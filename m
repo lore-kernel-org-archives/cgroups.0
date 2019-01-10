@@ -1,7 +1,7 @@
 From: Suren Baghdasaryan <surenb@google.com>
-Subject: [PATCH v2 1/5] fs: kernfs: add poll file operation
-Date: Thu, 10 Jan 2019 14:07:14 -0800
-Message-ID: <20190110220718.261134-2-surenb@google.com>
+Subject: [PATCH v2 2/5] kernel: cgroup: add poll file operation
+Date: Thu, 10 Jan 2019 14:07:15 -0800
+Message-ID: <20190110220718.261134-3-surenb@google.com>
 References: <20190110220718.261134-1-surenb@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,13 +10,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=6/O3eFualUs49i01Y9nCFMeVAmgaojLv/2MBw+YMFEw=;
-        b=ZlV37vZth2xskaz25CzDUgkv2F5IWqrPsLkXq+5WGuLB2x/bp81M8lLF8ZPkjLtZW3
-         lq4hOdS+fLTm6uWk/RIkdTi3zA+1aFHHEfLWYUGirXTb9rXw6xxvs+LGaUumLrV2P4k7
-         pITQRvyOn+4dWlNuZ4A4QQcf2n6KmihrQklYYmeAcjKsOM9He4TenXOi36Bn82mU/Ald
-         CTbGvrRA68GVELjzgQyqaSfj5x56VRoBO1LVTm8nyUiVwfH21VV2AV9+O8SDDYmNqkEz
-         D4GgOBYB9F0wlUEkDQspNYjZOL9OuIk4OFAkNhkIxOnxdpi9c0OTdoI4AElmSojoCPxk
-         /hSw==
+        bh=+OULLMuerNEP0alqy6OmnDEtcrB759rW8C6mN7L4vig=;
+        b=srgGXbB+MDNra9yHvnpA7JnWGI1yejRbQpFLJdis5RB26UjMRqie4R/aLpnklNN0sS
+         5MS4o1NN5rAT8Ib1XEseXKu47U1MW3+j8Nkeaj9RrKK9MxEaoeMMi7fVSpRYgDcAjikr
+         RiGmbTb0KnMwV26nPA14fjRBZePi7eM3fcfGCU4Dmom9T1iiwNS+gg622NARdbtZlrdy
+         xTwWjl+Z+99ssFmmYZqRPn7SNQYWzW6GoP30dPpVQv/zuXIAg8wvN0SWhp7AX1FS6eZF
+         oHZ75LY1xssaHYs2FxZ7UEZi6KubW8MBt6CheGcaSE3XdXz9IntU59HFtunkyEXA2Hwk
+         9keA==
 In-Reply-To: <20190110220718.261134-1-surenb@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -26,7 +26,7 @@ Cc: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, axboe@kernel.dk, denn
 
 From: Johannes Weiner <hannes@cmpxchg.org>
 
-Kernfs has a standardized poll/notification mechanism for waking all
+Cgroup has a standardized poll/notification mechanism for waking all
 pollers on all fds when a filesystem node changes. To allow polling
 for custom events, add a .poll callback that can override the default.
 
@@ -36,92 +36,69 @@ per-fd trigger configurations.
 Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 Signed-off-by: Suren Baghdasaryan <surenb@google.com>
 ---
- fs/kernfs/file.c       | 31 ++++++++++++++++++++-----------
- include/linux/kernfs.h |  6 ++++++
- 2 files changed, 26 insertions(+), 11 deletions(-)
+ include/linux/cgroup-defs.h |  4 ++++
+ kernel/cgroup/cgroup.c      | 12 ++++++++++++
+ 2 files changed, 16 insertions(+)
 
-diff --git a/fs/kernfs/file.c b/fs/kernfs/file.c
-index dbf5bc250bfd..2d8b91f4475d 100644
---- a/fs/kernfs/file.c
-+++ b/fs/kernfs/file.c
-@@ -832,26 +832,35 @@ void kernfs_drain_open_files(struct kernfs_node *kn)
-  * to see if it supports poll (Neither 'poll' nor 'select' return
-  * an appropriate error code).  When in doubt, set a suitable timeout value.
-  */
-+__poll_t kernfs_generic_poll(struct kernfs_open_file *of, poll_table *wait)
-+{
-+	struct kernfs_node *kn = kernfs_dentry_node(of->file->f_path.dentry);
-+	struct kernfs_open_node *on = kn->attr.open;
-+
-+	poll_wait(of->file, &on->poll, wait);
-+
-+	if (of->event != atomic_read(&on->event))
-+		return DEFAULT_POLLMASK|EPOLLERR|EPOLLPRI;
-+
-+	return DEFAULT_POLLMASK;
-+}
-+
- static __poll_t kernfs_fop_poll(struct file *filp, poll_table *wait)
- {
- 	struct kernfs_open_file *of = kernfs_of(filp);
- 	struct kernfs_node *kn = kernfs_dentry_node(filp->f_path.dentry);
--	struct kernfs_open_node *on = kn->attr.open;
-+	__poll_t ret;
- 
- 	if (!kernfs_get_active(kn))
--		goto trigger;
-+		return DEFAULT_POLLMASK|EPOLLERR|EPOLLPRI;
- 
--	poll_wait(filp, &on->poll, wait);
-+	if (kn->attr.ops->poll)
-+		ret = kn->attr.ops->poll(of, wait);
-+	else
-+		ret = kernfs_generic_poll(of, wait);
- 
- 	kernfs_put_active(kn);
--
--	if (of->event != atomic_read(&on->event))
--		goto trigger;
--
--	return DEFAULT_POLLMASK;
--
-- trigger:
--	return DEFAULT_POLLMASK|EPOLLERR|EPOLLPRI;
-+	return ret;
- }
- 
- static void kernfs_notify_workfn(struct work_struct *work)
-diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-index 5b36b1287a5a..0cac1207bb00 100644
---- a/include/linux/kernfs.h
-+++ b/include/linux/kernfs.h
-@@ -25,6 +25,7 @@ struct seq_file;
- struct vm_area_struct;
- struct super_block;
- struct file_system_type;
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 5e1694fe035b..6f9ea8601421 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -32,6 +32,7 @@ struct kernfs_node;
+ struct kernfs_ops;
+ struct kernfs_open_file;
+ struct seq_file;
 +struct poll_table_struct;
  
- struct kernfs_open_node;
- struct kernfs_iattrs;
-@@ -261,6 +262,9 @@ struct kernfs_ops {
- 	ssize_t (*write)(struct kernfs_open_file *of, char *buf, size_t bytes,
- 			 loff_t off);
+ #define MAX_CGROUP_TYPE_NAMELEN 32
+ #define MAX_CGROUP_ROOT_NAMELEN 64
+@@ -573,6 +574,9 @@ struct cftype {
+ 	ssize_t (*write)(struct kernfs_open_file *of,
+ 			 char *buf, size_t nbytes, loff_t off);
  
 +	__poll_t (*poll)(struct kernfs_open_file *of,
 +			 struct poll_table_struct *pt);
 +
- 	int (*mmap)(struct kernfs_open_file *of, struct vm_area_struct *vma);
- 
  #ifdef CONFIG_DEBUG_LOCK_ALLOC
-@@ -350,6 +354,8 @@ int kernfs_remove_by_name_ns(struct kernfs_node *parent, const char *name,
- int kernfs_rename_ns(struct kernfs_node *kn, struct kernfs_node *new_parent,
- 		     const char *new_name, const void *new_ns);
- int kernfs_setattr(struct kernfs_node *kn, const struct iattr *iattr);
-+__poll_t kernfs_generic_poll(struct kernfs_open_file *of,
-+			     struct poll_table_struct *pt);
- void kernfs_notify(struct kernfs_node *kn);
+ 	struct lock_class_key	lockdep_key;
+ #endif
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 7a8429f8e280..3f533f95acdc 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -3499,6 +3499,16 @@ static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
+ 	return ret ?: nbytes;
+ }
  
- const void *kernfs_super_ns(struct super_block *sb);
++static __poll_t cgroup_file_poll(struct kernfs_open_file *of, poll_table *pt)
++{
++	struct cftype *cft = of->kn->priv;
++
++	if (cft->poll)
++		return cft->poll(of, pt);
++
++	return kernfs_generic_poll(of, pt);
++}
++
+ static void *cgroup_seqfile_start(struct seq_file *seq, loff_t *ppos)
+ {
+ 	return seq_cft(seq)->seq_start(seq, ppos);
+@@ -3537,6 +3547,7 @@ static struct kernfs_ops cgroup_kf_single_ops = {
+ 	.open			= cgroup_file_open,
+ 	.release		= cgroup_file_release,
+ 	.write			= cgroup_file_write,
++	.poll			= cgroup_file_poll,
+ 	.seq_show		= cgroup_seqfile_show,
+ };
+ 
+@@ -3545,6 +3556,7 @@ static struct kernfs_ops cgroup_kf_ops = {
+ 	.open			= cgroup_file_open,
+ 	.release		= cgroup_file_release,
+ 	.write			= cgroup_file_write,
++	.poll			= cgroup_file_poll,
+ 	.seq_start		= cgroup_seqfile_start,
+ 	.seq_next		= cgroup_seqfile_next,
+ 	.seq_stop		= cgroup_seqfile_stop,
 -- 
 2.20.1.97.g81188d93c3-goog
 
