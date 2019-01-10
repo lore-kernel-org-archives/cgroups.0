@@ -1,81 +1,132 @@
-From: syzbot <syzbot+fa11f9da42b46cea3b4a@syzkaller.appspotmail.com>
-Subject: KASAN: null-ptr-deref Read in reclaim_high
-Date: Thu, 10 Jan 2019 09:03:04 -0800
-Message-ID: <000000000000491844057f1d8d2f@google.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH v3] memcg: schedule high reclaim for remote memcgs on high_work
+Date: Thu, 10 Jan 2019 09:44:32 -0800
+Message-ID: <20190110174432.82064-1-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=Gt8KB5JyoxxYaL1/z6NLcbWHN8NvTltGpPlll2SY3FY=;
+        b=rSTdy8EqKNDloKVk7yuhlbAdCYfMtPuUgqSsT99xkRUxQP4YdeQX2BlE7gVeyBCUB4
+         DpDB0pJiexAVR5wSa5LDB3gsKPGKD+LzAUgOfgBvfmCpIiJlxceVQCSfa9D6WKocBTzg
+         CYIeuSwBbcGCiapIrOH0wtIfM2+pZuVqkR2qPKjwZIZ9Q/OaKZ9U6wPPpODCqYJ9tJZc
+         6gH3LHZUs7tR7Lr6og9K7DHz8PgDkBLmDPoUWPUCZ0/l1+UuFjyKz4+4VS/zaqdz+l7d
+         LPp6BPRean8RE7C8UrsGUuZHKMYV1OYT4HSiOyZMuAh25AbdI6di/fQ+TJzKXPLcvOps
+         CAlQ==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, mhocko@kernel.org, syzkaller-bugs@googlegroups.com, vdavydov.dev@gmail.com
+To: Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
 
-Hello,
+If a memcg is over high limit, memory reclaim is scheduled to run on
+return-to-userland.  However it is assumed that the memcg is the current
+process's memcg.  With remote memcg charging for kmem or swapping in a
+page charged to remote memcg, current process can trigger reclaim on
+remote memcg.  So, schduling reclaim on return-to-userland for remote
+memcgs will ignore the high reclaim altogether.  So, record the memcg
+needing high reclaim and trigger high reclaim for that memcg on
+return-to-userland.  However if the memcg is already recorded for high
+reclaim and the recorded memcg is not the descendant of the the memcg
+needing high reclaim, punt the high reclaim to the work queue.
 
-syzbot found the following crash on:
-
-HEAD commit:    6cab33afc3dd Add linux-next specific files for 20190110
-git tree:       linux-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=178b287b400000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=611f89e5b6868db
-dashboard link: https://syzkaller.appspot.com/bug?extid=fa11f9da42b46cea3b4a
-compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=14259017400000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=141630a0c00000
-
-IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+fa11f9da42b46cea3b4a@syzkaller.appspotmail.com
-
-==================================================================
-BUG: KASAN: null-ptr-deref in atomic64_read  
-include/generated/atomic-instrumented.h:836 [inline]
-BUG: KASAN: null-ptr-deref in atomic_long_read  
-include/generated/atomic-long.h:28 [inline]
-BUG: KASAN: null-ptr-deref in page_counter_read  
-include/linux/page_counter.h:47 [inline]
-BUG: KASAN: null-ptr-deref in reclaim_high.constprop.0+0xa6/0x1e0  
-mm/memcontrol.c:2149
-Read of size 8 at addr 0000000000000138 by task syz-executor037/7964
-
-CPU: 1 PID: 7964 Comm: syz-executor037 Not tainted 5.0.0-rc1-next-20190110  
-#9
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
-Google 01/01/2011
-Call Trace:
-  __dump_stack lib/dump_stack.c:77 [inline]
-  dump_stack+0x1db/0x2d0 lib/dump_stack.c:113
-  kasan_report.cold+0x5/0x40 mm/kasan/report.c:321
-  check_memory_region_inline mm/kasan/generic.c:185 [inline]
-  check_memory_region+0x123/0x190 mm/kasan/generic.c:191
-  kasan_check_read+0x11/0x20 mm/kasan/common.c:100
-  atomic64_read include/generated/atomic-instrumented.h:836 [inline]
-  atomic_long_read include/generated/atomic-long.h:28 [inline]
-  page_counter_read include/linux/page_counter.h:47 [inline]
-  reclaim_high.constprop.0+0xa6/0x1e0 mm/memcontrol.c:2149
-  mem_cgroup_handle_over_high+0xc1/0x180 mm/memcontrol.c:2178
-  tracehook_notify_resume include/linux/tracehook.h:190 [inline]
-  exit_to_usermode_loop+0x299/0x3b0 arch/x86/entry/common.c:166
-  prepare_exit_to_usermode arch/x86/entry/common.c:197 [inline]
-  syscall_return_slowpath+0x519/0x5f0 arch/x86/entry/common.c:268
-  ret_from_fork+0x15/0x50 arch/x86/entry/entry_64.S:344
-RIP: 0033:0x44034a
-Code: Bad RIP value.
-RSP: 002b:00007ffc31cd3040 EFLAGS: 00000246 ORIG_RAX: 0000000000000038
-RAX: 0000000000000000 RBX: 0000000000000000 RCX: 000000000044034a
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000001200011
-RBP: 00007ffc31cd3060 R08: 0000000000000001 R09: 0000000002027880
-R10: 0000000002027b50 R11: 0000000000000246 R12: 0000000000000001
-R13: 000000000000cc59 R14: 0000000000000000 R15: 0000000000000000
-==================================================================
-
-
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
 ---
-This bug is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+Changelog since v2:
+- TIF_NOTIFY_RESUME can be set from places other than try_charge() in
+  which case current->memcg_high_reclaim will be null. Correctly handle
+  such scenarios.
 
-syzbot will keep track of this bug report. See:
-https://goo.gl/tpsmEJ#bug-status-tracking for how to communicate with  
-syzbot.
-syzbot can test patches for this bug, for details see:
-https://goo.gl/tpsmEJ#testing-patches
+Changelog since v1:
+- Punt high reclaim of a memcg to work queue only if the recorded memcg
+  is not its descendant.
+
+ include/linux/sched.h |  3 +++
+ kernel/fork.c         |  1 +
+ mm/memcontrol.c       | 22 ++++++++++++++++------
+ 3 files changed, 20 insertions(+), 6 deletions(-)
+
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 7d08562eeec7..5e6690042497 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1172,6 +1172,9 @@ struct task_struct {
+ 
+ 	/* Used by memcontrol for targeted memcg charge: */
+ 	struct mem_cgroup		*active_memcg;
++
++	/* Used by memcontrol for high relcaim: */
++	struct mem_cgroup		*memcg_high_reclaim;
+ #endif
+ 
+ #ifdef CONFIG_BLK_CGROUP
+diff --git a/kernel/fork.c b/kernel/fork.c
+index 1b0fde63d831..85da44137847 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -918,6 +918,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
+ 
+ #ifdef CONFIG_MEMCG
+ 	tsk->active_memcg = NULL;
++	tsk->memcg_high_reclaim = NULL;
+ #endif
+ 	return tsk;
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 953d4ba8a595..18f4aefbe0bf 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2168,14 +2168,17 @@ static void high_work_func(struct work_struct *work)
+ void mem_cgroup_handle_over_high(void)
+ {
+ 	unsigned int nr_pages = current->memcg_nr_pages_over_high;
+-	struct mem_cgroup *memcg;
++	struct mem_cgroup *memcg = current->memcg_high_reclaim;
+ 
+ 	if (likely(!nr_pages))
+ 		return;
+ 
+-	memcg = get_mem_cgroup_from_mm(current->mm);
++	if (!memcg)
++		memcg = get_mem_cgroup_from_mm(current->mm);
++
+ 	reclaim_high(memcg, nr_pages, GFP_KERNEL);
+ 	css_put(&memcg->css);
++	current->memcg_high_reclaim = NULL;
+ 	current->memcg_nr_pages_over_high = 0;
+ }
+ 
+@@ -2329,10 +2332,10 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	 * If the hierarchy is above the normal consumption range, schedule
+ 	 * reclaim on returning to userland.  We can perform reclaim here
+ 	 * if __GFP_RECLAIM but let's always punt for simplicity and so that
+-	 * GFP_KERNEL can consistently be used during reclaim.  @memcg is
+-	 * not recorded as it most likely matches current's and won't
+-	 * change in the meantime.  As high limit is checked again before
+-	 * reclaim, the cost of mismatch is negligible.
++	 * GFP_KERNEL can consistently be used during reclaim. Record the memcg
++	 * for the return-to-userland high reclaim. If the memcg is already
++	 * recorded and the recorded memcg is not the descendant of the memcg
++	 * needing high reclaim, punt the high reclaim to the work queue.
+ 	 */
+ 	do {
+ 		if (page_counter_read(&memcg->memory) > memcg->high) {
+@@ -2340,6 +2343,13 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 			if (in_interrupt()) {
+ 				schedule_work(&memcg->high_work);
+ 				break;
++			} else if (!current->memcg_high_reclaim) {
++				css_get(&memcg->css);
++				current->memcg_high_reclaim = memcg;
++			} else if (!mem_cgroup_is_descendant(
++					current->memcg_high_reclaim, memcg)) {
++				schedule_work(&memcg->high_work);
++				break;
+ 			}
+ 			current->memcg_nr_pages_over_high += batch;
+ 			set_notify_resume(current);
+-- 
+2.20.1.97.g81188d93c3-goog
+
