@@ -1,71 +1,94 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH v3] memcg: schedule high reclaim for remote memcgs on
- high_work
-Date: Sun, 13 Jan 2019 19:34:02 +0100
-Message-ID: <20190113183402.GD1578@dhcp22.suse.cz>
-References: <20190110174432.82064-1-shakeelb@google.com>
- <20190111205948.GA4591@cmpxchg.org>
- <CALvZod7O2CJuhbuLUy9R-E4dTgL4WBg8CayW_AFnCCG6KCDjUA@mail.gmail.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH v2 5/5] psi: introduce psi monitor
+Date: Mon, 14 Jan 2019 11:21:37 +0100
+Message-ID: <20190114102137.GB14054@worktop.programming.kicks-ass.net>
+References: <20190110220718.261134-1-surenb@google.com>
+ <20190110220718.261134-6-surenb@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=bxkTnJx2ceAX8K5kersQk7t4n/UQEPJI29wphVIz808=; b=iTx0Df8cQ26qLeQXkOAlcgl6R
+        S2nzh31CdDuB970VvEDUWiwBW5xA1/4XMZRIYQfWaBXIPctv1Oh8o6eORzQ2NCcZ2aiakvHxPtKov
+        QDaWujMi7FJzuy52oerT/t1DRQ3sWQg99IplBuXO9NjqenPNZWhIS8q4lyyHrAly3odk8jk71RfYM
+        VNuYVniepN5psaUaTbiQbXavkl44rAV3gREv6vZpgTgTluXk+FJfFBDrfHuj5yAjuy+J9JvqpiwGk
+        hj3HI3zuIMkCDWk4AbOLKye8cp/bmldHJz5YUVqVAM7C5JvklIYE6Lft5Djf6BJIaCXfyjqaqYuD0
+    
 Content-Disposition: inline
-In-Reply-To: <CALvZod7O2CJuhbuLUy9R-E4dTgL4WBg8CayW_AFnCCG6KCDjUA@mail.gmail.com>
+In-Reply-To: <20190110220718.261134-6-surenb@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: gregkh@linuxfoundation.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, axboe@kernel.dk, dennis@kernel.org, dennisszhou@gmail.com, mingo@redhat.com, akpm@linux-foundation.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@android.com
 
-On Fri 11-01-19 14:54:32, Shakeel Butt wrote:
-> Hi Johannes,
-> 
-> On Fri, Jan 11, 2019 at 12:59 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
-> >
-> > Hi Shakeel,
-> >
-> > On Thu, Jan 10, 2019 at 09:44:32AM -0800, Shakeel Butt wrote:
-> > > If a memcg is over high limit, memory reclaim is scheduled to run on
-> > > return-to-userland.  However it is assumed that the memcg is the current
-> > > process's memcg.  With remote memcg charging for kmem or swapping in a
-> > > page charged to remote memcg, current process can trigger reclaim on
-> > > remote memcg.  So, schduling reclaim on return-to-userland for remote
-> > > memcgs will ignore the high reclaim altogether. So, record the memcg
-> > > needing high reclaim and trigger high reclaim for that memcg on
-> > > return-to-userland.  However if the memcg is already recorded for high
-> > > reclaim and the recorded memcg is not the descendant of the the memcg
-> > > needing high reclaim, punt the high reclaim to the work queue.
-> >
-> > The idea behind remote charging is that the thread allocating the
-> > memory is not responsible for that memory, but a different cgroup
-> > is. Why would the same thread then have to work off any high excess
-> > this could produce in that unrelated group?
-> >
-> > Say you have a inotify/dnotify listener that is restricted in its
-> > memory use - now everybody sending notification events from outside
-> > that listener's group would get throttled on a cgroup over which it
-> > has no control. That sounds like a recipe for priority inversions.
-> >
-> > It seems to me we should only do reclaim-on-return when current is in
-> > the ill-behaved cgroup, and punt everything else - interrupts and
-> > remote charges - to the workqueue.
-> 
-> This is what v1 of this patch was doing but Michal suggested to do
-> what this version is doing. Michal's argument was that the current is
-> already charging and maybe reclaiming a remote memcg then why not do
-> the high excess reclaim as well.
+On Thu, Jan 10, 2019 at 02:07:18PM -0800, Suren Baghdasaryan wrote:
+> +/*
+> + * psi_update_work represents slowpath accounting part while
+> + * psi_group_change represents hotpath part.
+> + * There are two potential races between these path:
+> + * 1. Changes to group->polling when slowpath checks for new stall, then
+> + *    hotpath records new stall and then slowpath resets group->polling
+> + *    flag. This leads to the exit from the polling mode while monitored
+> + *    states are still changing.
+> + * 2. Slowpath overwriting an immediate update scheduled from the hotpath
+> + *    with a regular update further in the future and missing the
+> + *    immediate update.
+> + * Both races are handled with a retry cycle in the slowpath:
+> + *
+> + *    HOTPATH:                         |    SLOWPATH:
+> + *                                     |
+> + * A) times[cpu] += delta              | E) delta = times[*]
+> + * B) start_poll = (delta[poll_mask] &&|    if delta[poll_mask]:
+> + *      cmpxchg(g->polling, 0, 1) == 0)| F)   polling_until = now +
+> + *                                     |              grace_period
+> + *                                     |    if now > polling_until:
+> + *    if start_poll:                   |      if g->polling:
+> + * C)   mod_delayed_work(1)            | G)     g->polling = polling = 0
+> + *    else if !delayed_work_pending(): | H)     goto SLOWPATH
+> + * D)   schedule_delayed_work(PSI_FREQ)|    else:
+> + *                                     |      if !g->polling:
+> + *                                     | I)     g->polling = polling = 1
+> + *                                     | J) if delta && first_pass:
+> + *                                     |      next_avg = calculate_averages()
+> + *                                     |      if polling:
+> + *                                     |        next_poll = poll_triggers()
+> + *                                     |    if (delta && first_pass) || polling:
+> + *                                     | K)   mod_delayed_work(
+> + *                                     |          min(next_avg, next_poll))
+> + *                                     |      if !polling:
+> + *                                     |        first_pass = false
+> + *                                     | L)     goto SLOWPATH
+> + *
+> + * Race #1 is represented by (EABGD) sequence in which case slowpath
+> + * deactivates polling mode because it misses new monitored stall and hotpath
+> + * doesn't activate it because at (B) g->polling is not yet reset by slowpath
+> + * in (G). This race is handled by the (H) retry, which in the race described
+> + * above results in the new sequence of (EABGDHEIK) that reactivates polling
+> + * mode.
+> + *
+> + * Race #2 is represented by polling==false && (JABCK) sequence which
+> + * overwrites immediate update scheduled at (C) with a later (next_avg) update
+> + * scheduled at (K). This race is handled by the (L) retry which results in the
+> + * new sequence of polling==false && (JABCKLEIK) that reactivates polling mode
+> + * and reschedules next polling update (next_poll).
+> + *
+> + * Note that retries can't result in an infinite loop because retry #1 happens
+> + * only during polling reactivation and retry #2 happens only on the first
+> + * pass. Constant reactivations are impossible because polling will stay active
+> + * for at least grace_period. Worst case scenario involves two retries (HEJKLE)
+> + */
 
-Johannes has a good point about the priority inversion problems which I
-haven't thought about.
+I'm having a fairly hard time with this. There's a distinct lack of
+memory ordering, and a suspicious mixing of atomic ops (cmpxchg) and
+regular loads and stores (without READ_ONCE/WRITE_ONCE even).
 
-> Personally I don't have any strong opinion either way. What I actually
-> wanted was to punt this high reclaim to some process in that remote
-> memcg. However I didn't explore much on that direction thinking if
-> that complexity is worth it. Maybe I should at least explore it, so,
-> we can compare the solutions. What do you think?
+Please clarify.
 
-My question would be whether we really care all that much. Do we know of
-workloads which would generate a large high limit excess?
--- 
-Michal Hocko
-SUSE Labs
+(also, you look to have a whole bunch of line-breaks that are really not
+needed; concattenated the line would not be over 80 chars).
