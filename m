@@ -1,7 +1,7 @@
 From: Juri Lelli <juri.lelli@redhat.com>
-Subject: [PATCH v6 1/5] sched/topology: Adding function partition_sched_domains_locked()
-Date: Thu, 17 Jan 2019 09:47:35 +0100
-Message-ID: <20190117084739.17078-2-juri.lelli@redhat.com>
+Subject: [PATCH v6 4/5] sched/core: Prevent race condition between cpuset and __sched_setscheduler()
+Date: Thu, 17 Jan 2019 09:47:38 +0100
+Message-ID: <20190117084739.17078-5-juri.lelli@redhat.com>
 References: <20190117084739.17078-1-juri.lelli@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190117084739.17078-1-juri.lelli@redhat.com>
@@ -11,91 +11,138 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org
-Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>
 
-From: Mathieu Poirier <mathieu.poirier@linaro.org>
+No synchronisation mechanism exists between the cpuset subsystem and calls
+to function __sched_setscheduler(). As such, it is possible that new root
+domains are created on the cpuset side while a deadline acceptance test
+is carried out in __sched_setscheduler(), leading to a potential oversell
+of CPU bandwidth.
 
-Introducing function partition_sched_domains_locked() by taking
-the mutex locking code out of the original function.  That way
-the work done by partition_sched_domains_locked() can be reused
-without dropping the mutex lock.
-
-No change of functionality is introduced by this patch.
+Grab callback_lock from core scheduler, so to prevent situations such as
+the one described above from happening.
 
 Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
-Acked-by: Tejun Heo <tj@kernel.org>
----
- include/linux/sched/topology.h | 10 ++++++++++
- kernel/sched/topology.c        | 17 +++++++++++++----
- 2 files changed, 23 insertions(+), 4 deletions(-)
+Signed-off-by: Juri Lelli <juri.lelli@redhat.com>
 
-diff --git a/include/linux/sched/topology.h b/include/linux/sched/topology.h
-index 6b9976180c1e..d69e7d56253a 100644
---- a/include/linux/sched/topology.h
-+++ b/include/linux/sched/topology.h
-@@ -162,6 +162,10 @@ static inline struct cpumask *sched_domain_span(struct sched_domain *sd)
- 	return to_cpumask(sd->span);
+---
+
+v5->v6: Added more descriptive comments about why callback_lock gives
+the holder read-only access to cpusets.
+---
+ include/linux/cpuset.h |  6 ++++++
+ kernel/cgroup/cpuset.c | 25 ++++++++++++++++++++++++-
+ kernel/sched/core.c    | 10 ++++++++++
+ 3 files changed, 40 insertions(+), 1 deletion(-)
+
+diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+index 934633a05d20..8e5a8dd0622b 100644
+--- a/include/linux/cpuset.h
++++ b/include/linux/cpuset.h
+@@ -55,6 +55,8 @@ extern void cpuset_init_smp(void);
+ extern void cpuset_force_rebuild(void);
+ extern void cpuset_update_active_cpus(void);
+ extern void cpuset_wait_for_hotplug(void);
++extern void cpuset_read_only_lock(void);
++extern void cpuset_read_only_unlock(void);
+ extern void cpuset_cpus_allowed(struct task_struct *p, struct cpumask *mask);
+ extern void cpuset_cpus_allowed_fallback(struct task_struct *p);
+ extern nodemask_t cpuset_mems_allowed(struct task_struct *p);
+@@ -176,6 +178,10 @@ static inline void cpuset_update_active_cpus(void)
+ 
+ static inline void cpuset_wait_for_hotplug(void) { }
+ 
++static inline void cpuset_read_only_lock(void) { }
++
++static inline void cpuset_read_only_unlock(void) { }
++
+ static inline void cpuset_cpus_allowed(struct task_struct *p,
+ 				       struct cpumask *mask)
+ {
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 54b8ff5de7c8..8ee1b24b6353 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -330,7 +330,8 @@ static struct cpuset top_cpuset = {
+  * __alloc_pages().
+  *
+  * If a task is only holding callback_lock, then it has read-only
+- * access to cpusets.
++ * access to cpusets. Mind that callback_lock might be grabbed from other
++ * subsystems as well (via cpuset_read_only_lock()).
+  *
+  * Now, the task_struct fields mems_allowed and mempolicy may be changed
+  * by other task, we use alloc_lock in the task_struct fields to protect
+@@ -3218,6 +3219,28 @@ void __init cpuset_init_smp(void)
+ 	BUG_ON(!cpuset_migrate_mm_wq);
  }
  
-+extern void partition_sched_domains_locked(int ndoms_new,
-+					   cpumask_var_t doms_new[],
-+					   struct sched_domain_attr *dattr_new);
-+
- extern void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
- 				    struct sched_domain_attr *dattr_new);
- 
-@@ -206,6 +210,12 @@ extern void set_sched_topology(struct sched_domain_topology_level *tl);
- 
- struct sched_domain_attr;
- 
-+static inline void
-+partition_sched_domains_locked(int ndoms_new, cpumask_var_t doms_new[],
-+			       struct sched_domain_attr *dattr_new)
-+{
-+}
-+
- static inline void
- partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
- 			struct sched_domain_attr *dattr_new)
-diff --git a/kernel/sched/topology.c b/kernel/sched/topology.c
-index 8d7f15ba5916..dd94000cb378 100644
---- a/kernel/sched/topology.c
-+++ b/kernel/sched/topology.c
-@@ -1929,15 +1929,15 @@ static int dattrs_equal(struct sched_domain_attr *cur, int idx_cur,
-  * ndoms_new == 0 is a special case for destroying existing domains,
-  * and it will not create the default domain.
-  *
-- * Call with hotplug lock held
-+ * Call with hotplug lock and sched_domains_mutex held
-  */
--void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
--			     struct sched_domain_attr *dattr_new)
-+void partition_sched_domains_locked(int ndoms_new, cpumask_var_t doms_new[],
-+				    struct sched_domain_attr *dattr_new)
- {
- 	int i, j, n;
- 	int new_topology;
- 
--	mutex_lock(&sched_domains_mutex);
-+	lockdep_assert_held(&sched_domains_mutex);
- 
- 	/* Always unregister in case we don't destroy any domains: */
- 	unregister_sched_domain_sysctl();
-@@ -2002,6 +2002,15 @@ void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
- 	ndoms_cur = ndoms_new;
- 
- 	register_sched_domain_sysctl();
-+}
- 
-+/*
-+ * Call with hotplug lock held
++/**
++ * cpuset_read_only_lock - Grab the callback_lock from cpuset subsystem.
++ *
++ * Description: As described in full details the comment above cpuset_mutex
++ * and callback_lock definitions, holding callback_lock gives the holder
++ * read-only access to cpusets. Even though it might look counter-intuitive
++ * (as callback_lock is a spinlock), in fact a task must hold both
++ * callback_lock _and_ cpuset_mutex to modify cpusets (write access).
 + */
-+void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
-+			     struct sched_domain_attr *dattr_new)
++void cpuset_read_only_lock(void)
 +{
-+	mutex_lock(&sched_domains_mutex);
-+	partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
- 	mutex_unlock(&sched_domains_mutex);
++	raw_spin_lock(&callback_lock);
++}
++
++/**
++ * cpuset_read_only_unlock - Release the callback_lock from cpuset subsystem.
++ */
++void cpuset_read_only_unlock(void)
++{
++	raw_spin_unlock(&callback_lock);
++}
++
+ /**
+  * cpuset_cpus_allowed - return cpus_allowed mask from a tasks cpuset.
+  * @tsk: pointer to task_struct from which to obtain cpuset->cpus_allowed.
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index f5263383170e..d928a42b8852 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -4224,6 +4224,13 @@ static int __sched_setscheduler(struct task_struct *p,
+ 	rq = task_rq_lock(p, &rf);
+ 	update_rq_clock(rq);
+ 
++	/*
++	 * Make sure we don't race with the cpuset subsystem where root
++	 * domains can be rebuilt or modified while operations like DL
++	 * admission checks are carried out.
++	 */
++	cpuset_read_only_lock();
++
+ 	/*
+ 	 * Changing the policy of the stop threads its a very bad idea:
+ 	 */
+@@ -4285,6 +4292,7 @@ static int __sched_setscheduler(struct task_struct *p,
+ 	/* Re-check policy now with rq lock held: */
+ 	if (unlikely(oldpolicy != -1 && oldpolicy != p->policy)) {
+ 		policy = oldpolicy = -1;
++		cpuset_read_only_unlock();
+ 		task_rq_unlock(rq, p, &rf);
+ 		goto recheck;
+ 	}
+@@ -4342,6 +4350,7 @@ static int __sched_setscheduler(struct task_struct *p,
+ 
+ 	/* Avoid rq from going away on us: */
+ 	preempt_disable();
++	cpuset_read_only_unlock();
+ 	task_rq_unlock(rq, p, &rf);
+ 
+ 	if (pi)
+@@ -4354,6 +4363,7 @@ static int __sched_setscheduler(struct task_struct *p,
+ 	return 0;
+ 
+ unlock:
++	cpuset_read_only_unlock();
+ 	task_rq_unlock(rq, p, &rf);
+ 	return retval;
  }
 -- 
 2.17.2
