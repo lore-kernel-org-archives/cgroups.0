@@ -1,7 +1,7 @@
 From: Juri Lelli <juri.lelli@redhat.com>
-Subject: [PATCH v6 3/5] cgroup/cpuset: make callback_lock raw
-Date: Thu, 17 Jan 2019 09:47:37 +0100
-Message-ID: <20190117084739.17078-4-juri.lelli@redhat.com>
+Subject: [PATCH v6 5/5] cpuset: Rebuild root domain deadline accounting information
+Date: Thu, 17 Jan 2019 09:47:39 +0100
+Message-ID: <20190117084739.17078-6-juri.lelli@redhat.com>
 References: <20190117084739.17078-1-juri.lelli@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190117084739.17078-1-juri.lelli@redhat.com>
@@ -13,297 +13,265 @@ Content-Transfer-Encoding: 7bit
 To: peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org
 Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>
 
-callback_lock grants the holder read-only access to cpusets.  For fixing
-a synchronization issue between cpusets and scheduler core, it is now
-required to make callback_lock available to core scheduler code.
+When the topology of root domains is modified by CPUset or CPUhotplug
+operations information about the current deadline bandwidth held in the
+root domain is lost.
 
-Convert callback_lock to raw_spin_lock, so that it will be always safe
-to acquire it from atomic context.
+This patch addresses the issue by recalculating the lost deadline
+bandwidth information by circling through the deadline tasks held in
+CPUsets and adding their current load to the root domain they are
+associated with.
 
+Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
 Signed-off-by: Juri Lelli <juri.lelli@redhat.com>
 
 ---
 
-v5->v6: minor changes required to rebase on top of Waiman Long's cpuset
-for cgroup v2 set.
+v5 -> v6: Since the list of tasks that belongs to each cgroup is lazily
+built only the first time cgroups are mounted, to be able to use it for
+restoring deadline accounting information, we need to make sure we build
+it also when cgroups support is enabled, but cgroups are not yet mounted
+(early hotplugging of CPUs might verify this condition).
 ---
- kernel/cgroup/cpuset.c | 70 +++++++++++++++++++++---------------------
- 1 file changed, 35 insertions(+), 35 deletions(-)
+ include/linux/cgroup.h         |  1 +
+ include/linux/sched.h          |  5 +++
+ include/linux/sched/deadline.h |  8 +++++
+ kernel/cgroup/cgroup.c         |  2 +-
+ kernel/cgroup/cpuset.c         | 64 +++++++++++++++++++++++++++++++++-
+ kernel/sched/deadline.c        | 31 ++++++++++++++++
+ kernel/sched/sched.h           |  3 --
+ kernel/sched/topology.c        | 15 ++++++--
+ 8 files changed, 122 insertions(+), 7 deletions(-)
 
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 9d12757a65b0..ffa97eea5dfd 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -141,6 +141,7 @@ struct task_struct *cgroup_taskset_first(struct cgroup_taskset *tset,
+ struct task_struct *cgroup_taskset_next(struct cgroup_taskset *tset,
+ 					struct cgroup_subsys_state **dst_cssp);
+ 
++void cgroup_enable_task_cg_lists(void);
+ void css_task_iter_start(struct cgroup_subsys_state *css, unsigned int flags,
+ 			 struct css_task_iter *it);
+ struct task_struct *css_task_iter_next(struct css_task_iter *it);
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index a51c13c2b1a0..cb3b14f6069b 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -280,6 +280,11 @@ struct vtime {
+ 	u64			gtime;
+ };
+ 
++#ifdef CONFIG_SMP
++extern struct root_domain def_root_domain;
++extern struct mutex sched_domains_mutex;
++#endif
++
+ struct sched_info {
+ #ifdef CONFIG_SCHED_INFO
+ 	/* Cumulative counters: */
+diff --git a/include/linux/sched/deadline.h b/include/linux/sched/deadline.h
+index 0cb034331cbb..1aff00b65f3c 100644
+--- a/include/linux/sched/deadline.h
++++ b/include/linux/sched/deadline.h
+@@ -24,3 +24,11 @@ static inline bool dl_time_before(u64 a, u64 b)
+ {
+ 	return (s64)(a - b) < 0;
+ }
++
++#ifdef CONFIG_SMP
++
++struct root_domain;
++extern void dl_add_task_root_domain(struct task_struct *p);
++extern void dl_clear_root_domain(struct root_domain *rd);
++
++#endif /* CONFIG_SMP */
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 879c9f191f66..bc51786a4ae6 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -1802,7 +1802,7 @@ static int cgroup_remount(struct kernfs_root *kf_root, int *flags, char *data)
+  */
+ static bool use_task_css_set_links __read_mostly;
+ 
+-static void cgroup_enable_task_cg_lists(void)
++void cgroup_enable_task_cg_lists(void)
+ {
+ 	struct task_struct *p, *g;
+ 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index f0decd8165e7..54b8ff5de7c8 100644
+index 8ee1b24b6353..338cd5149436 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -345,7 +345,7 @@ static struct cpuset top_cpuset = {
-  */
- 
- static DEFINE_MUTEX(cpuset_mutex);
--static DEFINE_SPINLOCK(callback_lock);
-+static DEFINE_RAW_SPINLOCK(callback_lock);
- 
- static struct workqueue_struct *cpuset_migrate_mm_wq;
- 
-@@ -1220,7 +1220,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
- 	 * Newly added CPUs will be removed from effective_cpus and
- 	 * newly deleted ones will be added back to effective_cpus.
- 	 */
--	spin_lock_irq(&callback_lock);
-+	raw_spin_lock_irq(&callback_lock);
- 	if (adding) {
- 		cpumask_or(parent->subparts_cpus,
- 			   parent->subparts_cpus, tmp->addmask);
-@@ -1239,7 +1239,7 @@ static int update_parent_subparts_cpumask(struct cpuset *cpuset, int cmd,
- 	}
- 
- 	parent->nr_subparts_cpus = cpumask_weight(parent->subparts_cpus);
--	spin_unlock_irq(&callback_lock);
-+	raw_spin_unlock_irq(&callback_lock);
- 
- 	return cmd == partcmd_update;
+@@ -44,6 +44,7 @@
+ #include <linux/proc_fs.h>
+ #include <linux/rcupdate.h>
+ #include <linux/sched.h>
++#include <linux/sched/deadline.h>
+ #include <linux/sched/mm.h>
+ #include <linux/sched/task.h>
+ #include <linux/seq_file.h>
+@@ -934,6 +935,67 @@ static int generate_sched_domains(cpumask_var_t **domains,
+ 	return ndoms;
  }
-@@ -1344,7 +1344,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp)
- 			continue;
- 		rcu_read_unlock();
  
--		spin_lock_irq(&callback_lock);
-+		raw_spin_lock_irq(&callback_lock);
++static void update_tasks_root_domain(struct cpuset *cs)
++{
++	struct css_task_iter it;
++	struct task_struct *task;
++
++	css_task_iter_start(&cs->css, 0, &it);
++
++	while ((task = css_task_iter_next(&it)))
++		dl_add_task_root_domain(task);
++
++	css_task_iter_end(&it);
++}
++
++static void rebuild_root_domains(void)
++{
++	struct cpuset *cs = NULL;
++	struct cgroup_subsys_state *pos_css;
++
++	lockdep_assert_held(&cpuset_mutex);
++	lockdep_assert_cpus_held();
++	lockdep_assert_held(&sched_domains_mutex);
++
++	cgroup_enable_task_cg_lists();
++
++	rcu_read_lock();
++
++	/*
++	 * Clear default root domain DL accounting, it will be computed again
++	 * if a task belongs to it.
++	 */
++	dl_clear_root_domain(&def_root_domain);
++
++	cpuset_for_each_descendant_pre(cs, pos_css, &top_cpuset) {
++
++		if (cpumask_empty(cs->effective_cpus)) {
++			pos_css = css_rightmost_descendant(pos_css);
++			continue;
++		}
++
++		css_get(&cs->css);
++
++		rcu_read_unlock();
++
++		update_tasks_root_domain(cs);
++
++		rcu_read_lock();
++		css_put(&cs->css);
++	}
++	rcu_read_unlock();
++}
++
++static void
++partition_and_rebuild_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
++				    struct sched_domain_attr *dattr_new)
++{
++	mutex_lock(&sched_domains_mutex);
++	partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
++	rebuild_root_domains();
++	mutex_unlock(&sched_domains_mutex);
++}
++
+ /*
+  * Rebuild scheduler domains.
+  *
+@@ -971,7 +1033,7 @@ static void rebuild_sched_domains_locked(void)
+ 	ndoms = generate_sched_domains(&doms, &attr);
  
- 		cpumask_copy(cp->effective_cpus, tmp->new_cpus);
- 		if (cp->nr_subparts_cpus &&
-@@ -1375,7 +1375,7 @@ static void update_cpumasks_hier(struct cpuset *cs, struct tmpmasks *tmp)
- 					= cpumask_weight(cp->subparts_cpus);
- 			}
+ 	/* Have scheduler rebuild the domains */
+-	partition_sched_domains(ndoms, doms, attr);
++	partition_and_rebuild_sched_domains(ndoms, doms, attr);
+ out:
+ 	put_online_cpus();
+ }
+diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
+index 91e4202b0634..63d36958cbba 100644
+--- a/kernel/sched/deadline.c
++++ b/kernel/sched/deadline.c
+@@ -2285,6 +2285,37 @@ void __init init_sched_dl_class(void)
+ 					GFP_KERNEL, cpu_to_node(i));
+ }
+ 
++void dl_add_task_root_domain(struct task_struct *p)
++{
++	unsigned long flags;
++	struct rq_flags rf;
++	struct rq *rq;
++	struct dl_bw *dl_b;
++
++	rq = task_rq_lock(p, &rf);
++	if (!dl_task(p))
++		goto unlock;
++
++	dl_b = &rq->rd->dl_bw;
++	raw_spin_lock_irqsave(&dl_b->lock, flags);
++
++	dl_b->total_bw += p->dl.dl_bw;
++
++	raw_spin_unlock_irqrestore(&dl_b->lock, flags);
++
++unlock:
++	task_rq_unlock(rq, p, &rf);
++}
++
++void dl_clear_root_domain(struct root_domain *rd)
++{
++	unsigned long flags;
++
++	raw_spin_lock_irqsave(&rd->dl_bw.lock, flags);
++	rd->dl_bw.total_bw = 0;
++	raw_spin_unlock_irqrestore(&rd->dl_bw.lock, flags);
++}
++
+ #endif /* CONFIG_SMP */
+ 
+ static void switched_from_dl(struct rq *rq, struct task_struct *p)
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 618577fc9aa8..f34cc648c613 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -757,9 +757,6 @@ struct root_domain {
+ 	unsigned long		max_cpu_capacity;
+ };
+ 
+-extern struct root_domain def_root_domain;
+-extern struct mutex sched_domains_mutex;
+-
+ extern void init_defrootdomain(void);
+ extern int sched_init_domains(const struct cpumask *cpu_map);
+ extern void rq_attach_root(struct rq *rq, struct root_domain *rd);
+diff --git a/kernel/sched/topology.c b/kernel/sched/topology.c
+index dd94000cb378..dc3468b4b883 100644
+--- a/kernel/sched/topology.c
++++ b/kernel/sched/topology.c
+@@ -1961,9 +1961,20 @@ void partition_sched_domains_locked(int ndoms_new, cpumask_var_t doms_new[],
+ 	/* Destroy deleted domains: */
+ 	for (i = 0; i < ndoms_cur; i++) {
+ 		for (j = 0; j < n && !new_topology; j++) {
+-			if (cpumask_equal(doms_cur[i], doms_new[j])
+-			    && dattrs_equal(dattr_cur, i, dattr_new, j))
++			if (cpumask_equal(doms_cur[i], doms_new[j]) &&
++			    dattrs_equal(dattr_cur, i, dattr_new, j)) {
++				struct root_domain *rd;
++
++				/*
++				 * This domain won't be destroyed and as such
++				 * its dl_bw->total_bw needs to be cleared.  It
++				 * will be recomputed in function
++				 * update_tasks_root_domain().
++				 */
++				rd = cpu_rq(cpumask_any(doms_cur[i]))->rd;
++				dl_clear_root_domain(rd);
+ 				goto match1;
++			}
  		}
--		spin_unlock_irq(&callback_lock);
-+		raw_spin_unlock_irq(&callback_lock);
- 
- 		WARN_ON(!is_in_v2_mode() &&
- 			!cpumask_equal(cp->cpus_allowed, cp->effective_cpus));
-@@ -1493,7 +1493,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 			return -EINVAL;
- 	}
- 
--	spin_lock_irq(&callback_lock);
-+	raw_spin_lock_irq(&callback_lock);
- 	cpumask_copy(cs->cpus_allowed, trialcs->cpus_allowed);
- 
- 	/*
-@@ -1504,7 +1504,7 @@ static int update_cpumask(struct cpuset *cs, struct cpuset *trialcs,
- 			       cs->cpus_allowed);
- 		cs->nr_subparts_cpus = cpumask_weight(cs->subparts_cpus);
- 	}
--	spin_unlock_irq(&callback_lock);
-+	raw_spin_unlock_irq(&callback_lock);
- 
- 	update_cpumasks_hier(cs, &tmp);
- 
-@@ -1698,9 +1698,9 @@ static void update_nodemasks_hier(struct cpuset *cs, nodemask_t *new_mems)
- 			continue;
- 		rcu_read_unlock();
- 
--		spin_lock_irq(&callback_lock);
-+		raw_spin_lock_irq(&callback_lock);
- 		cp->effective_mems = *new_mems;
--		spin_unlock_irq(&callback_lock);
-+		raw_spin_unlock_irq(&callback_lock);
- 
- 		WARN_ON(!is_in_v2_mode() &&
- 			!nodes_equal(cp->mems_allowed, cp->effective_mems));
-@@ -1768,9 +1768,9 @@ static int update_nodemask(struct cpuset *cs, struct cpuset *trialcs,
- 	if (retval < 0)
- 		goto done;
- 
--	spin_lock_irq(&callback_lock);
-+	raw_spin_lock_irq(&callback_lock);
- 	cs->mems_allowed = trialcs->mems_allowed;
--	spin_unlock_irq(&callback_lock);
-+	raw_spin_unlock_irq(&callback_lock);
- 
- 	/* use trialcs->mems_allowed as a temp variable */
- 	update_nodemasks_hier(cs, &trialcs->mems_allowed);
-@@ -1861,9 +1861,9 @@ static int update_flag(cpuset_flagbits_t bit, struct cpuset *cs,
- 	spread_flag_changed = ((is_spread_slab(cs) != is_spread_slab(trialcs))
- 			|| (is_spread_page(cs) != is_spread_page(trialcs)));
- 
--	spin_lock_irq(&callback_lock);
-+	raw_spin_lock_irq(&callback_lock);
- 	cs->flags = trialcs->flags;
--	spin_unlock_irq(&callback_lock);
-+	raw_spin_unlock_irq(&callback_lock);
- 
- 	if (!cpumask_empty(trialcs->cpus_allowed) && balance_flag_changed)
- 		rebuild_sched_domains_locked();
-@@ -2366,7 +2366,7 @@ static int cpuset_common_seq_show(struct seq_file *sf, void *v)
- 	cpuset_filetype_t type = seq_cft(sf)->private;
- 	int ret = 0;
- 
--	spin_lock_irq(&callback_lock);
-+	raw_spin_lock_irq(&callback_lock);
- 
- 	switch (type) {
- 	case FILE_CPULIST:
-@@ -2388,7 +2388,7 @@ static int cpuset_common_seq_show(struct seq_file *sf, void *v)
- 		ret = -EINVAL;
- 	}
- 
--	spin_unlock_irq(&callback_lock);
-+	raw_spin_unlock_irq(&callback_lock);
- 	return ret;
- }
- 
-@@ -2698,14 +2698,14 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
- 
- 	cpuset_inc();
- 
--	spin_lock_irq(&callback_lock);
-+	raw_spin_lock_irq(&callback_lock);
- 	if (is_in_v2_mode()) {
- 		cpumask_copy(cs->effective_cpus, parent->effective_cpus);
- 		cs->effective_mems = parent->effective_mems;
- 		cs->use_parent_ecpus = true;
- 		parent->child_ecpus_count++;
- 	}
--	spin_unlock_irq(&callback_lock);
-+	raw_spin_unlock_irq(&callback_lock);
- 
- 	if (!test_bit(CGRP_CPUSET_CLONE_CHILDREN, &css->cgroup->flags))
- 		goto out_unlock;
-@@ -2732,12 +2732,12 @@ static int cpuset_css_online(struct cgroup_subsys_state *css)
- 	}
- 	rcu_read_unlock();
- 
--	spin_lock_irq(&callback_lock);
-+	raw_spin_lock_irq(&callback_lock);
- 	cs->mems_allowed = parent->mems_allowed;
- 	cs->effective_mems = parent->mems_allowed;
- 	cpumask_copy(cs->cpus_allowed, parent->cpus_allowed);
- 	cpumask_copy(cs->effective_cpus, parent->cpus_allowed);
--	spin_unlock_irq(&callback_lock);
-+	raw_spin_unlock_irq(&callback_lock);
- out_unlock:
- 	mutex_unlock(&cpuset_mutex);
- 	return 0;
-@@ -2790,7 +2790,7 @@ static void cpuset_css_free(struct cgroup_subsys_state *css)
- static void cpuset_bind(struct cgroup_subsys_state *root_css)
- {
- 	mutex_lock(&cpuset_mutex);
--	spin_lock_irq(&callback_lock);
-+	raw_spin_lock_irq(&callback_lock);
- 
- 	if (is_in_v2_mode()) {
- 		cpumask_copy(top_cpuset.cpus_allowed, cpu_possible_mask);
-@@ -2801,7 +2801,7 @@ static void cpuset_bind(struct cgroup_subsys_state *root_css)
- 		top_cpuset.mems_allowed = top_cpuset.effective_mems;
- 	}
- 
--	spin_unlock_irq(&callback_lock);
-+	raw_spin_unlock_irq(&callback_lock);
- 	mutex_unlock(&cpuset_mutex);
- }
- 
-@@ -2902,12 +2902,12 @@ hotplug_update_tasks_legacy(struct cpuset *cs,
- {
- 	bool is_empty;
- 
--	spin_lock_irq(&callback_lock);
-+	raw_spin_lock_irq(&callback_lock);
- 	cpumask_copy(cs->cpus_allowed, new_cpus);
- 	cpumask_copy(cs->effective_cpus, new_cpus);
- 	cs->mems_allowed = *new_mems;
- 	cs->effective_mems = *new_mems;
--	spin_unlock_irq(&callback_lock);
-+	raw_spin_unlock_irq(&callback_lock);
- 
- 	/*
- 	 * Don't call update_tasks_cpumask() if the cpuset becomes empty,
-@@ -2944,10 +2944,10 @@ hotplug_update_tasks(struct cpuset *cs,
- 	if (nodes_empty(*new_mems))
- 		*new_mems = parent_cs(cs)->effective_mems;
- 
--	spin_lock_irq(&callback_lock);
-+	raw_spin_lock_irq(&callback_lock);
- 	cpumask_copy(cs->effective_cpus, new_cpus);
- 	cs->effective_mems = *new_mems;
--	spin_unlock_irq(&callback_lock);
-+	raw_spin_unlock_irq(&callback_lock);
- 
- 	if (cpus_updated)
- 		update_tasks_cpumask(cs);
-@@ -3102,7 +3102,7 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
- 
- 	/* synchronize cpus_allowed to cpu_active_mask */
- 	if (cpus_updated) {
--		spin_lock_irq(&callback_lock);
-+		raw_spin_lock_irq(&callback_lock);
- 		if (!on_dfl)
- 			cpumask_copy(top_cpuset.cpus_allowed, &new_cpus);
- 		/*
-@@ -3122,17 +3122,17 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
- 			}
- 		}
- 		cpumask_copy(top_cpuset.effective_cpus, &new_cpus);
--		spin_unlock_irq(&callback_lock);
-+		raw_spin_unlock_irq(&callback_lock);
- 		/* we don't mess with cpumasks of tasks in top_cpuset */
- 	}
- 
- 	/* synchronize mems_allowed to N_MEMORY */
- 	if (mems_updated) {
--		spin_lock_irq(&callback_lock);
-+		raw_spin_lock_irq(&callback_lock);
- 		if (!on_dfl)
- 			top_cpuset.mems_allowed = new_mems;
- 		top_cpuset.effective_mems = new_mems;
--		spin_unlock_irq(&callback_lock);
-+		raw_spin_unlock_irq(&callback_lock);
- 		update_tasks_nodemask(&top_cpuset);
- 	}
- 
-@@ -3233,11 +3233,11 @@ void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
- {
- 	unsigned long flags;
- 
--	spin_lock_irqsave(&callback_lock, flags);
-+	raw_spin_lock_irqsave(&callback_lock, flags);
- 	rcu_read_lock();
- 	guarantee_online_cpus(task_cs(tsk), pmask);
- 	rcu_read_unlock();
--	spin_unlock_irqrestore(&callback_lock, flags);
-+	raw_spin_unlock_irqrestore(&callback_lock, flags);
- }
- 
- void cpuset_cpus_allowed_fallback(struct task_struct *tsk)
-@@ -3285,11 +3285,11 @@ nodemask_t cpuset_mems_allowed(struct task_struct *tsk)
- 	nodemask_t mask;
- 	unsigned long flags;
- 
--	spin_lock_irqsave(&callback_lock, flags);
-+	raw_spin_lock_irqsave(&callback_lock, flags);
- 	rcu_read_lock();
- 	guarantee_online_mems(task_cs(tsk), &mask);
- 	rcu_read_unlock();
--	spin_unlock_irqrestore(&callback_lock, flags);
-+	raw_spin_unlock_irqrestore(&callback_lock, flags);
- 
- 	return mask;
- }
-@@ -3381,14 +3381,14 @@ bool __cpuset_node_allowed(int node, gfp_t gfp_mask)
- 		return true;
- 
- 	/* Not hardwall and node outside mems_allowed: scan up cpusets */
--	spin_lock_irqsave(&callback_lock, flags);
-+	raw_spin_lock_irqsave(&callback_lock, flags);
- 
- 	rcu_read_lock();
- 	cs = nearest_hardwall_ancestor(task_cs(current));
- 	allowed = node_isset(node, cs->mems_allowed);
- 	rcu_read_unlock();
- 
--	spin_unlock_irqrestore(&callback_lock, flags);
-+	raw_spin_unlock_irqrestore(&callback_lock, flags);
- 	return allowed;
- }
- 
+ 		/* No match - a current sched domain not in new doms_new[] */
+ 		detach_destroy_domains(doms_cur[i]);
 -- 
 2.17.2
 
