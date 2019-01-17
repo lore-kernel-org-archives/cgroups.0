@@ -1,52 +1,73 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH v2 5/5] psi: introduce psi monitor
-Date: Thu, 17 Jan 2019 09:13:14 +0100
-Message-ID: <20190117081314.GD10486@hirez.programming.kicks-ass.net>
-References: <20190110220718.261134-1-surenb@google.com>
- <20190110220718.261134-6-surenb@google.com>
- <20190114102137.GB14054@worktop.programming.kicks-ass.net>
- <CAJuCfpGUWs0E9oPUjPTNm=WhPJcE_DBjZCtCiaVu5WXabKRW6A@mail.gmail.com>
- <20190116132446.GF10803@hirez.programming.kicks-ass.net>
- <CAJuCfpEJW6Uq4GSGEGLKOM4K7ySHUeTGrSUGM1+EJSQ16d8SJg@mail.gmail.com>
- <20190116191728.GA1380@cmpxchg.org>
-Mime-Version: 1.0
+From: Juri Lelli <juri.lelli@redhat.com>
+Subject: [PATCH v6 0/5] sched/deadline: fix cpusets bandwidth accounting
+Date: Thu, 17 Jan 2019 09:47:34 +0100
+Message-ID: <20190117084739.17078-1-juri.lelli@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=Y4uxIJ+NmKS4i1/qDFOJcjGOWHA5fYMzGvsJDpvLNMk=; b=Gb3Z2a5/SgLc7y6cDeKRsD6/b
-        UGyiZaiVvFOZBwXSKjGIYRsQNt6oZrxmzioVR9lNQDxgqinTD+S5lDERHN1ve0DaliP4AwKyITgCM
-        A+UCHwHAEEHzqwPGKMUytNEjA1IxycEObBOFm2SKjW9QKxa4IhnfAgppSs+foYr4ZPx9gJsX9BStQ
-        sBlgLXbY4Pr9Ohz+5g94z2E7eFXauAu5PKKbSLuqAPScIthGvavDjNylmSQvJQsT1cvRNkkMqFHVK
-        cfKQWe6maqz0v82+VU2+yFeXHBL3SWB5DG6pWbwzELav8dUpHCYgZnkf3mU7rYJrOR8kw1h8KeQfb
-    
-Content-Disposition: inline
-In-Reply-To: <20190116191728.GA1380@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Suren Baghdasaryan <surenb@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, lizefan@huawei.com, axboe@kernel.dk, dennis@kernel.org, Dennis Zhou <dennisszhou@gmail.com>, Ingo Molnar <mingo@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, linux-mm <linux-mm@kvack.org>, linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, kernel-team@android.com
+To: peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org
+Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>
 
-On Wed, Jan 16, 2019 at 02:17:28PM -0500, Johannes Weiner wrote:
+Hi,
 
-> > > Also, you probably want to use atomic_t for g->polling, because we
-> > > (sadly) have architectures where regular stores and atomic ops don't
-> > > work 'right'.
-> > 
-> > Oh, I see. Will do. Thanks!
-> 
-> Yikes, that's news to me too. Good to know.
+v6 of a series of patches, originally authored by Mathieu, with the intent
+of fixing a long standing issue of SCHED_DEADLINE bandwidth accounting.
+As originally reported by Steve [1], when hotplug and/or (certain)
+cpuset reconfiguration operations take place, DEADLINE bandwidth
+accounting information is lost since root domains are destroyed and
+recreated.
 
-See Documentation/atomic_t.txt, specifically the atomic_set() part in
-SEMANTICS.
+Mathieu's approach is based on restoring bandwidth accounting info on
+the newly created root domains by iterating through the (DEADLINE) tasks
+belonging to the configured cpuset(s).
 
-Archs that suffer this include (but are not limited to): parisc,
-sparc32-smp, something arc.
+Apart from some minor refactoring needed to rebase the set on top of
+Waiman Long's cpuset for cgroup series (now mainline), two changes worth
+of notice:
 
-And yes, I would dearly love to kill all SMP support for architectures
-like that..
+ - added some more descriptive comments about why callback_lock gives
+   the holder read-only access to cpusets [Steve] 04/05
+ - call cgroup_enable_task_cg_list if we need to traverse the list of
+   tasks belonging to a particular cgroup (to rebuild its bandwidth),
+   but such list is not yet ready (this can for example happen if CPUs
+   are hotplugged during early boot stages) 05/05
+
+Set also available at
+
+ https://github.com/jlelli/linux.git fixes/deadline/root-domain-accounting-v6
+
+Thanks,
+
+- Juri
+
+[1] https://lkml.org/lkml/2016/2/3/966
+
+Juri Lelli (1):
+  cgroup/cpuset: make callback_lock raw
+
+Mathieu Poirier (4):
+  sched/topology: Adding function partition_sched_domains_locked()
+  sched/core: Streamlining calls to task_rq_unlock()
+  sched/core: Prevent race condition between cpuset and
+    __sched_setscheduler()
+  cpuset: Rebuild root domain deadline accounting information
+
+ include/linux/cgroup.h         |   1 +
+ include/linux/cpuset.h         |   6 ++
+ include/linux/sched.h          |   5 ++
+ include/linux/sched/deadline.h |   8 ++
+ include/linux/sched/topology.h |  10 +++
+ kernel/cgroup/cgroup.c         |   2 +-
+ kernel/cgroup/cpuset.c         | 159 +++++++++++++++++++++++++--------
+ kernel/sched/core.c            |  34 ++++---
+ kernel/sched/deadline.c        |  31 +++++++
+ kernel/sched/sched.h           |   3 -
+ kernel/sched/topology.c        |  32 +++++--
+ 11 files changed, 234 insertions(+), 57 deletions(-)
+
+-- 
+2.17.2
+
