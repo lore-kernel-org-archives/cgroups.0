@@ -1,44 +1,50 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH rdma-next] IB/core: Simplify rdma cgroup registration
-Date: Fri, 18 Jan 2019 08:16:06 -0800
-Message-ID: <20190118161606.GD50184@devbig004.ftw2.facebook.com>
-References: <20190117181415.28566-1-leon@kernel.org>
+Subject: Re: [PATCH v6 0/5] sched/deadline: fix cpusets bandwidth accounting
+Date: Fri, 18 Jan 2019 08:17:39 -0800
+Message-ID: <20190118161739.GE50184@devbig004.ftw2.facebook.com>
+References: <20190117084739.17078-1-juri.lelli@redhat.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=rsOU4IZ09Qp6Nmi/lJ+hFBR4kFX8sxK+HJmA6AHo+Ns=;
-        b=Iuso1rGlXoQmbfJ0AgUzCBwQan1kkY55FpIK9KhQkHxm0VBw9UuO1YzJ6/kwqi6vrF
-         dsCdMI6DOOhiqcuAJAcbxysEF0B3eiCCk4qyqEY6sXYoFJwi+hh5gEUJ8fTvB/ecV4Df
-         tvMV64XxQZPWxf60iVvuIF06t/uH9KrhHbannuyvsSIS19kv/iHa1S3598f9PAkUbaCh
-         kAGU6VPAdZXioKuk4ZKuRB1RhS+NqT5kxMkl0kV5DGdmbH6fhFC14oI6MgoId34F1FpI
-         /7QVvZOLl64qP6DjCM1PJRfRI/BKH84Jr+hK1Ogc72CBRqZmELSPJGhVADAi+5Kwdwks
-         1fKw==
+        bh=jxu0a1nkN3ZpzOxZbKmUrpD1yZ9zO9HuQcvnymZzhI0=;
+        b=jz72BFxjt22s+qMlTfP1yKEqVRPB4cfDgk/N/nj7blKvYgkPWP3VEgyg0DStL144Ci
+         Y6XYdYW0kyK4R2xkoyfThcbL7ufeBvSTiRZtmq1k1wowHcaQUqkt9efm3izvgfx3Si75
+         MrhJwiQqrbLUZUer7Xu0a9lhkKS6OSz69ApO+zA+N8cuI8TrPIm5KHyeCKszHPq72J7x
+         BGkkdmpSnHuyulZPo0PvEFMac2Ju7bvPqY15ueTozLBt/XvKiRifhygeGNv/7po6/oPL
+         OX9ddJAvoxnxl96g9+XnRAu5+ttXnU7SHF+Y08Pl8CxTHupiwi+F2vQdi+g6p0WsWSEK
+         h2lw==
 Content-Disposition: inline
-In-Reply-To: <20190117181415.28566-1-leon@kernel.org>
+In-Reply-To: <20190117084739.17078-1-juri.lelli@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Doug Ledford <dledford@redhat.com>, Jason Gunthorpe <jgg@mellanox.com>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Parav Pandit <parav@mellanox.com>, RDMA mailing list <linux-rdma@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, cgroups <cgroups@vger.kernel.org>, Leon Romanovsky <leonro@mellanox.com>
+To: Juri Lelli <juri.lelli@redhat.com>
+Cc: peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org
 
-On Thu, Jan 17, 2019 at 08:14:15PM +0200, Leon Romanovsky wrote:
-> From: Parav Pandit <parav@mellanox.com>
+On Thu, Jan 17, 2019 at 09:47:34AM +0100, Juri Lelli wrote:
+> Hi,
 > 
-> RDMA cgroup registration routine always returns success,
-> so simplify function to be void and run clang formatter
-> over whole CONFIG_CGROUP_RDMA art of core_priv.h.
+> v6 of a series of patches, originally authored by Mathieu, with the intent
+> of fixing a long standing issue of SCHED_DEADLINE bandwidth accounting.
+> As originally reported by Steve [1], when hotplug and/or (certain)
+> cpuset reconfiguration operations take place, DEADLINE bandwidth
+> accounting information is lost since root domains are destroyed and
+> recreated.
 > 
-> This reduces unwinding error path for regular registration and
-> future net namespace change functionality for rdma device.
+> Mathieu's approach is based on restoring bandwidth accounting info on
+> the newly created root domains by iterating through the (DEADLINE) tasks
+> belonging to the configured cpuset(s).
 > 
-> Signed-off-by: Parav Pandit <parav@mellanox.com>
-> Signed-off-by: Leon Romanovsky <leonro@mellanox.com>
+> Apart from some minor refactoring needed to rebase the set on top of
+> Waiman Long's cpuset for cgroup series (now mainline), two changes worth
+> of notice:
 
-Acked-by: Tejun Heo <tj@kernel.org>
+Generally looks good to me but can you please ask Waiman to take a
+look?
 
 Thanks.
 
