@@ -1,171 +1,130 @@
-From: Leon Romanovsky <leon@kernel.org>
-Subject: [PATCH rdma-next] IB/core: Simplify rdma cgroup registration
-Date: Thu, 17 Jan 2019 20:14:15 +0200
-Message-ID: <20190117181415.28566-1-leon@kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From: Andrea Righi <righi.andrea@gmail.com>
+Subject: [RFC PATCH 0/3] cgroup: fsio throttle controller
+Date: Fri, 18 Jan 2019 11:31:24 +0100
+Message-ID: <20190118103127.325-1-righi.andrea@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1547748881;
-        bh=YUoXJ+YfyP/8CGhuS8JfQatsoIOW6rsIMgb+J5JGTzs=;
-        h=From:To:Cc:Subject:Date:From;
-        b=kbow17SJotJvNv252MQbz3snEhJum36zCrwT4c+vZ9RFItrJkEMg0p3gbQKX8rhcL
-         bLjFQRw1wpsn3aeGLvbew50xnyobZulWlImeLMkqYhheZTZ2iwOOukyzTY3mPq0Pkz
-         ky3Odhac+Nl71qzhpyupEEaAw5P6Wy7rOS6xC9Gc=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=DG6bk1ejVh8rxbtQA/jlQO7ic8ssgX5N3kx62jr5skA=;
+        b=FktayEwlolfuR8urYX2+zd96A4rZG4Xk3Kq6P8EQ+r7A6kUQKipD/GNTK6QUGai9Vz
+         4WJ2wCTF/PnrPUEoVg8dPqihrxX2iqKxowv6My5G7AiV0GVPAjDOitj1LKaV6uzE0jld
+         O+j/cwrmmfzXlyQINSFotgNUX/aMRdIBjYNcbX3fhi8XbqNFjAUsFzLpDJ0ELFL2ysWQ
+         u7/tCE//kFxCdtOAL/CnhePTdXtEvpeVDE4l8kquh5OsA8QoCrcbOPoz7RDjLA3akHT7
+         QISJZt6GtUQza+GZOdkEe2r23LqQidFoBZfHFSiBJtkdc4pL27+Gmt7V4OUdG1kFOXf8
+         3XRQ==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Doug Ledford <dledford@redhat.com>, Jason Gunthorpe <jgg@mellanox.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: Parav Pandit <parav@mellanox.com>, RDMA mailing list <linux-rdma@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, cgroups <cgroups@vger.kernel.org>, Leon Romanovsky <leonro@mellanox.com>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Vivek Goyal <vgoyal@redhat.com>, Josef Bacik <josef@toxicpanda.com>, Dennis Zhou <dennis@kernel.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Parav Pandit <parav@mellanox.com>
+This is a redesign of my old cgroup-io-throttle controller:
+https://lwn.net/Articles/330531/
 
-RDMA cgroup registration routine always returns success,
-so simplify function to be void and run clang formatter
-over whole CONFIG_CGROUP_RDMA art of core_priv.h.
+I'm resuming this old patch to point out a problem that I think is still
+not solved completely.
 
-This reduces unwinding error path for regular registration and
-future net namespace change functionality for rdma device.
+= Problem =
 
-Signed-off-by: Parav Pandit <parav@mellanox.com>
-Signed-off-by: Leon Romanovsky <leonro@mellanox.com>
-----
-Sorry for resend, now with relevant people in TO and CC
----
- drivers/infiniband/core/cgroup.c    |  5 ++---
- drivers/infiniband/core/core_priv.h | 17 +++++++++++------
- drivers/infiniband/core/device.c    |  8 +-------
- include/linux/cgroup_rdma.h         |  2 +-
- kernel/cgroup/rdma.c                |  5 +----
- 5 files changed, 16 insertions(+), 21 deletions(-)
+The io.max controller works really well at limiting synchronous I/O
+(READs), but a lot of I/O requests are initiated outside the context of
+the process that is ultimately responsible for its creation (e.g.,
+WRITEs).
 
-diff --git a/drivers/infiniband/core/cgroup.c b/drivers/infiniband/core/cgroup.c
-index 126ac5f99db7..388fd04e5f63 100644
---- a/drivers/infiniband/core/cgroup.c
-+++ b/drivers/infiniband/core/cgroup.c
-@@ -21,12 +21,11 @@
-  * Register with the rdma cgroup. Should be called before
-  * exposing rdma device to user space applications to avoid
-  * resource accounting leak.
-- * Returns 0 on success or otherwise failure code.
-  */
--int ib_device_register_rdmacg(struct ib_device *device)
-+void ib_device_register_rdmacg(struct ib_device *device)
- {
- 	device->cg_device.name = device->name;
--	return rdmacg_register_device(&device->cg_device);
-+	rdmacg_register_device(&device->cg_device);
- }
+Throttling at the block layer in some cases is too late and we may end
+up slowing down processes that are not responsible for the I/O that
+is being processed at that level.
 
- /**
-diff --git a/drivers/infiniband/core/core_priv.h b/drivers/infiniband/core/core_priv.h
-index a3d14cb1f9d1..cda2db1add39 100644
---- a/drivers/infiniband/core/core_priv.h
-+++ b/drivers/infiniband/core/core_priv.h
-@@ -115,7 +115,7 @@ void ib_cache_cleanup_one(struct ib_device *device);
- void ib_cache_release_one(struct ib_device *device);
+= Proposed solution =
 
- #ifdef CONFIG_CGROUP_RDMA
--int ib_device_register_rdmacg(struct ib_device *device);
-+void ib_device_register_rdmacg(struct ib_device *device);
- void ib_device_unregister_rdmacg(struct ib_device *device);
+The main idea of this controller is to split I/O measurement and I/O
+throttling: I/O is measured at the block layer for READS, at page cache
+(dirty pages) for WRITEs, and processes are limited while they're
+generating I/O at the VFS level, based on the measured I/O.
 
- int ib_rdmacg_try_charge(struct ib_rdmacg_object *cg_obj,
-@@ -126,21 +126,26 @@ void ib_rdmacg_uncharge(struct ib_rdmacg_object *cg_obj,
- 			struct ib_device *device,
- 			enum rdmacg_resource_type resource_index);
- #else
--static inline int ib_device_register_rdmacg(struct ib_device *device)
--{ return 0; }
-+static inline void ib_device_register_rdmacg(struct ib_device *device)
-+{
-+}
+= Example =
 
- static inline void ib_device_unregister_rdmacg(struct ib_device *device)
--{ }
-+{
-+}
+Here's a trivial example: create 2 cgroups, set an io.max limit of
+10MB/s, run a write-intensive workload on both and after a while, from a
+root cgroup, run "sync".
 
- static inline int ib_rdmacg_try_charge(struct ib_rdmacg_object *cg_obj,
- 				       struct ib_device *device,
- 				       enum rdmacg_resource_type resource_index)
--{ return 0; }
-+{
-+	return 0;
-+}
+ # cat /proc/self/cgroup
+ 0::/cg1
+ # fio --rw=write --bs=1M --size=32M --numjobs=16 --name=seeker --time_based --runtime=30
 
- static inline void ib_rdmacg_uncharge(struct ib_rdmacg_object *cg_obj,
- 				      struct ib_device *device,
- 				      enum rdmacg_resource_type resource_index)
--{ }
-+{
-+}
- #endif
+ # cat /proc/self/cgroup
+ 0::/cg2
+ # fio --rw=write --bs=1M --size=32M --numjobs=16 --name=seeker --time_based --runtime=30
 
- static inline bool rdma_is_upper_dev_rcu(struct net_device *dev,
-diff --git a/drivers/infiniband/core/device.c b/drivers/infiniband/core/device.c
-index fe06c65e8039..f8e6b13fd6a6 100644
---- a/drivers/infiniband/core/device.c
-+++ b/drivers/infiniband/core/device.c
-@@ -605,12 +605,7 @@ int ib_register_device(struct ib_device *device, const char *name)
+ - io.max controller:
 
- 	device->index = __dev_new_index();
+ # echo "259:0 rbps=10485760 wbps=10485760" > /sys/fs/cgroup/unified/cg1/io.max
+ # echo "259:0 rbps=10485760 wbps=10485760" > /sys/fs/cgroup/unified/cg2/io.max
 
--	ret = ib_device_register_rdmacg(device);
--	if (ret) {
--		dev_warn(&device->dev,
--			 "Couldn't register device with rdma cgroup\n");
--		goto dev_cleanup;
--	}
-+	ib_device_register_rdmacg(device);
+ # cat /proc/self/cgroup
+ 0::/
+ # time sync
 
- 	ret = ib_device_register_sysfs(device);
- 	if (ret) {
-@@ -633,7 +628,6 @@ int ib_register_device(struct ib_device *device, const char *name)
+ real	0m51,241s
+ user	0m0,000s
+ sys	0m0,113s
 
- cg_cleanup:
- 	ib_device_unregister_rdmacg(device);
--dev_cleanup:
- 	cleanup_device(device);
- out:
- 	mutex_unlock(&device_mutex);
-diff --git a/include/linux/cgroup_rdma.h b/include/linux/cgroup_rdma.h
-index e94290b29e99..ef1bae2983f3 100644
---- a/include/linux/cgroup_rdma.h
-+++ b/include/linux/cgroup_rdma.h
-@@ -39,7 +39,7 @@ struct rdmacg_device {
-  * APIs for RDMA/IB stack to publish when a device wants to
-  * participate in resource accounting
-  */
--int rdmacg_register_device(struct rdmacg_device *device);
-+void rdmacg_register_device(struct rdmacg_device *device);
- void rdmacg_unregister_device(struct rdmacg_device *device);
+Ideally "sync" should complete almost immediately, because the root
+cgroup is unlimited and it's not doing any I/O at all, but instead it's
+blocked for more than 50 sec with io.max, because the writeback is
+throttled to satisfy the io.max limits.
 
- /* APIs for RDMA/IB stack to charge/uncharge pool specific resources */
-diff --git a/kernel/cgroup/rdma.c b/kernel/cgroup/rdma.c
-index d3bbb757ee49..1d75ae7f1cb7 100644
---- a/kernel/cgroup/rdma.c
-+++ b/kernel/cgroup/rdma.c
-@@ -313,10 +313,8 @@ EXPORT_SYMBOL(rdmacg_try_charge);
-  * If IB stack wish a device to participate in rdma cgroup resource
-  * tracking, it must invoke this API to register with rdma cgroup before
-  * any user space application can start using the RDMA resources.
-- * Returns 0 on success or EINVAL when table length given is beyond
-- * supported size.
-  */
--int rdmacg_register_device(struct rdmacg_device *device)
-+void rdmacg_register_device(struct rdmacg_device *device)
- {
- 	INIT_LIST_HEAD(&device->dev_node);
- 	INIT_LIST_HEAD(&device->rpools);
-@@ -324,7 +322,6 @@ int rdmacg_register_device(struct rdmacg_device *device)
- 	mutex_lock(&rdmacg_mutex);
- 	list_add_tail(&device->dev_node, &rdmacg_devices);
- 	mutex_unlock(&rdmacg_mutex);
--	return 0;
- }
- EXPORT_SYMBOL(rdmacg_register_device);
+- fsio controller:
 
---
-2.19.1
+ # echo "259:0 10 10" > /sys/fs/cgroup/unified/cg1/fsio.max_mbs
+ # echo "259:0 10 10" > /sys/fs/cgroup/unified/cg2/fsio.max_mbs
+
+ [you can find details about the syntax in the documentation patch]
+
+ # cat /proc/self/cgroup
+ 0::/
+ # time sync
+
+ real	0m0,146s
+ user	0m0,003s
+ sys	0m0,001s
+
+= Questions =
+
+Q: Do we need another controller?
+A: Probably no, I think it would be better to integrate this policy (or
+   something similar) in the current blkio controller, this is just to
+   highlight the problem and get some ideas on how to address it.
+
+Q: What about proportional limits / latency?
+A: It should be trivial to add latency-based limits if we integrate this in the
+   current I/O controller. About proportional limits (weights), they're
+   strictly related to I/O scheduling and since this controller doesn't touch
+   I/O dispatching policies it's not trivial to implement proportional limits
+   (bandwidth limiting is definitely more straightforward).
+
+Q: Applying delays at the VFS layer doesn't prevent I/O spikes during
+   writeback, right?
+A: Correct, the tradeoff here is to tolerate I/O bursts during writeback to
+   avoid priority inversion problems in the system.
+
+Andrea Righi (3):
+  fsio-throttle: documentation
+  fsio-throttle: controller infrastructure
+  fsio-throttle: instrumentation
+
+ Documentation/cgroup-v1/fsio-throttle.txt | 142 +++++++++
+ block/blk-core.c                          |  10 +
+ include/linux/cgroup_subsys.h             |   4 +
+ include/linux/fsio-throttle.h             |  43 +++
+ include/linux/writeback.h                 |   7 +-
+ init/Kconfig                              |  11 +
+ kernel/cgroup/Makefile                    |   1 +
+ kernel/cgroup/fsio-throttle.c             | 501 ++++++++++++++++++++++++++++++
+ mm/filemap.c                              |  20 +-
+ mm/page-writeback.c                       |  14 +-
+ 10 files changed, 749 insertions(+), 4 deletions(-)
 
