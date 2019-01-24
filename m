@@ -1,60 +1,53 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
+From: Chris Down <chris@chrisdown.name>
 Subject: Re: [PATCH] mm: Move maxable seq_file logic into a single place
-Date: Thu, 24 Jan 2019 11:09:35 -0500
-Message-ID: <20190124160935.GB12436@cmpxchg.org>
+Date: Thu, 24 Jan 2019 11:56:34 -0500
+Message-ID: <20190124165634.GA13549@chrisdown.name>
 References: <20190124061718.GA15486@chrisdown.name>
+ <20190124160935.GB12436@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        d=chrisdown.name; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=cGQ/TMSWGm6i6QwmVNwOtbEz6FvQrTiXlzQK44rHJwA=;
-        b=Vp9BWMMNtSD8xSzhnjEWyK0/Ha4ZrmqLfO7rXLLtXOYMU6a5cu7VVhnyEe8K2lx2I1
-         /rfcdNbrUq1qGtrnNo3W8bcy/7whXZ+wPvxFaBn4lNJ35C48xU8cfqmJs7PBzVTBE1PU
-         VqdUExIZne/b7ck8gktsq9gjbmK6VSzEocsS8MF+941BDqwcdCht1y+Sov8y6iEyBc7L
-         wVLvILvIkOQoHBQEQAD8r2B1RsPLkuHQCgTxmTknmdIuZGpUGeC24ObTfdYapJuoOBru
-         EWvTKEnOvE/3v7nz9v9Lbfzu2ViuHKN1YOFWKMSUfAkfgBsV4fh89kgL/iYCAA2MDmSN
-         Tv6Q==
+        bh=/n5RO3ynJj5/bNE9tmIzk4EgTVnmQBOVPbiCNZWucCY=;
+        b=YKWa4jgiYZ79VkYeO8kCZgz1L1IMeQnAHkMW+GVd2NfaNUXvRA6B7g/3RPcFoQVc6O
+         0tvrfJrA8IDHOdaGmgsDJ8trxGoio6EUvlkDrQBuR0wQIpBM/6QhLqHCdRbvUJlt9tTd
+         PZ7QeIDKBV9N5XPgf+MVl1Ix8wDc2uxHANCMk=
 Content-Disposition: inline
-In-Reply-To: <20190124061718.GA15486@chrisdown.name>
+In-Reply-To: <20190124160935.GB12436@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 Content-Transfer-Encoding: 7bit
-To: Chris Down <chris@chrisdown.name>
+To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-On Thu, Jan 24, 2019 at 01:17:18AM -0500, Chris Down wrote:
-> memcg has a significant number of files exposed to kernfs where their
-> value is either exposed directly or is "max" in the case of
-> PAGE_COUNTER_MAX.
-> 
-> There's a fair amount of duplicated code here, since each file involves
-> turning a seq_file to a css, getting the memcg from the css, safely
-> reading the counter value, and then doing the right thing depending on
-> whether the value is PAGE_COUNTER_MAX or not.
-> 
-> This patch adds the macro DEFINE_MEMCG_MAX_OR_VAL, which defines and
-> implements a generic way to do this work, avoiding fragmenting logic.
-> 
-> Signed-off-by: Chris Down <chris@chrisdown.name>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Roman Gushchin <guro@fb.com>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-mm@kvack.org
-> Cc: kernel-team@fb.com
-> ---
-> mm/memcontrol.c | 78 ++++++++++++-------------------------------------
-> 1 file changed, 18 insertions(+), 60 deletions(-)
+Johannes Weiner writes:
+>I think this increases complexity more than it saves LOC,
+>unfortunately.
+>
+>The current situation is a bit repetitive, but much more obviously
+>correct. And we're not planning on adding many more of those memcg
+>interface files, so I this doesn't seem to be an improvement re:
+>maintainability and future extensibility of the code.
 
-I think this increases complexity more than it saves LOC,
-unfortunately.
+Hmm, my main goal in the patch was not really reduction of LOC, but more around 
+centralising logic so that it's clear where these functions are unique and 
+where they are completely the same. My initial reaction upon reading these was 
+mostly to feel like I'm missing something due to the large amount of similarity 
+between them, wondering if the change in mem_cgroup/page_counter access is 
+really the only thing to look at, so my goal was primarily to reduce confusion 
+(although of course this is subjective, I can also see your point about how 
+having "memory.low" and the like without context can also be confusing).
 
-The current situation is a bit repetitive, but much more obviously
-correct. And we're not planning on adding many more of those memcg
-interface files, so I this doesn't seem to be an improvement re:
-maintainability and future extensibility of the code.
+I think using a macro is not ideal, but unfortunately without it a lot of the 
+complexity can't really be abstracted easily.
+
+If not this, what would you think about a patch that adds two new functions:
+
+1. mem_cgroup_from_seq
+2. mem_cgroup_write_max_or_val
+
+This won't be able to reduce as much of the overlap as the macro, but it still 
+will centralise a lot of the logic.
