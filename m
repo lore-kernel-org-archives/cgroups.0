@@ -1,73 +1,53 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
-Date: Thu, 24 Jan 2019 16:51:21 +0100
-Message-ID: <20190124155121.GQ4087@dhcp22.suse.cz>
+Date: Thu, 24 Jan 2019 11:00:10 -0500
+Message-ID: <20190124160009.GA12436@cmpxchg.org>
 References: <20190123223144.GA10798@chrisdown.name>
  <20190124082252.GD4087@dhcp22.suse.cz>
- <20190124152122.GG50184@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=hCxh8cKbdjdveceYE2dpaNIbo3dOi85oEdfOpSI1M70=;
+        b=aOZLgnWFCiEp/DgAqJ0ZNWqNTjzcc5vJt9MAo9H/VK+bDPLL728DCs/dQTYumayW9b
+         hwEBKayaUcXB/Sm2wVblmZUXpmcYCgw5srU72fEnOiwv6GvjLFt7QQLCA15lf/iLKQTe
+         I2LZ9iXuNZVAc9x6w0w1nXX6r3sUSWtCQcX4vldjXpJSKymA1bOwkAdtqaA3BVwhK1pi
+         6XP/Xvmi4a2Fkd60WeR1k85nxSzSrbRmyv8/HOAf2fs9EJyFHmoNqroNwCqPIdMxMz4e
+         dNaWR2UqiCiGbVN1MaIK7kUOEqQUqWZbXjT6WX1XVcLMZ5aPHFeN5L19jQqp84gLGZ8p
+         iglw==
 Content-Disposition: inline
-In-Reply-To: <20190124152122.GG50184@devbig004.ftw2.facebook.com>
+In-Reply-To: <20190124082252.GD4087@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-On Thu 24-01-19 07:21:22, Tejun Heo wrote:
-> Hello, Michal.
+On Thu, Jan 24, 2019 at 09:22:52AM +0100, Michal Hocko wrote:
+> On Wed 23-01-19 17:31:44, Chris Down wrote:
+> > Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 > 
-> On Thu, Jan 24, 2019 at 09:22:52AM +0100, Michal Hocko wrote:
-> > I do not think we can do that for two reasons. It breaks the existing
-> > semantic userspace might depend on and more importantly this is not a
-> > correct behavior IMO.
-> 
-> This is a valid concern but I'll come back to this later.
-> 
-> > You have to realize that stats are hierarchical because that is how we
-> > account. Events represent a way to inform that something has happened at
-> > the specific level of the tree though. If you do not setup low/high/max
-> 
-> This isn't true.  e.g. cgroup.events's populated event is
-> hierarchical.  Everything in cgroup should be hierarchical by default.
-> 
-> > limit then you simply cannot expect to be informed those get hit because
-> > they cannot by definition. Or put it other way, if you are waiting for
-> > those events you really want to know the (sub)tree they happened and if
-> > you propagate the event up the hierarchy you have hard time to tell that
-> > (you would basically have to exclude all but the lowest one and that is
-> > an awkward semantic at best.
-> 
-> I don't think it's a good idea to argue this for each piece of
-> information.  Again, everything should be hierarchical unless there
-> are clear and strong reasons against;
+> btw. I do not see this patch posted anywhere yet it already comes with
+> an ack. Have I just missed a previous version?
 
-And I would argue that cgroups.events with its populated event is a
-different thing because that is inherently a hierarchical property.  If
-you compare that to low, min, max and oom those are events very specific
-to the particular level of the hierarchy because it is an action at that
-level that the event informs about. E.g. max event down the hierarchy is
-a completely different thing from the upper level.  That sounds like a
-pretty solid reason to differentiate here.
+I reviewed it offline before Chris sent it out.
 
-> otherwise, we end up with random
-> mix of hierarchical and flat behaviors, something that we want to
-> avoid the most - remember .use_hierarchy?.
-> 
-> > Maybe we want to document this better but I do not see we are going to
-> > change the behavior.
-> 
-> I beg you to reconsider.  This was a clear oversight and the cgroup2
-> usage is still relatively limited.  We sure can add local-specific
-> counters if needed but must not mix local and hierarchical counters
-> without a clear way to tell what's what.
+I agree with the sentiment that the non-hierarchical behavior was an
+oversight, not a design decision.
 
-If you really have a usecase for hierarchical events then I think the
-only way without breaking existing userspace is to add a new set of
-events. But I still believe that the current behavior makes a lot of
-sense.
--- 
-Michal Hocko
-SUSE Labs
+The arguments against the change don't convince me: the added
+difficulty of finding out local values is true for all other cgroup
+files as well. This is traded off with being able to detect any
+subtree state from the first level cgroups and drill down on-demand,
+without having to scan the entire tree on each monitoring interval.
+That's a trade-off we've made everywhere else, so this is simply an
+inconsistency, not a legitimate exception to the rule.
+
+We cannot fully eliminate a risk for regression, but it strikes me as
+highly unlikely, given the extremely young age of cgroup2-based system
+management and surrounding tooling.
+
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
