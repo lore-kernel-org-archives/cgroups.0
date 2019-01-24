@@ -1,7 +1,7 @@
 From: Suren Baghdasaryan <surenb@google.com>
-Subject: [PATCH v3 3/5] psi: introduce state_mask to represent stalled psi states
-Date: Thu, 24 Jan 2019 13:15:16 -0800
-Message-ID: <20190124211518.244221-4-surenb@google.com>
+Subject: [PATCH v3 1/5] fs: kernfs: add poll file operation
+Date: Thu, 24 Jan 2019 13:15:14 -0800
+Message-ID: <20190124211518.244221-2-surenb@google.com>
 References: <20190124211518.244221-1-surenb@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,13 +10,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Yle1TlNGJaGEEnORF+DKn94y7Tdky3DBMIMdCA8cBkQ=;
-        b=G5aiYxByVc6VsErIA8+F4qk2siELUvTdPPrbChQIOsAm83h4aweDW1EtGssVAsYcqr
-         d0Hbfi1U48XHWNKKSg6xfBhvQrj7g8/hZUrKv+aKhCRjAxjIsEjMdq9EtxxcRfVJu90f
-         BX6molsDxFs4E2ZxSEKUqzNfPjR4gcB67U8DPKVZujIWJXG+/xQti5Q/HhQ39OkRPKta
-         4qHw9QqImaawmIin18WKnJassSVIia4mg97ND/pwSl+bQs6LEJIkMU8ykdXNaM3OntUy
-         4wCAEHFwa73hdoSX8Xisl4JJso5mKIZzv+rz5PzXQafcVRCiPugAP22E9Ys7jJVMBrL2
-         ulKw==
+        bh=ucF1EwcLVxCtpPOBrQuqUFcO6ME+3ZXcCq84fU7zCQU=;
+        b=gygzfM8DMwdV2iIuQLyTUNZoqz3zBV3YtlUapmjclo6FC0Cojxkyvg4NivMng9lbsQ
+         UWdyeeLEfhPEp8uDGJi7V+xJ1r8fLv7cSF3AgCBMzvurwt/n6qyU4ar7Cg9qTtZeIxbU
+         J6YSkeKSSK0UPNMIulk/GIHII8GRmfVYhpB65NdU5mVAAkC5EC5Z9ITK8S75A88PP/rM
+         YCmvpjQontE64hJ0camuKp/QHj5ID+XU4FRhNKvHB2zo3jpM7bZb6q/XuMvwwy6vaDwK
+         BPTQ0nG+MGuEYAZ0eOa1zCAzJnqN3qOecuomYBNuInO5ONQIFkVFx7A78idtIZ3d2iHh
+         EAXA==
 In-Reply-To: <20190124211518.244221-1-surenb@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,152 +24,104 @@ Content-Type: text/plain; charset="us-ascii"
 To: gregkh@linuxfoundation.org
 Cc: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, axboe@kernel.dk, dennis@kernel.org, dennisszhou@gmail.com, mingo@redhat.com, peterz@infradead.org, akpm@linux-foundation.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@android.com, Suren Baghdasaryan <surenb@google.com>
 
-The psi monitoring patches will need to determine the same states as
-record_times(). To avoid calculating them twice, maintain a state mask
-that can be consulted cheaply. Do this in a separate patch to keep the
-churn in the main feature patch at a minimum.
-This adds 4-byte state_mask member into psi_group_cpu struct which
-results in its first cacheline-aligned part to become 52 bytes long.
-Add explicit values to enumeration element counters that affect
-psi_group_cpu struct size.
+From: Johannes Weiner <hannes@cmpxchg.org>
 
+Kernfs has a standardized poll/notification mechanism for waking all
+pollers on all fds when a filesystem node changes. To allow polling
+for custom events, add a .poll callback that can override the default.
+
+This is in preparation for pollable cgroup pressure files which have
+per-fd trigger configurations.
+
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 Signed-off-by: Suren Baghdasaryan <surenb@google.com>
 ---
- include/linux/psi_types.h |  9 ++++++---
- kernel/sched/psi.c        | 29 +++++++++++++++++++----------
- 2 files changed, 25 insertions(+), 13 deletions(-)
+ fs/kernfs/file.c       | 31 ++++++++++++++++++++-----------
+ include/linux/kernfs.h |  6 ++++++
+ 2 files changed, 26 insertions(+), 11 deletions(-)
 
-diff --git a/include/linux/psi_types.h b/include/linux/psi_types.h
-index 2cf422db5d18..762c6bb16f3c 100644
---- a/include/linux/psi_types.h
-+++ b/include/linux/psi_types.h
-@@ -11,7 +11,7 @@ enum psi_task_count {
- 	NR_IOWAIT,
- 	NR_MEMSTALL,
- 	NR_RUNNING,
--	NR_PSI_TASK_COUNTS,
-+	NR_PSI_TASK_COUNTS = 3,
- };
- 
- /* Task state bitmasks */
-@@ -24,7 +24,7 @@ enum psi_res {
- 	PSI_IO,
- 	PSI_MEM,
- 	PSI_CPU,
--	NR_PSI_RESOURCES,
-+	NR_PSI_RESOURCES = 3,
- };
- 
- /*
-@@ -41,7 +41,7 @@ enum psi_states {
- 	PSI_CPU_SOME,
- 	/* Only per-CPU, to weigh the CPU in the global average: */
- 	PSI_NONIDLE,
--	NR_PSI_STATES,
-+	NR_PSI_STATES = 6,
- };
- 
- struct psi_group_cpu {
-@@ -53,6 +53,9 @@ struct psi_group_cpu {
- 	/* States of the tasks belonging to this group */
- 	unsigned int tasks[NR_PSI_TASK_COUNTS];
- 
-+	/* Aggregate pressure state derived from the tasks */
-+	u32 state_mask;
+diff --git a/fs/kernfs/file.c b/fs/kernfs/file.c
+index f8d5021a652e..ae948aaa4c53 100644
+--- a/fs/kernfs/file.c
++++ b/fs/kernfs/file.c
+@@ -832,26 +832,35 @@ void kernfs_drain_open_files(struct kernfs_node *kn)
+  * to see if it supports poll (Neither 'poll' nor 'select' return
+  * an appropriate error code).  When in doubt, set a suitable timeout value.
+  */
++__poll_t kernfs_generic_poll(struct kernfs_open_file *of, poll_table *wait)
++{
++	struct kernfs_node *kn = kernfs_dentry_node(of->file->f_path.dentry);
++	struct kernfs_open_node *on = kn->attr.open;
 +
- 	/* Period time sampling buckets for each state of interest (ns) */
- 	u32 times[NR_PSI_STATES];
- 
-diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
-index fe24de3fbc93..2262d920295f 100644
---- a/kernel/sched/psi.c
-+++ b/kernel/sched/psi.c
-@@ -212,17 +212,17 @@ static bool test_state(unsigned int *tasks, enum psi_states state)
- static void get_recent_times(struct psi_group *group, int cpu, u32 *times)
++	poll_wait(of->file, &on->poll, wait);
++
++	if (of->event != atomic_read(&on->event))
++		return DEFAULT_POLLMASK|EPOLLERR|EPOLLPRI;
++
++	return DEFAULT_POLLMASK;
++}
++
+ static __poll_t kernfs_fop_poll(struct file *filp, poll_table *wait)
  {
- 	struct psi_group_cpu *groupc = per_cpu_ptr(group->pcpu, cpu);
--	unsigned int tasks[NR_PSI_TASK_COUNTS];
- 	u64 now, state_start;
-+	enum psi_states s;
- 	unsigned int seq;
--	int s;
-+	u32 state_mask;
+ 	struct kernfs_open_file *of = kernfs_of(filp);
+ 	struct kernfs_node *kn = kernfs_dentry_node(filp->f_path.dentry);
+-	struct kernfs_open_node *on = kn->attr.open;
++	__poll_t ret;
  
- 	/* Snapshot a coherent view of the CPU state */
- 	do {
- 		seq = read_seqcount_begin(&groupc->seq);
- 		now = cpu_clock(cpu);
- 		memcpy(times, groupc->times, sizeof(groupc->times));
--		memcpy(tasks, groupc->tasks, sizeof(groupc->tasks));
-+		state_mask = groupc->state_mask;
- 		state_start = groupc->state_start;
- 	} while (read_seqcount_retry(&groupc->seq, seq));
+ 	if (!kernfs_get_active(kn))
+-		goto trigger;
++		return DEFAULT_POLLMASK|EPOLLERR|EPOLLPRI;
  
-@@ -238,7 +238,7 @@ static void get_recent_times(struct psi_group *group, int cpu, u32 *times)
- 		 * (u32) and our reported pressure close to what's
- 		 * actually happening.
- 		 */
--		if (test_state(tasks, s))
-+		if (state_mask & (1 << s))
- 			times[s] += now - state_start;
+-	poll_wait(filp, &on->poll, wait);
++	if (kn->attr.ops->poll)
++		ret = kn->attr.ops->poll(of, wait);
++	else
++		ret = kernfs_generic_poll(of, wait);
  
- 		delta = times[s] - groupc->times_prev[s];
-@@ -406,15 +406,15 @@ static void record_times(struct psi_group_cpu *groupc, int cpu,
- 	delta = now - groupc->state_start;
- 	groupc->state_start = now;
- 
--	if (test_state(groupc->tasks, PSI_IO_SOME)) {
-+	if (groupc->state_mask & (1 << PSI_IO_SOME)) {
- 		groupc->times[PSI_IO_SOME] += delta;
--		if (test_state(groupc->tasks, PSI_IO_FULL))
-+		if (groupc->state_mask & (1 << PSI_IO_FULL))
- 			groupc->times[PSI_IO_FULL] += delta;
- 	}
- 
--	if (test_state(groupc->tasks, PSI_MEM_SOME)) {
-+	if (groupc->state_mask & (1 << PSI_MEM_SOME)) {
- 		groupc->times[PSI_MEM_SOME] += delta;
--		if (test_state(groupc->tasks, PSI_MEM_FULL))
-+		if (groupc->state_mask & (1 << PSI_MEM_FULL))
- 			groupc->times[PSI_MEM_FULL] += delta;
- 		else if (memstall_tick) {
- 			u32 sample;
-@@ -435,10 +435,10 @@ static void record_times(struct psi_group_cpu *groupc, int cpu,
- 		}
- 	}
- 
--	if (test_state(groupc->tasks, PSI_CPU_SOME))
-+	if (groupc->state_mask & (1 << PSI_CPU_SOME))
- 		groupc->times[PSI_CPU_SOME] += delta;
- 
--	if (test_state(groupc->tasks, PSI_NONIDLE))
-+	if (groupc->state_mask & (1 << PSI_NONIDLE))
- 		groupc->times[PSI_NONIDLE] += delta;
+ 	kernfs_put_active(kn);
+-
+-	if (of->event != atomic_read(&on->event))
+-		goto trigger;
+-
+-	return DEFAULT_POLLMASK;
+-
+- trigger:
+-	return DEFAULT_POLLMASK|EPOLLERR|EPOLLPRI;
++	return ret;
  }
  
-@@ -447,6 +447,8 @@ static void psi_group_change(struct psi_group *group, int cpu,
- {
- 	struct psi_group_cpu *groupc;
- 	unsigned int t, m;
-+	enum psi_states s;
-+	u32 state_mask = 0;
+ static void kernfs_notify_workfn(struct work_struct *work)
+diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
+index 5b36b1287a5a..0cac1207bb00 100644
+--- a/include/linux/kernfs.h
++++ b/include/linux/kernfs.h
+@@ -25,6 +25,7 @@ struct seq_file;
+ struct vm_area_struct;
+ struct super_block;
+ struct file_system_type;
++struct poll_table_struct;
  
- 	groupc = per_cpu_ptr(group->pcpu, cpu);
+ struct kernfs_open_node;
+ struct kernfs_iattrs;
+@@ -261,6 +262,9 @@ struct kernfs_ops {
+ 	ssize_t (*write)(struct kernfs_open_file *of, char *buf, size_t bytes,
+ 			 loff_t off);
  
-@@ -479,6 +481,13 @@ static void psi_group_change(struct psi_group *group, int cpu,
- 		if (set & (1 << t))
- 			groupc->tasks[t]++;
- 
-+	/* Calculate state mask representing active states */
-+	for (s = 0; s < NR_PSI_STATES; s++) {
-+		if (test_state(groupc->tasks, s))
-+			state_mask |= (1 << s);
-+	}
-+	groupc->state_mask = state_mask;
++	__poll_t (*poll)(struct kernfs_open_file *of,
++			 struct poll_table_struct *pt);
 +
- 	write_seqcount_end(&groupc->seq);
+ 	int (*mmap)(struct kernfs_open_file *of, struct vm_area_struct *vma);
  
- 	if (!delayed_work_pending(&group->clock_work))
+ #ifdef CONFIG_DEBUG_LOCK_ALLOC
+@@ -350,6 +354,8 @@ int kernfs_remove_by_name_ns(struct kernfs_node *parent, const char *name,
+ int kernfs_rename_ns(struct kernfs_node *kn, struct kernfs_node *new_parent,
+ 		     const char *new_name, const void *new_ns);
+ int kernfs_setattr(struct kernfs_node *kn, const struct iattr *iattr);
++__poll_t kernfs_generic_poll(struct kernfs_open_file *of,
++			     struct poll_table_struct *pt);
+ void kernfs_notify(struct kernfs_node *kn);
+ 
+ const void *kernfs_super_ns(struct super_block *sb);
 -- 
 2.20.1.321.g9e740568ce-goog
 
