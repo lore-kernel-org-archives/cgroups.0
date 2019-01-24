@@ -1,59 +1,158 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
-Date: Thu, 24 Jan 2019 13:23:28 -0500
-Message-ID: <20190124182328.GA10820@cmpxchg.org>
-References: <20190123223144.GA10798@chrisdown.name>
- <20190124082252.GD4087@dhcp22.suse.cz>
- <20190124160009.GA12436@cmpxchg.org>
- <20190124170117.GS4087@dhcp22.suse.cz>
+From: Chris Down <chris@chrisdown.name>
+Subject: [PATCH 2/2] mm: Extract memcg maxable seq_file logic to
+ seq_show_memcg_tunable
+Date: Thu, 24 Jan 2019 14:41:00 -0500
+Message-ID: <20190124194100.GA31425@chrisdown.name>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=FnNHJQWasIH8ZZGAghYWs1cLQc8v0FeaohIo7b3m2Xs=;
-        b=UpO1W59KzBPUdYXozLMYbpPfsOUDVZyeBT4VNzyjJMCY/l6K3zJWWABEBEeRWkuRHU
-         moaYIPc8Ndy6AhIYKdEVPAcsxqb7GKa3Uvi2WaT0YOH/ZgP62bvGHFeDML/RDP+/M4wH
-         LG8Jv5nZSnzZmA3NYAEkC9h0EK2afBSQapanqLiboWqKMgGgh3Qcy4zmk0HnLhhJtDiU
-         AsNi76Rm/cKHHjev068aGpWbJCLD9IJQmZOOC7MVccJiUOfb8f2CO1ZL6Qq+yOtltZXj
-         aKcUuF9GSaNpHjQHFlKd4c2Yb0yTIrcXVKncNb0+y0QwM9zIplkaE+poacFzbo1cYYYF
-         Nz0Q==
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=XQxFCnqX2P8KUUqb8YwfiiSFK3gunL+QvptxXbOpYcA=;
+        b=vyMN0TH+/6oVgdBcFhjoqtghfPopjw353xrPZsi7Qc1KTSVCzBT5zMiX7RbFZOpde/
+         nREk2GI0YQzUrh96Hme9mWtIBEAOYXdniwX6cvzHYjbXXO1HfMEewUSSvp+tnlJAKEWj
+         AZE2Cm6U+P5try7YJoMuZJPWD0XX3QdCmH4a4=
 Content-Disposition: inline
-In-Reply-To: <20190124170117.GS4087@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-On Thu, Jan 24, 2019 at 06:01:17PM +0100, Michal Hocko wrote:
-> On Thu 24-01-19 11:00:10, Johannes Weiner wrote:
-> [...]
-> > We cannot fully eliminate a risk for regression, but it strikes me as
-> > highly unlikely, given the extremely young age of cgroup2-based system
-> > management and surrounding tooling.
-> 
-> I am not really sure what you consider young but this interface is 4.0+
-> IIRC and the cgroup v2 is considered stable since 4.5 unless I
-> missrememeber and that is not a short time period in my book.
+memcg has a significant number of files exposed to kernfs where their
+value is either exposed directly or is "max" in the case of
+PAGE_COUNTER_MAX.
 
-If you read my sentence again, I'm not talking about the kernel but
-the surrounding infrastructure that consumes this data. The risk is
-not dependent on the age of the interface age, but on its adoption.
+This patch makes this generic by providing a single function to do this
+work. In combination with the previous patch adding mem_cgroup_from_seq,
+this makes all of the seq_show feeder functions significantly more
+simple.
 
-> Changing interfaces now represents a non-trivial risk and so far I
-> haven't heard any actual usecase where the current semantic is
-> actually wrong.  Inconsistency on its own is not a sufficient
-> justification IMO.
+Signed-off-by: Chris Down <chris@chrisdown.name>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Roman Gushchin <guro@fb.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: kernel-team@fb.com
+---
+ mm/memcontrol.c | 64 +++++++++++++++----------------------------------
+ 1 file changed, 19 insertions(+), 45 deletions(-)
 
-It can be seen either way, and in isolation it wouldn't be wrong to
-count events on the local level. But we made that decision for the
-entire interface, and this file is the odd one out now. From that
-comprehensive perspective, yes, the behavior is wrong. It really
-confuses people who are trying to use it, because they *do* expect it
-to behave recursively.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 98aad31f5226..81b6f752471a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5375,6 +5375,16 @@ static void mem_cgroup_bind(struct cgroup_subsys_state *root_css)
+ 		root_mem_cgroup->use_hierarchy = false;
+ }
+ 
++static int seq_puts_memcg_tunable(struct seq_file *m, unsigned long value)
++{
++	if (value == PAGE_COUNTER_MAX)
++		seq_puts(m, "max\n");
++	else
++		seq_printf(m, "%llu\n", (u64)value * PAGE_SIZE);
++
++	return 0;
++}
++
+ static u64 memory_current_read(struct cgroup_subsys_state *css,
+ 			       struct cftype *cft)
+ {
+@@ -5385,15 +5395,8 @@ static u64 memory_current_read(struct cgroup_subsys_state *css,
+ 
+ static int memory_min_show(struct seq_file *m, void *v)
+ {
+-	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
+-	unsigned long min = READ_ONCE(memcg->memory.min);
+-
+-	if (min == PAGE_COUNTER_MAX)
+-		seq_puts(m, "max\n");
+-	else
+-		seq_printf(m, "%llu\n", (u64)min * PAGE_SIZE);
+-
+-	return 0;
++	return seq_puts_memcg_tunable(m,
++		READ_ONCE(mem_cgroup_from_seq(m)->memory.min));
+ }
+ 
+ static ssize_t memory_min_write(struct kernfs_open_file *of,
+@@ -5415,15 +5418,8 @@ static ssize_t memory_min_write(struct kernfs_open_file *of,
+ 
+ static int memory_low_show(struct seq_file *m, void *v)
+ {
+-	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
+-	unsigned long low = READ_ONCE(memcg->memory.low);
+-
+-	if (low == PAGE_COUNTER_MAX)
+-		seq_puts(m, "max\n");
+-	else
+-		seq_printf(m, "%llu\n", (u64)low * PAGE_SIZE);
+-
+-	return 0;
++	return seq_puts_memcg_tunable(m,
++		READ_ONCE(mem_cgroup_from_seq(m)->memory.low));
+ }
+ 
+ static ssize_t memory_low_write(struct kernfs_open_file *of,
+@@ -5445,15 +5441,7 @@ static ssize_t memory_low_write(struct kernfs_open_file *of,
+ 
+ static int memory_high_show(struct seq_file *m, void *v)
+ {
+-	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
+-	unsigned long high = READ_ONCE(memcg->high);
+-
+-	if (high == PAGE_COUNTER_MAX)
+-		seq_puts(m, "max\n");
+-	else
+-		seq_printf(m, "%llu\n", (u64)high * PAGE_SIZE);
+-
+-	return 0;
++	return seq_puts_memcg_tunable(m, READ_ONCE(mem_cgroup_from_seq(m)->high));
+ }
+ 
+ static ssize_t memory_high_write(struct kernfs_open_file *of,
+@@ -5482,15 +5470,8 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
+ 
+ static int memory_max_show(struct seq_file *m, void *v)
+ {
+-	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
+-	unsigned long max = READ_ONCE(memcg->memory.max);
+-
+-	if (max == PAGE_COUNTER_MAX)
+-		seq_puts(m, "max\n");
+-	else
+-		seq_printf(m, "%llu\n", (u64)max * PAGE_SIZE);
+-
+-	return 0;
++	return seq_puts_memcg_tunable(m,
++		READ_ONCE(mem_cgroup_from_seq(m)->memory.max));
+ }
+ 
+ static ssize_t memory_max_write(struct kernfs_open_file *of,
+@@ -6622,15 +6603,8 @@ static u64 swap_current_read(struct cgroup_subsys_state *css,
+ 
+ static int swap_max_show(struct seq_file *m, void *v)
+ {
+-	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
+-	unsigned long max = READ_ONCE(memcg->swap.max);
+-
+-	if (max == PAGE_COUNTER_MAX)
+-		seq_puts(m, "max\n");
+-	else
+-		seq_printf(m, "%llu\n", (u64)max * PAGE_SIZE);
+-
+-	return 0;
++	return seq_puts_memcg_tunable(m,
++		READ_ONCE(mem_cgroup_from_seq(m)->swap.max));
+ }
+ 
+ static ssize_t swap_max_write(struct kernfs_open_file *of,
+-- 
+2.20.1
 
-I'm really having a hard time believing there are existing cgroup2
-users with specific expectations for the non-recursive behavior...
