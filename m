@@ -1,53 +1,60 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
-Date: Thu, 24 Jan 2019 11:00:10 -0500
-Message-ID: <20190124160009.GA12436@cmpxchg.org>
-References: <20190123223144.GA10798@chrisdown.name>
- <20190124082252.GD4087@dhcp22.suse.cz>
+Subject: Re: [PATCH] mm: Move maxable seq_file logic into a single place
+Date: Thu, 24 Jan 2019 11:09:35 -0500
+Message-ID: <20190124160935.GB12436@cmpxchg.org>
+References: <20190124061718.GA15486@chrisdown.name>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=hCxh8cKbdjdveceYE2dpaNIbo3dOi85oEdfOpSI1M70=;
-        b=aOZLgnWFCiEp/DgAqJ0ZNWqNTjzcc5vJt9MAo9H/VK+bDPLL728DCs/dQTYumayW9b
-         hwEBKayaUcXB/Sm2wVblmZUXpmcYCgw5srU72fEnOiwv6GvjLFt7QQLCA15lf/iLKQTe
-         I2LZ9iXuNZVAc9x6w0w1nXX6r3sUSWtCQcX4vldjXpJSKymA1bOwkAdtqaA3BVwhK1pi
-         6XP/Xvmi4a2Fkd60WeR1k85nxSzSrbRmyv8/HOAf2fs9EJyFHmoNqroNwCqPIdMxMz4e
-         dNaWR2UqiCiGbVN1MaIK7kUOEqQUqWZbXjT6WX1XVcLMZ5aPHFeN5L19jQqp84gLGZ8p
-         iglw==
+        bh=cGQ/TMSWGm6i6QwmVNwOtbEz6FvQrTiXlzQK44rHJwA=;
+        b=Vp9BWMMNtSD8xSzhnjEWyK0/Ha4ZrmqLfO7rXLLtXOYMU6a5cu7VVhnyEe8K2lx2I1
+         /rfcdNbrUq1qGtrnNo3W8bcy/7whXZ+wPvxFaBn4lNJ35C48xU8cfqmJs7PBzVTBE1PU
+         VqdUExIZne/b7ck8gktsq9gjbmK6VSzEocsS8MF+941BDqwcdCht1y+Sov8y6iEyBc7L
+         wVLvILvIkOQoHBQEQAD8r2B1RsPLkuHQCgTxmTknmdIuZGpUGeC24ObTfdYapJuoOBru
+         EWvTKEnOvE/3v7nz9v9Lbfzu2ViuHKN1YOFWKMSUfAkfgBsV4fh89kgL/iYCAA2MDmSN
+         Tv6Q==
 Content-Disposition: inline
-In-Reply-To: <20190124082252.GD4087@dhcp22.suse.cz>
+In-Reply-To: <20190124061718.GA15486@chrisdown.name>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Chris Down <chris@chrisdown.name>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-On Thu, Jan 24, 2019 at 09:22:52AM +0100, Michal Hocko wrote:
-> On Wed 23-01-19 17:31:44, Chris Down wrote:
-> > Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+On Thu, Jan 24, 2019 at 01:17:18AM -0500, Chris Down wrote:
+> memcg has a significant number of files exposed to kernfs where their
+> value is either exposed directly or is "max" in the case of
+> PAGE_COUNTER_MAX.
 > 
-> btw. I do not see this patch posted anywhere yet it already comes with
-> an ack. Have I just missed a previous version?
+> There's a fair amount of duplicated code here, since each file involves
+> turning a seq_file to a css, getting the memcg from the css, safely
+> reading the counter value, and then doing the right thing depending on
+> whether the value is PAGE_COUNTER_MAX or not.
+> 
+> This patch adds the macro DEFINE_MEMCG_MAX_OR_VAL, which defines and
+> implements a generic way to do this work, avoiding fragmenting logic.
+> 
+> Signed-off-by: Chris Down <chris@chrisdown.name>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Roman Gushchin <guro@fb.com>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: cgroups@vger.kernel.org
+> Cc: linux-mm@kvack.org
+> Cc: kernel-team@fb.com
+> ---
+> mm/memcontrol.c | 78 ++++++++++++-------------------------------------
+> 1 file changed, 18 insertions(+), 60 deletions(-)
 
-I reviewed it offline before Chris sent it out.
+I think this increases complexity more than it saves LOC,
+unfortunately.
 
-I agree with the sentiment that the non-hierarchical behavior was an
-oversight, not a design decision.
-
-The arguments against the change don't convince me: the added
-difficulty of finding out local values is true for all other cgroup
-files as well. This is traded off with being able to detect any
-subtree state from the first level cgroups and drill down on-demand,
-without having to scan the entire tree on each monitoring interval.
-That's a trade-off we've made everywhere else, so this is simply an
-inconsistency, not a legitimate exception to the rule.
-
-We cannot fully eliminate a risk for regression, but it strikes me as
-highly unlikely, given the extremely young age of cgroup2-based system
-management and surrounding tooling.
-
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+The current situation is a bit repetitive, but much more obviously
+correct. And we're not planning on adding many more of those memcg
+interface files, so I this doesn't seem to be an improvement re:
+maintainability and future extensibility of the code.
