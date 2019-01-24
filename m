@@ -1,21 +1,22 @@
 From: Chris Down <chris@chrisdown.name>
-Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
-Date: Wed, 23 Jan 2019 20:03:06 -0500
-Message-ID: <20190124010306.GA9055@chrisdown.name>
-References: <20190123223144.GA10798@chrisdown.name>
- <20190124002359.GB21563@castle.DHCP.thefacebook.com>
+Subject: Re: [PATCH 1/2] mm: Rename ambiguously named memory.stat counters
+ and functions
+Date: Wed, 23 Jan 2019 20:06:38 -0500
+Message-ID: <20190124010638.GB9055@chrisdown.name>
+References: <20190123223049.GA9149@chrisdown.name>
+ <20190123235940.GA21563@castle.DHCP.thefacebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chrisdown.name; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=ANT2kmcy8XCRyXb6bJChLK8lZ+sD1OWRerQylYMcD5Y=;
-        b=YRJP2+e4GkpC3N9LH13Jklf+b52TXUIXm1aZ/dAd8d33MJPiGGyM2d/Abr6eJFIbQ+
-         faCv/jKC5Y/zr8L8UO7Uvrl6xIrYt20NGZq7Qic0nboDCVjvyJx9j61Z7Xi/DnMFStZ6
-         EwgUI0lE8akX0v/Km9bGvxHn+Ay5+MQh74DYg=
+        bh=0AkmJA1QYcuNJ5TIP/Rznolsmj53RzAhmVndjUnRVJg=;
+        b=r5uoAxGebrDBWOF9OJn2bE4s7TsgVYb4fgBaOXGxU4FWKr/zdeuE2H7v6JA02b/R2x
+         d0GEE7UMADZLceRGSNsQP6t6zul1wJHInN4LWH4qXhrhcekXHT0yIPVHQMOPPdaIuCoU
+         ng38WFvux3gqwU9dkRgxFHoC2QSaj+/ueAQFc=
 Content-Disposition: inline
-In-Reply-To: <20190124002359.GB21563@castle.DHCP.thefacebook.com>
+In-Reply-To: <20190123235940.GA21563@castle.DHCP.thefacebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
@@ -24,74 +25,16 @@ To: Roman Gushchin <guro@fb.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Dennis Zhou <dennis@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Kernel Team <Kernel-team@fb.com>
 
 Roman Gushchin writes:
->On Wed, Jan 23, 2019 at 05:31:44PM -0500, Chris Down wrote:
->> memory.stat and other files already consider subtrees in their output,
->> and we should too in order to not present an inconsistent interface.
->>
->> The current situation is fairly confusing, because people interacting
->> with cgroups expect hierarchical behaviour in the vein of memory.stat,
->> cgroup.events, and other files. For example, this causes confusion when
->> debugging reclaim events under low, as currently these always read "0"
->> at non-leaf memcg nodes, which frequently causes people to misdiagnose
->> breach behaviour. The same confusion applies to other counters in this
->> file when debugging issues.
->>
->> Aggregation is done at write time instead of at read-time since these
->> counters aren't hot (unlike memory.stat which is per-page, so it does it
->> at read time), and it makes sense to bundle this with the file
->> notifications.
->
->I agree with the consistency argument (matching cgroup.events, ...),
->and it's definitely looks better for oom* events, but at the same time it feels
->like a API break.
->
->Just for example, let's say you have a delegated sub-tree with memory.max
->set. Earlier, getting memory.high/max event meant that the whole sub-tree
->is tight on memory, and, for example, led to shutdown of some parts of the tree.
->After your change, it might mean that some sub-cgroup has reached its limit,
->and probably doesn't matter on the top level.
+>I'd personally go with memcg_vmstat_percpu. Not insisting,
+>but you end up using both vmstat and vmstats, which isn't very
+>consistent.
 
-Yeah, this is something I was thinking about while writing it. I think there's 
-an argument to be made either way, since functionally they can both represent 
-the same feature set, just in different ways.
+Yeah, we also have similar naming in accumulated_vmstats. Hmm, let me think 
+about this a bit and get back to you tomorrow. The main bit I was concerned 
+about was memory_events vs. events -- I don't really have strong opinions on 
+the percpu struct's exact naming/plurality.
 
-In the subtree-propagated version you can find the level of the hierarchy that 
-the event fired at by checking parent events vs. their subtrees' events, and 
-this also allows trivially setting up event watches per-subtree.
+>Other than that looks good to me. Please, feel free to add
+>Acked-by: Roman Gushchin <guro@fb.com>
 
-In the previous, non-propagated version, it's more trivial to work out the 
-level as the event only appears in that memory.events file, but it's harder to 
-actually find out about the existence of such an event because you need to keep 
-a watch for each individual cgroup in the subtree at all times.
-
-So I think there's a reasonable argument to be made in favour of considering 
-subtrees.
-
-1. I'm not aware of anyone major currently relying on using the individual 
-subtree level to indicate only subtree-level events.
-2. Also, being able to detect the level at which an event happened can be 
-achieved in both versions by comparing event counters.
-3. Having memory.events work like cgroup.events and others seems to fit with 
-principle of least astonishment.
-
-That said, I agree that there's a tradeoff here, but in my experience this 
-behaviour more closely resembles user intuition and better matches the overall 
-semantics around hierarchical behaviour we've generally established for cgroup 
-v2.
-
->Maybe it's still ok, but we definitely need to document it better. It feels
->bad that different versions of the kernel will handle it differently, so
->the userspace has to workaround it to actually use these events.
-
-That's perfectly reasonable. I'll update the documentation to match.
-
->Also, please, make sure that it doesn't break memcg kselftests.
-
-For sure.
-
->We don't have memory.events file for the root cgroup, so we can stop earlier.
-
-Oh yeah, I missed that when changing from a for loop to do/while. I'll fix that 
-up, thanks.
-
-Thanks for your feedback!
+Thanks!
