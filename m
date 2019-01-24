@@ -1,54 +1,73 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v6 0/7] freezer for cgroup v2
-Date: Thu, 24 Jan 2019 07:26:23 -0800
-Message-ID: <20190124152623.GH50184@devbig004.ftw2.facebook.com>
-References: <20181222000307.28231-1-guro@fb.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
+Date: Thu, 24 Jan 2019 16:51:21 +0100
+Message-ID: <20190124155121.GQ4087@dhcp22.suse.cz>
+References: <20190123223144.GA10798@chrisdown.name>
+ <20190124082252.GD4087@dhcp22.suse.cz>
+ <20190124152122.GG50184@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=0FVwBJEbGSCpbztzTtTWXO0usmZDa4dlEKlgDqHqCvA=;
-        b=B8AqbH/hEr7vFeOCysJs7BMVx3i84OMajQGOlflkd98UzHDo0h0ijKJXNfYwVy/+rX
-         Sk+Vt6Dr5Y34f+gGZc/qAst6tHczDauakCVy22pKxBWFPjnRi98SE+HtVUrHJd55h52K
-         0MYyAKhMTfDpiE0TA8a+yMIS9z5W3XZvjehss3rxSDOa7bcsV/4+OEbzUtbRbGcVECRS
-         KkbsuU7HI4rfxZHi6XMwtb7ZSiBJxYmU8OavhKWqCZrasgWtKk2+Jn3WXKUMV+De1AF/
-         5MaGD7gCkbvlm0ZeGhPqUZRSewl4Zxu8Ot0PweRe1VZYsFW4t01Vm5qkGSPvqUUrMw3Z
-         ucZA==
 Content-Disposition: inline
-In-Reply-To: <20181222000307.28231-1-guro@fb.com>
+In-Reply-To: <20190124152122.GG50184@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guroan@gmail.com>
-Cc: Oleg Nesterov <oleg@redhat.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-On Fri, Dec 21, 2018 at 04:03:00PM -0800, Roman Gushchin wrote:
-> This patchset implements freezer for cgroup v2.
+On Thu 24-01-19 07:21:22, Tejun Heo wrote:
+> Hello, Michal.
 > 
-> It provides similar functionality as v1 freezer, but the interface
-> conforms to the cgroup v2 interface design principles, and it
-> provides a better user experience: tasks can be killed, ptrace works,
-> there is no separate controller, which has to be enabled, etc.
+> On Thu, Jan 24, 2019 at 09:22:52AM +0100, Michal Hocko wrote:
+> > I do not think we can do that for two reasons. It breaks the existing
+> > semantic userspace might depend on and more importantly this is not a
+> > correct behavior IMO.
 > 
-> Patches (1), (2) and (3) are some preparational work, patch (4) contains
-> the implementation, patch (5) is a small cgroup kselftest fix,
-> patch (6) covers freezer adds 6 new kselftests to cover the freezer
-> functionality. Patch (7) adds corresponding docs.
+> This is a valid concern but I'll come back to this later.
 > 
-> v6->v5:
->   - reverted to clear TIF_SIGPENDING with additional checks before schedule(),
->   as proposed by Oleg Nesterov
->   - made cgroup v2 freezer working with the system freezer (by using
->   freezable_schedule())
->   - make freezer working with SIGSTOPped and PTRACEd tasks
->   - added tests to cover freezing a cgroup with SIGSTOPped and PTRACEd tasks
+> > You have to realize that stats are hierarchical because that is how we
+> > account. Events represent a way to inform that something has happened at
+> > the specific level of the tree though. If you do not setup low/high/max
+> 
+> This isn't true.  e.g. cgroup.events's populated event is
+> hierarchical.  Everything in cgroup should be hierarchical by default.
+> 
+> > limit then you simply cannot expect to be informed those get hit because
+> > they cannot by definition. Or put it other way, if you are waiting for
+> > those events you really want to know the (sub)tree they happened and if
+> > you propagate the event up the hierarchy you have hard time to tell that
+> > (you would basically have to exclude all but the lowest one and that is
+> > an awkward semantic at best.
+> 
+> I don't think it's a good idea to argue this for each piece of
+> information.  Again, everything should be hierarchical unless there
+> are clear and strong reasons against;
 
-Oleg, ping?
+And I would argue that cgroups.events with its populated event is a
+different thing because that is inherently a hierarchical property.  If
+you compare that to low, min, max and oom those are events very specific
+to the particular level of the hierarchy because it is an action at that
+level that the event informs about. E.g. max event down the hierarchy is
+a completely different thing from the upper level.  That sounds like a
+pretty solid reason to differentiate here.
 
-Thanks.
+> otherwise, we end up with random
+> mix of hierarchical and flat behaviors, something that we want to
+> avoid the most - remember .use_hierarchy?.
+> 
+> > Maybe we want to document this better but I do not see we are going to
+> > change the behavior.
+> 
+> I beg you to reconsider.  This was a clear oversight and the cgroup2
+> usage is still relatively limited.  We sure can add local-specific
+> counters if needed but must not mix local and hierarchical counters
+> without a clear way to tell what's what.
 
+If you really have a usecase for hierarchical events then I think the
+only way without breaking existing userspace is to add a new set of
+events. But I still believe that the current behavior makes a lot of
+sense.
 -- 
-tejun
+Michal Hocko
+SUSE Labs
