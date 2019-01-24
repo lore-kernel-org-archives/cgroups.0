@@ -1,179 +1,69 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: Move maxable seq_file logic into a single place
-Date: Thu, 24 Jan 2019 09:58:34 +0100
-Message-ID: <20190124085834.GF4087@dhcp22.suse.cz>
-References: <20190124061718.GA15486@chrisdown.name>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
+Date: Thu, 24 Jan 2019 07:21:22 -0800
+Message-ID: <20190124152122.GG50184@devbig004.ftw2.facebook.com>
+References: <20190123223144.GA10798@chrisdown.name>
+ <20190124082252.GD4087@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=oHh6o8jn5g3tJ8EvMOq/zvMTuQRF5UWPWeqXachkSho=;
+        b=ilOnDM8ll9pxsLgqR2XzLXRMetdJw86ka4AcMniC8p52iV6zbSbAPjjzUt9S1pFVxM
+         RG54FaX6Fu0FURglgfSe5vsP+2EBeMksbHpMOYUz732zHg25PXAt/PsWsn5Tp37LZwSP
+         GygS4W7IdvL0uwu19h43JDoQmrPdVwzxItlVmxORX6uR/t0soxTfgsHUDmBQbBpvQUjx
+         fMZK77CA13TcCnwvKQ3vu5urs9np9Z1aavhPYgLNzJ/u5pcU40iw4/AxKqOTCinIBc5v
+         z2q9JOfcI0TqKCNE2/BQCkV0eS5bEULEWI7DV0JMYu8oUwbg9e2xI9pT6ZO5LjgabUvI
+         aoKg==
 Content-Disposition: inline
-In-Reply-To: <20190124061718.GA15486@chrisdown.name>
+In-Reply-To: <20190124082252.GD4087@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Chris Down <chris@chrisdown.name>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-On Thu 24-01-19 01:17:18, Chris Down wrote:
-> memcg has a significant number of files exposed to kernfs where their
-> value is either exposed directly or is "max" in the case of
-> PAGE_COUNTER_MAX.
-> 
-> There's a fair amount of duplicated code here, since each file involves
-> turning a seq_file to a css, getting the memcg from the css, safely
-> reading the counter value, and then doing the right thing depending on
-> whether the value is PAGE_COUNTER_MAX or not.
-> 
-> This patch adds the macro DEFINE_MEMCG_MAX_OR_VAL, which defines and
-> implements a generic way to do this work, avoiding fragmenting logic.
+Hello, Michal.
 
-I am not a huge fan of macro defined functions but it is true this will
-save more LOC than a simple helper used by each $foo_show function.
+On Thu, Jan 24, 2019 at 09:22:52AM +0100, Michal Hocko wrote:
+> I do not think we can do that for two reasons. It breaks the existing
+> semantic userspace might depend on and more importantly this is not a
+> correct behavior IMO.
 
-> Signed-off-by: Chris Down <chris@chrisdown.name>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Roman Gushchin <guro@fb.com>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-mm@kvack.org
-> Cc: kernel-team@fb.com
+This is a valid concern but I'll come back to this later.
 
-Acked-by: Michal Hocko <mhocko@suse.com>
+> You have to realize that stats are hierarchical because that is how we
+> account. Events represent a way to inform that something has happened at
+> the specific level of the tree though. If you do not setup low/high/max
 
-Thanks!
-> ---
-> mm/memcontrol.c | 78 ++++++++++++-------------------------------------
-> 1 file changed, 18 insertions(+), 60 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 18f4aefbe0bf..90e2e0ff5ed9 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -261,6 +261,19 @@ struct cgroup_subsys_state *vmpressure_to_css(struct vmpressure *vmpr)
-> 	return &container_of(vmpr, struct mem_cgroup, vmpressure)->css;
-> }
-> 
-> +/* Convenience macro to define seq_file mutators that can return "max" */
-> +#define DEFINE_MEMCG_MAX_OR_VAL(name, key)				    \
-> +	static int name(struct seq_file *m, void *v)			    \
-> +	{								    \
-> +		struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m)); \
-> +		unsigned long val = READ_ONCE(memcg->key);		    \
-> +		if (val == PAGE_COUNTER_MAX)				    \
-> +			seq_puts(m, "max\n");				    \
-> +		else							    \
-> +			seq_printf(m, "%llu\n", (u64)val * PAGE_SIZE);	    \
-> +		return 0;						    \
-> +	}
-> +
-> #ifdef CONFIG_MEMCG_KMEM
-> /*
->  * This will be the memcg's index in each cache's ->memcg_params.memcg_caches.
-> @@ -5383,18 +5396,7 @@ static u64 memory_current_read(struct cgroup_subsys_state *css,
-> 	return (u64)page_counter_read(&memcg->memory) * PAGE_SIZE;
-> }
-> 
-> -static int memory_min_show(struct seq_file *m, void *v)
-> -{
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> -	unsigned long min = READ_ONCE(memcg->memory.min);
-> -
-> -	if (min == PAGE_COUNTER_MAX)
-> -		seq_puts(m, "max\n");
-> -	else
-> -		seq_printf(m, "%llu\n", (u64)min * PAGE_SIZE);
-> -
-> -	return 0;
-> -}
-> +DEFINE_MEMCG_MAX_OR_VAL(memory_min_show, memory.min)
-> 
-> static ssize_t memory_min_write(struct kernfs_open_file *of,
-> 				char *buf, size_t nbytes, loff_t off)
-> @@ -5413,18 +5415,7 @@ static ssize_t memory_min_write(struct kernfs_open_file *of,
-> 	return nbytes;
-> }
-> 
-> -static int memory_low_show(struct seq_file *m, void *v)
-> -{
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> -	unsigned long low = READ_ONCE(memcg->memory.low);
-> -
-> -	if (low == PAGE_COUNTER_MAX)
-> -		seq_puts(m, "max\n");
-> -	else
-> -		seq_printf(m, "%llu\n", (u64)low * PAGE_SIZE);
-> -
-> -	return 0;
-> -}
-> +DEFINE_MEMCG_MAX_OR_VAL(memory_low_show, memory.low)
-> 
-> static ssize_t memory_low_write(struct kernfs_open_file *of,
-> 				char *buf, size_t nbytes, loff_t off)
-> @@ -5443,18 +5434,7 @@ static ssize_t memory_low_write(struct kernfs_open_file *of,
-> 	return nbytes;
-> }
-> 
-> -static int memory_high_show(struct seq_file *m, void *v)
-> -{
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> -	unsigned long high = READ_ONCE(memcg->high);
-> -
-> -	if (high == PAGE_COUNTER_MAX)
-> -		seq_puts(m, "max\n");
-> -	else
-> -		seq_printf(m, "%llu\n", (u64)high * PAGE_SIZE);
-> -
-> -	return 0;
-> -}
-> +DEFINE_MEMCG_MAX_OR_VAL(memory_high_show, high)
-> 
-> static ssize_t memory_high_write(struct kernfs_open_file *of,
-> 				 char *buf, size_t nbytes, loff_t off)
-> @@ -5480,18 +5460,7 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
-> 	return nbytes;
-> }
-> 
-> -static int memory_max_show(struct seq_file *m, void *v)
-> -{
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> -	unsigned long max = READ_ONCE(memcg->memory.max);
-> -
-> -	if (max == PAGE_COUNTER_MAX)
-> -		seq_puts(m, "max\n");
-> -	else
-> -		seq_printf(m, "%llu\n", (u64)max * PAGE_SIZE);
-> -
-> -	return 0;
-> -}
-> +DEFINE_MEMCG_MAX_OR_VAL(memory_max_show, memory.max)
-> 
-> static ssize_t memory_max_write(struct kernfs_open_file *of,
-> 				char *buf, size_t nbytes, loff_t off)
-> @@ -6620,18 +6589,7 @@ static u64 swap_current_read(struct cgroup_subsys_state *css,
-> 	return (u64)page_counter_read(&memcg->swap) * PAGE_SIZE;
-> }
-> 
-> -static int swap_max_show(struct seq_file *m, void *v)
-> -{
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> -	unsigned long max = READ_ONCE(memcg->swap.max);
-> -
-> -	if (max == PAGE_COUNTER_MAX)
-> -		seq_puts(m, "max\n");
-> -	else
-> -		seq_printf(m, "%llu\n", (u64)max * PAGE_SIZE);
-> -
-> -	return 0;
-> -}
-> +DEFINE_MEMCG_MAX_OR_VAL(swap_max_show, swap.max)
-> 
-> static ssize_t swap_max_write(struct kernfs_open_file *of,
-> 			      char *buf, size_t nbytes, loff_t off)
-> -- 
-> 2.20.1
+This isn't true.  e.g. cgroup.events's populated event is
+hierarchical.  Everything in cgroup should be hierarchical by default.
+
+> limit then you simply cannot expect to be informed those get hit because
+> they cannot by definition. Or put it other way, if you are waiting for
+> those events you really want to know the (sub)tree they happened and if
+> you propagate the event up the hierarchy you have hard time to tell that
+> (you would basically have to exclude all but the lowest one and that is
+> an awkward semantic at best.
+
+I don't think it's a good idea to argue this for each piece of
+information.  Again, everything should be hierarchical unless there
+are clear and strong reasons against; otherwise, we end up with random
+mix of hierarchical and flat behaviors, something that we want to
+avoid the most - remember .use_hierarchy?.
+
+> Maybe we want to document this better but I do not see we are going to
+> change the behavior.
+
+I beg you to reconsider.  This was a clear oversight and the cgroup2
+usage is still relatively limited.  We sure can add local-specific
+counters if needed but must not mix local and hierarchical counters
+without a clear way to tell what's what.
+
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
