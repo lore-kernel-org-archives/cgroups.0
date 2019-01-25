@@ -1,220 +1,147 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 1/2] mm: Create mem_cgroup_from_seq
-Date: Fri, 25 Jan 2019 08:25:58 +0100
-Message-ID: <20190125072558.GB3560@dhcp22.suse.cz>
-References: <20190124194050.GA31341@chrisdown.name>
+From: =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
+Subject: Re: pids.current with invalid value for hours [5.0.0 rc3 git]
+Date: Fri, 25 Jan 2019 08:52:11 +0100
+Message-ID: <1cdbef13-564d-61a6-95f4-579d2cad243d@gmail.com>
+References: <df806a77-3327-9db5-8be2-976fde1c84e5@gmail.com>
+ <20190117122535.njcbqhlmzozdkncw@mikami>
+ <1d36b181-cbaf-6694-1a31-2f7f55d15675@gmail.com>
+ <96ef6615-a5df-30af-b4dc-417a18ca63f1@gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190124194050.GA31341@chrisdown.name>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:from:to:references:cc:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=S/PecIcQc1kFgYlonoFxz1E4IJONkcf4aGIUu1zvd08=;
+        b=vMFBqrK63eVtVNZj0Q/vwZC4cCnruJWwIClI0a5m7ZShYCSrcLdZl8CXhFmEz27nv1
+         qbt0icT+fv9/IPCBXvVL4SVgAmP/248fNBpn2LfTAVzFLKT4mIHLmD1qeV+l6AKhOFAC
+         xojX7hMo3rfgBcVNeQRHsTDLHCBwiLXo6uPpcepX9K16FYASuc9hc3rAkmU0RdZpo8gZ
+         kQhRWZ+fOLbQ/5ynd9aZ+9Q7r4l1ZYtHXw205ivFQoJNr1jLqRmRbSu/2keIBIeJYIo5
+         htWEeZG4BOQLVfEp9nDPBODwYcO2MD6pYE+Lv+gFrtOIilXkaXnheS+xDnqgecs7QCK8
+         WPtw==
+In-Reply-To: <96ef6615-a5df-30af-b4dc-417a18ca63f1@gmail.com>
+Content-Language: pl
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Chris Down <chris@chrisdown.name>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+Content-Type: text/plain; charset="utf-8"
+To: cgroups@vger.kernel.org
+Cc: Aleksa Sarai <asarai@suse.de>, Jay Kamat <jgkamat@fb.com>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@suse.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org
 
-On Thu 24-01-19 14:40:50, Chris Down wrote:
-> This is the start of a series of patches similar to my earlier
-> DEFINE_MEMCG_MAX_OR_VAL work, but with less Macro Magic(tm).
+On 24/01/2019 12:21, Arkadiusz Miśkiewicz wrote:
+> On 17/01/2019 14:17, Arkadiusz Miśkiewicz wrote:
+>> On 17/01/2019 13:25, Aleksa Sarai wrote:
+>>> On 2019-01-17, Arkadiusz Miśkiewicz <a.miskiewicz@gmail.com> wrote:
+>>>> Using kernel 4.19.13.
+>>>>
+>>>> For one cgroup I noticed weird behaviour:
+>>>>
+>>>> # cat pids.current
+>>>> 60
+>>>> # cat cgroup.procs
+>>>> #
+>>>
+>>> Are there any zombies in the cgroup? pids.current is linked up directly
+>>> to __put_task_struct (so exit(2) won't decrease it, only the task_struct
+>>> actually being freed will decrease it).
+>>>
+>>
+>> There are no zombie processes.
+>>
+>> In mean time the problem shows on multiple servers and so far saw it
+>> only in cgroups that were OOMed.
+>>
+>> What has changed on these servers (yesterday) is turning on
+>> memory.oom.group=1 for all cgroups and changing memory.high from 1G to
+>> "max" (leaving memory.max=2G limit only).
+>>
+>> Previously there was no such problem.
+>>
 > 
-> There are a bunch of places we go from seq_file to mem_cgroup, which
-> currently requires manually getting the css, then getting the mem_cgroup
-> from the css. It's in enough places now that having mem_cgroup_from_seq
-> makes sense (and also makes the next patch a bit nicer).
+> I'm attaching reproducer. This time tried on different distribution
+> kernel (arch linux).
 > 
-> Signed-off-by: Chris Down <chris@chrisdown.name>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Roman Gushchin <guro@fb.com>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-mm@kvack.org
-> Cc: kernel-team@fb.com
+> After 60s pids.current still shows 37 processes even if there are no
+> processes running (according to ps aux).
 
-Acked-by: Michal Hocko <mhocko@suse.com>
 
-> ---
->  include/linux/memcontrol.h | 10 ++++++++++
->  mm/memcontrol.c            | 24 ++++++++++++------------
->  mm/slab_common.c           |  6 +++---
->  3 files changed, 25 insertions(+), 15 deletions(-)
+The same test on 5.0.0-rc3-00104-gc04e2a780caf and it's easy to
+reproduce bug. No processes in cgroup but pids.current reports 91.
+
+memory.oom.group=0 - everything works fine, pids are counted properly
+memory.oom.group=1 - bug becomes visible
+
+[root@xps test]# python3 cg.py
+Created cgroup: /sys/fs/cgroup/test_5277
+Start: pids.current: 0
+Start: cgroup.procs:
+0: pids.current: 103
+0: cgroup.procs:
+1: pids.current: 91
+1: cgroup.procs:
+2: pids.current: 91
+2: cgroup.procs:
+3: pids.current: 91
+3: cgroup.procs:
+4: pids.current: 91
+4: cgroup.procs:
+5: pids.current: 91
+5: cgroup.procs:
+6: pids.current: 91
+6: cgroup.procs:
+7: pids.current: 91
+7: cgroup.procs:
+8: pids.current: 91
+8: cgroup.procs:
+9: pids.current: 91
+9: cgroup.procs:
+10: pids.current: 91
+10: cgroup.procs:
+11: pids.current: 91
+11: cgroup.procs:
+[root@xps test]# uname -a
+Linux xps 5.0.0-rc3-00104-gc04e2a780caf #288 SMP PREEMPT Thu Jan 24
+19:00:32 CET 2019 x86_64 Intel(R)_Core(TM)_i9-8950HK_CPU_@_2.90GHz PLD Linux
+
+
+cc relevant people
+
+script is here: https://www.spinics.net/lists/cgroups/msg21330.html
+
 > 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index b0eb29ea0d9c..1f3d880b7ca1 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -429,6 +429,11 @@ static inline unsigned short mem_cgroup_id(struct mem_cgroup *memcg)
->  }
->  struct mem_cgroup *mem_cgroup_from_id(unsigned short id);
->  
-> +static inline struct mem_cgroup *mem_cgroup_from_seq(struct seq_file *m)
-> +{
-> +	return mem_cgroup_from_css(seq_css(m));
-> +}
-> +
->  static inline struct mem_cgroup *lruvec_memcg(struct lruvec *lruvec)
->  {
->  	struct mem_cgroup_per_node *mz;
-> @@ -937,6 +942,11 @@ static inline struct mem_cgroup *mem_cgroup_from_id(unsigned short id)
->  	return NULL;
->  }
->  
-> +static inline struct mem_cgroup *mem_cgroup_from_seq(struct seq_file *m)
-> +{
-> +	return NULL;
-> +}
-> +
->  static inline struct mem_cgroup *lruvec_memcg(struct lruvec *lruvec)
->  {
->  	return NULL;
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 18f4aefbe0bf..98aad31f5226 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3359,7 +3359,7 @@ static int memcg_numa_stat_show(struct seq_file *m, void *v)
->  	const struct numa_stat *stat;
->  	int nid;
->  	unsigned long nr;
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->  
->  	for (stat = stats; stat < stats + ARRAY_SIZE(stats); stat++) {
->  		nr = mem_cgroup_nr_lru_pages(memcg, stat->lru_mask);
-> @@ -3410,7 +3410,7 @@ static const char *const memcg1_event_names[] = {
->  
->  static int memcg_stat_show(struct seq_file *m, void *v)
->  {
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->  	unsigned long memory, memsw;
->  	struct mem_cgroup *mi;
->  	unsigned int i;
-> @@ -3842,7 +3842,7 @@ static void mem_cgroup_oom_unregister_event(struct mem_cgroup *memcg,
->  
->  static int mem_cgroup_oom_control_read(struct seq_file *sf, void *v)
->  {
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(sf));
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(sf);
->  
->  	seq_printf(sf, "oom_kill_disable %d\n", memcg->oom_kill_disable);
->  	seq_printf(sf, "under_oom %d\n", (bool)memcg->under_oom);
-> @@ -5385,7 +5385,7 @@ static u64 memory_current_read(struct cgroup_subsys_state *css,
->  
->  static int memory_min_show(struct seq_file *m, void *v)
->  {
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->  	unsigned long min = READ_ONCE(memcg->memory.min);
->  
->  	if (min == PAGE_COUNTER_MAX)
-> @@ -5415,7 +5415,7 @@ static ssize_t memory_min_write(struct kernfs_open_file *of,
->  
->  static int memory_low_show(struct seq_file *m, void *v)
->  {
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->  	unsigned long low = READ_ONCE(memcg->memory.low);
->  
->  	if (low == PAGE_COUNTER_MAX)
-> @@ -5445,7 +5445,7 @@ static ssize_t memory_low_write(struct kernfs_open_file *of,
->  
->  static int memory_high_show(struct seq_file *m, void *v)
->  {
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->  	unsigned long high = READ_ONCE(memcg->high);
->  
->  	if (high == PAGE_COUNTER_MAX)
-> @@ -5482,7 +5482,7 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
->  
->  static int memory_max_show(struct seq_file *m, void *v)
->  {
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->  	unsigned long max = READ_ONCE(memcg->memory.max);
->  
->  	if (max == PAGE_COUNTER_MAX)
-> @@ -5544,7 +5544,7 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
->  
->  static int memory_events_show(struct seq_file *m, void *v)
->  {
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->  
->  	seq_printf(m, "low %lu\n",
->  		   atomic_long_read(&memcg->memory_events[MEMCG_LOW]));
-> @@ -5562,7 +5562,7 @@ static int memory_events_show(struct seq_file *m, void *v)
->  
->  static int memory_stat_show(struct seq_file *m, void *v)
->  {
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->  	struct accumulated_stats acc;
->  	int i;
->  
-> @@ -5639,7 +5639,7 @@ static int memory_stat_show(struct seq_file *m, void *v)
->  
->  static int memory_oom_group_show(struct seq_file *m, void *v)
->  {
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->  
->  	seq_printf(m, "%d\n", memcg->oom_group);
->  
-> @@ -6622,7 +6622,7 @@ static u64 swap_current_read(struct cgroup_subsys_state *css,
->  
->  static int swap_max_show(struct seq_file *m, void *v)
->  {
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->  	unsigned long max = READ_ONCE(memcg->swap.max);
->  
->  	if (max == PAGE_COUNTER_MAX)
-> @@ -6652,7 +6652,7 @@ static ssize_t swap_max_write(struct kernfs_open_file *of,
->  
->  static int swap_events_show(struct seq_file *m, void *v)
->  {
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->  
->  	seq_printf(m, "max %lu\n",
->  		   atomic_long_read(&memcg->memory_events[MEMCG_SWAP_MAX]));
-> diff --git a/mm/slab_common.c b/mm/slab_common.c
-> index 81732d05e74a..3dfdbe49ce34 100644
-> --- a/mm/slab_common.c
-> +++ b/mm/slab_common.c
-> @@ -1424,7 +1424,7 @@ void dump_unreclaimable_slab(void)
->  #if defined(CONFIG_MEMCG)
->  void *memcg_slab_start(struct seq_file *m, loff_t *pos)
->  {
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->  
->  	mutex_lock(&slab_mutex);
->  	return seq_list_start(&memcg->kmem_caches, *pos);
-> @@ -1432,7 +1432,7 @@ void *memcg_slab_start(struct seq_file *m, loff_t *pos)
->  
->  void *memcg_slab_next(struct seq_file *m, void *p, loff_t *pos)
->  {
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->  
->  	return seq_list_next(p, &memcg->kmem_caches, pos);
->  }
-> @@ -1446,7 +1446,7 @@ int memcg_slab_show(struct seq_file *m, void *p)
->  {
->  	struct kmem_cache *s = list_entry(p, struct kmem_cache,
->  					  memcg_params.kmem_caches_node);
-> -	struct mem_cgroup *memcg = mem_cgroup_from_css(seq_css(m));
-> +	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->  
->  	if (p == memcg->kmem_caches.next)
->  		print_slabinfo_header(m);
-> -- 
-> 2.20.1
+> [root@warm ~]# uname -a
+> Linux warm 4.20.3-arch1-1-ARCH #1 SMP PREEMPT Wed Jan 16 22:38:58 UTC
+> 2019 x86_64 GNU/Linux
+> [root@warm ~]# python3 cg.py
+> Created cgroup: /sys/fs/cgroup/test_26207
+> Start: pids.current: 0
+> Start: cgroup.procs:
+> 0: pids.current: 62
+> 0: cgroup.procs:
+> 1: pids.current: 37
+> 1: cgroup.procs:
+> 2: pids.current: 37
+> 2: cgroup.procs:
+> 3: pids.current: 37
+> 3: cgroup.procs:
+> 4: pids.current: 37
+> 4: cgroup.procs:
+> 5: pids.current: 37
+> 5: cgroup.procs:
+> 6: pids.current: 37
+> 6: cgroup.procs:
+> 7: pids.current: 37
+> 7: cgroup.procs:
+> 8: pids.current: 37
+> 8: cgroup.procs:
+> 9: pids.current: 37
+> 9: cgroup.procs:
+> 10: pids.current: 37
+> 10: cgroup.procs:
+> 11: pids.current: 37
+> 11: cgroup.procs:
+> 
+
 
 -- 
-Michal Hocko
-SUSE Labs
+Arkadiusz Miśkiewicz, arekm / ( maven.pl | pld-linux.org )
