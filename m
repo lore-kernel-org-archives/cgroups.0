@@ -1,108 +1,120 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: + memcg-do-not-report-racy-no-eligible-oom-tasks.patch added to
- -mm tree
-Date: Fri, 25 Jan 2019 13:33:33 -0500
-Message-ID: <20190125183333.GA19686@cmpxchg.org>
-References: <20190109190306.rATpT%akpm@linux-foundation.org>
- <20190125165624.GA17719@cmpxchg.org>
- <20190125172416.GB20411@dhcp22.suse.cz>
+From: =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
+Subject: Re: pids.current with invalid value for hours [5.0.0 rc3 git]
+Date: Fri, 25 Jan 2019 20:47:57 +0100
+Message-ID: <a95d004a-4358-7efc-6d21-12aac4411b32@gmail.com>
+References: <df806a77-3327-9db5-8be2-976fde1c84e5@gmail.com>
+ <20190117122535.njcbqhlmzozdkncw@mikami>
+ <1d36b181-cbaf-6694-1a31-2f7f55d15675@gmail.com>
+ <96ef6615-a5df-30af-b4dc-417a18ca63f1@gmail.com>
+ <1cdbef13-564d-61a6-95f4-579d2cad243d@gmail.com>
+ <20190125163731.GJ50184@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=B3t51C6OYPvt5o6UtPBjFZI7V6rBh757zuDBU08ALjY=;
-        b=XwT43BZEal/mmUG0ScgCH1tj0dyst1bywR9tZ/PFS0Z2ALpe3xQDZ0XJWPs05jbamg
-         kIt/UwpnbH9BNb5NI5M3dC46mW8lIYy5PoZ4s5gjUi9j38wmV91tn653wh9MIIkZgkEE
-         /q506Lsupk/fJiqGl3PzIHX5jWETrO6amAIxuKR4DHH/DXxlwW2wNaZdDFtpS9xcgGdk
-         uIK/jGv2ozgGTpXELHtw+xx6cShaElkosanG0Iye1SjQCfc2kn93KtCokMPWgGi1YiRJ
-         p6bqbmlF+L6oho2wdA9oFJ+KMB3UCZvjvTFw/Uz/AyHoR10Z8S0fA5zuxrhFYO5NHtFJ
-         ztVQ==
-Content-Disposition: inline
-In-Reply-To: <20190125172416.GB20411@dhcp22.suse.cz>
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=PaL/Nm/0v0Ytkgf6OpFItlBs3opiEJwSabaR9s9+cdA=;
+        b=MSrBMA+DumtrsUm/pQTTTpC1N1PaTbo58IFFJQCNsIHblpupPe11ThukCc4LHwPB9x
+         hFQR6vD0Q0n/vEiBaxxBdXR1sMO2KCZh4vjS8ItJpSEjBWVtmwGkdK3XX+416m2xZaZJ
+         YNcV2OkvHcfrQMGTMuf4962U7Yp+Xbs4WuMDmodHT0VmmxfIdWszOrWEMVztr4Plf75M
+         MN8DxaivndxdcG1Li3uzBJnkOrDRrBaHjM/SeoUWHVijxrR7VC2y9xp2PcRV+wuxAgO3
+         oD2FaW7qhnBfgegGRYYQ1hp72rSAJ/mt+dTMf9Ve/TCIVJ+hJSqBz+nVY1wFXyrwJR5X
+         JnFw==
+In-Reply-To: <20190125163731.GJ50184@devbig004.ftw2.facebook.com>
+Content-Language: pl
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: akpm@linux-foundation.org, mm-commits@vger.kernel.org, penguin-kernel@i-love.sakura.ne.jp, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, Aleksa Sarai <asarai@suse.de>, Jay Kamat <jgkamat@fb.com>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@suse.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org
 
-On Fri, Jan 25, 2019 at 06:24:16PM +0100, Michal Hocko wrote:
-> On Fri 25-01-19 11:56:24, Johannes Weiner wrote:
-> > On Wed, Jan 09, 2019 at 11:03:06AM -0800, akpm@linux-foundation.org wrote:
-> > > 
-> > > The patch titled
-> > >      Subject: memcg: do not report racy no-eligible OOM tasks
-> > > has been added to the -mm tree.  Its filename is
-> > >      memcg-do-not-report-racy-no-eligible-oom-tasks.patch
-> > > 
-> > > This patch should soon appear at
-> > >     http://ozlabs.org/~akpm/mmots/broken-out/memcg-do-not-report-racy-no-eligible-oom-tasks.patch
-> > > and later at
-> > >     http://ozlabs.org/~akpm/mmotm/broken-out/memcg-do-not-report-racy-no-eligible-oom-tasks.patch
-> > > 
-> > > Before you just go and hit "reply", please:
-> > >    a) Consider who else should be cc'ed
-> > >    b) Prefer to cc a suitable mailing list as well
-> > >    c) Ideally: find the original patch on the mailing list and do a
-> > >       reply-to-all to that, adding suitable additional cc's
-> > > 
-> > > *** Remember to use Documentation/process/submit-checklist.rst when testing your code ***
-> > > 
-> > > The -mm tree is included into linux-next and is updated
-> > > there every 3-4 working days
-> > > 
-> > > ------------------------------------------------------
-> > > From: Michal Hocko <mhocko@suse.com>
-> > > Subject: memcg: do not report racy no-eligible OOM tasks
-> > > 
-> > > Tetsuo has reported [1] that a single process group memcg might easily
-> > > swamp the log with no-eligible oom victim reports due to race between the
-> > > memcg charge and oom_reaper
-> > > 
-> > > Thread 1		Thread2				oom_reaper
-> > > try_charge		try_charge
-> > > 			  mem_cgroup_out_of_memory
-> > > 			    mutex_lock(oom_lock)
-> > >   mem_cgroup_out_of_memory
-> > >     mutex_lock(oom_lock)
-> > > 			      out_of_memory
-> > > 			        select_bad_process
-> > > 				oom_kill_process(current)
-> > > 				  wake_oom_reaper
-> > > 							  oom_reap_task
-> > > 							  MMF_OOM_SKIP->victim
-> > > 			    mutex_unlock(oom_lock)
-> > >     out_of_memory
-> > >       select_bad_process # no task
-> > > 
-> > > If Thread1 didn't race it would bail out from try_charge and force the
-> > > charge.  We can achieve the same by checking tsk_is_oom_victim inside the
-> > > oom_lock and therefore close the race.
-> > > 
-> > > [1] http://lkml.kernel.org/r/bb2074c0-34fe-8c2c-1c7d-db71338f1e7f@i-love.sakura.ne.jp
-> > > Link: http://lkml.kernel.org/r/20190107143802.16847-3-mhocko@kernel.org
-> > > Signed-off-by: Michal Hocko <mhocko@suse.com>
-> > > Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> > > Cc: Johannes Weiner <hannes@cmpxchg.org>
-> > > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> > 
-> > It looks like this problem is happening in production systems:
-> > 
-> > https://www.spinics.net/lists/cgroups/msg21268.html
-> > 
-> > where the threads don't exit because they are trapped writing out the
-> > oom messages to a slow console (running the reproducer from this email
-> > thread triggers the oom flooding).
-> > 
-> > So IMO we should put this into 5.0 and add:
+On 25/01/2019 17:37, Tejun Heo wrote:
+> On Fri, Jan 25, 2019 at 08:52:11AM +0100, Arkadiusz Miśkiewicz wrote:
+>> On 24/01/2019 12:21, Arkadiusz Miśkiewicz wrote:
+>>> On 17/01/2019 14:17, Arkadiusz Miśkiewicz wrote:
+>>>> On 17/01/2019 13:25, Aleksa Sarai wrote:
+>>>>> On 2019-01-17, Arkadiusz Miśkiewicz <a.miskiewicz@gmail.com> wrote:
+>>>>>> Using kernel 4.19.13.
+>>>>>>
+>>>>>> For one cgroup I noticed weird behaviour:
+>>>>>>
+>>>>>> # cat pids.current
+>>>>>> 60
+>>>>>> # cat cgroup.procs
+>>>>>> #
+>>>>>
+>>>>> Are there any zombies in the cgroup? pids.current is linked up directly
+>>>>> to __put_task_struct (so exit(2) won't decrease it, only the task_struct
+>>>>> actually being freed will decrease it).
+>>>>>
+>>>>
+>>>> There are no zombie processes.
+>>>>
+>>>> In mean time the problem shows on multiple servers and so far saw it
+>>>> only in cgroups that were OOMed.
+>>>>
+>>>> What has changed on these servers (yesterday) is turning on
+>>>> memory.oom.group=1 for all cgroups and changing memory.high from 1G to
+>>>> "max" (leaving memory.max=2G limit only).
+>>>>
+>>>> Previously there was no such problem.
+>>>>
+>>>
+>>> I'm attaching reproducer. This time tried on different distribution
+>>> kernel (arch linux).
+>>>
+>>> After 60s pids.current still shows 37 processes even if there are no
+>>> processes running (according to ps aux).
+>>
+>>
+>> The same test on 5.0.0-rc3-00104-gc04e2a780caf and it's easy to
+>> reproduce bug. No processes in cgroup but pids.current reports 91.
 > 
-> Please note that Tetsuo has found out that this will not work with the
-> CLONE_VM without CLONE_SIGHAND cases and his http://lkml.kernel.org/r/01370f70-e1f6-ebe4-b95e-0df21a0bc15e@i-love.sakura.ne.jp
-> should handle this case as well. I've only had objections to the
-> changelog but other than that the patch looked sensible to me.
+> Can you please see whether the problem can be reproduced on the
+> current linux-next?
+> 
+>  git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
 
-I see. Yeah that looks reasonable to me too.
+I can reproduce on next (5.0.0-rc3-next-20190125), too:
 
-Tetsuo, could you include the Fixes: and CC: stable in your patch?
+[root@xps test]# python3 cg.py
+Created cgroup: /sys/fs/cgroup/test_2501
+Start: pids.current: 0
+Start: cgroup.procs:
+0: pids.current: 65
+0: cgroup.procs:
+1: pids.current: 44
+1: cgroup.procs:
+2: pids.current: 44
+2: cgroup.procs:
+3: pids.current: 44
+3: cgroup.procs:
+4: pids.current: 44
+4: cgroup.procs:
+5: pids.current: 44
+5: cgroup.procs:
+6: pids.current: 44
+6: cgroup.procs:
+7: pids.current: 44
+7: cgroup.procs:
+8: pids.current: 44
+8: cgroup.procs:
+9: pids.current: 44
+9: cgroup.procs:
+10: pids.current: 44
+10: cgroup.procs:
+11: pids.current: 44
+11: cgroup.procs:
+[root@xps test]# uname -a
+Linux xps 5.0.0-rc3-next-20190125 #2 SMP PREEMPT Fri Jan 25 19:11:40 CET
+2019 x86_64 Intel(R)_Core(TM)_i9-8950HK_CPU_@_2.90GHz PLD Linux
+[root@xps test]# mount |grep cgroup2
+cgroup2 on /sys/fs/cgroup type cgroup2 (rw,nosuid,nodev,noexec,relatime)
+
+
+I'm booting kernel with cgroup_no_v1=all
+
+-- 
+Arkadiusz Miśkiewicz, arekm / ( maven.pl | pld-linux.org )
