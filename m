@@ -1,7 +1,7 @@
 From: Oleg Nesterov <oleg@redhat.com>
 Subject: Re: [PATCH v6 4/7] cgroup: cgroup v2 freezer
-Date: Fri, 25 Jan 2019 13:27:13 +0100
-Message-ID: <20190125122713.GA18218@redhat.com>
+Date: Fri, 25 Jan 2019 14:43:36 +0100
+Message-ID: <20190125134336.GA18991@redhat.com>
 References: <20181222000307.28231-1-guro@fb.com>
  <20181222000307.28231-5-guro@fb.com>
 Mime-Version: 1.0
@@ -15,56 +15,46 @@ Content-Transfer-Encoding: 7bit
 To: Roman Gushchin <guroan@gmail.com>
 Cc: Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-Sorry, this version raced with my vacation, I missed it.
-
-I'll try to read this code carefully but after a quick glance I have some
-concerns,
-
 On 12/21, Roman Gushchin wrote:
 >
-> +static void cgroup_update_frozen(struct cgroup *cgrp)
+> +static void cgroup_do_freeze(struct cgroup *cgrp, bool freeze)
 > +{
-> +	bool frozen;
+> +	struct css_task_iter it;
+> +	struct task_struct *task;
 > +
-> +	lockdep_assert_held(&css_set_lock);
+> +	lockdep_assert_held(&cgroup_mutex);
 > +
-> +	/*
-> +	 * If the cgroup has to be frozen (CGRP_FREEZE bit set),
-> +	 * and all tasks are frozen or stopped, let's consider
-> +	 * the cgroup frozen. Otherwise it's not frozen.
-> +	 */
-> +	frozen = test_bit(CGRP_FREEZE, &cgrp->flags) &&
-> +		cgrp->freezer.nr_frozen_tasks +
-> +		cgrp->freezer.nr_stopped_tasks ==
-> +		cgrp->freezer.nr_tasks_to_freeze;
+> +	spin_lock_irq(&css_set_lock);
+> +	if (freeze) {
+> +		cgrp->freezer.nr_tasks_to_freeze = __cgroup_task_count(cgrp);
+> +		set_bit(CGRP_FREEZE, &cgrp->flags);
+> +	} else {
+> +		clear_bit(CGRP_FREEZE, &cgrp->flags);
+> +	}
+> +	spin_unlock_irq(&css_set_lock);
+> +
+> +	css_task_iter_start(&cgrp->self, 0, &it);
+> +	while ((task = css_task_iter_next(&it))) {
+> +		/*
+> +		 * Ignore kernel threads here. Freezing cgroups containing
+> +		 * kthreads isn't supported.
+> +		 */
+> +		if (task->flags & PF_KTHREAD)
+> +			continue;
+> +		cgroup_freeze_task(task, freeze);
+> +	}
+> +	css_task_iter_end(&it);
 
-OK. Suppose that cgroup is frozen, CGRP_FROZEN is set, stopped == 0,
-to_freeze = frozen.
+I don't understand why this can race with exiting task. Or with SIGKILL which
+kills a task before it sets current->frozen.
 
-One of the task is killed, it calls leave_frozen(). If I read this code path
-correctly, only ->nr_frozen_tasks will be decremented, so "frozen" will be
-"false" when cgroup_update_frozen() is called.
+How can we trust nr_tasks_to_freeze at all?
 
-Doesn't this mean that this cgroup will no longer be CGRP_FROZEN even after
-the killed task goes away completely?
+Yes you added cgroup_dec_tasks_to_freeze() into cgroup_exit(). But it won't be
+called if CGRP_FROZEN was not set yet, or because of "spurious" transitions
+caused by cgroup_inc/dec_frozen_cnt() called by this or other tasks.
 
-
-Or. Suppose that another process picks a task from the CGRP_FROZEN cgroup and
-does PTRACE_ATTACH + PTRACE_INTERRUPT. IIUC, the tracee will only increment
-->nr_stopped_tasks, it won't touch other counters. Again, cgroup won't be FROZEN
-until PTRACE_CONT'ed tracee does cgroup_leave_stopped() ? This looks strange at
-least.
-
-
-
-SIGSTOP. IIUC, a frozen task sleeping in do_freezer_trap() won't stop. However if
-another thread has already called do_signal_stop(), the woken frozen task will
-react to JOBCTL_STOP_PENDING and stop. And do_signal_stop()->cgroup_enter_stopped()
-will "destroy" CGRP_FROZEN too, or I am totally confused.
-
-OTOH, if you freeze a TASK_STOPPED task's cgroup, this task can react to SIGCONT,
-notify its parent, then freeze again. This is fine, but iiuc this cgroup won't be
-FROZEN in between, cgroup_file_notify() will be called twice...
+it seems that cgroup_exit() should check CGRP_FREEZE instead...
 
 Oleg.
 
