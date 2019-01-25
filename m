@@ -1,110 +1,132 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
-Date: Fri, 25 Jan 2019 08:51:52 -0800
-Message-ID: <20190125165152.GK50184@devbig004.ftw2.facebook.com>
-References: <20190123223144.GA10798@chrisdown.name>
- <20190124082252.GD4087@dhcp22.suse.cz>
- <20190124160009.GA12436@cmpxchg.org>
- <20190124170117.GS4087@dhcp22.suse.cz>
- <20190124182328.GA10820@cmpxchg.org>
- <20190125074824.GD3560@dhcp22.suse.cz>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: + memcg-do-not-report-racy-no-eligible-oom-tasks.patch added to
+ -mm tree
+Date: Fri, 25 Jan 2019 11:56:24 -0500
+Message-ID: <20190125165624.GA17719@cmpxchg.org>
+References: <20190109190306.rATpT%akpm@linux-foundation.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=Fx+ssMKA+Ay2K4eIcTnEhxGFGYOBaGx6lV4J25BcMHg=;
-        b=cimoxzcpAnB7bCbd6fNtWOQ9t2KVyXX1h+OvBbp5Htq+3KBWNIWcLM0nUHwKTg8hZd
-         sQTjOpllIj/vrDiB2bwOE/5lD4IhBPjblIPqgZxdjNnc5tmPY1kpP5PASI8/5Vv+ty6I
-         CFQrhRNsHqwhVgUFHr0uZH7aoe/uMk5nTykPbc/Dsfd8W8zCXAmuLYdz2T75z9jEP1ZB
-         10xullDgW5P+wrvGBknon1upG+l0cyrMpLIPs6hDWOCRqi5ogKZr3LqUDKEuB58lFtHK
-         3MJW9Qd/Ua0hcByDRthnz5a4b5i1CEahSJkkTygqGp+ADTVDL88vvPUS19UulUhKgmpH
-         9zzw==
+        bh=RNchuqr3adsTArnI0ZEntYHozJYWxyEQo/SnVvUtVNc=;
+        b=uIIoysv+H0D8F8n6fbuqAaCugVthDdjFx3BGz3Q/i0kCjWNLsFDyRt4QyJTmW+MJoI
+         hlkkG0VoFp67FGmCBF+IDnT7DMHQLVolbwhaWNj/bSpXJGG3WUTU7BggZuuoeoVxHj4r
+         XbFMWUT5Lxzp+UJhZa85SWO/4ZB0qNvzJhvXTseOeH/jND0qyo5RGgPYvHeXxsDEUoQ5
+         JI0wg8e78izosTtI38FdP+KKcMONfflsl0/HLPGYFY+Rsg5u3eavtLsPx3/u5mMd2tjM
+         OoYIi50y34FwpcXVeR3msE3n9vvsgFP+XWcE47HJue02u3LtgOwVQz+MVVsJ7t4wv4Sl
+         Ud0Q==
 Content-Disposition: inline
-In-Reply-To: <20190125074824.GD3560@dhcp22.suse.cz>
+In-Reply-To: <20190109190306.rATpT%akpm@linux-foundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: akpm@linux-foundation.org
+Cc: mm-commits@vger.kernel.org, penguin-kernel@i-love.sakura.ne.jp, mhocko@suse.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-Hello, Michal.
-
-On Fri, Jan 25, 2019 at 09:42:13AM +0100, Michal Hocko wrote:
-> > If you read my sentence again, I'm not talking about the kernel but
-> > the surrounding infrastructure that consumes this data. The risk is
-> > not dependent on the age of the interface age, but on its adoption.
+On Wed, Jan 09, 2019 at 11:03:06AM -0800, akpm@linux-foundation.org wrote:
 > 
-> You really have to assume the user visible interface is consumed shortly
-> after it is exposed/considered stable in this case as cgroups v2 was
-> explicitly called unstable for a considerable period of time. This is a
-> general policy regarding user APIs in the kernel. I can see arguments a
-> next release after introduction or in similar cases but this is 3 years
-> ago. We already have distribution kernels based on 4.12 kernel and it is
-> old comparing to 5.0.
-
-We do change userland-visible behaviors if the existing behavior is
-buggy / misleading / confusing.  For example, we recently changed how
-discard bytes are accounted (no longer included in write bytes or ios)
-and even how mincore(2) behaves, both of which are far older than
-cgroup2.
-
-The main considerations are the blast radius and existing use cases in
-these decisions.  Age does contribute to it but mostly because they
-affect how widely the behavior may be depended upon.
-
-> > > Changing interfaces now represents a non-trivial risk and so far I
-> > > haven't heard any actual usecase where the current semantic is
-> > > actually wrong.  Inconsistency on its own is not a sufficient
-> > > justification IMO.
-> > 
-> > It can be seen either way, and in isolation it wouldn't be wrong to
-> > count events on the local level. But we made that decision for the
-> > entire interface, and this file is the odd one out now. From that
-> > comprehensive perspective, yes, the behavior is wrong.
+> The patch titled
+>      Subject: memcg: do not report racy no-eligible OOM tasks
+> has been added to the -mm tree.  Its filename is
+>      memcg-do-not-report-racy-no-eligible-oom-tasks.patch
 > 
-> I do see your point about consistency. But it is also important to
-> consider the usability of this interface. As already mentioned, catching
-> an oom event at a level where the oom doesn't happen and having hard
-> time to identify that place without races is a not a straightforward API
-> to use. So it might be really the case that the api is actually usable
-> for its purpose.
-
-What if a user wants to monitor any ooms in the subtree tho, which is
-a valid use case?  If local event monitoring is useful and it can be,
-let's add separate events which are clearly identifiable to be local.
-Right now, it's confusing like hell.
-
-> > It really
-> > confuses people who are trying to use it, because they *do* expect it
-> > to behave recursively.
+> This patch should soon appear at
+>     http://ozlabs.org/~akpm/mmots/broken-out/memcg-do-not-report-racy-no-eligible-oom-tasks.patch
+> and later at
+>     http://ozlabs.org/~akpm/mmotm/broken-out/memcg-do-not-report-racy-no-eligible-oom-tasks.patch
 > 
-> Then we should improve the documentation. But seriously these are no
-> strong reasons to change a long term semantic people might rely on.
-
-This is broken interface.  We're mixing local and hierarchical numbers
-willy nilly without obvious way of telling them apart.
-
-> > I'm really having a hard time believing there are existing cgroup2
-> > users with specific expectations for the non-recursive behavior...
+> Before you just go and hit "reply", please:
+>    a) Consider who else should be cc'ed
+>    b) Prefer to cc a suitable mailing list as well
+>    c) Ideally: find the original patch on the mailing list and do a
+>       reply-to-all to that, adding suitable additional cc's
 > 
-> I can certainly imagine monitoring tools to hook at levels where limits
-> are set and report events as they happen. It would be more than
-> confusing to receive events for reclaim/ooms that hasn't happened at
-> that level just because a delegated memcg down the hierarchy has decided
-> to set a more restrictive limits. Really this is a very unexpected
-> behavior change for anybody using that interface right now on anything
-> but leaf memcgs.
+> *** Remember to use Documentation/process/submit-checklist.rst when testing your code ***
+> 
+> The -mm tree is included into linux-next and is updated
+> there every 3-4 working days
+> 
+> ------------------------------------------------------
+> From: Michal Hocko <mhocko@suse.com>
+> Subject: memcg: do not report racy no-eligible OOM tasks
+> 
+> Tetsuo has reported [1] that a single process group memcg might easily
+> swamp the log with no-eligible oom victim reports due to race between the
+> memcg charge and oom_reaper
+> 
+> Thread 1		Thread2				oom_reaper
+> try_charge		try_charge
+> 			  mem_cgroup_out_of_memory
+> 			    mutex_lock(oom_lock)
+>   mem_cgroup_out_of_memory
+>     mutex_lock(oom_lock)
+> 			      out_of_memory
+> 			        select_bad_process
+> 				oom_kill_process(current)
+> 				  wake_oom_reaper
+> 							  oom_reap_task
+> 							  MMF_OOM_SKIP->victim
+> 			    mutex_unlock(oom_lock)
+>     out_of_memory
+>       select_bad_process # no task
+> 
+> If Thread1 didn't race it would bail out from try_charge and force the
+> charge.  We can achieve the same by checking tsk_is_oom_victim inside the
+> oom_lock and therefore close the race.
+> 
+> [1] http://lkml.kernel.org/r/bb2074c0-34fe-8c2c-1c7d-db71338f1e7f@i-love.sakura.ne.jp
+> Link: http://lkml.kernel.org/r/20190107143802.16847-3-mhocko@kernel.org
+> Signed-off-by: Michal Hocko <mhocko@suse.com>
+> Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-Sure, there's some probability this change may cause some disruptions
-although I'm pretty skeptical given that inner node event monitoring
-is mostly useless right now.  However, there's also a lot of on-going
-and future costs everyone is paying because the interface is so
-confusing.
+It looks like this problem is happening in production systems:
 
-Thanks.
+https://www.spinics.net/lists/cgroups/msg21268.html
 
--- 
-tejun
+where the threads don't exit because they are trapped writing out the
+oom messages to a slow console (running the reproducer from this email
+thread triggers the oom flooding).
+
+So IMO we should put this into 5.0 and add:
+
+Fixes: 29ef680ae7c2 ("memcg, oom: move out_of_memory back to the charge path")
+Fixes: 3100dab2aa09 ("mm: memcontrol: print proper OOM header when no eligible victim left")
+Cc: stable@kernel.org # 4.19+
+
+> --- a/mm/memcontrol.c~memcg-do-not-report-racy-no-eligible-oom-tasks
+> +++ a/mm/memcontrol.c
+> @@ -1387,10 +1387,22 @@ static bool mem_cgroup_out_of_memory(str
+>  		.gfp_mask = gfp_mask,
+>  		.order = order,
+>  	};
+> -	bool ret;
+> +	bool ret = true;
+
+Should this be false if skip the oom kill, btw? Either will result in
+a forced charge - false will do so right away, true will retry once
+and then trigger the victim check in try_charge().
+
+It's just weird to return true when we didn't do what the caller asked
+us to do.
+
+>  	mutex_lock(&oom_lock);
+> +
+> +	/*
+> +	 * multi-threaded tasks might race with oom_reaper and gain
+> +	 * MMF_OOM_SKIP before reaching out_of_memory which can lead
+> +	 * to out_of_memory failure if the task is the last one in
+> +	 * memcg which would be a false possitive failure reported
+> +	 */
+> +	if (tsk_is_oom_victim(current))
+> +		goto unlock;
+> +
+>  	ret = out_of_memory(&oc);
+> +
+> +unlock:
+>  	mutex_unlock(&oom_lock);
+>  	return ret;
