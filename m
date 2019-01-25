@@ -1,147 +1,81 @@
-From: =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
-Subject: Re: pids.current with invalid value for hours [5.0.0 rc3 git]
-Date: Fri, 25 Jan 2019 08:52:11 +0100
-Message-ID: <1cdbef13-564d-61a6-95f4-579d2cad243d@gmail.com>
-References: <df806a77-3327-9db5-8be2-976fde1c84e5@gmail.com>
- <20190117122535.njcbqhlmzozdkncw@mikami>
- <1d36b181-cbaf-6694-1a31-2f7f55d15675@gmail.com>
- <96ef6615-a5df-30af-b4dc-417a18ca63f1@gmail.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
+Date: Fri, 25 Jan 2019 09:42:13 +0100
+Message-ID: <20190125074824.GD3560@dhcp22.suse.cz>
+References: <20190123223144.GA10798@chrisdown.name>
+ <20190124082252.GD4087@dhcp22.suse.cz>
+ <20190124160009.GA12436@cmpxchg.org>
+ <20190124170117.GS4087@dhcp22.suse.cz>
+ <20190124182328.GA10820@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:from:to:references:cc:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=S/PecIcQc1kFgYlonoFxz1E4IJONkcf4aGIUu1zvd08=;
-        b=vMFBqrK63eVtVNZj0Q/vwZC4cCnruJWwIClI0a5m7ZShYCSrcLdZl8CXhFmEz27nv1
-         qbt0icT+fv9/IPCBXvVL4SVgAmP/248fNBpn2LfTAVzFLKT4mIHLmD1qeV+l6AKhOFAC
-         xojX7hMo3rfgBcVNeQRHsTDLHCBwiLXo6uPpcepX9K16FYASuc9hc3rAkmU0RdZpo8gZ
-         kQhRWZ+fOLbQ/5ynd9aZ+9Q7r4l1ZYtHXw205ivFQoJNr1jLqRmRbSu/2keIBIeJYIo5
-         htWEeZG4BOQLVfEp9nDPBODwYcO2MD6pYE+Lv+gFrtOIilXkaXnheS+xDnqgecs7QCK8
-         WPtw==
-In-Reply-To: <96ef6615-a5df-30af-b4dc-417a18ca63f1@gmail.com>
-Content-Language: pl
+Content-Disposition: inline
+In-Reply-To: <20190124182328.GA10820@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: cgroups@vger.kernel.org
-Cc: Aleksa Sarai <asarai@suse.de>, Jay Kamat <jgkamat@fb.com>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@suse.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-On 24/01/2019 12:21, Arkadiusz Miśkiewicz wrote:
-> On 17/01/2019 14:17, Arkadiusz Miśkiewicz wrote:
->> On 17/01/2019 13:25, Aleksa Sarai wrote:
->>> On 2019-01-17, Arkadiusz Miśkiewicz <a.miskiewicz@gmail.com> wrote:
->>>> Using kernel 4.19.13.
->>>>
->>>> For one cgroup I noticed weird behaviour:
->>>>
->>>> # cat pids.current
->>>> 60
->>>> # cat cgroup.procs
->>>> #
->>>
->>> Are there any zombies in the cgroup? pids.current is linked up directly
->>> to __put_task_struct (so exit(2) won't decrease it, only the task_struct
->>> actually being freed will decrease it).
->>>
->>
->> There are no zombie processes.
->>
->> In mean time the problem shows on multiple servers and so far saw it
->> only in cgroups that were OOMed.
->>
->> What has changed on these servers (yesterday) is turning on
->> memory.oom.group=1 for all cgroups and changing memory.high from 1G to
->> "max" (leaving memory.max=2G limit only).
->>
->> Previously there was no such problem.
->>
+On Thu 24-01-19 13:23:28, Johannes Weiner wrote:
+> On Thu, Jan 24, 2019 at 06:01:17PM +0100, Michal Hocko wrote:
+> > On Thu 24-01-19 11:00:10, Johannes Weiner wrote:
+> > [...]
+> > > We cannot fully eliminate a risk for regression, but it strikes me as
+> > > highly unlikely, given the extremely young age of cgroup2-based system
+> > > management and surrounding tooling.
+> > 
+> > I am not really sure what you consider young but this interface is 4.0+
+> > IIRC and the cgroup v2 is considered stable since 4.5 unless I
+> > missrememeber and that is not a short time period in my book.
 > 
-> I'm attaching reproducer. This time tried on different distribution
-> kernel (arch linux).
+> If you read my sentence again, I'm not talking about the kernel but
+> the surrounding infrastructure that consumes this data. The risk is
+> not dependent on the age of the interface age, but on its adoption.
+
+You really have to assume the user visible interface is consumed shortly
+after it is exposed/considered stable in this case as cgroups v2 was
+explicitly called unstable for a considerable period of time. This is a
+general policy regarding user APIs in the kernel. I can see arguments a
+next release after introduction or in similar cases but this is 3 years
+ago. We already have distribution kernels based on 4.12 kernel and it is
+old comparing to 5.0.
+
+> > Changing interfaces now represents a non-trivial risk and so far I
+> > haven't heard any actual usecase where the current semantic is
+> > actually wrong.  Inconsistency on its own is not a sufficient
+> > justification IMO.
 > 
-> After 60s pids.current still shows 37 processes even if there are no
-> processes running (according to ps aux).
+> It can be seen either way, and in isolation it wouldn't be wrong to
+> count events on the local level. But we made that decision for the
+> entire interface, and this file is the odd one out now. From that
+> comprehensive perspective, yes, the behavior is wrong.
 
+I do see your point about consistency. But it is also important to
+consider the usability of this interface. As already mentioned, catching
+an oom event at a level where the oom doesn't happen and having hard
+time to identify that place without races is a not a straightforward API
+to use. So it might be really the case that the api is actually usable
+for its purpose.
 
-The same test on 5.0.0-rc3-00104-gc04e2a780caf and it's easy to
-reproduce bug. No processes in cgroup but pids.current reports 91.
+> It really
+> confuses people who are trying to use it, because they *do* expect it
+> to behave recursively.
 
-memory.oom.group=0 - everything works fine, pids are counted properly
-memory.oom.group=1 - bug becomes visible
+Then we should improve the documentation. But seriously these are no
+strong reasons to change a long term semantic people might rely on.
 
-[root@xps test]# python3 cg.py
-Created cgroup: /sys/fs/cgroup/test_5277
-Start: pids.current: 0
-Start: cgroup.procs:
-0: pids.current: 103
-0: cgroup.procs:
-1: pids.current: 91
-1: cgroup.procs:
-2: pids.current: 91
-2: cgroup.procs:
-3: pids.current: 91
-3: cgroup.procs:
-4: pids.current: 91
-4: cgroup.procs:
-5: pids.current: 91
-5: cgroup.procs:
-6: pids.current: 91
-6: cgroup.procs:
-7: pids.current: 91
-7: cgroup.procs:
-8: pids.current: 91
-8: cgroup.procs:
-9: pids.current: 91
-9: cgroup.procs:
-10: pids.current: 91
-10: cgroup.procs:
-11: pids.current: 91
-11: cgroup.procs:
-[root@xps test]# uname -a
-Linux xps 5.0.0-rc3-00104-gc04e2a780caf #288 SMP PREEMPT Thu Jan 24
-19:00:32 CET 2019 x86_64 Intel(R)_Core(TM)_i9-8950HK_CPU_@_2.90GHz PLD Linux
+> I'm really having a hard time believing there are existing cgroup2
+> users with specific expectations for the non-recursive behavior...
 
-
-cc relevant people
-
-script is here: https://www.spinics.net/lists/cgroups/msg21330.html
-
-> 
-> [root@warm ~]# uname -a
-> Linux warm 4.20.3-arch1-1-ARCH #1 SMP PREEMPT Wed Jan 16 22:38:58 UTC
-> 2019 x86_64 GNU/Linux
-> [root@warm ~]# python3 cg.py
-> Created cgroup: /sys/fs/cgroup/test_26207
-> Start: pids.current: 0
-> Start: cgroup.procs:
-> 0: pids.current: 62
-> 0: cgroup.procs:
-> 1: pids.current: 37
-> 1: cgroup.procs:
-> 2: pids.current: 37
-> 2: cgroup.procs:
-> 3: pids.current: 37
-> 3: cgroup.procs:
-> 4: pids.current: 37
-> 4: cgroup.procs:
-> 5: pids.current: 37
-> 5: cgroup.procs:
-> 6: pids.current: 37
-> 6: cgroup.procs:
-> 7: pids.current: 37
-> 7: cgroup.procs:
-> 8: pids.current: 37
-> 8: cgroup.procs:
-> 9: pids.current: 37
-> 9: cgroup.procs:
-> 10: pids.current: 37
-> 10: cgroup.procs:
-> 11: pids.current: 37
-> 11: cgroup.procs:
-> 
-
-
+I can certainly imagine monitoring tools to hook at levels where limits
+are set and report events as they happen. It would be more than
+confusing to receive events for reclaim/ooms that hasn't happened at
+that level just because a delegated memcg down the hierarchy has decided
+to set a more restrictive limits. Really this is a very unexpected
+behavior change for anybody using that interface right now on anything
+but leaf memcgs.
 -- 
-Arkadiusz Miśkiewicz, arekm / ( maven.pl | pld-linux.org )
+Michal Hocko
+SUSE Labs
