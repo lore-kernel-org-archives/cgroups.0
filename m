@@ -1,81 +1,70 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
-Date: Fri, 25 Jan 2019 09:42:13 +0100
-Message-ID: <20190125074824.GD3560@dhcp22.suse.cz>
-References: <20190123223144.GA10798@chrisdown.name>
- <20190124082252.GD4087@dhcp22.suse.cz>
- <20190124160009.GA12436@cmpxchg.org>
- <20190124170117.GS4087@dhcp22.suse.cz>
- <20190124182328.GA10820@cmpxchg.org>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: [PATCH v6 4/7] cgroup: cgroup v2 freezer
+Date: Fri, 25 Jan 2019 13:27:13 +0100
+Message-ID: <20190125122713.GA18218@redhat.com>
+References: <20181222000307.28231-1-guro@fb.com>
+ <20181222000307.28231-5-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20190124182328.GA10820@cmpxchg.org>
+In-Reply-To: <20181222000307.28231-5-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Roman Gushchin <guroan@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-On Thu 24-01-19 13:23:28, Johannes Weiner wrote:
-> On Thu, Jan 24, 2019 at 06:01:17PM +0100, Michal Hocko wrote:
-> > On Thu 24-01-19 11:00:10, Johannes Weiner wrote:
-> > [...]
-> > > We cannot fully eliminate a risk for regression, but it strikes me as
-> > > highly unlikely, given the extremely young age of cgroup2-based system
-> > > management and surrounding tooling.
-> > 
-> > I am not really sure what you consider young but this interface is 4.0+
-> > IIRC and the cgroup v2 is considered stable since 4.5 unless I
-> > missrememeber and that is not a short time period in my book.
-> 
-> If you read my sentence again, I'm not talking about the kernel but
-> the surrounding infrastructure that consumes this data. The risk is
-> not dependent on the age of the interface age, but on its adoption.
+Sorry, this version raced with my vacation, I missed it.
 
-You really have to assume the user visible interface is consumed shortly
-after it is exposed/considered stable in this case as cgroups v2 was
-explicitly called unstable for a considerable period of time. This is a
-general policy regarding user APIs in the kernel. I can see arguments a
-next release after introduction or in similar cases but this is 3 years
-ago. We already have distribution kernels based on 4.12 kernel and it is
-old comparing to 5.0.
+I'll try to read this code carefully but after a quick glance I have some
+concerns,
 
-> > Changing interfaces now represents a non-trivial risk and so far I
-> > haven't heard any actual usecase where the current semantic is
-> > actually wrong.  Inconsistency on its own is not a sufficient
-> > justification IMO.
-> 
-> It can be seen either way, and in isolation it wouldn't be wrong to
-> count events on the local level. But we made that decision for the
-> entire interface, and this file is the odd one out now. From that
-> comprehensive perspective, yes, the behavior is wrong.
+On 12/21, Roman Gushchin wrote:
+>
+> +static void cgroup_update_frozen(struct cgroup *cgrp)
+> +{
+> +	bool frozen;
+> +
+> +	lockdep_assert_held(&css_set_lock);
+> +
+> +	/*
+> +	 * If the cgroup has to be frozen (CGRP_FREEZE bit set),
+> +	 * and all tasks are frozen or stopped, let's consider
+> +	 * the cgroup frozen. Otherwise it's not frozen.
+> +	 */
+> +	frozen = test_bit(CGRP_FREEZE, &cgrp->flags) &&
+> +		cgrp->freezer.nr_frozen_tasks +
+> +		cgrp->freezer.nr_stopped_tasks ==
+> +		cgrp->freezer.nr_tasks_to_freeze;
 
-I do see your point about consistency. But it is also important to
-consider the usability of this interface. As already mentioned, catching
-an oom event at a level where the oom doesn't happen and having hard
-time to identify that place without races is a not a straightforward API
-to use. So it might be really the case that the api is actually usable
-for its purpose.
+OK. Suppose that cgroup is frozen, CGRP_FROZEN is set, stopped == 0,
+to_freeze = frozen.
 
-> It really
-> confuses people who are trying to use it, because they *do* expect it
-> to behave recursively.
+One of the task is killed, it calls leave_frozen(). If I read this code path
+correctly, only ->nr_frozen_tasks will be decremented, so "frozen" will be
+"false" when cgroup_update_frozen() is called.
 
-Then we should improve the documentation. But seriously these are no
-strong reasons to change a long term semantic people might rely on.
+Doesn't this mean that this cgroup will no longer be CGRP_FROZEN even after
+the killed task goes away completely?
 
-> I'm really having a hard time believing there are existing cgroup2
-> users with specific expectations for the non-recursive behavior...
 
-I can certainly imagine monitoring tools to hook at levels where limits
-are set and report events as they happen. It would be more than
-confusing to receive events for reclaim/ooms that hasn't happened at
-that level just because a delegated memcg down the hierarchy has decided
-to set a more restrictive limits. Really this is a very unexpected
-behavior change for anybody using that interface right now on anything
-but leaf memcgs.
--- 
-Michal Hocko
-SUSE Labs
+Or. Suppose that another process picks a task from the CGRP_FROZEN cgroup and
+does PTRACE_ATTACH + PTRACE_INTERRUPT. IIUC, the tracee will only increment
+->nr_stopped_tasks, it won't touch other counters. Again, cgroup won't be FROZEN
+until PTRACE_CONT'ed tracee does cgroup_leave_stopped() ? This looks strange at
+least.
+
+
+
+SIGSTOP. IIUC, a frozen task sleeping in do_freezer_trap() won't stop. However if
+another thread has already called do_signal_stop(), the woken frozen task will
+react to JOBCTL_STOP_PENDING and stop. And do_signal_stop()->cgroup_enter_stopped()
+will "destroy" CGRP_FROZEN too, or I am totally confused.
+
+OTOH, if you freeze a TASK_STOPPED task's cgroup, this task can react to SIGCONT,
+notify its parent, then freeze again. This is fine, but iiuc this cgroup won't be
+FROZEN in between, cgroup_file_notify() will be called twice...
+
+Oleg.
+
