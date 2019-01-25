@@ -1,80 +1,108 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: pids.current with invalid value for hours [5.0.0 rc3 git]
-Date: Fri, 25 Jan 2019 08:37:31 -0800
-Message-ID: <20190125163731.GJ50184@devbig004.ftw2.facebook.com>
-References: <df806a77-3327-9db5-8be2-976fde1c84e5@gmail.com>
- <20190117122535.njcbqhlmzozdkncw@mikami>
- <1d36b181-cbaf-6694-1a31-2f7f55d15675@gmail.com>
- <96ef6615-a5df-30af-b4dc-417a18ca63f1@gmail.com>
- <1cdbef13-564d-61a6-95f4-579d2cad243d@gmail.com>
+Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
+Date: Fri, 25 Jan 2019 08:51:52 -0800
+Message-ID: <20190125165152.GK50184@devbig004.ftw2.facebook.com>
+References: <20190123223144.GA10798@chrisdown.name>
+ <20190124082252.GD4087@dhcp22.suse.cz>
+ <20190124160009.GA12436@cmpxchg.org>
+ <20190124170117.GS4087@dhcp22.suse.cz>
+ <20190124182328.GA10820@cmpxchg.org>
+ <20190125074824.GD3560@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=RYL7pbha6AtxQjHD3ZK0n6qiStyqrgkMrnAlVCP0NNE=;
-        b=hZvlbsqyaKWNVGRewUWJIxOTzlUYhWS2zbX7SH2tizlgJpQpx60Q9lFUr1KAvxcC/o
-         1hPJlxzXj2+3gfQcXN2m7hvMawtI4t9aj1dEem45TLpkEql/eZmnG/q1Rj1mzVyhtxwr
-         HV7sN0Yf6DRbhWtZYwjdL3tBn7xcNcxE0m4fXAVJgEjZPCK1VAIW74UMrRR1vLSuVj0h
-         HyosUDdb9lBIVd02NWUS0S1pWyvOPCIyUMbdo++pIUAlLLlAg3hl9wVbLnyV7iSiBQWQ
-         Cmfs2mFJwxet2D8u3OAyjG/l6Soc19pDLR4LD+aJZAPHD4x6jylVAxQ/YGkiG692WER7
-         s73w==
+         :content-disposition:in-reply-to:user-agent;
+        bh=Fx+ssMKA+Ay2K4eIcTnEhxGFGYOBaGx6lV4J25BcMHg=;
+        b=cimoxzcpAnB7bCbd6fNtWOQ9t2KVyXX1h+OvBbp5Htq+3KBWNIWcLM0nUHwKTg8hZd
+         sQTjOpllIj/vrDiB2bwOE/5lD4IhBPjblIPqgZxdjNnc5tmPY1kpP5PASI8/5Vv+ty6I
+         CFQrhRNsHqwhVgUFHr0uZH7aoe/uMk5nTykPbc/Dsfd8W8zCXAmuLYdz2T75z9jEP1ZB
+         10xullDgW5P+wrvGBknon1upG+l0cyrMpLIPs6hDWOCRqi5ogKZr3LqUDKEuB58lFtHK
+         3MJW9Qd/Ua0hcByDRthnz5a4b5i1CEahSJkkTygqGp+ADTVDL88vvPUS19UulUhKgmpH
+         9zzw==
 Content-Disposition: inline
-In-Reply-To: <1cdbef13-564d-61a6-95f4-579d2cad243d@gmail.com>
+In-Reply-To: <20190125074824.GD3560@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <a.miskiewicz@gmail.com>
-Cc: cgroups@vger.kernel.org, Aleksa Sarai <asarai@suse.de>, Jay Kamat <jgkamat@fb.com>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@suse.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-On Fri, Jan 25, 2019 at 08:52:11AM +0100, Arkadiusz Miśkiewicz wrote:
-> On 24/01/2019 12:21, Arkadiusz Miśkiewicz wrote:
-> > On 17/01/2019 14:17, Arkadiusz Miśkiewicz wrote:
-> >> On 17/01/2019 13:25, Aleksa Sarai wrote:
-> >>> On 2019-01-17, Arkadiusz Miśkiewicz <a.miskiewicz@gmail.com> wrote:
-> >>>> Using kernel 4.19.13.
-> >>>>
-> >>>> For one cgroup I noticed weird behaviour:
-> >>>>
-> >>>> # cat pids.current
-> >>>> 60
-> >>>> # cat cgroup.procs
-> >>>> #
-> >>>
-> >>> Are there any zombies in the cgroup? pids.current is linked up directly
-> >>> to __put_task_struct (so exit(2) won't decrease it, only the task_struct
-> >>> actually being freed will decrease it).
-> >>>
-> >>
-> >> There are no zombie processes.
-> >>
-> >> In mean time the problem shows on multiple servers and so far saw it
-> >> only in cgroups that were OOMed.
-> >>
-> >> What has changed on these servers (yesterday) is turning on
-> >> memory.oom.group=1 for all cgroups and changing memory.high from 1G to
-> >> "max" (leaving memory.max=2G limit only).
-> >>
-> >> Previously there was no such problem.
-> >>
-> > 
-> > I'm attaching reproducer. This time tried on different distribution
-> > kernel (arch linux).
-> > 
-> > After 60s pids.current still shows 37 processes even if there are no
-> > processes running (according to ps aux).
+Hello, Michal.
+
+On Fri, Jan 25, 2019 at 09:42:13AM +0100, Michal Hocko wrote:
+> > If you read my sentence again, I'm not talking about the kernel but
+> > the surrounding infrastructure that consumes this data. The risk is
+> > not dependent on the age of the interface age, but on its adoption.
 > 
+> You really have to assume the user visible interface is consumed shortly
+> after it is exposed/considered stable in this case as cgroups v2 was
+> explicitly called unstable for a considerable period of time. This is a
+> general policy regarding user APIs in the kernel. I can see arguments a
+> next release after introduction or in similar cases but this is 3 years
+> ago. We already have distribution kernels based on 4.12 kernel and it is
+> old comparing to 5.0.
+
+We do change userland-visible behaviors if the existing behavior is
+buggy / misleading / confusing.  For example, we recently changed how
+discard bytes are accounted (no longer included in write bytes or ios)
+and even how mincore(2) behaves, both of which are far older than
+cgroup2.
+
+The main considerations are the blast radius and existing use cases in
+these decisions.  Age does contribute to it but mostly because they
+affect how widely the behavior may be depended upon.
+
+> > > Changing interfaces now represents a non-trivial risk and so far I
+> > > haven't heard any actual usecase where the current semantic is
+> > > actually wrong.  Inconsistency on its own is not a sufficient
+> > > justification IMO.
+> > 
+> > It can be seen either way, and in isolation it wouldn't be wrong to
+> > count events on the local level. But we made that decision for the
+> > entire interface, and this file is the odd one out now. From that
+> > comprehensive perspective, yes, the behavior is wrong.
 > 
-> The same test on 5.0.0-rc3-00104-gc04e2a780caf and it's easy to
-> reproduce bug. No processes in cgroup but pids.current reports 91.
+> I do see your point about consistency. But it is also important to
+> consider the usability of this interface. As already mentioned, catching
+> an oom event at a level where the oom doesn't happen and having hard
+> time to identify that place without races is a not a straightforward API
+> to use. So it might be really the case that the api is actually usable
+> for its purpose.
 
-Can you please see whether the problem can be reproduced on the
-current linux-next?
+What if a user wants to monitor any ooms in the subtree tho, which is
+a valid use case?  If local event monitoring is useful and it can be,
+let's add separate events which are clearly identifiable to be local.
+Right now, it's confusing like hell.
 
- git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+> > It really
+> > confuses people who are trying to use it, because they *do* expect it
+> > to behave recursively.
+> 
+> Then we should improve the documentation. But seriously these are no
+> strong reasons to change a long term semantic people might rely on.
+
+This is broken interface.  We're mixing local and hierarchical numbers
+willy nilly without obvious way of telling them apart.
+
+> > I'm really having a hard time believing there are existing cgroup2
+> > users with specific expectations for the non-recursive behavior...
+> 
+> I can certainly imagine monitoring tools to hook at levels where limits
+> are set and report events as they happen. It would be more than
+> confusing to receive events for reclaim/ooms that hasn't happened at
+> that level just because a delegated memcg down the hierarchy has decided
+> to set a more restrictive limits. Really this is a very unexpected
+> behavior change for anybody using that interface right now on anything
+> but leaf memcgs.
+
+Sure, there's some probability this change may cause some disruptions
+although I'm pretty skeptical given that inner node event monitoring
+is mostly useless right now.  However, there's also a lot of on-going
+and future costs everyone is paying because the interface is so
+confusing.
 
 Thanks.
 
