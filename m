@@ -1,7 +1,7 @@
-From: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+From: =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
 Subject: Re: pids.current with invalid value for hours [5.0.0 rc3 git]
-Date: Sat, 26 Jan 2019 20:09:46 +0900
-Message-ID: <34e97b46-0792-cc66-e0f2-d72576cdec59@i-love.sakura.ne.jp>
+Date: Sat, 26 Jan 2019 12:29:29 +0100
+Message-ID: <2b0c7d6c-c58a-da7d-6f0a-4900694ec2d3@gmail.com>
 References: <df806a77-3327-9db5-8be2-976fde1c84e5@gmail.com>
  <20190117122535.njcbqhlmzozdkncw@mikami>
  <1d36b181-cbaf-6694-1a31-2f7f55d15675@gmail.com>
@@ -13,84 +13,159 @@ References: <df806a77-3327-9db5-8be2-976fde1c84e5@gmail.com>
  <6da6ca69-5a6e-a9f6-d091-f89a8488982a@gmail.com>
  <72aa8863-a534-b8df-6b9e-f69cf4dd5c4d@i-love.sakura.ne.jp>
  <33a07810-6dbc-36be-5bb6-a279773ccf69@i-love.sakura.ne.jp>
+ <34e97b46-0792-cc66-e0f2-d72576cdec59@i-love.sakura.ne.jp>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <33a07810-6dbc-36be-5bb6-a279773ccf69@i-love.sakura.ne.jp>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Pfc5BY3RUMQrdUuR6kt6gMqUClwh6XrEZRqymzrITxE=;
+        b=farlpYshc4vbngnRjo+yXoJ03n6bv1su7ocwe0cBnpW2EB94knHl0zjtK3+JrIQfdO
+         p64XKmCy1vuS4hFFXllEyEAzUi+pTk4wsdWk9oDWQJ5JZZ7RBKRQhdTNf9um99RDRU3k
+         7QXpAWUyoD7Puc5JwdLNmf3xh+RVysyQZRN/yTm0iGcom25qZwd2f6CjEHIWtpNzBaZl
+         uSi5eUIf6aZsCZYUX+hSQt9oGH+S4PR8gfy29luM3fGAroyegOemQsTbnftQnvKkGsxz
+         JM6ml7DeIsh+Hq5zb4miwfDtic1wE6Fqnr6FVO9sNUgRuOBrs0lNxX/DrDwpgpde3U0/
+         mVGQ==
+In-Reply-To: <34e97b46-0792-cc66-e0f2-d72576cdec59@i-love.sakura.ne.jp>
+Content-Language: pl
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+To: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
 Cc: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Aleksa Sarai <asarai@suse.de>, Jay Kamat <jgkamat@fb.com>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@suse.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
 
-QXJrYWRpdXN6LCB3aWxsIHlvdSB0cnkgdGhpcyBwYXRjaD8KCkZyb20gNDg3NDRiNjMzOWNmNjQ5
-YTY5YjU1OTk3ZTEzOGMxN2RmMWVjYzg5NyBNb24gU2VwIDE3IDAwOjAwOjAwIDIwMDEKRnJvbTog
-VGV0c3VvIEhhbmRhIDxwZW5ndWluLWtlcm5lbEBJLWxvdmUuU0FLVVJBLm5lLmpwPgpEYXRlOiBT
-YXQsIDI2IEphbiAyMDE5IDIwOjAwOjUxICswOTAwClN1YmplY3Q6IFtQQVRDSF0gb29tLCBvb21f
-cmVhcGVyOiBkbyBub3QgZW5xdWV1ZSBzYW1lIHRhc2sgdHdpY2UKCkFya2FkaXVzeiByZXBvcnRl
-ZCB0aGF0IGVuYWJsaW5nIG1lbWNnJ3MgZ3JvdXAgb29tIGtpbGxpbmcgY2F1c2VzCnN0cmFuZ2Ug
-bWVtY2cgc3RhdGlzdGljcyB3aGVyZSB0aGVyZSBpcyBubyB0YXNrIGluIGEgbWVtY2cgZGVzcGl0
-ZQp0aGUgbnVtYmVyIG9mIHRhc2tzIGluIHRoYXQgbWVtY2cgaXMgbm90IDAuIEl0IHR1cm5lZCBv
-dXQgdGhhdCB0aGVyZQppcyBhIGJ1ZyBpbiB3YWtlX29vbV9yZWFwZXIoKSB3aGljaCBhbGxvd3Mg
-ZW5xdWV1aW5nIHNhbWUgdGFzayB0d2ljZQp3aGljaCBtYWtlcyBpbXBvc3NpYmxlIHRvIGRlY3Jl
-YXNlIHRoZSBudW1iZXIgb2YgdGFza3MgaW4gdGhhdCBtZW1jZwpkdWUgdG8gYSByZWZjb3VudCBs
-ZWFrLgoKVGhpcyBidWcgZXhpc3RlZCBzaW5jZSB0aGUgT09NIHJlYXBlciBiZWNhbWUgaW52b2th
-YmxlIGZyb20KdGFza193aWxsX2ZyZWVfbWVtKGN1cnJlbnQpIHBhdGggaW4gb3V0X29mX21lbW9y
-eSgpIGluIExpbnV4IDQuNywKYnV0IG1lbWNnJ3MgZ3JvdXAgb29tIGtpbGxpbmcgbWFkZSBpdCBl
-YXNpZXIgdG8gdHJpZ2dlciB0aGlzIGJ1ZyBieQpjYWxsaW5nIHdha2Vfb29tX3JlYXBlcigpIG9u
-IHRoZSBzYW1lIHRhc2sgZnJvbSBvbmUgb3V0X29mX21lbW9yeSgpCnJlcXVlc3QuCgpGaXggdGhp
-cyBidWcgdXNpbmcgYW4gYXBwcm9hY2ggdXNlZCBieSBjb21taXQgODU1YjAxODMyNTczN2Y3Ngoo
-Im9vbSwgb29tX3JlYXBlcjogZGlzYWJsZSBvb21fcmVhcGVyIGZvciBvb21fa2lsbF9hbGxvY2F0
-aW5nX3Rhc2siKS4KU2luY2UgdGFza193aWxsX2ZyZWVfbWVtKHApID09IGZhbHNlIGlmIHAtPm1t
-ID09IE5VTEwsIHdlIGNhbiBhc3N1bWUgdGhhdApwLT5tbSAhPSBOVUxMIHdoZW4gd2FrZV9vb21f
-cmVhcGVyKCkgaXMgY2FsbGVkIGZyb20gdGFza193aWxsX2ZyZWVfbWVtKCkKcGF0aHMuIEFzIGEg
-c2lkZSBlZmZlY3Qgb2YgdGhpcyBwYXRjaCwgdGhpcyBwYXRjaCBhbHNvIGF2b2lkcyBlbnF1ZXVp
-bmcKbXVsdGlwbGUgdGhyZWFkcyBzaGFyaW5nIG1lbW9yeSB2aWEgdGFza193aWxsX2ZyZWVfbWVt
-KGN1cnJlbnQpIHBhdGguCgpTaWduZWQtb2ZmLWJ5OiBUZXRzdW8gSGFuZGEgPHBlbmd1aW4ta2Vy
-bmVsQEktbG92ZS5TQUtVUkEubmUuanA+ClJlcG9ydGVkLWJ5OiBBcmthZGl1c3ogTWnFm2tpZXdp
-Y3ogPGEubWlza2lld2ljekBnbWFpbC5jb20+CkZpeGVzOiBhZjhlMTVjYzg1YTI1MzE1ICgib29t
-LCBvb21fcmVhcGVyOiBkbyBub3QgZW5xdWV1ZSB0YXNrIGlmIGl0IGlzIG9uIHRoZSBvb21fcmVh
-cGVyX2xpc3QgaGVhZCIpCi0tLQogbW0vb29tX2tpbGwuYyB8IDI4ICsrKysrKysrKysrKystLS0t
-LS0tLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCAxMyBpbnNlcnRpb25zKCspLCAxNSBkZWxldGlv
-bnMoLSkKCmRpZmYgLS1naXQgYS9tbS9vb21fa2lsbC5jIGIvbW0vb29tX2tpbGwuYwppbmRleCBm
-MGU4Y2Q5Li40NTdmMjQwIDEwMDY0NAotLS0gYS9tbS9vb21fa2lsbC5jCisrKyBiL21tL29vbV9r
-aWxsLmMKQEAgLTUwNSwxNCArNTA1LDYgQEAgYm9vbCBfX29vbV9yZWFwX3Rhc2tfbW0oc3RydWN0
-IG1tX3N0cnVjdCAqbW0pCiAJc3RydWN0IHZtX2FyZWFfc3RydWN0ICp2bWE7CiAJYm9vbCByZXQg
-PSB0cnVlOwogCi0JLyoKLQkgKiBUZWxsIGFsbCB1c2VycyBvZiBnZXRfdXNlci9jb3B5X2Zyb21f
-dXNlciBldGMuLi4gdGhhdCB0aGUgY29udGVudAotCSAqIGlzIG5vIGxvbmdlciBzdGFibGUuIE5v
-IGJhcnJpZXJzIHJlYWxseSBuZWVkZWQgYmVjYXVzZSB1bm1hcHBpbmcKLQkgKiBzaG91bGQgaW1w
-bHkgYmFycmllcnMgYWxyZWFkeSBhbmQgdGhlIHJlYWRlciB3b3VsZCBoaXQgYSBwYWdlIGZhdWx0
-Ci0JICogaWYgaXQgc3R1bWJsZWQgb3ZlciBhIHJlYXBlZCBtZW1vcnkuCi0JICovCi0Jc2V0X2Jp
-dChNTUZfVU5TVEFCTEUsICZtbS0+ZmxhZ3MpOwotCiAJZm9yICh2bWEgPSBtbS0+bW1hcCA7IHZt
-YTsgdm1hID0gdm1hLT52bV9uZXh0KSB7CiAJCWlmICghY2FuX21hZHZfZG9udG5lZWRfdm1hKHZt
-YSkpCiAJCQljb250aW51ZTsKQEAgLTY0NSwxMCArNjM3LDE1IEBAIHN0YXRpYyBpbnQgb29tX3Jl
-YXBlcih2b2lkICp1bnVzZWQpCiAJcmV0dXJuIDA7CiB9CiAKLXN0YXRpYyB2b2lkIHdha2Vfb29t
-X3JlYXBlcihzdHJ1Y3QgdGFza19zdHJ1Y3QgKnRzaykKK3N0YXRpYyB2b2lkIHdha2Vfb29tX3Jl
-YXBlcihzdHJ1Y3QgdGFza19zdHJ1Y3QgKnRzaywgc3RydWN0IG1tX3N0cnVjdCAqbW0pCiB7Ci0J
-LyogdHNrIGlzIGFscmVhZHkgcXVldWVkPyAqLwotCWlmICh0c2sgPT0gb29tX3JlYXBlcl9saXN0
-IHx8IHRzay0+b29tX3JlYXBlcl9saXN0KQorCS8qCisJICogVGVsbCBhbGwgdXNlcnMgb2YgZ2V0
-X3VzZXIvY29weV9mcm9tX3VzZXIgZXRjLi4uIHRoYXQgdGhlIGNvbnRlbnQKKwkgKiBpcyBubyBs
-b25nZXIgc3RhYmxlLiBObyBiYXJyaWVycyByZWFsbHkgbmVlZGVkIGJlY2F1c2UgdW5tYXBwaW5n
-CisJICogc2hvdWxkIGltcGx5IGJhcnJpZXJzIGFscmVhZHkgYW5kIHRoZSByZWFkZXIgd291bGQg
-aGl0IGEgcGFnZSBmYXVsdAorCSAqIGlmIGl0IHN0dW1ibGVkIG92ZXIgYSByZWFwZWQgbWVtb3J5
-LgorCSAqLworCWlmICh0ZXN0X2FuZF9zZXRfYml0KE1NRl9VTlNUQUJMRSwgJm1tLT5mbGFncykp
-CiAJCXJldHVybjsKIAogCWdldF90YXNrX3N0cnVjdCh0c2spOwpAQCAtNjY4LDcgKzY2NSw4IEBA
-IHN0YXRpYyBpbnQgX19pbml0IG9vbV9pbml0KHZvaWQpCiB9CiBzdWJzeXNfaW5pdGNhbGwob29t
-X2luaXQpCiAjZWxzZQotc3RhdGljIGlubGluZSB2b2lkIHdha2Vfb29tX3JlYXBlcihzdHJ1Y3Qg
-dGFza19zdHJ1Y3QgKnRzaykKK3N0YXRpYyBpbmxpbmUgdm9pZCB3YWtlX29vbV9yZWFwZXIoc3Ry
-dWN0IHRhc2tfc3RydWN0ICp0c2ssCisJCQkJICAgc3RydWN0IG1tX3N0cnVjdCAqbW0pCiB7CiB9
-CiAjZW5kaWYgLyogQ09ORklHX01NVSAqLwpAQCAtOTE1LDcgKzkxMyw3IEBAIHN0YXRpYyB2b2lk
-IF9fb29tX2tpbGxfcHJvY2VzcyhzdHJ1Y3QgdGFza19zdHJ1Y3QgKnZpY3RpbSkKIAlyY3VfcmVh
-ZF91bmxvY2soKTsKIAogCWlmIChjYW5fb29tX3JlYXApCi0JCXdha2Vfb29tX3JlYXBlcih2aWN0
-aW0pOworCQl3YWtlX29vbV9yZWFwZXIodmljdGltLCBtbSk7CiAKIAltbWRyb3AobW0pOwogCXB1
-dF90YXNrX3N0cnVjdCh2aWN0aW0pOwpAQCAtOTU1LDcgKzk1Myw3IEBAIHN0YXRpYyB2b2lkIG9v
-bV9raWxsX3Byb2Nlc3Moc3RydWN0IG9vbV9jb250cm9sICpvYywgY29uc3QgY2hhciAqbWVzc2Fn
-ZSkKIAl0YXNrX2xvY2socCk7CiAJaWYgKHRhc2tfd2lsbF9mcmVlX21lbShwKSkgewogCQltYXJr
-X29vbV92aWN0aW0ocCk7Ci0JCXdha2Vfb29tX3JlYXBlcihwKTsKKwkJd2FrZV9vb21fcmVhcGVy
-KHAsIHAtPm1tKTsKIAkJdGFza191bmxvY2socCk7CiAJCXB1dF90YXNrX3N0cnVjdChwKTsKIAkJ
-cmV0dXJuOwpAQCAtMTA4NSw3ICsxMDgzLDcgQEAgYm9vbCBvdXRfb2ZfbWVtb3J5KHN0cnVjdCBv
-b21fY29udHJvbCAqb2MpCiAJICovCiAJaWYgKHRhc2tfd2lsbF9mcmVlX21lbShjdXJyZW50KSkg
-ewogCQltYXJrX29vbV92aWN0aW0oY3VycmVudCk7Ci0JCXdha2Vfb29tX3JlYXBlcihjdXJyZW50
-KTsKKwkJd2FrZV9vb21fcmVhcGVyKGN1cnJlbnQsIGN1cnJlbnQtPm1tKTsKIAkJcmV0dXJuIHRy
-dWU7CiAJfQogCi0tIAoxLjguMy4xCgo=
+On 26/01/2019 12:09, Tetsuo Handa wrote:
+> Arkadiusz, will you try this patch?
+
+
+Works. Several tries and always getting 0 pids.current after ~1s.
+
+Please use
+
+Reported-by: Arkadiusz Miśkiewicz <arekm@maven.pl>
+
+(using gmail for transport only since vger postmasters aren't reasonable)
+
+And also
+Tested-by: Arkadiusz Miśkiewicz <arekm@maven.pl>
+
+Testing was done on:
+5.0.0-rc3-00104-gc04e2a780caf-dirty
+
+Thanks!
+
+> 
+> From 48744b6339cf649a69b55997e138c17df1ecc897 Mon Sep 17 00:00:00 2001
+> From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> Date: Sat, 26 Jan 2019 20:00:51 +0900
+> Subject: [PATCH] oom, oom_reaper: do not enqueue same task twice
+> 
+> Arkadiusz reported that enabling memcg's group oom killing causes
+> strange memcg statistics where there is no task in a memcg despite
+> the number of tasks in that memcg is not 0. It turned out that there
+> is a bug in wake_oom_reaper() which allows enqueuing same task twice
+> which makes impossible to decrease the number of tasks in that memcg
+> due to a refcount leak.
+> 
+> This bug existed since the OOM reaper became invokable from
+> task_will_free_mem(current) path in out_of_memory() in Linux 4.7,
+> but memcg's group oom killing made it easier to trigger this bug by
+> calling wake_oom_reaper() on the same task from one out_of_memory()
+> request.
+> 
+> Fix this bug using an approach used by commit 855b018325737f76
+> ("oom, oom_reaper: disable oom_reaper for oom_kill_allocating_task").
+> Since task_will_free_mem(p) == false if p->mm == NULL, we can assume that
+> p->mm != NULL when wake_oom_reaper() is called from task_will_free_mem()
+> paths. As a side effect of this patch, this patch also avoids enqueuing
+> multiple threads sharing memory via task_will_free_mem(current) path.
+> 
+> Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> Reported-by: Arkadiusz Miśkiewicz <a.miskiewicz@gmail.com>
+> Fixes: af8e15cc85a25315 ("oom, oom_reaper: do not enqueue task if it is on the oom_reaper_list head")
+> ---
+>  mm/oom_kill.c | 28 +++++++++++++---------------
+>  1 file changed, 13 insertions(+), 15 deletions(-)
+> 
+> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+> index f0e8cd9..457f240 100644
+> --- a/mm/oom_kill.c
+> +++ b/mm/oom_kill.c
+> @@ -505,14 +505,6 @@ bool __oom_reap_task_mm(struct mm_struct *mm)
+>  	struct vm_area_struct *vma;
+>  	bool ret = true;
+>  
+> -	/*
+> -	 * Tell all users of get_user/copy_from_user etc... that the content
+> -	 * is no longer stable. No barriers really needed because unmapping
+> -	 * should imply barriers already and the reader would hit a page fault
+> -	 * if it stumbled over a reaped memory.
+> -	 */
+> -	set_bit(MMF_UNSTABLE, &mm->flags);
+> -
+>  	for (vma = mm->mmap ; vma; vma = vma->vm_next) {
+>  		if (!can_madv_dontneed_vma(vma))
+>  			continue;
+> @@ -645,10 +637,15 @@ static int oom_reaper(void *unused)
+>  	return 0;
+>  }
+>  
+> -static void wake_oom_reaper(struct task_struct *tsk)
+> +static void wake_oom_reaper(struct task_struct *tsk, struct mm_struct *mm)
+>  {
+> -	/* tsk is already queued? */
+> -	if (tsk == oom_reaper_list || tsk->oom_reaper_list)
+> +	/*
+> +	 * Tell all users of get_user/copy_from_user etc... that the content
+> +	 * is no longer stable. No barriers really needed because unmapping
+> +	 * should imply barriers already and the reader would hit a page fault
+> +	 * if it stumbled over a reaped memory.
+> +	 */
+> +	if (test_and_set_bit(MMF_UNSTABLE, &mm->flags))
+>  		return;
+>  
+>  	get_task_struct(tsk);
+> @@ -668,7 +665,8 @@ static int __init oom_init(void)
+>  }
+>  subsys_initcall(oom_init)
+>  #else
+> -static inline void wake_oom_reaper(struct task_struct *tsk)
+> +static inline void wake_oom_reaper(struct task_struct *tsk,
+> +				   struct mm_struct *mm)
+>  {
+>  }
+>  #endif /* CONFIG_MMU */
+> @@ -915,7 +913,7 @@ static void __oom_kill_process(struct task_struct *victim)
+>  	rcu_read_unlock();
+>  
+>  	if (can_oom_reap)
+> -		wake_oom_reaper(victim);
+> +		wake_oom_reaper(victim, mm);
+>  
+>  	mmdrop(mm);
+>  	put_task_struct(victim);
+> @@ -955,7 +953,7 @@ static void oom_kill_process(struct oom_control *oc, const char *message)
+>  	task_lock(p);
+>  	if (task_will_free_mem(p)) {
+>  		mark_oom_victim(p);
+> -		wake_oom_reaper(p);
+> +		wake_oom_reaper(p, p->mm);
+>  		task_unlock(p);
+>  		put_task_struct(p);
+>  		return;
+> @@ -1085,7 +1083,7 @@ bool out_of_memory(struct oom_control *oc)
+>  	 */
+>  	if (task_will_free_mem(current)) {
+>  		mark_oom_victim(current);
+> -		wake_oom_reaper(current);
+> +		wake_oom_reaper(current, current->mm);
+>  		return true;
+>  	}
+>  
+> 
+
+
+-- 
+Arkadiusz Miśkiewicz, arekm / ( maven.pl | pld-linux.org )
