@@ -1,26 +1,27 @@
 From: Shakeel Butt <shakeelb@google.com>
 Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
-Date: Mon, 28 Jan 2019 07:59:33 -0800
-Message-ID: <CALvZod6LFY+FYfBcAX0kLxV5KKB1-TX2cU5EDyyyjvHOtuWWbA@mail.gmail.com>
+Date: Mon, 28 Jan 2019 08:08:26 -0800
+Message-ID: <CALvZod5Rrr6ENW5yLNzniFeFmGB=mDRH+guNLmcayTX-_xDAGw@mail.gmail.com>
 References: <20190123223144.GA10798@chrisdown.name> <20190124082252.GD4087@dhcp22.suse.cz>
  <20190124160009.GA12436@cmpxchg.org> <20190124170117.GS4087@dhcp22.suse.cz>
  <20190124182328.GA10820@cmpxchg.org> <20190125074824.GD3560@dhcp22.suse.cz>
  <20190125165152.GK50184@devbig004.ftw2.facebook.com> <20190125173713.GD20411@dhcp22.suse.cz>
- <20190125182808.GL50184@devbig004.ftw2.facebook.com>
+ <20190125182808.GL50184@devbig004.ftw2.facebook.com> <CALvZod6LFY+FYfBcAX0kLxV5KKB1-TX2cU5EDyyyjvHOtuWWbA@mail.gmail.com>
+ <20190128160512.GR50184@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=yG+IPoHDMDTax/O7ZuXb5W3f6MupuLya0ZnIkWYX/6w=;
-        b=Y2Nu9OJQzhF0nbbJyWful5kNWyBwddZ1f1VkAn29tp8WPoA3LQEpNLrXI0kn9uVKgy
-         OlGZ5zSDZ626uxv8mP78Rj7AY2v4WkaCfuHsdJlBn+xXi/4FgKXoDRlJQ+mYBvaUcEBs
-         /SM7LUD6MvsgbB1WryhJ8dhabqGvs4Z7Y6u8y+ALxnGe8PYsUrAJJ5Y/szN5wT1FRpNF
-         mB6Q3M2uWHzBMJQYukDpHZlc+LY9Usy04PZ+TuJ6YRjmujaKDcTm2vvts6QrF8UMvKSD
-         nwJH1risZ+AEEBgV+6YVoz9pRI6Oquh247133FVA/eaZMzmKJy+IaVYXqtOvdwRjrchm
-         ysOw==
-In-Reply-To: <20190125182808.GL50184@devbig004.ftw2.facebook.com>
+        bh=d0rb+admgqujxz8uCtJLl0Rf7qV1TQ5qEBaCJcsbcKE=;
+        b=wOXE9mlsqSzCnNKDjZ4de5VkO420siVjvekQdDBL2INCdraE6pj5XAX+vhi4jyxdXW
+         yDCJyDgEAeh+fT7R6wF1MjXjTejgF8pb5/MfAurddLddFBlZXOSuoxuE233Qi3HjVSqo
+         4GoZCjUBcPzKXWpUw1LcvBnU5kU3ubaHiZQclCUtzFKiL4hJHZ/MOAOwguW0MY2W+ZrX
+         F6zCrCUEuwRXz/80NBnkgnrbHR9sL0VgmzPbZNQjiwerNp2Q9J13nCdAoPxwwD5K51g+
+         tpnGlywKwCDWKUuQeurnWePHgElLGsMvJeWbyO0eh+ZkjFYyh1NP/o3GlX9dOCEavRlk
+         xU1w==
+In-Reply-To: <20190128160512.GR50184@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -30,39 +31,33 @@ Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Chri
 
 Hi Tejun,
 
-On Fri, Jan 25, 2019 at 10:28 AM Tejun Heo <tj@kernel.org> wrote:
+On Mon, Jan 28, 2019 at 8:05 AM Tejun Heo <tj@kernel.org> wrote:
 >
-> Hello, Michal.
+> Hello, Shakeel.
 >
-> On Fri, Jan 25, 2019 at 06:37:13PM +0100, Michal Hocko wrote:
-> > > What if a user wants to monitor any ooms in the subtree tho, which is
-> > > a valid use case?
+> On Mon, Jan 28, 2019 at 07:59:33AM -0800, Shakeel Butt wrote:
+> > Why not make this configurable at the delegation boundary? As you
+> > mentioned, there are jobs who want centralized workload manager to
+> > watch over their subtrees while there can be jobs which want to
+> > monitor their subtree themselves. For example I can have a job which
+> > know how to act when one of the children cgroup goes OOM. However if
+> > the root of that job goes OOM then the centralized workload manager
+> > should do something about it. With this change, how to implement this
+> > scenario? How will the central manager differentiates between that a
+> > subtree of a job goes OOM or the root of that job? I guess from the
+> > discussion it seems like the centralized manager has to traverse that
+> > job's subtree to find the source of OOM.
 > >
-> > How is that information useful without know which memcg the oom applies
-> > to?
+> > Why can't we let the implementation of centralized manager easier by
+> > allowing to configure the propagation of these notifications across
+> > delegation boundary.
 >
-> For example, a workload manager watching over a subtree for a job with
-> nested memory limits set by the job itself.  It wants to take action
-> (reporting and possibly other remediative actions) when something goes
-> wrong in the delegated subtree but isn't involved in how the subtree
-> is configured inside.
+> I think the right way to achieve the above would be having separate
+> recursive and local counters.
 >
 
-Why not make this configurable at the delegation boundary? As you
-mentioned, there are jobs who want centralized workload manager to
-watch over their subtrees while there can be jobs which want to
-monitor their subtree themselves. For example I can have a job which
-know how to act when one of the children cgroup goes OOM. However if
-the root of that job goes OOM then the centralized workload manager
-should do something about it. With this change, how to implement this
-scenario? How will the central manager differentiates between that a
-subtree of a job goes OOM or the root of that job? I guess from the
-discussion it seems like the centralized manager has to traverse that
-job's subtree to find the source of OOM.
+Do you envision a separate interface/file for recursive and local
+counters? That would make notifications simpler but that is an
+additional interface.
 
-Why can't we let the implementation of centralized manager easier by
-allowing to configure the propagation of these notifications across
-delegation boundary.
-
-thanks,
 Shakeel
