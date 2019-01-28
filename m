@@ -1,62 +1,179 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
-Date: Mon, 28 Jan 2019 08:05:12 -0800
-Message-ID: <20190128160512.GR50184@devbig004.ftw2.facebook.com>
-References: <20190123223144.GA10798@chrisdown.name>
- <20190124082252.GD4087@dhcp22.suse.cz>
- <20190124160009.GA12436@cmpxchg.org>
- <20190124170117.GS4087@dhcp22.suse.cz>
- <20190124182328.GA10820@cmpxchg.org>
- <20190125074824.GD3560@dhcp22.suse.cz>
- <20190125165152.GK50184@devbig004.ftw2.facebook.com>
- <20190125173713.GD20411@dhcp22.suse.cz>
- <20190125182808.GL50184@devbig004.ftw2.facebook.com>
- <CALvZod6LFY+FYfBcAX0kLxV5KKB1-TX2cU5EDyyyjvHOtuWWbA@mail.gmail.com>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: [PATCH] cgroup/pids: turn cgroup_subsys->free() into
+ cgroup_subsys->release() to fix the accounting
+Date: Mon, 28 Jan 2019 17:00:13 +0100
+Message-ID: <20190128160013.GA21219@redhat.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=D0XIA/6Qh8GnZZaGo5cB5eBgXybV2IxRZOPzdvJrX0c=;
-        b=l+K36/RDCfBLXWyfwDofaL0N6kncsH8J9nemOl65EBSWfBsCNapxwp3eNjnoplOTEg
-         5K6WRkAL0/ukREfK8WDnsPdxifoTXD0UigcTjP4F8EqcZ6Prk6QeaR6FSyVSmh1LCQuR
-         wbq/fKfQRplDMddZCczhcb2GLUV6Y5PmhcFFPM4CBO/CjzJ5rlOb+Jz/AOPBigxYRaOf
-         zfGSfdkMTqAVYZvMk1U9ZwSf9VJ+yMd3aGmeTjyA+GkmgO8wjEzamAYjwk8OMjpEgg/D
-         AzJtY400kLlnBy6R0JGDR5ehBi+hS47pxRDGQjoam2KKUhP3Uw93irXgqvzxYQ/q6fFW
-         zlJA==
 Content-Disposition: inline
-In-Reply-To: <CALvZod6LFY+FYfBcAX0kLxV5KKB1-TX2cU5EDyyyjvHOtuWWbA@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, kernel-team@fb.com
+To: Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>
+Cc: Herton Krzesinski <hkrzesin@redhat.com>, Jan Stancek <jstancek@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, Shakeel.
+The only user of cgroup_subsys->free() callback is pids_cgrp_subsys which
+needs pids_free() to uncharge the pid.
 
-On Mon, Jan 28, 2019 at 07:59:33AM -0800, Shakeel Butt wrote:
-> Why not make this configurable at the delegation boundary? As you
-> mentioned, there are jobs who want centralized workload manager to
-> watch over their subtrees while there can be jobs which want to
-> monitor their subtree themselves. For example I can have a job which
-> know how to act when one of the children cgroup goes OOM. However if
-> the root of that job goes OOM then the centralized workload manager
-> should do something about it. With this change, how to implement this
-> scenario? How will the central manager differentiates between that a
-> subtree of a job goes OOM or the root of that job? I guess from the
-> discussion it seems like the centralized manager has to traverse that
-> job's subtree to find the source of OOM.
-> 
-> Why can't we let the implementation of centralized manager easier by
-> allowing to configure the propagation of these notifications across
-> delegation boundary.
+However, ->free() is called from __put_task_struct()->cgroup_free() and this
+is too late. Even the trivial program which does
 
-I think the right way to achieve the above would be having separate
-recursive and local counters.
+	for (;;) {
+		int pid = fork();
+		assert(pid >= 0);
+		if (pid)
+			wait(NULL);
+		else
+			exit(0);
+	}
 
-Thanks.
+can run out of limits because release_task()->call_rcu(delayed_put_task_struct)
+implies an RCU gp after the task/pid goes away and before the final put().
 
+Test-case:
+
+	mkdir -p /tmp/CG
+	mount -t cgroup2 none /tmp/CG
+	echo '+pids' > /tmp/CG/cgroup.subtree_control
+
+	mkdir /tmp/CG/PID
+	echo 2 > /tmp/CG/PID/pids.max
+
+	perl -e 'while ($p = fork) { wait; } $p // die "fork failed: $!\n"' &
+	echo $! > /tmp/CG/PID/cgroup.procs
+
+Without this patch the forking process fails soon after migration.
+
+Rename cgroup_subsys->free() to cgroup_subsys->release() and move the callsite
+into the new helper, cgroup_release(), called by release_task() which actually
+frees the pid(s).
+
+Reported-by: Herton R. Krzesinski <hkrzesin@redhat.com>
+Reported-by: Jan Stancek <jstancek@redhat.com>
+Signed-off-by: Oleg Nesterov <oleg@redhat.com>
+---
+ include/linux/cgroup-defs.h |  2 +-
+ include/linux/cgroup.h      |  2 ++
+ kernel/cgroup/cgroup.c      | 15 +++++++++------
+ kernel/cgroup/pids.c        |  4 ++--
+ kernel/exit.c               |  1 +
+ 5 files changed, 15 insertions(+), 9 deletions(-)
+
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 8fcbae1..120d1d4 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -602,7 +602,7 @@ struct cgroup_subsys {
+ 	void (*cancel_fork)(struct task_struct *task);
+ 	void (*fork)(struct task_struct *task);
+ 	void (*exit)(struct task_struct *task);
+-	void (*free)(struct task_struct *task);
++	void (*release)(struct task_struct *task);
+ 	void (*bind)(struct cgroup_subsys_state *root_css);
+ 
+ 	bool early_init:1;
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 9968332..81f58b4 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -121,6 +121,7 @@ extern int cgroup_can_fork(struct task_struct *p);
+ extern void cgroup_cancel_fork(struct task_struct *p);
+ extern void cgroup_post_fork(struct task_struct *p);
+ void cgroup_exit(struct task_struct *p);
++void cgroup_release(struct task_struct *p);
+ void cgroup_free(struct task_struct *p);
+ 
+ int cgroup_init_early(void);
+@@ -697,6 +698,7 @@ static inline int cgroup_can_fork(struct task_struct *p) { return 0; }
+ static inline void cgroup_cancel_fork(struct task_struct *p) {}
+ static inline void cgroup_post_fork(struct task_struct *p) {}
+ static inline void cgroup_exit(struct task_struct *p) {}
++static inline void cgroup_release(struct task_struct *p) {}
+ static inline void cgroup_free(struct task_struct *p) {}
+ 
+ static inline int cgroup_init_early(void) { return 0; }
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index f31bd61..f441837 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -197,7 +197,7 @@ static u64 css_serial_nr_next = 1;
+  */
+ static u16 have_fork_callback __read_mostly;
+ static u16 have_exit_callback __read_mostly;
+-static u16 have_free_callback __read_mostly;
++static u16 have_release_callback __read_mostly;
+ static u16 have_canfork_callback __read_mostly;
+ 
+ /* cgroup namespace for init task */
+@@ -5313,7 +5313,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
+ 
+ 	have_fork_callback |= (bool)ss->fork << ss->id;
+ 	have_exit_callback |= (bool)ss->exit << ss->id;
+-	have_free_callback |= (bool)ss->free << ss->id;
++	have_release_callback |= (bool)ss->release << ss->id;
+ 	have_canfork_callback |= (bool)ss->can_fork << ss->id;
+ 
+ 	/* At system boot, before all subsystems have been
+@@ -5749,16 +5749,19 @@ void cgroup_exit(struct task_struct *tsk)
+ 	} while_each_subsys_mask();
+ }
+ 
+-void cgroup_free(struct task_struct *task)
++void cgroup_release(struct task_struct *task)
+ {
+-	struct css_set *cset = task_css_set(task);
+ 	struct cgroup_subsys *ss;
+ 	int ssid;
+ 
+-	do_each_subsys_mask(ss, ssid, have_free_callback) {
+-		ss->free(task);
++	do_each_subsys_mask(ss, ssid, have_release_callback) {
++		ss->release(task);
+ 	} while_each_subsys_mask();
++}
+ 
++void cgroup_free(struct task_struct *task)
++{
++	struct css_set *cset = task_css_set(task);
+ 	put_css_set(cset);
+ }
+ 
+diff --git a/kernel/cgroup/pids.c b/kernel/cgroup/pids.c
+index 9829c67..c9960baa 100644
+--- a/kernel/cgroup/pids.c
++++ b/kernel/cgroup/pids.c
+@@ -247,7 +247,7 @@ static void pids_cancel_fork(struct task_struct *task)
+ 	pids_uncharge(pids, 1);
+ }
+ 
+-static void pids_free(struct task_struct *task)
++static void pids_release(struct task_struct *task)
+ {
+ 	struct pids_cgroup *pids = css_pids(task_css(task, pids_cgrp_id));
+ 
+@@ -342,7 +342,7 @@ struct cgroup_subsys pids_cgrp_subsys = {
+ 	.cancel_attach 	= pids_cancel_attach,
+ 	.can_fork	= pids_can_fork,
+ 	.cancel_fork	= pids_cancel_fork,
+-	.free		= pids_free,
++	.release	= pids_release,
+ 	.legacy_cftypes	= pids_files,
+ 	.dfl_cftypes	= pids_files,
+ 	.threaded	= true,
+diff --git a/kernel/exit.c b/kernel/exit.c
+index 3fb7be0..c2b8443 100644
+--- a/kernel/exit.c
++++ b/kernel/exit.c
+@@ -219,6 +219,7 @@ void release_task(struct task_struct *p)
+ 	}
+ 
+ 	write_unlock_irq(&tasklist_lock);
++	cgroup_release(p);
+ 	release_thread(p);
+ 	call_rcu(&p->rcu, delayed_put_task_struct);
+ 
 -- 
-tejun
+2.5.0
+
+
