@@ -1,95 +1,68 @@
-From: Tejun Heo <tj@kernel.org>
+From: Shakeel Butt <shakeelb@google.com>
 Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
-Date: Mon, 28 Jan 2019 07:41:50 -0800
-Message-ID: <20190128154150.GQ50184@devbig004.ftw2.facebook.com>
-References: <20190124182328.GA10820@cmpxchg.org>
- <20190125074824.GD3560@dhcp22.suse.cz>
- <20190125165152.GK50184@devbig004.ftw2.facebook.com>
- <20190125173713.GD20411@dhcp22.suse.cz>
+Date: Mon, 28 Jan 2019 07:59:33 -0800
+Message-ID: <CALvZod6LFY+FYfBcAX0kLxV5KKB1-TX2cU5EDyyyjvHOtuWWbA@mail.gmail.com>
+References: <20190123223144.GA10798@chrisdown.name> <20190124082252.GD4087@dhcp22.suse.cz>
+ <20190124160009.GA12436@cmpxchg.org> <20190124170117.GS4087@dhcp22.suse.cz>
+ <20190124182328.GA10820@cmpxchg.org> <20190125074824.GD3560@dhcp22.suse.cz>
+ <20190125165152.GK50184@devbig004.ftw2.facebook.com> <20190125173713.GD20411@dhcp22.suse.cz>
  <20190125182808.GL50184@devbig004.ftw2.facebook.com>
- <20190128125151.GI18811@dhcp22.suse.cz>
- <20190128142816.GM50184@devbig004.ftw2.facebook.com>
- <20190128145210.GM18811@dhcp22.suse.cz>
- <20190128145407.GP50184@devbig004.ftw2.facebook.com>
- <20190128151859.GO18811@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=wPBPoBOwIobapi6oC16zq6H6TFfwJ/3I28jXaGw7G7E=;
-        b=u2H/PyOQXKHj3iK3PpnDcwvm6ncSmV+EqOAB3hUtcVKQdikPGsRkySFxZP/Ndmf/7r
-         ubxpAytZAOZ4sbfd2Zwo4w1DwKJufOrluB98Eq03/6O8+a3SBvf4kJw4LbPD7oift2uK
-         4eWzC4te3BWZvtS33vhNSitykED9QWq/zHWOkrC4aO+NJGY9RwfpHcA87AWSQkP8uxOx
-         qLwB7xRdKYlmYE0kpTooNI0oi+jmc2KuWbVo/rUBHLnjWEDqUHcKfb/AYm6Yh5JkhJst
-         90t9UPeKLs6HXbN4iJY0JPQB8PlJVJyBS0CpqXqslaBbAB9veaL8WCt3uBIbVBMviRgA
-         TeAA==
-Content-Disposition: inline
-In-Reply-To: <20190128151859.GO18811@dhcp22.suse.cz>
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=yG+IPoHDMDTax/O7ZuXb5W3f6MupuLya0ZnIkWYX/6w=;
+        b=Y2Nu9OJQzhF0nbbJyWful5kNWyBwddZ1f1VkAn29tp8WPoA3LQEpNLrXI0kn9uVKgy
+         OlGZ5zSDZ626uxv8mP78Rj7AY2v4WkaCfuHsdJlBn+xXi/4FgKXoDRlJQ+mYBvaUcEBs
+         /SM7LUD6MvsgbB1WryhJ8dhabqGvs4Z7Y6u8y+ALxnGe8PYsUrAJJ5Y/szN5wT1FRpNF
+         mB6Q3M2uWHzBMJQYukDpHZlc+LY9Usy04PZ+TuJ6YRjmujaKDcTm2vvts6QrF8UMvKSD
+         nwJH1risZ+AEEBgV+6YVoz9pRI6Oquh247133FVA/eaZMzmKJy+IaVYXqtOvdwRjrchm
+         ysOw==
+In-Reply-To: <20190125182808.GL50184@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Tejun Heo <tj@kernel.org>
+Cc: Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, kernel-team@fb.com
 
-Hello, Michal.
+Hi Tejun,
 
-On Mon, Jan 28, 2019 at 04:18:59PM +0100, Michal Hocko wrote:
-> How do you make an atomic snapshot of the hierarchy state? Or you do
-> not need it because event counters are monotonic and you are willing to
-> sacrifice some lost or misinterpreted events? For example, you receive
-> an oom event while the two children increase the oom event counter. How
-> do you tell which one was the source of the event and which one is still
-> pending? Or is the ordering unimportant in general?
+On Fri, Jan 25, 2019 at 10:28 AM Tejun Heo <tj@kernel.org> wrote:
+>
+> Hello, Michal.
+>
+> On Fri, Jan 25, 2019 at 06:37:13PM +0100, Michal Hocko wrote:
+> > > What if a user wants to monitor any ooms in the subtree tho, which is
+> > > a valid use case?
+> >
+> > How is that information useful without know which memcg the oom applies
+> > to?
+>
+> For example, a workload manager watching over a subtree for a job with
+> nested memory limits set by the job itself.  It wants to take action
+> (reporting and possibly other remediative actions) when something goes
+> wrong in the delegated subtree but isn't involved in how the subtree
+> is configured inside.
+>
 
-Hmm... This is straightforward stateful notification.  Imagine the
-following hierarchy.  The numbers are the notification counters.
+Why not make this configurable at the delegation boundary? As you
+mentioned, there are jobs who want centralized workload manager to
+watch over their subtrees while there can be jobs which want to
+monitor their subtree themselves. For example I can have a job which
+know how to act when one of the children cgroup goes OOM. However if
+the root of that job goes OOM then the centralized workload manager
+should do something about it. With this change, how to implement this
+scenario? How will the central manager differentiates between that a
+subtree of a job goes OOM or the root of that job? I guess from the
+discussion it seems like the centralized manager has to traverse that
+job's subtree to find the source of OOM.
 
-     A:0
-   /   \
-  B:0  C:0
+Why can't we let the implementation of centralized manager easier by
+allowing to configure the propagation of these notifications across
+delegation boundary.
 
-Let's say B generates an event, soon followed by C.  If A's counter is
-read after both B and C's events, nothing is missed.
-
-Let's say it ends up generating two notifications and we end up
-walking down inbetween B and C's events.  It would look like the
-following.
-
-     A:1
-   /   \
-  B:1  C:0
-
-We first see A's 0 -> 1 and then start scanning the subtrees to find
-out the origin.  We will notice B but let's say we visit C before C's
-event gets registered (otherwise, nothing is missed).
-
-But, no matter where you put C's event and notification, the
-followings hold.
-
-1. A's count will be different from what was seen before.
-2. There will be another notification queued on A.
-
-IOW, it's guaranteed that we'll notice and re-scan if we don't see C's
-event this time.  The worst that can happen is scanning spuriously but
-that's true even for local events.
-
-This isn't a novel thing.  It's how aggregated stateful notifications
-usually work (e.g. a lot of hardware interrupts behave this way).  The
-notification is just saying "something might have changed here, please
-take a look" and the interlocking is achieved by following specific
-orders when propagating and reading the events.
-
-> I can imagine you can live with this model, but having a hierarchical
-> reporting without a source of the event just sounds too clumsy from my
-> POV. But I guess this is getting tangent to the original patch.
-
-It seems like your opinion is mostly based on misunderstanding.  Let's
-keep the discussion focused on API stability.
-
-Thanks.
-
--- 
-tejun
+thanks,
+Shakeel
