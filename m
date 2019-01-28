@@ -1,63 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
-Date: Mon, 28 Jan 2019 09:49:05 -0800
-Message-ID: <20190128174905.GU50184@devbig004.ftw2.facebook.com>
-References: <20190125165152.GK50184@devbig004.ftw2.facebook.com>
- <20190125173713.GD20411@dhcp22.suse.cz>
- <20190125182808.GL50184@devbig004.ftw2.facebook.com>
- <20190128125151.GI18811@dhcp22.suse.cz>
- <20190128142816.GM50184@devbig004.ftw2.facebook.com>
- <20190128145210.GM18811@dhcp22.suse.cz>
- <20190128145407.GP50184@devbig004.ftw2.facebook.com>
- <20190128151859.GO18811@dhcp22.suse.cz>
- <20190128154150.GQ50184@devbig004.ftw2.facebook.com>
- <20190128170526.GQ18811@dhcp22.suse.cz>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v3] oom, oom_reaper: do not enqueue same task twice
+Date: Mon, 28 Jan 2019 10:15:13 -0800
+Message-ID: <20190128101513.f35752d6210f0781d0de8d17@linux-foundation.org>
+References: <a95d004a-4358-7efc-6d21-12aac4411b32@gmail.com>
+        <480296c4-ed7a-3265-e84a-298e42a0f1d5@I-love.SAKURA.ne.jp>
+        <6da6ca69-5a6e-a9f6-d091-f89a8488982a@gmail.com>
+        <72aa8863-a534-b8df-6b9e-f69cf4dd5c4d@i-love.sakura.ne.jp>
+        <33a07810-6dbc-36be-5bb6-a279773ccf69@i-love.sakura.ne.jp>
+        <34e97b46-0792-cc66-e0f2-d72576cdec59@i-love.sakura.ne.jp>
+        <2b0c7d6c-c58a-da7d-6f0a-4900694ec2d3@gmail.com>
+        <1d161137-55a5-126f-b47e-b2625bd798ca@i-love.sakura.ne.jp>
+        <20190127083724.GA18811@dhcp22.suse.cz>
+        <ec0d0580-a2dd-f329-9707-0cb91205a216@i-love.sakura.ne.jp>
+        <20190127114021.GB18811@dhcp22.suse.cz>
+        <e865a044-2c10-9858-f4ef-254bc71d6cc2@i-love.sakura.ne.jp>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=RDoi/eLjxnbObU8/lFllv41Z8VtANrIPfKdXbpygwCE=;
-        b=lVQH1nAeTUapo+A78necDxJ89EsWzDvsbvfeD3DQE7e36L5IebWuxztHjBVoiEnB3H
-         JeYQjUy2zp7nWDkKEDHWbhMsmEV1MFDjEeVeJ8VygkmA3LoR71R+X5dLBG4+lqqUOaWi
-         02xvs+8jBWBa+6eYq8LBoIGsolX6zO1GdwGD3IFAMWM8PbB4KrSsY+KxY9yeJ7jCBhY1
-         0UCJptuXx2QuyCQjU/AzkD5lNtgIKEWL2Qosqrg5N6HL8+iL2cLg8oWv6QbP1rznpvTm
-         cFlCvSg7b/VQb0x4QHr+rmpIWzqsN5L/045u6n82TWmN4rcvRTAXhNjm1X1Hcwgj+I2M
-         YJUg==
-Content-Disposition: inline
-In-Reply-To: <20190128170526.GQ18811@dhcp22.suse.cz>
+In-Reply-To: <e865a044-2c10-9858-f4ef-254bc71d6cc2@i-love.sakura.ne.jp>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+Cc: Michal Hocko <mhocko@kernel.org>, Arkadiusz =?UTF-8?Q?Mi=C5=9Bkiewicz?= <a.miskiewicz@gmail.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Aleksa Sarai <asarai@suse.de>, Jay Kamat <jgkamat@fb.com>, Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, linux-mm <linux-mm@kvack.org>
 
-Hello, Michal.
+On Sun, 27 Jan 2019 23:57:38 +0900 Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp> wrote:
 
-On Mon, Jan 28, 2019 at 06:05:26PM +0100, Michal Hocko wrote:
-> Yeah, that is quite clear. But it also assumes that the hierarchy is
-> pretty stable but cgroups might go away at any time. I am not saying
-> that the aggregated events are not useful I am just saying that it is
-> quite non-trivial to use and catch all potential corner cases. Maybe I
+> Arkadiusz reported that enabling memcg's group oom killing causes
+> strange memcg statistics where there is no task in a memcg despite
+> the number of tasks in that memcg is not 0. It turned out that there
+> is a bug in wake_oom_reaper() which allows enqueuing same task twice
+> which makes impossible to decrease the number of tasks in that memcg
+> due to a refcount leak.
+> 
+> This bug existed since the OOM reaper became invokable from
+> task_will_free_mem(current) path in out_of_memory() in Linux 4.7,
+> but memcg's group oom killing made it easier to trigger this bug by
+> calling wake_oom_reaper() on the same task from one out_of_memory()
+> request.
+> 
+> Fix this bug using an approach used by commit 855b018325737f76
+> ("oom, oom_reaper: disable oom_reaper for oom_kill_allocating_task").
+> As a side effect of this patch, this patch also avoids enqueuing
+> multiple threads sharing memory via task_will_free_mem(current) path.
+> 
 
-It really isn't complicated and doesn't require stable subtree.
-
-> am overcomplicating it but one thing is quite clear to me. The existing
-> semantic is really useful to watch for the reclaim behavior at the
-> current level of the tree. You really do not have to care what is
-> happening in the subtree when it is clear that the workload itself
-> is underprovisioned etc. Considering that such a semantic already
-> existis, somebody might depend on it and we likely want also aggregated
-> semantic then I really do not see why to risk regressions rather than
-> add a new memory.hierarchy_events and have both.
-
-The problem then is that most other things are hierarchical including
-some fields in .events files, so if we try to add local stats and
-events, there's no good way to add them.
-
-Thanks.
-
--- 
-tejun
+Do we think this is serious enough to warrant a -stable backport?
