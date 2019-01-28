@@ -1,53 +1,66 @@
 From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH v3] oom, oom_reaper: do not enqueue same task twice
-Date: Mon, 28 Jan 2019 19:42:31 +0100
-Message-ID: <20190128184231.GS18811@dhcp22.suse.cz>
-References: <72aa8863-a534-b8df-6b9e-f69cf4dd5c4d@i-love.sakura.ne.jp>
- <33a07810-6dbc-36be-5bb6-a279773ccf69@i-love.sakura.ne.jp>
- <34e97b46-0792-cc66-e0f2-d72576cdec59@i-love.sakura.ne.jp>
- <2b0c7d6c-c58a-da7d-6f0a-4900694ec2d3@gmail.com>
- <1d161137-55a5-126f-b47e-b2625bd798ca@i-love.sakura.ne.jp>
- <20190127083724.GA18811@dhcp22.suse.cz>
- <ec0d0580-a2dd-f329-9707-0cb91205a216@i-love.sakura.ne.jp>
- <20190127114021.GB18811@dhcp22.suse.cz>
- <e865a044-2c10-9858-f4ef-254bc71d6cc2@i-love.sakura.ne.jp>
- <20190128101513.f35752d6210f0781d0de8d17@linux-foundation.org>
+Subject: Re: + memcg-do-not-report-racy-no-eligible-oom-tasks.patch added to
+ -mm tree
+Date: Mon, 28 Jan 2019 19:43:26 +0100
+Message-ID: <20190128184326.GT18811@dhcp22.suse.cz>
+References: <20190109190306.rATpT%akpm@linux-foundation.org>
+ <20190125165624.GA17719@cmpxchg.org>
+ <20190125172416.GB20411@dhcp22.suse.cz>
+ <20190128102616.d7d63f8e1ecdf176bc313f8a@linux-foundation.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20190128101513.f35752d6210f0781d0de8d17@linux-foundation.org>
+In-Reply-To: <20190128102616.d7d63f8e1ecdf176bc313f8a@linux-foundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <a.miskiewicz@gmail.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Aleksa Sarai <asarai@suse.de>, Jay Kamat <jgkamat@fb.com>, Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, linux-mm <linux-mm@kvack.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, mm-commits@vger.kernel.org, penguin-kernel@i-love.sakura.ne.jp, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Mon 28-01-19 10:15:13, Andrew Morton wrote:
-> On Sun, 27 Jan 2019 23:57:38 +0900 Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp> wrote:
+On Mon 28-01-19 10:26:16, Andrew Morton wrote:
+> On Fri, 25 Jan 2019 18:24:16 +0100 Michal Hocko <mhocko@kernel.org> wrote:
 > 
-> > Arkadiusz reported that enabling memcg's group oom killing causes
-> > strange memcg statistics where there is no task in a memcg despite
-> > the number of tasks in that memcg is not 0. It turned out that there
-> > is a bug in wake_oom_reaper() which allows enqueuing same task twice
-> > which makes impossible to decrease the number of tasks in that memcg
-> > due to a refcount leak.
+> > > >     out_of_memory
+> > > >       select_bad_process # no task
+> > > > 
+> > > > If Thread1 didn't race it would bail out from try_charge and force the
+> > > > charge.  We can achieve the same by checking tsk_is_oom_victim inside the
+> > > > oom_lock and therefore close the race.
+> > > > 
+> > > > [1] http://lkml.kernel.org/r/bb2074c0-34fe-8c2c-1c7d-db71338f1e7f@i-love.sakura.ne.jp
+> > > > Link: http://lkml.kernel.org/r/20190107143802.16847-3-mhocko@kernel.org
+> > > > Signed-off-by: Michal Hocko <mhocko@suse.com>
+> > > > Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> > > > Cc: Johannes Weiner <hannes@cmpxchg.org>
+> > > > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> > > 
+> > > It looks like this problem is happening in production systems:
+> > > 
+> > > https://www.spinics.net/lists/cgroups/msg21268.html
+> > > 
+> > > where the threads don't exit because they are trapped writing out the
+> > > oom messages to a slow console (running the reproducer from this email
+> > > thread triggers the oom flooding).
+> > > 
+> > > So IMO we should put this into 5.0 and add:
 > > 
-> > This bug existed since the OOM reaper became invokable from
-> > task_will_free_mem(current) path in out_of_memory() in Linux 4.7,
-> > but memcg's group oom killing made it easier to trigger this bug by
-> > calling wake_oom_reaper() on the same task from one out_of_memory()
-> > request.
-> > 
-> > Fix this bug using an approach used by commit 855b018325737f76
-> > ("oom, oom_reaper: disable oom_reaper for oom_kill_allocating_task").
-> > As a side effect of this patch, this patch also avoids enqueuing
-> > multiple threads sharing memory via task_will_free_mem(current) path.
-> > 
+> > Please note that Tetsuo has found out that this will not work with the
+> > CLONE_VM without CLONE_SIGHAND cases and his http://lkml.kernel.org/r/01370f70-e1f6-ebe4-b95e-0df21a0bc15e@i-love.sakura.ne.jp
+> > should handle this case as well. I've only had objections to the
+> > changelog but other than that the patch looked sensible to me.
 > 
-> Do we think this is serious enough to warrant a -stable backport?
+> So I think you're saying that 
+> 
+> mm-oom-marks-all-killed-tasks-as-oom-victims.patch
+> and
+> memcg-do-not-report-racy-no-eligible-oom-tasks.patch
+> 
+> should be dropped and that "[PATCH v2] memcg: killed threads should not
+> invoke memcg OOM killer" should be redone with some changelog
+> alterations and should be merged instead?
 
-Yes, I would go with stable backport.
+Yup.
 
 -- 
 Michal Hocko
