@@ -1,7 +1,7 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
-Date: Mon, 28 Jan 2019 13:51:51 +0100
-Message-ID: <20190128125151.GI18811@dhcp22.suse.cz>
+Date: Mon, 28 Jan 2019 06:28:16 -0800
+Message-ID: <20190128142816.GM50184@devbig004.ftw2.facebook.com>
 References: <20190123223144.GA10798@chrisdown.name>
  <20190124082252.GD4087@dhcp22.suse.cz>
  <20190124160009.GA12436@cmpxchg.org>
@@ -11,75 +11,69 @@ References: <20190123223144.GA10798@chrisdown.name>
  <20190125165152.GK50184@devbig004.ftw2.facebook.com>
  <20190125173713.GD20411@dhcp22.suse.cz>
  <20190125182808.GL50184@devbig004.ftw2.facebook.com>
+ <20190128125151.GI18811@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=16iA2KhpGFaktyfkAkUeDivlPZNfQCdHzHmJAlMfvm0=;
+        b=OH9BmxAMpI2dn5E0OCOkDxyBFiuKIzG84TuAPLbsaHFD8Y4tP9t6UOgwYDLk0SqVJ+
+         rzNq4skU4+AoEyiSlUqHzLlGst9c7xkw0Y0CmKGKRy/PDltLoNyyp6NP9H7DbLDIgLLl
+         ooA2hHi2wDoPsq5RGy9/kHshGlGlPbFv7UC+4PgqPmcimos7sshWy5k7tzbolHoIbGWA
+         OkirYa+jyvJNqEbA1TyZ0BdTZxyM0Tb4H0zH+RE6jiXiAOfiCAEfggYon3kBS4Rqm9gk
+         uh7Ofnetke+CLAiD+Pi3juRT6eSFijXtCTiFKPwl2pFbgKwasbvGf2jX0YSyCZ7kXQ2Q
+         YI5w==
 Content-Disposition: inline
-In-Reply-To: <20190125182808.GL50184@devbig004.ftw2.facebook.com>
+In-Reply-To: <20190128125151.GI18811@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
+To: Michal Hocko <mhocko@kernel.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-On Fri 25-01-19 10:28:08, Tejun Heo wrote:
-> Hello, Michal.
+Hello, Michal.
+
+On Mon, Jan 28, 2019 at 01:51:51PM +0100, Michal Hocko wrote:
+> > For example, a workload manager watching over a subtree for a job with
+> > nested memory limits set by the job itself.  It wants to take action
+> > (reporting and possibly other remediative actions) when something goes
+> > wrong in the delegated subtree but isn't involved in how the subtree
+> > is configured inside.
 > 
-> On Fri, Jan 25, 2019 at 06:37:13PM +0100, Michal Hocko wrote:
-> > > What if a user wants to monitor any ooms in the subtree tho, which is
-> > > a valid use case?
-> > 
-> > How is that information useful without know which memcg the oom applies
-> > to?
+> Yes, I understand this part, but it is not clear to me, _how_ to report
+> anything sensible without knowing _what_ has caused the event. You can
+> walk the cgroup hierarchy and compare cached results with new ones but
+> this is a) racy and b) clumsy.
+
+All .events files generate aggregated stateful notifications.  For
+anyone to do anything, they'd have to remember the previous state to
+identify what actually happened.  Being hierarchical, it'd of course
+need to walk down when an event triggers.
+
+> > That sure is an option for use cases like above but it has the
+> > downside of carrying over the confusing interface into the indefinite
+> > future.
 > 
-> For example, a workload manager watching over a subtree for a job with
-> nested memory limits set by the job itself.  It wants to take action
-> (reporting and possibly other remediative actions) when something goes
-> wrong in the delegated subtree but isn't involved in how the subtree
-> is configured inside.
+> I actually believe that this is not such a big deal. For one thing the
+> current events are actually helpful to watch the reclaim/setup behavior.
 
-Yes, I understand this part, but it is not clear to me, _how_ to report
-anything sensible without knowing _what_ has caused the event. You can
-walk the cgroup hierarchy and compare cached results with new ones but
-this is a) racy and b) clumsy.
+Sure, it isn't something critical.  It's just confusing and I think
+it'd be better to improve.
 
-> > > If local event monitoring is useful and it can be,
-> > > let's add separate events which are clearly identifiable to be local.
-> > > Right now, it's confusing like hell.
-> > 
-> > From a backward compatible POV it should be a new interface added.
+> I do not really think you can go back. You cannot simply change semantic
+> back and forth because you just break new users.
 > 
-> That sure is an option for use cases like above but it has the
-> downside of carrying over the confusing interface into the indefinite
-> future.
+> Really, I do not see the semantic changing after more than 3 years of
+> production ready interface. If you really believe we need a hierarchical
+> notification mechanism for the reclaim activity then add a new one.
 
-I actually believe that this is not such a big deal. For one thing the
-current events are actually helpful to watch the reclaim/setup behavior.
+I don't see it as black and white as you do.  Let's agree to disagree.
+I'll ack the patch and note the disagreement.
 
-> Again, I'd like to point back at how we changed the
-> accounting write and trim accounting because the benefits outweighted
-> the risks.
-> 
-> > Please note that I understand that this might be confusing with the rest
-> > of the cgroup APIs but considering that this is the first time somebody
-> > is actually complaining and the interface is "production ready" for more
-> > than three years I am not really sure the situation is all that bad.
-> 
-> cgroup2 uptake hasn't progressed that fast.  None of the major distros
-> or container frameworks are currently shipping with it although many
-> are evaluating switching.  I don't think I'm too mistaken in that we
-> (FB) are at the bleeding edge in terms of adopting cgroup2 and its
-> various new features and are hitting these corner cases and oversights
-> in the process.  If there are noticeable breakages arising from this
-> change, we sure can backpaddle but I think the better course of action
-> is fixing them up while we can.
+Thanks.
 
-I do not really think you can go back. You cannot simply change semantic
-back and forth because you just break new users.
-
-Really, I do not see the semantic changing after more than 3 years of
-production ready interface. If you really believe we need a hierarchical
-notification mechanism for the reclaim activity then add a new one.
 -- 
-Michal Hocko
-SUSE Labs
+tejun
