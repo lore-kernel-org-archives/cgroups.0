@@ -1,58 +1,76 @@
-From: Tejun Heo <tj@kernel.org>
+From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
-Date: Mon, 28 Jan 2019 06:30:33 -0800
-Message-ID: <20190128143033.GN50184@devbig004.ftw2.facebook.com>
-References: <20190123223144.GA10798@chrisdown.name>
+Date: Mon, 28 Jan 2019 15:52:10 +0100
+Message-ID: <20190128145210.GM18811@dhcp22.suse.cz>
+References: <20190124082252.GD4087@dhcp22.suse.cz>
+ <20190124160009.GA12436@cmpxchg.org>
+ <20190124170117.GS4087@dhcp22.suse.cz>
+ <20190124182328.GA10820@cmpxchg.org>
+ <20190125074824.GD3560@dhcp22.suse.cz>
+ <20190125165152.GK50184@devbig004.ftw2.facebook.com>
+ <20190125173713.GD20411@dhcp22.suse.cz>
+ <20190125182808.GL50184@devbig004.ftw2.facebook.com>
+ <20190128125151.GI18811@dhcp22.suse.cz>
+ <20190128142816.GM50184@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=1ogb3hFMHB8WCDDPWWGm6OYJJs0L4GkVd3fDg6sKROY=;
-        b=L1ydZxq2pUdx41QvZPNxpibVmlWNSwIjOand8ivfRjISmfa1LIaEOSgbFYxaCSfydA
-         9JKxXq9itIXeevyyuBGJLlFvvNMbaCxOhfKS7sqFVcq9o2ImHgRNS2PQ7u2P7OE/8Ld1
-         vnN1CBwoZeu0o42j/hO7OJiH4yjm2hm6aM07+9zdXFS+ZBMBhS9pEW5fDqUbGYEn+Lir
-         D5NhFy92Kzkr0o4YoBq/SMH3e2HXhOOzRhaJ0INHmUPkPVYoNe1eXw+pLHT94+qlDtsR
-         eNw8P/PcwD5FAWBJTBDnl4nJZaCanVN663vg1JgF1tds/39xysXE1CSWq+en5qvrzmRl
-         zWeg==
 Content-Disposition: inline
-In-Reply-To: <20190123223144.GA10798@chrisdown.name>
+In-Reply-To: <20190128142816.GM50184@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Chris Down <chris@chrisdown.name>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-On Wed, Jan 23, 2019 at 05:31:44PM -0500, Chris Down wrote:
-> memory.stat and other files already consider subtrees in their output,
-> and we should too in order to not present an inconsistent interface.
+On Mon 28-01-19 06:28:16, Tejun Heo wrote:
+> Hello, Michal.
 > 
-> The current situation is fairly confusing, because people interacting
-> with cgroups expect hierarchical behaviour in the vein of memory.stat,
-> cgroup.events, and other files. For example, this causes confusion when
-> debugging reclaim events under low, as currently these always read "0"
-> at non-leaf memcg nodes, which frequently causes people to misdiagnose
-> breach behaviour. The same confusion applies to other counters in this
-> file when debugging issues.
+> On Mon, Jan 28, 2019 at 01:51:51PM +0100, Michal Hocko wrote:
+> > > For example, a workload manager watching over a subtree for a job with
+> > > nested memory limits set by the job itself.  It wants to take action
+> > > (reporting and possibly other remediative actions) when something goes
+> > > wrong in the delegated subtree but isn't involved in how the subtree
+> > > is configured inside.
+> > 
+> > Yes, I understand this part, but it is not clear to me, _how_ to report
+> > anything sensible without knowing _what_ has caused the event. You can
+> > walk the cgroup hierarchy and compare cached results with new ones but
+> > this is a) racy and b) clumsy.
 > 
-> Aggregation is done at write time instead of at read-time since these
-> counters aren't hot (unlike memory.stat which is per-page, so it does it
-> at read time), and it makes sense to bundle this with the file
-> notifications.
-...
-> Signed-off-by: Chris Down <chris@chrisdown.name>
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> All .events files generate aggregated stateful notifications.  For
+> anyone to do anything, they'd have to remember the previous state to
+> identify what actually happened.  Being hierarchical, it'd of course
+> need to walk down when an event triggers.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+And how do you do that in a raceless fashion?
 
-Michal has a valid counterpoint that this is a change in userland
-visible behavior but to me this patch seems to be more of a bug fix
-than anything else in that it's addressing an obvious inconsistency in
-the interface.
+> > > That sure is an option for use cases like above but it has the
+> > > downside of carrying over the confusing interface into the indefinite
+> > > future.
+> > 
+> > I actually believe that this is not such a big deal. For one thing the
+> > current events are actually helpful to watch the reclaim/setup behavior.
+> 
+> Sure, it isn't something critical.  It's just confusing and I think
+> it'd be better to improve.
+> 
+> > I do not really think you can go back. You cannot simply change semantic
+> > back and forth because you just break new users.
+> > 
+> > Really, I do not see the semantic changing after more than 3 years of
+> > production ready interface. If you really believe we need a hierarchical
+> > notification mechanism for the reclaim activity then add a new one.
+> 
+> I don't see it as black and white as you do.  Let's agree to disagree.
+> I'll ack the patch and note the disagreement.
 
-Thanks.
-
+Considering the justification behhind this change I really do not see
+other option than nack this change. There is simply no _strong_ reason
+to change the behavior. Even if the current behavior is confusing, the
+documentation can be improved to be more specific. If there is a strong
+demand for hierarchical reporting then add a new interface. But I have
+to say that I would consider such a reporting clumsy at best.
 -- 
-tejun
+Michal Hocko
+SUSE Labs
