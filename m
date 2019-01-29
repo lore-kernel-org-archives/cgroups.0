@@ -1,59 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
-Date: Tue, 29 Jan 2019 06:52:40 -0800
-Message-ID: <20190129145240.GX50184@devbig004.ftw2.facebook.com>
-References: <20190125182808.GL50184@devbig004.ftw2.facebook.com>
- <20190128125151.GI18811@dhcp22.suse.cz>
- <20190128142816.GM50184@devbig004.ftw2.facebook.com>
- <20190128145210.GM18811@dhcp22.suse.cz>
- <20190128145407.GP50184@devbig004.ftw2.facebook.com>
- <20190128151859.GO18811@dhcp22.suse.cz>
- <20190128154150.GQ50184@devbig004.ftw2.facebook.com>
- <20190128170526.GQ18811@dhcp22.suse.cz>
- <20190128174905.GU50184@devbig004.ftw2.facebook.com>
- <20190129144306.GO18811@dhcp22.suse.cz>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH v3 5/5] psi: introduce psi monitor
+Date: Tue, 29 Jan 2019 16:16:49 +0100
+Message-ID: <20190129151649.GA2997@hirez.programming.kicks-ass.net>
+References: <20190124211518.244221-1-surenb@google.com>
+ <20190124211518.244221-6-surenb@google.com>
+ <20190129123843.GK28467@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=zQdBRqPFHOQNaO1SDGHuI8AHS8ubhF0Kp7ZKbPRa6WM=;
-        b=Dz35RfkmFlIAefYXONkJks2DWh4gCYSnDKx7Ic9HCprDFYX5Ou5vbuEIkXMn+z+fVO
-         JlHPuKDsGHYaZ5pZSVsoIO7EAEa11SntplExSN4clqxj1CByxBGlYVrJST4PezDYw34n
-         Vc/jMONPC/0IrDFDJG3YbY7XtYxPITE6fLy2D7OpGo1S1N/Z/E02SXKASbQoaIFKVk7G
-         gBWy0pe9nZYbE5UcQFeAvBwRLg+/EDPeW4VWsHdPRYpsNKmZdE398QzmsTJKW9nGvl+i
-         92Mpet2l+ATxjKuy62Xea++iKrZ7k8T3k3Rk3Aj5HsH1IS3R+V/R7YoWg5HgP5Pd274u
-         s6Yw==
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=Gjx0D2Hp2M6LW1jg+jUAo3bizRCgLIialUofJPerBW0=; b=ZM1/k2tvtEsbf4Yr3BAZU68P2
+        aGBBvKiUnJ+pC5oDVacZS5s3oyMtjDVlQLFFy8uUEUxLSZViutxEhxlBgCApf2IBQmpOcml9jf5Di
+        f7H74YUBsdSIu4OA/tIhqmsDJUIB49ePezMZuopRrv4+la2rnZZ4x5SpBxtlBwOPUc93t1f2d0wEt
+        QYsAZYHfu9GTwbS1+QIgz6TJr4hzdUdy6G4hycQWTDwJyqzrDUgwT/ZfkXqQpwcQnuY2idiRbxenN
+        ADWS3xs25+rgsjAP8/QvH7fjMcKaT0IlurWuD8d2nBh5HNkIKCd/w5H7Zkw3Bkvpn7q5dNGx7JeOs
 Content-Disposition: inline
-In-Reply-To: <20190129144306.GO18811@dhcp22.suse.cz>
+In-Reply-To: <20190129123843.GK28467@hirez.programming.kicks-ass.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Suren Baghdasaryan <surenb@google.com>
+Cc: gregkh@linuxfoundation.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, axboe@kernel.dk, dennis@kernel.org, dennisszhou@gmail.com, mingo@redhat.com, akpm@linux-foundation.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@android.com
 
-Hello,
+On Tue, Jan 29, 2019 at 01:38:43PM +0100, Peter Zijlstra wrote:
+> On Thu, Jan 24, 2019 at 01:15:18PM -0800, Suren Baghdasaryan wrote:
+> > +			atomic_set(&group->polling, polling);
+> > +			/*
+> > +			 * Memory barrier is needed to order group->polling
+> > +			 * write before times[] read in collect_percpu_times()
+> > +			 */
+> > +			smp_mb__after_atomic();
+> 
+> That's broken, smp_mb__{before,after}_atomic() can only be used on
+> atomic RmW operations, something atomic_set() is _not_.
 
-On Tue, Jan 29, 2019 at 03:43:06PM +0100, Michal Hocko wrote:
-> All memcg events are represented non-hierarchical AFAICS
-> memcg_memory_event() simply accounts at the level when it happens. Or do
-> I miss something? Or are you talking about .events files for other
-> controllers?
-
-Yeah, cgroup.events and .stat files as some of the local stats would
-be useful too, so if we don't flip memory.events we'll end up with sth
-like cgroup.events.local, memory.events.tree and memory.stats.local,
-which is gonna be hilarious.
-
-If you aren't willing to change your mind, the only option seems to be
-introducing a mount option to gate the flip and additions of local
-files.  Most likely, userspace will enable the option by default
-everywhere, so the end result will be exactly the same but I guess
-it'll better address your concern.
-
-Thanks.
-
--- 
-tejun
+Also; the comment should explain _why_ not only what.
