@@ -1,188 +1,155 @@
 From: Chris Down <chris@chrisdown.name>
-Subject: Re: [PATCH v3] mm: Make memory.emin the baseline for utilisation
- determination
-Date: Tue, 29 Jan 2019 14:15:25 -0500
-Message-ID: <20190129191525.GB10430@chrisdown.name>
-References: <20190129182516.GA1834@chrisdown.name>
- <20190129190253.GA10430@chrisdown.name>
+Subject: [PATCH] mm: memcontrol: Expose THP events on a per-memcg basis
+Date: Tue, 29 Jan 2019 15:58:52 -0500
+Message-ID: <20190129205852.GA7310@chrisdown.name>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=7Uuf0LVs+pzHcF3nyh4GxvEPQsOE1NPnxZxuLZkBYcE=;
-        b=NWO1tpkadXDzKPLeqcckeYOXK0qRah25lv9XpFX4W/D0ZeK8WDrTZav72UjZSwm8Y5
-         8E9j5aDJinxsGCjkPiV9bCrYzES7wIWNC6XZjNvE3ekV4DtiuqGhAvnXih2dEIUtbjBe
-         5QquP/EkhMDDHWEeQGacIpCHyATrH6UAr06Rc=
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=+lCxnlIZUJU9pZqCTFE3c/UHyRafPDqnnoPq+cvx5Es=;
+        b=atRWCQe0OXSmeZ8tI433nmuVXC9/nf3+BVa2GFc+cDVIopGZtz4CpjFyBmLV5vlmE6
+         f5YbVCdzOSSXQtZpiK7XBBVdOuoKCkdmprZnxWY0zYoyQYZDgU40xLVWJfPGojBjisSe
+         /K00diZPmknhspvWEuz7lQEQrLtL1JiUXq/nU=
 Content-Disposition: inline
-In-Reply-To: <20190129190253.GA10430@chrisdown.name>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-Roman points out that when when we do the low reclaim pass, we scale the
-reclaim pressure relative to position between 0 and the maximum
-protection threshold.
+Currently THP allocation events data is fairly opaque, since you can
+only get it system-wide. This patch makes it easier to reason about
+transparent hugepage behaviour on a per-memcg basis.
 
-However, if the maximum protection is based on memory.elow, and
-memory.emin is above zero, this means we still may get binary behaviour
-on second-pass low reclaim. This is because we scale starting at 0, not
-starting at memory.emin, and since we don't scan at all below emin, we
-end up with cliff behaviour.
-
-This should be a fairly uncommon case since usually we don't go into the
-second pass, but it makes sense to scale our low reclaim pressure
-starting at emin.
-
-You can test this by catting two large sparse files, one in a cgroup
-with emin set to some moderate size compared to physical RAM, and
-another cgroup without any emin. In both cgroups, set an elow larger
-than 50% of physical RAM. The one with emin will have less page
-scanning, as reclaim pressure is lower.
+For anonymous THP-backed pages, we already have MEMCG_RSS_HUGE in v1,
+which is used for v1's rss_huge [sic]. This is reused here as it's
+fairly involved to untangle NR_ANON_THPS right now to make it
+per-memcg, since right now some of this is delegated to rmap before we
+have any memcg actually assigned to the page. It's a good idea to rework
+that, but let's leave untangling THP allocation for a future patch.
 
 Signed-off-by: Chris Down <chris@chrisdown.name>
-Suggested-by: Roman Gushchin <guro@fb.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Tejun Heo <tj@kernel.org>
 Cc: Roman Gushchin <guro@fb.com>
-Cc: Dennis Zhou <dennis@kernel.org>
 Cc: linux-kernel@vger.kernel.org
 Cc: cgroups@vger.kernel.org
 Cc: linux-mm@kvack.org
 Cc: kernel-team@fb.com
 ---
- include/linux/memcontrol.h | 12 ++++++---
- mm/vmscan.c                | 55 +++++++++++++++++++++++---------------
- 2 files changed, 41 insertions(+), 26 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst | 14 ++++++++++++++
+ mm/huge_memory.c                        |  2 ++
+ mm/khugepaged.c                         |  2 ++
+ mm/memcontrol.c                         | 13 +++++++++++++
+ 4 files changed, 31 insertions(+)
 
-...well, I sent it with NULL for !CONFIG_MEMCG when I wanted 0. This is the 
-fixed fix(tm) patch.
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 290cfbfd60cd..6f7e0e1b581d 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -333,9 +333,11 @@ static inline bool mem_cgroup_disabled(void)
- 	return !cgroup_subsys_enabled(memory_cgrp_subsys);
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 7bf3f129c68b..b6989b39ed8e 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1189,6 +1189,10 @@ PAGE_SIZE multiple when read back.
+ 		Amount of cached filesystem data that was modified and
+ 		is currently being written back to disk
+ 
++	  anon_thp
++		Amount of memory used in anonymous mappings backed by
++		transparent hugepages
++
+ 	  inactive_anon, active_anon, inactive_file, active_file, unevictable
+ 		Amount of memory, swap-backed and filesystem-backed,
+ 		on the internal memory management lists used by the
+@@ -1248,6 +1252,16 @@ PAGE_SIZE multiple when read back.
+ 
+ 		Amount of reclaimed lazyfree pages
+ 
++	  thp_fault_alloc
++
++		Number of transparent hugepages which were allocated to satisfy
++		a page fault, including COW faults
++
++	  thp_collapse_alloc
++
++		Number of transparent hugepages which were allocated to
++		allow collapsing an existing range of pages
++
+   memory.swap.current
+ 	A read-only single value file which exists on non-root
+ 	cgroups.
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index f5f1d4324fe2..6cb7a748aa33 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -617,6 +617,7 @@ static vm_fault_t __do_huge_pmd_anonymous_page(struct vm_fault *vmf,
+ 		mm_inc_nr_ptes(vma->vm_mm);
+ 		spin_unlock(vmf->ptl);
+ 		count_vm_event(THP_FAULT_ALLOC);
++		count_memcg_events(memcg, THP_FAULT_ALLOC, 1);
+ 	}
+ 
+ 	return 0;
+@@ -1339,6 +1340,7 @@ vm_fault_t do_huge_pmd_wp_page(struct vm_fault *vmf, pmd_t orig_pmd)
+ 	}
+ 
+ 	count_vm_event(THP_FAULT_ALLOC);
++	count_memcg_events(memcg, THP_FAULT_ALLOC, 1);
+ 
+ 	if (!page)
+ 		clear_huge_page(new_page, vmf->address, HPAGE_PMD_NR);
+diff --git a/mm/khugepaged.c b/mm/khugepaged.c
+index ceb242ca6ef6..54f3d33f897a 100644
+--- a/mm/khugepaged.c
++++ b/mm/khugepaged.c
+@@ -1075,6 +1075,7 @@ static void collapse_huge_page(struct mm_struct *mm,
+ 	BUG_ON(!pmd_none(*pmd));
+ 	page_add_new_anon_rmap(new_page, vma, address, true);
+ 	mem_cgroup_commit_charge(new_page, memcg, false, true);
++	count_memcg_events(memcg, THP_COLLAPSE_ALLOC, 1);
+ 	lru_cache_add_active_or_unevictable(new_page, vma);
+ 	pgtable_trans_huge_deposit(mm, pmd, pgtable);
+ 	set_pmd_at(mm, address, pmd, _pmd);
+@@ -1503,6 +1504,7 @@ static void collapse_shmem(struct mm_struct *mm,
+ 		page_ref_add(new_page, HPAGE_PMD_NR - 1);
+ 		set_page_dirty(new_page);
+ 		mem_cgroup_commit_charge(new_page, memcg, false, true);
++		count_memcg_events(memcg, THP_COLLAPSE_ALLOC, 1);
+ 		lru_cache_add_anon(new_page);
+ 
+ 		/*
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 18f4aefbe0bf..2f4fe2fb9046 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5603,6 +5603,15 @@ static int memory_stat_show(struct seq_file *m, void *v)
+ 	seq_printf(m, "file_writeback %llu\n",
+ 		   (u64)acc.stat[NR_WRITEBACK] * PAGE_SIZE);
+ 
++	/*
++	 * TODO: We should eventually replace our own MEMCG_RSS_HUGE counter
++	 * with the NR_ANON_THP vm counter, but right now it's a pain in the
++	 * arse because it requires migrating the work out of rmap to a place
++	 * where the page->mem_cgroup is set up and stable.
++	 */
++	seq_printf(m, "anon_thp %llu\n",
++		   (u64)acc.stat[MEMCG_RSS_HUGE] * PAGE_SIZE);
++
+ 	for (i = 0; i < NR_LRU_LISTS; i++)
+ 		seq_printf(m, "%s %llu\n", mem_cgroup_lru_names[i],
+ 			   (u64)acc.lru_pages[i] * PAGE_SIZE);
+@@ -5634,6 +5643,10 @@ static int memory_stat_show(struct seq_file *m, void *v)
+ 	seq_printf(m, "pglazyfree %lu\n", acc.events[PGLAZYFREE]);
+ 	seq_printf(m, "pglazyfreed %lu\n", acc.events[PGLAZYFREED]);
+ 
++	seq_printf(m, "thp_fault_alloc %lu\n", acc.events[THP_FAULT_ALLOC]);
++	seq_printf(m, "thp_collapse_alloc %lu\n",
++		   acc.events[THP_COLLAPSE_ALLOC]);
++
+ 	return 0;
  }
  
--static inline unsigned long mem_cgroup_protection(struct mem_cgroup *memcg)
-+static inline void mem_cgroup_protection(struct mem_cgroup *memcg,
-+					 unsigned long *min, unsigned long *low)
- {
--	return max(READ_ONCE(memcg->memory.emin), READ_ONCE(memcg->memory.elow));
-+	*min = READ_ONCE(memcg->memory.emin);
-+	*low = READ_ONCE(memcg->memory.elow);
- }
- 
- enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
-@@ -826,9 +828,11 @@ static inline void memcg_memory_event_mm(struct mm_struct *mm,
- {
- }
- 
--static inline unsigned long mem_cgroup_protection(struct mem_cgroup *memcg)
-+static inline void mem_cgroup_protection(struct mem_cgroup *memcg,
-+					 unsigned long *min, unsigned long *low)
- {
--	return 0;
-+	*min = 0;
-+	*low = 0;
- }
- 
- static inline enum mem_cgroup_protection mem_cgroup_protected(
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 549251818605..f7c4ab39d5d0 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -2447,12 +2447,12 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
- 		int file = is_file_lru(lru);
- 		unsigned long lruvec_size;
- 		unsigned long scan;
--		unsigned long protection;
-+		unsigned long min, low;
- 
- 		lruvec_size = lruvec_lru_size(lruvec, lru, sc->reclaim_idx);
--		protection = mem_cgroup_protection(memcg);
-+		mem_cgroup_protection(memcg, &min, &low);
- 
--		if (protection > 0) {
-+		if (min || low) {
- 			/*
- 			 * Scale a cgroup's reclaim pressure by proportioning
- 			 * its current usage to its memory.low or memory.min
-@@ -2467,28 +2467,38 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
- 			 * set it too low, which is not ideal.
- 			 */
- 			unsigned long cgroup_size = mem_cgroup_size(memcg);
--			unsigned long baseline = 0;
- 
- 			/*
--			 * During the reclaim first pass, we only consider
--			 * cgroups in excess of their protection setting, but if
--			 * that doesn't produce free pages, we come back for a
--			 * second pass where we reclaim from all groups.
-+			 * If there is any protection in place, we adjust scan
-+			 * pressure in proportion to how much a group's current
-+			 * usage exceeds that, in percent.
- 			 *
--			 * To maintain fairness in both cases, the first pass
--			 * targets groups in proportion to their overage, and
--			 * the second pass targets groups in proportion to their
--			 * protection utilization.
--			 *
--			 * So on the first pass, a group whose size is 130% of
--			 * its protection will be targeted at 30% of its size.
--			 * On the second pass, a group whose size is at 40% of
--			 * its protection will be
--			 * targeted at 40% of its size.
-+			 * There is one special case: in the first reclaim pass,
-+			 * we skip over all groups that are within their low
-+			 * protection. If that fails to reclaim enough pages to
-+			 * satisfy the reclaim goal, we come back and override
-+			 * the best-effort low protection. However, we still
-+			 * ideally want to honor how well-behaved groups are in
-+			 * that case instead of simply punishing them all
-+			 * equally. As such, we reclaim them based on how much
-+			 * of their best-effort protection they are using. Usage
-+			 * below memory.min is excluded from consideration when
-+			 * calculating utilisation, as it isn't ever
-+			 * reclaimable, so it might as well not exist for our
-+			 * purposes.
- 			 */
--			if (!sc->memcg_low_reclaim)
--				baseline = lruvec_size;
--			scan = lruvec_size * cgroup_size / protection - baseline;
-+			if (sc->memcg_low_reclaim && low > min) {
-+				/*
-+				 * Reclaim according to utilisation between min
-+				 * and low
-+				 */
-+				scan = lruvec_size * (cgroup_size - min) /
-+					(low - min);
-+			} else {
-+				/* Reclaim according to protection overage */
-+				scan = lruvec_size * cgroup_size /
-+					max(min, low) - lruvec_size;
-+			}
- 
- 			/*
- 			 * Don't allow the scan target to exceed the lruvec
-@@ -2504,7 +2514,8 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
- 			 * some cases in the case of large overages.
- 			 *
- 			 * Also, minimally target SWAP_CLUSTER_MAX pages to keep
--			 * reclaim moving forwards.
-+			 * reclaim moving forwards, avoiding decremeting
-+			 * sc->priority further than desirable.
- 			 */
- 			scan = clamp(scan, SWAP_CLUSTER_MAX, lruvec_size);
- 		} else {
 -- 
 2.20.1
 
