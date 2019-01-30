@@ -1,78 +1,65 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
-Date: Wed, 30 Jan 2019 14:23:45 -0500
-Message-ID: <20190130192345.GA20957@cmpxchg.org>
-References: <20190123223144.GA10798@chrisdown.name>
- <20190124082252.GD4087@dhcp22.suse.cz>
- <20190124160009.GA12436@cmpxchg.org>
- <20190124170117.GS4087@dhcp22.suse.cz>
- <20190124182328.GA10820@cmpxchg.org>
- <20190125074824.GD3560@dhcp22.suse.cz>
- <20190125165152.GK50184@devbig004.ftw2.facebook.com>
- <20190125173713.GD20411@dhcp22.suse.cz>
- <20190125182808.GL50184@devbig004.ftw2.facebook.com>
- <20190128125151.GI18811@dhcp22.suse.cz>
+Date: Wed, 30 Jan 2019 14:27:12 -0500
+Message-ID: <20190130192712.GA21279@cmpxchg.org>
+References: <20190128145407.GP50184@devbig004.ftw2.facebook.com>
+ <20190128151859.GO18811@dhcp22.suse.cz>
+ <20190128154150.GQ50184@devbig004.ftw2.facebook.com>
+ <20190128170526.GQ18811@dhcp22.suse.cz>
+ <20190128174905.GU50184@devbig004.ftw2.facebook.com>
+ <20190129144306.GO18811@dhcp22.suse.cz>
+ <20190129145240.GX50184@devbig004.ftw2.facebook.com>
+ <20190130165058.GA18811@dhcp22.suse.cz>
+ <20190130170658.GY50184@devbig004.ftw2.facebook.com>
+ <CALvZod5ma62fRKqrAhMcuNT3GYT3FpRX+DCmeVr2nDg1u=9T8w@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=6+s3m/wCiQicI56EM9O8sUfe7ZO8/YgchrGdD+iAv9I=;
-        b=ccNxnvT224O+7fChZ7Efge3FO8zKw7BrWhwJ7vtYCw2pMhdgeAnuGSy0ooAgXBO//i
-         RZodYsnJPpMtZAmiD6BTOM2ZmYll6e8Tx/HpFylbwTK5qpdK3HKp6c8tm3vGNFD5i3eG
-         8JiePIfFf14/NPKu2oWsFcTO4Wmr0VywSvdt7lcrunvnDALgrasx6zXTVrEFmG2x+muA
-         aIOTrYjcVAI1Zqden7mXBJepzBhvBMPxAagdov+uqKm15pG4iFf8eEdJtEwm3GOlHOKT
-         pgPErx42/P7qtYmr8UalnjLRF0Ek8ydI72C2ok/il/IB0bsnSgpJg/sO8ZnlzCxjp1kE
-         11Ow==
+        bh=lCaOFzEC9GUOriuVkX8NdFG1tjkodE5DqXV/LschmsI=;
+        b=ZohvWTSuJ0FjLHNrBU/NhCidpuP6uTp++17i5m8r0Y4BdXn5gysuarYBmwXmDnXh2E
+         5q1Zg6iKy575V4xaQ+3m+w3YaXK2epGUUWapRT4Qk1pYbJ8e24CWTlXowEvP0d0EY1gj
+         VGdefopA01lh0af6fU5Lw/yDe5q6HouSDwamc8EyJLf8rHD0F+4MvHD+Rji3pspKlXkr
+         R6EGixTm/VAe72WpuMNrIokMPUZJvqGh3qMbrMlYCi/rzPY0ozgqJnu4a8UmGQDrTYkI
+         couibxZPlwtjEDeLQU1PlYXif1ZmmnuJtzPzfiRz4zqRA+irU0fT/tlOc4Upb6sHSWXJ
+         0PAw==
 Content-Disposition: inline
-In-Reply-To: <20190128125151.GI18811@dhcp22.suse.cz>
+In-Reply-To: <CALvZod5ma62fRKqrAhMcuNT3GYT3FpRX+DCmeVr2nDg1u=9T8w@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>, Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@kernel.org>, Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, kernel-team@fb.com
 
-On Mon, Jan 28, 2019 at 01:51:51PM +0100, Michal Hocko wrote:
-> On Fri 25-01-19 10:28:08, Tejun Heo wrote:
-> > On Fri, Jan 25, 2019 at 06:37:13PM +0100, Michal Hocko wrote:
-> > > Please note that I understand that this might be confusing with the rest
-> > > of the cgroup APIs but considering that this is the first time somebody
-> > > is actually complaining and the interface is "production ready" for more
-> > > than three years I am not really sure the situation is all that bad.
-> > 
-> > cgroup2 uptake hasn't progressed that fast.  None of the major distros
-> > or container frameworks are currently shipping with it although many
-> > are evaluating switching.  I don't think I'm too mistaken in that we
-> > (FB) are at the bleeding edge in terms of adopting cgroup2 and its
-> > various new features and are hitting these corner cases and oversights
-> > in the process.  If there are noticeable breakages arising from this
-> > change, we sure can backpaddle but I think the better course of action
-> > is fixing them up while we can.
+On Wed, Jan 30, 2019 at 11:11:44AM -0800, Shakeel Butt wrote:
+> Hi Tejun,
 > 
-> I do not really think you can go back. You cannot simply change semantic
-> back and forth because you just break new users.
+> On Wed, Jan 30, 2019 at 9:07 AM Tejun Heo <tj@kernel.org> wrote:
+> >
+> > Hello, Michal.
+> >
+> > On Wed, Jan 30, 2019 at 05:50:58PM +0100, Michal Hocko wrote:
+> > > > Yeah, cgroup.events and .stat files as some of the local stats would
+> > > > be useful too, so if we don't flip memory.events we'll end up with sth
+> > > > like cgroup.events.local, memory.events.tree and memory.stats.local,
+> > > > which is gonna be hilarious.
+> > >
+> > > Why cannot we simply have memory.events_tree and be done with it? Sure
+> > > the file names are not goin to be consistent which is a minus but that
+> > > ship has already sailed some time ago.
+> >
+> > Because the overall cost of shitty interface will be way higher in the
+> > longer term.  cgroup2 interface is far from perfect but is way better
+> > than cgroup1 especially for the memory controller.  Why do you think
+> > that is?
+> >
 > 
-> Really, I do not see the semantic changing after more than 3 years of
-> production ready interface. If you really believe we need a hierarchical
-> notification mechanism for the reclaim activity then add a new one.
+> I thought you are fine with the separate interface for the hierarchical events.
 
-This discussion needs to be more nuanced.
+Every other file in cgroup2 is hierarchical, but for recursive
+memory.events you'd need to read memory.events_tree?
 
-We change interfaces and user-visible behavior all the time when we
-think nobody is likely to rely on it. Sometimes we change them after
-decades of established behavior - for example the recent OOM killer
-change to not kill children over parents.
-
-The argument was made that it's very unlikely that we break any
-existing user setups relying specifically on this behavior we are
-trying to fix. I don't see a real dispute to this, other than a
-repetition of "we can't change it after three years".
-
-I also don't see a concrete description of a plausible scenario that
-this change might break.
-
-I would like to see a solid case for why this change is a notable risk
-to actual users (interface age is not a criterium for other changes)
-before discussing errata solutions.
+Do we hate our users that much? :(
