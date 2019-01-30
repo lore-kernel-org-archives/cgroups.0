@@ -1,56 +1,53 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] mm: memcontrol: Expose THP events on a per-memcg basis
-Date: Tue, 29 Jan 2019 17:15:49 -0500
-Message-ID: <20190129221549.GA13066@cmpxchg.org>
-References: <20190129205852.GA7310@chrisdown.name>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
+Date: Wed, 30 Jan 2019 17:50:58 +0100
+Message-ID: <20190130165058.GA18811@dhcp22.suse.cz>
+References: <20190128125151.GI18811@dhcp22.suse.cz>
+ <20190128142816.GM50184@devbig004.ftw2.facebook.com>
+ <20190128145210.GM18811@dhcp22.suse.cz>
+ <20190128145407.GP50184@devbig004.ftw2.facebook.com>
+ <20190128151859.GO18811@dhcp22.suse.cz>
+ <20190128154150.GQ50184@devbig004.ftw2.facebook.com>
+ <20190128170526.GQ18811@dhcp22.suse.cz>
+ <20190128174905.GU50184@devbig004.ftw2.facebook.com>
+ <20190129144306.GO18811@dhcp22.suse.cz>
+ <20190129145240.GX50184@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=cjPKJoHf3Gll+qk80dZ1zwwaf8+ItgdBe9DjCPAWJDM=;
-        b=Wplr7vFthNztMxNfahA1bdj2lR3+YAdLQRgxzerOl/TRr5R4rFJx8TUrvIk1v7GEmQ
-         kW80/oYXICrRj09V7xe49KhmG2HZE1rJdek1rUmiqrM2TA1ik6ZtsJgqvXoDfbFUOR+S
-         r4jYBxwP6P+szzZp1EYHRu4AAGuOv48jtQZkBrJIuIK+HpL2oLgfyUT6VPMjGkKDonHS
-         muByxxO7QtKKoPg2xVphTkV4PvV79xkf5ySxjt/21cxk5LPq3n5eJ1Ke3iNPGFjjCCDn
-         eVLHYSC/VtVDEYZMxvnvbWN0zOjJl29ex2JcIHoqtd4k3gYMyhNO+XXv3bD3rnJ2e43X
-         LLtA==
 Content-Disposition: inline
-In-Reply-To: <20190129205852.GA7310@chrisdown.name>
+In-Reply-To: <20190129145240.GX50184@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Chris Down <chris@chrisdown.name>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Tejun Heo <tj@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-On Tue, Jan 29, 2019 at 03:58:52PM -0500, Chris Down wrote:
-> Currently THP allocation events data is fairly opaque, since you can
-> only get it system-wide. This patch makes it easier to reason about
-> transparent hugepage behaviour on a per-memcg basis.
+On Tue 29-01-19 06:52:40, Tejun Heo wrote:
+> Hello,
 > 
-> For anonymous THP-backed pages, we already have MEMCG_RSS_HUGE in v1,
-> which is used for v1's rss_huge [sic]. This is reused here as it's
-> fairly involved to untangle NR_ANON_THPS right now to make it
-> per-memcg, since right now some of this is delegated to rmap before we
-> have any memcg actually assigned to the page. It's a good idea to rework
-> that, but let's leave untangling THP allocation for a future patch.
->
-> Signed-off-by: Chris Down <chris@chrisdown.name>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Roman Gushchin <guro@fb.com>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-mm@kvack.org
-> Cc: kernel-team@fb.com
+> On Tue, Jan 29, 2019 at 03:43:06PM +0100, Michal Hocko wrote:
+> > All memcg events are represented non-hierarchical AFAICS
+> > memcg_memory_event() simply accounts at the level when it happens. Or do
+> > I miss something? Or are you talking about .events files for other
+> > controllers?
+> 
+> Yeah, cgroup.events and .stat files as some of the local stats would
+> be useful too, so if we don't flip memory.events we'll end up with sth
+> like cgroup.events.local, memory.events.tree and memory.stats.local,
+> which is gonna be hilarious.
 
-Looks good to me. It's useful to know if a cgroup is getting the THP
-coverage and allocation policy it's asking for.
+Why cannot we simply have memory.events_tree and be done with it? Sure
+the file names are not goin to be consistent which is a minus but that
+ship has already sailed some time ago.
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> If you aren't willing to change your mind, the only option seems to be
+> introducing a mount option to gate the flip and additions of local
+> files.  Most likely, userspace will enable the option by default
+> everywhere, so the end result will be exactly the same but I guess
+> it'll better address your concern.
 
-The fallback numbers could be useful as well, but they're tricky to
-obtain as there isn't an obvious memcg context. We can do them later.
+How does the consumer of the API learns about the mount type?
+-- 
+Michal Hocko
+SUSE Labs
