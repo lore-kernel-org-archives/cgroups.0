@@ -1,84 +1,69 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 2/2] mm: Consider subtrees in memory.events
-Date: Wed, 30 Jan 2019 21:05:59 +0100
-Message-ID: <20190130200559.GI18811@dhcp22.suse.cz>
-References: <20190124082252.GD4087@dhcp22.suse.cz>
- <20190124160009.GA12436@cmpxchg.org>
- <20190124170117.GS4087@dhcp22.suse.cz>
- <20190124182328.GA10820@cmpxchg.org>
- <20190125074824.GD3560@dhcp22.suse.cz>
- <20190125165152.GK50184@devbig004.ftw2.facebook.com>
- <20190125173713.GD20411@dhcp22.suse.cz>
- <20190125182808.GL50184@devbig004.ftw2.facebook.com>
- <20190128125151.GI18811@dhcp22.suse.cz>
- <20190130192345.GA20957@cmpxchg.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v3] mm: Make memory.emin the baseline for utilisation
+ determination
+Date: Wed, 30 Jan 2019 21:12:35 +0000
+Message-ID: <20190130211226.GA6216@castle.DHCP.thefacebook.com>
+References: <20190129182516.GA1834@chrisdown.name>
+ <20190129190253.GA10430@chrisdown.name>
+ <20190129191525.GB10430@chrisdown.name>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190130192345.GA20957@cmpxchg.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=tH/IbfNKhRC6ZrYi91YP5b3b99YaZHESbAqbffdYLP0=;
+ b=j7RFVe1YRRvGgsrFau+tskht5dMEWRpu6r0fQ/lfty+436yrVlEsJlxpoBGqbO+vi3LH
+ 27BqNo+Iv9ZazaJN510Dp3AIg84uh7ioerCpFeCPsM7OU7kkqHSptP/teY6aP6/sveeX
+ w6nT3neR2tJGSoNnPAjkD4EJsMWPlErZG+U= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tH/IbfNKhRC6ZrYi91YP5b3b99YaZHESbAqbffdYLP0=;
+ b=KaopT+1McO7R//b2r5nPkrPXflGDzGDJtucXHNqWXU1IR4uwzohxZBYYWet5fqTKBhKuSt11NpeuoSdBjPaLsd91l1OD7+4HaiTWbges8c2c7iBijAVkxh1CtLj8zlFIjGeREdnjUp3xQAcLSxxJddhh5cP8+43GECV6zAd5AQE=
+In-Reply-To: <20190129191525.GB10430@chrisdown.name>
+Content-Language: en-US
+Content-ID: <CC376DBE2AD86543AB31870EA097DB32@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tejun Heo <tj@kernel.org>, Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Chris Down <chris@chrisdown.name>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Dennis Zhou <dennis@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Kernel Team <Kernel-team@fb.com>
 
-On Wed 30-01-19 14:23:45, Johannes Weiner wrote:
-> On Mon, Jan 28, 2019 at 01:51:51PM +0100, Michal Hocko wrote:
-> > On Fri 25-01-19 10:28:08, Tejun Heo wrote:
-> > > On Fri, Jan 25, 2019 at 06:37:13PM +0100, Michal Hocko wrote:
-> > > > Please note that I understand that this might be confusing with the rest
-> > > > of the cgroup APIs but considering that this is the first time somebody
-> > > > is actually complaining and the interface is "production ready" for more
-> > > > than three years I am not really sure the situation is all that bad.
-> > > 
-> > > cgroup2 uptake hasn't progressed that fast.  None of the major distros
-> > > or container frameworks are currently shipping with it although many
-> > > are evaluating switching.  I don't think I'm too mistaken in that we
-> > > (FB) are at the bleeding edge in terms of adopting cgroup2 and its
-> > > various new features and are hitting these corner cases and oversights
-> > > in the process.  If there are noticeable breakages arising from this
-> > > change, we sure can backpaddle but I think the better course of action
-> > > is fixing them up while we can.
-> > 
-> > I do not really think you can go back. You cannot simply change semantic
-> > back and forth because you just break new users.
-> > 
-> > Really, I do not see the semantic changing after more than 3 years of
-> > production ready interface. If you really believe we need a hierarchical
-> > notification mechanism for the reclaim activity then add a new one.
-> 
-> This discussion needs to be more nuanced.
-> 
-> We change interfaces and user-visible behavior all the time when we
-> think nobody is likely to rely on it. Sometimes we change them after
-> decades of established behavior - for example the recent OOM killer
-> change to not kill children over parents.
+On Tue, Jan 29, 2019 at 02:15:25PM -0500, Chris Down wrote:
+> Roman points out that when when we do the low reclaim pass, we scale the
+> reclaim pressure relative to position between 0 and the maximum
+> protection threshold.
+>=20
+> However, if the maximum protection is based on memory.elow, and
+> memory.emin is above zero, this means we still may get binary behaviour
+> on second-pass low reclaim. This is because we scale starting at 0, not
+> starting at memory.emin, and since we don't scan at all below emin, we
+> end up with cliff behaviour.
+>=20
+> This should be a fairly uncommon case since usually we don't go into the
+> second pass, but it makes sense to scale our low reclaim pressure
+> starting at emin.
+>=20
+> You can test this by catting two large sparse files, one in a cgroup
+> with emin set to some moderate size compared to physical RAM, and
+> another cgroup without any emin. In both cgroups, set an elow larger
+> than 50% of physical RAM. The one with emin will have less page
+> scanning, as reclaim pressure is lower.
+>=20
+> Signed-off-by: Chris Down <chris@chrisdown.name>
+> Suggested-by: Roman Gushchin <guro@fb.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Roman Gushchin <guro@fb.com>
+> Cc: Dennis Zhou <dennis@kernel.org>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: cgroups@vger.kernel.org
+> Cc: linux-mm@kvack.org
+> Cc: kernel-team@fb.com
 
-That is an implementation detail of a kernel internal functionality.
-Most of changes in the kernel tend to have user visible effects. This is
-not what we are discussing here. We are talking about a change of user
-visibile API semantic change. And that is a completely different story.
+Acked-by: Roman Gushchin <guro@fb.com>
 
-> The argument was made that it's very unlikely that we break any
-> existing user setups relying specifically on this behavior we are
-> trying to fix. I don't see a real dispute to this, other than a
-> repetition of "we can't change it after three years".
-> 
-> I also don't see a concrete description of a plausible scenario that
-> this change might break.
-> 
-> I would like to see a solid case for why this change is a notable risk
-> to actual users (interface age is not a criterium for other changes)
-> before discussing errata solutions.
-
-I thought I have already mentioned an example. Say you have an observer
-on the top of a delegated cgroup hierarchy and you setup limits (e.g. hard
-limit) on the root of it. If you get an OOM event then you know that the
-whole hierarchy might be underprovisioned and perform some rebalancing.
-Now you really do not care that somewhere down the delegated tree there
-was an oom. Such a spurious event would just confuse the monitoring and
-lead to wrong decisions.
--- 
-Michal Hocko
-SUSE Labs
+Thanks!
