@@ -1,47 +1,75 @@
-From: Andrea Parri <andrea.parri@amarulasolutions.com>
-Subject: [PATCH] MAINTAINERS: Update cgroup entry
-Date: Thu, 31 Jan 2019 15:22:19 +0100
-Message-ID: <20190131142219.10175-1-andrea.parri@amarulasolutions.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] cgroup/pids: turn cgroup_subsys->free() into
+ cgroup_subsys->release() to fix the accounting
+Date: Thu, 31 Jan 2019 06:56:20 -0800
+Message-ID: <20190131145620.GC50184@devbig004.ftw2.facebook.com>
+References: <20190128160013.GA21219@redhat.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=amarulasolutions.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=JIMo3w7sRDSl/keT71uYvTtuh4JE+UyImwPdfucCUkE=;
-        b=G1BKxAbp2I4l6BcAvYlc3tr15PTmFxb6TK+igQETJs3Z974oXS6XYoIF7FDaeeETbo
-         liUmbJQw5Z8JHHFEXjIM1recEd//z3F2feQ0kTxEnCAe9MhY+bLqnwdSjzfhTCmQvLZ7
-         XAm84JWJtiz3frNJqQuzMFTyKC8FNJNrxkYuc=
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=wqkae5/SZUXV0XpHwrdhyDmdmZuXObNbFvC+52gNI10=;
+        b=T+tfKU9bLG/Ze8iEPeVXdRWijWD8iEUGg5hxZ7uE66Rm49Duni5enxE3uJgCj0ClBE
+         8OHx1m0Y2s0wwyJHaSsN76bNKEbEG0RWW2e/Ft212//gGXoVP+sO1/qflAXTBx+FwUiS
+         icEdvmjlo+NbU2KspZtxwijuTJEK40AKekvdtptVupBJ5hN23RQdGH9bPORrBFsiB59S
+         eA+FsM2mQKfMnbjlR3cIWbUHKOfV0+fGr8LQPdnG3qcRwTzAK8lcHMa37eXx9CWGuAn5
+         MvTn09SulsASG7+Bii1yDxsMlik+rv0QvEZYmbMwOyPxR9gviKae5xbVAcFtBvh+Xo0c
+         1HiA==
+Content-Disposition: inline
+In-Reply-To: <20190128160013.GA21219@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Andrea Parri <andrea.parri@amarulasolutions.com>
+To: Oleg Nesterov <oleg@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Herton Krzesinski <hkrzesin@redhat.com>, Jan Stancek <jstancek@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Fix wildcard patterns and add cgroup-v2 documentation.
+On Mon, Jan 28, 2019 at 05:00:13PM +0100, Oleg Nesterov wrote:
+> The only user of cgroup_subsys->free() callback is pids_cgrp_subsys which
+> needs pids_free() to uncharge the pid.
+> 
+> However, ->free() is called from __put_task_struct()->cgroup_free() and this
+> is too late. Even the trivial program which does
+> 
+> 	for (;;) {
+> 		int pid = fork();
+> 		assert(pid >= 0);
+> 		if (pid)
+> 			wait(NULL);
+> 		else
+> 			exit(0);
+> 	}
+> 
+> can run out of limits because release_task()->call_rcu(delayed_put_task_struct)
+> implies an RCU gp after the task/pid goes away and before the final put().
+> 
+> Test-case:
+> 
+> 	mkdir -p /tmp/CG
+> 	mount -t cgroup2 none /tmp/CG
+> 	echo '+pids' > /tmp/CG/cgroup.subtree_control
+> 
+> 	mkdir /tmp/CG/PID
+> 	echo 2 > /tmp/CG/PID/pids.max
+> 
+> 	perl -e 'while ($p = fork) { wait; } $p // die "fork failed: $!\n"' &
+> 	echo $! > /tmp/CG/PID/cgroup.procs
+> 
+> Without this patch the forking process fails soon after migration.
+> 
+> Rename cgroup_subsys->free() to cgroup_subsys->release() and move the callsite
+> into the new helper, cgroup_release(), called by release_task() which actually
+> frees the pid(s).
+> 
+> Reported-by: Herton R. Krzesinski <hkrzesin@redhat.com>
+> Reported-by: Jan Stancek <jstancek@redhat.com>
+> Signed-off-by: Oleg Nesterov <oleg@redhat.com>
 
-Signed-off-by: Andrea Parri <andrea.parri@amarulasolutions.com>
----
- MAINTAINERS | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Applied to cgroup/for-5.0.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 9f64f8d3740ed..a96054c1d870a 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3906,9 +3906,10 @@ M:	Johannes Weiner <hannes@cmpxchg.org>
- L:	cgroups@vger.kernel.org
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
- S:	Maintained
--F:	Documentation/cgroup*
-+F:	Documentation/admin-guide/cgroup-v2.rst
-+F:	Documentation/cgroup-v1/
- F:	include/linux/cgroup*
--F:	kernel/cgroup*
-+F:	kernel/cgroup/
- 
- CONTROL GROUP - CPUSET
- M:	Li Zefan <lizefan@huawei.com>
+Thanks, Oleg.
+
 -- 
-2.17.1
-
+tejun
