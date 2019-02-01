@@ -1,50 +1,37 @@
 From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: Throttle allocators when failing reclaim over
- memory.high
-Date: Fri, 1 Feb 2019 08:17:57 +0100
-Message-ID: <20190201071757.GE11599@dhcp22.suse.cz>
-References: <20190201011352.GA14370@chrisdown.name>
+Subject: Re: [PATCH] mm, memcg: Handle cgroup_disable=memory when getting
+ memcg protection
+Date: Fri, 1 Feb 2019 08:48:09 +0100
+Message-ID: <20190201074809.GF11599@dhcp22.suse.cz>
+References: <20190201045711.GA18302@chrisdown.name>
+ <20190201071203.GD11599@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20190201011352.GA14370@chrisdown.name>
+In-Reply-To: <20190201071203.GD11599@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Chris Down <chris@chrisdown.name>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+Cc: Andrew Morton <akpm@linux-foundation.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Thu 31-01-19 20:13:52, Chris Down wrote:
-[...]
-> The current situation goes against both the expectations of users of
-> memory.high, and our intentions as cgroup v2 developers. In
-> cgroup-v2.txt, we claim that we will throttle and only under "extreme
-> conditions" will memory.high protection be breached. Likewise, cgroup v2
-> users generally also expect that memory.high should throttle workloads
-> as they exceed their high threshold. However, as seen above, this isn't
-> always how it works in practice -- even on banal setups like those with
-> no swap, or where swap has become exhausted, we can end up with
-> memory.high being breached and us having no weapons left in our arsenal
-> to combat runaway growth with, since reclaim is futile.
+On Fri 01-02-19 08:12:03, Michal Hocko wrote:
+> On Thu 31-01-19 23:57:11, Chris Down wrote:
+> > memcg is NULL if we have CONFIG_MEMCG set, but cgroup_disable=memory on
+> > the kernel command line.
+> > 
+> > Fixes: 8a907cdf0177ab40 ("mm, memcg: proportional memory.{low,min} reclaim")
 > 
-> It's also hard for system monitoring software or users to tell how bad
-> the situation is, as "high" events for the memcg may in some cases be
-> benign, and in others be catastrophic. The current status quo is that we
-> fail containment in a way that doesn't provide any advance warning that
-> things are about to go horribly wrong (for example, we are about to
-> invoke the kernel OOM killer).
+> JFYI this is not a valid sha1. It is from linux next and it will change
+> with the next linux-next release.
 > 
-> This patch introduces explicit throttling when reclaim is failing to
-> keep memcg size contained at the memory.high setting. It does so by
-> applying an exponential delay curve derived from the memcg's overage
-> compared to memory.high.  In the normal case where the memcg is either
-> below or only marginally over its memory.high setting, no throttling
-> will be performed.
+> Btw. I still didn't get to look at your patch and I am unlikely to do so
+> today. I will be offline next week but I will try to get to it after I
+> get back.
 
-How does this play wit the actual OOM when the user expects oom to
-resolve the situation because the reclaim is futile and there is nothing
-reclaimable except for killing a process?
+Btw. I would appreciate if you could post the patch with all fixups
+folded for the final review once things settle down.
 -- 
 Michal Hocko
 SUSE Labs
