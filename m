@@ -1,84 +1,68 @@
 From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH v6 4/5] sched/core: Prevent race condition between cpuset
- and __sched_setscheduler()
-Date: Mon, 4 Feb 2019 13:10:29 +0100
-Message-ID: <20190204121029.GD17550@hirez.programming.kicks-ass.net>
+Subject: Re: [PATCH v6 0/5] sched/deadline: fix cpusets bandwidth accounting
+Date: Mon, 4 Feb 2019 13:18:25 +0100
+Message-ID: <20190204121825.GE17550@hirez.programming.kicks-ass.net>
 References: <20190117084739.17078-1-juri.lelli@redhat.com>
- <20190117084739.17078-5-juri.lelli@redhat.com>
+ <20190118161739.GE50184@devbig004.ftw2.facebook.com>
+ <20190118164642.GC26615@localhost.localdomain>
+ <20190204090211.GA10449@localhost.localdomain>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=xk9BHV1P6GGtyJFkFlG3uN5UNNhnFsyEyojuYFBV8Gk=; b=AS0IB77f9Q/HJxUDddKqss52Q
-        kEhNhxX+q435sNibLuRCzg/UQDeEqovzLKwLMQdyTQEF/0MdSGh8GfbBMYALyXPyYyH2xuu2TIgUK
-        n15cwhQVWdjVs09ohs5nE3DdETPoCdgJW3gEKhB+s49gIaA9FI5Ti1dwxi4wu+I/vqbM+gneGfBzz
-        +dHiDvkolZefcFCZh6X/QEFC2uux6lXS9iuQ5m7yhPMDFQriLLC8d6cDBAC7B1KfieZVgaf2SIpIn
-        WRfbeOnEAQkyRKETWoD9hcL3eNh+iwRyMvhgIeA/ox6z6oOhBPwBiDe2j4N72WHcJ1Ug4kkZ6DRUi
+         bh=4w5nfgJzQzB7J7OBjkWwXWwU2NpaLnL33MR+V7KnNxw=; b=p2jvkTYdAkPnpy0EoVIRngRsC
+        2jB4bul9vMI7PtdPGH/gb4KDMYCUWl5G/k0yiKQEq94zbg/iDSSOJd2bcP01UdB/4R/vZsrO/e4aW
+        vfjv3mXFE8b9jBrQk6+itOpFgSRyB+YDaQXZb/Oc5iDVw/uxE0AeWRfbb7lTAwjHicki3LbQ+sUCy
+        541MVBMlHalM1KWn1dK5PtuTX7ctajUqrY9h/joQHWG9rKwYlPlaGbxtNaI/ZaclbXIgo13l9vc/W
+        CxGoyot7A5SZPXozMFeqO4dMtZKoFmJLyWMuJNWaZY8okUbd32eE8hqtyRr7kNJPwME+9Koi0zAqa
 Content-Disposition: inline
-In-Reply-To: <20190117084739.17078-5-juri.lelli@redhat.com>
+In-Reply-To: <20190204090211.GA10449@localhost.localdomain>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Juri Lelli <juri.lelli@redhat.com>
-Cc: mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org
+Cc: longman@redhat.com, mingo@redhat.com, rostedt@goodmis.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org, tj@kernel.org
 
-On Thu, Jan 17, 2019 at 09:47:38AM +0100, Juri Lelli wrote:
-> No synchronisation mechanism exists between the cpuset subsystem and calls
-> to function __sched_setscheduler(). As such, it is possible that new root
-> domains are created on the cpuset side while a deadline acceptance test
-> is carried out in __sched_setscheduler(), leading to a potential oversell
-> of CPU bandwidth.
+On Mon, Feb 04, 2019 at 10:02:11AM +0100, Juri Lelli wrote:
+> On 18/01/19 17:46, Juri Lelli wrote:
+> > On 18/01/19 08:17, Tejun Heo wrote:
+> > > On Thu, Jan 17, 2019 at 09:47:34AM +0100, Juri Lelli wrote:
+> > > > Hi,
+> > > > 
+> > > > v6 of a series of patches, originally authored by Mathieu, with the intent
+> > > > of fixing a long standing issue of SCHED_DEADLINE bandwidth accounting.
+> > > > As originally reported by Steve [1], when hotplug and/or (certain)
+> > > > cpuset reconfiguration operations take place, DEADLINE bandwidth
+> > > > accounting information is lost since root domains are destroyed and
+> > > > recreated.
+> > > > 
+> > > > Mathieu's approach is based on restoring bandwidth accounting info on
+> > > > the newly created root domains by iterating through the (DEADLINE) tasks
+> > > > belonging to the configured cpuset(s).
+> > > > 
+> > > > Apart from some minor refactoring needed to rebase the set on top of
+> > > > Waiman Long's cpuset for cgroup series (now mainline), two changes worth
+> > > > of notice:
+> > > 
+> > > Generally looks good to me but can you please ask Waiman to take a
+> > > look?
+> > 
+> > Argh! I should have cc-ed him in the first instance.
+> > 
+> > Thanks for reviewing.
+> > 
+> > Waiman, do you see anything wrong with this series? Thanks!
+> > 
+> > https://lore.kernel.org/lkml/20190117084739.17078-1-juri.lelli@redhat.com/
 > 
-> Grab callback_lock from core scheduler, so to prevent situations such as
-> the one described above from happening.
+> Ping?
 
-> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-> index f5263383170e..d928a42b8852 100644
-> --- a/kernel/sched/core.c
-> +++ b/kernel/sched/core.c
-> @@ -4224,6 +4224,13 @@ static int __sched_setscheduler(struct task_struct *p,
->  	rq = task_rq_lock(p, &rf);
->  	update_rq_clock(rq);
->  
-> +	/*
-> +	 * Make sure we don't race with the cpuset subsystem where root
-> +	 * domains can be rebuilt or modified while operations like DL
-> +	 * admission checks are carried out.
-> +	 */
-> +	cpuset_read_only_lock();
-> +
->  	/*
->  	 * Changing the policy of the stop threads its a very bad idea:
->  	 */
-> @@ -4285,6 +4292,7 @@ static int __sched_setscheduler(struct task_struct *p,
->  	/* Re-check policy now with rq lock held: */
->  	if (unlikely(oldpolicy != -1 && oldpolicy != p->policy)) {
->  		policy = oldpolicy = -1;
-> +		cpuset_read_only_unlock();
->  		task_rq_unlock(rq, p, &rf);
->  		goto recheck;
->  	}
-> @@ -4342,6 +4350,7 @@ static int __sched_setscheduler(struct task_struct *p,
->  
->  	/* Avoid rq from going away on us: */
->  	preempt_disable();
-> +	cpuset_read_only_unlock();
->  	task_rq_unlock(rq, p, &rf);
->  
->  	if (pi)
-> @@ -4354,6 +4363,7 @@ static int __sched_setscheduler(struct task_struct *p,
->  	return 0;
->  
->  unlock:
-> +	cpuset_read_only_unlock();
->  	task_rq_unlock(rq, p, &rf);
->  	return retval;
->  }
+Basically looks OK to me; wlthough I think I prefer the callback_lock /
+rq->lock ordering to be the other way around.
 
-Why take callback_lock inside rq->lock and not the other way around?
-AFAICT there is no pre-existing order so we can pick one here.
+Waiman, you OK with this one?
