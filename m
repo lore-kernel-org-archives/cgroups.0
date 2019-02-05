@@ -1,76 +1,63 @@
 From: Juri Lelli <juri.lelli@redhat.com>
-Subject: Re: [PATCH v6 3/5] cgroup/cpuset: make callback_lock raw
-Date: Tue, 5 Feb 2019 10:18:20 +0100
-Message-ID: <20190205091820.GE30905@localhost.localdomain>
+Subject: Re: [PATCH v6 0/5] sched/deadline: fix cpusets bandwidth accounting
+Date: Tue, 5 Feb 2019 10:18:43 +0100
+Message-ID: <20190205091843.GF30905@localhost.localdomain>
 References: <20190117084739.17078-1-juri.lelli@redhat.com>
- <20190117084739.17078-4-juri.lelli@redhat.com>
- <20190204120236.GC17550@hirez.programming.kicks-ass.net>
- <20190204120711.GA17582@hirez.programming.kicks-ass.net>
+ <20190118161739.GE50184@devbig004.ftw2.facebook.com>
+ <20190118164642.GC26615@localhost.localdomain>
+ <20190204090211.GA10449@localhost.localdomain>
+ <20190204121825.GE17550@hirez.programming.kicks-ass.net>
+ <90ece065-8634-7a6c-7852-e04f6d727a13@redhat.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20190204120711.GA17582@hirez.programming.kicks-ass.net>
+In-Reply-To: <90ece065-8634-7a6c-7852-e04f6d727a13@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org
+To: Waiman Long <longman@redhat.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, mingo@redhat.com, rostedt@goodmis.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org, tj@kernel.org
 
-On 04/02/19 13:07, Peter Zijlstra wrote:
-> On Mon, Feb 04, 2019 at 01:02:36PM +0100, Peter Zijlstra wrote:
-> > On Thu, Jan 17, 2019 at 09:47:37AM +0100, Juri Lelli wrote:
-> > > @@ -3233,11 +3233,11 @@ void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
-> > >  {
-> > >  	unsigned long flags;
-> > >  
-> > > -	spin_lock_irqsave(&callback_lock, flags);
-> > > +	raw_spin_lock_irqsave(&callback_lock, flags);
-> > >  	rcu_read_lock();
-> > >  	guarantee_online_cpus(task_cs(tsk), pmask);
-> > >  	rcu_read_unlock();
-> > > -	spin_unlock_irqrestore(&callback_lock, flags);
-> > > +	raw_spin_unlock_irqrestore(&callback_lock, flags);
-> > >  }
-> > >  
-> > >  void cpuset_cpus_allowed_fallback(struct task_struct *tsk)
-> > > @@ -3285,11 +3285,11 @@ nodemask_t cpuset_mems_allowed(struct task_struct *tsk)
-> > >  	nodemask_t mask;
-> > >  	unsigned long flags;
-> > >  
-> > > -	spin_lock_irqsave(&callback_lock, flags);
-> > > +	raw_spin_lock_irqsave(&callback_lock, flags);
-> > >  	rcu_read_lock();
-> > >  	guarantee_online_mems(task_cs(tsk), &mask);
-> > >  	rcu_read_unlock();
-> > > -	spin_unlock_irqrestore(&callback_lock, flags);
-> > > +	raw_spin_unlock_irqrestore(&callback_lock, flags);
-> > >  
-> > >  	return mask;
-> > >  }
-> > > @@ -3381,14 +3381,14 @@ bool __cpuset_node_allowed(int node, gfp_t gfp_mask)
-> > >  		return true;
-> > >  
-> > >  	/* Not hardwall and node outside mems_allowed: scan up cpusets */
-> > > -	spin_lock_irqsave(&callback_lock, flags);
-> > > +	raw_spin_lock_irqsave(&callback_lock, flags);
-> > >  
-> > >  	rcu_read_lock();
-> > >  	cs = nearest_hardwall_ancestor(task_cs(current));
-> > >  	allowed = node_isset(node, cs->mems_allowed);
-> > >  	rcu_read_unlock();
-> > >  
-> > > -	spin_unlock_irqrestore(&callback_lock, flags);
-> > > +	raw_spin_unlock_irqrestore(&callback_lock, flags);
-> > >  	return allowed;
-> > >  }
-> > 
-> > These three appear to be a user-controlled O(n) (depth of cgroup tree).
-> > Which is basically bad for raw_spinlock_t.
-> > 
-> > The Changelog should really have mentioned this; and ideally we'd
-> > somehow avoid this.
+On 04/02/19 13:45, Waiman Long wrote:
+> On 02/04/2019 07:18 AM, Peter Zijlstra wrote:
+> > On Mon, Feb 04, 2019 at 10:02:11AM +0100, Juri Lelli wrote:
+> >> On 18/01/19 17:46, Juri Lelli wrote:
+> >>> On 18/01/19 08:17, Tejun Heo wrote:
+> >>>> On Thu, Jan 17, 2019 at 09:47:34AM +0100, Juri Lelli wrote:
+> >>>>> Hi,
+> >>>>>
+> >>>>> v6 of a series of patches, originally authored by Mathieu, with the intent
+> >>>>> of fixing a long standing issue of SCHED_DEADLINE bandwidth accounting.
+> >>>>> As originally reported by Steve [1], when hotplug and/or (certain)
+> >>>>> cpuset reconfiguration operations take place, DEADLINE bandwidth
+> >>>>> accounting information is lost since root domains are destroyed and
+> >>>>> recreated.
+> >>>>>
+> >>>>> Mathieu's approach is based on restoring bandwidth accounting info on
+> >>>>> the newly created root domains by iterating through the (DEADLINE) tasks
+> >>>>> belonging to the configured cpuset(s).
+> >>>>>
+> >>>>> Apart from some minor refactoring needed to rebase the set on top of
+> >>>>> Waiman Long's cpuset for cgroup series (now mainline), two changes worth
+> >>>>> of notice:
+> >>>> Generally looks good to me but can you please ask Waiman to take a
+> >>>> look?
+> >>> Argh! I should have cc-ed him in the first instance.
+> >>>
+> >>> Thanks for reviewing.
+> >>>
+> >>> Waiman, do you see anything wrong with this series? Thanks!
+> >>>
+> >>> https://lore.kernel.org/lkml/20190117084739.17078-1-juri.lelli@redhat.com/
+> >> Ping?
+> > Basically looks OK to me; wlthough I think I prefer the callback_lock /
+> > rq->lock ordering to be the other way around.
+> >
+> > Waiman, you OK with this one?
 > 
-> N/m avoiding it; we have this all over the place, just mention it..
+> Sorry for the late reply. I reviewed the patchset and don't see anything
+> wrong with it. However, my knowledge of the internal operation of the
+> deadline scheduler is limited.
 
-OK.
+Thanks for reviewing!
