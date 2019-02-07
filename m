@@ -1,64 +1,57 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v4] mm: Make memory.emin the baseline for utilisation
- determination
-Date: Wed, 6 Feb 2019 15:31:17 +0100
-Message-ID: <20190206143117.GA30357@cmpxchg.org>
-References: <20190129191525.GB10430@chrisdown.name>
- <20190201051810.GA18895@chrisdown.name>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH] Documentation: cgroup-v2: eliminate markup warnings
+Date: Wed, 6 Feb 2019 16:59:00 -0800
+Message-ID: <7ba0d6eb-8f45-7f4d-4e84-53dab1158da4@infradead.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=aCkiqYNvxX1a9nJPU/Nbyv1sM4Ffext0Xrvmi7ouJ9w=;
-        b=hz72O9Y3uWIkSfq8uoOTQBadfjKQoIu+JKa5XW82YFIX8YDAvNP66Bge7LiyeLclz6
-         iPBBiywri00HnOkmsvfIc/NksPb07HSk8jXer0XE78ZW8L7mFpxmioQ+3EfmHPNsJTF5
-         JykLNcbGm7+TicqSMwxXi2uVkhSjTHKf3tRMBTcDtSC2qmmWv0LS2Ns9wLSFiI2qXghd
-         i4EHmd1mj1w/ML9rhwhf4shb5qGzH76VAeA1OghmUVOb9Ttn6cUxUKMEv3kneBKuZvWh
-         ffvmXiQLHx75vnbCqvd6U/66s1f1zBv9QW353zZVBTPVbgi1gEyY0r/2TMhKQhoHWj2f
-         xmrg==
-Content-Disposition: inline
-In-Reply-To: <20190201051810.GA18895@chrisdown.name>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        Content-Type:MIME-Version:Date:Message-ID:Subject:From:Cc:To:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=SVWcuUz5gH1sGpGdo0QIT9ocAF9t5jKjZESXWQYppus=; b=NNpfCnGMNbAu6DOm9fKstuGN0
+        xkwYK7CJqYi6hL44/NpSs/RkK7kJorFt4eu5iqYWr1iD2yFjGRy9gZf/P4MzEY/0sX/PHkEROli4p
+        UMG2jnRspSbsUW0TRYoKL6iGJd3mSUZW1AJqs9uEY45m5cRkwoWeO4hLkrps4JsHY0jjfiDRnghsq
+        0EjrOWzi0KWEFcH5OA8Q9hDmgRQDkrsURyFpAp0GpafMlVsC2x1pp/py6Eq8QUw2bUOx1FzGG3TwP
+        Kr7Fi0Ha/FWXrDVPhrbP0W5zRqM8MkU8qfYanOLs+dsj8LkSXxfFUAWuhT0w4d9kIfOiWwyJsz/WB
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Chris Down <chris@chrisdown.name>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: LKML <linux-kernel@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org
 
-On Fri, Feb 01, 2019 at 12:18:10AM -0500, Chris Down wrote:
-> Roman points out that when when we do the low reclaim pass, we scale the
-> reclaim pressure relative to position between 0 and the maximum
-> protection threshold.
-> 
-> However, if the maximum protection is based on memory.elow, and
-> memory.emin is above zero, this means we still may get binary behaviour
-> on second-pass low reclaim. This is because we scale starting at 0, not
-> starting at memory.emin, and since we don't scan at all below emin, we
-> end up with cliff behaviour.
-> 
-> This should be a fairly uncommon case since usually we don't go into the
-> second pass, but it makes sense to scale our low reclaim pressure
-> starting at emin.
-> 
-> You can test this by catting two large sparse files, one in a cgroup
-> with emin set to some moderate size compared to physical RAM, and
-> another cgroup without any emin. In both cgroups, set an elow larger
-> than 50% of physical RAM. The one with emin will have less page
-> scanning, as reclaim pressure is lower.
-> 
-> Signed-off-by: Chris Down <chris@chrisdown.name>
-> Suggested-by: Roman Gushchin <guro@fb.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Roman Gushchin <guro@fb.com>
-> Cc: Dennis Zhou <dennis@kernel.org>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-mm@kvack.org
-> Cc: kernel-team@fb.com
+From: Randy Dunlap <rdunlap@infradead.org>
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Fix markup warnings in cgroup-v2.rst:
+
+Documentation/admin-guide/cgroup-v2.rst:1509: WARNING: Block quote ends without a blank line; unexpected unindent.
+Documentation/admin-guide/cgroup-v2.rst:1511: WARNING: Block quote ends without a blank line; unexpected unindent.
+Documentation/admin-guide/cgroup-v2.rst:1512: WARNING: Block quote ends without a blank line; unexpected unindent.
+
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: cgroups@vger.kernel.org
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-doc@vger.kernel.org
+---
+ Documentation/admin-guide/cgroup-v2.rst |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- lnx-50-rc5.orig/Documentation/admin-guide/cgroup-v2.rst
++++ lnx-50-rc5/Documentation/admin-guide/cgroup-v2.rst
+@@ -1503,7 +1503,7 @@ protected workload.
+ 
+ The limits are only applied at the peer level in the hierarchy.  This means that
+ in the diagram below, only groups A, B, and C will influence each other, and
+-groups D and F will influence each other.  Group G will influence nobody.
++groups D and F will influence each other.  Group G will influence nobody::
+ 
+ 			[root]
+ 		/	   |		\
+
+
