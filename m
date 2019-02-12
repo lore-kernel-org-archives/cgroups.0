@@ -1,7 +1,7 @@
 From: Roman Gushchin <guroan@gmail.com>
-Subject: [PATCH v7 1/7] cgroup: rename freezer.c into legacy_freezer.c
-Date: Tue, 12 Feb 2019 10:48:01 -0800
-Message-ID: <20190212184807.20304-2-guro@fb.com>
+Subject: [PATCH v7 3/7] cgroup: protect cgroup->nr_(dying_)descendants by css_set_lock
+Date: Tue, 12 Feb 2019 10:48:03 -0800
+Message-ID: <20190212184807.20304-4-guro@fb.com>
 References: <20190212184807.20304-1-guro@fb.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,13 +10,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=suU4k9iE7Md/KfJ4CfzvKVa4/9QAyJfSEidhnmW/+G4=;
-        b=INtNvp3H9zdMtp3kcYDQMskua1THtfRgxAGGAIVRB7JNDn874CDV9KsMStpNWa2xEL
-         RR9EQIAfASG2f5G41VZHK2HnxHV8kZ0pnnalBWPQlxagDRFqPxEfxHN9JlURxkFswNLn
-         3FtoFMTfHNMM+prhDC/yYPtfAIxtM3JmFrWdOEIwn+rfAdCwiwVLbcdHD0kUbkkWjY0M
-         vO/wyXBF3IWR8czOiJYKUC48AYvGvMixBgIr+6i6bwsnW5+FncVroEKebN/P8hZ2dDWS
-         +2MAONo26YVbxJAdZgOKF/ruZbPc1WABeR6PKFTBZD5E+4y1hnsDg9BvaynjpStiIYJU
-         AayA==
+        bh=pSVREjPCAv5T2ZXAYt7SDw0JOGFlD724donHrtDZGs4=;
+        b=GLRPP0yzDLzk0MN9BwvvmnuUtFsAUZLxv7dsvHDb7JDWWEfLIuqRdbg4iSK35Cwktj
+         dNfoJAGoY4amkqZCUKX/+07ghQ92hKQYCuirfEjguyYz3ftBeEzZL31V1uyN360oR27H
+         rEOmr9hWWHa/i8NqCZsMI8VVdVDRcZZesH7IrLKP9vGJuDzuZkm2IC1bz3v4PwBdhFgR
+         5k/qe0PfxDx68KL9xNtNaV+w/fWZgkGWehmxDokcg7fI59t9q5ovYnHcrg8OyS1IEsSP
+         B9YlzdBeClviN08HrNu93/iqcvxNiomGnRLoyb5zuo0xP5r/5xkwQM4eeo98cVPjtJ4u
+         9Q4w==
 In-Reply-To: <20190212184807.20304-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,35 +24,89 @@ Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>
 Cc: kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-Freezer.c will contain an implementation of cgroup v2 freezer,
-so let's rename the v1 freezer to avoid naming conflicts.
+The number of descendant cgroups and the number of dying
+descendant cgroups are currently synchronized using the cgroup_mutex.
+
+The number of descendant cgroups will be required by the cgroup v2
+freezer, which will use it to determine if a cgroup is frozen
+(depending on total number of descendants and number of frozen
+descendants). It's not always acceptable to grab the cgroup_mutex,
+especially from quite hot paths (e.g. exit()).
+
+To avoid this, let's additionally synchronize these counters using
+the css_set_lock.
+
+So, it's safe to read these counters with either cgroup_mutex or
+css_set_lock locked, and for changing both locks should be acquired.
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
 Cc: Tejun Heo <tj@kernel.org>
 Cc: kernel-team@fb.com
 ---
- kernel/cgroup/Makefile                        | 2 +-
- kernel/cgroup/{freezer.c => legacy_freezer.c} | 0
- 2 files changed, 1 insertion(+), 1 deletion(-)
- rename kernel/cgroup/{freezer.c => legacy_freezer.c} (100%)
+ include/linux/cgroup-defs.h | 5 +++++
+ kernel/cgroup/cgroup.c      | 6 ++++++
+ 2 files changed, 11 insertions(+)
 
-diff --git a/kernel/cgroup/Makefile b/kernel/cgroup/Makefile
-index bfcdae896122..8d5689ca94b9 100644
---- a/kernel/cgroup/Makefile
-+++ b/kernel/cgroup/Makefile
-@@ -1,7 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0
- obj-y := cgroup.o rstat.o namespace.o cgroup-v1.o
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 120d1d40704b..319c07305500 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -348,6 +348,11 @@ struct cgroup {
+ 	 * Dying cgroups are cgroups which were deleted by a user,
+ 	 * but are still existing because someone else is holding a reference.
+ 	 * max_descendants is a maximum allowed number of descent cgroups.
++	 *
++	 * nr_descendants and nr_dying_descendants are protected
++	 * by cgroup_mutex and css_set_lock. It's fine to read them holding
++	 * any of cgroup_mutex and css_set_lock; for writing both locks
++	 * should be held.
+ 	 */
+ 	int nr_descendants;
+ 	int nr_dying_descendants;
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index b230afccf635..7438c24297d4 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -4758,9 +4758,11 @@ static void css_release_work_fn(struct work_struct *work)
+ 		if (cgroup_on_dfl(cgrp))
+ 			cgroup_rstat_flush(cgrp);
  
--obj-$(CONFIG_CGROUP_FREEZER) += freezer.o
-+obj-$(CONFIG_CGROUP_FREEZER) += legacy_freezer.o
- obj-$(CONFIG_CGROUP_PIDS) += pids.o
- obj-$(CONFIG_CGROUP_RDMA) += rdma.o
- obj-$(CONFIG_CPUSETS) += cpuset.o
-diff --git a/kernel/cgroup/freezer.c b/kernel/cgroup/legacy_freezer.c
-similarity index 100%
-rename from kernel/cgroup/freezer.c
-rename to kernel/cgroup/legacy_freezer.c
++		spin_lock_irq(&css_set_lock);
+ 		for (tcgrp = cgroup_parent(cgrp); tcgrp;
+ 		     tcgrp = cgroup_parent(tcgrp))
+ 			tcgrp->nr_dying_descendants--;
++		spin_unlock_irq(&css_set_lock);
+ 
+ 		cgroup_idr_remove(&cgrp->root->cgroup_idr, cgrp->id);
+ 		cgrp->id = -1;
+@@ -4978,12 +4980,14 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
+ 	if (ret)
+ 		goto out_psi_free;
+ 
++	spin_lock_irq(&css_set_lock);
+ 	for (tcgrp = cgrp; tcgrp; tcgrp = cgroup_parent(tcgrp)) {
+ 		cgrp->ancestor_ids[tcgrp->level] = tcgrp->id;
+ 
+ 		if (tcgrp != cgrp)
+ 			tcgrp->nr_descendants++;
+ 	}
++	spin_unlock_irq(&css_set_lock);
+ 
+ 	if (notify_on_release(parent))
+ 		set_bit(CGRP_NOTIFY_ON_RELEASE, &cgrp->flags);
+@@ -5268,10 +5272,12 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 	if (parent && cgroup_is_threaded(cgrp))
+ 		parent->nr_threaded_children--;
+ 
++	spin_lock_irq(&css_set_lock);
+ 	for (tcgrp = cgroup_parent(cgrp); tcgrp; tcgrp = cgroup_parent(tcgrp)) {
+ 		tcgrp->nr_descendants--;
+ 		tcgrp->nr_dying_descendants++;
+ 	}
++	spin_unlock_irq(&css_set_lock);
+ 
+ 	cgroup1_check_for_release(parent);
+ 
 -- 
 2.20.1
 
