@@ -1,43 +1,65 @@
-From: Oleg Nesterov <oleg@redhat.com>
-Subject: Re: [PATCH v7 0/7] freezer for cgroup v2
-Date: Thu, 14 Feb 2019 17:30:19 +0100
-Message-ID: <20190214163018.GD19102@redhat.com>
-References: <20190212184807.20304-1-guro@fb.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v6 4/7] cgroup: cgroup v2 freezer
+Date: Thu, 14 Feb 2019 16:41:05 +0000
+Message-ID: <20190214164100.GA8688@tower.DHCP.thefacebook.com>
+References: <20181222000307.28231-1-guro@fb.com>
+ <20181222000307.28231-5-guro@fb.com> <20190125122713.GA18218@redhat.com>
+ <CALo0P13XnGiFykMXY3ZKu158ZqnBwHru0gyhQUrJSHEprnmiHQ@mail.gmail.com>
+ <20190130165200.GA4131@redhat.com>
+ <20190211213036.GA26063@tower.DHCP.thefacebook.com>
+ <20190214162612.GC19102@redhat.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190212184807.20304-1-guro@fb.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=KPdz73e855N+NeDZITgo6wZDKYSeeAFYIkTCWfsaUEc=;
+ b=TPFr9EhP9LO8QuYm2evzCxLCMAgf6LHZ/oAv5epvaKmgZHI9AKNH9uYYQd31iRZDTw5J
+ cyi9JcOBo3jOELdGKUZ2eHuesmuls+dHWPphasyrA+Xgxg9fLFzhhBfZ1aqan3KF8Vkq
+ apyYLAP0XKdtX47l1ELPzEBBGroWMNxKG7U= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=KPdz73e855N+NeDZITgo6wZDKYSeeAFYIkTCWfsaUEc=;
+ b=PEF4hkBlFsDENBpmjc/Y7In4d/neXHATSqQYkXRTiCdqKjnY4Sxwi/OPCoklfhryhX1M4qBLac72Pp+Gkp6t68rtQxgPRVfaxwdQj4i4S++ax3gpr8JdL1RDB2QS3p12GPhCysbYJn+KAADampMhAyxzCi9hIGIPy6WsRBMGya8=
+In-Reply-To: <20190214162612.GC19102@redhat.com>
+Content-Language: en-US
+Content-ID: <D3889F53817B344196DC0BAE5EFAC3AC@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guroan@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
+To: Oleg Nesterov <oleg@redhat.com>
+Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Kernel Team <Kernel-team@fb.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On 02/12, Roman Gushchin wrote:
->
->   - handle properly the case, when a task is both stopped and frozen
+On Thu, Feb 14, 2019 at 05:26:13PM +0100, Oleg Nesterov wrote:
+> On 02/11, Roman Gushchin wrote:
+> >
+> > On Wed, Jan 30, 2019 at 05:52:01PM +0100, Oleg Nesterov wrote:
+> > >
+> > > Worse, this looks just wrong. In the latter case, cgroup becomes CGRP=
+_FROZEN
+> > > right after a 2nd task migrates to this cgroup, before this new task =
+calls
+> > > do_freezer_trap() or cgroup_enter_stopped().
+> >
+> > You're right. So, it looks like the problem is in the equation
+> > nr_tasks_frozen + nr_tasks_stopped =3D=3D nr_tasks_to_freeze ,
+> > because a task can be frozen and stopped simultaneously.
+> >
+> > So, basically it has to be
+> > nr_tasks_frozen + nr_tasks_stopped >=3D nr_tasks_to_freeze instead.
+>=20
+> It seems you didn't read the paragraph above, or I missed something...
+>=20
+> How can "frozen + stopped >=3D to_freeze" fix the problem with the falsel=
+y true
+> CGRP_FROZEN ?
 
-I didn't read this version yet, just looked at
+It helps with the problem when cgroup is mistakenly reported as non-frozen,
+and adding a task makes it frozen due to increased nr_tasks_to_freeze.
 
-	+static void cgroup_update_frozen(struct cgroup *cgrp)
-	+{
-	+	bool frozen;
-	+
-	+	lockdep_assert_held(&css_set_lock);
-	+
-	+	/*
-	+        * If the cgroup has to be frozen (CGRP_FREEZE bit set),
-	+        * and all tasks are frozen and/or stopped, let's consider
-	+        * the cgroup frozen. Otherwise it's not frozen.
-	+        */
-	+	frozen = test_bit(CGRP_FREEZE, &cgrp->flags) &&
-	+               cgrp->freezer.nr_frozen_tasks +
-	+	        cgrp->freezer.nr_stopped_tasks >=
-	+	        cgrp->freezer.nr_tasks_to_freeze;
+But you're right, it's not correct. I have to think more how to make
+the accounting work correctly with stopped tasks.
 
-if this is the only change which should handle this case correctly, I doubt it can
-help. See another email I sent you a minute ago...
-
-Oleg.
-
+Roman
