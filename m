@@ -1,43 +1,43 @@
 From: Oleg Nesterov <oleg@redhat.com>
-Subject: Re: [PATCH v6 4/7] cgroup: cgroup v2 freezer
-Date: Thu, 14 Feb 2019 17:26:13 +0100
-Message-ID: <20190214162612.GC19102@redhat.com>
-References: <20181222000307.28231-1-guro@fb.com>
- <20181222000307.28231-5-guro@fb.com>
- <20190125122713.GA18218@redhat.com>
- <CALo0P13XnGiFykMXY3ZKu158ZqnBwHru0gyhQUrJSHEprnmiHQ@mail.gmail.com>
- <20190130165200.GA4131@redhat.com>
- <20190211213036.GA26063@tower.DHCP.thefacebook.com>
+Subject: Re: [PATCH v7 0/7] freezer for cgroup v2
+Date: Thu, 14 Feb 2019 17:30:19 +0100
+Message-ID: <20190214163018.GD19102@redhat.com>
+References: <20190212184807.20304-1-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20190211213036.GA26063@tower.DHCP.thefacebook.com>
+In-Reply-To: <20190212184807.20304-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Kernel Team <Kernel-team@fb.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Roman Gushchin <guroan@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-On 02/11, Roman Gushchin wrote:
+On 02/12, Roman Gushchin wrote:
 >
-> On Wed, Jan 30, 2019 at 05:52:01PM +0100, Oleg Nesterov wrote:
-> >
-> > Worse, this looks just wrong. In the latter case, cgroup becomes CGRP_FROZEN
-> > right after a 2nd task migrates to this cgroup, before this new task calls
-> > do_freezer_trap() or cgroup_enter_stopped().
->
-> You're right. So, it looks like the problem is in the equation
-> nr_tasks_frozen + nr_tasks_stopped == nr_tasks_to_freeze ,
-> because a task can be frozen and stopped simultaneously.
->
-> So, basically it has to be
-> nr_tasks_frozen + nr_tasks_stopped >= nr_tasks_to_freeze instead.
+>   - handle properly the case, when a task is both stopped and frozen
 
-It seems you didn't read the paragraph above, or I missed something...
+I didn't read this version yet, just looked at
 
-How can "frozen + stopped >= to_freeze" fix the problem with the falsely true
-CGRP_FROZEN ?
+	+static void cgroup_update_frozen(struct cgroup *cgrp)
+	+{
+	+	bool frozen;
+	+
+	+	lockdep_assert_held(&css_set_lock);
+	+
+	+	/*
+	+        * If the cgroup has to be frozen (CGRP_FREEZE bit set),
+	+        * and all tasks are frozen and/or stopped, let's consider
+	+        * the cgroup frozen. Otherwise it's not frozen.
+	+        */
+	+	frozen = test_bit(CGRP_FREEZE, &cgrp->flags) &&
+	+               cgrp->freezer.nr_frozen_tasks +
+	+	        cgrp->freezer.nr_stopped_tasks >=
+	+	        cgrp->freezer.nr_tasks_to_freeze;
+
+if this is the only change which should handle this case correctly, I doubt it can
+help. See another email I sent you a minute ago...
 
 Oleg.
 
