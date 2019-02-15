@@ -1,101 +1,101 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 2/6] mm: memcontrol: replace zone summing with lruvec_page_state()
-Date: Fri, 15 Feb 2019 13:14:21 -0500
-Message-ID: <20190215181425.32624-3-hannes@cmpxchg.org>
-References: <20190215181425.32624-1-hannes@cmpxchg.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH cgroup/for-5.0] cgroup, rstat: Don't flush subtree root
+ unless necessary
+Date: Fri, 15 Feb 2019 11:05:35 -0800
+Message-ID: <20190215190535.GR50184@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=0Mi2kL/2WsC77PZT2+GFY8rm4/RmpjTroxvb9aqMFLo=;
-        b=T68qNAfXm8z8Lj+3Sujbvrk6lrgzOm9xtKSZ/IbmFiUVElTgSyqQ2V+u8V/D9scygU
-         xxfD6Glf1ZjEFDVjQQL1tMksAEl64SR6rxg+DSZh4qQylcB+qKG7yvncHsUD6laSivYP
-         yrEesjRu1nLQkP3oKWLthCKmAAhpLG/cLBDhHmDEZHhlsOsBcznvipgKZKTxTcWUSIlS
-         3CGsUy80UjqzcUyhdj0RAav/iNiNe2XnpUFfM0WEFDf/Nju/TBXsm4AIq5xgFLVGyhme
-         /L0ACh/CL4wCcQTp/ogKd2o1NGC+q+Wz6XVJ5SxvPfpO1E1z2MSsbYxU1mnLMYATxkqx
-         ds+A==
-In-Reply-To: <20190215181425.32624-1-hannes@cmpxchg.org>
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=542kMV/M+F4ke2Nez4pG0EO/cK2G2uhP23eV8bg4uGc=;
+        b=fqohBaoCh6j07OJSvNB8YJkGy7d7sCxJdAaXOMg30nSbXziT7y+/S7HPkzBp6tv5w+
+         4jtBehbmIspbhohxS9FyV/e2dwR2scC7ZpC3s2Bl6Ybj4qu8PEFgAspIEyvzVIjcOfaP
+         +vOGLsHhI0UIvoH3WvYEXBJ5q2LAY5AloHoXnKtT0ao/23j1Y2Z6CgwyyHQqahMRP5R1
+         LoaaDrFQvxX3f3xGdS7bw4CIJj25lYnf+HUBqesdGzEYESkRDd86qs2zqwJOJ/p2pguE
+         pAp0v9FP7bVkWKMFGa9uHOJiTXm1sFOStnuow7/yDaN3Q97YYAPA4VudCAXI2ldAK0Op
+         ur0g==
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+Content-Transfer-Encoding: 7bit
+To: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Instead of adding up the zone counters, use lruvec_page_state() to get
-the node state directly. This is a bit cheaper and more stream-lined.
+From b4ff1b44bcd384d22fcbac6ebaf9cc0d33debe50 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Fri, 15 Feb 2019 11:01:31 -0800
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+cgroup_rstat_cpu_pop_updated() is used to traverse the updated cgroups
+on flush.  While it was only visiting updated ones in the subtree, it
+was visiting @root unconditionally.  We can easily check whether @root
+is updated or not by looking at its ->updated_next just as with the
+cgroups in the subtree.
+
+* Remove the unnecessary cgroup_parent() test.  The system root cgroup
+  is never updated and thus its ->updated_next is always NULL.  No
+  need to test whether cgroup_parent() exists in addition to
+  ->updated_next.
+
+* Terminate traverse if ->updated_next is NULL.  This can only happen
+  for subtree @root and there's no reason to visit it if it's not
+  marked updated.
+
+This reduces cpu consumption when reading a lot of rstat backed files.
+In a micro benchmark reading stat from ~1600 cgroups, the sys time was
+lowered by >40%.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- include/linux/memcontrol.h | 18 ------------------
- mm/memcontrol.c            |  2 +-
- mm/vmscan.c                |  2 +-
- 3 files changed, 2 insertions(+), 20 deletions(-)
+Hello,
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 83ae11cbd12c..206090de5d7c 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -499,19 +499,6 @@ void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
- unsigned long mem_cgroup_node_nr_lru_pages(struct mem_cgroup *memcg,
- 					   int nid, unsigned int lru_mask);
+I'm applying this on for-5.0.  It's a fairly straight forward
+optimization.
+
+Thanks.
+
+ kernel/cgroup/rstat.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index d503d1a9007c..bb95a35e8c2d 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -87,7 +87,6 @@ static struct cgroup *cgroup_rstat_cpu_pop_updated(struct cgroup *pos,
+ 						   struct cgroup *root, int cpu)
+ {
+ 	struct cgroup_rstat_cpu *rstatc;
+-	struct cgroup *parent;
  
--static inline
--unsigned long mem_cgroup_get_lru_size(struct lruvec *lruvec, enum lru_list lru)
--{
--	struct mem_cgroup_per_node *mz;
--	unsigned long nr_pages = 0;
--	int zid;
--
--	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
--	for (zid = 0; zid < MAX_NR_ZONES; zid++)
--		nr_pages += mz->lru_zone_size[zid][lru];
--	return nr_pages;
--}
--
- static inline
- unsigned long mem_cgroup_get_zone_lru_size(struct lruvec *lruvec,
- 		enum lru_list lru, int zone_idx)
-@@ -947,11 +934,6 @@ static inline bool mem_cgroup_online(struct mem_cgroup *memcg)
- 	return true;
- }
- 
--static inline unsigned long
--mem_cgroup_get_lru_size(struct lruvec *lruvec, enum lru_list lru)
--{
--	return 0;
--}
- static inline
- unsigned long mem_cgroup_get_zone_lru_size(struct lruvec *lruvec,
- 		enum lru_list lru, int zone_idx)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index af7f18b32389..a04177f25758 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -730,7 +730,7 @@ unsigned long mem_cgroup_node_nr_lru_pages(struct mem_cgroup *memcg,
- 	for_each_lru(lru) {
- 		if (!(BIT(lru) & lru_mask))
- 			continue;
--		nr += mem_cgroup_get_lru_size(lruvec, lru);
-+		nr += lruvec_page_state(lruvec, NR_LRU_BASE + lru);
+ 	if (pos == root)
+ 		return NULL;
+@@ -115,8 +114,8 @@ static struct cgroup *cgroup_rstat_cpu_pop_updated(struct cgroup *pos,
+ 	 * However, due to the way we traverse, @pos will be the first
+ 	 * child in most cases. The only exception is @root.
+ 	 */
+-	parent = cgroup_parent(pos);
+-	if (parent && rstatc->updated_next) {
++	if (rstatc->updated_next) {
++		struct cgroup *parent = cgroup_parent(pos);
+ 		struct cgroup_rstat_cpu *prstatc = cgroup_rstat_cpu(parent, cpu);
+ 		struct cgroup_rstat_cpu *nrstatc;
+ 		struct cgroup **nextp;
+@@ -140,9 +139,12 @@ static struct cgroup *cgroup_rstat_cpu_pop_updated(struct cgroup *pos,
+ 		 * updated stat.
+ 		 */
+ 		smp_mb();
++
++		return pos;
  	}
- 	return nr;
+ 
+-	return pos;
++	/* only happens for @root */
++	return NULL;
  }
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index e979705bbf32..f88fef03fc04 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -346,7 +346,7 @@ unsigned long lruvec_lru_size(struct lruvec *lruvec, enum lru_list lru, int zone
- 	int zid;
  
- 	if (!mem_cgroup_disabled())
--		lru_size = mem_cgroup_get_lru_size(lruvec, lru);
-+		lru_size = lruvec_page_state(lruvec, NR_LRU_BASE + lru);
- 	else
- 		lru_size = node_page_state(lruvec_pgdat(lruvec), NR_LRU_BASE + lru);
- 
+ /* see cgroup_rstat_flush() */
 -- 
-2.20.1
+2.17.1
 
