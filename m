@@ -1,60 +1,58 @@
-From: Masahiro Yamada <yamada.masahiro@socionext.com>
-Subject: [PATCH] cpuset: remove unused task_has_mempolicy()
-Date: Mon, 18 Feb 2019 15:28:11 +0900
-Message-ID: <1550471291-4327-1-git-send-email-yamada.masahiro@socionext.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] doc: cgroup: correct the wrong information about measure
+ of memory pressure
+Date: Mon, 18 Feb 2019 13:05:04 -0800
+Message-ID: <20190218210504.GT50184@devbig004.ftw2.facebook.com>
+References: <1550278564-81540-1-git-send-email-yang.shi@linux.alibaba.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Filter: OpenDKIM Filter v2.10.3 conuserg-07.nifty.com x1I6SF1Z003818
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
-        s=dec2015msa; t=1550471296;
-        bh=GQ7y1jv3TPMmSnBg82zb/DrP9e/mLTCQYVUXjI9OyZ4=;
-        h=From:To:Cc:Subject:Date:From;
-        b=KkA3AKPZ51exYb2sT/Xer+WNznFqHg5jSHzJaOkrzi89Me3a+WapQkd+0VVxGWMt+
-         D315WrZ1URvw8GckMPFT/LVqSOtTEbjl2WxpUWYYccQJ2CFgPhy66HzBa/ElDa50WA
-         4trva+OK9SxyQhykCu7cZeWylxqkYkF6nh4lbP4/tw3fy55Ohr9Y9IOdqBA1PJWilT
-         Iq11cpMPGyY0K8pKCK+RkBHqNKMiawtr+V9sLTWKj1v6Qu5gxbokMjtUFZ8k3T44NM
-         5BVO3DVnhjMXE241ukLo7JclWtX90L+iIz/z2MXhP6j6iP/+8acZ+Kua/9X0Im/aWO
-         0jGEtrIS3U9iQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=9DzCR79XKeIjL7+2ReBiux03I1IsbcYYGjv2zjhhJ2U=;
+        b=IvUXzBPQJEIyKxoXbz4dX0We4ImmqwmBbZb8b00WHoEnhmrQvX86N2WSx0rP1NzXFS
+         uwDuVGKTJxW0Bg0RNeRMY2lqSxHlylMUB1QW2kusIPBR/1eSRw3pLDFw0DxTiX4xKIJH
+         HI39c8dzh86yRNfROF1J4MTzi+z8cRaElf9D2wcp1bxf3Ak2psiTe3TVvbaMcSCeL0xz
+         0v5+CKY58TFKGjYiJixaNyF/JCodpDsL5qER8CF0AdDGaUzq7o2WyEBYDVhxhqSvThX0
+         wA2HOyR7hXaqWcIJ88Uhcpnx5RhK0K7pvEyKDaPBn85ZliSQTNNAHNknlI/GapPFjD4Q
+         6KrA==
+Content-Disposition: inline
+In-Reply-To: <1550278564-81540-1-git-send-email-yang.shi@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
-Cc: Masahiro Yamada <yamada.masahiro@socionext.com>, linux-kernel@vger.kernel.org
+To: Yang Shi <yang.shi@linux.alibaba.com>
+Cc: hannes@cmpxchg.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-This is a remnant of commit 5f155f27cb7f ("mm, cpuset: always use
-seqlock when changing task's nodemask").
+On Sat, Feb 16, 2019 at 08:56:04AM +0800, Yang Shi wrote:
+> Since PSI has implemented some kind of measure of memory pressure, the
+> statement about lack of such measure is not true anymore.
+> 
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Jonathan Corbet <corbet@lwn.net>
+> Signed-off-by: Yang Shi <yang.shi@linux.alibaba.com>
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index 7bf3f12..9a92013 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -1310,8 +1310,7 @@ network to a file can use all available memory but can also operate as
+>  performant with a small amount of memory.  A measure of memory
+>  pressure - how much the workload is being impacted due to lack of
+>  memory - is necessary to determine whether a workload needs more
+> -memory; unfortunately, memory pressure monitoring mechanism isn't
+> -implemented yet.
+> +memory.
 
-Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
----
+Maybe refer to PSI?
 
- kernel/cgroup/cpuset.c | 13 -------------
- 1 file changed, 13 deletions(-)
+Thanks.
 
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 479743d..72afd55 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -203,19 +203,6 @@ static inline struct cpuset *parent_cs(struct cpuset *cs)
- 	return css_cs(cs->css.parent);
- }
- 
--#ifdef CONFIG_NUMA
--static inline bool task_has_mempolicy(struct task_struct *task)
--{
--	return task->mempolicy;
--}
--#else
--static inline bool task_has_mempolicy(struct task_struct *task)
--{
--	return false;
--}
--#endif
--
--
- /* bits in struct cpuset flags field */
- typedef enum {
- 	CS_ONLINE,
 -- 
-2.7.4
-
+tejun
