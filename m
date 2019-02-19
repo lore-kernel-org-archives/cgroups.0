@@ -1,145 +1,56 @@
-From: Andrea Righi <righi.andrea@gmail.com>
-Subject: [PATCH 2/3] blkcg: introduce io.sync_isolation
-Date: Tue, 19 Feb 2019 16:27:11 +0100
-Message-ID: <20190219152712.9855-3-righi.andrea@gmail.com>
-References: <20190219152712.9855-1-righi.andrea@gmail.com>
+From: Yang Shi <yang.shi@linux.alibaba.com>
+Subject: Re: [PATCH] doc: cgroup: correct the wrong information about measure
+ of memory pressure
+Date: Tue, 19 Feb 2019 08:47:02 -0800
+Message-ID: <79dc6298-a062-51e0-64d0-9696dc602767@linux.alibaba.com>
+References: <1550278564-81540-1-git-send-email-yang.shi@linux.alibaba.com>
+ <20190218210504.GT50184@devbig004.ftw2.facebook.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=2q6fbrSJpEIdLncW4UFN3mJBQ17i3z8yQuQeSIDg2n4=;
-        b=Hc7yKF8Q0KWei9jPYZqwtPGUg6enGpDzAb3GPtEE+uGJT2GIltg9n8oYO6EmU47dnm
-         +wYlQ647qj51UGlYZNKeCAdC/Pk0mmoluTHFpcgfSvyMEmQeUgq4AKiVejeZ6dfnPl4m
-         rMc4yjeoJI8TOMezjLRVtcmIiw5XFWC3QpxlfLZ8teQOFbg4AbFQwkGBp+rnIwRF3/on
-         D/79xbnlJeVugNzjBBwnaDqvY/giTuukLGhCR5ATHdj0LlJe2WxnNXvk35VkbBIHm6jG
-         uWEuO55gt+o6aMnwdIRi0a3mwOkcjPyWJl8raBZDs8rP2AGQwOL0p2GaLPU8i5ndeUIc
-         /Sog==
-In-Reply-To: <20190219152712.9855-1-righi.andrea@gmail.com>
+In-Reply-To: <20190218210504.GT50184@devbig004.ftw2.facebook.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Josef Bacik <josef@toxicpanda.com>, Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Paolo Valente <paolo.valente@linaro.org>, Johannes Weiner <hannes@cmpxchg.org>, Jens Axboe <axboe@kernel.dk>, Vivek Goyal <vgoyal@redhat.com>, Dennis Zhou <dennis@kernel.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj@kernel.org>
+Cc: hannes@cmpxchg.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-Add a flag to the blkcg cgroups to make sync()'ers in a cgroup only be
-allowed to write out pages that have been dirtied by the cgroup itself.
 
-This flag is disabled by default (meaning that we are not changing the
-previous behavior by default).
 
-When this flag is enabled any cgroup can write out only dirty pages that
-belong to the cgroup itself (except for the root cgroup that would still
-be able to write out all pages globally).
+On 2/18/19 1:05 PM, Tejun Heo wrote:
+> On Sat, Feb 16, 2019 at 08:56:04AM +0800, Yang Shi wrote:
+>> Since PSI has implemented some kind of measure of memory pressure, the
+>> statement about lack of such measure is not true anymore.
+>>
+>> Cc: Tejun Heo <tj@kernel.org>
+>> Cc: Johannes Weiner <hannes@cmpxchg.org>
+>> Cc: Jonathan Corbet <corbet@lwn.net>
+>> Signed-off-by: Yang Shi <yang.shi@linux.alibaba.com>
+>> ---
+>>   Documentation/admin-guide/cgroup-v2.rst | 3 +--
+>>   1 file changed, 1 insertion(+), 2 deletions(-)
+>>
+>> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+>> index 7bf3f12..9a92013 100644
+>> --- a/Documentation/admin-guide/cgroup-v2.rst
+>> +++ b/Documentation/admin-guide/cgroup-v2.rst
+>> @@ -1310,8 +1310,7 @@ network to a file can use all available memory but can also operate as
+>>   performant with a small amount of memory.  A measure of memory
+>>   pressure - how much the workload is being impacted due to lack of
+>>   memory - is necessary to determine whether a workload needs more
+>> -memory; unfortunately, memory pressure monitoring mechanism isn't
+>> -implemented yet.
+>> +memory.
+> Maybe refer to PSI?
 
-Signed-off-by: Andrea Righi <righi.andrea@gmail.com>
----
- Documentation/admin-guide/cgroup-v2.rst |  9 ++++++
- block/blk-throttle.c                    | 37 +++++++++++++++++++++++++
- include/linux/blk-cgroup.h              |  7 +++++
- 3 files changed, 53 insertions(+)
+I thought so too, but the above "memory.pressure" has already referred 
+to PSI. So, I was not sure if we should duplicate PSI information.
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 7bf3f129c68b..f98027fc2398 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1432,6 +1432,15 @@ IO Interface Files
- 	Shows pressure stall information for IO. See
- 	Documentation/accounting/psi.txt for details.
- 
-+  io.sync_isolation
-+        A flag (0|1) that determines whether a cgroup is allowed to write out
-+        only pages that have been dirtied by the cgroup itself. This option is
-+        set to false (0) by default, meaning that any cgroup would try to write
-+        out dirty pages globally, even those that have been dirtied by other
-+        cgroups.
-+
-+        Setting this option to true (1) provides a better isolation across
-+        cgroups that are doing an intense write I/O activity.
- 
- Writeback
- ~~~~~~~~~
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index da817896cded..4bc3b40a4d93 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -1704,6 +1704,35 @@ static ssize_t tg_set_limit(struct kernfs_open_file *of,
- 	return ret ?: nbytes;
- }
- 
-+#ifdef CONFIG_CGROUP_WRITEBACK
-+static int sync_isolation_show(struct seq_file *sf, void *v)
-+{
-+	struct blkcg *blkcg = css_to_blkcg(seq_css(sf));
-+
-+	seq_printf(sf, "%d\n", test_bit(BLKCG_SYNC_ISOLATION, &blkcg->flags));
-+	return 0;
-+}
-+
-+static ssize_t sync_isolation_write(struct kernfs_open_file *of,
-+				    char *buf, size_t nbytes, loff_t off)
-+{
-+	struct blkcg *blkcg = css_to_blkcg(of_css(of));
-+	unsigned long val;
-+	int err;
-+
-+	buf = strstrip(buf);
-+	err = kstrtoul(buf, 0, &val);
-+	if (err)
-+		return err;
-+	if (val)
-+		set_bit(BLKCG_SYNC_ISOLATION, &blkcg->flags);
-+	else
-+		clear_bit(BLKCG_SYNC_ISOLATION, &blkcg->flags);
-+
-+	return nbytes;
-+}
-+#endif
-+
- static struct cftype throtl_files[] = {
- #ifdef CONFIG_BLK_DEV_THROTTLING_LOW
- 	{
-@@ -1721,6 +1750,14 @@ static struct cftype throtl_files[] = {
- 		.write = tg_set_limit,
- 		.private = LIMIT_MAX,
- 	},
-+#ifdef CONFIG_CGROUP_WRITEBACK
-+	{
-+		.name = "sync_isolation",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.seq_show = sync_isolation_show,
-+		.write = sync_isolation_write,
-+	},
-+#endif
- 	{ }	/* terminate */
- };
- 
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 0f7dcb70e922..6ac5aa049334 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -44,6 +44,12 @@ enum blkg_rwstat_type {
- 
- struct blkcg_gq;
- 
-+/* blkcg->flags */
-+enum {
-+	/* sync()'ers allowed to write out pages dirtied by the blkcg */
-+	BLKCG_SYNC_ISOLATION,
-+};
-+
- struct blkcg {
- 	struct cgroup_subsys_state	css;
- 	spinlock_t			lock;
-@@ -55,6 +61,7 @@ struct blkcg {
- 	struct blkcg_policy_data	*cpd[BLKCG_MAX_POLS];
- 
- 	struct list_head		all_blkcgs_node;
-+	unsigned long			flags;
- #ifdef CONFIG_CGROUP_WRITEBACK
- 	struct list_head		cgwb_wait_node;
- 	struct list_head		cgwb_list;
--- 
-2.17.1
+Thanks,
+Yang
+
+>
+> Thanks.
+>
 
