@@ -1,7 +1,7 @@
 From: Roman Gushchin <guroan@gmail.com>
-Subject: [PATCH v8 1/7] cgroup: rename freezer.c into legacy_freezer.c
-Date: Tue, 19 Feb 2019 14:02:46 -0800
-Message-ID: <20190219220252.4906-2-guro@fb.com>
+Subject: [PATCH v8 5/7] kselftests: cgroup: don't fail on cg_kill_all() error in cg_destroy()
+Date: Tue, 19 Feb 2019 14:02:50 -0800
+Message-ID: <20190219220252.4906-6-guro@fb.com>
 References: <20190219220252.4906-1-guro@fb.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,49 +10,49 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=suU4k9iE7Md/KfJ4CfzvKVa4/9QAyJfSEidhnmW/+G4=;
-        b=B1HAxSvDc7FtijdDUm9rWI+yRJlqlKsG+9KBWuJsmSWe9DctoGHgiFBz4Fm5nubpZM
-         DqXU2O7qRFhpUHzmLHlRvb9A4fZQIP9PIliEegLI1V8CJ7nUxUfUQg+m58jq1bIgsNWL
-         shuRKl/iiJptxMd1DLq0oN0cHQEoAnne2WN5GaEbzma3/UIEInHe+i79LkTxX66abOnl
-         Yp1xd7tlo4wLOvfs6jv4+fLtogbpP9n9c3Ib8/Z2EWE36pkA+oWPVHTkYfftSXeMCSSI
-         KGJihDA2v3puHTv7aX0LyHbE6vnVOJjOtrhZ0WCqzxwTp5sd5AkgirPtqiUnUxJ+GRg3
-         yalg==
+        bh=EXXdq7GrYAICjYexP9jF/A5d/mueQ96ws92MW4tT5O4=;
+        b=OLA3CV4tn6lzXLl6iKpHEQ9DD5iwCGH0PUshgOZysZoeGlzW3fYRQA4Bc3qSRtPu6E
+         pVod7ci3kF6COGP+EgqKMHZ83TypdDXU5eEpxtXWzYhCHT/MvdmRQR/ylUalw2VXBMgy
+         UevxePM5JkJSDxyn+sX0E+AvBq5NUuzK0/pbf3/JAoXFAhFvpMXLiAeEdfA1AKfzx6Zu
+         mU5rAGN+PVMpYkiVIofsPVNMyUWV+RodDOWLYdHN4UJ07o78JVyA5Ob+ENkvZm18IKCq
+         a9TL6bUekRePyZka7MzEPn93ObggbEHDb/t6yr+6WJL5pvt+O+EkdbACz3aAXJooBID+
+         G5wQ==
 In-Reply-To: <20190219220252.4906-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>
-Cc: kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
+Cc: kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>, Shuah Khan <shuah@kernel.org>, linux-kselftest@vger.kernel.org
 
-Freezer.c will contain an implementation of cgroup v2 freezer,
-so let's rename the v1 freezer to avoid naming conflicts.
+If the cgroup destruction races with an exit() of a belonging
+process(es), cg_kill_all() may fail. It's not a good reason to make
+cg_destroy() fail and leave the cgroup in place, potentially causing
+next test runs to fail.
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Shuah Khan <shuah@kernel.org>
 Cc: Tejun Heo <tj@kernel.org>
 Cc: kernel-team@fb.com
+Cc: linux-kselftest@vger.kernel.org
 ---
- kernel/cgroup/Makefile                        | 2 +-
- kernel/cgroup/{freezer.c => legacy_freezer.c} | 0
- 2 files changed, 1 insertion(+), 1 deletion(-)
- rename kernel/cgroup/{freezer.c => legacy_freezer.c} (100%)
+ tools/testing/selftests/cgroup/cgroup_util.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/kernel/cgroup/Makefile b/kernel/cgroup/Makefile
-index bfcdae896122..8d5689ca94b9 100644
---- a/kernel/cgroup/Makefile
-+++ b/kernel/cgroup/Makefile
-@@ -1,7 +1,7 @@
- # SPDX-License-Identifier: GPL-2.0
- obj-y := cgroup.o rstat.o namespace.o cgroup-v1.o
- 
--obj-$(CONFIG_CGROUP_FREEZER) += freezer.o
-+obj-$(CONFIG_CGROUP_FREEZER) += legacy_freezer.o
- obj-$(CONFIG_CGROUP_PIDS) += pids.o
- obj-$(CONFIG_CGROUP_RDMA) += rdma.o
- obj-$(CONFIG_CPUSETS) += cpuset.o
-diff --git a/kernel/cgroup/freezer.c b/kernel/cgroup/legacy_freezer.c
-similarity index 100%
-rename from kernel/cgroup/freezer.c
-rename to kernel/cgroup/legacy_freezer.c
+diff --git a/tools/testing/selftests/cgroup/cgroup_util.c b/tools/testing/selftests/cgroup/cgroup_util.c
+index 14c9fe284806..eba06f94433b 100644
+--- a/tools/testing/selftests/cgroup/cgroup_util.c
++++ b/tools/testing/selftests/cgroup/cgroup_util.c
+@@ -227,9 +227,7 @@ int cg_destroy(const char *cgroup)
+ retry:
+ 	ret = rmdir(cgroup);
+ 	if (ret && errno == EBUSY) {
+-		ret = cg_killall(cgroup);
+-		if (ret)
+-			return ret;
++		cg_killall(cgroup);
+ 		usleep(100);
+ 		goto retry;
+ 	}
 -- 
 2.20.1
 
