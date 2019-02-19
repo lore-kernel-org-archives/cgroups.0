@@ -1,112 +1,26 @@
-From: Roman Gushchin <guroan@gmail.com>
-Subject: [PATCH v8 3/7] cgroup: protect cgroup->nr_(dying_)descendants by css_set_lock
-Date: Tue, 19 Feb 2019 14:02:48 -0800
-Message-ID: <20190219220252.4906-4-guro@fb.com>
-References: <20190219220252.4906-1-guro@fb.com>
+From: David Howells <dhowells@redhat.com>
+Subject: Re: [RFC PATCH 02/27] containers: Implement containers as kernel objects
+Date: Tue, 19 Feb 2019 23:06:14 +0000
+Message-ID: <19562.1550617574@warthog.procyon.org.uk>
+References: <1550432358.2809.21.camel@HansenPartnership.com> <155024683432.21651.14153938339749694146.stgit@warthog.procyon.org.uk> <155024685321.21651.1504201877881622756.stgit@warthog.procyon.org.uk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=pSVREjPCAv5T2ZXAYt7SDw0JOGFlD724donHrtDZGs4=;
-        b=qtWQJv2rVWaichkhoDGYdp0xtsN6PdTx2BleTfjCBKibVyHppoduJjpV0NBZBiqSdJ
-         GYy/kOYOfzqB/13UoyYxAmlNuwEuomRO1lRhXML18wYLI15x622UFejM9ZY89jX/seDa
-         2IIka7t4xkxIK7Pn9a1KA+n/N9SWg+OB25GR55ZmANq9ycUgLceeq1eV7S5EL4dG3AZp
-         tq313qUC0onue8sKkdU1CvnDg6VKOx49atDX4YiSkwpcCSqEfOosvAYT6qQ5BSvoHg5I
-         95dSbuWoz+geWryY0qiLUZ13SvEuaj1POPLkLRbRg5K77AOXf0qNM8q8oapoCcjHoKAr
-         0zOA==
-In-Reply-To: <20190219220252.4906-1-guro@fb.com>
+In-Reply-To: <1550432358.2809.21.camel@HansenPartnership.com>
+Content-ID: <19561.1550617574.1@warthog.procyon.org.uk>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>
-Cc: kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
+Content-Transfer-Encoding: 7bit
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: dhowells@redhat.com, keyrings@vger.kernel.org, trond.myklebust@hammerspace.com, sfrench@samba.org, linux-security-module@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-fsdevel@vger.kernel.org, rgb@redhat.com, linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, cgroups@vger.kernel.org
 
-The number of descendant cgroups and the number of dying
-descendant cgroups are currently synchronized using the cgroup_mutex.
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-The number of descendant cgroups will be required by the cgroup v2
-freezer, which will use it to determine if a cgroup is frozen
-(depending on total number of descendants and number of frozen
-descendants). It's not always acceptable to grab the cgroup_mutex,
-especially from quite hot paths (e.g. exit()).
+> I thought we got agreement years ago that containers don't exist in
+> Linux as a single entity: they're currently a collection of cgroups and
+> namespaces some of which may and some of which may not be local to the
+> entity the orchestration system thinks of as a "container".
 
-To avoid this, let's additionally synchronize these counters using
-the css_set_lock.
+I wasn't party to that agreement and don't feel particularly bound by it.
 
-So, it's safe to read these counters with either cgroup_mutex or
-css_set_lock locked, and for changing both locks should be acquired.
-
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: kernel-team@fb.com
----
- include/linux/cgroup-defs.h | 5 +++++
- kernel/cgroup/cgroup.c      | 6 ++++++
- 2 files changed, 11 insertions(+)
-
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 120d1d40704b..319c07305500 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -348,6 +348,11 @@ struct cgroup {
- 	 * Dying cgroups are cgroups which were deleted by a user,
- 	 * but are still existing because someone else is holding a reference.
- 	 * max_descendants is a maximum allowed number of descent cgroups.
-+	 *
-+	 * nr_descendants and nr_dying_descendants are protected
-+	 * by cgroup_mutex and css_set_lock. It's fine to read them holding
-+	 * any of cgroup_mutex and css_set_lock; for writing both locks
-+	 * should be held.
- 	 */
- 	int nr_descendants;
- 	int nr_dying_descendants;
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index b230afccf635..7438c24297d4 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -4758,9 +4758,11 @@ static void css_release_work_fn(struct work_struct *work)
- 		if (cgroup_on_dfl(cgrp))
- 			cgroup_rstat_flush(cgrp);
- 
-+		spin_lock_irq(&css_set_lock);
- 		for (tcgrp = cgroup_parent(cgrp); tcgrp;
- 		     tcgrp = cgroup_parent(tcgrp))
- 			tcgrp->nr_dying_descendants--;
-+		spin_unlock_irq(&css_set_lock);
- 
- 		cgroup_idr_remove(&cgrp->root->cgroup_idr, cgrp->id);
- 		cgrp->id = -1;
-@@ -4978,12 +4980,14 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
- 	if (ret)
- 		goto out_psi_free;
- 
-+	spin_lock_irq(&css_set_lock);
- 	for (tcgrp = cgrp; tcgrp; tcgrp = cgroup_parent(tcgrp)) {
- 		cgrp->ancestor_ids[tcgrp->level] = tcgrp->id;
- 
- 		if (tcgrp != cgrp)
- 			tcgrp->nr_descendants++;
- 	}
-+	spin_unlock_irq(&css_set_lock);
- 
- 	if (notify_on_release(parent))
- 		set_bit(CGRP_NOTIFY_ON_RELEASE, &cgrp->flags);
-@@ -5268,10 +5272,12 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 	if (parent && cgroup_is_threaded(cgrp))
- 		parent->nr_threaded_children--;
- 
-+	spin_lock_irq(&css_set_lock);
- 	for (tcgrp = cgroup_parent(cgrp); tcgrp; tcgrp = cgroup_parent(tcgrp)) {
- 		tcgrp->nr_descendants--;
- 		tcgrp->nr_dying_descendants++;
- 	}
-+	spin_unlock_irq(&css_set_lock);
- 
- 	cgroup1_check_for_release(parent);
- 
--- 
-2.20.1
-
+David
