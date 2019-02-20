@@ -1,78 +1,65 @@
-From: Paul Moore <paul@paul-moore.com>
-Subject: Re: [RFC PATCH 02/27] containers: Implement containers as kernel objects
-Date: Wed, 20 Feb 2019 01:57:34 -0500
-Message-ID: <CAHC9VhQga+bSVEyKbAtfxDsV9RqK5Hv6h-cbs4ArQ3KedxvgpQ@mail.gmail.com>
-References: <1550432358.2809.21.camel@HansenPartnership.com>
- <155024683432.21651.14153938339749694146.stgit@warthog.procyon.org.uk>
+From: Christian Brauner <christian@brauner.io>
+Subject: Re: [RFC PATCH 02/27] containers: Implement containers as kernel
+ objects
+Date: Wed, 20 Feb 2019 14:26:02 +0100
+Message-ID: <20190220132600.c5ahsmnoihdrcqeq@brauner.io>
+References: <155024683432.21651.14153938339749694146.stgit@warthog.procyon.org.uk>
  <155024685321.21651.1504201877881622756.stgit@warthog.procyon.org.uk>
- <19562.1550617574@warthog.procyon.org.uk> <1550629220.11684.3.camel@HansenPartnership.com>
- <054c1e762d28306abd4db9c42fb1c5f4261332fd.camel@themaw.net> <1550634367.11684.6.camel@HansenPartnership.com>
+ <7923d4aa646fbe4bd71cfb4144f1c96f28cad972.camel@themaw.net>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=paul-moore-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ncoDYnqxH3gs9Sc4jdqZc699sEVY31p6X34ojqSqzzM=;
-        b=OcCZh083AzJ6sYc48woP23gRRbpaNKLC68TAdlArP77RO3+mrjVrj/iw4ZpWg3rNV3
-         29swcTzY/zTMAOqxs45u579zp81oWJDiOwSJh6tom9D/tAOgnuzVSLlkcuqb8zkvn041
-         kOisgtVcvn0D2ldK2m99xkgmKknYygp1QYdTxOKnNijCZ/APmJ7hGFeM3e3VsCDdMErt
-         wx0sR0iBJ+9HphZXJkooMsrO2GYHiQuoD7D0L5Nb1CAmiVGw+uEgE5SHW+LeT4H60qrm
-         snbkENIP97Ktg8O/dDr3jUbp95t4Oa9ezjlJLisfHr/j4+wT/VqcxY16IMT2kuOtYSUn
-         LRcw==
-In-Reply-To: <1550634367.11684.6.camel@HansenPartnership.com>
+        d=brauner.io; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to
+         :user-agent;
+        bh=1JQam90U+6VOjJbiYx8tejOxAiXSTEoSs7kyr8I+VFw=;
+        b=G2WBdU6bGnmGuvbpVAav4fL6NRioQgwohfgDFrrieMWMGgiT+Jg2vi/v+wWiXYMufa
+         4C1z5B/kF1sYh8GGIpAUWVY3b1agcNyixvWIq+JhskHVIuW7yJ6fnSBNTMd7SACwp6c6
+         D5ym2SUwCzj3JGI1bT2y5ybho+t8WhjNiRbfPTmIkZDcaJJbNUnS8w20ABrrBda45vql
+         bYYzTY2aqeCiQVx2yaPV4BAnsPqAzOIbmJ9/+lqUtx5liYzsWHjmXK9y7gyR6J3AaJW8
+         ujJ9vA/ycJlGuIWTk5meRwRknAxakE24vWEny5SsX+tUF8OK0w/eexPTrtZ9qv5UWABM
+         hRww==
+Content-Disposition: inline
+In-Reply-To: <7923d4aa646fbe4bd71cfb4144f1c96f28cad972.camel@themaw.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Ian Kent <raven@themaw.net>, David Howells <dhowells@redhat.com>, keyrings@vger.kernel.org, trond.myklebust@hammerspace.com, sfrench@samba.org, linux-security-module@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-fsdevel@vger.kernel.org, rgb@redhat.com, linux-kernel@vger.kernel.org, containers@lists.linux-foundation.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="macroman"
+To: Ian Kent <raven@themaw.net>
+Cc: David Howells <dhowells@redhat.com>, keyrings@vger.kernel.org, trond.myklebust@hammerspace.com, sfrench@samba.org, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, containers@lists.linux-foundation.org, linux-kernel@vger.kernel.org, linux-security-module@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org
 
-On Tue, Feb 19, 2019 at 10:46 PM James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Wed, 2019-02-20 at 11:04 +0800, Ian Kent wrote:
-> > On Tue, 2019-02-19 at 18:20 -0800, James Bottomley wrote:
-> > > On Tue, 2019-02-19 at 23:06 +0000, David Howells wrote:
-> > > > James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > > >
-> > > > > I thought we got agreement years ago that containers don't
-> > > > > exist in Linux as a single entity: they're currently a
-> > > > > collection of cgroups and namespaces some of which may and some
-> > > > > of which may not be local to the entity the orchestration
-> > > > > system thinks of as a "container".
-> > > >
-> > > > I wasn't party to that agreement and don't feel particularly
-> > > > bound by it.
-> > >
-> > > That's not at all relevant, is it?  The point is we have widespread
-> > > uses of namespaces and cgroups that span containers today meaning
-> > > that a "container id" becomes a problematic concept.  What we
-> > > finally got to with the audit people was an unmodifiable label
-> > > which the orchestration system can set ... can't you just use that?
-> >
-> > Sorry James, I fail to see how assigning an id to a collection of
-> > objects constitutes a problem or how that could restrict the way a
-> > container is used.
->
-> Rather than rehash the whole argument again, what's the reason you
-> can't use the audit label?  It seems to do what you want in a way that
-> doesn't cause problems.  If you can just use it there's little point
-> arguing over what is effectively a moot issue.
-
-Ignoring for a moment whether or not the audit container ID is
-applicable here, one of the things I've been focused on with the audit
-container ID work is trying to make it difficult for other subsystems
-to use it.  I've taken this stance not because I don't think something
-like a container ID would be useful outside the audit subsystem, but
-rather because I'm afraid of how it might be abused by other
-subsystems and that abuse might threaten the existence of the audit
-container ID.
-
-If there is a willingness to implement a general kernel container ID
-that behaves similarly to how the audit container ID is envisioned,
-I'd much rather do that then implement something which is audit
-specific.
-
--- 
-paul moore
-www.paul-moore.com
+T24gV2VkLCBGZWIgMjAsIDIwMTkgYXQgMTA6NDY6MjRBTSArMDgwMCwgSWFuIEtlbnQgd3JvdGU6
+Cj4gT24gRnJpLCAyMDE5LTAyLTE1IGF0IDE2OjA3ICswMDAwLCBEYXZpZCBIb3dlbGxzIHdyb3Rl
+Ogo+ID4gSW1wbGVtZW50IGEga2VybmVsIGNvbnRhaW5lciBvYmplY3Qgc3VjaCB0aGF0IGl0IGNv
+bnRhaW5zIHRoZSBmb2xsb3dpbmcKPiA+IHRoaW5nczoKPiA+IAo+ID4gICgxKSBOYW1lc3BhY2Vz
+Lgo+ID4gCj4gPiAgKDIpIEEgcm9vdCBkaXJlY3RvcnkuCj4gPiAKPiA+ICAoMykgQSBzZXQgb2Yg
+cHJvY2Vzc2VzLCBpbmNsdWRpbmcgb25lIGRlc2lnbmF0ZWQgYXMgdGhlICdpbml0JyBwcm9jZXNz
+Lgo+IAo+IFllYWgsIEkgdGhpbmsgYSBuYW1lIG90aGVyIHRoYW4gaW5pdCBuZWVkcyB0byBiZSB1
+c2VkIGZvciB0aGlzCj4gcHJvY2Vzcy4KPiAKPiBUaGUgcHJvYmxlbSBiZWluZyB0aGF0IHRoZXJl
+IGlzIG5vIHJlcXVpcmVtZW50IGZvciBjb250YWluZXIKPiBwcm9jZXNzIDEgdG8gYmVoYXZlIGlu
+IGFueSB3YXkgbGlrZSBhbiAiaW5pdCIgcHJvY2VzcyBpcwo+IGV4cGVjdGVkIHRvIGJlaGF2ZSBh
+bmQgdGhhdCBsZWFkcyB0byBjb25mdXNpb24gKGF0IGxlYXN0Cj4gaXQgY2VydGFpbmx5IGRpZCBm
+b3IgbWUpLgoKSWYgeW91IGxvb2sgYXQgdGhlIGRvY3VtZW50YXRpb24gZm9yIHBpZCBuYW1lc3Bh
+Y2VzKDcpIHlvdSBjYW4gc2VlIHRoYXQKdGhlIHBpZCAxIGluc2lkZSBhIHBpZCBuYW1lc3BhY2Ug
+aXMgZXhwZWN0ZWQgdG8gYmVoYXZlIGxpa2UgYW4gaW5pdApwcm9jZXNzOgotICAiVGhlICBmaXJz
+dCAgcHJvY2VzcyBjcmVhdGVkIGluIGEgbmV3IG5hbWVzcGFjZSBbLi4uXSBoYXMgIHRoZSBQSUQg
+MSwKICAgYW5kIGlzIHRoZSAiaW5pdCIgcHJvY2VzcyBmb3IgdGhlIG5hbWVzcGFjZSAoc2VlIGlu
+aXQoMSkpLiIKLSAiWy4uLl0gY2hpbGQgcHJvY2VzcyB0aGF0IGlzIG9ycGhhbmVkIHdpdGhpbiB0
+aGUgbmFtZXNwYWNlIHdpbGwgYmUKICByZXBhcmVudGVkIHRvIHRoaXMgcHJvY2VzcyByYXRoZXIg
+dGhhbiBpbml0KDEpIFsuLi5dIgotICJJZiB0aGUgImluaXQiIHByb2Nlc3Mgb2YgYSBQSUQgbmFt
+ZXNwYWNlIHRlcm1pbmF0ZXMsIHRoZSBrZXJuZWwKICB0ZXJtaW5hdGVzIGFsbCBvZiB0aGUgcHJv
+Y2Vzc2VzIGluIHRoZSAgbmFtZXNwYWNlICB2aWEgYSBTSUdLSUxMCiAgc2lnbmFsLiBUaGlzIGJl
+aGF2aW9yIHJlZmxlY3RzIHRoZSBmYWN0IHRoYXQgdGhlICJpbml0IiBwcm9jZXNzIGlzCiAgZXNz
+ZW50aWFsIGZvciB0aGUgY29y4oCQIHJlY3Qgb3BlcmF0aW9uIG9mIGEgUElEIG5hbWVzcGFjZS4i
+Ci0gIk9ubHkgc2lnbmFscyBmb3Igd2hpY2ggdGhlICJpbml0IiBwcm9jZXNzIGhhcyBlc3RhYmxp
+c2hlZCBhIHNpZ25hbAogIGhhbmRsZXIgY2FuIGJlIHNlbnQgdG8gdGhlICAiaW5pdCIgcHJvY2Vz
+cyBieSBvdGhlciBtZW1iZXJzIG9mIHRoZQogIFBJRCBuYW1lc3BhY2UuIgotICJbLi4uXSB0aGUg
+cmVib290KDIpIHN5c3RlbSBjYWxsIGNhdXNlcyBhIHNpZ25hbCB0byBiZSBzZW50IHRvIHRoZQog
+IG5hbWVzcGFjZSAiaW5pdCIgcHJvY2Vzcy4iCgpUaGlzIGlzIG9uZSBvZiB0aGUgcmVhc29ucyB3
+aHkgYWxsIG1ham9yIGN1cnJlbnQgY29udGFpbmVyIHJ1bnRpbWVzCmZpbmFsbHkgYWZ0ZXIgeWVh
+cnMgb2YgZmFpbGluZyB0byByZWFsaXplIHRoaXMgcnVuIGEgc3R1YiBpbml0IHByb2Nlc3MKdGhh
+dCBtaW1pY2tzIGEgZHVtYiBpbml0LiBTdXJlLCB5b3UgZ2V0IGF3YXkgd2l0aCBub3QgaGF2aW5n
+IGFuIGluaXQKdGhhdCBiZWhhdmVzIGxpa2UgYW4gaW5pdCBidXQgdGhpcyBpcyBpbmhlcmVudGx5
+IGJyb2tlbiBvciBhdCBsZWFzdAphZ2FpbnN0IHRoZSB3YXkgcGlkIG5hbWVzcGFjZXMgd2VyZSBk
+ZXNpZ25lZC4K
