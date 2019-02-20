@@ -1,65 +1,68 @@
-From: Christian Brauner <christian@brauner.io>
-Subject: Re: [RFC PATCH 02/27] containers: Implement containers as kernel
- objects
-Date: Wed, 20 Feb 2019 14:26:02 +0100
-Message-ID: <20190220132600.c5ahsmnoihdrcqeq@brauner.io>
-References: <155024683432.21651.14153938339749694146.stgit@warthog.procyon.org.uk>
- <155024685321.21651.1504201877881622756.stgit@warthog.procyon.org.uk>
- <7923d4aa646fbe4bd71cfb4144f1c96f28cad972.camel@themaw.net>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: [PATCH v8 0/7] freezer for cgroup v2
+Date: Wed, 20 Feb 2019 15:37:48 +0100
+Message-ID: <20190220143748.GA9477@redhat.com>
+References: <20190219220252.4906-1-guro@fb.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=brauner.io; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=1JQam90U+6VOjJbiYx8tejOxAiXSTEoSs7kyr8I+VFw=;
-        b=G2WBdU6bGnmGuvbpVAav4fL6NRioQgwohfgDFrrieMWMGgiT+Jg2vi/v+wWiXYMufa
-         4C1z5B/kF1sYh8GGIpAUWVY3b1agcNyixvWIq+JhskHVIuW7yJ6fnSBNTMd7SACwp6c6
-         D5ym2SUwCzj3JGI1bT2y5ybho+t8WhjNiRbfPTmIkZDcaJJbNUnS8w20ABrrBda45vql
-         bYYzTY2aqeCiQVx2yaPV4BAnsPqAzOIbmJ9/+lqUtx5liYzsWHjmXK9y7gyR6J3AaJW8
-         ujJ9vA/ycJlGuIWTk5meRwRknAxakE24vWEny5SsX+tUF8OK0w/eexPTrtZ9qv5UWABM
-         hRww==
 Content-Disposition: inline
-In-Reply-To: <7923d4aa646fbe4bd71cfb4144f1c96f28cad972.camel@themaw.net>
+In-Reply-To: <20190219220252.4906-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: Ian Kent <raven@themaw.net>
-Cc: David Howells <dhowells@redhat.com>, keyrings@vger.kernel.org, trond.myklebust@hammerspace.com, sfrench@samba.org, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-cifs@vger.kernel.org, linux-nfs@vger.kernel.org, containers@lists.linux-foundation.org, linux-kernel@vger.kernel.org, linux-security-module@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guroan@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-T24gV2VkLCBGZWIgMjAsIDIwMTkgYXQgMTA6NDY6MjRBTSArMDgwMCwgSWFuIEtlbnQgd3JvdGU6
-Cj4gT24gRnJpLCAyMDE5LTAyLTE1IGF0IDE2OjA3ICswMDAwLCBEYXZpZCBIb3dlbGxzIHdyb3Rl
-Ogo+ID4gSW1wbGVtZW50IGEga2VybmVsIGNvbnRhaW5lciBvYmplY3Qgc3VjaCB0aGF0IGl0IGNv
-bnRhaW5zIHRoZSBmb2xsb3dpbmcKPiA+IHRoaW5nczoKPiA+IAo+ID4gICgxKSBOYW1lc3BhY2Vz
-Lgo+ID4gCj4gPiAgKDIpIEEgcm9vdCBkaXJlY3RvcnkuCj4gPiAKPiA+ICAoMykgQSBzZXQgb2Yg
-cHJvY2Vzc2VzLCBpbmNsdWRpbmcgb25lIGRlc2lnbmF0ZWQgYXMgdGhlICdpbml0JyBwcm9jZXNz
-Lgo+IAo+IFllYWgsIEkgdGhpbmsgYSBuYW1lIG90aGVyIHRoYW4gaW5pdCBuZWVkcyB0byBiZSB1
-c2VkIGZvciB0aGlzCj4gcHJvY2Vzcy4KPiAKPiBUaGUgcHJvYmxlbSBiZWluZyB0aGF0IHRoZXJl
-IGlzIG5vIHJlcXVpcmVtZW50IGZvciBjb250YWluZXIKPiBwcm9jZXNzIDEgdG8gYmVoYXZlIGlu
-IGFueSB3YXkgbGlrZSBhbiAiaW5pdCIgcHJvY2VzcyBpcwo+IGV4cGVjdGVkIHRvIGJlaGF2ZSBh
-bmQgdGhhdCBsZWFkcyB0byBjb25mdXNpb24gKGF0IGxlYXN0Cj4gaXQgY2VydGFpbmx5IGRpZCBm
-b3IgbWUpLgoKSWYgeW91IGxvb2sgYXQgdGhlIGRvY3VtZW50YXRpb24gZm9yIHBpZCBuYW1lc3Bh
-Y2VzKDcpIHlvdSBjYW4gc2VlIHRoYXQKdGhlIHBpZCAxIGluc2lkZSBhIHBpZCBuYW1lc3BhY2Ug
-aXMgZXhwZWN0ZWQgdG8gYmVoYXZlIGxpa2UgYW4gaW5pdApwcm9jZXNzOgotICAiVGhlICBmaXJz
-dCAgcHJvY2VzcyBjcmVhdGVkIGluIGEgbmV3IG5hbWVzcGFjZSBbLi4uXSBoYXMgIHRoZSBQSUQg
-MSwKICAgYW5kIGlzIHRoZSAiaW5pdCIgcHJvY2VzcyBmb3IgdGhlIG5hbWVzcGFjZSAoc2VlIGlu
-aXQoMSkpLiIKLSAiWy4uLl0gY2hpbGQgcHJvY2VzcyB0aGF0IGlzIG9ycGhhbmVkIHdpdGhpbiB0
-aGUgbmFtZXNwYWNlIHdpbGwgYmUKICByZXBhcmVudGVkIHRvIHRoaXMgcHJvY2VzcyByYXRoZXIg
-dGhhbiBpbml0KDEpIFsuLi5dIgotICJJZiB0aGUgImluaXQiIHByb2Nlc3Mgb2YgYSBQSUQgbmFt
-ZXNwYWNlIHRlcm1pbmF0ZXMsIHRoZSBrZXJuZWwKICB0ZXJtaW5hdGVzIGFsbCBvZiB0aGUgcHJv
-Y2Vzc2VzIGluIHRoZSAgbmFtZXNwYWNlICB2aWEgYSBTSUdLSUxMCiAgc2lnbmFsLiBUaGlzIGJl
-aGF2aW9yIHJlZmxlY3RzIHRoZSBmYWN0IHRoYXQgdGhlICJpbml0IiBwcm9jZXNzIGlzCiAgZXNz
-ZW50aWFsIGZvciB0aGUgY29y4oCQIHJlY3Qgb3BlcmF0aW9uIG9mIGEgUElEIG5hbWVzcGFjZS4i
-Ci0gIk9ubHkgc2lnbmFscyBmb3Igd2hpY2ggdGhlICJpbml0IiBwcm9jZXNzIGhhcyBlc3RhYmxp
-c2hlZCBhIHNpZ25hbAogIGhhbmRsZXIgY2FuIGJlIHNlbnQgdG8gdGhlICAiaW5pdCIgcHJvY2Vz
-cyBieSBvdGhlciBtZW1iZXJzIG9mIHRoZQogIFBJRCBuYW1lc3BhY2UuIgotICJbLi4uXSB0aGUg
-cmVib290KDIpIHN5c3RlbSBjYWxsIGNhdXNlcyBhIHNpZ25hbCB0byBiZSBzZW50IHRvIHRoZQog
-IG5hbWVzcGFjZSAiaW5pdCIgcHJvY2Vzcy4iCgpUaGlzIGlzIG9uZSBvZiB0aGUgcmVhc29ucyB3
-aHkgYWxsIG1ham9yIGN1cnJlbnQgY29udGFpbmVyIHJ1bnRpbWVzCmZpbmFsbHkgYWZ0ZXIgeWVh
-cnMgb2YgZmFpbGluZyB0byByZWFsaXplIHRoaXMgcnVuIGEgc3R1YiBpbml0IHByb2Nlc3MKdGhh
-dCBtaW1pY2tzIGEgZHVtYiBpbml0LiBTdXJlLCB5b3UgZ2V0IGF3YXkgd2l0aCBub3QgaGF2aW5n
-IGFuIGluaXQKdGhhdCBiZWhhdmVzIGxpa2UgYW4gaW5pdCBidXQgdGhpcyBpcyBpbmhlcmVudGx5
-IGJyb2tlbiBvciBhdCBsZWFzdAphZ2FpbnN0IHRoZSB3YXkgcGlkIG5hbWVzcGFjZXMgd2VyZSBk
-ZXNpZ25lZC4K
+On 02/19, Roman Gushchin wrote:
+>
+> It provides similar functionality as v1 freezer, but the interface
+> conforms to the cgroup v2 interface design principles, and it
+> provides a better user experience: tasks can be killed, ptrace works,
+
+I tried to not argue with intent, but to be honest I am more and more
+sceptical... Lets forget about ptrace for the moment.
+
+Once again, why do we want a killable freezer?
+
+If a user wants to kill a frozen task from CGRP_FROZEN cgroup he can simply
+
+	1. send SIGKILL to that task
+
+	2. migrate it to the root cgroup.
+
+why this doesn't / can't work?
+
+
+
+Why I am starting to argue... The ability to kill a frozen task complicates
+the code, and since cgroup_enter_stopped() (in this version at least) doesn't
+properly interacts with freezable_schedule() leads to other problems.
+
+From 7/7:
+
+	+  cgroup.freeze
+	+	A read-write single value file which exists on non-root cgroups.
+	+	Allowed values are "0" and "1". The default is "0".
+	+
+	+	Writing "1" to the file causes freezing of the cgroup and all
+	+	descendant cgroups. This means that all belonging processes will
+	+	be stopped and will not run until the cgroup will be explicitly
+	+	unfrozen. Freezing of the cgroup may take some time;
+                                                 ^^^^^^^^^^^^^^^^^^
+it may take infinite time.
+
+Just suppose that a task does vfork() and this races with cgroup_do_freeze(true).
+If the new child notices JOBCTL_TRAP_FREEZE before exit/exec the cgroup will be
+never frozen.
+
+If I read the current kernel/cgroup/freezer.c correctly, CGROUP_FREEZING should
+"always" work (unless a task hangs in D state) and to me this looks more important
+than kill/ptrace support...
+
+> there is no separate controller, which has to be enabled, etc.
+
+agreed, this is nice.
+
+Oleg.
+
