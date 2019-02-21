@@ -1,90 +1,78 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v8 0/7] freezer for cgroup v2
-Date: Thu, 21 Feb 2019 09:34:22 -0800
-Message-ID: <20190221173422.GY50184@devbig004.ftw2.facebook.com>
-References: <20190219220252.4906-1-guro@fb.com>
- <20190220143748.GA9477@redhat.com>
- <20190220220020.GA16335@castle.DHCP.thefacebook.com>
- <20190221162923.GA26064@redhat.com>
+From: Yang Shi <yang.shi@linux.alibaba.com>
+Subject: Re: [PATCH] doc: cgroup: correct the wrong information about measure
+ of memory pressure
+Date: Thu, 21 Feb 2019 11:54:46 -0800
+Message-ID: <3edd7008-d568-f9b1-a991-bd0ee88f6c52@linux.alibaba.com>
+References: <1550278564-81540-1-git-send-email-yang.shi@linux.alibaba.com>
+ <20190218210504.GT50184@devbig004.ftw2.facebook.com>
+ <CAHCio2g-S6snHsh84r0Wp1RQW1CR3t_eyUUjcdDaxnUHWTcdFw@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=dZd5V90RuKK+ZbKvrS8KZJwldBEBUcHT50D54ZP9GEs=;
-        b=hK9JSeTVv0HCK65Qnku4+5Kl4Tc7KVtEQV68EPlOVwGF/ZY1amMKgBdiIrDc/PLk4X
-         Wkka0YqLmFOToI1gEeSo2PDxU1yOz7ka8tlrFeB9n9LPfFHH+u7jQLJN17qWnraLO2v1
-         SCVYD1h/iC5xcvt7Zy/MKztao0MuT68+1CYYafmm3WJPl+wYIR+wIej1nGDVK8/NokUB
-         7FCryMTYRVLITDtzKwN6drLI2TbNfWvevtUYzGjr0AkWGwJHYZfdkicZhpiBXOd5Wrc8
-         m3Vz4ofkNF0iyrVOBEGQmoxAVNKE6x91UdPSIItQM1Llp9cCsTqAFeKuPw0rsz+uvosD
-         xDtA==
-Content-Disposition: inline
-In-Reply-To: <20190221162923.GA26064@redhat.com>
+In-Reply-To: <CAHCio2g-S6snHsh84r0Wp1RQW1CR3t_eyUUjcdDaxnUHWTcdFw@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Oleg Nesterov <oleg@redhat.com>
-Cc: Roman Gushchin <guro@fb.com>, Roman Gushchin <guroan@gmail.com>, Kernel Team <Kernel-team@fb.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: =?UTF-8?B?56a56Iif6ZSu?= <ufo19890607@gmail.com>, Tejun Heo <tj@kernel.org>
+Cc: hannes@cmpxchg.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-Hello, Oleg.
 
-On Thu, Feb 21, 2019 at 05:29:24PM +0100, Oleg Nesterov wrote:
-> But to me this is a reasonable trade-off because this way we do not add
-> additional complexity to the kernel.
 
-So, I really wanna avoid allowing userspace to cause D state sleeps.
-It's not impossible to work around but becomes really nasty.  For
-example, imagine a memory pressure based userspace oom handler issuer
-kills based on per-cgroup pressure metric (as oomd would do).  It
-might not necessarily have the insight that a victim cgroup is frozen
-or whether it can move out its members to a different cgroup (in a lot
-of cases that will cause a lot of confusion in management software).
+On 2/19/19 2:45 AM, 禹舟键 wrote:
+> Hi TeJun
+> I've built the 5.0.0-rc6 kernel with psi option, but I cannot find any
+> cgroup.controllers when I mounted cgroup2.
+>
+> [root@bogon /]# uname -r
+> [root@bogon /]# 5.0.0-rc6+
+> [root@bogon /]# mount -t cgroup2 none cgroup2/
+> [root@bogon /]# cat cgroup2/cgroup.controllers
+> [root@bogon /]
+> [root@bogon /]# cat cgroup2/cgroup.subtree_control
+> [root@bogon /]#
+>
+> What's wrong with this kernel? Or maybe I lost some mount option?
 
-The frozen state in cgroup1 is a new task state which is different
-from all others and in a nasty way and it has been causing various
-confusions and mistakes from its users.  We really should make it
-closer to the existing stop behaviors even if that means more
-complexity in the implementation.
+I'm not sure what you did before you mounted cgroup2, but if you have 
+legacy controllers mounted, you have to unmount them, otherwise 
+cgroup.controllers would show up as empty. Or you can pass 
+"cgroup_no_v1=" in your kernel parameter.
 
-> Actually, "killable" is not that difficult afaics. "ptraceable" looks more
-> problematic to me. Again, user-space can do
-> 
-> 	1. PTRACE_SEIZE
-> 	2. move the tracee to the root cgroup
-> 	3. do anything with the tracee
-> 	4. move it back
+Yang
 
-which is fine.  The goal isn't trying to block userspace from doing
-things that it explicitly wants to do.  That's fine.  We just want
-things like killing and ptracing to behave similarly to other stopped
-states (ie. avoid introducing completely new behaviors).
+>
+> Thanks
+> Yuzhoujian
+>
+> Tejun Heo <tj@kernel.org> 于2019年2月19日周二 上午10:32写道：
+>> On Sat, Feb 16, 2019 at 08:56:04AM +0800, Yang Shi wrote:
+>>> Since PSI has implemented some kind of measure of memory pressure, the
+>>> statement about lack of such measure is not true anymore.
+>>>
+>>> Cc: Tejun Heo <tj@kernel.org>
+>>> Cc: Johannes Weiner <hannes@cmpxchg.org>
+>>> Cc: Jonathan Corbet <corbet@lwn.net>
+>>> Signed-off-by: Yang Shi <yang.shi@linux.alibaba.com>
+>>> ---
+>>>   Documentation/admin-guide/cgroup-v2.rst | 3 +--
+>>>   1 file changed, 1 insertion(+), 2 deletions(-)
+>>>
+>>> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+>>> index 7bf3f12..9a92013 100644
+>>> --- a/Documentation/admin-guide/cgroup-v2.rst
+>>> +++ b/Documentation/admin-guide/cgroup-v2.rst
+>>> @@ -1310,8 +1310,7 @@ network to a file can use all available memory but can also operate as
+>>>   performant with a small amount of memory.  A measure of memory
+>>>   pressure - how much the workload is being impacted due to lack of
+>>>   memory - is necessary to determine whether a workload needs more
+>>> -memory; unfortunately, memory pressure monitoring mechanism isn't
+>>> -implemented yet.
+>>> +memory.
+>> Maybe refer to PSI?
+>>
+>> Thanks.
+>>
+>> --
+>> tejun
 
-> But there is another case. If admin wants to freeze a cgroup then it is not
-> clear why a user which can send SIGKILL to a frozen process should wake it up.
-> 
-> ------------------------------------------------------------------------------
-> Again, it is not that I hate the idea of killable/ptraceable freezer. Just I
-> personally think it's not worth the trouble. Perhaps I am wrong, but so far
-> I do not see a good implementation...
-> 
-> And, apart from reading/writing the registers, what can ptrace do with a frozen
-> tracee? This doesn't look like a "must have" feature to me.
-> 
-> At least, may I ask you again to make (if possible) a separate patch which adds
-> the ability to kill/ptrace?
-
-ptrace support is a lot less important than kill for sure but if at
-all possible I think it'd be better to have it because that makes the
-frozen state closer to other stopped states and thus less surprising.
-
-To summarize, the ideal result is the frozen state to be "stuck in
-jobctl stop loop" but except for looping in it no different from
-regular jobctl stop.  Plus, register state examination is already
-useful for frozen cgroups for debbugging purposes in itself.
-
-Thanks.
-
--- 
-tejun
