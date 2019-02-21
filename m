@@ -1,78 +1,175 @@
-From: Yang Shi <yang.shi@linux.alibaba.com>
-Subject: Re: [PATCH] doc: cgroup: correct the wrong information about measure
- of memory pressure
-Date: Thu, 21 Feb 2019 11:54:46 -0800
-Message-ID: <3edd7008-d568-f9b1-a991-bd0ee88f6c52@linux.alibaba.com>
-References: <1550278564-81540-1-git-send-email-yang.shi@linux.alibaba.com>
- <20190218210504.GT50184@devbig004.ftw2.facebook.com>
- <CAHCio2g-S6snHsh84r0Wp1RQW1CR3t_eyUUjcdDaxnUHWTcdFw@mail.gmail.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v8 0/7] freezer for cgroup v2
+Date: Thu, 21 Feb 2019 22:43:58 +0000
+Message-ID: <20190221224352.GA24252@tower.DHCP.thefacebook.com>
+References: <20190219220252.4906-1-guro@fb.com>
+ <20190220143748.GA9477@redhat.com>
+ <20190220220020.GA16335@castle.DHCP.thefacebook.com>
+ <20190221162923.GA26064@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAHCio2g-S6snHsh84r0Wp1RQW1CR3t_eyUUjcdDaxnUHWTcdFw@mail.gmail.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=s1MXrnL7uro4t+iPYg88is8usA52Zxw7e4MQw6xasYI=;
+ b=kvR70Btw4jDwGqhIxSBGtEY4vY6Al1KzBWqYlfq4/Bh1QXqIq4tFyLGzV2eP9YCQ46Z8
+ IeAnPfZb6Xj1ivS0hWIYku+9EaKn2ue1OcnsMYc/c/dKgORYloQoFoHl1bfnCVdmOqVS
+ 2HKEMyaeP6AsZnlTqt9FpDmumN974MIjgGc= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=s1MXrnL7uro4t+iPYg88is8usA52Zxw7e4MQw6xasYI=;
+ b=KcDSTjXiyjQt9Bzi85eyqnLxqrNM73i5dE12E+HHY7RI7fmYUJ2WlNVnNP8XfZ2is9XmViGVpFvOp78uIZP0GQQU99JrFdppnwZ+ZtaWLEhVyep19RkHsTvvsR2uP1dIwYGMLLfNidZzK0XBF5gSGDMZ1/16H7pkwkYf0pD5Uwo=
+In-Reply-To: <20190221162923.GA26064@redhat.com>
 Content-Language: en-US
+Content-ID: <5A383B398F6CA64290A21DCCD68EC6D3@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: =?UTF-8?B?56a56Iif6ZSu?= <ufo19890607@gmail.com>, Tejun Heo <tj@kernel.org>
-Cc: hannes@cmpxchg.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Oleg Nesterov <oleg@redhat.com>
+Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Kernel Team <Kernel-team@fb.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
+On Thu, Feb 21, 2019 at 05:29:24PM +0100, Oleg Nesterov wrote:
+> On 02/20, Roman Gushchin wrote:
+> >
+> > On Wed, Feb 20, 2019 at 03:37:48PM +0100, Oleg Nesterov wrote:
+> > >
+> > > I tried to not argue with intent, but to be honest I am more and more
+> > > sceptical... Lets forget about ptrace for the moment.
+> > >
+> > > Once again, why do we want a killable freezer?
+> > >
+> > > If a user wants to kill a frozen task from CGRP_FROZEN cgroup he can =
+simply
+> > >
+> > > 	1. send SIGKILL to that task
+> > >
+> > > 	2. migrate it to the root cgroup.
+> > >
+> > > why this doesn't / can't work?
+> >
+> > It does work, but it doesn't look as a nice interface to take into
+> > the cgroup v2 world.
+> >
+> > It just not clear, why killing a frozen task requires some cgroup-level
+> > operations? It doesn't add anything except some additional complexity
+> > to the userspace.
+>=20
+> Yes.
+>=20
+> But to me this is a reasonable trade-off because this way we do not add
+> additional complexity to the kernel.
+>=20
+> Actually, "killable" is not that difficult afaics. "ptraceable" looks mor=
+e
+> problematic to me. Again, user-space can do
+>=20
+> 	1. PTRACE_SEIZE
+> 	2. move the tracee to the root cgroup
+> 	3. do anything with the tracee
+> 	4. move it back
+>=20
+> > Generally speaking, any process hanging in D-state
+> > for a long time isn't the nicest object from the userspace's point of v=
+iew.
+>=20
+> Roman, this is unfair comparison ;)
 
+Why not? This is exactly the point, with v1 freezer you get a task in D sta=
+te,
+which isn't manageable by userspace without some actions with sysfs.
 
-On 2/19/19 2:45 AM, 禹舟键 wrote:
-> Hi TeJun
-> I've built the 5.0.0-rc6 kernel with psi option, but I cannot find any
-> cgroup.controllers when I mounted cgroup2.
->
-> [root@bogon /]# uname -r
-> [root@bogon /]# 5.0.0-rc6+
-> [root@bogon /]# mount -t cgroup2 none cgroup2/
-> [root@bogon /]# cat cgroup2/cgroup.controllers
-> [root@bogon /]
-> [root@bogon /]# cat cgroup2/cgroup.subtree_control
-> [root@bogon /]#
->
-> What's wrong with this kernel? Or maybe I lost some mount option?
+>=20
+> > Exactly as a SIGSTOPped process can be killed without sending SIGCONT,
+> > why a frozen task would require some additional operations?
+>=20
+> this too,
+>=20
+> > And I'm not talking about the case, when the process which is sending
+> > SIGKILL has no write access to cgroupfs.
+>=20
+> True.
+>=20
+> But there is another case. If admin wants to freeze a cgroup then it is n=
+ot
+> clear why a user which can send SIGKILL to a frozen process should wake i=
+t up.
 
-I'm not sure what you did before you mounted cgroup2, but if you have 
-legacy controllers mounted, you have to unmount them, otherwise 
-cgroup.controllers would show up as empty. Or you can pass 
-"cgroup_no_v1=" in your kernel parameter.
+But it will woken up only for a short moment. And the cgroup will remain fr=
+ozen
+in a sense that belonging processes do not consume CPU.
+Actually, a signal can be useful: for example, if it was the last process,
+the container management software might want to delete the cgroup.
 
-Yang
+>=20
+> -------------------------------------------------------------------------=
+-----
+> Again, it is not that I hate the idea of killable/ptraceable freezer. Jus=
+t I
+> personally think it's not worth the trouble. Perhaps I am wrong, but so f=
+ar
+> I do not see a good implementation...
+>=20
+> And, apart from reading/writing the registers, what can ptrace do with a =
+frozen
+> tracee? This doesn't look like a "must have" feature to me.
 
->
-> Thanks
-> Yuzhoujian
->
-> Tejun Heo <tj@kernel.org> 于2019年2月19日周二 上午10:32写道：
->> On Sat, Feb 16, 2019 at 08:56:04AM +0800, Yang Shi wrote:
->>> Since PSI has implemented some kind of measure of memory pressure, the
->>> statement about lack of such measure is not true anymore.
->>>
->>> Cc: Tejun Heo <tj@kernel.org>
->>> Cc: Johannes Weiner <hannes@cmpxchg.org>
->>> Cc: Jonathan Corbet <corbet@lwn.net>
->>> Signed-off-by: Yang Shi <yang.shi@linux.alibaba.com>
->>> ---
->>>   Documentation/admin-guide/cgroup-v2.rst | 3 +--
->>>   1 file changed, 1 insertion(+), 2 deletions(-)
->>>
->>> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
->>> index 7bf3f12..9a92013 100644
->>> --- a/Documentation/admin-guide/cgroup-v2.rst
->>> +++ b/Documentation/admin-guide/cgroup-v2.rst
->>> @@ -1310,8 +1310,7 @@ network to a file can use all available memory but can also operate as
->>>   performant with a small amount of memory.  A measure of memory
->>>   pressure - how much the workload is being impacted due to lack of
->>>   memory - is necessary to determine whether a workload needs more
->>> -memory; unfortunately, memory pressure monitoring mechanism isn't
->>> -implemented yet.
->>> +memory.
->> Maybe refer to PSI?
->>
->> Thanks.
->>
->> --
->> tejun
+I think the minimal requirement is that the tracing application should not =
+hang
+and wait for tracee to be unfrozen.
+So, imagine you're trying to debug an application in production with gdb,
+and occasionally gdb just hangs because some cluster management stuff froze
+the tracee's cgroup. Not the best user experience.
 
+>=20
+> At least, may I ask you again to make (if possible) a separate patch whic=
+h adds
+> the ability to kill/ptrace?
+
+I'll try, but not sure if it can make the code easier for review.
+It looks like this ability defines the implementation.
+
+> -------------------------------------------------------------------------=
+-----
+>=20
+> > > Why I am starting to argue... The ability to kill a frozen task compl=
+icates
+> > > the code, and since cgroup_enter_stopped() (in this version at least)=
+ doesn't
+> > > properly interacts with freezable_schedule() leads to other problems.
+> > >
+> > > From 7/7:
+> > >
+> > > 	+  cgroup.freeze
+> > > 	+	A read-write single value file which exists on non-root cgroups.
+> > > 	+	Allowed values are "0" and "1". The default is "0".
+> > > 	+
+> > > 	+	Writing "1" to the file causes freezing of the cgroup and all
+> > > 	+	descendant cgroups. This means that all belonging processes will
+> > > 	+	be stopped and will not run until the cgroup will be explicitly
+> > > 	+	unfrozen. Freezing of the cgroup may take some time;
+> > >                                                  ^^^^^^^^^^^^^^^^^^
+> > > it may take infinite time.
+> > >
+> > > Just suppose that a task does vfork() and this races with cgroup_do_f=
+reeze(true).
+> > > If the new child notices JOBCTL_TRAP_FREEZE before exit/exec the cgro=
+up will be
+> > > never frozen.
+> >
+> > Hm, why? cgroup_update_frozen() called from cgroup_post_fork() should b=
+ring
+> > the cgroup into the frozen state. If it's not true (I'm missing some ra=
+ce here),
+> > it's a bug, but I don't see why it's not possible in general.
+>=20
+> A task P calls vfork() and creates the new child C. Now, how can the pare=
+nt P
+> (which sleeps in TASK_KILLABLE) call cgroup_enter_stopped() ? It can't un=
+til C
+> exits or execs. C can't exit or exec because it is frozen.
+
+Got it. I'll address it in the next version.
+
+Thanks!
