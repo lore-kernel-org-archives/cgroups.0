@@ -1,125 +1,79 @@
 From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Subject: [PATCH] blk-throttle: verify format of bandwidth limit and detect
- overflows
-Date: Wed, 27 Feb 2019 11:05:44 +0300
-Message-ID: <155125474480.292717.11530762471075713387.stgit@buzz>
+Subject: [PATCH] sched/core: check format and overflows in cgroup2 cpu.max
+Date: Wed, 27 Feb 2019 11:13:21 +0300
+Message-ID: <155125520155.293746.7017401430432481979.stgit@buzz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-        t=1551254745; bh=uje9cOqkSF4MsWapz7kByCQVbrgZbvE1xFNEZzdfCkI=;
+        t=1551255202; bh=8kFu2wWh3Op+B8NZK/FPFrEnAAthfynrTJBN0YQ9dko=;
         h=Message-ID:Date:To:From:Subject;
-        b=pyVgXo0DU98oiz0JlDZoUXviuXZj0POotBfGERsT1RoBY0FTaF77OABMy/qmtoOkB
-         TrB8qiNy77jU1XAAEq6OX2qtyDBUIgzisHLWcg5k2B04/bJ5aVtYvba8nNIxn9/yxo
-         WlU7/gHEdZvvufGnQHSu25nkGmo2175udw1UTU9I=
+        b=QChFQyWQRPml22HfRer0LqfEssiFGUcpS1KWe5R0TIdlZuGFWNRKKj56z9MhhdZXt
+         Zd+DrubbdYyyqGmvyngmLnkwfAP4CcG/3cAK5wAtuyqVojB77JYtHHqk4pYxpRMr0x
+         cHn31V4Ku8OwHCDGPQQjuQSDXj2R6508Qb/v2HBk=
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
+To: Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>
 
-Unlike to memory cgroup blkio throttler does not support value suffixes.
+Cgroup2 interface for cpu bandwidth limit has some flaws:
 
-It silently ignores everything after last digit. For example this command
-will set rate limit 1 byte per second rather than 1 megabyte per second:
+- on stack buffer overflow
+- no checks for valid format or trailing garbage
+- no checks for integer overflows
 
-# echo "7:0 1M" > blkio.throttle.read_bps_device
-# cat blkio.throttle.read_bps_device
-7:0 1
+This patch fixes all these flaws.
 
-Cgroup2 interface has the same flaw:
-
-# echo "7:0 rbps=1M" > io.max
-# cat io.max
-7:0 rbps=1 wbps=max riops=max wiops=max
-
-Also sscanf does not care much about overflows.
-
-This patch uses modern function kstrtou64 for parsing.
-It rejects trailing garbage and detects integer overflows.
-
-Also this patch handles iops limit overflows for cgroup-v1 in the same as
-cgroup-v2: limits >= UINT_MAX becomes unlimited.
-
-Fixes: 2ee867dcfa2e ("blkcg: implement interface for the unified hierarchy")
+Fixes: 0d5936344f30 ("sched: Implement interface for cgroup unified hierarchy")
 Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
 ---
- block/blk-throttle.c |   40 ++++++++++++++++++++++++----------------
- 1 file changed, 24 insertions(+), 16 deletions(-)
+ kernel/sched/core.c |   29 ++++++++++++++++++++++-------
+ 1 file changed, 22 insertions(+), 7 deletions(-)
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 1b97a73d2fb1..ce00060b3a48 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -1433,8 +1433,10 @@ static ssize_t tg_set_conf(struct kernfs_open_file *of,
- 	if (ret)
- 		return ret;
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 5f46aa335b28..123b1910bc2e 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -6947,19 +6947,34 @@ static int __maybe_unused cpu_period_quota_parse(char *buf,
+ 						 u64 *periodp, u64 *quotap)
+ {
+ 	char tok[21];	/* U64_MAX */
++	int ret, len;
  
--	ret = -EINVAL;
--	if (sscanf(ctx.body, "%llu", &v) != 1)
-+	/* remove trailing spaces, kstrto* are strict about them */
-+	ctx.body = strim(ctx.body);
-+	ret = kstrtou64(ctx.body, 10, &v);
-+	if (ret)
- 		goto out_finish;
- 	if (!v)
- 		v = U64_MAX;
-@@ -1444,7 +1446,8 @@ static ssize_t tg_set_conf(struct kernfs_open_file *of,
- 	if (is_u64)
- 		*(u64 *)((void *)tg + of_cft(of)->private) = v;
- 	else
--		*(unsigned int *)((void *)tg + of_cft(of)->private) = v;
-+		*(unsigned int *)((void *)tg + of_cft(of)->private) =
-+							min_t(u64, v, UINT_MAX);
+-	if (!sscanf(buf, "%s %llu", tok, periodp))
++	if (sscanf(buf, "%20s %n", tok, &len) != 1)
+ 		return -EINVAL;
  
- 	tg_conf_updated(tg, false);
- 	ret = 0;
-@@ -1609,23 +1612,25 @@ static ssize_t tg_set_limit(struct kernfs_open_file *of,
- 	idle_time = tg->idletime_threshold_conf;
- 	latency_time = tg->latency_target_conf;
- 	while (true) {
--		char tok[27];	/* wiops=18446744073709551616 */
--		char *p;
--		u64 val = U64_MAX;
--		int len;
+-	*periodp *= NSEC_PER_USEC;
 -
--		if (sscanf(ctx.body, "%26s%n", tok, &len) != 1)
--			break;
--		if (tok[0] == '\0')
--			break;
--		ctx.body += len;
-+		char tok[8];	/* "latency" */
-+		char buf[21];	/* U64_MAX */
-+		int end;
-+		u64 val;
+-	if (sscanf(tok, "%llu", quotap))
+-		*quotap *= NSEC_PER_USEC;
+-	else if (!strcmp(tok, "max"))
++	ret = kstrtou64(tok, 10, quotap);
++	if (ret) {
++		if (strcmp(tok, "max"))
++			return ret;
+ 		*quotap = RUNTIME_INF;
+-	else
++	} else if (*quotap <= U64_MAX / NSEC_PER_USEC) {
++		*quotap *= NSEC_PER_USEC;
++	} else
+ 		return -EINVAL;
  
- 		ret = -EINVAL;
--		p = tok;
--		strsep(&p, "=");
--		if (!p || (sscanf(p, "%llu", &val) != 1 && strcmp(p, "max")))
-+		if (sscanf(ctx.body, "%7[^=]=%20s %n", tok, buf, &end) != 2)
- 			goto out_finish;
++	buf += len;
++	if (*buf) {
++		if (sscanf(buf, "%20s %n", tok, &len) != 1 || buf[len])
++			return -EINVAL;
++		ret = kstrtou64(tok, 10, periodp);
++		if (ret)
++			return ret;
++		if (*periodp > U64_MAX / NSEC_PER_USEC)
++			return -EINVAL;
++	}
++
++	*periodp *= NSEC_PER_USEC;
++
+ 	return 0;
+ }
  
-+		/* skip this field and trailing spaces */
-+		ctx.body += end;
-+
-+		ret = kstrtou64(buf, 10, &val);
-+		if (ret) {
-+			if (strcmp(buf, "max"))
-+				goto out_finish;
-+			val = U64_MAX;
-+		}
-+
- 		ret = -ERANGE;
- 		if (!val)
- 			goto out_finish;
-@@ -1645,6 +1650,9 @@ static ssize_t tg_set_limit(struct kernfs_open_file *of,
- 			latency_time = val;
- 		else
- 			goto out_finish;
-+
-+		if (!*ctx.body)
-+			break;
- 	}
- 
- 	tg->bps_conf[READ][index] = v[0];
 
