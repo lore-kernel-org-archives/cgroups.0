@@ -1,55 +1,32 @@
-From: Souptick Joarder <jrdr.linux@gmail.com>
-Subject: Re: [PATCH] memcg: fix a bad line
-Date: Thu, 28 Feb 2019 17:26:47 +0530
-Message-ID: <CAFqt6za55vjCHvmk3smZYQ2cGLTsTyAcs6B1SLwCoYcm+XSiSA@mail.gmail.com>
-References: <20190227205242.77355-1-cai@lca.pw>
+From: Chris Down <chris@chrisdown.name>
+Subject: Re: [PATCH] mm, memcg: Handle cgroup_disable=memory when getting
+ memcg protection
+Date: Thu, 28 Feb 2019 12:51:41 +0000
+Message-ID: <20190228125141.GA7365@chrisdown.name>
+References: <20190201045711.GA18302@chrisdown.name>
+ <20190201071203.GD11599@dhcp22.suse.cz>
+ <20190201074809.GF11599@dhcp22.suse.cz>
+ <20190226152958.726b921f0cb03ccc50144539@linux-foundation.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=L8fcmR+rQmEReDcuYpUYxW0tKYPUtWoev1VscFLxHis=;
-        b=dMhcgLXPtaIJ8dCC63OVyx+y559roriUbGChDiEyK76D9mm2mvpV+Mr47Uzk5F5zBs
-         V79QA6AXgTBm3/Ww/X0wjRbY6VmTWxxftRvCDpAk7zBPU2BXSGgkwd1hYK04SUoFKST6
-         M/Qt5bDlNhN07ksiqepq8iSHE2zJGTK+IagegRaVbteW3txRORTNC9u1GFiBBE/iM0Hb
-         QcCzKZKLj1dHRkjUh4tRAu5Qmu/tmLb6SGUAKqrxPOX5rOltee5eSX0J5u/tHAGLby/z
-         VGgC7v+aZIqB4j0LdHlVwBw0IRklfOgpgW5TxMI9bdSRjYfdjwUaIAS89bu9kHfh+rDh
-         PRRw==
-In-Reply-To: <20190227205242.77355-1-cai@lca.pw>
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=9abm0vdzy1u8k6t9ZPdWfEHMFX/OS1Bdc2ERO6x3ga0=;
+        b=QjwzuLxDrl+HPKlwdKfODyAY2mBGwVvTaW9CLwhP32n2Lvx/8GicnuinoOZWPO8NJP
+         qsjsDgtvcl/0BePwDn7LlW7Vyc1CI604eY1Jt6o6HWr2VcYo2muKLPsjM/ljuwaBxvbQ
+         bOpUhPejtlwVVJHXuL2oF7YeBoiy+i3VrcLRg=
+Content-Disposition: inline
+In-Reply-To: <20190226152958.726b921f0cb03ccc50144539@linux-foundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 Content-Transfer-Encoding: 7bit
-To: Qian Cai <cai@lca.pw>
-Cc: hannes@cmpxchg.org, Michal Hocko <mhocko@kernel.org>, vdavydov.dev@gmail.com, cgroups@vger.kernel.org, Linux-MM <linux-mm@kvack.org>, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@kernel.org>, Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, Feb 28, 2019 at 2:22 AM Qian Cai <cai@lca.pw> wrote:
->
-> Miss a star.
->
-> Signed-off-by: Qian Cai <cai@lca.pw>
+Andrew Morton writes:
+>Things settled down.  Here's the rolled-up patch.  Please review?
 
-I think, the change log is too short and could be little more. Otherwise,
-Acked-by: Souptick Joarder <jrdr.linux@gmail.com>
-
-> ---
->  mm/memcontrol.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index af7f18b32389..d4b96dc4bd8a 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5747,7 +5747,7 @@ struct cgroup_subsys memory_cgrp_subsys = {
->   *
->   *             | memory.current, if memory.current < memory.low
->   * low_usage = |
-> -              | 0, otherwise.
-> + *            | 0, otherwise.
->   *
->   *
->   * Such definition of the effective memory.low provides the expected
-> --
-> 2.17.2 (Apple Git-113)
->
+Looks correct to me as patch author, thanks!
