@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 6/6] mm: memcontrol: quarantine the mem_cgroup_[node_]nr_lru_pages() API
-Date: Thu, 28 Feb 2019 11:30:20 -0500
-Message-ID: <20190228163020.24100-7-hannes@cmpxchg.org>
+Subject: [PATCH 5/6] mm: memcontrol: push down mem_cgroup_nr_lru_pages()
+Date: Thu, 28 Feb 2019 11:30:19 -0500
+Message-ID: <20190228163020.24100-6-hannes@cmpxchg.org>
 References: <20190228163020.24100-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,13 +10,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Z2sRN7pljcgc3IEs1HOIZy7cq4U6Vg2axPUdXHMU2lE=;
-        b=DEAtdOPWiEo0uOoF/kNQdPF0USk1MRsY3/VKt8/mJQFicjBli6ttNVH8RkvHkOg7wY
-         ByBYfX+mPzOz9P8Dn43tEMTeRXyvR12moI751Uv096CLMEY6EjSZA+WEDf1fNGD8fukR
-         hI3+VbOhIJVPNA3hgzNYNYZIqwq8/bYnBQQFyYaygDjHRN0w9ne2jfjL/rrEuW2UgLZx
-         ePVPYNWL+E839Gw74yrULf1nuqJO6jmJUWceXhvNVkSQYCxL+N+qwhDGHo4wc3vE1NnZ
-         uvoFdHHWn7bP1Lkywedfry5vLXo9gAO6JiqCgHzo8jp3u2/gXV2IhksYFvEo+pcToDvJ
-         XK6g==
+        bh=xYRD3i2lO0S8FmpT0yhEIbRdeHMhHjlJuWkUHWcpJsw=;
+        b=qZBcQtunj0HpdKLEyd50kzMF5u4hwQOvpkuAEd9NtT3C1jIdB7SHj5Wu9SVJiJwk3c
+         efLEI5hR9LP5jqeXRHv91q1Cfi7QKY7YBX/nYdAjWaCkhg0/6IEOPiQBjKAq0bfilI3N
+         6+YUWT4QM7QuO2aTXzGCOAO03Gu8MEqoAFGi1AsO2Gy+6MSFPDuRjpmStKdiUf3gl9WQ
+         rYJWUi4TxMM1rVZuaDh8gqG2aQjHBJ/peVLRMFwX1ONsJbyvqNoiueg8XQ0q6ZlZTrDO
+         AmmgTrAeqcwX3nf/JCr/thMhQEdk6+oBM8aZcyfJ5f8xItULOYhkQICIPL/RS7FEkfXS
+         5ByA==
 In-Reply-To: <20190228163020.24100-1-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,116 +24,63 @@ Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Only memcg_numa_stat_show() uses those wrappers and the lru bitmasks,
-group them together.
+mem_cgroup_nr_lru_pages() is just a convenience wrapper around
+memcg_page_state() that takes bitmasks of lru indexes and aggregates
+the counts for those.
+
+Replace callsites where the bitmask is simple enough with direct
+memcg_page_state() call(s).
 
 Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
- include/linux/mmzone.h |  5 ----
- mm/memcontrol.c        | 67 +++++++++++++++++++++++-------------------
- 2 files changed, 36 insertions(+), 36 deletions(-)
+ mm/memcontrol.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-index 2fd4247262e9..4f92d32c26a7 100644
---- a/include/linux/mmzone.h
-+++ b/include/linux/mmzone.h
-@@ -305,11 +305,6 @@ struct lruvec {
- #endif
- };
- 
--/* Mask used at gathering information at once (see memcontrol.c) */
--#define LRU_ALL_FILE (BIT(LRU_INACTIVE_FILE) | BIT(LRU_ACTIVE_FILE))
--#define LRU_ALL_ANON (BIT(LRU_INACTIVE_ANON) | BIT(LRU_ACTIVE_ANON))
--#define LRU_ALL	     ((1 << NR_LRU_LISTS) - 1)
--
- /* Isolate unmapped file */
- #define ISOLATE_UNMAPPED	((__force isolate_mode_t)0x2)
- /* Isolate for asynchronous migration */
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 76f599fbbbe8..84243831b738 100644
+index ad6214b3d20b..76f599fbbbe8 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -725,37 +725,6 @@ static void mem_cgroup_charge_statistics(struct mem_cgroup *memcg,
- 	__this_cpu_add(memcg->vmstats_percpu->nr_page_events, nr_pages);
+@@ -1361,7 +1361,7 @@ void mem_cgroup_print_oom_meminfo(struct mem_cgroup *memcg)
+ 
+ 		for (i = 0; i < NR_LRU_LISTS; i++)
+ 			pr_cont(" %s:%luKB", mem_cgroup_lru_names[i],
+-				K(mem_cgroup_nr_lru_pages(iter, BIT(i))));
++				K(memcg_page_state(iter, NR_LRU_BASE + i)));
+ 
+ 		pr_cont("\n");
+ 	}
+@@ -3016,8 +3016,8 @@ static void accumulate_vmstats(struct mem_cgroup *memcg,
+ 				? acc->vmevents_array[i] : i);
+ 
+ 		for (i = 0; i < NR_LRU_LISTS; i++)
+-			acc->lru_pages[i] +=
+-				mem_cgroup_nr_lru_pages(mi, BIT(i));
++			acc->lru_pages[i] += memcg_page_state(mi,
++							      NR_LRU_BASE + i);
+ 	}
  }
  
--static unsigned long mem_cgroup_node_nr_lru_pages(struct mem_cgroup *memcg,
--					   int nid, unsigned int lru_mask)
--{
--	struct lruvec *lruvec = mem_cgroup_lruvec(NODE_DATA(nid), memcg);
--	unsigned long nr = 0;
--	enum lru_list lru;
--
--	VM_BUG_ON((unsigned)nid >= nr_node_ids);
--
--	for_each_lru(lru) {
--		if (!(BIT(lru) & lru_mask))
--			continue;
--		nr += lruvec_page_state(lruvec, NR_LRU_BASE + lru);
--	}
--	return nr;
--}
--
--static unsigned long mem_cgroup_nr_lru_pages(struct mem_cgroup *memcg,
--			unsigned int lru_mask)
--{
--	unsigned long nr = 0;
--	enum lru_list lru;
--
--	for_each_lru(lru) {
--		if (!(BIT(lru) & lru_mask))
--			continue;
--		nr += memcg_page_state(memcg, NR_LRU_BASE + lru);
--	}
--	return nr;
--}
--
- static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
- 				       enum mem_cgroup_events_target target)
- {
-@@ -3357,6 +3326,42 @@ static int mem_cgroup_move_charge_write(struct cgroup_subsys_state *css,
- #endif
+@@ -3447,7 +3447,8 @@ static int memcg_stat_show(struct seq_file *m, void *v)
  
- #ifdef CONFIG_NUMA
-+
-+#define LRU_ALL_FILE (BIT(LRU_INACTIVE_FILE) | BIT(LRU_ACTIVE_FILE))
-+#define LRU_ALL_ANON (BIT(LRU_INACTIVE_ANON) | BIT(LRU_ACTIVE_ANON))
-+#define LRU_ALL	     ((1 << NR_LRU_LISTS) - 1)
-+
-+static unsigned long mem_cgroup_node_nr_lru_pages(struct mem_cgroup *memcg,
-+					   int nid, unsigned int lru_mask)
-+{
-+	struct lruvec *lruvec = mem_cgroup_lruvec(NODE_DATA(nid), memcg);
-+	unsigned long nr = 0;
-+	enum lru_list lru;
-+
-+	VM_BUG_ON((unsigned)nid >= nr_node_ids);
-+
-+	for_each_lru(lru) {
-+		if (!(BIT(lru) & lru_mask))
-+			continue;
-+		nr += lruvec_page_state(lruvec, NR_LRU_BASE + lru);
-+	}
-+	return nr;
-+}
-+
-+static unsigned long mem_cgroup_nr_lru_pages(struct mem_cgroup *memcg,
-+					     unsigned int lru_mask)
-+{
-+	unsigned long nr = 0;
-+	enum lru_list lru;
-+
-+	for_each_lru(lru) {
-+		if (!(BIT(lru) & lru_mask))
-+			continue;
-+		nr += memcg_page_state(memcg, NR_LRU_BASE + lru);
-+	}
-+	return nr;
-+}
-+
- static int memcg_numa_stat_show(struct seq_file *m, void *v)
- {
- 	struct numa_stat {
+ 	for (i = 0; i < NR_LRU_LISTS; i++)
+ 		seq_printf(m, "%s %lu\n", mem_cgroup_lru_names[i],
+-			   mem_cgroup_nr_lru_pages(memcg, BIT(i)) * PAGE_SIZE);
++			   memcg_page_state(memcg, NR_LRU_BASE + i) *
++			   PAGE_SIZE);
+ 
+ 	/* Hierarchical information */
+ 	memory = memsw = PAGE_COUNTER_MAX;
+@@ -3937,8 +3938,8 @@ void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pfilepages,
+ 
+ 	/* this should eventually include NR_UNSTABLE_NFS */
+ 	*pwriteback = memcg_page_state(memcg, NR_WRITEBACK);
+-	*pfilepages = mem_cgroup_nr_lru_pages(memcg, (1 << LRU_INACTIVE_FILE) |
+-						     (1 << LRU_ACTIVE_FILE));
++	*pfilepages = memcg_page_state(memcg, NR_INACTIVE_FILE) +
++		memcg_page_state(memcg, NR_ACTIVE_FILE);
+ 	*pheadroom = PAGE_COUNTER_MAX;
+ 
+ 	while ((parent = parent_mem_cgroup(memcg))) {
 -- 
 2.20.1
 
