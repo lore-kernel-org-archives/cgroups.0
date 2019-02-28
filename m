@@ -1,101 +1,64 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 2/6] mm: memcontrol: replace zone summing with lruvec_page_state()
-Date: Thu, 28 Feb 2019 11:30:16 -0500
-Message-ID: <20190228163020.24100-3-hannes@cmpxchg.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH 0/6] mm: memcontrol: clean up the LRU counts tracking
+Date: Thu, 28 Feb 2019 16:42:41 +0000
+Message-ID: <20190228164236.GA26032@tower.DHCP.thefacebook.com>
 References: <20190228163020.24100-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=NxReYuZN9DV/fcdnYYWinsazWkVL2jKBNqgEJlRIVkI=;
-        b=ZAGBYz8GP7xIIzJFVPTadJPGGMIowtbAf7+EPG3yvgRIeRyXKmFnQnaswl/xN6iA1h
-         Stype2OdeKY7ecFjCOIUKdyiqmYipTgueLOOP9OfEcLkTklZQs71jTxnDHOs/Afca+Ff
-         dh99RRH2hehKyyfIpmHBwk1bsz20KaPjXYYkmNhguy18yadeh7dnamP67D/VmkLw2nUb
-         ktqdqI4pYdDPvQjETyKp9zSCQqE+VSyjVVX6OecZlKOlxHzVlzveix/BhPrzCNSZJyS+
-         CdTvtK4NOJvO4/kPQ5/PxHPZu0t7yQiJLF5gQi2Q3xs2G+vSxFcKWfWRHeCrCn8bRNfR
-         8bZA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=J3TkBkbgJLidYXQwndc5Y9K0JpBhnEgIwXZ3Hj0Jilw=;
+ b=PdTYtuKzCtdu7/AkoHQwy8yoDgjX1G/aw3pkyoiTqNFyEWF+/zR6DaMpw8OUFJSrjwnC
+ LNKwDRfDZHucZiqMsJDhYbp1wZHCU1eVmFwh3MhJclXcmAor1cud5lW4HGPiwfS0sAyn
+ 4Tx/s2xkUHRXkbngn+PUUnwuydZo4Ux+y00= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=J3TkBkbgJLidYXQwndc5Y9K0JpBhnEgIwXZ3Hj0Jilw=;
+ b=DlU9Iw75/ITd5HVG3W+TNbiB0rOudfHNMirVPZkbVWrNczFMHfCvYMQOumu9bVKPc85t+CnEOcuapGCVsN7y+hiTOJtvXKlUNwauA3z3ywqEGHMud5FmO1CdaBPZG+lVkvysPwjFR8A2C2r/ig9UmRgRUyuPKj2vyaZX8s3PnTU=
 In-Reply-To: <20190228163020.24100-1-hannes@cmpxchg.org>
+Content-Language: en-US
+Content-ID: <FF49BB458586CF448F1935237336EB36@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
 
-Instead of adding up the zone counters, use lruvec_page_state() to get
-the node state directly. This is a bit cheaper and more stream-lined.
+On Thu, Feb 28, 2019 at 11:30:14AM -0500, Johannes Weiner wrote:
+> [ Resend #2: Sorry about the spam, I mixed up the header fields in
+>   git-send-email and I don't know who did and didn't receive the
+>   garbled previous attempt.
+>=20
+>   Resend #1: Rebased on top of the latest mmots. ]
+>=20
+> The memcg LRU stats usage is currently a bit messy. Memcg has private
+> per-zone counters because reclaim needs zone granularity sometimes,
+> but we also have plenty of users that need to awkwardly sum them up to
+> node or memcg granularity. Meanwhile the canonical per-memcg vmstats
+> do not track the LRU counts (NR_INACTIVE_ANON etc.) as you'd expect.
+>=20
+> This series enables LRU count tracking in the per-memcg vmstats array
+> such that lruvec_page_state() and memcg_page_state() work on the enum
+> node_stat_item items for the LRU counters. Then it converts all the
+> callers that don't specifically need per-zone numbers over to that.
+>=20
+>  include/linux/memcontrol.h | 28 ---------------
+>  include/linux/mm_inline.h  |  2 +-
+>  include/linux/mmzone.h     |  5 ---
+>  mm/memcontrol.c            | 85 +++++++++++++++++++++++++---------------=
+----
+>  mm/vmscan.c                |  2 +-
+>  mm/workingset.c            |  5 +--
+>  6 files changed, 54 insertions(+), 73 deletions(-)
+>=20
+>=20
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- include/linux/memcontrol.h | 18 ------------------
- mm/memcontrol.c            |  2 +-
- mm/vmscan.c                |  2 +-
- 3 files changed, 2 insertions(+), 20 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 534267947664..5050d281f67d 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -517,19 +517,6 @@ void mem_cgroup_update_lru_size(struct lruvec *lruvec, enum lru_list lru,
- unsigned long mem_cgroup_node_nr_lru_pages(struct mem_cgroup *memcg,
- 					   int nid, unsigned int lru_mask);
- 
--static inline
--unsigned long mem_cgroup_get_lru_size(struct lruvec *lruvec, enum lru_list lru)
--{
--	struct mem_cgroup_per_node *mz;
--	unsigned long nr_pages = 0;
--	int zid;
--
--	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
--	for (zid = 0; zid < MAX_NR_ZONES; zid++)
--		nr_pages += mz->lru_zone_size[zid][lru];
--	return nr_pages;
--}
--
- static inline
- unsigned long mem_cgroup_get_zone_lru_size(struct lruvec *lruvec,
- 		enum lru_list lru, int zone_idx)
-@@ -985,11 +972,6 @@ static inline bool mem_cgroup_online(struct mem_cgroup *memcg)
- 	return true;
- }
- 
--static inline unsigned long
--mem_cgroup_get_lru_size(struct lruvec *lruvec, enum lru_list lru)
--{
--	return 0;
--}
- static inline
- unsigned long mem_cgroup_get_zone_lru_size(struct lruvec *lruvec,
- 		enum lru_list lru, int zone_idx)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 5fc2e1a7d4d2..d85a41cfee60 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -737,7 +737,7 @@ unsigned long mem_cgroup_node_nr_lru_pages(struct mem_cgroup *memcg,
- 	for_each_lru(lru) {
- 		if (!(BIT(lru) & lru_mask))
- 			continue;
--		nr += mem_cgroup_get_lru_size(lruvec, lru);
-+		nr += lruvec_page_state(lruvec, NR_LRU_BASE + lru);
- 	}
- 	return nr;
- }
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index ac4806f0f332..cdf8d92e6b89 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -346,7 +346,7 @@ unsigned long lruvec_lru_size(struct lruvec *lruvec, enum lru_list lru, int zone
- 	int zid;
- 
- 	if (!mem_cgroup_disabled())
--		lru_size = mem_cgroup_get_lru_size(lruvec, lru);
-+		lru_size = lruvec_page_state(lruvec, NR_LRU_BASE + lru);
- 	else
- 		lru_size = node_page_state(lruvec_pgdat(lruvec), NR_LRU_BASE + lru);
- 
--- 
-2.20.1
+The patchset looks very good to me!
 
+Reviewed-by: Roman Gushchin <guro@fb.com>
+
+Thanks!
