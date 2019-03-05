@@ -1,88 +1,73 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v8 0/7] freezer for cgroup v2
-Date: Tue, 5 Mar 2019 09:27:32 -0800
-Message-ID: <20190305172711.GE50184@devbig004.ftw2.facebook.com>
-References: <20190219220252.4906-1-guro@fb.com>
- <20190220143748.GA9477@redhat.com>
- <20190220220020.GA16335@castle.DHCP.thefacebook.com>
- <20190221162923.GA26064@redhat.com>
- <20190221173422.GY50184@devbig004.ftw2.facebook.com>
- <20190222163441.GA5596@redhat.com>
- <20190222181740.GZ50184@devbig004.ftw2.facebook.com>
- <20190225155725.GA8096@redhat.com>
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Subject: Re: [PATCH] blk-throttle: verify format of bandwidth limit and detect
+ overflows
+Date: Tue, 5 Mar 2019 20:27:38 +0300
+Message-ID: <8854733a-8724-d4d1-da37-48717b05a42a@yandex-team.ru>
+References: <155125474480.292717.11530762471075713387.stgit@buzz>
+ <20190305155631.GC50184@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=mNi2wcs42w6UeX4ek2kNcWvb2MWYPhhWXQr+BTcHWzA=;
-        b=WGvmDns+blbuyso53uWHKhRtDGSCgonJqeV/qv36MQf+5wzAILLS9xN/7V1A5oKJYC
-         5p2rYbnI4yHmrwWtXSCzWvVUjtSsgAk1eZUUcKbS3rJO0Bpeb22uLSBw3duLCHZTcc9d
-         VyIkNTGwR7bzeBkNy66nBFRpn2AQzDpNvkjKGdKTDBM9NAiA8b5sjPmjIFOdK370b7tB
-         O7OmjnWOa2zPniVkNA/bUUFr+WTIktjJiaO2YksyzzTjxaoutu1ToFUOngyifduCGHqi
-         umCHTuczoamZ7P4KTFESx8p6VeI3ZGh3TOAGrPl2SvLVfWxCaIhCm/85udUMsIcaYnKh
-         wV4w==
-Content-Disposition: inline
-In-Reply-To: <20190225155725.GA8096@redhat.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+        t=1551806858; bh=SHMSe0BDUm7rTH2OZfSxE/ZaTpJiliYBzSWNaqaUXTY=;
+        h=In-Reply-To:Message-ID:From:Date:References:To:Subject:Cc;
+        b=tDJLPYS1loEp0aC1r9BJoM6xeYPqeLJOrgmqsG8vRcRtgBk1E0k/nDjfoMJUlgLOq
+         +0LV8oZVsopSRE51WPExwANwgaLbQKLsWD3ThUy8Z8xC/a6kXL3+QQztJXshP7T0L5
+         gVKtaISq7uPC0Dk05k3RUthG1UckTGlmEaPA6ccw=
+In-Reply-To: <20190305155631.GC50184@devbig004.ftw2.facebook.com>
+Content-Language: en-CA
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Oleg Nesterov <oleg@redhat.com>
-Cc: Roman Gushchin <guro@fb.com>, Roman Gushchin <guroan@gmail.com>, Kernel Team <Kernel-team@fb.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
 
-Hello, Oleg.
-
-Sorry about the delay.
-
-On Mon, Feb 25, 2019 at 04:57:25PM +0100, Oleg Nesterov wrote:
-> > As long as the task is
-> > guaranteed to be trapped by signal stop afterwards (and they are), we
-> > likely can use them the same way.  The only thing to be careful about
-> > would be ensuring that we don't end up flipping group level frozen
-> > state inbetween.  Would something like that work?
+On 05.03.2019 18:56, Tejun Heo wrote:
+> Hello, Konstantin.
 > 
-> I have no idea because I do not understand what exactly do you mean ;)
-
-Heh, sorry about that.  What I meant was that we can consider a task
-which is blocked in vfork wait as already frozen and that if we do so
-we need to be careful so that frozen state doesn't do a flip between
-vfork wait ending and the task getting parked again in a jobctl stop.
-
-> However. Thinking more about this, I am not sure my concerns were valid.
-> Yes, cg freezer can "hang" if it races with vfork(). But probably we should
-> blame vfork(), not freezer.
-
-I think we'd need to cover that ground regardless of where blame lies.
-It's weird if freezing doesn't complete cuz one of the tasks messed up
-while vforking.
-
-> The problem is, even ^Z can "hang" if the foreground process does vfork()
-> and the new child stops before exit/exec. Now I recall that I even tried
-> to make a patch to fix this using ERESTART_RESTARTBLOCK, but had some nasty
-> problems with blocked signals...
-
-Ugh... yeah, these wait non-interruptible wait sites which can be
-exposed to userspace are nasty.  They end up adding a unique wait
-state visible to userspace which comes with a bunch of corner cases.
-
-> de_thread() should use freezable_schedule() in TASK_KILLABLE too. Currently
-> it doesn't, but only because we have other (much more serious) problems with
-> cred_guard_mutex/exec. However, this is is fine wrt cg freezer, other threads
-> can't be frozen exactly because it is killable.
+> On Wed, Feb 27, 2019 at 11:05:44AM +0300, Konstantin Khlebnikov wrote:
+>> Unlike to memory cgroup blkio throttler does not support value suffixes.
+>>
+>> It silently ignores everything after last digit. For example this command
+>> will set rate limit 1 byte per second rather than 1 megabyte per second:
+>>
+>> # echo "7:0 1M" > blkio.throttle.read_bps_device
+>> # cat blkio.throttle.read_bps_device
+>> 7:0 1
+>>
+>> Cgroup2 interface has the same flaw:
+>>
+>> # echo "7:0 rbps=1M" > io.max
+>> # cat io.max
+>> 7:0 rbps=1 wbps=max riops=max wiops=max
+>>
+>> Also sscanf does not care much about overflows.
+>>
+>> This patch uses modern function kstrtou64 for parsing.
+>> It rejects trailing garbage and detects integer overflows.
+>>
+>> Also this patch handles iops limit overflows for cgroup-v1 in the same as
+>> cgroup-v2: limits >= UINT_MAX becomes unlimited.
+>>
+>> Fixes: 2ee867dcfa2e ("blkcg: implement interface for the unified hierarchy")
+>> Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
 > 
-> Anything else does freezer_do_not_count() in TASK_KILLABLE and waits for
-> another freezable process?
+> So, I'd much rather keep the parsing implementations simple.  Unless
+> there's a correctness problem (you mentioned overflowing, how would
+> that happen?), the simpler the better.  I don't think the kernel needs
+> to be in the business of strict input verification here.
 
-Can't find any.  Hopefully, that was it?
+This is inconsistency between controllers. IO controller should either
+accept size suffixes or reject them. Ignoring garbage is not an option.
+To be honest, I've successfully shot in the foot by bps limit "1M".
 
-> So it seems I have to take my words back, perhaps we can forget about
-> freezable_schedule/etc.
+Integer overflows are happens when userspace software uses floats for data
+representation and calculations. This way values bigger than 2^32-1 or
+2^64-1 could appear easily in text representation.
 
-I think it'd be great to be able to handle these if at all possible.
+Almost all integer knobs in sysctl and sysfs use modern kstrtoXX functions
+with strict validation of format and overflows.
 
-Thanks.
-
--- 
-tejun
+> 
+> Thanks.
+> 
