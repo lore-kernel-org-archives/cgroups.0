@@ -1,7 +1,7 @@
-From: Peter Xu <peterx@redhat.com>
+From: Mike Rapoport <rppt@linux.ibm.com>
 Subject: Re: KASAN: use-after-free Read in get_mem_cgroup_from_mm
-Date: Wed, 6 Mar 2019 16:12:01 +0800
-Message-ID: <20190306081201.GC11093@xz-x1>
+Date: Wed, 6 Mar 2019 10:20:07 +0200
+Message-ID: <20190306082006.GB3549@rapoport-lnx>
 References: <CACT4Y+Z+CH0UTdSz-w_woMPrBwg-GuobV1Su4qd9ReffTkyfVg@mail.gmail.com>
  <5C7D2F82.40907@huawei.com>
  <CACT4Y+agwaszODNGJHCqn4fSk4Le9exn3Cau0nornJ0RaTpDJw@mail.gmail.com>
@@ -21,7 +21,7 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: zhong jiang <zhongjiang@huawei.com>
-Cc: Mike Rapoport <rppt@linux.ibm.com>, Andrea Arcangeli <aarcange@redhat.com>, Dmitry Vyukov <dvyukov@google.com>, syzbot <syzbot+cbb52e396df3e565ab02@syzkaller.appspotmail.com>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Matthew Wilcox <willy@infradead.org>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>, Mike Rapoport <rppt@linux.vnet.ibm.com>
+Cc: Andrea Arcangeli <aarcange@redhat.com>, Dmitry Vyukov <dvyukov@google.com>, syzbot <syzbot+cbb52e396df3e565ab02@syzkaller.appspotmail.com>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Matthew Wilcox <willy@infradead.org>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>, Mike Rapoport <rppt@linux.vnet.ibm.com>, Peter Xu <peterx@redhat.com>
 
 On Wed, Mar 06, 2019 at 03:41:06PM +0800, zhong jiang wrote:
 > On 2019/3/6 14:26, Mike Rapoport wrote:
@@ -113,9 +113,6 @@ On Wed, Mar 06, 2019 at 03:41:06PM +0800, zhong jiang wrote:
 > >                                 |       /* access stale mm->owner */
 > >  
 > Hi, Mike
-
-Hi, Zhong,
-
 > 
 > forking thread fails to create the process ,and then free the allocated task struct.
 > Other userfaultfd monitor thread should not access the stale mm->owner.
@@ -123,14 +120,16 @@ Hi, Zhong,
 > The parent process and child process do not share the mm struct.  Userfaultfd monitor thread's
 > mm->owner should not point to the freed child task_struct.
 
-IIUC the problem is that above mm (of the mm->owner) is the child
-process's mm rather than the uffd monitor's.  When
-dup_userfaultfd_complete() is called there will be a new userfaultfd
-context sent to the uffd monitor thread which linked to the chlid
-process's mm, and if the monitor thread do UFFDIO_COPY upon the newly
-received userfaultfd it'll operate on that new mm too.
+Userfaultfd can monitor remote mm's [1]. In this case, dup_userfaultfd() and
+dup_userfaultfd_complete() create uffd context for the new process and
+notify userspace uffd monitor about this new context. The uffd monitor then
+can perform uffd operations on the new context.
 
-> 
+On the right side the mmget_not_zero() will take the reference for the mm of the newly
+created process.
+
+[1] https://www.kernel.org/doc/html/latest/admin-guide/mm/userfaultfd.html#non-cooperative-userfaultfd
+ 
 > and due to the existence of tasklist_lock,  we can not specify the mm->owner to freed task_struct.
 > 
 > I miss something,=-O
@@ -142,7 +141,7 @@ received userfaultfd it'll operate on that new mm too.
 > 
 > 
 
-Regards,
-
 -- 
-Peter Xu
+Sincerely yours,
+Mike.
+
