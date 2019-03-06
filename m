@@ -1,41 +1,75 @@
 From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Subject: [PATCH] sched/core: fix buffer overflow in cgroup2 property cpu.max
-Date: Wed, 06 Mar 2019 20:11:42 +0300
-Message-ID: <155189230232.2620.13120481613524200065.stgit@buzz>
+Subject: Re: [PATCH] sched/core: check format and overflows in cgroup2 cpu.max
+Date: Wed, 6 Mar 2019 20:21:40 +0300
+Message-ID: <7c418d64-734e-000c-052a-f6fc59fdcf8e@yandex-team.ru>
+References: <155125520155.293746.7017401430432481979.stgit@buzz>
+ <20190305155741.GD50184@devbig004.ftw2.facebook.com>
+ <4c0f1d90-b147-e1cd-20c1-0cdd869f4f15@yandex-team.ru>
+ <20190306161154.GF50184@devbig004.ftw2.facebook.com>
+ <20190306164825.GY32477@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-        t=1551892304; bh=N4pJuOAOM/HjAH7jthQtu7ug1NWBtPIhc7uNuJlsls8=;
-        h=Message-ID:Date:To:From:Subject:Cc;
-        b=L64b7S4Idl4iBSHfy4E3Cej6Fn8IsgExIzcoXbnkKR17KlxmuGRkSo7+3iAwj1ypo
-         25rpzukurur/tlRWHD5CiGOXiOKaz8tIBgPpFxL8BuTnGHtZhIjOzIBGz06AfUAcoI
-         88ARSg0KDwOOeeE7xy8uunc4RIJ3giniuyE+rL9A=
+        t=1551892901; bh=svhR2/tX9+r+vH6MDX+JmfKjG9q28BbX70lOscStCEg=;
+        h=In-Reply-To:Message-ID:From:Date:References:To:Subject:Cc;
+        b=XbZJbzsUScdF1Bru+p5YH3fAQqaUh3dopdNAc45dKqWZt+9eVJwYi0IhrHGbIDIJT
+         +oCud92s/7dxdlYTWWXoxUJao4sJTQ0OKwQd7y80lK38X+ygxfJ2lxyhv1kYAzFbPg
+         EBkYNDHG6mq7U1fdQNr5pfaJy0lxq3Y4IpzmD0FI=
+In-Reply-To: <20190306164825.GY32477@hirez.programming.kicks-ass.net>
+Content-Language: en-CA
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, linux-kernel@vger.kernel.org
-Cc: cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Ingo Molnar <mingo@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Peter Zijlstra <peterz@infradead.org>, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>
 
-Add limit into sscanf format string for on-stack buffer.
+On 06.03.2019 19:48, Peter Zijlstra wrote:
+> On Wed, Mar 06, 2019 at 08:11:54AM -0800, Tejun Heo wrote:
+>> Hello, Konstantin.
+>>
+>> On Tue, Mar 05, 2019 at 08:03:24PM +0300, Konstantin Khlebnikov wrote:
+>>>> Ditto as the blkio patch.  Unless there is a correctness problem, my
+>>>> preference is towards keeping the parsing functions simple and I don't
+>>>> think the kernel needs to play the role of strict input verifier here
+>>>> as long as the only foot getting shot is the user's own.
+>>>
+>>> IMHO non-strict interface more likely hides bugs and could cause
+>>> problems for future changes.
+>>>
+>>> Here is only only one fatal bug - buffer overflow in sscanf because
+>>> %s has no limit.
+>>
+>> Ah, indeed.  Can you please post a patch to fix that problem first?
 
-Fixes: 0d5936344f30 ("sched: Implement interface for cgroup unified hierarchy")
-Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
----
- kernel/sched/core.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Done.
+Please see [PATCH] sched/core: fix buffer overflow in cgroup2 property cpu.max
 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 43f44539b88f..3971bc62521d 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -6968,7 +6968,7 @@ static int __maybe_unused cpu_period_quota_parse(char *buf,
- {
- 	char tok[21];	/* U64_MAX */
- 
--	if (!sscanf(buf, "%s %llu", tok, periodp))
-+	if (sscanf(buf, "%20s %llu", tok, periodp) < 1)
- 		return -EINVAL;
- 
- 	*periodp *= NSEC_PER_USEC;
+>>
+>>> Strict validation could be done as more strict sscanf variant or
+>>> some kind of extension for format string.
+>>
+>> I don't necessarily disagree with you; however, what often ends up
+>> with these manually crafted parsing approach are 1. code which is
+>> unnecessarily difficult to follow 2. different subset of validations
+>> and parsing bugs (of course) everywhere.
+>>
+>> Given the above, I tend to lean towards dump sscanf() parsing.  If we
+>> wanna improve the situation, I think the right thing to do is either
+>> improving sscanf or introducing new helpers to parse these things
+>> rather than hand-crafting each site.  It is really error-prone.
 
+I'm playing with sscanf right now.
+
+Both problems (integer overflows and matching end of string)
+are relatively easy to fix without breaking sane compatibility.
+
+> 
+> Always use a field width specifier with %s.  Which is exactly what the
+> proposed patch did IIRC.
+> 
+> Maybe that's something checkpatch could warn about.
+> 
+
+This could be done mandatory.
+In-kernel sscanf always requires width for "%[...]".
