@@ -1,143 +1,62 @@
-From: zhong jiang <zhongjiang@huawei.com>
-Subject: Re: KASAN: use-after-free Read in get_mem_cgroup_from_mm
-Date: Wed, 6 Mar 2019 21:07:00 +0800
-Message-ID: <5C7FC5F4.40903@huawei.com>
-References: <CACT4Y+Z+CH0UTdSz-w_woMPrBwg-GuobV1Su4qd9ReffTkyfVg@mail.gmail.com> <5C7D2F82.40907@huawei.com> <CACT4Y+agwaszODNGJHCqn4fSk4Le9exn3Cau0nornJ0RaTpDJw@mail.gmail.com> <5C7D4500.3070607@huawei.com> <CACT4Y+b6y_3gTpR8LvNREHOV0TP7jB=Zp1L03dzpaz_SaeESng@mail.gmail.com> <5C7E1A38.2060906@huawei.com> <20190306020540.GA23850@redhat.com> <5C7F6048.2050802@huawei.com> <20190306062625.GA3549@rapoport-lnx> <5C7F7992.7050806@huawei.com> <20190306081201.GC11093@xz-x1>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] sched/core: check format and overflows in cgroup2 cpu.max
+Date: Wed, 6 Mar 2019 08:11:54 -0800
+Message-ID: <20190306161154.GF50184@devbig004.ftw2.facebook.com>
+References: <155125520155.293746.7017401430432481979.stgit@buzz>
+ <20190305155741.GD50184@devbig004.ftw2.facebook.com>
+ <4c0f1d90-b147-e1cd-20c1-0cdd869f4f15@yandex-team.ru>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190306081201.GC11093@xz-x1>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=j2ShychGTMUsUT8Zfh0SFhrOWqGhIAMgWTkjKkiV4qg=;
+        b=L7gfRNkxcA5vWx7QJVX4sBp0N3pcNjxGTwMViloTi6CFxQyN0OjRLX90j18nNi2Kyn
+         itmCaheEvuQKqTP+5l/5PBBRR8GSXDjGrkwxpYcZCFr+K/f3kNa/Wuacyh6M2k/Gr8XX
+         g/RgwSGKcBq04OJi++uh7hFLDLhzk7YV4QjXy3ggHqTCzWjLWP00cLz1CWqPl2hArcYm
+         pwAZNDuUSxdTbTiS20+K0nFEp9AK8ZG7KcIIlS5cQL7L5qESyGaB248LrhpcceSL1n/P
+         sHaSeUdasPc1VDzhNd0N88XQO8z+DnUQtEQl18RwGoUsWYmKzn+bD/WiZC3DuBqpSk2t
+         pWJg==
+Content-Disposition: inline
+In-Reply-To: <4c0f1d90-b147-e1cd-20c1-0cdd869f4f15@yandex-team.ru>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Xu <peterx@redhat.com>, Mike Rapoport <rppt@linux.ibm.com>, Andrea Arcangeli <aarcange@redhat.com>
-Cc: Dmitry Vyukov <dvyukov@google.com>, syzbot <syzbot+cbb52e396df3e565ab02@syzkaller.appspotmail.com>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Matthew Wilcox <willy@infradead.org>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>, Mike Rapoport <rppt@linux.vnet.ibm.com>
+Content-Transfer-Encoding: 7bit
+To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Cc: Peter Zijlstra <peterz@infradead.org>, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>
 
-On 2019/3/6 16:12, Peter Xu wrote:
-> On Wed, Mar 06, 2019 at 03:41:06PM +0800, zhong jiang wrote:
->> On 2019/3/6 14:26, Mike Rapoport wrote:
->>> Hi,
->>>
->>> On Wed, Mar 06, 2019 at 01:53:12PM +0800, zhong jiang wrote:
->>>> On 2019/3/6 10:05, Andrea Arcangeli wrote:
->>>>> Hello everyone,
->>>>>
->>>>> [ CC'ed Mike and Peter ]
->>>>>
->>>>> On Tue, Mar 05, 2019 at 02:42:00PM +0800, zhong jiang wrote:
->>>>>> On 2019/3/5 14:26, Dmitry Vyukov wrote:
->>>>>>> On Mon, Mar 4, 2019 at 4:32 PM zhong jiang <zhongjiang@huawei.com> wrote:
->>>>>>>> On 2019/3/4 22:11, Dmitry Vyukov wrote:
->>>>>>>>> On Mon, Mar 4, 2019 at 3:00 PM zhong jiang <zhongjiang@huawei.com> wrote:
->>>>>>>>>> On 2019/3/4 15:40, Dmitry Vyukov wrote:
->>>>>>>>>>> On Sun, Mar 3, 2019 at 5:19 PM zhong jiang <zhongjiang@huawei.com> wrote:
->>>>>>>>>>>> Hi, guys
->>>>>>>>>>>>
->>>>>>>>>>>> I also hit the following issue. but it fails to reproduce the issue by the log.
->>>>>>>>>>>>
->>>>>>>>>>>> it seems to the case that we access the mm->owner and deference it will result in the UAF.
->>>>>>>>>>>> But it should not be possible that we specify the incomplete process to be the mm->owner.
->>>>>>>>>>>>
->>>>>>>>>>>> Any thoughts?
->>>>>>>>>>> FWIW syzbot was able to reproduce this with this reproducer.
->>>>>>>>>>> This looks like a very subtle race (threaded reproducer that runs
->>>>>>>>>>> repeatedly in multiple processes), so most likely we are looking for
->>>>>>>>>>> something like few instructions inconsistency window.
->>>>>>>>>>>
->>>>>>>>>> I has a little doubtful about the instrustions inconsistency window.
->>>>>>>>>>
->>>>>>>>>> I guess that you mean some smb barriers should be taken into account.:-)
->>>>>>>>>>
->>>>>>>>>> Because IMO, It should not be the lock case to result in the issue.
->>>>>>>>> Since the crash was triggered on x86 _most likley_ this is not a
->>>>>>>>> missed barrier. What I meant is that one thread needs to executed some
->>>>>>>>> code, while another thread is stopped within few instructions.
->>>>>>>>>
->>>>>>>>>
->>>>>>>> It is weird and I can not find any relationship you had said with the issue.:-(
->>>>>>>>
->>>>>>>> Because It is the cause that mm->owner has been freed, whereas we still deference it.
->>>>>>>>
->>>>>>>> From the lastest freed task call trace, It fails to create process.
->>>>>>>>
->>>>>>>> Am I miss something or I misunderstand your meaning. Please correct me.
->>>>>>> Your analysis looks correct. I am just saying that the root cause of
->>>>>>> this use-after-free seems to be a race condition.
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>> Yep, Indeed,  I can not figure out how the race works. I will dig up further.
->>>>> Yes it's a race condition.
->>>>>
->>>>> We were aware about the non-cooperative fork userfaultfd feature
->>>>> creating userfaultfd file descriptor that gets reported to the parent
->>>>> uffd, despite they belong to mm created by failed forks.
->>>>>
->>>>> https://www.spinics.net/lists/linux-mm/msg136357.html
->>>>>
->>>> Hi, Andrea
->>>>
->>>> I still not clear why uffd ioctl can use the incomplete process as the mm->owner.
->>>> and how to produce the race.
->>> There is a C reproducer in  the syzcaller report:
->>>
->>> https://syzkaller.appspot.com/x/repro.c?x=172fa5a3400000
->>>  
->>>> From your above explainations,   My underdtanding is that the process handling do_exexve
->>>> will have a temporary mm,  which will be used by the UUFD ioctl.
->>> The race is between userfaultfd operation and fork() failure:
->>>
->>> forking thread                  | userfaultfd monitor thread
->>> --------------------------------+-------------------------------
->>> fork()                          |
->>>   dup_mmap()                    |
->>>     dup_userfaultfd()           |
->>>     dup_userfaultfd_complete()  |
->>>                                 |  read(UFFD_EVENT_FORK)
->>>                                 |  uffdio_copy()
->>>                                 |    mmget_not_zero()
->>>     goto bad_fork_something     |
->>>     ...                         |
->>> bad_fork_free:                  |
->>>       free_task()               |
->>>                                 |  mem_cgroup_from_task()
->>>                                 |       /* access stale mm->owner */
->>>  
->> Hi, Mike
-> Hi, Zhong,
->
->> forking thread fails to create the process ,and then free the allocated task struct.
->> Other userfaultfd monitor thread should not access the stale mm->owner.
->>
->> The parent process and child process do not share the mm struct.  Userfaultfd monitor thread's
->> mm->owner should not point to the freed child task_struct.
-> IIUC the problem is that above mm (of the mm->owner) is the child
-> process's mm rather than the uffd monitor's.  When
-> dup_userfaultfd_complete() is called there will be a new userfaultfd
-> context sent to the uffd monitor thread which linked to the chlid
-> process's mm, and if the monitor thread do UFFDIO_COPY upon the newly
-> received userfaultfd it'll operate on that new mm too.
-Thank Mike and Peter for further explanation. I get it.
+Hello, Konstantin.
 
-Yes, The race indeed will result in the issue.
+On Tue, Mar 05, 2019 at 08:03:24PM +0300, Konstantin Khlebnikov wrote:
+> >Ditto as the blkio patch.  Unless there is a correctness problem, my
+> >preference is towards keeping the parsing functions simple and I don't
+> >think the kernel needs to play the role of strict input verifier here
+> >as long as the only foot getting shot is the user's own.
+> 
+> IMHO non-strict interface more likely hides bugs and could cause
+> problems for future changes.
+> 
+> Here is only only one fatal bug - buffer overflow in sscanf because
+> %s has no limit.
 
-but as for the patch Andrea has posted. I still has a little worry.
+Ah, indeed.  Can you please post a patch to fix that problem first?
 
-The patch use call_rcu to delay free the task_struct, but It is possible to free the task_struct
-ahead of get_mem_cgroup_from_mm. is it right?
+> Strict validation could be done as more strict sscanf variant or
+> some kind of extension for format string.
 
-Thanks,
-zhong jiang
->> and due to the existence of tasklist_lock,  we can not specify the mm->owner to freed task_struct.
->>
->> I miss something,=-O
->>
->> Thanks,
->> zhong jiang
->>>> Thanks,
->>>> zhong jiang
->>
-> Regards,
->
+I don't necessarily disagree with you; however, what often ends up
+with these manually crafted parsing approach are 1. code which is
+unnecessarily difficult to follow 2. different subset of validations
+and parsing bugs (of course) everywhere.
 
+Given the above, I tend to lean towards dump sscanf() parsing.  If we
+wanna improve the situation, I think the right thing to do is either
+improving sscanf or introducing new helpers to parse these things
+rather than hand-crafting each site.  It is really error-prone.
 
+Thanks.
+
+-- 
+tejun
