@@ -1,63 +1,81 @@
-From: Andrea Arcangeli <aarcange@redhat.com>
-Subject: Re: KASAN: use-after-free Read in get_mem_cgroup_from_mm
-Date: Wed, 6 Mar 2019 13:29:44 -0500
-Message-ID: <20190306182944.GE23850@redhat.com>
-References: <CACT4Y+agwaszODNGJHCqn4fSk4Le9exn3Cau0nornJ0RaTpDJw@mail.gmail.com>
- <5C7D4500.3070607@huawei.com>
- <CACT4Y+b6y_3gTpR8LvNREHOV0TP7jB=Zp1L03dzpaz_SaeESng@mail.gmail.com>
- <5C7E1A38.2060906@huawei.com>
- <20190306020540.GA23850@redhat.com>
- <5C7F6048.2050802@huawei.com>
- <20190306062625.GA3549@rapoport-lnx>
- <5C7F7992.7050806@huawei.com>
- <20190306081201.GC11093@xz-x1>
- <5C7FC5F4.40903@huawei.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] cgroup changes for v5.1-rc1
+Date: Wed, 6 Mar 2019 10:41:53 -0800
+Message-ID: <20190306184153.GI50184@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=wWCXir4r1pXpp0Hmlieqg9dse5cFF3K/PCHaVFhMfhQ=;
+        b=tRFLglF0sRpWn57v0VTg/oj/p1a+1b2gTkJcO76E9XuUyIu1KSElPmoDfq+o5uo+2Z
+         HEKfjhTMkBEO7AY14hcLp8M12DnSF8HP7LTWLOALgLYKoAAXoerB0IjirLdFxWxnZwPN
+         GkExV8yLjuT3HwlLs1nuJfdJU1C0Vu4MvtHk+tch5PtjVkTteupp3cH5HAO4uCePDy7w
+         EggH+bUSFlHd8dRaG9jdViZhR26eqj43gQ5A+zTOG3aD0XiHn+LJgf8XG6oJ/ZzwMJvw
+         K4t36jIyNtk6PQDigVaWwf2Xog3PENqkgB31LsJEbqiZVcyafHnAPzay4aKM/8Xvkl/h
+         MZyw==
 Content-Disposition: inline
-In-Reply-To: <5C7FC5F4.40903@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: zhong jiang <zhongjiang@huawei.com>
-Cc: Peter Xu <peterx@redhat.com>, Mike Rapoport <rppt@linux.ibm.com>, Dmitry Vyukov <dvyukov@google.com>, syzbot <syzbot+cbb52e396df3e565ab02@syzkaller.appspotmail.com>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Matthew Wilcox <willy@infradead.org>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>, Mike Rapoport <rppt@linux.vnet.ibm.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello Zhong,
+Hello, Linus.
 
-On Wed, Mar 06, 2019 at 09:07:00PM +0800, zhong jiang wrote:
-> The patch use call_rcu to delay free the task_struct, but It is possible to free the task_struct
-> ahead of get_mem_cgroup_from_mm. is it right?
+* Oleg's pids controller accounting update which gets rid of rcu delay
+  in pids accounting updates.
 
-Yes it is possible to free before get_mem_cgroup_from_mm, but if it's
-freed before get_mem_cgroup_from_mm rcu_read_lock,
-rcu_dereference(mm->owner) will return NULL in such case and there
-will be no problem.
+* rstat (cgroup hierarchical stat collection mechanism) optimization.
 
-The simple fix also clears the mm->owner of the failed-fork-mm before
-doing the call_rcu. The call_rcu delays the freeing after no other CPU
-runs in between rcu_read_lock/unlock anymore. That guarantees that
-those critical section will see mm->owner == NULL if the freeing of
-the task strut already happened.
+* Doc updates.
 
-The solution Mike suggested for this and that we were wondering as
-ideal in the past for the signal issue too, is to move the uffd
-delivery at a point where fork is guaranteed to succeed. We should
-probably try that too to see how it looks like and if it can be done
-in a not intrusive way, but the simple fix that uses RCU should work
-too.
+Thanks.
 
-Rolling back in case of errors inside fork itself isn't easily doable:
-the moment we push the uffd ctx to the other side of the uffd pipe
-there's no coming back as that information can reach the userland of
-the uffd monitor/reader thread immediately after. The rolling back is
-really the other thread failing at mmget_not_zero eventually. It's the
-userland that has to rollback in such case when it gets a -ESRCH
-retval.
+The following changes since commit af0c9af1b3f66052c369d08be3f60fa9a9559e48:
 
-Note that this fork feature is only ever needed in the non-cooperative
-case, these things never need to happen when userfaultfd is used by an
-app (or a lib) that is aware that it is using userfaultfd.
+  fs/dcache: Track & report number of negative dentries (2019-01-30 11:02:11 -0800)
 
-Thanks,
-Andrea
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.1
+
+for you to fetch changes up to 6a613d24effcb875271b8a1c510172e2d6eaaee8:
+
+  cpuset: remove unused task_has_mempolicy() (2019-02-19 06:26:02 -0800)
+
+----------------------------------------------------------------
+Andrea Parri (1):
+      MAINTAINERS: Update cgroup entry
+
+Masahiro Yamada (1):
+      cpuset: remove unused task_has_mempolicy()
+
+Oleg Nesterov (1):
+      cgroup/pids: turn cgroup_subsys->free() into cgroup_subsys->release() to fix the accounting
+
+Randy Dunlap (1):
+      Documentation: cgroup-v2: eliminate markup warnings
+
+Tejun Heo (1):
+      cgroup, rstat: Don't flush subtree root unless necessary
+
+Tibor Billes (1):
+      cgroup: add documentation for pids.events file
+
+ Documentation/admin-guide/cgroup-v2.rst |  2 +-
+ Documentation/cgroup-v1/pids.txt        |  3 +++
+ MAINTAINERS                             |  5 +++--
+ include/linux/cgroup-defs.h             |  2 +-
+ include/linux/cgroup.h                  |  2 ++
+ kernel/cgroup/cgroup.c                  | 15 +++++++++------
+ kernel/cgroup/cpuset.c                  | 13 -------------
+ kernel/cgroup/pids.c                    |  4 ++--
+ kernel/cgroup/rstat.c                   | 10 ++++++----
+ kernel/exit.c                           |  1 +
+ 10 files changed, 28 insertions(+), 29 deletions(-)
+
+-- 
+tejun
