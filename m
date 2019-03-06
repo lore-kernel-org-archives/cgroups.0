@@ -1,41 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] sched/core: fix buffer overflow in cgroup2 property
- cpu.max
-Date: Wed, 6 Mar 2019 10:07:19 -0800
-Message-ID: <20190306180719.GG50184@devbig004.ftw2.facebook.com>
-References: <155189230232.2620.13120481613524200065.stgit@buzz>
+From: Andrea Arcangeli <aarcange@redhat.com>
+Subject: Re: KASAN: use-after-free Read in get_mem_cgroup_from_mm
+Date: Wed, 6 Mar 2019 13:29:44 -0500
+Message-ID: <20190306182944.GE23850@redhat.com>
+References: <CACT4Y+agwaszODNGJHCqn4fSk4Le9exn3Cau0nornJ0RaTpDJw@mail.gmail.com>
+ <5C7D4500.3070607@huawei.com>
+ <CACT4Y+b6y_3gTpR8LvNREHOV0TP7jB=Zp1L03dzpaz_SaeESng@mail.gmail.com>
+ <5C7E1A38.2060906@huawei.com>
+ <20190306020540.GA23850@redhat.com>
+ <5C7F6048.2050802@huawei.com>
+ <20190306062625.GA3549@rapoport-lnx>
+ <5C7F7992.7050806@huawei.com>
+ <20190306081201.GC11093@xz-x1>
+ <5C7FC5F4.40903@huawei.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=MoZymIeYpEA3JH5PffWyHNM38vDeCAjiLx3pLK1x8l8=;
-        b=KQk0ceeQM4K+MkwMcJQYLre2G1RYJpVpVisWfCktSy0qjCYEUhtEIR2nDix5IzCrJT
-         ODz7xOVwQqmJs0FujdRPCbuSWqE8dksbzWMhWNb+5q4ovQnxvwtYn9epb7V34UImQ9WH
-         0VAp8KH32TYjxtnpkrRkTQIf7m5Ns0kCt+Tld8ScKtCf5J1h8xmLDW9KMlfKTZJKX7Aq
-         sUrPqjlqPntBpt3V93NJQMerD80bRlcmOkp7AS9perFdSsvb7p5eUtPOUNZ1yHnVrXYD
-         rzWHcXVmEdJmxc0OKmDCADJh74Tjy4cMCo9fCa1K7loJubBHJ1SRDw4b0cXESh6wRa7o
-         JIkQ==
 Content-Disposition: inline
-In-Reply-To: <155189230232.2620.13120481613524200065.stgit@buzz>
+In-Reply-To: <5C7FC5F4.40903@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Cc: "Peter Zijlstra (Intel)" <peterz@infradead.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Ingo Molnar <mingo@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: zhong jiang <zhongjiang@huawei.com>
+Cc: Peter Xu <peterx@redhat.com>, Mike Rapoport <rppt@linux.ibm.com>, Dmitry Vyukov <dvyukov@google.com>, syzbot <syzbot+cbb52e396df3e565ab02@syzkaller.appspotmail.com>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Matthew Wilcox <willy@infradead.org>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>, Mike Rapoport <rppt@linux.vnet.ibm.com>
 
-On Wed, Mar 06, 2019 at 08:11:42PM +0300, Konstantin Khlebnikov wrote:
-> Add limit into sscanf format string for on-stack buffer.
-> 
-> Fixes: 0d5936344f30 ("sched: Implement interface for cgroup unified hierarchy")
-> Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Hello Zhong,
 
-Acked-by: Tejun Heo <tj@kernel.org>
+On Wed, Mar 06, 2019 at 09:07:00PM +0800, zhong jiang wrote:
+> The patch use call_rcu to delay free the task_struct, but It is possible to free the task_struct
+> ahead of get_mem_cgroup_from_mm. is it right?
 
-Thanks and I look forward to the sscanf improvements.  That'd be
-really nice to have.
+Yes it is possible to free before get_mem_cgroup_from_mm, but if it's
+freed before get_mem_cgroup_from_mm rcu_read_lock,
+rcu_dereference(mm->owner) will return NULL in such case and there
+will be no problem.
 
--- 
-tejun
+The simple fix also clears the mm->owner of the failed-fork-mm before
+doing the call_rcu. The call_rcu delays the freeing after no other CPU
+runs in between rcu_read_lock/unlock anymore. That guarantees that
+those critical section will see mm->owner == NULL if the freeing of
+the task strut already happened.
+
+The solution Mike suggested for this and that we were wondering as
+ideal in the past for the signal issue too, is to move the uffd
+delivery at a point where fork is guaranteed to succeed. We should
+probably try that too to see how it looks like and if it can be done
+in a not intrusive way, but the simple fix that uses RCU should work
+too.
+
+Rolling back in case of errors inside fork itself isn't easily doable:
+the moment we push the uffd ctx to the other side of the uffd pipe
+there's no coming back as that information can reach the userland of
+the uffd monitor/reader thread immediately after. The rolling back is
+really the other thread failing at mmget_not_zero eventually. It's the
+userland that has to rollback in such case when it gets a -ESRCH
+retval.
+
+Note that this fork feature is only ever needed in the non-cooperative
+case, these things never need to happen when userfaultfd is used by an
+app (or a lib) that is aware that it is using userfaultfd.
+
+Thanks,
+Andrea
