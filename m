@@ -1,81 +1,80 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] cgroup changes for v5.1-rc1
-Date: Wed, 6 Mar 2019 10:41:53 -0800
-Message-ID: <20190306184153.GI50184@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0
+From: Joel Savitz <jsavitz@redhat.com>
+Subject: [PATCH] cpuset: restore sanity to cpuset_cpus_allowed_fallback()
+Date: Wed,  6 Mar 2019 19:54:48 -0500
+Message-ID: <1551920088-30685-1-git-send-email-jsavitz@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=wWCXir4r1pXpp0Hmlieqg9dse5cFF3K/PCHaVFhMfhQ=;
-        b=tRFLglF0sRpWn57v0VTg/oj/p1a+1b2gTkJcO76E9XuUyIu1KSElPmoDfq+o5uo+2Z
-         HEKfjhTMkBEO7AY14hcLp8M12DnSF8HP7LTWLOALgLYKoAAXoerB0IjirLdFxWxnZwPN
-         GkExV8yLjuT3HwlLs1nuJfdJU1C0Vu4MvtHk+tch5PtjVkTteupp3cH5HAO4uCePDy7w
-         EggH+bUSFlHd8dRaG9jdViZhR26eqj43gQ5A+zTOG3aD0XiHn+LJgf8XG6oJ/ZzwMJvw
-         K4t36jIyNtk6PQDigVaWwf2Xog3PENqkgB31LsJEbqiZVcyafHnAPzay4aKM/8Xvkl/h
-         MZyw==
-Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Joel Savitz <jsavitz@redhat.com>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org
 
-Hello, Linus.
+If a process is limited by taskset (i.e. cpuset) to only be allowed to
+run on cpu N, and then cpu N is offlined via hotplug, the process will
+be assigned the current value of its cpuset cgroup's effective_cpus field
+in a call to do_set_cpus_allowed() in cpuset_cpus_allowed_fallback().
+This argument's value does not makes sense for this case, because
+task_cs(tsk)->effective_cpus is modified by cpuset_hotplug_workfn()
+to reflect the new value of cpu_active_mask after cpu N is removed from
+the mask. While this may make sense for the cgroup affinity mask, it
+does not make sense on a per-task basis, as a task that was previously
+limited to only be run on cpu N will be limited to every cpu _except_ for
+cpu N after it is offlined/onlined via hotplug.
 
-* Oleg's pids controller accounting update which gets rid of rcu delay
-  in pids accounting updates.
+Pre-patch behavior:
 
-* rstat (cgroup hierarchical stat collection mechanism) optimization.
+	$ grep Cpus /proc/$$/status
+	Cpus_allowed:	ff
+	Cpus_allowed_list:	0-7
 
-* Doc updates.
+	$ taskset -p 4 $$
+	pid 19202's current affinity mask: f
+	pid 19202's new affinity mask: 4
 
-Thanks.
+	$ grep Cpus /proc/self/status
+	Cpus_allowed:	04
+	Cpus_allowed_list:	2
 
-The following changes since commit af0c9af1b3f66052c369d08be3f60fa9a9559e48:
+	# echo off > /sys/devices/system/cpu/cpu2/online 
+	$ grep Cpus /proc/$$/status
+	Cpus_allowed:	0b
+	Cpus_allowed_list:	0-1,3
 
-  fs/dcache: Track & report number of negative dentries (2019-01-30 11:02:11 -0800)
+	# echo on > /sys/devices/system/cpu/cpu2/online 
+	$ grep Cpus /proc/$$/status
+	Cpus_allowed:	0b
+	Cpus_allowed_list:	0-1,3
 
-are available in the Git repository at:
+On a patched system, the final grep produces the following
+output instead:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.1
+	$ grep Cpus /proc/$$/status
+	Cpus_allowed:	ff
+	Cpus_allowed_list:	0-7
 
-for you to fetch changes up to 6a613d24effcb875271b8a1c510172e2d6eaaee8:
+This patch changes the above behavior by instead simply resetting the mask
+to cpu_possible_mask.
 
-  cpuset: remove unused task_has_mempolicy() (2019-02-19 06:26:02 -0800)
+Signed-off-by: Joel Savitz <jsavitz@redhat.com>
+---
+ kernel/cgroup/cpuset.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-----------------------------------------------------------------
-Andrea Parri (1):
-      MAINTAINERS: Update cgroup entry
-
-Masahiro Yamada (1):
-      cpuset: remove unused task_has_mempolicy()
-
-Oleg Nesterov (1):
-      cgroup/pids: turn cgroup_subsys->free() into cgroup_subsys->release() to fix the accounting
-
-Randy Dunlap (1):
-      Documentation: cgroup-v2: eliminate markup warnings
-
-Tejun Heo (1):
-      cgroup, rstat: Don't flush subtree root unless necessary
-
-Tibor Billes (1):
-      cgroup: add documentation for pids.events file
-
- Documentation/admin-guide/cgroup-v2.rst |  2 +-
- Documentation/cgroup-v1/pids.txt        |  3 +++
- MAINTAINERS                             |  5 +++--
- include/linux/cgroup-defs.h             |  2 +-
- include/linux/cgroup.h                  |  2 ++
- kernel/cgroup/cgroup.c                  | 15 +++++++++------
- kernel/cgroup/cpuset.c                  | 13 -------------
- kernel/cgroup/pids.c                    |  4 ++--
- kernel/cgroup/rstat.c                   | 10 ++++++----
- kernel/exit.c                           |  1 +
- 10 files changed, 28 insertions(+), 29 deletions(-)
-
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 479743db6c37..5f65a2167bdf 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -3243,7 +3243,7 @@ void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
+ void cpuset_cpus_allowed_fallback(struct task_struct *tsk)
+ {
+ 	rcu_read_lock();
+-	do_set_cpus_allowed(tsk, task_cs(tsk)->effective_cpus);
++	do_set_cpus_allowed(tsk, cpu_possible_mask);
+ 	rcu_read_unlock();
+ 
+ 	/*
 -- 
-tejun
+2.20.1
+
