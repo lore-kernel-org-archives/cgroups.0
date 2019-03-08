@@ -1,108 +1,63 @@
-From: Andrea Righi <andrea.righi@canonical.com>
-Subject: Re: [PATCH v2 3/3] blkcg: implement sync() isolation
-Date: Fri, 8 Mar 2019 08:39:50 +0100
-Message-ID: <20190308073950.GA6087@xps-13>
+From: Josef Bacik <josef@toxicpanda.com>
+Subject: Re: [PATCH v2 0/3] blkcg: sync() isolation
+Date: Fri, 8 Mar 2019 12:22:20 -0500
+Message-ID: <20190308172219.clcu6ehjav6y2hxi@MacBook-Pro-91.local>
 References: <20190307180834.22008-1-andrea.righi@canonical.com>
- <20190307180834.22008-4-andrea.righi@canonical.com>
- <20190307220659.5qmye2pxmto7nlei@macbook-pro-91.dhcp.thefacebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=JbH57hj38dbuvh9sgqbNRJMeCQlSikG1kcp1+esyKsE=;
+        b=BupmmeZkBGvKHTBw9Ba0knKotbsh2ucjHI0nGoWNbNfY/Vz5l98p4lh36/ATOGGIy/
+         9kATlqWal45/OVi5k69K+pOW61YgOyiLvZ6r0VrpTgcM+sOfWv88hoQebSU3FIik95m/
+         nqd7OdcTF0ygteH8C37NMIK2loiV2y+1untflcF5ccuY+lM7Ifx55dznXKhzRlE6DpzN
+         0oexkJ8SnQGCq+yKpGzbO4uUslVcAW+V7oupFlO+Lnf8/ZjjXcXnppBSPK4iRRUext12
+         wqA3iL83EOzC7Qf31kwEaU5WWO5d7OKXziWjufIToX8G26BQJNNAxiq2D1WEyceZLyho
+         bvsg==
 Content-Disposition: inline
-In-Reply-To: <20190307220659.5qmye2pxmto7nlei@macbook-pro-91.dhcp.thefacebook.com>
+In-Reply-To: <20190307180834.22008-1-andrea.righi@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Paolo Valente <paolo.valente@linaro.org>, Johannes Weiner <hannes@cmpxchg.org>, Jens Axboe <axboe@kernel.dk>, Vivek Goyal <vgoyal@redhat.com>, Dennis Zhou <dennis@kernel.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Andrea Righi <andrea.righi@canonical.com>
+Cc: Josef Bacik <josef@toxicpanda.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Paolo Valente <paolo.valente@linaro.org>, Johannes Weiner <hannes@cmpxchg.org>, Jens Axboe <axboe@kernel.dk>, Vivek Goyal <vgoyal@redhat.com>, Dennis Zhou <dennis@kernel.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On Thu, Mar 07, 2019 at 05:07:01PM -0500, Josef Bacik wrote:
-> On Thu, Mar 07, 2019 at 07:08:34PM +0100, Andrea Righi wrote:
-> > Keep track of the inodes that have been dirtied by each blkcg cgroup and
-> > make sure that a blkcg issuing a sync() can trigger the writeback + wait
-> > of only those pages that belong to the cgroup itself.
-> > 
-> > This behavior is applied only when io.sync_isolation is enabled in the
-> > cgroup, otherwise the old behavior is applied: sync() triggers the
-> > writeback of any dirty page.
-> > 
-> > Signed-off-by: Andrea Righi <andrea.righi@canonical.com>
-> > ---
-> >  block/blk-cgroup.c         | 47 ++++++++++++++++++++++++++++++++++
-> >  fs/fs-writeback.c          | 52 +++++++++++++++++++++++++++++++++++---
-> >  fs/inode.c                 |  1 +
-> >  include/linux/blk-cgroup.h | 22 ++++++++++++++++
-> >  include/linux/fs.h         |  4 +++
-> >  mm/page-writeback.c        |  1 +
-> >  6 files changed, 124 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-> > index 4305e78d1bb2..7d3b26ba4575 100644
-> > --- a/block/blk-cgroup.c
-> > +++ b/block/blk-cgroup.c
-> > @@ -1480,6 +1480,53 @@ void blkcg_stop_wb_wait_on_bdi(struct backing_dev_info *bdi)
-> >  	spin_unlock(&blkcg_wb_sleeper_lock);
-> >  	rcu_read_unlock();
-> >  }
-> > +
-> > +/**
-> > + * blkcg_set_mapping_dirty - set owner of a dirty mapping
-> > + * @mapping: target address space
-> > + *
-> > + * Set the current blkcg as the owner of the address space @mapping (the first
-> > + * blkcg that dirties @mapping becomes the owner).
-> > + */
-> > +void blkcg_set_mapping_dirty(struct address_space *mapping)
-> > +{
-> > +	struct blkcg *curr_blkcg, *blkcg;
-> > +
-> > +	if (mapping_tagged(mapping, PAGECACHE_TAG_WRITEBACK) ||
-> > +	    mapping_tagged(mapping, PAGECACHE_TAG_DIRTY))
-> > +		return;
-> > +
-> > +	rcu_read_lock();
-> > +	curr_blkcg = blkcg_from_current();
-> > +	blkcg = blkcg_from_mapping(mapping);
-> > +	if (curr_blkcg != blkcg) {
-> > +		if (blkcg)
-> > +			css_put(&blkcg->css);
-> > +		css_get(&curr_blkcg->css);
-> > +		rcu_assign_pointer(mapping->i_blkcg, curr_blkcg);
-> > +	}
-> > +	rcu_read_unlock();
-> > +}
-> > +
-> > +/**
-> > + * blkcg_set_mapping_clean - clear the owner of a dirty mapping
-> > + * @mapping: target address space
-> > + *
-> > + * Unset the owner of @mapping when it becomes clean.
-> > + */
-> > +
-> > +void blkcg_set_mapping_clean(struct address_space *mapping)
-> > +{
-> > +	struct blkcg *blkcg;
-> > +
-> > +	rcu_read_lock();
-> > +	blkcg = rcu_dereference(mapping->i_blkcg);
-> > +	if (blkcg) {
-> > +		css_put(&blkcg->css);
-> > +		RCU_INIT_POINTER(mapping->i_blkcg, NULL);
-> > +	}
-> > +	rcu_read_unlock();
-> > +}
-> >  #endif
-> >  
+On Thu, Mar 07, 2019 at 07:08:31PM +0100, Andrea Righi wrote:
+> = Problem =
 > 
-> Why do we need this?  We already have the inode_attach_wb(), which has the
-> blkcg_css embedded in it for whoever dirtied the inode first.  Can we not just
-> use that?  Thanks,
+> When sync() is executed from a high-priority cgroup, the process is forced to
+> wait the completion of the entire outstanding writeback I/O, even the I/O that
+> was originally generated by low-priority cgroups potentially.
 > 
-> Josef
+> This may cause massive latencies to random processes (even those running in the
+> root cgroup) that shouldn't be I/O-throttled at all, similarly to a classic
+> priority inversion problem.
+> 
+> This topic has been previously discussed here:
+> https://patchwork.kernel.org/patch/10804489/
+> 
 
-I'm realizing only now that inode_attach_wb() also has blkcg embedded
-in addition to the memcg. I think I can use that and drop these
-blkcg_set_mapping_dirty/clean()..
+Sorry to move the goal posts on you again Andrea, but Tejun and I talked about
+this some more offline.
 
-Thanks,
--Andrea
+We don't want cgroup to become the arbiter of correctness/behavior here.  We
+just want it to be isolating things.
+
+For you that means you can drop the per-cgroup flag stuff, and only do the
+priority boosting for multiple sync(2) waiters.  That is a real priority
+inversion that needs to be fixed.  io.latency and io.max are capable of noticing
+that a low priority group is going above their configured limits and putting
+pressure elsewhere accordingly.
+
+Tejun said he'd rather see the sync(2) isolation be done at the namespace level.
+That way if you have fs namespacing you are already isolated to your namespace.
+If you feel like tackling that then hooray, but that's a separate dragon to slay
+so don't feel like you have to right now.
+
+This way we keep cgroup doing its job, controlling resources.  Then we allow
+namespacing to do its thing, isolating resources.  Thanks,
+
+Josef
