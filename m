@@ -1,41 +1,47 @@
-From: Al Viro <viro@zeniv.linux.org.uk>
-Subject: Re: fs_context-related oops in mainline
-Date: Fri, 15 Mar 2019 14:51:55 +0000
-Message-ID: <20190315145155.GZ2217@ZenIV.linux.org.uk>
-References: <20190315121813.GY2217@ZenIV.linux.org.uk>
- <20190315074307.GA31430@light.dominikbrodowski.net>
- <3476.1552650285@warthog.procyon.org.uk>
- <20190315115002.GA9055@light.dominikbrodowski.net>
- <11428.1552659870@warthog.procyon.org.uk>
+From: Andrea Arcangeli <aarcange@redhat.com>
+Subject: Re: KASAN: use-after-free Read in get_mem_cgroup_from_mm
+Date: Fri, 15 Mar 2019 17:39:44 -0400
+Message-ID: <20190315213944.GD9967@redhat.com>
+References: <00000000000006457e057c341ff8@google.com>
+ <5C7BFE94.6070500@huawei.com>
+ <CACT4Y+Z+CH0UTdSz-w_woMPrBwg-GuobV1Su4qd9ReffTkyfVg@mail.gmail.com>
+ <5C7D2F82.40907@huawei.com>
+ <CACT4Y+agwaszODNGJHCqn4fSk4Le9exn3Cau0nornJ0RaTpDJw@mail.gmail.com>
+ <5C7D4500.3070607@huawei.com>
+ <CACT4Y+b6y_3gTpR8LvNREHOV0TP7jB=Zp1L03dzpaz_SaeESng@mail.gmail.com>
+ <5C7E1A38.2060906@huawei.com>
+ <20190306020540.GA23850@redhat.com>
+ <5C821550.50506@huawei.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <11428.1552659870@warthog.procyon.org.uk>
+In-Reply-To: <5C821550.50506@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Howells <dhowells@redhat.com>
-Cc: Dominik Brodowski <linux@dominikbrodowski.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, fenghua.yu@intel.com, linux-kernel@vger.kernel.org
+To: zhong jiang <zhongjiang@huawei.com>
+Cc: Mike Rapoport <rppt@linux.vnet.ibm.com>, Peter Xu <peterx@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Dmitry Vyukov <dvyukov@google.com>, syzbot <syzbot+cbb52e396df3e565ab02@syzkaller.appspotmail.com>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Matthew Wilcox <willy@infradead.org>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>
 
-On Fri, Mar 15, 2019 at 02:24:30PM +0000, David Howells wrote:
-> Al Viro <viro@zeniv.linux.org.uk> wrote:
+On Fri, Mar 08, 2019 at 03:10:08PM +0800, zhong jiang wrote:
+> I can reproduce the issue in arm64 qemu machine.  The issue will leave after applying the
+> patch.
 > 
-> > -	if (fc->user_ns)
-> > -		put_user_ns(fc->user_ns);
-> > -	fc->user_ns = get_user_ns(netns->user_ns);
-> > +	if (netns) {
-> > +		if (fc->user_ns)
-> > +			put_user_ns(fc->user_ns);
-> > +		fc->user_ns = get_user_ns(netns->user_ns);
-> > +	}
-> 
-> This begs the question why is sysfs using the current network namespace's idea
-> of the user namespace?  Why not just use the one directly from current->cred?
+> Tested-by: zhong jiang <zhongjiang@huawei.com>
 
-Because it gives access to that netns guts, presumably.  In a saner world sysfs
-wouldn't _have_ netns-dependent bits; a separate per-netns filesystem would
-contain those, and be mounted separately.  And yes, we do have way too many
-kinds of namespaces, along with filesystems that try to mix unrelated bits and
-lead to something that looks like Cthulhu's arse after an unfortunate
-accident with capsaicin suppository...
+Thanks a lot for the quick testing!
+
+> Meanwhile,  I just has a little doubt whether it is necessary to use RCU to free the task struct or not.
+> I think that mm->owner alway be NULL after failing to create to process. Because we call mm_clear_owner.
+
+I wish it was enough, but the problem is that the other CPU may be in
+the middle of get_mem_cgroup_from_mm() while this runs, and it would
+dereference mm->owner while it is been freed without the call_rcu
+affter we clear mm->owner. What prevents this race is the
+rcu_read_lock() in get_mem_cgroup_from_mm() and the corresponding
+call_rcu to free the task struct in the fork failure path (again only
+if CONFIG_MEMCG=y is defined). Considering you can reproduce this tiny
+race on arm64 qemu (perhaps tcg JIT timing variantions helps?), you
+might also in theory be able to still reproduce the race condition if
+you remove the call_rcu from delayed_free_task and you replace it with
+free_task.
