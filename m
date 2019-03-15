@@ -1,160 +1,77 @@
-From: Eric Biggers <ebiggers@kernel.org>
-Subject: Re: KASAN: null-ptr-deref Read in reclaim_high
-Date: Wed, 13 Mar 2019 11:16:50 -0700
-Message-ID: <20190313181649.GA10169@gmail.com>
-References: <0000000000001fd5780583d1433f@google.com>
- <20190311163747.f56cceebd9c2661e4519bdfc@linux-foundation.org>
- <CACT4Y+byKQSOCte3JS9XOnyr+aVSEFtBvLxG2-HUrZX3-82Hcg@mail.gmail.com>
- <20190311232541.db8571d2e3e0ca636785f31f@linux-foundation.org>
- <CACT4Y+Y0JdB-=yLLchw8icokn11iH2-XYoLJEOFKm6F88fJ3WQ@mail.gmail.com>
- <20190312225044.GB38846@gmail.com>
- <CACT4Y+a775wdkjQcsZTLG_Jr4k2gSXnOQF6ZTJDPOc-kvPG9Xw@mail.gmail.com>
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: fs_context-related oops in mainline
+Date: Fri, 15 Mar 2019 08:43:07 +0100
+Message-ID: <20190315074307.GA31430@light.dominikbrodowski.net>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1552501012;
-        bh=NBYWGtH9wtv5Jk1W5+17+1saO++Uar9ct/F9yhKpQZI=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=URSa0zmoebEWbGHKSEkWGzRrbEVoDmXu2HYX/iZre+2OIfJ8Rf6ZF4hULmOBmCzx+
-         dy74dBbaK4VuhVexHIJ4umpIejOh8BVmW5+BNhz6omfDdr4ANQpGl2fOdpBKYGgRlo
-         MrjBkIn1xE6P5zCFYEdVXhM1b2i+eQ/vGeSNGcRo=
 Content-Disposition: inline
-In-Reply-To: <CACT4Y+a775wdkjQcsZTLG_Jr4k2gSXnOQF6ZTJDPOc-kvPG9Xw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, syzbot <syzbot+fa11f9da42b46cea3b4a@syzkaller.appspotmail.com>, Cgroups <cgroups@vger.kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, Michal Hocko <mhocko@kernel.org>, Michal Hocko <mhocko@suse.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Shakeel Butt <shakeelb@google.com>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Vladimir Davydov <vdavydov.dev@gmail.com>
+To: David Howells <dhowells@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, fenghua.yu@intel.com, linux-kernel@vger.kernel.org
 
-On Wed, Mar 13, 2019 at 09:24:21AM +0100, 'Dmitry Vyukov' via syzkaller-bugs wrote:
-> On Tue, Mar 12, 2019 at 11:50 PM Eric Biggers <ebiggers@kernel.org> wrote:
-> >
-> > On Tue, Mar 12, 2019 at 09:33:44AM +0100, 'Dmitry Vyukov' via syzkaller-bugs wrote:
-> > > On Tue, Mar 12, 2019 at 7:25 AM Andrew Morton <akpm@linux-foundation.org> wrote:
-> > > >
-> > > > On Tue, 12 Mar 2019 07:08:38 +0100 Dmitry Vyukov <dvyukov@google.com> wrote:
-> > > >
-> > > > > On Tue, Mar 12, 2019 at 12:37 AM Andrew Morton
-> > > > > <akpm@linux-foundation.org> wrote:
-> > > > > >
-> > > > > > On Mon, 11 Mar 2019 06:08:01 -0700 syzbot <syzbot+fa11f9da42b46cea3b4a@syzkaller.appspotmail.com> wrote:
-> > > > > >
-> > > > > > > syzbot has bisected this bug to:
-> > > > > > >
-> > > > > > > commit 29a4b8e275d1f10c51c7891362877ef6cffae9e7
-> > > > > > > Author: Shakeel Butt <shakeelb@google.com>
-> > > > > > > Date:   Wed Jan 9 22:02:21 2019 +0000
-> > > > > > >
-> > > > > > >      memcg: schedule high reclaim for remote memcgs on high_work
-> > > > > > >
-> > > > > > > bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=155bf5db200000
-> > > > > > > start commit:   29a4b8e2 memcg: schedule high reclaim for remote memcgs on..
-> > > > > > > git tree:       linux-next
-> > > > > > > final crash:    https://syzkaller.appspot.com/x/report.txt?x=175bf5db200000
-> > > > > > > console output: https://syzkaller.appspot.com/x/log.txt?x=135bf5db200000
-> > > > > > > kernel config:  https://syzkaller.appspot.com/x/.config?x=611f89e5b6868db
-> > > > > > > dashboard link: https://syzkaller.appspot.com/bug?extid=fa11f9da42b46cea3b4a
-> > > > > > > userspace arch: amd64
-> > > > > > > syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=14259017400000
-> > > > > > > C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=141630a0c00000
-> > > > > > >
-> > > > > > > Reported-by: syzbot+fa11f9da42b46cea3b4a@syzkaller.appspotmail.com
-> > > > > > > Fixes: 29a4b8e2 ("memcg: schedule high reclaim for remote memcgs on
-> > > > > > > high_work")
-> > > > > >
-> > > > > > The following patch
-> > > > > > memcg-schedule-high-reclaim-for-remote-memcgs-on-high_work-v3.patch
-> > > > > > might have fixed this.  Was it applied?
-> > > > >
-> > > > > Hi Andrew,
-> > > > >
-> > > > > You mean if the patch was applied during the bisection?
-> > > > > No, it wasn't. Bisection is very specifically done on the same tree
-> > > > > where the bug was hit. There are already too many factors that make
-> > > > > the result flaky/wrong/inconclusive without changing the tree state.
-> > > > > Now, if syzbot would know about any pending fix for this bug, then it
-> > > > > would not do the bisection at all. But it have not seen any patch in
-> > > > > upstream/linux-next with the Reported-by tag, nor it received any syz
-> > > > > fix commands for this bugs. Should have been it aware of the fix? How?
-> > > >
-> > > > memcg-schedule-high-reclaim-for-remote-memcgs-on-high_work-v3.patch was
-> > > > added to linux-next on Jan 10.  I take it that this bug was hit when
-> > > > testing the entire linux-next tree, so we can assume that
-> > > > memcg-schedule-high-reclaim-for-remote-memcgs-on-high_work-v3.patch
-> > > > does not fix it, correct?
-> > > > In which case, over to Shakeel!
-> > >
-> > > Jan 10 is exactly when this bug was reported:
-> > > https://groups.google.com/forum/#!msg/syzkaller-bugs/5YkhNUg2PFY/4-B5M7bDCAAJ
-> > > https://syzkaller.appspot.com/bug?extid=fa11f9da42b46cea3b4a
-> > >
-> > > We don't know if that patch fixed the bug or not because nobody tested
-> > > the reproducer with that patch.
-> > >
-> > > It seems that the problem here is that nobody associated the fix with
-> > > the bug report. So people looking at open bug reports will spend time
-> > > again and again debugging this just to find that this was fixed months
-> > > ago. syzbot also doesn't have a chance to realize that this is fixed
-> > > and bisection is not necessary anymore. It also won't confirm/disprove
-> > > that the fix actually fixes the bug because even if the crash will
-> > > continue to happen it will look like the old crash just continues to
-> > > happen, so nothing to notify about.
-> > >
-> > > Associating fixes with bug reports solves all these problems for
-> > > humans and bots.
-> > >
-> >
-> > I think syzbot needs to be more aggressive about invalidating old bug reports on
-> > linux-next, e.g. automatically invalidate linux-next bugs that no longer occur
-> > after a few weeks even if there is a reproducer.  Patches get added, changed,
-> > and removed in linux-next every day.  Bugs that syzbot runs into on linux-next
-> > are often obvious enough that they get reported by other people too, resulting
-> > in bugs being fixed or dropped without people ever seeing the syzbot report.
-> > How do you propose that people associate fixes with syzbot reports when they
-> > never saw the syzbot report in the first place?
-> >
-> > This is a problem on mainline too, of course.  But we *know* it's a more severe
-> > problem on linux-next, and that a bug like this that only ever happened on
-> > linux-next and stopped happening 2 months ago, is much less likely to be
-> > relevant than a bug in mainline.  Kernel developers don't have time to examine
-> > every single syzbot report so you need to help them out by reducing the noise.
-> 
-> Please file an issue for this at https://github.com/google/syzkaller/issues
+David, Al,
 
-I filed https://github.com/google/syzkaller/issues/1054
+commit 23bf1b6be9c2 ("kernfs, sysfs, cgroup, intel_rdt: Support fs_context")
+seems to have introduced a bug; at least that's the commit I bisected the
+following oops down to:
 
-> 
-> I also wonder how does this work for all other kernel bugs reports?
-> syzbot is not the only one reporting kernel bugs and we don't want to
-> invent new rules here.
+[    0.827317] BUG: unable to handle kernel NULL pointer dereference at 0000000000000220
+[    0.829771] #PF error: [normal kernel read fault]
+[    0.831141] PGD 800000007f927067 P4D 800000007f927067 PUD 7f928067 PMD 0 
+[    0.833116] Oops: 0000 [#1] PREEMPT SMP PTI
+[    0.834330] CPU: 1 PID: 46 Comm: mount Tainted: G                T 5.0.0-rc2+ #38
+[    0.836478] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.12.0-20181126_142135-anatol 04/01/2014
+[    0.839322] RIP: 0010:sysfs_init_fs_context+0x82/0xd0
+[    0.840777] Code: 15 fb ef af 01 48 89 45 08 48 c7 45 10 72 65 65 62 48 c7 03 60 66 22 8f 48 85 ff 48 89 55 00 74 09 f0 ff 8f 5
+[    0.846170] RSP: 0018:ffffa55e8041bdb8 EFLAGS: 00010202
+[    0.847693] RAX: 0000000000000000 RBX: ffff949bbc0fee00 RCX: 0000000000000000
+[    0.850013] RDX: ffff949bbc878d00 RSI: 0000000000000000 RDI: ffffffff8f645c40
+[    0.852134] RBP: ffff949bbc0ff400 R08: 0000000000000001 R09: 00000000001ef140
+[    0.854211] R10: 0000000136a1068e R11: 0000000000000001 R12: 0000000000000000
+[    0.856225] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000008000
+[    0.858350] FS:  000000000050b558(0000) GS:ffff949bbce00000(0000) knlGS:0000000000000000
+[    0.860738] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    0.862391] CR2: 0000000000000220 CR3: 000000007c1f0004 CR4: 00000000003606e0
+[    0.864463] Call Trace:
+[    0.865200]  alloc_fs_context+0xfa/0x170
+[    0.866349]  do_mount+0x8fa/0xf50
+[    0.867310]  ? memdup_user+0x4b/0x70
+[    0.868350]  ksys_mount+0xba/0xd0
+[    0.869291]  __x64_sys_mount+0x21/0x30
+[    0.870390]  do_syscall_64+0x6a/0x3f4
+[    0.871465]  ? lockdep_hardirqs_off+0x79/0xd0
+[    0.872744]  ? trace_hardirqs_off_thunk+0x1a/0x1c
+[    0.874106]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[    0.875584] RIP: 0033:0x4bf02f
+[    0.876496] Code: e8 06 21 f4 ff 5a c3 48 63 ff 50 48 63 d2 b8 67 00 00 00 0f 05 48 89 c7 e8 ee 20 f4 ff 5a c3 49 89 ca 50 b8 8
+[    0.882329] RSP: 002b:00007ffc1befbd80 EFLAGS: 00000212 ORIG_RAX: 00000000000000a5
+[    0.884110] RAX: ffffffffffffffda RBX: 00007ffc1befc058 RCX: 00000000004bf02f
+[    0.885871] RDX: 00007ffc1befdf84 RSI: 00007ffc1befdf90 RDI: 00007ffc1befdf8a
+[    0.888102] RBP: 00007ffc1befdf8a R08: 0000000000000000 R09: 8080808080808080
+[    0.890154] R10: 0000000000008000 R11: 0000000000000212 R12: 00007ffc1befdf90
+[    0.892107] R13: 00007ffc1befdf84 R14: 0000000000008000 R15: 0000000000000000
+[    0.893537] CR2: 0000000000000220
+[    0.894467] ---[ end trace 0a9affd2a96301a9 ]---
+[    0.896230] RIP: 0010:sysfs_init_fs_context+0x82/0xd0
+[    0.897494] Code: 15 fb ef af 01 48 89 45 08 48 c7 45 10 72 65 65 62 48 c7 03 60 66 22 8f 48 85 ff 48 89 55 00 74 09 f0 ff 8f 5
+[    0.903017] RSP: 0018:ffffa55e8041bdb8 EFLAGS: 00010202
+[    0.904315] RAX: 0000000000000000 RBX: ffff949bbc0fee00 RCX: 0000000000000000
+[    0.905857] RDX: ffff949bbc878d00 RSI: 0000000000000000 RDI: ffffffff8f645c40
+[    0.907444] RBP: ffff949bbc0ff400 R08: 0000000000000001 R09: 00000000001ef140
+[    0.909973] R10: 0000000136a1068e R11: 0000000000000001 R12: 0000000000000000
+[    0.911415] R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000008000
+[    0.913726] FS:  000000000050b558(0000) GS:ffff949bbce00000(0000) knlGS:0000000000000000
+[    0.916710] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    0.918129] CR2: 0000000000000220 CR3: 000000007c1f0004 CR4: 00000000003606e0
 
-Well, I think you already know the answer to that.  There's no unified bug
-tracking system for all kernel subsystems, so in the worst case bugs/features
-just get ignored until someone cares to bring it up again.  I know you want to
-change that, but the larger problem is that there aren't enough people able and
-funded to do the work.  For the kernel overall (some subsystems are better, OFC)
-there so many low-quality, duplicate, or irrelevant reports/requests that no one
-can keep up.  That means maintainers have to focus on the highest priority
-reports/requests, such as the ones that are clearly relevant and get continued
-discussion, vs. some random problem someone had 2 years ago.  Just putting stuff
-on a bug tracker does not magically make people work on it.
+This occurs while trying to mount sysfs in initramfs
 
-I think the reality is that until people can actually be funded to immediately
-analyze every syzbot report, syzbot needs to be designed to help developers
-focus on the reports most likely to still be actual bugs.  That means
-automatically closing bugs where the crash is no longer occurring, especially if
-it was on linux-next; and sending reminders if the crash is still occurring.
+	mount -n -t sysfs sysfs /sys
 
-> 
-> Also note that what happens now may be not representative of what will
-> happen in a steady mode later. Now syzbot bisects old bugs accumulated
-> over 1+ year. Later if it reports a bug, it should bisect sooner. So
-> all of what happens in this bug report won't take place.
-> 
+All this obviously runs in qemu; config and further information are available upon request.
 
-Sure, but I think there will continue to be syzbot reports that the relevant
-people either don't see, or don't have time or expertise to look into.  This is
-especially true when the same bug is filed as many different bug reports.
-
-- Eric
+Thanks,
+	Dominik
