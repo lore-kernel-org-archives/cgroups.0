@@ -1,128 +1,77 @@
-From: Roman Gushchin <guroan@gmail.com>
-Subject: [PATCH v9 2/9] cgroup: implement __cgroup_task_count() helper
-Date: Sat, 16 Mar 2019 10:58:05 -0700
-Message-ID: <20190316175812.6787-3-guro@fb.com>
-References: <20190316175812.6787-1-guro@fb.com>
+From: Andrea Arcangeli <aarcange@redhat.com>
+Subject: Re: KASAN: use-after-free Read in get_mem_cgroup_from_mm
+Date: Sat, 16 Mar 2019 15:42:22 -0400
+Message-ID: <20190316194222.GA29767@redhat.com>
+References: <CACT4Y+Z+CH0UTdSz-w_woMPrBwg-GuobV1Su4qd9ReffTkyfVg@mail.gmail.com>
+ <5C7D2F82.40907@huawei.com>
+ <CACT4Y+agwaszODNGJHCqn4fSk4Le9exn3Cau0nornJ0RaTpDJw@mail.gmail.com>
+ <5C7D4500.3070607@huawei.com>
+ <CACT4Y+b6y_3gTpR8LvNREHOV0TP7jB=Zp1L03dzpaz_SaeESng@mail.gmail.com>
+ <5C7E1A38.2060906@huawei.com>
+ <20190306020540.GA23850@redhat.com>
+ <5C821550.50506@huawei.com>
+ <20190315213944.GD9967@redhat.com>
+ <5C8CC42E.1090208@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=UJ4P00vx6U5PVt2qTIPEjoDmQITn36JjYHqlVjlSqjo=;
-        b=kdkLG8w2jLU2Q+wYZHK4jJVemS6eEurY7WT5V+pbp3DY3kO+9NesXJQhACj5QFf+ay
-         uwAO6/lNJdsPUTgG5tRbh5K7owEceI+mtDKwLOBVcv8aUDLre2eZcWtGIi92ksgJp/W/
-         wdkJguUgI+fqAhL+DlzXJqglM1R2bWlUGQnkeBpgH8ThaM1BnIP1C8hM+RVIGKjZaPv/
-         ckg2uK0E2iB2B8rW1IQJJVSzdd/53okARBrrmtvq8TBEWBCgI1C+om3KKui/Yk5/z6uf
-         2beRIdboU2slOvukfpo/S9QKkuqDAO0fDNnmDcTPSxrWSPRqiPfYEwu4BXOMQCeoIEVK
-         w4FQ==
-In-Reply-To: <20190316175812.6787-1-guro@fb.com>
+Content-Disposition: inline
+In-Reply-To: <5C8CC42E.1090208@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>
-Cc: Roman Gushchin <guro@fb.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: zhong jiang <zhongjiang@huawei.com>
+Cc: Mike Rapoport <rppt@linux.vnet.ibm.com>, Peter Xu <peterx@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Dmitry Vyukov <dvyukov@google.com>, syzbot <syzbot+cbb52e396df3e565ab02@syzkaller.appspotmail.com>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Matthew Wilcox <willy@infradead.org>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>
 
-The helper is identical to the existing cgroup_task_count()
-except it doesn't take the css_set_lock by itself, assuming
-that the caller does.
+On Sat, Mar 16, 2019 at 05:38:54PM +0800, zhong jiang wrote:
+> On 2019/3/16 5:39, Andrea Arcangeli wrote:
+> > On Fri, Mar 08, 2019 at 03:10:08PM +0800, zhong jiang wrote:
+> >> I can reproduce the issue in arm64 qemu machine.  The issue will leave after applying the
+> >> patch.
+> >>
+> >> Tested-by: zhong jiang <zhongjiang@huawei.com>
+> > Thanks a lot for the quick testing!
+> >
+> >> Meanwhile,  I just has a little doubt whether it is necessary to use RCU to free the task struct or not.
+> >> I think that mm->owner alway be NULL after failing to create to process. Because we call mm_clear_owner.
+> > I wish it was enough, but the problem is that the other CPU may be in
+> > the middle of get_mem_cgroup_from_mm() while this runs, and it would
+> > dereference mm->owner while it is been freed without the call_rcu
+> > affter we clear mm->owner. What prevents this race is the
+> As you had said, It would dereference mm->owner after we clear mm->owner.
+> 
+> But after we clear mm->owner,  mm->owner should be NULL.  Is it right?
+> 
+> And mem_cgroup_from_task will check the parameter. 
+> you mean that it is possible after checking the parameter to  clear the owner .
+> and the NULL pointer will trigger. :-(
 
-Also, move cgroup_task_count() implementation into
-kernel/cgroup/cgroup.c, as there is nothing specific to cgroup v1.
+Dereference mm->owner didn't mean reading the value of the mm->owner
+pointer, it really means to dereference the value of the pointer. It's
+like below:
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: kernel-team@fb.com
----
- kernel/cgroup/cgroup-internal.h |  1 +
- kernel/cgroup/cgroup-v1.c       | 16 ----------------
- kernel/cgroup/cgroup.c          | 33 +++++++++++++++++++++++++++++++++
- 3 files changed, 34 insertions(+), 16 deletions(-)
+get_mem_cgroup_from_mm()		failing fork()
+----					---
+task = mm->owner
+					mm->owner = NULL;
+					free(mm->owner)
+*task /* use after free */
 
-diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-index c950864016e2..a195328431ce 100644
---- a/kernel/cgroup/cgroup-internal.h
-+++ b/kernel/cgroup/cgroup-internal.h
-@@ -226,6 +226,7 @@ int cgroup_rmdir(struct kernfs_node *kn);
- int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
- 		     struct kernfs_root *kf_root);
- 
-+int __cgroup_task_count(const struct cgroup *cgrp);
- int cgroup_task_count(const struct cgroup *cgrp);
- 
- /*
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 583b969b0c0e..29c0ca8f76cf 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -339,22 +339,6 @@ static struct cgroup_pidlist *cgroup_pidlist_find_create(struct cgroup *cgrp,
- 	return l;
- }
- 
--/**
-- * cgroup_task_count - count the number of tasks in a cgroup.
-- * @cgrp: the cgroup in question
-- */
--int cgroup_task_count(const struct cgroup *cgrp)
--{
--	int count = 0;
--	struct cgrp_cset_link *link;
--
--	spin_lock_irq(&css_set_lock);
--	list_for_each_entry(link, &cgrp->cset_links, cset_link)
--		count += link->cset->nr_tasks;
--	spin_unlock_irq(&css_set_lock);
--	return count;
--}
--
- /*
-  * Load a cgroup's pidarray with either procs' tgids or tasks' pids
-  */
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index f4418371c83b..b230afccf635 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -592,6 +592,39 @@ static void cgroup_get_live(struct cgroup *cgrp)
- 	css_get(&cgrp->self);
- }
- 
-+/**
-+ * __cgroup_task_count - count the number of tasks in a cgroup. The caller
-+ * is responsible for taking the css_set_lock.
-+ * @cgrp: the cgroup in question
-+ */
-+int __cgroup_task_count(const struct cgroup *cgrp)
-+{
-+	int count = 0;
-+	struct cgrp_cset_link *link;
-+
-+	lockdep_assert_held(&css_set_lock);
-+
-+	list_for_each_entry(link, &cgrp->cset_links, cset_link)
-+		count += link->cset->nr_tasks;
-+
-+	return count;
-+}
-+
-+/**
-+ * cgroup_task_count - count the number of tasks in a cgroup.
-+ * @cgrp: the cgroup in question
-+ */
-+int cgroup_task_count(const struct cgroup *cgrp)
-+{
-+	int count;
-+
-+	spin_lock_irq(&css_set_lock);
-+	count = __cgroup_task_count(cgrp);
-+	spin_unlock_irq(&css_set_lock);
-+
-+	return count;
-+}
-+
- struct cgroup_subsys_state *of_css(struct kernfs_open_file *of)
- {
- 	struct cgroup *cgrp = of->kn->parent->priv;
--- 
-2.20.1
+We didn't set mm->owner to NULL before, so the window for the race was
+larger, but setting mm->owner to NULL only hides the problem and it
+can still happen (albeit with a smaller window).
 
+If get_mem_cgroup_from_mm() can see at any time mm->owner not NULL,
+then the free of the task struct must be delayed until after
+rcu_read_unlock has returned in get_mem_cgroup_from_mm(). This is
+the standard RCU model, the freeing must be delayed until after the
+next quiescent point.
+
+BTW, both mm_update_next_owner() and mm_clear_owner() should have used
+WRITE_ONCE when they write to mm->owner, I can update that too but
+it's just to not to make assumptions that gcc does the right thing
+(and we still rely on gcc to do the right thing in other places) so
+that is just an orthogonal cleanup.
+
+Thanks,
+Andrea
