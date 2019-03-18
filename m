@@ -1,78 +1,109 @@
-From: zhong jiang <zhongjiang@huawei.com>
-Subject: Re: KASAN: use-after-free Read in get_mem_cgroup_from_mm
-Date: Mon, 18 Mar 2019 14:23:33 +0800
-Message-ID: <5C8F3965.2050202@huawei.com>
-References: <CACT4Y+Z+CH0UTdSz-w_woMPrBwg-GuobV1Su4qd9ReffTkyfVg@mail.gmail.com> <5C7D2F82.40907@huawei.com> <CACT4Y+agwaszODNGJHCqn4fSk4Le9exn3Cau0nornJ0RaTpDJw@mail.gmail.com> <5C7D4500.3070607@huawei.com> <CACT4Y+b6y_3gTpR8LvNREHOV0TP7jB=Zp1L03dzpaz_SaeESng@mail.gmail.com> <5C7E1A38.2060906@huawei.com> <20190306020540.GA23850@redhat.com> <5C821550.50506@huawei.com> <20190315213944.GD9967@redhat.com> <5C8CC42E.1090208@huawei.com> <20190316194222.GA29767@redhat.com>
+From: Dave Chiluk <chiluk+linux@indeed.com>
+Subject: Cgroup cpu throttling with low cpu usage of multi-threaded
+ applications on high-core count machines
+Date: Mon, 18 Mar 2019 09:59:32 -0500
+Message-ID: <CAC=E7cV_2QtXQ-mx4-GfHLyAWxW+7Ub75UmMvOLxLXzot47TWw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190316194222.GA29767@redhat.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=indeed.com; s=google;
+        h=mime-version:from:date:message-id:subject:to
+         :content-transfer-encoding;
+        bh=ws4FJo5ukAEQiG439+2y1DKalwBDgyKq1PiNzms22Kw=;
+        b=HxkosBIxEqzFF/0kkCpxkInPNuqViBtIZlV/vU4WhawG6sbQB8AVEsyBz999V/9jaJ
+         xdh7fW4uI57qpZA2L+eN7jvTV/hKO7j2h2CjlnT7CxXff+O0ZBt0yRuukhvE5qSm25Mg
+         cvVywpPROngtZu8fWfulOhe0adi5s0VyZLUBg=
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Andrea Arcangeli <aarcange@redhat.com>
-Cc: Mike Rapoport <rppt@linux.vnet.ibm.com>, Peter Xu <peterx@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Dmitry Vyukov <dvyukov@google.com>, syzbot <syzbot+cbb52e396df3e565ab02@syzkaller.appspotmail.com>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, syzkaller-bugs <syzkaller-bugs@googlegroups.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, David Rientjes <rientjes@google.com>, Hugh Dickins <hughd@google.com>, Matthew Wilcox <willy@infradead.org>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>
+Content-Type: text/plain; charset="utf-8"
+To: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Brendan Gregg <bgregg@netflix.com>, Kyle Anderson <kwa@yelp.com>, Gabriel Munos <gmunoz@netflix.com>, John Hammond <jhammond@indeed.com>, Cong Wang <xiyou.wangcong@gmail.com>
 
-On 2019/3/17 3:42, Andrea Arcangeli wrote:
-> On Sat, Mar 16, 2019 at 05:38:54PM +0800, zhong jiang wrote:
->> On 2019/3/16 5:39, Andrea Arcangeli wrote:
->>> On Fri, Mar 08, 2019 at 03:10:08PM +0800, zhong jiang wrote:
->>>> I can reproduce the issue in arm64 qemu machine.  The issue will leave after applying the
->>>> patch.
->>>>
->>>> Tested-by: zhong jiang <zhongjiang@huawei.com>
->>> Thanks a lot for the quick testing!
->>>
->>>> Meanwhile,  I just has a little doubt whether it is necessary to use RCU to free the task struct or not.
->>>> I think that mm->owner alway be NULL after failing to create to process. Because we call mm_clear_owner.
->>> I wish it was enough, but the problem is that the other CPU may be in
->>> the middle of get_mem_cgroup_from_mm() while this runs, and it would
->>> dereference mm->owner while it is been freed without the call_rcu
->>> affter we clear mm->owner. What prevents this race is the
->> As you had said, It would dereference mm->owner after we clear mm->owner.
->>
->> But after we clear mm->owner,  mm->owner should be NULL.  Is it right?
->>
->> And mem_cgroup_from_task will check the parameter. 
->> you mean that it is possible after checking the parameter to  clear the owner .
->> and the NULL pointer will trigger. :-(
-> Dereference mm->owner didn't mean reading the value of the mm->owner
-> pointer, it really means to dereference the value of the pointer. It's
-> like below:
->
-> get_mem_cgroup_from_mm()		failing fork()
-> ----					---
-> task = mm->owner
-> 					mm->owner = NULL;
-> 					free(mm->owner)
-> *task /* use after free */
->
-> We didn't set mm->owner to NULL before, so the window for the race was
-> larger, but setting mm->owner to NULL only hides the problem and it
-> can still happen (albeit with a smaller window).
->
-> If get_mem_cgroup_from_mm() can see at any time mm->owner not NULL,
-> then the free of the task struct must be delayed until after
-> rcu_read_unlock has returned in get_mem_cgroup_from_mm(). This is
-> the standard RCU model, the freeing must be delayed until after the
-> next quiescent point.
+We are seeing a high amount of cgroup cpu throttling, as measured by
+nr_throttled/nr_periods, while also seeing low cpu usage when running
+highly threaded applications on high core-count machines. In
+particular we are seeing this on "thread pool" design pattern
+applications that are being run on kubernetes cpu with hard limits.
+We've seen similar issues on other microservice cloud architectures
+that utilize cgroup cpu constraints.  Most information out there about
+this problem is to over-commit cpu which is wasteful, or turn off hard
+limits and rely on the cpu_shares mechanism instead.
 
-Thank you for your explaination patiently.  The patch should go to upstream too.  I think you
-should send a formal patch to the mainline.  Maybe other people suffer from
-the issue.  :-)
+We=E2=80=99ve root caused this to bandwitdth_slices being allocated to
+runqueues that own threads that do little work.  This results in the
+primary =E2=80=9Cfast=E2=80=9D worker threads being starved for runtime/thr=
+ottled,
+while runtime allocated to the cfs_rq=E2=80=99s of the less productive thre=
+ads
+goes unused.  Eventually the time slices on the less productive thread
+expires wasting cpu quota.
 
-Thanks,
-zhong jiang
-> BTW, both mm_update_next_owner() and mm_clear_owner() should have used
-> WRITE_ONCE when they write to mm->owner, I can update that too but
-> it's just to not to make assumptions that gcc does the right thing
-> (and we still rely on gcc to do the right thing in other places) so
-> that is just an orthogonal cleanup.
->
-> Thanks,
-> Andrea
->
-> .
->
+This issue is exacerbated even further as you move from 8 core -> 80
+core machines, as slices are allocated and left unused to that many
+more cfs_rq=E2=80=99s.  With an 80 core machine assigning the default time
+slice (5ms) to each cfs_rq requires 400ms quota per 100ms period
+simply to allow each cfs_rq to have one time slice which is 4 CPUs
+worth of quota.  In reality tasks rarely get spread out to every core
+like this, but that is only the worst case scenario.  This is also why
+we saw a performance regression when moving from older 46 core
+machines to newer 80 core machines.  Now that the world is moving to
+micro-services architectures such as kubernetes, more and more
+applications are being run with cgroup cpu constraints like this.
 
+I have created an artificial C testcase that reproduces that problem
+and have posted it at
+https://github.com/indeedeng/fibtest
 
+I have used that testcase to identify 512ac99 as the source of this
+performance regression.  However as far as I can tell 512ac99 is
+technically a correct patch. Instead what was happening before is that
+the runtime on each cfs_rq would almost never be expired because the
+following conditional would almost always be true.
+
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+static void expire_cfs_rq_runtime(struct cfs_rq *cfs_rq)
+...
+if (cfs_rq->runtime_expires !=3D cfs_b->runtime_expires) {
+       /* extend local deadline, drift is bounded above by 2 ticks */
+       cfs_rq->runtime_expires +=3D TICK_NSEC;
+..
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+I verified this by adding a variable to the cfs_bandwidth structure
+that counted all of the runtime_remaining that would've been expired,
+in the else clause of this if and found that it was never hit pre
+512ac99 on my test machines.  However after 512ac99 lots of runtime
+would be expired. I understand that this experience is different from
+the submitters of 512ac99, and I suspect there may be some
+architecture or configuration difference at play there.  So looking
+back at commit 51f2176d which introduced the above logic, the behavior
+appears to have existed since 3.16.
+
+Cong Wang submitted a patch that happens to work around this, by
+implementing bursting based on idle time
+https://lore.kernel.org/patchwork/patch/907450/.  However beneficial,
+that patch is orthogonal to the root cause of this problem, but I
+wanted to mention it.
+
+So my question is what should be done?
+1. Make the expiration time of a time slice configurable with the
+default set to INF to match the behavior of the kernel as it existed
+v3.16..v4.18-rc4.
+2. Another option that should work afaik would be to remove all the
+cfs_bandwidth time slice expiration logic, as time slices naturally
+expire as they get used anyways.  This is actually my preferred course
+of action as it's most performant, and it removes what appears to be
+some very hardware sensitive logic.  Additionally the hard limit
+description still holds true albeit not strictly per each accounting
+period.  However since no one has complained about that over the 5
+years it was broken, I think it's pretty safe to assume that very few
+people are actually watching that carefully.  Instead it's a much
+worse user experience when you ask for .5 cpu, and are only able to
+use .1 of it while being throttled because of time slice expiration.
+
+Thank you,
+Dave Chiluk
+p.s. I've copied representatives of Netflix and Yelp as well, as we
+were talking about this at the Scale 17x conference. There we
+discovered we had all individually hit this issue and had it on
+roadmaps to fix.
