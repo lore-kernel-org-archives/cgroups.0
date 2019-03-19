@@ -1,109 +1,67 @@
-From: Dave Chiluk <chiluk+linux@indeed.com>
-Subject: Cgroup cpu throttling with low cpu usage of multi-threaded
- applications on high-core count machines
-Date: Mon, 18 Mar 2019 09:59:32 -0500
-Message-ID: <CAC=E7cV_2QtXQ-mx4-GfHLyAWxW+7Ub75UmMvOLxLXzot47TWw@mail.gmail.com>
+From: Jann Horn <jannh@google.com>
+Subject: [PATCH] device_cgroup: fix RCU imbalance in error case
+Date: Tue, 19 Mar 2019 02:36:59 +0100
+Message-ID: <20190319013659.86199-1-jannh@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=indeed.com; s=google;
-        h=mime-version:from:date:message-id:subject:to
-         :content-transfer-encoding;
-        bh=ws4FJo5ukAEQiG439+2y1DKalwBDgyKq1PiNzms22Kw=;
-        b=HxkosBIxEqzFF/0kkCpxkInPNuqViBtIZlV/vU4WhawG6sbQB8AVEsyBz999V/9jaJ
-         xdh7fW4uI57qpZA2L+eN7jvTV/hKO7j2h2CjlnT7CxXff+O0ZBt0yRuukhvE5qSm25Mg
-         cvVywpPROngtZu8fWfulOhe0adi5s0VyZLUBg=
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=oxLrVFgA5K2VrFmqjuGgoMdvHwMxEteTMdtMpCigLWw=;
+        b=Ro5mFo/8VKGStal+WvRPQf5iZfNNrqXCEgrQOYimjcc+oRRjOLj855EH4daY3u632C
+         TGstRQ29doBElkYZZOCcdGzGdm+yi4pwVvgYguH+iPcHoPKvGz6nsQN8HJp+4xn2hg0L
+         8fPVWt5dFia1r64RnLsrS/ChWMZpqPKpqFDtZKI9+ctavrnmGpvnAcFBjJ6MmBoFY6sM
+         dbWIsykhXp3ovl4NVfkDhvGc8iYmDHnrV1Fo16u1TdmveWhHl7umzaotEPdAM7PZLLgG
+         eOEsoc4kgZShng9Orx7gY5sxpfM0j6sws067v9fXD+XhQr+sEnTkMRGJ9dLfuwJ7NdjI
+         6qYQ==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Brendan Gregg <bgregg@netflix.com>, Kyle Anderson <kwa@yelp.com>, Gabriel Munos <gmunoz@netflix.com>, John Hammond <jhammond@indeed.com>, Cong Wang <xiyou.wangcong@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, jannh@google.com
+Cc: linux-security-module@vger.kernel.org, linux-kernel@vger.kernel.org, Aristeu Rozanski <aris@redhat.com>, "Serge E . Hallyn" <serge.hallyn@ubuntu.com>, Michal Hocko <mhocko@suse.cz>, cgroups@vger.kernel.org
 
-We are seeing a high amount of cgroup cpu throttling, as measured by
-nr_throttled/nr_periods, while also seeing low cpu usage when running
-highly threaded applications on high core-count machines. In
-particular we are seeing this on "thread pool" design pattern
-applications that are being run on kubernetes cpu with hard limits.
-We've seen similar issues on other microservice cloud architectures
-that utilize cgroup cpu constraints.  Most information out there about
-this problem is to over-commit cpu which is wasteful, or turn off hard
-limits and rely on the cpu_shares mechanism instead.
+When dev_exception_add() returns an error (due to a failed memory
+allocation), make sure that we move the RCU preemption count back to where
+it was before we were called. We dropped the RCU read lock inside the loop
+body, so we can't just "break".
 
-We=E2=80=99ve root caused this to bandwitdth_slices being allocated to
-runqueues that own threads that do little work.  This results in the
-primary =E2=80=9Cfast=E2=80=9D worker threads being starved for runtime/thr=
-ottled,
-while runtime allocated to the cfs_rq=E2=80=99s of the less productive thre=
-ads
-goes unused.  Eventually the time slices on the less productive thread
-expires wasting cpu quota.
+sparse complains about this, too:
 
-This issue is exacerbated even further as you move from 8 core -> 80
-core machines, as slices are allocated and left unused to that many
-more cfs_rq=E2=80=99s.  With an 80 core machine assigning the default time
-slice (5ms) to each cfs_rq requires 400ms quota per 100ms period
-simply to allow each cfs_rq to have one time slice which is 4 CPUs
-worth of quota.  In reality tasks rarely get spread out to every core
-like this, but that is only the worst case scenario.  This is also why
-we saw a performance regression when moving from older 46 core
-machines to newer 80 core machines.  Now that the world is moving to
-micro-services architectures such as kubernetes, more and more
-applications are being run with cgroup cpu constraints like this.
+$ make -s C=2 security/device_cgroup.o
+./include/linux/rcupdate.h:647:9: warning: context imbalance in
+'propagate_exception' - unexpected unlock
 
-I have created an artificial C testcase that reproduces that problem
-and have posted it at
-https://github.com/indeedeng/fibtest
+Fixes: d591fb56618f ("device_cgroup: simplify cgroup tree walk in propagate_exception()")
+Cc: stable@vger.kernel.org
+Signed-off-by: Jann Horn <jannh@google.com>
+---
+Compile-tested only.
 
-I have used that testcase to identify 512ac99 as the source of this
-performance regression.  However as far as I can tell 512ac99 is
-technically a correct patch. Instead what was happening before is that
-the runtime on each cfs_rq would almost never be expired because the
-following conditional would almost always be true.
+I'm not entirely sure who's supposed to be the maintainer for this thing.
+The sign-offs on the commits to this file come from Tejun, but MAINTAINERS
+claims it's part of security/, so I'm just sending this to both the
+security folks and the cgroup folks, you can figure out whose tree you want
+to take this through. :P
+If the cgroup folks feel responsible for this file, maybe you could fix up
+MAINTAINERS?
 
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-static void expire_cfs_rq_runtime(struct cfs_rq *cfs_rq)
-...
-if (cfs_rq->runtime_expires !=3D cfs_b->runtime_expires) {
-       /* extend local deadline, drift is bounded above by 2 ticks */
-       cfs_rq->runtime_expires +=3D TICK_NSEC;
-..
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ security/device_cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I verified this by adding a variable to the cfs_bandwidth structure
-that counted all of the runtime_remaining that would've been expired,
-in the else clause of this if and found that it was never hit pre
-512ac99 on my test machines.  However after 512ac99 lots of runtime
-would be expired. I understand that this experience is different from
-the submitters of 512ac99, and I suspect there may be some
-architecture or configuration difference at play there.  So looking
-back at commit 51f2176d which introduced the above logic, the behavior
-appears to have existed since 3.16.
+diff --git a/security/device_cgroup.c b/security/device_cgroup.c
+index cd97929fac66..dc28914fa72e 100644
+--- a/security/device_cgroup.c
++++ b/security/device_cgroup.c
+@@ -560,7 +560,7 @@ static int propagate_exception(struct dev_cgroup *devcg_root,
+ 		    devcg->behavior == DEVCG_DEFAULT_ALLOW) {
+ 			rc = dev_exception_add(devcg, ex);
+ 			if (rc)
+-				break;
++				return rc;
+ 		} else {
+ 			/*
+ 			 * in the other possible cases:
+-- 
+2.21.0.225.g810b269d1ac-goog
 
-Cong Wang submitted a patch that happens to work around this, by
-implementing bursting based on idle time
-https://lore.kernel.org/patchwork/patch/907450/.  However beneficial,
-that patch is orthogonal to the root cause of this problem, but I
-wanted to mention it.
-
-So my question is what should be done?
-1. Make the expiration time of a time slice configurable with the
-default set to INF to match the behavior of the kernel as it existed
-v3.16..v4.18-rc4.
-2. Another option that should work afaik would be to remove all the
-cfs_bandwidth time slice expiration logic, as time slices naturally
-expire as they get used anyways.  This is actually my preferred course
-of action as it's most performant, and it removes what appears to be
-some very hardware sensitive logic.  Additionally the hard limit
-description still holds true albeit not strictly per each accounting
-period.  However since no one has complained about that over the 5
-years it was broken, I think it's pretty safe to assume that very few
-people are actually watching that carefully.  Instead it's a much
-worse user experience when you ask for .5 cpu, and are only able to
-use .1 of it while being throttled because of time slice expiration.
-
-Thank you,
-Dave Chiluk
-p.s. I've copied representatives of Netflix and Yelp as well, as we
-were talking about this at the Scale 17x conference. There we
-discovered we had all individually hit this issue and had it on
-roadmaps to fix.
