@@ -1,44 +1,31 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 3/6] mm: memcontrol: replace node summing with
- memcg_page_state()
-Date: Thu, 21 Mar 2019 18:54:53 -0700
-Message-ID: <20190321185453.6458679180e1e41893e7312b@linux-foundation.org>
-References: <20190228163020.24100-1-hannes@cmpxchg.org>
-        <20190228163020.24100-4-hannes@cmpxchg.org>
+From: syzbot <syzbot+cbb52e396df3e565ab02@syzkaller.appspotmail.com>
+Subject: Re: KASAN: use-after-free Read in get_mem_cgroup_from_mm
+Date: Fri, 22 Mar 2019 02:36:01 -0700
+Message-ID: <00000000000035d0e70584ab952b@google.com>
+References: <000000000000601367057a095de4@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190228163020.24100-4-hannes@cmpxchg.org>
+In-Reply-To: <000000000000601367057a095de4@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
+Content-Transfer-Encoding: 7bit
+To: aarcange@redhat.com, akpm@linux-foundation.org, cgroups@vger.kernel.org, dvyukov@google.com, hannes@cmpxchg.org, hughd@google.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, mgorman@suse.de, mhocko@kernel.org, peterx@redhat.com, rientjes@google.com, rppt@linux.ibm.com, rppt@linux.vnet.ibm.com, syzkaller-bugs@googlegroups.com, vbabka@suse.cz, vdavydov.dev@gmail.com, willy@infradead.org, zhongjiang@huawei.com
 
-On Thu, 28 Feb 2019 11:30:17 -0500 Johannes Weiner <hannes@cmpxchg.org> wrote:
+Bisection is inconclusive: the first bad commit could be any of:
 
-> Instead of adding up the node counters, use memcg_page_state() to get
-> the memcg state directly. This is a bit cheaper and more stream-lined.
-> 
-> ...
->
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -746,10 +746,13 @@ static unsigned long mem_cgroup_nr_lru_pages(struct mem_cgroup *memcg,
->  			unsigned int lru_mask)
->  {
->  	unsigned long nr = 0;
-> -	int nid;
-> +	enum lru_list lru;
->  
-> -	for_each_node_state(nid, N_MEMORY)
-> -		nr += mem_cgroup_node_nr_lru_pages(memcg, nid, lru_mask);
-> +	for_each_lru(lru) {
-> +		if (!(BIT(lru) & lru_mask))
-> +			continue;
-> +		nr += memcg_page_state(memcg, NR_LRU_BASE + lru);
-> +	}
+2c43838c sched/isolation: Enable CONFIG_CPU_ISOLATION=y by default
+bf29cb23 sched/isolation: Make CONFIG_NO_HZ_FULL select CONFIG_CPU_ISOLATION
+d94d1053 sched/isolation: Document boot parameters dependency on  
+CONFIG_CPU_ISOLATION=y
+4c470317 Merge branch 'sched-urgent-for-linus' of  
+git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
 
-Might be able to use for_each_set_bit(&lru_mnask) here, but it's much
-of a muchness.
+bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=1592b037200000
+start commit:   0072a0c1
+git tree:       upstream
+dashboard link: https://syzkaller.appspot.com/bug?extid=cbb52e396df3e565ab02
+syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=12835e25400000
+C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=172fa5a3400000
 
+For information about bisection process see: https://goo.gl/tpsmEJ#bisection
