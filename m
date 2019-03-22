@@ -1,31 +1,68 @@
-From: syzbot <syzbot+cbb52e396df3e565ab02@syzkaller.appspotmail.com>
-Subject: Re: KASAN: use-after-free Read in get_mem_cgroup_from_mm
-Date: Fri, 22 Mar 2019 02:36:01 -0700
-Message-ID: <00000000000035d0e70584ab952b@google.com>
-References: <000000000000601367057a095de4@google.com>
+From: Chris Down <chris@chrisdown.name>
+Subject: [PATCH] fixup: vmscan: Fix build on !CONFIG_MEMCG from nr_deactivate
+ changes
+Date: Fri, 22 Mar 2019 15:05:13 +0000
+Message-ID: <20190322150513.GA22021@chrisdown.name>
+References: <155290128498.31489.18250485448913338607.stgit@localhost.localdomain>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <000000000000601367057a095de4@google.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :content-transfer-encoding:in-reply-to:user-agent;
+        bh=la79GVMa47gWOb0qD5kRoQk6VC6UfGHw4stP89HbwZw=;
+        b=iyQnjGnG51BIfxJIICh18JKJdtzPSrWThifwALw2gWvK1/gNZEsTAKEvxsc3wzKXqK
+         tQ08PhWRYD6ROgWHR8CED2SyxdwNUvt1+EpYx+TraC3D3f4BUhopjef2d0iHHuR+fvRW
+         OK+Dxeh5EfJv5kyTXhWF0/qOB6NJxdNwXhYr8=
+Content-Disposition: inline
+In-Reply-To: <155290128498.31489.18250485448913338607.stgit@localhost.localdomain>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
-Content-Transfer-Encoding: 7bit
-To: aarcange@redhat.com, akpm@linux-foundation.org, cgroups@vger.kernel.org, dvyukov@google.com, hannes@cmpxchg.org, hughd@google.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, mgorman@suse.de, mhocko@kernel.org, peterx@redhat.com, rientjes@google.com, rppt@linux.ibm.com, rppt@linux.vnet.ibm.com, syzkaller-bugs@googlegroups.com, vbabka@suse.cz, vdavydov.dev@gmail.com, willy@infradead.org, zhongjiang@huawei.com
+Content-Type: text/plain; charset="utf-8"
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kirill Tkhai <ktkhai@virtuozzo.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-Bisection is inconclusive: the first bad commit could be any of:
+"mm: move nr_deactivate accounting to shrink_active_list()" uses the
+non-irqsaved version of count_memcg_events (__count_memcg_events), but
+we've only exported the irqsaving version of it to userspace, so the
+build breaks:
 
-2c43838c sched/isolation: Enable CONFIG_CPU_ISOLATION=y by default
-bf29cb23 sched/isolation: Make CONFIG_NO_HZ_FULL select CONFIG_CPU_ISOLATION
-d94d1053 sched/isolation: Document boot parameters dependency on  
-CONFIG_CPU_ISOLATION=y
-4c470317 Merge branch 'sched-urgent-for-linus' of  
-git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
+    mm/vmscan.c: In function ‘shrink_active_list’:
+    mm/vmscan.c:2101:2: error: implicit declaration of function ‘__count_memcg_events’; did you mean ‘count_memcg_events’? [-Werror=implicit-function-declaration]
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=1592b037200000
-start commit:   0072a0c1
-git tree:       upstream
-dashboard link: https://syzkaller.appspot.com/bug?extid=cbb52e396df3e565ab02
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=12835e25400000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=172fa5a3400000
+This fixup makes it build with !CONFIG_MEMCG.
 
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
+Signed-off-by: Chris Down <chris@chrisdown.name>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kirill Tkhai <ktkhai@virtuozzo.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: kernel-team@fb.com
+---
+ include/linux/memcontrol.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 534267947664..b226c4bafc93 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1147,6 +1147,12 @@ static inline void count_memcg_events(struct mem_cgroup *memcg,
+ {
+ }
+ 
++static inline void __count_memcg_events(struct mem_cgroup *memcg,
++					enum vm_event_item idx,
++					unsigned long count)
++{
++}
++
+ static inline void count_memcg_page_event(struct page *page,
+ 					  int idx)
+ {
+-- 
+2.21.0
+
