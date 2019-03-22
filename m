@@ -1,51 +1,44 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v6 6/7] refactor header includes to allow kthread.h
- inclusion in psi_types.h
-Date: Wed, 20 Mar 2019 17:04:03 -0400
-Message-ID: <20190320210403.GE19382@cmpxchg.org>
-References: <20190319235619.260832-1-surenb@google.com>
- <20190319235619.260832-7-surenb@google.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 3/6] mm: memcontrol: replace node summing with
+ memcg_page_state()
+Date: Thu, 21 Mar 2019 18:54:53 -0700
+Message-ID: <20190321185453.6458679180e1e41893e7312b@linux-foundation.org>
+References: <20190228163020.24100-1-hannes@cmpxchg.org>
+        <20190228163020.24100-4-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=c7mFoY9c1LOx2DLi8HmPtRRejYVacIC2KISLRsK7znE=;
-        b=iNfJLn1VEvAICGg6+J8aTGo2WHwUAblrU8TC4P4d/YRBZXKDhFuHuWPyZ+0OcodA2R
-         g7V3avx9WoHGDQcWiV6r3LM0LpMba9yJ3IUAj0x5QC+zKlzOmO4kgXtaoS+5XNfH35f6
-         y3Q95eLIBZnLlHIgU2hmV3Z3aaaWgB2xG+sNBTD2NsA89KSRqyVkPML3RtWfJhtmFNdq
-         uyW97pDsEiNY89ljQeenu9r/FX9qo6fKteLpOe4Ty8207DbRYrXxQ18O75u7haf4V8Sk
-         XGHF1f5dd/S4jj+izKUS5beIisOqtB2HANTsNRLdkYtB97haZMPGFXeQ0p9W+YOT5XOm
-         1Frw==
-Content-Disposition: inline
-In-Reply-To: <20190319235619.260832-7-surenb@google.com>
+In-Reply-To: <20190228163020.24100-4-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: gregkh@linuxfoundation.org, tj@kernel.org, lizefan@huawei.com, axboe@kernel.dk, dennis@kernel.org, dennisszhou@gmail.com, mingo@redhat.com, peterz@infradead.org, akpm@linux-foundation.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@android.com
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Tue, Mar 19, 2019 at 04:56:18PM -0700, Suren Baghdasaryan wrote:
-> kthread.h can't be included in psi_types.h because it creates a circular
-> inclusion with kthread.h eventually including psi_types.h and complaining
-> on kthread structures not being defined because they are defined further
-> in the kthread.h. Resolve this by removing psi_types.h inclusion from the
-> headers included from kthread.h.
+On Thu, 28 Feb 2019 11:30:17 -0500 Johannes Weiner <hannes@cmpxchg.org> wrote:
+
+> Instead of adding up the node counters, use memcg_page_state() to get
+> the memcg state directly. This is a bit cheaper and more stream-lined.
 > 
-> Signed-off-by: Suren Baghdasaryan <surenb@google.com>
+> ...
+>
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -746,10 +746,13 @@ static unsigned long mem_cgroup_nr_lru_pages(struct mem_cgroup *memcg,
+>  			unsigned int lru_mask)
+>  {
+>  	unsigned long nr = 0;
+> -	int nid;
+> +	enum lru_list lru;
+>  
+> -	for_each_node_state(nid, N_MEMORY)
+> -		nr += mem_cgroup_node_nr_lru_pages(memcg, nid, lru_mask);
+> +	for_each_lru(lru) {
+> +		if (!(BIT(lru) & lru_mask))
+> +			continue;
+> +		nr += memcg_page_state(memcg, NR_LRU_BASE + lru);
+> +	}
 
-> @@ -26,7 +26,6 @@
->  #include <linux/latencytop.h>
->  #include <linux/sched/prio.h>
->  #include <linux/signal_types.h>
-> -#include <linux/psi_types.h>
->  #include <linux/mm_types_task.h>
->  #include <linux/task_io_accounting.h>
->  #include <linux/rseq.h>
+Might be able to use for_each_set_bit(&lru_mnask) here, but it's much
+of a muchness.
 
-Ah yes, earlier versions of the psi patches had a psi_task struct or
-something embedded in task_struct. It's all just simple C types now.
-
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
