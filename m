@@ -1,57 +1,50 @@
-From: Andrew Morton <akpm@linux-foundation.org>
+From: Chris Down <chris@chrisdown.name>
 Subject: Re: [PATCH REBASED] mm, memcg: Make scan aggression always exclude
  protection
-Date: Fri, 22 Mar 2019 13:10:15 -0700
-Message-ID: <20190322131015.05edf9fac014f4cacf10dd2a@linux-foundation.org>
+Date: Fri, 22 Mar 2019 22:00:46 +0000
+Message-ID: <20190322220046.GA7667@chrisdown.name>
 References: <20190228213050.GA28211@chrisdown.name>
-        <20190322160307.GA3316@chrisdown.name>
+ <20190322160307.GA3316@chrisdown.name>
+ <20190322131015.05edf9fac014f4cacf10dd2a@linux-foundation.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190322160307.GA3316@chrisdown.name>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=z3kNb4x6nZaDJzrLCkv/8bMkNzuRCuubIRRX4PjKw9k=;
+        b=t33VxRIuRm3bprIjzdNlkZlPsKCoiKyBSPHzogx7bBAS/0Me5ORQuRWJPkoVAb30lf
+         WWGBbCUiJE/BUNBvPVoeD/FvsAqwyOPJrFQNHfPKqCwFogqxeBdfod9IT8SeXk83lwBq
+         U9Nu+yf0n+hoiMALOIPPIDxC2I56pXMvLTrQs=
+Content-Disposition: inline
+In-Reply-To: <20190322131015.05edf9fac014f4cacf10dd2a@linux-foundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Chris Down <chris@chrisdown.name>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-On Fri, 22 Mar 2019 16:03:07 +0000 Chris Down <chris@chrisdown.name> wrote:
+Andrew Morton writes:
+>Could you please provide more description of the effect this has upon 
+>userspace?  Preferably in real-world cases.  What problems were being 
+>observed and how does this improve things?
 
-> This patch is an incremental improvement on the existing
-> memory.{low,min} relative reclaim work to base its scan pressure
-> calculations on how much protection is available compared to the current
-> usage, rather than how much the current usage is over some protection
-> threshold.
-> 
-> Previously the way that memory.low protection works is that if you are
-> 50% over a certain baseline, you get 50% of your normal scan pressure.
-> This is certainly better than the previous cliff-edge behaviour, but it
-> can be improved even further by always considering memory under the
-> currently enforced protection threshold to be out of bounds. This means
-> that we can set relatively low memory.low thresholds for variable or
-> bursty workloads while still getting a reasonable level of protection,
-> whereas with the previous version we may still trivially hit the 100%
-> clamp. The previous 100% clamp is also somewhat arbitrary, whereas this
-> one is more concretely based on the currently enforced protection
-> threshold, which is likely easier to reason about.
-> 
-> There is also a subtle issue with the way that proportional reclaim
-> worked previously -- it promotes having no memory.low, since it makes
-> pressure higher during low reclaim. This happens because we base our
-> scan pressure modulation on how far memory.current is between memory.min
-> and memory.low, but if memory.low is unset, we only use the overage
-> method. In most cromulent configurations, this then means that we end up
-> with *more* pressure than with no memory.low at all when we're in low
-> reclaim, which is not really very usable or expected.
-> 
-> With this patch, memory.low and memory.min affect reclaim pressure in a
-> more understandable and composable way. For example, from a user
-> standpoint, "protected" memory now remains untouchable from a reclaim
-> aggression standpoint, and users can also have more confidence that
-> bursty workloads will still receive some amount of guaranteed
-> protection.
+Sure! The previous patch's behaviour isn't so much problematic as it is just 
+not as featureful as it could be.
 
-Could you please provide more description of the effect this has upon
-userspace?  Preferably in real-world cases.  What problems were being
-observed and how does this improve things?
+This change doesn't change the experience for the user in the normal case too 
+much. One benefit is that it replaces the (somewhat arbitrary) 100% cutoff with 
+an indefinite slope, which makes it easier to ballpark a memory.low value.
 
+As well as this, the old methodology doesn't quite apply generically to 
+machines with varying amounts of physical memory. Let's say we have a top level 
+cgroup, workload.slice, and another top level cgroup, system-management.slice.  
+We want to roughly give 12G to system-management.slice, so on a 32GB machine we 
+set memory.low to 20GB in workload.slice, and on a 64GB machine we set 
+memory.low to 52GB. However, because these are relative amounts to the total 
+machine size, while the amount of memory we want to generally be willing to 
+yield to system.slice is absolute (12G), we end up putting more pressure on 
+system.slice just because we have a larger machine and a larger workload to 
+fill it, which seems fairly unintuitive. With this new behaviour, we don't end 
+up with this unintended side effect.
