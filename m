@@ -1,105 +1,191 @@
-From: Joel Savitz <jsavitz@redhat.com>
-Subject: Re: [PATCH] cpuset: restore sanity to cpuset_cpus_allowed_fallback()
-Date: Tue, 26 Mar 2019 13:32:59 -0400
-Message-ID: <CAL1p7m6e8KgfM79+biL0HPRofnaghJmrUdX6zX4b0ef=cYbEdg@mail.gmail.com>
-References: <1551920088-30685-1-git-send-email-jsavitz@redhat.com>
- <CAL1p7m5e6HwFQVur+XVKWnpoMRPg0qFs0QkJ_5mnkUoxG_gwMw@mail.gmail.com> <CAL1p7m7n7+wwHsrxywnUYpOKvT6N+5ewCjaZXLPLCsBk+t+oNw@mail.gmail.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 203/262] cgroup/pids: turn cgroup_subsys->free() into cgroup_subsys->release() to fix the accounting
+Date: Wed, 27 Mar 2019 14:00:58 -0400
+Message-ID: <20190327180158.10245-203-sashal@kernel.org>
+References: <20190327180158.10245-1-sashal@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAL1p7m7n7+wwHsrxywnUYpOKvT6N+5ewCjaZXLPLCsBk+t+oNw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1553710116;
+        bh=BB4PbjXe50kzG7St37LEU3FBgzYqQQiYKuZ1AxfRPwk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=pCVPr5XPpsGbhRbsLstcvsWtWKjl/uGIRqNTuqBckUmDyfC+2+VJf2Aln3LYwC3+J
+         QmEpmuV8/j2x98eRSqU/JhJVSGTwy8x+Uzk/uC+KsUH5+tmEE6mN4WoAvTA+5AobgX
+         B2GWZLI5iGFaSN7awS8kAz7wnA3lJAmsZ2Iz/aFM=
+In-Reply-To: <20190327180158.10245-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, Philip Auld <pauld@redhat.com>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Oleg Nesterov <oleg@redhat.com>, Tejun Heo <tj@kernel.org>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org
 
-Forgot to add cc's... my bad.
+From: Oleg Nesterov <oleg@redhat.com>
 
-Best,
-Joel Savitz
+[ Upstream commit 51bee5abeab2058ea5813c5615d6197a23dbf041 ]
 
-On Tue, Mar 26, 2019 at 1:31 PM Joel Savitz <jsavitz@redhat.com> wrote:
->
-> Ping!
->
-> Does anyone have any comments or concerns about this patch?
->
-> Best,
-> Joel Savitz
->
-> Best,
-> Joel Savitz
->
->
-> On Thu, Mar 7, 2019 at 9:42 AM Joel Savitz <jsavitz@redhat.com> wrote:
-> >
-> > On Wed, Mar 6, 2019 at 7:55 PM Joel Savitz <jsavitz@redhat.com> wrote:
-> > >
-> > > If a process is limited by taskset (i.e. cpuset) to only be allowed to
-> > > run on cpu N, and then cpu N is offlined via hotplug, the process will
-> > > be assigned the current value of its cpuset cgroup's effective_cpus field
-> > > in a call to do_set_cpus_allowed() in cpuset_cpus_allowed_fallback().
-> > > This argument's value does not makes sense for this case, because
-> > > task_cs(tsk)->effective_cpus is modified by cpuset_hotplug_workfn()
-> > > to reflect the new value of cpu_active_mask after cpu N is removed from
-> > > the mask. While this may make sense for the cgroup affinity mask, it
-> > > does not make sense on a per-task basis, as a task that was previously
-> > > limited to only be run on cpu N will be limited to every cpu _except_ for
-> > > cpu N after it is offlined/onlined via hotplug.
-> > >
-> > > Pre-patch behavior:
-> > >
-> > >         $ grep Cpus /proc/$$/status
-> > >         Cpus_allowed:   ff
-> > >         Cpus_allowed_list:      0-7
-> > >
-> > >         $ taskset -p 4 $$
-> > >         pid 19202's current affinity mask: f
-> > >         pid 19202's new affinity mask: 4
-> > >
-> > >         $ grep Cpus /proc/self/status
-> > >         Cpus_allowed:   04
-> > >         Cpus_allowed_list:      2
-> > >
-> > >         # echo off > /sys/devices/system/cpu/cpu2/online
-> > >         $ grep Cpus /proc/$$/status
-> > >         Cpus_allowed:   0b
-> > >         Cpus_allowed_list:      0-1,3
-> > >
-> > >         # echo on > /sys/devices/system/cpu/cpu2/online
-> > >         $ grep Cpus /proc/$$/status
-> > >         Cpus_allowed:   0b
-> > >         Cpus_allowed_list:      0-1,3
-> > >
-> > > On a patched system, the final grep produces the following
-> > > output instead:
-> > >
-> > >         $ grep Cpus /proc/$$/status
-> > >         Cpus_allowed:   ff
-> > >         Cpus_allowed_list:      0-7
-> > >
-> > > This patch changes the above behavior by instead simply resetting the mask
-> > > to cpu_possible_mask.
-> > >
-> > > Signed-off-by: Joel Savitz <jsavitz@redhat.com>
-> > > ---
-> > >  kernel/cgroup/cpuset.c | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > >
-> > > diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> > > index 479743db6c37..5f65a2167bdf 100644
-> > > --- a/kernel/cgroup/cpuset.c
-> > > +++ b/kernel/cgroup/cpuset.c
-> > > @@ -3243,7 +3243,7 @@ void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
-> > >  void cpuset_cpus_allowed_fallback(struct task_struct *tsk)
-> > >  {
-> > >         rcu_read_lock();
-> > > -       do_set_cpus_allowed(tsk, task_cs(tsk)->effective_cpus);
-> > > +       do_set_cpus_allowed(tsk, cpu_possible_mask);
-> > >         rcu_read_unlock();
-> > >
-> > >         /*
-> > > --
-> > > 2.20.1
-> > >
+The only user of cgroup_subsys->free() callback is pids_cgrp_subsys which
+needs pids_free() to uncharge the pid.
+
+However, ->free() is called from __put_task_struct()->cgroup_free() and this
+is too late. Even the trivial program which does
+
+	for (;;) {
+		int pid = fork();
+		assert(pid >= 0);
+		if (pid)
+			wait(NULL);
+		else
+			exit(0);
+	}
+
+can run out of limits because release_task()->call_rcu(delayed_put_task_struct)
+implies an RCU gp after the task/pid goes away and before the final put().
+
+Test-case:
+
+	mkdir -p /tmp/CG
+	mount -t cgroup2 none /tmp/CG
+	echo '+pids' > /tmp/CG/cgroup.subtree_control
+
+	mkdir /tmp/CG/PID
+	echo 2 > /tmp/CG/PID/pids.max
+
+	perl -e 'while ($p = fork) { wait; } $p // die "fork failed: $!\n"' &
+	echo $! > /tmp/CG/PID/cgroup.procs
+
+Without this patch the forking process fails soon after migration.
+
+Rename cgroup_subsys->free() to cgroup_subsys->release() and move the callsite
+into the new helper, cgroup_release(), called by release_task() which actually
+frees the pid(s).
+
+Reported-by: Herton R. Krzesinski <hkrzesin@redhat.com>
+Reported-by: Jan Stancek <jstancek@redhat.com>
+Signed-off-by: Oleg Nesterov <oleg@redhat.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ include/linux/cgroup-defs.h |  2 +-
+ include/linux/cgroup.h      |  2 ++
+ kernel/cgroup/cgroup.c      | 15 +++++++++------
+ kernel/cgroup/pids.c        |  4 ++--
+ kernel/exit.c               |  1 +
+ 5 files changed, 15 insertions(+), 9 deletions(-)
+
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 8fcbae1b8db0..120d1d40704b 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -602,7 +602,7 @@ struct cgroup_subsys {
+ 	void (*cancel_fork)(struct task_struct *task);
+ 	void (*fork)(struct task_struct *task);
+ 	void (*exit)(struct task_struct *task);
+-	void (*free)(struct task_struct *task);
++	void (*release)(struct task_struct *task);
+ 	void (*bind)(struct cgroup_subsys_state *root_css);
+ 
+ 	bool early_init:1;
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 9968332cceed..81f58b4a5418 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -121,6 +121,7 @@ extern int cgroup_can_fork(struct task_struct *p);
+ extern void cgroup_cancel_fork(struct task_struct *p);
+ extern void cgroup_post_fork(struct task_struct *p);
+ void cgroup_exit(struct task_struct *p);
++void cgroup_release(struct task_struct *p);
+ void cgroup_free(struct task_struct *p);
+ 
+ int cgroup_init_early(void);
+@@ -697,6 +698,7 @@ static inline int cgroup_can_fork(struct task_struct *p) { return 0; }
+ static inline void cgroup_cancel_fork(struct task_struct *p) {}
+ static inline void cgroup_post_fork(struct task_struct *p) {}
+ static inline void cgroup_exit(struct task_struct *p) {}
++static inline void cgroup_release(struct task_struct *p) {}
+ static inline void cgroup_free(struct task_struct *p) {}
+ 
+ static inline int cgroup_init_early(void) { return 0; }
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 503bba3c4bae..f84bf28f36ba 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -197,7 +197,7 @@ static u64 css_serial_nr_next = 1;
+  */
+ static u16 have_fork_callback __read_mostly;
+ static u16 have_exit_callback __read_mostly;
+-static u16 have_free_callback __read_mostly;
++static u16 have_release_callback __read_mostly;
+ static u16 have_canfork_callback __read_mostly;
+ 
+ /* cgroup namespace for init task */
+@@ -5316,7 +5316,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
+ 
+ 	have_fork_callback |= (bool)ss->fork << ss->id;
+ 	have_exit_callback |= (bool)ss->exit << ss->id;
+-	have_free_callback |= (bool)ss->free << ss->id;
++	have_release_callback |= (bool)ss->release << ss->id;
+ 	have_canfork_callback |= (bool)ss->can_fork << ss->id;
+ 
+ 	/* At system boot, before all subsystems have been
+@@ -5752,16 +5752,19 @@ void cgroup_exit(struct task_struct *tsk)
+ 	} while_each_subsys_mask();
+ }
+ 
+-void cgroup_free(struct task_struct *task)
++void cgroup_release(struct task_struct *task)
+ {
+-	struct css_set *cset = task_css_set(task);
+ 	struct cgroup_subsys *ss;
+ 	int ssid;
+ 
+-	do_each_subsys_mask(ss, ssid, have_free_callback) {
+-		ss->free(task);
++	do_each_subsys_mask(ss, ssid, have_release_callback) {
++		ss->release(task);
+ 	} while_each_subsys_mask();
++}
+ 
++void cgroup_free(struct task_struct *task)
++{
++	struct css_set *cset = task_css_set(task);
+ 	put_css_set(cset);
+ }
+ 
+diff --git a/kernel/cgroup/pids.c b/kernel/cgroup/pids.c
+index 9829c67ebc0a..c9960baaa14f 100644
+--- a/kernel/cgroup/pids.c
++++ b/kernel/cgroup/pids.c
+@@ -247,7 +247,7 @@ static void pids_cancel_fork(struct task_struct *task)
+ 	pids_uncharge(pids, 1);
+ }
+ 
+-static void pids_free(struct task_struct *task)
++static void pids_release(struct task_struct *task)
+ {
+ 	struct pids_cgroup *pids = css_pids(task_css(task, pids_cgrp_id));
+ 
+@@ -342,7 +342,7 @@ struct cgroup_subsys pids_cgrp_subsys = {
+ 	.cancel_attach 	= pids_cancel_attach,
+ 	.can_fork	= pids_can_fork,
+ 	.cancel_fork	= pids_cancel_fork,
+-	.free		= pids_free,
++	.release	= pids_release,
+ 	.legacy_cftypes	= pids_files,
+ 	.dfl_cftypes	= pids_files,
+ 	.threaded	= true,
+diff --git a/kernel/exit.c b/kernel/exit.c
+index 2639a30a8aa5..2166c2d92ddc 100644
+--- a/kernel/exit.c
++++ b/kernel/exit.c
+@@ -219,6 +219,7 @@ void release_task(struct task_struct *p)
+ 	}
+ 
+ 	write_unlock_irq(&tasklist_lock);
++	cgroup_release(p);
+ 	release_thread(p);
+ 	call_rcu(&p->rcu, delayed_put_task_struct);
+ 
+-- 
+2.19.1
+
