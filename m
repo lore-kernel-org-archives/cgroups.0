@@ -1,116 +1,91 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 026/192] memcg: killed threads should not invoke memcg OOM killer
-Date: Wed, 27 Mar 2019 14:07:38 -0400
-Message-ID: <20190327181025.13507-26-sashal@kernel.org>
-References: <20190327181025.13507-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.0 133/262] cgroup, rstat: Don't flush subtree root unless necessary
+Date: Wed, 27 Mar 2019 13:59:48 -0400
+Message-ID: <20190327180158.10245-133-sashal@kernel.org>
+References: <20190327180158.10245-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553710270;
-        bh=Mh/4AwY9a0OWVofv47T5bGj6Q2yFFjAdYT4sKx0s80w=;
+        s=default; t=1553709959;
+        bh=pylpkBLNcCZBLgMSDbploWxJ69hWPZeS0H5eeVswZy0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=SA2lh+AAUVQkL1+HzlZZifq6G7DmYcdtg3FFhWcZXK2VIzXdmEe3DWEWNinc+94Mv
-         oOgcj4eZrKdGUMEyDe5V/BKJ8NS9seMg8WgJh7rBuBC7F3+eT7Fv6J3iKThsmkzYCg
-         ma206JbQDKh6bI4vQ5eg1ORJpFo7Lv+a4+D1UOfg=
-In-Reply-To: <20190327181025.13507-1-sashal@kernel.org>
+        b=T+Mejj2lrNbtgd5j/iaQ/kU1D54sTpO+YpP53CSU/0Ep+sQLRxbWU/TOhcHbdegSv
+         H8HbQlNHJFLktHktOYMzHZfQqDJiUwQsnFPfRgWZhVGML8bf1s8jj60KcgDJpjM8Fh
+         6GVuZbIWXtxbNsqd6ZgCz6TYGSSsIgbRFNTO5TiM=
+In-Reply-To: <20190327180158.10245-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Kirill Tkhai <ktkhai@virtuozzo.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org
+Cc: Tejun Heo <tj@kernel.org>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org
 
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+From: Tejun Heo <tj@kernel.org>
 
-[ Upstream commit 7775face207922ea62a4e96b9cd45abfdc7b9840 ]
+[ Upstream commit b4ff1b44bcd384d22fcbac6ebaf9cc0d33debe50 ]
 
-If a memory cgroup contains a single process with many threads
-(including different process group sharing the mm) then it is possible
-to trigger a race when the oom killer complains that there are no oom
-elible tasks and complain into the log which is both annoying and
-confusing because there is no actual problem.  The race looks as
-follows:
+cgroup_rstat_cpu_pop_updated() is used to traverse the updated cgroups
+on flush.  While it was only visiting updated ones in the subtree, it
+was visiting @root unconditionally.  We can easily check whether @root
+is updated or not by looking at its ->updated_next just as with the
+cgroups in the subtree.
 
-P1				oom_reaper		P2
-try_charge						try_charge
-  mem_cgroup_out_of_memory
-    mutex_lock(oom_lock)
-      out_of_memory
-        oom_kill_process(P1,P2)
-         wake_oom_reaper
-    mutex_unlock(oom_lock)
-    				oom_reap_task
-							  mutex_lock(oom_lock)
-							    select_bad_process # no victim
+* Remove the unnecessary cgroup_parent() test.  The system root cgroup
+  is never updated and thus its ->updated_next is always NULL.  No
+  need to test whether cgroup_parent() exists in addition to
+  ->updated_next.
 
-The problem is more visible with many threads.
+* Terminate traverse if ->updated_next is NULL.  This can only happen
+  for subtree @root and there's no reason to visit it if it's not
+  marked updated.
 
-Fix this by checking for fatal_signal_pending from
-mem_cgroup_out_of_memory when the oom_lock is already held.
+This reduces cpu consumption when reading a lot of rstat backed files.
+In a micro benchmark reading stat from ~1600 cgroups, the sys time was
+lowered by >40%.
 
-The oom bypass is safe because we do the same early in the try_charge
-path already.  The situation migh have changed in the mean time.  It
-should be safe to check for fatal_signal_pending and tsk_is_oom_victim
-but for a better code readability abstract the current charge bypass
-condition into should_force_charge and reuse it from that path.  "
-
-Link: http://lkml.kernel.org/r/01370f70-e1f6-ebe4-b95e-0df21a0bc15e@i-love.sakura.ne.jp
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Acked-by: Michal Hocko <mhocko@suse.com>
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-Cc: David Rientjes <rientjes@google.com>
-Cc: Kirill Tkhai <ktkhai@virtuozzo.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- mm/memcontrol.c | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+ kernel/cgroup/rstat.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 9518aefd8cbb..7c712c4565e6 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -248,6 +248,12 @@ enum res_type {
- 	     iter != NULL;				\
- 	     iter = mem_cgroup_iter(NULL, iter, NULL))
- 
-+static inline bool should_force_charge(void)
-+{
-+	return tsk_is_oom_victim(current) || fatal_signal_pending(current) ||
-+		(current->flags & PF_EXITING);
-+}
-+
- /* Some nice accessors for the vmpressure. */
- struct vmpressure *memcg_to_vmpressure(struct mem_cgroup *memcg)
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index d503d1a9007c..bb95a35e8c2d 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -87,7 +87,6 @@ static struct cgroup *cgroup_rstat_cpu_pop_updated(struct cgroup *pos,
+ 						   struct cgroup *root, int cpu)
  {
-@@ -1382,8 +1388,13 @@ static bool mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	};
- 	bool ret;
+ 	struct cgroup_rstat_cpu *rstatc;
+-	struct cgroup *parent;
  
--	mutex_lock(&oom_lock);
--	ret = out_of_memory(&oc);
-+	if (mutex_lock_killable(&oom_lock))
-+		return true;
-+	/*
-+	 * A few threads which were not waiting at mutex_lock_killable() can
-+	 * fail to bail out. Therefore, check again after holding oom_lock.
-+	 */
-+	ret = should_force_charge() || out_of_memory(&oc);
- 	mutex_unlock(&oom_lock);
- 	return ret;
- }
-@@ -2200,9 +2211,7 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	 * bypass the last charges so that they can exit quickly and
- 	 * free their memory.
+ 	if (pos == root)
+ 		return NULL;
+@@ -115,8 +114,8 @@ static struct cgroup *cgroup_rstat_cpu_pop_updated(struct cgroup *pos,
+ 	 * However, due to the way we traverse, @pos will be the first
+ 	 * child in most cases. The only exception is @root.
  	 */
--	if (unlikely(tsk_is_oom_victim(current) ||
--		     fatal_signal_pending(current) ||
--		     current->flags & PF_EXITING))
-+	if (unlikely(should_force_charge()))
- 		goto force;
+-	parent = cgroup_parent(pos);
+-	if (parent && rstatc->updated_next) {
++	if (rstatc->updated_next) {
++		struct cgroup *parent = cgroup_parent(pos);
+ 		struct cgroup_rstat_cpu *prstatc = cgroup_rstat_cpu(parent, cpu);
+ 		struct cgroup_rstat_cpu *nrstatc;
+ 		struct cgroup **nextp;
+@@ -140,9 +139,12 @@ static struct cgroup *cgroup_rstat_cpu_pop_updated(struct cgroup *pos,
+ 		 * updated stat.
+ 		 */
+ 		smp_mb();
++
++		return pos;
+ 	}
  
- 	/*
+-	return pos;
++	/* only happens for @root */
++	return NULL;
+ }
+ 
+ /* see cgroup_rstat_flush() */
 -- 
 2.19.1
 
