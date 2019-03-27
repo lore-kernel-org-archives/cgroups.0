@@ -1,20 +1,20 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.14 095/123] cgroup/pids: turn cgroup_subsys->free() into cgroup_subsys->release() to fix the accounting
-Date: Wed, 27 Mar 2019 14:15:59 -0400
-Message-ID: <20190327181628.15899-95-sashal@kernel.org>
-References: <20190327181628.15899-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 149/192] cgroup/pids: turn cgroup_subsys->free() into cgroup_subsys->release() to fix the accounting
+Date: Wed, 27 Mar 2019 14:09:41 -0400
+Message-ID: <20190327181025.13507-149-sashal@kernel.org>
+References: <20190327181025.13507-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <stable-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553710776;
-        bh=z49brsPFgwylA3azQBtZ/qBl3u50Q+P8cQncW8EKeGM=;
+        s=default; t=1553710505;
+        bh=tFeNp6xCiZeNYkO2BJ7gGcX3pgY0wjQG9gAkEM1G8oE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hH7vBRVnYYJszucEv6v1CH2fKgva/DxaGUw9ueUaEpgwXbKZNp4CsqqiCSamaRLhw
-         6K3PiiH7Fo9jWWvi4O+8U5MM0gDsZJuo+aA4gtWRozJkxrHcPMtwu2xpCAhS1fpiCk
-         iCXO/j1uvlj9RuOtyZPKCRdlWPEYPTkzEJBUv+5o=
-In-Reply-To: <20190327181628.15899-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        b=Aqe7uKlF1v9ZtSuArorD4hovd/p75LtfWyEK2S4xGIzRMxMnEYw0+c2lIBaJNnfF1
+         VB+6sdTtfH0M5MF59LIKRKHjKd939OTp0urQzt1p0JWj+GJbSwXDLY6OkaVF2h/qAS
+         HsQoAWmRGJ5q/Th+FMj2kv7d+oyp+alH9hXzEV6A=
+In-Reply-To: <20190327181025.13507-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
@@ -74,10 +74,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  5 files changed, 15 insertions(+), 9 deletions(-)
 
 diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index e7905d9353e8..93a2469a9130 100644
+index 22254c1fe1c5..6002275937f5 100644
 --- a/include/linux/cgroup-defs.h
 +++ b/include/linux/cgroup-defs.h
-@@ -523,7 +523,7 @@ struct cgroup_subsys {
+@@ -597,7 +597,7 @@ struct cgroup_subsys {
  	void (*cancel_fork)(struct task_struct *task);
  	void (*fork)(struct task_struct *task);
  	void (*exit)(struct task_struct *task);
@@ -87,10 +87,10 @@ index e7905d9353e8..93a2469a9130 100644
  
  	bool early_init:1;
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index dddbc29e2009..8e83c9055ccb 100644
+index 32c553556bbd..ca51b2c15bcc 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -118,6 +118,7 @@ extern int cgroup_can_fork(struct task_struct *p);
+@@ -119,6 +119,7 @@ extern int cgroup_can_fork(struct task_struct *p);
  extern void cgroup_cancel_fork(struct task_struct *p);
  extern void cgroup_post_fork(struct task_struct *p);
  void cgroup_exit(struct task_struct *p);
@@ -98,7 +98,7 @@ index dddbc29e2009..8e83c9055ccb 100644
  void cgroup_free(struct task_struct *p);
  
  int cgroup_init_early(void);
-@@ -668,6 +669,7 @@ static inline int cgroup_can_fork(struct task_struct *p) { return 0; }
+@@ -699,6 +700,7 @@ static inline int cgroup_can_fork(struct task_struct *p) { return 0; }
  static inline void cgroup_cancel_fork(struct task_struct *p) {}
  static inline void cgroup_post_fork(struct task_struct *p) {}
  static inline void cgroup_exit(struct task_struct *p) {}
@@ -107,10 +107,10 @@ index dddbc29e2009..8e83c9055ccb 100644
  
  static inline int cgroup_init_early(void) { return 0; }
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 7e79358b4473..694b1cc8d144 100644
+index e710ac7fbbbf..63dae7e0ccae 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -187,7 +187,7 @@ static u64 css_serial_nr_next = 1;
+@@ -195,7 +195,7 @@ static u64 css_serial_nr_next = 1;
   */
  static u16 have_fork_callback __read_mostly;
  static u16 have_exit_callback __read_mostly;
@@ -119,7 +119,7 @@ index 7e79358b4473..694b1cc8d144 100644
  static u16 have_canfork_callback __read_mostly;
  
  /* cgroup namespace for init task */
-@@ -5112,7 +5112,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
+@@ -5240,7 +5240,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
  
  	have_fork_callback |= (bool)ss->fork << ss->id;
  	have_exit_callback |= (bool)ss->exit << ss->id;
@@ -128,7 +128,7 @@ index 7e79358b4473..694b1cc8d144 100644
  	have_canfork_callback |= (bool)ss->can_fork << ss->id;
  
  	/* At system boot, before all subsystems have been
-@@ -5546,16 +5546,19 @@ void cgroup_exit(struct task_struct *tsk)
+@@ -5676,16 +5676,19 @@ void cgroup_exit(struct task_struct *tsk)
  	} while_each_subsys_mask();
  }
  
@@ -175,10 +175,10 @@ index 9829c67ebc0a..c9960baaa14f 100644
  	.dfl_cftypes	= pids_files,
  	.threaded	= true,
 diff --git a/kernel/exit.c b/kernel/exit.c
-index 5523fb0c20c8..95ce231ff5e2 100644
+index d607e23fd0c3..5c0964dc805a 100644
 --- a/kernel/exit.c
 +++ b/kernel/exit.c
-@@ -218,6 +218,7 @@ void release_task(struct task_struct *p)
+@@ -219,6 +219,7 @@ void release_task(struct task_struct *p)
  	}
  
  	write_unlock_irq(&tasklist_lock);
