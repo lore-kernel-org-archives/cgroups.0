@@ -1,191 +1,91 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 149/192] cgroup/pids: turn cgroup_subsys->free() into cgroup_subsys->release() to fix the accounting
-Date: Wed, 27 Mar 2019 14:09:41 -0400
-Message-ID: <20190327181025.13507-149-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 096/192] cgroup, rstat: Don't flush subtree root unless necessary
+Date: Wed, 27 Mar 2019 14:08:48 -0400
+Message-ID: <20190327181025.13507-96-sashal@kernel.org>
 References: <20190327181025.13507-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553710505;
-        bh=tFeNp6xCiZeNYkO2BJ7gGcX3pgY0wjQG9gAkEM1G8oE=;
+        s=default; t=1553710389;
+        bh=pylpkBLNcCZBLgMSDbploWxJ69hWPZeS0H5eeVswZy0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Aqe7uKlF1v9ZtSuArorD4hovd/p75LtfWyEK2S4xGIzRMxMnEYw0+c2lIBaJNnfF1
-         VB+6sdTtfH0M5MF59LIKRKHjKd939OTp0urQzt1p0JWj+GJbSwXDLY6OkaVF2h/qAS
-         HsQoAWmRGJ5q/Th+FMj2kv7d+oyp+alH9hXzEV6A=
+        b=atcY4NnBqaJaP0SxO43hxrgEkFntdLvPvltrq22Te2DxE3yNfhjI0DpyYl92D39YZ
+         DMJ1xOJwKMPnAWe1YEDFO3UOa82izGwCELjb/ynYkYJ4vntr8MxZ64+wkvgvsZBz+e
+         mhdcaUOWMiwwHsDx1nEqZxrW9V/xIknNILk5SkEg=
 In-Reply-To: <20190327181025.13507-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Oleg Nesterov <oleg@redhat.com>, Tejun Heo <tj@kernel.org>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org
 
-From: Oleg Nesterov <oleg@redhat.com>
+From: Tejun Heo <tj@kernel.org>
 
-[ Upstream commit 51bee5abeab2058ea5813c5615d6197a23dbf041 ]
+[ Upstream commit b4ff1b44bcd384d22fcbac6ebaf9cc0d33debe50 ]
 
-The only user of cgroup_subsys->free() callback is pids_cgrp_subsys which
-needs pids_free() to uncharge the pid.
+cgroup_rstat_cpu_pop_updated() is used to traverse the updated cgroups
+on flush.  While it was only visiting updated ones in the subtree, it
+was visiting @root unconditionally.  We can easily check whether @root
+is updated or not by looking at its ->updated_next just as with the
+cgroups in the subtree.
 
-However, ->free() is called from __put_task_struct()->cgroup_free() and this
-is too late. Even the trivial program which does
+* Remove the unnecessary cgroup_parent() test.  The system root cgroup
+  is never updated and thus its ->updated_next is always NULL.  No
+  need to test whether cgroup_parent() exists in addition to
+  ->updated_next.
 
-	for (;;) {
-		int pid = fork();
-		assert(pid >= 0);
-		if (pid)
-			wait(NULL);
-		else
-			exit(0);
-	}
+* Terminate traverse if ->updated_next is NULL.  This can only happen
+  for subtree @root and there's no reason to visit it if it's not
+  marked updated.
 
-can run out of limits because release_task()->call_rcu(delayed_put_task_struct)
-implies an RCU gp after the task/pid goes away and before the final put().
+This reduces cpu consumption when reading a lot of rstat backed files.
+In a micro benchmark reading stat from ~1600 cgroups, the sys time was
+lowered by >40%.
 
-Test-case:
-
-	mkdir -p /tmp/CG
-	mount -t cgroup2 none /tmp/CG
-	echo '+pids' > /tmp/CG/cgroup.subtree_control
-
-	mkdir /tmp/CG/PID
-	echo 2 > /tmp/CG/PID/pids.max
-
-	perl -e 'while ($p = fork) { wait; } $p // die "fork failed: $!\n"' &
-	echo $! > /tmp/CG/PID/cgroup.procs
-
-Without this patch the forking process fails soon after migration.
-
-Rename cgroup_subsys->free() to cgroup_subsys->release() and move the callsite
-into the new helper, cgroup_release(), called by release_task() which actually
-frees the pid(s).
-
-Reported-by: Herton R. Krzesinski <hkrzesin@redhat.com>
-Reported-by: Jan Stancek <jstancek@redhat.com>
-Signed-off-by: Oleg Nesterov <oleg@redhat.com>
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- include/linux/cgroup-defs.h |  2 +-
- include/linux/cgroup.h      |  2 ++
- kernel/cgroup/cgroup.c      | 15 +++++++++------
- kernel/cgroup/pids.c        |  4 ++--
- kernel/exit.c               |  1 +
- 5 files changed, 15 insertions(+), 9 deletions(-)
+ kernel/cgroup/rstat.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 22254c1fe1c5..6002275937f5 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -597,7 +597,7 @@ struct cgroup_subsys {
- 	void (*cancel_fork)(struct task_struct *task);
- 	void (*fork)(struct task_struct *task);
- 	void (*exit)(struct task_struct *task);
--	void (*free)(struct task_struct *task);
-+	void (*release)(struct task_struct *task);
- 	void (*bind)(struct cgroup_subsys_state *root_css);
- 
- 	bool early_init:1;
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 32c553556bbd..ca51b2c15bcc 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -119,6 +119,7 @@ extern int cgroup_can_fork(struct task_struct *p);
- extern void cgroup_cancel_fork(struct task_struct *p);
- extern void cgroup_post_fork(struct task_struct *p);
- void cgroup_exit(struct task_struct *p);
-+void cgroup_release(struct task_struct *p);
- void cgroup_free(struct task_struct *p);
- 
- int cgroup_init_early(void);
-@@ -699,6 +700,7 @@ static inline int cgroup_can_fork(struct task_struct *p) { return 0; }
- static inline void cgroup_cancel_fork(struct task_struct *p) {}
- static inline void cgroup_post_fork(struct task_struct *p) {}
- static inline void cgroup_exit(struct task_struct *p) {}
-+static inline void cgroup_release(struct task_struct *p) {}
- static inline void cgroup_free(struct task_struct *p) {}
- 
- static inline int cgroup_init_early(void) { return 0; }
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index e710ac7fbbbf..63dae7e0ccae 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -195,7 +195,7 @@ static u64 css_serial_nr_next = 1;
-  */
- static u16 have_fork_callback __read_mostly;
- static u16 have_exit_callback __read_mostly;
--static u16 have_free_callback __read_mostly;
-+static u16 have_release_callback __read_mostly;
- static u16 have_canfork_callback __read_mostly;
- 
- /* cgroup namespace for init task */
-@@ -5240,7 +5240,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
- 
- 	have_fork_callback |= (bool)ss->fork << ss->id;
- 	have_exit_callback |= (bool)ss->exit << ss->id;
--	have_free_callback |= (bool)ss->free << ss->id;
-+	have_release_callback |= (bool)ss->release << ss->id;
- 	have_canfork_callback |= (bool)ss->can_fork << ss->id;
- 
- 	/* At system boot, before all subsystems have been
-@@ -5676,16 +5676,19 @@ void cgroup_exit(struct task_struct *tsk)
- 	} while_each_subsys_mask();
- }
- 
--void cgroup_free(struct task_struct *task)
-+void cgroup_release(struct task_struct *task)
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index d503d1a9007c..bb95a35e8c2d 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -87,7 +87,6 @@ static struct cgroup *cgroup_rstat_cpu_pop_updated(struct cgroup *pos,
+ 						   struct cgroup *root, int cpu)
  {
--	struct css_set *cset = task_css_set(task);
- 	struct cgroup_subsys *ss;
- 	int ssid;
+ 	struct cgroup_rstat_cpu *rstatc;
+-	struct cgroup *parent;
  
--	do_each_subsys_mask(ss, ssid, have_free_callback) {
--		ss->free(task);
-+	do_each_subsys_mask(ss, ssid, have_release_callback) {
-+		ss->release(task);
- 	} while_each_subsys_mask();
-+}
- 
-+void cgroup_free(struct task_struct *task)
-+{
-+	struct css_set *cset = task_css_set(task);
- 	put_css_set(cset);
- }
- 
-diff --git a/kernel/cgroup/pids.c b/kernel/cgroup/pids.c
-index 9829c67ebc0a..c9960baaa14f 100644
---- a/kernel/cgroup/pids.c
-+++ b/kernel/cgroup/pids.c
-@@ -247,7 +247,7 @@ static void pids_cancel_fork(struct task_struct *task)
- 	pids_uncharge(pids, 1);
- }
- 
--static void pids_free(struct task_struct *task)
-+static void pids_release(struct task_struct *task)
- {
- 	struct pids_cgroup *pids = css_pids(task_css(task, pids_cgrp_id));
- 
-@@ -342,7 +342,7 @@ struct cgroup_subsys pids_cgrp_subsys = {
- 	.cancel_attach 	= pids_cancel_attach,
- 	.can_fork	= pids_can_fork,
- 	.cancel_fork	= pids_cancel_fork,
--	.free		= pids_free,
-+	.release	= pids_release,
- 	.legacy_cftypes	= pids_files,
- 	.dfl_cftypes	= pids_files,
- 	.threaded	= true,
-diff --git a/kernel/exit.c b/kernel/exit.c
-index d607e23fd0c3..5c0964dc805a 100644
---- a/kernel/exit.c
-+++ b/kernel/exit.c
-@@ -219,6 +219,7 @@ void release_task(struct task_struct *p)
+ 	if (pos == root)
+ 		return NULL;
+@@ -115,8 +114,8 @@ static struct cgroup *cgroup_rstat_cpu_pop_updated(struct cgroup *pos,
+ 	 * However, due to the way we traverse, @pos will be the first
+ 	 * child in most cases. The only exception is @root.
+ 	 */
+-	parent = cgroup_parent(pos);
+-	if (parent && rstatc->updated_next) {
++	if (rstatc->updated_next) {
++		struct cgroup *parent = cgroup_parent(pos);
+ 		struct cgroup_rstat_cpu *prstatc = cgroup_rstat_cpu(parent, cpu);
+ 		struct cgroup_rstat_cpu *nrstatc;
+ 		struct cgroup **nextp;
+@@ -140,9 +139,12 @@ static struct cgroup *cgroup_rstat_cpu_pop_updated(struct cgroup *pos,
+ 		 * updated stat.
+ 		 */
+ 		smp_mb();
++
++		return pos;
  	}
  
- 	write_unlock_irq(&tasklist_lock);
-+	cgroup_release(p);
- 	release_thread(p);
- 	call_rcu(&p->rcu, delayed_put_task_struct);
+-	return pos;
++	/* only happens for @root */
++	return NULL;
+ }
  
+ /* see cgroup_rstat_flush() */
 -- 
 2.19.1
 
