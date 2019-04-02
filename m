@@ -1,116 +1,150 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.0 036/262] memcg: killed threads should not invoke memcg OOM killer
-Date: Wed, 27 Mar 2019 13:58:11 -0400
-Message-ID: <20190327180158.10245-36-sashal@kernel.org>
-References: <20190327180158.10245-1-sashal@kernel.org>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: [PATCH v9 4/9] cgroup: cgroup v2 freezer
+Date: Tue, 2 Apr 2019 18:02:41 +0200
+Message-ID: <20190402160241.GA10425@redhat.com>
+References: <20190316175812.6787-1-guro@fb.com>
+ <20190316175812.6787-5-guro@fb.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1553709783;
-        bh=pPf0xG7tuJ/KeSsZbMSwoj8AVi5Un66nVo/A/1eQSFM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CaENcYPGYio1KqBnWQi9APPoYaZrdGohufPuawQZc6bmaKTC+HEtPqHFEQfeb6r89
-         I88mB8kxI+OtVjI4yYiXc2533KwBuE+4qxIVzV9fwR0/I6x6XWKoHF2JNNgSYxV6nc
-         QTMDL77c0VJaKPZprfS3hg6l7PPmpxyDUaGu3ku0=
-In-Reply-To: <20190327180158.10245-1-sashal@kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190316175812.6787-5-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, David Rientjes <rientjes@google.com>, Kirill Tkhai <ktkhai@virtuozzo.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guroan@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Hi Roman,
 
-[ Upstream commit 7775face207922ea62a4e96b9cd45abfdc7b9840 ]
+let me apologize again for the huge delay.
 
-If a memory cgroup contains a single process with many threads
-(including different process group sharing the mm) then it is possible
-to trigger a race when the oom killer complains that there are no oom
-elible tasks and complain into the log which is both annoying and
-confusing because there is no actual problem.  The race looks as
-follows:
+I see nothing really wrong in this version, so no objections from me.
 
-P1				oom_reaper		P2
-try_charge						try_charge
-  mem_cgroup_out_of_memory
-    mutex_lock(oom_lock)
-      out_of_memory
-        oom_kill_process(P1,P2)
-         wake_oom_reaper
-    mutex_unlock(oom_lock)
-    				oom_reap_task
-							  mutex_lock(oom_lock)
-							    select_bad_process # no victim
+However, 4/9 doesn't apply, so it seems you will need to make v10 anyway
+to adapt these changes to the recent changes in kernel/signal.c ;)
 
-The problem is more visible with many threads.
+Just a couple of minor nits below...
 
-Fix this by checking for fatal_signal_pending from
-mem_cgroup_out_of_memory when the oom_lock is already held.
+On 03/16, Roman Gushchin wrote:
+>
+> + * If always_leave is not set, and the cgroup is freezing,
+> + * we're racing with the cgroup freezing. In this case, we don't
+> + * drop the frozen counter to avoid a transient switch to
+> + * the unfrozen state. To make sure that the task won't go
+> + * to the userspace before reaching the signal handler loop,
+> + * let's set TIF_SIGPENDING flag.
+> + */
+> +void cgroup_leave_frozen(bool always_leave)
+> +{
+> +	struct cgroup *cgrp;
+> +
+> +	spin_lock_irq(&css_set_lock);
+> +	cgrp = task_dfl_cgroup(current);
+> +	if (always_leave || !test_bit(CGRP_FREEZE, &cgrp->flags)) {
+> +		cgroup_dec_frozen_cnt(cgrp);
+> +		cgroup_update_frozen(cgrp);
+> +		WARN_ON_ONCE(!current->frozen);
+> +		current->frozen = false;
+> +	} else {
+> +		set_tsk_thread_flag(current, TIF_SIGPENDING);
 
-The oom bypass is safe because we do the same early in the try_charge
-path already.  The situation migh have changed in the mean time.  It
-should be safe to check for fatal_signal_pending and tsk_is_oom_victim
-but for a better code readability abstract the current charge bypass
-condition into should_force_charge and reuse it from that path.  "
+The setting of TIF_SIGPENDING looks unnecessary and even not correct; because
+this flag must not be updated without ->siglock held (even if "set" is more
+or less safe).
 
-Link: http://lkml.kernel.org/r/01370f70-e1f6-ebe4-b95e-0df21a0bc15e@i-love.sakura.ne.jp
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Acked-by: Michal Hocko <mhocko@suse.com>
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-Cc: David Rientjes <rientjes@google.com>
-Cc: Kirill Tkhai <ktkhai@virtuozzo.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- mm/memcontrol.c | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+If JOBCTL_TRAP_FREEZE is already set, then TIF_SIGPENDING must be set too.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index af7f18b32389..79a7d2a06bba 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -248,6 +248,12 @@ enum res_type {
- 	     iter != NULL;				\
- 	     iter = mem_cgroup_iter(NULL, iter, NULL))
- 
-+static inline bool should_force_charge(void)
-+{
-+	return tsk_is_oom_victim(current) || fatal_signal_pending(current) ||
-+		(current->flags & PF_EXITING);
-+}
-+
- /* Some nice accessors for the vmpressure. */
- struct vmpressure *memcg_to_vmpressure(struct mem_cgroup *memcg)
- {
-@@ -1389,8 +1395,13 @@ static bool mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	};
- 	bool ret;
- 
--	mutex_lock(&oom_lock);
--	ret = out_of_memory(&oc);
-+	if (mutex_lock_killable(&oom_lock))
-+		return true;
-+	/*
-+	 * A few threads which were not waiting at mutex_lock_killable() can
-+	 * fail to bail out. Therefore, check again after holding oom_lock.
-+	 */
-+	ret = should_force_charge() || out_of_memory(&oc);
- 	mutex_unlock(&oom_lock);
- 	return ret;
- }
-@@ -2209,9 +2220,7 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	 * bypass the last charges so that they can exit quickly and
- 	 * free their memory.
- 	 */
--	if (unlikely(tsk_is_oom_victim(current) ||
--		     fatal_signal_pending(current) ||
--		     current->flags & PF_EXITING))
-+	if (unlikely(should_force_charge()))
- 		goto force;
- 
- 	/*
--- 
-2.19.1
+Otherwise set_tsk_thread_flag(TIF_SIGPENDING) can't help because the task can
+do recalc_sigpending() at any moment.
+
+In particular, get_signal() does dequeue_signal()->recalc_sigpending() right
+after cgroup_leave_frozen(), so I fail to understand why do we need to set
+TIF_SIGPENDING.
+
+
+> @@ -912,6 +912,10 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
+>  	tsk->fail_nth = 0;
+>  #endif
+>
+> +#ifdef CONFIG_CGROUPS
+> +	tsk->frozen = 0;
+> +#endif
+
+Hmm, do we really need this? How can a cgroup_task_frozen() task call
+copy_process() ?
+
+> +static void do_freezer_trap(void)
+> +	__releases(&current->sighand->siglock)
+> +{
+> +	/*
+> +	 * If a fatal signal is pending, there is no way back for the process,
+> +	 * so let it escape from the freezer trap and exit.
+> +	 * If the task has been frozen, cgroup_leave_frozen() will be invoked
+> +	 * to update the cgroup state, if necessary.
+> +	 */
+> +	if (fatal_signal_pending(current)) {
+> +		current->jobctl &= ~JOBCTL_TRAP_FREEZE;
+> +		spin_unlock_irq(&current->sighand->siglock);
+> +		return;
+> +	}
+> +
+> +	/*
+> +	 * If there are other trap bits pending except JOBCTL_TRAP_FREEZE,
+> +	 * let's make another loop to give it a chance to be handled.
+> +	 * In any case, we'll return back.
+> +	 */
+> +	if (((current->jobctl & (JOBCTL_PENDING_MASK | JOBCTL_TRAP_FREEZE)) !=
+> +	     JOBCTL_TRAP_FREEZE) || fatal_signal_pending(current)) {
+                                    ^^^^^^^^^^^^^^^^^^^^
+
+We have already checked fatal_signal_pending() at the start?
+
+And in fact, you can probably remove fatal_signal_pending() altogether...
+Note that with recent changes get_signal() does
+
+	if (signal_group_exit(signal)) {
+		ksig->info.si_signo = signr = SIGKILL;
+		sigdelset(&current->pending.signal, SIGKILL);
+		recalc_sigpending();
+		goto fatal;
+	}
+
+before the main loop, so afaics fatal_signal_pending() == T in do_freezer_trap()
+is simply impossible. This means that you can't clear JOBCTL_TRAP_FREEZE, but
+this is probably fine... if not, you can add jobctl &= ~JOBCTL_TRAP_FREEZE into
+the "if (signal_group_exit(signal))" above.
+
+> @@ -2401,12 +2453,27 @@ bool get_signal(struct ksignal *ksig)
+>  		    do_signal_stop(0))
+>  			goto relock;
+>  
+> -		if (unlikely(current->jobctl & JOBCTL_TRAP_MASK)) {
+> -			do_jobctl_trap();
+> -			spin_unlock_irq(&sighand->siglock);
+> +		if (unlikely(current->jobctl &
+> +			     (JOBCTL_TRAP_MASK | JOBCTL_TRAP_FREEZE))) {
+> +			if (current->jobctl & JOBCTL_TRAP_MASK) {
+> +				do_jobctl_trap();
+> +				spin_unlock_irq(&sighand->siglock);
+> +			} else if (current->jobctl & JOBCTL_TRAP_FREEZE)
+> +				do_freezer_trap();
+> +
+>  			goto relock;
+>  		}
+>  
+> +		/*
+> +		 * If the task is leaving the frozen state, let's update
+> +		 * cgroup counters and reset the frozen bit.
+> +		 */
+> +		if (unlikely(cgroup_task_frozen(current))) {
+> +			spin_unlock_irq(&sighand->siglock);
+> +			cgroup_leave_frozen(true);
+> +			spin_lock_irq(&sighand->siglock);
+
+I'd suggest to do "goto relock" rather than spin_lock_irq(&sighand->siglock).
+To ensure we can't miss SIGKILL which can come right after we drop siglock,
+note again the new signal_group_exit() check above.
+
+Oleg.
 
