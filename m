@@ -1,106 +1,58 @@
-From: Juri Lelli <juri.lelli@redhat.com>
-Subject: [PATCH v7 2/7] sched/core: Streamlining calls to task_rq_unlock()
-Date: Wed,  3 Apr 2019 10:46:45 +0200
-Message-ID: <20190403084650.4414-3-juri.lelli@redhat.com>
-References: <20190403084650.4414-1-juri.lelli@redhat.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH] cgroup: remove extra cgroup_migrate_finish() call
+Date: Wed,  3 Apr 2019 16:03:54 -0700
+Message-ID: <20190403230354.117915-1-shakeelb@google.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190403084650.4414-1-juri.lelli@redhat.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=FIYtD+2JyCBUBuNMFC53VJ5k0K3Im0wqDkI3BMTr5U0=;
+        b=uvpQS/sOp0F4/7auZRIGbkWQpb4Wu8lNLSbaYPYCQuDPuIIctcQEg03f3TKnxmS6oc
+         HIFMCKzdOSuYNWqcl4Q5VsHjWov71kLFC/b63Qv6PAQ8+ff4JsaOWb7nhC6oOs/yMv3m
+         7ptIBR4Elsi28SMZ4ujXt9e1T/lE8er+N6aJiBgec0jowELLZWn8CsCciFPO29CUehhO
+         QE93VHLSn35s1N/muma+UvtJHhlXyABdQl4DR6Xtkuzl/4S93zPjUMak0/M9thzI8WB4
+         dxZ5+ezMY/TZeQ+EUFqedh6wDmNDeB+acwnkx9cmnwd6R4un0VFKkASUgPCboUcbwYX7
+         bFBA==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org
-Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org
+To: Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
 
-From: Mathieu Poirier <mathieu.poirier@linaro.org>
+The callers of cgroup_migrate_prepare_dst() correctly call
+cgroup_migrate_finish() for success and failure cases both. No need to
+call it in cgroup_migrate_prepare_dst() in failure case.
 
-Calls to task_rq_unlock() are done several times in function
-__sched_setscheduler().  This is fine when only the rq lock needs to be
-handled but not so much when other locks come into play.
-
-This patch streamlines the release of the rq lock so that only one
-location need to be modified when dealing with more than one lock.
-
-No change of functionality is introduced by this patch.
-
-Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
-Reviewed-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
-Acked-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
 ---
- kernel/sched/core.c | 24 ++++++++++++++----------
- 1 file changed, 14 insertions(+), 10 deletions(-)
+ kernel/cgroup/cgroup.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index ead464a0f2e5..98e835de1e7b 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -4274,8 +4274,8 @@ static int __sched_setscheduler(struct task_struct *p,
- 	 * Changing the policy of the stop threads its a very bad idea:
- 	 */
- 	if (p == rq->stop) {
--		task_rq_unlock(rq, p, &rf);
--		return -EINVAL;
-+		retval = -EINVAL;
-+		goto unlock;
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 3f2b4bde0f9c..f219c195a9a5 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -2602,7 +2602,7 @@ int cgroup_migrate_prepare_dst(struct cgroup_mgctx *mgctx)
+ 
+ 		dst_cset = find_css_set(src_cset, src_cset->mg_dst_cgrp);
+ 		if (!dst_cset)
+-			goto err;
++			return -ENOMEM;
+ 
+ 		WARN_ON_ONCE(src_cset->mg_dst_cset || dst_cset->mg_dst_cset);
+ 
+@@ -2634,9 +2634,6 @@ int cgroup_migrate_prepare_dst(struct cgroup_mgctx *mgctx)
  	}
- 
- 	/*
-@@ -4291,8 +4291,8 @@ static int __sched_setscheduler(struct task_struct *p,
- 			goto change;
- 
- 		p->sched_reset_on_fork = reset_on_fork;
--		task_rq_unlock(rq, p, &rf);
--		return 0;
-+		retval = 0;
-+		goto unlock;
- 	}
- change:
- 
-@@ -4305,8 +4305,8 @@ static int __sched_setscheduler(struct task_struct *p,
- 		if (rt_bandwidth_enabled() && rt_policy(policy) &&
- 				task_group(p)->rt_bandwidth.rt_runtime == 0 &&
- 				!task_group_is_autogroup(task_group(p))) {
--			task_rq_unlock(rq, p, &rf);
--			return -EPERM;
-+			retval = -EPERM;
-+			goto unlock;
- 		}
- #endif
- #ifdef CONFIG_SMP
-@@ -4321,8 +4321,8 @@ static int __sched_setscheduler(struct task_struct *p,
- 			 */
- 			if (!cpumask_subset(span, &p->cpus_allowed) ||
- 			    rq->rd->dl_bw.bw == 0) {
--				task_rq_unlock(rq, p, &rf);
--				return -EPERM;
-+				retval = -EPERM;
-+				goto unlock;
- 			}
- 		}
- #endif
-@@ -4341,8 +4341,8 @@ static int __sched_setscheduler(struct task_struct *p,
- 	 * is available.
- 	 */
- 	if ((dl_policy(policy) || dl_task(p)) && sched_dl_overflow(p, policy, attr)) {
--		task_rq_unlock(rq, p, &rf);
--		return -EBUSY;
-+		retval = -EBUSY;
-+		goto unlock;
- 	}
- 
- 	p->sched_reset_on_fork = reset_on_fork;
-@@ -4398,6 +4398,10 @@ static int __sched_setscheduler(struct task_struct *p,
- 	preempt_enable();
  
  	return 0;
-+
-+unlock:
-+	task_rq_unlock(rq, p, &rf);
-+	return retval;
+-err:
+-	cgroup_migrate_finish(mgctx);
+-	return -ENOMEM;
  }
  
- static int _sched_setscheduler(struct task_struct *p, int policy,
+ /**
 -- 
-2.17.2
+2.21.0.392.gf8f6787159e-goog
 
