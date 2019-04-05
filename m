@@ -1,7 +1,7 @@
 From: Roman Gushchin <guroan@gmail.com>
-Subject: [PATCH v10 9/9] cgroup: document cgroup v2 freezer interface
-Date: Fri,  5 Apr 2019 10:47:08 -0700
-Message-ID: <20190405174708.1010-10-guro@fb.com>
+Subject: [PATCH v10 8/9] cgroup: add tracing points for cgroup v2 freezer
+Date: Fri,  5 Apr 2019 10:47:07 -0700
+Message-ID: <20190405174708.1010-9-guro@fb.com>
 References: <20190405174708.1010-1-guro@fb.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,76 +10,187 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=sPwqK0qKQccz1rnM8spQH4fx1OfXTPfbuyAOOQ+8AD0=;
-        b=dkTZWcoctKvv3aWGfJ+h5Whk/0MAavdY7xUT5DQ7kJVHQtRlg/JrdskB3bZPgjs1g9
-         76JbeYYkdvA3DNH5puqxF/F6SzZyGnHj9eYb675X5n6iCh1oBMzHxkRfLqOdf8www1U9
-         gtf2W8hpXxXkz3nAtnnquaVQMjRIUeXi8DlGUcq63gCvLtE9nocg8Sl+OeWIte+gv7Hl
-         YOOKnqHG/zX+haCgiYcilgCgt8MF5/EacFL+a112Z87UPWKCdDY0quZpZfJk61z6+Nyu
-         jqjnjXr7OYBN/yVNHl0bn6hrM/Dl2RB3UOZPjy3VfA6I1UB0UzUaoOSfZ08vGZKTy22q
-         yNuw==
+        bh=+Xwgw7oNRWc5QUjdIzS9HWKC+CrbutV7TwPIITbbDd4=;
+        b=XDqeaeSnd2hPunQJv8l1EwYu+c818r6D50Dm5yMr6X0anpwLI1ih2M5mjd9pkF2Fjv
+         +pnI4yAVsepRQ4w8wNmvSUBUGMtA3JQ4C4m7VF2irPc7ACPEEPSAnlasFp978zTu2vHE
+         C+E5kA5Kf5iJRYpPulrRj7cv4MjjxSSS3kxJMSknmy5oytN/V5z2+trE17uoFb8nt4TR
+         6I3s4t3NAWtn5/8Dqg9kVEdsroQrJeeq/plurZSLRxrOOyLN6r0+TOmvYG0Doi5W0bct
+         uP7VcTKdZN8E/wg0mibnD1x/X1s59oXpcXGxtu0WmYvq1JufuqFX87vgpJY1UvEcSLLH
+         rUBA==
 In-Reply-To: <20190405174708.1010-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>
-Cc: kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>, Mike Rapoport <rppt@linux.ibm.com>, linux-doc@vger.kernel.org
+Cc: kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-Describe cgroup v2 freezer interface in the cgroup v2 admin guide.
+Add cgroup:cgroup_freeze and cgroup:cgroup_unfreeze events,
+which are using the existing cgroup tracing infrastructure.
+
+Add the cgroup_event event class, which is similar to the cgroup
+class, but contains an additional integer field to store a new
+value (the level field is dropped).
+
+Also add two tracing events: cgroup_notify_populated and
+cgroup_notify_frozen, which are raised in a generic way using
+the TRACE_CGROUP_PATH() macro.
+
+This allows to trace cgroup state transitions and is generally
+helpful for debugging the cgroup freezer code.
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
-Reviewed-by: Mike Rapoport <rppt@linux.ibm.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: linux-doc@vger.kernel.org
-Cc: kernel-team@fb.com
 ---
- Documentation/admin-guide/cgroup-v2.rst | 27 +++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+ include/trace/events/cgroup.h | 55 +++++++++++++++++++++++++++++++++++
+ kernel/cgroup/cgroup.c        |  2 ++
+ kernel/cgroup/freezer.c       | 15 +++++++++-
+ 3 files changed, 71 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 20f92c16ffbf..88e746074252 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -864,6 +864,8 @@ All cgroup core files are prefixed with "cgroup."
- 	  populated
- 		1 if the cgroup or its descendants contains any live
- 		processes; otherwise, 0.
-+	  frozen
-+		1 if the cgroup is frozen; otherwise, 0.
+diff --git a/include/trace/events/cgroup.h b/include/trace/events/cgroup.h
+index a401ff5e7847..a566cc521476 100644
+--- a/include/trace/events/cgroup.h
++++ b/include/trace/events/cgroup.h
+@@ -103,6 +103,20 @@ DEFINE_EVENT(cgroup, cgroup_rename,
+ 	TP_ARGS(cgrp, path)
+ );
  
-   cgroup.max.descendants
- 	A read-write single value files.  The default is "max".
-@@ -897,6 +899,31 @@ All cgroup core files are prefixed with "cgroup."
- 		A dying cgroup can consume system resources not exceeding
- 		limits, which were active at the moment of cgroup deletion.
++DEFINE_EVENT(cgroup, cgroup_freeze,
++
++	TP_PROTO(struct cgroup *cgrp, const char *path),
++
++	TP_ARGS(cgrp, path)
++);
++
++DEFINE_EVENT(cgroup, cgroup_unfreeze,
++
++	TP_PROTO(struct cgroup *cgrp, const char *path),
++
++	TP_ARGS(cgrp, path)
++);
++
+ DECLARE_EVENT_CLASS(cgroup_migrate,
  
-+  cgroup.freeze
-+	A read-write single value file which exists on non-root cgroups.
-+	Allowed values are "0" and "1". The default is "0".
-+
-+	Writing "1" to the file causes freezing of the cgroup and all
-+	descendant cgroups. This means that all belonging processes will
-+	be stopped and will not run until the cgroup will be explicitly
-+	unfrozen. Freezing of the cgroup may take some time; when this action
-+	is completed, the "frozen" value in the cgroup.events control file
-+	will be updated to "1" and the corresponding notification will be
-+	issued.
-+
-+	A cgroup can be frozen either by its own settings, or by settings
-+	of any ancestor cgroups. If any of ancestor cgroups is frozen, the
-+	cgroup will remain frozen.
-+
-+	Processes in the frozen cgroup can be killed by a fatal signal.
-+	They also can enter and leave a frozen cgroup: either by an explicit
-+	move by a user, or if freezing of the cgroup races with fork().
-+	If a process is moved to a frozen cgroup, it stops. If a process is
-+	moved out of a frozen cgroup, it becomes running.
-+
-+	Frozen status of a cgroup doesn't affect any cgroup tree operations:
-+	it's possible to delete a frozen (and empty) cgroup, as well as
-+	create new sub-cgroups.
+ 	TP_PROTO(struct cgroup *dst_cgrp, const char *path,
+@@ -149,6 +163,47 @@ DEFINE_EVENT(cgroup_migrate, cgroup_transfer_tasks,
+ 	TP_ARGS(dst_cgrp, path, task, threadgroup)
+ );
  
- Controllers
- ===========
++DECLARE_EVENT_CLASS(cgroup_event,
++
++	TP_PROTO(struct cgroup *cgrp, const char *path, int val),
++
++	TP_ARGS(cgrp, path, val),
++
++	TP_STRUCT__entry(
++		__field(	int,		root			)
++		__field(	int,		id			)
++		__field(	int,		level			)
++		__string(	path,		path			)
++		__field(	int,		val			)
++	),
++
++	TP_fast_assign(
++		__entry->root = cgrp->root->hierarchy_id;
++		__entry->id = cgrp->id;
++		__entry->level = cgrp->level;
++		__assign_str(path, path);
++		__entry->val = val;
++	),
++
++	TP_printk("root=%d id=%d level=%d path=%s val=%d",
++		  __entry->root, __entry->id, __entry->level, __get_str(path),
++		  __entry->val)
++);
++
++DEFINE_EVENT(cgroup_event, cgroup_notify_populated,
++
++	TP_PROTO(struct cgroup *cgrp, const char *path, int val),
++
++	TP_ARGS(cgrp, path, val)
++);
++
++DEFINE_EVENT(cgroup_event, cgroup_notify_frozen,
++
++	TP_PROTO(struct cgroup *cgrp, const char *path, int val),
++
++	TP_ARGS(cgrp, path, val)
++);
++
+ #endif /* _TRACE_CGROUP_H */
+ 
+ /* This part must be outside protection */
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 6895464b54c6..57edcf398d71 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -816,6 +816,8 @@ static void cgroup_update_populated(struct cgroup *cgrp, bool populated)
+ 			break;
+ 
+ 		cgroup1_check_for_release(cgrp);
++		TRACE_CGROUP_PATH(notify_populated, cgrp,
++				  cgroup_is_populated(cgrp));
+ 		cgroup_file_notify(&cgrp->events_file);
+ 
+ 		child = cgrp;
+diff --git a/kernel/cgroup/freezer.c b/kernel/cgroup/freezer.c
+index 9d8cda478fc9..3bfbb3c8baf3 100644
+--- a/kernel/cgroup/freezer.c
++++ b/kernel/cgroup/freezer.c
+@@ -6,6 +6,8 @@
+ 
+ #include "cgroup-internal.h"
+ 
++#include <trace/events/cgroup.h>
++
+ /*
+  * Propagate the cgroup frozen state upwards by the cgroup tree.
+  */
+@@ -28,6 +30,7 @@ static void cgroup_propagate_frozen(struct cgroup *cgrp, bool frozen)
+ 			    cgrp->nr_descendants) {
+ 				set_bit(CGRP_FROZEN, &cgrp->flags);
+ 				cgroup_file_notify(&cgrp->events_file);
++				TRACE_CGROUP_PATH(notify_frozen, cgrp, 1);
+ 				desc++;
+ 			}
+ 		} else {
+@@ -35,6 +38,7 @@ static void cgroup_propagate_frozen(struct cgroup *cgrp, bool frozen)
+ 			if (test_bit(CGRP_FROZEN, &cgrp->flags)) {
+ 				clear_bit(CGRP_FROZEN, &cgrp->flags);
+ 				cgroup_file_notify(&cgrp->events_file);
++				TRACE_CGROUP_PATH(notify_frozen, cgrp, 0);
+ 				desc++;
+ 			}
+ 		}
+@@ -73,6 +77,7 @@ void cgroup_update_frozen(struct cgroup *cgrp)
+ 		clear_bit(CGRP_FROZEN, &cgrp->flags);
+ 	}
+ 	cgroup_file_notify(&cgrp->events_file);
++	TRACE_CGROUP_PATH(notify_frozen, cgrp, frozen);
+ 
+ 	/* Update the state of ancestor cgroups. */
+ 	cgroup_propagate_frozen(cgrp, frozen);
+@@ -189,6 +194,11 @@ static void cgroup_do_freeze(struct cgroup *cgrp, bool freeze)
+ 		clear_bit(CGRP_FREEZE, &cgrp->flags);
+ 	spin_unlock_irq(&css_set_lock);
+ 
++	if (freeze)
++		TRACE_CGROUP_PATH(freeze, cgrp);
++	else
++		TRACE_CGROUP_PATH(unfreeze, cgrp);
++
+ 	css_task_iter_start(&cgrp->self, 0, &it);
+ 	while ((task = css_task_iter_next(&it))) {
+ 		/*
+@@ -312,6 +322,9 @@ void cgroup_freeze(struct cgroup *cgrp, bool freeze)
+ 	 * In both cases it's better to notify a user, that there is
+ 	 * nothing to wait for.
+ 	 */
+-	if (!applied)
++	if (!applied) {
++		TRACE_CGROUP_PATH(notify_frozen, cgrp,
++				  test_bit(CGRP_FROZEN, &cgrp->flags));
+ 		cgroup_file_notify(&cgrp->events_file);
++	}
+ }
 -- 
 2.20.1
 
