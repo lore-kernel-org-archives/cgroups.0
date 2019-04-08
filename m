@@ -1,16 +1,16 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 1/7] sched: refactor tg_set_cfs_bandwidth()
-Date: Mon, 8 Apr 2019 14:45:33 -0700
-Message-ID: <20190408214539.2705660-2-songliubraving@fb.com>
+Subject: [PATCH 2/7] cgroup: introduce hook css_has_tasks_changed
+Date: Mon, 8 Apr 2019 14:45:34 -0700
+Message-ID: <20190408214539.2705660-3-songliubraving@fb.com>
 References: <20190408214539.2705660-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=L+rJS0SgXG+W7FCDQpKsebmkzZCRJJh5uOQMvLo7MzE=;
- b=gNd+cUPSgQXxXIhjvJseHkOL7XwB5XP+q3C9UVkwAkjEBv/UCphHt9nsq1/z40TIh1z2
- qSW7TovkGlfR6rMDTsyYno3vwc8WxOjE0KB4u3yMzLm50Ck3MbK4Ib5QPm5kzXRRhDo+
- mPao9/eHbGukPrYnRtlaw1H6CfF2ZlkBPVg= 
+ content-type; s=facebook; bh=gwcpzJCNH9zTKl6c0+rR3lwfn5Cb+QEquraGGM3w8eg=;
+ b=GNHw49efVqUrBpQIsK1cfbNcOF4clyurX8JZsvNaLB2dCP1YHHNTax2kCkaSge50lhbD
+ aF6Zqcupfeis+vKQF9Q+tDlcRQEZ0Z52yykMXmIotCxxN+cPUoStO8840UDq0+7SAk9s
+ JexNMq9HGVvM/db59wem8ckF4c0/dVzQ2xM= 
 In-Reply-To: <20190408214539.2705660-1-songliubraving@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -19,108 +19,84 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 Cc: mingo@redhat.com, peterz@infradead.org, vincent.guittot@linaro.org, tglx@linutronix.de, morten.rasmussen@arm.com, kernel-team@fb.com, Song Liu <songliubraving@fb.com>
 
-This patch factors tg_switch_cfs_runtime() out of tg_set_cfs_bandwidth(),
-so that next patches can extend tg_switch_cfs_runtime() to support the new
-target_idle_pct value.
+This patch introduces a new hook css_has_tasks_changed:
 
-This patch doesn't have any functionality changes.
+   void (*css_has_tasks_changed)(struct cgroup_subsys_state *css,
+                                 bool has_tasks);
+
+The hook is called when the cgroup gets its first task and when the cgroup
+loses its last task. It is called under css_set_lock.
+
+Note: has_task is different to populated. It only considers directly
+attached tasks.
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- kernel/sched/core.c | 71 +++++++++++++++++++++++++--------------------
- 1 file changed, 39 insertions(+), 32 deletions(-)
+ include/linux/cgroup-defs.h |  2 ++
+ kernel/cgroup/cgroup.c      | 14 ++++++++++++++
+ 2 files changed, 16 insertions(+)
 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index ead464a0f2e5..b8f220860dc7 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -6578,39 +6578,12 @@ const u64 min_cfs_quota_period = 1 * NSEC_PER_MSEC; /* 1ms */
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 1c70803e9f77..ba499ed5309c 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -594,6 +594,8 @@ struct cgroup_subsys {
+ 	void (*css_released)(struct cgroup_subsys_state *css);
+ 	void (*css_free)(struct cgroup_subsys_state *css);
+ 	void (*css_reset)(struct cgroup_subsys_state *css);
++	void (*css_has_tasks_changed)(struct cgroup_subsys_state *css,
++				      bool has_tasks);
+ 	void (*css_rstat_flush)(struct cgroup_subsys_state *css, int cpu);
+ 	int (*css_extra_stat_show)(struct seq_file *seq,
+ 				   struct cgroup_subsys_state *css);
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 3f2b4bde0f9c..b0df96132476 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -200,6 +200,7 @@ static u16 have_fork_callback __read_mostly;
+ static u16 have_exit_callback __read_mostly;
+ static u16 have_release_callback __read_mostly;
+ static u16 have_canfork_callback __read_mostly;
++static u16 have_has_tasks_changed_callback __read_mostly;
  
- static int __cfs_schedulable(struct task_group *tg, u64 period, u64 runtime);
- 
--static int tg_set_cfs_bandwidth(struct task_group *tg, u64 period, u64 quota)
-+/* need get_online_cpus() and hold cfs_constraints_mutex */
-+static void tg_switch_cfs_runtime(struct task_group *tg, u64 period, u64 quota)
+ /* cgroup namespace for init task */
+ struct cgroup_namespace init_cgroup_ns = {
+@@ -762,8 +763,11 @@ static bool css_set_populated(struct css_set *cset)
+  */
+ static void cgroup_update_populated(struct cgroup *cgrp, bool populated)
  {
--	int i, ret = 0, runtime_enabled, runtime_was_enabled;
- 	struct cfs_bandwidth *cfs_b = &tg->cfs_bandwidth;
--
--	if (tg == &root_task_group)
--		return -EINVAL;
--
--	/*
--	 * Ensure we have at some amount of bandwidth every period.  This is
--	 * to prevent reaching a state of large arrears when throttled via
--	 * entity_tick() resulting in prolonged exit starvation.
--	 */
--	if (quota < min_cfs_quota_period || period < min_cfs_quota_period)
--		return -EINVAL;
--
--	/*
--	 * Likewise, bound things on the otherside by preventing insane quota
--	 * periods.  This also allows us to normalize in computing quota
--	 * feasibility.
--	 */
--	if (period > max_cfs_quota_period)
--		return -EINVAL;
--
--	/*
--	 * Prevent race between setting of cfs_rq->runtime_enabled and
--	 * unthrottle_offline_cfs_rqs().
--	 */
--	get_online_cpus();
--	mutex_lock(&cfs_constraints_mutex);
--	ret = __cfs_schedulable(tg, period, quota);
--	if (ret)
--		goto out_unlock;
-+	int runtime_enabled, runtime_was_enabled;
-+	int i;
++	struct cgroup *orig_cgrp = cgrp;
+ 	struct cgroup *child = NULL;
+ 	int adj = populated ? 1 : -1;
++	struct cgroup_subsys *ss;
++	int ssid;
  
- 	runtime_enabled = quota != RUNTIME_INF;
- 	runtime_was_enabled = cfs_b->quota != RUNTIME_INF;
-@@ -6647,7 +6620,41 @@ static int tg_set_cfs_bandwidth(struct task_group *tg, u64 period, u64 quota)
- 	}
- 	if (runtime_was_enabled && !runtime_enabled)
- 		cfs_bandwidth_usage_dec();
--out_unlock:
-+}
-+
-+static int tg_set_cfs_bandwidth(struct task_group *tg, u64 period, u64 quota)
-+{
-+	int ret = 0;
-+
-+	if (tg == &root_task_group)
-+		return -EINVAL;
-+
-+	/*
-+	 * Ensure we have at some amount of bandwidth every period.  This is
-+	 * to prevent reaching a state of large arrears when throttled via
-+	 * entity_tick() resulting in prolonged exit starvation.
-+	 */
-+	if (quota < min_cfs_quota_period || period < min_cfs_quota_period)
-+		return -EINVAL;
-+
-+	/*
-+	 * Likewise, bound things on the otherside by preventing insane quota
-+	 * periods.  This also allows us to normalize in computing quota
-+	 * feasibility.
-+	 */
-+	if (period > max_cfs_quota_period)
-+		return -EINVAL;
-+
-+	/*
-+	 * Prevent race between setting of cfs_rq->runtime_enabled and
-+	 * unthrottle_offline_cfs_rqs().
-+	 */
-+	get_online_cpus();
-+	mutex_lock(&cfs_constraints_mutex);
-+	ret = __cfs_schedulable(tg, period, quota);
-+	if (!ret)
-+		tg_switch_cfs_runtime(tg, period, quota);
-+
- 	mutex_unlock(&cfs_constraints_mutex);
- 	put_online_cpus();
+ 	lockdep_assert_held(&css_set_lock);
  
+@@ -788,6 +792,14 @@ static void cgroup_update_populated(struct cgroup *cgrp, bool populated)
+ 		child = cgrp;
+ 		cgrp = cgroup_parent(cgrp);
+ 	} while (cgrp);
++
++	do_each_subsys_mask(ss, ssid, have_has_tasks_changed_callback) {
++		struct cgroup_subsys_state *css;
++
++		css = cgroup_css(orig_cgrp, ss);
++		if (css)
++			ss->css_has_tasks_changed(css, populated);
++	} while_each_subsys_mask();
+ }
+ 
+ /**
+@@ -5370,6 +5382,8 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
+ 	have_exit_callback |= (bool)ss->exit << ss->id;
+ 	have_release_callback |= (bool)ss->release << ss->id;
+ 	have_canfork_callback |= (bool)ss->can_fork << ss->id;
++	have_has_tasks_changed_callback |=
++		(bool)ss->css_has_tasks_changed << ss->id;
+ 
+ 	/* At system boot, before all subsystems have been
+ 	 * registered, no tasks have been forked, so we don't
 -- 
 2.17.1
 
