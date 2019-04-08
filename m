@@ -1,16 +1,16 @@
 From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 5/7] sched/fair: global idleness counter for cpu.headroom
-Date: Mon, 8 Apr 2019 14:45:37 -0700
-Message-ID: <20190408214539.2705660-6-songliubraving@fb.com>
+Subject: [PATCH 3/7] cgroup: introduce cgroup_parse_percentage
+Date: Mon, 8 Apr 2019 14:45:35 -0700
+Message-ID: <20190408214539.2705660-4-songliubraving@fb.com>
 References: <20190408214539.2705660-1-songliubraving@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=71jwMW3DLj1Y0qARI7vL6lQXr6moJopGA2vrTbvAKZY=;
- b=IFnokjdBqKBbNDyHAhzFonMssV3LqPdtM0epDC+Rm1ZlQCjqnHfITvIA9dfznHG/Qq8X
- tvgR3bD4vzKzSyCORx7WxtaQ+vRYuoJrkmtqhVRMNf5FpQCjKV1kT4/R5XfJDOknNd+Y
- vTkYz5QQoGDP9GKKp7GsXm+XyXqJSHQxlSQ= 
+ content-type; s=facebook; bh=PeE9Rwo7wGOWQ5q9OAqfNdhcUhps+PHukzw37s+pWWU=;
+ b=MhNsOP+MRfkIrNIaqiAHzdp0fdKp6DRltSzGP2He0iJnV9QGWfHatu+4xGZBL6Mi+beM
+ gg6zzRafbnNPUCUg/lfKa3/BvfIYL9UKl91oXdYV9n4uhgMe38zi64c/qqK5GLC/fQ2J
+ B1wPlZ6idY8iKtHEpc/Umtl5ZaZmTdA4nP8= 
 In-Reply-To: <20190408214539.2705660-1-songliubraving@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -19,149 +19,82 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 Cc: mingo@redhat.com, peterz@infradead.org, vincent.guittot@linaro.org, tglx@linutronix.de, morten.rasmussen@arm.com, kernel-team@fb.com, Song Liu <songliubraving@fb.com>
 
-This patch introduces a global idleness counter in fair.c for the
-cpu.headroom knob. This counter is based on per cpu get_idle_time().
+This patch introduces a helper to parse percentage string to long
+integer, with user selected scale:
 
-The counter is used via function call:
+   long cgroup_parse_percentage(char *tok, unsigned long base)
 
-  unsigned long cfs_global_idleness_update(u64 now, u64 period);
+Valid tok could be integer 0 to 100, decimal 0.00 to 100.00, or "max".
+A tok of "max"is same as "100".
 
-The function returns global idleness in fixed-point percentage since
-previous call of the function. If the time between previous call of the
-function is called and @now is shorter than @period, the function will
-return idleness calculated in previous call.
-
-cfs_global_idleness_update() will be called from a non-preemptible
-context, struct cfs_global_idleness uses raw_spin_lock instead of
-spin_lock.
+Base is the desire output scale for input "1".
 
 Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- fs/proc/stat.c              |  4 +--
- include/linux/kernel_stat.h |  2 ++
- kernel/sched/fair.c         | 64 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 68 insertions(+), 2 deletions(-)
+ include/linux/cgroup.h |  1 +
+ kernel/cgroup/cgroup.c | 37 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+)
 
-diff --git a/fs/proc/stat.c b/fs/proc/stat.c
-index 80c305f206bb..b327ffdb169f 100644
---- a/fs/proc/stat.c
-+++ b/fs/proc/stat.c
-@@ -23,7 +23,7 @@
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 81f58b4a5418..b28f8a41c970 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -110,6 +110,7 @@ int cgroup_add_dfl_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
+ int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
+ int cgroup_rm_cftypes(struct cftype *cfts);
+ void cgroup_file_notify(struct cgroup_file *cfile);
++long cgroup_parse_percentage(char *tok, unsigned long base);
  
- #ifdef arch_idle_time
+ int task_cgroup_path(struct task_struct *task, char *buf, size_t buflen);
+ int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry);
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index b0df96132476..2e48840ff613 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -3967,6 +3967,43 @@ void cgroup_file_notify(struct cgroup_file *cfile)
+ 	spin_unlock_irqrestore(&cgroup_file_kn_lock, flags);
+ }
  
--static u64 get_idle_time(struct kernel_cpustat *kcs, int cpu)
-+u64 get_idle_time(struct kernel_cpustat *kcs, int cpu)
- {
- 	u64 idle;
- 
-@@ -45,7 +45,7 @@ static u64 get_iowait_time(struct kernel_cpustat *kcs, int cpu)
- 
- #else
- 
--static u64 get_idle_time(struct kernel_cpustat *kcs, int cpu)
-+u64 get_idle_time(struct kernel_cpustat *kcs, int cpu)
- {
- 	u64 idle, idle_usecs = -1ULL;
- 
-diff --git a/include/linux/kernel_stat.h b/include/linux/kernel_stat.h
-index 7ee2bb43b251..337135272391 100644
---- a/include/linux/kernel_stat.h
-+++ b/include/linux/kernel_stat.h
-@@ -97,4 +97,6 @@ extern void account_process_tick(struct task_struct *, int user);
- 
- extern void account_idle_ticks(unsigned long ticks);
- 
-+u64 get_idle_time(struct kernel_cpustat *kcs, int cpu);
-+
- #endif /* _LINUX_KERNEL_STAT_H */
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 65aa9d3b665f..49c68daffe7e 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -116,6 +116,62 @@ static unsigned int capacity_margin			= 1280;
-  * (default: 5 msec, units: microseconds)
-  */
- unsigned int sysctl_sched_cfs_bandwidth_slice		= 5000UL;
-+
-+/* tracking global idlenesss for cpu.headroom */
-+struct cfs_global_idleness {
-+	u64		prev_total_idle_time;
-+	u64		prev_timestamp;
-+	unsigned long	idle_percent; /* fixed-point */
-+	raw_spinlock_t	lock;
-+};
-+
-+static struct cfs_global_idleness global_idleness;
-+
-+/*
-+ * Calculate global idleness in fixed-point percentage since previous call
-+ * of the function. If the time between previous call of the function is
-+ * called and @now is shorter than @period, return idleness calculated in
-+ * previous call.
++/**
++ * cgroup_parse_percentage - parse percentage number
++ * @tok: input string contains the token. Valid values are "00.00" to
++ *       "100.00", or "max"
++ * @base: number "1" in desired output scale
++ *
++ * Returns:
++ *    @base * 100 for "max";
++ *    @base * <0.00 to 100.00> for valid inputs;
++ *    -EINVAL for invalid input.
 + */
-+static unsigned long cfs_global_idleness_update(u64 now, u64 period)
++long cgroup_parse_percentage(char *tok, unsigned long base)
 +{
-+	u64 prev_timestamp, total_idle_time, delta_idle_time;
-+	unsigned long idle_percent;
-+	int cpu;
++	unsigned long val_int, val_frag;
 +
-+	/*
-+	 * Fastpath: if idleness has been updated within the last period
-+	 * of time, just return previous idleness.
-+	 */
-+	prev_timestamp = READ_ONCE(global_idleness.prev_timestamp);
-+	if (prev_timestamp + period >= now)
-+		return READ_ONCE(global_idleness.idle_percent);
-+
-+	raw_spin_lock_irq(&global_idleness.lock);
-+	if (global_idleness.prev_timestamp + period >= now) {
-+		idle_percent = global_idleness.idle_percent;
-+		goto out;
++	if (strcmp(tok, "max") == 0) {
++		return base * 100;
++	} else if (sscanf(tok, "%lu.%02lu", &val_int, &val_frag) == 2) {
++		/* xx.1 yields val_frag = 1, while it should be 10 */
++		if (val_frag < 10 && strstr(tok, ".0") == NULL)
++			val_frag *= 10;
++		goto calculate_output;
++	} else if (sscanf(tok, "%lu", &val_int) == 1) {
++		val_frag = 0;
++		goto calculate_output;
++	} else {
++		return -EINVAL;
 +	}
 +
-+	/* Slowpath: calculate the average idleness since prev_timestamp */
-+	total_idle_time = 0;
-+	for_each_online_cpu(cpu)
-+		total_idle_time += get_idle_time(&kcpustat_cpu(cpu), cpu);
++calculate_output:
++	if (val_int > 100 || (val_int == 100 && val_frag > 0))
++		return -EINVAL;
 +
-+	delta_idle_time = total_idle_time -
-+		global_idleness.prev_total_idle_time;
-+
-+	idle_percent = div64_u64((delta_idle_time << FSHIFT) * 100,
-+				 num_online_cpus() *
-+				 (now - global_idleness.prev_timestamp));
-+
-+	WRITE_ONCE(global_idleness.prev_total_idle_time, total_idle_time);
-+	WRITE_ONCE(global_idleness.prev_timestamp, now);
-+	WRITE_ONCE(global_idleness.idle_percent, idle_percent);
-+out:
-+	raw_spin_unlock_irq(&global_idleness.lock);
-+	return idle_percent;
++	/* round up val_frag by 0.5, to avoid repeated rounding down */
++	return (val_int * base) + div_u64((val_frag * 10 + 5) * base, 1000);
 +}
- #endif
- 
- static inline void update_load_add(struct load_weight *lw, unsigned long inc)
-@@ -4293,6 +4349,11 @@ void __refill_cfs_bandwidth_runtime(struct cfs_bandwidth *cfs_b)
- 	cfs_b->runtime = cfs_b->quota;
- 	cfs_b->runtime_expires = now + ktime_to_ns(cfs_b->period);
- 	cfs_b->expires_seq++;
 +
-+	if (cfs_b->target_idle == 0)
-+		return;
-+
-+	cfs_global_idleness_update(now, cfs_b->period);
- }
- 
- static inline struct cfs_bandwidth *tg_cfs_bandwidth(struct task_group *tg)
-@@ -10676,4 +10737,7 @@ __init void init_sched_fair_class(void)
- #endif
- #endif /* SMP */
- 
-+#ifdef CONFIG_CFS_BANDWIDTH
-+	raw_spin_lock_init(&global_idleness.lock);
-+#endif
- }
+ /**
+  * css_next_child - find the next child of a given css
+  * @pos: the current position (%NULL to initiate traversal)
 -- 
 2.17.1
 
