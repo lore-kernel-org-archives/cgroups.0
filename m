@@ -1,100 +1,100 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH 3/7] cgroup: introduce cgroup_parse_percentage
-Date: Mon, 8 Apr 2019 14:45:35 -0700
-Message-ID: <20190408214539.2705660-4-songliubraving@fb.com>
-References: <20190408214539.2705660-1-songliubraving@fb.com>
-Mime-Version: 1.0
+From: Joel Savitz <jsavitz@redhat.com>
+Subject: [PATCH v2] cpuset: restore sanity to cpuset_cpus_allowed_fallback()
+Date: Tue,  9 Apr 2019 16:40:03 -0400
+Message-ID: <20190409204003.6428-1-jsavitz@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=PeE9Rwo7wGOWQ5q9OAqfNdhcUhps+PHukzw37s+pWWU=;
- b=MhNsOP+MRfkIrNIaqiAHzdp0fdKp6DRltSzGP2He0iJnV9QGWfHatu+4xGZBL6Mi+beM
- gg6zzRafbnNPUCUg/lfKa3/BvfIYL9UKl91oXdYV9n4uhgMe38zi64c/qqK5GLC/fQ2J
- B1wPlZ6idY8iKtHEpc/Umtl5ZaZmTdA4nP8= 
-In-Reply-To: <20190408214539.2705660-1-songliubraving@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Cc: mingo@redhat.com, peterz@infradead.org, vincent.guittot@linaro.org, tglx@linutronix.de, morten.rasmussen@arm.com, kernel-team@fb.com, Song Liu <songliubraving@fb.com>
+To: linux-kernel@vger.kernel.org
+Cc: Joel Savitz <jsavitz@redhat.com>, Phil Auld <pauld@redhat.com>, Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org
 
-This patch introduces a helper to parse percentage string to long
-integer, with user selected scale:
+If a process is limited by taskset (i.e. cpuset) to only be allowed to
+run on cpu N, and then cpu N is offlined via hotplug, the process will
+be assigned the current value of its cpuset cgroup's effective_cpus field
+in a call to do_set_cpus_allowed() in cpuset_cpus_allowed_fallback().
+This argument's value does not makes sense for this case, because
+task_cs(tsk)->effective_cpus is modified by cpuset_hotplug_workfn()
+to reflect the new value of cpu_active_mask after cpu N is removed from
+the mask. While this may make sense for the cgroup affinity mask, it
+does not make sense on a per-task basis, as a task that was previously
+limited to only be run on cpu N will be limited to every cpu _except_ for
+cpu N after it is offlined/onlined via hotplug.
 
-   long cgroup_parse_percentage(char *tok, unsigned long base)
+Pre-patch behavior:
 
-Valid tok could be integer 0 to 100, decimal 0.00 to 100.00, or "max".
-A tok of "max"is same as "100".
+	$ grep Cpus /proc/$$/status
+	Cpus_allowed:	ff
+	Cpus_allowed_list:	0-7
 
-Base is the desire output scale for input "1".
+	$ taskset -p 4 $$
+	pid 19202's current affinity mask: f
+	pid 19202's new affinity mask: 4
 
-Signed-off-by: Song Liu <songliubraving@fb.com>
+	$ grep Cpus /proc/self/status
+	Cpus_allowed:	04
+	Cpus_allowed_list:	2
+
+	# echo off > /sys/devices/system/cpu/cpu2/online
+	$ grep Cpus /proc/$$/status
+	Cpus_allowed:	0b
+	Cpus_allowed_list:	0-1,3
+
+	# echo on > /sys/devices/system/cpu/cpu2/online
+	$ grep Cpus /proc/$$/status
+	Cpus_allowed:	0b
+	Cpus_allowed_list:	0-1,3
+
+On a patched system, the final grep produces the following
+output instead:
+
+	$ grep Cpus /proc/$$/status
+	Cpus_allowed:	ff
+	Cpus_allowed_list:	0-7
+
+This patch changes the above behavior by instead resetting the mask to
+task_cs(tsk)->cpus_allowed by default, and cpu_possible mask in legacy
+mode.
+
+This fallback mechanism is only triggered if _every_ other valid avenue
+has been traveled, and it is the last resort before calling BUG().
+
+Signed-off-by: Joel Savitz <jsavitz@redhat.com>
 ---
- include/linux/cgroup.h |  1 +
- kernel/cgroup/cgroup.c | 37 +++++++++++++++++++++++++++++++++++++
- 2 files changed, 38 insertions(+)
+ kernel/cgroup/cpuset.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 81f58b4a5418..b28f8a41c970 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -110,6 +110,7 @@ int cgroup_add_dfl_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
- int cgroup_add_legacy_cftypes(struct cgroup_subsys *ss, struct cftype *cfts);
- int cgroup_rm_cftypes(struct cftype *cfts);
- void cgroup_file_notify(struct cgroup_file *cfile);
-+long cgroup_parse_percentage(char *tok, unsigned long base);
- 
- int task_cgroup_path(struct task_struct *task, char *buf, size_t buflen);
- int cgroupstats_build(struct cgroupstats *stats, struct dentry *dentry);
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index b0df96132476..2e48840ff613 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -3967,6 +3967,43 @@ void cgroup_file_notify(struct cgroup_file *cfile)
- 	spin_unlock_irqrestore(&cgroup_file_kn_lock, flags);
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 4834c4214e9c..6c9deb2cc687 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -3255,10 +3255,23 @@ void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
+ 	spin_unlock_irqrestore(&callback_lock, flags);
  }
  
 +/**
-+ * cgroup_parse_percentage - parse percentage number
-+ * @tok: input string contains the token. Valid values are "00.00" to
-+ *       "100.00", or "max"
-+ * @base: number "1" in desired output scale
++ * cpuset_cpus_allowed_fallback - final fallback before complete catastrophe.
++ * @tsk: pointer to task_struct with which the scheduler is struggling
 + *
-+ * Returns:
-+ *    @base * 100 for "max";
-+ *    @base * <0.00 to 100.00> for valid inputs;
-+ *    -EINVAL for invalid input.
-+ */
-+long cgroup_parse_percentage(char *tok, unsigned long base)
-+{
-+	unsigned long val_int, val_frag;
++ * Description: In the case that the scheduler cannot find an allowed cpu in
++ * tsk->cpus_allowed, we fall back to task_cs(tsk)->cpus_allowed. In legacy
++ * mode however, this value is the same as task_cs(tsk)->effective_cpus,
++ * which will not contain a sane cpumask during cases such as cpu hotplugging.
++ * This is the absolute last resort for the scheduler and it is only used if
++ * _every_ other avenue has been traveled.
++ **/
 +
-+	if (strcmp(tok, "max") == 0) {
-+		return base * 100;
-+	} else if (sscanf(tok, "%lu.%02lu", &val_int, &val_frag) == 2) {
-+		/* xx.1 yields val_frag = 1, while it should be 10 */
-+		if (val_frag < 10 && strstr(tok, ".0") == NULL)
-+			val_frag *= 10;
-+		goto calculate_output;
-+	} else if (sscanf(tok, "%lu", &val_int) == 1) {
-+		val_frag = 0;
-+		goto calculate_output;
-+	} else {
-+		return -EINVAL;
-+	}
-+
-+calculate_output:
-+	if (val_int > 100 || (val_int == 100 && val_frag > 0))
-+		return -EINVAL;
-+
-+	/* round up val_frag by 0.5, to avoid repeated rounding down */
-+	return (val_int * base) + div_u64((val_frag * 10 + 5) * base, 1000);
-+}
-+
- /**
-  * css_next_child - find the next child of a given css
-  * @pos: the current position (%NULL to initiate traversal)
+ void cpuset_cpus_allowed_fallback(struct task_struct *tsk)
+ {
+ 	rcu_read_lock();
+-	do_set_cpus_allowed(tsk, task_cs(tsk)->effective_cpus);
++	do_set_cpus_allowed(tsk, is_in_v2_mode() ?
++		task_cs(tsk)->cpus_allowed : cpu_possible_mask);
+ 	rcu_read_unlock();
+ 
+ 	/*
 -- 
-2.17.1
+2.18.1
 
