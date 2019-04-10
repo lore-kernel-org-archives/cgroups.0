@@ -1,112 +1,42 @@
-From: Phil Auld <pauld@redhat.com>
-Subject: Re: [PATCH v2] cpuset: restore sanity to
- cpuset_cpus_allowed_fallback()
-Date: Wed, 10 Apr 2019 13:44:53 -0400
-Message-ID: <20190410174452.GI10132@pauld.bos.csb>
-References: <20190409204003.6428-1-jsavitz@redhat.com>
-Mime-Version: 1.0
+From: Waiman Long <longman@redhat.com>
+Subject: [RFC PATCH 0/2] mm/memcontrol: Finer-grained memory control
+Date: Wed, 10 Apr 2019 15:13:19 -0400
+Message-ID: <20190410191321.9527-1-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190409204003.6428-1-jsavitz@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Joel Savitz <jsavitz@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Kirill Tkhai <ktkhai@virtuozzo.com>, Aaron Lu <aaron.lu@intel.com>, Waiman Long <longman@redhat.com>
 
-On Tue, Apr 09, 2019 at 04:40:03PM -0400 Joel Savitz wrote:
-> If a process is limited by taskset (i.e. cpuset) to only be allowed to
-> run on cpu N, and then cpu N is offlined via hotplug, the process will
-> be assigned the current value of its cpuset cgroup's effective_cpus field
-> in a call to do_set_cpus_allowed() in cpuset_cpus_allowed_fallback().
-> This argument's value does not makes sense for this case, because
-> task_cs(tsk)->effective_cpus is modified by cpuset_hotplug_workfn()
-> to reflect the new value of cpu_active_mask after cpu N is removed from
-> the mask. While this may make sense for the cgroup affinity mask, it
-> does not make sense on a per-task basis, as a task that was previously
-> limited to only be run on cpu N will be limited to every cpu _except_ for
-> cpu N after it is offlined/onlined via hotplug.
-> 
-> Pre-patch behavior:
-> 
-> 	$ grep Cpus /proc/$$/status
-> 	Cpus_allowed:	ff
-> 	Cpus_allowed_list:	0-7
-> 
-> 	$ taskset -p 4 $$
-> 	pid 19202's current affinity mask: f
-> 	pid 19202's new affinity mask: 4
-> 
-> 	$ grep Cpus /proc/self/status
-> 	Cpus_allowed:	04
-> 	Cpus_allowed_list:	2
-> 
-> 	# echo off > /sys/devices/system/cpu/cpu2/online
-> 	$ grep Cpus /proc/$$/status
-> 	Cpus_allowed:	0b
-> 	Cpus_allowed_list:	0-1,3
-> 
-> 	# echo on > /sys/devices/system/cpu/cpu2/online
-> 	$ grep Cpus /proc/$$/status
-> 	Cpus_allowed:	0b
-> 	Cpus_allowed_list:	0-1,3
-> 
-> On a patched system, the final grep produces the following
-> output instead:
-> 
-> 	$ grep Cpus /proc/$$/status
-> 	Cpus_allowed:	ff
-> 	Cpus_allowed_list:	0-7
-> 
-> This patch changes the above behavior by instead resetting the mask to
-> task_cs(tsk)->cpus_allowed by default, and cpu_possible mask in legacy
-> mode.
-> 
-> This fallback mechanism is only triggered if _every_ other valid avenue
-> has been traveled, and it is the last resort before calling BUG().
-> 
-> Signed-off-by: Joel Savitz <jsavitz@redhat.com>
-> ---
->  kernel/cgroup/cpuset.c | 15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
-> 
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 4834c4214e9c..6c9deb2cc687 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -3255,10 +3255,23 @@ void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
->  	spin_unlock_irqrestore(&callback_lock, flags);
->  }
->  
-> +/**
-> + * cpuset_cpus_allowed_fallback - final fallback before complete catastrophe.
-> + * @tsk: pointer to task_struct with which the scheduler is struggling
-> + *
-> + * Description: In the case that the scheduler cannot find an allowed cpu in
-> + * tsk->cpus_allowed, we fall back to task_cs(tsk)->cpus_allowed. In legacy
-> + * mode however, this value is the same as task_cs(tsk)->effective_cpus,
-> + * which will not contain a sane cpumask during cases such as cpu hotplugging.
-> + * This is the absolute last resort for the scheduler and it is only used if
-> + * _every_ other avenue has been traveled.
-> + **/
-> +
->  void cpuset_cpus_allowed_fallback(struct task_struct *tsk)
->  {
->  	rcu_read_lock();
-> -	do_set_cpus_allowed(tsk, task_cs(tsk)->effective_cpus);
-> +	do_set_cpus_allowed(tsk, is_in_v2_mode() ?
-> +		task_cs(tsk)->cpus_allowed : cpu_possible_mask);
->  	rcu_read_unlock();
->  
->  	/*
-> -- 
-> 2.18.1
-> 
+The current control mechanism for memory cgroup v2 lumps all the memory
+together irrespective of the type of memory objects. However, there
+are cases where users may have more concern about one type of memory
+usage than the others.
 
-Fwiw,
+We have customer request to limit memory consumption on anonymous memory
+only as they said the feature was available in other OSes like Solaris.
 
-Acked-by: Phil Auld <pauld@redhat.com>
+To allow finer-grained control of memory, this patchset 2 new control
+knobs for memory controller:
+ - memory.subset.list for specifying the type of memory to be under control.
+ - memory.subset.high for the high limit of memory consumption of that
+   memory type.
 
+For simplicity, the limit is not hierarchical and applies to only tasks
+in the local memory cgroup.
+
+Waiman Long (2):
+  mm/memcontrol: Finer-grained control for subset of allocated memory
+  mm/memcontrol: Add a new MEMCG_SUBSET_HIGH event
+
+ Documentation/admin-guide/cgroup-v2.rst |  35 +++++++++
+ include/linux/memcontrol.h              |   8 ++
+ mm/memcontrol.c                         | 100 +++++++++++++++++++++++-
+ 3 files changed, 142 insertions(+), 1 deletion(-)
 
 -- 
+2.18.1
+
