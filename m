@@ -1,66 +1,92 @@
-From: Kirill Tkhai <ktkhai@virtuozzo.com>
+From: Roman Gushchin <guro@fb.com>
 Subject: Re: [RFC PATCH 0/2] mm/memcontrol: Finer-grained memory control
-Date: Thu, 11 Apr 2019 18:35:00 +0300
-Message-ID: <d8fc644e-0e83-7925-e728-34f6fc016f98@virtuozzo.com>
+Date: Thu, 11 Apr 2019 21:21:35 +0000
+Message-ID: <20190411212129.GA31565@tower.DHCP.thefacebook.com>
 References: <20190410191321.9527-1-longman@redhat.com>
- <1b6ee304-6176-15a0-c3fa-0b59cdd60085@virtuozzo.com>
- <cea941ed-f401-7380-6e48-622115a02533@redhat.com>
+ <20190410213824.GA13638@chrisdown.name>
+ <d8d6f82f-a950-8eea-16ce-9189e78f37fd@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cea941ed-f401-7380-6e48-622115a02533@redhat.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=J59ZmlOdTWha1uc+6rXK0NSv6K3t61Wr5VdtTAYniFg=;
+ b=C5Q/ZxjmL8Qsp02unNiG36lJkdXCpOGra3lM0wBog4IyNkgvVpJlkIcrBik23nPrtaqN
+ hh7WIW9JLH1s8suulT/5EPEEwP5fStblJIW9vgKhZuCXf0ayyK7DDecySE5RLF5RVmIC
+ r1mBWGls6Cm891o8o5+fKmxhfd9XkqYDGmg= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=J59ZmlOdTWha1uc+6rXK0NSv6K3t61Wr5VdtTAYniFg=;
+ b=GaprauWMbNYde7rr4mieyFI2H44/tHhhsUtQhFZm8f9kwTkWDYqYr5LwsWoCA9rYmienACKXhi+A4DlGIXCMli81eA0joVUq3KYD2gwWt1LYz0hA+zwC2ijyAS5A9dOMLqswmUzWqYDceQyxtcfIQHYg4OWgwroJ23egA/6DJeY=
+In-Reply-To: <d8d6f82f-a950-8eea-16ce-9189e78f37fd@redhat.com>
 Content-Language: en-US
+Content-ID: <1E5B2719146AB44CB3FB15816522B144@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Waiman Long <longman@redhat.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, aryabinin@virtuozzo.com
+To: Waiman Long <longman@redhat.com>
+Cc: Chris Down <chris@chrisdown.name>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Shakeel Butt <shakeelb@google.com>, Kirill Tkhai <ktkhai@virtuozzo.com>
 
-On 11.04.2019 17:55, Waiman Long wrote:
-> On 04/11/2019 10:37 AM, Kirill Tkhai wrote:
->> On 10.04.2019 22:13, Waiman Long wrote:
->>> The current control mechanism for memory cgroup v2 lumps all the memory
->>> together irrespective of the type of memory objects. However, there
->>> are cases where users may have more concern about one type of memory
->>> usage than the others.
->>>
->>> We have customer request to limit memory consumption on anonymous memory
->>> only as they said the feature was available in other OSes like Solaris.
->>>
->>> To allow finer-grained control of memory, this patchset 2 new control
->>> knobs for memory controller:
->>>  - memory.subset.list for specifying the type of memory to be under control.
->>>  - memory.subset.high for the high limit of memory consumption of that
->>>    memory type.
->>>
->>> For simplicity, the limit is not hierarchical and applies to only tasks
->>> in the local memory cgroup.
->>>
->>> Waiman Long (2):
->>>   mm/memcontrol: Finer-grained control for subset of allocated memory
->>>   mm/memcontrol: Add a new MEMCG_SUBSET_HIGH event
->>>
->>>  Documentation/admin-guide/cgroup-v2.rst |  35 +++++++++
->>>  include/linux/memcontrol.h              |   8 ++
->>>  mm/memcontrol.c                         | 100 +++++++++++++++++++++++-
->>>  3 files changed, 142 insertions(+), 1 deletion(-)
->> CC Andrey.
->>
->> In Virtuozzo kernel we have similar functionality for limitation of page cache in a cgroup:
->>
->> https://github.com/OpenVZ/vzkernel/commit/8ceef5e0c07c7621fcb0e04ccc48a679dfeec4a4
-> 
-> It will be helpful to know the use case where you want to limit page
-> cache usage. I have anonymous memory in mind when I compose this patch,
-> but I make the mechanism more generic so that it can apply to other use
-> cases as well.
+On Thu, Apr 11, 2019 at 10:22:22AM -0400, Waiman Long wrote:
+> On 04/10/2019 05:38 PM, Chris Down wrote:
+> > Hi Waiman,
+> >
+> > Waiman Long writes:
+> >> The current control mechanism for memory cgroup v2 lumps all the memor=
+y
+> >> together irrespective of the type of memory objects. However, there
+> >> are cases where users may have more concern about one type of memory
+> >> usage than the others.
+> >
+> > I have concerns about this implementation, and the overall idea in
+> > general. We had per-class memory limiting in the cgroup v1 API, and it
+> > ended up really poorly, and resulted in a situation where it's really
+> > hard to compose a usable system out of it any more.
+> >
+> > A major part of the restructure in cgroup v2 has been to simplify
+> > things so that it's more easy to understand for service owners and
+> > sysadmins. This was intentional, because otherwise the system overall
+> > is hard to make into something that does what users *really* want, and
+> > users end up with a lot of confusion, misconfiguration, and generally
+> > an inability to produce a coherent system, because we've made things
+> > too hard to piece together.
+> >
+> > In general, for purposes of resource control, I'm not convinced that
+> > it makes sense to limit only one kind of memory based on prior
+> > experience with v1. Can you give a production use case where this
+> > would be a clear benefit, traded off against the increase in
+> > complexity to the API?
+> >
+>=20
+> As I said in my previous email on this thread, the customer considered
+> pages cache as common goods not fully representing the "real" memory
+> footprint used by an application.=A0 Depending on actual mix of
+> applications running on a system, there are certainly cases where their
+> view is correct. In fact, what the customer is asking for is not even
+> provided by the v1 API even with that many classes of memory that you
+> can choose from.
 
-We have distributed storage, and there are its daemons on every host.
-There are replication factor 1:N, so the same block may be duplicated
-on different hosts. They produce a lot of pagecache, but it is reused
-not often (because of the above 1:N).
+Hello Waiman!
 
-So, we want to limit pagecache, but do not limit anon memory. This
-prevents global reclaim, and we found this improves our performance tests.
+If I understand the case correctly, the customer wants to get signaled
+when anon memory consumption will reach a certain point, right?
 
-Kirill
+I doubt that the idea is to keep only the certain amount of anon memory
+resident and swap out everything else. So, probably, the reaction will
+be to kill the application.
+
+If so, do we really need a control?
+Maybe polling memory.stats::anon will be enough?
+
+If not, I can imagine some sort of threshold notification mechanism
+on top of memory.stats. Similar to what is build on top of psi.
+
+Tracking the size of anon memory is definitely useful for spotting
+userspace leaks and spkies, so an ability to set up thresholds and get
+events sounds appealing to me.
+
+Thanks!
+
+Roman
