@@ -1,67 +1,60 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH 0/4] mm: memcontrol: memory.stat cost & correctness
-Date: Fri, 12 Apr 2019 13:07:17 -0700
-Message-ID: <CALvZod4-7a1aCELqWb+6xJ=-cPtfntNipAG634PA6UEQcN3Lag@mail.gmail.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH 3/4] mm: memcontrol: fix recursive statistics correctness
+ & scalabilty
+Date: Fri, 12 Apr 2019 16:10:05 -0400
+Message-ID: <20190412201004.GA27187@cmpxchg.org>
 References: <20190412151507.2769-1-hannes@cmpxchg.org>
+ <20190412151507.2769-4-hannes@cmpxchg.org>
+ <CALvZod4xu10+E41YyaamigysZAnDcdA09f5m-hGd72LeJ9VmEg@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=cWy39L110bpl90KlTOYN36nnj0m9Og8hXJw1+zoZDKk=;
-        b=LP65T9uo0dVn2Y5omvF5mxvXGRfAgu6NngtzQkPAnlMx95MzRaoxUddWsZp48rD13D
-         DVYmLNGVWFeqmVnvvMAV+nlf+frio4tA488tODN1HVqEvHfhTW5BOunil70RJ/PsIhYE
-         AVgukhQXhJcaGfW/bxdzEpdpiwIo/iM6ZGTv3XE8Y3RuPKBM4A8WyrvK4tDNZUmeWYl9
-         wLKIa898nv5rY6FJxM+Z2Bz1Tk8gGszZttNaJ7iQfD4v9jr1wIsYMwMZhHPbEWz/2gJT
-         zl199wVxdgncig7ajSNj8hQEX/RicdcdKS2ywd0YJfPSMTtbNXfvLGLH43wX3vF0nHyC
-         CWiA==
-In-Reply-To: <20190412151507.2769-1-hannes@cmpxchg.org>
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=KL4HVhtEWvgQo7HQOLpi2CSpq8VK+yUMixkba3uKDZg=;
+        b=HGtEDNLthqGLuedDvcWcQ1HekO50r/XS7jrtBnh6XFA8NQFzosqhgjcfVaTaVT21+F
+         w1q4VXl9ZZ9XnyKnnt0oXaOx+G2HR836hSnHm+9tRa5ftCZLstYd0AmiEW69ToQNXSTT
+         UaeyyJp9/M8MV9kQTD8tmlwbXPv2hp1lB+mozU7oDB9/SA4wsWc68mC8tHAWkn5i+TDh
+         om6ankdEU3FtXwv7KGCbZuNEApBQdcCi3mxFmA+66xv+wuiLEvVmNfZmkBNj6XwwGz4f
+         ehrnYoRllpVANXpOkKs+Ru/sR8PkPWgDKm/CRtFatWXmj7YYDjE7crWKlgGZ7hnywrmM
+         XVXA==
+Content-Disposition: inline
+In-Reply-To: <CALvZod4xu10+E41YyaamigysZAnDcdA09f5m-hGd72LeJ9VmEg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-team@fb.com
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-team@fb.com, Roman Gushchin <guro@fb.com>
 
-On Fri, Apr 12, 2019 at 8:15 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
->
-> The cgroup memory.stat file holds recursive statistics for the entire
-> subtree. The current implementation does this tree walk on-demand
-> whenever the file is read. This is giving us problems in production.
->
-> 1. The cost of aggregating the statistics on-demand is high. A lot of
-> system service cgroups are mostly idle and their stats don't change
-> between reads, yet we always have to check them. There are also always
-> some lazily-dying cgroups sitting around that are pinned by a handful
-> of remaining page cache; the same applies to them.
->
-> In an application that periodically monitors memory.stat in our fleet,
-> we have seen the aggregation consume up to 5% CPU time.
->
-> 2. When cgroups die and disappear from the cgroup tree, so do their
-> accumulated vm events. The result is that the event counters at
-> higher-level cgroups can go backwards and confuse some of our
-> automation, let alone people looking at the graphs over time.
->
-> To address both issues, this patch series changes the stat
-> implementation to spill counts upwards when the counters change.
->
-> The upward spilling is batched using the existing per-cpu cache. In a
-> sparse file stress test with 5 level cgroup nesting, the additional
-> cost of the flushing was negligible (a little under 1% of CPU at 100%
-> CPU utilization, compared to the 5% of reading memory.stat during
-> regular operation).
+On Fri, Apr 12, 2019 at 12:55:10PM -0700, Shakeel Butt wrote:
+> We also faced this exact same issue as well and had the similar solution.
+> 
+> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> 
+> Reviewed-by: Shakeel Butt <shakeelb@google.com>
 
-For whole series:
+Thanks for the review!
 
-Reviewed-by: Shakeel Butt <shakeelb@google.com>
+> (Unrelated to this patchset) I think there should also a way to get
+> the exact memcg stats. As the machines are getting bigger (more cpus
+> and larger basic page size) the accuracy of stats are getting worse.
+> Internally we have an additional interface memory.stat_exact for that.
+> However I am not sure in the upstream kernel will an additional
+> interface is better or something like /proc/sys/vm/stat_refresh which
+> sync all per-cpu stats.
 
->
->  include/linux/memcontrol.h |  96 +++++++-------
->  mm/memcontrol.c            | 290 +++++++++++++++++++++++++++----------------
->  mm/vmscan.c                |   4 +-
->  mm/workingset.c            |   7 +-
->  4 files changed, 234 insertions(+), 163 deletions(-)
->
->
+I was talking to Roman about this earlier as well and he mentioned it
+would be nice to have periodic flushing of the per-cpu caches. The
+global vmstat has something similar. We might be able to hook into
+those workers, but it would likely require some smarts so we don't
+walk the entire cgroup tree every couple of seconds.
+
+We haven't had any actual problems with the per-cpu fuzziness, mainly
+because the cgroups of interest also grow in size as the machines get
+bigger, and so the relative error doesn't increase.
+
+Are your requirements that the error dissipates over time (waiting for
+a threshold convergence somewhere?) or do you have automation that
+gets decisions wrong due to the error at any given point in time?
