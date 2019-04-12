@@ -1,92 +1,151 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [RFC PATCH 0/2] mm/memcontrol: Finer-grained memory control
-Date: Thu, 11 Apr 2019 21:21:35 +0000
-Message-ID: <20190411212129.GA31565@tower.DHCP.thefacebook.com>
-References: <20190410191321.9527-1-longman@redhat.com>
- <20190410213824.GA13638@chrisdown.name>
- <d8d6f82f-a950-8eea-16ce-9189e78f37fd@redhat.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH] mm: fix inactive list balancing between NUMA nodes and cgroups
+Date: Fri, 12 Apr 2019 10:44:38 -0400
+Message-ID: <20190412144438.2645-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=J59ZmlOdTWha1uc+6rXK0NSv6K3t61Wr5VdtTAYniFg=;
- b=C5Q/ZxjmL8Qsp02unNiG36lJkdXCpOGra3lM0wBog4IyNkgvVpJlkIcrBik23nPrtaqN
- hh7WIW9JLH1s8suulT/5EPEEwP5fStblJIW9vgKhZuCXf0ayyK7DDecySE5RLF5RVmIC
- r1mBWGls6Cm891o8o5+fKmxhfd9XkqYDGmg= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=J59ZmlOdTWha1uc+6rXK0NSv6K3t61Wr5VdtTAYniFg=;
- b=GaprauWMbNYde7rr4mieyFI2H44/tHhhsUtQhFZm8f9kwTkWDYqYr5LwsWoCA9rYmienACKXhi+A4DlGIXCMli81eA0joVUq3KYD2gwWt1LYz0hA+zwC2ijyAS5A9dOMLqswmUzWqYDceQyxtcfIQHYg4OWgwroJ23egA/6DJeY=
-In-Reply-To: <d8d6f82f-a950-8eea-16ce-9189e78f37fd@redhat.com>
-Content-Language: en-US
-Content-ID: <1E5B2719146AB44CB3FB15816522B144@namprd15.prod.outlook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=TpJORoHWMkN029iMtW7/72pORwZc7P01cwdjOx9UylM=;
+        b=dhjIGj9GhnlUIw42QmSp6MHvSVLlCu6/A72GkymhOJ1S3wjd/dN17urp2QV0SAlwlo
+         AwQwr86bgAy87FPEIYjdQBUK90nHPVdms2Gsk6G7qUOKpg5wj/jo9lb46sDapoIRzvwy
+         T3V0zNZJl4I74l4wDv0wZicEmFF35/pHAAqUhE8cCGRCM/IZMlaAdCcZyhksBfUb6m1q
+         c0JUuQBx88GqBraoMu0W8Ps11nbd9Wce4xNlJ+8FLUc0fIDBcEc3ZXGBcfboAbIzE/R/
+         bOizgsBKHYr3nkBRJj6gTO+8CbjiYSwUGajlKPLOdBLIoJF5An0UZdvQyj+G1meD2gI6
+         2bwg==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Waiman Long <longman@redhat.com>
-Cc: Chris Down <chris@chrisdown.name>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Shakeel Butt <shakeelb@google.com>, Kirill Tkhai <ktkhai@virtuozzo.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Thu, Apr 11, 2019 at 10:22:22AM -0400, Waiman Long wrote:
-> On 04/10/2019 05:38 PM, Chris Down wrote:
-> > Hi Waiman,
-> >
-> > Waiman Long writes:
-> >> The current control mechanism for memory cgroup v2 lumps all the memor=
-y
-> >> together irrespective of the type of memory objects. However, there
-> >> are cases where users may have more concern about one type of memory
-> >> usage than the others.
-> >
-> > I have concerns about this implementation, and the overall idea in
-> > general. We had per-class memory limiting in the cgroup v1 API, and it
-> > ended up really poorly, and resulted in a situation where it's really
-> > hard to compose a usable system out of it any more.
-> >
-> > A major part of the restructure in cgroup v2 has been to simplify
-> > things so that it's more easy to understand for service owners and
-> > sysadmins. This was intentional, because otherwise the system overall
-> > is hard to make into something that does what users *really* want, and
-> > users end up with a lot of confusion, misconfiguration, and generally
-> > an inability to produce a coherent system, because we've made things
-> > too hard to piece together.
-> >
-> > In general, for purposes of resource control, I'm not convinced that
-> > it makes sense to limit only one kind of memory based on prior
-> > experience with v1. Can you give a production use case where this
-> > would be a clear benefit, traded off against the increase in
-> > complexity to the API?
-> >
->=20
-> As I said in my previous email on this thread, the customer considered
-> pages cache as common goods not fully representing the "real" memory
-> footprint used by an application.=A0 Depending on actual mix of
-> applications running on a system, there are certainly cases where their
-> view is correct. In fact, what the customer is asking for is not even
-> provided by the v1 API even with that many classes of memory that you
-> can choose from.
+During !CONFIG_CGROUP reclaim, we expand the inactive list size if
+it's thrashing on the node that is about to be reclaimed. But when
+cgroups are enabled, we suddenly ignore the node scope and use the
+cgroup scope only. The result is that pressure bleeds between NUMA
+nodes depending on whether cgroups are merely compiled into Linux.
+This behavioral difference is unexpected and undesirable.
 
-Hello Waiman!
+When the refault adaptivity of the inactive list was first introduced,
+there were no statistics at the lruvec level - the intersection of
+node and memcg - so it was better than nothing.
 
-If I understand the case correctly, the customer wants to get signaled
-when anon memory consumption will reach a certain point, right?
+But now that we have that infrastructure, use lruvec_page_state() to
+make the list balancing decision always NUMA aware.
 
-I doubt that the idea is to keep only the certain amount of anon memory
-resident and swap out everything else. So, probably, the reaction will
-be to kill the application.
+Fixes: 2a2e48854d70 ("mm: vmscan: fix IO/refault regression in cache workingset transition")
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ mm/vmscan.c | 29 +++++++++--------------------
+ 1 file changed, 9 insertions(+), 20 deletions(-)
 
-If so, do we really need a control?
-Maybe polling memory.stats::anon will be enough?
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 347c9b3b29ac..c9f8afe61ae3 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2138,7 +2138,6 @@ static void shrink_active_list(unsigned long nr_to_scan,
+  *   10TB     320        32GB
+  */
+ static bool inactive_list_is_low(struct lruvec *lruvec, bool file,
+-				 struct mem_cgroup *memcg,
+ 				 struct scan_control *sc, bool actual_reclaim)
+ {
+ 	enum lru_list active_lru = file * LRU_FILE + LRU_ACTIVE;
+@@ -2159,16 +2158,12 @@ static bool inactive_list_is_low(struct lruvec *lruvec, bool file,
+ 	inactive = lruvec_lru_size(lruvec, inactive_lru, sc->reclaim_idx);
+ 	active = lruvec_lru_size(lruvec, active_lru, sc->reclaim_idx);
+ 
+-	if (memcg)
+-		refaults = memcg_page_state(memcg, WORKINGSET_ACTIVATE);
+-	else
+-		refaults = node_page_state(pgdat, WORKINGSET_ACTIVATE);
+-
+ 	/*
+ 	 * When refaults are being observed, it means a new workingset
+ 	 * is being established. Disable active list protection to get
+ 	 * rid of the stale workingset quickly.
+ 	 */
++	refaults = lruvec_page_state(lruvec, WORKINGSET_ACTIVATE);
+ 	if (file && actual_reclaim && lruvec->refaults != refaults) {
+ 		inactive_ratio = 0;
+ 	} else {
+@@ -2189,12 +2184,10 @@ static bool inactive_list_is_low(struct lruvec *lruvec, bool file,
+ }
+ 
+ static unsigned long shrink_list(enum lru_list lru, unsigned long nr_to_scan,
+-				 struct lruvec *lruvec, struct mem_cgroup *memcg,
+-				 struct scan_control *sc)
++				 struct lruvec *lruvec, struct scan_control *sc)
+ {
+ 	if (is_active_lru(lru)) {
+-		if (inactive_list_is_low(lruvec, is_file_lru(lru),
+-					 memcg, sc, true))
++		if (inactive_list_is_low(lruvec, is_file_lru(lru), sc, true))
+ 			shrink_active_list(nr_to_scan, lruvec, sc, lru);
+ 		return 0;
+ 	}
+@@ -2293,7 +2286,7 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
+ 			 * anonymous pages on the LRU in eligible zones.
+ 			 * Otherwise, the small LRU gets thrashed.
+ 			 */
+-			if (!inactive_list_is_low(lruvec, false, memcg, sc, false) &&
++			if (!inactive_list_is_low(lruvec, false, sc, false) &&
+ 			    lruvec_lru_size(lruvec, LRU_INACTIVE_ANON, sc->reclaim_idx)
+ 					>> sc->priority) {
+ 				scan_balance = SCAN_ANON;
+@@ -2311,7 +2304,7 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
+ 	 * lruvec even if it has plenty of old anonymous pages unless the
+ 	 * system is under heavy pressure.
+ 	 */
+-	if (!inactive_list_is_low(lruvec, true, memcg, sc, false) &&
++	if (!inactive_list_is_low(lruvec, true, sc, false) &&
+ 	    lruvec_lru_size(lruvec, LRU_INACTIVE_FILE, sc->reclaim_idx) >> sc->priority) {
+ 		scan_balance = SCAN_FILE;
+ 		goto out;
+@@ -2515,7 +2508,7 @@ static void shrink_node_memcg(struct pglist_data *pgdat, struct mem_cgroup *memc
+ 				nr[lru] -= nr_to_scan;
+ 
+ 				nr_reclaimed += shrink_list(lru, nr_to_scan,
+-							    lruvec, memcg, sc);
++							    lruvec, sc);
+ 			}
+ 		}
+ 
+@@ -2582,7 +2575,7 @@ static void shrink_node_memcg(struct pglist_data *pgdat, struct mem_cgroup *memc
+ 	 * Even if we did not try to evict anon pages at all, we want to
+ 	 * rebalance the anon lru active/inactive ratio.
+ 	 */
+-	if (inactive_list_is_low(lruvec, false, memcg, sc, true))
++	if (inactive_list_is_low(lruvec, false, sc, true))
+ 		shrink_active_list(SWAP_CLUSTER_MAX, lruvec,
+ 				   sc, LRU_ACTIVE_ANON);
+ }
+@@ -2985,12 +2978,8 @@ static void snapshot_refaults(struct mem_cgroup *root_memcg, pg_data_t *pgdat)
+ 		unsigned long refaults;
+ 		struct lruvec *lruvec;
+ 
+-		if (memcg)
+-			refaults = memcg_page_state(memcg, WORKINGSET_ACTIVATE);
+-		else
+-			refaults = node_page_state(pgdat, WORKINGSET_ACTIVATE);
+-
+ 		lruvec = mem_cgroup_lruvec(pgdat, memcg);
++		refaults = lruvec_page_state_local(lruvec, WORKINGSET_ACTIVATE);
+ 		lruvec->refaults = refaults;
+ 	} while ((memcg = mem_cgroup_iter(root_memcg, memcg, NULL)));
+ }
+@@ -3346,7 +3335,7 @@ static void age_active_anon(struct pglist_data *pgdat,
+ 	do {
+ 		struct lruvec *lruvec = mem_cgroup_lruvec(pgdat, memcg);
+ 
+-		if (inactive_list_is_low(lruvec, false, memcg, sc, true))
++		if (inactive_list_is_low(lruvec, false, sc, true))
+ 			shrink_active_list(SWAP_CLUSTER_MAX, lruvec,
+ 					   sc, LRU_ACTIVE_ANON);
+ 
+-- 
+2.21.0
 
-If not, I can imagine some sort of threshold notification mechanism
-on top of memory.stats. Similar to what is build on top of psi.
-
-Tracking the size of anon memory is definitely useful for spotting
-userspace leaks and spkies, so an ability to set up thresholds and get
-events sounds appealing to me.
-
-Thanks!
-
-Roman
