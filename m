@@ -1,96 +1,120 @@
-From: Oleg Nesterov <oleg@redhat.com>
-Subject: Re: [PATCH v10 4/9] cgroup: cgroup v2 freezer
-Date: Fri, 19 Apr 2019 17:19:12 +0200
-Message-ID: <20190419151912.GA12152@redhat.com>
-References: <20190405174708.1010-1-guro@fb.com>
- <20190405174708.1010-5-guro@fb.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH] memcg: refill_stock for kmem uncharging too
+Date: Fri, 19 Apr 2019 20:07:37 +0000
+Message-ID: <20190419200733.GB31878@tower.DHCP.thefacebook.com>
+References: <20190418214224.61900-1-shakeelb@google.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190405174708.1010-5-guro@fb.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=0o7TgRhaW9KvbjPuiOAr7raGQS1pQ+IeI9U51JZC12I=;
+ b=iIpvfYpK9uoABdqXowvTj/D0wOnhc0EcJ3DyUmWS98LMH9aIhIcIt4/5/kuDuZi9fVp2
+ kUibv00Ti57ANvzqVmxIH1MYozD/N9czODlsHNxrElaEo2p1Its8bnZWpdi6XswFtzzz
+ LRgfS5KqX/jTs0IWyirzVEUtkKQHzUGxqOk= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0o7TgRhaW9KvbjPuiOAr7raGQS1pQ+IeI9U51JZC12I=;
+ b=S+FCj6XiJVCX4l7FPV03wBXHGmcW9ckOipUBxwN1/xiCg8eKLesmGJ6CslQMHElSQk0yPdNlKVH1BL8fDF0T7JpQr9Tp0SuOISCy+c2/vU4t6YPI3sz/EyswpCFAKjSsiwltfrpe0FFDl8vnQofc8tGBWBE4mgJtsJ2Yr5NNWXI=
+In-Reply-To: <20190418214224.61900-1-shakeelb@google.com>
+Content-Language: en-US
+Content-ID: <6E89A0B4BEB6BB42B99AC022945CB334@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guroan@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On 04/05, Roman Gushchin wrote:
->
-> +void cgroup_leave_frozen(bool always_leave)
-> +{
-> +	struct cgroup *cgrp;
-> +
-> +	spin_lock_irq(&css_set_lock);
-> +	cgrp = task_dfl_cgroup(current);
-> +	if (always_leave || !test_bit(CGRP_FREEZE, &cgrp->flags)) {
-> +		cgroup_dec_frozen_cnt(cgrp);
-> +		cgroup_update_frozen(cgrp);
-> +		WARN_ON_ONCE(!current->frozen);
-> +		current->frozen = false;
-> +	}
-> +	spin_unlock_irq(&css_set_lock);
-> +
-> +	if (unlikely(current->frozen)) {
-> +		/*
-> +		 * If the task remained in the frozen state,
-> +		 * make sure it won't reach userspace without
-> +		 * entering the signal handling loop.
-> +		 */
-> +		spin_lock_irq(&current->sighand->siglock);
-> +		recalc_sigpending();
-> +		spin_unlock_irq(&current->sighand->siglock);
+On Thu, Apr 18, 2019 at 02:42:24PM -0700, Shakeel Butt wrote:
+> The commit 475d0487a2ad ("mm: memcontrol: use per-cpu stocks for socket
+> memory uncharging") added refill_stock() for skmem uncharging path to
+> optimize workloads having high network traffic. Do the same for the kmem
+> uncharging as well. However bypass the refill for offlined memcgs to not
+> cause zombie apocalypse.
+>=20
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
 
-I still can't understand this logic.
+Hello, Shakeel!
 
-Once again, suppose we race with CGRP_FREEZE. If JOBCTL_TRAP_FREEZE is already
-set then signal_pending() must be already T and we do not need recalc_sigpending?
-If JOBCTL_TRAP_FREEZE is not set yet, how can recalc_sigpending() help?
-
-> +static void cgroup_freeze_task(struct task_struct *task, bool freeze)
-> +{
-> +	unsigned long flags;
-> +
-> +	/* If the task is about to die, don't bother with freezing it. */
-> +	if (!lock_task_sighand(task, &flags))
+> ---
+>  mm/memcontrol.c | 17 ++++++++---------
+>  1 file changed, 8 insertions(+), 9 deletions(-)
+>=20
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 2535e54e7989..7b8de091f572 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -178,6 +178,7 @@ struct mem_cgroup_event {
+> =20
+>  static void mem_cgroup_threshold(struct mem_cgroup *memcg);
+>  static void mem_cgroup_oom_notify(struct mem_cgroup *memcg);
+> +static void cancel_charge(struct mem_cgroup *memcg, unsigned int nr_page=
+s);
+> =20
+>  /* Stuffs for move charges at task migration. */
+>  /*
+> @@ -2097,10 +2098,7 @@ static void drain_stock(struct memcg_stock_pcp *st=
+ock)
+>  	struct mem_cgroup *old =3D stock->cached;
+> =20
+>  	if (stock->nr_pages) {
+> -		page_counter_uncharge(&old->memory, stock->nr_pages);
+> -		if (do_memsw_account())
+> -			page_counter_uncharge(&old->memsw, stock->nr_pages);
+> -		css_put_many(&old->css, stock->nr_pages);
+> +		cancel_charge(old, stock->nr_pages);
+>  		stock->nr_pages =3D 0;
+>  	}
+>  	stock->cached =3D NULL;
+> @@ -2133,6 +2131,11 @@ static void refill_stock(struct mem_cgroup *memcg,=
+ unsigned int nr_pages)
+>  	struct memcg_stock_pcp *stock;
+>  	unsigned long flags;
+> =20
+> +	if (unlikely(!mem_cgroup_online(memcg))) {
+> +		cancel_charge(memcg, nr_pages);
 > +		return;
+> +	}
+
+I'm slightly concerned about this part. Do we really need it?
+The number of "zombies" which we can pin is limited by the number of CPUs,
+and it will drop fast if there is any load on the machine.
+
+If we skip offline memcgs, it can slow down charging/uncharging of skmem,
+which might be a problem, if the socket is in active use by an other cgroup=
+.
+Honestly, I'd drop this part.
+
 > +
-> +	if (freeze) {
-> +		task->jobctl |= JOBCTL_TRAP_FREEZE;
-> +		signal_wake_up(task, false);
-> +	} else {
-> +		task->jobctl &= ~JOBCTL_TRAP_FREEZE;
-> +		wake_up_process(task);
+>  	local_irq_save(flags);
+> =20
+>  	stock =3D this_cpu_ptr(&memcg_stock);
+> @@ -2768,17 +2771,13 @@ void __memcg_kmem_uncharge(struct page *page, int=
+ order)
+>  	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
+>  		page_counter_uncharge(&memcg->kmem, nr_pages);
+> =20
+> -	page_counter_uncharge(&memcg->memory, nr_pages);
+> -	if (do_memsw_account())
+> -		page_counter_uncharge(&memcg->memsw, nr_pages);
+> -
+>  	page->mem_cgroup =3D NULL;
+> =20
+>  	/* slab pages do not have PageKmemcg flag set */
+>  	if (PageKmemcg(page))
+>  		__ClearPageKmemcg(page);
+> =20
+> -	css_put_many(&memcg->css, nr_pages);
+> +	refill_stock(memcg, nr_pages);
+>  }
+>  #endif /* CONFIG_MEMCG_KMEM */
+> =20
+> --=20
+> 2.21.0.392.gf8f6787159e-goog
+>=20
 
-wake_up_interruptible() ?
+The rest looks good to me.
 
->  static int ptrace_signal(int signr, kernel_siginfo_t *info)
->  {
->  	/*
-> @@ -2442,6 +2483,10 @@ bool get_signal(struct ksignal *ksig)
->  		ksig->info.si_signo = signr = SIGKILL;
->  		sigdelset(&current->pending.signal, SIGKILL);
->  		recalc_sigpending();
-> +		current->jobctl &= ~JOBCTL_TRAP_FREEZE;
-> +		spin_unlock_irq(&sighand->siglock);
-> +		if (unlikely(cgroup_task_frozen(current)))
-> +			cgroup_leave_frozen(true);
-
-Oh, and another leave_frozen below...
-
-I feel this must be simplified somehow, but nothing comes to my mind right now.
-
-> +		/*
-> +		 * If the task is leaving the frozen state, let's update
-> +		 * cgroup counters and reset the frozen bit.
-> +		 */
-> +		if (unlikely(cgroup_task_frozen(current))) {
->  			spin_unlock_irq(&sighand->siglock);
-> +			cgroup_leave_frozen(true);
->  			goto relock;
->  		}
-
-afaics cgroup_leave_frozen(false) makes more sense here.
-
-Oleg.
-
+Thanks!
