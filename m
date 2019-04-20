@@ -1,34 +1,74 @@
-From: pr-tracker-bot@kernel.org
-Subject: Re: [GIT PULL] cgroup fix for v5.1-rc5
-Date: Sat, 20 Apr 2019 01:10:04 +0000
-Message-ID: <155572260418.2444.9252829961339784073.pr-tracker-bot@kernel.org>
-References: <20190420002834.GJ374014@devbig004.ftw2.facebook.com>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: [PATCH v10 4/9] cgroup: cgroup v2 freezer
+Date: Sat, 20 Apr 2019 12:58:38 +0200
+Message-ID: <20190420105838.GA17468@redhat.com>
+References: <20190405174708.1010-1-guro@fb.com>
+ <20190405174708.1010-5-guro@fb.com>
+ <20190419151912.GA12152@redhat.com>
+ <20190419161118.GA23357@tower.DHCP.thefacebook.com>
+ <20190419162600.GC12228@redhat.com>
+ <20190419165600.GC23357@tower.DHCP.thefacebook.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1555722604;
-        bh=IaPxTf9/I/b3n71r/gnRqeuIZFVa60ZtQU4mry22hu8=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=avKrYvHyS60C0vtYRlKrzK40PGS1ndiAcbme90WdpRJm7Syfy+UGLLFz5Ob5ylG4Z
-         e77R3jEMYFZyvOS6AHkaAJ4GexnQ3m7yrpp4s7/rP6Kuz79nYONOAGaY0u6KK2x0Xc
-         D1jwGXBlaeKSZ9C8RatrpV7p2K95JdP1aiXl6k5A=
-In-Reply-To: <20190420002834.GJ374014@devbig004.ftw2.facebook.com>
+Content-Disposition: inline
+In-Reply-To: <20190419165600.GC23357@tower.DHCP.thefacebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
+To: Roman Gushchin <guro@fb.com>
+Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Kernel Team <Kernel-team@fb.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-The pull request you sent on Fri, 19 Apr 2019 17:28:34 -0700:
+On 04/19, Roman Gushchin wrote:
+>
+> > > >
+> > > > wake_up_interruptible() ?
+> > >
+> > > Wait_up_interruptible() is supposed to work with a workqueue,
+> > > but here there is nothing like this. Probably, I didn't understand your idea.
+> > > Can you, please, elaborate a bit more?
+> >
+> > Not sure I understand... We need to wake up the task if it sleeps in
+> > do_freezer_trap(), right? do_freezer_trap() uses TASK_INTERRUPTIBLE, so
+> > why can't wake_up_interruptible() == __wake_up(TASK_INTERRUPTIBLE) work?
+>
+> Right, but __wake_up is supposed to wake threads blocked on a waitqueue:
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.1-fixes
+Ugh sorry ;) of course I meant wake_up_state(task, TASK_INTERRUPTIBLE).
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/371dd432ab39f7bc55d6ec77d63b430285627e04
+> > > > > +		if (unlikely(cgroup_task_frozen(current))) {
+> > > > >  			spin_unlock_irq(&sighand->siglock);
+> > > > > +			cgroup_leave_frozen(true);
+> > > > >  			goto relock;
+> > > > >  		}
+> > > >
+> > > > afaics cgroup_leave_frozen(false) makes more sense here.
+> > >
+> > > Why? I don't see any reasons why the task should remain in the frozen
+> > > state after this point.
+> >
+> > But cgroup_leave_frozen(false) will equally clear ->frozen if !CGRP_FREEZE ?
+> > OTOH, if CGRP_FREEZE is set again, why do we need to clear ->frozen?
+>
+> Hm, it might work too, but I'm not sure I like it more. IMO, the best option
+> is to have a single cgroup_leave_frozen(true) in signal.c, it's just simpler.
+> If a user changed the desired state of cgroup twice, there is no need to avoid
+> state transitions. Or maybe I don't see it yet.
 
-Thank you!
+Then why do we need cgroup_leave_frozen(false) in wait_for_vfork_done() ? How
+does it differ from get_signal() ?
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+If nothing else. Suppose that wait_for_vfork_done() calls leave(false) and this
+races with freezer, CGRP_FREEZE is already set but JOBCTL_TRAP_FREEZE is not.
+
+This sets TIF_SIGPENDING to ensure the task won't return to user mode, thus it
+calls get_signal().
+
+get_signal() doesn't see JOBCTL_TRAP_FREEZE, it notices ->frozen == T and does
+cgroup_leave_frozen(true) which clears ->frozen.
+
+Then the task calls dequeue_signal(), clears TIF_SIGPENDING and returns to user
+mode?
+
+Oleg.
+
