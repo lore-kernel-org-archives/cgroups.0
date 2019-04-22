@@ -1,13 +1,11 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v10 4/9] cgroup: cgroup v2 freezer
-Date: Mon, 22 Apr 2019 22:11:22 +0000
-Message-ID: <20190422221116.GA10341@tower.DHCP.thefacebook.com>
-References: <20190405174708.1010-1-guro@fb.com>
- <20190405174708.1010-5-guro@fb.com> <20190419151912.GA12152@redhat.com>
- <20190419161118.GA23357@tower.DHCP.thefacebook.com>
- <20190419162600.GC12228@redhat.com>
- <20190419165600.GC23357@tower.DHCP.thefacebook.com>
- <20190420105838.GA17468@redhat.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: Re: [PATCH 0/7] introduce cpu.headroom knob to cpu controller
+Date: Mon, 22 Apr 2019 23:22:21 +0000
+Message-ID: <E97E73F4-CE8C-4CD7-B6B6-5F63A4E881B1@fb.com>
+References: <20190408214539.2705660-1-songliubraving@fb.com>
+ <20190410115907.GE19434@e105550-lin.cambridge.arm.com>
+ <A2E9A149-9EAA-478D-A096-1D4D4BA442B3@fb.com>
+ <CAKfTPtAFB3gSZYJN1BcjU_XoY=Pfu2xtea+2MEw7FkVc3mwTSA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
@@ -15,108 +13,148 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : references : in-reply-to : content-type : content-id
  : content-transfer-encoding : mime-version; s=facebook;
- bh=OYV/QkCLKRJvFA326Z6+sTKwufHsZL75V0CTOKVRIV8=;
- b=hMylz/i7ddF3Idn4qvCvoWlhZecQho0UkzO/9BAX0tPH9SA7XBIL+Mxk3tyapDrk7l8G
- 4eH84ToYjb+Qhi9k8ecMzVcwqBgSZubjEB98pb2vbCAZP8HBn998kbIZuMa2DYvLBYdf
- 8KSLkV8Toy06AdHSsWjKGKMAqQOXW6sEMmk= 
+ bh=2CeFzKtjISHNTJ/GhmGMb7VMMUY0rdl1YKbLZO0t+Js=;
+ b=N2YJNoreyA6Oe3YUYV1tuIU3K2H0yI/ohY5XC6g8Q9EpjDZo5Aa6vxuW/KwFk7YDfzya
+ y02+4LBAy2DxzAXuPX137osMp5J7LH1zoT6wBYRrcIz8SCQK2pXEgVKK+8/ooyqxeoNj
+ 7kCnF+Sz8SX7QgJUamJbrZjYDtmVqqTlehw= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OYV/QkCLKRJvFA326Z6+sTKwufHsZL75V0CTOKVRIV8=;
- b=hfEBlBPSiv394G3gx4d3mvw8FKrE3NKqY84G2Wx2AIV6p7pwk36yMhgiE978Obl6eCOmrMmVoGwz+TAPYLrQTjnSoVFDHQFfhhQZnk33pLqcDzLvhdDS9U6fOdnS/WnXCfej6825QkBBdss5hxyeDk26NE2WmqLrCdbUU2BaXqQ=
-In-Reply-To: <20190420105838.GA17468@redhat.com>
+ bh=2CeFzKtjISHNTJ/GhmGMb7VMMUY0rdl1YKbLZO0t+Js=;
+ b=ZPWylkRRKeVTgSHE3O7VXrrM3wecNHiYgYNXTO4rPiB80DDI/vsG6ayK/5c9LUvhSUI2aHb+GMZ0gsg5o0vuMFIYLRJ6Zyg65EbGw5m6E8rCJg2gnovPzdWYeMDi5NzL/QX2/9gfE0vS5RWwPEEddncmzKpHBj7QyzVaLunWwFw=
+In-Reply-To: <CAKfTPtAFB3gSZYJN1BcjU_XoY=Pfu2xtea+2MEw7FkVc3mwTSA@mail.gmail.com>
 Content-Language: en-US
-Content-ID: <B91AB6C224AD854BBF2B3FE7BC05ED8D@namprd15.prod.outlook.com>
+Content-ID: <EF24496EEDBE124C9CEFF658E8571CDA@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Oleg Nesterov <oleg@redhat.com>
-Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Kernel Team <Kernel-team@fb.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Vincent Guittot <vincent.guittot@linaro.org>
+Cc: Morten Rasmussen <morten.rasmussen@arm.com>, linux-kernel <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "mingo@redhat.com" <mingo@redhat.com>, "peterz@infradead.org" <peterz@infradead.org>, "tglx@linutronix.de" <tglx@linutronix.de>, Kernel Team <Kernel-team@fb.com>
 
-On Sat, Apr 20, 2019 at 12:58:38PM +0200, Oleg Nesterov wrote:
-> On 04/19, Roman Gushchin wrote:
-> >
-> > > > >
-> > > > > wake_up_interruptible() ?
-> > > >
-> > > > Wait_up_interruptible() is supposed to work with a workqueue,
-> > > > but here there is nothing like this. Probably, I didn't understand =
-your idea.
-> > > > Can you, please, elaborate a bit more?
-> > >
-> > > Not sure I understand... We need to wake up the task if it sleeps in
-> > > do_freezer_trap(), right? do_freezer_trap() uses TASK_INTERRUPTIBLE, =
-so
-> > > why can't wake_up_interruptible() =3D=3D __wake_up(TASK_INTERRUPTIBLE=
-) work?
-> >
-> > Right, but __wake_up is supposed to wake threads blocked on a waitqueue=
-:
+Hi Vincent,
+
+> On Apr 17, 2019, at 5:56 AM, Vincent Guittot <vincent.guittot@linaro.org>=
+ wrote:
 >=20
-> Ugh sorry ;) of course I meant wake_up_state(task, TASK_INTERRUPTIBLE).
+> On Wed, 10 Apr 2019 at 21:43, Song Liu <songliubraving@fb.com> wrote:
+>>=20
+>> Hi Morten,
+>>=20
+>>> On Apr 10, 2019, at 4:59 AM, Morten Rasmussen <morten.rasmussen@arm.com=
+> wrote:
+>>>=20
+>=20
+>>>=20
+>>> The bit that isn't clear to me, is _why_ adding idle cycles helps your
+>>> workload. I'm not convinced that adding headroom gives any latency
+>>> improvements beyond watering down the impact of your side jobs. AFAIK,
+>>=20
+>> We think the latency improvements actually come from watering down the
+>> impact of side jobs. It is not just statistically improving average
+>> latency numbers, but also reduces resource contention caused by the side
+>> workload. I don't know whether it is from reducing contention of ALUs,
+>> memory bandwidth, CPU caches, or something else, but we saw reduced
+>> latencies when headroom is used.
+>>=20
+>>> the throttling mechanism effectively removes the throttled tasks from
+>>> the schedule according to a specific duty cycle. When the side job is
+>>> not throttled the main workload is experiencing the same latency issues
+>>> as before, but by dynamically tuning the side job throttling you can
+>>> achieve a better average latency. Am I missing something?
+>>>=20
+>>> Have you looked at your distribution of main job latency and tried to
+>>> compare with when throttling is active/not active?
+>>=20
+>> cfs_bandwidth adjusts allowed runtime for each task_group each period
+>> (configurable, 100ms by default). cpu.headroom logic applies gentle
+>> throttling, so that the side workload gets some runtime in every period.
+>> Therefore, if we look at time window equal to or bigger than 100ms, we
+>> don't really see "throttling active time" vs. "throttling inactive time"=
+.
+>>=20
+>>>=20
+>>> I'm wondering if the headroom solution is really the right solution for
+>>> your use-case or if what you are really after is something which is
+>>> lower priority than just setting the weight to 1. Something that
+>>=20
+>> The experiments show that, cpu.weight does proper work for priority: the
+>> main workload gets priority to use the CPU; while the side workload only
+>> fill the idle CPU. However, this is not sufficient, as the side workload
+>> creates big enough contention to impact the main workload.
+>>=20
+>>> (nearly) always gets pre-empted by your main job (SCHED_BATCH and
+>>> SCHED_IDLE might not be enough). If your main job consist
+>>> of lots of relatively short wake-ups things like the min_granularity
+>>> could have significant latency impact.
+>>=20
+>> cpu.headroom gives benefits in addition to optimizations in pre-empt
+>> side. By maintaining some idle time, fewer pre-empt actions are
+>> necessary, thus the main workload will get better latency.
+>=20
+> I agree with Morten's proposal, SCHED_IDLE should help your latency
+> problem because side job will be directly preempted unlike normal cfs
+> task even lowest priority.
+> In addition to min_granularity, sched_period also has an impact on the
+> time that a task has to wait before preempting the running task. Also,
+> some sched_feature like GENTLE_FAIR_SLEEPERS can also impact the
+> latency of a task.
+>=20
+> It would be nice to know if the latency problem comes from contention
+> on cache resources or if it's mainly because you main load waits
+> before running on a CPU
+>=20
+> Regards,
+> Vincent
 
-Agh, then it makes total sense to me. I'll master a follow-up patch.
+Thanks for these suggestions. Here are some more tests to show the impact=20
+of scheduler knobs and cpu.headroom.
+
+side-load | cpu.headroom | side/cpu.weight | min_gran | cpu-idle | main/lat=
+ency
+---------------------------------------------------------------------------=
+-----
+  none    |      0       |     n/a         |    1 ms  |  45.20%  |   1.00
+ ffmpeg   |      0       |      1          |   10 ms  |   3.38%  |   1.46
+ ffmpeg   |      0       |   SCHED_IDLE    |    1 ms  |   5.69%  |   1.42
+ ffmpeg   |    20%       |   SCHED_IDLE    |    1 ms  |  19.00%  |   1.13
+ ffmpeg   |    30%       |   SCHED_IDLE    |    1 ms  |  27.60%  |   1.08
+
+In all these cases, the main workload is loaded with same level of=20
+traffic (request per second). Main workload latency numbers are normalized=
+=20
+based on the baseline (first row).=20
+
+For the baseline, the main workload runs without any side workload, the=20
+system has about 45.20% idle CPU.=20
+
+The next two rows compare the impact of scheduling knobs cpu.weight and=20
+sched_min_granularity. With cpu.weight of 1 and min_granularity of 10ms,=20
+we see a latency of 1.46; with SCHED_IDLE and min_granularity of 1ms, we=20
+see a latency of 1.42. So SCHED_IDLE and min_granularity help protecting=20
+the main workload. However, it is not sufficient, as the latency overhead=20
+is high (>40%).=20
+
+The last two rows show the benefit of cpu.headroom. With 20% headroom,=20
+the latency is 1.13; while with 30% headroom, the latency is 1.08.=20
+
+We can also see a clear correlation between latency and global idle CPU:=20
+more idle CPU yields better lower latency.=20
+
+Over all, these results show that cpu.headroom provides effective=20
+mechanism to control the latency impact of side workloads. Other knobs=20
+could also help the latency, but they are not as effective and flexible=20
+as cpu.headroom.=20
+
+Does this analysis address your concern?=20
+
+Thanks,
+Song
 
 >=20
-> > > > > > +		if (unlikely(cgroup_task_frozen(current))) {
-> > > > > >  			spin_unlock_irq(&sighand->siglock);
-> > > > > > +			cgroup_leave_frozen(true);
-> > > > > >  			goto relock;
-> > > > > >  		}
-> > > > >
-> > > > > afaics cgroup_leave_frozen(false) makes more sense here.
-> > > >
-> > > > Why? I don't see any reasons why the task should remain in the froz=
-en
-> > > > state after this point.
-> > >
-> > > But cgroup_leave_frozen(false) will equally clear ->frozen if !CGRP_F=
-REEZE ?
-> > > OTOH, if CGRP_FREEZE is set again, why do we need to clear ->frozen?
-> >
-> > Hm, it might work too, but I'm not sure I like it more. IMO, the best o=
-ption
-> > is to have a single cgroup_leave_frozen(true) in signal.c, it's just si=
-mpler.
-> > If a user changed the desired state of cgroup twice, there is no need t=
-o avoid
-> > state transitions. Or maybe I don't see it yet.
->=20
-> Then why do we need cgroup_leave_frozen(false) in wait_for_vfork_done() ?=
- How
-> does it differ from get_signal() ?
+>>=20
+>> Thanks,
+>> Song
+>>=20
+>>>=20
+>>> Morten
+>>=20
 
-We need it because sleeping in vfork is a special state which we want to
-account as frozen. And if the parent process wakes up while the cgroup is f=
-rozen
-(because of the child death, for example), we want to push it into the "pro=
-per"
-frozen state without changing the state of the cgroup.
-
->=20
-> If nothing else. Suppose that wait_for_vfork_done() calls leave(false) an=
-d this
-> races with freezer, CGRP_FREEZE is already set but JOBCTL_TRAP_FREEZE is =
-not.
->=20
-> This sets TIF_SIGPENDING to ensure the task won't return to user mode, th=
-us it
-> calls get_signal().
->=20
-> get_signal() doesn't see JOBCTL_TRAP_FREEZE, it notices ->frozen =3D=3D T=
- and does
-> cgroup_leave_frozen(true) which clears ->frozen.
->=20
-> Then the task calls dequeue_signal(), clears TIF_SIGPENDING and returns t=
-o user
-> mode?
-
-Got it, a good catch! So if the freezer races with vfork() completion, we m=
-ight
-have a spurious frozen->unfrozen->frozen transition of the cgroup state.
-
-Switching to cgroup_leave_frozen(false) seems to solve it, but I'm slightly
-concerned that we're basically putting the task in a busy loop between
-the setting CGRP_FREEZE and setting TRAP_FREEZE. Do you think it's ok?
-I wonder if there are better solutions.
-
-Thank you!
