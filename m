@@ -1,16 +1,16 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: [PATCH v2 3/6] mm: introduce __memcg_kmem_uncharge_memcg()
-Date: Tue, 23 Apr 2019 14:31:30 -0700
-Message-ID: <20190423213133.3551969-4-guro@fb.com>
+Subject: [PATCH v2 1/6] mm: postpone kmem_cache memcg pointer initialization to memcg_link_cache()
+Date: Tue, 23 Apr 2019 14:31:28 -0700
+Message-ID: <20190423213133.3551969-2-guro@fb.com>
 References: <20190423213133.3551969-1-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=cRmr36eXTaKgScK2fa3yPK15EeGvQLf0Lc+faeDoG3Q=;
- b=UmOzXPgoQyMb6775Oz2yU4LqMZg7j6hKF1EyxksST2XqEVT04qJqd9NI/yWg3n/yIqH/
- a5TMQXYG/BcjWC4uW47FfZCqbTOyhI3fFCgDBKNwLiJZUmz//uzvCGM79Jb8FC1VCzJi
- 0YoFkJ587li2/ZqhKmpKSmSY/V+8v9wZ7Fw= 
+ content-type; s=facebook; bh=76gfXMG+0uRElSBO/APtur6FtcIZXTee5d1iEwxVGMw=;
+ b=fbPk8N3Dow+holCAQ3pCf4QAbbqddsS6NPrkcJh5/QiNWaTDi9YD90sMkGICKxU3HUQ7
+ Rvyu2D2pzHyc6dLas8EtypUUHuMAoloq4yfc5bcS8GewMfvZxKcwHG1ruQn+fVFu5/Ro
+ cuCf3AlXQXLrs9x25vA93N1ythjfbpb4Sxc= 
 In-Reply-To: <20190423213133.3551969-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -19,92 +19,141 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Shakeel Butt <shakeelb@google.com>, Christoph Lameter <cl@linux.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-Let's separate the page counter modification code out of
-__memcg_kmem_uncharge() in a way similar to what
-__memcg_kmem_charge() and __memcg_kmem_charge_memcg() work.
+Initialize kmem_cache->memcg_params.memcg pointer in
+memcg_link_cache() rather than in init_memcg_params().
 
-This will allow to reuse this code later using a new
-memcg_kmem_uncharge_memcg() wrapper, which calls
-__memcg_kmem_unchare_memcg() if memcg_kmem_enabled()
-check is passed.
+Once kmem_cache will hold a reference to the memory cgroup,
+it will simplify the refcounting.
+
+For non-root kmem_caches memcg_link_cache() is always called
+before the kmem_cache becomes visible to a user, so it's safe.
 
 Signed-off-by: Roman Gushchin <guro@fb.com>
 ---
- include/linux/memcontrol.h | 10 ++++++++++
- mm/memcontrol.c            | 25 +++++++++++++++++--------
- 2 files changed, 27 insertions(+), 8 deletions(-)
+ mm/slab.c        |  2 +-
+ mm/slab.h        |  5 +++--
+ mm/slab_common.c | 14 +++++++-------
+ mm/slub.c        |  2 +-
+ 4 files changed, 12 insertions(+), 11 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 36bdfe8e5965..deb209510902 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -1298,6 +1298,8 @@ int __memcg_kmem_charge(struct page *page, gfp_t gfp, int order);
- void __memcg_kmem_uncharge(struct page *page, int order);
- int __memcg_kmem_charge_memcg(struct page *page, gfp_t gfp, int order,
- 			      struct mem_cgroup *memcg);
-+void __memcg_kmem_uncharge_memcg(struct mem_cgroup *memcg,
-+				 unsigned int nr_pages);
+diff --git a/mm/slab.c b/mm/slab.c
+index b1eefe751d2a..57a332f524cf 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -1268,7 +1268,7 @@ void __init kmem_cache_init(void)
+ 				  nr_node_ids * sizeof(struct kmem_cache_node *),
+ 				  SLAB_HWCACHE_ALIGN, 0, 0);
+ 	list_add(&kmem_cache->list, &slab_caches);
+-	memcg_link_cache(kmem_cache);
++	memcg_link_cache(kmem_cache, NULL);
+ 	slab_state = PARTIAL;
  
- extern struct static_key_false memcg_kmem_enabled_key;
- extern struct workqueue_struct *memcg_kmem_cache_wq;
-@@ -1339,6 +1341,14 @@ static inline int memcg_kmem_charge_memcg(struct page *page, gfp_t gfp,
- 		return __memcg_kmem_charge_memcg(page, gfp, order, memcg);
- 	return 0;
+ 	/*
+diff --git a/mm/slab.h b/mm/slab.h
+index 43ac818b8592..6a562ca72bca 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -289,7 +289,7 @@ static __always_inline void memcg_uncharge_slab(struct page *page, int order,
  }
-+
-+static inline void memcg_kmem_uncharge_memcg(struct page *page, int order,
-+					     struct mem_cgroup *memcg)
-+{
-+	if (memcg_kmem_enabled())
-+		__memcg_kmem_uncharge_memcg(memcg, 1 << order);
-+}
-+
- /*
-  * helper for accessing a memcg's index. It will be used as an index in the
-  * child cache array in kmem_cache, and also to derive its name. This function
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 48a8f1c35176..b2c39f187cbb 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2750,6 +2750,22 @@ int __memcg_kmem_charge(struct page *page, gfp_t gfp, int order)
- 	css_put(&memcg->css);
+ 
+ extern void slab_init_memcg_params(struct kmem_cache *);
+-extern void memcg_link_cache(struct kmem_cache *s);
++extern void memcg_link_cache(struct kmem_cache *s, struct mem_cgroup *memcg);
+ extern void slab_deactivate_memcg_cache_rcu_sched(struct kmem_cache *s,
+ 				void (*deact_fn)(struct kmem_cache *));
+ 
+@@ -344,7 +344,8 @@ static inline void slab_init_memcg_params(struct kmem_cache *s)
+ {
+ }
+ 
+-static inline void memcg_link_cache(struct kmem_cache *s)
++static inline void memcg_link_cache(struct kmem_cache *s,
++				    struct mem_cgroup *memcg)
+ {
+ }
+ 
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index 58251ba63e4a..6e00bdf8618d 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -140,13 +140,12 @@ void slab_init_memcg_params(struct kmem_cache *s)
+ }
+ 
+ static int init_memcg_params(struct kmem_cache *s,
+-		struct mem_cgroup *memcg, struct kmem_cache *root_cache)
++			     struct kmem_cache *root_cache)
+ {
+ 	struct memcg_cache_array *arr;
+ 
+ 	if (root_cache) {
+ 		s->memcg_params.root_cache = root_cache;
+-		s->memcg_params.memcg = memcg;
+ 		INIT_LIST_HEAD(&s->memcg_params.children_node);
+ 		INIT_LIST_HEAD(&s->memcg_params.kmem_caches_node);
+ 		return 0;
+@@ -221,11 +220,12 @@ int memcg_update_all_caches(int num_memcgs)
  	return ret;
  }
-+
-+/**
-+ * __memcg_kmem_uncharge_memcg: uncharge a kmem page
-+ * @memcg: memcg to uncharge
-+ * @nr_pages: number of pages to uncharge
-+ */
-+void __memcg_kmem_uncharge_memcg(struct mem_cgroup *memcg,
-+				 unsigned int nr_pages)
-+{
-+	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
-+		page_counter_uncharge(&memcg->kmem, nr_pages);
-+
-+	page_counter_uncharge(&memcg->memory, nr_pages);
-+	if (do_memsw_account())
-+		page_counter_uncharge(&memcg->memsw, nr_pages);
-+}
- /**
-  * __memcg_kmem_uncharge: uncharge a kmem page
-  * @page: page to uncharge
-@@ -2764,14 +2780,7 @@ void __memcg_kmem_uncharge(struct page *page, int order)
- 		return;
  
- 	VM_BUG_ON_PAGE(mem_cgroup_is_root(memcg), page);
--
--	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
--		page_counter_uncharge(&memcg->kmem, nr_pages);
--
--	page_counter_uncharge(&memcg->memory, nr_pages);
--	if (do_memsw_account())
--		page_counter_uncharge(&memcg->memsw, nr_pages);
--
-+	__memcg_kmem_uncharge_memcg(memcg, nr_pages);
- 	page->mem_cgroup = NULL;
+-void memcg_link_cache(struct kmem_cache *s)
++void memcg_link_cache(struct kmem_cache *s, struct mem_cgroup *memcg)
+ {
+ 	if (is_root_cache(s)) {
+ 		list_add(&s->root_caches_node, &slab_root_caches);
+ 	} else {
++		s->memcg_params.memcg = memcg;
+ 		list_add(&s->memcg_params.children_node,
+ 			 &s->memcg_params.root_cache->memcg_params.children);
+ 		list_add(&s->memcg_params.kmem_caches_node,
+@@ -244,7 +244,7 @@ static void memcg_unlink_cache(struct kmem_cache *s)
+ }
+ #else
+ static inline int init_memcg_params(struct kmem_cache *s,
+-		struct mem_cgroup *memcg, struct kmem_cache *root_cache)
++				    struct kmem_cache *root_cache)
+ {
+ 	return 0;
+ }
+@@ -384,7 +384,7 @@ static struct kmem_cache *create_cache(const char *name,
+ 	s->useroffset = useroffset;
+ 	s->usersize = usersize;
  
- 	/* slab pages do not have PageKmemcg flag set */
+-	err = init_memcg_params(s, memcg, root_cache);
++	err = init_memcg_params(s, root_cache);
+ 	if (err)
+ 		goto out_free_cache;
+ 
+@@ -394,7 +394,7 @@ static struct kmem_cache *create_cache(const char *name,
+ 
+ 	s->refcount = 1;
+ 	list_add(&s->list, &slab_caches);
+-	memcg_link_cache(s);
++	memcg_link_cache(s, memcg);
+ out:
+ 	if (err)
+ 		return ERR_PTR(err);
+@@ -997,7 +997,7 @@ struct kmem_cache *__init create_kmalloc_cache(const char *name,
+ 
+ 	create_boot_cache(s, name, size, flags, useroffset, usersize);
+ 	list_add(&s->list, &slab_caches);
+-	memcg_link_cache(s);
++	memcg_link_cache(s, NULL);
+ 	s->refcount = 1;
+ 	return s;
+ }
+diff --git a/mm/slub.c b/mm/slub.c
+index a34fbe1f6ede..2b9244529d76 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -4224,7 +4224,7 @@ static struct kmem_cache * __init bootstrap(struct kmem_cache *static_cache)
+ 	}
+ 	slab_init_memcg_params(s);
+ 	list_add(&s->list, &slab_caches);
+-	memcg_link_cache(s);
++	memcg_link_cache(s, NULL);
+ 	return s;
+ }
+ 
 -- 
 2.20.1
 
