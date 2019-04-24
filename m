@@ -1,12 +1,15 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v2 4/6] mm: unify SLAB and SLUB page accounting
-Date: Wed, 24 Apr 2019 19:51:17 +0000
-Message-ID: <20190424195112.GB26707@tower.DHCP.thefacebook.com>
-References: <20190423213133.3551969-1-guro@fb.com>
- <20190423213133.3551969-5-guro@fb.com>
- <CALvZod6A43nQgkYj38K4h_ZYLSmYp0xJwO7n44kGJx2Ut7-EVg@mail.gmail.com>
- <20190424191706.GA26707@tower.DHCP.thefacebook.com>
- <CALvZod7sG+sD76dQmMhXa92=zpXz=wdUcsR9ah7YRj13g=YT+g@mail.gmail.com>
+Subject: Re: [PATCH v10 4/9] cgroup: cgroup v2 freezer
+Date: Wed, 24 Apr 2019 22:06:41 +0000
+Message-ID: <20190424220634.GA22896@tower.DHCP.thefacebook.com>
+References: <20190405174708.1010-1-guro@fb.com>
+ <20190405174708.1010-5-guro@fb.com> <20190419151912.GA12152@redhat.com>
+ <20190419161118.GA23357@tower.DHCP.thefacebook.com>
+ <20190419162600.GC12228@redhat.com>
+ <20190419165600.GC23357@tower.DHCP.thefacebook.com>
+ <20190420105838.GA17468@redhat.com>
+ <20190422221116.GA10341@tower.DHCP.thefacebook.com>
+ <20190424154619.GG16167@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
@@ -14,169 +17,106 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
  : date : message-id : references : in-reply-to : content-type : content-id
  : content-transfer-encoding : mime-version; s=facebook;
- bh=tS+a+MHZixdLX1Hby0gWxiTjUrqcSq39If4EyiZkPaE=;
- b=Pli0gShJA+G5HcMZcfIbTLOQIKE1pG3gvJXEM2CcPDIySko9Limpc9cGeuuQg1nKt2jx
- cdQoNPuFxiVQlxPV9aQz3yN9nRlZf0ExNDrKBqP+cMQz/bVvSZcdBJrbdzfy4+9iaSkX
- kIPKNohC/88TmSOe020b7G5hto08AOKmcss= 
+ bh=OO0dT22zQMUOLHjqGwpb/WzX0H3cVmTSMhoD/vmHPmw=;
+ b=Erq1WUQBh+vNUNTsq/PfkmWo/GtfO4zSNhQNGMuaKeTwJweEE2mHcB6AjP+3bhvDvF/r
+ 4I7F8viY3ji/E0u1tldqo+KjEv3y5uJnyOnTUc77jc81IEByxyEE0D35wxkaDETJtgwp
+ 6s0cGs2MlJ20CuZxS0ZAdobfw7CC8L3v5Cc= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector1-fb-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tS+a+MHZixdLX1Hby0gWxiTjUrqcSq39If4EyiZkPaE=;
- b=Qeq3AAqAUNLrcUWsZ7jLc7Cc/ORE/jE0tQtWiJH9rA2VKyBwVrEtaFSfraL0qLfQxTlDEUFZcuJaFg4dx5itBSHAxAzvsGzW32cK3ZYO5QdJvcZo7qIsVeuy9GCgsHwDRso7o0FUim7X1BznmVoSKslzxm5Fjijj1xlU2A+T63c=
-In-Reply-To: <CALvZod7sG+sD76dQmMhXa92=zpXz=wdUcsR9ah7YRj13g=YT+g@mail.gmail.com>
+ bh=OO0dT22zQMUOLHjqGwpb/WzX0H3cVmTSMhoD/vmHPmw=;
+ b=RRCpGFX33OyAXPsQCvKYTK/dbrTiBThKBzb4NOH9H2F6adOzrx8XQsZTKqRFXb3gWJoxZStvewxRoUrLqiTP3tVDlqzR61ncIXw4YFXPTGAhC99GLqIMcZuAAnpTeOzt8iGISPjlcRH4Fzakxq3sDaiJjkL3EPZrCrfYCVYXiq8=
+In-Reply-To: <20190424154619.GG16167@redhat.com>
 Content-Language: en-US
-Content-ID: <F45B68BFB4D7F84B9711AC2AE8B29159@namprd15.prod.outlook.com>
+Content-ID: <5F0127BE4FF174499F524C4EA730B549@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Christoph Lameter <cl@linux.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Cgroups <cgroups@vger.kernel.org>
+To: Oleg Nesterov <oleg@redhat.com>
+Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Kernel Team <Kernel-team@fb.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Wed, Apr 24, 2019 at 12:40:59PM -0700, Shakeel Butt wrote:
-> On Wed, Apr 24, 2019 at 12:17 PM Roman Gushchin <guro@fb.com> wrote:
+On Wed, Apr 24, 2019 at 05:46:19PM +0200, Oleg Nesterov wrote:
+> On 04/22, Roman Gushchin wrote:
 > >
-> > On Wed, Apr 24, 2019 at 10:23:45AM -0700, Shakeel Butt wrote:
-> > > Hi Roman,
+> > > > Hm, it might work too, but I'm not sure I like it more. IMO, the be=
+st option
+> > > > is to have a single cgroup_leave_frozen(true) in signal.c, it's jus=
+t simpler.
+> > > > If a user changed the desired state of cgroup twice, there is no ne=
+ed to avoid
+> > > > state transitions. Or maybe I don't see it yet.
 > > >
-> > > On Tue, Apr 23, 2019 at 9:30 PM Roman Gushchin <guro@fb.com> wrote:
-> > > >
-> > > > Currently the page accounting code is duplicated in SLAB and SLUB
-> > > > internals. Let's move it into new (un)charge_slab_page helpers
-> > > > in the slab_common.c file. These helpers will be responsible
-> > > > for statistics (global and memcg-aware) and memcg charging.
-> > > > So they are replacing direct memcg_(un)charge_slab() calls.
-> > > >
-> > > > Signed-off-by: Roman Gushchin <guro@fb.com>
-> > > > ---
-> > > >  mm/slab.c | 19 +++----------------
-> > > >  mm/slab.h | 22 ++++++++++++++++++++++
-> > > >  mm/slub.c | 14 ++------------
-> > > >  3 files changed, 27 insertions(+), 28 deletions(-)
-> > > >
-> > > > diff --git a/mm/slab.c b/mm/slab.c
-> > > > index 14466a73d057..53e6b2687102 100644
-> > > > --- a/mm/slab.c
-> > > > +++ b/mm/slab.c
-> > > > @@ -1389,7 +1389,6 @@ static struct page *kmem_getpages(struct kmem=
-_cache *cachep, gfp_t flags,
-> > > >                                                                 int=
- nodeid)
-> > > >  {
-> > > >         struct page *page;
-> > > > -       int nr_pages;
-> > > >
-> > > >         flags |=3D cachep->allocflags;
-> > > >
-> > > > @@ -1399,17 +1398,11 @@ static struct page *kmem_getpages(struct km=
-em_cache *cachep, gfp_t flags,
-> > > >                 return NULL;
-> > > >         }
-> > > >
-> > > > -       if (memcg_charge_slab(page, flags, cachep->gfporder, cachep=
-)) {
-> > > > +       if (charge_slab_page(page, flags, cachep->gfporder, cachep)=
-) {
-> > > >                 __free_pages(page, cachep->gfporder);
-> > > >                 return NULL;
-> > > >         }
-> > > >
-> > > > -       nr_pages =3D (1 << cachep->gfporder);
-> > > > -       if (cachep->flags & SLAB_RECLAIM_ACCOUNT)
-> > > > -               mod_lruvec_page_state(page, NR_SLAB_RECLAIMABLE, nr=
-_pages);
-> > > > -       else
-> > > > -               mod_lruvec_page_state(page, NR_SLAB_UNRECLAIMABLE, =
-nr_pages);
-> > > > -
-> > > >         __SetPageSlab(page);
-> > > >         /* Record if ALLOC_NO_WATERMARKS was set when allocating th=
-e slab */
-> > > >         if (sk_memalloc_socks() && page_is_pfmemalloc(page))
-> > > > @@ -1424,12 +1417,6 @@ static struct page *kmem_getpages(struct kme=
-m_cache *cachep, gfp_t flags,
-> > > >  static void kmem_freepages(struct kmem_cache *cachep, struct page =
-*page)
-> > > >  {
-> > > >         int order =3D cachep->gfporder;
-> > > > -       unsigned long nr_freed =3D (1 << order);
-> > > > -
-> > > > -       if (cachep->flags & SLAB_RECLAIM_ACCOUNT)
-> > > > -               mod_lruvec_page_state(page, NR_SLAB_RECLAIMABLE, -n=
-r_freed);
-> > > > -       else
-> > > > -               mod_lruvec_page_state(page, NR_SLAB_UNRECLAIMABLE, =
--nr_freed);
-> > > >
-> > > >         BUG_ON(!PageSlab(page));
-> > > >         __ClearPageSlabPfmemalloc(page);
-> > > > @@ -1438,8 +1425,8 @@ static void kmem_freepages(struct kmem_cache =
-*cachep, struct page *page)
-> > > >         page->mapping =3D NULL;
-> > > >
-> > > >         if (current->reclaim_state)
-> > > > -               current->reclaim_state->reclaimed_slab +=3D nr_free=
-d;
-> > > > -       memcg_uncharge_slab(page, order, cachep);
-> > > > +               current->reclaim_state->reclaimed_slab +=3D 1 << or=
-der;
-> > > > +       uncharge_slab_page(page, order, cachep);
-> > > >         __free_pages(page, order);
-> > > >  }
-> > > >
-> > > > diff --git a/mm/slab.h b/mm/slab.h
-> > > > index 4a261c97c138..0f5c5444acf1 100644
-> > > > --- a/mm/slab.h
-> > > > +++ b/mm/slab.h
-> > > > @@ -205,6 +205,12 @@ ssize_t slabinfo_write(struct file *file, cons=
-t char __user *buffer,
-> > > >  void __kmem_cache_free_bulk(struct kmem_cache *, size_t, void **);
-> > > >  int __kmem_cache_alloc_bulk(struct kmem_cache *, gfp_t, size_t, vo=
-id **);
-> > > >
-> > > > +static inline int cache_vmstat_idx(struct kmem_cache *s)
-> > > > +{
-> > > > +       return (s->flags & SLAB_RECLAIM_ACCOUNT) ?
-> > > > +               NR_SLAB_RECLAIMABLE : NR_SLAB_UNRECLAIMABLE;
-> > > > +}
-> > > > +
-> > > >  #ifdef CONFIG_MEMCG_KMEM
-> > > >
-> > > >  /* List of all root caches. */
-> > > > @@ -352,6 +358,22 @@ static inline void memcg_link_cache(struct kme=
-m_cache *s,
-> > > >
-> > > >  #endif /* CONFIG_MEMCG_KMEM */
-> > > >
-> > > > +static __always_inline int charge_slab_page(struct page *page,
-> > > > +                                           gfp_t gfp, int order,
-> > > > +                                           struct kmem_cache *s)
-> > > > +{
-> > > > +       memcg_charge_slab(page, gfp, order, s);
-> > >
-> > > This does not seem right. Why the return of memcg_charge_slab is igno=
-red?
+> > > Then why do we need cgroup_leave_frozen(false) in wait_for_vfork_done=
+() ? How
+> > > does it differ from get_signal() ?
 > >
-> > Hi Shakeel!
-> >
-> > Right, it's a bug. It's actually fixed later in the patchset
-> > (in "mm: rework non-root kmem_cache lifecycle management"),
-> > so the final result looks correct to me. Anyway, I'll fix it.
-> >
-> > How does everything else look to you?
-> >
-> > Thank you!
+> > We need it because sleeping in vfork is a special state which we want t=
+o
+> > account as frozen. And if the parent process wakes up while the cgroup =
+is frozen
+> > (because of the child death, for example), we want to push it into the =
+"proper"
+> > frozen state without changing the state of the cgroup.
 >=20
-> I caught this during quick glance. Another high level issue I found is
-> breakage of /proc/kpagecgroup for the slab pages which is easy to fix.
+> Again, I do not see how vfork() differs from get_signal() in this respect=
+.
+>=20
+> Let me provide another example. A TASK_STOPPED task reacts to SIGCONT and
+> returns to get_signal(), current->frozen is true.
+>=20
+> If this races with CGRP_FREEZE, the task should not return to user-space,
+> just like vfork(). I see no difference.
+>=20
+> They differ in that wait_for_vfork_done() should guarentee TIF_SIGPENDING
+> in this case, but this is another story...
 
-Good point! I'll add it in the next iteration.
+Right, I agree.
 
 >=20
-> At the moment I am kind of stuck on some other stuff but will get back
-> to this in a week or so.
+> >
+> > > If nothing else. Suppose that wait_for_vfork_done() calls leave(false=
+) and this
+> > > races with freezer, CGRP_FREEZE is already set but JOBCTL_TRAP_FREEZE=
+ is not.
+> > >
+> > > This sets TIF_SIGPENDING to ensure the task won't return to user mode=
+, thus it
+> > > calls get_signal().
+> > >
+> > > get_signal() doesn't see JOBCTL_TRAP_FREEZE, it notices ->frozen =3D=
+=3D T and does
+> > > cgroup_leave_frozen(true) which clears ->frozen.
+> > >
+> > > Then the task calls dequeue_signal(), clears TIF_SIGPENDING and retur=
+ns to user
+> > > mode?
+> >
+> > Got it, a good catch! So if the freezer races with vfork() completion, =
+we might
+> > have a spurious frozen->unfrozen->frozen transition of the cgroup state=
+.
+> >
+> > Switching to cgroup_leave_frozen(false) seems to solve it, but I'm slig=
+htly
+> > concerned that we're basically putting the task in a busy loop between
+> > the setting CGRP_FREEZE and setting TRAP_FREEZE.
+>=20
+> Yes, yes. Didn't I say I dislike the new ->frozen check in recalc() ? ;)
+>=20
+> OK, how about the ABSOLUTELY UNTESTED patch below? For the start.
 
-I'm looking forward then... I'm also repeating my long-term test with this
-iteration, and I'll have updated results in few days.
+It looks good to me (and all freezer selftests pass).
 
-Thank you for looking into it!
+Just to be sure, is it a solution to avoid the busy loop in the signal hand=
+ling
+loop, right? Because it doesn't allow to drop the ->frozen check from recal=
+c().
+
+The JOBCTL_TRAP_FREEZE check without siglock initially looked dangerous to =
+me,
+but after some thoughts I didn't find any case when it's wrong.
+
+Do you prefer me to master a patch or to do it by yourself?
+
+Thank you!
 
 Roman
