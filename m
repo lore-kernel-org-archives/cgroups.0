@@ -1,184 +1,44 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH 0/7] introduce cpu.headroom knob to cpu controller
-Date: Sun, 28 Apr 2019 19:47:24 +0000
-Message-ID: <F0A127DD-F9B6-4FBE-B9AD-8E8B00A7D676@fb.com>
-References: <20190408214539.2705660-1-songliubraving@fb.com>
- <20190410115907.GE19434@e105550-lin.cambridge.arm.com>
- <A2E9A149-9EAA-478D-A096-1D4D4BA442B3@fb.com>
- <CAKfTPtAFB3gSZYJN1BcjU_XoY=Pfu2xtea+2MEw7FkVc3mwTSA@mail.gmail.com>
- <E97E73F4-CE8C-4CD7-B6B6-5F63A4E881B1@fb.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v2] memcg: refill_stock for kmem uncharging too
+Date: Sun, 28 Apr 2019 16:54:24 -0700
+Message-ID: <CALvZod5Peau7D-O1oi0jFfiOCJrSOMHDnr6TPrTxawt_jh9izw@mail.gmail.com>
+References: <20190423154405.259178-1-shakeelb@google.com> <20190425064858.GL12751@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=fvqllITTRQUbdcOYVYcjo77A/GDSd1qE7aFF0ORjs/A=;
- b=UkrNgUqeQzKuWf652hPrTCs6PLovu+bvaUTxxqjKPmLzACGnJ3RbgWpyxUbpnkF3Jqwk
- llqsrFu9G9EgZohWbePKaNv4wQ86tMJjktKAitb+4XMIwJfR6eTOqiLb4fDTcxjO37Rs
- 3cpuEauZoCwWCZnknCUSYkJXp7mQnZfUu7M= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fvqllITTRQUbdcOYVYcjo77A/GDSd1qE7aFF0ORjs/A=;
- b=CqRMZmNi8oDLh+umEThABfPJMmQujyjeY5ifH8Wa4iPVrtnNjqQLuW9MOPCLED37fTUaEkK/YuhqHRukEQt6SPyYDwux6D49R0jQIWfH2FoqoFW6CRObWHJH6DgoECpNbMXW1voKLPYw12PiI8IhmancMA+Fwo3EnfpoC/Yh35U=
-In-Reply-To: <E97E73F4-CE8C-4CD7-B6B6-5F63A4E881B1@fb.com>
-Content-Language: en-US
-Content-ID: <E274646D4D5DC84AB9DB7A9F308DA3DF@namprd15.prod.outlook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=sJzmJt5dXSr46qHnoNS5EATc+3d/a2ElrqvTmuSBEdg=;
+        b=vtb874mzD79EZ4lK/FKahzxhVi0KRxJCPlqZoqswyk+2KOM5zWGrGYQuwyAm+T22Tw
+         owM7xGx6+2XBrBj5iKgttpXndlokSkCdXaHqUeHOFf+PlXlCZ2yp0uwBGU9kHmPDBaP3
+         NPMqftVpxG32Ym3soeW3UjOB6L1fPjZDBlyMdNqNwt9OVII2tfrlqfl/gnvIPU3bMaZn
+         cUVYDFNlR55+wB/mdDdGu/qVqcG7ro7bhCZ4ZElgyYQOn/W0/DI1IikYofKRbuRkkoiy
+         mESCGm4KqIGV5Jq0W0rf0Z4UcYiBTtc6ftKlNJ6VQTSglnjByMoBHVI/DsH9MW04d21q
+         MSfw==
+In-Reply-To: <20190425064858.GL12751@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Vincent Guittot <vincent.guittot@linaro.org>, Morten Rasmussen <morten.rasmussen@arm.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "mingo@redhat.com" <mingo@redhat.com>, "peterz@infradead.org" <peterz@infradead.org>, "tglx@linutronix.de" <tglx@linutronix.de>, Kernel Team <Kernel-team@fb.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-Hi Morten and Vincent,
+On Wed, Apr 24, 2019 at 11:49 PM Michal Hocko <mhocko@kernel.org> wrote:
+>
+> On Tue 23-04-19 08:44:05, Shakeel Butt wrote:
+> > The commit 475d0487a2ad ("mm: memcontrol: use per-cpu stocks for socket
+> > memory uncharging") added refill_stock() for skmem uncharging path to
+> > optimize workloads having high network traffic. Do the same for the kmem
+> > uncharging as well. Though we can bypass the refill for the offlined
+> > memcgs but it may impact the performance of network traffic for the
+> > sockets used by other cgroups.
+>
+> While the change makes sense, I would really like to see what kind of
+> effect on performance does it really have. Do you have any specific
+> workload that benefits from it?
+>
 
-> On Apr 22, 2019, at 6:22 PM, Song Liu <songliubraving@fb.com> wrote:
->=20
-> Hi Vincent,
->=20
->> On Apr 17, 2019, at 5:56 AM, Vincent Guittot <vincent.guittot@linaro.org=
-> wrote:
->>=20
->> On Wed, 10 Apr 2019 at 21:43, Song Liu <songliubraving@fb.com> wrote:
->>>=20
->>> Hi Morten,
->>>=20
->>>> On Apr 10, 2019, at 4:59 AM, Morten Rasmussen <morten.rasmussen@arm.co=
-m> wrote:
->>>>=20
->>=20
->>>>=20
->>>> The bit that isn't clear to me, is _why_ adding idle cycles helps your
->>>> workload. I'm not convinced that adding headroom gives any latency
->>>> improvements beyond watering down the impact of your side jobs. AFAIK,
->>>=20
->>> We think the latency improvements actually come from watering down the
->>> impact of side jobs. It is not just statistically improving average
->>> latency numbers, but also reduces resource contention caused by the sid=
-e
->>> workload. I don't know whether it is from reducing contention of ALUs,
->>> memory bandwidth, CPU caches, or something else, but we saw reduced
->>> latencies when headroom is used.
->>>=20
->>>> the throttling mechanism effectively removes the throttled tasks from
->>>> the schedule according to a specific duty cycle. When the side job is
->>>> not throttled the main workload is experiencing the same latency issue=
-s
->>>> as before, but by dynamically tuning the side job throttling you can
->>>> achieve a better average latency. Am I missing something?
->>>>=20
->>>> Have you looked at your distribution of main job latency and tried to
->>>> compare with when throttling is active/not active?
->>>=20
->>> cfs_bandwidth adjusts allowed runtime for each task_group each period
->>> (configurable, 100ms by default). cpu.headroom logic applies gentle
->>> throttling, so that the side workload gets some runtime in every period=
-.
->>> Therefore, if we look at time window equal to or bigger than 100ms, we
->>> don't really see "throttling active time" vs. "throttling inactive time=
-".
->>>=20
->>>>=20
->>>> I'm wondering if the headroom solution is really the right solution fo=
-r
->>>> your use-case or if what you are really after is something which is
->>>> lower priority than just setting the weight to 1. Something that
->>>=20
->>> The experiments show that, cpu.weight does proper work for priority: th=
-e
->>> main workload gets priority to use the CPU; while the side workload onl=
-y
->>> fill the idle CPU. However, this is not sufficient, as the side workloa=
-d
->>> creates big enough contention to impact the main workload.
->>>=20
->>>> (nearly) always gets pre-empted by your main job (SCHED_BATCH and
->>>> SCHED_IDLE might not be enough). If your main job consist
->>>> of lots of relatively short wake-ups things like the min_granularity
->>>> could have significant latency impact.
->>>=20
->>> cpu.headroom gives benefits in addition to optimizations in pre-empt
->>> side. By maintaining some idle time, fewer pre-empt actions are
->>> necessary, thus the main workload will get better latency.
->>=20
->> I agree with Morten's proposal, SCHED_IDLE should help your latency
->> problem because side job will be directly preempted unlike normal cfs
->> task even lowest priority.
->> In addition to min_granularity, sched_period also has an impact on the
->> time that a task has to wait before preempting the running task. Also,
->> some sched_feature like GENTLE_FAIR_SLEEPERS can also impact the
->> latency of a task.
->>=20
->> It would be nice to know if the latency problem comes from contention
->> on cache resources or if it's mainly because you main load waits
->> before running on a CPU
->>=20
->> Regards,
->> Vincent
->=20
-> Thanks for these suggestions. Here are some more tests to show the impact=
-=20
-> of scheduler knobs and cpu.headroom.
->=20
-> side-load | cpu.headroom | side/cpu.weight | min_gran | cpu-idle | main/l=
-atency
-> -------------------------------------------------------------------------=
--------
->  none    |      0       |     n/a         |    1 ms  |  45.20%  |   1.00
-> ffmpeg   |      0       |      1          |   10 ms  |   3.38%  |   1.46
-> ffmpeg   |      0       |   SCHED_IDLE    |    1 ms  |   5.69%  |   1.42
-> ffmpeg   |    20%       |   SCHED_IDLE    |    1 ms  |  19.00%  |   1.13
-> ffmpeg   |    30%       |   SCHED_IDLE    |    1 ms  |  27.60%  |   1.08
->=20
-> In all these cases, the main workload is loaded with same level of=20
-> traffic (request per second). Main workload latency numbers are normalize=
-d=20
-> based on the baseline (first row).=20
->=20
-> For the baseline, the main workload runs without any side workload, the=20
-> system has about 45.20% idle CPU.=20
->=20
-> The next two rows compare the impact of scheduling knobs cpu.weight and=20
-> sched_min_granularity. With cpu.weight of 1 and min_granularity of 10ms,=
-=20
-> we see a latency of 1.46; with SCHED_IDLE and min_granularity of 1ms, we=
-=20
-> see a latency of 1.42. So SCHED_IDLE and min_granularity help protecting=
-=20
-> the main workload. However, it is not sufficient, as the latency overhead=
-=20
-> is high (>40%).=20
->=20
-> The last two rows show the benefit of cpu.headroom. With 20% headroom,=20
-> the latency is 1.13; while with 30% headroom, the latency is 1.08.=20
->=20
-> We can also see a clear correlation between latency and global idle CPU:=
-=20
-> more idle CPU yields better lower latency.=20
->=20
-> Over all, these results show that cpu.headroom provides effective=20
-> mechanism to control the latency impact of side workloads. Other knobs=20
-> could also help the latency, but they are not as effective and flexible=20
-> as cpu.headroom.=20
->=20
-> Does this analysis address your concern?=20
->=20
-> Thanks,
-> Song
->=20
+Thanks for the review. I will run some benchmarks and report back later.
 
-Could you please share your comments and suggestions on this work? Did
-the results address your questions/concerns?=20
-
-Thanks again,
-Song=20
-
->>=20
->>>=20
->>> Thanks,
->>> Song
->>>=20
->>>>=20
->>>> Morten
-
+Shakeel
