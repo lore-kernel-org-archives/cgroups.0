@@ -1,31 +1,70 @@
-From: Jiri Slaby <jslaby@suse.cz>
-Subject: Re: [PATCH] memcg: make it work on sparse non-0-node systems
-Date: Mon, 29 Apr 2019 14:11:51 +0200
-Message-ID: <a8c032b3-a0be-1710-3ec3-cc3b0b1aaa67@suse.cz>
-References: <359d98e6-044a-7686-8522-bdd2489e9456@suse.cz>
- <20190429105939.11962-1-jslaby@suse.cz>
- <20190429112916.GI21837@dhcp22.suse.cz>
- <465a4b50-490c-7978-ecb8-d122b655f868@suse.cz>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH] memcg, oom: no oom-kill for __GFP_RETRY_MAYFAIL
+Date: Mon, 29 Apr 2019 08:22:14 -0400
+Message-ID: <20190429122214.GK21837@dhcp22.suse.cz>
+References: <20190428235613.166330-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <465a4b50-490c-7978-ecb8-d122b655f868@suse.cz>
-Content-Language: en-GB
+Content-Disposition: inline
+In-Reply-To: <20190428235613.166330-1-shakeelb@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, Raghavendra K T <raghavendra.kt@linux.vnet.ibm.com>
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 29. 04. 19, 13:55, Jiri Slaby wrote:
-> Well, I could have used first_node. But I am not sure, if the first
-> POSSIBLE node is also ONLINE during boot?
+On Sun 28-04-19 16:56:13, Shakeel Butt wrote:
+> The documentation of __GFP_RETRY_MAYFAIL clearly mentioned that the
+> OOM killer will not be triggered and indeed the page alloc does not
+> invoke OOM killer for such allocations. However we do trigger memcg
+> OOM killer for __GFP_RETRY_MAYFAIL. Fix that.
 
-Thinking about it, it does not matter, actually. Both first_node and
-first_online are allocated and set up, no matter which one is ONLINE
-node. So first_node should work as good as first_online_node.
+An example of __GFP_RETRY_MAYFAIL memcg OOM report would be nice. I
+thought we haven't been using that flag for memcg allocations yet.
+But this is definitely good to have addressed.
 
-thanks,
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+
+Acked-by: Michal Hocko <mhocko@suse.com>
+
+> ---
+>  mm/memcontrol.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 2713b45ec3f0..99eca724ed3b 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2294,7 +2294,6 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	unsigned long nr_reclaimed;
+>  	bool may_swap = true;
+>  	bool drained = false;
+> -	bool oomed = false;
+>  	enum oom_status oom_status;
+>  
+>  	if (mem_cgroup_is_root(memcg))
+> @@ -2381,7 +2380,7 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	if (nr_retries--)
+>  		goto retry;
+>  
+> -	if (gfp_mask & __GFP_RETRY_MAYFAIL && oomed)
+> +	if (gfp_mask & __GFP_RETRY_MAYFAIL)
+>  		goto nomem;
+>  
+>  	if (gfp_mask & __GFP_NOFAIL)
+> @@ -2400,7 +2399,6 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	switch (oom_status) {
+>  	case OOM_SUCCESS:
+>  		nr_retries = MEM_CGROUP_RECLAIM_RETRIES;
+> -		oomed = true;
+>  		goto retry;
+>  	case OOM_FAILED:
+>  		goto force;
+> -- 
+> 2.21.0.593.g511ec345e18-goog
+> 
+
 -- 
-js
-suse labs
+Michal Hocko
+SUSE Labs
