@@ -1,19 +1,22 @@
 From: Shakeel Butt <shakeelb@google.com>
-Subject: [PATCH 1/2] memcg, oom: no oom-kill for __GFP_RETRY_MAYFAIL
-Date: Mon, 29 Apr 2019 10:13:31 -0700
-Message-ID: <20190429171332.152992-1-shakeelb@google.com>
+Subject: [PATCH 2/2] memcg, fsnotify: no oom-kill for remote memcg charging
+Date: Mon, 29 Apr 2019 10:13:32 -0700
+Message-ID: <20190429171332.152992-2-shakeelb@google.com>
+References: <20190429171332.152992-1-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=eAfjg0nGPcLWfxJJhGXBjl7FIwajcYkmLSUZC9BoAVo=;
-        b=FKmZgoHbVGCO97K3BcQ+ic4v++s8rwzSXFy75ckZdej+bpKpVXnUNuY3AXrL33BVgJ
-         Hqz2qDXRzmxVtOoIbcV+h21LE3UduSmU2SvSZoF6iZ6fTU/Uda98vcUkpqI6iB9iB4m3
-         ts6v/RxvQwZAPpQgbA2bqqm1snmfVmcGk/alcHvia2mC0gY7WxDx3MzXcsdnuqA/gMZJ
-         XBYlW9aAVRGre8B6TOocT9qUo0Kl2vE6THP1e5dwTEiMa3I9hqxw/zuSjkYo1tPPGfr0
-         F47SccgEZEd4YLwQlE/5seZLLVVmyOrAhtyFNqs1W697mP3Z5oznCNev6CK6HYxdQwla
-         tG+g==
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=ZJZw+a1zAAS2yXCulVsapzFNzx2HgPG8quVXkMNIzRA=;
+        b=LNHMaVmcposMzXiBxo+LfVRrsXl/hzH7pjhT+t1iPGrPl3ttT6JqRtwLI+LmJZzfO3
+         6dooMjOh7leRjuHd+y/PjbfED8ng26vganF2W2sFFNwLnXk6AO6Gnk27hUJRFq6vMHnD
+         V/8GhLSaHioBm8HlcVfQcAoSlyZLZXgu6P3IdkSFLTkVAt1kTaAXh3IygzCUzwkRkMO2
+         ABs/JrSSCGKRasEP9mu0SQTJMLHuHvq8LSeIkgusJW0LAXLmHG7xmCeCdF9OyEsbz3k2
+         Ag2CxRX2t31eXoE9nTs+JsO7/i88GZiSYPqm/ZR7APmhOvzuNg5tIpU4XhI4eSSqDaiw
+         t5+g==
+In-Reply-To: <20190429171332.152992-1-shakeelb@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -21,51 +24,63 @@ Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>
 Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
 
-The documentation of __GFP_RETRY_MAYFAIL clearly mentioned that the
-OOM killer will not be triggered and indeed the page alloc does not
-invoke OOM killer for such allocations. However we do trigger memcg
-OOM killer for __GFP_RETRY_MAYFAIL. Fix that. This flag will used later
-to not trigger oom-killer in the charging path for fanotify and inotify
-event allocations.
+The commit d46eb14b735b ("fs: fsnotify: account fsnotify metadata to
+kmemcg") added remote memcg charging for fanotify and inotify event
+objects. The aim was to charge the memory to the listener who is
+interested in the events but without triggering the OOM killer.
+Otherwise there would be security concerns for the listener. At the
+time, oom-kill trigger was not in the charging path. A parallel work
+added the oom-kill back to charging path i.e. commit 29ef680ae7c2
+("memcg, oom: move out_of_memory back to the charge path"). So to not
+trigger oom-killer in the remote memcg, explicitly add
+__GFP_RETRY_MAYFAIL to the fanotify and inotify event allocations.
 
 Signed-off-by: Shakeel Butt <shakeelb@google.com>
-Acked-by: Michal Hocko <mhocko@suse.com>
 ---
-Changelog since v1:
-- commit message updated.
+ fs/notify/fanotify/fanotify.c        | 4 +++-
+ fs/notify/inotify/inotify_fsnotify.c | 7 +++++--
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
- mm/memcontrol.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 2713b45ec3f0..99eca724ed3b 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2294,7 +2294,6 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	unsigned long nr_reclaimed;
- 	bool may_swap = true;
- 	bool drained = false;
--	bool oomed = false;
- 	enum oom_status oom_status;
+diff --git a/fs/notify/fanotify/fanotify.c b/fs/notify/fanotify/fanotify.c
+index 6b9c27548997..9aa5d325e6d8 100644
+--- a/fs/notify/fanotify/fanotify.c
++++ b/fs/notify/fanotify/fanotify.c
+@@ -282,13 +282,15 @@ struct fanotify_event *fanotify_alloc_event(struct fsnotify_group *group,
+ 					    __kernel_fsid_t *fsid)
+ {
+ 	struct fanotify_event *event = NULL;
+-	gfp_t gfp = GFP_KERNEL_ACCOUNT;
++	gfp_t gfp = GFP_KERNEL_ACCOUNT | __GFP_RETRY_MAYFAIL;
+ 	struct inode *id = fanotify_fid_inode(inode, mask, data, data_type);
  
- 	if (mem_cgroup_is_root(memcg))
-@@ -2381,7 +2380,7 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	if (nr_retries--)
- 		goto retry;
+ 	/*
+ 	 * For queues with unlimited length lost events are not expected and
+ 	 * can possibly have security implications. Avoid losing events when
+ 	 * memory is short.
++	 *
++	 * Note: __GFP_NOFAIL takes precedence over __GFP_RETRY_MAYFAIL.
+ 	 */
+ 	if (group->max_events == UINT_MAX)
+ 		gfp |= __GFP_NOFAIL;
+diff --git a/fs/notify/inotify/inotify_fsnotify.c b/fs/notify/inotify/inotify_fsnotify.c
+index ff30abd6a49b..17c08daa1ba7 100644
+--- a/fs/notify/inotify/inotify_fsnotify.c
++++ b/fs/notify/inotify/inotify_fsnotify.c
+@@ -99,9 +99,12 @@ int inotify_handle_event(struct fsnotify_group *group,
+ 	i_mark = container_of(inode_mark, struct inotify_inode_mark,
+ 			      fsn_mark);
  
--	if (gfp_mask & __GFP_RETRY_MAYFAIL && oomed)
-+	if (gfp_mask & __GFP_RETRY_MAYFAIL)
- 		goto nomem;
+-	/* Whoever is interested in the event, pays for the allocation. */
++	/*
++	 * Whoever is interested in the event, pays for the allocation. However
++	 * do not trigger the OOM killer in the target memcg.
++	 */
+ 	memalloc_use_memcg(group->memcg);
+-	event = kmalloc(alloc_len, GFP_KERNEL_ACCOUNT);
++	event = kmalloc(alloc_len, GFP_KERNEL_ACCOUNT | __GFP_RETRY_MAYFAIL);
+ 	memalloc_unuse_memcg();
  
- 	if (gfp_mask & __GFP_NOFAIL)
-@@ -2400,7 +2399,6 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	switch (oom_status) {
- 	case OOM_SUCCESS:
- 		nr_retries = MEM_CGROUP_RECLAIM_RETRIES;
--		oomed = true;
- 		goto retry;
- 	case OOM_FAILED:
- 		goto force;
+ 	if (unlikely(!event)) {
 -- 
 2.21.0.593.g511ec345e18-goog
 
