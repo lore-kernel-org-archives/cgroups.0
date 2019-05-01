@@ -1,125 +1,340 @@
-From: "Kasiviswanathan, Harish" <Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>
-Subject: [PATCH 4/4] drm/amdkfd: Check against device cgroup
-Date: Wed, 1 May 2019 14:59:29 +0000
-Message-ID: <20190501145904.27505-5-Harish.Kasiviswanathan@amd.com>
-References: <20190501145904.27505-1-Harish.Kasiviswanathan@amd.com>
+From: Chris Down <chris@chrisdown.name>
+Subject: [PATCH v3] mm: Throttle allocators when failing reclaim over
+ memory.high
+Date: Wed, 1 May 2019 14:41:04 -0400
+Message-ID: <20190501184104.GA30293@chrisdown.name>
+References: <20190410153449.GA14915@chrisdown.name>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <20190501145904.27505-1-Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>
-Content-Language: en-US
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Type: text/plain; charset="us-ascii"
-To: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Cc: "Kasiviswanathan, Harish" <Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :content-transfer-encoding:in-reply-to:user-agent;
+        bh=2ZVG9r6esWCMDh6PHSGN2+/X9Az526hu+FZQRAm30Fc=;
+        b=Ky1BLUZ69tsjABfAzHpnW5zcBTM3faLuYUy+12iB4zNLnZySGKtLzSEhzwxTw4RJPw
+         rigkfo8guq5nhsh6okncEhUZ95iVEXNeD3q2Lzu7UdfLh3PFvgZc1K81zuQcXSkHSqr+
+         ckHANdVdfVgJEEz1AxcGghWSGbPL5c/9aq1RE=
+Content-Disposition: inline
+In-Reply-To: <20190410153449.GA14915@chrisdown.name>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, Michal Hocko <mhocko@kernel.org>
 
-UGFydGljaXBhdGUgaW4gZGV2aWNlIGNncm91cC4gQWxsIGtmZCBkZXZpY2VzIGFyZSBleHBvc2Vk
-IHZpYSAvZGV2L2tmZC4NClNvIHVzZSAvZGV2L2RyaS9yZW5kZXJOIG5vZGUuDQoNCkJlZm9yZSBl
-eHBvc2luZyB0aGUgZGV2aWNlIHRvIGEgdGFzayBjaGVjayBpZiBpdCBoYXMgcGVybWlzc2lvbiB0
-bw0KYWNjZXNzIGl0LiBJZiB0aGUgdGFzayAoYmFzZWQgb24gaXRzIGNncm91cCkgY2FuIGFjY2Vz
-cyAvZGV2L2RyaS9yZW5kZXJODQp0aGVuIGV4cG9zZSB0aGUgZGV2aWNlIHZpYSBrZmQgbm9kZS4N
-Cg0KSWYgdGhlIHRhc2sgY2Fubm90IGFjY2VzcyAvZGV2L2RyaS9yZW5kZXJOIHRoZW4gcHJvY2Vz
-cyBkZXZpY2UgZGF0YQ0KKHBkZCkgaXMgbm90IGNyZWF0ZWQuIFRoaXMgd2lsbCBlbnN1cmUgdGhh
-dCB0YXNrIGNhbm5vdCB1c2UgdGhlIGRldmljZS4NCg0KSW4gc3lzZnMgdG9wb2xvZ3ksIGFsbCBk
-ZXZpY2Ugbm9kZXMgYXJlIHZpc2libGUgaXJyZXNwZWN0aXZlIG9mIHRoZSB0YXNrDQpjZ3JvdXAu
-IFRoZSBzeXNmcyBub2RlIGRpcmVjdG9yaWVzIGFyZSBjcmVhdGVkIGF0IGRyaXZlciBsb2FkIHRp
-bWUgYW5kDQpjYW5ub3QgYmUgY2hhbmdlZCBkeW5hbWljYWxseS4gSG93ZXZlciwgYWNjZXNzIHRv
-IGluZm9ybWF0aW9uIGluc2lkZQ0Kbm9kZXMgaXMgY29udHJvbGxlZCBiYXNlZCBvbiB0aGUgdGFz
-aydzIGNncm91cCBwZXJtaXNzaW9ucy4NCg0KU2lnbmVkLW9mZi1ieTogSGFyaXNoIEthc2l2aXN3
-YW5hdGhhbiA8SGFyaXNoLkthc2l2aXN3YW5hdGhhbkBhbWQuY29tPg0KUmV2aWV3ZWQtYnk6IEZl
-bGl4IEt1ZWhsaW5nIDxGZWxpeC5LdWVobGluZ0BhbWQuY29tPg0KLS0tDQogZHJpdmVycy9ncHUv
-ZHJtL2FtZC9hbWRrZmQva2ZkX2ZsYXRfbWVtb3J5LmMgfCAgOSArKysrKysrLS0NCiBkcml2ZXJz
-L2dwdS9kcm0vYW1kL2FtZGtmZC9rZmRfcHJpdi5oICAgICAgICB8IDE3ICsrKysrKysrKysrKysr
-KysrDQogZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRrZmQva2ZkX3RvcG9sb2d5LmMgICAgfCAxMiAr
-KysrKysrKysrKysNCiAzIGZpbGVzIGNoYW5nZWQsIDM2IGluc2VydGlvbnMoKyksIDIgZGVsZXRp
-b25zKC0pDQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGtmZC9rZmRfZmxh
-dF9tZW1vcnkuYyBiL2RyaXZlcnMvZ3B1L2RybS9hbWQvYW1ka2ZkL2tmZF9mbGF0X21lbW9yeS5j
-DQppbmRleCBkYzczMzk4MjViNWMuLjM4MDRlZGZiNGZmNyAxMDA2NDQNCi0tLSBhL2RyaXZlcnMv
-Z3B1L2RybS9hbWQvYW1ka2ZkL2tmZF9mbGF0X21lbW9yeS5jDQorKysgYi9kcml2ZXJzL2dwdS9k
-cm0vYW1kL2FtZGtmZC9rZmRfZmxhdF9tZW1vcnkuYw0KQEAgLTM2OSw4ICszNjksMTMgQEAgaW50
-IGtmZF9pbml0X2FwZXJ0dXJlcyhzdHJ1Y3Qga2ZkX3Byb2Nlc3MgKnByb2Nlc3MpDQogDQogCS8q
-SXRlcmF0aW5nIG92ZXIgYWxsIGRldmljZXMqLw0KIAl3aGlsZSAoa2ZkX3RvcG9sb2d5X2VudW1f
-a2ZkX2RldmljZXMoaWQsICZkZXYpID09IDApIHsNCi0JCWlmICghZGV2KSB7DQotCQkJaWQrKzsg
-LyogU2tpcCBub24gR1BVIGRldmljZXMgKi8NCisJCWlmICghZGV2IHx8IGtmZF9kZXZjZ3JvdXBf
-Y2hlY2tfcGVybWlzc2lvbihkZXYpKSB7DQorCQkJLyogU2tpcCBub24gR1BVIGRldmljZXMgYW5k
-IGRldmljZXMgdG8gd2hpY2ggdGhlDQorCQkJICogY3VycmVudCBwcm9jZXNzIGhhdmUgbm8gYWNj
-ZXNzIHRvLiBBY2Nlc3MgY2FuIGJlDQorCQkJICogbGltaXRlZCBieSBwbGFjaW5nIHRoZSBwcm9j
-ZXNzIGluIGEgc3BlY2lmaWMNCisJCQkgKiBjZ3JvdXAgaGllcmFyY2h5DQorCQkJICovDQorCQkJ
-aWQrKzsNCiAJCQljb250aW51ZTsNCiAJCX0NCiANCmRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9k
-cm0vYW1kL2FtZGtmZC9rZmRfcHJpdi5oIGIvZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRrZmQva2Zk
-X3ByaXYuaA0KaW5kZXggN2NhZjRmYTNkMzY2Li44YjQwOTIyZGEwZmQgMTAwNjQ0DQotLS0gYS9k
-cml2ZXJzL2dwdS9kcm0vYW1kL2FtZGtmZC9rZmRfcHJpdi5oDQorKysgYi9kcml2ZXJzL2dwdS9k
-cm0vYW1kL2FtZGtmZC9rZmRfcHJpdi5oDQpAQCAtMzUsNiArMzUsOCBAQA0KICNpbmNsdWRlIDxs
-aW51eC9rZmlmby5oPg0KICNpbmNsdWRlIDxsaW51eC9zZXFfZmlsZS5oPg0KICNpbmNsdWRlIDxs
-aW51eC9rcmVmLmg+DQorI2luY2x1ZGUgPGxpbnV4L2RldmljZV9jZ3JvdXAuaD4NCisjaW5jbHVk
-ZSA8ZHJtL2RybVAuaD4NCiAjaW5jbHVkZSA8a2dkX2tmZF9pbnRlcmZhY2UuaD4NCiANCiAjaW5j
-bHVkZSAiYW1kX3NoYXJlZC5oIg0KQEAgLTk4OSw2ICs5OTEsMjEgQEAgYm9vbCBrZmRfaXNfbG9j
-a2VkKHZvaWQpOw0KIHZvaWQga2ZkX2luY19jb21wdXRlX2FjdGl2ZShzdHJ1Y3Qga2ZkX2RldiAq
-ZGV2KTsNCiB2b2lkIGtmZF9kZWNfY29tcHV0ZV9hY3RpdmUoc3RydWN0IGtmZF9kZXYgKmRldik7
-DQogDQorLyogQ2dyb3VwIFN1cHBvcnQgKi8NCisvKiBDaGVjayB3aXRoIGRldmljZSBjZ3JvdXAg
-aWYgQGtmZCBkZXZpY2UgaXMgYWNjZXNzaWJsZSAqLw0KK3N0YXRpYyBpbmxpbmUgaW50IGtmZF9k
-ZXZjZ3JvdXBfY2hlY2tfcGVybWlzc2lvbihzdHJ1Y3Qga2ZkX2RldiAqa2ZkKQ0KK3sNCisjaWYg
-ZGVmaW5lZChDT05GSUdfQ0dST1VQX0RFVklDRSkNCisJc3RydWN0IGRybV9kZXZpY2UgKmRkZXYg
-PSBrZmQtPmRkZXY7DQorDQorCXJldHVybiBkZXZjZ3JvdXBfY2hlY2tfcGVybWlzc2lvbihERVZD
-R19ERVZfQ0hBUiwgZGRldi0+ZHJpdmVyLT5tYWpvciwNCisJCQkJCSAgZGRldi0+cmVuZGVyLT5p
-bmRleCwNCisJCQkJCSAgREVWQ0dfQUNDX1dSSVRFIHwgREVWQ0dfQUNDX1JFQUQpOw0KKyNlbHNl
-DQorCXJldHVybiAwOw0KKyNlbmRpZg0KK30NCisNCiAvKiBEZWJ1Z2ZzICovDQogI2lmIGRlZmlu
-ZWQoQ09ORklHX0RFQlVHX0ZTKQ0KIA0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvZ3B1L2RybS9hbWQv
-YW1ka2ZkL2tmZF90b3BvbG9neS5jIGIvZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRrZmQva2ZkX3Rv
-cG9sb2d5LmMNCmluZGV4IDY0ZDY2N2FlMGQzNi4uYTNhMTRhNzZlY2UxIDEwMDY0NA0KLS0tIGEv
-ZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRrZmQva2ZkX3RvcG9sb2d5LmMNCisrKyBiL2RyaXZlcnMv
-Z3B1L2RybS9hbWQvYW1ka2ZkL2tmZF90b3BvbG9neS5jDQpAQCAtMjY5LDYgKzI2OSw4IEBAIHN0
-YXRpYyBzc2l6ZV90IGlvbGlua19zaG93KHN0cnVjdCBrb2JqZWN0ICprb2JqLCBzdHJ1Y3QgYXR0
-cmlidXRlICphdHRyLA0KIAlidWZmZXJbMF0gPSAwOw0KIA0KIAlpb2xpbmsgPSBjb250YWluZXJf
-b2YoYXR0ciwgc3RydWN0IGtmZF9pb2xpbmtfcHJvcGVydGllcywgYXR0cik7DQorCWlmIChpb2xp
-bmstPmdwdSAmJiBrZmRfZGV2Y2dyb3VwX2NoZWNrX3Blcm1pc3Npb24oaW9saW5rLT5ncHUpKQ0K
-KwkJcmV0dXJuIC1FUEVSTTsNCiAJc3lzZnNfc2hvd18zMmJpdF9wcm9wKGJ1ZmZlciwgInR5cGUi
-LCBpb2xpbmstPmlvbGlua190eXBlKTsNCiAJc3lzZnNfc2hvd18zMmJpdF9wcm9wKGJ1ZmZlciwg
-InZlcnNpb25fbWFqb3IiLCBpb2xpbmstPnZlcl9tYWopOw0KIAlzeXNmc19zaG93XzMyYml0X3By
-b3AoYnVmZmVyLCAidmVyc2lvbl9taW5vciIsIGlvbGluay0+dmVyX21pbik7DQpAQCAtMzA1LDYg
-KzMwNyw4IEBAIHN0YXRpYyBzc2l6ZV90IG1lbV9zaG93KHN0cnVjdCBrb2JqZWN0ICprb2JqLCBz
-dHJ1Y3QgYXR0cmlidXRlICphdHRyLA0KIAlidWZmZXJbMF0gPSAwOw0KIA0KIAltZW0gPSBjb250
-YWluZXJfb2YoYXR0ciwgc3RydWN0IGtmZF9tZW1fcHJvcGVydGllcywgYXR0cik7DQorCWlmICht
-ZW0tPmdwdSAmJiBrZmRfZGV2Y2dyb3VwX2NoZWNrX3Blcm1pc3Npb24obWVtLT5ncHUpKQ0KKwkJ
-cmV0dXJuIC1FUEVSTTsNCiAJc3lzZnNfc2hvd18zMmJpdF9wcm9wKGJ1ZmZlciwgImhlYXBfdHlw
-ZSIsIG1lbS0+aGVhcF90eXBlKTsNCiAJc3lzZnNfc2hvd182NGJpdF9wcm9wKGJ1ZmZlciwgInNp
-emVfaW5fYnl0ZXMiLCBtZW0tPnNpemVfaW5fYnl0ZXMpOw0KIAlzeXNmc19zaG93XzMyYml0X3By
-b3AoYnVmZmVyLCAiZmxhZ3MiLCBtZW0tPmZsYWdzKTsNCkBAIC0zMzQsNiArMzM4LDggQEAgc3Rh
-dGljIHNzaXplX3Qga2ZkX2NhY2hlX3Nob3coc3RydWN0IGtvYmplY3QgKmtvYmosIHN0cnVjdCBh
-dHRyaWJ1dGUgKmF0dHIsDQogCWJ1ZmZlclswXSA9IDA7DQogDQogCWNhY2hlID0gY29udGFpbmVy
-X29mKGF0dHIsIHN0cnVjdCBrZmRfY2FjaGVfcHJvcGVydGllcywgYXR0cik7DQorCWlmIChjYWNo
-ZS0+Z3B1ICYmIGtmZF9kZXZjZ3JvdXBfY2hlY2tfcGVybWlzc2lvbihjYWNoZS0+Z3B1KSkNCisJ
-CXJldHVybiAtRVBFUk07DQogCXN5c2ZzX3Nob3dfMzJiaXRfcHJvcChidWZmZXIsICJwcm9jZXNz
-b3JfaWRfbG93IiwNCiAJCQljYWNoZS0+cHJvY2Vzc29yX2lkX2xvdyk7DQogCXN5c2ZzX3Nob3df
-MzJiaXRfcHJvcChidWZmZXIsICJsZXZlbCIsIGNhY2hlLT5jYWNoZV9sZXZlbCk7DQpAQCAtNDE2
-LDEyICs0MjIsMTYgQEAgc3RhdGljIHNzaXplX3Qgbm9kZV9zaG93KHN0cnVjdCBrb2JqZWN0ICpr
-b2JqLCBzdHJ1Y3QgYXR0cmlidXRlICphdHRyLA0KIAlpZiAoc3RyY21wKGF0dHItPm5hbWUsICJn
-cHVfaWQiKSA9PSAwKSB7DQogCQlkZXYgPSBjb250YWluZXJfb2YoYXR0ciwgc3RydWN0IGtmZF90
-b3BvbG9neV9kZXZpY2UsDQogCQkJCWF0dHJfZ3B1aWQpOw0KKwkJaWYgKGRldi0+Z3B1ICYmIGtm
-ZF9kZXZjZ3JvdXBfY2hlY2tfcGVybWlzc2lvbihkZXYtPmdwdSkpDQorCQkJcmV0dXJuIC1FUEVS
-TTsNCiAJCXJldHVybiBzeXNmc19zaG93XzMyYml0X3ZhbChidWZmZXIsIGRldi0+Z3B1X2lkKTsN
-CiAJfQ0KIA0KIAlpZiAoc3RyY21wKGF0dHItPm5hbWUsICJuYW1lIikgPT0gMCkgew0KIAkJZGV2
-ID0gY29udGFpbmVyX29mKGF0dHIsIHN0cnVjdCBrZmRfdG9wb2xvZ3lfZGV2aWNlLA0KIAkJCQlh
-dHRyX25hbWUpOw0KKwkJaWYgKGRldi0+Z3B1ICYmIGtmZF9kZXZjZ3JvdXBfY2hlY2tfcGVybWlz
-c2lvbihkZXYtPmdwdSkpDQorCQkJcmV0dXJuIC1FUEVSTTsNCiAJCWZvciAoaSA9IDA7IGkgPCBL
-RkRfVE9QT0xPR1lfUFVCTElDX05BTUVfU0laRTsgaSsrKSB7DQogCQkJcHVibGljX25hbWVbaV0g
-PQ0KIAkJCQkJKGNoYXIpZGV2LT5ub2RlX3Byb3BzLm1hcmtldGluZ19uYW1lW2ldOw0KQEAgLTQz
-NCw2ICs0NDQsOCBAQCBzdGF0aWMgc3NpemVfdCBub2RlX3Nob3coc3RydWN0IGtvYmplY3QgKmtv
-YmosIHN0cnVjdCBhdHRyaWJ1dGUgKmF0dHIsDQogDQogCWRldiA9IGNvbnRhaW5lcl9vZihhdHRy
-LCBzdHJ1Y3Qga2ZkX3RvcG9sb2d5X2RldmljZSwNCiAJCQlhdHRyX3Byb3BzKTsNCisJaWYgKGRl
-di0+Z3B1ICYmIGtmZF9kZXZjZ3JvdXBfY2hlY2tfcGVybWlzc2lvbihkZXYtPmdwdSkpDQorCQly
-ZXR1cm4gLUVQRVJNOw0KIAlzeXNmc19zaG93XzMyYml0X3Byb3AoYnVmZmVyLCAiY3B1X2NvcmVz
-X2NvdW50IiwNCiAJCQlkZXYtPm5vZGVfcHJvcHMuY3B1X2NvcmVzX2NvdW50KTsNCiAJc3lzZnNf
-c2hvd18zMmJpdF9wcm9wKGJ1ZmZlciwgInNpbWRfY291bnQiLA0KLS0gDQoyLjE3LjENCg0KX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KYW1kLWdmeCBtYWls
-aW5nIGxpc3QKYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVl
-ZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9hbWQtZ2Z4
+We're trying to use memory.high to limit workloads, but have found that
+containment can frequently fail completely and cause OOM situations
+outside of the cgroup. This happens especially with swap space -- either
+when none is configured, or swap is full. These failures often also
+don't have enough warning to allow one to react, whether for a human or
+for a daemon monitoring PSI.
+
+Here is output from a simple program showing how long it takes in μsec
+(column 2) to allocate a megabyte of anonymous memory (column 1) when a
+cgroup is already beyond its memory high setting, and no swap is
+available:
+
+    [root@ktst ~]# systemd-run -p MemoryHigh=100M -p MemorySwapMax=1 \
+    > --wait -t timeout 300 /root/mdf
+    [...]
+    95  1035
+    96  1038
+    97  1000
+    98  1036
+    99  1048
+    100 1590
+    101 1968
+    102 1776
+    103 1863
+    104 1757
+    105 1921
+    106 1893
+    107 1760
+    108 1748
+    109 1843
+    110 1716
+    111 1924
+    112 1776
+    113 1831
+    114 1766
+    115 1836
+    116 1588
+    117 1912
+    118 1802
+    119 1857
+    120 1731
+    [...]
+    [System OOM in 2-3 seconds]
+
+The delay does go up extremely marginally past the 100MB memory.high
+threshold, as now we spend time scanning before returning to usermode,
+but it's nowhere near enough to contain growth. It also doesn't get
+worse the more pages you have, since it only considers nr_pages.
+
+The current situation goes against both the expectations of users of
+memory.high, and our intentions as cgroup v2 developers. In
+cgroup-v2.txt, we claim that we will throttle and only under "extreme
+conditions" will memory.high protection be breached. Likewise, cgroup v2
+users generally also expect that memory.high should throttle workloads
+as they exceed their high threshold. However, as seen above, this isn't
+always how it works in practice -- even on banal setups like those with
+no swap, or where swap has become exhausted, we can end up with
+memory.high being breached and us having no weapons left in our arsenal
+to combat runaway growth with, since reclaim is futile.
+
+It's also hard for system monitoring software or users to tell how bad
+the situation is, as "high" events for the memcg may in some cases be
+benign, and in others be catastrophic. The current status quo is that we
+fail containment in a way that doesn't provide any advance warning that
+things are about to go horribly wrong (for example, we are about to
+invoke the kernel OOM killer).
+
+This patch introduces explicit throttling when reclaim is failing to
+keep memcg size contained at the memory.high setting. It does so by
+applying an exponential delay curve derived from the memcg's overage
+compared to memory.high.  In the normal case where the memcg is either
+below or only marginally over its memory.high setting, no throttling
+will be performed.
+
+This composes well with system health monitoring and remediation, as
+these allocator delays are factored into PSI's memory pressure
+calculations. This both creates a mechanism system administrators or
+applications consuming the PSI interface to trivially see that the memcg
+in question is struggling and use that to make more reasonable
+decisions, and permits them enough time to act. Either of these can act
+with significantly more nuance than that we can provide using the system
+OOM killer.
+
+This is a similar idea to memory.oom_control in cgroup v1 which would
+put the cgroup to sleep if the threshold was violated, but it's also
+significantly improved as it results in visible memory pressure, and
+also doesn't schedule indefinitely, which previously made tracing and
+other introspection difficult (ie. it's clamped at 2*HZ per allocation
+through MEMCG_MAX_HIGH_DELAY_JIFFIES).
+
+Contrast the previous results with a kernel with this patch:
+
+    [root@ktst ~]# systemd-run -p MemoryHigh=100M -p MemorySwapMax=1 \
+    > --wait -t timeout 300 /root/mdf
+    [...]
+    95  1002
+    96  1000
+    97  1002
+    98  1003
+    99  1000
+    100 1043
+    101 84724
+    102 330628
+    103 610511
+    104 1016265
+    105 1503969
+    106 2391692
+    107 2872061
+    108 3248003
+    109 4791904
+    110 5759832
+    111 6912509
+    112 8127818
+    113 9472203
+    114 12287622
+    115 12480079
+    116 14144008
+    117 15808029
+    118 16384500
+    119 16383242
+    120 16384979
+    [...]
+
+As you can see, in the normal case, memory allocation takes around 1000
+μsec. However, as we exceed our memory.high, things start to increase
+exponentially, but fairly leniently at first. Our first megabyte over
+memory.high takes us 0.16 seconds, then the next is 0.46 seconds, then
+the next is almost an entire second. This gets worse until we reach our
+eventual 2*HZ clamp per batch, resulting in 16 seconds per megabyte.
+However, this is still making forward progress, so permits tracing or
+further analysis with programs like GDB.
+
+We use an exponential curve for our delay penalty for a few reasons:
+
+1. We run mem_cgroup_handle_over_high to potentially do reclaim after
+   we've already performed allocations, which means that temporarily
+   going over memory.high by a small amount may be perfectly legitimate,
+   even for compliant workloads. We don't want to unduly penalise such
+   cases.
+2. An exponential curve (as opposed to a static or linear delay) allows
+   ramping up memory pressure stats more gradually, which can be useful
+   to work out that you have set memory.high too low, without destroying
+   application performance entirely.
+
+This patch expands on earlier work by Johannes Weiner. Thanks!
+
+Signed-off-by: Chris Down <chris@chrisdown.name>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Roman Gushchin <guro@fb.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: kernel-team@fb.com
+---
+ mm/memcontrol.c | 118 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 117 insertions(+), 1 deletion(-)
+
+[v3: updated the changelog post discussion in person with Michal.]
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 2535e54e7989..e12fec0d4b58 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -66,6 +66,7 @@
+ #include <linux/lockdep.h>
+ #include <linux/file.h>
+ #include <linux/tracehook.h>
++#include <linux/psi.h>
+ #include "internal.h"
+ #include <net/sock.h>
+ #include <net/ip.h>
+@@ -2263,12 +2264,68 @@ static void high_work_func(struct work_struct *work)
+ 	reclaim_high(memcg, MEMCG_CHARGE_BATCH, GFP_KERNEL);
+ }
+ 
++/*
++ * Clamp the maximum sleep time per allocation batch to 2 seconds. This is
++ * enough to still cause a significant slowdown in most cases, while still
++ * allowing diagnostics and tracing to proceed without becoming stuck.
++ */
++#define MEMCG_MAX_HIGH_DELAY_JIFFIES (2UL*HZ)
++
++/*
++ * When calculating the delay, we use these either side of the exponentiation to
++ * maintain precision and scale to a reasonable number of jiffies (see the table
++ * below.
++ *
++ * - MEMCG_DELAY_PRECISION_SHIFT: Extra precision bits while translating the
++ *   overage ratio to a delay.
++ * - MEMCG_DELAY_SCALING_SHIFT: The number of bits to scale down down the
++ *   proposed penalty in order to reduce to a reasonable number of jiffies, and
++ *   to produce a reasonable delay curve.
++ *
++ * MEMCG_DELAY_SCALING_SHIFT just happens to be a number that produces a
++ * reasonable delay curve compared to precision-adjusted overage, not
++ * penalising heavily at first, but still making sure that growth beyond the
++ * limit penalises misbehaviour cgroups by slowing them down exponentially. For
++ * example, with a high of 100 megabytes:
++ *
++ *  +-------+------------------------+
++ *  | usage | time to allocate in ms |
++ *  +-------+------------------------+
++ *  | 100M  |                      0 |
++ *  | 101M  |                      6 |
++ *  | 102M  |                     25 |
++ *  | 103M  |                     57 |
++ *  | 104M  |                    102 |
++ *  | 105M  |                    159 |
++ *  | 106M  |                    230 |
++ *  | 107M  |                    313 |
++ *  | 108M  |                    409 |
++ *  | 109M  |                    518 |
++ *  | 110M  |                    639 |
++ *  | 111M  |                    774 |
++ *  | 112M  |                    921 |
++ *  | 113M  |                   1081 |
++ *  | 114M  |                   1254 |
++ *  | 115M  |                   1439 |
++ *  | 116M  |                   1638 |
++ *  | 117M  |                   1849 |
++ *  | 118M  |                   2000 |
++ *  | 119M  |                   2000 |
++ *  | 120M  |                   2000 |
++ *  +-------+------------------------+
++ */
++ #define MEMCG_DELAY_PRECISION_SHIFT 20
++ #define MEMCG_DELAY_SCALING_SHIFT 14
++
+ /*
+  * Scheduled by try_charge() to be executed from the userland return path
+  * and reclaims memory over the high limit.
+  */
+ void mem_cgroup_handle_over_high(void)
+ {
++	unsigned long usage, high;
++	unsigned long pflags;
++	unsigned long penalty_jiffies, overage;
+ 	unsigned int nr_pages = current->memcg_nr_pages_over_high;
+ 	struct mem_cgroup *memcg = current->memcg_high_reclaim;
+ 
+@@ -2279,9 +2336,68 @@ void mem_cgroup_handle_over_high(void)
+ 		memcg = get_mem_cgroup_from_mm(current->mm);
+ 
+ 	reclaim_high(memcg, nr_pages, GFP_KERNEL);
+-	css_put(&memcg->css);
+ 	current->memcg_high_reclaim = NULL;
+ 	current->memcg_nr_pages_over_high = 0;
++
++	/*
++	 * memory.high is breached and reclaim is unable to keep up. Throttle
++	 * allocators proactively to slow down excessive growth.
++	 *
++	 * We use overage compared to memory.high to calculate the number of
++	 * jiffies to sleep (penalty_jiffies). Ideally this value should be
++	 * fairly lenient on small overages, and increasingly harsh when the
++	 * memcg in question makes it clear that it has no intention of stopping
++	 * its crazy behaviour, so we exponentially increase the delay based on
++	 * overage amount.
++	 */
++
++	usage = page_counter_read(&memcg->memory);
++	high = READ_ONCE(memcg->high);
++
++	if (usage <= high)
++		goto out;
++
++	overage = ((u64)(usage - high) << MEMCG_DELAY_PRECISION_SHIFT) / high;
++	penalty_jiffies = ((u64)overage * overage * HZ)
++		>> (MEMCG_DELAY_PRECISION_SHIFT + MEMCG_DELAY_SCALING_SHIFT);
++
++	/*
++	 * Factor in the task's own contribution to the overage, such that four
++	 * N-sized allocations are throttled approximately the same as one
++	 * 4N-sized allocation.
++	 *
++	 * MEMCG_CHARGE_BATCH pages is nominal, so work out how much smaller or
++	 * larger the current charge patch is than that.
++	 */
++	penalty_jiffies = penalty_jiffies * nr_pages / MEMCG_CHARGE_BATCH;
++
++	/*
++	 * Clamp the max delay per usermode return so as to still keep the
++	 * application moving forwards and also permit diagnostics, albeit
++	 * extremely slowly.
++	 */
++	penalty_jiffies = min(penalty_jiffies, MEMCG_MAX_HIGH_DELAY_JIFFIES);
++
++	/*
++	 * Don't sleep if the amount of jiffies this memcg owes us is so low
++	 * that it's not even worth doing, in an attempt to be nice to those who
++	 * go only a small amount over their memory.high value and maybe haven't
++	 * been aggressively reclaimed enough yet.
++	 */
++	if (penalty_jiffies <= HZ / 100)
++		goto out;
++
++	/*
++	 * If we exit early, we're guaranteed to die (since
++	 * schedule_timeout_killable sets TASK_KILLABLE). This means we don't
++	 * need to account for any ill-begotten jiffies to pay them off later.
++	 */
++	psi_memstall_enter(&pflags);
++	schedule_timeout_killable(penalty_jiffies);
++	psi_memstall_leave(&pflags);
++
++out:
++	css_put(&memcg->css);
+ }
+ 
+ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+-- 
+2.21.0
+
