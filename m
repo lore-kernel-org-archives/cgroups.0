@@ -1,307 +1,86 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: Re: [PATCH 0/7] introduce cpu.headroom knob to cpu controller
-Date: Tue, 30 Apr 2019 16:54:18 +0000
-Message-ID: <19AF6556-A2A2-435B-9358-CD22CF7BFD9F@fb.com>
-References: <20190408214539.2705660-1-songliubraving@fb.com>
- <20190410115907.GE19434@e105550-lin.cambridge.arm.com>
- <A2E9A149-9EAA-478D-A096-1D4D4BA442B3@fb.com>
- <CAKfTPtAFB3gSZYJN1BcjU_XoY=Pfu2xtea+2MEw7FkVc3mwTSA@mail.gmail.com>
- <E97E73F4-CE8C-4CD7-B6B6-5F63A4E881B1@fb.com>
- <F0A127DD-F9B6-4FBE-B9AD-8E8B00A7D676@fb.com>
- <CAKfTPtA_ouYCes9LnYn0quAKm273mi3vP-++GTBtYcQn07xc6Q@mail.gmail.com>
- <A62E5068-4A1E-44E3-99BB-02E98229C1E2@fb.com>
- <CAKfTPtAG3v=37wyLjzkNNK_6HdoMK6WO7AMYfa+G24rq2iyAfg@mail.gmail.com>
+From: Brian Welty <brian.welty@intel.com>
+Subject: [RFC PATCH 0/5] cgroup support for GPU devices
+Date: Wed,  1 May 2019 10:04:33 -0400
+Message-ID: <20190501140438.9506-1-brian.welty@intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=ga/EWKOAn9UDB4/9v+JepbeJg373fEqSyzJw4liRsvE=;
- b=J/7lNJ2MO3QohbtmP58ifNjlYxGhac1sL5Qv6kjNPdsSRqsxPLuC/zWpflFo7RfaDV/C
- +avwcZOraofpifkwIPmvxuvtYmZqkwhfJCwj2PnKOmStwjuy/xDC6+NSd/lptRSvAFOh
- p79jbqnfMgOa52UIVxc95dhmotdni6sOAQU= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ga/EWKOAn9UDB4/9v+JepbeJg373fEqSyzJw4liRsvE=;
- b=KOVM2txMvQR230Okmd0uOBavvnacL3V91C5snYPoXu3pqeRweHszbCnetT6wo2tj0SZPgLgkeSSccg+FQbh2HDnxC9JKP3rE+WrT/Mp4KmEYUXWrlChLH9JVyzAnl5Eh7QcDZsgGniMq2Q0u/eBEOWbjn9/zwfbcAjBveNKqPqs=
-In-Reply-To: <CAKfTPtAG3v=37wyLjzkNNK_6HdoMK6WO7AMYfa+G24rq2iyAfg@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <D44450EECA858B4782EE638B5EF2A540@namprd15.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-To: Vincent Guittot <vincent.guittot@linaro.org>
-Cc: Morten Rasmussen <morten.rasmussen@arm.com>, linux-kernel <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "mingo@redhat.com" <mingo@redhat.com>, "peterz@infradead.org" <peterz@infradead.org>, "tglx@linutronix.de" <tglx@linutronix.de>, Kernel Team <Kernel-team@fb.com>, viresh kumar <viresh.kumar@linaro.org>
+To: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-mm@kvack.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, dri-devel@lists.freedesktop.org, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, intel-gfx@lists.freedesktop.org, Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>, Alex Deucher <alexander.deucher@amd.com>, ChunMing Zhou <David1.Zhou@amd.com>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>
 
-
-
-> On Apr 30, 2019, at 12:20 PM, Vincent Guittot <vincent.guittot@linaro.org=
-> wrote:
->=20
-> Hi Song,
->=20
-> On Tue, 30 Apr 2019 at 08:11, Song Liu <songliubraving@fb.com> wrote:
->>=20
->>=20
->>=20
->>> On Apr 29, 2019, at 8:24 AM, Vincent Guittot <vincent.guittot@linaro.or=
-g> wrote:
->>>=20
->>> Hi Song,
->>>=20
->>> On Sun, 28 Apr 2019 at 21:47, Song Liu <songliubraving@fb.com> wrote:
->>>>=20
->>>> Hi Morten and Vincent,
->>>>=20
->>>>> On Apr 22, 2019, at 6:22 PM, Song Liu <songliubraving@fb.com> wrote:
->>>>>=20
->>>>> Hi Vincent,
->>>>>=20
->>>>>> On Apr 17, 2019, at 5:56 AM, Vincent Guittot <vincent.guittot@linaro=
-.org> wrote:
->>>>>>=20
->>>>>> On Wed, 10 Apr 2019 at 21:43, Song Liu <songliubraving@fb.com> wrote=
-:
->>>>>>>=20
->>>>>>> Hi Morten,
->>>>>>>=20
->>>>>>>> On Apr 10, 2019, at 4:59 AM, Morten Rasmussen <morten.rasmussen@ar=
-m.com> wrote:
->>>>>>>>=20
->>>>>>=20
->>>>>>>>=20
->>>>>>>> The bit that isn't clear to me, is _why_ adding idle cycles helps =
-your
->>>>>>>> workload. I'm not convinced that adding headroom gives any latency
->>>>>>>> improvements beyond watering down the impact of your side jobs. AF=
-AIK,
->>>>>>>=20
->>>>>>> We think the latency improvements actually come from watering down =
-the
->>>>>>> impact of side jobs. It is not just statistically improving average
->>>>>>> latency numbers, but also reduces resource contention caused by the=
- side
->>>>>>> workload. I don't know whether it is from reducing contention of AL=
-Us,
->>>>>>> memory bandwidth, CPU caches, or something else, but we saw reduced
->>>>>>> latencies when headroom is used.
->>>>>>>=20
->>>>>>>> the throttling mechanism effectively removes the throttled tasks f=
-rom
->>>>>>>> the schedule according to a specific duty cycle. When the side job=
- is
->>>>>>>> not throttled the main workload is experiencing the same latency i=
-ssues
->>>>>>>> as before, but by dynamically tuning the side job throttling you c=
-an
->>>>>>>> achieve a better average latency. Am I missing something?
->>>>>>>>=20
->>>>>>>> Have you looked at your distribution of main job latency and tried=
- to
->>>>>>>> compare with when throttling is active/not active?
->>>>>>>=20
->>>>>>> cfs_bandwidth adjusts allowed runtime for each task_group each peri=
-od
->>>>>>> (configurable, 100ms by default). cpu.headroom logic applies gentle
->>>>>>> throttling, so that the side workload gets some runtime in every pe=
-riod.
->>>>>>> Therefore, if we look at time window equal to or bigger than 100ms,=
- we
->>>>>>> don't really see "throttling active time" vs. "throttling inactive =
-time".
->>>>>>>=20
->>>>>>>>=20
->>>>>>>> I'm wondering if the headroom solution is really the right solutio=
-n for
->>>>>>>> your use-case or if what you are really after is something which i=
-s
->>>>>>>> lower priority than just setting the weight to 1. Something that
->>>>>>>=20
->>>>>>> The experiments show that, cpu.weight does proper work for priority=
-: the
->>>>>>> main workload gets priority to use the CPU; while the side workload=
- only
->>>>>>> fill the idle CPU. However, this is not sufficient, as the side wor=
-kload
->>>>>>> creates big enough contention to impact the main workload.
->>>>>>>=20
->>>>>>>> (nearly) always gets pre-empted by your main job (SCHED_BATCH and
->>>>>>>> SCHED_IDLE might not be enough). If your main job consist
->>>>>>>> of lots of relatively short wake-ups things like the min_granulari=
-ty
->>>>>>>> could have significant latency impact.
->>>>>>>=20
->>>>>>> cpu.headroom gives benefits in addition to optimizations in pre-emp=
-t
->>>>>>> side. By maintaining some idle time, fewer pre-empt actions are
->>>>>>> necessary, thus the main workload will get better latency.
->>>>>>=20
->>>>>> I agree with Morten's proposal, SCHED_IDLE should help your latency
->>>>>> problem because side job will be directly preempted unlike normal cf=
-s
->>>>>> task even lowest priority.
->>>>>> In addition to min_granularity, sched_period also has an impact on t=
-he
->>>>>> time that a task has to wait before preempting the running task. Als=
-o,
->>>>>> some sched_feature like GENTLE_FAIR_SLEEPERS can also impact the
->>>>>> latency of a task.
->>>>>>=20
->>>>>> It would be nice to know if the latency problem comes from contentio=
-n
->>>>>> on cache resources or if it's mainly because you main load waits
->>>>>> before running on a CPU
->>>>>>=20
->>>>>> Regards,
->>>>>> Vincent
->>>>>=20
->>>>> Thanks for these suggestions. Here are some more tests to show the im=
-pact
->>>>> of scheduler knobs and cpu.headroom.
->>>>>=20
->>>>> side-load | cpu.headroom | side/cpu.weight | min_gran | cpu-idle | ma=
-in/latency
->>>>> ---------------------------------------------------------------------=
------------
->>>>> none    |      0       |     n/a         |    1 ms  |  45.20%  |   1.=
-00
->>>>> ffmpeg   |      0       |      1          |   10 ms  |   3.38%  |   1=
-.46
->>>>> ffmpeg   |      0       |   SCHED_IDLE    |    1 ms  |   5.69%  |   1=
-.42
->>>>> ffmpeg   |    20%       |   SCHED_IDLE    |    1 ms  |  19.00%  |   1=
-.13
->>>>> ffmpeg   |    30%       |   SCHED_IDLE    |    1 ms  |  27.60%  |   1=
-.08
->>>>>=20
->>>>> In all these cases, the main workload is loaded with same level of
->>>>> traffic (request per second). Main workload latency numbers are norma=
-lized
->>>>> based on the baseline (first row).
->>>>>=20
->>>>> For the baseline, the main workload runs without any side workload, t=
-he
->>>>> system has about 45.20% idle CPU.
->>>>>=20
->>>>> The next two rows compare the impact of scheduling knobs cpu.weight a=
-nd
->>>>> sched_min_granularity. With cpu.weight of 1 and min_granularity of 10=
-ms,
->>>>> we see a latency of 1.46; with SCHED_IDLE and min_granularity of 1ms,=
- we
->>>>> see a latency of 1.42. So SCHED_IDLE and min_granularity help protect=
-ing
->>>>> the main workload. However, it is not sufficient, as the latency over=
-head
->>>>> is high (>40%).
->>>>>=20
->>>>> The last two rows show the benefit of cpu.headroom. With 20% headroom=
-,
->>>>> the latency is 1.13; while with 30% headroom, the latency is 1.08.
->>>>>=20
->>>>> We can also see a clear correlation between latency and global idle C=
-PU:
->>>>> more idle CPU yields better lower latency.
->>>>>=20
->>>>> Over all, these results show that cpu.headroom provides effective
->>>>> mechanism to control the latency impact of side workloads. Other knob=
-s
->>>>> could also help the latency, but they are not as effective and flexib=
-le
->>>>> as cpu.headroom.
->>>>>=20
->>>>> Does this analysis address your concern?
->>>=20
->>> So, you results show that sched_idle class doesn't provide the
->>> intended behavior because it still delay the scheduling of sched_other
->>> tasks. In fact, the wakeup path of the scheduler doesn't make any
->>> difference between a cpu running a sched_other and a cpu running a
->>> sched_idle when looking for the idlest cpu and it can create some
->>> contentions between sched_other tasks whereas a cpu runs sched_idle
->>> task.
->>=20
->> I don't think scheduling delay is the only (or dominating) factor of
->> extra latency. Here are some data to show it.
->>=20
->> I measured IPC (instructions per cycle) of the main workload under
->> different scenarios:
->>=20
->> side-load | cpu.headroom | side/cpu.weight  | IPC
->> ----------------------------------------------------
->> none     |     0%       |       N/A        | 0.66
->> ffmpeg   |     0%       |    SCHED_IDLE    | 0.53
->> ffmpeg   |    20%       |    SCHED_IDLE    | 0.58
->> ffmpeg   |    30%       |    SCHED_IDLE    | 0.62
->>=20
->> These data show that the side workload has a negative impact on the
->> main workload's IPC. And cpu.headroom could help reduce this impact.
->>=20
->> Therefore, while optimizations in the wakeup path should help the
->> latency; cpu.headroom would add _significant_ benefit on top of that.
->=20
-> It seems normal that side workload has a negative impact on IPC
-> because of resources sharing but your previous results showed a 42%
-> regression of latency with sched_idle which is can't be only linked to
-> resources access contention
-
-Agreed. I think both scheduling latency and resource contention=20
-contribute noticeable latency overhead to the main workload. The=20
-scheduler optimization by Viresh would help reduce the scheduling
-latency, but it won't help the resource contention. Hopefully, with=20
-optimizations in the scheduler, we can meet the latency target with=20
-smaller cpu.headroom. However, I don't think scheduler optimizations=20
-will eliminate the need of cpu.headroom, as the resource contention
-always exists, and the impact could be significant.=20
-
-Do you have further concerns with this patchset?
-
-Thanks,
-Song=20
-
-
->>=20
->> Does this assessment make sense?
->>=20
->>=20
->>> Viresh (cced to this email) is working on improving such behavior at
->>> wake up and has sent an patch related to the subject:
->>> https://lkml.org/lkml/2019/4/25/251
->>> I'm curious if this would improve the results.
->>=20
->> I could try it with our workload next week (I am at LSF/MM this
->> week). Also, please keep in mind that this test sometimes takes
->> multiple days to setup and run.
->=20
-> Yes. I understand. That would be good to have a simpler setup to
-> reproduce the behavior of your setup in order to do preliminary tests
-> and analyse the behavior
->=20
->>=20
->> Thanks,
->> Song
->>=20
->>>=20
->>> Regards,
->>> Vincent
->>>=20
->>>>>=20
->>>>> Thanks,
->>>>> Song
->>>>>=20
->>>>=20
->>>> Could you please share your comments and suggestions on this work? Did
->>>> the results address your questions/concerns?
->>>>=20
->>>> Thanks again,
->>>> Song
->>>>=20
->>>>>>=20
->>>>>>>=20
->>>>>>> Thanks,
->>>>>>> Song
->>>>>>>=20
->>>>>>>>=20
->>>>>>>> Morten
-
+SW4gY29udGFpbmVyaXplZCBvciB2aXJ0dWFsaXplZCBlbnZpcm9ubWVudHMsIHRoZXJlIGlzIGRl
+c2lyZSB0byBoYXZlCmNvbnRyb2xzIGluIHBsYWNlIGZvciByZXNvdXJjZXMgdGhhdCBjYW4gYmUg
+Y29uc3VtZWQgYnkgdXNlcnMgb2YgYSBHUFUKZGV2aWNlLiAgVGhpcyBSRkMgcGF0Y2ggc2VyaWVz
+IHByb3Bvc2VzIGEgZnJhbWV3b3JrIGZvciBpbnRlZ3JhdGluZyAKdXNlIG9mIGV4aXN0aW5nIGNn
+cm91cCBjb250cm9sbGVycyBpbnRvIGRldmljZSBkcml2ZXJzLgpUaGUgaTkxNSBkcml2ZXIgaXMg
+dXBkYXRlZCBpbiB0aGlzIHNlcmllcyBhcyBvdXIgcHJpbWFyeSB1c2UgY2FzZSB0bwpsZXZlcmFn
+ZSB0aGlzIGZyYW1ld29yayBhbmQgdG8gc2VydmUgYXMgYW4gZXhhbXBsZSBmb3IgZGlzY3Vzc2lv
+bi4KClRoZSBwYXRjaCBzZXJpZXMgZW5hYmxlcyBkZXZpY2UgZHJpdmVycyB0byB1c2UgY2dyb3Vw
+cyB0byBjb250cm9sIHRoZQpmb2xsb3dpbmcgcmVzb3VyY2VzIHdpdGhpbiBhIEdQVSAob3Igb3Ro
+ZXIgYWNjZWxlcmF0b3IgZGV2aWNlKToKKiAgY29udHJvbCBhbGxvY2F0aW9uIG9mIGRldmljZSBt
+ZW1vcnkgKHJldXNlIG9mIG1lbWNnKQphbmQgd2l0aCBmdXR1cmUgd29yaywgd2UgY291bGQgZXh0
+ZW5kIHRvOgoqICB0cmFjayBhbmQgY29udHJvbCBzaGFyZSBvZiBHUFUgdGltZSAocmV1c2Ugb2Yg
+Y3B1L2NwdWFjY3QpCiogIGFwcGx5IG1hc2sgb2YgYWxsb3dlZCBleGVjdXRpb24gZW5naW5lcyAo
+cmV1c2Ugb2YgY3B1c2V0cykKCkluc3RlYWQgb2YgaW50cm9kdWNpbmcgYSBuZXcgY2dyb3VwIHN1
+YnN5c3RlbSBmb3IgR1BVIGRldmljZXMsIGEgbmV3CmZyYW1ld29yayBpcyBwcm9wb3NlZCB0byBh
+bGxvdyBkZXZpY2VzIHRvIHJlZ2lzdGVyIHdpdGggZXhpc3RpbmcgY2dyb3VwCmNvbnRyb2xsZXJz
+LCB3aGljaCBjcmVhdGVzIHBlci1kZXZpY2UgY2dyb3VwX3N1YnN5c19zdGF0ZSB3aXRoaW4gdGhl
+CmNncm91cC4gIFRoaXMgZ2l2ZXMgZGV2aWNlIGRyaXZlcnMgdGhlaXIgb3duIHByaXZhdGUgY2dy
+b3VwIGNvbnRyb2xzCihzdWNoIGFzIG1lbW9yeSBsaW1pdHMgb3Igb3RoZXIgcGFyYW1ldGVycykg
+dG8gYmUgYXBwbGllZCB0byBkZXZpY2UKcmVzb3VyY2VzIGluc3RlYWQgb2YgaG9zdCBzeXN0ZW0g
+cmVzb3VyY2VzLgpEZXZpY2UgZHJpdmVycyAoR1BVIG9yIG90aGVyKSBhcmUgdGhlbiBhYmxlIHRv
+IHJldXNlIHRoZSBleGlzdGluZyBjZ3JvdXAKY29udHJvbHMsIGluc3RlYWQgb2YgaW52ZW50aW5n
+IHNpbWlsYXIgb25lcy4KClBlci1kZXZpY2UgY29udHJvbHMgd291bGQgYmUgZXhwb3NlZCBpbiBj
+Z3JvdXAgZmlsZXN5c3RlbSBhczoKICAgIG1vdW50LzxjZ3JvdXBfbmFtZT4vPHN1YnN5c19uYW1l
+Pi5kZXZpY2VzLzxkZXZfbmFtZT4vPHN1YnN5c19maWxlcz4Kc3VjaCBhcyAoZm9yIGV4YW1wbGUp
+OgogICAgbW91bnQvPGNncm91cF9uYW1lPi9tZW1vcnkuZGV2aWNlcy88ZGV2X25hbWU+L21lbW9y
+eS5tYXgKICAgIG1vdW50LzxjZ3JvdXBfbmFtZT4vbWVtb3J5LmRldmljZXMvPGRldl9uYW1lPi9t
+ZW1vcnkuY3VycmVudAogICAgbW91bnQvPGNncm91cF9uYW1lPi9jcHUuZGV2aWNlcy88ZGV2X25h
+bWU+L2NwdS5zdGF0CiAgICBtb3VudC88Y2dyb3VwX25hbWU+L2NwdS5kZXZpY2VzLzxkZXZfbmFt
+ZT4vY3B1LndlaWdodAoKVGhlIGRybS9pOTE1IHBhdGNoIGluIHRoaXMgc2VyaWVzIGlzIGJhc2Vk
+IG9uIHRvcCBvZiBvdGhlciBSRkMgd29yayBbMV0KZm9yIGk5MTUgZGV2aWNlIG1lbW9yeSBzdXBw
+b3J0LgoKQU1EIFsyXSBhbmQgSW50ZWwgWzNdIGhhdmUgcHJvcG9zZWQgcmVsYXRlZCB3b3JrIGlu
+IHRoaXMgYXJlYSB3aXRoaW4gdGhlCmxhc3QgZmV3IHllYXJzLCBsaXN0ZWQgYmVsb3cgYXMgcmVm
+ZXJlbmNlLiAgVGhpcyBuZXcgUkZDIHJldXNlcyBleGlzdGluZwpjZ3JvdXAgY29udHJvbGxlcnMg
+YW5kIHRha2VzIGEgZGlmZmVyZW50IGFwcHJvYWNoIHRoYW4gcHJpb3Igd29yay4KCkZpbmFsbHks
+IHNvbWUgcG90ZW50aWFsIGRpc2N1c3Npb24gcG9pbnRzIGZvciB0aGlzIHNlcmllczoKKiBtZXJn
+ZSBwcm9wb3NlZCA8c3Vic3lzX25hbWU+LmRldmljZXMgaW50byBhIHNpbmdsZSBkZXZpY2VzIGRp
+cmVjdG9yeT8KKiBhbGxvdyBkZXZpY2VzIHRvIGhhdmUgbXVsdGlwbGUgcmVnaXN0cmF0aW9ucyBm
+b3Igc3Vic2V0cyBvZiByZXNvdXJjZXM/CiogZG9jdW1lbnQgYSAnY29tbW9uIGNoYXJnaW5nIHBv
+bGljeScgZm9yIGRldmljZSBkcml2ZXJzIHRvIGZvbGxvdz8KClsxXSBodHRwczovL3BhdGNod29y
+ay5mcmVlZGVza3RvcC5vcmcvc2VyaWVzLzU2NjgzLwpbMl0gaHR0cHM6Ly9saXN0cy5mcmVlZGVz
+a3RvcC5vcmcvYXJjaGl2ZXMvZHJpLWRldmVsLzIwMTgtTm92ZW1iZXIvMTk3MTA2Lmh0bWwKWzNd
+IGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL2FyY2hpdmVzL2ludGVsLWdmeC8yMDE4LUph
+bnVhcnkvMTUzMTU2Lmh0bWwKCgpCcmlhbiBXZWx0eSAoNSk6CiAgY2dyb3VwOiBBZGQgY2dyb3Vw
+X3N1YnN5cyBwZXItZGV2aWNlIHJlZ2lzdHJhdGlvbiBmcmFtZXdvcmsKICBjZ3JvdXA6IENoYW5n
+ZSBrZXJuZnNfbm9kZSBmb3IgZGlyZWN0b3JpZXMgdG8gc3RvcmUKICAgIGNncm91cF9zdWJzeXNf
+c3RhdGUKICBtZW1jZzogQWRkIHBlci1kZXZpY2Ugc3VwcG9ydCB0byBtZW1vcnkgY2dyb3VwIHN1
+YnN5c3RlbQogIGRybTogQWRkIG1lbW9yeSBjZ3JvdXAgcmVnaXN0cmF0aW9uIGFuZCBEUklWRVJf
+Q0dST1VQUyBmZWF0dXJlIGJpdAogIGRybS9pOTE1OiBVc2UgbWVtb3J5IGNncm91cCBmb3IgZW5m
+b3JjaW5nIGRldmljZSBtZW1vcnkgbGltaXQKCiBkcml2ZXJzL2dwdS9kcm0vZHJtX2Rydi5jICAg
+ICAgICAgICAgICAgICAgfCAgMTIgKwogZHJpdmVycy9ncHUvZHJtL2RybV9nZW0uYyAgICAgICAg
+ICAgICAgICAgIHwgICA3ICsKIGRyaXZlcnMvZ3B1L2RybS9pOTE1L2k5MTVfZHJ2LmMgICAgICAg
+ICAgICB8ICAgMiArLQogZHJpdmVycy9ncHUvZHJtL2k5MTUvaW50ZWxfbWVtb3J5X3JlZ2lvbi5j
+IHwgIDI0ICstCiBpbmNsdWRlL2RybS9kcm1fZGV2aWNlLmggICAgICAgICAgICAgICAgICAgfCAg
+IDMgKwogaW5jbHVkZS9kcm0vZHJtX2Rydi5oICAgICAgICAgICAgICAgICAgICAgIHwgICA4ICsK
+IGluY2x1ZGUvZHJtL2RybV9nZW0uaCAgICAgICAgICAgICAgICAgICAgICB8ICAxMSArCiBpbmNs
+dWRlL2xpbnV4L2Nncm91cC1kZWZzLmggICAgICAgICAgICAgICAgfCAgMjggKysKIGluY2x1ZGUv
+bGludXgvY2dyb3VwLmggICAgICAgICAgICAgICAgICAgICB8ICAgMyArCiBpbmNsdWRlL2xpbnV4
+L21lbWNvbnRyb2wuaCAgICAgICAgICAgICAgICAgfCAgMTAgKwoga2VybmVsL2Nncm91cC9jZ3Jv
+dXAtdjEuYyAgICAgICAgICAgICAgICAgIHwgIDEwICstCiBrZXJuZWwvY2dyb3VwL2Nncm91cC5j
+ICAgICAgICAgICAgICAgICAgICAgfCAzMTAgKysrKysrKysrKysrKysrKysrLS0tCiBtbS9tZW1j
+b250cm9sLmMgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAxODMgKysrKysrKysrKystCiAx
+MyBmaWxlcyBjaGFuZ2VkLCA1NTIgaW5zZXJ0aW9ucygrKSwgNTkgZGVsZXRpb25zKC0pCgotLSAK
+Mi4yMS4wCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpJ
+bnRlbC1nZnggbWFpbGluZyBsaXN0CkludGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0
+cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9pbnRlbC1nZng=
