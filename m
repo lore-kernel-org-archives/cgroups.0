@@ -1,113 +1,84 @@
-From: "Welty, Brian" <brian.welty@intel.com>
-Subject: Re: [RFC PATCH 0/5] cgroup support for GPU devices
-Date: Fri, 3 May 2019 14:14:33 -0700
-Message-ID: <bb001de0-e4e5-6b3f-7ced-9d0fb329635b@intel.com>
-References: <20190501140438.9506-1-brian.welty@intel.com>
- <20190502083433.GP7676@mtr-leonro.mtl.com>
- <CAOWid-cYknxeTQvP9vQf3-i3Cpux+bs7uBs7_o-YMFjVCo19bg@mail.gmail.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH v2] memcg, fsnotify: no oom-kill for remote memcg charging
+Date: Sat,  4 May 2019 07:52:42 -0700
+Message-ID: <20190504145242.258875-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <CAOWid-cYknxeTQvP9vQf3-i3Cpux+bs7uBs7_o-YMFjVCo19bg@mail.gmail.com>
-Content-Language: en-US
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=Q+yvnmyjVEzdFHEWBcoadDmmU/3yK5ganIOIoyEwouc=;
+        b=qFtjqSrcM4UGgRoJ8/RzfeaVyMan+d7Ts2pByis/59NTZYLaxr1drG0H5BJleMrsrh
+         MfXyUTFpANjtUv9d/3lln9gmv0JiZwKgSmPn/unKXf6ckvtwaiukK2EpBgYXSp2zaMVT
+         oBZSmqvUFGBLW+493GEBswqRKrbAhreW7h3pvJZKJyvSY9xqc6PSChOyIBpwKVl7OcOV
+         OYC8eGUnH5wq7H0Hf6xM8doNcgTcKdvF+OGgfSn2qK2KmkPDC1b9x7Pj9K9UegrblR69
+         dmm+H2DsQQ2Abc1ZsllHD5tiuI6keEcXuEUtH1k4JAzFM/AERoSNSFeerIz2sPD+jA9M
+         2gsA==
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Kenny Ho <y2kenny@gmail.com>, Leon Romanovsky <leon@kernel.org>
-Cc: Parav Pandit <parav@mellanox.com>, David Airlie <airlied@linux.ie>, kenny.ho@amd.com, intel-gfx@lists.freedesktop.org, Johannes Weiner <hannes@cmpxchg.org>, Harish.Kasiviswanathan@amd.com, cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org, Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, Li Zefan <lizefan@huawei.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, Alex Deucher <alexander.deucher@amd.com>, Tejun Heo <tj@kernel.org>, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>, RDMA mailing list <linux-rdma@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
 
-Ck9uIDUvMi8yMDE5IDM6NDggUE0sIEtlbm55IEhvIHdyb3RlOgo+IE9uIDUvMi8yMDE5IDE6MzQg
-QU0sIExlb24gUm9tYW5vdnNreSB3cm90ZToKPj4gQ291bnQgdXMgKE1lbGxhbm94KSB0b28sIG91
-ciBSRE1BIGRldmljZXMgYXJlIGV4cG9zaW5nIHNwZWNpYWwgYW5kCj4+IGxpbWl0ZWQgaW4gc2l6
-ZSBkZXZpY2UgbWVtb3J5IHRvIHRoZSB1c2VycyBhbmQgd2Ugd291bGQgbGlrZSB0byBwcm92aWRl
-Cj4+IGFuIG9wdGlvbiB0byB1c2UgY2dyb3VwIHRvIGNvbnRyb2wgaXRzIGV4cG9zdXJlLgoKSGkg
-TGVvbiwgZ3JlYXQgdG8gaGVhciBhbmQgaGFwcHkgdG8gd29yayB3aXRoIHlvdSBhbmQgUkRNQSBj
-b21tdW5pdHkKdG8gc2hhcGUgdGhpcyBmcmFtZXdvcmsgZm9yIHVzZSBieSBSRE1BIGRldmljZXMg
-YXMgd2VsbC4gIFRoZSBpbnRlbnQKd2FzIHRvIHN1cHBvcnQgbW9yZSB0aGFuIEdQVSBkZXZpY2Vz
-LgoKSW5jaWRlbnRhbGx5LCBJIGFsc28gd2FudGVkIHRvIGFzayBhYm91dCB0aGUgcmRtYSBjZ3Jv
-dXAgY29udHJvbGxlcgphbmQgaWYgdGhlcmUgaXMgaW50ZXJlc3QgaW4gdXBkYXRpbmcgdGhlIGRl
-dmljZSByZWdpc3RyYXRpb24gaW1wbGVtZW50ZWQKaW4gdGhhdCBjb250cm9sbGVyLiAgSXQgY291
-bGQgdXNlIHRoZSBjZ3JvdXBfZGV2aWNlX3JlZ2lzdGVyKCkgdGhhdCBpcwpwcm9wb3NlZCBoZXJl
-LiAgIEJ1dCB0aGlzIGlzIHBlcmhhcHMgZnV0dXJlIHdvcmssIHNvIGNhbiBkaXNjdXNzIHNlcGFy
-YXRlbHkuCgoKPiBEb2Vzbid0IFJETUEgYWxyZWFkeSBoYXMgYSBzZXBhcmF0ZSBjZ3JvdXA/ICBX
-aHkgbm90IGltcGxlbWVudCBpdCB0aGVyZT8KPiAKCkhpIEtlbm55LCBJIGNhbid0IGFuc3dlciBm
-b3IgTGVvbiwgYnV0IEknbSBob3BlZnVsIGhlIGFncmVlcyB3aXRoIHJhdGlvbmFsZQpJIGdhdmUg
-aW4gdGhlIGNvdmVyIGxldHRlci4gIE5hbWVseSwgdG8gaW1wbGVtZW50IGluIHJkbWEgY29udHJv
-bGxlciwgd291bGQKbWVhbiBkdXBsaWNhdGluZyBleGlzdGluZyBtZW1jZyBjb250cm9scyB0aGVy
-ZS4KCklzIEFNRCBpbnRlcmVzdGVkIGluIGNvbGxhYm9yYXRpbmcgdG8gaGVscCBzaGFwZSB0aGlz
-IGZyYW1ld29yaz8KSXQgaXMgaW50ZW5kZWQgdG8gYmUgZGV2aWNlLW5ldXRyYWwsIHNvIGNvdWxk
-IGJlIGxldmVyYWdlZCBieSB2YXJpb3VzCnR5cGVzIG9mIGRldmljZXMuCklmIHlvdSBoYXZlIGFu
-IGFsdGVybmF0aXZlIHNvbHV0aW9uIHdlbGwgdW5kZXJ3YXksIHRoZW4gbWF5YmUKd2UgY2FuIHdv
-cmsgdG9nZXRoZXIgdG8gbWVyZ2Ugb3VyIGVmZm9ydHMgaW50byBvbmUuCkluIHRoZSBlbmQsIHRo
-ZSBEUk0gY29tbXVuaXR5IGlzIGJlc3Qgc2VydmVkIHdpdGggY29tbW9uIHNvbHV0aW9uLgoKCj4g
-Cj4+PiBhbmQgd2l0aCBmdXR1cmUgd29yaywgd2UgY291bGQgZXh0ZW5kIHRvOgo+Pj4gKiAgdHJh
-Y2sgYW5kIGNvbnRyb2wgc2hhcmUgb2YgR1BVIHRpbWUgKHJldXNlIG9mIGNwdS9jcHVhY2N0KQo+
-Pj4gKiAgYXBwbHkgbWFzayBvZiBhbGxvd2VkIGV4ZWN1dGlvbiBlbmdpbmVzIChyZXVzZSBvZiBj
-cHVzZXRzKQo+Pj4KPj4+IEluc3RlYWQgb2YgaW50cm9kdWNpbmcgYSBuZXcgY2dyb3VwIHN1YnN5
-c3RlbSBmb3IgR1BVIGRldmljZXMsIGEgbmV3Cj4+PiBmcmFtZXdvcmsgaXMgcHJvcG9zZWQgdG8g
-YWxsb3cgZGV2aWNlcyB0byByZWdpc3RlciB3aXRoIGV4aXN0aW5nIGNncm91cAo+Pj4gY29udHJv
-bGxlcnMsIHdoaWNoIGNyZWF0ZXMgcGVyLWRldmljZSBjZ3JvdXBfc3Vic3lzX3N0YXRlIHdpdGhp
-biB0aGUKPj4+IGNncm91cC4gIFRoaXMgZ2l2ZXMgZGV2aWNlIGRyaXZlcnMgdGhlaXIgb3duIHBy
-aXZhdGUgY2dyb3VwIGNvbnRyb2xzCj4+PiAoc3VjaCBhcyBtZW1vcnkgbGltaXRzIG9yIG90aGVy
-IHBhcmFtZXRlcnMpIHRvIGJlIGFwcGxpZWQgdG8gZGV2aWNlCj4+PiByZXNvdXJjZXMgaW5zdGVh
-ZCBvZiBob3N0IHN5c3RlbSByZXNvdXJjZXMuCj4+PiBEZXZpY2UgZHJpdmVycyAoR1BVIG9yIG90
-aGVyKSBhcmUgdGhlbiBhYmxlIHRvIHJldXNlIHRoZSBleGlzdGluZyBjZ3JvdXAKPj4+IGNvbnRy
-b2xzLCBpbnN0ZWFkIG9mIGludmVudGluZyBzaW1pbGFyIG9uZXMuCj4+Pgo+Pj4gUGVyLWRldmlj
-ZSBjb250cm9scyB3b3VsZCBiZSBleHBvc2VkIGluIGNncm91cCBmaWxlc3lzdGVtIGFzOgo+Pj4g
-ICAgIG1vdW50LzxjZ3JvdXBfbmFtZT4vPHN1YnN5c19uYW1lPi5kZXZpY2VzLzxkZXZfbmFtZT4v
-PHN1YnN5c19maWxlcz4KPj4+IHN1Y2ggYXMgKGZvciBleGFtcGxlKToKPj4+ICAgICBtb3VudC88
-Y2dyb3VwX25hbWU+L21lbW9yeS5kZXZpY2VzLzxkZXZfbmFtZT4vbWVtb3J5Lm1heAo+Pj4gICAg
-IG1vdW50LzxjZ3JvdXBfbmFtZT4vbWVtb3J5LmRldmljZXMvPGRldl9uYW1lPi9tZW1vcnkuY3Vy
-cmVudAo+Pj4gICAgIG1vdW50LzxjZ3JvdXBfbmFtZT4vY3B1LmRldmljZXMvPGRldl9uYW1lPi9j
-cHUuc3RhdAo+Pj4gICAgIG1vdW50LzxjZ3JvdXBfbmFtZT4vY3B1LmRldmljZXMvPGRldl9uYW1l
-Pi9jcHUud2VpZ2h0Cj4+Pgo+Pj4gVGhlIGRybS9pOTE1IHBhdGNoIGluIHRoaXMgc2VyaWVzIGlz
-IGJhc2VkIG9uIHRvcCBvZiBvdGhlciBSRkMgd29yayBbMV0KPj4+IGZvciBpOTE1IGRldmljZSBt
-ZW1vcnkgc3VwcG9ydC4KPj4+Cj4+PiBBTUQgWzJdIGFuZCBJbnRlbCBbM10gaGF2ZSBwcm9wb3Nl
-ZCByZWxhdGVkIHdvcmsgaW4gdGhpcyBhcmVhIHdpdGhpbiB0aGUKPj4+IGxhc3QgZmV3IHllYXJz
-LCBsaXN0ZWQgYmVsb3cgYXMgcmVmZXJlbmNlLiAgVGhpcyBuZXcgUkZDIHJldXNlcyBleGlzdGlu
-Zwo+Pj4gY2dyb3VwIGNvbnRyb2xsZXJzIGFuZCB0YWtlcyBhIGRpZmZlcmVudCBhcHByb2FjaCB0
-aGFuIHByaW9yIHdvcmsuCj4+Pgo+Pj4gRmluYWxseSwgc29tZSBwb3RlbnRpYWwgZGlzY3Vzc2lv
-biBwb2ludHMgZm9yIHRoaXMgc2VyaWVzOgo+Pj4gKiBtZXJnZSBwcm9wb3NlZCA8c3Vic3lzX25h
-bWU+LmRldmljZXMgaW50byBhIHNpbmdsZSBkZXZpY2VzIGRpcmVjdG9yeT8KPj4+ICogYWxsb3cg
-ZGV2aWNlcyB0byBoYXZlIG11bHRpcGxlIHJlZ2lzdHJhdGlvbnMgZm9yIHN1YnNldHMgb2YgcmVz
-b3VyY2VzPwo+Pj4gKiBkb2N1bWVudCBhICdjb21tb24gY2hhcmdpbmcgcG9saWN5JyBmb3IgZGV2
-aWNlIGRyaXZlcnMgdG8gZm9sbG93Pwo+Pj4KPj4+IFsxXSBodHRwczovL3BhdGNod29yay5mcmVl
-ZGVza3RvcC5vcmcvc2VyaWVzLzU2NjgzLwo+Pj4gWzJdIGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0
-b3Aub3JnL2FyY2hpdmVzL2RyaS1kZXZlbC8yMDE4LU5vdmVtYmVyLzE5NzEwNi5odG1sCj4+PiBb
-M10gaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvYXJjaGl2ZXMvaW50ZWwtZ2Z4LzIwMTgt
-SmFudWFyeS8xNTMxNTYuaHRtbAo+Pj4KPj4+Cj4+PiBCcmlhbiBXZWx0eSAoNSk6Cj4+PiAgIGNn
-cm91cDogQWRkIGNncm91cF9zdWJzeXMgcGVyLWRldmljZSByZWdpc3RyYXRpb24gZnJhbWV3b3Jr
-Cj4+PiAgIGNncm91cDogQ2hhbmdlIGtlcm5mc19ub2RlIGZvciBkaXJlY3RvcmllcyB0byBzdG9y
-ZQo+Pj4gICAgIGNncm91cF9zdWJzeXNfc3RhdGUKPj4+ICAgbWVtY2c6IEFkZCBwZXItZGV2aWNl
-IHN1cHBvcnQgdG8gbWVtb3J5IGNncm91cCBzdWJzeXN0ZW0KPj4+ICAgZHJtOiBBZGQgbWVtb3J5
-IGNncm91cCByZWdpc3RyYXRpb24gYW5kIERSSVZFUl9DR1JPVVBTIGZlYXR1cmUgYml0Cj4+PiAg
-IGRybS9pOTE1OiBVc2UgbWVtb3J5IGNncm91cCBmb3IgZW5mb3JjaW5nIGRldmljZSBtZW1vcnkg
-bGltaXQKPj4+Cj4+PiAgZHJpdmVycy9ncHUvZHJtL2RybV9kcnYuYyAgICAgICAgICAgICAgICAg
-IHwgIDEyICsKPj4+ICBkcml2ZXJzL2dwdS9kcm0vZHJtX2dlbS5jICAgICAgICAgICAgICAgICAg
-fCAgIDcgKwo+Pj4gIGRyaXZlcnMvZ3B1L2RybS9pOTE1L2k5MTVfZHJ2LmMgICAgICAgICAgICB8
-ICAgMiArLQo+Pj4gIGRyaXZlcnMvZ3B1L2RybS9pOTE1L2ludGVsX21lbW9yeV9yZWdpb24uYyB8
-ICAyNCArLQo+Pj4gIGluY2x1ZGUvZHJtL2RybV9kZXZpY2UuaCAgICAgICAgICAgICAgICAgICB8
-ICAgMyArCj4+PiAgaW5jbHVkZS9kcm0vZHJtX2Rydi5oICAgICAgICAgICAgICAgICAgICAgIHwg
-ICA4ICsKPj4+ICBpbmNsdWRlL2RybS9kcm1fZ2VtLmggICAgICAgICAgICAgICAgICAgICAgfCAg
-MTEgKwo+Pj4gIGluY2x1ZGUvbGludXgvY2dyb3VwLWRlZnMuaCAgICAgICAgICAgICAgICB8ICAy
-OCArKwo+Pj4gIGluY2x1ZGUvbGludXgvY2dyb3VwLmggICAgICAgICAgICAgICAgICAgICB8ICAg
-MyArCj4+PiAgaW5jbHVkZS9saW51eC9tZW1jb250cm9sLmggICAgICAgICAgICAgICAgIHwgIDEw
-ICsKPj4+ICBrZXJuZWwvY2dyb3VwL2Nncm91cC12MS5jICAgICAgICAgICAgICAgICAgfCAgMTAg
-Ky0KPj4+ICBrZXJuZWwvY2dyb3VwL2Nncm91cC5jICAgICAgICAgICAgICAgICAgICAgfCAzMTAg
-KysrKysrKysrKysrKysrKysrLS0tCj4+PiAgbW0vbWVtY29udHJvbC5jICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIHwgMTgzICsrKysrKysrKysrLQo+Pj4gIDEzIGZpbGVzIGNoYW5nZWQsIDU1
-MiBpbnNlcnRpb25zKCspLCA1OSBkZWxldGlvbnMoLSkKPj4+Cj4+PiAtLQo+Pj4gMi4yMS4wCj4+
-Pgo+PiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwo+PiBk
-cmktZGV2ZWwgbWFpbGluZyBsaXN0Cj4+IGRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcK
-Pj4gaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2
-ZWwKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KZHJpLWRl
-dmVsIG1haWxpbmcgbGlzdApkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8v
-bGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVs
+The commit d46eb14b735b ("fs: fsnotify: account fsnotify metadata to
+kmemcg") added remote memcg charging for fanotify and inotify event
+objects. The aim was to charge the memory to the listener who is
+interested in the events but without triggering the OOM killer.
+Otherwise there would be security concerns for the listener. At the
+time, oom-kill trigger was not in the charging path. A parallel work
+added the oom-kill back to charging path i.e. commit 29ef680ae7c2
+("memcg, oom: move out_of_memory back to the charge path"). So to not
+trigger oom-killer in the remote memcg, explicitly add
+__GFP_RETRY_MAYFAIL to the fanotigy and inotify event allocations.
+
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
+---
+Changelog since v1:
+- Fixed usage of __GFP_RETRY_MAYFAIL flag.
+
+ fs/notify/fanotify/fanotify.c        | 5 ++++-
+ fs/notify/inotify/inotify_fsnotify.c | 7 +++++--
+ 2 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/fs/notify/fanotify/fanotify.c b/fs/notify/fanotify/fanotify.c
+index 6b9c27548997..f78fd4c8f12d 100644
+--- a/fs/notify/fanotify/fanotify.c
++++ b/fs/notify/fanotify/fanotify.c
+@@ -288,10 +288,13 @@ struct fanotify_event *fanotify_alloc_event(struct fsnotify_group *group,
+ 	/*
+ 	 * For queues with unlimited length lost events are not expected and
+ 	 * can possibly have security implications. Avoid losing events when
+-	 * memory is short.
++	 * memory is short. Also make sure to not trigger OOM killer in the
++	 * target memcg for the limited size queues.
+ 	 */
+ 	if (group->max_events == UINT_MAX)
+ 		gfp |= __GFP_NOFAIL;
++	else
++		gfp |= __GFP_RETRY_MAYFAIL;
+ 
+ 	/* Whoever is interested in the event, pays for the allocation. */
+ 	memalloc_use_memcg(group->memcg);
+diff --git a/fs/notify/inotify/inotify_fsnotify.c b/fs/notify/inotify/inotify_fsnotify.c
+index ff30abd6a49b..17c08daa1ba7 100644
+--- a/fs/notify/inotify/inotify_fsnotify.c
++++ b/fs/notify/inotify/inotify_fsnotify.c
+@@ -99,9 +99,12 @@ int inotify_handle_event(struct fsnotify_group *group,
+ 	i_mark = container_of(inode_mark, struct inotify_inode_mark,
+ 			      fsn_mark);
+ 
+-	/* Whoever is interested in the event, pays for the allocation. */
++	/*
++	 * Whoever is interested in the event, pays for the allocation. However
++	 * do not trigger the OOM killer in the target memcg.
++	 */
+ 	memalloc_use_memcg(group->memcg);
+-	event = kmalloc(alloc_len, GFP_KERNEL_ACCOUNT);
++	event = kmalloc(alloc_len, GFP_KERNEL_ACCOUNT | __GFP_RETRY_MAYFAIL);
+ 	memalloc_unuse_memcg();
+ 
+ 	if (unlikely(!event)) {
+-- 
+2.21.0.1020.gf2820cf01a-goog
+
