@@ -1,126 +1,135 @@
-From: Leon Romanovsky <leon@kernel.org>
-Subject: Re: [RFC PATCH 0/5] cgroup support for GPU devices
-Date: Sun, 5 May 2019 10:14:36 +0300
-Message-ID: <20190505071436.GD6938@mtr-leonro.mtl.com>
-References: <20190501140438.9506-1-brian.welty@intel.com>
- <20190502083433.GP7676@mtr-leonro.mtl.com>
- <CAOWid-cYknxeTQvP9vQf3-i3Cpux+bs7uBs7_o-YMFjVCo19bg@mail.gmail.com>
- <bb001de0-e4e5-6b3f-7ced-9d0fb329635b@intel.com>
+From: Jiufei Xue <jiufei.xue@linux.alibaba.com>
+Subject: Re: [PATCH v4 RESEND] fs/writeback: use rcu_barrier() to wait for
+ inflight wb switches going into workqueue when umount
+Date: Sun, 5 May 2019 20:09:01 +0800
+Message-ID: <499a7630-551e-70a1-7a4f-c5848030461d@linux.alibaba.com>
+References: <20190429024108.54150-1-jiufei.xue@linux.alibaba.com>
+ <20190430103201.9C2D92080C@mail.kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-Content-Disposition: inline
-In-Reply-To: <bb001de0-e4e5-6b3f-7ced-9d0fb329635b@intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="us-ascii"
-To: "Welty, Brian" <brian.welty@intel.com>
-Cc: Parav Pandit <parav@mellanox.com>, David Airlie <airlied@linux.ie>, kenny.ho@amd.com, intel-gfx@lists.freedesktop.org, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org, Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, J??r??me Glisse <jglisse@redhat.com>, Li Zefan <lizefan@huawei.com>, Kenny Ho <y2kenny@gmail.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Alex Deucher <alexander.deucher@amd.com>, Tejun Heo <tj@kernel.org>, Christian K??nig <christian.koenig@amd.com>, RDMA mailing list <linux-rdma@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190430103201.9C2D92080C@mail.kernel.org>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org
+Cc: tj@kernel.org, stable@kernel.org, stable@vger.kernel.org
 
-T24gRnJpLCBNYXkgMDMsIDIwMTkgYXQgMDI6MTQ6MzNQTSAtMDcwMCwgV2VsdHksIEJyaWFuIHdy
-b3RlOgo+Cj4gT24gNS8yLzIwMTkgMzo0OCBQTSwgS2VubnkgSG8gd3JvdGU6Cj4gPiBPbiA1LzIv
-MjAxOSAxOjM0IEFNLCBMZW9uIFJvbWFub3Zza3kgd3JvdGU6Cj4gPj4gQ291bnQgdXMgKE1lbGxh
-bm94KSB0b28sIG91ciBSRE1BIGRldmljZXMgYXJlIGV4cG9zaW5nIHNwZWNpYWwgYW5kCj4gPj4g
-bGltaXRlZCBpbiBzaXplIGRldmljZSBtZW1vcnkgdG8gdGhlIHVzZXJzIGFuZCB3ZSB3b3VsZCBs
-aWtlIHRvIHByb3ZpZGUKPiA+PiBhbiBvcHRpb24gdG8gdXNlIGNncm91cCB0byBjb250cm9sIGl0
-cyBleHBvc3VyZS4KPgo+IEhpIExlb24sIGdyZWF0IHRvIGhlYXIgYW5kIGhhcHB5IHRvIHdvcmsg
-d2l0aCB5b3UgYW5kIFJETUEgY29tbXVuaXR5Cj4gdG8gc2hhcGUgdGhpcyBmcmFtZXdvcmsgZm9y
-IHVzZSBieSBSRE1BIGRldmljZXMgYXMgd2VsbC4gIFRoZSBpbnRlbnQKPiB3YXMgdG8gc3VwcG9y
-dCBtb3JlIHRoYW4gR1BVIGRldmljZXMuCj4KPiBJbmNpZGVudGFsbHksIEkgYWxzbyB3YW50ZWQg
-dG8gYXNrIGFib3V0IHRoZSByZG1hIGNncm91cCBjb250cm9sbGVyCj4gYW5kIGlmIHRoZXJlIGlz
-IGludGVyZXN0IGluIHVwZGF0aW5nIHRoZSBkZXZpY2UgcmVnaXN0cmF0aW9uIGltcGxlbWVudGVk
-Cj4gaW4gdGhhdCBjb250cm9sbGVyLiAgSXQgY291bGQgdXNlIHRoZSBjZ3JvdXBfZGV2aWNlX3Jl
-Z2lzdGVyKCkgdGhhdCBpcwo+IHByb3Bvc2VkIGhlcmUuICAgQnV0IHRoaXMgaXMgcGVyaGFwcyBm
-dXR1cmUgd29yaywgc28gY2FuIGRpc2N1c3Mgc2VwYXJhdGVseS4KCkknbGwgdHJ5IHRvIHRha2Ug
-YSBsb29rIGxhdGVyIHRoaXMgd2Vlay4KCj4KPgo+ID4gRG9lc24ndCBSRE1BIGFscmVhZHkgaGFz
-IGEgc2VwYXJhdGUgY2dyb3VwPyAgV2h5IG5vdCBpbXBsZW1lbnQgaXQgdGhlcmU/Cj4gPgo+Cj4g
-SGkgS2VubnksIEkgY2FuJ3QgYW5zd2VyIGZvciBMZW9uLCBidXQgSSdtIGhvcGVmdWwgaGUgYWdy
-ZWVzIHdpdGggcmF0aW9uYWxlCj4gSSBnYXZlIGluIHRoZSBjb3ZlciBsZXR0ZXIuICBOYW1lbHks
-IHRvIGltcGxlbWVudCBpbiByZG1hIGNvbnRyb2xsZXIsIHdvdWxkCj4gbWVhbiBkdXBsaWNhdGlu
-ZyBleGlzdGluZyBtZW1jZyBjb250cm9scyB0aGVyZS4KCkV4YWN0bHksIEkgZGlkbid0IGZlZWwg
-Y29tZm9ydGFibGUgdG8gYWRkIG5vdGlvbiBvZiAiZGV2aWNlIG1lbW9yeSIKdG8gUkRNQSBjZ3Jv
-dXAgYW5kIHBvc3Rwb25lZCB0aGF0IGRlY2lzaW9uIHRvIGxhdGVyIHBvaW50IG9mIHRpbWUuClJE
-TUEgb3BlcmF0ZXMgd2l0aCB2ZXJicyBvYmplY3RzIGFuZCBhbGwgb3VyIHVzZXIgc3BhY2UgQVBJ
-IGlzIGJhc2VkIGFyb3VuZAp0aGF0IGNvbmNlcHQuIEF0IHRoZSBlbmQsIHN5c3RlbSBhZG1pbmlz
-dHJhdG9yIHdpbGwgaGF2ZSBoYXJkIHRpbWUgdG8KdW5kZXJzdGFuZCB0aGUgZGlmZmVyZW5jZXMg
-YmV0d2VlbiBtZW1jZyBhbmQgUkRNQSBtZW1vcnkuCgo+Cj4gSXMgQU1EIGludGVyZXN0ZWQgaW4g
-Y29sbGFib3JhdGluZyB0byBoZWxwIHNoYXBlIHRoaXMgZnJhbWV3b3JrPwo+IEl0IGlzIGludGVu
-ZGVkIHRvIGJlIGRldmljZS1uZXV0cmFsLCBzbyBjb3VsZCBiZSBsZXZlcmFnZWQgYnkgdmFyaW91
-cwo+IHR5cGVzIG9mIGRldmljZXMuCj4gSWYgeW91IGhhdmUgYW4gYWx0ZXJuYXRpdmUgc29sdXRp
-b24gd2VsbCB1bmRlcndheSwgdGhlbiBtYXliZQo+IHdlIGNhbiB3b3JrIHRvZ2V0aGVyIHRvIG1l
-cmdlIG91ciBlZmZvcnRzIGludG8gb25lLgo+IEluIHRoZSBlbmQsIHRoZSBEUk0gY29tbXVuaXR5
-IGlzIGJlc3Qgc2VydmVkIHdpdGggY29tbW9uIHNvbHV0aW9uLgo+Cj4KPiA+Cj4gPj4+IGFuZCB3
-aXRoIGZ1dHVyZSB3b3JrLCB3ZSBjb3VsZCBleHRlbmQgdG86Cj4gPj4+ICogIHRyYWNrIGFuZCBj
-b250cm9sIHNoYXJlIG9mIEdQVSB0aW1lIChyZXVzZSBvZiBjcHUvY3B1YWNjdCkKPiA+Pj4gKiAg
-YXBwbHkgbWFzayBvZiBhbGxvd2VkIGV4ZWN1dGlvbiBlbmdpbmVzIChyZXVzZSBvZiBjcHVzZXRz
-KQo+ID4+Pgo+ID4+PiBJbnN0ZWFkIG9mIGludHJvZHVjaW5nIGEgbmV3IGNncm91cCBzdWJzeXN0
-ZW0gZm9yIEdQVSBkZXZpY2VzLCBhIG5ldwo+ID4+PiBmcmFtZXdvcmsgaXMgcHJvcG9zZWQgdG8g
-YWxsb3cgZGV2aWNlcyB0byByZWdpc3RlciB3aXRoIGV4aXN0aW5nIGNncm91cAo+ID4+PiBjb250
-cm9sbGVycywgd2hpY2ggY3JlYXRlcyBwZXItZGV2aWNlIGNncm91cF9zdWJzeXNfc3RhdGUgd2l0
-aGluIHRoZQo+ID4+PiBjZ3JvdXAuICBUaGlzIGdpdmVzIGRldmljZSBkcml2ZXJzIHRoZWlyIG93
-biBwcml2YXRlIGNncm91cCBjb250cm9scwo+ID4+PiAoc3VjaCBhcyBtZW1vcnkgbGltaXRzIG9y
-IG90aGVyIHBhcmFtZXRlcnMpIHRvIGJlIGFwcGxpZWQgdG8gZGV2aWNlCj4gPj4+IHJlc291cmNl
-cyBpbnN0ZWFkIG9mIGhvc3Qgc3lzdGVtIHJlc291cmNlcy4KPiA+Pj4gRGV2aWNlIGRyaXZlcnMg
-KEdQVSBvciBvdGhlcikgYXJlIHRoZW4gYWJsZSB0byByZXVzZSB0aGUgZXhpc3RpbmcgY2dyb3Vw
-Cj4gPj4+IGNvbnRyb2xzLCBpbnN0ZWFkIG9mIGludmVudGluZyBzaW1pbGFyIG9uZXMuCj4gPj4+
-Cj4gPj4+IFBlci1kZXZpY2UgY29udHJvbHMgd291bGQgYmUgZXhwb3NlZCBpbiBjZ3JvdXAgZmls
-ZXN5c3RlbSBhczoKPiA+Pj4gICAgIG1vdW50LzxjZ3JvdXBfbmFtZT4vPHN1YnN5c19uYW1lPi5k
-ZXZpY2VzLzxkZXZfbmFtZT4vPHN1YnN5c19maWxlcz4KPiA+Pj4gc3VjaCBhcyAoZm9yIGV4YW1w
-bGUpOgo+ID4+PiAgICAgbW91bnQvPGNncm91cF9uYW1lPi9tZW1vcnkuZGV2aWNlcy88ZGV2X25h
-bWU+L21lbW9yeS5tYXgKPiA+Pj4gICAgIG1vdW50LzxjZ3JvdXBfbmFtZT4vbWVtb3J5LmRldmlj
-ZXMvPGRldl9uYW1lPi9tZW1vcnkuY3VycmVudAo+ID4+PiAgICAgbW91bnQvPGNncm91cF9uYW1l
-Pi9jcHUuZGV2aWNlcy88ZGV2X25hbWU+L2NwdS5zdGF0Cj4gPj4+ICAgICBtb3VudC88Y2dyb3Vw
-X25hbWU+L2NwdS5kZXZpY2VzLzxkZXZfbmFtZT4vY3B1LndlaWdodAo+ID4+Pgo+ID4+PiBUaGUg
-ZHJtL2k5MTUgcGF0Y2ggaW4gdGhpcyBzZXJpZXMgaXMgYmFzZWQgb24gdG9wIG9mIG90aGVyIFJG
-QyB3b3JrIFsxXQo+ID4+PiBmb3IgaTkxNSBkZXZpY2UgbWVtb3J5IHN1cHBvcnQuCj4gPj4+Cj4g
-Pj4+IEFNRCBbMl0gYW5kIEludGVsIFszXSBoYXZlIHByb3Bvc2VkIHJlbGF0ZWQgd29yayBpbiB0
-aGlzIGFyZWEgd2l0aGluIHRoZQo+ID4+PiBsYXN0IGZldyB5ZWFycywgbGlzdGVkIGJlbG93IGFz
-IHJlZmVyZW5jZS4gIFRoaXMgbmV3IFJGQyByZXVzZXMgZXhpc3RpbmcKPiA+Pj4gY2dyb3VwIGNv
-bnRyb2xsZXJzIGFuZCB0YWtlcyBhIGRpZmZlcmVudCBhcHByb2FjaCB0aGFuIHByaW9yIHdvcmsu
-Cj4gPj4+Cj4gPj4+IEZpbmFsbHksIHNvbWUgcG90ZW50aWFsIGRpc2N1c3Npb24gcG9pbnRzIGZv
-ciB0aGlzIHNlcmllczoKPiA+Pj4gKiBtZXJnZSBwcm9wb3NlZCA8c3Vic3lzX25hbWU+LmRldmlj
-ZXMgaW50byBhIHNpbmdsZSBkZXZpY2VzIGRpcmVjdG9yeT8KPiA+Pj4gKiBhbGxvdyBkZXZpY2Vz
-IHRvIGhhdmUgbXVsdGlwbGUgcmVnaXN0cmF0aW9ucyBmb3Igc3Vic2V0cyBvZiByZXNvdXJjZXM/
-Cj4gPj4+ICogZG9jdW1lbnQgYSAnY29tbW9uIGNoYXJnaW5nIHBvbGljeScgZm9yIGRldmljZSBk
-cml2ZXJzIHRvIGZvbGxvdz8KPiA+Pj4KPiA+Pj4gWzFdIGh0dHBzOi8vcGF0Y2h3b3JrLmZyZWVk
-ZXNrdG9wLm9yZy9zZXJpZXMvNTY2ODMvCj4gPj4+IFsyXSBodHRwczovL2xpc3RzLmZyZWVkZXNr
-dG9wLm9yZy9hcmNoaXZlcy9kcmktZGV2ZWwvMjAxOC1Ob3ZlbWJlci8xOTcxMDYuaHRtbAo+ID4+
-PiBbM10gaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvYXJjaGl2ZXMvaW50ZWwtZ2Z4LzIw
-MTgtSmFudWFyeS8xNTMxNTYuaHRtbAo+ID4+Pgo+ID4+Pgo+ID4+PiBCcmlhbiBXZWx0eSAoNSk6
-Cj4gPj4+ICAgY2dyb3VwOiBBZGQgY2dyb3VwX3N1YnN5cyBwZXItZGV2aWNlIHJlZ2lzdHJhdGlv
-biBmcmFtZXdvcmsKPiA+Pj4gICBjZ3JvdXA6IENoYW5nZSBrZXJuZnNfbm9kZSBmb3IgZGlyZWN0
-b3JpZXMgdG8gc3RvcmUKPiA+Pj4gICAgIGNncm91cF9zdWJzeXNfc3RhdGUKPiA+Pj4gICBtZW1j
-ZzogQWRkIHBlci1kZXZpY2Ugc3VwcG9ydCB0byBtZW1vcnkgY2dyb3VwIHN1YnN5c3RlbQo+ID4+
-PiAgIGRybTogQWRkIG1lbW9yeSBjZ3JvdXAgcmVnaXN0cmF0aW9uIGFuZCBEUklWRVJfQ0dST1VQ
-UyBmZWF0dXJlIGJpdAo+ID4+PiAgIGRybS9pOTE1OiBVc2UgbWVtb3J5IGNncm91cCBmb3IgZW5m
-b3JjaW5nIGRldmljZSBtZW1vcnkgbGltaXQKPiA+Pj4KPiA+Pj4gIGRyaXZlcnMvZ3B1L2RybS9k
-cm1fZHJ2LmMgICAgICAgICAgICAgICAgICB8ICAxMiArCj4gPj4+ICBkcml2ZXJzL2dwdS9kcm0v
-ZHJtX2dlbS5jICAgICAgICAgICAgICAgICAgfCAgIDcgKwo+ID4+PiAgZHJpdmVycy9ncHUvZHJt
-L2k5MTUvaTkxNV9kcnYuYyAgICAgICAgICAgIHwgICAyICstCj4gPj4+ICBkcml2ZXJzL2dwdS9k
-cm0vaTkxNS9pbnRlbF9tZW1vcnlfcmVnaW9uLmMgfCAgMjQgKy0KPiA+Pj4gIGluY2x1ZGUvZHJt
-L2RybV9kZXZpY2UuaCAgICAgICAgICAgICAgICAgICB8ICAgMyArCj4gPj4+ICBpbmNsdWRlL2Ry
-bS9kcm1fZHJ2LmggICAgICAgICAgICAgICAgICAgICAgfCAgIDggKwo+ID4+PiAgaW5jbHVkZS9k
-cm0vZHJtX2dlbS5oICAgICAgICAgICAgICAgICAgICAgIHwgIDExICsKPiA+Pj4gIGluY2x1ZGUv
-bGludXgvY2dyb3VwLWRlZnMuaCAgICAgICAgICAgICAgICB8ICAyOCArKwo+ID4+PiAgaW5jbHVk
-ZS9saW51eC9jZ3JvdXAuaCAgICAgICAgICAgICAgICAgICAgIHwgICAzICsKPiA+Pj4gIGluY2x1
-ZGUvbGludXgvbWVtY29udHJvbC5oICAgICAgICAgICAgICAgICB8ICAxMCArCj4gPj4+ICBrZXJu
-ZWwvY2dyb3VwL2Nncm91cC12MS5jICAgICAgICAgICAgICAgICAgfCAgMTAgKy0KPiA+Pj4gIGtl
-cm5lbC9jZ3JvdXAvY2dyb3VwLmMgICAgICAgICAgICAgICAgICAgICB8IDMxMCArKysrKysrKysr
-KysrKysrKystLS0KPiA+Pj4gIG1tL21lbWNvbnRyb2wuYyAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICB8IDE4MyArKysrKysrKysrKy0KPiA+Pj4gIDEzIGZpbGVzIGNoYW5nZWQsIDU1MiBpbnNl
-cnRpb25zKCspLCA1OSBkZWxldGlvbnMoLSkKPiA+Pj4KPiA+Pj4gLS0KPiA+Pj4gMi4yMS4wCj4g
-Pj4+Cj4gPj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-PiA+PiBkcmktZGV2ZWwgbWFpbGluZyBsaXN0Cj4gPj4gZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNr
-dG9wLm9yZwo+ID4+IGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGlu
-Zm8vZHJpLWRldmVsCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fCkludGVsLWdmeCBtYWlsaW5nIGxpc3QKSW50ZWwtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9y
-ZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2ludGVsLWdm
-eA==
+
+
+On 2019/4/30 下午6:32, Sasha Levin wrote:
+> Hi,
+> 
+> [This is an automated email]
+> 
+> This commit has been processed because it contains a -stable tag.
+> The stable tag indicates that it's relevant for the following trees: all.
+> 
+> The bot has tested the following trees: v5.0.10, v4.19.37, v4.14.114, v4.9.171, v4.4.179, v3.18.139.
+> 
+> v5.0.10: Build OK!
+> v4.19.37: Build OK!
+> v4.14.114: Build OK!
+> v4.9.171: Failed to apply! Possible dependencies:
+>     113c60970cf4 ("x86/intel_rdt: Add Haswell feature discovery")
+>     2264d9c74dda ("x86/intel_rdt: Build structures for each resource based on cache topology")
+>     3ee7e8697d58 ("bdi: Fix another oops in wb_workfn()")
+>     4f341a5e4844 ("x86/intel_rdt: Add scheduler hook")
+>     5318ce7d4686 ("bdi: Shutdown writeback on all cgwbs in cgwb_bdi_destroy()")
+>     5b825c3af1d8 ("sched/headers: Prepare to remove <linux/cred.h> inclusion from <linux/sched.h>")
+>     5dd43ce2f69d ("sched/wait: Split out the wait_bit*() APIs from <linux/wait.h> into <linux/wait_bit.h>")
+>     5ff193fbde20 ("x86/intel_rdt: Add basic resctrl filesystem support")
+>     60cf5e101fd4 ("x86/intel_rdt: Add mkdir to resctrl file system")
+>     60ec2440c63d ("x86/intel_rdt: Add schemata file")
+>     6b2bb7265f0b ("sched/wait: Introduce wait_var_event()")
+>     78e99b4a2b9a ("x86/intel_rdt: Add CONFIG, Makefile, and basic initialization")
+>     7fc5854f8c6e ("writeback: synchronize sync(2) against cgroup writeback membership switches")
+>     8236b0ae31c8 ("bdi: wake up concurrent wb_shutdown() callers.")
+>     c1c7c3f9d6bb ("x86/intel_rdt: Pick up L3/L2 RDT parameters from CPUID")
+> 
+> v4.4.179: Failed to apply! Possible dependencies:
+>     0007bccc3cfd ("x86: Replace RDRAND forced-reseed with simple sanity check")
+>     113c60970cf4 ("x86/intel_rdt: Add Haswell feature discovery")
+>     1b74dde7c47c ("x86/cpu: Convert printk(KERN_<LEVEL> ...) to pr_<level>(...)")
+>     27f6d22b037b ("perf/x86: Move perf_event.h to its new home")
+>     39b0332a2158 ("perf/x86: Move perf_event_amd.c ........... => x86/events/amd/core.c")
+>     3ee7e8697d58 ("bdi: Fix another oops in wb_workfn()")
+>     4f341a5e4844 ("x86/intel_rdt: Add scheduler hook")
+>     5318ce7d4686 ("bdi: Shutdown writeback on all cgwbs in cgwb_bdi_destroy()")
+>     5b825c3af1d8 ("sched/headers: Prepare to remove <linux/cred.h> inclusion from <linux/sched.h>")
+>     5dd43ce2f69d ("sched/wait: Split out the wait_bit*() APIs from <linux/wait.h> into <linux/wait_bit.h>")
+>     6b2bb7265f0b ("sched/wait: Introduce wait_var_event()")
+>     724697648eec ("perf/x86: Use INST_RETIRED.PREC_DIST for cycles: ppp")
+>     7fc5854f8c6e ("writeback: synchronize sync(2) against cgroup writeback membership switches")
+>     8236b0ae31c8 ("bdi: wake up concurrent wb_shutdown() callers.")
+>     fa9cbf320e99 ("perf/x86: Move perf_event.c ............... => x86/events/core.c")
+> 
+> v3.18.139: Failed to apply! Possible dependencies:
+>     0ae45f63d4ef ("vfs: add support for a lazytime mount option")
+>     4452226ea276 ("writeback: move backing_dev_info->state into bdi_writeback")
+>     52ebea749aae ("writeback: make backing_dev_info host cgroup-specific bdi_writebacks")
+>     66114cad64bf ("writeback: separate out include/linux/backing-dev-defs.h")
+>     682aa8e1a6a1 ("writeback: implement unlocked_inode_to_wb transaction and use it for stat updates")
+>     87e1d789bf55 ("writeback: implement [locked_]inode_to_wb_and_lock_list()")
+>     a3816ab0e8fe ("fs: Convert show_fdinfo functions to void")
+>     b16b1deb553a ("writeback: make writeback_control track the inode being written back")
+>     b4caecd48005 ("fs: introduce f_op->mmap_capabilities for nommu mmap support")
+>     bafc0dba1e20 ("buffer, writeback: make __block_write_full_page() honor cgroup writeback")
+> 
+> 
+> How should we proceed with this patch?
+> 
+> --
+
+I am sorry that I forgot to mention that the patch should be applied to stable
+since v4.4.
+
+v4.4.179 and v4.9.171 depend on the commit 7fc5854f8c6e ("writeback: synchronize sync(2) against cgroup writeback membership switches"). 
+On these two versions we can just inc isw_nr_in_flight before return.
+
+The patch is pasted below.
+
+--- linux-4.4.179.orig/fs/fs-writeback.c.orig	2019-05-05 19:56:29.993961267 +0800
++++ linux-4.4.179/fs/fs-writeback.c	2019-05-05 19:39:55.880336751 +0800
+@@ -502,8 +502,6 @@ static void inode_switch_wbs(struct inod
+ 	ihold(inode);
+ 	isw->inode = inode;
+ 
+-	atomic_inc(&isw_nr_in_flight);
+-
+ 	/*
+ 	 * In addition to synchronizing among switchers, I_WB_SWITCH tells
+ 	 * the RCU protected stat update paths to grab the mapping's
+@@ -511,6 +509,9 @@ static void inode_switch_wbs(struct inod
+ 	 * Let's continue after I_WB_SWITCH is guaranteed to be visible.
+ 	 */
+ 	call_rcu(&isw->rcu_head, inode_switch_wbs_rcu_fn);
++
++	atomic_inc(&isw_nr_in_flight);
++
+ 	return;
+ 
+ out_free:
+@@ -880,7 +881,11 @@ restart:
+ void cgroup_writeback_umount(void)
+ {
+ 	if (atomic_read(&isw_nr_in_flight)) {
+-		synchronize_rcu();
++		/*
++		 * Use rcu_barrier() to wait for all pending callbacks to
++		 * ensure that all in-flight wb switches are in the workqueue.
++		 */
++		rcu_barrier();
+ 		flush_workqueue(isw_wq);
+ 	}
+ }
+
+
+Thanks,
+Jiufei
+
+
+> Thanks,
+> Sasha
+> 
