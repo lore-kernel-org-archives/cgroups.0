@@ -1,40 +1,42 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/2] cgroup v2 freezer follow-up patches
-Date: Mon, 6 May 2019 08:40:23 -0700
-Message-ID: <20190506154023.GP374014@devbig004.ftw2.facebook.com>
-References: <20190426175945.2559865-1-guro@fb.com>
+Subject: Re: [PATCH v2 57/79] docs: accounting: convert to ReST
+Date: Mon, 6 May 2019 08:46:36 -0700
+Message-ID: <20190506154636.GR374014@devbig004.ftw2.facebook.com>
+References: <cover.1555938375.git.mchehab+samsung@kernel.org>
+ <13b52516ab787b9a9637e6b9adfec88ec1931b99.1555938376.git.mchehab+samsung@kernel.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=Z/JZRQAUubCvOOmwPXa9vzQ22nhQDYk8gbHs+6tTepg=;
-        b=u7pVVXVWWeyXope1cvFsPdbqh1azIgGjmAJyXSzAwwrh4VZcnx4EH5gFy3+S4dIgPw
-         rvuk1XWasLvn2RAB1cqGA4n4Pn42rLDS/nTz7oB0VY4R0UzuEifmx6bcHid1eRcLOZcc
-         gxTjnES/yBuyVtEdt+fZ2h3ZA42RXU3pCgPCn8YvfKht6KVCa0Cn1DnH/pqjdE6l/x/R
-         80Vq5+BTRc/X/rQl3vKMlTF+e1uyTDJYSg4XRRtCP7YpD3rtOYD9xrVu8MLTsi5RNUM8
-         Lfr+nVaGmea1gc9njhmP1lbBoeWBeEiKyRoq3N19cQb6leF8p5l3FjTK93TkggBgbceq
-         Brdg==
+        bh=lXQvw+zp+N33bb9guBw4WQqWlonXTLii4rMWOOFeOIg=;
+        b=dU2NZXWQ7YnYb9ycqqTB+h49uzgmVKDADAwnHw9iWFp9wip3Tc0RdRVxac66mNuTgk
+         4bim278kH1u2eNKoD84smILsRZONvqoTibhBF40u9Qw2YnorGSrAeRc7fcbbv9zQKR1q
+         pnExSVmOitOgU3ppFENP6TS4v4e2pJ/ptx073lkTQIUcDrgRLkipVT4ho50UrV1cQqzh
+         J82vr7UysGFU4nYFWfgR9i7QGIHYc7BzHhiDLyn+4oFiCFbTdCoFIMnlNIrJvjvPgR/0
+         423pRGLqM6++O18qV1iWgBk6nekzRNwMKL/oGk5kOaB0h64Wq5pg8o2uhlOzZX9kLtZE
+         dqSA==
 Content-Disposition: inline
-In-Reply-To: <20190426175945.2559865-1-guro@fb.com>
+In-Reply-To: <13b52516ab787b9a9637e6b9adfec88ec1931b99.1555938376.git.mchehab+samsung@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Oleg Nesterov <oleg@redhat.com>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc: Linux Doc Mailing List <linux-doc@vger.kernel.org>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Balbir Singh <bsingharora@gmail.com>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
 
-On Fri, Apr 26, 2019 at 10:59:43AM -0700, Roman Gushchin wrote:
-> Hi, Tejun!
+On Mon, Apr 22, 2019 at 10:27:46AM -0300, Mauro Carvalho Chehab wrote:
+> Rename the accounting documentation files to ReST, add an
+> index for them and adjust in order to produce a nice html
+> output via the Sphinx build system.
 > 
-> Please, pull these two follow-up patches for the cgroup v2 freezer.
+> At its new index.rst, let's add a :orphan: while this is not linked to
+> the main index.rst file, in order to avoid build warnings.
 > 
-> These are a fix for a spurious state transition, which could happen
-> due to a race condition, and a cleanup of some dead code. Both patches
-> were suggested by Oleg Nesterov.
+> Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
 
-Applied to cgroup/for-5.2.
+Acked-by: Tejun Heo <tj@kernel.org>
 
 Thanks.
 
