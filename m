@@ -1,46 +1,100 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH 0/5] cgroup support for GPU devices
-Date: Thu, 9 May 2019 09:52:32 -0700
-Message-ID: <20190509165232.GW374014@devbig004.ftw2.facebook.com>
-References: <20190501140438.9506-1-brian.welty@intel.com>
- <20190506152643.GL374014@devbig004.ftw2.facebook.com>
- <cf58b047-d678-ad89-c9b6-96fc6b01c1d7@intel.com>
+Subject: [GIT PULL] cgroup changes for v5.2-rc1
+Date: Thu, 9 May 2019 10:36:42 -0700
+Message-ID: <20190509173642.GA374014@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=iom6SqE2pGkNK9Z5BBYeoQQuW8YcGD2ELbPKlGymboM=;
+        b=cs0FXI2lpYwghUSDOf097f2v6Rt4diQmigrD+c/Xo1713L8qT08oedAGfjEbWsJUYJ
+         Y4uKJTdVdNlH5L2MyZL/0C5q/QLyE+ubVYeRFqZX8QwccR9HwEcpxshclYF2cqqOMnBL
+         ArKHoK9IiybB9p/TBSc6izdky9KEgTCNrSG3YfvQ5t+M1AsJdSrAr23HIhrXJJ8a1+OZ
+         6DiXvnfAxygTWRdUtaronQth1170tRMp467SFEcmAwqwIOvJSO9k64YUc5qLMAbbjhDT
+         KLFHGOIbXHgb3WyyF+MGnwAIvJejG1ZOLF7KZ4/O+H7WoXMreTJzTS7OfgJbDsYUqCGA
+         9WDQ==
 Content-Disposition: inline
-In-Reply-To: <cf58b047-d678-ad89-c9b6-96fc6b01c1d7@intel.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Welty, Brian" <brian.welty@intel.com>
-Cc: Leon Romanovsky <leon@kernel.org>, David Airlie <airlied@linux.ie>, kenny.ho@amd.com, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, Li Zefan <lizefan@huawei.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, RDMA mailing list <linux-rdma@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>, Oleg Nesterov <oleg@redhat.com>
 
-SGVsbG8sCgpPbiBUdWUsIE1heSAwNywgMjAxOSBhdCAxMjo1MDo1MFBNIC0wNzAwLCBXZWx0eSwg
-QnJpYW4gd3JvdGU6Cj4gVGhlcmUgbWlnaHQgc3RpbGwgYmUgbWVyaXQgaW4gaGF2aW5nIGEgJ2Rl
-dmljZSBtZW0nIGNncm91cCBjb250cm9sbGVyLgo+IFRoZSByZXNvdXJjZSBtb2RlbCBhdCBsZWFz
-dCBpcyB0aGVuIG5vIGxvbmdlciBtaXhlZCB1cCB3aXRoIGhvc3QgbWVtb3J5Lgo+IFJETUEgY29t
-bXVuaXR5IHNlZW1lZCB0byBoYXZlIHNvbWUgaW50ZXJlc3QgaW4gYSBjb21tb24gY29udHJvbGxl
-ciBhdAo+IGxlYXN0IGZvciBkZXZpY2UgbWVtb3J5IGFzcGVjdHMuCj4gVGhvdWdodHMgb24gdGhp
-cz8gICBJIGJlbGlldmUgY291bGQgc3RpbGwgcmV1c2UgdGhlICdzdHJ1Y3QgbWVtX2Nncm91cCcg
-ZGF0YQo+IHN0cnVjdHVyZS4gIFRoZXJlIHNob3VsZCBiZSBzb21lIG9wcG9ydHVuaXR5IHRvIHJl
-dXNlIGNoYXJnaW5nIEFQSXMgYW5kCj4gaGF2ZSBzb21lIG5pY2UgaW50ZWdyYXRpb24gd2l0aCBI
-TU0gZm9yIGNoYXJnaW5nIHRvIGRldmljZSBtZW1vcnksIGRlcGVuZGluZwo+IG9uIGJhY2tpbmcg
-c3RvcmUuCgpMaWJyYXJ5LWlzaCBzaGFyaW5nIGlzIGZpbmUgYnV0IGluIHRlcm1zIG9mIGludGVy
-ZmFjZSwgSSB0aGluayBpdCdkIGJlCmJldHRlciB0byBrZWVwIHRoZW0gc2VwYXJhdGUgYXQgbGVh
-c3QgZm9yIG5vdy4gIERvd24gdGhlIGxpbmUgbWF5YmUKdGhlc2UgcmVzb3VyY2VzIHdpbGwgaW50
-ZXJhY3Qgd2l0aCBlYWNoIG90aGVyIGluIGEgbW9yZSBpbnRlZ3JhdGVkIHdheQpidXQgSSBkb24n
-dCB0aGluayBpdCdzIGEgZ29vZCBpZGVhIHRvIHRyeSB0byBkZXNpZ24gYW5kIGltcGxlbWVudApy
-ZXNvdXJjZSBtb2RlbHMgZm9yIHNvbWV0aGluZyBsaWtlIHRoYXQgcHJlZW1wdGl2ZWx5LgoKVGhh
-bmtzLgoKLS0gCnRlanVuCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9w
-Lm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1k
-ZXZlbA==
+Hello, Linus.
+
+This pull request includes Roman's cgroup2 freezer implementation.
+It's a separate machanism from cgroup1 freezer.  Instead of blocking
+user tasks in arbitrary uninterruptible sleeps, the new implementation
+extends jobctl stop - frozen tasks are trapped in jobctl stop until
+thawed and can be killed and ptraced.  Lots of thanks to Oleg for
+sheperding the effort.
+
+Other than that, there are a few trivial changes.
+
+Thanks.
+
+The following changes since commit 145f47c7381d43c789cbad55d4dbfd28fc6c46a4:
+
+  Merge tag '5.1-rc3-smb3-fixes' of git://git.samba.org/sfrench/cifs-2.6 (2019-04-03 20:21:25 -1000)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.2
+
+for you to fetch changes up to f2b31bb598248c04721cb8485e6091a9feb045ac:
+
+  cgroup: never call do_group_exit() with task->frozen bit set (2019-05-09 07:56:47 -0700)
+
+----------------------------------------------------------------
+Fuqian Huang (1):
+      kernel: cgroup: fix misuse of %x
+
+Roman Gushchin (12):
+      cgroup: rename freezer.c into legacy_freezer.c
+      cgroup: implement __cgroup_task_count() helper
+      cgroup: protect cgroup->nr_(dying_)descendants by css_set_lock
+      cgroup: cgroup v2 freezer
+      kselftests: cgroup: don't fail on cg_kill_all() error in cg_destroy()
+      kselftests: cgroup: add freezer controller self-tests
+      cgroup: make TRACE_CGROUP_PATH irq-safe
+      cgroup: add tracing points for cgroup v2 freezer
+      cgroup: document cgroup v2 freezer interface
+      cgroup: prevent spurious transition into non-frozen state
+      cgroup: get rid of cgroup_freezer_frozen_exit()
+      cgroup: never call do_group_exit() with task->frozen bit set
+
+Shakeel Butt (1):
+      cgroup: remove extra cgroup_migrate_finish() call
+
+Shaokun Zhang (1):
+      cgroup: Remove unused cgrp variable
+
+ Documentation/admin-guide/cgroup-v2.rst       |  27 +
+ include/linux/cgroup-defs.h                   |  33 +
+ include/linux/cgroup.h                        |  43 ++
+ include/linux/sched.h                         |   2 +
+ include/linux/sched/jobctl.h                  |   2 +
+ include/trace/events/cgroup.h                 |  55 ++
+ kernel/cgroup/Makefile                        |   4 +-
+ kernel/cgroup/cgroup-internal.h               |   8 +-
+ kernel/cgroup/cgroup-v1.c                     |  16 -
+ kernel/cgroup/cgroup.c                        | 152 ++++-
+ kernel/cgroup/debug.c                         |   8 +-
+ kernel/cgroup/freezer.c                       | 639 +++++++------------
+ kernel/cgroup/legacy_freezer.c                | 481 +++++++++++++++
+ kernel/fork.c                                 |   2 +
+ kernel/signal.c                               |  66 +-
+ tools/testing/selftests/cgroup/.gitignore     |   1 +
+ tools/testing/selftests/cgroup/Makefile       |   2 +
+ tools/testing/selftests/cgroup/cgroup_util.c  |  58 +-
+ tools/testing/selftests/cgroup/cgroup_util.h  |   5 +
+ tools/testing/selftests/cgroup/test_freezer.c | 851 ++++++++++++++++++++++++++
+ 20 files changed, 2012 insertions(+), 443 deletions(-)
+ create mode 100644 kernel/cgroup/legacy_freezer.c
+ create mode 100644 tools/testing/selftests/cgroup/test_freezer.c
+
+-- 
+tejun
