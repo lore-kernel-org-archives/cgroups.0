@@ -1,147 +1,46 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH] memcg: make it work on sparse non-0-node systems
-Date: Thu, 9 May 2019 09:05:59 -0700
-Message-ID: <CALvZod5MseXtY_BTHegdqBphCein20ou=zbvYymBJ9_zTUdWmg@mail.gmail.com>
-References: <359d98e6-044a-7686-8522-bdd2489e9456@suse.cz> <20190429105939.11962-1-jslaby@suse.cz>
- <20190509122526.ck25wscwanooxa3t@esperanza>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC PATCH 0/5] cgroup support for GPU devices
+Date: Thu, 9 May 2019 09:52:32 -0700
+Message-ID: <20190509165232.GW374014@devbig004.ftw2.facebook.com>
+References: <20190501140438.9506-1-brian.welty@intel.com>
+ <20190506152643.GL374014@devbig004.ftw2.facebook.com>
+ <cf58b047-d678-ad89-c9b6-96fc6b01c1d7@intel.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=2bZRaBuaJVzOagPgAxGnwl37KeIxRpAUuki7qHiwS7w=;
-        b=lQJMF1J3Hq9E2jyZLMr011Qppcx+H+511s6SILzdH2F5jrBYvd7nkNxUY1FX0ESHU7
-         EgKbptxzbUfCTPygnZGyReLUb6p9aZ5h7qv0WnVnKliRI4f8Lurl9Ge0Vs/nEGhf/jko
-         JbCaUPv2yMdy3be/pvaZJp7d9vfwtZ5/67SB5faK9ry2CYsF92ymF5Dq6lJLWefmso/h
-         1D1bPpKvuwR5vDBgRn24Uo/XG2Ix49bJ+Kw+A9NggKf4vPZougpgmSRsEstw0q4KVhn6
-         WCWdjAJfCFckonpFRaVdI99ABUANiwAVNrk3EwUJS/3kNJTH/mlTAc2Ln+sA8c/Ma63n
-         5Uig==
-In-Reply-To: <20190509122526.ck25wscwanooxa3t@esperanza>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <cf58b047-d678-ad89-c9b6-96fc6b01c1d7@intel.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Jiri Slaby <jslaby@suse.cz>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Cgroups <cgroups@vger.kernel.org>, Raghavendra K T <raghavendra.kt@linux.vnet.ibm.com>
+To: "Welty, Brian" <brian.welty@intel.com>
+Cc: Leon Romanovsky <leon@kernel.org>, David Airlie <airlied@linux.ie>, kenny.ho@amd.com, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, Li Zefan <lizefan@huawei.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>, RDMA mailing list <linux-rdma@vger.kernel.org>
 
-On Thu, May 9, 2019 at 5:25 AM Vladimir Davydov <vdavydov.dev@gmail.com> wrote:
->
-> On Mon, Apr 29, 2019 at 12:59:39PM +0200, Jiri Slaby wrote:
-> > We have a single node system with node 0 disabled:
-> >   Scanning NUMA topology in Northbridge 24
-> >   Number of physical nodes 2
-> >   Skipping disabled node 0
-> >   Node 1 MemBase 0000000000000000 Limit 00000000fbff0000
-> >   NODE_DATA(1) allocated [mem 0xfbfda000-0xfbfeffff]
-> >
-> > This causes crashes in memcg when system boots:
-> >   BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
-> >   #PF error: [normal kernel read fault]
-> > ...
-> >   RIP: 0010:list_lru_add+0x94/0x170
-> > ...
-> >   Call Trace:
-> >    d_lru_add+0x44/0x50
-> >    dput.part.34+0xfc/0x110
-> >    __fput+0x108/0x230
-> >    task_work_run+0x9f/0xc0
-> >    exit_to_usermode_loop+0xf5/0x100
-> >
-> > It is reproducible as far as 4.12. I did not try older kernels. You have
-> > to have a new enough systemd, e.g. 241 (the reason is unknown -- was not
-> > investigated). Cannot be reproduced with systemd 234.
-> >
-> > The system crashes because the size of lru array is never updated in
-> > memcg_update_all_list_lrus and the reads are past the zero-sized array,
-> > causing dereferences of random memory.
-> >
-> > The root cause are list_lru_memcg_aware checks in the list_lru code.
-> > The test in list_lru_memcg_aware is broken: it assumes node 0 is always
-> > present, but it is not true on some systems as can be seen above.
-> >
-> > So fix this by checking the first online node instead of node 0.
-> >
-> > Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-> > Cc: Johannes Weiner <hannes@cmpxchg.org>
-> > Cc: Michal Hocko <mhocko@kernel.org>
-> > Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> > Cc: <cgroups@vger.kernel.org>
-> > Cc: <linux-mm@kvack.org>
-> > Cc: Raghavendra K T <raghavendra.kt@linux.vnet.ibm.com>
-> > ---
-> >  mm/list_lru.c | 6 +-----
-> >  1 file changed, 1 insertion(+), 5 deletions(-)
-> >
-> > diff --git a/mm/list_lru.c b/mm/list_lru.c
-> > index 0730bf8ff39f..7689910f1a91 100644
-> > --- a/mm/list_lru.c
-> > +++ b/mm/list_lru.c
-> > @@ -37,11 +37,7 @@ static int lru_shrinker_id(struct list_lru *lru)
-> >
-> >  static inline bool list_lru_memcg_aware(struct list_lru *lru)
-> >  {
-> > -     /*
-> > -      * This needs node 0 to be always present, even
-> > -      * in the systems supporting sparse numa ids.
-> > -      */
-> > -     return !!lru->node[0].memcg_lrus;
-> > +     return !!lru->node[first_online_node].memcg_lrus;
-> >  }
-> >
-> >  static inline struct list_lru_one *
->
-> Yep, I didn't expect node 0 could ever be unavailable, my bad.
-> The patch looks fine to me:
->
-> Acked-by: Vladimir Davydov <vdavydov.dev@gmail.com>
->
-> However, I tend to agree with Michal that (ab)using node[0].memcg_lrus
-> to check if a list_lru is memcg aware looks confusing. I guess we could
-> simply add a bool flag to list_lru instead. Something like this, may be:
->
-
-I think the bool flag approach is much better. No assumption on the
-node initialization.
-
-If we go with bool approach then add
-
-Reviewed-by: Shakeel Butt <shakeelb@google.com>
-
-> diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
-> index aa5efd9351eb..d5ceb2839a2d 100644
-> --- a/include/linux/list_lru.h
-> +++ b/include/linux/list_lru.h
-> @@ -54,6 +54,7 @@ struct list_lru {
->  #ifdef CONFIG_MEMCG_KMEM
->         struct list_head        list;
->         int                     shrinker_id;
-> +       bool                    memcg_aware;
->  #endif
->  };
->
-> diff --git a/mm/list_lru.c b/mm/list_lru.c
-> index 0730bf8ff39f..8e605e40a4c6 100644
-> --- a/mm/list_lru.c
-> +++ b/mm/list_lru.c
-> @@ -37,11 +37,7 @@ static int lru_shrinker_id(struct list_lru *lru)
->
->  static inline bool list_lru_memcg_aware(struct list_lru *lru)
->  {
-> -       /*
-> -        * This needs node 0 to be always present, even
-> -        * in the systems supporting sparse numa ids.
-> -        */
-> -       return !!lru->node[0].memcg_lrus;
-> +       return lru->memcg_aware;
->  }
->
->  static inline struct list_lru_one *
-> @@ -451,6 +447,7 @@ static int memcg_init_list_lru(struct list_lru *lru, bool memcg_aware)
->  {
->         int i;
->
-> +       lru->memcg_aware = memcg_aware;
->         if (!memcg_aware)
->                 return 0;
->
+SGVsbG8sCgpPbiBUdWUsIE1heSAwNywgMjAxOSBhdCAxMjo1MDo1MFBNIC0wNzAwLCBXZWx0eSwg
+QnJpYW4gd3JvdGU6Cj4gVGhlcmUgbWlnaHQgc3RpbGwgYmUgbWVyaXQgaW4gaGF2aW5nIGEgJ2Rl
+dmljZSBtZW0nIGNncm91cCBjb250cm9sbGVyLgo+IFRoZSByZXNvdXJjZSBtb2RlbCBhdCBsZWFz
+dCBpcyB0aGVuIG5vIGxvbmdlciBtaXhlZCB1cCB3aXRoIGhvc3QgbWVtb3J5Lgo+IFJETUEgY29t
+bXVuaXR5IHNlZW1lZCB0byBoYXZlIHNvbWUgaW50ZXJlc3QgaW4gYSBjb21tb24gY29udHJvbGxl
+ciBhdAo+IGxlYXN0IGZvciBkZXZpY2UgbWVtb3J5IGFzcGVjdHMuCj4gVGhvdWdodHMgb24gdGhp
+cz8gICBJIGJlbGlldmUgY291bGQgc3RpbGwgcmV1c2UgdGhlICdzdHJ1Y3QgbWVtX2Nncm91cCcg
+ZGF0YQo+IHN0cnVjdHVyZS4gIFRoZXJlIHNob3VsZCBiZSBzb21lIG9wcG9ydHVuaXR5IHRvIHJl
+dXNlIGNoYXJnaW5nIEFQSXMgYW5kCj4gaGF2ZSBzb21lIG5pY2UgaW50ZWdyYXRpb24gd2l0aCBI
+TU0gZm9yIGNoYXJnaW5nIHRvIGRldmljZSBtZW1vcnksIGRlcGVuZGluZwo+IG9uIGJhY2tpbmcg
+c3RvcmUuCgpMaWJyYXJ5LWlzaCBzaGFyaW5nIGlzIGZpbmUgYnV0IGluIHRlcm1zIG9mIGludGVy
+ZmFjZSwgSSB0aGluayBpdCdkIGJlCmJldHRlciB0byBrZWVwIHRoZW0gc2VwYXJhdGUgYXQgbGVh
+c3QgZm9yIG5vdy4gIERvd24gdGhlIGxpbmUgbWF5YmUKdGhlc2UgcmVzb3VyY2VzIHdpbGwgaW50
+ZXJhY3Qgd2l0aCBlYWNoIG90aGVyIGluIGEgbW9yZSBpbnRlZ3JhdGVkIHdheQpidXQgSSBkb24n
+dCB0aGluayBpdCdzIGEgZ29vZCBpZGVhIHRvIHRyeSB0byBkZXNpZ24gYW5kIGltcGxlbWVudApy
+ZXNvdXJjZSBtb2RlbHMgZm9yIHNvbWV0aGluZyBsaWtlIHRoYXQgcHJlZW1wdGl2ZWx5LgoKVGhh
+bmtzLgoKLS0gCnRlanVuCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9w
+Lm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1k
+ZXZlbA==
