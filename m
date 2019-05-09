@@ -1,26 +1,32 @@
-From: Jiri Slaby <jslaby@suse.cz>
+From: Vladimir Davydov <vdavydov.dev@gmail.com>
 Subject: Re: [PATCH] memcg: make it work on sparse non-0-node systems
-Date: Thu, 9 May 2019 09:21:41 +0200
-Message-ID: <414a361f-90c5-36ef-e290-c3551595e854@suse.cz>
+Date: Thu, 9 May 2019 15:25:26 +0300
+Message-ID: <20190509122526.ck25wscwanooxa3t@esperanza>
 References: <359d98e6-044a-7686-8522-bdd2489e9456@suse.cz>
  <20190429105939.11962-1-jslaby@suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=bgwFcpr4h0CqLDwaKDRvVqsaxrlGDdYtmYdrXixSeUQ=;
+        b=fXxBmE7ze/Z+gLUgPusLSOjeC8DPRni8xSXs72THlqUgvZ+YkB7C2X2joI2yabhZE3
+         8p3jL+zSxjqkE6WDx9RdpWMHV1BE+w1kk8V/mtEhJpgbCLjSPVymx2kjkrzPGSAIjr7D
+         w45LanlpZrGomO0jnZvIOzl4VSSIY4E3z+gyzmExHr1o6buuZO0GHkOYXoWSCeqrQLSb
+         FlCkYEZRTrKaSU02Al80SESzb5ftUvtSa4dEV1Il4KRbvvZUIkjl7K++UhJMBcIliYoC
+         xFLukUi+LA2L9H8oQGAQXR71a6J/JTXgKcmL1WnzuE5ndqFELwKSjnp7ngbqhxZBf77S
+         RirQ==
+Content-Disposition: inline
 In-Reply-To: <20190429105939.11962-1-jslaby@suse.cz>
-Content-Language: en-GB
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, Raghavendra K T <raghavendra.kt@linux.vnet.ibm.com>
+Content-Transfer-Encoding: 7bit
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, Raghavendra K T <raghavendra.kt@linux.vnet.ibm.com>
 
-Vladimir,
-
-as you are perhaps the one most familiar with the code, could you take a
-look on this?
-
-On 29. 04. 19, 12:59, Jiri Slaby wrote:
+On Mon, Apr 29, 2019 at 12:59:39PM +0200, Jiri Slaby wrote:
 > We have a single node system with node 0 disabled:
 >   Scanning NUMA topology in Northbridge 24
 >   Number of physical nodes 2
@@ -83,9 +89,50 @@ On 29. 04. 19, 12:59, Jiri Slaby wrote:
 >  }
 >  
 >  static inline struct list_lru_one *
-> 
 
+Yep, I didn't expect node 0 could ever be unavailable, my bad.
+The patch looks fine to me:
 
--- 
-js
-suse labs
+Acked-by: Vladimir Davydov <vdavydov.dev@gmail.com>
+
+However, I tend to agree with Michal that (ab)using node[0].memcg_lrus
+to check if a list_lru is memcg aware looks confusing. I guess we could
+simply add a bool flag to list_lru instead. Something like this, may be:
+
+diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
+index aa5efd9351eb..d5ceb2839a2d 100644
+--- a/include/linux/list_lru.h
++++ b/include/linux/list_lru.h
+@@ -54,6 +54,7 @@ struct list_lru {
+ #ifdef CONFIG_MEMCG_KMEM
+ 	struct list_head	list;
+ 	int			shrinker_id;
++	bool			memcg_aware;
+ #endif
+ };
+ 
+diff --git a/mm/list_lru.c b/mm/list_lru.c
+index 0730bf8ff39f..8e605e40a4c6 100644
+--- a/mm/list_lru.c
++++ b/mm/list_lru.c
+@@ -37,11 +37,7 @@ static int lru_shrinker_id(struct list_lru *lru)
+ 
+ static inline bool list_lru_memcg_aware(struct list_lru *lru)
+ {
+-	/*
+-	 * This needs node 0 to be always present, even
+-	 * in the systems supporting sparse numa ids.
+-	 */
+-	return !!lru->node[0].memcg_lrus;
++	return lru->memcg_aware;
+ }
+ 
+ static inline struct list_lru_one *
+@@ -451,6 +447,7 @@ static int memcg_init_list_lru(struct list_lru *lru, bool memcg_aware)
+ {
+ 	int i;
+ 
++	lru->memcg_aware = memcg_aware;
+ 	if (!memcg_aware)
+ 		return 0;
+ 
