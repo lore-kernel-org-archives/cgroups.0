@@ -1,100 +1,93 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] cgroup changes for v5.2-rc1
-Date: Thu, 9 May 2019 10:36:42 -0700
-Message-ID: <20190509173642.GA374014@devbig004.ftw2.facebook.com>
+From: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
+Subject: [RFC PATCH v2 1/5] cgroup: Introduce cgroup for drm subsystem
+Date: Thu, 9 May 2019 17:04:06 -0400
+Message-ID: <20190509210410.5471-2-Kenny.Ho@amd.com>
+References: <20181120185814.13362-1-Kenny.Ho@amd.com>
+ <20190509210410.5471-1-Kenny.Ho@amd.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=iom6SqE2pGkNK9Z5BBYeoQQuW8YcGD2ELbPKlGymboM=;
-        b=cs0FXI2lpYwghUSDOf097f2v6Rt4diQmigrD+c/Xo1713L8qT08oedAGfjEbWsJUYJ
-         Y4uKJTdVdNlH5L2MyZL/0C5q/QLyE+ubVYeRFqZX8QwccR9HwEcpxshclYF2cqqOMnBL
-         ArKHoK9IiybB9p/TBSc6izdky9KEgTCNrSG3YfvQ5t+M1AsJdSrAr23HIhrXJJ8a1+OZ
-         6DiXvnfAxygTWRdUtaronQth1170tRMp467SFEcmAwqwIOvJSO9k64YUc5qLMAbbjhDT
-         KLFHGOIbXHgb3WyyF+MGnwAIvJejG1ZOLF7KZ4/O+H7WoXMreTJzTS7OfgJbDsYUqCGA
-         9WDQ==
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+In-Reply-To: <20190509210410.5471-1-Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>, Oleg Nesterov <oleg@redhat.com>
+To: y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Kenny.Ho-5C7GfCeVMHo@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sunnanyong-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, alexander.deucher-5C7GfCeVMHo@public.gmane.org, brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
 
-Hello, Linus.
-
-This pull request includes Roman's cgroup2 freezer implementation.
-It's a separate machanism from cgroup1 freezer.  Instead of blocking
-user tasks in arbitrary uninterruptible sleeps, the new implementation
-extends jobctl stop - frozen tasks are trapped in jobctl stop until
-thawed and can be killed and ptraced.  Lots of thanks to Oleg for
-sheperding the effort.
-
-Other than that, there are a few trivial changes.
-
-Thanks.
-
-The following changes since commit 145f47c7381d43c789cbad55d4dbfd28fc6c46a4:
-
-  Merge tag '5.1-rc3-smb3-fixes' of git://git.samba.org/sfrench/cifs-2.6 (2019-04-03 20:21:25 -1000)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.2
-
-for you to fetch changes up to f2b31bb598248c04721cb8485e6091a9feb045ac:
-
-  cgroup: never call do_group_exit() with task->frozen bit set (2019-05-09 07:56:47 -0700)
-
-----------------------------------------------------------------
-Fuqian Huang (1):
-      kernel: cgroup: fix misuse of %x
-
-Roman Gushchin (12):
-      cgroup: rename freezer.c into legacy_freezer.c
-      cgroup: implement __cgroup_task_count() helper
-      cgroup: protect cgroup->nr_(dying_)descendants by css_set_lock
-      cgroup: cgroup v2 freezer
-      kselftests: cgroup: don't fail on cg_kill_all() error in cg_destroy()
-      kselftests: cgroup: add freezer controller self-tests
-      cgroup: make TRACE_CGROUP_PATH irq-safe
-      cgroup: add tracing points for cgroup v2 freezer
-      cgroup: document cgroup v2 freezer interface
-      cgroup: prevent spurious transition into non-frozen state
-      cgroup: get rid of cgroup_freezer_frozen_exit()
-      cgroup: never call do_group_exit() with task->frozen bit set
-
-Shakeel Butt (1):
-      cgroup: remove extra cgroup_migrate_finish() call
-
-Shaokun Zhang (1):
-      cgroup: Remove unused cgrp variable
-
- Documentation/admin-guide/cgroup-v2.rst       |  27 +
- include/linux/cgroup-defs.h                   |  33 +
- include/linux/cgroup.h                        |  43 ++
- include/linux/sched.h                         |   2 +
- include/linux/sched/jobctl.h                  |   2 +
- include/trace/events/cgroup.h                 |  55 ++
- kernel/cgroup/Makefile                        |   4 +-
- kernel/cgroup/cgroup-internal.h               |   8 +-
- kernel/cgroup/cgroup-v1.c                     |  16 -
- kernel/cgroup/cgroup.c                        | 152 ++++-
- kernel/cgroup/debug.c                         |   8 +-
- kernel/cgroup/freezer.c                       | 639 +++++++------------
- kernel/cgroup/legacy_freezer.c                | 481 +++++++++++++++
- kernel/fork.c                                 |   2 +
- kernel/signal.c                               |  66 +-
- tools/testing/selftests/cgroup/.gitignore     |   1 +
- tools/testing/selftests/cgroup/Makefile       |   2 +
- tools/testing/selftests/cgroup/cgroup_util.c  |  58 +-
- tools/testing/selftests/cgroup/cgroup_util.h  |   5 +
- tools/testing/selftests/cgroup/test_freezer.c | 851 ++++++++++++++++++++++++++
- 20 files changed, 2012 insertions(+), 443 deletions(-)
- create mode 100644 kernel/cgroup/legacy_freezer.c
- create mode 100644 tools/testing/selftests/cgroup/test_freezer.c
-
--- 
-tejun
+Q2hhbmdlLUlkOiBJNjgzMGQzOTkwZjYzZjBjMTNhYmViYTI5YjFkMzMwY2YyODg4MjgzMQpTaWdu
+ZWQtb2ZmLWJ5OiBLZW5ueSBIbyA8S2VubnkuSG9AYW1kLmNvbT4KLS0tCiBpbmNsdWRlL2xpbnV4
+L2Nncm91cF9kcm0uaCAgICB8IDMyICsrKysrKysrKysrKysrKysrKysrKysrKysrCiBpbmNsdWRl
+L2xpbnV4L2Nncm91cF9zdWJzeXMuaCB8ICA0ICsrKysKIGluaXQvS2NvbmZpZyAgICAgICAgICAg
+ICAgICAgIHwgIDUgKysrKysKIGtlcm5lbC9jZ3JvdXAvTWFrZWZpbGUgICAgICAgIHwgIDEgKwog
+a2VybmVsL2Nncm91cC9kcm0uYyAgICAgICAgICAgfCA0MiArKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKwogNSBmaWxlcyBjaGFuZ2VkLCA4NCBpbnNlcnRpb25zKCspCiBjcmVhdGUg
+bW9kZSAxMDA2NDQgaW5jbHVkZS9saW51eC9jZ3JvdXBfZHJtLmgKIGNyZWF0ZSBtb2RlIDEwMDY0
+NCBrZXJuZWwvY2dyb3VwL2RybS5jCgpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9jZ3JvdXBf
+ZHJtLmggYi9pbmNsdWRlL2xpbnV4L2Nncm91cF9kcm0uaApuZXcgZmlsZSBtb2RlIDEwMDY0NApp
+bmRleCAwMDAwMDAwMDAwMDAuLjEyMTAwMWJlMTIzMAotLS0gL2Rldi9udWxsCisrKyBiL2luY2x1
+ZGUvbGludXgvY2dyb3VwX2RybS5oCkBAIC0wLDAgKzEsMzIgQEAKKy8qIFNQRFgtTGljZW5zZS1J
+ZGVudGlmaWVyOiBNSVQKKyAqIENvcHlyaWdodCAyMDE5IEFkdmFuY2VkIE1pY3JvIERldmljZXMs
+IEluYy4KKyAqLworI2lmbmRlZiBfQ0dST1VQX0RSTV9ICisjZGVmaW5lIF9DR1JPVVBfRFJNX0gK
+KworI2lmZGVmIENPTkZJR19DR1JPVVBfRFJNCisKKyNpbmNsdWRlIDxsaW51eC9jZ3JvdXAuaD4K
+Kworc3RydWN0IGRybWNncnAgeworCXN0cnVjdCBjZ3JvdXBfc3Vic3lzX3N0YXRlCWNzczsKK307
+CisKK3N0YXRpYyBpbmxpbmUgc3RydWN0IGRybWNncnAgKmNzc19kcm1jZ3JwKHN0cnVjdCBjZ3Jv
+dXBfc3Vic3lzX3N0YXRlICpjc3MpCit7CisJcmV0dXJuIGNzcyA/IGNvbnRhaW5lcl9vZihjc3Ms
+IHN0cnVjdCBkcm1jZ3JwLCBjc3MpIDogTlVMTDsKK30KKworc3RhdGljIGlubGluZSBzdHJ1Y3Qg
+ZHJtY2dycCAqZ2V0X2RybWNncnAoc3RydWN0IHRhc2tfc3RydWN0ICp0YXNrKQoreworCXJldHVy
+biBjc3NfZHJtY2dycCh0YXNrX2dldF9jc3ModGFzaywgZHJtX2NncnBfaWQpKTsKK30KKworCitz
+dGF0aWMgaW5saW5lIHN0cnVjdCBkcm1jZ3JwICpwYXJlbnRfZHJtY2dycChzdHJ1Y3QgZHJtY2dy
+cCAqY2cpCit7CisJcmV0dXJuIGNzc19kcm1jZ3JwKGNnLT5jc3MucGFyZW50KTsKK30KKworI2Vu
+ZGlmCS8qIENPTkZJR19DR1JPVVBfRFJNICovCisjZW5kaWYJLyogX0NHUk9VUF9EUk1fSCAqLwpk
+aWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9jZ3JvdXBfc3Vic3lzLmggYi9pbmNsdWRlL2xpbnV4
+L2Nncm91cF9zdWJzeXMuaAppbmRleCBhY2I3N2RjZmYzYjQuLmRkZWRhZDgwOWU4YiAxMDA2NDQK
+LS0tIGEvaW5jbHVkZS9saW51eC9jZ3JvdXBfc3Vic3lzLmgKKysrIGIvaW5jbHVkZS9saW51eC9j
+Z3JvdXBfc3Vic3lzLmgKQEAgLTYxLDYgKzYxLDEwIEBAIFNVQlNZUyhwaWRzKQogU1VCU1lTKHJk
+bWEpCiAjZW5kaWYKIAorI2lmIElTX0VOQUJMRUQoQ09ORklHX0NHUk9VUF9EUk0pCitTVUJTWVMo
+ZHJtKQorI2VuZGlmCisKIC8qCiAgKiBUaGUgZm9sbG93aW5nIHN1YnN5c3RlbXMgYXJlIG5vdCBz
+dXBwb3J0ZWQgb24gdGhlIGRlZmF1bHQgaGllcmFyY2h5LgogICovCmRpZmYgLS1naXQgYS9pbml0
+L0tjb25maWcgYi9pbml0L0tjb25maWcKaW5kZXggZDQ3Y2I3N2EyMjBlLi4wYjBmMTEyZWIyM2Ig
+MTAwNjQ0Ci0tLSBhL2luaXQvS2NvbmZpZworKysgYi9pbml0L0tjb25maWcKQEAgLTgzOSw2ICs4
+MzksMTEgQEAgY29uZmlnIENHUk9VUF9SRE1BCiAJICBBdHRhY2hpbmcgcHJvY2Vzc2VzIHdpdGgg
+YWN0aXZlIFJETUEgcmVzb3VyY2VzIHRvIHRoZSBjZ3JvdXAKIAkgIGhpZXJhcmNoeSBpcyBhbGxv
+d2VkIGV2ZW4gaWYgY2FuIGNyb3NzIHRoZSBoaWVyYXJjaHkncyBsaW1pdC4KIAorY29uZmlnIENH
+Uk9VUF9EUk0KKwlib29sICJEUk0gY29udHJvbGxlciAoRVhQRVJJTUVOVEFMKSIKKwloZWxwCisJ
+ICBQcm92aWRlcyBhY2NvdW50aW5nIGFuZCBlbmZvcmNlbWVudCBvZiByZXNvdXJjZXMgaW4gdGhl
+IERSTSBzdWJzeXN0ZW0uCisKIGNvbmZpZyBDR1JPVVBfRlJFRVpFUgogCWJvb2wgIkZyZWV6ZXIg
+Y29udHJvbGxlciIKIAloZWxwCmRpZmYgLS1naXQgYS9rZXJuZWwvY2dyb3VwL01ha2VmaWxlIGIv
+a2VybmVsL2Nncm91cC9NYWtlZmlsZQppbmRleCBiZmNkYWU4OTYxMjIuLjZhZjE0YmQ5MzA1MCAx
+MDA2NDQKLS0tIGEva2VybmVsL2Nncm91cC9NYWtlZmlsZQorKysgYi9rZXJuZWwvY2dyb3VwL01h
+a2VmaWxlCkBAIC00LDUgKzQsNiBAQCBvYmoteSA6PSBjZ3JvdXAubyByc3RhdC5vIG5hbWVzcGFj
+ZS5vIGNncm91cC12MS5vCiBvYmotJChDT05GSUdfQ0dST1VQX0ZSRUVaRVIpICs9IGZyZWV6ZXIu
+bwogb2JqLSQoQ09ORklHX0NHUk9VUF9QSURTKSArPSBwaWRzLm8KIG9iai0kKENPTkZJR19DR1JP
+VVBfUkRNQSkgKz0gcmRtYS5vCitvYmotJChDT05GSUdfQ0dST1VQX0RSTSkgKz0gZHJtLm8KIG9i
+ai0kKENPTkZJR19DUFVTRVRTKSArPSBjcHVzZXQubwogb2JqLSQoQ09ORklHX0NHUk9VUF9ERUJV
+RykgKz0gZGVidWcubwpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9kcm0uYyBiL2tlcm5lbC9j
+Z3JvdXAvZHJtLmMKbmV3IGZpbGUgbW9kZSAxMDA2NDQKaW5kZXggMDAwMDAwMDAwMDAwLi42MjBj
+ODg3ZDZkMjQKLS0tIC9kZXYvbnVsbAorKysgYi9rZXJuZWwvY2dyb3VwL2RybS5jCkBAIC0wLDAg
+KzEsNDIgQEAKKy8vIFNQRFgtTGljZW5zZS1JZGVudGlmaWVyOiBNSVQKKy8vIENvcHlyaWdodCAy
+MDE5IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4KKyNpbmNsdWRlIDxsaW51eC9zbGFiLmg+
+CisjaW5jbHVkZSA8bGludXgvY2dyb3VwLmg+CisjaW5jbHVkZSA8bGludXgvY2dyb3VwX2RybS5o
+PgorCitzdGF0aWMgc3RydWN0IGRybWNncnAgKnJvb3RfZHJtY2dycCBfX3JlYWRfbW9zdGx5Owor
+CitzdGF0aWMgdm9pZCBkcm1jZ3JwX2Nzc19mcmVlKHN0cnVjdCBjZ3JvdXBfc3Vic3lzX3N0YXRl
+ICpjc3MpCit7CisJc3RydWN0IGRybWNncnAgKmRybWNncnAgPSBjc3NfZHJtY2dycChjc3MpOwor
+CisJa2ZyZWUoY3NzX2RybWNncnAoY3NzKSk7Cit9CisKK3N0YXRpYyBzdHJ1Y3QgY2dyb3VwX3N1
+YnN5c19zdGF0ZSAqCitkcm1jZ3JwX2Nzc19hbGxvYyhzdHJ1Y3QgY2dyb3VwX3N1YnN5c19zdGF0
+ZSAqcGFyZW50X2NzcykKK3sKKwlzdHJ1Y3QgZHJtY2dycCAqcGFyZW50ID0gY3NzX2RybWNncnAo
+cGFyZW50X2Nzcyk7CisJc3RydWN0IGRybWNncnAgKmRybWNncnA7CisKKwlkcm1jZ3JwID0ga3ph
+bGxvYyhzaXplb2Yoc3RydWN0IGRybWNncnApLCBHRlBfS0VSTkVMKTsKKwlpZiAoIWRybWNncnAp
+CisJCXJldHVybiBFUlJfUFRSKC1FTk9NRU0pOworCisJaWYgKCFwYXJlbnQpCisJCXJvb3RfZHJt
+Y2dycCA9IGRybWNncnA7CisKKwlyZXR1cm4gJmRybWNncnAtPmNzczsKK30KKworc3RydWN0IGNm
+dHlwZSBmaWxlc1tdID0geworCXsgfQkvKiB0ZXJtaW5hdGUgKi8KK307CisKK3N0cnVjdCBjZ3Jv
+dXBfc3Vic3lzIGRybV9jZ3JwX3N1YnN5cyA9IHsKKwkuY3NzX2FsbG9jCT0gZHJtY2dycF9jc3Nf
+YWxsb2MsCisJLmNzc19mcmVlCT0gZHJtY2dycF9jc3NfZnJlZSwKKwkuZWFybHlfaW5pdAk9IGZh
+bHNlLAorCS5sZWdhY3lfY2Z0eXBlcwk9IGZpbGVzLAorCS5kZmxfY2Z0eXBlcwk9IGZpbGVzLAor
+fTsKLS0gCjIuMjEuMAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX18KYW1kLWdmeCBtYWlsaW5nIGxpc3QKYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcK
+aHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9hbWQtZ2Z4
