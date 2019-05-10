@@ -1,89 +1,109 @@
-From: "Koenig, Christian" <Christian.Koenig@amd.com>
-Subject: Re: [RFC PATCH v2 4/5] drm, cgroup: Add total GEM buffer allocation
- limit
-Date: Fri, 10 May 2019 17:48:32 +0000
-Message-ID: <64d12227-a0b9-acee-518c-8c97c5da4136@amd.com>
-References: <20181120185814.13362-1-Kenny.Ho@amd.com>
- <20190509210410.5471-1-Kenny.Ho@amd.com>
- <20190509210410.5471-5-Kenny.Ho@amd.com>
- <f63c8d6b-92a4-2977-d062-7e0b7036834e@gmail.com>
- <CAOWid-fpHqvq35C+gfHmLnuHM9Lj+iiHFXE=3RPrkAiFL2=wvQ@mail.gmail.com>
- <1ca1363e-b39c-c299-1d24-098b1059f7ff@amd.com>
- <CAOWid-eVz4w-hN=4tPZ1AOu54xMH_2ztDDZaMEKRCAeBgt9Dyw@mail.gmail.com>
+From: Dan Schatzberg <dschatzberg@fb.com>
+Subject: [PATCH] psi: Expose pressure metrics on root cgroup
+Date: Fri, 10 May 2019 10:49:34 -0700
+Message-ID: <20190510174938.3361741-1-dschatzberg@fb.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <CAOWid-eVz4w-hN=4tPZ1AOu54xMH_2ztDDZaMEKRCAeBgt9Dyw@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <9983955C6C6EAB4889D7F39A79324FF4@namprd12.prod.outlook.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Kenny Ho <y2kenny@gmail.com>
-Cc: "sunnanyong@huawei.com" <sunnanyong@huawei.com>, "Ho,
- Kenny" <Kenny.Ho@amd.com>, Brian Welty <brian.welty@intel.com>, "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>, "Deucher,
- Alexander" <Alexander.Deucher@amd.com>, "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, Tejun Heo <tj@kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-type; s=facebook;
+ bh=Vx+fboig1rRLQHiyt4x8kMFHXQDhcpUyPZUqbGASJ+s=;
+ b=ZB5habr6JwKSQxVtjXM6wum/5y6gDXvf1zm3QSA0WIyWoZO0i14+TM/b/oM7egq7bYiV
+ 3g4QhKmma8jg8vvjz2wUOWmy60hvB5hQzF2j+cqTAiUfHn1ekIBYt1MxDskTPe6YkOVe
+ PIOagbPtqJaAf4h5/koWYEhvVUOzJAzSXGs= 
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: 
+Cc: Dan Schatzberg <dschatzberg@fb.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-QW0gMTAuMDUuMTkgdW0gMTc6MjUgc2NocmllYiBLZW5ueSBIbzoNCj4gW0NBVVRJT046IEV4dGVy
-bmFsIEVtYWlsXQ0KPg0KPiBPbiBGcmksIE1heSAxMCwgMjAxOSBhdCAxMTowOCBBTSBLb2VuaWcs
-IENocmlzdGlhbg0KPiA8Q2hyaXN0aWFuLktvZW5pZ0BhbWQuY29tPiB3cm90ZToNCj4+IEFtIDEw
-LjA1LjE5IHVtIDE2OjU3IHNjaHJpZWIgS2VubnkgSG86DQo+Pj4gT24gRnJpLCBNYXkgMTAsIDIw
-MTkgYXQgODoyOCBBTSBDaHJpc3RpYW4gS8O2bmlnDQo+Pj4gPGNrb2VuaWcubGVpY2h0enVtZXJr
-ZW5AZ21haWwuY29tPiB3cm90ZToNCj4+Pj4gQW0gMDkuMDUuMTkgdW0gMjM6MDQgc2NocmllYiBL
-ZW5ueSBIbzoNCj4+IFNvIHRoZSBkcm0gY2dyb3VwIGNvbnRhaW5lciBpcyBzZXBhcmF0ZSB0byBv
-dGhlciBjZ3JvdXAgY29udGFpbmVycz8NCj4gSW4gY2dyb3VwLXYxLCB3aGljaCBpcyBtb3N0IHdp
-ZGVseSBkZXBsb3llZCBjdXJyZW50bHksIGFsbCBjb250cm9sbGVycw0KPiBoYXZlIHRoZWlyIG93
-biBoaWVyYXJjaHkgKHNlZSAvc3lzL2ZzL2Nncm91cC8pLiAgSW4gY2dyb3VwLXYyLCB0aGUNCj4g
-aGllcmFyY2h5IGlzIHVuaWZpZWQgYnkgaW5kaXZpZHVhbCBjb250cm9sbGVycyBjYW4gYmUgZGlz
-YWJsZWQgKEkNCj4gYmVsaWV2ZSwgSSBhbSBub3Qgc3VwZXIgZmFtaWxpYXIgd2l0aCB2Mi4pDQo+
-DQo+PiBJbiBvdGhlciB3b3JkcyBhcyBsb25nIGFzIHVzZXJzcGFjZSBkb2Vzbid0IGNoYW5nZSwg
-dGhpcyB3b3VsZG4ndCBoYXZlDQo+PiBhbnkgZWZmZWN0Pw0KPiBBcyBmYXIgYXMgdGhpbmdzIGxp
-a2UgZG9ja2VyIGFuZCBwb2RtYW4gaXMgY29uY2VybiwgeWVzLiAgSSBhbSBub3QNCj4gc3VyZSBh
-Ym91dCB0aGUgYmVoYXZpb3VyIG9mIG90aGVycyBsaWtlIGx4YywgbHhkLCBldGMuIGJlY2F1c2Ug
-SQ0KPiBoYXZlbid0IHVzZWQgdGhvc2UgbXlzZWxmLg0KPg0KPj4gV2VsbCB0aGF0IGlzIHVuZXhw
-ZWN0ZWQgY2F1c2UgdGhlbiBhIHByb2Nlc3NlcyB3b3VsZCBiZSBpbiBkaWZmZXJlbnQNCj4+IGdy
-b3VwcyBmb3IgZGlmZmVyZW50IGNvbnRyb2xsZXJzLCBidXQgaWYgdGhhdCdzIHJlYWxseSB0aGUg
-Y2FzZSB0aGF0DQo+PiB3b3VsZCBjZXJ0YWlubHkgd29yay4NCj4gSSBiZWxpZXZlIHRoaXMgaXMg
-YSBwb3NzaWJpbGl0eSBmb3IgdjEgYW5kIGlzIHdoeSBmb2xrcyBjYW1lIHVwIHdpdGgNCj4gdGhl
-IHVuaWZpZWQgaGllcmFyY2h5IGluIHYyIHRvIHNvbHZlIHNvbWUgb2YgdGhlIGlzc3Vlcy4NCj4g
-aHR0cHM6Ly93d3cua2VybmVsLm9yZy9kb2MvaHRtbC9sYXRlc3QvYWRtaW4tZ3VpZGUvY2dyb3Vw
-LXYyLmh0bWwjaXNzdWVzLXdpdGgtdjEtYW5kLXJhdGlvbmFsZXMtZm9yLXYyDQoNCldlbGwgYW5v
-dGhlciBxdWVzdGlvbiBpcyB3aHkgZG8gd2Ugd2FudCB0byBwcmV2ZW50IHRoYXQgaW4gdGhlIGZp
-cnN0IHBsYWNlPw0KDQpJIG1lYW4gdGhlIHdvcnN0IHRoaW5nIHRoYXQgY2FuIGhhcHBlbiBpcyB0
-aGF0IHdlIGFjY291bnQgYSBCTyBtdWx0aXBsZSANCnRpbWVzLg0KDQpBbmQgZ29pbmcgaW50byB0
-aGUgc2FtZSBkaXJlY3Rpb24gd2hlcmUgaXMgdGhlIGNvZGUgdG8gaGFuZGxlIGFuIG9wZW4gDQpk
-ZXZpY2UgZmlsZSBkZXNjcmlwdG9yIHdoaWNoIGlzIHNlbmQgZnJvbSBvbmUgY2dyb3VwIHRvIGFu
-b3RoZXI/DQoNClJlZ2FyZHMsDQpDaHJpc3RpYW4uDQoNCj4NCj4gUmVnYXJkcywNCj4gS2VubnkN
-Cj4NCj4+PiBPbiB0aGUgb3RoZXIgaGFuZCwgaWYgdGhlcmUgYXJlIGV4cGVjdGF0aW9ucyBmb3Ig
-cmVzb3VyY2UgbWFuYWdlbWVudA0KPj4+IGJldHdlZW4gY29udGFpbmVycywgSSB3b3VsZCBsaWtl
-IHRvIGtub3cgd2hvIGlzIHRoZSBleHBlY3RlZCBtYW5hZ2VyDQo+Pj4gYW5kIGhvdyBkb2VzIGl0
-IGZpdCBpbnRvIHRoZSBjb25jZXB0IG9mIGNvbnRhaW5lciAod2hpY2ggZW5mb3JjZSBzb21lDQo+
-Pj4gbGV2ZWwgb2YgaXNvbGF0aW9uLikgIE9uZSBwb3NzaWJsZSBtYW5hZ2VyIG1heSBiZSB0aGUg
-ZGlzcGxheSBzZXJ2ZXIuDQo+Pj4gQnV0IGFzIGxvbmcgYXMgdGhlIGRpc3BsYXkgc2VydmVyIGlz
-IGluIGEgcGFyZW50IGNncm91cCBvZiB0aGUgYXBwcycNCj4+PiBjZ3JvdXAsIHRoZSBhcHBzIGNh
-biBzdGlsbCBpbXBvcnQgaGFuZGxlcyBmcm9tIHRoZSBkaXNwbGF5IHNlcnZlcg0KPj4+IHVuZGVy
-IHRoZSBjdXJyZW50IGltcGxlbWVudGF0aW9uLiAgTXkgdW5kZXJzdGFuZGluZyBpcyB0aGF0IHRo
-aXMgaXMNCj4+PiBtb3N0IGxpa2VseSB0aGUgY2FzZSwgd2l0aCB0aGUgZGlzcGxheSBzZXJ2ZXIg
-c2ltcGx5IHNpdHRpbmcgYXQgdGhlDQo+Pj4gZGVmYXVsdC9yb290IGNncm91cC4gIEJ1dCBJIGNl
-cnRhaW5seSB3YW50IHRvIGhlYXIgbW9yZSBhYm91dCBvdGhlcg0KPj4+IHVzZSBjYXNlcyAoZm9y
-IGV4YW1wbGUsIGlzIHJ1bm5pbmcgbXVsdGlwbGUgZGlzcGxheSBzZXJ2ZXJzIG9uIGENCj4+PiBz
-aW5nbGUgaG9zdCBhIHJlYWxpc3RpYyBwb3NzaWJpbGl0eT8gIEFyZSB0aGVyZSBwZW9wbGUgcnVu
-bmluZw0KPj4+IG11bHRpcGxlIGRpc3BsYXkgc2VydmVycyBpbnNpZGUgcGVlciBjb250YWluZXJz
-PyAgSWYgc28sIGhvdyBkbyB0aGV5DQo+Pj4gY29vcmRpbmF0ZSByZXNvdXJjZXM/KQ0KPj4gV2Ug
-ZGVmaW5pdGVseSBoYXZlIHNpdHVhdGlvbnMgd2l0aCBtdWx0aXBsZSBkaXNwbGF5IHNlcnZlcnMg
-cnVubmluZw0KPj4gKGp1c3QgdGhpbmsgb2YgVlIpLg0KPj4NCj4+IEkganVzdCBjYW4ndCBzYXkg
-aWYgdGhleSBjdXJyZW50bHkgdXNlIGNncm91cHMgaW4gYW55IHdheS4NCj4+DQo+PiBUaGFua3Ms
-DQo+PiBDaHJpc3RpYW4uDQo+Pg0KPj4+IEkgc2hvdWxkIHByb2JhYmx5IHN1bW1hcml6ZSBzb21l
-IG9mIHRoZXNlIGludG8gdGhlIGNvbW1pdCBtZXNzYWdlLg0KPj4+DQo+Pj4gUmVnYXJkcywNCj4+
-PiBLZW5ueQ0KPj4+DQo+Pj4NCj4+Pg0KPj4+PiBDaHJpc3RpYW4uDQo+Pj4+DQoNCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5n
-IGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVk
-ZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
+Pressure metrics are already recorded and exposed in procfs for the
+entire system, but any tool which monitors cgroup pressure has to
+special case the root cgroup to read from procfs. This patch exposes
+the already recorded pressure metrics on the root cgroup.
+
+Signed-off-by: Dan Schatzberg <dschatzberg@fb.com>
+---
+ include/linux/psi.h    |  1 +
+ kernel/cgroup/cgroup.c | 18 ++++++++++++------
+ kernel/sched/psi.c     |  2 +-
+ 3 files changed, 14 insertions(+), 7 deletions(-)
+
+diff --git a/include/linux/psi.h b/include/linux/psi.h
+index fc08da2bcc0a..64740dc42aa2 100644
+--- a/include/linux/psi.h
++++ b/include/linux/psi.h
+@@ -10,6 +10,7 @@ struct css_set;
+ #ifdef CONFIG_PSI
+ 
+ extern bool psi_disabled;
++extern struct psi_group psi_system;
+ 
+ void psi_init(void);
+ 
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index dc8adb124874..3a748c746324 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -3392,15 +3392,24 @@ static int cpu_stat_show(struct seq_file *seq, void *v)
+ #ifdef CONFIG_PSI
+ static int cgroup_cpu_pressure_show(struct seq_file *seq, void *v)
+ {
+-	return psi_show(seq, &seq_css(seq)->cgroup->psi, PSI_CPU);
++	struct cgroup *cgroup = seq_css(seq)->cgroup;
++	struct psi_group *psi = cgroup->id == 1 ? &psi_system : &cgroup->psi;
++
++	return psi_show(seq, psi, PSI_CPU);
+ }
+ static int cgroup_memory_pressure_show(struct seq_file *seq, void *v)
+ {
+-	return psi_show(seq, &seq_css(seq)->cgroup->psi, PSI_MEM);
++	struct cgroup *cgroup = seq_css(seq)->cgroup;
++	struct psi_group *psi = cgroup->id == 1 ? &psi_system : &cgroup->psi;
++
++	return psi_show(seq, psi, PSI_MEM);
+ }
+ static int cgroup_io_pressure_show(struct seq_file *seq, void *v)
+ {
+-	return psi_show(seq, &seq_css(seq)->cgroup->psi, PSI_IO);
++	struct cgroup *cgroup = seq_css(seq)->cgroup;
++	struct psi_group *psi = cgroup->id == 1 ? &psi_system : &cgroup->psi;
++
++	return psi_show(seq, psi, PSI_IO);
+ }
+ #endif
+ 
+@@ -4518,17 +4527,14 @@ static struct cftype cgroup_base_files[] = {
+ #ifdef CONFIG_PSI
+ 	{
+ 		.name = "cpu.pressure",
+-		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.seq_show = cgroup_cpu_pressure_show,
+ 	},
+ 	{
+ 		.name = "memory.pressure",
+-		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.seq_show = cgroup_memory_pressure_show,
+ 	},
+ 	{
+ 		.name = "io.pressure",
+-		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.seq_show = cgroup_io_pressure_show,
+ 	},
+ #endif
+diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
+index cc3faf56b614..59e67b3c3bc4 100644
+--- a/kernel/sched/psi.c
++++ b/kernel/sched/psi.c
+@@ -150,7 +150,7 @@ static u64 psi_period __read_mostly;
+ 
+ /* System-level pressure and stall tracking */
+ static DEFINE_PER_CPU(struct psi_group_cpu, system_group_pcpu);
+-static struct psi_group psi_system = {
++struct psi_group psi_system = {
+ 	.pcpu = &system_group_pcpu,
+ };
+ 
+-- 
+2.17.1
+
