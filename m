@@ -1,23 +1,22 @@
 From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH v3 1/7] mm: postpone kmem_cache memcg pointer
- initialization to memcg_link_cache()
-Date: Fri, 10 May 2019 17:32:29 -0700
-Message-ID: <CALvZod6itDOn6-QFmvZbtYaGDdOT6vbLuGP2jouJeqSJeZNECQ@mail.gmail.com>
-References: <20190508202458.550808-1-guro@fb.com> <20190508202458.550808-2-guro@fb.com>
+Subject: Re: [PATCH v3 2/7] mm: generalize postponed non-root kmem_cache deactivation
+Date: Fri, 10 May 2019 17:33:01 -0700
+Message-ID: <CALvZod7oxh+5z7xWGnrs4zTpM2fHGfqsWcx7+KU8r9vMp38TWw@mail.gmail.com>
+References: <20190508202458.550808-1-guro@fb.com> <20190508202458.550808-3-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=h+Sg7wqBtZAIQFIHjE5bsBOSA1iC/F0ye0Hv9HXbkK0=;
-        b=kcxCQHChsnR+cRhz3yi2p4ECRh/JZG+P0/PcTAsfiPmbm4oGEA2xXzWIYDseK85A6i
-         x2BamLYVIhkWr/Szcm7yMyBuNto4oSUlD3Re5713rkGubnY0wUF/l/5AafpR3s7I2CZS
-         PWTNkx0u0MtloUPVj7SoJ04y02i87ecqt+mXsND//oPIROlVrZZVoa2Uo3BLsrWU99FW
-         Z8mbCzqtZN6zBqeQh7qSNzabarlAD7wJVB0HoTS0UpUKHABFm+di2JRxKHJvbORD1TSQ
-         yjuWQ+jVHPPJ28aC+B4pfrFJEpglT6/KJtj0bZxPqvLDEraUkBescoyLWj7iX0UHGvIz
-         GYlw==
-In-Reply-To: <20190508202458.550808-2-guro@fb.com>
+        bh=05t4yLqiGc54LnQ5ZpBdMWfaLZVhZ5+2KCRuzx7eEX8=;
+        b=tpILgy3RmXvC0yltT+cnRg1Pt1urKSjgHZLDaAd0PFyHRCWS4ofNZsI7qMNoOaArmC
+         5eKPcc494ECjICs6c7N2ZDyJcGcp93BmshTYiPOVGXv8V7UzwFhUfFxWMkhVbO00LHhy
+         n3sMBrBwUt5l6RZAo2YzV4AY3QtVIIxJVicfetorlD/1+7AGVdBqlR2eqed1oAE0BNMA
+         G2L9CYcxCr4hcN1+VX2NHAGNdwXfa6YCQVXtnT4MiL3CEPIuKYI483EJiMac15JgntHW
+         WLT5IFS3yVf46q2+amrQnPkVbVJ895ldIK7jtzvFe0VsLOd4XmYWhdy4AZVRQXSgY4KQ
+         HcMQ==
+In-Reply-To: <20190508202458.550808-3-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -33,144 +32,240 @@ Cc: <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>,
 Christoph Lameter, Vladimir Davydov, <cgroups@vger.kernel.org>, Roman
 Gushchin
 
-> Initialize kmem_cache->memcg_params.memcg pointer in
-> memcg_link_cache() rather than in init_memcg_params().
+> Currently SLUB uses a work scheduled after an RCU grace period
+> to deactivate a non-root kmem_cache. This mechanism can be reused
+> for kmem_caches reparenting, but requires some generalization.
 >
-> Once kmem_cache will hold a reference to the memory cgroup,
-> it will simplify the refcounting.
+> Let's decouple all infrastructure (rcu callback, work callback)
+> from the SLUB-specific code, so it can be used with SLAB as well.
 >
-> For non-root kmem_caches memcg_link_cache() is always called
-> before the kmem_cache becomes visible to a user, so it's safe.
+> Also, let's rename some functions to make the code look simpler.
+> All SLAB/SLUB-specific functions start with "__". Remove "deact_"
+> prefix from the corresponding struct fields.
+>
+> Here is the graph of a new calling scheme:
+> kmemcg_cache_deactivate()
+>   __kmemcg_cache_deactivate()                  SLAB/SLUB-specific
+>   kmemcg_schedule_work_after_rcu()             rcu
+>     kmemcg_after_rcu_workfn()                  work
+>       kmemcg_cache_deactivate_after_rcu()
+>         __kmemcg_cache_deactivate_after_rcu()  SLAB/SLUB-specific
+>
+> instead of:
+> __kmemcg_cache_deactivate()                    SLAB/SLUB-specific
+>   slab_deactivate_memcg_cache_rcu_sched()      SLUB-only
+>     kmemcg_deactivate_rcufn                    SLUB-only, rcu
+>       kmemcg_deactivate_workfn                 SLUB-only, work
+>         kmemcg_cache_deact_after_rcu()         SLUB-only
 >
 > Signed-off-by: Roman Gushchin <guro@fb.com>
 
 Reviewed-by: Shakeel Butt <shakeelb@google.com>
 
-
 > ---
->  mm/slab.c        |  2 +-
->  mm/slab.h        |  5 +++--
->  mm/slab_common.c | 14 +++++++-------
->  mm/slub.c        |  2 +-
->  4 files changed, 12 insertions(+), 11 deletions(-)
+>  include/linux/slab.h |  6 ++---
+>  mm/slab.c            |  4 +++
+>  mm/slab.h            |  3 ++-
+>  mm/slab_common.c     | 62 ++++++++++++++++++++------------------------
+>  mm/slub.c            |  8 +-----
+>  5 files changed, 38 insertions(+), 45 deletions(-)
 >
+> diff --git a/include/linux/slab.h b/include/linux/slab.h
+> index 9449b19c5f10..47923c173f30 100644
+> --- a/include/linux/slab.h
+> +++ b/include/linux/slab.h
+> @@ -642,10 +642,10 @@ struct memcg_cache_params {
+>                         struct list_head children_node;
+>                         struct list_head kmem_caches_node;
+>
+> -                       void (*deact_fn)(struct kmem_cache *);
+> +                       void (*work_fn)(struct kmem_cache *);
+>                         union {
+> -                               struct rcu_head deact_rcu_head;
+> -                               struct work_struct deact_work;
+> +                               struct rcu_head rcu_head;
+> +                               struct work_struct work;
+>                         };
+>                 };
+>         };
 > diff --git a/mm/slab.c b/mm/slab.c
-> index 2915d912e89a..f6eff59e018e 100644
+> index f6eff59e018e..83000e46b870 100644
 > --- a/mm/slab.c
 > +++ b/mm/slab.c
-> @@ -1268,7 +1268,7 @@ void __init kmem_cache_init(void)
->                                   nr_node_ids * sizeof(struct kmem_cache_node *),
->                                   SLAB_HWCACHE_ALIGN, 0, 0);
->         list_add(&kmem_cache->list, &slab_caches);
-> -       memcg_link_cache(kmem_cache);
-> +       memcg_link_cache(kmem_cache, NULL);
->         slab_state = PARTIAL;
+> @@ -2281,6 +2281,10 @@ void __kmemcg_cache_deactivate(struct kmem_cache *cachep)
+>  {
+>         __kmem_cache_shrink(cachep);
+>  }
+> +
+> +void __kmemcg_cache_deactivate_after_rcu(struct kmem_cache *s)
+> +{
+> +}
+>  #endif
 >
->         /*
+>  int __kmem_cache_shutdown(struct kmem_cache *cachep)
 > diff --git a/mm/slab.h b/mm/slab.h
-> index 43ac818b8592..6a562ca72bca 100644
+> index 6a562ca72bca..4a261c97c138 100644
 > --- a/mm/slab.h
 > +++ b/mm/slab.h
-> @@ -289,7 +289,7 @@ static __always_inline void memcg_uncharge_slab(struct page *page, int order,
->  }
+> @@ -172,6 +172,7 @@ int __kmem_cache_shutdown(struct kmem_cache *);
+>  void __kmem_cache_release(struct kmem_cache *);
+>  int __kmem_cache_shrink(struct kmem_cache *);
+>  void __kmemcg_cache_deactivate(struct kmem_cache *s);
+> +void __kmemcg_cache_deactivate_after_rcu(struct kmem_cache *s);
+>  void slab_kmem_cache_release(struct kmem_cache *);
 >
+>  struct seq_file;
+> @@ -291,7 +292,7 @@ static __always_inline void memcg_uncharge_slab(struct page *page, int order,
 >  extern void slab_init_memcg_params(struct kmem_cache *);
-> -extern void memcg_link_cache(struct kmem_cache *s);
-> +extern void memcg_link_cache(struct kmem_cache *s, struct mem_cgroup *memcg);
+>  extern void memcg_link_cache(struct kmem_cache *s, struct mem_cgroup *memcg);
 >  extern void slab_deactivate_memcg_cache_rcu_sched(struct kmem_cache *s,
->                                 void (*deact_fn)(struct kmem_cache *));
+> -                               void (*deact_fn)(struct kmem_cache *));
+> +                               void (*work_fn)(struct kmem_cache *));
 >
-> @@ -344,7 +344,8 @@ static inline void slab_init_memcg_params(struct kmem_cache *s)
->  {
->  }
->
-> -static inline void memcg_link_cache(struct kmem_cache *s)
-> +static inline void memcg_link_cache(struct kmem_cache *s,
-> +                                   struct mem_cgroup *memcg)
->  {
->  }
+>  #else /* CONFIG_MEMCG_KMEM */
 >
 > diff --git a/mm/slab_common.c b/mm/slab_common.c
-> index 58251ba63e4a..6e00bdf8618d 100644
+> index 6e00bdf8618d..4e5b4292a763 100644
 > --- a/mm/slab_common.c
 > +++ b/mm/slab_common.c
-> @@ -140,13 +140,12 @@ void slab_init_memcg_params(struct kmem_cache *s)
+> @@ -691,17 +691,18 @@ void memcg_create_kmem_cache(struct mem_cgroup *memcg,
+>         put_online_cpus();
 >  }
 >
->  static int init_memcg_params(struct kmem_cache *s,
-> -               struct mem_cgroup *memcg, struct kmem_cache *root_cache)
-> +                            struct kmem_cache *root_cache)
+> -static void kmemcg_deactivate_workfn(struct work_struct *work)
+> +static void kmemcg_after_rcu_workfn(struct work_struct *work)
 >  {
->         struct memcg_cache_array *arr;
+>         struct kmem_cache *s = container_of(work, struct kmem_cache,
+> -                                           memcg_params.deact_work);
+> +                                           memcg_params.work);
 >
->         if (root_cache) {
->                 s->memcg_params.root_cache = root_cache;
-> -               s->memcg_params.memcg = memcg;
->                 INIT_LIST_HEAD(&s->memcg_params.children_node);
->                 INIT_LIST_HEAD(&s->memcg_params.kmem_caches_node);
->                 return 0;
-> @@ -221,11 +220,12 @@ int memcg_update_all_caches(int num_memcgs)
->         return ret;
+>         get_online_cpus();
+>         get_online_mems();
+>
+>         mutex_lock(&slab_mutex);
+>
+> -       s->memcg_params.deact_fn(s);
+> +       s->memcg_params.work_fn(s);
+> +       s->memcg_params.work_fn = NULL;
+>
+>         mutex_unlock(&slab_mutex);
+>
+> @@ -712,37 +713,28 @@ static void kmemcg_deactivate_workfn(struct work_struct *work)
+>         css_put(&s->memcg_params.memcg->css);
 >  }
 >
-> -void memcg_link_cache(struct kmem_cache *s)
-> +void memcg_link_cache(struct kmem_cache *s, struct mem_cgroup *memcg)
+> -static void kmemcg_deactivate_rcufn(struct rcu_head *head)
+> +/*
+> + * We need to grab blocking locks.  Bounce to ->work.  The
+> + * work item shares the space with the RCU head and can't be
+> + * initialized eariler.
+> +*/
+> +static void kmemcg_schedule_work_after_rcu(struct rcu_head *head)
 >  {
->         if (is_root_cache(s)) {
->                 list_add(&s->root_caches_node, &slab_root_caches);
->         } else {
-> +               s->memcg_params.memcg = memcg;
->                 list_add(&s->memcg_params.children_node,
->                          &s->memcg_params.root_cache->memcg_params.children);
->                 list_add(&s->memcg_params.kmem_caches_node,
-> @@ -244,7 +244,7 @@ static void memcg_unlink_cache(struct kmem_cache *s)
+>         struct kmem_cache *s = container_of(head, struct kmem_cache,
+> -                                           memcg_params.deact_rcu_head);
+> +                                           memcg_params.rcu_head);
+>
+> -       /*
+> -        * We need to grab blocking locks.  Bounce to ->deact_work.  The
+> -        * work item shares the space with the RCU head and can't be
+> -        * initialized eariler.
+> -        */
+> -       INIT_WORK(&s->memcg_params.deact_work, kmemcg_deactivate_workfn);
+> -       queue_work(memcg_kmem_cache_wq, &s->memcg_params.deact_work);
+> +       INIT_WORK(&s->memcg_params.work, kmemcg_after_rcu_workfn);
+> +       queue_work(memcg_kmem_cache_wq, &s->memcg_params.work);
 >  }
->  #else
->  static inline int init_memcg_params(struct kmem_cache *s,
-> -               struct mem_cgroup *memcg, struct kmem_cache *root_cache)
-> +                                   struct kmem_cache *root_cache)
+>
+> -/**
+> - * slab_deactivate_memcg_cache_rcu_sched - schedule deactivation after a
+> - *                                        sched RCU grace period
+> - * @s: target kmem_cache
+> - * @deact_fn: deactivation function to call
+> - *
+> - * Schedule @deact_fn to be invoked with online cpus, mems and slab_mutex
+> - * held after a sched RCU grace period.  The slab is guaranteed to stay
+> - * alive until @deact_fn is finished.  This is to be used from
+> - * __kmemcg_cache_deactivate().
+> - */
+> -void slab_deactivate_memcg_cache_rcu_sched(struct kmem_cache *s,
+> -                                          void (*deact_fn)(struct kmem_cache *))
+> +static void kmemcg_cache_deactivate_after_rcu(struct kmem_cache *s)
 >  {
->         return 0;
+> -       if (WARN_ON_ONCE(is_root_cache(s)) ||
+> -           WARN_ON_ONCE(s->memcg_params.deact_fn))
+> -               return;
+> +       __kmemcg_cache_deactivate_after_rcu(s);
+> +}
+> +
+> +static void kmemcg_cache_deactivate(struct kmem_cache *s)
+> +{
+> +       __kmemcg_cache_deactivate(s);
+>
+>         if (s->memcg_params.root_cache->memcg_params.dying)
+>                 return;
+> @@ -750,8 +742,9 @@ void slab_deactivate_memcg_cache_rcu_sched(struct kmem_cache *s,
+>         /* pin memcg so that @s doesn't get destroyed in the middle */
+>         css_get(&s->memcg_params.memcg->css);
+>
+> -       s->memcg_params.deact_fn = deact_fn;
+> -       call_rcu(&s->memcg_params.deact_rcu_head, kmemcg_deactivate_rcufn);
+> +       WARN_ON_ONCE(s->memcg_params.work_fn);
+> +       s->memcg_params.work_fn = kmemcg_cache_deactivate_after_rcu;
+> +       call_rcu(&s->memcg_params.rcu_head, kmemcg_schedule_work_after_rcu);
 >  }
-> @@ -384,7 +384,7 @@ static struct kmem_cache *create_cache(const char *name,
->         s->useroffset = useroffset;
->         s->usersize = usersize;
 >
-> -       err = init_memcg_params(s, memcg, root_cache);
-> +       err = init_memcg_params(s, root_cache);
->         if (err)
->                 goto out_free_cache;
+>  void memcg_deactivate_kmem_caches(struct mem_cgroup *memcg)
+> @@ -773,7 +766,7 @@ void memcg_deactivate_kmem_caches(struct mem_cgroup *memcg)
+>                 if (!c)
+>                         continue;
 >
-> @@ -394,7 +394,7 @@ static struct kmem_cache *create_cache(const char *name,
+> -               __kmemcg_cache_deactivate(c);
+> +               kmemcg_cache_deactivate(c);
+>                 arr->entries[idx] = NULL;
+>         }
+>         mutex_unlock(&slab_mutex);
+> @@ -866,11 +859,12 @@ static void flush_memcg_workqueue(struct kmem_cache *s)
+>         mutex_unlock(&slab_mutex);
 >
->         s->refcount = 1;
->         list_add(&s->list, &slab_caches);
-> -       memcg_link_cache(s);
-> +       memcg_link_cache(s, memcg);
->  out:
->         if (err)
->                 return ERR_PTR(err);
-> @@ -997,7 +997,7 @@ struct kmem_cache *__init create_kmalloc_cache(const char *name,
+>         /*
+> -        * SLUB deactivates the kmem_caches through call_rcu. Make
+> +        * SLAB and SLUB deactivate the kmem_caches through call_rcu. Make
+>          * sure all registered rcu callbacks have been invoked.
+>          */
+> -       if (IS_ENABLED(CONFIG_SLUB))
+> -               rcu_barrier();
+> +#ifndef CONFIG_SLOB
+> +       rcu_barrier();
+> +#endif
 >
->         create_boot_cache(s, name, size, flags, useroffset, usersize);
->         list_add(&s->list, &slab_caches);
-> -       memcg_link_cache(s);
-> +       memcg_link_cache(s, NULL);
->         s->refcount = 1;
->         return s;
->  }
+>         /*
+>          * SLAB and SLUB create memcg kmem_caches through workqueue and SLUB
 > diff --git a/mm/slub.c b/mm/slub.c
-> index 5b2e364102e1..16f7e4f5a141 100644
+> index 16f7e4f5a141..43c34d54ad86 100644
 > --- a/mm/slub.c
 > +++ b/mm/slub.c
-> @@ -4219,7 +4219,7 @@ static struct kmem_cache * __init bootstrap(struct kmem_cache *static_cache)
->         }
->         slab_init_memcg_params(s);
->         list_add(&s->list, &slab_caches);
-> -       memcg_link_cache(s);
-> +       memcg_link_cache(s, NULL);
->         return s;
+> @@ -4028,7 +4028,7 @@ int __kmem_cache_shrink(struct kmem_cache *s)
 >  }
+>
+>  #ifdef CONFIG_MEMCG
+> -static void kmemcg_cache_deact_after_rcu(struct kmem_cache *s)
+> +void __kmemcg_cache_deactivate_after_rcu(struct kmem_cache *s)
+>  {
+>         /*
+>          * Called with all the locks held after a sched RCU grace period.
+> @@ -4054,12 +4054,6 @@ void __kmemcg_cache_deactivate(struct kmem_cache *s)
+>          */
+>         slub_set_cpu_partial(s, 0);
+>         s->min_partial = 0;
+> -
+> -       /*
+> -        * s->cpu_partial is checked locklessly (see put_cpu_partial), so
+> -        * we have to make sure the change is visible before shrinking.
+> -        */
+> -       slab_deactivate_memcg_cache_rcu_sched(s, kmemcg_cache_deact_after_rcu);
+>  }
+>  #endif /* CONFIG_MEMCG */
 >
 > --
 > 2.20.1
