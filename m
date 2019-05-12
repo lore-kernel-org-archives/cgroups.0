@@ -1,124 +1,71 @@
 From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH v3 7/7] mm: fix /proc/kpagecgroup interface for slab pages
-Date: Fri, 10 May 2019 17:34:08 -0700
-Message-ID: <CALvZod5L=DXdcb87pbkxLoQnGxhH6W_nvJCoqEDdRTQ5h6R80g@mail.gmail.com>
-References: <20190508202458.550808-1-guro@fb.com> <20190508202458.550808-8-guro@fb.com>
+Subject: [RESEND PATCH v2 1/2] memcg, oom: no oom-kill for __GFP_RETRY_MAYFAIL
+Date: Sun, 12 May 2019 09:09:26 -0700
+Message-ID: <20190512160927.80042-1-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=UdR8JD8KNYcClfaFJdc0xlMZRTEn4yngxUY4SL7WlW0=;
-        b=ldjw+nnHKtK+fTb3weGK94cuP7qxL2t2RlNOFIukoBDh3zAGfoairpjWMbIy5l0awC
-         Cme3/bk3ny+bZNg+Sk7MaNgjTzhXOTneCTyRQFxQFgkDjo+F43dfkwIAhr2ZDouf1ews
-         ujrOSdkBOctfat+ir1VYjVQlB0jBB99jcYRj0lyEITB/Gf2XJgd3ff8voLr+y2opCB/C
-         n4J26cguL50D8zOOjX+oxASqm3If2L17oo63Q8Jn+fD2R36iAm/rUY6vb5zRAUKQbHYH
-         X5OWy/+DZyxzP1ozyftiL0Tx8uW2O7TiguDuR848V0mrs0l+HQDsrETH2rnVapR2eryN
-         +1TQ==
-In-Reply-To: <20190508202458.550808-8-guro@fb.com>
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=ZQi/sjipIMJL03RXDXGUBdRsbi1X2/+nI6E1TTfR44o=;
+        b=rT6GYZe9JljSs+O2RaDoCdYaRjz42r+UWesVjP61KLuG6brTai+B8I0s6wONcIdeUT
+         ZgBS6h91WxDWjJLdDl7mdy4nSk0wB5tEBBSyUohFeLAeQOweZF4nSJgoeSX+Z5lOzW7w
+         w1Kh4U5cruF03Fr6NcBIc2mu420URojoYNetRwXEgPNIIXNvzdCfMX4cuXwBaod2hE8y
+         AcVWU+jdpmBSZ75RVzArG/oirAEeyO6gh8KNjZ7rVUrwOjObNx6lGpqFGYsn7BWv0Bz4
+         yPD+2/26OCSf5xX0lvA/2dklhzgpKqeKHWI2sajCsyjGu0mYRjb04/FHoNtrsslXB/MH
+         Fe+A==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <kernel-team@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Christoph Lameter <cl@linux.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Cgroups <cgroups@vger.kernel.org>
+To: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>
+Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
 
-From: Roman Gushchin <guro@fb.com>
-Date: Wed, May 8, 2019 at 1:40 PM
-To: Andrew Morton, Shakeel Butt
-Cc: <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>,
-<kernel-team@fb.com>, Johannes Weiner, Michal Hocko, Rik van Riel,
-Christoph Lameter, Vladimir Davydov, <cgroups@vger.kernel.org>, Roman
-Gushchin
+The documentation of __GFP_RETRY_MAYFAIL clearly mentioned that the
+OOM killer will not be triggered and indeed the page alloc does not
+invoke OOM killer for such allocations. However we do trigger memcg
+OOM killer for __GFP_RETRY_MAYFAIL. Fix that. This flag will used later
+to not trigger oom-killer in the charging path for fanotify and inotify
+event allocations.
 
-> Switching to an indirect scheme of getting mem_cgroup pointer for
-> !root slab pages broke /proc/kpagecgroup interface for them.
->
-> Let's fix it by learning page_cgroup_ino() how to get memcg
-> pointer for slab pages.
->
-> Reported-by: Shakeel Butt <shakeelb@google.com>
-> Signed-off-by: Roman Gushchin <guro@fb.com>
-> ---
->  mm/memcontrol.c  |  5 ++++-
->  mm/slab.h        | 21 +++++++++++++++++++++
->  mm/slab_common.c |  1 +
->  3 files changed, 26 insertions(+), 1 deletion(-)
->
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 6e4d9ed16069..8114838759f6 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -494,7 +494,10 @@ ino_t page_cgroup_ino(struct page *page)
->         unsigned long ino = 0;
->
->         rcu_read_lock();
-> -       memcg = READ_ONCE(page->mem_cgroup);
-> +       if (PageSlab(page))
-> +               memcg = memcg_from_slab_page(page);
-> +       else
-> +               memcg = READ_ONCE(page->mem_cgroup);
->         while (memcg && !(memcg->css.flags & CSS_ONLINE))
->                 memcg = parent_mem_cgroup(memcg);
->         if (memcg)
-> diff --git a/mm/slab.h b/mm/slab.h
-> index acdc1810639d..cb684fbe2cc2 100644
-> --- a/mm/slab.h
-> +++ b/mm/slab.h
-> @@ -256,6 +256,22 @@ static inline struct kmem_cache *memcg_root_cache(struct kmem_cache *s)
->         return s->memcg_params.root_cache;
->  }
->
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
+Acked-by: Michal Hocko <mhocko@suse.com>
+---
+Changelog since v1:
+- commit message updated.
 
-Can you please document the preconditions of this function? It seems
-like it must be PageSlab() then why need to check PageTail and do
-compound_head().
+ mm/memcontrol.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 2535e54e7989..9548dfcae432 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2294,7 +2294,6 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	unsigned long nr_reclaimed;
+ 	bool may_swap = true;
+ 	bool drained = false;
+-	bool oomed = false;
+ 	enum oom_status oom_status;
+ 
+ 	if (mem_cgroup_is_root(memcg))
+@@ -2381,7 +2380,7 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	if (nr_retries--)
+ 		goto retry;
+ 
+-	if (gfp_mask & __GFP_RETRY_MAYFAIL && oomed)
++	if (gfp_mask & __GFP_RETRY_MAYFAIL)
+ 		goto nomem;
+ 
+ 	if (gfp_mask & __GFP_NOFAIL)
+@@ -2400,7 +2399,6 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	switch (oom_status) {
+ 	case OOM_SUCCESS:
+ 		nr_retries = MEM_CGROUP_RECLAIM_RETRIES;
+-		oomed = true;
+ 		goto retry;
+ 	case OOM_FAILED:
+ 		goto force;
+-- 
+2.21.0.1020.gf2820cf01a-goog
 
-> +static inline struct mem_cgroup *memcg_from_slab_page(struct page *page)
-> +{
-> +       struct kmem_cache *s;
-> +
-> +       WARN_ON_ONCE(!rcu_read_lock_held());
-> +
-> +       if (PageTail(page))
-> +               page = compound_head(page);
-> +
-> +       s = READ_ONCE(page->slab_cache);
-> +       if (s && !is_root_cache(s))
-> +               return rcu_dereference(s->memcg_params.memcg);
-> +
-> +       return NULL;
-> +}
-> +
->  static __always_inline int memcg_charge_slab(struct page *page,
->                                              gfp_t gfp, int order,
->                                              struct kmem_cache *s)
-> @@ -338,6 +354,11 @@ static inline struct kmem_cache *memcg_root_cache(struct kmem_cache *s)
->         return s;
->  }
->
-> +static inline struct mem_cgroup *memcg_from_slab_page(struct page *page)
-> +{
-> +       return NULL;
-> +}
-> +
->  static inline int memcg_charge_slab(struct page *page, gfp_t gfp, int order,
->                                     struct kmem_cache *s)
->  {
-> diff --git a/mm/slab_common.c b/mm/slab_common.c
-> index 36673a43ed31..0cfdad0a0aac 100644
-> --- a/mm/slab_common.c
-> +++ b/mm/slab_common.c
-> @@ -253,6 +253,7 @@ static void memcg_unlink_cache(struct kmem_cache *s)
->                 list_del(&s->memcg_params.kmem_caches_node);
->                 mem_cgroup_put(rcu_dereference_protected(s->memcg_params.memcg,
->                         lockdep_is_held(&slab_mutex)));
-> +               rcu_assign_pointer(s->memcg_params.memcg, NULL);
->         }
->  }
->  #else
-> --
-> 2.20.1
->
