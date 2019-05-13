@@ -1,119 +1,33 @@
-From: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
-Subject: Re: [RFC PATCH v2 4/5] drm, cgroup: Add total GEM buffer allocation
- limit
-Date: Mon, 13 May 2019 17:10:22 +0200
-Message-ID: <20190513151022.GU17751@phenom.ffwll.local>
-References: <20181120185814.13362-1-Kenny.Ho@amd.com>
- <20190509210410.5471-1-Kenny.Ho@amd.com>
- <20190509210410.5471-5-Kenny.Ho@amd.com>
- <f63c8d6b-92a4-2977-d062-7e0b7036834e@gmail.com>
- <CAOWid-fpHqvq35C+gfHmLnuHM9Lj+iiHFXE=3RPrkAiFL2=wvQ@mail.gmail.com>
- <1ca1363e-b39c-c299-1d24-098b1059f7ff@amd.com>
- <CAOWid-eVz4w-hN=4tPZ1AOu54xMH_2ztDDZaMEKRCAeBgt9Dyw@mail.gmail.com>
- <64d12227-a0b9-acee-518c-8c97c5da4136@amd.com>
- <CAOWid-es+C_iStQUkM52mO3TeP8eS9MX+emZDQNH2PyZCf=RHQ@mail.gmail.com>
+From: Christopher Lameter <cl@linux.com>
+Subject: Re: [PATCH v3 4/7] mm: unify SLAB and SLUB page accounting
+Date: Mon, 13 May 2019 18:01:05 +0000
+Message-ID: <0100016ab25aef20-4552213a-13e1-4aff-ba52-e970f3ac7fd4-000000@email.amazonses.com>
+References: <20190508202458.550808-1-guro@fb.com> <20190508202458.550808-5-guro@fb.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAOWid-es+C_iStQUkM52mO3TeP8eS9MX+emZDQNH2PyZCf=RHQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+        s=6gbrjpgwjskckoa6a5zn6fwqkn67xbtw; d=amazonses.com; t=1557770465;
+        h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:MIME-Version:Content-Type:Feedback-ID;
+        bh=PlYvmqxRpVISnjsRFpBbrKcWou6q8G660sOR1uIfQB8=;
+        b=b8UGgDxXFtgOe6/nHEgwLitQKKdP6MaTm72eml72TE9fnqIiPmXw8fT7pLun0Kck
+        rTcHdXuzgkeKJJQmYht5nMnPLcckFMsU/bqzVWYwIlrnDkBQuekNUTWLhxi0ugBfjUe
+        6vhOsZoNl7l4/KTlnny/6ogqiyJ4zFkjdnQwfoKQ=
+In-Reply-To: <20190508202458.550808-5-guro@fb.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: "sunnanyong-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <sunnanyong-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "Ho,
- Kenny" <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "Deucher,
- Alexander" <Alexander.Deucher-5C7GfCeVMHo@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Koenig,
- Christian" <Christian.Koenig-5C7GfCeVMHo@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro@fb.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org
 
-T24gRnJpLCBNYXkgMTAsIDIwMTkgYXQgMDI6NTA6MzlQTSAtMDQwMCwgS2VubnkgSG8gd3JvdGU6
-Cj4gT24gRnJpLCBNYXkgMTAsIDIwMTkgYXQgMTo0OCBQTSBLb2VuaWcsIENocmlzdGlhbgo+IDxD
-aHJpc3RpYW4uS29lbmlnQGFtZC5jb20+IHdyb3RlOgo+ID4gV2VsbCBhbm90aGVyIHF1ZXN0aW9u
-IGlzIHdoeSBkbyB3ZSB3YW50IHRvIHByZXZlbnQgdGhhdCBpbiB0aGUgZmlyc3QgcGxhY2U/Cj4g
-Pgo+ID4gSSBtZWFuIHRoZSB3b3JzdCB0aGluZyB0aGF0IGNhbiBoYXBwZW4gaXMgdGhhdCB3ZSBh
-Y2NvdW50IGEgQk8gbXVsdGlwbGUKPiA+IHRpbWVzLgo+IFRoYXQncyBvbmUgb2YgdGhlIHByb2Js
-ZW1zLiAgVGhlIG90aGVyIG9uZSBpcyB0aGUgQk8gb3V0bGl2aW5nIHRoZQo+IGxpZmV0aW1lIG9m
-IGEgY2dyb3VwIGFuZCB0aGVyZSdzIG5vIGdvb2Qgd2F5IHRvIHVuLWNoYXJnZSB0aGUgdXNhZ2UK
-PiB3aGVuIHRoZSBCTyBpcyBmcmVlIHNvIHRoZSBjb3VudCB3b24ndCBiZSBhY2N1cmF0ZS4KPiAK
-PiBJIGhhdmUgbG9va2VkIGludG8gdHdvIHBvc3NpYmxlIHNvbHV0aW9ucy4gIE9uZSBpcyB0byBw
-cmV2ZW50IGNncm91cAo+IGZyb20gYmVpbmcgcmVtb3ZlZCB3aGVuIHRoZXJlIGFyZSBCT3Mgb3du
-ZWQgYnkgdGhlIGNncm91cCBzdGlsbCBhbGl2ZQo+IChzaW1pbGFyIHRvIGhvdyBjZ3JvdXAgcmVt
-b3ZhbCB3aWxsIGZhaWwgaWYgaXQgc3RpbGwgaGFzIHByb2Nlc3Nlcwo+IGF0dGFjaGVkIHRvIGl0
-LikgIE15IGNvbmNlcm4gaGVyZSBpcyB0aGUgcG9zc2liaWxpdHkgb2Ygbm90IGFibGUgdG8KPiBy
-ZW1vdmUgYSBjZ3JvdXAgZm9yZXZlciBkdWUgdG8gdGhlIGxpZmV0aW1lIG9mIGEgQk8gKGNvbnRp
-bnVvdXNseQo+IGJlaW5nIHNoYXJlZCBhbmQgcmV1c2UgYW5kIG5ldmVyIGRpZS4pICBQZXJoYXBz
-IHlvdSBjYW4gc2hlZCBzb21lCj4gbGlnaHQgb24gdGhpcyBwb3NzaWJpbGl0eS4KPiAKPiBUaGUg
-b3RoZXIgb25lIGlzIHRvIGtlZXAgdHJhY2sgb2YgYWxsIHRoZSBidWZmZXJzIGFuZCBtaWdyYXRl
-IHRoZW0gdG8KPiB0aGUgcGFyZW50IGlmIGEgY2dyb3VwIGlzIGNsb3NlZC4gIE15IGNvbmNlcm4g
-aGVyZSBpcyB0aGUgcGVyZm9ybWFuY2UKPiBvdmVyaGVhZCBvbiB0cmFja2luZyBhbGwgdGhlIGJ1
-ZmZlcnMuCgpNeSB1bmRlcnN0YW5kaW5nIGlzIHRoYXQgb3RoZXIgY2dyb3VwcyBhbHJlYWR5IHVz
-ZSByZWZlcmVuY2UgY291bnRpbmcgdG8KbWFrZSBzdXJlIHRoZSBkYXRhIHN0cnVjdHVyZSBpbiB0
-aGUga2VybmVsIGRvZXNuJ3QgZGlzYXBwZWFyIHRvbyBlYXJseS4gU28KeW91IGNhbiBkZWxldGUg
-dGhlIGNncm91cCwgYnV0IGl0IG1pZ2h0IG5vdCBnZXQgZnJlZWQgY29tcGxldGVseSB1bnRpbCBh
-bGwKdGhlIEJPIGFsbG9jYXRlZCBmcm9tIHRoYXQgY2dyb3VwIGFyZSByZWxlYXNlZC4gVGhlcmUn
-cyBhIHJlY2VudCBsd24KYXJ0aWNsZSBvbiBob3cgdGhhdCdzIG5vdCBhbGwgdGhhdCBhd2Vzb21l
-IGZvciB0aGUgbWVtb3J5IGNncm91cApjb250cm9sbGVyLCBhbmQgd2hhdCB0byBkbyBhYm91dCBp
-dDoKCmh0dHBzOi8vbHduLm5ldC9BcnRpY2xlcy83ODc2MTQvCgpXZSBwcm9iYWJseSB3YW50IHRv
-IGFsaWduIHdpdGggd2hhdGV2ZXIgdGhlIG1lbSBjZ3JvdXAgZm9sa3MgY29tZSB1cCB3aXRoCihz
-byBfbm90XyBwcmV2ZW50IGRlbGV0aW9uIG9mIHRoZSBjZ3JvdXAsIHNpbmNlIHRoYXQncyBkaWZm
-ZXJlbnQKYmVoYXZpb3VyKS4KCj4gPiBBbmQgZ29pbmcgaW50byB0aGUgc2FtZSBkaXJlY3Rpb24g
-d2hlcmUgaXMgdGhlIGNvZGUgdG8gaGFuZGxlIGFuIG9wZW4KPiA+IGRldmljZSBmaWxlIGRlc2Ny
-aXB0b3Igd2hpY2ggaXMgc2VuZCBmcm9tIG9uZSBjZ3JvdXAgdG8gYW5vdGhlcj8KPiBJIGxvb2tl
-ZCBpbnRvIHRoaXMgYmVmb3JlIGJ1dCBJIGZvcmdvdCB3aGF0IEkgZm91bmQuICBQZXJoYXBzIGZv
-bGtzCj4gZmFtaWxpYXIgd2l0aCBkZXZpY2UgY2dyb3VwIGNhbiBjaGltZSBpbi4KPiAKPiBBY3R1
-YWxseSwganVzdCBkaWQgYW5vdGhlciBxdWljayBzZWFyY2ggcmlnaHQgbm93LiAgTG9va3MgbGlr
-ZSB0aGUKPiBhY2Nlc3MgaXMgZW5mb3JjZWQgYXQgdGhlIGlub2RlIGxldmVsIChfX2RldmNncm91
-cF9jaGVja19wZXJtaXNzaW9uKQo+IHNvIHRoZSBmZCBzZW50IHRvIGFub3RoZXIgY2dyb3VwIHRo
-YXQgZG9lcyBub3QgaGF2ZSBhY2Nlc3MgdG8gdGhlCj4gZGV2aWNlIHNob3VsZCBzdGlsbCBub3Qg
-aGF2ZSBhY2Nlc3MuCgpUaGF0J3MgdGhlIGRldmljZSBjZ3JvdXAsIG5vdCB0aGUgbWVtb3J5IGFj
-Y291bnRpbmcgc3R1ZmYuCgpJbW8gZm9yIG1lbW9yeSBhbGxvY2F0aW9ucyB3ZSBzaG91bGQgbG9v
-ayBhdCB3aGF0IGhhcHBlbnMgd2hlbiB5b3UgcGFzcyBhCnRlbXBmcyBmaWxlIGFyb3VuZCB0byBh
-bm90aGVyIGNncm91cCBhbmQgdGhlbiBleHRlbmQgaXQgdGhlcmUuIEkgdGhpbmsKdGhvc2UgYWxs
-b2NhdGlvbnMgYXJlIGNoYXJnZWQgYWdhaW5zdCB0aGUgY2dyb3VwIHdoaWNoIGFjdHVhbGx5IGFs
-bG9jYXRlcwpzdHVmZi4KClNvIGZvciBkcm0sIGlmIHlvdSBwYXNzIGFyb3VuZCBhIGRldmljZSBm
-ZCwgdGhlbiB3ZSBhbHdheXMgY2hhcmdlIGlvY3RsCmNhbGxzIHRvIGNyZWF0ZSBhIEJPIGFnYWlu
-c3QgdGhlIHByb2Nlc3MgZG9pbmcgdGhlIGlvY3RsIGNhbGwsIG5vdCBhZ2FpbnN0CnRoZSBwcm9j
-ZXNzIHdoaWNoIG9yaWdpbmFsbHkgb3BlbmVkIHRoZSBkZXZpY2UgZmQuIEZvciBlLmcuIERSSTMg
-dGhhdCdzCmFjdHVhbGx5IHRoZSBvbmx5IHJlYXNvbmFibGUgdGhpbmcgdG8gZG8sIHNpbmNlIG90
-aGVyd2lzZSB3ZSdkIGNoYXJnZQpldmVyeXRoaW5nIGFnYWluc3QgdGhlIFhzZXJ2ZXIuCi1EYW5p
-ZWwKCj4gCj4gUmVnYXJkcywKPiBLZW5ueQo+IAo+IAo+ID4gUmVnYXJkcywKPiA+IENocmlzdGlh
-bi4KPiA+Cj4gPiA+Cj4gPiA+IFJlZ2FyZHMsCj4gPiA+IEtlbm55Cj4gPiA+Cj4gPiA+Pj4gT24g
-dGhlIG90aGVyIGhhbmQsIGlmIHRoZXJlIGFyZSBleHBlY3RhdGlvbnMgZm9yIHJlc291cmNlIG1h
-bmFnZW1lbnQKPiA+ID4+PiBiZXR3ZWVuIGNvbnRhaW5lcnMsIEkgd291bGQgbGlrZSB0byBrbm93
-IHdobyBpcyB0aGUgZXhwZWN0ZWQgbWFuYWdlcgo+ID4gPj4+IGFuZCBob3cgZG9lcyBpdCBmaXQg
-aW50byB0aGUgY29uY2VwdCBvZiBjb250YWluZXIgKHdoaWNoIGVuZm9yY2Ugc29tZQo+ID4gPj4+
-IGxldmVsIG9mIGlzb2xhdGlvbi4pICBPbmUgcG9zc2libGUgbWFuYWdlciBtYXkgYmUgdGhlIGRp
-c3BsYXkgc2VydmVyLgo+ID4gPj4+IEJ1dCBhcyBsb25nIGFzIHRoZSBkaXNwbGF5IHNlcnZlciBp
-cyBpbiBhIHBhcmVudCBjZ3JvdXAgb2YgdGhlIGFwcHMnCj4gPiA+Pj4gY2dyb3VwLCB0aGUgYXBw
-cyBjYW4gc3RpbGwgaW1wb3J0IGhhbmRsZXMgZnJvbSB0aGUgZGlzcGxheSBzZXJ2ZXIKPiA+ID4+
-PiB1bmRlciB0aGUgY3VycmVudCBpbXBsZW1lbnRhdGlvbi4gIE15IHVuZGVyc3RhbmRpbmcgaXMg
-dGhhdCB0aGlzIGlzCj4gPiA+Pj4gbW9zdCBsaWtlbHkgdGhlIGNhc2UsIHdpdGggdGhlIGRpc3Bs
-YXkgc2VydmVyIHNpbXBseSBzaXR0aW5nIGF0IHRoZQo+ID4gPj4+IGRlZmF1bHQvcm9vdCBjZ3Jv
-dXAuICBCdXQgSSBjZXJ0YWlubHkgd2FudCB0byBoZWFyIG1vcmUgYWJvdXQgb3RoZXIKPiA+ID4+
-PiB1c2UgY2FzZXMgKGZvciBleGFtcGxlLCBpcyBydW5uaW5nIG11bHRpcGxlIGRpc3BsYXkgc2Vy
-dmVycyBvbiBhCj4gPiA+Pj4gc2luZ2xlIGhvc3QgYSByZWFsaXN0aWMgcG9zc2liaWxpdHk/ICBB
-cmUgdGhlcmUgcGVvcGxlIHJ1bm5pbmcKPiA+ID4+PiBtdWx0aXBsZSBkaXNwbGF5IHNlcnZlcnMg
-aW5zaWRlIHBlZXIgY29udGFpbmVycz8gIElmIHNvLCBob3cgZG8gdGhleQo+ID4gPj4+IGNvb3Jk
-aW5hdGUgcmVzb3VyY2VzPykKPiA+ID4+IFdlIGRlZmluaXRlbHkgaGF2ZSBzaXR1YXRpb25zIHdp
-dGggbXVsdGlwbGUgZGlzcGxheSBzZXJ2ZXJzIHJ1bm5pbmcKPiA+ID4+IChqdXN0IHRoaW5rIG9m
-IFZSKS4KPiA+ID4+Cj4gPiA+PiBJIGp1c3QgY2FuJ3Qgc2F5IGlmIHRoZXkgY3VycmVudGx5IHVz
-ZSBjZ3JvdXBzIGluIGFueSB3YXkuCj4gPiA+Pgo+ID4gPj4gVGhhbmtzLAo+ID4gPj4gQ2hyaXN0
-aWFuLgo+ID4gPj4KPiA+ID4+PiBJIHNob3VsZCBwcm9iYWJseSBzdW1tYXJpemUgc29tZSBvZiB0
-aGVzZSBpbnRvIHRoZSBjb21taXQgbWVzc2FnZS4KPiA+ID4+Pgo+ID4gPj4+IFJlZ2FyZHMsCj4g
-PiA+Pj4gS2VubnkKPiA+ID4+Pgo+ID4gPj4+Cj4gPiA+Pj4KPiA+ID4+Pj4gQ2hyaXN0aWFuLgo+
-ID4gPj4+Pgo+ID4KPiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fXwo+IGRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKPiBkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0
-b3Aub3JnCj4gaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9k
-cmktZGV2ZWwKCi0tIApEYW5pZWwgVmV0dGVyClNvZnR3YXJlIEVuZ2luZWVyLCBJbnRlbCBDb3Jw
-b3JhdGlvbgpodHRwOi8vYmxvZy5mZndsbC5jaApfX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fXwphbWQtZ2Z4IG1haWxpbmcgbGlzdAphbWQtZ2Z4QGxpc3RzLmZy
-ZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3Rp
-bmZvL2FtZC1nZng=
+On Wed, 8 May 2019, Roman Gushchin wrote:
+
+> Currently the page accounting code is duplicated in SLAB and SLUB
+> internals. Let's move it into new (un)charge_slab_page helpers
+> in the slab_common.c file. These helpers will be responsible
+> for statistics (global and memcg-aware) and memcg charging.
+> So they are replacing direct memcg_(un)charge_slab() calls.
+
+Looks good.
+
+Acked-by: Christoph Lameter <cl@linux.com>
