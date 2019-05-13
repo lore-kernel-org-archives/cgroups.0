@@ -1,144 +1,92 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: [PATCH] signal: don't always leave task frozen after ptrace_stop()
-Date: Mon, 13 May 2019 12:55:17 -0700
-Message-ID: <20190513195517.2289671-1-guro@fb.com>
+Subject: Re: [PATCH v3 0/7] mm: reparent slab memory on cgroup removal
+Date: Mon, 13 May 2019 20:21:52 +0000
+Message-ID: <20190513202146.GA18451@tower.DHCP.thefacebook.com>
+References: <20190508202458.550808-1-guro@fb.com>
+ <CALvZod4WGVVq+UY_TZdKP_PHdifDrkYqPGgKYTeUB6DsxGAdVw@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-type; s=facebook;
- bh=Q/m7r9oDhbabE7C5gARZpfLLlDj2HaUtKuQrbtPLsyQ=;
- b=iESxXiQh8mb73jrpFI7BpQ+227YydRv6Qyx7giJk6NgY/AibbJqMfp5B9+i5/DFDZmaJ
- xGCKpXW5AcggB98y/MQ6C2KMCqG4Nbiehiql13wiZ92CLvkMRjJqsDEnLv0GZvoYnso+
- zQwnhi7bI0MeWMwGDquYHiMIwQeIOulmK44= 
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=tsSq1++Ye+ueNW2uquEVLDQ0QUuST6HsPFGeUaz02Fg=;
+ b=atNArPYwI7Qi502c3cGXbYPvLVXeNdJL+9LkN0rK40ahoP3DwgzLcYDXJBPX89rkSnJX
+ w6GD8IIuhUjJx3u7QnxJYgwBfxMOrGvFharT7abTzC2dKOWHATqiTXHiDeeh0AQVS4NB
+ j6+RI08hcEjh23kfDQNymk+JdnUuGVJYwTw= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=tsSq1++Ye+ueNW2uquEVLDQ0QUuST6HsPFGeUaz02Fg=;
+ b=e8kd77HTWO0U024kz84jEE4mhV9DedZ3159BoIWOcoQq+3LIxnmIPT2ZoJ8v+/ypQtlcd/COFOWMyhDs38MzgZe1HCkouEmcsvFS97P3Gpwwjbp876zz7w/OXnILT/oS1sPyDV0x9hE3gfcCiBv4hI1dc+VLHWy5j995WFdZrlU=
+In-Reply-To: <CALvZod4WGVVq+UY_TZdKP_PHdifDrkYqPGgKYTeUB6DsxGAdVw@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <166DA22C09B836488E8671DA1192C6A8@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Oleg Nesterov <oleg@redhat.com>, Alex Xu <alex_y_xu@yahoo.ca>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Christoph Lameter <cl@linux.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Cgroups <cgroups@vger.kernel.org>
 
-The ptrace_stop() function contains the cgroup_enter_frozen() call,
-but no cgroup_leave_frozen(). When ptrace_stop() is called from the
-do_jobctl_trap() path, it's correct, because corresponding
-cgroup_leave_frozen() calls in get_signal() will guarantee that
-the task won't leave the signal handler loop frozen.
+On Fri, May 10, 2019 at 05:32:15PM -0700, Shakeel Butt wrote:
+> From: Roman Gushchin <guro@fb.com>
+> Date: Wed, May 8, 2019 at 1:30 PM
+> To: Andrew Morton, Shakeel Butt
+> Cc: <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>,
+> <kernel-team@fb.com>, Johannes Weiner, Michal Hocko, Rik van Riel,
+> Christoph Lameter, Vladimir Davydov, <cgroups@vger.kernel.org>, Roman
+> Gushchin
+>=20
+> > # Why do we need this?
+> >
+> > We've noticed that the number of dying cgroups is steadily growing on m=
+ost
+> > of our hosts in production. The following investigation revealed an iss=
+ue
+> > in userspace memory reclaim code [1], accounting of kernel stacks [2],
+> > and also the mainreason: slab objects.
+> >
+> > The underlying problem is quite simple: any page charged
+> > to a cgroup holds a reference to it, so the cgroup can't be reclaimed u=
+nless
+> > all charged pages are gone. If a slab object is actively used by other =
+cgroups,
+> > it won't be reclaimed, and will prevent the origin cgroup from being re=
+claimed.
+> >
+> > Slab objects, and first of all vfs cache, is shared between cgroups, wh=
+ich are
+> > using the same underlying fs, and what's even more important, it's shar=
+ed
+> > between multiple generations of the same workload. So if something is r=
+unning
+> > periodically every time in a new cgroup (like how systemd works), we do
+> > accumulate multiple dying cgroups.
+> >
+> > Strictly speaking pagecache isn't different here, but there is a key di=
+fference:
+> > we disable protection and apply some extra pressure on LRUs of dying cg=
+roups,
+>=20
+> How do you apply extra pressure on dying cgroups? cgroup-v2 does not
+> have memory.force_empty.
 
-However, if ptrace_stop() is called from ptrace_signal() or
-ptrace_notify(), there is no such guarantee, and the task may leave
-with the frozen bit set.
+I mean the following part of get_scan_count():
+	/*
+	 * If the cgroup's already been deleted, make sure to
+	 * scrape out the remaining cache.
+	 */
+	if (!scan && !mem_cgroup_online(memcg))
+		scan =3D min(lruvec_size, SWAP_CLUSTER_MAX);
 
-It leads to the regression, reported by Alex Xu. Write system call
-gets mistakenly interrupted by fake TIF_SIGPENDING, which is set
-by recalc_sigpending_tsk() because of the set frozen bit.
+It seems to work well, so that pagecache alone doesn't pin too many
+dying cgroups. The price we're paying is some excessive IO here,
+which can be avoided had we be able to recharge the pagecache.
 
-The regression can be reproduced by stracing the following simple
-program:
 
-  #include <unistd.h>
+Btw, thank you very much for looking into the patchset. I'll address
+all comments and send v4 soon.
 
-  int main() {
-      write(1, "a", 1);
-      return 0;
-  }
+Thanks!
 
-An attempt to run strace ./a.out leads to the infinite loop:
-  [ pre-main omitted ]
-  write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
-  write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
-  write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
-  write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
-  write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
-  write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
-  [ repeats forever ]
-
-With this patch applied, it works as expected:
-  [ pre-main omitted ]
-  write(1, "a", 1)                        = 1
-  exit_group(0)                           = ?
-  +++ exited with 0 +++
-
-Reported-by: Alex Xu <alex_y_xu@yahoo.ca>
-Fixes: 76f969e8948d ("cgroup: cgroup v2 freezer")
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Oleg Nesterov <oleg@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>
----
- kernel/signal.c | 18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
-
-diff --git a/kernel/signal.c b/kernel/signal.c
-index 8607b11ff936..f12abbda4c4b 100644
---- a/kernel/signal.c
-+++ b/kernel/signal.c
-@@ -2016,7 +2016,8 @@ static bool sigkill_pending(struct task_struct *tsk)
-  * If we actually decide not to stop at all because the tracer
-  * is gone, we keep current->exit_code unless clear_code.
-  */
--static void ptrace_stop(int exit_code, int why, int clear_code, kernel_siginfo_t *info)
-+static void ptrace_stop(int exit_code, int why, int clear_code,
-+			kernel_siginfo_t *info, bool may_remain_frozen)
- 	__releases(&current->sighand->siglock)
- 	__acquires(&current->sighand->siglock)
- {
-@@ -2112,6 +2113,8 @@ static void ptrace_stop(int exit_code, int why, int clear_code, kernel_siginfo_t
- 		preempt_enable_no_resched();
- 		cgroup_enter_frozen();
- 		freezable_schedule();
-+		if (!may_remain_frozen)
-+			cgroup_leave_frozen(true);
- 	} else {
- 		/*
- 		 * By the time we got the lock, our tracer went away.
-@@ -2152,7 +2155,8 @@ static void ptrace_stop(int exit_code, int why, int clear_code, kernel_siginfo_t
- 	recalc_sigpending_tsk(current);
- }
- 
--static void ptrace_do_notify(int signr, int exit_code, int why)
-+static void ptrace_do_notify(int signr, int exit_code, int why,
-+			     bool may_remain_frozen)
- {
- 	kernel_siginfo_t info;
- 
-@@ -2163,7 +2167,7 @@ static void ptrace_do_notify(int signr, int exit_code, int why)
- 	info.si_uid = from_kuid_munged(current_user_ns(), current_uid());
- 
- 	/* Let the debugger run.  */
--	ptrace_stop(exit_code, why, 1, &info);
-+	ptrace_stop(exit_code, why, 1, &info, may_remain_frozen);
- }
- 
- void ptrace_notify(int exit_code)
-@@ -2173,7 +2177,7 @@ void ptrace_notify(int exit_code)
- 		task_work_run();
- 
- 	spin_lock_irq(&current->sighand->siglock);
--	ptrace_do_notify(SIGTRAP, exit_code, CLD_TRAPPED);
-+	ptrace_do_notify(SIGTRAP, exit_code, CLD_TRAPPED, false);
- 	spin_unlock_irq(&current->sighand->siglock);
- }
- 
-@@ -2328,10 +2332,10 @@ static void do_jobctl_trap(void)
- 			signr = SIGTRAP;
- 		WARN_ON_ONCE(!signr);
- 		ptrace_do_notify(signr, signr | (PTRACE_EVENT_STOP << 8),
--				 CLD_STOPPED);
-+				 CLD_STOPPED, true);
- 	} else {
- 		WARN_ON_ONCE(!signr);
--		ptrace_stop(signr, CLD_STOPPED, 0, NULL);
-+		ptrace_stop(signr, CLD_STOPPED, 0, NULL, true);
- 		current->exit_code = 0;
- 	}
- }
-@@ -2385,7 +2389,7 @@ static int ptrace_signal(int signr, kernel_siginfo_t *info)
- 	 * comment in dequeue_signal().
- 	 */
- 	current->jobctl |= JOBCTL_STOP_DEQUEUED;
--	ptrace_stop(signr, CLD_TRAPPED, 0, info);
-+	ptrace_stop(signr, CLD_TRAPPED, 0, info, false);
- 
- 	/* We're back.  Did the debugger cancel the sig?  */
- 	signr = current->exit_code;
--- 
-2.20.1
-
+Roman
