@@ -1,92 +1,283 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v3 0/7] mm: reparent slab memory on cgroup removal
-Date: Mon, 13 May 2019 20:21:52 +0000
-Message-ID: <20190513202146.GA18451@tower.DHCP.thefacebook.com>
-References: <20190508202458.550808-1-guro@fb.com>
- <CALvZod4WGVVq+UY_TZdKP_PHdifDrkYqPGgKYTeUB6DsxGAdVw@mail.gmail.com>
+From: Debabrata Banerjee <dbanerje@akamai.com>
+Subject: [PATCH] mem_cgroup: event_list_lock requires irqsave lock
+Date: Mon, 13 May 2019 16:44:32 -0400
+Message-ID: <20190513204432.6063-1-dbanerje@akamai.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=tsSq1++Ye+ueNW2uquEVLDQ0QUuST6HsPFGeUaz02Fg=;
- b=atNArPYwI7Qi502c3cGXbYPvLVXeNdJL+9LkN0rK40ahoP3DwgzLcYDXJBPX89rkSnJX
- w6GD8IIuhUjJx3u7QnxJYgwBfxMOrGvFharT7abTzC2dKOWHATqiTXHiDeeh0AQVS4NB
- j6+RI08hcEjh23kfDQNymk+JdnUuGVJYwTw= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tsSq1++Ye+ueNW2uquEVLDQ0QUuST6HsPFGeUaz02Fg=;
- b=e8kd77HTWO0U024kz84jEE4mhV9DedZ3159BoIWOcoQq+3LIxnmIPT2ZoJ8v+/ypQtlcd/COFOWMyhDs38MzgZe1HCkouEmcsvFS97P3Gpwwjbp876zz7w/OXnILT/oS1sPyDV0x9hE3gfcCiBv4hI1dc+VLHWy5j995WFdZrlU=
-In-Reply-To: <CALvZod4WGVVq+UY_TZdKP_PHdifDrkYqPGgKYTeUB6DsxGAdVw@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <166DA22C09B836488E8671DA1192C6A8@namprd15.prod.outlook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=akamai.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-transfer-encoding;
+ s=jan2016.eng; bh=g37pczUbKrwfb2PG60E8lMD0YH4JQSGXnhy605XKbRk=;
+ b=UNFwA76FMzEnslJNqaYd6xF6+Ad6pIsR/tOmkUPsKfO4lLh67a73JyfyNF1GcsOK2FlJ
+ qWl3lfr4enLMFPbzufBP2Yo7z33AI11ha7ooX0CzP7laR0eCca49fXum+zPklSIHA9IT
+ 7H5B5ZZlE0kRrzMr1ow6mz9Tx4v1pdcY7kzrGtjqgLpsZlspcyunLgNuVTmyD4xR8xkr
+ pvqOe2Zi7ljA2mQ31HIBjkxz/lpZkcOsYambxAWINtkZ1PVdkYMz7KzT6k0Raswh7k0Z
+ PAr7+I9fAQ8VCE1XkEgBKcNTDGj2Ctd46CUQpVREBXW6xjsYTniU8MyYpw/sbeaN6wQ9 Xw== 
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Christoph Lameter <cl@linux.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Cgroups <cgroups@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Cc: dbanerje@akamai.com
 
-On Fri, May 10, 2019 at 05:32:15PM -0700, Shakeel Butt wrote:
-> From: Roman Gushchin <guro@fb.com>
-> Date: Wed, May 8, 2019 at 1:30 PM
-> To: Andrew Morton, Shakeel Butt
-> Cc: <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>,
-> <kernel-team@fb.com>, Johannes Weiner, Michal Hocko, Rik van Riel,
-> Christoph Lameter, Vladimir Davydov, <cgroups@vger.kernel.org>, Roman
-> Gushchin
->=20
-> > # Why do we need this?
-> >
-> > We've noticed that the number of dying cgroups is steadily growing on m=
-ost
-> > of our hosts in production. The following investigation revealed an iss=
-ue
-> > in userspace memory reclaim code [1], accounting of kernel stacks [2],
-> > and also the mainreason: slab objects.
-> >
-> > The underlying problem is quite simple: any page charged
-> > to a cgroup holds a reference to it, so the cgroup can't be reclaimed u=
-nless
-> > all charged pages are gone. If a slab object is actively used by other =
-cgroups,
-> > it won't be reclaimed, and will prevent the origin cgroup from being re=
-claimed.
-> >
-> > Slab objects, and first of all vfs cache, is shared between cgroups, wh=
-ich are
-> > using the same underlying fs, and what's even more important, it's shar=
-ed
-> > between multiple generations of the same workload. So if something is r=
-unning
-> > periodically every time in a new cgroup (like how systemd works), we do
-> > accumulate multiple dying cgroups.
-> >
-> > Strictly speaking pagecache isn't different here, but there is a key di=
-fference:
-> > we disable protection and apply some extra pressure on LRUs of dying cg=
-roups,
->=20
-> How do you apply extra pressure on dying cgroups? cgroup-v2 does not
-> have memory.force_empty.
+Lockdep reports of potential deadlock in memcg_event_wake():
 
-I mean the following part of get_scan_count():
-	/*
-	 * If the cgroup's already been deleted, make sure to
-	 * scrape out the remaining cache.
-	 */
-	if (!scan && !mem_cgroup_online(memcg))
-		scan =3D min(lruvec_size, SWAP_CLUSTER_MAX);
+[  850.145324] =====================================================
+[  850.151458] WARNING: SOFTIRQ-safe -> SOFTIRQ-unsafe lock order detected
+[  850.158108] 4.19.29-4.19.0-debug-99d9c44b25c08f51 #1 Tainted: G           O
+[  850.165540] -----------------------------------------------------
+[  850.171669] gh_PhantomThr00/8426 [HC0[0]:SC0[0]:HE0:SE1] is trying to acquire:
+[  850.178924] 00000000cf6f8a05 (&(&memcg->event_list_lock)->rlock){+.+.}, at: memcg_event_wake+0x58/0x210
+[  850.188360]
+[  850.188360] and this task is already holding:
+[  850.194226] 00000000bc034eb9 (&ctx->wqh#2){..-.}, at: __wake_up_common_lock+0xa3/0x100
+[  850.202183] which would create a new lock dependency:
+[  850.207279]  (&ctx->wqh#2){..-.} -> (&(&memcg->event_list_lock)->rlock){+.+.}
+[  850.214454]
+[  850.214454] but this new dependency connects a SOFTIRQ-irq-safe lock:
+[  850.222403]  (&ctx->wqh#2){..-.}
+[  850.222405]
+[  850.222405] ... which became SOFTIRQ-irq-safe at:
+[  850.231894]   _raw_spin_lock_irqsave+0x48/0x80
+[  850.236385]   eventfd_signal+0x1f/0xc0
+[  850.240169]   aio_complete+0x51b/0xd40
+[  850.243959]   dio_complete+0x2e3/0x880
+[  850.247970]   blk_update_request+0x197/0xb50
+[  850.252277]   scsi_end_request+0x77/0x870
+[  850.256325]   scsi_io_completion+0x211/0x14e0
+[  850.260720]   blk_done_softirq+0x212/0x310
+[  850.264863]   __do_softirq+0x22e/0x868
+[  850.268657]   irq_exit+0x150/0x170
+[  850.272098]   do_IRQ+0x87/0x1a0
+[  850.275277]   ret_from_intr+0x0/0x22
+[  850.278893]   orc_find+0x9a/0x340
+[  850.282246]   unwind_next_frame+0x1fd/0x1850
+[  850.286554]   __save_stack_trace+0x73/0xd0
+[  850.290690]   kasan_kmalloc+0xda/0x170
+[  850.294474]   kmem_cache_alloc+0x14e/0x340
+[  850.298609]   create_object+0x81/0x8e0
+[  850.302396]   kmem_cache_alloc+0x2c8/0x340
+[  850.306529]   __blockdev_direct_IO+0x36c/0xae51
+[  850.311121]   ext4_direct_IO+0xecd/0x1690 [ext4]
+[  850.315779]   generic_file_read_iter+0x1de/0x15b0
+[  850.320516]   aio_read+0x2a7/0x360
+[  850.323957]   io_submit_one+0x5a6/0x1710
+[  850.327917]   __se_sys_io_submit+0x115/0x340
+[  850.332226]   do_syscall_64+0x9b/0x400
+[  850.336014]   entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[  850.341187]
+[  850.341187] to a SOFTIRQ-irq-unsafe lock:
+[  850.346714]  (&(&memcg->event_list_lock)->rlock){+.+.}
+[  850.346717]
+[  850.346717] ... which became SOFTIRQ-irq-unsafe at:
+[  850.358283] ...
+[  850.358286]   _raw_spin_lock+0x30/0x70
+[  850.363867]   memcg_write_event_control+0x982/0xe60
+[  850.368782]   cgroup_file_write+0x260/0x640
+[  850.373002]   kernfs_fop_write+0x278/0x400
+[  850.377136]   __vfs_write+0xd5/0x5b0
+[  850.380748]   vfs_write+0x15d/0x460
+[  850.384275]   ksys_write+0xb1/0x170
+[  850.387803]   do_syscall_64+0x9b/0x400
+[  850.391591]   entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[  850.396762]
+[  850.396762] other info that might help us debug this:
+[  850.396762]
+[  850.404798]  Possible interrupt unsafe locking scenario:
+[  850.404798]
+[  850.411626]        CPU0                    CPU1
+[  850.416195]        ----                    ----
+[  850.420760]   lock(&(&memcg->event_list_lock)->rlock);
+[  850.426343]                                local_irq_disable();
+[  850.432297]                                lock(&ctx->wqh#2);
+[  850.438087]                                lock(&(&memcg->event_list_lock)->rlock);
+[  850.445781]   <Interrupt>
+[  850.448442]     lock(&ctx->wqh#2);
+[  850.451884]
+[  850.451884]  *** DEADLOCK ***
+[  850.451884]
+[  850.457847] 1 lock held by gh_PhantomThr00/8426:
+[  850.462499]  #0: 00000000bc034eb9 (&ctx->wqh#2){..-.}, at: __wake_up_common_lock+0xa3/0x100
+[  850.470889]
+[  850.470889] the dependencies between SOFTIRQ-irq-safe lock and the holding lock:
+[  850.479801] -> (&ctx->wqh#2){..-.} ops: 2456971 {
+[  850.484546]    IN-SOFTIRQ-W at:
+[  850.487731]                     _raw_spin_lock_irqsave+0x48/0x80
+[  850.493779]                     eventfd_signal+0x1f/0xc0
+[  850.499134]                     aio_complete+0x51b/0xd40
+[  850.504481]                     dio_complete+0x2e3/0x880
+[  850.509828]                     blk_update_request+0x197/0xb50
+[  850.515696]                     scsi_end_request+0x77/0x870
+[  850.521312]                     scsi_io_completion+0x211/0x14e0
+[  850.527265]                     blk_done_softirq+0x212/0x310
+[  850.532959]                     __do_softirq+0x22e/0x868
+[  850.538307]                     irq_exit+0x150/0x170
+[  850.543307]                     do_IRQ+0x87/0x1a0
+[  850.548046]                     ret_from_intr+0x0/0x22
+[  850.553224]                     orc_find+0x9a/0x340
+[  850.558136]                     unwind_next_frame+0x1fd/0x1850
+[  850.564002]                     __save_stack_trace+0x73/0xd0
+[  850.569700]                     kasan_kmalloc+0xda/0x170
+[  850.575054]                     kmem_cache_alloc+0x14e/0x340
+[  850.580747]                     create_object+0x81/0x8e0
+[  850.586103]                     kmem_cache_alloc+0x2c8/0x340
+[  850.591797]                     __blockdev_direct_IO+0x36c/0xae51
+[  850.597944]                     ext4_direct_IO+0xecd/0x1690 [ext4]
+[  850.604162]                     generic_file_read_iter+0x1de/0x15b0
+[  850.610474]                     aio_read+0x2a7/0x360
+[  850.615472]                     io_submit_one+0x5a6/0x1710
+[  850.620992]                     __se_sys_io_submit+0x115/0x340
+[  850.626862]                     do_syscall_64+0x9b/0x400
+[  850.632206]                     entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[  850.638943]    INITIAL USE at:
+[  850.642037]                    _raw_spin_lock_irqsave+0x48/0x80
+[  850.647989]                    add_wait_queue+0x49/0x150
+[  850.653338]                    ep_ptable_queue_proc+0x296/0x380
+[  850.659290]                    eventfd_poll+0x6f/0x100
+[  850.664464]                    ep_item_poll.isra.1+0xf9/0x320
+[  850.670246]                    __se_sys_epoll_ctl+0x12e0/0x3030
+[  850.676200]                    do_syscall_64+0x9b/0x400
+[  850.681469]                    entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[  850.688115]  }
+[  850.689825]  ... key      at: [<ffffffffbf2ac7e0>] __key.41123+0x0/0x40
+[  850.696479]  ... acquired at:
+[  850.699494]    _raw_spin_lock+0x30/0x70
+[  850.703378]    memcg_event_wake+0x58/0x210
+[  850.707512]    __wake_up_common+0x183/0x550
+[  850.711733]    __wake_up_common_lock+0xbe/0x100
+[  850.716299]    eventfd_release+0x47/0x70
+[  850.720261]    __fput+0x256/0x7e0
+[  850.723614]    task_work_run+0xfe/0x170
+[  850.727489]    do_exit+0x993/0x2b60
+[  850.731014]    do_group_exit+0xee/0x2b0
+[  850.734889]    get_signal+0x31f/0x18c0
+[  850.738674]    do_signal+0x9b/0x16d0
+[  850.742289]    exit_to_usermode_loop+0x146/0x1a0
+[  850.746942]    do_syscall_64+0x317/0x400
+[  850.750903]    entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[  850.756164]
+[  850.757706]
+[  850.757706] the dependencies between the lock to be acquired
+[  850.757707]  and SOFTIRQ-irq-unsafe lock:
+[  850.768925] -> (&(&memcg->event_list_lock)->rlock){+.+.} ops: 4 {
+[  850.775058]    HARDIRQ-ON-W at:
+[  850.778238]                     _raw_spin_lock+0x30/0x70
+[  850.783585]                     memcg_write_event_control+0x982/0xe60
+[  850.790069]                     cgroup_file_write+0x260/0x640
+[  850.795851]                     kernfs_fop_write+0x278/0x400
+[  850.801552]                     __vfs_write+0xd5/0x5b0
+[  850.807417]                     vfs_write+0x15d/0x460
+[  850.812505]                     ksys_write+0xb1/0x170
+[  850.817593]                     do_syscall_64+0x9b/0x400
+[  850.822941]                     entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[  850.829675]    SOFTIRQ-ON-W at:
+[  850.832856]                     _raw_spin_lock+0x30/0x70
+[  850.838203]                     memcg_write_event_control+0x982/0xe60
+[  850.844676]                     cgroup_file_write+0x260/0x640
+[  850.850457]                     kernfs_fop_write+0x278/0x400
+[  850.856152]                     __vfs_write+0xd5/0x5b0
+[  850.861333]                     vfs_write+0x15d/0x460
+[  850.866420]                     ksys_write+0xb1/0x170
+[  850.871507]                     do_syscall_64+0x9b/0x400
+[  850.876856]                     entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[  850.883595]    INITIAL USE at:
+[  850.886692]                    _raw_spin_lock+0x30/0x70
+[  850.891953]                    memcg_write_event_control+0x982/0xe60
+[  850.898347]                    cgroup_file_write+0x260/0x640
+[  850.904042]                    kernfs_fop_write+0x278/0x400
+[  850.909649]                    __vfs_write+0xd5/0x5b0
+[  850.914736]                    vfs_write+0x15d/0x460
+[  850.919737]                    ksys_write+0xb1/0x170
+[  850.924738]                    do_syscall_64+0x9b/0x400
+[  850.929998]                    entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[  850.936643]  }
+[  850.938356]  ... key      at: [<ffffffffbf2a6680>] __key.75511+0x0/0x40
+[  850.945007]  ... acquired at:
+[  850.948014]    _raw_spin_lock+0x30/0x70
+[  850.951891]    memcg_event_wake+0x58/0x210
+[  850.956025]    __wake_up_common+0x183/0x550
+[  850.960243]    __wake_up_common_lock+0xbe/0x100
+[  850.964811]    eventfd_release+0x47/0x70
+[  850.968771]    __fput+0x256/0x7e0
+[  850.972126]    task_work_run+0xfe/0x170
+[  850.975999]    do_exit+0x993/0x2b60
+[  850.979528]    do_group_exit+0xee/0x2b0
+[  850.983402]    get_signal+0x31f/0x18c0
+[  850.987189]    do_signal+0x9b/0x16d0
+[  850.990802]    exit_to_usermode_loop+0x146/0x1a0
+[  850.995456]    do_syscall_64+0x317/0x400
+[  850.999425]    entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
-It seems to work well, so that pagecache alone doesn't pin too many
-dying cgroups. The price we're paying is some excessive IO here,
-which can be avoided had we be able to recharge the pagecache.
+Signed-off-by: Debabrata Banerjee <dbanerje@akamai.com>
+---
+ mm/memcontrol.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 81a0d3914ec9..3faaa6934335 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4016,7 +4016,9 @@ static int memcg_event_wake(wait_queue_entry_t *wait, unsigned mode,
+ 		 * side will require wqh->lock via remove_wait_queue(),
+ 		 * which we hold.
+ 		 */
+-		spin_lock(&memcg->event_list_lock);
++		unsigned long irqflags;
++
++		spin_lock_irqsave(&memcg->event_list_lock, irqflags);
+ 		if (!list_empty(&event->list)) {
+ 			list_del_init(&event->list);
+ 			/*
+@@ -4025,7 +4027,7 @@ static int memcg_event_wake(wait_queue_entry_t *wait, unsigned mode,
+ 			 */
+ 			schedule_work(&event->remove);
+ 		}
+-		spin_unlock(&memcg->event_list_lock);
++		spin_unlock_irqrestore(&memcg->event_list_lock, irqflags);
+ 	}
+ 
+ 	return 0;
+@@ -4062,6 +4064,7 @@ static ssize_t memcg_write_event_control(struct kernfs_open_file *of,
+ 	const char *name;
+ 	char *endp;
+ 	int ret;
++	unsigned long flags;
+ 
+ 	buf = strstrip(buf);
+ 
+@@ -4157,9 +4160,9 @@ static ssize_t memcg_write_event_control(struct kernfs_open_file *of,
+ 
+ 	vfs_poll(efile.file, &event->pt);
+ 
+-	spin_lock(&memcg->event_list_lock);
++	spin_lock_irqsave(&memcg->event_list_lock, flags);
+ 	list_add(&event->list, &memcg->event_list);
+-	spin_unlock(&memcg->event_list_lock);
++	spin_unlock_irqrestore(&memcg->event_list_lock, flags);
+ 
+ 	fdput(cfile);
+ 	fdput(efile);
+@@ -4578,18 +4581,19 @@ static void mem_cgroup_css_offline(struct cgroup_subsys_state *css)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+ 	struct mem_cgroup_event *event, *tmp;
++	unsigned long flags;
+ 
+ 	/*
+ 	 * Unregister events and notify userspace.
+ 	 * Notify userspace about cgroup removing only after rmdir of cgroup
+ 	 * directory to avoid race between userspace and kernelspace.
+ 	 */
+-	spin_lock(&memcg->event_list_lock);
++	spin_lock_irqsave(&memcg->event_list_lock, flags);
+ 	list_for_each_entry_safe(event, tmp, &memcg->event_list, list) {
+ 		list_del_init(&event->list);
+ 		schedule_work(&event->remove);
+ 	}
+-	spin_unlock(&memcg->event_list_lock);
++	spin_unlock_irqrestore(&memcg->event_list_lock, flags);
+ 
+ 	page_counter_set_min(&memcg->memory, 0);
+ 	page_counter_set_low(&memcg->memory, 0);
+-- 
+2.21.0
 
-Btw, thank you very much for looking into the patchset. I'll address
-all comments and send v4 soon.
-
-Thanks!
-
-Roman
