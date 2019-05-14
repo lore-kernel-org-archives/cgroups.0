@@ -1,176 +1,59 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH] signal: don't always leave task frozen after
- ptrace_stop()
-Date: Tue, 14 May 2019 17:46:07 +0000
-Message-ID: <20190514174603.GB12629@tower.DHCP.thefacebook.com>
-References: <20190513195517.2289671-1-guro@fb.com>
- <20190514160158.GB32459@redhat.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH 4/4] drm/amdkfd: Check against device cgroup
+Date: Tue, 14 May 2019 17:37:54 +0000
+Message-ID: <20190514173749.GA12629@tower.DHCP.thefacebook.com>
+References: <20190501145904.27505-1-Harish.Kasiviswanathan@amd.com>
+ <20190501145904.27505-5-Harish.Kasiviswanathan@amd.com>
+ <20190514015832.GA14741@tower.DHCP.thefacebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=iFTJ0SqketpKa3Ua/Wo7Oc5guTdLd4V8cmejc+ytmug=;
- b=lukHVSqqVLpq/Gt+ZszLWxFY6MEWOlHIp0DoS3rW9X+JDMD9I8ipHev2goAdWseEwUQB
- RnTOMqHXcu41mbxqPh1Eb7Pikyo1wQZUPb4rjCI8AqUp0tZwL+kNuI8RXVQv6HqRs2Se
- Rp5EROZr7k9B86QcHfDBq9JjvLiSz1gEwzg= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iFTJ0SqketpKa3Ua/Wo7Oc5guTdLd4V8cmejc+ytmug=;
- b=GukmpHwaZrU4SLgX/I8WijkXNZveGAuFz+tDhn/Sjs1/AqDGVT+eR1zJf4FCN8xcN8hjz+1aj2tNwkkvW17jYBz7mQamSer4MHNPcmFUnIjHDAi9xjjJ6ND8E0ypVqjhfbR0oDZ701U3bvv+aFAdmb3Kd14gmZoeX8lbT7DZFWw=
-In-Reply-To: <20190514160158.GB32459@redhat.com>
+Content-Transfer-Encoding: base64
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+In-Reply-To: <20190514015832.GA14741-+gKZQzcddEWxlMhWRU56u/MCgOUTN/qS0E9HWUfgJXw@public.gmane.org>
 Content-Language: en-US
-Content-ID: <C22CEF3A0D495548B30C6E790ADAA0FC@namprd15.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-To: Oleg Nesterov <oleg@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Alex Xu <alex_y_xu@yahoo.ca>, Kernel Team <Kernel-team@fb.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-ID: <606A94B7321FCC45AB99DA08D0D9361D-JGF9Izt3QrScE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: "Kasiviswanathan, Harish" <Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>
+Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 
-On Tue, May 14, 2019 at 06:01:59PM +0200, Oleg Nesterov wrote:
-> Roman,
->=20
-> Sorry, I can't agree with this patch. And even the changelog doesn't
-> look right.
->=20
-> On 05/13, Roman Gushchin wrote:
-> >
-> > The ptrace_stop() function contains the cgroup_enter_frozen() call,
-> > but no cgroup_leave_frozen(). When ptrace_stop() is called from the
-> > do_jobctl_trap() path, it's correct, because corresponding
-> > cgroup_leave_frozen() calls in get_signal() will guarantee that
-> > the task won't leave the signal handler loop frozen.
-> >
-> > However, if ptrace_stop() is called from ptrace_signal() or
-> > ptrace_notify(), there is no such guarantee, and the task may leave
-> > with the frozen bit set.
->=20
-> ptrace_signal() looks fine in that the task can't return to user-mode,
-> get_signal() will be called again exactly because ->frozen =3D=3D 1 means
-> TIF_SIGPENDING. So I an not surre I understand why ptrace_signal() does
-> ptrace_stop(false) with your patch. But this is minor.
->=20
-> > It leads to the regression, reported by Alex Xu. Write system call
-> > gets mistakenly interrupted by fake TIF_SIGPENDING, which is set
-> > by recalc_sigpending_tsk() because of the set frozen bit.
->=20
-> IMHO, the real problem is not that syscall was interrupted. The problem
-> is that a frozen task must never start the syscall.
->=20
->=20
-> -------------------------------------------------------------------------=
---
->=20
-> Can't we add the unconditional leave_frozen() into ptrace_stop() for now =
-?
->=20
-> Sure, this is not what we want. Debugger can disturb CGRP_FROZEN.
->=20
-> But. The "may_remain_frozen" argument uglifies this code too much (imo) a=
-nd
-> at the same time it doesn't solve the problem above: CGRP_FROZEN can be c=
-leared
-> "for no reason".
->=20
-> Say, why ptrace_event_pid() should do leave_frozen(true) ? And if there i=
-s any
-> reason, then why wait_for_vfork_done() can do leave_frozen(false) ?
->=20
-> Or syscall-exit path. It can't miss get_signal(), it doesn't need leave_f=
-rozen().
->=20
->=20
-> In short, I believe that compared to the unconditional leave_frozen() in =
-ptrace_stop()
-> this patch buys almost nothing, but makes the code and the whole logic mu=
-ch uglier.
->=20
-> Oleg.
->=20
-
-Hi Oleg!
-
-I agree that "may_remain_frozen" adds a lot of ugliness, so let's fix
-the regression with the unconditional leave_frozen(true). The patch below.
-Please, let me know if it's not what you meant.
-
-The problem is that it makes the ptrace freezer kselftest to flap,
-so it's good only as a temporarily solution. But it looks like we agree her=
-e.
-
-Thank you!
-
-
---
-
-From 2602261b066a06f6884057d2cd7369951768b9ed Mon Sep 17 00:00:00 2001
-From: Roman Gushchin <guro@fb.com>
-Date: Tue, 14 May 2019 10:13:19 -0700
-Subject: [PATCH] signal: unconditionally leave the frozen state in
- ptrace_stop()
-
-Alex Xu reported a regression in strace, caused by the introduction of
-the cgroup v2 freezer. The regression can be reproduced by stracing
-the following simple program:
-
-  #include <unistd.h>
-
-  int main() {
-      write(1, "a", 1);
-      return 0;
-  }
-
-An attempt to run strace ./a.out leads to the infinite loop:
-  [ pre-main omitted ]
-  write(1, "a", 1)                        =3D ? ERESTARTSYS (To be restarte=
-d if SA_RESTART is set)
-  write(1, "a", 1)                        =3D ? ERESTARTSYS (To be restarte=
-d if SA_RESTART is set)
-  write(1, "a", 1)                        =3D ? ERESTARTSYS (To be restarte=
-d if SA_RESTART is set)
-  write(1, "a", 1)                        =3D ? ERESTARTSYS (To be restarte=
-d if SA_RESTART is set)
-  write(1, "a", 1)                        =3D ? ERESTARTSYS (To be restarte=
-d if SA_RESTART is set)
-  write(1, "a", 1)                        =3D ? ERESTARTSYS (To be restarte=
-d if SA_RESTART is set)
-  [ repeats forever ]
-
-The problem occurs because the traced task leaves ptrace_stop()
-(and the signal handling loop) with the frozen bit set. So let's
-call cgroup_leave_frozen(true) unconditionally after sleeping
-in ptrace_stop().
-
-With this patch applied, strace works as expected:
-  [ pre-main omitted ]
-  write(1, "a", 1)                        =3D 1
-  exit_group(0)                           =3D ?
-  +++ exited with 0 +++
-
-Reported-by: Alex Xu <alex_y_xu@yahoo.ca>
-Fixes: 76f969e8948d ("cgroup: cgroup v2 freezer")
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: Oleg Nesterov <oleg@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>
----
- kernel/signal.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/kernel/signal.c b/kernel/signal.c
-index 8607b11ff936..565ba14d89d5 100644
---- a/kernel/signal.c
-+++ b/kernel/signal.c
-@@ -2112,6 +2112,7 @@ static void ptrace_stop(int exit_code, int why, int c=
-lear_code, kernel_siginfo_t
- 		preempt_enable_no_resched();
- 		cgroup_enter_frozen();
- 		freezable_schedule();
-+		cgroup_leave_frozen(true);
- 	} else {
- 		/*
- 		 * By the time we got the lock, our tracer went away.
---=20
-2.20.1
-
+T24gVHVlLCBNYXkgMTQsIDIwMTkgYXQgMDE6NTg6NDBBTSArMDAwMCwgUm9tYW4gR3VzaGNoaW4g
+d3JvdGU6Cj4gT24gV2VkLCBNYXkgMDEsIDIwMTkgYXQgMDI6NTk6MjlQTSArMDAwMCwgS2FzaXZp
+c3dhbmF0aGFuLCBIYXJpc2ggd3JvdGU6Cj4gPiBQYXJ0aWNpcGF0ZSBpbiBkZXZpY2UgY2dyb3Vw
+LiBBbGwga2ZkIGRldmljZXMgYXJlIGV4cG9zZWQgdmlhIC9kZXYva2ZkLgo+ID4gU28gdXNlIC9k
+ZXYvZHJpL3JlbmRlck4gbm9kZS4KPiA+IAo+ID4gQmVmb3JlIGV4cG9zaW5nIHRoZSBkZXZpY2Ug
+dG8gYSB0YXNrIGNoZWNrIGlmIGl0IGhhcyBwZXJtaXNzaW9uIHRvCj4gPiBhY2Nlc3MgaXQuIElm
+IHRoZSB0YXNrIChiYXNlZCBvbiBpdHMgY2dyb3VwKSBjYW4gYWNjZXNzIC9kZXYvZHJpL3JlbmRl
+ck4KPiA+IHRoZW4gZXhwb3NlIHRoZSBkZXZpY2UgdmlhIGtmZCBub2RlLgo+ID4gCj4gPiBJZiB0
+aGUgdGFzayBjYW5ub3QgYWNjZXNzIC9kZXYvZHJpL3JlbmRlck4gdGhlbiBwcm9jZXNzIGRldmlj
+ZSBkYXRhCj4gPiAocGRkKSBpcyBub3QgY3JlYXRlZC4gVGhpcyB3aWxsIGVuc3VyZSB0aGF0IHRh
+c2sgY2Fubm90IHVzZSB0aGUgZGV2aWNlLgo+ID4gCj4gPiBJbiBzeXNmcyB0b3BvbG9neSwgYWxs
+IGRldmljZSBub2RlcyBhcmUgdmlzaWJsZSBpcnJlc3BlY3RpdmUgb2YgdGhlIHRhc2sKPiA+IGNn
+cm91cC4gVGhlIHN5c2ZzIG5vZGUgZGlyZWN0b3JpZXMgYXJlIGNyZWF0ZWQgYXQgZHJpdmVyIGxv
+YWQgdGltZSBhbmQKPiA+IGNhbm5vdCBiZSBjaGFuZ2VkIGR5bmFtaWNhbGx5LiBIb3dldmVyLCBh
+Y2Nlc3MgdG8gaW5mb3JtYXRpb24gaW5zaWRlCj4gPiBub2RlcyBpcyBjb250cm9sbGVkIGJhc2Vk
+IG9uIHRoZSB0YXNrJ3MgY2dyb3VwIHBlcm1pc3Npb25zLgo+ID4gCj4gPiBTaWduZWQtb2ZmLWJ5
+OiBIYXJpc2ggS2FzaXZpc3dhbmF0aGFuIDxIYXJpc2guS2FzaXZpc3dhbmF0aGFuQGFtZC5jb20+
+Cj4gPiBSZXZpZXdlZC1ieTogRmVsaXggS3VlaGxpbmcgPEZlbGl4Lkt1ZWhsaW5nQGFtZC5jb20+
+Cj4gCj4gSGVsbG8sIEhhcmlzaCEKPiAKPiBDZ3JvdXAvZGV2aWNlIGNvbnRyb2xsZXIgcGFydCBs
+b29rcyBnb29kIHRvIG1lLgo+IFBsZWFzZSwgZmVlbCBmcmVlIHRvIHVzZSBteSBhY2tzIGZvciBw
+YXRjaGVzIDMgYW5kIDQ6Cj4gQWNrZWQtYnk6IFJvbWFuIEd1c2hjaGluIDxndXJvQGZiLmNvbT4K
+CkhlbGxvIQoKQWZ0ZXIgdGhlIHNlY29uZCBsb29rIGF0IHRoZSBwYXRjaHNldCBJIGNhbWUgdG8g
+YW4gdW5kZXJzdGFuZGluZyB0aGF0CmV4cG9ydGluZyBjZ3JvdXBfdjEtb25seSBfX2RldmNncm91
+cF9jaGVja19wZXJtaXNzaW9uKCkgaXNuJ3QgdGhlIGJlc3QgaWRlYS4KCkluc3RlYWQgaXQgd291
+bGQgYmUgYmV0dGVyIHRvIGV4cG9ydCBkZXZjZ3JvdXBfY2hlY2tfcGVybWlzc2lvbigpLCB3aGlj
+aApwcm92aWRlcyBhbiB1bml2ZXJzYWwgaW50ZXJmYWNlIGZvciBib3RoIGNncm91cCB2MSBhbmQg
+djIgZGV2aWNlIGNvbnRyb2xsZXJzLgpJdCAgcmVxdWlyZSBzb21lIHJlZmFjdG9yaW5ncywgYnV0
+IHNob3VsZCBiZSBub3QgaGFyZC4KCkRvZXMgaXQgbWFrZXMgc2Vuc2UgdG8geW91PyBDYW4geW91
+LCBwbGVhc2UsIHJld29yayB0aGlzIHBhcnQ/CgpUaGFua3MhCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCmFtZC1nZnggbWFpbGluZyBsaXN0CmFtZC1nZnhA
+bGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxt
+YW4vbGlzdGluZm8vYW1kLWdmeA==
