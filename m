@@ -1,59 +1,98 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH 4/4] drm/amdkfd: Check against device cgroup
-Date: Tue, 14 May 2019 17:37:54 +0000
-Message-ID: <20190514173749.GA12629@tower.DHCP.thefacebook.com>
-References: <20190501145904.27505-1-Harish.Kasiviswanathan@amd.com>
- <20190501145904.27505-5-Harish.Kasiviswanathan@amd.com>
- <20190514015832.GA14741@tower.DHCP.thefacebook.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v3 0/7] mm: reparent slab memory on cgroup removal
+Date: Tue, 14 May 2019 12:22:08 -0700
+Message-ID: <CALvZod4GscZjob8bfCcfhsMh0sco16r4yfOaRU69WnNO7MRrpw@mail.gmail.com>
+References: <20190508202458.550808-1-guro@fb.com> <CALvZod4WGVVq+UY_TZdKP_PHdifDrkYqPGgKYTeUB6DsxGAdVw@mail.gmail.com>
+ <20190513202146.GA18451@tower.DHCP.thefacebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <20190514015832.GA14741-+gKZQzcddEWxlMhWRU56u/MCgOUTN/qS0E9HWUfgJXw@public.gmane.org>
-Content-Language: en-US
-Content-ID: <606A94B7321FCC45AB99DA08D0D9361D-JGF9Izt3QrScE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=YfOaL1oTnK5xA4uooC11ryURNw9L/10wivCSX2gcjCo=;
+        b=GAaDgk7n/tpFRiZ3MVfd/nTZvVS8gOy9QgwY0WSf+e6tOSWEVi0YrWAMv5RFGbDprW
+         AjTBdJhyEJCjt5jOANifS7VPXwOs1izpQ8BJUlZI9YWzJXVBYvd/JcdbIcJBIH0/qsJ1
+         c4PWmrJK0W5UxolQRTIAsskkAi4l2CLZZFPhxLpq7OePR8qRs4NhOZbAzQJfY5LoJXdd
+         7wWIKB/86sHuEiWNzyWBGD2BwCh+MX18mViRjbaLzDupK9+NmsOZ2YhjXGjy5CQV3Ivw
+         HwxFWXerI5hfYo9iqcWrLsrzxwQdbaVmFuOVKt1BHFvq7LErJFjomK170O3fUcF8HlJf
+         C6kw==
+In-Reply-To: <20190513202146.GA18451@tower.DHCP.thefacebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Kasiviswanathan, Harish" <Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>
-Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro@fb.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Christoph Lameter <cl@linux.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Cgroups <cgroups@vger.kernel.org>
 
-T24gVHVlLCBNYXkgMTQsIDIwMTkgYXQgMDE6NTg6NDBBTSArMDAwMCwgUm9tYW4gR3VzaGNoaW4g
-d3JvdGU6Cj4gT24gV2VkLCBNYXkgMDEsIDIwMTkgYXQgMDI6NTk6MjlQTSArMDAwMCwgS2FzaXZp
-c3dhbmF0aGFuLCBIYXJpc2ggd3JvdGU6Cj4gPiBQYXJ0aWNpcGF0ZSBpbiBkZXZpY2UgY2dyb3Vw
-LiBBbGwga2ZkIGRldmljZXMgYXJlIGV4cG9zZWQgdmlhIC9kZXYva2ZkLgo+ID4gU28gdXNlIC9k
-ZXYvZHJpL3JlbmRlck4gbm9kZS4KPiA+IAo+ID4gQmVmb3JlIGV4cG9zaW5nIHRoZSBkZXZpY2Ug
-dG8gYSB0YXNrIGNoZWNrIGlmIGl0IGhhcyBwZXJtaXNzaW9uIHRvCj4gPiBhY2Nlc3MgaXQuIElm
-IHRoZSB0YXNrIChiYXNlZCBvbiBpdHMgY2dyb3VwKSBjYW4gYWNjZXNzIC9kZXYvZHJpL3JlbmRl
-ck4KPiA+IHRoZW4gZXhwb3NlIHRoZSBkZXZpY2UgdmlhIGtmZCBub2RlLgo+ID4gCj4gPiBJZiB0
-aGUgdGFzayBjYW5ub3QgYWNjZXNzIC9kZXYvZHJpL3JlbmRlck4gdGhlbiBwcm9jZXNzIGRldmlj
-ZSBkYXRhCj4gPiAocGRkKSBpcyBub3QgY3JlYXRlZC4gVGhpcyB3aWxsIGVuc3VyZSB0aGF0IHRh
-c2sgY2Fubm90IHVzZSB0aGUgZGV2aWNlLgo+ID4gCj4gPiBJbiBzeXNmcyB0b3BvbG9neSwgYWxs
-IGRldmljZSBub2RlcyBhcmUgdmlzaWJsZSBpcnJlc3BlY3RpdmUgb2YgdGhlIHRhc2sKPiA+IGNn
-cm91cC4gVGhlIHN5c2ZzIG5vZGUgZGlyZWN0b3JpZXMgYXJlIGNyZWF0ZWQgYXQgZHJpdmVyIGxv
-YWQgdGltZSBhbmQKPiA+IGNhbm5vdCBiZSBjaGFuZ2VkIGR5bmFtaWNhbGx5LiBIb3dldmVyLCBh
-Y2Nlc3MgdG8gaW5mb3JtYXRpb24gaW5zaWRlCj4gPiBub2RlcyBpcyBjb250cm9sbGVkIGJhc2Vk
-IG9uIHRoZSB0YXNrJ3MgY2dyb3VwIHBlcm1pc3Npb25zLgo+ID4gCj4gPiBTaWduZWQtb2ZmLWJ5
-OiBIYXJpc2ggS2FzaXZpc3dhbmF0aGFuIDxIYXJpc2guS2FzaXZpc3dhbmF0aGFuQGFtZC5jb20+
-Cj4gPiBSZXZpZXdlZC1ieTogRmVsaXggS3VlaGxpbmcgPEZlbGl4Lkt1ZWhsaW5nQGFtZC5jb20+
-Cj4gCj4gSGVsbG8sIEhhcmlzaCEKPiAKPiBDZ3JvdXAvZGV2aWNlIGNvbnRyb2xsZXIgcGFydCBs
-b29rcyBnb29kIHRvIG1lLgo+IFBsZWFzZSwgZmVlbCBmcmVlIHRvIHVzZSBteSBhY2tzIGZvciBw
-YXRjaGVzIDMgYW5kIDQ6Cj4gQWNrZWQtYnk6IFJvbWFuIEd1c2hjaGluIDxndXJvQGZiLmNvbT4K
-CkhlbGxvIQoKQWZ0ZXIgdGhlIHNlY29uZCBsb29rIGF0IHRoZSBwYXRjaHNldCBJIGNhbWUgdG8g
-YW4gdW5kZXJzdGFuZGluZyB0aGF0CmV4cG9ydGluZyBjZ3JvdXBfdjEtb25seSBfX2RldmNncm91
-cF9jaGVja19wZXJtaXNzaW9uKCkgaXNuJ3QgdGhlIGJlc3QgaWRlYS4KCkluc3RlYWQgaXQgd291
-bGQgYmUgYmV0dGVyIHRvIGV4cG9ydCBkZXZjZ3JvdXBfY2hlY2tfcGVybWlzc2lvbigpLCB3aGlj
-aApwcm92aWRlcyBhbiB1bml2ZXJzYWwgaW50ZXJmYWNlIGZvciBib3RoIGNncm91cCB2MSBhbmQg
-djIgZGV2aWNlIGNvbnRyb2xsZXJzLgpJdCAgcmVxdWlyZSBzb21lIHJlZmFjdG9yaW5ncywgYnV0
-IHNob3VsZCBiZSBub3QgaGFyZC4KCkRvZXMgaXQgbWFrZXMgc2Vuc2UgdG8geW91PyBDYW4geW91
-LCBwbGVhc2UsIHJld29yayB0aGlzIHBhcnQ/CgpUaGFua3MhCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCmFtZC1nZnggbWFpbGluZyBsaXN0CmFtZC1nZnhA
-bGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxt
-YW4vbGlzdGluZm8vYW1kLWdmeA==
+From: Roman Gushchin <guro@fb.com>
+Date: Mon, May 13, 2019 at 1:22 PM
+To: Shakeel Butt
+Cc: Andrew Morton, Linux MM, LKML, Kernel Team, Johannes Weiner,
+Michal Hocko, Rik van Riel, Christoph Lameter, Vladimir Davydov,
+Cgroups
+
+> On Fri, May 10, 2019 at 05:32:15PM -0700, Shakeel Butt wrote:
+> > From: Roman Gushchin <guro@fb.com>
+> > Date: Wed, May 8, 2019 at 1:30 PM
+> > To: Andrew Morton, Shakeel Butt
+> > Cc: <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>,
+> > <kernel-team@fb.com>, Johannes Weiner, Michal Hocko, Rik van Riel,
+> > Christoph Lameter, Vladimir Davydov, <cgroups@vger.kernel.org>, Roman
+> > Gushchin
+> >
+> > > # Why do we need this?
+> > >
+> > > We've noticed that the number of dying cgroups is steadily growing on most
+> > > of our hosts in production. The following investigation revealed an issue
+> > > in userspace memory reclaim code [1], accounting of kernel stacks [2],
+> > > and also the mainreason: slab objects.
+> > >
+> > > The underlying problem is quite simple: any page charged
+> > > to a cgroup holds a reference to it, so the cgroup can't be reclaimed unless
+> > > all charged pages are gone. If a slab object is actively used by other cgroups,
+> > > it won't be reclaimed, and will prevent the origin cgroup from being reclaimed.
+> > >
+> > > Slab objects, and first of all vfs cache, is shared between cgroups, which are
+> > > using the same underlying fs, and what's even more important, it's shared
+> > > between multiple generations of the same workload. So if something is running
+> > > periodically every time in a new cgroup (like how systemd works), we do
+> > > accumulate multiple dying cgroups.
+> > >
+> > > Strictly speaking pagecache isn't different here, but there is a key difference:
+> > > we disable protection and apply some extra pressure on LRUs of dying cgroups,
+> >
+> > How do you apply extra pressure on dying cgroups? cgroup-v2 does not
+> > have memory.force_empty.
+>
+> I mean the following part of get_scan_count():
+>         /*
+>          * If the cgroup's already been deleted, make sure to
+>          * scrape out the remaining cache.
+>          */
+>         if (!scan && !mem_cgroup_online(memcg))
+>                 scan = min(lruvec_size, SWAP_CLUSTER_MAX);
+>
+> It seems to work well, so that pagecache alone doesn't pin too many
+> dying cgroups. The price we're paying is some excessive IO here,
+
+Thanks for the explanation. However for this to work, something still
+needs to trigger the memory pressure until then we will keep the
+zombies around. BTW the get_scan_count() is getting really creepy. It
+needs a refactor soon.
+
+> which can be avoided had we be able to recharge the pagecache.
+>
+
+Are you looking into this? Do you envision a mount option which will
+tell the filesystem is shared and do recharging on the offlining of
+the origin memcg?
+
+> Btw, thank you very much for looking into the patchset. I'll address
+> all comments and send v4 soon.
+>
+
+You are most welcome.
+
+thanks,
+Shakeel
