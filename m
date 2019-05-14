@@ -1,98 +1,69 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH v3 0/7] mm: reparent slab memory on cgroup removal
-Date: Tue, 14 May 2019 12:22:08 -0700
-Message-ID: <CALvZod4GscZjob8bfCcfhsMh0sco16r4yfOaRU69WnNO7MRrpw@mail.gmail.com>
-References: <20190508202458.550808-1-guro@fb.com> <CALvZod4WGVVq+UY_TZdKP_PHdifDrkYqPGgKYTeUB6DsxGAdVw@mail.gmail.com>
- <20190513202146.GA18451@tower.DHCP.thefacebook.com>
+From: Matteo Croce <mcroce@redhat.com>
+Subject: WARNING: CPU: 1 PID: 228 at kernel/cgroup/cgroup.c:5929
+Date: Tue, 14 May 2019 21:23:48 +0200
+Message-ID: <CAGnkfhwMSNm4uSkcGtqaGmYanfNK9rx6m2a3TqJh08YitbGAUg@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=YfOaL1oTnK5xA4uooC11ryURNw9L/10wivCSX2gcjCo=;
-        b=GAaDgk7n/tpFRiZ3MVfd/nTZvVS8gOy9QgwY0WSf+e6tOSWEVi0YrWAMv5RFGbDprW
-         AjTBdJhyEJCjt5jOANifS7VPXwOs1izpQ8BJUlZI9YWzJXVBYvd/JcdbIcJBIH0/qsJ1
-         c4PWmrJK0W5UxolQRTIAsskkAi4l2CLZZFPhxLpq7OePR8qRs4NhOZbAzQJfY5LoJXdd
-         7wWIKB/86sHuEiWNzyWBGD2BwCh+MX18mViRjbaLzDupK9+NmsOZ2YhjXGjy5CQV3Ivw
-         HwxFWXerI5hfYo9iqcWrLsrzxwQdbaVmFuOVKt1BHFvq7LErJFjomK170O3fUcF8HlJf
-         C6kw==
-In-Reply-To: <20190513202146.GA18451@tower.DHCP.thefacebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Christoph Lameter <cl@linux.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Cgroups <cgroups@vger.kernel.org>
+To: cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Roman Gushchin <guro@fb.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-From: Roman Gushchin <guro@fb.com>
-Date: Mon, May 13, 2019 at 1:22 PM
-To: Shakeel Butt
-Cc: Andrew Morton, Linux MM, LKML, Kernel Team, Johannes Weiner,
-Michal Hocko, Rik van Riel, Christoph Lameter, Vladimir Davydov,
-Cgroups
+Hi,
 
-> On Fri, May 10, 2019 at 05:32:15PM -0700, Shakeel Butt wrote:
-> > From: Roman Gushchin <guro@fb.com>
-> > Date: Wed, May 8, 2019 at 1:30 PM
-> > To: Andrew Morton, Shakeel Butt
-> > Cc: <linux-mm@kvack.org>, <linux-kernel@vger.kernel.org>,
-> > <kernel-team@fb.com>, Johannes Weiner, Michal Hocko, Rik van Riel,
-> > Christoph Lameter, Vladimir Davydov, <cgroups@vger.kernel.org>, Roman
-> > Gushchin
-> >
-> > > # Why do we need this?
-> > >
-> > > We've noticed that the number of dying cgroups is steadily growing on most
-> > > of our hosts in production. The following investigation revealed an issue
-> > > in userspace memory reclaim code [1], accounting of kernel stacks [2],
-> > > and also the mainreason: slab objects.
-> > >
-> > > The underlying problem is quite simple: any page charged
-> > > to a cgroup holds a reference to it, so the cgroup can't be reclaimed unless
-> > > all charged pages are gone. If a slab object is actively used by other cgroups,
-> > > it won't be reclaimed, and will prevent the origin cgroup from being reclaimed.
-> > >
-> > > Slab objects, and first of all vfs cache, is shared between cgroups, which are
-> > > using the same underlying fs, and what's even more important, it's shared
-> > > between multiple generations of the same workload. So if something is running
-> > > periodically every time in a new cgroup (like how systemd works), we do
-> > > accumulate multiple dying cgroups.
-> > >
-> > > Strictly speaking pagecache isn't different here, but there is a key difference:
-> > > we disable protection and apply some extra pressure on LRUs of dying cgroups,
-> >
-> > How do you apply extra pressure on dying cgroups? cgroup-v2 does not
-> > have memory.force_empty.
->
-> I mean the following part of get_scan_count():
->         /*
->          * If the cgroup's already been deleted, make sure to
->          * scrape out the remaining cache.
->          */
->         if (!scan && !mem_cgroup_online(memcg))
->                 scan = min(lruvec_size, SWAP_CLUSTER_MAX);
->
-> It seems to work well, so that pagecache alone doesn't pin too many
-> dying cgroups. The price we're paying is some excessive IO here,
+I have the following splat when a ptraced process exits:
 
-Thanks for the explanation. However for this to work, something still
-needs to trigger the memory pressure until then we will keep the
-zombies around. BTW the get_scan_count() is getting really creepy. It
-needs a refactor soon.
+root@debian64:~# strace true
+execve("/bin/true", ["true"], 0x7ffd444fdfb0 /* 18 vars */) = 0
+[..]
+exit_group(0)                           = ?
+[    5.394349] WARNING: CPU: 1 PID: 228 at kernel/cgroup/cgroup.c:5929 cgroup_exit+0xed/0x100
+[    5.394606] CPU: 1 PID: 228 Comm: true Not tainted 5.1.0-rc3-kvm+ #86
+[    5.394819] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.12.0-2.fc30 04/01/2014
+[    5.395091] RIP: 0010:cgroup_exit+0xed/0x100
+[    5.395269] Code: 04 89 c3 7e d5 48 83 c4 08 5b 5d c3 f0 ff 43 28 0f 88 8e 4d 34 00 eb a3 48 8b 85 78 06 00 00 48 8b 78 38 e8 e5 25 00 00 eb 82 <0f> 0b e9 5f ff ff ff 66 66 2e 0f 1f 84 00 00 00 00 00 90 55 be 05
+[    5.395827] RSP: 0018:ffffc9000037be38 EFLAGS: 00010002
+[    5.396009] RAX: ffff88807be8bc40 RBX: ffff888078f62400 RCX: ffff888078f62468
+[    5.396236] RDX: ffff888078f62448 RSI: ffff888078f62400 RDI: ffff888078f62408
+[    5.396463] RBP: ffff888078f89580 R08: ffff888078f89c60 R09: 0000000000000000
+[    5.396692] R10: ffff88807adc1100 R11: 0000000000000001 R12: ffff888078f89580
+[    5.396919] R13: ffff888078f89b80 R14: 0000000000000000 R15: ffff888078ed4060
+[    5.397169] FS:  0000000000000000(0000) GS:ffff88807da80000(0000) knlGS:0000000000000000
+[    5.397425] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    5.397614] CR2: 00007f017ea1d9a0 CR3: 0000000001a0c000 CR4: 00000000000006a0
+[    5.397846] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[    5.398097] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+[    5.398324] Call Trace:
+[    5.398408]  do_exit+0x27f/0xa10
+[    5.398550]  ? ptrace_do_notify+0x6c/0x80
+[    5.398694]  do_group_exit+0x35/0xa0
+[    5.398838]  __x64_sys_exit_group+0xf/0x10
+[    5.398983]  do_syscall_64+0x48/0x340
+[    5.399127]  ? __do_page_fault+0x1aa/0x3f0
+[    5.399272]  ? __put_user_4+0x19/0x20
+[    5.399418]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[    5.399598] RIP: 0033:0x7f017ea1d9d6
+[    5.399745] Code: Bad RIP value.
+[    5.399885] RSP: 002b:00007ffc187f7aa8 EFLAGS: 00000246 ORIG_RAX: 00000000000000e7
+[    5.400144] RAX: ffffffffffffffda RBX: 00007f017eb0e760 RCX: 00007f017ea1d9d6
+[    5.400370] RDX: 0000000000000000 RSI: 000000000000003c RDI: 0000000000000000
+[    5.400601] RBP: 0000000000000000 R08: 00000000000000e7 R09: ffffffffffffff80
+[    5.400858] R10: 00007ffc187f7974 R11: 0000000000000246 R12: 00007f017eb0e760
+[    5.401105] R13: 0000000000000001 R14: 00007f017eb17428 R15: 0000000000000000
+[    5.401337] ---[ end trace 6bf3ae0d5396cf27 ]---
 
-> which can be avoided had we be able to recharge the pagecache.
->
+I found the offending commit bisecting, and seems to be this one.
 
-Are you looking into this? Do you envision a mount option which will
-tell the filesystem is shared and do recharging on the offlining of
-the origin memcg?
+commit 96b9c592def5d7203bdad1337d9c92a2183de5cb
+Author: Roman Gushchin <guro@fb.com>
+Date:   Fri Apr 26 10:59:45 2019 -0700
 
-> Btw, thank you very much for looking into the patchset. I'll address
-> all comments and send v4 soon.
->
+    cgroup: get rid of cgroup_freezer_frozen_exit()
 
-You are most welcome.
 
-thanks,
-Shakeel
+Regards,
+-- 
+Matteo Croce
+per aspera ad upstream
