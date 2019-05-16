@@ -1,67 +1,75 @@
-From: Kenny Ho <y2kenny@gmail.com>
-Subject: Re: [RFC PATCH v2 4/5] drm,
- cgroup: Add total GEM buffer allocation limit
-Date: Thu, 16 May 2019 10:58:17 -0400
-Message-ID: <CAOWid-fU7ScF7-+Ox-y2RHLeXVZmDOno=nLDf6HtToAPFwNNrQ@mail.gmail.com>
-References: <20181120185814.13362-1-Kenny.Ho@amd.com>
- <20190509210410.5471-1-Kenny.Ho@amd.com>
- <20190509210410.5471-5-Kenny.Ho@amd.com>
- <d81e8f55-9602-818e-0f9c-1d9d150133b1@intel.com>
- <CAOWid-ftUrVVWPu9KuS8xpWKNQT6_FtxB8gEyEAn9nLD6qxb5Q@mail.gmail.com>
- <20190516141015.GC374014@devbig004.ftw2.facebook.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: [PATCH RESEND] signal: unconditionally leave the frozen state in ptrace_stop()
+Date: Thu, 16 May 2019 10:38:21 -0700
+Message-ID: <20190516173821.1498807-1-guro@fb.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20190516141015.GC374014@devbig004.ftw2.facebook.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-type; s=facebook;
+ bh=B2SIJpPp/mlOGynEQLUWe5A/4Aq03L0X3tl4w90B9Gw=;
+ b=U/xGWQ3ojU2JxIog44PXNp5LPf2/Ycypw+1r8vLEJyLqAzCnHVyC3zvrKUvVZK0XoAwZ
+ DN0Y0n3NAKzNROT8Uh7Ecr++ixHJ9xnPfvBycVuQZ4gX7kxv3Xr0Nkf9WT4+yhJtCOo+
+ rJF8OhLSP4zv0YuxXkQW0bS/JN7M9+GwNnU= 
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
-Cc: sunnanyong@huawei.com, Kenny Ho <Kenny.Ho@amd.com>, "Welty,
- Brian" <brian.welty@intel.com>, amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, Alex Deucher <alexander.deucher@amd.com>, cgroups@vger.kernel.org, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+Cc: Oleg Nesterov <oleg@redhat.com>, Alex Xu <alex_y_xu@yahoo.ca>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-T24gVGh1LCBNYXkgMTYsIDIwMTkgYXQgMTA6MTAgQU0gVGVqdW4gSGVvIDx0akBrZXJuZWwub3Jn
-PiB3cm90ZToKPiBJIGhhdmVuJ3QgZ29uZSB0aHJvdWdoIHRoZSBwYXRjaHNldCB5ZXQgYnV0IHNv
-bWUgcXVpY2sgY29tbWVudHMuCj4KPiBPbiBXZWQsIE1heSAxNSwgMjAxOSBhdCAxMDoyOToyMVBN
-IC0wNDAwLCBLZW5ueSBIbyB3cm90ZToKPiA+IEdpdmVuIHRoaXMgY29udHJvbGxlciBpcyBzcGVj
-aWZpYyB0byB0aGUgZHJtIGtlcm5lbCBzdWJzeXN0ZW0gd2hpY2gKPiA+IHVzZXMgbWlub3IgdG8g
-aWRlbnRpZnkgZHJtIGRldmljZSwgSSBkb24ndCBzZWUgYSBuZWVkIHRvIGNvbXBsaWNhdGUKPiA+
-IHRoZSBpbnRlcmZhY2VzIG1vcmUgYnkgaGF2aW5nIG1ham9yIGFuZCBhIGtleS4gIEFzIHlvdSBj
-YW4gc2VlIGluIHRoZQo+ID4gZXhhbXBsZXMgYmVsb3csIHRoZSBkcm0gZGV2aWNlIG1pbm9yIGNv
-cnJlc3BvbmRzIHRvIHRoZSBsaW5lIG51bWJlci4KPiA+IEkgYW0gbm90IHN1cmUgaG93IHN0cmlj
-dCBjZ3JvdXAgdXBzdHJlYW0gaXMgYWJvdXQgdGhlIGNvbnZlbnRpb24gYnV0IEkKPgo+IFdlJ3Jl
-IHByZXR0eSBzdHJpY3QuCj4KPiA+IGFtIGhvcGluZyB0aGVyZSBhcmUgZmxleGliaWxpdHkgaGVy
-ZSB0byBhbGxvdyBmb3Igd2hhdCBJIGhhdmUKPiA+IGltcGxlbWVudGVkLiAgVGhlcmUgYXJlIGEg
-Y291cGxlIG9mIG90aGVyIHRoaW5ncyBJIGhhdmUgZG9uZSB0aGF0IGlzCj4KPiBTbywgcGxlYXNl
-IGZvbGxvdyB0aGUgaW50ZXJmYWNlIGNvbnZlbnRpb25zLiAgV2UgY2FuIGRlZmluaXRlbHkgYWRk
-Cj4gbmV3IG9uZXMgYnV0IHRoYXQgd291bGQgbmVlZCBmdW5jdGlvbmFsIHJlYXNvbnMuCj4KPiA+
-IG5vdCBkZXNjcmliZWQgaW4gdGhlIGNvbnZlbnRpb246IDEpIGluY2x1c2lvbiBvZiByZWFkLW9u
-bHkgKi5oZWxwIGZpbGUKPiA+IGF0IHRoZSByb290IGNncm91cCwgMikgdXNlIHJlYWQtb25seSAo
-d2hpY2ggSSBjYW4gcG90ZW50aWFsbHkgbWFrZSBydykKPiA+ICouZGVmYXVsdCBmaWxlIGluc3Rl
-YWQgb2YgaGF2aW5nIGEgZGVmYXVsdCBlbnRyaWVzIChzaW5jZSB0aGUgZGVmYXVsdAo+ID4gY2Fu
-IGJlIGRpZmZlcmVudCBmb3IgZGlmZmVyZW50IGRldmljZXMpIGluc2lkZSB0aGUgY29udHJvbCBm
-aWxlcyAodGhpcwo+ID4gd2F5LCB0aGUgcmVzZXR0aW5nIG9mIGNncm91cCB2YWx1ZXMgZm9yIGFs
-bCB0aGUgZHJtIGRldmljZXMsIGNhbiBiZQo+ID4gZG9uZSBieSBhIHNpbXBsZSAnY3AnLikKPgo+
-IEFnYWluLCBwbGVhc2UgZm9sbG93IHRoZSBleGlzdGluZyBjb252ZW50aW9ucy4gIFRoZXJlJ3Mg
-YSBsb3QgbW9yZQo+IGhhcm0gdGhhbiBnb29kIGluIGV2ZXJ5IGNvbnRyb2xsZXIgYmVpbmcgY3Jl
-YXRpdmUgaW4gdGhlaXIgb3duIHdheS4KPiBJdCdzIHRyaXZpYWwgdG8gYnVpbGQgY29udmVuaWVu
-Y2UgZmVhdHVyZXMgaW4gdXNlcnNwYWNlLiAgUGxlYXNlIGRvIGl0Cj4gdGhlcmUuCkkgY2FuIGNl
-cnRhaW5seSByZW1vdmUgdGhlIHJvICouaGVscCBmaWxlIGFuZCBsZWF2ZSB0aGUgZG9jdW1lbnRh
-dGlvbgp0byBEb2N1bWVudGF0aW9uLywgYnV0IGZvciB0aGUgKi5kZWZhdWx0IEkgZG8gaGF2ZSBh
-IGZ1bmN0aW9uYWwgcmVhc29uCnRvIGl0LiAgQXMgZmFyIGFzIEkgY2FuIHRlbGwgZnJvbSB0aGUg
-Y29udmVudGlvbiwgdGhlIGRlZmF1bHQgaXMgcGVyCmNncm91cCBhbmQgdGhlcmUgaXMgbm8gd2F5
-IHRvIGRlc2NyaWJlIHBlciBkZXZpY2UgZGVmYXVsdC4gIEFsdGhvdWdoLApwZXJoYXBzIHdlIGFy
-ZSB0YWxraW5nIGFib3V0IHR3byBkaWZmZXJlbnQga2luZHMgb2YgZGVmYXVsdHMuICBBbnl3YXks
-CkkgY2FuIGxlYXZlIHRoZSBkaXNjdXNzaW9uIHRvIGEgbW9yZSBkZXRhaWxlZCByZXZpZXcuCgpS
-ZWdhcmRzLApLZW5ueQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5v
-cmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2
-ZWw=
+Alex Xu reported a regression in strace, caused by the introduction of
+the cgroup v2 freezer. The regression can be reproduced by stracing
+the following simple program:
+
+  #include <unistd.h>
+
+  int main() {
+      write(1, "a", 1);
+      return 0;
+  }
+
+An attempt to run strace ./a.out leads to the infinite loop:
+  [ pre-main omitted ]
+  write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
+  write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
+  write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
+  write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
+  write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
+  write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
+  [ repeats forever ]
+
+The problem occurs because the traced task leaves ptrace_stop()
+(and the signal handling loop) with the frozen bit set. So let's
+call cgroup_leave_frozen(true) unconditionally after sleeping
+in ptrace_stop().
+
+With this patch applied, strace works as expected:
+  [ pre-main omitted ]
+  write(1, "a", 1)                        = 1
+  exit_group(0)                           = ?
+  +++ exited with 0 +++
+
+Reported-by: Alex Xu <alex_y_xu@yahoo.ca>
+Fixes: 76f969e8948d ("cgroup: cgroup v2 freezer")
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Acked-by: Oleg Nesterov <oleg@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>
+---
+ kernel/signal.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/kernel/signal.c b/kernel/signal.c
+index 8607b11ff936..565ba14d89d5 100644
+--- a/kernel/signal.c
++++ b/kernel/signal.c
+@@ -2112,6 +2112,7 @@ static void ptrace_stop(int exit_code, int why, int clear_code, kernel_siginfo_t
+ 		preempt_enable_no_resched();
+ 		cgroup_enter_frozen();
+ 		freezable_schedule();
++		cgroup_leave_frozen(true);
+ 	} else {
+ 		/*
+ 		 * By the time we got the lock, our tracer went away.
+-- 
+2.20.1
+
