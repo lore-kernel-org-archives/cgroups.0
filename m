@@ -1,86 +1,329 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v2 3/4] device_cgroup: Export devcgroup_check_permission
-Date: Fri, 17 May 2019 17:06:35 +0000
-Message-ID: <20190517170630.GA1646@tower.DHCP.thefacebook.com>
-References: <20190517161435.14121-1-Harish.Kasiviswanathan@amd.com>
- <20190517161435.14121-4-Harish.Kasiviswanathan@amd.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <20190517161435.14121-4-Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>
-Content-Language: en-US
-Content-ID: <DC1F663BC871E54EB6797495E4A22492-JGF9Izt3QrScE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+From: Dave Chiluk <chiluk+linux@indeed.com>
+Subject: [PATCH] sched/fair: Fix low cpu usage with high throttling by removing expiration of cpu slices
+Date: Fri, 17 May 2019 14:30:24 -0500
+Message-ID: <1558121424-2914-1-git-send-email-chiluk+linux@indeed.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=indeed.com; s=google;
+        h=from:to:subject:date:message-id;
+        bh=o07nY9dfWP+zC9Cz3rhRMrIZdh7F1mKdDkQ8lc4TN8I=;
+        b=STEI1EVVgCpmWP3zyeQjp30mJxvyPu6D0nynYhx12ILOsuoy4/UyeT+NrSqBfS7Y8l
+         ZjL4CIvepqPvxw8IomlAvb+j6TpU8c6+a+63xo5EBQOvmHdBHcZXeA8+ugGj8sXRttZr
+         hOIPeYCHhy2bFLFG71jB9yjOu8yDX0WMNSiFk=
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: "Kasiviswanathan, Harish" <Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>
-Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Brendan Gregg <bgregg@netflix.com>, Kyle Anderson <kwa@yelp.com>, Gabriel Munos <gmunoz@netflix.com>, John Hammond <jhammond@indeed.com>, Cong Wang <xiyou.wangcong@gmail.com>, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org
 
-T24gRnJpLCBNYXkgMTcsIDIwMTkgYXQgMDQ6MTU6MDZQTSArMDAwMCwgS2FzaXZpc3dhbmF0aGFu
-LCBIYXJpc2ggd3JvdGU6Cj4gRm9yIEFNRCBjb21wdXRlIChhbWRrZmQpIGRyaXZlci4KPiAKPiBB
-bGwgQU1EIGNvbXB1dGUgZGV2aWNlcyBhcmUgZXhwb3J0ZWQgdmlhIHNpbmdsZSBkZXZpY2Ugbm9k
-ZSAvZGV2L2tmZC4gQXMKPiBhIHJlc3VsdCBkZXZpY2VzIGNhbm5vdCBiZSBjb250cm9sbGVkIGlu
-ZGl2aWR1YWxseSB1c2luZyBkZXZpY2UgY2dyb3VwLgo+IAo+IEFNRCBjb21wdXRlIGRldmljZXMg
-d2lsbCByZWx5IG9uIGl0cyBncmFwaGljcyBjb3VudGVycGFydCB0aGF0IGV4cG9zZXMKPiAvZGV2
-L2RyaS9yZW5kZXJOIG5vZGUgZm9yIGVhY2ggZGV2aWNlLiBGb3IgZWFjaCB0YXNrIChiYXNlZCBv
-biBpdHMKPiBjZ3JvdXApLCBLRkQgZHJpdmVyIHdpbGwgY2hlY2sgaWYgL2Rldi9kcmkvcmVuZGVy
-TiBub2RlIGlzIGFjY2Vzc2libGUKPiBiZWZvcmUgZXhwb3NpbmcgaXQuCj4gCj4gQ2hhbmdlLUlk
-OiBJMWI5NzA1YjJjMzA2MjJhMjc2NTVmNGY4Nzg5ODBmYTEzOGRiZjM3Mwo+IFNpZ25lZC1vZmYt
-Ynk6IEhhcmlzaCBLYXNpdmlzd2FuYXRoYW4gPEhhcmlzaC5LYXNpdmlzd2FuYXRoYW5AYW1kLmNv
-bT4KPiAtLS0KPiAgaW5jbHVkZS9saW51eC9kZXZpY2VfY2dyb3VwLmggfCAxOSArKysrLS0tLS0t
-LS0tLS0tLS0tCj4gIHNlY3VyaXR5L2RldmljZV9jZ3JvdXAuYyAgICAgIHwgMTUgKysrKysrKysr
-KysrKy0tCj4gIDIgZmlsZXMgY2hhbmdlZCwgMTcgaW5zZXJ0aW9ucygrKSwgMTcgZGVsZXRpb25z
-KC0pCj4gCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvZGV2aWNlX2Nncm91cC5oIGIvaW5j
-bHVkZS9saW51eC9kZXZpY2VfY2dyb3VwLmgKPiBpbmRleCA4NTU3ZWZlMDk2ZGMuLmJkMTk4OTdi
-ZDU4MiAxMDA2NDQKPiAtLS0gYS9pbmNsdWRlL2xpbnV4L2RldmljZV9jZ3JvdXAuaAo+ICsrKyBi
-L2luY2x1ZGUvbGludXgvZGV2aWNlX2Nncm91cC5oCj4gQEAgLTEyLDI2ICsxMiwxNSBAQAo+ICAj
-ZGVmaW5lIERFVkNHX0RFVl9BTEwgICA0ICAvKiB0aGlzIHJlcHJlc2VudHMgYWxsIGRldmljZXMg
-Ki8KPiAgCj4gICNpZmRlZiBDT05GSUdfQ0dST1VQX0RFVklDRQo+IC1leHRlcm4gaW50IF9fZGV2
-Y2dyb3VwX2NoZWNrX3Blcm1pc3Npb24oc2hvcnQgdHlwZSwgdTMyIG1ham9yLCB1MzIgbWlub3Is
-Cj4gLQkJCQkJc2hvcnQgYWNjZXNzKTsKPiArZXh0ZXJuIGludCBkZXZjZ3JvdXBfY2hlY2tfcGVy
-bWlzc2lvbihzaG9ydCB0eXBlLCB1MzIgbWFqb3IsIHUzMiBtaW5vciwKPiArCQkJCSAgICAgIHNo
-b3J0IGFjY2Vzcyk7Cj4gICNlbHNlCj4gLXN0YXRpYyBpbmxpbmUgaW50IF9fZGV2Y2dyb3VwX2No
-ZWNrX3Blcm1pc3Npb24oc2hvcnQgdHlwZSwgdTMyIG1ham9yLCB1MzIgbWlub3IsCj4gLQkJCQkJ
-ICAgICAgIHNob3J0IGFjY2VzcykKPiArc3RhdGljIGlubGluZSBpbnQgZGV2Y2dyb3VwX2NoZWNr
-X3Blcm1pc3Npb24oc2hvcnQgdHlwZSwgdTMyIG1ham9yLCB1MzIgbWlub3IsCj4gKwkJCQkJICAg
-ICBzaG9ydCBhY2Nlc3MpCj4gIHsgcmV0dXJuIDA7IH0KPiAgI2VuZGlmCj4gIAo+ICAjaWYgZGVm
-aW5lZChDT05GSUdfQ0dST1VQX0RFVklDRSkgfHwgZGVmaW5lZChDT05GSUdfQ0dST1VQX0JQRikK
-PiAtc3RhdGljIGlubGluZSBpbnQgZGV2Y2dyb3VwX2NoZWNrX3Blcm1pc3Npb24oc2hvcnQgdHlw
-ZSwgdTMyIG1ham9yLCB1MzIgbWlub3IsCj4gLQkJCQkJICAgICBzaG9ydCBhY2Nlc3MpCj4gLXsK
-PiAtCWludCByYyA9IEJQRl9DR1JPVVBfUlVOX1BST0dfREVWSUNFX0NHUk9VUCh0eXBlLCBtYWpv
-ciwgbWlub3IsIGFjY2Vzcyk7Cj4gLQo+IC0JaWYgKHJjKQo+IC0JCXJldHVybiAtRVBFUk07Cj4g
-LQo+IC0JcmV0dXJuIF9fZGV2Y2dyb3VwX2NoZWNrX3Blcm1pc3Npb24odHlwZSwgbWFqb3IsIG1p
-bm9yLCBhY2Nlc3MpOwo+IC19Cj4gLQo+ICBzdGF0aWMgaW5saW5lIGludCBkZXZjZ3JvdXBfaW5v
-ZGVfcGVybWlzc2lvbihzdHJ1Y3QgaW5vZGUgKmlub2RlLCBpbnQgbWFzaykKPiAgewo+ICAJc2hv
-cnQgdHlwZSwgYWNjZXNzID0gMDsKPiBkaWZmIC0tZ2l0IGEvc2VjdXJpdHkvZGV2aWNlX2Nncm91
-cC5jIGIvc2VjdXJpdHkvZGV2aWNlX2Nncm91cC5jCj4gaW5kZXggY2Q5NzkyOWZhYzY2Li4zYzU3
-ZTA1YmY3M2IgMTAwNjQ0Cj4gLS0tIGEvc2VjdXJpdHkvZGV2aWNlX2Nncm91cC5jCj4gKysrIGIv
-c2VjdXJpdHkvZGV2aWNlX2Nncm91cC5jCj4gQEAgLTgwMSw4ICs4MDEsOCBAQCBzdHJ1Y3QgY2dy
-b3VwX3N1YnN5cyBkZXZpY2VzX2NncnBfc3Vic3lzID0gewo+ICAgKgo+ICAgKiByZXR1cm5zIDAg
-b24gc3VjY2VzcywgLUVQRVJNIGNhc2UgdGhlIG9wZXJhdGlvbiBpcyBub3QgcGVybWl0dGVkCj4g
-ICAqLwo+IC1pbnQgX19kZXZjZ3JvdXBfY2hlY2tfcGVybWlzc2lvbihzaG9ydCB0eXBlLCB1MzIg
-bWFqb3IsIHUzMiBtaW5vciwKPiAtCQkJCSBzaG9ydCBhY2Nlc3MpCj4gK3N0YXRpYyBpbnQgX19k
-ZXZjZ3JvdXBfY2hlY2tfcGVybWlzc2lvbihzaG9ydCB0eXBlLCB1MzIgbWFqb3IsIHUzMiBtaW5v
-ciwKPiArCQkJCQlzaG9ydCBhY2Nlc3MpCj4gIHsKPiAgCXN0cnVjdCBkZXZfY2dyb3VwICpkZXZf
-Y2dyb3VwOwo+ICAJYm9vbCByYzsKPiBAQCAtODI0LDMgKzgyNCwxNCBAQCBpbnQgX19kZXZjZ3Jv
-dXBfY2hlY2tfcGVybWlzc2lvbihzaG9ydCB0eXBlLCB1MzIgbWFqb3IsIHUzMiBtaW5vciwKPiAg
-Cj4gIAlyZXR1cm4gMDsKPiAgfQo+ICsKPiAraW50IGRldmNncm91cF9jaGVja19wZXJtaXNzaW9u
-KHNob3J0IHR5cGUsIHUzMiBtYWpvciwgdTMyIG1pbm9yLCBzaG9ydCBhY2Nlc3MpCj4gK3sKPiAr
-CWludCByYyA9IEJQRl9DR1JPVVBfUlVOX1BST0dfREVWSUNFX0NHUk9VUCh0eXBlLCBtYWpvciwg
-bWlub3IsIGFjY2Vzcyk7Cj4gKwo+ICsJaWYgKHJjKQo+ICsJCXJldHVybiAtRVBFUk07Cj4gKwo+
-ICsJcmV0dXJuIF9fZGV2Y2dyb3VwX2NoZWNrX3Blcm1pc3Npb24odHlwZSwgbWFqb3IsIG1pbm9y
-LCBhY2Nlc3MpOwo+ICt9Cj4gK0VYUE9SVF9TWU1CT0woZGV2Y2dyb3VwX2NoZWNrX3Blcm1pc3Np
-b24pOwoKUGVyZmVjdCwgbm93IGxvb2tzIGdvb2QgdG8gbWUhCgpQbGVhc2UsIGZlZWwgZnJlZSB0
-byB1c2UgbXkgYWNrcyBmb3IgcGF0Y2hlcyAzIGFuZCA0OgpBY2tlZC1ieTogUm9tYW4gR3VzaGNo
-aW4gPGd1cm9AZmIuY29tPgoKVGhhbmtzIQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fXwphbWQtZ2Z4IG1haWxpbmcgbGlzdAphbWQtZ2Z4QGxpc3RzLmZyZWVk
-ZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZv
-L2FtZC1nZng=
+It has been observed, that highly-threaded, non-cpu-bound applications
+running under cpu.cfs_quota_us constraints can hit a high percentage of
+periods throttled while simultaneously not consuming the allocated
+amount of quota.  This use case is typical of user-interactive non-cpu
+bound applications, such as those running in kubernetes or mesos when
+run on multiple cpu cores.
+
+This has been root caused to threads being allocated per cpu bandwidth
+slices, and then not fully using that slice within the period. At which
+point the slice and quota expires.  This expiration of unused slice
+results in applications not being able to utilize the quota for which
+they are allocated.
+
+The expiration of per-cpu slices was recently fixed by commit
+512ac999d275 ("sched/fair: Fix bandwidth timer clock drift condition").
+Prior to that it appears that this has been broken since a least commit
+51f2176d74ac ("sched/fair: Fix unlocked reads of some
+cfs_b->quota/period") which was introduced in v3.16-rc1 in 2014.  That
+commit added the following conditional which resulted in slices never
+being expired.
+
+if (cfs_rq->runtime_expires != cfs_b->runtime_expires) {
+	/* extend local deadline, drift is bounded above by 2 ticks */
+	cfs_rq->runtime_expires += TICK_NSEC;
+
+Because this was broken for nearly 5 years, and has recently been fixed
+and is now being noticed by many users running kubernetes
+(https://github.com/kubernetes/kubernetes/issues/67577) it is my opinion
+that the mechanisms around expiring runtime should be removed
+altogether.
+
+This allows only per-cpu slices to live longer than the period boundary.
+This allows threads on runqueues that do not use much CPU to continue to
+use their remaining slice over a longer period of time than
+cpu.cfs_period_us. However, this helps prevents the above condition of
+hitting throttling while also not fully utilizing your cpu quota.
+
+This theoretically allows a machine to use slightly more than it's
+allotted quota in some periods.  This overflow would be bounded by the
+remaining per-cpu slice that was left un-used in the previous period.
+For CPU bound tasks this will change nothing, as they should
+theoretically fully utilize all of their quota and slices in each
+period. For user-interactive tasks as described above this provides a
+much better user/application experience as their cpu utilization will
+more closely match the amount they requested when they hit throttling.
+
+This greatly improves performance of high-thread-count, non-cpu bound
+applications with low cfs_quota_us allocation on high-core-count
+machines. In the case of an artificial testcase, this performance
+discrepancy has been observed to be almost 30x performance improvement,
+while still maintaining correct cpu quota restrictions albeit over
+longer time intervals than cpu.cfs_period_us.  That testcase is available
+at https://github.com/indeedeng/fibtest.
+
+Fixes: 512ac999d275 ("sched/fair: Fix bandwidth timer clock drift condition")
+Signed-off-by: Dave Chiluk <chiluk+linux@indeed.com>
+---
+ Documentation/scheduler/sched-bwc.txt | 29 +++++++++++---
+ kernel/sched/fair.c                   | 71 +++--------------------------------
+ kernel/sched/sched.h                  |  4 --
+ 3 files changed, 29 insertions(+), 75 deletions(-)
+
+diff --git a/Documentation/scheduler/sched-bwc.txt b/Documentation/scheduler/sched-bwc.txt
+index f6b1873..4ded8ae 100644
+--- a/Documentation/scheduler/sched-bwc.txt
++++ b/Documentation/scheduler/sched-bwc.txt
+@@ -8,16 +8,33 @@ CFS bandwidth control is a CONFIG_FAIR_GROUP_SCHED extension which allows the
+ specification of the maximum CPU bandwidth available to a group or hierarchy.
+ 
+ The bandwidth allowed for a group is specified using a quota and period. Within
+-each given "period" (microseconds), a group is allowed to consume only up to
+-"quota" microseconds of CPU time.  When the CPU bandwidth consumption of a
+-group exceeds this limit (for that period), the tasks belonging to its
+-hierarchy will be throttled and are not allowed to run again until the next
+-period.
++each given "period" (microseconds), a task group is allocated up to "quota"
++microseconds of CPU time.  When the CPU bandwidth consumption of a group
++exceeds this limit (for that period), the tasks belonging to its hierarchy will
++be throttled and are not allowed to run again until the next period.
+ 
+ A group's unused runtime is globally tracked, being refreshed with quota units
+ above at each period boundary.  As threads consume this bandwidth it is
+ transferred to cpu-local "silos" on a demand basis.  The amount transferred
+-within each of these updates is tunable and described as the "slice".
++within each of these updates is tunable and described as the "slice".  Slices
++that are allocated to cpu-local silos do not expire at the end of the period,
++but unallocated quota does.  This doesn't affect cpu-bound applications as they
++by definition consume all of their bandwidth in each each period.
++
++However for highly-threaded user-interactive/non-cpu bound applications this
++non-expiration nuance allows applications to burst past their quota limits
++equal to the amount of unused slice per cpu that the task group is running on.
++This slight burst requires that quota had gone unused in previous periods.
++Additionally this burst amount is limited to the size of a slice for every cpu
++a task group is run on.  As a result, this mechanism still strictly limits the
++task group to quota average usage over a longer time windows.  This provides
++better more predictable user experience for highly threaded applications with
++small quota limits on high core count machines.  It also eliminates the
++propensity to throttle these applications while simultanously using less than
++quota amounts of cpu.  Another way to say this, is that by allowing the unused
++portion of a slice to be used in following periods we have decreased the
++possibility of wasting unused quota on cpu-local silos that don't need much cpu
++time.
+ 
+ Management
+ ----------
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index f35930f..a675c69 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -4295,8 +4295,6 @@ void __refill_cfs_bandwidth_runtime(struct cfs_bandwidth *cfs_b)
+ 
+ 	now = sched_clock_cpu(smp_processor_id());
+ 	cfs_b->runtime = cfs_b->quota;
+-	cfs_b->runtime_expires = now + ktime_to_ns(cfs_b->period);
+-	cfs_b->expires_seq++;
+ }
+ 
+ static inline struct cfs_bandwidth *tg_cfs_bandwidth(struct task_group *tg)
+@@ -4318,8 +4316,7 @@ static int assign_cfs_rq_runtime(struct cfs_rq *cfs_rq)
+ {
+ 	struct task_group *tg = cfs_rq->tg;
+ 	struct cfs_bandwidth *cfs_b = tg_cfs_bandwidth(tg);
+-	u64 amount = 0, min_amount, expires;
+-	int expires_seq;
++	u64 amount = 0, min_amount;
+ 
+ 	/* note: this is a positive sum as runtime_remaining <= 0 */
+ 	min_amount = sched_cfs_bandwidth_slice() - cfs_rq->runtime_remaining;
+@@ -4336,61 +4333,17 @@ static int assign_cfs_rq_runtime(struct cfs_rq *cfs_rq)
+ 			cfs_b->idle = 0;
+ 		}
+ 	}
+-	expires_seq = cfs_b->expires_seq;
+-	expires = cfs_b->runtime_expires;
+ 	raw_spin_unlock(&cfs_b->lock);
+ 
+ 	cfs_rq->runtime_remaining += amount;
+-	/*
+-	 * we may have advanced our local expiration to account for allowed
+-	 * spread between our sched_clock and the one on which runtime was
+-	 * issued.
+-	 */
+-	if (cfs_rq->expires_seq != expires_seq) {
+-		cfs_rq->expires_seq = expires_seq;
+-		cfs_rq->runtime_expires = expires;
+-	}
+ 
+ 	return cfs_rq->runtime_remaining > 0;
+ }
+ 
+-/*
+- * Note: This depends on the synchronization provided by sched_clock and the
+- * fact that rq->clock snapshots this value.
+- */
+-static void expire_cfs_rq_runtime(struct cfs_rq *cfs_rq)
+-{
+-	struct cfs_bandwidth *cfs_b = tg_cfs_bandwidth(cfs_rq->tg);
+-
+-	/* if the deadline is ahead of our clock, nothing to do */
+-	if (likely((s64)(rq_clock(rq_of(cfs_rq)) - cfs_rq->runtime_expires) < 0))
+-		return;
+-
+-	if (cfs_rq->runtime_remaining < 0)
+-		return;
+-
+-	/*
+-	 * If the local deadline has passed we have to consider the
+-	 * possibility that our sched_clock is 'fast' and the global deadline
+-	 * has not truly expired.
+-	 *
+-	 * Fortunately we can check determine whether this the case by checking
+-	 * whether the global deadline(cfs_b->expires_seq) has advanced.
+-	 */
+-	if (cfs_rq->expires_seq == cfs_b->expires_seq) {
+-		/* extend local deadline, drift is bounded above by 2 ticks */
+-		cfs_rq->runtime_expires += TICK_NSEC;
+-	} else {
+-		/* global deadline is ahead, expiration has passed */
+-		cfs_rq->runtime_remaining = 0;
+-	}
+-}
+-
+ static void __account_cfs_rq_runtime(struct cfs_rq *cfs_rq, u64 delta_exec)
+ {
+ 	/* dock delta_exec before expiring quota (as it could span periods) */
+ 	cfs_rq->runtime_remaining -= delta_exec;
+-	expire_cfs_rq_runtime(cfs_rq);
+ 
+ 	if (likely(cfs_rq->runtime_remaining > 0))
+ 		return;
+@@ -4581,8 +4534,7 @@ void unthrottle_cfs_rq(struct cfs_rq *cfs_rq)
+ 		resched_curr(rq);
+ }
+ 
+-static u64 distribute_cfs_runtime(struct cfs_bandwidth *cfs_b,
+-		u64 remaining, u64 expires)
++static u64 distribute_cfs_runtime(struct cfs_bandwidth *cfs_b, u64 remaining)
+ {
+ 	struct cfs_rq *cfs_rq;
+ 	u64 runtime;
+@@ -4604,7 +4556,6 @@ static u64 distribute_cfs_runtime(struct cfs_bandwidth *cfs_b,
+ 		remaining -= runtime;
+ 
+ 		cfs_rq->runtime_remaining += runtime;
+-		cfs_rq->runtime_expires = expires;
+ 
+ 		/* we check whether we're throttled above */
+ 		if (cfs_rq->runtime_remaining > 0)
+@@ -4629,7 +4580,7 @@ static u64 distribute_cfs_runtime(struct cfs_bandwidth *cfs_b,
+  */
+ static int do_sched_cfs_period_timer(struct cfs_bandwidth *cfs_b, int overrun, unsigned long flags)
+ {
+-	u64 runtime, runtime_expires;
++	u64 runtime;
+ 	int throttled;
+ 
+ 	/* no need to continue the timer with no bandwidth constraint */
+@@ -4657,8 +4608,6 @@ static int do_sched_cfs_period_timer(struct cfs_bandwidth *cfs_b, int overrun, u
+ 	/* account preceding periods in which throttling occurred */
+ 	cfs_b->nr_throttled += overrun;
+ 
+-	runtime_expires = cfs_b->runtime_expires;
+-
+ 	/*
+ 	 * This check is repeated as we are holding onto the new bandwidth while
+ 	 * we unthrottle. This can potentially race with an unthrottled group
+@@ -4671,8 +4620,7 @@ static int do_sched_cfs_period_timer(struct cfs_bandwidth *cfs_b, int overrun, u
+ 		cfs_b->distribute_running = 1;
+ 		raw_spin_unlock_irqrestore(&cfs_b->lock, flags);
+ 		/* we can't nest cfs_b->lock while distributing bandwidth */
+-		runtime = distribute_cfs_runtime(cfs_b, runtime,
+-						 runtime_expires);
++		runtime = distribute_cfs_runtime(cfs_b, runtime);
+ 		raw_spin_lock_irqsave(&cfs_b->lock, flags);
+ 
+ 		cfs_b->distribute_running = 0;
+@@ -4749,8 +4697,7 @@ static void __return_cfs_rq_runtime(struct cfs_rq *cfs_rq)
+ 		return;
+ 
+ 	raw_spin_lock(&cfs_b->lock);
+-	if (cfs_b->quota != RUNTIME_INF &&
+-	    cfs_rq->runtime_expires == cfs_b->runtime_expires) {
++	if (cfs_b->quota != RUNTIME_INF) {
+ 		cfs_b->runtime += slack_runtime;
+ 
+ 		/* we are under rq->lock, defer unthrottling using a timer */
+@@ -4783,7 +4730,6 @@ static void do_sched_cfs_slack_timer(struct cfs_bandwidth *cfs_b)
+ {
+ 	u64 runtime = 0, slice = sched_cfs_bandwidth_slice();
+ 	unsigned long flags;
+-	u64 expires;
+ 
+ 	/* confirm we're still not at a refresh boundary */
+ 	raw_spin_lock_irqsave(&cfs_b->lock, flags);
+@@ -4800,7 +4746,6 @@ static void do_sched_cfs_slack_timer(struct cfs_bandwidth *cfs_b)
+ 	if (cfs_b->quota != RUNTIME_INF && cfs_b->runtime > slice)
+ 		runtime = cfs_b->runtime;
+ 
+-	expires = cfs_b->runtime_expires;
+ 	if (runtime)
+ 		cfs_b->distribute_running = 1;
+ 
+@@ -4809,11 +4754,9 @@ static void do_sched_cfs_slack_timer(struct cfs_bandwidth *cfs_b)
+ 	if (!runtime)
+ 		return;
+ 
+-	runtime = distribute_cfs_runtime(cfs_b, runtime, expires);
++	runtime = distribute_cfs_runtime(cfs_b, runtime);
+ 
+ 	raw_spin_lock_irqsave(&cfs_b->lock, flags);
+-	if (expires == cfs_b->runtime_expires)
+-		lsub_positive(&cfs_b->runtime, runtime);
+ 	cfs_b->distribute_running = 0;
+ 	raw_spin_unlock_irqrestore(&cfs_b->lock, flags);
+ }
+@@ -4969,8 +4912,6 @@ void start_cfs_bandwidth(struct cfs_bandwidth *cfs_b)
+ 
+ 	cfs_b->period_active = 1;
+ 	overrun = hrtimer_forward_now(&cfs_b->period_timer, cfs_b->period);
+-	cfs_b->runtime_expires += (overrun + 1) * ktime_to_ns(cfs_b->period);
+-	cfs_b->expires_seq++;
+ 	hrtimer_start_expires(&cfs_b->period_timer, HRTIMER_MODE_ABS_PINNED);
+ }
+ 
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index b52ed1a..0c0ed23 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -341,8 +341,6 @@ struct cfs_bandwidth {
+ 	u64			quota;
+ 	u64			runtime;
+ 	s64			hierarchical_quota;
+-	u64			runtime_expires;
+-	int			expires_seq;
+ 
+ 	short			idle;
+ 	short			period_active;
+@@ -562,8 +560,6 @@ struct cfs_rq {
+ 
+ #ifdef CONFIG_CFS_BANDWIDTH
+ 	int			runtime_enabled;
+-	int			expires_seq;
+-	u64			runtime_expires;
+ 	s64			runtime_remaining;
+ 
+ 	u64			throttled_clock;
+-- 
+1.8.3.1
+
