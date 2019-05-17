@@ -1,73 +1,33 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RESEND] signal: unconditionally leave the frozen state in
- ptrace_stop()
-Date: Thu, 16 May 2019 10:45:23 -0700
-Message-ID: <20190516174523.GD374014@devbig004.ftw2.facebook.com>
-References: <20190516173821.1498807-1-guro@fb.com>
+From: Jiri Slaby <jslaby@suse.cz>
+Subject: Re: [PATCH] memcg: make it work on sparse non-0-node systems
+Date: Fri, 17 May 2019 06:48:37 +0200
+Message-ID: <68075828-8fd7-adbb-c1d9-5eb39fbf18cb@suse.cz>
+References: <359d98e6-044a-7686-8522-bdd2489e9456@suse.cz>
+ <20190429105939.11962-1-jslaby@suse.cz>
+ <20190509122526.ck25wscwanooxa3t@esperanza>
+ <20190516135923.GV16651@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=TZW9oPjKjF7UuQfNRNZlJhWogoRZGc1JB7uoqoIfv+8=;
-        b=U+/Dsbpe3Ev8qOz5ABegg4QwYrxhkHAqm6TrtgUJZMxYDxJyKNRkrRR2BomF+w8bGA
-         JeXPRak510vhmmzJ8bRXqpXFQtGibDSo/kyK2zYtiw+D7B7H/6Gb/lGYxPaHanLuyx5i
-         gUYWYVTnZ5fNLpvZmPoI1/hpBdL/MlRiTGoXmomSU60h70cP2MeSUERNp3AMtK+BAXOR
-         753TXbfYLlPuastYz2vzgY435v4UWD/63ouWJF2lzPjL0KwD1TPbqNzSVAQQTSmrFxD3
-         BiH4q8vfb1Vc8YX3FlMIFhHYqPuYMeE0fF9Zpl545yER8ygpzwARFTZi9cGlYGk6xKUt
-         f7dA==
-Content-Disposition: inline
-In-Reply-To: <20190516173821.1498807-1-guro@fb.com>
+In-Reply-To: <20190516135923.GV16651@dhcp22.suse.cz>
+Content-Language: en-GB
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Oleg Nesterov <oleg@redhat.com>, Alex Xu <alex_y_xu@yahoo.ca>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Raghavendra K T <raghavendra.kt@linux.vnet.ibm.com>
 
-On Thu, May 16, 2019 at 10:38:21AM -0700, Roman Gushchin wrote:
-> Alex Xu reported a regression in strace, caused by the introduction of
-> the cgroup v2 freezer. The regression can be reproduced by stracing
-> the following simple program:
+On 16. 05. 19, 15:59, Michal Hocko wrote:
+>> However, I tend to agree with Michal that (ab)using node[0].memcg_lrus
+>> to check if a list_lru is memcg aware looks confusing. I guess we could
+>> simply add a bool flag to list_lru instead. Something like this, may be:
 > 
->   #include <unistd.h>
-> 
->   int main() {
->       write(1, "a", 1);
->       return 0;
->   }
-> 
-> An attempt to run strace ./a.out leads to the infinite loop:
->   [ pre-main omitted ]
->   write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
->   write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
->   write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
->   write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
->   write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
->   write(1, "a", 1)                        = ? ERESTARTSYS (To be restarted if SA_RESTART is set)
->   [ repeats forever ]
-> 
-> The problem occurs because the traced task leaves ptrace_stop()
-> (and the signal handling loop) with the frozen bit set. So let's
-> call cgroup_leave_frozen(true) unconditionally after sleeping
-> in ptrace_stop().
-> 
-> With this patch applied, strace works as expected:
->   [ pre-main omitted ]
->   write(1, "a", 1)                        = 1
->   exit_group(0)                           = ?
->   +++ exited with 0 +++
-> 
-> Reported-by: Alex Xu <alex_y_xu@yahoo.ca>
-> Fixes: 76f969e8948d ("cgroup: cgroup v2 freezer")
-> Signed-off-by: Roman Gushchin <guro@fb.com>
-> Acked-by: Oleg Nesterov <oleg@redhat.com>
-> Cc: Tejun Heo <tj@kernel.org>
+> Yes, this makes much more sense to me!
 
-Applied to cgroup/for-5.2-fixes.
+I am not sure if I should send a patch with this solution or Vladimir
+will (given he is an author and has a diff already)?
 
-Thanks.
-
+thanks,
 -- 
-tejun
+js
+suse labs
