@@ -1,128 +1,48 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH v2] memcg: make it work on sparse non-0-node systems
-Date: Fri, 17 May 2019 14:27:05 +0200
-Message-ID: <20190517122705.GH6836@dhcp22.suse.cz>
-References: <20190517080044.tnwhbeyxcccsymgf@esperanza>
- <20190517114204.6330-1-jslaby@suse.cz>
+From: "Kasiviswanathan, Harish" <Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>
+Subject: [PATCH v2 0/4] AMDKFD (AMD GPU compute) support for device cgroup.
+Date: Fri, 17 May 2019 16:14:52 +0000
+Message-ID: <20190517161435.14121-1-Harish.Kasiviswanathan@amd.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190517114204.6330-1-jslaby@suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Language: en-US
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, Raghavendra K T <raghavendra.kt@linux.vnet.ibm.com>
+To: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Cc: "Kasiviswanathan, Harish" <Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>
 
-On Fri 17-05-19 13:42:04, Jiri Slaby wrote:
-> We have a single node system with node 0 disabled:
->   Scanning NUMA topology in Northbridge 24
->   Number of physical nodes 2
->   Skipping disabled node 0
->   Node 1 MemBase 0000000000000000 Limit 00000000fbff0000
->   NODE_DATA(1) allocated [mem 0xfbfda000-0xfbfeffff]
-> 
-> This causes crashes in memcg when system boots:
->   BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
->   #PF error: [normal kernel read fault]
-> ...
->   RIP: 0010:list_lru_add+0x94/0x170
-> ...
->   Call Trace:
->    d_lru_add+0x44/0x50
->    dput.part.34+0xfc/0x110
->    __fput+0x108/0x230
->    task_work_run+0x9f/0xc0
->    exit_to_usermode_loop+0xf5/0x100
-> 
-> It is reproducible as far as 4.12. I did not try older kernels. You have
-> to have a new enough systemd, e.g. 241 (the reason is unknown -- was not
-> investigated). Cannot be reproduced with systemd 234.
-> 
-> The system crashes because the size of lru array is never updated in
-> memcg_update_all_list_lrus and the reads are past the zero-sized array,
-> causing dereferences of random memory.
-> 
-> The root cause are list_lru_memcg_aware checks in the list_lru code.
-> The test in list_lru_memcg_aware is broken: it assumes node 0 is always
-> present, but it is not true on some systems as can be seen above.
-> 
-> So fix this by avoiding checks on node 0. Remember the memcg-awareness
-> by a bool flag in struct list_lru.
-> 
-> [v2] use the idea proposed by Vladimir -- the bool flag.
-> 
-> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Suggested-by: Vladimir Davydov <vdavydov.dev@gmail.com>
-> Acked-by: Vladimir Davydov <vdavydov.dev@gmail.com>
-> Cc: <cgroups@vger.kernel.org>
-> Cc: <linux-mm@kvack.org>
-> Cc: Raghavendra K T <raghavendra.kt@linux.vnet.ibm.com>
-
-Fixes: 60d3fd32a7a9 ("list_lru: introduce per-memcg lists")
-unless I have missed something
-
-Cc: stable sounds like a good idea to me as well, although nobody has
-noticed this yet but Node0 machines are quite rare.
-
-I haven't checked all users of list_lru but the structure size increase
-shouldn't be a big problem. There tend to be only limited number of
-those and the number shouldn't be huge.
-
-So this looks good to me.
-Acked-by: Michal Hocko <mhocko@suse.com>
-
-Thanks a lot Jiri!
-
-> ---
->  include/linux/list_lru.h | 1 +
->  mm/list_lru.c            | 8 +++-----
->  2 files changed, 4 insertions(+), 5 deletions(-)
-> 
-> diff --git a/include/linux/list_lru.h b/include/linux/list_lru.h
-> index aa5efd9351eb..d5ceb2839a2d 100644
-> --- a/include/linux/list_lru.h
-> +++ b/include/linux/list_lru.h
-> @@ -54,6 +54,7 @@ struct list_lru {
->  #ifdef CONFIG_MEMCG_KMEM
->  	struct list_head	list;
->  	int			shrinker_id;
-> +	bool			memcg_aware;
->  #endif
->  };
->  
-> diff --git a/mm/list_lru.c b/mm/list_lru.c
-> index 0730bf8ff39f..d3b538146efd 100644
-> --- a/mm/list_lru.c
-> +++ b/mm/list_lru.c
-> @@ -37,11 +37,7 @@ static int lru_shrinker_id(struct list_lru *lru)
->  
->  static inline bool list_lru_memcg_aware(struct list_lru *lru)
->  {
-> -	/*
-> -	 * This needs node 0 to be always present, even
-> -	 * in the systems supporting sparse numa ids.
-> -	 */
-> -	return !!lru->node[0].memcg_lrus;
-> +	return lru->memcg_aware;
->  }
->  
->  static inline struct list_lru_one *
-> @@ -451,6 +447,8 @@ static int memcg_init_list_lru(struct list_lru *lru, bool memcg_aware)
->  {
->  	int i;
->  
-> +	lru->memcg_aware = memcg_aware;
-> +
->  	if (!memcg_aware)
->  		return 0;
->  
-> -- 
-> 2.21.0
-
--- 
-Michal Hocko
-SUSE Labs
+YW1ka2ZkIChwYXJ0IG9mIGFtZGdwdSkgZHJpdmVyIHN1cHBvcnRzIHRoZSBBTUQgR1BVIGNvbXB1
+dGUgc3RhY2suDQphbWRrZmQgZXhwb3NlcyBvbmx5IGEgc2luZ2xlIGRldmljZSAvZGV2L2tmZCBl
+dmVuIGlmIG11bHRpcGxlIEFNRCBHUFUNCihjb21wdXRlKSBkZXZpY2VzIGV4aXN0IGluIGEgc3lz
+dGVtLiBIb3dldmVyLCBhbWRncHUgZHJ2aWVyIGV4cG9zZXMgYQ0Kc2VwYXJhdGUgcmVuZGVyIGRl
+dmljZSBmaWxlIC9kZXYvZHJpL3JlbmRlckROIGZvciBlYWNoIGRldmljZS4gVG8gcGFydGljaXBh
+dGUNCmluIGRldmljZSBjZ3JvdXAgYW1ka2ZkIGRyaXZlciB3aWxsIHJlbHkgb24gdGhlc2UgcmVk
+bmVyIGRldmljZSBmaWxlcy4NCg0KdjI6IEV4cG9ydGluZyBkZXZjZ3JvdXBfY2hlY2tfcGVybWlz
+c2lvbigpIGluc3RlYWQgb2YNCl9fZGV2Y2dyb3VwX2NoZWNrX3Blcm1pc3Npb24oKSBhcyBwZXIg
+cmV2aWV3IGNvbW1lbnRzLg0KDQpIYXJpc2ggS2FzaXZpc3dhbmF0aGFuICg0KToNCiAgZHJtL2Ft
+ZGtmZDogU3RvcmUga2ZkX2RldiBpbiBpb2xpbmsgYW5kIGNhY2hlIHByb3BlcnRpZXMNCiAgZHJt
+L2FtZDogUGFzcyBkcm1fZGV2aWNlIHRvIGtmZA0KICBkZXZpY2VfY2dyb3VwOiBFeHBvcnQgZGV2
+Y2dyb3VwX2NoZWNrX3Blcm1pc3Npb24NCiAgZHJtL2FtZGtmZDogQ2hlY2sgYWdhaW5zdCBkZXZp
+Y2UgY2dyb3VwDQoNCiBkcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGdwdS9hbWRncHVfYW1ka2ZkLmMg
+ICB8ICAyICstDQogZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUvYW1kZ3B1X2FtZGtmZC5oICAg
+fCAgMSArDQogZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRrZmQva2ZkX2RldmljZS5jICAgICAgfCAg
+MiArKw0KIGRyaXZlcnMvZ3B1L2RybS9hbWQvYW1ka2ZkL2tmZF9mbGF0X21lbW9yeS5jIHwgIDkg
+KysrKysrLS0NCiBkcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGtmZC9rZmRfcHJpdi5oICAgICAgICB8
+IDIwICsrKysrKysrKysrKysrKysrKw0KIGRyaXZlcnMvZ3B1L2RybS9hbWQvYW1ka2ZkL2tmZF90
+b3BvbG9neS5jICAgIHwgMjIgKysrKysrKysrKysrKysrKysrKysNCiBkcml2ZXJzL2dwdS9kcm0v
+YW1kL2FtZGtmZC9rZmRfdG9wb2xvZ3kuaCAgICB8ICAzICsrKw0KIGluY2x1ZGUvbGludXgvZGV2
+aWNlX2Nncm91cC5oICAgICAgICAgICAgICAgIHwgMTkgKysrKy0tLS0tLS0tLS0tLS0NCiBzZWN1
+cml0eS9kZXZpY2VfY2dyb3VwLmMgICAgICAgICAgICAgICAgICAgICB8IDE1ICsrKysrKysrKysr
+LS0NCiA5IGZpbGVzIGNoYW5nZWQsIDczIGluc2VydGlvbnMoKyksIDIwIGRlbGV0aW9ucygtKQ0K
+DQotLSANCjIuMTcuMQ0KDQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwphbWQtZ2Z4IG1haWxpbmcgbGlzdAphbWQtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9y
+ZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2FtZC1nZng=
