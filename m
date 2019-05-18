@@ -1,73 +1,149 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH v2] mm, memcg: introduce memory.events.local
-Date: Fri, 17 May 2019 18:19:19 -0700
-Message-ID: <CALvZod4cOWrzGzJncCzaPqBbnmavbkrbTZnwY6r1V5eFVwOJAQ@mail.gmail.com>
-References: <20190518001818.193336-1-shakeelb@google.com> <20190518005927.GB3431@tower.DHCP.thefacebook.com>
-Mime-Version: 1.0
+From: Paolo Valente <paolo.valente@linaro.org>
+Subject: Re: CFQ idling kills I/O performance on ext4 with blkio cgroup
+ controller
+Date: Sat, 18 May 2019 20:39:54 +0200
+Message-ID: <1812E450-14EF-4D5A-8F31-668499E13652@linaro.org>
+References: <8d72fcf7-bbb4-2965-1a06-e9fc177a8938@csail.mit.edu>
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.8\))
+Content-Type: multipart/signed;
+        boundary="Apple-Mail=_2AB4EAF8-8BC4-47A0-9500-56DE63C63E62";
+        protocol="application/pgp-signature";
+        micalg=pgp-sha256
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=7Ho8cHrK4qMqiN3LtaRzVtq4HS5hpwx3f8cFy/TZJ4Y=;
-        b=Aa2aThr8oZpP0WVahD8NCNtshzOd5qsE6LqKaPa6VLI3iYk06oUL4BlBH5BA18zwU4
-         Gq3Rt3R6ehByjfoq9VBjVL/B24UpZw5SethE0DegFvSksoigMBv9jPJcnkpsG7vVKnei
-         7eB9NigP6sVXiyh6W3xmHGF2LtlTntNh8IWQG1gltDpbv/Vnqwt/dDkSv32UQ+Zyvmuj
-         7W64PTuAiZN+TtH90+krk10ZQRyYxIinqRqWZJElqdKAXDdwkbAtXLjE7EHAVHb0pNoh
-         RHgbOyZnzTbbTsUszgg8DRq5iAKYSjwFf09KEFH7+p2jQNeUpkR8kOulHqKzRSL9pd69
-         RqIw==
-In-Reply-To: <20190518005927.GB3431@tower.DHCP.thefacebook.com>
+        d=linaro.org; s=google;
+        h=from:message-id:mime-version:subject:date:in-reply-to:cc:to
+         :references;
+        bh=ouEAfY4fVdVHhS9xR65IP6Zu3YZKMcX1yK26/K9YRUY=;
+        b=nlp7cHJt2SjtBL+lyV4uwEHDsEea6nRrWx5BU9r3PG8LieJX1ROiQDyxQpLG1WdGm/
+         2TrUP8Z6n6D2ouN6A/3sw7WZysGcv73ll6ZTXI8RyL+ntXWvd5wHWzQ0o6aS92tqPJju
+         C1rGQW9JCxQuhs7CQOqrLPbJWm4aEiqDd41KQhAWZirqNKSNz9MAlQOMB68cUxn0UUTe
+         KIP/emPF1QPcyA/CLxVNJXMr1X2h46CgI12jfOyhBlI++DQErsG3wj3NPXfXWYj9glIE
+         wEEPycLptPZkBPIoyZqcaurC/U5Ltp6ZOOnPhW8BvqdYLnVBza6XzYvD+pPkgWf02k+g
+         eK+g==
+In-Reply-To: <8d72fcf7-bbb4-2965-1a06-e9fc177a8938@csail.mit.edu>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+To: "Srivatsa S. Bhat" <srivatsa@csail.mit.edu>
+Cc: linux-fsdevel@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, linux-ext4@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@kernel.dk, jack@suse.cz, jmoyer@redhat.com, tytso@mit.edu, amakhalov@vmware.com, anishs@vmware.com, srivatsab@vmware.com
+
+
+--Apple-Mail=_2AB4EAF8-8BC4-47A0-9500-56DE63C63E62
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
+
+I've addressed these issues in my last batch of improvements for BFQ, =
+which landed in the upcoming 5.2. If you give it a try, and still see =
+the problem, then I'll be glad to reproduce it, and hopefully fix it for =
+you.
+
+Thanks,
+Paolo
+
+> Il giorno 18 mag 2019, alle ore 00:16, Srivatsa S. Bhat =
+<srivatsa@csail.mit.edu> ha scritto:
+>=20
+>=20
+> Hi,
+>=20
+> One of my colleagues noticed upto 10x - 30x drop in I/O throughput
+> running the following command, with the CFQ I/O scheduler:
+>=20
+> dd if=3D/dev/zero of=3D/root/test.img bs=3D512 count=3D10000 =
+oflags=3Ddsync
+>=20
+> Throughput with CFQ: 60 KB/s
+> Throughput with noop or deadline: 1.5 MB/s - 2 MB/s
+>=20
+> I spent some time looking into it and found that this is caused by the
+> undesirable interaction between 4 different components:
+>=20
+> - blkio cgroup controller enabled
+> - ext4 with the jbd2 kthread running in the root blkio cgroup
+> - dd running on ext4, in any other blkio cgroup than that of jbd2
+> - CFQ I/O scheduler with defaults for slice_idle and group_idle
+>=20
+>=20
+> When docker is enabled, systemd creates a blkio cgroup called
+> system.slice to run system services (and docker) under it, and a
+> separate blkio cgroup called user.slice for user processes. So, when
+> dd is invoked, it runs under user.slice.
+>=20
+> The dd command above includes the dsync flag, which performs an
+> fdatasync after every write to the output file. Since dd is writing to
+> a file on ext4, jbd2 will be active, committing transactions
+> corresponding to those fdatasync requests from dd. (In other words, dd
+> depends on jdb2, in order to make forward progress). But jdb2 being a
+> kernel thread, runs in the root blkio cgroup, as opposed to dd, which
+> runs under user.slice.
+>=20
+> Now, if the I/O scheduler in use for the underlying block device is
+> CFQ, then its inter-queue/inter-group idling takes effect (via the
+> slice_idle and group_idle parameters, both of which default to 8ms).
+> Therefore, everytime CFQ switches between processing requests from dd
+> vs jbd2, this 8ms idle time is injected, which slows down the overall
+> throughput tremendously!
+>=20
+> To verify this theory, I tried various experiments, and in all cases,
+> the 4 pre-conditions mentioned above were necessary to reproduce this
+> performance drop. For example, if I used an XFS filesystem (which
+> doesn't use a separate kthread like jbd2 for journaling), or if I =
+dd'ed
+> directly to a block device, I couldn't reproduce the performance
+> issue. Similarly, running dd in the root blkio cgroup (where jbd2
+> runs) also gets full performance; as does using the noop or deadline
+> I/O schedulers; or even CFQ itself, with slice_idle and group_idle set
+> to zero.
+>=20
+> These results were reproduced on a Linux VM (kernel v4.19) on ESXi,
+> both with virtualized storage as well as with disk pass-through,
+> backed by a rotational hard disk in both cases. The same problem was
+> also seen with the BFQ I/O scheduler in kernel v5.1.
+>=20
+> Searching for any earlier discussions of this problem, I found an old
+> thread on LKML that encountered this behavior [1], as well as a docker
+> github issue [2] with similar symptoms (mentioned later in the
+> thread).
+>=20
+> So, I'm curious to know if this is a well-understood problem and if
+> anybody has any thoughts on how to fix it.
+>=20
+> Thank you very much!
+>=20
+>=20
+> [1]. https://lkml.org/lkml/2015/11/19/359
+>=20
+> [2]. https://github.com/moby/moby/issues/21485
+>     https://github.com/moby/moby/issues/21485#issuecomment-222941103
+>=20
+> Regards,
+> Srivatsa
+
+
+--Apple-Mail=_2AB4EAF8-8BC4-47A0-9500-56DE63C63E62
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Chris Down <chris@chrisdown.name>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
 
-On Fri, May 17, 2019 at 5:59 PM Roman Gushchin <guro@fb.com> wrote:
->
-> On Fri, May 17, 2019 at 05:18:18PM -0700, Shakeel Butt wrote:
-> > The memory controller in cgroup v2 exposes memory.events file for each
-> > memcg which shows the number of times events like low, high, max, oom
-> > and oom_kill have happened for the whole tree rooted at that memcg.
-> > Users can also poll or register notification to monitor the changes in
-> > that file. Any event at any level of the tree rooted at memcg will
-> > notify all the listeners along the path till root_mem_cgroup. There are
-> > existing users which depend on this behavior.
-> >
-> > However there are users which are only interested in the events
-> > happening at a specific level of the memcg tree and not in the events in
-> > the underlying tree rooted at that memcg. One such use-case is a
-> > centralized resource monitor which can dynamically adjust the limits of
-> > the jobs running on a system. The jobs can create their sub-hierarchy
-> > for their own sub-tasks. The centralized monitor is only interested in
-> > the events at the top level memcgs of the jobs as it can then act and
-> > adjust the limits of the jobs. Using the current memory.events for such
-> > centralized monitor is very inconvenient. The monitor will keep
-> > receiving events which it is not interested and to find if the received
-> > event is interesting, it has to read memory.event files of the next
-> > level and compare it with the top level one. So, let's introduce
-> > memory.events.local to the memcg which shows and notify for the events
-> > at the memcg level.
-> >
-> > Now, does memory.stat and memory.pressure need their local versions.
-> > IMHO no due to the no internal process contraint of the cgroup v2. The
-> > memory.stat file of the top level memcg of a job shows the stats and
-> > vmevents of the whole tree. The local stats or vmevents of the top level
-> > memcg will only change if there is a process running in that memcg but
-> > v2 does not allow that. Similarly for memory.pressure there will not be
-> > any process in the internal nodes and thus no chance of local pressure.
-> >
-> > Signed-off-by: Shakeel Butt <shakeelb@google.com>
-> > ---
-> > Changelog since v1:
-> > - refactor memory_events_show to share between events and events.local
->
-> Reviewed-by: Roman Gushchin <guro@fb.com>
->
-> You also need to add some stuff into cgroup v2 documentation.
->
+-----BEGIN PGP SIGNATURE-----
 
-Thanks, will update the doc in the next version.
+iQIzBAEBCAAdFiEEpYoduex+OneZyvO8OAkCLQGo9oMFAlzgUXoACgkQOAkCLQGo
+9oPNXw//edQtNFa1ZbM3WUODyCQi7cKAIh4ducAKO16wY4cr3eaXmlDO++GEBBos
+cPdrh1eqQUs6ARuLbmwyLSCZpm3dyJFuK6RBqWYAPdM8vExd4cl6xAHzCK271grv
+2+HvBk5p9/fR+TZoKKz/fv6gJG1qBW6/sdVwLGY7pb6J9iTYjRO6t2faRhc6LXFE
+LrsLOwF4OzYYhYbbU1tvTu34VxDycloASVdaYUQsqA9B3C5NO1VeMVhoPRFXL6fK
+8ZOiXkpOZLaqldXk6sctyg7yWFmzjUFS/PfnG3ZBSOGWYhA0T7aIEzOddQy39Ckx
+iEFl6DCCsUrzCw7kWZRjitVeDZp1itdANtNmqBBwcv/ccW1ag4Hryt08F9LSNKp/
+P4JDKOLezZ39VQyLoOnYVT/HeCQjx1uQpmilE3lU6+KFEjq61lD5y072Wz8Nw8AE
+qVjwv7Z2FPAROe8JGVpHn6YMvFzrl79nKa+ji9BlQWm1JVvgDcHoZGdVyuaznNyV
+NXOpSbi2BnsQvyfhNYwSc9/Jkopfbx/3fMkTK7LnLLSiPo1snzC2bMdICJPWtsYx
+Vqd4II1J1ZcvSmllZ7lOHpAi3JsPbuemcx0fvA8CXdBST0ZgEuaJLzb2MM5+X8uP
+SJwBn7Vy3TlM6kio9mtr4W3x2341l/FmpxnHWDZiCFsS6A/EQ6c=
+=FzRW
+-----END PGP SIGNATURE-----
 
-Shakeel
+--Apple-Mail=_2AB4EAF8-8BC4-47A0-9500-56DE63C63E62--
