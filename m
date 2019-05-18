@@ -1,149 +1,63 @@
-From: Paolo Valente <paolo.valente@linaro.org>
+From: "Theodore Ts'o" <tytso@mit.edu>
 Subject: Re: CFQ idling kills I/O performance on ext4 with blkio cgroup
  controller
-Date: Sat, 18 May 2019 20:39:54 +0200
-Message-ID: <1812E450-14EF-4D5A-8F31-668499E13652@linaro.org>
+Date: Sat, 18 May 2019 15:28:47 -0400
+Message-ID: <20190518192847.GB14277@mit.edu>
 References: <8d72fcf7-bbb4-2965-1a06-e9fc177a8938@csail.mit.edu>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.8\))
-Content-Type: multipart/signed;
-        boundary="Apple-Mail=_2AB4EAF8-8BC4-47A0-9500-56DE63C63E62";
-        protocol="application/pgp-signature";
-        micalg=pgp-sha256
+ <1812E450-14EF-4D5A-8F31-668499E13652@linaro.org>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:message-id:mime-version:subject:date:in-reply-to:cc:to
-         :references;
-        bh=ouEAfY4fVdVHhS9xR65IP6Zu3YZKMcX1yK26/K9YRUY=;
-        b=nlp7cHJt2SjtBL+lyV4uwEHDsEea6nRrWx5BU9r3PG8LieJX1ROiQDyxQpLG1WdGm/
-         2TrUP8Z6n6D2ouN6A/3sw7WZysGcv73ll6ZTXI8RyL+ntXWvd5wHWzQ0o6aS92tqPJju
-         C1rGQW9JCxQuhs7CQOqrLPbJWm4aEiqDd41KQhAWZirqNKSNz9MAlQOMB68cUxn0UUTe
-         KIP/emPF1QPcyA/CLxVNJXMr1X2h46CgI12jfOyhBlI++DQErsG3wj3NPXfXWYj9glIE
-         wEEPycLptPZkBPIoyZqcaurC/U5Ltp6ZOOnPhW8BvqdYLnVBza6XzYvD+pPkgWf02k+g
-         eK+g==
-In-Reply-To: <8d72fcf7-bbb4-2965-1a06-e9fc177a8938@csail.mit.edu>
+Content-Disposition: inline
+In-Reply-To: <1812E450-14EF-4D5A-8F31-668499E13652@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: "Srivatsa S. Bhat" <srivatsa@csail.mit.edu>
-Cc: linux-fsdevel@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, linux-ext4@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@kernel.dk, jack@suse.cz, jmoyer@redhat.com, tytso@mit.edu, amakhalov@vmware.com, anishs@vmware.com, srivatsab@vmware.com
-
-
---Apple-Mail=_2AB4EAF8-8BC4-47A0-9500-56DE63C63E62
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
-
-I've addressed these issues in my last batch of improvements for BFQ, =
-which landed in the upcoming 5.2. If you give it a try, and still see =
-the problem, then I'll be glad to reproduce it, and hopefully fix it for =
-you.
-
-Thanks,
-Paolo
-
-> Il giorno 18 mag 2019, alle ore 00:16, Srivatsa S. Bhat =
-<srivatsa@csail.mit.edu> ha scritto:
->=20
->=20
-> Hi,
->=20
-> One of my colleagues noticed upto 10x - 30x drop in I/O throughput
-> running the following command, with the CFQ I/O scheduler:
->=20
-> dd if=3D/dev/zero of=3D/root/test.img bs=3D512 count=3D10000 =
-oflags=3Ddsync
->=20
-> Throughput with CFQ: 60 KB/s
-> Throughput with noop or deadline: 1.5 MB/s - 2 MB/s
->=20
-> I spent some time looking into it and found that this is caused by the
-> undesirable interaction between 4 different components:
->=20
-> - blkio cgroup controller enabled
-> - ext4 with the jbd2 kthread running in the root blkio cgroup
-> - dd running on ext4, in any other blkio cgroup than that of jbd2
-> - CFQ I/O scheduler with defaults for slice_idle and group_idle
->=20
->=20
-> When docker is enabled, systemd creates a blkio cgroup called
-> system.slice to run system services (and docker) under it, and a
-> separate blkio cgroup called user.slice for user processes. So, when
-> dd is invoked, it runs under user.slice.
->=20
-> The dd command above includes the dsync flag, which performs an
-> fdatasync after every write to the output file. Since dd is writing to
-> a file on ext4, jbd2 will be active, committing transactions
-> corresponding to those fdatasync requests from dd. (In other words, dd
-> depends on jdb2, in order to make forward progress). But jdb2 being a
-> kernel thread, runs in the root blkio cgroup, as opposed to dd, which
-> runs under user.slice.
->=20
-> Now, if the I/O scheduler in use for the underlying block device is
-> CFQ, then its inter-queue/inter-group idling takes effect (via the
-> slice_idle and group_idle parameters, both of which default to 8ms).
-> Therefore, everytime CFQ switches between processing requests from dd
-> vs jbd2, this 8ms idle time is injected, which slows down the overall
-> throughput tremendously!
->=20
-> To verify this theory, I tried various experiments, and in all cases,
-> the 4 pre-conditions mentioned above were necessary to reproduce this
-> performance drop. For example, if I used an XFS filesystem (which
-> doesn't use a separate kthread like jbd2 for journaling), or if I =
-dd'ed
-> directly to a block device, I couldn't reproduce the performance
-> issue. Similarly, running dd in the root blkio cgroup (where jbd2
-> runs) also gets full performance; as does using the noop or deadline
-> I/O schedulers; or even CFQ itself, with slice_idle and group_idle set
-> to zero.
->=20
-> These results were reproduced on a Linux VM (kernel v4.19) on ESXi,
-> both with virtualized storage as well as with disk pass-through,
-> backed by a rotational hard disk in both cases. The same problem was
-> also seen with the BFQ I/O scheduler in kernel v5.1.
->=20
-> Searching for any earlier discussions of this problem, I found an old
-> thread on LKML that encountered this behavior [1], as well as a docker
-> github issue [2] with similar symptoms (mentioned later in the
-> thread).
->=20
-> So, I'm curious to know if this is a well-understood problem and if
-> anybody has any thoughts on how to fix it.
->=20
-> Thank you very much!
->=20
->=20
-> [1]. https://lkml.org/lkml/2015/11/19/359
->=20
-> [2]. https://github.com/moby/moby/issues/21485
->     https://github.com/moby/moby/issues/21485#issuecomment-222941103
->=20
-> Regards,
-> Srivatsa
-
-
---Apple-Mail=_2AB4EAF8-8BC4-47A0-9500-56DE63C63E62
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP
+To: Paolo Valente <paolo.valente@linaro.org>
+Cc: "Srivatsa S. Bhat" <srivatsa@csail.mit.edu>, linux-fsdevel@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, linux-ext4@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@kernel.dk, jack@suse.cz, jmoyer@redhat.com, amakhalov@vmware.com, anishs@vmware.com, srivatsab@vmware.com
 
------BEGIN PGP SIGNATURE-----
+On Sat, May 18, 2019 at 08:39:54PM +0200, Paolo Valente wrote:
+> I've addressed these issues in my last batch of improvements for
+> BFQ, which landed in the upcoming 5.2. If you give it a try, and
+> still see the problem, then I'll be glad to reproduce it, and
+> hopefully fix it for you.
 
-iQIzBAEBCAAdFiEEpYoduex+OneZyvO8OAkCLQGo9oMFAlzgUXoACgkQOAkCLQGo
-9oPNXw//edQtNFa1ZbM3WUODyCQi7cKAIh4ducAKO16wY4cr3eaXmlDO++GEBBos
-cPdrh1eqQUs6ARuLbmwyLSCZpm3dyJFuK6RBqWYAPdM8vExd4cl6xAHzCK271grv
-2+HvBk5p9/fR+TZoKKz/fv6gJG1qBW6/sdVwLGY7pb6J9iTYjRO6t2faRhc6LXFE
-LrsLOwF4OzYYhYbbU1tvTu34VxDycloASVdaYUQsqA9B3C5NO1VeMVhoPRFXL6fK
-8ZOiXkpOZLaqldXk6sctyg7yWFmzjUFS/PfnG3ZBSOGWYhA0T7aIEzOddQy39Ckx
-iEFl6DCCsUrzCw7kWZRjitVeDZp1itdANtNmqBBwcv/ccW1ag4Hryt08F9LSNKp/
-P4JDKOLezZ39VQyLoOnYVT/HeCQjx1uQpmilE3lU6+KFEjq61lD5y072Wz8Nw8AE
-qVjwv7Z2FPAROe8JGVpHn6YMvFzrl79nKa+ji9BlQWm1JVvgDcHoZGdVyuaznNyV
-NXOpSbi2BnsQvyfhNYwSc9/Jkopfbx/3fMkTK7LnLLSiPo1snzC2bMdICJPWtsYx
-Vqd4II1J1ZcvSmllZ7lOHpAi3JsPbuemcx0fvA8CXdBST0ZgEuaJLzb2MM5+X8uP
-SJwBn7Vy3TlM6kio9mtr4W3x2341l/FmpxnHWDZiCFsS6A/EQ6c=
-=FzRW
------END PGP SIGNATURE-----
+Hi Paolo, I'm curious if you could give a quick summary about what you
+changed in BFQ?
 
---Apple-Mail=_2AB4EAF8-8BC4-47A0-9500-56DE63C63E62--
+I was considering adding support so that if userspace calls fsync(2)
+or fdatasync(2), to attach the process's CSS to the transaction, and
+then charge all of the journal metadata writes the process's CSS.  If
+there are multiple fsync's batched into the transaction, the first
+process which forced the early transaction commit would get charged
+the entire journal write.  OTOH, journal writes are sequential I/O, so
+the amount of disk time for writing the journal is going to be
+relatively small, and especially, the fact that work from other
+cgroups is going to be minimal, especially if hadn't issued an
+fsync().
+
+In the case where you have three cgroups all issuing fsync(2) and they
+all landed in the same jbd2 transaction thanks to commit batching, in
+the ideal world we would split up the disk time usage equally across
+those three cgroups.  But it's probably not worth doing that...
+
+That being said, we probably do need some BFQ support, since in the
+case where we have multiple processes doing buffered writes w/o fsync,
+we do charnge the data=ordered writeback to each block cgroup.  Worse,
+the commit can't complete until the all of the data integrity
+writebacks have completed.  And if there are N cgroups with dirty
+inodes, and slice_idle set to 8ms, there is going to be 8*N ms worth
+of idle time tacked onto the commit time.
+
+If we charge the journal I/O to the cgroup, and there's only one
+process doing the 
+
+   dd if=/dev/zero of=/root/test.img bs=512 count=10000 oflags=dsync
+
+then we don't need to worry about this failure mode, since both the
+journal I/O and the data writeback will be hitting the same cgroup.
+But that's arguably an artificial use case, and much more commonly
+there will be multiple cgroups all trying to at least some file system
+I/O.
+
+						- Ted
