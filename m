@@ -1,65 +1,104 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v2] mm, memcg: introduce memory.events.local
-Date: Mon, 20 May 2019 13:05:28 -0400
-Message-ID: <20190520170528.GC11665@cmpxchg.org>
-References: <20190518001818.193336-1-shakeelb@google.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v4 5/7] mm: rework non-root kmem_cache lifecycle
+ management
+Date: Mon, 20 May 2019 17:56:46 +0000
+Message-ID: <20190520175640.GA24204@tower.DHCP.thefacebook.com>
+References: <20190514213940.2405198-1-guro@fb.com>
+ <20190514213940.2405198-6-guro@fb.com>
+ <CALvZod6Zb_kYHyG02jXBY9gvvUn_gOug7kq_hVa8vuCbXdPdjQ@mail.gmail.com>
+ <5e3c4646-3e4f-414a-0eca-5249956d68a5@gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=4ZOI+jnwXBptD9UIpostnVMZFPCwcvxnpKvL3qurL40=;
-        b=Rg3JGm7cAcDM+AZNutQuRwGkJ3ubXbt1UCwOCgZnkJntyOzhCrWnunCiEjWY7ROSIZ
-         kVmBbyBsGGB57A5oVMp546xpWJgwU/oSoyDYqohN31no/hHulLW0cV3TFXQxHRGm3Arh
-         oZI0B0sNElaQefwHOOurYmhojHza1z+7f0MdJSYwJgf0UX78I0BFmHNhkkyTJP+ysJgA
-         1oq4KvyqLM9FGoFmGF0bhA3gzuw3Xcn/MOZUKRVRWJpoiE+3D/NOeDKnUVfhlEhq8tFr
-         ACelj15Q04D4dmGoY8dB6fOkc4qS2Hmb9f4IVHnDWYoNGwTJItV3oZNqdJ6Lf+b5E2oC
-         /1IA==
-Content-Disposition: inline
-In-Reply-To: <20190518001818.193336-1-shakeelb@google.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=ZiG/s3OPwoUxswb+C2dKoiuIlrtNc7Ss7KDaPAFqyZg=;
+ b=rA4LGsS5aYKGac27pVplwvVYqfQ+bM3ff142NEYp7ETU4F1d5MbqOpMFGD7YfI7Qfuwp
+ qDY5mC4qpbX8HQSSoyC9UIDEZxik8cCeD2AtglXP2wKX9V0PKbmfGMWeP0N/0Fw0v6+u
+ m4IhoUFUsD+R03vxZ8ww0k5xQyIq3PbJtis= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ZiG/s3OPwoUxswb+C2dKoiuIlrtNc7Ss7KDaPAFqyZg=;
+ b=GuMF0nCwIKAVEvMlixihJm3hjQALm+Qv4YVIo4UF5s19OLw6pegSyvK2OiNZacKCtId5btboBCDy2dRa49lCLEXDhogGqddghRN5Oc5NssHCC9QA02isUYbARR1yLf0ADxIKkTa35AEM8f9D0ggICxXAX3TFRNsnES0ScXbMejI=
+In-Reply-To: <5e3c4646-3e4f-414a-0eca-5249956d68a5@gmail.com>
+Content-Language: en-US
+Content-ID: <8521F75896B0D548B2274FB23420AC8E@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Chris Down <chris@chrisdown.name>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Waiman Long <longman9394@gmail.com>
+Cc: Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Christoph Lameter <cl@linux.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Cgroups <cgroups@vger.kernel.org>
 
-On Fri, May 17, 2019 at 05:18:18PM -0700, Shakeel Butt wrote:
-> The memory controller in cgroup v2 exposes memory.events file for each
-> memcg which shows the number of times events like low, high, max, oom
-> and oom_kill have happened for the whole tree rooted at that memcg.
-> Users can also poll or register notification to monitor the changes in
-> that file. Any event at any level of the tree rooted at memcg will
-> notify all the listeners along the path till root_mem_cgroup. There are
-> existing users which depend on this behavior.
-> 
-> However there are users which are only interested in the events
-> happening at a specific level of the memcg tree and not in the events in
-> the underlying tree rooted at that memcg. One such use-case is a
-> centralized resource monitor which can dynamically adjust the limits of
-> the jobs running on a system. The jobs can create their sub-hierarchy
-> for their own sub-tasks. The centralized monitor is only interested in
-> the events at the top level memcgs of the jobs as it can then act and
-> adjust the limits of the jobs. Using the current memory.events for such
-> centralized monitor is very inconvenient. The monitor will keep
-> receiving events which it is not interested and to find if the received
-> event is interesting, it has to read memory.event files of the next
-> level and compare it with the top level one. So, let's introduce
-> memory.events.local to the memcg which shows and notify for the events
-> at the memcg level.
-> 
-> Now, does memory.stat and memory.pressure need their local versions.
-> IMHO no due to the no internal process contraint of the cgroup v2. The
-> memory.stat file of the top level memcg of a job shows the stats and
-> vmevents of the whole tree. The local stats or vmevents of the top level
-> memcg will only change if there is a process running in that memcg but
-> v2 does not allow that. Similarly for memory.pressure there will not be
-> any process in the internal nodes and thus no chance of local pressure.
-> 
-> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+On Mon, May 20, 2019 at 10:54:24AM -0400, Waiman Long wrote:
+> On 5/14/19 8:06 PM, Shakeel Butt wrote:
+> > diff --git a/mm/slab_common.c b/mm/slab_common.c
+> > index 4e5b4292a763..1ee967b4805e 100644
+> > --- a/mm/slab_common.c
+> > +++ b/mm/slab_common.c
+> > @@ -45,6 +45,8 @@ static void slab_caches_to_rcu_destroy_workfn(struct =
+work_struct *work);
+> >  static DECLARE_WORK(slab_caches_to_rcu_destroy_work,
+> >                     slab_caches_to_rcu_destroy_workfn);
+> >
+> > +static void kmemcg_queue_cache_shutdown(struct percpu_ref *percpu_ref)=
+;
+> > +
+>=20
+> kmemcg_queue_cache_shutdown is only defined if CONFIG_MEMCG_KMEM is
+> defined. If it is not defined, a compilation warning can be produced.
+> Maybe putting the declaration inside a CONFIG_MEMCG_KMEM block:
 
-This looks reasonable to me. Thanks for working out a clear use case
-and also addressing how it compares to the stats and pressure files.
+Hi Waiman!
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Yes, that makes total sense to me. Thank you for letting me know!
+How about this one?
+
+--
+
+From 0fa19369adc240cc93281911a59713822a4f3e07 Mon Sep 17 00:00:00 2001
+From: Roman Gushchin <guro@fb.com>
+Date: Mon, 20 May 2019 10:52:07 -0700
+Subject: [PATCH] mm: guard kmemcg_queue_cache_shutdown() with
+ CONFIG_MEMCG_KMEM
+
+Currently kmemcg_queue_cache_shutdown() is defined only
+if CONFIG_MEMCG_KMEM is set, however the declaration is not guarded
+with corresponding ifdefs. So a compilation warning might be produced.
+
+Let's move the declaration to the section of slab_common.c, where all
+kmemcg-specific stuff is defined.
+
+Reported-by: Waiman Long <longman9394@gmail.com>
+Signed-off-by: Roman Gushchin <guro@fb.com>
+---
+ mm/slab_common.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index 9d2a3d6245dc..e818609c8209 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -45,8 +45,6 @@ static void slab_caches_to_rcu_destroy_workfn(struct work=
+_struct *work);
+ static DECLARE_WORK(slab_caches_to_rcu_destroy_work,
+ 		    slab_caches_to_rcu_destroy_workfn);
+=20
+-static void kmemcg_queue_cache_shutdown(struct percpu_ref *percpu_ref);
+-
+ /*
+  * Set of flags that will prevent slab merging
+  */
+@@ -134,6 +132,8 @@ int __kmem_cache_alloc_bulk(struct kmem_cache *s, gfp_t=
+ flags, size_t nr,
+ LIST_HEAD(slab_root_caches);
+ static DEFINE_SPINLOCK(memcg_kmem_wq_lock);
+=20
++static void kmemcg_queue_cache_shutdown(struct percpu_ref *percpu_ref);
++
+ void slab_init_memcg_params(struct kmem_cache *s)
+ {
+ 	s->memcg_params.root_cache =3D NULL;
+--=20
+2.20.1
