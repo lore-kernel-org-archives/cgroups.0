@@ -1,127 +1,67 @@
-From: "Srivatsa S. Bhat" <srivatsa@csail.mit.edu>
-Subject: Re: CFQ idling kills I/O performance on ext4 with blkio cgroup
- controller
-Date: Sat, 18 May 2019 13:50:42 -0700
-Message-ID: <46c6a4be-f567-3621-2e16-0e341762b828@csail.mit.edu>
-References: <8d72fcf7-bbb4-2965-1a06-e9fc177a8938@csail.mit.edu>
- <1812E450-14EF-4D5A-8F31-668499E13652@linaro.org>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: [PATCH v2 1/3] kselftest/cgroup: fix unexpected testing failure on test_memcontrol
+Date: Mon, 20 May 2019 11:01:38 +0800
+Message-ID: <20190520030140.203605-2-alex.shi@linux.alibaba.com>
+References: <20190520030140.203605-1-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1812E450-14EF-4D5A-8F31-668499E13652@linaro.org>
-Content-Language: en-US
+In-Reply-To: <20190520030140.203605-1-alex.shi@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Paolo Valente <paolo.valente@linaro.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, linux-ext4@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@kernel.dk, jack@suse.cz, jmoyer@redhat.com, tytso@mit.edu, amakhalov@vmware.com, anishs@vmware.com, srivatsab@vmware.com
+To: cgroups@vger.kernel.org
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, Mike Rapoport <rppt@linux.vnet.ibm.com>, Jay Kamat <jgkamat@fb.com>, linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 5/18/19 11:39 AM, Paolo Valente wrote:
-> I've addressed these issues in my last batch of improvements for BFQ,
-> which landed in the upcoming 5.2. If you give it a try, and still see
-> the problem, then I'll be glad to reproduce it, and hopefully fix it
-> for you.
->
+The cgroup testing relies on the root cgroup's subtree_control setting,
+If the 'memory' controller isn't set, all test cases will be failed
+as following:
 
-Hi Paolo,
+$ sudo ./test_memcontrol
+not ok 1 test_memcg_subtree_control
+not ok 2 test_memcg_current
+ok 3 # skip test_memcg_min
+not ok 4 test_memcg_low
+not ok 5 test_memcg_high
+not ok 6 test_memcg_max
+not ok 7 test_memcg_oom_events
+ok 8 # skip test_memcg_swap_max
+not ok 9 test_memcg_sock
+not ok 10 test_memcg_oom_group_leaf_events
+not ok 11 test_memcg_oom_group_parent_events
+not ok 12 test_memcg_oom_group_score_events
 
-Thank you for looking into this!
+To correct this unexpected failure, this patch write the 'memory' to
+subtree_control of root to get a right result.
 
-I just tried current mainline at commit 72cf0b07, but unfortunately
-didn't see any improvement:
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Shuah Khan <shuah@kernel.org>
+Cc: Roman Gushchin <guro@fb.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Mike Rapoport <rppt@linux.vnet.ibm.com>
+Cc: Jay Kamat <jgkamat@fb.com>
+Cc: linux-kselftest@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Reviewed-by: Roman Gushchin <guro@fb.com>
+---
+ tools/testing/selftests/cgroup/test_memcontrol.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-dd if=/dev/zero of=/root/test.img bs=512 count=10000 oflag=dsync
-
-With mq-deadline, I get:
-
-5120000 bytes (5.1 MB, 4.9 MiB) copied, 3.90981 s, 1.3 MB/s
-
-With bfq, I get:
-5120000 bytes (5.1 MB, 4.9 MiB) copied, 84.8216 s, 60.4 kB/s
-
-Please let me know if any more info about my setup might be helpful.
-
-Thank you!
-
-Regards,
-Srivatsa
-VMware Photon OS
-
-> 
->> Il giorno 18 mag 2019, alle ore 00:16, Srivatsa S. Bhat <srivatsa@csail.mit.edu> ha scritto:
->>
->>
->> Hi,
->>
->> One of my colleagues noticed upto 10x - 30x drop in I/O throughput
->> running the following command, with the CFQ I/O scheduler:
->>
->> dd if=/dev/zero of=/root/test.img bs=512 count=10000 oflags=dsync
->>
->> Throughput with CFQ: 60 KB/s
->> Throughput with noop or deadline: 1.5 MB/s - 2 MB/s
->>
->> I spent some time looking into it and found that this is caused by the
->> undesirable interaction between 4 different components:
->>
->> - blkio cgroup controller enabled
->> - ext4 with the jbd2 kthread running in the root blkio cgroup
->> - dd running on ext4, in any other blkio cgroup than that of jbd2
->> - CFQ I/O scheduler with defaults for slice_idle and group_idle
->>
->>
->> When docker is enabled, systemd creates a blkio cgroup called
->> system.slice to run system services (and docker) under it, and a
->> separate blkio cgroup called user.slice for user processes. So, when
->> dd is invoked, it runs under user.slice.
->>
->> The dd command above includes the dsync flag, which performs an
->> fdatasync after every write to the output file. Since dd is writing to
->> a file on ext4, jbd2 will be active, committing transactions
->> corresponding to those fdatasync requests from dd. (In other words, dd
->> depends on jdb2, in order to make forward progress). But jdb2 being a
->> kernel thread, runs in the root blkio cgroup, as opposed to dd, which
->> runs under user.slice.
->>
->> Now, if the I/O scheduler in use for the underlying block device is
->> CFQ, then its inter-queue/inter-group idling takes effect (via the
->> slice_idle and group_idle parameters, both of which default to 8ms).
->> Therefore, everytime CFQ switches between processing requests from dd
->> vs jbd2, this 8ms idle time is injected, which slows down the overall
->> throughput tremendously!
->>
->> To verify this theory, I tried various experiments, and in all cases,
->> the 4 pre-conditions mentioned above were necessary to reproduce this
->> performance drop. For example, if I used an XFS filesystem (which
->> doesn't use a separate kthread like jbd2 for journaling), or if I dd'ed
->> directly to a block device, I couldn't reproduce the performance
->> issue. Similarly, running dd in the root blkio cgroup (where jbd2
->> runs) also gets full performance; as does using the noop or deadline
->> I/O schedulers; or even CFQ itself, with slice_idle and group_idle set
->> to zero.
->>
->> These results were reproduced on a Linux VM (kernel v4.19) on ESXi,
->> both with virtualized storage as well as with disk pass-through,
->> backed by a rotational hard disk in both cases. The same problem was
->> also seen with the BFQ I/O scheduler in kernel v5.1.
->>
->> Searching for any earlier discussions of this problem, I found an old
->> thread on LKML that encountered this behavior [1], as well as a docker
->> github issue [2] with similar symptoms (mentioned later in the
->> thread).
->>
->> So, I'm curious to know if this is a well-understood problem and if
->> anybody has any thoughts on how to fix it.
->>
->> Thank you very much!
->>
->>
->> [1]. https://lkml.org/lkml/2015/11/19/359
->>
->> [2]. https://github.com/moby/moby/issues/21485
->>     https://github.com/moby/moby/issues/21485#issuecomment-222941103
->>
->> Regards,
->> Srivatsa
-> 
+diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
+index 6f339882a6ca..73612d604a2a 100644
+--- a/tools/testing/selftests/cgroup/test_memcontrol.c
++++ b/tools/testing/selftests/cgroup/test_memcontrol.c
+@@ -1205,6 +1205,10 @@ int main(int argc, char **argv)
+ 	if (cg_read_strstr(root, "cgroup.controllers", "memory"))
+ 		ksft_exit_skip("memory controller isn't available\n");
+ 
++	if (cg_read_strstr(root, "cgroup.subtree_control", "memory"))
++	    if (cg_write(root, "cgroup.subtree_control", "+memory"))
++		ksft_exit_skip("Failed to set root memory controller\n");
++
+ 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
+ 		switch (tests[i].fn(root)) {
+ 		case KSFT_PASS:
+-- 
+2.19.1.856.g8858448bb
 
