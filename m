@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v2 1/3] kselftest/cgroup: fix unexpected testing failure on test_memcontrol
-Date: Mon, 20 May 2019 11:01:38 +0800
-Message-ID: <20190520030140.203605-2-alex.shi@linux.alibaba.com>
+Subject: [PATCH v2 3/3] kselftest/cgroup: fix incorrect test_core skip
+Date: Mon, 20 May 2019 11:01:40 +0800
+Message-ID: <20190520030140.203605-4-alex.shi@linux.alibaba.com>
 References: <20190520030140.203605-1-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -11,57 +11,44 @@ Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: cgroups@vger.kernel.org
-Cc: Alex Shi <alex.shi@linux.alibaba.com>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, Mike Rapoport <rppt@linux.vnet.ibm.com>, Jay Kamat <jgkamat@fb.com>, linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, Shuah Khan <shuah@kernel.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, Claudio Zumbo <claudioz@fb.com>, Claudio <claudiozumbo@gmail.com>, linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The cgroup testing relies on the root cgroup's subtree_control setting,
-If the 'memory' controller isn't set, all test cases will be failed
-as following:
+The test_core will skip the
+test_cgcore_no_internal_process_constraint_on_threads test case if the
+'cpu' controller missing in root's subtree_control. In fact we need to
+set the 'cpu' in subtree_control, to make the testing meaningful.
 
-$ sudo ./test_memcontrol
-not ok 1 test_memcg_subtree_control
-not ok 2 test_memcg_current
-ok 3 # skip test_memcg_min
-not ok 4 test_memcg_low
-not ok 5 test_memcg_high
-not ok 6 test_memcg_max
-not ok 7 test_memcg_oom_events
-ok 8 # skip test_memcg_swap_max
-not ok 9 test_memcg_sock
-not ok 10 test_memcg_oom_group_leaf_events
-not ok 11 test_memcg_oom_group_parent_events
-not ok 12 test_memcg_oom_group_score_events
-
-To correct this unexpected failure, this patch write the 'memory' to
-subtree_control of root to get a right result.
+./test_core
+...
+ok 4 # skip test_cgcore_no_internal_process_constraint_on_threads
+...
 
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
 Cc: Shuah Khan <shuah@kernel.org>
-Cc: Roman Gushchin <guro@fb.com>
 Cc: Tejun Heo <tj@kernel.org>
-Cc: Mike Rapoport <rppt@linux.vnet.ibm.com>
-Cc: Jay Kamat <jgkamat@fb.com>
+Cc: Roman Gushchin <guro@fb.com>
+Cc: Claudio Zumbo <claudioz@fb.com>
+Cc: Claudio <claudiozumbo@gmail.com>
 Cc: linux-kselftest@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 Reviewed-by: Roman Gushchin <guro@fb.com>
 ---
- tools/testing/selftests/cgroup/test_memcontrol.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ tools/testing/selftests/cgroup/test_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index 6f339882a6ca..73612d604a2a 100644
---- a/tools/testing/selftests/cgroup/test_memcontrol.c
-+++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -1205,6 +1205,10 @@ int main(int argc, char **argv)
- 	if (cg_read_strstr(root, "cgroup.controllers", "memory"))
- 		ksft_exit_skip("memory controller isn't available\n");
+diff --git a/tools/testing/selftests/cgroup/test_core.c b/tools/testing/selftests/cgroup/test_core.c
+index b1a570d7c557..2ffc3e07d98d 100644
+--- a/tools/testing/selftests/cgroup/test_core.c
++++ b/tools/testing/selftests/cgroup/test_core.c
+@@ -198,7 +198,7 @@ static int test_cgcore_no_internal_process_constraint_on_threads(const char *roo
+ 	char *parent = NULL, *child = NULL;
  
-+	if (cg_read_strstr(root, "cgroup.subtree_control", "memory"))
-+	    if (cg_write(root, "cgroup.subtree_control", "+memory"))
-+		ksft_exit_skip("Failed to set root memory controller\n");
-+
- 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
- 		switch (tests[i].fn(root)) {
- 		case KSFT_PASS:
+ 	if (cg_read_strstr(root, "cgroup.controllers", "cpu") ||
+-	    cg_read_strstr(root, "cgroup.subtree_control", "cpu")) {
++	    cg_write(root, "cgroup.subtree_control", "+cpu")) {
+ 		ret = KSFT_SKIP;
+ 		goto cleanup;
+ 	}
 -- 
 2.19.1.856.g8858448bb
 
