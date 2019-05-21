@@ -1,58 +1,141 @@
-From: "Theodore Ts'o" <tytso@mit.edu>
-Subject: Re: CFQ idling kills I/O performance on ext4 with blkio cgroup
- controller
-Date: Tue, 21 May 2019 15:10:33 -0400
-Message-ID: <20190521191033.GA4855@mit.edu>
-References: <8d72fcf7-bbb4-2965-1a06-e9fc177a8938@csail.mit.edu>
- <1812E450-14EF-4D5A-8F31-668499E13652@linaro.org>
- <20190518192847.GB14277@mit.edu>
- <20190520091558.GC2172@quack2.suse.cz>
- <20190521164814.GC2591@mit.edu>
- <20190521181952.4vpruone2mzbczpw@MacBook-Pro-91.local>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v4 5/7] mm: rework non-root kmem_cache lifecycle
+ management
+Date: Tue, 21 May 2019 19:23:28 +0000
+Message-ID: <20190521192320.GA6658@tower.DHCP.thefacebook.com>
+References: <20190514213940.2405198-1-guro@fb.com>
+ <20190514213940.2405198-6-guro@fb.com>
+ <CALvZod6Zb_kYHyG02jXBY9gvvUn_gOug7kq_hVa8vuCbXdPdjQ@mail.gmail.com>
+ <7d06354d-4542-af42-d83d-2bc4639b56f2@redhat.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190521181952.4vpruone2mzbczpw@MacBook-Pro-91.local>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=a/vTltGmddZuymYENLe8F8jwZplMzsDLI+yPIM85JP8=;
+ b=YNVpcMewDrFQS5NzwFYnxkFFXPj7nGKMuE+PR86olL5ggaFkvlpjzg5u+yLqcnOWhukc
+ tbyOR1r796JwLfhc5TEM0F4mcbz+cEFtJUMHNrOMLDM71fI47kyX30El2UbqDMtOSwIq
+ 3y/a/I+HKGvTQIcBO1yk1RlDOBXq7Lon1ig= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=a/vTltGmddZuymYENLe8F8jwZplMzsDLI+yPIM85JP8=;
+ b=eS8KNHCgQ7nYcFmbuRxCG7PZ7ofZw+N8a85W729ow9Aq0/BOa3/ILwmQsQSpFCCzXtJdKIbEDCKuDvlTD68Ttdkm9K1VLRblAcdsP8OSmLBHii0rUP7K8tCrcmQKJMpiLfYF081IeNB6SZ9jUuteNaeSfMojV3iyZLIRNETVEu0=
+In-Reply-To: <7d06354d-4542-af42-d83d-2bc4639b56f2@redhat.com>
+Content-Language: en-US
+Content-ID: <546644CEB60182419ED14B9EE35DB82C@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Josef Bacik <josef@toxicpanda.com>
-Cc: Jan Kara <jack@suse.cz>, Paolo Valente <paolo.valente@linaro.org>, "Srivatsa S. Bhat" <srivatsa@csail.mit.edu>, linux-fsdevel@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, linux-ext4@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@kernel.dk, jmoyer@redhat.com, amakhalov@vmware.com, anishs@vmware.com, srivatsab@vmware.com
+To: Waiman Long <longman@redhat.com>
+Cc: Shakeel Butt <shakeelb@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Christoph Lameter <cl@linux.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Cgroups <cgroups@vger.kernel.org>
 
-On Tue, May 21, 2019 at 02:19:53PM -0400, Josef Bacik wrote:
-> Chris is adding a REQ_ROOT (or something) flag that means don't throttle me now,
-> but the the blkcg attached to the bio is the one that is responsible for this
-> IO.  Then for io.latency we'll let the io go through unmolested but it gets
-> counted to the right cgroup, and if then we're exceeding latency guarantees we
-> have the ability to schedule throttling for that cgroup in a safer place.  This
-> would eliminate the data=ordered issue for ext4, you guys keep doing what you
-> are doing and we'll handle throttling elsewhere, just so long as the bio's are
-> tagged with the correct source then all is well.  Thanks,
+On Tue, May 21, 2019 at 02:39:50PM -0400, Waiman Long wrote:
+> On 5/14/19 8:06 PM, Shakeel Butt wrote:
+> >> @@ -2651,20 +2652,35 @@ struct kmem_cache *memcg_kmem_get_cache(struct=
+ kmem_cache *cachep)
+> >>         struct mem_cgroup *memcg;
+> >>         struct kmem_cache *memcg_cachep;
+> >>         int kmemcg_id;
+> >> +       struct memcg_cache_array *arr;
+> >>
+> >>         VM_BUG_ON(!is_root_cache(cachep));
+> >>
+> >>         if (memcg_kmem_bypass())
+> >>                 return cachep;
+> >>
+> >> -       memcg =3D get_mem_cgroup_from_current();
+> >> +       rcu_read_lock();
+> >> +
+> >> +       if (unlikely(current->active_memcg))
+> >> +               memcg =3D current->active_memcg;
+> >> +       else
+> >> +               memcg =3D mem_cgroup_from_task(current);
+> >> +
+> >> +       if (!memcg || memcg =3D=3D root_mem_cgroup)
+> >> +               goto out_unlock;
+> >> +
+> >>         kmemcg_id =3D READ_ONCE(memcg->kmemcg_id);
+> >>         if (kmemcg_id < 0)
+> >> -               goto out;
+> >> +               goto out_unlock;
+> >>
+> >> -       memcg_cachep =3D cache_from_memcg_idx(cachep, kmemcg_id);
+> >> -       if (likely(memcg_cachep))
+> >> -               return memcg_cachep;
+> >> +       arr =3D rcu_dereference(cachep->memcg_params.memcg_caches);
+> >> +
+> >> +       /*
+> >> +        * Make sure we will access the up-to-date value. The code upd=
+ating
+> >> +        * memcg_caches issues a write barrier to match this (see
+> >> +        * memcg_create_kmem_cache()).
+> >> +        */
+> >> +       memcg_cachep =3D READ_ONCE(arr->entries[kmemcg_id]);
+> >>
+> >>         /*
+> >>          * If we are in a safe context (can wait, and not in interrupt
+> >> @@ -2677,10 +2693,20 @@ struct kmem_cache *memcg_kmem_get_cache(struct=
+ kmem_cache *cachep)
+> >>          * memcg_create_kmem_cache, this means no further allocation
+> >>          * could happen with the slab_mutex held. So it's better to
+> >>          * defer everything.
+> >> +        *
+> >> +        * If the memcg is dying or memcg_cache is about to be release=
+d,
+> >> +        * don't bother creating new kmem_caches. Because memcg_cachep
+> >> +        * is ZEROed as the fist step of kmem offlining, we don't need
+> >> +        * percpu_ref_tryget() here. css_tryget_online() check in
+> > *percpu_ref_tryget_live()
+> >
+> >> +        * memcg_schedule_kmem_cache_create() will prevent us from
+> >> +        * creation of a new kmem_cache.
+> >>          */
+> >> -       memcg_schedule_kmem_cache_create(memcg, cachep);
+> >> -out:
+> >> -       css_put(&memcg->css);
+> >> +       if (unlikely(!memcg_cachep))
+> >> +               memcg_schedule_kmem_cache_create(memcg, cachep);
+> >> +       else if (percpu_ref_tryget(&memcg_cachep->memcg_params.refcnt)=
+)
+> >> +               cachep =3D memcg_cachep;
+> >> +out_unlock:
+> >> +       rcu_read_lock();
+>=20
+> There is one more bug that causes the kernel to panic on bootup when I
+> turned on debugging options.
+>=20
+> [=A0=A0 49.871437] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> [=A0=A0 49.875452] WARNING: suspicious RCU usage
+> [=A0=A0 49.879476] 5.2.0-rc1.bz1699202_memcg_test+ #2 Not tainted
+> [=A0=A0 49.884967] -----------------------------
+> [=A0=A0 49.888991] include/linux/rcupdate.h:268 Illegal context switch in
+> RCU read-side critical section!
+> [=A0=A0 49.897950]
+> [=A0=A0 49.897950] other info that might help us debug this:
+> [=A0=A0 49.897950]
+> [=A0=A0 49.905958]
+> [=A0=A0 49.905958] rcu_scheduler_active =3D 2, debug_locks =3D 1
+> [=A0=A0 49.912492] 3 locks held by systemd/1:
+> [=A0=A0 49.916252]=A0 #0: 00000000633673c5 (&type->i_mutex_dir_key#5){.+.=
++},
+> at: lookup_slow+0x42/0x70
+> [=A0=A0 49.924788]=A0 #1: 0000000029fa8c75 (rcu_read_lock){....}, at:
+> memcg_kmem_get_cache+0x12b/0x910
+> [=A0=A0 49.933316]=A0 #2: 0000000029fa8c75 (rcu_read_lock){....}, at:
+> memcg_kmem_get_cache+0x3da/0x910
+>=20
+> It should be "rcu_read_unlock();" at the end.
 
-Great, it sounds like Chris also came up with the the entangled writes
-flag idea (although with probably a better name than I did :-).  So
-now all we need to do is to plumb a flag through the writeback code so
-that file systems (or the VFS player) implementing syncfs(2) or
-fsync(2) can arrange to have that flag set if necessary.
+Oops. Good catch, thanks Waiman!
 
-Speaking of syncfs(2), something which we considered doing at Google
-many years ago (but never did) was to implement a hack so that someone
-calling syncfs(2) or sync(2) when they were not root, would make that
-sys call be a no-op.  The reason for this was on heavy loaded
-machines, an SRE logged in as a non-root user might absent-mindly type
-"sync", and that would cause a storm of I/O traffic that would really
-mess up the machine.  The jobs that were in the low latency bucket
-would be protected (since we didn't run with journalling), but those
-that were in the best efforts bucket would be really unhappy.
+I'm somewhat surprised it didn't get up in my tests, neither any of test
+bots caught it. Anyway, I'll fix it and send v5.
 
-If we have a "don't throttle me now" REQ_ROOT flag combined with
-journalling, then someone running "sync", even if it's by accident,
-could really ruin a low-latency job's day, and in a container
-environment, there really is no reason for a non-root user to be
-wanting to request a syncfs(2) or sync(2).  So maybe we should have a
-way to make it be a no-op (or return an error, but that might surprise
-some applications) for non-privileged users.  Maybe as a per-mount
-flag/option, or via some other tunable?
+Does the rest of the patchset looks sane to you?
 
-						- Ted
+Thank you!
+
+Roman
