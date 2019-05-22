@@ -1,151 +1,220 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] Fix comments with paths pointing to renamed or moved
- files.
-Date: Wed, 22 May 2019 11:54:31 -0700
-Message-ID: <8ae488765c8d441dbb444adaf89e59a2afa81298.camel@perches.com>
-References: <20190521155430.14941-1-langspielplatte@black-mesa.xyz>
-         <20190522183614.GD10003@amd>
+From: Roman Gushchin <guro@fb.com>
+Subject: [PATCH bpf-next 2/4] selftests/bpf: convert test_cgrp2_attach2 example into kselftest
+Date: Wed, 22 May 2019 14:29:30 -0700
+Message-ID: <20190522212932.2646247-3-guro@fb.com>
+References: <20190522212932.2646247-1-guro@fb.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190522183614.GD10003@amd>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=facebook; bh=4TamBFhMxI7eVZDyeQik75QRP7s+XDIcj/PxFC9FCqI=;
+ b=hrSfMQXlWX3e2ugBLp6dlDBdgmdVT07HzTNOYTllL0bU9jxXQgDXIUrNOGahC4qMUO9R
+ /Xxb10Z6dqPx3F4O71Mb0VipIGl19fwl2YeDXI1v2ujVe7sbP43vcIOaguoPGVg+o//D
+ eADmCL4L+FuFQGehqldAcP/bg8mv0Qu9q+w= 
+In-Reply-To: <20190522212932.2646247-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Pavel Machek <pavel@ucw.cz>, Lukas Prause <langspielplatte@black-mesa.xyz>
-Cc: lizefan@huawei.com, tj@kernel.org, hannes@cmpxchg.org, peterz@infradead.org, mingo@redhat.com, will.deacon@arm.com, rjw@rjwysocki.net, len.brown@intel.com, rostedt@goodmis.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-pm@vger.kernel.org, Lennart Glauer <mail@lennart-glauer.de>
+Content-Transfer-Encoding: 7bit
+To: bpf@vger.kernel.org
+Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-On Wed, 2019-05-22 at 20:36 +0200, Pavel Machek wrote:
-> On Tue 2019-05-21 17:54:30, Lukas Prause wrote:
-> > This patch corrects renamed or moved paths in comments.
-> > 
-> > Signed-off-by: Lukas Prause <langspielplatte@black-mesa.xyz>
-> > Signed-off-by: Lennart Glauer <mail@lennart-glauer.de>
-> 
-> Acked-by: Pavel Machek <pavel@ucw.cz>
-> 
-> > diff --git a/kernel/power/power.h b/kernel/power/power.h
-> > index 9e58bdc8a562..5de8b0c7f657 100644
-> > --- a/kernel/power/power.h
-> > +++ b/kernel/power/power.h
-> > @@ -182,7 +182,7 @@ extern int swsusp_unmark(void);
-> >  #endif
-> >  
-> >  struct timeval;
-> > -/* kernel/power/swsusp.c */
-> > +/* kernel/power/hibernate.c */
-> >  extern void swsusp_show_speed(ktime_t, ktime_t, unsigned int, char *);
-> >  
-> >  #ifdef CONFIG_SUSPEND
+Convert test_cgrp2_attach2 example into a proper test_cgroup_attach
+kselftest. It's better because we do run kselftest on a constant
+basis, so there are better chances to spot a potential regression.
 
-I think all of these markings should be removed instead.
-Why are these useful?
-It seems many of these filenames in power.h aren't correct anyway.
+Also make it slightly less verbose to conform kselftests output style.
 
-For instance power.h has:
+Output example:
+  $ ./test_cgroup_attach
+  #override:PASS
+  #multi:PASS
+  test_cgroup_attach:PASS
 
-   /* kernel/power/hibernate.c */
-   extern int swsusp_check(void);
-   extern void swsusp_free(void);
-   extern int swsusp_read(unsigned int *flags_p);
-   extern int swsusp_write(unsigned int flags);
-   extern void swsusp_close(fmode_t);
-   #ifdef CONFIG_SUSPEND
-   extern int swsusp_unmark(void);
-   #endif
-
-but:
-
-swsusp_check is in swap.c
-swsusp_free is in snapshot.c
-swsusp_read is in swap.c
-
-etc...
-
-Perhaps:
+Signed-off-by: Roman Gushchin <guro@fb.com>
 ---
- kernel/power/power.h | 10 ----------
- 1 file changed, 10 deletions(-)
+ samples/bpf/Makefile                          |  2 -
+ tools/testing/selftests/bpf/Makefile          |  4 +-
+ .../selftests/bpf/test_cgroup_attach.c        | 48 ++++++++++++-------
+ 3 files changed, 35 insertions(+), 19 deletions(-)
+ rename samples/bpf/test_cgrp2_attach2.c => tools/testing/selftests/bpf/test_cgroup_attach.c (92%)
 
-diff --git a/kernel/power/power.h b/kernel/power/power.h
-index 9e58bdc8a562..52bcb72564e5 100644
---- a/kernel/power/power.h
-+++ b/kernel/power/power.h
-@@ -16,7 +16,6 @@ struct swsusp_info {
- } __aligned(PAGE_SIZE);
+diff --git a/samples/bpf/Makefile b/samples/bpf/Makefile
+index 4f0a1cdbfe7c..253e5a2856be 100644
+--- a/samples/bpf/Makefile
++++ b/samples/bpf/Makefile
+@@ -26,7 +26,6 @@ hostprogs-y += map_perf_test
+ hostprogs-y += test_overhead
+ hostprogs-y += test_cgrp2_array_pin
+ hostprogs-y += test_cgrp2_attach
+-hostprogs-y += test_cgrp2_attach2
+ hostprogs-y += test_cgrp2_sock
+ hostprogs-y += test_cgrp2_sock2
+ hostprogs-y += xdp1
+@@ -81,7 +80,6 @@ map_perf_test-objs := bpf_load.o map_perf_test_user.o
+ test_overhead-objs := bpf_load.o test_overhead_user.o
+ test_cgrp2_array_pin-objs := test_cgrp2_array_pin.o
+ test_cgrp2_attach-objs := test_cgrp2_attach.o
+-test_cgrp2_attach2-objs := test_cgrp2_attach2.o $(CGROUP_HELPERS)
+ test_cgrp2_sock-objs := test_cgrp2_sock.o
+ test_cgrp2_sock2-objs := bpf_load.o test_cgrp2_sock2.o
+ xdp1-objs := xdp1_user.o
+diff --git a/tools/testing/selftests/bpf/Makefile b/tools/testing/selftests/bpf/Makefile
+index 66f2dca1dee1..e09f419f4d7e 100644
+--- a/tools/testing/selftests/bpf/Makefile
++++ b/tools/testing/selftests/bpf/Makefile
+@@ -23,7 +23,8 @@ TEST_GEN_PROGS = test_verifier test_tag test_maps test_lru_map test_lpm_map test
+ 	test_align test_verifier_log test_dev_cgroup test_tcpbpf_user \
+ 	test_sock test_btf test_sockmap test_lirc_mode2_user get_cgroup_id_user \
+ 	test_socket_cookie test_cgroup_storage test_select_reuseport test_section_names \
+-	test_netcnt test_tcpnotify_user test_sock_fields test_sysctl
++	test_netcnt test_tcpnotify_user test_sock_fields test_sysctl \
++	test_cgroup_attach
  
- #ifdef CONFIG_HIBERNATION
--/* kernel/power/snapshot.c */
- extern void __init hibernate_reserved_size_init(void);
- extern void __init hibernate_image_size_init(void);
+ BPF_OBJ_FILES = $(patsubst %.c,%.o, $(notdir $(wildcard progs/*.c)))
+ TEST_GEN_FILES = $(BPF_OBJ_FILES)
+@@ -96,6 +97,7 @@ $(OUTPUT)/test_cgroup_storage: cgroup_helpers.c
+ $(OUTPUT)/test_netcnt: cgroup_helpers.c
+ $(OUTPUT)/test_sock_fields: cgroup_helpers.c
+ $(OUTPUT)/test_sysctl: cgroup_helpers.c
++$(OUTPUT)/test_cgroup_attach: cgroup_helpers.c
  
-@@ -55,7 +54,6 @@ extern int hibernate_resume_nonboot_cpu_disable(void);
+ .PHONY: force
  
- asmlinkage int swsusp_save(void);
+diff --git a/samples/bpf/test_cgrp2_attach2.c b/tools/testing/selftests/bpf/test_cgroup_attach.c
+similarity index 92%
+rename from samples/bpf/test_cgrp2_attach2.c
+rename to tools/testing/selftests/bpf/test_cgroup_attach.c
+index 0bb6507256b7..93d4fe295e7d 100644
+--- a/samples/bpf/test_cgrp2_attach2.c
++++ b/tools/testing/selftests/bpf/test_cgroup_attach.c
+@@ -1,3 +1,5 @@
++// SPDX-License-Identifier: GPL-2.0
++
+ /* eBPF example program:
+  *
+  * - Creates arraymap in kernel with 4 bytes keys and 8 byte values
+@@ -25,20 +27,27 @@
+ #include <sys/resource.h>
+ #include <sys/time.h>
+ #include <unistd.h>
++#include <linux/filter.h>
  
--/* kernel/power/hibernate.c */
- extern bool freezer_test_done;
+ #include <linux/bpf.h>
+ #include <bpf/bpf.h>
  
- extern int hibernation_snapshot(int platform_mode);
-@@ -63,7 +61,6 @@ extern int hibernation_restore(int platform_mode);
- extern int hibernation_platform_enter(void);
+-#include "bpf_insn.h"
++#include "bpf_util.h"
+ #include "bpf_rlimit.h"
+ #include "cgroup_helpers.h"
  
- #ifdef CONFIG_STRICT_KERNEL_RWX
--/* kernel/power/snapshot.c */
- extern void enable_restore_image_protection(void);
- #else
- static inline void enable_restore_image_protection(void) {}
-@@ -171,7 +168,6 @@ extern int swsusp_swap_in_use(void);
- #define SF_NOCOMPRESS_MODE	2
- #define SF_CRC32_MODE	        4
+ #define FOO		"/foo"
+ #define BAR		"/foo/bar/"
+-#define PING_CMD	"ping -c1 -w1 127.0.0.1 > /dev/null"
++#define PING_CMD	"ping -q -c1 -w1 127.0.0.1 > /dev/null"
  
--/* kernel/power/hibernate.c */
- extern int swsusp_check(void);
- extern void swsusp_free(void);
- extern int swsusp_read(unsigned int *flags_p);
-@@ -182,11 +178,9 @@ extern int swsusp_unmark(void);
- #endif
+ char bpf_log_buf[BPF_LOG_BUF_SIZE];
  
- struct timeval;
--/* kernel/power/swsusp.c */
- extern void swsusp_show_speed(ktime_t, ktime_t, unsigned int, char *);
++#ifdef DEBUG
++#define debug(args...) printf(args)
++#else
++#define debug(args...)
++#endif
++
+ static int prog_load(int verdict)
+ {
+ 	int ret;
+@@ -89,7 +98,7 @@ static int test_foo_bar(void)
+ 		goto err;
+ 	}
  
- #ifdef CONFIG_SUSPEND
--/* kernel/power/suspend.c */
- extern const char * const pm_labels[];
- extern const char *pm_states[];
- extern const char *mem_sleep_states[];
-@@ -202,7 +196,6 @@ static inline int suspend_devices_and_enter(suspend_state_t state)
- #endif /* !CONFIG_SUSPEND */
+-	printf("Attached DROP prog. This ping in cgroup /foo should fail...\n");
++	debug("Attached DROP prog. This ping in cgroup /foo should fail...\n");
+ 	assert(system(PING_CMD) != 0);
  
- #ifdef CONFIG_PM_TEST_SUSPEND
--/* kernel/power/suspend_test.c */
- extern void suspend_test_start(void);
- extern void suspend_test_finish(const char *label);
- #else /* !CONFIG_PM_TEST_SUSPEND */
-@@ -211,7 +204,6 @@ static inline void suspend_test_finish(const char *label) {}
- #endif /* !CONFIG_PM_TEST_SUSPEND */
+ 	/* Create cgroup /foo/bar, get fd, and join it */
+@@ -100,7 +109,7 @@ static int test_foo_bar(void)
+ 	if (join_cgroup(BAR))
+ 		goto err;
  
- #ifdef CONFIG_PM_SLEEP
--/* kernel/power/main.c */
- extern int __pm_notifier_call_chain(unsigned long val, int nr_to_call,
- 				    int *nr_calls);
- extern int pm_notifier_call_chain(unsigned long val);
-@@ -289,7 +281,6 @@ static inline void suspend_thaw_processes(void)
+-	printf("Attached DROP prog. This ping in cgroup /foo/bar should fail...\n");
++	debug("Attached DROP prog. This ping in cgroup /foo/bar should fail...\n");
+ 	assert(system(PING_CMD) != 0);
  
- #ifdef CONFIG_PM_AUTOSLEEP
+ 	if (bpf_prog_attach(allow_prog, bar, BPF_CGROUP_INET_EGRESS,
+@@ -109,7 +118,7 @@ static int test_foo_bar(void)
+ 		goto err;
+ 	}
  
--/* kernel/power/autosleep.c */
- extern int pm_autosleep_init(void);
- extern int pm_autosleep_lock(void);
- extern void pm_autosleep_unlock(void);
-@@ -307,7 +298,6 @@ static inline suspend_state_t pm_autosleep_state(void) { return PM_SUSPEND_ON; }
+-	printf("Attached PASS prog. This ping in cgroup /foo/bar should pass...\n");
++	debug("Attached PASS prog. This ping in cgroup /foo/bar should pass...\n");
+ 	assert(system(PING_CMD) == 0);
  
- #ifdef CONFIG_PM_WAKELOCKS
+ 	if (bpf_prog_detach(bar, BPF_CGROUP_INET_EGRESS)) {
+@@ -117,7 +126,7 @@ static int test_foo_bar(void)
+ 		goto err;
+ 	}
  
--/* kernel/power/wakelock.c */
- extern ssize_t pm_show_wakelocks(char *buf, bool show_active);
- extern int pm_wake_lock(const char *buf);
- extern int pm_wake_unlock(const char *buf);
-
+-	printf("Detached PASS from /foo/bar while DROP is attached to /foo.\n"
++	debug("Detached PASS from /foo/bar while DROP is attached to /foo.\n"
+ 	       "This ping in cgroup /foo/bar should fail...\n");
+ 	assert(system(PING_CMD) != 0);
+ 
+@@ -132,7 +141,7 @@ static int test_foo_bar(void)
+ 		goto err;
+ 	}
+ 
+-	printf("Attached PASS from /foo/bar and detached DROP from /foo.\n"
++	debug("Attached PASS from /foo/bar and detached DROP from /foo.\n"
+ 	       "This ping in cgroup /foo/bar should pass...\n");
+ 	assert(system(PING_CMD) == 0);
+ 
+@@ -199,9 +208,9 @@ static int test_foo_bar(void)
+ 	close(bar);
+ 	cleanup_cgroup_environment();
+ 	if (!rc)
+-		printf("### override:PASS\n");
++		printf("#override:PASS\n");
+ 	else
+-		printf("### override:FAIL\n");
++		printf("#override:FAIL\n");
+ 	return rc;
+ }
+ 
+@@ -441,19 +450,26 @@ static int test_multiprog(void)
+ 	close(cg5);
+ 	cleanup_cgroup_environment();
+ 	if (!rc)
+-		printf("### multi:PASS\n");
++		printf("#multi:PASS\n");
+ 	else
+-		printf("### multi:FAIL\n");
++		printf("#multi:FAIL\n");
+ 	return rc;
+ }
+ 
+ int main(int argc, char **argv)
+ {
+-	int rc = 0;
++	int (*tests[])(void) = {test_foo_bar, test_multiprog};
++	int errors = 0;
++	int i;
+ 
+-	rc = test_foo_bar();
+-	if (rc)
+-		return rc;
++	for (i = 0; i < ARRAY_SIZE(tests); i++)
++		if (tests[i]())
++			errors++;
++
++	if (errors)
++		printf("test_cgroup_attach:FAIL\n");
++	else
++		printf("test_cgroup_attach:PASS\n");
+ 
+-	return test_multiprog();
++	return errors ? EXIT_FAILURE : EXIT_SUCCESS;
+ }
+-- 
+2.20.1
 
