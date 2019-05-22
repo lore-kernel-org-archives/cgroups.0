@@ -1,184 +1,103 @@
-From: Stanislav Fomichev <sdf@fomichev.me>
-Subject: Re: [PATCH bpf-next 4/4] selftests/bpf: add auto-detach test
-Date: Wed, 22 May 2019 15:24:38 -0700
-Message-ID: <20190522222438.GB3032@mini-arch>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH bpf-next 3/4] selftests/bpf: enable all available cgroup
+ v2 controllers
+Date: Wed, 22 May 2019 23:16:20 +0000
+Message-ID: <20190522231613.GA20167@tower.DHCP.thefacebook.com>
 References: <20190522212932.2646247-1-guro@fb.com>
- <20190522212932.2646247-5-guro@fb.com>
+ <20190522212932.2646247-4-guro@fb.com> <20190522221843.GA3032@mini-arch>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fomichev-me.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=E8hgoVg7Z24mHuKhx6PCXKnN1YCFRZlKI7hEdBBG7n4=;
-        b=quVY0HJMdq36jTE+oPCZRu2+0OMjilZHQzHr4/10w72TxfMi3ATKW0ufXorXHkICqe
-         luRKesQxx+PlINxvpYLGqkSklsX4zkRZ1I0gE9iYilbRoQFsx+E8XR7kBaliDeYBKaCA
-         R5wxkcTddQst2E6V6H/c8YgbqJkpQ1AN4TiNAKhYZvYyAOkp4yjEK8qwqBTRBc6UCKzF
-         xwuwSTprQHJswWcNOrtiYPCW2HOHmdh+H/zGCOdnXkSqN1XjrtjiNByYyB6z0jyZr7wu
-         U4/hnNvWSTpxH8TOHXmiQTxXIKDTqGLB8UYyAzqqNYKRfKZ1xrN/TS1A+PmMK0Tg4m+t
-         1Bkg==
-Content-Disposition: inline
-In-Reply-To: <20190522212932.2646247-5-guro@fb.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=i1feLUhwGMQVGZL9+X7Ze3YL3PYK8dLOen4Caa/0J0U=;
+ b=OWp98crVwHBBgbwapMKdWSEEZNbF4N/kDbJp47sjVwcz1+d+t3fsaMVUSS/tvLnq6aB5
+ o39mg6/Kn4w4ftiVmKK8z/qCfCMKm9lj1jYyD6Dj4IrM8OuES/i3ZyIPP1e1Nyu0rY9h
+ QH5L1tSL7PAI2w6yvBJhhsQoIQEHjQJXwDs= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=i1feLUhwGMQVGZL9+X7Ze3YL3PYK8dLOen4Caa/0J0U=;
+ b=e9u1LePRwc9N4pN6zpw/O7w/dBn3S0ptxA28LNXHvR5QToS1yjttCbNn9OulPHvSa8lSMNRI4JJkbCsocX2jXptH5yDQRrPAappydXiCVI/l2eB1pXt1KSi1My3B2HW1yd1SL5KEAT2YiKPpLfYbcSTEv1eI/bP3rRhPG2+7P9o=
+In-Reply-To: <20190522221843.GA3032@mini-arch>
+Content-Language: en-US
+Content-ID: <FA7BB09FF47CAE4A81E46F24346899CE@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: bpf@vger.kernel.org, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Stanislav Fomichev <sdf@fomichev.me>
+Cc: "bpf@vger.kernel.org" <bpf@vger.kernel.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Kernel Team <Kernel-team@fb.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On 05/22, Roman Gushchin wrote:
-> Add a kselftest to cover bpf auto-detachment functionality.
-> The test creates a cgroup, associates some resources with it,
-> attaches a couple of bpf programs and deletes the cgroup.
-> 
-> Then it checks that bpf programs are going away in 5 seconds.
-> 
-> Expected output:
->   $ ./test_cgroup_attach
->   #override:PASS
->   #multi:PASS
->   #autodetach:PASS
->   test_cgroup_attach:PASS
-> 
-> On a kernel without auto-detaching:
->   $ ./test_cgroup_attach
->   #override:PASS
->   #multi:PASS
->   #autodetach:FAIL
->   test_cgroup_attach:FAIL
-> 
-> Signed-off-by: Roman Gushchin <guro@fb.com>
-> ---
->  .../selftests/bpf/test_cgroup_attach.c        | 108 +++++++++++++++++-
->  1 file changed, 107 insertions(+), 1 deletion(-)
-> 
-> diff --git a/tools/testing/selftests/bpf/test_cgroup_attach.c b/tools/testing/selftests/bpf/test_cgroup_attach.c
-> index 93d4fe295e7d..36441fd0f392 100644
-> --- a/tools/testing/selftests/bpf/test_cgroup_attach.c
-> +++ b/tools/testing/selftests/bpf/test_cgroup_attach.c
-> @@ -456,9 +456,115 @@ static int test_multiprog(void)
->  	return rc;
->  }
->  
-> +static int test_autodetach(void)
-> +{
-> +	__u32 prog_cnt = 4, attach_flags;
-> +	int allow_prog[2] = {0};
-> +	__u32 prog_ids[2] = {0};
-> +	int cg = 0, i, rc = -1;
-> +	void *ptr = NULL;
-> +	int attempts;
-> +
-> +
-> +	for (i = 0; i < ARRAY_SIZE(allow_prog); i++) {
-> +		allow_prog[i] = prog_load_cnt(1, 1 << i);
-> +		if (!allow_prog[i])
-> +			goto err;
-> +	}
-> +
-> +	if (setup_cgroup_environment())
-> +		goto err;
-> +
-> +	/* create a cgroup, attach two programs and remember their ids */
-> +	cg = create_and_get_cgroup("/cg_autodetach");
-> +	if (cg < 0)
-> +		goto err;
-> +
-> +	if (join_cgroup("/cg_autodetach"))
-> +		goto err;
-> +
-> +	for (i = 0; i < ARRAY_SIZE(allow_prog); i++) {
-> +		if (bpf_prog_attach(allow_prog[i], cg, BPF_CGROUP_INET_EGRESS,
-> +				    BPF_F_ALLOW_MULTI)) {
-> +			log_err("Attaching prog[%d] to cg:egress", i);
-> +			goto err;
-> +		}
-> +	}
-> +
-> +	/* make sure that programs are attached and run some traffic */
-> +	assert(bpf_prog_query(cg, BPF_CGROUP_INET_EGRESS, 0, &attach_flags,
-> +			      prog_ids, &prog_cnt) == 0);
-> +	assert(system(PING_CMD) == 0);
-> +
-> +	/* allocate some memory (4Mb) to pin the original cgroup */
-> +	ptr = malloc(4 * (1 << 20));
-> +	if (!ptr)
-> +		goto err;
-> +
-> +	/* close programs and cgroup fd */
-> +	for (i = 0; i < ARRAY_SIZE(allow_prog); i++) {
-> +		close(allow_prog[i]);
-> +		allow_prog[i] = 0;
-> +	}
-> +
-> +	close(cg);
-> +	cg = 0;
-> +
-> +	/* leave the cgroup and remove it. don't detach programs */
-> +	cleanup_cgroup_environment();
-> +
+On Wed, May 22, 2019 at 03:18:43PM -0700, Stanislav Fomichev wrote:
+> On 05/22, Roman Gushchin wrote:
+> > Enable all available cgroup v2 controllers when setting up
+> > the environment for the bpf kselftests. It's required to properly test
+> > the bpf prog auto-detach feature. Also it will generally increase
+> > the code coverage.
+> >=20
+> > Signed-off-by: Roman Gushchin <guro@fb.com>
+> > ---
+> >  tools/testing/selftests/bpf/cgroup_helpers.c | 58 ++++++++++++++++++++
+> >  1 file changed, 58 insertions(+)
+> >=20
+> > diff --git a/tools/testing/selftests/bpf/cgroup_helpers.c b/tools/testi=
+ng/selftests/bpf/cgroup_helpers.c
+> > index 6692a40a6979..4533839c0ce0 100644
+> > --- a/tools/testing/selftests/bpf/cgroup_helpers.c
+> > +++ b/tools/testing/selftests/bpf/cgroup_helpers.c
+> > @@ -33,6 +33,61 @@
+> >  	snprintf(buf, sizeof(buf), "%s%s%s", CGROUP_MOUNT_PATH, \
+> >  		 CGROUP_WORK_DIR, path)
+> > =20
+> > +/**
+> > + * enable_all_controllers() - Enable all available cgroup v2 controlle=
+rs
+> > + *
+> > + * Enable all available cgroup v2 controllers in order to increase
+> > + * the code coverage.
+> > + *
+> > + * If successful, 0 is returned.
+> > + */
+> > +int enable_all_controllers(char *cgroup_path)
+> > +{
+> > +	char path[PATH_MAX + 1];
+> > +	char buf[PATH_MAX];
+> > +	char *c, *c2;
+> > +	int fd, cfd;
+> > +	size_t len;
+> > +
+> > +	snprintf(path, sizeof(path), "%s/cgroup.controllers", cgroup_path);
+> > +	fd =3D open(path, O_RDONLY);
+> > +	if (fd < 0) {
+> > +		log_err("Opening cgroup.controllers: %s", path);
+> > +		return -1;
+> > +	}
+> > +
+> > +	len =3D read(fd, buf, sizeof(buf) - 1);
+> > +	if (len < 0) {
+> > +		close(fd);
+> > +		log_err("Reading cgroup.controllers: %s", path);
+> > +		return -1;
+> > +	}
+> > +
+> > +	close(fd);
+> > +
+> > +	/* No controllers available? We're probably on cgroup v1. */
+> > +	if (len =3D=3D 0)
+> > +		return 0;
+> > +
+> > +	snprintf(path, sizeof(path), "%s/cgroup.subtree_control", cgroup_path=
+);
+> > +	cfd =3D open(path, O_RDWR);
+> > +	if (cfd < 0) {
+> > +		log_err("Opening cgroup.subtree_control: %s", path);
+> > +		return -1;
+> > +	}
+> > +
+>=20
+> [..]
+> > +	buf[len] =3D 0;
+> nit: move this up a bit? Right after:
 
-[..]
-> +	/* programs must stay pinned by the allocated memory */
-> +	for (i = 0; i < ARRAY_SIZE(prog_ids); i++) {
-> +		int fd = bpf_prog_get_fd_by_id(prog_ids[i]);
-> +
-> +		if (fd < 0)
-> +			goto err;
-> +		close(fd);
-> +	}
-This looks a bit flaky. It's essentially the same check you later
-do in a for loop. I guess there is a chance that async auto-detach
-might happen right after cleanup_cgroup_environment and before this for loop?
-
-> +
-> +	/* wait for the asynchronous auto-detachment.
-> +	 * wait for no more than 5 sec and give up.
-> +	 */
-> +	for (i = 0; i < ARRAY_SIZE(prog_ids); i++) {
-> +		for (attempts = 5; attempts >= 0; attempts--) {
-> +			int fd = bpf_prog_get_fd_by_id(prog_ids[i]);
-> +
-> +			if (fd < 0)
-> +				break;
-> +
-> +			/* don't leave the fd open */
-> +			close(fd);
-> +
-> +			if (!attempts)
-> +				goto err;
-> +
-> +			sleep(1);
-> +		}
-> +	}
-> +
-> +	rc = 0;
-> +err:
-> +	for (i = 0; i < ARRAY_SIZE(allow_prog); i++)
-> +		if (allow_prog[i] > 0)
-> +			close(allow_prog[i]);
-> +	if (cg)
-> +		close(cg);
-> +	free(ptr);
-> +	cleanup_cgroup_environment();
-> +	if (!rc)
-> +		printf("#autodetach:PASS\n");
-> +	else
-> +		printf("#autodetach:FAIL\n");
-> +	return rc;
-> +}
-> +
->  int main(int argc, char **argv)
->  {
-> -	int (*tests[])(void) = {test_foo_bar, test_multiprog};
-> +	int (*tests[])(void) = {
-> +		test_foo_bar,
-> +		test_multiprog,
-> +		test_autodetach,
-> +	};
->  	int errors = 0;
->  	int i;
->  
-> -- 
-> 2.20.1
-> 
+Ok, np. Thanks!
