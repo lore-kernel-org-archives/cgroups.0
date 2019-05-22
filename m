@@ -1,132 +1,65 @@
-From: Stanislav Fomichev <sdf@fomichev.me>
-Subject: Re: [PATCH bpf-next 3/4] selftests/bpf: enable all available cgroup
- v2 controllers
-Date: Wed, 22 May 2019 15:18:43 -0700
-Message-ID: <20190522221843.GA3032@mini-arch>
-References: <20190522212932.2646247-1-guro@fb.com>
- <20190522212932.2646247-4-guro@fb.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v5 0/7] mm: reparent slab memory on cgroup removal
+Date: Wed, 22 May 2019 22:23:01 +0000
+Message-ID: <20190522222254.GA5700@castle>
+References: <20190521200735.2603003-1-guro@fb.com>
+ <20190522214347.GA10082@tower.DHCP.thefacebook.com>
+ <20190522145906.60c9e70ac0ed7ee3918a124c@linux-foundation.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fomichev-me.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=QUdAmGAks4E+4DtrN0mw6crQFbwVYGBopZMl7vlB5xU=;
-        b=gnPu95pB76Hc4txzz6BDi48JQGwlBKlryzlDHuG/n0DhE+ubr+d43v3d4CVQQARDfv
-         rDONLYaYKQ8KqJ9i++TTN0BPf98fY37iG3zfc6/oSlvf6rd3PoVUGcLZ+qk5MujPnyHx
-         kGbxwb6lScVthKUY9+NLiUOuf7eI7JIbT0Vyx5A860qAlECkU6+LM3bqn/pAj4MZ7srv
-         5+I5uMRWrfuHhSKRjjpoUuu2QdfaAe5pQHq6mnpg8lhi8LjhGXP/C0tsx4cyD/1pjA+b
-         maDom5+rvbWtufW7OFGn2mS3ghksirusuFNUjDPBn4Vw4BDTtymMKQRTfGPGyPsDtI01
-         D+nw==
-Content-Disposition: inline
-In-Reply-To: <20190522212932.2646247-4-guro@fb.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=dGmKexW93ziU4gaxGu2r8jazHHWX79RJa8vFWpgs9PA=;
+ b=IAEjEkbK1fNS9QuZ5RtI4RWq2cpu9zKkLk4Rti/yV01QYV8kG1U3eIz5Rah4wzJUsQ91
+ lSWbqIWGduow+/cXrlgLSYo97fZs4fRK21NSP3TJC+xqcBs4VdBs0o9nvHnGqZiba22o
+ IqaKjwpzRVCF60QB4mRiNEpjyT+fqY3uqOc= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=dGmKexW93ziU4gaxGu2r8jazHHWX79RJa8vFWpgs9PA=;
+ b=r4T7y0il9x6ORmFiY+ATgUu27a5Q8elRA6V5CL9dgARrsp6Vv6YqHqQA57GRa5IZAjHFAYbw76PmE0c4fh8ahy2zDrKyWxs3f7au137fhrs5yg4vJZzTFKtioDF86B4DDVh/7n9ELX1UqbDAznWxbH8D44z06Ktz0XQ8rn5V1y8=
+In-Reply-To: <20190522145906.60c9e70ac0ed7ee3918a124c@linux-foundation.org>
+Content-Language: en-US
+Content-ID: <65249C67D481204287EF3B3478D04766@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: bpf@vger.kernel.org, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Shakeel Butt <shakeelb@google.com>, Christoph Lameter <cl@linux.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Waiman Long <longman@redhat.com>
 
-On 05/22, Roman Gushchin wrote:
-> Enable all available cgroup v2 controllers when setting up
-> the environment for the bpf kselftests. It's required to properly test
-> the bpf prog auto-detach feature. Also it will generally increase
-> the code coverage.
-> 
-> Signed-off-by: Roman Gushchin <guro@fb.com>
-> ---
->  tools/testing/selftests/bpf/cgroup_helpers.c | 58 ++++++++++++++++++++
->  1 file changed, 58 insertions(+)
-> 
-> diff --git a/tools/testing/selftests/bpf/cgroup_helpers.c b/tools/testing/selftests/bpf/cgroup_helpers.c
-> index 6692a40a6979..4533839c0ce0 100644
-> --- a/tools/testing/selftests/bpf/cgroup_helpers.c
-> +++ b/tools/testing/selftests/bpf/cgroup_helpers.c
-> @@ -33,6 +33,61 @@
->  	snprintf(buf, sizeof(buf), "%s%s%s", CGROUP_MOUNT_PATH, \
->  		 CGROUP_WORK_DIR, path)
->  
-> +/**
-> + * enable_all_controllers() - Enable all available cgroup v2 controllers
-> + *
-> + * Enable all available cgroup v2 controllers in order to increase
-> + * the code coverage.
-> + *
-> + * If successful, 0 is returned.
-> + */
-> +int enable_all_controllers(char *cgroup_path)
-> +{
-> +	char path[PATH_MAX + 1];
-> +	char buf[PATH_MAX];
-> +	char *c, *c2;
-> +	int fd, cfd;
-> +	size_t len;
-> +
-> +	snprintf(path, sizeof(path), "%s/cgroup.controllers", cgroup_path);
-> +	fd = open(path, O_RDONLY);
-> +	if (fd < 0) {
-> +		log_err("Opening cgroup.controllers: %s", path);
-> +		return -1;
-> +	}
-> +
-> +	len = read(fd, buf, sizeof(buf) - 1);
-> +	if (len < 0) {
-> +		close(fd);
-> +		log_err("Reading cgroup.controllers: %s", path);
-> +		return -1;
-> +	}
-> +
-> +	close(fd);
-> +
-> +	/* No controllers available? We're probably on cgroup v1. */
-> +	if (len == 0)
-> +		return 0;
-> +
-> +	snprintf(path, sizeof(path), "%s/cgroup.subtree_control", cgroup_path);
-> +	cfd = open(path, O_RDWR);
-> +	if (cfd < 0) {
-> +		log_err("Opening cgroup.subtree_control: %s", path);
-> +		return -1;
-> +	}
-> +
+On Wed, May 22, 2019 at 02:59:06PM -0700, Andrew Morton wrote:
+> On Wed, 22 May 2019 21:43:54 +0000 Roman Gushchin <guro@fb.com> wrote:
+>=20
+> > Is this patchset good to go? Or do you have any remaining concerns?
+> >=20
+> > It has been carefully reviewed by Shakeel; and also Christoph and Waima=
+n
+> > gave some attention to it.
+> >=20
+> > Since commit 172b06c32b94 ("mm: slowly shrink slabs with a relatively")
+> > has been reverted, the memcg "leak" problem is open again, and I've hea=
+rd
+> > from several independent people and companies that it's a real problem
+> > for them. So it will be nice to close it asap.
+> >=20
+> > I suspect that the fix is too heavy for stable, unfortunately.
+> >=20
+> > Please, let me know if you have any issues that preventing you
+> > from pulling it into the tree.
+>=20
+> I looked, and put it on ice for a while, hoping to hear from
+> mhocko/hannes.  Did they look at the earlier versions?
 
-[..]
-> +	buf[len] = 0;
-nit: move this up a bit? Right after:
+Johannes has definitely looked at one of early versions of the patchset,
+and one of the outcomes was his own patchset about pushing memcg stats
+up by the tree, which eliminated the need to deal with memcg stats
+on kmem_cache reparenting.
 
-	if (len < 0) {
-		...
-	}
-	buf[len] = 0;
-	close(fd);
+The problem and the proposed solution have been discussed on latest LSFMM,
+and I didn't hear any opposition. So I assume that Michal is at least
+not against the idea in general. A careful code review is always welcome,
+of course.
 
-I was actually writing a comment about missing buf[len]=0 until I
-somehow spotted it :-)
-
-> +	for (c = strtok_r(buf, " ", &c2); c; c = strtok_r(NULL, " ", &c2)) {
-> +		if (dprintf(cfd, "+%s\n", c) <= 0) {
-> +			log_err("Enabling controller %s: %s", c, path);
-> +			close(cfd);
-> +			return -1;
-> +		}
-> +	}
-> +	close(cfd);
-> +	return 0;
-> +}
-> +
->  /**
->   * setup_cgroup_environment() - Setup the cgroup environment
->   *
-> @@ -71,6 +126,9 @@ int setup_cgroup_environment(void)
->  		return 1;
->  	}
->  
-> +	if (enable_all_controllers(cgroup_workdir))
-> +		return 1;
-> +
->  	return 0;
->  }
->  
-> -- 
-> 2.20.1
-> 
+Thanks!
