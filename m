@@ -1,17 +1,15 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: [PATCH v2 bpf-next 4/4] selftests/bpf: add auto-detach test
-Date: Wed, 22 May 2019 16:20:51 -0700
-Message-ID: <20190522232051.2938491-5-guro@fb.com>
-References: <20190522232051.2938491-1-guro@fb.com>
+Subject: [PATCH v2 bpf-next 0/4] cgroup bpf auto-detachment
+Date: Wed, 22 May 2019 16:20:47 -0700
+Message-ID: <20190522232051.2938491-1-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=JUaLacIUau6Nx5Fy096Qj5WLvuTqbFiSOX145LGNSQQ=;
- b=ptDXiR7wa+4uVhOvQ12HJ6+z51vxeKRfqVeLtOGJn2gqxR2BUGgIQR/JjgcrdijsM4VL
- RpdsgE2HkaucgJ+Gn48beB9pI0t+WKdMcCR76Wd2lzAgstIXwKVsTt4l3jPBM1I5m7zR
- iG1g7o6LF/9Aat57JCp3KhM83LRXpUUvFHo= 
-In-Reply-To: <20190522232051.2938491-1-guro@fb.com>
+ : date : message-id : mime-version : content-type; s=facebook;
+ bh=X6P44zjZ47fHY3Lb/kucsCI8qXASyw0JnvINTZV+gOs=;
+ b=TfuFpW4L8bxHJ7DQctRXJeWF5d9O646Y+aS27Chd/28P9CVv6t73NQ4c7xRQ73ukJrkX
+ 94xZ2jUNnZcPR0c63EwPB539Tga5PwRMfVTNrKhOX6AtyJJW+mOLsvTYA6sYnRrKfi45
+ M8K1GAEAMpyiDdMc/mZyKFvil+qWfczQg0U= 
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -19,143 +17,35 @@ Content-Transfer-Encoding: 7bit
 To: Alexei Starovoitov <ast@kernel.org>, bpf@vger.kernel.org
 Cc: Daniel Borkmann <daniel@iogearbox.net>, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, Stanislav Fomichev <sdf@fomichev.me>, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-Add a kselftest to cover bpf auto-detachment functionality.
-The test creates a cgroup, associates some resources with it,
-attaches a couple of bpf programs and deletes the cgroup.
+This patchset implements a cgroup bpf auto-detachment functionality:
+bpf programs are attached as soon as possible after removal of the
+cgroup, without waiting for the release of all associated resources.
 
-Then it checks that bpf programs are going away in 5 seconds.
+Patches 2 and 3 are required to implement a corresponding kselftest
+in patch 4.
 
-Expected output:
-  $ ./test_cgroup_attach
-  #override:PASS
-  #multi:PASS
-  #autodetach:PASS
-  test_cgroup_attach:PASS
+v2:
+  1) removed a bogus check in patch 4
+  2) moved buf[len] = 0 in patch 2
 
-On a kernel without auto-detaching:
-  $ ./test_cgroup_attach
-  #override:PASS
-  #multi:PASS
-  #autodetach:FAIL
-  test_cgroup_attach:FAIL
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
----
- .../selftests/bpf/test_cgroup_attach.c        | 99 ++++++++++++++++++-
- 1 file changed, 98 insertions(+), 1 deletion(-)
+Roman Gushchin (4):
+  bpf: decouple the lifetime of cgroup_bpf from cgroup itself
+  selftests/bpf: convert test_cgrp2_attach2 example into kselftest
+  selftests/bpf: enable all available cgroup v2 controllers
+  selftests/bpf: add auto-detach test
 
-diff --git a/tools/testing/selftests/bpf/test_cgroup_attach.c b/tools/testing/selftests/bpf/test_cgroup_attach.c
-index 93d4fe295e7d..bc5bd0f1728e 100644
---- a/tools/testing/selftests/bpf/test_cgroup_attach.c
-+++ b/tools/testing/selftests/bpf/test_cgroup_attach.c
-@@ -456,9 +456,106 @@ static int test_multiprog(void)
- 	return rc;
- }
- 
-+static int test_autodetach(void)
-+{
-+	__u32 prog_cnt = 4, attach_flags;
-+	int allow_prog[2] = {0};
-+	__u32 prog_ids[2] = {0};
-+	int cg = 0, i, rc = -1;
-+	void *ptr = NULL;
-+	int attempts;
-+
-+
-+	for (i = 0; i < ARRAY_SIZE(allow_prog); i++) {
-+		allow_prog[i] = prog_load_cnt(1, 1 << i);
-+		if (!allow_prog[i])
-+			goto err;
-+	}
-+
-+	if (setup_cgroup_environment())
-+		goto err;
-+
-+	/* create a cgroup, attach two programs and remember their ids */
-+	cg = create_and_get_cgroup("/cg_autodetach");
-+	if (cg < 0)
-+		goto err;
-+
-+	if (join_cgroup("/cg_autodetach"))
-+		goto err;
-+
-+	for (i = 0; i < ARRAY_SIZE(allow_prog); i++) {
-+		if (bpf_prog_attach(allow_prog[i], cg, BPF_CGROUP_INET_EGRESS,
-+				    BPF_F_ALLOW_MULTI)) {
-+			log_err("Attaching prog[%d] to cg:egress", i);
-+			goto err;
-+		}
-+	}
-+
-+	/* make sure that programs are attached and run some traffic */
-+	assert(bpf_prog_query(cg, BPF_CGROUP_INET_EGRESS, 0, &attach_flags,
-+			      prog_ids, &prog_cnt) == 0);
-+	assert(system(PING_CMD) == 0);
-+
-+	/* allocate some memory (4Mb) to pin the original cgroup */
-+	ptr = malloc(4 * (1 << 20));
-+	if (!ptr)
-+		goto err;
-+
-+	/* close programs and cgroup fd */
-+	for (i = 0; i < ARRAY_SIZE(allow_prog); i++) {
-+		close(allow_prog[i]);
-+		allow_prog[i] = 0;
-+	}
-+
-+	close(cg);
-+	cg = 0;
-+
-+	/* leave the cgroup and remove it. don't detach programs */
-+	cleanup_cgroup_environment();
-+
-+	/* wait for the asynchronous auto-detachment.
-+	 * wait for no more than 5 sec and give up.
-+	 */
-+	for (i = 0; i < ARRAY_SIZE(prog_ids); i++) {
-+		for (attempts = 5; attempts >= 0; attempts--) {
-+			int fd = bpf_prog_get_fd_by_id(prog_ids[i]);
-+
-+			if (fd < 0)
-+				break;
-+
-+			/* don't leave the fd open */
-+			close(fd);
-+
-+			if (!attempts)
-+				goto err;
-+
-+			sleep(1);
-+		}
-+	}
-+
-+	rc = 0;
-+err:
-+	for (i = 0; i < ARRAY_SIZE(allow_prog); i++)
-+		if (allow_prog[i] > 0)
-+			close(allow_prog[i]);
-+	if (cg)
-+		close(cg);
-+	free(ptr);
-+	cleanup_cgroup_environment();
-+	if (!rc)
-+		printf("#autodetach:PASS\n");
-+	else
-+		printf("#autodetach:FAIL\n");
-+	return rc;
-+}
-+
- int main(int argc, char **argv)
- {
--	int (*tests[])(void) = {test_foo_bar, test_multiprog};
-+	int (*tests[])(void) = {
-+		test_foo_bar,
-+		test_multiprog,
-+		test_autodetach,
-+	};
- 	int errors = 0;
- 	int i;
- 
+ include/linux/bpf-cgroup.h                    |   8 +-
+ include/linux/cgroup.h                        |  18 +++
+ kernel/bpf/cgroup.c                           |  25 ++-
+ kernel/cgroup/cgroup.c                        |  11 +-
+ samples/bpf/Makefile                          |   2 -
+ tools/testing/selftests/bpf/Makefile          |   4 +-
+ tools/testing/selftests/bpf/cgroup_helpers.c  |  57 +++++++
+ .../selftests/bpf/test_cgroup_attach.c        | 145 ++++++++++++++++--
+ 8 files changed, 243 insertions(+), 27 deletions(-)
+ rename samples/bpf/test_cgrp2_attach2.c => tools/testing/selftests/bpf/test_cgroup_attach.c (79%)
+
 -- 
 2.20.1
 
