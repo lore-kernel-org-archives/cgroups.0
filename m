@@ -1,231 +1,225 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: [PATCH bpf-next 1/4] bpf: decouple the lifetime of cgroup_bpf from cgroup itself
-Date: Wed, 22 May 2019 14:29:29 -0700
-Message-ID: <20190522212932.2646247-2-guro@fb.com>
-References: <20190522212932.2646247-1-guro@fb.com>
+Subject: Re: [PATCH v5 0/7] mm: reparent slab memory on cgroup removal
+Date: Wed, 22 May 2019 21:43:54 +0000
+Message-ID: <20190522214347.GA10082@tower.DHCP.thefacebook.com>
+References: <20190521200735.2603003-1-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=7M3KTYgCtux1ge1QjiyZqAfJv7mn0dKoN8WOBcMq0W0=;
- b=YxJevwDWh4zLYydFYhe0lXMny4pnf5Lkmuyo/w7UGqjwSQuWGkOzFkMIxe/aqvWBVhgn
- DRjpCH6KrORbNE4kibD7gJ29qlAO3zh6EWfp8VCnFnSZ9a0CJapU62kMhPB/CuTSkeFl
- fQSgqq1kfxxZjEaA73i7pv5kiLdVsGdnJ2c= 
-In-Reply-To: <20190522212932.2646247-1-guro@fb.com>
-Sender: netdev-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: bpf@vger.kernel.org
-Cc: Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>, jolsa@redhat.com
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=CVBt7BPNswQzm1QWI5odkco7icjFSz99iGBFJfOMJQA=;
+ b=b1KQ6zvJd/xPhumJ6qChso9eTSMzXaX0pe1ZeVasAtdQygLY/E+cYhAnD+dsC2oGQJE3
+ Wsp8r9P/tu0/DQT9tW+NJw/0hCePmRwLpdyEVOyeGf53Mvz1DWn9/u+EWr6R1t/CE7kd
+ fG5Ouwu8z4zgh+pHYLgy1IYoWu5PjABBXzA= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CVBt7BPNswQzm1QWI5odkco7icjFSz99iGBFJfOMJQA=;
+ b=lPRSEyRg4tPgG8O0DHIfFcEAQUHyDjDmcf6ezrL4pX7pH6C0zXEAwSSBJ2aOXg1eSmPqKceyVueee9HMN+VyEb1qgF8uEkToesbLVt4gE8dLmMEFt+FYgMDJ0INtrUUWAqTM4zceSITf2VuKlReeLhfUhwzyGAGhgY8Xz2R7RFM=
+In-Reply-To: <20190521200735.2603003-1-guro@fb.com>
+Content-Language: en-US
+Content-ID: <F6381D1F9E5B2945A5A46313F2B8DFE9@namprd15.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Shakeel Butt <shakeelb@google.com>, Christoph Lameter <cl@linux.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Waiman Long <longman@redhat.com>
 
-Currently the lifetime of bpf programs attached to a cgroup is bound
-to the lifetime of the cgroup itself. It means that if a user
-forgets (or intentionally avoids) to detach a bpf program before
-removing the cgroup, it will stay attached up to the release of the
-cgroup. Since the cgroup can stay in the dying state (the state
-between being rmdir()'ed and being released) for a very long time, it
-leads to a waste of memory. Also, it blocks a possibility to implement
-the memcg-based memory accounting for bpf objects, because a circular
-reference dependency will occur. Charged memory pages are pinning the
-corresponding memory cgroup, and if the memory cgroup is pinning
-the attached bpf program, nothing will be ever released.
+Hi, Andrew!
 
-A dying cgroup can not contain any processes, so the only chance for
-an attached bpf program to be executed is a live socket associated
-with the cgroup. So in order to release all bpf data early, let's
-count associated sockets using a new percpu refcounter. On cgroup
-removal the counter is transitioned to the atomic mode, and as soon
-as it reaches 0, all bpf programs are detached.
+Is this patchset good to go? Or do you have any remaining concerns?
 
-The reference counter is not socket specific, and can be used for any
-other types of programs, which can be executed from a cgroup-bpf hook
-outside of the process context, had such a need arise in the future.
+It has been carefully reviewed by Shakeel; and also Christoph and Waiman
+gave some attention to it.
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Cc: jolsa@redhat.com
----
- include/linux/bpf-cgroup.h |  8 ++++++--
- include/linux/cgroup.h     | 18 ++++++++++++++++++
- kernel/bpf/cgroup.c        | 25 ++++++++++++++++++++++---
- kernel/cgroup/cgroup.c     | 11 ++++++++---
- 4 files changed, 54 insertions(+), 8 deletions(-)
+Since commit 172b06c32b94 ("mm: slowly shrink slabs with a relatively")
+has been reverted, the memcg "leak" problem is open again, and I've heard
+from several independent people and companies that it's a real problem
+for them. So it will be nice to close it asap.
 
-diff --git a/include/linux/bpf-cgroup.h b/include/linux/bpf-cgroup.h
-index cb3c6b3b89c8..a0945de9ba5f 100644
---- a/include/linux/bpf-cgroup.h
-+++ b/include/linux/bpf-cgroup.h
-@@ -6,6 +6,7 @@
- #include <linux/errno.h>
- #include <linux/jump_label.h>
- #include <linux/percpu.h>
-+#include <linux/percpu-refcount.h>
- #include <linux/rbtree.h>
- #include <uapi/linux/bpf.h>
- 
-@@ -72,10 +73,13 @@ struct cgroup_bpf {
- 
- 	/* temp storage for effective prog array used by prog_attach/detach */
- 	struct bpf_prog_array __rcu *inactive;
-+
-+	/* reference counter used to detach bpf programs after cgroup removal */
-+	struct percpu_ref refcnt;
- };
- 
--void cgroup_bpf_put(struct cgroup *cgrp);
- int cgroup_bpf_inherit(struct cgroup *cgrp);
-+void cgroup_bpf_offline(struct cgroup *cgrp);
- 
- int __cgroup_bpf_attach(struct cgroup *cgrp, struct bpf_prog *prog,
- 			enum bpf_attach_type type, u32 flags);
-@@ -283,8 +287,8 @@ int cgroup_bpf_prog_query(const union bpf_attr *attr,
- 
- struct bpf_prog;
- struct cgroup_bpf {};
--static inline void cgroup_bpf_put(struct cgroup *cgrp) {}
- static inline int cgroup_bpf_inherit(struct cgroup *cgrp) { return 0; }
-+static inline void cgroup_bpf_offline(struct cgroup *cgrp) {}
- 
- static inline int cgroup_bpf_prog_attach(const union bpf_attr *attr,
- 					 enum bpf_prog_type ptype,
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index c0077adeea83..49e8facf7c4a 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -924,4 +924,22 @@ static inline bool cgroup_task_frozen(struct task_struct *task)
- 
- #endif /* !CONFIG_CGROUPS */
- 
-+#ifdef CONFIG_CGROUP_BPF
-+static inline void cgroup_bpf_get(struct cgroup *cgrp)
-+{
-+	percpu_ref_get(&cgrp->bpf.refcnt);
-+}
-+
-+static inline void cgroup_bpf_put(struct cgroup *cgrp)
-+{
-+	percpu_ref_put(&cgrp->bpf.refcnt);
-+}
-+
-+#else /* CONFIG_CGROUP_BPF */
-+
-+static inline void cgroup_bpf_get(struct cgroup *cgrp) {}
-+static inline void cgroup_bpf_put(struct cgroup *cgrp) {}
-+
-+#endif /* CONFIG_CGROUP_BPF */
-+
- #endif /* _LINUX_CGROUP_H */
-diff --git a/kernel/bpf/cgroup.c b/kernel/bpf/cgroup.c
-index fcde0f7b2585..65f5c482ed9d 100644
---- a/kernel/bpf/cgroup.c
-+++ b/kernel/bpf/cgroup.c
-@@ -22,12 +22,20 @@
- DEFINE_STATIC_KEY_FALSE(cgroup_bpf_enabled_key);
- EXPORT_SYMBOL(cgroup_bpf_enabled_key);
- 
-+void cgroup_bpf_offline(struct cgroup *cgrp)
-+{
-+	cgroup_get(cgrp);
-+	percpu_ref_kill(&cgrp->bpf.refcnt);
-+}
-+
- /**
-- * cgroup_bpf_put() - put references of all bpf programs
-+ * cgroup_bpf_release() - put references of all bpf programs and
-+ *                        release all cgroup bpf data
-  * @cgrp: the cgroup to modify
-  */
--void cgroup_bpf_put(struct cgroup *cgrp)
-+static void cgroup_bpf_release(struct percpu_ref *ref)
- {
-+	struct cgroup *cgrp = container_of(ref, struct cgroup, bpf.refcnt);
- 	enum bpf_cgroup_storage_type stype;
- 	unsigned int type;
- 
-@@ -47,6 +55,9 @@ void cgroup_bpf_put(struct cgroup *cgrp)
- 		}
- 		bpf_prog_array_free(cgrp->bpf.effective[type]);
- 	}
-+
-+	percpu_ref_exit(&cgrp->bpf.refcnt);
-+	cgroup_put(cgrp);
- }
- 
- /* count number of elements in the list.
-@@ -167,7 +178,12 @@ int cgroup_bpf_inherit(struct cgroup *cgrp)
-  */
- #define	NR ARRAY_SIZE(cgrp->bpf.effective)
- 	struct bpf_prog_array __rcu *arrays[NR] = {};
--	int i;
-+	int ret, i;
-+
-+	ret = percpu_ref_init(&cgrp->bpf.refcnt, cgroup_bpf_release, 0,
-+			      GFP_KERNEL);
-+	if (ret)
-+		return -ENOMEM;
- 
- 	for (i = 0; i < NR; i++)
- 		INIT_LIST_HEAD(&cgrp->bpf.progs[i]);
-@@ -183,6 +199,9 @@ int cgroup_bpf_inherit(struct cgroup *cgrp)
- cleanup:
- 	for (i = 0; i < NR; i++)
- 		bpf_prog_array_free(arrays[i]);
-+
-+	percpu_ref_exit(&cgrp->bpf.refcnt);
-+
- 	return -ENOMEM;
- }
- 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 217cec4e22c6..ef9cfbfc82a9 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -4955,8 +4955,6 @@ static void css_release_work_fn(struct work_struct *work)
- 		if (cgrp->kn)
- 			RCU_INIT_POINTER(*(void __rcu __force **)&cgrp->kn->priv,
- 					 NULL);
--
--		cgroup_bpf_put(cgrp);
- 	}
- 
- 	mutex_unlock(&cgroup_mutex);
-@@ -5482,6 +5480,8 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 
- 	cgroup1_check_for_release(parent);
- 
-+	cgroup_bpf_offline(cgrp);
-+
- 	/* put the base reference */
- 	percpu_ref_kill(&cgrp->self.refcnt);
- 
-@@ -6221,6 +6221,7 @@ void cgroup_sk_alloc(struct sock_cgroup_data *skcd)
- 		 * Don't use cgroup_get_live().
- 		 */
- 		cgroup_get(sock_cgroup_ptr(skcd));
-+		cgroup_bpf_get(sock_cgroup_ptr(skcd));
- 		return;
- 	}
- 
-@@ -6232,6 +6233,7 @@ void cgroup_sk_alloc(struct sock_cgroup_data *skcd)
- 		cset = task_css_set(current);
- 		if (likely(cgroup_tryget(cset->dfl_cgrp))) {
- 			skcd->val = (unsigned long)cset->dfl_cgrp;
-+			cgroup_bpf_get(cset->dfl_cgrp);
- 			break;
- 		}
- 		cpu_relax();
-@@ -6242,7 +6244,10 @@ void cgroup_sk_alloc(struct sock_cgroup_data *skcd)
- 
- void cgroup_sk_free(struct sock_cgroup_data *skcd)
- {
--	cgroup_put(sock_cgroup_ptr(skcd));
-+	struct cgroup *cgrp = sock_cgroup_ptr(skcd);
-+
-+	cgroup_bpf_put(cgrp);
-+	cgroup_put(cgrp);
- }
- 
- #endif	/* CONFIG_SOCK_CGROUP_DATA */
--- 
-2.20.1
+I suspect that the fix is too heavy for stable, unfortunately.
 
+Please, let me know if you have any issues that preventing you
+from pulling it into the tree.
+
+Thank you!
+
+On Tue, May 21, 2019 at 01:07:28PM -0700, Roman Gushchin wrote:
+> # Why do we need this?
+>=20
+> We've noticed that the number of dying cgroups is steadily growing on mos=
+t
+> of our hosts in production. The following investigation revealed an issue
+> in userspace memory reclaim code [1], accounting of kernel stacks [2],
+> and also the mainreason: slab objects.
+>=20
+> The underlying problem is quite simple: any page charged
+> to a cgroup holds a reference to it, so the cgroup can't be reclaimed unl=
+ess
+> all charged pages are gone. If a slab object is actively used by other cg=
+roups,
+> it won't be reclaimed, and will prevent the origin cgroup from being recl=
+aimed.
+>=20
+> Slab objects, and first of all vfs cache, is shared between cgroups, whic=
+h are
+> using the same underlying fs, and what's even more important, it's shared
+> between multiple generations of the same workload. So if something is run=
+ning
+> periodically every time in a new cgroup (like how systemd works), we do
+> accumulate multiple dying cgroups.
+>=20
+> Strictly speaking pagecache isn't different here, but there is a key diff=
+erence:
+> we disable protection and apply some extra pressure on LRUs of dying cgro=
+ups,
+> and these LRUs contain all charged pages.
+> My experiments show that with the disabled kernel memory accounting the n=
+umber
+> of dying cgroups stabilizes at a relatively small number (~100, depends o=
+n
+> memory pressure and cgroup creation rate), and with kernel memory account=
+ing
+> it grows pretty steadily up to several thousands.
+>=20
+> Memory cgroups are quite complex and big objects (mostly due to percpu st=
+ats),
+> so it leads to noticeable memory losses. Memory occupied by dying cgroups
+> is measured in hundreds of megabytes. I've even seen a host with more tha=
+n 100Gb
+> of memory wasted for dying cgroups. It leads to a degradation of performa=
+nce
+> with the uptime, and generally limits the usage of cgroups.
+>=20
+> My previous attempt [3] to fix the problem by applying extra pressure on =
+slab
+> shrinker lists caused a regressions with xfs and ext4, and has been rever=
+ted [4].
+> The following attempts to find the right balance [5, 6] were not successf=
+ul.
+>=20
+> So instead of trying to find a maybe non-existing balance, let's do repar=
+ent
+> the accounted slabs to the parent cgroup on cgroup removal.
+>=20
+>=20
+> # Implementation approach
+>=20
+> There is however a significant problem with reparenting of slab memory:
+> there is no list of charged pages. Some of them are in shrinker lists,
+> but not all. Introducing of a new list is really not an option.
+>=20
+> But fortunately there is a way forward: every slab page has a stable poin=
+ter
+> to the corresponding kmem_cache. So the idea is to reparent kmem_caches
+> instead of slab pages.
+>=20
+> It's actually simpler and cheaper, but requires some underlying changes:
+> 1) Make kmem_caches to hold a single reference to the memory cgroup,
+>    instead of a separate reference per every slab page.
+> 2) Stop setting page->mem_cgroup pointer for memcg slab pages and use
+>    page->kmem_cache->memcg indirection instead. It's used only on
+>    slab page release, so it shouldn't be a big issue.
+> 3) Introduce a refcounter for non-root slab caches. It's required to
+>    be able to destroy kmem_caches when they become empty and release
+>    the associated memory cgroup.
+>=20
+> There is a bonus: currently we do release empty kmem_caches on cgroup
+> removal, however all other are waiting for the releasing of the memory cg=
+roup.
+> These refactorings allow kmem_caches to be released as soon as they
+> become inactive and free.
+>=20
+> Some additional implementation details are provided in corresponding
+> commit messages.
+>=20
+>=20
+> # Results
+>=20
+> Below is the average number of dying cgroups on two groups of our product=
+ion
+> hosts. They do run some sort of web frontend workload, the memory pressur=
+e
+> is moderate. As we can see, with the kernel memory reparenting the number
+> stabilizes in 60s range; however with the original version it grows almos=
+t
+> linearly and doesn't show any signs of plateauing. The difference in slab
+> and percpu usage between patched and unpatched versions also grows linear=
+ly.
+> In 7 days it exceeded 200Mb.
+>=20
+> day           0    1    2    3    4    5    6    7
+> original     56  362  628  752 1070 1250 1490 1560
+> patched      23   46   51   55   60   57   67   69
+> mem diff(Mb) 22   74  123  152  164  182  214  241
+>=20
+>=20
+> # History
+>=20
+> v5:
+>   1) fixed a compilation warning around missing kmemcg_queue_cache_shutdo=
+wn()
+>   2) s/rcu_read_lock()/rcu_read_unlock() in memcg_kmem_get_cache()
+>=20
+> v4:
+>   1) removed excessive memcg !=3D parent check in memcg_deactivate_kmem_c=
+aches()
+>   2) fixed rcu_read_lock() usage in memcg_charge_slab()
+>   3) fixed synchronization around dying flag in kmemcg_queue_cache_shutdo=
+wn()
+>   4) refreshed test results data
+>   5) reworked PageTail() checks in memcg_from_slab_page()
+>   6) added some comments in multiple places
+>=20
+> v3:
+>   1) reworked memcg kmem_cache search on allocation path
+>   2) fixed /proc/kpagecgroup interface
+>=20
+> v2:
+>   1) switched to percpu kmem_cache refcounter
+>   2) a reference to kmem_cache is held during the allocation
+>   3) slabs stats are fixed for !MEMCG case (and the refactoring
+>      is separated into a standalone patch)
+>   4) kmem_cache reparenting is performed from deactivatation context
+>=20
+> v1:
+>   https://lkml.org/lkml/2019/4/17/1095
+>=20
+>=20
+> # Links
+>=20
+> [1]: commit 68600f623d69 ("mm: don't miss the last page because of
+> round-off error")
+> [2]: commit 9b6f7e163cd0 ("mm: rework memcg kernel stack accounting")
+> [3]: commit 172b06c32b94 ("mm: slowly shrink slabs with a relatively
+> small number of objects")
+> [4]: commit a9a238e83fbb ("Revert "mm: slowly shrink slabs
+> with a relatively small number of objects")
+> [5]: https://lkml.org/lkml/2019/1/28/1865
+> [6]: https://marc.info/?l=3Dlinux-mm&m=3D155064763626437&w=3D2
+>=20
+>=20
+> Roman Gushchin (7):
+>   mm: postpone kmem_cache memcg pointer initialization to
+>     memcg_link_cache()
+>   mm: generalize postponed non-root kmem_cache deactivation
+>   mm: introduce __memcg_kmem_uncharge_memcg()
+>   mm: unify SLAB and SLUB page accounting
+>   mm: rework non-root kmem_cache lifecycle management
+>   mm: reparent slab memory on cgroup removal
+>   mm: fix /proc/kpagecgroup interface for slab pages
+>=20
+>  include/linux/memcontrol.h |  10 +++
+>  include/linux/slab.h       |  13 +--
+>  mm/memcontrol.c            | 101 ++++++++++++++++-------
+>  mm/slab.c                  |  25 ++----
+>  mm/slab.h                  | 137 ++++++++++++++++++++++++-------
+>  mm/slab_common.c           | 162 +++++++++++++++++++++----------------
+>  mm/slub.c                  |  36 ++-------
+>  7 files changed, 299 insertions(+), 185 deletions(-)
+>=20
+> --=20
+> 2.20.1
+>=20
