@@ -1,160 +1,158 @@
 From: Roman Gushchin <guro@fb.com>
-Subject: [PATCH v3 bpf-next 4/4] selftests/bpf: add auto-detach test
-Date: Thu, 23 May 2019 12:45:32 -0700
-Message-ID: <20190523194532.2376233-5-guro@fb.com>
-References: <20190523194532.2376233-1-guro@fb.com>
+Subject: Re: [mm] e52271917f:
+ BUG:sleeping_function_called_from_invalid_context_at_mm/slab.h
+Date: Thu, 23 May 2019 21:00:46 +0000
+Message-ID: <20190523210040.GA8420@tower.DHCP.thefacebook.com>
+References: <20190514213940.2405198-6-guro@fb.com>
+ <20190523005858.GJ19312@shao2-debian>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=dM9+BVyTbQ+UpQVar9OuJ9mOa6aG8ajNryPCO9+TC84=;
- b=cH5YpDqLi+CHixLBKT4SUEC1kS0buGjmaHN3UnNbhX7V5irhEmIlTHU2ITVG7r4ZZSpg
- rTkUi1Q5TngrhHekFu3CNKDQT8mvcrmvLIpvvgnrJZs42PGzpPh9X0IO8f2bQYFApaR/
- hIgNplupE5tuAxxFwTPwxGK2khnmOsJp52M= 
-In-Reply-To: <20190523194532.2376233-1-guro@fb.com>
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=ClXmZI/N8fwomQ8i6o2AXSf9bNgp0rLsWx833fh4w7w=;
+ b=oyz/0Gh3XwjNR0oV+t3VLB0rHM+XdWjakeoqcANNGJD2oebAcnO8BM5XPXWUew0qud6s
+ pkAAPEwMSl+j7Yg89U8dLSJxr5YjZ29tVzWX7TT1p2GG1SzIvFyuYntHn3G6y9YE0tTc
+ gJ/qwyA++j9+/2tp4bb2+v/QxuMhoceKs88= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ClXmZI/N8fwomQ8i6o2AXSf9bNgp0rLsWx833fh4w7w=;
+ b=PLZ9cqz2KZq65koeqD8iXRwBudhiGAyk5JVjfYRsOv1kA9inn4eYt4DmhNd6INkgWu1rAOwc2DcFTBjwimXBxEqHYckOzsgfxTZ5tLeq5RyZeddQGNLr/Div8May8XsBnMsEchBKPFvywYzW0BKpavGJVTqX4JlaxBbvDtN5tOs=
+In-Reply-To: <20190523005858.GJ19312@shao2-debian>
+Content-Language: en-US
+Content-ID: <14F14FC4BCF487408A51CD4FB01F9AD2@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alexei Starovoitov <ast@kernel.org>, bpf@vger.kernel.org
-Cc: Daniel Borkmann <daniel@iogearbox.net>, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, Stanislav Fomichev <sdf@fomichev.me>, Yonghong Song <yhs@fb.com>, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
+To: kernel test robot <rong.a.chen@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Shakeel Butt <shakeelb@google.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Christoph Lameter <cl@linux.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "lkp@01.org" <lkp@01.org>
 
-Add a kselftest to cover bpf auto-detachment functionality.
-The test creates a cgroup, associates some resources with it,
-attaches a couple of bpf programs and deletes the cgroup.
+On Thu, May 23, 2019 at 08:58:58AM +0800, kernel test robot wrote:
+> FYI, we noticed the following commit (built with gcc-7):
+>=20
+> commit: e52271917f9f5159c791eda8ba748a66d659c27e ("[PATCH v4 5/7] mm: rew=
+ork non-root kmem_cache lifecycle management")
+> url: https://github.com/0day-ci/linux/commits/Roman-Gushchin/mm-reparent-=
+slab-memory-on-cgroup-removal/20190517-173841
+>=20
+>=20
+> in testcase: nvml
+> with following parameters:
+>=20
+> 	group: obj
+> 	test: non-pmem
+>=20
+>=20
+>=20
+> on test machine: qemu-system-x86_64 -enable-kvm -cpu SandyBridge -smp 2 -=
+m 8G
+>=20
+> caused below changes (please refer to attached dmesg/kmsg for entire log/=
+backtrace):
+>=20
+>=20
+> +------------------------------------------------------------------------=
+------+------------+------------+
+> |                                                                        =
+      | ff756a15f3 | e52271917f |
+> +------------------------------------------------------------------------=
+------+------------+------------+
+> | boot_successes                                                         =
+      | 5          | 4          |
+> | boot_failures                                                          =
+      | 861        | 852        |
+> | BUG:kernel_reboot-without-warning_in_test_stage                        =
+      | 738        | 163        |
+> | BUG:kernel_hang_in_boot_stage                                          =
+      | 120        | 122        |
+> | BUG:soft_lockup-CPU##stuck_for#s                                       =
+      | 4          | 1          |
+> | RIP:free_unref_page                                                    =
+      | 1          |            |
+> | Kernel_panic-not_syncing:softlockup:hung_tasks                         =
+      | 4          | 1          |
+> | RIP:free_reserved_area                                                 =
+      | 3          | 1          |
+> | BUG:sleeping_function_called_from_invalid_context_at_mm/slab.h         =
+      | 0          | 560        |
+> | BUG:scheduling_while_atomic                                            =
+      | 0          | 561        |
+> | WARNING:at_lib/usercopy.c:#_copy_to_user                               =
+      | 0          | 116        |
+> | RIP:_copy_to_user                                                      =
+      | 0          | 116        |
+> | WARNING:at_arch/x86/kernel/fpu/signal.c:#copy_fpstate_to_sigframe      =
+      | 0          | 534        |
+> | RIP:copy_fpstate_to_sigframe                                           =
+      | 0          | 532        |
+> | WARNING:at_arch/x86/kernel/signal.c:#do_signal                         =
+      | 0          | 527        |
+> | RIP:do_signal                                                          =
+      | 0          | 526        |
+> | WARNING:at_lib/usercopy.c:#_copy_from_user                             =
+      | 0          | 389        |
+> | RIP:_copy_from_user                                                    =
+      | 0          | 388        |
+> | kernel_BUG_at_mm/vmalloc.c                                             =
+      | 0          | 304        |
+> | invalid_opcode:#[##]                                                   =
+      | 0          | 304        |
+> | RIP:__get_vm_area_node                                                 =
+      | 0          | 301        |
+> | Kernel_panic-not_syncing:Fatal_exception_in_interrupt                  =
+      | 0          | 294        |
+> | Kernel_panic-not_syncing:Aiee,killing_interrupt_handler                =
+      | 0          | 155        |
+> | WARNING:at_fs/read_write.c:#vfs_write                                  =
+      | 0          | 15         |
+> | RIP:vfs_write                                                          =
+      | 0          | 15         |
+> | BUG:sleeping_function_called_from_invalid_context_at_kernel/locking/rws=
+em.c  | 0          | 101        |
+> | BUG:sleeping_function_called_from_invalid_context_at_include/linux/uacc=
+ess.h | 0          | 54         |
+> | Kernel_panic-not_syncing:Attempted_to_kill_init!exitcode=3D            =
+        | 0          | 47         |
+> | BUG:sleeping_function_called_from_invalid_context_at_lib/iov_iter.c    =
+      | 0          | 1          |
+> | BUG:sleeping_function_called_from_invalid_context_at_fs/dcache.c       =
+      | 0          | 57         |
+> | BUG:sleeping_function_called_from_invalid_context_at_mm/memory.c       =
+      | 0          | 1          |
+> | BUG:sleeping_function_called_from_invalid_context_at_kernel/locking/mut=
+ex.c  | 0          | 104        |
+> | BUG:kernel_hang_in_test_stage                                          =
+      | 0          | 5          |
+> | WARNING:at_arch/x86/include/asm/uaccess.h:#strncpy_from_user           =
+      | 0          | 4          |
+> | RIP:strncpy_from_user                                                  =
+      | 0          | 4          |
+> | WARNING:at_fs/read_write.c:#vfs_read                                   =
+      | 0          | 4          |
+> | RIP:vfs_read                                                           =
+      | 0          | 4          |
+> | BUG:sleeping_function_called_from_invalid_context_at_mm/filemap.c      =
+      | 0          | 3          |
+> | BUG:sleeping_function_called_from_invalid_context_at_mm/page_alloc.c   =
+      | 0          | 8          |
+> | BUG:sleeping_function_called_from_invalid_context_at_mm/gup.c          =
+      | 0          | 1          |
+> | BUG:sleeping_function_called_from_invalid_context_at_include/linux/free=
+zer.h | 0          | 1          |
+> | BUG:sleeping_function_called_from_invalid_context_at/kb                =
+      | 0          | 1          |
+> +------------------------------------------------------------------------=
+------+------------+------------+
+>=20
+>=20
+> If you fix the issue, kindly add following tag
+> Reported-by: kernel test robot <rong.a.chen@intel.com>
 
-Then it checks that bpf programs are going away in 5 seconds.
+Hi!
 
-Expected output:
-  $ ./test_cgroup_attach
-  #override:PASS
-  #multi:PASS
-  #autodetach:PASS
-  test_cgroup_attach:PASS
+It seems that it's caused by unbalanced rcu_read_lock(),
+which already has been fixed in v5.
 
-On a kernel without auto-detaching:
-  $ ./test_cgroup_attach
-  #override:PASS
-  #multi:PASS
-  #autodetach:FAIL
-  test_cgroup_attach:FAIL
-
-Signed-off-by: Roman Gushchin <guro@fb.com>
----
- .../selftests/bpf/test_cgroup_attach.c        | 98 ++++++++++++++++++-
- 1 file changed, 97 insertions(+), 1 deletion(-)
-
-diff --git a/tools/testing/selftests/bpf/test_cgroup_attach.c b/tools/testing/selftests/bpf/test_cgroup_attach.c
-index 2d6d57f50e10..7671909ee1cb 100644
---- a/tools/testing/selftests/bpf/test_cgroup_attach.c
-+++ b/tools/testing/selftests/bpf/test_cgroup_attach.c
-@@ -456,9 +456,105 @@ static int test_multiprog(void)
- 	return rc;
- }
- 
-+static int test_autodetach(void)
-+{
-+	__u32 prog_cnt = 4, attach_flags;
-+	int allow_prog[2] = {0};
-+	__u32 prog_ids[2] = {0};
-+	int cg = 0, i, rc = -1;
-+	void *ptr = NULL;
-+	int attempts;
-+
-+	for (i = 0; i < ARRAY_SIZE(allow_prog); i++) {
-+		allow_prog[i] = prog_load_cnt(1, 1 << i);
-+		if (!allow_prog[i])
-+			goto err;
-+	}
-+
-+	if (setup_cgroup_environment())
-+		goto err;
-+
-+	/* create a cgroup, attach two programs and remember their ids */
-+	cg = create_and_get_cgroup("/cg_autodetach");
-+	if (cg < 0)
-+		goto err;
-+
-+	if (join_cgroup("/cg_autodetach"))
-+		goto err;
-+
-+	for (i = 0; i < ARRAY_SIZE(allow_prog); i++) {
-+		if (bpf_prog_attach(allow_prog[i], cg, BPF_CGROUP_INET_EGRESS,
-+				    BPF_F_ALLOW_MULTI)) {
-+			log_err("Attaching prog[%d] to cg:egress", i);
-+			goto err;
-+		}
-+	}
-+
-+	/* make sure that programs are attached and run some traffic */
-+	assert(bpf_prog_query(cg, BPF_CGROUP_INET_EGRESS, 0, &attach_flags,
-+			      prog_ids, &prog_cnt) == 0);
-+	assert(system(PING_CMD) == 0);
-+
-+	/* allocate some memory (4Mb) to pin the original cgroup */
-+	ptr = malloc(4 * (1 << 20));
-+	if (!ptr)
-+		goto err;
-+
-+	/* close programs and cgroup fd */
-+	for (i = 0; i < ARRAY_SIZE(allow_prog); i++) {
-+		close(allow_prog[i]);
-+		allow_prog[i] = 0;
-+	}
-+
-+	close(cg);
-+	cg = 0;
-+
-+	/* leave the cgroup and remove it. don't detach programs */
-+	cleanup_cgroup_environment();
-+
-+	/* wait for the asynchronous auto-detachment.
-+	 * wait for no more than 5 sec and give up.
-+	 */
-+	for (i = 0; i < ARRAY_SIZE(prog_ids); i++) {
-+		for (attempts = 5; attempts >= 0; attempts--) {
-+			int fd = bpf_prog_get_fd_by_id(prog_ids[i]);
-+
-+			if (fd < 0)
-+				break;
-+
-+			/* don't leave the fd open */
-+			close(fd);
-+
-+			if (!attempts)
-+				goto err;
-+
-+			sleep(1);
-+		}
-+	}
-+
-+	rc = 0;
-+err:
-+	for (i = 0; i < ARRAY_SIZE(allow_prog); i++)
-+		if (allow_prog[i] > 0)
-+			close(allow_prog[i]);
-+	if (cg)
-+		close(cg);
-+	free(ptr);
-+	cleanup_cgroup_environment();
-+	if (!rc)
-+		printf("#autodetach:PASS\n");
-+	else
-+		printf("#autodetach:FAIL\n");
-+	return rc;
-+}
-+
- int main(void)
- {
--	int (*tests[])(void) = {test_foo_bar, test_multiprog};
-+	int (*tests[])(void) = {
-+		test_foo_bar,
-+		test_multiprog,
-+		test_autodetach,
-+	};
- 	int errors = 0;
- 	int i;
- 
--- 
-2.20.1
-
+Thanks!
