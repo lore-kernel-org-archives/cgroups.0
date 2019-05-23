@@ -1,36 +1,23 @@
-From: Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [PATCH] Fix comments with paths pointing to renamed or moved
- files.
-Date: Thu, 23 May 2019 14:35:32 -0400
-Message-ID: <20190523143532.0319e253@gandalf.local.home>
-References: <20190521155430.14941-1-langspielplatte@black-mesa.xyz>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Dave Chiluk <chiluk+linux@indeed.com>
+Subject: [PATCH v2 0/1] sched/fair: Fix low cpu usage with high throttling by removing expiration of cpu-local slices
+Date: Thu, 23 May 2019 13:44:46 -0500
+Message-ID: <1558637087-20283-1-git-send-email-chiluk+linux@indeed.com>
+References: <1558121424-2914-1-git-send-email-chiluk+linux@indeed.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190521155430.14941-1-langspielplatte@black-mesa.xyz>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=indeed.com; s=google;
+        h=from:to:subject:date:message-id:in-reply-to:references;
+        bh=yNILfyJChXA1qHX1Kqi1owLnUHep4ERKIkS79Wu1+tk=;
+        b=ytyrCd/qOMiw0SMCH3uGeCH96UCKXfeNngBh+3fqTLyrvfr3w1CggUfgpYbxePvNdH
+         mgBFPc9L9iqibPjumTk2GvTbWndammyucmWOw7SoENj+v2wcyYufN6wiTU612eG5yOFW
+         L3WLFb7W/s9PKX9oom+IMNnX0YkzBTk+WZOnc=
+In-Reply-To: <1558121424-2914-1-git-send-email-chiluk+linux@indeed.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Lukas Prause <langspielplatte@black-mesa.xyz>
-Cc: lizefan@huawei.com, tj@kernel.org, hannes@cmpxchg.org, peterz@infradead.org, mingo@redhat.com, will.deacon@arm.com, rjw@rjwysocki.net, len.brown@intel.com, pavel@ucw.cz, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-pm@vger.kernel.org, Lennart Glauer <mail@lennart-glauer.de>
+Content-Transfer-Encoding: 7bit
+To: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Brendan Gregg <bgregg@netflix.com>, Kyle Anderson <kwa@yelp.com>, Gabriel Munos <gmunoz@netflix.com>, John Hammond <jhammond@indeed.com>, Cong Wang <xiyou.wangcong@gmail.com>, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org
 
-On Tue, 21 May 2019 17:54:30 +0200
-Lukas Prause <langspielplatte@black-mesa.xyz> wrote:
-
-> This patch corrects renamed or moved paths in comments.
-> 
-> Signed-off-by: Lukas Prause <langspielplatte@black-mesa.xyz>
-> Signed-off-by: Lennart Glauer <mail@lennart-glauer.de>
-> ---
->  kernel/cgroup/cpuset.c       |  2 +-
->  kernel/locking/mutex-debug.h |  2 +-
->  kernel/power/power.h         |  2 +-
->  kernel/sched/core.c          |  2 +-
->  kernel/trace/trace.h         | 14 +++++++-------
-
-Acked-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
-
--- Steve
-
->  5 files changed, 11 insertions(+), 11 deletions(-)
-
+Changelog v2
+    - Fixed some checkpatch errors in the commit message.
