@@ -1,99 +1,83 @@
-From: Yonghong Song <yhs@fb.com>
-Subject: Re: [PATCH v3 bpf-next 4/4] selftests/bpf: add auto-detach test
-Date: Thu, 23 May 2019 23:09:30 +0000
-Message-ID: <4ff840cb-7e24-62d5-4ea7-fbca34218800@fb.com>
-References: <20190523194532.2376233-1-guro@fb.com>
- <20190523194532.2376233-5-guro@fb.com>
+From: "Srivatsa S. Bhat" <srivatsa@csail.mit.edu>
+Subject: Re: CFQ idling kills I/O performance on ext4 with blkio cgroup
+ controller
+Date: Thu, 23 May 2019 16:32:32 -0700
+Message-ID: <a0096333-55c0-eb30-87fc-d63b5e285b99@csail.mit.edu>
+References: <8d72fcf7-bbb4-2965-1a06-e9fc177a8938@csail.mit.edu>
+ <1812E450-14EF-4D5A-8F31-668499E13652@linaro.org>
+ <46c6a4be-f567-3621-2e16-0e341762b828@csail.mit.edu>
+ <07D11833-8285-49C2-943D-E4C1D23E8859@linaro.org>
+ <A0DFE635-EFEC-4670-AD70-5D813E170BEE@linaro.org>
+ <5B6570A2-541A-4CF8-98E0-979EA6E3717D@linaro.org>
+ <2CB39B34-21EE-4A95-A073-8633CF2D187C@linaro.org>
+ <FC24E25F-4578-454D-AE2B-8D8D352478D8@linaro.org>
+ <0e3fdf31-70d9-26eb-7b42-2795d4b03722@csail.mit.edu>
+ <F5E29C98-6CC4-43B8-994D-0B5354EECBF3@linaro.org>
+ <686D6469-9DE7-4738-B92A-002144C3E63E@linaro.org>
+ <01d55216-5718-767a-e1e6-aadc67b632f4@csail.mit.edu>
+ <CA8A23E2-6F22-4444-9A20-E052A94CAA9B@linaro.org>
+ <cc148388-3c82-d7c0-f9ff-8c31bb5dc77d@csail.mit.edu>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=uq6BJ+pKj6xRhzw5uR8hoMYMFZoGjuFIfP/FnerFbTI=;
- b=FBP8UPGq8ZST0wp2r0ynWPNVLPzV0sXLCSN26nHZL15ND0VgIB7yP3vN8vfzTbB+BsNv
- B6/0PihmM4ZzSvjq0ysiPMriB9sXr373+RLc+YZwfoLI57g+FNY9cc3WVTiBYigvqxSx
- GogbkRXe0DmzZ3V1k5tUk2eyugkG5HHhGlw= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uq6BJ+pKj6xRhzw5uR8hoMYMFZoGjuFIfP/FnerFbTI=;
- b=i6iy/wNeDqQG/iBu6o6VPvHSp4map3/1po+xKPKmunqnU/6oC4l4s8YU36Taj4ZkVqxicFvL+drehnI0Egg8CkJPefRs/d4whruSfNGN7JqV8BJ04RadKIWuDBmzFYK/E7rLuS7j5GIxvs1mCDwasy7sODLgmbni53TNpcZt7F0=
-In-Reply-To: <20190523194532.2376233-5-guro@fb.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cc148388-3c82-d7c0-f9ff-8c31bb5dc77d@csail.mit.edu>
 Content-Language: en-US
-Content-ID: <BC104A1435D9E4498C5C759DF5144600@namprd15.prod.outlook.com>
-Sender: netdev-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Roman Gushchin <guro@fb.com>, Alexei Starovoitov <ast@kernel.org>, "bpf@vger.kernel.org" <bpf@vger.kernel.org>
-Cc: Daniel Borkmann <daniel@iogearbox.net>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Kernel Team <Kernel-team@fb.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Stanislav Fomichev <sdf@fomichev.me>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Paolo Valente <paolo.valente@linaro.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, linux-ext4@vger.kernel.org, cgroups@vger.kernel.org, kernel list <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>, jmoyer@redhat.com, Theodore Ts'o <tytso@mit.edu>, amakhalov@vmware.com, anishs@vmware.com, srivatsab@vmware.com
 
-DQoNCk9uIDUvMjMvMTkgMTI6NDUgUE0sIFJvbWFuIEd1c2hjaGluIHdyb3RlOg0KPiBBZGQgYSBr
-c2VsZnRlc3QgdG8gY292ZXIgYnBmIGF1dG8tZGV0YWNobWVudCBmdW5jdGlvbmFsaXR5Lg0KPiBU
-aGUgdGVzdCBjcmVhdGVzIGEgY2dyb3VwLCBhc3NvY2lhdGVzIHNvbWUgcmVzb3VyY2VzIHdpdGgg
-aXQsDQo+IGF0dGFjaGVzIGEgY291cGxlIG9mIGJwZiBwcm9ncmFtcyBhbmQgZGVsZXRlcyB0aGUg
-Y2dyb3VwLg0KPiANCj4gVGhlbiBpdCBjaGVja3MgdGhhdCBicGYgcHJvZ3JhbXMgYXJlIGdvaW5n
-IGF3YXkgaW4gNSBzZWNvbmRzLg0KPiANCj4gRXhwZWN0ZWQgb3V0cHV0Og0KPiAgICAkIC4vdGVz
-dF9jZ3JvdXBfYXR0YWNoDQo+ICAgICNvdmVycmlkZTpQQVNTDQo+ICAgICNtdWx0aTpQQVNTDQo+
-ICAgICNhdXRvZGV0YWNoOlBBU1MNCj4gICAgdGVzdF9jZ3JvdXBfYXR0YWNoOlBBU1MNCj4gDQo+
-IE9uIGEga2VybmVsIHdpdGhvdXQgYXV0by1kZXRhY2hpbmc6DQo+ICAgICQgLi90ZXN0X2Nncm91
-cF9hdHRhY2gNCj4gICAgI292ZXJyaWRlOlBBU1MNCj4gICAgI211bHRpOlBBU1MNCj4gICAgI2F1
-dG9kZXRhY2g6RkFJTA0KPiAgICB0ZXN0X2Nncm91cF9hdHRhY2g6RkFJTA0KPiANCj4gU2lnbmVk
-LW9mZi1ieTogUm9tYW4gR3VzaGNoaW4gPGd1cm9AZmIuY29tPg0KDQpMb29rcyBnb29kIHRvIG1l
-LiBJdCB3aWxsIGJlIGdvb2QgaWYgeW91IGNhbiBhZGQgdGVzdF9jZ3JvdXBfYXR0YWNoDQp0byAu
-Z2l0aWdub3JlIHRvIGF2b2lkIGl0IHNob3dzIHVwIGluIGBnaXQgc3RhdHVzYC4gV2l0aCB0aGF0
-LA0KDQpBY2tlZC1ieTogWW9uZ2hvbmcgU29uZyA8eWhzQGZiLmNvbT4NCg0KPiAtLS0NCj4gICAu
-Li4vc2VsZnRlc3RzL2JwZi90ZXN0X2Nncm91cF9hdHRhY2guYyAgICAgICAgfCA5OCArKysrKysr
-KysrKysrKysrKystDQo+ICAgMSBmaWxlIGNoYW5nZWQsIDk3IGluc2VydGlvbnMoKyksIDEgZGVs
-ZXRpb24oLSkNCj4gDQo+IGRpZmYgLS1naXQgYS90b29scy90ZXN0aW5nL3NlbGZ0ZXN0cy9icGYv
-dGVzdF9jZ3JvdXBfYXR0YWNoLmMgYi90b29scy90ZXN0aW5nL3NlbGZ0ZXN0cy9icGYvdGVzdF9j
-Z3JvdXBfYXR0YWNoLmMNCj4gaW5kZXggMmQ2ZDU3ZjUwZTEwLi43NjcxOTA5ZWUxY2IgMTAwNjQ0
-DQo+IC0tLSBhL3Rvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2JwZi90ZXN0X2Nncm91cF9hdHRhY2gu
-Yw0KPiArKysgYi90b29scy90ZXN0aW5nL3NlbGZ0ZXN0cy9icGYvdGVzdF9jZ3JvdXBfYXR0YWNo
-LmMNCj4gQEAgLTQ1Niw5ICs0NTYsMTA1IEBAIHN0YXRpYyBpbnQgdGVzdF9tdWx0aXByb2codm9p
-ZCkNCj4gICAJcmV0dXJuIHJjOw0KPiAgIH0NCj4gICANCj4gK3N0YXRpYyBpbnQgdGVzdF9hdXRv
-ZGV0YWNoKHZvaWQpDQo+ICt7DQo+ICsJX191MzIgcHJvZ19jbnQgPSA0LCBhdHRhY2hfZmxhZ3M7
-DQo+ICsJaW50IGFsbG93X3Byb2dbMl0gPSB7MH07DQo+ICsJX191MzIgcHJvZ19pZHNbMl0gPSB7
-MH07DQo+ICsJaW50IGNnID0gMCwgaSwgcmMgPSAtMTsNCj4gKwl2b2lkICpwdHIgPSBOVUxMOw0K
-PiArCWludCBhdHRlbXB0czsNCj4gKw0KPiArCWZvciAoaSA9IDA7IGkgPCBBUlJBWV9TSVpFKGFs
-bG93X3Byb2cpOyBpKyspIHsNCj4gKwkJYWxsb3dfcHJvZ1tpXSA9IHByb2dfbG9hZF9jbnQoMSwg
-MSA8PCBpKTsNCj4gKwkJaWYgKCFhbGxvd19wcm9nW2ldKQ0KPiArCQkJZ290byBlcnI7DQo+ICsJ
-fQ0KPiArDQo+ICsJaWYgKHNldHVwX2Nncm91cF9lbnZpcm9ubWVudCgpKQ0KPiArCQlnb3RvIGVy
-cjsNCj4gKw0KPiArCS8qIGNyZWF0ZSBhIGNncm91cCwgYXR0YWNoIHR3byBwcm9ncmFtcyBhbmQg
-cmVtZW1iZXIgdGhlaXIgaWRzICovDQo+ICsJY2cgPSBjcmVhdGVfYW5kX2dldF9jZ3JvdXAoIi9j
-Z19hdXRvZGV0YWNoIik7DQo+ICsJaWYgKGNnIDwgMCkNCj4gKwkJZ290byBlcnI7DQo+ICsNCj4g
-KwlpZiAoam9pbl9jZ3JvdXAoIi9jZ19hdXRvZGV0YWNoIikpDQo+ICsJCWdvdG8gZXJyOw0KPiAr
-DQo+ICsJZm9yIChpID0gMDsgaSA8IEFSUkFZX1NJWkUoYWxsb3dfcHJvZyk7IGkrKykgew0KPiAr
-CQlpZiAoYnBmX3Byb2dfYXR0YWNoKGFsbG93X3Byb2dbaV0sIGNnLCBCUEZfQ0dST1VQX0lORVRf
-RUdSRVNTLA0KPiArCQkJCSAgICBCUEZfRl9BTExPV19NVUxUSSkpIHsNCj4gKwkJCWxvZ19lcnIo
-IkF0dGFjaGluZyBwcm9nWyVkXSB0byBjZzplZ3Jlc3MiLCBpKTsNCj4gKwkJCWdvdG8gZXJyOw0K
-PiArCQl9DQo+ICsJfQ0KPiArDQo+ICsJLyogbWFrZSBzdXJlIHRoYXQgcHJvZ3JhbXMgYXJlIGF0
-dGFjaGVkIGFuZCBydW4gc29tZSB0cmFmZmljICovDQo+ICsJYXNzZXJ0KGJwZl9wcm9nX3F1ZXJ5
-KGNnLCBCUEZfQ0dST1VQX0lORVRfRUdSRVNTLCAwLCAmYXR0YWNoX2ZsYWdzLA0KPiArCQkJICAg
-ICAgcHJvZ19pZHMsICZwcm9nX2NudCkgPT0gMCk7DQo+ICsJYXNzZXJ0KHN5c3RlbShQSU5HX0NN
-RCkgPT0gMCk7DQo+ICsNCj4gKwkvKiBhbGxvY2F0ZSBzb21lIG1lbW9yeSAoNE1iKSB0byBwaW4g
-dGhlIG9yaWdpbmFsIGNncm91cCAqLw0KPiArCXB0ciA9IG1hbGxvYyg0ICogKDEgPDwgMjApKTsN
-Cj4gKwlpZiAoIXB0cikNCj4gKwkJZ290byBlcnI7DQo+ICsNCj4gKwkvKiBjbG9zZSBwcm9ncmFt
-cyBhbmQgY2dyb3VwIGZkICovDQo+ICsJZm9yIChpID0gMDsgaSA8IEFSUkFZX1NJWkUoYWxsb3df
-cHJvZyk7IGkrKykgew0KPiArCQljbG9zZShhbGxvd19wcm9nW2ldKTsNCj4gKwkJYWxsb3dfcHJv
-Z1tpXSA9IDA7DQo+ICsJfQ0KPiArDQo+ICsJY2xvc2UoY2cpOw0KPiArCWNnID0gMDsNCj4gKw0K
-PiArCS8qIGxlYXZlIHRoZSBjZ3JvdXAgYW5kIHJlbW92ZSBpdC4gZG9uJ3QgZGV0YWNoIHByb2dy
-YW1zICovDQo+ICsJY2xlYW51cF9jZ3JvdXBfZW52aXJvbm1lbnQoKTsNCj4gKw0KPiArCS8qIHdh
-aXQgZm9yIHRoZSBhc3luY2hyb25vdXMgYXV0by1kZXRhY2htZW50Lg0KPiArCSAqIHdhaXQgZm9y
-IG5vIG1vcmUgdGhhbiA1IHNlYyBhbmQgZ2l2ZSB1cC4NCj4gKwkgKi8NCj4gKwlmb3IgKGkgPSAw
-OyBpIDwgQVJSQVlfU0laRShwcm9nX2lkcyk7IGkrKykgew0KPiArCQlmb3IgKGF0dGVtcHRzID0g
-NTsgYXR0ZW1wdHMgPj0gMDsgYXR0ZW1wdHMtLSkgew0KPiArCQkJaW50IGZkID0gYnBmX3Byb2df
-Z2V0X2ZkX2J5X2lkKHByb2dfaWRzW2ldKTsNCj4gKw0KPiArCQkJaWYgKGZkIDwgMCkNCj4gKwkJ
-CQlicmVhazsNCj4gKw0KPiArCQkJLyogZG9uJ3QgbGVhdmUgdGhlIGZkIG9wZW4gKi8NCj4gKwkJ
-CWNsb3NlKGZkKTsNCj4gKw0KPiArCQkJaWYgKCFhdHRlbXB0cykNCj4gKwkJCQlnb3RvIGVycjsN
-Cj4gKw0KPiArCQkJc2xlZXAoMSk7DQo+ICsJCX0NCj4gKwl9DQo+ICsNCj4gKwlyYyA9IDA7DQo+
-ICtlcnI6DQo+ICsJZm9yIChpID0gMDsgaSA8IEFSUkFZX1NJWkUoYWxsb3dfcHJvZyk7IGkrKykN
-Cj4gKwkJaWYgKGFsbG93X3Byb2dbaV0gPiAwKQ0KPiArCQkJY2xvc2UoYWxsb3dfcHJvZ1tpXSk7
-DQo+ICsJaWYgKGNnKQ0KPiArCQljbG9zZShjZyk7DQo+ICsJZnJlZShwdHIpOw0KPiArCWNsZWFu
-dXBfY2dyb3VwX2Vudmlyb25tZW50KCk7DQo+ICsJaWYgKCFyYykNCj4gKwkJcHJpbnRmKCIjYXV0
-b2RldGFjaDpQQVNTXG4iKTsNCj4gKwllbHNlDQo+ICsJCXByaW50ZigiI2F1dG9kZXRhY2g6RkFJ
-TFxuIik7DQo+ICsJcmV0dXJuIHJjOw0KPiArfQ0KPiArDQo+ICAgaW50IG1haW4odm9pZCkNCj4g
-ICB7DQo+IC0JaW50ICgqdGVzdHNbXSkodm9pZCkgPSB7dGVzdF9mb29fYmFyLCB0ZXN0X211bHRp
-cHJvZ307DQo+ICsJaW50ICgqdGVzdHNbXSkodm9pZCkgPSB7DQo+ICsJCXRlc3RfZm9vX2JhciwN
-Cj4gKwkJdGVzdF9tdWx0aXByb2csDQo+ICsJCXRlc3RfYXV0b2RldGFjaCwNCj4gKwl9Ow0KPiAg
-IAlpbnQgZXJyb3JzID0gMDsNCj4gICAJaW50IGk7DQo+ICAgDQo+IA0K
+On 5/22/19 7:30 PM, Srivatsa S. Bhat wrote:
+> On 5/22/19 3:54 AM, Paolo Valente wrote:
+>>
+>>
+>>> Il giorno 22 mag 2019, alle ore 12:01, Srivatsa S. Bhat <srivatsa@csail.mit.edu> ha scritto:
+>>>
+>>> On 5/22/19 2:09 AM, Paolo Valente wrote:
+>>>>
+>>>> First, thank you very much for testing my patches, and, above all, for
+>>>> sharing those huge traces!
+>>>>
+>>>> According to the your traces, the residual 20% lower throughput that you
+>>>> record is due to the fact that the BFQ injection mechanism takes a few
+>>>> hundredths of seconds to stabilize, at the beginning of the workload.
+>>>> During that setup time, the throughput is equal to the dreadful ~60-90 KB/s
+>>>> that you see without this new patch.  After that time, there
+>>>> seems to be no loss according to the trace.
+>>>>
+>>>> The problem is that a loss lasting only a few hundredths of seconds is
+>>>> however not negligible for a write workload that lasts only 3-4
+>>>> seconds.  Could you please try writing a larger file?
+>>>>
+>>>
+>>> I tried running dd for longer (about 100 seconds), but still saw around
+>>> 1.4 MB/s throughput with BFQ, and between 1.5 MB/s - 1.6 MB/s with
+>>> mq-deadline and noop.
+>>
+>> Ok, then now the cause is the periodic reset of the mechanism.
+>>
+>> It would be super easy to fill this gap, by just gearing the mechanism
+>> toward a very aggressive injection.  The problem is maintaining
+>> control.  As you can imagine from the performance gap between CFQ (or
+>> BFQ with malfunctioning injection) and BFQ with this fix, it is very
+>> hard to succeed in maximizing the throughput while at the same time
+>> preserving control on per-group I/O.
+>>
+> 
+> Ah, I see. Just to make sure that this fix doesn't overly optimize for
+> total throughput (because of the testcase we've been using) and end up
+> causing regressions in per-group I/O control, I ran a test with
+> multiple simultaneous dd instances, each writing to a different
+> portion of the filesystem (well separated, to induce seeks), and each
+> dd task bound to its own blkio cgroup. I saw similar results with and
+> without this patch, and the throughput was equally distributed among
+> all the dd tasks.
+> 
+Actually, it turns out that I ran the dd tasks directly on the block
+device for this experiment, and not on top of ext4. I'll redo this on
+ext4 and report back soon.
+
+Regards,
+Srivatsa
+VMware Photon OS
