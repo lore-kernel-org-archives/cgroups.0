@@ -1,41 +1,140 @@
-From: shuah <shuah@kernel.org>
-Subject: Re: [PATCH v2 1/3] kselftest/cgroup: fix unexpected testing failure
- on test_memcontrol
-Date: Fri, 24 May 2019 15:44:04 -0600
-Message-ID: <0c6b76b8-e20c-33f0-21da-64a5d5da30a9@kernel.org>
-References: <20190520030140.203605-1-alex.shi@linux.alibaba.com>
- <20190520030140.203605-2-alex.shi@linux.alibaba.com>
- <20190524214035.GG374014@devbig004.ftw2.facebook.com>
+From: Peter Oskolkov <posk@posk.io>
+Subject: Re: [PATCH v2 1/1] sched/fair: Fix low cpu usage with high throttling
+ by removing expiration of cpu-local slices
+Date: Fri, 24 May 2019 15:07:10 -0700
+Message-ID: <CAFTs51VhpDk9iW5UT62CkPCN3SjgUHHO1nVqhe+ssHMYqou6Bg@mail.gmail.com>
+References: <1558121424-2914-1-git-send-email-chiluk+linux@indeed.com>
+ <1558637087-20283-1-git-send-email-chiluk+linux@indeed.com>
+ <1558637087-20283-2-git-send-email-chiluk+linux@indeed.com>
+ <CAFTs51W0KdK4nw6wydn2HjNYvFRC8DYMmVeKX9FAe+4YUGEAZg@mail.gmail.com>
+ <20190524143204.GB4684@lorien.usersys.redhat.com> <CAC=E7cXxsyMLw1PR+8QchTH8FYL7WX6_8LBVdqueR1yjW+VVkQ@mail.gmail.com>
+ <CAFTs51Vm258CkDXi_Jj_cGOMotTvhdYR_VW8aUwAUvgistZOFQ@mail.gmail.com> <CAC=E7cXVrGRKMNkJPhd4fJi7wgdYk=YcXPV7B8GVNL5M69BarQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1558734246;
-        bh=TiUA1WFEq7Il0rd+tzTv7rHfLDePXM5hZjMGD293VfM=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=cJ+pF9asSBVEbeEPeP4pGA0GV5iHC4bFiFHmwoUEDwMg7DFd9qo4/LIbkBQ4tMJEI
-         0P7Xi2JdoC42bXYGpT6WKBUWfmkp7AZszIPijW/GZ8fpUAlM95SC/uT8XAKkzXDsjB
-         MsQHY6yNf8WuMRRrrmjS3ZtdwpvPrvdw9ldaJSyY=
-In-Reply-To: <20190524214035.GG374014@devbig004.ftw2.facebook.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=posk.io; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=aqOH77AFv2fQ8WuNNOzGfaD62FQFznjbgv+BXyATBoQ=;
+        b=L92ErfkuKLNpSCuWOJZZYzzlKOxrRVdqgQOBcjLPbFUroWQMmZvZtNA6dAB+17Wp41
+         TsoWakbK40NRsG9ef9j62ZTdS7xdavC+K/GMFLsgIqhT5cQwUFhyoj1NnjH+LjGJrsVH
+         HetgkYR02HOFa1rwZRMQjk+Ko62kS32RL5MPtPpnF4g8GH7EB2lQvXKB6GXnmsAFtmOo
+         mAioyfEYLn/Jhgp/OG/syHn2KTY47nYNyLDMGNa4IPECUm79DRux4xABUByvt8Ltc23W
+         izpv+UC8EJNqgiKju3Z8eKxd8rGxXsWyUAQKoubEVoRhQqB7ELWwWq4Qqi7MhaQzdrVT
+         G9KQ==
+In-Reply-To: <CAC=E7cXVrGRKMNkJPhd4fJi7wgdYk=YcXPV7B8GVNL5M69BarQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Tejun Heo <tj@kernel.org>, Alex Shi <alex.shi@linux.alibaba.com>
-Cc: cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, Jay Kamat <jgkamat@fb.com>, linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, shuah <shuah@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Dave Chiluk <chiluk+linux@indeed.com>
+Cc: Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Brendan Gregg <bgregg@netflix.com>, Kyle Anderson <kwa@yelp.com>, Gabriel Munos <gmunoz@netflix.com>, John Hammond <jhammond@indeed.com>, Cong Wang <xiyou.wangcong@gmail.com>, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org, Ben Segall <bsegall@google.com>
 
-On 5/24/19 3:40 PM, Tejun Heo wrote:
-> Hello,
-> 
-> All three patches look good to me.  Please feel free to add my
-> acked-by.  Shuah, should I route these through cgroup tree or would
-> the kselftest tree be a better fit?
-> 
-> Thanks.
-> 
+On Fri, May 24, 2019 at 2:35 PM Dave Chiluk <chiluk+linux@indeed.com> wrote:
+>
+> On Fri, May 24, 2019 at 11:28 AM Peter Oskolkov <posk@posk.io> wrote:
+> >
+> > On Fri, May 24, 2019 at 8:15 AM Dave Chiluk <chiluk+linux@indeed.com> wrote:
+> > >
+> > > On Fri, May 24, 2019 at 9:32 AM Phil Auld <pauld@redhat.com> wrote:
+> > > > On Thu, May 23, 2019 at 02:01:58PM -0700 Peter Oskolkov wrote:
+> > >
+> > > > > If the machine runs at/close to capacity, won't the overallocation
+> > > > > of the quota to bursty tasks necessarily negatively impact every other
+> > > > > task? Should the "unused" quota be available only on idle CPUs?
+> > > > > (Or maybe this is the behavior achieved here, and only the comment and
+> > > > > the commit message should be fixed...)
+> > > > >
+> > > >
+> > > > It's bounded by the amount left unused from the previous period. So
+> > > > theoretically a process could use almost twice its quota. But then it
+> > > > would have nothing left over in the next period. To repeat it would have
+> > > > to not use any that next period. Over a longer number of periods it's the
+> > > > same amount of CPU usage.
+> > > >
+> > > > I think that is more fair than throttling a process that has never used
+> > > > its full quota.
+> > > >
+> > > > And it removes complexity.
+> > > >
+> > > > Cheers,
+> > > > Phil
+> > >
+> > > Actually it's not even that bad.  The overallocation of quota to a
+> > > bursty task in a period is limited to at most one slice per cpu, and
+> > > that slice must not have been used in the previous periods.  The slice
+> > > size is set with /proc/sys/kernel/sched_cfs_bandwidth_slice_us and
+> > > defaults to 5ms.  If a bursty task goes from underutilizing quota to
+> > > using it's entire quota, it will not be able to burst in the
+> > > subsequent periods.  Therefore in an absolute worst case contrived
+> > > scenario, a bursty task can add at most 5ms to the latency of other
+> > > threads on the same CPU.  I think this worst case 5ms tradeoff is
+> > > entirely worth it.
+> > >
+> > > This does mean that a theoretically a poorly written massively
+> > > threaded application on an 80 core box, that spreads itself onto 80
+> > > cpu run queues, can overutilize it's quota in a period by at most 5ms
+> > > * 80 CPUs in a sincle period (slice * number of runqueues the
+> > > application is running on).  But that means that each of those threads
+> > >  would have had to not be use their quota in a previous period, and it
+> > > also means that the application would have to be carefully written to
+> > > exacerbate this behavior.
+> > >
+> > > Additionally if cpu bound threads underutilize a slice of their quota
+> > > in a period due to the cfs choosing a bursty task to run, they should
+> > > theoretically be able to make it up in the following periods when the
+> > > bursty task is unable to "burst".
+> >
+> > OK, so it is indeed possible that CPU bound threads will underutilize a slice
+> > of their quota in a period as a result of this patch. This should probably
+> > be clearly stated in the code comments and in the commit message.
+> >
+> > In addition, I believe that although many workloads will indeed be
+> > indifferent to getting their fair share "later", some latency-sensitive
+> > workloads will definitely be negatively affected by this temporary
+> > CPU quota stealing by bursty antagonists. So there should probably be
+> > a way to limit this behavior; for example, by making it tunable
+> > per cgroup.
+> >
+> This patch restores the behavior that existed from at least
+> v3.16..v4.18, and the current Redhat 7 kernels.  So you are kind of
+> championing a moot point as no one has noticed this "bursting"
+> behavior in over 5 years.  By removing this slice expiration
+> altogether we restore the behavior and also solve the root issue of
+> 'commit 512ac999d275 ("sched/fair: Fix bandwidth timer clock drift
+> condition")'.
+>
+> Since 512ac999d275, many people are now noticing the slice expiration
+> and very displeased with the behavior change.
+> see: https://github.com/kubernetes/kubernetes/issues/67577
+>
+> I would love to hear if you know of a single complaint during that 5
+> year time window, where someone noticed this bursting and reported
+> that it negatively affected their application.
 
+Linux CPU scheduling tail latency is a well-known issue and a major
+pain point in some workloads:
+https://www.google.com/search?q=linux+cpu+scheduling+tail+latency
 
-Tejun, I can take them through kselftest tree.
+Even assuming that nobody noticed this particular cause
+of CPU scheduling latencies, it does not mean the problem should be waved
+away. At least it should be documented, if at this point it decided that
+it is difficult to address it in a meaningful way. And, preferably, a way
+to address the issue later on should be discussed and hopefully agreed to.
 
-thanks,
--- Shuah
+>
+> As for the documentation, I thought about documenting the possible
+> adverse side-effect, but I didn't feel it was worthwhile since no one
+> had noticed that corner case in the 5 years.  I also could not figure
+> out a concise way of describing the slight corner case issue without
+> overly complicating the documentation.  I felt that adding that corner
+> case would have detracted rather than added to the documentation's
+> usefulness.  As far as commenting in code, considering most of this
+> commit removes lines, there's not a really great place for it.  That's
+> why I did my best to describe the behavior in the documentation.
+> Smart people can draw conclusions from there as you have done.  Please
+> keep in mind that this "bursting" is again limited to a single slice
+> on each per-cpu run-queue.
+>
+> Thank you,
+> Dave
