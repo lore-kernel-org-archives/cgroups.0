@@ -1,159 +1,65 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH] mm: fix page cache convergence regression
-Date: Fri, 24 May 2019 11:04:06 -0700
-Message-ID: <CALvZod4ZK5X+Tf2BMgwi40XmSTqHW-=wAwSVg_eFrtCf2=rCQw@mail.gmail.com>
-References: <20190524153148.18481-1-hannes@cmpxchg.org> <20190524160417.GB1075@bombadil.infradead.org>
- <20190524173900.GA11702@cmpxchg.org>
+From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Subject: Re: [PATCH v3 bpf-next 0/4] cgroup bpf auto-detachment
+Date: Fri, 24 May 2019 14:03:23 -0700
+Message-ID: <20190524210321.tzpt7ilaasaagtou@ast-mbp.dhcp.thefacebook.com>
+References: <20190523194532.2376233-1-guro@fb.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ac3B/Xe+w3ROTUibljmXKgMNFheZh3fEEGPnecMKhL8=;
-        b=r1OoUil15z41t05s7Vkc/zjldTqEYgmmxywmhKuW54yfFoy/DzoLQdlPOyYRIwSPds
-         sEHDpgwMAcqLq1YXHhMikBuTJisl+J2t2x60kdRX3fh+DCltNpsWy5VjfrYhj93J/WV9
-         hrRLr/L897Xl/6cxVjDjl8EB/mnP3sCPl+QE8oW6qtneUdfiqvfxgUyLSqP/wtg/foth
-         i+Wxt0gU2HJ0rfVhaCvQ6415HVjOy7xHl2d9q0YhQjQFIqCXXQvxMliZxaEgaiXcRr6u
-         Ovm0UwnXvMH3SnusLsATmcCksvmzuf4hl8kotBCewE2zc/q8LmW+uDruXRlmZFlvwfT8
-         EPlw==
-In-Reply-To: <20190524173900.GA11702@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=veCSDwIU7Xf8XfmuNtrrDmEH89bB2GKhK9A6gPb0QBQ=;
+        b=Xvnk4WTmydtuFb0RyGDZKhWc3ExxFqVv7ezG/mmUmkVCCtF/hUKBOl8UVVEHqoTZjr
+         TW5Af5FcpTcmy5+sW/IQm8EyyF1mD9A2B3bA4Nuv/k8XRCA9M+7pu9wTJOLeLsFOV2RR
+         N4Yu077B5V8hQVtKNnDA3B5NFq+KTAl6JfPBEdVsn/1EurfX6X511EiATEcQzceWWk1g
+         n0JDHHrlNWnPzKnPj/sjphXkrRosoIMqqvg0bfJQW0WTxwwJrcONCdQzmkOWQNqUJkW6
+         sTiMfuXkgYHbbxX59nBcLJRCoY4Kfor6nrwx8VJNTSkEwX/NNOV3OCkca3Q6PYR/hpgL
+         RNzg==
+Content-Disposition: inline
+In-Reply-To: <20190523194532.2376233-1-guro@fb.com>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Matthew Wilcox <willy@infradead.org>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <kernel-team@fb.com>
+To: Roman Gushchin <guro@fb.com>
+Cc: Alexei Starovoitov <ast@kernel.org>, bpf@vger.kernel.org, Daniel Borkmann <daniel@iogearbox.net>, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, Stanislav Fomichev <sdf@fomichev.me>, Yonghong Song <yhs@fb.com>, linux-kernel@vger.kernel.org
 
-On Fri, May 24, 2019 at 10:41 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
->
-> On Fri, May 24, 2019 at 09:04:17AM -0700, Matthew Wilcox wrote:
-> > On Fri, May 24, 2019 at 11:31:48AM -0400, Johannes Weiner wrote:
-> > > diff --git a/include/linux/xarray.h b/include/linux/xarray.h
-> > > index 0e01e6129145..cbbf76e4c973 100644
-> > > --- a/include/linux/xarray.h
-> > > +++ b/include/linux/xarray.h
-> > > @@ -292,6 +292,7 @@ struct xarray {
-> > >     spinlock_t      xa_lock;
-> > >  /* private: The rest of the data structure is not to be used directly. */
-> > >     gfp_t           xa_flags;
-> > > +   gfp_t           xa_gfp;
-> > >     void __rcu *    xa_head;
-> > >  };
-> >
-> > No.  I'm willing to go for a xa_flag which says to use __GFP_ACCOUNT, but
-> > you can't add another element to the struct xarray.
->
-> Ok, we can generalize per-tree gfp flags later if necessary.
->
-> Below is the updated fix that uses an XA_FLAGS_ACCOUNT flag instead.
->
-> ---
-> From 63a0dbc571ff38f7c072c62d6bc28192debe37ac Mon Sep 17 00:00:00 2001
-> From: Johannes Weiner <hannes@cmpxchg.org>
-> Date: Fri, 24 May 2019 10:12:46 -0400
-> Subject: [PATCH] mm: fix page cache convergence regression
->
-> Since a28334862993 ("page cache: Finish XArray conversion"), on most
-> major Linux distributions, the page cache doesn't correctly transition
-> when the hot data set is changing, and leaves the new pages thrashing
-> indefinitely instead of kicking out the cold ones.
->
-> On a freshly booted, freshly ssh'd into virtual machine with 1G RAM
-> running stock Arch Linux:
->
-> [root@ham ~]# ./reclaimtest.sh
-> + dd of=workingset-a bs=1M count=0 seek=600
-> + cat workingset-a
-> + cat workingset-a
-> + cat workingset-a
-> + cat workingset-a
-> + cat workingset-a
-> + cat workingset-a
-> + cat workingset-a
-> + cat workingset-a
-> + ./mincore workingset-a
-> 153600/153600 workingset-a
-> + dd of=workingset-b bs=1M count=0 seek=600
-> + cat workingset-b
-> + cat workingset-b
-> + cat workingset-b
-> + cat workingset-b
-> + ./mincore workingset-a workingset-b
-> 104029/153600 workingset-a
-> 120086/153600 workingset-b
-> + cat workingset-b
-> + cat workingset-b
-> + cat workingset-b
-> + cat workingset-b
-> + ./mincore workingset-a workingset-b
-> 104029/153600 workingset-a
-> 120268/153600 workingset-b
->
-> workingset-b is a 600M file on a 1G host that is otherwise entirely
-> idle. No matter how often it's being accessed, it won't get cached.
->
-> While investigating, I noticed that the non-resident information gets
-> aggressively reclaimed - /proc/vmstat::workingset_nodereclaim. This is
-> a problem because a workingset transition like this relies on the
-> non-resident information tracked in the page cache tree of evicted
-> file ranges: when the cache faults are refaults of recently evicted
-> cache, we challenge the existing active set, and that allows a new
-> workingset to establish itself.
->
-> Tracing the shrinker that maintains this memory revealed that all page
-> cache tree nodes were allocated to the root cgroup. This is a problem,
-> because 1) the shrinker sizes the amount of non-resident information
-> it keeps to the size of the cgroup's other memory and 2) on most major
-> Linux distributions, only kernel threads live in the root cgroup and
-> everything else gets put into services or session groups:
->
-> [root@ham ~]# cat /proc/self/cgroup
-> 0::/user.slice/user-0.slice/session-c1.scope
->
-> As a result, we basically maintain no non-resident information for the
-> workloads running on the system, thus breaking the caching algorithm.
->
-> Looking through the code, I found the culprit in the above-mentioned
-> patch: when switching from the radix tree to xarray, it dropped the
-> __GFP_ACCOUNT flag from the tree node allocations - the flag that
-> makes sure the allocated memory gets charged to and tracked by the
-> cgroup of the calling process - in this case, the one doing the fault.
->
-> To fix this, allow xarray users to specify per-tree flag that makes
-> xarray allocate nodes using __GFP_ACCOUNT. Then restore the page cache
-> tree annotation to request such cgroup tracking for the cache nodes.
->
-> With this patch applied, the page cache correctly converges on new
-> workingsets again after just a few iterations:
->
-> [root@ham ~]# ./reclaimtest.sh
-> + dd of=workingset-a bs=1M count=0 seek=600
-> + cat workingset-a
-> + cat workingset-a
-> + cat workingset-a
-> + cat workingset-a
-> + cat workingset-a
-> + cat workingset-a
-> + cat workingset-a
-> + cat workingset-a
-> + ./mincore workingset-a
-> 153600/153600 workingset-a
-> + dd of=workingset-b bs=1M count=0 seek=600
-> + cat workingset-b
-> + ./mincore workingset-a workingset-b
-> 124607/153600 workingset-a
-> 87876/153600 workingset-b
-> + cat workingset-b
-> + ./mincore workingset-a workingset-b
-> 81313/153600 workingset-a
-> 133321/153600 workingset-b
-> + cat workingset-b
-> + ./mincore workingset-a workingset-b
-> 63036/153600 workingset-a
-> 153600/153600 workingset-b
->
-> Cc: stable@vger.kernel.org # 4.20+
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+On Thu, May 23, 2019 at 12:45:28PM -0700, Roman Gushchin wrote:
+> This patchset implements a cgroup bpf auto-detachment functionality:
+> bpf programs are detached as soon as possible after removal of the
+> cgroup, without waiting for the release of all associated resources.
 
-Reviewed-by: Shakeel Butt <shakeelb@google.com>
+The idea looks great, but doesn't quite work:
+
+$ ./test_cgroup_attach
+#override:PASS
+[   66.475219] BUG: sleeping function called from invalid context at ../include/linux/percpu-rwsem.h:34
+[   66.476095] in_atomic(): 1, irqs_disabled(): 0, pid: 21, name: ksoftirqd/2
+[   66.476706] CPU: 2 PID: 21 Comm: ksoftirqd/2 Not tainted 5.2.0-rc1-00211-g1861420d0162 #1564
+[   66.477595] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.0-2.el7 04/01/2014
+[   66.478360] Call Trace:
+[   66.478591]  dump_stack+0x5b/0x8b
+[   66.478892]  ___might_sleep+0x22f/0x290
+[   66.479230]  cpus_read_lock+0x18/0x50
+[   66.479550]  static_key_slow_dec+0x41/0x70
+[   66.479914]  cgroup_bpf_release+0x1a6/0x400
+[   66.480285]  percpu_ref_switch_to_atomic_rcu+0x203/0x330
+[   66.480754]  rcu_core+0x475/0xcc0
+[   66.481047]  ? switch_mm_irqs_off+0x684/0xa40
+[   66.481422]  ? rcu_note_context_switch+0x260/0x260
+[   66.481842]  __do_softirq+0x1cf/0x5ff
+[   66.482174]  ? takeover_tasklets+0x5f0/0x5f0
+[   66.482542]  ? smpboot_thread_fn+0xab/0x780
+[   66.482911]  run_ksoftirqd+0x1a/0x40
+[   66.483225]  smpboot_thread_fn+0x3ad/0x780
+[   66.483583]  ? sort_range+0x20/0x20
+[   66.483894]  ? __kthread_parkme+0xb0/0x190
+[   66.484253]  ? sort_range+0x20/0x20
+[   66.484562]  ? sort_range+0x20/0x20
+[   66.484878]  kthread+0x2e2/0x3e0
+[   66.485166]  ? kthread_create_worker_on_cpu+0xb0/0xb0
+[   66.485620]  ret_from_fork+0x1f/0x30
+
+Same test runs fine before the patches.
+
