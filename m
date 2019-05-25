@@ -1,50 +1,41 @@
-From: shuah <shuah@kernel.org>
-Subject: Re: [PATCH v2 1/3] kselftest/cgroup: fix unexpected testing failure
- on test_memcontrol
-Date: Fri, 24 May 2019 18:06:39 -0600
-Message-ID: <ea5514c1-80a1-3c41-de1c-43582b6f1a49@kernel.org>
-References: <20190520030140.203605-1-alex.shi@linux.alibaba.com>
- <20190520030140.203605-2-alex.shi@linux.alibaba.com>
- <20190524214035.GG374014@devbig004.ftw2.facebook.com>
- <0c6b76b8-e20c-33f0-21da-64a5d5da30a9@kernel.org>
+From: Alexei Starovoitov <alexei.starovoitov@gmail.com>
+Subject: Re: [PATCH v4 bpf-next 0/4] cgroup bpf auto-detachment
+Date: Fri, 24 May 2019 19:57:17 -0700
+Message-ID: <CAADnVQK7uukL5=S=96BrU7YOyxidA4Pnm3rPRoGy45bJU=_8tA@mail.gmail.com>
+References: <20190524235156.4076591-1-guro@fb.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1558742800;
-        bh=R5AKhhljVFaewfHEJrRuX+cMSqD/1Iy0pRTZaZD5wOA=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=gCiElU+nd/lFG9ym/Rld6sfSG6dgF4ypBbDXnsWuBOAJPxmOH5Ruw1x0wSNYyzIkd
-         gqUvYt2Y1Hy9DiuXT88sEqhkTCfDgtxngUDv7/Zax9v7o/YFOOvrbPtp66lSut0EWI
-         t6IPvgPj2T76F4J4cGrkn+8xspQXslqqsQa5l2hI=
-In-Reply-To: <0c6b76b8-e20c-33f0-21da-64a5d5da30a9@kernel.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=riyApgsTYeHf2zY9V/AMEGkb7h3Dl4SpcWBAI87ws7o=;
+        b=Cr2EYgUjkeLHCtvqjSOGW9oFUeSPO02ig9NkKOBRRNy0fICJ7Ng/0FaVg2RY/yn8+m
+         fz1gqwEe5Nghmb5/L0O5hssEIMkWS1e+FyPTKJK9O30frk2ZuXUF4A7Sv0KDahcfE8zk
+         YtliVApzcXpsSSdDiNfKn6Sw5q+kJFunCzZVbDdOtbLiZwofrEhlj/bp58LcT/3UnmF0
+         2/ydota/TCeN+DqRA829wZP16pG24a5l/A9vt+NrcUhcK1FAB9OpXT6DXYRCXKa5H0+K
+         2rBqm9geg/dPXJDCyYojiykzXs+Q4uq2kfpSoHY55opQgPFJZNGpg74TUPicJdisQ2Ei
+         eBvA==
+In-Reply-To: <20190524235156.4076591-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Tejun Heo <tj@kernel.org>, Alex Shi <alex.shi@linux.alibaba.com>
-Cc: cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, Jay Kamat <jgkamat@fb.com>, linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, shuah <shuah@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro@fb.com>
+Cc: Alexei Starovoitov <ast@kernel.org>, bpf <bpf@vger.kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Network Development <netdev@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Kernel Team <kernel-team@fb.com>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, Stanislav Fomichev <sdf@fomichev.me>, Yonghong Song <yhs@fb.com>, LKML <linux-kernel@vger.kernel.org>
 
-On 5/24/19 3:44 PM, shuah wrote:
-> On 5/24/19 3:40 PM, Tejun Heo wrote:
->> Hello,
->>
->> All three patches look good to me.  Please feel free to add my
->> acked-by.  Shuah, should I route these through cgroup tree or would
->> the kselftest tree be a better fit?
->>
->> Thanks.
->>
-> 
-> 
-> Tejun, I can take them through kselftest tree.
-> 
+On Fri, May 24, 2019 at 4:52 PM Roman Gushchin <guro@fb.com> wrote:
+>
+> This patchset implements a cgroup bpf auto-detachment functionality:
+> bpf programs are detached as soon as possible after removal of the
+> cgroup, without waiting for the release of all associated resources.
+>
+> Patches 2 and 3 are required to implement a corresponding kselftest
+> in patch 4.
+>
+> v4:
+>   1) release cgroup bpf data using a workqueue
+>   2) add test_cgroup_attach to .gitignore
 
-Alex,
-
-patches 1/3 and 2/3 failed checkpatch. Could you please the warns
-and send v3. Go ahead and send all v3 for all 3 patches
-
-thanks,
--- Shuah
-
+There is a conflict in tools/testing/selftests/bpf/Makefile
+Please rebase
