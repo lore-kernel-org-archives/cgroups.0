@@ -1,66 +1,33 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v3 1/3] kselftest/cgroup: fix unexpected testing failure on test_memcontrol
-Date: Mon, 27 May 2019 14:28:05 +0800
-Message-ID: <20190527062807.93404-1-alex.shi@linux.alibaba.com>
+Subject: Re: [PATCH v2 1/3] kselftest/cgroup: fix unexpected testing failure
+ on test_memcontrol
+Date: Mon, 27 May 2019 14:30:33 +0800
+Message-ID: <3db110a3-0662-24ae-ef0a-cde3deee99ea@linux.alibaba.com>
+References: <20190520030140.203605-1-alex.shi@linux.alibaba.com>
+ <20190520030140.203605-2-alex.shi@linux.alibaba.com>
+ <20190524214035.GG374014@devbig004.ftw2.facebook.com>
+ <0c6b76b8-e20c-33f0-21da-64a5d5da30a9@kernel.org>
+ <ea5514c1-80a1-3c41-de1c-43582b6f1a49@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <ea5514c1-80a1-3c41-de1c-43582b6f1a49@kernel.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: cgroups@vger.kernel.org
-Cc: Alex Shi <alex.shi@linux.alibaba.com>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, Mike Rapoport <rppt@linux.vnet.ibm.com>, Jay Kamat <jgkamat@fb.com>, linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: shuah <shuah@kernel.org>, Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, Jay Kamat <jgkamat@fb.com>, linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The cgroup testing relies on the root cgroup's subtree_control setting,
-If the 'memory' controller isn't set, all test cases will be failed
-as following:
 
-$ sudo ./test_memcontrol
-not ok 1 test_memcg_subtree_control
-not ok 2 test_memcg_current
-ok 3 # skip test_memcg_min
-not ok 4 test_memcg_low
-not ok 5 test_memcg_high
-not ok 6 test_memcg_max
-not ok 7 test_memcg_oom_events
-ok 8 # skip test_memcg_swap_max
-not ok 9 test_memcg_sock
-not ok 10 test_memcg_oom_group_leaf_events
-not ok 11 test_memcg_oom_group_parent_events
-not ok 12 test_memcg_oom_group_score_events
 
-To correct this unexpected failure, this patch write the 'memory' to
-subtree_control of root to get a right result.
+On 2019/5/25 8:06 上午, shuah wrote:
+> Alex,
+> 
+> patches 1/3 and 2/3 failed checkpatch. Could you please the warns
+> and send v3. Go ahead and send all v3 for all 3 patches
 
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Shuah Khan <shuah@kernel.org>
-Cc: Roman Gushchin <guro@fb.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Mike Rapoport <rppt@linux.vnet.ibm.com>
-Cc: Jay Kamat <jgkamat@fb.com>
-Cc: linux-kselftest@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Reviewed-by: Roman Gushchin <guro@fb.com>
-Acked-by: Tejun Heo <tj@kernel.org>
----
- tools/testing/selftests/cgroup/test_memcontrol.c | 4 ++++
- 1 file changed, 4 insertions(+)
+fixed and rent. 
 
-diff --git a/tools/testing/selftests/cgroup/test_memcontrol.c b/tools/testing/selftests/cgroup/test_memcontrol.c
-index 6f339882a6ca..c19a97dd02d4 100644
---- a/tools/testing/selftests/cgroup/test_memcontrol.c
-+++ b/tools/testing/selftests/cgroup/test_memcontrol.c
-@@ -1205,6 +1205,10 @@ int main(int argc, char **argv)
- 	if (cg_read_strstr(root, "cgroup.controllers", "memory"))
- 		ksft_exit_skip("memory controller isn't available\n");
- 
-+	if (cg_read_strstr(root, "cgroup.subtree_control", "memory"))
-+		if (cg_write(root, "cgroup.subtree_control", "+memory"))
-+			ksft_exit_skip("Failed to set memory controller\n");
-+
- 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
- 		switch (tests[i].fn(root)) {
- 		case KSFT_PASS:
--- 
-2.19.1.856.g8858448bb
-
+Thanks a lot! 
+Alex 
