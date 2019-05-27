@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v3 2/3] kselftest/cgroup: fix unexpected testing failure on test_core
-Date: Mon, 27 May 2019 14:28:06 +0800
-Message-ID: <20190527062807.93404-2-alex.shi@linux.alibaba.com>
+Subject: [PATCH v3 3/3] kselftest/cgroup: fix incorrect test_core skip
+Date: Mon, 27 May 2019 14:28:07 +0800
+Message-ID: <20190527062807.93404-3-alex.shi@linux.alibaba.com>
 References: <20190527062807.93404-1-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -13,18 +13,15 @@ Content-Type: text/plain; charset="us-ascii"
 To: cgroups@vger.kernel.org
 Cc: Alex Shi <alex.shi@linux.alibaba.com>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, Mike Rapoport <rppt@linux.vnet.ibm.com>, Jay Kamat <jgkamat@fb.com>, linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, Claudio Zumbo <claudioz@fb.com>, Claudio <claudiozumbo@gmail.com>
 
-The cgroup testing relys on the root cgroup's subtree_control setting,
-If the 'memory' controller isn't set, some test cases will be failed
-as following:
+The test_core will skip the
+test_cgcore_no_internal_process_constraint_on_threads test case if the
+'cpu' controller missing in root's subtree_control. In fact we need to
+set the 'cpu' in subtree_control, to make the testing meaningful.
 
-$sudo  ./test_core
-not ok 1 test_cgcore_internal_process_constraint
-ok 2 test_cgcore_top_down_constraint_enable
-not ok 3 test_cgcore_top_down_constraint_disable
+./test_core
 ...
-
-To correct this unexpected failure, this patch write the 'memory' to
-subtree_control of root to get a right result.
+ok 4 # skip test_cgcore_no_internal_process_constraint_on_threads
+...
 
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
 Cc: Shuah Khan <shuah@kernel.org>
@@ -37,25 +34,22 @@ Cc: linux-kernel@vger.kernel.org
 Reviewed-by: Roman Gushchin <guro@fb.com>
 Acked-by: Tejun Heo <tj@kernel.org>
 ---
- tools/testing/selftests/cgroup/test_core.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ tools/testing/selftests/cgroup/test_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/tools/testing/selftests/cgroup/test_core.c b/tools/testing/selftests/cgroup/test_core.c
-index be59f9c34ea2..d78f1c5366d3 100644
+index d78f1c5366d3..79053a4f4783 100644
 --- a/tools/testing/selftests/cgroup/test_core.c
 +++ b/tools/testing/selftests/cgroup/test_core.c
-@@ -376,6 +376,11 @@ int main(int argc, char *argv[])
+@@ -198,7 +198,7 @@ static int test_cgcore_no_internal_process_constraint_on_threads(const char *roo
+ 	char *parent = NULL, *child = NULL;
  
- 	if (cg_find_unified_root(root, sizeof(root)))
- 		ksft_exit_skip("cgroup v2 isn't mounted\n");
-+
-+	if (cg_read_strstr(root, "cgroup.subtree_control", "memory"))
-+		if (cg_write(root, "cgroup.subtree_control", "+memory"))
-+			ksft_exit_skip("Failed to set memory controller\n");
-+
- 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
- 		switch (tests[i].fn(root)) {
- 		case KSFT_PASS:
+ 	if (cg_read_strstr(root, "cgroup.controllers", "cpu") ||
+-	    cg_read_strstr(root, "cgroup.subtree_control", "cpu")) {
++	    cg_write(root, "cgroup.subtree_control", "+cpu")) {
+ 		ret = KSFT_SKIP;
+ 		goto cleanup;
+ 	}
 -- 
 2.19.1.856.g8858448bb
 
