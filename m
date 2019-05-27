@@ -1,110 +1,61 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: [PATCH v5 bpf-next 3/4] selftests/bpf: enable all available cgroup v2 controllers
-Date: Sat, 25 May 2019 09:37:41 -0700
-Message-ID: <20190525163742.2616471-4-guro@fb.com>
-References: <20190525163742.2616471-1-guro@fb.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: [PATCH v3 2/3] kselftest/cgroup: fix unexpected testing failure on test_core
+Date: Mon, 27 May 2019 14:28:06 +0800
+Message-ID: <20190527062807.93404-2-alex.shi@linux.alibaba.com>
+References: <20190527062807.93404-1-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-type; s=facebook; bh=lKhanow2gCoKTpUe2uSEXYyid+Hsa+6G59YaV2LcGMw=;
- b=TGSed2VJDZP1+kKX1HnQpAO/Zm8VWr/wATK/sU+BJi4Zi9Rcrw/Oe3DnJohlT162AxBg
- 19f72gpGSIeNeRTI5O5sY5yuyqPRsH2i524/meFsVEWRQI/Pzvtdu7+NktXrJ+GXjrN6
- q6hLeGtnQV4S9Q4tI/myhHiqxxRKmkvDyss= 
-In-Reply-To: <20190525163742.2616471-1-guro@fb.com>
+In-Reply-To: <20190527062807.93404-1-alex.shi@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alexei Starovoitov <ast@kernel.org>, bpf@vger.kernel.org
-Cc: Daniel Borkmann <daniel@iogearbox.net>, netdev@vger.kernel.org, Tejun Heo <tj@kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, Stanislav Fomichev <sdf@fomichev.me>, Yonghong Song <yhs@fb.com>, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>
+To: cgroups@vger.kernel.org
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, Shuah Khan <shuah@kernel.org>, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, Mike Rapoport <rppt@linux.vnet.ibm.com>, Jay Kamat <jgkamat@fb.com>, linux-kselftest@vger.kernel.org, linux-kernel@vger.kernel.org, Claudio Zumbo <claudioz@fb.com>, Claudio <claudiozumbo@gmail.com>
 
-Enable all available cgroup v2 controllers when setting up
-the environment for the bpf kselftests. It's required to properly test
-the bpf prog auto-detach feature. Also it will generally increase
-the code coverage.
+The cgroup testing relys on the root cgroup's subtree_control setting,
+If the 'memory' controller isn't set, some test cases will be failed
+as following:
 
-Signed-off-by: Roman Gushchin <guro@fb.com>
-Acked-by: Yonghong Song <yhs@fb.com>
+$sudo  ./test_core
+not ok 1 test_cgcore_internal_process_constraint
+ok 2 test_cgcore_top_down_constraint_enable
+not ok 3 test_cgcore_top_down_constraint_disable
+...
+
+To correct this unexpected failure, this patch write the 'memory' to
+subtree_control of root to get a right result.
+
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Shuah Khan <shuah@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Roman Gushchin <guro@fb.com>
+Cc: Claudio Zumbo <claudioz@fb.com>
+Cc: Claudio <claudiozumbo@gmail.com>
+Cc: linux-kselftest@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Reviewed-by: Roman Gushchin <guro@fb.com>
+Acked-by: Tejun Heo <tj@kernel.org>
 ---
- tools/testing/selftests/bpf/cgroup_helpers.c | 57 ++++++++++++++++++++
- 1 file changed, 57 insertions(+)
+ tools/testing/selftests/cgroup/test_core.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/tools/testing/selftests/bpf/cgroup_helpers.c b/tools/testing/selftests/bpf/cgroup_helpers.c
-index 6692a40a6979..0d89f0396be4 100644
---- a/tools/testing/selftests/bpf/cgroup_helpers.c
-+++ b/tools/testing/selftests/bpf/cgroup_helpers.c
-@@ -33,6 +33,60 @@
- 	snprintf(buf, sizeof(buf), "%s%s%s", CGROUP_MOUNT_PATH, \
- 		 CGROUP_WORK_DIR, path)
+diff --git a/tools/testing/selftests/cgroup/test_core.c b/tools/testing/selftests/cgroup/test_core.c
+index be59f9c34ea2..d78f1c5366d3 100644
+--- a/tools/testing/selftests/cgroup/test_core.c
++++ b/tools/testing/selftests/cgroup/test_core.c
+@@ -376,6 +376,11 @@ int main(int argc, char *argv[])
  
-+/**
-+ * enable_all_controllers() - Enable all available cgroup v2 controllers
-+ *
-+ * Enable all available cgroup v2 controllers in order to increase
-+ * the code coverage.
-+ *
-+ * If successful, 0 is returned.
-+ */
-+int enable_all_controllers(char *cgroup_path)
-+{
-+	char path[PATH_MAX + 1];
-+	char buf[PATH_MAX];
-+	char *c, *c2;
-+	int fd, cfd;
-+	size_t len;
+ 	if (cg_find_unified_root(root, sizeof(root)))
+ 		ksft_exit_skip("cgroup v2 isn't mounted\n");
 +
-+	snprintf(path, sizeof(path), "%s/cgroup.controllers", cgroup_path);
-+	fd = open(path, O_RDONLY);
-+	if (fd < 0) {
-+		log_err("Opening cgroup.controllers: %s", path);
-+		return 1;
-+	}
++	if (cg_read_strstr(root, "cgroup.subtree_control", "memory"))
++		if (cg_write(root, "cgroup.subtree_control", "+memory"))
++			ksft_exit_skip("Failed to set memory controller\n");
 +
-+	len = read(fd, buf, sizeof(buf) - 1);
-+	if (len < 0) {
-+		close(fd);
-+		log_err("Reading cgroup.controllers: %s", path);
-+		return 1;
-+	}
-+	buf[len] = 0;
-+	close(fd);
-+
-+	/* No controllers available? We're probably on cgroup v1. */
-+	if (len == 0)
-+		return 0;
-+
-+	snprintf(path, sizeof(path), "%s/cgroup.subtree_control", cgroup_path);
-+	cfd = open(path, O_RDWR);
-+	if (cfd < 0) {
-+		log_err("Opening cgroup.subtree_control: %s", path);
-+		return 1;
-+	}
-+
-+	for (c = strtok_r(buf, " ", &c2); c; c = strtok_r(NULL, " ", &c2)) {
-+		if (dprintf(cfd, "+%s\n", c) <= 0) {
-+			log_err("Enabling controller %s: %s", c, path);
-+			close(cfd);
-+			return 1;
-+		}
-+	}
-+	close(cfd);
-+	return 0;
-+}
-+
- /**
-  * setup_cgroup_environment() - Setup the cgroup environment
-  *
-@@ -71,6 +125,9 @@ int setup_cgroup_environment(void)
- 		return 1;
- 	}
- 
-+	if (enable_all_controllers(cgroup_workdir))
-+		return 1;
-+
- 	return 0;
- }
- 
+ 	for (i = 0; i < ARRAY_SIZE(tests); i++) {
+ 		switch (tests[i].fn(root)) {
+ 		case KSFT_PASS:
 -- 
-2.21.0
+2.19.1.856.g8858448bb
 
