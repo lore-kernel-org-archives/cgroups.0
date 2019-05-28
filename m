@@ -1,50 +1,57 @@
-From: Dave Chiluk <chiluk+linux@indeed.com>
-Subject: Re: [PATCH v2 1/1] sched/fair: Fix low cpu usage with high throttling
- by removing expiration of cpu-local slices
-Date: Tue, 28 May 2019 17:25:22 -0500
-Message-ID: <CAC=E7cVrLFDOm3uNQ_45DzmMVJ_i9bNvjsi7yRPaPe0HcaykUg@mail.gmail.com>
-References: <1558121424-2914-1-git-send-email-chiluk+linux@indeed.com>
- <1558637087-20283-1-git-send-email-chiluk+linux@indeed.com>
- <1558637087-20283-2-git-send-email-chiluk+linux@indeed.com>
- <CAFTs51W0KdK4nw6wydn2HjNYvFRC8DYMmVeKX9FAe+4YUGEAZg@mail.gmail.com>
- <20190524143204.GB4684@lorien.usersys.redhat.com> <CAC=E7cXxsyMLw1PR+8QchTH8FYL7WX6_8LBVdqueR1yjW+VVkQ@mail.gmail.com>
- <CAFTs51Vm258CkDXi_Jj_cGOMotTvhdYR_VW8aUwAUvgistZOFQ@mail.gmail.com>
- <CAC=E7cXVrGRKMNkJPhd4fJi7wgdYk=YcXPV7B8GVNL5M69BarQ@mail.gmail.com> <CAFTs51VhpDk9iW5UT62CkPCN3SjgUHHO1nVqhe+ssHMYqou6Bg@mail.gmail.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v5 5/7] mm: rework non-root kmem_cache lifecycle
+ management
+Date: Tue, 28 May 2019 22:28:51 +0000
+Message-ID: <20190528222847.GE27847@tower.DHCP.thefacebook.com>
+References: <20190521200735.2603003-1-guro@fb.com>
+ <20190521200735.2603003-6-guro@fb.com> <20190528220353.GC26614@cmpxchg.org>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=indeed.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=M9EQwLvAO9oXFChsQAamKMxe068zBhP/svdhcV040aU=;
-        b=oZO5Y0/DQnUWbpFkchPEk+KHgUZmbFsV53HDF5Y2snBl8sfk23OBpMHuYhiQnjogbn
-         Pypla7gFHvnyePY6+WprzNqKLk3FagutRMWa9TFsABvcrJGecUYKfDQk8MBHawwtWdLt
-         nT+OHEv2XEM1YDavmsCLBLsIK2pCcvpfcsM94=
-In-Reply-To: <CAFTs51VhpDk9iW5UT62CkPCN3SjgUHHO1nVqhe+ssHMYqou6Bg@mail.gmail.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=BqXrZYH8sAaIkc8wS42rAiXcrgzZJ8PEYyOJZew7260=;
+ b=bJeQPDz5+RldEeWucq7npQkgDLVkDJHnjE1C7txLMO0hEbjmBTLTLhbJcMYMsyAp2nuD
+ 7cDoEBk6m8RMx26tbta3gIFD/ih/A0KRm8h5TFVdR+WnHs2PSPnblWKchdFXl5ZziRZ5
+ BLw80p7bespEMYEQ4oXLd/64GyGYflKMo3g= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=BqXrZYH8sAaIkc8wS42rAiXcrgzZJ8PEYyOJZew7260=;
+ b=W5H/OB32nlYnyCx1cX+yqAc+BMQLLLnII/4CTmGvxwMg/BcQM2NqiYDfwc3dgAigFO7KHR5exNJEC7P4a72HNMkFW2i1EA6lhzxkSCnXeiH3HIwFp15LUvGesIRMMFYmTqPZo9R2ERe05ydABJxjraBtpY9CuDD1hKF5rZTEOxY=
+In-Reply-To: <20190528220353.GC26614@cmpxchg.org>
+Content-Language: en-US
+Content-ID: <CA0D957DFE75114BB468938EE4F4C758@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Peter Oskolkov <posk@posk.io>
-Cc: Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Brendan Gregg <bgregg@netflix.com>, Kyle Anderson <kwa@yelp.com>, Gabriel Munos <gmunoz@netflix.com>, John Hammond <jhammond@indeed.com>, Cong Wang <xiyou.wangcong@gmail.com>, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org, Ben Segall <bsegall@google.com>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Shakeel Butt <shakeelb@google.com>, Christoph Lameter <cl@linux.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Waiman Long <longman@redhat.com>
 
-On Fri, May 24, 2019 at 5:07 PM Peter Oskolkov <posk@posk.io> wrote:
-> Linux CPU scheduling tail latency is a well-known issue and a major
-> pain point in some workloads:
-> https://www.google.com/search?q=linux+cpu+scheduling+tail+latency
->
-> Even assuming that nobody noticed this particular cause
-> of CPU scheduling latencies, it does not mean the problem should be waved
-> away. At least it should be documented, if at this point it decided that
-> it is difficult to address it in a meaningful way. And, preferably, a way
-> to address the issue later on should be discussed and hopefully agreed to.
+On Tue, May 28, 2019 at 06:03:53PM -0400, Johannes Weiner wrote:
+> On Tue, May 21, 2019 at 01:07:33PM -0700, Roman Gushchin wrote:
+> > +	arr =3D rcu_dereference(cachep->memcg_params.memcg_caches);
+> > +
+> > +	/*
+> > +	 * Make sure we will access the up-to-date value. The code updating
+> > +	 * memcg_caches issues a write barrier to match this (see
+> > +	 * memcg_create_kmem_cache()).
+> > +	 */
+> > +	memcg_cachep =3D READ_ONCE(arr->entries[kmemcg_id]);
+>=20
+> READ_ONCE() isn't an SMP barrier, it just prevents compiler
+> muckery. This needs an explicit smp_rmb() to pair with the smp_wmb()
+> on the other side.
 
-Pursuing reducing tail latencies for our web application is the
-precise reason I created this patch set.  Those applications that
-previously were responding in 20ms 95% where now taking 220ms.  Those
-were correctly sized applications prior to 512ac999. After which, they
-started seeing massive increases in their latencies  due to hitting
-throttling with lower than quota amounts of cpu usage.
+I believe rcu_dereference()/rcu_assign_pointer()/... are better replacement=
+s.
 
-I'll see if I can rework the documentation.  Any specific
-suggestions for how that can be worded would be appreciated.
+>=20
+> I realize you're only moving this code, but it would be good to fix
+> that up while you're there.
+
+Right. I'll try to fix it with new-ish rcu API in a separate patch
+preceding this one.
+
+Thank you for looking into the series!
