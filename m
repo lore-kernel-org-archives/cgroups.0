@@ -1,86 +1,50 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v5 6/7] mm: reparent slab memory on cgroup removal
-Date: Tue, 28 May 2019 18:16:14 -0400
-Message-ID: <20190528221614.GD26614@cmpxchg.org>
-References: <20190521200735.2603003-1-guro@fb.com>
- <20190521200735.2603003-7-guro@fb.com>
- <20190528183302.zv75bsxxblc6v4dt@esperanza>
- <20190528195808.GA27847@tower.DHCP.thefacebook.com>
+From: Dave Chiluk <chiluk+linux@indeed.com>
+Subject: Re: [PATCH v2 1/1] sched/fair: Fix low cpu usage with high throttling
+ by removing expiration of cpu-local slices
+Date: Tue, 28 May 2019 17:25:22 -0500
+Message-ID: <CAC=E7cVrLFDOm3uNQ_45DzmMVJ_i9bNvjsi7yRPaPe0HcaykUg@mail.gmail.com>
+References: <1558121424-2914-1-git-send-email-chiluk+linux@indeed.com>
+ <1558637087-20283-1-git-send-email-chiluk+linux@indeed.com>
+ <1558637087-20283-2-git-send-email-chiluk+linux@indeed.com>
+ <CAFTs51W0KdK4nw6wydn2HjNYvFRC8DYMmVeKX9FAe+4YUGEAZg@mail.gmail.com>
+ <20190524143204.GB4684@lorien.usersys.redhat.com> <CAC=E7cXxsyMLw1PR+8QchTH8FYL7WX6_8LBVdqueR1yjW+VVkQ@mail.gmail.com>
+ <CAFTs51Vm258CkDXi_Jj_cGOMotTvhdYR_VW8aUwAUvgistZOFQ@mail.gmail.com>
+ <CAC=E7cXVrGRKMNkJPhd4fJi7wgdYk=YcXPV7B8GVNL5M69BarQ@mail.gmail.com> <CAFTs51VhpDk9iW5UT62CkPCN3SjgUHHO1nVqhe+ssHMYqou6Bg@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=SLwBA8MbvD2QC0ep8E6TWiO4osZD4fu2h/9Z2V53XVU=;
-        b=1U+7o4fD7tmYoGz+yUlK3xEC1BolyoWKEYDkAchX/oKTIdCJ03mkyuokQEfbvRSu2J
-         aGd9YozwjkbKIRGDOUx6V5TNQV10fBydRP3/Rref/HmapwqQZiV9R4GRFjbMDQgluno+
-         0zHhUoORAlPNG66tv0aBbi6J1l5JMOKKBFrNXSeq1LkzuGBuaLOfIVr2A802gf+RC1pL
-         +oa0FYRQhTCfhF5qx4XRkKaaxYuVA6TXhvlkdl7eTRQtFWHk8AIvAGmY8XmG0Lr5F0w0
-         2GAmIemcB/o8diV8Hr/dq8X+6wB9bHxgvYLAnWqThhUoTxyo31DHn2/FkNsat0MFD2go
-         3t4A==
-Content-Disposition: inline
-In-Reply-To: <20190528195808.GA27847@tower.DHCP.thefacebook.com>
+        d=indeed.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=M9EQwLvAO9oXFChsQAamKMxe068zBhP/svdhcV040aU=;
+        b=oZO5Y0/DQnUWbpFkchPEk+KHgUZmbFsV53HDF5Y2snBl8sfk23OBpMHuYhiQnjogbn
+         Pypla7gFHvnyePY6+WprzNqKLk3FagutRMWa9TFsABvcrJGecUYKfDQk8MBHawwtWdLt
+         nT+OHEv2XEM1YDavmsCLBLsIK2pCcvpfcsM94=
+In-Reply-To: <CAFTs51VhpDk9iW5UT62CkPCN3SjgUHHO1nVqhe+ssHMYqou6Bg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Shakeel Butt <shakeelb@google.com>, Christoph Lameter <cl@linux.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Waiman Long <longman@redhat.com>
+To: Peter Oskolkov <posk@posk.io>
+Cc: Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Brendan Gregg <bgregg@netflix.com>, Kyle Anderson <kwa@yelp.com>, Gabriel Munos <gmunoz@netflix.com>, John Hammond <jhammond@indeed.com>, Cong Wang <xiyou.wangcong@gmail.com>, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org, Ben Segall <bsegall@google.com>
 
-On Tue, May 28, 2019 at 07:58:17PM +0000, Roman Gushchin wrote:
-> On Tue, May 28, 2019 at 09:33:02PM +0300, Vladimir Davydov wrote:
-> > On Tue, May 21, 2019 at 01:07:34PM -0700, Roman Gushchin wrote:
-> > > Let's reparent memcg slab memory on memcg offlining. This allows us
-> > > to release the memory cgroup without waiting for the last outstanding
-> > > kernel object (e.g. dentry used by another application).
-> > > 
-> > > So instead of reparenting all accounted slab pages, let's do reparent
-> > > a relatively small amount of kmem_caches. Reparenting is performed as
-> > > a part of the deactivation process.
-> > > 
-> > > Since the parent cgroup is already charged, everything we need to do
-> > > is to splice the list of kmem_caches to the parent's kmem_caches list,
-> > > swap the memcg pointer and drop the css refcounter for each kmem_cache
-> > > and adjust the parent's css refcounter. Quite simple.
-> > > 
-> > > Please, note that kmem_cache->memcg_params.memcg isn't a stable
-> > > pointer anymore. It's safe to read it under rcu_read_lock() or
-> > > with slab_mutex held.
-> > > 
-> > > We can race with the slab allocation and deallocation paths. It's not
-> > > a big problem: parent's charge and slab global stats are always
-> > > correct, and we don't care anymore about the child usage and global
-> > > stats. The child cgroup is already offline, so we don't use or show it
-> > > anywhere.
-> > > 
-> > > Local slab stats (NR_SLAB_RECLAIMABLE and NR_SLAB_UNRECLAIMABLE)
-> > > aren't used anywhere except count_shadow_nodes(). But even there it
-> > > won't break anything: after reparenting "nodes" will be 0 on child
-> > > level (because we're already reparenting shrinker lists), and on
-> > > parent level page stats always were 0, and this patch won't change
-> > > anything.
-> > > 
-> > > Signed-off-by: Roman Gushchin <guro@fb.com>
-> > > Reviewed-by: Shakeel Butt <shakeelb@google.com>
-> > 
-> > This one looks good to me. I can't see why anything could possibly go
-> > wrong after this change.
-> 
-> Hi Vladimir!
-> 
-> Thank you for looking into the series. Really appreciate it!
-> 
-> It looks like outstanding questions are:
-> 1) synchronization around the dying flag
-> 2) removing CONFIG_SLOB in 2/7
-> 3) early sysfs_slab_remove()
-> 4) mem_cgroup_from_kmem in 7/7
-> 
-> Please, let me know if I missed anything.
-> 
-> I'm waiting now for Johanness's review, so I'll address these issues
-> in background and post the next (and hopefully) final version.
+On Fri, May 24, 2019 at 5:07 PM Peter Oskolkov <posk@posk.io> wrote:
+> Linux CPU scheduling tail latency is a well-known issue and a major
+> pain point in some workloads:
+> https://www.google.com/search?q=linux+cpu+scheduling+tail+latency
+>
+> Even assuming that nobody noticed this particular cause
+> of CPU scheduling latencies, it does not mean the problem should be waved
+> away. At least it should be documented, if at this point it decided that
+> it is difficult to address it in a meaningful way. And, preferably, a way
+> to address the issue later on should be discussed and hopefully agreed to.
 
-The todo items here aside, the series looks good to me - although I'm
-glad that Vladimir gave it a much more informed review than I could.
+Pursuing reducing tail latencies for our web application is the
+precise reason I created this patch set.  Those applications that
+previously were responding in 20ms 95% where now taking 220ms.  Those
+were correctly sized applications prior to 512ac999. After which, they
+started seeing massive increases in their latencies  due to hitting
+throttling with lower than quota amounts of cpu usage.
+
+I'll see if I can rework the documentation.  Any specific
+suggestions for how that can be worded would be appreciated.
