@@ -1,25 +1,25 @@
 From: Vladimir Davydov <vdavydov.dev@gmail.com>
-Subject: Re: [PATCH v5 5/7] mm: rework non-root kmem_cache lifecycle
- management
-Date: Tue, 28 May 2019 20:08:28 +0300
-Message-ID: <20190528170828.zrkvcdsj3d3jzzzo@esperanza>
+Subject: Re: [PATCH v5 2/7] mm: generalize postponed non-root kmem_cache
+ deactivation
+Date: Tue, 28 May 2019 20:11:26 +0300
+Message-ID: <20190528171126.oaneakkydwyzied6@esperanza>
 References: <20190521200735.2603003-1-guro@fb.com>
- <20190521200735.2603003-6-guro@fb.com>
+ <20190521200735.2603003-3-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=eSIxYkcdixCKshTAAgauoFvEH6o7/CVdQzS8JHWoXBo=;
-        b=CxnItHnsesXuxSeLCbxyq9Qzebn6SCvY7q8rl4VSmEDy6OgJ33k/LviCwobWrOuX31
-         8h3CjYytq2Qx3nRTG89frfKemk4goXBw00VmBONWrQm4RT9R44DJeELSUtXUNVUQI3Pi
-         2h+Th+gatt1NdMJg2oX2E5N6sG2jpK7/koWX3EImvxbOcuDaGa2EUDwtGAhn6D64yBdi
-         G06hZlGysibO+bGEz4LUuV0RdSzVDDDOBq8hKFKQbuF30D7KJNpyDfc3gXNtdFAZkWnT
-         foF0Icqh0P0qkvbJiWMumfU8C+MFlL2P54vZ7Z2y3GUbEJiJ/8imYCJkKIAWN0Ic0y4G
-         cojg==
+        bh=A8QVP2Qf5aJcHIy8l49WfRPomDE8uUrBG/3Am/yYNlU=;
+        b=tbj82VcOGB/BLqdwN+zId/aL1F3LbvsduOAs5GjftF3C0NFgGGQfU7vrCi+8ZFR4Ew
+         uMeDuC9cIWItsZjEU/EYdPtcQbKmV0dwqkHg9AKjbOptmKOd7+DPQ5dAVm05PXKt+oqr
+         Td+xYmJbU2LeazwHzmVCPZVcSIPUATTVRVMsqa/4LHzrIbZLk9+XKgatIB2qZQOx+2ZA
+         HWq/fedWq82lYNQt9lABwgmMYVhppMEEmA50HzdtSJIgMvQoAuTqzJ3bJoQ5o3mjftyT
+         3JTeLVmb57ufyHL1txvLiGXT8sTJqMyPMloJLNcl+S/m1XAOixYz0YB+OWBWw35SNfR1
+         S1Yw==
 Content-Disposition: inline
-In-Reply-To: <20190521200735.2603003-6-guro@fb.com>
+In-Reply-To: <20190521200735.2603003-3-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -27,139 +27,29 @@ Content-Transfer-Encoding: 7bit
 To: Roman Gushchin <guro@fb.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Shakeel Butt <shakeelb@google.com>, Christoph Lameter <cl@linux.com>, cgroups@vger.kernel.org, Waiman Long <longman@redhat.com>
 
-Hello Roman,
-
-On Tue, May 21, 2019 at 01:07:33PM -0700, Roman Gushchin wrote:
-> This commit makes several important changes in the lifecycle
-> of a non-root kmem_cache, which also affect the lifecycle
-> of a memory cgroup.
-> 
-> Currently each charged slab page has a page->mem_cgroup pointer
-> to the memory cgroup and holds a reference to it.
-> Kmem_caches are held by the memcg and are released with it.
-> It means that none of kmem_caches are released unless at least one
-> reference to the memcg exists, which is not optimal.
-> 
-> So the current scheme can be illustrated as:
-> page->mem_cgroup->kmem_cache.
-> 
-> To implement the slab memory reparenting we need to invert the scheme
-> into: page->kmem_cache->mem_cgroup.
-> 
-> Let's make every page to hold a reference to the kmem_cache (we
-> already have a stable pointer), and make kmem_caches to hold a single
-> reference to the memory cgroup.
-
-Is there any reason why we can't reference both mem cgroup and kmem
-cache per each charged kmem page? I mean,
-
-  page->mem_cgroup references mem_cgroup
-  page->kmem_cache references kmem_cache
-  mem_cgroup references kmem_cache while it's online
-
-TBO it seems to me that not taking a reference to mem cgroup per charged
-kmem page makes the code look less straightforward, e.g. as you
-mentioned in the commit log, we have to use mod_lruvec_state() for memcg
-pages and mod_lruvec_page_state() for root pages.
-
-> 
-> To make this possible we need to introduce a new percpu refcounter
-> for non-root kmem_caches. The counter is initialized to the percpu
-> mode, and is switched to atomic mode after deactivation, so we never
-> shutdown an active cache. The counter is bumped for every charged page
-> and also for every running allocation. So the kmem_cache can't
-> be released unless all allocations complete.
-> 
-> To shutdown non-active empty kmem_caches, let's reuse the
-> infrastructure of the RCU-delayed work queue, used previously for
-> the deactivation. After the generalization, it's perfectly suited
-> for our needs.
-> 
-> Since now we can release a kmem_cache at any moment after the
-> deactivation, let's call sysfs_slab_remove() only from the shutdown
-> path. It makes deactivation path simpler.
-
-But a cache can be dangling for quite a while after cgroup was taken
-down, even after this patch, because there still can be pages charged to
-it. The reason why we call sysfs_slab_remove() is to delete associated
-files from sysfs ASAP. I'd try to preserve the current behavior if
-possible.
-
-> 
-> Because we don't set the page->mem_cgroup pointer, we need to change
-> the way how memcg-level stats is working for slab pages. We can't use
-> mod_lruvec_page_state() helpers anymore, so switch over to
-> mod_lruvec_state().
-
+On Tue, May 21, 2019 at 01:07:30PM -0700, Roman Gushchin wrote:
 > diff --git a/mm/slab_common.c b/mm/slab_common.c
-> index 4e5b4292a763..8d68de4a2341 100644
+> index 6e00bdf8618d..4e5b4292a763 100644
 > --- a/mm/slab_common.c
 > +++ b/mm/slab_common.c
-> @@ -727,9 +737,31 @@ static void kmemcg_schedule_work_after_rcu(struct rcu_head *head)
->  	queue_work(memcg_kmem_cache_wq, &s->memcg_params.work);
->  }
->  
-> +static void kmemcg_cache_shutdown_after_rcu(struct kmem_cache *s)
-> +{
-> +	WARN_ON(shutdown_cache(s));
-> +}
-> +
-> +static void kmemcg_queue_cache_shutdown(struct percpu_ref *percpu_ref)
-> +{
-> +	struct kmem_cache *s = container_of(percpu_ref, struct kmem_cache,
-> +					    memcg_params.refcnt);
-> +
-> +	spin_lock(&memcg_kmem_wq_lock);
-
-This code may be called from irq context AFAIU so you should use
-irq-safe primitive.
-
-> +	if (s->memcg_params.root_cache->memcg_params.dying)
-> +		goto unlock;
-> +
-> +	WARN_ON(s->memcg_params.work_fn);
-> +	s->memcg_params.work_fn = kmemcg_cache_shutdown_after_rcu;
-> +	call_rcu(&s->memcg_params.rcu_head, kmemcg_schedule_work_after_rcu);
-
-I may be totally wrong here, but I have a suspicion we don't really need
-rcu here.
-
-As I see it, you add this code so as to prevent memcg_kmem_get_cache
-from dereferencing a destroyed kmem cache. Can't we continue using
-css_tryget_online for that? I mean, take rcu_read_lock() and try to get
-css reference. If you succeed, then the cgroup must be online, and
-css_offline won't be called until you unlock rcu, right? This means that
-the cache is guaranteed to be alive until then, because the cgroup holds
-a reference to all its kmem caches until it's taken offline.
-
-> +unlock:
-> +	spin_unlock(&memcg_kmem_wq_lock);
-> +}
-> +
->  static void kmemcg_cache_deactivate_after_rcu(struct kmem_cache *s)
->  {
->  	__kmemcg_cache_deactivate_after_rcu(s);
-> +	percpu_ref_kill(&s->memcg_params.refcnt);
->  }
->  
->  static void kmemcg_cache_deactivate(struct kmem_cache *s)
-> @@ -854,8 +861,15 @@ static int shutdown_memcg_caches(struct kmem_cache *s)
->  
->  static void flush_memcg_workqueue(struct kmem_cache *s)
->  {
-> +	/*
-> +	 * memcg_params.dying is synchronized using slab_mutex AND
-> +	 * memcg_kmem_wq_lock spinlock, because it's not always
-> +	 * possible to grab slab_mutex.
-> +	 */
->  	mutex_lock(&slab_mutex);
-> +	spin_lock(&memcg_kmem_wq_lock);
->  	s->memcg_params.dying = true;
-> +	spin_unlock(&memcg_kmem_wq_lock);
-
-I would completely switch from the mutex to the new spin lock -
-acquiring them both looks weird.
-
+> @@ -866,11 +859,12 @@ static void flush_memcg_workqueue(struct kmem_cache *s)
 >  	mutex_unlock(&slab_mutex);
 >  
 >  	/*
+> -	 * SLUB deactivates the kmem_caches through call_rcu. Make
+> +	 * SLAB and SLUB deactivate the kmem_caches through call_rcu. Make
+>  	 * sure all registered rcu callbacks have been invoked.
+>  	 */
+> -	if (IS_ENABLED(CONFIG_SLUB))
+> -		rcu_barrier();
+> +#ifndef CONFIG_SLOB
+> +	rcu_barrier();
+> +#endif
+
+Nit: you don't need to check CONFIG_SLOB here as this code is under
+CONFIG_MEMCG_KMEM which depends on !SLOB.
+
+Other than that, the patch looks good to me, provided using rcu for slab
+deactivation proves to be really necessary, although I'd split it in two
+patches - one doing renaming another refactoring - easier to review that
+way.
