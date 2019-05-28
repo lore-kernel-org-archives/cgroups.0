@@ -1,56 +1,70 @@
-From: Waiman Long <longman@redhat.com>
+From: Vladimir Davydov <vdavydov.dev@gmail.com>
 Subject: Re: [PATCH v5 5/7] mm: rework non-root kmem_cache lifecycle
  management
-Date: Tue, 28 May 2019 13:41:34 -0400
-Message-ID: <518419c5-ee74-d9a1-c01c-f1a3306d2d34@redhat.com>
+Date: Tue, 28 May 2019 21:00:26 +0300
+Message-ID: <20190528180026.zb6yaxdeapwx5r3v@esperanza>
 References: <20190521200735.2603003-1-guro@fb.com>
  <20190521200735.2603003-6-guro@fb.com>
  <20190528170828.zrkvcdsj3d3jzzzo@esperanza>
- <96b8a923-49e4-f13e-b1e3-3df4598d849e@redhat.com>
- <20190528173959.h4hq55b3ajlfpjrk@esperanza>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190528173959.h4hq55b3ajlfpjrk@esperanza>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=gzRimgoeRu7R/UsHOkPXtR9NqQokG6oQDoPTeeW4GsA=;
+        b=K5mTZO29tbBaLBfmC9xktb9UyEHFJm7cNGH2ho7TmDNYxAatoyUag706Zd7cjqjf28
+         KkeBW1GaNsqZpGtuXpPL2jgCnJM5DuHaiEWuudtfGOhqTqHMJOGDCHv8YAGmcWlXiSLK
+         tvB79wzMLr5Um6QS7j3cKNsAv1752T6NIpZ/9dqKNuDh+uFqgoopmTVuvev/Ic1UEPV9
+         POninSj+/FBXrDQrPHxHzYlplgfdBdt11aQdVLcmU7bI3aGISf73jtSTKnsqq7hOE1Hl
+         V+x+dWvcxXzA/c6PZ2CFDN+iGZBodzbs4Zs7PsfeskXJix3j7cStbEXLgSLKM7CJ7KPj
+         kKnQ==
+Content-Disposition: inline
+In-Reply-To: <20190528170828.zrkvcdsj3d3jzzzo@esperanza>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Roman Gushchin <guro@fb.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Shakeel Butt <shakeelb@google.com>, Christoph Lameter <cl@linux.com>, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro@fb.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Shakeel Butt <shakeelb@google.com>, Christoph Lameter <cl@linux.com>, cgroups@vger.kernel.org, Waiman Long <longman@redhat.com>
 
-On 5/28/19 1:39 PM, Vladimir Davydov wrote:
-> On Tue, May 28, 2019 at 01:37:50PM -0400, Waiman Long wrote:
->> On 5/28/19 1:08 PM, Vladimir Davydov wrote:
->>>>  static void flush_memcg_workqueue(struct kmem_cache *s)
->>>>  {
->>>> +	/*
->>>> +	 * memcg_params.dying is synchronized using slab_mutex AND
->>>> +	 * memcg_kmem_wq_lock spinlock, because it's not always
->>>> +	 * possible to grab slab_mutex.
->>>> +	 */
->>>>  	mutex_lock(&slab_mutex);
->>>> +	spin_lock(&memcg_kmem_wq_lock);
->>>>  	s->memcg_params.dying = true;
->>>> +	spin_unlock(&memcg_kmem_wq_lock);
->>> I would completely switch from the mutex to the new spin lock -
->>> acquiring them both looks weird.
->>>
->>>>  	mutex_unlock(&slab_mutex);
->>>>  
->>>>  	/*
->> There are places where the slab_mutex is held and sleeping functions
->> like kvzalloc() are called. I understand that taking both mutex and
->> spinlocks look ugly, but converting all the slab_mutex critical sections
->> to spinlock critical sections will be a major undertaking by itself. So
->> I would suggest leaving that for now.
-> I didn't mean that. I meant taking spin_lock wherever we need to access
-> the 'dying' flag, even if slab_mutex is held. So that we don't need to
-> take mutex_lock in flush_memcg_workqueue, where it's used solely for
-> 'dying' synchronization.
+On Tue, May 28, 2019 at 08:08:28PM +0300, Vladimir Davydov wrote:
+> Hello Roman,
+> 
+> On Tue, May 21, 2019 at 01:07:33PM -0700, Roman Gushchin wrote:
+> > This commit makes several important changes in the lifecycle
+> > of a non-root kmem_cache, which also affect the lifecycle
+> > of a memory cgroup.
+> > 
+> > Currently each charged slab page has a page->mem_cgroup pointer
+> > to the memory cgroup and holds a reference to it.
+> > Kmem_caches are held by the memcg and are released with it.
+> > It means that none of kmem_caches are released unless at least one
+> > reference to the memcg exists, which is not optimal.
+> > 
+> > So the current scheme can be illustrated as:
+> > page->mem_cgroup->kmem_cache.
+> > 
+> > To implement the slab memory reparenting we need to invert the scheme
+> > into: page->kmem_cache->mem_cgroup.
+> > 
+> > Let's make every page to hold a reference to the kmem_cache (we
+> > already have a stable pointer), and make kmem_caches to hold a single
+> > reference to the memory cgroup.
+> 
+> Is there any reason why we can't reference both mem cgroup and kmem
+> cache per each charged kmem page? I mean,
+> 
+>   page->mem_cgroup references mem_cgroup
+>   page->kmem_cache references kmem_cache
+>   mem_cgroup references kmem_cache while it's online
+> 
+> TBO it seems to me that not taking a reference to mem cgroup per charged
+> kmem page makes the code look less straightforward, e.g. as you
+> mentioned in the commit log, we have to use mod_lruvec_state() for memcg
+> pages and mod_lruvec_page_state() for root pages.
 
-OK, that makes sense. Thanks for the clarification.
-
-Cheers,
-Longman
-
+I think I completely missed the point here. In the following patch you
+move kmem caches from a child to the parent cgroup on offline (aka
+reparent them). That's why you can't maintain page->mem_cgroup. Sorry
+for misunderstanding.
