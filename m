@@ -1,43 +1,85 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 4/4] drm/amdkfd: Check against device cgroup
-Date: Tue, 28 May 2019 12:02:39 -0700
-Message-ID: <20190528190239.GM374014@devbig004.ftw2.facebook.com>
-References: <20190517161435.14121-1-Harish.Kasiviswanathan@amd.com>
- <20190517161435.14121-5-Harish.Kasiviswanathan@amd.com>
- <e547c0a1-e153-c3a6-79bc-67f59f364c3e@amd.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v5 6/7] mm: reparent slab memory on cgroup removal
+Date: Tue, 28 May 2019 19:58:17 +0000
+Message-ID: <20190528195808.GA27847@tower.DHCP.thefacebook.com>
+References: <20190521200735.2603003-1-guro@fb.com>
+ <20190521200735.2603003-7-guro@fb.com>
+ <20190528183302.zv75bsxxblc6v4dt@esperanza>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <e547c0a1-e153-c3a6-79bc-67f59f364c3e-5C7GfCeVMHo@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Kuehling, Felix" <Felix.Kuehling-5C7GfCeVMHo@public.gmane.org>
-Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kasiviswanathan,
- Harish" <Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=LkSxTZxdxqWXHs6bcjODkfy5ThgF4ZzKI+BFcFNhJwc=;
+ b=WmXfvDLJbX5jj5IFNgc0Wbxcie3JyXKz9Bk3P4JXDoblWYirieoymNy8a43A8rPtyjlv
+ a+7676R4Xe6PtyLU232Wz1VTz8k7FgXegFLYnOf7eGQXu/N1kUZHgqPegNxC3nYcd3kV
+ AgXMKWUaCJDzC89vCHMFvtIL0uK1O7kHVQo= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LkSxTZxdxqWXHs6bcjODkfy5ThgF4ZzKI+BFcFNhJwc=;
+ b=mz3MGrm9QwsvbTIAx5Q3kP7X2sKuVY/oejW6MoPS8f8Y0CrH7SlH9GlLZxfSGbpJ8Qw/lJH/ptvSFpYKxqWL6sB097D1QFMuAbwF6dIlXVGxK0gJLzzEJtPhN8LpHfPG9WwwjMrBqiYlfrMKJTNCyu05IHUz3bnYGjU6QebJxW4=
+In-Reply-To: <20190528183302.zv75bsxxblc6v4dt@esperanza>
+Content-Language: en-US
+Content-ID: <0850A1DD02DABC429A7DDA28E4AFE9A8@namprd15.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+To: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Shakeel Butt <shakeelb@google.com>, Christoph Lameter <cl@linux.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Waiman Long <longman@redhat.com>
 
-SGVsbG8sCgpPbiBGcmksIE1heSAxNywgMjAxOSBhdCAwODoxMjoxN1BNICswMDAwLCBLdWVobGlu
-ZywgRmVsaXggd3JvdGU6Cj4gUGF0Y2hlcyAxLDIsNCB3aWxsIGJlIHN1Ym1pdHRlZCB0aHJvdWdo
-IGFtZC1zdGFnaW5nLWRybS1uZXh0LiBQYXRjaCAzIAo+IGdvZXMgdGhyb3VnaCB0aGUgY2dyb3Vw
-IHRyZWUuIFBhdGNoIDQgZGVwZW5kcyBvbiBwYXRjaCAzLiBTbyBzdWJtaXR0aW5nIAo+IHBhdGNo
-IDQgd2lsbCBuZWVkIHRvIHdhaXQgdW50aWwgd2UgcmViYXNlIGFtZC1zdGFnaW5nLWRybS1uZXh0
-IG9uIGEgbmV3IAo+IGVub3VnaCBrZXJuZWwgcmVsZWFzZSB0aGF0IGluY2x1ZGVzIHBhdGNoIDMu
-Cj4gCj4gUGF0Y2ggMSBhbmQgMiBjb3VsZCBiZSBzdWJtaXR0ZWQgbm93IG9yIHdhaXQgZm9yIHBh
-dGNoIDMgYXMgd2VsbCBzbyB3ZSAKPiBzdWJtaXQgYWxsIG91ciBjZ3JvdXAgc3R1ZmYgaW4gYW1k
-Z3B1IGFuZCBLRkQgdG9nZXRoZXIuIEl0IHByb2JhYmx5IAo+IG1ha2VzIG1vc3Qgc2Vuc2UgdG8g
-d2FpdCBzaW5jZSB1bnVzZWQgY29kZSB0ZW5kcyB0byByb3QuCj4gCj4gUGF0Y2hlcyAxLDIsNCBh
-cmUgYWxyZWFkeSByZXZpZXdlZCBieSBtZS4gRmVlbCBmcmVlIHRvIGFkZCBteSBBY2tlZC1ieSAK
-PiB0byBwYXRjaCAzLgoKUGxlYXNlIGZlZWwgZnJlZSB0byBhZGQgbXkgYWNrZWQtYnkgYW5kIHRh
-a2UgcGF0Y2ggMyB3aXRoIHRoZSByZXN0IG9mCnRoZSBwYXRjaHNldC4KClRoYW5rcy4KCi0tIAp0
-ZWp1bgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwphbWQt
-Z2Z4IG1haWxpbmcgbGlzdAphbWQtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xp
-c3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2FtZC1nZng=
+On Tue, May 28, 2019 at 09:33:02PM +0300, Vladimir Davydov wrote:
+> On Tue, May 21, 2019 at 01:07:34PM -0700, Roman Gushchin wrote:
+> > Let's reparent memcg slab memory on memcg offlining. This allows us
+> > to release the memory cgroup without waiting for the last outstanding
+> > kernel object (e.g. dentry used by another application).
+> >=20
+> > So instead of reparenting all accounted slab pages, let's do reparent
+> > a relatively small amount of kmem_caches. Reparenting is performed as
+> > a part of the deactivation process.
+> >=20
+> > Since the parent cgroup is already charged, everything we need to do
+> > is to splice the list of kmem_caches to the parent's kmem_caches list,
+> > swap the memcg pointer and drop the css refcounter for each kmem_cache
+> > and adjust the parent's css refcounter. Quite simple.
+> >=20
+> > Please, note that kmem_cache->memcg_params.memcg isn't a stable
+> > pointer anymore. It's safe to read it under rcu_read_lock() or
+> > with slab_mutex held.
+> >=20
+> > We can race with the slab allocation and deallocation paths. It's not
+> > a big problem: parent's charge and slab global stats are always
+> > correct, and we don't care anymore about the child usage and global
+> > stats. The child cgroup is already offline, so we don't use or show it
+> > anywhere.
+> >=20
+> > Local slab stats (NR_SLAB_RECLAIMABLE and NR_SLAB_UNRECLAIMABLE)
+> > aren't used anywhere except count_shadow_nodes(). But even there it
+> > won't break anything: after reparenting "nodes" will be 0 on child
+> > level (because we're already reparenting shrinker lists), and on
+> > parent level page stats always were 0, and this patch won't change
+> > anything.
+> >=20
+> > Signed-off-by: Roman Gushchin <guro@fb.com>
+> > Reviewed-by: Shakeel Butt <shakeelb@google.com>
+>=20
+> This one looks good to me. I can't see why anything could possibly go
+> wrong after this change.
+
+Hi Vladimir!
+
+Thank you for looking into the series. Really appreciate it!
+
+It looks like outstanding questions are:
+1) synchronization around the dying flag
+2) removing CONFIG_SLOB in 2/7
+3) early sysfs_slab_remove()
+4) mem_cgroup_from_kmem in 7/7
+
+Please, let me know if I missed anything.
+
+I'm waiting now for Johanness's review, so I'll address these issues
+in background and post the next (and hopefully) final version.
+
+Thanks!
