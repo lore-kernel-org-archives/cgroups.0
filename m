@@ -1,47 +1,48 @@
-From: Vladimir Davydov <vdavydov.dev@gmail.com>
-Subject: Re: [PATCH v5 1/7] mm: postpone kmem_cache memcg pointer
- initialization to memcg_link_cache()
-Date: Tue, 28 May 2019 20:14:16 +0300
-Message-ID: <20190528171416.ujwr5rhbo7g4wfd5@esperanza>
-References: <20190521200735.2603003-1-guro@fb.com>
- <20190521200735.2603003-2-guro@fb.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] mm: memcontrol: don't batch updates of local VM stats and events
+Date: Tue, 28 May 2019 10:37:15 -0700
+Message-ID: <CAHk-=wgaLQjZ8AZj76_cwvk_wLPJjr+Dc=Qvac_vHY2RruuBww@mail.gmail.com>
+References: <20190520063534.GB19312@shao2-debian> <20190520215328.GA1186@cmpxchg.org>
+ <20190521134646.GE19312@shao2-debian> <20190521151647.GB2870@cmpxchg.org> <CALvZod5KFJvfBfTZKWiDo_ux_OkLKK-b6sWtnYeFCY2ARiiKwQ@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=WjL1kPJpFZ+/6P/J2gFeO1EXLoFczY/0XpAxesm/SAI=;
-        b=X2EOagEpclu4ci+J5hELZN56hZWa/YKEEJMK9pne6v5cmFWQgQ58z6hcuN4SKQZLrs
-         2LYlVt5tiD/iE7WqzRZ8jHNm0MmyqhWQEq2iiBv+DbERpI0KtlpIuMTL9yxGXn0AATbh
-         8S0dlssbwt0wAe9eMcKuq2YGU1jgdpZYeMbvwqLprQpHN3qxVNgQDU8vri2A537s8p//
-         4WiaEtaZRVBk3HrrAySnKiZf7QfTCHiQPbl3Qy0m6tUmkxDUBAoSxoVUsBGbuUEW8WH2
-         XoXsVF5Uid2iHAY8wQtjZ5v4ARPAKJRygdV96eXj2QnQS68LlFvJivE/aqEn0j6N9eNR
-         yrbA==
-Content-Disposition: inline
-In-Reply-To: <20190521200735.2603003-2-guro@fb.com>
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=F2jMeMvfMZ6+f8aMiqek9ZN+qjHWyjCaTe5iI/rDq+E=;
+        b=F1ETGdXeFfCBHmdWbLBHd8vZ7taVOvI6ORkmxBqkgmnSIzcWwbuL7Fhv0S2FLp97AT
+         XCPInppgu1tkfwt4dcLiPmzEju6ML58hvTfKMWoxMW2Wuusd11zPUwBSNYNdyPwqwnst
+         6LPs3DuCLXNIyE4Zp2se+L+KeAMs1gw7ROLd4=
+In-Reply-To: <CALvZod5KFJvfBfTZKWiDo_ux_OkLKK-b6sWtnYeFCY2ARiiKwQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Shakeel Butt <shakeelb@google.com>, Christoph Lameter <cl@linux.com>, cgroups@vger.kernel.org, Waiman Long <longman@redhat.com>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, kernel test robot <rong.a.chen@intel.com>, LKP <lkp@01.org>, LKML <linux-kernel@vger.kernel.org>, Michal Hocko <mhocko@kernel.org>, Roman Gushchin <guro@fb.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>
 
-On Tue, May 21, 2019 at 01:07:29PM -0700, Roman Gushchin wrote:
-> Initialize kmem_cache->memcg_params.memcg pointer in
-> memcg_link_cache() rather than in init_memcg_params().
-> 
-> Once kmem_cache will hold a reference to the memory cgroup,
-> it will simplify the refcounting.
-> 
-> For non-root kmem_caches memcg_link_cache() is always called
-> before the kmem_cache becomes visible to a user, so it's safe.
-> 
-> Signed-off-by: Roman Gushchin <guro@fb.com>
-> Reviewed-by: Shakeel Butt <shakeelb@google.com>
+On Tue, May 28, 2019 at 9:00 AM Shakeel Butt <shakeelb@google.com> wrote:
+>
+> I was suspecting the following for-loop+atomic-add for the regression.
 
-This one is a no-brainer.
+If I read the kernel test robot reports correctly, Johannes' fix patch
+does fix the regression (well - mostly. The original reported
+regression was 26%, and with Johannes' fix patch it was 3% - so still
+a slight performance regression, but not nearly as bad).
 
-Acked-by: Vladimir Davydov <vdavydov.dev@gmail.com>
+> Why the above atomic-add is the culprit?
 
-Provided it's necessary for the rest of the series.
+I think the problem with that one is that it's cross-cpu statistics,
+so you end up with lots of cacheline bounces on the local counts when
+you have lots of load.
+
+But yes, the recursive updates still do show a small regression,
+probably because there's still some overhead from the looping up in
+the hierarchy. You still get *those* cacheline bounces, but now they
+are limited to the upper hierarchies that only get updated at batch
+time.
+
+Johannes? Am I reading this right?
+
+                   Linus
