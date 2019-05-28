@@ -1,26 +1,24 @@
 From: Vladimir Davydov <vdavydov.dev@gmail.com>
-Subject: Re: [PATCH v5 5/7] mm: rework non-root kmem_cache lifecycle
- management
-Date: Tue, 28 May 2019 21:00:26 +0300
-Message-ID: <20190528180026.zb6yaxdeapwx5r3v@esperanza>
+Subject: Re: [PATCH v5 6/7] mm: reparent slab memory on cgroup removal
+Date: Tue, 28 May 2019 21:33:02 +0300
+Message-ID: <20190528183302.zv75bsxxblc6v4dt@esperanza>
 References: <20190521200735.2603003-1-guro@fb.com>
- <20190521200735.2603003-6-guro@fb.com>
- <20190528170828.zrkvcdsj3d3jzzzo@esperanza>
+ <20190521200735.2603003-7-guro@fb.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=gzRimgoeRu7R/UsHOkPXtR9NqQokG6oQDoPTeeW4GsA=;
-        b=K5mTZO29tbBaLBfmC9xktb9UyEHFJm7cNGH2ho7TmDNYxAatoyUag706Zd7cjqjf28
-         KkeBW1GaNsqZpGtuXpPL2jgCnJM5DuHaiEWuudtfGOhqTqHMJOGDCHv8YAGmcWlXiSLK
-         tvB79wzMLr5Um6QS7j3cKNsAv1752T6NIpZ/9dqKNuDh+uFqgoopmTVuvev/Ic1UEPV9
-         POninSj+/FBXrDQrPHxHzYlplgfdBdt11aQdVLcmU7bI3aGISf73jtSTKnsqq7hOE1Hl
-         V+x+dWvcxXzA/c6PZ2CFDN+iGZBodzbs4Zs7PsfeskXJix3j7cStbEXLgSLKM7CJ7KPj
-         kKnQ==
+        bh=/dxRboK00I5JVZJIcKIh8lDmjqTZ8vT2RGIZXym9hs8=;
+        b=JdETCGK02W+TtswFGWYTMmY9WIEyBXPpCljaIU/VvB/d3DyEtFWnP0lJVxjUjx9TD+
+         BbFimxaiEpjpXaitfVH8KM8TBEOsn6oSsKdEWrPjq9D15Ew99jozw+GsV/lZqrVVZ0bd
+         sGtow18Jv93Jk3c4kkSM9BZ05m3scy1imL1EdiSpaSjWhIrIPyNB9w8DdlCdVlnDOZNn
+         KB5glui+lV+DZKpPu++CN6VKlXQmcVFXpxLJUgk52DMVAvzV1zTNcKZuZuMlzrMfr+zo
+         qH7zlgas8ajm6z/0f37WMEh9ITFodHk5tXZpvMdRGXtAceFsYcaEo3ESqN2B34xySD+d
+         KVXQ==
 Content-Disposition: inline
-In-Reply-To: <20190528170828.zrkvcdsj3d3jzzzo@esperanza>
+In-Reply-To: <20190521200735.2603003-7-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -28,43 +26,39 @@ Content-Transfer-Encoding: 7bit
 To: Roman Gushchin <guro@fb.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Shakeel Butt <shakeelb@google.com>, Christoph Lameter <cl@linux.com>, cgroups@vger.kernel.org, Waiman Long <longman@redhat.com>
 
-On Tue, May 28, 2019 at 08:08:28PM +0300, Vladimir Davydov wrote:
-> Hello Roman,
+On Tue, May 21, 2019 at 01:07:34PM -0700, Roman Gushchin wrote:
+> Let's reparent memcg slab memory on memcg offlining. This allows us
+> to release the memory cgroup without waiting for the last outstanding
+> kernel object (e.g. dentry used by another application).
 > 
-> On Tue, May 21, 2019 at 01:07:33PM -0700, Roman Gushchin wrote:
-> > This commit makes several important changes in the lifecycle
-> > of a non-root kmem_cache, which also affect the lifecycle
-> > of a memory cgroup.
-> > 
-> > Currently each charged slab page has a page->mem_cgroup pointer
-> > to the memory cgroup and holds a reference to it.
-> > Kmem_caches are held by the memcg and are released with it.
-> > It means that none of kmem_caches are released unless at least one
-> > reference to the memcg exists, which is not optimal.
-> > 
-> > So the current scheme can be illustrated as:
-> > page->mem_cgroup->kmem_cache.
-> > 
-> > To implement the slab memory reparenting we need to invert the scheme
-> > into: page->kmem_cache->mem_cgroup.
-> > 
-> > Let's make every page to hold a reference to the kmem_cache (we
-> > already have a stable pointer), and make kmem_caches to hold a single
-> > reference to the memory cgroup.
+> So instead of reparenting all accounted slab pages, let's do reparent
+> a relatively small amount of kmem_caches. Reparenting is performed as
+> a part of the deactivation process.
 > 
-> Is there any reason why we can't reference both mem cgroup and kmem
-> cache per each charged kmem page? I mean,
+> Since the parent cgroup is already charged, everything we need to do
+> is to splice the list of kmem_caches to the parent's kmem_caches list,
+> swap the memcg pointer and drop the css refcounter for each kmem_cache
+> and adjust the parent's css refcounter. Quite simple.
 > 
->   page->mem_cgroup references mem_cgroup
->   page->kmem_cache references kmem_cache
->   mem_cgroup references kmem_cache while it's online
+> Please, note that kmem_cache->memcg_params.memcg isn't a stable
+> pointer anymore. It's safe to read it under rcu_read_lock() or
+> with slab_mutex held.
 > 
-> TBO it seems to me that not taking a reference to mem cgroup per charged
-> kmem page makes the code look less straightforward, e.g. as you
-> mentioned in the commit log, we have to use mod_lruvec_state() for memcg
-> pages and mod_lruvec_page_state() for root pages.
+> We can race with the slab allocation and deallocation paths. It's not
+> a big problem: parent's charge and slab global stats are always
+> correct, and we don't care anymore about the child usage and global
+> stats. The child cgroup is already offline, so we don't use or show it
+> anywhere.
+> 
+> Local slab stats (NR_SLAB_RECLAIMABLE and NR_SLAB_UNRECLAIMABLE)
+> aren't used anywhere except count_shadow_nodes(). But even there it
+> won't break anything: after reparenting "nodes" will be 0 on child
+> level (because we're already reparenting shrinker lists), and on
+> parent level page stats always were 0, and this patch won't change
+> anything.
+> 
+> Signed-off-by: Roman Gushchin <guro@fb.com>
+> Reviewed-by: Shakeel Butt <shakeelb@google.com>
 
-I think I completely missed the point here. In the following patch you
-move kmem caches from a child to the parent cgroup on offline (aka
-reparent them). That's why you can't maintain page->mem_cgroup. Sorry
-for misunderstanding.
+This one looks good to me. I can't see why anything could possibly go
+wrong after this change.
