@@ -1,37 +1,76 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 4/4] drm/amdkfd: Check against device cgroup
-Date: Wed, 29 May 2019 14:15:29 -0700
-Message-ID: <20190529211529.GQ374014@devbig004.ftw2.facebook.com>
-References: <20190517161435.14121-1-Harish.Kasiviswanathan@amd.com>
- <20190517161435.14121-5-Harish.Kasiviswanathan@amd.com>
- <e547c0a1-e153-c3a6-79bc-67f59f364c3e@amd.com>
- <20190528190239.GM374014@devbig004.ftw2.facebook.com>
- <d39ec6a7-b30d-404b-c8d1-4e22604e0c8e@amd.com>
+From: Odin Ugedal <odin@ugedal.com>
+Subject: [PATCH] docs cgroups: add another example size for hugetlb
+Date: Thu, 30 May 2019 00:24:25 +0200
+Message-ID: <20190529222425.30879-1-odin@ugedal.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <d39ec6a7-b30d-404b-c8d1-4e22604e0c8e-5C7GfCeVMHo@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ugedal.com; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=DK/ogr6pZZUphW9lU4h1f+fFgOabCak3KXyja9ZoLt0=;
+        b=EtEkBupWZk2J/O72xoPMmoNFOSLqen/od3RSkObixQLiBW0S7B4LBoMgiN1OJs5lTI
+         7eQsLP01PJJoMg2Rx3TXT2fHK9oKRyTMsSxuM14Bv/AhGUfZbEp+jOWiJjg08NWOPWIn
+         60jXRmoCOn7ULv9kGZ6Qa3BukeR4KLALFfbLjl+hFFUdKHdpARIjb7oq/IA0fCdMe6Jw
+         CGumH0h5cYi/VpKQ+Q0RElMr9yUgKn5Qljab6cDKdX0txp1pFfhPYKT+HwcU8Rt1cCYS
+         WLSjSr5B2qq/nQyorb4FdVBSJC+ONV8G5I9EocBK2BtkSCoIadihUFJo7fO60LGyljtK
+         4pKA==
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Kuehling, Felix" <Felix.Kuehling-5C7GfCeVMHo@public.gmane.org>
-Cc: "Deucher, Alexander" <Alexander.Deucher-5C7GfCeVMHo@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Kasiviswanathan,
- Harish" <Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: odin@ugedal.com
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, "open list:CONTROL GROUP CGROUP" <cgroups@vger.kernel.org>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 
-T24gV2VkLCBNYXkgMjksIDIwMTkgYXQgMDg6NDU6NDRQTSArMDAwMCwgS3VlaGxpbmcsIEZlbGl4
-IHdyb3RlOgo+IEp1c3QgdG8gY2xhcmlmeSwgYXJlIHlvdSBzYXlpbmcgdGhhdCB3ZSBzaG91bGQg
-dXBzdHJlYW0gdGhpcyBjaGFuZ2UgCj4gdGhyb3VnaCBBbGV4IERldWNoZXIncyBhbWQtc3RhZ2lu
-Zy1kcm0tbmV4dCBhbmQgRGF2ZSBBaXJsaWUncyBkcm0tbmV4dCAKPiB0cmVlcz8KClllYWgsIHN1
-cmUsIHdoaWNoZXZlciB0cmVlIGlzIHRoZSBtb3N0IGNvbnZlbmllbnQuCgpUaGFua3MuCgotLSAK
-dGVqdW4KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KYW1k
-LWdmeCBtYWlsaW5nIGxpc3QKYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9s
-aXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9hbWQtZ2Z4
+Add another example to clarify that HugePages smaller than 1MB will
+be displayed using "KB", with an uppercased K (eg. 20KB), and not the
+normal SI prefix kilo (small k).
+
+Because of a misunderstanding/copy-paste error inside runc
+(see https://github.com/opencontainers/runc/pull/2065), it tried
+accessing the cgroup control file of a 64kB HugePage using
+"hugetlb.64kB._____" instead of the correct "hugetlb.64KB._____".
+
+Adding a new example will make it clear how sizes smaller than 1MB are
+handled.
+
+Signed-off-by: Odin Ugedal <odin@ugedal.com>
+---
+ Documentation/cgroup-v1/hugetlb.txt | 22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
+
+diff --git a/Documentation/cgroup-v1/hugetlb.txt b/Documentation/cgroup-v1/hugetlb.txt
+index 106245c3aecc..1260e5369b9b 100644
+--- a/Documentation/cgroup-v1/hugetlb.txt
++++ b/Documentation/cgroup-v1/hugetlb.txt
+@@ -32,14 +32,18 @@ Brief summary of control files
+  hugetlb.<hugepagesize>.usage_in_bytes     # show current usage for "hugepagesize" hugetlb
+  hugetlb.<hugepagesize>.failcnt		   # show the number of allocation failure due to HugeTLB limit
+ 
+-For a system supporting two hugepage size (16M and 16G) the control
++For a system supporting three hugepage sizes (64k, 32M and 1G), the control
+ files include:
+ 
+-hugetlb.16GB.limit_in_bytes
+-hugetlb.16GB.max_usage_in_bytes
+-hugetlb.16GB.usage_in_bytes
+-hugetlb.16GB.failcnt
+-hugetlb.16MB.limit_in_bytes
+-hugetlb.16MB.max_usage_in_bytes
+-hugetlb.16MB.usage_in_bytes
+-hugetlb.16MB.failcnt
++hugetlb.1GB.limit_in_bytes
++hugetlb.1GB.max_usage_in_bytes
++hugetlb.1GB.usage_in_bytes
++hugetlb.1GB.failcnt
++hugetlb.64KB.limit_in_bytes
++hugetlb.64KB.max_usage_in_bytes
++hugetlb.64KB.usage_in_bytes
++hugetlb.64KB.failcnt
++hugetlb.32MB.limit_in_bytes
++hugetlb.32MB.max_usage_in_bytes
++hugetlb.32MB.usage_in_bytes
++hugetlb.32MB.failcnt
+-- 
+2.21.0
+
