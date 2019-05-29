@@ -1,175 +1,120 @@
-From: Phil Auld <pauld@redhat.com>
-Subject: Re: [PATCH v3 1/1] sched/fair: Fix low cpu usage with high
- throttling by removing expiration of cpu-local slices
-Date: Wed, 29 May 2019 15:28:33 -0400
-Message-ID: <20190529192833.GF26206@pauld.bos.csb>
+From: bsegall@google.com
+Subject: Re: [PATCH v3 1/1] sched/fair: Fix low cpu usage with high throttling by removing expiration of cpu-local slices
+Date: Wed, 29 May 2019 12:50:22 -0700
+Message-ID: <xm26blzlyr9d.fsf@bsegall-linux.svl.corp.google.com>
 References: <1558121424-2914-1-git-send-email-chiluk+linux@indeed.com>
- <1559156926-31336-1-git-send-email-chiluk+linux@indeed.com>
- <1559156926-31336-2-git-send-email-chiluk+linux@indeed.com>
+        <1559156926-31336-1-git-send-email-chiluk+linux@indeed.com>
+        <1559156926-31336-2-git-send-email-chiluk+linux@indeed.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1559156926-31336-2-git-send-email-chiluk+linux@indeed.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=from:to:cc:subject:references:date:in-reply-to:message-id
+         :user-agent:mime-version;
+        bh=z596bta4rnvntAQDgf+fFcauM3ob59dKjWY1OdsYMKo=;
+        b=pE1DG7jxvSSAUIngdKKy8SGdjXwNZF0gKUEfIO7uIOz19XZQLPVNGTFcfJvyXyO3W9
+         FQwJJn15+yK86NLne5wN9s8kpifZsp+U7+HedfghIBYeUQBULzTgSZqoucRCcEvJr8sC
+         RYF07nkoPv0kjyLAW8qfe3qOWb1gCyKuTytRud3LD2WRPBzI+yw5iH4ELti4VEqkfqt7
+         9zclBKHZtmYjOsWw0NB0DSHFDCOaetAq68wYIlk36kwfooWpH6SbbQYPdxOW2Mo06ugy
+         t2KLfNWlEZid2pIRCCKt53pYGHq++hzN4JwX+kbVcDpMc0o0LKhxXZTV5V7JQefcSiNs
+         RoaQ==
+In-Reply-To: <1559156926-31336-2-git-send-email-chiluk+linux@indeed.com> (Dave
+        Chiluk's message of "Wed, 29 May 2019 14:08:46 -0500")
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Dave Chiluk <chiluk+linux@indeed.com>
-Cc: Ben Segall <bsegall@google.com>, Peter Oskolkov <posk@posk.io>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Brendan Gregg <bgregg@netflix.com>, Kyle Anderson <kwa@yelp.com>, Gabriel Munos <gmunoz@netflix.com>, John Hammond <jhammond@indeed.com>, Cong Wang <xiyou.wangcong@gmail.com>, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org
+Cc: Phil Auld <pauld@redhat.com>, Peter Oskolkov <posk@posk.io>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Brendan Gregg <bgregg@netflix.com>, Kyle Anderson <kwa@yelp.com>, Gabriel Munos <gmunoz@netflix.com>, John Hammond <jhammond@indeed.com>, Cong Wang <xiyou.wangcong@gmail.com>, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org
 
-On Wed, May 29, 2019 at 02:08:46PM -0500 Dave Chiluk wrote:
+Dave Chiluk <chiluk+linux@indeed.com> writes:
+
 > It has been observed, that highly-threaded, non-cpu-bound applications
 > running under cpu.cfs_quota_us constraints can hit a high percentage of
 > periods throttled while simultaneously not consuming the allocated
 > amount of quota.  This use case is typical of user-interactive non-cpu
 > bound applications, such as those running in kubernetes or mesos when
 > run on multiple cpu cores.
-> 
+>
 > This has been root caused to threads being allocated per cpu bandwidth
 > slices, and then not fully using that slice within the period. At which
 > point the slice and quota expires.  This expiration of unused slice
 > results in applications not being able to utilize the quota for which
 > they are allocated.
-> 
-> The expiration of per-cpu slices was recently fixed by
-> 'commit 512ac999d275 ("sched/fair: Fix bandwidth timer clock drift
-> condition")'.  Prior to that it appears that this has been broken since
-> at least 'commit 51f2176d74ac ("sched/fair: Fix unlocked reads of some
-> cfs_b->quota/period")' which was introduced in v3.16-rc1 in 2014.  That
-> added the following conditional which resulted in slices never being
-> expired.
-> 
-> if (cfs_rq->runtime_expires != cfs_b->runtime_expires) {
-> 	/* extend local deadline, drift is bounded above by 2 ticks */
-> 	cfs_rq->runtime_expires += TICK_NSEC;
-> 
-> Because this was broken for nearly 5 years, and has recently been fixed
-> and is now being noticed by many users running kubernetes
-> (https://github.com/kubernetes/kubernetes/issues/67577) it is my opinion
-> that the mechanisms around expiring runtime should be removed
-> altogether.
-> 
-> This allows only per-cpu slices to live longer than the period boundary.
-> This allows threads on runqueues that do not use much CPU to continue to
-> use their remaining slice over a longer period of time than
-> cpu.cfs_period_us. However, this helps prevents the above condition of
-> hitting throttling while also not fully utilizing your cpu quota.
-> 
-> This theoretically allows a machine to use slightly more than it's
-> allotted quota in some periods.  This overflow would be bounded by the
-> remaining per-cpu slice that was left un-used in the previous period.
-> For CPU bound tasks this will change nothing, as they should
-> theoretically fully utilize all of their quota and slices in each
-> period. For user-interactive tasks as described above this provides a
-> much better user/application experience as their cpu utilization will
-> more closely match the amount they requested when they hit throttling.
-> 
-> This greatly improves performance of high-thread-count, non-cpu bound
-> applications with low cfs_quota_us allocation on high-core-count
-> machines. In the case of an artificial testcase, this performance
-> discrepancy has been observed to be almost 30x performance improvement,
-> while still maintaining correct cpu quota restrictions albeit over
-> longer time intervals than cpu.cfs_period_us.  That testcase is
-> available at https://github.com/indeedeng/fibtest.
-> 
-> Fixes: 512ac999d275 ("sched/fair: Fix bandwidth timer clock drift condition")
-> Signed-off-by: Dave Chiluk <chiluk+linux@indeed.com>
-> ---
->  Documentation/scheduler/sched-bwc.txt | 56 ++++++++++++++++++++++-----
->  kernel/sched/fair.c                   | 71 +++--------------------------------
->  kernel/sched/sched.h                  |  4 --
->  3 files changed, 53 insertions(+), 78 deletions(-)
-> 
-> diff --git a/Documentation/scheduler/sched-bwc.txt b/Documentation/scheduler/sched-bwc.txt
-> index f6b1873..260fd65 100644
-> --- a/Documentation/scheduler/sched-bwc.txt
-> +++ b/Documentation/scheduler/sched-bwc.txt
-> @@ -8,15 +8,16 @@ CFS bandwidth control is a CONFIG_FAIR_GROUP_SCHED extension which allows the
->  specification of the maximum CPU bandwidth available to a group or hierarchy.
->  
->  The bandwidth allowed for a group is specified using a quota and period. Within
-> -each given "period" (microseconds), a group is allowed to consume only up to
-> -"quota" microseconds of CPU time.  When the CPU bandwidth consumption of a
-> -group exceeds this limit (for that period), the tasks belonging to its
-> -hierarchy will be throttled and are not allowed to run again until the next
-> -period.
-> -
-> -A group's unused runtime is globally tracked, being refreshed with quota units
-> -above at each period boundary.  As threads consume this bandwidth it is
-> -transferred to cpu-local "silos" on a demand basis.  The amount transferred
-> +each given "period" (microseconds), a task group is allocated up to "quota"
-> +microseconds of CPU time.  That quota is assigned to per cpu run queues in
-> +slices as threads in the cgroup become runnable.  Once all quota has been
-> +assigned any additional requests for quota will result in those threads being
-> +throttled.  Throttled threads will not be able to run again until the next
-> +period when the quota is replenished.
-> +
-> +A group's unassigned quota is globally tracked, being refreshed back to
-> +cfs_quota units at each period boundary.  As threads consume this bandwidth it
-> +is transferred to cpu-local "silos" on a demand basis.  The amount transferred
->  within each of these updates is tunable and described as the "slice".
->  
->  Management
-> @@ -90,6 +91,43 @@ There are two ways in which a group may become throttled:
->  In case b) above, even though the child may have runtime remaining it will not
->  be allowed to until the parent's runtime is refreshed.
->  
-> +Real-world behavior of slice non-expiration
-> +-------------------------------------------
-> +The fact that cpu-local slices do not expire results in some interesting corner
-> +cases that should be understood.
-> +
-> +For cgroup cpu constrained applications that are cpu limited this is a
-> +relatively moot point because they will naturally consume the entirety of their
-> +quota as well as the entirety of each cpu-local slice in each period.  As a
-> +result it is expected that nr_periods roughly equal nr_throttled, and that
-> +cpuacct.usage will increase roughly equal to cfs_quota_us in each period.
-> +
-> +However in a worst-case scenario, highly-threaded, interactive/non-cpu bound
-> +applications this non-expiration nuance allows applications to briefly burst
-> +past their quota limits by the amount of unused slice on each cpu that the task
-> +group is running on.  This slight burst requires that quota had been assigned
-> +and then not fully used in previous periods.  This burst amount will not be
-> +transferred between cores.  As a result, this mechanism still strictly limits
-> +the task group to quota average usage, albeit over a longer time window than
-> +period.  This provides better more predictable user experience for highly
-> +threaded applications with small quota limits on high core count machines.  It
-> +also eliminates the propensity to throttle these applications while
-> +simultanously using less than quota amounts of cpu.  Another way to say this,
-> +is that by allowing the unused portion of a slice to remain valid across
-> +periods we have decreased the possibility of wasting quota on cpu-local silos
-> +that don't need a full slice's amount of cpu time.
-> +
-> +The interaction between cpu-bound and non-cpu-bound-interactive applications
-> +should also be considered, especially when single core usage hits 100%.  If you
-> +gave each of these applications half of a cpu-core and they both got scheduled
-> +on the same CPU it is theoretically possible that the non-cpu bound application
-> +will use up to sched_cfs_bandwidth_slice_us additional quota in some periods,
-> +thereby preventing the cpu-bound application from fully using it's quota by
+>
 
-
-"its quota"
-
-
-> +that same amount.  In these instances it will be up to the CFS algorithm (see
-> +sched-design-CFS.txt) to decide which application is chosen to run, as they
-> +will both be runnable and have remaining quota.  This runtime discrepancy will
-> +should made up in the following periods when the interactive application idles.
-> +
-
-
-"discrepancy will be made"  or "descrepancy should be made"  but not both :)
+So most of the bandwidth is supposed to be returned, leaving only 1ms.
+I'm setting up to try your test now, but there was a bug with the
+unthrottle part of this where it could be continuously pushed into the
+future. You might try this patch instead, possibly along with lowering
+min_cfs_rq_runtime (currently not runtime tunable) if you see that cost
+more than the cost of extra locking to acquire runtime.
 
 
 
-Otherwise, fwiw, 
-
-Acked-by:  Phil Auld <pauld@redhat.com>
 
 
+From: Ben Segall <bsegall@google.com>
+Date: Tue, 28 May 2019 12:30:25 -0700
+Subject: [PATCH] sched/fair: don't push cfs_bandwith slack timers forward
 
-Cheers,
-Phil
+When a cfs_rq sleeps and returns its quota, we delay for 5ms before waking any
+throttled cfs_rqs to coalesce with other cfs_rqs going to sleep, as this has has
+to be done outside of the rq lock we hold. The current code waits for 5ms
+without any sleeps, instead of waiting for 5ms from the first sleep, which can
+delay the unthrottle more than we want. Switch this around.
 
+Change-Id: Ife536bb54af633863de486ba6ec0d20e55ada8c9
+Signed-off-by: Ben Segall <bsegall@google.com>
+---
+ kernel/sched/fair.c  | 7 +++++++
+ kernel/sched/sched.h | 1 +
+ 2 files changed, 8 insertions(+)
 
+diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
+index 8213ff6e365d..2ead252cfa32 100644
+--- a/kernel/sched/fair.c
++++ b/kernel/sched/fair.c
+@@ -4729,6 +4729,11 @@ static void start_cfs_slack_bandwidth(struct cfs_bandwidth *cfs_b)
+ 	if (runtime_refresh_within(cfs_b, min_left))
+ 		return;
+ 
++	/* don't push forwards an existing deferred unthrottle */
++	if (cfs_b->slack_started)
++		return;
++	cfs_b->slack_started = true;
++
+ 	hrtimer_start(&cfs_b->slack_timer,
+ 			ns_to_ktime(cfs_bandwidth_slack_period),
+ 			HRTIMER_MODE_REL);
+@@ -4782,6 +4787,7 @@ static void do_sched_cfs_slack_timer(struct cfs_bandwidth *cfs_b)
+ 
+ 	/* confirm we're still not at a refresh boundary */
+ 	raw_spin_lock_irqsave(&cfs_b->lock, flags);
++	cfs_b->slack_started = false;
+ 	if (cfs_b->distribute_running) {
+ 		raw_spin_unlock_irqrestore(&cfs_b->lock, flags);
+ 		return;
+@@ -4920,6 +4926,7 @@ void init_cfs_bandwidth(struct cfs_bandwidth *cfs_b)
+ 	hrtimer_init(&cfs_b->slack_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+ 	cfs_b->slack_timer.function = sched_cfs_slack_timer;
+ 	cfs_b->distribute_running = 0;
++	cfs_b->slack_started = false;
+ }
+ 
+ static void init_cfs_rq_runtime(struct cfs_rq *cfs_rq)
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index efa686eeff26..60219acda94b 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -356,6 +356,7 @@ struct cfs_bandwidth {
+ 	u64			throttled_time;
+ 
+ 	bool                    distribute_running;
++	bool                    slack_started;
+ #endif
+ };
+ 
 -- 
+2.22.0.rc1.257.g3120a18244-goog
+
