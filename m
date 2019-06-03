@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 01/11] mm: vmscan: move inactive_list_is_low() swap check to the caller
-Date: Mon,  3 Jun 2019 17:07:36 -0400
-Message-ID: <20190603210746.15800-2-hannes@cmpxchg.org>
+Subject: [PATCH 06/11] mm: vmscan: turn shrink_node_memcg() into shrink_lruvec()
+Date: Mon,  3 Jun 2019 17:07:41 -0400
+Message-ID: <20190603210746.15800-7-hannes@cmpxchg.org>
 References: <20190603210746.15800-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,13 +10,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=0EoeyvI+6nSZVdPsXoo6A3bLjv7jCmnakg13/Vo0S7g=;
-        b=jQQKpymP0x+HXM6AidEDpl+oryXhrFlsULaSJxrk+bRuLIK2zph32NK7fQ9YAJaCBe
-         N7+enaR2Vc1oYLo8aptLEfjl+dIsZ+yBuVWMXGIzNgNQI9SdCmD/jLhITwBQ9ehLSkb+
-         XEVP/h3PMZVC5vzDLRMA2ctacgD5ioiLhXBcIfjUB5IUWXVcT3hHScDrk9eh/9mNvu5o
-         PWXDbM+Um+WQ9hcOjSXq+jo3FDIH6cYOI+MipuzXRWJvoaNI+qxII2acSgoctNl9nHHf
-         375AuTgxJjHK4jIuhHyjGLr4uaIo2/oQ034Ox+mp98rzfJnHVOkExpOIKkw9vVPM1s+r
-         yyag==
+        bh=TZYaz3eXPzGxVmhv3HMCDwJQRLheeIorOMAlH7HJ9WE=;
+        b=WQm7ItMwHktG69xBNCOEpRK0igijLT4KjtCpBChKUtJC8aBS9I40wEtrTmWdpuarBT
+         EckEfBxI/uccO9dAsIBtIyhtxBfgqHV0832w0TwgkUwpZ7L5A7gL+qjqAq5+n37IDIcL
+         QOnCWjesoJnT4Ik5GCuPeO/EyCm9kSCpcQ26IFQLfuLJY5XXNcXM+pfT84cIDT5o+y6o
+         +MhC8h281MnBe0uI2y+qvuR2asCG9iNhPDsNn9dwW9QRXVOtO8309ZMSiP9qFEiRH84p
+         fQJBUtGGkOa0hmoDQAgB3Q9oqONyoSWSGmot04Ty0joMo26ffwXfKHDAmgMunBMEa7eZ
+         vQvw==
 In-Reply-To: <20190603210746.15800-1-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,59 +24,94 @@ Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>, Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-inactive_list_is_low() should be about one thing: checking the ratio
-between inactive and active list. Kitchensink checks like the one for
-swap space makes the function hard to use and modify its
-callsites. Luckly, most callers already have an understanding of the
-swap situation, so it's easy to clean up.
+A lruvec holds LRU pages owned by a certain NUMA node and cgroup.
+Instead of awkwardly passing around a combination of a pgdat and a
+memcg pointer, pass down the lruvec as soon as we can look it up.
 
-get_scan_count() has its own, memcg-aware swap check, and doesn't even
-get to the inactive_list_is_low() check on the anon list when there is
-no swap space available.
-
-shrink_list() is called on the results of get_scan_count(), so that
-check is redundant too.
-
-age_active_anon() has its own totalswap_pages check right before it
-checks the list proportions.
-
-The shrink_node_memcg() site is the only one that doesn't do its own
-swap check. Add it there.
-
-Then delete the swap check from inactive_list_is_low().
+Nested callers that need to access node or cgroup properties can look
+them them up if necessary, but there are only a few cases.
 
 Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
- mm/vmscan.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+ mm/vmscan.c | 21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
 
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 84dcb651d05c..f396424850aa 100644
+index 304974481146..b85111474ee2 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -2165,13 +2165,6 @@ static bool inactive_list_is_low(struct lruvec *lruvec, bool file,
- 	unsigned long refaults;
- 	unsigned long gb;
- 
--	/*
--	 * If we don't have swap space, anonymous page deactivation
--	 * is pointless.
--	 */
--	if (!file && !total_swap_pages)
--		return false;
--
- 	inactive = lruvec_lru_size(lruvec, inactive_lru, sc->reclaim_idx);
- 	active = lruvec_lru_size(lruvec, active_lru, sc->reclaim_idx);
- 
-@@ -2592,7 +2585,7 @@ static void shrink_node_memcg(struct pglist_data *pgdat, struct mem_cgroup *memc
- 	 * Even if we did not try to evict anon pages at all, we want to
- 	 * rebalance the anon lru active/inactive ratio.
- 	 */
--	if (inactive_list_is_low(lruvec, false, sc, true))
-+	if (total_swap_pages && inactive_list_is_low(lruvec, false, sc, true))
- 		shrink_active_list(SWAP_CLUSTER_MAX, lruvec,
- 				   sc, LRU_ACTIVE_ANON);
+@@ -2210,9 +2210,10 @@ enum scan_balance {
+  * nr[0] = anon inactive pages to scan; nr[1] = anon active pages to scan
+  * nr[2] = file inactive pages to scan; nr[3] = file active pages to scan
+  */
+-static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
+-			   struct scan_control *sc, unsigned long *nr)
++static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
++			   unsigned long *nr)
+ {
++	struct mem_cgroup *memcg = lruvec_memcg(lruvec);
+ 	int swappiness = mem_cgroup_swappiness(memcg);
+ 	struct zone_reclaim_stat *reclaim_stat = &lruvec->reclaim_stat;
+ 	u64 fraction[2];
+@@ -2460,13 +2461,8 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
+ 	}
  }
+ 
+-/*
+- * This is a basic per-node page freer.  Used by both kswapd and direct reclaim.
+- */
+-static void shrink_node_memcg(struct pglist_data *pgdat, struct mem_cgroup *memcg,
+-			      struct scan_control *sc)
++static void shrink_lruvec(struct lruvec *lruvec, struct scan_control *sc)
+ {
+-	struct lruvec *lruvec = mem_cgroup_lruvec(memcg, pgdat);
+ 	unsigned long nr[NR_LRU_LISTS];
+ 	unsigned long targets[NR_LRU_LISTS];
+ 	unsigned long nr_to_scan;
+@@ -2476,7 +2472,7 @@ static void shrink_node_memcg(struct pglist_data *pgdat, struct mem_cgroup *memc
+ 	struct blk_plug plug;
+ 	bool scan_adjusted;
+ 
+-	get_scan_count(lruvec, memcg, sc, nr);
++	get_scan_count(lruvec, sc, nr);
+ 
+ 	/* Record the original scan target for proportional adjustments later */
+ 	memcpy(targets, nr, sizeof(nr));
+@@ -2689,6 +2685,7 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+ 
+ 	memcg = mem_cgroup_iter(root, NULL, &reclaim);
+ 	do {
++		struct lruvec *lruvec = mem_cgroup_lruvec(memcg, pgdat);
+ 		unsigned long reclaimed;
+ 		unsigned long scanned;
+ 
+@@ -2725,7 +2722,8 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+ 
+ 		reclaimed = sc->nr_reclaimed;
+ 		scanned = sc->nr_scanned;
+-		shrink_node_memcg(pgdat, memcg, sc);
++
++		shrink_lruvec(lruvec, sc);
+ 
+ 		if (sc->may_shrinkslab) {
+ 			shrink_slab(sc->gfp_mask, pgdat->node_id,
+@@ -3243,6 +3241,7 @@ unsigned long mem_cgroup_shrink_node(struct mem_cgroup *memcg,
+ 						pg_data_t *pgdat,
+ 						unsigned long *nr_scanned)
+ {
++	struct lruvec *lruvec = mem_cgroup_lruvec(memcg, pgdat);
+ 	struct scan_control sc = {
+ 		.nr_to_reclaim = SWAP_CLUSTER_MAX,
+ 		.target_mem_cgroup = memcg,
+@@ -3268,7 +3267,7 @@ unsigned long mem_cgroup_shrink_node(struct mem_cgroup *memcg,
+ 	 * will pick up pages from other mem cgroup's as well. We hack
+ 	 * the priority and make it zero.
+ 	 */
+-	shrink_node_memcg(pgdat, memcg, &sc);
++	shrink_lruvec(lruvec, &sc);
+ 
+ 	trace_mm_vmscan_memcg_softlimit_reclaim_end(
+ 					cgroup_ino(memcg->css.cgroup),
 -- 
 2.21.0
 
