@@ -1,279 +1,133 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 02/11] mm: clean up and clarify lruvec lookup procedure
-Date: Mon,  3 Jun 2019 17:07:37 -0400
-Message-ID: <20190603210746.15800-3-hannes@cmpxchg.org>
-References: <20190603210746.15800-1-hannes@cmpxchg.org>
+From: syzbot <syzbot+9343b7623bc03dc680c1@syzkaller.appspotmail.com>
+Subject: KASAN: slab-out-of-bounds Read in css_task_iter_advance
+Date: Tue, 04 Jun 2019 06:56:06 -0700
+Message-ID: <00000000000097025d058a7fd785@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=z23PZhEFw+QhEt/mQOsZQQYtYHRN5d+bP7DeTd5XrzA=;
-        b=DVH2GCKNrNgADjceKBBm6o8NfcLS2rdp3xbn242c7DdynX2bTZq4lklw8oXnSFQnsP
-         NGyQM9FAa2/b8444R5NSB4X4p380FKi//ZWqYSF8qzZaECNMNRpbAybJZ2BM1iWaV+s3
-         3eFr0kg1fA8ronXzk9Pr181m/Ny9gvc2kpgw9erAMN5iYNk2qxPccfp3hm+epjm3HBXt
-         1bbGpvoMnBQUqho/8UxBBQGfussO1/i8lX0lnXrCrpNWBTzZQjUao2PJ+zbEwfsPvsbW
-         URn6vyjMORUJY2XLzMBMrP5keu32Tll/EFKeFSibqGMVbJAeC06fgohHiwrA/2dgpz5v
-         4obA==
-In-Reply-To: <20190603210746.15800-1-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>, Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+Content-Type: text/plain; charset="us-ascii"; format="flowed"; delsp="yes"
+Content-Transfer-Encoding: 7bit
+To: ast@kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, daniel@iogearbox.net, hannes@cmpxchg.org, kafai@fb.com, linux-kernel@vger.kernel.org, lizefan@huawei.com, netdev@vger.kernel.org, songliubraving@fb.com, syzkaller-bugs@googlegroups.com, tj@kernel.org, yhs@fb.com
 
-There is a per-memcg lruvec and a NUMA node lruvec. Which one is being
-used is somewhat confusing right now, and it's easy to make mistakes -
-especially when it comes to global reclaim.
+Hello,
 
-How it works: when memory cgroups are enabled, we always use the
-root_mem_cgroup's per-node lruvecs. When memory cgroups are not
-compiled in or disabled at runtime, we use pgdat->lruvec.
+syzbot found the following crash on:
 
-Document that in a comment.
+HEAD commit:    56b697c6 Add linux-next specific files for 20190604
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=170d747ca00000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=4248d6bc70076f7d
+dashboard link: https://syzkaller.appspot.com/bug?extid=9343b7623bc03dc680c1
+compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
 
-Due to the way the reclaim code is generalized, all lookups use the
-mem_cgroup_lruvec() helper function, and nobody should have to find
-the right lruvec manually right now. But to avoid future mistakes,
-rename the pgdat->lruvec member to pgdat->__lruvec and delete the
-convenience wrapper that suggests it's a commonly accessed member.
+Unfortunately, I don't have any reproducer for this crash yet.
 
-While in this area, swap the mem_cgroup_lruvec() argument order. The
-name suggests a memcg operation, yet it takes a pgdat first and a
-memcg second. I have to double take every time I call this. Fix that.
+IMPORTANT: if you fix the bug, please add the following tag to the commit:
+Reported-by: syzbot+9343b7623bc03dc680c1@syzkaller.appspotmail.com
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+==================================================================
+BUG: KASAN: slab-out-of-bounds in css_task_iter_advance+0x49b/0x540  
+kernel/cgroup/cgroup.c:4507
+Read of size 4 at addr ffff88809ae59d64 by task syz-executor.2/28895
+
+CPU: 1 PID: 28895 Comm: syz-executor.2 Not tainted 5.2.0-rc3-next-20190604  
+#8
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
+Google 01/01/2011
+Call Trace:
+  __dump_stack lib/dump_stack.c:77 [inline]
+  dump_stack+0x172/0x1f0 lib/dump_stack.c:113
+  print_address_description.cold+0xd4/0x306 mm/kasan/report.c:351
+  __kasan_report.cold+0x1b/0x36 mm/kasan/report.c:482
+  kasan_report+0x12/0x20 mm/kasan/common.c:614
+  __asan_report_load4_noabort+0x14/0x20 mm/kasan/generic_report.c:131
+  css_task_iter_advance+0x49b/0x540 kernel/cgroup/cgroup.c:4507
+  css_task_iter_start+0x18b/0x230 kernel/cgroup/cgroup.c:4543
+  update_tasks_flags+0x85/0x100 kernel/cgroup/cpuset.c:1836
+  update_flag+0x232/0x470 kernel/cgroup/cpuset.c:1886
+  cpuset_write_u64+0x222/0x270 kernel/cgroup/cpuset.c:2268
+  cgroup_file_write+0x4db/0x790 kernel/cgroup/cgroup.c:3727
+  kernfs_fop_write+0x2b8/0x480 fs/kernfs/file.c:316
+  __vfs_write+0x8a/0x110 fs/read_write.c:494
+  vfs_write+0x268/0x5d0 fs/read_write.c:558
+  ksys_write+0x14f/0x290 fs/read_write.c:611
+  __do_sys_write fs/read_write.c:623 [inline]
+  __se_sys_write fs/read_write.c:620 [inline]
+  __x64_sys_write+0x73/0xb0 fs/read_write.c:620
+  do_syscall_64+0xfd/0x680 arch/x86/entry/common.c:301
+  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+RIP: 0033:0x459279
+Code: fd b7 fb ff c3 66 2e 0f 1f 84 00 00 00 00 00 66 90 48 89 f8 48 89 f7  
+48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff  
+ff 0f 83 cb b7 fb ff c3 66 2e 0f 1f 84 00 00 00 00
+RSP: 002b:00007f8d15ef2c78 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 0000000000459279
+RDX: 0000000000000011 RSI: 00000000200000c0 RDI: 0000000000000004
+RBP: 000000000075bf20 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 00007f8d15ef36d4
+R13: 00000000004c8eb1 R14: 00000000004dfb68 R15: 00000000ffffffff
+
+Allocated by task 9803:
+  save_stack+0x23/0x90 mm/kasan/common.c:71
+  set_track mm/kasan/common.c:79 [inline]
+  __kasan_kmalloc mm/kasan/common.c:489 [inline]
+  __kasan_kmalloc.constprop.0+0xcf/0xe0 mm/kasan/common.c:462
+  kasan_slab_alloc+0xf/0x20 mm/kasan/common.c:497
+  slab_post_alloc_hook mm/slab.h:444 [inline]
+  slab_alloc mm/slab.c:3320 [inline]
+  kmem_cache_alloc+0x11a/0x6f0 mm/slab.c:3482
+  getname_flags fs/namei.c:138 [inline]
+  getname_flags+0xd6/0x5b0 fs/namei.c:128
+  getname fs/namei.c:209 [inline]
+  do_renameat2+0x199/0xc40 fs/namei.c:4543
+  __do_sys_rename fs/namei.c:4671 [inline]
+  __se_sys_rename fs/namei.c:4669 [inline]
+  __x64_sys_rename+0x61/0x80 fs/namei.c:4669
+  do_syscall_64+0xfd/0x680 arch/x86/entry/common.c:301
+  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+Freed by task 9803:
+  save_stack+0x23/0x90 mm/kasan/common.c:71
+  set_track mm/kasan/common.c:79 [inline]
+  __kasan_slab_free+0x102/0x150 mm/kasan/common.c:451
+  kasan_slab_free+0xe/0x10 mm/kasan/common.c:459
+  __cache_free mm/slab.c:3426 [inline]
+  kmem_cache_free+0x86/0x320 mm/slab.c:3692
+  putname+0xef/0x130 fs/namei.c:259
+  do_renameat2+0x2b4/0xc40 fs/namei.c:4647
+  __do_sys_rename fs/namei.c:4671 [inline]
+  __se_sys_rename fs/namei.c:4669 [inline]
+  __x64_sys_rename+0x61/0x80 fs/namei.c:4669
+  do_syscall_64+0xfd/0x680 arch/x86/entry/common.c:301
+  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+The buggy address belongs to the object at ffff88809ae58440
+  which belongs to the cache names_cache of size 4096
+The buggy address is located 2340 bytes to the right of
+  4096-byte region [ffff88809ae58440, ffff88809ae59440)
+The buggy address belongs to the page:
+page:ffffea00026b9600 refcount:1 mapcount:0 mapping:ffff8880aa593ac0  
+index:0x0 compound_mapcount: 0
+flags: 0x1fffc0000010200(slab|head)
+raw: 01fffc0000010200 ffffea00018b4308 ffffea0001afb488 ffff8880aa593ac0
+raw: 0000000000000000 ffff88809ae58440 0000000100000001 0000000000000000
+page dumped because: kasan: bad access detected
+
+Memory state around the buggy address:
+  ffff88809ae59c00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+  ffff88809ae59c80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+> ffff88809ae59d00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+                                                        ^
+  ffff88809ae59d80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+  ffff88809ae59e00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+==================================================================
+
+
 ---
- include/linux/memcontrol.h | 26 +++++++++++++-------------
- include/linux/mmzone.h     | 15 ++++++++-------
- mm/memcontrol.c            |  6 +++---
- mm/page_alloc.c            |  2 +-
- mm/vmscan.c                |  6 +++---
- mm/workingset.c            |  8 ++++----
- 6 files changed, 32 insertions(+), 31 deletions(-)
+This bug is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index fa1e8cb1b3e2..fc32cfaebf32 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -382,22 +382,22 @@ mem_cgroup_nodeinfo(struct mem_cgroup *memcg, int nid)
- }
- 
- /**
-- * mem_cgroup_lruvec - get the lru list vector for a node or a memcg zone
-- * @node: node of the wanted lruvec
-+ * mem_cgroup_lruvec - get the lru list vector for a memcg & node
-  * @memcg: memcg of the wanted lruvec
-+ * @node: node of the wanted lruvec
-  *
-- * Returns the lru list vector holding pages for a given @node or a given
-- * @memcg and @zone. This can be the node lruvec, if the memory controller
-- * is disabled.
-+ * Returns the lru list vector holding pages for a given @memcg &
-+ * @node combination. This can be the node lruvec, if the memory
-+ * controller is disabled.
-  */
--static inline struct lruvec *mem_cgroup_lruvec(struct pglist_data *pgdat,
--				struct mem_cgroup *memcg)
-+static inline struct lruvec *mem_cgroup_lruvec(struct mem_cgroup *memcg,
-+					       struct pglist_data *pgdat)
- {
- 	struct mem_cgroup_per_node *mz;
- 	struct lruvec *lruvec;
- 
- 	if (mem_cgroup_disabled()) {
--		lruvec = node_lruvec(pgdat);
-+		lruvec = &pgdat->__lruvec;
- 		goto out;
- 	}
- 
-@@ -716,7 +716,7 @@ static inline void __mod_lruvec_page_state(struct page *page,
- 		return;
- 	}
- 
--	lruvec = mem_cgroup_lruvec(pgdat, page->mem_cgroup);
-+	lruvec = mem_cgroup_lruvec(page->mem_cgroup, pgdat);
- 	__mod_lruvec_state(lruvec, idx, val);
- }
- 
-@@ -887,16 +887,16 @@ static inline void mem_cgroup_migrate(struct page *old, struct page *new)
- {
- }
- 
--static inline struct lruvec *mem_cgroup_lruvec(struct pglist_data *pgdat,
--				struct mem_cgroup *memcg)
-+static inline struct lruvec *mem_cgroup_lruvec(struct mem_cgroup *memcg,
-+					       struct pglist_data *pgdat)
- {
--	return node_lruvec(pgdat);
-+	return &pgdat->__lruvec;
- }
- 
- static inline struct lruvec *mem_cgroup_page_lruvec(struct page *page,
- 						    struct pglist_data *pgdat)
- {
--	return &pgdat->lruvec;
-+	return &pgdat->__lruvec;
- }
- 
- static inline bool mm_match_cgroup(struct mm_struct *mm,
-diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-index 427b79c39b3c..95d63a395f40 100644
---- a/include/linux/mmzone.h
-+++ b/include/linux/mmzone.h
-@@ -761,7 +761,13 @@ typedef struct pglist_data {
- #endif
- 
- 	/* Fields commonly accessed by the page reclaim scanner */
--	struct lruvec		lruvec;
-+
-+	/*
-+	 * NOTE: THIS IS UNUSED IF MEMCG IS ENABLED.
-+	 *
-+	 * Use mem_cgroup_lruvec() to look up lruvecs.
-+	 */
-+	struct lruvec		__lruvec;
- 
- 	unsigned long		flags;
- 
-@@ -784,11 +790,6 @@ typedef struct pglist_data {
- #define node_start_pfn(nid)	(NODE_DATA(nid)->node_start_pfn)
- #define node_end_pfn(nid) pgdat_end_pfn(NODE_DATA(nid))
- 
--static inline struct lruvec *node_lruvec(struct pglist_data *pgdat)
--{
--	return &pgdat->lruvec;
--}
--
- static inline unsigned long pgdat_end_pfn(pg_data_t *pgdat)
- {
- 	return pgdat->node_start_pfn + pgdat->node_spanned_pages;
-@@ -826,7 +827,7 @@ static inline struct pglist_data *lruvec_pgdat(struct lruvec *lruvec)
- #ifdef CONFIG_MEMCG
- 	return lruvec->pgdat;
- #else
--	return container_of(lruvec, struct pglist_data, lruvec);
-+	return container_of(lruvec, struct pglist_data, __lruvec);
- #endif
- }
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c193aef3ba9e..6de8ca735ee2 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1200,7 +1200,7 @@ struct lruvec *mem_cgroup_page_lruvec(struct page *page, struct pglist_data *pgd
- 	struct lruvec *lruvec;
- 
- 	if (mem_cgroup_disabled()) {
--		lruvec = &pgdat->lruvec;
-+		lruvec = &pgdat->__lruvec;
- 		goto out;
- 	}
- 
-@@ -1518,7 +1518,7 @@ static bool mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
- static bool test_mem_cgroup_node_reclaimable(struct mem_cgroup *memcg,
- 		int nid, bool noswap)
- {
--	struct lruvec *lruvec = mem_cgroup_lruvec(NODE_DATA(nid), memcg);
-+	struct lruvec *lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
- 
- 	if (lruvec_page_state(lruvec, NR_INACTIVE_FILE) ||
- 	    lruvec_page_state(lruvec, NR_ACTIVE_FILE))
-@@ -3406,7 +3406,7 @@ static int mem_cgroup_move_charge_write(struct cgroup_subsys_state *css,
- static unsigned long mem_cgroup_node_nr_lru_pages(struct mem_cgroup *memcg,
- 					   int nid, unsigned int lru_mask)
- {
--	struct lruvec *lruvec = mem_cgroup_lruvec(NODE_DATA(nid), memcg);
-+	struct lruvec *lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
- 	unsigned long nr = 0;
- 	enum lru_list lru;
- 
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index a345418b548e..cd8e64e536f7 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -6619,7 +6619,7 @@ static void __meminit pgdat_init_internals(struct pglist_data *pgdat)
- 
- 	pgdat_page_ext_init(pgdat);
- 	spin_lock_init(&pgdat->lru_lock);
--	lruvec_init(node_lruvec(pgdat));
-+	lruvec_init(&pgdat->__lruvec);
- }
- 
- static void __meminit zone_init_internals(struct zone *zone, enum zone_type idx, int nid,
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index f396424850aa..853be16ee5e2 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -2477,7 +2477,7 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
- static void shrink_node_memcg(struct pglist_data *pgdat, struct mem_cgroup *memcg,
- 			      struct scan_control *sc)
- {
--	struct lruvec *lruvec = mem_cgroup_lruvec(pgdat, memcg);
-+	struct lruvec *lruvec = mem_cgroup_lruvec(memcg, pgdat);
- 	unsigned long nr[NR_LRU_LISTS];
- 	unsigned long targets[NR_LRU_LISTS];
- 	unsigned long nr_to_scan;
-@@ -2988,7 +2988,7 @@ static void snapshot_refaults(struct mem_cgroup *root_memcg, pg_data_t *pgdat)
- 		unsigned long refaults;
- 		struct lruvec *lruvec;
- 
--		lruvec = mem_cgroup_lruvec(pgdat, memcg);
-+		lruvec = mem_cgroup_lruvec(memcg, pgdat);
- 		refaults = lruvec_page_state_local(lruvec, WORKINGSET_ACTIVATE);
- 		lruvec->refaults = refaults;
- 	} while ((memcg = mem_cgroup_iter(root_memcg, memcg, NULL)));
-@@ -3351,7 +3351,7 @@ static void age_active_anon(struct pglist_data *pgdat,
- 
- 	memcg = mem_cgroup_iter(NULL, NULL, NULL);
- 	do {
--		struct lruvec *lruvec = mem_cgroup_lruvec(pgdat, memcg);
-+		struct lruvec *lruvec = mem_cgroup_lruvec(memcg, pgdat);
- 
- 		if (inactive_list_is_low(lruvec, false, sc, true))
- 			shrink_active_list(SWAP_CLUSTER_MAX, lruvec,
-diff --git a/mm/workingset.c b/mm/workingset.c
-index e0b4edcb88c8..2aaa70bea99c 100644
---- a/mm/workingset.c
-+++ b/mm/workingset.c
-@@ -233,7 +233,7 @@ void *workingset_eviction(struct page *page)
- 	VM_BUG_ON_PAGE(page_count(page), page);
- 	VM_BUG_ON_PAGE(!PageLocked(page), page);
- 
--	lruvec = mem_cgroup_lruvec(pgdat, memcg);
-+	lruvec = mem_cgroup_lruvec(memcg, pgdat);
- 	eviction = atomic_long_inc_return(&lruvec->inactive_age);
- 	return pack_shadow(memcgid, pgdat, eviction, PageWorkingset(page));
- }
-@@ -280,7 +280,7 @@ void workingset_refault(struct page *page, void *shadow)
- 	memcg = mem_cgroup_from_id(memcgid);
- 	if (!mem_cgroup_disabled() && !memcg)
- 		goto out;
--	lruvec = mem_cgroup_lruvec(pgdat, memcg);
-+	lruvec = mem_cgroup_lruvec(memcg, pgdat);
- 	refault = atomic_long_read(&lruvec->inactive_age);
- 	active_file = lruvec_lru_size(lruvec, LRU_ACTIVE_FILE, MAX_NR_ZONES);
- 
-@@ -345,7 +345,7 @@ void workingset_activation(struct page *page)
- 	memcg = page_memcg_rcu(page);
- 	if (!mem_cgroup_disabled() && !memcg)
- 		goto out;
--	lruvec = mem_cgroup_lruvec(page_pgdat(page), memcg);
-+	lruvec = mem_cgroup_lruvec(memcg, page_pgdat(page));
- 	atomic_long_inc(&lruvec->inactive_age);
- out:
- 	rcu_read_unlock();
-@@ -428,7 +428,7 @@ static unsigned long count_shadow_nodes(struct shrinker *shrinker,
- 		struct lruvec *lruvec;
- 		int i;
- 
--		lruvec = mem_cgroup_lruvec(NODE_DATA(sc->nid), sc->memcg);
-+		lruvec = mem_cgroup_lruvec(sc->memcg, NODE_DATA(sc->nid));
- 		for (pages = 0, i = 0; i < NR_LRU_LISTS; i++)
- 			pages += lruvec_page_state_local(lruvec,
- 							 NR_LRU_BASE + i);
--- 
-2.21.0
-
+syzbot will keep track of this bug report. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
