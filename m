@@ -1,7 +1,7 @@
-From: Mark Rutland <mark.rutland@arm.com>
+From: Mike Rapoport <rppt@linux.ibm.com>
 Subject: Re: [PATCH -next] arm64/mm: fix a bogus GFP flag in pgd_alloc()
-Date: Tue, 4 Jun 2019 15:30:20 +0100
-Message-ID: <20190604143020.GD24467@lakrids.cambridge.arm.com>
+Date: Tue, 4 Jun 2019 17:54:22 +0300
+Message-ID: <20190604145422.GG8417@rapoport-lnx>
 References: <1559656836-24940-1-git-send-email-cai@lca.pw>
  <20190604142338.GC24467@lakrids.cambridge.arm.com>
 Mime-Version: 1.0
@@ -12,8 +12,8 @@ Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Qian Cai <cai@lca.pw>, rppt@linux.ibm.com
-Cc: akpm@linux-foundation.org, catalin.marinas@arm.com, will.deacon@arm.com, linux-kernel@vger.kernel.org, mhocko@kernel.org, linux-mm@kvack.org, vdavydov.dev@gmail.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+To: Mark Rutland <mark.rutland@arm.com>
+Cc: Qian Cai <cai@lca.pw>, akpm@linux-foundation.org, catalin.marinas@arm.com, will.deacon@arm.com, linux-kernel@vger.kernel.org, mhocko@kernel.org, linux-mm@kvack.org, vdavydov.dev@gmail.com, hannes@cmpxchg.org, guro@fb.com, cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
 On Tue, Jun 04, 2019 at 03:23:38PM +0100, Mark Rutland wrote:
 > On Tue, Jun 04, 2019 at 10:00:36AM -0400, Qian Cai wrote:
@@ -30,7 +30,13 @@ On Tue, Jun 04, 2019 at 03:23:38PM +0100, Mark Rutland wrote:
 > as the accounting should bypass kernel threads.
 > 
 > Was that assumption wrong, or is something different happening here?
-> 
+
+I was under impression that all allocations are going through
+__memcg_kmem_charge() which does the bypass.
+
+Apparently, it's not the case :(
+
+> > 
 > > backtrace:
 > >   kobject_add_internal
 > >   kobject_init_and_add
@@ -63,14 +69,22 @@ On Tue, Jun 04, 2019 at 03:23:38PM +0100, Mark Rutland wrote:
 > for the efi runtime services), so while this may fix the regression, I'm
 > not sure it's the right fix.
 
-I see that since [1], pgd_alloc() was updated to special-case the
-init_mm, which is not sufficient for cases like:
+Me neither.
+ 
+> Do we need a separate pgd_alloc_kernel()?
+ 
+I'd like to take a closer look at memcg paths once again before adding
+pgd_alloc_kernel().
 
-	efi_mm.pgd = pgd_alloc(&efi_mm)
+Johannes, Roman, can you please advise anything?
 
-... which occurs in a kthread.
+> Thanks,
+> Mark.
+> 
+> [1] https://lkml.kernel.org/r/20190505061956.GE15755@rapoport-lnx
+> 
 
-So let's have a pgd_alloc_kernel() to make that explicit.
+-- 
+Sincerely yours,
+Mike.
 
-Thanks,
-Mark.
