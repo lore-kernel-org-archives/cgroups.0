@@ -1,7 +1,7 @@
 From: Daniel Jordan <daniel.m.jordan@oracle.com>
-Subject: [RFC v2 1/5] cgroup: add cgroup v2 interfaces to migrate kernel threads
-Date: Wed,  5 Jun 2019 09:36:46 -0400
-Message-ID: <20190605133650.28545-2-daniel.m.jordan@oracle.com>
+Subject: [RFC v2 5/5] ktask, cgroup: attach helper threads to the master thread's cgroup
+Date: Wed,  5 Jun 2019 09:36:50 -0400
+Message-ID: <20190605133650.28545-6-daniel.m.jordan@oracle.com>
 References: <20190605133650.28545-1-daniel.m.jordan@oracle.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,12 +9,12 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-transfer-encoding; s=corp-2018-07-02;
- bh=u+zLCba4ifvorqHECxdb8NWOVORyLACPhu1rUxGfaiU=;
- b=04/ccSPIDB9rw0yaqtcHi0KxfYmVhroln6GrxIIJzj+KGMwFDFX7hLTbB5o3fTLxBF89
- f6L2rcGShr+HLDMtx402CIThkjTlkqOfuo5U4Vd+MJrso7BezPsVTOmqkth7JJQ+RTEc
- kb14qh1piCluKWghlyGA2hLFa4230l30Vnc3+2m6xnNZIVg07MSAiWxocE7bA/4j0m0+
- TK9uMGn+1S+nIxB5mvY6N/WRTOKYBwl3FYzT/tWQhVUECUikgTVXITWKP/BEzEeEU74+
- 6ZJYd4KTUVHwSCKtYk7FLDVi+4/BwJsFLksq3zUNl7MKDZf0qHnUIp/9vO+eJvVWqjYF RA== 
+ bh=8yYACzlvtHpZ4BGD0wo6T7cr3uUD8GGsT+k2KVWRDBw=;
+ b=KgjE/QqSvEaVhxjmUZSwxl3HJ81jm0KfBRa6GrQqRCsxSbtGJII3Vn0krmhid9ln8mxl
+ /IAuycz4jC5dI7ZQ+BbIdfgrUIddnOrjMaUlQBmSmAjx7jbhhKxVHO0tmRvnjBa6T652
+ 1mOFsUnAF0jSPfRCh+xnFIDivnRf2yGS/XbnthP+tMOotD5MgJmBMZacmbItiC7n9UY8
+ xouolCSMtTywmiU/Bp/x438/4Fs3wutxNVFHbbgMiC/WVKzta3VvayOSXeVvQmIe2eSu
+ WNjobOq+HhQiFUAGXPjGTblcavUC3T9/ef9esBe90wb/Cr5yjigYZ00ZXYJUirGpd8z4 7w== 
 In-Reply-To: <20190605133650.28545-1-daniel.m.jordan@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -22,111 +22,191 @@ Content-Type: text/plain; charset="us-ascii"
 To: hannes@cmpxchg.org, jiangshanlai@gmail.com, lizefan@huawei.com, tj@kernel.org
 Cc: bsd@redhat.com, dan.j.williams@intel.com, daniel.m.jordan@oracle.com, dave.hansen@intel.com, juri.lelli@redhat.com, mhocko@kernel.org, peterz@infradead.org, steven.sistare@oracle.com, tglx@linutronix.de, tom.hromatka@oracle.com, vdavydov.dev@gmail.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-Prepare for cgroup aware workqueues by introducing cgroup_attach_kthread
-and a helper cgroup_attach_kthread_to_dfl_root.
+ktask tasks are expensive, and helper threads are not currently
+throttled by the master's cgroup, so helpers' resource usage is
+unbounded.
 
-A workqueue worker will always migrate itself, so for now use @current
-in the interfaces to avoid handling task references.
+Attach helper threads to the master thread's cgroup to ensure helpers
+get this throttling.
+
+It's possible for the master to be migrated to a new cgroup before the
+task is finished.  In that case, to keep it simple, the helpers continue
+executing in the original cgroup.
 
 Signed-off-by: Daniel Jordan <daniel.m.jordan@oracle.com>
 ---
- include/linux/cgroup.h |  6 ++++++
- kernel/cgroup/cgroup.c | 48 +++++++++++++++++++++++++++++++++++++-----
- 2 files changed, 49 insertions(+), 5 deletions(-)
+ include/linux/cgroup.h | 26 ++++++++++++++++++++++++++
+ kernel/ktask.c         | 32 ++++++++++++++++++++------------
+ 2 files changed, 46 insertions(+), 12 deletions(-)
 
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 81f58b4a5418..ad78784e3692 100644
+index de578e29077b..67b2c469f17f 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
-@@ -103,6 +103,7 @@ struct cgroup_subsys_state *css_tryget_online_from_dir(struct dentry *dentry,
- struct cgroup *cgroup_get_from_path(const char *path);
- struct cgroup *cgroup_get_from_fd(int fd);
- 
-+int cgroup_attach_kthread(struct cgroup *dst_cgrp);
- int cgroup_attach_task_all(struct task_struct *from, struct task_struct *);
- int cgroup_transfer_tasks(struct cgroup *to, struct cgroup *from);
- 
-@@ -530,6 +531,11 @@ static inline struct cgroup *task_dfl_cgroup(struct task_struct *task)
+@@ -532,6 +532,28 @@ static inline struct cgroup *task_dfl_cgroup(struct task_struct *task)
  	return task_css_set(task)->dfl_cgrp;
  }
  
-+static inline int cgroup_attach_kthread_to_dfl_root(void)
-+{
-+	return cgroup_attach_kthread(&cgrp_dfl_root.cgrp);
-+}
-+
- static inline struct cgroup *cgroup_parent(struct cgroup *cgrp)
- {
- 	struct cgroup_subsys_state *parent_css = cgrp->self.parent;
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 3f2b4bde0f9c..bc8d6a2e529f 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -2771,21 +2771,59 @@ struct task_struct *cgroup_procs_write_start(char *buf, bool threadgroup)
- 	return tsk;
- }
- 
--void cgroup_procs_write_finish(struct task_struct *task)
--	__releases(&cgroup_threadgroup_rwsem)
-+static void __cgroup_procs_write_finish(struct task_struct *task)
- {
- 	struct cgroup_subsys *ss;
- 	int ssid;
- 
--	/* release reference from cgroup_procs_write_start() */
--	put_task_struct(task);
-+	lockdep_assert_held(&cgroup_mutex);
- 
--	percpu_up_write(&cgroup_threadgroup_rwsem);
- 	for_each_subsys(ss, ssid)
- 		if (ss->post_attach)
- 			ss->post_attach();
- }
- 
-+void cgroup_procs_write_finish(struct task_struct *task)
-+	__releases(&cgroup_threadgroup_rwsem)
-+{
-+	lockdep_assert_held(&cgroup_mutex);
-+
-+	/* release reference from cgroup_procs_write_start() */
-+	put_task_struct(task);
-+
-+	percpu_up_write(&cgroup_threadgroup_rwsem);
-+	__cgroup_procs_write_finish(task);
-+}
-+
 +/**
-+ * cgroup_attach_kthread - attach the current kernel thread to a cgroup
-+ * @dst_cgrp: the cgroup to attach to
++ * task_get_dfl_cgroup - find and get the default hierarchy cgroup for task
++ * @task: the target task
 + *
-+ * The caller is responsible for ensuring @dst_cgrp is valid until this
-+ * function returns.
-+ *
-+ * Return: 0 on success or negative error code.
++ * Find the default hierarchy cgroup for @task, take a reference on it, and
++ * return it.  Guaranteed to return a valid cgroup.
 + */
-+int cgroup_attach_kthread(struct cgroup *dst_cgrp)
++static inline struct cgroup *task_get_dfl_cgroup(struct task_struct *task)
 +{
-+	int ret;
++	struct cgroup *cgroup;
 +
-+	if (WARN_ON_ONCE(!(current->flags & PF_KTHREAD)))
-+		return -EINVAL;
-+
-+	mutex_lock(&cgroup_mutex);
-+
-+	percpu_down_write(&cgroup_threadgroup_rwsem);
-+	ret = cgroup_attach_task(dst_cgrp, current, false);
-+	percpu_up_write(&cgroup_threadgroup_rwsem);
-+
-+	__cgroup_procs_write_finish(current);
-+
-+	mutex_unlock(&cgroup_mutex);
-+
-+	return ret;
++	rcu_read_lock();
++	while (true) {
++		cgroup = task_dfl_cgroup(task);
++		if (likely(css_tryget_online(&cgroup->self)))
++			break;
++		cpu_relax();
++	}
++	rcu_read_unlock();
++	return cgroup;
 +}
 +
- static void cgroup_print_ss_mask(struct seq_file *seq, u16 ss_mask)
+ static inline struct cgroup *cgroup_dfl_root(void)
  {
- 	struct cgroup_subsys *ss;
+ 	return &cgrp_dfl_root.cgrp;
+@@ -705,6 +727,10 @@ static inline struct cgroup *task_dfl_cgroup(struct task_struct *task)
+ {
+ 	return NULL;
+ }
++static inline struct cgroup *task_get_dfl_cgroup(struct task_struct *task)
++{
++	return NULL;
++}
+ static inline int cgroup_attach_task_all(struct task_struct *from,
+ 					 struct task_struct *t) { return 0; }
+ static inline int cgroupstats_build(struct cgroupstats *stats,
+diff --git a/kernel/ktask.c b/kernel/ktask.c
+index 15d62ed7c67e..b047f30f77fa 100644
+--- a/kernel/ktask.c
++++ b/kernel/ktask.c
+@@ -14,6 +14,7 @@
+ 
+ #ifdef CONFIG_KTASK
+ 
++#include <linux/cgroup.h>
+ #include <linux/cpu.h>
+ #include <linux/cpumask.h>
+ #include <linux/init.h>
+@@ -49,7 +50,7 @@ enum ktask_work_flags {
+ 
+ /* Used to pass ktask data to the workqueue API. */
+ struct ktask_work {
+-	struct work_struct	kw_work;
++	struct cgroup_work	kw_work;
+ 	struct ktask_task	*kw_task;
+ 	int			kw_ktask_node_i;
+ 	int			kw_queue_nid;
+@@ -76,6 +77,7 @@ struct ktask_task {
+ 	size_t			kt_nr_nodes;
+ 	size_t			kt_nr_nodes_left;
+ 	int			kt_error; /* first error from thread_func */
++	struct cgroup		*kt_cgroup;
+ #ifdef CONFIG_LOCKDEP
+ 	struct lockdep_map	kt_lockdep_map;
+ #endif
+@@ -103,16 +105,16 @@ static void ktask_init_work(struct ktask_work *kw, struct ktask_task *kt,
+ {
+ 	/* The master's work is always on the stack--in __ktask_run_numa. */
+ 	if (flags & KTASK_WORK_MASTER)
+-		INIT_WORK_ONSTACK(&kw->kw_work, ktask_thread);
++		INIT_CGROUP_WORK_ONSTACK(&kw->kw_work, ktask_thread);
+ 	else
+-		INIT_WORK(&kw->kw_work, ktask_thread);
++		INIT_CGROUP_WORK(&kw->kw_work, ktask_thread);
+ 	kw->kw_task = kt;
+ 	kw->kw_ktask_node_i = ktask_node_i;
+ 	kw->kw_queue_nid = queue_nid;
+ 	kw->kw_flags = flags;
+ }
+ 
+-static void ktask_queue_work(struct ktask_work *kw)
++static void ktask_queue_work(struct ktask_work *kw, struct cgroup *cgroup)
+ {
+ 	struct workqueue_struct *wq;
+ 
+@@ -128,7 +130,8 @@ static void ktask_queue_work(struct ktask_work *kw)
+ 	}
+ 
+ 	WARN_ON(!wq);
+-	WARN_ON(!queue_work_node(kw->kw_queue_nid, wq, &kw->kw_work));
++	WARN_ON(!queue_cgroup_work_node(kw->kw_queue_nid, wq, &kw->kw_work,
++		cgroup));
+ }
+ 
+ /* Returns true if we're migrating this part of the task to another node. */
+@@ -163,14 +166,15 @@ static bool ktask_node_migrate(struct ktask_node *old_kn, struct ktask_node *kn,
+ 
+ 	WARN_ON(kw->kw_flags & (KTASK_WORK_FINISHED | KTASK_WORK_UNDO));
+ 	ktask_init_work(kw, kt, ktask_node_i, new_queue_nid, kw->kw_flags);
+-	ktask_queue_work(kw);
++	ktask_queue_work(kw, kt->kt_cgroup);
+ 
+ 	return true;
+ }
+ 
+ static void ktask_thread(struct work_struct *work)
+ {
+-	struct ktask_work  *kw = container_of(work, struct ktask_work, kw_work);
++	struct cgroup_work *cw = container_of(work, struct cgroup_work, work);
++	struct ktask_work  *kw = container_of(cw, struct ktask_work, kw_work);
+ 	struct ktask_task  *kt = kw->kw_task;
+ 	struct ktask_ctl   *kc = &kt->kt_ctl;
+ 	struct ktask_node  *kn = &kt->kt_nodes[kw->kw_ktask_node_i];
+@@ -455,7 +459,7 @@ static void __ktask_wait_for_completion(struct ktask_task *kt,
+ 		while (!(READ_ONCE(work->kw_flags) & KTASK_WORK_FINISHED))
+ 			cpu_relax();
+ 	} else {
+-		flush_work_at_nice(&work->kw_work, task_nice(current));
++		flush_work_at_nice(&work->kw_work.work, task_nice(current));
+ 	}
+ }
+ 
+@@ -530,15 +534,18 @@ int __ktask_run_numa(struct ktask_node *nodes, size_t nr_nodes,
+ 	kt.kt_chunk_size = ktask_chunk_size(kt.kt_total_size,
+ 					    ctl->kc_min_chunk_size, nr_works);
+ 
++	/* Ensure the master's cgroup throttles helper threads. */
++	kt.kt_cgroup = task_get_dfl_cgroup(current);
+ 	list_for_each_entry(work, &unfinished_works, kw_list)
+-		ktask_queue_work(work);
++		ktask_queue_work(work, kt.kt_cgroup);
+ 
+ 	/* Use the current thread, which saves starting a workqueue worker. */
+ 	ktask_init_work(&kw, &kt, 0, nodes[0].kn_nid, KTASK_WORK_MASTER);
+ 	INIT_LIST_HEAD(&kw.kw_list);
+-	ktask_thread(&kw.kw_work);
++	ktask_thread(&kw.kw_work.work);
+ 
+ 	ktask_wait_for_completion(&kt, &unfinished_works, &finished_works);
++	cgroup_put(kt.kt_cgroup);
+ 
+ 	if (kt.kt_error != KTASK_RETURN_SUCCESS && ctl->kc_undo_func)
+ 		ktask_undo(nodes, nr_nodes, ctl, &finished_works, &kw);
+@@ -611,13 +618,14 @@ void __init ktask_init(void)
+ 	if (!ktask_rlim_init())
+ 		goto out;
+ 
+-	ktask_wq = alloc_workqueue("ktask_wq", WQ_UNBOUND, 0);
++	ktask_wq = alloc_workqueue("ktask_wq", WQ_UNBOUND | WQ_CGROUP, 0);
+ 	if (!ktask_wq) {
+ 		pr_warn("disabled (failed to alloc ktask_wq)");
+ 		goto out;
+ 	}
+ 
+-	ktask_nonuma_wq = alloc_workqueue("ktask_nonuma_wq", WQ_UNBOUND, 0);
++	ktask_nonuma_wq = alloc_workqueue("ktask_nonuma_wq",
++					  WQ_UNBOUND | WQ_CGROUP, 0);
+ 	if (!ktask_nonuma_wq) {
+ 		pr_warn("disabled (failed to alloc ktask_nonuma_wq)");
+ 		goto alloc_fail;
 -- 
 2.21.0
 
