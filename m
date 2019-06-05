@@ -1,156 +1,179 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] mm: memcontrol: dump memory.stat during cgroup OOM
-Date: Wed, 5 Jun 2019 12:11:33 -0400
-Message-ID: <20190605161133.GA12453@cmpxchg.org>
-References: <20190604210509.9744-1-hannes@cmpxchg.org>
- <20190605120837.GE15685@dhcp22.suse.cz>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v4 0/7] mm: reparent slab memory on cgroup removal
+Date: Wed, 5 Jun 2019 17:33:00 +0000
+Message-ID: <20190605173256.GB10098@tower.DHCP.thefacebook.com>
+References: <20190514213940.2405198-1-guro@fb.com>
+ <xr93ef48v5ub.fsf@gthelen.svl.corp.google.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=KwGTPhlO4F01V7ggP/cBc9JouzklE/A9aHOmDIgUHBk=;
-        b=zjoAxtmU+7WyTYQ00sJFDH6OJqtCjZpplgs9SVN+RWNg6guyKEzFqHxWvkeWD5xfQx
-         3viyeJVCAPj+8k0LO4Z+bc2QpTkfCW9m8xZE9z6fUdeDh7YFKe1UZZyi0rL238e8zESs
-         MYs+yNFzM+DRnW6HrIeF6FbVmC7ddiFnlLH2M9Lor+6Q+h9+zxEHT4bocMkRdEW4SE1O
-         tCd8Z2lNM9FmEhZvR0Aq+vQRXZxxJ1ZRDemdOvmtML38bbyLZbowaKM5F0TdIWZ+tBA3
-         yyUMzaBENQiqhfUXhFhSk3/uadr0bUA4xkuQeThSRBjkw90iT+SCdxg/HHsZwmrIAtTf
-         UMfQ==
-Content-Disposition: inline
-In-Reply-To: <20190605120837.GE15685@dhcp22.suse.cz>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=NQd/ZrI7OHysa9+zywBc0NoPVivbuTiA3s8wT2Jxq4Y=;
+ b=kto5V4C/V0elVdD6dHMAsm4VhDwt1TTtQhq/8JrkNr241iFgZXjd3ETWvpyrON+dCvOK
+ MJOsoQNi32z3FiPzEK9Fb2kZMPtcVNw76Iqsq62yCdxms0uMPhyNfdgjB8J0LUpiZBBx
+ pcHPF65WKmJoKx05ersvDvWp0Ak3Hi/etZA= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NQd/ZrI7OHysa9+zywBc0NoPVivbuTiA3s8wT2Jxq4Y=;
+ b=trQfGH8YOa4LmX/6mzBHPf+6imT05ZbzrLQ2ldxSP+NEK/17MfHSZ8Kv9Mc7Lo8NzUmd2Qhz+ESIclMPUGXp3qqj2UNyExZyCvNb5zfoOhd4OPW/5CMzczVU9DETQFoS+0YVssjlYeW0O8uCzrMlIhJivWu1caRRTv19aEZ63fg=
+In-Reply-To: <xr93ef48v5ub.fsf@gthelen.svl.corp.google.com>
+Content-Language: en-US
+Content-ID: <4827968C6C11134CB78F7FF0C1B2FBD3@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Greg Thelen <gthelen@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Shakeel Butt <shakeelb@google.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Rik van Riel <riel@surriel.com>, Christoph Lameter <cl@linux.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
 
-On Wed, Jun 05, 2019 at 02:08:37PM +0200, Michal Hocko wrote:
-> On Tue 04-06-19 17:05:09, Johannes Weiner wrote:
-> > The current cgroup OOM memory info dump doesn't include all the memory
-> > we are tracking, nor does it give insight into what the VM tried to do
-> > leading up to the OOM. All that useful info is in memory.stat.
-> 
-> I agree that other memcg counters can provide a useful insight for the OOM
-> situation.
-> 
-> > Furthermore, the recursive printing for every child cgroup can
-> > generate absurd amounts of data on the console for larger cgroup
-> > trees, and it's not like we provide a per-cgroup breakdown during
-> > global OOM kills.
-> 
-> The idea was that this information might help to identify which subgroup
-> is the major contributor to the OOM at a higher level. I have to confess
-> that I have never really used that information myself though.
+On Wed, Jun 05, 2019 at 12:39:24AM -0700, Greg Thelen wrote:
+> Roman Gushchin <guro@fb.com> wrote:
+>=20
+> > # Why do we need this?
+> >
+> > We've noticed that the number of dying cgroups is steadily growing on m=
+ost
+> > of our hosts in production. The following investigation revealed an iss=
+ue
+> > in userspace memory reclaim code [1], accounting of kernel stacks [2],
+> > and also the mainreason: slab objects.
+> >
+> > The underlying problem is quite simple: any page charged
+> > to a cgroup holds a reference to it, so the cgroup can't be reclaimed u=
+nless
+> > all charged pages are gone. If a slab object is actively used by other =
+cgroups,
+> > it won't be reclaimed, and will prevent the origin cgroup from being re=
+claimed.
+> >
+> > Slab objects, and first of all vfs cache, is shared between cgroups, wh=
+ich are
+> > using the same underlying fs, and what's even more important, it's shar=
+ed
+> > between multiple generations of the same workload. So if something is r=
+unning
+> > periodically every time in a new cgroup (like how systemd works), we do
+> > accumulate multiple dying cgroups.
+> >
+> > Strictly speaking pagecache isn't different here, but there is a key di=
+fference:
+> > we disable protection and apply some extra pressure on LRUs of dying cg=
+roups,
+> > and these LRUs contain all charged pages.
+> > My experiments show that with the disabled kernel memory accounting the=
+ number
+> > of dying cgroups stabilizes at a relatively small number (~100, depends=
+ on
+> > memory pressure and cgroup creation rate), and with kernel memory accou=
+nting
+> > it grows pretty steadily up to several thousands.
+> >
+> > Memory cgroups are quite complex and big objects (mostly due to percpu =
+stats),
+> > so it leads to noticeable memory losses. Memory occupied by dying cgrou=
+ps
+> > is measured in hundreds of megabytes. I've even seen a host with more t=
+han 100Gb
+> > of memory wasted for dying cgroups. It leads to a degradation of perfor=
+mance
+> > with the uptime, and generally limits the usage of cgroups.
+> >
+> > My previous attempt [3] to fix the problem by applying extra pressure o=
+n slab
+> > shrinker lists caused a regressions with xfs and ext4, and has been rev=
+erted [4].
+> > The following attempts to find the right balance [5, 6] were not succes=
+sful.
+> >
+> > So instead of trying to find a maybe non-existing balance, let's do rep=
+arent
+> > the accounted slabs to the parent cgroup on cgroup removal.
+> >
+> >
+> > # Implementation approach
+> >
+> > There is however a significant problem with reparenting of slab memory:
+> > there is no list of charged pages. Some of them are in shrinker lists,
+> > but not all. Introducing of a new list is really not an option.
+> >
+> > But fortunately there is a way forward: every slab page has a stable po=
+inter
+> > to the corresponding kmem_cache. So the idea is to reparent kmem_caches
+> > instead of slab pages.
+> >
+> > It's actually simpler and cheaper, but requires some underlying changes=
+:
+> > 1) Make kmem_caches to hold a single reference to the memory cgroup,
+> >    instead of a separate reference per every slab page.
+> > 2) Stop setting page->mem_cgroup pointer for memcg slab pages and use
+> >    page->kmem_cache->memcg indirection instead. It's used only on
+> >    slab page release, so it shouldn't be a big issue.
+> > 3) Introduce a refcounter for non-root slab caches. It's required to
+> >    be able to destroy kmem_caches when they become empty and release
+> >    the associated memory cgroup.
+> >
+> > There is a bonus: currently we do release empty kmem_caches on cgroup
+> > removal, however all other are waiting for the releasing of the memory =
+cgroup.
+> > These refactorings allow kmem_caches to be released as soon as they
+> > become inactive and free.
+> >
+> > Some additional implementation details are provided in corresponding
+> > commit messages.
+> >
+> > # Results
+> >
+> > Below is the average number of dying cgroups on two groups of our produ=
+ction
+> > hosts. They do run some sort of web frontend workload, the memory press=
+ure
+> > is moderate. As we can see, with the kernel memory reparenting the numb=
+er
+> > stabilizes in 60s range; however with the original version it grows alm=
+ost
+> > linearly and doesn't show any signs of plateauing. The difference in sl=
+ab
+> > and percpu usage between patched and unpatched versions also grows line=
+arly.
+> > In 7 days it exceeded 200Mb.
+> >
+> > day           0    1    2    3    4    5    6    7
+> > original     56  362  628  752 1070 1250 1490 1560
+> > patched      23   46   51   55   60   57   67   69
+> > mem diff(Mb) 22   74  123  152  164  182  214  241
+>=20
+> No objection to the idea, but a question...
 
-Yeah, same. The thing is that sometimes we have tens or even hundreds
-of subgroups, and when an OOM triggers at the top-level the console
-will be printing for a while. But often when you have that big of a
-shared domain it's because you just run a lot of parallel instances of
-the same job, and when the oom triggers it's because you ran too many
-jobs rather than one job acting up. In more hybrid setups, we tend to
-also configure the limits more locally.
+Hi Greg!
 
-> > When an OOM kill is triggered, print one set of recursive memory.stat
-> > items at the level whose limit triggered the OOM condition.
-> > 
-> > Example output:
-> > 
-> [...]
-> > memory: usage 1024kB, limit 1024kB, failcnt 75131
-> > swap: usage 0kB, limit 9007199254740988kB, failcnt 0
-> > Memory cgroup stats for /foo:
-> > anon 0
-> > file 0
-> > kernel_stack 36864
-> > slab 274432
-> > sock 0
-> > shmem 0
-> > file_mapped 0
-> > file_dirty 0
-> > file_writeback 0
-> > anon_thp 0
-> > inactive_anon 126976
-> > active_anon 0
-> > inactive_file 0
-> > active_file 0
-> > unevictable 0
-> > slab_reclaimable 0
-> > slab_unreclaimable 274432
-> > pgfault 59466
-> > pgmajfault 1617
-> > workingset_refault 2145
-> > workingset_activate 0
-> > workingset_nodereclaim 0
-> > pgrefill 98952
-> > pgscan 200060
-> > pgsteal 59340
-> > pgactivate 40095
-> > pgdeactivate 96787
-> > pglazyfree 0
-> > pglazyfreed 0
-> > thp_fault_alloc 0
-> > thp_collapse_alloc 0
-> 
-> I am not entirely happy with that many lines in the oom report though. I
-> do see that you are trying to reduce code duplication which is fine but
-> would it be possible to squeeze all of these counters on a single line?
-> The same way we do for the global OOM report?
+> In patched kernel, does slabinfo (or similar) show the list reparented
+> slab caches?  A pile of zombie kmem_caches is certainly better than a
+> pile of zombie mem_cgroup.  But it still seems like it'll might cause
+> degradation - does cache_reap() walk an ever growing set of zombie
+> caches?
 
-TBH I really hate those in the global reports because I always
-struggle to find what I'm looking for. And smoking guns don't stand
-out visually either. I'd rather have newlines there as well.
+It's not a pile of zombie kmem_caches vs a pile of zombie mem_cgroups.
+It's a smaller pile of zombie kmem_caches vs a larger pile of zombie kmem_c=
+aches
+*and* a pile of zombie mem_cgroups. The patchset makes the number of zombie
+kmem_caches lower, not bigger.
 
-> > +	seq_buf_init(&s, kvmalloc(PAGE_SIZE, GFP_KERNEL), PAGE_SIZE);
-> 
-> What is the reason to use kvmalloc here? It doesn't make much sense to
-> me to use it for the page size allocation TBH.
+Re slabinfo and other debug interfaces: I do not change anything here.
 
-Oh, good spot. I first did something similar to seq_file.c with an
-auto-resizing buffer in case we print too much data. Then decided
-that's silly since everything that will print into the buffer is right
-there, and it's obvious that it'll fit, so I did the fixed allocation
-and the WARN_ON instead.
+>=20
+> We've found it useful to add a slabinfo_full file which includes zombie
+> kmem_cache with their memcg_name.  This can help hunt down zombies.
 
-How about a simple kmalloc?. I know it's a page sized buffer, but the
-gfp interface seems a bit too low-level and has weird kinks that
-kmalloc nicely abstracts into a sane memory allocation interface, with
-kmemleak support and so forth...
+I'm not sure we need to add a permanent debug interface, because something =
+like
+drgn ( https://github.com/osandov/drgn ) can be used instead.
 
-Thanks for your review.
+If you think that we lack some necessary debug interfaces, I'm totally open
+here, but it's not a part of this patchset. Let's talk about them separatel=
+y.
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
+Thank you for looking into it!
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 0907a96ceddf..b0e0e840705d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1371,7 +1371,7 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
- 	struct seq_buf s;
- 	int i;
- 
--	seq_buf_init(&s, kvmalloc(PAGE_SIZE, GFP_KERNEL), PAGE_SIZE);
-+	seq_buf_init(&s, kmalloc(PAGE_SIZE, GFP_KERNEL), PAGE_SIZE);
- 	if (!s.buffer)
- 		return NULL;
- 
-@@ -1533,7 +1533,7 @@ void mem_cgroup_print_oom_meminfo(struct mem_cgroup *memcg)
- 	if (!buf)
- 		return;
- 	pr_info("%s", buf);
--	kvfree(buf);
-+	kfree(buf);
- }
- 
- /*
-@@ -5775,7 +5775,7 @@ static int memory_stat_show(struct seq_file *m, void *v)
- 	if (!buf)
- 		return -ENOMEM;
- 	seq_puts(m, buf);
--	kvfree(buf);
-+	kfree(buf);
- 	return 0;
- }
- 
+Roman
