@@ -1,87 +1,76 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC v2 0/5] cgroup-aware unbound workqueues
-Date: Tue, 11 Jun 2019 12:55:49 -0700
-Message-ID: <20190611195549.GL3341036@devbig004.ftw2.facebook.com>
-References: <20190605133650.28545-1-daniel.m.jordan@oracle.com>
- <20190605135319.GK374014@devbig004.ftw2.facebook.com>
- <20190605153229.nvxr6j7tdzffwkgj@ca-dmjordan1.us.oracle.com>
+From: "Srivatsa S. Bhat" <srivatsa@csail.mit.edu>
+Subject: Re: CFQ idling kills I/O performance on ext4 with blkio cgroup
+ controller
+Date: Tue, 11 Jun 2019 15:34:48 -0700
+Message-ID: <7c5e9d11-4a3d-7df4-c1e6-7c95919522ab@csail.mit.edu>
+References: <8d72fcf7-bbb4-2965-1a06-e9fc177a8938@csail.mit.edu>
+ <5B6570A2-541A-4CF8-98E0-979EA6E3717D@linaro.org>
+ <2CB39B34-21EE-4A95-A073-8633CF2D187C@linaro.org>
+ <FC24E25F-4578-454D-AE2B-8D8D352478D8@linaro.org>
+ <0e3fdf31-70d9-26eb-7b42-2795d4b03722@csail.mit.edu>
+ <F5E29C98-6CC4-43B8-994D-0B5354EECBF3@linaro.org>
+ <686D6469-9DE7-4738-B92A-002144C3E63E@linaro.org>
+ <01d55216-5718-767a-e1e6-aadc67b632f4@csail.mit.edu>
+ <CA8A23E2-6F22-4444-9A20-E052A94CAA9B@linaro.org>
+ <cc148388-3c82-d7c0-f9ff-8c31bb5dc77d@csail.mit.edu>
+ <6FE0A98F-1E3D-4EF6-8B38-2C85741924A4@linaro.org>
+ <2A58C239-EF3F-422B-8D87-E7A3B500C57C@linaro.org>
+ <a04368ba-f1d5-8f2c-1279-a685a137d024@csail.mit.edu>
+ <E270AD92-943E-4529-8158-AB480D6D9DF8@linaro.org>
+ <5b71028c-72f0-73dd-0cd5-f28ff298a0a3@csail.mit.edu>
+ <FFA44D26-75FF-4A8E-A331-495349BE5FFC@linaro.org>
+ <0d6e3c02-1952-2177-02d7-10ebeb133940@csail.mit.edu>
+ <7B74A790-BD98-412B-ADAB-3B513FB1944E@linaro.org>
+ <6a6f4aa4-fc95-f132-55b2-224ff52bd2d8@csail.mit.edu>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=AwCIOFChcpLV9jmax1ImmjMnCxcc76+OXa2FfkpzRbI=;
-        b=M9Z4LDyf9SZZLX+d8CLiaU1622gjvuImt3hgOgTYF2aM+GSl0AKsuxaM4G0Of4fQYH
-         bV1tH5bOuSISTn6BvaZWTPMZ61j8tdlblPxANEmHu4dHb+K2/Nb8rXPQXf+d0yj/iA4G
-         zdZXb+Tavk9kH5/1IApep03ogPUtZ3a8dntz14yOU4tABUdlci1Etq2OELbaeHGQxhdt
-         0AhAsXZHBu3i5/EHAds23Y5tIy86tRFCy7esVxwHdzhzrZ1+5l8/WwVhL1qdEe/mOG5r
-         8olwrJbO9oO1VXfufZSI7X/eJtOdsyQWzv9g+iTH6uKOQHboVP4PlxGpynBp/2YzJ1ek
-         2GmA==
-Content-Disposition: inline
-In-Reply-To: <20190605153229.nvxr6j7tdzffwkgj@ca-dmjordan1.us.oracle.com>
+In-Reply-To: <6a6f4aa4-fc95-f132-55b2-224ff52bd2d8@csail.mit.edu>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Daniel Jordan <daniel.m.jordan@oracle.com>
-Cc: hannes@cmpxchg.org, jiangshanlai@gmail.com, lizefan@huawei.com, bsd@redhat.com, dan.j.williams@intel.com, dave.hansen@intel.com, juri.lelli@redhat.com, mhocko@kernel.org, peterz@infradead.org, steven.sistare@oracle.com, tglx@linutronix.de, tom.hromatka@oracle.com, vdavydov.dev@gmail.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, shakeelb@google.com
+To: Paolo Valente <paolo.valente@linaro.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, linux-ext4@vger.kernel.org, cgroups@vger.kernel.org, kernel list <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Theodore Ts'o <tytso@mit.edu>, amakhalov@vmware.com, anishs@vmware.com, srivatsab@vmware.com, Ulf Hansson <ulf.hansson@linaro.org>, Linus Walleij <linus.walleij@linaro.org>
 
-Hello, Daniel.
-
-On Wed, Jun 05, 2019 at 11:32:29AM -0400, Daniel Jordan wrote:
-> Sure, quoting from the last ktask post:
+On 6/2/19 12:04 AM, Srivatsa S. Bhat wrote:
+> On 5/30/19 3:45 AM, Paolo Valente wrote:
+>>
+[...]
+>> At any rate, since you pointed out that you are interested in
+>> out-of-the-box performance, let me complete the context: in case
+>> low_latency is left set, one gets, in return for this 12% loss,
+>> a) at least 1000% higher responsiveness, e.g., 1000% lower start-up
+>> times of applications under load [1];
+>> b) 500-1000% higher throughput in multi-client server workloads, as I
+>> already pointed out [2].
+>>
 > 
->   A single CPU can spend an excessive amount of time in the kernel operating
->   on large amounts of data.  Often these situations arise during initialization-
->   and destruction-related tasks, where the data involved scales with system size.
->   These long-running jobs can slow startup and shutdown of applications and the
->   system itself while extra CPUs sit idle.
->       
->   To ensure that applications and the kernel continue to perform well as core
->   counts and memory sizes increase, harness these idle CPUs to complete such jobs
->   more quickly.
->       
->   ktask is a generic framework for parallelizing CPU-intensive work in the
->   kernel.  The API is generic enough to add concurrency to many different kinds
->   of tasks--for example, zeroing a range of pages or evicting a list of
->   inodes--and aims to save its clients the trouble of splitting up the work,
->   choosing the number of threads to use, maintaining an efficient concurrency
->   level, starting these threads, and load balancing the work between them.
-
-Yeah, that rings a bell.
-
-> > For memory and io, we're generally going for remote charging, where a
-> > kthread explicitly says who the specific io or allocation is for,
-> > combined with selective back-charging, where the resource is charged
-> > and consumed unconditionally even if that would put the usage above
-> > the current limits temporarily.  From what I've been seeing recently,
-> > combination of the two give us really good control quality without
-> > being too invasive across the stack.
+> I'm very happy that you could solve the problem without having to
+> compromise on any of the performance characteristics/features of BFQ!
 > 
-> Yes, for memory I actually use remote charging.  In patch 3 the worker's
-> current->active_memcg field is changed to match that of the cgroup associated
-> with the work.
-
-I see.
-
-> > CPU doesn't have a backcharging mechanism yet and depending on the use
-> > case, we *might* need to put kthreads in different cgroups.  However,
-> > such use cases might not be that abundant and there may be gotaches
-> > which require them to be force-executed and back-charged (e.g. fs
-> > compression from global reclaim).
 > 
-> The CPU-intensiveness of these works is one of the reasons for actually putting
-> the workers through the migration path.  I don't know of a way to get the
-> workers to respect the cpu controller (and even cpuset for that matter) without
-> doing that.
+>> I'm going to prepare complete patches.  In addition, if ok for you,
+>> I'll report these results on the bug you created.  Then I guess we can
+>> close it.
+>>
+> 
+> Sounds great!
+>
 
-So, I still think it'd likely be better to go back-charging route than
-actually putting kworkers in non-root cgroups.  That's gonna be way
-cheaper, simpler and makes avoiding inadvertent priority inversions
-trivial.
+Hi Paolo,
 
-Thanks.
+Hope you are doing great!
 
--- 
-tejun
+I was wondering if you got a chance to post these patches to LKML for
+review and inclusion... (No hurry, of course!)
+
+Also, since your fixes address the performance issues in BFQ, do you
+have any thoughts on whether they can be adapted to CFQ as well, to
+benefit the older stable kernels that still support CFQ?
+
+Thank you!
+
+Regards,
+Srivatsa
+VMware Photon OS
