@@ -1,41 +1,60 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: blk-cgroup cleanups
-Date: Mon, 10 Jun 2019 11:23:02 -0700
-Message-ID: <20190610182302.GD3341036@devbig004.ftw2.facebook.com>
-References: <20190606102624.3847-1-hch@lst.de>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: -next-20190607 kernel: oopses on bootup or shutdown
+Date: Tue, 11 Jun 2019 10:57:53 +0200
+Message-ID: <20190611085753.GA12364@amd>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="IS0zKkzwUGydFO0o"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=ZFqoQ1NOYvg67NnTQGvHpFt++wU3sOt+xafTmUoMtA4=;
-        b=CIrSvqbul3dKDqKmx+MXHnrt0zVRSlnMXD02VsGK1E13v46iS6NppURtuIxPH2XPu9
-         IZvPszVw8H/KZqu8IEYoPvFsADsS7ZRarU6YHsQSkyIJ+qQdhxQegDMH/Kx6D1+/bd86
-         fACkoLbL3BmDxXzAm74qMiXgr4ZaaXA5yVsrq8w9P2X1+C7M76WzjcjueUdelaVY9hbx
-         JWoM5eCxO3p6S92vov3M5DHfVyLr7FOk8PImyvqc0Oa5PaBZHs/tuxSXKFvv5pZ/MnSE
-         A+bTyvlYeQhSwoPvbj7Ei5f4Q8MC8FD8NZdqiL9e5/sZNpv3fxNxRdLF756TXLlCIc62
-         6Pkg==
 Content-Disposition: inline
-In-Reply-To: <20190606102624.3847-1-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Paolo Valente <paolo.valente@linaro.org>, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, kernel list <linux-kernel@vger.kernel.org>, sfr@canb.auug.org.au
 
-On Thu, Jun 06, 2019 at 12:26:18PM +0200, Christoph Hellwig wrote:
-> Hi all,
-> 
-> below are a couple of cleanups I came up with when trying to understand
-> the blk-cgroup code.
 
-For the whole patchset,
+--IS0zKkzwUGydFO0o
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
- Acked-by: Tejun Heo <tj@kernel.org>
+Hi!
 
-Thanks.
+It failed to boot three times; now it booted but failed on shutdown.
 
--- 
-tejun
+Hardware is thinkpad X60 (32bit x86), and I'm copying oops by hand.
+
+EIP: exit_creds+0x1a
+Call Trace:
+ __put_task_struct
+ css_task_iter_end
+ cgroup_pidlist_start
+ cgroup_seqfile_start
+ kernfs_seq_start
+ seq_read
+ ? kernfs_fop_write
+ ...
+ sys_read
+
+Kernel panic - not syncing: Attempted to kill init
+
+Any ideas?
+							Pavel
+
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--IS0zKkzwUGydFO0o
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlz/bREACgkQMOfwapXb+vJMyQCdETJGv9ZLT5dkhTw6BfKL+eoN
+/8AAn3VDLp02ZpYszETZXN+9zkdE8pAB
+=ay6w
+-----END PGP SIGNATURE-----
+
+--IS0zKkzwUGydFO0o--
