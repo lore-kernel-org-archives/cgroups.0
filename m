@@ -1,38 +1,52 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: -next-20190607 kernel: oopses on bootup or shutdown
-Date: Tue, 11 Jun 2019 06:25:36 -0700
-Message-ID: <20190611132536.GE3341036@devbig004.ftw2.facebook.com>
-References: <20190611085753.GA12364@amd>
+Subject: Re: [PATCH v3 05/33] docs: cgroup-v1: convert docs to ReST and
+ rename to *.rst
+Date: Tue, 11 Jun 2019 12:03:32 -0700
+Message-ID: <20190611190332.GI3341036@devbig004.ftw2.facebook.com>
+References: <cover.1560045490.git.mchehab+samsung@kernel.org>
+ <79865a4248ce5b042106e5ec69bb493292a8d392.1560045490.git.mchehab+samsung@kernel.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=Z3SVKPRw9ZtZpo81aZhS+cQGKdAzxZJguviRIBAK0b4=;
-        b=hkx2GURtFLnpgApzKLSXJXyEaJj/ziUqazQEkyPie9Mnwpy4xHumI5UUcVe5mQza0b
-         lKH388U00jEmGYS0jIwaGGYpjrprh72VY+OnyINgSvTUXaYlPdxS3mj1Vjren5hcpCiD
-         3j69a1dFIzq97phFF0iX9sgjkxwfs7m0o4FGmtMxhv+XGKm8J33kSmuSDw+sq+oH1w6s
-         SMmnaIOnv18Yq9M2kVkkdawBKUmOD5mewX4Wtlupss724qP3FdnyRFlv27hqw6Ws5qRv
-         VnLC7hoeVOXhKmqAII4wOKn1Kn7GOHXop+dfFC0bDzxYLkV4InOdMxh3fhEFg8UmkxZf
-         /ITA==
+        bh=TINH5Zv9sdfI5yGkKfukd7zEs5gc5SFmFE6Rm33jogw=;
+        b=sTbvzg1IBs2bb8cjreY5cBasSaH+2pFI5pjQ35wagL+18kPnXLznCC9TyL/tH+M4hP
+         q8EzAGJHmuFs3cTKR1D9zefrPRRKJAU8/AOrhIRoejq49CWhnsGswe/IoyW+3pLcVrZA
+         idoBHD6D/SGQjCHVkxMcAuSa0qZ0UYf6PuryCCl6KxGiUpZO9zLoZB/vD1r7/EDrA+xH
+         AVkmXuIzCTP0+FrXVOmES1ohd6KLAjLFxCArXYNa/4QqLSZCec9i31IIvqj3lneR3rck
+         uR0BMYPVVBv3BGDTkrSUVMI/X2O/9KCPcGFl11pf9di+5Ug8qf/qOIO7Nn2RveaTofno
+         9dig==
 Content-Disposition: inline
-In-Reply-To: <20190611085753.GA12364@amd>
+In-Reply-To: <79865a4248ce5b042106e5ec69bb493292a8d392.1560045490.git.mchehab+samsung@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Pavel Machek <pavel@ucw.cz>
-Cc: lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, kernel list <linux-kernel@vger.kernel.org>, sfr@canb.auug.org.au
+To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc: Linux Doc Mailing List <linux-doc@vger.kernel.org>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Jens Axboe <axboe@kernel.dk>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>, linux-block@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, linux-security-modu
 
-On Tue, Jun 11, 2019 at 10:57:53AM +0200, Pavel Machek wrote:
-> Hi!
+On Sat, Jun 08, 2019 at 11:26:55PM -0300, Mauro Carvalho Chehab wrote:
+> Convert the cgroup-v1 files to ReST format, in order to
+> allow a later addition to the admin-guide.
 > 
-> It failed to boot three times; now it booted but failed on shutdown.
+> The conversion is actually:
+>   - add blank lines and identation in order to identify paragraphs;
+>   - fix tables markups;
+>   - add some lists markups;
+>   - mark literal blocks;
+>   - adjust title markups.
 > 
-> Hardware is thinkpad X60 (32bit x86), and I'm copying oops by hand.
+> At its new index.rst, let's add a :orphan: while this is not linked to
+> the main index.rst file, in order to avoid build warnings.
+> 
+> Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
 
-Can you please try next-20190611?  It should be fixed now.
+Acked-by: Tejun Heo <tj@kernel.org>
+
+Please feel free to route with the rest of the series.  If you want
+the patch to be routed through the cgroup tree, please let me know.
 
 Thanks.
 
