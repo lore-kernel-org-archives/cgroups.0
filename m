@@ -1,159 +1,72 @@
-From: Andreas Herrmann <aherrmann@suse.com>
-Subject: [PATCH] blkio-controller.txt: Remove references to CFQ
-Date: Wed, 12 Jun 2019 08:17:32 +0200
-Message-ID: <20190612061732.GA3711@suselix>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: CFQ idling kills I/O performance on ext4 with blkio cgroup
+ controller
+Date: Wed, 12 Jun 2019 15:04:46 +0200
+Message-ID: <20190612130446.GD14578@quack2.suse.cz>
+References: <6FE0A98F-1E3D-4EF6-8B38-2C85741924A4@linaro.org>
+ <2A58C239-EF3F-422B-8D87-E7A3B500C57C@linaro.org>
+ <a04368ba-f1d5-8f2c-1279-a685a137d024@csail.mit.edu>
+ <E270AD92-943E-4529-8158-AB480D6D9DF8@linaro.org>
+ <5b71028c-72f0-73dd-0cd5-f28ff298a0a3@csail.mit.edu>
+ <FFA44D26-75FF-4A8E-A331-495349BE5FFC@linaro.org>
+ <0d6e3c02-1952-2177-02d7-10ebeb133940@csail.mit.edu>
+ <7B74A790-BD98-412B-ADAB-3B513FB1944E@linaro.org>
+ <6a6f4aa4-fc95-f132-55b2-224ff52bd2d8@csail.mit.edu>
+ <7c5e9d11-4a3d-7df4-c1e6-7c95919522ab@csail.mit.edu>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <7c5e9d11-4a3d-7df4-c1e6-7c95919522ab@csail.mit.edu>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org
+To: "Srivatsa S. Bhat" <srivatsa@csail.mit.edu>
+Cc: Paolo Valente <paolo.valente@linaro.org>, linux-fsdevel@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, linux-ext4@vger.kernel.org, cgroups@vger.kernel.org, kernel list <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Theodore Ts'o <tytso@mit.edu>, amakhalov@vmware.com, anishs@vmware.com, srivatsab@vmware.com, Ulf Hansson <ulf.hansson@linaro.org>, Linus Walleij <linus.walleij@linaro.org>
 
-CFQ is gone. No need anymore to document its "proportional weight time
-based division of disk policy".
+On Tue 11-06-19 15:34:48, Srivatsa S. Bhat wrote:
+> On 6/2/19 12:04 AM, Srivatsa S. Bhat wrote:
+> > On 5/30/19 3:45 AM, Paolo Valente wrote:
+> >>
+> [...]
+> >> At any rate, since you pointed out that you are interested in
+> >> out-of-the-box performance, let me complete the context: in case
+> >> low_latency is left set, one gets, in return for this 12% loss,
+> >> a) at least 1000% higher responsiveness, e.g., 1000% lower start-up
+> >> times of applications under load [1];
+> >> b) 500-1000% higher throughput in multi-client server workloads, as I
+> >> already pointed out [2].
+> >>
+> > 
+> > I'm very happy that you could solve the problem without having to
+> > compromise on any of the performance characteristics/features of BFQ!
+> > 
+> > 
+> >> I'm going to prepare complete patches.  In addition, if ok for you,
+> >> I'll report these results on the bug you created.  Then I guess we can
+> >> close it.
+> >>
+> > 
+> > Sounds great!
+> >
+> 
+> Hi Paolo,
+> 
+> Hope you are doing great!
+> 
+> I was wondering if you got a chance to post these patches to LKML for
+> review and inclusion... (No hurry, of course!)
+> 
+> Also, since your fixes address the performance issues in BFQ, do you
+> have any thoughts on whether they can be adapted to CFQ as well, to
+> benefit the older stable kernels that still support CFQ?
 
-Signed-off-by: Andreas Herrmann <aherrmann@suse.com>
----
- Documentation/cgroup-v1/blkio-controller.txt | 96 ++--------------------------
- 1 file changed, 7 insertions(+), 89 deletions(-)
+Since CFQ doesn't exist in current upstream kernel anymore, I seriously
+doubt you'll be able to get any performance improvements for it in the
+stable kernels...
 
-diff --git a/Documentation/cgroup-v1/blkio-controller.txt b/Documentation/cgroup-v1/blkio-controller.txt
-index 673dc34d3f78..d1a1b7bdd03a 100644
---- a/Documentation/cgroup-v1/blkio-controller.txt
-+++ b/Documentation/cgroup-v1/blkio-controller.txt
-@@ -8,61 +8,13 @@ both at leaf nodes as well as at intermediate nodes in a storage hierarchy.
- Plan is to use the same cgroup based management interface for blkio controller
- and based on user options switch IO policies in the background.
- 
--Currently two IO control policies are implemented. First one is proportional
--weight time based division of disk policy. It is implemented in CFQ. Hence
--this policy takes effect only on leaf nodes when CFQ is being used. The second
--one is throttling policy which can be used to specify upper IO rate limits
--on devices. This policy is implemented in generic block layer and can be
--used on leaf nodes as well as higher level logical devices like device mapper.
-+One IO control policy is throttling policy which can be used to
-+specify upper IO rate limits on devices. This policy is implemented in
-+generic block layer and can be used on leaf nodes as well as higher
-+level logical devices like device mapper.
- 
- HOWTO
- =====
--Proportional Weight division of bandwidth
-------------------------------------------
--You can do a very simple testing of running two dd threads in two different
--cgroups. Here is what you can do.
--
--- Enable Block IO controller
--	CONFIG_BLK_CGROUP=y
--
--- Enable group scheduling in CFQ
--	CONFIG_CFQ_GROUP_IOSCHED=y
--
--- Compile and boot into kernel and mount IO controller (blkio); see
--  cgroups.txt, Why are cgroups needed?.
--
--	mount -t tmpfs cgroup_root /sys/fs/cgroup
--	mkdir /sys/fs/cgroup/blkio
--	mount -t cgroup -o blkio none /sys/fs/cgroup/blkio
--
--- Create two cgroups
--	mkdir -p /sys/fs/cgroup/blkio/test1/ /sys/fs/cgroup/blkio/test2
--
--- Set weights of group test1 and test2
--	echo 1000 > /sys/fs/cgroup/blkio/test1/blkio.weight
--	echo 500 > /sys/fs/cgroup/blkio/test2/blkio.weight
--
--- Create two same size files (say 512MB each) on same disk (file1, file2) and
--  launch two dd threads in different cgroup to read those files.
--
--	sync
--	echo 3 > /proc/sys/vm/drop_caches
--
--	dd if=/mnt/sdb/zerofile1 of=/dev/null &
--	echo $! > /sys/fs/cgroup/blkio/test1/tasks
--	cat /sys/fs/cgroup/blkio/test1/tasks
--
--	dd if=/mnt/sdb/zerofile2 of=/dev/null &
--	echo $! > /sys/fs/cgroup/blkio/test2/tasks
--	cat /sys/fs/cgroup/blkio/test2/tasks
--
--- At macro level, first dd should finish first. To get more precise data, keep
--  on looking at (with the help of script), at blkio.disk_time and
--  blkio.disk_sectors files of both test1 and test2 groups. This will tell how
--  much disk time (in milliseconds), each group got and how many sectors each
--  group dispatched to the disk. We provide fairness in terms of disk time, so
--  ideally io.disk_time of cgroups should be in proportion to the weight.
--
- Throttling/Upper Limit policy
- -----------------------------
- - Enable Block IO controller
-@@ -94,7 +46,7 @@ Throttling/Upper Limit policy
- Hierarchical Cgroups
- ====================
- 
--Both CFQ and throttling implement hierarchy support; however,
-+Throttling implements hierarchy support; however,
- throttling's hierarchy support is enabled iff "sane_behavior" is
- enabled from cgroup side, which currently is a development option and
- not publicly available.
-@@ -107,9 +59,8 @@ If somebody created a hierarchy like as follows.
- 			|
- 		     test3
- 
--CFQ by default and throttling with "sane_behavior" will handle the
--hierarchy correctly.  For details on CFQ hierarchy support, refer to
--Documentation/block/cfq-iosched.txt.  For throttling, all limits apply
-+Throttling with "sane_behavior" will handle the
-+hierarchy correctly. For throttling, all limits apply
- to the whole subtree while all statistics are local to the IOs
- directly generated by tasks in that cgroup.
- 
-@@ -130,10 +81,6 @@ CONFIG_DEBUG_BLK_CGROUP
- 	- Debug help. Right now some additional stats file show up in cgroup
- 	  if this option is enabled.
- 
--CONFIG_CFQ_GROUP_IOSCHED
--	- Enables group scheduling in CFQ. Currently only 1 level of group
--	  creation is allowed.
--
- CONFIG_BLK_DEV_THROTTLING
- 	- Enable block device throttling support in block layer.
- 
-@@ -344,32 +291,3 @@ Common files among various policies
- - blkio.reset_stats
- 	- Writing an int to this file will result in resetting all the stats
- 	  for that cgroup.
--
--CFQ sysfs tunable
--=================
--/sys/block/<disk>/queue/iosched/slice_idle
--------------------------------------------
--On a faster hardware CFQ can be slow, especially with sequential workload.
--This happens because CFQ idles on a single queue and single queue might not
--drive deeper request queue depths to keep the storage busy. In such scenarios
--one can try setting slice_idle=0 and that would switch CFQ to IOPS
--(IO operations per second) mode on NCQ supporting hardware.
--
--That means CFQ will not idle between cfq queues of a cfq group and hence be
--able to driver higher queue depth and achieve better throughput. That also
--means that cfq provides fairness among groups in terms of IOPS and not in
--terms of disk time.
--
--/sys/block/<disk>/queue/iosched/group_idle
--------------------------------------------
--If one disables idling on individual cfq queues and cfq service trees by
--setting slice_idle=0, group_idle kicks in. That means CFQ will still idle
--on the group in an attempt to provide fairness among groups.
--
--By default group_idle is same as slice_idle and does not do anything if
--slice_idle is enabled.
--
--One can experience an overall throughput drop if you have created multiple
--groups and put applications in that group which are not driving enough
--IO to keep disk busy. In that case set group_idle=0, and CFQ will not idle
--on individual groups and throughput should improve.
+								Honza
+
 -- 
-2.13.7
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
