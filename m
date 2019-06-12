@@ -1,76 +1,79 @@
-From: "Srivatsa S. Bhat" <srivatsa@csail.mit.edu>
-Subject: Re: CFQ idling kills I/O performance on ext4 with blkio cgroup
- controller
-Date: Tue, 11 Jun 2019 15:34:48 -0700
-Message-ID: <7c5e9d11-4a3d-7df4-c1e6-7c95919522ab@csail.mit.edu>
-References: <8d72fcf7-bbb4-2965-1a06-e9fc177a8938@csail.mit.edu>
- <5B6570A2-541A-4CF8-98E0-979EA6E3717D@linaro.org>
- <2CB39B34-21EE-4A95-A073-8633CF2D187C@linaro.org>
- <FC24E25F-4578-454D-AE2B-8D8D352478D8@linaro.org>
- <0e3fdf31-70d9-26eb-7b42-2795d4b03722@csail.mit.edu>
- <F5E29C98-6CC4-43B8-994D-0B5354EECBF3@linaro.org>
- <686D6469-9DE7-4738-B92A-002144C3E63E@linaro.org>
- <01d55216-5718-767a-e1e6-aadc67b632f4@csail.mit.edu>
- <CA8A23E2-6F22-4444-9A20-E052A94CAA9B@linaro.org>
- <cc148388-3c82-d7c0-f9ff-8c31bb5dc77d@csail.mit.edu>
- <6FE0A98F-1E3D-4EF6-8B38-2C85741924A4@linaro.org>
- <2A58C239-EF3F-422B-8D87-E7A3B500C57C@linaro.org>
- <a04368ba-f1d5-8f2c-1279-a685a137d024@csail.mit.edu>
- <E270AD92-943E-4529-8158-AB480D6D9DF8@linaro.org>
- <5b71028c-72f0-73dd-0cd5-f28ff298a0a3@csail.mit.edu>
- <FFA44D26-75FF-4A8E-A331-495349BE5FFC@linaro.org>
- <0d6e3c02-1952-2177-02d7-10ebeb133940@csail.mit.edu>
- <7B74A790-BD98-412B-ADAB-3B513FB1944E@linaro.org>
- <6a6f4aa4-fc95-f132-55b2-224ff52bd2d8@csail.mit.edu>
+From: Mike Rapoport <rppt@linux.ibm.com>
+Subject: Re: [PATCH -next] arm64/mm: fix a bogus GFP flag in pgd_alloc()
+Date: Wed, 12 Jun 2019 09:57:36 +0300
+Message-ID: <20190612065728.GB4761@rapoport-lnx>
+References: <1559656836-24940-1-git-send-email-cai@lca.pw>
+ <20190604142338.GC24467@lakrids.cambridge.arm.com>
+ <20190610114326.GF15979@fuggles.cambridge.arm.com>
+ <1560187575.6132.70.camel@lca.pw>
+ <20190611100348.GB26409@lakrids.cambridge.arm.com>
+ <20190611124118.GA4761@rapoport-lnx>
+ <3F6E1B9F-3789-4648-B95C-C4243B57DA02@lca.pw>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <6a6f4aa4-fc95-f132-55b2-224ff52bd2d8@csail.mit.edu>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <3F6E1B9F-3789-4648-B95C-C4243B57DA02@lca.pw>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Paolo Valente <paolo.valente@linaro.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-block <linux-block@vger.kernel.org>, linux-ext4@vger.kernel.org, cgroups@vger.kernel.org, kernel list <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Theodore Ts'o <tytso@mit.edu>, amakhalov@vmware.com, anishs@vmware.com, srivatsab@vmware.com, Ulf Hansson <ulf.hansson@linaro.org>, Linus Walleij <linus.walleij@linaro.org>
+Content-Transfer-Encoding: 7bit
+To: Qian Cai <cai@lca.pw>
+Cc: Mark Rutland <mark.rutland@arm.com>, Will Deacon <will.deacon@arm.com>, Andrew Morton <akpm@linux-foundation.org>, catalin.marinas@arm.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, mhocko@kernel.org, linux-mm@kvack.org, vdavydov.dev@gmail.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-On 6/2/19 12:04 AM, Srivatsa S. Bhat wrote:
-> On 5/30/19 3:45 AM, Paolo Valente wrote:
->>
-[...]
->> At any rate, since you pointed out that you are interested in
->> out-of-the-box performance, let me complete the context: in case
->> low_latency is left set, one gets, in return for this 12% loss,
->> a) at least 1000% higher responsiveness, e.g., 1000% lower start-up
->> times of applications under load [1];
->> b) 500-1000% higher throughput in multi-client server workloads, as I
->> already pointed out [2].
->>
+Hi,
+
+On Tue, Jun 11, 2019 at 08:46:45AM -0400, Qian Cai wrote:
 > 
-> I'm very happy that you could solve the problem without having to
-> compromise on any of the performance characteristics/features of BFQ!
+> > On Jun 11, 2019, at 8:41 AM, Mike Rapoport <rppt@linux.ibm.com> wrote:
+> > 
+> > Sorry for the delay, I'm mostly offline these days.
+> > 
+> > I wanted to understand first what is the reason for the failure. I've tried
+> > to reproduce it with qemu, but I failed to find a bootable configuration
+> > that will have PGD_SIZE != PAGE_SIZE :(
+> > 
+> > Qian Cai, can you share what is your environment and the kernel config?
 > 
+> https://raw.githubusercontent.com/cailca/linux-mm/master/arm64.config
 > 
->> I'm going to prepare complete patches.  In addition, if ok for you,
->> I'll report these results on the bug you created.  Then I guess we can
->> close it.
->>
+> # lscpu
+> Architecture:        aarch64
+> Byte Order:          Little Endian
+> CPU(s):              256
+> On-line CPU(s) list: 0-255
+> Thread(s) per core:  4
+> Core(s) per socket:  32
+> Socket(s):           2
+> NUMA node(s):        2
+> Vendor ID:           Cavium
+> Model:               1
+> Model name:          ThunderX2 99xx
+> Stepping:            0x1
+> BogoMIPS:            400.00
+> L1d cache:           32K
+> L1i cache:           32K
+> L2 cache:            256K
+> L3 cache:            32768K
+> NUMA node0 CPU(s):   0-127
+> NUMA node1 CPU(s):   128-255
+> Flags:               fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics cpuid asimdrdm
 > 
-> Sounds great!
->
+> # dmidecode
+> Handle 0x0001, DMI type 1, 27 bytes
+> System Information
+>         Manufacturer: HPE
+>         Product Name: Apollo 70             
+>         Version: X1
+>         Wake-up Type: Power Switch
+>         Family: CN99XX
+> 
 
-Hi Paolo,
+Can you please also send the entire log when the failure happens?
 
-Hope you are doing great!
+Another question, is the problem exist with PGD_SIZE == PAGE_SIZE?
+ 
 
-I was wondering if you got a chance to post these patches to LKML for
-review and inclusion... (No hurry, of course!)
+-- 
+Sincerely yours,
+Mike.
 
-Also, since your fixes address the performance issues in BFQ, do you
-have any thoughts on whether they can be adapted to CFQ as well, to
-benefit the older stable kernels that still support CFQ?
-
-Thank you!
-
-Regards,
-Srivatsa
-VMware Photon OS
