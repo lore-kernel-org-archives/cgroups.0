@@ -1,120 +1,114 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 04/10] block/rq_qos: add rq_qos_merge()
-Date: Thu, 13 Jun 2019 18:56:14 -0700
-Message-ID: <20190614015620.1587672-5-tj@kernel.org>
+From: Quentin Monnet <quentin.monnet@netronome.com>
+Subject: Re: [PATCH 10/10] blkcg: implement BPF_PROG_TYPE_IO_COST
+Date: Fri, 14 Jun 2019 12:32:09 +0100
+Message-ID: <e4d1df7b-66bb-061a-8ecb-ff1e5be3ab1d@netronome.com>
 References: <20190614015620.1587672-1-tj@kernel.org>
+ <20190614015620.1587672-11-tj@kernel.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=x9k+i8/yjn1FnDiqnqxeuqzHrHlaZhjhqT7rlMgp6Jo=;
-        b=sNTdvHamDWegVotZF5FTov7T1Gxp3fJ0AXA/cpZtRV1WXzHSbuwE7f5eFwqTMl3K83
-         lfhRlCSRcc+/atTEiEmKW84J7S46M1Blj5eVfGDlM3ro5BE5v7uSno4vY5L1cFO2+Ywe
-         56MgJowlPT8gsjmuL+P/+tP/siy3DzHBUiQCt4f0q2JE3rq02Yapf0n4Cy1lje35xNhZ
-         2aFiOWvrsxymR9r/LjwMzoKAjPZ/k4mWzoQUBcqgM2I/jDmJJQy9aIpd0MpxLKrako2q
-         6E0cGc/R0Pj3fDUqbC4/AW5rRYKwmJA923N39FpivTFUZ9eluTC/8FtwEyB1WHhetpKm
-         C/iw==
-In-Reply-To: <20190614015620.1587672-1-tj@kernel.org>
+        d=netronome-com.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=8nVWJoeY39suIIZgzswj4aacVGQOKuAApyinJQUDhzc=;
+        b=wISeSxpdrtKy6YhXKfQtLkE0GD4kqa0Oy/ToMDpugnOr/zje0ASKBMqfYVlwFAJ7g9
+         qXKsNUHtAnPBZUlTbwYFb8A5Qo5d+LAh2OFvLBIJSpsDjbeow7PfCwXVKA9lHIH5pTOl
+         ytn8W8OncmzZ4Z/wB28QLVHWqJmr0J74T6Z4BUSEI6y+qhdIoIpAU2TLCtOlufQIPRgd
+         pJKe0B4Ub69eLYUbHVNtoo3gERByIWNNtz3dyGwTnmCCRNZjpxm+Rzdhp8ilmSVzo55a
+         9FDw6931BM5c3Sb4T7JFrD7hdknJooQM1Ph79P9CZiOO/2NLv+03hFFoAHE266bJexg0
+         gU+A==
+In-Reply-To: <20190614015620.1587672-11-tj@kernel.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk, newella@fb.com, clm@fb.com, josef@toxicpanda.com, dennisz@fb.com, lizefan@huawei.com, hannes@cmpxchg.org
-Cc: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, ast@kernel.org, daniel@iogearbox.net, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, bpf@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: Tejun Heo <tj@kernel.org>, axboe@kernel.dk, newella@fb.com, clm@fb.com, josef@toxicpanda.com, dennisz@fb.com, lizefan@huawei.com, hannes@cmpxchg.org
+Cc: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, ast@kernel.org, daniel@iogearbox.net, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, bpf@vger.kernel.org
 
-Add a merge hook for rq_qos.  This will be used by io.weight.
+2019-06-13 18:56 UTC-0700 ~ Tejun Heo <tj@kernel.org>
+> Currently, blkcg implements one builtin IO cost model - lienar.  To
+> allow customization and experimentation, allow a bpf program to
+> override IO cost model.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- block/blk-core.c   | 4 ++++
- block/blk-rq-qos.c | 9 +++++++++
- block/blk-rq-qos.h | 9 +++++++++
- 3 files changed, 22 insertions(+)
+[...]
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index aad32071fa67..1dcf679c4b44 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -559,6 +559,7 @@ bool bio_attempt_back_merge(struct request_queue *q, struct request *req,
- 		return false;
- 
- 	trace_block_bio_backmerge(q, req, bio);
-+	rq_qos_merge(q, req, bio);
- 
- 	if ((req->cmd_flags & REQ_FAILFAST_MASK) != ff)
- 		blk_rq_set_mixed_merge(req);
-@@ -580,6 +581,7 @@ bool bio_attempt_front_merge(struct request_queue *q, struct request *req,
- 		return false;
- 
- 	trace_block_bio_frontmerge(q, req, bio);
-+	rq_qos_merge(q, req, bio);
- 
- 	if ((req->cmd_flags & REQ_FAILFAST_MASK) != ff)
- 		blk_rq_set_mixed_merge(req);
-@@ -605,6 +607,8 @@ bool bio_attempt_discard_merge(struct request_queue *q, struct request *req,
- 	    blk_rq_get_max_sectors(req, blk_rq_pos(req)))
- 		goto no_merge;
- 
-+	rq_qos_merge(q, req, bio);
-+
- 	req->biotail->bi_next = bio;
- 	req->biotail = bio;
- 	req->__data_len += bio->bi_iter.bi_size;
-diff --git a/block/blk-rq-qos.c b/block/blk-rq-qos.c
-index 659ccb8b693f..7debcaf1ee53 100644
---- a/block/blk-rq-qos.c
-+++ b/block/blk-rq-qos.c
-@@ -83,6 +83,15 @@ void __rq_qos_track(struct rq_qos *rqos, struct request *rq, struct bio *bio)
- 	} while (rqos);
- }
- 
-+void __rq_qos_merge(struct rq_qos *rqos, struct request *rq, struct bio *bio)
-+{
-+	do {
-+		if (rqos->ops->merge)
-+			rqos->ops->merge(rqos, rq, bio);
-+		rqos = rqos->next;
-+	} while (rqos);
-+}
-+
- void __rq_qos_done_bio(struct rq_qos *rqos, struct bio *bio)
- {
- 	do {
-diff --git a/block/blk-rq-qos.h b/block/blk-rq-qos.h
-index 2300e038b9fa..8e426a8505b6 100644
---- a/block/blk-rq-qos.h
-+++ b/block/blk-rq-qos.h
-@@ -35,6 +35,7 @@ struct rq_qos {
- struct rq_qos_ops {
- 	void (*throttle)(struct rq_qos *, struct bio *);
- 	void (*track)(struct rq_qos *, struct request *, struct bio *);
-+	void (*merge)(struct rq_qos *, struct request *, struct bio *);
- 	void (*issue)(struct rq_qos *, struct request *);
- 	void (*requeue)(struct rq_qos *, struct request *);
- 	void (*done)(struct rq_qos *, struct request *);
-@@ -135,6 +136,7 @@ void __rq_qos_issue(struct rq_qos *rqos, struct request *rq);
- void __rq_qos_requeue(struct rq_qos *rqos, struct request *rq);
- void __rq_qos_throttle(struct rq_qos *rqos, struct bio *bio);
- void __rq_qos_track(struct rq_qos *rqos, struct request *rq, struct bio *bio);
-+void __rq_qos_merge(struct rq_qos *rqos, struct request *rq, struct bio *bio);
- void __rq_qos_done_bio(struct rq_qos *rqos, struct bio *bio);
- 
- static inline void rq_qos_cleanup(struct request_queue *q, struct bio *bio)
-@@ -185,6 +187,13 @@ static inline void rq_qos_track(struct request_queue *q, struct request *rq,
- 		__rq_qos_track(q->rq_qos, rq, bio);
- }
- 
-+static inline void rq_qos_merge(struct request_queue *q, struct request *rq,
-+				struct bio *bio)
-+{
-+	if (q->rq_qos)
-+		__rq_qos_merge(q->rq_qos, rq, bio);
-+}
-+
- void rq_qos_exit(struct request_queue *);
- 
- #endif
--- 
-2.17.1
+> diff --git a/tools/bpf/bpftool/feature.c b/tools/bpf/bpftool/feature.c
+> index d672d9086fff..beeac8ac48f3 100644
+> --- a/tools/bpf/bpftool/feature.c
+> +++ b/tools/bpf/bpftool/feature.c
+> @@ -383,6 +383,9 @@ static void probe_kernel_image_config(void)
+>  		/* bpftilter module with "user mode helper" */
+>  		"CONFIG_BPFILTER_UMH",
+>  
+> +		/* Block */
+> +		"CONFIG_BLK_IO_COST",
+> +
+>  		/* test_bpf module for BPF tests */
+>  		"CONFIG_TEST_BPF",
+>  	};
+> diff --git a/tools/bpf/bpftool/main.h b/tools/bpf/bpftool/main.h
+> index 3d63feb7f852..298e53f35573 100644
+> --- a/tools/bpf/bpftool/main.h
+> +++ b/tools/bpf/bpftool/main.h
+> @@ -74,6 +74,7 @@ static const char * const prog_type_name[] = {
+>  	[BPF_PROG_TYPE_SK_REUSEPORT]		= "sk_reuseport",
+>  	[BPF_PROG_TYPE_FLOW_DISSECTOR]		= "flow_dissector",
+>  	[BPF_PROG_TYPE_CGROUP_SYSCTL]		= "cgroup_sysctl",
+> +	[BPF_PROG_TYPE_IO_COST]			= "io_cost",
+>  };
+>  
+>  extern const char * const map_type_name[];
 
+Hi Tejun,
+
+Please make sure to update the documentation and bash
+completion when adding the new type to bpftool. You
+probably want something like the diff below.
+
+Thanks,
+Quentin
+
+
+diff --git a/tools/bpf/bpftool/Documentation/bpftool-prog.rst b/tools/bpf/bpftool/Documentation/bpftool-prog.rst
+index 228a5c863cc7..0ceae71c07a8 100644
+--- a/tools/bpf/bpftool/Documentation/bpftool-prog.rst
++++ b/tools/bpf/bpftool/Documentation/bpftool-prog.rst
+@@ -40,7 +40,7 @@ PROG COMMANDS
+ |              **lwt_seg6local** | **sockops** | **sk_skb** | **sk_msg** | **lirc_mode2** |
+ |              **cgroup/bind4** | **cgroup/bind6** | **cgroup/post_bind4** | **cgroup/post_bind6** |
+ |              **cgroup/connect4** | **cgroup/connect6** | **cgroup/sendmsg4** | **cgroup/sendmsg6** |
+-|              **cgroup/sysctl**
++|              **cgroup/sysctl** | **io_cost**
+ |      }
+ |       *ATTACH_TYPE* := {
+ |              **msg_verdict** | **stream_verdict** | **stream_parser** | **flow_dissector**
+diff --git a/tools/bpf/bpftool/bash-completion/bpftool b/tools/bpf/bpftool/bash-completion/bpftool
+index 2725e27dfa42..057590611e63 100644
+--- a/tools/bpf/bpftool/bash-completion/bpftool
++++ b/tools/bpf/bpftool/bash-completion/bpftool
+@@ -378,7 +378,7 @@ _bpftool()
+                                 cgroup/connect4 cgroup/connect6 \
+                                 cgroup/sendmsg4 cgroup/sendmsg6 \
+                                 cgroup/post_bind4 cgroup/post_bind6 \
+-                                cgroup/sysctl" -- \
++                                cgroup/sysctl io_cost" -- \
+                                                    "$cur" ) )
+                             return 0
+                             ;;
+diff --git a/tools/bpf/bpftool/prog.c b/tools/bpf/bpftool/prog.c
+index 1f209c80d906..6ba1d567bf17 100644
+--- a/tools/bpf/bpftool/prog.c
++++ b/tools/bpf/bpftool/prog.c
+@@ -1070,7 +1070,7 @@ static int do_help(int argc, char **argv)
+                "                 sk_reuseport | flow_dissector | cgroup/sysctl |\n"
+                "                 cgroup/bind4 | cgroup/bind6 | cgroup/post_bind4 |\n"
+                "                 cgroup/post_bind6 | cgroup/connect4 | cgroup/connect6 |\n"
+-               "                 cgroup/sendmsg4 | cgroup/sendmsg6 }\n"
++               "                 cgroup/sendmsg4 | cgroup/sendmsg6 | io_cost }\n"
+                "       ATTACH_TYPE := { msg_verdict | stream_verdict | stream_parser |\n"
+                "                        flow_dissector }\n"
+                "       " HELP_SPEC_OPTIONS "\n"
