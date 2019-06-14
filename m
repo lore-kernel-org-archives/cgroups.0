@@ -1,59 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v4 05/28] docs: cgroup-v1: convert docs to ReST and
- rename to *.rst
-Date: Fri, 14 Jun 2019 13:30:33 -0700
-Message-ID: <20190614203033.GD657710@devbig004.ftw2.facebook.com>
-References: <cover.1560361364.git.mchehab+samsung@kernel.org>
- <c1dd623359f44f05863456b8bceba0d8f3e42f38.1560361364.git.mchehab+samsung@kernel.org>
- <20190614141401.48bfb266@lwn.net>
+From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
+Subject: Re: [PATCH 08/10] blkcg: implement blk-ioweight
+Date: Fri, 14 Jun 2019 22:50:34 +0200
+Message-ID: <87blyzc2n9.fsf@toke.dk>
+References: <20190614015620.1587672-1-tj@kernel.org> <20190614015620.1587672-9-tj@kernel.org> <87pnngbbti.fsf@toke.dk> <20190614150924.GB538958@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=AurvGG5md8kdmEphcGq2SiHYTXdU1Fp3TGMe3JSDOo0=;
-        b=ponl8/TKF4625A5i4nwix1bf/BKuWpdnWdsbj1AYGUJeoO6YwVASh4cXNfVx9IvaZa
-         CFwxikzqVVjimctDR05UE41qDDK4m4UYGGq6lT/dI8Ixp9oxQCdYqc2Z3XtJrBBoXrBq
-         umOejNZ+ajnJrFU8/luWxLTc7Lm3AgFpFjiX5f8hfTa03/nmo8RpqMAR3V/rc21lr+pO
-         P0+G+E4MVXjXkkNwPVaW1x6EO7L4vXqTBB1608iq6Bbm2erdxjqToEzmht7mQ7XHe7Ki
-         LsXMlWNkp0G6rLPcPPR+KhweE4x8FfhIUl4x1cZTqJy/9LML7BZbbD8ApalUlsrWEJMI
-         TxRg==
-Content-Disposition: inline
-In-Reply-To: <20190614141401.48bfb266@lwn.net>
-Sender: netdev-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190614150924.GB538958@devbig004.ftw2.facebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, Linux Doc Mailing List <linux-doc@vger.kernel.org>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Jens Axboe <axboe@kernel.dk>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>, linux-block@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, l
+Content-Type: text/plain; charset="utf-8"
+To: Tejun Heo <tj@kernel.org>
+Cc: axboe@kernel.dk, newella@fb.com, clm@fb.com, josef@toxicpanda.com, dennisz@fb.com, lizefan@huawei.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, ast@kernel.org, daniel@iogearbox.net, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, bpf@vger.kernel.org, Josef Bacik <jbacik@fb.com>
 
-On Fri, Jun 14, 2019 at 02:14:01PM -0600, Jonathan Corbet wrote:
-> On Wed, 12 Jun 2019 14:52:41 -0300
-> Mauro Carvalho Chehab <mchehab+samsung@kernel.org> wrote:
-> 
-> > Convert the cgroup-v1 files to ReST format, in order to
-> > allow a later addition to the admin-guide.
-> > 
-> > The conversion is actually:
-> >   - add blank lines and identation in order to identify paragraphs;
-> >   - fix tables markups;
-> >   - add some lists markups;
-> >   - mark literal blocks;
-> >   - adjust title markups.
-> > 
-> > At its new index.rst, let's add a :orphan: while this is not linked to
-> > the main index.rst file, in order to avoid build warnings.
-> > 
-> > Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-> > Acked-by: Tejun Heo <tj@kernel.org>
-> 
-> This one, too, has linux-next stuff that keeps it from applying to
-> docs-next.  Tejun, would you like to carry it on top of your work?
+Tejun Heo <tj@kernel.org> writes:
 
-Applied to cgroup/for-5.3.
+> Hello, Toke.
+>
+> On Fri, Jun 14, 2019 at 02:17:45PM +0200, Toke Høiland-Jørgensen wrote:
+>> One question: How are equal-weight cgroups scheduled relative to each
+>> other? Or requests from different processes within a single cgroup for
+>> that matter? FIFO? Round-robin? Something else?
+>
+> Once each cgroup got their hierarchical weight and current vtime for
+> the period, they don't talk to each other.  Each is expected to do the
+> right thing on their own.  When the period ends, the timer looks at
+> how the device is performing, how much each used and so on and then
+> make necessary adjustments.  So, there's no direct cross-cgroup
+> synchronization.  Each is throttled to their target level
+> independently.
 
-Thanks.
+Right, makes sense.
 
--- 
-tejun
+> Within a single cgroup, the IOs are FIFO. When an IO has enough vtime
+> credit, it just passes through. When it doesn't, it always waits
+> behind any other IOs which are already waiting.
+
+OK. Is there any fundamental reason why requests from individual
+processes could not be interleaved? Or does it just not give the same
+benefits in an IO request context as it does for network packets?
+
+Thanks for the explanations! :)
+
+-Toke
