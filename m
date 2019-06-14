@@ -1,79 +1,44 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] cgroup fixes for v5.2-rc4
-Date: Fri, 14 Jun 2019 13:02:53 -0700
-Message-ID: <20190614200253.GB657710@devbig004.ftw2.facebook.com>
+From: Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH v4 05/28] docs: cgroup-v1: convert docs to ReST and
+ rename to *.rst
+Date: Fri, 14 Jun 2019 14:14:01 -0600
+Message-ID: <20190614141401.48bfb266@lwn.net>
+References: <cover.1560361364.git.mchehab+samsung@kernel.org>
+        <c1dd623359f44f05863456b8bceba0d8f3e42f38.1560361364.git.mchehab+samsung@kernel.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=XcuM7K9cI0UVePrxFlGBexaTFIUHFIVo5KkIzm6e+gw=;
-        b=hLFC2FBQl6ExeriTXWpqg+lTQLNyx7oiqJlcJtW5p7dIVpNR/713tQHUmBcEmbF50g
-         EM9hlT4xym5+VrGtWzQ3zMzigjQOpdKhkdgtmh6SoFGS9voFjFKXorSiHHiA8OUp0xZY
-         q5IErmOUUZV06pBOmI23oJWEpQiiQ5Gcwpd66gYyLF58q0pXzUT1vIvNlQGDPk2SYPrY
-         268F7qjTDcX6v1w53n7RS9r6Cab538jFbIO8QlgZQVkX63Mme8nOe6xDBYvzXZYHRyoY
-         EbkWiwjsLghYr2OPfcQriM+zAFB6cMfj7Q28AJyD+ujDl3Vpu49wXOnOSFfjcG//wVvw
-         9rAw==
-Content-Disposition: inline
+In-Reply-To: <c1dd623359f44f05863456b8bceba0d8f3e42f38.1560361364.git.mchehab+samsung@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
+To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc: Linux Doc Mailing List <linux-doc@vger.kernel.org>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, James Morris <jmorris@namei.org>, "Serge E. Hallyn" <serge@hallyn.com>, linux-block@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, linux-security-module@vger
 
-Hello,
+On Wed, 12 Jun 2019 14:52:41 -0300
+Mauro Carvalho Chehab <mchehab+samsung@kernel.org> wrote:
 
-This pull request has unusually high density of tricky fixes.
+> Convert the cgroup-v1 files to ReST format, in order to
+> allow a later addition to the admin-guide.
+> 
+> The conversion is actually:
+>   - add blank lines and identation in order to identify paragraphs;
+>   - fix tables markups;
+>   - add some lists markups;
+>   - mark literal blocks;
+>   - adjust title markups.
+> 
+> At its new index.rst, let's add a :orphan: while this is not linked to
+> the main index.rst file, in order to avoid build warnings.
+> 
+> Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+> Acked-by: Tejun Heo <tj@kernel.org>
 
-* task_get_css() could deadlock when it races against a dying cgroup.
+This one, too, has linux-next stuff that keeps it from applying to
+docs-next.  Tejun, would you like to carry it on top of your work?
 
-* cgroup.procs didn't list thread group leaders with live threads.
-  This could mislead readers to think that a cgroup is empty when it's
-  not.  Fixed by making PROCS iterator include dead tasks.  I made a
-  couple mistakes making this change and this pull request contains a
-  couple follow-up patches.
+(This means I won't be able to apply #6 either, naturally).
 
-* When cpusets run out of online cpus, it updates cpusmasks of member
-  tasks in bizarre ways.  Joel improved the behavior significantly.
+Thanks,
 
-Thanks.
-
-The following changes since commit 9fb67d643f6f1892a08ee3a04ea54022d1060bb0:
-
-  Merge tag 'pinctrl-v5.2-2' of git://git.kernel.org/pub/scm/linux/kernel/git/linusw/linux-pinctrl (2019-05-28 09:35:04 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.2-fixes
-
-for you to fetch changes up to d477f8c202d1f0d4791ab1263ca7657bbe5cf79e:
-
-  cpuset: restore sanity to cpuset_cpus_allowed_fallback() (2019-06-12 11:00:08 -0700)
-
-----------------------------------------------------------------
-Joel Savitz (1):
-      cpuset: restore sanity to cpuset_cpus_allowed_fallback()
-
-Odin Ugedal (1):
-      docs cgroups: add another example size for hugetlb
-
-Tejun Heo (6):
-      cgroup: Use css_tryget() instead of css_tryget_online() in task_get_css()
-      cgroup: Call cgroup_release() before __exit_signal()
-      cgroup: Implement css_task_iter_skip()
-      cgroup: Include dying leaders with live threads in PROCS iterations
-      cgroup: css_task_iter_skip()'d iterators must be advanced before accessed
-      cgroup: Fix css_task_iter_advance_css_set() cset skip condition
-
- Documentation/cgroup-v1/hugetlb.txt |  22 +++++---
- include/linux/cgroup-defs.h         |   1 +
- include/linux/cgroup.h              |  14 ++++-
- kernel/cgroup/cgroup.c              | 106 ++++++++++++++++++++++++++----------
- kernel/cgroup/cpuset.c              |  15 ++++-
- kernel/exit.c                       |   2 +-
- 6 files changed, 117 insertions(+), 43 deletions(-)
-
--- 
-tejun
+jon
