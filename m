@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 05/10] block/rq_qos: implement rq_qos_ops->queue_depth_changed()
-Date: Thu, 13 Jun 2019 18:56:15 -0700
-Message-ID: <20190614015620.1587672-6-tj@kernel.org>
+Subject: [PATCH 07/10] blk-mq: add optional request->pre_start_time_ns
+Date: Thu, 13 Jun 2019 18:56:17 -0700
+Message-ID: <20190614015620.1587672-8-tj@kernel.org>
 References: <20190614015620.1587672-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=JKWpADQRRd4cOHqFQiVbs/M0Dl+jEZ4tiWOCtZnmPQM=;
-        b=bVOk9cRgxS237CKF5DQNNDDNI7ebragn3p3J0XeHDup2qIySlHeojvulx9R0hMiBio
-         NnQbjs9ZwZ9i3QONH1yxqJKKKzMSr6G5jShqohBg8Xc81Uk5iDpyFFiG2QGRvE4Z5VEI
-         jEQpyk/n97XDlIp+7h9cO6ouEC1uBfeD2x2CyXgG8YNTHn2pyIrbLYwb8hnlHLfbutZE
-         4XL0BqwtnSRjwOSHOtN3aWvEKpaa6Lf361yRc7dyeW2UBjFZpL2KEXvF+dlwlQARigq8
-         Ebow6wjHLAsdT3+S/dwOMPoTFSMGzRJpGO+qxOlk/N4/nIsP9zyKG8deNdCnvEAHz6WI
-         vbKA==
+        bh=1+KdFgJZvhBrFGCV8+TCH6qm9KzyCmoisOVOsrQ/edE=;
+        b=oFY/FvPPz+fvxLrOVIiXPYJ4mo0/NNdQYAYUukXGVzvMV+xkzEXQmJpR1ZTX6HtUAe
+         HzJ+ehvOts/wpqr59T4Vcwbzr90A/Awnasu0Z2XGSsz/KrfWccFoe074ZAYpO31ugvup
+         rbGle+M/or88E0BqNgHlMHgII9Gv8uEjKPRxxSJeU1HkBRzb+BZQRUJwmn1M9DtdEUHL
+         c8b5qLgEZpgNrSkCD9GYsgRh5MIkoggcHYwKtQDWAVVauisx3PsN+uBOJ6zc6PMlsMRr
+         0apBiygMMG6ka23rAaa1tp+iZiP4msrsbHf2+bjoJ2EBrullebRR/2nHPmUAASgD0+9H
+         7JbQ==
 In-Reply-To: <20190614015620.1587672-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,158 +23,100 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk, newella@fb.com, clm@fb.com, josef@toxicpanda.com, dennisz@fb.com, lizefan@huawei.com, hannes@cmpxchg.org
 Cc: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, ast@kernel.org, daniel@iogearbox.net, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, bpf@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-wbt already gets queue depth changed notification through
-wbt_set_queue_depth().  Generalize it into
-rq_qos_ops->queue_depth_changed() so that other rq_qos policies can
-easily hook into the events too.
+There are currently two start time timestamps - start_time_ns and
+io_start_time_ns.  The former marks the request allocation and and the
+second issue-to-device time.  The planned io.weight controller needs
+to measure the total time bios take to execute after it leaves rq_qos
+including the time spent waiting for request to become available,
+which can easily dominate on saturated devices.
+
+This patch adds request->pre_start_time_ns which records when the
+request allocation attempt started.  As it isn't used for the usual
+stats, make it optional behind QUEUE_FLAG_REC_PRESTART.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-rq-qos.c   |  9 +++++++++
- block/blk-rq-qos.h   |  8 ++++++++
- block/blk-settings.c |  2 +-
- block/blk-wbt.c      | 18 ++++++++----------
- block/blk-wbt.h      |  4 ----
- 5 files changed, 26 insertions(+), 15 deletions(-)
+ block/blk-mq.c         | 11 +++++++++--
+ include/linux/blkdev.h |  7 ++++++-
+ 2 files changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/block/blk-rq-qos.c b/block/blk-rq-qos.c
-index 7debcaf1ee53..fb11652348fc 100644
---- a/block/blk-rq-qos.c
-+++ b/block/blk-rq-qos.c
-@@ -101,6 +101,15 @@ void __rq_qos_done_bio(struct rq_qos *rqos, struct bio *bio)
- 	} while (rqos);
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index ce0f5f4ede70..25ce27434c63 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -291,7 +291,7 @@ static inline bool blk_mq_need_time_stamp(struct request *rq)
  }
  
-+void __rq_qos_queue_depth_changed(struct rq_qos *rqos)
-+{
-+	do {
-+		if (rqos->ops->queue_depth_changed)
-+			rqos->ops->queue_depth_changed(rqos);
-+		rqos = rqos->next;
-+	} while (rqos);
-+}
-+
- /*
-  * Return true, if we can't increase the depth further by scaling
-  */
-diff --git a/block/blk-rq-qos.h b/block/blk-rq-qos.h
-index 8e426a8505b6..e15b6907b76d 100644
---- a/block/blk-rq-qos.h
-+++ b/block/blk-rq-qos.h
-@@ -41,6 +41,7 @@ struct rq_qos_ops {
- 	void (*done)(struct rq_qos *, struct request *);
- 	void (*done_bio)(struct rq_qos *, struct bio *);
- 	void (*cleanup)(struct rq_qos *, struct bio *);
-+	void (*queue_depth_changed)(struct rq_qos *);
- 	void (*exit)(struct rq_qos *);
- 	const struct blk_mq_debugfs_attr *debugfs_attrs;
- };
-@@ -138,6 +139,7 @@ void __rq_qos_throttle(struct rq_qos *rqos, struct bio *bio);
- void __rq_qos_track(struct rq_qos *rqos, struct request *rq, struct bio *bio);
- void __rq_qos_merge(struct rq_qos *rqos, struct request *rq, struct bio *bio);
- void __rq_qos_done_bio(struct rq_qos *rqos, struct bio *bio);
-+void __rq_qos_queue_depth_changed(struct rq_qos *rqos);
- 
- static inline void rq_qos_cleanup(struct request_queue *q, struct bio *bio)
+ static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
+-		unsigned int tag, unsigned int op)
++		unsigned int tag, unsigned int op, u64 pre_start_time_ns)
  {
-@@ -194,6 +196,12 @@ static inline void rq_qos_merge(struct request_queue *q, struct request *rq,
- 		__rq_qos_merge(q->rq_qos, rq, bio);
- }
+ 	struct blk_mq_tags *tags = blk_mq_tags_from_data(data);
+ 	struct request *rq = tags->static_rqs[tag];
+@@ -325,6 +325,7 @@ static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
+ 	RB_CLEAR_NODE(&rq->rb_node);
+ 	rq->rq_disk = NULL;
+ 	rq->part = NULL;
++	rq->pre_start_time_ns = pre_start_time_ns;
+ 	if (blk_mq_need_time_stamp(rq))
+ 		rq->start_time_ns = ktime_get_ns();
+ 	else
+@@ -356,8 +357,14 @@ static struct request *blk_mq_get_request(struct request_queue *q,
+ 	struct request *rq;
+ 	unsigned int tag;
+ 	bool put_ctx_on_error = false;
++	u64 pre_start_time_ns = 0;
  
-+static inline void rq_qos_queue_depth_changed(struct request_queue *q)
-+{
-+	if (q->rq_qos)
-+		__rq_qos_queue_depth_changed(q->rq_qos);
-+}
+ 	blk_queue_enter_live(q);
 +
- void rq_qos_exit(struct request_queue *);
- 
- #endif
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 2ae348c101a0..df323ea448de 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -804,7 +804,7 @@ EXPORT_SYMBOL(blk_queue_update_dma_alignment);
- void blk_set_queue_depth(struct request_queue *q, unsigned int depth)
- {
- 	q->queue_depth = depth;
--	wbt_set_queue_depth(q, depth);
-+	rq_qos_queue_depth_changed(q);
- }
- EXPORT_SYMBOL(blk_set_queue_depth);
- 
-diff --git a/block/blk-wbt.c b/block/blk-wbt.c
-index 313f45a37e9d..8118f95a194b 100644
---- a/block/blk-wbt.c
-+++ b/block/blk-wbt.c
-@@ -629,15 +629,6 @@ static void wbt_requeue(struct rq_qos *rqos, struct request *rq)
++	/* pre_start_time includes depth and tag waits */
++	if (blk_queue_rec_prestart(q))
++		pre_start_time_ns = ktime_get_ns();
++
+ 	data->q = q;
+ 	if (likely(!data->ctx)) {
+ 		data->ctx = blk_mq_get_ctx(q);
+@@ -395,7 +402,7 @@ static struct request *blk_mq_get_request(struct request_queue *q,
+ 		return NULL;
  	}
- }
  
--void wbt_set_queue_depth(struct request_queue *q, unsigned int depth)
--{
--	struct rq_qos *rqos = wbt_rq_qos(q);
--	if (rqos) {
--		RQWB(rqos)->rq_depth.queue_depth = depth;
--		__wbt_update_limits(RQWB(rqos));
--	}
--}
--
- void wbt_set_write_cache(struct request_queue *q, bool write_cache_on)
- {
- 	struct rq_qos *rqos = wbt_rq_qos(q);
-@@ -689,6 +680,12 @@ static int wbt_data_dir(const struct request *rq)
- 	return -1;
- }
+-	rq = blk_mq_rq_ctx_init(data, tag, data->cmd_flags);
++	rq = blk_mq_rq_ctx_init(data, tag, data->cmd_flags, pre_start_time_ns);
+ 	if (!op_is_flush(data->cmd_flags)) {
+ 		rq->elv.icq = NULL;
+ 		if (e && e->type->ops.prepare_request) {
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 592669bcc536..ff72eb940d4c 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -194,7 +194,9 @@ struct request {
  
-+static void wbt_queue_depth_changed(struct rq_qos *rqos)
-+{
-+	RQWB(rqos)->rq_depth.queue_depth = blk_queue_depth(rqos->q);
-+	__wbt_update_limits(RQWB(rqos));
-+}
-+
- static void wbt_exit(struct rq_qos *rqos)
- {
- 	struct rq_wb *rwb = RQWB(rqos);
-@@ -811,6 +808,7 @@ static struct rq_qos_ops wbt_rqos_ops = {
- 	.requeue = wbt_requeue,
- 	.done = wbt_done,
- 	.cleanup = wbt_cleanup,
-+	.queue_depth_changed = wbt_queue_depth_changed,
- 	.exit = wbt_exit,
- #ifdef CONFIG_BLK_DEBUG_FS
- 	.debugfs_attrs = wbt_debugfs_attrs,
-@@ -853,7 +851,7 @@ int wbt_init(struct request_queue *q)
+ 	struct gendisk *rq_disk;
+ 	struct hd_struct *part;
+-	/* Time that I/O was submitted to the kernel. */
++	/* Time that the first bio started allocating this request. */
++	u64 pre_start_time_ns;
++	/* Time that this request was allocated for this IO. */
+ 	u64 start_time_ns;
+ 	/* Time that I/O was submitted to the device. */
+ 	u64 io_start_time_ns;
+@@ -606,6 +608,7 @@ struct request_queue {
+ #define QUEUE_FLAG_SCSI_PASSTHROUGH 23	/* queue supports SCSI commands */
+ #define QUEUE_FLAG_QUIESCED	24	/* queue has been quiesced */
+ #define QUEUE_FLAG_PCI_P2PDMA	25	/* device supports PCI p2p requests */
++#define QUEUE_FLAG_REC_PRESTART	26	/* record pre_start_time_ns */
  
- 	rwb->min_lat_nsec = wbt_default_latency_nsec(q);
+ #define QUEUE_FLAG_MQ_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
+ 				 (1 << QUEUE_FLAG_SAME_COMP))
+@@ -632,6 +635,8 @@ bool blk_queue_flag_test_and_set(unsigned int flag, struct request_queue *q);
+ 	test_bit(QUEUE_FLAG_SCSI_PASSTHROUGH, &(q)->queue_flags)
+ #define blk_queue_pci_p2pdma(q)	\
+ 	test_bit(QUEUE_FLAG_PCI_P2PDMA, &(q)->queue_flags)
++#define blk_queue_rec_prestart(q)	\
++	test_bit(QUEUE_FLAG_REC_PRESTART, &(q)->queue_flags)
  
--	wbt_set_queue_depth(q, blk_queue_depth(q));
-+	wbt_queue_depth_changed(&rwb->rqos);
- 	wbt_set_write_cache(q, test_bit(QUEUE_FLAG_WC, &q->queue_flags));
- 
- 	return 0;
-diff --git a/block/blk-wbt.h b/block/blk-wbt.h
-index f47218d5b3b2..8e4e37660971 100644
---- a/block/blk-wbt.h
-+++ b/block/blk-wbt.h
-@@ -95,7 +95,6 @@ void wbt_enable_default(struct request_queue *);
- u64 wbt_get_min_lat(struct request_queue *q);
- void wbt_set_min_lat(struct request_queue *q, u64 val);
- 
--void wbt_set_queue_depth(struct request_queue *, unsigned int);
- void wbt_set_write_cache(struct request_queue *, bool);
- 
- u64 wbt_default_latency_nsec(struct request_queue *);
-@@ -118,9 +117,6 @@ static inline void wbt_disable_default(struct request_queue *q)
- static inline void wbt_enable_default(struct request_queue *q)
- {
- }
--static inline void wbt_set_queue_depth(struct request_queue *q, unsigned int depth)
--{
--}
- static inline void wbt_set_write_cache(struct request_queue *q, bool wc)
- {
- }
+ #define blk_noretry_request(rq) \
+ 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
 -- 
 2.17.1
 
