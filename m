@@ -1,136 +1,216 @@
-From: Mike Rapoport <rppt@linux.ibm.com>
-Subject: Re: [PATCH -next] arm64/mm: fix a bogus GFP flag in pgd_alloc()
-Date: Thu, 13 Jun 2019 22:44:28 +0300
-Message-ID: <20190613194427.GC25164@rapoport-lnx>
-References: <1559656836-24940-1-git-send-email-cai@lca.pw>
- <20190604142338.GC24467@lakrids.cambridge.arm.com>
- <20190610114326.GF15979@fuggles.cambridge.arm.com>
- <1560187575.6132.70.camel@lca.pw>
- <20190611100348.GB26409@lakrids.cambridge.arm.com>
- <20190613121100.GB25164@rapoport-lnx>
- <1560432156.5154.11.camel@lca.pw>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCHSET block/for-next] IO cost model based work-conserving porportional controller
+Date: Thu, 13 Jun 2019 18:56:10 -0700
+Message-ID: <20190614015620.1587672-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1560432156.5154.11.camel@lca.pw>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=SR8M6Ti5j/3I6nXx+EB2QCVkt/EsvMWc6B0LovjzHEY=;
+        b=tuogteSkKpt2iRcOnqRANHGIzyYK7P/qZ6GixOJk7Rblemec1OhU7Bi33T7HdV9x05
+         rU6FkYi7SXRaeVmrvKCFzyFo2Fm7nZ1QJHSYmzITHW9MdUgsiY8EQfzCFwGggCQvcKcm
+         FVKyovUbiRGlK8rnYUp91QbMxObu/yBHnnp26iu36uxYoEOX+CRf+umhStz3ehVX52WX
+         TNxSKfTzaNTi+s53F0d7NQd0uybzHufs4378zvE4hgwosVhsW143fBpBpG0JZyqTNxcv
+         72KsqJ2Y1UCdDau0pgi2DEhRPF8Eq9uoVlUY1XYJwtaysxyKFEetnq+0KlZ/zHzg8Duk
+         v8Mg==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Qian Cai <cai@lca.pw>
-Cc: Mark Rutland <mark.rutland@arm.com>, Will Deacon <will.deacon@arm.com>, akpm@linux-foundation.org, Roman Gushchin <guro@fb.com>, catalin.marinas@arm.com, linux-kernel@vger.kernel.org, mhocko@kernel.org, linux-mm@kvack.org, vdavydov.dev@gmail.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: axboe@kernel.dk, newella@fb.com, clm@fb.com, josef@toxicpanda.com, dennisz@fb.com, lizefan@huawei.com, hannes@cmpxchg.org
+Cc: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, ast@kernel.org, daniel@iogearbox.net, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, bpf@vger.kernel.org
 
-On Thu, Jun 13, 2019 at 09:22:36AM -0400, Qian Cai wrote:
-> On Thu, 2019-06-13 at 15:11 +0300, Mike Rapoport wrote:
-> > The log Qian Cai posted at [1] and partially cited below confirms that =
-the
-> > failure happens when *user* PGDs are allocated and the addition of
-> > __GFP_ACCOUNT to gfp flags used by pgd_alloc() only uncovered another
-> > issue.
-> >=20
-> > I'm still failing to reproduce it with qemu and I'm not really familiar
-> > with slub/memcg code to say anything smart about it. Will keep looking.
-> >=20
-> > Note, that as failures start way after efi_virtmap_init() that allocate=
-s a
-> > PGD for efi_mm, there are no real fixes required for the original serie=
-s,
-> > except that the check for mm =3D=3D &init_mm I copied for some reason f=
-rom
-> > powerpc is bogus and can be removed.
->=20
-> Yes, there is more places are not happy with __GFP_ACCOUNT other than efi=
-_mm.
-> For example,
+One challenge of controlling IO resources is the lack of trivially
+observable cost metric.  This is distinguished from CPU and memory
+where wallclock time and the number of bytes can serve as accurate
+enough approximations.
 
-Here we allocate the pgd for a user process and it should be accounted.
+Bandwidth and iops are the most commonly used metrics for IO devices
+but depending on the type and specifics of the device, different IO
+patterns easily lead to multiple orders of magnitude variations
+rendering them useless for the purpose of IO capacity distribution.
+While on-device time, with a lot of clutches, could serve as a useful
+approximation for non-queued rotational devices, this is no longer
+viable with modern devices, even the rotational ones.
 
-Actually, the whole point of changing the gfp flags in arm64::pgd_alloc()
-was to enable the accounting for memory occupied by user pgds, just like
-x86 and powerpc do.
+While there is no cost metric we can trivially observe, it isn't a
+complete mystery.  For example, on a rotational device, seek cost
+dominates while a contiguous transfer contributes a smaller amount
+proportional to the size.  If we can characterize at least the
+relative costs of these different types of IOs, it should be possible
+to implement a reasonable work-conserving proportional IO resource
+distribution.
 
-> [=A0=A0132.786842][ T1501] kobject_add_internal failed for pgd_cache(49:s=
-ystemd-
-> udevd.service) (error: -2 parent: cgroup)
-> [=A0=A0132.795589][ T1889] CPU: 9 PID: 1889 Comm: systemd-udevd Tainted:
-> G=A0=A0=A0=A0=A0=A0=A0=A0W=A0=A0=A0=A0=A0=A0=A0=A0=A05.2.0-rc4-next-20190=
-613+ #8
-> [=A0=A0132.807356][ T1889] Hardware name: HPE Apollo
-> 70=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0/C01_APACHE_MB=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0, BIOS L50_5.13_1.0.9 03/01/2019
-> [=A0=A0132.817872][ T1889] Call trace:
-> [=A0=A0132.821017][ T1889]=A0=A0dump_backtrace+0x0/0x268
-> [=A0=A0132.825372][ T1889]=A0=A0show_stack+0x20/0x2c
-> [=A0=A0132.829380][ T1889]=A0=A0dump_stack+0xb4/0x108
-> [=A0=A0132.833475][ T1889]=A0=A0pgd_alloc+0x34/0x5c
-> [=A0=A0132.837396][ T1889]=A0=A0mm_init+0x27c/0x32c
-> [=A0=A0132.841315][ T1889]=A0=A0dup_mm+0x84/0x7b4
-> [=A0=A0132.845061][ T1889]=A0=A0copy_process+0xf20/0x24cc
-> [=A0=A0132.849500][ T1889]=A0=A0_do_fork+0xa4/0x66c
-> [=A0=A0132.853420][ T1889]=A0=A0__arm64_sys_clone+0x114/0x1b4
-> [=A0=A0132.858208][ T1889]=A0=A0el0_svc_handler+0x198/0x260
-> [=A0=A0132.862821][ T1889]=A0=A0el0_svc+0x8/0xc
->=20
-> >=20
-> > I surely can add pgd_alloc_kernel() to be used by the EFI code to make =
-sure
-> > we won't run into issues with memcg in the future.
-> >=20
-> > [=A0=A0=A082.125966] Freeing unused kernel memory: 28672K
-> > [=A0=A0=A087.940365] Checked W+X mappings: passed, no W+X pages found
-> > [=A0=A0=A087.946769] Run /init as init process
-> > [=A0=A0=A088.040040] systemd[1]: System time before build time, advanci=
-ng clock.
-> > [=A0=A0=A088.054593] systemd[1]: Failed to insert module 'autofs4': No =
-such file or
-> > directory
-> > [=A0=A0=A088.374129] modprobe (1726) used greatest stack depth: 28464 b=
-ytes left
-> > [=A0=A0=A088.470108] systemd[1]: systemd 239 running in system mode. (+=
-PAM +AUDIT
-> > +SELINUX +IMA -APPARMOR +SMACK +SYSVINIT +UTMP +LIBCRYPTSETUP +GCRYPT
-> > +GNUTLS +ACL +XZ +LZ4 +SECCOMP +BLKID +ELFUTILS +KMOD +IDN2 -IDN +PCRE2
-> > default-hierarchy=3Dlegacy)
-> > [=A0=A0=A088.498398] systemd[1]: Detected architecture arm64.
-> > [=A0=A0=A088.506517] systemd[1]: Running in initial RAM disk.
-> > [=A0=A0=A089.621995] mkdir (1730) used greatest stack depth: 27872 byte=
-s left
-> > [=A0=A0=A090.222658] random: systemd: uninitialized urandom read (16 by=
-tes read)
-> > [=A0=A0=A090.230072] systemd[1]: Reached target Swap.
-> > [=A0=A0=A090.240205] random: systemd: uninitialized urandom read (16 by=
-tes read)
-> > [=A0=A0=A090.251088] systemd[1]: Reached target Timers.
-> > [=A0=A0=A090.261303] random: systemd: uninitialized urandom read (16 by=
-tes read)
-> > [=A0=A0=A090.271209] systemd[1]: Listening on udev Control Socket.
-> > [=A0=A0=A090.283238] systemd[1]: Reached target Local File Systems.
-> > [=A0=A0=A090.296232] systemd[1]: Reached target Slices.
-> > [=A0=A0=A090.307239] systemd[1]: Listening on udev Kernel Socket.
-> > [=A0=A0=A090.608597] kobject_add_internal failed for pgd_cache(13:init.=
-scope)
-> > (error: -2 parent: cgroup)
-> > [=A0=A0=A090.678007] kobject_add_internal failed for pgd_cache(13:init.=
-scope)(error:
-> > -2 parent: cgroup)
-> > [=A0=A0=A090.713260] kobject_add_internal failed for pgd_cache(21:syste=
-md-tmpfiles-
-> > setup.service) (error: -2 parent: cgroup)
-> > [=A0=A0=A090.820012] systemd-tmpfile (1759) used greatest stack depth: =
-27184 bytes
-> > left
-> > [=A0=A0=A090.861942] kobject_add_internal failed for pgd_cache(13:init.=
-scope) error:
-> > -2 parent: cgroup)
-> > =A0
-> > > Thanks,
-> > > Mark.
-> > >=20
-> >=20
-> > [1] https://cailca.github.io/files/dmesg.txt
-> >=20
+This patchset implements IO cost model based work-conserving
+proportional controller.  It currently has a simple linear cost model
+builtin where each IO is classified as sequential or random and given
+a base cost accordingly and additional size-proportional cost is added
+on top.  Each IO is given a cost based on the model and the controller
+issues IOs for each cgroup according to their hierarchical weight.
 
---=20
-Sincerely yours,
-Mike.
+By default, the controller adapts its overall IO rate so that it
+doesn't build up buffer bloat in the request_queue layer, which
+guarantees that the controller doesn't lose significant amount of
+total work.  However, this may not provide sufficient differentiation
+as the underlying device may have a deep queue and not be fair in how
+the queued IOs are serviced.  The controller provides extra QoS
+control knobs which allow tightening control feedback loop as
+necessary.
+
+For more details on the control mechanism, implementation and
+interface, please refer to the comment at the top of
+block/blk-ioweight.c and Documentation/admin-guide/cgroup-v2.rst
+changes in the "blkcg: implement blk-ioweight" patch.
+
+Here are some test results.  Each test run goes through the following
+combinations with each combination running for a minute.  All tests
+are performed against regular files on btrfs w/ deadline as the IO
+scheduler.  Random IOs are direct w/ queue depth of 64.  Sequential
+are normal buffered IOs.
+
+	high priority (weight=500)	low priority (weight=100)
+
+	Rand read			None
+	ditto				Rand read
+	ditto				Seq  read
+	ditto				Rand write
+	ditto				Seq  write
+	Seq  read			None
+	ditto				Rand read
+	ditto				Seq  read
+	ditto				Rand write
+	ditto				Seq  write
+	Rand write			None
+	ditto				Rand read
+	ditto				Seq  read
+	ditto				Rand write
+	ditto				Seq  write
+	Seq  write			None
+	ditto				Rand read
+	ditto				Seq  read
+	ditto				Rand write
+	ditto				Seq  write
+
+* 7200RPM SATA hard disk
+  * No IO control
+    https://photos.app.goo.gl/1KBHn7ykpC1LXRkB8
+  * ioweight, QoS: None
+    https://photos.app.goo.gl/MLNQGxCtBQ8wAmjm7
+  * ioweight, QoS: rpct=95.00 rlat=40000 wpct=95.00 wlat=40000 min=25.00 max=200.00
+    https://photos.app.goo.gl/XqXHm3Mkbm9w6Db46
+* NCQ-blacklisted SATA SSD (QD==1)
+  * No IO control
+    https://photos.app.goo.gl/wCTXeu2uJ6LYL4pk8
+  * ioweight, QoS: None
+    https://photos.app.goo.gl/T2HedKD2sywQgj7R9
+  * ioweight, QoS: rpct=95.00 rlat=20000 wpct=95.00 wlat=20000 min=50.00 max=200.00
+    https://photos.app.goo.gl/urBTV8XQc1UqPJJw7
+* SATA SSD (QD==32)
+  * No IO control
+    https://photos.app.goo.gl/TjEVykuVudSQcryh6
+  * ioweight, QoS: None
+    https://photos.app.goo.gl/iyQBsky7bmM54Xiq7
+  * ioweight, QoS: rpct=95.00 rlat=10000 wpct=95.00 wlat=20000 min=50.00 max=400.00
+    https://photos.app.goo.gl/q1a6URLDxPLMrnHy5
+
+Even without explicit QoS configuration, read-heavy scenarios can
+obtain acceptable differentiation.  However, when write-heavy, the
+deep buffering on the device side makes it difficult to maintain
+control.  With QoS parameters set, the differentiation is acceptable
+across all combinations.
+
+The implementation comes with default cost model parameters which are
+selected automatically which should provide acceptable behavior across
+most common devices.  The parameters for hdd and consumer-grade SSDs
+seem pretty robust.  The default parameter set and selection criteria
+for highend SSDs might need further adjustments.
+
+It is fairly easy to configure the QoS parameters and, if needed, cost
+model coefficients.  We'll follow up with tooling and further
+documentation.  Also, the last RFC patch in the series implements
+support for bpf-based custom cost function.  Originally we thought
+that we'd need per-device-type cost functions but the simple linear
+model now seem good enough to cover all common device classes.  In
+case custom cost functions become necessary, we can fully develop the
+bpf based extension and also easily add different builtin cost models.
+
+Andy Newell did the heavy lifting of analyzing IO workloads and device
+characteristics, exploring various cost models, determining the
+default model and parameters to use.
+
+Josef Bacik implemented a prototype which explored the use of
+different types of cost metrics including on-device time and Andy's
+linear model.
+
+This patchset is on top of
+  cgroup/for-5.3
+    git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.3
++ [PATCHSET block/for-linus] Assorted blkcg fixes
+    http://lkml.kernel.org/r/20190613223041.606735-1-tj@kernel.org
++ [PATCHSET btrfs/for-next] btrfs: fix cgroup writeback support
+    http://20190614003350.1178444-1-tj@kernel.org
+
+This patchset contains the following 10 patches.
+
+ 0001-blkcg-pass-q-and-blkcg-into-blkcg_pol_alloc_pd_fn.patch
+ 0002-blkcg-make-cpd_init_fn-optional.patch
+ 0003-blkcg-separate-blkcg_conf_get_disk-out-of-blkg_conf_.patch
+ 0004-block-rq_qos-add-rq_qos_merge.patch
+ 0005-block-rq_qos-implement-rq_qos_ops-queue_depth_change.patch
+ 0006-blkcg-s-RQ_QOS_CGROUP-RQ_QOS_LATENCY.patch
+ 0007-blk-mq-add-optional-request-pre_start_time_ns.patch
+ 0008-blkcg-implement-blk-ioweight.patch
+ 0009-blkcg-add-tools-cgroup-monitor_ioweight.py.patch
+ 0010-RFC-blkcg-implement-BPF_PROG_TYPE_IO_COST.patch
+
+0001-0007 are prep patches.
+0008 implements blk-ioweight.
+0009 adds monitoring script.
+0010 is the RFC patch for BPF cost function.
+
+The patchset is also available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-iow
+
+diffstat follows, Thanks.
+
+ Documentation/admin-guide/cgroup-v2.rst                |   93 
+ block/Kconfig                                          |   12 
+ block/Makefile                                         |    1 
+ block/bfq-cgroup.c                                     |    5 
+ block/blk-cgroup.c                                     |   71 
+ block/blk-core.c                                       |    4 
+ block/blk-iolatency.c                                  |    8 
+ block/blk-ioweight.c                                   | 2509 +++++++++++++++++
+ block/blk-mq.c                                         |   11 
+ block/blk-rq-qos.c                                     |   18 
+ block/blk-rq-qos.h                                     |   28 
+ block/blk-settings.c                                   |    2 
+ block/blk-throttle.c                                   |    6 
+ block/blk-wbt.c                                        |   18 
+ block/blk-wbt.h                                        |    4 
+ block/blk.h                                            |    8 
+ block/ioctl.c                                          |    4 
+ include/linux/blk-cgroup.h                             |    4 
+ include/linux/blk_types.h                              |    3 
+ include/linux/blkdev.h                                 |    7 
+ include/linux/bpf_types.h                              |    3 
+ include/trace/events/ioweight.h                        |  174 +
+ include/uapi/linux/bpf.h                               |   11 
+ include/uapi/linux/fs.h                                |    2 
+ tools/bpf/bpftool/feature.c                            |    3 
+ tools/bpf/bpftool/main.h                               |    1 
+ tools/cgroup/monitor_ioweight.py                       |  264 +
+ tools/include/uapi/linux/bpf.h                         |   11 
+ tools/include/uapi/linux/fs.h                          |    2 
+ tools/lib/bpf/libbpf.c                                 |    2 
+ tools/lib/bpf/libbpf_probes.c                          |    1 
+ tools/testing/selftests/bpf/Makefile                   |    2 
+ tools/testing/selftests/bpf/iocost_ctrl.c              |   43 
+ tools/testing/selftests/bpf/progs/iocost_linear_prog.c |   52 
+ 34 files changed, 3333 insertions(+), 54 deletions(-)
+
+--
+tejun
 
