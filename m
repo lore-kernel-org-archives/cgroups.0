@@ -1,45 +1,34 @@
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@redhat.com>
-Subject: Re: [PATCH 08/10] blkcg: implement blk-ioweight
-Date: Fri, 14 Jun 2019 22:50:34 +0200
-Message-ID: <87blyzc2n9.fsf@toke.dk>
-References: <20190614015620.1587672-1-tj@kernel.org> <20190614015620.1587672-9-tj@kernel.org> <87pnngbbti.fsf@toke.dk> <20190614150924.GB538958@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From: pr-tracker-bot@kernel.org
+Subject: Re: [GIT PULL] cgroup fixes for v5.2-rc4
+Date: Sat, 15 Jun 2019 04:05:05 +0000
+Message-ID: <156057150566.28747.12493884345585916211.pr-tracker-bot@kernel.org>
+References: <20190614200253.GB657710@devbig004.ftw2.facebook.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190614150924.GB538958@devbig004.ftw2.facebook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1560571505;
+        bh=b/a8q+CufRJOz/FcqspHWxNUkU3OrCBVs4vkAypASqQ=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=otnN/L1LY0F94t/dI+qB38ZzdW7FYqv3bIFyVAeJjWDOdwGJ+NvFu/zAGw8no7Qlf
+         coDpQUqN9fmObXv4xW0QCLzheSm+fDrYqdGme9kwfyv7pEN/ePErevz7nbdjpyQHig
+         HOVxsodcqUnskYLizcCGQHyd0Us8V7ySu/wR8oTk=
+In-Reply-To: <20190614200253.GB657710@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, newella@fb.com, clm@fb.com, josef@toxicpanda.com, dennisz@fb.com, lizefan@huawei.com, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, ast@kernel.org, daniel@iogearbox.net, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, bpf@vger.kernel.org, Josef Bacik <jbacik@fb.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
 
-Tejun Heo <tj@kernel.org> writes:
+The pull request you sent on Fri, 14 Jun 2019 13:02:53 -0700:
 
-> Hello, Toke.
->
-> On Fri, Jun 14, 2019 at 02:17:45PM +0200, Toke Høiland-Jørgensen wrote:
->> One question: How are equal-weight cgroups scheduled relative to each
->> other? Or requests from different processes within a single cgroup for
->> that matter? FIFO? Round-robin? Something else?
->
-> Once each cgroup got their hierarchical weight and current vtime for
-> the period, they don't talk to each other.  Each is expected to do the
-> right thing on their own.  When the period ends, the timer looks at
-> how the device is performing, how much each used and so on and then
-> make necessary adjustments.  So, there's no direct cross-cgroup
-> synchronization.  Each is throttled to their target level
-> independently.
+> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.2-fixes
 
-Right, makes sense.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/0011572c883082a95e02d47f45fc4a42dc0e8634
 
-> Within a single cgroup, the IOs are FIFO. When an IO has enough vtime
-> credit, it just passes through. When it doesn't, it always waits
-> behind any other IOs which are already waiting.
+Thank you!
 
-OK. Is there any fundamental reason why requests from individual
-processes could not be interleaved? Or does it just not give the same
-benefits in an IO request context as it does for network packets?
-
-Thanks for the explanations! :)
-
--Toke
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
