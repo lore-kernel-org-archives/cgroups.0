@@ -1,34 +1,67 @@
-From: pr-tracker-bot@kernel.org
-Subject: Re: [GIT PULL] cgroup fixes for v5.2-rc4
-Date: Sat, 15 Jun 2019 04:05:05 +0000
-Message-ID: <156057150566.28747.12493884345585916211.pr-tracker-bot@kernel.org>
-References: <20190614200253.GB657710@devbig004.ftw2.facebook.com>
+From: Xi Ruoyao <xry111@mengyan1223.wang>
+Subject: [PATCH RFC] mm: memcontrol: add cgroup v2 interface to read memory
+ watermark
+Date: Sat, 15 Jun 2019 16:20:04 +0800
+Message-ID: <0f1be041f8de95603753ffe989bd25069efa13bb.camel@mengyan1223.wang>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1560571505;
-        bh=b/a8q+CufRJOz/FcqspHWxNUkU3OrCBVs4vkAypASqQ=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=otnN/L1LY0F94t/dI+qB38ZzdW7FYqv3bIFyVAeJjWDOdwGJ+NvFu/zAGw8no7Qlf
-         coDpQUqN9fmObXv4xW0QCLzheSm+fDrYqdGme9kwfyv7pEN/ePErevz7nbdjpyQHig
-         HOVxsodcqUnskYLizcCGQHyd0Us8V7ySu/wR8oTk=
-In-Reply-To: <20190614200253.GB657710@devbig004.ftw2.facebook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mengyan1223.wang;
+        s=mail; t=1560586815;
+        bh=bqks99JML0mByy8FjY6xU4G7QtZG+ZkGbWODY0s995M=;
+        h=Subject:From:To:Cc:Date:From;
+        b=X6WUvQ6Am7IOROADt2MULQT0N6H5XyrHdIjWhdgp66wkT9D8yJ03fRRJg/E8IzSug
+         gP0aGKnrhRYQxaiRYYbPD+FNjl+mcGY+DcnnpYHZJat/mcn3+jv+6UuxSAFkQC/7Fm
+         J6Yf0nJeFn/Rq0SXJrgMZDo0dMHERBp4NR1yps8ewLikCwHpT1K9ZW7KAC5AHOJDxE
+         MmIP//2o1N12q/4eljFk+jD8otsc+oigSiisbEjPqxj+3G/Utn+HpXRQLdbZvtl5zs
+         EYW60BWEROdja3ZcdxvD1EgO9YE768kPQwCJJCK/G5PEiAsYo1EaNILfCRAvT7uhUf
+         eHr2f/ibTrg5A==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-The pull request you sent on Fri, 14 Jun 2019 13:02:53 -0700:
+Introduce a control file memory.watermark showing the watermark
+consumption of the cgroup and its descendants, in bytes.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.2-fixes
+Signed-off-by: Xi Ruoyao <xry111@mengyan1223.wang>
+---
+ mm/memcontrol.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/0011572c883082a95e02d47f45fc4a42dc0e8634
-
-Thank you!
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index ba9138a4a1de..b1d968f2adcd 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5495,6 +5495,13 @@ static u64 memory_current_read(struct cgroup_subsys_state
+*css,
+ 	return (u64)page_counter_read(&memcg->memory) * PAGE_SIZE;
+ }
+ 
++static u64 memory_watermark_read(struct cgroup_subsys_state *css,
++				 struct cftype *cft)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
++	return (u64)memcg->memory.watermark * PAGE_SIZE;
++}
++
+ static int memory_min_show(struct seq_file *m, void *v)
+ {
+ 	return seq_puts_memcg_tunable(m,
+@@ -5771,6 +5778,11 @@ static struct cftype memory_files[] = {
+ 		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.read_u64 = memory_current_read,
+ 	},
++	{
++		.name = "watermark",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.read_u64 = memory_watermark_read,
++	},
+ 	{
+ 		.name = "min",
+ 		.flags = CFTYPE_NOT_ON_ROOT,
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+Xi Ruoyao <xry111@mengyan1223.wang>
+School of Aerospace Science and Technology, Xidian University
+
