@@ -1,7 +1,7 @@
 From: <xiaoggchen@tencent.com>
-Subject: [PATCH 1/5] sched/BT: add BT scheduling entity
-Date: Fri, 21 Jun 2019 15:45:53 +0800
-Message-ID: <1561103157-11246-2-git-send-email-xiaoggchen@tencent.com>
+Subject: [PATCH 3/5] sched/BT: extend the priority for BT scheduling class
+Date: Fri, 21 Jun 2019 15:45:55 +0800
+Message-ID: <1561103157-11246-4-git-send-email-xiaoggchen@tencent.com>
 References: <1561103157-11246-1-git-send-email-xiaoggchen@tencent.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -15,200 +15,244 @@ Cc: mingo@redhat.com, peterz@infradead.org, linux-kernel@vger.kernel.org, tj@ker
 
 From: chen xiaoguang <xiaoggchen@tencent.com>
 
+The priority of BT scheduler is from 140 to 179.
+
 Signed-off-by: Newton Gao <newtongao@tencent.com>
 Signed-off-by: Shook Liu <shookliu@tencent.com>
 Signed-off-by: Zhiguang Peng <zgpeng@tencent.com>
 Signed-off-by: Xiaoguang Chen <xiaoggchen@tencent.com>
 ---
- include/linux/sched.h      | 18 ++++++++++++++++++
- include/uapi/linux/sched.h |  1 +
- kernel/sched/Makefile      |  2 +-
- kernel/sched/bt.c          | 17 +++++++++++++++++
- kernel/sched/core.c        | 10 ++++++++++
- kernel/sched/sched.h       | 22 ++++++++++++++++++++++
- 6 files changed, 69 insertions(+), 1 deletion(-)
- create mode 100644 kernel/sched/bt.c
+ include/linux/ioprio.h     |  2 +-
+ include/linux/sched/bt.h   | 30 ++++++++++++++++++++++++++++++
+ include/linux/sched/prio.h |  5 ++++-
+ init/init_task.c           |  6 +++---
+ kernel/sched/core.c        | 15 ++++++++++++---
+ kernel/sched/cputime.c     | 26 ++++++++++++++++++++------
+ kernel/sched/sched.h       | 12 ++++++++++++
+ 7 files changed, 82 insertions(+), 14 deletions(-)
+ create mode 100644 include/linux/sched/bt.h
 
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 1183741..c0dfbb2 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -560,6 +560,23 @@ struct sched_dl_entity {
- 	struct hrtimer inactive_timer;
- };
- 
-+struct sched_bt_entity {
-+	struct load_weight load;
-+	struct rb_node          run_node;
-+	unsigned int            on_rq;
-+
-+	u64                     exec_start;
-+	u64                     sum_exec_runtime;
-+	u64                     vruntime;
-+	u64                     prev_sum_exec_runtime;
-+
-+	u64                     nr_migrations;
-+
-+#if defined(CONFIG_SCHEDSTATS) || defined(CONFIG_LATENCYTOP)
-+	struct sched_statistics *statistics;
-+#endif
-+};
-+
- union rcu_special {
- 	struct {
- 		u8			blocked;
-@@ -639,6 +656,7 @@ struct task_struct {
- 	struct task_group		*sched_task_group;
- #endif
- 	struct sched_dl_entity		dl;
-+	struct sched_bt_entity		bt;
- 
- #ifdef CONFIG_PREEMPT_NOTIFIERS
- 	/* List of struct preempt_notifier: */
-diff --git a/include/uapi/linux/sched.h b/include/uapi/linux/sched.h
-index ed4ee17..410042a 100644
---- a/include/uapi/linux/sched.h
-+++ b/include/uapi/linux/sched.h
-@@ -41,6 +41,7 @@
- /* SCHED_ISO: reserved but not implemented yet */
- #define SCHED_IDLE		5
- #define SCHED_DEADLINE		6
-+#define SCHED_BT		7
- 
- /* Can be ORed in to make sure the process is reverted back to SCHED_NORMAL on fork */
- #define SCHED_RESET_ON_FORK     0x40000000
-diff --git a/kernel/sched/Makefile b/kernel/sched/Makefile
-index 21fb5a5..938e539 100644
---- a/kernel/sched/Makefile
-+++ b/kernel/sched/Makefile
-@@ -17,7 +17,7 @@ CFLAGS_core.o := $(PROFILING) -fno-omit-frame-pointer
- endif
- 
- obj-y += core.o loadavg.o clock.o cputime.o
--obj-y += idle.o fair.o rt.o deadline.o
-+obj-y += idle.o fair.o rt.o deadline.o bt.o
- obj-y += wait.o wait_bit.o swait.o completion.o
- 
- obj-$(CONFIG_SMP) += cpupri.o cpudeadline.o topology.o stop_task.o pelt.o
-diff --git a/kernel/sched/bt.c b/kernel/sched/bt.c
+diff --git a/include/linux/ioprio.h b/include/linux/ioprio.h
+index e9bfe69..3adb9ad 100644
+--- a/include/linux/ioprio.h
++++ b/include/linux/ioprio.h
+@@ -62,7 +62,7 @@ static inline int task_nice_ioprio(struct task_struct *task)
+  */
+ static inline int task_nice_ioclass(struct task_struct *task)
+ {
+-	if (task->policy == SCHED_IDLE)
++	if (task->policy == SCHED_IDLE || task->policy == SCHED_BT)
+ 		return IOPRIO_CLASS_IDLE;
+ 	else if (task_is_realtime(task))
+ 		return IOPRIO_CLASS_RT;
+diff --git a/include/linux/sched/bt.h b/include/linux/sched/bt.h
 new file mode 100644
-index 0000000..56566e6
+index 0000000..5f40600
 --- /dev/null
-+++ b/kernel/sched/bt.c
-@@ -0,0 +1,17 @@
-+// SPDX-License-Identifier: GPL-2.0
++++ b/include/linux/sched/bt.h
+@@ -0,0 +1,30 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _SCHED_BT_H
++#define _SCHED_BT_H
++
 +/*
-+ * Background Scheduling Class
++ * SCHED_BT tasks has 140~179 priorities, reflecting
++ * the fact that any of them has slower prio than RT and
++ * NORMAL/BATCH tasks.
 + */
-+
-+#include "sched.h"
-+
-+void init_bt_rq(struct bt_rq *bt_rq)
++#define NICE_TO_BT_PRIO(nice)  (MAX_RT_PRIO + (nice) + 20 + 40)
++#define PRIO_TO_BT_NICE(prio)  ((prio) - MAX_RT_PRIO - 20 - 40)
++static inline int task_bt_nice(const struct task_struct *p)
 +{
-+	bt_rq->tasks_timeline = RB_ROOT;
-+	bt_rq->min_vruntime = (u64)(-(1LL << 20));
-+#ifndef CONFIG_64BIT
-+	bt_rq->min_vruntime_copy = bt_rq->min_vruntime;
-+#endif
++	return PRIO_TO_BT_NICE((p)->static_prio);
 +}
 +
++static inline int bt_prio(int prio)
++{
++	if (unlikely(prio < MAX_PRIO && prio >= MIN_BT_PRIO))
++		return 1;
++	return 0;
++}
 +
++static inline int bt_task(struct task_struct *p)
++{
++	return bt_prio(p->prio);
++}
++#endif /* _SCHED_BT_H */
++
++
+diff --git a/include/linux/sched/prio.h b/include/linux/sched/prio.h
+index 7d64fea..5c36ed2 100644
+--- a/include/linux/sched/prio.h
++++ b/include/linux/sched/prio.h
+@@ -22,9 +22,12 @@
+ #define MAX_USER_RT_PRIO	100
+ #define MAX_RT_PRIO		MAX_USER_RT_PRIO
+ 
+-#define MAX_PRIO		(MAX_RT_PRIO + NICE_WIDTH)
++#define MAX_PRIO		(MAX_RT_PRIO + NICE_WIDTH + 40)
+ #define DEFAULT_PRIO		(MAX_RT_PRIO + NICE_WIDTH / 2)
+ 
++#define MIN_BT_PRIO		(MAX_RT_PRIO + 40)
++#define MAX_BT_PRIO		(MAX_PRIO - 1)
++
+ /*
+  * Convert user-nice values [ -20 ... 0 ... 19 ]
+  * to static priority [ MAX_RT_PRIO..MAX_PRIO-1 ],
+diff --git a/init/init_task.c b/init/init_task.c
+index c70ef65..603ec4f 100644
+--- a/init/init_task.c
++++ b/init/init_task.c
+@@ -68,9 +68,9 @@ struct task_struct init_task
+ 	.stack		= init_stack,
+ 	.usage		= REFCOUNT_INIT(2),
+ 	.flags		= PF_KTHREAD,
+-	.prio		= MAX_PRIO - 20,
+-	.static_prio	= MAX_PRIO - 20,
+-	.normal_prio	= MAX_PRIO - 20,
++	.prio		= MAX_PRIO - 20 - 40,
++	.static_prio	= MAX_PRIO - 20 - 40,
++	.normal_prio	= MAX_PRIO - 20 - 40,
+ 	.policy		= SCHED_NORMAL,
+ 	.cpus_allowed	= CPU_MASK_ALL,
+ 	.nr_cpus_allowed= NR_CPUS,
 diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 874c427..3eb4723 100644
+index 3eb4723..b542c17 100644
 --- a/kernel/sched/core.c
 +++ b/kernel/sched/core.c
-@@ -2138,6 +2138,13 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
- 	p->se.vruntime			= 0;
- 	INIT_LIST_HEAD(&p->se.group_node);
+@@ -2312,7 +2312,8 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
+ 	 * Revert to default priority/policy on fork if requested.
+ 	 */
+ 	if (unlikely(p->sched_reset_on_fork)) {
+-		if (task_has_dl_policy(p) || task_has_rt_policy(p)) {
++		if (task_has_dl_policy(p) || task_has_rt_policy(p) ||
++		    task_has_bt_policy(p)) {
+ 			p->policy = SCHED_NORMAL;
+ 			p->static_prio = NICE_TO_PRIO(0);
+ 			p->rt_priority = 0;
+@@ -2333,6 +2334,8 @@ int sched_fork(unsigned long clone_flags, struct task_struct *p)
+ 		return -EAGAIN;
+ 	else if (rt_prio(p->prio))
+ 		p->sched_class = &rt_sched_class;
++	else if (bt_prio(p->prio))
++		p->sched_class = &bt_sched_class;
+ 	else
+ 		p->sched_class = &fair_sched_class;
  
-+	p->bt.on_rq			= 0;
-+	p->bt.exec_start		= 0;
-+	p->bt.sum_exec_runtime		= 0;
-+	p->bt.prev_sum_exec_runtime	= 0;
-+	p->bt.nr_migrations		= 0;
-+	p->bt.vruntime			= 0;
-+
- #ifdef CONFIG_FAIR_GROUP_SCHED
- 	p->se.cfs_rq			= NULL;
- #endif
-@@ -2145,6 +2152,7 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
- #ifdef CONFIG_SCHEDSTATS
- 	/* Even if schedstat is disabled, there should not be garbage */
- 	memset(&p->se.statistics, 0, sizeof(p->se.statistics));
-+	p->bt.statistics = &p->se.statistics;
- #endif
+@@ -3833,6 +3836,12 @@ void rt_mutex_setprio(struct task_struct *p, struct task_struct *pi_task)
+ 		if (oldprio < prio)
+ 			queue_flag |= ENQUEUE_HEAD;
+ 		p->sched_class = &rt_sched_class;
++	} else if (bt_prio(prio)) {
++		if (dl_prio(oldprio))
++			p->dl.dl_boosted = 0;
++		if (rt_prio(oldprio))
++			p->rt.timeout = 0;
++		p->sched_class = &bt_sched_class;
+ 	} else {
+ 		if (dl_prio(oldprio))
+ 			p->dl.dl_boosted = 0;
+@@ -3991,7 +4000,7 @@ int idle_cpu(int cpu)
+ {
+ 	struct rq *rq = cpu_rq(cpu);
  
- 	RB_CLEAR_NODE(&p->dl.rb_node);
-@@ -5974,6 +5982,7 @@ void __init sched_init(void)
- 		init_cfs_rq(&rq->cfs);
- 		init_rt_rq(&rq->rt);
- 		init_dl_rq(&rq->dl);
-+		init_bt_rq(&rq->bt);
- #ifdef CONFIG_FAIR_GROUP_SCHED
- 		root_task_group.shares = ROOT_TASK_GROUP_LOAD;
- 		INIT_LIST_HEAD(&rq->leaf_cfs_rq_list);
-@@ -6186,6 +6195,7 @@ void normalize_rt_tasks(void)
- 			continue;
+-	if (rq->curr != rq->idle)
++	if (rq->curr != rq->idle && !bt_prio(rq->curr->prio))
+ 		return 0;
  
- 		p->se.exec_start = 0;
-+		p->bt.exec_start = 0;
- 		schedstat_set(p->se.statistics.wait_start,  0);
+ 	if (rq->nr_running)
+@@ -6200,7 +6209,7 @@ void normalize_rt_tasks(void)
  		schedstat_set(p->se.statistics.sleep_start, 0);
  		schedstat_set(p->se.statistics.block_start, 0);
+ 
+-		if (!dl_task(p) && !rt_task(p)) {
++		if (!dl_task(p) && !rt_task(p) && !bt_task(p)) {
+ 			/*
+ 			 * Renice negative nice level userspace
+ 			 * tasks back to 0:
+diff --git a/kernel/sched/cputime.c b/kernel/sched/cputime.c
+index 2305ce8..ca26a04 100644
+--- a/kernel/sched/cputime.c
++++ b/kernel/sched/cputime.c
+@@ -122,7 +122,10 @@ void account_user_time(struct task_struct *p, u64 cputime)
+ 	p->utime += cputime;
+ 	account_group_user_time(p, cputime);
+ 
+-	index = (task_nice(p) > 0) ? CPUTIME_NICE : CPUTIME_USER;
++	if (bt_prio(p->static_prio))
++		index = (task_bt_nice(p) > 0) ? CPUTIME_NICE : CPUTIME_USER;
++	else
++		index = (task_nice(p) > 0) ? CPUTIME_NICE : CPUTIME_USER;
+ 
+ 	/* Add user time to cpustat. */
+ 	task_group_account_field(p, index, cputime);
+@@ -146,13 +149,24 @@ void account_guest_time(struct task_struct *p, u64 cputime)
+ 	p->gtime += cputime;
+ 
+ 	/* Add guest time to cpustat. */
+-	if (task_nice(p) > 0) {
+-		cpustat[CPUTIME_NICE] += cputime;
+-		cpustat[CPUTIME_GUEST_NICE] += cputime;
++	if (bt_prio(p->static_prio)) {
++		if (task_bt_nice(p) > 0) {
++			cpustat[CPUTIME_NICE] += cputime;
++			cpustat[CPUTIME_GUEST_NICE] += cputime;
++		} else {
++			cpustat[CPUTIME_USER] += cputime;
++			cpustat[CPUTIME_GUEST] += cputime;
++		}
+ 	} else {
+-		cpustat[CPUTIME_USER] += cputime;
+-		cpustat[CPUTIME_GUEST] += cputime;
++		if (task_nice(p) > 0) {
++			cpustat[CPUTIME_NICE] += cputime;
++			cpustat[CPUTIME_GUEST_NICE] += cputime;
++		} else {
++			cpustat[CPUTIME_USER] += cputime;
++			cpustat[CPUTIME_GUEST] += cputime;
++		}
+ 	}
++
+ }
+ 
+ /*
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index b52ed1a..320c80d 100644
+index 68007be..403eec6 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
-@@ -331,6 +331,7 @@ bool __dl_overflow(struct dl_bw *dl_b, int cpus, u64 old_bw, u64 new_bw)
+@@ -32,6 +32,7 @@
+ #include <linux/sched/user.h>
+ #include <linux/sched/wake_q.h>
+ #include <linux/sched/xacct.h>
++#include <linux/sched/bt.h>
  
- struct cfs_rq;
- struct rt_rq;
-+struct bt_rq;
+ #include <uapi/linux/sched/types.h>
  
- extern struct list_head task_groups;
- 
-@@ -576,6 +577,25 @@ struct cfs_rq {
- #endif /* CONFIG_FAIR_GROUP_SCHED */
- };
- 
-+struct bt_rq {
-+	struct load_weight load;
-+	unsigned int bt_nr_running;
-+	unsigned long nr_uninterruptible;
-+
-+	u64 exec_clock;
-+	u64 min_vruntime;
-+#ifndef CONFIG_64BIT
-+	u64 min_vruntime_copy;
-+#endif
-+#ifdef CONFIG_SCHED_DEBUG
-+	unsigned int            nr_spread_over;
-+#endif
-+	struct rb_root tasks_timeline;
-+	struct rb_node *rb_leftmost;
-+
-+	struct sched_bt_entity *curr, *next;
-+};
-+
- static inline int rt_bandwidth_enabled(void)
+@@ -172,6 +173,12 @@ static inline int dl_policy(int policy)
  {
- 	return sysctl_sched_rt_runtime >= 0;
-@@ -838,6 +858,7 @@ struct rq {
- 	struct cfs_rq		cfs;
- 	struct rt_rq		rt;
- 	struct dl_rq		dl;
-+	struct bt_rq		bt;
+ 	return policy == SCHED_DEADLINE;
+ }
++
++static inline int bt_policy(int policy)
++{
++	return policy == SCHED_BT;
++}
++
+ static inline bool valid_policy(int policy)
+ {
+ 	return idle_policy(policy) || fair_policy(policy) ||
+@@ -193,6 +200,11 @@ static inline int task_has_dl_policy(struct task_struct *p)
+ 	return dl_policy(p->policy);
+ }
  
- #ifdef CONFIG_FAIR_GROUP_SCHED
- 	/* list of leaf cfs_rq on this CPU: */
-@@ -2107,6 +2128,7 @@ static inline void double_rq_unlock(struct rq *rq1, struct rq *rq2)
- extern void init_cfs_rq(struct cfs_rq *cfs_rq);
- extern void init_rt_rq(struct rt_rq *rt_rq);
- extern void init_dl_rq(struct dl_rq *dl_rq);
-+extern void init_bt_rq(struct bt_rq *bt_rq);
++static inline int task_has_bt_policy(struct task_struct *p)
++{
++	return bt_policy(p->policy);
++}
++
+ #define cap_scale(v, s) ((v)*(s) >> SCHED_CAPACITY_SHIFT)
  
- extern void cfs_bandwidth_usage_inc(void);
- extern void cfs_bandwidth_usage_dec(void);
+ /*
 -- 
 1.8.3.1
 
