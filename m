@@ -1,37 +1,42 @@
-From: Valentin Schneider <valentin.schneider@arm.com>
-Subject: Re: [PATCH 0/5] BT scheduling class
-Date: Fri, 21 Jun 2019 14:26:11 +0100
-Message-ID: <6a81a564-9d89-f01d-15b8-e07f092cc5f1@arm.com>
-References: <1561103157-11246-1-git-send-email-xiaoggchen@tencent.com>
- <20190621130316.GK3436@hirez.programming.kicks-ass.net>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH] slub: Don't panic for memcg kmem cache creation
+ failure
+Date: Fri, 21 Jun 2019 13:52:26 -0700 (PDT)
+Message-ID: <alpine.DEB.2.21.1906211352130.77141@chino.kir.corp.google.com>
+References: <20190619232514.58994-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190621130316.GK3436@hirez.programming.kicks-ass.net>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=xsZwkR1O4dGnGMsIIG/ufAmeJ6Z+ZenaQocCY4Tza70=;
+        b=rv+E/7b7JY6cpCuEo3QEn8sbHqI1ZR79p1uD+ayLvYUjdZXy45cMBXnpOBANzRD/h9
+         AKwFkx5YKkPwDV+z+alIPV1uhD4Us31/0w7Onebbflsxun6qItXz81HGcxTZ7S45mQkF
+         mdeJXXlNrRYxGieY6CO5sW7OvYILoQQwQhzFqNXgIR9sUhMfzb7yJehRXESr28JDm6lq
+         IJUwCKmkCEQEHh2qvgZDsesKij6FJXeF66csul2evLnnuuXC21nlojygQcdLk+8jHF2L
+         PqLK6XveRhNJzO6G5iTrQWirXDKQbFegQGPu2Np+nWTUBVb8ggftrLbBsHWiZy5kTdaQ
+         g5dg==
+In-Reply-To: <20190619232514.58994-1-shakeelb@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz@infradead.org>, xiaoggchen@tencent.com
-Cc: jasperwang@tencent.com, heddchen@tencent.com, mingo@redhat.com, linux-kernel@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, viresh.kumar@linaro.org
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Christoph Lameter <cl@linux.com>, Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Pekka Enberg <penberg@kernel.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Dave Hansen <dave.hansen@intel.com>
 
-On 21/06/2019 14:03, Peter Zijlstra wrote:
-> On Fri, Jun 21, 2019 at 03:45:52PM +0800, xiaoggchen@tencent.com wrote:
-> 
->> First only server application exists in the system and the success
->> rate is 99.998% and the average cpu use is only 25%.
-> 
-> Have you guys looked at this series:
-> 
->   https://lkml.kernel.org/r/cover.1556182964.git.viresh.kumar@linaro.org
-> 
-> 
+On Wed, 19 Jun 2019, Shakeel Butt wrote:
 
-Sort of a shot in the dark here, but I wonder if task stealing [1] could
-help as well? IIRC Steve had some pretty good CPU utilization improvements
-with his series.
+> Currently for CONFIG_SLUB, if a memcg kmem cache creation is failed and
+> the corresponding root kmem cache has SLAB_PANIC flag, the kernel will
+> be crashed. This is unnecessary as the kernel can handle the creation
+> failures of memcg kmem caches. Additionally CONFIG_SLAB does not
+> implement this behavior. So, to keep the behavior consistent between
+> SLAB and SLUB, removing the panic for memcg kmem cache creation
+> failures. The root kmem cache creation failure for SLAB_PANIC correctly
+> panics for both SLAB and SLUB.
+> 
+> Reported-by: Dave Hansen <dave.hansen@intel.com>
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
 
-FWIW I have a somewhat recent rebase of CFS stealing laying around at [2].
-
-[1]: https://lore.kernel.org/lkml/1544131696-2888-1-git-send-email-steven.sistare@oracle.com/
-[2]: http://www.linux-arm.org/git?p=linux-vs.git;a=shortlog;h=refs/heads/mainline/cfs-stealing/v4-rebase
+Acked-by: David Rientjes <rientjes@google.com>
