@@ -1,7 +1,7 @@
 From: <xiaoggchen@tencent.com>
-Subject: [PATCH 5/5] sched/BT: add debug information for BT scheduling class
-Date: Fri, 21 Jun 2019 15:45:57 +0800
-Message-ID: <1561103157-11246-6-git-send-email-xiaoggchen@tencent.com>
+Subject: [PATCH 1/5] sched/BT: add BT scheduling entity
+Date: Fri, 21 Jun 2019 15:45:53 +0800
+Message-ID: <1561103157-11246-2-git-send-email-xiaoggchen@tencent.com>
 References: <1561103157-11246-1-git-send-email-xiaoggchen@tencent.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -20,99 +20,195 @@ Signed-off-by: Shook Liu <shookliu@tencent.com>
 Signed-off-by: Zhiguang Peng <zgpeng@tencent.com>
 Signed-off-by: Xiaoguang Chen <xiaoggchen@tencent.com>
 ---
- kernel/sched/bt.c    | 11 +++++++++++
- kernel/sched/debug.c | 37 +++++++++++++++++++++++++++++++++++++
- kernel/sched/sched.h |  3 +++
- 3 files changed, 51 insertions(+)
+ include/linux/sched.h      | 18 ++++++++++++++++++
+ include/uapi/linux/sched.h |  1 +
+ kernel/sched/Makefile      |  2 +-
+ kernel/sched/bt.c          | 17 +++++++++++++++++
+ kernel/sched/core.c        | 10 ++++++++++
+ kernel/sched/sched.h       | 22 ++++++++++++++++++++++
+ 6 files changed, 69 insertions(+), 1 deletion(-)
+ create mode 100644 kernel/sched/bt.c
 
-diff --git a/kernel/sched/bt.c b/kernel/sched/bt.c
-index 87eb04f..11b4abd 100644
---- a/kernel/sched/bt.c
-+++ b/kernel/sched/bt.c
-@@ -1027,3 +1027,14 @@ static unsigned int get_rr_interval_bt(struct rq *rq, struct task_struct *task)
- 	.update_curr            = update_curr_bt,
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index 1183741..c0dfbb2 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -560,6 +560,23 @@ struct sched_dl_entity {
+ 	struct hrtimer inactive_timer;
  };
  
-+#ifdef CONFIG_SCHED_DEBUG
-+void print_bt_stats(struct seq_file *m, int cpu)
-+{
-+	struct bt_rq *bt_rq;
++struct sched_bt_entity {
++	struct load_weight load;
++	struct rb_node          run_node;
++	unsigned int            on_rq;
 +
-+	rcu_read_lock();
-+	bt_rq = &cpu_rq(cpu)->bt;
-+	print_bt_rq(m, cpu, bt_rq);
-+	rcu_read_unlock();
-+}
++	u64                     exec_start;
++	u64                     sum_exec_runtime;
++	u64                     vruntime;
++	u64                     prev_sum_exec_runtime;
++
++	u64                     nr_migrations;
++
++#if defined(CONFIG_SCHEDSTATS) || defined(CONFIG_LATENCYTOP)
++	struct sched_statistics *statistics;
 +#endif
-diff --git a/kernel/sched/debug.c b/kernel/sched/debug.c
-index 678bfb9..44d0859 100644
---- a/kernel/sched/debug.c
-+++ b/kernel/sched/debug.c
-@@ -497,6 +497,43 @@ static void print_rq(struct seq_file *m, struct rq *rq, int rq_cpu)
- 	rcu_read_unlock();
- }
++};
++
+ union rcu_special {
+ 	struct {
+ 		u8			blocked;
+@@ -639,6 +656,7 @@ struct task_struct {
+ 	struct task_group		*sched_task_group;
+ #endif
+ 	struct sched_dl_entity		dl;
++	struct sched_bt_entity		bt;
  
-+void print_bt_rq(struct seq_file *m, int cpu, struct bt_rq *bt_rq)
+ #ifdef CONFIG_PREEMPT_NOTIFIERS
+ 	/* List of struct preempt_notifier: */
+diff --git a/include/uapi/linux/sched.h b/include/uapi/linux/sched.h
+index ed4ee17..410042a 100644
+--- a/include/uapi/linux/sched.h
++++ b/include/uapi/linux/sched.h
+@@ -41,6 +41,7 @@
+ /* SCHED_ISO: reserved but not implemented yet */
+ #define SCHED_IDLE		5
+ #define SCHED_DEADLINE		6
++#define SCHED_BT		7
+ 
+ /* Can be ORed in to make sure the process is reverted back to SCHED_NORMAL on fork */
+ #define SCHED_RESET_ON_FORK     0x40000000
+diff --git a/kernel/sched/Makefile b/kernel/sched/Makefile
+index 21fb5a5..938e539 100644
+--- a/kernel/sched/Makefile
++++ b/kernel/sched/Makefile
+@@ -17,7 +17,7 @@ CFLAGS_core.o := $(PROFILING) -fno-omit-frame-pointer
+ endif
+ 
+ obj-y += core.o loadavg.o clock.o cputime.o
+-obj-y += idle.o fair.o rt.o deadline.o
++obj-y += idle.o fair.o rt.o deadline.o bt.o
+ obj-y += wait.o wait_bit.o swait.o completion.o
+ 
+ obj-$(CONFIG_SMP) += cpupri.o cpudeadline.o topology.o stop_task.o pelt.o
+diff --git a/kernel/sched/bt.c b/kernel/sched/bt.c
+new file mode 100644
+index 0000000..56566e6
+--- /dev/null
++++ b/kernel/sched/bt.c
+@@ -0,0 +1,17 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Background Scheduling Class
++ */
++
++#include "sched.h"
++
++void init_bt_rq(struct bt_rq *bt_rq)
 +{
-+	s64 MIN_vruntime = -1, min_vruntime, max_vruntime = -1,
-+		spread, rq0_min_vruntime, spread0;
-+	struct rq *rq = cpu_rq(cpu);
-+	unsigned long flags;
-+
-+	SEQ_printf(m, "\nbt_rq[%d]:\n", cpu);
-+
-+	SEQ_printf(m, "  .%-30s: %lld.%06ld\n", "exec_clock",
-+			SPLIT_NS(bt_rq->exec_clock));
-+
-+	raw_spin_lock_irqsave(&rq->lock, flags);
-+	if (bt_rq->rb_leftmost)
-+		MIN_vruntime = (__pick_first_bt_entity(bt_rq))->vruntime;
-+	min_vruntime = bt_rq->min_vruntime;
-+	rq0_min_vruntime = cpu_rq(0)->bt.min_vruntime;
-+	raw_spin_unlock_irqrestore(&rq->lock, flags);
-+	SEQ_printf(m, "  .%-30s: %lld.%06ld\n", "MIN_vruntime",
-+		SPLIT_NS(MIN_vruntime));
-+	SEQ_printf(m, "  .%-30s: %lld.%06ld\n", "min_vruntime",
-+		SPLIT_NS(min_vruntime));
-+	SEQ_printf(m, "  .%-30s: %lld.%06ld\n", "max_vruntime",
-+		SPLIT_NS(max_vruntime));
-+	spread = max_vruntime - MIN_vruntime;
-+	SEQ_printf(m, "  .%-30s: %lld.%06ld\n", "spread",
-+		SPLIT_NS(spread));
-+	spread0 = min_vruntime - rq0_min_vruntime;
-+	SEQ_printf(m, "  .%-30s: %lld.%06ld\n", "spread0",
-+		SPLIT_NS(spread0));
-+	SEQ_printf(m, "  .%-30s: %d\n", "nr_spread_over",
-+		bt_rq->nr_spread_over);
-+	SEQ_printf(m, "  .%-30s: %d\n", "nr_running", bt_rq->bt_nr_running);
-+	SEQ_printf(m, "  .%-30s: %ld\n", "load", bt_rq->load.weight);
++	bt_rq->tasks_timeline = RB_ROOT;
++	bt_rq->min_vruntime = (u64)(-(1LL << 20));
++#ifndef CONFIG_64BIT
++	bt_rq->min_vruntime_copy = bt_rq->min_vruntime;
++#endif
 +}
 +
 +
- void print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq)
- {
- 	s64 MIN_vruntime = -1, min_vruntime, max_vruntime = -1,
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 874c427..3eb4723 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -2138,6 +2138,13 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
+ 	p->se.vruntime			= 0;
+ 	INIT_LIST_HEAD(&p->se.group_node);
+ 
++	p->bt.on_rq			= 0;
++	p->bt.exec_start		= 0;
++	p->bt.sum_exec_runtime		= 0;
++	p->bt.prev_sum_exec_runtime	= 0;
++	p->bt.nr_migrations		= 0;
++	p->bt.vruntime			= 0;
++
+ #ifdef CONFIG_FAIR_GROUP_SCHED
+ 	p->se.cfs_rq			= NULL;
+ #endif
+@@ -2145,6 +2152,7 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
+ #ifdef CONFIG_SCHEDSTATS
+ 	/* Even if schedstat is disabled, there should not be garbage */
+ 	memset(&p->se.statistics, 0, sizeof(p->se.statistics));
++	p->bt.statistics = &p->se.statistics;
+ #endif
+ 
+ 	RB_CLEAR_NODE(&p->dl.rb_node);
+@@ -5974,6 +5982,7 @@ void __init sched_init(void)
+ 		init_cfs_rq(&rq->cfs);
+ 		init_rt_rq(&rq->rt);
+ 		init_dl_rq(&rq->dl);
++		init_bt_rq(&rq->bt);
+ #ifdef CONFIG_FAIR_GROUP_SCHED
+ 		root_task_group.shares = ROOT_TASK_GROUP_LOAD;
+ 		INIT_LIST_HEAD(&rq->leaf_cfs_rq_list);
+@@ -6186,6 +6195,7 @@ void normalize_rt_tasks(void)
+ 			continue;
+ 
+ 		p->se.exec_start = 0;
++		p->bt.exec_start = 0;
+ 		schedstat_set(p->se.statistics.wait_start,  0);
+ 		schedstat_set(p->se.statistics.sleep_start, 0);
+ 		schedstat_set(p->se.statistics.block_start, 0);
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 403eec6..749f580 100644
+index b52ed1a..320c80d 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
-@@ -2120,6 +2120,8 @@ static inline void double_rq_unlock(struct rq *rq1, struct rq *rq2)
- extern struct sched_entity *__pick_first_entity(struct cfs_rq *cfs_rq);
- extern struct sched_entity *__pick_last_entity(struct cfs_rq *cfs_rq);
+@@ -331,6 +331,7 @@ bool __dl_overflow(struct dl_bw *dl_b, int cpus, u64 old_bw, u64 new_bw)
  
-+extern struct sched_bt_entity *__pick_first_bt_entity(struct bt_rq *bt_rq);
+ struct cfs_rq;
+ struct rt_rq;
++struct bt_rq;
+ 
+ extern struct list_head task_groups;
+ 
+@@ -576,6 +577,25 @@ struct cfs_rq {
+ #endif /* CONFIG_FAIR_GROUP_SCHED */
+ };
+ 
++struct bt_rq {
++	struct load_weight load;
++	unsigned int bt_nr_running;
++	unsigned long nr_uninterruptible;
 +
- #ifdef	CONFIG_SCHED_DEBUG
- extern bool sched_debug_enabled;
++	u64 exec_clock;
++	u64 min_vruntime;
++#ifndef CONFIG_64BIT
++	u64 min_vruntime_copy;
++#endif
++#ifdef CONFIG_SCHED_DEBUG
++	unsigned int            nr_spread_over;
++#endif
++	struct rb_root tasks_timeline;
++	struct rb_node *rb_leftmost;
++
++	struct sched_bt_entity *curr, *next;
++};
++
+ static inline int rt_bandwidth_enabled(void)
+ {
+ 	return sysctl_sched_rt_runtime >= 0;
+@@ -838,6 +858,7 @@ struct rq {
+ 	struct cfs_rq		cfs;
+ 	struct rt_rq		rt;
+ 	struct dl_rq		dl;
++	struct bt_rq		bt;
  
-@@ -2129,6 +2131,7 @@ static inline void double_rq_unlock(struct rq *rq1, struct rq *rq2)
- extern void print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq);
- extern void print_rt_rq(struct seq_file *m, int cpu, struct rt_rq *rt_rq);
- extern void print_dl_rq(struct seq_file *m, int cpu, struct dl_rq *dl_rq);
-+extern void print_bt_rq(struct seq_file *m, int cpu, struct bt_rq *bt_rq);
- #ifdef CONFIG_NUMA_BALANCING
- extern void
- show_numa_stats(struct task_struct *p, struct seq_file *m);
+ #ifdef CONFIG_FAIR_GROUP_SCHED
+ 	/* list of leaf cfs_rq on this CPU: */
+@@ -2107,6 +2128,7 @@ static inline void double_rq_unlock(struct rq *rq1, struct rq *rq2)
+ extern void init_cfs_rq(struct cfs_rq *cfs_rq);
+ extern void init_rt_rq(struct rt_rq *rt_rq);
+ extern void init_dl_rq(struct dl_rq *dl_rq);
++extern void init_bt_rq(struct bt_rq *bt_rq);
+ 
+ extern void cfs_bandwidth_usage_inc(void);
+ extern void cfs_bandwidth_usage_dec(void);
 -- 
 1.8.3.1
 
