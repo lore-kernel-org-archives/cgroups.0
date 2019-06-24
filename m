@@ -1,47 +1,54 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] mm: fix page cache convergence regression
-Date: Mon, 24 Jun 2019 11:19:23 -0400
-Message-ID: <20190624151923.GA10572@cmpxchg.org>
-References: <20190524153148.18481-1-hannes@cmpxchg.org>
- <20190524160417.GB1075@bombadil.infradead.org>
- <20190524173900.GA11702@cmpxchg.org>
- <20190530161548.GA8415@cmpxchg.org>
- <20190530171356.GA19630@bombadil.infradead.org>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH v3 4/5] genirq/affinity: allow driver's discontigous
+ affinity set
+Date: Mon, 24 Jun 2019 17:42:39 +0200 (CEST)
+Message-ID: <alpine.DEB.2.21.1906241740320.32342@nanos.tec.linutronix.de>
+References: <cover.1561385989.git.zhangweiping@didiglobal.com> <1ead341c6d603cf138aed62e31091f257cb19981.1561385989.git.zhangweiping@didiglobal.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=xk9Y9/4d1P0hhiRulYC6/59GayfnrTydVvyulmj2MA0=;
-        b=gJlLLhHaj6Jvm1bCaUN3ZW2zumf00y0LQxCLkUqwaGzxFCYZiFYQ8rTczXQpCRZDpw
-         NtK5q/uM6I5V76gghSg5fmbJ43CHbwtS081cohfzOJ6io4WFLGOcoXgaTyWCbMrjkAsj
-         xY9qHxrZFwQHzIVemFHx4ljFg0oGqYce6edkh2yeRRpwJiU/trCjsIhFgezWhFJcCgqe
-         H4Scl/FXgMov4Q2yD8FeFxw798h6RqiToCrKV5Bs2iobxW0/QAamUc9TkSldXFyswImI
-         Apxtk2c/8886Fs7QUpgFAYPFhvHX896Nq/69H5XW37lFOXvRa0xmPRdWgvt7Lc42nHf+
-         rPsw==
-Content-Disposition: inline
-In-Reply-To: <20190530171356.GA19630@bombadil.infradead.org>
+In-Reply-To: <1ead341c6d603cf138aed62e31091f257cb19981.1561385989.git.zhangweiping@didiglobal.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Weiping Zhang <zhangweiping@didiglobal.com>
+Cc: axboe@kernel.dk, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, bvanassche@acm.org, keith.busch@intel.com, minwoo.im.dev@gmail.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-nvme@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, Ming Lei <ming.lei@redhat.com>
 
-On Thu, May 30, 2019 at 10:13:56AM -0700, Matthew Wilcox wrote:
-> On Thu, May 30, 2019 at 12:15:48PM -0400, Johannes Weiner wrote:
-> > Are there any objections or feedback on the proposed fix below? This
-> > is kind of a serious regression.
+On Mon, 24 Jun 2019, Weiping Zhang wrote:
+
+> The driver may implement multiple affinity set, and some of
+> are empty, for this case we just skip them.
+
+Why? What's the point of creating empty sets? Just because is not a real
+good justification.
+
+Leaving the patch for Ming.
+
+Thanks,
+
+	tglx
+
+> Signed-off-by: Weiping Zhang <zhangweiping@didiglobal.com>
+> ---
+>  kernel/irq/affinity.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> I'll drop it into the xarray tree for merging in a week, if that's ok
-> with you?
-
-Hey, it's three weeks later and we're about to miss 5.2.
-
-This sucks, Matthew. You introduced a serious regression to the MM
-subsystem, whose process and patch routing you largely bypassed. When
-I encountered the problem and provided a reproducer and a fix, you
-gave me a hard time on cosmetic grounds. I incorporated all your
-feedback, and still you show no urgency to get this patch or a fix of
-your own into mainline. It's your bug, please fix it.
+> diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+> index f18cd5aa33e8..6d964fe0fbd8 100644
+> --- a/kernel/irq/affinity.c
+> +++ b/kernel/irq/affinity.c
+> @@ -295,6 +295,10 @@ irq_create_affinity_masks(unsigned int nvecs, struct irq_affinity *affd)
+>  		unsigned int this_vecs = affd->set_size[i];
+>  		int ret;
+>  
+> +		/* skip empty affinity set */
+> +		if (this_vecs == 0)
+> +			continue;
+> +
+>  		ret = irq_build_affinity_masks(affd, curvec, this_vecs,
+>  					       curvec, masks);
+>  		if (ret) {
+> -- 
+> 2.14.1
+> 
+> 
