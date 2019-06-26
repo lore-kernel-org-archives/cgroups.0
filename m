@@ -1,95 +1,76 @@
-From: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC PATCH v3 02/11] cgroup: Add mechanism to register DRM devices
-Date: Wed, 26 Jun 2019 17:58:19 -0400
-Message-ID: <CAOWid-eeVcsb-rJfY9rxM4vDqGz=3XcZH0G=Qz9sq97L-NduCQ@mail.gmail.com>
-References: <20190626150522.11618-1-Kenny.Ho@amd.com>
- <20190626150522.11618-3-Kenny.Ho@amd.com>
- <20190626155605.GQ12905@phenom.ffwll.local>
- <CAOWid-cDopwjMns+c=fRpUA-z51zU=YbDC2QCVUXDjjTiyRcXw@mail.gmail.com>
- <CAKMK7uERvn7Ed2trGQShM94Ozp6+x8bsULFyGj9CYWstuzb56A@mail.gmail.com>
+From: Dave Chiluk <chiluk+linux@indeed.com>
+Subject: Re: [PATCH v4 1/1] sched/fair: Return all runtime when cfs_b has very
+ little remaining.
+Date: Wed, 26 Jun 2019 17:10:04 -0500
+Message-ID: <CAC=E7cUxcNkc7T7AXCr3PO6rqqxrk269JW3SDnXG-LtO-6-BVQ@mail.gmail.com>
+References: <1558121424-2914-1-git-send-email-chiluk+linux@indeed.com>
+ <1561391404-14450-1-git-send-email-chiluk+linux@indeed.com>
+ <1561391404-14450-2-git-send-email-chiluk+linux@indeed.com> <xm26tvcex50s.fsf@bsegall-linux.svl.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <CAKMK7uERvn7Ed2trGQShM94Ozp6+x8bsULFyGj9CYWstuzb56A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=indeed.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=rH2Dez6ibqeQegsSHJwCDNyF4HevqK6rJDhBC1vQRG4=;
+        b=yyWseDrs1tj8p1o6MQ872kjOA3UQ9CVqeYBmzwveWs+QXL8fcZ+guUO9UdPac/xfHj
+         gFVMKie1TtQFHdC4tm2WBM2cjHHHn08h2zlPssRFotp/FOHhzpueAl4s1jKCYs2O0yvO
+         cSItEv0JI4r+/FqqfoDEb9j8YIQSIZTgpAleo=
+In-Reply-To: <xm26tvcex50s.fsf@bsegall-linux.svl.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
-Cc: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, joseph.greathouse-5C7GfCeVMHo@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Ben Segall <bsegall@google.com>
+Cc: Phil Auld <pauld@redhat.com>, Peter Oskolkov <posk@posk.io>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Brendan Gregg <bgregg@netflix.com>, Kyle Anderson <kwa@yelp.com>, Gabriel Munos <gmunoz@netflix.com>, John Hammond <jhammond@indeed.com>, Cong Wang <xiyou.wangcong@gmail.com>
 
-T24gV2VkLCBKdW4gMjYsIDIwMTkgYXQgNTowNCBQTSBEYW5pZWwgVmV0dGVyIDxkYW5pZWxAZmZ3
-bGwuY2g+IHdyb3RlOgo+IE9uIFdlZCwgSnVuIDI2LCAyMDE5IGF0IDEwOjM3IFBNIEtlbm55IEhv
-IDx5Mmtlbm55QGdtYWlsLmNvbT4gd3JvdGU6Cj4gPiAoc2VuZGluZyBhZ2FpbiwgSSBrZWVwIG1p
-c3NpbmcgdGhlIHJlcGx5LWFsbCBpbiBnbWFpbC4pCj4gWW91IGNhbiBtYWtlIGl0IHRoZSBkZWZh
-dWx0IHNvbWV3aGVyZSBpbiB0aGUgZ21haWwgb3B0aW9ucy4KVW0uLi4gaW50ZXJlc3RpbmcsIG15
-IG9wdGlvbiB3YXMgYWN0dWFsbHkgbm90IHNldCAobmVpdGhlciByZXBseSBvciByZXBseS1hbGwu
-KQoKPiA+IE9uIFdlZCwgSnVuIDI2LCAyMDE5IGF0IDExOjU2IEFNIERhbmllbCBWZXR0ZXIgPGRh
-bmllbEBmZndsbC5jaD4gd3JvdGU6Cj4gPiA+Cj4gPiA+IFdoeSB0aGUgc2VwYXJhdGUsIGV4cGxp
-Y2l0IHJlZ2lzdHJhdGlvbiBzdGVwPyBJIHRoaW5rIGEgc2ltcGxlciBkZXNpZ24gZm9yCj4gPiA+
-IGRyaXZlcnMgd291bGQgYmUgdGhhdCB3ZSBzZXQgdXAgY2dyb3VwcyBpZiB0aGVyZSdzIGFueXRo
-aW5nIHRvIGJlCj4gPiA+IGNvbnRyb2xsZWQsIGFuZCB0aGVuIGZvciBHRU0gZHJpdmVycyB0aGUg
-YmFzaWMgR0VNIHN0dWZmIHdvdWxkIGJlIHNldCB1cAo+ID4gPiBhdXRvbWljYWxseSAodGhlcmUn
-cyByZWFsbHkgbm8gcmVhc29uIG5vdCB0byBJIHRoaW5rKS4KPiA+Cj4gPiBJcyB0aGlzIHdoYXQg
-eW91IG1lYW4gd2l0aCB0aGUgY29tbWVudCBhYm91dCBkcm1fZGV2X3JlZ2lzdGVyIGJlbG93Pwo+
-ID4gSSB0aGluayBJIHVuZGVyc3RhbmQgd2hhdCB5b3UgYXJlIHNheWluZyBidXQgbm90IHN1cGVy
-IGNsZWFyLiAgQXJlIHlvdQo+ID4gc3VnZ2VzdGluZyB0aGUgdXNlIG9mIGRyaXZlciBmZWF0dXJl
-IGJpdHMgKGRybV9jb3JlX2NoZWNrX2ZlYXR1cmUsCj4gPiBldGMuKSBzaW1pbGFyIHRvIHRoZSB3
-YXkgQnJpYW4gV2VsdHkgZGlkIGluIGhpcyBwcm9wb3NhbCBpbiBNYXk/Cj4KPiBBbHNvIG5vdCBl
-eGFjdGx5IGEgZmFuIG9mIGRyaXZlciBmZWF0dXJlIGJpdHMgdGJoLiBXaGF0IEkgaGFkIGluIG1p
-bmQgd2FzOgo+Cj4gLSBGb3Igc3R1ZmYgbGlrZSB0aGUgR0VNIGFjY291bnRpbmcgd2hpY2ggd2Ug
-Y2FuIGRvIGZvciBhbGwgZHJpdmVycwo+IGVhc2lseSAod2UgY2FuJ3QgZG8gdGhlIGVuZm9yY21l
-bnQsIHRoYXQgbmVlZHMgYSBmZXcgY2hhbmdlcyksIGp1c3QKPiByb2xsIGl0IG91dCBmb3IgZXZl
-cnlvbmUuIEkuZS4gaWYgeW91IGVuYWJsZSB0aGUgRFJNQ0cgS2NvbmZpZywgYWxsCj4gRFJJVkVS
-X0dFTSB3b3VsZCBnZXQgdGhhdCBiYXNpYyBnZW0gY2dyb3VwIGFjY291bnRpbmcuCj4KPiAtIGZv
-ciBvdGhlciBiaXRzIHRoZSBkcml2ZXIganVzdCByZWdpc3RlcnMgY2VydGFpbiB0aGluZ3MsIGxp
-a2UgIkkgY2FuCj4gZW5mb3JjZSBnZW0gbGltaXRzIiBvciAiSSBoYXZlIGdwdSBtZW1vcnkgcmVn
-aW9ucyB2cmFtLCB0dCwgYW5kIHN5c3RlbQo+IGFuZCBjYW4gZW5mb3JjZSB0aGVtIiBpbiB0aGVp
-ciBub3JtYWwgZHJpdmVyIHNldHVwLiBUaGVuIGF0Cj4gZHJtX2Rldl9yZWdpc3RlciB0aW1lIHdl
-IHJlZ2lzdGVyIGFsbCB0aGVzZSBhZGRpdGlvbmFsIGNncm91cHMsIGxpa2UKPiB3ZSB0b2RheSBy
-ZWdpc3RlciBhbGwgdGhlIG90aGVyIGludGVyYWZhY2VzIGFuZCBwaWVjZXMgb2YgYSBkcm1fZGV2
-aWNlCj4gKGRybV9taW5vciwgZHJtX2Nvbm5lY3RvcnMsIGRlYnVnZnMgZmlsZXMsIHN5c2ZzIHN0
-dWZmLCBhbGwgdGhlc2UKPiB0aGluZ3MpLgo+Cj4gU2luY2UgdGhlIGNvbmNlcHRzIGFyZSBzdGls
-bCBhIGJpdCBpbiBmbHV4LCBsZXQncyB0YWtlIGFuIGV4YW1wbGUgZnJvbQo+IHRoZSBtb2Rlc2V0
-IHNpZGU6Cj4gLSBkcml2ZXIgY2FsbCBkcm1fY29ubmVjdG9yX2luaXQoKSB0byBjcmVhdGUgY29u
-bmVjdG9yIG9iamVjdAo+IC0gZHJtX2Rldl9yZWdpc3RlcigpIGFsc28gc2V0cyB1cCBhbGwgdGhl
-IHB1YmxpYyBpbnRlcmZhY2VzIGZvciB0aGF0Cj4gY29ubmVjdG9yIChkZWJ1Z2ZzLCBzeXNmcywg
-Li4uKQo+Cj4gSSB0aGluayBhIHNpbWlsYXIgc2V0dXAgd291bGQgYmUgZ29vZCBmb3IgY2dyb3Vw
-cyBoZXJlLCB5b3UganVzdAo+IHJlZ2lzdGVyIHlvdXIgc3BlY2lhbCB0dG1fbWVtX3JlZyBvciB3
-aGF0ZXZlciwgYW5kIHRoZSBtYWdpYyBoYXBwZW5zCj4gYXV0b21hdGljYWxseS4KCk9rLCBJIHdp
-bGwgbG9vayBpbnRvIHRob3NlIChJIGFtIG5vdCB0b28gZmFtaWxpYXIgYWJvdXQgdGhvc2UgYXQg
-dGhpcyBwb2ludC4pCgo+ID4gPiBJIGhhdmUgbm8gaWRlYSwgYnV0IGlzIHRoaXMgZ3VhcmFudGVl
-ZCB0byBnZXQgdGhlbSBhbGw/Cj4gPgo+ID4gSSBiZWxpZXZlIHNvLCBiYXNlIG9uIG15IHVuZGVy
-c3RhbmRpbmcgYWJvdXQKPiA+IGNzc19mb3JfZWFjaF9kZXNjZW5kYW50X3ByZSBhbmQgaG93IEkg
-YW0gc3RhcnRpbmcgZnJvbSB0aGUgcm9vdAo+ID4gY2dyb3VwLiAgSG9wZWZ1bGx5IEkgZGlkbid0
-IG1pc3MgYW55dGhpbmcuCj4KPiBXZWxsIGl0J3MgcmN1LCBzbyBJIGV4cGVjdCBpdCdsbCByYWNl
-IHdpdGggY29uY3VycmVudAo+IGFkZGl0aW9uL3JlbW92YWwuIEFuZCB0aGUga2VybmVsZG9jIGhh
-cyBzb21lIGNvbXBsaWNhdGVkIHNvdW5kaW5nCj4gY29tbWVudHMgYWJvdXQgaG93IHRvIHN5bmNo
-cm9uaXplIHRoYXQgd2l0aCBzb21lIGxvY2tzIHRoYXQgSSBkb24ndAo+IGZ1bGx5IHVuZGVyc3Rh
-bmQsIGJ1dCBJIHRoaW5rIHlvdSdyZSBhbHNvIG5vdCBoYXZpbmcgYW55IGFkZGl0aW9uYWwKPiBs
-b2NraW5nIHNvIG5vdCBzdXJlIHRoaXMgYWxsIHdvcmtzIGNvcnJlY3RseSAuLi4KPgo+IERvIHdl
-IHN0aWxsIG5lZWQgdGhlIGluaXRfZG1jZ3JwIHN0dWZmIGlmIHdlJ2QganVzdCBlbWJlZGQ/IFRo
-YXQgd291bGQKPiBwcm9iYWJseSBiZSB0aGUgc2ltcGxlc3Qgd2F5IHRvIHNvbHZlIHRoaXMgYWxs
-IDotKQoKSSB3aWxsIG5lZWQgdG8gZGlnIGludG8gaXQgYSBiaXQgbW9yZSB0byBrbm93IGZvciBz
-dXJlLiAgSSB0aGluayBJCnN0aWxsIG5lZWQgdGhlIGluaXRfZHJtY2dycCBzdHVmZi4gSSBpbXBs
-ZW1lbnRlZCBpdCBsaWtlIHRoaXMgYmVjYXVzZQp0aGUgY2dyb3VwIHN1YnN5c3RlbSBhcHBlYXIg
-dG8gYmUgaW5pdGlhbGl6ZWQgYmVmb3JlIHRoZSBkcm0gc3Vic3lzdGVtCnNvIHRoZSByb290IGNn
-cm91cCBkb2VzIG5vdCBrbm93IGFueSBkcm0gZGV2aWNlcyBhbmQgdGhlIHBlciBkZXZpY2UKZGVm
-YXVsdCBsaW1pdHMgYXJlIG5vdCBzZXQuICBJbiB0aGVvcnksIEkgc2hvdWxkIG9ubHkgbmVlZCB0
-byBzZXQgdGhlCnJvb3QgY2dyb3VwIChzbyBJIGRvbid0IG5lZWQgdG8gdXNlIGNzc19mb3JfZWFj
-aF9kZXNjZW5kYW50X3ByZSwgd2hpY2gKcmVxdWlyZXMgdGhlIHJjdV9sb2NrLikgIEJ1dCBJIGFt
-IG5vdCAxMDAlIGNvbmZpZGVudCB0aGVyZSB3b24ndCBiZQphbnkgYWRkaXRpb25hbCBjZ3JvdXAg
-YmVpbmcgYWRkZWQgdG8gdGhlIGhpZXJhcmNoeSBiZXR3ZWVuIGNncm91cApzdWJzeXN0ZW0gaW5p
-dCBhbmQgZHJtIHN1YnN5c3RlbSBpbml0LgoKQWx0ZXJuYXRpdmVseSBJIGNhbiBwcm90ZWN0IGl0
-IHdpdGggYW4gYWRkaXRpb25hbCBtdXRleCBidXQgSSBhbSBub3QKc3VyZSBpZiB0aGF0J3MgbmVl
-ZGVkLgoKUmVnYXJkcywKS2VubnkKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX18KYW1kLWdmeCBtYWlsaW5nIGxpc3QKYW1kLWdmeEBsaXN0cy5mcmVlZGVza3Rv
-cC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9hbWQt
-Z2Z4
+On Mon, Jun 24, 2019 at 10:33:07AM -0700, bsegall@google.com wrote:
+> This still has a similar cost as reducing min_cfs_rq_runtime to 0 - we
+> now take a tg-global lock on every group se dequeue. Setting min=0 means
+> that we have to take it on both enqueue and dequeue, while baseline
+> means we take it once per min_cfs_rq_runtime in the worst case.
+Yep, it's only slightly better than simply setting min_cfs_rq_runtime=0.
+There's definitely a tradeoff of having to grab the lock every time.
+
+The other non-obvious benefit to this is that when the application
+starts hitting throttling the entire application starts hitting
+throttling closer to simultaneously.  Previously, threads that don't do
+much could continue sipping on their 1ms of min_cfs_rq_runtime, while
+main threads were throttled.  With this the application would more or
+less halt within 5ms of full quota usage.
+
+> In addition how much this helps is very dependent on the exact pattern
+> of sleep/wake - you can still strand all but 15ms of runtime with a
+> pretty reasonable pattern.
+
+I thought this change would have an upper bound stranded time of:
+NUMCPUs * min_cfs_rq_runtime - 3 * sched_cfs_bandwidth_slice().
+From the stranding of 1ms on each queue minues the amount that we'd
+return when we forcibly hit the 3 x bandwidth slice Am I missing
+something here? Additionally that's worst case, and would require that
+threads be scheduled on distinct cpus mostly sequentially, and then
+never run again.
+
+> If the cost of taking this global lock across all cpus without a
+> ratelimit was somehow not a problem, I'd much prefer to just set
+> min_cfs_rq_runtime = 0. (Assuming it is, I definitely prefer the "lie
+> and sorta have 2x period 2x runtime" solution of removing expiration)
+
+Can I take this as an technical ack of the v3 patchset?  Do you have any
+other comments for that patchset you'd like to see corrected before it
+gets integrated?  If you are indeed good with that patchset, I'll clean
+up the comment and Documentation text and re-submit as a v5 patchset. I
+
+actually like that patchset best as well, for all the reasons already
+discussed.  Especially the one where it's been running like this for 5
+years prior to 512ac999.
+
+Also given my new-found understanding of min_cfs_rq_runtime, doesn't
+this mean that if we don't expire runtime we could potentially have a
+worst case of 1ms * NUMCPUs of extra runtime instead of 2x runtime?
+This is because min_cfs_rq_runtime could theoretically live on a per-cpu
+indefinitely?  Still this is actually much smaller than I previously had
+feared.  Also it still holds that average runtime is still bounded by
+runtime/period on average.
+
+Thanks
