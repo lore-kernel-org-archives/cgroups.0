@@ -1,20 +1,20 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.1 46/51] cpuset: restore sanity to cpuset_cpus_allowed_fallback()
-Date: Tue, 25 Jun 2019 23:41:02 -0400
-Message-ID: <20190626034117.23247-46-sashal@kernel.org>
-References: <20190626034117.23247-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 29/34] cpuset: restore sanity to cpuset_cpus_allowed_fallback()
+Date: Tue, 25 Jun 2019 23:43:30 -0400
+Message-ID: <20190626034335.23767-29-sashal@kernel.org>
+References: <20190626034335.23767-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <stable-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1561520602;
-        bh=CTgbSb/STtDheisGfsL3f2cO9SoZaxgdEaueJD9i2Z0=;
+        s=default; t=1561520688;
+        bh=rg2X3Dz7v8hDfBOjeKAWERZJmuKoBfoNg9SUmhhyzo8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kVeh1Y5cYmS6lYKXK0JkoSVsXdEOUj+odj8m+8uSwjLwu/BeoWznadoKY/0PXZuLO
-         h2ChXYMqwjjoCouByQ9tYryqz59ZeV0K7ujgPn9lFwAxo0bPXBGtoDxz1yxAN7B27L
-         MGGeCAslSNQdfVJjk7DnITTCGSKS5oqRkO8IF2t4=
-In-Reply-To: <20190626034117.23247-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        b=vCbPz6WHoa3FLjaRNGDUaztVRIAul/QEKdncdn9zxa3pf/M/3pnImFBflO5sFJPLF
+         rhFQLSNdbDu5rxNcRZBemr2Me96WWTls2myB2PD8Y9spTjhH68x+Kvc3zp9d9QYQ9y
+         vcev348FzvwHbDExx3cczlNryRi6jpmK+WlOqqEE=
+In-Reply-To: <20190626034335.23767-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
@@ -129,10 +129,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 4834c4214e9c..6c9deb2cc687 100644
+index 266f10cb7222..ff956ccbb6df 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -3255,10 +3255,23 @@ void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
+@@ -2432,10 +2432,23 @@ void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
  	spin_unlock_irqrestore(&callback_lock, flags);
  }
  
