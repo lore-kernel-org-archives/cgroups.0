@@ -1,45 +1,95 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] memcg: Add kmem.slabinfo to v2 for debugging purpose
-Date: Wed, 26 Jun 2019 15:25:53 -0700
-Message-ID: <20190626152553.6f9178a0361e699a5d53e360@linux-foundation.org>
-References: <20190626165614.18586-1-longman@redhat.com>
+From: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC PATCH v3 04/11] drm,
+ cgroup: Add total GEM buffer allocation limit
+Date: Wed, 26 Jun 2019 18:41:32 -0400
+Message-ID: <CAOWid-egYGijS0a6uuG4mPUmOWaPwF-EKokR=LFNJ=5M+akVZw@mail.gmail.com>
+References: <20190626150522.11618-1-Kenny.Ho@amd.com>
+ <20190626150522.11618-5-Kenny.Ho@amd.com>
+ <20190626160553.GR12905@phenom.ffwll.local>
+ <CAOWid-eurCMx1F7ciUwx0e+p=s=NP8=UxQUhhF-hdK-iAna+fA@mail.gmail.com>
+ <20190626214113.GA12905@phenom.ffwll.local>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1561587954;
-        bh=dWrZzF/XhnDsjGoEGdLBbSVqFhzeMu0M8np8rL3DeVs=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=mssNCvDXM3lIy9mHu47Fi5QIRccIP4NEIrmBc+mQHupnTW7+YYbhguOoXDqtvERvH
-         REfZC+aT9ppRRnmbB7/H8Yp47SEvjMSnzviL8SITVJOqWUzWaWRjUa5YprDOQSdFxO
-         pQ6Rdu5QWpA8GqFoZXwWmNRKk1ID+8M77YZ7zkKo=
-In-Reply-To: <20190626165614.18586-1-longman@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+In-Reply-To: <20190626214113.GA12905-dv86pmgwkMBes7Z6vYuT8azUEOm+Xw19@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Waiman Long <longman@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>
+To: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
+Cc: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, joseph.greathouse-5C7GfCeVMHo@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
 
-On Wed, 26 Jun 2019 12:56:14 -0400 Waiman Long <longman@redhat.com> wrote:
-
-> With memory cgroup v1, there is a kmem.slabinfo file that can be
-> used to view what slabs are allocated to the memory cgroup. There
-> is currently no such equivalent in memory cgroup v2. This file can
-> be useful for debugging purpose.
-> 
-> This patch adds an equivalent kmem.slabinfo to v2 with the caveat that
-> this file will only show up as ".__DEBUG__.memory.kmem.slabinfo" when the
-> "cgroup_debug" parameter is specified in the kernel boot command line.
-> This is to avoid cluttering the cgroup v2 interface with files that
-> are seldom used by end users.
->
-> ...
->
-> mm/memcontrol.c | 16 ++++++++++++++++
-> 1 file changed, 16 insertions(+)
-
-A change to the kernel's user interface triggers a change to the
-kernel's user interface documentation.  This should be automatic by
-now :(
-
-
+T24gV2VkLCBKdW4gMjYsIDIwMTkgYXQgNTo0MSBQTSBEYW5pZWwgVmV0dGVyIDxkYW5pZWxAZmZ3
+bGwuY2g+IHdyb3RlOgo+IE9uIFdlZCwgSnVuIDI2LCAyMDE5IGF0IDA1OjI3OjQ4UE0gLTA0MDAs
+IEtlbm55IEhvIHdyb3RlOgo+ID4gT24gV2VkLCBKdW4gMjYsIDIwMTkgYXQgMTI6MDUgUE0gRGFu
+aWVsIFZldHRlciA8ZGFuaWVsQGZmd2xsLmNoPiB3cm90ZToKPiA+ID4gU28gd2hhdCBoYXBwZW5z
+IHdoZW4geW91IHN0YXJ0IGEgbG90IG9mIHRocmVhZHMgYWxsIGF0IHRoZSBzYW1lIHRpbWUsCj4g
+PiA+IGFsbG9jYXRpbmcgZ2VtIGJvPyBBbHNvIHdvdWxkIGJlIG5pY2UgaWYgd2UgY291bGQgcm9s
+bCBvdXQgYXQgbGVhc3QgdGhlCj4gPiA+IGFjY291bnRpbmcgcGFydCBvZiB0aGlzIGNncm91cCB0
+byBhbGwgR0VNIGRyaXZlcnMuCj4gPgo+ID4gV2hlbiB0aGVyZSBpcyBhIGxhcmdlIG51bWJlciBv
+ZiBhbGxvY2F0aW9uLCB0aGUgYWxsb2NhdGlvbiB3aWxsIGJlCj4gPiBjaGVja2VkIGluIHNlcXVl
+bmNlIHdpdGhpbiBhIGRldmljZSAoc2luY2UgSSB1c2VkIGEgcGVyIGRldmljZSBtdXRleAo+ID4g
+aW4gdGhlIGNoZWNrLikgIEFyZSB5b3Ugc3VnZ2VzdGluZyB0aGUgb3ZlcmhlYWQgaGVyZSBpcyBz
+aWduaWZpY2FudAo+ID4gZW5vdWdoIHRvIGJlIGEgYm90dGxlbmVjaz8gIFRoZSBhY2NvdW50aW5n
+IHBhcnQgc2hvdWxkIGJlIGF2YWlsYWJsZSB0bwo+ID4gYWxsIEdFTSBkcml2ZXJzICh1bmxlc3Mg
+SSBtaXNzZWQgc29tZXRoaW5nKSBzaW5jZSB0aGUgY2hnIGFuZCB1bmNoZwo+ID4gZnVuY3Rpb24g
+aXMgY2FsbGVkIHZpYSB0aGUgZ2VuZXJpYyBkcm1fZ2VtX3ByaXZhdGVfb2JqZWN0X2luaXQgYW5k
+Cj4gPiBkcm1fZ2VtX29iamVjdF9yZWxlYXNlLgo+Cj4gdGhyZWFkIDE6IGNoZWNrcyBsaW1pdHMs
+IHN0aWxsIHVuZGVyIHRoZSB0b3RhbAo+Cj4gdGhyZWFkIDI6IGNoZWNrcyBsaW1pdHMsIHN0aWxs
+IHVuZGVyIHRoZSB0b3RhbAo+Cj4gdGhyZWFkIDE6IGFsbG9jYXRlcywgc3RpbGwgdW5kZXIKPgo+
+IHRocmVhZCAyOiBhbGxvY2F0ZXMsIG5vdyBvdmVyIHRoZSBsaW1pdAo+Cj4gSSB0aGluayB0aGUg
+Y2hlY2sgYW5kIGNoZyBuZWVkIHRvIGJlIG9uZSBzdGVwLCBvciB0aGlzIHdvbnQgd29yay4gT3Ig
+SSdtCj4gbWlzc2luZyBzb21ldGhpbmcgc29tZXdoZXJlLgoKT2ssIEkgc2VlIHdoYXQgeW91IGFy
+ZSBzYXlpbmcuCgo+IFdydCByb2xsaW5nIG91dCB0aGUgYWNjb3VudGluZyBmb3IgYWxsIGRyaXZl
+cnM6IFNpbmNlIHlvdSBhbHNvIHJvbGwgb3V0Cj4gZW5mb3JjZW1lbnQgaW4gdGhpcyBwYXRjaCBJ
+J20gbm90IHN1cmUgd2hldGhlciB0aGUgYWNjb3VudGluZyBwYXJ0IGlzCj4gZnVsbHkgc3RhbmQt
+YWxvbmUuIEFuZCBhcyBkaXNjdXNzZWQgYSBiaXQgb24gYW4gZWFybGllciBwYXRjaCwgSSB0aGlu
+ayBmb3IKPiBEUklWRVJfR0VNIHdlIHNob3VsZCBzZXQgdXAgdGhlIGFjY291bnRpbmcgY2dyb3Vw
+IGF1dG9tYXRpY2FsbHkuCkkgdGhpbmsgSSBzaG91bGQgYmUgYWJsZSB0byBzcGxpdCB0aGUgY29t
+bWl0IGFuZCByZXN0cnVjdHVyZSB0aGluZ3MgYSBiaXQuCgo+ID4gPiBXaGF0J3MgdGhlIHVuZGVy
+bHlpbmcgdGVjaG5pY2FsIHJlYXNvbiBmb3Igbm90IGFsbG93aW5nIHNoYXJpbmcgYWNyb3NzCj4g
+PiA+IGNncm91cHM/Cj4gPiBUbyBiZSBjbGVhciwgc2hhcmluZyBhY3Jvc3MgY2dyb3VwIGlzIGFs
+bG93ZWQsIHRoZSBidWZmZXIganVzdCBuZWVkcwo+ID4gdG8gYmUgYWxsb2NhdGVkIGJ5IGEgcHJv
+Y2VzcyB0aGF0IGlzIHBhcmVudCB0byB0aGUgY2dyb3VwLiAgU28gaW4gdGhlCj4gPiBjYXNlIG9m
+IHhvcmcgYWxsb2NhdGluZyBidWZmZXIgZm9yIGNsaWVudCwgdGhlIHhvcmcgd291bGQgYmUgaW4g
+dGhlCj4gPiByb290IGNncm91cCBhbmQgdGhlIGJ1ZmZlciBjYW4gYmUgcGFzc2VkIGFyb3VuZCBi
+eSBkaWZmZXJlbnQgY2xpZW50cwo+ID4gKGluIHJvb3Qgb3Igb3RoZXIgY2dyb3VwLikgIFRoZSBp
+ZGVhIGhlcmUgaXMgdG8gZXN0YWJsaXNoIHNvbWUgZm9ybSBvZgo+ID4gb3duZXJzaGlwLCBvdGhl
+cndpc2UgdGhlcmUgd291bGRuJ3QgYmUgYSB3YXkgdG8gYWNjb3VudCBmb3Igb3IgbGltaXQKPiA+
+IHRoZSB1c2FnZS4KPgo+IEJ1dCB3aHk/IFdoYXQncyB0aGUgcHJvYmxlbSBpZiBJIGFsbG9jYXRl
+IHNvbWV0aGluZyBhbmQgdGhlbiBoYW5kIGl0IHRvCj4gc29tZW9uZSBlbHNlLiBFLmcuIG9uZSBw
+b3B1bGFyIHVzZSBvZiBjZ3JvdXBzIGlzIHRvIGlzb2xhdGUgY2xpZW50cywgc28KPiBtYXliZSB5
+b3UnZCBkbyBhIGNncm91cCArIG5hbWVzcGFjZSBmb3IgZWFjaCBYMTEgY2xpZW50IChvayB3YXls
+YW5kLCB3aXRoCj4gWDExIHRoaXMgaXMgcHJvYmFibHkgcG9pbnRsZXNzKS4KPgo+IEJ1dCB3aXRo
+IHlvdXIgY3VycmVudCBsaW1pdGF0aW9uIHRob3NlIGNsaWVudHMgY2FuJ3QgcGFzcyBidWZmZXJz
+IHRvIHRoZQo+IGNvbXBvc2l0b3IgYW55bW9yZSwgbWFraW5nIGNncm91cHMgdXNlbGVzcy4gWW91
+ciBleGFtcGxlIGhlcmUgb25seSB3b3Jrcwo+IGlmIFhvcmcgaXMgaW4gdGhlIHJvb3QgYW5kIGFs
+bG9jYXRlcyBhbGwgdGhlIGJ1ZmZlcnMuIFRoYXQncyBub3QgZXZlbiB0cnVlCj4gZm9yIERSSTMg
+YW55bW9yZS4KPgo+IFNvIHByZXR0eSBzZXJpb3VzIGxpbWl0YXRpb24gb24gY2dyb3VwcywgYW5k
+IEknbSBub3QgcmVhbGx5IHVuZGVyc3RhbmRpbmcKPiB3aHkgd2UgbmVlZCB0aGlzLiBJIHRoaW5r
+IGlmIHdlIHdhbnQgdG8gcHJldmVudCBidWZmZXIgc2hhcmluZywgd2hhdCB3ZQo+IG5lZWQgYXJl
+IHNvbWUgc2VsaW51eCBob29rcyBhbmQgc3R1ZmYgc28geW91IGNhbiBwcmV2ZW50IGFuIGltcG9y
+dC9hY2Nlc3MKPiBieSBzb21lb25lIHdobydzIG5vdCBhbGxvd2VkIHRvIHRvdWNoIGEgYnVmZmVy
+LiBCdXQgdGhhdCBraW5kIG9mIGFjY2Vzcwo+IHJpZ2h0IG1hbmFnZW1lbnQgc2hvdWxkIGJlIHNl
+cGFyYXRlIGZyb20gcmVzb3VyY2UgY29udHJvbCBpbW8uClNvIHdpdGhvdXQgdGhlIHNoYXJpbmcg
+cmVzdHJpY3Rpb24gYW5kIHNvbWUga2luZCBvZiBvd25lcnNoaXAKc3RydWN0dXJlLCB3ZSB3aWxs
+IGhhdmUgdG8gbWlncmF0ZS9jaGFuZ2UgdGhlIG93bmVyIG9mIHRoZSBidWZmZXIgd2hlbgp0aGUg
+Y2dyb3VwIHRoYXQgY3JlYXRlZCB0aGUgYnVmZmVyIGRpZSBiZWZvcmUgdGhlIHJlY2VpdmluZyBj
+Z3JvdXAocykKYW5kIEkgYW0gbm90IHN1cmUgaG93IHRvIGRvIHRoYXQgcHJvcGVybHkgYXQgdGhl
+IG1vbWVudC4gIDEpIFNob3VsZAplYWNoIGNncm91cCBrZWVwIHRyYWNrIG9mIGFsbCB0aGUgYnVm
+ZmVycyB0aGF0IGJlbG9uZ3MgdG8gaXQgYW5kCm1pZ3JhdGU/ICAoSXMgdGhhdCBlZmZpY2llbnQ/
+KSAgMikgd2hpY2ggY2dyb3VwIHNob3VsZCBiZSB0aGUgbmV3Cm93bmVyIChhbmQgdGhlcmVmb3Jl
+IGhhdmUgdGhlIGxpbWl0IGFwcGxpZWQ/KSAgSGF2aW5nIHRoZSBjcmVhdG9yCmJlaW5nIHRoZSBv
+d25lciBpcyBraW5kIG9mIG5hdHVyYWwsIGJ1dCBsZXQgc2F5IHRoZSBidWZmZXIgaXMgc2hhcmVk
+CndpdGggNSBvdGhlciBjZ3JvdXBzLCB3aGljaCBvZiB0aGVzZSA1IGNncm91cHMgc2hvdWxkIGJl
+IHRoZSBuZXcgb3duZXIKb2YgdGhlIGJ1ZmZlcj8KClJlZ2FyZHMsCktlbm55Cl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmFtZC1nZnggbWFpbGluZyBsaXN0
+CmFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Au
+b3JnL21haWxtYW4vbGlzdGluZm8vYW1kLWdmeA==
