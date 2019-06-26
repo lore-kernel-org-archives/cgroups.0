@@ -1,77 +1,162 @@
-From: Weiping Zhang <zwp10758@gmail.com>
-Subject: Re: [PATCH v3 4/5] genirq/affinity: allow driver's discontigous
- affinity set
-Date: Tue, 25 Jun 2019 22:55:10 +0800
-Message-ID: <CAA70yB7xNf14-Ex1zq3mbBm_EEtLspmDDYBjOXibrMZS8r7ODQ@mail.gmail.com>
-References: <cover.1561385989.git.zhangweiping@didiglobal.com>
- <1ead341c6d603cf138aed62e31091f257cb19981.1561385989.git.zhangweiping@didiglobal.com>
- <alpine.DEB.2.21.1906241740320.32342@nanos.tec.linutronix.de>
- <20190625021411.GD23777@ming.t460p> <alpine.DEB.2.21.1906250811150.32342@nanos.tec.linutronix.de>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.1 46/51] cpuset: restore sanity to cpuset_cpus_allowed_fallback()
+Date: Tue, 25 Jun 2019 23:41:02 -0400
+Message-ID: <20190626034117.23247-46-sashal@kernel.org>
+References: <20190626034117.23247-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=nQl+kry098BAN4ziHwHdwhs+dskL6lReHJUDAXsmPwM=;
-        b=d8kFT8Uefh9+6U+HQxiWM6eBbwSmgwiJDtX31TzyClbisj7GCdOkXoDPDoUEkghrJV
-         gpG+dPSFaMwHFAVoh+lsnYJutX2SijP5xJs4s/tNgJ6IWEg/wFdyhLBYVzpR8LtoNdiu
-         mjnv4MYLek7bg1cdUoGvGDrhMY+Yn6YpbA/HyZjSPA7pJT6rBo9FC7XhTvvcq/8N9rnt
-         0/PP+PAVc/QicS8Vet7YQBzhf7ikc9+MoRqVoiIcnY8zJCnVbKnkoEl9k6UpuoAhFWDW
-         UletLRN3Omc8qy9UTXp0WTmUdy3XNXG4WHVpJvwsU+KeA/3OsMb4l2J69GRAjEIta3HG
-         qbgw==
-In-Reply-To: <alpine.DEB.2.21.1906250811150.32342@nanos.tec.linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1561520602;
+        bh=CTgbSb/STtDheisGfsL3f2cO9SoZaxgdEaueJD9i2Z0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=kVeh1Y5cYmS6lYKXK0JkoSVsXdEOUj+odj8m+8uSwjLwu/BeoWznadoKY/0PXZuLO
+         h2ChXYMqwjjoCouByQ9tYryqz59ZeV0K7ujgPn9lFwAxo0bPXBGtoDxz1yxAN7B27L
+         MGGeCAslSNQdfVJjk7DnITTCGSKS5oqRkO8IF2t4=
+In-Reply-To: <20190626034117.23247-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ming Lei <ming.lei@redhat.com>, Weiping Zhang <zhangweiping@didiglobal.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>, keith.busch@intel.com, Minwoo Im <minwoo.im.dev@gmail.com>, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-nvme@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Joel Savitz <jsavitz@redhat.com>, Waiman Long <longman@redhat.com>, Phil Auld <pauld@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Tejun Heo <tj@kernel.org>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org
 
-Thomas Gleixner <tglx@linutronix.de> =E4=BA=8E2019=E5=B9=B46=E6=9C=8825=E6=
-=97=A5=E5=91=A8=E4=BA=8C =E4=B8=8B=E5=8D=883:36=E5=86=99=E9=81=93=EF=BC=9A
->
-> MIng,
->
-> On Tue, 25 Jun 2019, Ming Lei wrote:
-> > On Mon, Jun 24, 2019 at 05:42:39PM +0200, Thomas Gleixner wrote:
-> > > On Mon, 24 Jun 2019, Weiping Zhang wrote:
-> > >
-> > > > The driver may implement multiple affinity set, and some of
-> > > > are empty, for this case we just skip them.
-> > >
-> > > Why? What's the point of creating empty sets? Just because is not a r=
-eal
-> > > good justification.
-> >
-> > Patch 5 will add 4 new sets for supporting NVMe's weighted round robin
-> > arbitration. It can be a headache to manage so many irq sets(now the to=
-tal
-> > sets can become 6) dynamically since size of anyone in the new 4 sets c=
-an
-> > be zero, so each particular set is assigned one static index for avoidi=
-ng
-> > the management trouble, then empty set will be seen by
-> > irq_create_affinity_masks().
-> >
-> > So looks skipping the empty set makes sense because the API will become
-> > easier to use than before.
->
-Hello Ming,
-Thanks your detail explanation.
+From: Joel Savitz <jsavitz@redhat.com>
 
-> That makes sense, but at least some of that information wants to be in th=
-e
-> change log and not some uninformative description of what the patch does.
->
-> I was not Cc'ed on the rest of the patches so I had exactly zero context.
->
-Hello Thomas,
+[ Upstream commit d477f8c202d1f0d4791ab1263ca7657bbe5cf79e ]
 
-I am sorry I didn't cc you the full patchset, I will add more detail
-description in
-commit message at V4.
+In the case that a process is constrained by taskset(1) (i.e.
+sched_setaffinity(2)) to a subset of available cpus, and all of those are
+subsequently offlined, the scheduler will set tsk->cpus_allowed to
+the current value of task_cs(tsk)->effective_cpus.
 
-> Thanks,
->
->         tglx
+This is done via a call to do_set_cpus_allowed() in the context of
+cpuset_cpus_allowed_fallback() made by the scheduler when this case is
+detected. This is the only call made to cpuset_cpus_allowed_fallback()
+in the latest mainline kernel.
+
+However, this is not sane behavior.
+
+I will demonstrate this on a system running the latest upstream kernel
+with the following initial configuration:
+
+	# grep -i cpu /proc/$$/status
+	Cpus_allowed:	ffffffff,fffffff
+	Cpus_allowed_list:	0-63
+
+(Where cpus 32-63 are provided via smt.)
+
+If we limit our current shell process to cpu2 only and then offline it
+and reonline it:
+
+	# taskset -p 4 $$
+	pid 2272's current affinity mask: ffffffffffffffff
+	pid 2272's new affinity mask: 4
+
+	# echo off > /sys/devices/system/cpu/cpu2/online
+	# dmesg | tail -3
+	[ 2195.866089] process 2272 (bash) no longer affine to cpu2
+	[ 2195.872700] IRQ 114: no longer affine to CPU2
+	[ 2195.879128] smpboot: CPU 2 is now offline
+
+	# echo on > /sys/devices/system/cpu/cpu2/online
+	# dmesg | tail -1
+	[ 2617.043572] smpboot: Booting Node 0 Processor 2 APIC 0x4
+
+We see that our current process now has an affinity mask containing
+every cpu available on the system _except_ the one we originally
+constrained it to:
+
+	# grep -i cpu /proc/$$/status
+	Cpus_allowed:   ffffffff,fffffffb
+	Cpus_allowed_list:      0-1,3-63
+
+This is not sane behavior, as the scheduler can now not only place the
+process on previously forbidden cpus, it can't even schedule it on
+the cpu it was originally constrained to!
+
+Other cases result in even more exotic affinity masks. Take for instance
+a process with an affinity mask containing only cpus provided by smt at
+the moment that smt is toggled, in a configuration such as the following:
+
+	# taskset -p f000000000 $$
+	# grep -i cpu /proc/$$/status
+	Cpus_allowed:	000000f0,00000000
+	Cpus_allowed_list:	36-39
+
+A double toggle of smt results in the following behavior:
+
+	# echo off > /sys/devices/system/cpu/smt/control
+	# echo on > /sys/devices/system/cpu/smt/control
+	# grep -i cpus /proc/$$/status
+	Cpus_allowed:	ffffff00,ffffffff
+	Cpus_allowed_list:	0-31,40-63
+
+This is even less sane than the previous case, as the new affinity mask
+excludes all smt-provided cpus with ids less than those that were
+previously in the affinity mask, as well as those that were actually in
+the mask.
+
+With this patch applied, both of these cases end in the following state:
+
+	# grep -i cpu /proc/$$/status
+	Cpus_allowed:	ffffffff,ffffffff
+	Cpus_allowed_list:	0-63
+
+The original policy is discarded. Though not ideal, it is the simplest way
+to restore sanity to this fallback case without reinventing the cpuset
+wheel that rolls down the kernel just fine in cgroup v2. A user who wishes
+for the previous affinity mask to be restored in this fallback case can use
+that mechanism instead.
+
+This patch modifies scheduler behavior by instead resetting the mask to
+task_cs(tsk)->cpus_allowed by default, and cpu_possible mask in legacy
+mode. I tested the cases above on both modes.
+
+Note that the scheduler uses this fallback mechanism if and only if
+_every_ other valid avenue has been traveled, and it is the last resort
+before calling BUG().
+
+Suggested-by: Waiman Long <longman@redhat.com>
+Suggested-by: Phil Auld <pauld@redhat.com>
+Signed-off-by: Joel Savitz <jsavitz@redhat.com>
+Acked-by: Phil Auld <pauld@redhat.com>
+Acked-by: Waiman Long <longman@redhat.com>
+Acked-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ kernel/cgroup/cpuset.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 4834c4214e9c..6c9deb2cc687 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -3255,10 +3255,23 @@ void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
+ 	spin_unlock_irqrestore(&callback_lock, flags);
+ }
+ 
++/**
++ * cpuset_cpus_allowed_fallback - final fallback before complete catastrophe.
++ * @tsk: pointer to task_struct with which the scheduler is struggling
++ *
++ * Description: In the case that the scheduler cannot find an allowed cpu in
++ * tsk->cpus_allowed, we fall back to task_cs(tsk)->cpus_allowed. In legacy
++ * mode however, this value is the same as task_cs(tsk)->effective_cpus,
++ * which will not contain a sane cpumask during cases such as cpu hotplugging.
++ * This is the absolute last resort for the scheduler and it is only used if
++ * _every_ other avenue has been traveled.
++ **/
++
+ void cpuset_cpus_allowed_fallback(struct task_struct *tsk)
+ {
+ 	rcu_read_lock();
+-	do_set_cpus_allowed(tsk, task_cs(tsk)->effective_cpus);
++	do_set_cpus_allowed(tsk, is_in_v2_mode() ?
++		task_cs(tsk)->cpus_allowed : cpu_possible_mask);
+ 	rcu_read_unlock();
+ 
+ 	/*
+-- 
+2.20.1
+
