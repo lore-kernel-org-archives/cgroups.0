@@ -1,19 +1,19 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 29/34] cpuset: restore sanity to cpuset_cpus_allowed_fallback()
-Date: Tue, 25 Jun 2019 23:43:30 -0400
-Message-ID: <20190626034335.23767-29-sashal@kernel.org>
-References: <20190626034335.23767-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 17/21] cpuset: restore sanity to cpuset_cpus_allowed_fallback()
+Date: Tue, 25 Jun 2019 23:45:02 -0400
+Message-ID: <20190626034506.24125-17-sashal@kernel.org>
+References: <20190626034506.24125-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <stable-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1561520688;
-        bh=rg2X3Dz7v8hDfBOjeKAWERZJmuKoBfoNg9SUmhhyzo8=;
+        s=default; t=1561520751;
+        bh=DZe5PTe4zle8QnQQX1FE+nwEIWNj8Vl0WiZFq6FsARA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vCbPz6WHoa3FLjaRNGDUaztVRIAul/QEKdncdn9zxa3pf/M/3pnImFBflO5sFJPLF
-         rhFQLSNdbDu5rxNcRZBemr2Me96WWTls2myB2PD8Y9spTjhH68x+Kvc3zp9d9QYQ9y
-         vcev348FzvwHbDExx3cczlNryRi6jpmK+WlOqqEE=
-In-Reply-To: <20190626034335.23767-1-sashal@kernel.org>
+        b=y2MA7T/TcTQhzg+T96feYRF92qTjg/aOK00uNpVNNfUgUHL2PhIpqfskWH5Jh0Mhl
+         IpRjVrsPyGPnx6py4/rZfKGpLWt/udSgz3RJFTocGWDrONRAEGMOzHSUbOo3bHhIn+
+         xGdPCZxhOtsLWw7V+gA1JJo2iR4pFlqe7+wLf2fE=
+In-Reply-To: <20190626034506.24125-1-sashal@kernel.org>
 Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -129,10 +129,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 266f10cb7222..ff956ccbb6df 100644
+index 4657e2924ecb..0a0e1aa11f5e 100644
 --- a/kernel/cgroup/cpuset.c
 +++ b/kernel/cgroup/cpuset.c
-@@ -2432,10 +2432,23 @@ void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
+@@ -2436,10 +2436,23 @@ void cpuset_cpus_allowed(struct task_struct *tsk, struct cpumask *pmask)
  	spin_unlock_irqrestore(&callback_lock, flags);
  }
  
