@@ -1,63 +1,114 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH 2/2] mm, slab: Extend vm/drop_caches to shrink kmem slabs
-Date: Thu, 27 Jun 2019 17:16:04 -0400
-Message-ID: <5cb05d2c-39a7-f138-b0b9-4b03d6008999@redhat.com>
-References: <20190624174219.25513-1-longman@redhat.com>
- <20190624174219.25513-3-longman@redhat.com>
- <20190627151506.GE5303@dhcp22.suse.cz>
+From: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
+Subject: Re: [RFC PATCH v3 04/11] drm, cgroup: Add total GEM buffer
+ allocation limit
+Date: Thu, 27 Jun 2019 23:24:01 +0200
+Message-ID: <20190627212401.GO12905@phenom.ffwll.local>
+References: <20190626150522.11618-1-Kenny.Ho@amd.com>
+ <20190626150522.11618-5-Kenny.Ho@amd.com>
+ <20190626160553.GR12905@phenom.ffwll.local>
+ <CAOWid-eurCMx1F7ciUwx0e+p=s=NP8=UxQUhhF-hdK-iAna+fA@mail.gmail.com>
+ <20190626214113.GA12905@phenom.ffwll.local>
+ <CAOWid-egYGijS0a6uuG4mPUmOWaPwF-EKokR=LFNJ=5M+akVZw@mail.gmail.com>
+ <20190627054320.GB12905@phenom.ffwll.local>
+ <CAOWid-cT4TQ7HGzcSWjmLGjAW_D1hRrkNguEiV8N+baNiKQm_A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190627151506.GE5303@dhcp22.suse.cz>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAOWid-cT4TQ7HGzcSWjmLGjAW_D1hRrkNguEiV8N+baNiKQm_A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Luis Chamberlain <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Andrea Arcangeli <aarcange@redhat.com>
+To: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: joseph.greathouse-5C7GfCeVMHo@public.gmane.org, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
 
-On 6/27/19 11:15 AM, Michal Hocko wrote:
-> On Mon 24-06-19 13:42:19, Waiman Long wrote:
->> With the slub memory allocator, the numbers of active slab objects
->> reported in /proc/slabinfo are not real because they include objects
->> that are held by the per-cpu slab structures whether they are actually
->> used or not.  The problem gets worse the more CPUs a system have. For
->> instance, looking at the reported number of active task_struct objects,
->> one will wonder where all the missing tasks gone.
->>
->> I know it is hard and costly to get a real count of active objects.
-> What exactly is expensive? Why cannot slabinfo reduce the number of
-> active objects by per-cpu cached objects?
->
-The number of cachelines that needs to be accessed in order to get an
-accurate count will be much higher if we need to iterate through all the
-per-cpu structures. In addition, accessing the per-cpu partial list will
-be racy.
-
-
->> So
->> I am not advocating for that. Instead, this patch extends the
->> /proc/sys/vm/drop_caches sysctl parameter by using a new bit (bit 3)
->> to shrink all the kmem slabs which will flush out all the slabs in the
->> per-cpu structures and give a more accurate view of how much memory are
->> really used up by the active slab objects. This is a costly operation,
->> of course, but it gives a way to have a clearer picture of the actual
->> number of slab objects used, if the need arises.
-> drop_caches is a terrible interface. It destroys all the caching and
-> people are just too easy in using it to solve any kind of problem they
-> think they might have and cause others they might not see immediately.
-> I am strongly discouraging anybody - except for some tests which really
-> do want to see reproducible results without cache effects - from using
-> this interface and therefore I am not really happy to paper over
-> something that might be a real problem with yet another mode. If SLUB
-> indeed caches too aggressively on large machines then this should be
-> fixed.
->
-OK, as explained in another thread, the main reason for doing this patch
-is to be able to do more accurate measurement of changes in kmem cache
-memory consumption. Yes, I do agree that drop_caches is not a general
-purpose interface that should be used lightly.
-
-Cheers,
-Longman
-
+T24gVGh1LCBKdW4gMjcsIDIwMTkgYXQgMDI6NDI6NDNQTSAtMDQwMCwgS2VubnkgSG8gd3JvdGU6
+Cj4gT24gVGh1LCBKdW4gMjcsIDIwMTkgYXQgMTo0MyBBTSBEYW5pZWwgVmV0dGVyIDxkYW5pZWxA
+ZmZ3bGwuY2g+IHdyb3RlOgo+ID4KPiA+IE9uIFdlZCwgSnVuIDI2LCAyMDE5IGF0IDA2OjQxOjMy
+UE0gLTA0MDAsIEtlbm55IEhvIHdyb3RlOgo+ID4gPiBTbyB3aXRob3V0IHRoZSBzaGFyaW5nIHJl
+c3RyaWN0aW9uIGFuZCBzb21lIGtpbmQgb2Ygb3duZXJzaGlwCj4gPiA+IHN0cnVjdHVyZSwgd2Ug
+d2lsbCBoYXZlIHRvIG1pZ3JhdGUvY2hhbmdlIHRoZSBvd25lciBvZiB0aGUgYnVmZmVyIHdoZW4K
+PiA+ID4gdGhlIGNncm91cCB0aGF0IGNyZWF0ZWQgdGhlIGJ1ZmZlciBkaWUgYmVmb3JlIHRoZSBy
+ZWNlaXZpbmcgY2dyb3VwKHMpCj4gPiA+IGFuZCBJIGFtIG5vdCBzdXJlIGhvdyB0byBkbyB0aGF0
+IHByb3Blcmx5IGF0IHRoZSBtb21lbnQuICAxKSBTaG91bGQKPiA+ID4gZWFjaCBjZ3JvdXAga2Vl
+cCB0cmFjayBvZiBhbGwgdGhlIGJ1ZmZlcnMgdGhhdCBiZWxvbmdzIHRvIGl0IGFuZAo+ID4gPiBt
+aWdyYXRlPyAgKElzIHRoYXQgZWZmaWNpZW50PykgIDIpIHdoaWNoIGNncm91cCBzaG91bGQgYmUg
+dGhlIG5ldwo+ID4gPiBvd25lciAoYW5kIHRoZXJlZm9yZSBoYXZlIHRoZSBsaW1pdCBhcHBsaWVk
+PykgIEhhdmluZyB0aGUgY3JlYXRvcgo+ID4gPiBiZWluZyB0aGUgb3duZXIgaXMga2luZCBvZiBu
+YXR1cmFsLCBidXQgbGV0IHNheSB0aGUgYnVmZmVyIGlzIHNoYXJlZAo+ID4gPiB3aXRoIDUgb3Ro
+ZXIgY2dyb3Vwcywgd2hpY2ggb2YgdGhlc2UgNSBjZ3JvdXBzIHNob3VsZCBiZSB0aGUgbmV3IG93
+bmVyCj4gPiA+IG9mIHRoZSBidWZmZXI/Cj4gPgo+ID4gRGlmZmVyZW50IGFuc3dlcnM6Cj4gPgo+
+ID4gLSBEbyB3ZSBjYXJlIGlmIHdlIGxlYWsgYm9zIGxpa2UgdGhpcyBpbiBhIGNncm91cCwgaWYg
+dGhlIGNncm91cAo+ID4gICBkaXNhcHBlYXJzIGJlZm9yZSBhbGwgdGhlIGJvIGFyZSBjbGVhbmVk
+IHVwPwo+ID4KPiA+IC0gSnVzdCBjaGFyZ2UgdGhlIGJvIHRvIGVhY2ggY2dyb3VwIGl0J3MgaW4/
+IFdpbGwgYmUgcXVpdGUgYSBiaXQgbW9yZQo+ID4gICB0cmFja2luZyBuZWVkZWQgdG8gZ2V0IHRo
+YXQgZG9uZSAuLi4KPiBUaGF0IHNlZW1zIHRvIGJlIHRoZSBhcHByb2FjaCBtZW1jZyB0YWtlcywg
+YnV0IGFzIHNob3duIGJ5IHRoZSBsd24KPiBsaW5rIHlvdSBzZW50IG1lIGZyb20gdGhlIGxhc3Qg
+cmZjICh0YWxrIGZyb20gUm9tYW4gR3VzaGNoaW4pLCB0aGF0Cj4gYXBwcm9hY2ggaXMgbm90IHBy
+b2JsZW0gZnJlZSBlaXRoZXIuICBBbmQgd291bGRuJ3QgdGhpcyBhcHByb2FjaAo+IGRpc2Nvbm5l
+Y3QgcmVzb3VyY2UgbWFuYWdlbWVudCBmcm9tIHRoZSB1bmRlcmx5aW5nIHJlc291cmNlIG9uZSB3
+b3VsZAo+IGxpa2UgdG8gY29udHJvbD8gIEZvciBleGFtcGxlLCBpZiB5b3UgaGF2ZSA1IE1CIG9m
+IG1lbW9yeSwgeW91IGNhbgo+IGhhdmUgNSB1c2VycyB1c2luZyAxIE1CIGVhY2guICBCdXQgaW4g
+dGhlIGNoYXJnZS1ldmVyeWJvZHkgYXBwcm9hY2gsIGEKPiAxIE1CIHVzYWdlIHNoYXJlZCA0IHRp
+bWVzIHdpbGwgbWFrZSBpdCBsb29rcyBsaWtlIDVNQiBpcyB1c2VkLiAgU28gdGhlCj4gcmVzb3Vy
+Y2UgYmVpbmcgY29udHJvbCBpcyBubyBsb25nZXIgJ3JlYWwnIHNpbmNlIHRoZSBhbW91bnQgb2YK
+PiByZXNvdXJjZSB5b3UgaGF2ZSBpcyBub3cgZHluYW1pYyBhbmQgZGVwZW5kcyBvbiB0aGUgYW1v
+dW50IG9mIHNoYXJpbmcKPiBvbmUgZG9lcy4KClRoZSBwcm9ibGVtIHdpdGggbWVtY2cgaXMgdGhh
+dCBpdCdzIG5vdCBqdXN0IHRoZSBhbGxvY2F0aW9uLCBidXQgYSB0b24gb2YKbWVtb3J5IGFsbG9j
+YXRlZCB0byB0cmFjayB0aGVzZSBhbGxvY2F0aW9ucy4gQXQgbGVhc3QgdGhhdCdzIG15CnVuZGVy
+c3RhbmRpbmcgb2YgdGhlIG5hdHVyZSBvZiB0aGUgbWVtY2cgbGVhay4gTWFkZSBhIGxvdCB3b3Jz
+ZSBieSBwYWdlcwpiZWluZyBzbWFsbCBhbmQgcGxlbnRpZnVsIGFuZCBzaGFyZWQgZXh0cmVtZWx5
+IHdpZGVseSAoZS5nLiBpdCdzIHJlYWxseQpoYXJkIHRvIGNvbnRyb2wgd2hvIGdldHMgY2hhcmdl
+ZCBmb3IgcGFnZWNhY2hlIGFsbG9jYXRpb25zLCBzbyB0aG9zZQpwYWdlY2FjaGUgZW50cmllcyBt
+aWdodCBvdXRsaXZlIHRoZSBtZW1jZyBmb3JldmVyIGlmIHlvdSdyZSB1bmx1Y2t5KS4KCkZvciB1
+cyBpdCdzIGp1c3QgYSBjb3VudGVyLCBwbHVzIGJvIHNoYXJpbmcgaXMgYSBsb3QgbW9yZSBjb250
+cm9sbGVkOiBPbgphbnkgcmVhc29uYWJsZSBzeXN0ZW0gaWYgeW91IGRvIGtpbGwgdGhlIGNvbXBv
+c2l0b3IsIHRoZW4gYWxsIHRoZSBjbGllbnRzCmdvIGRvd24uIEFuZCB3aGVuIHlvdSBkbyBraWxs
+IGEgY2xpZW50LCB0aGUgY29tcG9zaXRvciB3aWxsIHJlbGVhc2UgYWxsCnRoZSBzaGFyZWQgYnVm
+ZmVycyAoYW5kIGFueSBvdGhlciByZXNvdXJjZXMpLgoKU28gSSB0aGluayBmb3IgZHJtY2cgd2Ug
+d29uJ3QgaGF2ZSBhbnl0aGluZyBuZWFyIHRoZSBzYW1lIHJlc291cmNlIGxlYWsKcHJvYmxlbSBl
+dmVuIGluIHRoZW9yeSwgYW5kIGluIHByYWN0aWNlIEkgdGhpbmsgdGhlIGlzc3VlIGlzIG5vbmUu
+Cgo+ID4gLSBBbHNvLCB0aGVyZSdzIHRoZSBsZWdhY3kgd2F5IG9mIHNoYXJpbmcgYSBibywgd2l0
+aCB0aGUgRkxJTksgYW5kCj4gPiAgIEdFTV9PUEVOIGlvY3Rscy4gV2UgbmVlZCB0byBwbHVnIHRo
+ZXNlIGhvbGVzIHRvby4KPiA+Cj4gPiBKdXN0IGZlZWxzIGxpa2UgeW91ciBjdXJyZW50IHNvbHV0
+aW9uIGlzIHRlY2huaWNhbGx5IHdlbGwtanVzdGlmaWVkLCBidXQKPiA+IGl0IGNvbXBsZXRlbHkg
+ZGVmZWF0cyB0aGUgcG9pbnQgb2YgY2dyb3Vwcy9jb250YWluZXJzIGFuZCBidWZmZXIgc2hhcmlu
+Zwo+ID4gLi4uCj4gVW0uLi4gSSBhbSBnb2luZyB0byBnZXQgYSBiaXQgcGhpbG9zb3BoaWNhbCBo
+ZXJlIGFuZCBzdWdnZXN0IHRoYXQgdGhlCj4gaWRlYSBvZiBzaGFyaW5nIChlc3BlY2lhbGx5IHVu
+Y29udHJvbGxlZCBzaGFyaW5nKSBpcyBpbmhlcmVudGx5IGF0IG9kZAo+IHdpdGggY29udGFpbm1l
+bnQuICBJdCdzIGxpa2UsIGlmIGV2ZXJ5Ym9keSBpcyBzcGVjaWFsLCBubyBvbmUgaXMKPiBzcGVj
+aWFsLiAgUGVyaGFwcyBhbiBhbHRlcm5hdGl2ZSBpcyB0byBtYWtlIHRoaXMgY29uZmlndXJhYmxl
+IHNvIHRoYXQKPiBwZW9wbGUgY2FuIGFsbG93IHNoYXJpbmcga25vd2luZyB0aGUgY2F2ZWF0PyAg
+QW5kIGp1c3QgdG8gYmUgY2xlYXIsCj4gdGhlIGN1cnJlbnQgc29sdXRpb24gYWxsb3dzIGZvciBz
+aGFyaW5nLCBldmVuIGJldHdlZW4gY2dyb3VwLgoKVGhlIHRoaW5nIGlzLCB3aHkgc2hvdWxkbid0
+IHdlIGp1c3QgYWxsb3cgaXQgKHdpdGggc29tZSBkb2N1bWVudGVkCmNhdmVhdCk/CgpJIG1lYW4g
+aWYgYWxsIHBlb3BsZSBkbyBpcyBzaGFyZSBpdCBhcyB5b3VyIGN1cnJlbnQgcGF0Y2hlcyBhbGxv
+dywgdGhlbgp0aGVyZSdzIG5vdGhpbmcgZnVubnkgZ29pbmcgb24gKGF0IGxlYXN0IGlmIHdlIGdv
+IHdpdGgganVzdCBsZWFraW5nIHRoZQphbGxvY2F0aW9ucykuIElmIHdlIGFsbG93IGFkZGl0aW9u
+YWwgc2hhcmluZywgdGhlbiB0aGF0J3MgYSBwbHVzLgoKQW5kIGlmIHlvdSB3YW50IGFkZGl0aW9u
+YWwgY29udGFpbm1lbnQsIHRoYXQncyBhIGRpZmZlcmVudCB0aGluZzogVGhlCmVudGlyZSBsaW51
+eCBhcmNoaXRlY3R1cmUgZm9yIGNvbnRhaW5lcnMgaXMgdGhhdCBhIGNvbnRhaW5lciBkb2Vzbid0
+CmV4aXN0LiBJbnN0ZWFkIHlvdSBnZXQgYSBwaWxlIG9mIGJ1aWxkaW5nIGJsb2NrcyB0aGF0IGFs
+bCBzb2x2ZSBkaWZmZXJlbnQKYXNwZWN0cyBvZiB3aGF0IGEgY29udGFpbmVyIG5lZWRzIHRvIGRv
+OgotIGNncm91cHMgZm9yIHJlc291cmNlIGxpbWl0cwotIG5hbWVzcGFjZXMgZm9yIHJlc291cmNl
+IHZpc2liaWxpdHkKLSBzZWxpbnV4L3NlY29tcC9sc20gZm9yIHJlc291cmNlIGlzb2xhdGlvbiBh
+bmQgYWNjZXNzIHJpZ2h0cwoKTGV0J3Mgbm90IHRyeSB0byBidWlsZCBhIGRybSBjZ3JvdXAgY29u
+dHJvbCB0aGF0IHRyaWVzIHRvIGRvIG1vcmUgdGhhbgp3aGF0IGNncm91cHMgYXJlIG1lYW50IHRv
+IHNvbHZlLiBJZiB5b3UgaGF2ZSBhIG5lZWQgdG8gcmVzdHJpY3QgdGhlCnNoYXJpbmcsIGltbyB0
+aGF0IHNob3VsZCBiZSBkb25lIHdpdGggYW4gbHNtIHNlY3VyaXR5IGhvb2suCgpidHcgZm9yIGJv
+IHNoYXJpbmcsIEkndmUgZm91bmQgYSAzcmQgc2hhcmluZyBwYXRoIChiZXNpZGVzIGRtYS1idWYg
+YW5kIGdlbQpmbGluayk6IEdFVENSVEMgaW9jdGwgY2FuIGFsc28gYmUgdXNlZCAoaXQncyB0aGUg
+aXRlbmRlZCBnb2FsIGFjdHVhbGx5KSB0bwpzaGFyZSBidWZmZXJzIGFjcm9zcyBwcm9jZXNzZXMu
+Ci1EYW5pZWwKLS0gCkRhbmllbCBWZXR0ZXIKU29mdHdhcmUgRW5naW5lZXIsIEludGVsIENvcnBv
+cmF0aW9uCmh0dHA6Ly9ibG9nLmZmd2xsLmNoCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fCmFtZC1nZnggbWFpbGluZyBsaXN0CmFtZC1nZnhAbGlzdHMuZnJl
+ZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGlu
+Zm8vYW1kLWdmeA==
