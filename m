@@ -1,52 +1,75 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 2/2] mm, slab: Extend vm/drop_caches to shrink kmem slabs
-Date: Thu, 27 Jun 2019 17:15:06 +0200
-Message-ID: <20190627151506.GE5303@dhcp22.suse.cz>
-References: <20190624174219.25513-1-longman@redhat.com>
- <20190624174219.25513-3-longman@redhat.com>
+From: Kenny Ho <y2kenny@gmail.com>
+Subject: Re: [RFC PATCH v3 04/11] drm,
+ cgroup: Add total GEM buffer allocation limit
+Date: Thu, 27 Jun 2019 14:42:43 -0400
+Message-ID: <CAOWid-cT4TQ7HGzcSWjmLGjAW_D1hRrkNguEiV8N+baNiKQm_A@mail.gmail.com>
+References: <20190626150522.11618-1-Kenny.Ho@amd.com>
+ <20190626150522.11618-5-Kenny.Ho@amd.com>
+ <20190626160553.GR12905@phenom.ffwll.local>
+ <CAOWid-eurCMx1F7ciUwx0e+p=s=NP8=UxQUhhF-hdK-iAna+fA@mail.gmail.com>
+ <20190626214113.GA12905@phenom.ffwll.local>
+ <CAOWid-egYGijS0a6uuG4mPUmOWaPwF-EKokR=LFNJ=5M+akVZw@mail.gmail.com>
+ <20190627054320.GB12905@phenom.ffwll.local>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190624174219.25513-3-longman@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <20190627054320.GB12905@phenom.ffwll.local>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Luis Chamberlain <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Andrea Arcangeli <aarcange@redhat.com>
+To: Daniel Vetter <daniel@ffwll.ch>
+Cc: Kenny Ho <Kenny.Ho@amd.com>, jsparks@cray.com, amd-gfx list <amd-gfx@lists.freedesktop.org>, lkaplan@cray.com, Alex Deucher <alexander.deucher@amd.com>, dri-devel <dri-devel@lists.freedesktop.org>, joseph.greathouse@amd.com, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
 
-On Mon 24-06-19 13:42:19, Waiman Long wrote:
-> With the slub memory allocator, the numbers of active slab objects
-> reported in /proc/slabinfo are not real because they include objects
-> that are held by the per-cpu slab structures whether they are actually
-> used or not.  The problem gets worse the more CPUs a system have. For
-> instance, looking at the reported number of active task_struct objects,
-> one will wonder where all the missing tasks gone.
-> 
-> I know it is hard and costly to get a real count of active objects.
-
-What exactly is expensive? Why cannot slabinfo reduce the number of
-active objects by per-cpu cached objects?
-
-> So
-> I am not advocating for that. Instead, this patch extends the
-> /proc/sys/vm/drop_caches sysctl parameter by using a new bit (bit 3)
-> to shrink all the kmem slabs which will flush out all the slabs in the
-> per-cpu structures and give a more accurate view of how much memory are
-> really used up by the active slab objects. This is a costly operation,
-> of course, but it gives a way to have a clearer picture of the actual
-> number of slab objects used, if the need arises.
-
-drop_caches is a terrible interface. It destroys all the caching and
-people are just too easy in using it to solve any kind of problem they
-think they might have and cause others they might not see immediately.
-I am strongly discouraging anybody - except for some tests which really
-do want to see reproducible results without cache effects - from using
-this interface and therefore I am not really happy to paper over
-something that might be a real problem with yet another mode. If SLUB
-indeed caches too aggressively on large machines then this should be
-fixed.
-
--- 
-Michal Hocko
-SUSE Labs
+T24gVGh1LCBKdW4gMjcsIDIwMTkgYXQgMTo0MyBBTSBEYW5pZWwgVmV0dGVyIDxkYW5pZWxAZmZ3
+bGwuY2g+IHdyb3RlOgo+Cj4gT24gV2VkLCBKdW4gMjYsIDIwMTkgYXQgMDY6NDE6MzJQTSAtMDQw
+MCwgS2VubnkgSG8gd3JvdGU6Cj4gPiBTbyB3aXRob3V0IHRoZSBzaGFyaW5nIHJlc3RyaWN0aW9u
+IGFuZCBzb21lIGtpbmQgb2Ygb3duZXJzaGlwCj4gPiBzdHJ1Y3R1cmUsIHdlIHdpbGwgaGF2ZSB0
+byBtaWdyYXRlL2NoYW5nZSB0aGUgb3duZXIgb2YgdGhlIGJ1ZmZlciB3aGVuCj4gPiB0aGUgY2dy
+b3VwIHRoYXQgY3JlYXRlZCB0aGUgYnVmZmVyIGRpZSBiZWZvcmUgdGhlIHJlY2VpdmluZyBjZ3Jv
+dXAocykKPiA+IGFuZCBJIGFtIG5vdCBzdXJlIGhvdyB0byBkbyB0aGF0IHByb3Blcmx5IGF0IHRo
+ZSBtb21lbnQuICAxKSBTaG91bGQKPiA+IGVhY2ggY2dyb3VwIGtlZXAgdHJhY2sgb2YgYWxsIHRo
+ZSBidWZmZXJzIHRoYXQgYmVsb25ncyB0byBpdCBhbmQKPiA+IG1pZ3JhdGU/ICAoSXMgdGhhdCBl
+ZmZpY2llbnQ/KSAgMikgd2hpY2ggY2dyb3VwIHNob3VsZCBiZSB0aGUgbmV3Cj4gPiBvd25lciAo
+YW5kIHRoZXJlZm9yZSBoYXZlIHRoZSBsaW1pdCBhcHBsaWVkPykgIEhhdmluZyB0aGUgY3JlYXRv
+cgo+ID4gYmVpbmcgdGhlIG93bmVyIGlzIGtpbmQgb2YgbmF0dXJhbCwgYnV0IGxldCBzYXkgdGhl
+IGJ1ZmZlciBpcyBzaGFyZWQKPiA+IHdpdGggNSBvdGhlciBjZ3JvdXBzLCB3aGljaCBvZiB0aGVz
+ZSA1IGNncm91cHMgc2hvdWxkIGJlIHRoZSBuZXcgb3duZXIKPiA+IG9mIHRoZSBidWZmZXI/Cj4K
+PiBEaWZmZXJlbnQgYW5zd2VyczoKPgo+IC0gRG8gd2UgY2FyZSBpZiB3ZSBsZWFrIGJvcyBsaWtl
+IHRoaXMgaW4gYSBjZ3JvdXAsIGlmIHRoZSBjZ3JvdXAKPiAgIGRpc2FwcGVhcnMgYmVmb3JlIGFs
+bCB0aGUgYm8gYXJlIGNsZWFuZWQgdXA/Cj4KPiAtIEp1c3QgY2hhcmdlIHRoZSBibyB0byBlYWNo
+IGNncm91cCBpdCdzIGluPyBXaWxsIGJlIHF1aXRlIGEgYml0IG1vcmUKPiAgIHRyYWNraW5nIG5l
+ZWRlZCB0byBnZXQgdGhhdCBkb25lIC4uLgpUaGF0IHNlZW1zIHRvIGJlIHRoZSBhcHByb2FjaCBt
+ZW1jZyB0YWtlcywgYnV0IGFzIHNob3duIGJ5IHRoZSBsd24KbGluayB5b3Ugc2VudCBtZSBmcm9t
+IHRoZSBsYXN0IHJmYyAodGFsayBmcm9tIFJvbWFuIEd1c2hjaGluKSwgdGhhdAphcHByb2FjaCBp
+cyBub3QgcHJvYmxlbSBmcmVlIGVpdGhlci4gIEFuZCB3b3VsZG4ndCB0aGlzIGFwcHJvYWNoCmRp
+c2Nvbm5lY3QgcmVzb3VyY2UgbWFuYWdlbWVudCBmcm9tIHRoZSB1bmRlcmx5aW5nIHJlc291cmNl
+IG9uZSB3b3VsZApsaWtlIHRvIGNvbnRyb2w/ICBGb3IgZXhhbXBsZSwgaWYgeW91IGhhdmUgNSBN
+QiBvZiBtZW1vcnksIHlvdSBjYW4KaGF2ZSA1IHVzZXJzIHVzaW5nIDEgTUIgZWFjaC4gIEJ1dCBp
+biB0aGUgY2hhcmdlLWV2ZXJ5Ym9keSBhcHByb2FjaCwgYQoxIE1CIHVzYWdlIHNoYXJlZCA0IHRp
+bWVzIHdpbGwgbWFrZSBpdCBsb29rcyBsaWtlIDVNQiBpcyB1c2VkLiAgU28gdGhlCnJlc291cmNl
+IGJlaW5nIGNvbnRyb2wgaXMgbm8gbG9uZ2VyICdyZWFsJyBzaW5jZSB0aGUgYW1vdW50IG9mCnJl
+c291cmNlIHlvdSBoYXZlIGlzIG5vdyBkeW5hbWljIGFuZCBkZXBlbmRzIG9uIHRoZSBhbW91bnQg
+b2Ygc2hhcmluZwpvbmUgZG9lcy4KCj4gLSBBbHNvLCB0aGVyZSdzIHRoZSBsZWdhY3kgd2F5IG9m
+IHNoYXJpbmcgYSBibywgd2l0aCB0aGUgRkxJTksgYW5kCj4gICBHRU1fT1BFTiBpb2N0bHMuIFdl
+IG5lZWQgdG8gcGx1ZyB0aGVzZSBob2xlcyB0b28uCj4KPiBKdXN0IGZlZWxzIGxpa2UgeW91ciBj
+dXJyZW50IHNvbHV0aW9uIGlzIHRlY2huaWNhbGx5IHdlbGwtanVzdGlmaWVkLCBidXQKPiBpdCBj
+b21wbGV0ZWx5IGRlZmVhdHMgdGhlIHBvaW50IG9mIGNncm91cHMvY29udGFpbmVycyBhbmQgYnVm
+ZmVyIHNoYXJpbmcKPiAuLi4KVW0uLi4gSSBhbSBnb2luZyB0byBnZXQgYSBiaXQgcGhpbG9zb3Bo
+aWNhbCBoZXJlIGFuZCBzdWdnZXN0IHRoYXQgdGhlCmlkZWEgb2Ygc2hhcmluZyAoZXNwZWNpYWxs
+eSB1bmNvbnRyb2xsZWQgc2hhcmluZykgaXMgaW5oZXJlbnRseSBhdCBvZGQKd2l0aCBjb250YWlu
+bWVudC4gIEl0J3MgbGlrZSwgaWYgZXZlcnlib2R5IGlzIHNwZWNpYWwsIG5vIG9uZSBpcwpzcGVj
+aWFsLiAgUGVyaGFwcyBhbiBhbHRlcm5hdGl2ZSBpcyB0byBtYWtlIHRoaXMgY29uZmlndXJhYmxl
+IHNvIHRoYXQKcGVvcGxlIGNhbiBhbGxvdyBzaGFyaW5nIGtub3dpbmcgdGhlIGNhdmVhdD8gIEFu
+ZCBqdXN0IHRvIGJlIGNsZWFyLAp0aGUgY3VycmVudCBzb2x1dGlvbiBhbGxvd3MgZm9yIHNoYXJp
+bmcsIGV2ZW4gYmV0d2VlbiBjZ3JvdXAuCgpSZWdhcmRzLApLZW5ueQpfX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRy
+aS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5v
+cmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWw=
