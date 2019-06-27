@@ -1,114 +1,105 @@
-From: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
-Subject: Re: [RFC PATCH v3 04/11] drm, cgroup: Add total GEM buffer
- allocation limit
-Date: Thu, 27 Jun 2019 23:24:01 +0200
-Message-ID: <20190627212401.GO12905@phenom.ffwll.local>
-References: <20190626150522.11618-1-Kenny.Ho@amd.com>
- <20190626150522.11618-5-Kenny.Ho@amd.com>
- <20190626160553.GR12905@phenom.ffwll.local>
- <CAOWid-eurCMx1F7ciUwx0e+p=s=NP8=UxQUhhF-hdK-iAna+fA@mail.gmail.com>
- <20190626214113.GA12905@phenom.ffwll.local>
- <CAOWid-egYGijS0a6uuG4mPUmOWaPwF-EKokR=LFNJ=5M+akVZw@mail.gmail.com>
- <20190627054320.GB12905@phenom.ffwll.local>
- <CAOWid-cT4TQ7HGzcSWjmLGjAW_D1hRrkNguEiV8N+baNiKQm_A@mail.gmail.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH 2/2] mm, slab: Extend vm/drop_caches to shrink kmem slabs
+Date: Thu, 27 Jun 2019 21:24:25 +0000
+Message-ID: <20190627212419.GA25233@tower.DHCP.thefacebook.com>
+References: <20190624174219.25513-1-longman@redhat.com>
+ <20190624174219.25513-3-longman@redhat.com>
+ <20190626201900.GC24698@tower.DHCP.thefacebook.com>
+ <063752b2-4f1a-d198-36e7-3e642d4fcf19@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAOWid-cT4TQ7HGzcSWjmLGjAW_D1hRrkNguEiV8N+baNiKQm_A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: joseph.greathouse-5C7GfCeVMHo@public.gmane.org, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=sNOu3HJF9ywLPRfufTO5OfZzrVkrGyiQosuhKaX+PKU=;
+ b=YPadNksSiOYGqw+BAyyZpfaWwww3OIwZFi6ng0BIayOywkVkfgsAdBfmb9YVPMxK74It
+ Q0uaE6NWTpZtpHPvoM9tcirgjyokdmfxVBQT/AmILxIwLyHYd0///NDHfpeoaXlwW0aW
+ daP1EJnhvurny0ESMh7mg/6yf0Nr/PAJRBc= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=sNOu3HJF9ywLPRfufTO5OfZzrVkrGyiQosuhKaX+PKU=;
+ b=cONWwgOqiZvAyWfGsIE5JImH/EeoYWyEdx0i35coVnU44YH+rI70/oJFtukfMwsDwEUb1Fbmerf+wkYujPyNwU38S7yFmSRfU7aiGGIz2cDUfguMXYwVzxVxCILeR2rmsemJktFjhYGBkfnq9cBlL7jamXSiLJ4sUkhH7D9bR6w=
+In-Reply-To: <063752b2-4f1a-d198-36e7-3e642d4fcf19@redhat.com>
+Content-Language: en-US
+Content-ID: <7E5727AEB2313B4682CD26ADDCB22D2A@namprd15.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+To: Waiman Long <longman@redhat.com>
+Cc: Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Luis Chamberlain <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Shakeel Butt <shake>
 
-T24gVGh1LCBKdW4gMjcsIDIwMTkgYXQgMDI6NDI6NDNQTSAtMDQwMCwgS2VubnkgSG8gd3JvdGU6
-Cj4gT24gVGh1LCBKdW4gMjcsIDIwMTkgYXQgMTo0MyBBTSBEYW5pZWwgVmV0dGVyIDxkYW5pZWxA
-ZmZ3bGwuY2g+IHdyb3RlOgo+ID4KPiA+IE9uIFdlZCwgSnVuIDI2LCAyMDE5IGF0IDA2OjQxOjMy
-UE0gLTA0MDAsIEtlbm55IEhvIHdyb3RlOgo+ID4gPiBTbyB3aXRob3V0IHRoZSBzaGFyaW5nIHJl
-c3RyaWN0aW9uIGFuZCBzb21lIGtpbmQgb2Ygb3duZXJzaGlwCj4gPiA+IHN0cnVjdHVyZSwgd2Ug
-d2lsbCBoYXZlIHRvIG1pZ3JhdGUvY2hhbmdlIHRoZSBvd25lciBvZiB0aGUgYnVmZmVyIHdoZW4K
-PiA+ID4gdGhlIGNncm91cCB0aGF0IGNyZWF0ZWQgdGhlIGJ1ZmZlciBkaWUgYmVmb3JlIHRoZSBy
-ZWNlaXZpbmcgY2dyb3VwKHMpCj4gPiA+IGFuZCBJIGFtIG5vdCBzdXJlIGhvdyB0byBkbyB0aGF0
-IHByb3Blcmx5IGF0IHRoZSBtb21lbnQuICAxKSBTaG91bGQKPiA+ID4gZWFjaCBjZ3JvdXAga2Vl
-cCB0cmFjayBvZiBhbGwgdGhlIGJ1ZmZlcnMgdGhhdCBiZWxvbmdzIHRvIGl0IGFuZAo+ID4gPiBt
-aWdyYXRlPyAgKElzIHRoYXQgZWZmaWNpZW50PykgIDIpIHdoaWNoIGNncm91cCBzaG91bGQgYmUg
-dGhlIG5ldwo+ID4gPiBvd25lciAoYW5kIHRoZXJlZm9yZSBoYXZlIHRoZSBsaW1pdCBhcHBsaWVk
-PykgIEhhdmluZyB0aGUgY3JlYXRvcgo+ID4gPiBiZWluZyB0aGUgb3duZXIgaXMga2luZCBvZiBu
-YXR1cmFsLCBidXQgbGV0IHNheSB0aGUgYnVmZmVyIGlzIHNoYXJlZAo+ID4gPiB3aXRoIDUgb3Ro
-ZXIgY2dyb3Vwcywgd2hpY2ggb2YgdGhlc2UgNSBjZ3JvdXBzIHNob3VsZCBiZSB0aGUgbmV3IG93
-bmVyCj4gPiA+IG9mIHRoZSBidWZmZXI/Cj4gPgo+ID4gRGlmZmVyZW50IGFuc3dlcnM6Cj4gPgo+
-ID4gLSBEbyB3ZSBjYXJlIGlmIHdlIGxlYWsgYm9zIGxpa2UgdGhpcyBpbiBhIGNncm91cCwgaWYg
-dGhlIGNncm91cAo+ID4gICBkaXNhcHBlYXJzIGJlZm9yZSBhbGwgdGhlIGJvIGFyZSBjbGVhbmVk
-IHVwPwo+ID4KPiA+IC0gSnVzdCBjaGFyZ2UgdGhlIGJvIHRvIGVhY2ggY2dyb3VwIGl0J3MgaW4/
-IFdpbGwgYmUgcXVpdGUgYSBiaXQgbW9yZQo+ID4gICB0cmFja2luZyBuZWVkZWQgdG8gZ2V0IHRo
-YXQgZG9uZSAuLi4KPiBUaGF0IHNlZW1zIHRvIGJlIHRoZSBhcHByb2FjaCBtZW1jZyB0YWtlcywg
-YnV0IGFzIHNob3duIGJ5IHRoZSBsd24KPiBsaW5rIHlvdSBzZW50IG1lIGZyb20gdGhlIGxhc3Qg
-cmZjICh0YWxrIGZyb20gUm9tYW4gR3VzaGNoaW4pLCB0aGF0Cj4gYXBwcm9hY2ggaXMgbm90IHBy
-b2JsZW0gZnJlZSBlaXRoZXIuICBBbmQgd291bGRuJ3QgdGhpcyBhcHByb2FjaAo+IGRpc2Nvbm5l
-Y3QgcmVzb3VyY2UgbWFuYWdlbWVudCBmcm9tIHRoZSB1bmRlcmx5aW5nIHJlc291cmNlIG9uZSB3
-b3VsZAo+IGxpa2UgdG8gY29udHJvbD8gIEZvciBleGFtcGxlLCBpZiB5b3UgaGF2ZSA1IE1CIG9m
-IG1lbW9yeSwgeW91IGNhbgo+IGhhdmUgNSB1c2VycyB1c2luZyAxIE1CIGVhY2guICBCdXQgaW4g
-dGhlIGNoYXJnZS1ldmVyeWJvZHkgYXBwcm9hY2gsIGEKPiAxIE1CIHVzYWdlIHNoYXJlZCA0IHRp
-bWVzIHdpbGwgbWFrZSBpdCBsb29rcyBsaWtlIDVNQiBpcyB1c2VkLiAgU28gdGhlCj4gcmVzb3Vy
-Y2UgYmVpbmcgY29udHJvbCBpcyBubyBsb25nZXIgJ3JlYWwnIHNpbmNlIHRoZSBhbW91bnQgb2YK
-PiByZXNvdXJjZSB5b3UgaGF2ZSBpcyBub3cgZHluYW1pYyBhbmQgZGVwZW5kcyBvbiB0aGUgYW1v
-dW50IG9mIHNoYXJpbmcKPiBvbmUgZG9lcy4KClRoZSBwcm9ibGVtIHdpdGggbWVtY2cgaXMgdGhh
-dCBpdCdzIG5vdCBqdXN0IHRoZSBhbGxvY2F0aW9uLCBidXQgYSB0b24gb2YKbWVtb3J5IGFsbG9j
-YXRlZCB0byB0cmFjayB0aGVzZSBhbGxvY2F0aW9ucy4gQXQgbGVhc3QgdGhhdCdzIG15CnVuZGVy
-c3RhbmRpbmcgb2YgdGhlIG5hdHVyZSBvZiB0aGUgbWVtY2cgbGVhay4gTWFkZSBhIGxvdCB3b3Jz
-ZSBieSBwYWdlcwpiZWluZyBzbWFsbCBhbmQgcGxlbnRpZnVsIGFuZCBzaGFyZWQgZXh0cmVtZWx5
-IHdpZGVseSAoZS5nLiBpdCdzIHJlYWxseQpoYXJkIHRvIGNvbnRyb2wgd2hvIGdldHMgY2hhcmdl
-ZCBmb3IgcGFnZWNhY2hlIGFsbG9jYXRpb25zLCBzbyB0aG9zZQpwYWdlY2FjaGUgZW50cmllcyBt
-aWdodCBvdXRsaXZlIHRoZSBtZW1jZyBmb3JldmVyIGlmIHlvdSdyZSB1bmx1Y2t5KS4KCkZvciB1
-cyBpdCdzIGp1c3QgYSBjb3VudGVyLCBwbHVzIGJvIHNoYXJpbmcgaXMgYSBsb3QgbW9yZSBjb250
-cm9sbGVkOiBPbgphbnkgcmVhc29uYWJsZSBzeXN0ZW0gaWYgeW91IGRvIGtpbGwgdGhlIGNvbXBv
-c2l0b3IsIHRoZW4gYWxsIHRoZSBjbGllbnRzCmdvIGRvd24uIEFuZCB3aGVuIHlvdSBkbyBraWxs
-IGEgY2xpZW50LCB0aGUgY29tcG9zaXRvciB3aWxsIHJlbGVhc2UgYWxsCnRoZSBzaGFyZWQgYnVm
-ZmVycyAoYW5kIGFueSBvdGhlciByZXNvdXJjZXMpLgoKU28gSSB0aGluayBmb3IgZHJtY2cgd2Ug
-d29uJ3QgaGF2ZSBhbnl0aGluZyBuZWFyIHRoZSBzYW1lIHJlc291cmNlIGxlYWsKcHJvYmxlbSBl
-dmVuIGluIHRoZW9yeSwgYW5kIGluIHByYWN0aWNlIEkgdGhpbmsgdGhlIGlzc3VlIGlzIG5vbmUu
-Cgo+ID4gLSBBbHNvLCB0aGVyZSdzIHRoZSBsZWdhY3kgd2F5IG9mIHNoYXJpbmcgYSBibywgd2l0
-aCB0aGUgRkxJTksgYW5kCj4gPiAgIEdFTV9PUEVOIGlvY3Rscy4gV2UgbmVlZCB0byBwbHVnIHRo
-ZXNlIGhvbGVzIHRvby4KPiA+Cj4gPiBKdXN0IGZlZWxzIGxpa2UgeW91ciBjdXJyZW50IHNvbHV0
-aW9uIGlzIHRlY2huaWNhbGx5IHdlbGwtanVzdGlmaWVkLCBidXQKPiA+IGl0IGNvbXBsZXRlbHkg
-ZGVmZWF0cyB0aGUgcG9pbnQgb2YgY2dyb3Vwcy9jb250YWluZXJzIGFuZCBidWZmZXIgc2hhcmlu
-Zwo+ID4gLi4uCj4gVW0uLi4gSSBhbSBnb2luZyB0byBnZXQgYSBiaXQgcGhpbG9zb3BoaWNhbCBo
-ZXJlIGFuZCBzdWdnZXN0IHRoYXQgdGhlCj4gaWRlYSBvZiBzaGFyaW5nIChlc3BlY2lhbGx5IHVu
-Y29udHJvbGxlZCBzaGFyaW5nKSBpcyBpbmhlcmVudGx5IGF0IG9kZAo+IHdpdGggY29udGFpbm1l
-bnQuICBJdCdzIGxpa2UsIGlmIGV2ZXJ5Ym9keSBpcyBzcGVjaWFsLCBubyBvbmUgaXMKPiBzcGVj
-aWFsLiAgUGVyaGFwcyBhbiBhbHRlcm5hdGl2ZSBpcyB0byBtYWtlIHRoaXMgY29uZmlndXJhYmxl
-IHNvIHRoYXQKPiBwZW9wbGUgY2FuIGFsbG93IHNoYXJpbmcga25vd2luZyB0aGUgY2F2ZWF0PyAg
-QW5kIGp1c3QgdG8gYmUgY2xlYXIsCj4gdGhlIGN1cnJlbnQgc29sdXRpb24gYWxsb3dzIGZvciBz
-aGFyaW5nLCBldmVuIGJldHdlZW4gY2dyb3VwLgoKVGhlIHRoaW5nIGlzLCB3aHkgc2hvdWxkbid0
-IHdlIGp1c3QgYWxsb3cgaXQgKHdpdGggc29tZSBkb2N1bWVudGVkCmNhdmVhdCk/CgpJIG1lYW4g
-aWYgYWxsIHBlb3BsZSBkbyBpcyBzaGFyZSBpdCBhcyB5b3VyIGN1cnJlbnQgcGF0Y2hlcyBhbGxv
-dywgdGhlbgp0aGVyZSdzIG5vdGhpbmcgZnVubnkgZ29pbmcgb24gKGF0IGxlYXN0IGlmIHdlIGdv
-IHdpdGgganVzdCBsZWFraW5nIHRoZQphbGxvY2F0aW9ucykuIElmIHdlIGFsbG93IGFkZGl0aW9u
-YWwgc2hhcmluZywgdGhlbiB0aGF0J3MgYSBwbHVzLgoKQW5kIGlmIHlvdSB3YW50IGFkZGl0aW9u
-YWwgY29udGFpbm1lbnQsIHRoYXQncyBhIGRpZmZlcmVudCB0aGluZzogVGhlCmVudGlyZSBsaW51
-eCBhcmNoaXRlY3R1cmUgZm9yIGNvbnRhaW5lcnMgaXMgdGhhdCBhIGNvbnRhaW5lciBkb2Vzbid0
-CmV4aXN0LiBJbnN0ZWFkIHlvdSBnZXQgYSBwaWxlIG9mIGJ1aWxkaW5nIGJsb2NrcyB0aGF0IGFs
-bCBzb2x2ZSBkaWZmZXJlbnQKYXNwZWN0cyBvZiB3aGF0IGEgY29udGFpbmVyIG5lZWRzIHRvIGRv
-OgotIGNncm91cHMgZm9yIHJlc291cmNlIGxpbWl0cwotIG5hbWVzcGFjZXMgZm9yIHJlc291cmNl
-IHZpc2liaWxpdHkKLSBzZWxpbnV4L3NlY29tcC9sc20gZm9yIHJlc291cmNlIGlzb2xhdGlvbiBh
-bmQgYWNjZXNzIHJpZ2h0cwoKTGV0J3Mgbm90IHRyeSB0byBidWlsZCBhIGRybSBjZ3JvdXAgY29u
-dHJvbCB0aGF0IHRyaWVzIHRvIGRvIG1vcmUgdGhhbgp3aGF0IGNncm91cHMgYXJlIG1lYW50IHRv
-IHNvbHZlLiBJZiB5b3UgaGF2ZSBhIG5lZWQgdG8gcmVzdHJpY3QgdGhlCnNoYXJpbmcsIGltbyB0
-aGF0IHNob3VsZCBiZSBkb25lIHdpdGggYW4gbHNtIHNlY3VyaXR5IGhvb2suCgpidHcgZm9yIGJv
-IHNoYXJpbmcsIEkndmUgZm91bmQgYSAzcmQgc2hhcmluZyBwYXRoIChiZXNpZGVzIGRtYS1idWYg
-YW5kIGdlbQpmbGluayk6IEdFVENSVEMgaW9jdGwgY2FuIGFsc28gYmUgdXNlZCAoaXQncyB0aGUg
-aXRlbmRlZCBnb2FsIGFjdHVhbGx5KSB0bwpzaGFyZSBidWZmZXJzIGFjcm9zcyBwcm9jZXNzZXMu
-Ci1EYW5pZWwKLS0gCkRhbmllbCBWZXR0ZXIKU29mdHdhcmUgRW5naW5lZXIsIEludGVsIENvcnBv
-cmF0aW9uCmh0dHA6Ly9ibG9nLmZmd2xsLmNoCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCmFtZC1nZnggbWFpbGluZyBsaXN0CmFtZC1nZnhAbGlzdHMuZnJl
-ZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGlu
-Zm8vYW1kLWdmeA==
+On Thu, Jun 27, 2019 at 04:57:50PM -0400, Waiman Long wrote:
+> On 6/26/19 4:19 PM, Roman Gushchin wrote:
+> >> =20
+> >> +#ifdef CONFIG_MEMCG_KMEM
+> >> +static void kmem_cache_shrink_memcg(struct mem_cgroup *memcg,
+> >> +				    void __maybe_unused *arg)
+> >> +{
+> >> +	struct kmem_cache *s;
+> >> +
+> >> +	if (memcg =3D=3D root_mem_cgroup)
+> >> +		return;
+> >> +	mutex_lock(&slab_mutex);
+> >> +	list_for_each_entry(s, &memcg->kmem_caches,
+> >> +			    memcg_params.kmem_caches_node) {
+> >> +		kmem_cache_shrink(s);
+> >> +	}
+> >> +	mutex_unlock(&slab_mutex);
+> >> +	cond_resched();
+> >> +}
+> > A couple of questions:
+> > 1) how about skipping already offlined kmem_caches? They are already sh=
+runk,
+> >    so you probably won't get much out of them. Or isn't it true?
+>=20
+> I have been thinking about that. This patch is based on the linux tree
+> and so don't have an easy to find out if the kmem caches have been
+> shrinked. Rebasing this on top of linux-next, I can use the
+> SLAB_DEACTIVATED flag as a marker for skipping the shrink.
+>=20
+> With all the latest patches, I am still seeing 121 out of a total of 726
+> memcg kmem caches (1/6) that are deactivated caches after system bootup
+> one of the test systems. My system is still using cgroup v1 and so the
+> number may be different in a v2 setup. The next step is probably to
+> figure out why those deactivated caches are still there.
+
+It's not a secret: these kmem_caches are holding objects, which are in use.
+It's a drawback of the current slab accounting implementation: every
+object holds a whole page and the corresponding kmem_cache. It's optimized
+for a large number of objects, which are created and destroyed within
+the life of the cgroup (e.g. task_structs), and it works worse for long-liv=
+ing
+objects like vfs cache.
+
+Long-term I think we need a different implementation for long-living object=
+s,
+so that objects belonging to different memory cgroups can share the same pa=
+ge
+and kmem_caches.
+
+It's a fairly big change though.
+
+>=20
+> > 2) what's your long-term vision here? do you think that we need to shri=
+nk
+> >    kmem_caches periodically, depending on memory pressure? how a user
+> >    will use this new sysctl?
+> Shrinking the kmem caches under extreme memory pressure can be one way
+> to free up extra pages, but the effect will probably be temporary.
+> > What's the problem you're trying to solve in general?
+>=20
+> At least for the slub allocator, shrinking the caches allow the number
+> of active objects reported in slabinfo to be more accurate. In addition,
+> this allow to know the real slab memory consumption. I have been working
+> on a BZ about continuous memory leaks with a container based workloads.
+> The ability to shrink caches allow us to get a more accurate memory
+> consumption picture. Another alternative is to turn on slub_debug which
+> will then disables all the per-cpu slabs.
+
+I see... I agree with Michal here, that extending drop_caches sysctl isn't
+the best idea. Isn't it possible to achieve the same effect using slub sysf=
+s?
+
+Thanks!
