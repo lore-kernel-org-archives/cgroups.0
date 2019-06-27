@@ -1,165 +1,115 @@
-From: Daniel Vetter <daniel@ffwll.ch>
-Subject: Re: [RFC PATCH v3 00/11] new cgroup controller for gpu/drm subsystem
-Date: Thu, 27 Jun 2019 09:24:06 +0200
-Message-ID: <CAKMK7uFq7qCpzXqrD4o8Vw_dOwt=ny_oS7TRZFsANpPdC604vw@mail.gmail.com>
-References: <20190626150522.11618-1-Kenny.Ho@amd.com>
+From: Peng Wang <rocking@whu.edu.cn>
+Subject: [PATCH] cgroup: provide a macro helper to iterate a cgroup's ancestors
+Date: Thu, 27 Jun 2019 18:19:01 +0800
+Message-ID: <20190627101901.26714-1-rocking@whu.edu.cn>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20190626150522.11618-1-Kenny.Ho@amd.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Kenny Ho <Kenny.Ho@amd.com>, Jerome Glisse <jglisse@redhat.com>
-Cc: jsparks@cray.com, amd-gfx list <amd-gfx@lists.freedesktop.org>, lkaplan@cray.com, Alex Deucher <alexander.deucher@amd.com>, Kenny Ho <y2kenny@gmail.com>, dri-devel <dri-devel@lists.freedesktop.org>, joseph.greathouse@amd.com, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+To: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Peng Wang <rocking@whu.edu.cn>
 
-T24gV2VkLCBKdW4gMjYsIDIwMTkgYXQgNTowNSBQTSBLZW5ueSBIbyA8S2VubnkuSG9AYW1kLmNv
-bT4gd3JvdGU6Cj4gVGhpcyBpcyBhIGZvbGxvdyB1cCB0byB0aGUgUkZDIEkgbWFkZSBwcmV2aW91
-c2x5IHRvIGludHJvZHVjZSBhIGNncm91cAo+IGNvbnRyb2xsZXIgZm9yIHRoZSBHUFUvRFJNIHN1
-YnN5c3RlbSBbdjEsdjJdLiAgVGhlIGdvYWwgaXMgdG8gYmUgYWJsZSB0bwo+IHByb3ZpZGUgcmVz
-b3VyY2UgbWFuYWdlbWVudCB0byBHUFUgcmVzb3VyY2VzIHVzaW5nIHRoaW5ncyBsaWtlIGNvbnRh
-aW5lci4KPiBUaGUgY292ZXIgbGV0dGVyIGZyb20gdjEgaXMgY29waWVkIGJlbG93IGZvciByZWZl
-cmVuY2UuCj4KPiBbdjFdOiBodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9hcmNoaXZlcy9k
-cmktZGV2ZWwvMjAxOC1Ob3ZlbWJlci8xOTcxMDYuaHRtbAo+IFt2Ml06IGh0dHBzOi8vd3d3LnNw
-aW5pY3MubmV0L2xpc3RzL2Nncm91cHMvbXNnMjIwNzQuaHRtbAo+Cj4gdjM6Cj4gQmFzZSBvbiBm
-ZWVkYmFja3Mgb24gdjI6Cj4gKiByZW1vdmVkIC5oZWxwIHR5cGUgZmlsZSBmcm9tIHYyCj4gKiBj
-b25mb3JtIHRvIGNncm91cCBjb252ZW50aW9uIGZvciBkZWZhdWx0IGFuZCBtYXggaGFuZGxpbmcK
-PiAqIGNvbmZvcm0gdG8gY2dyb3VwIGNvbnZlbnRpb24gZm9yIGFkZHJlc3NpbmcgZGV2aWNlIHNw
-ZWNpZmljIGxpbWl0cyAod2l0aCBtYWpvcjptaW5vcikKPiBOZXcgZnVuY3Rpb246Cj4gKiBhZG9w
-dGVkIG1lbXBhcnNlIGZvciBtZW1vcnkgc2l6ZSByZWxhdGVkIGF0dHJpYnV0ZXMKPiAqIGFkZGVk
-IG1hY3JvIHRvIG1hcnNoYWxsIGRybWNncnAgY2Z0eXBlIHByaXZhdGUgIChEUk1DR19DVEZfUFJJ
-ViwgZXRjLikKPiAqIGFkZGVkIHR0bSBidWZmZXIgdXNhZ2Ugc3RhdHMgKHBlciBjZ3JvdXAsIGZv
-ciBzeXN0ZW0sIHR0LCB2cmFtLikKPiAqIGFkZGVkIHR0bSBidWZmZXIgdXNhZ2UgbGltaXQgKHBl
-ciBjZ3JvdXAsIGZvciB2cmFtLikKPiAqIGFkZGVkIHBlciBjZ3JvdXAgYmFuZHdpZHRoIHN0YXRz
-IGFuZCBsaW1pdGluZyAoYnVyc3QgYW5kIGF2ZXJhZ2UgYmFuZHdpZHRoKQo+Cj4gdjI6Cj4gKiBS
-ZW1vdmVkIHRoZSB2ZW5kb3JpbmcgY29uY2VwdHMKPiAqIEFkZCBsaW1pdCB0byB0b3RhbCBidWZm
-ZXIgYWxsb2NhdGlvbgo+ICogQWRkIGxpbWl0IHRvIHRoZSBtYXhpbXVtIHNpemUgb2YgYSBidWZm
-ZXIgYWxsb2NhdGlvbgo+Cj4gdjE6IGNvdmVyIGxldHRlcgo+Cj4gVGhlIHB1cnBvc2Ugb2YgdGhp
-cyBwYXRjaCBzZXJpZXMgaXMgdG8gc3RhcnQgYSBkaXNjdXNzaW9uIGZvciBhIGdlbmVyaWMgY2dy
-b3VwCj4gY29udHJvbGxlciBmb3IgdGhlIGRybSBzdWJzeXN0ZW0uICBUaGUgZGVzaWduIHByb3Bv
-c2VkIGhlcmUgaXMgYSB2ZXJ5IGVhcmx5IG9uZS4KPiBXZSBhcmUgaG9waW5nIHRvIGVuZ2FnZSB0
-aGUgY29tbXVuaXR5IGFzIHdlIGRldmVsb3AgdGhlIGlkZWEuCj4KPgo+IEJhY2tncm91bmRzCj4g
-PT09PT09PT09PQo+IENvbnRyb2wgR3JvdXBzL2Nncm91cCBwcm92aWRlIGEgbWVjaGFuaXNtIGZv
-ciBhZ2dyZWdhdGluZy9wYXJ0aXRpb25pbmcgc2V0cyBvZgo+IHRhc2tzLCBhbmQgYWxsIHRoZWly
-IGZ1dHVyZSBjaGlsZHJlbiwgaW50byBoaWVyYXJjaGljYWwgZ3JvdXBzIHdpdGggc3BlY2lhbGl6
-ZWQKPiBiZWhhdmlvdXIsIHN1Y2ggYXMgYWNjb3VudGluZy9saW1pdGluZyB0aGUgcmVzb3VyY2Vz
-IHdoaWNoIHByb2Nlc3NlcyBpbiBhIGNncm91cAo+IGNhbiBhY2Nlc3NbMV0uICBXZWlnaHRzLCBs
-aW1pdHMsIHByb3RlY3Rpb25zLCBhbGxvY2F0aW9ucyBhcmUgdGhlIG1haW4gcmVzb3VyY2UKPiBk
-aXN0cmlidXRpb24gbW9kZWxzLiAgRXhpc3RpbmcgY2dyb3VwIGNvbnRyb2xsZXJzIGluY2x1ZGVz
-IGNwdSwgbWVtb3J5LCBpbywKPiByZG1hLCBhbmQgbW9yZS4gIGNncm91cCBpcyBvbmUgb2YgdGhl
-IGZvdW5kYXRpb25hbCB0ZWNobm9sb2dpZXMgdGhhdCBlbmFibGVzIHRoZQo+IHBvcHVsYXIgY29u
-dGFpbmVyIGFwcGxpY2F0aW9uIGRlcGxveW1lbnQgYW5kIG1hbmFnZW1lbnQgbWV0aG9kLgo+Cj4g
-RGlyZWN0IFJlbmRlcmluZyBNYW5hZ2VyL2RybSBjb250YWlucyBjb2RlIGludGVuZGVkIHRvIHN1
-cHBvcnQgdGhlIG5lZWRzIG9mCj4gY29tcGxleCBncmFwaGljcyBkZXZpY2VzLiBHcmFwaGljcyBk
-cml2ZXJzIGluIHRoZSBrZXJuZWwgbWF5IG1ha2UgdXNlIG9mIERSTQo+IGZ1bmN0aW9ucyB0byBt
-YWtlIHRhc2tzIGxpa2UgbWVtb3J5IG1hbmFnZW1lbnQsIGludGVycnVwdCBoYW5kbGluZyBhbmQg
-RE1BCj4gZWFzaWVyLCBhbmQgcHJvdmlkZSBhIHVuaWZvcm0gaW50ZXJmYWNlIHRvIGFwcGxpY2F0
-aW9ucy4gIFRoZSBEUk0gaGFzIGFsc28KPiBkZXZlbG9wZWQgYmV5b25kIHRyYWRpdGlvbmFsIGdy
-YXBoaWNzIGFwcGxpY2F0aW9ucyB0byBzdXBwb3J0IGNvbXB1dGUvR1BHUFUKPiBhcHBsaWNhdGlv
-bnMuCj4KPgo+IE1vdGl2YXRpb25zCj4gPT09PT09PT09Cj4gQXMgR1BVIGdyb3cgYmV5b25kIHRo
-ZSByZWFsbSBvZiBkZXNrdG9wL3dvcmtzdGF0aW9uIGdyYXBoaWNzIGludG8gYXJlYXMgbGlrZQo+
-IGRhdGEgY2VudGVyIGNsdXN0ZXJzIGFuZCBJb1QsIHRoZXJlIGFyZSBpbmNyZWFzaW5nIG5lZWRz
-IHRvIG1vbml0b3IgYW5kIHJlZ3VsYXRlCj4gR1BVIGFzIGEgcmVzb3VyY2UgbGlrZSBjcHUsIG1l
-bW9yeSBhbmQgaW8uCj4KPiBNYXR0IFJvcGVyIGZyb20gSW50ZWwgYmVnYW4gd29ya2luZyBvbiBz
-aW1pbGFyIGlkZWEgaW4gZWFybHkgMjAxOCBbMl0gZm9yIHRoZQo+IHB1cnBvc2Ugb2YgbWFuYWdp
-bmcgR1BVIHByaW9yaXR5IHVzaW5nIHRoZSBjZ3JvdXAgaGllcmFyY2h5LiAgV2hpbGUgdGhhdAo+
-IHBhcnRpY3VsYXIgdXNlIGNhc2UgbWF5IG5vdCB3YXJyYW50IGEgc3RhbmRhbG9uZSBkcm0gY2dy
-b3VwIGNvbnRyb2xsZXIsIHRoZXJlCj4gYXJlIG90aGVyIHVzZSBjYXNlcyB3aGVyZSBoYXZpbmcg
-b25lIGNhbiBiZSB1c2VmdWwgWzNdLiAgTW9uaXRvcmluZyBHUFUKPiByZXNvdXJjZXMgc3VjaCBh
-cyBWUkFNIGFuZCBidWZmZXJzLCBDVSAoY29tcHV0ZSB1bml0IFtBTUQncyBub21lbmNsYXR1cmVd
-KS9FVQo+IChleGVjdXRpb24gdW5pdCBbSW50ZWwncyBub21lbmNsYXR1cmVdKSwgR1BVIGpvYiBz
-Y2hlZHVsaW5nIFs0XSBjYW4gaGVscAo+IHN5c2FkbWlucyBnZXQgYSBiZXR0ZXIgdW5kZXJzdGFu
-ZGluZyBvZiB0aGUgYXBwbGljYXRpb25zIHVzYWdlIHByb2ZpbGUuICBGdXJ0aGVyCj4gdXNhZ2Ug
-cmVndWxhdGlvbnMgb2YgdGhlIGFmb3JlbWVudGlvbmVkIHJlc291cmNlcyBjYW4gYWxzbyBoZWxw
-IHN5c2FkbWlucwo+IG9wdGltaXplIHdvcmtsb2FkIGRlcGxveW1lbnQgb24gbGltaXRlZCBHUFUg
-cmVzb3VyY2VzLgo+Cj4gV2l0aCB0aGUgaW5jcmVhc2VkIGltcG9ydGFuY2Ugb2YgbWFjaGluZSBs
-ZWFybmluZywgZGF0YSBzY2llbmNlIGFuZCBvdGhlcgo+IGNsb3VkLWJhc2VkIGFwcGxpY2F0aW9u
-cywgR1BVcyBhcmUgYWxyZWFkeSBpbiBwcm9kdWN0aW9uIHVzZSBpbiBkYXRhIGNlbnRlcnMKPiB0
-b2RheSBbNSw2LDddLiAgRXhpc3RpbmcgR1BVIHJlc291cmNlIG1hbmFnZW1lbnQgaXMgdmVyeSBj
-b3Vyc2UgZ3JhaW4sIGhvd2V2ZXIsCj4gYXMgc3lzYWRtaW5zIGFyZSBvbmx5IGFibGUgdG8gZGlz
-dHJpYnV0ZSB3b3JrbG9hZCBvbiBhIHBlci1HUFUgYmFzaXMgWzhdLiAgQW4KPiBhbHRlcm5hdGl2
-ZSBpcyB0byB1c2UgR1BVIHZpcnR1YWxpemF0aW9uICh3aXRoIG9yIHdpdGhvdXQgU1JJT1YpIGJ1
-dCBpdAo+IGdlbmVyYWxseSBhY3RzIG9uIHRoZSBlbnRpcmUgR1BVIGluc3RlYWQgb2YgdGhlIHNw
-ZWNpZmljIHJlc291cmNlcyBpbiBhIEdQVS4KPiBXaXRoIGEgZHJtIGNncm91cCBjb250cm9sbGVy
-LCB3ZSBjYW4gZW5hYmxlIGFsdGVybmF0ZSwgZmluZS1ncmFpbiwgc3ViLUdQVQo+IHJlc291cmNl
-IG1hbmFnZW1lbnQgKGluIGFkZGl0aW9uIHRvIHdoYXQgbWF5IGJlIGF2YWlsYWJsZSB2aWEgR1BV
-Cj4gdmlydHVhbGl6YXRpb24uKQo+Cj4gSW4gYWRkaXRpb24gdG8gcHJvZHVjdGlvbiB1c2UsIHRo
-ZSBEUk0gY2dyb3VwIGNhbiBhbHNvIGhlbHAgd2l0aCB0ZXN0aW5nCj4gZ3JhcGhpY3MgYXBwbGlj
-YXRpb24gcm9idXN0bmVzcyBieSBwcm92aWRpbmcgYSBtZWFuIHRvIGFydGlmaWNpYWxseSBsaW1p
-dCBEUk0KPiByZXNvdXJjZXMgYXZhaWxibGUgdG8gdGhlIGFwcGxpY2F0aW9ucy4KPgo+Cj4gQ2hh
-bGxlbmdlcwo+ID09PT09PT09Cj4gV2hpbGUgdGhlcmUgYXJlIGNvbW1vbiBpbmZyYXN0cnVjdHVy
-ZSBpbiBEUk0gdGhhdCBpcyBzaGFyZWQgYWNyb3NzIG1hbnkgdmVuZG9ycwo+ICh0aGUgc2NoZWR1
-bGVyIFs0XSBmb3IgZXhhbXBsZSksIHRoZXJlIGFyZSBhbHNvIGFzcGVjdHMgb2YgRFJNIHRoYXQg
-YXJlIHZlbmRvcgo+IHNwZWNpZmljLiAgVG8gYWNjb21tb2RhdGUgdGhpcywgd2UgYm9ycm93ZWQg
-dGhlIG1lY2hhbmlzbSB1c2VkIGJ5IHRoZSBjZ3JvdXAgdG8KPiBoYW5kbGUgZGlmZmVyZW50IGtp
-bmRzIG9mIGNncm91cCBjb250cm9sbGVyLgo+Cj4gUmVzb3VyY2VzIGZvciBEUk0gYXJlIGFsc28g
-b2Z0ZW4gZGV2aWNlIChHUFUpIHNwZWNpZmljIGluc3RlYWQgb2Ygc3lzdGVtCj4gc3BlY2lmaWMg
-YW5kIGEgc3lzdGVtIG1heSBjb250YWluIG1vcmUgdGhhbiBvbmUgR1BVLiAgRm9yIHRoaXMsIHdl
-IGJvcnJvd2VkIHNvbWUKPiBvZiB0aGUgaWRlYXMgZnJvbSBSRE1BIGNncm91cCBjb250cm9sbGVy
-LgoKQW5vdGhlciBxdWVzdGlvbiBJIGhhdmU6IFdoYXQgYWJvdXQgSE1NPyBXaXRoIHRoZSBkZXZp
-Y2UgbWVtb3J5IHpvbmUKdGhlIGNvcmUgbW0gd2lsbCBiZSBhIGxvdCBtb3JlIGludm9sdmVkIGlu
-IG1hbmFnaW5nIHRoYXQsIGJ1dCBJIGFsc28KZXhwZWN0IHRoYXQgd2UnbGwgaGF2ZSBjbGFzc2lj
-IGJ1ZmZlci1iYXNlZCBtYW5hZ2VtZW50IGZvciBhIGxvbmcgdGltZQpzdGlsbC4gU28gdGhlc2Ug
-bmVlZCB0byB3b3JrIHRvZ2V0aGVyLCBhbmQgSSBmZWFyIHNsaWdodGx5IHRoYXQgd2UnbGwKaGF2
-ZSBtZW1jZyBhbmQgZHJtY2cgZmlnaHRpbmcgb3ZlciB0aGUgc2FtZSBwaWVjZXMgYSBiaXQgcGVy
-aGFwcz8KCkFkZGluZyBKZXJvbWUsIG1heWJlIGhlIGhhcyBzb21lIHRob3VnaHRzIG9uIHRoaXMu
-Ci1EYW5pZWwKCj4gQXBwcm9hY2gKPiA9PT09PT09Cj4gVG8gZXhwZXJpbWVudCB3aXRoIHRoZSBp
-ZGVhIG9mIGEgRFJNIGNncm91cCwgd2Ugd291bGQgbGlrZSB0byBzdGFydCB3aXRoIGJhc2ljCj4g
-YWNjb3VudGluZyBhbmQgc3RhdGlzdGljcywgdGhlbiBjb250aW51ZSB0byBpdGVyYXRlIGFuZCBh
-ZGQgcmVndWxhdGluZwo+IG1lY2hhbmlzbXMgaW50byB0aGUgZHJpdmVyLgo+Cj4gWzFdIGh0dHBz
-Oi8vd3d3Lmtlcm5lbC5vcmcvZG9jL0RvY3VtZW50YXRpb24vY2dyb3VwLXYxL2Nncm91cHMudHh0
-Cj4gWzJdIGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL2FyY2hpdmVzL2ludGVsLWdmeC8y
-MDE4LUphbnVhcnkvMTUzMTU2Lmh0bWwKPiBbM10gaHR0cHM6Ly93d3cuc3Bpbmljcy5uZXQvbGlz
-dHMvY2dyb3Vwcy9tc2cyMDcyMC5odG1sCj4gWzRdIGh0dHBzOi8vZWxpeGlyLmJvb3RsaW4uY29t
-L2xpbnV4L2xhdGVzdC9zb3VyY2UvZHJpdmVycy9ncHUvZHJtL3NjaGVkdWxlcgo+IFs1XSBodHRw
-czovL2t1YmVybmV0ZXMuaW8vZG9jcy90YXNrcy9tYW5hZ2UtZ3B1cy9zY2hlZHVsaW5nLWdwdXMv
-Cj4gWzZdIGh0dHBzOi8vYmxvZy5vcGVuc2hpZnQuY29tL2dwdS1hY2NlbGVyYXRlZC1zcWwtcXVl
-cmllcy13aXRoLXBvc3RncmVzcWwtcGctc3Ryb20taW4tb3BlbnNoaWZ0LTMtMTAvCj4gWzddIGh0
-dHBzOi8vZ2l0aHViLmNvbS9SYWRlb25PcGVuQ29tcHV0ZS9rOHMtZGV2aWNlLXBsdWdpbgo+IFs4
-XSBodHRwczovL2dpdGh1Yi5jb20va3ViZXJuZXRlcy9rdWJlcm5ldGVzL2lzc3Vlcy81Mjc1Nwo+
-Cj4gS2VubnkgSG8gKDExKToKPiAgIGNncm91cDogSW50cm9kdWNlIGNncm91cCBmb3IgZHJtIHN1
-YnN5c3RlbQo+ICAgY2dyb3VwOiBBZGQgbWVjaGFuaXNtIHRvIHJlZ2lzdGVyIERSTSBkZXZpY2Vz
-Cj4gICBkcm0vYW1kZ3B1OiBSZWdpc3RlciBBTUQgZGV2aWNlcyBmb3IgRFJNIGNncm91cAo+ICAg
-ZHJtLCBjZ3JvdXA6IEFkZCB0b3RhbCBHRU0gYnVmZmVyIGFsbG9jYXRpb24gbGltaXQKPiAgIGRy
-bSwgY2dyb3VwOiBBZGQgcGVhayBHRU0gYnVmZmVyIGFsbG9jYXRpb24gbGltaXQKPiAgIGRybSwg
-Y2dyb3VwOiBBZGQgR0VNIGJ1ZmZlciBhbGxvY2F0aW9uIGNvdW50IHN0YXRzCj4gICBkcm0sIGNn
-cm91cDogQWRkIFRUTSBidWZmZXIgYWxsb2NhdGlvbiBzdGF0cwo+ICAgZHJtLCBjZ3JvdXA6IEFk
-ZCBUVE0gYnVmZmVyIHBlYWsgdXNhZ2Ugc3RhdHMKPiAgIGRybSwgY2dyb3VwOiBBZGQgcGVyIGNn
-cm91cCBidyBtZWFzdXJlIGFuZCBjb250cm9sCj4gICBkcm0sIGNncm91cDogQWRkIHNvZnQgVlJB
-TSBsaW1pdAo+ICAgZHJtLCBjZ3JvdXA6IEFsbG93IG1vcmUgYWdncmVzc2l2ZSBtZW1vcnkgcmVj
-bGFpbQo+Cj4gIGRyaXZlcnMvZ3B1L2RybS9hbWQvYW1kZ3B1L2FtZGdwdV9rbXMuYyAgICB8ICAg
-IDQgKwo+ICBkcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGdwdS9hbWRncHVfb2JqZWN0LmMgfCAgICA0
-ICsKPiAgZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUvYW1kZ3B1X3R0bS5jICAgIHwgICAgMyAr
-LQo+ICBkcml2ZXJzL2dwdS9kcm0vZHJtX2dlbS5jICAgICAgICAgICAgICAgICAgfCAgICA4ICsK
-PiAgZHJpdmVycy9ncHUvZHJtL2RybV9wcmltZS5jICAgICAgICAgICAgICAgIHwgICAgOSArCj4g
-IGRyaXZlcnMvZ3B1L2RybS90dG0vdHRtX2JvLmMgICAgICAgICAgICAgICB8ICAgOTEgKysKPiAg
-ZHJpdmVycy9ncHUvZHJtL3R0bS90dG1fYm9fdXRpbC5jICAgICAgICAgIHwgICAgNCArCj4gIGlu
-Y2x1ZGUvZHJtL2RybV9jZ3JvdXAuaCAgICAgICAgICAgICAgICAgICB8ICAxMTUgKysKPiAgaW5j
-bHVkZS9kcm0vZHJtX2dlbS5oICAgICAgICAgICAgICAgICAgICAgIHwgICAxMSArCj4gIGluY2x1
-ZGUvZHJtL3R0bS90dG1fYm9fYXBpLmggICAgICAgICAgICAgICB8ICAgIDIgKwo+ICBpbmNsdWRl
-L2RybS90dG0vdHRtX2JvX2RyaXZlci5oICAgICAgICAgICAgfCAgIDEwICsKPiAgaW5jbHVkZS9s
-aW51eC9jZ3JvdXBfZHJtLmggICAgICAgICAgICAgICAgIHwgIDExNCArKwo+ICBpbmNsdWRlL2xp
-bnV4L2Nncm91cF9zdWJzeXMuaCAgICAgICAgICAgICAgfCAgICA0ICsKPiAgaW5pdC9LY29uZmln
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAgNSArCj4gIGtlcm5lbC9jZ3JvdXAv
-TWFrZWZpbGUgICAgICAgICAgICAgICAgICAgICB8ICAgIDEgKwo+ICBrZXJuZWwvY2dyb3VwL2Ry
-bS5jICAgICAgICAgICAgICAgICAgICAgICAgfCAxMTcxICsrKysrKysrKysrKysrKysrKysrCj4g
-IDE2IGZpbGVzIGNoYW5nZWQsIDE1NTUgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQo+ICBj
-cmVhdGUgbW9kZSAxMDA2NDQgaW5jbHVkZS9kcm0vZHJtX2Nncm91cC5oCj4gIGNyZWF0ZSBtb2Rl
-IDEwMDY0NCBpbmNsdWRlL2xpbnV4L2Nncm91cF9kcm0uaAo+ICBjcmVhdGUgbW9kZSAxMDA2NDQg
-a2VybmVsL2Nncm91cC9kcm0uYwo+Cj4gLS0KPiAyLjIxLjAKPgo+IF9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4gZHJpLWRldmVsIG1haWxpbmcgbGlzdAo+
-IGRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKPiBodHRwczovL2xpc3RzLmZyZWVkZXNr
-dG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbAoKCgotLSAKRGFuaWVsIFZldHRlcgpT
-b2Z0d2FyZSBFbmdpbmVlciwgSW50ZWwgQ29ycG9yYXRpb24KKzQxICgwKSA3OSAzNjUgNTcgNDgg
-LSBodHRwOi8vYmxvZy5mZndsbC5jaApfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5mcmVl
-ZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5m
-by9kcmktZGV2ZWw=
+Use for_each_ancestor macro to iterate a cgroup's ancestors for clarity.
+
+Signed-off-by: Peng Wang <rocking@whu.edu.cn>
+---
+ include/linux/cgroup.h  | 11 +++++++++++
+ kernel/cgroup/cgroup.c  |  7 +++----
+ kernel/cgroup/freezer.c |  2 +-
+ kernel/cgroup/rstat.c   |  4 ++--
+ 4 files changed, 17 insertions(+), 7 deletions(-)
+
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 0297f930a56e..00b0a16bbc30 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -298,6 +298,17 @@ void css_task_iter_end(struct css_task_iter *it);
+ 			;						\
+ 		else
+ 
++/**
++ * for_each_ancestor - iterate a cgroup's ancestors
++ * @tcgrp: the loop cursor
++ * @cgrp: cgroup whose ancestors to iterate
++ *
++ * Iterate ancestors of @cgrp.
++ */
++#define for_each_ancestor(tcgrp, cgrp)					\
++	for ((tcgrp) = cgroup_parent((cgrp)); (tcgrp);			\
++		(tcgrp) = cgroup_parent((tcgrp)))
++
+ /*
+  * Inline functions.
+  */
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index bf9dbffd46b1..32fa09679209 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -404,7 +404,7 @@ static bool cgroup_is_valid_domain(struct cgroup *cgrp)
+ 		return false;
+ 
+ 	/* but the ancestors can't be unless mixable */
+-	while ((cgrp = cgroup_parent(cgrp))) {
++	for_each_ancestor(cgrp, cgrp) {
+ 		if (!cgroup_is_mixable(cgrp) && cgroup_is_thread_root(cgrp))
+ 			return false;
+ 		if (cgroup_is_threaded(cgrp))
+@@ -4987,8 +4987,7 @@ static void css_release_work_fn(struct work_struct *work)
+ 			cgroup_rstat_flush(cgrp);
+ 
+ 		spin_lock_irq(&css_set_lock);
+-		for (tcgrp = cgroup_parent(cgrp); tcgrp;
+-		     tcgrp = cgroup_parent(tcgrp))
++		for_each_ancestor(tcgrp, cgrp)
+ 			tcgrp->nr_dying_descendants--;
+ 		spin_unlock_irq(&css_set_lock);
+ 
+@@ -5518,7 +5517,7 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
+ 		parent->nr_threaded_children--;
+ 
+ 	spin_lock_irq(&css_set_lock);
+-	for (tcgrp = cgroup_parent(cgrp); tcgrp; tcgrp = cgroup_parent(tcgrp)) {
++	for_each_ancestor(tcgrp, cgrp) {
+ 		tcgrp->nr_descendants--;
+ 		tcgrp->nr_dying_descendants++;
+ 		/*
+diff --git a/kernel/cgroup/freezer.c b/kernel/cgroup/freezer.c
+index 8cf010680678..4dfc2f04a82d 100644
+--- a/kernel/cgroup/freezer.c
++++ b/kernel/cgroup/freezer.c
+@@ -21,7 +21,7 @@ static void cgroup_propagate_frozen(struct cgroup *cgrp, bool frozen)
+ 	 *
+ 	 * Otherwise, all ancestor cgroups are forced into the non-frozen state.
+ 	 */
+-	while ((cgrp = cgroup_parent(cgrp))) {
++	for_each_ancestor(cgrp, cgrp) {
+ 		if (frozen) {
+ 			cgrp->freezer.nr_frozen_descendants += desc;
+ 			if (!test_bit(CGRP_FROZEN, &cgrp->flags) &&
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index ca19b4c8acf5..58d352e0d76a 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -49,8 +49,7 @@ void cgroup_rstat_updated(struct cgroup *cgrp, int cpu)
+ 	raw_spin_lock_irqsave(cpu_lock, flags);
+ 
+ 	/* put @cgrp and all ancestors on the corresponding updated lists */
+-	for (parent = cgroup_parent(cgrp); parent;
+-	     cgrp = parent, parent = cgroup_parent(cgrp)) {
++	for_each_ancestor(parent, cgrp) {
+ 		struct cgroup_rstat_cpu *rstatc = cgroup_rstat_cpu(cgrp, cpu);
+ 		struct cgroup_rstat_cpu *prstatc = cgroup_rstat_cpu(parent, cpu);
+ 
+@@ -63,6 +62,7 @@ void cgroup_rstat_updated(struct cgroup *cgrp, int cpu)
+ 
+ 		rstatc->updated_next = prstatc->updated_children;
+ 		prstatc->updated_children = cgrp;
++		cgrp = parent;
+ 	}
+ 
+ 	raw_spin_unlock_irqrestore(cpu_lock, flags);
+-- 
+2.19.1
+
