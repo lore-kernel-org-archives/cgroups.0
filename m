@@ -1,76 +1,81 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH 2/2] mm, slab: Extend vm/drop_caches to shrink kmem slabs
-Date: Fri, 28 Jun 2019 17:30:46 +0000
-Message-ID: <20190628173040.GA11971@tower.DHCP.thefacebook.com>
-References: <20190624174219.25513-1-longman@redhat.com>
- <20190624174219.25513-3-longman@redhat.com>
- <20190626201900.GC24698@tower.DHCP.thefacebook.com>
- <063752b2-4f1a-d198-36e7-3e642d4fcf19@redhat.com>
- <20190627212419.GA25233@tower.DHCP.thefacebook.com>
- <0100016b9eb7685e-0a5ab625-abb4-4e79-ab86-07744b1e4c3a-000000@email.amazonses.com>
- <CAHbLzkr+EJWgAQ9VhAdeTtMx+11=AX=mVVEvC-0UihROf2J+PA@mail.gmail.com>
+From: Kenny Ho <y2kenny@gmail.com>
+Subject: Re: [RFC PATCH v3 04/11] drm,
+ cgroup: Add total GEM buffer allocation limit
+Date: Fri, 28 Jun 2019 14:43:18 -0400
+Message-ID: <CAOWid-dZQhpKHxYEFn+X+WSep+B66M_LtN6v0=4-uO3ecZ0pcg@mail.gmail.com>
+References: <20190626150522.11618-1-Kenny.Ho@amd.com>
+ <20190626150522.11618-5-Kenny.Ho@amd.com>
+ <20190626160553.GR12905@phenom.ffwll.local>
+ <CAOWid-eurCMx1F7ciUwx0e+p=s=NP8=UxQUhhF-hdK-iAna+fA@mail.gmail.com>
+ <20190626214113.GA12905@phenom.ffwll.local>
+ <CAOWid-egYGijS0a6uuG4mPUmOWaPwF-EKokR=LFNJ=5M+akVZw@mail.gmail.com>
+ <20190627054320.GB12905@phenom.ffwll.local>
+ <CAOWid-cT4TQ7HGzcSWjmLGjAW_D1hRrkNguEiV8N+baNiKQm_A@mail.gmail.com>
+ <20190627212401.GO12905@phenom.ffwll.local>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <20190627212401.GO12905@phenom.ffwll.local>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=VgE/836/q1ZgHFTz46BuTxhY1pWpQQygQXnKQTtXWWg=;
- b=RG3h+qO2eUkVxxSHAw1yZ6M0fUOP0KjgMeAjUlRXexZDZWhyluqnvVzPEhWsIwWNPXqG
- dg4mNOO7A3fUPL/Y6peIx8gp8Sx5drQdBAFlA1Ycs9Ex46yB47K1vGFDURUCjVpJHKF4
- ITfAstaTyrYZWotQcUkEEokEsMSZvDvRY2A= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VgE/836/q1ZgHFTz46BuTxhY1pWpQQygQXnKQTtXWWg=;
- b=fnCP2Z3ei5ogfSNC2Z7AO3ZfRV6TRW3tg09Sr8nVG+XpuZuPDzbRa/h1puTh8gKAKyO+FAw3z5+B7sGcVAeCdH7i/cJxcpfwbyoQd0pGxbXhwSbiK5Mltb70urDIMfiwETSB4YCBdvpA2FAIKMdTy1w2lGm4UIe3V6kdhxSmr0k=
-In-Reply-To: <CAHbLzkr+EJWgAQ9VhAdeTtMx+11=AX=mVVEvC-0UihROf2J+PA@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <96E427C466A25B4EB9262E3679EF031A@namprd15.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-To: Yang Shi <shy828301@gmail.com>
-Cc: Christopher Lameter <cl@linux.com>, Waiman Long <longman@redhat.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Luis Chamberlain <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.>
+To: Daniel Vetter <daniel@ffwll.ch>
+Cc: Kenny Ho <Kenny.Ho@amd.com>, jsparks@cray.com, amd-gfx list <amd-gfx@lists.freedesktop.org>, lkaplan@cray.com, Alex Deucher <alexander.deucher@amd.com>, dri-devel <dri-devel@lists.freedesktop.org>, joseph.greathouse@amd.com, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
 
-On Fri, Jun 28, 2019 at 10:16:13AM -0700, Yang Shi wrote:
-> On Fri, Jun 28, 2019 at 8:32 AM Christopher Lameter <cl@linux.com> wrote:
-> >
-> > On Thu, 27 Jun 2019, Roman Gushchin wrote:
-> >
-> > > so that objects belonging to different memory cgroups can share the s=
-ame page
-> > > and kmem_caches.
-> > >
-> > > It's a fairly big change though.
-> >
-> > Could this be done at another level? Put a cgoup pointer into the
-> > corresponding structures and then go back to just a single kmen_cache f=
-or
-> > the system as a whole? You can still account them per cgroup and there
-> > will be no cleanup problem anymore. You could scan through a slab cache
-> > to remove the objects of a certain cgroup and then the fragmentation
-> > problem that cgroups create here will be handled by the slab allocators=
- in
-> > the traditional way. The duplication of the kmem_cache was not designed
-> > into the allocators but bolted on later.
->=20
-> I'm afraid this may bring in another problem for memcg page reclaim.
-> When shrinking the slabs, the shrinker may end up scanning a very long
-> list to find out the slabs for a specific memcg. Particularly for the
-> count operation, it may have to scan the list from the beginning all
-> the way down to the end. It may take unbounded time.
->=20
-> When I worked on THP deferred split shrinker problem, I used to do
-> like this, but it turns out it may take milliseconds to count the
-> objects on the list, but it may just need reclaim a few of them.
-
-I don't think the shrinker mechanism should be altered. Shrinker lists
-already contain individual objects, and I don't see any reasons, why
-these objects can't reside on a shared set of pages.
-
-What we're discussing is that it's way too costly (under some conditions)
-to have many sets of kmem_caches, if each of them is containing only
-few objects.
-
-Thanks!
+T24gVGh1LCBKdW4gMjcsIDIwMTkgYXQgNToyNCBQTSBEYW5pZWwgVmV0dGVyIDxkYW5pZWxAZmZ3
+bGwuY2g+IHdyb3RlOgo+IE9uIFRodSwgSnVuIDI3LCAyMDE5IGF0IDAyOjQyOjQzUE0gLTA0MDAs
+IEtlbm55IEhvIHdyb3RlOgo+ID4gVW0uLi4gSSBhbSBnb2luZyB0byBnZXQgYSBiaXQgcGhpbG9z
+b3BoaWNhbCBoZXJlIGFuZCBzdWdnZXN0IHRoYXQgdGhlCj4gPiBpZGVhIG9mIHNoYXJpbmcgKGVz
+cGVjaWFsbHkgdW5jb250cm9sbGVkIHNoYXJpbmcpIGlzIGluaGVyZW50bHkgYXQgb2RkCj4gPiB3
+aXRoIGNvbnRhaW5tZW50LiAgSXQncyBsaWtlLCBpZiBldmVyeWJvZHkgaXMgc3BlY2lhbCwgbm8g
+b25lIGlzCj4gPiBzcGVjaWFsLiAgUGVyaGFwcyBhbiBhbHRlcm5hdGl2ZSBpcyB0byBtYWtlIHRo
+aXMgY29uZmlndXJhYmxlIHNvIHRoYXQKPiA+IHBlb3BsZSBjYW4gYWxsb3cgc2hhcmluZyBrbm93
+aW5nIHRoZSBjYXZlYXQ/ICBBbmQganVzdCB0byBiZSBjbGVhciwKPiA+IHRoZSBjdXJyZW50IHNv
+bHV0aW9uIGFsbG93cyBmb3Igc2hhcmluZywgZXZlbiBiZXR3ZWVuIGNncm91cC4KPgo+IFRoZSB0
+aGluZyBpcywgd2h5IHNob3VsZG4ndCB3ZSBqdXN0IGFsbG93IGl0ICh3aXRoIHNvbWUgZG9jdW1l
+bnRlZAo+IGNhdmVhdCk/Cj4KPiBJIG1lYW4gaWYgYWxsIHBlb3BsZSBkbyBpcyBzaGFyZSBpdCBh
+cyB5b3VyIGN1cnJlbnQgcGF0Y2hlcyBhbGxvdywgdGhlbgo+IHRoZXJlJ3Mgbm90aGluZyBmdW5u
+eSBnb2luZyBvbiAoYXQgbGVhc3QgaWYgd2UgZ28gd2l0aCBqdXN0IGxlYWtpbmcgdGhlCj4gYWxs
+b2NhdGlvbnMpLiBJZiB3ZSBhbGxvdyBhZGRpdGlvbmFsIHNoYXJpbmcsIHRoZW4gdGhhdCdzIGEg
+cGx1cy4KVW0uLi4gcGVyaGFwcyBJIHdhcyBiZWluZyBvdmVybHkgY29uc2VydmF0aXZlIDopLiAg
+U28gbGV0IG1lCmlsbHVzdHJhdGUgd2l0aCBhbiBleGFtcGxlIHRvIGFkZCBtb3JlIGNsYXJpdHkg
+YW5kIGdldCBtb3JlIGNvbW1lbnRzCm9uIGl0LgoKTGV0IHNheSB3ZSBoYXZlIHRoZSBmb2xsb3dp
+bmcgY2dyb3VwIGhpZXJhcmNoeSAoVGhlIGxldHRlcnMgYXJlCmNncm91cHMgd2l0aCBSIGJlaW5n
+IHRoZSByb290IGNncm91cC4gIFRoZSBudW1iZXJzIGluIGJyYWNrZXRzIGFyZQpwcm9jZXNzZXMu
+ICBUaGUgcHJvY2Vzc2VzIGFyZSBwbGFjZWQgd2l0aCB0aGUgJ05vIEludGVybmFsIFByb2Nlc3MK
+Q29uc3RyYWludCcgaW4gbWluZC4pClIgKDQsIDUpIC0tLS0tLSBBICg2KQogIFwKICAgIEIgLS0t
+LSBDICg3LDgpCiAgICAgXAogICAgICAgRCAoOSkKCkhlcmUgaXMgYSBsaXN0IG9mIG9wZXJhdGlv
+biBhbmQgdGhlIGFzc29jaWF0ZWQgZWZmZWN0IG9uIHRoZSBzaXplCnRyYWNrIGJ5IHRoZSBjZ3Jv
+dXBzIChmb3Igc2ltcGxpY2l0eSwgZWFjaCBidWZmZXIgaXMgMSB1bml0IGluIHNpemUuKQpXaXRo
+IGN1cnJlbnQgaW1wbGVtZW50YXRpb24gKGNoYXJnZSBvbiBidWZmZXIgY3JlYXRpb24gd2l0aApy
+ZXN0cmljdGlvbiBvbiBzaGFyaW5nLikKUiAgIEEgICBCICAgQyAgIEQgICB8T3BzCj09PT09PT09
+PT09PT09PT0KMSAgIDAgICAwICAgMCAgIDAgICB8NCBhbGxvY2F0ZWQgYSBidWZmZXIKMSAgIDAg
+ICAwICAgMCAgIDAgICB8NCBzaGFyZWQgYSBidWZmZXIgd2l0aCA1CjEgICAwICAgMCAgIDAgICAw
+ICAgfDQgc2hhcmVkIGEgYnVmZmVyIHdpdGggOQoyICAgMCAgIDEgICAwICAgMSAgIHw5IGFsbG9j
+YXRlZCBhIGJ1ZmZlcgozICAgMCAgIDIgICAxICAgMSAgIHw3IGFsbG9jYXRlZCBhIGJ1ZmZlcgoz
+ICAgMCAgIDIgICAxICAgMSAgIHw3IHNoYXJlZCBhIGJ1ZmZlciB3aXRoIDgKMyAgIDAgICAyICAg
+MSAgIDEgICB8NyBzaGFyaW5nIHdpdGggOSAobm90IGFsbG93ZWQpCjMgICAwICAgMiAgIDEgICAx
+ICAgfDcgc2hhcmluZyB3aXRoIDQgKG5vdCBhbGxvd2VkKQozICAgMCAgIDIgICAxICAgMSAgIHw3
+IHJlbGVhc2UgYSBidWZmZXIKMiAgIDAgICAxICAgMCAgIDEgICB8OCByZWxlYXNlIGEgYnVmZmVy
+IGZyb20gNwoKVGhlIHN1Z2dlc3Rpb24gYXMgSSB1bmRlcnN0YW5kIGl0IChjaGFyZ2UgcGVyIGJ1
+ZmZlciByZWZlcmVuY2Ugd2l0aAp1bnJlc3RyaWN0ZWQgc2hhcmluZy4pClIgICBBICAgQiAgIEMg
+ICBEICAgfE9wcwo9PT09PT09PT09PT09PT09CjEgICAwICAgMCAgIDAgICAwICAgfDQgYWxsb2Nh
+dGVkIGEgYnVmZmVyCjIgICAwICAgMCAgIDAgICAwICAgfDQgc2hhcmVkIGEgYnVmZmVyIHdpdGgg
+NQozICAgMCAgIDAgICAwICAgMSAgIHw0IHNoYXJlZCBhIGJ1ZmZlciB3aXRoIDkKNCAgIDAgICAx
+ICAgMCAgIDIgICB8OSBhbGxvY2F0ZWQgYSBidWZmZXIKNSAgIDAgICAyICAgMSAgIDEgICB8NyBh
+bGxvY2F0ZWQgYSBidWZmZXIKNiAgIDAgICAzICAgMiAgIDEgICB8NyBzaGFyZWQgYSBidWZmZXIg
+d2l0aCA4CjcgICAwICAgNCAgIDIgICAyICAgfDcgc2hhcmluZyB3aXRoIDkKOCAgIDAgICA0ICAg
+MiAgIDIgICB8NyBzaGFyaW5nIHdpdGggNAo3ICAgMCAgIDMgICAxICAgMiAgIHw3IHJlbGVhc2Ug
+YSBidWZmZXIKNiAgIDAgICAyICAgMCAgIDIgICB8OCByZWxlYXNlIGEgYnVmZmVyIGZyb20gNwoK
+SXMgdGhpcyBhIGNvcnJlY3QgdW5kZXJzdGFuZGluZyBvZiB0aGUgc3VnZ2VzdGlvbj8KClJlZ2Fy
+ZHMsCktlbm55Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+CmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpo
+dHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
