@@ -1,77 +1,103 @@
 From: Juri Lelli <juri.lelli@redhat.com>
-Subject: [PATCH v8 0/8] sched/deadline: fix cpusets bandwidth accounting
-Date: Fri, 28 Jun 2019 10:06:10 +0200
-Message-ID: <20190628080618.522-1-juri.lelli@redhat.com>
+Subject: [PATCH v8 1/8] sched/topology: Adding function partition_sched_domains_locked()
+Date: Fri, 28 Jun 2019 10:06:11 +0200
+Message-ID: <20190628080618.522-2-juri.lelli@redhat.com>
+References: <20190628080618.522-1-juri.lelli@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190628080618.522-1-juri.lelli@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org
-Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>
+Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org
 
-Hi,
+From: Mathieu Poirier <mathieu.poirier@linaro.org>
 
-v8 of a series of patches, originally authored by Mathieu, with the intent
-of fixing a long standing issue of SCHED_DEADLINE bandwidth accounting.
-As originally reported by Steve [1], when hotplug and/or (certain)
-cpuset reconfiguration operations take place, DEADLINE bandwidth
-accounting information is lost since root domains are destroyed and
-recreated.
+Introducing function partition_sched_domains_locked() by taking
+the mutex locking code out of the original function.  That way
+the work done by partition_sched_domains_locked() can be reused
+without dropping the mutex lock.
 
-Mathieu's approach is based on restoring bandwidth accounting info on
-the newly created root domains by iterating through the (DEADLINE) tasks
-belonging to the configured cpuset(s).
+No change of functionality is introduced by this patch.
 
-Apart from the usual rebase on top of cgroup/for-next, this version
-brings in an important difference w.r.t. v7: cpuset_mutex conversion to
-percpu_rwsem (as suggested by Peter) to deal with a performance
-regression caused by the fact that grabbing the (v7) callback_lock raw
-spinlock from sched_setscheduler() was in fact a bottleneck. The
-conversion required some lock order changes and an rcu related mod.
+Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
+Acked-by: Tejun Heo <tj@kernel.org>
+---
+ include/linux/sched/topology.h | 10 ++++++++++
+ kernel/sched/topology.c        | 17 +++++++++++++----
+ 2 files changed, 23 insertions(+), 4 deletions(-)
 
-So, this is (unfortunately) more than a small update. Hope it still
-makes sense, though.
-
-Set also available at
-
- https://github.com/jlelli/linux.git fixes/deadline/root-domain-accounting-v8
-
-Thanks,
-
-- Juri
-
-[1] https://lkml.org/lkml/2016/2/3/966
-
-Juri Lelli (6):
-  cpuset: Rebuild root domain deadline accounting information
-  sched/deadline: Fix bandwidth accounting at all levels after offline
-    migration
-  cgroup/cpuset: convert cpuset_mutex to percpu_rwsem
-  cgroup/cpuset: Change cpuset_rwsem and hotplug lock order
-  sched/core: Prevent race condition between cpuset and
-    __sched_setscheduler()
-  rcu/tree: Setschedule gp ktread to SCHED_FIFO outside of atomic region
-
-Mathieu Poirier (2):
-  sched/topology: Adding function partition_sched_domains_locked()
-  sched/core: Streamlining calls to task_rq_unlock()
-
- include/linux/cgroup.h         |   1 +
- include/linux/cpuset.h         |  13 ++-
- include/linux/sched.h          |   5 +
- include/linux/sched/deadline.h |   8 ++
- include/linux/sched/topology.h |  10 ++
- kernel/cgroup/cgroup.c         |   2 +-
- kernel/cgroup/cpuset.c         | 163 +++++++++++++++++++++++++--------
- kernel/rcu/tree.c              |   6 +-
- kernel/sched/core.c            |  57 ++++++++----
- kernel/sched/deadline.c        |  63 +++++++++++++
- kernel/sched/sched.h           |   3 -
- kernel/sched/topology.c        |  30 +++++-
- 12 files changed, 290 insertions(+), 71 deletions(-)
-
+diff --git a/include/linux/sched/topology.h b/include/linux/sched/topology.h
+index cfc0a89a7159..d7166f8c0215 100644
+--- a/include/linux/sched/topology.h
++++ b/include/linux/sched/topology.h
+@@ -161,6 +161,10 @@ static inline struct cpumask *sched_domain_span(struct sched_domain *sd)
+ 	return to_cpumask(sd->span);
+ }
+ 
++extern void partition_sched_domains_locked(int ndoms_new,
++					   cpumask_var_t doms_new[],
++					   struct sched_domain_attr *dattr_new);
++
+ extern void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+ 				    struct sched_domain_attr *dattr_new);
+ 
+@@ -213,6 +217,12 @@ unsigned long arch_scale_cpu_capacity(struct sched_domain *sd, int cpu)
+ 
+ struct sched_domain_attr;
+ 
++static inline void
++partition_sched_domains_locked(int ndoms_new, cpumask_var_t doms_new[],
++			       struct sched_domain_attr *dattr_new)
++{
++}
++
+ static inline void
+ partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+ 			struct sched_domain_attr *dattr_new)
+diff --git a/kernel/sched/topology.c b/kernel/sched/topology.c
+index f53f89df837d..362c383ec4bd 100644
+--- a/kernel/sched/topology.c
++++ b/kernel/sched/topology.c
+@@ -2159,16 +2159,16 @@ static int dattrs_equal(struct sched_domain_attr *cur, int idx_cur,
+  * ndoms_new == 0 is a special case for destroying existing domains,
+  * and it will not create the default domain.
+  *
+- * Call with hotplug lock held
++ * Call with hotplug lock and sched_domains_mutex held
+  */
+-void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+-			     struct sched_domain_attr *dattr_new)
++void partition_sched_domains_locked(int ndoms_new, cpumask_var_t doms_new[],
++				    struct sched_domain_attr *dattr_new)
+ {
+ 	bool __maybe_unused has_eas = false;
+ 	int i, j, n;
+ 	int new_topology;
+ 
+-	mutex_lock(&sched_domains_mutex);
++	lockdep_assert_held(&sched_domains_mutex);
+ 
+ 	/* Always unregister in case we don't destroy any domains: */
+ 	unregister_sched_domain_sysctl();
+@@ -2251,6 +2251,15 @@ void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+ 	ndoms_cur = ndoms_new;
+ 
+ 	register_sched_domain_sysctl();
++}
+ 
++/*
++ * Call with hotplug lock held
++ */
++void partition_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
++			     struct sched_domain_attr *dattr_new)
++{
++	mutex_lock(&sched_domains_mutex);
++	partition_sched_domains_locked(ndoms_new, doms_new, dattr_new);
+ 	mutex_unlock(&sched_domains_mutex);
+ }
 -- 
 2.17.2
 
