@@ -1,52 +1,46 @@
-From: Kenny Ho <y2kenny@gmail.com>
-Subject: Re: [RFC PATCH v3 00/11] new cgroup controller for gpu/drm subsystem
-Date: Sun, 30 Jun 2019 01:10:28 -0400
-Message-ID: <CAOWid-e-gxFBoiBii4wZs0HMnHwCvJWOQWpNopdPHi8So53gNw@mail.gmail.com>
-References: <20190626150522.11618-1-Kenny.Ho@amd.com>
- <CAKMK7uFq7qCpzXqrD4o8Vw_dOwt=ny_oS7TRZFsANpPdC604vw@mail.gmail.com>
+From: Juri Lelli <juri.lelli@redhat.com>
+Subject: Re: [PATCH v8 6/8] cgroup/cpuset: Change cpuset_rwsem and hotplug
+ lock order
+Date: Mon, 1 Jul 2019 08:52:33 +0200
+Message-ID: <20190701065233.GA26005@localhost.localdomain>
+References: <20190628080618.522-1-juri.lelli@redhat.com>
+ <20190628080618.522-7-juri.lelli@redhat.com>
+ <20190628130308.GU3419@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <CAKMK7uFq7qCpzXqrD4o8Vw_dOwt=ny_oS7TRZFsANpPdC604vw@mail.gmail.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190628130308.GU3419@hirez.programming.kicks-ass.net>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Daniel Vetter <daniel@ffwll.ch>
-Cc: Kenny Ho <Kenny.Ho@amd.com>, jsparks@cray.com, amd-gfx list <amd-gfx@lists.freedesktop.org>, lkaplan@cray.com, Alex Deucher <alexander.deucher@amd.com>, Jerome Glisse <jglisse@redhat.com>, dri-devel <dri-devel@lists.freedesktop.org>, joseph.greathouse@amd.com, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+Content-Transfer-Encoding: 7bit
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org, Prateek Sood <prsood@codeaurora.org>
 
-T24gVGh1LCBKdW4gMjcsIDIwMTkgYXQgMzoyNCBBTSBEYW5pZWwgVmV0dGVyIDxkYW5pZWxAZmZ3
-bGwuY2g+IHdyb3RlOgo+IEFub3RoZXIgcXVlc3Rpb24gSSBoYXZlOiBXaGF0IGFib3V0IEhNTT8g
-V2l0aCB0aGUgZGV2aWNlIG1lbW9yeSB6b25lCj4gdGhlIGNvcmUgbW0gd2lsbCBiZSBhIGxvdCBt
-b3JlIGludm9sdmVkIGluIG1hbmFnaW5nIHRoYXQsIGJ1dCBJIGFsc28KPiBleHBlY3QgdGhhdCB3
-ZSdsbCBoYXZlIGNsYXNzaWMgYnVmZmVyLWJhc2VkIG1hbmFnZW1lbnQgZm9yIGEgbG9uZyB0aW1l
-Cj4gc3RpbGwuIFNvIHRoZXNlIG5lZWQgdG8gd29yayB0b2dldGhlciwgYW5kIEkgZmVhciBzbGln
-aHRseSB0aGF0IHdlJ2xsCj4gaGF2ZSBtZW1jZyBhbmQgZHJtY2cgZmlnaHRpbmcgb3ZlciB0aGUg
-c2FtZSBwaWVjZXMgYSBiaXQgcGVyaGFwcz8KPgo+IEFkZGluZyBKZXJvbWUsIG1heWJlIGhlIGhh
-cyBzb21lIHRob3VnaHRzIG9uIHRoaXMuCgpJIGp1c3QgZGlkIGEgYml0IG9mIGRpZ2dpbmcgYW5k
-IHRoaXMgbG9va3MgbGlrZSB0aGUgY3VycmVudCBiZWhhdmlvdXI6Cmh0dHBzOi8vd3d3Lmtlcm5l
-bC5vcmcvZG9jL2h0bWwvdjUuMS92bS9obW0uaHRtbCNtZW1vcnktY2dyb3VwLW1lbWNnLWFuZC1y
-c3MtYWNjb3VudGluZwoKIkZvciBub3cgZGV2aWNlIG1lbW9yeSBpcyBhY2NvdW50ZWQgYXMgYW55
-IHJlZ3VsYXIgcGFnZSBpbiByc3MKY291bnRlcnMgKGVpdGhlciBhbm9ueW1vdXMgaWYgZGV2aWNl
-IHBhZ2UgaXMgdXNlZCBmb3IgYW5vbnltb3VzLCBmaWxlCmlmIGRldmljZSBwYWdlIGlzIHVzZWQg
-Zm9yIGZpbGUgYmFja2VkIHBhZ2Ugb3Igc2htZW0gaWYgZGV2aWNlIHBhZ2UgaXMKdXNlZCBmb3Ig
-c2hhcmVkIG1lbW9yeSkuIFRoaXMgaXMgYSBkZWxpYmVyYXRlIGNob2ljZSB0byBrZWVwIGV4aXN0
-aW5nCmFwcGxpY2F0aW9ucywgdGhhdCBtaWdodCBzdGFydCB1c2luZyBkZXZpY2UgbWVtb3J5IHdp
-dGhvdXQga25vd2luZwphYm91dCBpdCwgcnVubmluZyB1bmltcGFjdGVkLgoKQSBkcmF3YmFjayBp
-cyB0aGF0IHRoZSBPT00ga2lsbGVyIG1pZ2h0IGtpbGwgYW4gYXBwbGljYXRpb24gdXNpbmcgYQps
-b3Qgb2YgZGV2aWNlIG1lbW9yeSBhbmQgbm90IGEgbG90IG9mIHJlZ3VsYXIgc3lzdGVtIG1lbW9y
-eSBhbmQgdGh1cwpub3QgZnJlZWluZyBtdWNoIHN5c3RlbSBtZW1vcnkuIFdlIHdhbnQgdG8gZ2F0
-aGVyIG1vcmUgcmVhbCB3b3JsZApleHBlcmllbmNlIG9uIGhvdyBhcHBsaWNhdGlvbnMgYW5kIHN5
-c3RlbSByZWFjdCB1bmRlciBtZW1vcnkgcHJlc3N1cmUKaW4gdGhlIHByZXNlbmNlIG9mIGRldmlj
-ZSBtZW1vcnkgYmVmb3JlIGRlY2lkaW5nIHRvIGFjY291bnQgZGV2aWNlCm1lbW9yeSBkaWZmZXJl
-bnRseS4iCgpSZWdhcmRzLApLZW5ueQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5mcmVl
-ZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5m
-by9kcmktZGV2ZWw=
+Hi,
+
+On 28/06/19 15:03, Peter Zijlstra wrote:
+> On Fri, Jun 28, 2019 at 10:06:16AM +0200, Juri Lelli wrote:
+> > cpuset_rwsem is going to be acquired from sched_setscheduler() with a
+> > following patch. There are however paths (e.g., spawn_ksoftirqd) in
+> > which sched_scheduler() is eventually called while holding hotplug lock;
+> > this creates a dependecy between hotplug lock (to be always acquired
+> > first) and cpuset_rwsem (to be always acquired after hotplug lock).
+> > 
+> > Fix paths which currently take the two locks in the wrong order (after
+> > a following patch is applied).
+> > Signed-off-by: Juri Lelli <juri.lelli@redhat.com>
+> 
+> This all reminds me of this:
+> 
+>   https://lkml.kernel.org/r/1510755615-25906-1-git-send-email-prsood@codeaurora.org
+> 
+> Which sadly got reverted again. If we do this now (I've always been a
+> proponent), then we can make that rebuild synchronous again, which
+> should also help here IIRC.
+
+Why was that reverted? Perf regression of some type?
+
+Thanks,
+
+Juri
