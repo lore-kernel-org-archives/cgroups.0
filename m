@@ -1,61 +1,53 @@
-From: Daniel Vetter <daniel@ffwll.ch>
-Subject: Re: [RFC PATCH v3 00/11] new cgroup controller for gpu/drm subsystem
-Date: Tue, 2 Jul 2019 15:21:44 +0200
-Message-ID: <20190702132144.GC15868@phenom.ffwll.local>
-References: <20190626150522.11618-1-Kenny.Ho@amd.com>
- <CAKMK7uFq7qCpzXqrD4o8Vw_dOwt=ny_oS7TRZFsANpPdC604vw@mail.gmail.com>
- <CAOWid-e-gxFBoiBii4wZs0HMnHwCvJWOQWpNopdPHi8So53gNw@mail.gmail.com>
+From: Markus Elfring <Markus.Elfring@web.de>
+Subject: [PATCH] cgroup: Replace a seq_printf() call by seq_puts() in
+ cgroup_print_ss_mask()
+Date: Tue, 2 Jul 2019 19:33:08 +0200
+Message-ID: <d465ca81-a870-b88c-0ea2-5e8bfbefb79d@web.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-Content-Disposition: inline
-In-Reply-To: <CAOWid-e-gxFBoiBii4wZs0HMnHwCvJWOQWpNopdPHi8So53gNw@mail.gmail.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Kenny Ho <y2kenny@gmail.com>
-Cc: joseph.greathouse@amd.com, Kenny Ho <Kenny.Ho@amd.com>, jsparks@cray.com, amd-gfx list <amd-gfx@lists.freedesktop.org>, lkaplan@cray.com, Alex Deucher <alexander.deucher@amd.com>, Jerome Glisse <jglisse@redhat.com>, dri-devel <dri-devel@lists.freedesktop.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
+        s=dbaedf251592; t=1562088791;
+        bh=lVjT2ewFqk1ytdCtHu/OnHNzgzrQYPG56Na/OyfRN9o=;
+        h=X-UI-Sender-Class:To:Cc:From:Subject:Date;
+        b=q+uICQZuVbm+qQliAF3uODVywi7KkRRU9KBxXxXUSQxMyPwTPBiW3F4AHU31/mnM4
+         CLQkYfJ/6baG0NINIA4FVk0dCmP5o16egB79auUF/Fzz0H+ns2hKCc+lTbOJdKPLg6
+         jQ5mvA7sQsoYJWboDwcmfVBh9QLOrrlXQ60w1fqY=
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 
-T24gU3VuLCBKdW4gMzAsIDIwMTkgYXQgMDE6MTA6MjhBTSAtMDQwMCwgS2VubnkgSG8gd3JvdGU6
-Cj4gT24gVGh1LCBKdW4gMjcsIDIwMTkgYXQgMzoyNCBBTSBEYW5pZWwgVmV0dGVyIDxkYW5pZWxA
-ZmZ3bGwuY2g+IHdyb3RlOgo+ID4gQW5vdGhlciBxdWVzdGlvbiBJIGhhdmU6IFdoYXQgYWJvdXQg
-SE1NPyBXaXRoIHRoZSBkZXZpY2UgbWVtb3J5IHpvbmUKPiA+IHRoZSBjb3JlIG1tIHdpbGwgYmUg
-YSBsb3QgbW9yZSBpbnZvbHZlZCBpbiBtYW5hZ2luZyB0aGF0LCBidXQgSSBhbHNvCj4gPiBleHBl
-Y3QgdGhhdCB3ZSdsbCBoYXZlIGNsYXNzaWMgYnVmZmVyLWJhc2VkIG1hbmFnZW1lbnQgZm9yIGEg
-bG9uZyB0aW1lCj4gPiBzdGlsbC4gU28gdGhlc2UgbmVlZCB0byB3b3JrIHRvZ2V0aGVyLCBhbmQg
-SSBmZWFyIHNsaWdodGx5IHRoYXQgd2UnbGwKPiA+IGhhdmUgbWVtY2cgYW5kIGRybWNnIGZpZ2h0
-aW5nIG92ZXIgdGhlIHNhbWUgcGllY2VzIGEgYml0IHBlcmhhcHM/Cj4gPgo+ID4gQWRkaW5nIEpl
-cm9tZSwgbWF5YmUgaGUgaGFzIHNvbWUgdGhvdWdodHMgb24gdGhpcy4KPiAKPiBJIGp1c3QgZGlk
-IGEgYml0IG9mIGRpZ2dpbmcgYW5kIHRoaXMgbG9va3MgbGlrZSB0aGUgY3VycmVudCBiZWhhdmlv
-dXI6Cj4gaHR0cHM6Ly93d3cua2VybmVsLm9yZy9kb2MvaHRtbC92NS4xL3ZtL2htbS5odG1sI21l
-bW9yeS1jZ3JvdXAtbWVtY2ctYW5kLXJzcy1hY2NvdW50aW5nCj4gCj4gIkZvciBub3cgZGV2aWNl
-IG1lbW9yeSBpcyBhY2NvdW50ZWQgYXMgYW55IHJlZ3VsYXIgcGFnZSBpbiByc3MKPiBjb3VudGVy
-cyAoZWl0aGVyIGFub255bW91cyBpZiBkZXZpY2UgcGFnZSBpcyB1c2VkIGZvciBhbm9ueW1vdXMs
-IGZpbGUKPiBpZiBkZXZpY2UgcGFnZSBpcyB1c2VkIGZvciBmaWxlIGJhY2tlZCBwYWdlIG9yIHNo
-bWVtIGlmIGRldmljZSBwYWdlIGlzCj4gdXNlZCBmb3Igc2hhcmVkIG1lbW9yeSkuIFRoaXMgaXMg
-YSBkZWxpYmVyYXRlIGNob2ljZSB0byBrZWVwIGV4aXN0aW5nCj4gYXBwbGljYXRpb25zLCB0aGF0
-IG1pZ2h0IHN0YXJ0IHVzaW5nIGRldmljZSBtZW1vcnkgd2l0aG91dCBrbm93aW5nCj4gYWJvdXQg
-aXQsIHJ1bm5pbmcgdW5pbXBhY3RlZC4KPiAKPiBBIGRyYXdiYWNrIGlzIHRoYXQgdGhlIE9PTSBr
-aWxsZXIgbWlnaHQga2lsbCBhbiBhcHBsaWNhdGlvbiB1c2luZyBhCj4gbG90IG9mIGRldmljZSBt
-ZW1vcnkgYW5kIG5vdCBhIGxvdCBvZiByZWd1bGFyIHN5c3RlbSBtZW1vcnkgYW5kIHRodXMKPiBu
-b3QgZnJlZWluZyBtdWNoIHN5c3RlbSBtZW1vcnkuIFdlIHdhbnQgdG8gZ2F0aGVyIG1vcmUgcmVh
-bCB3b3JsZAo+IGV4cGVyaWVuY2Ugb24gaG93IGFwcGxpY2F0aW9ucyBhbmQgc3lzdGVtIHJlYWN0
-IHVuZGVyIG1lbW9yeSBwcmVzc3VyZQo+IGluIHRoZSBwcmVzZW5jZSBvZiBkZXZpY2UgbWVtb3J5
-IGJlZm9yZSBkZWNpZGluZyB0byBhY2NvdW50IGRldmljZQo+IG1lbW9yeSBkaWZmZXJlbnRseS4i
-CgpIbSAuLi4gSSBhbHNvIGp1c3QgbGVhcm5lZCB0aGF0IHRoZSBkZXZpY2UgbWVtb3J5IHN0dWZm
-LCBhdCBsZWFzdCB0aGUgaG1tCnBhcnQsIGlzIHByb2JhYmx5IGdldHRpbmcgcmVtb3ZlZCBhZ2Fp
-biwgYW5kIG9ubHkgdGhlIGhtbV9taXJyb3IgcGFydCBvZgpobW0gd2lsbCBiZSBrZXB0LiBTbyBt
-YXliZSB0aGlzIGRvZXNuJ3QgbWF0dGVyIHRvIHVzLiBCdXQgcmVhbGx5IG5vIGlkZWEuCi1EYW5p
-ZWwKLS0gCkRhbmllbCBWZXR0ZXIKU29mdHdhcmUgRW5naW5lZXIsIEludGVsIENvcnBvcmF0aW9u
-Cmh0dHA6Ly9ibG9nLmZmd2xsLmNoCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVk
-ZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZv
-L2RyaS1kZXZlbA==
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Tue, 2 Jul 2019 19:26:59 +0200
+
+A string which did not contain a data format specification should be put
+into a sequence. Thus use the corresponding function =E2=80=9Cseq_puts=E2=
+=80=9D.
+
+This issue was detected by using the Coccinelle software.
+
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+=2D--
+ kernel/cgroup/cgroup.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 300b0c416341..9d04e3004e3b 100644
+=2D-- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -2851,7 +2851,7 @@ static void cgroup_print_ss_mask(struct seq_file *se=
+q, u16 ss_mask)
+ 	do_each_subsys_mask(ss, ssid, ss_mask) {
+ 		if (printed)
+ 			seq_putc(seq, ' ');
+-		seq_printf(seq, "%s", ss->name);
++		seq_puts(seq, ss->name);
+ 		printed =3D true;
+ 	} while_each_subsys_mask();
+ 	if (printed)
+=2D-
+2.22.0
+
