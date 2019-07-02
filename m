@@ -1,53 +1,153 @@
-From: Markus Elfring <Markus.Elfring@web.de>
-Subject: [PATCH] cgroup: Replace a seq_printf() call by seq_puts() in
- cgroup_print_ss_mask()
-Date: Tue, 2 Jul 2019 19:33:08 +0200
-Message-ID: <bded6e4b-7fa6-b361-cf79-260a6ce679bb@web.de>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH] mm, slab: Extend slab/shrink to shrink all the memcg caches
+Date: Tue,  2 Jul 2019 14:37:30 -0400
+Message-ID: <20190702183730.14461-1-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1562088791;
-        bh=lVjT2ewFqk1ytdCtHu/OnHNzgzrQYPG56Na/OyfRN9o=;
-        h=X-UI-Sender-Class:To:Cc:From:Subject:Date;
-        b=q+uICQZuVbm+qQliAF3uODVywi7KkRRU9KBxXxXUSQxMyPwTPBiW3F4AHU31/mnM4
-         CLQkYfJ/6baG0NINIA4FVk0dCmP5o16egB79auUF/Fzz0H+ns2hKCc+lTbOJdKPLg6
-         jQ5mvA7sQsoYJWboDwcmfVBh9QLOrrlXQ60w1fqY=
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Luis Chamberlain <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Waiman Long <longman@redhat.com>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Tue, 2 Jul 2019 19:26:59 +0200
+Currently, a value of '1" is written to /sys/kernel/slab/<slab>/shrink
+file to shrink the slab by flushing all the per-cpu slabs and free
+slabs in partial lists. This applies only to the root caches, though.
 
-A string which did not contain a data format specification should be put
-into a sequence. Thus use the corresponding function =E2=80=9Cseq_puts=E2=
-=80=9D.
+Extends this capability by shrinking all the child memcg caches and
+the root cache when a value of '2' is written to the shrink sysfs file.
 
-This issue was detected by using the Coccinelle software.
+On a 4-socket 112-core 224-thread x86-64 system after a parallel kernel
+build, the the amount of memory occupied by slabs before shrinking
+slabs were:
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-=2D--
- kernel/cgroup/cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ # grep task_struct /proc/slabinfo
+ task_struct         7114   7296   7744    4    8 : tunables    0    0
+ 0 : slabdata   1824   1824      0
+ # grep "^S[lRU]" /proc/meminfo
+ Slab:            1310444 kB
+ SReclaimable:     377604 kB
+ SUnreclaim:       932840 kB
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 300b0c416341..9d04e3004e3b 100644
-=2D-- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -2851,7 +2851,7 @@ static void cgroup_print_ss_mask(struct seq_file *se=
-q, u16 ss_mask)
- 	do_each_subsys_mask(ss, ssid, ss_mask) {
- 		if (printed)
- 			seq_putc(seq, ' ');
--		seq_printf(seq, "%s", ss->name);
-+		seq_puts(seq, ss->name);
- 		printed =3D true;
- 	} while_each_subsys_mask();
- 	if (printed)
-=2D-
-2.22.0
+After shrinking slabs:
+
+ # grep "^S[lRU]" /proc/meminfo
+ Slab:             695652 kB
+ SReclaimable:     322796 kB
+ SUnreclaim:       372856 kB
+ # grep task_struct /proc/slabinfo
+ task_struct         2262   2572   7744    4    8 : tunables    0    0
+ 0 : slabdata    643    643      0
+
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ Documentation/ABI/testing/sysfs-kernel-slab | 10 +++--
+ mm/slab.h                                   |  1 +
+ mm/slab_common.c                            | 43 +++++++++++++++++++++
+ mm/slub.c                                   |  2 +
+ 4 files changed, 52 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/ABI/testing/sysfs-kernel-slab b/Documentation/ABI/testing/sysfs-kernel-slab
+index 29601d93a1c2..2a3d0fc4b4ac 100644
+--- a/Documentation/ABI/testing/sysfs-kernel-slab
++++ b/Documentation/ABI/testing/sysfs-kernel-slab
+@@ -429,10 +429,12 @@ KernelVersion:	2.6.22
+ Contact:	Pekka Enberg <penberg@cs.helsinki.fi>,
+ 		Christoph Lameter <cl@linux-foundation.org>
+ Description:
+-		The shrink file is written when memory should be reclaimed from
+-		a cache.  Empty partial slabs are freed and the partial list is
+-		sorted so the slabs with the fewest available objects are used
+-		first.
++		A value of '1' is written to the shrink file when memory should
++		be reclaimed from a cache.  Empty partial slabs are freed and
++		the partial list is sorted so the slabs with the fewest
++		available objects are used first.  When a value of '2' is
++		written, all the corresponding child memory cgroup caches
++		should be shrunk as well.  All other values are invalid.
+ 
+ What:		/sys/kernel/slab/cache/slab_size
+ Date:		May 2007
+diff --git a/mm/slab.h b/mm/slab.h
+index 3b22931bb557..a16b2c7ff4dd 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -174,6 +174,7 @@ int __kmem_cache_shrink(struct kmem_cache *);
+ void __kmemcg_cache_deactivate(struct kmem_cache *s);
+ void __kmemcg_cache_deactivate_after_rcu(struct kmem_cache *s);
+ void slab_kmem_cache_release(struct kmem_cache *);
++int kmem_cache_shrink_all(struct kmem_cache *s);
+ 
+ struct seq_file;
+ struct file;
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index 464faaa9fd81..493697ba1da5 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -981,6 +981,49 @@ int kmem_cache_shrink(struct kmem_cache *cachep)
+ }
+ EXPORT_SYMBOL(kmem_cache_shrink);
+ 
++/**
++ * kmem_cache_shrink_all - shrink a cache and all its memcg children
++ * @s: The root cache to shrink.
++ *
++ * Return: 0 if successful, -EINVAL if not a root cache
++ */
++int kmem_cache_shrink_all(struct kmem_cache *s)
++{
++	struct kmem_cache *c;
++
++	if (!IS_ENABLED(CONFIG_MEMCG_KMEM)) {
++		kmem_cache_shrink(s);
++		return 0;
++	}
++	if (!is_root_cache(s))
++		return -EINVAL;
++
++	/*
++	 * The caller should have a reference to the root cache and so
++	 * we don't need to take the slab_mutex. We have to take the
++	 * slab_mutex, however, to iterate the memcg caches.
++	 */
++	get_online_cpus();
++	get_online_mems();
++	kasan_cache_shrink(s);
++	__kmem_cache_shrink(s);
++
++	mutex_lock(&slab_mutex);
++	for_each_memcg_cache(c, s) {
++		/*
++		 * Don't need to shrink deactivated memcg caches.
++		 */
++		if (s->flags & SLAB_DEACTIVATED)
++			continue;
++		kasan_cache_shrink(c);
++		__kmem_cache_shrink(c);
++	}
++	mutex_unlock(&slab_mutex);
++	put_online_mems();
++	put_online_cpus();
++	return 0;
++}
++
+ bool slab_is_available(void)
+ {
+ 	return slab_state >= UP;
+diff --git a/mm/slub.c b/mm/slub.c
+index a384228ff6d3..5d7b0004c51f 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -5298,6 +5298,8 @@ static ssize_t shrink_store(struct kmem_cache *s,
+ {
+ 	if (buf[0] == '1')
+ 		kmem_cache_shrink(s);
++	else if (buf[0] == '2')
++		kmem_cache_shrink_all(s);
+ 	else
+ 		return -EINVAL;
+ 	return length;
+-- 
+2.18.1
 
