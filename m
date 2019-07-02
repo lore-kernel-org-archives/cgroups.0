@@ -1,50 +1,125 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH 2/2] mm, slab: Extend vm/drop_caches to shrink kmem slabs
-Date: Tue, 2 Jul 2019 14:41:43 -0400
-Message-ID: <eeca4ef9-1b62-dada-3d31-c247cb0b137f@redhat.com>
-References: <20190624174219.25513-1-longman@redhat.com>
- <20190624174219.25513-3-longman@redhat.com>
- <20190627151506.GE5303@dhcp22.suse.cz>
- <5cb05d2c-39a7-f138-b0b9-4b03d6008999@redhat.com>
- <20190628073128.GC2751@dhcp22.suse.cz>
+From: David Rientjes <rientjes@google.com>
+Subject: Re: [PATCH] mm, slab: Extend slab/shrink to shrink all the memcg
+ caches
+Date: Tue, 2 Jul 2019 12:09:27 -0700 (PDT)
+Message-ID: <alpine.DEB.2.21.1907021206000.67286@chino.kir.corp.google.com>
+References: <20190702183730.14461-1-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190628073128.GC2751@dhcp22.suse.cz>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=7MbyDYqaqvSFQxOK+144mOVh5/lF6H2bN9YDe1mqXsE=;
+        b=gf9AynaRipCPNwL4fqUj1Kgn+M7Ben9Z5cpa9swnWQpDwgucDeCPC01FXDrDkJ6uY0
+         NSSCVdOhd5rccsRnUlWJ3ltnJlP3CpkB1Z4l9dmROza6n7s9SAwfvaIofJOW+IwiIL9D
+         rzCy4GxgcbCFYjvq+xCwL1krM+FxBF9je/WbpobhrRQYa2zVlcD4/XurltNaGbLN9rvS
+         ede+qAXNcAhTef1SGO6BUKHn/q2Nvk/NaAg2z6OGVU+ZBiu/dqAHr+Q4jibrC9xFD2D6
+         NHug/qhQbzlj3lSwkRlT7jw6/nXJDtW+gVpRHI/qNjTEGJuGadXUqOSUe5XpcXv/SWGi
+         fj7w==
+In-Reply-To: <20190702183730.14461-1-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Luis Chamberlain <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Andrea Arcangeli <aarcange@redhat.com>
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Luis Chamberlain <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Andrea Arcangeli <aarcange@redhat.com>
 
-On 6/28/19 3:31 AM, Michal Hocko wrote:
-> On Thu 27-06-19 17:16:04, Waiman Long wrote:
->> On 6/27/19 11:15 AM, Michal Hocko wrote:
->>> On Mon 24-06-19 13:42:19, Waiman Long wrote:
->>>> With the slub memory allocator, the numbers of active slab objects
->>>> reported in /proc/slabinfo are not real because they include objects
->>>> that are held by the per-cpu slab structures whether they are actually
->>>> used or not.  The problem gets worse the more CPUs a system have. For
->>>> instance, looking at the reported number of active task_struct objects,
->>>> one will wonder where all the missing tasks gone.
->>>>
->>>> I know it is hard and costly to get a real count of active objects.
->>> What exactly is expensive? Why cannot slabinfo reduce the number of
->>> active objects by per-cpu cached objects?
->>>
->> The number of cachelines that needs to be accessed in order to get an
->> accurate count will be much higher if we need to iterate through all the
->> per-cpu structures. In addition, accessing the per-cpu partial list will
->> be racy.
-> Why is all that a problem for a root only interface that should be used
-> quite rarely (it is not something that you should be reading hundreds
-> time per second, right)?
+On Tue, 2 Jul 2019, Waiman Long wrote:
 
-That can be true. Anyway, I have posted a new patch to use the existing
-<slab>/shrink sysfs file to perform memcg cache shrinking as well. So I
-am not going to pursue this patch.
+> diff --git a/Documentation/ABI/testing/sysfs-kernel-slab b/Documentation/ABI/testing/sysfs-kernel-slab
+> index 29601d93a1c2..2a3d0fc4b4ac 100644
+> --- a/Documentation/ABI/testing/sysfs-kernel-slab
+> +++ b/Documentation/ABI/testing/sysfs-kernel-slab
+> @@ -429,10 +429,12 @@ KernelVersion:	2.6.22
+>  Contact:	Pekka Enberg <penberg@cs.helsinki.fi>,
+>  		Christoph Lameter <cl@linux-foundation.org>
+>  Description:
+> -		The shrink file is written when memory should be reclaimed from
+> -		a cache.  Empty partial slabs are freed and the partial list is
+> -		sorted so the slabs with the fewest available objects are used
+> -		first.
+> +		A value of '1' is written to the shrink file when memory should
+> +		be reclaimed from a cache.  Empty partial slabs are freed and
+> +		the partial list is sorted so the slabs with the fewest
+> +		available objects are used first.  When a value of '2' is
+> +		written, all the corresponding child memory cgroup caches
+> +		should be shrunk as well.  All other values are invalid.
+>  
 
-Thanks,
-Longman
+This should likely call out that '2' also does '1', that might not be 
+clear enough.
 
+>  What:		/sys/kernel/slab/cache/slab_size
+>  Date:		May 2007
+> diff --git a/mm/slab.h b/mm/slab.h
+> index 3b22931bb557..a16b2c7ff4dd 100644
+> --- a/mm/slab.h
+> +++ b/mm/slab.h
+> @@ -174,6 +174,7 @@ int __kmem_cache_shrink(struct kmem_cache *);
+>  void __kmemcg_cache_deactivate(struct kmem_cache *s);
+>  void __kmemcg_cache_deactivate_after_rcu(struct kmem_cache *s);
+>  void slab_kmem_cache_release(struct kmem_cache *);
+> +int kmem_cache_shrink_all(struct kmem_cache *s);
+>  
+>  struct seq_file;
+>  struct file;
+> diff --git a/mm/slab_common.c b/mm/slab_common.c
+> index 464faaa9fd81..493697ba1da5 100644
+> --- a/mm/slab_common.c
+> +++ b/mm/slab_common.c
+> @@ -981,6 +981,49 @@ int kmem_cache_shrink(struct kmem_cache *cachep)
+>  }
+>  EXPORT_SYMBOL(kmem_cache_shrink);
+>  
+> +/**
+> + * kmem_cache_shrink_all - shrink a cache and all its memcg children
+> + * @s: The root cache to shrink.
+> + *
+> + * Return: 0 if successful, -EINVAL if not a root cache
+> + */
+> +int kmem_cache_shrink_all(struct kmem_cache *s)
+> +{
+> +	struct kmem_cache *c;
+> +
+> +	if (!IS_ENABLED(CONFIG_MEMCG_KMEM)) {
+> +		kmem_cache_shrink(s);
+> +		return 0;
+> +	}
+> +	if (!is_root_cache(s))
+> +		return -EINVAL;
+> +
+> +	/*
+> +	 * The caller should have a reference to the root cache and so
+> +	 * we don't need to take the slab_mutex. We have to take the
+> +	 * slab_mutex, however, to iterate the memcg caches.
+> +	 */
+> +	get_online_cpus();
+> +	get_online_mems();
+> +	kasan_cache_shrink(s);
+> +	__kmem_cache_shrink(s);
+> +
+> +	mutex_lock(&slab_mutex);
+> +	for_each_memcg_cache(c, s) {
+> +		/*
+> +		 * Don't need to shrink deactivated memcg caches.
+> +		 */
+> +		if (s->flags & SLAB_DEACTIVATED)
+> +			continue;
+> +		kasan_cache_shrink(c);
+> +		__kmem_cache_shrink(c);
+> +	}
+> +	mutex_unlock(&slab_mutex);
+> +	put_online_mems();
+> +	put_online_cpus();
+> +	return 0;
+> +}
+> +
+>  bool slab_is_available(void)
+>  {
+>  	return slab_state >= UP;
+
+I'm wondering how long this could take, i.e. how long we hold slab_mutex 
+while we traverse each cache and shrink it.
+
+Acked-by: David Rientjes <rientjes@google.com>
