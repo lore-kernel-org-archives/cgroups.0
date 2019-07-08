@@ -1,71 +1,37 @@
-From: Peng Wang <rocking@whu.edu.cn>
-Subject: [PATCH] cgroup: simplify code for cgroup_subtree_control_write()
-Date: Mon,  8 Jul 2019 21:01:32 +0800
-Message-ID: <20190708130132.5582-1-rocking@whu.edu.cn>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] cgroup: simplify code for cgroup_subtree_control_write()
+Date: Mon, 8 Jul 2019 07:41:21 -0700
+Message-ID: <20190708144121.GA657710@devbig004.ftw2.facebook.com>
+References: <20190708130132.5582-1-rocking@whu.edu.cn>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=kXUN90sDFULd4qRU/R3KEOn/usuVWjJoGJ35nR0nQ18=;
+        b=Xl9uEj6Og+rO1HLpisU7MOQS4uv+UWSEBNNTBNCnDepQBNXTF8mBQpk9jo/3wdKibZ
+         CtZ5kQkMen21+OKQuJ+PCew8yXZuL5r+BgvKpLxdZM9mmLPQ+IYG6A+qUCJCGIEZ8tnH
+         reW7Nkw1QthoOFm1CoYBce4mMtko7w8uWB1P05mMGNTOsZXKHk1cluXKkadnDTJGwCBm
+         IGzeblqdEzm5X4MFpL3O715NYXJ49/og3rViPEBVtXDCIra2D+aJBBXOv9Wf8sSq/MwJ
+         Z+c7nb/En3PazH06XUDEysCWZsK/YpFDRy6/xAUpmjPARQnRlTG5Jc/8fnHOcuzk4zWR
+         REOg==
+Content-Disposition: inline
+In-Reply-To: <20190708130132.5582-1-rocking@whu.edu.cn>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Peng Wang <rocking@whu.edu.cn>
+Content-Transfer-Encoding: 7bit
+To: Peng Wang <rocking@whu.edu.cn>
+Cc: lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Process "enable" and "disable" earlier to simplify code.
+On Mon, Jul 08, 2019 at 09:01:32PM +0800, Peng Wang wrote:
+> Process "enable" and "disable" earlier to simplify code.
 
-Signed-off-by: Peng Wang <rocking@whu.edu.cn>
----
- kernel/cgroup/cgroup.c | 23 ++++++++---------------
- 1 file changed, 8 insertions(+), 15 deletions(-)
+I don't think this is correct and even if it were the value of this
+change is close to none, so nack on this one.
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index bf9dbffd46b1..e49b8bde5c99 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -3269,23 +3269,21 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 	if (!cgrp)
- 		return -ENODEV;
- 
-+	enable &= ~(cgrp->subtree_control);
-+	disable &= cgrp->subtree_control;
-+
-+	if (!enable && !disable) {
-+		ret = 0;
-+		goto out_unlock;
-+	}
-+
- 	for_each_subsys(ss, ssid) {
- 		if (enable & (1 << ssid)) {
--			if (cgrp->subtree_control & (1 << ssid)) {
--				enable &= ~(1 << ssid);
--				continue;
--			}
--
- 			if (!(cgroup_control(cgrp) & (1 << ssid))) {
- 				ret = -ENOENT;
- 				goto out_unlock;
- 			}
- 		} else if (disable & (1 << ssid)) {
--			if (!(cgrp->subtree_control & (1 << ssid))) {
--				disable &= ~(1 << ssid);
--				continue;
--			}
--
- 			/* a child has it enabled? */
- 			cgroup_for_each_live_child(child, cgrp) {
- 				if (child->subtree_control & (1 << ssid)) {
-@@ -3296,11 +3294,6 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 		}
- 	}
- 
--	if (!enable && !disable) {
--		ret = 0;
--		goto out_unlock;
--	}
--
- 	ret = cgroup_vet_subtree_control_enable(cgrp, enable);
- 	if (ret)
- 		goto out_unlock;
+Thanks.
+
 -- 
-2.19.1
-
+tejun
