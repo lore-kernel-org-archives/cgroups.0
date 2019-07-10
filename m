@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 05/10] block/rq_qos: implement rq_qos_ops->queue_depth_changed()
-Date: Wed, 10 Jul 2019 13:51:23 -0700
-Message-ID: <20190710205128.1316483-6-tj@kernel.org>
+Subject: [PATCH 03/10] blkcg: separate blkcg_conf_get_disk() out of blkg_conf_prep()
+Date: Wed, 10 Jul 2019 13:51:21 -0700
+Message-ID: <20190710205128.1316483-4-tj@kernel.org>
 References: <20190710205128.1316483-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=JKWpADQRRd4cOHqFQiVbs/M0Dl+jEZ4tiWOCtZnmPQM=;
-        b=SdtjWVkQh250bHyYw3SHxdON+2qnRJzzC7V9U5QRdPizFZ0UDpPxW6hPrYYWE1ILkZ
-         YLV7Wb5H5zanBWfmfad6oFQmHGDXMJe3DKQZyJClOVIj91Fb1XY68X0oCsDkHDUjevMJ
-         k3ezfpym+frm3+q9lkmtDva8o+3zKmQSPv7W2MmoMXqce+GieBpLhCEdu6fUbzRFNIBu
-         qnFuJcGULszw/smK2K/uW9BOY1R7Ft3Zj3KNWTlRP3rBTsUbKD4lYIjf/E3U/gJN/yB6
-         JKuVtLOerNKxM28/N9vmCX8o3MUvoIad9xlj2tVwprJpX7fcJ511sNz104wczjj1Jydp
-         JTXQ==
+        bh=NSsXuJroaDqOlhMryi+iSYceW4KouvHH84idtExmGM0=;
+        b=NuEfAEexdKe5z2kFDQNehIrB3aMB/hR+imA+acy7jtmdbjM2moXZf9UjPyRMqFUn7s
+         PeGzkykFUiy3lBsdvRk03i9+xNY1FZYnYDeuNgzAKrK7T4dXIVOuZCtGobmHPS8S1Ge9
+         +8zzZEyqPNhZw7ml2Q3Hce8U/K5GD0YpG1eHNZGgueLEDIscaK1MIsdGYPK4GlalISdb
+         MU+p4BMnlTYl33MBfDtIFmE5kvqgZt69reT1+uqiOwpBDpKCnkP9dXCnBYcIrAqCglSN
+         pINjO8k4G1kK9ovCBSXNPzb0+xAi9KSYMwvKPojE8DThJSFVAhUrLpt2tCchqcS9tiTX
+         ZsQw==
 In-Reply-To: <20190710205128.1316483-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,158 +23,116 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk, newella@fb.com, clm@fb.com, josef@toxicpanda.com, dennisz@fb.com, lizefan@huawei.com, hannes@cmpxchg.org
 Cc: linux-kernel@vger.kernel.org, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-wbt already gets queue depth changed notification through
-wbt_set_queue_depth().  Generalize it into
-rq_qos_ops->queue_depth_changed() so that other rq_qos policies can
-easily hook into the events too.
+Separate out blkcg_conf_get_disk() so that it can be used by blkcg
+policy interface file input parsers before the policy is actually
+enabled.  This doesn't introduce any functional changes.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-rq-qos.c   |  9 +++++++++
- block/blk-rq-qos.h   |  8 ++++++++
- block/blk-settings.c |  2 +-
- block/blk-wbt.c      | 18 ++++++++----------
- block/blk-wbt.h      |  4 ----
- 5 files changed, 26 insertions(+), 15 deletions(-)
+ block/blk-cgroup.c         | 62 ++++++++++++++++++++++++++------------
+ include/linux/blk-cgroup.h |  1 +
+ 2 files changed, 44 insertions(+), 19 deletions(-)
 
-diff --git a/block/blk-rq-qos.c b/block/blk-rq-qos.c
-index 7debcaf1ee53..fb11652348fc 100644
---- a/block/blk-rq-qos.c
-+++ b/block/blk-rq-qos.c
-@@ -101,6 +101,15 @@ void __rq_qos_done_bio(struct rq_qos *rqos, struct bio *bio)
- 	} while (rqos);
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 818e50b4cc7a..aed46a2c553e 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -753,6 +753,44 @@ static struct blkcg_gq *blkg_lookup_check(struct blkcg *blkcg,
+ 	return __blkg_lookup(blkcg, q, true /* update_hint */);
  }
  
-+void __rq_qos_queue_depth_changed(struct rq_qos *rqos)
++/**
++ * blkg_conf_prep - parse and prepare for per-blkg config update
++ * @inputp: input string pointer
++ *
++ * Parse the device node prefix part, MAJ:MIN, of per-blkg config update
++ * from @input and get and return the matching gendisk.  *@inputp is
++ * updated to point past the device node prefix.  Returns an ERR_PTR()
++ * value on error.
++ *
++ * Use this function iff blkg_conf_prep() can't be used for some reason.
++ */
++struct gendisk *blkcg_conf_get_disk(char **inputp)
 +{
-+	do {
-+		if (rqos->ops->queue_depth_changed)
-+			rqos->ops->queue_depth_changed(rqos);
-+		rqos = rqos->next;
-+	} while (rqos);
++	char *input = *inputp;
++	unsigned int major, minor;
++	struct gendisk *disk;
++	int key_len, part;
++
++	if (sscanf(input, "%u:%u%n", &major, &minor, &key_len) != 2)
++		return ERR_PTR(-EINVAL);
++
++	input += key_len;
++	if (!isspace(*input))
++		return ERR_PTR(-EINVAL);
++	input = skip_spaces(input);
++
++	disk = get_gendisk(MKDEV(major, minor), &part);
++	if (!disk)
++		return ERR_PTR(-ENODEV);
++	if (part) {
++		put_disk_and_module(disk);
++		return ERR_PTR(-ENODEV);
++	}
++
++	*inputp = input;
++	return disk;
 +}
 +
- /*
-  * Return true, if we can't increase the depth further by scaling
-  */
-diff --git a/block/blk-rq-qos.h b/block/blk-rq-qos.h
-index 8e426a8505b6..e15b6907b76d 100644
---- a/block/blk-rq-qos.h
-+++ b/block/blk-rq-qos.h
-@@ -41,6 +41,7 @@ struct rq_qos_ops {
- 	void (*done)(struct rq_qos *, struct request *);
- 	void (*done_bio)(struct rq_qos *, struct bio *);
- 	void (*cleanup)(struct rq_qos *, struct bio *);
-+	void (*queue_depth_changed)(struct rq_qos *);
- 	void (*exit)(struct rq_qos *);
- 	const struct blk_mq_debugfs_attr *debugfs_attrs;
- };
-@@ -138,6 +139,7 @@ void __rq_qos_throttle(struct rq_qos *rqos, struct bio *bio);
- void __rq_qos_track(struct rq_qos *rqos, struct request *rq, struct bio *bio);
- void __rq_qos_merge(struct rq_qos *rqos, struct request *rq, struct bio *bio);
- void __rq_qos_done_bio(struct rq_qos *rqos, struct bio *bio);
-+void __rq_qos_queue_depth_changed(struct rq_qos *rqos);
- 
- static inline void rq_qos_cleanup(struct request_queue *q, struct bio *bio)
- {
-@@ -194,6 +196,12 @@ static inline void rq_qos_merge(struct request_queue *q, struct request *rq,
- 		__rq_qos_merge(q->rq_qos, rq, bio);
- }
- 
-+static inline void rq_qos_queue_depth_changed(struct request_queue *q)
-+{
-+	if (q->rq_qos)
-+		__rq_qos_queue_depth_changed(q->rq_qos);
-+}
-+
- void rq_qos_exit(struct request_queue *);
- 
- #endif
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 2ae348c101a0..df323ea448de 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -804,7 +804,7 @@ EXPORT_SYMBOL(blk_queue_update_dma_alignment);
- void blk_set_queue_depth(struct request_queue *q, unsigned int depth)
- {
- 	q->queue_depth = depth;
--	wbt_set_queue_depth(q, depth);
-+	rq_qos_queue_depth_changed(q);
- }
- EXPORT_SYMBOL(blk_set_queue_depth);
- 
-diff --git a/block/blk-wbt.c b/block/blk-wbt.c
-index 313f45a37e9d..8118f95a194b 100644
---- a/block/blk-wbt.c
-+++ b/block/blk-wbt.c
-@@ -629,15 +629,6 @@ static void wbt_requeue(struct rq_qos *rqos, struct request *rq)
- 	}
- }
- 
--void wbt_set_queue_depth(struct request_queue *q, unsigned int depth)
--{
--	struct rq_qos *rqos = wbt_rq_qos(q);
--	if (rqos) {
--		RQWB(rqos)->rq_depth.queue_depth = depth;
--		__wbt_update_limits(RQWB(rqos));
--	}
--}
+ /**
+  * blkg_conf_prep - parse and prepare for per-blkg config update
+  * @blkcg: target block cgroup
+@@ -772,25 +810,11 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ 	struct gendisk *disk;
+ 	struct request_queue *q;
+ 	struct blkcg_gq *blkg;
+-	unsigned int major, minor;
+-	int key_len, part, ret;
+-	char *body;
 -
- void wbt_set_write_cache(struct request_queue *q, bool write_cache_on)
- {
- 	struct rq_qos *rqos = wbt_rq_qos(q);
-@@ -689,6 +680,12 @@ static int wbt_data_dir(const struct request *rq)
- 	return -1;
- }
+-	if (sscanf(input, "%u:%u%n", &major, &minor, &key_len) != 2)
+-		return -EINVAL;
+-
+-	body = input + key_len;
+-	if (!isspace(*body))
+-		return -EINVAL;
+-	body = skip_spaces(body);
++	int ret;
  
-+static void wbt_queue_depth_changed(struct rq_qos *rqos)
-+{
-+	RQWB(rqos)->rq_depth.queue_depth = blk_queue_depth(rqos->q);
-+	__wbt_update_limits(RQWB(rqos));
-+}
-+
- static void wbt_exit(struct rq_qos *rqos)
- {
- 	struct rq_wb *rwb = RQWB(rqos);
-@@ -811,6 +808,7 @@ static struct rq_qos_ops wbt_rqos_ops = {
- 	.requeue = wbt_requeue,
- 	.done = wbt_done,
- 	.cleanup = wbt_cleanup,
-+	.queue_depth_changed = wbt_queue_depth_changed,
- 	.exit = wbt_exit,
- #ifdef CONFIG_BLK_DEBUG_FS
- 	.debugfs_attrs = wbt_debugfs_attrs,
-@@ -853,7 +851,7 @@ int wbt_init(struct request_queue *q)
+-	disk = get_gendisk(MKDEV(major, minor), &part);
+-	if (!disk)
+-		return -ENODEV;
+-	if (part) {
+-		ret = -ENODEV;
+-		goto fail;
+-	}
++	disk = blkcg_conf_get_disk(&input);
++	if (IS_ERR(disk))
++		return PTR_ERR(disk);
  
- 	rwb->min_lat_nsec = wbt_default_latency_nsec(q);
+ 	q = disk->queue;
  
--	wbt_set_queue_depth(q, blk_queue_depth(q));
-+	wbt_queue_depth_changed(&rwb->rqos);
- 	wbt_set_write_cache(q, test_bit(QUEUE_FLAG_WC, &q->queue_flags));
- 
+@@ -856,7 +880,7 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ success:
+ 	ctx->disk = disk;
+ 	ctx->blkg = blkg;
+-	ctx->body = body;
++	ctx->body = input;
  	return 0;
-diff --git a/block/blk-wbt.h b/block/blk-wbt.h
-index f47218d5b3b2..8e4e37660971 100644
---- a/block/blk-wbt.h
-+++ b/block/blk-wbt.h
-@@ -95,7 +95,6 @@ void wbt_enable_default(struct request_queue *);
- u64 wbt_get_min_lat(struct request_queue *q);
- void wbt_set_min_lat(struct request_queue *q, u64 val);
  
--void wbt_set_queue_depth(struct request_queue *, unsigned int);
- void wbt_set_write_cache(struct request_queue *, bool);
+ fail_unlock:
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 930631cad5cf..b0eacec11037 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -233,6 +233,7 @@ struct blkg_conf_ctx {
+ 	char				*body;
+ };
  
- u64 wbt_default_latency_nsec(struct request_queue *);
-@@ -118,9 +117,6 @@ static inline void wbt_disable_default(struct request_queue *q)
- static inline void wbt_enable_default(struct request_queue *q)
- {
- }
--static inline void wbt_set_queue_depth(struct request_queue *q, unsigned int depth)
--{
--}
- static inline void wbt_set_write_cache(struct request_queue *q, bool wc)
- {
- }
++struct gendisk *blkcg_conf_get_disk(char **inputp);
+ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ 		   char *input, struct blkg_conf_ctx *ctx);
+ void blkg_conf_finish(struct blkg_conf_ctx *ctx);
 -- 
 2.17.1
 
