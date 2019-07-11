@@ -1,93 +1,84 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 11/10] block: omit request->pre_start_time_ns if
- !CONFIG_BLK_CGROUP_IOCOST work-conserving porportional controller
-Date: Wed, 10 Jul 2019 14:21:42 -0700
-Message-ID: <20190710212142.GP657710@devbig004.ftw2.facebook.com>
-References: <20190710205128.1316483-1-tj@kernel.org>
+From: =?UTF-8?B?546L6LSH?= <yun.wang@linux.alibaba.com>
+Subject: Re: [PATCH 0/4] per cgroup numa suite
+Date: Thu, 11 Jul 2019 17:00:10 +0800
+Message-ID: <6a050974-30f3-66b6-4c99-c7e376fb84d8@linux.alibaba.com>
+References: <209d247e-c1b2-3235-2722-dd7c1f896483@linux.alibaba.com>
+ <60b59306-5e36-e587-9145-e90657daec41@linux.alibaba.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=siIn1w9IRj9EyAz1dx7Gl8hkgFfIWbx6jNb+pkUBwDM=;
-        b=CWXXPYiJmNO2VkL3MT7DkHV+hmD6kdOoGicSmCBWezxnW3FtZWUaM6vZU1jQNA/eS+
-         ln6xoL5gaBXAKj+Ud0V0NkTKNiTDmbUXXBzRXsgE1yQmVCRot+YPhZcGoM758uw19VmT
-         CnnGu6vGxos82NuqzEfkrNw+TtW7B1jITstDIG5KEQR4BKgB2lIqHSCLaqrsgNMQxsfj
-         Zcpjs6nphhqe+2Bt9te7fqFOQ0J1rBiZI3EyD11sChA1bbYVICRaNWJ6c+cVl2mprSR7
-         4YfoDL5JUBiN7h9J+arYvdtZjXF4lBEAxb5wNcCPLRGk4SlBvVCGts/PESbNS7CE3hqa
-         K6rw==
-Content-Disposition: inline
-In-Reply-To: <20190710205128.1316483-1-tj@kernel.org>
+In-Reply-To: <60b59306-5e36-e587-9145-e90657daec41@linux.alibaba.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk, newella@fb.com, clm@fb.com, josef@toxicpanda.com, dennisz@fb.com, lizefan@huawei.com, hannes@cmpxchg.org
-Cc: linux-kernel@vger.kernel.org, kernel-team@fb.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: Peter Zijlstra <peterz@infradead.org>, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, Ingo Molnar <mingo@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, mcgrof@kernel.org, keescook@chromium.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org
 
-From e2693136fa64d5c9dde73d2d663bde84f8326877 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Wed, 10 Jul 2019 14:18:12 -0700
+Hi folks,
 
-request->pre_start_time is currently only used by the iocost
-controller.  Let's omit the field if disabled and avoid wasting space
-in struct request.
+How do you think about these patches?
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Suggested-by: Jens Axboe <axboe@kernel.dk>
----
-The git branch is updated accordingly.
+During most of our tests the results show stable improvements, thus
+we consider this as a generic problem and proposed this solution,
+hope to help address the issue.
 
-Thanks.
+Comments are sincerely welcome :-)
 
- block/blk-mq.c         | 2 ++
- include/linux/blkdev.h | 7 +++++++
- 2 files changed, 9 insertions(+)
+Regards,
+Michael Wang
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 90b46988cc02..ce96bcd7e260 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -325,7 +325,9 @@ static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
- 	RB_CLEAR_NODE(&rq->rb_node);
- 	rq->rq_disk = NULL;
- 	rq->part = NULL;
-+#ifdef CONFIG_BLK_CGROUP_IOCOST
- 	rq->pre_start_time_ns = pre_start_time_ns;
-+#endif
- 	if (blk_mq_need_time_stamp(rq))
- 		rq->start_time_ns = ktime_get_ns();
- 	else
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 4247a9bc44b7..2425af6d3f5e 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -194,8 +194,10 @@ struct request {
- 
- 	struct gendisk *rq_disk;
- 	struct hd_struct *part;
-+#ifdef CONFIG_BLK_CGROUP_IOCOST
- 	/* Time that the first bio started allocating this request. */
- 	u64 pre_start_time_ns;
-+#endif
- 	/* Time that this request was allocated for this IO. */
- 	u64 start_time_ns;
- 	/* Time that I/O was submitted to the device. */
-@@ -635,8 +637,13 @@ bool blk_queue_flag_test_and_set(unsigned int flag, struct request_queue *q);
- 	test_bit(QUEUE_FLAG_SCSI_PASSTHROUGH, &(q)->queue_flags)
- #define blk_queue_pci_p2pdma(q)	\
- 	test_bit(QUEUE_FLAG_PCI_P2PDMA, &(q)->queue_flags)
-+
-+#ifdef CONFIG_BLK_CGROUP_IOCOST
- #define blk_queue_rec_prestart(q)	\
- 	test_bit(QUEUE_FLAG_REC_PRESTART, &(q)->queue_flags)
-+#else
-+#define blk_queue_rec_prestart(q)		false
-+#endif
- 
- #define blk_noretry_request(rq) \
- 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
--- 
-2.17.1
-
+On 2019/7/3 上午11:26, 王贇 wrote:
+> During our torturing on numa stuff, we found problems like:
+> 
+>   * missing per-cgroup information about the per-node execution status
+>   * missing per-cgroup information about the numa locality
+> 
+> That is when we have a cpu cgroup running with bunch of tasks, no good
+> way to tell how it's tasks are dealing with numa.
+> 
+> The first two patches are trying to complete the missing pieces, but
+> more problems appeared after monitoring these status:
+> 
+>   * tasks not always running on the preferred numa node
+>   * tasks from same cgroup running on different nodes
+> 
+> The task numa group handler will always check if tasks are sharing pages
+> and try to pack them into a single numa group, so they will have chance to
+> settle down on the same node, but this failed in some cases:
+> 
+>   * workloads share page caches rather than share mappings
+>   * workloads got too many wakeup across nodes
+> 
+> Since page caches are not traced by numa balancing, there are no way to
+> realize such kind of relationship, and when there are too many wakeup,
+> task will be drag from the preferred node and then migrate back by numa
+> balancing, repeatedly.
+> 
+> Here the third patch try to address the first issue, we could now give hint
+> to kernel about the relationship of tasks, and pack them into single numa
+> group.
+> 
+> And the forth patch introduced numa cling, which try to address the wakup
+> issue, now we try to make task stay on the preferred node on wakeup in fast
+> path, in order to address the unbalancing risk, we monitoring the numa
+> migration failure ratio, and pause numa cling when it reach the specified
+> degree.
+> 
+> Michael Wang (4):
+>   numa: introduce per-cgroup numa balancing locality statistic
+>   numa: append per-node execution info in memory.numa_stat
+>   numa: introduce numa group per task group
+>   numa: introduce numa cling feature
+> 
+>  include/linux/memcontrol.h   |  37 ++++
+>  include/linux/sched.h        |   8 +-
+>  include/linux/sched/sysctl.h |   3 +
+>  kernel/sched/core.c          |  37 ++++
+>  kernel/sched/debug.c         |   7 +
+>  kernel/sched/fair.c          | 455 ++++++++++++++++++++++++++++++++++++++++++-
+>  kernel/sched/sched.h         |  14 ++
+>  kernel/sysctl.c              |   9 +
+>  mm/memcontrol.c              |  66 +++++++
+>  9 files changed, 628 insertions(+), 8 deletions(-)
+> 
