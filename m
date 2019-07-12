@@ -1,62 +1,50 @@
-From: =?UTF-8?B?546L6LSH?= <yun.wang@linux.alibaba.com>
-Subject: Re: [PATCH 1/4] numa: introduce per-cgroup numa balancing locality,
- statistic
-Date: Fri, 12 Jul 2019 18:10:24 +0800
-Message-ID: <f8020f92-045e-d515-360b-faf9a149ab80@linux.alibaba.com>
-References: <209d247e-c1b2-3235-2722-dd7c1f896483@linux.alibaba.com>
- <60b59306-5e36-e587-9145-e90657daec41@linux.alibaba.com>
- <3ac9b43a-cc80-01be-0079-df008a71ce4b@linux.alibaba.com>
- <20190711134754.GD3402@hirez.programming.kicks-ass.net>
- <b027f9cc-edd2-840c-3829-176a1e298446@linux.alibaba.com>
- <20190712075815.GN3402@hirez.programming.kicks-ass.net>
- <37474414-1a54-8e3a-60df-eb7e5e1cc1ed@linux.alibaba.com>
- <20190712094214.GR3402@hirez.programming.kicks-ass.net>
+From: Juri Lelli <juri.lelli@redhat.com>
+Subject: Re: [PATCH v8 6/8] cgroup/cpuset: Change cpuset_rwsem and hotplug
+ lock order
+Date: Fri, 12 Jul 2019 16:04:09 +0200
+Message-ID: <20190712140409.GB13885@localhost.localdomain>
+References: <20190628080618.522-1-juri.lelli@redhat.com>
+ <20190628080618.522-7-juri.lelli@redhat.com>
+ <20190628130308.GU3419@hirez.programming.kicks-ass.net>
+ <20190701065233.GA26005@localhost.localdomain>
+ <20190701082731.GP3402@hirez.programming.kicks-ass.net>
+ <20190701145107.GY657710@devbig004.ftw2.facebook.com>
+ <20190704084924.GC9099@localhost.localdomain>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190712094214.GR3402@hirez.programming.kicks-ass.net>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20190704084924.GC9099@localhost.localdomain>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, Ingo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, mcgrof@kernel.org, keescook@chromium.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, Mel Gorman <mgorman@suse.de>, riel@surriel.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, mingo@redhat.com, rostedt@goodmis.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org, Prateek Sood <prsood@codeaurora.org>
 
-
-
-On 2019/7/12 下午5:42, Peter Zijlstra wrote:
-> On Fri, Jul 12, 2019 at 05:11:25PM +0800, 王贇 wrote:
->>
->>
->> On 2019/7/12 下午3:58, Peter Zijlstra wrote:
->> [snip]
->>>>>
->>>>> Then our task t1 should be accounted to B (as you do), but also to A and
->>>>> R.
->>>>
->>>> I get the point but not quite sure about this...
->>>>
->>>> Not like pages there are no hierarchical limitation on locality, also tasks
->>>
->>> You can use cpusets to affect that.
->>
->> Could you please give more detail on this?
+On 04/07/19 10:49, Juri Lelli wrote:
+> Hi,
 > 
-> Documentation/cgroup-v1/cpusets.txt
+> On 01/07/19 07:51, Tejun Heo wrote:
+> > Hello,
+> > 
+> > On Mon, Jul 01, 2019 at 10:27:31AM +0200, Peter Zijlstra wrote:
+> > > IIRC TJ figured it wasn't strictly required to fix the lock invertion at
+> > > that time and they sorted it differently. If I (re)read the thread
+> > > correctly the other day, he didn't have fundamental objections against
+> > > it, but wanted the simpler fix.
+> > 
+> > Yeah I've got no objections to the change itself, it just wasn't
+> > needed at the time.  We've had multiple issues there tho, so please
+> > keep an eye open after the changes get merged.
 > 
-> Look for mems_allowed.
-
-This is the attribute belong to cpuset cgroup isn't it?
-
-Forgive me but I have no idea on how to combined this
-with memory cgroup's locality hierarchical update...
-parent memory cgroup do not have influence on mems_allowed
-to it's children, correct?
-
-What about we just account the locality status of child
-memory group into it's ancestors?
-
-Regards,
-Michael Wang
-
+> Should I take this as an indication that you had a look at the set and
+> (apart from Peter's comments) you are OK with them?
 > 
+> If that's the case I will send a v9 out soon. Otherwise I'd kindly ask
+> you to please have a look.
+
+Gentle ping.
+
+Thanks,
+
+Juri
