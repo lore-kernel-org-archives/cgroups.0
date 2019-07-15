@@ -1,45 +1,36 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [PATCH 1/4] numa: introduce per-cgroup numa balancing locality,
- statistic
-Date: Mon, 15 Jul 2019 14:10:25 +0200
-Message-ID: <20190715121025.GN9035@blackbody.suse.cz>
-References: <209d247e-c1b2-3235-2722-dd7c1f896483@linux.alibaba.com>
- <60b59306-5e36-e587-9145-e90657daec41@linux.alibaba.com>
- <3ac9b43a-cc80-01be-0079-df008a71ce4b@linux.alibaba.com>
- <20190711134754.GD3402@hirez.programming.kicks-ass.net>
- <b027f9cc-edd2-840c-3829-176a1e298446@linux.alibaba.com>
- <20190712075815.GN3402@hirez.programming.kicks-ass.net>
- <37474414-1a54-8e3a-60df-eb7e5e1cc1ed@linux.alibaba.com>
- <20190712094214.GR3402@hirez.programming.kicks-ass.net>
- <f8020f92-045e-d515-360b-faf9a149ab80@linux.alibaba.com>
+From: Dave Chiluk <chiluk+linux@indeed.com>
+Subject: Re: [PATCH v5 1/1] sched/fair: Fix low cpu usage with high throttling
+ by removing expiration of cpu-local slices
+Date: Mon, 15 Jul 2019 10:44:39 -0500
+Message-ID: <CAC=E7cVSVqg8raXgVC8f7wB+BJO8TAjSU=0UN-M+Oxuo2raXAw@mail.gmail.com>
+References: <1558121424-2914-1-git-send-email-chiluk+linux@indeed.com>
+ <1561664970-1555-1-git-send-email-chiluk+linux@indeed.com>
+ <1561664970-1555-2-git-send-email-chiluk+linux@indeed.com>
+ <xm26lfxhwlxr.fsf@bsegall-linux.svl.corp.google.com> <20190711095102.GX3402@hirez.programming.kicks-ass.net>
+ <xm26v9w8jwgl.fsf@bsegall-linux.svl.corp.google.com> <CAC=E7cV4sO50NpYOZ06n_BkZTcBqf1KQp83prc+oave3ircBrw@mail.gmail.com>
+ <xm26muhikiq2.fsf@bsegall-linux.svl.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <f8020f92-045e-d515-360b-faf9a149ab80@linux.alibaba.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=indeed.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ScxfIM+hKDT1VQaIZy4BKqol+JPqVs71rTa7fK4KN1M=;
+        b=gnHK+c2cwZGKOdspduqrUgKCh6lVrsKIInyhuuavEpiiOcbGli77C58lcIXgh934gd
+         X+tLt3k+Ik4aenfsxG9NFO2TPCD832u+KzaI36GcEuU2FPeWtzF+N76i6iSHvlttqWsR
+         k+frcRdRsmUd5oRFAvWQ9JfUk8UTM29DlkBao=
+In-Reply-To: <xm26muhikiq2.fsf@bsegall-linux.svl.corp.google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: =?utf-8?B?546L6LSH?= <yun.wang@linux.alibaba.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, keescook@chromium.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com, mcgrof@kernel.org, mhocko@kernel.org, linux-mm@kvack.org, Ingo Molnar <mingo@redhat.com>, riel@surriel.com, Mel Gorman <mgorman@suse.de>, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Ben Segall <bsegall@google.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, Pqhil Auld <pauld@redhat.com>, Peter Oskolkov <posk@posk.io>, Ingo Molnar <mingo@redhat.com>, cgroups@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Brendan Gregg <bgregg@netflix.com>, Kyle Anderson <kwa@yelp.com>, Gabriel Munos <gmunoz@netflix.com>, John Hammond <jhammond@indeed.com>, Cong Wang <xiyou.wangcong@gmail.com>, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org, Paul Turner <pjt@google.com>
 
-Hello Yun.
+On Fri, Jul 12, 2019 at 5:10 PM <bsegall@google.com> wrote:
+> Ugh. Maybe we /do/ just give up and say that most people don't seem to
+> be using cfs_b in a way that expiration of the leftover 1ms matters.
 
-On Fri, Jul 12, 2019 at 06:10:24PM +0800, 王贇  <yun.wang@linux.alibaba.com> wrote:
-> Forgive me but I have no idea on how to combined this
-> with memory cgroup's locality hierarchical update...
-> parent memory cgroup do not have influence on mems_allowed
-> to it's children, correct?
-I'd recommend to look at the v2 of the cpuset controller that implements
-the hierarchical behavior among configured memory node sets.
-
-(My comment would better fit to 
-    [PATCH 3/4] numa: introduce numa group per task group
-IIUC, you could use cpuset controller to constraint memory nodes.)
-
-For the second part (accessing numa statistics, i.e. this patch), I
-wonder wheter this information wouldn't be better presented under the
-cpuset controller too.
-
-HTH,
-Michal
+That was my conclusion as well.  Does this mean you want to proceed
+with my patch set?  Do you have any changes you want made to the
+proposed documentation changes, or any other changes for that matter?
