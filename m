@@ -1,78 +1,72 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH REBASED] mm, memcg: Make scan aggression always exclude
- protection
-Date: Tue, 16 Jul 2019 13:10:56 -0400
-Message-ID: <20190716171056.GA16575@cmpxchg.org>
-References: <20190228213050.GA28211@chrisdown.name>
- <20190322160307.GA3316@chrisdown.name>
+Subject: Re: [PATCH] mm: Proportional memory.{low,min} reclaim
+Date: Tue, 16 Jul 2019 13:24:59 -0400
+Message-ID: <20190716172459.GB16575@cmpxchg.org>
+References: <20190124014455.GA6396@chrisdown.name>
+ <20190128210031.GA31446@castle.DHCP.thefacebook.com>
+ <20190128214213.GB15349@chrisdown.name>
+ <20190128215230.GA32069@castle.DHCP.thefacebook.com>
+ <20190715153527.86a3f6e65ecf5d501252dbf1@linux-foundation.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=kwpOpWT2eWiCeBhDjuSXvGXNhdNaH2c1UD5BkyTJoqs=;
-        b=knBTmABIgOoXo69WB++c8IiWB76RVPwIFTQLPCH60rHTf+UJ7FGF+ss1UJhIMPAq8x
-         0EwUItQ8ZgDKhh+54f7rBkRV7MSkUDhNen+cxQRpDwq4odvt0AmVDnfhd5gDsDsim6Oc
-         /NPzqJO1Ut/8JkDliDODiF4nieSIiOvRtiA2DDTkydoPrCpwaekiYCu4HxFCBNUMOdrv
-         Kh+4kgtRPjClbTdLMdYDm8rTNtWJmYgbqv8d+6z8dyl0uMeRa9N2RZCdxwR9l/flo6FS
-         TgIxRET8UFzLd1mskmgymFDDldbBvFBtSzi+kDwEtAaFdE8OH18mOJU1usfuTg9ZgWuu
-         4sBQ==
+        bh=jmmNrLz05OQxiUsEmtCkS8mBmrl8vj668vZ/xiMeIrY=;
+        b=phx1Mq5J6p2gfPq049fRU4kJqr233RVvBA6UMs66Fh5VPoHy5KsLA3yLW7b00Y3rb8
+         GTdFxxgsB1P4yFAdo2Qi0lgz4B0At2EUVu95fRfY8Bd7hU1ELdLrEB76Wv/eTo0O/IHK
+         cBHGKVh+C260gNquMCThFTjxvff5UR0XDGNu4y01LXooRqWSmV8nFoJlX5Ux8Oc0p4YR
+         Ffk+3gQEUfcv+lzY/PFoTBxKXktxFJtv2i/1ZrJEAx+OqMpmcJgHGEZrhE7dlAGzP7Ne
+         tVCLPB+rZn10vOY9YPlc33YLioHP5gwh7muhEqrhXj+c2blGXe3qtkyX7eg0lodMWVNf
+         3yiA==
 Content-Disposition: inline
-In-Reply-To: <20190322160307.GA3316@chrisdown.name>
+In-Reply-To: <20190715153527.86a3f6e65ecf5d501252dbf1@linux-foundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Chris Down <chris@chrisdown.name>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Roman Gushchin <guro@fb.com>, Chris Down <chris@chrisdown.name>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Dennis Zhou <dennis@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Kernel Team <Kernel-team@fb.com>
 
-On Fri, Mar 22, 2019 at 04:03:07PM +0000, Chris Down wrote:
-> This patch is an incremental improvement on the existing
-> memory.{low,min} relative reclaim work to base its scan pressure
-> calculations on how much protection is available compared to the current
-> usage, rather than how much the current usage is over some protection
-> threshold.
+On Mon, Jul 15, 2019 at 03:35:27PM -0700, Andrew Morton wrote:
+> On Mon, 28 Jan 2019 21:52:40 +0000 Roman Gushchin <guro@fb.com> wrote:
 > 
-> Previously the way that memory.low protection works is that if you are
-> 50% over a certain baseline, you get 50% of your normal scan pressure.
-> This is certainly better than the previous cliff-edge behaviour, but it
-> can be improved even further by always considering memory under the
-> currently enforced protection threshold to be out of bounds. This means
-> that we can set relatively low memory.low thresholds for variable or
-> bursty workloads while still getting a reasonable level of protection,
-> whereas with the previous version we may still trivially hit the 100%
-> clamp. The previous 100% clamp is also somewhat arbitrary, whereas this
-> one is more concretely based on the currently enforced protection
-> threshold, which is likely easier to reason about.
+> > > Hmm, this isn't really a common situation that I'd thought about, but it
+> > > seems reasonable to make the boundaries when in low reclaim to be between
+> > > min and low, rather than 0 and low. I'll add another patch with that. Thanks
+> >
+> > It's not a stopper, so I'm perfectly fine with a follow-up patch.
 > 
-> There is also a subtle issue with the way that proportional reclaim
-> worked previously -- it promotes having no memory.low, since it makes
-> pressure higher during low reclaim. This happens because we base our
-> scan pressure modulation on how far memory.current is between memory.min
-> and memory.low, but if memory.low is unset, we only use the overage
-> method. In most cromulent configurations, this then means that we end up
-> with *more* pressure than with no memory.low at all when we're in low
-> reclaim, which is not really very usable or expected.
+> Did this happen?
 > 
-> With this patch, memory.low and memory.min affect reclaim pressure in a
-> more understandable and composable way. For example, from a user
-> standpoint, "protected" memory now remains untouchable from a reclaim
-> aggression standpoint, and users can also have more confidence that
-> bursty workloads will still receive some amount of guaranteed
-> protection.
+> I'm still trying to get this five month old patchset unstuck :(.  The
+> review status is: 
 > 
-> Signed-off-by: Chris Down <chris@chrisdown.name>
-> Reviewed-by: Roman Gushchin <guro@fb.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Roman Gushchin <guro@fb.com>
-> Cc: Dennis Zhou <dennis@kernel.org>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-mm@kvack.org
-> Cc: kernel-team@fb.com
+> [1/3] mm, memcg: proportional memory.{low,min} reclaim
+> Acked-by: Johannes
+> Reviewed-by: Roman
+> 
+> [2/3] mm, memcg: make memory.emin the baseline for utilisation determination
+> Acked-by: Johannes
+> 
+> [3/3] mm, memcg: make scan aggression always exclude protection
+> Reviewed-by: Roman
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+I forgot to send out the actual ack-tag on #, so I just did. I was
+involved in the discussions that led to that patch, the code looks
+good to me, and it's what we've been using internally for a while
+without any hiccups.
+
+> I do have a note here that mhocko intended to take a closer look but I
+> don't recall whether that happened.
+
+Michal acked #3 in 20190530065111.GC6703@dhcp22.suse.cz. Afaik not the
+others, but #3 also doesn't make a whole lot of sense without #1...
+
+> a) say what the hell and merge them or
+> b) sit on them for another cycle or
+> c) drop them and ask Chris for a resend so we can start again.
+
+Michal, would you have time to take another look this week? Otherwise,
+I think everyone who would review them has done so.
