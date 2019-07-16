@@ -1,65 +1,73 @@
-From: Chris Down <chris@chrisdown.name>
-Subject: Re: [PATCH] mm: Proportional memory.{low,min} reclaim
-Date: Mon, 15 Jul 2019 23:57:29 +0100
-Message-ID: <20190715225729.GA19191@chrisdown.name>
-References: <20190124014455.GA6396@chrisdown.name>
- <20190128210031.GA31446@castle.DHCP.thefacebook.com>
- <20190128214213.GB15349@chrisdown.name>
- <20190128215230.GA32069@castle.DHCP.thefacebook.com>
- <20190715153527.86a3f6e65ecf5d501252dbf1@linux-foundation.org>
+From: =?UTF-8?B?546L6LSH?= <yun.wang@linux.alibaba.com>
+Subject: Re: [PATCH 1/4] numa: introduce per-cgroup numa balancing locality,
+ statistic
+Date: Tue, 16 Jul 2019 10:41:36 +0800
+Message-ID: <ecd21563-539c-06b1-92f2-26a111163174@linux.alibaba.com>
+References: <209d247e-c1b2-3235-2722-dd7c1f896483@linux.alibaba.com>
+ <60b59306-5e36-e587-9145-e90657daec41@linux.alibaba.com>
+ <3ac9b43a-cc80-01be-0079-df008a71ce4b@linux.alibaba.com>
+ <20190711134754.GD3402@hirez.programming.kicks-ass.net>
+ <b027f9cc-edd2-840c-3829-176a1e298446@linux.alibaba.com>
+ <20190712075815.GN3402@hirez.programming.kicks-ass.net>
+ <37474414-1a54-8e3a-60df-eb7e5e1cc1ed@linux.alibaba.com>
+ <20190712094214.GR3402@hirez.programming.kicks-ass.net>
+ <f8020f92-045e-d515-360b-faf9a149ab80@linux.alibaba.com>
+ <20190715121025.GN9035@blackbody.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=7VSl4WMlmc5jmN5dNuL2dV5fcPROFvmtmokhA+NF36I=;
-        b=FupgII/o9bbimWyh0bR/UkrMCpIcBrEpJ9ja2EO6K5VA/hOxrdLwUrKeytS0QyP0Y0
-         OhXsBBkmUiEHwe9vHBVKjTY1KbQ8/G/lcXfmnhG5kapCPmdHusIlp+cwSXAld52Wnqa/
-         nRh649s69N06QxHZL6McwutEtJnh9SDnxj+SU=
-Content-Disposition: inline
-In-Reply-To: <20190715153527.86a3f6e65ecf5d501252dbf1@linux-foundation.org>
+In-Reply-To: <20190715121025.GN9035@blackbody.suse.cz>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Dennis Zhou <dennis@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Kernel Team <Kernel-team@fb.com>
+Content-Type: text/plain; charset="utf-8"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, keescook@chromium.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com, mcgrof@kernel.org, mhocko@kernel.org, linux-mm@kvack.org, Ingo Molnar <mingo@redhat.com>, riel@surriel.com, Mel Gorman <mgorman@suse.de>, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hey Andrew,
+Hi Michal,
 
-Andrew Morton writes:
->On Mon, 28 Jan 2019 21:52:40 +0000 Roman Gushchin <guro@fb.com> wrote:
->
->> > Hmm, this isn't really a common situation that I'd thought about, but it
->> > seems reasonable to make the boundaries when in low reclaim to be between
->> > min and low, rather than 0 and low. I'll add another patch with that. Thanks
->>
->> It's not a stopper, so I'm perfectly fine with a follow-up patch.
->
->Did this happen?
+Thx for the comments :-)
 
-Yes, that's "mm, memcg: make memory.emin the baseline for utilisation 
-determination" :-)
+On 2019/7/15 下午8:10, Michal Koutný wrote:
+> Hello Yun.
+> 
+> On Fri, Jul 12, 2019 at 06:10:24PM +0800, 王贇  <yun.wang@linux.alibaba.com> wrote:
+>> Forgive me but I have no idea on how to combined this
+>> with memory cgroup's locality hierarchical update...
+>> parent memory cgroup do not have influence on mems_allowed
+>> to it's children, correct?
+> I'd recommend to look at the v2 of the cpuset controller that implements
+> the hierarchical behavior among configured memory node sets.
 
->I'm still trying to get this five month old patchset unstuck :(.
+Actually whatever the memory node sets or cpu allow sets is, it will
+take effect on task's behavior regarding memory location and cpu
+location, while the locality only care about the results rather than
+the sets.
 
-Thank you for your help. The patches are stable and proven to do what they're 
-intended to do at scale (both shown by the test results, and production use 
-inside FB at scale).
+For example if we bind tasks to cpus of node 0 and memory allow only
+the node 1, by cgroup controller or madvise, then they will running
+on node 0 with all the memory on node 1, on each PF for numa balancing,
+the task will access page on node 1 from node 0 remotely, so the
+locality will always be 0.
 
->I do have a note here that mhocko intended to take a closer look but I
->don't recall whether that happened.
->
->I could
->
->a) say what the hell and merge them or
->b) sit on them for another cycle or
->c) drop them and ask Chris for a resend so we can start again.
+> 
+> (My comment would better fit to 
+>     [PATCH 3/4] numa: introduce numa group per task group
+> IIUC, you could use cpuset controller to constraint memory nodes.)
+> 
+> For the second part (accessing numa statistics, i.e. this patch), I
+> wonder wheter this information wouldn't be better presented under the
+> cpuset controller too.
 
-Is there any reason to resend? As far as I know these patches are good to go.  
-I'm happy to rebase them, as long as it doesn't extend the time they're being 
-sat on. I don't see anything changing before the next release, though, and I 
-feel any reviews are clearly not coming at this series with any urgency.
+Yeah, we realized the cpu cgroup could be a better place to hold these
+new statistics, both locality and exectime are task's running behavior,
+related to memory location but not the memory behavior, will apply in
+next version.
 
-Thanks for the poke on this, I appreciate it.
+Regards,
+Michael Wang
+
+> 
+> HTH,
+> Michal
+> 
