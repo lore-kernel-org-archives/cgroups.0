@@ -1,51 +1,78 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v8 6/8] cgroup/cpuset: Change cpuset_rwsem and hotplug
- lock order
-Date: Tue, 16 Jul 2019 08:36:33 -0700
-Message-ID: <20190716153633.GA696309@devbig004.ftw2.facebook.com>
-References: <20190628080618.522-1-juri.lelli@redhat.com>
- <20190628080618.522-7-juri.lelli@redhat.com>
- <20190628130308.GU3419@hirez.programming.kicks-ass.net>
- <20190701065233.GA26005@localhost.localdomain>
- <20190701082731.GP3402@hirez.programming.kicks-ass.net>
- <20190701145107.GY657710@devbig004.ftw2.facebook.com>
- <20190704084924.GC9099@localhost.localdomain>
- <20190712140409.GB13885@localhost.localdomain>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH REBASED] mm, memcg: Make scan aggression always exclude
+ protection
+Date: Tue, 16 Jul 2019 13:10:56 -0400
+Message-ID: <20190716171056.GA16575@cmpxchg.org>
+References: <20190228213050.GA28211@chrisdown.name>
+ <20190322160307.GA3316@chrisdown.name>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=Rkr1cM2tkiVjVeg3QaVTaa27A8PkbBvry/gW4kLkkZo=;
-        b=QPXD/nW75d/To43UoaPRd46yJMqyRqYx84yCkV48ArLvUhJsr81fCDsaOReW/mntY4
-         RoUEInISzJzFjjgiiNXOa/dFxR7Hzb8s9QWuJEXbDpAjuUW8qLSOa3vp4DB2Du7ikDQx
-         kdo3OcgremMaklw/9W7tJleL438pee+faQN3g7CyoM/kHu0ijiYHegsvSSzASOp2/+LL
-         bHrQXIPE9qoKfDbqjX+9GC1V1nPuLxGcNXYcNTRg892CVHTum+xRz/WOyDmpD9br0oYT
-         o8XwOp8uuAu3ggxnWxmjeLqw+A7zojyphIG3Z2MqJ6olNNctQKECDqK4AOufZ0WUHwvf
-         ANng==
+        bh=kwpOpWT2eWiCeBhDjuSXvGXNhdNaH2c1UD5BkyTJoqs=;
+        b=knBTmABIgOoXo69WB++c8IiWB76RVPwIFTQLPCH60rHTf+UJ7FGF+ss1UJhIMPAq8x
+         0EwUItQ8ZgDKhh+54f7rBkRV7MSkUDhNen+cxQRpDwq4odvt0AmVDnfhd5gDsDsim6Oc
+         /NPzqJO1Ut/8JkDliDODiF4nieSIiOvRtiA2DDTkydoPrCpwaekiYCu4HxFCBNUMOdrv
+         Kh+4kgtRPjClbTdLMdYDm8rTNtWJmYgbqv8d+6z8dyl0uMeRa9N2RZCdxwR9l/flo6FS
+         TgIxRET8UFzLd1mskmgymFDDldbBvFBtSzi+kDwEtAaFdE8OH18mOJU1usfuTg9ZgWuu
+         4sBQ==
 Content-Disposition: inline
-In-Reply-To: <20190712140409.GB13885@localhost.localdomain>
+In-Reply-To: <20190322160307.GA3316@chrisdown.name>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Juri Lelli <juri.lelli@redhat.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, mingo@redhat.com, rostedt@goodmis.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org, Prateek Sood <prsood@codeaurora.org>
+To: Chris Down <chris@chrisdown.name>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, Dennis Zhou <dennis@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-On Fri, Jul 12, 2019 at 04:04:09PM +0200, Juri Lelli wrote:
-> > Should I take this as an indication that you had a look at the set and
-> > (apart from Peter's comments) you are OK with them?
-> > 
-> > If that's the case I will send a v9 out soon. Otherwise I'd kindly ask
-> > you to please have a look.
+On Fri, Mar 22, 2019 at 04:03:07PM +0000, Chris Down wrote:
+> This patch is an incremental improvement on the existing
+> memory.{low,min} relative reclaim work to base its scan pressure
+> calculations on how much protection is available compared to the current
+> usage, rather than how much the current usage is over some protection
+> threshold.
 > 
-> Gentle ping.
+> Previously the way that memory.low protection works is that if you are
+> 50% over a certain baseline, you get 50% of your normal scan pressure.
+> This is certainly better than the previous cliff-edge behaviour, but it
+> can be improved even further by always considering memory under the
+> currently enforced protection threshold to be out of bounds. This means
+> that we can set relatively low memory.low thresholds for variable or
+> bursty workloads while still getting a reasonable level of protection,
+> whereas with the previous version we may still trivially hit the 100%
+> clamp. The previous 100% clamp is also somewhat arbitrary, whereas this
+> one is more concretely based on the currently enforced protection
+> threshold, which is likely easier to reason about.
+> 
+> There is also a subtle issue with the way that proportional reclaim
+> worked previously -- it promotes having no memory.low, since it makes
+> pressure higher during low reclaim. This happens because we base our
+> scan pressure modulation on how far memory.current is between memory.min
+> and memory.low, but if memory.low is unset, we only use the overage
+> method. In most cromulent configurations, this then means that we end up
+> with *more* pressure than with no memory.low at all when we're in low
+> reclaim, which is not really very usable or expected.
+> 
+> With this patch, memory.low and memory.min affect reclaim pressure in a
+> more understandable and composable way. For example, from a user
+> standpoint, "protected" memory now remains untouchable from a reclaim
+> aggression standpoint, and users can also have more confidence that
+> bursty workloads will still receive some amount of guaranteed
+> protection.
+> 
+> Signed-off-by: Chris Down <chris@chrisdown.name>
+> Reviewed-by: Roman Gushchin <guro@fb.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Roman Gushchin <guro@fb.com>
+> Cc: Dennis Zhou <dennis@kernel.org>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: cgroups@vger.kernel.org
+> Cc: linux-mm@kvack.org
+> Cc: kernel-team@fb.com
 
-Sorry about the late response.  Yes, I have no objection to the change
-but can you please cc Waiman Long on the next round?
-
-Thanks.
-
--- 
-tejun
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
