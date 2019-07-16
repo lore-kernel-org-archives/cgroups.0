@@ -1,77 +1,51 @@
-From: Naresh Kamboju <naresh.kamboju@linaro.org>
-Subject: Re: [PATCH v10 6/9] kselftests: cgroup: add freezer controller self-tests
-Date: Tue, 16 Jul 2019 20:18:39 +0530
-Message-ID: <CA+G9fYvz6MA0N8GgwY5QNdWBAw+XT9QcmwnABsSpjLnwz_jLzA@mail.gmail.com>
-References: <20190405174708.1010-1-guro@fb.com> <20190405174708.1010-7-guro@fb.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v8 6/8] cgroup/cpuset: Change cpuset_rwsem and hotplug
+ lock order
+Date: Tue, 16 Jul 2019 08:36:33 -0700
+Message-ID: <20190716153633.GA696309@devbig004.ftw2.facebook.com>
+References: <20190628080618.522-1-juri.lelli@redhat.com>
+ <20190628080618.522-7-juri.lelli@redhat.com>
+ <20190628130308.GU3419@hirez.programming.kicks-ass.net>
+ <20190701065233.GA26005@localhost.localdomain>
+ <20190701082731.GP3402@hirez.programming.kicks-ass.net>
+ <20190701145107.GY657710@devbig004.ftw2.facebook.com>
+ <20190704084924.GC9099@localhost.localdomain>
+ <20190712140409.GB13885@localhost.localdomain>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=YrNz8Q0qPVQBIoGob+UcRjTxZM1rMVhgoGUsAEtnBd8=;
-        b=nRiNC+kUdj8lsYEzkcic81q9xM1RzrwfOcHBr5/kNF0xZPu/wF9Vuhh3dG+c5MjMsB
-         Lcd+uU1Eyy9SGkEH1qTwGyP5MmWQw80swJjOgDqnNzvvPSbELxtkfVNzxvC1rzKPff4T
-         nlkrn59+VV4ygIjhgauMHTsYBOdeAARNubjpDOia/L0U+3Q449nuF7uWDDAAdvL1dmFd
-         wJkmpbOwdAES6uGqXCQbVrzRu18SfRx3imvYjibztYVB/oUecv5Q1nVe3IgQqHZsjfPC
-         c+pHZCA00FHgqIAk0IDcmvCtqYbkEEM0TRO78bDpZYR17llbBNgvigXKjGMP63jnccZl
-         Rtog==
-In-Reply-To: <20190405174708.1010-7-guro@fb.com>
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=Rkr1cM2tkiVjVeg3QaVTaa27A8PkbBvry/gW4kLkkZo=;
+        b=QPXD/nW75d/To43UoaPRd46yJMqyRqYx84yCkV48ArLvUhJsr81fCDsaOReW/mntY4
+         RoUEInISzJzFjjgiiNXOa/dFxR7Hzb8s9QWuJEXbDpAjuUW8qLSOa3vp4DB2Du7ikDQx
+         kdo3OcgremMaklw/9W7tJleL438pee+faQN3g7CyoM/kHu0ijiYHegsvSSzASOp2/+LL
+         bHrQXIPE9qoKfDbqjX+9GC1V1nPuLxGcNXYcNTRg892CVHTum+xRz/WOyDmpD9br0oYT
+         o8XwOp8uuAu3ggxnWxmjeLqw+A7zojyphIG3Z2MqJ6olNNctQKECDqK4AOufZ0WUHwvf
+         ANng==
+Content-Disposition: inline
+In-Reply-To: <20190712140409.GB13885@localhost.localdomain>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guroan@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>, kernel-team@fb.com, cgroups@vger.kernel.org, open list <linux-kernel@vger.kernel.org>, Roman Gushchin <guro@fb.com>, Shuah Khan <shuah@kernel.org>, "open list:KERNEL SELFTEST FRAMEWORK" <linux-kselftest@vger.kernel.org>, lkft-triage@lists.linaro.org
+To: Juri Lelli <juri.lelli@redhat.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, mingo@redhat.com, rostedt@goodmis.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, cgroups@vger.kernel.org, Prateek Sood <prsood@codeaurora.org>
 
-Hi Roman,
+On Fri, Jul 12, 2019 at 04:04:09PM +0200, Juri Lelli wrote:
+> > Should I take this as an indication that you had a look at the set and
+> > (apart from Peter's comments) you are OK with them?
+> > 
+> > If that's the case I will send a v9 out soon. Otherwise I'd kindly ask
+> > you to please have a look.
+> 
+> Gentle ping.
 
-Just want to share information here on what we notice on running this test case,
+Sorry about the late response.  Yes, I have no objection to the change
+but can you please cc Waiman Long on the next round?
 
-On Fri, 5 Apr 2019 at 23:17, Roman Gushchin <guroan@gmail.com> wrote:
->
-> This patch implements 9 tests for the freezer controller for
-> cgroup v2:
-...
-> 6) ptrace test: the test checks that it's possible to attach to
-> a process in a frozen cgroup, get some information and detach, and
-> the cgroup will remain frozen.
+Thanks.
 
-selftests cgroup test_freezer failed because of the sys entry path not found.
- Cgroup /sys/fs/cgroup/unified/cg_test_ptrace isn't frozen
-/sys/fs/cgroup/unified/cg_test_ptrace: isn't_frozen #
-# not ok 6 test_cgfreezer_ptrace
-
-This test case fails intermittently.
-
-Test output:
--------------
-# selftests cgroup test_freezer
-cgroup: test_freezer_ #
-# Cgroup /sys/fs/cgroup/unified/cg_test_ptrace isn't frozen
-/sys/fs/cgroup/unified/cg_test_ptrace: isn't_frozen #
-# ok 1 test_cgfreezer_simple
-1: test_cgfreezer_simple_ #
-# ok 2 test_cgfreezer_tree
-2: test_cgfreezer_tree_ #
-# ok 3 test_cgfreezer_forkbomb
-3: test_cgfreezer_forkbomb_ #
-# ok 4 test_cgfreezer_rmdir
-4: test_cgfreezer_rmdir_ #
-# ok 5 test_cgfreezer_migrate
-5: test_cgfreezer_migrate_ #
-# not ok 6 test_cgfreezer_ptrace
-ok: 6_test_cgfreezer_ptrace #
-# ok 7 test_cgfreezer_stopped
-7: test_cgfreezer_stopped_ #
-# ok 8 test_cgfreezer_ptraced
-8: test_cgfreezer_ptraced_ #
-# ok 9 test_cgfreezer_vfork
-9: test_cgfreezer_vfork_ #
-[FAIL] 3 selftests cgroup test_freezer
-selftests: cgroup_test_freezer [FAIL]
-
-Test results link,
-https://qa-reports.linaro.org/lkft/linux-mainline-oe/tests/kselftest/cgroup_test_freezer?page=1
-
-- Naresh
+-- 
+tejun
