@@ -1,60 +1,173 @@
-From: Naresh Kamboju <naresh.kamboju@linaro.org>
-Subject: Re: [PATCH v10 6/9] kselftests: cgroup: add freezer controller self-tests
-Date: Wed, 17 Jul 2019 14:26:49 +0530
-Message-ID: <CA+G9fYt+UmakwaZAM4gR-B+V8kZUJVNh8gFBcXa4zU2j0Cz0ZQ@mail.gmail.com>
-References: <20190405174708.1010-1-guro@fb.com> <20190405174708.1010-7-guro@fb.com>
- <CA+G9fYvz6MA0N8GgwY5QNdWBAw+XT9QcmwnABsSpjLnwz_jLzA@mail.gmail.com> <20190717004904.GA32357@castle.dhcp.thefacebook.com>
+From: Patrick Bellasi <patrick.bellasi@arm.com>
+Subject: [PATCH v12 0/6] Add utilization clamping support (CGroups API)
+Date: Thu, 18 Jul 2019 19:17:42 +0100
+Message-ID: <20190718181748.28446-1-patrick.bellasi@arm.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=5jVJYwVPqhI92ePrVwuK/g+oP5mpkNXJhduBRrTnzOo=;
-        b=hc6r1e69nhIl69WPP0wsHJjCJ0EIaTLGofpXpOOCuwEBWVM2DslumLrlHBCVRPlXOb
-         vtpofLq3bWMezI1jFYPQSlVS0XUVXadYW1mcxJJ5hzyT0MTd+x3PpzFNVy3N1IxT0mBM
-         zCVb5nyOsBRFPJnDRXtMVc95qbpz21UCgaHQBRVnZjF87bPjqx3yZHbISO4sBn7ubXjb
-         qa7ZJwAAPRVKsL+9pm4ezR+ltfBh3ZdLMYqJFyBAUnv1FDYODKsz9I1vzYgHx5jMZToN
-         VCYnF5+0nRvQ69Xkihe/2ovzECrI4sGWEORpaknO3Y4aTs7qO9TZ198lz6V70XEcqWDr
-         bOOw==
-In-Reply-To: <20190717004904.GA32357@castle.dhcp.thefacebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>, Kernel Team <Kernel-team@fb.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Shuah Khan <shuah@kernel.org>, "open list:KERNEL SELFTEST FRAMEWORK" <linux-kselftest@vger.kernel.org>, "lkft-triage@lists.linaro.org" <lkft-triage@lists.linaro.org>
+To: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-api@vger.kernel.org, cgroups@vger.kernel.org
+Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Tejun Heo <tj@kernel.org>, "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Vincent Guittot <vincent.guittot@linaro.org>, Viresh Kumar <viresh.kumar@linaro.org>, Paul Turner <pjt@google.com>, Michal Koutny <mkoutny@suse.com>, Quentin Perret <quentin.perret@arm.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Morten Rasmussen <morten.rasmussen@arm.com>, Juri Lelli <juri.lelli@redhat.com>, Todd Kjos <tkjos@google.com>, Joel Fernandes <joelaf@google.com>, Steve Muckle <smuckle@google.com>, Suren Baghdasaryan <surenb@google.com>, Alessio Balsini <balsini@android.com>
 
-Hi Roman,
+Hi all, this is a respin of:
 
-> The interaction between ptrace and freezer is complicated
-> (as ptrace in general),so there are known cases when spurious
-> cgroup transitions (frozen <-> non frozen <-> frozen ) can happen.
+  https://lore.kernel.org/lkml/20190708084357.12944-1-patrick.bellasi@arm.com/
 
-When test ran for 8 times it got failed 5 times.
-I have noticed intermittent failure on x86_64, arm64 hikey device and
-qemu_arm64.
+which addresses all the comments collected so far:
 
->
-> Does it create any difficulties? If so, I'll send a diff to ignore
-> the result of this test for now.
+- track requested cgroup's percentage to mask conversion rounding to userspace
+- use a dedicated variable for parent restrictions
+- make more explicit in the documentation that the requested "protection" is
+  always capped by the requested "limit"
+- use the newly added uclamp_mutex to serialize the sysfs write callback
+- add missing RCU read locks across cpu_util_update_eff() call from
+  uclamp_update_root_tg()
+- remove not required and confusing sentence from the above changelog
+- add a new patch to always use enum uclamp_id for clamp_id values
+- fix percentage's decimals format string
 
-No difficulties. I will mark this test case as known failure.
+as well as adds some small modifications:
 
-> > > This patch implements 9 tests for the freezer controller for
-> > > cgroup v2:
-> > ...
-> > > 6) ptrace test: the test checks that it's possible to attach to
-> > > a process in a frozen cgroup, get some information and detach, and
-> > > the cgroup will remain frozen.
-> >
-> > selftests cgroup test_freezer failed because of the sys entry path not found.
->
-> Can you, please, elaborate on this?
+- introduce UCLAMP_PERCENT_{SHIFT,SCALE} to avoid hardcoded constants
+- s/uclamp_scale_from_percent()/capacity_from_percent()/
+- move range check from cpu_uclamp_{min,max}_write() to capacity_from_percent()
 
-I see this failure output on screen and sharing log here.
+The series is based on top of today's Linus master branch (wip for 5.3-rc1):
 
-Please find full test log here,
-https://lkft.validation.linaro.org/scheduler/job/825346#L673
+  commit 22051d9c4a57 ("Merge tag 'platform-drivers-x86-v5.3-2' of git://git.infradead.org/linux-platform-drivers-x86")
 
-- Naresh
+Thanks Quentin, Michal and Tejun for your review comments!
+
+This has been the first code review targeting specifically the cgroups bits and
+the series is now hopefully in a better shape.
+
+Looking forward for any additional comments! ;)
+
+Cheers,
+Patrick
+
+Series Organization
+===================
+
+The full tree is available here:
+
+   git://linux-arm.org/linux-pb.git   lkml/utilclamp_v12
+   http://www.linux-arm.org/git?p=linux-pb.git;a=shortlog;h=refs/heads/lkml/utilclamp_v12
+
+
+Newcomer's Short Abstract
+=========================
+
+The Linux scheduler tracks a "utilization" signal for each scheduling entity
+(SE), e.g. tasks, to know how much CPU time they use. This signal allows the
+scheduler to know how "big" a task is and, in principle, it can support
+advanced task placement strategies by selecting the best CPU to run a task.
+Some of these strategies are represented by the Energy Aware Scheduler [1].
+
+When the schedutil cpufreq governor is in use, the utilization signal allows
+the Linux scheduler to also drive frequency selection. The CPU utilization
+signal, which represents the aggregated utilization of tasks scheduled on that
+CPU, is used to select the frequency which best fits the workload generated by
+the tasks.
+
+The current translation of utilization values into a frequency selection is
+simple: we go to max for RT tasks or to the minimum frequency which can
+accommodate the utilization of DL+FAIR tasks.
+However, utilization values by themselves cannot convey the desired
+power/performance behaviors of each task as intended by user-space.
+As such they are not ideally suited for task placement decisions.
+
+Task placement and frequency selection policies in the kernel can be improved
+by taking into consideration hints coming from authorized user-space elements,
+like for example the Android middleware or more generally any "System
+Management Software" (SMS) framework.
+
+Utilization clamping is a mechanism which allows to "clamp" (i.e. filter) the
+utilization generated by RT and FAIR tasks within a range defined by user-space.
+The clamped utilization value can then be used, for example, to enforce a
+minimum and/or maximum frequency depending on which tasks are active on a CPU.
+
+The main use-cases for utilization clamping are:
+
+ - boosting: better interactive response for small tasks which
+   are affecting the user experience.
+
+   Consider for example the case of a small control thread for an external
+   accelerator (e.g. GPU, DSP, other devices). Here, from the task utilization
+   the scheduler does not have a complete view of what the task's requirements
+   are and, if it's a small utilization task, it keeps selecting a more energy
+   efficient CPU, with smaller capacity and lower frequency, thus negatively
+   impacting the overall time required to complete task activations.
+
+ - capping: increase energy efficiency for background tasks not affecting the
+   user experience.
+
+   Since running on a lower capacity CPU at a lower frequency is more energy
+   efficient, when the completion time is not a main goal, then capping the
+   utilization considered for certain (maybe big) tasks can have positive
+   effects, both on energy consumption and thermal headroom.
+   This feature allows also to make RT tasks more energy friendly on mobile
+   systems where running them on high capacity CPUs and at the maximum
+   frequency is not required.
+
+From these two use-cases, it's worth noticing that frequency selection
+biasing, introduced by patches 9 and 10 of this series, is just one possible
+usage of utilization clamping. Another compelling extension of utilization
+clamping is in helping the scheduler in making tasks placement decisions.
+
+Utilization is (also) a task specific property the scheduler uses to know
+how much CPU bandwidth a task requires, at least as long as there is idle time.
+Thus, the utilization clamp values, defined either per-task or per-task_group,
+can represent tasks to the scheduler as being bigger (or smaller) than what
+they actually are.
+
+Utilization clamping thus enables interesting additional optimizations, for
+example on asymmetric capacity systems like Arm big.LITTLE and DynamIQ CPUs,
+where:
+
+ - boosting: try to run small/foreground tasks on higher-capacity CPUs to
+   complete them faster despite being less energy efficient.
+
+ - capping: try to run big/background tasks on low-capacity CPUs to save power
+   and thermal headroom for more important tasks
+
+This series does not present this additional usage of utilization clamping but
+it's an integral part of the EAS feature set, where [2] is one of its main
+components.
+
+Android kernels use SchedTune, a solution similar to utilization clamping, to
+bias both 'frequency selection' and 'task placement'. This series provides the
+foundation to add similar features to mainline while focusing, for the
+time being, just on schedutil integration.
+
+
+References
+==========
+
+[1] Energy Aware Scheduling
+    https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/scheduler/sched-energy.txt?h=v5.1
+
+[2] Expressing per-task/per-cgroup performance hints
+    Linux Plumbers Conference 2018
+    https://linuxplumbersconf.org/event/2/contributions/128/
+
+
+Patrick Bellasi (6):
+  sched/core: uclamp: Extend CPU's cgroup controller
+  sched/core: uclamp: Propagate parent clamps
+  sched/core: uclamp: Propagate system defaults to root group
+  sched/core: uclamp: Use TG's clamps to restrict TASK's clamps
+  sched/core: uclamp: Update CPU's refcount on TG's clamp changes
+  sched/core: uclamp: always use enum uclamp_id for clamp_id values
+
+ Documentation/admin-guide/cgroup-v2.rst |  34 +++
+ init/Kconfig                            |  22 ++
+ kernel/sched/core.c                     | 382 ++++++++++++++++++++++--
+ kernel/sched/sched.h                    |  12 +-
+ 4 files changed, 430 insertions(+), 20 deletions(-)
+
+-- 
+2.22.0
+
