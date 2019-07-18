@@ -1,103 +1,57 @@
-From: Patrick Bellasi <patrick.bellasi@arm.com>
-Subject: [PATCH v12 4/6] sched/core: uclamp: Use TG's clamps to restrict TASK's clamps
-Date: Thu, 18 Jul 2019 19:17:46 +0100
-Message-ID: <20190718181748.28446-5-patrick.bellasi@arm.com>
-References: <20190718181748.28446-1-patrick.bellasi@arm.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v10 6/9] kselftests: cgroup: add freezer controller
+ self-tests
+Date: Thu, 18 Jul 2019 18:19:10 +0000
+Message-ID: <20190718181904.GD6139@castle.dhcp.thefacebook.com>
+References: <20190405174708.1010-1-guro@fb.com>
+ <20190405174708.1010-7-guro@fb.com>
+ <CA+G9fYvz6MA0N8GgwY5QNdWBAw+XT9QcmwnABsSpjLnwz_jLzA@mail.gmail.com>
+ <20190717004904.GA32357@castle.dhcp.thefacebook.com>
+ <CA+G9fYt+UmakwaZAM4gR-B+V8kZUJVNh8gFBcXa4zU2j0Cz0ZQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190718181748.28446-1-patrick.bellasi@arm.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=khrjtnpG6kKmS72BYUdVyVePYfUYDGHmwtuP+Bs8IBc=;
+ b=fxUxvHzLdeROapSBHpgMgZNL+xAIrcS2uq/RJXN+s6QzjM9Z70Vzg9DXbk6i+uOFwqbe
+ G0RxqQK137+w7YZtAPxxIvcfUcCOhbggD5hUuyUFFMMPeBt1iacvOKsfYyg0I/U2UuX8
+ zSW+CtN5XhiNAdGH9pUUrH6fvalXQWQotJ8= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=khrjtnpG6kKmS72BYUdVyVePYfUYDGHmwtuP+Bs8IBc=;
+ b=cfRFJZkfRCiXyMmVC0sKdplm8EYjowAel6I7DaQFLlXE7kalDdZxyULBRbOkI/cqqOVtUOSvdb2KVh7aVAUUGEQKleXAHWw618S4EbgejMqCsT8rCKV93sRJYy8jDYg4OS9oBb8z8BPPLpwcTXeMyEKc4XvQ5LdCY6CjvY9WPgI=
+In-Reply-To: <CA+G9fYt+UmakwaZAM4gR-B+V8kZUJVNh8gFBcXa4zU2j0Cz0ZQ@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <67975A3D2650094AB9D000C513E0331B@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-api@vger.kernel.org, cgroups@vger.kernel.org
-Cc: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Tejun Heo <tj@kernel.org>, "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Vincent Guittot <vincent.guittot@linaro.org>, Viresh Kumar <viresh.kumar@linaro.org>, Paul Turner <pjt@google.com>, Michal Koutny <mkoutny@suse.com>, Quentin Perret <quentin.perret@arm.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Morten Rasmussen <morten.rasmussen@arm.com>, Juri Lelli <juri.lelli@redhat.com>, Todd Kjos <tkjos@google.com>, Joel Fernandes <joelaf@google.com>, Steve Muckle <smuckle@google.com>, Suren Baghdasaryan <surenb@google.com>, Alessio Balsini <balsini@android.com>
+To: Naresh Kamboju <naresh.kamboju@linaro.org>
+Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>, Kernel Team <Kernel-team@fb.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Shuah Khan <shuah@kernel.org>, "open list:KERNEL SELFTEST FRAMEWORK" <linux-kselftest@vger.kernel.org>, "lkft-triage@lists.linaro.org" <lkft-triage@lists.linaro.org>
 
-When a task specific clamp value is configured via sched_setattr(2), this
-value is accounted in the corresponding clamp bucket every time the task is
-{en,de}qeued. However, when cgroups are also in use, the task specific
-clamp values could be restricted by the task_group (TG) clamp values.
+On Wed, Jul 17, 2019 at 02:26:49PM +0530, Naresh Kamboju wrote:
+> Hi Roman,
+>=20
+> > The interaction between ptrace and freezer is complicated
+> > (as ptrace in general),so there are known cases when spurious
+> > cgroup transitions (frozen <-> non frozen <-> frozen ) can happen.
+>=20
+> When test ran for 8 times it got failed 5 times.
+> I have noticed intermittent failure on x86_64, arm64 hikey device and
+> qemu_arm64.
 
-Update uclamp_cpu_inc() to aggregate task and TG clamp values. Every time a
-task is enqueued, it's accounted in the clamp bucket tracking the smaller
-clamp between the task specific value and its TG effective value. This
-allows to:
+Oh, it wasn't nearly as bad when I ran it. I'll take a look.
 
-1. ensure cgroup clamps are always used to restrict task specific requests,
-   i.e. boosted not more than its TG effective protection and capped at
-   least as its TG effective limit.
+>=20
+> >
+> > Does it create any difficulties? If so, I'll send a diff to ignore
+> > the result of this test for now.
+>=20
+> No difficulties. I will mark this test case as known failure.
 
-2. implement a "nice-like" policy, where tasks are still allowed to request
-   less than what enforced by their TG effective limits and protections
+Sure.
 
-Do this by exploiting the concept of "effective" clamp, which is already
-used by a TG to track parent enforced restrictions.
-
-Apply task group clamp restrictions only to tasks belonging to a child
-group. While, for tasks in the root group or in an autogroup, system
-defaults are still enforced.
-
-Signed-off-by: Patrick Bellasi <patrick.bellasi@arm.com>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Tejun Heo <tj@kernel.org>
-
----
-Changes in v12:
- Message-ID: <20190716143435.iwwd6fjr3udlqol4@e110439-lin>
- - remove not required and confusing sentence from the above changelog
----
- kernel/sched/core.c | 28 +++++++++++++++++++++++++++-
- 1 file changed, 27 insertions(+), 1 deletion(-)
-
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index e9231b089d5c..426736b2c4d7 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -873,16 +873,42 @@ unsigned int uclamp_rq_max_value(struct rq *rq, unsigned int clamp_id,
- 	return uclamp_idle_value(rq, clamp_id, clamp_value);
- }
- 
-+static inline struct uclamp_se
-+uclamp_tg_restrict(struct task_struct *p, unsigned int clamp_id)
-+{
-+	struct uclamp_se uc_req = p->uclamp_req[clamp_id];
-+#ifdef CONFIG_UCLAMP_TASK_GROUP
-+	struct uclamp_se uc_max;
-+
-+	/*
-+	 * Tasks in autogroups or root task group will be
-+	 * restricted by system defaults.
-+	 */
-+	if (task_group_is_autogroup(task_group(p)))
-+		return uc_req;
-+	if (task_group(p) == &root_task_group)
-+		return uc_req;
-+
-+	uc_max = task_group(p)->uclamp[clamp_id];
-+	if (uc_req.value > uc_max.value || !uc_req.user_defined)
-+		return uc_max;
-+#endif
-+
-+	return uc_req;
-+}
-+
- /*
-  * The effective clamp bucket index of a task depends on, by increasing
-  * priority:
-  * - the task specific clamp value, when explicitly requested from userspace
-+ * - the task group effective clamp value, for tasks not either in the root
-+ *   group or in an autogroup
-  * - the system default clamp value, defined by the sysadmin
-  */
- static inline struct uclamp_se
- uclamp_eff_get(struct task_struct *p, unsigned int clamp_id)
- {
--	struct uclamp_se uc_req = p->uclamp_req[clamp_id];
-+	struct uclamp_se uc_req = uclamp_tg_restrict(p, clamp_id);
- 	struct uclamp_se uc_max = uclamp_default[clamp_id];
- 
- 	/* System default restrictions always apply */
--- 
-2.22.0
-
+Thanks!
