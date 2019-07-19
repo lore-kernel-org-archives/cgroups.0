@@ -1,106 +1,73 @@
 From: Juri Lelli <juri.lelli@redhat.com>
-Subject: [PATCH v9 2/8] sched/core: Streamlining calls to task_rq_unlock()
-Date: Fri, 19 Jul 2019 15:59:54 +0200
-Message-ID: <20190719140000.31694-3-juri.lelli@redhat.com>
-References: <20190719140000.31694-1-juri.lelli@redhat.com>
+Subject: [PATCH v9 0/8] sched/deadline: fix cpusets bandwidth accounting
+Date: Fri, 19 Jul 2019 15:59:52 +0200
+Message-ID: <20190719140000.31694-1-juri.lelli@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190719140000.31694-1-juri.lelli@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org
-Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, longman@redhat.com, dietmar.eggemann@arm.com, cgroups@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, longman@redhat.com, dietmar.eggemann@arm.com, cgroups@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>
 
-From: Mathieu Poirier <mathieu.poirier@linaro.org>
+Hi,
 
-Calls to task_rq_unlock() are done several times in function
-__sched_setscheduler().  This is fine when only the rq lock needs to be
-handled but not so much when other locks come into play.
+v9 of a series of patches, originally authored by Mathieu, with the intent
+of fixing a long standing issue of SCHED_DEADLINE bandwidth accounting.
+As originally reported by Steve [1], when hotplug and/or (certain)
+cpuset reconfiguration operations take place, DEADLINE bandwidth
+accounting information is lost since root domains are destroyed and
+recreated.
 
-This patch streamlines the release of the rq lock so that only one
-location need to be modified when dealing with more than one lock.
+Mathieu's approach is based on restoring bandwidth accounting info on
+the newly created root domains by iterating through the (DEADLINE) tasks
+belonging to the configured cpuset(s).
 
-No change of functionality is introduced by this patch.
+Apart from the usual rebase on top of cgroup/for-next, this version
 
-Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
-Reviewed-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
-Acked-by: Tejun Heo <tj@kernel.org>
----
- kernel/sched/core.c | 24 ++++++++++++++----------
- 1 file changed, 14 insertions(+), 10 deletions(-)
+ - make cpuset_{can,cancel}_attach grab cpuset_rwsem for write (5/8 - Peter)
+ - moves v8 8/8 to 7/8 for bisectability (Peter)
+ - adds comment in changelog regarding normalize_rt_tasks() (8/8 - Peter)
 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 874c427742a9..acd6a9fe85bc 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -4222,8 +4222,8 @@ static int __sched_setscheduler(struct task_struct *p,
- 	 * Changing the policy of the stop threads its a very bad idea:
- 	 */
- 	if (p == rq->stop) {
--		task_rq_unlock(rq, p, &rf);
--		return -EINVAL;
-+		retval = -EINVAL;
-+		goto unlock;
- 	}
- 
- 	/*
-@@ -4239,8 +4239,8 @@ static int __sched_setscheduler(struct task_struct *p,
- 			goto change;
- 
- 		p->sched_reset_on_fork = reset_on_fork;
--		task_rq_unlock(rq, p, &rf);
--		return 0;
-+		retval = 0;
-+		goto unlock;
- 	}
- change:
- 
-@@ -4253,8 +4253,8 @@ static int __sched_setscheduler(struct task_struct *p,
- 		if (rt_bandwidth_enabled() && rt_policy(policy) &&
- 				task_group(p)->rt_bandwidth.rt_runtime == 0 &&
- 				!task_group_is_autogroup(task_group(p))) {
--			task_rq_unlock(rq, p, &rf);
--			return -EPERM;
-+			retval = -EPERM;
-+			goto unlock;
- 		}
- #endif
- #ifdef CONFIG_SMP
-@@ -4269,8 +4269,8 @@ static int __sched_setscheduler(struct task_struct *p,
- 			 */
- 			if (!cpumask_subset(span, &p->cpus_allowed) ||
- 			    rq->rd->dl_bw.bw == 0) {
--				task_rq_unlock(rq, p, &rf);
--				return -EPERM;
-+				retval = -EPERM;
-+				goto unlock;
- 			}
- 		}
- #endif
-@@ -4289,8 +4289,8 @@ static int __sched_setscheduler(struct task_struct *p,
- 	 * is available.
- 	 */
- 	if ((dl_policy(policy) || dl_task(p)) && sched_dl_overflow(p, policy, attr)) {
--		task_rq_unlock(rq, p, &rf);
--		return -EBUSY;
-+		retval = -EBUSY;
-+		goto unlock;
- 	}
- 
- 	p->sched_reset_on_fork = reset_on_fork;
-@@ -4346,6 +4346,10 @@ static int __sched_setscheduler(struct task_struct *p,
- 	preempt_enable();
- 
- 	return 0;
-+
-+unlock:
-+	task_rq_unlock(rq, p, &rf);
-+	return retval;
- }
- 
- static int _sched_setscheduler(struct task_struct *p, int policy,
+Set also available at
+
+ https://github.com/jlelli/linux.git fixes/deadline/root-domain-accounting-v9
+
+Thanks,
+
+- Juri
+
+[1] https://lkml.org/lkml/2016/2/3/966
+
+Juri Lelli (6):
+  cpuset: Rebuild root domain deadline accounting information
+  sched/deadline: Fix bandwidth accounting at all levels after offline
+    migration
+  cgroup/cpuset: convert cpuset_mutex to percpu_rwsem
+  cgroup/cpuset: Change cpuset_rwsem and hotplug lock order
+  rcu/tree: Setschedule gp ktread to SCHED_FIFO outside of atomic region
+  sched/core: Prevent race condition between cpuset and
+    __sched_setscheduler()
+
+Mathieu Poirier (2):
+  sched/topology: Adding function partition_sched_domains_locked()
+  sched/core: Streamlining calls to task_rq_unlock()
+
+ include/linux/cgroup.h         |   1 +
+ include/linux/cpuset.h         |  13 ++-
+ include/linux/sched.h          |   5 +
+ include/linux/sched/deadline.h |   8 ++
+ include/linux/sched/topology.h |  10 ++
+ kernel/cgroup/cgroup.c         |   2 +-
+ kernel/cgroup/cpuset.c         | 163 +++++++++++++++++++++++++--------
+ kernel/rcu/tree.c              |   6 +-
+ kernel/sched/core.c            |  57 ++++++++----
+ kernel/sched/deadline.c        |  63 +++++++++++++
+ kernel/sched/sched.h           |   3 -
+ kernel/sched/topology.c        |  30 +++++-
+ 12 files changed, 290 insertions(+), 71 deletions(-)
+
 -- 
 2.17.2
 
