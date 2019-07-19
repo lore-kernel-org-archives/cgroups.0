@@ -1,46 +1,106 @@
-From: Daniel Bristot de Oliveira <bristot@redhat.com>
-Subject: Re: [PATCH v2] sched/core: Fix cpu controller for !RT_GROUP_SCHED
-Date: Fri, 19 Jul 2019 10:18:28 +0200
-Message-ID: <f9372197-0282-1ed8-fa0b-a2b4a723a439@redhat.com>
-References: <20190719063455.27328-1-juri.lelli@redhat.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+From: Juri Lelli <juri.lelli@redhat.com>
+Subject: [PATCH v9 2/8] sched/core: Streamlining calls to task_rq_unlock()
+Date: Fri, 19 Jul 2019 15:59:54 +0200
+Message-ID: <20190719140000.31694-3-juri.lelli@redhat.com>
+References: <20190719140000.31694-1-juri.lelli@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190719063455.27328-1-juri.lelli@redhat.com>
-Content-Language: en-US
+In-Reply-To: <20190719140000.31694-1-juri.lelli@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: Juri Lelli <juri.lelli@redhat.com>, peterz@infradead.org, mingo@redhat.com, tj@kernel.org
-Cc: rostedt@goodmis.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, lizefan@huawei.com, longman@redhat.com, cgroups@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org
+Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, longman@redhat.com, dietmar.eggemann@arm.com, cgroups@vger.kernel.org
 
-T24gMTkvMDcvMjAxOSAwODozNCwgSnVyaSBMZWxsaSB3cm90ZToKPiBPbiAhQ09ORklHX1JUX0dS
-T1VQX1NDSEVEIGNvbmZpZ3VyYXRpb25zIGl0IGlzIGN1cnJlbnRseSBub3QgcG9zc2libGUgdG8K
-PiBtb3ZlIFJUIHRhc2tzIGJldHdlZW4gY2dyb3VwcyB0byB3aGljaCBjcHUgY29udHJvbGxlciBo
-YXMgYmVlbiBhdHRhY2hlZDsKPiBidXQgaXQgaXMgb2RkbHkgcG9zc2libGUgdG8gZmlyc3QgbW92
-ZSB0YXNrcyBhcm91bmQgYW5kIHRoZW4gbWFrZSB0aGVtCj4gUlQgKHNldHNjaGVkdWxlIHRvIEZJ
-Rk8vUlIpLgo+IAo+IEUuZy46Cj4gCj4gICAjIG1rZGlyIC9zeXMvZnMvY2dyb3VwL2NwdSxjcHVh
-Y2N0L2dyb3VwMQo+ICAgIyBjaHJ0IC1mcCAxMCAkJAo+ICAgIyBlY2hvICQkID4gL3N5cy9mcy9j
-Z3JvdXAvY3B1LGNwdWFjY3QvZ3JvdXAxL3Rhc2tzCj4gICBiYXNoOiBlY2hvOiB3cml0ZSBlcnJv
-cjogSW52YWxpZCBhcmd1bWVudAo+ICAgIyBjaHJ0IC1vcCAwICQkCj4gICAjIGVjaG8gJCQgPiAv
-c3lzL2ZzL2Nncm91cC9jcHUsY3B1YWNjdC9ncm91cDEvdGFza3MKPiAgICMgY2hydCAtZnAgMTAg
-JCQKPiAgICMgY2F0IC9zeXMvZnMvY2dyb3VwL2NwdSxjcHVhY2N0L2dyb3VwMS90YXNrcwo+ICAg
-MjM0NQo+ICAgMjU5OAo+ICAgIyBjaHJ0IC1wIDIzNDUKPiAgIHBpZCAyMzQ1J3MgY3VycmVudCBz
-Y2hlZHVsaW5nIHBvbGljeTogU0NIRURfRklGTwo+ICAgcGlkIDIzNDUncyBjdXJyZW50IHNjaGVk
-dWxpbmcgcHJpb3JpdHk6IDEwCj4gCj4gQWxzbywgYXMgTWljaGFsIG5vdGVkLCBpdCBpcyBjdXJy
-ZW50bHkgbm90IHBvc3NpYmxlIHRvIGVuYWJsZSBjcHUKPiBjb250cm9sbGVyIG9uIHVuaWZpZWQg
-aGllcmFyY2h5IHdpdGggIUNPTkZJR19SVF9HUk9VUF9TQ0hFRCAoaWYgdGhlcmUKPiBhcmUgYW55
-IGtlcm5lbCBSVCB0aHJlYWRzIGluIHJvb3QgY2dyb3VwLCB0aGV5IGNhbid0IGJlIG1pZ3JhdGVk
-IHRvIHRoZQo+IG5ld2x5IGNyZWF0ZWQgY3B1IGNvbnRyb2xsZXIncyByb290IGluIGNncm91cF91
-cGRhdGVfZGZsX2Nzc2VzKCkpLgo+IAo+IEV4aXN0aW5nIGNvZGUgY29tZXMgd2l0aCBhIGNvbW1l
-bnQgc2F5aW5nIHRoZSAid2UgZG9uJ3Qgc3VwcG9ydCBSVC10YXNrcwo+IGJlaW5nIGluIHNlcGFy
-YXRlIGdyb3VwcyIuIFN1Y2ggY29tbWVudCBpcyBob3dldmVyIHN0YWxlIGFuZCBiZWxvbmdzIHRv
-Cj4gcHJlLVJUX0dST1VQX1NDSEVEIHRpbWVzLiBBbHNvLCBpdCBkb2Vzbid0IG1ha2UgbXVjaCBz
-ZW5zZSBmb3IKPiAhUlRfR1JPVVBfIFNDSEVEIGNvbmZpZ3VyYXRpb25zLCBzaW5jZSBjaGVja3Mg
-cmVsYXRlZCB0byBSVCBiYW5kd2lkdGgKPiBhcmUgbm90IHBlcmZvcm1lZCBhdCBhbGwgaW4gdGhl
-c2UgY2FzZXMuCj4gCj4gTWFrZSBtb3ZpbmcgUlQgdGFza3MgYmV0d2VlbiBjcHUgY29udHJvbGxl
-ciBncm91cHMgdmlhYmxlIGJ5IHJlbW92aW5nCj4gc3BlY2lhbCBjYXNlIGNoZWNrIGZvciBSVCAo
-YW5kIERFQURMSU5FKSB0YXNrcy4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBKdXJpIExlbGxpIDxqdXJp
-LmxlbGxpQHJlZGhhdC5jb20+Cj4gUmV2aWV3ZWQtYnk6IE1pY2hhbCBLb3V0bsO9IDxta291dG55
-QHN1c2UuY29tPgoKUmV2aWV3ZWQtYnk6IERhbmllbCBCcmlzdG90IGRlIE9saXZlaXJhIDxicmlz
-dG90QHJlZGhhdC5jb20+CgpUaGFua3MhCi0tIERhbmllbAo=
+From: Mathieu Poirier <mathieu.poirier@linaro.org>
+
+Calls to task_rq_unlock() are done several times in function
+__sched_setscheduler().  This is fine when only the rq lock needs to be
+handled but not so much when other locks come into play.
+
+This patch streamlines the release of the rq lock so that only one
+location need to be modified when dealing with more than one lock.
+
+No change of functionality is introduced by this patch.
+
+Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
+Reviewed-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
+Acked-by: Tejun Heo <tj@kernel.org>
+---
+ kernel/sched/core.c | 24 ++++++++++++++----------
+ 1 file changed, 14 insertions(+), 10 deletions(-)
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 874c427742a9..acd6a9fe85bc 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -4222,8 +4222,8 @@ static int __sched_setscheduler(struct task_struct *p,
+ 	 * Changing the policy of the stop threads its a very bad idea:
+ 	 */
+ 	if (p == rq->stop) {
+-		task_rq_unlock(rq, p, &rf);
+-		return -EINVAL;
++		retval = -EINVAL;
++		goto unlock;
+ 	}
+ 
+ 	/*
+@@ -4239,8 +4239,8 @@ static int __sched_setscheduler(struct task_struct *p,
+ 			goto change;
+ 
+ 		p->sched_reset_on_fork = reset_on_fork;
+-		task_rq_unlock(rq, p, &rf);
+-		return 0;
++		retval = 0;
++		goto unlock;
+ 	}
+ change:
+ 
+@@ -4253,8 +4253,8 @@ static int __sched_setscheduler(struct task_struct *p,
+ 		if (rt_bandwidth_enabled() && rt_policy(policy) &&
+ 				task_group(p)->rt_bandwidth.rt_runtime == 0 &&
+ 				!task_group_is_autogroup(task_group(p))) {
+-			task_rq_unlock(rq, p, &rf);
+-			return -EPERM;
++			retval = -EPERM;
++			goto unlock;
+ 		}
+ #endif
+ #ifdef CONFIG_SMP
+@@ -4269,8 +4269,8 @@ static int __sched_setscheduler(struct task_struct *p,
+ 			 */
+ 			if (!cpumask_subset(span, &p->cpus_allowed) ||
+ 			    rq->rd->dl_bw.bw == 0) {
+-				task_rq_unlock(rq, p, &rf);
+-				return -EPERM;
++				retval = -EPERM;
++				goto unlock;
+ 			}
+ 		}
+ #endif
+@@ -4289,8 +4289,8 @@ static int __sched_setscheduler(struct task_struct *p,
+ 	 * is available.
+ 	 */
+ 	if ((dl_policy(policy) || dl_task(p)) && sched_dl_overflow(p, policy, attr)) {
+-		task_rq_unlock(rq, p, &rf);
+-		return -EBUSY;
++		retval = -EBUSY;
++		goto unlock;
+ 	}
+ 
+ 	p->sched_reset_on_fork = reset_on_fork;
+@@ -4346,6 +4346,10 @@ static int __sched_setscheduler(struct task_struct *p,
+ 	preempt_enable();
+ 
+ 	return 0;
++
++unlock:
++	task_rq_unlock(rq, p, &rf);
++	return retval;
+ }
+ 
+ static int _sched_setscheduler(struct task_struct *p, int policy,
+-- 
+2.17.2
+
