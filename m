@@ -1,57 +1,53 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v10 6/9] kselftests: cgroup: add freezer controller
- self-tests
-Date: Thu, 18 Jul 2019 18:19:10 +0000
-Message-ID: <20190718181904.GD6139@castle.dhcp.thefacebook.com>
-References: <20190405174708.1010-1-guro@fb.com>
- <20190405174708.1010-7-guro@fb.com>
- <CA+G9fYvz6MA0N8GgwY5QNdWBAw+XT9QcmwnABsSpjLnwz_jLzA@mail.gmail.com>
- <20190717004904.GA32357@castle.dhcp.thefacebook.com>
- <CA+G9fYt+UmakwaZAM4gR-B+V8kZUJVNh8gFBcXa4zU2j0Cz0ZQ@mail.gmail.com>
+From: Juri Lelli <juri.lelli@redhat.com>
+Subject: [PATCH v2] sched/core: Fix cpu controller for !RT_GROUP_SCHED
+Date: Fri, 19 Jul 2019 08:34:55 +0200
+Message-ID: <20190719063455.27328-1-juri.lelli@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=khrjtnpG6kKmS72BYUdVyVePYfUYDGHmwtuP+Bs8IBc=;
- b=fxUxvHzLdeROapSBHpgMgZNL+xAIrcS2uq/RJXN+s6QzjM9Z70Vzg9DXbk6i+uOFwqbe
- G0RxqQK137+w7YZtAPxxIvcfUcCOhbggD5hUuyUFFMMPeBt1iacvOKsfYyg0I/U2UuX8
- zSW+CtN5XhiNAdGH9pUUrH6fvalXQWQotJ8= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=khrjtnpG6kKmS72BYUdVyVePYfUYDGHmwtuP+Bs8IBc=;
- b=cfRFJZkfRCiXyMmVC0sKdplm8EYjowAel6I7DaQFLlXE7kalDdZxyULBRbOkI/cqqOVtUOSvdb2KVh7aVAUUGEQKleXAHWw618S4EbgejMqCsT8rCKV93sRJYy8jDYg4OS9oBb8z8BPPLpwcTXeMyEKc4XvQ5LdCY6CjvY9WPgI=
-In-Reply-To: <CA+G9fYt+UmakwaZAM4gR-B+V8kZUJVNh8gFBcXa4zU2j0Cz0ZQ@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <67975A3D2650094AB9D000C513E0331B@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Naresh Kamboju <naresh.kamboju@linaro.org>
-Cc: Roman Gushchin <guroan@gmail.com>, Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>, Kernel Team <Kernel-team@fb.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, Shuah Khan <shuah@kernel.org>, "open list:KERNEL SELFTEST FRAMEWORK" <linux-kselftest@vger.kernel.org>, "lkft-triage@lists.linaro.org" <lkft-triage@lists.linaro.org>
+Content-Type: text/plain; charset="macroman"
+To: peterz@infradead.org, mingo@redhat.com, tj@kernel.org
+Cc: rostedt@goodmis.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, bristot@redhat.com, lizefan@huawei.com, longman@redhat.com, cgroups@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>
 
-On Wed, Jul 17, 2019 at 02:26:49PM +0530, Naresh Kamboju wrote:
-> Hi Roman,
->=20
-> > The interaction between ptrace and freezer is complicated
-> > (as ptrace in general),so there are known cases when spurious
-> > cgroup transitions (frozen <-> non frozen <-> frozen ) can happen.
->=20
-> When test ran for 8 times it got failed 5 times.
-> I have noticed intermittent failure on x86_64, arm64 hikey device and
-> qemu_arm64.
-
-Oh, it wasn't nearly as bad when I ran it. I'll take a look.
-
->=20
-> >
-> > Does it create any difficulties? If so, I'll send a diff to ignore
-> > the result of this test for now.
->=20
-> No difficulties. I will mark this test case as known failure.
-
-Sure.
-
-Thanks!
+T24gIUNPTkZJR19SVF9HUk9VUF9TQ0hFRCBjb25maWd1cmF0aW9ucyBpdCBpcyBjdXJyZW50bHkg
+bm90IHBvc3NpYmxlIHRvCm1vdmUgUlQgdGFza3MgYmV0d2VlbiBjZ3JvdXBzIHRvIHdoaWNoIGNw
+dSBjb250cm9sbGVyIGhhcyBiZWVuIGF0dGFjaGVkOwpidXQgaXQgaXMgb2RkbHkgcG9zc2libGUg
+dG8gZmlyc3QgbW92ZSB0YXNrcyBhcm91bmQgYW5kIHRoZW4gbWFrZSB0aGVtClJUIChzZXRzY2hl
+ZHVsZSB0byBGSUZPL1JSKS4KCkUuZy46CgogICMgbWtkaXIgL3N5cy9mcy9jZ3JvdXAvY3B1LGNw
+dWFjY3QvZ3JvdXAxCiAgIyBjaHJ0IC1mcCAxMCAkJAogICMgZWNobyAkJCA+IC9zeXMvZnMvY2dy
+b3VwL2NwdSxjcHVhY2N0L2dyb3VwMS90YXNrcwogIGJhc2g6IGVjaG86IHdyaXRlIGVycm9yOiBJ
+bnZhbGlkIGFyZ3VtZW50CiAgIyBjaHJ0IC1vcCAwICQkCiAgIyBlY2hvICQkID4gL3N5cy9mcy9j
+Z3JvdXAvY3B1LGNwdWFjY3QvZ3JvdXAxL3Rhc2tzCiAgIyBjaHJ0IC1mcCAxMCAkJAogICMgY2F0
+IC9zeXMvZnMvY2dyb3VwL2NwdSxjcHVhY2N0L2dyb3VwMS90YXNrcwogIDIzNDUKICAyNTk4CiAg
+IyBjaHJ0IC1wIDIzNDUKICBwaWQgMjM0NSdzIGN1cnJlbnQgc2NoZWR1bGluZyBwb2xpY3k6IFND
+SEVEX0ZJRk8KICBwaWQgMjM0NSdzIGN1cnJlbnQgc2NoZWR1bGluZyBwcmlvcml0eTogMTAKCkFs
+c28sIGFzIE1pY2hhbCBub3RlZCwgaXQgaXMgY3VycmVudGx5IG5vdCBwb3NzaWJsZSB0byBlbmFi
+bGUgY3B1CmNvbnRyb2xsZXIgb24gdW5pZmllZCBoaWVyYXJjaHkgd2l0aCAhQ09ORklHX1JUX0dS
+T1VQX1NDSEVEIChpZiB0aGVyZQphcmUgYW55IGtlcm5lbCBSVCB0aHJlYWRzIGluIHJvb3QgY2dy
+b3VwLCB0aGV5IGNhbid0IGJlIG1pZ3JhdGVkIHRvIHRoZQpuZXdseSBjcmVhdGVkIGNwdSBjb250
+cm9sbGVyJ3Mgcm9vdCBpbiBjZ3JvdXBfdXBkYXRlX2RmbF9jc3NlcygpKS4KCkV4aXN0aW5nIGNv
+ZGUgY29tZXMgd2l0aCBhIGNvbW1lbnQgc2F5aW5nIHRoZSAid2UgZG9uJ3Qgc3VwcG9ydCBSVC10
+YXNrcwpiZWluZyBpbiBzZXBhcmF0ZSBncm91cHMiLiBTdWNoIGNvbW1lbnQgaXMgaG93ZXZlciBz
+dGFsZSBhbmQgYmVsb25ncyB0bwpwcmUtUlRfR1JPVVBfU0NIRUQgdGltZXMuIEFsc28sIGl0IGRv
+ZXNuJ3QgbWFrZSBtdWNoIHNlbnNlIGZvcgohUlRfR1JPVVBfIFNDSEVEIGNvbmZpZ3VyYXRpb25z
+LCBzaW5jZSBjaGVja3MgcmVsYXRlZCB0byBSVCBiYW5kd2lkdGgKYXJlIG5vdCBwZXJmb3JtZWQg
+YXQgYWxsIGluIHRoZXNlIGNhc2VzLgoKTWFrZSBtb3ZpbmcgUlQgdGFza3MgYmV0d2VlbiBjcHUg
+Y29udHJvbGxlciBncm91cHMgdmlhYmxlIGJ5IHJlbW92aW5nCnNwZWNpYWwgY2FzZSBjaGVjayBm
+b3IgUlQgKGFuZCBERUFETElORSkgdGFza3MuCgpTaWduZWQtb2ZmLWJ5OiBKdXJpIExlbGxpIDxq
+dXJpLmxlbGxpQHJlZGhhdC5jb20+ClJldmlld2VkLWJ5OiBNaWNoYWwgS291dG7DvSA8bWtvdXRu
+eUBzdXNlLmNvbT4KQWNrZWQtYnk6IFRlanVuIEhlbyA8dGpAa2VybmVsLm9yZz4KLS0tCnYxIC0+
+IHYyOiBhZGRlZCBjb21tZW50IGFib3V0IHVuaWZpZWQgaGllcmFjaHkgaW4gY2hhbmdlbG9nIChN
+aWNoYWwpCiAgICAgICAgICBjb2xsZWN0ZWQgYWNrcy9yZXZpZXdzCi0tLQoga2VybmVsL3NjaGVk
+L2NvcmUuYyB8IDQgLS0tLQogMSBmaWxlIGNoYW5nZWQsIDQgZGVsZXRpb25zKC0pCgpkaWZmIC0t
+Z2l0IGEva2VybmVsL3NjaGVkL2NvcmUuYyBiL2tlcm5lbC9zY2hlZC9jb3JlLmMKaW5kZXggZmE0
+M2NlMzk2MmU3Li5iZTA0MWRjN2QzMTMgMTAwNjQ0Ci0tLSBhL2tlcm5lbC9zY2hlZC9jb3JlLmMK
+KysrIGIva2VybmVsL3NjaGVkL2NvcmUuYwpAQCAtNjkzNCwxMCArNjkzNCw2IEBAIHN0YXRpYyBp
+bnQgY3B1X2Nncm91cF9jYW5fYXR0YWNoKHN0cnVjdCBjZ3JvdXBfdGFza3NldCAqdHNldCkKICNp
+ZmRlZiBDT05GSUdfUlRfR1JPVVBfU0NIRUQKIAkJaWYgKCFzY2hlZF9ydF9jYW5fYXR0YWNoKGNz
+c190Zyhjc3MpLCB0YXNrKSkKIAkJCXJldHVybiAtRUlOVkFMOwotI2Vsc2UKLQkJLyogV2UgZG9u
+J3Qgc3VwcG9ydCBSVC10YXNrcyBiZWluZyBpbiBzZXBhcmF0ZSBncm91cHMgKi8KLQkJaWYgKHRh
+c2stPnNjaGVkX2NsYXNzICE9ICZmYWlyX3NjaGVkX2NsYXNzKQotCQkJcmV0dXJuIC1FSU5WQUw7
+CiAjZW5kaWYKIAkJLyoKIAkJICogU2VyaWFsaXplIGFnYWluc3Qgd2FrZV91cF9uZXdfdGFzaygp
+IHN1Y2ggdGhhdCBpZiBpdHMKLS0gCjIuMTcuMgoK
