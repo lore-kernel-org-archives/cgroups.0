@@ -1,49 +1,40 @@
 From: Dietmar Eggemann <dietmar.eggemann@arm.com>
-Subject: Re: [PATCH v9 2/8] sched/core: Streamlining calls to task_rq_unlock()
-Date: Mon, 22 Jul 2019 11:08:17 +0200
-Message-ID: <b18f1ec3-46a1-e65e-2c6e-85729031c996@arm.com>
+Subject: Re: [PATCH v9 4/8] sched/deadline: Fix bandwidth accounting at all
+ levels after offline migration
+Date: Mon, 22 Jul 2019 13:07:33 +0200
+Message-ID: <5da6abab-00ff-9bb4-f24b-0bf5dfcd4c35@arm.com>
 References: <20190719140000.31694-1-juri.lelli@redhat.com>
- <20190719140000.31694-3-juri.lelli@redhat.com>
- <50f00347-ffb3-285c-5a7d-3a9c5f813950@arm.com>
- <20190722083214.GF25636@localhost.localdomain>
+ <20190719140000.31694-5-juri.lelli@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190722083214.GF25636@localhost.localdomain>
+In-Reply-To: <20190719140000.31694-5-juri.lelli@redhat.com>
 Content-Language: en-GB
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Juri Lelli <juri.lelli@redhat.com>
-Cc: peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, longman@redhat.com, cgroups@vger.kernel.org
+To: Juri Lelli <juri.lelli@redhat.com>, peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org
+Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, longman@redhat.com, cgroups@vger.kernel.org
 
-On 7/22/19 10:32 AM, Juri Lelli wrote:
-> On 22/07/19 10:21, Dietmar Eggemann wrote:
->> On 7/19/19 3:59 PM, Juri Lelli wrote:
->>> From: Mathieu Poirier <mathieu.poirier@linaro.org>
->>
->> [...]
->>
->>> @@ -4269,8 +4269,8 @@ static int __sched_setscheduler(struct task_struct *p,
->>>  			 */
->>>  			if (!cpumask_subset(span, &p->cpus_allowed) ||
->>
->> This doesn't apply cleanly on v5.3-rc1 anymore due to commit
->> 3bd3706251ee ("sched/core: Provide a pointer to the valid CPU mask").
->>
->>>  			    rq->rd->dl_bw.bw == 0) {
->>> -				task_rq_unlock(rq, p, &rf);
->>> -				return -EPERM;
->>> +				retval = -EPERM;
->>> +				goto unlock;
->>>  			}
->>>  		}
->>>  #endif
-> 
-> Thanks for reporting. The set is based on cgroup/for-next (as of last
-> week), though. I can of course rebase on tip/sched/core or mainline if
-> needed.
+On 7/19/19 3:59 PM, Juri Lelli wrote:
 
-Not sure, there is another little issue on 3/8 since uclamp is in
-v5.3-rc1 as well commit 69842cba9ace8 ("sched/uclamp: Add CPU's clamp
-buckets refcounting").
+[...]
+
+> @@ -557,6 +558,38 @@ static struct rq *dl_task_offline_migration(struct rq *rq, struct task_struct *p
+>  		double_lock_balance(rq, later_rq);
+>  	}
+>  
+> +	if (p->dl.dl_non_contending || p->dl.dl_throttled) {
+> +		/*
+> +		 * Inactive timer is armed (or callback is running, but
+> +		 * waiting for us to release rq locks). In any case, when it
+> +		 * will file (or continue), it will see running_bw of this
+
+s/file/fire ?
+
+> +		 * task migrated to later_rq (and correctly handle it).
+
+Is this because of dl_task_timer()->enqueue_task_dl()->task_contending()
+setting dl_se->dl_non_contending = 0 ?
+
+[...]
