@@ -1,40 +1,48 @@
-From: Dietmar Eggemann <dietmar.eggemann@arm.com>
-Subject: Re: [PATCH v9 4/8] sched/deadline: Fix bandwidth accounting at all
- levels after offline migration
-Date: Mon, 22 Jul 2019 13:07:33 +0200
-Message-ID: <5da6abab-00ff-9bb4-f24b-0bf5dfcd4c35@arm.com>
-References: <20190719140000.31694-1-juri.lelli@redhat.com>
- <20190719140000.31694-5-juri.lelli@redhat.com>
+From: Peng Wang <rocking@whu.edu.cn>
+Subject: [PATCH] cgroup: remove redundant assignment in while loop of cgroup_calc_subtree_ss_mask()
+Date: Mon, 22 Jul 2019 19:39:23 +0800
+Message-ID: <20190722113923.16914-1-rocking@whu.edu.cn>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190719140000.31694-5-juri.lelli@redhat.com>
-Content-Language: en-GB
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Juri Lelli <juri.lelli@redhat.com>, peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org
-Cc: linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, longman@redhat.com, cgroups@vger.kernel.org
+To: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Peng Wang <rocking@whu.edu.cn>
 
-On 7/19/19 3:59 PM, Juri Lelli wrote:
+new_ss_mask is always not less than cur_ss_mask.
+We don not need to update it with cur_ss_mask's value.
 
-[...]
+Signed-off-by: Peng Wang <rocking@whu.edu.cn>
+---
+ kernel/cgroup/cgroup.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-> @@ -557,6 +558,38 @@ static struct rq *dl_task_offline_migration(struct rq *rq, struct task_struct *p
->  		double_lock_balance(rq, later_rq);
->  	}
->  
-> +	if (p->dl.dl_non_contending || p->dl.dl_throttled) {
-> +		/*
-> +		 * Inactive timer is armed (or callback is running, but
-> +		 * waiting for us to release rq locks). In any case, when it
-> +		 * will file (or continue), it will see running_bw of this
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 300b0c416341..2b8c39dabd26 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -1520,7 +1520,7 @@ static umode_t cgroup_file_mode(const struct cftype *cft)
+  */
+ static u16 cgroup_calc_subtree_ss_mask(u16 subtree_control, u16 this_ss_mask)
+ {
+-	u16 cur_ss_mask = subtree_control;
++	u16 cur_ss_mask = subtree_control, new_ss_mask;
+ 	struct cgroup_subsys *ss;
+ 	int ssid;
+ 
+@@ -1528,9 +1528,8 @@ static u16 cgroup_calc_subtree_ss_mask(u16 subtree_control, u16 this_ss_mask)
+ 
+ 	cur_ss_mask |= cgrp_dfl_implicit_ss_mask;
+ 
++	new_ss_mask = cur_ss_mask;
+ 	while (true) {
+-		u16 new_ss_mask = cur_ss_mask;
+-
+ 		do_each_subsys_mask(ss, ssid, cur_ss_mask) {
+ 			new_ss_mask |= ss->depends_on;
+ 		} while_each_subsys_mask();
+-- 
+2.19.1
 
-s/file/fire ?
-
-> +		 * task migrated to later_rq (and correctly handle it).
-
-Is this because of dl_task_timer()->enqueue_task_dl()->task_contending()
-setting dl_se->dl_non_contending = 0 ?
-
-[...]
