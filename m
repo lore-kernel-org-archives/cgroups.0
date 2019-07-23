@@ -1,68 +1,41 @@
-From: Dietmar Eggemann <dietmar.eggemann@arm.com>
-Subject: Re: [PATCH v9 4/8] sched/deadline: Fix bandwidth accounting at all
- levels after offline migration
-Date: Mon, 22 Jul 2019 16:29:53 +0200
-Message-ID: <0e546906-01b1-b15b-7188-9ad2c4b30dc1@arm.com>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH v9 2/8] sched/core: Streamlining calls to task_rq_unlock()
+Date: Tue, 23 Jul 2019 12:31:31 +0200
+Message-ID: <20190723103131.GB3402@hirez.programming.kicks-ass.net>
 References: <20190719140000.31694-1-juri.lelli@redhat.com>
- <20190719140000.31694-5-juri.lelli@redhat.com>
- <5da6abab-00ff-9bb4-f24b-0bf5dfcd4c35@arm.com>
- <20190722122828.GG25636@localhost.localdomain>
- <07a45864-07bf-aa5d-3ff7-a300326b9040@arm.com>
- <20190722133520.GH25636@localhost.localdomain>
+ <20190719140000.31694-3-juri.lelli@redhat.com>
+ <50f00347-ffb3-285c-5a7d-3a9c5f813950@arm.com>
+ <20190722083214.GF25636@localhost.localdomain>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190722133520.GH25636@localhost.localdomain>
-Content-Language: en-GB
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=MnT833q43OKgOeGMbkNl4vZ1Sr0chNDr5cIKxrka6/s=; b=guRZ1+tUYg9jhJ2PD2PsuUIT1
+        4QBkAklWJMBjR8UXnloAdUN4bhNaFSBjKNDfGAUGWOD5iKniBRB+YfV+0UkW3CDtuLIkLlSjLK/Ed
+        Z6vwQ1qxWmwY3EusrIZ5611r4vWuXwo+3a0omOSXASgptn1A6WiWz0+UPBCKEgE+K3SACKHbYjDzJ
+        LH7ooWwzv5hNYYxpsrYRd6bnroTm5z9n5eeMxrcOTAQvI7WNDS5OwNGQh03Ds/dpR6FBMVtf2sq6l
+        VVsL4ORpmJCl39/ulpHCNLeKHvDfXwygOLirPh0lzboT5Dju9JgC5S9bVnmLh76+mI0Y2LElUF1F/
+Content-Disposition: inline
+In-Reply-To: <20190722083214.GF25636@localhost.localdomain>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Juri Lelli <juri.lelli@redhat.com>
-Cc: peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, longman@redhat.com, cgroups@vger.kernel.org
+Cc: Dietmar Eggemann <dietmar.eggemann@arm.com>, mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, longman@redhat.com, cgroups@vger.kernel.org
 
-On 7/22/19 3:35 PM, Juri Lelli wrote:
-> On 22/07/19 15:21, Dietmar Eggemann wrote:
->> On 7/22/19 2:28 PM, Juri Lelli wrote:
->>> On 22/07/19 13:07, Dietmar Eggemann wrote:
->>>> On 7/19/19 3:59 PM, Juri Lelli wrote:
->>>>
->>>> [...]
->>>>
->>>>> @@ -557,6 +558,38 @@ static struct rq *dl_task_offline_migration(struct rq *rq, struct task_struct *p
->>>>>  		double_lock_balance(rq, later_rq);
->>>>>  	}
->>>>>  
->>>>> +	if (p->dl.dl_non_contending || p->dl.dl_throttled) {
->>>>> +		/*
->>>>> +		 * Inactive timer is armed (or callback is running, but
->>>>> +		 * waiting for us to release rq locks). In any case, when it
->>>>> +		 * will file (or continue), it will see running_bw of this
->>>>
->>>> s/file/fire ?
->>>
->>> Yep.
->>>
->>>>> +		 * task migrated to later_rq (and correctly handle it).
->>>>
->>>> Is this because of dl_task_timer()->enqueue_task_dl()->task_contending()
->>>> setting dl_se->dl_non_contending = 0 ?
->>>
->>> No, this is related to inactive_task_timer() callback. Since the task is
->>> migrated (by this function calling set_task_cpu()) because a CPU hotplug
->>> operation happened, we need to reflect this w.r.t. running_bw, or
->>> inactive_task_timer() might sub from the new CPU and cause running_bw to
->>> underflow.
->>
->> I was more referring to the '... it will see running_bw of thus task
->> migrated to later_rq ...) and specifically to the HOW the timer
->> callback can detect this.
-> 
-> Oh, it actually doesn't "actively" detect this condition. The problem is
-> that if it still sees dl_non_contending == 1, it will sub (from the
-> "new" rq to which task's running_bw hasn't been added - w/o this fix)
-> and cause the underflow.
+On Mon, Jul 22, 2019 at 10:32:14AM +0200, Juri Lelli wrote:
 
-I was wrong ... enqueue_task_dl() is called with ENQUEUE_REPLENISH which
-doesn't call task_contending(). The comment makes sense to me now.
+> Thanks for reporting. The set is based on cgroup/for-next (as of last
+> week), though. I can of course rebase on tip/sched/core or mainline if
+> needed.
 
+TJ; I would like to take these patches through the scheduler tree if you
+don't mind. Afaict there's no real conflict vs cgroup/for-next (I
+applied the patches and then did a pull of cgroup/for-next which
+finished without complaints).
 
