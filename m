@@ -1,56 +1,189 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] mm/backing-dev: show state of all bdi_writeback in
- debugfs
-Date: Tue, 23 Jul 2019 13:07:29 -0700
-Message-ID: <20190723130729.522976a1f075d748fc946ff6@linux-foundation.org>
-References: <156388617236.3608.2194886130557491278.stgit@buzz>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v4] mm: Throttle allocators when failing reclaim over
+ memory.high
+Date: Tue, 23 Jul 2019 16:50:26 -0400
+Message-ID: <20190723205026.GB30522@cmpxchg.org>
+References: <20190501184104.GA30293@chrisdown.name>
+ <20190723180700.GA29459@chrisdown.name>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563912450;
-        bh=aJAwIMG/PcNFQKUZTnI3xqTnmOSc6qBWaaEdBvulUpA=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=VX9USo4Gy2dVgkf+TNz6HITq9P3GchWQKOUSzY/le0qD3BWAE3Fbfj7zdKjsmUOzb
-         Dd1tT7mXRLQHqbUBmsJ2jqrXD2UEQHY2yKfHn0GeQXCYvKA/9zMzwnYY5F7fXbovHX
-         FImaoH6ldCnadpDFM15AqXu4eNYu4RKODmNdv8DM=
-In-Reply-To: <156388617236.3608.2194886130557491278.stgit@buzz>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to
+         :user-agent;
+        bh=8+jweQXNw+FvBUs6L1ninWLU4jT9qpYpiOUnyQkbE24=;
+        b=buC5Qa3vmUJPzu5hmh7UlXW+7BjE84M7XsvjmO2wR+fJ6KPC106sjJAWESvmbKYSHn
+         8jPS6hBDBxJS1rAFsJJP4+8hFxfuElN5ND41jEU58Bx6P8WqXcb87AnXQKJ3LE/kkI30
+         KdFt2BJo5aImDmFGv1cdsv+Z+Y+7v8Qf3cVAZtXYzEIwN+NorT1dv+gyYM0J9NtDOele
+         12DB0fCUgk1CGlJm5t53su11w62w26pLFZFclqpZZIlzZtBVcle/u7n3mbu2XDeQgn6k
+         1CEjpg/O6QhjI+E14pGFki+IqznIFPUuDwXq1xzMIyxMm2LynxxE415jBRzXS3psomfc
+         vIzg==
+Content-Disposition: inline
+In-Reply-To: <20190723180700.GA29459@chrisdown.name>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: Chris Down <chris@chrisdown.name>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com, Michal Hocko <mhocko@kernel.org>
 
-On Tue, 23 Jul 2019 15:49:32 +0300 Konstantin Khlebnikov <khlebnikov@yandex-team.ru> wrote:
-
-> Currently /sys/kernel/debug/bdi/$maj:$min/stats shows only root bdi wb.
-> With CONFIG_CGROUP_WRITEBACK=y there is one for each memory cgroup.
+On Tue, Jul 23, 2019 at 02:07:00PM -0400, Chris Down wrote:
+> We're trying to use memory.high to limit workloads, but have found that
+> containment can frequently fail completely and cause OOM situations
+> outside of the cgroup. This happens especially with swap space -- either
+> when none is configured, or swap is full. These failures often also
+> don't have enough warning to allow one to react, whether for a human or
+> for a daemon monitoring PSI.
 > 
-> This patch shows here state of each bdi_writeback in form:
+> Here is output from a simple program showing how long it takes in μsec
+> (column 2) to allocate a megabyte of anonymous memory (column 1) when a
+> cgroup is already beyond its memory high setting, and no swap is
+> available:
 > 
-> <global state>
+>     [root@ktst ~]# systemd-run -p MemoryHigh=100M -p MemorySwapMax=1 \
+>     > --wait -t timeout 300 /root/mdf
+>     [...]
+>     95  1035
+>     96  1038
+>     97  1000
+>     98  1036
+>     99  1048
+>     100 1590
+>     101 1968
+>     102 1776
+>     103 1863
+>     104 1757
+>     105 1921
+>     106 1893
+>     107 1760
+>     108 1748
+>     109 1843
+>     110 1716
+>     111 1924
+>     112 1776
+>     113 1831
+>     114 1766
+>     115 1836
+>     116 1588
+>     117 1912
+>     118 1802
+>     119 1857
+>     120 1731
+>     [...]
+>     [System OOM in 2-3 seconds]
 > 
-> Id: 1
-> Cgroup: /
-> <root wb state>
+> The delay does go up extremely marginally past the 100MB memory.high
+> threshold, as now we spend time scanning before returning to usermode,
+> but it's nowhere near enough to contain growth. It also doesn't get
+> worse the more pages you have, since it only considers nr_pages.
 > 
-> Id: xxx
-> Cgroup: /path
-> <cgroup wb state>
+> The current situation goes against both the expectations of users of
+> memory.high, and our intentions as cgroup v2 developers. In
+> cgroup-v2.txt, we claim that we will throttle and only under "extreme
+> conditions" will memory.high protection be breached. Likewise, cgroup v2
+> users generally also expect that memory.high should throttle workloads
+> as they exceed their high threshold. However, as seen above, this isn't
+> always how it works in practice -- even on banal setups like those with
+> no swap, or where swap has become exhausted, we can end up with
+> memory.high being breached and us having no weapons left in our arsenal
+> to combat runaway growth with, since reclaim is futile.
 > 
-> Id: yyy
-> Cgroup: /path2
-> <cgroup wb state>
+> It's also hard for system monitoring software or users to tell how bad
+> the situation is, as "high" events for the memcg may in some cases be
+> benign, and in others be catastrophic. The current status quo is that we
+> fail containment in a way that doesn't provide any advance warning that
+> things are about to go horribly wrong (for example, we are about to
+> invoke the kernel OOM killer).
+> 
+> This patch introduces explicit throttling when reclaim is failing to
+> keep memcg size contained at the memory.high setting. It does so by
+> applying an exponential delay curve derived from the memcg's overage
+> compared to memory.high.  In the normal case where the memcg is either
+> below or only marginally over its memory.high setting, no throttling
+> will be performed.
+> 
+> This composes well with system health monitoring and remediation, as
+> these allocator delays are factored into PSI's memory pressure
+> calculations. This both creates a mechanism system administrators or
+> applications consuming the PSI interface to trivially see that the memcg
+> in question is struggling and use that to make more reasonable
+> decisions, and permits them enough time to act. Either of these can act
+> with significantly more nuance than that we can provide using the system
+> OOM killer.
+> 
+> This is a similar idea to memory.oom_control in cgroup v1 which would
+> put the cgroup to sleep if the threshold was violated, but it's also
+> significantly improved as it results in visible memory pressure, and
+> also doesn't schedule indefinitely, which previously made tracing and
+> other introspection difficult (ie. it's clamped at 2*HZ per allocation
+> through MEMCG_MAX_HIGH_DELAY_JIFFIES).
+> 
+> Contrast the previous results with a kernel with this patch:
+> 
+>     [root@ktst ~]# systemd-run -p MemoryHigh=100M -p MemorySwapMax=1 \
+>     > --wait -t timeout 300 /root/mdf
+>     [...]
+>     95  1002
+>     96  1000
+>     97  1002
+>     98  1003
+>     99  1000
+>     100 1043
+>     101 84724
+>     102 330628
+>     103 610511
+>     104 1016265
+>     105 1503969
+>     106 2391692
+>     107 2872061
+>     108 3248003
+>     109 4791904
+>     110 5759832
+>     111 6912509
+>     112 8127818
+>     113 9472203
+>     114 12287622
+>     115 12480079
+>     116 14144008
+>     117 15808029
+>     118 16384500
+>     119 16383242
+>     120 16384979
+>     [...]
+> 
+> As you can see, in the normal case, memory allocation takes around 1000
+> μsec. However, as we exceed our memory.high, things start to increase
+> exponentially, but fairly leniently at first. Our first megabyte over
+> memory.high takes us 0.16 seconds, then the next is 0.46 seconds, then
+> the next is almost an entire second. This gets worse until we reach our
+> eventual 2*HZ clamp per batch, resulting in 16 seconds per megabyte.
+> However, this is still making forward progress, so permits tracing or
+> further analysis with programs like GDB.
+> 
+> We use an exponential curve for our delay penalty for a few reasons:
+> 
+> 1. We run mem_cgroup_handle_over_high to potentially do reclaim after
+>    we've already performed allocations, which means that temporarily
+>    going over memory.high by a small amount may be perfectly legitimate,
+>    even for compliant workloads. We don't want to unduly penalise such
+>    cases.
+> 2. An exponential curve (as opposed to a static or linear delay) allows
+>    ramping up memory pressure stats more gradually, which can be useful
+>    to work out that you have set memory.high too low, without destroying
+>    application performance entirely.
+> 
+> This patch expands on earlier work by Johannes Weiner. Thanks!
+> 
+> Signed-off-by: Chris Down <chris@chrisdown.name>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Roman Gushchin <guro@fb.com>
+> Cc: linux-kernel@vger.kernel.org
+> Cc: cgroups@vger.kernel.org
+> Cc: linux-mm@kvack.org
+> Cc: kernel-team@fb.com
+> ---
 
-Why is this considered useful?  What are the use cases.  ie, why should
-we add this to Linux?
-
-> mm/backing-dev.c |  106 +++++++++++++++++++++++++++++++++++++++++++++++-------
-> 1 file changed, 93 insertions(+), 13 deletions(-)
-
-No documentation because it's debugfs, right?
-
-I'm struggling to understand why this is a good thing :(.  If it's
-there and people use it then we should document it for them.  If it's
-there and people don't use it then we should delete the code.
-
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
