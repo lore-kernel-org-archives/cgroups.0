@@ -1,59 +1,39 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH] mm, slab: Extend slab/shrink to shrink all the memcg
- caches
-Date: Tue, 23 Jul 2019 10:30:07 -0400
-Message-ID: <f878a00c-5d84-534b-deac-5736534a61cd@redhat.com>
-References: <20190702183730.14461-1-longman@redhat.com>
- <71ab6307-9484-fdd3-fe6d-d261acf7c4a5@sony.com>
+From: Juri Lelli <juri.lelli@redhat.com>
+Subject: Re: [PATCH v9 2/8] sched/core: Streamlining calls to task_rq_unlock()
+Date: Tue, 23 Jul 2019 16:58:18 +0200
+Message-ID: <20190723145818.GI25636@localhost.localdomain>
+References: <20190719140000.31694-1-juri.lelli@redhat.com>
+ <20190719140000.31694-3-juri.lelli@redhat.com>
+ <50f00347-ffb3-285c-5a7d-3a9c5f813950@arm.com>
+ <20190722083214.GF25636@localhost.localdomain>
+ <20190723103131.GB3402@hirez.programming.kicks-ass.net>
+ <20190723131100.GE696309@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <71ab6307-9484-fdd3-fe6d-d261acf7c4a5@sony.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20190723131100.GE696309@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: peter enderborg <peter.enderborg@sony.com>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Jonathan Corbet <corbet@lwn.net>, Luis Chamberlain <mcgrof@kernel.org>, Kees Cook <keescook@chromium.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Andrea Arcangeli <aarcange@redhat.com>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, mingo@redhat.com, rostedt@goodmis.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, longman@redhat.com, cgroups@vger.kernel.org
 
-On 7/22/19 8:46 AM, peter enderborg wrote:
-> On 7/2/19 8:37 PM, Waiman Long wrote:
->> Currently, a value of '1" is written to /sys/kernel/slab/<slab>/shrink
->> file to shrink the slab by flushing all the per-cpu slabs and free
->> slabs in partial lists. This applies only to the root caches, though.
->>
->> Extends this capability by shrinking all the child memcg caches and
->> the root cache when a value of '2' is written to the shrink sysfs file.
->>
->> On a 4-socket 112-core 224-thread x86-64 system after a parallel kernel
->> build, the the amount of memory occupied by slabs before shrinking
->> slabs were:
->>
->>  # grep task_struct /proc/slabinfo
->>  task_struct         7114   7296   7744    4    8 : tunables    0    0
->>  0 : slabdata   1824   1824      0
->>  # grep "^S[lRU]" /proc/meminfo
->>  Slab:            1310444 kB
->>  SReclaimable:     377604 kB
->>  SUnreclaim:       932840 kB
->>
->> After shrinking slabs:
->>
->>  # grep "^S[lRU]" /proc/meminfo
->>  Slab:             695652 kB
->>  SReclaimable:     322796 kB
->>  SUnreclaim:       372856 kB
->>  # grep task_struct /proc/slabinfo
->>  task_struct         2262   2572   7744    4    8 : tunables    0    0
->>  0 : slabdata    643    643      0
->
-> What is the time between this measurement points? Should not the shrinked memory show up as reclaimable?
+On 23/07/19 06:11, Tejun Heo wrote:
+> On Tue, Jul 23, 2019 at 12:31:31PM +0200, Peter Zijlstra wrote:
+> > On Mon, Jul 22, 2019 at 10:32:14AM +0200, Juri Lelli wrote:
+> > 
+> > > Thanks for reporting. The set is based on cgroup/for-next (as of last
+> > > week), though. I can of course rebase on tip/sched/core or mainline if
+> > > needed.
+> > 
+> > TJ; I would like to take these patches through the scheduler tree if you
+> > don't mind. Afaict there's no real conflict vs cgroup/for-next (I
+> > applied the patches and then did a pull of cgroup/for-next which
+> > finished without complaints).
+> 
+> Yeah, for sure, please go ahead.
+> 
+> Thanks.
 
-In this case, I echoed '2' to all the shrink sysfs files under
-/sys/kernel/slab. The purpose of shrinking caches is to reclaim as much
-unused memory slabs from all the caches, irrespective if they are
-reclaimable or not. We do not reclaim any used objects. That is why we
-see the numbers were reduced in both cases.
-
-Cheers,
-Longman
+Thanks!
