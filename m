@@ -1,37 +1,90 @@
-From: Peng Wang <rocking@whu.edu.cn>
-Subject: [PATCH] cgroup: remove early strstrip in cgroup_threads_write
-Date: Wed, 24 Jul 2019 21:05:26 +0800
-Message-ID: <20190724130526.20671-1-rocking@whu.edu.cn>
+From: Roman Gushchin <guro@fb.com>
+Subject: Bug#931111: linux-image-4.9.0-9: Memory "leak" caused by CGroup as used by pam_systemd
+Date: Wed, 24 Jul 2019 14:41:42 +0000
+Message-ID: <20190724144137.GB11425@castle.DHCP.thefacebook.com>
+References: <156154446841.16461.12659721223363969171.reportbug@fixa.knut.univention.de> <ad0222ca-5fb0-4177-dc82-ca63f079e942@univention.de> <aa31aa4f4f6c05df3f52f4bd99ceb6f0341ff482.camel@decadent.org.uk> <ad6a6d63-b61d-45c2-36f4-e7761bb58a3d@univention.de> <156154446841.16461.12659721223363969171.reportbug@fixa.knut.univention.de>
+Reply-To: Roman Gushchin <guro@fb.com>, 931111@bugs.debian.org
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Peng Wang <rocking@whu.edu.cn>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <bounce-debian-bugs-dist=glddb-debian-bugs-dist2=m.gmane.org@lists.debian.org>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.931111.B931111.156398195720323@bugs.debian.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=+DvBjlhSBR+cAuMcoX0J52F26OOs+GmIjiHE/JQ5hqo=;
+ b=gKl2ogZ0Hwvm0zJ5C8en2e02f/vv+zAZhJkNg1Ab6HXHGySMEAAIxStG4n2IsvHwGA86
+ YbHa2jBiOLzS4t+DmVP/Otbr6IHIerqfKskQ0s0vppoC/qPQRcHS7wgMBpDmTzkWq51q
+ JMxlj4G8yuEyS6YWJv1E3nUC2BkS4MXeKxg= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector1-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=+DvBjlhSBR+cAuMcoX0J52F26OOs+GmIjiHE/JQ5hqo=;
+ b=jKA16YyTy0xAv1XqF3peGaWd96/cc3MY3uIh+LpdyoUd2RB5J76qhUEhp/HFbn24FdCIFoi+EDVJcmHJE+Y233wlKbSsdqqGytWII7NqVSl+sDJ5z7KMRkyTU0KQwCY0jgIFgXboxv3OPlrZ9s80z2RxlqAUA748cJxLNx6oK3I=
+In-Reply-To: <ad6a6d63-b61d-45c2-36f4-e7761bb58a3d@univention.de>
+Content-Language: en-US
+Content-ID: <2951F9ABB1F0764CAD2C37410167C09C@namprd15.prod.outlook.com>
+List-Id: <cgroups.vger.kernel.org>
+List-URL: <https://lists.debian.org/debian-bugs-dist/>
+List-Post: <mailto:debian-bugs-dist@lists.debian.org>
+List-Help: <mailto:debian-bugs-dist-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-bugs-dist-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-bugs-dist-request@lists.debian.org?subject=unsubscribe>
+To: Philipp Hahn <hahn@univention.de>
+Cc: Ben Hutchings <ben@decadent.org.uk>, "931111@bugs.debian.org" <931111@bugs.debian.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, =?UTF-8?Q?=E6=AE=B5=E7=86=8A=E6=98=A5?= <duanxiongchun@bytedance.com>
 
-cgroup_procs_write_start() will process leading and
-trailing whitespace when necessary.
-
-Signed-off-by: Peng Wang <rocking@whu.edu.cn>
----
- kernel/cgroup/cgroup.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 753afbca549f..49f2b133cf67 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -4796,8 +4796,6 @@ static ssize_t cgroup_threads_write(struct kernfs_open_file *of,
- 	struct task_struct *task;
- 	ssize_t ret;
- 
--	buf = strstrip(buf);
--
- 	dst_cgrp = cgroup_kn_lock_live(of->kn, false);
- 	if (!dst_cgrp)
- 		return -ENODEV;
--- 
-2.19.1
+T24gV2VkLCBKdWwgMjQsIDIwMTkgYXQgMDk6MTI6NTBBTSArMDIwMCwgUGhpbGlwcCBIYWhuIHdy
+b3RlOg0KPiBIZWxsbyBCZW4sDQo+IA0KPiBBbSAyNC4wNy4xOSB1bSAwMDowMyBzY2hyaWViIEJl
+biBIdXRjaGluZ3M6DQo+ID4gT24gVHVlLCAyMDE5LTA3LTIzIGF0IDE1OjU2ICswMjAwLCBQaGls
+aXBwIEhhaG4gd3JvdGU6DQo+ID4gWy4uLl0NCj4gPj4gLSB3aGVuIHRoZSBqb2IgLyBzZXNzaW9u
+IHRlcm1pbmF0ZXMsIHRoZSBkaXJlY3RvcnkgaXMgZGVsZXRlZCBieQ0KPiA+PiBwYW1fc3lzdGVt
+ZC4NCj4gPj4NCj4gPj4gLSBidXQgdGhlIExpbnV4IGtlcm5lbCBzdGlsbCB1c2VzIHRoZSBDR3Jv
+dXAgdG8gdHJhY2sga2VybmVsIGludGVybmFsDQo+ID4+IG1lbW9yeSAoU0xBQiBvYmplY3RzLCBw
+ZW5kaW5nIGNhY2hlIHBhZ2VzLCAuLi4/KQ0KPiA+Pg0KPiA+PiAtIGluc2lkZSB0aGUga2VybmVs
+IHRoZSBDR3JvdXAgaXMgbWFya2VkIGFzICJkeWluZyIsIGJ1dCBpdCBpcyBvbmx5DQo+ID4+IGdh
+cmJhZ2UgY29sbGVjdGVkIHZlcnkgbGF0ZXIgb24NCj4gPiBbLi4uXQ0KPiA+PiBJIGRvIG5vdCBr
+bm93IHdobyBpcyBhdCBmYXVsdCBoZXJlLCBpZiBpdCBpcw0KPiA+PiAtIHRoZSBMaW51eCBrZXJu
+ZWwgZm9yIG5vdCBmcmVlaW5nIHRob3NlIHJlc291cmNlcyBlYXJsaWVyDQo+ID4+IC0gc3lzdGVt
+ZCBmb3IgdXNpbmcgQ0dzIGluIGEgYnJva2VuIHdheQ0KPiA+PiAtIHNvbWVvbmUgb3RoZXJzIGZh
+dWx0Lg0KPiA+IFsuLi5dDQo+ID4gDQo+ID4gSSB3b3VsZCBzYXkgdGhpcyBpcyBhIGtlcm5lbCBi
+dWcuICBJIHRoaW5rIGl0J3MgdGhlIHNhbWUgcHJvYmxlbSB0aGF0DQo+ID4gdGhpcyBwYXRjaCBz
+ZXJpZXMgaXMgdHJ5aW5nIHRvIHNvbHZlOg0KPiA+IGh0dHBzOi8vdXJsZGVmZW5zZS5wcm9vZnBv
+aW50LmNvbS92Mi91cmw/dT1odHRwcy0zQV9fbHduLm5ldF9tbF9saW51eC0yRGtlcm5lbF8yMDE5
+MDYxMTIzMTgxMy4zMTQ4ODQzLTJEMS0yRGd1cm8tNDBmYi5jb21fJmQ9RHdJRGFRJmM9NVZEMFJU
+dE5sVGgzeWNkNDFiM01VdyZyPWpKWWd0RE03UVQtVy1Gel9kMjlIWVEmbT14TkxGQUIzZ0JHQjFO
+Q0ttUVpOLTZKTkVqX0FYZkozLXdZSzdJRFdKQXg0JnM9WWZXV25vVy16SmRUTjBoZDF0enpaUWxV
+SVV0anYtaUJOOUNvNXJOUDVKMCZlPSANCj4gPiANCj4gPiBEb2VzIHRoZSBkZXNjcmlwdGlvbiB0
+aGVyZSBzZWVtIHRvIG1hdGNoIHdoYXQgeW91J3JlIHNlZWluZz8NCj4gDQo+IFllcywgUm9tYW4g
+R3VzaGNoaW4gcmVwbGllZCB0byBtZSBieSBwcml2YXRlIG1haWwsIHdoaWNoIEkgd2lsbCBxdW90
+ZQ0KPiBoZXJlIHRvIGdldCBoaXMgcmVzcG9uc2UgYXJjaGl2ZWQgaW4gRGViaWFuJ3MgQlRTIGFz
+IHdlbGw6DQo+IA0KPiA+IEhpIFBoaWxpcHAhDQo+ID4gDQo+ID4gVGhhbmsgeW91IGZvciB0aGUg
+cmVwb3J0IQ0KPiA+IA0KPiA+IEkndmUgc3BlbnQgbG90IG9mIHRpbWUgd29ya2luZyBvbiB0aGlz
+IHByb2JsZW0sIGFuZCB0aGUgZmluYWwgcGF0Y2hzZXQNCj4gPiBoYXMgYmVlbiBtZXJnZWQgaW50
+byA1LjMuIEl0IGltcGxlbWVudHMgcmVwYXJlbnRpbmcgb2YgdGhlIHNsYWIgbWVtb3J5DQo+ID4g
+b24gY2dyb3VwIGRlbGV0aW9uLiA1LjMgc2hvdWxkIGJlIG11Y2ggYmV0dGVyIGluIHJlY2xhaW1p
+bmcgZHlpbmcgY2dyb3Vwcy4NCj4gPiANCj4gPiBVbmZvcnR1bmF0ZWx5LCB0aGUgcGF0Y2hzZXQg
+aXMgcXVpdGUgaW52YXNpdmUgYW5kIGlzIGJhc2VkIG9uIHNvbWUNCj4gPiB2bXN0YXRzIGNoYW5n
+ZXMgZnJvbSA1LjIsIHNvIGl0J3Mgbm90IHRyaXZpYWwgdG8gYmFja3BvcnQgaXQgdG8NCj4gPiBv
+bGRlciBrZXJuZWxzLg0KPiA+IA0KPiA+IEFsc28sIHRoZXJlIGlzIG5vIGdvb2Qgd29ya2Fyb3Vu
+ZCwgb25seSBtYW51YWxseSBkcm9wcGluZyBrZXJuZWwNCj4gPiBjYWNoZXMgb3IgZGlzYWJsZSB0
+aGUga2VybmVsIG1lbW9yeSBhY2NvdW50aW5nIGFzIGEgd2hvbGUuDQo+ID4gDQo+ID4gVGhhbmtz
+IQ0KPiANCj4gDQo+IOauteeGiuaYpSA8ZHVhbnhpb25nY2h1bkBieXRlZGFuY2UuY29tPiBhbHNv
+IHJlcGxpZWQgYW5kIHBvaW50ZWQgb3V0IGhpcw0KPiBwYXRjaC1zZXQgPGh0dHBzOi8vcGF0Y2h3
+b3JrLmtlcm5lbC5vcmcvY292ZXIvMTA3NzIyNzcvPiwgd2hpY2ggc29sdmVkDQo+IHRoZSBwcm9i
+bGVtIGZvciB0aGVtLiBJIG1vcmUgbG9va3MgbGlrZSBhICJoYWNrIiwgd2FzIG5ldmVyIGFwcGxp
+ZWQNCj4gdXBzdHJlYW0gYXMgUm9tYW5zIHdvcmsgc29sdmVkIHRoZSB1bmRlcmx5aW5nIHByb2Js
+ZW0uDQo+IA0KPiANCj4gU28gc2hvdWxkIHNvbWVvbmXihKIgYml0ZSB0aGUgYnVsbGV0IGFuZCB0
+cnkgdG8gYmFja3BvcnQgUm9tYW5zIGNoYW5nZSB0bw0KPiA0LjE5IChhbmQgNC45KT8gKHRob3Nl
+IGFyZSB0aGUga2VybmVsIHZlcnNpb25zIHVzZWQgYnkgRGViaWFuKS4NCj4gSSdtIG5vdCBhIGtl
+cm5lbCBleHBlcnQgbXlzZWxmLCBlc3BlY2lhbGx5IG5vIG1tL2NnIGV4cGVydCwgYnV0IGhhdmUN
+Cj4gZG9uZSBzb21lIHdvcmsgbXlzZWxmIGluIHRoZSBwYXN0LCBidXQgSSB3b3VsZCBoYXBwaWx5
+IHBhc3Mgb24gdGhlDQo+IGNoYWxpY2UgdG8gc29tZW9uZSBtb3JlIGV4cGVyaWVuY2VkLg0KDQpI
+aSBQaGlsaXBwIQ0KDQpJdCdzIGRvYWJsZSBmcm9tIHRoZSB0ZWNobmljYWwgcG9pbnQgb2Ygdmll
+dywgYnV0IEkgcmVhbGx5IGRvdWJ0IGl0J3Mgc3VpdGFibGUNCmZvciB0aGUgb2ZmaWNpYWwgc3Rh
+YmxlLiBUaGUgYmFja3BvcnQgd2lsbCBjb25zaXN0IG9mIGF0IGxlYXN0IDIwKyBjb3JlDQptbS9t
+ZW1jb250cm9sIHBhdGNoZXMsIHNvIGl0IHJlYWxseSBmZWVscyBleGNlc3NpdmUuDQoNCklmIHlv
+dSBzdGlsbCB3YW50IHRvIHRyeSwgeW91IG5lZWQgdG8gYmFja3BvcnQgMjA1YjIwY2M1YTk5IGZp
+cnN0IChhbmQgdGhlIHJlc3QNCm9mIHRoZSBwYXRjaHNldCksIGJ1dCBpdCBtYXkgYWxzbyBkZXBl
+bmQgb24gc29tZSBvdGhlciB2bXN0YXQgY2hhbmdlcy4NCg0KVGhhbmtzIQ0K
 
