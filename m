@@ -1,81 +1,51 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [PATCH v12 3/6] sched/core: uclamp: Propagate system defaults to
- root group
-Date: Thu, 25 Jul 2019 13:41:37 +0200
-Message-ID: <20190725114126.GA4130@blackbody.suse.cz>
-References: <20190718181748.28446-1-patrick.bellasi@arm.com>
- <20190718181748.28446-4-patrick.bellasi@arm.com>
+From: Ingo Molnar <mingo@kernel.org>
+Subject: Re: [PATCH v9 3/8] cpuset: Rebuild root domain deadline accounting
+ information
+Date: Thu, 25 Jul 2019 15:53:51 +0200
+Message-ID: <20190725135351.GA108579@gmail.com>
+References: <20190719140000.31694-1-juri.lelli@redhat.com>
+ <20190719140000.31694-4-juri.lelli@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="wzJLGUyc3ArbnUjN"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=GCYwHJCLOsYoyyik86R2Z6x2q4egJ0xmOYkZtSr5Et4=;
+        b=IS0yrIsbzCZQC1jP26jRFo0g4nOCtbeBYrhyWET/czx/N3PXQHriKYe1jqGFSnEARp
+         gBcSwxE4pl/mFpnDgKRnZgJOdb+Eyyl3uQekvIU2tsrJV4jTZU6qZQbeHyIyaMMdg9N/
+         YSZSQHty4Etpi/Qv507Y9gxmTqwz/awhhozgI7wxwb8Y61KY01bYAa/hit5+jPUtV6/q
+         Ei2yMP5zgt3sIkgsi2XGczqjmf4Cle4wKQIZan6/brv6TH2vbBMoMquCb9akA+6lhZtw
+         e2tjtuXzfBiU2wgE+DjXs+6pc0P6+tbSF/2MR0vCd03WoyjL0Xcn2ZGRIli0CZKpDZFA
+         abFw==
 Content-Disposition: inline
-In-Reply-To: <20190718181748.28446-4-patrick.bellasi@arm.com>
+In-Reply-To: <20190719140000.31694-4-juri.lelli@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Patrick Bellasi <patrick.bellasi@arm.com>
-Cc: cgroups@vger.kernel.org, linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, Alessio Balsini <balsini@android.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Morten Rasmussen <morten.rasmussen@arm.com>, Quentin Perret <quentin.perret@arm.com>, Joel Fernandes <joelaf@google.com>, Paul Turner <pjt@google.com>, Steve Muckle <smuckle@google.com>, Suren Baghdasaryan <surenb@google.com>, Todd Kjos <tkjos@google.com>, Peter Zijlstra <peterz@infradead.org>, "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Tejun Heo <tj@kernel.org>, Vincent Guittot <vincent.guittot@linaro.org>, Viresh Kumar <viresh.kumar@linaro.org>, Juri Lelli <juri.lelli@redhat.com>, Ingo Molnar <mingo@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Juri Lelli <juri.lelli@redhat.com>
+Cc: peterz@infradead.org, mingo@redhat.com, rostedt@goodmis.org, tj@kernel.org, linux-kernel@vger.kernel.org, luca.abeni@santannapisa.it, claudio@evidence.eu.com, tommaso.cucinotta@santannapisa.it, bristot@redhat.com, mathieu.poirier@linaro.org, lizefan@huawei.com, longman@redhat.com, dietmar.eggemann@arm.com, cgroups@vger.kernel.org
 
 
---wzJLGUyc3ArbnUjN
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+* Juri Lelli <juri.lelli@redhat.com> wrote:
 
-On Thu, Jul 18, 2019 at 07:17:45PM +0100, Patrick Bellasi <patrick.bellasi@=
-arm.com> wrote:
-> The clamp values are not tunable at the level of the root task group.
-> That's for two main reasons:
->=20
->  - the root group represents "system resources" which are always
->    entirely available from the cgroup standpoint.
->=20
->  - when tuning/restricting "system resources" makes sense, tuning must
->    be done using a system wide API which should also be available when
->    control groups are not.
->=20
-> When a system wide restriction is available, cgroups should be aware of
-> its value in order to know exactly how much "system resources" are
-> available for the subgroups.
-IIUC, the global default would apply in uclamp_eff_get(), so this
-propagation isn't strictly necessary in order to apply to tasks (that's
-how it works under !CONFIG_UCLAMP_TASK_GROUP).
-The reason is that effective value (which isn't exposed currently) in a
-group takes into account this global restriction, right?
+> When the topology of root domains is modified by CPUset or CPUhotplug
+> operations information about the current deadline bandwidth held in the
+> root domain is lost.
+> 
+> This patch addresses the issue by recalculating the lost deadline
+> bandwidth information by circling through the deadline tasks held in
+> CPUsets and adding their current load to the root domain they are
+> associated with.
+> 
+> Signed-off-by: Mathieu Poirier <mathieu.poirier@linaro.org>
+> Signed-off-by: Juri Lelli <juri.lelli@redhat.com>
 
+Was this commit written by Mathieu? If yes then it's missing a From line. 
+If not then the Signed-off-by should probably be changed to Acked-by or 
+Reviewed-by?
 
-> @@ -1043,12 +1063,17 @@ int sysctl_sched_uclamp_handler(struct ctl_table =
-*table, int write,
-> [...]
-> +	if (update_root_tg)
-> +		uclamp_update_root_tg();
-> +
->  	/*
->  	 * Updating all the RUNNABLE task is expensive, keep it simple and do
->  	 * just a lazy update at each next enqueue time.
-Since uclamp_update_root_tg() traverses down to
-uclamp_update_active_tasks() is this comment half true now?
+Thanks,
 
-
---wzJLGUyc3ArbnUjN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEE+amhwRV4jZeXdUhoK2l36XSZ9y4FAl05lXAACgkQK2l36XSZ
-9y5cgw//QQud17T2NvswG8hJs4iqq9hLqZdoEQh3auHGt5gBhY//Pre7fKieLaeQ
-twqmtcup1hN8T5n1s3J88mCC/Hl7uRlvQyHj2TrN5kFbRgrPRExi6desTMWU6hGp
-nyfsenwH7NvPPUWlO7RhIQtRJRc23cHen01DxTWDJZrg48oeZnoJV533Sj9Qf6tV
-qGTj1ZikLeyPzlVvHwnP1Vb+kBIQ1VTU8dZCkV+0RW4qFtnin7nmYca57/ARC8RV
-KnE/DZNVETsikE/J/3dyvxw/5cJGYoZssikqIjnSrmF9eoXvWzkEnUsg2WFO6Rtl
-UuFllWgrPScfjBlq1KfsD4WOCGgMtiuUtaOSe3SSnH2dVALsHfgmW5pqnMC38N3O
-kEV1abGka6x2VTX1HJyXW/buNP5WQY2fh2dWFm06oe1iC80NiLmIULpTKZYIVdtZ
-LWZfAOjcXU3fwdAu8daZOKnizG0mOfQxT7PiaX/A74ucc0DV0C2JnM+MszR3pWIp
-huSGQ3AU4V2+OGbJPO7/rht//Du47t77tzF1RXjpjONMq8ONGIeFQ4Ansp3hSQS3
-98shobgsl2Be0MUm7nWKHSOay48IoJJuZoKwvoi/rFE3Elnlbs6fcJE5IWdM3PW4
-EmmxngweF0LmvVlDGLZ4JP6utbdgvGEUpJ1DUfmkKOnE4bKT60o=
-=lOBr
------END PGP SIGNATURE-----
-
---wzJLGUyc3ArbnUjN--
+	Ingo
