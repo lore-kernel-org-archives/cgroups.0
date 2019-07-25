@@ -1,90 +1,92 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Bug#931111: linux-image-4.9.0-9: Memory "leak" caused by CGroup as used by pam_systemd
-Date: Wed, 24 Jul 2019 14:41:42 +0000
-Message-ID: <20190724144137.GB11425@castle.DHCP.thefacebook.com>
-References: <156154446841.16461.12659721223363969171.reportbug@fixa.knut.univention.de> <ad0222ca-5fb0-4177-dc82-ca63f079e942@univention.de> <aa31aa4f4f6c05df3f52f4bd99ceb6f0341ff482.camel@decadent.org.uk> <ad6a6d63-b61d-45c2-36f4-e7761bb58a3d@univention.de> <156154446841.16461.12659721223363969171.reportbug@fixa.knut.univention.de>
-Reply-To: Roman Gushchin <guro@fb.com>, 931111@bugs.debian.org
+From: =?UTF-8?B?546L6LSH?= <yun.wang@linux.alibaba.com>
+Subject: Re: [PATCH v2 0/4] per-cgroup numa suite
+Date: Thu, 25 Jul 2019 10:33:10 +0800
+Message-ID: <2203b828-1458-5fec-f4f6-353f51091e2a@linux.alibaba.com>
+References: <209d247e-c1b2-3235-2722-dd7c1f896483@linux.alibaba.com>
+ <60b59306-5e36-e587-9145-e90657daec41@linux.alibaba.com>
+ <65c1987f-bcce-2165-8c30-cf8cf3454591@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <bounce-debian-bugs-dist=glddb-debian-bugs-dist2=m.gmane.org@lists.debian.org>
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.931111.B931111.156398195720323@bugs.debian.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=+DvBjlhSBR+cAuMcoX0J52F26OOs+GmIjiHE/JQ5hqo=;
- b=gKl2ogZ0Hwvm0zJ5C8en2e02f/vv+zAZhJkNg1Ab6HXHGySMEAAIxStG4n2IsvHwGA86
- YbHa2jBiOLzS4t+DmVP/Otbr6IHIerqfKskQ0s0vppoC/qPQRcHS7wgMBpDmTzkWq51q
- JMxlj4G8yuEyS6YWJv1E3nUC2BkS4MXeKxg= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector1-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+DvBjlhSBR+cAuMcoX0J52F26OOs+GmIjiHE/JQ5hqo=;
- b=jKA16YyTy0xAv1XqF3peGaWd96/cc3MY3uIh+LpdyoUd2RB5J76qhUEhp/HFbn24FdCIFoi+EDVJcmHJE+Y233wlKbSsdqqGytWII7NqVSl+sDJ5z7KMRkyTU0KQwCY0jgIFgXboxv3OPlrZ9s80z2RxlqAUA748cJxLNx6oK3I=
-In-Reply-To: <ad6a6d63-b61d-45c2-36f4-e7761bb58a3d@univention.de>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <65c1987f-bcce-2165-8c30-cf8cf3454591@linux.alibaba.com>
 Content-Language: en-US
-Content-ID: <2951F9ABB1F0764CAD2C37410167C09C@namprd15.prod.outlook.com>
-List-Id: <cgroups.vger.kernel.org>
-List-URL: <https://lists.debian.org/debian-bugs-dist/>
-List-Post: <mailto:debian-bugs-dist@lists.debian.org>
-List-Help: <mailto:debian-bugs-dist-request@lists.debian.org?subject=help>
-List-Subscribe: <mailto:debian-bugs-dist-request@lists.debian.org?subject=subscribe>
-List-Unsubscribe: <mailto:debian-bugs-dist-request@lists.debian.org?subject=unsubscribe>
-To: Philipp Hahn <hahn@univention.de>
-Cc: Ben Hutchings <ben@decadent.org.uk>, "931111@bugs.debian.org" <931111@bugs.debian.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, =?UTF-8?Q?=E6=AE=B5=E7=86=8A=E6=98=A5?= <duanxiongchun@bytedance.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: Peter Zijlstra <peterz@infradead.org>, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, Ingo Molnar <mingo@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, mcgrof@kernel.org, keescook@chromium.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Hillf Danton <hdanton@sina.com>
 
-T24gV2VkLCBKdWwgMjQsIDIwMTkgYXQgMDk6MTI6NTBBTSArMDIwMCwgUGhpbGlwcCBIYWhuIHdy
-b3RlOg0KPiBIZWxsbyBCZW4sDQo+IA0KPiBBbSAyNC4wNy4xOSB1bSAwMDowMyBzY2hyaWViIEJl
-biBIdXRjaGluZ3M6DQo+ID4gT24gVHVlLCAyMDE5LTA3LTIzIGF0IDE1OjU2ICswMjAwLCBQaGls
-aXBwIEhhaG4gd3JvdGU6DQo+ID4gWy4uLl0NCj4gPj4gLSB3aGVuIHRoZSBqb2IgLyBzZXNzaW9u
-IHRlcm1pbmF0ZXMsIHRoZSBkaXJlY3RvcnkgaXMgZGVsZXRlZCBieQ0KPiA+PiBwYW1fc3lzdGVt
-ZC4NCj4gPj4NCj4gPj4gLSBidXQgdGhlIExpbnV4IGtlcm5lbCBzdGlsbCB1c2VzIHRoZSBDR3Jv
-dXAgdG8gdHJhY2sga2VybmVsIGludGVybmFsDQo+ID4+IG1lbW9yeSAoU0xBQiBvYmplY3RzLCBw
-ZW5kaW5nIGNhY2hlIHBhZ2VzLCAuLi4/KQ0KPiA+Pg0KPiA+PiAtIGluc2lkZSB0aGUga2VybmVs
-IHRoZSBDR3JvdXAgaXMgbWFya2VkIGFzICJkeWluZyIsIGJ1dCBpdCBpcyBvbmx5DQo+ID4+IGdh
-cmJhZ2UgY29sbGVjdGVkIHZlcnkgbGF0ZXIgb24NCj4gPiBbLi4uXQ0KPiA+PiBJIGRvIG5vdCBr
-bm93IHdobyBpcyBhdCBmYXVsdCBoZXJlLCBpZiBpdCBpcw0KPiA+PiAtIHRoZSBMaW51eCBrZXJu
-ZWwgZm9yIG5vdCBmcmVlaW5nIHRob3NlIHJlc291cmNlcyBlYXJsaWVyDQo+ID4+IC0gc3lzdGVt
-ZCBmb3IgdXNpbmcgQ0dzIGluIGEgYnJva2VuIHdheQ0KPiA+PiAtIHNvbWVvbmUgb3RoZXJzIGZh
-dWx0Lg0KPiA+IFsuLi5dDQo+ID4gDQo+ID4gSSB3b3VsZCBzYXkgdGhpcyBpcyBhIGtlcm5lbCBi
-dWcuICBJIHRoaW5rIGl0J3MgdGhlIHNhbWUgcHJvYmxlbSB0aGF0DQo+ID4gdGhpcyBwYXRjaCBz
-ZXJpZXMgaXMgdHJ5aW5nIHRvIHNvbHZlOg0KPiA+IGh0dHBzOi8vdXJsZGVmZW5zZS5wcm9vZnBv
-aW50LmNvbS92Mi91cmw/dT1odHRwcy0zQV9fbHduLm5ldF9tbF9saW51eC0yRGtlcm5lbF8yMDE5
-MDYxMTIzMTgxMy4zMTQ4ODQzLTJEMS0yRGd1cm8tNDBmYi5jb21fJmQ9RHdJRGFRJmM9NVZEMFJU
-dE5sVGgzeWNkNDFiM01VdyZyPWpKWWd0RE03UVQtVy1Gel9kMjlIWVEmbT14TkxGQUIzZ0JHQjFO
-Q0ttUVpOLTZKTkVqX0FYZkozLXdZSzdJRFdKQXg0JnM9WWZXV25vVy16SmRUTjBoZDF0enpaUWxV
-SVV0anYtaUJOOUNvNXJOUDVKMCZlPSANCj4gPiANCj4gPiBEb2VzIHRoZSBkZXNjcmlwdGlvbiB0
-aGVyZSBzZWVtIHRvIG1hdGNoIHdoYXQgeW91J3JlIHNlZWluZz8NCj4gDQo+IFllcywgUm9tYW4g
-R3VzaGNoaW4gcmVwbGllZCB0byBtZSBieSBwcml2YXRlIG1haWwsIHdoaWNoIEkgd2lsbCBxdW90
-ZQ0KPiBoZXJlIHRvIGdldCBoaXMgcmVzcG9uc2UgYXJjaGl2ZWQgaW4gRGViaWFuJ3MgQlRTIGFz
-IHdlbGw6DQo+IA0KPiA+IEhpIFBoaWxpcHAhDQo+ID4gDQo+ID4gVGhhbmsgeW91IGZvciB0aGUg
-cmVwb3J0IQ0KPiA+IA0KPiA+IEkndmUgc3BlbnQgbG90IG9mIHRpbWUgd29ya2luZyBvbiB0aGlz
-IHByb2JsZW0sIGFuZCB0aGUgZmluYWwgcGF0Y2hzZXQNCj4gPiBoYXMgYmVlbiBtZXJnZWQgaW50
-byA1LjMuIEl0IGltcGxlbWVudHMgcmVwYXJlbnRpbmcgb2YgdGhlIHNsYWIgbWVtb3J5DQo+ID4g
-b24gY2dyb3VwIGRlbGV0aW9uLiA1LjMgc2hvdWxkIGJlIG11Y2ggYmV0dGVyIGluIHJlY2xhaW1p
-bmcgZHlpbmcgY2dyb3Vwcy4NCj4gPiANCj4gPiBVbmZvcnR1bmF0ZWx5LCB0aGUgcGF0Y2hzZXQg
-aXMgcXVpdGUgaW52YXNpdmUgYW5kIGlzIGJhc2VkIG9uIHNvbWUNCj4gPiB2bXN0YXRzIGNoYW5n
-ZXMgZnJvbSA1LjIsIHNvIGl0J3Mgbm90IHRyaXZpYWwgdG8gYmFja3BvcnQgaXQgdG8NCj4gPiBv
-bGRlciBrZXJuZWxzLg0KPiA+IA0KPiA+IEFsc28sIHRoZXJlIGlzIG5vIGdvb2Qgd29ya2Fyb3Vu
-ZCwgb25seSBtYW51YWxseSBkcm9wcGluZyBrZXJuZWwNCj4gPiBjYWNoZXMgb3IgZGlzYWJsZSB0
-aGUga2VybmVsIG1lbW9yeSBhY2NvdW50aW5nIGFzIGEgd2hvbGUuDQo+ID4gDQo+ID4gVGhhbmtz
-IQ0KPiANCj4gDQo+IOauteeGiuaYpSA8ZHVhbnhpb25nY2h1bkBieXRlZGFuY2UuY29tPiBhbHNv
-IHJlcGxpZWQgYW5kIHBvaW50ZWQgb3V0IGhpcw0KPiBwYXRjaC1zZXQgPGh0dHBzOi8vcGF0Y2h3
-b3JrLmtlcm5lbC5vcmcvY292ZXIvMTA3NzIyNzcvPiwgd2hpY2ggc29sdmVkDQo+IHRoZSBwcm9i
-bGVtIGZvciB0aGVtLiBJIG1vcmUgbG9va3MgbGlrZSBhICJoYWNrIiwgd2FzIG5ldmVyIGFwcGxp
-ZWQNCj4gdXBzdHJlYW0gYXMgUm9tYW5zIHdvcmsgc29sdmVkIHRoZSB1bmRlcmx5aW5nIHByb2Js
-ZW0uDQo+IA0KPiANCj4gU28gc2hvdWxkIHNvbWVvbmXihKIgYml0ZSB0aGUgYnVsbGV0IGFuZCB0
-cnkgdG8gYmFja3BvcnQgUm9tYW5zIGNoYW5nZSB0bw0KPiA0LjE5IChhbmQgNC45KT8gKHRob3Nl
-IGFyZSB0aGUga2VybmVsIHZlcnNpb25zIHVzZWQgYnkgRGViaWFuKS4NCj4gSSdtIG5vdCBhIGtl
-cm5lbCBleHBlcnQgbXlzZWxmLCBlc3BlY2lhbGx5IG5vIG1tL2NnIGV4cGVydCwgYnV0IGhhdmUN
-Cj4gZG9uZSBzb21lIHdvcmsgbXlzZWxmIGluIHRoZSBwYXN0LCBidXQgSSB3b3VsZCBoYXBwaWx5
-IHBhc3Mgb24gdGhlDQo+IGNoYWxpY2UgdG8gc29tZW9uZSBtb3JlIGV4cGVyaWVuY2VkLg0KDQpI
-aSBQaGlsaXBwIQ0KDQpJdCdzIGRvYWJsZSBmcm9tIHRoZSB0ZWNobmljYWwgcG9pbnQgb2Ygdmll
-dywgYnV0IEkgcmVhbGx5IGRvdWJ0IGl0J3Mgc3VpdGFibGUNCmZvciB0aGUgb2ZmaWNpYWwgc3Rh
-YmxlLiBUaGUgYmFja3BvcnQgd2lsbCBjb25zaXN0IG9mIGF0IGxlYXN0IDIwKyBjb3JlDQptbS9t
-ZW1jb250cm9sIHBhdGNoZXMsIHNvIGl0IHJlYWxseSBmZWVscyBleGNlc3NpdmUuDQoNCklmIHlv
-dSBzdGlsbCB3YW50IHRvIHRyeSwgeW91IG5lZWQgdG8gYmFja3BvcnQgMjA1YjIwY2M1YTk5IGZp
-cnN0IChhbmQgdGhlIHJlc3QNCm9mIHRoZSBwYXRjaHNldCksIGJ1dCBpdCBtYXkgYWxzbyBkZXBl
-bmQgb24gc29tZSBvdGhlciB2bXN0YXQgY2hhbmdlcy4NCg0KVGhhbmtzIQ0K
+Hi, Peter
 
+Now we have all these stuff in cpu cgroup, with the new statistic
+folks should be able to estimate their per-cgroup workloads on
+numa platform, and numa group + cling would help to address the
+issue when their workloads can't be settled on one node.
+
+How do you think about this version :-)
+
+Regards,
+Michael Wang
+
+On 2019/7/16 上午11:38, 王贇 wrote:
+> During our torturing on numa stuff, we found problems like:
+> 
+>   * missing per-cgroup information about the per-node execution status
+>   * missing per-cgroup information about the numa locality
+> 
+> That is when we have a cpu cgroup running with bunch of tasks, no good
+> way to tell how it's tasks are dealing with numa.
+> 
+> The first two patches are trying to complete the missing pieces, but
+> more problems appeared after monitoring these status:
+> 
+>   * tasks not always running on the preferred numa node
+>   * tasks from same cgroup running on different nodes
+> 
+> The task numa group handler will always check if tasks are sharing pages
+> and try to pack them into a single numa group, so they will have chance to
+> settle down on the same node, but this failed in some cases:
+> 
+>   * workloads share page caches rather than share mappings
+>   * workloads got too many wakeup across nodes
+> 
+> Since page caches are not traced by numa balancing, there are no way to
+> realize such kind of relationship, and when there are too many wakeup,
+> task will be drag from the preferred node and then migrate back by numa
+> balancing, repeatedly.
+> 
+> Here the third patch try to address the first issue, we could now give hint
+> to kernel about the relationship of tasks, and pack them into single numa
+> group.
+> 
+> And the forth patch introduced numa cling, which try to address the wakup
+> issue, now we try to make task stay on the preferred node on wakeup in fast
+> path, in order to address the unbalancing risk, we monitoring the numa
+> migration failure ratio, and pause numa cling when it reach the specified
+> degree.
+> 
+> Since v1:
+>   * move statistics from memory cgroup into cpu group
+>   * statistics now accounting in hierarchical way
+>   * locality now accounted into 8 regions equally
+>   * numa cling no longer override select_idle_sibling, instead we
+>     prevent numa swap migration with tasks cling to dst-node, also
+>     prevent wake affine to drag tasks away which already cling to
+>     prev-cpu
+>   * other refine on comments and names
+> 
+> Michael Wang (4):
+>   v2 numa: introduce per-cgroup numa balancing locality statistic
+>   v2 numa: append per-node execution time in cpu.numa_stat
+>   v2 numa: introduce numa group per task group
+>   v4 numa: introduce numa cling feature
+> 
+>  include/linux/sched.h        |   8 +-
+>  include/linux/sched/sysctl.h |   3 +
+>  kernel/sched/core.c          |  85 ++++++++
+>  kernel/sched/debug.c         |   7 +
+>  kernel/sched/fair.c          | 510 ++++++++++++++++++++++++++++++++++++++++++-
+>  kernel/sched/sched.h         |  41 ++++
+>  kernel/sysctl.c              |   9 +
+>  7 files changed, 651 insertions(+), 12 deletions(-)
+> 
