@@ -1,27 +1,21 @@
-From: Miles Chen <miles.chen@mediatek.com>
+From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: [PATCH v2] mm: memcontrol: fix use after free in
  mem_cgroup_iter()
-Date: Fri, 26 Jul 2019 18:20:23 +0800
-Message-ID: <1564136423.15330.4.camel@mtkswgap22>
+Date: Fri, 26 Jul 2019 14:49:33 +0200
+Message-ID: <20190726124933.GN6142@dhcp22.suse.cz>
 References: <20190726021247.16162-1-miles.chen@mediatek.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <20190726021247.16162-1-miles.chen@mediatek.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org, wsd_upstream@mediatek.com
+Content-Transfer-Encoding: 7bit
+To: Miles Chen <miles.chen@mediatek.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org, wsd_upstream@mediatek.com
 
-Hi Johannes,
-
-I post patch v2 with proper comment you mentioned.
-(I am not sure if I can copy your acked-by to patch v2 directly)
-
-Miles
-
-On Fri, 2019-07-26 at 10:12 +0800, Miles Chen wrote:
+On Fri 26-07-19 10:12:47, Miles Chen wrote:
 > This patch is sent to report an use after free in mem_cgroup_iter()
 > after merging commit: be2657752e9e "mm: memcg: fix use after free in
 > mem_cgroup_iter()".
@@ -159,78 +153,33 @@ On Fri, 2019-07-26 at 10:12 +0800, Miles Chen wrote:
 >     iter = &mz->iter[reclaim->priority];
 >     pos = READ_ONCE(iter->position);
 >     css_tryget(&pos->css) <- use after free
-> 
+
+Thanks for the write up. This is really useful.
+
 > To avoid this, we should also invalidate root_mem_cgroup.nodeinfo.iter in
 > invalidate_reclaim_iterators().
-> 
-> Change since v1:
-> Add a comment to explain why we need to handle root_mem_cgroup separately.
-> Rename invalid_root to invalidate_root.
-> 
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Signed-off-by: Miles Chen <miles.chen@mediatek.com>
-> ---
->  mm/memcontrol.c | 38 ++++++++++++++++++++++++++++----------
->  1 file changed, 28 insertions(+), 10 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index cdbb7a84cb6e..09f2191f113b 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1130,26 +1130,44 @@ void mem_cgroup_iter_break(struct mem_cgroup *root,
->  		css_put(&prev->css);
->  }
->  
-> -static void invalidate_reclaim_iterators(struct mem_cgroup *dead_memcg)
-> +static void __invalidate_reclaim_iterators(struct mem_cgroup *from,
-> +					struct mem_cgroup *dead_memcg)
->  {
-> -	struct mem_cgroup *memcg = dead_memcg;
->  	struct mem_cgroup_reclaim_iter *iter;
->  	struct mem_cgroup_per_node *mz;
->  	int nid;
->  	int i;
->  
-> -	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
-> -		for_each_node(nid) {
-> -			mz = mem_cgroup_nodeinfo(memcg, nid);
-> -			for (i = 0; i <= DEF_PRIORITY; i++) {
-> -				iter = &mz->iter[i];
-> -				cmpxchg(&iter->position,
-> -					dead_memcg, NULL);
-> -			}
-> +	for_each_node(nid) {
-> +		mz = mem_cgroup_nodeinfo(from, nid);
-> +		for (i = 0; i <= DEF_PRIORITY; i++) {
-> +			iter = &mz->iter[i];
-> +			cmpxchg(&iter->position,
-> +				dead_memcg, NULL);
->  		}
->  	}
->  }
->  
-> +/*
-> + * When cgruop1 non-hierarchy mode is used, parent_mem_cgroup() does
-> + * not walk all the way up to the cgroup root (root_mem_cgroup). So
-> + * we have to handle dead_memcg from cgroup root separately.
-> + */
+
+I am sorry, I didn't get to comment an earlier version but I am
+wondering whether it makes more sense to do and explicit invalidation.
+
+[...]
 > +static void invalidate_reclaim_iterators(struct mem_cgroup *dead_memcg)
 > +{
 > +	struct mem_cgroup *memcg = dead_memcg;
 > +	int invalidate_root = 0;
 > +
-> +	for (; memcg; memcg = parent_mem_cgroup(memcg)) {
+> +	for (; memcg; memcg = parent_mem_cgroup(memcg))
 > +		__invalidate_reclaim_iterators(memcg, dead_memcg);
-> +		if (memcg == root_mem_cgroup)
-> +			invalidate_root = 1;
-> +	}
+
+	/* here goes your comment */
+	if (!dead_memcg->use_hierarchy)
+		__invalidate_reclaim_iterators(root_mem_cgroup,	dead_memcg);
 > +
-> +	if (!invalidate_root)
-> +		__invalidate_reclaim_iterators(root_mem_cgroup, dead_memcg);
 > +}
-> +
->  /**
->   * mem_cgroup_scan_tasks - iterate over tasks of a memory cgroup hierarchy
->   * @memcg: hierarchy root
 
+Other than that the patch looks good to me.
 
+Acked-by: Michal Hocko <mhocko@suse.com>
+-- 
+Michal Hocko
+SUSE Labs
