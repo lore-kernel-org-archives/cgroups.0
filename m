@@ -1,35 +1,53 @@
 From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: [PATCH RFC] mm/memcontrol: reclaim severe usage over high limit
  in get_user_pages loop
-Date: Mon, 29 Jul 2019 20:48:50 +0200
-Message-ID: <20190729184850.GH9330@dhcp22.suse.cz>
+Date: Mon, 29 Jul 2019 20:55:09 +0200
+Message-ID: <20190729185509.GI9330@dhcp22.suse.cz>
 References: <156431697805.3170.6377599347542228221.stgit@buzz>
- <20190729091738.GF9330@dhcp22.suse.cz>
- <3d6fc779-2081-ba4b-22cf-be701d617bb4@yandex-team.ru>
- <20190729103307.GG9330@dhcp22.suse.cz>
- <CAHbLzkrdj-O2uXwM8ujm90OcgjyR4nAiEbFtRGe7SOoY_fs=BA@mail.gmail.com>
+ <20190729154952.GC21958@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAHbLzkrdj-O2uXwM8ujm90OcgjyR4nAiEbFtRGe7SOoY_fs=BA@mail.gmail.com>
+In-Reply-To: <20190729154952.GC21958@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yang Shi <shy828301@gmail.com>
-Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Linux MM <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>
 
-On Mon 29-07-19 10:28:43, Yang Shi wrote:
-[...]
-> I don't worry too much about scale since the scale issue is not unique
-> to background reclaim, direct reclaim may run into the same problem.
+On Mon 29-07-19 11:49:52, Johannes Weiner wrote:
+> On Sun, Jul 28, 2019 at 03:29:38PM +0300, Konstantin Khlebnikov wrote:
+> > --- a/mm/gup.c
+> > +++ b/mm/gup.c
+> > @@ -847,8 +847,11 @@ static long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
+> >  			ret = -ERESTARTSYS;
+> >  			goto out;
+> >  		}
+> > -		cond_resched();
+> >  
+> > +		/* Reclaim memory over high limit before stocking too much */
+> > +		mem_cgroup_handle_over_high(true);
+> 
+> I'd rather this remained part of the try_charge() call. The code
+> comment in try_charge says this:
+> 
+> 	 * We can perform reclaim here if __GFP_RECLAIM but let's
+> 	 * always punt for simplicity and so that GFP_KERNEL can
+> 	 * consistently be used during reclaim.
+> 
+> The simplicity argument doesn't hold true anymore once we have to add
+> manual calls into allocation sites. We should instead fix try_charge()
+> to do synchronous reclaim for __GFP_RECLAIM and only punt to userspace
+> return when actually needed.
 
-Just to clarify. By scaling problem I mean 1:1 kswapd thread to memcg.
-You can have thousands of memcgs and I do not think we really do want
-to create one kswapd for each. Once we have a kswapd thread pool then we
-get into a tricky land where a determinism/fairness would be non trivial
-to achieve. Direct reclaim, on the other hand is bound by the workload
-itself.
+Agreed. If we want to do direct reclaim on the high limit breach then it
+should go into try_charge same way we do hard limit reclaim there. I am
+not yet sure about how/whether to scale the excess. The only reason to
+move reclaim to return-to-userspace path was GFP_NOWAIT charges. As you
+say, maybe we should start by always performing the reclaim for
+sleepable contexts first and only defer for non-sleeping requests.
+
 -- 
 Michal Hocko
 SUSE Labs
