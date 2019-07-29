@@ -1,47 +1,43 @@
 From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH v2] mm: memcontrol: fix use after free in
- mem_cgroup_iter()
-Date: Mon, 29 Jul 2019 08:25:00 +0200
-Message-ID: <20190729062500.GB9330@dhcp22.suse.cz>
-References: <20190726021247.16162-1-miles.chen@mediatek.com>
- <20190726124933.GN6142@dhcp22.suse.cz>
- <20190726125533.GO6142@dhcp22.suse.cz>
- <1564184878.19817.5.camel@mtkswgap22>
+Subject: Re: [PATCH RFC] mm/memcontrol: reclaim severe usage over high limit
+ in get_user_pages loop
+Date: Mon, 29 Jul 2019 11:17:38 +0200
+Message-ID: <20190729091738.GF9330@dhcp22.suse.cz>
+References: <156431697805.3170.6377599347542228221.stgit@buzz>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1564184878.19817.5.camel@mtkswgap22>
+In-Reply-To: <156431697805.3170.6377599347542228221.stgit@buzz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Miles Chen <miles.chen@mediatek.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org, wsd_upstream@mediatek.com
+To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-On Sat 27-07-19 07:47:58, Miles Chen wrote:
-> On Fri, 2019-07-26 at 14:55 +0200, Michal Hocko wrote:
-[...]
-> > > I am sorry, I didn't get to comment an earlier version but I am
-> > > wondering whether it makes more sense to do and explicit invalidation.
-> > > 
+On Sun 28-07-19 15:29:38, Konstantin Khlebnikov wrote:
+> High memory limit in memory cgroup allows to batch memory reclaiming and
+> defer it until returning into userland. This moves it out of any locks.
 > 
-> I think we should keep the original v2 version, the reason is the 
-> !use_hierarchy does not imply we can reach root_mem_cgroup:
+> Fixed gap between high and max limit works pretty well (we are using
+> 64 * NR_CPUS pages) except cases when one syscall allocates tons of
+> memory. This affects all other tasks in cgroup because they might hit
+> max memory limit in unhandy places and\or under hot locks.
 > 
-> cd /sys/fs/cgroup/memory/0
-> mkdir 1
-> cd /sys/fs/cgroup/memory/0/1
-> echo 1 > memory.use_hierarchy // only 1 and its children has
-> use_hierarchy set
-> mkdir 2
+> For example mmap with MAP_POPULATE or MAP_LOCKED might allocate a lot
+> of pages and push memory cgroup usage far ahead high memory limit.
 > 
-> rmdir 2 // parent_mem_cgroup(2) goes up to 1
+> This patch uses halfway between high and max limits as threshold and
+> in this case starts memory reclaiming if mem_cgroup_handle_over_high()
+> called with argument only_severe = true, otherwise reclaim is deferred
+> till returning into userland. If high limits isn't set nothing changes.
+> 
+> Now long running get_user_pages will periodically reclaim cgroup memory.
+> Other possible targets are generic file read/write iter loops.
 
-You are right I have missed this case. I am not sure anybody is using
-layout like that but your fix is more robust and catches that case as
-well.
-
-Acked-by: Michal Hocko <mhocko@suse.com>
+I do see how gup can lead to a large high limit excess, but could you be
+more specific why is that a problem? We should be reclaiming the similar
+number of pages cumulatively.
 -- 
 Michal Hocko
 SUSE Labs
