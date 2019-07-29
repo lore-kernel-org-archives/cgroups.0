@@ -1,125 +1,75 @@
-From: Yang Shi <shy828301@gmail.com>
-Subject: Re: [PATCH RFC] mm/memcontrol: reclaim severe usage over high limit
- in get_user_pages loop
-Date: Mon, 29 Jul 2019 10:28:43 -0700
-Message-ID: <CAHbLzkrdj-O2uXwM8ujm90OcgjyR4nAiEbFtRGe7SOoY_fs=BA@mail.gmail.com>
-References: <156431697805.3170.6377599347542228221.stgit@buzz>
- <20190729091738.GF9330@dhcp22.suse.cz> <3d6fc779-2081-ba4b-22cf-be701d617bb4@yandex-team.ru>
- <20190729103307.GG9330@dhcp22.suse.cz>
+From: Chuhong Yuan <hslester96-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 00/12] Replace strncmp with str_has_prefix
+Date: Mon, 29 Jul 2019 23:13:23 +0800
+Message-ID: <20190729151323.9226-1-hslester96@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=udkUdoHD+/xDbjBugzOSQ54RdKcLOvg7mCBhGnLbrHY=;
-        b=oh54sUbqobJwz9lD8GsJU9GCOWfnXwfAsAG3K9yMfohPeWmqap0o2gqLB8B0e1ky8U
-         e37WLWqIOD4v3QcbJqyhfmeWrigLZi9lTlOFjRshdB47i0McihHUiSXOYW72erAwtW4h
-         4iYG5Vr7nO39ZaUSHgdLVNVGU8KH4sndynjs91oJgtSid4bkhglmXffKyl834QaAngdA
-         DvOzpuLJrSTw8N+ZfdutrFul1SB6i21Sh1z00FSZXNcN8yDkXB57LOljJuo6w3lWRwWv
-         ICyERxp9m8QwB3gS882QmH14NabvmB3IbdMoSsfCm0Mu2j77FzN4DCmP5/f75wALlMW6
-         ffaw==
-In-Reply-To: <20190729103307.GG9330@dhcp22.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Cc: Linux MM <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20161025;
+	h=from:to:cc:subject:date:message-id:mime-version
+	:content-transfer-encoding;
+	bh=CReZX3ZIW9UVm3F381oja+qdURlLghUskZk6mGhexL4=;
+	b=DF5eQiR/9iQxp/I05TpQxh96+yZz7SV9RG6uhl8zm5tQDkywRpo7tBrHo6+JYi9DMP
+	aIHtjuXNygQy++dokdfX3GdSr9dlSz9bgGKf6DU4b9xcRtUDPafirv5OFFt7xntBUlZn
+	j9XvmuoU2MOmMqnoKS+Lf5IRijAZXLO3YL5YivUqg9npFcmjI7ffrnyM4bxclXLs+p3V
+	89IiySx2lv/p3CIxLGE/Lan/Kj6cJbPLYkh7Npa85VJ89wVuDve2mibdyFGFJyGUsvSq
+	UdQYN969Ua7dgZYoTV74bAdwxPJ56h4tOpoaX8SKamq34W+W1tIrFUBiMsFps7A/3pBX
+	3Y5A==
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: Petr Mladek <pmladek-IBi9RG/b67k@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, kgdb-bugreport-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Daniel Thompson <daniel.thompson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jason Wessel <jason.wessel-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>, Len Brown <len.brown-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Chuhong Yuan <hslester96-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, "Rafael J . Wysocki" <rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org>, Peter Oberparleiter <oberpar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Sergey Senozhatsky <sergey.senozhatsky-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jessica Yu <jeyu-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>
 
-On Mon, Jul 29, 2019 at 3:33 AM Michal Hocko <mhocko@kernel.org> wrote:
->
-> On Mon 29-07-19 12:40:29, Konstantin Khlebnikov wrote:
-> > On 29.07.2019 12:17, Michal Hocko wrote:
-> > > On Sun 28-07-19 15:29:38, Konstantin Khlebnikov wrote:
-> > > > High memory limit in memory cgroup allows to batch memory reclaiming and
-> > > > defer it until returning into userland. This moves it out of any locks.
-> > > >
-> > > > Fixed gap between high and max limit works pretty well (we are using
-> > > > 64 * NR_CPUS pages) except cases when one syscall allocates tons of
-> > > > memory. This affects all other tasks in cgroup because they might hit
-> > > > max memory limit in unhandy places and\or under hot locks.
-> > > >
-> > > > For example mmap with MAP_POPULATE or MAP_LOCKED might allocate a lot
-> > > > of pages and push memory cgroup usage far ahead high memory limit.
-> > > >
-> > > > This patch uses halfway between high and max limits as threshold and
-> > > > in this case starts memory reclaiming if mem_cgroup_handle_over_high()
-> > > > called with argument only_severe = true, otherwise reclaim is deferred
-> > > > till returning into userland. If high limits isn't set nothing changes.
-> > > >
-> > > > Now long running get_user_pages will periodically reclaim cgroup memory.
-> > > > Other possible targets are generic file read/write iter loops.
-> > >
-> > > I do see how gup can lead to a large high limit excess, but could you be
-> > > more specific why is that a problem? We should be reclaiming the similar
-> > > number of pages cumulatively.
-> > >
-> >
-> > Large gup might push usage close to limit and keep it here for a some time.
-> > As a result concurrent allocations will enter direct reclaim right at
-> > charging much more frequently.
->
-> Yes, this is indeed prossible. On the other hand even the reclaim from
-> the charge path doesn't really prevent from that happening because the
-> context might get preempted or blocked on locks. So I guess we need a
-> more detailed information of an actual world visible problem here.
->
-> > Right now deferred recalaim after passing high limit works like distributed
-> > memcg kswapd which reclaims memory in "background" and prevents completely
-> > synchronous direct reclaim.
-> >
-> > Maybe somebody have any plans for real kswapd for memcg?
->
-> I am not aware of that. The primary problem back then was that we simply
-> cannot have a kernel thread per each memcg because that doesn't scale.
-> Using kthreads and a dynamic pool of threads tends to be quite tricky -
-> e.g. a proper accounting, scaling again.
+The commit 72921427d46b
+("string.h: Add str_has_prefix() helper function")
+introduced str_has_prefix() to substitute error-prone
+strncmp(str, const, len).
 
-We did discuss this topic in last year's LSF/MM, please see:
-https://lwn.net/Articles/753162/. We (Alibaba) do have the memcg
-kswapd thing work in our production environment for a while, and it
-works well for our 11.11 shopping festival flood.
+The commit b6b2735514bc
+("tracing: Use str_has_prefix() instead of using fixed sizes")
+has fixed some codes.
 
-I did plan to post the patches to upstream, but I was distracted by
-something else for a long time, now I already redesigned it and
-already had some preliminary patches work, if you are interested in
-this I would like post the patches soon to gather some comments early.
+These patches use str_has_prefix to replace
+such pattern of strncmp usages.
 
-However, some of the issues mentioned by Michal does still exist, i.e.
-accounting. I have not thought too much about accounting yet. I
-recalled Johannes mentioned they were working on accounting kswapd
-back then. But, I'm not sure if they are still working on that or not,
-or he just meant some throttling solved by commit
-2cf855837b89d92996cf264713f3bed2bf9b0b4f ("memcontrol: schedule
-throttling if we are congested")? But, I recalled vaguely accounting
-sounds not very critical.
+Chuhong Yuan (12):
+  rdmacg: Replace strncmp with str_has_prefix
+  kdb: Replace strncmp with str_has_prefix
+  dma-debug: Replace strncmp with str_has_prefix
+  gcov: Replace strncmp with str_has_prefix
+  genirq/debugfs: Replace strncmp with str_has_prefix
+  module: Replace strncmp with str_has_prefix
+  power: Replace strncmp with str_has_prefix
+  printk: Replace strncmp with str_has_prefix
+  reboot: Replace strncmp with str_has_prefix
+  sched: Replace strncmp with str_has_prefix
+  userns: Replace strncmp with str_has_prefix
+  watchdog: Replace strncmp with str_has_prefix
 
-I don't worry too much about scale since the scale issue is not unique
-to background reclaim, direct reclaim may run into the same problem.
-If you run into extreme memory pressure, a lot memcgs run into direct
-relcaim and global reclaim is also running at the mean time, your
-machine is definitely already not usable. And, our usecase is memcg
-backgroup reclaim is mainly used by some latency sensitive memcgs
-(running latency sensitive applications) to try to minimize direct
-reclaim, for other memcgs they'd better be throttled by direct reclaim
-if they consume too much memory.
+ kernel/cgroup/rdma.c        | 2 +-
+ kernel/debug/kdb/kdb_main.c | 2 +-
+ kernel/dma/debug.c          | 2 +-
+ kernel/gcov/fs.c            | 2 +-
+ kernel/irq/debugfs.c        | 2 +-
+ kernel/module.c             | 2 +-
+ kernel/power/hibernate.c    | 8 ++++----
+ kernel/power/main.c         | 2 +-
+ kernel/printk/braille.c     | 4 ++--
+ kernel/printk/printk.c      | 6 +++---
+ kernel/reboot.c             | 2 +-
+ kernel/sched/debug.c        | 2 +-
+ kernel/sched/isolation.c    | 4 ++--
+ kernel/user_namespace.c     | 4 ++--
+ kernel/watchdog.c           | 8 ++++----
+ 15 files changed, 26 insertions(+), 26 deletions(-)
 
-Regards,
-Yang
-
->
-> > I've put mem_cgroup_handle_over_high in gup next to cond_resched() and
-> > later that gave me idea that this is good place for running any
-> > deferred works, like bottom half for tasks. Right now this happens
-> > only at switching into userspace.
->
-> I am not against pushing high memory reclaim into the charge path in
-> principle. I just want to hear how big of a problem this really is in
-> practice. If this is mostly a theoretical problem that might hit then I
-> would rather stick with the existing code though.
->
-> --
-> Michal Hocko
-> SUSE Labs
->
+-- 
+2.20.1
