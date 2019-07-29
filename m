@@ -1,53 +1,37 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH RFC] mm/memcontrol: reclaim severe usage over high limit
- in get_user_pages loop
-Date: Mon, 29 Jul 2019 20:55:09 +0200
-Message-ID: <20190729185509.GI9330@dhcp22.suse.cz>
-References: <156431697805.3170.6377599347542228221.stgit@buzz>
- <20190729154952.GC21958@cmpxchg.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v12 0/6] Add utilization clamping support (CGroups API)
+Date: Mon, 29 Jul 2019 13:06:06 -0700
+Message-ID: <20190729200606.GA136335@devbig004.ftw2.facebook.com>
+References: <20190718181748.28446-1-patrick.bellasi@arm.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=P3EUM+tzT2Mr9lYyH9h+ka7j8G70ef8Dl2l22x1qowY=;
+        b=e68jNLw0799EKEVQytct+JZQNey8bkPM//gc4ZFMDQZt6EuWjdKKRGpVlCTMWq7Iqo
+         A+dcRsjM4FizcWmU+Pe5CRlrHn1pVvJyOmfNMEJfMlsdrGvxgecpZ/Vz2EjV+oGs4zZv
+         caDGsF7LjY/bt2zUP/pfgLlCSthMkMgm0P30KycyqAo/vHsx4JIUHzrLR6z1YlWrQHF2
+         Z/O54RfdGRdkJdCERpIQTbLh8SD1teL8PkDFWC337LABr2NOIPBHPVBaqvBIZ+Fjr6S9
+         FQfjphUq5UIZmZbQAPaqMS0yFAL1KgtnRWEoarVjXw+oyOU2oF5/pLul9G4CyNiLufzV
+         Aw4Q==
 Content-Disposition: inline
-In-Reply-To: <20190729154952.GC21958@cmpxchg.org>
+In-Reply-To: <20190718181748.28446-1-patrick.bellasi@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>
+To: Patrick Bellasi <patrick.bellasi@arm.com>
+Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-api@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Vincent Guittot <vincent.guittot@linaro.org>, Viresh Kumar <viresh.kumar@linaro.org>, Paul Turner <pjt@google.com>, Michal Koutny <mkoutny@suse.com>, Quentin Perret <quentin.perret@arm.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Morten Rasmussen <morten.rasmussen@arm.com>, Juri Lelli <juri.lelli@redhat.com>, Todd Kjos <tkjos@google.com>, Joel Fernandes <joelaf@google.com>, Steve Muckle <smuckle@google.com>, Suren Baghdasaryan <surenb@google.com>, Alessio Balsini <balsini@android.com>
 
-On Mon 29-07-19 11:49:52, Johannes Weiner wrote:
-> On Sun, Jul 28, 2019 at 03:29:38PM +0300, Konstantin Khlebnikov wrote:
-> > --- a/mm/gup.c
-> > +++ b/mm/gup.c
-> > @@ -847,8 +847,11 @@ static long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
-> >  			ret = -ERESTARTSYS;
-> >  			goto out;
-> >  		}
-> > -		cond_resched();
-> >  
-> > +		/* Reclaim memory over high limit before stocking too much */
-> > +		mem_cgroup_handle_over_high(true);
-> 
-> I'd rather this remained part of the try_charge() call. The code
-> comment in try_charge says this:
-> 
-> 	 * We can perform reclaim here if __GFP_RECLAIM but let's
-> 	 * always punt for simplicity and so that GFP_KERNEL can
-> 	 * consistently be used during reclaim.
-> 
-> The simplicity argument doesn't hold true anymore once we have to add
-> manual calls into allocation sites. We should instead fix try_charge()
-> to do synchronous reclaim for __GFP_RECLAIM and only punt to userspace
-> return when actually needed.
+Hello,
 
-Agreed. If we want to do direct reclaim on the high limit breach then it
-should go into try_charge same way we do hard limit reclaim there. I am
-not yet sure about how/whether to scale the excess. The only reason to
-move reclaim to return-to-userspace path was GFP_NOWAIT charges. As you
-say, maybe we should start by always performing the reclaim for
-sleepable contexts first and only defer for non-sleeping requests.
+Looks good to me.  On cgroup side,
+
+Acked-by: Tejun Heo <tj@kernel.org>
+
+Thanks.
 
 -- 
-Michal Hocko
-SUSE Labs
+tejun
