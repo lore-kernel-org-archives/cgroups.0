@@ -1,233 +1,65 @@
-From: Masoud Sharbiani <msharbiani@apple.com>
-Subject: Possible mem cgroup bug in kernels between 4.18.0 and 5.3-rc1.
-Date: Thu, 01 Aug 2019 11:04:14 -0700
-Message-ID: <5659221C-3E9B-44AD-9BBF-F74DE09535CD@apple.com>
-Mime-Version: 1.0 (Mac OS X Mail 13.0 \(3570.1\))
-Content-Type: multipart/signed;
- boundary="Apple-Mail=_CB8B0DF1-FADB-47F7-B24E-A6A4DA793A4C";
- protocol="application/pkcs7-signature"; micalg=sha-256
+From: Yang Shi <shy828301@gmail.com>
+Subject: Re: [PATCH RFC] mm/memcontrol: reclaim severe usage over high limit
+ in get_user_pages loop
+Date: Thu, 1 Aug 2019 14:00:51 -0700
+Message-ID: <CAHbLzkp9xFV2sE0TdKfWNRVcAwaYNKwDugRiBBoEKx6A_Hr3Jw@mail.gmail.com>
+References: <156431697805.3170.6377599347542228221.stgit@buzz>
+ <20190729091738.GF9330@dhcp22.suse.cz> <3d6fc779-2081-ba4b-22cf-be701d617bb4@yandex-team.ru>
+ <20190729103307.GG9330@dhcp22.suse.cz> <CAHbLzkrdj-O2uXwM8ujm90OcgjyR4nAiEbFtRGe7SOoY_fs=BA@mail.gmail.com>
+ <20190729184850.GH9330@dhcp22.suse.cz>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=apple.com; h=sender : from :
- content-type : mime-version : date : subject : cc : to : message-id;
- s=20180706; bh=4pyxIMgdcs9ruixtsPnEaV4NLKA7nF+9EPMnboTP4lc=;
- b=f68So1dFPS6qaIItQdMmPD7Tk7PUJ5r1L1MIg61yLiha2bMx+TXSGzE6i2y3eqaTzBlO
- WHVMsF3S/XYsPoFYnb5FTF5c5U68rBVZ+tIjG34hIX87G1UGyr7JHm2MvrinHeVdvC6Z
- RompOMNKMYeNTO4tYXIchkq2wfu1AzQYaiKEGMmPTdxXMlddKeH9MVUPY5xdQbKh5uNZ
- t3DGHdhMwJefsiiRGYlsr/FioQgng4nYOYYoPkFi6dsQD2jMi2YkZZR8zbWqPrQ1EADZ
- sBvGncD40q3/DZQZw/rWPYzsoDhwRCL5G3GRCT8YDYR0iVHUOPgiQgPV+Ti+Z+aMkdvj ig== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=At1IZWoUrcjzoFBo6+pPU11vzH0qsCf+6x4oe65bvIg=;
+        b=uStsrgDNX3A3NRNPBmsfEftPfszUtOF9JqpdBbxcAseb2Cp1nI6QJ4BVFu5H/rIZ8v
+         rbzDuskZ1BvP68LPeL0zq8ZjO/V5OD40IDX9ZX4jz0s3j6TiVwylL6qxzXVjoGygHzq9
+         NmtbEwgot5NskVLQwlSiyq0FuDuFiySrUDL+272PF2AvoPl6l1u6DBsQ8OlznD+uFli4
+         4OHGxfrZaIQUIYT2PfKT1uatEHmlFCJQpUua+5gcsJt6g8M0BXkEO+QPsDrI1K3I16L/
+         aTcKdJV9yk1ZrIuhzinYwy3k623M0pkPpqHfW8HbwvMAGxoiGTdSRxSA1LN1rg9S3KDA
+         /nmQ==
+In-Reply-To: <20190729184850.GH9330@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: gregkh@linuxfoundation.org, mhocko@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com
-Cc: linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Linux MM <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>
 
+On Mon, Jul 29, 2019 at 11:48 AM Michal Hocko <mhocko@kernel.org> wrote:
+>
+> On Mon 29-07-19 10:28:43, Yang Shi wrote:
+> [...]
+> > I don't worry too much about scale since the scale issue is not unique
+> > to background reclaim, direct reclaim may run into the same problem.
+>
+> Just to clarify. By scaling problem I mean 1:1 kswapd thread to memcg.
+> You can have thousands of memcgs and I do not think we really do want
+> to create one kswapd for each. Once we have a kswapd thread pool then we
+> get into a tricky land where a determinism/fairness would be non trivial
+> to achieve. Direct reclaim, on the other hand is bound by the workload
+> itself.
 
---Apple-Mail=_CB8B0DF1-FADB-47F7-B24E-A6A4DA793A4C
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=utf-8
+Yes, I agree thread pool would introduce more latency than dedicated
+kswapd thread. But, it looks not that bad in our test. When memory
+allocation is fast, even though dedicated kswapd thread can't catch
+up. So, such background reclaim is best effort, not guaranteed.
 
-Hey folks,
-I=E2=80=99ve come across an issue that affects most of 4.19, 4.20 and =
-5.2 linux-stable kernels that has only been fixed in 5.3-rc1.
-It was introduced by
+I don't quite get what you mean about fairness. Do you mean they may
+spend excessive cpu time then cause other processes starvation? I
+think this could be mitigated by properly organizing and setting
+groups. But, I agree this is tricky.
 
-29ef680 memcg, oom: move out_of_memory back to the charge path=20
+Typically, the processes are placed into different cgroups according
+to their importance and priority. For example, in our cluster, system
+processes would go to system group, then latency sensitive jobs and
+batch jobs (they are usually second class citizens) go to different
+groups. The memcg kswapd would be enabled for latency sensitive groups
+only. The memcg kswapd threads would have the same priority with
+global kswapd.
 
-The gist of it is that if you have a memory control group for a process =
-that repeatedly maps all of the pages of a file with  repeated calls to:
-
-   mmap(NULL, pages * PAGE_SIZE, PROT_WRITE|PROT_READ, =
-MAP_FILE|MAP_PRIVATE, fd, 0)
-
-The memory cg eventually runs out of memory, as it should. However, =
-prior to the 29ef680 commit, it would kill the running process with OOM; =
-After that commit ( and until 5.3-rc1; Haven=E2=80=99t pinpointed the =
-exact commit in between 5.2.0 and 5.3-rc1) the offending process goes =
-into %100 CPU usage, and doesn=E2=80=99t die (prior behavior) or fail =
-the mmap call (which is what happens if one runs the test program with a =
-low ulimit -v value).
-
-Any ideas on how to chase this down further?
-
-(Test program and script have been pasted below)
-Thanks,
-Masoud
-
-
-//=E2=80=94=E2=80=94=E2=80=94 leaker.c =E2=80=94=E2=80=94
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/uio.h>
-#include <stdio.h>
-#include <errno.h>
-#include <signal.h>
-
-#ifndef PAGE_SIZE
-#define PAGE_SIZE 4096
-#endif
-
-void sighandler(int x) {
-   printf("SIGNAL %d received. Quitting\n", x);
-   exit(2);
-}
-
-int main(int ac, char*av[])
-{
-   int i;
-   int fd;
-   int pages =3D 4096;
-   char buf[PAGE_SIZE];
-   char *d;
-   int sum =3D 0, loop_cnt =3D 0;
-   int max_loops =3D 100000;
-   // For getopt(3) stuff:
-   int opt;
-
-   while ((opt =3D getopt(ac, av, "p:c:")) !=3D -1) {
-       switch (opt) {
-           case 'p':
-               pages =3D atoi(optarg);
-               break;
-           case 'c':
-               max_loops =3D atoi(optarg);
-               break;
-           default:
-               fprintf(stderr, "Wrong usage:\n");
-               fprintf(stderr, "%s -p <pages> -c <loop_count>\n", =
-av[0]);
-               exit(-1);
-       }
-
-   }
-   signal(SIGTERM, sighandler);
-   printf("Mapping %d pages anonymously %d times.\n", pages, max_loops);
-   printf("File size will be %ld\n", pages * (long)PAGE_SIZE);
-   printf("max memory usage size will be %ld\n", (long) max_loops * =
-pages * PAGE_SIZE);
-
-   memset(buf, 0, PAGE_SIZE);
-
-   fd =3D open("big-data-file.bin", O_CREAT|O_WRONLY|O_TRUNC , S_IRUSR | =
-S_IWUSR);
-   if (fd =3D=3D -1) {
-       printf("open failed: %d - %s\n", errno, strerror(errno));
-       return -1;
-   }
-   for (i=3D0; i < pages; i++) {
-       write(fd, buf, PAGE_SIZE);
-   }
-   close(fd);
-   fd =3D open("big-data-file.bin", O_RDWR);
-   printf("fd is %d\n", fd);
-   while (loop_cnt < max_loops) {
-       d =3D mmap(NULL, pages * PAGE_SIZE, PROT_WRITE|PROT_READ, =
-MAP_FILE|MAP_PRIVATE, fd, 0);
-       if (d =3D=3D MAP_FAILED) {
-           printf("mmap failed: %d - %s\n", errno, strerror(errno));
-           return -1;
-       }
-       printf("Buffer is @ %p\n", d);
-       for (i =3D 0; i < pages * PAGE_SIZE; i++) {
-           sum +=3D d[i];
-           if ((i & (PAGE_SIZE-1)) =3D=3D 0)
-               d[i] =3D 42;
-       }
-       printf("Todal sum was %d. Loop count is %d\n", sum, loop_cnt++);
-   }
-   close(fd);
-   return 0;
-}
-
-///=E2=80=94=E2=80=94 test script launching it=E2=80=A6
-#!/bin/sh
-
-if [ `id -u` -ne 0 ]; then
-       echo NEED TO RUN THIS AS ROOT.; exit 1
-fi
-PID=3D$(echo $$)
-echo PID detected as: $PID
-mkdir /sys/fs/cgroup/memory/leaker
-echo 536870912 > /sys/fs/cgroup/memory/leaker/memory.limit_in_bytes
-
-echo leaker mem cgroup created, with `cat =
-/sys/fs/cgroup/memory/leaker/memory.limit_in_bytes` bytes.
-echo $PID > /sys/fs/cgroup/memory/leaker/cgroup.procs
-echo Moved into the leaker cgroup.
-ps -o cgroup $PID
-sleep 15
-echo Starting...
-./leaker -p 10240 -c 100000=
-
---Apple-Mail=_CB8B0DF1-FADB-47F7-B24E-A6A4DA793A4C
-Content-Disposition: attachment;
-	filename=smime.p7s
-Content-Type: application/pkcs7-signature;
-	name=smime.p7s
-Content-Transfer-Encoding: base64
-
-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
-Y2E1ZzEuZGVyMDgGCCsGAQUFBzABhixodHRwOi8vb2NzcC5hcHBsZS5jb20vb2NzcDAzLWFwcGxl
-aXN0Y2E1ZzEwMTAfBgNVHREEGDAWgRRtc2hhcmJpYW5pQGFwcGxlLmNvbTCCASoGA1UdIASCASEw
-ggEdMIIBGQYLKoZIhvdjZAULBQEwggEIMIHKBggrBgEFBQcCAjCBvQyBulJlbGlhbmNlIG9uIHRo
-aXMgY2VydGlmaWNhdGUgYXNzdW1lcyBhY2NlcHRhbmNlIG9mIGFueSBhcHBsaWNhYmxlIHRlcm1z
-IG9mIHVzZSBhbmQgY2VydGlmaWNhdGlvbiBwcmFjdGljZSBzdGF0ZW1lbnRzLiBUaGlzIGNlcnRp
-ZmljYXRlIHNoYWxsIG5vdCBzZXJ2ZSBhcywgb3IgcmVwbGFjZSBhIHdyaXR0ZW4gc2lnbmF0dXJl
-LjA5BggrBgEFBQcCARYtaHR0cDovL3d3dy5hcHBsZS5jb20vY2VydGlmaWNhdGVhdXRob3JpdHkv
-cnBhMBMGA1UdJQQMMAoGCCsGAQUFBwMEMDcGA1UdHwQwMC4wLKAqoCiGJmh0dHA6Ly9jcmwuYXBw
-bGUuY29tL2FwcGxlaXN0Y2E1ZzEuY3JsMB0GA1UdDgQWBBR5OmXQsx80at576fQVWG/05OardjAO
-BgNVHQ8BAf8EBAMCBaAwDQYJKoZIhvcNAQELBQADggEBAMavb8+8hvTGbqNfz0g9P4Alj5YKpTnW
-pt1NNuyl9qR+QVooK8oMbGTB6cbSSKX7lcAW7motP5eRF0EiKXiu+IIgPhmDWKkbKnrrWK9AGhVn
-xpm3OCnRHt2b+zYbkGGty0HYncIRdy3acTr+0T9Vs4xANJHwBIqUnkW5XKbPiZkv+EVKAsnL5CYD
-npLI/uslfLquUYe6o8XIBVNYhmxEcxeCXbeESEk/KutdL+JcV4SpNoEB6Y4Dk1ZnHYOZRiLV3ZEG
-neaCYYxam7SPWxeXqLtgeQMEEPgqj6pj430BQ/NKmCqdwRv2Sd0wXlKEDMul7jmWVUiRd6Nijgy5
-7E2hn9MxggMgMIIDHAIBATB2MGIxHDAaBgNVBAMTE0FwcGxlIElTVCBDQSA1IC0gRzExIDAeBgNV
-BAsTF0NlcnRpZmljYXRpb24gQXV0aG9yaXR5MRMwEQYDVQQKEwpBcHBsZSBJbmMuMQswCQYDVQQG
-EwJVUwIQDNpHL/RwufOMyUmvGQQ2czANBglghkgBZQMEAgEFAKCCAXswGAYJKoZIhvcNAQkDMQsG
-CSqGSIb3DQEHATAcBgkqhkiG9w0BCQUxDxcNMTkwODAxMTgwNDE1WjAvBgkqhkiG9w0BCQQxIgQg
-vnsk9yvJdyTHTNsykPX6Y9lptenzOf8l+ketcxJTpnswgYUGCSsGAQQBgjcQBDF4MHYwYjEcMBoG
-A1UEAxMTQXBwbGUgSVNUIENBIDUgLSBHMTEgMB4GA1UECxMXQ2VydGlmaWNhdGlvbiBBdXRob3Jp
-dHkxEzARBgNVBAoTCkFwcGxlIEluYy4xCzAJBgNVBAYTAlVTAhAM2kcv9HC584zJSa8ZBDZzMIGH
-BgsqhkiG9w0BCRACCzF4oHYwYjEcMBoGA1UEAxMTQXBwbGUgSVNUIENBIDUgLSBHMTEgMB4GA1UE
-CxMXQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxEzARBgNVBAoTCkFwcGxlIEluYy4xCzAJBgNVBAYT
-AlVTAhAM2kcv9HC584zJSa8ZBDZzMA0GCSqGSIb3DQEBAQUABIIBAJdc4Cu7pN+fGw31vpLXm1zl
-WRyOUlvFk0mUB/Qaafq9RX31VrRrPVgNA+ViEVbxnUPGciDSBeMbpPyyvN0HQx1cuimVLsnn6bqr
-xY8TUXWRSI/Dau3RkCE5iciqI4olSKRgx0d0ZGpd8J1/kGs/oQch0EYfYJvOlgA0pQbG59Ubvnc5
-eH6QdBnkFnXnImk/M1+NkQYqaWcqAqe0IGf2Pv50/PGja5suqlADLXOSneWfoZTbjY0EmVz3mIaz
-s6M2ILfMKBsLd2CduBOl6MDulzETP+o6HBnzf6eL0NCF5str6XsafjlEHI57Gb2x6HHjYEXJishf
-ZlOlCsYPZOvUeEMAAAAAAAA=
---Apple-Mail=_CB8B0DF1-FADB-47F7-B24E-A6A4DA793A4C--
+> --
+> Michal Hocko
+> SUSE Labs
