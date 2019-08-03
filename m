@@ -1,56 +1,133 @@
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH 2/4] bdi: Add bdi->id
-Date: Sat, 3 Aug 2019 09:17:43 -0700
-Message-ID: <20190803161743.GB932@bombadil.infradead.org>
-References: <20190803140155.181190-1-tj@kernel.org>
- <20190803140155.181190-3-tj@kernel.org>
- <20190803153908.GA932@bombadil.infradead.org>
- <20190803155349.GD136335@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0
+From: Masoud Sharbiani <msharbiani@apple.com>
+Subject: Re: Possible mem cgroup bug in kernels between 4.18.0 and 5.3-rc1.
+Date: Sat, 03 Aug 2019 10:41:40 -0700
+Message-ID: <77568CFC-280C-4C0F-85FC-92F1212BC6FC@apple.com>
+References: <5659221C-3E9B-44AD-9BBF-F74DE09535CD@apple.com>
+ <20190802074047.GQ11627@dhcp22.suse.cz>
+ <7E44073F-9390-414A-B636-B1AE916CC21E@apple.com>
+ <20190802144110.GL6461@dhcp22.suse.cz>
+ <5DE6F4AE-F3F9-4C52-9DFC-E066D9DD5EDC@apple.com>
+ <20190802191430.GO6461@dhcp22.suse.cz>
+ <A06C5313-B021-4ADA-9897-CE260A9011CC@apple.com>
+ <f7733773-35bc-a1f6-652f-bca01ea90078@I-love.SAKURA.ne.jp>
+ <d7efccf4-7f07-10da-077d-a58dafbf627e@I-love.SAKURA.ne.jp>
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=/X3WDI0mWhLkrrAZYpOBF14jsWJC/LWwN2nM68m2FXE=; b=YTMLQb4x9LXJC64dxUjr6v4Xk
-        GMXQsTaDR1vmYROgRuPGQmcgEYe76/aACMQQWCtkZimsYaMoot1ZvwPQDm2Ihc2qq7OidsOSLkgi5
-        5h4VKxOmA9p2bsT/wyW0eiE02ATnGIGZFQZ1DcJKqPFLLhndN++tne2fJkGXmLxkZ5sdM7ADQfEHj
-        ZUnzIYOL2jqDrOkrkXILUmtHBpDlM7HqH5QWkJ6gkEmQSJSg1PFxAP5KxYT78scR0A+zv9wLYi74s
-        ucUhUJiJLtSFE9BZiIREAP1CItRqGkb5o5/6a4VXeKUPosSTon4rRzJYDNgxMmGjhEAcUMcDZEnKr
-Content-Disposition: inline
-In-Reply-To: <20190803155349.GD136335@devbig004.ftw2.facebook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=apple.com; h=sender : content-type
+ : mime-version : subject : from : in-reply-to : date : cc :
+ content-transfer-encoding : message-id : references : to; s=20180706;
+ bh=bRkkC/ntl093lal8PH707LIzyeDQRUxXglb6XCpCp5g=;
+ b=atDS6defcl+FOy7rii078Ax6ErNtRNuaV05osswNbt377/LhCv9iReo3Ig5SL0oohxEX
+ 34pTSV/vqUCGQjeDwxeQ9bto2hQzvkBJOJy+mJXEXlHfamDJ+U/phgU8vC8qwq5rgzWT
+ CKQFCVwA7VKDxEFHTZuQwmuf+jA14sKY/gDZuuvJ/IrER4xGmxld46m0Vn/x6/KYLiYP
+ 9ONqVEcP4T97iAIRtBVlRqKRHUppPyreqPgx9S3A6wCJhKDrxjIFd/FXQXJy7tqcc2tM
+ EGLJe05byUEnw0MN+z4t155hWgN3dE5X5nyKqTLt1Ir5nNyl7bvu1cUsvEnefiY+9aHs TQ== 
+In-reply-to: <d7efccf4-7f07-10da-077d-a58dafbf627e@I-love.SAKURA.ne.jp>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, jack@suse.cz, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, guro@fb.com, akpm@linux-foundation.org
+Content-Type: text/plain; charset="utf-8"
+To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: Michal Hocko <mhocko@kernel.org>, Greg KH <gregkh@linuxfoundation.org>, hannes@cmpxchg.org, vdavydov.dev@gmail.com, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, Aug 03, 2019 at 08:53:49AM -0700, Tejun Heo wrote:
-> Hey, Matthew.
-> 
-> On Sat, Aug 03, 2019 at 08:39:08AM -0700, Matthew Wilcox wrote:
-> > On Sat, Aug 03, 2019 at 07:01:53AM -0700, Tejun Heo wrote:
-> > > There currently is no way to universally identify and lookup a bdi
-> > > without holding a reference and pointer to it.  This patch adds an
-> > > non-recycling bdi->id and implements bdi_get_by_id() which looks up
-> > > bdis by their ids.  This will be used by memcg foreign inode flushing.
-> > > 
-> > > I left bdi_list alone for simplicity and because while rb_tree does
-> > > support rcu assignment it doesn't seem to guarantee lossless walk when
-> > > walk is racing aginst tree rebalance operations.
-> > 
-> > This would seem like the perfect use for an allocating xarray.  That
-> > does guarantee lossless walk under the RCU lock.  You could get rid of the
-> > bdi_list too.
-> 
-> It definitely came to mind but there's a bunch of downsides to
-> recycling IDs or using radix tree for non-compacting allocations.
 
-Ah, I wasn't sure what would happen if you recycled an ID.  I agree, the
-radix tree is pretty horrid for monotonically increasing IDs.  I'm still
-working on the maple tree to replace it, but that's going slower than
-I would like, so I can't in good conscience ask you to wait for it to
-be ready.
+
+> On Aug 3, 2019, at 8:51 AM, Tetsuo Handa =
+<penguin-kernel@I-love.SAKURA.ne.jp> wrote:
+>=20
+> Masoud, will you try this patch?
+
+Gladly.
+It looks like it is working (and OOMing properly).
+
+
+>=20
+> By the way, is /sys/fs/cgroup/memory/leaker/memory.usage_in_bytes =
+remains non-zero
+> despite /sys/fs/cgroup/memory/leaker/tasks became empty due to memcg =
+OOM killer expected?
+> Deleting big-data-file.bin after memcg OOM killer reduces some, but =
+still remains
+> non-zero.
+
+Yes. I had not noticed that:
+
+[ 1114.190477] oom_reaper: reaped process 1942 (leaker), now =
+anon-rss:0kB, file-
+rss:0kB, shmem-rss:0kB
+./test-script.sh: line 16:  1942 Killed                  ./leaker -p =
+10240 -c 100000
+
+[root@localhost laleaker]# cat  =
+/sys/fs/cgroup/memory/leaker/memory.usage_in_bytes
+3194880
+[root@localhost laleaker]# cat  =
+/sys/fs/cgroup/memory/leaker/memory.limit_in_bytes
+536870912
+[root@localhost laleaker]# rm -f big-data-file.bin
+[root@localhost laleaker]# cat  =
+/sys/fs/cgroup/memory/leaker/memory.usage_in_bytes
+2838528
+
+Thanks!
+Masoud
+
+PS: Tried hand-back-porting it to 4.19-y and it didn=E2=80=99t work. I =
+think there are other patches between 4.19.0 and 5.3 that could be =
+necessary=E2=80=A6
+
+
+>=20
+> ----------------------------------------
+> =46rom 2f92c70f390f42185c6e2abb8dda98b1b7d02fa9 Mon Sep 17 00:00:00 =
+2001
+> From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> Date: Sun, 4 Aug 2019 00:41:30 +0900
+> Subject: [PATCH] memcg, oom: don't require __GFP_FS when invoking =
+memcg OOM killer
+>=20
+> Masoud Sharbiani noticed that commit 29ef680ae7c21110 ("memcg, oom: =
+move
+> out_of_memory back to the charge path") broke memcg OOM called from
+> __xfs_filemap_fault() path. It turned out that try_chage() is retrying
+> forever without making forward progress because =
+mem_cgroup_oom(GFP_NOFS)
+> cannot invoke the OOM killer due to commit 3da88fb3bacfaa33 ("mm, oom:
+> move GFP_NOFS check to out_of_memory"). Regarding memcg OOM, we need =
+to
+> bypass GFP_NOFS check in order to guarantee forward progress.
+>=20
+> Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> Reported-by: Masoud Sharbiani <msharbiani@apple.com>
+> Bisected-by: Masoud Sharbiani <msharbiani@apple.com>
+> Fixes: 29ef680ae7c21110 ("memcg, oom: move out_of_memory back to the =
+charge path")
+> ---
+> mm/oom_kill.c | 5 +++--
+> 1 file changed, 3 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+> index eda2e2a..26804ab 100644
+> --- a/mm/oom_kill.c
+> +++ b/mm/oom_kill.c
+> @@ -1068,9 +1068,10 @@ bool out_of_memory(struct oom_control *oc)
+> 	 * The OOM killer does not compensate for IO-less reclaim.
+> 	 * pagefault_out_of_memory lost its gfp context so we have to
+> 	 * make sure exclude 0 mask - all other users should have at =
+least
+> -	 * ___GFP_DIRECT_RECLAIM to get here.
+> +	 * ___GFP_DIRECT_RECLAIM to get here. But mem_cgroup_oom() has =
+to
+> +	 * invoke the OOM killer even if it is a GFP_NOFS allocation.
+> 	 */
+> -	if (oc->gfp_mask && !(oc->gfp_mask & __GFP_FS))
+> +	if (oc->gfp_mask && !(oc->gfp_mask & __GFP_FS) && =
+!is_memcg_oom(oc))
+> 		return true;
+>=20
+> 	/*
+> --=20
+> 1.8.3.1
+>=20
+>=20
+
