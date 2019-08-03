@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 1/4] writeback: Generalize and expose wb_completion
-Date: Sat,  3 Aug 2019 07:01:52 -0700
-Message-ID: <20190803140155.181190-2-tj@kernel.org>
+Subject: [PATCH 3/4] writeback, memcg: Implement cgroup_writeback_by_id()
+Date: Sat,  3 Aug 2019 07:01:54 -0700
+Message-ID: <20190803140155.181190-4-tj@kernel.org>
 References: <20190803140155.181190-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=JC5z+niHC2ys8Ss7xrjM0YoJZI8L5s31HXoeqm/We84=;
-        b=DJEr2Am8aUs/Bxqbf8Oe1iNAGSg2kMKLdQ1AG21tQFIdXSnuJzMrosYcYzf2ROze8q
-         4YFxAny8N5FSx8a9UauG8ni7CRArp5pGSkfNJRKfGu8oQzlfzzVKCAEt+vO4W/RpE9Dx
-         lrqdPORRoI6J1OSpz7UB36KWiMg0Xksy51goxvY6Sv2uO2Jdx2b2nzslAQekssUa/WZz
-         G/HYMZPcaLxsVH3jXbGhlN5J2hG8HxvRWM6XJJHS7T2cyi89iPkOERZFo/bjgewLN7gG
-         W2sjjgE9Ztufd2wWKhxBY0zmqn0yMHZ/FlnMpz0mdXg4p+E8JbMfNy+IumRdWrnn1u4E
-         0Zng==
+        bh=D9orjRjfDP9pgbxu2ifvLHy1ukGCDC2EnGjf/tPTneg=;
+        b=cYPLPoMt3nONdxSxEBH2DXkIoLL+c9kekNeZLQCrDU7eCfsa88/QnKRrpo2uMjGpnt
+         8yr36k8tiB7bRtBvd+j8pp9LWfqhmue6miSiyxYELzY5FOgfWc3t58Snbg5xMh32u7rt
+         53KM77N+vC78kPnMnfPjHh98M4fvvJg+TDfRrGu/otL4kB49lI+RXnGcUJn6ggTljn6T
+         9eY1HB5jWO32Zsqkc6HchBQ3JKLeJC5KoocZEgyb7QzmFt3SrF//DO0yYyQMG7d5kpQr
+         HLMxXYD/noRAOoXbQ7C1kXaOd/Rh95WKAb4novdD59drxwXue25gMwWDx4RmQHus7pYV
+         t6ug==
 In-Reply-To: <20190803140155.181190-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,203 +23,106 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk, jack@suse.cz, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com
 Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, guro@fb.com, akpm@linux-foundation.org, Tejun Heo <tj@kernel.org>
 
-wb_completion is used to track writeback completions.  We want to use
-it from memcg side for foreign inode flushes.  This patch updates it
-to remember the target waitq instead of assuming bdi->wb_waitq and
-expose it outside of fs-writeback.c.
+Implement cgroup_writeback_by_id() which initiates cgroup writeback
+from bdi and memcg IDs.  This will be used by memcg foreign inode
+flushing.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- fs/fs-writeback.c                | 47 ++++++++++----------------------
- include/linux/backing-dev-defs.h | 20 ++++++++++++++
- include/linux/backing-dev.h      |  2 ++
- 3 files changed, 36 insertions(+), 33 deletions(-)
+ fs/fs-writeback.c         | 64 +++++++++++++++++++++++++++++++++++++++
+ include/linux/writeback.h |  4 +++
+ 2 files changed, 68 insertions(+)
 
 diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 542b02d170f8..6129debdc938 100644
+index 6129debdc938..5c79d7acefdb 100644
 --- a/fs/fs-writeback.c
 +++ b/fs/fs-writeback.c
-@@ -36,10 +36,6 @@
-  */
- #define MIN_WRITEBACK_PAGES	(4096UL >> (PAGE_SHIFT - 10))
- 
--struct wb_completion {
--	atomic_t		cnt;
--};
--
- /*
-  * Passed into wb_writeback(), essentially a subset of writeback_control
-  */
-@@ -60,19 +56,6 @@ struct wb_writeback_work {
- 	struct wb_completion *done;	/* set if the caller waits */
- };
- 
--/*
-- * If one wants to wait for one or more wb_writeback_works, each work's
-- * ->done should be set to a wb_completion defined using the following
-- * macro.  Once all work items are issued with wb_queue_work(), the caller
-- * can wait for the completion of all using wb_wait_for_completion().  Work
-- * items which are waited upon aren't freed automatically on completion.
-- */
--#define DEFINE_WB_COMPLETION_ONSTACK(cmpl)				\
--	struct wb_completion cmpl = {					\
--		.cnt		= ATOMIC_INIT(1),			\
--	}
--
--
- /*
-  * If an inode is constantly having its pages dirtied, but then the
-  * updates stop dirtytime_expire_interval seconds in the past, it's
-@@ -182,7 +165,7 @@ static void finish_writeback_work(struct bdi_writeback *wb,
- 	if (work->auto_free)
- 		kfree(work);
- 	if (done && atomic_dec_and_test(&done->cnt))
--		wake_up_all(&wb->bdi->wb_waitq);
-+		wake_up_all(done->waitq);
+@@ -880,6 +880,70 @@ static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
+ 		wb_put(last_wb);
  }
  
- static void wb_queue_work(struct bdi_writeback *wb,
-@@ -206,20 +189,18 @@ static void wb_queue_work(struct bdi_writeback *wb,
- 
- /**
-  * wb_wait_for_completion - wait for completion of bdi_writeback_works
-- * @bdi: bdi work items were issued to
-  * @done: target wb_completion
-  *
-  * Wait for one or more work items issued to @bdi with their ->done field
-- * set to @done, which should have been defined with
-- * DEFINE_WB_COMPLETION_ONSTACK().  This function returns after all such
-- * work items are completed.  Work items which are waited upon aren't freed
-+ * set to @done, which should have been initialized with
-+ * DEFINE_WB_COMPLETION().  This function returns after all such work items
-+ * are completed.  Work items which are waited upon aren't freed
-  * automatically on completion.
-  */
--static void wb_wait_for_completion(struct backing_dev_info *bdi,
--				   struct wb_completion *done)
-+void wb_wait_for_completion(struct wb_completion *done)
- {
- 	atomic_dec(&done->cnt);		/* put down the initial count */
--	wait_event(bdi->wb_waitq, !atomic_read(&done->cnt));
-+	wait_event(*done->waitq, !atomic_read(&done->cnt));
- }
- 
- #ifdef CONFIG_CGROUP_WRITEBACK
-@@ -843,7 +824,7 @@ static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
- restart:
- 	rcu_read_lock();
- 	list_for_each_entry_continue_rcu(wb, &bdi->wb_list, bdi_node) {
--		DEFINE_WB_COMPLETION_ONSTACK(fallback_work_done);
-+		DEFINE_WB_COMPLETION(fallback_work_done, bdi);
- 		struct wb_writeback_work fallback_work;
- 		struct wb_writeback_work *work;
- 		long nr_pages;
-@@ -890,7 +871,7 @@ static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
- 		last_wb = wb;
- 
- 		rcu_read_unlock();
--		wb_wait_for_completion(bdi, &fallback_work_done);
-+		wb_wait_for_completion(&fallback_work_done);
- 		goto restart;
- 	}
- 	rcu_read_unlock();
-@@ -2362,7 +2343,8 @@ static void wait_sb_inodes(struct super_block *sb)
- static void __writeback_inodes_sb_nr(struct super_block *sb, unsigned long nr,
- 				     enum wb_reason reason, bool skip_if_busy)
- {
--	DEFINE_WB_COMPLETION_ONSTACK(done);
-+	struct backing_dev_info *bdi = sb->s_bdi;
-+	DEFINE_WB_COMPLETION(done, bdi);
- 	struct wb_writeback_work work = {
- 		.sb			= sb,
- 		.sync_mode		= WB_SYNC_NONE,
-@@ -2371,14 +2353,13 @@ static void __writeback_inodes_sb_nr(struct super_block *sb, unsigned long nr,
- 		.nr_pages		= nr,
- 		.reason			= reason,
- 	};
--	struct backing_dev_info *bdi = sb->s_bdi;
- 
- 	if (!bdi_has_dirty_io(bdi) || bdi == &noop_backing_dev_info)
- 		return;
- 	WARN_ON(!rwsem_is_locked(&sb->s_umount));
- 
- 	bdi_split_work_to_wbs(sb->s_bdi, &work, skip_if_busy);
--	wb_wait_for_completion(bdi, &done);
-+	wb_wait_for_completion(&done);
- }
- 
- /**
-@@ -2440,7 +2421,8 @@ EXPORT_SYMBOL(try_to_writeback_inodes_sb);
-  */
- void sync_inodes_sb(struct super_block *sb)
- {
--	DEFINE_WB_COMPLETION_ONSTACK(done);
-+	struct backing_dev_info *bdi = sb->s_bdi;
-+	DEFINE_WB_COMPLETION(done, bdi);
- 	struct wb_writeback_work work = {
- 		.sb		= sb,
- 		.sync_mode	= WB_SYNC_ALL,
-@@ -2450,7 +2432,6 @@ void sync_inodes_sb(struct super_block *sb)
- 		.reason		= WB_REASON_SYNC,
- 		.for_sync	= 1,
- 	};
--	struct backing_dev_info *bdi = sb->s_bdi;
- 
- 	/*
- 	 * Can't skip on !bdi_has_dirty() because we should wait for !dirty
-@@ -2464,7 +2445,7 @@ void sync_inodes_sb(struct super_block *sb)
- 	/* protect against inode wb switch, see inode_switch_wbs_work_fn() */
- 	bdi_down_write_wb_switch_rwsem(bdi);
- 	bdi_split_work_to_wbs(bdi, &work, false);
--	wb_wait_for_completion(bdi, &done);
-+	wb_wait_for_completion(&done);
- 	bdi_up_write_wb_switch_rwsem(bdi);
- 
- 	wait_sb_inodes(sb);
-diff --git a/include/linux/backing-dev-defs.h b/include/linux/backing-dev-defs.h
-index 6a1a8a314d85..8fb740178d5d 100644
---- a/include/linux/backing-dev-defs.h
-+++ b/include/linux/backing-dev-defs.h
-@@ -67,6 +67,26 @@ enum wb_reason {
- 	WB_REASON_MAX,
- };
- 
-+struct wb_completion {
-+	atomic_t		cnt;
-+	wait_queue_head_t	*waitq;
-+};
-+
-+#define __WB_COMPLETION_INIT(_waitq)	\
-+	(struct wb_completion){ .cnt = ATOMIC_INIT(1), .waitq = (_waitq) }
-+
-+/*
-+ * If one wants to wait for one or more wb_writeback_works, each work's
-+ * ->done should be set to a wb_completion defined using the following
-+ * macro.  Once all work items are issued with wb_queue_work(), the caller
-+ * can wait for the completion of all using wb_wait_for_completion().  Work
-+ * items which are waited upon aren't freed automatically on completion.
++/**
++ * cgroup_writeback_by_id - initiate cgroup writeback from bdi and memcg IDs
++ * @bdi_id: target bdi id
++ * @memcg_id: target memcg css id
++ * @nr_pages: number of pages to write
++ * @reason: reason why some writeback work initiated
++ * @done: target wb_completion
++ *
++ * Initiate flush of the bdi_writeback identified by @bdi_id and @memcg_id
++ * with the specified parameters.
 + */
-+#define WB_COMPLETION_INIT(bdi)		__WB_COMPLETION_INIT(&(bdi)->wb_waitq)
++int cgroup_writeback_by_id(u64 bdi_id, int memcg_id, unsigned long nr,
++			   enum wb_reason reason, struct wb_completion *done)
++{
++	struct backing_dev_info *bdi;
++	struct cgroup_subsys_state *memcg_css;
++	struct bdi_writeback *wb;
++	struct wb_writeback_work *work;
++	int ret;
 +
-+#define DEFINE_WB_COMPLETION(cmpl, bdi)	\
-+	struct wb_completion cmpl = WB_COMPLETION_INIT(bdi)
++	/* lookup bdi and memcg */
++	bdi = bdi_get_by_id(bdi_id);
++	if (!bdi)
++		return -ENOENT;
 +
- /*
-  * For cgroup writeback, multiple wb's may map to the same blkcg.  Those
-  * wb's can operate mostly independently but should share the congested
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 35b31d176f74..02650b1253a2 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -44,6 +44,8 @@ void wb_start_background_writeback(struct bdi_writeback *wb);
- void wb_workfn(struct work_struct *work);
- void wb_wakeup_delayed(struct bdi_writeback *wb);
++	rcu_read_lock();
++	memcg_css = css_from_id(memcg_id, &memory_cgrp_subsys);
++	if (memcg_css && !css_tryget(memcg_css))
++		memcg_css = NULL;
++	rcu_read_unlock();
++	if (!memcg_css) {
++		ret = -ENOENT;
++		goto out_bdi_put;
++	}
++
++	/* and find the associated wb */
++	wb = wb_get_create(bdi, memcg_css, GFP_NOWAIT | __GFP_NOWARN);
++	if (!wb) {
++		ret = -ENOMEM;
++		goto out_css_put;
++	}
++
++	/* issue the writeback work */
++	work = kzalloc(sizeof(*work), GFP_NOWAIT | __GFP_NOWARN);
++	if (work) {
++		work->nr_pages = nr;
++		work->sync_mode = WB_SYNC_NONE;
++		work->reason = reason;
++		work->done = done;
++		work->auto_free = 1;
++		wb_queue_work(wb, work);
++		ret = 0;
++	} else {
++		ret = -ENOMEM;
++	}
++
++	wb_put(wb);
++out_css_put:
++	css_put(memcg_css);
++out_bdi_put:
++	bdi_put(bdi);
++	return ret;
++}
++
+ /**
+  * cgroup_writeback_umount - flush inode wb switches for umount
+  *
+diff --git a/include/linux/writeback.h b/include/linux/writeback.h
+index 8945aac31392..ad794f2a7d42 100644
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -217,6 +217,10 @@ void wbc_attach_and_unlock_inode(struct writeback_control *wbc,
+ void wbc_detach_inode(struct writeback_control *wbc);
+ void wbc_account_cgroup_owner(struct writeback_control *wbc, struct page *page,
+ 			      size_t bytes);
++int cgroup_writeback_by_id(u64 bdi_id, int memcg_id, unsigned long nr_pages,
++			   enum wb_reason reason, struct wb_completion *done);
++int writeback_by_id(int id, unsigned long nr, enum wb_reason reason,
++		    struct wb_completion *done);
+ void cgroup_writeback_umount(void);
  
-+void wb_wait_for_completion(struct wb_completion *done);
-+
- extern spinlock_t bdi_lock;
- extern struct list_head bdi_list;
- 
+ /**
 -- 
 2.17.1
 
