@@ -1,95 +1,87 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [PATCH v2 0/3] Implement BFQ per-device weight interface
-Date: Mon, 5 Aug 2019 17:08:36 +0200
-Message-ID: <A6E36505-16B1-4E6D-BCA8-53E5FD4AEE98@linaro.org>
-References: <20190805063807.9494-1-zhengfeiran@bytedance.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.8\))
-Content-Transfer-Encoding: quoted-printable
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH RFC] mm/memcontrol: reclaim severe usage over high limit
+ in get_user_pages loop
+Date: Mon, 5 Aug 2019 12:24:58 -0700
+Message-ID: <CALvZod5upYA2UgUSWJjrL7K=zifhwwvK5M_gUakPhf2fP-3HxA@mail.gmail.com>
+References: <156431697805.3170.6377599347542228221.stgit@buzz>
+ <20190729091738.GF9330@dhcp22.suse.cz> <3d6fc779-2081-ba4b-22cf-be701d617bb4@yandex-team.ru>
+ <20190729103307.GG9330@dhcp22.suse.cz> <CAHbLzkrdj-O2uXwM8ujm90OcgjyR4nAiEbFtRGe7SOoY_fs=BA@mail.gmail.com>
+ <20190729184850.GH9330@dhcp22.suse.cz> <CAHbLzkp9xFV2sE0TdKfWNRVcAwaYNKwDugRiBBoEKx6A_Hr3Jw@mail.gmail.com>
+ <20190802093507.GF6461@dhcp22.suse.cz> <CAHbLzkrjh7KEvdfXackaVy8oW5CU=UaBucERffxcUorgq1vdoA@mail.gmail.com>
+ <20190805143239.GS7597@dhcp22.suse.cz>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=CfGlMJlJq1yx6eSWof1+4yQXKTkrtm+XZNLVyiuuYPc=;
-        b=jbxxzFHHvusryD5w8vzHeuPeqU/d3yLi9SHaw+kphMYUNZbQHKRDzd0wOyUR/cmUgM
-         iMB55vlb/E8GPsyr5ucRPmimQH23RpGgdFiQBLzrxFXoq1sqDkFlGV+7etEF2y6fKRcg
-         mc5VTGedBcNbRLHK58Op9xwxSGRqTW4NNy2ZXqz4/zNBv9SNY0VBWz5gJVC1blrGH3jF
-         vNnmQ7gxzsoLn1ExYyoQuw5LWo9CH554+vbq0kfDJVdyCK4eq5LocjSQ4KunVUAkwDaG
-         7q2NuNsw16RVT8AZxS87xuORXknHwk+nYviQ763BWAYD5i9CYfsX2MjrExgAgGrwLfWf
-         gQXA==
-In-Reply-To: <20190805063807.9494-1-zhengfeiran@bytedance.com>
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=jBhZHZxcR0OIAcxY7/57CQdVnxqW0BKtiYJig9O330A=;
+        b=OWoEZJcfzeB9SYxPFawo056U4q1al2l7k+0gU3JECGIOX5fJ9AIdUCnznZLyUznYRF
+         Tt203xpJn7adxpO28UHjqgDOoQm2q85rp40ZFW+XF8uvBcrlSXeStp3k0U3tihqqdSZG
+         HqAu/l+qBcDLyzGHEVoJraaaC6fsenAwxprN829u8nILdwy08WqWvqliXoPBXr2Y/7JM
+         b7Nf9zKAJdeZoKdGBMxeicWw3wXpN10PUPyvRrn6Hzdwvuh0Ss0RCTr5DRAAeRPt0GnF
+         uzYpyuws4/j/4HUokCCBpgk9/3CI8BxdwHhbi3hJWUq/6jl9NtTOOd8QPD+zqw5w5f6u
+         nx+w==
+In-Reply-To: <20190805143239.GS7597@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Fam Zheng <zhengfeiran@bytedance.com>
-Cc: kernel list <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Fam Zheng <fam@euphon.net>, duanxiongchun@bytedance.com, linux-block <linux-block@vger.kernel.org>, tj@kernel.org, cgroups@vger.kernel.org, zhangjiachen.jc@bytedance.com
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Yang Shi <shy828301@gmail.com>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Linux MM <linux-mm@kvack.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-Thank you very much, Fam, for this extension.
+On Mon, Aug 5, 2019 at 7:32 AM Michal Hocko <mhocko@kernel.org> wrote:
+>
+> On Fri 02-08-19 11:56:28, Yang Shi wrote:
+> > On Fri, Aug 2, 2019 at 2:35 AM Michal Hocko <mhocko@kernel.org> wrote:
+> > >
+> > > On Thu 01-08-19 14:00:51, Yang Shi wrote:
+> > > > On Mon, Jul 29, 2019 at 11:48 AM Michal Hocko <mhocko@kernel.org> wrote:
+> > > > >
+> > > > > On Mon 29-07-19 10:28:43, Yang Shi wrote:
+> > > > > [...]
+> > > > > > I don't worry too much about scale since the scale issue is not unique
+> > > > > > to background reclaim, direct reclaim may run into the same problem.
+> > > > >
+> > > > > Just to clarify. By scaling problem I mean 1:1 kswapd thread to memcg.
+> > > > > You can have thousands of memcgs and I do not think we really do want
+> > > > > to create one kswapd for each. Once we have a kswapd thread pool then we
+> > > > > get into a tricky land where a determinism/fairness would be non trivial
+> > > > > to achieve. Direct reclaim, on the other hand is bound by the workload
+> > > > > itself.
+> > > >
+> > > > Yes, I agree thread pool would introduce more latency than dedicated
+> > > > kswapd thread. But, it looks not that bad in our test. When memory
+> > > > allocation is fast, even though dedicated kswapd thread can't catch
+> > > > up. So, such background reclaim is best effort, not guaranteed.
+> > > >
+> > > > I don't quite get what you mean about fairness. Do you mean they may
+> > > > spend excessive cpu time then cause other processes starvation? I
+> > > > think this could be mitigated by properly organizing and setting
+> > > > groups. But, I agree this is tricky.
+> > >
+> > > No, I meant that the cost of reclaiming a unit of charges (e.g.
+> > > SWAP_CLUSTER_MAX) is not constant and depends on the state of the memory
+> > > on LRUs. Therefore any thread pool mechanism would lead to unfair
+> > > reclaim and non-deterministic behavior.
+> >
+> > Yes, the cost depends on the state of pages, but I still don't quite
+> > understand what does "unfair" refer to in this context. Do you mean
+> > some cgroups may reclaim much more than others?
+>
+> > Or the work may take too long so it can't not serve other cgroups in time?
+>
+> exactly.
+>
 
-Reviewed-by: Paolo Valente <paolo.valente@linaro.org>
+How about allowing the users to implement their own user space kswapd?
+A memcg interface similar to MADV_PAGEOUT. Users can register for
+MEMCG_HIGH notification (it needs some modification) and on receiving
+the notification, the uswapd (User's kswapd) will trigger reclaim
+through memory.pageout (or memory.try_to_free_pages). One can argue
+why not just use MADV_PAGEOUT? In real workload, a job can be a
+combination of different sub-jobs and most probably may not know the
+importance of the memory layout of the tasks of the sub-jobs. So, a
+memcg level interface makes more sense there.
 
-> Il giorno 5 ago 2019, alle ore 08:38, Fam Zheng =
-<zhengfeiran@bytedance.com> ha scritto:
->=20
-> (Revision starting from v2 since v1 was used off-list)
->=20
-> Hi Paolo and others,
->=20
-> This adds to BFQ the missing per-device weight interfaces:
-> blkio.bfq.weight_device on legacy and io.bfq.weight on unified. The
-> implementation pretty closely resembles what we had in CFQ and the =
-parsing code
-> is basically reused.
->=20
-> Tests
-> =3D=3D=3D=3D=3D
->=20
-> Using two cgroups and three block devices, having weights setup as:
->=20
-> Cgroup          test1           test2
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> default         100             500
-> sda             500             100
-> sdb             default         default
-> sdc             200             200
->=20
-> cgroup v1 runs
-> --------------
->=20
->    sda.test1.out:   READ: bw=3D913MiB/s
->    sda.test2.out:   READ: bw=3D183MiB/s
->=20
->    sdb.test1.out:   READ: bw=3D213MiB/s
->    sdb.test2.out:   READ: bw=3D1054MiB/s
->=20
->    sdc.test1.out:   READ: bw=3D650MiB/s
->    sdc.test2.out:   READ: bw=3D650MiB/s
->=20
-> cgroup v2 runs
-> --------------
->=20
->    sda.test1.out:   READ: bw=3D915MiB/s
->    sda.test2.out:   READ: bw=3D184MiB/s
->=20
->    sdb.test1.out:   READ: bw=3D216MiB/s
->    sdb.test2.out:   READ: bw=3D1069MiB/s
->=20
->    sdc.test1.out:   READ: bw=3D621MiB/s
->    sdc.test2.out:   READ: bw=3D622MiB/s
->=20
-> Fam Zheng (3):
->  bfq: Fix the missing barrier in __bfq_entity_update_weight_prio
->  bfq: Extract bfq_group_set_weight from bfq_io_set_weight_legacy
->  bfq: Add per-device weight
->=20
-> block/bfq-cgroup.c  | 151 =
-+++++++++++++++++++++++++++++++++++++++-------------
-> block/bfq-iosched.h |   3 ++
-> block/bfq-wf2q.c    |   2 +
-> 3 files changed, 119 insertions(+), 37 deletions(-)
->=20
-> --=20
-> 2.11.0
->=20
-
+Shakeel
