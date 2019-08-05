@@ -1,18 +1,20 @@
 From: Fam Zheng <zhengfeiran@bytedance.com>
-Subject: [PATCH v2 0/3] Implement BFQ per-device weight interface
-Date: Mon,  5 Aug 2019 14:38:04 +0800
-Message-ID: <20190805063807.9494-1-zhengfeiran@bytedance.com>
+Subject: [PATCH v2 1/3] bfq: Fix the missing barrier in __bfq_entity_update_weight_prio
+Date: Mon,  5 Aug 2019 14:38:05 +0800
+Message-ID: <20190805063807.9494-2-zhengfeiran@bytedance.com>
+References: <20190805063807.9494-1-zhengfeiran@bytedance.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id;
-        bh=c8VHeq19ya4NgPAfDdaqw+9aj+OFOs4WuaGxyy8ErMY=;
-        b=OIeSnNO7cj0zewIOCmHFYjKvW+fx4JZINu923BjB0Hq/ubX+bwiftL7/216vqNXYB1
-         Lvks5py6y2q6fGu/M7MagQ8j0/yj5L9KGlvU+Mibf3MLnOSONPXVuTIdfPrUM7z974aj
-         /eVzeZ2pbGEtDq1N5I9ns4JjUvVzAwJ2GuM0Dp56b/MMHk55rwpC8sB9F58psHo3HV3f
-         yiHG0YyHEFKQXZ6Lwpmr6OB9/t3xUkgMGy95WPvIGYYGwp00ReDgvYx+1hfgOoTkb4Hg
-         HooskmgqWCHsPqVKWhVei8eC/pOEyaijR9Pk8/gclfLyAZkvoIiS+vIgNoO0O5tg/PcS
-         4VqA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=H0yUp64wfUQz7/P14zeAkDAdPbazrBmBRzsKkTj102k=;
+        b=HkqdS5JfAzU5BEi1rePzJYVVta7pmYY9kcs8THIOz9I9OoWyVYFoS8yIydBOR4khk5
+         NeMe6c/hV8JE8DIvkkaEz8yze8KZ1gP7tzk+8ey9ETPzgPATG5RgLbFTQ2SSaIEtF9ww
+         6ZFeXT8qCQpIRrKSxqf1DLd7BnjBrA5abZ3VxSqjTOBPBP18qoUm5LLlvjyrM+cfIHfV
+         e0l9CmNfliF9bLK/71XhHxS26xy1KnswmuImQ04lHQJerW1dB/mMVqRBjda0RZ116I6g
+         pTFy2Wo6QOPDj2YsB8/flAFkdF3Hi2A7F/xY5Wzj9oBxQdd5g1vbsMV2JkgpPKSUMnfn
+         iV3A==
+In-Reply-To: <20190805063807.9494-1-zhengfeiran@bytedance.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -21,61 +23,28 @@ Content-Transfer-Encoding: 7bit
 To: linux-kernel@vger.kernel.org
 Cc: axboe@kernel.dk, fam@euphon.net, paolo.valente@linaro.org, duanxiongchun@bytedance.com, linux-block@vger.kernel.org, tj@kernel.org, cgroups@vger.kernel.org, zhangjiachen.jc@bytedance.com
 
-(Revision starting from v2 since v1 was used off-list)
+The comment of bfq_group_set_weight says the reading of prio_changed
+should happen before the reading of weight, but a memory barrier is
+missing here. Add it now, to match the smp_wmb() there.
 
-Hi Paolo and others,
+Signed-off-by: Fam Zheng <zhengfeiran@bytedance.com>
+---
+ block/bfq-wf2q.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-This adds to BFQ the missing per-device weight interfaces:
-blkio.bfq.weight_device on legacy and io.bfq.weight on unified. The
-implementation pretty closely resembles what we had in CFQ and the parsing code
-is basically reused.
-
-Tests
-=====
-
-Using two cgroups and three block devices, having weights setup as:
-
-Cgroup          test1           test2
-============================================
-default         100             500
-sda             500             100
-sdb             default         default
-sdc             200             200
-
-cgroup v1 runs
---------------
-
-    sda.test1.out:   READ: bw=913MiB/s
-    sda.test2.out:   READ: bw=183MiB/s
-
-    sdb.test1.out:   READ: bw=213MiB/s
-    sdb.test2.out:   READ: bw=1054MiB/s
-
-    sdc.test1.out:   READ: bw=650MiB/s
-    sdc.test2.out:   READ: bw=650MiB/s
-
-cgroup v2 runs
---------------
-
-    sda.test1.out:   READ: bw=915MiB/s
-    sda.test2.out:   READ: bw=184MiB/s
-
-    sdb.test1.out:   READ: bw=216MiB/s
-    sdb.test2.out:   READ: bw=1069MiB/s
-
-    sdc.test1.out:   READ: bw=621MiB/s
-    sdc.test2.out:   READ: bw=622MiB/s
-
-Fam Zheng (3):
-  bfq: Fix the missing barrier in __bfq_entity_update_weight_prio
-  bfq: Extract bfq_group_set_weight from bfq_io_set_weight_legacy
-  bfq: Add per-device weight
-
- block/bfq-cgroup.c  | 151 +++++++++++++++++++++++++++++++++++++++-------------
- block/bfq-iosched.h |   3 ++
- block/bfq-wf2q.c    |   2 +
- 3 files changed, 119 insertions(+), 37 deletions(-)
-
+diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
+index c9ba225081ce..05f0bf4a1144 100644
+--- a/block/bfq-wf2q.c
++++ b/block/bfq-wf2q.c
+@@ -744,6 +744,8 @@ __bfq_entity_update_weight_prio(struct bfq_service_tree *old_st,
+ 		}
+ #endif
+ 
++		/* Matches the smp_wmb() in bfq_group_set_weight. */
++		smp_rmb();
+ 		old_st->wsum -= entity->weight;
+ 
+ 		if (entity->new_weight != entity->orig_weight) {
 -- 
 2.11.0
 
