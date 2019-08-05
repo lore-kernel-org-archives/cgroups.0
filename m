@@ -1,114 +1,104 @@
-From: Fam Zheng <zhengfeiran@bytedance.com>
-Subject: [PATCH v2 2/3] bfq: Extract bfq_group_set_weight from bfq_io_set_weight_legacy
-Date: Mon,  5 Aug 2019 14:38:06 +0800
-Message-ID: <20190805063807.9494-3-zhengfeiran@bytedance.com>
-References: <20190805063807.9494-1-zhengfeiran@bytedance.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: Possible mem cgroup bug in kernels between 4.18.0 and 5.3-rc1.
+Date: Mon, 5 Aug 2019 10:18:10 +0200
+Message-ID: <20190805081810.GA7597@dhcp22.suse.cz>
+References: <5659221C-3E9B-44AD-9BBF-F74DE09535CD@apple.com>
+ <20190802074047.GQ11627@dhcp22.suse.cz>
+ <7E44073F-9390-414A-B636-B1AE916CC21E@apple.com>
+ <20190802144110.GL6461@dhcp22.suse.cz>
+ <5DE6F4AE-F3F9-4C52-9DFC-E066D9DD5EDC@apple.com>
+ <20190802191430.GO6461@dhcp22.suse.cz>
+ <A06C5313-B021-4ADA-9897-CE260A9011CC@apple.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=CBE2RxQAGoG3LaBnrWD40VvQ1s3Zc1p2YNjhDaVQZYE=;
-        b=wIkzzujgXkOVi7Ki0cOf1lHqXj2TsWK0iWppP0cX5E3NgPSgD8LmlqqnGfCdKrmOiW
-         YC/5558MPEGyzGrLSZ/odKYU7SfqvwQFsv0QK1xirJeTtwA3ZmCKproGKzoWSM7MgYoL
-         K0npL84yKbwslvnXFud6giJKc+gi9NEoBx2fNCqY4fj2B7BUGQzEQSU/hIUcR/xVX/uP
-         w0ezOuEvrOWAUqFBppcVxdk1fgWYqqXd6Z80d6FzzQ7Spsk5x8FZuRUW4cSlYw2ZVyi7
-         FT9nGH7wXkDm+naORN+RByCHNchfJqSW62DZyHPvHzUR7FFNS+zpMBdGpmE5rm6xB8Pk
-         74DQ==
-In-Reply-To: <20190805063807.9494-1-zhengfeiran@bytedance.com>
+Content-Disposition: inline
+In-Reply-To: <A06C5313-B021-4ADA-9897-CE260A9011CC@apple.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-kernel@vger.kernel.org
-Cc: axboe@kernel.dk, fam@euphon.net, paolo.valente@linaro.org, duanxiongchun@bytedance.com, linux-block@vger.kernel.org, tj@kernel.org, cgroups@vger.kernel.org, zhangjiachen.jc@bytedance.com
+Content-Type: text/plain; charset="utf-8"
+To: Masoud Sharbiani <msharbiani@apple.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, hannes@cmpxchg.org, vdavydov.dev@gmail.com, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This function will be useful when we update weight from the soon-coming
-per-device interface.
+On Fri 02-08-19 16:28:25, Masoud Sharbiani wrote:
+> 
+> 
+> > On Aug 2, 2019, at 12:14 PM, Michal Hocko <mhocko@kernel.org> wrote:
+> > 
+> > On Fri 02-08-19 11:00:55, Masoud Sharbiani wrote:
+> >> 
+> >> 
+> >>> On Aug 2, 2019, at 7:41 AM, Michal Hocko <mhocko@kernel.org> wrote:
+> >>> 
+> >>> On Fri 02-08-19 07:18:17, Masoud Sharbiani wrote:
+> >>>> 
+> >>>> 
+> >>>>> On Aug 2, 2019, at 12:40 AM, Michal Hocko <mhocko@kernel.org> wrote:
+> >>>>> 
+> >>>>> On Thu 01-08-19 11:04:14, Masoud Sharbiani wrote:
+> >>>>>> Hey folks,
+> >>>>>> I’ve come across an issue that affects most of 4.19, 4.20 and 5.2 linux-stable kernels that has only been fixed in 5.3-rc1.
+> >>>>>> It was introduced by
+> >>>>>> 
+> >>>>>> 29ef680 memcg, oom: move out_of_memory back to the charge path 
+> >>>>> 
+> >>>>> This commit shouldn't really change the OOM behavior for your particular
+> >>>>> test case. It would have changed MAP_POPULATE behavior but your usage is
+> >>>>> triggering the standard page fault path. The only difference with
+> >>>>> 29ef680 is that the OOM killer is invoked during the charge path rather
+> >>>>> than on the way out of the page fault.
+> >>>>> 
+> >>>>> Anyway, I tried to run your test case in a loop and leaker always ends
+> >>>>> up being killed as expected with 5.2. See the below oom report. There
+> >>>>> must be something else going on. How much swap do you have on your
+> >>>>> system?
+> >>>> 
+> >>>> I do not have swap defined. 
+> >>> 
+> >>> OK, I have retested with swap disabled and again everything seems to be
+> >>> working as expected. The oom happens earlier because I do not have to
+> >>> wait for the swap to get full.
+> >>> 
+> >> 
+> >> In my tests (with the script provided), it only loops 11 iterations before hanging, and uttering the soft lockup message.
+> >> 
+> >> 
+> >>> Which fs do you use to write the file that you mmap?
+> >> 
+> >> /dev/sda3 on / type xfs (rw,relatime,seclabel,attr2,inode64,logbufs=8,logbsize=32k,noquota)
+> >> 
+> >> Part of the soft lockup path actually specifies that it is going through __xfs_filemap_fault():
+> > 
+> > Right, I have just missed that.
+> > 
+> > [...]
+> > 
+> >> If I switch the backing file to a ext4 filesystem (separate hard drive), it OOMs.
+> >> 
+> >> 
+> >> If I switch the file used to /dev/zero, it OOMs: 
+> >> …
+> >> Todal sum was 0. Loop count is 11
+> >> Buffer is @ 0x7f2b66c00000
+> >> ./test-script-devzero.sh: line 16:  3561 Killed                  ./leaker -p 10240 -c 100000
+> >> 
+> >> 
+> >>> Or could you try to
+> >>> simplify your test even further? E.g. does everything work as expected
+> >>> when doing anonymous mmap rather than file backed one?
+> >> 
+> >> It also OOMs with MAP_ANON. 
+> >> 
+> >> Hope that helps.
+> > 
+> > It helps to focus more on the xfs reclaim path. Just to be sure, is
+> > there any difference if you use cgroup v2? I do not expect to be but
+> > just to be sure there are no v1 artifacts.
+> 
+> I was unable to use cgroups2. I’ve created the new control group, but the attempt to move a running process into it fails with ‘Device or resource busy’.
 
-Signed-off-by: Fam Zheng <zhengfeiran@bytedance.com>
----
- block/bfq-cgroup.c | 60 +++++++++++++++++++++++++++++-------------------------
- 1 file changed, 32 insertions(+), 28 deletions(-)
-
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 0f6cd688924f..28e5a9241237 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -918,6 +918,36 @@ static int bfq_io_show_weight(struct seq_file *sf, void *v)
- 	return 0;
- }
- 
-+static void bfq_group_set_weight(struct bfq_group *bfqg, u64 weight)
-+{
-+	/*
-+	 * Setting the prio_changed flag of the entity
-+	 * to 1 with new_weight == weight would re-set
-+	 * the value of the weight to its ioprio mapping.
-+	 * Set the flag only if necessary.
-+	 */
-+	if ((unsigned short)weight != bfqg->entity.new_weight) {
-+		bfqg->entity.new_weight = (unsigned short)weight;
-+		/*
-+		 * Make sure that the above new value has been
-+		 * stored in bfqg->entity.new_weight before
-+		 * setting the prio_changed flag. In fact,
-+		 * this flag may be read asynchronously (in
-+		 * critical sections protected by a different
-+		 * lock than that held here), and finding this
-+		 * flag set may cause the execution of the code
-+		 * for updating parameters whose value may
-+		 * depend also on bfqg->entity.new_weight (in
-+		 * __bfq_entity_update_weight_prio).
-+		 * This barrier makes sure that the new value
-+		 * of bfqg->entity.new_weight is correctly
-+		 * seen in that code.
-+		 */
-+		smp_wmb();
-+		bfqg->entity.prio_changed = 1;
-+	}
-+}
-+
- static int bfq_io_set_weight_legacy(struct cgroup_subsys_state *css,
- 				    struct cftype *cftype,
- 				    u64 val)
-@@ -936,34 +966,8 @@ static int bfq_io_set_weight_legacy(struct cgroup_subsys_state *css,
- 	hlist_for_each_entry(blkg, &blkcg->blkg_list, blkcg_node) {
- 		struct bfq_group *bfqg = blkg_to_bfqg(blkg);
- 
--		if (!bfqg)
--			continue;
--		/*
--		 * Setting the prio_changed flag of the entity
--		 * to 1 with new_weight == weight would re-set
--		 * the value of the weight to its ioprio mapping.
--		 * Set the flag only if necessary.
--		 */
--		if ((unsigned short)val != bfqg->entity.new_weight) {
--			bfqg->entity.new_weight = (unsigned short)val;
--			/*
--			 * Make sure that the above new value has been
--			 * stored in bfqg->entity.new_weight before
--			 * setting the prio_changed flag. In fact,
--			 * this flag may be read asynchronously (in
--			 * critical sections protected by a different
--			 * lock than that held here), and finding this
--			 * flag set may cause the execution of the code
--			 * for updating parameters whose value may
--			 * depend also on bfqg->entity.new_weight (in
--			 * __bfq_entity_update_weight_prio).
--			 * This barrier makes sure that the new value
--			 * of bfqg->entity.new_weight is correctly
--			 * seen in that code.
--			 */
--			smp_wmb();
--			bfqg->entity.prio_changed = 1;
--		}
-+		if (bfqg)
-+			bfq_group_set_weight(bfqg, val);
- 	}
- 	spin_unlock_irq(&blkcg->lock);
- 
+Have you enabled the memory controller for the hierarchy? Please read
+Documentation/admin-guide/cgroup-v2.rst for more information.
 -- 
-2.11.0
-
+Michal Hocko
+SUSE Labs
