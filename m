@@ -1,55 +1,70 @@
-From: Patrick Bellasi <patrick.bellasi@arm.com>
-Subject: Re: [PATCH v13 0/6] Add utilization clamping support (CGroups API)
-Date: Tue, 06 Aug 2019 17:40:55 +0100
-Message-ID: <87k1bqfdrc.fsf@arm.com>
-References: <20190802090853.4810-1-patrick.bellasi@arm.com> <20190806161206.GA20526@blackbody.suse.cz>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 2/4] bdi: Add bdi->id
+Date: Tue, 6 Aug 2019 16:01:02 -0700
+Message-ID: <20190806160102.11366694af6b56d9c4ca6ea3@linux-foundation.org>
+References: <20190803140155.181190-1-tj@kernel.org>
+        <20190803140155.181190-3-tj@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <20190806161206.GA20526@blackbody.suse.cz>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1565132464;
+        bh=vGl/qyUj+m3xdNJaJ9fF/HjSzIEZvTJK5xJjIUiHOxQ=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=ram+yxpjoZZlMPdi2p/p8wC9xbLXU244ul4IK2w7JME7Dob0R4Qy/D1hsmAvZ0GDM
+         lPuIhCuLFw5/g2cagStWN5Eua65k6HVxgrIAfPon7hrUHTVSJGBaJH22M3WDg17C6L
+         TdVf/pEW1LNxxYciU9FWLJmB9xyejRP00N6oKK4k=
+In-Reply-To: <20190803140155.181190-3-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-api@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Tejun Heo <tj@kernel.org>, "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Vincent Guittot <vincent.guittot@linaro.org>, Viresh Kumar <viresh.kumar@linaro.org>, Paul Turner <pjt@google.com>, Quentin Perret <quentin.perret@arm.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Morten Rasmussen <morten.rasmussen@arm.com>, Juri Lelli <juri.lelli@redhat.com>, Todd Kjos <tkjos@google.com>, Joel Fernandes <joelaf@google.com>, Steve Muckle <smuckle@google.com>, Suren Baghdasaryan <surenb@google.com>, Alessio Balsini <balsini@android.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj@kernel.org>
+Cc: axboe@kernel.dk, jack@suse.cz, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, guro@fb.com
 
+On Sat,  3 Aug 2019 07:01:53 -0700 Tejun Heo <tj@kernel.org> wrote:
 
-On Tue, Aug 06, 2019 at 17:12:06 +0100, Michal Koutn=C3=BD wrote...
+> There currently is no way to universally identify and lookup a bdi
+> without holding a reference and pointer to it.  This patch adds an
+> non-recycling bdi->id and implements bdi_get_by_id() which looks up
+> bdis by their ids.  This will be used by memcg foreign inode flushing.
 
-> On Fri, Aug 02, 2019 at 10:08:47AM +0100, Patrick Bellasi <patrick.bellas=
-i@arm.com> wrote:
->> Patrick Bellasi (6):
->>   sched/core: uclamp: Extend CPU's cgroup controller
->>   sched/core: uclamp: Propagate parent clamps
->>   sched/core: uclamp: Propagate system defaults to root group
->>   sched/core: uclamp: Use TG's clamps to restrict TASK's clamps
->>   sched/core: uclamp: Update CPU's refcount on TG's clamp changes
->>   sched/core: uclamp: always use enum uclamp_id for clamp_id values
+Why is the id non-recycling?  Presumably to address some
+lifetime/lookup issues, but what are they?
 
-Hi Michal!
+Why was the IDR code not used?
 
-> Thank you Patrick for your patience.
+> I left bdi_list alone for simplicity and because while rb_tree does
+> support rcu assignment it doesn't seem to guarantee lossless walk when
+> walk is racing aginst tree rebalance operations.
+> 
+> ...
+>
+> +/**
+> + * bdi_get_by_id - lookup and get bdi from its id
+> + * @id: bdi id to lookup
+> + *
+> + * Find bdi matching @id and get it.  Returns NULL if the matching bdi
+> + * doesn't exist or is already unregistered.
+> + */
+> +struct backing_dev_info *bdi_get_by_id(u64 id)
+> +{
+> +	struct backing_dev_info *bdi = NULL;
+> +	struct rb_node **p;
+> +
+> +	spin_lock_irq(&bdi_lock);
 
-Thanks to you for your reviews.
+Why irq-safe?  Everywhere else uses spin_lock_bh(&bdi_lock).
 
-> I used the time to revisit the series once again and I think the RCU
-> locks can be streamlined a bit.
-
-I'll have a look at those, thanks!
-
-> If you find that correct, feel free to add my Reviewed-by to the
-> updated series (for 1/6 and legacy, I'm just asking).
-
-Sure, actually sorry for not having already added that tag in the
-current version, it will be there in v14 ;)
-
-> Michal
-
-Cheers,
-Patrick
-
---
-#include <best/regards.h>
-
-Patrick Bellasi
-
+> +	p = bdi_lookup_rb_node(id, NULL);
+> +	if (*p) {
+> +		bdi = rb_entry(*p, struct backing_dev_info, rb_node);
+> +		bdi_get(bdi);
+> +	}
+> +	spin_unlock_irq(&bdi_lock);
+> +
+> +	return bdi;
+> +}
+> +
+>
+> ...
+>
