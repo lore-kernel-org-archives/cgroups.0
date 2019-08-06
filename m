@@ -1,87 +1,60 @@
-From: Marc Koderer <marc@koderer.com>
-Subject: [PATCH] Use kvmalloc in cgroups-v1
-Date: Tue,  6 Aug 2019 15:24:12 +0200
-Message-ID: <20190806132412.92945-1-marc@koderer.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH v13 1/6] sched/core: uclamp: Extend CPU's cgroup
+ controller
+Date: Tue, 6 Aug 2019 18:11:34 +0200
+Message-ID: <20190806161133.GA18532@blackbody.suse.cz>
+References: <20190802090853.4810-1-patrick.bellasi@arm.com>
+ <20190802090853.4810-2-patrick.bellasi@arm.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190802090853.4810-2-patrick.bellasi@arm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Marc Koderer <marc@koderer.com>
+Content-Transfer-Encoding: 7bit
+To: Patrick Bellasi <patrick.bellasi@arm.com>
+Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-api@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Tejun Heo <tj@kernel.org>, "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Vincent Guittot <vincent.guittot@linaro.org>, Viresh Kumar <viresh.kumar@linaro.org>, Paul Turner <pjt@google.com>, Quentin Perret <quentin.perret@arm.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Morten Rasmussen <morten.rasmussen@arm.com>, Juri Lelli <juri.lelli@redhat.com>, Todd Kjos <tkjos@google.com>, Joel Fernandes <joelaf@google.com>, Steve Muckle <smuckle@google.com>, Suren Baghdasaryan <surenb@google.com>, Alessio Balsini <balsini@android.com>
 
-Instead of using its own logic for k-/vmalloc rely on
-kvmalloc which is actually doing quite the same.
+On Fri, Aug 02, 2019 at 10:08:48AM +0100, Patrick Bellasi <patrick.bellasi@arm.com> wrote:
+> +static ssize_t cpu_uclamp_write(struct kernfs_open_file *of, char *buf,
+> +				size_t nbytes, loff_t off,
+> +				enum uclamp_id clamp_id)
+> +{
+> +	struct uclamp_request req;
+> +	struct task_group *tg;
+> +
+> +	req = capacity_from_percent(buf);
+> +	if (req.ret)
+> +		return req.ret;
+> +
+> +	rcu_read_lock();
+This should be the uclamp_mutex.
 
-Signed-off-by: Marc Koderer <marc@koderer.com>
----
- kernel/cgroup/cgroup-v1.c | 27 ++++-----------------------
- 1 file changed, 4 insertions(+), 23 deletions(-)
+(The compound results of the series is correct as the lock is introduced
+in "sched/core: uclamp: Propagate parent clamps".
+This is just for the happiness of cherry-pickers/bisectors.)
 
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 88006be40ea3..7f83f4121d8d 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -193,25 +193,6 @@ struct cgroup_pidlist {
- 	struct delayed_work destroy_dwork;
- };
- 
--/*
-- * The following two functions "fix" the issue where there are more pids
-- * than kmalloc will give memory for; in such cases, we use vmalloc/vfree.
-- * TODO: replace with a kernel-wide solution to this problem
-- */
--#define PIDLIST_TOO_LARGE(c) ((c) * sizeof(pid_t) > (PAGE_SIZE * 2))
--static void *pidlist_allocate(int count)
--{
--	if (PIDLIST_TOO_LARGE(count))
--		return vmalloc(array_size(count, sizeof(pid_t)));
--	else
--		return kmalloc_array(count, sizeof(pid_t), GFP_KERNEL);
--}
--
--static void pidlist_free(void *p)
--{
--	kvfree(p);
--}
--
- /*
-  * Used to destroy all pidlists lingering waiting for destroy timer.  None
-  * should be left afterwards.
-@@ -244,7 +225,7 @@ static void cgroup_pidlist_destroy_work_fn(struct work_struct *work)
- 	 */
- 	if (!delayed_work_pending(dwork)) {
- 		list_del(&l->links);
--		pidlist_free(l->list);
-+		kvfree(l->list);
- 		put_pid_ns(l->key.ns);
- 		tofree = l;
- 	}
-@@ -365,7 +346,7 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
- 	 * show up until sometime later on.
- 	 */
- 	length = cgroup_task_count(cgrp);
--	array = pidlist_allocate(length);
-+	array = kvmalloc_array(length, sizeof(pid_t), GFP_KERNEL);
- 	if (!array)
- 		return -ENOMEM;
- 	/* now, populate the array */
-@@ -390,12 +371,12 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
- 
- 	l = cgroup_pidlist_find_create(cgrp, type);
- 	if (!l) {
--		pidlist_free(array);
-+		kvfree(array);
- 		return -ENOMEM;
- 	}
- 
- 	/* store array, freeing old if necessary */
--	pidlist_free(l->list);
-+	kvfree(l->list);
- 	l->list = array;
- 	l->length = length;
- 	*lp = l;
--- 
-2.22.0
+> +static inline void cpu_uclamp_print(struct seq_file *sf,
+> +				    enum uclamp_id clamp_id)
+> +{
+> [...]
+> +	rcu_read_lock();
+> +	tg = css_tg(seq_css(sf));
+> +	util_clamp = tg->uclamp_req[clamp_id].value;
+> +	rcu_read_unlock();
+Why is the rcu_read_lock() needed here? (I'm considering the comment in
+of_css() that should apply here (and it seems that similar uses in other
+seq_file handlers also skip this).)
+
+> @@ -7369,6 +7506,20 @@ static struct cftype cpu_legacy_files[] = {
+> [...]
+> +		.name = "uclamp.min",
+> [...]
+> +		.name = "uclamp.max",
+I don't see technical reasons why uclamp couldn't work on legacy
+hierarchy and Tejun acked the series, despite that I'll ask -- should
+the new attributes be exposed in v1 controller hierarchy (taking into
+account the legacy API is sort of frozen and potential maintenance needs
+spanning both hierarchies)?
 
