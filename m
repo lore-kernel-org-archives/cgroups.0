@@ -1,66 +1,65 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/4] bdi: Add bdi->id
-Date: Wed, 7 Aug 2019 13:34:14 -0700
-Message-ID: <20190807203414.GA554060@devbig004.ftw2.facebook.com>
-References: <20190803140155.181190-1-tj@kernel.org>
- <20190803140155.181190-3-tj@kernel.org>
- <20190806160102.11366694af6b56d9c4ca6ea3@linux-foundation.org>
- <20190807183151.GM136335@devbig004.ftw2.facebook.com>
- <20190807120037.72018c136db40e88d89c05d1@linux-foundation.org>
+From: Patrick Bellasi <patrick.bellasi@arm.com>
+Subject: Re: [PATCH v13 2/6] sched/core: uclamp: Propagate parent clamps
+Date: Thu, 08 Aug 2019 16:08:10 +0100
+Message-ID: <87h86r4rvp.fsf@arm.com>
+References: <20190802090853.4810-1-patrick.bellasi@arm.com> <20190802090853.4810-3-patrick.bellasi@arm.com> <20190806161153.GA19991@blackbody.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=IC+13V8Mtk7y8HC7bnHIWtqIcy1I5HJyllIeTOClBTQ=;
-        b=gA2Gxo3VVUUiZocJ2EWD7FWO7YBQ8ft67UkLPK3AQg2nN2DoElFq/GksGEaLO+Xxs7
-         yBG49lmFjj6YiLTjAaIGIQ41gk0yijO+ArJDE8dr0MOM8hPWXP6zZJu4zTmZ5U0pgrQi
-         HknnD6KZRyK/MCSoGtYJTTYotU0YW8UoTRgeuRn+pC5MZtc7pzuYv6kj3xs5K4Iq01gZ
-         86PLHXMC6iInXVPSj6NydUiB8ADQvz4JihwAriUqmR/FNZBo1PmtDfw6VQ/NCCRIFgf2
-         ZxOvpizlKlGxc62Gw+giLRS40hco+rKNH4/JXvGmrSXjrc5JQOrAHKmp7zbC6NOQ0jDG
-         Tr4A==
-Content-Disposition: inline
-In-Reply-To: <20190807120037.72018c136db40e88d89c05d1@linux-foundation.org>
+In-reply-to: <20190806161153.GA19991@blackbody.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: axboe@kernel.dk, jack@suse.cz, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, guro@fb.com
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny@suse.com>
+Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-api@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Tejun Heo <tj@kernel.org>, "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Vincent Guittot <vincent.guittot@linaro.org>, Viresh Kumar <viresh.kumar@linaro.org>, Paul Turner <pjt@google.com>, Quentin Perret <quentin.perret@arm.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Morten Rasmussen <morten.rasmussen@arm.com>, Juri Lelli <juri.lelli@redhat.com>, Todd Kjos <tkjos@google.com>, Joel Fernandes <joelaf@google.com>, Steve Muckle <smuckle@google.com>, Suren Baghdasaryan <surenb@google.com>, Alessio Balsini <balsini@android.com>
 
-Hello,
 
-On Wed, Aug 07, 2019 at 12:00:37PM -0700, Andrew Morton wrote:
-> OK, but why is recycling a problem?  For example, file descriptors
-> recycle as aggressively as is possible, and that doesn't cause any
-> trouble.  Presumably recycling is a problem with cgroups because of
-> some sort of stale reference problem?
+On Tue, Aug 06, 2019 at 17:11:53 +0100, Michal Koutn=C3=BD wrote...
 
-Oh, because there are use cases where the consumers are detached from
-the lifetime synchronization.  In this example, the benefit of using
-IDs is that memcgs don't need to pin foreign bdi_wb's and just look up
-and verify when it wants to flush them.  If we use pointers, we have
-to pin the objects which then requires either shooting down those
-references with timers or somehow doing reverse lookup to shoot them
-down when bdi_wb is taken offline.  If we use IDs which can be
-recycling aggressively, there can be pathological cases where remote
-flushes are issued on the wrong target possibly repeatedly, which may
-or may not be a real problem.
+> On Fri, Aug 02, 2019 at 10:08:49AM +0100, Patrick Bellasi <patrick.bellas=
+i@arm.com> wrote:
+>> @@ -7095,6 +7149,7 @@ static ssize_t cpu_uclamp_write(struct kernfs_open=
+_file *of, char *buf,
+>>  	if (req.ret)
+>>  		return req.ret;
+>> =20
+>> +	mutex_lock(&uclamp_mutex);
+>>  	rcu_read_lock();
+>> =20
+>>  	tg =3D css_tg(of_css(of));
+>> @@ -7107,7 +7162,11 @@ static ssize_t cpu_uclamp_write(struct kernfs_ope=
+n_file *of, char *buf,
+>>  	 */
+>>  	tg->uclamp_pct[clamp_id] =3D req.percent;
+>> =20
+>> +	/* Update effective clamps to track the most restrictive value */
+>> +	cpu_util_update_eff(of_css(of));
+>> +
+>>  	rcu_read_unlock();
+>> +	mutex_unlock(&uclamp_mutex);
+> Following my remarks to "[PATCH v13 1/6] sched/core: uclamp: Extend
+> CPU's cgroup", I wonder if the rcu_read_lock() couldn't be moved right
+> before cpu_util_update_eff(). And by extension rcu_read_(un)lock could
+> be hidden into cpu_util_update_eff() closer to its actual need.
 
-For cgroup ID, the problem is more immediate.  We give out the IDs to
-userspace and there is no way to shoot those references down when the
-cgroup goes away and the ID gets recycled, so when the user comes back
-and asks "I want to attach this bpf program to the cgroup identified
-with this ID", we can end up attaching it to the wrong cgroup if we
-recycle IDs.  cgroup ended up with two separate IDs, which is kinda
-dumb.
+Well, if I've got correctly your comment in the previous message, I
+would say that at this stage we don't need RCU looks at all.
 
-tl;dr is that it's either cumbersome or impossible to synchronize the
-users of these IDs, so if they get recycled, they end up identifying
-the wrong thing.
+Reason being that cpu_util_update_eff() gets called only from
+cpu_uclamp_write() which is from an ongoing write operation on a cgroup
+attribute and thus granted to be available.
 
-Thanks.
+We will eventually need to move the RCU look only down the stack when
+uclamp_update_active_tasks() gets called to update the RUNNABLE tasks on
+a RQ... or perhaps we don't need them since we already get the
+task_rq_lock() for each task we visit.
 
--- 
-tejun
+Is that correct?
+
+Cheers,
+Patrick
+
+--=20
+#include <best/regards.h>
+
+Patrick Bellasi
