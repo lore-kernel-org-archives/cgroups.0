@@ -1,57 +1,68 @@
-From: Rik van Riel <riel@fb.com>
-Subject: Re: [PATCH 2/4] bdi: Add bdi->id
-Date: Fri, 9 Aug 2019 00:57:24 +0000
-Message-ID: <775309de70c1371e852fa5e6f84ca1ca2727faa0.camel@fb.com>
-References: <20190803140155.181190-1-tj@kernel.org>
-         <20190803140155.181190-3-tj@kernel.org>
-         <20190806160102.11366694af6b56d9c4ca6ea3@linux-foundation.org>
-         <20190807183151.GM136335@devbig004.ftw2.facebook.com>
-         <20190807120037.72018c136db40e88d89c05d1@linux-foundation.org>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [RFC PATCH] hugetlbfs: Add hugetlb_cgroup reservation limits
+Date: Fri, 9 Aug 2019 13:27:39 +0200
+Message-ID: <20190809112738.GB13061@blackbody.suse.cz>
+References: <20190808194002.226688-1-almasrymina@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="IiVenqGWf+H9Y6IX"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=/BPU77XJe1qy2ASoI5lFobOZEYDoCwlx/KYqwMSP0aY=;
- b=qdmRVyTW7vOPlR31vJUZ374HcyFcs7eaixAb/F6dZuUV9I48T2nH8zRTT19KdeW9/bzJ
- kX6MPH/wfRmXQZqAbQMGV8O5uCabXA4nA1zp6Lb7q7GBiVSi6V3yQbF2SdXlLEePMU4R
- vVuVnLtFpPzk9KRyWgjktVNsWBPUNGURRlo= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/BPU77XJe1qy2ASoI5lFobOZEYDoCwlx/KYqwMSP0aY=;
- b=b8qmWhKlB2740VAbokWnsRlAQh05Y8xlXNDrJdjX9dj4d2WYpY0H+z87VoAluX/RArfXTA0OwMyuEyRSDQV0T9ByM+YPRVjatTSeDwmZ34gxajhfz6G4ydyYmceNdA5UXEtbLRCE4IFfHqjxQu/Zda7Dm4xkON6bX47XJWITGPQ=
-In-Reply-To: <20190807120037.72018c136db40e88d89c05d1@linux-foundation.org>
-Content-Language: en-US
-Content-ID: <407D6DBF6F662F4A87AD469AF3BAF9A2@namprd15.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <20190808194002.226688-1-almasrymina@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>
-Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "jack@suse.cz" <jack@suse.cz>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "mhocko@kernel.org" <mhocko@kernel.org>, "vdavydov.dev@gmail.com" <vdavydov.dev@gmail.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>, Roman Gushchin <guro@fb.com>
+To: Mina Almasry <almasrymina@google.com>
+Cc: mike.kravetz@oracle.com, shuah@kernel.org, rientjes@google.com, shakeelb@google.com, gthelen@google.com, akpm@linux-foundation.org, khalid.aziz@oracle.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org
 
-T24gV2VkLCAyMDE5LTA4LTA3IGF0IDEyOjAwIC0wNzAwLCBBbmRyZXcgTW9ydG9uIHdyb3RlOg0K
-PiBPbiBXZWQsIDcgQXVnIDIwMTkgMTE6MzE6NTEgLTA3MDAgVGVqdW4gSGVvIDx0akBrZXJuZWwu
-b3JnPiB3cm90ZToNCj4gDQo+ID4gSGVsbG8sDQo+ID4gDQo+ID4gT24gVHVlLCBBdWcgMDYsIDIw
-MTkgYXQgMDQ6MDE6MDJQTSAtMDcwMCwgQW5kcmV3IE1vcnRvbiB3cm90ZToNCj4gPiA+IE9uIFNh
-dCwgIDMgQXVnIDIwMTkgMDc6MDE6NTMgLTA3MDAgVGVqdW4gSGVvIDx0akBrZXJuZWwub3JnPg0K
-PiA+ID4gd3JvdGU6DQo+ID4gPiA+IFRoZXJlIGN1cnJlbnRseSBpcyBubyB3YXkgdG8gdW5pdmVy
-c2FsbHkgaWRlbnRpZnkgYW5kIGxvb2t1cCBhDQo+ID4gPiA+IGJkaQ0KPiA+ID4gPiB3aXRob3V0
-IGhvbGRpbmcgYSByZWZlcmVuY2UgYW5kIHBvaW50ZXIgdG8gaXQuICBUaGlzIHBhdGNoIGFkZHMN
-Cj4gPiA+ID4gYW4NCj4gPiA+ID4gbm9uLXJlY3ljbGluZyBiZGktPmlkIGFuZCBpbXBsZW1lbnRz
-IGJkaV9nZXRfYnlfaWQoKSB3aGljaA0KPiA+ID4gPiBsb29rcyB1cA0KPiA+ID4gPiBiZGlzIGJ5
-IHRoZWlyIGlkcy4gIFRoaXMgd2lsbCBiZSB1c2VkIGJ5IG1lbWNnIGZvcmVpZ24gaW5vZGUNCj4g
-PiA+ID4gZmx1c2hpbmcuDQo+ID4gPiANCj4gPiA+IFdoeSBpcyB0aGUgaWQgbm9uLXJlY3ljbGlu
-Zz8gIFByZXN1bWFibHkgdG8gYWRkcmVzcyBzb21lDQo+ID4gPiBsaWZldGltZS9sb29rdXAgaXNz
-dWVzLCBidXQgd2hhdCBhcmUgdGhleT8NCj4gPiANCj4gPiBUaGUgSUQgYnkgaXRzZWxmIGlzIHVz
-ZWQgdG8gcG9pbnQgdG8gdGhlIGJkaSBmcm9tIGNncm91cCBhbmQgaWRyDQo+ID4gcmVjeWNsZXMg
-cmVhbGx5IGFnZ3Jlc3NpdmVseS4gIENvbWJpbmVkIHdpdGgsIGZvciBleGFtcGxlLCBsb29wDQo+
-ID4gZGV2aWNlDQo+ID4gYmFzZWQgY29udGFpbmVycywgc3RhbGUgcG9pbnRpbmcgY2FuIGJlY29t
-ZSBwcmV0dHkgY29tbW9uLiAgV2UncmUNCj4gPiBoYXZpbmcgc2ltaWxhciBpc3N1ZXMgd2l0aCBj
-Z3JvdXAgSURzLg0KPiANCj4gT0ssIGJ1dCB3aHkgaXMgcmVjeWNsaW5nIGEgcHJvYmxlbT8gIEZv
-ciBleGFtcGxlLCBmaWxlIGRlc2NyaXB0b3JzDQo+IHJlY3ljbGUgYXMgYWdncmVzc2l2ZWx5IGFz
-IGlzIHBvc3NpYmxlLCBhbmQgdGhhdCBkb2Vzbid0IGNhdXNlIGFueQ0KPiB0cm91YmxlLiAgUHJl
-c3VtYWJseSByZWN5Y2xpbmcgaXMgYSBwcm9ibGVtIHdpdGggY2dyb3VwcyBiZWNhdXNlIG9mDQo+
-IHNvbWUgc29ydCBvZiBzdGFsZSByZWZlcmVuY2UgcHJvYmxlbT8NCg0KUElEcywgb24gdGhlIG90
-aGVyIGhhbmQsIHdlIHJlY3ljbGUgYXMgc2xvd2x5IGFzDQpwb3NzaWJsZS4uLg0KDQo=
+
+--IiVenqGWf+H9Y6IX
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+(+CC cgroups@vger.kernel.org)
+
+On Thu, Aug 08, 2019 at 12:40:02PM -0700, Mina Almasry <almasrymina@google.com> wrote:
+> We have developers interested in using hugetlb_cgroups, and they have expressed
+> dissatisfaction regarding this behavior.
+I assume you still want to enforce a limit on a particular group and the
+application must be able to handle resource scarcity (but better
+notified than SIGBUS).
+
+> Alternatives considered:
+> [...]
+(I did not try that but) have you considered:
+3) MAP_POPULATE while you're making the reservation,
+4) Using multple hugetlbfs mounts with respective limits.
+
+> Caveats:
+> 1. This support is implemented for cgroups-v1. I have not tried
+>    hugetlb_cgroups with cgroups v2, and AFAICT it's not supported yet.
+>    This is largely because we use cgroups-v1 for now.
+Adding something new into v1 without v2 counterpart, is making migration
+harder, that's one of the reasons why v1 API is rather frozen now. (I'm
+not sure whether current hugetlb controller fits into v2 at all though.)
+
+Michal
+
+--IiVenqGWf+H9Y6IX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAl1NWKMACgkQia1+riC5
+qSi2Sw/+M4XGujSB2JZaZ0/yi48MZThHdXWt5rWC6L/Nt7CW42/WhqltGcNl9c9F
+O7Fegy17Qhgi0y/UUqUbQ2l27VD5AD5DZB+DIVmAIraiznhljDL24hTmSELtwOi9
+Zn+c9dudCpUV4Z6LwBme2DSrsA9YAHwcjBSAhFu1YTTq07t+cT2RShx0ntKS5R9a
+dYYh4JKFTsQ+qL/lWzl8aF4nYZGii7e+3i8E9+8ZYMLje6AYolAKJwQSmkWEJGGP
+9asZ61GcnygJyxY4jEXo5xqUirK0c2knwT+41w1cwSto6+qdsYIYBuXueksUfMcv
+LRKp/72MRdb7vHQdVQq/0uXj4QB5WAq8qFvhPbbTFgDRdMIyxUlltuLSCZ4oEKWK
+TdDK/cfyowjrTbcqydWHLhX2R711IlpP2g1gGBa4nHHnXssOMTBrUthuSpX8EPUZ
+YxDV4IQFEDCNxFsqsDJqd6mCZxm/Wdb+0LYz7Hi7Dqrs47bp+ggp3gYkVxFiZSsj
+MzbjDYwrxdMgv6SS2P/IGUJI0Duzx3PjArGCAkYO5mjsi6HvfsF9l+pIRbb3uejC
+EsWo/ReGFPTKmogjoAX4vxCRg1LpktYtzIzpqWqVTmWL70jiLnV4+FmeWBijlAJU
+3TJwzTYrBbizqKm/PSjakNr9+3bBc+Tq2ZBcnq0bewC8hJZzdls=
+=q8Ru
+-----END PGP SIGNATURE-----
+
+--IiVenqGWf+H9Y6IX--
