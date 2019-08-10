@@ -1,71 +1,77 @@
 From: Mike Kravetz <mike.kravetz@oracle.com>
-Subject: Re: [RFC PATCH] hugetlbfs: Add hugetlb_cgroup reservation limits
-Date: Fri, 9 Aug 2019 14:00:21 -0700
-Message-ID: <af6a8c43-e286-5360-61f3-6d306d8f1951@oracle.com>
-References: <20190808194002.226688-1-almasrymina@google.com>
- <20190809112738.GB13061@blackbody.suse.cz>
- <CAHS8izNM3jYFWHY5UJ7cmJ402f-RKXzQ=JFHpD7EkvpAdC2_SA@mail.gmail.com>
- <fc420531-f0fe-8df5-57fe-71a686bf2a71@oracle.com>
- <CAHS8izN9BFASse_pjLEhQzWwofjRv+JQ5Z=ZiR6Wywn2USLELA@mail.gmail.com>
+Subject: Re: [RFC PATCH v2 0/5] hugetlb_cgroup: Add hugetlb_cgroup reservation
+ limits
+Date: Sat, 10 Aug 2019 11:58:17 -0700
+Message-ID: <71a29844-7367-44c4-23be-eff26ac80467@oracle.com>
+References: <20190808231340.53601-1-almasrymina@google.com>
+ <f0a5afe9-2586-38c9-9a6d-8a2b7b288b50@oracle.com>
+ <CAHS8izOKmaOETBd_545Zex=KFNjYOvf3dCzcMRUEXnnhYCK5bw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=9sLztaDMB8aeSX3WL8ufO6Qlj+pu4SLKowKGxHUAYS8=;
- b=pcYp9yfI3GuKYjG0G1hZnUZ4mlVzJhMn8SDnFIAzHBL80YDKrjzKOIYK5jCrJnoZCC7T
- RRO8mCE2iaWu46snuI9l0EoYMXANzjdEMQ57i1CRXiO6XGPmABWxu2DmDbWlcq7LKuyz
- yNF6hBnc83a66hJimNA6UgiMfpJe0JRVQWDKBFil0LYD8mLzdiOg2n96TIJwiX282nbH
- c9Pjrfahh0u7DRAhZHcOitDBo33YQph1lvHMNnfypeliX/9mlv6NZyaXOU7uSuk/Yyl5
- 5vi7kruxTckNH64kZyDfpogI8yEcQJ7JtVKRpFpngUgaLve2gShL6D1Z25RDCpAIQ70n Cw== 
+ bh=9Kvou7nXU35uL9YTviEvgLeoRHiA9PhMGEANGocDyTQ=;
+ b=XNvddTvuSX42e9Bx6XI7qBNi6FdGuvw6eDcxPeN1dZEeq398Lg9ds1v+NBkz33ekJe7f
+ fIM9MI37VDjrDEZ7ka8s6VqIAYkBiC8m3excUvNRWdOz3HHednTY8cGbC7qn5NREF2bt
+ IQfOH+SlafYp/lSVcpqDrBlNJyWhgDQVemijSe6Bo66M8bLn2LGNADzuVHtw+X/AGbLg
+ vuciZKPpFoZWMZKv8ku19r8PGX8d1tFOkcKhGrH+yVlPU7stAkAwLu8RZ4gBxwu4HHGG
+ Rc8SrS3AoCaT2avj1b3lcls2SbKsOgUTfNvDH+gb82fw0vdGII7tbTq8+rSIRbZYdu5Y DA== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2018-07-02;
- bh=9sLztaDMB8aeSX3WL8ufO6Qlj+pu4SLKowKGxHUAYS8=;
- b=UefUInbUUZVRUhWHdFjDeVmYihsfyeb61d47cAMjPnlxeMdTTxQ76xdZCw2SPU++rVKt
- bG0sK1hFkwkSCJS/zxMt/pdcl0734OhVrIAp8qyhNAOUQkwXW/GeHY8WNyXFIgRV/pV7
- 86uwKsYH94fY2QX0WVToNPbbsBB1VL+XOdq9/mjdldNniAKHzPrIzYiec+dKe36ZfSW7
- 15CKaLG/oZyet44aTb2NcVFdZ7b934CoDlRI8j4hKxohV9Hh6dP84fv3f65XPbtYhZq7
- PCFCjFg8zoSvpYzoXE4PerYHA7HB53JMytkkEs8emfM8PAk1NNjTa1dy7pcK1wejnL69 hw== 
-In-Reply-To: <CAHS8izN9BFASse_pjLEhQzWwofjRv+JQ5Z=ZiR6Wywn2USLELA@mail.gmail.com>
+ bh=9Kvou7nXU35uL9YTviEvgLeoRHiA9PhMGEANGocDyTQ=;
+ b=3mM++sKZGEyvNYSdOX/GSKo+KkyrsMOPKlb50IE2wtVkX6sFZCl2HcNZWU1pwukw3ivo
+ 9rtXp7iVHNXLcJn37OiVJkv4+pyl7Dq3kP6q7IVQ5qdvvmFCGsCNb5C5zdqdXxONWRl2
+ lMaZ74cOjZRtavVOkLDUuAyJg3GjoW6ESf3l1dYGT96/giNjl/+A85CIH9gwSOEjbl1w
+ XQCyDoPaK/iwrp1Ik8j/iySHQBuHf0ElT8DAu8xa9zmdJ9qiMKuqYyyfUraV9OPHdah9
+ ufZyfnyLaF4ohL6FMEo+TVqwVsG7XyXhP1w/MevZI5OpPsRrKQViJG1MCgWlQcnGAGQY UA== 
+In-Reply-To: <CAHS8izOKmaOETBd_545Zex=KFNjYOvf3dCzcMRUEXnnhYCK5bw@mail.gmail.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
+Content-Type: text/plain; charset="us-ascii"
 To: Mina Almasry <almasrymina@google.com>
-Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, akpm@linux-foundation.org, khalid.aziz@oracle.com, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org
+Cc: shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, akpm@linux-foundation.org, khalid.aziz@oracle.com, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, cgroups@vger.kernel.org
 
-T24gOC85LzE5IDE6NTcgUE0sIE1pbmEgQWxtYXNyeSB3cm90ZToKPiBPbiBGcmksIEF1ZyA5LCAy
-MDE5IGF0IDE6MzkgUE0gTWlrZSBLcmF2ZXR6IDxtaWtlLmtyYXZldHpAb3JhY2xlLmNvbT4gd3Jv
-dGU6Cj4+Cj4+IE9uIDgvOS8xOSAxMTowNSBBTSwgTWluYSBBbG1hc3J5IHdyb3RlOgo+Pj4gT24g
-RnJpLCBBdWcgOSwgMjAxOSBhdCA0OjI3IEFNIE1pY2hhbCBLb3V0bsO9IDxta291dG55QHN1c2Uu
-Y29tPiB3cm90ZToKPj4+Pj4gQWx0ZXJuYXRpdmVzIGNvbnNpZGVyZWQ6Cj4+Pj4+IFsuLi5dCj4+
-Pj4gKEkgZGlkIG5vdCB0cnkgdGhhdCBidXQpIGhhdmUgeW91IGNvbnNpZGVyZWQ6Cj4+Pj4gMykg
-TUFQX1BPUFVMQVRFIHdoaWxlIHlvdSdyZSBtYWtpbmcgdGhlIHJlc2VydmF0aW9uLAo+Pj4KPj4+
-IEkgaGF2ZSB0cmllZCB0aGlzLCBhbmQgdGhlIGJlaGF2aW91ciBpcyBub3QgZ3JlYXQuIEJhc2lj
-YWxseSBpZgo+Pj4gdXNlcnNwYWNlIG1tYXBzIG1vcmUgbWVtb3J5IHRoYW4gaXRzIGNncm91cCBs
-aW1pdCBhbGxvd3Mgd2l0aAo+Pj4gTUFQX1BPUFVMQVRFLCB0aGUga2VybmVsIHdpbGwgcmVzZXJ2
-ZSB0aGUgdG90YWwgYW1vdW50IHJlcXVlc3RlZCBieQo+Pj4gdGhlIHVzZXJzcGFjZSwgaXQgd2ls
-bCBmYXVsdCBpbiB1cCB0byB0aGUgY2dyb3VwIGxpbWl0LCBhbmQgdGhlbiBpdAo+Pj4gd2lsbCBT
-SUdCVVMgdGhlIHRhc2sgd2hlbiBpdCB0cmllcyB0byBhY2Nlc3MgdGhlIHJlc3Qgb2YgaXRzCj4+
-PiAncmVzZXJ2ZWQnIG1lbW9yeS4KPj4+Cj4+PiBTbyBmb3IgZXhhbXBsZToKPj4+IC0gaWYgL3By
-b2Mvc3lzL3ZtL25yX2h1Z2VwYWdlcyA9PSAxMCwgYW5kCj4+PiAtIHlvdXIgY2dyb3VwIGxpbWl0
-IGlzIDUgcGFnZXMsIGFuZAo+Pj4gLSB5b3UgbW1hcChNQVBfUE9QVUxBVEUpIDcgcGFnZXMuCj4+
-Pgo+Pj4gVGhlbiB0aGUga2VybmVsIHdpbGwgcmVzZXJ2ZSA3IHBhZ2VzLCBhbmQgd2lsbCBmYXVs
-dCBpbiA1IG9mIHRob3NlIDcKPj4+IHBhZ2VzLCBhbmQgd2lsbCBTSUdCVVMgeW91IHdoZW4geW91
-IHRyeSB0byBhY2Nlc3MgdGhlIHJlbWFpbmluZyAyCj4+PiBwYWdlcy4gU28gdGhlIHByb2JsZW0g
-cGVyc2lzdHMuIEZvbGtzIHdvdWxkIHN0aWxsIGxpa2UgdG8ga25vdyB0aGV5Cj4+PiBhcmUgY3Jv
-c3NpbmcgdGhlIGxpbWl0cyBvbiBtbWFwIHRpbWUuCj4+Cj4+IElmIHlvdSBnb3QgdGhlIGZhaWx1
-cmUgYXQgbW1hcCB0aW1lIGluIHRoZSBNQVBfUE9QVUxBVEUgY2FzZSB3b3VsZCB0aGlzCj4+IGJl
-IHVzZWZ1bD8KPj4KPj4gSnVzdCB0aGlua2luZyB0aGF0IHdvdWxkIGJlIGEgcmVsYXRpdmVseSBz
-aW1wbGUgY2hhbmdlLgo+IAo+IE5vdCBxdWl0ZSwgdW5mb3J0dW5hdGVseS4gQSBzdWJzZXQgb2Yg
-dGhlIGZvbGtzIHRoYXQgd2FudCB0byB1c2UKPiBodWdldGxiIG1lbW9yeSwgZG9uJ3Qgd2FudCB0
-byB1c2UgTUFQX1BPUFVMQVRFIChJSVJDLCBzb21ldGhpbmcgYWJvdXQKPiBtbWFwaW5nIGEgaHVn
-ZSBhbW91bnQgb2YgaHVnZXRsYiBtZW1vcnkgYXQgdGhlaXIgam9icycgc3RhcnR1cCwgYW5kCj4g
-ZG9pbmcgdGhhdCB3aXRoIE1BUF9QT1BVTEFURSBhZGRzIHNvIG11Y2ggdG8gdGhlaXIgc3RhcnR1
-cCB0aW1lIHRoYXQKPiBpdCBpcyBwcm9oaWJpdGl2ZWx5IGV4cGVuc2l2ZSAtIGJ1dCB0aGF0J3Mg
-anVzdCB3aGF0IEkgdmFndWVseSByZWNhbGwKPiBvZmZoYW5kLiBJIGNhbiBnZXQgeW91IHRoZSBk
-ZXRhaWxzIGlmIHlvdSdyZSBpbnRlcmVzdGVkKS4KClllcywgTUFQX1BPUFVMQVRFIGNhbiBnZXQg
-ZXhwZW5zaXZlIGFzIHlvdSB3aWxsIG5lZWQgdG8gemVybyBhbGwgdGhvc2UKaHVnZSBwYWdlcy4K
-Ci0tIApNaWtlIEtyYXZldHoK
+On 8/9/19 12:42 PM, Mina Almasry wrote:
+> On Fri, Aug 9, 2019 at 10:54 AM Mike Kravetz <mike.kravetz@oracle.com> wrote:
+>> On 8/8/19 4:13 PM, Mina Almasry wrote:
+>>> Problem:
+>>> Currently tasks attempting to allocate more hugetlb memory than is available get
+>>> a failure at mmap/shmget time. This is thanks to Hugetlbfs Reservations [1].
+>>> However, if a task attempts to allocate hugetlb memory only more than its
+>>> hugetlb_cgroup limit allows, the kernel will allow the mmap/shmget call,
+>>> but will SIGBUS the task when it attempts to fault the memory in.
+<snip>
+>> I believe tracking reservations for shared mappings can get quite complicated.
+>> The hugetlbfs reservation code around shared mappings 'works' on the basis
+>> that shared mapping reservations are global.  As a result, reservations are
+>> more associated with the inode than with the task making the reservation.
+> 
+> FWIW, I found it not too bad. And my tests at least don't detect an
+> anomaly around shared mappings. The key I think is that I'm tracking
+> cgroup to uncharge on the file_region entry inside the resv_map, so we
+> know who allocated each file_region entry exactly and we can uncharge
+> them when the entry is region_del'd.
+> 
+>> For example, consider a file of size 4 hugetlb pages.
+>> Task A maps the first 2 pages, and 2 reservations are taken.  Task B maps
+>> all 4 pages, and 2 additional reservations are taken.  I am not really sure
+>> of the desired semantics here for reservation limits if A and B are in separate
+>> cgroups.  Should B be charged for 4 or 2 reservations?
+> 
+> Task A's cgroup is charged 2 pages to its reservation usage.
+> Task B's cgroup is charged 2 pages to its reservation usage.
+
+OK,
+Suppose Task B's cgroup allowed 2 huge pages reservation and 2 huge pages
+allocation.  The mmap would succeed, but Task B could potentially need to
+allocate more than 2 huge pages.  So, when faulting in more than 2 huge
+pages B would get a SIGBUS.  Correct?  Or, am I missing something?
+
+Perhaps reservation charge should always be the same as map size/maximum
+allocation size?
+-- 
+Mike Kravetz
