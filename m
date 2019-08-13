@@ -1,110 +1,116 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] mm: vmscan: do not share cgroup iteration between
- reclaimers
-Date: Tue, 13 Aug 2019 14:14:31 -0400
-Message-ID: <20190813181431.GA23056@cmpxchg.org>
-References: <20190812192316.13615-1-hannes@cmpxchg.org>
- <20190813132938.GJ17933@dhcp22.suse.cz>
- <CAHbLzkrRvoVLH16Cxq-f6hn-CLJjh=tJnYnF8P0xNiZ9=eEg8A@mail.gmail.com>
+From: Mike Kravetz <mike.kravetz@oracle.com>
+Subject: Re: [RFC PATCH v2 0/5] hugetlb_cgroup: Add hugetlb_cgroup reservation
+ limits
+Date: Tue, 13 Aug 2019 16:40:39 -0700
+Message-ID: <ce087279-7235-e579-4aec-bc3792b6c09c@oracle.com>
+References: <20190808231340.53601-1-almasrymina@google.com>
+ <f0a5afe9-2586-38c9-9a6d-8a2b7b288b50@oracle.com>
+ <CAHS8izOKmaOETBd_545Zex=KFNjYOvf3dCzcMRUEXnnhYCK5bw@mail.gmail.com>
+ <71a29844-7367-44c4-23be-eff26ac80467@oracle.com>
+ <CAHS8izPGhHS+=qnf7Vy=C8kXQ=7v7XH3uEVitrW6ARRYU6iDdg@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=EgcOWrbU42e6Bz/dNCaGzvQRlmmBX/ILwM0rAxK2QB8=;
-        b=Xpgr53VvIkeiIKN7I509QxwJNBY38P1bS8Gb57ABqKGEjIDZT7FL7kvsq8TSUDicYz
-         AV6mOPsUxwsdTmvxxhluwI1qmfupgIQR8/IJ38jYSTypC7rVcRM8NGi8WUEZipLoKVMZ
-         Jz+1huobQe+KyeLD0c32pDcLoBiGynF7flJHDuhqOZmZo5qI/3OrbNwAjYVpzdxDsHSL
-         twFboR4cqTfiADNZva+/cfsaEWD8i+bJqlvjgvQIb87GVugh+f0uW+pjcchomLVu2CtH
-         16hyjA1yiWexmWe3OiNgDC1fxkbGApsvS3TU9O4P3UTG+oYTuGJ3zNimp3etPg43xIKQ
-         TdMQ==
-Content-Disposition: inline
-In-Reply-To: <CAHbLzkrRvoVLH16Cxq-f6hn-CLJjh=tJnYnF8P0xNiZ9=eEg8A@mail.gmail.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2019-08-05;
+ bh=4sbmczonSDq7hMSzD5d9nB/WEujCYY2Kbl0OVowZy30=;
+ b=Mg48PWRCx/UGmdQ+LhxE0ApUMA7usmcn1IT6wfUB5oESpjaJU95lAFUuOP+lrXza5i2O
+ nGjnhjYB1nLdwSAsLGfRqAq8GrzokGXFZs0QyU0dvnO25FfoQSwyRbC4yZj4Kj+btcxY
+ iFDLLUdN0+FyulEzyuGWuf/4Uk5OVbkO/OgUfapiZZCyLFvHEWCP27leFn22m0y+gsTe
+ 1hFbzXXR0oHlRKmZRbIywzASgEONv5aerYMH2thpsejQ1zdhiSlWJQB2LohBqfS86SNE
+ QXvMxHJGlBGyz/09dAR9paxjdwWJIj/k0n0MNZ74YFw8ZhDH2Ypm0s/vFLr6h48ARUUz XQ== 
+In-Reply-To: <CAHS8izPGhHS+=qnf7Vy=C8kXQ=7v7XH3uEVitrW6ARRYU6iDdg@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yang Shi <shy828301@gmail.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, cgroups@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, kernel-team@fb.com
+To: Mina Almasry <almasrymina@google.com>
+Cc: shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, akpm@linux-foundation.org, khalid.aziz@oracle.com, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, cgroups@vger.kernel.org
 
-On Tue, Aug 13, 2019 at 08:59:38AM -0700, Yang Shi wrote:
-> On Tue, Aug 13, 2019 at 6:29 AM Michal Hocko <mhocko@kernel.org> wrote:
-> >
-> > On Mon 12-08-19 15:23:16, Johannes Weiner wrote:
-> > > One of our services observed a high rate of cgroup OOM kills in the
-> > > presence of large amounts of clean cache. Debugging showed that the
-> > > culprit is the shared cgroup iteration in page reclaim.
-> > >
-> > > Under high allocation concurrency, multiple threads enter reclaim at
-> > > the same time. Fearing overreclaim when we first switched from the
-> > > single global LRU to cgrouped LRU lists, we introduced a shared
-> > > iteration state for reclaim invocations - whether 1 or 20 reclaimers
-> > > are active concurrently, we only walk the cgroup tree once: the 1st
-> > > reclaimer reclaims the first cgroup, the second the second one etc.
-> > > With more reclaimers than cgroups, we start another walk from the top.
-> > >
-> > > This sounded reasonable at the time, but the problem is that reclaim
-> > > concurrency doesn't scale with allocation concurrency. As reclaim
-> > > concurrency increases, the amount of memory individual reclaimers get
-> > > to scan gets smaller and smaller. Individual reclaimers may only see
-> > > one cgroup per cycle, and that may not have much reclaimable
-> > > memory. We see individual reclaimers declare OOM when there is plenty
-> > > of reclaimable memory available in cgroups they didn't visit.
-> > >
-> > > This patch does away with the shared iterator, and every reclaimer is
-> > > allowed to scan the full cgroup tree and see all of reclaimable
-> > > memory, just like it would on a non-cgrouped system. This way, when
-> > > OOM is declared, we know that the reclaimer actually had a chance.
-> > >
-> > > To still maintain fairness in reclaim pressure, disallow cgroup
-> > > reclaim from bailing out of the tree walk early. Kswapd and regular
-> > > direct reclaim already don't bail, so it's not clear why limit reclaim
-> > > would have to, especially since it only walks subtrees to begin with.
-> >
-> > The code does bail out on any direct reclaim - be it limit or page
-> > allocator triggered. Check the !current_is_kswapd part of the condition.
+On 8/10/19 3:01 PM, Mina Almasry wrote:
+> On Sat, Aug 10, 2019 at 11:58 AM Mike Kravetz <mike.kravetz@oracle.com> wrote:
+>>
+>> On 8/9/19 12:42 PM, Mina Almasry wrote:
+>>> On Fri, Aug 9, 2019 at 10:54 AM Mike Kravetz <mike.kravetz@oracle.com> wrote:
+>>>> On 8/8/19 4:13 PM, Mina Almasry wrote:
+>>>>> Problem:
+>>>>> Currently tasks attempting to allocate more hugetlb memory than is available get
+>>>>> a failure at mmap/shmget time. This is thanks to Hugetlbfs Reservations [1].
+>>>>> However, if a task attempts to allocate hugetlb memory only more than its
+>>>>> hugetlb_cgroup limit allows, the kernel will allow the mmap/shmget call,
+>>>>> but will SIGBUS the task when it attempts to fault the memory in.
+>> <snip>
+>>>> I believe tracking reservations for shared mappings can get quite complicated.
+>>>> The hugetlbfs reservation code around shared mappings 'works' on the basis
+>>>> that shared mapping reservations are global.  As a result, reservations are
+>>>> more associated with the inode than with the task making the reservation.
+>>>
+>>> FWIW, I found it not too bad. And my tests at least don't detect an
+>>> anomaly around shared mappings. The key I think is that I'm tracking
+>>> cgroup to uncharge on the file_region entry inside the resv_map, so we
+>>> know who allocated each file_region entry exactly and we can uncharge
+>>> them when the entry is region_del'd.
+>>>
+>>>> For example, consider a file of size 4 hugetlb pages.
+>>>> Task A maps the first 2 pages, and 2 reservations are taken.  Task B maps
+>>>> all 4 pages, and 2 additional reservations are taken.  I am not really sure
+>>>> of the desired semantics here for reservation limits if A and B are in separate
+>>>> cgroups.  Should B be charged for 4 or 2 reservations?
+>>>
+>>> Task A's cgroup is charged 2 pages to its reservation usage.
+>>> Task B's cgroup is charged 2 pages to its reservation usage.
+>>
+>> OK,
+>> Suppose Task B's cgroup allowed 2 huge pages reservation and 2 huge pages
+>> allocation.  The mmap would succeed, but Task B could potentially need to
+>> allocate more than 2 huge pages.  So, when faulting in more than 2 huge
+>> pages B would get a SIGBUS.  Correct?  Or, am I missing something?
+>>
+>> Perhaps reservation charge should always be the same as map size/maximum
+>> allocation size?
 > 
-> Yes, please see commit 2bb0f34fe3c1 ("mm: vmscan: do not iterate all
-> mem cgroups for global direct reclaim")
-
-This patch is a workaround for the cgroup tree blowing up with zombie
-cgroups. Roman's slab reparenting patches are fixing the zombies, so
-we shouldn't need this anymore.
-
-Because with or without the direct reclaim rule, we still don't want
-offline cgroups to accumulate like this. They also slow down kswapd,
-and they eat a ton of RAM.
-
-> > > This change completely eliminates the OOM kills on our service, while
-> > > showing no signs of overreclaim - no increased scan rates, %sys time,
-> > > or abrupt free memory spikes. I tested across 100 machines that have
-> > > 64G of RAM and host about 300 cgroups each.
-> >
-> > What is the usual direct reclaim involvement on those machines?
-> >
-> > > [ It's possible overreclaim never was a *practical* issue to begin
-> > >   with - it was simply a concern we had on the mailing lists at the
-> > >   time, with no real data to back it up. But we have also added more
-> > >   bail-out conditions deeper inside reclaim (e.g. the proportional
-> > >   exit in shrink_node_memcg) since. Regardless, now we have data that
-> > >   suggests full walks are more reliable and scale just fine. ]
-> >
-> > I do not see how shrink_node_memcg bail out helps here. We do scan up-to
-> > SWAP_CLUSTER_MAX pages for each LRU at least once. So we are getting to
-> > nr_memcgs_with_pages multiplier with the patch applied in the worst case.
-> >
-> > How much that matters is another question and it depends on the
-> > number of cgroups and the rate the direct reclaim happens. I do not
-> > remember exact numbers but even walking a very large memcg tree was
-> > noticeable.
+> I'm thinking this would work similar to how other shared memory like
+> tmpfs is accounted for right now. I.e. if a task conducts an operation
+> that causes memory to be allocated then that task is charged for that
+> memory, and if another task uses memory that has already been
+> allocated and charged by another task, then it can use the memory
+> without being charged.
 > 
-> I'm concerned by this too. It might be ok to cgroup v2, but v1 still
-> dominates. And, considering offline memcgs it might be not unusual to
-> have quite large memcg tree.
+> So in case of hugetlb memory, if a task is mmaping memory that causes
+> a new reservation to be made, and new entries to be created in the
+> resv_map for the shared mapping, then that task gets charged. If the
+> task is mmaping memory that is already reserved or faulted, then it
+> reserves or faults it without getting charged.
+> 
+> In the example above, in chronological order:
+> - Task A mmaps 2 hugetlb pages, gets charged 2 hugetlb reservations.
+> - Task B mmaps 4 hugetlb pages, gets charged only 2 hugetlb
+> reservations because the first 2 are charged already and can be used
+> without incurring a charge.
+> - Task B accesses 4 hugetlb pages, gets charged *4* hugetlb faults,
+> since none of the 4 pages are faulted in yet. If the task is only
+> allowed 2 hugetlb page faults then it will actually get a SIGBUS.
+> - Task A accesses 4 hugetlb pages, gets charged no faults, since all
+> the hugetlb faults is charged to Task B.
+> 
+> So, yes, I can see a scenario where userspace still gets SIGBUS'd, but
+> I think that's fine because:
+> 1. Notice that the SIGBUS is due to the faulting limit, and not the
+> reservation limit, so we're not regressing the status quo per say.
+> Folks using the fault limit today understand the SIGBUS risk.
+> 2. the way I expect folks to use this is to use 'reservation limits'
+> to partition the available hugetlb memory on the machine using it and
+> forgo using the existing fault limits. Using both at the same time I
+> think would be a superuser feature for folks that really know what
+> they are doing, and understand the risk of SIGBUS that comes with
+> using the existing fault limits.
+> 3. I expect userspace to in general handle this correctly because
+> there are similar challenges with all shared memory and accounting of
+> it, even in tmpfs, I think.
 
-cgroup2 was affected by the offline memcgs just as much as cgroup1 -
-probably even more so because it tracks more types of memory per
-default. That's why Roman worked tirelessly on a solution.
-
-But we shouldn't keep those bandaid patches around forever.
+Ok, that helps explain your use case.  I agree that it would be difficult
+to use both fault and reservation limits together.  Especially in the case
+of shared mappings.
+-- 
+Mike Kravetz
