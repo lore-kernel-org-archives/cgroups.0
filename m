@@ -1,46 +1,85 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/4] bdi: Add bdi->id
-Date: Thu, 15 Aug 2019 10:34:59 -0700
-Message-ID: <20190815173459.GE588936@devbig004.ftw2.facebook.com>
-References: <20190803140155.181190-1-tj@kernel.org>
- <20190803140155.181190-3-tj@kernel.org>
- <20190815144623.GM14313@quack2.suse.cz>
+Subject: [PATCHSET v2] writeback, memcg: Implement foreign inode flushing
+Date: Thu, 15 Aug 2019 12:56:19 -0700
+Message-ID: <20190815195619.GA2263813@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=2ZSbStm7AbDlXUhKJSg3L8e0NLU9fEch1EIrUdDIspw=;
-        b=gfG9UzxThCigCBaKBs4lpzT/DQERj6tRex3zsyhWWtC5mNoRtHY0KVhl1Eusttge/6
-         gTa0XkfdlzW5xd0gUiYLS0otjvybVrqu20zk5hDPLSTPCA42Rld4afQ1YnK0eHOHfAvx
-         XchEDv5NXEmt5CcVefyG3DYRIVtmobbNBMwDKn8GtVpQKOTUK9LexdYi+sTLctzGyNxe
-         TYWo1VhCO+dbNXL98G4TvRHHRh6LRAXKcuaLZV2w+2AsiVgzdSbIulXiEvLbHnLjM9/r
-         FAzV2hVYQhnbnkcDrUmUq0qh4De17xFpCKGwoLpS0fpwYewK6JYlJy0m2NMukOuaQRKo
-         U9Ag==
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=8z1El4joEJPfZv/LOFE6htKfEd+io5Oqo8kE5bpDZI8=;
+        b=IV591KQoCqfTve5OPjwQ47qHrWwJRQf3xrEvs5BOJAkNcxSizdrKC6TUcjcAaz9PoQ
+         px/g/rn3BTUn77UIp7bkv6L/1d9qTjvMhw/OQX8nroblfWcmVo93BMhaqjBRFoBlA1RI
+         10S1uDqFaHcg1R8CS7xKdqNFnQrkMfSNbLm4P9cBlbgE6j91TZWgHEUnVYF9rHSpnhuW
+         tpDQZcemdcad6WXNjgVDo9e+re3W/IsVX5KPyDXUnuJvt8FOYQOOy8yprthlx9FQfKP2
+         WjO9IZw+8e0pI6aAhBHhlJ2AmcWyozZKtW9efPWWbwtSQ+6Ecj79f0juQPYo17z08IuK
+         FaFQ==
 Content-Disposition: inline
-In-Reply-To: <20190815144623.GM14313@quack2.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jan Kara <jack@suse.cz>
-Cc: axboe@kernel.dk, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, guro@fb.com, akpm@linux-foundation.org
+To: axboe@kernel.dk, jack@suse.cz, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, guro@fb.com, akpm@linux-foundation.org
 
 Hello,
 
-On Thu, Aug 15, 2019 at 04:46:23PM +0200, Jan Kara wrote:
-> Although I would note that here you take effort not to recycle bdi->id so
-> that you don't flush wrong devices while in patch 4 you take pretty lax
-> approach to feeding garbage into the writeback system. So these two don't
-> quite match to me...
+Changes from v1[1]:
 
-So, I was trying to avoid systemic errors where the wrong thing can be
-triggered repeatedly.  A wrong flush once in a blue moon shouldn't be
-a big problem but if they can be triggered consistently by some
-pathological behavior, it's an a lot bigger problem.
+* More comments explaining the parameters.
 
-Thanks.
+* 0003-writeback-Separate-out-wb_get_lookup-from-wb_get_create.patch
+  added and avoid spuriously creating missing wbs for foreign
+  flushing.
 
--- 
+There's an inherent mismatch between memcg and writeback.  The former
+trackes ownership per-page while the latter per-inode.  This was a
+deliberate design decision because honoring per-page ownership in the
+writeback path is complicated, may lead to higher CPU and IO overheads
+and deemed unnecessary given that write-sharing an inode across
+different cgroups isn't a common use-case.
+
+Combined with inode majority-writer ownership switching, this works
+well enough in most cases but there are some pathological cases.  For
+example, let's say there are two cgroups A and B which keep writing to
+different but confined parts of the same inode.  B owns the inode and
+A's memory is limited far below B's.  A's dirty ratio can rise enough
+to trigger balance_dirty_pages() sleeps but B's can be low enough to
+avoid triggering background writeback.  A will be slowed down without
+a way to make writeback of the dirty pages happen.
+
+This patchset implements foreign dirty recording and foreign mechanism
+so that when a memcg encounters a condition as above it can trigger
+flushes on bdi_writebacks which can clean its pages.  Please see the
+last patch for more details.
+
+This patchset contains the following four patches.
+
+ 0001-writeback-Generalize-and-expose-wb_completion.patch
+ 0002-bdi-Add-bdi-id.patch
+ 0003-writeback-Separate-out-wb_get_lookup-from-wb_get_create.patch
+ 0004-writeback-memcg-Implement-cgroup_writeback_by_id.patch
+ 0005-writeback-memcg-Implement-foreign-dirty-flushing.patch
+
+0001-0004 are prep patches which expose wb_completion and implement
+bdi->id and flushing by bdi and memcg IDs.
+
+0005 implements foreign inode flushing.
+
+Thanks.  diffstat follows.
+
+ fs/fs-writeback.c                |  114 +++++++++++++++++++++++----------
+ include/linux/backing-dev-defs.h |   23 ++++++
+ include/linux/backing-dev.h      |    5 +
+ include/linux/memcontrol.h       |   39 +++++++++++
+ include/linux/writeback.h        |    2 
+ mm/backing-dev.c                 |  120 +++++++++++++++++++++++++++++------
+ mm/memcontrol.c                  |  132 +++++++++++++++++++++++++++++++++++++++
+ mm/page-writeback.c              |    4 +
+ 8 files changed, 386 insertions(+), 53 deletions(-)
+
+--
 tejun
+
+[1] http://lkml.kernel.org/r/20190803140155.181190-1-tj@kernel.org
