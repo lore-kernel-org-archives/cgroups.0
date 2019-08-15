@@ -1,89 +1,43 @@
-From: Jan Kara <jack@suse.cz>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 3/4] writeback, memcg: Implement cgroup_writeback_by_id()
-Date: Thu, 15 Aug 2019 16:54:21 +0200
-Message-ID: <20190815145421.GN14313@quack2.suse.cz>
+Date: Thu, 15 Aug 2019 08:43:02 -0700
+Message-ID: <20190815154302.GB588936@devbig004.ftw2.facebook.com>
 References: <20190803140155.181190-1-tj@kernel.org>
  <20190803140155.181190-4-tj@kernel.org>
+ <20190815140535.GJ14313@quack2.suse.cz>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=VSR3T6Q49rCFXPPoyb9XFgF2ejksN7y0WyTo3YMYamM=;
+        b=hyuuAh2CNIxYP3ggj8gDm8R4p/9az4kHrRaL6c7xkvVmp5KasB2iSYzUaAGIeZjGiM
+         A95PrUyUJC+0/lW0z1W+odNW7+/4tOmRmm6g86Fh0uQd7iEZ7NQH9paD1ey8Ro+yUg4g
+         y3VeNucMGXfPbFqNNe2fdHGkico4kMYi0IGp8QW1kdMhBhiJeExKMtbS0t6bdR0K3WmR
+         I+szM8wY4iywtp965t3+afNr0ujT0/Y5OO7fs8HNBxXO9ilORnMG3/ZqeRVzaRoWWy1f
+         y2cWJTQHxaLlPv/FNGs6kLzLnFQz0yqnp8YocfIMbukfVsK2R/XaBg8GPyF6ZzZ2cszC
+         /M0g==
 Content-Disposition: inline
-In-Reply-To: <20190803140155.181190-4-tj@kernel.org>
+In-Reply-To: <20190815140535.GJ14313@quack2.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, jack@suse.cz, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, guro@fb.com, akpm@linux-foundation.org
+To: Jan Kara <jack@suse.cz>
+Cc: axboe@kernel.dk, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, guro@fb.com, akpm@linux-foundation.org
 
-On Sat 03-08-19 07:01:54, Tejun Heo wrote:
-> Implement cgroup_writeback_by_id() which initiates cgroup writeback
-> from bdi and memcg IDs.  This will be used by memcg foreign inode
-> flushing.
+On Thu, Aug 15, 2019 at 04:05:35PM +0200, Jan Kara wrote:
+> > +int cgroup_writeback_by_id(u64 bdi_id, int memcg_id, unsigned long nr_pages,
+> > +			   enum wb_reason reason, struct wb_completion *done);
+> > +int writeback_by_id(int id, unsigned long nr, enum wb_reason reason,
+> > +		    struct wb_completion *done);
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> ---
->  fs/fs-writeback.c         | 64 +++++++++++++++++++++++++++++++++++++++
->  include/linux/writeback.h |  4 +++
->  2 files changed, 68 insertions(+)
-> 
-> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-> index 6129debdc938..5c79d7acefdb 100644
-> --- a/fs/fs-writeback.c
-> +++ b/fs/fs-writeback.c
-> @@ -880,6 +880,70 @@ static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
->  		wb_put(last_wb);
->  }
->  
-> +/**
-> + * cgroup_writeback_by_id - initiate cgroup writeback from bdi and memcg IDs
-> + * @bdi_id: target bdi id
-> + * @memcg_id: target memcg css id
-> + * @nr_pages: number of pages to write
-> + * @reason: reason why some writeback work initiated
-> + * @done: target wb_completion
-> + *
-> + * Initiate flush of the bdi_writeback identified by @bdi_id and @memcg_id
-> + * with the specified parameters.
-> + */
-> +int cgroup_writeback_by_id(u64 bdi_id, int memcg_id, unsigned long nr,
-> +			   enum wb_reason reason, struct wb_completion *done)
-> +{
-> +	struct backing_dev_info *bdi;
-> +	struct cgroup_subsys_state *memcg_css;
-> +	struct bdi_writeback *wb;
-> +	struct wb_writeback_work *work;
-> +	int ret;
-> +
-> +	/* lookup bdi and memcg */
-> +	bdi = bdi_get_by_id(bdi_id);
-> +	if (!bdi)
-> +		return -ENOENT;
-> +
-> +	rcu_read_lock();
-> +	memcg_css = css_from_id(memcg_id, &memory_cgrp_subsys);
-> +	if (memcg_css && !css_tryget(memcg_css))
-> +		memcg_css = NULL;
-> +	rcu_read_unlock();
-> +	if (!memcg_css) {
-> +		ret = -ENOENT;
-> +		goto out_bdi_put;
-> +	}
-> +
-> +	/* and find the associated wb */
-> +	wb = wb_get_create(bdi, memcg_css, GFP_NOWAIT | __GFP_NOWARN);
-> +	if (!wb) {
-> +		ret = -ENOMEM;
-> +		goto out_css_put;
-> +	}
+> I guess this writeback_by_id() is stale? I didn't find it anywhere else...
 
-One more thought: You don't want the "_create" part here, do you? If
-there's any point in writing back using this wb, it must be attached to
-some inode and thus it must exist. In the normal case wb_get_create() will
-just fetch the reference and be done with it but when you feed garbage into
-this function due to id going stale or frn structures getting corrupted due
-to concurrent access, you can be creating bogus wb structures in bdi...
+Yes, removed.
 
-								Honza
+Thanks.
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+tejun
