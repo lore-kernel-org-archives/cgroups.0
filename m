@@ -1,81 +1,38 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [PATCHSET block/for-next] IO cost model based work-conserving
- porportional controller
-Date: Tue, 20 Aug 2019 12:48:09 +0200
-Message-ID: <5A63F937-F7B5-4D09-9DB4-C73D6F571D50@linaro.org>
-References: <20190614015620.1587672-1-tj@kernel.org>
- <20190614175642.GA657710@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.8\))
-Content-Transfer-Encoding: quoted-printable
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH 01/14] mm/lru: move pgdat lru_lock into lruvec
+Date: Tue, 20 Aug 2019 06:40:32 -0700
+Message-ID: <20190820134032.GA24642@bombadil.infradead.org>
+References: <1566294517-86418-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1566294517-86418-2-git-send-email-alex.shi@linux.alibaba.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=8YhdYjqe+CTt77YsPRFesv990RDPmX6UdhabR8/j8l8=;
-        b=dgG7nSaegDa/f34PzKpV/NDTRDbAf4Tn8ESgBGCCvyBUctxq98sGkgyEW3giHSJqxI
-         yUlLAH58TbPebsNICnhxbv2FhjuVdm71H1yyw5DTYaHXUr2mcxTajrDMX8YQgXP6K59l
-         KMlqgNId7X/0kUtpLyRyUbCvjdArWdQ99nv9N56pBQaxb3fB9btAbzRfZfUnDKcyc653
-         FieTVsewJyyWcgh+hruCD2sviZgKsiiLWf5EamLzSfUSXhw0pHGE0djlhbWl5DfBK/qL
-         x+kZDh5BOO4jY2T8+YBs/0azHTKHddDMvZO7kBrbJSv/Sg/eUgpzfCZxDVIdodTyN4C4
-         JChA==
-In-Reply-To: <20190614175642.GA657710@devbig004.ftw2.facebook.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=B8LOvtinbA79S6NGUvPmiLsFutes9sDZnF3rriD/5Mw=; b=LqgG+2Wdt6591p4WO0+ZJbqG6
+        JVwTerajJO10FChITzDm05wP2VLtJnRRALEsBN7lsG55BOjyn6LJqArhyPi3bXAVRiBtxrTIhVrGR
+        dmyT7Q0/4ozU+NDkCoQ/0z2ri/SOjl8JXuwudo7C/gjOUeWgoXYQh6VKjtldhzkcQ1usxbl+YUCJ8
+        eYICpPUrQ3PQaIjpM7+lIJBtpr13OYextxKSxKz6NELTmP6n+QIOUH/DRp5wUH9Y4G1TJWigSzkWx
+        uLj+hzSg/dfvmLL9uPbxkKLxvFoeoFGigZRqWKfM95/1lnk9qu4wSzinaCZd34957WhaXkdSxjpeI
+Content-Disposition: inline
+In-Reply-To: <1566294517-86418-2-git-send-email-alex.shi@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, newella@fb.com, clm@fb.com, Josef Bacik <josef@toxicpanda.com>, dennisz@fb.com, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, ast@kernel.org, daniel@iogearbox.net, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, bpf@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Vlastimil Babka <vbabka@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Oscar Salvador <osalvador@suse.de>, Wei Yang <richard.weiyang@gmail.com>, Pavel Tatashin <pasha.tatashin@oracle.com>, Arun KS <arunks@codeaurora.org>, Qian Cai <cai@lca.pw>, Andrey Ryabinin <aryabinin@virtuozzo.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Hugh Dickins <hughd@google.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, Andrea Arcangeli <aarc>
 
+On Tue, Aug 20, 2019 at 05:48:24PM +0800, Alex Shi wrote:
+> +++ b/include/linux/mmzone.h
+> @@ -295,6 +295,9 @@ struct zone_reclaim_stat {
+>  
+>  struct lruvec {
+>  	struct list_head		lists[NR_LRU_LISTS];
+> +	/* move lru_lock to per lruvec for memcg */
+> +	spinlock_t			lru_lock;
 
-
-> Il giorno 14 giu 2019, alle ore 19:56, Tejun Heo <tj@kernel.org> ha =
-scritto:
->=20
-> On Thu, Jun 13, 2019 at 06:56:10PM -0700, Tejun Heo wrote:
-> ...
->> The patchset is also available in the following git branch.
->>=20
->> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git =
-review-iow
->=20
-> Updated patchset available in the following branch.  Just build fixes
-> and cosmetic changes for now.
->=20
->  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git =
-review-iow-v2
->=20
-
-Hi Tejun,
-I'm running the kernel in your tree above, in an Ubuntu 18.04.
-
-After unmounting the v1 blkio controller that gets mounted at startup
-I have created v2 root as follows
-
-$ mount -t cgroup2 none /cgroup
-
-Then I have:
-$ ls /cgroup
-cgroup.controllers  cgroup.max.descendants  cgroup.stat             =
-cgroup.threads  io.weight.cost_model  system.slice
-cgroup.max.depth    cgroup.procs            cgroup.subtree_control  =
-init.scope      io.weight.qos         user.slice
-
-But the following command gives no output:
-$ cat /cgroup/io.weight.qos=20
-
-And, above all,
-$ echo 1 > /cgroup/io.weight.qos=20
-bash: echo: write error: Invalid argument
-
-No complain in the kernel log.
-
-What am I doing wrong? How can I make the controller work?
-
-Thanks,
-Paolo
-
-> Thanks.
->=20
-> --=20
-> tejun
-
+This comment makes no sense outside the context of this patch.
