@@ -1,63 +1,129 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 5/5] writeback, memcg: Implement foreign dirty flushing
-Date: Fri, 16 Aug 2019 18:02:56 +0200
-Message-ID: <20190816160256.GI3041@quack2.suse.cz>
-References: <20190815195619.GA2263813@devbig004.ftw2.facebook.com>
- <20190815195930.GF2263813@devbig004.ftw2.facebook.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: [PATCH 00/14] per memcg lru_lock
+Date: Tue, 20 Aug 2019 17:48:23 +0800
+Message-ID: <1566294517-86418-1-git-send-email-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190815195930.GF2263813@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, jack@suse.cz, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, guro@fb.com, akpm@linux-foundation.org
+To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>
 
-On Thu 15-08-19 12:59:30, Tejun Heo wrote:
-> +/* issue foreign writeback flushes for recorded foreign dirtying events */
-> +void mem_cgroup_flush_foreign(struct bdi_writeback *wb)
-> +{
-> +	struct mem_cgroup *memcg = mem_cgroup_from_css(wb->memcg_css);
-> +	unsigned long intv = msecs_to_jiffies(dirty_expire_interval * 10);
-> +	u64 now = jiffies_64;
-> +	int i;
-> +
-> +	for (i = 0; i < MEMCG_CGWB_FRN_CNT; i++) {
-> +		struct memcg_cgwb_frn *frn = &memcg->cgwb_frn[i];
-> +
-> +		/*
-> +		 * If the record is older than dirty_expire_interval,
-> +		 * writeback on it has already started.  No need to kick it
-> +		 * off again.  Also, don't start a new one if there's
-> +		 * already one in flight.
-> +		 */
-> +		if (frn->at > now - intv && atomic_read(&frn->done.cnt) == 1) {
-> +			frn->at = 0;
-> +			cgroup_writeback_by_id(frn->bdi_id, frn->memcg_id,
-> +					       LONG_MAX, WB_REASON_FOREIGN_FLUSH,
-> +					       &frn->done);
-> +		}
+This patchset move lru_lock into lruvec, give a lru_lock for each of
+lruvec, thus bring a lru_lock for each of memcg.
 
-Hum, two concerns here still:
+Per memcg lru_lock would ease the lru_lock contention a lot in
+this patch series.
 
-1) You ask to writeback LONG_MAX pages. That means that you give up any
-livelock avoidance for the flusher work and you can writeback almost
-forever if someone is busily dirtying pages in the wb. I think you need to
-pick something like amount of dirty pages in the given wb (that would have
-to be fetched after everything is looked up) or just some arbitrary
-reasonably small constant like 1024 (but then I guess there's no guarantee
-stuck memcg will make any progress and you've invalidated the frn entry
-here).
+In some data center, containers are used widely to deploy different kind
+of services, then multiple memcgs share per node pgdat->lru_lock which
+cause heavy lock contentions when doing lru operation.
 
-2) When you invalidate frn entry here by writing 0 to 'at', it's likely to get
-reused soon. Possibly while the writeback is still running. And then you
-won't start any writeback for the new entry because of the
-atomic_read(&frn->done.cnt) == 1 check. This seems like it could happen
-pretty frequently?
+On my 2 socket * 6 cores E5-2630 platform, 24 containers run aim9
+simultaneously with mmtests' config:
+        # AIM9
+        export AIM9_TESTTIME=180
+        export AIM9_TESTLIST=page_test,brk_test
 
-								Honza
+perf lock report show much contentions on lru_lock in 20 second snapshot:
+                        Name   acquired  contended   avg wait (ns) total wait (ns)   max wait (ns)   min wait (ns)
+        &(ptlock_ptr(pag...         22          0               0       0               0               0
+        ...
+        &(&pgdat->lru_lo...          9          7           12728       89096           26656            1597
+
+With this patch series, lruvec->lru_lock show no contentions
+        &(&lruvec->lru_l...          8          0               0       0               0               0
+
+and aim9 page_test/brk_test performance increased 5%~50%.
+BTW, Detailed results in aim9-pft.compare.log if needed,
+All containers data are increased and pretty steady.
+
+$for i in Max Min Hmean Stddev CoeffVar BHmean-50 BHmean-95 BHmean-99; do echo "========= $i page_test ============"; cat aim9-pft.compare.log | grep "^$i.*page_test" | awk 'BEGIN {a=b=0;}  { a+=$3; b+=$6 } END { print "5.3-rc4          " a/24; print "5.3-rc4+lru_lock " b/24}' ; done
+========= Max page_test ============
+5.3-rc4          34729.6
+5.3-rc4+lru_lock 36128.3
+========= Min page_test ============
+5.3-rc4          33644.2
+5.3-rc4+lru_lock 35349.7
+========= Hmean page_test ============
+5.3-rc4          34355.4
+5.3-rc4+lru_lock 35810.9
+========= Stddev page_test ============
+5.3-rc4          319.757
+5.3-rc4+lru_lock 223.324
+========= CoeffVar page_test ============
+5.3-rc4          0.93125
+5.3-rc4+lru_lock 0.623333
+========= BHmean-50 page_test ============
+5.3-rc4          34579.2
+5.3-rc4+lru_lock 35977.1
+========= BHmean-95 page_test ============
+5.3-rc4          34421.7
+5.3-rc4+lru_lock 35853.6
+========= BHmean-99 page_test ============
+5.3-rc4          34421.7
+5.3-rc4+lru_lock 35853.6
+
+$for i in Max Min Hmean Stddev CoeffVar BHmean-50 BHmean-95 BHmean-99; do echo "========= $i brk_test ============"; cat aim9-pft.compare.log | grep "^$i.*brk_test" | awk 'BEGIN {a=b=0;}  { a+=$3; b+=$6 } END { print "5.3-rc4          " a/24; print "5.3-rc4+lru_lock " b/24}' ; done
+========= Max brk_test ============
+5.3-rc4          96647.7
+5.3-rc4+lru_lock 98960.3
+========= Min brk_test ============
+5.3-rc4          91800.8
+5.3-rc4+lru_lock 96817.6
+========= Hmean brk_test ============
+5.3-rc4          95470
+5.3-rc4+lru_lock 97769.6
+========= Stddev brk_test ============
+5.3-rc4          1253.52
+5.3-rc4+lru_lock 596.593
+========= CoeffVar brk_test ============
+5.3-rc4          1.31375
+5.3-rc4+lru_lock 0.609583
+========= BHmean-50 brk_test ============
+5.3-rc4          96141.4
+5.3-rc4+lru_lock 98194
+========= BHmean-95 brk_test ============
+5.3-rc4          95818.5
+5.3-rc4+lru_lock 97857.2
+========= BHmean-99 brk_test ============
+5.3-rc4          95818.5
+5.3-rc4+lru_lock 97857.2
+
+Alex Shi (14):
+  mm/lru: move pgdat lru_lock into lruvec
+  lru/memcg: move the lruvec->pgdat sync out lru_lock
+  lru/memcg: using per lruvec lock in un/lock_page_lru
+  lru/compaction: use per lruvec lock in isolate_migratepages_block
+  lru/huge_page: use per lruvec lock in __split_huge_page
+  lru/mlock: using per lruvec lock in munlock
+  lru/swap: using per lruvec lock in page_cache_release
+  lru/swap: uer lruvec lock in activate_page
+  lru/swap: uer per lruvec lock in pagevec_lru_move_fn
+  lru/swap: use per lruvec lock in release_pages
+  lru/vmscan: using per lruvec lock in lists shrinking.
+  lru/vmscan: use pre lruvec lock in check_move_unevictable_pages
+  lru/vmscan: using per lruvec lru_lock in get_scan_count
+  mm/lru: fix the comments of lru_lock
+
+ include/linux/memcontrol.h | 24 ++++++++++----
+ include/linux/mm_types.h   |  2 +-
+ include/linux/mmzone.h     |  6 ++--
+ mm/compaction.c            | 48 +++++++++++++++++-----------
+ mm/filemap.c               |  4 +--
+ mm/huge_memory.c           |  9 ++++--
+ mm/memcontrol.c            | 24 ++++++--------
+ mm/mlock.c                 | 35 ++++++++++----------
+ mm/mmzone.c                |  1 +
+ mm/page_alloc.c            |  1 -
+ mm/page_idle.c             |  4 +--
+ mm/rmap.c                  |  2 +-
+ mm/swap.c                  | 79 +++++++++++++++++++++++++---------------------
+ mm/vmscan.c                | 63 ++++++++++++++++++------------------
+ 14 files changed, 166 insertions(+), 136 deletions(-)
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+1.8.3.1
+
