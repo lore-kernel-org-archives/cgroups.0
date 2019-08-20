@@ -1,129 +1,82 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH 00/14] per memcg lru_lock
-Date: Tue, 20 Aug 2019 17:48:23 +0800
-Message-ID: <1566294517-86418-1-git-send-email-alex.shi@linux.alibaba.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH 09/14] lru/swap: uer per lruvec lock in pagevec_lru_move_fn
+Date: Tue, 20 Aug 2019 17:48:32 +0800
+Message-ID: <1566294517-86418-10-git-send-email-alex.shi@linux.alibaba.com>
+References: <1566294517-86418-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1566294517-86418-1-git-send-email-alex.shi@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>
-Cc: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, Michal Hocko <mhocko@suse.com>, Vlastimil Babka <vbabka@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, Matthew Wilcox <willy@infradead.org>, Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, Peng Fan <peng.fan@nxp.com>, Nikolay Borisov <nborisov@suse.com>, Ira Weiny <ira.weiny@intel.com>, Andrey Ryabinin <aryabinin@virtuozzo.com>
 
-This patchset move lru_lock into lruvec, give a lru_lock for each of
-lruvec, thus bring a lru_lock for each of memcg.
+to replace pgdat lru_lock.
 
-Per memcg lru_lock would ease the lru_lock contention a lot in
-this patch series.
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.com>
+Cc: Vlastimil Babka <vbabka@suse.cz>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc: Peng Fan <peng.fan@nxp.com>
+Cc: Nikolay Borisov <nborisov@suse.com>
+Cc: Ira Weiny <ira.weiny@intel.com>
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
+---
+ mm/swap.c | 25 +++++++++++++------------
+ 1 file changed, 13 insertions(+), 12 deletions(-)
 
-In some data center, containers are used widely to deploy different kind
-of services, then multiple memcgs share per node pgdat->lru_lock which
-cause heavy lock contentions when doing lru operation.
-
-On my 2 socket * 6 cores E5-2630 platform, 24 containers run aim9
-simultaneously with mmtests' config:
-        # AIM9
-        export AIM9_TESTTIME=180
-        export AIM9_TESTLIST=page_test,brk_test
-
-perf lock report show much contentions on lru_lock in 20 second snapshot:
-                        Name   acquired  contended   avg wait (ns) total wait (ns)   max wait (ns)   min wait (ns)
-        &(ptlock_ptr(pag...         22          0               0       0               0               0
-        ...
-        &(&pgdat->lru_lo...          9          7           12728       89096           26656            1597
-
-With this patch series, lruvec->lru_lock show no contentions
-        &(&lruvec->lru_l...          8          0               0       0               0               0
-
-and aim9 page_test/brk_test performance increased 5%~50%.
-BTW, Detailed results in aim9-pft.compare.log if needed,
-All containers data are increased and pretty steady.
-
-$for i in Max Min Hmean Stddev CoeffVar BHmean-50 BHmean-95 BHmean-99; do echo "========= $i page_test ============"; cat aim9-pft.compare.log | grep "^$i.*page_test" | awk 'BEGIN {a=b=0;}  { a+=$3; b+=$6 } END { print "5.3-rc4          " a/24; print "5.3-rc4+lru_lock " b/24}' ; done
-========= Max page_test ============
-5.3-rc4          34729.6
-5.3-rc4+lru_lock 36128.3
-========= Min page_test ============
-5.3-rc4          33644.2
-5.3-rc4+lru_lock 35349.7
-========= Hmean page_test ============
-5.3-rc4          34355.4
-5.3-rc4+lru_lock 35810.9
-========= Stddev page_test ============
-5.3-rc4          319.757
-5.3-rc4+lru_lock 223.324
-========= CoeffVar page_test ============
-5.3-rc4          0.93125
-5.3-rc4+lru_lock 0.623333
-========= BHmean-50 page_test ============
-5.3-rc4          34579.2
-5.3-rc4+lru_lock 35977.1
-========= BHmean-95 page_test ============
-5.3-rc4          34421.7
-5.3-rc4+lru_lock 35853.6
-========= BHmean-99 page_test ============
-5.3-rc4          34421.7
-5.3-rc4+lru_lock 35853.6
-
-$for i in Max Min Hmean Stddev CoeffVar BHmean-50 BHmean-95 BHmean-99; do echo "========= $i brk_test ============"; cat aim9-pft.compare.log | grep "^$i.*brk_test" | awk 'BEGIN {a=b=0;}  { a+=$3; b+=$6 } END { print "5.3-rc4          " a/24; print "5.3-rc4+lru_lock " b/24}' ; done
-========= Max brk_test ============
-5.3-rc4          96647.7
-5.3-rc4+lru_lock 98960.3
-========= Min brk_test ============
-5.3-rc4          91800.8
-5.3-rc4+lru_lock 96817.6
-========= Hmean brk_test ============
-5.3-rc4          95470
-5.3-rc4+lru_lock 97769.6
-========= Stddev brk_test ============
-5.3-rc4          1253.52
-5.3-rc4+lru_lock 596.593
-========= CoeffVar brk_test ============
-5.3-rc4          1.31375
-5.3-rc4+lru_lock 0.609583
-========= BHmean-50 brk_test ============
-5.3-rc4          96141.4
-5.3-rc4+lru_lock 98194
-========= BHmean-95 brk_test ============
-5.3-rc4          95818.5
-5.3-rc4+lru_lock 97857.2
-========= BHmean-99 brk_test ============
-5.3-rc4          95818.5
-5.3-rc4+lru_lock 97857.2
-
-Alex Shi (14):
-  mm/lru: move pgdat lru_lock into lruvec
-  lru/memcg: move the lruvec->pgdat sync out lru_lock
-  lru/memcg: using per lruvec lock in un/lock_page_lru
-  lru/compaction: use per lruvec lock in isolate_migratepages_block
-  lru/huge_page: use per lruvec lock in __split_huge_page
-  lru/mlock: using per lruvec lock in munlock
-  lru/swap: using per lruvec lock in page_cache_release
-  lru/swap: uer lruvec lock in activate_page
-  lru/swap: uer per lruvec lock in pagevec_lru_move_fn
-  lru/swap: use per lruvec lock in release_pages
-  lru/vmscan: using per lruvec lock in lists shrinking.
-  lru/vmscan: use pre lruvec lock in check_move_unevictable_pages
-  lru/vmscan: using per lruvec lru_lock in get_scan_count
-  mm/lru: fix the comments of lru_lock
-
- include/linux/memcontrol.h | 24 ++++++++++----
- include/linux/mm_types.h   |  2 +-
- include/linux/mmzone.h     |  6 ++--
- mm/compaction.c            | 48 +++++++++++++++++-----------
- mm/filemap.c               |  4 +--
- mm/huge_memory.c           |  9 ++++--
- mm/memcontrol.c            | 24 ++++++--------
- mm/mlock.c                 | 35 ++++++++++----------
- mm/mmzone.c                |  1 +
- mm/page_alloc.c            |  1 -
- mm/page_idle.c             |  4 +--
- mm/rmap.c                  |  2 +-
- mm/swap.c                  | 79 +++++++++++++++++++++++++---------------------
- mm/vmscan.c                | 63 ++++++++++++++++++------------------
- 14 files changed, 166 insertions(+), 136 deletions(-)
-
+diff --git a/mm/swap.c b/mm/swap.c
+index d2dad08fcfd0..24a2b3456e10 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -192,26 +192,27 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
+ 	void *arg)
+ {
+ 	int i;
+-	struct pglist_data *pgdat = NULL;
+-	struct lruvec *lruvec;
++	struct lruvec *locked_lruvec = NULL;
+ 	unsigned long flags = 0;
+ 
+ 	for (i = 0; i < pagevec_count(pvec); i++) {
+ 		struct page *page = pvec->pages[i];
+-		struct pglist_data *pagepgdat = page_pgdat(page);
+-
+-		if (pagepgdat != pgdat) {
+-			if (pgdat)
+-				spin_unlock_irqrestore(&pgdat->lruvec.lru_lock, flags);
+-			pgdat = pagepgdat;
+-			spin_lock_irqsave(&pgdat->lruvec.lru_lock, flags);
++		struct pglist_data *pgdat = page_pgdat(page);
++		struct lruvec *lruvec = mem_cgroup_page_lruvec(page, pgdat);
++
++		if (locked_lruvec != lruvec) {
++			if (locked_lruvec)
++				spin_unlock_irqrestore(&locked_lruvec->lru_lock, flags);
++			locked_lruvec = lruvec;
++			spin_lock_irqsave(&lruvec->lru_lock, flags);
++			sync_lruvec_pgdat(lruvec, pgdat);
+ 		}
+ 
+-		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+ 		(*move_fn)(page, lruvec, arg);
+ 	}
+-	if (pgdat)
+-		spin_unlock_irqrestore(&pgdat->lruvec.lru_lock, flags);
++	if (locked_lruvec)
++		spin_unlock_irqrestore(&locked_lruvec->lru_lock, flags);
++
+ 	release_pages(pvec->pages, pvec->nr);
+ 	pagevec_reinit(pvec);
+ }
 -- 
 1.8.3.1
 
