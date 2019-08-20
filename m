@@ -1,51 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET block/for-next] IO cost model based work-conserving
- porportional controller
-Date: Tue, 20 Aug 2019 08:19:03 -0700
-Message-ID: <20190820151903.GH2263813@devbig004.ftw2.facebook.com>
-References: <20190614015620.1587672-1-tj@kernel.org>
- <20190614175642.GA657710@devbig004.ftw2.facebook.com>
- <5A63F937-F7B5-4D09-9DB4-C73D6F571D50@linaro.org>
- <B5E431F7-549D-4FC4-A098-D074DF9586A1@linaro.org>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH 00/14] per memcg lru_lock
+Date: Tue, 20 Aug 2019 09:48:40 -0700
+Message-ID: <CALvZod7-dL90jwd2pywpaD8NfUByVU9Y809+RfvJABGdRASYUg@mail.gmail.com>
+References: <1566294517-86418-1-git-send-email-alex.shi@linux.alibaba.com> <20190820104532.GP3111@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=c+ytF9JRpx+c+jH7VEntcNHapqJkhUT6uddNW8eq0CI=;
-        b=j/1N4ekm9zWh5OV8A5seiIkduZDfjViU9YztBjbBDi/ScXALSStzfFPCDm2ywBgFj8
-         AORxFbVW4sevVDpQebSL2W1ZojiMi+XLadvgTE3WCgc7EXGi+LOyEqH8QbHkcuPB8M6w
-         IUTsf8zPnnBepJEIZ/O4HkfQjDt4ZNMqlk3lL6TsEqpC208NnZkb26y6clD8vPNbUxpF
-         nzYJe9/TAMcTTEx4+jtfLT5n3UfKgN64VgK23qGqtcjtUVCFIZP5TO7t2fS5zVa60L80
-         1h+LaGlzWQF8Gzp8ZMe7GR4lpBYwpXxxGot+HkJHKIGWwXc7E45B5XlcOCUfhxLDy/5c
-         DxWQ==
-Content-Disposition: inline
-In-Reply-To: <B5E431F7-549D-4FC4-A098-D074DF9586A1@linaro.org>
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=HfS/3YweTIcGGO2RRMlCPJRIxqMja+WwkZZpwCr9I0U=;
+        b=K+mam5zvf/E3cU2LIDxXZWug/rqk3N2IZZ43MXOq44SNotDZn+byvLHrUFInHkDO7K
+         krZMi68j2Wv9KleBJmISlXyAtf+AWs9TyWORM/Is9r/JWDOIisvRoaxJKLMa9X2+DkSD
+         X8/9HsIrCN6cY1UKIUVTesBhBp4i3524bVcclEQ++s0bi/yh5/iX8yzTgk/KVOUmV0on
+         7IlLZhBsYqtAIBE6vQRbijMnbR9VYedqBUFYnNM8Rbdx/bhjrOR+OtiJMEX84yYFHCtT
+         KdyACLP9WpPoCaDmJFCRZjVP1xzZkn+G18umMyHY3eO4qR19pRTmM/TC8TB1C0CiILyZ
+         TXzg==
+In-Reply-To: <20190820104532.GP3111@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Paolo Valente <paolo.valente@linaro.org>
-Cc: Jens Axboe <axboe@kernel.dk>, newella@fb.com, clm@fb.com, Josef Bacik <josef@toxicpanda.com>, dennisz@fb.com, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, ast@kernel.org, daniel@iogearbox.net, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, bpf@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>
 
-Hello, Paolo.
+On Tue, Aug 20, 2019 at 3:45 AM Michal Hocko <mhocko@kernel.org> wrote:
+>
+> On Tue 20-08-19 17:48:23, Alex Shi wrote:
+> > This patchset move lru_lock into lruvec, give a lru_lock for each of
+> > lruvec, thus bring a lru_lock for each of memcg.
+> >
+> > Per memcg lru_lock would ease the lru_lock contention a lot in
+> > this patch series.
+> >
+> > In some data center, containers are used widely to deploy different kind
+> > of services, then multiple memcgs share per node pgdat->lru_lock which
+> > cause heavy lock contentions when doing lru operation.
+>
+> Having some real world workloads numbers would be more than useful
+> for a non trivial change like this. I believe googlers have tried
+> something like this in the past but then didn't have really a good
+> example of workloads that benefit. I might misremember though. Cc Hugh.
+>
 
-On Tue, Aug 20, 2019 at 05:04:25PM +0200, Paolo Valente wrote:
-> and makes one fio instance generate I/O for each group.  The bandwidth
-> reported above is that reported by the fio instance emulating the
-> target client.
-> 
-> Am I missing something?
+We, at Google, have been using per-memcg lru locks for more than 7
+years. Per-memcg lru locks are really beneficial for providing
+performance isolation if there are multiple distinct jobs/memcgs
+running on large machines. We are planning to upstream our internal
+implementation. I will let Hugh comment on that.
 
-If you didn't configure QoS targets, the controller is using device
-qdepth saturation as the sole guidance in determining whether the
-device needs throttling.  Please try configuring the target latencies.
-The bandwidth you see for single stream of rand ios should have direct
-correlation with how the latency targets are configured.  The head
-letter for the patchset has some examples.
-
-Thanks.
-
--- 
-tejun
+thanks,
+Shakeel
