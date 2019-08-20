@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH 10/14] lru/swap: use per lruvec lock in release_pages
-Date: Tue, 20 Aug 2019 17:48:33 +0800
-Message-ID: <1566294517-86418-11-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH 02/14] lru/memcg: move the lruvec->pgdat sync out lru_lock
+Date: Tue, 20 Aug 2019 17:48:25 +0800
+Message-ID: <1566294517-86418-3-git-send-email-alex.shi@linux.alibaba.com>
 References: <1566294517-86418-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1566294517-86418-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -11,119 +11,103 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>
-Cc: Alex Shi <alex.shi@linux.alibaba.com>, Michal Hocko <mhocko@suse.com>, Vlastimil Babka <vbabka@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, Matthew Wilcox <willy@infradead.org>, Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, Peng Fan <peng.fan@nxp.com>, Nikolay Borisov <nborisov@suse.com>, Ira Weiny <ira.weiny@intel.com>, Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Kirill Tkhai <ktkhai@virtuozzo.com>, Thomas Gleixner <tglx@linutronix.de>
 
-Replace pgdat lru_lock with lruvec lru_lock.
+We are going to move lruvec getting out of lru_lock, the only unsafe
+part is lruvec->pgdat syncing when memory node hot pluging.
+
+Splitting out the lruvec->pgdat assignment now and will put it in
+lruvec lru_lock protection.
+
+No function changes in this patch now.
 
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Roman Gushchin <guro@fb.com>
+Cc: Shakeel Butt <shakeelb@google.com>
+Cc: Chris Down <chris@chrisdown.name>
+Cc: Kirill Tkhai <ktkhai@virtuozzo.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
 Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.com>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Cc: Peng Fan <peng.fan@nxp.com>
-Cc: Nikolay Borisov <nborisov@suse.com>
-Cc: Ira Weiny <ira.weiny@intel.com>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Tejun Heo <tj@kernel.org>
 Cc: cgroups@vger.kernel.org
-Cc: linux-mm@kvack.org
 Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
 ---
- mm/swap.c | 40 +++++++++++++++++++++-------------------
- 1 file changed, 21 insertions(+), 19 deletions(-)
+ include/linux/memcontrol.h | 24 +++++++++++++++++-------
+ mm/memcontrol.c            |  8 +-------
+ 2 files changed, 18 insertions(+), 14 deletions(-)
 
-diff --git a/mm/swap.c b/mm/swap.c
-index 24a2b3456e10..798bffe7875d 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -724,8 +724,7 @@ void release_pages(struct page **pages, int nr)
- {
- 	int i;
- 	LIST_HEAD(pages_to_free);
--	struct pglist_data *locked_pgdat = NULL;
--	struct lruvec *lruvec;
-+	struct lruvec *locked_lruvec = NULL;
- 	unsigned long uninitialized_var(flags);
- 	unsigned int uninitialized_var(lock_batch);
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 2cd4359cb38c..95b3d9885ab6 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -359,6 +359,17 @@ void mem_cgroup_cancel_charge(struct page *page, struct mem_cgroup *memcg,
+ 	return memcg->nodeinfo[nid];
+ }
  
-@@ -737,19 +736,19 @@ void release_pages(struct page **pages, int nr)
- 		 * excessive with a continuous string of pages from the
- 		 * same pgdat. The lock is held only if pgdat != NULL.
- 		 */
--		if (locked_pgdat && ++lock_batch == SWAP_CLUSTER_MAX) {
--			spin_unlock_irqrestore(&locked_pgdat->lruvec.lru_lock, flags);
--			locked_pgdat = NULL;
-+		if (locked_lruvec && ++lock_batch == SWAP_CLUSTER_MAX) {
-+			spin_unlock_irqrestore(&locked_lruvec->lru_lock, flags);
-+			locked_lruvec = NULL;
- 		}
- 
- 		if (is_huge_zero_page(page))
- 			continue;
- 
- 		if (is_zone_device_page(page)) {
--			if (locked_pgdat) {
--				spin_unlock_irqrestore(&locked_pgdat->lruvec.lru_lock,
-+			if (locked_lruvec) {
-+				spin_unlock_irqrestore(&locked_lruvec->lru_lock,
- 						       flags);
--				locked_pgdat = NULL;
-+				locked_lruvec = NULL;
- 			}
- 			/*
- 			 * ZONE_DEVICE pages that return 'false' from
-@@ -766,27 +765,30 @@ void release_pages(struct page **pages, int nr)
- 			continue;
- 
- 		if (PageCompound(page)) {
--			if (locked_pgdat) {
--				spin_unlock_irqrestore(&locked_pgdat->lruvec.lru_lock, flags);
--				locked_pgdat = NULL;
-+			if (locked_lruvec) {
-+				spin_unlock_irqrestore(&locked_lruvec->lru_lock, flags);
-+				locked_lruvec = NULL;
- 			}
- 			__put_compound_page(page);
- 			continue;
- 		}
- 
- 		if (PageLRU(page)) {
-+			struct lruvec *lruvec;
- 			struct pglist_data *pgdat = page_pgdat(page);
- 
--			if (pgdat != locked_pgdat) {
--				if (locked_pgdat)
--					spin_unlock_irqrestore(&locked_pgdat->lruvec.lru_lock,
-+			lruvec = mem_cgroup_page_lruvec(page, pgdat);
++static void sync_lruvec_pgdat(struct lruvec *lruvec, struct pglist_data *pgdat)
++{
++	/*
++	 * Since a node can be onlined after the mem_cgroup was created,
++	 * we have to be prepared to initialize lruvec->pgdat here;
++	 * and if offlined then reonlined, we need to reinitialize it.
++	 */
++	if (!mem_cgroup_disabled() && unlikely(lruvec->pgdat != pgdat))
++		lruvec->pgdat = pgdat;
++}
 +
-+			if (lruvec != locked_lruvec) {
-+				if (locked_lruvec)
-+					spin_unlock_irqrestore(&locked_lruvec->lru_lock,
- 									flags);
- 				lock_batch = 0;
--				locked_pgdat = pgdat;
--				spin_lock_irqsave(&locked_pgdat->lruvec.lru_lock, flags);
-+				locked_lruvec = lruvec;
-+				spin_lock_irqsave(&locked_lruvec->lru_lock, flags);
-+				sync_lruvec_pgdat(lruvec, pgdat);
- 			}
+ /**
+  * mem_cgroup_lruvec - get the lru list vector for a node or a memcg zone
+  * @node: node of the wanted lruvec
+@@ -382,13 +393,7 @@ static inline struct lruvec *mem_cgroup_lruvec(struct pglist_data *pgdat,
+ 	mz = mem_cgroup_nodeinfo(memcg, pgdat->node_id);
+ 	lruvec = &mz->lruvec;
+ out:
+-	/*
+-	 * Since a node can be onlined after the mem_cgroup was created,
+-	 * we have to be prepared to initialize lruvec->pgdat here;
+-	 * and if offlined then reonlined, we need to reinitialize it.
+-	 */
+-	if (unlikely(lruvec->pgdat != pgdat))
+-		lruvec->pgdat = pgdat;
++	sync_lruvec_pgdat(lruvec, pgdat);
+ 	return lruvec;
+ }
  
--			lruvec = mem_cgroup_page_lruvec(page, locked_pgdat);
- 			VM_BUG_ON_PAGE(!PageLRU(page), page);
- 			__ClearPageLRU(page);
- 			del_page_from_lru_list(page, lruvec, page_off_lru(page));
-@@ -798,8 +800,8 @@ void release_pages(struct page **pages, int nr)
+@@ -857,6 +862,11 @@ static inline void mem_cgroup_migrate(struct page *old, struct page *new)
+ {
+ }
  
- 		list_add(&page->lru, &pages_to_free);
- 	}
--	if (locked_pgdat)
--		spin_unlock_irqrestore(&locked_pgdat->lruvec.lru_lock, flags);
-+	if (locked_lruvec)
-+		spin_unlock_irqrestore(&locked_lruvec->lru_lock, flags);
++static inline void sync_lruvec_pgdat(struct lruvec *lruvec,
++						struct pglist_data *pgdat)
++{
++}
++
+ static inline struct lruvec *mem_cgroup_lruvec(struct pglist_data *pgdat,
+ 				struct mem_cgroup *memcg)
+ {
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 2792b8ed405f..e8a1b0d95ba8 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1257,13 +1257,7 @@ struct lruvec *mem_cgroup_page_lruvec(struct page *page, struct pglist_data *pgd
+ 	mz = mem_cgroup_page_nodeinfo(memcg, page);
+ 	lruvec = &mz->lruvec;
+ out:
+-	/*
+-	 * Since a node can be onlined after the mem_cgroup was created,
+-	 * we have to be prepared to initialize lruvec->zone here;
+-	 * and if offlined then reonlined, we need to reinitialize it.
+-	 */
+-	if (unlikely(lruvec->pgdat != pgdat))
+-		lruvec->pgdat = pgdat;
++	sync_lruvec_pgdat(lruvec, pgdat);
+ 	return lruvec;
+ }
  
- 	mem_cgroup_uncharge_list(&pages_to_free);
- 	free_unref_page_list(&pages_to_free);
 -- 
 1.8.3.1
 
