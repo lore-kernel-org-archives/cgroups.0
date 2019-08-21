@@ -1,114 +1,147 @@
-From: Daniel Jordan <daniel.m.jordan@oracle.com>
-Subject: Re: [PATCH 00/14] per memcg lru_lock
-Date: Wed, 21 Aug 2019 14:00:31 -0400
-Message-ID: <6ba1ffb0-fce0-c590-c373-7cbc516dbebd@oracle.com>
-References: <1566294517-86418-1-git-send-email-alex.shi@linux.alibaba.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH v3 4/5] writeback, memcg: Implement cgroup_writeback_by_id()
+Date: Wed, 21 Aug 2019 14:02:10 -0700
+Message-ID: <20190821210210.GM2263813@devbig004.ftw2.facebook.com>
+References: <20190815195619.GA2263813@devbig004.ftw2.facebook.com>
+ <20190815195902.GE2263813@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=tmRGzebsdlR9sHASmyyyKPRbTYCSfFlnVG/zj++02Y4=;
- b=HwUtvYoInfaOTd1lpkEF2lXCkMMdX8CCXLFKikiq1tJTeuhrZIHbtyZt8T8CDAj/kJ49
- VnjSul33YJvV5jf+Uj9PtxaV5/CcI73/kU9ElXuNugL621Rk0AiI1I2oL79Mvf+xi36n
- 76vZRSktp24TmNIuHTXekZuGyRu1NjL3pw0YsEbJpb/vUWHsKQa9qEjZmm9AYUV4RSd2
- B/EJ0530GJxR6tkZmHGGcESAaXpcopGjSgNDdU8f26Xc2dkZ+WaruJgFG4B6bTZtEq7j
- s9K8k8QULrqN1tnEiUSa4SGco7jrEgYaenk4MeWWYscV6wZZTdubbQBpR3Nu+vQofrnT VQ== 
-In-Reply-To: <1566294517-86418-1-git-send-email-alex.shi@linux.alibaba.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=KqdERxhIBAIfp0cd0hd74/Q6JgUT8pUqLNfVR97hQrw=;
+        b=cvs9Vr1YLEympRLozhgSozrKl/OUAv7d2nZM7TBMrHINk/WCc10TYb0b7zVsDTOHhU
+         Ta5B4QJ347mfUkR+Wup4leIKwduHVyS+oPVMrEk2P80BjxZRHKGUtSEQ6gZ9xJhc74f7
+         FXfp3eqwTYi689KtqkWIiD0avLvg+V4jePnSbNV5KsDQnukJYxKgL4OHMa+8ehX5TEHN
+         Sf7gBaXzkDUK+ATl6xXFt3mobpa8Y7S3RQchx1wt7116E02QSagSd/IuyCGvHU2Q+r8j
+         6rvey1+5cnTsOx0CG88ElNI/RUUWRUhXv5KiUGa23CgKxHmLU/gjbEvt2/2Rp8aPHMBT
+         N9lw==
+Content-Disposition: inline
+In-Reply-To: <20190815195902.GE2263813@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Alex Shi <alex.shi@linux.alibaba.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: axboe@kernel.dk, jack@suse.cz, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, guro@fb.com, akpm@linux-foundation.org
 
-Hi Alex,
+Implement cgroup_writeback_by_id() which initiates cgroup writeback
+from bdi and memcg IDs.  This will be used by memcg foreign inode
+flushing.
 
-On 8/20/19 5:48 AM, Alex Shi wrote:
-> In some data center, containers are used widely to deploy different kind
-> of services, then multiple memcgs share per node pgdat->lru_lock which
-> cause heavy lock contentions when doing lru operation.
-> 
-> On my 2 socket * 6 cores E5-2630 platform, 24 containers run aim9
-> simultaneously with mmtests' config:
->          # AIM9
->          export AIM9_TESTTIME=180
->          export AIM9_TESTLIST=page_test,brk_test
-> 
-> perf lock report show much contentions on lru_lock in 20 second snapshot:
->                          Name   acquired  contended   avg wait (ns) total wait (ns)   max wait (ns)   min wait (ns)
->          &(ptlock_ptr(pag...         22          0               0       0               0               0
->          ...
->          &(&pgdat->lru_lo...          9          7           12728       89096           26656            1597
+v2: Use wb_get_lookup() instead of wb_get_create() to avoid creating
+    spurious wbs.
 
-This is system-wide right, not per container?  Even per container, 89 usec isn't much contention over 20 seconds.  You may want to give this a try:
+v3: Interpret 0 @nr as 1.25 * nr_dirty to implement best-effort
+    flushing while avoding possible livelocks.
 
-   https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/tree/case-lru-file-readtwice
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ fs/fs-writeback.c         |   83 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/writeback.h |    2 +
+ 2 files changed, 85 insertions(+)
 
-It's also synthetic but it stresses lru_lock more than just anon alloc/free.  It hits the page activate path, which is where we see this lock in our database, and if enough memory is configured lru_lock also gets stressed during reclaim, similar to [1].
-
-It'd be better though, as Michal suggests, to use the real workload that's causing problems.  Where are you seeing contention?
-
-> With this patch series, lruvec->lru_lock show no contentions
->          &(&lruvec->lru_l...          8          0               0       0               0               0
-> 
-> and aim9 page_test/brk_test performance increased 5%~50%.
-
-Where does the 50% number come in?  The numbers below seem to only show ~4% boost.
-
-> BTW, Detailed results in aim9-pft.compare.log if needed,
-> All containers data are increased and pretty steady.
-> 
-> $for i in Max Min Hmean Stddev CoeffVar BHmean-50 BHmean-95 BHmean-99; do echo "========= $i page_test ============"; cat aim9-pft.compare.log | grep "^$i.*page_test" | awk 'BEGIN {a=b=0;}  { a+=$3; b+=$6 } END { print "5.3-rc4          " a/24; print "5.3-rc4+lru_lock " b/24}' ; done
-> ========= Max page_test ============
-> 5.3-rc4          34729.6
-> 5.3-rc4+lru_lock 36128.3
-> ========= Min page_test ============
-> 5.3-rc4          33644.2
-> 5.3-rc4+lru_lock 35349.7
-> ========= Hmean page_test ============
-> 5.3-rc4          34355.4
-> 5.3-rc4+lru_lock 35810.9
-> ========= Stddev page_test ============
-> 5.3-rc4          319.757
-> 5.3-rc4+lru_lock 223.324
-> ========= CoeffVar page_test ============
-> 5.3-rc4          0.93125
-> 5.3-rc4+lru_lock 0.623333
-> ========= BHmean-50 page_test ============
-> 5.3-rc4          34579.2
-> 5.3-rc4+lru_lock 35977.1
-> ========= BHmean-95 page_test ============
-> 5.3-rc4          34421.7
-> 5.3-rc4+lru_lock 35853.6
-> ========= BHmean-99 page_test ============
-> 5.3-rc4          34421.7
-> 5.3-rc4+lru_lock 35853.6
-> 
-> $for i in Max Min Hmean Stddev CoeffVar BHmean-50 BHmean-95 BHmean-99; do echo "========= $i brk_test ============"; cat aim9-pft.compare.log | grep "^$i.*brk_test" | awk 'BEGIN {a=b=0;}  { a+=$3; b+=$6 } END { print "5.3-rc4          " a/24; print "5.3-rc4+lru_lock " b/24}' ; done
-> ========= Max brk_test ============
-> 5.3-rc4          96647.7
-> 5.3-rc4+lru_lock 98960.3
-> ========= Min brk_test ============
-> 5.3-rc4          91800.8
-> 5.3-rc4+lru_lock 96817.6
-> ========= Hmean brk_test ============
-> 5.3-rc4          95470
-> 5.3-rc4+lru_lock 97769.6
-> ========= Stddev brk_test ============
-> 5.3-rc4          1253.52
-> 5.3-rc4+lru_lock 596.593
-> ========= CoeffVar brk_test ============
-> 5.3-rc4          1.31375
-> 5.3-rc4+lru_lock 0.609583
-> ========= BHmean-50 brk_test ============
-> 5.3-rc4          96141.4
-> 5.3-rc4+lru_lock 98194
-> ========= BHmean-95 brk_test ============
-> 5.3-rc4          95818.5
-> 5.3-rc4+lru_lock 97857.2
-> ========= BHmean-99 brk_test ============
-> 5.3-rc4          95818.5
-> 5.3-rc4+lru_lock 97857.2
-
-[1] https://lore.kernel.org/linux-mm/CABdVr8R2y9B+2zzSAT_Ve=BQCa+F+E9_kVH+C28DGpkeQitiog@mail.gmail.com/
+--- a/fs/fs-writeback.c
++++ b/fs/fs-writeback.c
+@@ -892,6 +892,89 @@ restart:
+ }
+ 
+ /**
++ * cgroup_writeback_by_id - initiate cgroup writeback from bdi and memcg IDs
++ * @bdi_id: target bdi id
++ * @memcg_id: target memcg css id
++ * @nr_pages: number of pages to write, 0 for best-effort dirty flushing
++ * @reason: reason why some writeback work initiated
++ * @done: target wb_completion
++ *
++ * Initiate flush of the bdi_writeback identified by @bdi_id and @memcg_id
++ * with the specified parameters.
++ */
++int cgroup_writeback_by_id(u64 bdi_id, int memcg_id, unsigned long nr,
++			   enum wb_reason reason, struct wb_completion *done)
++{
++	struct backing_dev_info *bdi;
++	struct cgroup_subsys_state *memcg_css;
++	struct bdi_writeback *wb;
++	struct wb_writeback_work *work;
++	int ret;
++
++	/* lookup bdi and memcg */
++	bdi = bdi_get_by_id(bdi_id);
++	if (!bdi)
++		return -ENOENT;
++
++	rcu_read_lock();
++	memcg_css = css_from_id(memcg_id, &memory_cgrp_subsys);
++	if (memcg_css && !css_tryget(memcg_css))
++		memcg_css = NULL;
++	rcu_read_unlock();
++	if (!memcg_css) {
++		ret = -ENOENT;
++		goto out_bdi_put;
++	}
++
++	/*
++	 * And find the associated wb.  If the wb isn't there already
++	 * there's nothing to flush, don't create one.
++	 */
++	wb = wb_get_lookup(bdi, memcg_css);
++	if (!wb) {
++		ret = -ENOENT;
++		goto out_css_put;
++	}
++
++	/*
++	 * If @nr is zero, the caller is attempting to write out most of
++	 * the currently dirty pages.  Let's take the current dirty page
++	 * count and inflate it by 25% which should be large enough to
++	 * flush out most dirty pages while avoiding getting livelocked by
++	 * concurrent dirtiers.
++	 */
++	if (!nr) {
++		unsigned long filepages, headroom, dirty, writeback;
++
++		mem_cgroup_wb_stats(wb, &filepages, &headroom, &dirty,
++				      &writeback);
++		nr = dirty * 10 / 8;
++	}
++
++	/* issue the writeback work */
++	work = kzalloc(sizeof(*work), GFP_NOWAIT | __GFP_NOWARN);
++	if (work) {
++		work->nr_pages = nr;
++		work->sync_mode = WB_SYNC_NONE;
++		work->range_cyclic = 1;
++		work->reason = reason;
++		work->done = done;
++		work->auto_free = 1;
++		wb_queue_work(wb, work);
++		ret = 0;
++	} else {
++		ret = -ENOMEM;
++	}
++
++	wb_put(wb);
++out_css_put:
++	css_put(memcg_css);
++out_bdi_put:
++	bdi_put(bdi);
++	return ret;
++}
++
++/**
+  * cgroup_writeback_umount - flush inode wb switches for umount
+  *
+  * This function is called when a super_block is about to be destroyed and
+--- a/include/linux/writeback.h
++++ b/include/linux/writeback.h
+@@ -217,6 +217,8 @@ void wbc_attach_and_unlock_inode(struct
+ void wbc_detach_inode(struct writeback_control *wbc);
+ void wbc_account_cgroup_owner(struct writeback_control *wbc, struct page *page,
+ 			      size_t bytes);
++int cgroup_writeback_by_id(u64 bdi_id, int memcg_id, unsigned long nr_pages,
++			   enum wb_reason reason, struct wb_completion *done);
+ void cgroup_writeback_umount(void);
+ 
+ /**
