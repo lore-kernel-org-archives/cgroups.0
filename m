@@ -1,89 +1,48 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [PATCHSET block/for-next] IO cost model based work-conserving
- porportional controller
-Date: Thu, 22 Aug 2019 10:58:22 +0200
-Message-ID: <9EB760CE-0028-4766-AE9D-6E90028D8579@linaro.org>
-References: <20190614015620.1587672-1-tj@kernel.org>
- <20190614175642.GA657710@devbig004.ftw2.facebook.com>
- <5A63F937-F7B5-4D09-9DB4-C73D6F571D50@linaro.org>
- <B5E431F7-549D-4FC4-A098-D074DF9586A1@linaro.org>
- <20190820151903.GH2263813@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.8\))
-Content-Transfer-Encoding: quoted-printable
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: Re: [PATCH 00/14] per memcg lru_lock
+Date: Thu, 22 Aug 2019 19:56:59 +0800
+Message-ID: <348495d2-b558-fdfd-a411-89c75d4a9c78@linux.alibaba.com>
+References: <1566294517-86418-1-git-send-email-alex.shi@linux.alibaba.com>
+ <6ba1ffb0-fce0-c590-c373-7cbc516dbebd@oracle.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=HwcMDsi2XQejCpwJcqSON0QYDIy6of9C4lFX3vq5Vd8=;
-        b=rws6jNKsi1M8Rkg+o1TcSh47k+MBIMlZ2PG9GVoXpHOHN3MDWajZ42qf2bwZzNxViW
-         DAkPKntHOYRZpDPuvQBKP7zUv/xa/jRR6w1y4bYMxRKUh79SEfgnY5pr5iHYPMjsgAXC
-         tHtspKL5+LLP11iVlGZn7uqXQIsYg61EWdpwaohwUKU3vfXKzvl5DkkrMzXQtl+wnfPB
-         JStOH5mMiyjBhPn0AYgSLb0WOsyjKgkMJnEmj3SR0AeYOSficjQrUV73JMO1ziA+o0Jb
-         fVTYxfpb0LpU0FytZ+oQndnyNIff/g8nsrg8CJDfgs0FuxT66v2GorScxqX5dSepeJNF
-         /zXQ==
-In-Reply-To: <20190820151903.GH2263813@devbig004.ftw2.facebook.com>
+In-Reply-To: <6ba1ffb0-fce0-c590-c373-7cbc516dbebd@oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, newella@fb.com, clm@fb.com, Josef Bacik <josef@toxicpanda.com>, dennisz@fb.com, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, ast@kernel.org, daniel@iogearbox.net, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, bpf@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: Daniel Jordan <daniel.m.jordan@oracle.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@kernel.org>
 
 
 
-> Il giorno 20 ago 2019, alle ore 17:19, Tejun Heo <tj@kernel.org> ha =
-scritto:
->=20
-> Hello, Paolo.
->=20
-> On Tue, Aug 20, 2019 at 05:04:25PM +0200, Paolo Valente wrote:
->> and makes one fio instance generate I/O for each group.  The =
-bandwidth
->> reported above is that reported by the fio instance emulating the
->> target client.
->>=20
->> Am I missing something?
->=20
-> If you didn't configure QoS targets, the controller is using device
-> qdepth saturation as the sole guidance in determining whether the
-> device needs throttling.  Please try configuring the target latencies.
-> The bandwidth you see for single stream of rand ios should have direct
-> correlation with how the latency targets are configured.  The head
-> letter for the patchset has some examples.
->=20
+在 2019/8/22 上午2:00, Daniel Jordan 写道:
+>>
+> 
+> This is system-wide right, not per container?  Even per container, 89 usec isn't much contention over 20 seconds.  You may want to give this a try:
 
-Ok, I tried with the parameters reported for a SATA SSD:
+yes, perf lock show the host info.
+> 
+>   https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/tree/case-lru-file-readtwice> 
+> It's also synthetic but it stresses lru_lock more than just anon alloc/free.  It hits the page activate path, which is where we see this lock in our database, and if enough memory is configured lru_lock also gets stressed during reclaim, similar to [1].
 
-rpct=3D95.00 rlat=3D10000 wpct=3D95.00 wlat=3D20000 min=3D50.00 =
-max=3D400.00
+Thanks for the sharing, this patchset can not help the [1] case, since it's just relief the per container lock contention now. Yes, readtwice case could be more sensitive for this lru_lock changes in containers. I may try to use it in container with some tuning. But anyway, aim9 is also pretty good to show the problem and solutions. :)
+> 
+> It'd be better though, as Michal suggests, to use the real workload that's causing problems.  Where are you seeing contention?
 
-and with a simpler configuration [1]: one target doing random reads
-and only four interferers doing sequential reads, with all the
-processes (groups) having the same weight.
+We repeatly create or delete a lot of different containers according to servers load/usage, so normal workload could cause lots of pages alloc/remove. aim9 could reflect part of scenarios. I don't know the DB scenario yet.
 
-But there seemed to be little or no control on I/O, because the target
-got only 1.84 MB/s, against 1.15 MB/s without any control.
+> 
+>> With this patch series, lruvec->lru_lock show no contentions
+>>          &(&lruvec->lru_l...          8          0               0       0               0               0
+>>
+>> and aim9 page_test/brk_test performance increased 5%~50%.
+> 
+> Where does the 50% number come in?  The numbers below seem to only show ~4% boost.
 
-So I tried with rlat=3D1000 and rlat=3D100.
+the Setddev/CoeffVar case has about 50% performance increase. one of container's mmtests result as following:
 
-Control did improve, with same results for both values of rlat.  The
-problem is that these results still seem rather bad, both in terms of
-throughput guaranteed to the target and in terms of total throughput.
-Here are results compared with BFQ (throughputs measured in MB/s):
-
-                           io.weight            BFQ
-target's throughput        3.415                6.224       =20
-total throughput           159.14               321.375
-
-Am I doing something else wrong?
-
-Thanks,
-Paolo
-
-[1] sudo ./bandwidth-latency.sh -t randread -s none -b weight -n 4
-
-> Thanks.
->=20
-> --=20
-> tejun
+Stddev    page_test      245.15 (   0.00%)      189.29 (  22.79%)
+Stddev    brk_test      1258.60 (   0.00%)      629.16 (  50.01%)
+CoeffVar  page_test        0.71 (   0.00%)        0.53 (  26.05%)
+CoeffVar  brk_test         1.32 (   0.00%)        0.64 (  51.14%)
 
