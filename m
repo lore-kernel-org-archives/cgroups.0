@@ -1,135 +1,133 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 3/5] writeback: Separate out wb_get_lookup() from wb_get_create()
-Date: Mon, 26 Aug 2019 09:06:54 -0700
-Message-ID: <20190826160656.870307-4-tj@kernel.org>
-References: <20190826160656.870307-1-tj@kernel.org>
+From: Mina Almasry <almasrymina@google.com>
+Subject: [PATCH v3 0/6] hugetlb_cgroup: Add hugetlb_cgroup reservation limits
+Date: Mon, 26 Aug 2019 16:32:34 -0700
+Message-ID: <20190826233240.11524-1-almasrymina@google.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=sbi9AtPpKs90xX0XCzYWXMGLwoRRPZP34bqUM0NUXLs=;
-        b=gX5n0n0Iya2r+6HfxSBgduwjqnM9PRtJlmoEm5ghngBsve/UtQYFYtPDwNviTIYOMH
-         yLHoMeNJ+DWQ0bdNx4cvSVgcN681dV36+OkH/g1jKJgRguOi7VsP0NlyTZAz7cNUZOE6
-         zqnuyTGB/QvBuFExLTGnei+AosOZ6sQ0y8LkGtkVWGqoLaIqdMokGxmf43BnVYTMWOsm
-         TfgrfDI+kUfbZopDzIk1PUoIxNGEh7GWOOExZRBb6f7AdZPpR69VNoZkY4jlUDeGLJQo
-         pcOBl6W9Exf/K3YN+IZmyKLnwa/O+zqQugMqiuDEyPBkAwPlHoZuAITEWOR87u2+0DCW
-         ok0w==
-In-Reply-To: <20190826160656.870307-1-tj@kernel.org>
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=ElPLhkujITMw+6kOZxdN4egPf1l2LHGwTUiYDYEp8fM=;
+        b=CY1aI8s69o9YGJ6K0vFmmYLyZzVcf7onXN3mweVqR4ZVSJ+5HLlMO+q+W9vvWtb6vR
+         z2AkrdPcZcVdVlYEGdkDSHBbkFBq51Ovx3UJg1LQ4+Ycem0XA2703fLioTfaokEhnbA8
+         syXgP8odCYCcmUvJVe8bSrlTzfih3jZ+pCyEfFf7ALVFgfr+A50/JcYr33g1gZ3yJUT5
+         pRNe4gRSKcKE0AUplOuw3dNWsmY4BpIby3TVjfxq9tasyxAMh4DsD8kRtius50dvXEUd
+         WiEEXxDZY+WKTX2pe0nvVtRh9/M/BgviA6AIcxL76YM9EiRGO7Bg+4aetvVdl6UVPQmN
+         oNUw==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk, jack@suse.cz, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, guro@fb.com, akpm@linux-foundation.org, Tejun Heo <tj@kernel.org>
+To: mike.kravetz@oracle.com
+Cc: shuah@kernel.org, almasrymina@google.com, rientjes@google.com, shakeelb@google.com, gthelen@google.com, akpm@linux-foundation.org, khalid.aziz@oracle.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, aneesh.kumar@linux.vnet.ibm.com, mkoutny@suse.com
 
-Separate out wb_get_lookup() which doesn't try to create one if there
-isn't already one from wb_get_create().  This will be used by later
-patches.
+Problem:
+Currently tasks attempting to allocate more hugetlb memory than is available get
+a failure at mmap/shmget time. This is thanks to Hugetlbfs Reservations [1].
+However, if a task attempts to allocate hugetlb memory only more than its
+hugetlb_cgroup limit allows, the kernel will allow the mmap/shmget call,
+but will SIGBUS the task when it attempts to fault the memory in.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- include/linux/backing-dev.h |  2 ++
- mm/backing-dev.c            | 55 +++++++++++++++++++++++++------------
- 2 files changed, 39 insertions(+), 18 deletions(-)
+We have developers interested in using hugetlb_cgroups, and they have expressed
+dissatisfaction regarding this behavior. We'd like to improve this
+behavior such that tasks violating the hugetlb_cgroup limits get an error on
+mmap/shmget time, rather than getting SIGBUS'd when they try to fault
+the excess memory in.
 
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 84cdcfbc763f..97967ce06de3 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -230,6 +230,8 @@ static inline int bdi_sched_wait(void *word)
- struct bdi_writeback_congested *
- wb_congested_get_create(struct backing_dev_info *bdi, int blkcg_id, gfp_t gfp);
- void wb_congested_put(struct bdi_writeback_congested *congested);
-+struct bdi_writeback *wb_get_lookup(struct backing_dev_info *bdi,
-+				    struct cgroup_subsys_state *memcg_css);
- struct bdi_writeback *wb_get_create(struct backing_dev_info *bdi,
- 				    struct cgroup_subsys_state *memcg_css,
- 				    gfp_t gfp);
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index 612aa7c5ddbd..d9daa3e422d0 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -618,13 +618,12 @@ static int cgwb_create(struct backing_dev_info *bdi,
- }
- 
- /**
-- * wb_get_create - get wb for a given memcg, create if necessary
-+ * wb_get_lookup - get wb for a given memcg
-  * @bdi: target bdi
-  * @memcg_css: cgroup_subsys_state of the target memcg (must have positive ref)
-- * @gfp: allocation mask to use
-  *
-- * Try to get the wb for @memcg_css on @bdi.  If it doesn't exist, try to
-- * create one.  The returned wb has its refcount incremented.
-+ * Try to get the wb for @memcg_css on @bdi.  The returned wb has its
-+ * refcount incremented.
-  *
-  * This function uses css_get() on @memcg_css and thus expects its refcnt
-  * to be positive on invocation.  IOW, rcu_read_lock() protection on
-@@ -641,6 +640,39 @@ static int cgwb_create(struct backing_dev_info *bdi,
-  * each lookup.  On mismatch, the existing wb is discarded and a new one is
-  * created.
-  */
-+struct bdi_writeback *wb_get_lookup(struct backing_dev_info *bdi,
-+				    struct cgroup_subsys_state *memcg_css)
-+{
-+	struct bdi_writeback *wb;
-+
-+	if (!memcg_css->parent)
-+		return &bdi->wb;
-+
-+	rcu_read_lock();
-+	wb = radix_tree_lookup(&bdi->cgwb_tree, memcg_css->id);
-+	if (wb) {
-+		struct cgroup_subsys_state *blkcg_css;
-+
-+		/* see whether the blkcg association has changed */
-+		blkcg_css = cgroup_get_e_css(memcg_css->cgroup, &io_cgrp_subsys);
-+		if (unlikely(wb->blkcg_css != blkcg_css || !wb_tryget(wb)))
-+			wb = NULL;
-+		css_put(blkcg_css);
-+	}
-+	rcu_read_unlock();
-+
-+	return wb;
-+}
-+
-+/**
-+ * wb_get_create - get wb for a given memcg, create if necessary
-+ * @bdi: target bdi
-+ * @memcg_css: cgroup_subsys_state of the target memcg (must have positive ref)
-+ * @gfp: allocation mask to use
-+ *
-+ * Try to get the wb for @memcg_css on @bdi.  If it doesn't exist, try to
-+ * create one.  See wb_get_lookup() for more details.
-+ */
- struct bdi_writeback *wb_get_create(struct backing_dev_info *bdi,
- 				    struct cgroup_subsys_state *memcg_css,
- 				    gfp_t gfp)
-@@ -653,20 +685,7 @@ struct bdi_writeback *wb_get_create(struct backing_dev_info *bdi,
- 		return &bdi->wb;
- 
- 	do {
--		rcu_read_lock();
--		wb = radix_tree_lookup(&bdi->cgwb_tree, memcg_css->id);
--		if (wb) {
--			struct cgroup_subsys_state *blkcg_css;
--
--			/* see whether the blkcg association has changed */
--			blkcg_css = cgroup_get_e_css(memcg_css->cgroup,
--						     &io_cgrp_subsys);
--			if (unlikely(wb->blkcg_css != blkcg_css ||
--				     !wb_tryget(wb)))
--				wb = NULL;
--			css_put(blkcg_css);
--		}
--		rcu_read_unlock();
-+		wb = wb_get_lookup(bdi, memcg_css);
- 	} while (!wb && !cgwb_create(bdi, memcg_css, gfp));
- 
- 	return wb;
--- 
-2.17.1
+The underlying problem is that today's hugetlb_cgroup accounting happens
+at hugetlb memory *fault* time, rather than at *reservation* time.
+Thus, enforcing the hugetlb_cgroup limit only happens at fault time, and
+the offending task gets SIGBUS'd.
 
+Proposed Solution:
+A new page counter named hugetlb.xMB.reservation_[limit|usage]_in_bytes. This
+counter has slightly different semantics than
+hugetlb.xMB.[limit|usage]_in_bytes:
+
+- While usage_in_bytes tracks all *faulted* hugetlb memory,
+reservation_usage_in_bytes tracks all *reserved* hugetlb memory.
+
+- If a task attempts to reserve more memory than limit_in_bytes allows,
+the kernel will allow it to do so. But if a task attempts to reserve
+more memory than reservation_limit_in_bytes, the kernel will fail this
+reservation.
+
+This proposal is implemented in this patch, with tests to verify
+functionality and show the usage.
+
+Alternatives considered:
+1. A new cgroup, instead of only a new page_counter attached to
+   the existing hugetlb_cgroup. Adding a new cgroup seemed like a lot of code
+   duplication with hugetlb_cgroup. Keeping hugetlb related page counters under
+   hugetlb_cgroup seemed cleaner as well.
+
+2. Instead of adding a new counter, we considered adding a sysctl that modifies
+   the behavior of hugetlb.xMB.[limit|usage]_in_bytes, to do accounting at
+   reservation time rather than fault time. Adding a new page_counter seems
+   better as userspace could, if it wants, choose to enforce different cgroups
+   differently: one via limit_in_bytes, and another via
+   reservation_limit_in_bytes. This could be very useful if you're
+   transitioning how hugetlb memory is partitioned on your system one
+   cgroup at a time, for example. Also, someone may find usage for both
+   limit_in_bytes and reservation_limit_in_bytes concurrently, and this
+   approach gives them the option to do so.
+
+Caveats:
+1. This support is implemented for cgroups-v1. I have not tried
+   hugetlb_cgroups with cgroups v2, and AFAICT it's not supported yet.
+   This is largely because we use cgroups-v1 for now. If required, I
+   can add hugetlb_cgroup support to cgroups v2 in this patch or
+   a follow up.
+2. Most complicated bit of this patch I believe is: where to store the
+   pointer to the hugetlb_cgroup to uncharge at unreservation time?
+   Normally the cgroup pointers hang off the struct page. But, with
+   hugetlb_cgroup reservations, one task can reserve a specific page and another
+   task may fault it in (I believe), so storing the pointer in struct
+   page is not appropriate. Proposed approach here is to store the pointer in
+   the resv_map. See patch for details.
+
+Signed-off-by: Mina Almasry <almasrymina@google.com>
+
+[1]: https://www.kernel.org/doc/html/latest/vm/hugetlbfs_reserv.html
+
+Changes in v3:
+- Addressed comments of Hillf Danton:
+  - Added docs.
+  - cgroup_files now uses enum.
+  - Various readability improvements.
+- Addressed comments of Mike Kravetz.
+  - region_* functions no longer coalesce file_region entries in the resv_map.
+  - region_add() and region_chg() refactored to make them much easier to
+    understand and remove duplicated code so this patch doesn't add too much
+    complexity.
+  - Refactored common functionality into helpers.
+
+Changes in v2:
+- Split the patch into a 5 patch series.
+- Fixed patch subject.
+
+Mina Almasry (6):
+  hugetlb_cgroup: Add hugetlb_cgroup reservation counter
+  hugetlb_cgroup: add interface for charge/uncharge hugetlb reservations
+  hugetlb_cgroup: add reservation accounting for private mappings
+  hugetlb_cgroup: add accounting for shared mappings
+  hugetlb_cgroup: Add hugetlb_cgroup reservation tests
+  hugetlb_cgroup: Add hugetlb_cgroup reservation docs
+
+ .../admin-guide/cgroup-v1/hugetlb.rst         |  84 ++-
+ include/linux/hugetlb.h                       |  24 +-
+ include/linux/hugetlb_cgroup.h                |  19 +-
+ mm/hugetlb.c                                  | 493 ++++++++++++------
+ mm/hugetlb_cgroup.c                           | 187 +++++--
+ tools/testing/selftests/vm/.gitignore         |   1 +
+ tools/testing/selftests/vm/Makefile           |   4 +
+ .../selftests/vm/charge_reserved_hugetlb.sh   | 438 ++++++++++++++++
+ .../selftests/vm/write_hugetlb_memory.sh      |  22 +
+ .../testing/selftests/vm/write_to_hugetlbfs.c | 252 +++++++++
+ 10 files changed, 1300 insertions(+), 224 deletions(-)
+ create mode 100755 tools/testing/selftests/vm/charge_reserved_hugetlb.sh
+ create mode 100644 tools/testing/selftests/vm/write_hugetlb_memory.sh
+ create mode 100644 tools/testing/selftests/vm/write_to_hugetlbfs.c
+
+--
+2.23.0.187.g17f5b7556c-goog
