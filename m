@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 4/5] writeback, memcg: Implement cgroup_writeback_by_id()
-Date: Mon, 26 Aug 2019 09:06:55 -0700
-Message-ID: <20190826160656.870307-5-tj@kernel.org>
+Subject: [PATCH 3/5] writeback: Separate out wb_get_lookup() from wb_get_create()
+Date: Mon, 26 Aug 2019 09:06:54 -0700
+Message-ID: <20190826160656.870307-4-tj@kernel.org>
 References: <20190826160656.870307-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=E6MTfC4z3G0quoIF3DBw3b87rQV2WqMBkOF2p8Csnt4=;
-        b=f7PWgdQaNS08y3O69h2TR6wz4T9l5sgzCskuEu75Rl4PPIoqtP1eKAL8MIWvGgBGtD
-         b9nHdxjt/X7Yhwz4de8X2WBOiT4ZepZsWVsoCYdmY2fMXZfNCQehm+t0G3Ku1Ww+4huv
-         PQ6z8migaaxzUVn9akM/4OyyWFicteYTGNjr2o9iivqYNfvwcZBbtk9hiqePLSyjKXxt
-         0RoWxaEApyGfC0uS3sh3e33KjgJQNMv299LqP+PaH6YtTg+QfOuubHX1AmqbNWUaATVV
-         gLgNdO4IRMKOeIBRyMaFmxRomthURawpH6qAf1+ZHXC5o5v4K5s/VBLoljkuFuy5JFa0
-         OhGA==
+        bh=sbi9AtPpKs90xX0XCzYWXMGLwoRRPZP34bqUM0NUXLs=;
+        b=gX5n0n0Iya2r+6HfxSBgduwjqnM9PRtJlmoEm5ghngBsve/UtQYFYtPDwNviTIYOMH
+         yLHoMeNJ+DWQ0bdNx4cvSVgcN681dV36+OkH/g1jKJgRguOi7VsP0NlyTZAz7cNUZOE6
+         zqnuyTGB/QvBuFExLTGnei+AosOZ6sQ0y8LkGtkVWGqoLaIqdMokGxmf43BnVYTMWOsm
+         TfgrfDI+kUfbZopDzIk1PUoIxNGEh7GWOOExZRBb6f7AdZPpR69VNoZkY4jlUDeGLJQo
+         pcOBl6W9Exf/K3YN+IZmyKLnwa/O+zqQugMqiuDEyPBkAwPlHoZuAITEWOR87u2+0DCW
+         ok0w==
 In-Reply-To: <20190826160656.870307-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,130 +23,113 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk, jack@suse.cz, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com
 Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, guro@fb.com, akpm@linux-foundation.org, Tejun Heo <tj@kernel.org>
 
-Implement cgroup_writeback_by_id() which initiates cgroup writeback
-from bdi and memcg IDs.  This will be used by memcg foreign inode
-flushing.
-
-v2: Use wb_get_lookup() instead of wb_get_create() to avoid creating
-    spurious wbs.
-
-v3: Interpret 0 @nr as 1.25 * nr_dirty to implement best-effort
-    flushing while avoding possible livelocks.
+Separate out wb_get_lookup() which doesn't try to create one if there
+isn't already one from wb_get_create().  This will be used by later
+patches.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- fs/fs-writeback.c         | 83 +++++++++++++++++++++++++++++++++++++++
- include/linux/writeback.h |  2 +
- 2 files changed, 85 insertions(+)
+ include/linux/backing-dev.h |  2 ++
+ mm/backing-dev.c            | 55 +++++++++++++++++++++++++------------
+ 2 files changed, 39 insertions(+), 18 deletions(-)
 
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 9442f1fd6460..658dc16c9e6d 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -891,6 +891,89 @@ static void bdi_split_work_to_wbs(struct backing_dev_info *bdi,
- 		wb_put(last_wb);
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index 84cdcfbc763f..97967ce06de3 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -230,6 +230,8 @@ static inline int bdi_sched_wait(void *word)
+ struct bdi_writeback_congested *
+ wb_congested_get_create(struct backing_dev_info *bdi, int blkcg_id, gfp_t gfp);
+ void wb_congested_put(struct bdi_writeback_congested *congested);
++struct bdi_writeback *wb_get_lookup(struct backing_dev_info *bdi,
++				    struct cgroup_subsys_state *memcg_css);
+ struct bdi_writeback *wb_get_create(struct backing_dev_info *bdi,
+ 				    struct cgroup_subsys_state *memcg_css,
+ 				    gfp_t gfp);
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index 612aa7c5ddbd..d9daa3e422d0 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -618,13 +618,12 @@ static int cgwb_create(struct backing_dev_info *bdi,
  }
  
-+/**
-+ * cgroup_writeback_by_id - initiate cgroup writeback from bdi and memcg IDs
-+ * @bdi_id: target bdi id
-+ * @memcg_id: target memcg css id
-+ * @nr_pages: number of pages to write, 0 for best-effort dirty flushing
-+ * @reason: reason why some writeback work initiated
-+ * @done: target wb_completion
-+ *
-+ * Initiate flush of the bdi_writeback identified by @bdi_id and @memcg_id
-+ * with the specified parameters.
-+ */
-+int cgroup_writeback_by_id(u64 bdi_id, int memcg_id, unsigned long nr,
-+			   enum wb_reason reason, struct wb_completion *done)
+ /**
+- * wb_get_create - get wb for a given memcg, create if necessary
++ * wb_get_lookup - get wb for a given memcg
+  * @bdi: target bdi
+  * @memcg_css: cgroup_subsys_state of the target memcg (must have positive ref)
+- * @gfp: allocation mask to use
+  *
+- * Try to get the wb for @memcg_css on @bdi.  If it doesn't exist, try to
+- * create one.  The returned wb has its refcount incremented.
++ * Try to get the wb for @memcg_css on @bdi.  The returned wb has its
++ * refcount incremented.
+  *
+  * This function uses css_get() on @memcg_css and thus expects its refcnt
+  * to be positive on invocation.  IOW, rcu_read_lock() protection on
+@@ -641,6 +640,39 @@ static int cgwb_create(struct backing_dev_info *bdi,
+  * each lookup.  On mismatch, the existing wb is discarded and a new one is
+  * created.
+  */
++struct bdi_writeback *wb_get_lookup(struct backing_dev_info *bdi,
++				    struct cgroup_subsys_state *memcg_css)
 +{
-+	struct backing_dev_info *bdi;
-+	struct cgroup_subsys_state *memcg_css;
 +	struct bdi_writeback *wb;
-+	struct wb_writeback_work *work;
-+	int ret;
 +
-+	/* lookup bdi and memcg */
-+	bdi = bdi_get_by_id(bdi_id);
-+	if (!bdi)
-+		return -ENOENT;
++	if (!memcg_css->parent)
++		return &bdi->wb;
 +
 +	rcu_read_lock();
-+	memcg_css = css_from_id(memcg_id, &memory_cgrp_subsys);
-+	if (memcg_css && !css_tryget(memcg_css))
-+		memcg_css = NULL;
++	wb = radix_tree_lookup(&bdi->cgwb_tree, memcg_css->id);
++	if (wb) {
++		struct cgroup_subsys_state *blkcg_css;
++
++		/* see whether the blkcg association has changed */
++		blkcg_css = cgroup_get_e_css(memcg_css->cgroup, &io_cgrp_subsys);
++		if (unlikely(wb->blkcg_css != blkcg_css || !wb_tryget(wb)))
++			wb = NULL;
++		css_put(blkcg_css);
++	}
 +	rcu_read_unlock();
-+	if (!memcg_css) {
-+		ret = -ENOENT;
-+		goto out_bdi_put;
-+	}
 +
-+	/*
-+	 * And find the associated wb.  If the wb isn't there already
-+	 * there's nothing to flush, don't create one.
-+	 */
-+	wb = wb_get_lookup(bdi, memcg_css);
-+	if (!wb) {
-+		ret = -ENOENT;
-+		goto out_css_put;
-+	}
-+
-+	/*
-+	 * If @nr is zero, the caller is attempting to write out most of
-+	 * the currently dirty pages.  Let's take the current dirty page
-+	 * count and inflate it by 25% which should be large enough to
-+	 * flush out most dirty pages while avoiding getting livelocked by
-+	 * concurrent dirtiers.
-+	 */
-+	if (!nr) {
-+		unsigned long filepages, headroom, dirty, writeback;
-+
-+		mem_cgroup_wb_stats(wb, &filepages, &headroom, &dirty,
-+				      &writeback);
-+		nr = dirty * 10 / 8;
-+	}
-+
-+	/* issue the writeback work */
-+	work = kzalloc(sizeof(*work), GFP_NOWAIT | __GFP_NOWARN);
-+	if (work) {
-+		work->nr_pages = nr;
-+		work->sync_mode = WB_SYNC_NONE;
-+		work->range_cyclic = 1;
-+		work->reason = reason;
-+		work->done = done;
-+		work->auto_free = 1;
-+		wb_queue_work(wb, work);
-+		ret = 0;
-+	} else {
-+		ret = -ENOMEM;
-+	}
-+
-+	wb_put(wb);
-+out_css_put:
-+	css_put(memcg_css);
-+out_bdi_put:
-+	bdi_put(bdi);
-+	return ret;
++	return wb;
 +}
 +
- /**
-  * cgroup_writeback_umount - flush inode wb switches for umount
-  *
-diff --git a/include/linux/writeback.h b/include/linux/writeback.h
-index 8945aac31392..a19d845dd7eb 100644
---- a/include/linux/writeback.h
-+++ b/include/linux/writeback.h
-@@ -217,6 +217,8 @@ void wbc_attach_and_unlock_inode(struct writeback_control *wbc,
- void wbc_detach_inode(struct writeback_control *wbc);
- void wbc_account_cgroup_owner(struct writeback_control *wbc, struct page *page,
- 			      size_t bytes);
-+int cgroup_writeback_by_id(u64 bdi_id, int memcg_id, unsigned long nr_pages,
-+			   enum wb_reason reason, struct wb_completion *done);
- void cgroup_writeback_umount(void);
++/**
++ * wb_get_create - get wb for a given memcg, create if necessary
++ * @bdi: target bdi
++ * @memcg_css: cgroup_subsys_state of the target memcg (must have positive ref)
++ * @gfp: allocation mask to use
++ *
++ * Try to get the wb for @memcg_css on @bdi.  If it doesn't exist, try to
++ * create one.  See wb_get_lookup() for more details.
++ */
+ struct bdi_writeback *wb_get_create(struct backing_dev_info *bdi,
+ 				    struct cgroup_subsys_state *memcg_css,
+ 				    gfp_t gfp)
+@@ -653,20 +685,7 @@ struct bdi_writeback *wb_get_create(struct backing_dev_info *bdi,
+ 		return &bdi->wb;
  
- /**
+ 	do {
+-		rcu_read_lock();
+-		wb = radix_tree_lookup(&bdi->cgwb_tree, memcg_css->id);
+-		if (wb) {
+-			struct cgroup_subsys_state *blkcg_css;
+-
+-			/* see whether the blkcg association has changed */
+-			blkcg_css = cgroup_get_e_css(memcg_css->cgroup,
+-						     &io_cgrp_subsys);
+-			if (unlikely(wb->blkcg_css != blkcg_css ||
+-				     !wb_tryget(wb)))
+-				wb = NULL;
+-			css_put(blkcg_css);
+-		}
+-		rcu_read_unlock();
++		wb = wb_get_lookup(bdi, memcg_css);
+ 	} while (!wb && !cgwb_create(bdi, memcg_css, gfp));
+ 
+ 	return wb;
 -- 
 2.17.1
 
