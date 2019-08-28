@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 04/10] block/rq_qos: add rq_qos_merge()
-Date: Wed, 28 Aug 2019 15:05:54 -0700
-Message-ID: <20190828220600.2527417-5-tj@kernel.org>
+Subject: [PATCH 01/10] blkcg: pass @q and @blkcg into blkcg_pol_alloc_pd_fn()
+Date: Wed, 28 Aug 2019 15:05:51 -0700
+Message-ID: <20190828220600.2527417-2-tj@kernel.org>
 References: <20190828220600.2527417-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=85wyZs3HMu6iXK+wZ0W8BFNcrkDk5YmJ/FXIK4MM3S8=;
-        b=cG+3/ed+q1RdEnqmWH4ftRcuxyp4xnZQof6cm/OxQXjNXAi+nZbBEnX10Jw0NfVdM/
-         O9nEbP/1s2E7IfITAwQTVpdRRflbD/FAQK83XRL36CN8o8HwKTzka1Sny7JjJYreVXbA
-         4rYCz2XdATy2L/df9Y743cFRjramsvYTkyDu5QoTrZTrpylaHzR4hB9NVfaoGSKfD+ME
-         7iVYTTPjGExBhPoYs5HYXOjn5qKYoYoM1cj95smDJWQKRv4ztSF8H2y0h3fz7iVw2QFh
-         7DJ1YBNI3TTW9LtcBctjZ7kYYWKeOwe8cWb3EhhKI82e/f3cST1zRbpMzdMyfE7I15fU
-         hJdQ==
+        bh=E79NtAzOgIUAizJwIesUtiv2mCB5ZP/4rNwX4GMcwPI=;
+        b=aYzG7U0qx200TAfF6SANRqpsqmzCpyPAG6ywyYSvuykYASu2JfqjduSvQDq0IbeRh/
+         Qygo2r9DYfVqyC/MO929R8Pz0U0y3Ijgwy856gR0/8/C/vAv0TAhwXKimEPwkppjV1C9
+         EmbbgDfwv/x0e1SAuE3/QLuzafbLQCQrvkeyfQcu9/E0v84XvW5eKCUn4JjkmM88k1m9
+         mt+jC2UUw1ckafk+3PxhG707zlguMjx+uEy6X/6bM3FVcJ/l+00fLe2GzdhiJ5Lj59sK
+         5QrpyeR4p5hzEiF+ME0aA+UwrZg/jLzVnwSJ5cQ6yMvip/dick/WiQKYI1oeahebMC36
+         Y+lg==
 In-Reply-To: <20190828220600.2527417-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,98 +23,124 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk, newella@fb.com, clm@fb.com, josef@toxicpanda.com, dennisz@fb.com, lizefan@huawei.com, hannes@cmpxchg.org
 Cc: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Add a merge hook for rq_qos.  This will be used by io.weight.
+Instead of @node, pass in @q and @blkcg so that the alloc function has
+more context.  This doesn't cause any behavior change and will be used
+by io.weight implementation.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-core.c   | 4 ++++
- block/blk-rq-qos.c | 9 +++++++++
- block/blk-rq-qos.h | 9 +++++++++
- 3 files changed, 22 insertions(+)
+ block/bfq-cgroup.c         | 5 +++--
+ block/blk-cgroup.c         | 6 +++---
+ block/blk-iolatency.c      | 6 ++++--
+ block/blk-throttle.c       | 6 ++++--
+ include/linux/blk-cgroup.h | 3 ++-
+ 5 files changed, 16 insertions(+), 10 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 77807a5d7f9e..875e8d105067 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -604,6 +604,7 @@ bool bio_attempt_back_merge(struct request *req, struct bio *bio,
- 		return false;
- 
- 	trace_block_bio_backmerge(req->q, req, bio);
-+	rq_qos_merge(req->q, req, bio);
- 
- 	if ((req->cmd_flags & REQ_FAILFAST_MASK) != ff)
- 		blk_rq_set_mixed_merge(req);
-@@ -625,6 +626,7 @@ bool bio_attempt_front_merge(struct request *req, struct bio *bio,
- 		return false;
- 
- 	trace_block_bio_frontmerge(req->q, req, bio);
-+	rq_qos_merge(req->q, req, bio);
- 
- 	if ((req->cmd_flags & REQ_FAILFAST_MASK) != ff)
- 		blk_rq_set_mixed_merge(req);
-@@ -650,6 +652,8 @@ bool bio_attempt_discard_merge(struct request_queue *q, struct request *req,
- 	    blk_rq_get_max_sectors(req, blk_rq_pos(req)))
- 		goto no_merge;
- 
-+	rq_qos_merge(q, req, bio);
-+
- 	req->biotail->bi_next = bio;
- 	req->biotail = bio;
- 	req->__data_len += bio->bi_iter.bi_size;
-diff --git a/block/blk-rq-qos.c b/block/blk-rq-qos.c
-index 3954c0dc1443..f4eea78f5cc1 100644
---- a/block/blk-rq-qos.c
-+++ b/block/blk-rq-qos.c
-@@ -83,6 +83,15 @@ void __rq_qos_track(struct rq_qos *rqos, struct request *rq, struct bio *bio)
- 	} while (rqos);
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index 0f6cd688924f..e6fb537b4bfc 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -501,11 +501,12 @@ static void bfq_cpd_free(struct blkcg_policy_data *cpd)
+ 	kfree(cpd_to_bfqgd(cpd));
  }
  
-+void __rq_qos_merge(struct rq_qos *rqos, struct request *rq, struct bio *bio)
-+{
-+	do {
-+		if (rqos->ops->merge)
-+			rqos->ops->merge(rqos, rq, bio);
-+		rqos = rqos->next;
-+	} while (rqos);
-+}
-+
- void __rq_qos_done_bio(struct rq_qos *rqos, struct bio *bio)
+-static struct blkg_policy_data *bfq_pd_alloc(gfp_t gfp, int node)
++static struct blkg_policy_data *bfq_pd_alloc(gfp_t gfp, struct request_queue *q,
++					     struct blkcg *blkcg)
  {
- 	do {
-diff --git a/block/blk-rq-qos.h b/block/blk-rq-qos.h
-index 2300e038b9fa..8e426a8505b6 100644
---- a/block/blk-rq-qos.h
-+++ b/block/blk-rq-qos.h
-@@ -35,6 +35,7 @@ struct rq_qos {
- struct rq_qos_ops {
- 	void (*throttle)(struct rq_qos *, struct bio *);
- 	void (*track)(struct rq_qos *, struct request *, struct bio *);
-+	void (*merge)(struct rq_qos *, struct request *, struct bio *);
- 	void (*issue)(struct rq_qos *, struct request *);
- 	void (*requeue)(struct rq_qos *, struct request *);
- 	void (*done)(struct rq_qos *, struct request *);
-@@ -135,6 +136,7 @@ void __rq_qos_issue(struct rq_qos *rqos, struct request *rq);
- void __rq_qos_requeue(struct rq_qos *rqos, struct request *rq);
- void __rq_qos_throttle(struct rq_qos *rqos, struct bio *bio);
- void __rq_qos_track(struct rq_qos *rqos, struct request *rq, struct bio *bio);
-+void __rq_qos_merge(struct rq_qos *rqos, struct request *rq, struct bio *bio);
- void __rq_qos_done_bio(struct rq_qos *rqos, struct bio *bio);
+ 	struct bfq_group *bfqg;
  
- static inline void rq_qos_cleanup(struct request_queue *q, struct bio *bio)
-@@ -185,6 +187,13 @@ static inline void rq_qos_track(struct request_queue *q, struct request *rq,
- 		__rq_qos_track(q->rq_qos, rq, bio);
+-	bfqg = kzalloc_node(sizeof(*bfqg), gfp, node);
++	bfqg = kzalloc_node(sizeof(*bfqg), gfp, q->node);
+ 	if (!bfqg)
+ 		return NULL;
+ 
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 55a7dc227dfb..6a82ca3fb5cf 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -175,7 +175,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
+ 			continue;
+ 
+ 		/* alloc per-policy data and attach it to blkg */
+-		pd = pol->pd_alloc_fn(gfp_mask, q->node);
++		pd = pol->pd_alloc_fn(gfp_mask, q, blkcg);
+ 		if (!pd)
+ 			goto err_free;
+ 
+@@ -1346,7 +1346,7 @@ int blkcg_activate_policy(struct request_queue *q,
+ 		blk_mq_freeze_queue(q);
+ pd_prealloc:
+ 	if (!pd_prealloc) {
+-		pd_prealloc = pol->pd_alloc_fn(GFP_KERNEL, q->node);
++		pd_prealloc = pol->pd_alloc_fn(GFP_KERNEL, q, &blkcg_root);
+ 		if (!pd_prealloc) {
+ 			ret = -ENOMEM;
+ 			goto out_bypass_end;
+@@ -1362,7 +1362,7 @@ int blkcg_activate_policy(struct request_queue *q,
+ 		if (blkg->pd[pol->plid])
+ 			continue;
+ 
+-		pd = pol->pd_alloc_fn(GFP_NOWAIT | __GFP_NOWARN, q->node);
++		pd = pol->pd_alloc_fn(GFP_NOWAIT | __GFP_NOWARN, q, &blkcg_root);
+ 		if (!pd)
+ 			swap(pd, pd_prealloc);
+ 		if (!pd) {
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index 0fff7b56df0e..46fa6449f4bb 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -934,11 +934,13 @@ static size_t iolatency_pd_stat(struct blkg_policy_data *pd, char *buf,
  }
  
-+static inline void rq_qos_merge(struct request_queue *q, struct request *rq,
-+				struct bio *bio)
-+{
-+	if (q->rq_qos)
-+		__rq_qos_merge(q->rq_qos, rq, bio);
-+}
-+
- void rq_qos_exit(struct request_queue *);
  
- #endif
+-static struct blkg_policy_data *iolatency_pd_alloc(gfp_t gfp, int node)
++static struct blkg_policy_data *iolatency_pd_alloc(gfp_t gfp,
++						   struct request_queue *q,
++						   struct blkcg *blkcg)
+ {
+ 	struct iolatency_grp *iolat;
+ 
+-	iolat = kzalloc_node(sizeof(*iolat), gfp, node);
++	iolat = kzalloc_node(sizeof(*iolat), gfp, q->node);
+ 	if (!iolat)
+ 		return NULL;
+ 	iolat->stats = __alloc_percpu_gfp(sizeof(struct latency_stat),
+diff --git a/block/blk-throttle.c b/block/blk-throttle.c
+index 8ab6c8153223..0445c998c377 100644
+--- a/block/blk-throttle.c
++++ b/block/blk-throttle.c
+@@ -478,12 +478,14 @@ static void throtl_service_queue_init(struct throtl_service_queue *sq)
+ 	timer_setup(&sq->pending_timer, throtl_pending_timer_fn, 0);
+ }
+ 
+-static struct blkg_policy_data *throtl_pd_alloc(gfp_t gfp, int node)
++static struct blkg_policy_data *throtl_pd_alloc(gfp_t gfp,
++						struct request_queue *q,
++						struct blkcg *blkcg)
+ {
+ 	struct throtl_grp *tg;
+ 	int rw;
+ 
+-	tg = kzalloc_node(sizeof(*tg), gfp, node);
++	tg = kzalloc_node(sizeof(*tg), gfp, q->node);
+ 	if (!tg)
+ 		return NULL;
+ 
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 0bb79d858a13..261248e88eb1 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -149,7 +149,8 @@ typedef struct blkcg_policy_data *(blkcg_pol_alloc_cpd_fn)(gfp_t gfp);
+ typedef void (blkcg_pol_init_cpd_fn)(struct blkcg_policy_data *cpd);
+ typedef void (blkcg_pol_free_cpd_fn)(struct blkcg_policy_data *cpd);
+ typedef void (blkcg_pol_bind_cpd_fn)(struct blkcg_policy_data *cpd);
+-typedef struct blkg_policy_data *(blkcg_pol_alloc_pd_fn)(gfp_t gfp, int node);
++typedef struct blkg_policy_data *(blkcg_pol_alloc_pd_fn)(gfp_t gfp,
++				struct request_queue *q, struct blkcg *blkcg);
+ typedef void (blkcg_pol_init_pd_fn)(struct blkg_policy_data *pd);
+ typedef void (blkcg_pol_online_pd_fn)(struct blkg_policy_data *pd);
+ typedef void (blkcg_pol_offline_pd_fn)(struct blkg_policy_data *pd);
 -- 
 2.17.1
 
