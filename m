@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 03/10] blkcg: separate blkcg_conf_get_disk() out of blkg_conf_prep()
-Date: Wed, 28 Aug 2019 15:05:53 -0700
-Message-ID: <20190828220600.2527417-4-tj@kernel.org>
+Subject: [PATCH 06/10] blkcg: s/RQ_QOS_CGROUP/RQ_QOS_LATENCY/
+Date: Wed, 28 Aug 2019 15:05:56 -0700
+Message-ID: <20190828220600.2527417-7-tj@kernel.org>
 References: <20190828220600.2527417-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=bWZcH9vXISfuapb1ykMaOfyWg7zt+sgcAj3N+lm1Zag=;
-        b=o2Et28SpDBqQxXHw6ogGlJgbvLPYCQ9MpmtRA9waNPizgA/7c8qe8GOzpK4LlrmKwY
-         4s/GVlErvN8ncdVDDlFH6DgzcAJ6HHAoO2NsFgNzUCscUj7E0a+bcMQsZKuX/I/CP15B
-         /ulO+fr/7cMn7ad6jyG3YhkxyVMH7x0b3zMLZj+55m2LUNpVZhcLkm26v83cyFcUV7eP
-         hPTuRPwioPT8mtfHtPyjcwnMCLG8jzZZD+3NJDeSuT3Zcgw0i7QWUGTsxFA69uIeQsUg
-         T5hGn7QgfqtCw1DYk352R2p3sXYSSD7IAQBCNmHSeMmtdh1gEk4NaxrEF/+pnsLJMq2x
-         Ho4w==
+        bh=KICYxWKT5dxQPbrCwvbX65RDkKc1Qm5xckGukET75uw=;
+        b=hGSObE46mrzPGCerWrDrpt0b7WXeKGm/n3XDOQo+v8RG3F68dq2ll00C64WPj7mfL5
+         GdDA5ZzVNIuL+kCHazgDanC19G4392qfBA1Xb7FZTFEfTmDn7yhciq/yEiqxFpcQHd3Z
+         gOdcU067Z0at2ye7SUTC3sAIKBD2aTnYNvweQJfQ+XWQ03CAQS67/Gw6hCeIo7AVloZJ
+         RIiOSpIPM/LmSpABoGyI+J1DL+Pozvqrcb1/uMgF+X5N+u1ODKlXCGxBvGxd9BjaTvax
+         hAmAtuiJ5U6wBH0vmOwPUAatFI6M2rDtKPluGKhGO/nopDx3ejPNk2iLSF3khWNzinZg
+         15IQ==
 In-Reply-To: <20190828220600.2527417-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,116 +23,62 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk, newella@fb.com, clm@fb.com, josef@toxicpanda.com, dennisz@fb.com, lizefan@huawei.com, hannes@cmpxchg.org
 Cc: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Separate out blkcg_conf_get_disk() so that it can be used by blkcg
-policy interface file input parsers before the policy is actually
-enabled.  This doesn't introduce any functional changes.
+io.weight is gonna be another rq_qos cgroup mechanism.  Let's rename
+RQ_QOS_CGROUP which is being used by io.latency to RQ_QOS_LATENCY in
+preparation.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-cgroup.c         | 62 ++++++++++++++++++++++++++------------
- include/linux/blk-cgroup.h |  1 +
- 2 files changed, 44 insertions(+), 19 deletions(-)
+ block/blk-iolatency.c | 2 +-
+ block/blk-rq-qos.h    | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 78ccbdcfe723..0e2619c1a422 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -753,6 +753,44 @@ static struct blkcg_gq *blkg_lookup_check(struct blkcg *blkcg,
- 	return __blkg_lookup(blkcg, q, true /* update_hint */);
- }
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index 46fa6449f4bb..c128d50cb410 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -725,7 +725,7 @@ int blk_iolatency_init(struct request_queue *q)
+ 		return -ENOMEM;
  
-+/**
-+ * blkg_conf_prep - parse and prepare for per-blkg config update
-+ * @inputp: input string pointer
-+ *
-+ * Parse the device node prefix part, MAJ:MIN, of per-blkg config update
-+ * from @input and get and return the matching gendisk.  *@inputp is
-+ * updated to point past the device node prefix.  Returns an ERR_PTR()
-+ * value on error.
-+ *
-+ * Use this function iff blkg_conf_prep() can't be used for some reason.
-+ */
-+struct gendisk *blkcg_conf_get_disk(char **inputp)
-+{
-+	char *input = *inputp;
-+	unsigned int major, minor;
-+	struct gendisk *disk;
-+	int key_len, part;
-+
-+	if (sscanf(input, "%u:%u%n", &major, &minor, &key_len) != 2)
-+		return ERR_PTR(-EINVAL);
-+
-+	input += key_len;
-+	if (!isspace(*input))
-+		return ERR_PTR(-EINVAL);
-+	input = skip_spaces(input);
-+
-+	disk = get_gendisk(MKDEV(major, minor), &part);
-+	if (!disk)
-+		return ERR_PTR(-ENODEV);
-+	if (part) {
-+		put_disk_and_module(disk);
-+		return ERR_PTR(-ENODEV);
-+	}
-+
-+	*inputp = input;
-+	return disk;
-+}
-+
- /**
-  * blkg_conf_prep - parse and prepare for per-blkg config update
-  * @blkcg: target block cgroup
-@@ -772,25 +810,11 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
- 	struct gendisk *disk;
- 	struct request_queue *q;
- 	struct blkcg_gq *blkg;
--	unsigned int major, minor;
--	int key_len, part, ret;
--	char *body;
--
--	if (sscanf(input, "%u:%u%n", &major, &minor, &key_len) != 2)
--		return -EINVAL;
--
--	body = input + key_len;
--	if (!isspace(*body))
--		return -EINVAL;
--	body = skip_spaces(body);
-+	int ret;
+ 	rqos = &blkiolat->rqos;
+-	rqos->id = RQ_QOS_CGROUP;
++	rqos->id = RQ_QOS_LATENCY;
+ 	rqos->ops = &blkcg_iolatency_ops;
+ 	rqos->q = q;
  
--	disk = get_gendisk(MKDEV(major, minor), &part);
--	if (!disk)
--		return -ENODEV;
--	if (part) {
--		ret = -ENODEV;
--		goto fail;
--	}
-+	disk = blkcg_conf_get_disk(&input);
-+	if (IS_ERR(disk))
-+		return PTR_ERR(disk);
+diff --git a/block/blk-rq-qos.h b/block/blk-rq-qos.h
+index e15b6907b76d..5f8b75826a98 100644
+--- a/block/blk-rq-qos.h
++++ b/block/blk-rq-qos.h
+@@ -14,7 +14,7 @@ struct blk_mq_debugfs_attr;
  
- 	q = disk->queue;
- 
-@@ -856,7 +880,7 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
- success:
- 	ctx->disk = disk;
- 	ctx->blkg = blkg;
--	ctx->body = body;
-+	ctx->body = input;
- 	return 0;
- 
- fail_unlock:
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 261248e88eb1..bed9e43f9426 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -234,6 +234,7 @@ struct blkg_conf_ctx {
- 	char				*body;
+ enum rq_qos_id {
+ 	RQ_QOS_WBT,
+-	RQ_QOS_CGROUP,
++	RQ_QOS_LATENCY,
  };
  
-+struct gendisk *blkcg_conf_get_disk(char **inputp);
- int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
- 		   char *input, struct blkg_conf_ctx *ctx);
- void blkg_conf_finish(struct blkg_conf_ctx *ctx);
+ struct rq_wait {
+@@ -74,7 +74,7 @@ static inline struct rq_qos *wbt_rq_qos(struct request_queue *q)
+ 
+ static inline struct rq_qos *blkcg_rq_qos(struct request_queue *q)
+ {
+-	return rq_qos_id(q, RQ_QOS_CGROUP);
++	return rq_qos_id(q, RQ_QOS_LATENCY);
+ }
+ 
+ static inline const char *rq_qos_id_to_name(enum rq_qos_id id)
+@@ -82,8 +82,8 @@ static inline const char *rq_qos_id_to_name(enum rq_qos_id id)
+ 	switch (id) {
+ 	case RQ_QOS_WBT:
+ 		return "wbt";
+-	case RQ_QOS_CGROUP:
+-		return "cgroup";
++	case RQ_QOS_LATENCY:
++		return "latency";
+ 	}
+ 	return "unknown";
+ }
 -- 
 2.17.1
 
