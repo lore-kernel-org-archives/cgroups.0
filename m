@@ -1,85 +1,116 @@
 From: Fam Zheng <zhengfeiran@bytedance.com>
-Subject: [PATCH v3 0/3] Implement BFQ per-device weight interface
-Date: Wed, 28 Aug 2019 11:54:50 +0800
-Message-ID: <20190828035453.18129-1-zhengfeiran@bytedance.com>
+Subject: [PATCH v3 2/3] bfq: Extract bfq_group_set_weight from bfq_io_set_weight_legacy
+Date: Wed, 28 Aug 2019 11:54:52 +0800
+Message-ID: <20190828035453.18129-3-zhengfeiran@bytedance.com>
+References: <20190828035453.18129-1-zhengfeiran@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Y9181Itz3jIauqOELXX6WInlwQHr+dm37ugRC+ucshM=;
-        b=TjQXccpZVKZ1sffAXO/DsPyDsK+AdFu9vdXcGvo9YuHGjpeHZlNiTOqwGfSPmYezm8
-         l9Ajufq1E8hHy8CbTnQ2anykStPYMn7aF2ga3wEwW/IN1412J6cvxPr1DCxzzre7bLtx
-         yS+d1Zh8I5PLqcOSKW5u/cce0sblzCDq2saTXTtJySLWpDmPv4on2rEXv33NS+3gHECZ
-         /SIke6FZhTib1ascyJl3ItKGFoiCXn+zjg79QsgbWTNJQuWIrANzjeE+aU6JHsMPNJ9y
-         IyyyJ8KkIDEJn10TuxcBtjTkEygENGwIvTRAXT18w5KFl4l7fKuf377AwEnhJljA6BBF
-         crrA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=Spd8tWh4JGn3fBDEW8q9V28IkZ0ZVpCm4ISnu3nMaQM=;
+        b=aQ2B4fFB6wrF6qbAgHFZWLIJBhdhVTA/hv4KAiq7MVYvRbBqWjbP6CrvRB/d4Ulqx1
+         tRKuf+FbiNADlKz00WPw49rPF4mULQpIOTB+kw/E2Y6UwD9re9KqwiCxrBa3LvPOQZxB
+         CRFelNFwgRThHt/CP9knGc0RrVtZSieKNJrnXkTRCah08mW/Q9Najk8yXZ9lyN05ivTL
+         3SXFC3gQHIkTVYriMvQtHHPhHv5EmY5AmL0qwbYs99S9wjJAi8i+NqkhVRSzcgKlLbhX
+         lhKWX4P7PqsksULwa+wWvhUYYh/yIn+RxNYVaBrtxNgLQki5OHp17zyR+AGns9sF50HT
+         auHA==
+In-Reply-To: <20190828035453.18129-1-zhengfeiran@bytedance.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel@vger.kernel.org
 Cc: axboe@kernel.dk, paolo.valente@linaro.org, fam@euphon.net, duanxiongchun@bytedance.com, cgroups@vger.kernel.org, zhangjiachen.jc@bytedance.com, tj@kernel.org, linux-block@vger.kernel.org
 
-v3: Pick up rev-by and ack-by from Paolo and Tejun.
-    Add commit message to patch 3.
+This function will be useful when we update weight from the soon-coming
+per-device interface.
 
-(Revision starting from v2 since v1 was used off-list)
+Signed-off-by: Fam Zheng <zhengfeiran@bytedance.com>
+Reviewed-by: Paolo Valente <paolo.valente@linaro.org>
+---
+ block/bfq-cgroup.c | 60 ++++++++++++++++++++++++----------------------
+ 1 file changed, 32 insertions(+), 28 deletions(-)
 
-Hi Paolo and others,
-
-This adds to BFQ the missing per-device weight interfaces:
-blkio.bfq.weight_device on legacy and io.bfq.weight on unified. The
-implementation pretty closely resembles what we had in CFQ and the parsing code
-is basically reused.
-
-Tests
-=====
-
-Using two cgroups and three block devices, having weights setup as:
-
-Cgroup          test1           test2
-============================================
-default         100             500
-sda             500             100
-sdb             default         default
-sdc             200             200
-
-cgroup v1 runs
---------------
-
-    sda.test1.out:   READ: bw=913MiB/s
-    sda.test2.out:   READ: bw=183MiB/s
-
-    sdb.test1.out:   READ: bw=213MiB/s
-    sdb.test2.out:   READ: bw=1054MiB/s
-
-    sdc.test1.out:   READ: bw=650MiB/s
-    sdc.test2.out:   READ: bw=650MiB/s
-
-cgroup v2 runs
---------------
-
-    sda.test1.out:   READ: bw=915MiB/s
-    sda.test2.out:   READ: bw=184MiB/s
-
-    sdb.test1.out:   READ: bw=216MiB/s
-    sdb.test2.out:   READ: bw=1069MiB/s
-
-    sdc.test1.out:   READ: bw=621MiB/s
-    sdc.test2.out:   READ: bw=622MiB/s
-
-Fam Zheng (3):
-  bfq: Fix the missing barrier in __bfq_entity_update_weight_prio
-  bfq: Extract bfq_group_set_weight from bfq_io_set_weight_legacy
-  bfq: Add per-device weight
-
- block/bfq-cgroup.c  | 151 +++++++++++++++++++++++++++++++++-----------
- block/bfq-iosched.h |   3 +
- block/bfq-wf2q.c    |   2 +
- 3 files changed, 119 insertions(+), 37 deletions(-)
-
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index 0f6cd688924f..28e5a9241237 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -918,6 +918,36 @@ static int bfq_io_show_weight(struct seq_file *sf, void *v)
+ 	return 0;
+ }
+ 
++static void bfq_group_set_weight(struct bfq_group *bfqg, u64 weight)
++{
++	/*
++	 * Setting the prio_changed flag of the entity
++	 * to 1 with new_weight == weight would re-set
++	 * the value of the weight to its ioprio mapping.
++	 * Set the flag only if necessary.
++	 */
++	if ((unsigned short)weight != bfqg->entity.new_weight) {
++		bfqg->entity.new_weight = (unsigned short)weight;
++		/*
++		 * Make sure that the above new value has been
++		 * stored in bfqg->entity.new_weight before
++		 * setting the prio_changed flag. In fact,
++		 * this flag may be read asynchronously (in
++		 * critical sections protected by a different
++		 * lock than that held here), and finding this
++		 * flag set may cause the execution of the code
++		 * for updating parameters whose value may
++		 * depend also on bfqg->entity.new_weight (in
++		 * __bfq_entity_update_weight_prio).
++		 * This barrier makes sure that the new value
++		 * of bfqg->entity.new_weight is correctly
++		 * seen in that code.
++		 */
++		smp_wmb();
++		bfqg->entity.prio_changed = 1;
++	}
++}
++
+ static int bfq_io_set_weight_legacy(struct cgroup_subsys_state *css,
+ 				    struct cftype *cftype,
+ 				    u64 val)
+@@ -936,34 +966,8 @@ static int bfq_io_set_weight_legacy(struct cgroup_subsys_state *css,
+ 	hlist_for_each_entry(blkg, &blkcg->blkg_list, blkcg_node) {
+ 		struct bfq_group *bfqg = blkg_to_bfqg(blkg);
+ 
+-		if (!bfqg)
+-			continue;
+-		/*
+-		 * Setting the prio_changed flag of the entity
+-		 * to 1 with new_weight == weight would re-set
+-		 * the value of the weight to its ioprio mapping.
+-		 * Set the flag only if necessary.
+-		 */
+-		if ((unsigned short)val != bfqg->entity.new_weight) {
+-			bfqg->entity.new_weight = (unsigned short)val;
+-			/*
+-			 * Make sure that the above new value has been
+-			 * stored in bfqg->entity.new_weight before
+-			 * setting the prio_changed flag. In fact,
+-			 * this flag may be read asynchronously (in
+-			 * critical sections protected by a different
+-			 * lock than that held here), and finding this
+-			 * flag set may cause the execution of the code
+-			 * for updating parameters whose value may
+-			 * depend also on bfqg->entity.new_weight (in
+-			 * __bfq_entity_update_weight_prio).
+-			 * This barrier makes sure that the new value
+-			 * of bfqg->entity.new_weight is correctly
+-			 * seen in that code.
+-			 */
+-			smp_wmb();
+-			bfqg->entity.prio_changed = 1;
+-		}
++		if (bfqg)
++			bfq_group_set_weight(bfqg, val);
+ 	}
+ 	spin_unlock_irq(&blkcg->lock);
+ 
 -- 
 2.22.1
 
