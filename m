@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 07/10] blk-mq: add optional request->alloc_time_ns
-Date: Wed, 28 Aug 2019 15:05:57 -0700
-Message-ID: <20190828220600.2527417-8-tj@kernel.org>
+Subject: [PATCH 10/10] blkcg: add tools/cgroup/iocost_coef_gen.py
+Date: Wed, 28 Aug 2019 15:06:00 -0700
+Message-ID: <20190828220600.2527417-11-tj@kernel.org>
 References: <20190828220600.2527417-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=hJvU7rmwIge55OnvUhbefmrBEQ8Ym4OUDfM2nXYs6sA=;
-        b=SUgVVk64RTHaoNIAgijUQpv5HFB6s5wym3N8KbvF1Kc7aCU6csB6QYObFfyzY8vUbh
-         ztdsAAzEtjIkTyPPRC+AbKzmE+Nj2jr+KTv0+dcdEZaUYlwfYB2psX7HCXapsFsT8+xO
-         yRvCZHXiYqCghYOsRiWYTdo272wq51qBwE1O/jYvO/2yIq9VCLaXQ/0BYIURYI5QZAup
-         5uYMv2EtMN8INwx9dZNqqMCeYILSznb+vCd3ejsyK/aTforkB7PbaBlQLYLLD+46p6nA
-         akh+AIfRpdVylk+QNtbhTvYkAnZ2eWZxN9ECBdY4tWEQeGu6CwFgXSnh8madvm70Nhix
-         NdVQ==
+        bh=6kVIFEhxFXj2VwKuP8wNFEI6LlDjARsvOHaqSOLV2+M=;
+        b=VBmUEzWmOjIiq6Fy+mPjDu6xFByq2AEJi/Mek/smOE6AgZA8Cav9ZMfa3PXNxZe+P9
+         og4HGaLKIcpIJ6rXYXjd/5u+DiyTTNzWSve3YjXGv9pVi6vEIIiThEsa/AkoTb/q+qMv
+         G77M7InKfNzylFDnomt+lFaPO0wgoCfKIMw2gi+LEmflI5fjG+sCBleA0NbUWun6+3hQ
+         t4HcKj94n8Zkqy3kjOMLjEM+v/e/cgawWnbeaiMOShyrym98/uIf4P8XijlUdgiAEgRK
+         OSif/b3Up3cBPNF4KWVxufbMWlTmCF4ppADA2VgC9QJWSpRmeS7IlUBrpu38QdYhOXQ2
+         opdw==
 In-Reply-To: <20190828220600.2527417-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,129 +23,229 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk, newella@fb.com, clm@fb.com, josef@toxicpanda.com, dennisz@fb.com, lizefan@huawei.com, hannes@cmpxchg.org
 Cc: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-There are currently two start time timestamps - start_time_ns and
-io_start_time_ns.  The former marks the request allocation and and the
-second issue-to-device time.  The planned io.weight controller needs
-to measure the total time bios take to execute after it leaves rq_qos
-including the time spent waiting for request to become available,
-which can easily dominate on saturated devices.
-
-This patch adds request->alloc_time_ns which records when the request
-allocation attempt started.  As it isn't used for the usual stats,
-make it optional behind CONFIG_BLK_RQ_ALLOC_TIME and
-QUEUE_FLAG_RQ_ALLOC_TIME so that it can be compiled out when there are
-no users and it's active only on queues which need it even when
-compiled in.
-
-v2: s/pre_start_time/alloc_time/ and add CONFIG_BLK_RQ_ALLOC_TIME
-    gating as suggested by Jens.
+Add a script which can be used to generate device-specific iocost
+linear model coefficients.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/Kconfig          |  3 +++
- block/blk-mq.c         | 13 +++++++++++--
- include/linux/blkdev.h | 13 ++++++++++++-
- 3 files changed, 26 insertions(+), 3 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst |   3 +
+ block/blk-iocost.c                      |   3 +
+ tools/cgroup/iocost_coef_gen.py         | 178 ++++++++++++++++++++++++
+ 3 files changed, 184 insertions(+)
+ create mode 100644 tools/cgroup/iocost_coef_gen.py
 
-diff --git a/block/Kconfig b/block/Kconfig
-index 8b5f8e560eb4..1b62ad6d0e12 100644
---- a/block/Kconfig
-+++ b/block/Kconfig
-@@ -26,6 +26,9 @@ menuconfig BLOCK
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 1521c7e554f5..3deacdc5e6d2 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1529,6 +1529,9 @@ IO Interface Files
+ 	The IO cost model isn't expected to be accurate in absolute
+ 	sense and is scaled to the device behavior dynamically.
  
- if BLOCK
- 
-+config BLK_RQ_ALLOC_TIME
-+	bool
++	If needed, tools/cgroup/iocost_coef_gen.py can be used to
++	generate device-specific coefficients.
 +
- config BLK_SCSI_REQUEST
- 	bool
- 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index f6620a30752e..b622029b19ea 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -291,7 +291,7 @@ static inline bool blk_mq_need_time_stamp(struct request *rq)
- }
- 
- static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
--		unsigned int tag, unsigned int op)
-+		unsigned int tag, unsigned int op, u64 alloc_time_ns)
- {
- 	struct blk_mq_tags *tags = blk_mq_tags_from_data(data);
- 	struct request *rq = tags->static_rqs[tag];
-@@ -325,6 +325,9 @@ static struct request *blk_mq_rq_ctx_init(struct blk_mq_alloc_data *data,
- 	RB_CLEAR_NODE(&rq->rb_node);
- 	rq->rq_disk = NULL;
- 	rq->part = NULL;
-+#ifdef CONFIG_BLK_RQ_ALLOC_TIME
-+	rq->alloc_time_ns = alloc_time_ns;
-+#endif
- 	if (blk_mq_need_time_stamp(rq))
- 		rq->start_time_ns = ktime_get_ns();
- 	else
-@@ -356,8 +359,14 @@ static struct request *blk_mq_get_request(struct request_queue *q,
- 	struct request *rq;
- 	unsigned int tag;
- 	bool clear_ctx_on_error = false;
-+	u64 alloc_time_ns = 0;
- 
- 	blk_queue_enter_live(q);
+   io.weight
+ 	A read-write flat-keyed file which exists on non-root cgroups.
+ 	The default is "default 100".
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index 3208d2fdc55e..f04a4ed1cb45 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -46,6 +46,9 @@
+  * If needed, tools/cgroup/iocost_coef_gen.py can be used to generate
+  * device-specific coefficients.
+  *
++ * If needed, tools/cgroup/iocost_coef_gen.py can be used to generate
++ * device-specific coefficients.
++ *
+  * 2. Control Strategy
+  *
+  * The device virtual time (vtime) is used as the primary control metric.
+diff --git a/tools/cgroup/iocost_coef_gen.py b/tools/cgroup/iocost_coef_gen.py
+new file mode 100644
+index 000000000000..df17a2ae80e5
+--- /dev/null
++++ b/tools/cgroup/iocost_coef_gen.py
+@@ -0,0 +1,178 @@
++#!/usr/bin/env python3
++#
++# Copyright (C) 2019 Tejun Heo <tj@kernel.org>
++# Copyright (C) 2019 Andy Newell <newella@fb.com>
++# Copyright (C) 2019 Facebook
 +
-+	/* alloc_time includes depth and tag waits */
-+	if (blk_queue_rq_alloc_time(q))
-+		alloc_time_ns = ktime_get_ns();
++desc = """
++Generate linear IO cost model coefficients used by the blk-iocost
++controller.  If the target raw testdev is specified, destructive tests
++are performed against the whole device; otherwise, on
++./iocost-coef-fio.testfile.  The result can be written directly to
++/sys/fs/cgroup/io.cost.model.
 +
- 	data->q = q;
- 	if (likely(!data->ctx)) {
- 		data->ctx = blk_mq_get_ctx(q);
-@@ -393,7 +402,7 @@ static struct request *blk_mq_get_request(struct request_queue *q,
- 		return NULL;
- 	}
- 
--	rq = blk_mq_rq_ctx_init(data, tag, data->cmd_flags);
-+	rq = blk_mq_rq_ctx_init(data, tag, data->cmd_flags, alloc_time_ns);
- 	if (!op_is_flush(data->cmd_flags)) {
- 		rq->elv.icq = NULL;
- 		if (e && e->type->ops.prepare_request) {
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 1ac790178787..d0ad21e4771b 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -194,7 +194,11 @@ struct request {
- 
- 	struct gendisk *rq_disk;
- 	struct hd_struct *part;
--	/* Time that I/O was submitted to the kernel. */
-+#ifdef CONFIG_BLK_RQ_ALLOC_TIME
-+	/* Time that the first bio started allocating this request. */
-+	u64 alloc_time_ns;
-+#endif
-+	/* Time that this request was allocated for this IO. */
- 	u64 start_time_ns;
- 	/* Time that I/O was submitted to the device. */
- 	u64 io_start_time_ns;
-@@ -609,6 +613,7 @@ struct request_queue {
- #define QUEUE_FLAG_QUIESCED	24	/* queue has been quiesced */
- #define QUEUE_FLAG_PCI_P2PDMA	25	/* device supports PCI p2p requests */
- #define QUEUE_FLAG_ZONE_RESETALL 26	/* supports Zone Reset All */
-+#define QUEUE_FLAG_RQ_ALLOC_TIME 27	/* record rq->alloc_time_ns */
- 
- #define QUEUE_FLAG_MQ_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
- 				 (1 << QUEUE_FLAG_SAME_COMP))
-@@ -637,6 +642,12 @@ bool blk_queue_flag_test_and_set(unsigned int flag, struct request_queue *q);
- 	test_bit(QUEUE_FLAG_SCSI_PASSTHROUGH, &(q)->queue_flags)
- #define blk_queue_pci_p2pdma(q)	\
- 	test_bit(QUEUE_FLAG_PCI_P2PDMA, &(q)->queue_flags)
-+#ifdef CONFIG_BLK_RQ_ALLOC_TIME
-+#define blk_queue_rq_alloc_time(q)	\
-+	test_bit(QUEUE_FLAG_RQ_ALLOC_TIME, &(q)->queue_flags)
-+#else
-+#define blk_queue_rq_alloc_time(q)	false
-+#endif
- 
- #define blk_noretry_request(rq) \
- 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
++On high performance devices, --numjobs > 1 is needed to achieve
++saturation.
++
++See Documentation/admin-guide/cgroup-v2.rst and block/blk-iocost.c
++for more details.
++"""
++
++import argparse
++import re
++import json
++import glob
++import os
++import sys
++import atexit
++import shutil
++import tempfile
++import subprocess
++
++parser = argparse.ArgumentParser(description=desc,
++                                 formatter_class=argparse.RawTextHelpFormatter)
++parser.add_argument('--testdev', metavar='DEV',
++                    help='Raw block device to use for testing, ignores --testfile-size')
++parser.add_argument('--testfile-size-gb', type=float, metavar='GIGABYTES', default=16,
++                    help='Testfile size in gigabytes (default: %(default)s)')
++parser.add_argument('--duration', type=int, metavar='SECONDS', default=120,
++                    help='Individual test run duration in seconds (default: %(default)s)')
++parser.add_argument('--seqio-block-mb', metavar='MEGABYTES', type=int, default=128,
++                    help='Sequential test block size in megabytes (default: %(default)s)')
++parser.add_argument('--seq-depth', type=int, metavar='DEPTH', default=64,
++                    help='Sequential test queue depth (default: %(default)s)')
++parser.add_argument('--rand-depth', type=int, metavar='DEPTH', default=64,
++                    help='Random test queue depth (default: %(default)s)')
++parser.add_argument('--numjobs', type=int, metavar='JOBS', default=1,
++                    help='Number of parallel fio jobs to run (default: %(default)s)')
++parser.add_argument('--quiet', action='store_true')
++parser.add_argument('--verbose', action='store_true')
++
++def info(msg):
++    if not args.quiet:
++        print(msg)
++
++def dbg(msg):
++    if args.verbose and not args.quiet:
++        print(msg)
++
++# determine ('DEVNAME', 'MAJ:MIN') for @path
++def dir_to_dev(path):
++    # find the block device the current directory is on
++    devname = subprocess.run(f'findmnt -nvo SOURCE -T{path}',
++                             stdout=subprocess.PIPE, shell=True).stdout
++    devname = os.path.basename(devname).decode('utf-8').strip()
++
++    # partition -> whole device
++    parents = glob.glob('/sys/block/*/' + devname)
++    if len(parents):
++        devname = os.path.basename(os.path.dirname(parents[0]))
++    rdev = os.stat(f'/dev/{devname}').st_rdev
++    return (devname, f'{os.major(rdev)}:{os.minor(rdev)}')
++
++def create_testfile(path, size):
++    global args
++
++    if os.path.isfile(path) and os.stat(path).st_size == size:
++        return
++
++    info(f'Creating testfile {path}')
++    subprocess.check_call(f'rm -f {path}', shell=True)
++    subprocess.check_call(f'touch {path}', shell=True)
++    subprocess.call(f'chattr +C {path}', shell=True)
++    subprocess.check_call(
++        f'pv -s {size} -pr /dev/urandom {"-q" if args.quiet else ""} | '
++        f'dd of={path} count={size} '
++        f'iflag=count_bytes,fullblock oflag=direct bs=16M status=none',
++        shell=True)
++
++def run_fio(testfile, duration, iotype, iodepth, blocksize, jobs):
++    global args
++
++    eta = 'never' if args.quiet else 'always'
++    outfile = tempfile.NamedTemporaryFile()
++    cmd = (f'fio --direct=1 --ioengine=libaio --name=coef '
++           f'--filename={testfile} --runtime={round(duration)} '
++           f'--readwrite={iotype} --iodepth={iodepth} --blocksize={blocksize} '
++           f'--eta={eta} --output-format json --output={outfile.name} '
++           f'--time_based --numjobs={jobs}')
++    if args.verbose:
++        dbg(f'Running {cmd}')
++    subprocess.check_call(cmd, shell=True)
++    with open(outfile.name, 'r') as f:
++        d = json.loads(f.read())
++    return sum(j['read']['bw_bytes'] + j['write']['bw_bytes'] for j in d['jobs'])
++
++def restore_elevator_nomerges():
++    global elevator_path, nomerges_path, elevator, nomerges
++
++    info(f'Restoring elevator to {elevator} and nomerges to {nomerges}')
++    with open(elevator_path, 'w') as f:
++        f.write(elevator)
++    with open(nomerges_path, 'w') as f:
++        f.write(nomerges)
++
++
++args = parser.parse_args()
++
++missing = False
++for cmd in [ 'findmnt', 'pv', 'dd', 'fio' ]:
++    if not shutil.which(cmd):
++        print(f'Required command "{cmd}" is missing', file=sys.stderr)
++        missing = True
++if missing:
++    sys.exit(1)
++
++if args.testdev:
++    devname = os.path.basename(args.testdev)
++    rdev = os.stat(f'/dev/{devname}').st_rdev
++    devno = f'{os.major(rdev)}:{os.minor(rdev)}'
++    testfile = f'/dev/{devname}'
++    info(f'Test target: {devname}({devno})')
++else:
++    devname, devno = dir_to_dev('.')
++    testfile = 'iocost-coef-fio.testfile'
++    testfile_size = int(args.testfile_size_gb * 2 ** 30)
++    create_testfile(testfile, testfile_size)
++    info(f'Test target: {testfile} on {devname}({devno})')
++
++elevator_path = f'/sys/block/{devname}/queue/scheduler'
++nomerges_path = f'/sys/block/{devname}/queue/nomerges'
++
++with open(elevator_path, 'r') as f:
++    elevator = re.sub(r'.*\[(.*)\].*', r'\1', f.read().strip())
++with open(nomerges_path, 'r') as f:
++    nomerges = f.read().strip()
++
++info(f'Temporarily disabling elevator and merges')
++atexit.register(restore_elevator_nomerges)
++with open(elevator_path, 'w') as f:
++    f.write('none')
++with open(nomerges_path, 'w') as f:
++    f.write('1')
++
++info('Determining rbps...')
++rbps = run_fio(testfile, args.duration, 'read',
++               1, args.seqio_block_mb * (2 ** 20), args.numjobs)
++info(f'\nrbps={rbps}, determining rseqiops...')
++rseqiops = round(run_fio(testfile, args.duration, 'read',
++                         args.seq_depth, 4096, args.numjobs) / 4096)
++info(f'\nrseqiops={rseqiops}, determining rrandiops...')
++rrandiops = round(run_fio(testfile, args.duration, 'randread',
++                          args.rand_depth, 4096, args.numjobs) / 4096)
++info(f'\nrrandiops={rrandiops}, determining wbps...')
++wbps = run_fio(testfile, args.duration, 'write',
++               1, args.seqio_block_mb * (2 ** 20), args.numjobs)
++info(f'\nwbps={wbps}, determining wseqiops...')
++wseqiops = round(run_fio(testfile, args.duration, 'write',
++                         args.seq_depth, 4096, args.numjobs) / 4096)
++info(f'\nwseqiops={wseqiops}, determining wrandiops...')
++wrandiops = round(run_fio(testfile, args.duration, 'randwrite',
++                          args.rand_depth, 4096, args.numjobs) / 4096)
++info(f'\nwrandiops={wrandiops}')
++restore_elevator_nomerges()
++atexit.unregister(restore_elevator_nomerges)
++info('')
++
++print(f'{devno} rbps={rbps} rseqiops={rseqiops} rrandiops={rrandiops} '
++      f'wbps={wbps} wseqiops={wseqiops} wrandiops={wrandiops}')
 -- 
 2.17.1
 
