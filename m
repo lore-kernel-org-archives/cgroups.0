@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 02/10] blkcg: make ->cpd_init_fn() optional
-Date: Wed, 28 Aug 2019 15:05:52 -0700
-Message-ID: <20190828220600.2527417-3-tj@kernel.org>
+Subject: [PATCH 03/10] blkcg: separate blkcg_conf_get_disk() out of blkg_conf_prep()
+Date: Wed, 28 Aug 2019 15:05:53 -0700
+Message-ID: <20190828220600.2527417-4-tj@kernel.org>
 References: <20190828220600.2527417-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=77lPCJVMbm2iaN6uswmaTozVPtpjzTspO9i1Ih4UGx0=;
-        b=lkuKDlvcQJNAPDyWqh7z64PzAcgiPoVACIt2kCEHwITSzvm4646qx3UMoaXftENKBP
-         qLyFOZlWg14FxVymoH+uPbQl5Gnj4yAngGhap+ZB4Fye+TKJ5t9O9oP3sOU0ECzPLIOu
-         wxBCfu1/n/dbUAViCv+xm4hkJguZeixMibUkeKzeq++SwfncBv9StsMNCnbev2XjWe8s
-         s+aivSvYkDNyXnvuS80dFmkhr36IlGtUhus4hZmcE4BNJGEROllypy8x7eOngTefjfPV
-         NtY5z2iL8XeBKR+WnmNvi5CAGSiOehrdsB49BDNYDXU7nwVWydGk6Zc/AFGP+5IcHCPw
-         q23A==
+        bh=bWZcH9vXISfuapb1ykMaOfyWg7zt+sgcAj3N+lm1Zag=;
+        b=o2Et28SpDBqQxXHw6ogGlJgbvLPYCQ9MpmtRA9waNPizgA/7c8qe8GOzpK4LlrmKwY
+         4s/GVlErvN8ncdVDDlFH6DgzcAJ6HHAoO2NsFgNzUCscUj7E0a+bcMQsZKuX/I/CP15B
+         /ulO+fr/7cMn7ad6jyG3YhkxyVMH7x0b3zMLZj+55m2LUNpVZhcLkm26v83cyFcUV7eP
+         hPTuRPwioPT8mtfHtPyjcwnMCLG8jzZZD+3NJDeSuT3Zcgw0i7QWUGTsxFA69uIeQsUg
+         T5hGn7QgfqtCw1DYk352R2p3sXYSSD7IAQBCNmHSeMmtdh1gEk4NaxrEF/+pnsLJMq2x
+         Ho4w==
 In-Reply-To: <20190828220600.2527417-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,28 +23,116 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk, newella@fb.com, clm@fb.com, josef@toxicpanda.com, dennisz@fb.com, lizefan@huawei.com, hannes@cmpxchg.org
 Cc: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-For policies which can do enough initialization from ->cpd_alloc_fn(),
-make ->cpd_init_fn() optional.
+Separate out blkcg_conf_get_disk() so that it can be used by blkcg
+policy interface file input parsers before the policy is actually
+enabled.  This doesn't introduce any functional changes.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-cgroup.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ block/blk-cgroup.c         | 62 ++++++++++++++++++++++++++------------
+ include/linux/blk-cgroup.h |  1 +
+ 2 files changed, 44 insertions(+), 19 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 6a82ca3fb5cf..78ccbdcfe723 100644
+index 78ccbdcfe723..0e2619c1a422 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -1475,7 +1475,8 @@ int blkcg_policy_register(struct blkcg_policy *pol)
- 			blkcg->cpd[pol->plid] = cpd;
- 			cpd->blkcg = blkcg;
- 			cpd->plid = pol->plid;
--			pol->cpd_init_fn(cpd);
-+			if (pol->cpd_init_fn)
-+				pol->cpd_init_fn(cpd);
- 		}
- 	}
+@@ -753,6 +753,44 @@ static struct blkcg_gq *blkg_lookup_check(struct blkcg *blkcg,
+ 	return __blkg_lookup(blkcg, q, true /* update_hint */);
+ }
  
++/**
++ * blkg_conf_prep - parse and prepare for per-blkg config update
++ * @inputp: input string pointer
++ *
++ * Parse the device node prefix part, MAJ:MIN, of per-blkg config update
++ * from @input and get and return the matching gendisk.  *@inputp is
++ * updated to point past the device node prefix.  Returns an ERR_PTR()
++ * value on error.
++ *
++ * Use this function iff blkg_conf_prep() can't be used for some reason.
++ */
++struct gendisk *blkcg_conf_get_disk(char **inputp)
++{
++	char *input = *inputp;
++	unsigned int major, minor;
++	struct gendisk *disk;
++	int key_len, part;
++
++	if (sscanf(input, "%u:%u%n", &major, &minor, &key_len) != 2)
++		return ERR_PTR(-EINVAL);
++
++	input += key_len;
++	if (!isspace(*input))
++		return ERR_PTR(-EINVAL);
++	input = skip_spaces(input);
++
++	disk = get_gendisk(MKDEV(major, minor), &part);
++	if (!disk)
++		return ERR_PTR(-ENODEV);
++	if (part) {
++		put_disk_and_module(disk);
++		return ERR_PTR(-ENODEV);
++	}
++
++	*inputp = input;
++	return disk;
++}
++
+ /**
+  * blkg_conf_prep - parse and prepare for per-blkg config update
+  * @blkcg: target block cgroup
+@@ -772,25 +810,11 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ 	struct gendisk *disk;
+ 	struct request_queue *q;
+ 	struct blkcg_gq *blkg;
+-	unsigned int major, minor;
+-	int key_len, part, ret;
+-	char *body;
+-
+-	if (sscanf(input, "%u:%u%n", &major, &minor, &key_len) != 2)
+-		return -EINVAL;
+-
+-	body = input + key_len;
+-	if (!isspace(*body))
+-		return -EINVAL;
+-	body = skip_spaces(body);
++	int ret;
+ 
+-	disk = get_gendisk(MKDEV(major, minor), &part);
+-	if (!disk)
+-		return -ENODEV;
+-	if (part) {
+-		ret = -ENODEV;
+-		goto fail;
+-	}
++	disk = blkcg_conf_get_disk(&input);
++	if (IS_ERR(disk))
++		return PTR_ERR(disk);
+ 
+ 	q = disk->queue;
+ 
+@@ -856,7 +880,7 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ success:
+ 	ctx->disk = disk;
+ 	ctx->blkg = blkg;
+-	ctx->body = body;
++	ctx->body = input;
+ 	return 0;
+ 
+ fail_unlock:
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 261248e88eb1..bed9e43f9426 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -234,6 +234,7 @@ struct blkg_conf_ctx {
+ 	char				*body;
+ };
+ 
++struct gendisk *blkcg_conf_get_disk(char **inputp);
+ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+ 		   char *input, struct blkg_conf_ctx *ctx);
+ void blkg_conf_finish(struct blkg_conf_ctx *ctx);
 -- 
 2.17.1
 
