@@ -1,16 +1,15 @@
-From: "Koenig, Christian" <Christian.Koenig@amd.com>
-Subject: Re: [PATCH RFC v4 13/16] drm, cgroup: Allow more aggressive memory
- reclaim
-Date: Thu, 29 Aug 2019 07:08:18 +0000
-Message-ID: <464ad318-48dd-3f78-d82b-83a8e7175ff9@amd.com>
+From: Kenny Ho <y2kenny@gmail.com>
+Subject: Re: [PATCH RFC v4 13/16] drm,
+ cgroup: Allow more aggressive memory reclaim
+Date: Thu, 29 Aug 2019 10:07:47 -0400
+Message-ID: <CAOWid-dzJiqjH9+=36fFYh87OKOzToMDcJZpepOWdjoXpBSF8A@mail.gmail.com>
 References: <20190829060533.32315-1-Kenny.Ho@amd.com>
  <20190829060533.32315-14-Kenny.Ho@amd.com>
+ <464ad318-48dd-3f78-d82b-83a8e7175ff9@amd.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============1985058733=="
 Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20190829060533.32315-14-Kenny.Ho@amd.com>
-Content-Language: en-US
-Content-ID: <492B6C2A21B49B4A8CB6451CCD4330D8@namprd12.prod.outlook.com>
+In-Reply-To: <464ad318-48dd-3f78-d82b-83a8e7175ff9@amd.com>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
  <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
@@ -21,132 +20,567 @@ List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
  <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
 Errors-To: dri-devel-bounces@lists.freedesktop.org
 Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="us-ascii"
-To: "Ho, Kenny" <Kenny.Ho@amd.com>, "y2kenny@gmail.com" <y2kenny@gmail.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>, "tj@kernel.org" <tj@kernel.org>, "Deucher, Alexander" <Alexander.Deucher@amd.com>, "Kuehling, Felix" <Felix.Kuehling@amd.com>, "Greathouse, Joseph" <Joseph.Greathouse@amd.com>, "jsparks@cray.com" <jsparks@cray.com>, "lkaplan@cray.com" <lkaplan@cray.com>, "daniel@ffwll.ch" <daniel@ffwll.ch>
+To: "Koenig, Christian" <Christian.Koenig@amd.com>
+Cc: "Ho, Kenny" <Kenny.Ho@amd.com>, "Kuehling, Felix" <Felix.Kuehling@amd.com>, "jsparks@cray.com" <jsparks@cray.com>, "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>, "lkaplan@cray.com" <lkaplan@cray.com>, "Deucher,
+ Alexander" <Alexander.Deucher@amd.com>, "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, "Greathouse, Joseph" <Joseph.Greathouse@amd.com>, "tj@kernel.org" <tj@kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
 
-QW0gMjkuMDguMTkgdW0gMDg6MDUgc2NocmllYiBLZW5ueSBIbzoNCj4gQWxsb3cgRFJNIFRUTSBt
-ZW1vcnkgbWFuYWdlciB0byByZWdpc3RlciBhIHdvcmtfc3RydWN0LCBzdWNoIHRoYXQsIHdoZW4N
-Cj4gYSBkcm1jZ3JwIGlzIHVuZGVyIG1lbW9yeSBwcmVzc3VyZSwgbWVtb3J5IHJlY2xhaW1pbmcg
-Y2FuIGJlIHRyaWdnZXJlZA0KPiBpbW1lZGlhdGVseS4NCj4NCj4gQ2hhbmdlLUlkOiBJMjVhYzA0
-ZTJkYjljMTlmZjEyNjUyYjg4ZWJmZjE4YjQ0YjI3MDZkOA0KPiBTaWduZWQtb2ZmLWJ5OiBLZW5u
-eSBIbyA8S2VubnkuSG9AYW1kLmNvbT4NCj4gLS0tDQo+ICAgZHJpdmVycy9ncHUvZHJtL3R0bS90
-dG1fYm8uYyAgICB8IDQ5ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKw0KPiAgIGlu
-Y2x1ZGUvZHJtL2RybV9jZ3JvdXAuaCAgICAgICAgfCAxNiArKysrKysrKysrKw0KPiAgIGluY2x1
-ZGUvZHJtL3R0bS90dG1fYm9fZHJpdmVyLmggfCAgMiArKw0KPiAgIGtlcm5lbC9jZ3JvdXAvZHJt
-LmMgICAgICAgICAgICAgfCAzMCArKysrKysrKysrKysrKysrKysrKw0KPiAgIDQgZmlsZXMgY2hh
-bmdlZCwgOTcgaW5zZXJ0aW9ucygrKQ0KPg0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9ncHUvZHJt
-L3R0bS90dG1fYm8uYyBiL2RyaXZlcnMvZ3B1L2RybS90dG0vdHRtX2JvLmMNCj4gaW5kZXggZDdl
-M2QzMTI4ZWJiLi43MmVmYWU2OTRiN2UgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvZ3B1L2RybS90
-dG0vdHRtX2JvLmMNCj4gKysrIGIvZHJpdmVycy9ncHUvZHJtL3R0bS90dG1fYm8uYw0KPiBAQCAt
-MTU5MCw2ICsxNTkwLDQ2IEBAIGludCB0dG1fYm9fZXZpY3RfbW0oc3RydWN0IHR0bV9ib19kZXZp
-Y2UgKmJkZXYsIHVuc2lnbmVkIG1lbV90eXBlKQ0KPiAgIH0NCj4gICBFWFBPUlRfU1lNQk9MKHR0
-bV9ib19ldmljdF9tbSk7DQo+ICAgDQo+ICtzdGF0aWMgdm9pZCB0dG1fYm9fcmVjbGFpbV93cShz
-dHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspDQo+ICt7DQo+ICsJc3RydWN0IHR0bV9vcGVyYXRpb25f
-Y3R4IGN0eCA9IHsNCj4gKwkJLmludGVycnVwdGlibGUgPSBmYWxzZSwNCj4gKwkJLm5vX3dhaXRf
-Z3B1ID0gZmFsc2UsDQo+ICsJCS5mbGFncyA9IFRUTV9PUFRfRkxBR19GT1JDRV9BTExPQw0KPiAr
-CX07DQo+ICsJc3RydWN0IHR0bV9tZW1fdHlwZV9tYW5hZ2VyICptYW4gPQ0KPiArCSAgICBjb250
-YWluZXJfb2Yod29yaywgc3RydWN0IHR0bV9tZW1fdHlwZV9tYW5hZ2VyLCByZWNsYWltX3dxKTsN
-Cj4gKwlzdHJ1Y3QgdHRtX2JvX2RldmljZSAqYmRldiA9IG1hbi0+YmRldjsNCj4gKwlzdHJ1Y3Qg
-ZG1hX2ZlbmNlICpmZW5jZTsNCj4gKwlpbnQgbWVtX3R5cGU7DQo+ICsJaW50IHJldDsNCj4gKw0K
-PiArCWZvciAobWVtX3R5cGUgPSAwOyBtZW1fdHlwZSA8IFRUTV9OVU1fTUVNX1RZUEVTOyBtZW1f
-dHlwZSsrKQ0KPiArCQlpZiAoJmJkZXYtPm1hblttZW1fdHlwZV0gPT0gbWFuKQ0KPiArCQkJYnJl
-YWs7DQo+ICsNCj4gKwlXQVJOX09OKG1lbV90eXBlID49IFRUTV9OVU1fTUVNX1RZUEVTKTsNCj4g
-KwlpZiAobWVtX3R5cGUgPj0gVFRNX05VTV9NRU1fVFlQRVMpDQo+ICsJCXJldHVybjsNCj4gKw0K
-PiArCWlmICghZHJtY2dfbWVtX3ByZXNzdXJlX3NjYW4oYmRldiwgbWVtX3R5cGUpKQ0KPiArCQly
-ZXR1cm47DQo+ICsNCj4gKwlyZXQgPSB0dG1fbWVtX2V2aWN0X2ZpcnN0KGJkZXYsIG1lbV90eXBl
-LCBOVUxMLCAmY3R4LCBOVUxMKTsNCj4gKwlpZiAocmV0KQ0KPiArCQlyZXR1cm47DQo+ICsNCj4g
-KwlzcGluX2xvY2soJm1hbi0+bW92ZV9sb2NrKTsNCj4gKwlmZW5jZSA9IGRtYV9mZW5jZV9nZXQo
-bWFuLT5tb3ZlKTsNCj4gKwlzcGluX3VubG9jaygmbWFuLT5tb3ZlX2xvY2spOw0KPiArDQo+ICsJ
-aWYgKGZlbmNlKSB7DQo+ICsJCXJldCA9IGRtYV9mZW5jZV93YWl0KGZlbmNlLCBmYWxzZSk7DQo+
-ICsJCWRtYV9mZW5jZV9wdXQoZmVuY2UpOw0KPiArCX0NCg0KV2h5IGRvIHlvdSB3YW50IHRvIGJs
-b2NrIGZvciB0aGUgZmVuY2UgaGVyZT8gVGhhdCBpcyBhIHJhdGhlciBiYWQgaWRlYSANCmFuZCB3
-b3VsZCBicmVhayBwaXBlLWxpbmluZy4NCg0KQXBhcnQgZnJvbSB0aGF0IEkgZG9uJ3QgdGhpbmsg
-d2Ugc2hvdWxkIHB1dCB0aGF0IGludG8gVFRNLg0KDQpJbnN0ZWFkIGRybWNnX3JlZ2lzdGVyX2Rl
-dmljZV9tbSgpIHNob3VsZCBnZXQgYSBmdW5jdGlvbiBwb2ludGVyIHdoaWNoIA0KaXMgY2FsbGVk
-IGZyb20gYSB3b3JrIGl0ZW0gd2hlbiB0aGUgZ3JvdXAgaXMgdW5kZXIgcHJlc3N1cmUuDQoNClRU
-TSBjYW4gdGhlbiBwcm92aWRlcyB0aGUgZnVuY3Rpb24gd2hpY2ggY2FuIGJlIGNhbGxlZCwgYnV0
-IHRoZSBhY3R1YWxseSANCnJlZ2lzdHJhdGlvbiBpcyBqb2Igb2YgdGhlIGRldmljZSBhbmQgbm90
-IFRUTS4NCg0KUmVnYXJkcywNCkNocmlzdGlhbi4NCg0KPiArDQo+ICt9DQo+ICsNCj4gICBpbnQg
-dHRtX2JvX2luaXRfbW0oc3RydWN0IHR0bV9ib19kZXZpY2UgKmJkZXYsIHVuc2lnbmVkIHR5cGUs
-DQo+ICAgCQkJdW5zaWduZWQgbG9uZyBwX3NpemUpDQo+ICAgew0KPiBAQCAtMTYyNCw2ICsxNjY0
-LDEzIEBAIGludCB0dG1fYm9faW5pdF9tbShzdHJ1Y3QgdHRtX2JvX2RldmljZSAqYmRldiwgdW5z
-aWduZWQgdHlwZSwNCj4gICAJCUlOSVRfTElTVF9IRUFEKCZtYW4tPmxydVtpXSk7DQo+ICAgCW1h
-bi0+bW92ZSA9IE5VTEw7DQo+ICAgDQo+ICsJcHJfZXJyKCJkcm1jZyAlcCB0eXBlICVkXG4iLCBi
-ZGV2LT5kZGV2LCB0eXBlKTsNCj4gKw0KPiArCWlmICh0eXBlIDw9IFRUTV9QTF9WUkFNKSB7DQo+
-ICsJCUlOSVRfV09SSygmbWFuLT5yZWNsYWltX3dxLCB0dG1fYm9fcmVjbGFpbV93cSk7DQo+ICsJ
-CWRybWNnX3JlZ2lzdGVyX2RldmljZV9tbShiZGV2LT5kZGV2LCB0eXBlLCAmbWFuLT5yZWNsYWlt
-X3dxKTsNCj4gKwl9DQo+ICsNCj4gICAJcmV0dXJuIDA7DQo+ICAgfQ0KPiAgIEVYUE9SVF9TWU1C
-T0wodHRtX2JvX2luaXRfbW0pOw0KPiBAQCAtMTcwMSw2ICsxNzQ4LDggQEAgaW50IHR0bV9ib19k
-ZXZpY2VfcmVsZWFzZShzdHJ1Y3QgdHRtX2JvX2RldmljZSAqYmRldikNCj4gICAJCW1hbiA9ICZi
-ZGV2LT5tYW5baV07DQo+ICAgCQlpZiAobWFuLT5oYXNfdHlwZSkgew0KPiAgIAkJCW1hbi0+dXNl
-X3R5cGUgPSBmYWxzZTsNCj4gKwkJCWRybWNnX3VucmVnaXN0ZXJfZGV2aWNlX21tKGJkZXYtPmRk
-ZXYsIGkpOw0KPiArCQkJY2FuY2VsX3dvcmtfc3luYygmbWFuLT5yZWNsYWltX3dxKTsNCj4gICAJ
-CQlpZiAoKGkgIT0gVFRNX1BMX1NZU1RFTSkgJiYgdHRtX2JvX2NsZWFuX21tKGJkZXYsIGkpKSB7
-DQo+ICAgCQkJCXJldCA9IC1FQlVTWTsNCj4gICAJCQkJcHJfZXJyKCJEUk0gbWVtb3J5IG1hbmFn
-ZXIgdHlwZSAlZCBpcyBub3QgY2xlYW5cbiIsDQo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2RybS9k
-cm1fY2dyb3VwLmggYi9pbmNsdWRlL2RybS9kcm1fY2dyb3VwLmgNCj4gaW5kZXggYzExZGYzODhm
-ZGYyLi42ZDk3MDdlMWViNzIgMTAwNjQ0DQo+IC0tLSBhL2luY2x1ZGUvZHJtL2RybV9jZ3JvdXAu
-aA0KPiArKysgYi9pbmNsdWRlL2RybS9kcm1fY2dyb3VwLmgNCj4gQEAgLTUsNiArNSw3IEBADQo+
-ICAgI2RlZmluZSBfX0RSTV9DR1JPVVBfSF9fDQo+ICAgDQo+ICAgI2luY2x1ZGUgPGxpbnV4L2Nn
-cm91cF9kcm0uaD4NCj4gKyNpbmNsdWRlIDxsaW51eC93b3JrcXVldWUuaD4NCj4gICAjaW5jbHVk
-ZSA8ZHJtL3R0bS90dG1fYm9fYXBpLmg+DQo+ICAgI2luY2x1ZGUgPGRybS90dG0vdHRtX2JvX2Ry
-aXZlci5oPg0KPiAgIA0KPiBAQCAtMjUsMTIgKzI2LDE3IEBAIHN0cnVjdCBkcm1jZ19wcm9wcyB7
-DQo+ICAgCXM2NAkJCW1lbV9id19hdmdfYnl0ZXNfcGVyX3VzX2RlZmF1bHQ7DQo+ICAgDQo+ICAg
-CXM2NAkJCW1lbV9oaWdoc19kZWZhdWx0W1RUTV9QTF9QUklWKzFdOw0KPiArDQo+ICsJc3RydWN0
-IHdvcmtfc3RydWN0CSptZW1fcmVjbGFpbV93cVtUVE1fUExfUFJJVl07DQo+ICAgfTsNCj4gICAN
-Cj4gICAjaWZkZWYgQ09ORklHX0NHUk9VUF9EUk0NCj4gICANCj4gICB2b2lkIGRybWNnX2Rldmlj
-ZV91cGRhdGUoc3RydWN0IGRybV9kZXZpY2UgKmRldmljZSk7DQo+ICAgdm9pZCBkcm1jZ19kZXZp
-Y2VfZWFybHlfaW5pdChzdHJ1Y3QgZHJtX2RldmljZSAqZGV2aWNlKTsNCj4gK3ZvaWQgZHJtY2df
-cmVnaXN0ZXJfZGV2aWNlX21tKHN0cnVjdCBkcm1fZGV2aWNlICpkZXYsIHVuc2lnbmVkIGludCB0
-eXBlLA0KPiArCQlzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndxKTsNCj4gK3ZvaWQgZHJtY2dfdW5yZWdp
-c3Rlcl9kZXZpY2VfbW0oc3RydWN0IGRybV9kZXZpY2UgKmRldiwgdW5zaWduZWQgaW50IHR5cGUp
-Ow0KPiAgIGJvb2wgZHJtY2dfdHJ5X2NoZ19ib19hbGxvYyhzdHJ1Y3QgZHJtY2cgKmRybWNnLCBz
-dHJ1Y3QgZHJtX2RldmljZSAqZGV2LA0KPiAgIAkJc2l6ZV90IHNpemUpOw0KPiAgIHZvaWQgZHJt
-Y2dfdW5jaGdfYm9fYWxsb2Moc3RydWN0IGRybWNnICpkcm1jZywgc3RydWN0IGRybV9kZXZpY2Ug
-KmRldiwNCj4gQEAgLTUzLDYgKzU5LDE2IEBAIHN0YXRpYyBpbmxpbmUgdm9pZCBkcm1jZ19kZXZp
-Y2VfZWFybHlfaW5pdChzdHJ1Y3QgZHJtX2RldmljZSAqZGV2aWNlKQ0KPiAgIHsNCj4gICB9DQo+
-ICAgDQo+ICtzdGF0aWMgaW5saW5lIHZvaWQgZHJtY2dfcmVnaXN0ZXJfZGV2aWNlX21tKHN0cnVj
-dCBkcm1fZGV2aWNlICpkZXYsDQo+ICsJCXVuc2lnbmVkIGludCB0eXBlLCBzdHJ1Y3Qgd29ya19z
-dHJ1Y3QgKndxKQ0KPiArew0KPiArfQ0KPiArDQo+ICtzdGF0aWMgaW5saW5lIHZvaWQgZHJtY2df
-dW5yZWdpc3Rlcl9kZXZpY2VfbW0oc3RydWN0IGRybV9kZXZpY2UgKmRldiwNCj4gKwkJdW5zaWdu
-ZWQgaW50IHR5cGUpDQo+ICt7DQo+ICt9DQo+ICsNCj4gICBzdGF0aWMgaW5saW5lIHZvaWQgZHJt
-Y2dfdHJ5X2NoZ19ib19hbGxvYyhzdHJ1Y3QgZHJtY2cgKmRybWNnLA0KPiAgIAkJc3RydWN0IGRy
-bV9kZXZpY2UgKmRldiwJc2l6ZV90IHNpemUpDQo+ICAgew0KPiBkaWZmIC0tZ2l0IGEvaW5jbHVk
-ZS9kcm0vdHRtL3R0bV9ib19kcml2ZXIuaCBiL2luY2x1ZGUvZHJtL3R0bS90dG1fYm9fZHJpdmVy
-LmgNCj4gaW5kZXggZTFhODA1ZDY1YjgzLi41MjljZWY5MmJjZjYgMTAwNjQ0DQo+IC0tLSBhL2lu
-Y2x1ZGUvZHJtL3R0bS90dG1fYm9fZHJpdmVyLmgNCj4gKysrIGIvaW5jbHVkZS9kcm0vdHRtL3R0
-bV9ib19kcml2ZXIuaA0KPiBAQCAtMjA1LDYgKzIwNSw4IEBAIHN0cnVjdCB0dG1fbWVtX3R5cGVf
-bWFuYWdlciB7DQo+ICAgCSAqIFByb3RlY3RlZCBieSBAbW92ZV9sb2NrLg0KPiAgIAkgKi8NCj4g
-ICAJc3RydWN0IGRtYV9mZW5jZSAqbW92ZTsNCj4gKw0KPiArCXN0cnVjdCB3b3JrX3N0cnVjdCBy
-ZWNsYWltX3dxOw0KPiAgIH07DQo+ICAgDQo+ICAgLyoqDQo+IGRpZmYgLS1naXQgYS9rZXJuZWwv
-Y2dyb3VwL2RybS5jIGIva2VybmVsL2Nncm91cC9kcm0uYw0KPiBpbmRleCAwNGZiOWEzOTg3NDAu
-LjBlYTdmMDYxOWUyNSAxMDA2NDQNCj4gLS0tIGEva2VybmVsL2Nncm91cC9kcm0uYw0KPiArKysg
-Yi9rZXJuZWwvY2dyb3VwL2RybS5jDQo+IEBAIC04MDQsNiArODA0LDI5IEBAIHZvaWQgZHJtY2df
-ZGV2aWNlX2Vhcmx5X2luaXQoc3RydWN0IGRybV9kZXZpY2UgKmRldikNCj4gICB9DQo+ICAgRVhQ
-T1JUX1NZTUJPTChkcm1jZ19kZXZpY2VfZWFybHlfaW5pdCk7DQo+ICAgDQo+ICt2b2lkIGRybWNn
-X3JlZ2lzdGVyX2RldmljZV9tbShzdHJ1Y3QgZHJtX2RldmljZSAqZGV2LCB1bnNpZ25lZCBpbnQg
-dHlwZSwNCj4gKwkJc3RydWN0IHdvcmtfc3RydWN0ICp3cSkNCj4gK3sNCj4gKwlpZiAoZGV2ID09
-IE5VTEwgfHwgdHlwZSA+PSBUVE1fUExfUFJJVikNCj4gKwkJcmV0dXJuOw0KPiArDQo+ICsJbXV0
-ZXhfbG9jaygmZHJtY2dfbXV0ZXgpOw0KPiArCWRldi0+ZHJtY2dfcHJvcHMubWVtX3JlY2xhaW1f
-d3FbdHlwZV0gPSB3cTsNCj4gKwltdXRleF91bmxvY2soJmRybWNnX211dGV4KTsNCj4gK30NCj4g
-K0VYUE9SVF9TWU1CT0woZHJtY2dfcmVnaXN0ZXJfZGV2aWNlX21tKTsNCj4gKw0KPiArdm9pZCBk
-cm1jZ191bnJlZ2lzdGVyX2RldmljZV9tbShzdHJ1Y3QgZHJtX2RldmljZSAqZGV2LCB1bnNpZ25l
-ZCBpbnQgdHlwZSkNCj4gK3sNCj4gKwlpZiAoZGV2ID09IE5VTEwgfHwgdHlwZSA+PSBUVE1fUExf
-UFJJVikNCj4gKwkJcmV0dXJuOw0KPiArDQo+ICsJbXV0ZXhfbG9jaygmZHJtY2dfbXV0ZXgpOw0K
-PiArCWRldi0+ZHJtY2dfcHJvcHMubWVtX3JlY2xhaW1fd3FbdHlwZV0gPSBOVUxMOw0KPiArCW11
-dGV4X3VubG9jaygmZHJtY2dfbXV0ZXgpOw0KPiArfQ0KPiArRVhQT1JUX1NZTUJPTChkcm1jZ191
-bnJlZ2lzdGVyX2RldmljZV9tbSk7DQo+ICsNCj4gICAvKioNCj4gICAgKiBkcm1jZ190cnlfY2hn
-X2JvX2FsbG9jIC0gY2hhcmdlIEdFTSBidWZmZXIgdXNhZ2UgZm9yIGEgZGV2aWNlIGFuZCBjZ3Jv
-dXANCj4gICAgKiBAZHJtY2c6IHRoZSBEUk0gY2dyb3VwIHRvIGJlIGNoYXJnZWQgdG8NCj4gQEAg
-LTEwMTMsNiArMTAzNiwxMyBAQCB2b2lkIGRybWNnX21lbV90cmFja19tb3ZlKHN0cnVjdCB0dG1f
-YnVmZmVyX29iamVjdCAqb2xkX2JvLCBib29sIGV2aWN0LA0KPiAgIA0KPiAgIAkJZGRyLT5tZW1f
-Yndfc3RhdHNbRFJNQ0dfTUVNX0JXX0FUVFJfQllURV9DUkVESVRdDQo+ICAgCQkJLT0gbW92ZV9p
-bl9ieXRlczsNCj4gKw0KPiArCQlpZiAoZGV2LT5kcm1jZ19wcm9wcy5tZW1fcmVjbGFpbV93cVtu
-ZXdfbWVtX3R5cGVdDQo+ICsJCQkhPSBOVUxMICYmDQo+ICsJCQlkZHItPm1lbV9zdGF0c1tuZXdf
-bWVtX3R5cGVdID4NCj4gKwkJCQlkZHItPm1lbV9oaWdoc1tuZXdfbWVtX3R5cGVdKQ0KPiArCQkJ
-c2NoZWR1bGVfd29yayhkZXYtPg0KPiArCQkJCWRybWNnX3Byb3BzLm1lbV9yZWNsYWltX3dxW25l
-d19tZW1fdHlwZV0pOw0KPiAgIAl9DQo+ICAgCW11dGV4X3VubG9jaygmZGV2LT5kcm1jZ19tdXRl
-eCk7DQo+ICAgfQ0KDQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5v
-cmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2
-ZWw=
+--===============1985058733==
+Content-Type: multipart/alternative; boundary="0000000000007024a405914208cc"
+
+--0000000000007024a405914208cc
+Content-Type: text/plain; charset="UTF-8"
+
+Thanks for the feedback Christian.  I am still digging into this one.
+Daniel suggested leveraging the Shrinker API for the functionality of this
+commit in RFC v3 but I am still trying to figure it out how/if ttm fit with
+shrinker (though the idea behind the shrinker API seems fairly
+straightforward as far as I understand it currently.)
+
+Regards,
+Kenny
+
+On Thu, Aug 29, 2019 at 3:08 AM Koenig, Christian <Christian.Koenig@amd.com>
+wrote:
+
+> Am 29.08.19 um 08:05 schrieb Kenny Ho:
+> > Allow DRM TTM memory manager to register a work_struct, such that, when
+> > a drmcgrp is under memory pressure, memory reclaiming can be triggered
+> > immediately.
+> >
+> > Change-Id: I25ac04e2db9c19ff12652b88ebff18b44b2706d8
+> > Signed-off-by: Kenny Ho <Kenny.Ho@amd.com>
+> > ---
+> >   drivers/gpu/drm/ttm/ttm_bo.c    | 49 +++++++++++++++++++++++++++++++++
+> >   include/drm/drm_cgroup.h        | 16 +++++++++++
+> >   include/drm/ttm/ttm_bo_driver.h |  2 ++
+> >   kernel/cgroup/drm.c             | 30 ++++++++++++++++++++
+> >   4 files changed, 97 insertions(+)
+> >
+> > diff --git a/drivers/gpu/drm/ttm/ttm_bo.c b/drivers/gpu/drm/ttm/ttm_bo.c
+> > index d7e3d3128ebb..72efae694b7e 100644
+> > --- a/drivers/gpu/drm/ttm/ttm_bo.c
+> > +++ b/drivers/gpu/drm/ttm/ttm_bo.c
+> > @@ -1590,6 +1590,46 @@ int ttm_bo_evict_mm(struct ttm_bo_device *bdev,
+> unsigned mem_type)
+> >   }
+> >   EXPORT_SYMBOL(ttm_bo_evict_mm);
+> >
+> > +static void ttm_bo_reclaim_wq(struct work_struct *work)
+> > +{
+> > +     struct ttm_operation_ctx ctx = {
+> > +             .interruptible = false,
+> > +             .no_wait_gpu = false,
+> > +             .flags = TTM_OPT_FLAG_FORCE_ALLOC
+> > +     };
+> > +     struct ttm_mem_type_manager *man =
+> > +         container_of(work, struct ttm_mem_type_manager, reclaim_wq);
+> > +     struct ttm_bo_device *bdev = man->bdev;
+> > +     struct dma_fence *fence;
+> > +     int mem_type;
+> > +     int ret;
+> > +
+> > +     for (mem_type = 0; mem_type < TTM_NUM_MEM_TYPES; mem_type++)
+> > +             if (&bdev->man[mem_type] == man)
+> > +                     break;
+> > +
+> > +     WARN_ON(mem_type >= TTM_NUM_MEM_TYPES);
+> > +     if (mem_type >= TTM_NUM_MEM_TYPES)
+> > +             return;
+> > +
+> > +     if (!drmcg_mem_pressure_scan(bdev, mem_type))
+> > +             return;
+> > +
+> > +     ret = ttm_mem_evict_first(bdev, mem_type, NULL, &ctx, NULL);
+> > +     if (ret)
+> > +             return;
+> > +
+> > +     spin_lock(&man->move_lock);
+> > +     fence = dma_fence_get(man->move);
+> > +     spin_unlock(&man->move_lock);
+> > +
+> > +     if (fence) {
+> > +             ret = dma_fence_wait(fence, false);
+> > +             dma_fence_put(fence);
+> > +     }
+>
+> Why do you want to block for the fence here? That is a rather bad idea
+> and would break pipe-lining.
+>
+> Apart from that I don't think we should put that into TTM.
+>
+> Instead drmcg_register_device_mm() should get a function pointer which
+> is called from a work item when the group is under pressure.
+>
+> TTM can then provides the function which can be called, but the actually
+> registration is job of the device and not TTM.
+>
+> Regards,
+> Christian.
+>
+> > +
+> > +}
+> > +
+> >   int ttm_bo_init_mm(struct ttm_bo_device *bdev, unsigned type,
+> >                       unsigned long p_size)
+> >   {
+> > @@ -1624,6 +1664,13 @@ int ttm_bo_init_mm(struct ttm_bo_device *bdev,
+> unsigned type,
+> >               INIT_LIST_HEAD(&man->lru[i]);
+> >       man->move = NULL;
+> >
+> > +     pr_err("drmcg %p type %d\n", bdev->ddev, type);
+> > +
+> > +     if (type <= TTM_PL_VRAM) {
+> > +             INIT_WORK(&man->reclaim_wq, ttm_bo_reclaim_wq);
+> > +             drmcg_register_device_mm(bdev->ddev, type,
+> &man->reclaim_wq);
+> > +     }
+> > +
+> >       return 0;
+> >   }
+> >   EXPORT_SYMBOL(ttm_bo_init_mm);
+> > @@ -1701,6 +1748,8 @@ int ttm_bo_device_release(struct ttm_bo_device
+> *bdev)
+> >               man = &bdev->man[i];
+> >               if (man->has_type) {
+> >                       man->use_type = false;
+> > +                     drmcg_unregister_device_mm(bdev->ddev, i);
+> > +                     cancel_work_sync(&man->reclaim_wq);
+> >                       if ((i != TTM_PL_SYSTEM) && ttm_bo_clean_mm(bdev,
+> i)) {
+> >                               ret = -EBUSY;
+> >                               pr_err("DRM memory manager type %d is not
+> clean\n",
+> > diff --git a/include/drm/drm_cgroup.h b/include/drm/drm_cgroup.h
+> > index c11df388fdf2..6d9707e1eb72 100644
+> > --- a/include/drm/drm_cgroup.h
+> > +++ b/include/drm/drm_cgroup.h
+> > @@ -5,6 +5,7 @@
+> >   #define __DRM_CGROUP_H__
+> >
+> >   #include <linux/cgroup_drm.h>
+> > +#include <linux/workqueue.h>
+> >   #include <drm/ttm/ttm_bo_api.h>
+> >   #include <drm/ttm/ttm_bo_driver.h>
+> >
+> > @@ -25,12 +26,17 @@ struct drmcg_props {
+> >       s64                     mem_bw_avg_bytes_per_us_default;
+> >
+> >       s64                     mem_highs_default[TTM_PL_PRIV+1];
+> > +
+> > +     struct work_struct      *mem_reclaim_wq[TTM_PL_PRIV];
+> >   };
+> >
+> >   #ifdef CONFIG_CGROUP_DRM
+> >
+> >   void drmcg_device_update(struct drm_device *device);
+> >   void drmcg_device_early_init(struct drm_device *device);
+> > +void drmcg_register_device_mm(struct drm_device *dev, unsigned int type,
+> > +             struct work_struct *wq);
+> > +void drmcg_unregister_device_mm(struct drm_device *dev, unsigned int
+> type);
+> >   bool drmcg_try_chg_bo_alloc(struct drmcg *drmcg, struct drm_device
+> *dev,
+> >               size_t size);
+> >   void drmcg_unchg_bo_alloc(struct drmcg *drmcg, struct drm_device *dev,
+> > @@ -53,6 +59,16 @@ static inline void drmcg_device_early_init(struct
+> drm_device *device)
+> >   {
+> >   }
+> >
+> > +static inline void drmcg_register_device_mm(struct drm_device *dev,
+> > +             unsigned int type, struct work_struct *wq)
+> > +{
+> > +}
+> > +
+> > +static inline void drmcg_unregister_device_mm(struct drm_device *dev,
+> > +             unsigned int type)
+> > +{
+> > +}
+> > +
+> >   static inline void drmcg_try_chg_bo_alloc(struct drmcg *drmcg,
+> >               struct drm_device *dev, size_t size)
+> >   {
+> > diff --git a/include/drm/ttm/ttm_bo_driver.h
+> b/include/drm/ttm/ttm_bo_driver.h
+> > index e1a805d65b83..529cef92bcf6 100644
+> > --- a/include/drm/ttm/ttm_bo_driver.h
+> > +++ b/include/drm/ttm/ttm_bo_driver.h
+> > @@ -205,6 +205,8 @@ struct ttm_mem_type_manager {
+> >        * Protected by @move_lock.
+> >        */
+> >       struct dma_fence *move;
+> > +
+> > +     struct work_struct reclaim_wq;
+> >   };
+> >
+> >   /**
+> > diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
+> > index 04fb9a398740..0ea7f0619e25 100644
+> > --- a/kernel/cgroup/drm.c
+> > +++ b/kernel/cgroup/drm.c
+> > @@ -804,6 +804,29 @@ void drmcg_device_early_init(struct drm_device *dev)
+> >   }
+> >   EXPORT_SYMBOL(drmcg_device_early_init);
+> >
+> > +void drmcg_register_device_mm(struct drm_device *dev, unsigned int type,
+> > +             struct work_struct *wq)
+> > +{
+> > +     if (dev == NULL || type >= TTM_PL_PRIV)
+> > +             return;
+> > +
+> > +     mutex_lock(&drmcg_mutex);
+> > +     dev->drmcg_props.mem_reclaim_wq[type] = wq;
+> > +     mutex_unlock(&drmcg_mutex);
+> > +}
+> > +EXPORT_SYMBOL(drmcg_register_device_mm);
+> > +
+> > +void drmcg_unregister_device_mm(struct drm_device *dev, unsigned int
+> type)
+> > +{
+> > +     if (dev == NULL || type >= TTM_PL_PRIV)
+> > +             return;
+> > +
+> > +     mutex_lock(&drmcg_mutex);
+> > +     dev->drmcg_props.mem_reclaim_wq[type] = NULL;
+> > +     mutex_unlock(&drmcg_mutex);
+> > +}
+> > +EXPORT_SYMBOL(drmcg_unregister_device_mm);
+> > +
+> >   /**
+> >    * drmcg_try_chg_bo_alloc - charge GEM buffer usage for a device and
+> cgroup
+> >    * @drmcg: the DRM cgroup to be charged to
+> > @@ -1013,6 +1036,13 @@ void drmcg_mem_track_move(struct
+> ttm_buffer_object *old_bo, bool evict,
+> >
+> >               ddr->mem_bw_stats[DRMCG_MEM_BW_ATTR_BYTE_CREDIT]
+> >                       -= move_in_bytes;
+> > +
+> > +             if (dev->drmcg_props.mem_reclaim_wq[new_mem_type]
+> > +                     != NULL &&
+> > +                     ddr->mem_stats[new_mem_type] >
+> > +                             ddr->mem_highs[new_mem_type])
+> > +                     schedule_work(dev->
+> > +                             drmcg_props.mem_reclaim_wq[new_mem_type]);
+> >       }
+> >       mutex_unlock(&dev->drmcg_mutex);
+> >   }
+>
+>
+
+--0000000000007024a405914208cc
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr">Thanks for the feedback Christian.=C2=A0 I am still diggin=
+g into this one.=C2=A0 Daniel suggested leveraging the Shrinker API for the=
+ functionality of this commit in RFC v3 but I am still trying to figure it =
+out how/if ttm fit with shrinker (though the idea behind the shrinker API s=
+eems fairly straightforward as far as I understand it currently.)<div><br><=
+/div><div>Regards,</div><div>Kenny</div></div><br><div class=3D"gmail_quote=
+"><div dir=3D"ltr" class=3D"gmail_attr">On Thu, Aug 29, 2019 at 3:08 AM Koe=
+nig, Christian &lt;<a href=3D"mailto:Christian.Koenig@amd.com">Christian.Ko=
+enig@amd.com</a>&gt; wrote:<br></div><blockquote class=3D"gmail_quote" styl=
+e=3D"margin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,204,204);paddin=
+g-left:1ex">Am 29.08.19 um 08:05 schrieb Kenny Ho:<br>
+&gt; Allow DRM TTM memory manager to register a work_struct, such that, whe=
+n<br>
+&gt; a drmcgrp is under memory pressure, memory reclaiming can be triggered=
+<br>
+&gt; immediately.<br>
+&gt;<br>
+&gt; Change-Id: I25ac04e2db9c19ff12652b88ebff18b44b2706d8<br>
+&gt; Signed-off-by: Kenny Ho &lt;<a href=3D"mailto:Kenny.Ho@amd.com" target=
+=3D"_blank">Kenny.Ho@amd.com</a>&gt;<br>
+&gt; ---<br>
+&gt;=C2=A0 =C2=A0drivers/gpu/drm/ttm/ttm_bo.c=C2=A0 =C2=A0 | 49 +++++++++++=
+++++++++++++++++++++++<br>
+&gt;=C2=A0 =C2=A0include/drm/drm_cgroup.h=C2=A0 =C2=A0 =C2=A0 =C2=A0 | 16 +=
+++++++++++<br>
+&gt;=C2=A0 =C2=A0include/drm/ttm/ttm_bo_driver.h |=C2=A0 2 ++<br>
+&gt;=C2=A0 =C2=A0kernel/cgroup/drm.c=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0| 30 ++++++++++++++++++++<br>
+&gt;=C2=A0 =C2=A04 files changed, 97 insertions(+)<br>
+&gt;<br>
+&gt; diff --git a/drivers/gpu/drm/ttm/ttm_bo.c b/drivers/gpu/drm/ttm/ttm_bo=
+.c<br>
+&gt; index d7e3d3128ebb..72efae694b7e 100644<br>
+&gt; --- a/drivers/gpu/drm/ttm/ttm_bo.c<br>
+&gt; +++ b/drivers/gpu/drm/ttm/ttm_bo.c<br>
+&gt; @@ -1590,6 +1590,46 @@ int ttm_bo_evict_mm(struct ttm_bo_device *bdev,=
+ unsigned mem_type)<br>
+&gt;=C2=A0 =C2=A0}<br>
+&gt;=C2=A0 =C2=A0EXPORT_SYMBOL(ttm_bo_evict_mm);<br>
+&gt;=C2=A0 =C2=A0<br>
+&gt; +static void ttm_bo_reclaim_wq(struct work_struct *work)<br>
+&gt; +{<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0struct ttm_operation_ctx ctx =3D {<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.interruptible =3D fa=
+lse,<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.no_wait_gpu =3D fals=
+e,<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.flags =3D TTM_OPT_FL=
+AG_FORCE_ALLOC<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0};<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0struct ttm_mem_type_manager *man =3D<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0container_of(work, struct ttm_mem_t=
+ype_manager, reclaim_wq);<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0struct ttm_bo_device *bdev =3D man-&gt;bdev;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0struct dma_fence *fence;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0int mem_type;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0int ret;<br>
+&gt; +<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0for (mem_type =3D 0; mem_type &lt; TTM_NUM_MEM_TY=
+PES; mem_type++)<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (&amp;bdev-&gt;man=
+[mem_type] =3D=3D man)<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0break;<br>
+&gt; +<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0WARN_ON(mem_type &gt;=3D TTM_NUM_MEM_TYPES);<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0if (mem_type &gt;=3D TTM_NUM_MEM_TYPES)<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return;<br>
+&gt; +<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0if (!drmcg_mem_pressure_scan(bdev, mem_type))<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return;<br>
+&gt; +<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0ret =3D ttm_mem_evict_first(bdev, mem_type, NULL,=
+ &amp;ctx, NULL);<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0if (ret)<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return;<br>
+&gt; +<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0spin_lock(&amp;man-&gt;move_lock);<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0fence =3D dma_fence_get(man-&gt;move);<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0spin_unlock(&amp;man-&gt;move_lock);<br>
+&gt; +<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0if (fence) {<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D dma_fence_wai=
+t(fence, false);<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0dma_fence_put(fence);=
+<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0}<br>
+<br>
+Why do you want to block for the fence here? That is a rather bad idea <br>
+and would break pipe-lining.<br>
+<br>
+Apart from that I don&#39;t think we should put that into TTM.<br>
+<br>
+Instead drmcg_register_device_mm() should get a function pointer which <br>
+is called from a work item when the group is under pressure.<br>
+<br>
+TTM can then provides the function which can be called, but the actually <b=
+r>
+registration is job of the device and not TTM.<br>
+<br>
+Regards,<br>
+Christian.<br>
+<br>
+&gt; +<br>
+&gt; +}<br>
+&gt; +<br>
+&gt;=C2=A0 =C2=A0int ttm_bo_init_mm(struct ttm_bo_device *bdev, unsigned ty=
+pe,<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0unsigned long p_size)<br>
+&gt;=C2=A0 =C2=A0{<br>
+&gt; @@ -1624,6 +1664,13 @@ int ttm_bo_init_mm(struct ttm_bo_device *bdev, =
+unsigned type,<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0INIT_LIST_HEAD(&=
+amp;man-&gt;lru[i]);<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0man-&gt;move =3D NULL;<br>
+&gt;=C2=A0 =C2=A0<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0pr_err(&quot;drmcg %p type %d\n&quot;, bdev-&gt;d=
+dev, type);<br>
+&gt; +<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0if (type &lt;=3D TTM_PL_VRAM) {<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0INIT_WORK(&amp;man-&g=
+t;reclaim_wq, ttm_bo_reclaim_wq);<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0drmcg_register_device=
+_mm(bdev-&gt;ddev, type, &amp;man-&gt;reclaim_wq);<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0}<br>
+&gt; +<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0return 0;<br>
+&gt;=C2=A0 =C2=A0}<br>
+&gt;=C2=A0 =C2=A0EXPORT_SYMBOL(ttm_bo_init_mm);<br>
+&gt; @@ -1701,6 +1748,8 @@ int ttm_bo_device_release(struct ttm_bo_device *=
+bdev)<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0man =3D &amp;bde=
+v-&gt;man[i];<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (man-&gt;has_=
+type) {<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0man-&gt;use_type =3D false;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0drmcg_unregister_device_mm(bdev-&gt;ddev, i);<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0cancel_work_sync(&amp;man-&gt;reclaim_wq);<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0if ((i !=3D TTM_PL_SYSTEM) &amp;&amp; ttm_bo_clean_mm(bdev, i)=
+) {<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ret =3D -EBUSY;<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0pr_err(&quot;DRM memory manager ty=
+pe %d is not clean\n&quot;,<br>
+&gt; diff --git a/include/drm/drm_cgroup.h b/include/drm/drm_cgroup.h<br>
+&gt; index c11df388fdf2..6d9707e1eb72 100644<br>
+&gt; --- a/include/drm/drm_cgroup.h<br>
+&gt; +++ b/include/drm/drm_cgroup.h<br>
+&gt; @@ -5,6 +5,7 @@<br>
+&gt;=C2=A0 =C2=A0#define __DRM_CGROUP_H__<br>
+&gt;=C2=A0 =C2=A0<br>
+&gt;=C2=A0 =C2=A0#include &lt;linux/cgroup_drm.h&gt;<br>
+&gt; +#include &lt;linux/workqueue.h&gt;<br>
+&gt;=C2=A0 =C2=A0#include &lt;drm/ttm/ttm_bo_api.h&gt;<br>
+&gt;=C2=A0 =C2=A0#include &lt;drm/ttm/ttm_bo_driver.h&gt;<br>
+&gt;=C2=A0 =C2=A0<br>
+&gt; @@ -25,12 +26,17 @@ struct drmcg_props {<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0s64=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0mem_bw_avg_bytes_per_us_default;<br>
+&gt;=C2=A0 =C2=A0<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0s64=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0mem_highs_default[TTM_PL_PRIV+1];<br>
+&gt; +<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0struct work_struct=C2=A0 =C2=A0 =C2=A0 *mem_recla=
+im_wq[TTM_PL_PRIV];<br>
+&gt;=C2=A0 =C2=A0};<br>
+&gt;=C2=A0 =C2=A0<br>
+&gt;=C2=A0 =C2=A0#ifdef CONFIG_CGROUP_DRM<br>
+&gt;=C2=A0 =C2=A0<br>
+&gt;=C2=A0 =C2=A0void drmcg_device_update(struct drm_device *device);<br>
+&gt;=C2=A0 =C2=A0void drmcg_device_early_init(struct drm_device *device);<b=
+r>
+&gt; +void drmcg_register_device_mm(struct drm_device *dev, unsigned int ty=
+pe,<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct work_struct *w=
+q);<br>
+&gt; +void drmcg_unregister_device_mm(struct drm_device *dev, unsigned int =
+type);<br>
+&gt;=C2=A0 =C2=A0bool drmcg_try_chg_bo_alloc(struct drmcg *drmcg, struct dr=
+m_device *dev,<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0size_t size);<br=
+>
+&gt;=C2=A0 =C2=A0void drmcg_unchg_bo_alloc(struct drmcg *drmcg, struct drm_=
+device *dev,<br>
+&gt; @@ -53,6 +59,16 @@ static inline void drmcg_device_early_init(struct d=
+rm_device *device)<br>
+&gt;=C2=A0 =C2=A0{<br>
+&gt;=C2=A0 =C2=A0}<br>
+&gt;=C2=A0 =C2=A0<br>
+&gt; +static inline void drmcg_register_device_mm(struct drm_device *dev,<b=
+r>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0unsigned int type, st=
+ruct work_struct *wq)<br>
+&gt; +{<br>
+&gt; +}<br>
+&gt; +<br>
+&gt; +static inline void drmcg_unregister_device_mm(struct drm_device *dev,=
+<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0unsigned int type)<br=
+>
+&gt; +{<br>
+&gt; +}<br>
+&gt; +<br>
+&gt;=C2=A0 =C2=A0static inline void drmcg_try_chg_bo_alloc(struct drmcg *dr=
+mcg,<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct drm_devic=
+e *dev, size_t size)<br>
+&gt;=C2=A0 =C2=A0{<br>
+&gt; diff --git a/include/drm/ttm/ttm_bo_driver.h b/include/drm/ttm/ttm_bo_=
+driver.h<br>
+&gt; index e1a805d65b83..529cef92bcf6 100644<br>
+&gt; --- a/include/drm/ttm/ttm_bo_driver.h<br>
+&gt; +++ b/include/drm/ttm/ttm_bo_driver.h<br>
+&gt; @@ -205,6 +205,8 @@ struct ttm_mem_type_manager {<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 * Protected by @move_lock.<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 */<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0struct dma_fence *move;<br>
+&gt; +<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0struct work_struct reclaim_wq;<br>
+&gt;=C2=A0 =C2=A0};<br>
+&gt;=C2=A0 =C2=A0<br>
+&gt;=C2=A0 =C2=A0/**<br>
+&gt; diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c<br>
+&gt; index 04fb9a398740..0ea7f0619e25 100644<br>
+&gt; --- a/kernel/cgroup/drm.c<br>
+&gt; +++ b/kernel/cgroup/drm.c<br>
+&gt; @@ -804,6 +804,29 @@ void drmcg_device_early_init(struct drm_device *d=
+ev)<br>
+&gt;=C2=A0 =C2=A0}<br>
+&gt;=C2=A0 =C2=A0EXPORT_SYMBOL(drmcg_device_early_init);<br>
+&gt;=C2=A0 =C2=A0<br>
+&gt; +void drmcg_register_device_mm(struct drm_device *dev, unsigned int ty=
+pe,<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0struct work_struct *w=
+q)<br>
+&gt; +{<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0if (dev =3D=3D NULL || type &gt;=3D TTM_PL_PRIV)<=
+br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return;<br>
+&gt; +<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0mutex_lock(&amp;drmcg_mutex);<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0dev-&gt;drmcg_props.mem_reclaim_wq[type] =3D wq;<=
+br>
+&gt; +=C2=A0 =C2=A0 =C2=A0mutex_unlock(&amp;drmcg_mutex);<br>
+&gt; +}<br>
+&gt; +EXPORT_SYMBOL(drmcg_register_device_mm);<br>
+&gt; +<br>
+&gt; +void drmcg_unregister_device_mm(struct drm_device *dev, unsigned int =
+type)<br>
+&gt; +{<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0if (dev =3D=3D NULL || type &gt;=3D TTM_PL_PRIV)<=
+br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return;<br>
+&gt; +<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0mutex_lock(&amp;drmcg_mutex);<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0dev-&gt;drmcg_props.mem_reclaim_wq[type] =3D NULL=
+;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0mutex_unlock(&amp;drmcg_mutex);<br>
+&gt; +}<br>
+&gt; +EXPORT_SYMBOL(drmcg_unregister_device_mm);<br>
+&gt; +<br>
+&gt;=C2=A0 =C2=A0/**<br>
+&gt;=C2=A0 =C2=A0 * drmcg_try_chg_bo_alloc - charge GEM buffer usage for a =
+device and cgroup<br>
+&gt;=C2=A0 =C2=A0 * @drmcg: the DRM cgroup to be charged to<br>
+&gt; @@ -1013,6 +1036,13 @@ void drmcg_mem_track_move(struct ttm_buffer_obj=
+ect *old_bo, bool evict,<br>
+&gt;=C2=A0 =C2=A0<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ddr-&gt;mem_bw_s=
+tats[DRMCG_MEM_BW_ATTR_BYTE_CREDIT]<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
+=C2=A0 =C2=A0-=3D move_in_bytes;<br>
+&gt; +<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0if (dev-&gt;drmcg_pro=
+ps.mem_reclaim_wq[new_mem_type]<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0!=3D NULL &amp;&amp;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0ddr-&gt;mem_stats[new_mem_type] &gt;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0ddr-&gt;mem_highs[new_mem_type])<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0schedule_work(dev-&gt;<br>
+&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0drmcg_props.mem_reclaim_wq[new_mem_type]=
+);<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0}<br>
+&gt;=C2=A0 =C2=A0 =C2=A0 =C2=A0mutex_unlock(&amp;dev-&gt;drmcg_mutex);<br>
+&gt;=C2=A0 =C2=A0}<br>
+<br>
+</blockquote></div>
+
+--0000000000007024a405914208cc--
+
+--===============1985058733==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: inline
+
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KZHJpLWRldmVs
+IG1haWxpbmcgbGlzdApkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlz
+dHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVs
+
+--===============1985058733==--
