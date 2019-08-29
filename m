@@ -1,85 +1,59 @@
-From: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
-Subject: [PATCH RFC v4 06/16] drm,
- cgroup: Add GEM buffer allocation count stats
-Date: Thu, 29 Aug 2019 02:05:23 -0400
-Message-ID: <20190829060533.32315-7-Kenny.Ho@amd.com>
-References: <20190829060533.32315-1-Kenny.Ho@amd.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH v3 0/6] hugetlb_cgroup: Add hugetlb_cgroup reservation
+ limits
+Date: Thu, 29 Aug 2019 09:18:07 +0200
+Message-ID: <20190829071807.GR28313@dhcp22.suse.cz>
+References: <20190826233240.11524-1-almasrymina@google.com>
+ <20190828112340.GB7466@dhcp22.suse.cz>
+ <CAHS8izPPhPoqh-J9LJ40NJUCbgTFS60oZNuDSHmgtMQiYw72RA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <20190829060533.32315-1-Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAHS8izPPhPoqh-J9LJ40NJUCbgTFS60oZNuDSHmgtMQiYw72RA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, alexander.deucher-5C7GfCeVMHo@public.gmane.org, christian.koenig-5C7GfCeVMHo@public.gmane.org, felix.kuehling-5C7GfCeVMHo@public.gmane.org, joseph.greathouse-5C7GfCeVMHo@public.gmane.org, jsparks-WVYJKLFxKCc@public.gmane.org, lkaplan-WVYJKLFxKCc@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org
-Cc: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Mina Almasry <almasrymina@google.com>
+Cc: Mike Kravetz <mike.kravetz@oracle.com>, shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, khalid.aziz@oracle.com, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>
 
-ZHJtLmJ1ZmZlci5jb3VudC5zdGF0cwogICAgICAgIEEgcmVhZC1vbmx5IGZsYXQta2V5ZWQgZmls
-ZSB3aGljaCBleGlzdHMgb24gYWxsIGNncm91cHMuICBFYWNoCiAgICAgICAgZW50cnkgaXMga2V5
-ZWQgYnkgdGhlIGRybSBkZXZpY2UncyBtYWpvcjptaW5vci4KCiAgICAgICAgVG90YWwgbnVtYmVy
-IG9mIEdFTSBidWZmZXIgYWxsb2NhdGVkLgoKQ2hhbmdlLUlkOiBJZDNlMTgwOWQ1ZmVlODU2MmU0
-N2E3ZDJiOTYxNjg4OTU2ZDg0NGVjNgpTaWduZWQtb2ZmLWJ5OiBLZW5ueSBIbyA8S2VubnkuSG9A
-YW1kLmNvbT4KLS0tCiBEb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nncm91cC12Mi5yc3QgfCAg
-NiArKysrKysKIGluY2x1ZGUvbGludXgvY2dyb3VwX2RybS5oICAgICAgICAgICAgICB8ICAzICsr
-Kwoga2VybmVsL2Nncm91cC9kcm0uYyAgICAgICAgICAgICAgICAgICAgIHwgMjIgKysrKysrKysr
-KysrKysrKysrKy0tLQogMyBmaWxlcyBjaGFuZ2VkLCAyOCBpbnNlcnRpb25zKCspLCAzIGRlbGV0
-aW9ucygtKQoKZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vYWRtaW4tZ3VpZGUvY2dyb3VwLXYy
-LnJzdCBiL0RvY3VtZW50YXRpb24vYWRtaW4tZ3VpZGUvY2dyb3VwLXYyLnJzdAppbmRleCA4NTg4
-YTBmZmM2OWQuLjRkYzcyMzM5YTliNiAxMDA2NDQKLS0tIGEvRG9jdW1lbnRhdGlvbi9hZG1pbi1n
-dWlkZS9jZ3JvdXAtdjIucnN0CisrKyBiL0RvY3VtZW50YXRpb24vYWRtaW4tZ3VpZGUvY2dyb3Vw
-LXYyLnJzdApAQCAtMTkxMyw2ICsxOTEzLDEyIEBAIERSTSBJbnRlcmZhY2UgRmlsZXMKIAogCUxh
-cmdlc3QgKGhpZ2ggd2F0ZXIgbWFyaykgR0VNIGJ1ZmZlciBhbGxvY2F0ZWQgaW4gYnl0ZXMuCiAK
-KyAgZHJtLmJ1ZmZlci5jb3VudC5zdGF0cworCUEgcmVhZC1vbmx5IGZsYXQta2V5ZWQgZmlsZSB3
-aGljaCBleGlzdHMgb24gYWxsIGNncm91cHMuICBFYWNoCisJZW50cnkgaXMga2V5ZWQgYnkgdGhl
-IGRybSBkZXZpY2UncyBtYWpvcjptaW5vci4KKworCVRvdGFsIG51bWJlciBvZiBHRU0gYnVmZmVy
-IGFsbG9jYXRlZC4KKwogR0VNIEJ1ZmZlciBPd25lcnNoaXAKIH5+fn5+fn5+fn5+fn5+fn5+fn5+
-CiAKZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvY2dyb3VwX2RybS5oIGIvaW5jbHVkZS9saW51
-eC9jZ3JvdXBfZHJtLmgKaW5kZXggOTc0ZDM5MGNmYTRmLi45NzJmN2FhOTc1YjUgMTAwNjQ0Ci0t
-LSBhL2luY2x1ZGUvbGludXgvY2dyb3VwX2RybS5oCisrKyBiL2luY2x1ZGUvbGludXgvY2dyb3Vw
-X2RybS5oCkBAIC0xNiw2ICsxNiw3IEBACiBlbnVtIGRybWNnX3Jlc190eXBlIHsKIAlEUk1DR19U
-WVBFX0JPX1RPVEFMLAogCURSTUNHX1RZUEVfQk9fUEVBSywKKwlEUk1DR19UWVBFX0JPX0NPVU5U
-LAogCV9fRFJNQ0dfVFlQRV9MQVNULAogfTsKIApAQCAtMjcsNiArMjgsOCBAQCBzdHJ1Y3QgZHJt
-Y2dfZGV2aWNlX3Jlc291cmNlIHsKIAlzNjQJCQlib19zdGF0c190b3RhbF9hbGxvY2F0ZWQ7CiAK
-IAlzNjQJCQlib19zdGF0c19wZWFrX2FsbG9jYXRlZDsKKworCXM2NAkJCWJvX3N0YXRzX2NvdW50
-X2FsbG9jYXRlZDsKIH07CiAKIC8qKgpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9kcm0uYyBi
-L2tlcm5lbC9jZ3JvdXAvZHJtLmMKaW5kZXggMGJmNWI5NTY2OGM0Li44NWU0NmVjZTRhODIgMTAw
-NjQ0Ci0tLSBhL2tlcm5lbC9jZ3JvdXAvZHJtLmMKKysrIGIva2VybmVsL2Nncm91cC9kcm0uYwpA
-QCAtMTMyLDYgKzEzMiw5IEBAIHN0YXRpYyB2b2lkIGRybWNnX3ByaW50X3N0YXRzKHN0cnVjdCBk
-cm1jZ19kZXZpY2VfcmVzb3VyY2UgKmRkciwKIAljYXNlIERSTUNHX1RZUEVfQk9fUEVBSzoKIAkJ
-c2VxX3ByaW50ZihzZiwgIiVsbGRcbiIsIGRkci0+Ym9fc3RhdHNfcGVha19hbGxvY2F0ZWQpOwog
-CQlicmVhazsKKwljYXNlIERSTUNHX1RZUEVfQk9fQ09VTlQ6CisJCXNlcV9wcmludGYoc2YsICIl
-bGxkXG4iLCBkZHItPmJvX3N0YXRzX2NvdW50X2FsbG9jYXRlZCk7CisJCWJyZWFrOwogCWRlZmF1
-bHQ6CiAJCXNlcV9wdXRzKHNmLCAiXG4iKTsKIAkJYnJlYWs7CkBAIC0xODYsNiArMTg5LDEyIEBA
-IHN0cnVjdCBjZnR5cGUgZmlsZXNbXSA9IHsKIAkJLnByaXZhdGUgPSBEUk1DR19DVEZfUFJJVihE
-Uk1DR19UWVBFX0JPX1BFQUssCiAJCQkJCQlEUk1DR19GVFlQRV9TVEFUUyksCiAJfSwKKwl7CisJ
-CS5uYW1lID0gImJ1ZmZlci5jb3VudC5zdGF0cyIsCisJCS5zZXFfc2hvdyA9IGRybWNnX3NlcV9z
-aG93LAorCQkucHJpdmF0ZSA9IERSTUNHX0NURl9QUklWKERSTUNHX1RZUEVfQk9fQ09VTlQsCisJ
-CQkJCQlEUk1DR19GVFlQRV9TVEFUUyksCisJfSwKIAl7IH0JLyogdGVybWluYXRlICovCiB9Owog
-CkBAIC0yNzIsNiArMjgxLDggQEAgdm9pZCBkcm1jZ19jaGdfYm9fYWxsb2Moc3RydWN0IGRybWNn
-ICpkcm1jZywgc3RydWN0IGRybV9kZXZpY2UgKmRldiwKIAogCQlpZiAoZGRyLT5ib19zdGF0c19w
-ZWFrX2FsbG9jYXRlZCA8IChzNjQpc2l6ZSkKIAkJCWRkci0+Ym9fc3RhdHNfcGVha19hbGxvY2F0
-ZWQgPSAoczY0KXNpemU7CisKKwkJZGRyLT5ib19zdGF0c19jb3VudF9hbGxvY2F0ZWQrKzsKIAl9
-CiAJbXV0ZXhfdW5sb2NrKCZkZXYtPmRybWNnX211dGV4KTsKIH0KQEAgLTI4OSwxNSArMzAwLDIw
-IEBAIEVYUE9SVF9TWU1CT0woZHJtY2dfY2hnX2JvX2FsbG9jKTsKIHZvaWQgZHJtY2dfdW5jaGdf
-Ym9fYWxsb2Moc3RydWN0IGRybWNnICpkcm1jZywgc3RydWN0IGRybV9kZXZpY2UgKmRldiwKIAkJ
-c2l6ZV90IHNpemUpCiB7CisJc3RydWN0IGRybWNnX2RldmljZV9yZXNvdXJjZSAqZGRyOwogCWlu
-dCBkZXZJZHggPSBkZXYtPnByaW1hcnktPmluZGV4OwogCiAJaWYgKGRybWNnID09IE5VTEwpCiAJ
-CXJldHVybjsKIAogCW11dGV4X2xvY2soJmRldi0+ZHJtY2dfbXV0ZXgpOwotCWZvciAoIDsgZHJt
-Y2cgIT0gTlVMTDsgZHJtY2cgPSBkcm1jZ19wYXJlbnQoZHJtY2cpKQotCQlkcm1jZy0+ZGV2X3Jl
-c291cmNlc1tkZXZJZHhdLT5ib19zdGF0c190b3RhbF9hbGxvY2F0ZWQKLQkJCS09IChzNjQpc2l6
-ZTsKKwlmb3IgKCA7IGRybWNnICE9IE5VTEw7IGRybWNnID0gZHJtY2dfcGFyZW50KGRybWNnKSkg
-eworCQlkZHIgPSBkcm1jZy0+ZGV2X3Jlc291cmNlc1tkZXZJZHhdOworCisJCWRkci0+Ym9fc3Rh
-dHNfdG90YWxfYWxsb2NhdGVkIC09IChzNjQpc2l6ZTsKKworCQlkZHItPmJvX3N0YXRzX2NvdW50
-X2FsbG9jYXRlZC0tOworCX0KIAltdXRleF91bmxvY2soJmRldi0+ZHJtY2dfbXV0ZXgpOwogfQog
-RVhQT1JUX1NZTUJPTChkcm1jZ191bmNoZ19ib19hbGxvYyk7Ci0tIAoyLjIyLjAKCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmFtZC1nZnggbWFpbGluZyBs
-aXN0CmFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0
-b3Aub3JnL21haWxtYW4vbGlzdGluZm8vYW1kLWdmeA==
+[Cc cgroups maintainers]
+
+On Wed 28-08-19 10:58:00, Mina Almasry wrote:
+> On Wed, Aug 28, 2019 at 4:23 AM Michal Hocko <mhocko@kernel.org> wrote:
+> >
+> > On Mon 26-08-19 16:32:34, Mina Almasry wrote:
+> > >  mm/hugetlb.c                                  | 493 ++++++++++++------
+> > >  mm/hugetlb_cgroup.c                           | 187 +++++--
+> >
+> > This is a lot of changes to an already subtle code which hugetlb
+> > reservations undoubly are.
+> 
+> For what it's worth, I think this patch series is a net decrease in
+> the complexity of the reservation code, especially the region_*
+> functions, which is where a lot of the complexity lies. I removed the
+> race between region_del and region_{add|chg}, refactored the main
+> logic into smaller code, moved common code to helpers and deleted the
+> duplicates, and finally added lots of comments to the hard to
+> understand pieces. I hope that when folks review the changes they will
+> see that! :)
+
+Post those improvements as standalone patches and sell them as
+improvements. We can talk about the net additional complexity of the
+controller much easier then.
+
+> > Moreover cgroupv1 is feature frozen and I am
+> > not aware of any plans to port the controller to v2.
+> 
+> Also for what it's worth, if porting the controller to v2 is a
+> requisite to take this, I'm happy to do that. As far as I understand
+> there is no reason hugetlb_cgroups shouldn't be in cgroups v2, and we
+> see value in them.
+
+Talk to cgroups maintainers why the hugegetlb controller hasn't been
+enabled in v2. All I am saing is that v1 only features are really a hard
+sell. Even without adding a lot of code to hugetlb which is quite
+complex on its own.
+-- 
+Michal Hocko
+SUSE Labs
