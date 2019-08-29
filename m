@@ -1,146 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 01/10] blkcg: pass @q and @blkcg into blkcg_pol_alloc_pd_fn()
-Date: Wed, 28 Aug 2019 15:05:51 -0700
-Message-ID: <20190828220600.2527417-2-tj@kernel.org>
-References: <20190828220600.2527417-1-tj@kernel.org>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v3 0/6] hugetlb_cgroup: Add hugetlb_cgroup reservation limits
+Date: Wed, 28 Aug 2019 17:42:17 -0700
+Message-ID: <CALvZod50oU2M6uhUU1JsBz+qWYgSCb9brMVVnxmGnzSRY+1k_w@mail.gmail.com>
+References: <20190826233240.11524-1-almasrymina@google.com> <20190828112340.GB7466@dhcp22.suse.cz>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=E79NtAzOgIUAizJwIesUtiv2mCB5ZP/4rNwX4GMcwPI=;
-        b=aYzG7U0qx200TAfF6SANRqpsqmzCpyPAG6ywyYSvuykYASu2JfqjduSvQDq0IbeRh/
-         Qygo2r9DYfVqyC/MO929R8Pz0U0y3Ijgwy856gR0/8/C/vAv0TAhwXKimEPwkppjV1C9
-         EmbbgDfwv/x0e1SAuE3/QLuzafbLQCQrvkeyfQcu9/E0v84XvW5eKCUn4JjkmM88k1m9
-         mt+jC2UUw1ckafk+3PxhG707zlguMjx+uEy6X/6bM3FVcJ/l+00fLe2GzdhiJ5Lj59sK
-         5QrpyeR4p5hzEiF+ME0aA+UwrZg/jLzVnwSJ5cQ6yMvip/dick/WiQKYI1oeahebMC36
-         Y+lg==
-In-Reply-To: <20190828220600.2527417-1-tj@kernel.org>
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=JGRwNGErn4fgKcrUQ6xiTdFGa/UMxL0bW7u4f7HW4+s=;
+        b=pBO9kFI77gE/gtpKbWkDAhKyiVvqdGWPANz9tNI0ulLcwYHoReFSfdXsKvIH5b2ukK
+         WGnn+9GA91GX0cvQr5BUecBkiW3S29/Rw0gTWQUMFlFjv518j/HXADFAj+4761buG12B
+         iyiEMUsd42x8e+ChjWSlMASRf9onmoRTvLke52aYFW5iHXS/bcePN11ElmPPs2wEHwr+
+         +lo9WwG12RwAezKZNZnE+4D2qf1ZmnQwI4Yefcvpkkl6fjQclDsYV6Df+hzX3xOmZ8Wm
+         w625t6PosUftPeW/9D5oDaSYkeGL4TR12mZ+mdAvFl3FLIEjoe+eb+wrL1d7u+9yz/dL
+         GWgA==
+In-Reply-To: <20190828112340.GB7466@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk, newella@fb.com, clm@fb.com, josef@toxicpanda.com, dennisz@fb.com, lizefan@huawei.com, hannes@cmpxchg.org
-Cc: linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Mina Almasry <almasrymina@google.com>, mike.kravetz@oracle.com, shuah@kernel.org, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, khalid.aziz@oracle.com, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, linux-kselftest@vger.kernel.org, Cgroups <cgroups@vger.kernel.org>, aneesh.kumar@linux.vnet.ibm.com, mkoutny@suse.com
 
-Instead of @node, pass in @q and @blkcg so that the alloc function has
-more context.  This doesn't cause any behavior change and will be used
-by io.weight implementation.
+On Wed, Aug 28, 2019 at 4:23 AM Michal Hocko <mhocko@kernel.org> wrote:
+>
+> On Mon 26-08-19 16:32:34, Mina Almasry wrote:
+> >  mm/hugetlb.c                                  | 493 ++++++++++++------
+> >  mm/hugetlb_cgroup.c                           | 187 +++++--
+>
+> This is a lot of changes to an already subtle code which hugetlb
+> reservations undoubly are. Moreover cgroupv1 is feature frozen and I am
+> not aware of any plans to port the controller to v2. That all doesn't
+> sound in favor of this change.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- block/bfq-cgroup.c         | 5 +++--
- block/blk-cgroup.c         | 6 +++---
- block/blk-iolatency.c      | 6 ++++--
- block/blk-throttle.c       | 6 ++++--
- include/linux/blk-cgroup.h | 3 ++-
- 5 files changed, 16 insertions(+), 10 deletions(-)
+Actually "no plan to port the controller to v2" makes the case strong
+for these changes (and other new features) to be done in v1. If there
+is an alternative solution in v2 then I can understand the push-back
+on changes in v1 but that is not the case here.
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 0f6cd688924f..e6fb537b4bfc 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -501,11 +501,12 @@ static void bfq_cpd_free(struct blkcg_policy_data *cpd)
- 	kfree(cpd_to_bfqgd(cpd));
- }
- 
--static struct blkg_policy_data *bfq_pd_alloc(gfp_t gfp, int node)
-+static struct blkg_policy_data *bfq_pd_alloc(gfp_t gfp, struct request_queue *q,
-+					     struct blkcg *blkcg)
- {
- 	struct bfq_group *bfqg;
- 
--	bfqg = kzalloc_node(sizeof(*bfqg), gfp, node);
-+	bfqg = kzalloc_node(sizeof(*bfqg), gfp, q->node);
- 	if (!bfqg)
- 		return NULL;
- 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 55a7dc227dfb..6a82ca3fb5cf 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -175,7 +175,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
- 			continue;
- 
- 		/* alloc per-policy data and attach it to blkg */
--		pd = pol->pd_alloc_fn(gfp_mask, q->node);
-+		pd = pol->pd_alloc_fn(gfp_mask, q, blkcg);
- 		if (!pd)
- 			goto err_free;
- 
-@@ -1346,7 +1346,7 @@ int blkcg_activate_policy(struct request_queue *q,
- 		blk_mq_freeze_queue(q);
- pd_prealloc:
- 	if (!pd_prealloc) {
--		pd_prealloc = pol->pd_alloc_fn(GFP_KERNEL, q->node);
-+		pd_prealloc = pol->pd_alloc_fn(GFP_KERNEL, q, &blkcg_root);
- 		if (!pd_prealloc) {
- 			ret = -ENOMEM;
- 			goto out_bypass_end;
-@@ -1362,7 +1362,7 @@ int blkcg_activate_policy(struct request_queue *q,
- 		if (blkg->pd[pol->plid])
- 			continue;
- 
--		pd = pol->pd_alloc_fn(GFP_NOWAIT | __GFP_NOWARN, q->node);
-+		pd = pol->pd_alloc_fn(GFP_NOWAIT | __GFP_NOWARN, q, &blkcg_root);
- 		if (!pd)
- 			swap(pd, pd_prealloc);
- 		if (!pd) {
-diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
-index 0fff7b56df0e..46fa6449f4bb 100644
---- a/block/blk-iolatency.c
-+++ b/block/blk-iolatency.c
-@@ -934,11 +934,13 @@ static size_t iolatency_pd_stat(struct blkg_policy_data *pd, char *buf,
- }
- 
- 
--static struct blkg_policy_data *iolatency_pd_alloc(gfp_t gfp, int node)
-+static struct blkg_policy_data *iolatency_pd_alloc(gfp_t gfp,
-+						   struct request_queue *q,
-+						   struct blkcg *blkcg)
- {
- 	struct iolatency_grp *iolat;
- 
--	iolat = kzalloc_node(sizeof(*iolat), gfp, node);
-+	iolat = kzalloc_node(sizeof(*iolat), gfp, q->node);
- 	if (!iolat)
- 		return NULL;
- 	iolat->stats = __alloc_percpu_gfp(sizeof(struct latency_stat),
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 8ab6c8153223..0445c998c377 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -478,12 +478,14 @@ static void throtl_service_queue_init(struct throtl_service_queue *sq)
- 	timer_setup(&sq->pending_timer, throtl_pending_timer_fn, 0);
- }
- 
--static struct blkg_policy_data *throtl_pd_alloc(gfp_t gfp, int node)
-+static struct blkg_policy_data *throtl_pd_alloc(gfp_t gfp,
-+						struct request_queue *q,
-+						struct blkcg *blkcg)
- {
- 	struct throtl_grp *tg;
- 	int rw;
- 
--	tg = kzalloc_node(sizeof(*tg), gfp, node);
-+	tg = kzalloc_node(sizeof(*tg), gfp, q->node);
- 	if (!tg)
- 		return NULL;
- 
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 0bb79d858a13..261248e88eb1 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -149,7 +149,8 @@ typedef struct blkcg_policy_data *(blkcg_pol_alloc_cpd_fn)(gfp_t gfp);
- typedef void (blkcg_pol_init_cpd_fn)(struct blkcg_policy_data *cpd);
- typedef void (blkcg_pol_free_cpd_fn)(struct blkcg_policy_data *cpd);
- typedef void (blkcg_pol_bind_cpd_fn)(struct blkcg_policy_data *cpd);
--typedef struct blkg_policy_data *(blkcg_pol_alloc_pd_fn)(gfp_t gfp, int node);
-+typedef struct blkg_policy_data *(blkcg_pol_alloc_pd_fn)(gfp_t gfp,
-+				struct request_queue *q, struct blkcg *blkcg);
- typedef void (blkcg_pol_init_pd_fn)(struct blkg_policy_data *pd);
- typedef void (blkcg_pol_online_pd_fn)(struct blkg_policy_data *pd);
- typedef void (blkcg_pol_offline_pd_fn)(struct blkg_policy_data *pd);
--- 
-2.17.1
-
+Shakeel
