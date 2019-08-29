@@ -1,49 +1,79 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [PATCH v2 3/3] bfq: Add per-device weight
-Date: Mon, 26 Aug 2019 08:36:17 +0200
-Message-ID: <C2F0BE1E-9CAA-4FBD-80D8-C18ECCE3FD4B@linaro.org>
-References: <20190805063807.9494-1-zhengfeiran@bytedance.com>
- <20190805063807.9494-4-zhengfeiran@bytedance.com>
- <20190821154402.GI2263813@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.8\))
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=iVlNOvcGkxOW82lX/stt8mZNXgPWFfdeCPzC+y26i1w=;
-        b=Ko288HnotBth8jQ1QLLaxPiIBMWT0CGuHCphEGfWiVxL3InXCHOVU/SvqRYl+8Uk7I
-         maRDjlOXSxFfzYnf7uhq9Zva9futXeSmVAMYxChtvlzzMGTZEPl2c++crWSqiz+vYzQW
-         /Cp3r2Uzy2vuRJ/YpuiMHfXMNBcmbxXQqfN6vuE7WQjy7ZLKu6bWXHe1bW5va0Zpsb3+
-         24VCf/amP3DuZFxAtkt45Q2mSJSfihWLPi301wjgoam+Op4sqi1ZCxEN0VxTPwmi4xhQ
-         AOGPUweB+T7vdpITeG+1HnPM4JAZH4qdY5b2eJyXWsk7G5mO6LrO3oWxUD+ZKN3G51bo
-         EcYA==
-In-Reply-To: <20190821154402.GI2263813@devbig004.ftw2.facebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+From: Kenny Ho <Kenny.Ho@amd.com>
+Subject: [PATCH RFC v4 01/16] drm: Add drm_minor_for_each
+Date: Thu, 29 Aug 2019 02:05:18 -0400
+Message-ID: <20190829060533.32315-2-Kenny.Ho@amd.com>
+References: <20190829060533.32315-1-Kenny.Ho@amd.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <20190829060533.32315-1-Kenny.Ho@amd.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Fam Zheng <zhengfeiran@bytedance.com>, linux-kernel <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Fam Zheng <fam@euphon.net>, duanxiongchun@bytedance.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, zhangjiachen.jc@bytedance.com
+To: y2kenny@gmail.com, cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org, amd-gfx@lists.freedesktop.org, tj@kernel.org, alexander.deucher@amd.com, christian.koenig@amd.com, felix.kuehling@amd.com, joseph.greathouse@amd.com, jsparks@cray.com, lkaplan@cray.com, daniel@ffwll.ch
+Cc: Kenny Ho <Kenny.Ho@amd.com>
 
-Hi Jens,
-do you think this series could now be queued for 5.4?
-
-Thanks,
-Paolo
-
-> Il giorno 21 ago 2019, alle ore 17:44, Tejun Heo <tj@kernel.org> ha =
-scritto:
->=20
-> On Mon, Aug 05, 2019 at 02:38:07PM +0800, Fam Zheng wrote:
->> Signed-off-by: Fam Zheng <zhengfeiran@bytedance.com>
->=20
-> Looks good to me.
->=20
-> Acked-by: Tejun Heo <tj@kernel.org>
->=20
-> Thanks.
->=20
-> --=20
-> tejun
-
+VG8gYWxsb3cgb3RoZXIgc3Vic3lzdGVtcyB0byBpdGVyYXRlIHRocm91Z2ggYWxsIHN0b3JlZCBE
+Uk0gbWlub3JzIGFuZAphY3QgdXBvbiB0aGVtLgoKQWxzbyBleHBvc2VzIGRybV9taW5vcl9hY3F1
+aXJlIGFuZCBkcm1fbWlub3JfcmVsZWFzZSBmb3Igb3RoZXIgc3Vic3lzdGVtCnRvIGhhbmRsZSBk
+cm1fbWlub3IuICBEUk0gY2dyb3VwIGNvbnRyb2xsZXIgaXMgdGhlIGluaXRpYWwgY29uc3VtZXIg
+b2YKdGhpcyBuZXcgZmVhdHVyZXMuCgpDaGFuZ2UtSWQ6IEk3YzRiNjdjZTZiMzFmMDZkMTAzN2Iw
+MzQzNTM4NmZmNWI4MTQ0Y2E1ClNpZ25lZC1vZmYtYnk6IEtlbm55IEhvIDxLZW5ueS5Ib0BhbWQu
+Y29tPgotLS0KIGRyaXZlcnMvZ3B1L2RybS9kcm1fZHJ2LmMgICAgICB8IDE5ICsrKysrKysrKysr
+KysrKysrKysKIGRyaXZlcnMvZ3B1L2RybS9kcm1faW50ZXJuYWwuaCB8ICA0IC0tLS0KIGluY2x1
+ZGUvZHJtL2RybV9kcnYuaCAgICAgICAgICB8ICA0ICsrKysKIDMgZmlsZXMgY2hhbmdlZCwgMjMg
+aW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9k
+cm0vZHJtX2Rydi5jIGIvZHJpdmVycy9ncHUvZHJtL2RybV9kcnYuYwppbmRleCA4NjI2MjE0OTRh
+OTMuLjAwMGNkZGFiZDk3MCAxMDA2NDQKLS0tIGEvZHJpdmVycy9ncHUvZHJtL2RybV9kcnYuYwor
+KysgYi9kcml2ZXJzL2dwdS9kcm0vZHJtX2Rydi5jCkBAIC0yNTQsMTEgKzI1NCwxMyBAQCBzdHJ1
+Y3QgZHJtX21pbm9yICpkcm1fbWlub3JfYWNxdWlyZSh1bnNpZ25lZCBpbnQgbWlub3JfaWQpCiAK
+IAlyZXR1cm4gbWlub3I7CiB9CitFWFBPUlRfU1lNQk9MKGRybV9taW5vcl9hY3F1aXJlKTsKIAog
+dm9pZCBkcm1fbWlub3JfcmVsZWFzZShzdHJ1Y3QgZHJtX21pbm9yICptaW5vcikKIHsKIAlkcm1f
+ZGV2X3B1dChtaW5vci0+ZGV2KTsKIH0KK0VYUE9SVF9TWU1CT0woZHJtX21pbm9yX3JlbGVhc2Up
+OwogCiAvKioKICAqIERPQzogZHJpdmVyIGluc3RhbmNlIG92ZXJ2aWV3CkBAIC0xMDc4LDYgKzEw
+ODAsMjMgQEAgaW50IGRybV9kZXZfc2V0X3VuaXF1ZShzdHJ1Y3QgZHJtX2RldmljZSAqZGV2LCBj
+b25zdCBjaGFyICpuYW1lKQogfQogRVhQT1JUX1NZTUJPTChkcm1fZGV2X3NldF91bmlxdWUpOwog
+CisvKioKKyAqIGRybV9taW5vcl9mb3JfZWFjaCAtIEl0ZXJhdGUgdGhyb3VnaCBhbGwgc3RvcmVk
+IERSTSBtaW5vcnMKKyAqIEBmbjogRnVuY3Rpb24gdG8gYmUgY2FsbGVkIGZvciBlYWNoIHBvaW50
+ZXIuCisgKiBAZGF0YTogRGF0YSBwYXNzZWQgdG8gY2FsbGJhY2sgZnVuY3Rpb24uCisgKgorICog
+VGhlIGNhbGxiYWNrIGZ1bmN0aW9uIHdpbGwgYmUgY2FsbGVkIGZvciBlYWNoIEBkcm1fbWlub3Ig
+ZW50cnksIHBhc3NpbmcKKyAqIHRoZSBtaW5vciwgdGhlIGVudHJ5IGFuZCBAZGF0YS4KKyAqCisg
+KiBJZiBAZm4gcmV0dXJucyBhbnl0aGluZyBvdGhlciB0aGFuICUwLCB0aGUgaXRlcmF0aW9uIHN0
+b3BzIGFuZCB0aGF0CisgKiB2YWx1ZSBpcyByZXR1cm5lZCBmcm9tIHRoaXMgZnVuY3Rpb24uCisg
+Ki8KK2ludCBkcm1fbWlub3JfZm9yX2VhY2goaW50ICgqZm4pKGludCBpZCwgdm9pZCAqcCwgdm9p
+ZCAqZGF0YSksIHZvaWQgKmRhdGEpCit7CisJcmV0dXJuIGlkcl9mb3JfZWFjaCgmZHJtX21pbm9y
+c19pZHIsIGZuLCBkYXRhKTsKK30KK0VYUE9SVF9TWU1CT0woZHJtX21pbm9yX2Zvcl9lYWNoKTsK
+KwogLyoKICAqIERSTSBDb3JlCiAgKiBUaGUgRFJNIGNvcmUgbW9kdWxlIGluaXRpYWxpemVzIGFs
+bCBnbG9iYWwgRFJNIG9iamVjdHMgYW5kIG1ha2VzIHRoZW0KZGlmZiAtLWdpdCBhL2RyaXZlcnMv
+Z3B1L2RybS9kcm1faW50ZXJuYWwuaCBiL2RyaXZlcnMvZ3B1L2RybS9kcm1faW50ZXJuYWwuaApp
+bmRleCBlMTlhYzdjYTYwMmQuLjZiZmFkNzZmOGU3OCAxMDA2NDQKLS0tIGEvZHJpdmVycy9ncHUv
+ZHJtL2RybV9pbnRlcm5hbC5oCisrKyBiL2RyaXZlcnMvZ3B1L2RybS9kcm1faW50ZXJuYWwuaApA
+QCAtNTQsMTAgKzU0LDYgQEAgdm9pZCBkcm1fcHJpbWVfZGVzdHJveV9maWxlX3ByaXZhdGUoc3Ry
+dWN0IGRybV9wcmltZV9maWxlX3ByaXZhdGUgKnByaW1lX2Zwcml2KTsKIHZvaWQgZHJtX3ByaW1l
+X3JlbW92ZV9idWZfaGFuZGxlX2xvY2tlZChzdHJ1Y3QgZHJtX3ByaW1lX2ZpbGVfcHJpdmF0ZSAq
+cHJpbWVfZnByaXYsCiAJCQkJCXN0cnVjdCBkbWFfYnVmICpkbWFfYnVmKTsKIAotLyogZHJtX2Ry
+di5jICovCi1zdHJ1Y3QgZHJtX21pbm9yICpkcm1fbWlub3JfYWNxdWlyZSh1bnNpZ25lZCBpbnQg
+bWlub3JfaWQpOwotdm9pZCBkcm1fbWlub3JfcmVsZWFzZShzdHJ1Y3QgZHJtX21pbm9yICptaW5v
+cik7Ci0KIC8qIGRybV92YmxhbmsuYyAqLwogdm9pZCBkcm1fdmJsYW5rX2Rpc2FibGVfYW5kX3Nh
+dmUoc3RydWN0IGRybV9kZXZpY2UgKmRldiwgdW5zaWduZWQgaW50IHBpcGUpOwogdm9pZCBkcm1f
+dmJsYW5rX2NsZWFudXAoc3RydWN0IGRybV9kZXZpY2UgKmRldik7CmRpZmYgLS1naXQgYS9pbmNs
+dWRlL2RybS9kcm1fZHJ2LmggYi9pbmNsdWRlL2RybS9kcm1fZHJ2LmgKaW5kZXggNjhjYTczNmM1
+NDhkLi4yNGY4ZDA1NGM1NzAgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvZHJtL2RybV9kcnYuaAorKysg
+Yi9pbmNsdWRlL2RybS9kcm1fZHJ2LmgKQEAgLTc5OSw1ICs3OTksOSBAQCBzdGF0aWMgaW5saW5l
+IGJvb2wgZHJtX2Rydl91c2VzX2F0b21pY19tb2Rlc2V0KHN0cnVjdCBkcm1fZGV2aWNlICpkZXYp
+CiAKIGludCBkcm1fZGV2X3NldF91bmlxdWUoc3RydWN0IGRybV9kZXZpY2UgKmRldiwgY29uc3Qg
+Y2hhciAqbmFtZSk7CiAKK2ludCBkcm1fbWlub3JfZm9yX2VhY2goaW50ICgqZm4pKGludCBpZCwg
+dm9pZCAqcCwgdm9pZCAqZGF0YSksIHZvaWQgKmRhdGEpOworCitzdHJ1Y3QgZHJtX21pbm9yICpk
+cm1fbWlub3JfYWNxdWlyZSh1bnNpZ25lZCBpbnQgbWlub3JfaWQpOwordm9pZCBkcm1fbWlub3Jf
+cmVsZWFzZShzdHJ1Y3QgZHJtX21pbm9yICptaW5vcik7CiAKICNlbmRpZgotLSAKMi4yMi4wCgpf
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwg
+bWFpbGluZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0
+cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWw=
