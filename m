@@ -1,59 +1,85 @@
 From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH v3 0/6] hugetlb_cgroup: Add hugetlb_cgroup reservation
- limits
-Date: Thu, 29 Aug 2019 09:18:07 +0200
-Message-ID: <20190829071807.GR28313@dhcp22.suse.cz>
-References: <20190826233240.11524-1-almasrymina@google.com>
- <20190828112340.GB7466@dhcp22.suse.cz>
- <CAHS8izPPhPoqh-J9LJ40NJUCbgTFS60oZNuDSHmgtMQiYw72RA@mail.gmail.com>
+Subject: Re: [PATCH] mm: memcontrol: fix percpu vmstats and vmevents flush
+Date: Fri, 30 Aug 2019 07:49:31 +0200
+Message-ID: <20190830054931.GN28313@dhcp22.suse.cz>
+References: <20190829203110.129263-1-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAHS8izPPhPoqh-J9LJ40NJUCbgTFS60oZNuDSHmgtMQiYw72RA@mail.gmail.com>
+In-Reply-To: <20190829203110.129263-1-shakeelb@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mina Almasry <almasrymina@google.com>
-Cc: Mike Kravetz <mike.kravetz@oracle.com>, shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, khalid.aziz@oracle.com, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, stable@vger.kernel.org
 
-[Cc cgroups maintainers]
-
-On Wed 28-08-19 10:58:00, Mina Almasry wrote:
-> On Wed, Aug 28, 2019 at 4:23 AM Michal Hocko <mhocko@kernel.org> wrote:
-> >
-> > On Mon 26-08-19 16:32:34, Mina Almasry wrote:
-> > >  mm/hugetlb.c                                  | 493 ++++++++++++------
-> > >  mm/hugetlb_cgroup.c                           | 187 +++++--
-> >
-> > This is a lot of changes to an already subtle code which hugetlb
-> > reservations undoubly are.
+On Thu 29-08-19 13:31:10, Shakeel Butt wrote:
+> Instead of using raw_cpu_read() use per_cpu() to read the actual data of
+> the corresponding cpu otherwise we will be reading the data of the
+> current cpu for the number of online CPUs.
 > 
-> For what it's worth, I think this patch series is a net decrease in
-> the complexity of the reservation code, especially the region_*
-> functions, which is where a lot of the complexity lies. I removed the
-> race between region_del and region_{add|chg}, refactored the main
-> logic into smaller code, moved common code to helpers and deleted the
-> duplicates, and finally added lots of comments to the hard to
-> understand pieces. I hope that when folks review the changes they will
-> see that! :)
+> Fixes: bb65f89b7d3d ("mm: memcontrol: flush percpu vmevents before releasing memcg")
+> Fixes: c350a99ea2b1 ("mm: memcontrol: flush percpu vmstats before releasing memcg")
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> Cc: Roman Gushchin <guro@fb.com>
+> Cc: Michal Hocko <mhocko@suse.com>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: <stable@vger.kernel.org>
 
-Post those improvements as standalone patches and sell them as
-improvements. We can talk about the net additional complexity of the
-controller much easier then.
+Ups, missed that when reviewing. Sorry about that.
 
-> > Moreover cgroupv1 is feature frozen and I am
-> > not aware of any plans to port the controller to v2.
+Acked-by: Michal Hocko <mhocko@suse.com>
+
+> ---
 > 
-> Also for what it's worth, if porting the controller to v2 is a
-> requisite to take this, I'm happy to do that. As far as I understand
-> there is no reason hugetlb_cgroups shouldn't be in cgroups v2, and we
-> see value in them.
+> Note: The buggy patches were marked for stable therefore adding Cc to
+> stable.
+> 
+>  mm/memcontrol.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 26e2999af608..f4e60ee8b845 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3271,7 +3271,7 @@ static void memcg_flush_percpu_vmstats(struct mem_cgroup *memcg)
+>  
+>  	for_each_online_cpu(cpu)
+>  		for (i = 0; i < MEMCG_NR_STAT; i++)
+> -			stat[i] += raw_cpu_read(memcg->vmstats_percpu->stat[i]);
+> +			stat[i] += per_cpu(memcg->vmstats_percpu->stat[i], cpu);
+>  
+>  	for (mi = memcg; mi; mi = parent_mem_cgroup(mi))
+>  		for (i = 0; i < MEMCG_NR_STAT; i++)
+> @@ -3286,8 +3286,8 @@ static void memcg_flush_percpu_vmstats(struct mem_cgroup *memcg)
+>  
+>  		for_each_online_cpu(cpu)
+>  			for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
+> -				stat[i] += raw_cpu_read(
+> -					pn->lruvec_stat_cpu->count[i]);
+> +				stat[i] += per_cpu(
+> +					pn->lruvec_stat_cpu->count[i], cpu);
+>  
+>  		for (pi = pn; pi; pi = parent_nodeinfo(pi, node))
+>  			for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
+> @@ -3306,8 +3306,8 @@ static void memcg_flush_percpu_vmevents(struct mem_cgroup *memcg)
+>  
+>  	for_each_online_cpu(cpu)
+>  		for (i = 0; i < NR_VM_EVENT_ITEMS; i++)
+> -			events[i] += raw_cpu_read(
+> -				memcg->vmstats_percpu->events[i]);
+> +			events[i] += per_cpu(memcg->vmstats_percpu->events[i],
+> +					     cpu);
+>  
+>  	for (mi = memcg; mi; mi = parent_mem_cgroup(mi))
+>  		for (i = 0; i < NR_VM_EVENT_ITEMS; i++)
+> -- 
+> 2.23.0.187.g17f5b7556c-goog
+> 
 
-Talk to cgroups maintainers why the hugegetlb controller hasn't been
-enabled in v2. All I am saing is that v1 only features are really a hard
-sell. Even without adding a lot of code to hugetlb which is quite
-complex on its own.
 -- 
 Michal Hocko
 SUSE Labs
