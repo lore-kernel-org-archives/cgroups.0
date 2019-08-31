@@ -1,59 +1,57 @@
-From: Yizhuo Zhai <yzhai003@ucr.edu>
-Subject: Re: [PATCH] mm/memcg: return value of the function
- mem_cgroup_from_css() is not checked
-Date: Fri, 30 Aug 2019 15:27:50 -0700
-Message-ID: <CABvMjLRFm5ghgXJYuuNOOSzg01EgE1MazAY7c6HXZaa6wogF8g@mail.gmail.com>
-References: <20190822062210.18649-1-yzhai003@ucr.edu> <20190822070550.GA12785@dhcp22.suse.cz>
- <CABvMjLRCt4gC3GKzBehGppxfyMOb6OGQwW-6Yu_+MbMp5tN3tg@mail.gmail.com> <20190822201200.GP12785@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH RFC v4 00/16] new cgroup controller for gpu/drm subsystem
+Date: Fri, 30 Aug 2019 21:28:57 -0700
+Message-ID: <20190831042857.GD2263813@devbig004.ftw2.facebook.com>
+References: <20190829060533.32315-1-Kenny.Ho@amd.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=ucr.edu; i=@ucr.edu; q=dns/txt; s=selector3;
-  t=1567204042; x=1598740042;
-  h=mime-version:references:in-reply-to:from:date:message-id:
-   subject:to:cc;
-  bh=+AxKleiBOotn72mRXxY/KudOmnLMJMiIcrvaqwrtHdw=;
-  b=OzpFioaXHjOs1ZkOfgehhLN6JksrEiWwHw4FAr5GnMYaegARhvBpoG3L
-   96Nvl7QtXZrxM4C/sHmjvQKJnPQWswqJ7G1wVFmvs9wjYWtmv2qVQLLvc
-   4XcnLYIwmQr6mSXEY1PscQUoBjGOssX6kfUFvFI9Ho/XZw9eNDRlp2nGz
-   3wHZwDiLvKnRFKoasyD+sHLuKxp/+psLpqYaFC+ohNQx4zDfmrzxxHNuP
-   kJ73TP+V7K6scPeAfcf33oJbV5bbNUv4FQxHzPOTetin46Oy6oxFQLME6
-   o9y8H7fAxY873hkMBbZWjp4FHUIbHD9MR7FxKq8dsmEnwd68t+DXfwGoE
-   g==;
-In-Reply-To: <20190822201200.GP12785@dhcp22.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20190829060533.32315-1-Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Chengyu Song <csong@cs.ucr.edu>, Zhiyun Qian <zhiyunq@cs.ucr.edu>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
+Cc: daniel-/w4YWyX8dFk@public.gmane.org, felix.kuehling-5C7GfCeVMHo@public.gmane.org, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, lkaplan-WVYJKLFxKCc@public.gmane.org, y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, joseph.greathouse-5C7GfCeVMHo@public.gmane.org, alexander.deucher-5C7GfCeVMHo@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, christian.koenig-5C7GfCeVMHo@public.gmane.org
 
-Our tool did not trace back the whole path, so, now we could say it
-might happen.
-
-On Thu, Aug 22, 2019 at 1:12 PM Michal Hocko <mhocko@kernel.org> wrote:
->
-> On Thu 22-08-19 13:07:17, Yizhuo Zhai wrote:
-> > This will happen if variable "wb->memcg_css" is NULL. This case is reported
-> > by our analysis tool.
->
-> Does your tool report the particular call path and conditions when that
-> happen? Or is it just a "it mignt happen" kinda thing?
->
-> > Since the function mem_cgroup_wb_domain() is visible to the global, we
-> > cannot control caller's behavior.
->
-> I am sorry but I do not understand what is this supposed to mean.
-> --
-> Michal Hocko
-> SUSE Labs
-
-
-
--- 
-Kind Regards,
-
-Yizhuo Zhai
-
-Computer Science, Graduate Student
-University of California, Riverside
+SGVsbG8sCgpJIGp1c3QgZ2xhbmNlZCB0aHJvdWdoIHRoZSBpbnRlcmZhY2UgYW5kIGRvbid0IGhh
+dmUgZW5vdWdoIGNvbnRleHQgdG8KZ2l2ZSBhbnkga2luZCBvZiBkZXRhaWxlZCByZXZpZXcgeWV0
+LiAgSSdsbCB0cnkgdG8gcmVhZCB1cCBhbmQKdW5kZXJzdGFuZCBtb3JlIGFuZCB3b3VsZCBncmVh
+dGx5IGFwcHJlY2lhdGUgaWYgeW91IGNhbiBnaXZlIG1lIHNvbWUKcG9pbnRlcnMgdG8gcmVhZCB1
+cCBvbiB0aGUgcmVzb3VyY2VzIGJlaW5nIGNvbnRyb2xsZWQgYW5kIGhvdyB0aGUKYWN0dWFsIHVz
+ZSBjYXNlcyB3b3VsZCBsb29rIGxpa2UuICBUaGF0IHNhaWQsIEkgaGF2ZSBzb21lIGJhc2ljCmNv
+bmNlcm5zLgoKKiBUVE0gdnMuIEdFTSBkaXN0aW5jdGlvbiBzZWVtcyB0byBiZSBpbnRlcm5hbCBp
+bXBsZW1lbnRhdGlvbiBkZXRhaWwKICByYXRoZXIgdGhhbiBhbnl0aGluZyByZWxhdGluZyB0byB1
+bmRlcmx5aW5nIHBoeXNpY2FsIHJlc291cmNlcy4KICBQcm92aWRlZCB0aGF0J3MgdGhlIGNhc2Us
+IEknbSBhZnJhaWQgdGhlc2UgaW50ZXJuYWwgY29uc3RydWN0cyBiZWluZwogIHVzZWQgYXMgcHJp
+bWFyeSByZXNvdXJjZSBjb250cm9sIG9iamVjdHMgbGlrZWx5IGlzbid0IHRoZSByaWdodAogIGFw
+cHJvYWNoLiAgV2hldGhlciBhIGdpdmVuIGRyaXZlciB1c2VzIG9uZSBvciB0aGUgb3RoZXIgaW50
+ZXJuYWwKICBhYnN0cmFjdGlvbiBsYXllciBzaG91bGRuJ3QgZGV0ZXJtaW5lIGhvdyByZXNvdXJj
+ZXMgYXJlIHJlcHJlc2VudGVkCiAgYXQgdGhlIHVzZXJsYW5kIGludGVyZmFjZSBsYXllci4KCiog
+V2hpbGUgYnJlYWtpbmcgdXAgYW5kIGFwcGx5aW5nIGNvbnRyb2wgdG8gZGlmZmVyZW50IHR5cGVz
+IG9mCiAgaW50ZXJuYWwgb2JqZWN0cyBtYXkgc2VlbSBhdHRyYWN0aXZlIHRvIGZvbGtzIHdobyB3
+b3JrIGRheSBpbiBhbmQKICBkYXkgb3V0IHdpdGggdGhlIHN1YnN5c3RlbSwgdGhleSBhcmVuJ3Qg
+YWxsIHRoYXQgdXNlZnVsIHRvIHVzZXJzIGFuZAogIHRoZSBzaWxvZWQgY29udHJvbHMgYXJlIGxp
+a2VseSB0byBtYWtlIHRoZSB3aG9sZSBtZWNoYW5pc20gYSBsb3QKICBsZXNzIHVzZWZ1bC4gIFdl
+IGhhZCB0aGUgc2FtZSBwcm9ibGVtIHdpdGggY2dyb3VwMSBtZW1jZyAtIHB1dHRpbmcKICBjb250
+cm9sIG9mIGRpZmZlcmVudCB1c2VzIG9mIG1lbW9yeSB1bmRlciBzZXBhcmF0ZSBrbm9icy4gIEl0
+IG1hZGUKICB0aGUgd2hvbGUgdGhpbmcgcHJldHR5IHVzZWxlc3MuICBlLmcuIGlmIHlvdSBjb25z
+dHJhaW4gYWxsIGtub2JzCiAgdGlnaHQgZW5vdWdoIHRvIGNvbnRyb2wgdGhlIG92ZXJhbGwgdXNh
+Z2UsIG92ZXJhbGwgdXRpbGl6YXRpb24KICBzdWZmZXJzLCBidXQgaWYgeW91IGRvbid0LCB5b3Ug
+cmVhbGx5IGRvbid0IGhhdmUgY29udHJvbCBvdmVyIGFjdHVhbAogIHVzYWdlLiAgRm9yIG1lbWNn
+LCB3aGF0IGhhcyB0byBiZSBhbGxvY2F0ZWQgYW5kIGNvbnRyb2xsZWQgaXMKICBwaHlzaWNhbCBt
+ZW1vcnksIG5vIG1hdHRlciBob3cgdGhleSdyZSB1c2VkLiAgSXQncyBub3QgbGlrZSB5b3UgY2Fu
+CiAgZ28gYnV5IG1vcmUgInNvY2tldCIgbWVtb3J5LiAgQXQgbGVhc3QgZnJvbSB0aGUgbG9va3Mg
+b2YgaXQsIEknbQogIGFmcmFpZCBncHUgY29udHJvbGxlciBpcyByZXBlYXRpbmcgdGhlIHNhbWUg
+bWlzdGFrZXMuCgpUaGFua3MuCgotLSAKdGVqdW4KX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KYW1kLWdmeCBtYWlsaW5nIGxpc3QKYW1kLWdmeEBsaXN0cy5m
+cmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0
+aW5mby9hbWQtZ2Z4
