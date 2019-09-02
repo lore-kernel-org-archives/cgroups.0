@@ -1,91 +1,49 @@
-From: Patrick Bellasi <patrick.bellasi@arm.com>
-Subject: Re: [PATCH v14 5/6] sched/core: uclamp: Update CPU's refcount on TG's clamp changes
-Date: Mon, 02 Sep 2019 07:44:40 +0100
-Message-ID: <87woernqnb.fsf@arm.com>
-References: <20190822132811.31294-1-patrick.bellasi@arm.com> <20190822132811.31294-6-patrick.bellasi@arm.com> <20190830094834.GB2369@hirez.programming.kicks-ass.net>
+From: Chuhong Yuan <hslester96@gmail.com>
+Subject: Re: [PATCH 01/12] rdmacg: Replace strncmp with str_has_prefix
+Date: Mon, 2 Sep 2019 14:48:05 +0800
+Message-ID: <CANhBUQ1NvLc7vxMJsFpCN2X502d8TwZSVNTJPfg35Y_ocUpYPA@mail.gmail.com>
+References: <20190729151346.9280-1-hslester96@gmail.com> <201907292117.DA40CA7D@keescook>
+ <CANhBUQ3V2A-TBVizVh+eMLSi5Gzw5sMBY7C-0a8=-z15qyQ75w@mail.gmail.com> <201908291652.46E2D65@keescook>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <20190830094834.GB2369@hirez.programming.kicks-ass.net>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=FMzxmnkxNJ25Ubbbpj3fmyVSXQrVBstVeDl3+hULd4I=;
+        b=ALTtMzFn01urPW1oTRJx8B8KaMUkx5MsYciorahuYhsXjqCHHMYHNTyPmOlvxbP8H/
+         7y34YPgWOWXKI6kZgpy/CbydTQFA6W6oEtPvXdi670yMBN8T59o9xYDh4yrC/jx5wmsq
+         SS20Qct5zUK4wP0LTYZohQqqcZOSgg/aD2qkVkSvaPVAe5s7otwTtVWomLlmjIyLxwL7
+         ia9wKVWkXkd7b0IWIB3MUucyEN2xttcLijQZsmMl9XOGA9dhKvo2oZIclli1IUkvJAMA
+         GFWhSM3pluYyrWl1n2qUWnt10pZ0F+2uQIrQzM/mZpYz5HkbWfCdU2pKKNajItqKcnhK
+         iUmg==
+In-Reply-To: <201908291652.46E2D65@keescook>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-api@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Vincent Guittot <vincent.guittot@linaro.org>, Viresh Kumar <viresh.kumar@linaro.org>, Paul Turner <pjt@google.com>, Michal Koutny <mkoutny@suse.com>, Quentin Perret <quentin.perret@arm.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Morten Rasmussen <morten.rasmussen@arm.com>, Juri Lelli <juri.lelli@redhat.com>, Todd Kjos <tkjos@google.com>, Joel Fernandes <joelaf@google.com>, Steve Muckle <smuckle@google.com>, Suren Baghdasaryan <surenb@google.com>, Alessio Balsini <balsini@android.com>
+To: Kees Cook <keescook@chromium.org>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Joe Perches <joe@perches.com>, Laura Abbott <labbott@redhat.com>, Michael Ellerman <mpe@ellerman.id.au>, Steven Rostedt <rostedt@goodmis.org>
 
-
-On Fri, Aug 30, 2019 at 09:48:34 +0000, Peter Zijlstra wrote...
-
-> On Thu, Aug 22, 2019 at 02:28:10PM +0100, Patrick Bellasi wrote:
+On Fri, Aug 30, 2019 at 7:52 AM Kees Cook <keescook@chromium.org> wrote:
 >
->> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
->> index 04fc161e4dbe..fc2dc86a2abe 100644
->> --- a/kernel/sched/core.c
->> +++ b/kernel/sched/core.c
->> @@ -1043,6 +1043,57 @@ static inline void uclamp_rq_dec(struct rq *rq, struct task_struct *p)
->>  		uclamp_rq_dec_id(rq, p, clamp_id);
->>  }
->>  
->> +static inline void
->> +uclamp_update_active(struct task_struct *p, unsigned int clamp_id)
->> +{
->> +	struct rq_flags rf;
->> +	struct rq *rq;
->> +
->> +	/*
->> +	 * Lock the task and the rq where the task is (or was) queued.
->> +	 *
->> +	 * We might lock the (previous) rq of a !RUNNABLE task, but that's the
->> +	 * price to pay to safely serialize util_{min,max} updates with
->> +	 * enqueues, dequeues and migration operations.
->> +	 * This is the same locking schema used by __set_cpus_allowed_ptr().
->> +	 */
->> +	rq = task_rq_lock(p, &rf);
+> On Tue, Jul 30, 2019 at 02:39:40PM +0800, Chuhong Yuan wrote:
+> > I think with the help of Coccinelle script, all strncmp(str, const, len)
+> > can be replaced and these problems will be eliminated. :)
 >
-> Since modifying cgroup parameters is priv only, this should be OK I
-> suppose. Priv can already DoS the system anyway.
-
-Are you referring to the possibility to DoS the scheduler by keep
-writing cgroup attributes?
-
-Because, in that case I think cgroup attributes could be written also by
-non priv users. It all depends on how they are mounted and permissions
-are set. Isn't it?
-
-Anyway, I'm not sure we can fix that here... and in principle we could
-have that DoS by setting CPUs affinities, which is user exposed.
-Isn't it?
-
->> +	/*
->> +	 * Setting the clamp bucket is serialized by task_rq_lock().
->> +	 * If the task is not yet RUNNABLE and its task_struct is not
->> +	 * affecting a valid clamp bucket, the next time it's enqueued,
->> +	 * it will already see the updated clamp bucket value.
->> +	 */
->> +	if (!p->uclamp[clamp_id].active)
->> +		goto done;
->> +
->> +	uclamp_rq_dec_id(rq, p, clamp_id);
->> +	uclamp_rq_inc_id(rq, p, clamp_id);
->> +
->> +done:
+> Hi! Just pinging this thread again. Any progress on this conversion?
 >
-> I'm thinking that:
+
+I didn't work further on this conversion since it seems that developers
+are not very interested in this problem (only half of my sent patches have
+been responded till now) and I am working on other projects recently.
+
+If the Coccinelle script is needed, I can try to implement it next week.
+
+Regards,
+Chuhong
+
+> Thanks!
 >
-> 	if (p->uclamp[clamp_id].active) {
-> 		uclamp_rq_dec_id(rq, p, clamp_id);
-> 		uclamp_rq_inc_id(rq, p, clamp_id);
-> 	}
->
-> was too obvious? ;-)
-
-Yep, right... I think there was some more code in prev versions but I
-forgot to get rid of that "goto" pattern after some change.
-
->> +
->> +	task_rq_unlock(rq, p, &rf);
->> +}
-
-Cheers,
-Patrick
-
+> --
+> Kees Cook
