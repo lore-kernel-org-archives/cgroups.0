@@ -1,217 +1,89 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [PATCHSET block/for-next] IO cost model based work-conserving
- porportional controller
-Date: Sat, 31 Aug 2019 09:10:26 +0200
-Message-ID: <73CA9E04-DD93-47E4-B0FE-0A12EC991DEF@linaro.org>
-References: <20190614015620.1587672-1-tj@kernel.org>
- <20190614175642.GA657710@devbig004.ftw2.facebook.com>
- <5A63F937-F7B5-4D09-9DB4-C73D6F571D50@linaro.org>
- <B5E431F7-549D-4FC4-A098-D074DF9586A1@linaro.org>
- <20190820151903.GH2263813@devbig004.ftw2.facebook.com>
- <9EB760CE-0028-4766-AE9D-6E90028D8579@linaro.org>
- <20190831065358.GF2263813@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.8\))
-Content-Transfer-Encoding: quoted-printable
+From: Patrick Bellasi <patrick.bellasi@arm.com>
+Subject: Re: [PATCH v14 1/6] sched/core: uclamp: Extend CPU's cgroup controller
+Date: Mon, 02 Sep 2019 07:38:53 +0100
+Message-ID: <87zhjnnqz2.fsf@arm.com>
+References: <20190822132811.31294-1-patrick.bellasi@arm.com> <20190822132811.31294-2-patrick.bellasi@arm.com> <20190830094505.GA2369@hirez.programming.kicks-ass.net>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=EeuIZUpqUqc/8WDxEHPupzvlc/p9S4zpotV6I9WmvkM=;
-        b=LL4Qpp87Hv1Ygb7kMa7vN1g5ULpRxFtx2+9gTP4usv3GRB/H1j7DDsLMO7w0RKpHYK
-         tyJ1vKX7cwFh31KtWfqY5hRkznLkJnVYB0gIoDXScRQufN6SgnC0kqbsX6DUsId1V1M8
-         bYoSVak32CLagVCCc3V9tKDMWCiSd+cMk8+YAdkNRfuLUomSgC9cGosCEfV1mPHcLYHy
-         eApVtx+3iV6SaFGwF1Lkmq82kmEjbTUNhTfbABwJpakwtU40ebMNs5XUnGl52Sz7VGdy
-         zwrAebB4Et4nFQ3QQJyjQK9QMrWbVEjoooyPxSkp+iBiwoH3/+pyERyvIqoMT+1cGWvf
-         ni7g==
-In-Reply-To: <20190831065358.GF2263813@devbig004.ftw2.facebook.com>
+In-reply-to: <20190830094505.GA2369@hirez.programming.kicks-ass.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, newella@fb.com, clm@fb.com, Josef Bacik <josef@toxicpanda.com>, dennisz@fb.com, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, ast@kernel.org, daniel@iogearbox.net, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, bpf@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-api@vger.kernel.org, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>, Vincent Guittot <vincent.guittot@linaro.org>, Viresh Kumar <viresh.kumar@linaro.org>, Paul Turner <pjt@google.com>, Michal Koutny <mkoutny@suse.com>, Quentin Perret <quentin.perret@arm.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Morten Rasmussen <morten.rasmussen@arm.com>, Juri Lelli <juri.lelli@redhat.com>, Todd Kjos <tkjos@google.com>, Joel Fernandes <joelaf@google.com>, Steve Muckle <smuckle@google.com>, Suren Baghdasaryan <surenb@google.com>, Alessio Balsini <balsini@android.com>
 
-Hi Tejun,
-thank you very much for this extra information, I'll try the
-configuration you suggest.  In this respect, is this still the branch
-to use
 
-=
-https://kernel.googlesource.com/pub/scm/linux/kernel/git/tj/cgroup/+/refs/=
-heads/review-iocost-v2
+On Fri, Aug 30, 2019 at 09:45:05 +0000, Peter Zijlstra wrote...
 
-also after the issue spotted two days ago [1]?
+> On Thu, Aug 22, 2019 at 02:28:06PM +0100, Patrick Bellasi wrote:
+>> +#define _POW10(exp) ((unsigned int)1e##exp)
+>> +#define POW10(exp) _POW10(exp)
+>
+> What is this magic? You're forcing a float literal into an integer.
+> Surely that deserves a comment!
 
-Thanks,
-Paolo
+Yes, I'm introducing the two constants:
+  UCLAMP_PERCENT_SHIFT,
+  UCLAMP_PERCENT_SCALE
+similar to what we have for CAPACITY. Moreover, I need both 100*100 (for
+the scale) and 100 further down in the code for the: 
 
-[1] https://lkml.org/lkml/2019/8/29/910
+	percent = div_u64_rem(percent, POW10(UCLAMP_PERCENT_SHIFT), &rem);
 
-> Il giorno 31 ago 2019, alle ore 08:53, Tejun Heo <tj@kernel.org> ha =
-scritto:
->=20
-> Hello, Paolo.
->=20
-> On Thu, Aug 22, 2019 at 10:58:22AM +0200, Paolo Valente wrote:
->> Ok, I tried with the parameters reported for a SATA SSD:
->>=20
->> rpct=3D95.00 rlat=3D10000 wpct=3D95.00 wlat=3D20000 min=3D50.00 =
-max=3D400.00
->=20
-> Sorry, I should have explained it with a lot more details.
->=20
-> There are two things - the cost model and qos params.  The default SSD
-> cost model parameters are derived by averaging a number of mainstream
-> SSD parameters.  As a ballpark, this can be good enough because while
-> the overall performance varied quite a bit from one ssd to another,
-> the relative cost of different types of IOs wasn't drastically
-> different.
->=20
-> However, this means that the performance baseline can easily be way
-> off from 100% depending on the specific device in use.  In the above,
-> you're specifying min/max which limits how far the controller is
-> allowed to adjust the overall cost estimation.  50% and 400% are
-> numbers which may make sense if the cost model parameter is expected
-> to fall somewhere around 100% - ie. if the parameters are for that
-> specific device.
->=20
-> In your script, you're using default model params but limiting vrate
-> range.  It's likely that your device is significantly slower than what
-> the default parameters are expecting.  However, because min vrate is
-> limited to 50%, it doesn't throttle below 50% of the estimated cost,
-> so if the device is significantly slower than that, nothing gets
-> controlled.
->=20
->> and with a simpler configuration [1]: one target doing random reads
->=20
-> And without QoS latency targets, the controller is purely going by
-> queue depth depletion which works fine for many usual workloads such
-> as larger reads and writes but isn't likely to serve low-concurrency
-> latency-sensitive IOs well.
->=20
->> and only four interferers doing sequential reads, with all the
->> processes (groups) having the same weight.
->>=20
->> But there seemed to be little or no control on I/O, because the =
-target
->> got only 1.84 MB/s, against 1.15 MB/s without any control.
->>=20
->> So I tried with rlat=3D1000 and rlat=3D100.
->=20
-> And this won't do anything as all rlat/wlat does is regulating how the
-> overall vrate should be adjusted and it's being min'd at 50%.
->=20
->> Control did improve, with same results for both values of rlat.  The
->> problem is that these results still seem rather bad, both in terms of
->> throughput guaranteed to the target and in terms of total throughput.
->> Here are results compared with BFQ (throughputs measured in MB/s):
->>=20
->>                           io.weight            BFQ
->> target's throughput        3.415                6.224       =20
->> total throughput           159.14               321.375
->=20
-> So, what should have been configured is something like
->=20
-> $ echo '8:0 enable=3D1 rpct=3D95 rlat=3D10000 wpct=3D95 wlat=3D20000' =
-> /sys/fs/cgroup/io.cost.qos
->=20
-> which just says "target 10ms p(95) read latency and 20ms p(95) write
-> latency" without putting any restrictions on vrate range.
->=20
-> With that, I got the following on Micron_1100_MTFDDAV256TBN which is a
-> pretty old 256GB SATA drive.
->=20
->  Aggregated throughput:
-> 	   min         max         avg     std_dev     conf99%
-> 	266.73      275.71      271.38     4.05144     45.7635
->  Interfered total throughput:
-> 	   min         max         avg     std_dev
-> 	 9.608      13.008      10.941    0.664938
->=20
-> During the run, iocost-monitor.py looked like the following.
->=20
->  sda RUN  per=3D40ms cur_per=3D2074.351:v1008.844 busy=3D +0 vrate=3D =
-59.85% params=3Dssd_dfl(CQ)
-> 			    active    weight      hweight% inflt% del_ms =
-usages%
->  InterfererGroup0             *   100/  100  22.94/ 20.00   0.00  =
-0*000 023:023:023
->  InterfererGroup1             *   100/  100  22.94/ 20.00   0.00  =
-0*000 023:023:023
->  InterfererGroup2             *   100/  100  22.94/ 20.00   0.00  =
-0*000 025:023:021
->  InterfererGroup3             *   100/  100  22.94/ 20.00   0.00  =
-0*000 023:023:023
->  interfered                   *    36/  100   8.26/ 20.00   0.42  =
-0*000 003:004:004
->=20
-> Note that interfered is reported to only use 3-4% of the disk capacity
-> while configured to consume 20%.  This is because with single
-> concurrency 4k randread job, its ability to consume IO capacity is
-> limited by the completion latency.
->=20
-> 10ms is pretty generous (ie. more work-conserving) target for SSDs.
-> Let's say we're willing to tighten it to trade off total work for
-> tighter latency.
->=20
-> $ echo '8:0 enable=3D1 rpct=3D95 rlat=3D2500 wpct=3D95 wlat=3D5000' > =
-/sys/fs/cgroup/io.cost.qos
->=20
->  Aggregated throughput:
-> 	   min         max         avg     std_dev     conf99%
-> 	147.06      172.18     154.608      11.783     133.096
->  Interfered total throughput:
-> 	   min         max         avg     std_dev
-> 	17.992       19.32      18.698    0.313105
->=20
-> and the monitoring output
->=20
->  sda RUN  per=3D10ms cur_per=3D2927.152:v1556.138 busy=3D -2 vrate=3D =
-34.74% params=3Dssd_dfl(CQ)
-> 			    active    weight      hweight% inflt% del_ms =
-usages%
->  InterfererGroup0             *   100/  100  20.00/ 20.00 386.11  =
-0*000 070:020:020
->  InterfererGroup1             *   100/  100  20.00/ 20.00 386.11  =
-0*000 070:020:020
->  InterfererGroup2             *   100/  100  20.00/ 20.00 386.11  =
-0*000 070:020:020
->  InterfererGroup3             *   100/  100  20.00/ 20.00   0.00  =
-0*000 020:020:020
->  interfered                   *   100/  100  20.00/ 20.00   1.21  =
-0*000 010:014:017
->=20
-> The followings happened.
->=20
-> * The vrate is now hovering way lower.  The device is now doing less
->  total work to acheive tighter completion latencies.
->=20
-> * The overall throughput dropped but interfered's utilization is now
->  significantly higher along with its bandwidth from lower completion
->  latencies.
->=20
-> For reference:
->=20
-> [Disabled]
->=20
->  Aggregated throughput:
-> 	   min         max         avg     std_dev     conf99%
-> 	493.98      511.37     502.808     9.52773     107.621
->  Interfered total throughput:
-> 	   min         max         avg     std_dev
-> 	 0.056       0.304       0.107   0.0691052
->=20
-> [Enabled, no QoS config]
->=20
->  Aggregated throughput:
-> 	   min         max         avg     std_dev     conf99%
-> 	429.07      449.59     437.597     8.64952     97.7015
->  Interfered total throughput:
-> 	   min         max         avg     std_dev
-> 	 0.456        3.12        1.08    0.774318
->=20
-> Thanks.
->=20
-> --=20
-> tejun
+used in cpu_uclamp_print().
+
+That's why adding a compile time support to compute a 10^N is useful.
+
+C provides the "1eN" literal, I just convert it to integer and to do
+that at compile time I need a two level macros.
+
+What if I add this comment just above the macro definitions:
+
+/*
+ * Integer 10^N with a given N exponent by casting to integer the literal "1eN"
+ * C expression. Since there is no way to convert a macro argument (N) into a
+ * character constant, use two levels of macros.
+ */
+
+is this clear enough?
+
+>
+>> +struct uclamp_request {
+>> +#define UCLAMP_PERCENT_SHIFT	2
+>> +#define UCLAMP_PERCENT_SCALE	(100 * POW10(UCLAMP_PERCENT_SHIFT))
+>> +	s64 percent;
+>> +	u64 util;
+>> +	int ret;
+>> +};
+>> +
+>> +static inline struct uclamp_request
+>> +capacity_from_percent(char *buf)
+>> +{
+>> +	struct uclamp_request req = {
+>> +		.percent = UCLAMP_PERCENT_SCALE,
+>> +		.util = SCHED_CAPACITY_SCALE,
+>> +		.ret = 0,
+>> +	};
+>> +
+>> +	buf = strim(buf);
+>> +	if (strncmp("max", buf, 4)) {
+>
+> That is either a bug, and you meant to write: strncmp(buf, "max", 3),
+> or it is not, and then you could've written: strcmp(buf, "max")
+
+I don't think it's a bug.
+
+The usage of 4 is intentional, to force a '\0' check while using
+strncmp(). Otherwise, strncmp(buf, "max", 3) would accept also strings
+starting by "max", which we don't want.
+
+> But as written it doesn't make sense.
+
+The code is safe but I agree that strcmp() does just the same and it
+does not generate confusion. That's actually a pretty good example
+on how it's not always better to use strncmp() instead of strcmp().
+
+Cheers,
+Patrick
 
