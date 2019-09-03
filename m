@@ -1,96 +1,93 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [PATCH v5 0/7] hugetlb_cgroup: Add hugetlb_cgroup reservation
- limits
-Date: Mon, 30 Sep 2019 17:12:34 +0200
-Message-ID: <20190930151233.GH6694@blackbody.suse.cz>
-References: <20190919222421.27408-1-almasrymina@google.com>
- <3c73d2b7-f8d0-16bf-b0f0-86673c3e9ce3@oracle.com>
- <CAHS8izOj2AT4tX-+Hcb8LB2TOUKJDHScDtJ80u4M6OWpwktq0g@mail.gmail.com>
- <a8e9c533-1593-35ee-e65d-1f2fc2b0fb48@oracle.com>
- <CAHS8izPfKQA8qTndyzWSm9fR_xJ=X-xmE+4P4K+ZFdxrYNuLBA@mail.gmail.com>
- <alpine.DEB.2.21.1909261220150.39830@chino.kir.corp.google.com>
- <8f7db4f1-9c16-def5-79dc-d38d6b9d150e@oracle.com>
- <CAHS8izM3=ZDNukx5xhWmeJT+78Ekfff9J4s5Vqkqpx-DtH=C-A@mail.gmail.com>
+From: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
+Subject: Re: [PATCH RFC v4 01/16] drm: Add drm_minor_for_each
+Date: Tue, 3 Sep 2019 09:57:19 +0200
+Message-ID: <20190903075719.GK2112@phenom.ffwll.local>
+References: <20190829060533.32315-1-Kenny.Ho@amd.com>
+ <20190829060533.32315-2-Kenny.Ho@amd.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="YhFoJY/gx7awiIuK"
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CAHS8izM3=ZDNukx5xhWmeJT+78Ekfff9J4s5Vqkqpx-DtH=C-A@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-To: Mina Almasry <almasrymina@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Mike Kravetz <mike.kravetz@oracle.com>, Greg Thelen <gthelen@google.com>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, shuah <shuah@kernel.org>, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, khalid.aziz@oracle.com, cgroups@vger.kernel.org, open list <linux-kernel@vger.kernel.org>, linux-kselftest@vger.kernel.org
+In-Reply-To: <20190829060533.32315-2-Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
+Cc: daniel-/w4YWyX8dFk@public.gmane.org, felix.kuehling-5C7GfCeVMHo@public.gmane.org, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, lkaplan-WVYJKLFxKCc@public.gmane.org, alexander.deucher-5C7GfCeVMHo@public.gmane.org, y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, joseph.greathouse-5C7GfCeVMHo@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, christian.koenig-5C7GfCeVMHo@public.gmane.org
 
-
---YhFoJY/gx7awiIuK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-Hi.
-
-On Thu, Sep 26, 2019 at 05:55:29PM -0700, Mina Almasry <almasrymina@google.com> wrote:
-> My guess is that a new controller needs to support cgroups-v2, which
-> is fine. But can a new controller also support v1? Or is there a
-> requirement that new controllers support *only* v2? I need whatever
-> solution here to work on v1.
-Here is my view of important criteria:
-
-	1) stability, v1 APIs and semantics should not be changed,
-	2) futureproofness, v1 uses should be convertible to v2 uses,
-	3) maintainability, the less (similar) code the better.
-
-And here is my braindump of some approaches:
-
-A) new controller, v2 only
-- 1) ok
-- 2) may be ok
-- 3) separate v1 and v2 implementations
-- exclusion must be ensured on hybrid hierarchies
-
-B) new controller, version oblivious (see e.g. pid)
-- 1) sort of ok
-- 2) partially ok
-- 3) two v1 implementations
-- exclusion must be ensured even on pure v1 hierarchies
-
-C) extending the existing controller, w/out v2 counterpart
-- 1) ok with workarounds (new option switching behavior)
-- 2) not ok
-- 3) likely OK
-
-D) extending the existing controller, with v2 counterpart
-- 1) ok with workarounds (new option switching behavior, see cpuset)
-- 2) may be ok
-- 3) likely OK
-
-AFAIU, the current patchset is variation of C). Personally, I think
-something like D) could work, I'm not convinced about A) and B) based on
-the breakdown above. But it may induce some other ideas.
-
-
-My two cents,
-Michal
-
---YhFoJY/gx7awiIuK
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAl2SG14ACgkQia1+riC5
-qShedQ/8DyEdvjT0PcRMLE3EjsjDi32g8BDv8aIV1H1UVciQZIM+BFvPycHsjJ9N
-XwYn3bspedb10o6wm1Luj6LhXjVht5dglPSrmhTWp4E5YrLqP2AqKPt8p5ZL4pTq
-L64SrAHXo5qFq85CDnSQkFgYXmuPEkM9NCdLN3Dt30P1/zr6mrt0vhPbLNwJkgdT
-xsTp2UObM12TuEJxsnb2F6nirZLa6RHQ3utUjDZUsLbPOgnb+WbTgLyCNwHFnqUk
-bInSN/vrHcn52yYefxWuHW1VdXXV2vpjqcQG5CdYjXEzpKQxnysI+IiYxpv4kw6Q
-FQpT5nQtCVVr2EHj9LEsk9vgks2Hcfsb87psTIL0rxA4HvxiutPcDHBHqhcs/52o
-2ozl8p7G0WXGYQ+bSeTBJ35O/qtTGibw1YELSkpVhG742SrzMj9SxdhtFO7dsdeY
-uk/HdATsAPl3kAX1fOhUSmIcnOL9ECAO0pgcRnmsyPdXEDUWwaiji0tK9Q0yP6Wu
-jnFTX3MY/Nq5FhJzZ3QYvCUxc1n1LgzW9STMUU5MuTN9NYXC4AlZnZhMqduDH5HK
-l0seBNntlNnaI4lQhbWl2OR0cXTDN88Nv2bF84LBI01F4N2D/NL97p69jCMYxgUx
-5EiC89zRH0RUxb8RX+NeMG/OMd0qxTNFELjONXX1D5fpzLqg5Ao=
-=ksZu
------END PGP SIGNATURE-----
-
---YhFoJY/gx7awiIuK--
+T24gVGh1LCBBdWcgMjksIDIwMTkgYXQgMDI6MDU6MThBTSAtMDQwMCwgS2VubnkgSG8gd3JvdGU6
+Cj4gVG8gYWxsb3cgb3RoZXIgc3Vic3lzdGVtcyB0byBpdGVyYXRlIHRocm91Z2ggYWxsIHN0b3Jl
+ZCBEUk0gbWlub3JzIGFuZAo+IGFjdCB1cG9uIHRoZW0uCj4gCj4gQWxzbyBleHBvc2VzIGRybV9t
+aW5vcl9hY3F1aXJlIGFuZCBkcm1fbWlub3JfcmVsZWFzZSBmb3Igb3RoZXIgc3Vic3lzdGVtCj4g
+dG8gaGFuZGxlIGRybV9taW5vci4gIERSTSBjZ3JvdXAgY29udHJvbGxlciBpcyB0aGUgaW5pdGlh
+bCBjb25zdW1lciBvZgo+IHRoaXMgbmV3IGZlYXR1cmVzLgo+IAo+IENoYW5nZS1JZDogSTdjNGI2
+N2NlNmIzMWYwNmQxMDM3YjAzNDM1Mzg2ZmY1YjgxNDRjYTUKPiBTaWduZWQtb2ZmLWJ5OiBLZW5u
+eSBIbyA8S2VubnkuSG9AYW1kLmNvbT4KCkl0ZXJhdGluZyBvdmVyIG1pbm9ycyBmb3IgY2dyb3Vw
+cyBzb3VuZHMgdmVyeSwgdmVyeSB3cm9uZy4gV2h5IGRvIHdlIGNhcmUKd2hldGhlciBhIGJ1ZmZl
+ciB3YXMgYWxsb2NhdGVkIHRocm91Z2gga21zIGR1bWIgdnMgcmVuZGVyIG5vZGVzPwoKSSdkIGV4
+cGVjdCBhbGwgdGhlIGNncm91cCBzdHVmZiB0byBvbmx5IHdvcmsgb24gZHJtX2RldmljZSwgaWYg
+aXQgZG9lcwpjYXJlIGFib3V0IGRldmljZXMuCgooSSBkaWRuJ3QgbG9vayB0aHJvdWdoIHRoZSBw
+YXRjaCBzZXJpZXMgdG8gZmluZCBvdXQgd2hlcmUgZXhhY3RseSB5b3UncmUKdXNpbmcgdGhpcywg
+c28gbWF5YmUgSSdtIG9mZiB0aGUgcmFpbHMgaGVyZSkuCi1EYW5pZWwKCj4gLS0tCj4gIGRyaXZl
+cnMvZ3B1L2RybS9kcm1fZHJ2LmMgICAgICB8IDE5ICsrKysrKysrKysrKysrKysrKysKPiAgZHJp
+dmVycy9ncHUvZHJtL2RybV9pbnRlcm5hbC5oIHwgIDQgLS0tLQo+ICBpbmNsdWRlL2RybS9kcm1f
+ZHJ2LmggICAgICAgICAgfCAgNCArKysrCj4gIDMgZmlsZXMgY2hhbmdlZCwgMjMgaW5zZXJ0aW9u
+cygrKSwgNCBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9ncHUvZHJtL2Ry
+bV9kcnYuYyBiL2RyaXZlcnMvZ3B1L2RybS9kcm1fZHJ2LmMKPiBpbmRleCA4NjI2MjE0OTRhOTMu
+LjAwMGNkZGFiZDk3MCAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL2dwdS9kcm0vZHJtX2Rydi5jCj4g
+KysrIGIvZHJpdmVycy9ncHUvZHJtL2RybV9kcnYuYwo+IEBAIC0yNTQsMTEgKzI1NCwxMyBAQCBz
+dHJ1Y3QgZHJtX21pbm9yICpkcm1fbWlub3JfYWNxdWlyZSh1bnNpZ25lZCBpbnQgbWlub3JfaWQp
+Cj4gIAo+ICAJcmV0dXJuIG1pbm9yOwo+ICB9Cj4gK0VYUE9SVF9TWU1CT0woZHJtX21pbm9yX2Fj
+cXVpcmUpOwo+ICAKPiAgdm9pZCBkcm1fbWlub3JfcmVsZWFzZShzdHJ1Y3QgZHJtX21pbm9yICpt
+aW5vcikKPiAgewo+ICAJZHJtX2Rldl9wdXQobWlub3ItPmRldik7Cj4gIH0KPiArRVhQT1JUX1NZ
+TUJPTChkcm1fbWlub3JfcmVsZWFzZSk7Cj4gIAo+ICAvKioKPiAgICogRE9DOiBkcml2ZXIgaW5z
+dGFuY2Ugb3ZlcnZpZXcKPiBAQCAtMTA3OCw2ICsxMDgwLDIzIEBAIGludCBkcm1fZGV2X3NldF91
+bmlxdWUoc3RydWN0IGRybV9kZXZpY2UgKmRldiwgY29uc3QgY2hhciAqbmFtZSkKPiAgfQo+ICBF
+WFBPUlRfU1lNQk9MKGRybV9kZXZfc2V0X3VuaXF1ZSk7Cj4gIAo+ICsvKioKPiArICogZHJtX21p
+bm9yX2Zvcl9lYWNoIC0gSXRlcmF0ZSB0aHJvdWdoIGFsbCBzdG9yZWQgRFJNIG1pbm9ycwo+ICsg
+KiBAZm46IEZ1bmN0aW9uIHRvIGJlIGNhbGxlZCBmb3IgZWFjaCBwb2ludGVyLgo+ICsgKiBAZGF0
+YTogRGF0YSBwYXNzZWQgdG8gY2FsbGJhY2sgZnVuY3Rpb24uCj4gKyAqCj4gKyAqIFRoZSBjYWxs
+YmFjayBmdW5jdGlvbiB3aWxsIGJlIGNhbGxlZCBmb3IgZWFjaCBAZHJtX21pbm9yIGVudHJ5LCBw
+YXNzaW5nCj4gKyAqIHRoZSBtaW5vciwgdGhlIGVudHJ5IGFuZCBAZGF0YS4KPiArICoKPiArICog
+SWYgQGZuIHJldHVybnMgYW55dGhpbmcgb3RoZXIgdGhhbiAlMCwgdGhlIGl0ZXJhdGlvbiBzdG9w
+cyBhbmQgdGhhdAo+ICsgKiB2YWx1ZSBpcyByZXR1cm5lZCBmcm9tIHRoaXMgZnVuY3Rpb24uCj4g
+KyAqLwo+ICtpbnQgZHJtX21pbm9yX2Zvcl9lYWNoKGludCAoKmZuKShpbnQgaWQsIHZvaWQgKnAs
+IHZvaWQgKmRhdGEpLCB2b2lkICpkYXRhKQo+ICt7Cj4gKwlyZXR1cm4gaWRyX2Zvcl9lYWNoKCZk
+cm1fbWlub3JzX2lkciwgZm4sIGRhdGEpOwo+ICt9Cj4gK0VYUE9SVF9TWU1CT0woZHJtX21pbm9y
+X2Zvcl9lYWNoKTsKPiArCj4gIC8qCj4gICAqIERSTSBDb3JlCj4gICAqIFRoZSBEUk0gY29yZSBt
+b2R1bGUgaW5pdGlhbGl6ZXMgYWxsIGdsb2JhbCBEUk0gb2JqZWN0cyBhbmQgbWFrZXMgdGhlbQo+
+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9kcm0vZHJtX2ludGVybmFsLmggYi9kcml2ZXJzL2dw
+dS9kcm0vZHJtX2ludGVybmFsLmgKPiBpbmRleCBlMTlhYzdjYTYwMmQuLjZiZmFkNzZmOGU3OCAx
+MDA2NDQKPiAtLS0gYS9kcml2ZXJzL2dwdS9kcm0vZHJtX2ludGVybmFsLmgKPiArKysgYi9kcml2
+ZXJzL2dwdS9kcm0vZHJtX2ludGVybmFsLmgKPiBAQCAtNTQsMTAgKzU0LDYgQEAgdm9pZCBkcm1f
+cHJpbWVfZGVzdHJveV9maWxlX3ByaXZhdGUoc3RydWN0IGRybV9wcmltZV9maWxlX3ByaXZhdGUg
+KnByaW1lX2Zwcml2KTsKPiAgdm9pZCBkcm1fcHJpbWVfcmVtb3ZlX2J1Zl9oYW5kbGVfbG9ja2Vk
+KHN0cnVjdCBkcm1fcHJpbWVfZmlsZV9wcml2YXRlICpwcmltZV9mcHJpdiwKPiAgCQkJCQlzdHJ1
+Y3QgZG1hX2J1ZiAqZG1hX2J1Zik7Cj4gIAo+IC0vKiBkcm1fZHJ2LmMgKi8KPiAtc3RydWN0IGRy
+bV9taW5vciAqZHJtX21pbm9yX2FjcXVpcmUodW5zaWduZWQgaW50IG1pbm9yX2lkKTsKPiAtdm9p
+ZCBkcm1fbWlub3JfcmVsZWFzZShzdHJ1Y3QgZHJtX21pbm9yICptaW5vcik7Cj4gLQo+ICAvKiBk
+cm1fdmJsYW5rLmMgKi8KPiAgdm9pZCBkcm1fdmJsYW5rX2Rpc2FibGVfYW5kX3NhdmUoc3RydWN0
+IGRybV9kZXZpY2UgKmRldiwgdW5zaWduZWQgaW50IHBpcGUpOwo+ICB2b2lkIGRybV92Ymxhbmtf
+Y2xlYW51cChzdHJ1Y3QgZHJtX2RldmljZSAqZGV2KTsKPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9k
+cm0vZHJtX2Rydi5oIGIvaW5jbHVkZS9kcm0vZHJtX2Rydi5oCj4gaW5kZXggNjhjYTczNmM1NDhk
+Li4yNGY4ZDA1NGM1NzAgMTAwNjQ0Cj4gLS0tIGEvaW5jbHVkZS9kcm0vZHJtX2Rydi5oCj4gKysr
+IGIvaW5jbHVkZS9kcm0vZHJtX2Rydi5oCj4gQEAgLTc5OSw1ICs3OTksOSBAQCBzdGF0aWMgaW5s
+aW5lIGJvb2wgZHJtX2Rydl91c2VzX2F0b21pY19tb2Rlc2V0KHN0cnVjdCBkcm1fZGV2aWNlICpk
+ZXYpCj4gIAo+ICBpbnQgZHJtX2Rldl9zZXRfdW5pcXVlKHN0cnVjdCBkcm1fZGV2aWNlICpkZXYs
+IGNvbnN0IGNoYXIgKm5hbWUpOwo+ICAKPiAraW50IGRybV9taW5vcl9mb3JfZWFjaChpbnQgKCpm
+bikoaW50IGlkLCB2b2lkICpwLCB2b2lkICpkYXRhKSwgdm9pZCAqZGF0YSk7Cj4gKwo+ICtzdHJ1
+Y3QgZHJtX21pbm9yICpkcm1fbWlub3JfYWNxdWlyZSh1bnNpZ25lZCBpbnQgbWlub3JfaWQpOwo+
+ICt2b2lkIGRybV9taW5vcl9yZWxlYXNlKHN0cnVjdCBkcm1fbWlub3IgKm1pbm9yKTsKPiAgCj4g
+ICNlbmRpZgo+IC0tIAo+IDIuMjIuMAo+IAoKLS0gCkRhbmllbCBWZXR0ZXIKU29mdHdhcmUgRW5n
+aW5lZXIsIEludGVsIENvcnBvcmF0aW9uCmh0dHA6Ly9ibG9nLmZmd2xsLmNoCl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmFtZC1nZnggbWFpbGluZyBsaXN0
+CmFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Au
+b3JnL21haWxtYW4vbGlzdGluZm8vYW1kLWdmeA==
