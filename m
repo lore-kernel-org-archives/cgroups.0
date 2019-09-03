@@ -1,134 +1,95 @@
-From: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH RFC v4 01/16] drm: Add drm_minor_for_each
-Date: Tue, 3 Sep 2019 16:43:45 -0400
-Message-ID: <CAOWid-eUVztW4hNVpznnJRcwHcjCirGL2aS75p4OY8XoGuJqUg@mail.gmail.com>
-References: <20190829060533.32315-1-Kenny.Ho@amd.com>
- <20190829060533.32315-2-Kenny.Ho@amd.com>
- <20190903075719.GK2112@phenom.ffwll.local>
- <CAOWid-dxxDhyxP2+0R0oKAk29rR-1TbMyhshR1+gbcpGJCAW6g@mail.gmail.com>
- <CAKMK7uEofjdVURu+meonh_YdV5eX8vfNALkW3A_+kLapCV8j+w@mail.gmail.com>
+From: Mike Kravetz <mike.kravetz@oracle.com>
+Subject: Re: [PATCH v3 0/6] hugetlb_cgroup: Add hugetlb_cgroup reservation
+ limits
+Date: Tue, 3 Sep 2019 16:44:00 -0700
+Message-ID: <e7f91a50-5957-249c-8756-25ea87c77fc4@oracle.com>
+References: <20190826233240.11524-1-almasrymina@google.com>
+ <20190828112340.GB7466@dhcp22.suse.cz>
+ <CAHS8izPPhPoqh-J9LJ40NJUCbgTFS60oZNuDSHmgtMQiYw72RA@mail.gmail.com>
+ <20190829071807.GR28313@dhcp22.suse.cz>
+ <cb7ebcce-05c5-3384-5632-2bbac9995c15@oracle.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <CAKMK7uEofjdVURu+meonh_YdV5eX8vfNALkW3A_+kLapCV8j+w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : references : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2019-08-05;
+ bh=gVzd1xf9o+fcSS2lfDeJltPXEjbUtM30OmGuZGgNO7M=;
+ b=hSmwubqrsY25Qx8aIq/54/tJiLgh28xXXlaE0aNL0uV9fXey2tXHfMl0THru4K7mEjr9
+ oZag18RuzqILZ9Cg9xZUYVU/7L/ZpfkToycFo1IE6TraQKhwh6rdwSDw/hOYY7QjE1Ec
+ q02lZeb892ymnKgpkKK9/31TDcipl2reZmoXAJe4dbsIHaqnEcowWrONpgec1otShh5C
+ eV7VMyIcACsuK3r41bdRNt4dxUaWo1+RH8WhdhyesJxQwWc00L9TljBtURYSfJLWRkiT
+ G8fqrPSjXVNb9xteZdgoXIv5K1yYMXoRlR1HPqE6gqA7f1Lj1LdPS+3LqCwUuEGhA27n Sg== 
+In-Reply-To: <cb7ebcce-05c5-3384-5632-2bbac9995c15@oracle.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
-Cc: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "Greathouse,
- Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
+To: Michal Hocko <mhocko@kernel.org>, Mina Almasry <almasrymina@google.com>
+Cc: shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, khalid.aziz@oracle.com, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>
 
-T24gVHVlLCBTZXAgMywgMjAxOSBhdCA0OjEyIFBNIERhbmllbCBWZXR0ZXIgPGRhbmllbEBmZnds
-bC5jaD4gd3JvdGU6Cj4gT24gVHVlLCBTZXAgMywgMjAxOSBhdCA5OjQ1IFBNIEtlbm55IEhvIDx5
-Mmtlbm55QGdtYWlsLmNvbT4gd3JvdGU6Cj4gPiBPbiBUdWUsIFNlcCAzLCAyMDE5IGF0IDM6NTcg
-QU0gRGFuaWVsIFZldHRlciA8ZGFuaWVsQGZmd2xsLmNoPiB3cm90ZToKPiA+ID4gSXRlcmF0aW5n
-IG92ZXIgbWlub3JzIGZvciBjZ3JvdXBzIHNvdW5kcyB2ZXJ5LCB2ZXJ5IHdyb25nLiBXaHkgZG8g
-d2UgY2FyZQo+ID4gPiB3aGV0aGVyIGEgYnVmZmVyIHdhcyBhbGxvY2F0ZWQgdGhyb3VnaCBrbXMg
-ZHVtYiB2cyByZW5kZXIgbm9kZXM/Cj4gPiA+Cj4gPiA+IEknZCBleHBlY3QgYWxsIHRoZSBjZ3Jv
-dXAgc3R1ZmYgdG8gb25seSB3b3JrIG9uIGRybV9kZXZpY2UsIGlmIGl0IGRvZXMKPiA+ID4gY2Fy
-ZSBhYm91dCBkZXZpY2VzLgo+ID4gPgo+ID4gPiAoSSBkaWRuJ3QgbG9vayB0aHJvdWdoIHRoZSBw
-YXRjaCBzZXJpZXMgdG8gZmluZCBvdXQgd2hlcmUgZXhhY3RseSB5b3UncmUKPiA+ID4gdXNpbmcg
-dGhpcywgc28gbWF5YmUgSSdtIG9mZiB0aGUgcmFpbHMgaGVyZSkuCj4gPgo+ID4gSSBhbSBleHBv
-c2luZyB0aGlzIHRvIHJlbW92ZSB0aGUgbmVlZCB0byBrZWVwIHRyYWNrIG9mIGEgc2VwYXJhdGUg
-bGlzdAo+ID4gb2YgYXZhaWxhYmxlIGRybV9kZXZpY2UgaW4gdGhlIHN5c3RlbSAodG8gcmVtb3Zl
-IHRoZSByZWdpc3RlcmluZyBhbmQKPiA+IHVucmVnaXN0ZXJpbmcgb2YgZHJtX2RldmljZSB0byB0
-aGUgY2dyb3VwIHN1YnN5c3RlbSBhbmQganVzdCB1c2UKPiA+IGRybV9taW5vciBhcyB0aGUgc2lu
-Z2xlIHNvdXJjZSBvZiB0cnV0aC4pICBJIGFtIG9ubHkgZmlsdGVyaW5nIG91dCB0aGUKPiA+IHJl
-bmRlciBub2RlcyBtaW5vciBiZWNhdXNlIHRoZXkgcG9pbnQgdG8gdGhlIHNhbWUgZHJtX2Rldmlj
-ZSBhbmQgaXMKPiA+IGNvbmZ1c2luZy4KPiA+Cj4gPiBQZXJoYXBzIEkgbWlzc2VkIGFuIG9idmlv
-dXMgd2F5IHRvIGxpc3QgdGhlIGRybSBkZXZpY2VzIHdpdGhvdXQKPiA+IGl0ZXJhdGluZyB0aHJv
-dWdoIHRoZSBkcm1fbWlub3JzPyAgKEkgcHJvYmFibHkganVtcGVkIHRvIHRoZSBtaW5vcnMKPiA+
-IGJlY2F1c2UgJG1ham9yOiRtaW5vciBpcyB0aGUgY29udmVudGlvbiB0byBhZGRyZXNzIGRldmlj
-ZXMgaW4gY2dyb3VwLikKPgo+IENyZWF0ZSB5b3VyIG93biBpZiB0aGVyZSdzIG5vdGhpbmcsIGJl
-Y2F1c2UgeW91IG5lZWQgdG8gYW55d2F5Ogo+IC0gWW91IG5lZWQgc3BlY2lhbCBsb2NraW5nIGFu
-eXdheSwgd2UgY2FuJ3QganVzdCBibG9jayBvbiB0aGUgaWRyIGxvY2sKPiBmb3IgZXZlcnl0aGlu
-Zy4KPiAtIFRoaXMgbmVlZHMgdG8gcmVmY291bnQgZHJtX2RldmljZSwgbm8gdGhlIG1pbm9ycy4K
-Pgo+IEl0ZXJhdGluZyBvdmVyIHN0dWZmIHN0aWxsIGZlZWxzIGtpbmRhIHdyb25nIHN0aWxsLCBi
-ZWNhdXNlIG5vcm1hbGx5Cj4gdGhlIHdheSB3ZSByZWdpc3Rlci91bnJlZ2lzdGVyIHVzZXJzcGFj
-ZSBhcGkgKGFuZCBjZ3JvdXBzIGlzbid0Cj4gYW55dGhpbmcgZWxzZSBmcm9tIGEgZHJtIGRyaXZl
-ciBwb3YpIGlzIGJ5IGFkZGluZyBtb3JlIGNhbGxzIHRvCj4gZHJtX2Rldl9yZWdpc3Rlci91bnJl
-Z2lzdGVyLiBJZiB5b3UgcHV0IGEgZHJtX2NnX3JlZ2lzdGVyL3VucmVnaXN0ZXIKPiBjYWxsIGlu
-IHRoZXJlIHdlIGhhdmUgYSBjbGVhbiBzZXBhcmF0aW9uLCBhbmQgeW91IGNhbiB0cmFjayBhbGwg
-dGhlCj4gY3VycmVudGx5IGFjdGl2ZSBkZXZpY2VzIGhvd2V2ZXIgeW91IHdhbnQuIEl0ZXJhdGlu
-ZyBvdmVyIG9iamVjdHMgdGhhdAo+IGNhbiBiZSBob3R1bnBsdWdnZWQgYW55IHRpbWUgdGVuZHMg
-dG8gZ2V0IHJlYWxseSBjb21wbGljYXRlZCByZWFsbHkKPiBxdWlja2x5LgoKVW0uLi4gSSB0aG91
-Z2h0IHRoaXMgaXMgd2hhdCBJIGhhZCBwcmV2aW91c2x5LiAgRGlkIEkgbWlzdW5kZXJzdG9vZAp5
-b3VyIGZlZWRiYWNrIGZyb20gdjM/ICBEb2Vzbid0IGRybV9taW5vciBhbHJlYWR5IGluY2x1ZGUg
-YWxsIHRoZXNlCmZhY2lsaXRpZXMgc28gaXNuJ3QgY3JlYXRpbmcgbXkgb3duIGtpbmQgb2YgcmVp
-bnZlbnRpbmcgdGhlIHdoZWVsPwooYXMgSSBkaWQgcHJldmlvdXNseT8pICBkcm1fbWlub3JfcmVn
-aXN0ZXIgaXMgY2FsbGVkIGluc2lkZQpkcm1fZGV2X3JlZ2lzdGVyIHNvIGlzbid0IGxldmVyYWdp
-bmcgZXhpc3RpbmcgZHJtX21pbm9yIGZhY2lsaXRpZXMKbXVjaCBiZXR0ZXIgc29sdXRpb24/CgpL
-ZW5ueQoKPgo+Cj4gPgo+ID4gS2VubnkKPiA+Cj4gPiA+IC1EYW5pZWwKPiA+ID4KPiA+ID4gPiAt
-LS0KPiA+ID4gPiAgZHJpdmVycy9ncHUvZHJtL2RybV9kcnYuYyAgICAgIHwgMTkgKysrKysrKysr
-KysrKysrKysrKwo+ID4gPiA+ICBkcml2ZXJzL2dwdS9kcm0vZHJtX2ludGVybmFsLmggfCAgNCAt
-LS0tCj4gPiA+ID4gIGluY2x1ZGUvZHJtL2RybV9kcnYuaCAgICAgICAgICB8ICA0ICsrKysKPiA+
-ID4gPiAgMyBmaWxlcyBjaGFuZ2VkLCAyMyBpbnNlcnRpb25zKCspLCA0IGRlbGV0aW9ucygtKQo+
-ID4gPiA+Cj4gPiA+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvZ3B1L2RybS9kcm1fZHJ2LmMgYi9k
-cml2ZXJzL2dwdS9kcm0vZHJtX2Rydi5jCj4gPiA+ID4gaW5kZXggODYyNjIxNDk0YTkzLi4wMDBj
-ZGRhYmQ5NzAgMTAwNjQ0Cj4gPiA+ID4gLS0tIGEvZHJpdmVycy9ncHUvZHJtL2RybV9kcnYuYwo+
-ID4gPiA+ICsrKyBiL2RyaXZlcnMvZ3B1L2RybS9kcm1fZHJ2LmMKPiA+ID4gPiBAQCAtMjU0LDEx
-ICsyNTQsMTMgQEAgc3RydWN0IGRybV9taW5vciAqZHJtX21pbm9yX2FjcXVpcmUodW5zaWduZWQg
-aW50IG1pbm9yX2lkKQo+ID4gPiA+Cj4gPiA+ID4gICAgICAgcmV0dXJuIG1pbm9yOwo+ID4gPiA+
-ICB9Cj4gPiA+ID4gK0VYUE9SVF9TWU1CT0woZHJtX21pbm9yX2FjcXVpcmUpOwo+ID4gPiA+Cj4g
-PiA+ID4gIHZvaWQgZHJtX21pbm9yX3JlbGVhc2Uoc3RydWN0IGRybV9taW5vciAqbWlub3IpCj4g
-PiA+ID4gIHsKPiA+ID4gPiAgICAgICBkcm1fZGV2X3B1dChtaW5vci0+ZGV2KTsKPiA+ID4gPiAg
-fQo+ID4gPiA+ICtFWFBPUlRfU1lNQk9MKGRybV9taW5vcl9yZWxlYXNlKTsKPiA+ID4gPgo+ID4g
-PiA+ICAvKioKPiA+ID4gPiAgICogRE9DOiBkcml2ZXIgaW5zdGFuY2Ugb3ZlcnZpZXcKPiA+ID4g
-PiBAQCAtMTA3OCw2ICsxMDgwLDIzIEBAIGludCBkcm1fZGV2X3NldF91bmlxdWUoc3RydWN0IGRy
-bV9kZXZpY2UgKmRldiwgY29uc3QgY2hhciAqbmFtZSkKPiA+ID4gPiAgfQo+ID4gPiA+ICBFWFBP
-UlRfU1lNQk9MKGRybV9kZXZfc2V0X3VuaXF1ZSk7Cj4gPiA+ID4KPiA+ID4gPiArLyoqCj4gPiA+
-ID4gKyAqIGRybV9taW5vcl9mb3JfZWFjaCAtIEl0ZXJhdGUgdGhyb3VnaCBhbGwgc3RvcmVkIERS
-TSBtaW5vcnMKPiA+ID4gPiArICogQGZuOiBGdW5jdGlvbiB0byBiZSBjYWxsZWQgZm9yIGVhY2gg
-cG9pbnRlci4KPiA+ID4gPiArICogQGRhdGE6IERhdGEgcGFzc2VkIHRvIGNhbGxiYWNrIGZ1bmN0
-aW9uLgo+ID4gPiA+ICsgKgo+ID4gPiA+ICsgKiBUaGUgY2FsbGJhY2sgZnVuY3Rpb24gd2lsbCBi
-ZSBjYWxsZWQgZm9yIGVhY2ggQGRybV9taW5vciBlbnRyeSwgcGFzc2luZwo+ID4gPiA+ICsgKiB0
-aGUgbWlub3IsIHRoZSBlbnRyeSBhbmQgQGRhdGEuCj4gPiA+ID4gKyAqCj4gPiA+ID4gKyAqIElm
-IEBmbiByZXR1cm5zIGFueXRoaW5nIG90aGVyIHRoYW4gJTAsIHRoZSBpdGVyYXRpb24gc3RvcHMg
-YW5kIHRoYXQKPiA+ID4gPiArICogdmFsdWUgaXMgcmV0dXJuZWQgZnJvbSB0aGlzIGZ1bmN0aW9u
-Lgo+ID4gPiA+ICsgKi8KPiA+ID4gPiAraW50IGRybV9taW5vcl9mb3JfZWFjaChpbnQgKCpmbiko
-aW50IGlkLCB2b2lkICpwLCB2b2lkICpkYXRhKSwgdm9pZCAqZGF0YSkKPiA+ID4gPiArewo+ID4g
-PiA+ICsgICAgIHJldHVybiBpZHJfZm9yX2VhY2goJmRybV9taW5vcnNfaWRyLCBmbiwgZGF0YSk7
-Cj4gPiA+ID4gK30KPiA+ID4gPiArRVhQT1JUX1NZTUJPTChkcm1fbWlub3JfZm9yX2VhY2gpOwo+
-ID4gPiA+ICsKPiA+ID4gPiAgLyoKPiA+ID4gPiAgICogRFJNIENvcmUKPiA+ID4gPiAgICogVGhl
-IERSTSBjb3JlIG1vZHVsZSBpbml0aWFsaXplcyBhbGwgZ2xvYmFsIERSTSBvYmplY3RzIGFuZCBt
-YWtlcyB0aGVtCj4gPiA+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvZ3B1L2RybS9kcm1faW50ZXJu
-YWwuaCBiL2RyaXZlcnMvZ3B1L2RybS9kcm1faW50ZXJuYWwuaAo+ID4gPiA+IGluZGV4IGUxOWFj
-N2NhNjAyZC4uNmJmYWQ3NmY4ZTc4IDEwMDY0NAo+ID4gPiA+IC0tLSBhL2RyaXZlcnMvZ3B1L2Ry
-bS9kcm1faW50ZXJuYWwuaAo+ID4gPiA+ICsrKyBiL2RyaXZlcnMvZ3B1L2RybS9kcm1faW50ZXJu
-YWwuaAo+ID4gPiA+IEBAIC01NCwxMCArNTQsNiBAQCB2b2lkIGRybV9wcmltZV9kZXN0cm95X2Zp
-bGVfcHJpdmF0ZShzdHJ1Y3QgZHJtX3ByaW1lX2ZpbGVfcHJpdmF0ZSAqcHJpbWVfZnByaXYpOwo+
-ID4gPiA+ICB2b2lkIGRybV9wcmltZV9yZW1vdmVfYnVmX2hhbmRsZV9sb2NrZWQoc3RydWN0IGRy
-bV9wcmltZV9maWxlX3ByaXZhdGUgKnByaW1lX2Zwcml2LAo+ID4gPiA+ICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgc3RydWN0IGRtYV9idWYgKmRtYV9idWYpOwo+ID4gPiA+
-Cj4gPiA+ID4gLS8qIGRybV9kcnYuYyAqLwo+ID4gPiA+IC1zdHJ1Y3QgZHJtX21pbm9yICpkcm1f
-bWlub3JfYWNxdWlyZSh1bnNpZ25lZCBpbnQgbWlub3JfaWQpOwo+ID4gPiA+IC12b2lkIGRybV9t
-aW5vcl9yZWxlYXNlKHN0cnVjdCBkcm1fbWlub3IgKm1pbm9yKTsKPiA+ID4gPiAtCj4gPiA+ID4g
-IC8qIGRybV92YmxhbmsuYyAqLwo+ID4gPiA+ICB2b2lkIGRybV92YmxhbmtfZGlzYWJsZV9hbmRf
-c2F2ZShzdHJ1Y3QgZHJtX2RldmljZSAqZGV2LCB1bnNpZ25lZCBpbnQgcGlwZSk7Cj4gPiA+ID4g
-IHZvaWQgZHJtX3ZibGFua19jbGVhbnVwKHN0cnVjdCBkcm1fZGV2aWNlICpkZXYpOwo+ID4gPiA+
-IGRpZmYgLS1naXQgYS9pbmNsdWRlL2RybS9kcm1fZHJ2LmggYi9pbmNsdWRlL2RybS9kcm1fZHJ2
-LmgKPiA+ID4gPiBpbmRleCA2OGNhNzM2YzU0OGQuLjI0ZjhkMDU0YzU3MCAxMDA2NDQKPiA+ID4g
-PiAtLS0gYS9pbmNsdWRlL2RybS9kcm1fZHJ2LmgKPiA+ID4gPiArKysgYi9pbmNsdWRlL2RybS9k
-cm1fZHJ2LmgKPiA+ID4gPiBAQCAtNzk5LDUgKzc5OSw5IEBAIHN0YXRpYyBpbmxpbmUgYm9vbCBk
-cm1fZHJ2X3VzZXNfYXRvbWljX21vZGVzZXQoc3RydWN0IGRybV9kZXZpY2UgKmRldikKPiA+ID4g
-Pgo+ID4gPiA+ICBpbnQgZHJtX2Rldl9zZXRfdW5pcXVlKHN0cnVjdCBkcm1fZGV2aWNlICpkZXYs
-IGNvbnN0IGNoYXIgKm5hbWUpOwo+ID4gPiA+Cj4gPiA+ID4gK2ludCBkcm1fbWlub3JfZm9yX2Vh
-Y2goaW50ICgqZm4pKGludCBpZCwgdm9pZCAqcCwgdm9pZCAqZGF0YSksIHZvaWQgKmRhdGEpOwo+
-ID4gPiA+ICsKPiA+ID4gPiArc3RydWN0IGRybV9taW5vciAqZHJtX21pbm9yX2FjcXVpcmUodW5z
-aWduZWQgaW50IG1pbm9yX2lkKTsKPiA+ID4gPiArdm9pZCBkcm1fbWlub3JfcmVsZWFzZShzdHJ1
-Y3QgZHJtX21pbm9yICptaW5vcik7Cj4gPiA+ID4KPiA+ID4gPiAgI2VuZGlmCj4gPiA+ID4gLS0K
-PiA+ID4gPiAyLjIyLjAKPiA+ID4gPgo+ID4gPgo+ID4gPiAtLQo+ID4gPiBEYW5pZWwgVmV0dGVy
-Cj4gPiA+IFNvZnR3YXJlIEVuZ2luZWVyLCBJbnRlbCBDb3Jwb3JhdGlvbgo+ID4gPiBodHRwOi8v
-YmxvZy5mZndsbC5jaAo+Cj4KPgo+IC0tCj4gRGFuaWVsIFZldHRlcgo+IFNvZnR3YXJlIEVuZ2lu
-ZWVyLCBJbnRlbCBDb3Jwb3JhdGlvbgo+ICs0MSAoMCkgNzkgMzY1IDU3IDQ4IC0gaHR0cDovL2Js
-b2cuZmZ3bGwuY2gKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KYW1kLWdmeCBtYWlsaW5nIGxpc3QKYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0
-cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9hbWQtZ2Z4
+On 9/3/19 10:57 AM, Mike Kravetz wrote:
+> On 8/29/19 12:18 AM, Michal Hocko wrote:
+>> [Cc cgroups maintainers]
+>>
+>> On Wed 28-08-19 10:58:00, Mina Almasry wrote:
+>>> On Wed, Aug 28, 2019 at 4:23 AM Michal Hocko <mhocko@kernel.org> wrote:
+>>>>
+>>>> On Mon 26-08-19 16:32:34, Mina Almasry wrote:
+>>>>>  mm/hugetlb.c                                  | 493 ++++++++++++------
+>>>>>  mm/hugetlb_cgroup.c                           | 187 +++++--
+>>>>
+>>>> This is a lot of changes to an already subtle code which hugetlb
+>>>> reservations undoubly are.
+>>>
+>>> For what it's worth, I think this patch series is a net decrease in
+>>> the complexity of the reservation code, especially the region_*
+>>> functions, which is where a lot of the complexity lies. I removed the
+>>> race between region_del and region_{add|chg}, refactored the main
+>>> logic into smaller code, moved common code to helpers and deleted the
+>>> duplicates, and finally added lots of comments to the hard to
+>>> understand pieces. I hope that when folks review the changes they will
+>>> see that! :)
+>>
+>> Post those improvements as standalone patches and sell them as
+>> improvements. We can talk about the net additional complexity of the
+>> controller much easier then.
+> 
+> All such changes appear to be in patch 4 of this series.  The commit message
+> says "region_add() and region_chg() are heavily refactored to in this commit
+> to make the code easier to understand and remove duplication.".  However, the
+> modifications were also added to accommodate the new cgroup reservation
+> accounting.  I think it would be helpful to explain why the existing code does
+> not work with the new accounting.  For example, one change is because
+> "existing code coalesces resv_map entries for shared mappings.  new cgroup
+> accounting requires that resv_map entries be kept separate for proper
+> uncharging."
+> 
+> I am starting to review the changes, but it would help if there was a high
+> level description.  I also like Michal's idea of calling out the region_*
+> changes separately.  If not a standalone patch, at least the first patch of
+> the series.  This new code will be exercised even if cgroup reservation
+> accounting not enabled, so it is very important than no subtle regressions
+> be introduced.
+
+While looking at the region_* changes, I started thinking about this no
+coalesce change for shared mappings which I think is necessary.  Am I
+mistaken, or is this a requirement?
+
+If it is a requirement, then think about some of the possible scenarios
+such as:
+- There is a hugetlbfs file of size 10 huge pages.
+- Task A has reservations for pages at offset 1 3 5 7 and 9
+- Task B then mmaps the entire file which should result in reservations
+  at 0 2 4 6 and 8.
+- region_chg will return 5, but will also need to allocate 5 resv_map
+  entries for the subsequent region_add which can not fail.  Correct?
+  The code does not appear to handle this.
+
+BTW, this series will BUG when running libhugetlbfs test suite.  It will
+hit this in resv_map_release().
+
+	VM_BUG_ON(resv_map->adds_in_progress);
+
+-- 
+Mike Kravetz
