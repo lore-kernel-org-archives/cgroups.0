@@ -1,81 +1,73 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET block/for-next] blk-iocost: Implement absolute debt handling
-Date: Wed,  4 Sep 2019 12:45:51 -0700
-Message-ID: <20190904194556.2984857-1-tj@kernel.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v1 0/7] mm/memcontrol: recharge mlocked pages
+Date: Wed, 4 Sep 2019 23:13:54 +0000
+Message-ID: <20190904231350.GA5246@tower.dhcp.thefacebook.com>
+References: <156760509382.6560.17364256340940314860.stgit@buzz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id;
-        bh=PXmGfQo6neOlWgmykljZagbJmoHVSlvd5lTMWMsizwM=;
-        b=QCZLciyop0aVFo7y3eUWYwt/dAOgH9EHQhPsURPxfFrz963UhondyfnfVJlm5Irs0p
-         5SQHRH6fK7+gJHEIPCtM6fkDwAxAREkPGiiev0r3QCLM4aGH4PFydtMEw5T+1dm9B4Gh
-         PMPBoOUkKrisr6T/O7sRUGxemAeW+Fnsqb27SoTJUkCnpcdmU4kYbysvqhe5Jlk5EuZu
-         MIhCKiKHM7FYt91Ji8jdBoJTVuY1SdyTRsa6Hfyo2P1J21BaXOlpNJvO6aaOA2Osda1G
-         rbhVIz380w3pu+qKBZCUNTdf/IzfHFgQaEhvrxeOf+Z4NBKswArkr+tRU6ziV5xi8b2Z
-         ntfw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=4Ul75V30fqg4tJL6AUehuDGJapCIoB5ZrB+HTS8LLpk=;
+ b=pJ2gHKdGifN8CNjgU7HV5nuCIIzfX11XJlKcHZM1ax6ypV1uSDfZ0+MCD639VYr9SaI5
+ Q8ffYW1o3OYG1MEZx+arnhT12sHPGBLXg9+H6e7nya15X2AORb+HugoAUORjVRJedbLm
+ gPixdCfnK5QjfNCWIvchAjgFmqoMj4Jcy0E= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4Ul75V30fqg4tJL6AUehuDGJapCIoB5ZrB+HTS8LLpk=;
+ b=ijbRmKJisfWxcyzK5Y351mYbicHFxusReORY87YCZb366NVHVOckZpGPneVHegf1M9DI0Y/cRefOlTKhb8SxOd6oWeuAhy6q/O9at8kBTDNpwmZcRQUM4Y5UmyHY4ySvJeKFe27cuZcI6vNYqmgUpBJGQYiVt1+MgZtFzWULsNQ=
+In-Reply-To: <156760509382.6560.17364256340940314860.stgit@buzz>
+Content-Language: en-US
+Content-ID: <59294D3005729C4181703E55A0E5DA85@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@vger.kernel.org, cgroups@vger.kernel.org, newella@fb.com
+To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-Currently, when a given cgroup doesn't have enough budget, a forced or
-merged bio will advance the cgroup's vtime by the cost calculated
-according to the hierarchical weight at the time of issue.  Once vtime
-is advanced, how the cgroup's weight changes doesn't matter.  It has
-to wait until global vtime catches up with the cgroup's.
+On Wed, Sep 04, 2019 at 04:53:08PM +0300, Konstantin Khlebnikov wrote:
+> Currently mlock keeps pages in cgroups where they were accounted.
+> This way one container could affect another if they share file cache.
+> Typical case is writing (downloading) file in one container and then
+> locking in another. After that first container cannot get rid of cache.
 
-This means that the cost is calculated based on the hweight at the
-time of issuing but may later be paid at the wrong hweight.  This, for
-example, can lead to a scenario like the following.
+Yeah, it's a valid problem, and it's not about mlocked pages only,
+the same thing is true for generic pagecache. The only difference is that
+in theory memory pressure should fix everything. But in reality
+pagecache used by the second container can be very hot, so the first
+once can't really get rid of it.
+In other words, there is no way to pass a pagecache page between cgroups
+without evicting it and re-reading from a storage, which is sub-optimal
+in many cases.
 
-1. A cgroup with a very low hweight runs out of budget.
+We thought about new madvise(), which will uncharge pagecache but set
+a new page flag, which will mean something like "whoever first starts using
+the page, should be charged for it". But it never materialized in a patchse=
+t.
 
-2. A storm of swap-out happens on it.  All of them are scaled
-   according to the current low hweight and charged to vtime pushing
-   it to a far future.
+> Also removed cgroup stays pinned by these mlocked pages.
 
-3. All other cgroups go idle and now the above cgroup has access to
-   the whole device.  However, because vtime is already wound using
-   the past low hweight, what its current hweight is doesn't matter
-   until global vtime catches up to the local vtime.
+Tbh, I don't think it's a big issue here. If only there is a huge number
+of 1-page sized mlock areas, but this seems to be unlikely.
 
-4. As a result, either vrate gets ramped up extremely or the IOs stall
-   while the underlying device is idle.
+>=20
+> This patchset implements recharging pages to cgroup of mlock user.
+>=20
+> There are three cases:
+> * recharging at first mlock
+> * recharging at munlock to any remaining mlock
+> * recharging at 'culling' in reclaimer to any existing mlock
+>=20
+> To keep things simple recharging ignores memory limit. After that memory
+> usage temporary could be higher than limit but cgroup will reclaim memory
+> later or trigger oom, which is valid outcome when somebody mlock too much=
+.
 
-This patchset fixes the behavior by accounting the cost of forced or
-merged bios in absolute vtime rather than cgroup-relative.  This
-allows the cgroup to pay back the debt with whatever actual budget it
-has each period removing the hweight discrepancy.
+OOM is a concern here. If quitting an application will cause an immediate O=
+OM
+in an other cgroup, that's not so good. Ideally it should work like
+memory.high, forcing all threads in the second cgroup into direct reclaim.
 
-Note that !forced bios' costs are already accounted in absolute vtime.
-This patchset puts forced charges on the same ground.
-
-This patchset contains the following five patches and is on top of the
-current linux-block.git for-next 35e7ae82f62b ("Merge branch
-'for-5.4/block' into for-next").
-
- 0001-blk-iocost-Account-force-charged-overage-in-absolute.patch
- 0002-blk-iocost-Don-t-let-merges-push-vtime-into-the-futu.patch
- 0003-iocost_monitor-Always-use-strings-for-json-values.patch
- 0004-iocost_monitor-Report-more-info-with-higher-accuracy.patch
- 0005-iocost_monitor-Report-debt.patch
-
-0001-0002 implement absolute debt handling.  0003-0005 improve the
-monitoring script and add debt reporting.
-
-This patchset is also available in the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git iocost-vdebt
-
-diffstat follows.  Thanks.
-
- block/blk-iocost.c             |   93 +++++++++++++++++++++++++++++++++--------
- tools/cgroup/iocost_monitor.py |   61 ++++++++++++++------------
- 2 files changed, 110 insertions(+), 44 deletions(-)
-
---
-tejun
-
+Thanks!
