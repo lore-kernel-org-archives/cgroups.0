@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 3/5] iocost_monitor: Always use strings for json values
-Date: Wed,  4 Sep 2019 12:45:54 -0700
-Message-ID: <20190904194556.2984857-4-tj@kernel.org>
+Subject: [PATCH 4/5] iocost_monitor: Report more info with higher accuracy
+Date: Wed,  4 Sep 2019 12:45:55 -0700
+Message-ID: <20190904194556.2984857-5-tj@kernel.org>
 References: <20190904194556.2984857-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=TRsIsTqTTaD4KvJ5qqrHTq3GaA09a3g8vTgRyaRa+1g=;
-        b=Cy/rW5q/7uBhRpjIRkte/wVsq531S30qrwpCgl8Fl8aWv8B9RYhNXyyRJUdYJFVqZ1
-         hQZurp7uO2Ep5E4LHaqNjkNXCVTnByOGz+o/2DwqUkKkljYGXsxPdQu5Upwnr+mCe/Vr
-         Dgpu0m62CwYkw9XgXFso9Q5d1PsdjZmqklzoyxyaSzR3Guh1bx2usmf0HSL0D/ZAaHZL
-         jMxtBEzmlq/mwV41VVXfRowouGAC/lMkxV+Jq/Ra1kqJbmcyVpk8oFHX0miW/qm2Q1Do
-         bqrEjPahv/I/K/sCSnaYdVBmWT4K4rug7ZkIbuuOzvCOF0Xy0I2Mh/YomkF5TTHovzXk
-         rFng==
+        bh=iI9MwVhDc7RAqkPvomtO9iKQGF6mvrirQ+L7ZaA22N4=;
+        b=vIyNi+SSpBFV02XHRcFiU9QGtz6rnHbfRIsKoGrthXgk0sdQVAXBI+WeCYlcYrFY9B
+         eB9CTcGogSly1Aa92JWc/hMa04vsKdDocBNkcfP0pLj2rSC8LLgDtQUbDRGEwqQhTug2
+         s7kNEpY6sjbPd42tv/iLO2VKb9Ks5j3Ly2zqsmuMsCwGPQsLyfBeTS7tHJAtlJZmdiAn
+         yhEHs5pEysE9NGXmG2R+48Rfw/qZrPT2MPxCKQ25clVabwpMfcxR6YguiXsPC4UdSapl
+         ZR2cwgxvYBXFRQvjqYtfi7msm+LLM5x5SaD/dKpAi4YgZS4uQu6Y2qF5oC5vRTOQwZU6
+         wE0A==
 In-Reply-To: <20190904194556.2984857-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,76 +23,92 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@vger.kernel.org, cgroups@vger.kernel.org, newella@fb.com, Tejun Heo <tj@kernel.org>
 
-Json has limited accuracy for numbers and can silently truncate 64bit
-values, which can be extremely confusing.  Let's consistently use
-string encapsulated values for json output.
+When outputting json:
 
-While at it, convert an unnecesary f-string to str().
+* Don't truncate numbers.
+
+* Report address of iocg to ease drilling down further.
+
+When outputting table:
+
+* Use math.ceil() for delay_ms so that small delays don't read as 0.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- tools/cgroup/iocost_monitor.py | 40 +++++++++++++++++-----------------
- 1 file changed, 20 insertions(+), 20 deletions(-)
+ tools/cgroup/iocost_monitor.py | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
 
 diff --git a/tools/cgroup/iocost_monitor.py b/tools/cgroup/iocost_monitor.py
-index 2c9445e966d8..8f6b4ac377bd 100644
+index 8f6b4ac377bd..5d8bac603ffa 100644
 --- a/tools/cgroup/iocost_monitor.py
 +++ b/tools/cgroup/iocost_monitor.py
-@@ -111,14 +111,14 @@ autop_names = {
+@@ -13,6 +13,7 @@ import sys
+ import re
+ import time
+ import json
++import math
  
-     def dict(self, now):
-         return { 'device'               : devname,
--                 'timestamp'            : now,
--                 'enabled'              : self.enabled,
--                 'running'              : self.running,
--                 'period_ms'            : self.period_ms,
--                 'period_at'            : self.period_at,
--                 'period_vtime_at'      : self.vperiod_at,
--                 'busy_level'           : self.busy_level,
--                 'vrate_pct'            : self.vrate_pct, }
-+                 'timestamp'            : str(now),
-+                 'enabled'              : str(int(self.enabled)),
-+                 'running'              : str(int(self.running)),
-+                 'period_ms'            : str(self.period_ms),
-+                 'period_at'            : str(self.period_at),
-+                 'period_vtime_at'      : str(self.vperiod_at),
-+                 'busy_level'           : str(self.busy_level),
-+                 'vrate_pct'            : str(self.vrate_pct), }
+ import drgn
+ from drgn import container_of
+@@ -95,7 +96,7 @@ autop_names = {
  
-     def table_preamble_str(self):
-         state = ('RUN' if self.running else 'IDLE') if self.enabled else 'OFF'
-@@ -171,19 +171,19 @@ autop_names = {
+         self.enabled = ioc.enabled.value_()
+         self.running = ioc.running.value_() == IOC_RUNNING
+-        self.period_ms = round(ioc.period_us.value_() / 1_000)
++        self.period_ms = ioc.period_us.value_() / 1_000
+         self.period_at = ioc.period_at.value_() / 1_000_000
+         self.vperiod_at = ioc.period_at_vtime.value_() / VTIME_PER_SEC
+         self.vrate_pct = ioc.vtime_rate.counter.value_() * 100 / VTIME_PER_USEC
+@@ -147,6 +148,7 @@ autop_names = {
+         self.inuse = iocg.inuse.value_()
+         self.hwa_pct = iocg.hweight_active.value_() * 100 / HWEIGHT_WHOLE
+         self.hwi_pct = iocg.hweight_inuse.value_() * 100 / HWEIGHT_WHOLE
++        self.address = iocg.value_()
  
-     def dict(self, now, path):
-         out = { 'cgroup'                : path,
--                'timestamp'             : now,
--                'is_active'             : self.is_active,
--                'weight'                : self.weight,
--                'weight_active'         : self.active,
--                'weight_inuse'          : self.inuse,
--                'hweight_active_pct'    : self.hwa_pct,
--                'hweight_inuse_pct'     : self.hwi_pct,
--                'inflight_pct'          : self.inflight_pct,
--                'use_delay'             : self.use_delay,
--                'delay_ms'              : self.delay_ms,
--                'usage_pct'             : self.usage }
-+                'timestamp'             : str(now),
-+                'is_active'             : str(int(self.is_active)),
-+                'weight'                : str(self.weight),
-+                'weight_active'         : str(self.active),
-+                'weight_inuse'          : str(self.inuse),
-+                'hweight_active_pct'    : str(self.hwa_pct),
-+                'hweight_inuse_pct'     : str(self.hwi_pct),
-+                'inflight_pct'          : str(self.inflight_pct),
-+                'use_delay'             : str(self.use_delay),
-+                'delay_ms'              : str(self.delay_ms),
-+                'usage_pct'             : str(self.usage) }
+         vdone = iocg.done_vtime.counter.value_()
+         vtime = iocg.vtime.counter.value_()
+@@ -157,15 +159,15 @@ autop_names = {
+         else:
+             self.inflight_pct = 0
+ 
+-        self.use_delay = min(blkg.use_delay.counter.value_(), 99)
+-        self.delay_ms = min(round(blkg.delay_nsec.counter.value_() / 1_000_000), 999)
++        self.use_delay = blkg.use_delay.counter.value_()
++        self.delay_ms = blkg.delay_nsec.counter.value_() / 1_000_000
+ 
+         usage_idx = iocg.usage_idx.value_()
+         self.usages = []
+         self.usage = 0
+         for i in range(NR_USAGE_SLOTS):
+             usage = iocg.usages[(usage_idx + i) % NR_USAGE_SLOTS].value_()
+-            upct = min(usage * 100 / HWEIGHT_WHOLE, 999)
++            upct = usage * 100 / HWEIGHT_WHOLE
+             self.usages.append(upct)
+             self.usage = max(self.usage, upct)
+ 
+@@ -181,7 +183,8 @@ autop_names = {
+                 'inflight_pct'          : str(self.inflight_pct),
+                 'use_delay'             : str(self.use_delay),
+                 'delay_ms'              : str(self.delay_ms),
+-                'usage_pct'             : str(self.usage) }
++                'usage_pct'             : str(self.usage),
++                'address'               : str(hex(self.address)) }
          for i in range(len(self.usages)):
--            out[f'usage_pct_{i}'] = f'{self.usages[i]}'
-+            out[f'usage_pct_{i}'] = str(self.usages[i])
+             out[f'usage_pct_{i}'] = str(self.usages[i])
+         return out
+@@ -192,9 +195,10 @@ autop_names = {
+               f'{self.inuse:5}/{self.active:5} ' \
+               f'{self.hwi_pct:6.2f}/{self.hwa_pct:6.2f} ' \
+               f'{self.inflight_pct:6.2f} ' \
+-              f'{self.use_delay:2}*{self.delay_ms:03} '
++              f'{min(self.use_delay, 99):2}*'\
++              f'{min(math.ceil(self.delay_ms), 999):03} '
+         for u in self.usages:
+-            out += f'{round(u):03d}:'
++            out += f'{min(round(u), 999):03d}:'
+         out = out.rstrip(':')
          return out
  
-     def table_row_str(self, path):
 -- 
 2.17.1
 
