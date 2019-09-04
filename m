@@ -1,90 +1,81 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 5/5] iocost_monitor: Report debt
-Date: Wed,  4 Sep 2019 12:45:56 -0700
-Message-ID: <20190904194556.2984857-6-tj@kernel.org>
-References: <20190904194556.2984857-1-tj@kernel.org>
+Subject: [PATCHSET block/for-next] blk-iocost: Implement absolute debt handling
+Date: Wed,  4 Sep 2019 12:45:51 -0700
+Message-ID: <20190904194556.2984857-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=jL4d81pypGq7ODywNqxdQtdPeeIUOLBTqveh64eDASc=;
-        b=Z0oBR0eUEqPyun6hEblYCICjdKNvWRr+b29/35hl2k9IPCpnLWYk0YRY/8L5vtThT9
-         rqb7sJxaWR3X8K4fC+O5IkrzkOK1cnraVOQlHpbAUryTpGEd8x1V2MF9f4AKzgabbPN4
-         RURLEtu/yEDEf+b64CY/JEYDCcpg0DIRHptVcP+sl4fVElmdNupPsKEc1YTszbljredC
-         6QJXBlhEqOK2ua2rUmzwgc0UOAFR/+1fjYgDmuwXttlJgNlzx8QdHsY1mQ6Iq345qlJM
-         /UXcMmB/pCl4//OeGXfgwloUyMdpYFvINjlHOxBwvbqzG6c++Nio0VNFmvhBGqoSgXN2
-         FXyQ==
-In-Reply-To: <20190904194556.2984857-1-tj@kernel.org>
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=PXmGfQo6neOlWgmykljZagbJmoHVSlvd5lTMWMsizwM=;
+        b=QCZLciyop0aVFo7y3eUWYwt/dAOgH9EHQhPsURPxfFrz963UhondyfnfVJlm5Irs0p
+         5SQHRH6fK7+gJHEIPCtM6fkDwAxAREkPGiiev0r3QCLM4aGH4PFydtMEw5T+1dm9B4Gh
+         PMPBoOUkKrisr6T/O7sRUGxemAeW+Fnsqb27SoTJUkCnpcdmU4kYbysvqhe5Jlk5EuZu
+         MIhCKiKHM7FYt91Ji8jdBoJTVuY1SdyTRsa6Hfyo2P1J21BaXOlpNJvO6aaOA2Osda1G
+         rbhVIz380w3pu+qKBZCUNTdf/IzfHFgQaEhvrxeOf+Z4NBKswArkr+tRU6ziV5xi8b2Z
+         ntfw==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@vger.kernel.org, cgroups@vger.kernel.org, newella@fb.com, Tejun Heo <tj@kernel.org>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@vger.kernel.org, cgroups@vger.kernel.org, newella@fb.com
 
-Report debt and rename del_ms row to delay for consistency.
+Currently, when a given cgroup doesn't have enough budget, a forced or
+merged bio will advance the cgroup's vtime by the cost calculated
+according to the hierarchical weight at the time of issue.  Once vtime
+is advanced, how the cgroup's weight changes doesn't matter.  It has
+to wait until global vtime catches up with the cgroup's.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- block/blk-iocost.c             | 6 +++---
- tools/cgroup/iocost_monitor.py | 5 ++++-
- 2 files changed, 7 insertions(+), 4 deletions(-)
+This means that the cost is calculated based on the hweight at the
+time of issuing but may later be paid at the wrong hweight.  This, for
+example, can lead to a scenario like the following.
 
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 6000ce9b10bb..f0c5bfd4b4a8 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -161,9 +161,9 @@
-  * https://github.com/osandov/drgn.  The ouput looks like the following.
-  *
-  *  sdb RUN   per=300ms cur_per=234.218:v203.695 busy= +1 vrate= 62.12%
-- *                 active      weight      hweight% inflt% del_ms usages%
-- *  test/a              *    50/   50  33.33/ 33.33  27.65  0*041 033:033:033
-- *  test/b              *   100/  100  66.67/ 66.67  17.56  0*000 066:079:077
-+ *                 active      weight      hweight% inflt% dbt  delay usages%
-+ *  test/a              *    50/   50  33.33/ 33.33  27.65   2  0*041 033:033:033
-+ *  test/b              *   100/  100  66.67/ 66.67  17.56   0  0*000 066:079:077
-  *
-  * - per	: Timer period
-  * - cur_per	: Internal wall and device vtime clock
-diff --git a/tools/cgroup/iocost_monitor.py b/tools/cgroup/iocost_monitor.py
-index 5d8bac603ffa..f79b23582a1d 100644
---- a/tools/cgroup/iocost_monitor.py
-+++ b/tools/cgroup/iocost_monitor.py
-@@ -135,7 +135,7 @@ autop_names = {
- 
-     def table_header_str(self):
-         return f'{"":25} active {"weight":>9} {"hweight%":>13} {"inflt%":>6} ' \
--               f'{"del_ms":>6} {"usages%"}'
-+               f'{"dbt":>3} {"delay":>6} {"usages%"}'
- 
- class IocgStat:
-     def __init__(self, iocg):
-@@ -159,6 +159,7 @@ autop_names = {
-         else:
-             self.inflight_pct = 0
- 
-+        self.debt_ms = iocg.abs_vdebt.counter.value_() / VTIME_PER_USEC / 1000
-         self.use_delay = blkg.use_delay.counter.value_()
-         self.delay_ms = blkg.delay_nsec.counter.value_() / 1_000_000
- 
-@@ -181,6 +182,7 @@ autop_names = {
-                 'hweight_active_pct'    : str(self.hwa_pct),
-                 'hweight_inuse_pct'     : str(self.hwi_pct),
-                 'inflight_pct'          : str(self.inflight_pct),
-+                'debt_ms'               : str(self.debt_ms),
-                 'use_delay'             : str(self.use_delay),
-                 'delay_ms'              : str(self.delay_ms),
-                 'usage_pct'             : str(self.usage),
-@@ -195,6 +197,7 @@ autop_names = {
-               f'{self.inuse:5}/{self.active:5} ' \
-               f'{self.hwi_pct:6.2f}/{self.hwa_pct:6.2f} ' \
-               f'{self.inflight_pct:6.2f} ' \
-+              f'{min(math.ceil(self.debt_ms), 999):3} ' \
-               f'{min(self.use_delay, 99):2}*'\
-               f'{min(math.ceil(self.delay_ms), 999):03} '
-         for u in self.usages:
--- 
-2.17.1
+1. A cgroup with a very low hweight runs out of budget.
+
+2. A storm of swap-out happens on it.  All of them are scaled
+   according to the current low hweight and charged to vtime pushing
+   it to a far future.
+
+3. All other cgroups go idle and now the above cgroup has access to
+   the whole device.  However, because vtime is already wound using
+   the past low hweight, what its current hweight is doesn't matter
+   until global vtime catches up to the local vtime.
+
+4. As a result, either vrate gets ramped up extremely or the IOs stall
+   while the underlying device is idle.
+
+This patchset fixes the behavior by accounting the cost of forced or
+merged bios in absolute vtime rather than cgroup-relative.  This
+allows the cgroup to pay back the debt with whatever actual budget it
+has each period removing the hweight discrepancy.
+
+Note that !forced bios' costs are already accounted in absolute vtime.
+This patchset puts forced charges on the same ground.
+
+This patchset contains the following five patches and is on top of the
+current linux-block.git for-next 35e7ae82f62b ("Merge branch
+'for-5.4/block' into for-next").
+
+ 0001-blk-iocost-Account-force-charged-overage-in-absolute.patch
+ 0002-blk-iocost-Don-t-let-merges-push-vtime-into-the-futu.patch
+ 0003-iocost_monitor-Always-use-strings-for-json-values.patch
+ 0004-iocost_monitor-Report-more-info-with-higher-accuracy.patch
+ 0005-iocost_monitor-Report-debt.patch
+
+0001-0002 implement absolute debt handling.  0003-0005 improve the
+monitoring script and add debt reporting.
+
+This patchset is also available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git iocost-vdebt
+
+diffstat follows.  Thanks.
+
+ block/blk-iocost.c             |   93 +++++++++++++++++++++++++++++++++--------
+ tools/cgroup/iocost_monitor.py |   61 ++++++++++++++------------
+ 2 files changed, 110 insertions(+), 44 deletions(-)
+
+--
+tejun
 
