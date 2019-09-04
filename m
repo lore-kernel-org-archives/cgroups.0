@@ -1,170 +1,72 @@
-From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Subject: [PATCH v1 1/7] mm/memcontrol: move locking page out of
- mem_cgroup_move_account
-Date: Wed, 04 Sep 2019 16:53:10 +0300
-Message-ID: <156760519049.6560.475471327815521193.stgit@buzz>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH v1 0/7] mm/memcontrol: recharge mlocked pages
+Date: Wed, 4 Sep 2019 16:37:47 +0200
+Message-ID: <20190904143747.GA3838@dhcp22.suse.cz>
 References: <156760509382.6560.17364256340940314860.stgit@buzz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-        t=1567605191; bh=lTB5juDz41QpnMFucOhR5p9H8tWOOdh3MISjDg6Qtyo=;
-        h=In-Reply-To:Message-ID:References:Date:To:From:Subject:Cc;
-        b=t3HiszGlnoa0G41kFf87kWHWUfY/hTsAHUKmF5h9fmsvsFu3c8o8tu/MlWtpddOFA
-         tesrmKHUH/r2B0Pu47yB4Ay2NuVX3+tF/9dbtV51c1AkmtwGVs7gSzp/ehwzFqbFdU
-         6ycbxiL/tz7fm+BIVbdgZH5gdafWmJqj0BCqsuys=
+Content-Disposition: inline
 In-Reply-To: <156760509382.6560.17364256340940314860.stgit@buzz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Cc: Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>
+Content-Transfer-Encoding: 7bit
+To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-Required for calling mem_cgroup_move_account() for already locked page.
+On Wed 04-09-19 16:53:08, Konstantin Khlebnikov wrote:
+> Currently mlock keeps pages in cgroups where they were accounted.
+> This way one container could affect another if they share file cache.
+> Typical case is writing (downloading) file in one container and then
+> locking in another. After that first container cannot get rid of cache.
+> Also removed cgroup stays pinned by these mlocked pages.
+> 
+> This patchset implements recharging pages to cgroup of mlock user.
+> 
+> There are three cases:
+> * recharging at first mlock
+> * recharging at munlock to any remaining mlock
+> * recharging at 'culling' in reclaimer to any existing mlock
+> 
+> To keep things simple recharging ignores memory limit. After that memory
+> usage temporary could be higher than limit but cgroup will reclaim memory
+> later or trigger oom, which is valid outcome when somebody mlock too much.
 
-Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
----
- mm/memcontrol.c |   64 +++++++++++++++++++++++++++----------------------------
- 1 file changed, 31 insertions(+), 33 deletions(-)
+I assume that this is mlock specific because the pagecache which has the
+same problem is reclaimable and the problem tends to resolve itself
+after some time.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 9ec5e12486a7..40ddc233e973 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5135,7 +5135,8 @@ static struct page *mc_handle_file_pte(struct vm_area_struct *vma,
-  * @from: mem_cgroup which the page is moved from.
-  * @to:	mem_cgroup which the page is moved to. @from != @to.
-  *
-- * The caller must make sure the page is not on LRU (isolate_page() is useful.)
-+ * The caller must lock the page and make sure it is not on LRU
-+ * (isolate_page() is useful.)
-  *
-  * This function doesn't do "charge" to new cgroup and doesn't do "uncharge"
-  * from old cgroup.
-@@ -5147,24 +5148,15 @@ static int mem_cgroup_move_account(struct page *page,
- {
- 	unsigned long flags;
- 	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
--	int ret;
- 	bool anon;
- 
- 	VM_BUG_ON(from == to);
-+	VM_BUG_ON_PAGE(!PageLocked(page), page);
- 	VM_BUG_ON_PAGE(PageLRU(page), page);
- 	VM_BUG_ON(compound && !PageTransHuge(page));
- 
--	/*
--	 * Prevent mem_cgroup_migrate() from looking at
--	 * page->mem_cgroup of its source page while we change it.
--	 */
--	ret = -EBUSY;
--	if (!trylock_page(page))
--		goto out;
--
--	ret = -EINVAL;
- 	if (page->mem_cgroup != from)
--		goto out_unlock;
-+		return -EINVAL;
- 
- 	anon = PageAnon(page);
- 
-@@ -5204,18 +5196,14 @@ static int mem_cgroup_move_account(struct page *page,
- 	page->mem_cgroup = to;
- 	spin_unlock_irqrestore(&from->move_lock, flags);
- 
--	ret = 0;
--
- 	local_irq_disable();
- 	mem_cgroup_charge_statistics(to, page, compound, nr_pages);
- 	memcg_check_events(to, page);
- 	mem_cgroup_charge_statistics(from, page, compound, -nr_pages);
- 	memcg_check_events(from, page);
- 	local_irq_enable();
--out_unlock:
--	unlock_page(page);
--out:
--	return ret;
-+
-+	return 0;
- }
- 
- /**
-@@ -5535,36 +5523,42 @@ static int mem_cgroup_move_charge_pte_range(pmd_t *pmd,
- 	struct vm_area_struct *vma = walk->vma;
- 	pte_t *pte;
- 	spinlock_t *ptl;
--	enum mc_target_type target_type;
- 	union mc_target target;
- 	struct page *page;
- 
- 	ptl = pmd_trans_huge_lock(pmd, vma);
- 	if (ptl) {
-+		bool device = false;
-+
- 		if (mc.precharge < HPAGE_PMD_NR) {
- 			spin_unlock(ptl);
- 			return 0;
- 		}
--		target_type = get_mctgt_type_thp(vma, addr, *pmd, &target);
--		if (target_type == MC_TARGET_PAGE) {
--			page = target.page;
--			if (!isolate_lru_page(page)) {
--				if (!mem_cgroup_move_account(page, true,
--							     mc.from, mc.to)) {
--					mc.precharge -= HPAGE_PMD_NR;
--					mc.moved_charge += HPAGE_PMD_NR;
--				}
--				putback_lru_page(page);
--			}
--			put_page(page);
--		} else if (target_type == MC_TARGET_DEVICE) {
-+
-+		switch (get_mctgt_type_thp(vma, addr, *pmd, &target)) {
-+		case MC_TARGET_DEVICE:
-+			device = true;
-+			/* fall through */
-+		case MC_TARGET_PAGE:
- 			page = target.page;
-+			if (!trylock_page(page))
-+				goto put_huge;
-+			if (!device && isolate_lru_page(page))
-+				goto unlock_huge;
- 			if (!mem_cgroup_move_account(page, true,
- 						     mc.from, mc.to)) {
- 				mc.precharge -= HPAGE_PMD_NR;
- 				mc.moved_charge += HPAGE_PMD_NR;
- 			}
-+			if (!device)
-+				putback_lru_page(page);
-+unlock_huge:
-+			unlock_page(page);
-+put_huge:
- 			put_page(page);
-+			break;
-+		default:
-+			break;
- 		}
- 		spin_unlock(ptl);
- 		return 0;
-@@ -5596,8 +5590,10 @@ static int mem_cgroup_move_charge_pte_range(pmd_t *pmd,
- 			 */
- 			if (PageTransCompound(page))
- 				goto put;
--			if (!device && isolate_lru_page(page))
-+			if (!trylock_page(page))
- 				goto put;
-+			if (!device && isolate_lru_page(page))
-+				goto unlock;
- 			if (!mem_cgroup_move_account(page, false,
- 						mc.from, mc.to)) {
- 				mc.precharge--;
-@@ -5606,6 +5602,8 @@ static int mem_cgroup_move_charge_pte_range(pmd_t *pmd,
- 			}
- 			if (!device)
- 				putback_lru_page(page);
-+unlock:
-+			unlock_page(page);
- put:			/* get_mctgt_type() gets the page */
- 			put_page(page);
- 			break;
+Anyway, how big of a problem this really is? A lingering memcg is
+certainly not nice but pages are usually not mlocked for ever. Or is
+this a way to protect from an hostile actor?
 
+> Konstantin Khlebnikov (7):
+>       mm/memcontrol: move locking page out of mem_cgroup_move_account
+>       mm/memcontrol: add mem_cgroup_recharge
+>       mm/mlock: add vma argument for mlock_vma_page()
+>       mm/mlock: recharge memory accounting to first mlock user
+>       mm/mlock: recharge memory accounting to second mlock user at munlock
+>       mm/vmscan: allow changing page memory cgroup during reclaim
+>       mm/mlock: recharge mlocked pages at culling by vmscan
+> 
+> 
+>  Documentation/admin-guide/cgroup-v1/memory.rst |    5 +
+>  include/linux/memcontrol.h                     |    9 ++
+>  include/linux/rmap.h                           |    3 -
+>  mm/gup.c                                       |    2 
+>  mm/huge_memory.c                               |    4 -
+>  mm/internal.h                                  |    6 +
+>  mm/ksm.c                                       |    2 
+>  mm/memcontrol.c                                |  104 ++++++++++++++++--------
+>  mm/migrate.c                                   |    2 
+>  mm/mlock.c                                     |   14 +++
+>  mm/rmap.c                                      |    5 +
+>  mm/vmscan.c                                    |   17 ++--
+>  12 files changed, 121 insertions(+), 52 deletions(-)
+> 
+> --
+> Signature
+
+-- 
+Michal Hocko
+SUSE Labs
