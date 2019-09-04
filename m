@@ -1,95 +1,159 @@
-From: Mike Kravetz <mike.kravetz@oracle.com>
-Subject: Re: [PATCH v3 0/6] hugetlb_cgroup: Add hugetlb_cgroup reservation
- limits
-Date: Tue, 3 Sep 2019 16:44:00 -0700
-Message-ID: <e7f91a50-5957-249c-8756-25ea87c77fc4@oracle.com>
-References: <20190826233240.11524-1-almasrymina@google.com>
- <20190828112340.GB7466@dhcp22.suse.cz>
- <CAHS8izPPhPoqh-J9LJ40NJUCbgTFS60oZNuDSHmgtMQiYw72RA@mail.gmail.com>
- <20190829071807.GR28313@dhcp22.suse.cz>
- <cb7ebcce-05c5-3384-5632-2bbac9995c15@oracle.com>
+From: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
+Subject: Re: [PATCH RFC v4 01/16] drm: Add drm_minor_for_each
+Date: Wed, 4 Sep 2019 10:54:34 +0200
+Message-ID: <20190904085434.GF2112@phenom.ffwll.local>
+References: <20190829060533.32315-1-Kenny.Ho@amd.com>
+ <20190829060533.32315-2-Kenny.Ho@amd.com>
+ <20190903075719.GK2112@phenom.ffwll.local>
+ <CAOWid-dxxDhyxP2+0R0oKAk29rR-1TbMyhshR1+gbcpGJCAW6g@mail.gmail.com>
+ <CAKMK7uEofjdVURu+meonh_YdV5eX8vfNALkW3A_+kLapCV8j+w@mail.gmail.com>
+ <CAOWid-eUVztW4hNVpznnJRcwHcjCirGL2aS75p4OY8XoGuJqUg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : references : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=gVzd1xf9o+fcSS2lfDeJltPXEjbUtM30OmGuZGgNO7M=;
- b=hSmwubqrsY25Qx8aIq/54/tJiLgh28xXXlaE0aNL0uV9fXey2tXHfMl0THru4K7mEjr9
- oZag18RuzqILZ9Cg9xZUYVU/7L/ZpfkToycFo1IE6TraQKhwh6rdwSDw/hOYY7QjE1Ec
- q02lZeb892ymnKgpkKK9/31TDcipl2reZmoXAJe4dbsIHaqnEcowWrONpgec1otShh5C
- eV7VMyIcACsuK3r41bdRNt4dxUaWo1+RH8WhdhyesJxQwWc00L9TljBtURYSfJLWRkiT
- G8fqrPSjXVNb9xteZdgoXIv5K1yYMXoRlR1HPqE6gqA7f1Lj1LdPS+3LqCwUuEGhA27n Sg== 
-In-Reply-To: <cb7ebcce-05c5-3384-5632-2bbac9995c15@oracle.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAOWid-eUVztW4hNVpznnJRcwHcjCirGL2aS75p4OY8XoGuJqUg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@kernel.org>, Mina Almasry <almasrymina@google.com>
-Cc: shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, khalid.aziz@oracle.com, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>
+To: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: "Greathouse, Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
 
-On 9/3/19 10:57 AM, Mike Kravetz wrote:
-> On 8/29/19 12:18 AM, Michal Hocko wrote:
->> [Cc cgroups maintainers]
->>
->> On Wed 28-08-19 10:58:00, Mina Almasry wrote:
->>> On Wed, Aug 28, 2019 at 4:23 AM Michal Hocko <mhocko@kernel.org> wrote:
->>>>
->>>> On Mon 26-08-19 16:32:34, Mina Almasry wrote:
->>>>>  mm/hugetlb.c                                  | 493 ++++++++++++------
->>>>>  mm/hugetlb_cgroup.c                           | 187 +++++--
->>>>
->>>> This is a lot of changes to an already subtle code which hugetlb
->>>> reservations undoubly are.
->>>
->>> For what it's worth, I think this patch series is a net decrease in
->>> the complexity of the reservation code, especially the region_*
->>> functions, which is where a lot of the complexity lies. I removed the
->>> race between region_del and region_{add|chg}, refactored the main
->>> logic into smaller code, moved common code to helpers and deleted the
->>> duplicates, and finally added lots of comments to the hard to
->>> understand pieces. I hope that when folks review the changes they will
->>> see that! :)
->>
->> Post those improvements as standalone patches and sell them as
->> improvements. We can talk about the net additional complexity of the
->> controller much easier then.
-> 
-> All such changes appear to be in patch 4 of this series.  The commit message
-> says "region_add() and region_chg() are heavily refactored to in this commit
-> to make the code easier to understand and remove duplication.".  However, the
-> modifications were also added to accommodate the new cgroup reservation
-> accounting.  I think it would be helpful to explain why the existing code does
-> not work with the new accounting.  For example, one change is because
-> "existing code coalesces resv_map entries for shared mappings.  new cgroup
-> accounting requires that resv_map entries be kept separate for proper
-> uncharging."
-> 
-> I am starting to review the changes, but it would help if there was a high
-> level description.  I also like Michal's idea of calling out the region_*
-> changes separately.  If not a standalone patch, at least the first patch of
-> the series.  This new code will be exercised even if cgroup reservation
-> accounting not enabled, so it is very important than no subtle regressions
-> be introduced.
-
-While looking at the region_* changes, I started thinking about this no
-coalesce change for shared mappings which I think is necessary.  Am I
-mistaken, or is this a requirement?
-
-If it is a requirement, then think about some of the possible scenarios
-such as:
-- There is a hugetlbfs file of size 10 huge pages.
-- Task A has reservations for pages at offset 1 3 5 7 and 9
-- Task B then mmaps the entire file which should result in reservations
-  at 0 2 4 6 and 8.
-- region_chg will return 5, but will also need to allocate 5 resv_map
-  entries for the subsequent region_add which can not fail.  Correct?
-  The code does not appear to handle this.
-
-BTW, this series will BUG when running libhugetlbfs test suite.  It will
-hit this in resv_map_release().
-
-	VM_BUG_ON(resv_map->adds_in_progress);
-
--- 
-Mike Kravetz
+T24gVHVlLCBTZXAgMDMsIDIwMTkgYXQgMDQ6NDM6NDVQTSAtMDQwMCwgS2VubnkgSG8gd3JvdGU6
+Cj4gT24gVHVlLCBTZXAgMywgMjAxOSBhdCA0OjEyIFBNIERhbmllbCBWZXR0ZXIgPGRhbmllbEBm
+ZndsbC5jaD4gd3JvdGU6Cj4gPiBPbiBUdWUsIFNlcCAzLCAyMDE5IGF0IDk6NDUgUE0gS2Vubnkg
+SG8gPHkya2VubnlAZ21haWwuY29tPiB3cm90ZToKPiA+ID4gT24gVHVlLCBTZXAgMywgMjAxOSBh
+dCAzOjU3IEFNIERhbmllbCBWZXR0ZXIgPGRhbmllbEBmZndsbC5jaD4gd3JvdGU6Cj4gPiA+ID4g
+SXRlcmF0aW5nIG92ZXIgbWlub3JzIGZvciBjZ3JvdXBzIHNvdW5kcyB2ZXJ5LCB2ZXJ5IHdyb25n
+LiBXaHkgZG8gd2UgY2FyZQo+ID4gPiA+IHdoZXRoZXIgYSBidWZmZXIgd2FzIGFsbG9jYXRlZCB0
+aHJvdWdoIGttcyBkdW1iIHZzIHJlbmRlciBub2Rlcz8KPiA+ID4gPgo+ID4gPiA+IEknZCBleHBl
+Y3QgYWxsIHRoZSBjZ3JvdXAgc3R1ZmYgdG8gb25seSB3b3JrIG9uIGRybV9kZXZpY2UsIGlmIGl0
+IGRvZXMKPiA+ID4gPiBjYXJlIGFib3V0IGRldmljZXMuCj4gPiA+ID4KPiA+ID4gPiAoSSBkaWRu
+J3QgbG9vayB0aHJvdWdoIHRoZSBwYXRjaCBzZXJpZXMgdG8gZmluZCBvdXQgd2hlcmUgZXhhY3Rs
+eSB5b3UncmUKPiA+ID4gPiB1c2luZyB0aGlzLCBzbyBtYXliZSBJJ20gb2ZmIHRoZSByYWlscyBo
+ZXJlKS4KPiA+ID4KPiA+ID4gSSBhbSBleHBvc2luZyB0aGlzIHRvIHJlbW92ZSB0aGUgbmVlZCB0
+byBrZWVwIHRyYWNrIG9mIGEgc2VwYXJhdGUgbGlzdAo+ID4gPiBvZiBhdmFpbGFibGUgZHJtX2Rl
+dmljZSBpbiB0aGUgc3lzdGVtICh0byByZW1vdmUgdGhlIHJlZ2lzdGVyaW5nIGFuZAo+ID4gPiB1
+bnJlZ2lzdGVyaW5nIG9mIGRybV9kZXZpY2UgdG8gdGhlIGNncm91cCBzdWJzeXN0ZW0gYW5kIGp1
+c3QgdXNlCj4gPiA+IGRybV9taW5vciBhcyB0aGUgc2luZ2xlIHNvdXJjZSBvZiB0cnV0aC4pICBJ
+IGFtIG9ubHkgZmlsdGVyaW5nIG91dCB0aGUKPiA+ID4gcmVuZGVyIG5vZGVzIG1pbm9yIGJlY2F1
+c2UgdGhleSBwb2ludCB0byB0aGUgc2FtZSBkcm1fZGV2aWNlIGFuZCBpcwo+ID4gPiBjb25mdXNp
+bmcuCj4gPiA+Cj4gPiA+IFBlcmhhcHMgSSBtaXNzZWQgYW4gb2J2aW91cyB3YXkgdG8gbGlzdCB0
+aGUgZHJtIGRldmljZXMgd2l0aG91dAo+ID4gPiBpdGVyYXRpbmcgdGhyb3VnaCB0aGUgZHJtX21p
+bm9ycz8gIChJIHByb2JhYmx5IGp1bXBlZCB0byB0aGUgbWlub3JzCj4gPiA+IGJlY2F1c2UgJG1h
+am9yOiRtaW5vciBpcyB0aGUgY29udmVudGlvbiB0byBhZGRyZXNzIGRldmljZXMgaW4gY2dyb3Vw
+LikKPiA+Cj4gPiBDcmVhdGUgeW91ciBvd24gaWYgdGhlcmUncyBub3RoaW5nLCBiZWNhdXNlIHlv
+dSBuZWVkIHRvIGFueXdheToKPiA+IC0gWW91IG5lZWQgc3BlY2lhbCBsb2NraW5nIGFueXdheSwg
+d2UgY2FuJ3QganVzdCBibG9jayBvbiB0aGUgaWRyIGxvY2sKPiA+IGZvciBldmVyeXRoaW5nLgo+
+ID4gLSBUaGlzIG5lZWRzIHRvIHJlZmNvdW50IGRybV9kZXZpY2UsIG5vIHRoZSBtaW5vcnMuCj4g
+Pgo+ID4gSXRlcmF0aW5nIG92ZXIgc3R1ZmYgc3RpbGwgZmVlbHMga2luZGEgd3Jvbmcgc3RpbGws
+IGJlY2F1c2Ugbm9ybWFsbHkKPiA+IHRoZSB3YXkgd2UgcmVnaXN0ZXIvdW5yZWdpc3RlciB1c2Vy
+c3BhY2UgYXBpIChhbmQgY2dyb3VwcyBpc24ndAo+ID4gYW55dGhpbmcgZWxzZSBmcm9tIGEgZHJt
+IGRyaXZlciBwb3YpIGlzIGJ5IGFkZGluZyBtb3JlIGNhbGxzIHRvCj4gPiBkcm1fZGV2X3JlZ2lz
+dGVyL3VucmVnaXN0ZXIuIElmIHlvdSBwdXQgYSBkcm1fY2dfcmVnaXN0ZXIvdW5yZWdpc3Rlcgo+
+ID4gY2FsbCBpbiB0aGVyZSB3ZSBoYXZlIGEgY2xlYW4gc2VwYXJhdGlvbiwgYW5kIHlvdSBjYW4g
+dHJhY2sgYWxsIHRoZQo+ID4gY3VycmVudGx5IGFjdGl2ZSBkZXZpY2VzIGhvd2V2ZXIgeW91IHdh
+bnQuIEl0ZXJhdGluZyBvdmVyIG9iamVjdHMgdGhhdAo+ID4gY2FuIGJlIGhvdHVucGx1Z2dlZCBh
+bnkgdGltZSB0ZW5kcyB0byBnZXQgcmVhbGx5IGNvbXBsaWNhdGVkIHJlYWxseQo+ID4gcXVpY2ts
+eS4KPiAKPiBVbS4uLiBJIHRob3VnaHQgdGhpcyBpcyB3aGF0IEkgaGFkIHByZXZpb3VzbHkuICBE
+aWQgSSBtaXN1bmRlcnN0b29kCj4geW91ciBmZWVkYmFjayBmcm9tIHYzPyAgRG9lc24ndCBkcm1f
+bWlub3IgYWxyZWFkeSBpbmNsdWRlIGFsbCB0aGVzZQo+IGZhY2lsaXRpZXMgc28gaXNuJ3QgY3Jl
+YXRpbmcgbXkgb3duIGtpbmQgb2YgcmVpbnZlbnRpbmcgdGhlIHdoZWVsPwo+IChhcyBJIGRpZCBw
+cmV2aW91c2x5PykgIGRybV9taW5vcl9yZWdpc3RlciBpcyBjYWxsZWQgaW5zaWRlCj4gZHJtX2Rl
+dl9yZWdpc3RlciBzbyBpc24ndCBsZXZlcmFnaW5nIGV4aXN0aW5nIGRybV9taW5vciBmYWNpbGl0
+aWVzCj4gbXVjaCBiZXR0ZXIgc29sdXRpb24/CgpIbSB0aGUgcHJldmlvdXMgdmVyc2lvbiBhbHJl
+YWR5IGRyb3BwZWQgb3V0IG9mIG15IGluYm94LCBzbyBoYXJkIHRvIGZpbmQKaXQgYWdhaW4uIEFu
+ZCBJIGNvdWxkbid0IGZpbmQgdGhpcyBpbiBhcmNoaWV2ZXMuIERvIHlvdSBoYXZlIHBvaW50ZXJz
+PwoKSSB0aG91Z2h0IHRoZSBwcmV2aW91cyB2ZXJzaW9uIGRpZCBjZ3JvdXAgaW5pdCBzZXBhcmF0
+ZWx5IGZyb20gZHJtX2RldmljZQpzZXR1cCwgYW5kIEkgZ3Vlc3MgSSBzdWdnZXN0ZWQgdGhhdCBp
+dCBzaG91bGQgYmUgbW92ZWQgaW50CmRybV9kZXZfcmVnaXN0ZXIvdW5yZWdpc3Rlcj8KCkFueXdh
+eSwgSSBkb24ndCB0aGluayByZXVzaW5nIHRoZSBkcm1fbWlub3IgcmVnaXN0cmF0aW9uIG1ha2Vz
+IHNlbnNlLApzaW5jZSB3ZSB3YW50IHRvIGJlIG9uIHRoZSBkcm1fZGV2aWNlLCBub3Qgb24gdGhl
+IG1pbm9yLiBXaGljaCBpcyBhIGJpdAphd2t3YXJkIGZvciBjZ3JvdXBzLCB3aGljaCB3YW50cyB0
+byBpZGVudGlmeSBkZXZpY2VzIHVzaW5nIG1ham9yLm1pbm9yCnBhaXJzLiBCdXQgSSBndWVzcyBk
+cm0gaXMgdGhlIGZpcnN0IHN1YnN5c3RlbSB3aGVyZSAxIGRldmljZSBjYW4gYmUKZXhwb3NlZCB0
+aHJvdWdoIG11bHRpcGxlIG1pbm9ycyAuLi4KClRlanVuLCBhbnkgc3VnZ2VzdGlvbnMgb24gdGhp
+cz8KCkFueXdheSwgSSB0aGluayBqdXN0IGxldmVyYWdpbmcgZXhpc3RpbmcgY29kZSBiZWNhdXNl
+IGl0IGNhbiBiZSBhYnVzZWQgdG8KbWFrZSBpdCBmaXQgZm9yIHVzIGRvZXNuJ3QgbWFrZSBzZW5z
+ZS4gRS5nLiBmb3IgdGhlIGttcyBzaWRlIHdlIGFsc28gZG9uJ3QKcGlnZ3ktYmFjayBvbiB0b3Ag
+b2YgZHJtX21pbm9yX3JlZ2lzdGVyIChpdCB3b3VsZCBiZSB0ZWNobmljYWxseQpwb3NzaWJsZSks
+IGJ1dCBpbnN0ZWFkIHdlIGhhdmUgZHJtX21vZGVzZXRfcmVnaXN0ZXJfYWxsKCkuCi1EYW5pZWwK
+Cj4gCj4gS2VubnkKPiAKPiA+Cj4gPgo+ID4gPgo+ID4gPiBLZW5ueQo+ID4gPgo+ID4gPiA+IC1E
+YW5pZWwKPiA+ID4gPgo+ID4gPiA+ID4gLS0tCj4gPiA+ID4gPiAgZHJpdmVycy9ncHUvZHJtL2Ry
+bV9kcnYuYyAgICAgIHwgMTkgKysrKysrKysrKysrKysrKysrKwo+ID4gPiA+ID4gIGRyaXZlcnMv
+Z3B1L2RybS9kcm1faW50ZXJuYWwuaCB8ICA0IC0tLS0KPiA+ID4gPiA+ICBpbmNsdWRlL2RybS9k
+cm1fZHJ2LmggICAgICAgICAgfCAgNCArKysrCj4gPiA+ID4gPiAgMyBmaWxlcyBjaGFuZ2VkLCAy
+MyBpbnNlcnRpb25zKCspLCA0IGRlbGV0aW9ucygtKQo+ID4gPiA+ID4KPiA+ID4gPiA+IGRpZmYg
+LS1naXQgYS9kcml2ZXJzL2dwdS9kcm0vZHJtX2Rydi5jIGIvZHJpdmVycy9ncHUvZHJtL2RybV9k
+cnYuYwo+ID4gPiA+ID4gaW5kZXggODYyNjIxNDk0YTkzLi4wMDBjZGRhYmQ5NzAgMTAwNjQ0Cj4g
+PiA+ID4gPiAtLS0gYS9kcml2ZXJzL2dwdS9kcm0vZHJtX2Rydi5jCj4gPiA+ID4gPiArKysgYi9k
+cml2ZXJzL2dwdS9kcm0vZHJtX2Rydi5jCj4gPiA+ID4gPiBAQCAtMjU0LDExICsyNTQsMTMgQEAg
+c3RydWN0IGRybV9taW5vciAqZHJtX21pbm9yX2FjcXVpcmUodW5zaWduZWQgaW50IG1pbm9yX2lk
+KQo+ID4gPiA+ID4KPiA+ID4gPiA+ICAgICAgIHJldHVybiBtaW5vcjsKPiA+ID4gPiA+ICB9Cj4g
+PiA+ID4gPiArRVhQT1JUX1NZTUJPTChkcm1fbWlub3JfYWNxdWlyZSk7Cj4gPiA+ID4gPgo+ID4g
+PiA+ID4gIHZvaWQgZHJtX21pbm9yX3JlbGVhc2Uoc3RydWN0IGRybV9taW5vciAqbWlub3IpCj4g
+PiA+ID4gPiAgewo+ID4gPiA+ID4gICAgICAgZHJtX2Rldl9wdXQobWlub3ItPmRldik7Cj4gPiA+
+ID4gPiAgfQo+ID4gPiA+ID4gK0VYUE9SVF9TWU1CT0woZHJtX21pbm9yX3JlbGVhc2UpOwo+ID4g
+PiA+ID4KPiA+ID4gPiA+ICAvKioKPiA+ID4gPiA+ICAgKiBET0M6IGRyaXZlciBpbnN0YW5jZSBv
+dmVydmlldwo+ID4gPiA+ID4gQEAgLTEwNzgsNiArMTA4MCwyMyBAQCBpbnQgZHJtX2Rldl9zZXRf
+dW5pcXVlKHN0cnVjdCBkcm1fZGV2aWNlICpkZXYsIGNvbnN0IGNoYXIgKm5hbWUpCj4gPiA+ID4g
+PiAgfQo+ID4gPiA+ID4gIEVYUE9SVF9TWU1CT0woZHJtX2Rldl9zZXRfdW5pcXVlKTsKPiA+ID4g
+PiA+Cj4gPiA+ID4gPiArLyoqCj4gPiA+ID4gPiArICogZHJtX21pbm9yX2Zvcl9lYWNoIC0gSXRl
+cmF0ZSB0aHJvdWdoIGFsbCBzdG9yZWQgRFJNIG1pbm9ycwo+ID4gPiA+ID4gKyAqIEBmbjogRnVu
+Y3Rpb24gdG8gYmUgY2FsbGVkIGZvciBlYWNoIHBvaW50ZXIuCj4gPiA+ID4gPiArICogQGRhdGE6
+IERhdGEgcGFzc2VkIHRvIGNhbGxiYWNrIGZ1bmN0aW9uLgo+ID4gPiA+ID4gKyAqCj4gPiA+ID4g
+PiArICogVGhlIGNhbGxiYWNrIGZ1bmN0aW9uIHdpbGwgYmUgY2FsbGVkIGZvciBlYWNoIEBkcm1f
+bWlub3IgZW50cnksIHBhc3NpbmcKPiA+ID4gPiA+ICsgKiB0aGUgbWlub3IsIHRoZSBlbnRyeSBh
+bmQgQGRhdGEuCj4gPiA+ID4gPiArICoKPiA+ID4gPiA+ICsgKiBJZiBAZm4gcmV0dXJucyBhbnl0
+aGluZyBvdGhlciB0aGFuICUwLCB0aGUgaXRlcmF0aW9uIHN0b3BzIGFuZCB0aGF0Cj4gPiA+ID4g
+PiArICogdmFsdWUgaXMgcmV0dXJuZWQgZnJvbSB0aGlzIGZ1bmN0aW9uLgo+ID4gPiA+ID4gKyAq
+Lwo+ID4gPiA+ID4gK2ludCBkcm1fbWlub3JfZm9yX2VhY2goaW50ICgqZm4pKGludCBpZCwgdm9p
+ZCAqcCwgdm9pZCAqZGF0YSksIHZvaWQgKmRhdGEpCj4gPiA+ID4gPiArewo+ID4gPiA+ID4gKyAg
+ICAgcmV0dXJuIGlkcl9mb3JfZWFjaCgmZHJtX21pbm9yc19pZHIsIGZuLCBkYXRhKTsKPiA+ID4g
+PiA+ICt9Cj4gPiA+ID4gPiArRVhQT1JUX1NZTUJPTChkcm1fbWlub3JfZm9yX2VhY2gpOwo+ID4g
+PiA+ID4gKwo+ID4gPiA+ID4gIC8qCj4gPiA+ID4gPiAgICogRFJNIENvcmUKPiA+ID4gPiA+ICAg
+KiBUaGUgRFJNIGNvcmUgbW9kdWxlIGluaXRpYWxpemVzIGFsbCBnbG9iYWwgRFJNIG9iamVjdHMg
+YW5kIG1ha2VzIHRoZW0KPiA+ID4gPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9kcm0vZHJt
+X2ludGVybmFsLmggYi9kcml2ZXJzL2dwdS9kcm0vZHJtX2ludGVybmFsLmgKPiA+ID4gPiA+IGlu
+ZGV4IGUxOWFjN2NhNjAyZC4uNmJmYWQ3NmY4ZTc4IDEwMDY0NAo+ID4gPiA+ID4gLS0tIGEvZHJp
+dmVycy9ncHUvZHJtL2RybV9pbnRlcm5hbC5oCj4gPiA+ID4gPiArKysgYi9kcml2ZXJzL2dwdS9k
+cm0vZHJtX2ludGVybmFsLmgKPiA+ID4gPiA+IEBAIC01NCwxMCArNTQsNiBAQCB2b2lkIGRybV9w
+cmltZV9kZXN0cm95X2ZpbGVfcHJpdmF0ZShzdHJ1Y3QgZHJtX3ByaW1lX2ZpbGVfcHJpdmF0ZSAq
+cHJpbWVfZnByaXYpOwo+ID4gPiA+ID4gIHZvaWQgZHJtX3ByaW1lX3JlbW92ZV9idWZfaGFuZGxl
+X2xvY2tlZChzdHJ1Y3QgZHJtX3ByaW1lX2ZpbGVfcHJpdmF0ZSAqcHJpbWVfZnByaXYsCj4gPiA+
+ID4gPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHN0cnVjdCBkbWFfYnVm
+ICpkbWFfYnVmKTsKPiA+ID4gPiA+Cj4gPiA+ID4gPiAtLyogZHJtX2Rydi5jICovCj4gPiA+ID4g
+PiAtc3RydWN0IGRybV9taW5vciAqZHJtX21pbm9yX2FjcXVpcmUodW5zaWduZWQgaW50IG1pbm9y
+X2lkKTsKPiA+ID4gPiA+IC12b2lkIGRybV9taW5vcl9yZWxlYXNlKHN0cnVjdCBkcm1fbWlub3Ig
+Km1pbm9yKTsKPiA+ID4gPiA+IC0KPiA+ID4gPiA+ICAvKiBkcm1fdmJsYW5rLmMgKi8KPiA+ID4g
+PiA+ICB2b2lkIGRybV92YmxhbmtfZGlzYWJsZV9hbmRfc2F2ZShzdHJ1Y3QgZHJtX2RldmljZSAq
+ZGV2LCB1bnNpZ25lZCBpbnQgcGlwZSk7Cj4gPiA+ID4gPiAgdm9pZCBkcm1fdmJsYW5rX2NsZWFu
+dXAoc3RydWN0IGRybV9kZXZpY2UgKmRldik7Cj4gPiA+ID4gPiBkaWZmIC0tZ2l0IGEvaW5jbHVk
+ZS9kcm0vZHJtX2Rydi5oIGIvaW5jbHVkZS9kcm0vZHJtX2Rydi5oCj4gPiA+ID4gPiBpbmRleCA2
+OGNhNzM2YzU0OGQuLjI0ZjhkMDU0YzU3MCAxMDA2NDQKPiA+ID4gPiA+IC0tLSBhL2luY2x1ZGUv
+ZHJtL2RybV9kcnYuaAo+ID4gPiA+ID4gKysrIGIvaW5jbHVkZS9kcm0vZHJtX2Rydi5oCj4gPiA+
+ID4gPiBAQCAtNzk5LDUgKzc5OSw5IEBAIHN0YXRpYyBpbmxpbmUgYm9vbCBkcm1fZHJ2X3VzZXNf
+YXRvbWljX21vZGVzZXQoc3RydWN0IGRybV9kZXZpY2UgKmRldikKPiA+ID4gPiA+Cj4gPiA+ID4g
+PiAgaW50IGRybV9kZXZfc2V0X3VuaXF1ZShzdHJ1Y3QgZHJtX2RldmljZSAqZGV2LCBjb25zdCBj
+aGFyICpuYW1lKTsKPiA+ID4gPiA+Cj4gPiA+ID4gPiAraW50IGRybV9taW5vcl9mb3JfZWFjaChp
+bnQgKCpmbikoaW50IGlkLCB2b2lkICpwLCB2b2lkICpkYXRhKSwgdm9pZCAqZGF0YSk7Cj4gPiA+
+ID4gPiArCj4gPiA+ID4gPiArc3RydWN0IGRybV9taW5vciAqZHJtX21pbm9yX2FjcXVpcmUodW5z
+aWduZWQgaW50IG1pbm9yX2lkKTsKPiA+ID4gPiA+ICt2b2lkIGRybV9taW5vcl9yZWxlYXNlKHN0
+cnVjdCBkcm1fbWlub3IgKm1pbm9yKTsKPiA+ID4gPiA+Cj4gPiA+ID4gPiAgI2VuZGlmCj4gPiA+
+ID4gPiAtLQo+ID4gPiA+ID4gMi4yMi4wCj4gPiA+ID4gPgo+ID4gPiA+Cj4gPiA+ID4gLS0KPiA+
+ID4gPiBEYW5pZWwgVmV0dGVyCj4gPiA+ID4gU29mdHdhcmUgRW5naW5lZXIsIEludGVsIENvcnBv
+cmF0aW9uCj4gPiA+ID4gaHR0cDovL2Jsb2cuZmZ3bGwuY2gKPiA+Cj4gPgo+ID4KPiA+IC0tCj4g
+PiBEYW5pZWwgVmV0dGVyCj4gPiBTb2Z0d2FyZSBFbmdpbmVlciwgSW50ZWwgQ29ycG9yYXRpb24K
+PiA+ICs0MSAoMCkgNzkgMzY1IDU3IDQ4IC0gaHR0cDovL2Jsb2cuZmZ3bGwuY2gKCi0tIApEYW5p
+ZWwgVmV0dGVyClNvZnR3YXJlIEVuZ2luZWVyLCBJbnRlbCBDb3Jwb3JhdGlvbgpodHRwOi8vYmxv
+Zy5mZndsbC5jaApfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+XwphbWQtZ2Z4IG1haWxpbmcgbGlzdAphbWQtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRw
+czovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2FtZC1nZng=
