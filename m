@@ -1,17 +1,17 @@
 From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Subject: [PATCH v1 3/7] mm/mlock: add vma argument for mlock_vma_page()
-Date: Wed, 04 Sep 2019 16:53:14 +0300
-Message-ID: <156760519431.6560.14636274673495137289.stgit@buzz>
+Subject: [PATCH v1 2/7] mm/memcontrol: add mem_cgroup_recharge
+Date: Wed, 04 Sep 2019 16:53:12 +0300
+Message-ID: <156760519254.6560.3180815463616863318.stgit@buzz>
 References: <156760509382.6560.17364256340940314860.stgit@buzz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-        t=1567605195; bh=FKXul/4983ZBoHHq4ipo38Vdx5JAQEjK+xyNcL5XG/o=;
+        t=1567605193; bh=Nk9h8il5OEPYVOEQt3XS8DDQ8EFzu/mVMbOut2gTstg=;
         h=In-Reply-To:Message-ID:References:Date:To:From:Subject:Cc;
-        b=Eembe5LspBdMt9h2FqQbMeEXSQ77B3oYjZdnfPSHj4lgjdTwEOxdK+7wZvEZxreve
-         X11uBDqxc7NATKNpghw11W6j7IVoLAustrV0Jh7zA00z6OLgnDkLnbFBKIKcVvqAlr
-         A0OlBRpBj/NZW06uM4G84V1qr5Tt3/5zJEk0rVkI=
+        b=m3MD009msbTOFyJaC9thdsye5NnOnu3jYpUpiliIYoehZ9INDqRDGTHc3PrykUde1
+         A1kZlWlicjI2ukKTsXo140gJH7cRyMvTLE4Q8k1CcgCTxV5pRLuHfI7gL5gy9OioCz
+         LjXyuLHHJSpAWh38qPV2sxMPPqkkYM5ftDK9lUwA=
 In-Reply-To: <156760509382.6560.17364256340940314860.stgit@buzz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -19,126 +19,91 @@ Content-Type: text/plain; charset="us-ascii"
 To: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 Cc: Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-This will be used for recharging memory cgroup accounting.
+This function tries to move page into other cgroup.
+Caller must lock page and isolate it from LRU.
 
 Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
 ---
- mm/gup.c         |    2 +-
- mm/huge_memory.c |    4 ++--
- mm/internal.h    |    4 ++--
- mm/ksm.c         |    2 +-
- mm/migrate.c     |    2 +-
- mm/mlock.c       |    2 +-
- mm/rmap.c        |    2 +-
- 7 files changed, 9 insertions(+), 9 deletions(-)
+ include/linux/memcontrol.h |    9 +++++++++
+ mm/memcontrol.c            |   40 ++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 49 insertions(+)
 
-diff --git a/mm/gup.c b/mm/gup.c
-index 98f13ab37bac..f0accc229266 100644
---- a/mm/gup.c
-+++ b/mm/gup.c
-@@ -306,7 +306,7 @@ static struct page *follow_page_pte(struct vm_area_struct *vma,
- 			 * know the page is still mapped, we don't even
- 			 * need to check for file-cache page truncation.
- 			 */
--			mlock_vma_page(page);
-+			mlock_vma_page(vma, page);
- 			unlock_page(page);
- 		}
- 	}
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index de1f15969e27..157faa231e26 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -1513,7 +1513,7 @@ struct page *follow_trans_huge_pmd(struct vm_area_struct *vma,
- 			goto skip_mlock;
- 		lru_add_drain();
- 		if (page->mapping && !PageDoubleMap(page))
--			mlock_vma_page(page);
-+			mlock_vma_page(vma, page);
- 		unlock_page(page);
- 	}
- skip_mlock:
-@@ -3009,7 +3009,7 @@ void remove_migration_pmd(struct page_vma_mapped_walk *pvmw, struct page *new)
- 		page_add_file_rmap(new, true);
- 	set_pmd_at(mm, mmun_start, pvmw->pmd, pmde);
- 	if ((vma->vm_flags & VM_LOCKED) && !PageDoubleMap(new))
--		mlock_vma_page(new);
-+		mlock_vma_page(vma, new);
- 	update_mmu_cache_pmd(vma, address, pvmw->pmd);
- }
- #endif
-diff --git a/mm/internal.h b/mm/internal.h
-index e32390802fd3..9f91992ef281 100644
---- a/mm/internal.h
-+++ b/mm/internal.h
-@@ -305,7 +305,7 @@ static inline void munlock_vma_pages_all(struct vm_area_struct *vma)
- /*
-  * must be called with vma's mmap_sem held for read or write, and page locked.
-  */
--extern void mlock_vma_page(struct page *page);
-+extern void mlock_vma_page(struct vm_area_struct *vma, struct page *page);
- extern unsigned int munlock_vma_page(struct page *page);
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 2cd4359cb38c..d94950584f60 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -352,6 +352,8 @@ void mem_cgroup_uncharge(struct page *page);
+ void mem_cgroup_uncharge_list(struct list_head *page_list);
  
- /*
-@@ -364,7 +364,7 @@ vma_address(struct page *page, struct vm_area_struct *vma)
+ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage);
++int mem_cgroup_try_recharge(struct page *page, struct mm_struct *mm,
++			    gfp_t gfp_mask);
  
- #else /* !CONFIG_MMU */
- static inline void clear_page_mlock(struct page *page) { }
--static inline void mlock_vma_page(struct page *page) { }
-+static inline void mlock_vma_page(struct vm_area_struct *, struct page *) { }
- static inline void mlock_migrate_page(struct page *new, struct page *old) { }
- 
- #endif /* !CONFIG_MMU */
-diff --git a/mm/ksm.c b/mm/ksm.c
-index 3dc4346411e4..cb5705d6f26c 100644
---- a/mm/ksm.c
-+++ b/mm/ksm.c
-@@ -1274,7 +1274,7 @@ static int try_to_merge_one_page(struct vm_area_struct *vma,
- 		if (!PageMlocked(kpage)) {
- 			unlock_page(page);
- 			lock_page(kpage);
--			mlock_vma_page(kpage);
-+			mlock_vma_page(vma, kpage);
- 			page = kpage;		/* for final unlock */
- 		}
- 	}
-diff --git a/mm/migrate.c b/mm/migrate.c
-index a42858d8e00b..1f6151cb7310 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -269,7 +269,7 @@ static bool remove_migration_pte(struct page *page, struct vm_area_struct *vma,
- 				page_add_file_rmap(new, false);
- 		}
- 		if (vma->vm_flags & VM_LOCKED && !PageTransCompound(new))
--			mlock_vma_page(new);
-+			mlock_vma_page(vma, new);
- 
- 		if (PageTransHuge(page) && PageMlocked(page))
- 			clear_page_mlock(page);
-diff --git a/mm/mlock.c b/mm/mlock.c
-index a90099da4fb4..73d477aaa411 100644
---- a/mm/mlock.c
-+++ b/mm/mlock.c
-@@ -85,7 +85,7 @@ void clear_page_mlock(struct page *page)
-  * Mark page as mlocked if not already.
-  * If page on LRU, isolate and putback to move to unevictable list.
-  */
--void mlock_vma_page(struct page *page)
-+void mlock_vma_page(struct vm_area_struct *vma, struct page *page)
+ static struct mem_cgroup_per_node *
+ mem_cgroup_nodeinfo(struct mem_cgroup *memcg, int nid)
+@@ -857,6 +859,13 @@ static inline void mem_cgroup_migrate(struct page *old, struct page *new)
  {
- 	/* Serialize with page migration */
- 	BUG_ON(!PageLocked(page));
-diff --git a/mm/rmap.c b/mm/rmap.c
-index 003377e24232..de88f4897c1d 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -1410,7 +1410,7 @@ static bool try_to_unmap_one(struct page *page, struct vm_area_struct *vma,
- 					 * Holding pte lock, we do *not* need
- 					 * mmap_sem here
- 					 */
--					mlock_vma_page(page);
-+					mlock_vma_page(vma, page);
- 				}
- 				ret = false;
- 				page_vma_mapped_walk_done(&pvmw);
+ }
+ 
++static inline int mem_cgroup_try_recharge(struct page *page,
++					  struct mm_struct *mm,
++					  gfp_t gfp_mask)
++{
++	return 0;
++}
++
+ static inline struct lruvec *mem_cgroup_lruvec(struct pglist_data *pgdat,
+ 				struct mem_cgroup *memcg)
+ {
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 40ddc233e973..953a0bbb9f43 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6507,6 +6507,46 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage)
+ 	local_irq_restore(flags);
+ }
+ 
++/*
++ * mem_cgroup_try_recharge - try to recharge page to mm's memcg.
++ *
++ * Page must be locked and isolated.
++ */
++int mem_cgroup_try_recharge(struct page *page, struct mm_struct *mm,
++			    gfp_t gfp_mask)
++{
++	struct mem_cgroup *from, *to;
++	int nr_pages;
++	int err = 0;
++
++	VM_BUG_ON_PAGE(!PageLocked(page), page);
++	VM_BUG_ON_PAGE(PageLRU(page), page);
++
++	if (mem_cgroup_disabled())
++		return 0;
++
++	from = page->mem_cgroup;
++	to = get_mem_cgroup_from_mm(mm);
++
++	if (likely(from == to) || !from)
++		goto out;
++
++	nr_pages = hpage_nr_pages(page);
++	err = try_charge(to, gfp_mask, nr_pages);
++	if (err)
++		goto out;
++
++	err = mem_cgroup_move_account(page, nr_pages > 1, from, to);
++	if (err)
++		cancel_charge(to, nr_pages);
++	else
++		cancel_charge(from, nr_pages);
++out:
++	css_put(&to->css);
++
++	return err;
++}
++
+ DEFINE_STATIC_KEY_FALSE(memcg_sockets_enabled_key);
+ EXPORT_SYMBOL(memcg_sockets_enabled_key);
+ 
 
