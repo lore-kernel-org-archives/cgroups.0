@@ -1,177 +1,82 @@
-From: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH RFC v4 01/16] drm: Add drm_minor_for_each
-Date: Thu, 5 Sep 2019 14:28:39 -0400
-Message-ID: <CAOWid-fiEOmPw1z=aF6E4VE03xikREKt-X8VVKGGUGBQd3i=Kw@mail.gmail.com>
-References: <20190829060533.32315-1-Kenny.Ho@amd.com>
- <20190829060533.32315-2-Kenny.Ho@amd.com>
- <20190903075719.GK2112@phenom.ffwll.local>
- <CAOWid-dxxDhyxP2+0R0oKAk29rR-1TbMyhshR1+gbcpGJCAW6g@mail.gmail.com>
- <CAKMK7uEofjdVURu+meonh_YdV5eX8vfNALkW3A_+kLapCV8j+w@mail.gmail.com>
- <CAOWid-eUVztW4hNVpznnJRcwHcjCirGL2aS75p4OY8XoGuJqUg@mail.gmail.com>
- <20190904085434.GF2112@phenom.ffwll.local>
+From: Mina Almasry <almasrymina@google.com>
+Subject: Re: [PATCH v3 0/6] hugetlb_cgroup: Add hugetlb_cgroup reservation limits
+Date: Thu, 5 Sep 2019 12:55:11 -0700
+Message-ID: <CAHS8izP=8WDvZvTjenX5CtdKfYTbOO+bU7oK1Nx=r7QZrBjpaw@mail.gmail.com>
+References: <20190826233240.11524-1-almasrymina@google.com>
+ <20190828112340.GB7466@dhcp22.suse.cz> <CAHS8izPPhPoqh-J9LJ40NJUCbgTFS60oZNuDSHmgtMQiYw72RA@mail.gmail.com>
+ <20190829071807.GR28313@dhcp22.suse.cz> <cb7ebcce-05c5-3384-5632-2bbac9995c15@oracle.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <20190904085434.GF2112-dv86pmgwkMBes7Z6vYuT8azUEOm+Xw19@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=0E53FGGcFw2XkCPybueZ5rdV/s9NQh6tuW3+GUXCXGs=;
+        b=VGbVic4g4iq558TW4/70JbzqBVSLs2OD6RYvmwl5QuMLvX12QTRqKBc25h98tnlvfd
+         v80uRkHZ/GTRqZ9g0C91oXPt7FF9Cjg2RFsnqXMbw5eyQo4fETfoQfYqB3ODTpk1KGbT
+         Sh7ZlY3E1TGKRoYaW0H4kZo4b2PTayljx1y2V3yNZ4Xk1AiYBIE7CMPHAO6aUXmgSVvL
+         n+hxUokjuXNIO43xyQEVoEOE/WcMVZM7h6kPMc9wbPx58jxtemgv5zSJ0dDz0qRpK6Bu
+         TGXYQQxbrjGOBl9YxOCNePENdnFw6LVmvebG7GfSIuvOrT+Ti3KvjxrDKiOToU7kEiSF
+         wq6A==
+In-Reply-To: <cb7ebcce-05c5-3384-5632-2bbac9995c15@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
-Cc: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "Greathouse,
- Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Mike Kravetz <mike.kravetz@oracle.com>
+Cc: Michal Hocko <mhocko@kernel.org>, shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, khalid.aziz@oracle.com, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>
 
-KHJlc2VudCBpbiBwbGFpbiB0ZXh0IG1vZGUpCgpIaSBEYW5pZWwsCgpUaGlzIGlzIHRoZSBwcmV2
-aW91cyBwYXRjaCByZWxldmFudCB0byB0aGlzIGRpc2N1c3Npb246Cmh0dHBzOi8vcGF0Y2h3b3Jr
-LmZyZWVkZXNrdG9wLm9yZy9wYXRjaC8zMTQzNDMvCgpTbyBiZWZvcmUgSSByZWZhY3RvcmVkIHRo
-ZSBjb2RlIHRvIGxldmVyYWdlIGRybV9taW5vciwgSSBrZXB0IG15IG93bgpsaXN0IG9mICJrbm93
-biIgZHJtX2RldmljZSBpbnNpZGUgdGhlIGNvbnRyb2xsZXIgYW5kIGhhdmUgZXhwbGljaXQKcmVn
-aXN0ZXIgYW5kIHVucmVnaXN0ZXIgZnVuY3Rpb24gdG8gaW5pdCBwZXIgZGV2aWNlIGNncm91cCBk
-ZWZhdWx0cy4KRm9yIHY0LCBJIHJlZmFjdG9yZWQgdGhlIHBlciBkZXZpY2UgY2dyb3VwIHByb3Bl
-cnRpZXMgYW5kIGVtYmVkZGVkCnRoZW0gaW50byB0aGUgZHJtX2RldmljZSBhbmQgY29udGludWUg
-dG8gb25seSB1c2UgdGhlIHByaW1hcnkgbWlub3IgYXMKYSB3YXkgdG8gaW5kZXggdGhlIGRldmlj
-ZSBhcyB2My4KClJlZ2FyZHMsCktlbm55CgoKT24gV2VkLCBTZXAgNCwgMjAxOSBhdCA0OjU0IEFN
-IERhbmllbCBWZXR0ZXIgPGRhbmllbEBmZndsbC5jaD4gd3JvdGU6Cj4KPiBPbiBUdWUsIFNlcCAw
-MywgMjAxOSBhdCAwNDo0Mzo0NVBNIC0wNDAwLCBLZW5ueSBIbyB3cm90ZToKPiA+IE9uIFR1ZSwg
-U2VwIDMsIDIwMTkgYXQgNDoxMiBQTSBEYW5pZWwgVmV0dGVyIDxkYW5pZWxAZmZ3bGwuY2g+IHdy
-b3RlOgo+ID4gPiBPbiBUdWUsIFNlcCAzLCAyMDE5IGF0IDk6NDUgUE0gS2VubnkgSG8gPHkya2Vu
-bnlAZ21haWwuY29tPiB3cm90ZToKPiA+ID4gPiBPbiBUdWUsIFNlcCAzLCAyMDE5IGF0IDM6NTcg
-QU0gRGFuaWVsIFZldHRlciA8ZGFuaWVsQGZmd2xsLmNoPiB3cm90ZToKPiA+ID4gPiA+IEl0ZXJh
-dGluZyBvdmVyIG1pbm9ycyBmb3IgY2dyb3VwcyBzb3VuZHMgdmVyeSwgdmVyeSB3cm9uZy4gV2h5
-IGRvIHdlIGNhcmUKPiA+ID4gPiA+IHdoZXRoZXIgYSBidWZmZXIgd2FzIGFsbG9jYXRlZCB0aHJv
-dWdoIGttcyBkdW1iIHZzIHJlbmRlciBub2Rlcz8KPiA+ID4gPiA+Cj4gPiA+ID4gPiBJJ2QgZXhw
-ZWN0IGFsbCB0aGUgY2dyb3VwIHN0dWZmIHRvIG9ubHkgd29yayBvbiBkcm1fZGV2aWNlLCBpZiBp
-dCBkb2VzCj4gPiA+ID4gPiBjYXJlIGFib3V0IGRldmljZXMuCj4gPiA+ID4gPgo+ID4gPiA+ID4g
-KEkgZGlkbid0IGxvb2sgdGhyb3VnaCB0aGUgcGF0Y2ggc2VyaWVzIHRvIGZpbmQgb3V0IHdoZXJl
-IGV4YWN0bHkgeW91J3JlCj4gPiA+ID4gPiB1c2luZyB0aGlzLCBzbyBtYXliZSBJJ20gb2ZmIHRo
-ZSByYWlscyBoZXJlKS4KPiA+ID4gPgo+ID4gPiA+IEkgYW0gZXhwb3NpbmcgdGhpcyB0byByZW1v
-dmUgdGhlIG5lZWQgdG8ga2VlcCB0cmFjayBvZiBhIHNlcGFyYXRlIGxpc3QKPiA+ID4gPiBvZiBh
-dmFpbGFibGUgZHJtX2RldmljZSBpbiB0aGUgc3lzdGVtICh0byByZW1vdmUgdGhlIHJlZ2lzdGVy
-aW5nIGFuZAo+ID4gPiA+IHVucmVnaXN0ZXJpbmcgb2YgZHJtX2RldmljZSB0byB0aGUgY2dyb3Vw
-IHN1YnN5c3RlbSBhbmQganVzdCB1c2UKPiA+ID4gPiBkcm1fbWlub3IgYXMgdGhlIHNpbmdsZSBz
-b3VyY2Ugb2YgdHJ1dGguKSAgSSBhbSBvbmx5IGZpbHRlcmluZyBvdXQgdGhlCj4gPiA+ID4gcmVu
-ZGVyIG5vZGVzIG1pbm9yIGJlY2F1c2UgdGhleSBwb2ludCB0byB0aGUgc2FtZSBkcm1fZGV2aWNl
-IGFuZCBpcwo+ID4gPiA+IGNvbmZ1c2luZy4KPiA+ID4gPgo+ID4gPiA+IFBlcmhhcHMgSSBtaXNz
-ZWQgYW4gb2J2aW91cyB3YXkgdG8gbGlzdCB0aGUgZHJtIGRldmljZXMgd2l0aG91dAo+ID4gPiA+
-IGl0ZXJhdGluZyB0aHJvdWdoIHRoZSBkcm1fbWlub3JzPyAgKEkgcHJvYmFibHkganVtcGVkIHRv
-IHRoZSBtaW5vcnMKPiA+ID4gPiBiZWNhdXNlICRtYWpvcjokbWlub3IgaXMgdGhlIGNvbnZlbnRp
-b24gdG8gYWRkcmVzcyBkZXZpY2VzIGluIGNncm91cC4pCj4gPiA+Cj4gPiA+IENyZWF0ZSB5b3Vy
-IG93biBpZiB0aGVyZSdzIG5vdGhpbmcsIGJlY2F1c2UgeW91IG5lZWQgdG8gYW55d2F5Ogo+ID4g
-PiAtIFlvdSBuZWVkIHNwZWNpYWwgbG9ja2luZyBhbnl3YXksIHdlIGNhbid0IGp1c3QgYmxvY2sg
-b24gdGhlIGlkciBsb2NrCj4gPiA+IGZvciBldmVyeXRoaW5nLgo+ID4gPiAtIFRoaXMgbmVlZHMg
-dG8gcmVmY291bnQgZHJtX2RldmljZSwgbm8gdGhlIG1pbm9ycy4KPiA+ID4KPiA+ID4gSXRlcmF0
-aW5nIG92ZXIgc3R1ZmYgc3RpbGwgZmVlbHMga2luZGEgd3Jvbmcgc3RpbGwsIGJlY2F1c2Ugbm9y
-bWFsbHkKPiA+ID4gdGhlIHdheSB3ZSByZWdpc3Rlci91bnJlZ2lzdGVyIHVzZXJzcGFjZSBhcGkg
-KGFuZCBjZ3JvdXBzIGlzbid0Cj4gPiA+IGFueXRoaW5nIGVsc2UgZnJvbSBhIGRybSBkcml2ZXIg
-cG92KSBpcyBieSBhZGRpbmcgbW9yZSBjYWxscyB0bwo+ID4gPiBkcm1fZGV2X3JlZ2lzdGVyL3Vu
-cmVnaXN0ZXIuIElmIHlvdSBwdXQgYSBkcm1fY2dfcmVnaXN0ZXIvdW5yZWdpc3Rlcgo+ID4gPiBj
-YWxsIGluIHRoZXJlIHdlIGhhdmUgYSBjbGVhbiBzZXBhcmF0aW9uLCBhbmQgeW91IGNhbiB0cmFj
-ayBhbGwgdGhlCj4gPiA+IGN1cnJlbnRseSBhY3RpdmUgZGV2aWNlcyBob3dldmVyIHlvdSB3YW50
-LiBJdGVyYXRpbmcgb3ZlciBvYmplY3RzIHRoYXQKPiA+ID4gY2FuIGJlIGhvdHVucGx1Z2dlZCBh
-bnkgdGltZSB0ZW5kcyB0byBnZXQgcmVhbGx5IGNvbXBsaWNhdGVkIHJlYWxseQo+ID4gPiBxdWlj
-a2x5Lgo+ID4KPiA+IFVtLi4uIEkgdGhvdWdodCB0aGlzIGlzIHdoYXQgSSBoYWQgcHJldmlvdXNs
-eS4gIERpZCBJIG1pc3VuZGVyc3Rvb2QKPiA+IHlvdXIgZmVlZGJhY2sgZnJvbSB2Mz8gIERvZXNu
-J3QgZHJtX21pbm9yIGFscmVhZHkgaW5jbHVkZSBhbGwgdGhlc2UKPiA+IGZhY2lsaXRpZXMgc28g
-aXNuJ3QgY3JlYXRpbmcgbXkgb3duIGtpbmQgb2YgcmVpbnZlbnRpbmcgdGhlIHdoZWVsPwo+ID4g
-KGFzIEkgZGlkIHByZXZpb3VzbHk/KSAgZHJtX21pbm9yX3JlZ2lzdGVyIGlzIGNhbGxlZCBpbnNp
-ZGUKPiA+IGRybV9kZXZfcmVnaXN0ZXIgc28gaXNuJ3QgbGV2ZXJhZ2luZyBleGlzdGluZyBkcm1f
-bWlub3IgZmFjaWxpdGllcwo+ID4gbXVjaCBiZXR0ZXIgc29sdXRpb24/Cj4KPiBIbSB0aGUgcHJl
-dmlvdXMgdmVyc2lvbiBhbHJlYWR5IGRyb3BwZWQgb3V0IG9mIG15IGluYm94LCBzbyBoYXJkIHRv
-IGZpbmQKPiBpdCBhZ2Fpbi4gQW5kIEkgY291bGRuJ3QgZmluZCB0aGlzIGluIGFyY2hpZXZlcy4g
-RG8geW91IGhhdmUgcG9pbnRlcnM/Cj4KPiBJIHRob3VnaHQgdGhlIHByZXZpb3VzIHZlcnNpb24g
-ZGlkIGNncm91cCBpbml0IHNlcGFyYXRlbHkgZnJvbSBkcm1fZGV2aWNlCj4gc2V0dXAsIGFuZCBJ
-IGd1ZXNzIEkgc3VnZ2VzdGVkIHRoYXQgaXQgc2hvdWxkIGJlIG1vdmVkIGludAo+IGRybV9kZXZf
-cmVnaXN0ZXIvdW5yZWdpc3Rlcj8KPgo+IEFueXdheSwgSSBkb24ndCB0aGluayByZXVzaW5nIHRo
-ZSBkcm1fbWlub3IgcmVnaXN0cmF0aW9uIG1ha2VzIHNlbnNlLAo+IHNpbmNlIHdlIHdhbnQgdG8g
-YmUgb24gdGhlIGRybV9kZXZpY2UsIG5vdCBvbiB0aGUgbWlub3IuIFdoaWNoIGlzIGEgYml0Cj4g
-YXdrd2FyZCBmb3IgY2dyb3Vwcywgd2hpY2ggd2FudHMgdG8gaWRlbnRpZnkgZGV2aWNlcyB1c2lu
-ZyBtYWpvci5taW5vcgo+IHBhaXJzLiBCdXQgSSBndWVzcyBkcm0gaXMgdGhlIGZpcnN0IHN1YnN5
-c3RlbSB3aGVyZSAxIGRldmljZSBjYW4gYmUKPiBleHBvc2VkIHRocm91Z2ggbXVsdGlwbGUgbWlu
-b3JzIC4uLgo+Cj4gVGVqdW4sIGFueSBzdWdnZXN0aW9ucyBvbiB0aGlzPwo+Cj4gQW55d2F5LCBJ
-IHRoaW5rIGp1c3QgbGV2ZXJhZ2luZyBleGlzdGluZyBjb2RlIGJlY2F1c2UgaXQgY2FuIGJlIGFi
-dXNlZCB0bwo+IG1ha2UgaXQgZml0IGZvciB1cyBkb2Vzbid0IG1ha2Ugc2Vuc2UuIEUuZy4gZm9y
-IHRoZSBrbXMgc2lkZSB3ZSBhbHNvIGRvbid0Cj4gcGlnZ3ktYmFjayBvbiB0b3Agb2YgZHJtX21p
-bm9yX3JlZ2lzdGVyIChpdCB3b3VsZCBiZSB0ZWNobmljYWxseQo+IHBvc3NpYmxlKSwgYnV0IGlu
-c3RlYWQgd2UgaGF2ZSBkcm1fbW9kZXNldF9yZWdpc3Rlcl9hbGwoKS4KPiAtRGFuaWVsCj4KPiA+
-Cj4gPiBLZW5ueQo+ID4KPiA+ID4KPiA+ID4KPiA+ID4gPgo+ID4gPiA+IEtlbm55Cj4gPiA+ID4K
-PiA+ID4gPiA+IC1EYW5pZWwKPiA+ID4gPiA+Cj4gPiA+ID4gPiA+IC0tLQo+ID4gPiA+ID4gPiAg
-ZHJpdmVycy9ncHUvZHJtL2RybV9kcnYuYyAgICAgIHwgMTkgKysrKysrKysrKysrKysrKysrKwo+
-ID4gPiA+ID4gPiAgZHJpdmVycy9ncHUvZHJtL2RybV9pbnRlcm5hbC5oIHwgIDQgLS0tLQo+ID4g
-PiA+ID4gPiAgaW5jbHVkZS9kcm0vZHJtX2Rydi5oICAgICAgICAgIHwgIDQgKysrKwo+ID4gPiA+
-ID4gPiAgMyBmaWxlcyBjaGFuZ2VkLCAyMyBpbnNlcnRpb25zKCspLCA0IGRlbGV0aW9ucygtKQo+
-ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9ncHUvZHJtL2RybV9k
-cnYuYyBiL2RyaXZlcnMvZ3B1L2RybS9kcm1fZHJ2LmMKPiA+ID4gPiA+ID4gaW5kZXggODYyNjIx
-NDk0YTkzLi4wMDBjZGRhYmQ5NzAgMTAwNjQ0Cj4gPiA+ID4gPiA+IC0tLSBhL2RyaXZlcnMvZ3B1
-L2RybS9kcm1fZHJ2LmMKPiA+ID4gPiA+ID4gKysrIGIvZHJpdmVycy9ncHUvZHJtL2RybV9kcnYu
-Ywo+ID4gPiA+ID4gPiBAQCAtMjU0LDExICsyNTQsMTMgQEAgc3RydWN0IGRybV9taW5vciAqZHJt
-X21pbm9yX2FjcXVpcmUodW5zaWduZWQgaW50IG1pbm9yX2lkKQo+ID4gPiA+ID4gPgo+ID4gPiA+
-ID4gPiAgICAgICByZXR1cm4gbWlub3I7Cj4gPiA+ID4gPiA+ICB9Cj4gPiA+ID4gPiA+ICtFWFBP
-UlRfU1lNQk9MKGRybV9taW5vcl9hY3F1aXJlKTsKPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4gIHZv
-aWQgZHJtX21pbm9yX3JlbGVhc2Uoc3RydWN0IGRybV9taW5vciAqbWlub3IpCj4gPiA+ID4gPiA+
-ICB7Cj4gPiA+ID4gPiA+ICAgICAgIGRybV9kZXZfcHV0KG1pbm9yLT5kZXYpOwo+ID4gPiA+ID4g
-PiAgfQo+ID4gPiA+ID4gPiArRVhQT1JUX1NZTUJPTChkcm1fbWlub3JfcmVsZWFzZSk7Cj4gPiA+
-ID4gPiA+Cj4gPiA+ID4gPiA+ICAvKioKPiA+ID4gPiA+ID4gICAqIERPQzogZHJpdmVyIGluc3Rh
-bmNlIG92ZXJ2aWV3Cj4gPiA+ID4gPiA+IEBAIC0xMDc4LDYgKzEwODAsMjMgQEAgaW50IGRybV9k
-ZXZfc2V0X3VuaXF1ZShzdHJ1Y3QgZHJtX2RldmljZSAqZGV2LCBjb25zdCBjaGFyICpuYW1lKQo+
-ID4gPiA+ID4gPiAgfQo+ID4gPiA+ID4gPiAgRVhQT1JUX1NZTUJPTChkcm1fZGV2X3NldF91bmlx
-dWUpOwo+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiArLyoqCj4gPiA+ID4gPiA+ICsgKiBkcm1fbWlu
-b3JfZm9yX2VhY2ggLSBJdGVyYXRlIHRocm91Z2ggYWxsIHN0b3JlZCBEUk0gbWlub3JzCj4gPiA+
-ID4gPiA+ICsgKiBAZm46IEZ1bmN0aW9uIHRvIGJlIGNhbGxlZCBmb3IgZWFjaCBwb2ludGVyLgo+
-ID4gPiA+ID4gPiArICogQGRhdGE6IERhdGEgcGFzc2VkIHRvIGNhbGxiYWNrIGZ1bmN0aW9uLgo+
-ID4gPiA+ID4gPiArICoKPiA+ID4gPiA+ID4gKyAqIFRoZSBjYWxsYmFjayBmdW5jdGlvbiB3aWxs
-IGJlIGNhbGxlZCBmb3IgZWFjaCBAZHJtX21pbm9yIGVudHJ5LCBwYXNzaW5nCj4gPiA+ID4gPiA+
-ICsgKiB0aGUgbWlub3IsIHRoZSBlbnRyeSBhbmQgQGRhdGEuCj4gPiA+ID4gPiA+ICsgKgo+ID4g
-PiA+ID4gPiArICogSWYgQGZuIHJldHVybnMgYW55dGhpbmcgb3RoZXIgdGhhbiAlMCwgdGhlIGl0
-ZXJhdGlvbiBzdG9wcyBhbmQgdGhhdAo+ID4gPiA+ID4gPiArICogdmFsdWUgaXMgcmV0dXJuZWQg
-ZnJvbSB0aGlzIGZ1bmN0aW9uLgo+ID4gPiA+ID4gPiArICovCj4gPiA+ID4gPiA+ICtpbnQgZHJt
-X21pbm9yX2Zvcl9lYWNoKGludCAoKmZuKShpbnQgaWQsIHZvaWQgKnAsIHZvaWQgKmRhdGEpLCB2
-b2lkICpkYXRhKQo+ID4gPiA+ID4gPiArewo+ID4gPiA+ID4gPiArICAgICByZXR1cm4gaWRyX2Zv
-cl9lYWNoKCZkcm1fbWlub3JzX2lkciwgZm4sIGRhdGEpOwo+ID4gPiA+ID4gPiArfQo+ID4gPiA+
-ID4gPiArRVhQT1JUX1NZTUJPTChkcm1fbWlub3JfZm9yX2VhY2gpOwo+ID4gPiA+ID4gPiArCj4g
-PiA+ID4gPiA+ICAvKgo+ID4gPiA+ID4gPiAgICogRFJNIENvcmUKPiA+ID4gPiA+ID4gICAqIFRo
-ZSBEUk0gY29yZSBtb2R1bGUgaW5pdGlhbGl6ZXMgYWxsIGdsb2JhbCBEUk0gb2JqZWN0cyBhbmQg
-bWFrZXMgdGhlbQo+ID4gPiA+ID4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9ncHUvZHJtL2RybV9p
-bnRlcm5hbC5oIGIvZHJpdmVycy9ncHUvZHJtL2RybV9pbnRlcm5hbC5oCj4gPiA+ID4gPiA+IGlu
-ZGV4IGUxOWFjN2NhNjAyZC4uNmJmYWQ3NmY4ZTc4IDEwMDY0NAo+ID4gPiA+ID4gPiAtLS0gYS9k
-cml2ZXJzL2dwdS9kcm0vZHJtX2ludGVybmFsLmgKPiA+ID4gPiA+ID4gKysrIGIvZHJpdmVycy9n
-cHUvZHJtL2RybV9pbnRlcm5hbC5oCj4gPiA+ID4gPiA+IEBAIC01NCwxMCArNTQsNiBAQCB2b2lk
-IGRybV9wcmltZV9kZXN0cm95X2ZpbGVfcHJpdmF0ZShzdHJ1Y3QgZHJtX3ByaW1lX2ZpbGVfcHJp
-dmF0ZSAqcHJpbWVfZnByaXYpOwo+ID4gPiA+ID4gPiAgdm9pZCBkcm1fcHJpbWVfcmVtb3ZlX2J1
-Zl9oYW5kbGVfbG9ja2VkKHN0cnVjdCBkcm1fcHJpbWVfZmlsZV9wcml2YXRlICpwcmltZV9mcHJp
-diwKPiA+ID4gPiA+ID4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHJ1
-Y3QgZG1hX2J1ZiAqZG1hX2J1Zik7Cj4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+IC0vKiBkcm1fZHJ2
-LmMgKi8KPiA+ID4gPiA+ID4gLXN0cnVjdCBkcm1fbWlub3IgKmRybV9taW5vcl9hY3F1aXJlKHVu
-c2lnbmVkIGludCBtaW5vcl9pZCk7Cj4gPiA+ID4gPiA+IC12b2lkIGRybV9taW5vcl9yZWxlYXNl
-KHN0cnVjdCBkcm1fbWlub3IgKm1pbm9yKTsKPiA+ID4gPiA+ID4gLQo+ID4gPiA+ID4gPiAgLyog
-ZHJtX3ZibGFuay5jICovCj4gPiA+ID4gPiA+ICB2b2lkIGRybV92YmxhbmtfZGlzYWJsZV9hbmRf
-c2F2ZShzdHJ1Y3QgZHJtX2RldmljZSAqZGV2LCB1bnNpZ25lZCBpbnQgcGlwZSk7Cj4gPiA+ID4g
-PiA+ICB2b2lkIGRybV92YmxhbmtfY2xlYW51cChzdHJ1Y3QgZHJtX2RldmljZSAqZGV2KTsKPiA+
-ID4gPiA+ID4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvZHJtL2RybV9kcnYuaCBiL2luY2x1ZGUvZHJt
-L2RybV9kcnYuaAo+ID4gPiA+ID4gPiBpbmRleCA2OGNhNzM2YzU0OGQuLjI0ZjhkMDU0YzU3MCAx
-MDA2NDQKPiA+ID4gPiA+ID4gLS0tIGEvaW5jbHVkZS9kcm0vZHJtX2Rydi5oCj4gPiA+ID4gPiA+
-ICsrKyBiL2luY2x1ZGUvZHJtL2RybV9kcnYuaAo+ID4gPiA+ID4gPiBAQCAtNzk5LDUgKzc5OSw5
-IEBAIHN0YXRpYyBpbmxpbmUgYm9vbCBkcm1fZHJ2X3VzZXNfYXRvbWljX21vZGVzZXQoc3RydWN0
-IGRybV9kZXZpY2UgKmRldikKPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4gIGludCBkcm1fZGV2X3Nl
-dF91bmlxdWUoc3RydWN0IGRybV9kZXZpY2UgKmRldiwgY29uc3QgY2hhciAqbmFtZSk7Cj4gPiA+
-ID4gPiA+Cj4gPiA+ID4gPiA+ICtpbnQgZHJtX21pbm9yX2Zvcl9lYWNoKGludCAoKmZuKShpbnQg
-aWQsIHZvaWQgKnAsIHZvaWQgKmRhdGEpLCB2b2lkICpkYXRhKTsKPiA+ID4gPiA+ID4gKwo+ID4g
-PiA+ID4gPiArc3RydWN0IGRybV9taW5vciAqZHJtX21pbm9yX2FjcXVpcmUodW5zaWduZWQgaW50
-IG1pbm9yX2lkKTsKPiA+ID4gPiA+ID4gK3ZvaWQgZHJtX21pbm9yX3JlbGVhc2Uoc3RydWN0IGRy
-bV9taW5vciAqbWlub3IpOwo+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiAgI2VuZGlmCj4gPiA+ID4g
-PiA+IC0tCj4gPiA+ID4gPiA+IDIuMjIuMAo+ID4gPiA+ID4gPgo+ID4gPiA+ID4KPiA+ID4gPiA+
-IC0tCj4gPiA+ID4gPiBEYW5pZWwgVmV0dGVyCj4gPiA+ID4gPiBTb2Z0d2FyZSBFbmdpbmVlciwg
-SW50ZWwgQ29ycG9yYXRpb24KPiA+ID4gPiA+IGh0dHA6Ly9ibG9nLmZmd2xsLmNoCj4gPiA+Cj4g
-PiA+Cj4gPiA+Cj4gPiA+IC0tCj4gPiA+IERhbmllbCBWZXR0ZXIKPiA+ID4gU29mdHdhcmUgRW5n
-aW5lZXIsIEludGVsIENvcnBvcmF0aW9uCj4gPiA+ICs0MSAoMCkgNzkgMzY1IDU3IDQ4IC0gaHR0
-cDovL2Jsb2cuZmZ3bGwuY2gKPgo+IC0tCj4gRGFuaWVsIFZldHRlcgo+IFNvZnR3YXJlIEVuZ2lu
-ZWVyLCBJbnRlbCBDb3Jwb3JhdGlvbgo+IGh0dHA6Ly9ibG9nLmZmd2xsLmNoCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmFtZC1nZnggbWFpbGluZyBsaXN0
-CmFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Au
-b3JnL21haWxtYW4vbGlzdGluZm8vYW1kLWdmeA==
+On Tue, Sep 3, 2019 at 10:58 AM Mike Kravetz <mike.kravetz@oracle.com> wrote:
+>
+> On 8/29/19 12:18 AM, Michal Hocko wrote:
+> > [Cc cgroups maintainers]
+> >
+> > On Wed 28-08-19 10:58:00, Mina Almasry wrote:
+> >> On Wed, Aug 28, 2019 at 4:23 AM Michal Hocko <mhocko@kernel.org> wrote:
+> >>>
+> >>> On Mon 26-08-19 16:32:34, Mina Almasry wrote:
+> >>>>  mm/hugetlb.c                                  | 493 ++++++++++++------
+> >>>>  mm/hugetlb_cgroup.c                           | 187 +++++--
+> >>>
+> >>> This is a lot of changes to an already subtle code which hugetlb
+> >>> reservations undoubly are.
+> >>
+> >> For what it's worth, I think this patch series is a net decrease in
+> >> the complexity of the reservation code, especially the region_*
+> >> functions, which is where a lot of the complexity lies. I removed the
+> >> race between region_del and region_{add|chg}, refactored the main
+> >> logic into smaller code, moved common code to helpers and deleted the
+> >> duplicates, and finally added lots of comments to the hard to
+> >> understand pieces. I hope that when folks review the changes they will
+> >> see that! :)
+> >
+> > Post those improvements as standalone patches and sell them as
+> > improvements. We can talk about the net additional complexity of the
+> > controller much easier then.
+>
+> All such changes appear to be in patch 4 of this series.  The commit message
+> says "region_add() and region_chg() are heavily refactored to in this commit
+> to make the code easier to understand and remove duplication.".  However, the
+> modifications were also added to accommodate the new cgroup reservation
+> accounting.  I think it would be helpful to explain why the existing code does
+> not work with the new accounting.  For example, one change is because
+> "existing code coalesces resv_map entries for shared mappings.  new cgroup
+> accounting requires that resv_map entries be kept separate for proper
+> uncharging."
+>
+> I am starting to review the changes, but it would help if there was a high
+> level description.  I also like Michal's idea of calling out the region_*
+> changes separately.  If not a standalone patch, at least the first patch of
+> the series.  This new code will be exercised even if cgroup reservation
+> accounting not enabled, so it is very important than no subtle regressions
+> be introduced.
+>
+
+Yep, seems I'm not calling out these changes as clearly as I should.
+I'll look into breaking them into separate patches. I'll probably put
+them as a separate patch or right behind current patchset 4, since
+they are really done to make removing the coalescing a bit easier. Let
+me look into that.
+
+> --
+> Mike Kravetz
