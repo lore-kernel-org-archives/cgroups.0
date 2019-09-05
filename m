@@ -1,202 +1,126 @@
-From: Daniel Vetter <daniel@ffwll.ch>
-Subject: Re: [PATCH RFC v4 01/16] drm: Add drm_minor_for_each
-Date: Thu, 5 Sep 2019 22:06:24 +0200
-Message-ID: <CAKMK7uGSrscs-WAv0pYfcxaUGXvx7M6JYbiPHTY=1hxRbFK1sg@mail.gmail.com>
-References: <20190829060533.32315-1-Kenny.Ho@amd.com>
- <20190829060533.32315-2-Kenny.Ho@amd.com>
- <20190903075719.GK2112@phenom.ffwll.local>
- <CAOWid-dxxDhyxP2+0R0oKAk29rR-1TbMyhshR1+gbcpGJCAW6g@mail.gmail.com>
- <CAKMK7uEofjdVURu+meonh_YdV5eX8vfNALkW3A_+kLapCV8j+w@mail.gmail.com>
- <CAOWid-eUVztW4hNVpznnJRcwHcjCirGL2aS75p4OY8XoGuJqUg@mail.gmail.com>
- <20190904085434.GF2112@phenom.ffwll.local>
- <CAOWid-fiEOmPw1z=aF6E4VE03xikREKt-X8VVKGGUGBQd3i=Kw@mail.gmail.com>
+From: Mina Almasry <almasrymina@google.com>
+Subject: Re: [PATCH v3 0/6] hugetlb_cgroup: Add hugetlb_cgroup reservation limits
+Date: Thu, 5 Sep 2019 13:07:30 -0700
+Message-ID: <CAHS8izMCA9+sY+dxHxuFgANCLD2oNznPqGYvi1+C2xOkv=7EYw@mail.gmail.com>
+References: <20190826233240.11524-1-almasrymina@google.com>
+ <20190828112340.GB7466@dhcp22.suse.cz> <CAHS8izPPhPoqh-J9LJ40NJUCbgTFS60oZNuDSHmgtMQiYw72RA@mail.gmail.com>
+ <20190829071807.GR28313@dhcp22.suse.cz> <cb7ebcce-05c5-3384-5632-2bbac9995c15@oracle.com>
+ <e7f91a50-5957-249c-8756-25ea87c77fc4@oracle.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <CAOWid-fiEOmPw1z=aF6E4VE03xikREKt-X8VVKGGUGBQd3i=Kw@mail.gmail.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=6k7PZuJzGWrD6r0C7js2ghL9hn4vXg63+nMGa3lc03Q=;
+        b=fEPR9+4FnJ/Wuh5lAs7l0q7dg8u+29rxGa1vObZGAYxHLXpMJmWtvQm0WI7yFHpbA9
+         sotwZ5fvHtmhbOOjsGD4XdRWAE+6AYb3s0hVUcTs0ij1ac4cvAJs5swoW2m9fu57OadR
+         o7BrkXPdVisi/74Qj4Up0mSJKh8d9sLEmWMfy0aV0iHYtAC5JGXFYDT9kmIBY8JKcNFQ
+         WvzUvTWDjYTc+t0UA+BITLbIMNqKrTmCn661eeX0fPI9t70tskNE478AIBdUgubiXhlJ
+         3kroS/4vY/n8ro+zwulHYVAcsEsu6RBGxZdPvkeg1EPaxxG7BNg55LP1WNtcedAtAJlo
+         YeMg==
+In-Reply-To: <e7f91a50-5957-249c-8756-25ea87c77fc4@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Kenny Ho <y2kenny@gmail.com>
-Cc: Kenny Ho <Kenny.Ho@amd.com>, "Kuehling, Felix" <felix.kuehling@amd.com>, jsparks@cray.com, amd-gfx list <amd-gfx@lists.freedesktop.org>, lkaplan@cray.com, Alex Deucher <alexander.deucher@amd.com>, dri-devel <dri-devel@lists.freedesktop.org>, "Greathouse,
- Joseph" <joseph.greathouse@amd.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>
+Content-Transfer-Encoding: 7bit
+To: Mike Kravetz <mike.kravetz@oracle.com>
+Cc: Michal Hocko <mhocko@kernel.org>, shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, khalid.aziz@oracle.com, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>
 
-T24gVGh1LCBTZXAgNSwgMjAxOSBhdCA4OjI4IFBNIEtlbm55IEhvIDx5Mmtlbm55QGdtYWlsLmNv
-bT4gd3JvdGU6Cj4KPiAocmVzZW50IGluIHBsYWluIHRleHQgbW9kZSkKPgo+IEhpIERhbmllbCwK
-Pgo+IFRoaXMgaXMgdGhlIHByZXZpb3VzIHBhdGNoIHJlbGV2YW50IHRvIHRoaXMgZGlzY3Vzc2lv
-bjoKPiBodHRwczovL3BhdGNod29yay5mcmVlZGVza3RvcC5vcmcvcGF0Y2gvMzE0MzQzLwoKQWgg
-eWVzLCB0aGFua3MgZm9yIGZpbmRpbmcgdGhhdC4KCj4gU28gYmVmb3JlIEkgcmVmYWN0b3JlZCB0
-aGUgY29kZSB0byBsZXZlcmFnZSBkcm1fbWlub3IsIEkga2VwdCBteSBvd24KPiBsaXN0IG9mICJr
-bm93biIgZHJtX2RldmljZSBpbnNpZGUgdGhlIGNvbnRyb2xsZXIgYW5kIGhhdmUgZXhwbGljaXQK
-PiByZWdpc3RlciBhbmQgdW5yZWdpc3RlciBmdW5jdGlvbiB0byBpbml0IHBlciBkZXZpY2UgY2dy
-b3VwIGRlZmF1bHRzLgo+IEZvciB2NCwgSSByZWZhY3RvcmVkIHRoZSBwZXIgZGV2aWNlIGNncm91
-cCBwcm9wZXJ0aWVzIGFuZCBlbWJlZGRlZAo+IHRoZW0gaW50byB0aGUgZHJtX2RldmljZSBhbmQg
-Y29udGludWUgdG8gb25seSB1c2UgdGhlIHByaW1hcnkgbWlub3IgYXMKPiBhIHdheSB0byBpbmRl
-eCB0aGUgZGV2aWNlIGFzIHYzLgoKSSBkaWRuJ3QgcmVhbGx5IGxpa2UgdGhlIGV4cGxpY2l0IHJl
-Z2lzdHJhdGlvbiBzdGVwLCBhdCBsZWFzdCBmb3IgdGhlCmJhc2ljIGNncm91cCBjb250cm9scyAo
-bGlrZSBnZW0gYnVmZmVyIGxpbWl0cyksIGFuZCBzdWdnZXN0ZWQgdGhhdApzaG91bGQgaGFwcGVu
-IGF1dG9tYXRpY2FsbHkgYXQgZHJtX2Rldl9yZWdpc3Rlci91bnJlZ2lzdGVyIHRpbWUuIEkKYWxz
-byB0YWxrZWQgYWJvdXQgcGlja2luZyBhIGNvbnNpc3RlbnQgbWlub3IgKGlmIHdlIGhhdmUgdG8g
-dXNlCm1pbm9ycywgc3RpbGwgd291bGQgbGlrZSBUZWp1biB0byBjb25maXJtIHdoYXQgd2Ugc2hv
-dWxkIGRvIGhlcmUpLCBidXQKdGhhdCB3YXMgYW4gdW5yZWxhdGVkIGNvbW1lbnQuIFNvIGRvaW5n
-IGF1dG8tcmVnaXN0cmF0aW9uIG9uIGRybV9taW5vcgp3YXMgb25lIHN0ZXAgdG9vIGZhci4KCkp1
-c3QgZG9pbmcgYSBkcm1fY2dfcmVnaXN0ZXIvdW5yZWdpc3RlciBwYWlyIHRoYXQncyBjYWxsZWQg
-ZnJvbQpkcm1fZGV2X3JlZ2lzdGVyL3VucmVnaXN0ZXIsIGFuZCB0aGVuIGlmIHlvdSB3YW50LCBs
-b29raW5nIHVwIHRoZQpyaWdodCBtaW5vciAoSSB0aGluayBhbHdheXMgcGlja2luZyB0aGUgcmVu
-ZGVyIG5vZGUgbWFrZXMgc2Vuc2UgZm9yCnRoaXMsIGFuZCBza2lwcGluZyBpZiB0aGVyZSdzIG5v
-IHJlbmRlciBub2RlKSB3b3VsZCBtYWtlIG1vc3Qgc2Vuc2UuCkF0IGxlYXN0IGZvciB0aGUgYmFz
-aWMgY2dyb3VwIGNvbnRyb2xsZXJzIHdoaWNoIGFyZSBnZW5lcmljIGFjcm9zcwpkcml2ZXJzLgot
-RGFuaWVsCgoKCj4KPiBSZWdhcmRzLAo+IEtlbm55Cj4KPgo+IE9uIFdlZCwgU2VwIDQsIDIwMTkg
-YXQgNDo1NCBBTSBEYW5pZWwgVmV0dGVyIDxkYW5pZWxAZmZ3bGwuY2g+IHdyb3RlOgo+ID4KPiA+
-IE9uIFR1ZSwgU2VwIDAzLCAyMDE5IGF0IDA0OjQzOjQ1UE0gLTA0MDAsIEtlbm55IEhvIHdyb3Rl
-Ogo+ID4gPiBPbiBUdWUsIFNlcCAzLCAyMDE5IGF0IDQ6MTIgUE0gRGFuaWVsIFZldHRlciA8ZGFu
-aWVsQGZmd2xsLmNoPiB3cm90ZToKPiA+ID4gPiBPbiBUdWUsIFNlcCAzLCAyMDE5IGF0IDk6NDUg
-UE0gS2VubnkgSG8gPHkya2VubnlAZ21haWwuY29tPiB3cm90ZToKPiA+ID4gPiA+IE9uIFR1ZSwg
-U2VwIDMsIDIwMTkgYXQgMzo1NyBBTSBEYW5pZWwgVmV0dGVyIDxkYW5pZWxAZmZ3bGwuY2g+IHdy
-b3RlOgo+ID4gPiA+ID4gPiBJdGVyYXRpbmcgb3ZlciBtaW5vcnMgZm9yIGNncm91cHMgc291bmRz
-IHZlcnksIHZlcnkgd3JvbmcuIFdoeSBkbyB3ZSBjYXJlCj4gPiA+ID4gPiA+IHdoZXRoZXIgYSBi
-dWZmZXIgd2FzIGFsbG9jYXRlZCB0aHJvdWdoIGttcyBkdW1iIHZzIHJlbmRlciBub2Rlcz8KPiA+
-ID4gPiA+ID4KPiA+ID4gPiA+ID4gSSdkIGV4cGVjdCBhbGwgdGhlIGNncm91cCBzdHVmZiB0byBv
-bmx5IHdvcmsgb24gZHJtX2RldmljZSwgaWYgaXQgZG9lcwo+ID4gPiA+ID4gPiBjYXJlIGFib3V0
-IGRldmljZXMuCj4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+IChJIGRpZG4ndCBsb29rIHRocm91Z2gg
-dGhlIHBhdGNoIHNlcmllcyB0byBmaW5kIG91dCB3aGVyZSBleGFjdGx5IHlvdSdyZQo+ID4gPiA+
-ID4gPiB1c2luZyB0aGlzLCBzbyBtYXliZSBJJ20gb2ZmIHRoZSByYWlscyBoZXJlKS4KPiA+ID4g
-PiA+Cj4gPiA+ID4gPiBJIGFtIGV4cG9zaW5nIHRoaXMgdG8gcmVtb3ZlIHRoZSBuZWVkIHRvIGtl
-ZXAgdHJhY2sgb2YgYSBzZXBhcmF0ZSBsaXN0Cj4gPiA+ID4gPiBvZiBhdmFpbGFibGUgZHJtX2Rl
-dmljZSBpbiB0aGUgc3lzdGVtICh0byByZW1vdmUgdGhlIHJlZ2lzdGVyaW5nIGFuZAo+ID4gPiA+
-ID4gdW5yZWdpc3RlcmluZyBvZiBkcm1fZGV2aWNlIHRvIHRoZSBjZ3JvdXAgc3Vic3lzdGVtIGFu
-ZCBqdXN0IHVzZQo+ID4gPiA+ID4gZHJtX21pbm9yIGFzIHRoZSBzaW5nbGUgc291cmNlIG9mIHRy
-dXRoLikgIEkgYW0gb25seSBmaWx0ZXJpbmcgb3V0IHRoZQo+ID4gPiA+ID4gcmVuZGVyIG5vZGVz
-IG1pbm9yIGJlY2F1c2UgdGhleSBwb2ludCB0byB0aGUgc2FtZSBkcm1fZGV2aWNlIGFuZCBpcwo+
-ID4gPiA+ID4gY29uZnVzaW5nLgo+ID4gPiA+ID4KPiA+ID4gPiA+IFBlcmhhcHMgSSBtaXNzZWQg
-YW4gb2J2aW91cyB3YXkgdG8gbGlzdCB0aGUgZHJtIGRldmljZXMgd2l0aG91dAo+ID4gPiA+ID4g
-aXRlcmF0aW5nIHRocm91Z2ggdGhlIGRybV9taW5vcnM/ICAoSSBwcm9iYWJseSBqdW1wZWQgdG8g
-dGhlIG1pbm9ycwo+ID4gPiA+ID4gYmVjYXVzZSAkbWFqb3I6JG1pbm9yIGlzIHRoZSBjb252ZW50
-aW9uIHRvIGFkZHJlc3MgZGV2aWNlcyBpbiBjZ3JvdXAuKQo+ID4gPiA+Cj4gPiA+ID4gQ3JlYXRl
-IHlvdXIgb3duIGlmIHRoZXJlJ3Mgbm90aGluZywgYmVjYXVzZSB5b3UgbmVlZCB0byBhbnl3YXk6
-Cj4gPiA+ID4gLSBZb3UgbmVlZCBzcGVjaWFsIGxvY2tpbmcgYW55d2F5LCB3ZSBjYW4ndCBqdXN0
-IGJsb2NrIG9uIHRoZSBpZHIgbG9jawo+ID4gPiA+IGZvciBldmVyeXRoaW5nLgo+ID4gPiA+IC0g
-VGhpcyBuZWVkcyB0byByZWZjb3VudCBkcm1fZGV2aWNlLCBubyB0aGUgbWlub3JzLgo+ID4gPiA+
-Cj4gPiA+ID4gSXRlcmF0aW5nIG92ZXIgc3R1ZmYgc3RpbGwgZmVlbHMga2luZGEgd3Jvbmcgc3Rp
-bGwsIGJlY2F1c2Ugbm9ybWFsbHkKPiA+ID4gPiB0aGUgd2F5IHdlIHJlZ2lzdGVyL3VucmVnaXN0
-ZXIgdXNlcnNwYWNlIGFwaSAoYW5kIGNncm91cHMgaXNuJ3QKPiA+ID4gPiBhbnl0aGluZyBlbHNl
-IGZyb20gYSBkcm0gZHJpdmVyIHBvdikgaXMgYnkgYWRkaW5nIG1vcmUgY2FsbHMgdG8KPiA+ID4g
-PiBkcm1fZGV2X3JlZ2lzdGVyL3VucmVnaXN0ZXIuIElmIHlvdSBwdXQgYSBkcm1fY2dfcmVnaXN0
-ZXIvdW5yZWdpc3Rlcgo+ID4gPiA+IGNhbGwgaW4gdGhlcmUgd2UgaGF2ZSBhIGNsZWFuIHNlcGFy
-YXRpb24sIGFuZCB5b3UgY2FuIHRyYWNrIGFsbCB0aGUKPiA+ID4gPiBjdXJyZW50bHkgYWN0aXZl
-IGRldmljZXMgaG93ZXZlciB5b3Ugd2FudC4gSXRlcmF0aW5nIG92ZXIgb2JqZWN0cyB0aGF0Cj4g
-PiA+ID4gY2FuIGJlIGhvdHVucGx1Z2dlZCBhbnkgdGltZSB0ZW5kcyB0byBnZXQgcmVhbGx5IGNv
-bXBsaWNhdGVkIHJlYWxseQo+ID4gPiA+IHF1aWNrbHkuCj4gPiA+Cj4gPiA+IFVtLi4uIEkgdGhv
-dWdodCB0aGlzIGlzIHdoYXQgSSBoYWQgcHJldmlvdXNseS4gIERpZCBJIG1pc3VuZGVyc3Rvb2QK
-PiA+ID4geW91ciBmZWVkYmFjayBmcm9tIHYzPyAgRG9lc24ndCBkcm1fbWlub3IgYWxyZWFkeSBp
-bmNsdWRlIGFsbCB0aGVzZQo+ID4gPiBmYWNpbGl0aWVzIHNvIGlzbid0IGNyZWF0aW5nIG15IG93
-biBraW5kIG9mIHJlaW52ZW50aW5nIHRoZSB3aGVlbD8KPiA+ID4gKGFzIEkgZGlkIHByZXZpb3Vz
-bHk/KSAgZHJtX21pbm9yX3JlZ2lzdGVyIGlzIGNhbGxlZCBpbnNpZGUKPiA+ID4gZHJtX2Rldl9y
-ZWdpc3RlciBzbyBpc24ndCBsZXZlcmFnaW5nIGV4aXN0aW5nIGRybV9taW5vciBmYWNpbGl0aWVz
-Cj4gPiA+IG11Y2ggYmV0dGVyIHNvbHV0aW9uPwo+ID4KPiA+IEhtIHRoZSBwcmV2aW91cyB2ZXJz
-aW9uIGFscmVhZHkgZHJvcHBlZCBvdXQgb2YgbXkgaW5ib3gsIHNvIGhhcmQgdG8gZmluZAo+ID4g
-aXQgYWdhaW4uIEFuZCBJIGNvdWxkbid0IGZpbmQgdGhpcyBpbiBhcmNoaWV2ZXMuIERvIHlvdSBo
-YXZlIHBvaW50ZXJzPwo+ID4KPiA+IEkgdGhvdWdodCB0aGUgcHJldmlvdXMgdmVyc2lvbiBkaWQg
-Y2dyb3VwIGluaXQgc2VwYXJhdGVseSBmcm9tIGRybV9kZXZpY2UKPiA+IHNldHVwLCBhbmQgSSBn
-dWVzcyBJIHN1Z2dlc3RlZCB0aGF0IGl0IHNob3VsZCBiZSBtb3ZlZCBpbnQKPiA+IGRybV9kZXZf
-cmVnaXN0ZXIvdW5yZWdpc3Rlcj8KPiA+Cj4gPiBBbnl3YXksIEkgZG9uJ3QgdGhpbmsgcmV1c2lu
-ZyB0aGUgZHJtX21pbm9yIHJlZ2lzdHJhdGlvbiBtYWtlcyBzZW5zZSwKPiA+IHNpbmNlIHdlIHdh
-bnQgdG8gYmUgb24gdGhlIGRybV9kZXZpY2UsIG5vdCBvbiB0aGUgbWlub3IuIFdoaWNoIGlzIGEg
-Yml0Cj4gPiBhd2t3YXJkIGZvciBjZ3JvdXBzLCB3aGljaCB3YW50cyB0byBpZGVudGlmeSBkZXZp
-Y2VzIHVzaW5nIG1ham9yLm1pbm9yCj4gPiBwYWlycy4gQnV0IEkgZ3Vlc3MgZHJtIGlzIHRoZSBm
-aXJzdCBzdWJzeXN0ZW0gd2hlcmUgMSBkZXZpY2UgY2FuIGJlCj4gPiBleHBvc2VkIHRocm91Z2gg
-bXVsdGlwbGUgbWlub3JzIC4uLgo+ID4KPiA+IFRlanVuLCBhbnkgc3VnZ2VzdGlvbnMgb24gdGhp
-cz8KPiA+Cj4gPiBBbnl3YXksIEkgdGhpbmsganVzdCBsZXZlcmFnaW5nIGV4aXN0aW5nIGNvZGUg
-YmVjYXVzZSBpdCBjYW4gYmUgYWJ1c2VkIHRvCj4gPiBtYWtlIGl0IGZpdCBmb3IgdXMgZG9lc24n
-dCBtYWtlIHNlbnNlLiBFLmcuIGZvciB0aGUga21zIHNpZGUgd2UgYWxzbyBkb24ndAo+ID4gcGln
-Z3ktYmFjayBvbiB0b3Agb2YgZHJtX21pbm9yX3JlZ2lzdGVyIChpdCB3b3VsZCBiZSB0ZWNobmlj
-YWxseQo+ID4gcG9zc2libGUpLCBidXQgaW5zdGVhZCB3ZSBoYXZlIGRybV9tb2Rlc2V0X3JlZ2lz
-dGVyX2FsbCgpLgo+ID4gLURhbmllbAo+ID4KPiA+ID4KPiA+ID4gS2VubnkKPiA+ID4KPiA+ID4g
-Pgo+ID4gPiA+Cj4gPiA+ID4gPgo+ID4gPiA+ID4gS2VubnkKPiA+ID4gPiA+Cj4gPiA+ID4gPiA+
-IC1EYW5pZWwKPiA+ID4gPiA+ID4KPiA+ID4gPiA+ID4gPiAtLS0KPiA+ID4gPiA+ID4gPiAgZHJp
-dmVycy9ncHUvZHJtL2RybV9kcnYuYyAgICAgIHwgMTkgKysrKysrKysrKysrKysrKysrKwo+ID4g
-PiA+ID4gPiA+ICBkcml2ZXJzL2dwdS9kcm0vZHJtX2ludGVybmFsLmggfCAgNCAtLS0tCj4gPiA+
-ID4gPiA+ID4gIGluY2x1ZGUvZHJtL2RybV9kcnYuaCAgICAgICAgICB8ICA0ICsrKysKPiA+ID4g
-PiA+ID4gPiAgMyBmaWxlcyBjaGFuZ2VkLCAyMyBpbnNlcnRpb25zKCspLCA0IGRlbGV0aW9ucygt
-KQo+ID4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvZ3B1L2Ry
-bS9kcm1fZHJ2LmMgYi9kcml2ZXJzL2dwdS9kcm0vZHJtX2Rydi5jCj4gPiA+ID4gPiA+ID4gaW5k
-ZXggODYyNjIxNDk0YTkzLi4wMDBjZGRhYmQ5NzAgMTAwNjQ0Cj4gPiA+ID4gPiA+ID4gLS0tIGEv
-ZHJpdmVycy9ncHUvZHJtL2RybV9kcnYuYwo+ID4gPiA+ID4gPiA+ICsrKyBiL2RyaXZlcnMvZ3B1
-L2RybS9kcm1fZHJ2LmMKPiA+ID4gPiA+ID4gPiBAQCAtMjU0LDExICsyNTQsMTMgQEAgc3RydWN0
-IGRybV9taW5vciAqZHJtX21pbm9yX2FjcXVpcmUodW5zaWduZWQgaW50IG1pbm9yX2lkKQo+ID4g
-PiA+ID4gPiA+Cj4gPiA+ID4gPiA+ID4gICAgICAgcmV0dXJuIG1pbm9yOwo+ID4gPiA+ID4gPiA+
-ICB9Cj4gPiA+ID4gPiA+ID4gK0VYUE9SVF9TWU1CT0woZHJtX21pbm9yX2FjcXVpcmUpOwo+ID4g
-PiA+ID4gPiA+Cj4gPiA+ID4gPiA+ID4gIHZvaWQgZHJtX21pbm9yX3JlbGVhc2Uoc3RydWN0IGRy
-bV9taW5vciAqbWlub3IpCj4gPiA+ID4gPiA+ID4gIHsKPiA+ID4gPiA+ID4gPiAgICAgICBkcm1f
-ZGV2X3B1dChtaW5vci0+ZGV2KTsKPiA+ID4gPiA+ID4gPiAgfQo+ID4gPiA+ID4gPiA+ICtFWFBP
-UlRfU1lNQk9MKGRybV9taW5vcl9yZWxlYXNlKTsKPiA+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiA+
-ICAvKioKPiA+ID4gPiA+ID4gPiAgICogRE9DOiBkcml2ZXIgaW5zdGFuY2Ugb3ZlcnZpZXcKPiA+
-ID4gPiA+ID4gPiBAQCAtMTA3OCw2ICsxMDgwLDIzIEBAIGludCBkcm1fZGV2X3NldF91bmlxdWUo
-c3RydWN0IGRybV9kZXZpY2UgKmRldiwgY29uc3QgY2hhciAqbmFtZSkKPiA+ID4gPiA+ID4gPiAg
-fQo+ID4gPiA+ID4gPiA+ICBFWFBPUlRfU1lNQk9MKGRybV9kZXZfc2V0X3VuaXF1ZSk7Cj4gPiA+
-ID4gPiA+ID4KPiA+ID4gPiA+ID4gPiArLyoqCj4gPiA+ID4gPiA+ID4gKyAqIGRybV9taW5vcl9m
-b3JfZWFjaCAtIEl0ZXJhdGUgdGhyb3VnaCBhbGwgc3RvcmVkIERSTSBtaW5vcnMKPiA+ID4gPiA+
-ID4gPiArICogQGZuOiBGdW5jdGlvbiB0byBiZSBjYWxsZWQgZm9yIGVhY2ggcG9pbnRlci4KPiA+
-ID4gPiA+ID4gPiArICogQGRhdGE6IERhdGEgcGFzc2VkIHRvIGNhbGxiYWNrIGZ1bmN0aW9uLgo+
-ID4gPiA+ID4gPiA+ICsgKgo+ID4gPiA+ID4gPiA+ICsgKiBUaGUgY2FsbGJhY2sgZnVuY3Rpb24g
-d2lsbCBiZSBjYWxsZWQgZm9yIGVhY2ggQGRybV9taW5vciBlbnRyeSwgcGFzc2luZwo+ID4gPiA+
-ID4gPiA+ICsgKiB0aGUgbWlub3IsIHRoZSBlbnRyeSBhbmQgQGRhdGEuCj4gPiA+ID4gPiA+ID4g
-KyAqCj4gPiA+ID4gPiA+ID4gKyAqIElmIEBmbiByZXR1cm5zIGFueXRoaW5nIG90aGVyIHRoYW4g
-JTAsIHRoZSBpdGVyYXRpb24gc3RvcHMgYW5kIHRoYXQKPiA+ID4gPiA+ID4gPiArICogdmFsdWUg
-aXMgcmV0dXJuZWQgZnJvbSB0aGlzIGZ1bmN0aW9uLgo+ID4gPiA+ID4gPiA+ICsgKi8KPiA+ID4g
-PiA+ID4gPiAraW50IGRybV9taW5vcl9mb3JfZWFjaChpbnQgKCpmbikoaW50IGlkLCB2b2lkICpw
-LCB2b2lkICpkYXRhKSwgdm9pZCAqZGF0YSkKPiA+ID4gPiA+ID4gPiArewo+ID4gPiA+ID4gPiA+
-ICsgICAgIHJldHVybiBpZHJfZm9yX2VhY2goJmRybV9taW5vcnNfaWRyLCBmbiwgZGF0YSk7Cj4g
-PiA+ID4gPiA+ID4gK30KPiA+ID4gPiA+ID4gPiArRVhQT1JUX1NZTUJPTChkcm1fbWlub3JfZm9y
-X2VhY2gpOwo+ID4gPiA+ID4gPiA+ICsKPiA+ID4gPiA+ID4gPiAgLyoKPiA+ID4gPiA+ID4gPiAg
-ICogRFJNIENvcmUKPiA+ID4gPiA+ID4gPiAgICogVGhlIERSTSBjb3JlIG1vZHVsZSBpbml0aWFs
-aXplcyBhbGwgZ2xvYmFsIERSTSBvYmplY3RzIGFuZCBtYWtlcyB0aGVtCj4gPiA+ID4gPiA+ID4g
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvZ3B1L2RybS9kcm1faW50ZXJuYWwuaCBiL2RyaXZlcnMvZ3B1
-L2RybS9kcm1faW50ZXJuYWwuaAo+ID4gPiA+ID4gPiA+IGluZGV4IGUxOWFjN2NhNjAyZC4uNmJm
-YWQ3NmY4ZTc4IDEwMDY0NAo+ID4gPiA+ID4gPiA+IC0tLSBhL2RyaXZlcnMvZ3B1L2RybS9kcm1f
-aW50ZXJuYWwuaAo+ID4gPiA+ID4gPiA+ICsrKyBiL2RyaXZlcnMvZ3B1L2RybS9kcm1faW50ZXJu
-YWwuaAo+ID4gPiA+ID4gPiA+IEBAIC01NCwxMCArNTQsNiBAQCB2b2lkIGRybV9wcmltZV9kZXN0
-cm95X2ZpbGVfcHJpdmF0ZShzdHJ1Y3QgZHJtX3ByaW1lX2ZpbGVfcHJpdmF0ZSAqcHJpbWVfZnBy
-aXYpOwo+ID4gPiA+ID4gPiA+ICB2b2lkIGRybV9wcmltZV9yZW1vdmVfYnVmX2hhbmRsZV9sb2Nr
-ZWQoc3RydWN0IGRybV9wcmltZV9maWxlX3ByaXZhdGUgKnByaW1lX2Zwcml2LAo+ID4gPiA+ID4g
-PiA+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc3RydWN0IGRtYV9idWYg
-KmRtYV9idWYpOwo+ID4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+ID4gLS8qIGRybV9kcnYuYyAqLwo+
-ID4gPiA+ID4gPiA+IC1zdHJ1Y3QgZHJtX21pbm9yICpkcm1fbWlub3JfYWNxdWlyZSh1bnNpZ25l
-ZCBpbnQgbWlub3JfaWQpOwo+ID4gPiA+ID4gPiA+IC12b2lkIGRybV9taW5vcl9yZWxlYXNlKHN0
-cnVjdCBkcm1fbWlub3IgKm1pbm9yKTsKPiA+ID4gPiA+ID4gPiAtCj4gPiA+ID4gPiA+ID4gIC8q
-IGRybV92YmxhbmsuYyAqLwo+ID4gPiA+ID4gPiA+ICB2b2lkIGRybV92YmxhbmtfZGlzYWJsZV9h
-bmRfc2F2ZShzdHJ1Y3QgZHJtX2RldmljZSAqZGV2LCB1bnNpZ25lZCBpbnQgcGlwZSk7Cj4gPiA+
-ID4gPiA+ID4gIHZvaWQgZHJtX3ZibGFua19jbGVhbnVwKHN0cnVjdCBkcm1fZGV2aWNlICpkZXYp
-Owo+ID4gPiA+ID4gPiA+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2RybS9kcm1fZHJ2LmggYi9pbmNs
-dWRlL2RybS9kcm1fZHJ2LmgKPiA+ID4gPiA+ID4gPiBpbmRleCA2OGNhNzM2YzU0OGQuLjI0Zjhk
-MDU0YzU3MCAxMDA2NDQKPiA+ID4gPiA+ID4gPiAtLS0gYS9pbmNsdWRlL2RybS9kcm1fZHJ2LmgK
-PiA+ID4gPiA+ID4gPiArKysgYi9pbmNsdWRlL2RybS9kcm1fZHJ2LmgKPiA+ID4gPiA+ID4gPiBA
-QCAtNzk5LDUgKzc5OSw5IEBAIHN0YXRpYyBpbmxpbmUgYm9vbCBkcm1fZHJ2X3VzZXNfYXRvbWlj
-X21vZGVzZXQoc3RydWN0IGRybV9kZXZpY2UgKmRldikKPiA+ID4gPiA+ID4gPgo+ID4gPiA+ID4g
-PiA+ICBpbnQgZHJtX2Rldl9zZXRfdW5pcXVlKHN0cnVjdCBkcm1fZGV2aWNlICpkZXYsIGNvbnN0
-IGNoYXIgKm5hbWUpOwo+ID4gPiA+ID4gPiA+Cj4gPiA+ID4gPiA+ID4gK2ludCBkcm1fbWlub3Jf
-Zm9yX2VhY2goaW50ICgqZm4pKGludCBpZCwgdm9pZCAqcCwgdm9pZCAqZGF0YSksIHZvaWQgKmRh
-dGEpOwo+ID4gPiA+ID4gPiA+ICsKPiA+ID4gPiA+ID4gPiArc3RydWN0IGRybV9taW5vciAqZHJt
-X21pbm9yX2FjcXVpcmUodW5zaWduZWQgaW50IG1pbm9yX2lkKTsKPiA+ID4gPiA+ID4gPiArdm9p
-ZCBkcm1fbWlub3JfcmVsZWFzZShzdHJ1Y3QgZHJtX21pbm9yICptaW5vcik7Cj4gPiA+ID4gPiA+
-ID4KPiA+ID4gPiA+ID4gPiAgI2VuZGlmCj4gPiA+ID4gPiA+ID4gLS0KPiA+ID4gPiA+ID4gPiAy
-LjIyLjAKPiA+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPgo+ID4gPiA+ID4gPiAtLQo+ID4gPiA+ID4g
-PiBEYW5pZWwgVmV0dGVyCj4gPiA+ID4gPiA+IFNvZnR3YXJlIEVuZ2luZWVyLCBJbnRlbCBDb3Jw
-b3JhdGlvbgo+ID4gPiA+ID4gPiBodHRwOi8vYmxvZy5mZndsbC5jaAo+ID4gPiA+Cj4gPiA+ID4K
-PiA+ID4gPgo+ID4gPiA+IC0tCj4gPiA+ID4gRGFuaWVsIFZldHRlcgo+ID4gPiA+IFNvZnR3YXJl
-IEVuZ2luZWVyLCBJbnRlbCBDb3Jwb3JhdGlvbgo+ID4gPiA+ICs0MSAoMCkgNzkgMzY1IDU3IDQ4
-IC0gaHR0cDovL2Jsb2cuZmZ3bGwuY2gKPiA+Cj4gPiAtLQo+ID4gRGFuaWVsIFZldHRlcgo+ID4g
-U29mdHdhcmUgRW5naW5lZXIsIEludGVsIENvcnBvcmF0aW9uCj4gPiBodHRwOi8vYmxvZy5mZnds
-bC5jaAoKCgotLSAKRGFuaWVsIFZldHRlcgpTb2Z0d2FyZSBFbmdpbmVlciwgSW50ZWwgQ29ycG9y
-YXRpb24KKzQxICgwKSA3OSAzNjUgNTcgNDggLSBodHRwOi8vYmxvZy5mZndsbC5jaApfX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGlu
-ZyBsaXN0CmRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVl
-ZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWw=
+On Tue, Sep 3, 2019 at 4:46 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
+>
+> On 9/3/19 10:57 AM, Mike Kravetz wrote:
+> > On 8/29/19 12:18 AM, Michal Hocko wrote:
+> >> [Cc cgroups maintainers]
+> >>
+> >> On Wed 28-08-19 10:58:00, Mina Almasry wrote:
+> >>> On Wed, Aug 28, 2019 at 4:23 AM Michal Hocko <mhocko@kernel.org> wrote:
+> >>>>
+> >>>> On Mon 26-08-19 16:32:34, Mina Almasry wrote:
+> >>>>>  mm/hugetlb.c                                  | 493 ++++++++++++------
+> >>>>>  mm/hugetlb_cgroup.c                           | 187 +++++--
+> >>>>
+> >>>> This is a lot of changes to an already subtle code which hugetlb
+> >>>> reservations undoubly are.
+> >>>
+> >>> For what it's worth, I think this patch series is a net decrease in
+> >>> the complexity of the reservation code, especially the region_*
+> >>> functions, which is where a lot of the complexity lies. I removed the
+> >>> race between region_del and region_{add|chg}, refactored the main
+> >>> logic into smaller code, moved common code to helpers and deleted the
+> >>> duplicates, and finally added lots of comments to the hard to
+> >>> understand pieces. I hope that when folks review the changes they will
+> >>> see that! :)
+> >>
+> >> Post those improvements as standalone patches and sell them as
+> >> improvements. We can talk about the net additional complexity of the
+> >> controller much easier then.
+> >
+> > All such changes appear to be in patch 4 of this series.  The commit message
+> > says "region_add() and region_chg() are heavily refactored to in this commit
+> > to make the code easier to understand and remove duplication.".  However, the
+> > modifications were also added to accommodate the new cgroup reservation
+> > accounting.  I think it would be helpful to explain why the existing code does
+> > not work with the new accounting.  For example, one change is because
+> > "existing code coalesces resv_map entries for shared mappings.  new cgroup
+> > accounting requires that resv_map entries be kept separate for proper
+> > uncharging."
+> >
+> > I am starting to review the changes, but it would help if there was a high
+> > level description.  I also like Michal's idea of calling out the region_*
+> > changes separately.  If not a standalone patch, at least the first patch of
+> > the series.  This new code will be exercised even if cgroup reservation
+> > accounting not enabled, so it is very important than no subtle regressions
+> > be introduced.
+>
+> While looking at the region_* changes, I started thinking about this no
+> coalesce change for shared mappings which I think is necessary.  Am I
+> mistaken, or is this a requirement?
+>
+
+No coalesce is a requirement, yes. The idea is that task A can reseve
+range [0-1], and task B can reserve range [1-2]. We want the code to
+put in 2 regions:
+
+1. [0-1], with cgroup information that points to task A's cgroup.
+2. [1-2], with cgroup information that points to task B's cgroup.
+
+If coalescing is happening, then you end up with one region [0-2] with
+cgroup information for one of those cgroups, and someone gets
+uncharged wrong when the reservation is freed.
+
+Technically we can still coalesce if the cgroup information is the
+same and I can do that, but the region_* code becomes more
+complicated, and you mentioned on an earlier patchset that you were
+concerned with how complicated the region_* functions are as is.
+
+> If it is a requirement, then think about some of the possible scenarios
+> such as:
+> - There is a hugetlbfs file of size 10 huge pages.
+> - Task A has reservations for pages at offset 1 3 5 7 and 9
+> - Task B then mmaps the entire file which should result in reservations
+>   at 0 2 4 6 and 8.
+> - region_chg will return 5, but will also need to allocate 5 resv_map
+>   entries for the subsequent region_add which can not fail.  Correct?
+>   The code does not appear to handle this.
+>
+
+I thought the code did handle this. region_chg calls
+allocate_enough_cache_for_range_and_lock(), which in this scenario
+will put 5 entries in resv_map->region_cache. region_add will use
+these 5 region_cache entries to do its business.
+
+I'll add a test in my suite to test this case to make sure.
+
+> BTW, this series will BUG when running libhugetlbfs test suite.  It will
+> hit this in resv_map_release().
+>
+>         VM_BUG_ON(resv_map->adds_in_progress);
+>
+
+Sorry about that, I've been having trouble running the libhugetlbfs
+tests, but I'm still on it. I'll get to the bottom of this by next
+patch series.
+
+> --
+> Mike Kravetz
