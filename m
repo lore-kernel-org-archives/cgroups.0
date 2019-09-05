@@ -1,73 +1,155 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v1 0/7] mm/memcontrol: recharge mlocked pages
-Date: Wed, 4 Sep 2019 23:13:54 +0000
-Message-ID: <20190904231350.GA5246@tower.dhcp.thefacebook.com>
-References: <156760509382.6560.17364256340940314860.stgit@buzz>
+From: Chunyan Zhang <zhang.lyra@gmail.com>
+Subject: [PATCH] cpuset: adjust the lock sequence when rebuilding the sched domains.
+Date: Thu,  5 Sep 2019 10:18:08 +0800
+Message-ID: <20190905021808.25130-1-zhang.lyra@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=4Ul75V30fqg4tJL6AUehuDGJapCIoB5ZrB+HTS8LLpk=;
- b=pJ2gHKdGifN8CNjgU7HV5nuCIIzfX11XJlKcHZM1ax6ypV1uSDfZ0+MCD639VYr9SaI5
- Q8ffYW1o3OYG1MEZx+arnhT12sHPGBLXg9+H6e7nya15X2AORb+HugoAUORjVRJedbLm
- gPixdCfnK5QjfNCWIvchAjgFmqoMj4Jcy0E= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4Ul75V30fqg4tJL6AUehuDGJapCIoB5ZrB+HTS8LLpk=;
- b=ijbRmKJisfWxcyzK5Y351mYbicHFxusReORY87YCZb366NVHVOckZpGPneVHegf1M9DI0Y/cRefOlTKhb8SxOd6oWeuAhy6q/O9at8kBTDNpwmZcRQUM4Y5UmyHY4ySvJeKFe27cuZcI6vNYqmgUpBJGQYiVt1+MgZtFzWULsNQ=
-In-Reply-To: <156760509382.6560.17364256340940314860.stgit@buzz>
-Content-Language: en-US
-Content-ID: <59294D3005729C4181703E55A0E5DA85@namprd15.prod.outlook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=6AyUQpUESbXIit8/mFMuPXgv5/l8JCgnDTWH0unW7Ss=;
+        b=ZF+ems9WYI1dee3Fth3+II+uEhqwh9SDSOy/2cLlr2AGI0eutDB20m+Y69c9hh/iKV
+         7MfMoJ8T7RwK6sDdB98z8oSuZi/yl7xuUxKyISDrmuxLBC0QyHgRI1YAo/CSM9MXomfX
+         cHLw5jDsPMogRTRsIWaZg6vh5IMXClAWJLPN4X43JbcPwLUtVreXCUGd4+rsE6/f07Me
+         27ypQ0P37hXaEGRWbBjaboAjn59n0Bzu3RZtXyTA003KOSVqwBY4+dJaxn1sd5dnQ1sb
+         lkY2qEANWis5xyxPIv41HmGgOC+FTyJ5kWuFAecW2bhC+oH8Oe2OFjHgChkdfwg9eHst
+         /n5g==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Cc: "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.com>, Johannes Weiner <hannes@cmpxchg.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Vincent Wang <vincent.wang@unisoc.com>, Chunyan Zhang <zhang.lyra@gmail.com>
 
-On Wed, Sep 04, 2019 at 04:53:08PM +0300, Konstantin Khlebnikov wrote:
-> Currently mlock keeps pages in cgroups where they were accounted.
-> This way one container could affect another if they share file cache.
-> Typical case is writing (downloading) file in one container and then
-> locking in another. After that first container cannot get rid of cache.
+From: Vincent Wang <vincent.wang@unisoc.com>
 
-Yeah, it's a valid problem, and it's not about mlocked pages only,
-the same thing is true for generic pagecache. The only difference is that
-in theory memory pressure should fix everything. But in reality
-pagecache used by the second container can be very hot, so the first
-once can't really get rid of it.
-In other words, there is no way to pass a pagecache page between cgroups
-without evicting it and re-reading from a storage, which is sub-optimal
-in many cases.
+A deadlock issue is found when executing a cpu hotplug stress test on
+android phones with cpuset and scheduil enabled.
 
-We thought about new madvise(), which will uncharge pagecache but set
-a new page flag, which will mean something like "whoever first starts using
-the page, should be charged for it". But it never materialized in a patchse=
-t.
+When CPUx is plugged out, the hotplug thread that calls cpu_down()
+will hold cpu_hotplug_lock and wait the thread cpuhp/x to finish
+hotplug. If the core is the last one in a cluster, cpuhp/x have to
+call cpuhp_cpufreq_offline() and the kernel thread sugov need to exit
+for schedutil governor. The exit of sugov need to hold
+cgroup_threadgroup_rwsem in exit_signals(). For example:
 
-> Also removed cgroup stays pinned by these mlocked pages.
+PID: 150    TASK: ffffffc0b9cad080  CPU: 0   COMMAND: "sprdhotplug"
+ #0 [ffffff8009fcb9d0] __switch_to at ffffff80080858f0
+ #1 [ffffff8009fcb9f0] __schedule at ffffff80089f185c
+ #2 [ffffff8009fcba80] schedule at ffffff80089f1b84
+ #3 [ffffff8009fcbaa0] schedule_timeout at ffffff80089f5124
+ #4 [ffffff8009fcbb40] wait_for_common at ffffff80089f2944
+ #5 [ffffff8009fcbbe0] wait_for_completion at ffffff80089f29a4
+ #6 [ffffff8009fcbc00] __cpuhp_kick_ap at ffffff80080ab030
+ #7 [ffffff8009fcbc20] cpuhp_kick_ap_work at ffffff80080ab154
+ #8 [ffffff8009fcbc70] _cpu_down at ffffff80089ee19c
+ #9 [ffffff8009fcbcd0] cpu_down at ffffff80080ac144
 
-Tbh, I don't think it's a big issue here. If only there is a huge number
-of 1-page sized mlock areas, but this seems to be unlikely.
+PID: 26     TASK: ffffffc0bbe22080  CPU: 3   COMMAND: "cpuhp/3"
+ #0 [ffffff8009693a30] __switch_to at ffffff80080858f0
+ #1 [ffffff8009693a50] __schedule at ffffff80089f185c
+ #2 [ffffff8009693ae0] schedule at ffffff80089f1b84
+ #3 [ffffff8009693b00] schedule_timeout at ffffff80089f5124
+ #4 [ffffff8009693ba0] wait_for_common at ffffff80089f2944
+ #5 [ffffff8009693c40] wait_for_completion at ffffff80089f29a4
+ #6 [ffffff8009693c60] kthread_stop at ffffff80080ccd2c
+ #7 [ffffff8009693c90] sugov_exit at ffffff8008102134
+ #8 [ffffff8009693cc0] cpufreq_exit_governor at ffffff80086c03bc
+ #9 [ffffff8009693ce0] cpufreq_offline at ffffff80086c0634
 
->=20
-> This patchset implements recharging pages to cgroup of mlock user.
->=20
-> There are three cases:
-> * recharging at first mlock
-> * recharging at munlock to any remaining mlock
-> * recharging at 'culling' in reclaimer to any existing mlock
->=20
-> To keep things simple recharging ignores memory limit. After that memory
-> usage temporary could be higher than limit but cgroup will reclaim memory
-> later or trigger oom, which is valid outcome when somebody mlock too much=
-.
+PID: 13819  TASK: ffffffc0affb6080  CPU: 0   COMMAND: "sugov:3"
+ #0 [ffffff800ee73c30] __switch_to at ffffff80080858f0
+ #1 [ffffff800ee73c50] __schedule at ffffff80089f185c
+ #2 [ffffff800ee73ce0] schedule at ffffff80089f1b84
+ #3 [ffffff800ee73d00] rwsem_down_read_failed at ffffff80089f49d0
+ #4 [ffffff800ee73d80] __percpu_down_read at ffffff8008102ebc
+ #5 [ffffff800ee73da0] exit_signals at ffffff80080bbd24
+ #6 [ffffff800ee73de0] do_exit at ffffff80080ae65c
+ #7 [ffffff800ee73e60] kthread at ffffff80080cc550
 
-OOM is a concern here. If quitting an application will cause an immediate O=
-OM
-in an other cgroup, that's not so good. Ideally it should work like
-memory.high, forcing all threads in the second cgroup into direct reclaim.
+Sometimes cgroup_threadgroup_rwsem is hold by another thread, for
+example Binder:681_2 on android, it wants to hold cpuset_mutex:
 
-Thanks!
+PID: 732    TASK: ffffffc09668b080  CPU: 2   COMMAND: "Binder:681_2"
+ #0 [ffffff800cb7b8c0] __switch_to at ffffff80080858f0
+ #1 [ffffff800cb7b8e0] __schedule at ffffff80089f185c
+ #2 [ffffff800cb7b970] schedule at ffffff80089f1b84
+ #3 [ffffff800cb7b990] schedule_preempt_disabled at ffffff80089f205c
+ #4 [ffffff800cb7b9a0] __mutex_lock at ffffff80089f3118
+ #5 [ffffff800cb7ba40] __mutex_lock_slowpath at ffffff80089f3230
+ #6 [ffffff800cb7ba60] mutex_lock at ffffff80089f3278
+ #7 [ffffff800cb7ba80] cpuset_can_attach at ffffff8008152f84
+ #8 [ffffff800cb7bae0] cgroup_migrate_execute at ffffff800814ada8
+
+On android, a thread kworker/3:0 will hold cpuset_mutex in
+rebuild_sched_domains() and want to hold cpu_hotplug_lock which
+is already hold by the hotplug thread.
+
+PID: 4847   TASK: ffffffc031a6a080  CPU: 3   COMMAND: "kworker/3:0"
+ #0 [ffffff8016fd3ad0] __switch_to at ffffff80080858f0
+ #1 [ffffff8016fd3af0] __schedule at ffffff80089f185c
+ #2 [ffffff8016fd3b80] schedule at ffffff80089f1b84
+ #3 [ffffff8016fd3ba0] rwsem_down_read_failed at ffffff80089f49d0
+ #4 [ffffff8016fd3c20] __percpu_down_read at ffffff8008102ebc
+ #5 [ffffff8016fd3c40] cpus_read_lock at ffffff80080aa59c
+ #6 [ffffff8016fd3c50] rebuild_sched_domains_locked at ffffff80081522a8
+
+In order to fix the deadlock, this patch will adjust the lock sequence
+when rebuilding sched domains. After stress tests, it works well.
+
+Signed-off-by: Vincent Wang <vincent.wang@unisoc.com>
+Signed-off-by: Chunyan Zhang <zhang.lyra@gmail.com>
+---
+ kernel/cgroup/cpuset.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 5aa37531ce76..ef10d276da22 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -912,7 +912,6 @@ static void rebuild_sched_domains_locked(void)
+ 	int ndoms;
+ 
+ 	lockdep_assert_held(&cpuset_mutex);
+-	get_online_cpus();
+ 
+ 	/*
+ 	 * We have raced with CPU hotplug. Don't do anything to avoid
+@@ -921,19 +920,17 @@ static void rebuild_sched_domains_locked(void)
+ 	 */
+ 	if (!top_cpuset.nr_subparts_cpus &&
+ 	    !cpumask_equal(top_cpuset.effective_cpus, cpu_active_mask))
+-		goto out;
++		return;
+ 
+ 	if (top_cpuset.nr_subparts_cpus &&
+ 	   !cpumask_subset(top_cpuset.effective_cpus, cpu_active_mask))
+-		goto out;
++		return;
+ 
+ 	/* Generate domain masks and attrs */
+ 	ndoms = generate_sched_domains(&doms, &attr);
+ 
+ 	/* Have scheduler rebuild the domains */
+ 	partition_sched_domains(ndoms, doms, attr);
+-out:
+-	put_online_cpus();
+ }
+ #else /* !CONFIG_SMP */
+ static void rebuild_sched_domains_locked(void)
+@@ -943,9 +940,11 @@ static void rebuild_sched_domains_locked(void)
+ 
+ void rebuild_sched_domains(void)
+ {
++	get_online_cpus();
+ 	mutex_lock(&cpuset_mutex);
+ 	rebuild_sched_domains_locked();
+ 	mutex_unlock(&cpuset_mutex);
++	put_online_cpus();
+ }
+ 
+ /**
+-- 
+2.20.1
+
