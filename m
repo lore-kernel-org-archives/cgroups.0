@@ -1,99 +1,64 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [PATCH v3 0/3] Implement BFQ per-device weight interface
-Date: Fri, 6 Sep 2019 16:28:42 +0200
-Message-ID: <A9FD0759-F1A7-4675-A2B3-26E5F11019EF@linaro.org>
-References: <20190828035453.18129-1-zhengfeiran@bytedance.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.8\))
-Content-Transfer-Encoding: quoted-printable
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCHSET block/for-next] IO cost model based work-conserving
+ porportional controller
+Date: Fri, 6 Sep 2019 07:58:26 -0700
+Message-ID: <20190906145826.GL2263813@devbig004.ftw2.facebook.com>
+References: <5A63F937-F7B5-4D09-9DB4-C73D6F571D50@linaro.org>
+ <B5E431F7-549D-4FC4-A098-D074DF9586A1@linaro.org>
+ <20190820151903.GH2263813@devbig004.ftw2.facebook.com>
+ <9EB760CE-0028-4766-AE9D-6E90028D8579@linaro.org>
+ <20190831065358.GF2263813@devbig004.ftw2.facebook.com>
+ <88C7DC68-680E-49BB-9699-509B9B0B12A0@linaro.org>
+ <20190902155652.GH2263813@devbig004.ftw2.facebook.com>
+ <D9F6BC6D-FEB3-40CA-A33C-F501AE4434F0@linaro.org>
+ <20190905165540.GJ2263813@devbig004.ftw2.facebook.com>
+ <EFFA2298-8614-4AFC-9208-B36976F6548C@linaro.org>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=CPNhO04EXqyOcEwUnPkRjub5+4HJbhPw4k4lP1BUIFY=;
-        b=SgMVkFczhy1adqzEWg0jDFl+ms6YylZJ+CPw0meDi4tUKNT8GSH+BXVqYMst9hiMpB
-         ahVaFQ2nBY9/RFvc6TbN6UuBnQKQ3l/SvFs0p2M2wqUn2P7rT7dzpxtzj1BejrOrcNf5
-         GrJ+AkVNYBb/t76oZGsJzPhQKcne+Xrh7uGpnNSTVyWvb4al4388+x1HdL299wqPpp1c
-         Lyg4KemDwXk0laBb06V79aAKdNQXdABlbYod4zV5iP3plkj5i/7NqDb4AJ7966TZklBZ
-         Rg/lM3x03AjmR4EuOcvd1a7sRypF0naq0keKBd7Tttg3niHeMUPYrn5FnIk5e5EGmGFX
-         cO6w==
-In-Reply-To: <20190828035453.18129-1-zhengfeiran@bytedance.com>
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=LOL4RkhxwNmxVBDlkkOKh5q7eIdq3MEVHDS6KxIm1I4=;
+        b=MOXP8ySNFPJpMxFpoTNloLC7w8Wh/zABeSUGLmy9GcZZLTPwTWbLNAiqmpDc3ec4/o
+         fd/SQEbUNPqNvtpl1/z5Lvnd779JkYSuyqQbJvM8lCbSRUV/hrvYwZxSgL1rKwz0us/i
+         ZREmz6vxrZfPNGqJkZmhWJzITJzzyL2gIw8RxEgkUTgtbxCjFWnGsP1l5JXqBN4ds0LM
+         SVyRMrlR29TEH85320jHVL5TDIO8nn5KCyJ9cdcTr0DMf2el5OoMqyCl+KPnXNdr78gM
+         NnqSEpEKFjrjmUF5jre4PNzvz5/0G04w9u5myf8I6/pAcoyhos2ouAn+mFiJ6I12Kg6r
+         75JQ==
+Content-Disposition: inline
+In-Reply-To: <EFFA2298-8614-4AFC-9208-B36976F6548C@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Fam Zheng <zhengfeiran@bytedance.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, axboe@kernel.dk, Fam Zheng <fam@euphon.net>, duanxiongchun@bytedance.com, cgroups@vger.kernel.org, zhangjiachen.jc@bytedance.com, tj@kernel.org, linux-block@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Paolo Valente <paolo.valente@linaro.org>
+Cc: Jens Axboe <axboe@kernel.dk>, newella@fb.com, clm@fb.com, Josef Bacik <josef@toxicpanda.com>, dennisz@fb.com, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, ast@kernel.org, daniel@iogearbox.net, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, bpf@vger.kernel.org
 
-Hi Jens,
-is this patch series fine now?
+Hello, Paolo.
 
-Thanks,
-Paolo
+On Fri, Sep 06, 2019 at 11:07:17AM +0200, Paolo Valente wrote:
+> email.  As for the filesystem, I'm interested in ext4, because it is
+> the most widely used file system, and, with some workloads, it makes
 
-> Il giorno 28 ago 2019, alle ore 05:54, Fam Zheng =
-<zhengfeiran@bytedance.com> ha scritto:
->=20
-> v3: Pick up rev-by and ack-by from Paolo and Tejun.
->    Add commit message to patch 3.
->=20
-> (Revision starting from v2 since v1 was used off-list)
->=20
-> Hi Paolo and others,
->=20
-> This adds to BFQ the missing per-device weight interfaces:
-> blkio.bfq.weight_device on legacy and io.bfq.weight on unified. The
-> implementation pretty closely resembles what we had in CFQ and the =
-parsing code
-> is basically reused.
->=20
-> Tests
-> =3D=3D=3D=3D=3D
->=20
-> Using two cgroups and three block devices, having weights setup as:
->=20
-> Cgroup          test1           test2
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> default         100             500
-> sda             500             100
-> sdb             default         default
-> sdc             200             200
->=20
-> cgroup v1 runs
-> --------------
->=20
->    sda.test1.out:   READ: bw=3D913MiB/s
->    sda.test2.out:   READ: bw=3D183MiB/s
->=20
->    sdb.test1.out:   READ: bw=3D213MiB/s
->    sdb.test2.out:   READ: bw=3D1054MiB/s
->=20
->    sdc.test1.out:   READ: bw=3D650MiB/s
->    sdc.test2.out:   READ: bw=3D650MiB/s
->=20
-> cgroup v2 runs
-> --------------
->=20
->    sda.test1.out:   READ: bw=3D915MiB/s
->    sda.test2.out:   READ: bw=3D184MiB/s
->=20
->    sdb.test1.out:   READ: bw=3D216MiB/s
->    sdb.test2.out:   READ: bw=3D1069MiB/s
->=20
->    sdc.test1.out:   READ: bw=3D621MiB/s
->    sdc.test2.out:   READ: bw=3D622MiB/s
->=20
-> Fam Zheng (3):
->  bfq: Fix the missing barrier in __bfq_entity_update_weight_prio
->  bfq: Extract bfq_group_set_weight from bfq_io_set_weight_legacy
->  bfq: Add per-device weight
->=20
-> block/bfq-cgroup.c  | 151 +++++++++++++++++++++++++++++++++-----------
-> block/bfq-iosched.h |   3 +
-> block/bfq-wf2q.c    |   2 +
-> 3 files changed, 119 insertions(+), 37 deletions(-)
->=20
-> --=20
-> 2.22.1
->=20
+Ext4 can't do writeback control as it currently stands.  It creates
+hard ordering across data writes from different cgroups.  No matter
+what mechanism you use for IO control, it is broken.  I'm sure it's
+fixable but does need some work.
 
+That said, read-only tests like you're doing should work fine on ext4
+too but the last time I tested io control on ext4 is more than a year
+ago so something might have changed in the meantime.
+
+Just to rule out this isn't what you're hitting.  Can you please run
+your test on btrfs with the following patchset applied?
+
+ http://lkml.kernel.org/r/20190710192818.1069475-1-tj@kernel.org
+
+And as I wrote in the previous reply, I did run your benchmark on one
+of the test machines and it did work fine.
+
+Thanks.
+
+-- 
+tejun
