@@ -1,94 +1,45 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH RFC v4 00/16] new cgroup controller for gpu/drm subsystem
-Date: Fri, 6 Sep 2019 08:45:39 -0700
-Message-ID: <20190906154539.GP2263813@devbig004.ftw2.facebook.com>
-References: <20190829060533.32315-1-Kenny.Ho@amd.com>
- <20190831042857.GD2263813@devbig004.ftw2.facebook.com>
- <20190903075550.GJ2112@phenom.ffwll.local>
- <20190903185013.GI2263813@devbig004.ftw2.facebook.com>
- <CAKMK7uE5Bj-3cJH895iqnLpwUV+GBDM1Y=n4Z4A3xervMdJKXg@mail.gmail.com>
- <20190906152320.GM2263813@devbig004.ftw2.facebook.com>
- <CAKMK7uEXP7XLFB2aFU6+E0TH_DepFRkfCoKoHwkXtjZRDyhHig@mail.gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v3 0/3] Implement BFQ per-device weight interface
+Date: Fri, 6 Sep 2019 14:34:17 -0600
+Message-ID: <437c831d-179e-f8a3-5687-f93459d28b53@kernel.dk>
+References: <20190828035453.18129-1-zhengfeiran@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAKMK7uEXP7XLFB2aFU6+E0TH_DepFRkfCoKoHwkXtjZRDyhHig-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=jG4+RgP/pviUKJ8QbJcP8qw2XnaK/vU+SiEUpD2jM1E=;
+        b=OBMSFHpUBrpgwRkuVSPuBXbTZeB7AfzZ02OBd9Cgdn1S+8h270Jx/KJtcH8H2re6K/
+         QknBx24vAAsFHkJy9KIFbcB9pHKUvQoYsGTRPYmsbO301vXvzn3C32XPJki9Yc9mYaPr
+         M4RSGBUaA7CAlN6Kupdt8WteuEj7jN26aRtadlJ57R/wGEm5knMLk2IHvMlHwOhuJ/CQ
+         3pMYOyWHvBo/daB2+3QR4DK7BVvaFF/QuYl/SvP4fKHkFXgMuTbiRj5QzgSU6thfzqsK
+         n9lUD14fI+mG59+DGd61uprySi1oepwNw6B7eqNFFeFptt9dhedT82pelGc+watqkcWU
+         TP0A==
+In-Reply-To: <20190828035453.18129-1-zhengfeiran@bytedance.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
-Cc: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "Greathouse,
- Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
+To: Fam Zheng <zhengfeiran@bytedance.com>, linux-kernel@vger.kernel.org
+Cc: paolo.valente@linaro.org, fam@euphon.net, duanxiongchun@bytedance.com, cgroups@vger.kernel.org, zhangjiachen.jc@bytedance.com, tj@kernel.org, linux-block@vger.kernel.org
 
-SGVsbG8sIERhbmllbC4KCk9uIEZyaSwgU2VwIDA2LCAyMDE5IGF0IDA1OjM0OjE2UE0gKzAyMDAs
-IERhbmllbCBWZXR0ZXIgd3JvdGU6Cj4gPiBIbW0uLi4gd2hhdCdkIGJlIHRoZSBmdW5kYW1lbnRh
-bCBkaWZmZXJlbmNlIGZyb20gc2xhYiBvciBzb2NrZXQgbWVtb3J5Cj4gPiB3aGljaCBhcmUgaGFu
-ZGxlZCB0aHJvdWdoIG1lbWNnPyAgSXMgc3lzdGVtIG1lbW9yeSB1c2VkIGJ5IEdQVXMgaGF2ZQo+
-ID4gZnVydGhlciBnbG9iYWwgcmVzdHJpY3Rpb25zIGluIGFkZGl0aW9uIHRvIHRoZSBhbW91bnQg
-b2YgcGh5c2ljYWwKPiA+IG1lbW9yeSB1c2VkPwo+IAo+IFNvbWV0aW1lcywgYnV0IHRoYXQgd291
-bGQgYmUgc3BlY2lmaWMgcmVzb3VyY2VzIChraW5kYSBsaWtlIHZyYW0pLAo+IGUuZy4gQ01BIHJl
-Z2lvbnMgdXNlZCBieSBhIGdwdS4gQnV0IHByb2JhYmx5IG5vdCBzb21ldGhpbmcgeW91J2xsIHJ1
-bgo+IGluIGEgZGF0YWNlbnRlciBhbmQgd2FudCBjZ3JvdXBzIGZvciAuLi4KPiAKPiBJIGd1ZXNz
-IHdlIGNvdWxkIHRyeSB0byBpbnRlZ3JhdGUgd2l0aCB0aGUgbWVtY2cgZ3JvdXAgY29udHJvbGxl
-ci4gT25lCj4gdHJvdWJsZSBpcyB0aGF0IGFzaWRlIGZyb20gaTkxNSBtb3N0IGdwdSBkcml2ZXJz
-IGRvIG5vdCByZWFsbHkgaGF2ZSBhCj4gZnVsbCBzaHJpbmtlciwgc28gbm90IHN1cmUgaG93IHRo
-YXQgd291bGQgYWxsIGludGVncmF0ZS4KClNvLCB3aGlsZSBpdCdkIGdyZWF0IHRvIGhhdmUgc2hy
-aW5rZXJzIGluIHRoZSBsb25nZXIgdGVybSwgaXQncyBub3QgYQpzdHJpY3QgcmVxdWlyZW1lbnQg
-dG8gYmUgYWNjb3VudGVkIGluIG1lbWNnLiAgSXQgYWxyZWFkeSBhY2NvdW50cyBhCmxvdCBvZiBt
-ZW1vcnkgd2hpY2ggaXNuJ3QgcmVjbGFpbWFibGUgKGEgbG90IG9mIHNsYWJzIGFuZCBzb2NrZXQK
-YnVmZmVyKS4KCj4gVGhlIG92ZXJhbGwgZ3B1IG1lbW9yeSBjb250cm9sbGVyIHdvdWxkIHN0aWxs
-IGJlIG91dHNpZGUgb2YgbWVtY2cgSQo+IHRoaW5rLCBzaW5jZSB0aGF0IHdvdWxkIGluY2x1ZGUg
-c3dhcHBlZC1vdXQgZ3B1IG9iamVjdHMsIGFuZCBzdHVmZiBpbgo+IHNwZWNpYWwgbWVtb3J5IHJl
-Z2lvbnMgbGlrZSB2cmFtLgoKWWVhaCwgZm9yIHJlc291cmNlcyB3aGljaCBhcmUgb24gdGhlIEdQ
-VSBpdHNlbGYgb3IgaGFyZCBsaW1pdGF0aW9ucwphcmlzaW5nIGZyb20gaXQuICBJbiBnZW5lcmFs
-LCB3ZSB3YW5uYSBtYWtlIGNncm91cCBjb250cm9sbGVycyBjb250cm9sCnNvbWV0aGluZyByZWFs
-IGFuZCBjb25jcmV0ZSBhcyBpbiBwaHlzaWNhbCByZXNvdXJjZXMuCgo+ID4gQXQgdGhlIHN5c3Rl
-bSBsZXZlbCwgaXQganVzdCBnZXRzIGZvbGRlZCBpbnRvIGNwdSB0aW1lLCB3aGljaCBpc24ndAo+
-ID4gcGVyZmVjdCBidXQgaXMgdXN1YWxseSBhIGdvb2QgZW5vdWdoIGFwcHJveGltYXRpb24gb2Yg
-Y29tcHV0ZSByZWxhdGVkCj4gPiBkeW5hbWljIHJlc291cmNlcy4gIENhbiBncHUgZG8gc29tZXRp
-bmcgc2ltaWxhciBvciBhdCBsZWFzdCBzdGFydCB3aXRoCj4gPiB0aGF0Pwo+IAo+IFNvIGdlbmVy
-YWxseSB0aGVyZSdzIGEgcGlsZSBvZiBlbmdpbmVzLCBvZnRlbiBvZiBkaWZmZXJlbnQgdHlwZSAo
-ZS5nLgo+IGFtZCBodyBoYXMgYW4gZW50aXJlIHBpbGUgb2YgY29weSBlbmdpbmVzKSwgd2l0aCBz
-b21lIGlsbC1kZWZpbmVkCj4gc2hhcmluZyBjaGFyYXRlcmlzdGljcyBmb3Igc29tZSAob2Z0ZW4g
-Y29tcHV0ZS9yZW5kZXIgZW5naW5lcyB1c2UgdGhlCj4gc2FtZSBzaGFkZXIgY29yZXMgdW5kZXJu
-ZWF0aCksIGtpbmRhIGxpa2UgaHlwZXJ0aHJlYWRpbmcuIFNvIGF0IHRoYXQKPiBkZXRhaWwgaXQn
-cyBhbGwgZXh0cmVtZWx5IGh3IHNwZWNpZmljLCBhbmQgcHJvYmFibHkgdG9vIGhhcmQgdG8KPiBj
-b250cm9sIGluIGEgdXNlZnVsIHdheSBmb3IgdXNlcnMuIEFuZCBJJ20gbm90IHN1cmUgd2UgY2Fu
-IHJlYWxseSBkbyBhCj4gcmVhc29uYWJsZSBrbm9iIGZvciBvdmVyYWxsIGdwdSB1c2FnZSwgZS5n
-LiBpZiB3ZSBpbmNsdWRlIGFsbCB0aGUgY29weQo+IGVuZ2luZXMsIGJ1dCB0aGUgd29ya2xvYWRz
-IGFyZSBvbmx5IHJ1bm5pbmcgb24gY29tcHV0ZSBlbmdpbmVzLCB0aGVuCj4geW91IG1pZ2h0IG9u
-bHkgZ2V0IDEwJSBvdmVyYWxsIHV0aWxpemF0aW9uIGJ5IGVuZ2luZS10aW1lLiBXaGlsZSB0aGUK
-PiBzaGFkZXJzICh3aGljaCBpcyBtb3N0IG9mIHRoZSBjaGlwIGFyZWEvcG93ZXIgY29uc3VtcHRp
-b24pIGFyZQo+IGFjdHVhbGx5IGF0IDEwMCUuIE9uIHRvcCwgd2l0aCBtYW55IHVzZXJzcGFjZSBh
-cGlzIHRob3NlIGVuZ2luZXMgYXJlCj4gYW4gaW50ZXJuYWwgaW1wbGVtZW50YXRpb24gZGV0YWls
-IG9mIGEgbW9yZSBhYnN0cmFjdCBncHUgZGV2aWNlIChlLmcuCj4gb3BlbmdsKSwgYnV0IHdpdGgg
-b3RoZXJzLCB0aGlzIGlzIGFsbCBmdWxseSBleHBvc2VkIChsaWtlIHZ1bGthbikuCj4gCj4gUGx1
-cyB0aGUga2VybmVsIG5lZWRzIHRvIHVzZSBhdCBsZWFzdCBjb3B5IGVuZ2luZXMgZm9yIHZyYW0g
-bWFuYWdlbWVudAo+IGl0c2VsZiwgYW5kIHlvdSByZWFsbHkgY2FuJ3QgdGFrZSB0aGF0IGF3YXku
-IEFsdGhvdWdoIEtlbm55IGhlcmUgaGFzCj4gc29tZSBwcm9wb3NhbCBmb3IgYSBzZXBhcmF0ZSBj
-Z3JvdXAgcmVzb3VyY2UganVzdCBmb3IgdGhhdC4KPiAKPiBJIGp1c3QgdGhpbmsgaXQncyBhbGwg
-YSBiaXQgdG9vIGlsbC1kZWZpbmVkLCBhbmQgd2UgbWlnaHQgYmUgYmV0dGVyCj4gb2ZmIG5haWxp
-bmcgdGhlIG1lbW9yeSBzaWRlIGZpcnN0IGFuZCBnZXQgc29tZSByZWFsIHdvcmxkIGV4cGVyaWVu
-Y2UKPiBvbiB0aGlzIHN0dWZmLiBGb3IgY29udGV4dCwgdGhlcmUncyBub3QgZXZlbiBhIGNyb3Nz
-LWRyaXZlciBzdGFuZGFyZAo+IGZvciBob3cgcHJpb3JpdGllcyBhcmUgaGFuZGxlZCwgdGhhdCdz
-IGFsbCBkcml2ZXItc3BlY2lmaWMgaW50ZXJmYWNlcy4KCkkgc2VlLiAgWWVhaCwgZmlndXJpbmcg
-aXQgb3V0IGFzIHRoaXMgZGV2ZWxvcHMgbWFrZXMgc2Vuc2UgdG8gbWUuICBPbmUKdGhpbmcgSSB3
-YW5uYSByYWlzZSBpcyB0aGF0IGluIGdlbmVyYWwgd2UgZG9uJ3Qgd2FudCB0byBleHBvc2UgZGV2
-aWNlCm9yIGltcGxlbWVudGF0aW9uIGRldGFpbHMgaW4gY2dyb3VwIGludGVyZmFjZS4gIFdoYXQg
-d2Ugd2FudCBleHByZXNzZWQKdGhlcmUgaXMgdGhlIGludGVudGlvbnMgb2YgdGhlIHVzZXIuICBU
-aGUgbW9yZSBpbnRlcm5hbCBkZXRhaWxzIHdlCmV4cG9zZSB0aGUgbW9yZSB3ZSBlbmQgdXAgZ2V0
-dGluZyB0aWVkIGRvd24gdG8gdGhlIHNwZWNpZmljCmltcGxlbWVudGF0aW9uIHdoaWNoIHdlIHNo
-b3VsZCBhdm9pZCBlc3BlY2lhbGx5IGdpdmVuIHRoZSBlYXJseSBzdGFnZQpvZiBkZXZlbG9wbWVu
-dC4KClRoYW5rcy4KCi0tIAp0ZWp1bgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwphbWQtZ2Z4IG1haWxpbmcgbGlzdAphbWQtZ2Z4QGxpc3RzLmZyZWVkZXNr
-dG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2Ft
-ZC1nZng=
+On 8/27/19 9:54 PM, Fam Zheng wrote:
+> v3: Pick up rev-by and ack-by from Paolo and Tejun.
+>      Add commit message to patch 3.
+> 
+> (Revision starting from v2 since v1 was used off-list)
+> 
+> Hi Paolo and others,
+> 
+> This adds to BFQ the missing per-device weight interfaces:
+> blkio.bfq.weight_device on legacy and io.bfq.weight on unified. The
+> implementation pretty closely resembles what we had in CFQ and the parsing code
+> is basically reused.
+
+Applied, thanks.
+
+-- 
+Jens Axboe
+
