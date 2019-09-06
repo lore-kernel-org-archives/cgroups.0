@@ -1,107 +1,81 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [PATCHSET block/for-next] IO cost model based work-conserving
- porportional controller
-Date: Fri, 6 Sep 2019 11:07:17 +0200
-Message-ID: <EFFA2298-8614-4AFC-9208-B36976F6548C@linaro.org>
-References: <20190614015620.1587672-1-tj@kernel.org>
- <20190614175642.GA657710@devbig004.ftw2.facebook.com>
- <5A63F937-F7B5-4D09-9DB4-C73D6F571D50@linaro.org>
- <B5E431F7-549D-4FC4-A098-D074DF9586A1@linaro.org>
- <20190820151903.GH2263813@devbig004.ftw2.facebook.com>
- <9EB760CE-0028-4766-AE9D-6E90028D8579@linaro.org>
- <20190831065358.GF2263813@devbig004.ftw2.facebook.com>
- <88C7DC68-680E-49BB-9699-509B9B0B12A0@linaro.org>
- <20190902155652.GH2263813@devbig004.ftw2.facebook.com>
- <D9F6BC6D-FEB3-40CA-A33C-F501AE4434F0@linaro.org>
- <20190905165540.GJ2263813@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.8\))
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=bRNpTF+jlVTEA0th1ETWAk1qTJWN6Qeu8URjuG4vuw0=;
-        b=g2/f8zaLtJ58LwSPZ4Fxp31XofUqLVy6CiLpQZDRxqfSFCkkkcQLmP2pN2lCr2Rvma
-         iQJYDrF+zvyU/PUN6bEeU5c3tIgPkZfK545NpqirU+wuHQnRcG43TdxBmEC2cEZRwsiY
-         rtFeoV8dRoYX1yt6xiu7gsSNbRo/a2xy2lLe+bnBCfBxMj1ZL9K1yYgTC0JgUyLrQ8Up
-         SGrBhpTBm62GcF/Xcwdw5RbV4mP9XNKsL94XLYOL+Z65LESWw2zQzD1bbFKib96Bk+9s
-         KAaQoiygmpBNgES7OYeyQdBSdamFxGxMR9Rl/R6obORIq2TlsRfCcMnN7w819OT00gC7
-         vLkw==
-In-Reply-To: <20190905165540.GJ2263813@devbig004.ftw2.facebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+From: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
+Subject: Re: [PATCH RFC v4 01/16] drm: Add drm_minor_for_each
+Date: Fri, 6 Sep 2019 11:12:40 +0200
+Message-ID: <20190906091240.GB3958@phenom.ffwll.local>
+References: <20190903075719.GK2112@phenom.ffwll.local>
+ <CAOWid-dxxDhyxP2+0R0oKAk29rR-1TbMyhshR1+gbcpGJCAW6g@mail.gmail.com>
+ <CAKMK7uEofjdVURu+meonh_YdV5eX8vfNALkW3A_+kLapCV8j+w@mail.gmail.com>
+ <CAOWid-eUVztW4hNVpznnJRcwHcjCirGL2aS75p4OY8XoGuJqUg@mail.gmail.com>
+ <20190904085434.GF2112@phenom.ffwll.local>
+ <CAOWid-fiEOmPw1z=aF6E4VE03xikREKt-X8VVKGGUGBQd3i=Kw@mail.gmail.com>
+ <CAKMK7uGSrscs-WAv0pYfcxaUGXvx7M6JYbiPHTY=1hxRbFK1sg@mail.gmail.com>
+ <CAOWid-eRZGxWzHw4qFqtSOCixQXvY4bEP91QnVH0Nmm13J9F-g@mail.gmail.com>
+ <CAKMK7uHy+GRAcpLDuz6STCBW+GNfNWr-i=ZERF3uqkO7jfynnQ@mail.gmail.com>
+ <CAOWid-cRP1T2gr2U_ZN+QhS7jFM0kFTWiYy8JPPXXmGW7xBPzA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: base64
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAOWid-cRP1T2gr2U_ZN+QhS7jFM0kFTWiYy8JPPXXmGW7xBPzA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, newella@fb.com, clm@fb.com, Josef Bacik <josef@toxicpanda.com>, dennisz@fb.com, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, ast@kernel.org, daniel@iogearbox.net, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, bpf@vger.kernel.org
+To: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: "Greathouse, Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
 
-
-
-> Il giorno 5 set 2019, alle ore 18:55, Tejun Heo <tj@kernel.org> ha scritto:
-> 
-> Hello, Paolo.
-> 
-> So, I'm currently verifying iocost in the FB fleet.  Around three
-> thousand machines running v5.2 (+ some backports) with btrfs on a
-> handful of different models of consumer grade SSDs.  I haven't seen
-> complete loss of control as you're reporting.  Given that you're
-> reporting the same thing on io.latency, which is deployed on multiple
-> orders of magnitude more machines at this point, it's likely that
-> there's something common affecting your test setup.
-
-Yep, I had that doubt too, so I extended my tests to one more PC and
-two more drives: a fast SAMSUNG NVMe SSD 970 PRO and an HITACHI
-HTS72755 HDD, using the QoS configurations suggested in your last
-email.  As for the filesystem, I'm interested in ext4, because it is
-the most widely used file system, and, with some workloads, it makes
-it hard to control I/O while keeping throughput high.  I'll provide hw
-and sw details in my reply to your next question.  I'm willing to run
-tests with btrfs too, at a later time.
-
-Something is wrong with io.cost also with the other PC and the other
-drives.  In the next table, each pair of numbers contains the target's
-throughput and the total throughput:
-
-                  none                 io.cost               bfq
-SAMSUNG SSD    11.373  3295.517     6.468  3273.892    10.802  1862.288
-HITACHI HDD    0.026    11.531      0.042    30.299     0.067    76.642
-
-With the SAMSUNG SSD, io.cost gives to the target less throughput than
-none (and bfq is behaving badly too, but this is my problem).  On the
-HDD, io.cost gives to the target a little bit more than half the
-throughput guaranteed by bfq, and reaches less than half the total
-throughput reached by bfq.
-
-I do agree that three thousand is an overwhelming number of machines,
-and I'll probably never have that many resources for my tests.  Still,
-it seems rather unlikely that two different PCs, and three different
-drives, all suffer from a common anomaly that causes troubles only to
-io.cost and io.latency.
-
-I try to never overlook also me being the problematic link in the
-chain.  But I'm executing this test with the public script I mentioned
-in my previous emails; and all steps seem correct.
-
->  Can you please
-> describe your test configuration and if you aren't already try testing
-> on btrfs?
-> 
-
-PC 1: Thinkpad W520, Ubuntu 18.04 (no configuration change w.r.t.
-defaults), PLEXTOR SATA PX-256M5S SSD, HITACHI HTS72755 HDD, ext4.
-
-PC 2: Thinkpad X1 Extreme, Ubuntu 19.04 (no configuration change
-w.r.t.  defaults), SAMSUNG NVMe SSD 970 PRO, ext4.
-
-If you need more details, just ask.
-
-Thanks,
-Paolo
-
-
-
-> Thanks.
-> 
-> -- 
-> tejun
-
+T24gVGh1LCBTZXAgMDUsIDIwMTkgYXQgMDU6MjY6MDhQTSAtMDQwMCwgS2VubnkgSG8gd3JvdGU6
+Cj4gT24gVGh1LCBTZXAgNSwgMjAxOSBhdCA0OjMyIFBNIERhbmllbCBWZXR0ZXIgPGRhbmllbEBm
+ZndsbC5jaD4gd3JvdGU6Cj4gPgo+ICpzbmlwKgo+ID4gZHJtX2Rldl91bnJlZ2lzdGVyIGdldHMg
+Y2FsbGVkIG9uIGhvdHVucGx1Zywgc28geW91ciBjZ3JvdXAtaW50ZXJuYWwKPiA+IHRyYWNraW5n
+IHdvbid0IGdldCBvdXQgb2Ygc3luYyBhbnkgbW9yZSB0aGFuIHRoZSBkcm1fbWlub3IgbGlzdCBn
+ZXRzCj4gPiBvdXQgb2Ygc3luYyB3aXRoIGRybV9kZXZpY2VzLiBUaGUgdHJvdWJsZSB3aXRoIGRy
+bV9taW5vciBpcyBqdXN0IHRoYXQKPiA+IGNncm91cCBkb2Vzbid0IHRyYWNrIGFsbG9jYXRpb25z
+IG9uIGRybV9taW5vciAodGhhdCdzIGp1c3QgdGhlIHVhcGkKPiA+IGZsYXZvdXIpLCBidXQgb24g
+dGhlIHVuZGVybHlpbmcgZHJtX2RldmljZS4gU28gcmVhbGx5IGRvZXNuJ3QgbWFrZQo+ID4gbXVj
+aCBzZW5zZSB0byBhdHRhY2ggY2dyb3VwIHRyYWNraW5nIHRvIHRoZSBkcm1fbWlub3IuCj4gCj4g
+VW0uLi4gSSB0aGluayBJIGdldCB3aGF0IHlvdSBhcmUgc2F5aW5nLCBidXQgaXNuJ3QgdGhpcyBh
+IG1hdHRlciBvZgo+IHRoZSBjZ3JvdXAgY29udHJvbGxlciBkb2luZyBhIGRybV9kZXZfZ2V0IHdo
+ZW4gdXNpbmcgdGhlIGRybV9taW5vcj8KPiBPciB0aGF0IHdvbid0IHdvcmsgYmVjYXVzZSBpdCdz
+IHBvc3NpYmxlIHRvIGhhdmUgYSB2YWxpZCBkcm1fbWlub3IgYnV0Cj4gaW52YWxpZCBkcm1fZGV2
+aWNlIGluIGl0PyBJIHVuZGVyc3RhbmQgaXQncyBhbiBleHRyYSBsZXZlbCBvZgo+IGluZGlyZWN0
+aW9uIGJ1dCBzaW5jZSB0aGUgY29udmVudGlvbiBmb3IgYWRkcmVzc2luZyBkZXZpY2UgaW4gY2dy
+b3VwCj4gaXMgdXNpbmcgJG1ham9yOiRtaW5vciBJIGRvbid0IHNlZSBhIHdheSB0byBlc2NhcGUg
+dGhpcy4gIChUZWp1bgo+IGFjdHVhbGx5IGFscmVhZHkgbWFkZSBhIGNvbW1lbnQgb24gbXkgZWFy
+bGllciBSRkMgd2hlcmUgSSBkaWRuJ3QKPiBmb2xsb3cgdGhlIG1ham9yOm1pbm9yIGNvbnZlbnRp
+b24gc3RyaWN0bHkuKQoKZHJtX2RldmljZSBpcyB0aGUgb2JqZWN0IHRoYXQgY29udHJvbHMgbGlm
+ZXRpbWUgYW5kIGV2ZXJ5dGhpbmcsIHRoYXQncyB3aHkKeW91IG5lZWQgdG8gZG8gYSBkcm1fZGV2
+X2dldCBhbmQgYWxsIHRoYXQgaW4gc29tZSBwbGFjZXMuIEdvaW5nIHRocm91Z2gKdGhlIG1pbm9y
+IHJlYWxseSBmZWVscyBsaWtlIGEgZGlzdHJhY3Rpb24uCgpBbmQgeWVzIHdlIGhhdmUgYSBiaXQg
+YSBtZXNzIGJldHdlZW4gY2dyb3VwcyBpbnNpc3Rpbmcgb24gdXNpbmcgdGhlIG1pbm9yLAphbmQg
+ZHJtX2RldmljZSBoYXZpbmcgbW9yZSB0aGFuIDEgbWlub3IgZm9yIHRoZSBzYW1lIHVuZGVybHlp
+bmcgcGh5c2ljYWwKcmVzb3VyY2UuIEp1c3QgYmVjYXVzZSB0aGUgdWFwaSBpcyBhIGJpdCBhIG1l
+c3MgaW4gdGhhdCByZWdhcmQgZG9lc24ndAptZWFuIHdlIHNob3VsZCBwdWxsIHRoYXQgbWVzcyBp
+bnRvIHRoZSBrZXJuZWwgaW1wbGVtZW50YXRpb24gaW1vLgotRGFuaWVsCgo+IAo+IEtlbm55Cj4g
+Cj4gPiA+ID4gSnVzdCBkb2luZyBhIGRybV9jZ19yZWdpc3Rlci91bnJlZ2lzdGVyIHBhaXIgdGhh
+dCdzIGNhbGxlZCBmcm9tCj4gPiA+ID4gZHJtX2Rldl9yZWdpc3Rlci91bnJlZ2lzdGVyLCBhbmQg
+dGhlbiBpZiB5b3Ugd2FudCwgbG9va2luZyB1cCB0aGUKPiA+ID4gPiByaWdodCBtaW5vciAoSSB0
+aGluayBhbHdheXMgcGlja2luZyB0aGUgcmVuZGVyIG5vZGUgbWFrZXMgc2Vuc2UgZm9yCj4gPiA+
+ID4gdGhpcywgYW5kIHNraXBwaW5nIGlmIHRoZXJlJ3Mgbm8gcmVuZGVyIG5vZGUpIHdvdWxkIG1h
+a2UgbW9zdCBzZW5zZS4KPiA+ID4gPiBBdCBsZWFzdCBmb3IgdGhlIGJhc2ljIGNncm91cCBjb250
+cm9sbGVycyB3aGljaCBhcmUgZ2VuZXJpYyBhY3Jvc3MKPiA+ID4gPiBkcml2ZXJzLgo+ID4gPgo+
+ID4gPiBXaHkgZG8gd2Ugd2FudCB0byBza2lwIGRybSBkZXZpY2VzIHRoYXQgZG9lcyBub3QgaGF2
+ZSBhIHJlbmRlciBub2RlCj4gPiA+IGFuZCBub3QganVzdCB1c2UgdGhlIHByaW1hcnkgaW5zdGVh
+ZD8KPiA+Cj4gPiBJIGd1ZXNzIHdlIGNvdWxkIGFsc28gdGFrZSB0aGUgcHJpbWFyeSBub2RlLCBi
+dXQgZHJpdmVycyB3aXRoIG9ubHkKPiA+IHByaW1hcnkgbm9kZSBhcmUgZ2VuZXJhbHkgZGlzcGxh
+eS1vbmx5IGRybSBkcml2ZXJzLiBOb3Qgc3VyZSB3ZSB3YW50Cj4gPiBjZ3JvdXBzIG9uIHRob3Nl
+IChidXQgSSBndWVzcyBjYW4ndCBodXJ0LCBhbmQgbW9yZSBjb25zaXN0ZW50KS4gQnV0Cj4gPiB0
+aGVuIHdlJ2QgYWx3YXlzIG5lZWQgdG8gcGljayB0aGUgcHJpbWFyeSBub2RlIGZvciBjZ3JvdXAK
+PiA+IGlkZW50aWZpY2F0aW9uIHB1cnBvc2VzLgo+ID4gLURhbmllbAo+ID4KPiA+ID4KPiA+ID4g
+S2VubnkKPiA+ID4KPiA+ID4KPiA+ID4KPiA+ID4gPiAtRGFuaWVsCgotLSAKRGFuaWVsIFZldHRl
+cgpTb2Z0d2FyZSBFbmdpbmVlciwgSW50ZWwgQ29ycG9yYXRpb24KaHR0cDovL2Jsb2cuZmZ3bGwu
+Y2gKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KYW1kLWdm
+eCBtYWlsaW5nIGxpc3QKYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0
+cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9hbWQtZ2Z4
