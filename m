@@ -1,64 +1,65 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET block/for-next] IO cost model based work-conserving
- porportional controller
-Date: Fri, 6 Sep 2019 07:58:26 -0700
-Message-ID: <20190906145826.GL2263813@devbig004.ftw2.facebook.com>
-References: <5A63F937-F7B5-4D09-9DB4-C73D6F571D50@linaro.org>
- <B5E431F7-549D-4FC4-A098-D074DF9586A1@linaro.org>
- <20190820151903.GH2263813@devbig004.ftw2.facebook.com>
- <9EB760CE-0028-4766-AE9D-6E90028D8579@linaro.org>
- <20190831065358.GF2263813@devbig004.ftw2.facebook.com>
- <88C7DC68-680E-49BB-9699-509B9B0B12A0@linaro.org>
- <20190902155652.GH2263813@devbig004.ftw2.facebook.com>
- <D9F6BC6D-FEB3-40CA-A33C-F501AE4434F0@linaro.org>
- <20190905165540.GJ2263813@devbig004.ftw2.facebook.com>
- <EFFA2298-8614-4AFC-9208-B36976F6548C@linaro.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH RFC v4 00/16] new cgroup controller for gpu/drm subsystem
+Date: Fri, 6 Sep 2019 08:23:20 -0700
+Message-ID: <20190906152320.GM2263813@devbig004.ftw2.facebook.com>
+References: <20190829060533.32315-1-Kenny.Ho@amd.com>
+ <20190831042857.GD2263813@devbig004.ftw2.facebook.com>
+ <20190903075550.GJ2112@phenom.ffwll.local>
+ <20190903185013.GI2263813@devbig004.ftw2.facebook.com>
+ <CAKMK7uE5Bj-3cJH895iqnLpwUV+GBDM1Y=n4Z4A3xervMdJKXg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=LOL4RkhxwNmxVBDlkkOKh5q7eIdq3MEVHDS6KxIm1I4=;
-        b=MOXP8ySNFPJpMxFpoTNloLC7w8Wh/zABeSUGLmy9GcZZLTPwTWbLNAiqmpDc3ec4/o
-         fd/SQEbUNPqNvtpl1/z5Lvnd779JkYSuyqQbJvM8lCbSRUV/hrvYwZxSgL1rKwz0us/i
-         ZREmz6vxrZfPNGqJkZmhWJzITJzzyL2gIw8RxEgkUTgtbxCjFWnGsP1l5JXqBN4ds0LM
-         SVyRMrlR29TEH85320jHVL5TDIO8nn5KCyJ9cdcTr0DMf2el5OoMqyCl+KPnXNdr78gM
-         NnqSEpEKFjrjmUF5jre4PNzvz5/0G04w9u5myf8I6/pAcoyhos2ouAn+mFiJ6I12Kg6r
-         75JQ==
+Content-Transfer-Encoding: base64
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <EFFA2298-8614-4AFC-9208-B36976F6548C@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+In-Reply-To: <CAKMK7uE5Bj-3cJH895iqnLpwUV+GBDM1Y=n4Z4A3xervMdJKXg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Paolo Valente <paolo.valente@linaro.org>
-Cc: Jens Axboe <axboe@kernel.dk>, newella@fb.com, clm@fb.com, Josef Bacik <josef@toxicpanda.com>, dennisz@fb.com, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, kernel-team@fb.com, cgroups@vger.kernel.org, ast@kernel.org, daniel@iogearbox.net, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, bpf@vger.kernel.org
+To: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
+Cc: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, joseph.greathouse-5C7GfCeVMHo@public.gmane.org, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
 
-Hello, Paolo.
-
-On Fri, Sep 06, 2019 at 11:07:17AM +0200, Paolo Valente wrote:
-> email.  As for the filesystem, I'm interested in ext4, because it is
-> the most widely used file system, and, with some workloads, it makes
-
-Ext4 can't do writeback control as it currently stands.  It creates
-hard ordering across data writes from different cgroups.  No matter
-what mechanism you use for IO control, it is broken.  I'm sure it's
-fixable but does need some work.
-
-That said, read-only tests like you're doing should work fine on ext4
-too but the last time I tested io control on ext4 is more than a year
-ago so something might have changed in the meantime.
-
-Just to rule out this isn't what you're hitting.  Can you please run
-your test on btrfs with the following patchset applied?
-
- http://lkml.kernel.org/r/20190710192818.1069475-1-tj@kernel.org
-
-And as I wrote in the previous reply, I did run your benchmark on one
-of the test machines and it did work fine.
-
-Thanks.
-
--- 
-tejun
+SGVsbG8sIERhbmllbC4KCk9uIFR1ZSwgU2VwIDAzLCAyMDE5IGF0IDA5OjQ4OjIyUE0gKzAyMDAs
+IERhbmllbCBWZXR0ZXIgd3JvdGU6Cj4gSSB0aGluayBzeXN0ZW0gbWVtb3J5IHNlcGFyYXRlIGZy
+b20gdnJhbSBtYWtlcyBzZW5zZS4gRm9yIG9uZSwgdnJhbSBpcwo+IGxpa2UgMTB4KyBmYXN0ZXIg
+dGhhbiBzeXN0ZW0gbWVtb3J5LCBzbyB3ZSBkZWZpbml0ZWx5IHdhbnQgdG8gaGF2ZQo+IGdvb2Qg
+Y29udHJvbCBvbiB0aGF0LiBCdXQgbWF5YmUgd2Ugb25seSB3YW50IG9uZSB2cmFtIGJ1Y2tldCBv
+dmVyYWxsCj4gZm9yIHRoZSBlbnRpcmUgc3lzdGVtPwo+IAo+IFRoZSB0cm91YmxlIHdpdGggc3lz
+dGVtIG1lbW9yeSBpcyB0aGF0IGdwdSB0YXNrcyBwaW4gdGhhdCBtZW1vcnkgdG8KPiBwcmVwIGV4
+ZWN1dGlvbi4gVGhlcmUncyB0d28gc29sdXRpb25zOgo+IC0gaTkxNSBoYXMgYSBzaHJpbmtlci4g
+TG90cyAoYW5kIEkgcmVhbGx5IG1lYW4gbG90cykgb2YgcGFpbiB3aXRoCj4gZGlyZWN0IHJlY2xh
+aW0gcmVjdXJzaW9uLCB3aGljaCBvZnRlbiBtZWFucyB3ZSBjYW4ndCBmcmVlIG1lbW9yeSwgYW5k
+Cj4gd2UncmUgYW5nZXJpbmcgdGhlIG9vbSBraWxsZXIgYSBsb3QuIFBsdXMgaXQgaW50cm9kdWNl
+cyByZWFsIGJhZAo+IGxhdGVuY3kgc3Bpa2VzIGV2ZXJ5d2hlcmUgKGdwdSB3b3JrbG9hZHMgYXJl
+IG9jY2FzaW9uYWxseSByZWFsbHkgc2xvdywKPiB0aGluayAid29yc2UgdGhhbiBwYWdlb3V0IHRv
+IHNwaW5uaW5nIHJ1c3QiIHRvIGdldCBtZW1vcnkgZnJlZWQpLgo+IC0gdHRtIGp1c3QgaGFzIGEg
+Z2xvYmFsIGxpbWl0LCBzZXQgdG8gNTAlIG9mIHN5c3RlbSBtZW1vcnkuCj4gCj4gSSBkbyB0aGlu
+ayBhIGdsb2JhbCBzeXN0ZW0gbWVtb3J5IGxpbWl0IHRvIHRhbWUgdGhlIHNocmlua2VyLCB3aXRo
+b3V0Cj4gdGhlIHR0bSBhcHByb2FjaCBvZiBwb3NzaWJsZSBqdXN0IHdhc3RpbmcgaGFsZiB5b3Vy
+IG1lbW9yeSwgY291bGQgYmUKPiB1c2VmdWwuCgpIbW0uLi4gd2hhdCdkIGJlIHRoZSBmdW5kYW1l
+bnRhbCBkaWZmZXJlbmNlIGZyb20gc2xhYiBvciBzb2NrZXQgbWVtb3J5CndoaWNoIGFyZSBoYW5k
+bGVkIHRocm91Z2ggbWVtY2c/ICBJcyBzeXN0ZW0gbWVtb3J5IHVzZWQgYnkgR1BVcyBoYXZlCmZ1
+cnRoZXIgZ2xvYmFsIHJlc3RyaWN0aW9ucyBpbiBhZGRpdGlvbiB0byB0aGUgYW1vdW50IG9mIHBo
+eXNpY2FsCm1lbW9yeSB1c2VkPwoKPiBJJ20gYWxzbyBub3Qgc3VyZSBvZiB0aGUgYncgbGltaXRz
+LCBnaXZlbiBhbGwgdGhlIGZ1biB3ZSBoYXZlIG9uIHRoZQo+IGJsb2NrIGlvIGNncm91cHMgc2lk
+ZS4gQXNpZGUgZnJvbSB0aGF0IHRoZSBjdXJyZW50IGJ3IGxpbWl0IG9ubHkKPiBjb250cm9scyB0
+aGUgYncgdGhlIGtlcm5lbCB1c2VzLCB1c2Vyc3BhY2UgY2FuIHN1Ym1pdCB1bmxpbWl0ZWQKPiBh
+bW91bnRzIG9mIGNvcHlpbmcgY29tbWFuZHMgdGhhdCB1c2UgdGhlIHNhbWUgcGNpZSBsaW5rcyBk
+aXJlY3RseSB0bwo+IHRoZSBncHUsIGJ5cGFzc2luZyB0aGlzIGNnIGtub2IuIEFsc28sIGNvbnRy
+b2xsaW5nIGV4ZWN1dGlvbiB0aW1lIGZvcgo+IGdwdXMgaXMgdmVyeSB0cmlja3ksIHNpbmNlIHRo
+ZXkgd29yayBhIGxvdCBtb3JlIGxpa2UgYSBibG9jayBpbyBkZXZpY2UKPiBvciBtYXliZSBhIG5l
+dHdvcmsgY29udHJvbGxlciB3aXRoIHBhY2tldCBzY2hlZHVsaW5nLCB0aGFuIGEgY3B1LgoKQXQg
+dGhlIHN5c3RlbSBsZXZlbCwgaXQganVzdCBnZXRzIGZvbGRlZCBpbnRvIGNwdSB0aW1lLCB3aGlj
+aCBpc24ndApwZXJmZWN0IGJ1dCBpcyB1c3VhbGx5IGEgZ29vZCBlbm91Z2ggYXBwcm94aW1hdGlv
+biBvZiBjb21wdXRlIHJlbGF0ZWQKZHluYW1pYyByZXNvdXJjZXMuICBDYW4gZ3B1IGRvIHNvbWV0
+aW5nIHNpbWlsYXIgb3IgYXQgbGVhc3Qgc3RhcnQgd2l0aAp0aGF0PwoKVGhhbmtzLgoKLS0gCnRl
+anVuCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmFtZC1n
+ZnggbWFpbGluZyBsaXN0CmFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlz
+dHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vYW1kLWdmeA==
