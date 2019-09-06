@@ -1,81 +1,99 @@
-From: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
-Subject: Re: [PATCH RFC v4 01/16] drm: Add drm_minor_for_each
-Date: Fri, 6 Sep 2019 11:12:40 +0200
-Message-ID: <20190906091240.GB3958@phenom.ffwll.local>
-References: <20190903075719.GK2112@phenom.ffwll.local>
- <CAOWid-dxxDhyxP2+0R0oKAk29rR-1TbMyhshR1+gbcpGJCAW6g@mail.gmail.com>
- <CAKMK7uEofjdVURu+meonh_YdV5eX8vfNALkW3A_+kLapCV8j+w@mail.gmail.com>
- <CAOWid-eUVztW4hNVpznnJRcwHcjCirGL2aS75p4OY8XoGuJqUg@mail.gmail.com>
- <20190904085434.GF2112@phenom.ffwll.local>
- <CAOWid-fiEOmPw1z=aF6E4VE03xikREKt-X8VVKGGUGBQd3i=Kw@mail.gmail.com>
- <CAKMK7uGSrscs-WAv0pYfcxaUGXvx7M6JYbiPHTY=1hxRbFK1sg@mail.gmail.com>
- <CAOWid-eRZGxWzHw4qFqtSOCixQXvY4bEP91QnVH0Nmm13J9F-g@mail.gmail.com>
- <CAKMK7uHy+GRAcpLDuz6STCBW+GNfNWr-i=ZERF3uqkO7jfynnQ@mail.gmail.com>
- <CAOWid-cRP1T2gr2U_ZN+QhS7jFM0kFTWiYy8JPPXXmGW7xBPzA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAOWid-cRP1T2gr2U_ZN+QhS7jFM0kFTWiYy8JPPXXmGW7xBPzA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+From: Paolo Valente <paolo.valente@linaro.org>
+Subject: Re: [PATCH v3 0/3] Implement BFQ per-device weight interface
+Date: Fri, 6 Sep 2019 16:28:42 +0200
+Message-ID: <A9FD0759-F1A7-4675-A2B3-26E5F11019EF@linaro.org>
+References: <20190828035453.18129-1-zhengfeiran@bytedance.com>
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.8\))
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=CPNhO04EXqyOcEwUnPkRjub5+4HJbhPw4k4lP1BUIFY=;
+        b=SgMVkFczhy1adqzEWg0jDFl+ms6YylZJ+CPw0meDi4tUKNT8GSH+BXVqYMst9hiMpB
+         ahVaFQ2nBY9/RFvc6TbN6UuBnQKQ3l/SvFs0p2M2wqUn2P7rT7dzpxtzj1BejrOrcNf5
+         GrJ+AkVNYBb/t76oZGsJzPhQKcne+Xrh7uGpnNSTVyWvb4al4388+x1HdL299wqPpp1c
+         Lyg4KemDwXk0laBb06V79aAKdNQXdABlbYod4zV5iP3plkj5i/7NqDb4AJ7966TZklBZ
+         Rg/lM3x03AjmR4EuOcvd1a7sRypF0naq0keKBd7Tttg3niHeMUPYrn5FnIk5e5EGmGFX
+         cO6w==
+In-Reply-To: <20190828035453.18129-1-zhengfeiran@bytedance.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: "Greathouse, Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
+To: Fam Zheng <zhengfeiran@bytedance.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, axboe@kernel.dk, Fam Zheng <fam@euphon.net>, duanxiongchun@bytedance.com, cgroups@vger.kernel.org, zhangjiachen.jc@bytedance.com, tj@kernel.org, linux-block@vger.kernel.org
 
-T24gVGh1LCBTZXAgMDUsIDIwMTkgYXQgMDU6MjY6MDhQTSAtMDQwMCwgS2VubnkgSG8gd3JvdGU6
-Cj4gT24gVGh1LCBTZXAgNSwgMjAxOSBhdCA0OjMyIFBNIERhbmllbCBWZXR0ZXIgPGRhbmllbEBm
-ZndsbC5jaD4gd3JvdGU6Cj4gPgo+ICpzbmlwKgo+ID4gZHJtX2Rldl91bnJlZ2lzdGVyIGdldHMg
-Y2FsbGVkIG9uIGhvdHVucGx1Zywgc28geW91ciBjZ3JvdXAtaW50ZXJuYWwKPiA+IHRyYWNraW5n
-IHdvbid0IGdldCBvdXQgb2Ygc3luYyBhbnkgbW9yZSB0aGFuIHRoZSBkcm1fbWlub3IgbGlzdCBn
-ZXRzCj4gPiBvdXQgb2Ygc3luYyB3aXRoIGRybV9kZXZpY2VzLiBUaGUgdHJvdWJsZSB3aXRoIGRy
-bV9taW5vciBpcyBqdXN0IHRoYXQKPiA+IGNncm91cCBkb2Vzbid0IHRyYWNrIGFsbG9jYXRpb25z
-IG9uIGRybV9taW5vciAodGhhdCdzIGp1c3QgdGhlIHVhcGkKPiA+IGZsYXZvdXIpLCBidXQgb24g
-dGhlIHVuZGVybHlpbmcgZHJtX2RldmljZS4gU28gcmVhbGx5IGRvZXNuJ3QgbWFrZQo+ID4gbXVj
-aCBzZW5zZSB0byBhdHRhY2ggY2dyb3VwIHRyYWNraW5nIHRvIHRoZSBkcm1fbWlub3IuCj4gCj4g
-VW0uLi4gSSB0aGluayBJIGdldCB3aGF0IHlvdSBhcmUgc2F5aW5nLCBidXQgaXNuJ3QgdGhpcyBh
-IG1hdHRlciBvZgo+IHRoZSBjZ3JvdXAgY29udHJvbGxlciBkb2luZyBhIGRybV9kZXZfZ2V0IHdo
-ZW4gdXNpbmcgdGhlIGRybV9taW5vcj8KPiBPciB0aGF0IHdvbid0IHdvcmsgYmVjYXVzZSBpdCdz
-IHBvc3NpYmxlIHRvIGhhdmUgYSB2YWxpZCBkcm1fbWlub3IgYnV0Cj4gaW52YWxpZCBkcm1fZGV2
-aWNlIGluIGl0PyBJIHVuZGVyc3RhbmQgaXQncyBhbiBleHRyYSBsZXZlbCBvZgo+IGluZGlyZWN0
-aW9uIGJ1dCBzaW5jZSB0aGUgY29udmVudGlvbiBmb3IgYWRkcmVzc2luZyBkZXZpY2UgaW4gY2dy
-b3VwCj4gaXMgdXNpbmcgJG1ham9yOiRtaW5vciBJIGRvbid0IHNlZSBhIHdheSB0byBlc2NhcGUg
-dGhpcy4gIChUZWp1bgo+IGFjdHVhbGx5IGFscmVhZHkgbWFkZSBhIGNvbW1lbnQgb24gbXkgZWFy
-bGllciBSRkMgd2hlcmUgSSBkaWRuJ3QKPiBmb2xsb3cgdGhlIG1ham9yOm1pbm9yIGNvbnZlbnRp
-b24gc3RyaWN0bHkuKQoKZHJtX2RldmljZSBpcyB0aGUgb2JqZWN0IHRoYXQgY29udHJvbHMgbGlm
-ZXRpbWUgYW5kIGV2ZXJ5dGhpbmcsIHRoYXQncyB3aHkKeW91IG5lZWQgdG8gZG8gYSBkcm1fZGV2
-X2dldCBhbmQgYWxsIHRoYXQgaW4gc29tZSBwbGFjZXMuIEdvaW5nIHRocm91Z2gKdGhlIG1pbm9y
-IHJlYWxseSBmZWVscyBsaWtlIGEgZGlzdHJhY3Rpb24uCgpBbmQgeWVzIHdlIGhhdmUgYSBiaXQg
-YSBtZXNzIGJldHdlZW4gY2dyb3VwcyBpbnNpc3Rpbmcgb24gdXNpbmcgdGhlIG1pbm9yLAphbmQg
-ZHJtX2RldmljZSBoYXZpbmcgbW9yZSB0aGFuIDEgbWlub3IgZm9yIHRoZSBzYW1lIHVuZGVybHlp
-bmcgcGh5c2ljYWwKcmVzb3VyY2UuIEp1c3QgYmVjYXVzZSB0aGUgdWFwaSBpcyBhIGJpdCBhIG1l
-c3MgaW4gdGhhdCByZWdhcmQgZG9lc24ndAptZWFuIHdlIHNob3VsZCBwdWxsIHRoYXQgbWVzcyBp
-bnRvIHRoZSBrZXJuZWwgaW1wbGVtZW50YXRpb24gaW1vLgotRGFuaWVsCgo+IAo+IEtlbm55Cj4g
-Cj4gPiA+ID4gSnVzdCBkb2luZyBhIGRybV9jZ19yZWdpc3Rlci91bnJlZ2lzdGVyIHBhaXIgdGhh
-dCdzIGNhbGxlZCBmcm9tCj4gPiA+ID4gZHJtX2Rldl9yZWdpc3Rlci91bnJlZ2lzdGVyLCBhbmQg
-dGhlbiBpZiB5b3Ugd2FudCwgbG9va2luZyB1cCB0aGUKPiA+ID4gPiByaWdodCBtaW5vciAoSSB0
-aGluayBhbHdheXMgcGlja2luZyB0aGUgcmVuZGVyIG5vZGUgbWFrZXMgc2Vuc2UgZm9yCj4gPiA+
-ID4gdGhpcywgYW5kIHNraXBwaW5nIGlmIHRoZXJlJ3Mgbm8gcmVuZGVyIG5vZGUpIHdvdWxkIG1h
-a2UgbW9zdCBzZW5zZS4KPiA+ID4gPiBBdCBsZWFzdCBmb3IgdGhlIGJhc2ljIGNncm91cCBjb250
-cm9sbGVycyB3aGljaCBhcmUgZ2VuZXJpYyBhY3Jvc3MKPiA+ID4gPiBkcml2ZXJzLgo+ID4gPgo+
-ID4gPiBXaHkgZG8gd2Ugd2FudCB0byBza2lwIGRybSBkZXZpY2VzIHRoYXQgZG9lcyBub3QgaGF2
-ZSBhIHJlbmRlciBub2RlCj4gPiA+IGFuZCBub3QganVzdCB1c2UgdGhlIHByaW1hcnkgaW5zdGVh
-ZD8KPiA+Cj4gPiBJIGd1ZXNzIHdlIGNvdWxkIGFsc28gdGFrZSB0aGUgcHJpbWFyeSBub2RlLCBi
-dXQgZHJpdmVycyB3aXRoIG9ubHkKPiA+IHByaW1hcnkgbm9kZSBhcmUgZ2VuZXJhbHkgZGlzcGxh
-eS1vbmx5IGRybSBkcml2ZXJzLiBOb3Qgc3VyZSB3ZSB3YW50Cj4gPiBjZ3JvdXBzIG9uIHRob3Nl
-IChidXQgSSBndWVzcyBjYW4ndCBodXJ0LCBhbmQgbW9yZSBjb25zaXN0ZW50KS4gQnV0Cj4gPiB0
-aGVuIHdlJ2QgYWx3YXlzIG5lZWQgdG8gcGljayB0aGUgcHJpbWFyeSBub2RlIGZvciBjZ3JvdXAK
-PiA+IGlkZW50aWZpY2F0aW9uIHB1cnBvc2VzLgo+ID4gLURhbmllbAo+ID4KPiA+ID4KPiA+ID4g
-S2VubnkKPiA+ID4KPiA+ID4KPiA+ID4KPiA+ID4gPiAtRGFuaWVsCgotLSAKRGFuaWVsIFZldHRl
-cgpTb2Z0d2FyZSBFbmdpbmVlciwgSW50ZWwgQ29ycG9yYXRpb24KaHR0cDovL2Jsb2cuZmZ3bGwu
-Y2gKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KYW1kLWdm
-eCBtYWlsaW5nIGxpc3QKYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0
-cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9hbWQtZ2Z4
+Hi Jens,
+is this patch series fine now?
+
+Thanks,
+Paolo
+
+> Il giorno 28 ago 2019, alle ore 05:54, Fam Zheng =
+<zhengfeiran@bytedance.com> ha scritto:
+>=20
+> v3: Pick up rev-by and ack-by from Paolo and Tejun.
+>    Add commit message to patch 3.
+>=20
+> (Revision starting from v2 since v1 was used off-list)
+>=20
+> Hi Paolo and others,
+>=20
+> This adds to BFQ the missing per-device weight interfaces:
+> blkio.bfq.weight_device on legacy and io.bfq.weight on unified. The
+> implementation pretty closely resembles what we had in CFQ and the =
+parsing code
+> is basically reused.
+>=20
+> Tests
+> =3D=3D=3D=3D=3D
+>=20
+> Using two cgroups and three block devices, having weights setup as:
+>=20
+> Cgroup          test1           test2
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> default         100             500
+> sda             500             100
+> sdb             default         default
+> sdc             200             200
+>=20
+> cgroup v1 runs
+> --------------
+>=20
+>    sda.test1.out:   READ: bw=3D913MiB/s
+>    sda.test2.out:   READ: bw=3D183MiB/s
+>=20
+>    sdb.test1.out:   READ: bw=3D213MiB/s
+>    sdb.test2.out:   READ: bw=3D1054MiB/s
+>=20
+>    sdc.test1.out:   READ: bw=3D650MiB/s
+>    sdc.test2.out:   READ: bw=3D650MiB/s
+>=20
+> cgroup v2 runs
+> --------------
+>=20
+>    sda.test1.out:   READ: bw=3D915MiB/s
+>    sda.test2.out:   READ: bw=3D184MiB/s
+>=20
+>    sdb.test1.out:   READ: bw=3D216MiB/s
+>    sdb.test2.out:   READ: bw=3D1069MiB/s
+>=20
+>    sdc.test1.out:   READ: bw=3D621MiB/s
+>    sdc.test2.out:   READ: bw=3D622MiB/s
+>=20
+> Fam Zheng (3):
+>  bfq: Fix the missing barrier in __bfq_entity_update_weight_prio
+>  bfq: Extract bfq_group_set_weight from bfq_io_set_weight_legacy
+>  bfq: Add per-device weight
+>=20
+> block/bfq-cgroup.c  | 151 +++++++++++++++++++++++++++++++++-----------
+> block/bfq-iosched.h |   3 +
+> block/bfq-wf2q.c    |   2 +
+> 3 files changed, 119 insertions(+), 37 deletions(-)
+>=20
+> --=20
+> 2.22.1
+>=20
+
