@@ -1,45 +1,102 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v3 0/3] Implement BFQ per-device weight interface
-Date: Fri, 6 Sep 2019 14:34:17 -0600
-Message-ID: <437c831d-179e-f8a3-5687-f93459d28b53@kernel.dk>
-References: <20190828035453.18129-1-zhengfeiran@bytedance.com>
+From: Ivan Safonov <insafonov@gmail.com>
+Subject: [PATCH] cgroup: use kv(malloc|free) instead of pidlist_(allocate|free)
+Date: Sun,  8 Sep 2019 17:40:41 +0300
+Message-ID: <20190908144041.19667-1-insafonov@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=jG4+RgP/pviUKJ8QbJcP8qw2XnaK/vU+SiEUpD2jM1E=;
-        b=OBMSFHpUBrpgwRkuVSPuBXbTZeB7AfzZ02OBd9Cgdn1S+8h270Jx/KJtcH8H2re6K/
-         QknBx24vAAsFHkJy9KIFbcB9pHKUvQoYsGTRPYmsbO301vXvzn3C32XPJki9Yc9mYaPr
-         M4RSGBUaA7CAlN6Kupdt8WteuEj7jN26aRtadlJ57R/wGEm5knMLk2IHvMlHwOhuJ/CQ
-         3pMYOyWHvBo/daB2+3QR4DK7BVvaFF/QuYl/SvP4fKHkFXgMuTbiRj5QzgSU6thfzqsK
-         n9lUD14fI+mG59+DGd61uprySi1oepwNw6B7eqNFFeFptt9dhedT82pelGc+watqkcWU
-         TP0A==
-In-Reply-To: <20190828035453.18129-1-zhengfeiran@bytedance.com>
-Content-Language: en-US
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=FmmHtAJUP2a/sLNIvsEgkXzhFS+gIz57sAKIuY6RAn8=;
+        b=lBDsvcqqCALrs7Asc/HmKgFWFmwGNUKXuO1TAhKJ5Csl+ugUwRosyWCH334U7DF+ZF
+         dcoLrwnMGGWEpFSOiyHsNBBRLoSjg97E2KnqWfDOV4ZIavS1O0CNzvZFJhRlUU6deFCS
+         rMCFjQV/LyfaP0/59T1/0LlgAivaQpSrPCCk5LAJvkt7WHPFkVo6eS4szqHZNAQrGvxK
+         LHXyEbIFlqq+lVSU6OZ6pJC8prWZ8mk0H+7gtoYydJpgt6dNrc+PdesE+N0mUu65ogSu
+         vkkkXx3SIF2SWg+LALK7c/dINDV5wP70vX9NWMxYhgM9MdGv4vaJlLDWtFKjKYbWFxLp
+         Q6jA==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Fam Zheng <zhengfeiran@bytedance.com>, linux-kernel@vger.kernel.org
-Cc: paolo.valente@linaro.org, fam@euphon.net, duanxiongchun@bytedance.com, cgroups@vger.kernel.org, zhangjiachen.jc@bytedance.com, tj@kernel.org, linux-block@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ivan Safonov <insafonov@gmail.com>
 
-On 8/27/19 9:54 PM, Fam Zheng wrote:
-> v3: Pick up rev-by and ack-by from Paolo and Tejun.
->      Add commit message to patch 3.
-> 
-> (Revision starting from v2 since v1 was used off-list)
-> 
-> Hi Paolo and others,
-> 
-> This adds to BFQ the missing per-device weight interfaces:
-> blkio.bfq.weight_device on legacy and io.bfq.weight on unified. The
-> implementation pretty closely resembles what we had in CFQ and the parsing code
-> is basically reused.
+Resolve TODO:
+> The following two functions "fix" the issue where there are more pids
+> than kmalloc will give memory for; in such cases, we use vmalloc/vfree.
+> TODO: replace with a kernel-wide solution to this problem
 
-Applied, thanks.
+kv(malloc|free) is appropriate replacement for pidlist_(allocate|free).
 
+Signed-off-by: Ivan Safonov <insafonov@gmail.com>
+---
+ kernel/cgroup/cgroup-v1.c | 27 ++++-----------------------
+ 1 file changed, 4 insertions(+), 23 deletions(-)
+
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 88006be40ea3..1f25f35af2c4 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -193,25 +193,6 @@ struct cgroup_pidlist {
+ 	struct delayed_work destroy_dwork;
+ };
+ 
+-/*
+- * The following two functions "fix" the issue where there are more pids
+- * than kmalloc will give memory for; in such cases, we use vmalloc/vfree.
+- * TODO: replace with a kernel-wide solution to this problem
+- */
+-#define PIDLIST_TOO_LARGE(c) ((c) * sizeof(pid_t) > (PAGE_SIZE * 2))
+-static void *pidlist_allocate(int count)
+-{
+-	if (PIDLIST_TOO_LARGE(count))
+-		return vmalloc(array_size(count, sizeof(pid_t)));
+-	else
+-		return kmalloc_array(count, sizeof(pid_t), GFP_KERNEL);
+-}
+-
+-static void pidlist_free(void *p)
+-{
+-	kvfree(p);
+-}
+-
+ /*
+  * Used to destroy all pidlists lingering waiting for destroy timer.  None
+  * should be left afterwards.
+@@ -244,7 +225,7 @@ static void cgroup_pidlist_destroy_work_fn(struct work_struct *work)
+ 	 */
+ 	if (!delayed_work_pending(dwork)) {
+ 		list_del(&l->links);
+-		pidlist_free(l->list);
++		kvfree(l->list);
+ 		put_pid_ns(l->key.ns);
+ 		tofree = l;
+ 	}
+@@ -365,7 +346,7 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
+ 	 * show up until sometime later on.
+ 	 */
+ 	length = cgroup_task_count(cgrp);
+-	array = pidlist_allocate(length);
++	array = kvmalloc(array_size(length, sizeof(pid_t)), GFP_KERNEL);
+ 	if (!array)
+ 		return -ENOMEM;
+ 	/* now, populate the array */
+@@ -390,12 +371,12 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
+ 
+ 	l = cgroup_pidlist_find_create(cgrp, type);
+ 	if (!l) {
+-		pidlist_free(array);
++		kvfree(array);
+ 		return -ENOMEM;
+ 	}
+ 
+ 	/* store array, freeing old if necessary */
+-	pidlist_free(l->list);
++	kvfree(l->list);
+ 	l->list = array;
+ 	l->length = length;
+ 	*lp = l;
 -- 
-Jens Axboe
+2.21.0
 
