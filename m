@@ -1,102 +1,50 @@
-From: Ivan Safonov <insafonov@gmail.com>
-Subject: [PATCH] cgroup: use kv(malloc|free) instead of pidlist_(allocate|free)
-Date: Sun,  8 Sep 2019 17:40:41 +0300
-Message-ID: <20190908144041.19667-1-insafonov@gmail.com>
+From: Paolo Valente <paolo.valente@linaro.org>
+Subject: [PATCH 0/1] block, bfq: remove bfq prefix from cgroups filenames
+Date: Mon,  9 Sep 2019 09:31:16 +0200
+Message-ID: <20190909073117.20625-1-paolo.valente@linaro.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
+        d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=FmmHtAJUP2a/sLNIvsEgkXzhFS+gIz57sAKIuY6RAn8=;
-        b=lBDsvcqqCALrs7Asc/HmKgFWFmwGNUKXuO1TAhKJ5Csl+ugUwRosyWCH334U7DF+ZF
-         dcoLrwnMGGWEpFSOiyHsNBBRLoSjg97E2KnqWfDOV4ZIavS1O0CNzvZFJhRlUU6deFCS
-         rMCFjQV/LyfaP0/59T1/0LlgAivaQpSrPCCk5LAJvkt7WHPFkVo6eS4szqHZNAQrGvxK
-         LHXyEbIFlqq+lVSU6OZ6pJC8prWZ8mk0H+7gtoYydJpgt6dNrc+PdesE+N0mUu65ogSu
-         vkkkXx3SIF2SWg+LALK7c/dINDV5wP70vX9NWMxYhgM9MdGv4vaJlLDWtFKjKYbWFxLp
-         Q6jA==
+        bh=B1DB8hLBI0DfoqSgN7BPkx2C4LPQLRBtlT6+2pkAJhs=;
+        b=HKRj88wLIuKKvMVrlcCv44LZGStlBJSMMWn4leonTHif3dSsI6XAAv+OM86+GCrN1v
+         /hOaBr4dA9agJJsMN2NYIiBjmsuYpTNf+QT52+rpd974601QbtgJW3WkeenkfG758vHI
+         8ZxT/x+F2of1EhU+ByWFVGSyy1wTh1hM88FeSE1dPOx5hCgQYmVMy2M94iciqXojaTmL
+         3VOUCnsFbF9Ancywa6eTxH/S//UOOLO/4AZLR5wRM1KS4iGmDekWn9sLA1XZwuc5p3s5
+         QmPtliwpPqY1PJaqx6n0mXBW58VfnEJe87NWLZ/rah0/r1Rte+oSMwZzDYGlc18n3Dpp
+         7wUA==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Ivan Safonov <insafonov@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, ulf.hansson@linaro.org, linus.walleij@linaro.org, bfq-iosched@googlegroups.com, oleksandr@natalenko.name, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Paolo Valente <paolo.valente@linaro.org>
 
-Resolve TODO:
-> The following two functions "fix" the issue where there are more pids
-> than kmalloc will give memory for; in such cases, we use vmalloc/vfree.
-> TODO: replace with a kernel-wide solution to this problem
+Hi Jens,
+now that BFQ's weight interface has been fixed [1], can we proceed
+with this change?
 
-kv(malloc|free) is appropriate replacement for pidlist_(allocate|free).
+In addition to acking this solution, in [2] Tejun already suggested a
+reduced version of the present patch. In Tejun's version, only
+bfq.weight is changed. But I guess that legacy code may use also some
+of the other bfq parameters in cgroups, without the bfq prefix. Apart
+from that, any version is ok for me, provided that it solves the
+current confusing situation for userspace [3].
 
-Signed-off-by: Ivan Safonov <insafonov@gmail.com>
----
- kernel/cgroup/cgroup-v1.c | 27 ++++-----------------------
- 1 file changed, 4 insertions(+), 23 deletions(-)
+Thanks,
+Paolo
 
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 88006be40ea3..1f25f35af2c4 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -193,25 +193,6 @@ struct cgroup_pidlist {
- 	struct delayed_work destroy_dwork;
- };
- 
--/*
-- * The following two functions "fix" the issue where there are more pids
-- * than kmalloc will give memory for; in such cases, we use vmalloc/vfree.
-- * TODO: replace with a kernel-wide solution to this problem
-- */
--#define PIDLIST_TOO_LARGE(c) ((c) * sizeof(pid_t) > (PAGE_SIZE * 2))
--static void *pidlist_allocate(int count)
--{
--	if (PIDLIST_TOO_LARGE(count))
--		return vmalloc(array_size(count, sizeof(pid_t)));
--	else
--		return kmalloc_array(count, sizeof(pid_t), GFP_KERNEL);
--}
--
--static void pidlist_free(void *p)
--{
--	kvfree(p);
--}
--
- /*
-  * Used to destroy all pidlists lingering waiting for destroy timer.  None
-  * should be left afterwards.
-@@ -244,7 +225,7 @@ static void cgroup_pidlist_destroy_work_fn(struct work_struct *work)
- 	 */
- 	if (!delayed_work_pending(dwork)) {
- 		list_del(&l->links);
--		pidlist_free(l->list);
-+		kvfree(l->list);
- 		put_pid_ns(l->key.ns);
- 		tofree = l;
- 	}
-@@ -365,7 +346,7 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
- 	 * show up until sometime later on.
- 	 */
- 	length = cgroup_task_count(cgrp);
--	array = pidlist_allocate(length);
-+	array = kvmalloc(array_size(length, sizeof(pid_t)), GFP_KERNEL);
- 	if (!array)
- 		return -ENOMEM;
- 	/* now, populate the array */
-@@ -390,12 +371,12 @@ static int pidlist_array_load(struct cgroup *cgrp, enum cgroup_filetype type,
- 
- 	l = cgroup_pidlist_find_create(cgrp, type);
- 	if (!l) {
--		pidlist_free(array);
-+		kvfree(array);
- 		return -ENOMEM;
- 	}
- 
- 	/* store array, freeing old if necessary */
--	pidlist_free(l->list);
-+	kvfree(l->list);
- 	l->list = array;
- 	l->length = length;
- 	*lp = l;
--- 
-2.21.0
+[1] https://lkml.org/lkml/2019/8/27/1716
+[2] https://www.mail-archive.com/linux-block@vger.kernel.org/msg35823.html
+[3] https://github.com/systemd/systemd/issues/7057
 
+Angelo Ruocco (1):
+  block, bfq: delete "bfq" prefix from cgroup filenames
+
+ block/bfq-cgroup.c | 46 +++++++++++++++++++++++-----------------------
+ 1 file changed, 23 insertions(+), 23 deletions(-)
+
+--
+2.20.1
