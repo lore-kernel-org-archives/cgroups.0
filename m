@@ -1,206 +1,45 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: [PATCH 1/1] block, bfq: delete "bfq" prefix from cgroup filenames
-Date: Mon,  9 Sep 2019 09:31:17 +0200
-Message-ID: <20190909073117.20625-2-paolo.valente@linaro.org>
-References: <20190909073117.20625-1-paolo.valente@linaro.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH] cgroup: use kv(malloc|free) instead of
+ pidlist_(allocate|free)
+Date: Mon, 9 Sep 2019 16:23:38 +0000
+Message-ID: <20190909162333.GA8571@tower.dhcp.thefacebook.com>
+References: <20190908144041.19667-1-insafonov@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=Zyjk5LLEUpKt0UtgpDlm7KCNgviInbE7D7cMBgrLQBk=;
-        b=Nmp2Nta8RxHOTP0Ai3OSlk2CAwu/jWa+KWkMVPpAh2/xBK8uiovcqm4z1wSvte1jkt
-         6iUWhoDT5l2W164KcZuTpvo7o1yIZR3IBwSbqkeBHf1lLtqcY7woUt/JKqcVFHlia/bp
-         dyGFf2tKxXFEoeNOvzrPNKs4KH22VpTPdZ3+x4mh3CvP5I5G0/N5SGkjK5ArFa2f4qgL
-         9VG45Dn9Lz8h/kVWzA7AIyUmgmp1aoFGJQG+vkT7xS+LkH6059pSXqilXqhlkyElhcUx
-         U+5tRCgRHVXTi48ZdhKkhy0RG07bPT3w2oob2Fm8r5gBSnBd+ipMK4d1zi7GGWOmrzU+
-         YdTA==
-In-Reply-To: <20190909073117.20625-1-paolo.valente@linaro.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type : content-id
+ : content-transfer-encoding : mime-version; s=facebook;
+ bh=m/+u36wyBdJNgYpeuMX8Bk/u91XmjHB9gZiyi7/IxXk=;
+ b=DGSmxlg0ivDhney3HH603x02F4rWpPqa7jDUV095V+eM4fwK7KOLAfllr6/ATr1BYSVd
+ Ic8hvBXuXsSzEJBPDJXbYsaBv4nN1Hc8HmdDCeEcaRZdMRqGSS93o9CMytRJIqq8aPkJ
+ AJouNGGa4tYqLJykb6rH+sxzrqb1hYiVicA= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=m/+u36wyBdJNgYpeuMX8Bk/u91XmjHB9gZiyi7/IxXk=;
+ b=PwZO/p4kQfRAep7egQlDvK3iqZyNv9M023X5cuQy4/hdgPyuHUdawsxN04FlKcDUwI9zSbqQe8PIuNJhzQudXQc8Z0L5NINE2/aSYO5uXqXesz5/NGsMT0jIcw4L9iJPa9dFC/Vf2539w8Nc5p3Jaqb5dpkIBMf535HL3PXBXRk=
+In-Reply-To: <20190908144041.19667-1-insafonov@gmail.com>
+Content-Language: en-US
+Content-ID: <627F6A5E88B2754E875DE38D7C361586@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, ulf.hansson@linaro.org, linus.walleij@linaro.org, bfq-iosched@googlegroups.com, oleksandr@natalenko.name, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Angelo Ruocco <angeloruocco90@gmail.com>, Paolo Valente <paolo.valente@linaro.org>
+To: Ivan Safonov <insafonov@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-From: Angelo Ruocco <angeloruocco90@gmail.com>
+On Sun, Sep 08, 2019 at 05:40:41PM +0300, Ivan Safonov wrote:
+> Resolve TODO:
+> > The following two functions "fix" the issue where there are more pids
+> > than kmalloc will give memory for; in such cases, we use vmalloc/vfree.
+> > TODO: replace with a kernel-wide solution to this problem
+>=20
+> kv(malloc|free) is appropriate replacement for pidlist_(allocate|free).
+>=20
+> Signed-off-by: Ivan Safonov <insafonov@gmail.com>
 
-When bfq was merged into mainline, there were two I/O schedulers that
-implemented the proportional-share policy: bfq for blk-mq and cfq for
-legacy blk. bfq's interface files in the blkio/io controller have the
-same names as cfq. But the cgroups interface doesn't allow two
-entities to use the same name for their files, so for bfq we had to
-prepend the "bfq" prefix to each of its files. However no legacy code
-uses these modified file names. This naming also causes confusion, as,
-e.g., in [1].
+Looks good to me!
 
-Now cfq has gone with legacy blk, so there is no need any longer for
-these prefixes in (the never used) bfq names. In view of this fact, this
-commit removes these prefixes, thereby enabling legacy code to truly
-use the proportional share policy in blk-mq.
+Acked-by: Roman Gushchin <guro@fb.com>
 
-[1] https://github.com/systemd/systemd/issues/7057
-
-Signed-off-by: Angelo Ruocco <angeloruocco90@gmail.com>
-Signed-off-by: Paolo Valente <paolo.valente@linaro.org>
----
- block/bfq-cgroup.c | 46 +++++++++++++++++++++++-----------------------
- 1 file changed, 23 insertions(+), 23 deletions(-)
-
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 0f6cd688924f..14b7a1160664 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -1139,7 +1139,7 @@ struct blkcg_policy blkcg_policy_bfq = {
- 
- struct cftype bfq_blkcg_legacy_files[] = {
- 	{
--		.name = "bfq.weight",
-+		.name = "weight",
- 		.flags = CFTYPE_NOT_ON_ROOT,
- 		.seq_show = bfq_io_show_weight,
- 		.write_u64 = bfq_io_set_weight_legacy,
-@@ -1147,42 +1147,42 @@ struct cftype bfq_blkcg_legacy_files[] = {
- 
- 	/* statistics, covers only the tasks in the bfqg */
- 	{
--		.name = "bfq.io_service_bytes",
-+		.name = "io_service_bytes",
- 		.private = (unsigned long)&blkcg_policy_bfq,
- 		.seq_show = blkg_print_stat_bytes,
- 	},
- 	{
--		.name = "bfq.io_serviced",
-+		.name = "io_serviced",
- 		.private = (unsigned long)&blkcg_policy_bfq,
- 		.seq_show = blkg_print_stat_ios,
- 	},
- #ifdef CONFIG_BFQ_CGROUP_DEBUG
- 	{
--		.name = "bfq.time",
-+		.name = "time",
- 		.private = offsetof(struct bfq_group, stats.time),
- 		.seq_show = bfqg_print_stat,
- 	},
- 	{
--		.name = "bfq.sectors",
-+		.name = "sectors",
- 		.seq_show = bfqg_print_stat_sectors,
- 	},
- 	{
--		.name = "bfq.io_service_time",
-+		.name = "io_service_time",
- 		.private = offsetof(struct bfq_group, stats.service_time),
- 		.seq_show = bfqg_print_rwstat,
- 	},
- 	{
--		.name = "bfq.io_wait_time",
-+		.name = "io_wait_time",
- 		.private = offsetof(struct bfq_group, stats.wait_time),
- 		.seq_show = bfqg_print_rwstat,
- 	},
- 	{
--		.name = "bfq.io_merged",
-+		.name = "io_merged",
- 		.private = offsetof(struct bfq_group, stats.merged),
- 		.seq_show = bfqg_print_rwstat,
- 	},
- 	{
--		.name = "bfq.io_queued",
-+		.name = "io_queued",
- 		.private = offsetof(struct bfq_group, stats.queued),
- 		.seq_show = bfqg_print_rwstat,
- 	},
-@@ -1190,66 +1190,66 @@ struct cftype bfq_blkcg_legacy_files[] = {
- 
- 	/* the same statistics which cover the bfqg and its descendants */
- 	{
--		.name = "bfq.io_service_bytes_recursive",
-+		.name = "io_service_bytes_recursive",
- 		.private = (unsigned long)&blkcg_policy_bfq,
- 		.seq_show = blkg_print_stat_bytes_recursive,
- 	},
- 	{
--		.name = "bfq.io_serviced_recursive",
-+		.name = "io_serviced_recursive",
- 		.private = (unsigned long)&blkcg_policy_bfq,
- 		.seq_show = blkg_print_stat_ios_recursive,
- 	},
- #ifdef CONFIG_BFQ_CGROUP_DEBUG
- 	{
--		.name = "bfq.time_recursive",
-+		.name = "time_recursive",
- 		.private = offsetof(struct bfq_group, stats.time),
- 		.seq_show = bfqg_print_stat_recursive,
- 	},
- 	{
--		.name = "bfq.sectors_recursive",
-+		.name = "sectors_recursive",
- 		.seq_show = bfqg_print_stat_sectors_recursive,
- 	},
- 	{
--		.name = "bfq.io_service_time_recursive",
-+		.name = "io_service_time_recursive",
- 		.private = offsetof(struct bfq_group, stats.service_time),
- 		.seq_show = bfqg_print_rwstat_recursive,
- 	},
- 	{
--		.name = "bfq.io_wait_time_recursive",
-+		.name = "io_wait_time_recursive",
- 		.private = offsetof(struct bfq_group, stats.wait_time),
- 		.seq_show = bfqg_print_rwstat_recursive,
- 	},
- 	{
--		.name = "bfq.io_merged_recursive",
-+		.name = "io_merged_recursive",
- 		.private = offsetof(struct bfq_group, stats.merged),
- 		.seq_show = bfqg_print_rwstat_recursive,
- 	},
- 	{
--		.name = "bfq.io_queued_recursive",
-+		.name = "io_queued_recursive",
- 		.private = offsetof(struct bfq_group, stats.queued),
- 		.seq_show = bfqg_print_rwstat_recursive,
- 	},
- 	{
--		.name = "bfq.avg_queue_size",
-+		.name = "avg_queue_size",
- 		.seq_show = bfqg_print_avg_queue_size,
- 	},
- 	{
--		.name = "bfq.group_wait_time",
-+		.name = "group_wait_time",
- 		.private = offsetof(struct bfq_group, stats.group_wait_time),
- 		.seq_show = bfqg_print_stat,
- 	},
- 	{
--		.name = "bfq.idle_time",
-+		.name = "idle_time",
- 		.private = offsetof(struct bfq_group, stats.idle_time),
- 		.seq_show = bfqg_print_stat,
- 	},
- 	{
--		.name = "bfq.empty_time",
-+		.name = "empty_time",
- 		.private = offsetof(struct bfq_group, stats.empty_time),
- 		.seq_show = bfqg_print_stat,
- 	},
- 	{
--		.name = "bfq.dequeue",
-+		.name = "dequeue",
- 		.private = offsetof(struct bfq_group, stats.dequeue),
- 		.seq_show = bfqg_print_stat,
- 	},
-@@ -1259,7 +1259,7 @@ struct cftype bfq_blkcg_legacy_files[] = {
- 
- struct cftype bfq_blkg_files[] = {
- 	{
--		.name = "bfq.weight",
-+		.name = "weight",
- 		.flags = CFTYPE_NOT_ON_ROOT,
- 		.seq_show = bfq_io_show_weight,
- 		.write = bfq_io_set_weight,
--- 
-2.20.1
-
+Thanks!
