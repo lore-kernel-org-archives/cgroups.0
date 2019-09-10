@@ -1,45 +1,61 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH] cgroup: use kv(malloc|free) instead of
- pidlist_(allocate|free)
-Date: Mon, 9 Sep 2019 16:23:38 +0000
-Message-ID: <20190909162333.GA8571@tower.dhcp.thefacebook.com>
-References: <20190908144041.19667-1-insafonov@gmail.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH RFC v4 00/16] new cgroup controller for gpu/drm subsystem
+Date: Tue, 10 Sep 2019 13:54:48 +0200
+Message-ID: <20190910115448.GT2063@dhcp22.suse.cz>
+References: <20190829060533.32315-1-Kenny.Ho@amd.com>
+ <20190831042857.GD2263813@devbig004.ftw2.facebook.com>
+ <20190903075550.GJ2112@phenom.ffwll.local>
+ <20190903185013.GI2263813@devbig004.ftw2.facebook.com>
+ <CAKMK7uE5Bj-3cJH895iqnLpwUV+GBDM1Y=n4Z4A3xervMdJKXg@mail.gmail.com>
+ <20190906152320.GM2263813@devbig004.ftw2.facebook.com>
+ <CAKMK7uEXP7XLFB2aFU6+E0TH_DepFRkfCoKoHwkXtjZRDyhHig@mail.gmail.com>
+ <20190906154539.GP2263813@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20190906154539.GP2263813-LpCCV3molIbIZ9tKgghJQw2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=m/+u36wyBdJNgYpeuMX8Bk/u91XmjHB9gZiyi7/IxXk=;
- b=DGSmxlg0ivDhney3HH603x02F4rWpPqa7jDUV095V+eM4fwK7KOLAfllr6/ATr1BYSVd
- Ic8hvBXuXsSzEJBPDJXbYsaBv4nN1Hc8HmdDCeEcaRZdMRqGSS93o9CMytRJIqq8aPkJ
- AJouNGGa4tYqLJykb6rH+sxzrqb1hYiVicA= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=m/+u36wyBdJNgYpeuMX8Bk/u91XmjHB9gZiyi7/IxXk=;
- b=PwZO/p4kQfRAep7egQlDvK3iqZyNv9M023X5cuQy4/hdgPyuHUdawsxN04FlKcDUwI9zSbqQe8PIuNJhzQudXQc8Z0L5NINE2/aSYO5uXqXesz5/NGsMT0jIcw4L9iJPa9dFC/Vf2539w8Nc5p3Jaqb5dpkIBMf535HL3PXBXRk=
-In-Reply-To: <20190908144041.19667-1-insafonov@gmail.com>
-Content-Language: en-US
-Content-ID: <627F6A5E88B2754E875DE38D7C361586@namprd15.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-To: Ivan Safonov <insafonov@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "Greathouse, Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
 
-On Sun, Sep 08, 2019 at 05:40:41PM +0300, Ivan Safonov wrote:
-> Resolve TODO:
-> > The following two functions "fix" the issue where there are more pids
-> > than kmalloc will give memory for; in such cases, we use vmalloc/vfree.
-> > TODO: replace with a kernel-wide solution to this problem
->=20
-> kv(malloc|free) is appropriate replacement for pidlist_(allocate|free).
->=20
-> Signed-off-by: Ivan Safonov <insafonov@gmail.com>
-
-Looks good to me!
-
-Acked-by: Roman Gushchin <guro@fb.com>
-
-Thanks!
+T24gRnJpIDA2LTA5LTE5IDA4OjQ1OjM5LCBUZWp1biBIZW8gd3JvdGU6Cj4gSGVsbG8sIERhbmll
+bC4KPiAKPiBPbiBGcmksIFNlcCAwNiwgMjAxOSBhdCAwNTozNDoxNlBNICswMjAwLCBEYW5pZWwg
+VmV0dGVyIHdyb3RlOgo+ID4gPiBIbW0uLi4gd2hhdCdkIGJlIHRoZSBmdW5kYW1lbnRhbCBkaWZm
+ZXJlbmNlIGZyb20gc2xhYiBvciBzb2NrZXQgbWVtb3J5Cj4gPiA+IHdoaWNoIGFyZSBoYW5kbGVk
+IHRocm91Z2ggbWVtY2c/ICBJcyBzeXN0ZW0gbWVtb3J5IHVzZWQgYnkgR1BVcyBoYXZlCj4gPiA+
+IGZ1cnRoZXIgZ2xvYmFsIHJlc3RyaWN0aW9ucyBpbiBhZGRpdGlvbiB0byB0aGUgYW1vdW50IG9m
+IHBoeXNpY2FsCj4gPiA+IG1lbW9yeSB1c2VkPwo+ID4gCj4gPiBTb21ldGltZXMsIGJ1dCB0aGF0
+IHdvdWxkIGJlIHNwZWNpZmljIHJlc291cmNlcyAoa2luZGEgbGlrZSB2cmFtKSwKPiA+IGUuZy4g
+Q01BIHJlZ2lvbnMgdXNlZCBieSBhIGdwdS4gQnV0IHByb2JhYmx5IG5vdCBzb21ldGhpbmcgeW91
+J2xsIHJ1bgo+ID4gaW4gYSBkYXRhY2VudGVyIGFuZCB3YW50IGNncm91cHMgZm9yIC4uLgo+ID4g
+Cj4gPiBJIGd1ZXNzIHdlIGNvdWxkIHRyeSB0byBpbnRlZ3JhdGUgd2l0aCB0aGUgbWVtY2cgZ3Jv
+dXAgY29udHJvbGxlci4gT25lCj4gPiB0cm91YmxlIGlzIHRoYXQgYXNpZGUgZnJvbSBpOTE1IG1v
+c3QgZ3B1IGRyaXZlcnMgZG8gbm90IHJlYWxseSBoYXZlIGEKPiA+IGZ1bGwgc2hyaW5rZXIsIHNv
+IG5vdCBzdXJlIGhvdyB0aGF0IHdvdWxkIGFsbCBpbnRlZ3JhdGUuCj4gCj4gU28sIHdoaWxlIGl0
+J2QgZ3JlYXQgdG8gaGF2ZSBzaHJpbmtlcnMgaW4gdGhlIGxvbmdlciB0ZXJtLCBpdCdzIG5vdCBh
+Cj4gc3RyaWN0IHJlcXVpcmVtZW50IHRvIGJlIGFjY291bnRlZCBpbiBtZW1jZy4gIEl0IGFscmVh
+ZHkgYWNjb3VudHMgYQo+IGxvdCBvZiBtZW1vcnkgd2hpY2ggaXNuJ3QgcmVjbGFpbWFibGUgKGEg
+bG90IG9mIHNsYWJzIGFuZCBzb2NrZXQKPiBidWZmZXIpLgoKWWVhaCwgaGF2aW5nIGEgc2hyaW5r
+ZXIgaXMgcHJlZmVycmVkIGJ1dCB0aGUgbWVtb3J5IHNob3VsZCBiZXR0ZXIgYmUKcmVjbGFpbWFi
+bGUgaW4gc29tZSBmb3JtLiBJZiBub3QgYnkgYW55IG90aGVyIG1lYW5zIHRoZW4gYXQgbGVhc3Qg
+Ym91bmQKdG8gYSB1c2VyIHByb2Nlc3MgY29udGV4dCBzbyB0aGF0IGl0IGdvZXMgYXdheSB3aXRo
+IGEgdGFzayBiZWluZyBraWxsZWQKYnkgdGhlIE9PTSBraWxsZXIuIElmIHRoYXQgaXMgbm90IHRo
+ZSBjYXNlIHRoZW4gd2UgY2Fubm90IHJlYWxseSBjaGFyZ2UKaXQgYmVjYXVzZSB0aGVuIHRoZSBt
+ZW1jZyBjb250cm9sbGVyIGlzIG9mIG5vIHVzZS4gV2UgY2FuIHRvbGVyYXRlIGl0IHRvCnNvbWUg
+ZGVncmVlIGlmIHRoZSBhbW91bnQgb2YgbWVtb3J5IGNoYXJnZWQgbGlrZSB0aGF0IGlzIG5lZ2xp
+Z2libGUgdG8KdGhlIG92ZXJhbGwgc2l6ZS4gQnV0IGZyb20gdGhlIGRpc2N1c3Npb24gaXQgc2Vl
+bXMgdGhhdCB0aGVzZSBidWZmZXJzCmFyZSByZWFsbHkgbGFyZ2UuCi0tIApNaWNoYWwgSG9ja28K
+U1VTRSBMYWJzCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+CmFtZC1nZnggbWFpbGluZyBsaXN0CmFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBz
+Oi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vYW1kLWdmeA==
