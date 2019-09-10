@@ -1,76 +1,86 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 08/10] blkcg: implement blk-iocost
-Date: Tue, 10 Sep 2019 09:08:55 -0700
-Message-ID: <20190910160855.GS2263813@devbig004.ftw2.facebook.com>
-References: <20190828220600.2527417-1-tj@kernel.org>
- <20190828220600.2527417-9-tj@kernel.org>
- <20190910125513.GA6399@blackbody.suse.cz>
+Subject: [block/for-next] iocost: Fix incorrect operation order during iocg
+ free
+Date: Tue, 10 Sep 2019 09:15:25 -0700
+Message-ID: <20190910161525.GT2263813@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=bdd/RVi8vfAfg851AYquHh04me7NuiJ7iVVTsDpYp68=;
-        b=fUA+fYqvDaEh6XnC8UBQ3JpjN/2WjcxI+8CiRk4SalHIoVe5prkjFMu71bb/uLhLEi
-         vdSRmM1ImkGHh+5l222crJZZ8/ZbN5H9jaqs5XiMxOkLTzGZGkekXnXHoceWM87OVVZW
-         t0OZsTU5TT8dmyCn/uOnVU4OzwLHubfn9Uk/eyxwR46e9wcUNF0twyojDJIJ4r9hPgm+
-         ctrVk79+ExOfFiWG/zP/jiTtOv9aL/Mk6GmHBR0tH9tBI793M0JSgUKIbdE11v4CZcki
-         biWouuq8snH+yIDMNXZDgpkw+bvxzlXrTIXXskJqm/qPfuoXfRt7hgJ7cl/2r4M4jd6M
-         /rRQ==
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=BzSkrvowps0g0N5g6HScYMxe8xO2mx5UwGqeLTuW+Hk=;
+        b=ParuHlsgLMt+EXk5iwj5kllgfVd78Xqi8XxmT53ucKqxnnfE9HO1f70TItdD4QTprD
+         NSI2+nSSvd0DYFCBc/MYuP/0c21UzIXD3t0PjcjjuelpRvBobkcN3+HCpgtP2rWKgIUJ
+         +gy6rh9Tp0ZCS6BiO7coXzGiUQIE+Rg/GI+WbVE5Nx9gDt6fKH30h7tddn6FTpqTfoyp
+         WbVyAMGGuFpwjE6MtE+FCUW0R4lw8vsBpG4FJAIdTV9YmqRudzlnzSX5XLtaAdJGWfbI
+         E/gWUk5lSZgExw+x22kpQ2NEsvbI0H4SfrVZySWh+0M1No6viAjzSv711nFqxfPcoAiI
+         bHRw==
 Content-Disposition: inline
-In-Reply-To: <20190910125513.GA6399@blackbody.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: hannes@cmpxchg.org, clm@fb.com, dennisz@fb.com, newella@fb.com, lizefan@huawei.com, axboe@kernel.dk, josef@toxicpanda.com, Josef Bacik <jbacik@fb.com>, kernel-team@fb.com, Rik van Riel <riel@surriel.com>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Paolo Valente <paolo.valente@linaro.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, Dave Jones <davej@codemonkey.org.uk>
 
-Hello, Michal.
+ioc_pd_free() first cancels the hrtimers and then deactivates the
+iocg.  However, the iocg timer can run inbetween and reschedule the
+hrtimers which will end up running after the iocg is freed leading to
+crashes like the following.
 
-On Tue, Sep 10, 2019 at 02:55:14PM +0200, Michal Koutn=FD wrote:
-> This adds the generic io.weight attribute. How will this compose with
-> the weight from IO schedulers? (AFAIK, only BFQ allows proportional
-> control as of now. +CC Paolo.)
+  general protection fault: 0000 [#1] SMP
+  ...
+  RIP: 0010:iocg_kick_delay+0xbe/0x1b0
+  RSP: 0018:ffffc90003598ea0 EFLAGS: 00010046
+  RAX: 1cee00fd69512b54 RBX: ffff8881bba48400 RCX: 00000000000003e8
+  RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff8881bba48400
+  RBP: 0000000000004e20 R08: 0000000000000002 R09: 00000000000003e8
+  R10: 0000000000000000 R11: 0000000000000000 R12: ffffc90003598ef0
+  R13: 00979f3810ad461f R14: ffff8881bba4b400 R15: 25439f950d26e1d1
+  FS:  0000000000000000(0000) GS:ffff88885f800000(0000) knlGS:0000000000000000
+  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+  CR2: 00007f64328c7e40 CR3: 0000000002409005 CR4: 00000000003606e0
+  DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+  DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+  Call Trace:
+   <IRQ>
+   iocg_delay_timer_fn+0x3d/0x60
+   __hrtimer_run_queues+0xfe/0x270
+   hrtimer_interrupt+0xf4/0x210
+   smp_apic_timer_interrupt+0x5e/0x120
+   apic_timer_interrupt+0xf/0x20
+   </IRQ>
 
-The two being enabled at the same time doesn't make sense, so we can
-just switch over to bfq when bfq is selected as the iosched.  I asked
-what Paolo wanted to do in terms of interface a couple times now but
-didn't get an answer and he posted a patch which makes the two
-controllers conflict, so....  Paolo, so it looks like you want to
-rename all bfq files to drop the bfq prefix, right?  I can implement
-the switching if so.
+Fix it by canceling hrtimers after deactivating the iocg.
 
-> I see this attributes are effectively per-cgroup per-device. Apparently,
-> one device should have only one weight across hierarchy. Would it make
-> sense to have io.bfq.weight and io.cost.weight with disjunctive devices?
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Dave Jones <davej@codemonkey.org.uk>
+Fixes: 7caa47151ab2 ("blkcg: implement blk-iocost")
+---
+ block/blk-iocost.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-It never makes sense to have both enabled, so I don't think that
-interface makes sense.
-
-> > +		.name =3D "cost.qos",
-> > +		.flags =3D CFTYPE_ONLY_ON_ROOT,
-> > [...]
-> > +		.name =3D "cost.model",
-> > +		.flags =3D CFTYPE_ONLY_ON_ROOT,
-> I'm concerned that these aren't true cgroup attributes. The root cgroup
-> would act as container for global configuration options. Wouldn't these
-> values better fit as (configurable) attributes of the respective
-> devices?
-
-Initially, I put them under block device sysfs but it was too clumsy
-with different config file formats and all.  I think it's better to
-have global controller configs at the root cgroup.
-
-> Secondly, how is CFTYPE_ONLY_ON_ROOT supposed to be presented in cgroup
-> namespaces?
-
-Not at all.  These are system-wide configs.  cgroup namespaces
-shouldn't have anything which aren't in non-root cgroups.
-
-Thanks.
-
---=20
-tejun
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index 2aae8ec391ef..7af350293c2f 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -1957,15 +1957,15 @@ static void ioc_pd_free(struct blkg_policy_data *pd)
+ 	struct ioc *ioc = iocg->ioc;
+ 
+ 	if (ioc) {
+-		hrtimer_cancel(&iocg->waitq_timer);
+-		hrtimer_cancel(&iocg->delay_timer);
+-
+ 		spin_lock(&ioc->lock);
+ 		if (!list_empty(&iocg->active_list)) {
+ 			propagate_active_weight(iocg, 0, 0);
+ 			list_del_init(&iocg->active_list);
+ 		}
+ 		spin_unlock(&ioc->lock);
++
++		hrtimer_cancel(&iocg->waitq_timer);
++		hrtimer_cancel(&iocg->delay_timer);
+ 	}
+ 	kfree(iocg);
+ }
