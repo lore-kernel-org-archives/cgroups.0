@@ -1,55 +1,76 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH RFC v4 00/16] new cgroup controller for gpu/drm subsystem
-Date: Tue, 10 Sep 2019 09:03:29 -0700
-Message-ID: <20190910160329.GR2263813@devbig004.ftw2.facebook.com>
-References: <20190829060533.32315-1-Kenny.Ho@amd.com>
- <20190831042857.GD2263813@devbig004.ftw2.facebook.com>
- <20190903075550.GJ2112@phenom.ffwll.local>
- <20190903185013.GI2263813@devbig004.ftw2.facebook.com>
- <CAKMK7uE5Bj-3cJH895iqnLpwUV+GBDM1Y=n4Z4A3xervMdJKXg@mail.gmail.com>
- <20190906152320.GM2263813@devbig004.ftw2.facebook.com>
- <CAKMK7uEXP7XLFB2aFU6+E0TH_DepFRkfCoKoHwkXtjZRDyhHig@mail.gmail.com>
- <20190906154539.GP2263813@devbig004.ftw2.facebook.com>
- <20190910115448.GT2063@dhcp22.suse.cz>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 08/10] blkcg: implement blk-iocost
+Date: Tue, 10 Sep 2019 09:08:55 -0700
+Message-ID: <20190910160855.GS2263813@devbig004.ftw2.facebook.com>
+References: <20190828220600.2527417-1-tj@kernel.org>
+ <20190828220600.2527417-9-tj@kernel.org>
+ <20190910125513.GA6399@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to
+         :user-agent;
+        bh=bdd/RVi8vfAfg851AYquHh04me7NuiJ7iVVTsDpYp68=;
+        b=fUA+fYqvDaEh6XnC8UBQ3JpjN/2WjcxI+8CiRk4SalHIoVe5prkjFMu71bb/uLhLEi
+         vdSRmM1ImkGHh+5l222crJZZ8/ZbN5H9jaqs5XiMxOkLTzGZGkekXnXHoceWM87OVVZW
+         t0OZsTU5TT8dmyCn/uOnVU4OzwLHubfn9Uk/eyxwR46e9wcUNF0twyojDJIJ4r9hPgm+
+         ctrVk79+ExOfFiWG/zP/jiTtOv9aL/Mk6GmHBR0tH9tBI793M0JSgUKIbdE11v4CZcki
+         biWouuq8snH+yIDMNXZDgpkw+bvxzlXrTIXXskJqm/qPfuoXfRt7hgJ7cl/2r4M4jd6M
+         /rRQ==
 Content-Disposition: inline
-In-Reply-To: <20190910115448.GT2063-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "Greathouse, Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
+In-Reply-To: <20190910125513.GA6399@blackbody.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Cc: hannes@cmpxchg.org, clm@fb.com, dennisz@fb.com, newella@fb.com, lizefan@huawei.com, axboe@kernel.dk, josef@toxicpanda.com, Josef Bacik <jbacik@fb.com>, kernel-team@fb.com, Rik van Riel <riel@surriel.com>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Paolo Valente <paolo.valente@linaro.org>
 
-SGVsbG8sIE1pY2hhbC4KCk9uIFR1ZSwgU2VwIDEwLCAyMDE5IGF0IDAxOjU0OjQ4UE0gKzAyMDAs
-IE1pY2hhbCBIb2NrbyB3cm90ZToKPiA+IFNvLCB3aGlsZSBpdCdkIGdyZWF0IHRvIGhhdmUgc2hy
-aW5rZXJzIGluIHRoZSBsb25nZXIgdGVybSwgaXQncyBub3QgYQo+ID4gc3RyaWN0IHJlcXVpcmVt
-ZW50IHRvIGJlIGFjY291bnRlZCBpbiBtZW1jZy4gIEl0IGFscmVhZHkgYWNjb3VudHMgYQo+ID4g
-bG90IG9mIG1lbW9yeSB3aGljaCBpc24ndCByZWNsYWltYWJsZSAoYSBsb3Qgb2Ygc2xhYnMgYW5k
-IHNvY2tldAo+ID4gYnVmZmVyKS4KPiAKPiBZZWFoLCBoYXZpbmcgYSBzaHJpbmtlciBpcyBwcmVm
-ZXJyZWQgYnV0IHRoZSBtZW1vcnkgc2hvdWxkIGJldHRlciBiZQo+IHJlY2xhaW1hYmxlIGluIHNv
-bWUgZm9ybS4gSWYgbm90IGJ5IGFueSBvdGhlciBtZWFucyB0aGVuIGF0IGxlYXN0IGJvdW5kCj4g
-dG8gYSB1c2VyIHByb2Nlc3MgY29udGV4dCBzbyB0aGF0IGl0IGdvZXMgYXdheSB3aXRoIGEgdGFz
-ayBiZWluZyBraWxsZWQKPiBieSB0aGUgT09NIGtpbGxlci4gSWYgdGhhdCBpcyBub3QgdGhlIGNh
-c2UgdGhlbiB3ZSBjYW5ub3QgcmVhbGx5IGNoYXJnZQo+IGl0IGJlY2F1c2UgdGhlbiB0aGUgbWVt
-Y2cgY29udHJvbGxlciBpcyBvZiBubyB1c2UuIFdlIGNhbiB0b2xlcmF0ZSBpdCB0bwo+IHNvbWUg
-ZGVncmVlIGlmIHRoZSBhbW91bnQgb2YgbWVtb3J5IGNoYXJnZWQgbGlrZSB0aGF0IGlzIG5lZ2xp
-Z2libGUgdG8KPiB0aGUgb3ZlcmFsbCBzaXplLiBCdXQgZnJvbSB0aGUgZGlzY3Vzc2lvbiBpdCBz
-ZWVtcyB0aGF0IHRoZXNlIGJ1ZmZlcnMKPiBhcmUgcmVhbGx5IGxhcmdlLgoKWWVhaCwgb29tIGtp
-bGxzIHNob3VsZCBiZSBhYmxlIHRvIHJlZHVjZSB0aGUgdXNhZ2U7IGhvd2V2ZXIsIHBsZWFzZQpu
-b3RlIHRoYXQgdG1wZnMsIGFtb25nIG90aGVyIHRoaW5ncywgY2FuIGFscmVhZHkgZXNjYXBlIHRo
-aXMKcmVzdHJpY3Rpb24gYW5kIHdlIGNhbiBoYXZlIGNncm91cHMgd2hpY2ggYXJlIG92ZXIgbWF4
-IGFuZCBlbXB0eS4KSXQncyBvYnZpb3VzbHkgbm90IGlkZWFsIGJ1dCB0aGUgc3lzdGVtIGRvZXNu
-J3QgbWVsdCBkb3duIGZyb20gaXQKZWl0aGVyLgoKVGhhbmtzLgoKLS0gCnRlanVuCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmFtZC1nZnggbWFpbGluZyBs
-aXN0CmFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0
-b3Aub3JnL21haWxtYW4vbGlzdGluZm8vYW1kLWdmeA==
+Hello, Michal.
+
+On Tue, Sep 10, 2019 at 02:55:14PM +0200, Michal Koutn=FD wrote:
+> This adds the generic io.weight attribute. How will this compose with
+> the weight from IO schedulers? (AFAIK, only BFQ allows proportional
+> control as of now. +CC Paolo.)
+
+The two being enabled at the same time doesn't make sense, so we can
+just switch over to bfq when bfq is selected as the iosched.  I asked
+what Paolo wanted to do in terms of interface a couple times now but
+didn't get an answer and he posted a patch which makes the two
+controllers conflict, so....  Paolo, so it looks like you want to
+rename all bfq files to drop the bfq prefix, right?  I can implement
+the switching if so.
+
+> I see this attributes are effectively per-cgroup per-device. Apparently,
+> one device should have only one weight across hierarchy. Would it make
+> sense to have io.bfq.weight and io.cost.weight with disjunctive devices?
+
+It never makes sense to have both enabled, so I don't think that
+interface makes sense.
+
+> > +		.name =3D "cost.qos",
+> > +		.flags =3D CFTYPE_ONLY_ON_ROOT,
+> > [...]
+> > +		.name =3D "cost.model",
+> > +		.flags =3D CFTYPE_ONLY_ON_ROOT,
+> I'm concerned that these aren't true cgroup attributes. The root cgroup
+> would act as container for global configuration options. Wouldn't these
+> values better fit as (configurable) attributes of the respective
+> devices?
+
+Initially, I put them under block device sysfs but it was too clumsy
+with different config file formats and all.  I think it's better to
+have global controller configs at the root cgroup.
+
+> Secondly, how is CFTYPE_ONLY_ON_ROOT supposed to be presented in cgroup
+> namespaces?
+
+Not at all.  These are system-wide configs.  cgroup namespaces
+shouldn't have anything which aren't in non-root cgroups.
+
+Thanks.
+
+--=20
+tejun
