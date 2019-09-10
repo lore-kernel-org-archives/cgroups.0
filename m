@@ -1,62 +1,64 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH RFC v4 00/16] new cgroup controller for gpu/drm subsystem
-Date: Tue, 10 Sep 2019 19:25:53 +0200
-Message-ID: <20190910172553.GA4023@dhcp22.suse.cz>
-References: <20190829060533.32315-1-Kenny.Ho@amd.com>
- <20190831042857.GD2263813@devbig004.ftw2.facebook.com>
- <20190903075550.GJ2112@phenom.ffwll.local>
- <20190903185013.GI2263813@devbig004.ftw2.facebook.com>
- <CAKMK7uE5Bj-3cJH895iqnLpwUV+GBDM1Y=n4Z4A3xervMdJKXg@mail.gmail.com>
- <20190906152320.GM2263813@devbig004.ftw2.facebook.com>
- <CAKMK7uEXP7XLFB2aFU6+E0TH_DepFRkfCoKoHwkXtjZRDyhHig@mail.gmail.com>
- <20190906154539.GP2263813@devbig004.ftw2.facebook.com>
- <20190910115448.GT2063@dhcp22.suse.cz>
- <20190910160329.GR2263813@devbig004.ftw2.facebook.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [block/for-next] iocost: Fix incorrect operation order during
+ iocg free
+Date: Tue, 10 Sep 2019 12:21:14 -0600
+Message-ID: <2222732f-09f7-1434-31a6-b591630d2efb@kernel.dk>
+References: <20190910161525.GT2263813@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-Content-Disposition: inline
-In-Reply-To: <20190910160329.GR2263813@devbig004.ftw2.facebook.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=He18b5RVxxpe8smLyrpLpEIbfLqZ+paKB0vO+pHwR0g=;
+        b=xqDdzksClH+VzDniz0I3kbc4+dbzzazVKzgT6Ff4DZMABzndDy97UPPfDYpirqRCml
+         PFu9R4FCQtPyGcxX/uYeajB/GMRFM0mZUbiZDKp83Aky9HTCz45hCcdFFkDt+V2HvzYI
+         TfNIAcMWT4/Z38wIcFGpNBTsAjEeuCKY5GHcu/2ZO9zytYqipZbjE6Pr1OmE2xFFJNpK
+         jGApnEkDxlX0I2fd6Kv4CSpKDI5HI1r7tfX8JMs0XYpDeZRO2KhFEAeTVCP8v/l80S7J
+         haD3WvPie8GxrBV3FQyZcasYkmMDtrDImkPwXs4nib/c5wR/YXhvjZfcP7BG5/yvZREU
+         obew==
+In-Reply-To: <20190910161525.GT2263813@devbig004.ftw2.facebook.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj@kernel.org>
-Cc: "Greathouse, Joseph" <joseph.greathouse@amd.com>, Kenny Ho <Kenny.Ho@amd.com>, "Kuehling, Felix" <felix.kuehling@amd.com>, jsparks@cray.com, amd-gfx list <amd-gfx@lists.freedesktop.org>, lkaplan@cray.com, Kenny Ho <y2kenny@gmail.com>, dri-devel <dri-devel@lists.freedesktop.org>, Alex Deucher <alexander.deucher@amd.com>, cgroups@vger.kernel.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, Dave Jones <davej@codemonkey.org.uk>
 
-T24gVHVlIDEwLTA5LTE5IDA5OjAzOjI5LCBUZWp1biBIZW8gd3JvdGU6Cj4gSGVsbG8sIE1pY2hh
-bC4KPiAKPiBPbiBUdWUsIFNlcCAxMCwgMjAxOSBhdCAwMTo1NDo0OFBNICswMjAwLCBNaWNoYWwg
-SG9ja28gd3JvdGU6Cj4gPiA+IFNvLCB3aGlsZSBpdCdkIGdyZWF0IHRvIGhhdmUgc2hyaW5rZXJz
-IGluIHRoZSBsb25nZXIgdGVybSwgaXQncyBub3QgYQo+ID4gPiBzdHJpY3QgcmVxdWlyZW1lbnQg
-dG8gYmUgYWNjb3VudGVkIGluIG1lbWNnLiAgSXQgYWxyZWFkeSBhY2NvdW50cyBhCj4gPiA+IGxv
-dCBvZiBtZW1vcnkgd2hpY2ggaXNuJ3QgcmVjbGFpbWFibGUgKGEgbG90IG9mIHNsYWJzIGFuZCBz
-b2NrZXQKPiA+ID4gYnVmZmVyKS4KPiA+IAo+ID4gWWVhaCwgaGF2aW5nIGEgc2hyaW5rZXIgaXMg
-cHJlZmVycmVkIGJ1dCB0aGUgbWVtb3J5IHNob3VsZCBiZXR0ZXIgYmUKPiA+IHJlY2xhaW1hYmxl
-IGluIHNvbWUgZm9ybS4gSWYgbm90IGJ5IGFueSBvdGhlciBtZWFucyB0aGVuIGF0IGxlYXN0IGJv
-dW5kCj4gPiB0byBhIHVzZXIgcHJvY2VzcyBjb250ZXh0IHNvIHRoYXQgaXQgZ29lcyBhd2F5IHdp
-dGggYSB0YXNrIGJlaW5nIGtpbGxlZAo+ID4gYnkgdGhlIE9PTSBraWxsZXIuIElmIHRoYXQgaXMg
-bm90IHRoZSBjYXNlIHRoZW4gd2UgY2Fubm90IHJlYWxseSBjaGFyZ2UKPiA+IGl0IGJlY2F1c2Ug
-dGhlbiB0aGUgbWVtY2cgY29udHJvbGxlciBpcyBvZiBubyB1c2UuIFdlIGNhbiB0b2xlcmF0ZSBp
-dCB0bwo+ID4gc29tZSBkZWdyZWUgaWYgdGhlIGFtb3VudCBvZiBtZW1vcnkgY2hhcmdlZCBsaWtl
-IHRoYXQgaXMgbmVnbGlnaWJsZSB0bwo+ID4gdGhlIG92ZXJhbGwgc2l6ZS4gQnV0IGZyb20gdGhl
-IGRpc2N1c3Npb24gaXQgc2VlbXMgdGhhdCB0aGVzZSBidWZmZXJzCj4gPiBhcmUgcmVhbGx5IGxh
-cmdlLgo+IAo+IFllYWgsIG9vbSBraWxscyBzaG91bGQgYmUgYWJsZSB0byByZWR1Y2UgdGhlIHVz
-YWdlOyBob3dldmVyLCBwbGVhc2UKPiBub3RlIHRoYXQgdG1wZnMsIGFtb25nIG90aGVyIHRoaW5n
-cywgY2FuIGFscmVhZHkgZXNjYXBlIHRoaXMKPiByZXN0cmljdGlvbiBhbmQgd2UgY2FuIGhhdmUg
-Y2dyb3VwcyB3aGljaCBhcmUgb3ZlciBtYXggYW5kIGVtcHR5Lgo+IEl0J3Mgb2J2aW91c2x5IG5v
-dCBpZGVhbCBidXQgdGhlIHN5c3RlbSBkb2Vzbid0IG1lbHQgZG93biBmcm9tIGl0Cj4gZWl0aGVy
-LgoKUmlnaHQsIGFuZCB0aGF0IGlzIGEgcmVhc29uIHdoeSBhbiBhY2Nlc3MgdG8gdG1wZnMgc2hv
-dWxkIGJlIHJlc3RyaWN0ZWQKd2hlbiBjb250YWluaW5nIGEgd29ya2xvYWQgYnkgbWVtY2cuIE15
-IHVuZGVyc3RhbmRpbmcgb2YgdGhpcyBwYXJ0aWN1bGFyCmZlYXR1cmUgaXMgdGhhdCBtZW1jZyBz
-aG91bGQgYmUgdGhlIHByaW1hcnkgY29udGFpbm1lbnQgbWV0aG9kIGFuZAp0aGF0J3Mgd2h5IEkg
-YnJvdWdodCB0aGlzIHVwLgoKLS0gCk1pY2hhbCBIb2NrbwpTVVNFIExhYnMKX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KZHJpLWRldmVsIG1haWxpbmcgbGlz
-dApkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0
-b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVs
+On 9/10/19 10:15 AM, Tejun Heo wrote:
+> ioc_pd_free() first cancels the hrtimers and then deactivates the
+> iocg.  However, the iocg timer can run inbetween and reschedule the
+> hrtimers which will end up running after the iocg is freed leading to
+> crashes like the following.
+> 
+>    general protection fault: 0000 [#1] SMP
+>    ...
+>    RIP: 0010:iocg_kick_delay+0xbe/0x1b0
+>    RSP: 0018:ffffc90003598ea0 EFLAGS: 00010046
+>    RAX: 1cee00fd69512b54 RBX: ffff8881bba48400 RCX: 00000000000003e8
+>    RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff8881bba48400
+>    RBP: 0000000000004e20 R08: 0000000000000002 R09: 00000000000003e8
+>    R10: 0000000000000000 R11: 0000000000000000 R12: ffffc90003598ef0
+>    R13: 00979f3810ad461f R14: ffff8881bba4b400 R15: 25439f950d26e1d1
+>    FS:  0000000000000000(0000) GS:ffff88885f800000(0000) knlGS:0000000000000000
+>    CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>    CR2: 00007f64328c7e40 CR3: 0000000002409005 CR4: 00000000003606e0
+>    DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+>    DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+>    Call Trace:
+>     <IRQ>
+>     iocg_delay_timer_fn+0x3d/0x60
+>     __hrtimer_run_queues+0xfe/0x270
+>     hrtimer_interrupt+0xf4/0x210
+>     smp_apic_timer_interrupt+0x5e/0x120
+>     apic_timer_interrupt+0xf/0x20
+>     </IRQ>
+> 
+> Fix it by canceling hrtimers after deactivating the iocg.
+
+Applied, thanks.
+
+-- 
+Jens Axboe
+
