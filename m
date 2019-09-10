@@ -1,61 +1,81 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH RFC v4 00/16] new cgroup controller for gpu/drm subsystem
-Date: Tue, 10 Sep 2019 13:54:48 +0200
-Message-ID: <20190910115448.GT2063@dhcp22.suse.cz>
-References: <20190829060533.32315-1-Kenny.Ho@amd.com>
- <20190831042857.GD2263813@devbig004.ftw2.facebook.com>
- <20190903075550.GJ2112@phenom.ffwll.local>
- <20190903185013.GI2263813@devbig004.ftw2.facebook.com>
- <CAKMK7uE5Bj-3cJH895iqnLpwUV+GBDM1Y=n4Z4A3xervMdJKXg@mail.gmail.com>
- <20190906152320.GM2263813@devbig004.ftw2.facebook.com>
- <CAKMK7uEXP7XLFB2aFU6+E0TH_DepFRkfCoKoHwkXtjZRDyhHig@mail.gmail.com>
- <20190906154539.GP2263813@devbig004.ftw2.facebook.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH 08/10] blkcg: implement blk-iocost
+Date: Tue, 10 Sep 2019 14:55:14 +0200
+Message-ID: <20190910125513.GA6399@blackbody.suse.cz>
+References: <20190828220600.2527417-1-tj@kernel.org>
+ <20190828220600.2527417-9-tj@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="1yeeQ81UyVL57Vl7"
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20190906154539.GP2263813-LpCCV3molIbIZ9tKgghJQw2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "Greathouse, Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
+In-Reply-To: <20190828220600.2527417-9-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: hannes@cmpxchg.org, clm@fb.com, dennisz@fb.com, newella@fb.com, lizefan@huawei.com, axboe@kernel.dk, josef@toxicpanda.com, Josef Bacik <jbacik@fb.com>, kernel-team@fb.com, Rik van Riel <riel@surriel.com>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, Paolo Valente <paolo.valente@linaro.org>
 
-T24gRnJpIDA2LTA5LTE5IDA4OjQ1OjM5LCBUZWp1biBIZW8gd3JvdGU6Cj4gSGVsbG8sIERhbmll
-bC4KPiAKPiBPbiBGcmksIFNlcCAwNiwgMjAxOSBhdCAwNTozNDoxNlBNICswMjAwLCBEYW5pZWwg
-VmV0dGVyIHdyb3RlOgo+ID4gPiBIbW0uLi4gd2hhdCdkIGJlIHRoZSBmdW5kYW1lbnRhbCBkaWZm
-ZXJlbmNlIGZyb20gc2xhYiBvciBzb2NrZXQgbWVtb3J5Cj4gPiA+IHdoaWNoIGFyZSBoYW5kbGVk
-IHRocm91Z2ggbWVtY2c/ICBJcyBzeXN0ZW0gbWVtb3J5IHVzZWQgYnkgR1BVcyBoYXZlCj4gPiA+
-IGZ1cnRoZXIgZ2xvYmFsIHJlc3RyaWN0aW9ucyBpbiBhZGRpdGlvbiB0byB0aGUgYW1vdW50IG9m
-IHBoeXNpY2FsCj4gPiA+IG1lbW9yeSB1c2VkPwo+ID4gCj4gPiBTb21ldGltZXMsIGJ1dCB0aGF0
-IHdvdWxkIGJlIHNwZWNpZmljIHJlc291cmNlcyAoa2luZGEgbGlrZSB2cmFtKSwKPiA+IGUuZy4g
-Q01BIHJlZ2lvbnMgdXNlZCBieSBhIGdwdS4gQnV0IHByb2JhYmx5IG5vdCBzb21ldGhpbmcgeW91
-J2xsIHJ1bgo+ID4gaW4gYSBkYXRhY2VudGVyIGFuZCB3YW50IGNncm91cHMgZm9yIC4uLgo+ID4g
-Cj4gPiBJIGd1ZXNzIHdlIGNvdWxkIHRyeSB0byBpbnRlZ3JhdGUgd2l0aCB0aGUgbWVtY2cgZ3Jv
-dXAgY29udHJvbGxlci4gT25lCj4gPiB0cm91YmxlIGlzIHRoYXQgYXNpZGUgZnJvbSBpOTE1IG1v
-c3QgZ3B1IGRyaXZlcnMgZG8gbm90IHJlYWxseSBoYXZlIGEKPiA+IGZ1bGwgc2hyaW5rZXIsIHNv
-IG5vdCBzdXJlIGhvdyB0aGF0IHdvdWxkIGFsbCBpbnRlZ3JhdGUuCj4gCj4gU28sIHdoaWxlIGl0
-J2QgZ3JlYXQgdG8gaGF2ZSBzaHJpbmtlcnMgaW4gdGhlIGxvbmdlciB0ZXJtLCBpdCdzIG5vdCBh
-Cj4gc3RyaWN0IHJlcXVpcmVtZW50IHRvIGJlIGFjY291bnRlZCBpbiBtZW1jZy4gIEl0IGFscmVh
-ZHkgYWNjb3VudHMgYQo+IGxvdCBvZiBtZW1vcnkgd2hpY2ggaXNuJ3QgcmVjbGFpbWFibGUgKGEg
-bG90IG9mIHNsYWJzIGFuZCBzb2NrZXQKPiBidWZmZXIpLgoKWWVhaCwgaGF2aW5nIGEgc2hyaW5r
-ZXIgaXMgcHJlZmVycmVkIGJ1dCB0aGUgbWVtb3J5IHNob3VsZCBiZXR0ZXIgYmUKcmVjbGFpbWFi
-bGUgaW4gc29tZSBmb3JtLiBJZiBub3QgYnkgYW55IG90aGVyIG1lYW5zIHRoZW4gYXQgbGVhc3Qg
-Ym91bmQKdG8gYSB1c2VyIHByb2Nlc3MgY29udGV4dCBzbyB0aGF0IGl0IGdvZXMgYXdheSB3aXRo
-IGEgdGFzayBiZWluZyBraWxsZWQKYnkgdGhlIE9PTSBraWxsZXIuIElmIHRoYXQgaXMgbm90IHRo
-ZSBjYXNlIHRoZW4gd2UgY2Fubm90IHJlYWxseSBjaGFyZ2UKaXQgYmVjYXVzZSB0aGVuIHRoZSBt
-ZW1jZyBjb250cm9sbGVyIGlzIG9mIG5vIHVzZS4gV2UgY2FuIHRvbGVyYXRlIGl0IHRvCnNvbWUg
-ZGVncmVlIGlmIHRoZSBhbW91bnQgb2YgbWVtb3J5IGNoYXJnZWQgbGlrZSB0aGF0IGlzIG5lZ2xp
-Z2libGUgdG8KdGhlIG92ZXJhbGwgc2l6ZS4gQnV0IGZyb20gdGhlIGRpc2N1c3Npb24gaXQgc2Vl
-bXMgdGhhdCB0aGVzZSBidWZmZXJzCmFyZSByZWFsbHkgbGFyZ2UuCi0tIApNaWNoYWwgSG9ja28K
-U1VTRSBMYWJzCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-CmFtZC1nZnggbWFpbGluZyBsaXN0CmFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBz
-Oi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vYW1kLWdmeA==
+
+--1yeeQ81UyVL57Vl7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+Hello.
+
+On Wed, Aug 28, 2019 at 03:05:58PM -0700, Tejun Heo <tj@kernel.org> wrote:
+> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+> [...]
+> +static struct cftype ioc_files[] = {
+> +		.name = "weight",
+> [...]
+This adds the generic io.weight attribute. How will this compose with
+the weight from IO schedulers? (AFAIK, only BFQ allows proportional
+control as of now. +CC Paolo.)
+
+I see this attributes are effectively per-cgroup per-device. Apparently,
+one device should have only one weight across hierarchy. Would it make
+sense to have io.bfq.weight and io.cost.weight with disjunctive devices?
+
+(Alas, I have no idea how to make the users of io.weight happy, when
+proportionality control mechanism seems orthogonal to the weight.
+(Vector weights?))
+
+
+> +		.name = "cost.qos",
+> +		.flags = CFTYPE_ONLY_ON_ROOT,
+> [...]
+> +		.name = "cost.model",
+> +		.flags = CFTYPE_ONLY_ON_ROOT,
+I'm concerned that these aren't true cgroup attributes. The root cgroup
+would act as container for global configuration options. Wouldn't these
+values better fit as (configurable) attributes of the respective
+devices?
+
+Secondly, how is CFTYPE_ONLY_ON_ROOT supposed to be presented in cgroup
+namespaces?
+
+Thanks,
+Michal
+
+--1yeeQ81UyVL57Vl7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAl13nSUACgkQia1+riC5
+qShK8w//Q7gh2wjcYmn/uuKlxF40/MhRa8LwT9aDjZp3gEiRmMQbHUHpx3Td5aAl
+nPOQEp/W2sucYziohHPIokkeXIx+RwJliOEYfOCP+47ZOtWpeBXe6bTfmeRe87Ak
+xSZ6M3ibr2Y4mNLdcvjSzSeh1T0qAha9B5DBEuK7C4xqK45DKSekLjVmd9jd71cE
+CoYm56fVYZpDcYAHdTW7kjMie85QTLbiEY0WsuC563fxAoHDBZCDReIEtuAeMMog
+lgOgBquPb6OCObzkE9CYMSroWMCRPkq2F9BTnk85fnpXkeQeE1cP8FbFt8CXGSh2
+wsaz3dP8z7TAkUHRGySQiqaxsWDKRh/6KBk8Lv/wxffF3nSGLXuHC8tKcQIWHP45
+y+e6utaK47XA7JDZcXObloE200Vpko5MhYM6vKsUYNDQ8BQjew/+xs5aYdU7yO/z
+RtstUYBwgH6WWufm7D4yezdWGaJCZCuqtd46hy9vz8sJpm7iuJFbQdIQRD9z4kSf
+NieSVJLSO3p6QJVYOdbtN1xzEEz1Qm8UJaHcgyjaUckKVjnkB7UWe/U5wj7D+b5R
+sI0i0ACF6fdMsM0UnVArg4usmuFcwhO7NkngLrY85c6UTP75At+FhmTRJA3ZaIXI
+l3T8OtIYNXt3+PBYIGwcPHLDa+HbPOToKpeP6ePE1r9ZzSV8bzI=
+=VCDP
+-----END PGP SIGNATURE-----
+
+--1yeeQ81UyVL57Vl7--
