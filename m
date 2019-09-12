@@ -1,83 +1,88 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [PATCH 08/10] blkcg: implement blk-iocost
-Date: Wed, 11 Sep 2019 18:44:31 +0200
-Message-ID: <37CB2690-F1B9-4159-B6A9-77BDB0FF906D@linaro.org>
-References: <20190828220600.2527417-1-tj@kernel.org>
- <20190828220600.2527417-9-tj@kernel.org>
- <20190910125513.GA6399@blackbody.suse.cz>
- <20190910160855.GS2263813@devbig004.ftw2.facebook.com>
- <A69EF8D0-8156-46DB-A4DA-C5334764116E@linaro.org>
- <20190911141630.GV2263813@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.8\))
-Content-Transfer-Encoding: quoted-printable
+From: Roman Gushchin <guro@fb.com>
+Subject: [PATCH 2/2] cgroup: freezer: fix frozen state inheritance
+Date: Thu, 12 Sep 2019 10:56:45 -0700
+Message-ID: <20190912175645.2841713-2-guro@fb.com>
+References: <20190912175645.2841713-1-guro@fb.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=CIzlo4K5/PjwxwRPJcn0L8E28gxLYoETPgMFHBnxBGM=;
-        b=RiplzaXsZoN/l8/1QB2+PKmfBVYwqpeO8FjSnlnUnzxJBUYAaqG8Zm1oboRrHXiUgK
-         shFRnhEZ9eAh5ONRTyBJDmTxG56+hxS9st+TCG401AIBpGfhNFuCfPkL/dcJCWBB0VQD
-         X760P9SJ0S3MpF0ZGewpEpp8cHqbAFGYiZffb1lKQ6ej5txVcZzNhSZqqlBLsjymKFgD
-         S1tQjzpdK8PA1rlsT7cr9AOOK94cRX5NGAP1ZHEviIDK+Q89HaLqqsdpqxy2M0ctDDbq
-         KAzP+tv0EsEdBVkVUh5M6A6MLsCnd3jTrRLqj/6zi4SuSH/7MmYIU0IMTDMjeaznIdVu
-         hAVA==
-In-Reply-To: <20190911141630.GV2263813@devbig004.ftw2.facebook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=facebook; bh=JHcGIr6DfeeZGfRlp0Bw8MSSseCy7tNcl4Zfer3yjas=;
+ b=Ws37Eh+4it10LaEbzqprrRYoR6i8fyBwmbB70feddo3KvOnHh2Ev0c0EM7XHb9TEqslA
+ /MJbRaOrckgrmUOtNmfr62EObwVA3ajdVceCbAEhzZVlTzOReprBcrp8ne7bIRs/zxm0
+ Ks4NZE4CCTU0VenxfprPN4jzLDkXeNDah6Y= 
+In-Reply-To: <20190912175645.2841713-1-guro@fb.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: =?utf-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Johannes Weiner <hannes@cmpxchg.org>, clm@fb.com, dennisz@fb.com, newella@fb.com, Li Zefan <lizefan@huawei.com>, Jens Axboe <axboe@kernel.dk>, Josef Bacik <josef@toxicpanda.com>, Josef Bacik <jbacik@fb.com>, kernel-team@fb.com, Rik van Riel <riel@surriel.com>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, kernel-team@fb.com, Mark Crossen <mcrossen@fb.com>, Roman Gushchin <guro@fb.com>, stable@vger.kernel.org
 
+If a new child cgroup is created in the frozen cgroup hierarchy
+(one or more of ancestor cgroups is frozen), the CGRP_FREEZE cgroup
+flag should be set. Otherwise if a process will be attached to the
+child cgroup, it won't become frozen.
 
+The problem can be reproduced with the test_cgfreezer_mkdir test.
 
-> Il giorno 11 set 2019, alle ore 16:16, Tejun Heo <tj@kernel.org> ha =
-scritto:
->=20
-> Hello,
->=20
-> On Wed, Sep 11, 2019 at 10:18:53AM +0200, Paolo Valente wrote:
->>> The two being enabled at the same time doesn't make sense, so we can
->>> just switch over to bfq when bfq is selected as the iosched.  I =
-asked
->>> what Paolo wanted to do in terms of interface a couple times now but
->>> didn't get an answer and he posted a patch which makes the two
->>> controllers conflict, so....  Paolo, so it looks like you want to
->>> rename all bfq files to drop the bfq prefix, right?
->>=20
->> Yep, mainly because ... this is the solution you voted and you
->> yourself proposed [1] :)
->>=20
->> [1] https://patchwork.kernel.org/patch/10988261/
->=20
-> So, that was then.  Since then the interface change has been published
-> and userspace, at least some of them, already had to adjust.  Now, I
-> don't have any opinion on the matter and flipping again will cause
-> inconveniences to some subset of users.  It's your call.
->=20
+This is the output before this patch:
+  ~/test_freezer
+  ok 1 test_cgfreezer_simple
+  ok 2 test_cgfreezer_tree
+  ok 3 test_cgfreezer_forkbomb
+  Cgroup /sys/fs/cgroup/cg_test_mkdir_A/cg_test_mkdir_B isn't frozen
+  not ok 4 test_cgfreezer_mkdir
+  ok 5 test_cgfreezer_rmdir
+  ok 6 test_cgfreezer_migrate
+  ok 7 test_cgfreezer_ptrace
+  ok 8 test_cgfreezer_stopped
+  ok 9 test_cgfreezer_ptraced
+  ok 10 test_cgfreezer_vfork
 
-Ok, then let's go for removing bfq prefix, as expected, e.g., by
-systemd community [1].  A few days ago I reposted a patch removing the
-prefix from all involved parameters [2], it should make all legacy
-software work again.
+And with this patch:
+  ~/test_freezer
+  ok 1 test_cgfreezer_simple
+  ok 2 test_cgfreezer_tree
+  ok 3 test_cgfreezer_forkbomb
+  ok 4 test_cgfreezer_mkdir
+  ok 5 test_cgfreezer_rmdir
+  ok 6 test_cgfreezer_migrate
+  ok 7 test_cgfreezer_ptrace
+  ok 8 test_cgfreezer_stopped
+  ok 9 test_cgfreezer_ptraced
+  ok 10 test_cgfreezer_vfork
 
-[1] https://github.com/systemd/systemd/issues/7057
-[2] https://lkml.org/lkml/2019/9/9/47
+Reported-by: Mark Crossen <mcrossen@fb.com>
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: stable@vger.kernel.org
+---
+ kernel/cgroup/cgroup.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
->>> I can implement
->>> the switching if so.
->>=20
->> That would be perfect.
->=20
-> Whichever way it gets decided, this is easy enough.  I'll prep a
-> patch.
->=20
-
-Thank you for that too,
-Paolo
-
-> Thanks.
->=20
-> --=20
-> tejun
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 753afbca549f..8be1da1ebd9a 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -5255,8 +5255,16 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
+ 	 * if the parent has to be frozen, the child has too.
+ 	 */
+ 	cgrp->freezer.e_freeze = parent->freezer.e_freeze;
+-	if (cgrp->freezer.e_freeze)
++	if (cgrp->freezer.e_freeze) {
++		/*
++		 * Set the CGRP_FREEZE flag, so when a process will be
++		 * attached to the child cgroup, it will become frozen.
++		 * At this point the new cgroup is unpopulated, so we can
++		 * consider it frozen immediately.
++		 */
++		set_bit(CGRP_FREEZE, &cgrp->flags);
+ 		set_bit(CGRP_FROZEN, &cgrp->flags);
++	}
+ 
+ 	spin_lock_irq(&css_set_lock);
+ 	for (tcgrp = cgrp; tcgrp; tcgrp = cgroup_parent(tcgrp)) {
+-- 
+2.21.0
 
