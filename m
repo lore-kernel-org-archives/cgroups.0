@@ -1,55 +1,34 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] cgroup fixes for v5.3-rc8
-Date: Thu, 12 Sep 2019 14:11:50 -0700
-Message-ID: <20190912211150.GB3084169@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0
+From: pr-tracker-bot@kernel.org
+Subject: Re: [GIT PULL] cgroup fixes for v5.3-rc8
+Date: Fri, 13 Sep 2019 09:05:06 +0000
+Message-ID: <156836550667.13985.9782542852327752376.pr-tracker-bot@kernel.org>
+References: <20190912211150.GB3084169@devbig004.ftw2.facebook.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=Ft1lXaFWyeFaR5dQq95+R6LQSsO9+rjJoCxsIQDK09Q=;
-        b=ieuj2Q4AeufUufy5S/GjvLZqVEpSa2IqXOab6R7dw+TPfduNg/yvHq0tl5qtqN0aKu
-         S0Fx69ForISDBKoqDSgnU+Ex84zoIn6OicdJHOOhJfaN9DpJhK8OQ8WlNWst6zNANSkE
-         uz06s7IH1hnkNgtVos8xsUrtLpW1alGkANMSxzQwJikaxvOm328tMWkt5q/ckCJSeW2R
-         tE8OFY85hlXCYtYKqnIT9SUAM0Pcjd+igwUe9qIHEbjEGkiPA6Q/+niXtkBsb8oQYYKh
-         c97G6DGolDXJlzzSulLh/aVSPaV7e5fCXSMlHdZBsu+PHA6+WRDQMnP8v5BH1IUP6rEI
-         QvQQ==
-Content-Disposition: inline
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1568365506;
+        bh=y9zosm6Emxt7qS4zMnO2PZBMmj/UTTpSTgH+rozrYxY=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=qh+GPIuJXLFL+TLXp0P4fh/pWOakYAA83ToIlMeidNJucguuimgAT5TMrcW5WYBoe
+         I4tPNpNZerfoOJ4V2lMvlo34qVx9M9Vgz9kxp3MEvCaRx3oP6Hr5jrYNLyQYW3bIT2
+         5ilQt6psn5DHj0AP1pNkaJohdaim/LixCa/R0Z0o=
+In-Reply-To: <20190912211150.GB3084169@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
 
-Hello, Linus.
+The pull request you sent on Thu, 12 Sep 2019 14:11:50 -0700:
 
-Roman found and fixed a bug in the cgroup2 freezer which allows new
-child cgroup to escape frozen state.
+> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.3-fixes
 
-Thanks.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/a7f89616b7376495424f682b6086e0c391a89a1d
 
-The following changes since commit 505a8ec7e11ae5236c4a154a1e24ef49a8349600:
-
-  Revert "drm/i915/userptr: Acquire the page lock around set_page_dirty()" (2019-09-12 14:55:03 +0100)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.3-fixes
-
-for you to fetch changes up to 97a61369830ab085df5aed0ff9256f35b07d425a:
-
-  cgroup: freezer: fix frozen state inheritance (2019-09-12 14:04:45 -0700)
-
-----------------------------------------------------------------
-Roman Gushchin (2):
-      kselftests: cgroup: add freezer mkdir test
-      cgroup: freezer: fix frozen state inheritance
-
- kernel/cgroup/cgroup.c                        | 10 ++++-
- tools/testing/selftests/cgroup/test_freezer.c | 54 +++++++++++++++++++++++++++
- 2 files changed, 63 insertions(+), 1 deletion(-)
+Thank you!
 
 -- 
-tejun
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
