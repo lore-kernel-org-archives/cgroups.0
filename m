@@ -1,60 +1,59 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [PATCH 0/1] block, bfq: remove bfq prefix from cgroups filenames
-Date: Mon, 16 Sep 2019 17:21:01 +0200
-Message-ID: <64329DDB-FFF4-4709-83B1-39D5E6BF6AB6@linaro.org>
-References: <20190909073117.20625-1-paolo.valente@linaro.org>
- <80C56C11-DA21-4036-9006-2F459ACE9A8C@linaro.org>
- <c67c4d4b-ee56-85c1-5b94-7ae1704918b6@kernel.dk>
- <1F3898DA-C61F-4FA7-B586-F0FA0CAF5069@linaro.org>
- <20190916151643.GC3084169@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.8\))
-Content-Transfer-Encoding: quoted-printable
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] cgroup changes for v5.4-rc1
+Date: Mon, 16 Sep 2019 08:29:47 -0700
+Message-ID: <20190916152947.GE3084169@devbig004.ftw2.facebook.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=K5n01uhQ5HwxlBE5M/2zmjIiad/mSltxdBurQPag48E=;
-        b=Jy6+FzxuA5xspP87WcsXSOV4KOdYZWkwZV9U8INYadGh7JZSwRWH/gbT0hmx1AVdJp
-         c3z4qE9I4ZBu1OjPKIDmA/xJwG31JNjYTHNY62FngQXJj5Ch5iIf3UvshZV0IaFH7yuh
-         v9qvTI6LiL9JqE+hz8CfexVxz2uXwVd5QIAsfhXlMbsTH/wDD/OOX1+fX6e0lOq7Dc6o
-         kpe/jGOTZFtoFFaRWaeYDiih2pLyUhyfw4aG8BiagqvcX5YT1xfGUnnl72ARPECAPPBr
-         BSGYMoyvKuKfPeDNJ+h/hWOJcuvDR9nehhvCOzGJkCoKRRPU+l6z5hvmHnbNmglWZkkH
-         9olg==
-In-Reply-To: <20190916151643.GC3084169@devbig004.ftw2.facebook.com>
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=Ey0wD9SSrsgQ+GVE+vYc1coFKJxFcUoh6S5jBW7ZYvo=;
+        b=r6Tdi/eeQB83Zu0TvOlrODrPbnDctrTtiVLezpx9OYq6F37NtaWbabg56gHTpdI46+
+         4PLIar4hiAHgKcM1xNimBS6Yf83anB4wxsER40seAeriMGLA5vBDLGNJe7X65PPCVdrb
+         cB7HaOl0pIOlEs6n0a1rqQUqcTCLkz0TupZDeojcFchmrQBGNXQW3ZnfchDR8SQZNCkV
+         v6KMEVgJSEsQcXbHCd0qU9rHkuLW7gplk2XZNoejD2u/hd6FyX5Up46CqdLeJncyY7w2
+         /RlNtrVqCHgO76Ma36XAB7w9caRNBZ9weXUnuxu9VsijfM2p9OACH2Ri4kYuglIb7mwp
+         eXjw==
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Linus Walleij <linus.walleij@linaro.org>, noreply-spamdigest via bfq-iosched <bfq-iosched@googlegroups.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
 
+Hello, Linus.
 
+Three minor cleanup patches.
 
-> Il giorno 16 set 2019, alle ore 17:16, Tejun Heo <tj@kernel.org> ha =
-scritto:
->=20
-> Hello, Paolo.
->=20
-> On Mon, Sep 16, 2019 at 05:07:29PM +0200, Paolo Valente wrote:
->> Tejun, could you put your switch-off-io-cost code into a standalone
->> patch, so that I can put it together with this one in a complete
->> series?
->=20
-> It was more of a proof-of-concept / example, so the note in the email
-> that the code is free to be modified / used any way you see fit.  That
-> said, if you like it as it is, I can surely prep it as a standalone
-> patch.
->=20
+Thanks.
 
-AFAICT your proposal contains no evident error.  Plus, no one seems to
-have complained about the idea (regardless from the exact
-implementation).  So I guess the best next step is to go for it.
+The following changes since commit ad5e427e0f6b702e52c11d1f7b2b7be3bac7de82:
 
-Thanks,
-Paolo
+  Merge branch 'parisc-5.3-3' of git://git.kernel.org/pub/scm/linux/kernel/git/deller/parisc-linux (2019-07-23 15:34:59 -0700)
 
-> Thanks.
->=20
-> --=20
-> tejun
+are available in the Git repository at:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.4
+
+for you to fetch changes up to 653a23ca7e1e1ae907654e91d028bc6dfc7fce0c:
+
+  Use kvmalloc in cgroups-v1 (2019-08-07 11:37:58 -0700)
+
+----------------------------------------------------------------
+Marc Koderer (1):
+      Use kvmalloc in cgroups-v1
+
+Markus Elfring (1):
+      cgroup: Replace a seq_printf() call by seq_puts() in cgroup_print_ss_mask()
+
+Peng Wang (1):
+      cgroup: minor tweak for logic to get cgroup css
+
+ kernel/cgroup/cgroup-v1.c | 27 ++++-----------------------
+ kernel/cgroup/cgroup.c    |  4 ++--
+ 2 files changed, 6 insertions(+), 25 deletions(-)
+
+-- 
+tejun
