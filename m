@@ -1,123 +1,183 @@
-From: "Kasiviswanathan, Harish" <Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>
-Subject: [PATCH v2 4/4] drm/amdkfd: Check against device cgroup
-Date: Mon, 16 Sep 2019 18:05:57 +0000
-Message-ID: <20190916180523.27341-5-Harish.Kasiviswanathan@amd.com>
-References: <20190916180523.27341-1-Harish.Kasiviswanathan@amd.com>
+From: Mike Kravetz <mike.kravetz@oracle.com>
+Subject: Re: [PATCH v4 4/9] hugetlb: region_chg provides only cache entry
+Date: Mon, 16 Sep 2019 15:17:35 -0700
+Message-ID: <b2fa24c3-c92f-6834-e6da-b952ac25e5f3@oracle.com>
+References: <20190910233146.206080-1-almasrymina@google.com>
+ <20190910233146.206080-5-almasrymina@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <20190916180523.27341-1-Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2019-08-05;
+ bh=5OkYw5loGY+OZIKxyRG0zWZuSmCpM8iP5v71+KbI6wE=;
+ b=T6LkMsomnlr9e7oB0XtUY1t7V3HJL+mwG5+JE3QrXX9x2O1kPF8LFd8W9s96Ll7f9oR+
+ fSGcId+xwGbD3lH5muRVYv0Ore6kJHF7eddUWdf3xZ2xySXDgfGE5HgU5MbLHIKBFPrA
+ pzIYxeyU8q5wwB3srG9+/P8zSTIIEUzhQAADA6UA8tflwE+IN2jvpkpj772ReunZJ6tU
+ 0oqKU6LThA1Ppif7YWp58GYLmIf2Ad9mNeT5L+F9Du09Skbf0bBWuiwf1EVAsASvuvhR
+ PNbL0mpYfytf24cLd8OcO2OwI/qeXUwHNh8RphFuAnXq5oEy+JAG/Buy26dfm1+HmdER og== 
+In-Reply-To: <20190910233146.206080-5-almasrymina@google.com>
 Content-Language: en-US
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Deucher, Alexander" <Alexander.Deucher-5C7GfCeVMHo@public.gmane.org>, "airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Kasiviswanathan,
- Harish" <Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+To: Mina Almasry <almasrymina@google.com>
+Cc: shuah@kernel.org, rientjes@google.com, shakeelb@google.com, gthelen@google.com, akpm@linux-foundation.org, khalid.aziz@oracle.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, aneesh.kumar@linux.vnet.ibm.com, mkoutny@suse.com
 
-UGFydGljaXBhdGUgaW4gZGV2aWNlIGNncm91cC4gQWxsIGtmZCBkZXZpY2VzIGFyZSBleHBvc2Vk
-IHZpYSAvZGV2L2tmZC4KU28gdXNlIC9kZXYvZHJpL3JlbmRlck4gbm9kZS4KCkJlZm9yZSBleHBv
-c2luZyB0aGUgZGV2aWNlIHRvIGEgdGFzayBjaGVjayBpZiBpdCBoYXMgcGVybWlzc2lvbiB0bwph
-Y2Nlc3MgaXQuIElmIHRoZSB0YXNrIChiYXNlZCBvbiBpdHMgY2dyb3VwKSBjYW4gYWNjZXNzIC9k
-ZXYvZHJpL3JlbmRlck4KdGhlbiBleHBvc2UgdGhlIGRldmljZSB2aWEga2ZkIG5vZGUuCgpJZiB0
-aGUgdGFzayBjYW5ub3QgYWNjZXNzIC9kZXYvZHJpL3JlbmRlck4gdGhlbiBwcm9jZXNzIGRldmlj
-ZSBkYXRhCihwZGQpIGlzIG5vdCBjcmVhdGVkLiBUaGlzIHdpbGwgZW5zdXJlIHRoYXQgdGFzayBj
-YW5ub3QgdXNlIHRoZSBkZXZpY2UuCgpJbiBzeXNmcyB0b3BvbG9neSwgYWxsIGRldmljZSBub2Rl
-cyBhcmUgdmlzaWJsZSBpcnJlc3BlY3RpdmUgb2YgdGhlIHRhc2sKY2dyb3VwLiBUaGUgc3lzZnMg
-bm9kZSBkaXJlY3RvcmllcyBhcmUgY3JlYXRlZCBhdCBkcml2ZXIgbG9hZCB0aW1lIGFuZApjYW5u
-b3QgYmUgY2hhbmdlZCBkeW5hbWljYWxseS4gSG93ZXZlciwgYWNjZXNzIHRvIGluZm9ybWF0aW9u
-IGluc2lkZQpub2RlcyBpcyBjb250cm9sbGVkIGJhc2VkIG9uIHRoZSB0YXNrJ3MgY2dyb3VwIHBl
-cm1pc3Npb25zLgoKQ2hhbmdlLUlkOiBJYzc2ZDRkM2M0ZTEyZTI4ODAzM2I4ZDIyYjA4ZmZjNWEy
-ZDc4NGU1YwpTaWduZWQtb2ZmLWJ5OiBIYXJpc2ggS2FzaXZpc3dhbmF0aGFuIDxIYXJpc2guS2Fz
-aXZpc3dhbmF0aGFuQGFtZC5jb20+ClJldmlld2VkLWJ5OiBGZWxpeCBLdWVobGluZyA8RmVsaXgu
-S3VlaGxpbmdAYW1kLmNvbT4KLS0tCiBkcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGtmZC9rZmRfZmxh
-dF9tZW1vcnkuYyB8ICA5ICsrKysrKystLQogZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRrZmQva2Zk
-X3ByaXYuaCAgICAgICAgfCAxNyArKysrKysrKysrKysrKysrKwogZHJpdmVycy9ncHUvZHJtL2Ft
-ZC9hbWRrZmQva2ZkX3RvcG9sb2d5LmMgICAgfCAxMiArKysrKysrKysrKysKIDMgZmlsZXMgY2hh
-bmdlZCwgMzYgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2
-ZXJzL2dwdS9kcm0vYW1kL2FtZGtmZC9rZmRfZmxhdF9tZW1vcnkuYyBiL2RyaXZlcnMvZ3B1L2Ry
-bS9hbWQvYW1ka2ZkL2tmZF9mbGF0X21lbW9yeS5jCmluZGV4IDQ4MTY2MTQ5OWM5YS4uYWU5NTA2
-MzMyMjhjIDEwMDY0NAotLS0gYS9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGtmZC9rZmRfZmxhdF9t
-ZW1vcnkuYworKysgYi9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGtmZC9rZmRfZmxhdF9tZW1vcnku
-YwpAQCAtMzY5LDggKzM2OSwxMyBAQCBpbnQga2ZkX2luaXRfYXBlcnR1cmVzKHN0cnVjdCBrZmRf
-cHJvY2VzcyAqcHJvY2VzcykKIAogCS8qSXRlcmF0aW5nIG92ZXIgYWxsIGRldmljZXMqLwogCXdo
-aWxlIChrZmRfdG9wb2xvZ3lfZW51bV9rZmRfZGV2aWNlcyhpZCwgJmRldikgPT0gMCkgewotCQlp
-ZiAoIWRldikgewotCQkJaWQrKzsgLyogU2tpcCBub24gR1BVIGRldmljZXMgKi8KKwkJaWYgKCFk
-ZXYgfHwga2ZkX2RldmNncm91cF9jaGVja19wZXJtaXNzaW9uKGRldikpIHsKKwkJCS8qIFNraXAg
-bm9uIEdQVSBkZXZpY2VzIGFuZCBkZXZpY2VzIHRvIHdoaWNoIHRoZQorCQkJICogY3VycmVudCBw
-cm9jZXNzIGhhdmUgbm8gYWNjZXNzIHRvLiBBY2Nlc3MgY2FuIGJlCisJCQkgKiBsaW1pdGVkIGJ5
-IHBsYWNpbmcgdGhlIHByb2Nlc3MgaW4gYSBzcGVjaWZpYworCQkJICogY2dyb3VwIGhpZXJhcmNo
-eQorCQkJICovCisJCQlpZCsrOwogCQkJY29udGludWU7CiAJCX0KIApkaWZmIC0tZ2l0IGEvZHJp
-dmVycy9ncHUvZHJtL2FtZC9hbWRrZmQva2ZkX3ByaXYuaCBiL2RyaXZlcnMvZ3B1L2RybS9hbWQv
-YW1ka2ZkL2tmZF9wcml2LmgKaW5kZXggOWM1NmJhNmVjODI2Li5hMzAyM2Y5MzI1NTQgMTAwNjQ0
-Ci0tLSBhL2RyaXZlcnMvZ3B1L2RybS9hbWQvYW1ka2ZkL2tmZF9wcml2LmgKKysrIGIvZHJpdmVy
-cy9ncHUvZHJtL2FtZC9hbWRrZmQva2ZkX3ByaXYuaApAQCAtMzYsNiArMzYsOCBAQAogI2luY2x1
-ZGUgPGxpbnV4L3NlcV9maWxlLmg+CiAjaW5jbHVkZSA8bGludXgva3JlZi5oPgogI2luY2x1ZGUg
-PGxpbnV4L3N5c2ZzLmg+CisjaW5jbHVkZSA8bGludXgvZGV2aWNlX2Nncm91cC5oPgorI2luY2x1
-ZGUgPGRybS9kcm1QLmg+CiAjaW5jbHVkZSA8a2dkX2tmZF9pbnRlcmZhY2UuaD4KIAogI2luY2x1
-ZGUgImFtZF9zaGFyZWQuaCIKQEAgLTEwNDgsNiArMTA1MCwyMSBAQCBib29sIGtmZF9pc19sb2Nr
-ZWQodm9pZCk7CiB2b2lkIGtmZF9pbmNfY29tcHV0ZV9hY3RpdmUoc3RydWN0IGtmZF9kZXYgKmRl
-dik7CiB2b2lkIGtmZF9kZWNfY29tcHV0ZV9hY3RpdmUoc3RydWN0IGtmZF9kZXYgKmRldik7CiAK
-Ky8qIENncm91cCBTdXBwb3J0ICovCisvKiBDaGVjayB3aXRoIGRldmljZSBjZ3JvdXAgaWYgQGtm
-ZCBkZXZpY2UgaXMgYWNjZXNzaWJsZSAqLworc3RhdGljIGlubGluZSBpbnQga2ZkX2RldmNncm91
-cF9jaGVja19wZXJtaXNzaW9uKHN0cnVjdCBrZmRfZGV2ICprZmQpCit7CisjaWYgZGVmaW5lZChD
-T05GSUdfQ0dST1VQX0RFVklDRSkKKwlzdHJ1Y3QgZHJtX2RldmljZSAqZGRldiA9IGtmZC0+ZGRl
-djsKKworCXJldHVybiBkZXZjZ3JvdXBfY2hlY2tfcGVybWlzc2lvbihERVZDR19ERVZfQ0hBUiwg
-ZGRldi0+ZHJpdmVyLT5tYWpvciwKKwkJCQkJICBkZGV2LT5yZW5kZXItPmluZGV4LAorCQkJCQkg
-IERFVkNHX0FDQ19XUklURSB8IERFVkNHX0FDQ19SRUFEKTsKKyNlbHNlCisJcmV0dXJuIDA7Cisj
-ZW5kaWYKK30KKwogLyogRGVidWdmcyAqLwogI2lmIGRlZmluZWQoQ09ORklHX0RFQlVHX0ZTKQog
-CmRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGtmZC9rZmRfdG9wb2xvZ3kuYyBi
-L2RyaXZlcnMvZ3B1L2RybS9hbWQvYW1ka2ZkL2tmZF90b3BvbG9neS5jCmluZGV4IDhkMGNmZDM5
-MWQ2Ny4uOTJlNTg2N2FhOTkwIDEwMDY0NAotLS0gYS9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGtm
-ZC9rZmRfdG9wb2xvZ3kuYworKysgYi9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGtmZC9rZmRfdG9w
-b2xvZ3kuYwpAQCAtMjY5LDYgKzI2OSw4IEBAIHN0YXRpYyBzc2l6ZV90IGlvbGlua19zaG93KHN0
-cnVjdCBrb2JqZWN0ICprb2JqLCBzdHJ1Y3QgYXR0cmlidXRlICphdHRyLAogCWJ1ZmZlclswXSA9
-IDA7CiAKIAlpb2xpbmsgPSBjb250YWluZXJfb2YoYXR0ciwgc3RydWN0IGtmZF9pb2xpbmtfcHJv
-cGVydGllcywgYXR0cik7CisJaWYgKGlvbGluay0+Z3B1ICYmIGtmZF9kZXZjZ3JvdXBfY2hlY2tf
-cGVybWlzc2lvbihpb2xpbmstPmdwdSkpCisJCXJldHVybiAtRVBFUk07CiAJc3lzZnNfc2hvd18z
-MmJpdF9wcm9wKGJ1ZmZlciwgInR5cGUiLCBpb2xpbmstPmlvbGlua190eXBlKTsKIAlzeXNmc19z
-aG93XzMyYml0X3Byb3AoYnVmZmVyLCAidmVyc2lvbl9tYWpvciIsIGlvbGluay0+dmVyX21haik7
-CiAJc3lzZnNfc2hvd18zMmJpdF9wcm9wKGJ1ZmZlciwgInZlcnNpb25fbWlub3IiLCBpb2xpbmst
-PnZlcl9taW4pOwpAQCAtMzA1LDYgKzMwNyw4IEBAIHN0YXRpYyBzc2l6ZV90IG1lbV9zaG93KHN0
-cnVjdCBrb2JqZWN0ICprb2JqLCBzdHJ1Y3QgYXR0cmlidXRlICphdHRyLAogCWJ1ZmZlclswXSA9
-IDA7CiAKIAltZW0gPSBjb250YWluZXJfb2YoYXR0ciwgc3RydWN0IGtmZF9tZW1fcHJvcGVydGll
-cywgYXR0cik7CisJaWYgKG1lbS0+Z3B1ICYmIGtmZF9kZXZjZ3JvdXBfY2hlY2tfcGVybWlzc2lv
-bihtZW0tPmdwdSkpCisJCXJldHVybiAtRVBFUk07CiAJc3lzZnNfc2hvd18zMmJpdF9wcm9wKGJ1
-ZmZlciwgImhlYXBfdHlwZSIsIG1lbS0+aGVhcF90eXBlKTsKIAlzeXNmc19zaG93XzY0Yml0X3By
-b3AoYnVmZmVyLCAic2l6ZV9pbl9ieXRlcyIsIG1lbS0+c2l6ZV9pbl9ieXRlcyk7CiAJc3lzZnNf
-c2hvd18zMmJpdF9wcm9wKGJ1ZmZlciwgImZsYWdzIiwgbWVtLT5mbGFncyk7CkBAIC0zMzQsNiAr
-MzM4LDggQEAgc3RhdGljIHNzaXplX3Qga2ZkX2NhY2hlX3Nob3coc3RydWN0IGtvYmplY3QgKmtv
-YmosIHN0cnVjdCBhdHRyaWJ1dGUgKmF0dHIsCiAJYnVmZmVyWzBdID0gMDsKIAogCWNhY2hlID0g
-Y29udGFpbmVyX29mKGF0dHIsIHN0cnVjdCBrZmRfY2FjaGVfcHJvcGVydGllcywgYXR0cik7CisJ
-aWYgKGNhY2hlLT5ncHUgJiYga2ZkX2RldmNncm91cF9jaGVja19wZXJtaXNzaW9uKGNhY2hlLT5n
-cHUpKQorCQlyZXR1cm4gLUVQRVJNOwogCXN5c2ZzX3Nob3dfMzJiaXRfcHJvcChidWZmZXIsICJw
-cm9jZXNzb3JfaWRfbG93IiwKIAkJCWNhY2hlLT5wcm9jZXNzb3JfaWRfbG93KTsKIAlzeXNmc19z
-aG93XzMyYml0X3Byb3AoYnVmZmVyLCAibGV2ZWwiLCBjYWNoZS0+Y2FjaGVfbGV2ZWwpOwpAQCAt
-NDE0LDYgKzQyMCw4IEBAIHN0YXRpYyBzc2l6ZV90IG5vZGVfc2hvdyhzdHJ1Y3Qga29iamVjdCAq
-a29iaiwgc3RydWN0IGF0dHJpYnV0ZSAqYXR0ciwKIAlpZiAoc3RyY21wKGF0dHItPm5hbWUsICJn
-cHVfaWQiKSA9PSAwKSB7CiAJCWRldiA9IGNvbnRhaW5lcl9vZihhdHRyLCBzdHJ1Y3Qga2ZkX3Rv
-cG9sb2d5X2RldmljZSwKIAkJCQlhdHRyX2dwdWlkKTsKKwkJaWYgKGRldi0+Z3B1ICYmIGtmZF9k
-ZXZjZ3JvdXBfY2hlY2tfcGVybWlzc2lvbihkZXYtPmdwdSkpCisJCQlyZXR1cm4gLUVQRVJNOwog
-CQlyZXR1cm4gc3lzZnNfc2hvd18zMmJpdF92YWwoYnVmZmVyLCBkZXYtPmdwdV9pZCk7CiAJfQog
-CkBAIC00MjEsMTEgKzQyOSwxNSBAQCBzdGF0aWMgc3NpemVfdCBub2RlX3Nob3coc3RydWN0IGtv
-YmplY3QgKmtvYmosIHN0cnVjdCBhdHRyaWJ1dGUgKmF0dHIsCiAJCWRldiA9IGNvbnRhaW5lcl9v
-ZihhdHRyLCBzdHJ1Y3Qga2ZkX3RvcG9sb2d5X2RldmljZSwKIAkJCQlhdHRyX25hbWUpOwogCisJ
-CWlmIChkZXYtPmdwdSAmJiBrZmRfZGV2Y2dyb3VwX2NoZWNrX3Blcm1pc3Npb24oZGV2LT5ncHUp
-KQorCQkJcmV0dXJuIC1FUEVSTTsKIAkJcmV0dXJuIHN5c2ZzX3Nob3dfc3RyX3ZhbChidWZmZXIs
-IGRldi0+bm9kZV9wcm9wcy5uYW1lKTsKIAl9CiAKIAlkZXYgPSBjb250YWluZXJfb2YoYXR0ciwg
-c3RydWN0IGtmZF90b3BvbG9neV9kZXZpY2UsCiAJCQlhdHRyX3Byb3BzKTsKKwlpZiAoZGV2LT5n
-cHUgJiYga2ZkX2RldmNncm91cF9jaGVja19wZXJtaXNzaW9uKGRldi0+Z3B1KSkKKwkJcmV0dXJu
-IC1FUEVSTTsKIAlzeXNmc19zaG93XzMyYml0X3Byb3AoYnVmZmVyLCAiY3B1X2NvcmVzX2NvdW50
-IiwKIAkJCWRldi0+bm9kZV9wcm9wcy5jcHVfY29yZXNfY291bnQpOwogCXN5c2ZzX3Nob3dfMzJi
-aXRfcHJvcChidWZmZXIsICJzaW1kX2NvdW50IiwKLS0gCjIuMTcuMQoKX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KYW1kLWdmeCBtYWlsaW5nIGxpc3QKYW1k
-LWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcv
-bWFpbG1hbi9saXN0aW5mby9hbWQtZ2Z4
+On 9/10/19 4:31 PM, Mina Almasry wrote:
+> Current behavior is that region_chg provides both a cache entry in
+> resv->region_cache, AND a placeholder entry in resv->regions. region_add
+> first tries to use the placeholder, and if it finds that the placeholder
+> has been deleted by a racing region_del call, it uses the cache entry.
+> 
+> This behavior is completely unnecessary and is removed in this patch for
+> a couple of reasons:
+> 
+> 1. region_add needs to either find a cached file_region entry in
+>    resv->region_cache, or find an entry in resv->regions to expand. It
+>    does not need both.
+> 2. region_chg adding a placeholder entry in resv->regions opens up
+>    a possible race with region_del, where region_chg adds a placeholder
+>    region in resv->regions, and this region is deleted by a racing call
+>    to region_del during region_chg execution or before region_add is
+>    called. Removing the race makes the code easier to reason about and
+>    maintain.
+> 
+> In addition, a follow up patch in this series disables region
+> coalescing, which would be further complicated if the race with
+> region_del exists.
+> 
+> Signed-off-by: Mina Almasry <almasrymina@google.com>
+
+Thanks.  I like this modification as it does simplify the code and could
+be added as a general cleanup independent of the other changes.
+
+Reviewed-by: Mike Kravetz <mike.kravetz@oracle.com>
+-- 
+Mike Kravetz
+
+> ---
+>  mm/hugetlb.c | 63 +++++++++-------------------------------------------
+>  1 file changed, 11 insertions(+), 52 deletions(-)
+> 
+> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+> index fbd7c52e17348..bea51ae422f63 100644
+> --- a/mm/hugetlb.c
+> +++ b/mm/hugetlb.c
+> @@ -246,14 +246,10 @@ struct file_region {
+> 
+>  /*
+>   * Add the huge page range represented by [f, t) to the reserve
+> - * map.  In the normal case, existing regions will be expanded
+> - * to accommodate the specified range.  Sufficient regions should
+> - * exist for expansion due to the previous call to region_chg
+> - * with the same range.  However, it is possible that region_del
+> - * could have been called after region_chg and modifed the map
+> - * in such a way that no region exists to be expanded.  In this
+> - * case, pull a region descriptor from the cache associated with
+> - * the map and use that for the new range.
+> + * map.  Existing regions will be expanded to accommodate the specified
+> + * range, or a region will be taken from the cache.  Sufficient regions
+> + * must exist in the cache due to the previous call to region_chg with
+> + * the same range.
+>   *
+>   * Return the number of new huge pages added to the map.  This
+>   * number is greater than or equal to zero.
+> @@ -272,9 +268,8 @@ static long region_add(struct resv_map *resv, long f, long t)
+> 
+>  	/*
+>  	 * If no region exists which can be expanded to include the
+> -	 * specified range, the list must have been modified by an
+> -	 * interleving call to region_del().  Pull a region descriptor
+> -	 * from the cache and use it for this range.
+> +	 * specified range, pull a region descriptor from the cache
+> +	 * and use it for this range.
+>  	 */
+>  	if (&rg->link == head || t < rg->from) {
+>  		VM_BUG_ON(resv->region_cache_count <= 0);
+> @@ -339,15 +334,9 @@ static long region_add(struct resv_map *resv, long f, long t)
+>   * call to region_add that will actually modify the reserve
+>   * map to add the specified range [f, t).  region_chg does
+>   * not change the number of huge pages represented by the
+> - * map.  However, if the existing regions in the map can not
+> - * be expanded to represent the new range, a new file_region
+> - * structure is added to the map as a placeholder.  This is
+> - * so that the subsequent region_add call will have all the
+> - * regions it needs and will not fail.
+> - *
+> - * Upon entry, region_chg will also examine the cache of region descriptors
+> - * associated with the map.  If there are not enough descriptors cached, one
+> - * will be allocated for the in progress add operation.
+> + * map.  A new file_region structure is added to the cache
+> + * as a placeholder, so that the subsequent region_add
+> + * call will have all the regions it needs and will not fail.
+>   *
+>   * Returns the number of huge pages that need to be added to the existing
+>   * reservation map for the range [f, t).  This number is greater or equal to
+> @@ -357,10 +346,9 @@ static long region_add(struct resv_map *resv, long f, long t)
+>  static long region_chg(struct resv_map *resv, long f, long t)
+>  {
+>  	struct list_head *head = &resv->regions;
+> -	struct file_region *rg, *nrg = NULL;
+> +	struct file_region *rg;
+>  	long chg = 0;
+> 
+> -retry:
+>  	spin_lock(&resv->lock);
+>  retry_locked:
+>  	resv->adds_in_progress++;
+> @@ -378,10 +366,8 @@ static long region_chg(struct resv_map *resv, long f, long t)
+>  		spin_unlock(&resv->lock);
+> 
+>  		trg = kmalloc(sizeof(*trg), GFP_KERNEL);
+> -		if (!trg) {
+> -			kfree(nrg);
+> +		if (!trg)
+>  			return -ENOMEM;
+> -		}
+> 
+>  		spin_lock(&resv->lock);
+>  		list_add(&trg->link, &resv->region_cache);
+> @@ -394,28 +380,6 @@ static long region_chg(struct resv_map *resv, long f, long t)
+>  		if (f <= rg->to)
+>  			break;
+> 
+> -	/* If we are below the current region then a new region is required.
+> -	 * Subtle, allocate a new region at the position but make it zero
+> -	 * size such that we can guarantee to record the reservation. */
+> -	if (&rg->link == head || t < rg->from) {
+> -		if (!nrg) {
+> -			resv->adds_in_progress--;
+> -			spin_unlock(&resv->lock);
+> -			nrg = kmalloc(sizeof(*nrg), GFP_KERNEL);
+> -			if (!nrg)
+> -				return -ENOMEM;
+> -
+> -			nrg->from = f;
+> -			nrg->to   = f;
+> -			INIT_LIST_HEAD(&nrg->link);
+> -			goto retry;
+> -		}
+> -
+> -		list_add(&nrg->link, rg->link.prev);
+> -		chg = t - f;
+> -		goto out_nrg;
+> -	}
+> -
+>  	/* Round our left edge to the current segment if it encloses us. */
+>  	if (f > rg->from)
+>  		f = rg->from;
+> @@ -439,11 +403,6 @@ static long region_chg(struct resv_map *resv, long f, long t)
+>  	}
+> 
+>  out:
+> -	spin_unlock(&resv->lock);
+> -	/*  We already know we raced and no longer need the new region */
+> -	kfree(nrg);
+> -	return chg;
+> -out_nrg:
+>  	spin_unlock(&resv->lock);
+>  	return chg;
+>  }
+> --
+> 2.23.0.162.g0b9fbb3734-goog
