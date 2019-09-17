@@ -1,72 +1,52 @@
-From: Daniel Vetter <daniel@ffwll.ch>
-Subject: Re: [PATCH RFC v4 00/16] new cgroup controller for gpu/drm subsystem
-Date: Tue, 17 Sep 2019 14:21:40 +0200
-Message-ID: <20190917122140.GL3958@phenom.ffwll.local>
-References: <20190829060533.32315-1-Kenny.Ho@amd.com>
- <20190831042857.GD2263813@devbig004.ftw2.facebook.com>
- <20190903075550.GJ2112@phenom.ffwll.local>
- <20190903185013.GI2263813@devbig004.ftw2.facebook.com>
- <CAKMK7uE5Bj-3cJH895iqnLpwUV+GBDM1Y=n4Z4A3xervMdJKXg@mail.gmail.com>
- <20190906152320.GM2263813@devbig004.ftw2.facebook.com>
- <CAKMK7uEXP7XLFB2aFU6+E0TH_DepFRkfCoKoHwkXtjZRDyhHig@mail.gmail.com>
- <20190906154539.GP2263813@devbig004.ftw2.facebook.com>
- <20190910115448.GT2063@dhcp22.suse.cz>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 1/2] blkcg: Export blkcg_conf_prep/finish() for bfq
+Date: Tue, 17 Sep 2019 08:13:08 -0700
+Message-ID: <20190917151308.GH3084169@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=2BszFrJE5DhvvCqO6dnoH5rt4IlU+zqhXXHVu1J4dUQ=;
+        b=BdxsZV3xdouTBb85ev20LScZzJk9sHxCTS804kLTi4P+4cxV14+mdM/5k/CTfY7KYy
+         QlIbcCNUMrm97b8uLRopqvPVyRIZWzE4h3GKMdK+b6Nxzijp/EzTlas3mw8Jc7C0q03Q
+         z0GMOTss3RH52FWcirpt0t+ETLAx/ycrt2r6PRYvRj8iyP8tB0BjGNEuMdQ5TNGKvxz/
+         HTJ5cTOptNPgmHGUkpqBjYcghQgHxfCvtUfOYAruMsjfvSNevICznZAXEw8Kv/MQLGxt
+         z8h7yk2O4Y3phH9s8yE0gpXzECURVyKfHMKJyN+dW/wo7vWayo9UMyNkA6H/5LUhqKYc
+         OKzQ==
 Content-Disposition: inline
-In-Reply-To: <20190910115448.GT2063@dhcp22.suse.cz>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@kernel.org>
-Cc: "Greathouse, Joseph" <joseph.greathouse@amd.com>, Kenny Ho <Kenny.Ho@amd.com>, "Kuehling, Felix" <felix.kuehling@amd.com>, jsparks@cray.com, dri-devel <dri-devel@lists.freedesktop.org>, lkaplan@cray.com, Alex Deucher <alexander.deucher@amd.com>, Kenny Ho <y2kenny@gmail.com>, amd-gfx list <amd-gfx@lists.freedesktop.org>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
+Content-Transfer-Encoding: 7bit
+To: Jens Axboe <axboe@kernel.dk>, Paolo Valente <paolo.valente@linaro.org>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
 
-T24gVHVlLCBTZXAgMTAsIDIwMTkgYXQgMDE6NTQ6NDhQTSArMDIwMCwgTWljaGFsIEhvY2tvIHdy
-b3RlOgo+IE9uIEZyaSAwNi0wOS0xOSAwODo0NTozOSwgVGVqdW4gSGVvIHdyb3RlOgo+ID4gSGVs
-bG8sIERhbmllbC4KPiA+IAo+ID4gT24gRnJpLCBTZXAgMDYsIDIwMTkgYXQgMDU6MzQ6MTZQTSAr
-MDIwMCwgRGFuaWVsIFZldHRlciB3cm90ZToKPiA+ID4gPiBIbW0uLi4gd2hhdCdkIGJlIHRoZSBm
-dW5kYW1lbnRhbCBkaWZmZXJlbmNlIGZyb20gc2xhYiBvciBzb2NrZXQgbWVtb3J5Cj4gPiA+ID4g
-d2hpY2ggYXJlIGhhbmRsZWQgdGhyb3VnaCBtZW1jZz8gIElzIHN5c3RlbSBtZW1vcnkgdXNlZCBi
-eSBHUFVzIGhhdmUKPiA+ID4gPiBmdXJ0aGVyIGdsb2JhbCByZXN0cmljdGlvbnMgaW4gYWRkaXRp
-b24gdG8gdGhlIGFtb3VudCBvZiBwaHlzaWNhbAo+ID4gPiA+IG1lbW9yeSB1c2VkPwo+ID4gPiAK
-PiA+ID4gU29tZXRpbWVzLCBidXQgdGhhdCB3b3VsZCBiZSBzcGVjaWZpYyByZXNvdXJjZXMgKGtp
-bmRhIGxpa2UgdnJhbSksCj4gPiA+IGUuZy4gQ01BIHJlZ2lvbnMgdXNlZCBieSBhIGdwdS4gQnV0
-IHByb2JhYmx5IG5vdCBzb21ldGhpbmcgeW91J2xsIHJ1bgo+ID4gPiBpbiBhIGRhdGFjZW50ZXIg
-YW5kIHdhbnQgY2dyb3VwcyBmb3IgLi4uCj4gPiA+IAo+ID4gPiBJIGd1ZXNzIHdlIGNvdWxkIHRy
-eSB0byBpbnRlZ3JhdGUgd2l0aCB0aGUgbWVtY2cgZ3JvdXAgY29udHJvbGxlci4gT25lCj4gPiA+
-IHRyb3VibGUgaXMgdGhhdCBhc2lkZSBmcm9tIGk5MTUgbW9zdCBncHUgZHJpdmVycyBkbyBub3Qg
-cmVhbGx5IGhhdmUgYQo+ID4gPiBmdWxsIHNocmlua2VyLCBzbyBub3Qgc3VyZSBob3cgdGhhdCB3
-b3VsZCBhbGwgaW50ZWdyYXRlLgo+ID4gCj4gPiBTbywgd2hpbGUgaXQnZCBncmVhdCB0byBoYXZl
-IHNocmlua2VycyBpbiB0aGUgbG9uZ2VyIHRlcm0sIGl0J3Mgbm90IGEKPiA+IHN0cmljdCByZXF1
-aXJlbWVudCB0byBiZSBhY2NvdW50ZWQgaW4gbWVtY2cuICBJdCBhbHJlYWR5IGFjY291bnRzIGEK
-PiA+IGxvdCBvZiBtZW1vcnkgd2hpY2ggaXNuJ3QgcmVjbGFpbWFibGUgKGEgbG90IG9mIHNsYWJz
-IGFuZCBzb2NrZXQKPiA+IGJ1ZmZlcikuCj4gCj4gWWVhaCwgaGF2aW5nIGEgc2hyaW5rZXIgaXMg
-cHJlZmVycmVkIGJ1dCB0aGUgbWVtb3J5IHNob3VsZCBiZXR0ZXIgYmUKPiByZWNsYWltYWJsZSBp
-biBzb21lIGZvcm0uIElmIG5vdCBieSBhbnkgb3RoZXIgbWVhbnMgdGhlbiBhdCBsZWFzdCBib3Vu
-ZAo+IHRvIGEgdXNlciBwcm9jZXNzIGNvbnRleHQgc28gdGhhdCBpdCBnb2VzIGF3YXkgd2l0aCBh
-IHRhc2sgYmVpbmcga2lsbGVkCj4gYnkgdGhlIE9PTSBraWxsZXIuIElmIHRoYXQgaXMgbm90IHRo
-ZSBjYXNlIHRoZW4gd2UgY2Fubm90IHJlYWxseSBjaGFyZ2UKPiBpdCBiZWNhdXNlIHRoZW4gdGhl
-IG1lbWNnIGNvbnRyb2xsZXIgaXMgb2Ygbm8gdXNlLiBXZSBjYW4gdG9sZXJhdGUgaXQgdG8KPiBz
-b21lIGRlZ3JlZSBpZiB0aGUgYW1vdW50IG9mIG1lbW9yeSBjaGFyZ2VkIGxpa2UgdGhhdCBpcyBu
-ZWdsaWdpYmxlIHRvCj4gdGhlIG92ZXJhbGwgc2l6ZS4gQnV0IGZyb20gdGhlIGRpc2N1c3Npb24g
-aXQgc2VlbXMgdGhhdCB0aGVzZSBidWZmZXJzCj4gYXJlIHJlYWxseSBsYXJnZS4KCkkgdGhpbmsg
-d2UgY2FuIGp1c3QgbWFrZSAibXVzdCBoYXZlIGEgc2hyaW5rZXIiIGFzIGEgcmVxdWlyZW1lbnQg
-Zm9yCnN5c3RlbSBtZW1vcnkgY2dyb3VwIHRoaW5nIGZvciBncHUgYnVmZmVycy4gVGhlcmUncyBt
-aWxkIGxvY2tpbmcgaW52ZXJzaW9uCmZ1biB0byBiZSBoYWQgd2hlbiB0eXBpbmcgb25lLCBidXQg
-SSB0aGluayB0aGUgcHJvYmxlbSBpcyB3ZWxsLXVuZGVyc3Rvb2QKZW5vdWdoIHRoYXQgdGhpcyBp
-c24ndCBhIGh1Z2UgaHVyZGxlIHRvIGNsaW1iIG92ZXIuIEFuZCBzaG91bGQgZ2l2ZSBhZG1pbnMK
-YW4gZWFzaWVyIHRvIG1hbmdlIHN5c3RlbSwgc2luY2UgaXQgd29ya3MgbW9yZSBsaWtlIHdoYXQg
-dGhleSBrbm93CmFscmVhZHkuCi1EYW5pZWwKLS0gCkRhbmllbCBWZXR0ZXIKU29mdHdhcmUgRW5n
-aW5lZXIsIEludGVsIENvcnBvcmF0aW9uCmh0dHA6Ly9ibG9nLmZmd2xsLmNoCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxp
-c3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNr
-dG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
+bfq module build is currently broken due to these two functions.  Fix
+it by export them.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Paolo Valente <paolo.valente@linaro.org>
+---
+ block/blk-cgroup.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -900,6 +900,7 @@ fail:
+ 	}
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(blkg_conf_prep);
+ 
+ /**
+  * blkg_conf_finish - finish up per-blkg config update
+@@ -915,6 +916,7 @@ void blkg_conf_finish(struct blkg_conf_c
+ 	rcu_read_unlock();
+ 	put_disk_and_module(ctx->disk);
+ }
++EXPORT_SYMBOL_GPL(blkg_conf_finish);
+ 
+ static int blkcg_print_stat(struct seq_file *sf, void *v)
+ {
