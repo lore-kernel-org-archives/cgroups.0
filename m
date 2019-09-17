@@ -1,204 +1,60 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: [PATCH 1/2] blkcg: Make bfq disable iocost when enabled
-Date: Tue, 17 Sep 2019 18:51:47 +0200
-Message-ID: <20190917165148.19146-2-paolo.valente@linaro.org>
+From: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+Subject: Re: [PATCH 2/2] block, bfq: delete "bfq" prefix from cgroup filenames
+Date: Tue, 17 Sep 2019 21:04:52 +0000
+Message-ID: <BYAPR04MB57492FC0194EFB7506147533868F0@BYAPR04MB5749.namprd04.prod.outlook.com>
 References: <20190917165148.19146-1-paolo.valente@linaro.org>
+ <20190917165148.19146-3-paolo.valente@linaro.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1568754295; x=1600290295;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=5L/3zDrhBByJdOrBbw28FOeLuhv56OkWr9EyUtoofrc=;
+  b=f9apoqKocv6c7IQk9DYAylRWv5slcxrFMM8f3hMblQ5egMjU+JixiW9F
+   QG5wPWciRVF+eeb/7HnwR53Xdyxv2FI6ytW7h4KttMbJuGjjy9OJs4y3F
+   zwcHw8T1yQZY3/gGUJBJucqTYNrH9nXvZSnz9DWX18ko/K3+xznA/cFeh
+   gckxkvqlodE0lMHDs5zOctbX3wPMhYRgtWgm1M0SDuGnsXLexufoYJgQX
+   U+zL+UTuxkYEUrsBIBtHJhPATu+YOU0asl8nt6QSqK2mptWhY2F85+epQ
+   BYhEteH5216X45+lMIFhcEPiyV5t53XCPzkEeNFghbhk7bz97N8XIIg7C
+   g==;
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=D17brve6b6KAv4fqOmqA3INLGXx33zG7oskk+r6jVO8=;
-        b=hHiW8B/QKwHCS22NUzjtEbLG8SCk2S3zBzArHW2Q9oZ8//kdEgusup7MhqecS/2AEB
-         yF6OG6N6oV+f1nDE1wDU+LMtO2czrB56uU2oRX6x+4hPmUxkl0a8vFBZpIoGa3xz48Uv
-         +gc6kHj7G3csBtOnlLWFxsddt8gxaJQhJ3bdoqNriEauIH7KxJcvbFbPNHoEIqRaHXEu
-         28FafC+evdI7HfXnQMXvkY6ibAMw0fgvvunmPYKCljgkH2xkNdfJwwsxa+Mg3xnJ7p0P
-         z+Zi669gBxRrsg5sUV9Qj5Be2Cxm7XPszByLZoicHHs242Qo8chu3PxPnKH9sEzlphSF
-         EyoQ==
-In-Reply-To: <20190917165148.19146-1-paolo.valente@linaro.org>
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=5L/3zDrhBByJdOrBbw28FOeLuhv56OkWr9EyUtoofrc=;
+ b=R7HwcDApQ6GY/xk7MdMBs/opg4kGGXrspxCiIXLtj+p+LE4qDbrEO0nmOno0w6iqOpGggZEayJSIfUMnrbcwz7TLmKdadKYDCdt6sfUL+nlkZGqibzP3bZkbUXzS8vD8aCliBs3+KMVr9/xmBLJGaS1PbrDI6ltuTr82+iY6Aqs=
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, ulf.hansson@linaro.org, linus.walleij@linaro.org, bfq-iosched@googlegroups.com, oleksandr@natalenko.name, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, Paolo Valente <paolo.valente@linaro.org>
+To: Paolo Valente <paolo.valente@linaro.org>, Jens Axboe <axboe@kernel.dk>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>, "linus.walleij@linaro.org" <linus.walleij@linaro.org>, "bfq-iosched@googlegroups.com" <bfq-iosched@googlegroups.com>, "oleksandr@natalenko.name" <oleksandr@natalenko.name>, Tejun Heo <tj@kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Angelo Ruocco <angeloruocco90@gmail.com>
 
-From: Tejun Heo <tj@kernel.org>
-
-Both iocost and bfq implement weight based IO control.  Currently, bfq
-is using io.bfq prefix but wants to drop the bfq part.  To avoid
-interface conflict, make bfq disable iocost when it's selected as the
-IO scheduler for any block device on the system.  iocost is only
-re-enabled when bfq is built as a module and unloaded.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Paolo Valente <paolo.valente@linaro.org>
----
- Documentation/admin-guide/cgroup-v2.rst |  8 ++++---
- block/bfq-cgroup.c                      |  2 ++
- block/bfq-iosched.c                     | 32 +++++++++++++++++++++++++
- block/blk-iocost.c                      |  5 ++--
- include/linux/blk-cgroup.h              |  5 ++++
- kernel/cgroup/cgroup.c                  |  2 ++
- 6 files changed, 48 insertions(+), 6 deletions(-)
-
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 3deacdc5e6d2..d4d06a970f8a 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1406,9 +1406,11 @@ IO
- 
- The "io" controller regulates the distribution of IO resources.  This
- controller implements both weight based and absolute bandwidth or IOPS
--limit distribution; however, weight based distribution is available
--only if cfq-iosched is in use and neither scheme is available for
--blk-mq devices.
-+limit distribution.  Weight based distribution is implemented by
-+either iocost controller or bfq IO scheduler.  When bfq is selected as
-+the IO scheduler for any block device, iocost is disabled and bfq's
-+implementation overrides for all devices.  If bfq is built as a kernel
-+module, unloading it re-enables iocost.
- 
- 
- IO Interface Files
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 86a607cf19a1..decda96770f4 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -1194,7 +1194,9 @@ struct bfq_group *bfq_create_group_hierarchy(struct bfq_data *bfqd, int node)
- }
- 
- struct blkcg_policy blkcg_policy_bfq = {
-+#ifndef CONFIG_BLK_CGROUP_IOCOST
- 	.dfl_cftypes		= bfq_blkg_files,
-+#endif
- 	.legacy_cftypes		= bfq_blkcg_legacy_files,
- 
- 	.cpd_alloc_fn		= bfq_cpd_alloc,
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 0319d6339822..21d1b08610b1 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -6382,6 +6382,36 @@ static void bfq_init_root_group(struct bfq_group *root_group,
- 	root_group->sched_data.bfq_class_idle_last_service = jiffies;
- }
- 
-+#if defined(CONFIG_BFQ_GROUP_IOSCHED) && defined(CONFIG_BLK_CGROUP_IOCOST)
-+static bool bfq_enabled = false;
-+
-+static void bfq_enable(void)
-+{
-+	static DEFINE_MUTEX(bfq_enable_mutex);
-+
-+	mutex_lock(&bfq_enable_mutex);
-+	if (!bfq_enabled) {
-+		pr_info("bfq-iosched: Overriding iocost\n");
-+		blkcg_policy_unregister(&blkcg_policy_iocost);
-+		cgroup_add_dfl_cftypes(&io_cgrp_subsys, bfq_blkg_files);
-+		bfq_enabled = true;
-+	}
-+	mutex_unlock(&bfq_enable_mutex);
-+}
-+
-+static void __exit bfq_disable(void)
-+{
-+	if (bfq_enabled) {
-+		pr_info("bfq-iosched: Restoring iocost\n");
-+		cgroup_rm_cftypes(bfq_blkg_files);
-+		blkcg_policy_register(&blkcg_policy_iocost);
-+	}
-+}
-+#else
-+static void bfq_enable(void) {}
-+static void __exit bfq_disable(void) {}
-+#endif
-+
- static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
- {
- 	struct bfq_data *bfqd;
-@@ -6506,6 +6536,7 @@ static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
- 	bfq_init_entity(&bfqd->oom_bfqq.entity, bfqd->root_group);
- 
- 	wbt_disable_default(q);
-+	bfq_enable();
- 	return 0;
- 
- out_free:
-@@ -6823,6 +6854,7 @@ static void __exit bfq_exit(void)
- 	blkcg_policy_unregister(&blkcg_policy_bfq);
- #endif
- 	bfq_slab_kill();
-+	bfq_disable();
- }
- 
- module_init(bfq_init);
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 3b39deb8b9f8..1ef5b443c09a 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -605,8 +605,6 @@ static u32 vrate_adj_pct[] =
- 	  2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
- 	  4, 4, 4, 4, 4, 4, 4, 4, 8, 8, 8, 8, 8, 8, 8, 8, 16 };
- 
--static struct blkcg_policy blkcg_policy_iocost;
--
- /* accessors and helpers */
- static struct ioc *rqos_to_ioc(struct rq_qos *rqos)
- {
-@@ -2434,7 +2432,7 @@ static struct cftype ioc_files[] = {
- 	{}
- };
- 
--static struct blkcg_policy blkcg_policy_iocost = {
-+struct blkcg_policy blkcg_policy_iocost = {
- 	.dfl_cftypes	= ioc_files,
- 	.cpd_alloc_fn	= ioc_cpd_alloc,
- 	.cpd_free_fn	= ioc_cpd_free,
-@@ -2442,6 +2440,7 @@ static struct blkcg_policy blkcg_policy_iocost = {
- 	.pd_init_fn	= ioc_pd_init,
- 	.pd_free_fn	= ioc_pd_free,
- };
-+EXPORT_SYMBOL_GPL(blkcg_policy_iocost);
- 
- static int __init ioc_init(void)
- {
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index bed9e43f9426..5669e3cfa1bc 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -815,6 +815,11 @@ static inline void blkcg_clear_delay(struct blkcg_gq *blkg)
- void blkcg_add_delay(struct blkcg_gq *blkg, u64 now, u64 delta);
- void blkcg_schedule_throttle(struct request_queue *q, bool use_memdelay);
- void blkcg_maybe_throttle_current(void);
-+
-+#ifdef CONFIG_BLK_CGROUP_IOCOST
-+extern struct blkcg_policy blkcg_policy_iocost;
-+#endif
-+
- #else	/* CONFIG_BLK_CGROUP */
- 
- struct blkcg {
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 8be1da1ebd9a..4d015328ebb0 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -4059,6 +4059,7 @@ int cgroup_rm_cftypes(struct cftype *cfts)
- 	mutex_unlock(&cgroup_mutex);
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(cgroup_rm_cftypes);
- 
- /**
-  * cgroup_add_cftypes - add an array of cftypes to a subsystem
-@@ -4115,6 +4116,7 @@ int cgroup_add_dfl_cftypes(struct cgroup_subsys *ss, struct cftype *cfts)
- 		cft->flags |= __CFTYPE_ONLY_ON_DFL;
- 	return cgroup_add_cftypes(ss, cfts);
- }
-+EXPORT_SYMBOL_GPL(cgroup_add_dfl_cftypes);
- 
- /**
-  * cgroup_add_legacy_cftypes - add an array of cftypes for legacy hierarchies
--- 
-2.20.1
-
+Looks good to me.=0A=
+=0A=
+Reviewed-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>=0A=
+On 09/17/2019 09:52 AM, Paolo Valente wrote:=0A=
+> From: Angelo Ruocco<angeloruocco90@gmail.com>=0A=
+>=0A=
+> When bfq was merged into mainline, there were two I/O schedulers that=0A=
+> implemented the proportional-share policy: bfq for blk-mq and cfq for=0A=
+> legacy blk. bfq's interface files in the blkio/io controller have the=0A=
+> same names as cfq. But the cgroups interface doesn't allow two=0A=
+> entities to use the same name for their files, so for bfq we had to=0A=
+> prepend the "bfq" prefix to each of its files. However no legacy code=0A=
+> uses these modified file names. This naming also causes confusion, as,=0A=
+> e.g., in [1].=0A=
+>=0A=
+> Now cfq has gone with legacy blk, so there is no need any longer for=0A=
+> these prefixes in (the never used) bfq names. In view of this fact, this=
+=0A=
+> commit removes these prefixes, thereby enabling legacy code to truly=0A=
+> use the proportional share policy in blk-mq.=0A=
+>=0A=
+> [1]https://github.com/systemd/systemd/issues/7057=0A=
+>=0A=
+> Signed-off-by: Angelo Ruocco<angeloruocco90@gmail.com>=0A=
+> Signed-off-by: Paolo Valente<paolo.valente@linaro.org>=0A=
+=0A=
