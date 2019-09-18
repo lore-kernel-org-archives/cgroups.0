@@ -1,65 +1,59 @@
-From: Ulf Hansson <ulf.hansson@linaro.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 2/2] block, bfq: delete "bfq" prefix from cgroup filenames
-Date: Wed, 18 Sep 2019 08:09:42 +0200
-Message-ID: <CAPDyKFrHeEb77F-U3W1HdSj3_rrMyi66XCt73By3OoLOVa65bQ@mail.gmail.com>
+Date: Wed, 18 Sep 2019 08:19:48 -0700
+Message-ID: <20190918151948.GL3084169@devbig004.ftw2.facebook.com>
 References: <20190917165148.19146-1-paolo.valente@linaro.org>
- <20190917165148.19146-3-paolo.valente@linaro.org> <20190917213209.GK3084169@devbig004.ftw2.facebook.com>
+ <20190917165148.19146-3-paolo.valente@linaro.org>
+ <20190917213209.GK3084169@devbig004.ftw2.facebook.com>
+ <4D39D2FA-A487-4FAD-A67E-B90750CE0BD4@linaro.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=xTBwbLii9b70VDIiu2pkAKMCAWF61Wo+h6WzPYHryB4=;
-        b=T+rtTKk5TFAHOQsUgV/It9GsfiXKaB+bhfa5dN/sLkCoY4OmhkyktixzO9f+8YwHkk
-         cEwMurZ/Mg+6d/IyWE/VoTFh6ibwd0Mwl6dha6HSGU+9F+3oa3E4SG8ssP4tJD2gAj2Z
-         CgfhsGf+P+xpNd67ACMjlLHF9Vo5pLWNL+0rS9zkvOMFSZdZhpHuEdLXnjGXRBDdZa05
-         gMHUHQCZdMtNI95/7aMMVk9PajYLgBwdgoxrI69ssFUOuabdzO4bzrjNDV04fRzwiUtG
-         OU6mo3S5DUmnJ0GDQ58haSoMZ17PjkKDKF6Z+zaNrgrM1JI3wMct87apJQWCU/YgECc4
-         x8Ew==
-In-Reply-To: <20190917213209.GK3084169@devbig004.ftw2.facebook.com>
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=4/ozkoPe7I7HBcRNmLxlm9zJ7nl+dZfk4PcCpSwHEE0=;
+        b=T2V++haNtE/r+StT15PyzM8Pcx6eaP5oSwCQUlyICnkOO9OKmWUetxLSpJ+zeMMVm4
+         Umui41NlalpMH08oCwjhUB8rcPoPnvb4O75FaSLSpzXsOC8AeDcEFpcwKgGoIrv8svQG
+         Rq6lvlestuw80aSnQEx6Bp8hEcJzMpt1xbUH732DypsleAg7F1jnT0gy2aTwuAuVwG5i
+         vG3D/JY8NyPMDOrlPAk9MoiOF/4w7Er3TI3dDYvtUxWooplJYAbrWZwmnWkbKkv2kZNJ
+         O9knfGLSvhfjDSDSr3jLBMun+UVHVSZO/V4bM/o9XlBnZMKtacHwgn6vG8Zd4liINg+A
+         vcKg==
+Content-Disposition: inline
+In-Reply-To: <4D39D2FA-A487-4FAD-A67E-B90750CE0BD4@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>, Paolo Valente <paolo.valente@linaro.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Walleij <linus.walleij@linaro.org>, 'Paolo Valente' via bfq-iosched <bfq-iosched@googlegroups.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, cgroups@vger.kernel.org, Angelo Ruocco <angeloruocco90@gmail.com>
+To: Paolo Valente <paolo.valente@linaro.org>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, linux-kernel@vger.kernel.org, ulf.hansson@linaro.org, linus.walleij@linaro.org, bfq-iosched@googlegroups.com, oleksandr@natalenko.name, cgroups@vger.kernel.org, Angelo Ruocco <angeloruocco90@gmail.com>
 
-Tejun, Paolo,
+Hello,
 
-On Tue, 17 Sep 2019 at 23:32, Tejun Heo <tj@kernel.org> wrote:
->
-> Hello,
->
-> On Tue, Sep 17, 2019 at 06:51:48PM +0200, Paolo Valente wrote:
-> > When bfq was merged into mainline, there were two I/O schedulers that
-> > implemented the proportional-share policy: bfq for blk-mq and cfq for
-> > legacy blk. bfq's interface files in the blkio/io controller have the
-> > same names as cfq. But the cgroups interface doesn't allow two
-> > entities to use the same name for their files, so for bfq we had to
-> > prepend the "bfq" prefix to each of its files. However no legacy code
-> > uses these modified file names. This naming also causes confusion, as,
-> > e.g., in [1].
-> >
-> > Now cfq has gone with legacy blk, so there is no need any longer for
-> > these prefixes in (the never used) bfq names. In view of this fact, this
-> > commit removes these prefixes, thereby enabling legacy code to truly
-> > use the proportional share policy in blk-mq.
->
-> So, I wrote the iocost switching patch and don't have a strong
-> interest in whether bfq prefix should get dropped or not.  However, I
-> gotta point out that flipping interface this way is way out of the
-> norm.
->
-> In the previous release cycle, the right thing to do was dropping the
-> bfq prefix but that wasn't possible because bfq's interface wasn't
-> compatible at that point and didn't made to be compatible in time.
+On Wed, Sep 18, 2019 at 07:18:50AM +0200, Paolo Valente wrote:
+> A solution that both fulfills userspace request and doesn't break
+> anything for hypothetical users of the current interface already made
+> it to mainline, and Linus liked it too.  It is:
 
-Sounds like we really should send those relevant patches for stable,
-to set the correct ground. Then using a symlink, to make sure we don't
-brake current ABI, right?
+Linus didn't like it.  The implementation was a bit nasty.  That was
+why it became a subject in the first place.
 
-[...]
+> 19e9da9e86c4 ("block, bfq: add weight symlink to the bfq.weight cgroup parameter")
+> 
+> But it was then reverted on Tejun's request to do exactly what we
+> don't want do any longer now:
+> cf8929885de3 ("cgroup/bfq: revert bfq.weight symlink change")
 
-Kind regards
-Uffe
+Note that the interface was wrong at the time too.
+
+> So, Jens, Tejun, can we please just revert that revert?
+
+I think presenting both io.weight and io.bfq.weight interfaces are
+probably the best course of action at this point but why does it have
+to be a symlink?  What's wrong with just creating another file with
+the same backing function?
+
+Thanks.
+
+-- 
+tejun
