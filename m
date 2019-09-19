@@ -1,19 +1,23 @@
 From: Mina Almasry <almasrymina@google.com>
-Subject: [PATCH v5 0/7] hugetlb_cgroup: Add hugetlb_cgroup reservation limits
-Date: Thu, 19 Sep 2019 15:24:14 -0700
-Message-ID: <20190919222421.27408-1-almasrymina@google.com>
+Subject: [PATCH v5 2/7] hugetlb_cgroup: add interface for charge/uncharge
+ hugetlb reservations
+Date: Thu, 19 Sep 2019 15:24:16 -0700
+Message-ID: <20190919222421.27408-3-almasrymina@google.com>
+References: <20190919222421.27408-1-almasrymina@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=ieJJfZWRKKIX60np7mueb+mmTEbZMC8x8RYuPdA8C20=;
-        b=QnOn4cu3RXmIUffEGilk2J2NAOH2uH0HiV7ymdBeadWqAib3RPsOSvnnTZgqcBKPSu
-         tnorXppl3gmlwv+V+J3RRaX0IB+7JLz4Xvey54Fvktrgv0Kd6hu84J6pB/eAT7qwIYeX
-         LyPrpbWlomgsxsVRoxqPGPXaJXmuMxQ8hmY2sIQWghSi/KMF1qdNnsr4atjr5mG54YrG
-         VyOWBlkSBx5UrOvc72t+EfhKNdY7IG/2+AA3mh82ljh0TND7aUV3WHV1idKU7xVhINs3
-         Y0gmC9DWzRxFEOMiWah30HYYMQiC0etKCDgP/EOIFUvOwPa2Biu/RDcE4n4hSnepMGAf
-         35KQ==
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=+NcLR0j8oIkkrKRFig4Ivx79n0Rsn8K5jx0s8Am1QMc=;
+        b=alBdQ/EZ13ksHIaeau6L5RjvgbvhN1X3ybaU3P/gT5wdxoOczAe9umIkdbhmPEwZ2P
+         UwuZgMW10wJt+f01DOQiSeho2YQydfUQid15+jC+skYatAqNDAKjm26sn/JEZ4fyIPTp
+         Lsc0uoT3pEH5pU+3vJz9IUSaMhhY//Bd30m33U7LG1VNjYSrmfwF/1BDKgEb3ytt3EDk
+         7PaJq+eblBmqFVjq42vQYtvxuUkH06wObieTyxv8wRM7t/Uwr6BeiODB8SvkaQjO7Bch
+         MLZTAbx/5fa7wPJjgZXDrz9PJ2dDIwwmM7s/qCn/sk+SqsTAbnDgc8IPemikzY7OFP7W
+         l/Yw==
+In-Reply-To: <20190919222421.27408-1-almasrymina@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -21,74 +25,249 @@ Content-Transfer-Encoding: 7bit
 To: mike.kravetz@oracle.com
 Cc: shuah@kernel.org, almasrymina@google.com, rientjes@google.com, shakeelb@google.com, gthelen@google.com, akpm@linux-foundation.org, khalid.aziz@oracle.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, aneesh.kumar@linux.vnet.ibm.com, mkoutny@suse.com
 
-Patch series implements hugetlb_cgroup reservation usage and limits, which
-track hugetlb reservations rather than hugetlb memory faulted in. Details of
-the approach is 1/7.
+Augments hugetlb_cgroup_charge_cgroup to be able to charge hugetlb
+usage or hugetlb reservation counter.
 
-Changes in v5:
-- Moved the bulk of the description to the first patch in the series.
-- Clang formatted the entire series.
-- Split off 'hugetlb: remove duplicated code' and 'hugetlb: region_chg provides
-  only cache entry' into their own patch series.
-- Added comments to HUGETLB_RES enum.
-- Fixed bug in 'hugetlb: disable region_add file_region coalescing' calculating
-  the wrong number of regions_needed in some cases.
-- Changed sleeps in test to proper conditions.
-- Misc fixes in test based on shuah@ review.
+Adds a new interface to uncharge a hugetlb_cgroup counter via
+hugetlb_cgroup_uncharge_counter.
 
-Changes in v4:
-- Split up 'hugetlb_cgroup: add accounting for shared mappings' into 4 patches
-  for better isolation and context on the indvidual changes:
-  - hugetlb_cgroup: add accounting for shared mappings
-  - hugetlb: disable region_add file_region coalescing
-  - hugetlb: remove duplicated code
-  - hugetlb: region_chg provides only cache entry
-- Fixed resv->adds_in_progress accounting.
-- Retained behavior that region_add never fails, in earlier patchsets region_add
-  could return failure.
-- Fixed libhugetlbfs failure.
-- Minor fix to the added tests that was preventing them from running on some
-  environments.
+Integrates the counter with hugetlb_cgroup, via hugetlb_cgroup_init,
+hugetlb_cgroup_have_usage, and hugetlb_cgroup_css_offline.
 
-Changes in v3:
-- Addressed comments of Hillf Danton:
-  - Added docs.
-  - cgroup_files now uses enum.
-  - Various readability improvements.
-- Addressed comments of Mike Kravetz.
-  - region_* functions no longer coalesce file_region entries in the resv_map.
-  - region_add() and region_chg() refactored to make them much easier to
-    understand and remove duplicated code so this patch doesn't add too much
-    complexity.
-  - Refactored common functionality into helpers.
+Signed-off-by: Mina Almasry <almasrymina@google.com>
 
-Changes in v2:
-- Split the patch into a 5 patch series.
-- Fixed patch subject.
+---
+ include/linux/hugetlb_cgroup.h | 22 ++++++----
+ mm/hugetlb.c                   |  6 ++-
+ mm/hugetlb_cgroup.c            | 77 ++++++++++++++++++++++++++++------
+ 3 files changed, 83 insertions(+), 22 deletions(-)
 
-Mina Almasry (7):
-  hugetlb_cgroup: Add hugetlb_cgroup reservation counter
-  hugetlb_cgroup: add interface for charge/uncharge hugetlb reservations
-  hugetlb_cgroup: add reservation accounting for private mappings
-  hugetlb: disable region_add file_region coalescing
-  hugetlb_cgroup: add accounting for shared mappings
-  hugetlb_cgroup: Add hugetlb_cgroup reservation tests
-  hugetlb_cgroup: Add hugetlb_cgroup reservation docs
+diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
+index 063962f6dfc6..de35997bb5f9 100644
+--- a/include/linux/hugetlb_cgroup.h
++++ b/include/linux/hugetlb_cgroup.h
+@@ -52,14 +52,19 @@ static inline bool hugetlb_cgroup_disabled(void)
+ }
 
- .../admin-guide/cgroup-v1/hugetlb.rst         |  85 +++-
- include/linux/hugetlb.h                       |  31 +-
- include/linux/hugetlb_cgroup.h                |  33 +-
- mm/hugetlb.c                                  | 423 +++++++++++-----
- mm/hugetlb_cgroup.c                           | 190 ++++++--
- tools/testing/selftests/vm/.gitignore         |   1 +
- tools/testing/selftests/vm/Makefile           |   1 +
- .../selftests/vm/charge_reserved_hugetlb.sh   | 461 ++++++++++++++++++
- .../selftests/vm/write_hugetlb_memory.sh      |  22 +
- .../testing/selftests/vm/write_to_hugetlbfs.c | 250 ++++++++++
- 10 files changed, 1306 insertions(+), 191 deletions(-)
- create mode 100755 tools/testing/selftests/vm/charge_reserved_hugetlb.sh
- create mode 100644 tools/testing/selftests/vm/write_hugetlb_memory.sh
- create mode 100644 tools/testing/selftests/vm/write_to_hugetlbfs.c
+ extern int hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
+-					struct hugetlb_cgroup **ptr);
++					struct hugetlb_cgroup **ptr,
++					bool reserved);
+ extern void hugetlb_cgroup_commit_charge(int idx, unsigned long nr_pages,
+ 					 struct hugetlb_cgroup *h_cg,
+ 					 struct page *page);
+ extern void hugetlb_cgroup_uncharge_page(int idx, unsigned long nr_pages,
+ 					 struct page *page);
+ extern void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+-					   struct hugetlb_cgroup *h_cg);
++					   struct hugetlb_cgroup *h_cg,
++					   bool reserved);
++extern void hugetlb_cgroup_uncharge_counter(struct page_counter *p,
++					    unsigned long nr_pages);
++
+ extern void hugetlb_cgroup_file_init(void) __init;
+ extern void hugetlb_cgroup_migrate(struct page *oldhpage,
+ 				   struct page *newhpage);
+@@ -81,9 +86,9 @@ static inline bool hugetlb_cgroup_disabled(void)
+ 	return true;
+ }
 
+-static inline int
+-hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
+-			     struct hugetlb_cgroup **ptr)
++static inline int hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
++					       struct hugetlb_cgroup **ptr,
++					       bool reserved)
+ {
+ 	return 0;
+ }
+@@ -100,9 +105,10 @@ hugetlb_cgroup_uncharge_page(int idx, unsigned long nr_pages, struct page *page)
+ {
+ }
+
+-static inline void
+-hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+-			       struct hugetlb_cgroup *h_cg)
++static inline void hugetlb_cgroup_uncharge_cgroup(int idx,
++						  unsigned long nr_pages,
++						  struct hugetlb_cgroup *h_cg,
++						  bool reserved)
+ {
+ }
+
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 052a2532528a..a52efcb70d04 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -2032,7 +2032,8 @@ struct page *alloc_huge_page(struct vm_area_struct *vma,
+ 			gbl_chg = 1;
+ 	}
+
+-	ret = hugetlb_cgroup_charge_cgroup(idx, pages_per_huge_page(h), &h_cg);
++	ret = hugetlb_cgroup_charge_cgroup(idx, pages_per_huge_page(h), &h_cg,
++					   false);
+ 	if (ret)
+ 		goto out_subpool_put;
+
+@@ -2080,7 +2081,8 @@ struct page *alloc_huge_page(struct vm_area_struct *vma,
+ 	return page;
+
+ out_uncharge_cgroup:
+-	hugetlb_cgroup_uncharge_cgroup(idx, pages_per_huge_page(h), h_cg);
++	hugetlb_cgroup_uncharge_cgroup(idx, pages_per_huge_page(h), h_cg,
++				       false);
+ out_subpool_put:
+ 	if (map_chg || avoid_reserve)
+ 		hugepage_subpool_put_pages(spool, 1);
+diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
+index 1386da79c9d7..dc1ddc9b09c4 100644
+--- a/mm/hugetlb_cgroup.c
++++ b/mm/hugetlb_cgroup.c
+@@ -73,8 +73,12 @@ static inline bool hugetlb_cgroup_have_usage(struct hugetlb_cgroup *h_cg)
+ 	int idx;
+
+ 	for (idx = 0; idx < hugetlb_max_hstate; idx++) {
+-		if (page_counter_read(&h_cg->hugepage[idx]))
++		if (page_counter_read(
++			    hugetlb_cgroup_get_counter(h_cg, idx, true)) ||
++		    page_counter_read(
++			    hugetlb_cgroup_get_counter(h_cg, idx, false))) {
+ 			return true;
++		}
+ 	}
+ 	return false;
+ }
+@@ -85,18 +89,32 @@ static void hugetlb_cgroup_init(struct hugetlb_cgroup *h_cgroup,
+ 	int idx;
+
+ 	for (idx = 0; idx < HUGE_MAX_HSTATE; idx++) {
+-		struct page_counter *counter = &h_cgroup->hugepage[idx];
+ 		struct page_counter *parent = NULL;
++		struct page_counter *reserved_parent = NULL;
+ 		unsigned long limit;
+ 		int ret;
+
+-		if (parent_h_cgroup)
+-			parent = &parent_h_cgroup->hugepage[idx];
+-		page_counter_init(counter, parent);
++		if (parent_h_cgroup) {
++			parent = hugetlb_cgroup_get_counter(parent_h_cgroup,
++							    idx, false);
++			reserved_parent = hugetlb_cgroup_get_counter(
++				parent_h_cgroup, idx, true);
++		}
++		page_counter_init(hugetlb_cgroup_get_counter(h_cgroup, idx,
++							     false),
++				  parent);
++		page_counter_init(hugetlb_cgroup_get_counter(h_cgroup, idx,
++							     true),
++				  reserved_parent);
+
+ 		limit = round_down(PAGE_COUNTER_MAX,
+ 				   1 << huge_page_order(&hstates[idx]));
+-		ret = page_counter_set_max(counter, limit);
++
++		ret = page_counter_set_max(
++			hugetlb_cgroup_get_counter(h_cgroup, idx, false),
++			limit);
++		ret = page_counter_set_max(
++			hugetlb_cgroup_get_counter(h_cgroup, idx, true), limit);
+ 		VM_BUG_ON(ret);
+ 	}
+ }
+@@ -126,6 +144,26 @@ static void hugetlb_cgroup_css_free(struct cgroup_subsys_state *css)
+ 	kfree(h_cgroup);
+ }
+
++static void hugetlb_cgroup_move_parent_reservation(int idx,
++						   struct hugetlb_cgroup *h_cg)
++{
++	struct hugetlb_cgroup *parent = parent_hugetlb_cgroup(h_cg);
++
++	/* Move the reservation counters. */
++	if (!parent_hugetlb_cgroup(h_cg)) {
++		parent = root_h_cgroup;
++		/* root has no limit */
++		page_counter_charge(
++			&root_h_cgroup->reserved_hugepage[idx],
++			page_counter_read(
++				hugetlb_cgroup_get_counter(h_cg, idx, true)));
++	}
++
++	/* Take the pages off the local counter */
++	page_counter_cancel(
++		hugetlb_cgroup_get_counter(h_cg, idx, true),
++		page_counter_read(hugetlb_cgroup_get_counter(h_cg, idx, true)));
++}
+
+ /*
+  * Should be called with hugetlb_lock held.
+@@ -180,6 +218,7 @@ static void hugetlb_cgroup_css_offline(struct cgroup_subsys_state *css)
+ 	do {
+ 		for_each_hstate(h) {
+ 			spin_lock(&hugetlb_lock);
++			hugetlb_cgroup_move_parent_reservation(idx, h_cg);
+ 			list_for_each_entry(page, &h->hugepage_activelist, lru)
+ 				hugetlb_cgroup_move_parent(idx, h_cg, page);
+
+@@ -191,7 +230,7 @@ static void hugetlb_cgroup_css_offline(struct cgroup_subsys_state *css)
+ }
+
+ int hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
+-				 struct hugetlb_cgroup **ptr)
++				 struct hugetlb_cgroup **ptr, bool reserved)
+ {
+ 	int ret = 0;
+ 	struct page_counter *counter;
+@@ -214,8 +253,11 @@ int hugetlb_cgroup_charge_cgroup(int idx, unsigned long nr_pages,
+ 	}
+ 	rcu_read_unlock();
+
+-	if (!page_counter_try_charge(&h_cg->hugepage[idx], nr_pages, &counter))
++	if (!page_counter_try_charge(hugetlb_cgroup_get_counter(h_cg, idx,
++								reserved),
++				     nr_pages, &counter)) {
+ 		ret = -ENOMEM;
++	}
+ 	css_put(&h_cg->css);
+ done:
+ 	*ptr = h_cg;
+@@ -249,12 +291,14 @@ void hugetlb_cgroup_uncharge_page(int idx, unsigned long nr_pages,
+ 	if (unlikely(!h_cg))
+ 		return;
+ 	set_hugetlb_cgroup(page, NULL);
+-	page_counter_uncharge(&h_cg->hugepage[idx], nr_pages);
++	page_counter_uncharge(hugetlb_cgroup_get_counter(h_cg, idx, false),
++			      nr_pages);
++
+ 	return;
+ }
+
+ void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+-				    struct hugetlb_cgroup *h_cg)
++				    struct hugetlb_cgroup *h_cg, bool reserved)
+ {
+ 	if (hugetlb_cgroup_disabled() || !h_cg)
+ 		return;
+@@ -262,8 +306,17 @@ void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+ 	if (huge_page_order(&hstates[idx]) < HUGETLB_CGROUP_MIN_ORDER)
+ 		return;
+
+-	page_counter_uncharge(&h_cg->hugepage[idx], nr_pages);
+-	return;
++	page_counter_uncharge(hugetlb_cgroup_get_counter(h_cg, idx, reserved),
++			      nr_pages);
++}
++
++void hugetlb_cgroup_uncharge_counter(struct page_counter *p,
++				     unsigned long nr_pages)
++{
++	if (hugetlb_cgroup_disabled() || !p)
++		return;
++
++	page_counter_uncharge(p, nr_pages);
+ }
+
+ static u64 hugetlb_cgroup_read_u64(struct cgroup_subsys_state *css,
 --
 2.23.0.351.gc4317032e6-goog
