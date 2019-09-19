@@ -1,74 +1,195 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [PATCH 2/2] block, bfq: delete "bfq" prefix from cgroup filenames
-Date: Wed, 18 Sep 2019 18:19:42 +0200
-Message-ID: <4F416823-855F-4091-90B9-92253BF189FA@linaro.org>
-References: <20190917165148.19146-1-paolo.valente@linaro.org>
- <20190917165148.19146-3-paolo.valente@linaro.org>
- <20190917213209.GK3084169@devbig004.ftw2.facebook.com>
- <4D39D2FA-A487-4FAD-A67E-B90750CE0BD4@linaro.org>
- <20190918151948.GL3084169@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.8\))
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=jkRvwN7j8d6+3yYxujaDpdYkk73iNWb6wxPtS0qswdE=;
-        b=NkofmqnCSprkwxBJoUDKnTb+3Uj/9yc6OmR4Yulm/W/mK7DM5Yry64Bb0TLfbeA4w/
-         0L360/+PzUU7wzqahEZy7qO+5UvxDTAuFOwOCAlEg3LFZvahuaRqYvKBr9K10Xko2Cx+
-         XHb6rYgdUm5i86gYRLXVj6258yQs9Qw1UUxnefk5no8k4IgTFts/Ue/Ou5RUqYyJHQOv
-         UFME+F58lY294Ujkr+Mw7u0QddYKlPHlIRh8zdFjNIMsMF1PIOFTOFLfuZsWEhEiI1+y
-         rNCoJv6uVhgfXsk+B7W/Laa1irG7idIEgpNZWvrfpDHtsFgiepPac8d3vgK4e82lcrgY
-         Gciw==
-In-Reply-To: <20190918151948.GL3084169@devbig004.ftw2.facebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Richard Guy Briggs <rgb@redhat.com>
+Subject: RFC(V4): Audit Kernel Container IDs
+Date: Wed, 18 Sep 2019 21:19:28 -0400
+Message-ID: <20190919011928.nsr4leqnomgumaac@madcap2.tricolour.ca>
+Mime-Version: 1.0
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Linus Walleij <linus.walleij@linaro.org>, noreply-spamdigest via bfq-iosched <bfq-iosched@googlegroups.com>, oleksandr@natalenko.name, cgroups@vger.kernel.org, Angelo Ruocco <angeloruocco90@gmail.com>
+Content-Transfer-Encoding: 7bit
+To: cgroups@vger.kernel.org, Linux Containers <containers@lists.linux-foundation.org>, Linux API <linux-api@vger.kernel.org>, Linux Audit <linux-audit@redhat.com>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Linux Network Development <netdev@vger.kernel.org>
+Cc: mszeredi@redhat.com, Andy Lutomirski <luto@kernel.org>, jlayton@redhat.com, Carlos O'Donell <carlos@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>, David Howells <dhowells@redhat.com>, Simo Sorce <simo@redhat.com>, trondmy@primarydata.com, Eric Paris <eparis@parisplace.org>, "Serge E. Hallyn" <serge@hallyn.com>, "Eric W. Biederman" <ebiederm@xmission.com>, dwalsh@redhat.com, mpatel@redhat.com
 
+Containers are a userspace concept.  The kernel knows nothing of them.
 
+The Linux audit system needs a way to be able to track the container
+provenance of events and actions.  Audit needs the kernel's help to do
+this.
 
-> Il giorno 18 set 2019, alle ore 17:19, Tejun Heo <tj@kernel.org> ha =
-scritto:
->=20
-> Hello,
->=20
-> On Wed, Sep 18, 2019 at 07:18:50AM +0200, Paolo Valente wrote:
->> A solution that both fulfills userspace request and doesn't break
->> anything for hypothetical users of the current interface already made
->> it to mainline, and Linus liked it too.  It is:
->=20
-> Linus didn't like it.  The implementation was a bit nasty.  That was
-> why it became a subject in the first place.
->=20
->> 19e9da9e86c4 ("block, bfq: add weight symlink to the bfq.weight =
-cgroup parameter")
->>=20
->> But it was then reverted on Tejun's request to do exactly what we
->> don't want do any longer now:
->> cf8929885de3 ("cgroup/bfq: revert bfq.weight symlink change")
->=20
-> Note that the interface was wrong at the time too.
->=20
->> So, Jens, Tejun, can we please just revert that revert?
->=20
-> I think presenting both io.weight and io.bfq.weight interfaces are
-> probably the best course of action at this point but why does it have
-> to be a symlink?  What's wrong with just creating another file with
-> the same backing function?
->=20
+The motivations are:
 
-I think a symlink would be much clearer for users, given the confusion
-already caused by two names for the same parameter.  But let's hear
-others' opinion too.
+- A sysadmin needs to be able to filter unwanted, irrelevant or
+  unimportant messages before they fill the queue so that important
+  messages don't get lost.  This is a certification requirement.
 
-Thanks,
-Paolo
+- Security claims need to be made about containers, requiring tracking
+  of actions within those containers to ensure compliance with
+  established security policies.
 
-> Thanks.
->=20
-> --=20
-> tejun
+- It will be required to route messages from events local to an audit
+  daemon instance or host audit daemon instance.
 
+- nsIDs were considered seriously, but turns out to be insufficient for
+  efficient filtering, routing, and tracking.
+
+Since the concept of a container is entirely a userspace concept, a
+registration from the userspace container orchestration system initiates
+this.  This will define a point in time and a set of resources
+associated with a particular container with an audit container
+identifier.
+
+The registration is a u64 representing the audit container identifier.
+
+This is written to a special file in a pseudo filesystem (proc, since
+PID tree already exists) representing a process that will become a
+parent process in that container.  This write might place restrictions
+on mount namespaces required to define a container, or at least careful
+checking of namespaces in the kernel to verify permissions of the
+orchestrator so it can't change its own container ID.  A bind mount of
+nsfs may be necessary in the container orchestrator's mount namespace.
+This write can only happen once per process.
+
+Note: The justification for using a u64 is that it minimizes the
+information printed in every audit record, reducing bandwidth and limits
+comparisons to a single u64 which will be faster and less error-prone.
+
+[ALT:
+The registration is a
+netlink message to the audit subsystem of type AUDIT_SET_CONTID with a
+data structure including a u32 representing the PID of the target
+process to become the parent process in that container and a
+u64 representing the audit container identifier.
+:ALT]
+
+Require CAP_AUDIT_CONTROL to be able to carry out the registration.  At
+that time, record the target container's user-supplied audit container
+identifier along with a target container's parent process (which may
+become the target container's "init" process) process ID (referenced
+from the initial PID namespace) in a new record AUDIT_CONTAINER_OP with
+a qualifying op=$action field.
+
+Issue a new auxilliary record AUDIT_CONTAINER_ID for each valid
+audit container identifier present on an auditable action or event.
+
+Forked and cloned processes inherit their parent's audit container
+identifier, referenced from the process' task_struct indirectly in the
+audit pointer to a struct audit_task_info.  Since the audit
+container identifier is inherited rather than written, it can still be
+written once.  This will prevent tampering while allowing nesting.
+
+Mimic setns(2) and return an error if the process has already initiated
+threading or forked since this registration should happen before the
+process execution is started by the orchestrator and hence should not
+yet have any threads or children.  If this is deemed overly restrictive,
+switch all of the target's threads and children to the new containerID.
+
+Trust the orchestrator to judiciously use and restrict CAP_AUDIT_CONTROL.
+
+The audit container identifier will be stored in a refcounted kernel
+object that is searchable in a hashtabled list for efficient access.
+This is so that multiple container orchestrators/engines can operate on
+one machine without danger of them trampling each other's audit
+container identifiers.  The owner of each container will also be stored
+to be able to permit tasks to be injected into an existing container
+only by its owner.
+
+The total number of containers can be restricted by a total count.
+
+To permit nesting containers, the target container must be a descendant
+process of the container orchestrator and the container's parent
+container (if set) will be stored in the audit container identifier
+kernel object.  Report the chain of contids back to the top level
+container of a process.  Filters will check the chain of contids back to
+the top container.
+
+The total depth of container nesting can be restricted.
+
+When a container ceases to exist because the last process in that
+container has exited log the fact to balance the registration action.  
+(This is likely needed for certification accountability.)
+
+At this point it appears unnecessary to add a container session
+identifier since this is all tracked from loginuid and sessionid to
+communicate with the container orchestrator to spawn an additional
+session into an existing container which would be logged.  It can be
+added at a later date without breaking API should it be deemed
+necessary.
+
+To permit container nesting beyond the initial user namespace, add a
+capcontid flag per process in its audit audit_task_info struct to store
+this ability communicated either via /proc/PID/capcontid or an audit
+netlink message type AUDIT_SET_CAPCONTID.
+
+The following namespace logging actions are not needed for certification
+purposes at this point, but are helpful for tracking namespace activity.
+These are auxilliary records that are associated with namespace
+manipulation syscalls unshare(2), clone(2) and setns(2), so the records
+will only show up if explicit syscall rules have been added to document
+this activity.
+
+Log the creation of every namespace, inheriting/adding its spawning
+process' audit container identifier(s), if applicable.  Include the
+spawning and spawned namespace IDs (device and inode number tuples).
+[AUDIT_NS_CREATE, AUDIT_NS_DESTROY] [clone(2), unshare(2), setns(2)]
+Note: At this point it appears only network namespaces may need to track
+container IDs apart from processes since incoming packets may cause an
+auditable event before being associated with a process.  Since a
+namespace can be shared by processes in different containers, the
+namespace will need to track all containers to which it has been
+assigned.
+
+Upon registration, the target process' namespace IDs (in the form of a
+nsfs device number and inode number tuple) will be recorded in an
+AUDIT_NS_INFO auxilliary record.
+
+Log the destruction of every namespace that is no longer used by any
+process, including the namespace IDs (device and inode number tuples).
+[AUDIT_NS_DESTROY] [process exit, unshare(2), setns(2)]
+
+Issue a new auxilliary record AUDIT_NS_CHANGE listing (opt: op=$action)
+the parent and child namespace IDs for any changes to a process'
+namespaces. [setns(2)]
+Note: It may be possible to combine AUDIT_NS_* record formats and
+distinguish them with an op=$action field depending on the fields
+required for each message type.
+
+The audit container identifier will need to be reaped from all
+implicated namespaces upon the destruction of a container.
+
+This namespace information adds supporting information for tracking
+events not attributable to specific processes.
+
+Changelog:
+
+(Upstream V4)
+- Add elaborated motivations.
+- Switch AUDIT_CONTAINER to AUDIT_CONTAINER_OP
+- Switch AUDIT_CONTAINER_INFO to AUDIT_CONTAINER_ID
+- Add capcontid to mimic CAP_AUDIT_CONTROL in non-init user namespaces
+- Check for max contid depth
+- Check for max contid quantity
+- Store the contid in a refcounted kernel object filed by hashtable
+  lists
+- Mediate contid registration between peer orchestrators
+- Allow injection of processes into an existing container by container
+  owner
+
+(Upstream V3)
+- switch back to u64 (from pmoore, can be expanded to u128 in future if
+  need arises without breaking API.  u32 was originally proposed, up to
+  c36 discussed)
+- write-once, but children inherit audit container identifier and can
+  then still be written once
+- switch to CAP_AUDIT_CONTROL
+- group namespace actions together, auxilliary records to namespace
+  operations.
+
+(Upstream V2)
+- switch from u64 to u128 UUID
+- switch from "signal" and "trigger" to "register"
+- restrict registration to single process or force all threads and
+  children into same container
+
+- RGB
