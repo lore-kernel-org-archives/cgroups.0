@@ -1,50 +1,115 @@
-From: Will Deacon <will@kernel.org>
-Subject: Re: [PATCH -next] treewide: remove unused argument in lock_release()
-Date: Fri, 20 Sep 2019 14:49:43 +0100
-Message-ID: <20190920134942.iiygzg6s7dcay56l@willie-the-truck>
-References: <1568909380-32199-1-git-send-email-cai@lca.pw>
- <20190920093700.7nfaghxdrmubp2do@willie-the-truck>
- <1568983836.5576.194.camel@lca.pw>
-Mime-Version: 1.0
+From: Paolo Valente <paolo.valente@linaro.org>
+Subject: Re: [PATCH 2/2] block, bfq: delete "bfq" prefix from cgroup filenames
+Date: Sat, 21 Sep 2019 08:55:53 +0200
+Message-ID: <FE1AEF80-F07F-42DE-A979-BC5AE72B25A1@linaro.org>
+References: <20190917165148.19146-1-paolo.valente@linaro.org>
+ <20190917165148.19146-3-paolo.valente@linaro.org>
+ <20190917213209.GK3084169@devbig004.ftw2.facebook.com>
+ <4D39D2FA-A487-4FAD-A67E-B90750CE0BD4@linaro.org>
+ <20190918151948.GL3084169@devbig004.ftw2.facebook.com>
+ <4F416823-855F-4091-90B9-92253BF189FA@linaro.org>
+ <A87FEC8A-3E1A-4DC8-89F7-5FAF63CF5B47@linaro.org>
+ <de7664b1-6f47-8a7b-b231-727336c0ef85@kernel.dk>
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.8\))
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1568987393;
-        bh=JziL+5K0N67ZfzV4tlVfkTPVyCElvzMYgV7JKwZMvak=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=I3aTruf+IgU+nu2WE9zoVKEsbQiuW1la0SrCePBCYi/j7Jep2PZJEI/aEbQCK2dlD
-         FJkBTGSE1Dae8vjnWNYZOGUZtAOcdhrBtwvOMy1GDMt96r5u1dd2sz5lfXy4XASxJo
-         Khgn1c3fwX9e7+fy0lwK0UCkXIO/oAu8Q/KnWcIA=
-Content-Disposition: inline
-In-Reply-To: <1568983836.5576.194.camel@lca.pw>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=G+3UPEhERrKETlk0FsuOwaqKLSxXjoLtJQ8TkFpUanQ=;
+        b=evkEodFPsQCy9q6aV3S9m0L2g7DE6Jx4M0MnI0imvyxJMf176t1gVqZYI3GQbP0Ww9
+         2lD47ST6Shv9mG6w0mER4CKLC+uBdRfcdMal7Qqp21MqL2IOZry3tch/Or5s+nez9jo/
+         x4Zc6AW2/ZdQ4WTW3QnN994vYcNDJtJm/Lj98TlUV42VFytLSWzKJTK7qCUT7ONxKX8l
+         18O9Hax99+RMyOmpzbHROpEnGpRuL3tItse+yn0TYvtYP6y3dUNF4GpyLMWcYN3KXAda
+         8dH9eS2f50YIRSPt3C6QxBRVCBBqZISO60GiNPJ22ZdB1/6Oyi3FrNQH0N+z43kOn5CF
+         NPYw==
+In-Reply-To: <de7664b1-6f47-8a7b-b231-727336c0ef85@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Qian Cai <cai@lca.pw>
-Cc: torvalds@linux-foundation.org, ast@kernel.org, akpm@linux-foundation.org, mingo@redhat.com, peterz@infradead.org, linux-kernel@vger.kernel.org, linux-api@vger.kernel.org, maarten.lankhorst@linux.intel.com, mripard@kernel.org, sean@poorly.run, airlied@linux.ie, daniel@ffwll.ch, dri-devel@lists.freedesktop.org, gregkh@linuxfoundation.org, jslaby@suse.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, joonas.lahtinen@linux.intel.com, rodrigo.vivi@intel.com, intel-gfx@lists.freedesktop.org, tytso@mit.edu, jack@suse.com, linux-ext4@vger.kernel.org, tj@kernel.org, mark@fasheh.com, jlbec@evilplan.org, joseph.qi@linux.alibaba.com, ocfs2-devel@oss.oracle.com, davem@davemloft.net, daniel@iogearbox.net, netdev@vger.kernel.org, bpf@vger.kernel.org, duyuyang@gmail.com, juri.lelli@redh
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <tj@kernel.org>, linux-block <linux-block@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Linus Walleij <linus.walleij@linaro.org>, noreply-spamdigest via bfq-iosched <bfq-iosched@googlegroups.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, cgroups@vger.kernel.org, Angelo Ruocco <angeloruocco90@gmail.com>
 
-On Fri, Sep 20, 2019 at 08:50:36AM -0400, Qian Cai wrote:
-> On Fri, 2019-09-20 at 10:38 +0100, Will Deacon wrote:
-> > On Thu, Sep 19, 2019 at 12:09:40PM -0400, Qian Cai wrote:
-> > > Since the commit b4adfe8e05f1 ("locking/lockdep: Remove unused argument
-> > > in __lock_release"), @nested is no longer used in lock_release(), so
-> > > remove it from all lock_release() calls and friends.
-> > > 
-> > > Signed-off-by: Qian Cai <cai@lca.pw>
-> > > ---
-> > 
-> > Although this looks fine to me at a first glance, it might be slightly
-> > easier to manage if you hit {spin,rwlock,seqcount,mutex,rwsem}_release()
-> > first with coccinelle scripts, and then hack lock_release() as a final
-> > patch. That way it's easy to regenerate things if needed.
-> 
-> I am not sure if it worth the extra efforts where I have to retest it on all
-> architectures, and the patch is really simple, but I can certainly do that if
-> you insist.
 
-I'm not insisting, just thought it might be easier to get it merged that
-way. If you prefer to go with the big diff,
 
-Acked-by: Will Deacon <will@kernel.org>
+> Il giorno 20 set 2019, alle ore 15:05, Jens Axboe <axboe@kernel.dk> ha =
+scritto:
+>=20
+> On 9/20/19 12:58 AM, Paolo Valente wrote:
+>>=20
+>>=20
+>>> Il giorno 18 set 2019, alle ore 18:19, Paolo Valente =
+<paolo.valente@linaro.org> ha scritto:
+>>>=20
+>>>=20
+>>>=20
+>>>> Il giorno 18 set 2019, alle ore 17:19, Tejun Heo <tj@kernel.org> ha =
+scritto:
+>>>>=20
+>>>> Hello,
+>>>>=20
+>>>> On Wed, Sep 18, 2019 at 07:18:50AM +0200, Paolo Valente wrote:
+>>>>> A solution that both fulfills userspace request and doesn't break
+>>>>> anything for hypothetical users of the current interface already =
+made
+>>>>> it to mainline, and Linus liked it too.  It is:
+>>>>=20
+>>>> Linus didn't like it.  The implementation was a bit nasty.  That =
+was
+>>>> why it became a subject in the first place.
+>>>>=20
+>>>>> 19e9da9e86c4 ("block, bfq: add weight symlink to the bfq.weight =
+cgroup parameter")
+>>>>>=20
+>>>>> But it was then reverted on Tejun's request to do exactly what we
+>>>>> don't want do any longer now:
+>>>>> cf8929885de3 ("cgroup/bfq: revert bfq.weight symlink change")
+>>>>=20
+>>>> Note that the interface was wrong at the time too.
+>>>>=20
+>>>>> So, Jens, Tejun, can we please just revert that revert?
+>>>>=20
+>>>> I think presenting both io.weight and io.bfq.weight interfaces are
+>>>> probably the best course of action at this point but why does it =
+have
+>>>> to be a symlink?  What's wrong with just creating another file with
+>>>> the same backing function?
+>>>>=20
+>>>=20
+>>> I think a symlink would be much clearer for users, given the =
+confusion
+>>> already caused by two names for the same parameter.  But let's hear
+>>> others' opinion too.
+>>>=20
+>>=20
+>> Jens, could you express your opinion on this?  Any solution you and
+>> Tejun agree on is ok for me.  Also this new (fourth) possible
+>> implementation of this fix, provided that then it is definitely ok =
+for
+>> both of you.
+>=20
+> Retaining both interfaces is arguably the right solution.
 
-Will
+So you also are voting for BFQ to create two files, instead of having a
+symlink, aren't you?  I just want to be certain before submitting one
+more solution.
+
+Looking forward to your confirmation,
+Paolo
+
+> It would be
+> nice if we didn't have to, but the first bfq variant was incompatible
+> with the in-kernel one, so we'll always have that out in the wild.
+> Adding everything to stable doesn't work, as we still have existing
+> kernels out there with the interface. In fact, in some ways that's
+> worse, as you definitely don't want interfaces to change between two
+> stable kernels.
+>=20
+> I know it's not ideal, and some better initial planning would have
+> made it better, but we have to deal with the situation as it stands
+> now.
+>=20
+> --=20
+> Jens Axboe
+
