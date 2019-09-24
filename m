@@ -1,102 +1,165 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v2 3/4] device_cgroup: Export devcgroup_check_permission
-Date: Tue, 24 Sep 2019 17:13:07 +0000
-Message-ID: <20190924171303.GA1978@tower.DHCP.thefacebook.com>
-References: <20190916180523.27341-1-Harish.Kasiviswanathan@amd.com>
- <20190916180523.27341-4-Harish.Kasiviswanathan@amd.com>
- <MN2PR12MB2911F59E9B91AAD349B4E40F8C840@MN2PR12MB2911.namprd12.prod.outlook.com>
+From: Mina Almasry <almasrymina@google.com>
+Subject: Re: [PATCH v5 0/7] hugetlb_cgroup: Add hugetlb_cgroup reservation limits
+Date: Tue, 24 Sep 2019 15:42:06 -0700
+Message-ID: <CAHS8izPfKQA8qTndyzWSm9fR_xJ=X-xmE+4P4K+ZFdxrYNuLBA@mail.gmail.com>
+References: <20190919222421.27408-1-almasrymina@google.com>
+ <3c73d2b7-f8d0-16bf-b0f0-86673c3e9ce3@oracle.com> <CAHS8izOj2AT4tX-+Hcb8LB2TOUKJDHScDtJ80u4M6OWpwktq0g@mail.gmail.com>
+ <a8e9c533-1593-35ee-e65d-1f2fc2b0fb48@oracle.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <MN2PR12MB2911F59E9B91AAD349B4E40F8C840-rweVpJHSKTpv4wpD+z6awQdYzm3356FpvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
-Content-Language: en-US
-Content-ID: <4C5BA7C636460D4186CFC4B1FC662A53-JGF9Izt3QrScE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=tLGshlxIGKhLcXUM0uB8QvsR7iqHi3kS/y0xfRKm0lM=;
+        b=lyFd6NKLnJffQTtK5uJBQQ7012wiEa8kfPQp3MvPsNG1KoPM+uZ5DOeXAsSVsHhhYl
+         9PhbUGy760gbP3AbAI0haHWUjXeqJuV1Ff6KFLenze+pOgXpQNk/UUV6EMPzIh6GiERb
+         hkPoXs3KywobQJyS6dJIKtYbMWX+dcH1Z9IqG+y7mMINZC/6+WIH/ikyRo5vCTeBGtMw
+         +z5T43aRRTA4BWjxL/E1O6WpxSwYPEa0ucXaZC+shiZ3dJlTMl4CE/iJfpZYB6WvXsEA
+         dzUlZYOtCRyM+9PG+UnhpzsvSPW1o0SPzIAUOOhO0g+8rLEeXQY32mKBSxJefjDb4Fqr
+         01+w==
+In-Reply-To: <a8e9c533-1593-35ee-e65d-1f2fc2b0fb48@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Kasiviswanathan, Harish" <Harish.Kasiviswanathan-5C7GfCeVMHo@public.gmane.org>
-Cc: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Deucher,
- Alexander" <Alexander.Deucher-5C7GfCeVMHo@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org" <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Mike Kravetz <mike.kravetz@oracle.com>, David Rientjes <rientjes@google.com>
+Cc: Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, shuah <shuah@kernel.org>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, khalid.aziz@oracle.com, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
 
-T24gVHVlLCBTZXAgMjQsIDIwMTkgYXQgMDM6NTQ6NDdQTSArMDAwMCwgS2FzaXZpc3dhbmF0aGFu
-LCBIYXJpc2ggd3JvdGU6Cj4gSGkgVGVqdW4sCj4gCj4gQ2FuIHlvdSBwbGVhc2UgcmV2aWV3IHRo
-aXM/IFlvdSBhbmQgUm9tYW4gYWNrZWQgdGhpcyBwYXRjaCBiZWZvcmUuIEl0IHdpbGwgYmUgZ3Jl
-YXQgaWYgSSBjYW4gUmV2aWV3ZWQtYnksIHNvIHRoYXQgSSBjYW4gdXBzdHJlYW0gdGhpcyB0aHJv
-dWdoIEFsZXggRGV1Y2hlcidzIGFtZC1zdGFnaW5nLWRybS1uZXh0IGFuZCBEYXZlIEFpcmxpZSdz
-IGRybS1uZXh0IHRyZWVzCj4gCj4gVGhhbmtzLAo+IEhhcmlzaAoKSGVsbG8sIEhhcmlzaCEKCklm
-IGl0IGNhbiBoZWxwLCBwbGVhc2UsIGZlZWwgZnJlZSB0byB1c2UKUmV2aWV3ZWQtYnk6IFJvbWFu
-IEd1c2hjaGluIDxndXJvQGZiLmNvbT4KClRoYW5rcyEKCj4gCj4gCj4gLS0tLS1PcmlnaW5hbCBN
-ZXNzYWdlLS0tLS0KPiBGcm9tOiBLYXNpdmlzd2FuYXRoYW4sIEhhcmlzaCA8SGFyaXNoLkthc2l2
-aXN3YW5hdGhhbkBhbWQuY29tPiAKPiBTZW50OiBNb25kYXksIFNlcHRlbWJlciAxNiwgMjAxOSAy
-OjA2IFBNCj4gVG86IHRqQGtlcm5lbC5vcmc7IERldWNoZXIsIEFsZXhhbmRlciA8QWxleGFuZGVy
-LkRldWNoZXJAYW1kLmNvbT47IGFpcmxpZWRAcmVkaGF0LmNvbQo+IENjOiBjZ3JvdXBzQHZnZXIu
-a2VybmVsLm9yZzsgYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmc7IEthc2l2aXN3YW5hdGhh
-biwgSGFyaXNoIDxIYXJpc2guS2FzaXZpc3dhbmF0aGFuQGFtZC5jb20+Cj4gU3ViamVjdDogW1BB
-VENIIHYyIDMvNF0gZGV2aWNlX2Nncm91cDogRXhwb3J0IGRldmNncm91cF9jaGVja19wZXJtaXNz
-aW9uCj4gCj4gRm9yIEFNRCBjb21wdXRlIChhbWRrZmQpIGRyaXZlci4KPiAKPiBBbGwgQU1EIGNv
-bXB1dGUgZGV2aWNlcyBhcmUgZXhwb3J0ZWQgdmlhIHNpbmdsZSBkZXZpY2Ugbm9kZSAvZGV2L2tm
-ZC4gQXMKPiBhIHJlc3VsdCBkZXZpY2VzIGNhbm5vdCBiZSBjb250cm9sbGVkIGluZGl2aWR1YWxs
-eSB1c2luZyBkZXZpY2UgY2dyb3VwLgo+IAo+IEFNRCBjb21wdXRlIGRldmljZXMgd2lsbCByZWx5
-IG9uIGl0cyBncmFwaGljcyBjb3VudGVycGFydCB0aGF0IGV4cG9zZXMKPiAvZGV2L2RyaS9yZW5k
-ZXJOIG5vZGUgZm9yIGVhY2ggZGV2aWNlLiBGb3IgZWFjaCB0YXNrIChiYXNlZCBvbiBpdHMKPiBj
-Z3JvdXApLCBLRkQgZHJpdmVyIHdpbGwgY2hlY2sgaWYgL2Rldi9kcmkvcmVuZGVyTiBub2RlIGlz
-IGFjY2Vzc2libGUKPiBiZWZvcmUgZXhwb3NpbmcgaXQuCj4gCj4gQ2hhbmdlLUlkOiBJOWFlMjgz
-ZGY1NTBiMmMxMjJkNjc4NzBiMGNmYTMxNmJmYmYzYjYxNAo+IEFja2VkLWJ5OiBGZWxpeCBLdWVo
-bGluZyA8RmVsaXguS3VlaGxpbmdAYW1kLmNvbT4KPiBBY2tlZC1ieTogVGVqdW4gSGVvIDx0akBr
-ZXJuZWwub3JnPgo+IEFja2VkLWJ5OiBSb21hbiBHdXNoY2hpbiA8Z3Vyb0BmYi5jb20+Cj4gU2ln
-bmVkLW9mZi1ieTogSGFyaXNoIEthc2l2aXN3YW5hdGhhbiA8SGFyaXNoLkthc2l2aXN3YW5hdGhh
-bkBhbWQuY29tPgo+IC0tLQo+ICBpbmNsdWRlL2xpbnV4L2RldmljZV9jZ3JvdXAuaCB8IDE5ICsr
-KystLS0tLS0tLS0tLS0tLS0KPiAgc2VjdXJpdHkvZGV2aWNlX2Nncm91cC5jICAgICAgfCAxNSAr
-KysrKysrKysrKysrLS0KPiAgMiBmaWxlcyBjaGFuZ2VkLCAxNyBpbnNlcnRpb25zKCspLCAxNyBk
-ZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9kZXZpY2VfY2dyb3Vw
-LmggYi9pbmNsdWRlL2xpbnV4L2RldmljZV9jZ3JvdXAuaAo+IGluZGV4IDg1NTdlZmUwOTZkYy4u
-ZmEzNWI1MmUwMDAyIDEwMDY0NAo+IC0tLSBhL2luY2x1ZGUvbGludXgvZGV2aWNlX2Nncm91cC5o
-Cj4gKysrIGIvaW5jbHVkZS9saW51eC9kZXZpY2VfY2dyb3VwLmgKPiBAQCAtMTIsMjYgKzEyLDE1
-IEBACj4gICNkZWZpbmUgREVWQ0dfREVWX0FMTCAgIDQgIC8qIHRoaXMgcmVwcmVzZW50cyBhbGwg
-ZGV2aWNlcyAqLwo+ICAKPiAgI2lmZGVmIENPTkZJR19DR1JPVVBfREVWSUNFCj4gLWV4dGVybiBp
-bnQgX19kZXZjZ3JvdXBfY2hlY2tfcGVybWlzc2lvbihzaG9ydCB0eXBlLCB1MzIgbWFqb3IsIHUz
-MiBtaW5vciwKPiAtCQkJCQlzaG9ydCBhY2Nlc3MpOwo+ICtpbnQgZGV2Y2dyb3VwX2NoZWNrX3Bl
-cm1pc3Npb24oc2hvcnQgdHlwZSwgdTMyIG1ham9yLCB1MzIgbWlub3IsCj4gKwkJCSAgICAgICBz
-aG9ydCBhY2Nlc3MpOwo+ICAjZWxzZQo+IC1zdGF0aWMgaW5saW5lIGludCBfX2RldmNncm91cF9j
-aGVja19wZXJtaXNzaW9uKHNob3J0IHR5cGUsIHUzMiBtYWpvciwgdTMyIG1pbm9yLAo+IC0JCQkJ
-CSAgICAgICBzaG9ydCBhY2Nlc3MpCj4gK3N0YXRpYyBpbmxpbmUgaW50IGRldmNncm91cF9jaGVj
-a19wZXJtaXNzaW9uKHNob3J0IHR5cGUsIHUzMiBtYWpvciwgdTMyIG1pbm9yLAo+ICsJCQkJCSAg
-ICAgc2hvcnQgYWNjZXNzKQo+ICB7IHJldHVybiAwOyB9Cj4gICNlbmRpZgo+ICAKPiAgI2lmIGRl
-ZmluZWQoQ09ORklHX0NHUk9VUF9ERVZJQ0UpIHx8IGRlZmluZWQoQ09ORklHX0NHUk9VUF9CUEYp
-Cj4gLXN0YXRpYyBpbmxpbmUgaW50IGRldmNncm91cF9jaGVja19wZXJtaXNzaW9uKHNob3J0IHR5
-cGUsIHUzMiBtYWpvciwgdTMyIG1pbm9yLAo+IC0JCQkJCSAgICAgc2hvcnQgYWNjZXNzKQo+IC17
-Cj4gLQlpbnQgcmMgPSBCUEZfQ0dST1VQX1JVTl9QUk9HX0RFVklDRV9DR1JPVVAodHlwZSwgbWFq
-b3IsIG1pbm9yLCBhY2Nlc3MpOwo+IC0KPiAtCWlmIChyYykKPiAtCQlyZXR1cm4gLUVQRVJNOwo+
-IC0KPiAtCXJldHVybiBfX2RldmNncm91cF9jaGVja19wZXJtaXNzaW9uKHR5cGUsIG1ham9yLCBt
-aW5vciwgYWNjZXNzKTsKPiAtfQo+IC0KPiAgc3RhdGljIGlubGluZSBpbnQgZGV2Y2dyb3VwX2lu
-b2RlX3Blcm1pc3Npb24oc3RydWN0IGlub2RlICppbm9kZSwgaW50IG1hc2spCj4gIHsKPiAgCXNo
-b3J0IHR5cGUsIGFjY2VzcyA9IDA7Cj4gZGlmZiAtLWdpdCBhL3NlY3VyaXR5L2RldmljZV9jZ3Jv
-dXAuYyBiL3NlY3VyaXR5L2RldmljZV9jZ3JvdXAuYwo+IGluZGV4IGRjMjg5MTRmYTcyZS4uMDRk
-ZDI5YmY3ZjA2IDEwMDY0NAo+IC0tLSBhL3NlY3VyaXR5L2RldmljZV9jZ3JvdXAuYwo+ICsrKyBi
-L3NlY3VyaXR5L2RldmljZV9jZ3JvdXAuYwo+IEBAIC04MDEsOCArODAxLDggQEAgc3RydWN0IGNn
-cm91cF9zdWJzeXMgZGV2aWNlc19jZ3JwX3N1YnN5cyA9IHsKPiAgICoKPiAgICogcmV0dXJucyAw
-IG9uIHN1Y2Nlc3MsIC1FUEVSTSBjYXNlIHRoZSBvcGVyYXRpb24gaXMgbm90IHBlcm1pdHRlZAo+
-ICAgKi8KPiAtaW50IF9fZGV2Y2dyb3VwX2NoZWNrX3Blcm1pc3Npb24oc2hvcnQgdHlwZSwgdTMy
-IG1ham9yLCB1MzIgbWlub3IsCj4gLQkJCQkgc2hvcnQgYWNjZXNzKQo+ICtzdGF0aWMgaW50IF9f
-ZGV2Y2dyb3VwX2NoZWNrX3Blcm1pc3Npb24oc2hvcnQgdHlwZSwgdTMyIG1ham9yLCB1MzIgbWlu
-b3IsCj4gKwkJCQkJc2hvcnQgYWNjZXNzKQo+ICB7Cj4gIAlzdHJ1Y3QgZGV2X2Nncm91cCAqZGV2
-X2Nncm91cDsKPiAgCWJvb2wgcmM7Cj4gQEAgLTgyNCwzICs4MjQsMTQgQEAgaW50IF9fZGV2Y2dy
-b3VwX2NoZWNrX3Blcm1pc3Npb24oc2hvcnQgdHlwZSwgdTMyIG1ham9yLCB1MzIgbWlub3IsCj4g
-IAo+ICAJcmV0dXJuIDA7Cj4gIH0KPiArCj4gK2ludCBkZXZjZ3JvdXBfY2hlY2tfcGVybWlzc2lv
-bihzaG9ydCB0eXBlLCB1MzIgbWFqb3IsIHUzMiBtaW5vciwgc2hvcnQgYWNjZXNzKQo+ICt7Cj4g
-KwlpbnQgcmMgPSBCUEZfQ0dST1VQX1JVTl9QUk9HX0RFVklDRV9DR1JPVVAodHlwZSwgbWFqb3Is
-IG1pbm9yLCBhY2Nlc3MpOwo+ICsKPiArCWlmIChyYykKPiArCQlyZXR1cm4gLUVQRVJNOwo+ICsK
-PiArCXJldHVybiBfX2RldmNncm91cF9jaGVja19wZXJtaXNzaW9uKHR5cGUsIG1ham9yLCBtaW5v
-ciwgYWNjZXNzKTsKPiArfQo+ICtFWFBPUlRfU1lNQk9MKGRldmNncm91cF9jaGVja19wZXJtaXNz
-aW9uKTsKPiAtLSAKPiAyLjE3LjEKPiAKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX18KYW1kLWdmeCBtYWlsaW5nIGxpc3QKYW1kLWdmeEBsaXN0cy5mcmVlZGVz
-a3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9h
-bWQtZ2Z4
+On Mon, Sep 23, 2019 at 2:27 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
+>
+> On 9/23/19 12:18 PM, Mina Almasry wrote:
+> > On Mon, Sep 23, 2019 at 10:47 AM Mike Kravetz <mike.kravetz@oracle.com> wrote:
+> >>
+> >> On 9/19/19 3:24 PM, Mina Almasry wrote:
+> >>> Patch series implements hugetlb_cgroup reservation usage and limits, which
+> >>> track hugetlb reservations rather than hugetlb memory faulted in. Details of
+> >>> the approach is 1/7.
+> >>
+> >> Thanks for your continued efforts Mina.
+> >>
+> >
+> > And thanks for your reviews so far.
+> >
+> >> One thing that has bothered me with this approach from the beginning is that
+> >> hugetlb reservations are related to, but somewhat distinct from hugetlb
+> >> allocations.  The original (existing) huegtlb cgroup implementation does not
+> >> take reservations into account.  This is an issue you are trying to address
+> >> by adding a cgroup support for hugetlb reservations.  However, this new
+> >> reservation cgroup ignores hugetlb allocations at fault time.
+> >>
+> >> I 'think' the whole purpose of any hugetlb cgroup is to manage the allocation
+> >> of hugetlb pages.  Both the existing cgroup code and the reservation approach
+> >> have what I think are some serious flaws.  Consider a system with 100 hugetlb
+> >> pages available.  A sysadmin, has two groups A and B and wants to limit hugetlb
+> >> usage to 50 pages each.
+> >>
+> >> With the existing implementation, a task in group A could create a mmap of
+> >> 100 pages in size and reserve all 100 pages.  Since the pages are 'reserved',
+> >> nobody in group B can allocate ANY huge pages.  This is true even though
+> >> no pages have been allocated in A (or B).
+> >>
+> >> With the reservation implementation, a task in group A could use MAP_NORESERVE
+> >> and allocate all 100 pages without taking any reservations.
+> >>
+> >> As mentioned in your documentation, it would be possible to use both the
+> >> existing (allocation) and new reservation cgroups together.  Perhaps if both
+> >> are setup for the 50/50 split things would work a little better.
+> >>
+> >> However, instead of creating a new reservation crgoup how about adding
+> >> reservation support to the existing allocation cgroup support.  One could
+> >> even argue that a reservation is an allocation as it sets aside huge pages
+> >> that can only be used for a specific purpose.  Here is something that
+> >> may work.
+> >>
+> >> Starting with the existing allocation cgroup.
+> >> - When hugetlb pages are reserved, the cgroup of the task making the
+> >>   reservations is charged.  Tracking for the charged cgroup is done in the
+> >>   reservation map in the same way proposed by this patch set.
+> >> - At page fault time,
+> >>   - If a reservation already exists for that specific area do not charge the
+> >>     faulting task.  No tracking in page, just the reservation map.
+> >>   - If no reservation exists, charge the group of the faulting task.  Tracking
+> >>     of this information is in the page itself as implemented today.
+> >> - When the hugetlb object is removed, compare the reservation map with any
+> >>   allocated pages.  If cgroup tracking information exists in page, uncharge
+> >>   that group.  Otherwise, unharge the group (if any) in the reservation map.
+> >>
+> >> One of the advantages of a separate reservation cgroup is that the existing
+> >> code is unmodified.  Combining the two provides a more complete/accurate
+> >> solution IMO.  But, it has the potential to break existing users.
+> >>
+> >> I really would like to get feedback from anyone that knows how the existing
+> >> hugetlb cgroup controller may be used today.  Comments from Aneesh would
+> >> be very welcome to know if reservations were considered in development of the
+> >> existing code.
+> >> --
+> >
+> > FWIW, I'm aware of the interaction with NORESERVE and my thoughts are:
+> >
+> > AFAICT, the 2 counter approach we have here is strictly superior to
+> > the 1 upgraded counter approach. Consider these points:
+> >
+> > - From what I can tell so far, everything you can do with the 1
+> > counter approach, you can do with the two counter approach by setting
+> > both limit_in_bytes and reservation_limit_in_bytes to the limit value.
+> > That will limit both reservations and at fault allocations.
+> >
+> > - The 2 counter approach preserves existing usage of hugetlb cgroups,
+> > so no need to muck around with reverting the feature some time from
+> > now because of broken users. No existing users of hugetlb cgroups need
+> > to worry about the effect of this on their usage.
+> >
+> > - Users that use hugetlb memory strictly through reservations can use
+> > only reservation_limit_in_bytes and enjoy cgroup limits that never
+> > SIGBUS the application. This is our usage for example.
+> >
+> > - The 2 counter approach provides more info to the sysadmin. The
+> > sysadmin knows exactly how much reserved bytes there are via
+> > reservation_usage_in_bytes, and how much actually in use bytes there
+> > are via usage_in_bytes. They can even detect NORESERVE usage if
+> > usage_in_bytes > reservation_usage_in_bytes. failcnt shows failed
+> > reservations *and* failed allocations at fault, etc. All around better
+> > debuggability when things go wrong. I think this is particularly
+> > troubling for the 1 upgraded counter approach. That counter's
+> > usage_in_bytes doesn't tell you if the usage came from reservations or
+> > allocations at fault time.
+> >
+> > - Honestly, I think the 2 counter approach is easier to document and
+> > understand by the userspace? 1 counter that vaguely tracks both the
+> > reservations and usage and decides whether or not to charge at fault
+> > time seems hard to understand what really happened after something
+> > goes wrong. 1 counter that tracks reservations and 1 counter that
+> > tracks actual usage seem much simpler to digest, and provide better
+> > visibility to what the cgroup is doing as I mentioned above.
+> >
+> > I think it may be better if I keep the 2 counter approach but
+> > thoroughly document the interaction between the existing counters and
+> > NORESERVE. What do you think?
+>
+> I personally prefer the one counter approach only for the reason that it
+> exposes less information about hugetlb reservations.  I was not around
+> for the introduction of hugetlb reservations, but I have fixed several
+> issues having to do with reservations.  IMO, reservations should be hidden
+> from users as much as possible.  Others may disagree.
+>
+> I really hope that Aneesh will comment.  He added the existing hugetlb
+> cgroup code.  I was not involved in that effort, but it looks like there
+> might have been some thought given to reservations in early versions of
+> that code.  It would be interesting to get his perspective.
+>
+> Changes included in patch 4 (disable region_add file_region coalescing)
+> would be needed in a one counter approach as well, so I do plan to
+> review those changes.
+
+OK, FWIW, the 1 counter approach should be sufficient for us, so I'm
+not really opposed. David, maybe chime in if you see a problem here?
+From the perspective of hiding reservations from the user as much as
+possible, it is an improvement.
+
+I'm only wary about changing the behavior of the current and having
+that regress applications. I'm hoping you and Aneesh can shed light on
+this.
+
+> --
+> Mike Kravetz
