@@ -1,47 +1,74 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 1/3 for-5.4/block] iocost: better trace vrate changes
-Date: Thu, 26 Sep 2019 09:12:38 +0200
-Message-ID: <310739da-b606-6485-9979-9bc03a592265@kernel.dk>
-References: <20190925230207.GI2233839@devbig004.ftw2.facebook.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH] mm: Proportional memory.{low,min} reclaim
+Date: Thu, 26 Sep 2019 13:49:53 +0200
+Message-ID: <20190926114953.GA1224@dhcp22.suse.cz>
+References: <20190124014455.GA6396@chrisdown.name>
+ <20190128210031.GA31446@castle.DHCP.thefacebook.com>
+ <20190128214213.GB15349@chrisdown.name>
+ <20190128215230.GA32069@castle.DHCP.thefacebook.com>
+ <20190715153527.86a3f6e65ecf5d501252dbf1@linux-foundation.org>
+ <20190716172459.GB16575@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=u/+FmsO2fNzcsmYglT3xz6RDpSXgM0989c2PSz8Zvf4=;
-        b=VFGoxo+2NsxxwxjafuC2PpLHAFStjdosoGEbFmrM8SZ3rrImY4Sqc1/3J0DL/nSiek
-         cKXmLnyFis+D0MbKrVE0ATCMolB8ETO3TmYRdu83WYIqnQN2/9Kr879GEZ2XHDJJp0Np
-         sfEk1iSsp2VIf4BX2N7yHGkfOznLAcThCZOePG9i/g9qzTRvaEjv8bR5rGYL86uzXlQx
-         FVWTg05Jc+tDb3dA6Y661ABAFal9Jdn4j3GNAfXvyNBLm7YFtNgG3YtiZnpvk0ZpjpRu
-         SfIdUGBrMNXSt8Y7+NgK6sl1kd11BTn6K3rme6akMMJnevDRjfsXmJnf+0J+hfgcnGmm
-         f3BQ==
-In-Reply-To: <20190925230207.GI2233839@devbig004.ftw2.facebook.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20190716172459.GB16575@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Chris Down <chris@chrisdown.name>, Tejun Heo <tj@kernel.org>, Dennis Zhou <dennis@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Kernel Team <Kernel-team@fb.com>
 
-On 9/26/19 1:02 AM, Tejun Heo wrote:
-> vrate_adj tracepoint traces vrate changes; however, it does so only
-> when busy_level is non-zero.  busy_level turning to zero can sometimes
-> be as interesting an event.  This patch also enables vrate_adj
-> tracepoint on other vrate related events - busy_level changes and
-> non-zero nr_lagging.
+[Hmm, this one somehow slipped through. sorry about that]
+
+On Tue 16-07-19 13:24:59, Johannes Weiner wrote:
+> On Mon, Jul 15, 2019 at 03:35:27PM -0700, Andrew Morton wrote:
+> > On Mon, 28 Jan 2019 21:52:40 +0000 Roman Gushchin <guro@fb.com> wrote:
+> > 
+> > > > Hmm, this isn't really a common situation that I'd thought about, but it
+> > > > seems reasonable to make the boundaries when in low reclaim to be between
+> > > > min and low, rather than 0 and low. I'll add another patch with that. Thanks
+> > >
+> > > It's not a stopper, so I'm perfectly fine with a follow-up patch.
+> > 
+> > Did this happen?
+> > 
+> > I'm still trying to get this five month old patchset unstuck :(.  The
+> > review status is: 
+> > 
+> > [1/3] mm, memcg: proportional memory.{low,min} reclaim
+> > Acked-by: Johannes
+> > Reviewed-by: Roman
+> > 
+> > [2/3] mm, memcg: make memory.emin the baseline for utilisation determination
+> > Acked-by: Johannes
+> > 
+> > [3/3] mm, memcg: make scan aggression always exclude protection
+> > Reviewed-by: Roman
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> ---
-> Hello, Jens.
+> I forgot to send out the actual ack-tag on #, so I just did. I was
+> involved in the discussions that led to that patch, the code looks
+> good to me, and it's what we've been using internally for a while
+> without any hiccups.
 > 
-> I've encountered vrate regulation issues while testing on a hard disk
-> machine.  These are three patches to improve vrate adj visibility and
-> fix the issue.
+> > I do have a note here that mhocko intended to take a closer look but I
+> > don't recall whether that happened.
+> 
+> Michal acked #3 in 20190530065111.GC6703@dhcp22.suse.cz. Afaik not the
+> others, but #3 also doesn't make a whole lot of sense without #1...
+> 
+> > a) say what the hell and merge them or
+> > b) sit on them for another cycle or
+> > c) drop them and ask Chris for a resend so we can start again.
+> 
+> Michal, would you have time to take another look this week? Otherwise,
+> I think everyone who would review them has done so.
 
-Applied 1-3 for 5.4, thanks Tejun.
+I do not remember objecting to this particular patch. I also admit I do
+not remember much about it either. I am unlikely to get to review this
+in more depth these days.
 
+It seems more people have reviewed it already so just go ahead.
 -- 
-Jens Axboe
-
+Michal Hocko
+SUSE Labs
