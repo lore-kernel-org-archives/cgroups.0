@@ -1,72 +1,106 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH -next] treewide: remove unused argument in
- lock_release()
-Date: Mon, 30 Sep 2019 09:29:38 +0200
-Message-ID: <20190930072938.GK4553@hirez.programming.kicks-ass.net>
-References: <1568909380-32199-1-git-send-email-cai@lca.pw>
+From: Pavel Begunkov <asml.silence@gmail.com>
+Subject: Re: [RESEND RFC PATCH 0/2] Fix misuse of blk_rq_stats in
+ blk-iolatency
+Date: Mon, 30 Sep 2019 11:29:21 +0300
+Message-ID: <276a02f3-3b1a-0580-54fb-497f85103ae3@gmail.com>
+References: <cover.1560510935.git.asml.silence@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-Content-Disposition: inline
-In-Reply-To: <1568909380-32199-1-git-send-email-cai@lca.pw>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Qian Cai <cai@lca.pw>
-Cc: juri.lelli@redhat.com, airlied@linux.ie, dri-devel@lists.freedesktop.org, mhocko@kernel.org, alexander.levin@microsoft.com, joseph.qi@linux.alibaba.com, netdev@vger.kernel.org, st@kernel.org, will@kernel.org, duyuyang@gmail.com, daniel@iogearbox.net, mark@fasheh.com, mingo@redhat.com, vdavydov.dev@gmail.com, jslaby@suse.com, linux-ext4@vger.kernel.org, intel-gfx@lists.freedesktop.org, jack@suse.com, mripard@kernel.org, linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk, cgroups@vger.kernel.org, bpf@vger.kernel.org, tytso@mit.edu, linux-mm@kvack.org, linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, hannes@cmpxchg.org, jlbec@evilplan.or, gregkh@linuxfoundation.org, tj@kernel.org, akpm@linux-foundation.org, davem@davemloft.net, ocfs2-devel@oss.oracle.com
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="vpDpuljOak4VUjubg0p6HLJIDCCP6aiBm"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=to:references:from:autocrypt:subject:message-id:date:user-agent
+         :mime-version:in-reply-to;
+        bh=cMSmKksRpZvm7DjI+W2FPVfuQhvxd33fHRo5ksvWmP4=;
+        b=dRuBx2TC1uq36DDhogFse6nwMfAp/ucimdeY6k5ppTn2Xho+z3y/ZjUdHhQcPoazXo
+         cUl5M2Tc2K6mKaKlg+SBDvdy7Oi3X7/ikExmnGLRT8sGsNOpxOiEHe6QK7uPo/VY0CXK
+         CVzAd7AnOL8C+caYQYuaodnOP3e54tWdY5iqQe/Cyb8kAEKxKQs1s1QktwlZCCLiO/VU
+         u/RomifRoQXgVF/ZB3ahSgGkC3anJWf1MWewAskf6e5kleYuhEMhhAW5MmC81Er9o0Et
+         N8BH6XxrP3+LHJxEPhEDwii7muqWvRD/et3s8ml3IWlUZYc7iWKvuRtsKTfBeoTgGStr
+         Gkaw==
+In-Reply-To: <cover.1560510935.git.asml.silence@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, josef@toxicpanda.com, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
 
-T24gVGh1LCBTZXAgMTksIDIwMTkgYXQgMTI6MDk6NDBQTSAtMDQwMCwgUWlhbiBDYWkgd3JvdGU6
-Cj4gU2luY2UgdGhlIGNvbW1pdCBiNGFkZmU4ZTA1ZjEgKCJsb2NraW5nL2xvY2tkZXA6IFJlbW92
-ZSB1bnVzZWQgYXJndW1lbnQKPiBpbiBfX2xvY2tfcmVsZWFzZSIpLCBAbmVzdGVkIGlzIG5vIGxv
-bmdlciB1c2VkIGluIGxvY2tfcmVsZWFzZSgpLCBzbwo+IHJlbW92ZSBpdCBmcm9tIGFsbCBsb2Nr
-X3JlbGVhc2UoKSBjYWxscyBhbmQgZnJpZW5kcy4KClJpZ2h0OyBJIG5ldmVyIGRpZCB0aGlzIGNs
-ZWFudXAgZm9yIG5vdCB3YW50aW5nIHRoZSBjaHVybiwgYnV0IGFzIGxvbmcKYXMgaXQgYXBwbGll
-cyBJJ2xsIHRha2UgaXQuCgo+IFNpZ25lZC1vZmYtYnk6IFFpYW4gQ2FpIDxjYWlAbGNhLnB3Pgo+
-IC0tLQo+ICBkcml2ZXJzL2dwdS9kcm0vZHJtX2Nvbm5lY3Rvci5jICAgICAgICAgICAgICAgfCAg
-MiArLQo+ICBkcml2ZXJzL2dwdS9kcm0vaTkxNS9nZW0vaTkxNV9nZW1fc2hyaW5rZXIuYyAgfCAg
-NiArKystLS0KPiAgZHJpdmVycy9ncHUvZHJtL2k5MTUvZ3QvaW50ZWxfZW5naW5lX3BtLmMgICAg
-IHwgIDIgKy0KPiAgZHJpdmVycy9ncHUvZHJtL2k5MTUvaTkxNV9yZXF1ZXN0LmMgICAgICAgICAg
-IHwgIDIgKy0KPiAgZHJpdmVycy90dHkvdHR5X2xkc2VtLmMgICAgICAgICAgICAgICAgICAgICAg
-IHwgIDggKysrKy0tLS0KPiAgZnMvZGNhY2hlLmMgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgIHwgIDIgKy0KPiAgZnMvamJkMi90cmFuc2FjdGlvbi5jICAgICAgICAgICAgICAgICAg
-ICAgICAgIHwgIDQgKystLQo+ICBmcy9rZXJuZnMvZGlyLmMgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgfCAgNCArKy0tCj4gIGZzL29jZnMyL2RsbWdsdWUuYyAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICB8ICAyICstCj4gIGluY2x1ZGUvbGludXgvamJkMi5oICAgICAgICAgICAgICAg
-ICAgICAgICAgICB8ICAyICstCj4gIGluY2x1ZGUvbGludXgvbG9ja2RlcC5oICAgICAgICAgICAg
-ICAgICAgICAgICB8IDIxICsrKysrKysrKystLS0tLS0tLS0tLQo+ICBpbmNsdWRlL2xpbnV4L3Bl
-cmNwdS1yd3NlbS5oICAgICAgICAgICAgICAgICAgfCAgNCArKy0tCj4gIGluY2x1ZGUvbGludXgv
-cmN1cGRhdGUuaCAgICAgICAgICAgICAgICAgICAgICB8ICAyICstCj4gIGluY2x1ZGUvbGludXgv
-cndsb2NrX2FwaV9zbXAuaCAgICAgICAgICAgICAgICB8IDE2ICsrKysrKysrLS0tLS0tLS0KPiAg
-aW5jbHVkZS9saW51eC9zZXFsb2NrLmggICAgICAgICAgICAgICAgICAgICAgIHwgIDQgKystLQo+
-ICBpbmNsdWRlL2xpbnV4L3NwaW5sb2NrX2FwaV9zbXAuaCAgICAgICAgICAgICAgfCAgOCArKysr
-LS0tLQo+ICBpbmNsdWRlL2xpbnV4L3d3X211dGV4LmggICAgICAgICAgICAgICAgICAgICAgfCAg
-MiArLQo+ICBpbmNsdWRlL25ldC9zb2NrLmggICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAg
-MiArLQo+ICBrZXJuZWwvYnBmL3N0YWNrbWFwLmMgICAgICAgICAgICAgICAgICAgICAgICAgfCAg
-MiArLQo+ICBrZXJuZWwvY3B1LmMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAg
-MiArLQo+ICBrZXJuZWwvbG9ja2luZy9sb2NrZGVwLmMgICAgICAgICAgICAgICAgICAgICAgfCAg
-MyArLS0KPiAga2VybmVsL2xvY2tpbmcvbXV0ZXguYyAgICAgICAgICAgICAgICAgICAgICAgIHwg
-IDQgKystLQo+ICBrZXJuZWwvbG9ja2luZy9ydG11dGV4LmMgICAgICAgICAgICAgICAgICAgICAg
-fCAgNiArKystLS0KPiAga2VybmVsL2xvY2tpbmcvcndzZW0uYyAgICAgICAgICAgICAgICAgICAg
-ICAgIHwgMTAgKysrKystLS0tLQo+ICBrZXJuZWwvcHJpbnRrL3ByaW50ay5jICAgICAgICAgICAg
-ICAgICAgICAgICAgfCAxMCArKysrKy0tLS0tCj4gIGtlcm5lbC9zY2hlZC9jb3JlLmMgICAgICAg
-ICAgICAgICAgICAgICAgICAgICB8ICAyICstCj4gIGxpYi9sb2NraW5nLXNlbGZ0ZXN0LmMgICAg
-ICAgICAgICAgICAgICAgICAgICB8IDI0ICsrKysrKysrKysrKy0tLS0tLS0tLS0tLQo+ICBtbS9t
-ZW1jb250cm9sLmMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMiArLQo+ICBuZXQv
-Y29yZS9zb2NrLmMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMiArLQo+ICB0b29s
-cy9saWIvbG9ja2RlcC9pbmNsdWRlL2xpYmxvY2tkZXAvY29tbW9uLmggfCAgMyArLS0KPiAgdG9v
-bHMvbGliL2xvY2tkZXAvaW5jbHVkZS9saWJsb2NrZGVwL211dGV4LmggIHwgIDIgKy0KPiAgdG9v
-bHMvbGliL2xvY2tkZXAvaW5jbHVkZS9saWJsb2NrZGVwL3J3bG9jay5oIHwgIDIgKy0KPiAgdG9v
-bHMvbGliL2xvY2tkZXAvcHJlbG9hZC5jICAgICAgICAgICAgICAgICAgIHwgMTYgKysrKysrKyst
-LS0tLS0tLQo+ICAzMyBmaWxlcyBjaGFuZ2VkLCA5MCBpbnNlcnRpb25zKCspLCA5MyBkZWxldGlv
-bnMoLSkKClRoYW5rcyEKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KSW50ZWwtZ2Z4IG1haWxpbmcgbGlzdApJbnRlbC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Au
-b3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vaW50ZWwt
-Z2Z4
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--vpDpuljOak4VUjubg0p6HLJIDCCP6aiBm
+Content-Type: multipart/mixed; boundary="iwCQfC1143W97Fjrsn5ILXvfBDPud4pYO";
+ protected-headers="v1"
+From: Pavel Begunkov <asml.silence@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+ linux-kernel@vger.kernel.org, josef@toxicpanda.com, Tejun Heo
+ <tj@kernel.org>, cgroups@vger.kernel.org
+Message-ID: <276a02f3-3b1a-0580-54fb-497f85103ae3@gmail.com>
+Subject: Re: [RESEND RFC PATCH 0/2] Fix misuse of blk_rq_stats in
+ blk-iolatency
+References: <cover.1560510935.git.asml.silence@gmail.com>
+In-Reply-To: <cover.1560510935.git.asml.silence@gmail.com>
+
+--iwCQfC1143W97Fjrsn5ILXvfBDPud4pYO
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+I claim, that there is a bug, that hopefully doesn't show itself apart
+from a minor disabled optimisation. It's _too_ easy to misuse, and if
+somebody try to reuse, this could lead to quite interesting issues.
+
+Could somebody at last take a look?
+Thanks
+
+On 25/07/2019 00:35, Pavel Begunkov (Silence) wrote:
+> From: Pavel Begunkov <asml.silence@gmail.com>
+>=20
+> There are implicit assumptions about struct blk_rq_stats, which make
+> it's very easy to misuse. The first patch fixes consequences, and the
+> second employs type-system to prevent recurrences.
+>=20
+> Acked-by: Josef Bacik <josef@toxicpanda.com>
+>=20
+> Pavel Begunkov (2):
+>   blk-iolatency: Fix zero mean in previous stats
+>   blk-stats: Introduce explicit stat staging buffers
+>=20
+>  block/blk-iolatency.c     | 60 ++++++++++++++++++++++++++++++---------=
+
+>  block/blk-stat.c          | 48 +++++++++++++++++++++++--------
+>  block/blk-stat.h          |  9 ++++--
+>  include/linux/blk_types.h |  6 ++++
+>  4 files changed, 94 insertions(+), 29 deletions(-)
+>=20
+
+--=20
+Yours sincerely,
+Pavel Begunkov
+
+
+--iwCQfC1143W97Fjrsn5ILXvfBDPud4pYO--
+
+--vpDpuljOak4VUjubg0p6HLJIDCCP6aiBm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEE+6JuPTjTbx479o3OWt5b1Glr+6UFAl2RvOEACgkQWt5b1Glr
++6UKiBAAgW2BL4yvqLYVizbAQnkdFQG/KreGrf5vyKZhcv2UHjoMvO2EUQzpwX2v
+FMaHbFAx5tOnjeoWmwXjYuAJLAnu3qT1+tGtVUFxWcDbyTnrnqAEMB9dItDr2Ga5
+K6smdf9rZhnFufPiJfJ0dFqBlfqJ1YhY3L5PG8as5/9Um9B/JCCb0Hjft5yoG2Gs
+lsVh+RFzw8hHSptJOru/Fz6oKVDiMloqRSCWhiS7hXquMUhcPusAJLzGPhQ8Kv7o
+W8bZOcs99Ijp8Ye5xlgLtohBtpN1C/+ZFMHVxv4UH+JrPvwFzLDCD/mCfGLWTbUK
+N8ypzi5AW4KmlBAbzUs8HjQk7FvswcazyWRRm9bg4JWEE1TLgUMrrWmUsHxLlnDO
+knNWMjD9+PO7BrYtQm6OUX4+0Jz9wUtYBGSZF7IXLCutJ9/NloHRTFIQWXnp2NX8
+WWhB1x590ljZ1REULO1312qztHOQyEOgI9vGV1jlMMQPp5RzRAHeJyC2Ay0JSt43
+RZBkbjkG5tcSZ/atpzi/LhXW4PIN3IBvto9F1WYpf465ISjFhmHfEk7K+Tcfa+S1
+QfHO3/t2dmFEH/2vm2/foff0av4HedV3gtulofAjpH7c4SVFWJGRjGDewrsap/C2
+zMKGPSyJnh8D+boNOMkiLV8qI0juyFQD7MTybazl6u8vHqVssVQ=
+=CxFQ
+-----END PGP SIGNATURE-----
+
+--vpDpuljOak4VUjubg0p6HLJIDCCP6aiBm--
