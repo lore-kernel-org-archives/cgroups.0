@@ -1,40 +1,48 @@
-From: Qian Cai <cai@lca.pw>
-Subject: Re: [PATCH -next] treewide: remove unused argument in lock_release()
-Date: Tue, 01 Oct 2019 08:46:44 -0400
-Message-ID: <1569934004.5576.249.camel@lca.pw>
-References: <1568909380-32199-1-git-send-email-cai@lca.pw>
-         <20190930072938.GK4553@hirez.programming.kicks-ass.net>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] mm/memcontrol.c: fix another unused function warning
+Date: Tue,  1 Oct 2019 16:22:12 +0200
+Message-ID: <20191001142227.1227176-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lca.pw; s=google;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=yhYK707SJYezdTmtlm0H5DzhvYDEY+AheUSfJipRwQA=;
-        b=Ip07l89zJ0jmeRNnjuMLfwUjUW/Co9PU7e0m/xjX5PRGmc7z0AHojhkZabJt8X2Bgg
-         g+nON2pSO1jYd3vrOuUPki6rr1yQEu8hEHqD2uxKaL1mXqoQO+mmyIxyk/MqTG+kwh7j
-         k8s6vQHeaqcK2Ex9HxDcxmXOxrevnS6yuu8GEXyqlYjEZ0NonLeaC1CRZJXuD0MLzbKz
-         KMfG1EI87v8Lxz8Ezrm+M3DQJYYjEG8yK9ND3K1qjmeVssoYCQLFRhdCLXQgMe4P5XGr
-         47iPcjETHnPBpfL8Sd3yLzPtHoVT0IEvJrxtCfa4Pu82gMneNTnjOQOCUx8TaPMdQriE
-         9BWQ==
-In-Reply-To: <20190930072938.GK4553@hirez.programming.kicks-ass.net>
-Sender: netdev-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: akpm@linux-foundation.org, mingo@redhat.com, will@kernel.org, linux-kernel@vger.kernel.org, linux-api@vger.kernel.org, maarten.lankhorst@linux.intel.com, mripard@kernel.org, sean@poorly.run, airlied@linux.ie, daniel@ffwll.ch, dri-devel@lists.freedesktop.org, gregkh@linuxfoundation.org, jslaby@suse.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, joonas.lahtinen@linux.intel.com, rodrigo.vivi@intel.com, intel-gfx@lists.freedesktop.org, tytso@mit.edu, jack@suse.com, linux-ext4@vger.kernel.org, tj@kernel.org, mark@fasheh.com, jlbec@evilplan.org, joseph.qi@linux.alibaba.com, ocfs2-devel@oss.oracle.com, davem@davemloft.net, st@kernel.org, daniel@iogearbox.net, netdev@vger.kernel.org, bpf@vger.kernel.org, duyuyang@gmail.com, juri.lelli@redhat.com, vincent.guittot@linaro.org
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Qian Cai <cai@lca.pw>, Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com
 
-On Mon, 2019-09-30 at 09:29 +0200, Peter Zijlstra wrote:
-> On Thu, Sep 19, 2019 at 12:09:40PM -0400, Qian Cai wrote:
-> > Since the commit b4adfe8e05f1 ("locking/lockdep: Remove unused argument
-> > in __lock_release"), @nested is no longer used in lock_release(), so
-> > remove it from all lock_release() calls and friends.
-> 
-> Right; I never did this cleanup for not wanting the churn, but as long
-> as it applies I'll take it.
+Removing the mem_cgroup_id_get() stub function introduced a new warning
+of the same kind when CONFIG_MMU is disabled:
 
-Not sure when you would like to merge this. As you know, the longer it is
-pending, the more churn it could have. If you could give me rough timeline
-(i.e., aim for v5.4-rc2 or v5.5), I'll double-check for breakage and rebase it
-if necessary.
+mm/memcontrol.c:4929:13: error: unused function 'mem_cgroup_id_get_many' [-Werror,-Wunused-function]
+
+Address this using a __maybe_unused annotation.
+
+Note: alternatively, this could be moved into an #ifdef block.  Marking it
+'static inline' would not work here as that would still produce the
+warning on clang, which only ignores unused inline functions declared
+in header files instead of .c files.
+
+Fixes: 4d0e3230a56a ("mm/memcontrol.c: fix a -Wunused-function warning")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ mm/memcontrol.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c313c49074ca..5f9f90e3cef8 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4921,7 +4921,8 @@ static void mem_cgroup_id_remove(struct mem_cgroup *memcg)
+ 	}
+ }
+ 
+-static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned int n)
++static void __maybe_unused
++mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned int n)
+ {
+ 	refcount_add(n, &memcg->id.ref);
+ }
+-- 
+2.20.0
+
