@@ -1,93 +1,40 @@
-From: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
-Subject: Re: [PATCH RFC v4 01/16] drm: Add drm_minor_for_each
-Date: Tue, 3 Sep 2019 09:57:19 +0200
-Message-ID: <20190903075719.GK2112@phenom.ffwll.local>
-References: <20190829060533.32315-1-Kenny.Ho@amd.com>
- <20190829060533.32315-2-Kenny.Ho@amd.com>
+From: Qian Cai <cai@lca.pw>
+Subject: Re: [PATCH -next] treewide: remove unused argument in lock_release()
+Date: Tue, 01 Oct 2019 08:46:44 -0400
+Message-ID: <1569934004.5576.249.camel@lca.pw>
+References: <1568909380-32199-1-git-send-email-cai@lca.pw>
+         <20190930072938.GK4553@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20190829060533.32315-2-Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=lca.pw; s=google;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=yhYK707SJYezdTmtlm0H5DzhvYDEY+AheUSfJipRwQA=;
+        b=Ip07l89zJ0jmeRNnjuMLfwUjUW/Co9PU7e0m/xjX5PRGmc7z0AHojhkZabJt8X2Bgg
+         g+nON2pSO1jYd3vrOuUPki6rr1yQEu8hEHqD2uxKaL1mXqoQO+mmyIxyk/MqTG+kwh7j
+         k8s6vQHeaqcK2Ex9HxDcxmXOxrevnS6yuu8GEXyqlYjEZ0NonLeaC1CRZJXuD0MLzbKz
+         KMfG1EI87v8Lxz8Ezrm+M3DQJYYjEG8yK9ND3K1qjmeVssoYCQLFRhdCLXQgMe4P5XGr
+         47iPcjETHnPBpfL8Sd3yLzPtHoVT0IEvJrxtCfa4Pu82gMneNTnjOQOCUx8TaPMdQriE
+         9BWQ==
+In-Reply-To: <20190930072938.GK4553@hirez.programming.kicks-ass.net>
+Sender: netdev-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
-Cc: daniel-/w4YWyX8dFk@public.gmane.org, felix.kuehling-5C7GfCeVMHo@public.gmane.org, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, lkaplan-WVYJKLFxKCc@public.gmane.org, alexander.deucher-5C7GfCeVMHo@public.gmane.org, y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, joseph.greathouse-5C7GfCeVMHo@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, christian.koenig-5C7GfCeVMHo@public.gmane.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: akpm@linux-foundation.org, mingo@redhat.com, will@kernel.org, linux-kernel@vger.kernel.org, linux-api@vger.kernel.org, maarten.lankhorst@linux.intel.com, mripard@kernel.org, sean@poorly.run, airlied@linux.ie, daniel@ffwll.ch, dri-devel@lists.freedesktop.org, gregkh@linuxfoundation.org, jslaby@suse.com, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, joonas.lahtinen@linux.intel.com, rodrigo.vivi@intel.com, intel-gfx@lists.freedesktop.org, tytso@mit.edu, jack@suse.com, linux-ext4@vger.kernel.org, tj@kernel.org, mark@fasheh.com, jlbec@evilplan.org, joseph.qi@linux.alibaba.com, ocfs2-devel@oss.oracle.com, davem@davemloft.net, st@kernel.org, daniel@iogearbox.net, netdev@vger.kernel.org, bpf@vger.kernel.org, duyuyang@gmail.com, juri.lelli@redhat.com, vincent.guittot@linaro.org
 
-T24gVGh1LCBBdWcgMjksIDIwMTkgYXQgMDI6MDU6MThBTSAtMDQwMCwgS2VubnkgSG8gd3JvdGU6
-Cj4gVG8gYWxsb3cgb3RoZXIgc3Vic3lzdGVtcyB0byBpdGVyYXRlIHRocm91Z2ggYWxsIHN0b3Jl
-ZCBEUk0gbWlub3JzIGFuZAo+IGFjdCB1cG9uIHRoZW0uCj4gCj4gQWxzbyBleHBvc2VzIGRybV9t
-aW5vcl9hY3F1aXJlIGFuZCBkcm1fbWlub3JfcmVsZWFzZSBmb3Igb3RoZXIgc3Vic3lzdGVtCj4g
-dG8gaGFuZGxlIGRybV9taW5vci4gIERSTSBjZ3JvdXAgY29udHJvbGxlciBpcyB0aGUgaW5pdGlh
-bCBjb25zdW1lciBvZgo+IHRoaXMgbmV3IGZlYXR1cmVzLgo+IAo+IENoYW5nZS1JZDogSTdjNGI2
-N2NlNmIzMWYwNmQxMDM3YjAzNDM1Mzg2ZmY1YjgxNDRjYTUKPiBTaWduZWQtb2ZmLWJ5OiBLZW5u
-eSBIbyA8S2VubnkuSG9AYW1kLmNvbT4KCkl0ZXJhdGluZyBvdmVyIG1pbm9ycyBmb3IgY2dyb3Vw
-cyBzb3VuZHMgdmVyeSwgdmVyeSB3cm9uZy4gV2h5IGRvIHdlIGNhcmUKd2hldGhlciBhIGJ1ZmZl
-ciB3YXMgYWxsb2NhdGVkIHRocm91Z2gga21zIGR1bWIgdnMgcmVuZGVyIG5vZGVzPwoKSSdkIGV4
-cGVjdCBhbGwgdGhlIGNncm91cCBzdHVmZiB0byBvbmx5IHdvcmsgb24gZHJtX2RldmljZSwgaWYg
-aXQgZG9lcwpjYXJlIGFib3V0IGRldmljZXMuCgooSSBkaWRuJ3QgbG9vayB0aHJvdWdoIHRoZSBw
-YXRjaCBzZXJpZXMgdG8gZmluZCBvdXQgd2hlcmUgZXhhY3RseSB5b3UncmUKdXNpbmcgdGhpcywg
-c28gbWF5YmUgSSdtIG9mZiB0aGUgcmFpbHMgaGVyZSkuCi1EYW5pZWwKCj4gLS0tCj4gIGRyaXZl
-cnMvZ3B1L2RybS9kcm1fZHJ2LmMgICAgICB8IDE5ICsrKysrKysrKysrKysrKysrKysKPiAgZHJp
-dmVycy9ncHUvZHJtL2RybV9pbnRlcm5hbC5oIHwgIDQgLS0tLQo+ICBpbmNsdWRlL2RybS9kcm1f
-ZHJ2LmggICAgICAgICAgfCAgNCArKysrCj4gIDMgZmlsZXMgY2hhbmdlZCwgMjMgaW5zZXJ0aW9u
-cygrKSwgNCBkZWxldGlvbnMoLSkKPiAKPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9ncHUvZHJtL2Ry
-bV9kcnYuYyBiL2RyaXZlcnMvZ3B1L2RybS9kcm1fZHJ2LmMKPiBpbmRleCA4NjI2MjE0OTRhOTMu
-LjAwMGNkZGFiZDk3MCAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL2dwdS9kcm0vZHJtX2Rydi5jCj4g
-KysrIGIvZHJpdmVycy9ncHUvZHJtL2RybV9kcnYuYwo+IEBAIC0yNTQsMTEgKzI1NCwxMyBAQCBz
-dHJ1Y3QgZHJtX21pbm9yICpkcm1fbWlub3JfYWNxdWlyZSh1bnNpZ25lZCBpbnQgbWlub3JfaWQp
-Cj4gIAo+ICAJcmV0dXJuIG1pbm9yOwo+ICB9Cj4gK0VYUE9SVF9TWU1CT0woZHJtX21pbm9yX2Fj
-cXVpcmUpOwo+ICAKPiAgdm9pZCBkcm1fbWlub3JfcmVsZWFzZShzdHJ1Y3QgZHJtX21pbm9yICpt
-aW5vcikKPiAgewo+ICAJZHJtX2Rldl9wdXQobWlub3ItPmRldik7Cj4gIH0KPiArRVhQT1JUX1NZ
-TUJPTChkcm1fbWlub3JfcmVsZWFzZSk7Cj4gIAo+ICAvKioKPiAgICogRE9DOiBkcml2ZXIgaW5z
-dGFuY2Ugb3ZlcnZpZXcKPiBAQCAtMTA3OCw2ICsxMDgwLDIzIEBAIGludCBkcm1fZGV2X3NldF91
-bmlxdWUoc3RydWN0IGRybV9kZXZpY2UgKmRldiwgY29uc3QgY2hhciAqbmFtZSkKPiAgfQo+ICBF
-WFBPUlRfU1lNQk9MKGRybV9kZXZfc2V0X3VuaXF1ZSk7Cj4gIAo+ICsvKioKPiArICogZHJtX21p
-bm9yX2Zvcl9lYWNoIC0gSXRlcmF0ZSB0aHJvdWdoIGFsbCBzdG9yZWQgRFJNIG1pbm9ycwo+ICsg
-KiBAZm46IEZ1bmN0aW9uIHRvIGJlIGNhbGxlZCBmb3IgZWFjaCBwb2ludGVyLgo+ICsgKiBAZGF0
-YTogRGF0YSBwYXNzZWQgdG8gY2FsbGJhY2sgZnVuY3Rpb24uCj4gKyAqCj4gKyAqIFRoZSBjYWxs
-YmFjayBmdW5jdGlvbiB3aWxsIGJlIGNhbGxlZCBmb3IgZWFjaCBAZHJtX21pbm9yIGVudHJ5LCBw
-YXNzaW5nCj4gKyAqIHRoZSBtaW5vciwgdGhlIGVudHJ5IGFuZCBAZGF0YS4KPiArICoKPiArICog
-SWYgQGZuIHJldHVybnMgYW55dGhpbmcgb3RoZXIgdGhhbiAlMCwgdGhlIGl0ZXJhdGlvbiBzdG9w
-cyBhbmQgdGhhdAo+ICsgKiB2YWx1ZSBpcyByZXR1cm5lZCBmcm9tIHRoaXMgZnVuY3Rpb24uCj4g
-KyAqLwo+ICtpbnQgZHJtX21pbm9yX2Zvcl9lYWNoKGludCAoKmZuKShpbnQgaWQsIHZvaWQgKnAs
-IHZvaWQgKmRhdGEpLCB2b2lkICpkYXRhKQo+ICt7Cj4gKwlyZXR1cm4gaWRyX2Zvcl9lYWNoKCZk
-cm1fbWlub3JzX2lkciwgZm4sIGRhdGEpOwo+ICt9Cj4gK0VYUE9SVF9TWU1CT0woZHJtX21pbm9y
-X2Zvcl9lYWNoKTsKPiArCj4gIC8qCj4gICAqIERSTSBDb3JlCj4gICAqIFRoZSBEUk0gY29yZSBt
-b2R1bGUgaW5pdGlhbGl6ZXMgYWxsIGdsb2JhbCBEUk0gb2JqZWN0cyBhbmQgbWFrZXMgdGhlbQo+
-IGRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9kcm0vZHJtX2ludGVybmFsLmggYi9kcml2ZXJzL2dw
-dS9kcm0vZHJtX2ludGVybmFsLmgKPiBpbmRleCBlMTlhYzdjYTYwMmQuLjZiZmFkNzZmOGU3OCAx
-MDA2NDQKPiAtLS0gYS9kcml2ZXJzL2dwdS9kcm0vZHJtX2ludGVybmFsLmgKPiArKysgYi9kcml2
-ZXJzL2dwdS9kcm0vZHJtX2ludGVybmFsLmgKPiBAQCAtNTQsMTAgKzU0LDYgQEAgdm9pZCBkcm1f
-cHJpbWVfZGVzdHJveV9maWxlX3ByaXZhdGUoc3RydWN0IGRybV9wcmltZV9maWxlX3ByaXZhdGUg
-KnByaW1lX2Zwcml2KTsKPiAgdm9pZCBkcm1fcHJpbWVfcmVtb3ZlX2J1Zl9oYW5kbGVfbG9ja2Vk
-KHN0cnVjdCBkcm1fcHJpbWVfZmlsZV9wcml2YXRlICpwcmltZV9mcHJpdiwKPiAgCQkJCQlzdHJ1
-Y3QgZG1hX2J1ZiAqZG1hX2J1Zik7Cj4gIAo+IC0vKiBkcm1fZHJ2LmMgKi8KPiAtc3RydWN0IGRy
-bV9taW5vciAqZHJtX21pbm9yX2FjcXVpcmUodW5zaWduZWQgaW50IG1pbm9yX2lkKTsKPiAtdm9p
-ZCBkcm1fbWlub3JfcmVsZWFzZShzdHJ1Y3QgZHJtX21pbm9yICptaW5vcik7Cj4gLQo+ICAvKiBk
-cm1fdmJsYW5rLmMgKi8KPiAgdm9pZCBkcm1fdmJsYW5rX2Rpc2FibGVfYW5kX3NhdmUoc3RydWN0
-IGRybV9kZXZpY2UgKmRldiwgdW5zaWduZWQgaW50IHBpcGUpOwo+ICB2b2lkIGRybV92Ymxhbmtf
-Y2xlYW51cChzdHJ1Y3QgZHJtX2RldmljZSAqZGV2KTsKPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9k
-cm0vZHJtX2Rydi5oIGIvaW5jbHVkZS9kcm0vZHJtX2Rydi5oCj4gaW5kZXggNjhjYTczNmM1NDhk
-Li4yNGY4ZDA1NGM1NzAgMTAwNjQ0Cj4gLS0tIGEvaW5jbHVkZS9kcm0vZHJtX2Rydi5oCj4gKysr
-IGIvaW5jbHVkZS9kcm0vZHJtX2Rydi5oCj4gQEAgLTc5OSw1ICs3OTksOSBAQCBzdGF0aWMgaW5s
-aW5lIGJvb2wgZHJtX2Rydl91c2VzX2F0b21pY19tb2Rlc2V0KHN0cnVjdCBkcm1fZGV2aWNlICpk
-ZXYpCj4gIAo+ICBpbnQgZHJtX2Rldl9zZXRfdW5pcXVlKHN0cnVjdCBkcm1fZGV2aWNlICpkZXYs
-IGNvbnN0IGNoYXIgKm5hbWUpOwo+ICAKPiAraW50IGRybV9taW5vcl9mb3JfZWFjaChpbnQgKCpm
-bikoaW50IGlkLCB2b2lkICpwLCB2b2lkICpkYXRhKSwgdm9pZCAqZGF0YSk7Cj4gKwo+ICtzdHJ1
-Y3QgZHJtX21pbm9yICpkcm1fbWlub3JfYWNxdWlyZSh1bnNpZ25lZCBpbnQgbWlub3JfaWQpOwo+
-ICt2b2lkIGRybV9taW5vcl9yZWxlYXNlKHN0cnVjdCBkcm1fbWlub3IgKm1pbm9yKTsKPiAgCj4g
-ICNlbmRpZgo+IC0tIAo+IDIuMjIuMAo+IAoKLS0gCkRhbmllbCBWZXR0ZXIKU29mdHdhcmUgRW5n
-aW5lZXIsIEludGVsIENvcnBvcmF0aW9uCmh0dHA6Ly9ibG9nLmZmd2xsLmNoCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmFtZC1nZnggbWFpbGluZyBsaXN0
-CmFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Au
-b3JnL21haWxtYW4vbGlzdGluZm8vYW1kLWdmeA==
+On Mon, 2019-09-30 at 09:29 +0200, Peter Zijlstra wrote:
+> On Thu, Sep 19, 2019 at 12:09:40PM -0400, Qian Cai wrote:
+> > Since the commit b4adfe8e05f1 ("locking/lockdep: Remove unused argument
+> > in __lock_release"), @nested is no longer used in lock_release(), so
+> > remove it from all lock_release() calls and friends.
+> 
+> Right; I never did this cleanup for not wanting the churn, but as long
+> as it applies I'll take it.
+
+Not sure when you would like to merge this. As you know, the longer it is
+pending, the more churn it could have. If you could give me rough timeline
+(i.e., aim for v5.4-rc2 or v5.5), I'll double-check for breakage and rebase it
+if necessary.
