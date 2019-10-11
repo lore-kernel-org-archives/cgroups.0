@@ -1,61 +1,128 @@
-From: "tj@kernel.org" <tj@kernel.org>
-Subject: Re: [PATCH RFC v4 14/16] drm, cgroup: Introduce lgpu as DRM cgroup
- resource
-Date: Fri, 11 Oct 2019 10:12:47 -0700
-Message-ID: <20191011171247.GC18794@devbig004.ftw2.facebook.com>
-References: <20190829060533.32315-1-Kenny.Ho@amd.com>
- <20190829060533.32315-15-Kenny.Ho@amd.com>
- <b3d2b3c1-8854-10ca-3e39-b3bef35bdfa9@amd.com>
- <20191009103153.GU16989@phenom.ffwll.local>
- <ee873e89-48fd-c4c9-1ce0-73965f4ad2ba@amd.com>
- <20191009153429.GI16989@phenom.ffwll.local>
- <c7812af4-7ec4-02bb-ff4c-21dd114cf38e@amd.com>
- <20191009160652.GO16989@phenom.ffwll.local>
+From: Mina Almasry <almasrymina@google.com>
+Subject: Re: [PATCH v5 0/7] hugetlb_cgroup: Add hugetlb_cgroup reservation limits
+Date: Fri, 11 Oct 2019 12:10:05 -0700
+Message-ID: <CAHS8izN1Q7XH84Srem_McB+Jz67-fu6KPCMQjzbnPDTPzgwC2A@mail.gmail.com>
+References: <20190919222421.27408-1-almasrymina@google.com> <3c73d2b7-f8d0-16bf-b0f0-86673c3e9ce3@oracle.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-Content-Disposition: inline
-In-Reply-To: <20191009160652.GO16989@phenom.ffwll.local>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=eQy6FsVhMeNMB9gB/UP0lH5OqQZ9aItb6uOTcxZNCvo=;
+        b=qOmYPAjMmx6jAFQshrjW/rvLdYI8s/aiGo4RRudcwxFjzFObiW0KS+yQ1VoMFj9kmO
+         tjWHfsWzeaQrjHq8LK81IxqfP9OGcu/C1ZBJ4fT0CCpbg0rQ8zECtUJmI8BK2SF/GLei
+         XWnlf+TPRqB7pp6TbAd8B4IU/zlQYUoP2tsX8p+RAYQaCdZkgWkVcrNjRpAh2fOvePf+
+         3VpRoOkKmDnt8Z59pV6kBa7owdhNzb0G8tEpllL8sAYAk8ZlYp88P4XVtZcbfrCUVMuY
+         NLjpHLKRpO3/HdyyHJZmvAgAdOuMwLiE/c0VLUhPxP0DglTpYtLOQ+xChg0N7pR+wruq
+         lh6w==
+In-Reply-To: <3c73d2b7-f8d0-16bf-b0f0-86673c3e9ce3@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Daniel Vetter <daniel@ffwll.ch>
-Cc: "Ho, Kenny" <Kenny.Ho@amd.com>, "Kuehling, Felix" <Felix.Kuehling@amd.com>, "jsparks@cray.com" <jsparks@cray.com>, "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>, "lkaplan@cray.com" <lkaplan@cray.com>, "y2kenny@gmail.com" <y2kenny@gmail.com>, "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, "Greathouse, Joseph" <Joseph.Greathouse@amd.com>, "Deucher,
- Alexander" <Alexander.Deucher@amd.com>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "Koenig,
- Christian" <Christian.Koenig@amd.com>
+Content-Transfer-Encoding: 7bit
+To: Mike Kravetz <mike.kravetz@oracle.com>
+Cc: Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, khalid.aziz@oracle.com, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
 
-SGVsbG8sIERhbmllbC4KCk9uIFdlZCwgT2N0IDA5LCAyMDE5IGF0IDA2OjA2OjUyUE0gKzAyMDAs
-IERhbmllbCBWZXR0ZXIgd3JvdGU6Cj4gVGhhdCdzIG5vdCB0aGUgcG9pbnQgSSB3YXMgbWFraW5n
-LiBGb3IgY3B1IGNncm91cHMgdGhlcmUncyBhIHZlcnkgd2VsbAo+IGRlZmluZWQgY29ubmVjdGlv
-biBiZXR3ZWVuIHRoZSBjcHUgYml0bWFza3MvbnVtYmVycyBpbiBjZ3JvdXBzIGFuZCB0aGUgY3B1
-Cj4gYml0bWFza3MgeW91IHVzZSBpbiB2YXJpb3VzIHN5c3RlbSBjYWxscyAodGhleSBtYXRjaCku
-IEFuZCB0aGF0IHN0dWZmCj4gd29ya3MgYWNyb3NzIHZlbmRvcnMuCgpQbGVhc2Ugbm90ZSB0aGF0
-IHRoZXJlIGFyZSBhIGxvdCBvZiBsaW1pdGF0aW9ucyBldmVuIHRvIGNwdXNldC4KQWZmaW5pdHkg
-aXMgZWFzeSB0byBpbXBsZW1lbnQgYW5kIHNlZW1zIGF0dHJhY3RpdmUgaW4gdGVybXMgb2YKYWJz
-b2x1dGUgaXNvbGF0aW9uIGJ1dCBpdCdzIGluaGVyZW50bHkgY3VtYmVyc29tZSBhbmQgbGltaXRl
-ZCBpbgpncmFudWxhcml0eSBhbmQgY2FuIGxlYWQgdG8gc3VycHJpc2luZyBmYWlsdXJlIG1vZGVz
-IHdoZXJlIGNvbnRlbnRpb24Kb24gb25lIGNwdSBjYW4ndCBiZSByZXNvbHZlZCBieSB0aGUgbG9h
-ZCBiYWxhbmNlciBhbmQgbGVhZHMgdG8gc3lzdGVtCndpZGUgc2xvd2Rvd25zIC8gc3RhbGxzIGNh
-dXNlZCBieSB0aGUgZGVwZW5kZW5jeSBjaGFpbiBhbmNob3JlZCBhdCB0aGUKYWZmaW5pdHkgbGlt
-aXRlZCB0YXNrcy4KCk1heWJlIHRoaXMgaXMgYSBsZXNzIG9mIGEgcHJvYmxlbSBmb3IgZ3B1IHdv
-cmtsb2FkcyBidXQgaW4gZ2VuZXJhbCB0aGUKbW9yZSBjb25zdHJhaW50cyBhcmUgcHV0IG9uIHNj
-aGVkdWxpbmcsIHRoZSBtb3JlIGxpa2VseSBpcyB0aGUgc3lzdGVtCnRvIGRldmVsb3AgdHdpc3Rl
-ZCBkZXBlbmRlbmN5IGNoYWlucyB3aGlsZSBvdGhlciBwYXJ0cyBvZiB0aGUgc3lzdGVtCmFyZSBz
-aXR0aW5nIGlkbGUuCgpIb3cgZG9lcyBzY2hlZHVsaW5nIGN1cnJlbnRseSB3b3JrIHdoZW4gdGhl
-cmUgYXJlIGNvbXBldGluZyBncHUKd29ya2xvYWRzPyAgVGhlcmUgZ290dGEgYmUgc29tZSBmYWly
-bmVzcyBwcm92aXNpb24gd2hldGhlciB0aGF0J3MgdW5pdAphbGxvY2F0aW9uIGJhc2VkIG9yIHRp
-bWUgc2xpY2luZywgcmlnaHQ/ICBJZiB0aGF0J3MgdGhlIGNhc2UsIGl0IG1pZ2h0CmJlIGJlc3Qg
-dG8gaW1wbGVtZW50IHByb3BvcnRpb25hbCBjb250cm9sIG9uIHRvcCBvZiB0aGF0LgpXb3JrLWNv
-bnNlcnZpbmcgbWVjaGFuaXNtcyBhcmUgdGhlIG1vc3QgdmVyc2F0aWxlLCBlYXNpZXN0IHRvIHVz
-ZSBhbmQKbGVhc3QgbGlrZWx5IHRvIGNhdXNlIHJlZ3Jlc3Npb25zLgoKVGhhbmtzLgoKLS0gCnRl
-anVuCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1k
-ZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczov
-L2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
+On Mon, Sep 23, 2019 at 10:47 AM Mike Kravetz <mike.kravetz@oracle.com> wrote:
+>
+> On 9/19/19 3:24 PM, Mina Almasry wrote:
+> > Patch series implements hugetlb_cgroup reservation usage and limits, which
+> > track hugetlb reservations rather than hugetlb memory faulted in. Details of
+> > the approach is 1/7.
+>
+> Thanks for your continued efforts Mina.
+>
+> One thing that has bothered me with this approach from the beginning is that
+> hugetlb reservations are related to, but somewhat distinct from hugetlb
+> allocations.  The original (existing) huegtlb cgroup implementation does not
+> take reservations into account.  This is an issue you are trying to address
+> by adding a cgroup support for hugetlb reservations.  However, this new
+> reservation cgroup ignores hugetlb allocations at fault time.
+>
+> I 'think' the whole purpose of any hugetlb cgroup is to manage the allocation
+> of hugetlb pages.  Both the existing cgroup code and the reservation approach
+> have what I think are some serious flaws.  Consider a system with 100 hugetlb
+> pages available.  A sysadmin, has two groups A and B and wants to limit hugetlb
+> usage to 50 pages each.
+>
+> With the existing implementation, a task in group A could create a mmap of
+> 100 pages in size and reserve all 100 pages.  Since the pages are 'reserved',
+> nobody in group B can allocate ANY huge pages.  This is true even though
+> no pages have been allocated in A (or B).
+>
+> With the reservation implementation, a task in group A could use MAP_NORESERVE
+> and allocate all 100 pages without taking any reservations.
+>
+> As mentioned in your documentation, it would be possible to use both the
+> existing (allocation) and new reservation cgroups together.  Perhaps if both
+> are setup for the 50/50 split things would work a little better.
+>
+> However, instead of creating a new reservation crgoup how about adding
+> reservation support to the existing allocation cgroup support.  One could
+> even argue that a reservation is an allocation as it sets aside huge pages
+> that can only be used for a specific purpose.  Here is something that
+> may work.
+>
+> Starting with the existing allocation cgroup.
+> - When hugetlb pages are reserved, the cgroup of the task making the
+>   reservations is charged.  Tracking for the charged cgroup is done in the
+>   reservation map in the same way proposed by this patch set.
+> - At page fault time,
+>   - If a reservation already exists for that specific area do not charge the
+>     faulting task.  No tracking in page, just the reservation map.
+>   - If no reservation exists, charge the group of the faulting task.  Tracking
+>     of this information is in the page itself as implemented today.
+> - When the hugetlb object is removed, compare the reservation map with any
+>   allocated pages.  If cgroup tracking information exists in page, uncharge
+>   that group.  Otherwise, unharge the group (if any) in the reservation map.
+>
+
+Sorry for the late response here. I've been prototyping the
+suggestions from this conversation:
+
+1. Supporting cgroup-v2 on the current controller seems trivial.
+Basically just specifying the dfl files seems to do it, and my tests
+on top of cgroup-v2 don't see any problems so far at least. In light
+of this I'm not sure it's best to create a new controller per say.
+Seems like it would duplicate a lot of code with the current
+controller, so I've tentatively just stuck to the plan in my current
+patchset, a new counter on the existing controller.
+
+2. I've been working on transitioning the new counter to the behavior
+Mike specified in the email I'm responding to. So far I have a flow
+that works for shared mappings but not private mappings:
+
+- On reservation, charge the new counter and store the info in the
+resv_map. The counter gets uncharged when the resv_map entry gets
+removed (works fine).
+- On alloc_huge_page(), check if there is a reservation for the page
+being allocated. If not, charge the new counter and store the
+information in resv_map. The counter still gets uncharged when the
+resv_map entry gets removed.
+
+The above works for all shared mappings and reserved private mappings,
+but I' having trouble supporting private NORESERVE mappings. Charging
+can work the same as for shared mappings: charge the new counter on
+reservation and on allocations that do not have a reservation. But the
+question still comes up: where to store the counter to uncharge this
+page? I thought of a couple of things that don't seem to work:
+
+1. I thought of putting the counter in resv_map->reservation_counter,
+so that it gets uncharged on vm_op_close. But, private NORESERVE
+mappings don't even have a resv_map allocated for them.
+
+2. I thought of detecting on free_huge_page that the page being freed
+belonged to a private NORESERVE mapping, and uncharging the
+hugetlb_cgroup in the page itself, but free_huge_page only gets a
+struct page* and I can't seem to find a way to detect that that the
+page comes from a private NORESERVE mapping from only the struct
+page*.
+
+Mike, note your suggestion above to check if the page hugetlb_cgroup
+is null doesn't work if we want to keep the current counter working
+the same: the page will always have a hugetlb_cgroup that points that
+contains the old counter. Any ideas how to apply this new counter
+behavior to a private NORESERVE mappings? Is there maybe a flag I can
+set on the pages at allocation time that I can read on free time to
+know whether to uncharge the hugetlb_cgroup or not?
