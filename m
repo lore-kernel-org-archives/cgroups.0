@@ -1,7 +1,7 @@
 From: Mina Almasry <almasrymina@google.com>
-Subject: [PATCH v6 7/9] hugetlb_cgroup: support noreserve mappings
-Date: Sat, 12 Oct 2019 17:30:22 -0700
-Message-ID: <20191013003024.215429-7-almasrymina@google.com>
+Subject: [PATCH v6 9/9] hugetlb_cgroup: Add hugetlb_cgroup reservation docs
+Date: Sat, 12 Oct 2019 17:30:24 -0700
+Message-ID: <20191013003024.215429-9-almasrymina@google.com>
 References: <20191013003024.215429-1-almasrymina@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -9,110 +9,129 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=xekgIg4dN3m1HVyQSgfrAu003H3IqqF6Q7QAQZd3RT0=;
-        b=aQR29j5FYNJohLbfcXRNwkGUhbOnF+f07QgP1hMkNy7kiKn1f5mnO8EVdG7aw01ly5
-         TtSY91Przz2c/ZSOK8uEKQiaIgFMSiIpENtHoQuJxMWLTgn4tGCqj+65kukDeTvuPZ+6
-         e0aIFU+zJxpx8cSGSTanyam9LjcbAm5+M063GirvgsUNTDcfagTWeRYCTtHzVqnwLLM7
-         69ewHkcoHtOzQ0btNWcjLRJURH9G3Y0Bhzo7A+/nE7v0y300AxR4DbiKcLJHGloN4RHm
-         ctuwoCBT++gTQxKoneYGym6bnDCYtc6ZwSEYHmKmL+Fa0JZy8Lz3Qh4pnmBaTp7cQ0RP
-         3+Sg==
+        bh=P7abJRI85r+K/TRDAITrJhvU4blOks6xxJvHrDmdwNo=;
+        b=wP3VRc4Sjd0MfiWZ3l2O6xPOLegcNe5EG1wD6mk6jKeio7RlfzqcFgBJyTj8r2Qle2
+         kuGJwA3jttSxlj7OKvvEPJdc3CKObPaqCoIxgSi2+gefihDO33R6kqlmnHH76TwNxMpG
+         SLcYgJmC6zeZuTvcfSwzUAMb4vKCHShqf89n0eGQQIbfvZ280blHsZSwNsjdxgaXhUpQ
+         ljle8dNBA64Hmq3eBKl6ld5wmof4nc8QdiozpMkmy+vjIrXPnnPjAImDGAKwjPoIZHw5
+         Ffr+GO/dLvKz03UQ1axTfrFlysqXhmwBXxxDdUJDi9DbQUmX73pfEtBtHLS0/xbo2JCd
+         qzHA==
 In-Reply-To: <20191013003024.215429-1-almasrymina@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: mike.kravetz@oracle.com
-Cc: shuah@kernel.org, almasrymina@google.com, rientjes@google.com, shakeelb@google.com, gthelen@google.com, akpm@linux-foundation.org, khalid.aziz@oracle.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, aneesh.kumar@linux.vnet.ibm.com, mkoutny@suse.com
+Cc: shuah@kernel.org, almasrymina@google.com, rientjes@google.com, shakeelb@google.com, gthelen@google.com, akpm@linux-foundation.org, khalid.aziz@oracle.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, aneesh.kumar@linux.vnet.ibm.com, mkoutny@suse.com, Hillf Danton <hdanton@sina.com>
 
-Support MAP_NORESERVE accounting as part of the new counter.
+Add docs for how to use hugetlb_cgroup reservations, and their behavior.
 
-For each hugepage allocation, at allocation time we check if there is
-a reservation for this allocation or not. If there is a reservation for
-this allocation, then this allocation was charged at reservation time,
-and we don't re-account it. If there is no reserevation for this
-allocation, we charge the appropriate hugetlb_cgroup.
-
-The hugetlb_cgroup to uncharge for this allocation is stored in
-page[3].private. We use new APIs added in an earlier patch to set this
-pointer.
+Signed-off-by: Mina Almasry <almasrymina@google.com>
+Acked-by: Hillf Danton <hdanton@sina.com>
 
 ---
- mm/hugetlb.c | 25 ++++++++++++++++++++++++-
- 1 file changed, 24 insertions(+), 1 deletion(-)
 
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index af336bf227fb6..79b99878ce6f9 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -1217,6 +1217,7 @@ static void update_and_free_page(struct hstate *h, struct page *page)
- 				1 << PG_writeback);
- 	}
- 	VM_BUG_ON_PAGE(hugetlb_cgroup_from_page(page, false), page);
-+	VM_BUG_ON_PAGE(hugetlb_cgroup_from_page(page, true), page);
- 	set_compound_page_dtor(page, NULL_COMPOUND_DTOR);
- 	set_page_refcounted(page);
- 	if (hstate_is_gigantic(h)) {
-@@ -1328,6 +1329,9 @@ void free_huge_page(struct page *page)
- 	clear_page_huge_active(page);
- 	hugetlb_cgroup_uncharge_page(hstate_index(h), pages_per_huge_page(h),
- 				     page, false);
-+	hugetlb_cgroup_uncharge_page(hstate_index(h), pages_per_huge_page(h),
-+				     page, true);
+Changes in v6:
+- Updated docs to reflect the new design based on a new counter that
+tracks both reservations and faults.
+
+---
+ .../admin-guide/cgroup-v1/hugetlb.rst         | 64 +++++++++++++++----
+ 1 file changed, 53 insertions(+), 11 deletions(-)
+
+diff --git a/Documentation/admin-guide/cgroup-v1/hugetlb.rst b/Documentation/admin-guide/cgroup-v1/hugetlb.rst
+index a3902aa253a96..efb94e4db9d5a 100644
+--- a/Documentation/admin-guide/cgroup-v1/hugetlb.rst
++++ b/Documentation/admin-guide/cgroup-v1/hugetlb.rst
+@@ -2,13 +2,6 @@
+ HugeTLB Controller
+ ==================
+
+-The HugeTLB controller allows to limit the HugeTLB usage per control group and
+-enforces the controller limit during page fault. Since HugeTLB doesn't
+-support page reclaim, enforcing the limit at page fault time implies that,
+-the application will get SIGBUS signal if it tries to access HugeTLB pages
+-beyond its limit. This requires the application to know beforehand how much
+-HugeTLB pages it would require for its use.
+-
+ HugeTLB controller can be created by first mounting the cgroup filesystem.
+
+ # mount -t cgroup -o hugetlb none /sys/fs/cgroup
+@@ -28,10 +21,14 @@ process (bash) into it.
+
+ Brief summary of control files::
+
+- hugetlb.<hugepagesize>.limit_in_bytes     # set/show limit of "hugepagesize" hugetlb usage
+- hugetlb.<hugepagesize>.max_usage_in_bytes # show max "hugepagesize" hugetlb  usage recorded
+- hugetlb.<hugepagesize>.usage_in_bytes     # show current usage for "hugepagesize" hugetlb
+- hugetlb.<hugepagesize>.failcnt		   # show the number of allocation failure due to HugeTLB limit
++ hugetlb.<hugepagesize>.reservation_limit_in_bytes     # set/show limit of "hugepagesize" hugetlb reservations
++ hugetlb.<hugepagesize>.reservation_max_usage_in_bytes # show max "hugepagesize" hugetlb reservations and no-reserve faults.
++ hugetlb.<hugepagesize>.reservation_usage_in_bytes     # show current reservations and no-reserve faults for "hugepagesize" hugetlb
++ hugetlb.<hugepagesize>.reservation_failcnt            # show the number of allocation failure due to HugeTLB reservation limit
++ hugetlb.<hugepagesize>.limit_in_bytes                 # set/show limit of "hugepagesize" hugetlb faults
++ hugetlb.<hugepagesize>.max_usage_in_bytes             # show max "hugepagesize" hugetlb  usage recorded
++ hugetlb.<hugepagesize>.usage_in_bytes                 # show current usage for "hugepagesize" hugetlb
++ hugetlb.<hugepagesize>.failcnt                        # show the number of allocation failure due to HugeTLB usage limit
+
+ For a system supporting three hugepage sizes (64k, 32M and 1G), the control
+ files include::
+@@ -40,11 +37,56 @@ files include::
+   hugetlb.1GB.max_usage_in_bytes
+   hugetlb.1GB.usage_in_bytes
+   hugetlb.1GB.failcnt
++  hugetlb.1GB.reservation_limit_in_bytes
++  hugetlb.1GB.reservation_max_usage_in_bytes
++  hugetlb.1GB.reservation_usage_in_bytes
++  hugetlb.1GB.reservation_failcnt
+   hugetlb.64KB.limit_in_bytes
+   hugetlb.64KB.max_usage_in_bytes
+   hugetlb.64KB.usage_in_bytes
+   hugetlb.64KB.failcnt
++  hugetlb.64KB.reservation_limit_in_bytes
++  hugetlb.64KB.reservation_max_usage_in_bytes
++  hugetlb.64KB.reservation_usage_in_bytes
++  hugetlb.64KB.reservation_failcnt
+   hugetlb.32MB.limit_in_bytes
+   hugetlb.32MB.max_usage_in_bytes
+   hugetlb.32MB.usage_in_bytes
+   hugetlb.32MB.failcnt
++  hugetlb.32MB.reservation_limit_in_bytes
++  hugetlb.32MB.reservation_max_usage_in_bytes
++  hugetlb.32MB.reservation_usage_in_bytes
++  hugetlb.32MB.reservation_failcnt
 +
- 	if (restore_reserve)
- 		h->resv_huge_pages++;
-
-@@ -1354,6 +1358,7 @@ static void prep_new_huge_page(struct hstate *h, struct page *page, int nid)
- 	set_compound_page_dtor(page, HUGETLB_PAGE_DTOR);
- 	spin_lock(&hugetlb_lock);
- 	set_hugetlb_cgroup(page, NULL, false);
-+	set_hugetlb_cgroup(page, NULL, true);
- 	h->nr_huge_pages++;
- 	h->nr_huge_pages_node[nid]++;
- 	spin_unlock(&hugetlb_lock);
-@@ -2155,10 +2160,19 @@ struct page *alloc_huge_page(struct vm_area_struct *vma,
- 			gbl_chg = 1;
- 	}
-
-+	/* If this allocation is not consuming a reservation, charge it now.
-+	 */
-+	if (map_chg || avoid_reserve || !vma_resv_map(vma)) {
-+		ret = hugetlb_cgroup_charge_cgroup(idx, pages_per_huge_page(h),
-+						   &h_cg, true);
-+		if (ret)
-+			goto out_subpool_put;
-+	}
 +
- 	ret = hugetlb_cgroup_charge_cgroup(idx, pages_per_huge_page(h), &h_cg,
- 					   false);
- 	if (ret)
--		goto out_subpool_put;
-+		goto out_uncharge_cgroup_reservation;
-
- 	spin_lock(&hugetlb_lock);
- 	/*
-@@ -2182,6 +2196,11 @@ struct page *alloc_huge_page(struct vm_area_struct *vma,
- 	}
- 	hugetlb_cgroup_commit_charge(idx, pages_per_huge_page(h), h_cg, page,
- 				     false);
-+	if (!vma_resv_map(vma) || map_chg || avoid_reserve) {
-+		hugetlb_cgroup_commit_charge(idx, pages_per_huge_page(h), h_cg,
-+					     page, true);
-+	}
++1. Reservation limits
 +
- 	spin_unlock(&hugetlb_lock);
-
- 	set_page_private(page, (unsigned long)spool);
-@@ -2207,6 +2226,10 @@ struct page *alloc_huge_page(struct vm_area_struct *vma,
- out_uncharge_cgroup:
- 	hugetlb_cgroup_uncharge_cgroup(idx, pages_per_huge_page(h), h_cg,
- 				       false);
-+out_uncharge_cgroup_reservation:
-+	if (map_chg || avoid_reserve || !vma_resv_map(vma))
-+		hugetlb_cgroup_uncharge_cgroup(idx, pages_per_huge_page(h),
-+					       h_cg, true);
- out_subpool_put:
- 	if (map_chg || avoid_reserve)
- 		hugepage_subpool_put_pages(spool, 1);
++The HugeTLB controller allows to limit the HugeTLB reservations per control
++group and enforces the controller limit at reservation time and at the fault of
++hugetlb memory for which no reservation exists. Reservation limits
++are superior to Page fault limits (see section 2), since Reservation limits are
++enforced at reservation time (on mmap or shget), and never causes the
++application to get SIGBUS signal if the memory was reserved before hand. For
++MAP_NORESERVE allocations, the reservation limit behaves the same as the fault
++limit, enforcing memory usage at fault time and causing the application to
++receive a SIGBUS if it's crossing its limit.
++
++2. Page fault limits
++
++The HugeTLB controller allows to limit the HugeTLB usage (page fault) per
++control group and enforces the controller limit during page fault. Since HugeTLB
++doesn't support page reclaim, enforcing the limit at page fault time implies
++that, the application will get SIGBUS signal if it tries to access HugeTLB
++pages beyond its limit. This requires the application to know beforehand how
++much HugeTLB pages it would require for its use.
++
++
++3. Caveats with shared memory
++
++For shared hugetlb memory, both hugetlb reservation and page faults are charged
++to the first task that causes the memory to be reserved or faulted, and all
++subsequent uses of this reserved or faulted memory is done without charging.
++
++Shared hugetlb memory is only uncharged when it is unreserved or deallocated.
++This is usually when the hugetlbfs file is deleted, and not when the task that
++caused the reservation or fault has exited.
 --
 2.23.0.700.g56cf767bdb-goog
