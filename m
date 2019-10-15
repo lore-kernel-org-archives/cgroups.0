@@ -1,76 +1,55 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH] mm/memcontrol: update lruvec counters in
  mem_cgroup_move_account
-Date: Tue, 15 Oct 2019 10:31:42 -0400
-Message-ID: <20191015143142.GB139269@cmpxchg.org>
+Date: Tue, 15 Oct 2019 11:24:17 -0400
+Message-ID: <20191015152417.GA141964@cmpxchg.org>
 References: <157112699975.7360.1062614888388489788.stgit@buzz>
- <20191015082048.GU317@dhcp22.suse.cz>
- <3b73e301-ea4a-5edb-9360-2ae9b4ad9f69@yandex-team.ru>
- <20191015103623.GX317@dhcp22.suse.cz>
- <31cab57d-6e79-33cb-1a58-99065c6e7b82@yandex-team.ru>
- <20191015110401.GZ317@dhcp22.suse.cz>
+ <20191015135348.GA139269@cmpxchg.org>
+ <89171a94-8b6f-e949-0078-10fa8fd26dfc@yandex-team.ru>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=rLVD7vPJBGWYE3BC+T54ofrBrkXdHmXQZojv0W6wPTA=;
-        b=tV6fx4WFPct3lTQ345Oq5xdMJixBxbdzJ7TXEOs2AxCPbU6ggBQHmQqmttRkGbTrth
-         fKUwwLGnsTfYmRceiI3Xgg90DWKq4uc8M2uCUC0gW7Kszq8+XiEcQm6DORDmpne3DNc3
-         sP3uuZEW9h1B9OlrpZxPAEvnvNcADrsXQlBARcp4sThPwcJuBQcxX7qj870CDr30s0wy
-         Y/Bru1q+VVfeGEiZXBd0NtokPdennXJiRa6MUbNmTAiBGLUzZbv2mtF4OVrL4AeU9/4O
-         7yXtd3u+UCcgUo7ynZF+2L510IN+ovY2Y/IJq7wZ2XYC/oEL5iAmc75a89W/b9z4mPS1
-         UZ6Q==
+        bh=aermn/Dt4ttLuAv+N2gyIczaxg1Onw7W29ecU8QQsuU=;
+        b=Bq+rgeAkSV5v5wBQys2jjm4AZ0pYPa9/XbKBRpPOlBLfNDsDFE7Dkh3DWGe5g3gYls
+         zokIj7GljcQdnKbVJYMiZaAgA6lYP1V007kxefUS5Z05OPBHVY3QjDFfkCz+ZM5xOtu8
+         wZJwkm+DfQFAhfxaeYMaVMjY+5+ktdnUTtgoso6V8kcvdkmwLIVvazOVBh8rZU3eGh9t
+         ciq6ne/xZOvY6PRQN2KQURHwfAr+9mnyxTCn1TNChxdpraybhn9Ecd9kueZeDRQ50fSp
+         jgJ9IA47gzBVwjrnrK2s5e5Fhi13NdWivrn/Rt/tEWPlxR8UVm+zjL/dMtWsXFZnJ6I1
+         IrCQ==
 Content-Disposition: inline
-In-Reply-To: <20191015110401.GZ317@dhcp22.suse.cz>
+In-Reply-To: <89171a94-8b6f-e949-0078-10fa8fd26dfc@yandex-team.ru>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>
+To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Cc: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
 
-On Tue, Oct 15, 2019 at 01:04:01PM +0200, Michal Hocko wrote:
-> On Tue 15-10-19 13:49:14, Konstantin Khlebnikov wrote:
-> > On 15/10/2019 13.36, Michal Hocko wrote:
-> > > On Tue 15-10-19 11:44:22, Konstantin Khlebnikov wrote:
-> > > > On 15/10/2019 11.20, Michal Hocko wrote:
-> > > > > On Tue 15-10-19 11:09:59, Konstantin Khlebnikov wrote:
-> > > > > > Mapped, dirty and writeback pages are also counted in per-lruvec stats.
-> > > > > > These counters needs update when page is moved between cgroups.
-> > > > > 
-> > > > > Please describe the user visible effect.
-> > > > 
-> > > > Surprisingly I don't see any users at this moment.
-> > > > So, there is no effect in mainline kernel.
+On Tue, Oct 15, 2019 at 05:04:44PM +0300, Konstantin Khlebnikov wrote:
+> On 15/10/2019 16.53, Johannes Weiner wrote:
+> > On Tue, Oct 15, 2019 at 11:09:59AM +0300, Konstantin Khlebnikov wrote:
+> > > Mapped, dirty and writeback pages are also counted in per-lruvec stats.
+> > > These counters needs update when page is moved between cgroups.
 > > > 
-> > > Those counters are exported right? Or do we exclude them for v1?
+> > > Fixes: 00f3ca2c2d66 ("mm: memcontrol: per-lruvec stats infrastructure")
+> > > Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
 > > 
-> > It seems per-lruvec statistics is not exposed anywhere.
-> > And per-lruvec NR_FILE_MAPPED, NR_FILE_DIRTY, NR_WRITEBACK never had users.
+> > Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> > 
+> > Please mention in the changelog that currently is nobody *consuming*
+> > the lruvec versions of these counters and that there is no
+> > user-visible effect. Thanks
+> > 
 > 
-> So why do we have it in the first place? I have to say that counters
-> as we have them now are really clear as mud. This is really begging for
-> a clean up.
+> Maybe just kill all these per-lruvec counters?
+> I see only one user which have no alternative data source: WORKINGSET_ACTIVATE.
+> 
+> This will save some memory: 32 * sizeof(long) * nr_nodes * nr_cpus bytes
 
-IMO This is going in the right direction. The goal is to have all
-vmstat items accounted per lruvec - the intersection of the node and
-the memcg - to further integrate memcg into the traditional VM code
-and eliminate differences between them. We use the lruvec counters
-quite extensively in reclaim already, since the lruvec is the primary
-context for page reclaim. More consumers will follow in pending
-patches. This patch cleans up some stragglers.
+This is backwards, see my reply to Michal, as well as the patches at
+https://lore.kernel.org/linux-mm/20190603210746.15800-1-hannes@cmpxchg.org/
 
-The only counters we can't have in the lruvec are the legacy memcg
-ones that are accounted to the memcg without a node context:
-MEMCG_RSS, MEMCG_CACHE etc. We should eventually replace them with
-per-lruvec accounted NR_ANON_PAGES, NR_FILE_PAGES etc - tracked by
-generic VM code, not inside memcg, further reducing the size of the
-memory controller. But it'll require some work in the page creation
-path, as that accounting happens before the memcg commit right now.
-
-Then we can get rid of memcg_stat_item and the_memcg_page_state
-API. And we should be able to do for_each_node() summing of the lruvec
-counters to produce memory.stat output, and drop memcg->vmstats_local,
-memcg->vmstats_percpu, memcg->vmstats and memcg->vmevents altogether.
+We're not using the lruvec counters in all places where we should.
