@@ -1,224 +1,222 @@
 From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Subject: [PATCH 2/2] mm/memcontrol: use vmstat names for printing statistics
-Date: Tue, 15 Oct 2019 12:02:05 +0300
-Message-ID: <157113012508.453.80391533767219371.stgit@buzz>
-References: <157113012325.453.562783073839432766.stgit@buzz>
+Subject: [PATCH 1/2] mm/vmstat: add helpers to get vmstat item names for
+ each enum type
+Date: Tue, 15 Oct 2019 12:02:03 +0300
+Message-ID: <157113012325.453.562783073839432766.stgit@buzz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-        t=1571130125; bh=1aq0pVoTzlDnzXJ1d6ME0b2po+bbeLYJMa32BOa4Uzs=;
-        h=In-Reply-To:Message-ID:References:Date:To:From:Subject:Cc;
-        b=dFoY6Mbv7lkY3dqBTxfNtO6WxztXVf8vh0W3zhA6EqWINXorGsGi/oIrgpzuXF1KB
-         KBElDLYGa9wj3ehn5Ks6WIvuYt8CfV4XcC2qHJfEP5QNneWCuaf6x0OH3VXkyV/6QV
-         56uKhB0CElNd6zWODPKq5/+KfYwyV8gTnVuf4UKw=
-In-Reply-To: <157113012325.453.562783073839432766.stgit@buzz>
+        t=1571130123; bh=zI18dNBNXOgchJaUsCZ4rEWuTdAP8TPR+E7kuGvEeoQ=;
+        h=Message-ID:Date:To:From:Subject:Cc;
+        b=qGyVlPLPV+q8cAABUjS3GnFLZR2f6jt7QuJBrWXXPHEU12fCcC86Rwo6TUcfAJFAV
+         HsWFWf6yzNwbdWnb7nDh5GQojTM3r7IOEnIJUSKkzfPChKda36TPQlEBwDu/dMcxo8
+         D7vB1gb7YXwTKipuIad+adI+bkn8VDRhgBp6N0Tk=
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
 Cc: cgroups@vger.kernel.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>
 
-Use common names from vmstat array when possible.
-This gives not much difference in code size for now,
-but should help in keeping interfaces consistent.
+Statistics in vmstat is combined from counters with different structure,
+but names for them are merged into one array.
 
-add/remove: 0/2 grow/shrink: 2/0 up/down: 70/-72 (-2)
-Function                                     old     new   delta
-memory_stat_format                           984    1050     +66
-memcg_stat_show                              957     961      +4
-memcg1_event_names                            32       -     -32
-mem_cgroup_lru_names                          40       -     -40
-Total: Before=14485337, After=14485335, chg -0.00%
+This patch adds trivial helpers to get name for each item:
+
+const char *zone_stat_name(enum zone_stat_item item);
+const char *numa_stat_name(enum numa_stat_item item);
+const char *node_stat_name(enum node_stat_item item);
+const char *writeback_stat_name(enum writeback_stat_item item);
+const char *vm_event_name(enum vm_event_item item);
+
+
+Names for enum writeback_stat_item are folded in the middle of
+vmstat_text so this patch moves declaration into header to calculate
+offset of following items.
+
+
+Also this patch reuses piece of node stat names for lru list names:
+
+const char *lru_list_name(enum lru_list lru);
+
+This returns common lru list names: "inactive_anon", "active_anon",
+"inactive_file", "active_file", "unevictable".
 
 Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
 ---
- include/linux/vmstat.h |    4 ++--
- mm/memcontrol.c        |   52 ++++++++++++++++++++----------------------------
- mm/vmstat.c            |    9 +++++---
- 3 files changed, 29 insertions(+), 36 deletions(-)
+ drivers/base/node.c    |    9 +++------
+ include/linux/vmstat.h |   50 ++++++++++++++++++++++++++++++++++++++++++++++++
+ mm/vmstat.c            |   27 +++++++++-----------------
+ 3 files changed, 62 insertions(+), 24 deletions(-)
 
+diff --git a/drivers/base/node.c b/drivers/base/node.c
+index 296546ffed6c..98a31bafc8a2 100644
+--- a/drivers/base/node.c
++++ b/drivers/base/node.c
+@@ -496,20 +496,17 @@ static ssize_t node_read_vmstat(struct device *dev,
+ 	int n = 0;
+ 
+ 	for (i = 0; i < NR_VM_ZONE_STAT_ITEMS; i++)
+-		n += sprintf(buf+n, "%s %lu\n", vmstat_text[i],
++		n += sprintf(buf+n, "%s %lu\n", zone_stat_name(i),
+ 			     sum_zone_node_page_state(nid, i));
+ 
+ #ifdef CONFIG_NUMA
+ 	for (i = 0; i < NR_VM_NUMA_STAT_ITEMS; i++)
+-		n += sprintf(buf+n, "%s %lu\n",
+-			     vmstat_text[i + NR_VM_ZONE_STAT_ITEMS],
++		n += sprintf(buf+n, "%s %lu\n", numa_stat_name(i),
+ 			     sum_zone_numa_state(nid, i));
+ #endif
+ 
+ 	for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
+-		n += sprintf(buf+n, "%s %lu\n",
+-			     vmstat_text[i + NR_VM_ZONE_STAT_ITEMS +
+-			     NR_VM_NUMA_STAT_ITEMS],
++		n += sprintf(buf+n, "%s %lu\n", node_stat_name(i),
+ 			     node_page_state(pgdat, i));
+ 
+ 	return n;
 diff --git a/include/linux/vmstat.h b/include/linux/vmstat.h
-index b995d8b680c2..292485f3d24d 100644
+index bdeda4b079fe..b995d8b680c2 100644
 --- a/include/linux/vmstat.h
 +++ b/include/linux/vmstat.h
-@@ -420,7 +420,7 @@ static inline const char *writeback_stat_name(enum writeback_stat_item item)
- 			   item];
- }
- 
--#ifdef CONFIG_VM_EVENT_COUNTERS
-+#if defined(CONFIG_VM_EVENT_COUNTERS) || defined(CONFIG_MEMCG)
- static inline const char *vm_event_name(enum vm_event_item item)
- {
- 	return vmstat_text[NR_VM_ZONE_STAT_ITEMS +
-@@ -429,6 +429,6 @@ static inline const char *vm_event_name(enum vm_event_item item)
- 			   NR_VM_WRITEBACK_STAT_ITEMS +
- 			   item];
- }
--#endif /* CONFIG_VM_EVENT_COUNTERS */
-+#endif /* CONFIG_VM_EVENT_COUNTERS || CONFIG_MEMCG */
- 
- #endif /* _LINUX_VMSTAT_H */
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index bdac56009a38..e0aff8a81067 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -98,14 +98,6 @@ static bool do_memsw_account(void)
- 	return !cgroup_subsys_on_dfl(memory_cgrp_subsys) && do_swap_account;
- }
- 
--static const char *const mem_cgroup_lru_names[] = {
--	"inactive_anon",
--	"active_anon",
--	"inactive_file",
--	"active_file",
--	"unevictable",
--};
--
- #define THRESHOLDS_EVENTS_TARGET 128
- #define SOFTLIMIT_EVENTS_TARGET 1024
- #define NUMAINFO_EVENTS_TARGET	1024
-@@ -1438,7 +1430,7 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
- 		       PAGE_SIZE);
- 
- 	for (i = 0; i < NR_LRU_LISTS; i++)
--		seq_buf_printf(&s, "%s %llu\n", mem_cgroup_lru_names[i],
-+		seq_buf_printf(&s, "%s %llu\n", lru_list_name(i),
- 			       (u64)memcg_page_state(memcg, NR_LRU_BASE + i) *
- 			       PAGE_SIZE);
- 
-@@ -1451,8 +1443,10 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
- 
- 	/* Accumulated memory events */
- 
--	seq_buf_printf(&s, "pgfault %lu\n", memcg_events(memcg, PGFAULT));
--	seq_buf_printf(&s, "pgmajfault %lu\n", memcg_events(memcg, PGMAJFAULT));
-+	seq_buf_printf(&s, "%s %lu\n", vm_event_name(PGFAULT),
-+		       memcg_events(memcg, PGFAULT));
-+	seq_buf_printf(&s, "%s %lu\n", vm_event_name(PGMAJFAULT),
-+		       memcg_events(memcg, PGMAJFAULT));
- 
- 	seq_buf_printf(&s, "workingset_refault %lu\n",
- 		       memcg_page_state(memcg, WORKINGSET_REFAULT));
-@@ -1461,22 +1455,27 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
- 	seq_buf_printf(&s, "workingset_nodereclaim %lu\n",
- 		       memcg_page_state(memcg, WORKINGSET_NODERECLAIM));
- 
--	seq_buf_printf(&s, "pgrefill %lu\n", memcg_events(memcg, PGREFILL));
-+	seq_buf_printf(&s, "%s %lu\n",  vm_event_name(PGREFILL),
-+		       memcg_events(memcg, PGREFILL));
- 	seq_buf_printf(&s, "pgscan %lu\n",
- 		       memcg_events(memcg, PGSCAN_KSWAPD) +
- 		       memcg_events(memcg, PGSCAN_DIRECT));
- 	seq_buf_printf(&s, "pgsteal %lu\n",
- 		       memcg_events(memcg, PGSTEAL_KSWAPD) +
- 		       memcg_events(memcg, PGSTEAL_DIRECT));
--	seq_buf_printf(&s, "pgactivate %lu\n", memcg_events(memcg, PGACTIVATE));
--	seq_buf_printf(&s, "pgdeactivate %lu\n", memcg_events(memcg, PGDEACTIVATE));
--	seq_buf_printf(&s, "pglazyfree %lu\n", memcg_events(memcg, PGLAZYFREE));
--	seq_buf_printf(&s, "pglazyfreed %lu\n", memcg_events(memcg, PGLAZYFREED));
-+	seq_buf_printf(&s, "%s %lu\n", vm_event_name(PGACTIVATE),
-+		       memcg_events(memcg, PGACTIVATE));
-+	seq_buf_printf(&s, "%s %lu\n", vm_event_name(PGDEACTIVATE),
-+		       memcg_events(memcg, PGDEACTIVATE));
-+	seq_buf_printf(&s, "%s %lu\n", vm_event_name(PGLAZYFREE),
-+		       memcg_events(memcg, PGLAZYFREE));
-+	seq_buf_printf(&s, "%s %lu\n", vm_event_name(PGLAZYFREED),
-+		       memcg_events(memcg, PGLAZYFREED));
- 
- #ifdef CONFIG_TRANSPARENT_HUGEPAGE
--	seq_buf_printf(&s, "thp_fault_alloc %lu\n",
-+	seq_buf_printf(&s, "%s %lu\n", vm_event_name(THP_FAULT_ALLOC),
- 		       memcg_events(memcg, THP_FAULT_ALLOC));
--	seq_buf_printf(&s, "thp_collapse_alloc %lu\n",
-+	seq_buf_printf(&s, "%s %lu\n", vm_event_name(THP_COLLAPSE_ALLOC),
- 		       memcg_events(memcg, THP_COLLAPSE_ALLOC));
- #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
- 
-@@ -3849,13 +3848,6 @@ static const unsigned int memcg1_events[] = {
- 	PGMAJFAULT,
+@@ -31,6 +31,12 @@ struct reclaim_stat {
+ 	unsigned nr_unmap_fail;
  };
  
--static const char *const memcg1_event_names[] = {
--	"pgpgin",
--	"pgpgout",
--	"pgfault",
--	"pgmajfault",
--};
--
- static int memcg_stat_show(struct seq_file *m, void *v)
- {
- 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
-@@ -3864,7 +3856,6 @@ static int memcg_stat_show(struct seq_file *m, void *v)
- 	unsigned int i;
++enum writeback_stat_item {
++	NR_DIRTY_THRESHOLD,
++	NR_DIRTY_BG_THRESHOLD,
++	NR_VM_WRITEBACK_STAT_ITEMS,
++};
++
+ #ifdef CONFIG_VM_EVENT_COUNTERS
+ /*
+  * Light weight per cpu counter implementation.
+@@ -381,4 +387,48 @@ static inline void __mod_zone_freepage_state(struct zone *zone, int nr_pages,
  
- 	BUILD_BUG_ON(ARRAY_SIZE(memcg1_stat_names) != ARRAY_SIZE(memcg1_stats));
--	BUILD_BUG_ON(ARRAY_SIZE(mem_cgroup_lru_names) != NR_LRU_LISTS);
+ extern const char * const vmstat_text[];
  
- 	for (i = 0; i < ARRAY_SIZE(memcg1_stats); i++) {
- 		if (memcg1_stats[i] == MEMCG_SWAP && !do_memsw_account())
-@@ -3875,11 +3866,11 @@ static int memcg_stat_show(struct seq_file *m, void *v)
- 	}
- 
- 	for (i = 0; i < ARRAY_SIZE(memcg1_events); i++)
--		seq_printf(m, "%s %lu\n", memcg1_event_names[i],
-+		seq_printf(m, "%s %lu\n", vm_event_name(memcg1_events[i]),
- 			   memcg_events_local(memcg, memcg1_events[i]));
- 
- 	for (i = 0; i < NR_LRU_LISTS; i++)
--		seq_printf(m, "%s %lu\n", mem_cgroup_lru_names[i],
-+		seq_printf(m, "%s %lu\n", lru_list_name(i),
- 			   memcg_page_state_local(memcg, NR_LRU_BASE + i) *
- 			   PAGE_SIZE);
- 
-@@ -3904,11 +3895,12 @@ static int memcg_stat_show(struct seq_file *m, void *v)
- 	}
- 
- 	for (i = 0; i < ARRAY_SIZE(memcg1_events); i++)
--		seq_printf(m, "total_%s %llu\n", memcg1_event_names[i],
-+		seq_printf(m, "total_%s %llu\n",
-+			   vm_event_name(memcg1_events[i]),
- 			   (u64)memcg_events(memcg, memcg1_events[i]));
- 
- 	for (i = 0; i < NR_LRU_LISTS; i++)
--		seq_printf(m, "total_%s %llu\n", mem_cgroup_lru_names[i],
-+		seq_printf(m, "total_%s %llu\n", lru_list_name(i),
- 			   (u64)memcg_page_state(memcg, NR_LRU_BASE + i) *
- 			   PAGE_SIZE);
- 
++static inline const char *zone_stat_name(enum zone_stat_item item)
++{
++	return vmstat_text[item];
++}
++
++#ifdef CONFIG_NUMA
++static inline const char *numa_stat_name(enum numa_stat_item item)
++{
++	return vmstat_text[NR_VM_ZONE_STAT_ITEMS +
++			   item];
++}
++#endif /* CONFIG_NUMA */
++
++static inline const char *node_stat_name(enum node_stat_item item)
++{
++	return vmstat_text[NR_VM_ZONE_STAT_ITEMS +
++			   NR_VM_NUMA_STAT_ITEMS +
++			   item];
++}
++
++static inline const char *lru_list_name(enum lru_list lru)
++{
++	return node_stat_name(NR_LRU_BASE + lru) + 3; // skip "nr_"
++}
++
++static inline const char *writeback_stat_name(enum writeback_stat_item item)
++{
++	return vmstat_text[NR_VM_ZONE_STAT_ITEMS +
++			   NR_VM_NUMA_STAT_ITEMS +
++			   NR_VM_NODE_STAT_ITEMS +
++			   item];
++}
++
++#ifdef CONFIG_VM_EVENT_COUNTERS
++static inline const char *vm_event_name(enum vm_event_item item)
++{
++	return vmstat_text[NR_VM_ZONE_STAT_ITEMS +
++			   NR_VM_NUMA_STAT_ITEMS +
++			   NR_VM_NODE_STAT_ITEMS +
++			   NR_VM_WRITEBACK_STAT_ITEMS +
++			   item];
++}
++#endif /* CONFIG_VM_EVENT_COUNTERS */
++
+ #endif /* _LINUX_VMSTAT_H */
 diff --git a/mm/vmstat.c b/mm/vmstat.c
-index 590aeca27cab..b2fd344d2fcf 100644
+index 6afc892a148a..590aeca27cab 100644
 --- a/mm/vmstat.c
 +++ b/mm/vmstat.c
-@@ -1084,7 +1084,8 @@ int fragmentation_index(struct zone *zone, unsigned int order)
- }
+@@ -1134,7 +1134,7 @@ const char * const vmstat_text[] = {
+ 	"numa_other",
  #endif
  
--#if defined(CONFIG_PROC_FS) || defined(CONFIG_SYSFS) || defined(CONFIG_NUMA)
-+#if defined(CONFIG_PROC_FS) || defined(CONFIG_SYSFS) || \
-+    defined(CONFIG_NUMA) || defined(CONFIG_MEMCG)
- #ifdef CONFIG_ZONE_DMA
- #define TEXT_FOR_DMA(xx) xx "_dma",
- #else
-@@ -1172,7 +1173,7 @@ const char * const vmstat_text[] = {
- 	"nr_dirty_threshold",
- 	"nr_dirty_background_threshold",
+-	/* Node-based counters */
++	/* enum node_stat_item counters */
+ 	"nr_inactive_anon",
+ 	"nr_active_anon",
+ 	"nr_inactive_file",
+@@ -1547,10 +1547,8 @@ static void zoneinfo_show_print(struct seq_file *m, pg_data_t *pgdat,
+ 	if (is_zone_first_populated(pgdat, zone)) {
+ 		seq_printf(m, "\n  per-node stats");
+ 		for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++) {
+-			seq_printf(m, "\n      %-12s %lu",
+-				vmstat_text[i + NR_VM_ZONE_STAT_ITEMS +
+-				NR_VM_NUMA_STAT_ITEMS],
+-				node_page_state(pgdat, i));
++			seq_printf(m, "\n      %-12s %lu", node_stat_name(i),
++				   node_page_state(pgdat, i));
+ 		}
+ 	}
+ 	seq_printf(m,
+@@ -1583,14 +1581,13 @@ static void zoneinfo_show_print(struct seq_file *m, pg_data_t *pgdat,
+ 	}
  
--#ifdef CONFIG_VM_EVENT_COUNTERS
-+#if defined(CONFIG_VM_EVENT_COUNTERS) || defined(CONFIG_MEMCG)
- 	/* enum vm_event_item counters */
- 	"pgpgin",
- 	"pgpgout",
-@@ -1291,9 +1292,9 @@ const char * const vmstat_text[] = {
- 	"swap_ra",
- 	"swap_ra_hit",
+ 	for (i = 0; i < NR_VM_ZONE_STAT_ITEMS; i++)
+-		seq_printf(m, "\n      %-12s %lu", vmstat_text[i],
+-				zone_page_state(zone, i));
++		seq_printf(m, "\n      %-12s %lu", zone_stat_name(i),
++			   zone_page_state(zone, i));
+ 
+ #ifdef CONFIG_NUMA
+ 	for (i = 0; i < NR_VM_NUMA_STAT_ITEMS; i++)
+-		seq_printf(m, "\n      %-12s %lu",
+-				vmstat_text[i + NR_VM_ZONE_STAT_ITEMS],
+-				zone_numa_state_snapshot(zone, i));
++		seq_printf(m, "\n      %-12s %lu", numa_stat_name(i),
++			   zone_numa_state_snapshot(zone, i));
  #endif
--#endif /* CONFIG_VM_EVENTS_COUNTERS */
-+#endif /* CONFIG_VM_EVENT_COUNTERS || CONFIG_MEMCG */
+ 
+ 	seq_printf(m, "\n  pagesets");
+@@ -1641,12 +1638,6 @@ static const struct seq_operations zoneinfo_op = {
+ 	.show	= zoneinfo_show,
  };
--#endif /* CONFIG_PROC_FS || CONFIG_SYSFS || CONFIG_NUMA */
-+#endif /* CONFIG_PROC_FS || CONFIG_SYSFS || CONFIG_NUMA || CONFIG_MEMCG */
  
- #if (defined(CONFIG_DEBUG_FS) && defined(CONFIG_COMPACTION)) || \
-      defined(CONFIG_PROC_FS)
+-enum writeback_stat_item {
+-	NR_DIRTY_THRESHOLD,
+-	NR_DIRTY_BG_THRESHOLD,
+-	NR_VM_WRITEBACK_STAT_ITEMS,
+-};
+-
+ static void *vmstat_start(struct seq_file *m, loff_t *pos)
+ {
+ 	unsigned long *v;
+@@ -1764,7 +1755,7 @@ int vmstat_refresh(struct ctl_table *table, int write,
+ 		val = atomic_long_read(&vm_zone_stat[i]);
+ 		if (val < 0) {
+ 			pr_warn("%s: %s %ld\n",
+-				__func__, vmstat_text[i], val);
++				__func__, zone_stat_name(i), val);
+ 			err = -EINVAL;
+ 		}
+ 	}
+@@ -1773,7 +1764,7 @@ int vmstat_refresh(struct ctl_table *table, int write,
+ 		val = atomic_long_read(&vm_numa_stat[i]);
+ 		if (val < 0) {
+ 			pr_warn("%s: %s %ld\n",
+-				__func__, vmstat_text[i + NR_VM_ZONE_STAT_ITEMS], val);
++				__func__, numa_stat_name(i), val);
+ 			err = -EINVAL;
+ 		}
+ 	}
 
