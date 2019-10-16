@@ -1,63 +1,235 @@
-From: Valentin Schneider <valentin.schneider@arm.com>
-Subject: [PATCH v3 2/2] sched/topology: Allow sched_asym_cpucapacity to be disabled
-Date: Tue, 15 Oct 2019 16:42:50 +0100
-Message-ID: <20191015154250.12951-3-valentin.schneider@arm.com>
-References: <20191015154250.12951-1-valentin.schneider@arm.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: [PATCH] tools/cgroup: add slabinfo.py tool
+Date: Tue, 15 Oct 2019 17:15:04 -0700
+Message-ID: <20191016001504.1099106-1-guro@fb.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191015154250.12951-1-valentin.schneider@arm.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-type; s=facebook;
+ bh=piuROuyuLexIgo6YVVV71gK2H3dCOmrH37BJZ+WhLE4=;
+ b=IOMWFbguI49f3iQvjtxFW5tLTfLq/bndlCE/ioKXF4NLJjNA0qTWWsZGvZVthc7O9czK
+ vjnzu/GECxHxp0rPWAc4AWaHiWS8YFPCQRpt6ZPPfSe3UGhkB/Qy2ZjB9CLNhuTmi4jk
+ QN+QX32n8GOLNKdXjvj1CM7rG6QMMPirj9s= 
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Cc: lizefan@huawei.com, tj@kernel.org, hannes@cmpxchg.org, mingo@kernel.org, peterz@infradead.org, vincent.guittot@linaro.org, Dietmar.Eggemann@arm.com, morten.rasmussen@arm.com, qperret@google.com, stable@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: tj@kernel.org
+Cc: linux-kernel@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, linux-mm@kvack.org, Roman Gushchin <guro@fb.com>, Waiman Long <longman@redhat.com>, "Tobin C . Harding" <tobin@kernel.org>
 
-While the static key is correctly initialized as being disabled, it will
-remain forever enabled once turned on. This means that if we start with an
-asymmetric system and hotplug out enough CPUs to end up with an SMP system,
-the static key will remain set - which is obviously wrong. We should detect
-this and turn off things like misfit migration and capacity aware wakeups.
+Add a drgn-based tool to display slab information for a given memcg.
+Can replace cgroup v1 memory.kmem.slabinfo interface on cgroup v2,
+but in a more flexiable way.
 
-As Quentin pointed out, having separate root domains makes this slightly
-trickier. We could have exclusive cpusets that create an SMP island - IOW,
-the domains within this root domain will not see any asymmetry. This means
-we need to count how many asymmetric root domains we have.
+Currently supports only SLUB configuration, but SLAB can be trivially
+added later.
 
-Change the simple key enablement to an increment, and decrement the key
-counter when destroying domains that cover asymmetric CPUs.
+Output example:
+$ sudo ./tools/cgroup/slabinfo.py /sys/fs/cgroup/user.slice/user-111017.slice/user\@111017.service
+shmem_inode_cache     92     92    704   46    8 : tunables    0    0    0 : slabdata      2      2      0
+eventpoll_pwq         56     56     72   56    1 : tunables    0    0    0 : slabdata      1      1      0
+eventpoll_epi         32     32    128   32    1 : tunables    0    0    0 : slabdata      1      1      0
+kmalloc-8              0      0      8  512    1 : tunables    0    0    0 : slabdata      0      0      0
+kmalloc-96             0      0     96   42    1 : tunables    0    0    0 : slabdata      0      0      0
+kmalloc-2048           0      0   2048   16    8 : tunables    0    0    0 : slabdata      0      0      0
+kmalloc-64           128    128     64   64    1 : tunables    0    0    0 : slabdata      2      2      0
+mm_struct            160    160   1024   32    8 : tunables    0    0    0 : slabdata      5      5      0
+signal_cache          96     96   1024   32    8 : tunables    0    0    0 : slabdata      3      3      0
+sighand_cache         45     45   2112   15    8 : tunables    0    0    0 : slabdata      3      3      0
+files_cache          138    138    704   46    8 : tunables    0    0    0 : slabdata      3      3      0
+task_delay_info      153    153     80   51    1 : tunables    0    0    0 : slabdata      3      3      0
+task_struct           27     27   3520    9    8 : tunables    0    0    0 : slabdata      3      3      0
+radix_tree_node       56     56    584   28    4 : tunables    0    0    0 : slabdata      2      2      0
+btrfs_inode          140    140   1136   28    8 : tunables    0    0    0 : slabdata      5      5      0
+kmalloc-1024          64     64   1024   32    8 : tunables    0    0    0 : slabdata      2      2      0
+kmalloc-192           84     84    192   42    2 : tunables    0    0    0 : slabdata      2      2      0
+inode_cache           54     54    600   27    4 : tunables    0    0    0 : slabdata      2      2      0
+kmalloc-128            0      0    128   32    1 : tunables    0    0    0 : slabdata      0      0      0
+kmalloc-512           32     32    512   32    4 : tunables    0    0    0 : slabdata      1      1      0
+skbuff_head_cache     32     32    256   32    2 : tunables    0    0    0 : slabdata      1      1      0
+sock_inode_cache      46     46    704   46    8 : tunables    0    0    0 : slabdata      1      1      0
+cred_jar             378    378    192   42    2 : tunables    0    0    0 : slabdata      9      9      0
+proc_inode_cache      96     96    672   24    4 : tunables    0    0    0 : slabdata      4      4      0
+dentry               336    336    192   42    2 : tunables    0    0    0 : slabdata      8      8      0
+filp                 697    864    256   32    2 : tunables    0    0    0 : slabdata     27     27      0
+anon_vma             644    644     88   46    1 : tunables    0    0    0 : slabdata     14     14      0
+pid                 1408   1408     64   64    1 : tunables    0    0    0 : slabdata     22     22      0
+vm_area_struct      1200   1200    200   40    2 : tunables    0    0    0 : slabdata     30     30      0
 
-Cc: <stable@vger.kernel.org>
-Fixes: df054e8445a4 ("sched/topology: Add static_key for asymmetric CPU capacity optimizations")
-Signed-off-by: Valentin Schneider <valentin.schneider@arm.com>
+Signed-off-by: Roman Gushchin <guro@fb.com>
+Cc: Waiman Long <longman@redhat.com>
+Cc: Tobin C. Harding <tobin@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>
 ---
- kernel/sched/topology.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ tools/cgroup/slabinfo.py | 159 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 159 insertions(+)
+ create mode 100755 tools/cgroup/slabinfo.py
 
-diff --git a/kernel/sched/topology.c b/kernel/sched/topology.c
-index 9318acf1d1fe..f0e730143380 100644
---- a/kernel/sched/topology.c
-+++ b/kernel/sched/topology.c
-@@ -2029,7 +2029,7 @@ build_sched_domains(const struct cpumask *cpu_map, struct sched_domain_attr *att
- 	rcu_read_unlock();
- 
- 	if (has_asym)
--		static_branch_enable_cpuslocked(&sched_asym_cpucapacity);
-+		static_branch_inc_cpuslocked(&sched_asym_cpucapacity);
- 
- 	if (rq && sched_debug_enabled) {
- 		pr_info("root domain span: %*pbl (max cpu_capacity = %lu)\n",
-@@ -2125,7 +2125,10 @@ int sched_init_domains(const struct cpumask *cpu_map)
- static void detach_destroy_domains(const struct cpumask *cpu_map)
- {
- 	int i;
-+	unsigned int cpu = cpumask_any(cpu_map);
+diff --git a/tools/cgroup/slabinfo.py b/tools/cgroup/slabinfo.py
+new file mode 100755
+index 000000000000..40b01a6ec4b0
+--- /dev/null
++++ b/tools/cgroup/slabinfo.py
+@@ -0,0 +1,159 @@
++#!/usr/bin/env drgn
++#
++# Copyright (C) 2019 Roman Gushchin <guro@fb.com>
++# Copyright (C) 2019 Facebook
 +
-+	if (rcu_access_pointer(per_cpu(sd_asym_cpucapacity, cpu)))
-+		static_branch_dec_cpuslocked(&sched_asym_cpucapacity);
- 
- 	rcu_read_lock();
- 	for_each_cpu(i, cpu_map)
---
-2.22.0
++from os import stat
++import argparse
++import sys
++
++from drgn.helpers.linux import list_for_each_entry, list_empty
++from drgn import container_of
++
++
++DESC = """
++This is a drgn script to provide slab statistics for memory cgroups.
++It supports cgroup v2 and v1 and can emulate memory.kmem.slabinfo
++interface of cgroup v1.
++For drgn, visit https://github.com/osandov/drgn.
++"""
++
++
++MEMCGS = {}
++
++OO_SHIFT = 16
++OO_MASK = ((1 << OO_SHIFT) - 1)
++
++
++def err(s):
++    print('slabinfo.py: error: %s' % s, file=sys.stderr, flush=True)
++    sys.exit(1)
++
++
++def find_memcg_ids(css=prog['root_mem_cgroup'].css, prefix=''):
++    if not list_empty(css.children.address_of_()):
++        for css in list_for_each_entry('struct cgroup_subsys_state',
++                                       css.children.address_of_(),
++                                       'sibling'):
++            name = prefix + '/' + css.cgroup.kn.name.string_().decode('utf-8')
++            memcg = container_of(css, 'struct mem_cgroup', 'css')
++            MEMCGS[css.cgroup.kn.id.ino.value_()] = memcg
++            find_memcg_ids(css, name)
++
++
++def is_root_cache(s):
++    return False if s.memcg_params.root_cache else True
++
++
++def cache_name(s):
++    if is_root_cache(s):
++        return s.name
++    else:
++        return s.memcg_params.root_cache.name.string_().decode('utf-8')
++
++
++# SLUB
++
++def oo_order(s):
++    return s.oo.x >> OO_SHIFT
++
++
++def oo_objects(s):
++    return s.oo.x & OO_MASK
++
++
++def count_partial(n, fn):
++    nr_pages = 0
++    for page in list_for_each_entry('struct page', n.partial.address_of_(),
++                                    'lru'):
++         nr_pages += fn(page)
++    return nr_pages
++
++
++def count_free(page):
++    return page.objects - page.inuse
++
++
++def slub_get_slabinfo(s, cfg):
++    nr_slabs = 0
++    nr_objs = 0
++    nr_free = 0
++
++    for node in range(cfg['nr_nodes']):
++        n = s.node[node]
++        nr_slabs += n.nr_slabs.counter.value_()
++        nr_objs += n.total_objects.counter.value_()
++        nr_free += count_partial(n, count_free)
++
++    return {'active_objs': nr_objs - nr_free,
++            'num_objs': nr_objs,
++            'active_slabs': nr_slabs,
++            'num_slabs': nr_slabs,
++            'objects_per_slab': oo_objects(s),
++            'cache_order': oo_order(s),
++            'limit': 0,
++            'batchcount': 0,
++            'shared': 0,
++            'shared_avail': 0}
++
++# SLAB-specific functions can be added here...
++
++
++def cache_show(s, cfg):
++    if cfg['allocator'] == 'SLUB':
++        sinfo = slub_get_slabinfo(s, cfg)
++    else:
++        err('SLAB isn\'t supported yet')
++
++    print('%-17s %6lu %6lu %6u %4u %4d'
++          ' : tunables %4u %4u %4u'
++          ' : slabdata %6lu %6lu %6lu' % (
++              cache_name(s), sinfo['active_objs'], sinfo['num_objs'],
++              s.size, sinfo['objects_per_slab'], 1 << sinfo['cache_order'],
++              sinfo['limit'], sinfo['batchcount'], sinfo['shared'],
++              sinfo['active_slabs'], sinfo['num_slabs'],
++              sinfo['shared_avail']))
++
++
++def detect_kernel_config():
++    cfg = {}
++
++    cfg['nr_nodes'] = prog['nr_online_nodes'].value_()
++
++    if prog.type('struct kmem_cache').members[1][1] == 'flags':
++        cfg['allocator'] = 'SLUB'
++    elif prog.type('struct kmem_cache').members[1][1] == 'batchcount':
++        cfg['allocator'] = 'SLAB'
++    else:
++        err('Can\'t determine the slab allocator')
++
++    return cfg
++
++
++def main():
++    parser = argparse.ArgumentParser(description=DESC,
++                                     formatter_class=argparse.RawTextHelpFormatter)
++    parser.add_argument('cgroup', metavar='CGROUP',
++                        help='Target memory cgroup')
++    args = parser.parse_args()
++
++    try:
++        cgroup_id = stat(args.cgroup).st_ino
++        find_memcg_ids()
++        memcg = MEMCGS[cgroup_id]
++    except KeyError:
++        err('Can\'t find the memory cgroup')
++
++    cfg = detect_kernel_config()
++
++    print('# name            <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab>'
++          ' : tunables <limit> <batchcount> <sharedfactor>'
++          ' : slabdata <active_slabs> <num_slabs> <sharedavail>')
++
++    for s in list_for_each_entry('struct kmem_cache',
++                                 memcg.kmem_caches.address_of_(),
++                                 'memcg_params.kmem_caches_node'):
++        cache_show(s, cfg)
++
++
++main()
+-- 
+2.17.1
 
