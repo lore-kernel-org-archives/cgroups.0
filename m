@@ -1,88 +1,54 @@
-From: Aleksa Sarai <cyphar@cyphar.com>
-Subject: [PATCH v2] cgroup: pids: use atomic64_t for pids->limit
-Date: Thu, 17 Oct 2019 02:50:01 +1100
-Message-ID: <20191016155001.13651-1-cyphar@cyphar.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] cgroup: pids: use {READ,WRITE}_ONCE for pids->limit
+ operations
+Date: Wed, 16 Oct 2019 08:54:07 -0700
+Message-ID: <20191016155407.GP18794@devbig004.ftw2.facebook.com>
+References: <20191012010539.6131-1-cyphar@cyphar.com>
+ <20191014154136.GF18794@devbig004.ftw2.facebook.com>
+ <20191014155931.jl7idjebhqxb3ck3@yavin.dot.cyphar.com>
+ <20191014163307.GG18794@devbig004.ftw2.facebook.com>
+ <20191016083218.ttsaqnxpjh5i5bgv@yavin.dot.cyphar.com>
+ <20191016142756.GN18794@devbig004.ftw2.facebook.com>
+ <20191016152946.34j5x45ko5auhv3g@yavin.dot.cyphar.com>
+ <20191016153520.zet5mn5xsygig4xc@yavin.dot.cyphar.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <stable-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=0WPO79DQDmX9K5UUvDG9NIvgYir9s6WI5TJKIJkxgcM=;
+        b=KCKGbCnnZALErjaIOXUYlE+dIZkF5JwVP/bpZ27+TuqqGH9oF0ds351xGOTB7cX87c
+         c4943D0f6UUJc5cY4nDXJIhYnPI8ba57pzg6LD+UtawPccJUsKjuyd0K8Y6vM2/hJm5I
+         RflHR2EyV1blt1g8DVrTRsNn+6EwcKLXhSqsK6OznGPFaYfeKCajl+kZriwEBFPPtDIC
+         LGwjAz89030aFNhbBaWQtFZnJTGGXoLm4aPpNSC1rj5FOBJXVMSkAZGyhvXwt8cU8Ppo
+         1pTL4woX4HN5aiZXh64itUXu4jap71Aba4sJGmNQlXnuRmfaDnNtUd8f4WP9tHxpEf67
+         KKXg==
+Content-Disposition: inline
+In-Reply-To: <20191016153520.zet5mn5xsygig4xc@yavin.dot.cyphar.com>
 Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Aleksa Sarai <cyphar@cyphar.com>, stable@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Aleksa Sarai <cyphar@cyphar.com>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 
-Because pids->limit can be changed concurrently (but we don't want to
-take a lock because it would be needlessly expensive), use atomic64_ts
-instead.
+On Thu, Oct 17, 2019 at 02:35:20AM +1100, Aleksa Sarai wrote:
+> > Sure, I will switch it to use atomic64_read() and atomic64_set() instead
+> > if that's what you'd prefer. Though I will mention that on quite a few
+> > architectures atomic64_read() is defined as:
+> > 
+> >   #define atomic64_read(v)        READ_ONCE((v)->counter)
+> 
+> Though I guess that's because on those architectures it turns out that
+> READ_ONCE is properly atomic?
 
-Fixes: commit 49b786ea146f ("cgroup: implement the PIDs subsystem")
-Cc: stable@vger.kernel.org # v4.3+
-Signed-off-by: Aleksa Sarai <cyphar@cyphar.com>
----
-v2:
-  * Switch to atomic64_t instead of using {READ,WRITE}_ONCE().
-v1: <https://lore.kernel.org/lkml/20191012010539.6131-1-cyphar@cyphar.com/>
+Oh yeah, on archs where 64bit accesses are atomic, READ_ONCE() /
+WRITE_ONCE() would work here.  If the limit variable were ulong
+instead of an explicit 64bit variable, RW ONCE would work too as ulong
+accesses are atomic on all archs IIRC.
 
- kernel/cgroup/pids.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+Thanks.
 
-diff --git a/kernel/cgroup/pids.c b/kernel/cgroup/pids.c
-index 8e513a573fe9..138059eb730d 100644
---- a/kernel/cgroup/pids.c
-+++ b/kernel/cgroup/pids.c
-@@ -45,7 +45,7 @@ struct pids_cgroup {
- 	 * %PIDS_MAX = (%PID_MAX_LIMIT + 1).
- 	 */
- 	atomic64_t			counter;
--	int64_t				limit;
-+	atomic64_t			limit;
- 
- 	/* Handle for "pids.events" */
- 	struct cgroup_file		events_file;
-@@ -73,8 +73,8 @@ pids_css_alloc(struct cgroup_subsys_state *parent)
- 	if (!pids)
- 		return ERR_PTR(-ENOMEM);
- 
--	pids->limit = PIDS_MAX;
- 	atomic64_set(&pids->counter, 0);
-+	atomic64_set(&pids->limit, PIDS_MAX);
- 	atomic64_set(&pids->events_limit, 0);
- 	return &pids->css;
- }
-@@ -146,13 +146,14 @@ static int pids_try_charge(struct pids_cgroup *pids, int num)
- 
- 	for (p = pids; parent_pids(p); p = parent_pids(p)) {
- 		int64_t new = atomic64_add_return(num, &p->counter);
-+		int64_t limit = atomic64_read(&p->limit);
- 
- 		/*
- 		 * Since new is capped to the maximum number of pid_t, if
- 		 * p->limit is %PIDS_MAX then we know that this test will never
- 		 * fail.
- 		 */
--		if (new > p->limit)
-+		if (new > limit)
- 			goto revert;
- 	}
- 
-@@ -277,7 +278,7 @@ static ssize_t pids_max_write(struct kernfs_open_file *of, char *buf,
- 	 * Limit updates don't need to be mutex'd, since it isn't
- 	 * critical that any racing fork()s follow the new limit.
- 	 */
--	pids->limit = limit;
-+	atomic64_set(&pids->limit, limit);
- 	return nbytes;
- }
- 
-@@ -285,7 +286,7 @@ static int pids_max_show(struct seq_file *sf, void *v)
- {
- 	struct cgroup_subsys_state *css = seq_css(sf);
- 	struct pids_cgroup *pids = css_pids(css);
--	int64_t limit = pids->limit;
-+	int64_t limit = atomic64_read(&pids->limit);
- 
- 	if (limit >= PIDS_MAX)
- 		seq_printf(sf, "%s\n", PIDS_MAX_STR);
 -- 
-2.23.0
-
+tejun
