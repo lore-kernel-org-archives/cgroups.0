@@ -1,132 +1,171 @@
-From: Mina Almasry <almasrymina@google.com>
-Subject: Re: [PATCH v6 5/9] hugetlb: disable region_add file_region coalescing
-Date: Mon, 21 Oct 2019 12:29:46 -0700
-Message-ID: <CAHS8izP5=6PFFkq7NMrXCS6x_oV8uNGO4hUM3uh8mBE+J-Y1TA@mail.gmail.com>
-References: <20191013003024.215429-1-almasrymina@google.com>
- <20191013003024.215429-5-almasrymina@google.com> <982efbbc-f795-5819-83a8-7d328537e070@oracle.com>
+From: Dietmar Eggemann <dietmar.eggemann@arm.com>
+Subject: Re: [PATCH v3 1/2] sched/topology: Don't try to build empty sched
+ domains
+Date: Tue, 22 Oct 2019 13:43:22 +0200
+Message-ID: <20dc939f-4102-334e-5fde-a442ee7eaa5e@arm.com>
+References: <20191015154250.12951-1-valentin.schneider@arm.com>
+ <20191015154250.12951-2-valentin.schneider@arm.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=38DEAaPe7VPNtXQ2EseqbfEr1C+gTTQIPutRtKmtjCg=;
-        b=jqJNlerT/h0PB/yL2UqjliVjE/m9ZYB1YyN24nPa/HvH9kqLgg/UQ2jPkbYVK6v//M
-         6dlvQUaOWUhzVi21Uisi0ck9tehmlXxQmY9svr55XdkPCfZ3QNAbbbjkCt3aJF9rT3jZ
-         KqwC3rb+Q0U44fb236Fo5gIAlo19lc86VBZtIuITRWK4R0T/ZmefPz1JxZCBm71znt2T
-         ZQ/GO6j2pVlyTnzm6NhtvBfugCp4kKOVcMrmgfxPJcdD3vpH5x6DdYqKm99Wgq2P9a8R
-         ehLTNzh7cn5JOxuYkyr308NDoy0ddIIoZvUEhTub+mAUElgRAmbaIvxtjFPy+Ztzs1L2
-         ujeQ==
-In-Reply-To: <982efbbc-f795-5819-83a8-7d328537e070@oracle.com>
+In-Reply-To: <20191015154250.12951-2-valentin.schneider@arm.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Mike Kravetz <mike.kravetz@oracle.com>
-Cc: shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, khalid.aziz@oracle.com, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
+To: Valentin Schneider <valentin.schneider@arm.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: lizefan@huawei.com, tj@kernel.org, hannes@cmpxchg.org, mingo@kernel.org, peterz@infradead.org, vincent.guittot@linaro.org, morten.rasmussen@arm.com, qperret@google.com, stable@vger.kernel.org
 
-On Mon, Oct 21, 2019 at 12:02 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
->
-> On 10/12/19 5:30 PM, Mina Almasry wrote:
-> > A follow up patch in this series adds hugetlb cgroup uncharge info the
-> > file_region entries in resv->regions. The cgroup uncharge info may
-> > differ for different regions, so they can no longer be coalesced at
-> > region_add time. So, disable region coalescing in region_add in this
-> > patch.
-> >
-> > Behavior change:
-> >
-> > Say a resv_map exists like this [0->1], [2->3], and [5->6].
-> >
-> > Then a region_chg/add call comes in region_chg/add(f=0, t=5).
-> >
-> > Old code would generate resv->regions: [0->5], [5->6].
-> > New code would generate resv->regions: [0->1], [1->2], [2->3], [3->5],
-> > [5->6].
-> >
-> > Special care needs to be taken to handle the resv->adds_in_progress
-> > variable correctly. In the past, only 1 region would be added for every
-> > region_chg and region_add call. But now, each call may add multiple
-> > regions, so we can no longer increment adds_in_progress by 1 in region_chg,
-> > or decrement adds_in_progress by 1 after region_add or region_abort. Instead,
-> > region_chg calls add_reservation_in_range() to count the number of regions
-> > needed and allocates those, and that info is passed to region_add and
-> > region_abort to decrement adds_in_progress correctly.
-> >
-> > Signed-off-by: Mina Almasry <almasrymina@google.com>
-> >
-> > ---
-> >
-> > Changes in v6:
-> > - Fix bug in number of region_caches allocated by region_chg
-> >
-> > ---
-> >  mm/hugetlb.c | 256 +++++++++++++++++++++++++++++----------------------
-> >  1 file changed, 147 insertions(+), 109 deletions(-)
-> >
-> > diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-> > index 4a60d7d44b4c3..f9c1947925bb9 100644
-> > --- a/mm/hugetlb.c
-> > +++ b/mm/hugetlb.c
-> <snip>
-> > -static long region_chg(struct resv_map *resv, long f, long t)
-> > +static long region_chg(struct resv_map *resv, long f, long t,
-> > +                    long *out_regions_needed)
-> >  {
-> > +     struct file_region *trg = NULL;
-> >       long chg = 0;
-> >
-> > +     /* Allocate the maximum number of regions we're going to need for this
-> > +      * reservation. The maximum number of regions we're going to need is
-> > +      * (t - f) / 2 + 1, which corresponds to a region with alternating
-> > +      * reserved and unreserved pages.
-> > +      */
-> > +     *out_regions_needed = (t - f) / 2 + 1;
-> > +
-> >       spin_lock(&resv->lock);
-> > -retry_locked:
-> > -     resv->adds_in_progress++;
-> > +
-> > +     resv->adds_in_progress += *out_regions_needed;
-> >
-> >       /*
-> >        * Check for sufficient descriptors in the cache to accommodate
-> >        * the number of in progress add operations.
-> >        */
-> > -     if (resv->adds_in_progress > resv->region_cache_count) {
-> > -             struct file_region *trg;
-> > -
-> > -             VM_BUG_ON(resv->adds_in_progress - resv->region_cache_count > 1);
-> > +     while (resv->region_cache_count < resv->adds_in_progress) {
-> >               /* Must drop lock to allocate a new descriptor. */
-> > -             resv->adds_in_progress--;
-> >               spin_unlock(&resv->lock);
-> > -
-> >               trg = kmalloc(sizeof(*trg), GFP_KERNEL);
-> >               if (!trg)
-> >                       return -ENOMEM;
-> > @@ -393,9 +395,9 @@ static long region_chg(struct resv_map *resv, long f, long t)
-> >               spin_lock(&resv->lock);
-> >               list_add(&trg->link, &resv->region_cache);
-> >               resv->region_cache_count++;
-> > -             goto retry_locked;
-> >       }
->
->
-> I know that I suggested allocating the worst case number of entries, but this
-> is going to be too much of a hit for existing hugetlbfs users.  It is not
-> uncommon for DBs to have a shared areas in excess of 1TB mapped by hugetlbfs.
-> With this new scheme, the above while loop will allocate over a half million
-> file region entries and end up only using one.
->
-> I think we need to step back and come up with a different approach.  Let me
-> give it some more thought before throwing out ideas that may waste more of
-> your time.  Sorry.
+On 15/10/2019 17:42, Valentin Schneider wrote:
+> Turns out hotplugging CPUs that are in exclusive cpusets can lead to the
+> cpuset code feeding empty cpumasks to the sched domain rebuild machinery.
+> This leads to the following splat:
+> 
+> [   30.618174] Internal error: Oops: 96000004 [#1] PREEMPT SMP
+> [   30.623697] Modules linked in:
+> [   30.626731] CPU: 0 PID: 235 Comm: kworker/5:2 Not tainted 5.4.0-rc1-00005-g8d495477d62e #23
+> [   30.635003] Hardware name: ARM Juno development board (r0) (DT)
+> [   30.640877] Workqueue: events cpuset_hotplug_workfn
+> [   30.645713] pstate: 60000005 (nZCv daif -PAN -UAO)
+> [   30.650464] pc : build_sched_domains (./include/linux/arch_topology.h:23 kernel/sched/topology.c:1898 kernel/sched/topology.c:1969)
+> [   30.655126] lr : build_sched_domains (kernel/sched/topology.c:1966)
+> [...]
+> [   30.742047] Call trace:
+> [   30.744474] build_sched_domains (./include/linux/arch_topology.h:23 kernel/sched/topology.c:1898 kernel/sched/topology.c:1969)
+> [   30.748793] partition_sched_domains_locked (kernel/sched/topology.c:2250)
+> [   30.753971] rebuild_sched_domains_locked (./include/linux/bitmap.h:370 ./include/linux/cpumask.h:538 kernel/cgroup/cpuset.c:955 kernel/cgroup/cpuset.c:978 kernel/cgroup/cpuset.c:1019)
+> [   30.758977] rebuild_sched_domains (kernel/cgroup/cpuset.c:1032)
+> [   30.763209] cpuset_hotplug_workfn (kernel/cgroup/cpuset.c:3205 (discriminator 2))
+> [   30.767613] process_one_work (./arch/arm64/include/asm/jump_label.h:21 ./include/linux/jump_label.h:200 ./include/trace/events/workqueue.h:114 kernel/workqueue.c:2274)
+> [   30.771586] worker_thread (./include/linux/compiler.h:199 ./include/linux/list.h:268 kernel/workqueue.c:2416)
+> [   30.775217] kthread (kernel/kthread.c:255)
+> [   30.778418] ret_from_fork (arch/arm64/kernel/entry.S:1167)
+> [ 30.781965] Code: f860dae2 912802d6 aa1603e1 12800000 (f8616853)
+> 
+> The faulty line in question is
+> 
+>   cap = arch_scale_cpu_capacity(cpumask_first(cpu_map));
+> 
+> and we're not checking the return value against nr_cpu_ids (we shouldn't
+> have to!), which leads to the above.
+> 
+> Prevent generate_sched_domains() from returning empty cpumasks, and add
+> some assertion in build_sched_domains() to scream bloody murder if it
+> happens again.
 
-No problem at all. The other more reasonable option is to have it such
-that region_add allocates its own cache entries if it needs to, and
-the effect of that is that region_add may fail, so the callers must
-handle that possibility. Doesn't seem too difficult to handle.
+First I thought we can do with a little less drama by only preventing
+arch_scale_cpu_capacity() from consuming >= nr_cpu_ids.
 
-> --
-> Mike Kravetz
+@@ -1894,6 +1894,9 @@ static struct sched_domain_topology_level
+        struct sched_domain_topology_level *tl, *asym_tl = NULL;
+        unsigned long cap;
+
++       if (cpumask_empty(cpu_map))
++               return NULL;
++
+
+Until I tried to hp'ed in CPU4 after CPU4/5 had been hp'ed out (your
+example further below) and I got another:
+
+[   68.014564] Unable to handle kernel paging request at virtual address
+fffe8009903d8ee0
+...
+[   68.191293] Call trace:
+[   68.193712]  partition_sched_domains_locked+0x1a4/0x4a0
+[   68.198882]  rebuild_sched_domains_locked+0x4d0/0x7b0
+[   68.203880]  rebuild_sched_domains+0x24/0x40
+[   68.208104]  cpuset_hotplug_workfn+0xe0/0x5f8
+...
+
+@@ -2213,6 +2216,11 @@ void partition_sched_domains_locked(int
+ndoms_new, cpumask_var_t doms_new[],
+                               * will be recomputed in function
+                               * update_tasks_root_domain().
+                               */
++                             if (cpumask_empty(doms_cur[i]))
++                                    printk("doms_cur[%d] empty\n", i);
++
+                              rd = cpu_rq(cpumask_any(doms_cur[i]))->rd;
+
+doms_cur[i] is empty when hp'ing in CPU4 again.
+
+Your patch fixes this as well.
+
+Might be worth noting that this is not only about asym CPU capacity
+handling but missing checks after cpumask operations in case the cpuset
+is empty.
+
+> The above splat was obtained on my Juno r0 with:>
+>   cgcreate -g cpuset:asym
+>   cgset -r cpuset.cpus=0-3 asym
+>   cgset -r cpuset.mems=0 asym
+>   cgset -r cpuset.cpu_exclusive=1 asym
+> 
+>   cgcreate -g cpuset:smp
+>   cgset -r cpuset.cpus=4-5 smp
+>   cgset -r cpuset.mems=0 smp
+>   cgset -r cpuset.cpu_exclusive=1 smp
+> 
+>   cgset -r cpuset.sched_load_balance=0 .
+> 
+>   echo 0 > /sys/devices/system/cpu/cpu4/online
+>   echo 0 > /sys/devices/system/cpu/cpu5/online
+> 
+> Cc: <stable@vger.kernel.org>
+> Fixes: 05484e098448 ("sched/topology: Add SD_ASYM_CPUCAPACITY flag detection")
+> Signed-off-by: Valentin Schneider <valentin.schneider@arm.com>
+> ---
+>  kernel/cgroup/cpuset.c  | 8 ++++++++
+>  kernel/sched/topology.c | 5 ++++-
+>  2 files changed, 12 insertions(+), 1 deletion(-)
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index c52bc91f882b..a859e5539440 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -817,6 +817,11 @@ static int generate_sched_domains(cpumask_var_t **domains,
+>  		struct cpuset *a = csa[i];
+>  		int apn = a->pn;
+>  
+> +		if (cpumask_empty(a->effective_cpus)) {
+> +			ndoms--;
+> +			continue;
+> +		}
+> +
+>  		for (j = 0; j < csn; j++) {
+>  			struct cpuset *b = csa[j];
+>  			int bpn = b->pn;
+> @@ -859,6 +864,9 @@ static int generate_sched_domains(cpumask_var_t **domains,
+>  			continue;
+>  		}
+>  
+> +		if (cpumask_empty(a->effective_cpus))
+> +			continue;
+> +
+>  		dp = doms[nslot];
+>  
+>  		if (nslot == ndoms) {
+> diff --git a/kernel/sched/topology.c b/kernel/sched/topology.c
+> index b5667a273bf6..9318acf1d1fe 100644
+> --- a/kernel/sched/topology.c
+> +++ b/kernel/sched/topology.c
+> @@ -1948,7 +1948,7 @@ static struct sched_domain_topology_level
+>  static int
+>  build_sched_domains(const struct cpumask *cpu_map, struct sched_domain_attr *attr)
+>  {
+> -	enum s_alloc alloc_state;
+> +	enum s_alloc alloc_state = sa_none;
+>  	struct sched_domain *sd;
+>  	struct s_data d;
+>  	struct rq *rq = NULL;
+> @@ -1956,6 +1956,9 @@ build_sched_domains(const struct cpumask *cpu_map, struct sched_domain_attr *att
+>  	struct sched_domain_topology_level *tl_asym;
+>  	bool has_asym = false;
+>  
+> +	if (WARN_ON(cpumask_empty(cpu_map)))
+> +		goto error;
+> +
+>  	alloc_state = __visit_domain_allocation_hell(&d, cpu_map);
+>  	if (alloc_state != sa_rootdomain)
+>  		goto error;
+> 
