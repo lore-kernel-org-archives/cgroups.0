@@ -1,73 +1,82 @@
-From: Valentin Schneider <valentin.schneider@arm.com>
-Subject: Re: [PATCH v3 1/2] sched/topology: Don't try to build empty sched
- domains
-Date: Tue, 22 Oct 2019 13:46:08 +0100
-Message-ID: <b38c30cd-f990-dd98-b414-c284f8f32cfd@arm.com>
-References: <20191015154250.12951-1-valentin.schneider@arm.com>
- <20191015154250.12951-2-valentin.schneider@arm.com>
- <20dc939f-4102-334e-5fde-a442ee7eaa5e@arm.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH 1/8] mm: vmscan: simplify lruvec_lru_size()
+Date: Tue, 22 Oct 2019 10:47:56 -0400
+Message-ID: <20191022144803.302233-2-hannes@cmpxchg.org>
+References: <20191022144803.302233-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20dc939f-4102-334e-5fde-a442ee7eaa5e@arm.com>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=iFBKqmL/4fnTvQgxpmecsW4xlCLftKHwTd8yhraPD9Y=;
+        b=po3EgEl1Mfcj8YgbJhdpnDMRmpW8tzAaBeWPxhTAU12MmtccZL11JGUkwiGCxgb3xA
+         QjdEo7R/vlHoX3wx55XWp85atLxaGk+SyRuTtJRtL93CNS+tRpuJrui+/9PKaa7yN3ii
+         JLNR+sQ8cffNhgL+fm6oIOASPG2kRusL/cs1itJ4EqXdId40uJ9ocUAIThgUAPxylvbj
+         MObUpe5nqGUYyuW0YRa7+wCtibgztGJg5dkHeW5ZpttdFZ1zN86nHgyeiLiVBtPJvEU2
+         rNzOnZd29An6Kf7sEkGGYMYqrq9BBDH/jts3v2801jiVF9o7199dTnfCZ1scCLknemwz
+         ViqQ==
+In-Reply-To: <20191022144803.302233-1-hannes@cmpxchg.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Dietmar Eggemann <dietmar.eggemann@arm.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Cc: lizefan@huawei.com, tj@kernel.org, hannes@cmpxchg.org, mingo@kernel.org, peterz@infradead.org, vincent.guittot@linaro.org, morten.rasmussen@arm.com, qperret@google.com, stable@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On 22/10/2019 12:43, Dietmar Eggemann wrote:
-> First I thought we can do with a little less drama by only preventing
-> arch_scale_cpu_capacity() from consuming >= nr_cpu_ids.
-> 
-> @@ -1894,6 +1894,9 @@ static struct sched_domain_topology_level
->         struct sched_domain_topology_level *tl, *asym_tl = NULL;
->         unsigned long cap;
-> 
-> +       if (cpumask_empty(cpu_map))
-> +               return NULL;
-> +
-> 
-> Until I tried to hp'ed in CPU4 after CPU4/5 had been hp'ed out (your
-> example further below) and I got another:
-> 
-> [   68.014564] Unable to handle kernel paging request at virtual address
-> fffe8009903d8ee0
-> ...
-> [   68.191293] Call trace:
-> [   68.193712]  partition_sched_domains_locked+0x1a4/0x4a0
-> [   68.198882]  rebuild_sched_domains_locked+0x4d0/0x7b0
-> [   68.203880]  rebuild_sched_domains+0x24/0x40
-> [   68.208104]  cpuset_hotplug_workfn+0xe0/0x5f8
-> ...
-> 
-> @@ -2213,6 +2216,11 @@ void partition_sched_domains_locked(int
-> ndoms_new, cpumask_var_t doms_new[],
->                                * will be recomputed in function
->                                * update_tasks_root_domain().
->                                */
-> +                             if (cpumask_empty(doms_cur[i]))
-> +                                    printk("doms_cur[%d] empty\n", i);
-> +
->                               rd = cpu_rq(cpumask_any(doms_cur[i]))->rd;
-> 
-> doms_cur[i] is empty when hp'ing in CPU4 again.
-> 
-> Your patch fixes this as well.
-> 
+This function currently takes the node or lruvec size and subtracts
+the zones that are excluded by the classzone index of the
+allocation. It uses four different types of counters to do this.
 
-Thanks for giving it a spin!
+Just add up the eligible zones.
 
-> Might be worth noting that this is not only about asym CPU capacity
-> handling but missing checks after cpumask operations in case the cpuset
-> is empty.
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ mm/vmscan.c | 21 +++++----------------
+ 1 file changed, 5 insertions(+), 16 deletions(-)
 
-Aye, we end up saving whatever we're given (doms_cur = doms_new at the end
-of the rebuild). As you pointed out this is also an issue for the operation
-done by
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 1154b3a2b637..57f533b808f2 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -351,32 +351,21 @@ unsigned long zone_reclaimable_pages(struct zone *zone)
+  */
+ unsigned long lruvec_lru_size(struct lruvec *lruvec, enum lru_list lru, int zone_idx)
+ {
+-	unsigned long lru_size = 0;
++	unsigned long size = 0;
+ 	int zid;
+ 
+-	if (!mem_cgroup_disabled()) {
+-		for (zid = 0; zid < MAX_NR_ZONES; zid++)
+-			lru_size += mem_cgroup_get_zone_lru_size(lruvec, lru, zid);
+-	} else
+-		lru_size = node_page_state(lruvec_pgdat(lruvec), NR_LRU_BASE + lru);
+-
+-	for (zid = zone_idx + 1; zid < MAX_NR_ZONES; zid++) {
++	for (zid = 0; zid <= zone_idx; zid++) {
+ 		struct zone *zone = &lruvec_pgdat(lruvec)->node_zones[zid];
+-		unsigned long size;
+ 
+ 		if (!managed_zone(zone))
+ 			continue;
+ 
+ 		if (!mem_cgroup_disabled())
+-			size = mem_cgroup_get_zone_lru_size(lruvec, lru, zid);
++			size += mem_cgroup_get_zone_lru_size(lruvec, lru, zid);
+ 		else
+-			size = zone_page_state(&lruvec_pgdat(lruvec)->node_zones[zid],
+-				       NR_ZONE_LRU_BASE + lru);
+-		lru_size -= min(size, lru_size);
++			size += zone_page_state(zone, NR_ZONE_LRU_BASE + lru);
+ 	}
+-
+-	return lru_size;
+-
++	return size;
+ }
+ 
+ /*
+-- 
+2.23.0
 
-  f9a25f776d78 ("cpusets: Rebuild root domain deadline accounting information")
-
-but it has been introduced after the asymmetry check, hence why I'm tagging
-the latter for stable.
