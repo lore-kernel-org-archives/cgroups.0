@@ -1,82 +1,42 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 3/8] mm: vmscan: move inactive_list_is_low() swap check to the caller
-Date: Tue, 22 Oct 2019 10:47:58 -0400
-Message-ID: <20191022144803.302233-4-hannes@cmpxchg.org>
-References: <20191022144803.302233-1-hannes@cmpxchg.org>
+Subject: [PATCH 0/8]: mm: vmscan: cgroup-related cleanups
+Date: Tue, 22 Oct 2019 10:47:55 -0400
+Message-ID: <20191022144803.302233-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=q6d0e71c1U6ZW8RKPMSK80x36zGerojsdp9LXPgfjJI=;
-        b=mxq29U7KFf8nIL2EPYKGYZG3PSPLfnfyyUP3N9kMMBJep9Noe7BqgaM7RFDkI//avH
-         +lWfp9sEakhlXGJS7YoZspH/bCa783BlFJaZLulfx06SkaVO6nseVrPLlE02uM46F5BT
-         aXX+S5xo0gm2UsAhO2A+VmjIUQsL1r/v4PvaaiE2y1ld5cy0y2xidgDz/jYugGswM5YV
-         XXV8qKlJgxAtFWHtk1MlF7jqqYsu3cW2zhBUYJ9MJyMxm8kVj4CL23AeGxB9bcLq1Cws
-         cSqoKgFqCMpFHjtqd2m7RkiZsKaft0d6fZFpH0OP4v5ikJ/CxQXmt9q7gy7W0QOWLeLy
-         G68g==
-In-Reply-To: <20191022144803.302233-1-hannes@cmpxchg.org>
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=UutYteqTWkPmD48f0jNhpK+dvRJrMgtVJxTJWvlNPEM=;
+        b=vlBYE+fWCY++BNYbapfKjvbzLNzuEMvv1UXCfI27y9wdHR3b89oXrVKLA8ud68Zs6J
+         LqUbEsGJanuyERO6T1Dr7kUcpK/YSTQME+H9oYcAKQK8vlmOLbgPDHBVeq26VXQ5aBSV
+         PLA0dfTYtghWw83ibT/hu+u8uuDVMlHbIetO16tszI+oUcbVZebbbpEmbKXBydiHkwhh
+         SpNoB7b3+RMat88O1vqGmMpg8SHgx/hJBUHzbR1h4NcFWBtScqVSQK29G5nTaq5xJENX
+         iE9rdbBtv3zaV6M4uLKi7GapV5UGPecdZrvbJlyMr47HQqY5Z6EgsWs3ROMRTwlkHnVY
+         HQaw==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Michal Hocko <mhocko@suse.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-inactive_list_is_low() should be about one thing: checking the ratio
-between inactive and active list. Kitchensink checks like the one for
-swap space makes the function hard to use and modify its
-callsites. Luckly, most callers already have an understanding of the
-swap situation, so it's easy to clean up.
+Here are 8 patches that clean up the reclaim code's interaction with
+cgroups a bit. They're not supposed to change any behavior, just make
+the implementation easier to understand and work with.
 
-get_scan_count() has its own, memcg-aware swap check, and doesn't even
-get to the inactive_list_is_low() check on the anon list when there is
-no swap space available.
+My apologies in advance for 5/8, which changes the indentation of
+shrink_node() and so results in a terrible diff. The rest of the
+series should be straight-forward.
 
-shrink_list() is called on the results of get_scan_count(), so that
-check is redundant too.
+ include/linux/memcontrol.h |  32 ++--
+ include/linux/mmzone.h     |  26 +--
+ mm/memcontrol.c            |  12 +-
+ mm/page_alloc.c            |   2 +-
+ mm/slab.h                  |   4 +-
+ mm/vmscan.c                | 386 +++++++++++++++++++------------------------
+ mm/workingset.c            |   8 +-
+ 7 files changed, 216 insertions(+), 254 deletions(-)
 
-age_active_anon() has its own totalswap_pages check right before it
-checks the list proportions.
-
-The shrink_node_memcg() site is the only one that doesn't do its own
-swap check. Add it there.
-
-Then delete the swap check from inactive_list_is_low().
-
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- mm/vmscan.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
-
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index be3c22c274c1..622b77488144 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -2226,13 +2226,6 @@ static bool inactive_list_is_low(struct lruvec *lruvec, bool file,
- 	unsigned long refaults;
- 	unsigned long gb;
- 
--	/*
--	 * If we don't have swap space, anonymous page deactivation
--	 * is pointless.
--	 */
--	if (!file && !total_swap_pages)
--		return false;
--
- 	inactive = lruvec_lru_size(lruvec, inactive_lru, sc->reclaim_idx);
- 	active = lruvec_lru_size(lruvec, active_lru, sc->reclaim_idx);
- 
-@@ -2653,7 +2646,7 @@ static void shrink_node_memcg(struct pglist_data *pgdat, struct mem_cgroup *memc
- 	 * Even if we did not try to evict anon pages at all, we want to
- 	 * rebalance the anon lru active/inactive ratio.
- 	 */
--	if (inactive_list_is_low(lruvec, false, sc, true))
-+	if (total_swap_pages && inactive_list_is_low(lruvec, false, sc, true))
- 		shrink_active_list(SWAP_CLUSTER_MAX, lruvec,
- 				   sc, LRU_ACTIVE_ANON);
- }
--- 
-2.23.0
 
