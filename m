@@ -1,104 +1,45 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 7/8] mm: vmscan: split shrink_node() into node part and
- memcgs part
-Date: Wed, 23 Oct 2019 16:24:37 +0200
-Message-ID: <20191023142437.GH17610@dhcp22.suse.cz>
-References: <20191022144803.302233-1-hannes@cmpxchg.org>
- <20191022144803.302233-8-hannes@cmpxchg.org>
+From: Valentin Schneider <valentin.schneider@arm.com>
+Subject: [PATCH v4 0/2] sched/topology: Asymmetric topologies fixes
+Date: Wed, 23 Oct 2019 16:37:43 +0100
+Message-ID: <20191023153745.19515-1-valentin.schneider@arm.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20191022144803.302233-8-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: lizefan@huawei.com, tj@kernel.org, hannes@cmpxchg.org, mingo@kernel.org, peterz@infradead.org, vincent.guittot@linaro.org, Dietmar.Eggemann@arm.com, morten.rasmussen@arm.com, qperret@google.com
 
-On Tue 22-10-19 10:48:02, Johannes Weiner wrote:
-> This function is getting long and unwieldy, split out the memcg bits.
-> 
-> The updated shrink_node() handles the generic (node) reclaim aspects:
->   - global vmpressure notifications
->   - writeback and congestion throttling
->   - reclaim/compaction management
->   - kswapd giving up on unreclaimable nodes
-> 
-> It then calls a new shrink_node_memcgs() which handles cgroup specifics:
->   - the cgroup tree traversal
->   - memory.low considerations
->   - per-cgroup slab shrinking callbacks
->   - per-cgroup vmpressure notifications
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Hi,
 
-Acked-by: Michal Hocko <mhocko@suse.com>
+I got a nice splat while testing out the toggling of
+sched_asym_cpucapacity, so this is a cpuset fix plus a topology patch.
 
-> ---
->  mm/vmscan.c | 28 ++++++++++++++++++----------
->  1 file changed, 18 insertions(+), 10 deletions(-)
-> 
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index db073b40c432..65baa89740dd 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -2722,18 +2722,10 @@ static bool pgdat_memcg_congested(pg_data_t *pgdat, struct mem_cgroup *memcg)
->  		(memcg && memcg_congested(pgdat, memcg));
->  }
->  
-> -static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
-> +static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
->  {
-> -	struct reclaim_state *reclaim_state = current->reclaim_state;
->  	struct mem_cgroup *root = sc->target_mem_cgroup;
-> -	unsigned long nr_reclaimed, nr_scanned;
-> -	bool reclaimable = false;
->  	struct mem_cgroup *memcg;
-> -again:
-> -	memset(&sc->nr, 0, sizeof(sc->nr));
-> -
-> -	nr_reclaimed = sc->nr_reclaimed;
-> -	nr_scanned = sc->nr_scanned;
->  
->  	memcg = mem_cgroup_iter(root, NULL, NULL);
->  	do {
-> @@ -2786,6 +2778,22 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
->  			   sc->nr_reclaimed - reclaimed);
->  
->  	} while ((memcg = mem_cgroup_iter(root, memcg, NULL)));
-> +}
-> +
-> +static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
-> +{
-> +	struct reclaim_state *reclaim_state = current->reclaim_state;
-> +	struct mem_cgroup *root = sc->target_mem_cgroup;
-> +	unsigned long nr_reclaimed, nr_scanned;
-> +	bool reclaimable = false;
-> +
-> +again:
-> +	memset(&sc->nr, 0, sizeof(sc->nr));
-> +
-> +	nr_reclaimed = sc->nr_reclaimed;
-> +	nr_scanned = sc->nr_scanned;
-> +
-> +	shrink_node_memcgs(pgdat, sc);
->  
->  	if (reclaim_state) {
->  		sc->nr_reclaimed += reclaim_state->reclaimed_slab;
-> @@ -2793,7 +2801,7 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
->  	}
->  
->  	/* Record the subtree's reclaim efficiency */
-> -	vmpressure(sc->gfp_mask, sc->target_mem_cgroup, true,
-> +	vmpressure(sc->gfp_mask, root, true,
->  		   sc->nr_scanned - nr_scanned,
->  		   sc->nr_reclaimed - nr_reclaimed);
->  
-> -- 
-> 2.23.0
-> 
+Details are in the logs.
 
--- 
-Michal Hocko
-SUSE Labs
+v2 changes:
+  - Use static_branch_{inc,dec} rather than enable/disable
+
+v3 changes:
+  - New patch: add fix for empty cpumap in sched domain rebuild
+  - Move static_branch_dec outside of RCU read-side section (Quentin)
+
+v4 changes:
+  - Patch 1/2: Directly tweak the cpuset array (Dietmar)
+  - Patch 2/2: Add an example to the changelog (Dietmar)
+
+Cheers,
+Valentin
+
+Valentin Schneider (2):
+  sched/topology: Don't try to build empty sched domains
+  sched/topology: Allow sched_asym_cpucapacity to be disabled
+
+ kernel/cgroup/cpuset.c  |  3 ++-
+ kernel/sched/topology.c | 11 +++++++++--
+ 2 files changed, 11 insertions(+), 3 deletions(-)
+
+--
+2.22.0
+
