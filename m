@@ -1,114 +1,71 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] mm: memcontrol: fix network errors from failing
- __GFP_ATOMIC charges
-Date: Wed, 23 Oct 2019 11:46:18 -0400
-Message-ID: <20191023154618.GA366316@cmpxchg.org>
-References: <20191022233708.365764-1-hannes@cmpxchg.org>
- <20191023064012.GB754@dhcp22.suse.cz>
+Subject: Re: [PATCH 4/8] mm: vmscan: naming fixes: global_reclaim() and
+ sane_reclaim()
+Date: Wed, 23 Oct 2019 11:56:43 -0400
+Message-ID: <20191023155643.GB366316@cmpxchg.org>
+References: <20191022144803.302233-1-hannes@cmpxchg.org>
+ <20191022144803.302233-5-hannes@cmpxchg.org>
+ <20191023141436.GE17610@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=zwE9Z3/9LcARux9+B76rcKwvDcmouV9c6zymdxIVL7A=;
-        b=rp22pdO+QJHOU3Ho1UY7xorn4AuL580GE2ZqkiG4d0nMzXkU1MfXodmLe7hD1ECc7D
-         IMC7Vvg31Z/tmSkTKeeEmklazG16Zz/DPdfshuBOKlhM66xv44LcaukLTPllAgDPxKh4
-         W4x7z1ZcwGuVAvUiVdsJHQ9/Kvzfx/ygtO20SMcSux2IGgsogJHtQBXEIqbOsxDYt+Ky
-         hjkl01/xYV9eQ/viklG2tHO7G/RInBKIybiOtsUrJHphXUicWp0fhuvXW8fxwJ4593/j
-         vZWiwCQMkwTwVOTvxAwdaAXYBhqGp7zxO/3j8tKGXer3bofrn+ImDKl91U5K6RaR8+6T
-         yTng==
+        bh=qCDfb7NBt3k96Z3LHT9+wyaPinygdsUVG4eMjwQIig0=;
+        b=gzPtJc9UG7/c3nCw1QDLmDFrPZ2p/5hVgwAWj5fxU7jOZw+4M6LELBbAGYk+6wbln3
+         f8ief24ppj67ptUxcdk4CzpF1yUiOP/2cRcPsqUBcFvNqdvDdfh1GrdDRfcdT6jSga8O
+         lCUDrd5RQn/iYeUN5F8eMCJalFsQlOXYkpMo6RwW+lAx6M9sN67Bw/rIRZs76wUfN5ST
+         3CmZcNDi0/pmB0JWE+/PHNP2bwbar9mrnhDdr4HqOzD/LbibMVqfVF5SBw424VYUqiAQ
+         ZP48m8ZlTKx6J90KvpquV6g52d05IyK6VPpkmJ5aUaOaY30+/V/qPLq6e17IUoCMFz2f
+         +SgA==
 Content-Disposition: inline
-In-Reply-To: <20191023064012.GB754@dhcp22.suse.cz>
-Sender: netdev-owner@vger.kernel.org
+In-Reply-To: <20191023141436.GE17610@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, kernel-team@fb.com
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Wed, Oct 23, 2019 at 08:40:12AM +0200, Michal Hocko wrote:
-> On Tue 22-10-19 19:37:08, Johannes Weiner wrote:
-> > While upgrading from 4.16 to 5.2, we noticed these allocation errors
-> > in the log of the new kernel:
-> > 
-> > [ 8642.253395] SLUB: Unable to allocate memory on node -1, gfp=0xa20(GFP_ATOMIC)
-> > [ 8642.269170]   cache: tw_sock_TCPv6(960:helper-logs), object size: 232, buffer size: 240, default order: 1, min order: 0
-> > [ 8642.293009]   node 0: slabs: 5, objs: 170, free: 0
-> > 
-> >         slab_out_of_memory+1
-> >         ___slab_alloc+969
-> >         __slab_alloc+14
-> >         kmem_cache_alloc+346
-> >         inet_twsk_alloc+60
-> >         tcp_time_wait+46
-> >         tcp_fin+206
-> >         tcp_data_queue+2034
-> >         tcp_rcv_state_process+784
-> >         tcp_v6_do_rcv+405
-> >         __release_sock+118
-> >         tcp_close+385
-> >         inet_release+46
-> >         __sock_release+55
-> >         sock_close+17
-> >         __fput+170
-> >         task_work_run+127
-> >         exit_to_usermode_loop+191
-> >         do_syscall_64+212
-> >         entry_SYSCALL_64_after_hwframe+68
-> > 
-> > accompanied by an increase in machines going completely radio silent
-> > under memory pressure.
+On Wed, Oct 23, 2019 at 04:14:36PM +0200, Michal Hocko wrote:
+> On Tue 22-10-19 10:47:59, Johannes Weiner wrote:
+> > Seven years after introducing the global_reclaim() function, I still
+> > have to double take when reading a callsite. I don't know how others
+> > do it, this is a terrible name.
 > 
-> This is really worrying because that suggests that something depends on
-> GFP_ATOMIC allocation which is fragile and broken. 
-
-I don't think that is true. You cannot rely on a *single instance* of
-atomic allocations to succeed. But you have to be able to rely on that
-failure is temporary and there is a chance of succeeding eventually.
-
-Network is a good example. It retries transmits, but within reason. If
-you aren't able to process incoming packets for minutes, you might as
-well be dead.
-
-> > One thing that changed since 4.16 is e699e2c6a654 ("net, mm: account
-> > sock objects to kmemcg"), which made these slab caches subject to
-> > cgroup memory accounting and control.
+> I somehow never had problem with that but ...
 > > 
-> > The problem with that is that cgroups, unlike the page allocator, do
-> > not maintain dedicated atomic reserves. As a cgroup's usage hovers at
-> > its limit, atomic allocations - such as done during network rx - can
-> > fail consistently for extended periods of time. The kernel is not able
-> > to operate under these conditions.
+> > Invert the meaning and rename it to cgroup_reclaim().
 > > 
-> > We don't want to revert the culprit patch, because it indeed tracks a
-> > potentially substantial amount of memory used by a cgroup.
-> > 
-> > We also don't want to implement dedicated atomic reserves for cgroups.
-> > There is no point in keeping a fixed margin of unused bytes in the
-> > cgroup's memory budget to accomodate a consumer that is impossible to
-> > predict - we'd be wasting memory and get into configuration headaches,
-> > not unlike what we have going with min_free_kbytes. We do this for
-> > physical mem because we have to, but cgroups are an accounting game.
-> > 
-> > Instead, account these privileged allocations to the cgroup, but let
-> > them bypass the configured limit if they have to. This way, we get the
-> > benefits of accounting the consumed memory and have it exert pressure
-> > on the rest of the cgroup, but like with the page allocator, we shift
-> > the burden of reclaimining on behalf of atomic allocations onto the
-> > regular allocations that can block.
+> > [ After all, "global reclaim" is just regular reclaim invoked from the
+> >   page allocator. It's reclaim on behalf of a cgroup limit that is a
+> >   special case of reclaim, and should be explicit - not the reverse. ]
 > 
-> On the other hand this would allow to break the isolation by an
-> unpredictable amount. Should we put a simple cap on how much we can go
-> over the limit. If the memcg limit reclaim is not able to keep up with
-> those overflows then even __GFP_ATOMIC allocations have to fail. What do
-> you think?
+> ... this is a valid point.
+> 
+> > sane_reclaim() isn't very descriptive either: it tests whether we can
+> > use the regular writeback throttling - available during regular page
+> > reclaim or cgroup2 limit reclaim - or need to use the broken
+> > wait_on_page_writeback() method. Use "writeback_throttling_sane()".
+> 
+> I do have a stronger opinion on this one. sane_reclaim is really a
+> terrible name. As you say the only thing this should really tell is
+> whether writeback throttling is available so I would rather go with
+> has_writeback_throttling() or writeba_throttling_{eabled,available}
+> If you insist on having sane in the name then I won't object but it just
+> raises a question whether we have some levels of throttling with a
+> different level of sanity.
 
-I don't expect a big overrun in practice, and it appears that Google
-has been letting even NOWAIT allocations pass through without
-isolation issues. Likewise, we have been force-charging the skmem for
-a while now and it hasn't been an issue for reclaim to keep up.
+I mean, cgroup1 *does* have a method to not OOM due to pages under
+writeback: wait_on_page_writeback() on each wb page on the LRU.
 
-My experience from production is that it's a whole lot easier to debug
-something like a memory.max overrun than it is to debug a machine that
-won't respond to networking. So that's the side I would err on.
+It's terrible, but it's a form of writeback throttling. That's what
+the sane vs insane distinction is about, I guess: we do in fact have
+throttling implementations with different levels of sanity.
+
+> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> 
+> Acked-by: Michal Hocko <mhocko@suse.com>
+
+Thanks!
