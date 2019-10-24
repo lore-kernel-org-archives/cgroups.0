@@ -1,7 +1,7 @@
 From: Mina Almasry <almasrymina@google.com>
-Subject: [PATCH v7 4/9] hugetlb_cgroup: add reservation accounting for private mappings
-Date: Thu, 24 Oct 2019 13:28:53 -0700
-Message-ID: <20191024202858.95342-4-almasrymina@google.com>
+Subject: [PATCH v7 3/9] hugetlb_cgroup: add cgroup-v2 support
+Date: Thu, 24 Oct 2019 13:28:52 -0700
+Message-ID: <20191024202858.95342-3-almasrymina@google.com>
 References: <20191024202858.95342-1-almasrymina@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -9,203 +9,59 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=SnH5RBGbkhUP/UZw9CWfxghxoUrFWs+lk1POY7ZXOLw=;
-        b=lo5wyZOcD6lmi3r9CI3NxkGq3kUXqmCZl1GjwBTpoZLJBJ7J3ewYjS+G+G8nXR87k0
-         KfaFAzofL9bUWdrN6AWcdnO9Z6deMvQQeD8YskTsoibgqvOfr5mYCxf7z6pzbX6F8ZlO
-         KgjGFb0XEIApmseE4ByKCR1teKWztrvcl68FX55wY6ezHfjlZAjxrOS2JI8e5ZjbSO0R
-         yJFofHMKvcQ4gevdOUZUwOstzxgkafqhXGuCIvHXepC/FwSlLKQU3hMQ/qoiHP3ernfe
-         4siG3u6JND9yIecYW1qv8ooA+Nf0znwRL23nz48fDySmLEcgQpqeSBU7d6wRyWSeDni8
-         JJAw==
+        bh=OTTgP/4rSMZq1YQryUiCckFA0Or1XPmBCQJjGhG/4Xo=;
+        b=k+KQK1yVgr8ftCY21WnHwRy8s7u2DAecuwJppewUUySA6SAvk6D0TqMKRNnRAQIxAe
+         koa/CpSG/tMqlcpF0TwQT3hvEfx3jFSpMcNrp8mXRKclZVYizJldrdCOqmRKc5wHnIMY
+         WDceg4mifhX2pxAPYV++HQnr/zH4VGfVOaZQNy/dvkawRHLD4jRCpG5aIwT5NBxX5D7F
+         SCJxRdQwJdpTwP0ZJUUedSNcOAMRAsRTUO9yko1ejSRBbrwa5zZteMMvixSReRioOhPB
+         1B70iyeoARY9KcnjukFGO5frbxtkbCJo0W/vyGeQNZSatoWWipT8f1b6/BTh9PQkxnlF
+         LeTA==
 In-Reply-To: <20191024202858.95342-1-almasrymina@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: mike.kravetz@oracle.com
-Cc: shuah@kernel.org, almasrymina@google.com, rientjes@google.com, shakeelb@google.com, gthelen@google.com, akpm@linux-foundation.org, khalid.aziz@oracle.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, aneesh.kumar@linux.vnet.ibm.com, mkoutny@suse.com, Hillf Danton <hdanton@sina.com>
-
-Normally the pointer to the cgroup to uncharge hangs off the struct
-page, and gets queried when it's time to free the page. With
-hugetlb_cgroup reservations, this is not possible. Because it's possible
-for a page to be reserved by one task and actually faulted in by another
-task.
-
-The best place to put the hugetlb_cgroup pointer to uncharge for
-reservations is in the resv_map. But, because the resv_map has different
-semantics for private and shared mappings, the code patch to
-charge/uncharge shared and private mappings is different. This patch
-implements charging and uncharging for private mappings.
-
-For private mappings, the counter to uncharge is in
-resv_map->reservation_counter. On initializing the resv_map this is set
-to NULL. On reservation of a region in private mapping, the tasks
-hugetlb_cgroup is charged and the hugetlb_cgroup is placed is
-resv_map->reservation_counter.
-
-On hugetlb_vm_op_close, we uncharge resv_map->reservation_counter.
-
-Signed-off-by: Mina Almasry <almasrymina@google.com>
-Acked-by: Hillf Danton <hdanton@sina.com>
+Cc: shuah@kernel.org, almasrymina@google.com, rientjes@google.com, shakeelb@google.com, gthelen@google.com, akpm@linux-foundation.org, khalid.aziz@oracle.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, aneesh.kumar@linux.vnet.ibm.com, mkoutny@suse.com
 
 ---
- include/linux/hugetlb.h        |  8 +++++++
- include/linux/hugetlb_cgroup.h | 11 +++++++++
- mm/hugetlb.c                   | 44 +++++++++++++++++++++++++++++++++-
- mm/hugetlb_cgroup.c            | 12 ----------
- 4 files changed, 62 insertions(+), 13 deletions(-)
+ mm/hugetlb_cgroup.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
-index 9c49a0ba894d3..36dcda7be4b0e 100644
---- a/include/linux/hugetlb.h
-+++ b/include/linux/hugetlb.h
-@@ -46,6 +46,14 @@ struct resv_map {
- 	long adds_in_progress;
- 	struct list_head region_cache;
- 	long region_cache_count;
-+#ifdef CONFIG_CGROUP_HUGETLB
-+	/*
-+	 * On private mappings, the counter to uncharge reservations is stored
-+	 * here. If these fields are 0, then the mapping is shared.
-+	 */
-+	struct page_counter *reservation_counter;
-+	unsigned long pages_per_hpage;
-+#endif
- };
- extern struct resv_map *resv_map_alloc(void);
- void resv_map_release(struct kref *ref);
-diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
-index 1bb58a63af586..f6e3d74a02536 100644
---- a/include/linux/hugetlb_cgroup.h
-+++ b/include/linux/hugetlb_cgroup.h
-@@ -25,6 +25,17 @@ struct hugetlb_cgroup;
- #define HUGETLB_CGROUP_MIN_ORDER 3
-
- #ifdef CONFIG_CGROUP_HUGETLB
-+struct hugetlb_cgroup {
-+	struct cgroup_subsys_state css;
-+	/*
-+	 * the counter to account for hugepages from hugetlb.
-+	 */
-+	struct page_counter hugepage[HUGE_MAX_HSTATE];
-+	/*
-+	 * the counter to account for hugepage reservations from hugetlb.
-+	 */
-+	struct page_counter reserved_hugepage[HUGE_MAX_HSTATE];
-+};
-
- static inline struct hugetlb_cgroup *hugetlb_cgroup_from_page(struct page *page,
- 							      bool reserved)
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index 325d5454bf168..8d8aa89a9928e 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -665,6 +665,16 @@ struct resv_map *resv_map_alloc(void)
- 	INIT_LIST_HEAD(&resv_map->regions);
-
- 	resv_map->adds_in_progress = 0;
-+#ifdef CONFIG_CGROUP_HUGETLB
-+	/*
-+	 * Initialize these to 0. On shared mappings, 0's here indicate these
-+	 * fields don't do cgroup accounting. On private mappings, these will be
-+	 * re-initialized to the proper values, to indicate that hugetlb cgroup
-+	 * reservations are to be un-charged from here.
-+	 */
-+	resv_map->reservation_counter = NULL;
-+	resv_map->pages_per_hpage = 0;
-+#endif
-
- 	INIT_LIST_HEAD(&resv_map->region_cache);
- 	list_add(&rg->link, &resv_map->region_cache);
-@@ -3216,7 +3226,18 @@ static void hugetlb_vm_op_close(struct vm_area_struct *vma)
-
- 	reserve = (end - start) - region_count(resv, start, end);
-
--	kref_put(&resv->refs, resv_map_release);
-+#ifdef CONFIG_CGROUP_HUGETLB
-+	/*
-+	 * Since we check for HPAGE_RESV_OWNER above, this must a private
-+	 * mapping, and these values should be none-zero, and should point to
-+	 * the hugetlb_cgroup counter to uncharge for this reservation.
-+	 */
-+	WARN_ON(!resv->reservation_counter);
-+	WARN_ON(!resv->pages_per_hpage);
-+
-+	hugetlb_cgroup_uncharge_counter(resv->reservation_counter,
-+					(end - start) * resv->pages_per_hpage);
-+#endif
-
- 	if (reserve) {
- 		/*
-@@ -3226,6 +3247,8 @@ static void hugetlb_vm_op_close(struct vm_area_struct *vma)
- 		gbl_reserve = hugepage_subpool_put_pages(spool, reserve);
- 		hugetlb_acct_memory(h, -gbl_reserve);
- 	}
-+
-+	kref_put(&resv->refs, resv_map_release);
- }
-
- static int hugetlb_vm_op_split(struct vm_area_struct *vma, unsigned long addr)
-@@ -4559,6 +4582,7 @@ int hugetlb_reserve_pages(struct inode *inode,
- 	struct hstate *h = hstate_inode(inode);
- 	struct hugepage_subpool *spool = subpool_inode(inode);
- 	struct resv_map *resv_map;
-+	struct hugetlb_cgroup *h_cg;
- 	long gbl_reserve;
-
- 	/* This should never happen */
-@@ -4592,12 +4616,30 @@ int hugetlb_reserve_pages(struct inode *inode,
- 		chg = region_chg(resv_map, from, to);
-
- 	} else {
-+		/* Private mapping. */
- 		resv_map = resv_map_alloc();
- 		if (!resv_map)
- 			return -ENOMEM;
-
- 		chg = to - from;
-
-+		if (hugetlb_cgroup_charge_cgroup(hstate_index(h),
-+						 chg * pages_per_huge_page(h),
-+						 &h_cg, true)) {
-+			kref_put(&resv_map->refs, resv_map_release);
-+			return -ENOMEM;
-+		}
-+
-+#ifdef CONFIG_CGROUP_HUGETLB
-+		/*
-+		 * Since this branch handles private mappings, we attach the
-+		 * counter to uncharge for this reservation off resv_map.
-+		 */
-+		resv_map->reservation_counter =
-+			&h_cg->reserved_hugepage[hstate_index(h)];
-+		resv_map->pages_per_hpage = pages_per_huge_page(h);
-+#endif
-+
- 		set_vma_resv_map(vma, resv_map);
- 		set_vma_resv_flags(vma, HPAGE_RESV_OWNER);
- 	}
 diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-index ac1500205faf7..a0ca4024888e1 100644
+index 854117513979b..ac1500205faf7 100644
 --- a/mm/hugetlb_cgroup.c
 +++ b/mm/hugetlb_cgroup.c
-@@ -19,18 +19,6 @@
- #include <linux/hugetlb.h>
- #include <linux/hugetlb_cgroup.h>
+@@ -503,8 +503,13 @@ static void __init __hugetlb_cgroup_file_init(int idx)
+ 	cft = &h->cgroup_files[HUGETLB_RES_NULL];
+ 	memset(cft, 0, sizeof(*cft));
 
--struct hugetlb_cgroup {
--	struct cgroup_subsys_state css;
--	/*
--	 * the counter to account for hugepages from hugetlb.
--	 */
--	struct page_counter hugepage[HUGE_MAX_HSTATE];
--	/*
--	 * the counter to account for hugepage reservations from hugetlb.
--	 */
--	struct page_counter reserved_hugepage[HUGE_MAX_HSTATE];
--};
--
- #define MEMFILE_PRIVATE(x, val)	(((x) << 16) | (val))
- #define MEMFILE_IDX(val)	(((val) >> 16) & 0xffff)
- #define MEMFILE_ATTR(val)	((val) & 0xffff)
+-	WARN_ON(cgroup_add_legacy_cftypes(&hugetlb_cgrp_subsys,
+-					  h->cgroup_files));
++	if (cgroup_subsys_on_dfl(hugetlb_cgrp_subsys)) {
++		WARN_ON(cgroup_add_dfl_cftypes(&hugetlb_cgrp_subsys,
++					       h->cgroup_files));
++	} else {
++		WARN_ON(cgroup_add_legacy_cftypes(&hugetlb_cgrp_subsys,
++						  h->cgroup_files));
++	}
+ }
+
+ void __init hugetlb_cgroup_file_init(void)
+@@ -548,8 +553,14 @@ void hugetlb_cgroup_migrate(struct page *oldhpage, struct page *newhpage)
+ 	return;
+ }
+
++static struct cftype hugetlb_files[] = {
++	{} /* terminate */
++};
++
+ struct cgroup_subsys hugetlb_cgrp_subsys = {
+ 	.css_alloc	= hugetlb_cgroup_css_alloc,
+ 	.css_offline	= hugetlb_cgroup_css_offline,
+ 	.css_free	= hugetlb_cgroup_css_free,
++	.dfl_cftypes = hugetlb_files,
++	.legacy_cftypes = hugetlb_files,
+ };
 --
 2.24.0.rc0.303.g954a862665-goog
