@@ -1,24 +1,24 @@
-From: Marco Elver <elver@google.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH] mm: memcontrol: fix data race in
  mem_cgroup_select_victim_node
-Date: Tue, 29 Oct 2019 19:28:02 +0100
-Message-ID: <20191029182802.GA193152@google.com>
+Date: Tue, 29 Oct 2019 14:34:28 -0400
+Message-ID: <20191029183428.GA38233@cmpxchg.org>
 References: <20191029005405.201986-1-shakeelb@google.com>
  <20191029090347.GG31513@dhcp22.suse.cz>
  <CALvZod648GRvjd_LqViFzLRwxnzSrLZzjaNBOJju4xkDQkvrXw@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=Lc0YR6zDkvJBR1Lmyr78EIEUjbyCrD4ENhnxzUSJhcA=;
-        b=iHFxJvYuZq4G9qaQCdumXteszLysWMaL+ueo6DBsLBl3z9HNC1yqtPLD6gCDJbLYqM
-         miI2K6+47J3PmvgsRFG+XsCPP09qOfnRSZ2o3fVAQcL6IWq+F0Lb0IVuNVN6LyDMuhWN
-         QcyjxJQ5J6fHF0BExW1H737h62yFQrOyNhixlBx7jo+y1a/HGWvG4vsHMkcFzQIBku2c
-         nvCLr73gax20ZKvuzP5i84oLfymNJYCk27XQapnmXlrGUYsZcnZvJesVN6wyDdLWfTnh
-         vCGc+KlD3c16A7xbdM6tQ4F2q90fB2FvGO2/z2ROvny0qvzWII8MwF+O73vO3S3lMpkR
-         WOYQ==
+        bh=uIU7OLCPQwf11UO7remUH85e2MdSUd0Df/No5kThl+Q=;
+        b=xUtlmgfTX/z8VFSs9NdfjYD2h7uC3bxMX9c2AFApAHuLU7LT6V7ubs5uXk74wKkkx/
+         PJ2uLnbqAvx+8TOq/4JkQXCvAYH/t2uV1hkfDxQQv4ceHZH7Ta/AjZmchGgfTanNnlp5
+         NtrxxujwR8dWyTNdCfJSiSCza6w//XxLj2TpNNhUvb8PYNxuf7QXmDzvi7i+ppvNcF2G
+         Y//gF7lM27cJmeZ9XiwN2vLDy0qpLyjKuI6ydePXHTokzd0Wa9uzNwMCIAebJUNtY7e4
+         mo4P1zqBlD5wVxm/X3fGz8j9J9XPnHJRFFY3NYkb+aB0UfDSVhLMAK8uAJiD1a1xHjlm
+         xwwQ==
 Content-Disposition: inline
 In-Reply-To: <CALvZod648GRvjd_LqViFzLRwxnzSrLZzjaNBOJju4xkDQkvrXw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
@@ -26,12 +26,9 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Shakeel Butt <shakeelb@google.com>
-Cc: Michal Hocko <mhocko@kernel.org>, Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Eric Dumazet <edumazet@google.com>, Greg Thelen <gthelen@google.com>, syzbot+13f93c99c06988391efe@syzkaller.appspotmail.com
+Cc: Michal Hocko <mhocko@kernel.org>, Roman Gushchin <guro@fb.com>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Eric Dumazet <edumazet@google.com>, Greg Thelen <gthelen@google.com>, syzbot+13f93c99c06988391efe@syzkaller.appspotmail.com, elver@google.com
 
-
-
-On Tue, 29 Oct 2019, Shakeel Butt wrote:
-
+On Tue, Oct 29, 2019 at 11:09:29AM -0700, Shakeel Butt wrote:
 > +Marco
 > 
 > On Tue, Oct 29, 2019 at 2:03 AM Michal Hocko <mhocko@kernel.org> wrote:
@@ -65,13 +62,7 @@ On Tue, 29 Oct 2019, Shakeel Butt wrote:
 > > > and modifies memcg->last_scanned_node without any synchrnonization. So,
 > > > read and modify memcg->last_scanned_node with READ_ONCE()/WRITE_ONCE()
 > > > to stop potential reordering.
-
-Strictly speaking, READ_ONCE/WRITE_ONCE alone avoid various bad compiler
-optimizations, including store tearing, load tearing, etc. This does not
-add memory barriers to constrain memory ordering.  (If this code needs
-some memory ordering guarantees w.r.t. previous loads/stores then this
-alone is not enough.)
-
+> >
 > > I am sorry but I do not understand the problem and the fix. Why does the
 > > race happen and why does _ONCE fixes it? There is still no
 > > synchronization. Do you want to prevent from memcg->last_scanned_node
@@ -83,17 +74,24 @@ alone is not enough.)
 > worth to add an explicit lock. My aim was to make KCSAN happy here to
 > look elsewhere for the concurrency bugs. However I see that it might
 > complain next on memcg->scan_nodes.
+> 
+> Now taking a step back, I am questioning the whole motivation behind
+> mem_cgroup_select_victim_node(). Since we pass ZONELIST_FALLBACK
+> zonelist to the reclaimer, the shrink_node will be called for all
+> potential nodes. Also we don't short circuit the traversal of
+> shrink_node for all nodes on nr_reclaimed and we scan (size_on_node >>
+> priority) for all nodes, I don't see the reason behind having round
+> robin order of node traversal.
 
-The plain concurrent reads/writes are a data race, which may manifest in
-various undefined behaviour due to compiler optimizations. The _ONCE
-will prevent these (KCSAN only reports data races).  Note that, "data
-race" does not necessarily imply "race condition"; some data races are
-race conditions (usually the more interesting bugs) -- but not *all*
-data races are race conditions. If there is no race condition here that
-warrants heavier synchronization (locking etc.), then this patch is all
-that should be needed.
+It's actually only very recently that we don't bail out of the reclaim
+loop anymore - if I'm not missing anything, it was only 1ba6fc9af35b
+("mm: vmscan: do not share cgroup iteration between reclaimers") that
+removed the last bailout condition on sc->nr_reclaimed.
 
-I can't comment on the rest.
+> I am thinking of removing the whole mem_cgroup_select_victim_node()
+> heuristic. Please let me know if there are any objections.
 
-Thanks,
--- Marco
+In the current state, I don't see any reason to keep it, either. We
+can always just start the zonelist walk from the current node.
+
+A nice cleanup, actually. Good catch!
