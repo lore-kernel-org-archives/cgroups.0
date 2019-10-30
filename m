@@ -1,19 +1,19 @@
 From: Andrew Morton <akpm@linux-foundation.org>
 Subject: Re: [PATCH] mm: vmscan: memcontrol: remove
  mem_cgroup_select_victim_node()
-Date: Tue, 29 Oct 2019 17:47:23 -0700
-Message-ID: <20191029174723.ceb916ec850e7c88ed00e091@linux-foundation.org>
+Date: Tue, 29 Oct 2019 17:54:59 -0700
+Message-ID: <20191029175459.b3bfed9326559e69acdd2e35@linux-foundation.org>
 References: <20191029234753.224143-1-shakeelb@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572396444;
-        bh=rC4DTyV2zuA+J7bw7dlMjJDABthKcuPGgzmZ5hyLjuk=;
+        s=default; t=1572396900;
+        bh=tFF8Zjgmu+WIIlTlxCMd0FFO5WyZqnXX4sv24/2yUUc=;
         h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=DqNmB7cmPEMslfCggeao0xz1kdv2tQhIkyD7Hc8ovAHyXPu3xJlmo9hCCB4yuZF2C
-         Yqf39GHojD759SooL74JvoLuYT7M8J0q4zOVJ8XoFBP4Q/DrCA+/i6JM6+iJH4KCx8
-         s/OLz4DGT94C0Dhpc+xlz1YOg3OoodQ3lsuWTBl0=
+        b=z6JxpYIAXwYaitOroIOgVkFFJ+fD7w974Y/gOcL+K9o7d1P1lWTu08tW16aKNpUvw
+         y+t/MUhPzHfbuARnFWHe6PZgDfV3SiJMRkW2/CE4taPh37lj9lpTCJutLLoo1fzGnY
+         M/E0EaPON/9wkaV7L85UXF+LEpMHvI7mmNWumlTY=
 In-Reply-To: <20191029234753.224143-1-shakeelb@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -39,6 +39,8 @@ On Tue, 29 Oct 2019 16:47:53 -0700 Shakeel Butt <shakeelb@google.com> wrote:
 > Signed-off-by: Shakeel Butt <shakeelb@google.com>
 > Reported-by: <syzbot+13f93c99c06988391efe@syzkaller.appspotmail.com>
 
-The sysbot report
-(http://lkml.kernel.org/r/00000000000055aba7058af4d378@google.com) was
-for a null pointer deref.  So won't we be needing a Fixes: and cc:stable?
+I can't find the original sysbot email.  Help?
+
+iirc the incidentally-fixed issue is a rather theoretical data race and
+the patch isn't a high priority thing?
+
