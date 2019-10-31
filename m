@@ -1,249 +1,81 @@
-From: Mike Kravetz <mike.kravetz@oracle.com>
-Subject: Re: [PATCH v7 5/9] hugetlb: disable region_add file_region coalescing
-Date: Thu, 31 Oct 2019 10:05:24 -0700
-Message-ID: <d810e0dc-0bcd-9882-b1d6-1d6da112d558@oracle.com>
-References: <20191024202858.95342-1-almasrymina@google.com>
- <20191024202858.95342-5-almasrymina@google.com>
- <c3d9f0aa-3d9b-f46e-ecb1-bdea99be82c7@oracle.com>
- <CAHS8izM36yfP2jNe=S83MSzo6b1KzHVwWrngVUNh_H1WSHj63w@mail.gmail.com>
+From: Valentin Schneider <valentin.schneider@arm.com>
+Subject: Re: [PATCH v4 1/2] sched/topology: Don't try to build empty sched
+ domains
+Date: Thu, 31 Oct 2019 18:23:12 +0100
+Message-ID: <3752bca9-a670-f415-4aaa-e8ff75ea6fcc@arm.com>
+References: <20191023153745.19515-1-valentin.schneider@arm.com>
+ <20191023153745.19515-2-valentin.schneider@arm.com>
+ <20191031162334.GA18570@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=6zeZQCt5KSy9iY879DP3c25YYnvX1B7KZZYOEc5BkVU=;
- b=qUBB/RAxFO/7T6CQHP8JhtlkO1VYLIAxwAHOqa2whguFg10nnjeoXiPilKlSHOmPhb4m
- FTFYiAwxzRyF6tOmIqY2pfAg69j8RUaZl58xSaDBJqbBJCOc3D5TTQfavPhdyTJw2QNa
- s1Fbo94ZeH4OiFdJIwRK4PpdSnBlu/2PMXXq+Tmh3QNGScTRCwLaUocwrt7Lelvlp/Vg
- Jv9hKkigkMBm/HiRg8bALRNub1XBTUpD+U3WlRNttuXxSZzojy+9ATdvtenSyKomCPt/
- k+S5gtHO+k5CMOjszDQ0SZZLREsbdH+n7dzLy9lWcVtceNPe7t2dzAJelycGEAEvVM5O SQ== 
-In-Reply-To: <CAHS8izM36yfP2jNe=S83MSzo6b1KzHVwWrngVUNh_H1WSHj63w@mail.gmail.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20191031162334.GA18570@blackbody.suse.cz>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Mina Almasry <almasrymina@google.com>
-Cc: shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, khalid.aziz@oracle.com, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Content-Type: text/plain; charset="iso-8859-1"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, lizefan@huawei.com, tj@kernel.org, hannes@cmpxchg.org, mingo@kernel.org, peterz@infradead.org, vincent.guittot@linaro.org, Dietmar.Eggemann@arm.com, morten.rasmussen@arm.com, qperret@google.com, stable@vger.kernel.org
 
-On 10/29/19 6:38 PM, Mina Almasry wrote:
-> On Fri, Oct 25, 2019 at 2:37 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
->>
->> On 10/24/19 1:28 PM, Mina Almasry wrote:
->>>  static long add_reservation_in_range(struct resv_map *resv, long f, long t,
->>> -                                  bool count_only)
->>> +                                  long *regions_needed, bool count_only)
->>>  {
->>> -     long chg = 0;
->>> +     long add = 0;
->>>       struct list_head *head = &resv->regions;
->>> +     long last_accounted_offset = f;
->>>       struct file_region *rg = NULL, *trg = NULL, *nrg = NULL;
->>>
->>> -     /* Locate the region we are before or in. */
->>> -     list_for_each_entry (rg, head, link)
->>> -             if (f <= rg->to)
->>> -                     break;
->>> -
->>> -     /* Round our left edge to the current segment if it encloses us. */
->>> -     if (f > rg->from)
->>> -             f = rg->from;
->>> +     if (regions_needed)
->>> +             *regions_needed = 0;
->>>
->>> -     chg = t - f;
->>> +     /* In this loop, we essentially handle an entry for the range
->>> +      * last_accounted_offset -> rg->from, at every iteration, with some
->>> +      * bounds checking.
->>> +      */
->>> +     list_for_each_entry_safe(rg, trg, head, link) {
->>> +             /* Skip irrelevant regions that start before our range. */
->>> +             if (rg->from < f) {
->>> +                     /* If this region ends after the last accounted offset,
->>> +                      * then we need to update last_accounted_offset.
->>> +                      */
->>> +                     if (rg->to > last_accounted_offset)
->>> +                             last_accounted_offset = rg->to;
->>> +                     continue;
->>> +             }
->>>
->>> -     /* Check for and consume any regions we now overlap with. */
->>> -     nrg = rg;
->>> -     list_for_each_entry_safe (rg, trg, rg->link.prev, link) {
->>> -             if (&rg->link == head)
->>> -                     break;
->>> +             /* When we find a region that starts beyond our range, we've
->>> +              * finished.
->>> +              */
->>>               if (rg->from > t)
->>>                       break;
->>>
->>> -             /* We overlap with this area, if it extends further than
->>> -              * us then we must extend ourselves.  Account for its
->>> -              * existing reservation.
->>> +             /* Add an entry for last_accounted_offset -> rg->from, and
->>> +              * update last_accounted_offset.
->>>                */
->>> -             if (rg->to > t) {
->>> -                     chg += rg->to - t;
->>> -                     t = rg->to;
->>> +             if (rg->from > last_accounted_offset) {
->>
->> After the above checks, can this condition ever be false?
->>
-> 
-> rg->from can be == to last_accounted_offset, no? We only want to add a
-> region when there is a gap between rg->from and last_accounted_offset.
+Hi Michal,
 
-Yes, you are correct.  I had to write out the logic. :)
+On 31/10/2019 17:23, Michal Koutn=FD wrote:
+> On Wed, Oct 23, 2019 at 04:37:44PM +0100, Valentin Schneider <valentin.sc=
+hneider@arm.com> wrote:
+>> Prevent generate_sched_domains() from returning empty cpumasks, and add
+>> some assertion in build_sched_domains() to scream bloody murder if it
+>> happens again.
+> Good catch. It makes sense to prune the empty domains in
+> generate_sched_domains already.
+>=20
+>> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+>> index c52bc91f882b..c87ee6412b36 100644
+>> --- a/kernel/cgroup/cpuset.c
+>> +++ b/kernel/cgroup/cpuset.c
+>> @@ -798,7 +798,8 @@ static int generate_sched_domains(cpumask_var_t **do=
+mains,
+>>  		    cpumask_subset(cp->cpus_allowed, top_cpuset.effective_cpus))
+>>  			continue;
+>> =20
+>> -		if (is_sched_load_balance(cp))
+>> +		if (is_sched_load_balance(cp) &&
+>> +		    !cpumask_empty(cp->effective_cpus))
+>>  			csa[csn++] =3D cp;
+> If I didn't overlook anything, cp->effective_cpus can contain CPUs
+> exluded by housekeeping_cpumask(HK_FLAG_DOMAIN) later, i.e. possibly
+> still returning domains with empty cpusets.
+>=20
+> I'd suggest moving the emptiness check down into the loop where domain
+> cpumasks are ultimately constructed.
+>=20
 
-<snip>
->>> +      * Check for sufficient descriptors in the cache to accommodate
->>> +      * this add operation.
->>>        */
->>> -     if (&rg->link == head || t < rg->from) {
->>> -             VM_BUG_ON(resv->region_cache_count <= 0);
->>> -
->>> -             resv->region_cache_count--;
->>> -             nrg = list_first_entry(&resv->region_cache, struct file_region,
->>> -                                     link);
->>> -             list_del(&nrg->link);
->>> -
->>> -             nrg->from = f;
->>> -             nrg->to = t;
->>> -             list_add(&nrg->link, rg->link.prev);
->>> +     if (resv->region_cache_count < actual_regions_needed) {
->>> +             /* region_add operation of range 1 should never need to
->>> +              * allocate file_region entries.
->>> +              */
->>> +             VM_BUG_ON(t - f <= 1);
->>
->> Should we instead compare actual_regions_needed to in_regions_needed and
->> allocate if more regions are actually needed?  If not, the loop below only
->> brings the cache up to the number of regions needed for this operation.
->> There could be an operation with range of one in progress and this operation
->> will consume all operation in the cache which will cause us to hit the BUG.
->>
-> 
-> Great catch, thanks! Fixed in v8!
-> 
-> I think the correct condition is:
-> 
-> region_cache_count == (adds_in_progress + (actual_regions_needed -
-> in_regions_needed))
-> 
-> That means the region_cache_count has enough for all the current adds
-> in progress plus the ones we discovered are needed extra.
-> 
+Ah, wasn't aware of this - thanks for having a look!
 
-Yes, the idea is that you want to make sure you do niot deplete the
-cache beyond the adds in progress.  This is especially important if we
-want to guarantee success of region_add for a single page.
+I think I need to have the check before the final cpumask gets built,
+because at this point the cpumask array is already built and it's handed
+off directly to the sched domain rebuild.
 
->>> +             while (resv->region_cache_count < actual_regions_needed) {
->>> +                     /* Must drop lock to allocate a new descriptor. */
->>
->> It would be better to drop the lock,  try to allocate all the needed
->> descriptors, and then reacquire lock instead of dropping and acquiring
->> lock in a loop.
->>
-> 
-> Fixed in v8.
+Do you reckon the following would work?=20
 
-I would not expect this to be the common case.  We will only be doing
-allocations here in the case of races.  Similiar code in region_chg
-would be the more expected place to perform multiple allocations.
-
->>> +                     spin_unlock(&resv->lock);
->>> +                     trg = kmalloc(sizeof(*trg), GFP_KERNEL);
->>> +                     if (!trg)
->>> +                             return -ENOMEM;
->>> +
->>> +                     spin_lock(&resv->lock);
->>> +                     list_add(&trg->link, &resv->region_cache);
->>> +                     resv->region_cache_count++;
->>> +             }
->>>
->>> -             add += t - f;
->>> -             goto out_locked;
->>> +             goto retry;
->>>       }
->>>
->>> -     add = add_reservation_in_range(resv, f, t, false);
->>> +     add = add_reservation_in_range(resv, f, t, NULL, false);
->>> +
->>> +     resv->adds_in_progress -= in_regions_needed;
->>
->> Ok, so adds_in_progress really becomes regions in the process of being added.
->> I think we would then like to keep number of entries in the cache equal to
->> adds_in_progress?
->>
-> 
-> Excess cache entries will be re-used by the next region_chg call. Is that ok?
-> 
-> Deallocating the excess entries so that the next region_chg entry has
-> to allocate its own is doable too, but it's quite annoying. Some
-> codepaths are made simpler by not worrying about 'cleaning up' excess
-> cache entries. For example, region_add doesn't need to handle what if
-> the actual_regions_needed is less than the in_regions_needed because
-> it can just leave the extra cache entries for later use.
-
-Ok, I agree that we can keep excess entries in the cache.  Just wanted to
-make sure we covered the case of depleting the cache such that we could not
-provide guarantees for region_add success of single pages.
-
->>>       /*
->>>        * Check for sufficient descriptors in the cache to accommodate
->>>        * the number of in progress add operations.
->>>        */
->>> -     if (resv->adds_in_progress > resv->region_cache_count) {
->>> -             struct file_region *trg;
->>> -
->>> -             VM_BUG_ON(resv->adds_in_progress - resv->region_cache_count > 1);
->>> +     while (resv->region_cache_count < resv->adds_in_progress) {
->>
->> I think we always want to add out_regions_needed to the cache?
->>
-> 
-> Current code adds out_regions_needed to adds_in_progress while holding
-> the lock, then brings up region_cache_count to adds_in_prorgess. There
-> shouldn't be a race here, since other region_chg/add calls hold the
-> lock to modify the adds_in_progress value. The effect here is that we
-> re-use excess cache entries.
-> 
-> What I fixed in v8 is that when region_add finds out it needs more
-> entries, it should make sure there is enough for the adds_in_progress
-> plus the extra regions that operation needs.
-
-Great.  Will be reviewing V8 shortly.
-
->>> -static long __vma_reservation_common(struct hstate *h,
->>> -                             struct vm_area_struct *vma, unsigned long addr,
->>> -                             enum vma_resv_mode mode)
->>> +static long
->>> +__vma_reservation_common(struct hstate *h, struct vm_area_struct *vma,
->>> +                      unsigned long addr, enum vma_resv_mode mode,
->>> +                      long *out_regions_needed, long in_regions_needed)
->>
->> All of the vma_*_reservation routines operate on a single page.  As a result,
->> region_chg will always set out_regions_needed to 1 and in_regions_needed
->> will always be 1.  With this in mind, can we just hard code the value 1 in
->> these calls within __vma_reservation_common and avoid any changes to the
->> vma_*_reservation routines?  If yes, let's put a big fat comment in
->> region_chg/region_add about the assumptions and a reminder to change this
->> code if those assumptions change.
->>
-> 
-> Fixed.
-
-Great.  I am glad this works.
-
-<snip>
-> 
-> Should be sending out v8 with these fixes shortly.
-> 
-
-Thanks, I'll take a look.
-
--- 
-Mike Kravetz
+----8<----
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index c87ee6412b36..e4c10785dc7c 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -798,8 +798,14 @@ static int generate_sched_domains(cpumask_var_t **doma=
+ins,
+ 		    cpumask_subset(cp->cpus_allowed, top_cpuset.effective_cpus))
+ 			continue;
+=20
++		/*
++		 * Skip cpusets that would lead to an empty sched domain.
++		 * That could be because effective_cpus is empty, or because
++		 * it's only spanning CPUs outside the housekeeping mask.
++		 */
+ 		if (is_sched_load_balance(cp) &&
+-		    !cpumask_empty(cp->effective_cpus))
++		    cpumask_intersects(cp->effective_cpus,
++				       housekeeping_cpumask(HK_FLAG_DOMAIN)))
+ 			csa[csn++] =3D cp;
+=20
+ 		/* skip @cp's subtree if not a partition root */
