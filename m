@@ -1,39 +1,51 @@
-From: Valentin Schneider <valentin.schneider@arm.com>
-Subject: [PATCH] sched/topology, cpuset: Account for housekeeping CPUs to avoid empty cpumasks
-Date: Sat,  2 Nov 2019 00:14:06 +0000
-Message-ID: <20191102001406.10208-1-valentin.schneider@arm.com>
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Subject: [PATCH] mm/memcontrol: update documentation about invoking oom
+ killer
+Date: Sat, 02 Nov 2019 18:16:33 +0300
+Message-ID: <157270779336.1961.6528158720593572480.stgit@buzz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+        t=1572707794; bh=AR0posdeGGjRMOUjYp9dgJq5OCpwQBAAcmepPzGDKWg=;
+        h=Message-ID:Date:To:From:Subject:Cc;
+        b=X9dFktO77Na/G0mtC2+xSzpD1cMLgWOkM1P9fpb+ypv5Obc9xW91WTB8Mc1xm15fI
+         f+vjegUUhK0i7hnoRfJ+Na/UVVXYuRet+Jx2AzVkMEQdB23FUCLveNYbe34Rajfqob
+         WnSYBjjQfRvF4wy/a3HK7oM0Cf0Nz8wpJRNk4zps=
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Cc: lizefan@huawei.com, tj@kernel.org, hannes@cmpxchg.org, mingo@kernel.org, peterz@infradead.org, vincent.guittot@linaro.org, Dietmar.Eggemann@arm.com, morten.rasmussen@arm.com, qperret@google.com, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
+Content-Type: text/plain; charset="us-ascii"
+To: linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org, Michal Hocko <mhocko@suse.com>
 
-TWljaGFsIG5vdGVkIHRoYXQgYSBjcHVzZXQncyBlZmZlY3RpdmVfY3B1cyBjYW4gYmUgYSBub24t
-ZW1weSBtYXNrLCBidXQKYmVjYXVzZSBvZiB0aGUgbWFza2luZyBkb25lIHdpdGggaG91c2VrZWVw
-aW5nX2NwdW1hc2soSEtfRkxBR19ET01BSU4pCmZ1cnRoZXIgZG93biB0aGUgbGluZSwgd2UgY2Fu
-IHN0aWxsIGVuZCB1cCB3aXRoIGFuIGVtcHR5IGNwdW1hc2sgYmVpbmcKcGFzc2VkIGRvd24gdG8g
-cGFydGl0aW9uX3NjaGVkX2RvbWFpbnNfbG9ja2VkKCkuCgpEbyB0aGUgcHJvcGVyIHRoaW5nIGFu
-ZCBkb24ndCBqdXN0IGNoZWNrIHRoZSBtYXNrIGlzIG5vbi1lbXB0eSAtIGNoZWNrCnRoYXQgaXRz
-IGludGVyc2VjdGlvbiB3aXRoIGhvdXNla2VlcGluZ19jcHVtYXNrKEhLX0ZMQUdfRE9NQUlOKSBp
-cwpub24tZW1wdHkuCgpGaXhlczogY2QxY2IzMzUwNTYxICgic2NoZWQvdG9wb2xvZ3k6IERvbid0
-IHRyeSB0byBidWlsZCBlbXB0eSBzY2hlZCBkb21haW5zIikKUmVwb3J0ZWQtYnk6IE1pY2hhbCBL
-b3V0bsO9IDxta291dG55QHN1c2UuY29tPgpTaWduZWQtb2ZmLWJ5OiBWYWxlbnRpbiBTY2huZWlk
-ZXIgPHZhbGVudGluLnNjaG5laWRlckBhcm0uY29tPgotLS0KIGtlcm5lbC9jZ3JvdXAvY3B1c2V0
-LmMgfCA4ICsrKysrKystCiAxIGZpbGUgY2hhbmdlZCwgNyBpbnNlcnRpb25zKCspLCAxIGRlbGV0
-aW9uKC0pCgpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9jcHVzZXQuYyBiL2tlcm5lbC9jZ3Jv
-dXAvY3B1c2V0LmMKaW5kZXggYzg3ZWU2NDEyYjM2Li5lNGMxMDc4NWRjN2MgMTAwNjQ0Ci0tLSBh
-L2tlcm5lbC9jZ3JvdXAvY3B1c2V0LmMKKysrIGIva2VybmVsL2Nncm91cC9jcHVzZXQuYwpAQCAt
-Nzk4LDkgKzc5OCwxNCBAQCBzdGF0aWMgaW50IGdlbmVyYXRlX3NjaGVkX2RvbWFpbnMoY3B1bWFz
-a192YXJfdCAqKmRvbWFpbnMsCiAJCSAgICBjcHVtYXNrX3N1YnNldChjcC0+Y3B1c19hbGxvd2Vk
-LCB0b3BfY3B1c2V0LmVmZmVjdGl2ZV9jcHVzKSkKIAkJCWNvbnRpbnVlOwogCisJCS8qCisJCSAq
-IFNraXAgY3B1c2V0cyB0aGF0IHdvdWxkIGxlYWQgdG8gYW4gZW1wdHkgc2NoZWQgZG9tYWluLgor
-CQkgKiBUaGF0IGNvdWxkIGJlIGJlY2F1c2UgZWZmZWN0aXZlX2NwdXMgaXMgZW1wdHksIG9yIGJl
-Y2F1c2UKKwkJICogaXQncyBvbmx5IHNwYW5uaW5nIENQVXMgb3V0c2lkZSB0aGUgaG91c2VrZWVw
-aW5nIG1hc2suCisJCSAqLwogCQlpZiAoaXNfc2NoZWRfbG9hZF9iYWxhbmNlKGNwKSAmJgotCQkg
-ICAgIWNwdW1hc2tfZW1wdHkoY3AtPmVmZmVjdGl2ZV9jcHVzKSkKKwkJICAgIGNwdW1hc2tfaW50
-ZXJzZWN0cyhjcC0+ZWZmZWN0aXZlX2NwdXMsCisJCQkJICAgICAgIGhvdXNla2VlcGluZ19jcHVt
-YXNrKEhLX0ZMQUdfRE9NQUlOKSkpCiAJCQljc2FbY3NuKytdID0gY3A7CiAKIAkJLyogc2tpcCBA
-Y3AncyBzdWJ0cmVlIGlmIG5vdCBhIHBhcnRpdGlvbiByb290ICovCi0tCjIuMjIuMAoK
+Since commit 29ef680ae7c2 ("memcg, oom: move out_of_memory back to the
+charge path") memcg invokes oom killer not only for user page-faults.
+This means 0-order allocation will either succeed or task get killed.
+
+Fixes: 8e675f7af507 ("mm/oom_kill: count global and memory cgroup oom kills")
+Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+---
+ Documentation/admin-guide/cgroup-v2.rst |    9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 5361ebec3361..eb47815e137b 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1219,8 +1219,13 @@ PAGE_SIZE multiple when read back.
+ 
+ 		Failed allocation in its turn could be returned into
+ 		userspace as -ENOMEM or silently ignored in cases like
+-		disk readahead.  For now OOM in memory cgroup kills
+-		tasks iff shortage has happened inside page fault.
++		disk readahead.
++
++		Before 4.19 OOM in memory cgroup killed tasks iff
++		shortage has happened inside page fault, random
++		syscall may fail with ENOMEM or EFAULT. Since 4.19
++		failed memory cgroup allocation invokes oom killer and
++		keeps retrying until it succeeds.
+ 
+ 		This event is not raised if the OOM killer is not
+ 		considered as an option, e.g. for failed high-order
+
