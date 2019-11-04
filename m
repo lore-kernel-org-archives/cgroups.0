@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 06/10] kernfs: convert kernfs_node->id from union kernfs_node_id to u64
-Date: Mon,  4 Nov 2019 15:59:40 -0800
-Message-ID: <20191104235944.3470866-7-tj@kernel.org>
+Subject: [PATCH 10/10] cgroup: use cgrp->kn->id as the cgroup ID
+Date: Mon,  4 Nov 2019 15:59:44 -0800
+Message-ID: <20191104235944.3470866-11-tj@kernel.org>
 References: <20191104235944.3470866-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=dVpjuj8UwavcIst9QqE8NhYJae3gffaD1D5bpqdhhuo=;
-        b=H/3BoZMxBFgl1e89uQ7H755KUcdc1zqubAuqyHKvxqLpyy86qI08EEtVpzioA8vwb+
-         2jkJprRUUSkvGeWIl15GF4IWQqra3xH+CR8LyWMgC2qrvJpnTNcK9gscQP8F+woKggAq
-         uZ3zMF3rfeJ2MnseMHcb+/F/s1bKLNWSfbrFGvEFXX+6pJyH9z/cHXaaVb6JpZra+yiF
-         xfT8gv/1ZsFWY8HcgKWMuaXdSbNrv/9prv1yBxjNd6HLricuBiX9rXBGd2OoRLUMvYPM
-         s1voSzZ7zGIQiiVlmP/rXnBO3968/c3ezOsNhmx/BkEUXRCnDsKvSFUDSWIi6PRz5K1D
-         7clA==
+        bh=StDF3mAXV3B3BTVHMDmB1zfit4dLUdsFQUmlMXqBrMs=;
+        b=kKrTjDPv3EYRg0aDo6aAt7w7Xz+0M/JMj1GuHqO01CKc1DAy645E66QpCbz0oW/Uyr
+         NeixBRQi7Ur7qCl3lNRrQPtrfugmbXGa6d6WR519IhEIYLbmRWHMEvltyCJuohI07sk+
+         gwpc+3WZJkw/wppXP7xqZQPEw8ArhyM19hDNH42kmTUiPqYNwUHLXenFSoikxJM3xRdV
+         CpT7p08GC7gtXZxs4LtsN7ehktUQFQa4ufXxEa5bOysbGLMTr3gQICtUu4k1xx/Xdd8s
+         yXYG1aujs/n08U9vywBv0PiclzrhYIMEGOngdVjEZI/pu6A6kkNMwvJa6aM3GLCw6xIZ
+         Fq2A==
 In-Reply-To: <20191104235944.3470866-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,575 +21,447 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: gregkh@linuxfoundation.org
-Cc: kernel-team@fb.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, namhyung@kernel.org, ast@kernel.org, daniel@iogearbox.net, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc: kernel-team@fb.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, namhyung@kernel.org, ast@kernel.org, daniel@iogearbox.net, Tejun Heo <tj@kernel.org>
 
-kernfs_node->id is currently a union kernfs_node_id which represents
-either a 32bit (ino, gen) pair or u64 value.  I can't see much value
-in the usage of the union - all that's needed is a 64bit ID which the
-current code is already limited to.  Using a union makes the code
-unnecessarily complicated and prevents using 64bit ino without adding
-practical benefits.
+cgroup ID is currently allocated using a dedicated per-hierarchy idr
+and used internally and exposed through tracepoints and bpf.  This is
+confusing because there are tracepoints and other interfaces which use
+the cgroupfs ino as IDs.
 
-This patch drops union kernfs_node_id and makes kernfs_node->id a u64.
-ino is stored in the lower 32bits and gen upper.  Accessors -
-kernfs[_id]_ino() and kernfs[_id]_gen() - are added to retrieve the
-ino and gen.  This simplifies ID handling less cumbersome and will
-allow using 64bit inos on supported archs.
+The preceding changes made kn->id exposed as ino as 64bit ino on
+supported archs or ino+gen (low 32bits as ino, high gen).  There's no
+reason for cgroup to use different IDs.  The kernfs IDs are unique and
+userland can easily discover them and map them back to paths using
+standard file operations.
 
-This patch doesn't make any functional changes.
+This patch replaces cgroup IDs with kernfs IDs.
+
+* cgroup_id() is added and all cgroup ID users are converted to use it.
+
+* kernfs_node creation is moved to earlier during cgroup init so that
+  cgroup_id() is available during init.
+
+* While at it, s/cgroup/cgrp/ in psi helpers for consistency.
+
+* Fallback ID value is changed to 1 to be consistent with root cgroup
+  ID.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 Cc: Namhyung Kim <namhyung@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Alexei Starovoitov <ast@kernel.org>
 ---
- fs/kernfs/dir.c                  | 10 ++---
- fs/kernfs/file.c                 |  4 +-
- fs/kernfs/inode.c                |  4 +-
- fs/kernfs/mount.c                |  7 ++--
- include/linux/cgroup.h           | 17 ++++----
- include/linux/kernfs.h           | 45 ++++++++++++---------
- include/trace/events/writeback.h |  4 +-
- kernel/bpf/helpers.c             |  2 +-
- kernel/bpf/local_storage.c       |  2 +-
- kernel/cgroup/cgroup.c           |  3 +-
- kernel/trace/blktrace.c          | 67 +++++++++++++++-----------------
- net/core/filter.c                |  4 +-
- 12 files changed, 85 insertions(+), 84 deletions(-)
+ include/linux/cgroup-defs.h   | 17 +-------
+ include/linux/cgroup.h        | 17 ++++----
+ include/trace/events/cgroup.h |  6 +--
+ kernel/bpf/helpers.c          |  2 +-
+ kernel/bpf/local_storage.c    |  2 +-
+ kernel/cgroup/cgroup.c        | 76 ++++++++++++-----------------------
+ kernel/trace/blktrace.c       |  4 +-
+ net/core/filter.c             |  4 +-
+ 8 files changed, 43 insertions(+), 85 deletions(-)
 
-diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
-index beabb585a7d8..c67afb591e5b 100644
---- a/fs/kernfs/dir.c
-+++ b/fs/kernfs/dir.c
-@@ -532,7 +532,7 @@ void kernfs_put(struct kernfs_node *kn)
- 		kmem_cache_free(kernfs_iattrs_cache, kn->iattr);
- 	}
- 	spin_lock(&kernfs_idr_lock);
--	idr_remove(&root->ino_idr, kn->id.ino);
-+	idr_remove(&root->ino_idr, kernfs_ino(kn));
- 	spin_unlock(&kernfs_idr_lock);
- 	kmem_cache_free(kernfs_node_cache, kn);
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 430e219e3aba..cc38408aa065 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -354,16 +354,6 @@ struct cgroup {
  
-@@ -639,8 +639,8 @@ static struct kernfs_node *__kernfs_new_node(struct kernfs_root *root,
- 	idr_preload_end();
- 	if (ret < 0)
- 		goto err_out2;
--	kn->id.ino = ret;
--	kn->id.generation = gen;
-+
-+	kn->id = (u64)gen << 32 | ret;
+ 	unsigned long flags;		/* "unsigned long" so bitops work */
  
- 	atomic_set(&kn->count, 1);
- 	atomic_set(&kn->active, KN_DEACTIVATED_BIAS);
-@@ -671,7 +671,7 @@ static struct kernfs_node *__kernfs_new_node(struct kernfs_root *root,
- 	return kn;
+-	/*
+-	 * idr allocated in-hierarchy ID.
+-	 *
+-	 * ID 0 is not used, the ID of the root cgroup is always 1, and a
+-	 * new cgroup will be assigned with a smallest available ID.
+-	 *
+-	 * Allocating/Removing ID must be protected by cgroup_mutex.
+-	 */
+-	int id;
+-
+ 	/*
+ 	 * The depth this cgroup is at.  The root is at depth zero and each
+ 	 * step down the hierarchy increments the level.  This along with
+@@ -488,7 +478,7 @@ struct cgroup {
+ 	struct cgroup_freezer_state freezer;
  
-  err_out3:
--	idr_remove(&root->ino_idr, kn->id.ino);
-+	idr_remove(&root->ino_idr, kernfs_ino(kn));
-  err_out2:
- 	kmem_cache_free(kernfs_node_cache, kn);
-  err_out1:
-@@ -1656,7 +1656,7 @@ static int kernfs_fop_readdir(struct file *file, struct dir_context *ctx)
- 		const char *name = pos->name;
- 		unsigned int type = dt_type(pos);
- 		int len = strlen(name);
--		ino_t ino = pos->id.ino;
-+		ino_t ino = kernfs_ino(pos);
- 
- 		ctx->pos = pos->hash;
- 		file->private_data = pos;
-diff --git a/fs/kernfs/file.c b/fs/kernfs/file.c
-index e8c792b49616..34366db3620d 100644
---- a/fs/kernfs/file.c
-+++ b/fs/kernfs/file.c
-@@ -892,7 +892,7 @@ static void kernfs_notify_workfn(struct work_struct *work)
- 		 * have the matching @file available.  Look up the inodes
- 		 * and generate the events manually.
- 		 */
--		inode = ilookup(info->sb, kn->id.ino);
-+		inode = ilookup(info->sb, kernfs_ino(kn));
- 		if (!inode)
- 			continue;
- 
-@@ -901,7 +901,7 @@ static void kernfs_notify_workfn(struct work_struct *work)
- 		if (parent) {
- 			struct inode *p_inode;
- 
--			p_inode = ilookup(info->sb, parent->id.ino);
-+			p_inode = ilookup(info->sb, kernfs_ino(parent));
- 			if (p_inode) {
- 				fsnotify(p_inode, FS_MODIFY | FS_EVENT_ON_CHILD,
- 					 inode, FSNOTIFY_EVENT_INODE, &name, 0);
-diff --git a/fs/kernfs/inode.c b/fs/kernfs/inode.c
-index f3eaa8869f42..eac277c63d42 100644
---- a/fs/kernfs/inode.c
-+++ b/fs/kernfs/inode.c
-@@ -201,7 +201,7 @@ static void kernfs_init_inode(struct kernfs_node *kn, struct inode *inode)
- 	inode->i_private = kn;
- 	inode->i_mapping->a_ops = &kernfs_aops;
- 	inode->i_op = &kernfs_iops;
--	inode->i_generation = kn->id.generation;
-+	inode->i_generation = kernfs_gen(kn);
- 
- 	set_default_inode_attr(inode, kn->mode);
- 	kernfs_refresh_inode(kn, inode);
-@@ -247,7 +247,7 @@ struct inode *kernfs_get_inode(struct super_block *sb, struct kernfs_node *kn)
- {
- 	struct inode *inode;
- 
--	inode = iget_locked(sb, kn->id.ino);
-+	inode = iget_locked(sb, kernfs_ino(kn));
- 	if (inode && (inode->i_state & I_NEW))
- 		kernfs_init_inode(kn, inode);
- 
-diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
-index 067b7c380056..f05d5d6f926d 100644
---- a/fs/kernfs/mount.c
-+++ b/fs/kernfs/mount.c
-@@ -57,15 +57,14 @@ const struct super_operations kernfs_sops = {
-  * Similar to kernfs_fh_get_inode, this one gets kernfs node from inode
-  * number and generation
-  */
--struct kernfs_node *kernfs_get_node_by_id(struct kernfs_root *root,
--	const union kernfs_node_id *id)
-+struct kernfs_node *kernfs_get_node_by_id(struct kernfs_root *root, u64 id)
- {
- 	struct kernfs_node *kn;
- 
--	kn = kernfs_find_and_get_node_by_ino(root, id->ino);
-+	kn = kernfs_find_and_get_node_by_ino(root, kernfs_id_ino(id));
- 	if (!kn)
- 		return NULL;
--	if (kn->id.generation != id->generation) {
-+	if (kernfs_gen(kn) != kernfs_id_gen(id)) {
- 		kernfs_put(kn);
- 		return NULL;
- 	}
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index f6b048902d6c..815fff49d555 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -616,7 +616,7 @@ static inline bool cgroup_is_populated(struct cgroup *cgrp)
- /* returns ino associated with a cgroup */
- static inline ino_t cgroup_ino(struct cgroup *cgrp)
- {
--	return cgrp->kn->id.ino;
-+	return kernfs_ino(cgrp->kn);
- }
- 
- /* cft/css accessors for cftype->write() operation */
-@@ -687,13 +687,12 @@ static inline void cgroup_kthread_ready(void)
- 	current->no_cgroup_migration = 0;
- }
- 
--static inline union kernfs_node_id *cgroup_get_kernfs_id(struct cgroup *cgrp)
-+static inline u64 cgroup_get_kernfs_id(struct cgroup *cgrp)
- {
--	return &cgrp->kn->id;
-+	return cgrp->kn->id;
- }
- 
--void cgroup_path_from_kernfs_id(const union kernfs_node_id *id,
--					char *buf, size_t buflen);
-+void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen);
- #else /* !CONFIG_CGROUPS */
- 
- struct cgroup_subsys_state;
-@@ -718,9 +717,9 @@ static inline int cgroup_init_early(void) { return 0; }
- static inline int cgroup_init(void) { return 0; }
- static inline void cgroup_init_kthreadd(void) {}
- static inline void cgroup_kthread_ready(void) {}
--static inline union kernfs_node_id *cgroup_get_kernfs_id(struct cgroup *cgrp)
-+static inline union u64 cgroup_get_kernfs_id(struct cgroup *cgrp)
- {
--	return NULL;
-+	return 0;
- }
- 
- static inline struct cgroup *cgroup_parent(struct cgroup *cgrp)
-@@ -739,8 +738,8 @@ static inline bool task_under_cgroup_hierarchy(struct task_struct *task,
- 	return true;
- }
- 
--static inline void cgroup_path_from_kernfs_id(const union kernfs_node_id *id,
--	char *buf, size_t buflen) {}
-+static inline void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen)
-+{}
- #endif /* !CONFIG_CGROUPS */
- 
- #ifdef CONFIG_CGROUPS
-diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-index f797ccc650e7..b2fc5c8ef6d9 100644
---- a/include/linux/kernfs.h
-+++ b/include/linux/kernfs.h
-@@ -104,21 +104,6 @@ struct kernfs_elem_attr {
- 	struct kernfs_node	*notify_next;	/* for kernfs_notify() */
+ 	/* ids of the ancestors at each level including self */
+-	int ancestor_ids[];
++	u64 ancestor_ids[];
  };
  
--/* represent a kernfs node */
--union kernfs_node_id {
--	struct {
--		/*
--		 * blktrace will export this struct as a simplified 'struct
--		 * fid' (which is a big data struction), so userspace can use
--		 * it to find kernfs node. The layout must match the first two
--		 * fields of 'struct fid' exactly.
--		 */
--		u32		ino;
--		u32		generation;
--	};
--	u64			id;
--};
--
  /*
-  * kernfs_node - the building block of kernfs hierarchy.  Each and every
-  * kernfs node is represented by single kernfs_node.  Most fields are
-@@ -155,7 +140,12 @@ struct kernfs_node {
+@@ -509,7 +499,7 @@ struct cgroup_root {
+ 	struct cgroup cgrp;
  
- 	void			*priv;
+ 	/* for cgrp->ancestor_ids[0] */
+-	int cgrp_ancestor_id_storage;
++	u64 cgrp_ancestor_id_storage;
  
--	union kernfs_node_id	id;
-+	/*
-+	 * 64bit unique ID.  Lower 32bits carry the inode number and lower
-+	 * generation.
-+	 */
-+	u64			id;
-+
- 	unsigned short		flags;
- 	umode_t			mode;
- 	struct kernfs_iattrs	*iattr;
-@@ -292,6 +282,26 @@ static inline enum kernfs_node_type kernfs_type(struct kernfs_node *kn)
- 	return kn->flags & KERNFS_TYPE_MASK;
- }
+ 	/* Number of cgroups in the hierarchy, used only for /proc/cgroups */
+ 	atomic_t nr_cgrps;
+@@ -520,9 +510,6 @@ struct cgroup_root {
+ 	/* Hierarchy-specific flags */
+ 	unsigned int flags;
  
-+static inline ino_t kernfs_id_ino(u64 id)
+-	/* IDs for cgroups in this hierarchy */
+-	struct idr cgroup_idr;
+-
+ 	/* The path to use for release notifications. */
+ 	char release_agent_path[PATH_MAX];
+ 
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index 815fff49d555..d7ddebd0cdec 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -304,6 +304,11 @@ void css_task_iter_end(struct css_task_iter *it);
+  * Inline functions.
+  */
+ 
++static inline u64 cgroup_id(struct cgroup *cgrp)
 +{
-+	return (u32)id;
-+}
-+
-+static inline u32 kernfs_id_gen(u64 id)
-+{
-+	return id >> 32;
-+}
-+
-+static inline ino_t kernfs_ino(struct kernfs_node *kn)
-+{
-+	return kernfs_id_ino(kn->id);
-+}
-+
-+static inline ino_t kernfs_gen(struct kernfs_node *kn)
-+{
-+	return kernfs_id_gen(kn->id);
++	return cgrp->kn->id;
 +}
 +
  /**
-  * kernfs_enable_ns - enable namespace under a directory
-  * @kn: directory of interest, should be empty
-@@ -383,8 +393,7 @@ void kernfs_kill_sb(struct super_block *sb);
- 
- void kernfs_init(void);
- 
--struct kernfs_node *kernfs_get_node_by_id(struct kernfs_root *root,
--	const union kernfs_node_id *id);
-+struct kernfs_node *kernfs_get_node_by_id(struct kernfs_root *root, u64 id);
- #else	/* CONFIG_KERNFS */
- 
- static inline enum kernfs_node_type kernfs_type(struct kernfs_node *kn)
-diff --git a/include/trace/events/writeback.h b/include/trace/events/writeback.h
-index 95e50677476b..b4f0ffe1817e 100644
---- a/include/trace/events/writeback.h
-+++ b/include/trace/events/writeback.h
-@@ -152,7 +152,7 @@ DEFINE_EVENT(writeback_dirty_inode_template, writeback_dirty_inode,
- 
- static inline ino_t __trace_wb_assign_cgroup(struct bdi_writeback *wb)
+  * css_get - obtain a reference on the specified css
+  * @css: target css
+@@ -565,7 +570,7 @@ static inline bool cgroup_is_descendant(struct cgroup *cgrp,
  {
--	return wb->memcg_css->cgroup->kn->id.ino;
-+	return cgroup_ino(wb->memcg_css->cgroup);
+ 	if (cgrp->root != ancestor->root || cgrp->level < ancestor->level)
+ 		return false;
+-	return cgrp->ancestor_ids[ancestor->level] == ancestor->id;
++	return cgrp->ancestor_ids[ancestor->level] == cgroup_id(ancestor);
  }
  
- static inline ino_t __trace_wbc_assign_cgroup(struct writeback_control *wbc)
-@@ -260,7 +260,7 @@ TRACE_EVENT(track_foreign_dirty,
- 		__entry->ino		= inode ? inode->i_ino : 0;
- 		__entry->memcg_id	= wb->memcg_css->id;
- 		__entry->cgroup_ino	= __trace_wb_assign_cgroup(wb);
--		__entry->page_cgroup_ino = page->mem_cgroup->css.cgroup->kn->id.ino;
-+		__entry->page_cgroup_ino = cgroup_ino(page->mem_cgroup->css.cgroup);
- 	),
+ /**
+@@ -687,17 +692,13 @@ static inline void cgroup_kthread_ready(void)
+ 	current->no_cgroup_migration = 0;
+ }
  
- 	TP_printk("bdi %s[%llu]: ino=%lu memcg_id=%u cgroup_ino=%lu page_cgroup_ino=%lu",
+-static inline u64 cgroup_get_kernfs_id(struct cgroup *cgrp)
+-{
+-	return cgrp->kn->id;
+-}
+-
+ void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen);
+ #else /* !CONFIG_CGROUPS */
+ 
+ struct cgroup_subsys_state;
+ struct cgroup;
+ 
++static inline u64 cgroup_id(struct cgroup *cgrp) { return 1; }
+ static inline void css_get(struct cgroup_subsys_state *css) {}
+ static inline void css_put(struct cgroup_subsys_state *css) {}
+ static inline int cgroup_attach_task_all(struct task_struct *from,
+@@ -717,10 +718,6 @@ static inline int cgroup_init_early(void) { return 0; }
+ static inline int cgroup_init(void) { return 0; }
+ static inline void cgroup_init_kthreadd(void) {}
+ static inline void cgroup_kthread_ready(void) {}
+-static inline union u64 cgroup_get_kernfs_id(struct cgroup *cgrp)
+-{
+-	return 0;
+-}
+ 
+ static inline struct cgroup *cgroup_parent(struct cgroup *cgrp)
+ {
+diff --git a/include/trace/events/cgroup.h b/include/trace/events/cgroup.h
+index a566cc521476..7f42a3de59e6 100644
+--- a/include/trace/events/cgroup.h
++++ b/include/trace/events/cgroup.h
+@@ -66,7 +66,7 @@ DECLARE_EVENT_CLASS(cgroup,
+ 
+ 	TP_fast_assign(
+ 		__entry->root = cgrp->root->hierarchy_id;
+-		__entry->id = cgrp->id;
++		__entry->id = cgroup_id(cgrp);
+ 		__entry->level = cgrp->level;
+ 		__assign_str(path, path);
+ 	),
+@@ -135,7 +135,7 @@ DECLARE_EVENT_CLASS(cgroup_migrate,
+ 
+ 	TP_fast_assign(
+ 		__entry->dst_root = dst_cgrp->root->hierarchy_id;
+-		__entry->dst_id = dst_cgrp->id;
++		__entry->dst_id = cgroup_id(dst_cgrp);
+ 		__entry->dst_level = dst_cgrp->level;
+ 		__assign_str(dst_path, path);
+ 		__entry->pid = task->pid;
+@@ -179,7 +179,7 @@ DECLARE_EVENT_CLASS(cgroup_event,
+ 
+ 	TP_fast_assign(
+ 		__entry->root = cgrp->root->hierarchy_id;
+-		__entry->id = cgrp->id;
++		__entry->id = cgroup_id(cgrp);
+ 		__entry->level = cgrp->level;
+ 		__assign_str(path, path);
+ 		__entry->val = val;
 diff --git a/kernel/bpf/helpers.c b/kernel/bpf/helpers.c
-index 5e28718928ca..912e761cd17a 100644
+index 912e761cd17a..cada974c9f4e 100644
 --- a/kernel/bpf/helpers.c
 +++ b/kernel/bpf/helpers.c
 @@ -317,7 +317,7 @@ BPF_CALL_0(bpf_get_current_cgroup_id)
  {
  	struct cgroup *cgrp = task_dfl_cgroup(current);
  
--	return cgrp->kn->id.id;
-+	return cgrp->kn->id;
+-	return cgrp->kn->id;
++	return cgroup_id(cgrp);
  }
  
  const struct bpf_func_proto bpf_get_current_cgroup_id_proto = {
 diff --git a/kernel/bpf/local_storage.c b/kernel/bpf/local_storage.c
-index addd6fdceec8..5d867f6d7204 100644
+index 5d867f6d7204..2ba750725cb2 100644
 --- a/kernel/bpf/local_storage.c
 +++ b/kernel/bpf/local_storage.c
 @@ -569,7 +569,7 @@ void bpf_cgroup_storage_link(struct bpf_cgroup_storage *storage,
  		return;
  
  	storage->key.attach_type = type;
--	storage->key.cgroup_inode_id = cgroup->kn->id.id;
-+	storage->key.cgroup_inode_id = cgroup->kn->id;
+-	storage->key.cgroup_inode_id = cgroup->kn->id;
++	storage->key.cgroup_inode_id = cgroup_id(cgroup);
  
  	map = storage->map;
  
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index cf32c0c7a45d..c6bd1a5a1977 100644
+index b5dcbee5aa6c..c12dcf7dc432 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -5786,8 +5786,7 @@ static int __init cgroup_wq_init(void)
- }
- core_initcall(cgroup_wq_init);
+@@ -1308,10 +1308,7 @@ static void cgroup_exit_root_id(struct cgroup_root *root)
  
--void cgroup_path_from_kernfs_id(const union kernfs_node_id *id,
--					char *buf, size_t buflen)
-+void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen)
+ void cgroup_free_root(struct cgroup_root *root)
  {
- 	struct kernfs_node *kn;
+-	if (root) {
+-		idr_destroy(&root->cgroup_idr);
+-		kfree(root);
+-	}
++	kfree(root);
+ }
  
+ static void cgroup_destroy_root(struct cgroup_root *root)
+@@ -1917,7 +1914,6 @@ void init_cgroup_root(struct cgroup_fs_context *ctx)
+ 	atomic_set(&root->nr_cgrps, 1);
+ 	cgrp->root = root;
+ 	init_cgroup_housekeeping(cgrp);
+-	idr_init(&root->cgroup_idr);
+ 
+ 	root->flags = ctx->flags;
+ 	if (ctx->release_agent)
+@@ -1938,12 +1934,6 @@ int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask)
+ 
+ 	lockdep_assert_held(&cgroup_mutex);
+ 
+-	ret = cgroup_idr_alloc(&root->cgroup_idr, root_cgrp, 1, 2, GFP_KERNEL);
+-	if (ret < 0)
+-		goto out;
+-	root_cgrp->id = ret;
+-	root_cgrp->ancestor_ids[0] = ret;
+-
+ 	ret = percpu_ref_init(&root_cgrp->self.refcnt, css_release,
+ 			      0, GFP_KERNEL);
+ 	if (ret)
+@@ -1976,6 +1966,8 @@ int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask)
+ 		goto exit_root_id;
+ 	}
+ 	root_cgrp->kn = root->kf_root->kn;
++	WARN_ON_ONCE(cgroup_id(root_cgrp) != 1);
++	root_cgrp->ancestor_ids[0] = cgroup_id(root_cgrp);
+ 
+ 	ret = css_populate_dir(&root_cgrp->self);
+ 	if (ret)
+@@ -3552,22 +3544,22 @@ static int cpu_stat_show(struct seq_file *seq, void *v)
+ #ifdef CONFIG_PSI
+ static int cgroup_io_pressure_show(struct seq_file *seq, void *v)
+ {
+-	struct cgroup *cgroup = seq_css(seq)->cgroup;
+-	struct psi_group *psi = cgroup->id == 1 ? &psi_system : &cgroup->psi;
++	struct cgroup *cgrp = seq_css(seq)->cgroup;
++	struct psi_group *psi = cgroup_id(cgrp) == 1 ? &psi_system : &cgrp->psi;
+ 
+ 	return psi_show(seq, psi, PSI_IO);
+ }
+ static int cgroup_memory_pressure_show(struct seq_file *seq, void *v)
+ {
+-	struct cgroup *cgroup = seq_css(seq)->cgroup;
+-	struct psi_group *psi = cgroup->id == 1 ? &psi_system : &cgroup->psi;
++	struct cgroup *cgrp = seq_css(seq)->cgroup;
++	struct psi_group *psi = cgroup_id(cgrp) == 1 ? &psi_system : &cgrp->psi;
+ 
+ 	return psi_show(seq, psi, PSI_MEM);
+ }
+ static int cgroup_cpu_pressure_show(struct seq_file *seq, void *v)
+ {
+-	struct cgroup *cgroup = seq_css(seq)->cgroup;
+-	struct psi_group *psi = cgroup->id == 1 ? &psi_system : &cgroup->psi;
++	struct cgroup *cgrp = seq_css(seq)->cgroup;
++	struct psi_group *psi = cgroup_id(cgrp) == 1 ? &psi_system : &cgrp->psi;
+ 
+ 	return psi_show(seq, psi, PSI_CPU);
+ }
+@@ -4987,9 +4979,6 @@ static void css_release_work_fn(struct work_struct *work)
+ 			tcgrp->nr_dying_descendants--;
+ 		spin_unlock_irq(&css_set_lock);
+ 
+-		cgroup_idr_remove(&cgrp->root->cgroup_idr, cgrp->id);
+-		cgrp->id = -1;
+-
+ 		/*
+ 		 * There are two control paths which try to determine
+ 		 * cgroup from dentry without going through kernfs -
+@@ -5154,10 +5143,12 @@ static struct cgroup_subsys_state *css_create(struct cgroup *cgrp,
+  * it isn't associated with its kernfs_node and doesn't have the control
+  * mask applied.
+  */
+-static struct cgroup *cgroup_create(struct cgroup *parent)
++static struct cgroup *cgroup_create(struct cgroup *parent, const char *name,
++				    umode_t mode)
+ {
+ 	struct cgroup_root *root = parent->root;
+ 	struct cgroup *cgrp, *tcgrp;
++	struct kernfs_node *kn;
+ 	int level = parent->level + 1;
+ 	int ret;
+ 
+@@ -5177,15 +5168,13 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
+ 			goto out_cancel_ref;
+ 	}
+ 
+-	/*
+-	 * Temporarily set the pointer to NULL, so idr_find() won't return
+-	 * a half-baked cgroup.
+-	 */
+-	cgrp->id = cgroup_idr_alloc(&root->cgroup_idr, NULL, 2, 0, GFP_KERNEL);
+-	if (cgrp->id < 0) {
+-		ret = -ENOMEM;
++	/* create the directory */
++	kn = kernfs_create_dir(parent->kn, name, mode, cgrp);
++	if (IS_ERR(kn)) {
++		ret = PTR_ERR(kn);
+ 		goto out_stat_exit;
+ 	}
++	cgrp->kn = kn;
+ 
+ 	init_cgroup_housekeeping(cgrp);
+ 
+@@ -5195,7 +5184,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
+ 
+ 	ret = psi_cgroup_alloc(cgrp);
+ 	if (ret)
+-		goto out_idr_free;
++		goto out_kernfs_remove;
+ 
+ 	ret = cgroup_bpf_inherit(cgrp);
+ 	if (ret)
+@@ -5219,7 +5208,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
+ 
+ 	spin_lock_irq(&css_set_lock);
+ 	for (tcgrp = cgrp; tcgrp; tcgrp = cgroup_parent(tcgrp)) {
+-		cgrp->ancestor_ids[tcgrp->level] = tcgrp->id;
++		cgrp->ancestor_ids[tcgrp->level] = cgroup_id(tcgrp);
+ 
+ 		if (tcgrp != cgrp) {
+ 			tcgrp->nr_descendants++;
+@@ -5248,12 +5237,6 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
+ 	atomic_inc(&root->nr_cgrps);
+ 	cgroup_get_live(parent);
+ 
+-	/*
+-	 * @cgrp is now fully operational.  If something fails after this
+-	 * point, it'll be released via the normal destruction path.
+-	 */
+-	cgroup_idr_replace(&root->cgroup_idr, cgrp, cgrp->id);
+-
+ 	/*
+ 	 * On the default hierarchy, a child doesn't automatically inherit
+ 	 * subtree_control from the parent.  Each is configured manually.
+@@ -5267,8 +5250,8 @@ static struct cgroup *cgroup_create(struct cgroup *parent)
+ 
+ out_psi_free:
+ 	psi_cgroup_free(cgrp);
+-out_idr_free:
+-	cgroup_idr_remove(&root->cgroup_idr, cgrp->id);
++out_kernfs_remove:
++	kernfs_remove(cgrp->kn);
+ out_stat_exit:
+ 	if (cgroup_on_dfl(parent))
+ 		cgroup_rstat_exit(cgrp);
+@@ -5305,7 +5288,6 @@ static bool cgroup_check_hierarchy_limits(struct cgroup *parent)
+ int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name, umode_t mode)
+ {
+ 	struct cgroup *parent, *cgrp;
+-	struct kernfs_node *kn;
+ 	int ret;
+ 
+ 	/* do not accept '\n' to prevent making /proc/<pid>/cgroup unparsable */
+@@ -5321,27 +5303,19 @@ int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name, umode_t mode)
+ 		goto out_unlock;
+ 	}
+ 
+-	cgrp = cgroup_create(parent);
++	cgrp = cgroup_create(parent, name, mode);
+ 	if (IS_ERR(cgrp)) {
+ 		ret = PTR_ERR(cgrp);
+ 		goto out_unlock;
+ 	}
+ 
+-	/* create the directory */
+-	kn = kernfs_create_dir(parent->kn, name, mode, cgrp);
+-	if (IS_ERR(kn)) {
+-		ret = PTR_ERR(kn);
+-		goto out_destroy;
+-	}
+-	cgrp->kn = kn;
+-
+ 	/*
+ 	 * This extra ref will be put in cgroup_free_fn() and guarantees
+ 	 * that @cgrp->kn is always accessible.
+ 	 */
+-	kernfs_get(kn);
++	kernfs_get(cgrp->kn);
+ 
+-	ret = cgroup_kn_set_ugid(kn);
++	ret = cgroup_kn_set_ugid(cgrp->kn);
+ 	if (ret)
+ 		goto out_destroy;
+ 
+@@ -5356,7 +5330,7 @@ int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name, umode_t mode)
+ 	TRACE_CGROUP_PATH(mkdir, cgrp);
+ 
+ 	/* let's create and online css's */
+-	kernfs_activate(kn);
++	kernfs_activate(cgrp->kn);
+ 
+ 	ret = 0;
+ 	goto out_unlock;
 diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
-index 2d6e93ab0478..a986d2e74ca2 100644
+index a7dac5b63f3f..475e29498bca 100644
 --- a/kernel/trace/blktrace.c
 +++ b/kernel/trace/blktrace.c
-@@ -64,8 +64,7 @@ static void blk_unregister_tracepoints(void);
-  * Send out a notify message.
-  */
- static void trace_note(struct blk_trace *bt, pid_t pid, int action,
--		       const void *data, size_t len,
--		       union kernfs_node_id *cgid)
-+		       const void *data, size_t len, u64 cgid)
- {
- 	struct blk_io_trace *t;
- 	struct ring_buffer_event *event = NULL;
-@@ -73,7 +72,7 @@ static void trace_note(struct blk_trace *bt, pid_t pid, int action,
- 	int pc = 0;
- 	int cpu = smp_processor_id();
- 	bool blk_tracer = blk_tracer_enabled;
--	ssize_t cgid_len = cgid ? sizeof(*cgid) : 0;
-+	ssize_t cgid_len = cgid ? sizeof(cgid) : 0;
- 
- 	if (blk_tracer) {
- 		buffer = blk_tr->trace_buffer.buffer;
-@@ -100,8 +99,8 @@ static void trace_note(struct blk_trace *bt, pid_t pid, int action,
- 		t->pid = pid;
- 		t->cpu = cpu;
- 		t->pdu_len = len + cgid_len;
--		if (cgid)
--			memcpy((void *)t + sizeof(*t), cgid, cgid_len);
-+		if (cgid_len)
-+			memcpy((void *)t + sizeof(*t), &cgid, cgid_len);
- 		memcpy((void *) t + sizeof(*t) + cgid_len, data, len);
- 
- 		if (blk_tracer)
-@@ -122,7 +121,7 @@ static void trace_note_tsk(struct task_struct *tsk)
- 	spin_lock_irqsave(&running_trace_lock, flags);
- 	list_for_each_entry(bt, &running_trace_list, running_list) {
- 		trace_note(bt, tsk->pid, BLK_TN_PROCESS, tsk->comm,
--			   sizeof(tsk->comm), NULL);
-+			   sizeof(tsk->comm), 0);
- 	}
- 	spin_unlock_irqrestore(&running_trace_lock, flags);
- }
-@@ -139,7 +138,7 @@ static void trace_note_time(struct blk_trace *bt)
- 	words[1] = now.tv_nsec;
- 
- 	local_irq_save(flags);
--	trace_note(bt, 0, BLK_TN_TIMESTAMP, words, sizeof(words), NULL);
-+	trace_note(bt, 0, BLK_TN_TIMESTAMP, words, sizeof(words), 0);
- 	local_irq_restore(flags);
- }
- 
-@@ -172,9 +171,9 @@ void __trace_note_message(struct blk_trace *bt, struct blkcg *blkcg,
+@@ -171,7 +171,7 @@ void __trace_note_message(struct blk_trace *bt, struct blkcg *blkcg,
  		blkcg = NULL;
  #ifdef CONFIG_BLK_CGROUP
  	trace_note(bt, 0, BLK_TN_MESSAGE, buf, n,
--		blkcg ? cgroup_get_kernfs_id(blkcg->css.cgroup) : NULL);
-+		blkcg ? cgroup_get_kernfs_id(blkcg->css.cgroup) : 0);
+-		blkcg ? cgroup_get_kernfs_id(blkcg->css.cgroup) : 0);
++		   blkcg ? cgroup_id(blkcg->css.cgroup) : 1);
  #else
--	trace_note(bt, 0, BLK_TN_MESSAGE, buf, n, NULL);
-+	trace_note(bt, 0, BLK_TN_MESSAGE, buf, n, 0);
+ 	trace_note(bt, 0, BLK_TN_MESSAGE, buf, n, 0);
  #endif
- 	local_irq_restore(flags);
- }
-@@ -212,7 +211,7 @@ static const u32 ddir_act[2] = { BLK_TC_ACT(BLK_TC_READ),
-  */
- static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
- 		     int op, int op_flags, u32 what, int error, int pdu_len,
--		     void *pdu_data, union kernfs_node_id *cgid)
-+		     void *pdu_data, u64 cgid)
- {
- 	struct task_struct *tsk = current;
- 	struct ring_buffer_event *event = NULL;
-@@ -223,7 +222,7 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
- 	pid_t pid;
- 	int cpu, pc = 0;
- 	bool blk_tracer = blk_tracer_enabled;
--	ssize_t cgid_len = cgid ? sizeof(*cgid) : 0;
-+	ssize_t cgid_len = cgid ? sizeof(cgid) : 0;
- 
- 	if (unlikely(bt->trace_state != Blktrace_running && !blk_tracer))
- 		return;
-@@ -294,7 +293,7 @@ static void __blk_add_trace(struct blk_trace *bt, sector_t sector, int bytes,
- 		t->pdu_len = pdu_len + cgid_len;
- 
- 		if (cgid_len)
--			memcpy((void *)t + sizeof(*t), cgid, cgid_len);
-+			memcpy((void *)t + sizeof(*t), &cgid, cgid_len);
- 		if (pdu_len)
- 			memcpy((void *)t + sizeof(*t) + cgid_len, pdu_data, pdu_len);
- 
-@@ -751,31 +750,29 @@ void blk_trace_shutdown(struct request_queue *q)
- }
- 
- #ifdef CONFIG_BLK_CGROUP
--static union kernfs_node_id *
--blk_trace_bio_get_cgid(struct request_queue *q, struct bio *bio)
-+static u64 blk_trace_bio_get_cgid(struct request_queue *q, struct bio *bio)
- {
- 	struct blk_trace *bt = q->blk_trace;
- 
- 	if (!bt || !(blk_tracer_flags.val & TRACE_BLK_OPT_CGROUP))
--		return NULL;
-+		return 0;
+@@ -759,7 +759,7 @@ static u64 blk_trace_bio_get_cgid(struct request_queue *q, struct bio *bio)
  
  	if (!bio->bi_blkg)
--		return NULL;
-+		return 0;
- 	return cgroup_get_kernfs_id(bio_blkcg(bio)->css.cgroup);
+ 		return 0;
+-	return cgroup_get_kernfs_id(bio_blkcg(bio)->css.cgroup);
++	return cgroup_id(bio_blkcg(bio)->css.cgroup);
  }
  #else
--static union kernfs_node_id *
--blk_trace_bio_get_cgid(struct request_queue *q, struct bio *bio)
-+u64 blk_trace_bio_get_cgid(struct request_queue *q, struct bio *bio)
- {
--	return NULL;
-+	return 0;
- }
- #endif
- 
--static union kernfs_node_id *
-+static u64
- blk_trace_request_get_cgid(struct request_queue *q, struct request *rq)
- {
- 	if (!rq->bio)
--		return NULL;
-+		return 0;
- 	/* Use the first bio */
- 	return blk_trace_bio_get_cgid(q, rq->bio);
- }
-@@ -797,8 +794,7 @@ blk_trace_request_get_cgid(struct request_queue *q, struct request *rq)
-  *
-  **/
- static void blk_add_trace_rq(struct request *rq, int error,
--			     unsigned int nr_bytes, u32 what,
--			     union kernfs_node_id *cgid)
-+			     unsigned int nr_bytes, u32 what, u64 cgid)
- {
- 	struct blk_trace *bt = rq->q->blk_trace;
- 
-@@ -913,7 +909,7 @@ static void blk_add_trace_getrq(void *ignore,
- 
- 		if (bt)
- 			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_GETRQ, 0, 0,
--					NULL, NULL);
-+					NULL, 0);
- 	}
- }
- 
-@@ -929,7 +925,7 @@ static void blk_add_trace_sleeprq(void *ignore,
- 
- 		if (bt)
- 			__blk_add_trace(bt, 0, 0, rw, 0, BLK_TA_SLEEPRQ,
--					0, 0, NULL, NULL);
-+					0, 0, NULL, 0);
- 	}
- }
- 
-@@ -938,7 +934,7 @@ static void blk_add_trace_plug(void *ignore, struct request_queue *q)
- 	struct blk_trace *bt = q->blk_trace;
- 
- 	if (bt)
--		__blk_add_trace(bt, 0, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL, NULL);
-+		__blk_add_trace(bt, 0, 0, 0, 0, BLK_TA_PLUG, 0, 0, NULL, 0);
- }
- 
- static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
-@@ -955,7 +951,7 @@ static void blk_add_trace_unplug(void *ignore, struct request_queue *q,
- 		else
- 			what = BLK_TA_UNPLUG_TIMER;
- 
--		__blk_add_trace(bt, 0, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu, NULL);
-+		__blk_add_trace(bt, 0, 0, 0, 0, what, 0, sizeof(rpdu), &rpdu, 0);
- 	}
- }
- 
-@@ -1172,19 +1168,17 @@ const struct blk_io_trace *te_blk_io_trace(const struct trace_entry *ent)
- 
- static inline const void *pdu_start(const struct trace_entry *ent, bool has_cg)
- {
--	return (void *)(te_blk_io_trace(ent) + 1) +
--		(has_cg ? sizeof(union kernfs_node_id) : 0);
-+	return (void *)(te_blk_io_trace(ent) + 1) + (has_cg ? sizeof(u64) : 0);
- }
- 
--static inline const void *cgid_start(const struct trace_entry *ent)
-+static inline u64 t_cgid(const struct trace_entry *ent)
- {
--	return (void *)(te_blk_io_trace(ent) + 1);
-+	return *(u64 *)(te_blk_io_trace(ent) + 1);
- }
- 
- static inline int pdu_real_len(const struct trace_entry *ent, bool has_cg)
- {
--	return te_blk_io_trace(ent)->pdu_len -
--			(has_cg ? sizeof(union kernfs_node_id) : 0);
-+	return te_blk_io_trace(ent)->pdu_len - (has_cg ? sizeof(u64) : 0);
- }
- 
- static inline u32 t_action(const struct trace_entry *ent)
-@@ -1257,7 +1251,7 @@ static void blk_log_action(struct trace_iterator *iter, const char *act,
- 
- 	fill_rwbs(rwbs, t);
- 	if (has_cg) {
--		const union kernfs_node_id *id = cgid_start(iter->ent);
-+		u64 id = t_cgid(iter->ent);
- 
- 		if (blk_tracer_flags.val & TRACE_BLK_OPT_CGNAME) {
- 			char blkcg_name_buf[NAME_MAX + 1] = "<...>";
-@@ -1269,9 +1263,10 @@ static void blk_log_action(struct trace_iterator *iter, const char *act,
- 				 blkcg_name_buf, act, rwbs);
- 		} else
- 			trace_seq_printf(&iter->seq,
--				 "%3d,%-3d %x,%-x %2s %3s ",
-+				 "%3d,%-3d %lx,%-x %2s %3s ",
- 				 MAJOR(t->device), MINOR(t->device),
--				 id->ino, id->generation, act, rwbs);
-+				 kernfs_id_ino(id), kernfs_id_gen(id),
-+				 act, rwbs);
- 	} else
- 		trace_seq_printf(&iter->seq, "%3d,%-3d %2s %3s ",
- 				 MAJOR(t->device), MINOR(t->device), act, rwbs);
+ u64 blk_trace_bio_get_cgid(struct request_queue *q, struct bio *bio)
 diff --git a/net/core/filter.c b/net/core/filter.c
-index ed6563622ce3..b360a7beb6fc 100644
+index b360a7beb6fc..caef7c74cad5 100644
 --- a/net/core/filter.c
 +++ b/net/core/filter.c
 @@ -4089,7 +4089,7 @@ BPF_CALL_1(bpf_skb_cgroup_id, const struct sk_buff *, skb)
  		return 0;
  
  	cgrp = sock_cgroup_ptr(&sk->sk_cgrp_data);
--	return cgrp->kn->id.id;
-+	return cgrp->kn->id;
+-	return cgrp->kn->id;
++	return cgroup_id(cgrp);
  }
  
  static const struct bpf_func_proto bpf_skb_cgroup_id_proto = {
@@ -597,8 +469,8 @@ index ed6563622ce3..b360a7beb6fc 100644
  	if (!ancestor)
  		return 0;
  
--	return ancestor->kn->id.id;
-+	return ancestor->kn->id;
+-	return ancestor->kn->id;
++	return cgroup_id(ancestor);
  }
  
  static const struct bpf_func_proto bpf_skb_ancestor_cgroup_id_proto = {
