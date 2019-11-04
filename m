@@ -1,71 +1,61 @@
-From: Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [PATCH v2 1/2] kernfs: Convert to u64 id
-Date: Mon, 4 Nov 2019 08:59:01 -0500
-Message-ID: <20191104085901.06035a26@grimm.local.home>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 0/2] cgroup: Sync cgroup id and inode number
+Date: Mon, 4 Nov 2019 08:49:03 -0800
+Message-ID: <20191104164903.GQ3622521@devbig004.ftw2.facebook.com>
 References: <20191104084520.398584-1-namhyung@kernel.org>
-        <20191104084520.398584-2-namhyung@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191104084520.398584-2-namhyung@kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=Tolm0KjoKvfRTvG4VjDhlcLgC6/zdCu4XmFbBPjTkwY=;
+        b=QDb28cZajsvYgqeWWWhRnDIReogocXA/kxJfrHS6albWdfSNMVrp+8MS/zWWV5k5+T
+         rNv853PHTXdFaUyuxjCXFUyIRcT4ZvKLScrh0pCo04OU5kBwlAITLvKP0d1iTcxYJE5a
+         qYIUCczhmyFKKcc2Sf3hIhNvHcN0fcrf7e+f3ZLWrccNxGJN7imun8WvZrw6VF+9OWBX
+         41opJ+xmjK2J1Nu+/iVZoCce5+jor1RKkjrOQ/bez2sFnLjFRPr9yM9pLYWx2bjPNNBz
+         +3lzIOElaS/CRtT7q/u4sXn9CX/MB357yZYyb1r718eM6SUk+k9Wr/oaYgKxq7kY+svp
+         Wrew==
+Content-Disposition: inline
+In-Reply-To: <20191104084520.398584-1-namhyung@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Namhyung Kim <namhyung@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, LKML <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, Song Liu <liu.song.a23@gmail.com>, cgroups@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, Jens Axboe <axboe@kernel.dk>, "David S. Miller" <davem@davemloft.net>, linux-block@vger.kernel.org, bpf@vger.kernel.org, netdev@vger.kernel.org
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, LKML <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, Song Liu <liu.song.a23@gmail.com>, cgroups@vger.kernel.org
 
-On Mon,  4 Nov 2019 17:45:19 +0900
-Namhyung Kim <namhyung@kernel.org> wrote:
-
-> From: Tejun Heo <tj@kernel.org>
+On Mon, Nov 04, 2019 at 05:45:18PM +0900, Namhyung Kim wrote:
+> Hello,
 > 
-> The kernfs_id was an union type sharing a 64bit id with 32bit ino +
-> gen.  But it resulted in using 32bit inode even on 64bit systems.
-> Also dealing with an union is annoying especially if you just want to
-> use a single id.
+> This patchset changes cgroup inode number and id management to be in
+> sync with kernfs.  The cgroup inode number is managed by kernfs but
+> cgroup id is allocated by a separate idr.  The idea is to have a
+> single id for internal usage, inode number and file handle which can
+> be accessed from userspace.  Actually this work is from Tejun who also
+> provided the idea.  I just took over the work and fixed some errors
+> and finally was able to run perf for testing.
 > 
-> Thus let's get rid of the kernfs_node_id type and use u64 directly.
-> The upper 32bit is used for gen and lower is for ino on 32bit systems.
-> The kernfs_id_ino() and kernfs_id_gen() helpers will take care of the
-> bit handling depends on the system word size.
+> The background of this work is that I want to add cgroup sampling
+> feature in the perf event subsystem.  As Tejun mentioned that using
+> cgroup id is not enough and it'd better using file handle instead.
+> But getting file handle in perf NMI handler is not possible so I want
+> to get the info from a cgroup node.
 > 
-> Cc: Steven Rostedt <rostedt@goodmis.org>
-> Cc: Ingo Molnar <mingo@redhat.com>
-> Cc: Alexei Starovoitov <ast@kernel.org>
-> Cc: Daniel Borkmann <daniel@iogearbox.net>
-> Cc: Martin KaFai Lau <kafai@fb.com>
-> Cc: Song Liu <songliubraving@fb.com>
-> Cc: Yonghong Song <yhs@fb.com>
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: linux-block@vger.kernel.org
-> Cc: bpf@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> [namhyung: fix build error in bpf_get_current_cgroup_id()]
-> Signed-off-by: Namhyung Kim <namhyung@kernel.org>
-> ---
->  fs/kernfs/dir.c                  | 36 ++++++++-----
->  fs/kernfs/file.c                 |  4 +-
->  fs/kernfs/inode.c                |  4 +-
->  fs/kernfs/kernfs-internal.h      |  2 -
->  fs/kernfs/mount.c                | 92 +++++++++++++++++++-------------
->  include/linux/cgroup.h           | 17 +++---
->  include/linux/exportfs.h         |  5 ++
->  include/linux/kernfs.h           | 47 +++++++++-------
+> The first patch converted kernfs id into a single 64bit number and in
+> the second patch cgroup uses the kernfs id as cgroup id.
+> 
+> The patches are based on the for-next branch in Tejun's cgroup tree.
+> Tested with tools/testing/selftests/cgroup/test_stress.sh.
 
->  include/trace/events/writeback.h | 92 ++++++++++++++++----------------
+Sorry about the delay.  I'm still working on the patch series and the
+draft patches currently posted aren't quite correct (e.g. netprio is
+now trying to allocate arrays which use u64 values as index and that
+u64 value can start with 33rd bit set from the get-go).
 
-I only looked at the above file, and didn't see anything bad about it.
+So, please hold on w/ this series for now.
 
-Acked-by: Steven Rostedt (VMware) <rostedt@goodmis.org>
+Thanks.
 
--- Steve
-
-
->  kernel/bpf/helpers.c             |  2 +-
->  kernel/cgroup/cgroup.c           |  5 +-
->  kernel/trace/blktrace.c          | 66 +++++++++++------------
->  net/core/filter.c                |  4 +-
->  13 files changed, 207 insertions(+), 169 deletions(-)
-
+-- 
+tejun
