@@ -1,160 +1,133 @@
-From: Mina Almasry <almasrymina@google.com>
-Subject: Re: [PATCH v8 5/9] hugetlb: disable region_add file_region coalescing
-Date: Mon, 4 Nov 2019 13:19:18 -0800
-Message-ID: <CAHS8izMYaHf-3zeVcM_73_KSMCpA5vds-NtRjNt0d8VsMfczQw@mail.gmail.com>
-References: <20191030013701.39647-1-almasrymina@google.com>
- <20191030013701.39647-5-almasrymina@google.com> <1c060bde-8d44-146c-6d67-a7b145aa1b59@oracle.com>
- <CAHS8izPTvybLq9Y9Fn6Z+hSc7gLP+goQ-ixzjxa1XJ-qhWM8ow@mail.gmail.com> <a5f991c8-3f74-6000-cbd3-09fb8626e3f5@oracle.com>
+From: Brian Welty <brian.welty@intel.com>
+Subject: [RFC PATCH] cgroup: Document interface files and rationale for DRM
+ controller
+Date: Mon,  4 Nov 2019 17:08:47 -0500
+Message-ID: <20191104220847.23283-1-brian.welty@intel.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=/8yU3O5k24h9e3PyFN4Dj6MFbBb6JVOj0JoMWY+S3AE=;
-        b=D9p5NchbwDhe9mp8NmRpUK2kC/a+iNk7mb4uEiZ8i732RHQD6+tLGJUqQxUtZVO/6E
-         cj1d8a4CJKXF8pG7Zq7JEeo0VUK3rLYbIqPfzCn9VAy0MLJ3rg/OY1kog7CQmyv2Amrc
-         JcgPRVvZUwSxwpa+ttmnJcoylJD3NkiLLnmjKjCHY/C1g4stQ8Ed1DyQrK1adfzuqzG0
-         UtqL7KFhK1ty8dRL3C+GxB04afBz9u4VTY09zYZBWWaqrssMfw3imLZpgVrl9CnzcqC5
-         01mxKNlxFe9J0MLshePp0EkD4m82n/DCA8btqZnttBF+d3W3jxDnTftdC5+8WtGvIWYe
-         1bqg==
-In-Reply-To: <a5f991c8-3f74-6000-cbd3-09fb8626e3f5@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Mike Kravetz <mike.kravetz@oracle.com>
-Cc: shuah <shuah@kernel.org>, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>
+To: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, dri-devel@lists.freedesktop.org, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>, Kenny Ho <Kenny.Ho@amd.com>, Felix Kuehling <Felix.Kuehling@amd.com>, Leon Romanovsky <leon@kernel.org>
 
-On Mon, Nov 4, 2019 at 1:15 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
->
-> On 11/4/19 1:04 PM, Mina Almasry wrote:
-> > On Fri, Nov 1, 2019 at 4:23 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
-> >>
-> >> On 10/29/19 6:36 PM, Mina Almasry wrote:
-> >>>  static long add_reservation_in_range(struct resv_map *resv, long f, long t,
-> >>> -                                  bool count_only)
-> >>> +                                  long *regions_needed, bool count_only)
-> >>>  {
-> >>> -     long chg = 0;
-> >>> +     long add = 0;
-> >>>       struct list_head *head = &resv->regions;
-> >>> +     long last_accounted_offset = f;
-> >>>       struct file_region *rg = NULL, *trg = NULL, *nrg = NULL;
-> >>>
-> >>> -     /* Locate the region we are before or in. */
-> >>> -     list_for_each_entry (rg, head, link)
-> >>> -             if (f <= rg->to)
-> >>> -                     break;
-> >>> +     if (regions_needed)
-> >>> +             *regions_needed = 0;
-> >>>
-> >>> -     /* Round our left edge to the current segment if it encloses us. */
-> >>> -     if (f > rg->from)
-> >>> -             f = rg->from;
-> >>> -
-> >>> -     chg = t - f;
-> >>> +     /* In this loop, we essentially handle an entry for the range
-> >>> +      * [last_accounted_offset, rg->from), at every iteration, with some
-> >>> +      * bounds checking.
-> >>> +      */
-> >>> +     list_for_each_entry_safe(rg, trg, head, link) {
-> >>> +             /* Skip irrelevant regions that start before our range. */
-> >>> +             if (rg->from < f) {
-> >>> +                     /* If this region ends after the last accounted offset,
-> >>> +                      * then we need to update last_accounted_offset.
-> >>> +                      */
-> >>> +                     if (rg->to > last_accounted_offset)
-> >>> +                             last_accounted_offset = rg->to;
-> >>> +                     continue;
-> >>> +             }
-> >>>
-> >>> -     /* Check for and consume any regions we now overlap with. */
-> >>> -     nrg = rg;
-> >>> -     list_for_each_entry_safe (rg, trg, rg->link.prev, link) {
-> >>> -             if (&rg->link == head)
-> >>> -                     break;
-> >>> +             /* When we find a region that starts beyond our range, we've
-> >>> +              * finished.
-> >>> +              */
-> >>>               if (rg->from > t)
-> >>>                       break;
-> >>>
-> >>> -             /* We overlap with this area, if it extends further than
-> >>> -              * us then we must extend ourselves.  Account for its
-> >>> -              * existing reservation.
-> >>> +             /* Add an entry for last_accounted_offset -> rg->from, and
-> >>> +              * update last_accounted_offset.
-> >>>                */
-> >>> -             if (rg->to > t) {
-> >>> -                     chg += rg->to - t;
-> >>> -                     t = rg->to;
-> >>> +             if (rg->from > last_accounted_offset) {
-> >>> +                     add += rg->from - last_accounted_offset;
-> >>> +                     if (!count_only) {
-> >>> +                             nrg = get_file_region_entry_from_cache(
-> >>> +                                     resv, last_accounted_offset, rg->from);
-> >>> +                             list_add(&nrg->link, rg->link.prev);
-> >>> +                     } else if (regions_needed)
-> >>> +                             *regions_needed += 1;
-> >>>               }
-> >>> -             chg -= rg->to - rg->from;
-> >>>
-> >>> -             if (!count_only && rg != nrg) {
-> >>> -                     list_del(&rg->link);
-> >>> -                     kfree(rg);
-> >>> -             }
-> >>> +             last_accounted_offset = rg->to;
-> >>
-> >> That last assignment is unneeded.  Correct?
-> >>
-> >
-> > Not to make you nervous, but this assignment is needed.
-> >
-> > The basic idea is that there are 2 loop invariants here:
-> > 1. Everything before last_accounted_offset is filled in with file_regions.
-> > 2. rg points to the first region past last_account_offset.
-> >
-> > Each loop iteration compares rg->from to last_accounted_offset, and if
-> > there is a gap, it creates a new region to fill this gap. Then this
-> > assignment restores loop invariant #2 by assigning
-> > last_accounted_offset to rg->to, since now everything before rg->to is
-> > filled in with file_regions.
-> >
->
-> My apologies!
->
-> >>>       }
-> >>>
-> >>> -     if (!count_only) {
-> >>> -             nrg->from = f;
-> >>> -             nrg->to = t;
-> >>> +     /* Handle the case where our range extends beyond
-> >>> +      * last_accounted_offset.
-> >>> +      */
-> >>> +     if (last_accounted_offset < t) {
-> >>> +             add += t - last_accounted_offset;
-> >>> +             if (!count_only) {
-> >>> +                     nrg = get_file_region_entry_from_cache(
-> >>> +                             resv, last_accounted_offset, t);
-> >>> +                     list_add(&nrg->link, rg->link.prev);
-> >>> +             } else if (regions_needed)
-> >>> +                     *regions_needed += 1;
-> >>> +             last_accounted_offset = t;
->
-> The question about an unnecessary assignment was supposed to be
-> directed at the above line.
->
-
-Oh, yes. That assignment is completely unnecessary; the function just
-exits after pretty much. Will remove, thanks!
-
-> --
-> Mike Kravetz
->
->
-> >>>       }
-> >>>
-> >>> -     return chg;
-> >>> +     return add;
-> >>>  }
+SGVyZSBpcyBvbmUgcHJvcG9zYWwgZm9yIGEgc2V0IG9mIGludGVyZmFjZSBmaWxlcyB0byBiZSBp
+bXBsZW1lbnRlZCBpbgppbiBhIG5ldyBEUk0gY29udHJvbGxlci4gIFRoaXMgaXMgYW4gYWx0ZXJu
+YXRlIHNldCBvZiBpbnRlcmZhY2UgZmlsZXMKdGhhbiBpbiB0aGUgY3VycmVudCB2NCBvZiBEUk0g
+Y29udHJvbGxlciBbMV0uICBBcyB0aGVyZSB3YXMgbm90IGEgY2xlYXIKY29uc2Vuc3VzIG9uIHRo
+ZSBpbnRlcmZhY2UgZmlsZXMgYW5kIGFzc29jaWF0ZWQgY29udHJvbHMsIGl0IHNlZW1zIHdvcnRo
+CmFnYWluIGNvbnNpZGVyaW5nIGlmIHdlIHNob3VsZCBoYXZlIGEgc2V0IG9mIGNvbnRyb2xzIG1v
+cmUgY29uc2lzdGVudAppbiBmdW5jdGlvbmFsaXR5IHdpdGggd2hhdCBleGlzdGluZyBDUFUgYW5k
+IE1FTSBjb250cm9sbGVycyBwcm92aWRlLgoKVGhpcyBpcyBpbiBzb21lIHJlc3BlY3RzIGEgZm9s
+bG93LXVwIHRvIG15IHByaW9yIFJGQyBzZXJpZXMgWzJdIHdoZXJlCkkgYXR0ZW1wdGVkIHRvIGlt
+cGxlbWVudCBwZXItZGV2aWNlIGNvbnRyb2xzIHdpdGhpbiBleGlzdGluZyBjZ3JvdXAKc3Vic3lz
+dGVtcy4KClRoZSBiYXNpYyBnb2FsIG9mIHRoYXQgZGVzaWduIHdhcyB0byByZXVzZSB3ZWxsIGtu
+b3duIGNvbnRyb2xzLiBJbnN0ZWFkCndlIGNhbiBhY2hpZXZlIHRoYXQgc2FtZSBnb2FsLCBidXQg
+Ynkgc2ltcGx5IGhhdmluZyB0aGUgcHJvcG9zZWQgRFJNCmNvbnRyb2xsZXIgaW1wbGVtZW50IHRo
+b3NlIHNhbWUgaW50ZXJmYWNlIGZpbGVzIHdpdGggaWRlbnRpY2FsIG5hbWUuClRoZSBpbnRlbnQg
+YmVpbmcgdGhhdCBlcXVpdmFsZW50IGZ1bmN0aW9uYWxpdHkgaXMgdGhlbiBwcm92aWRlZCBieSB0
+aGUKdW5kZXJseWluZyBHUFUgZGV2aWNlIGRyaXZlci4KCkhlcmUgaXMgdGhlIHJhdGlvbmFsZSwg
+cmVwZWF0ZWQgZnJvbSBwcm9wb3NlZCBEUk0gY29udHJvbGxlciBkb2N1bWVudGlvbjoKQXMgYW4g
+YWNjZWxlcmF0b3Igb3IgR1BVIGRldmljZSBpcyBzaW1pbGFyIGluIG1hbnkgcmVzcGVjdHMgdG8g
+YSBDUFUKd2l0aCAob3Igd2l0aG91dCkgYXR0YWNoZWQgc3lzdGVtIG1lbW9yeSwgdGhlIGRlc2ln
+biBwcmluY2lwbGUgaGVyZSBpcwp0byBjbG9uZSBleGlzdGluZyBjb250cm9scyBmcm9tIG90aGVy
+IGNvbnRyb2xsZXJzIHdoZXJlIHRob3NlIGNvbnRyb2xzCmFyZSB1c2VkIGZvciB0aGUgc2FtZSBm
+dW5kYW1lbnRhbCBwdXJwb3NlLiAgRm9yIGV4YW1wbGUsIHJhdGhlciB0aGFuCmludmVudGluZyBu
+ZXcgYnV0IHNpbWlsYXIgY29udHJvbHMgZm9yIG1hbmFnaW5nIG1lbW9yeSBhbGxvY2F0aW9uIGFu
+ZAp3b3JrbG9hZCBpc29sYXRpb24gYW5kIHNjaGVkdWxpbmcsIHdlIGNsb25lIChpbiBuYW1lIGFu
+ZCBhcyBwb3NzaWJsZSBpbgpmdW5jdGlvbmFsaXR5KSBjb250cm9scyBmcm9tIGZvbGxvd2luZyBj
+b250cm9sbGVyczogQ1BVLCBDUFVTRVQsIGFuZCBNRU0uClRoZSBjb250cm9scyBmb3VuZCBpbiB0
+aG9zZSBjb250cm9sbGVycyBhcmUgd2VsbCB1bmRlcnN0b29kIGFscmVhZHkgYnkKc3lzdGVtIGFk
+bWluaXN0cmF0b3JzIGFuZCB0aGUgaW50ZW50IGhlcmUgaXMgdG8gcHJvdmlkZSB0aGVzZSBjb250
+cm9scwpmb3IgdXNlIHdpdGggYWNjZWxhcmF0b3IgYW5kIEdQVSBkZXZpY2VzIHZpYSB0aGUgRFJN
+IGNvbnRyb2xsZXIuCgpSRkMgbm90ZToKSW4gZmFjdCwgdG8gbWFrZSB0aGUgYWJvdmUgcG9pbnQg
+bW9yZSBzdHJvbmdseSwgb25lIHN1Z2dlc3Rpb24gaXMgdG8KcmVuYW1lIHRoaXMgY2dyb3VwIGNv
+bnRyb2xsZXIgYXMgWFBVIGluc3RlYWQgb2YgdGhlIGN1cnJlbnQgRFJNLgpUaGlzIG1ha2VzIGl0
+IGNsZWFyIHRoaXMgaXMgbm90IEdQVS1zcGVjaWZpYyBhbmQgbm8gcmVhc29uIHRvIG1ha2UgdGhp
+cwpyZXN0cmljdGVkIHRvIGRyaXZlcnMgdW5kZXIgZHJpdmVycy9ncHUvZHJtLy4KClsxXSBodHRw
+czovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9hcmNoaXZlcy9kcmktZGV2ZWwvMjAxOS1BdWd1c3Qv
+MjMzNDYzLmh0bWwKWzJdIGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL2FyY2hpdmVzL2Ry
+aS1kZXZlbC8yMDE5LU1heS8yMTYzNzMuaHRtbAoKU2lnbmVkLW9mZi1ieTogQnJpYW4gV2VsdHkg
+PGJyaWFuLndlbHR5QGludGVsLmNvbT4KLS0tCiBEb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nn
+cm91cC12Mi5yc3QgfCA4OSArKysrKysrKysrKysrKysrKysrKysrKysrCiAxIGZpbGUgY2hhbmdl
+ZCwgODkgaW5zZXJ0aW9ucygrKQoKZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vYWRtaW4tZ3Vp
+ZGUvY2dyb3VwLXYyLnJzdCBiL0RvY3VtZW50YXRpb24vYWRtaW4tZ3VpZGUvY2dyb3VwLXYyLnJz
+dAppbmRleCA1MzYxZWJlYzMzNjEuLjJhNzEzMDU5Y2NiZCAxMDA2NDQKLS0tIGEvRG9jdW1lbnRh
+dGlvbi9hZG1pbi1ndWlkZS9jZ3JvdXAtdjIucnN0CisrKyBiL0RvY3VtZW50YXRpb24vYWRtaW4t
+Z3VpZGUvY2dyb3VwLXYyLnJzdApAQCAtMjA1MCw2ICsyMDUwLDk1IEBAIFJETUEgSW50ZXJmYWNl
+IEZpbGVzCiAJICBtbHg0XzAgaGNhX2hhbmRsZT0xIGhjYV9vYmplY3Q9MjAKIAkgIG9jcmRtYTEg
+aGNhX2hhbmRsZT0xIGhjYV9vYmplY3Q9MjMKIAorRFJNCistLS0tCisKK1RoZSAiZHJtIiBjb250
+cm9sbGVyIHJlZ3VsYXRlcyB0aGUgZGlzdHJpYnV0aW9uIGFuZCBhY2NvdW50aW5nIG9mCityZXNv
+dXJjZXMgd2l0aGluIGEgR1BVIGRldmljZSAob3Igb3RoZXIgc2ltaWxhciBhY2NlbGVyYXRvciBk
+ZXZpY2UpLCBidXQKK29ubHkgdGhvc2UgY29udHJvbGxlZCBieSBkZXZpY2UgZHJpdmVycyB1bmRl
+ciBkcml2ZXJzL2dwdS9kcm0vIGFuZCB0aHVzCit3aGljaCByZWdpc3RlciB3aXRoIERSTS4KKwor
+QXMgYW4gYWNjZWxlcmF0b3Igb3IgR1BVIGRldmljZSBpcyBzaW1pbGFyIGluIG1hbnkgcmVzcGVj
+dHMgdG8gYSBDUFUKK3dpdGggKG9yIHdpdGhvdXQpIGF0dGFjaGVkIHN5c3RlbSBtZW1vcnksIHRo
+ZSBkZXNpZ24gcHJpbmNpcGxlIGhlcmUgaXMKK3RvIGNsb25lIGV4aXN0aW5nIGNvbnRyb2xzIGZy
+b20gb3RoZXIgY29udHJvbGxlcnMgd2hlcmUgdGhvc2UgY29udHJvbHMKK2FyZSB1c2VkIGZvciB0
+aGUgc2FtZSBmdW5kYW1lbnRhbCBwdXJwb3NlLiAgRm9yIGV4YW1wbGUsIHJhdGhlciB0aGFuCitp
+bnZlbnRpbmcgbmV3IGJ1dCBzaW1pbGFyIGNvbnRyb2xzIGZvciBtYW5hZ2luZyBtZW1vcnkgYWxs
+b2NhdGlvbiBhbmQKK3dvcmtsb2FkIGlzb2xhdGlvbiBhbmQgc2NoZWR1bGluZywgd2UgY2xvbmUg
+KGluIG5hbWUgYW5kIGFzIHBvc3NpYmxlIGluCitmdW5jdGlvbmFsaXR5KSBjb250cm9scyBmcm9t
+IGZvbGxvd2luZyBjb250cm9sbGVyczogQ1BVLCBDUFVTRVQsIGFuZCBNRU0uCitUaGUgY29udHJv
+bHMgZm91bmQgaW4gdGhvc2UgY29udHJvbGxlcnMgYXJlIHdlbGwgdW5kZXJzdG9vZCBhbHJlYWR5
+IGJ5CitzeXN0ZW0gYWRtaW5pc3RyYXRvcnMgYW5kIHRoZSBpbnRlbnQgaGVyZSBpcyB0byBwcm92
+aWRlIHRoZXNlIGNvbnRyb2xzCitmb3IgdXNlIHdpdGggYWNjZWxhcmF0b3IgYW5kIEdQVSBkZXZp
+Y2VzIHZpYSB0aGUgRFJNIGNvbnRyb2xsZXIuCisKK1JGQyBub3RlOgorSW4gZmFjdCwgdG8gbWFr
+ZSB0aGUgYWJvdmUgcG9pbnQgbW9yZSBzdHJvbmdseSwgb25lIHN1Z2dlc3Rpb24gaXMgdG8KK3Jl
+bmFtZSB0aGlzIGNncm91cCBjb250cm9sbGVyIGFzIFhQVSBpbnN0ZWFkIG9mIHRoZSBjdXJyZW50
+IERSTS4KK1RoaXMgbWFrZXMgaXQgY2xlYXIgdGhpcyBpcyBub3QgR1BVLXNwZWNpZmljIGFuZCBu
+byByZWFzb24gdG8gbWFrZSB0aGlzCityZXN0cmljdGVkIHRvIGRyaXZlcnMgdW5kZXIgZHJpdmVy
+cy9ncHUvZHJtLy4KKworRFJNIEludGVyZmFjZSBGaWxlcworfn5+fn5+fn5+fn5+fn5+fn5+fgor
+CitEUk0gY29udHJvbGxlciBzdXBwb3J0cyB1c2FnZSBvZiBtdWx0aXBsZSBEUk0gZGV2aWNlcyB3
+aXRoaW4gYSBjZ3JvdXAuCitBcyBzdWNoLCBmb3IgYWxsIGludGVyZmFjZSBmaWxlcywgb3V0cHV0
+IGlzIGtleWVkIGJ5IGRldmljZSBuYW1lIGFuZCBpcworbm90IG9yZGVyZWQuCisKK1RoZSBmaXJz
+dCBzZXQgb2YgY29udHJvbCBmaWxlcyBhcmUgaW50ZW5kZWQgdG8gY2xvbmUgZnVuY3Rpb25hbGl0
+eSBmcm9tCitDUFVTRVRzIGFuZCB0aHVzIHByb3ZpZGUgYSBtZWNoYW5pc20gZm9yIGFzc2lnbmlu
+ZyBhIHNldCBvZiB3b3JrbG9hZAorZXhlY3V0aW9uIHVuaXRzIGFuZCBhIHNldCBvZiBhdHRhY2hl
+ZCBtZW1vcmllcyB0byBhIGNncm91cCBpbiBvcmRlciB0bworcHJvdmlkZSByZXNvdXJjZSBpc29s
+YXRpb24uICBUaGUgdGVybSAnd29ya2xvYWQgZXhlY3V0aW9uIHVuaXQnIGlzCit1bnJlYWxpc3Rp
+YyB0byBoYXZlIGEgY29tbW9uIHVuZGVybHlpbmcgaGFyZHdhcmUgaW1wbGVtZW50YXRpb24gYWNy
+b3NzCithbGwgZGV2aWNlcy4gIFRoZSBpbnRlbnQgaXMgdG8gcmVwcmVzZW50IHRoZSBhdmFpbGFi
+bGUgc2V0IG9mIGhhcmR3YXJlCityZXNvdXJjZXMgdGhhdCBwcm92aWRlcyBzY2hlZHVsaW5nIGFu
+ZC9vciBwYXJ0aXRpb25pbmcgb2Ygd29ya2xvYWRzLCBieQord2hpY2ggcG90ZW50aWFsbHkgdGhp
+cyBtYXBzIHRvICdHUFUgY29yZXMnIG9yIHRvICdoYXJkd2FyZSBlbmdpbmVzJy4KKworICBncHVz
+ZXQudW5pdHMKKyAgZ3B1c2V0LnVuaXRzLmVmZmVjdGl2ZQorICBncHVzZXQudW5pdHMucGFydGl0
+aW9uCisKKyAgZ3B1c2V0Lm1lbXMKKyAgZ3B1c2V0Lm1lbXMuZWZmZWN0aXZlCisgIGdwdXNldC5t
+ZW1zLnBhcnRpdGlvbgorCitbQXMgdGhpcyBpcyBhbiBSRkMsIGVhY2ggY29udHJvbCBhYm92ZSBp
+cyBub3QgeWV0IGRlc2NyaWJlZC4gIEZvciBub3csCitwbGVhc2UgcmVmZXIgdG8gQ1BVU0VUIGlu
+dGVyZmFjZSBmaWxlIGRvY3VtZW50YXRpb24gYXMgdGhlc2UgYXJlIGludGVuZGVkCit0byBwcm92
+aWRlIGVxdWl2YWxlbnQgZnVuY3Rpb25hbGl0eS5dCisKK1RoZSBuZXh0IHNldCBvZiBjb250cm9s
+IGZpbGVzIGFyZSBpbnRlbmRlZCB0byBjbG9uZSBmdW5jdGlvbmFsaXR5IGZyb20KK0NQVSBjb250
+cm9sbGVyIGFuZCB0aHVzIHByb3ZpZGUgYSBtZWNoYW5pc20gdG8gaW5mbHVlbmNlIHdvcmtsb2Fk
+CitzY2hlZHVsaW5nLgorCisgIHNjaGVkLm1heAorICBzY2hlZC5zdGF0cworICBzY2hlZC53ZWln
+aHQKKyAgc2NoZWQud2VpZ2h0Lm5pY2UKKworW0FzIHRoaXMgaXMgYW4gUkZDLCBlYWNoIGNvbnRy
+b2wgYWJvdmUgaXMgbm90IHlldCBkZXNjcmliZWQuICBGb3Igbm93LAorcGxlYXNlIHJlZmVyIHRv
+IENQVSBpbnRlcmZhY2UgZmlsZSBkb2N1bWVudGF0aW9uIGFzIHRoZXNlIGFyZSBpbnRlbmRlZAor
+dG8gcHJvdmlkZSBlcXVpdmFsZW50IGZ1bmN0aW9uYWxpdHkuXQorCitUaGUgbmV4dCBzZXQgb2Yg
+Y29udHJvbCBmaWxlcyBhcmUgaW50ZW5kZWQgdG8gY2xvbmUgZnVuY3Rpb25hbGl0eSBmcm9tCit0
+aGUgTUVNIGNvbnRyb2xsZXIgYW5kIHRodXMgcHJvdmlkZSBhIG1lY2hhbmlzbSBmb3IgcmVndWxh
+dGluZyBhbGxvY2F0aW9uCithbmQgYWNjb3VudGluZyBvZiBhdHRhY2hlZCBtZW1vcnkuICBBbGwg
+bWVtb3J5IGFtb3VudHMgYXJlIGluIGJ5dGVzLgorCisgIG1lbW9yeS5jdXJyZW50CisgIG1lbW9y
+eS5ldmVudHMKKyAgbWVtb3J5LmhpZ2gKKyAgbWVtb3J5LmxvdworICBtZW1vcnkubWF4CisgIG1l
+bW9yeS5taW4KKyAgbWVtb3J5LnN0YXQKKyAgbWVtb3J5LnN3YXAuY3VycmVudAorICBtZW1vcnku
+c3dhcC5tYXgKKworUG90ZW50aWFsbHksIHdpdGggc3Vic3RhbnRpYWwganVzdGlmY2lhdGlvbiwg
+dGhlIGFib3ZlIGNhbiBiZSBleHBhbmRlZAoraW4gdGhlIGZ1dHVyZSB3aXRoIG5ldyBtZW1vcnku
+eHh4Lnl5eSBzZXQgb2YgY29udHJvbHMgZm9yIGFkZGl0aW9uYWwKK21lbW9yeSAndHlwZXMnIG9y
+ICdwbGFjZW1lbnQgcmVnaW9ucycgdGhhdCBhcmUgdW5pcXVlIGZyb20gZWFjaCBvdGhlcgorYW5k
+IHdhcnJhbnQgc2VwYXJhdGUgY29udHJvbHMsIChzdWNoIGFzIG1lbW9yeS5zd2FwLnl5eSkuCisK
+K1tBcyB0aGlzIGlzIGFuIFJGQywgZWFjaCBjb250cm9sIGFib3ZlIGlzIG5vdCB5ZXQgZGVzY3Jp
+YmVkLiAgRm9yIG5vdywKK3BsZWFzZSByZWZlciB0byBNRU0gaW50ZXJmYWNlIGZpbGUgZG9jdW1l
+bnRhdGlvbiBhcyB0aGVzZSBhcmUgaW50ZW5kZWQKK3RvIHByb3ZpZGUgZXF1aXZhbGVudCBmdW5j
+dGlvbmFsaXR5Ll0KKwogCiBNaXNjCiAtLS0tCi0tIAoyLjIxLjAKCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJp
+LWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9y
+Zy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
