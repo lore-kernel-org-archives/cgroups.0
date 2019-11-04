@@ -1,47 +1,91 @@
-From: Valentin Schneider <valentin.schneider@arm.com>
-Subject: Re: [PATCH v2] sched/topology, cpuset: Account for housekeeping CPUs
- to avoid empty cpumasks
-Date: Mon, 4 Nov 2019 00:47:50 +0000
-Message-ID: <fbb03d7c-5599-a2ac-b3ac-30f91d440e18@arm.com>
-References: <20191104003906.31476-1-valentin.schneider@arm.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+From: Paolo Valente <paolo.valente@linaro.org>
+Subject: Re: [PATCH 0/2] block, bfq: make bfq disable iocost and present a
+ double interface
+Date: Mon, 4 Nov 2019 07:55:39 +0100
+Message-ID: <DE7EFCFA-D8A6-48EB-AE46-0C7D813A2095@linaro.org>
+References: <20191001193316.3330-1-paolo.valente@linaro.org>
+ <19BC0425-559E-433A-ACAD-B12FA02E20E4@linaro.org>
+ <94E51269-62DC-427A-A81C-3851ABC818BC@linaro.org>
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.8\))
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191104003906.31476-1-valentin.schneider@arm.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=efTsrgum6xJE7MRvVJBRK/zmwVe4c8WJ2kKIMnNW8Ps=;
+        b=ZS7APdfirJFEeeWRieuYZxjTYo9DlEALo+JfcE0VB6A2bSmE0xq8e7lEn2LFs8bzxu
+         ZQ0OjuqTqgY6VOaacTG1EqRkLnd2SRbWat6wLEdTuZgNvrcMZ+1bfa8gVsSbRJ1Yd/Nh
+         bj8p+niD42iKCFX0pKGd659xJmFDKPbLG4p67nwtx9YJY0mMrhtArgNX2pOlxpjLIXIA
+         QKyRgP3ulGzaen3kpD7HFDXpwZ7INdxT8NBmKmpvGH0H+dlOhXtqUrTZCCcS2LUiD40E
+         9RaPT0ZycgVBlMOL6GJJKMVKgQQBkAagSQouQ+eflMrIgvseOzrkV+HrFRlWeV//emlE
+         DrNg==
+In-Reply-To: <94E51269-62DC-427A-A81C-3851ABC818BC@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Cc: lizefan@huawei.com, tj@kernel.org, hannes@cmpxchg.org, mingo@kernel.org, peterz@infradead.org, vincent.guittot@linaro.org, Dietmar.Eggemann@arm.com, morten.rasmussen@arm.com, qperret@google.com, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block <linux-block@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Linus Walleij <linus.walleij@linaro.org>, noreply-spamdigest via bfq-iosched <bfq-iosched@googlegroups.com>, Oleksandr Natalenko <oleksandr@natalenko.name>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org
 
-CgpPbiAwNC8xMS8yMDE5IDAwOjM5LCBWYWxlbnRpbiBTY2huZWlkZXIgd3JvdGU6Cj4gTWljaGFs
-IG5vdGVkIHRoYXQgYSBjcHVzZXQncyBlZmZlY3RpdmVfY3B1cyBjYW4gYmUgYSBub24tZW1weSBt
-YXNrLCBidXQKPiBiZWNhdXNlIG9mIHRoZSBtYXNraW5nIGRvbmUgd2l0aCBob3VzZWtlZXBpbmdf
-Y3B1bWFzayhIS19GTEFHX0RPTUFJTikKPiBmdXJ0aGVyIGRvd24gdGhlIGxpbmUsIHdlIGNhbiBz
-dGlsbCBlbmQgdXAgd2l0aCBhbiBlbXB0eSBjcHVtYXNrIGJlaW5nCj4gcGFzc2VkIGRvd24gdG8g
-cGFydGl0aW9uX3NjaGVkX2RvbWFpbnNfbG9ja2VkKCkuCj4gCj4gRG8gdGhlIHByb3BlciB0aGlu
-ZyBhbmQgZG9uJ3QganVzdCBjaGVjayB0aGUgbWFzayBpcyBub24tZW1wdHkgLSBjaGVjawo+IHRo
-YXQgaXRzIGludGVyc2VjdGlvbiB3aXRoIGhvdXNla2VlcGluZ19jcHVtYXNrKEhLX0ZMQUdfRE9N
-QUlOKSBpcwo+IG5vbi1lbXB0eS4KPiAKPiBGaXhlczogY2QxY2IzMzUwNTYxICgic2NoZWQvdG9w
-b2xvZ3k6IERvbid0IHRyeSB0byBidWlsZCBlbXB0eSBzY2hlZCBkb21haW5zIikKPiBSZXBvcnRl
-ZC1ieTogTWljaGFsIEtvdXRuw70gPG1rb3V0bnlAc3VzZS5jb20+Cj4gU2lnbmVkLW9mZi1ieTog
-VmFsZW50aW4gU2NobmVpZGVyIDx2YWxlbnRpbi5zY2huZWlkZXJAYXJtLmNvbT4KPiAtLS0KClNp
-Z2gsIHRoaXMgaXMgbWlzc2luZzoKCnYyIGNoYW5nZXM6CiAgICAtIEZpeCBicm9rZW4gZGlmZgoK
-QXQgbGVhc3QgaXQgKmRvZXMqIGFwcGx5IHRoaXMgdGltZSBhcm91bmQuCgo+ICBrZXJuZWwvY2dy
-b3VwL2NwdXNldC5jIHwgOCArKysrKysrLQo+ICAxIGZpbGUgY2hhbmdlZCwgNyBpbnNlcnRpb25z
-KCspLCAxIGRlbGV0aW9uKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2tlcm5lbC9jZ3JvdXAvY3B1c2V0
-LmMgYi9rZXJuZWwvY2dyb3VwL2NwdXNldC5jCj4gaW5kZXggYzg3ZWU2NDEyYjM2Li5lNGMxMDc4
-NWRjN2MgMTAwNjQ0Cj4gLS0tIGEva2VybmVsL2Nncm91cC9jcHVzZXQuYwo+ICsrKyBiL2tlcm5l
-bC9jZ3JvdXAvY3B1c2V0LmMKPiBAQCAtNzk4LDggKzc5OCwxNCBAQCBzdGF0aWMgaW50IGdlbmVy
-YXRlX3NjaGVkX2RvbWFpbnMoY3B1bWFza192YXJfdCAqKmRvbWFpbnMsCj4gIAkJICAgIGNwdW1h
-c2tfc3Vic2V0KGNwLT5jcHVzX2FsbG93ZWQsIHRvcF9jcHVzZXQuZWZmZWN0aXZlX2NwdXMpKQo+
-ICAJCQljb250aW51ZTsKPiAgCj4gKwkJLyoKPiArCQkgKiBTa2lwIGNwdXNldHMgdGhhdCB3b3Vs
-ZCBsZWFkIHRvIGFuIGVtcHR5IHNjaGVkIGRvbWFpbi4KPiArCQkgKiBUaGF0IGNvdWxkIGJlIGJl
-Y2F1c2UgZWZmZWN0aXZlX2NwdXMgaXMgZW1wdHksIG9yIGJlY2F1c2UKPiArCQkgKiBpdCdzIG9u
-bHkgc3Bhbm5pbmcgQ1BVcyBvdXRzaWRlIHRoZSBob3VzZWtlZXBpbmcgbWFzay4KPiArCQkgKi8K
-PiAgCQlpZiAoaXNfc2NoZWRfbG9hZF9iYWxhbmNlKGNwKSAmJgo+IC0JCSAgICAhY3B1bWFza19l
-bXB0eShjcC0+ZWZmZWN0aXZlX2NwdXMpKQo+ICsJCSAgICBjcHVtYXNrX2ludGVyc2VjdHMoY3At
-PmVmZmVjdGl2ZV9jcHVzLAo+ICsJCQkJICAgICAgIGhvdXNla2VlcGluZ19jcHVtYXNrKEhLX0ZM
-QUdfRE9NQUlOKSkpCj4gIAkJCWNzYVtjc24rK10gPSBjcDsKPiAgCj4gIAkJLyogc2tpcCBAY3An
-cyBzdWJ0cmVlIGlmIG5vdCBhIHBhcnRpdGlvbiByb290ICovCj4gCg==
+Hi Jens,
+no issue has been raised in more than a month, and this version was
+requested by Tejun and is backed by you. So can it be queued for 5.5?
+
+Thanks,
+Paolo
+
+> Il giorno 23 ott 2019, alle ore 07:44, Paolo Valente =
+<paolo.valente@linaro.org> ha scritto:
+>=20
+> ping
+>=20
+>> Il giorno 9 ott 2019, alle ore 16:25, Paolo Valente =
+<paolo.valente@linaro.org> ha scritto:
+>>=20
+>> Jens, Tejun,
+>> can we proceed with this double-interface solution?
+>>=20
+>> Thanks,
+>> Paolo
+>>=20
+>>> Il giorno 1 ott 2019, alle ore 21:33, Paolo Valente =
+<paolo.valente@linaro.org> ha scritto:
+>>>=20
+>>> Hi Jens,
+>>>=20
+>>> the first patch in this series is Tejun's patch for making BFQ =
+disable
+>>> io.cost. The second patch makes BFQ present both the bfq-prefixes
+>>> parameters and non-prefixed parameters, as suggested by Tejun [1].
+>>>=20
+>>> In the first patch I've tried to use macros not to repeat code
+>>> twice. checkpatch complains that these macros should be enclosed in
+>>> parentheses. I don't see how to do it. I'm willing to switch to any
+>>> better solution.
+>>>=20
+>>> Thanks,
+>>> Paolo
+>>>=20
+>>> [1] https://lkml.org/lkml/2019/9/18/736
+>>>=20
+>>> Paolo Valente (1):
+>>> block, bfq: present a double cgroups interface
+>>>=20
+>>> Tejun Heo (1):
+>>> blkcg: Make bfq disable iocost when enabled
+>>>=20
+>>> Documentation/admin-guide/cgroup-v2.rst |   8 +-
+>>> Documentation/block/bfq-iosched.rst     |  40 ++--
+>>> block/bfq-cgroup.c                      | 260 =
+++++++++++++------------
+>>> block/bfq-iosched.c                     |  32 +++
+>>> block/blk-iocost.c                      |   5 +-
+>>> include/linux/blk-cgroup.h              |   5 +
+>>> kernel/cgroup/cgroup.c                  |   2 +
+>>> 7 files changed, 201 insertions(+), 151 deletions(-)
+>>>=20
+>>> --
+>>> 2.20.1
+>>=20
+>=20
+
