@@ -1,133 +1,104 @@
-From: Brian Welty <brian.welty@intel.com>
-Subject: [RFC PATCH] cgroup: Document interface files and rationale for DRM
- controller
-Date: Mon,  4 Nov 2019 17:08:47 -0500
-Message-ID: <20191104220847.23283-1-brian.welty@intel.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCHSET cgroup/for-5.5] kernfs,cgroup: support 64bit inos and unify cgroup IDs
+Date: Mon,  4 Nov 2019 15:59:34 -0800
+Message-ID: <20191104235944.3470866-1-tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=1Zg4NM4L65BwHYcai+2O54GGM0p3wG4erjr6tQWRcZo=;
+        b=EBABFhcW/4CbrVfst7qrvYwEisArwJDXkGvHeGIs6q50PrJnHJsYbvayJGlGq3KFPI
+         s1dyozt349s6fP7eGa4SKiNQMtZZmJ/Tafth7BCNAHcSPDSFQUVShG7a2kEdoijrnqLe
+         +lpUXTAc6iK8jBglQ1YqbfIyS6oD2A5QBg0NEXjooUKmwLhN0WjMwEV8j+cN1s1RZSJp
+         8rQYYwjqqc/RcJIMdtCWB/7onffM5Be0FxtJlOpn9jSD10wzST0B5bIlzsreHPvpKK6V
+         vaNjDebun2eFoPmouATYyFMfr5zQz+FuvH94T3LPmWbZlAraLpT7W2JBRW0pYcVX4Miu
+         T0kw==
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, dri-devel@lists.freedesktop.org, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>, Kenny Ho <Kenny.Ho@amd.com>, Felix Kuehling <Felix.Kuehling@amd.com>, Leon Romanovsky <leon@kernel.org>
+Content-Transfer-Encoding: 7bit
+To: gregkh@linuxfoundation.org
+Cc: kernel-team@fb.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, namhyung@kernel.org, ast@kernel.org, daniel@iogearbox.net
 
-SGVyZSBpcyBvbmUgcHJvcG9zYWwgZm9yIGEgc2V0IG9mIGludGVyZmFjZSBmaWxlcyB0byBiZSBp
-bXBsZW1lbnRlZCBpbgppbiBhIG5ldyBEUk0gY29udHJvbGxlci4gIFRoaXMgaXMgYW4gYWx0ZXJu
-YXRlIHNldCBvZiBpbnRlcmZhY2UgZmlsZXMKdGhhbiBpbiB0aGUgY3VycmVudCB2NCBvZiBEUk0g
-Y29udHJvbGxlciBbMV0uICBBcyB0aGVyZSB3YXMgbm90IGEgY2xlYXIKY29uc2Vuc3VzIG9uIHRo
-ZSBpbnRlcmZhY2UgZmlsZXMgYW5kIGFzc29jaWF0ZWQgY29udHJvbHMsIGl0IHNlZW1zIHdvcnRo
-CmFnYWluIGNvbnNpZGVyaW5nIGlmIHdlIHNob3VsZCBoYXZlIGEgc2V0IG9mIGNvbnRyb2xzIG1v
-cmUgY29uc2lzdGVudAppbiBmdW5jdGlvbmFsaXR5IHdpdGggd2hhdCBleGlzdGluZyBDUFUgYW5k
-IE1FTSBjb250cm9sbGVycyBwcm92aWRlLgoKVGhpcyBpcyBpbiBzb21lIHJlc3BlY3RzIGEgZm9s
-bG93LXVwIHRvIG15IHByaW9yIFJGQyBzZXJpZXMgWzJdIHdoZXJlCkkgYXR0ZW1wdGVkIHRvIGlt
-cGxlbWVudCBwZXItZGV2aWNlIGNvbnRyb2xzIHdpdGhpbiBleGlzdGluZyBjZ3JvdXAKc3Vic3lz
-dGVtcy4KClRoZSBiYXNpYyBnb2FsIG9mIHRoYXQgZGVzaWduIHdhcyB0byByZXVzZSB3ZWxsIGtu
-b3duIGNvbnRyb2xzLiBJbnN0ZWFkCndlIGNhbiBhY2hpZXZlIHRoYXQgc2FtZSBnb2FsLCBidXQg
-Ynkgc2ltcGx5IGhhdmluZyB0aGUgcHJvcG9zZWQgRFJNCmNvbnRyb2xsZXIgaW1wbGVtZW50IHRo
-b3NlIHNhbWUgaW50ZXJmYWNlIGZpbGVzIHdpdGggaWRlbnRpY2FsIG5hbWUuClRoZSBpbnRlbnQg
-YmVpbmcgdGhhdCBlcXVpdmFsZW50IGZ1bmN0aW9uYWxpdHkgaXMgdGhlbiBwcm92aWRlZCBieSB0
-aGUKdW5kZXJseWluZyBHUFUgZGV2aWNlIGRyaXZlci4KCkhlcmUgaXMgdGhlIHJhdGlvbmFsZSwg
-cmVwZWF0ZWQgZnJvbSBwcm9wb3NlZCBEUk0gY29udHJvbGxlciBkb2N1bWVudGlvbjoKQXMgYW4g
-YWNjZWxlcmF0b3Igb3IgR1BVIGRldmljZSBpcyBzaW1pbGFyIGluIG1hbnkgcmVzcGVjdHMgdG8g
-YSBDUFUKd2l0aCAob3Igd2l0aG91dCkgYXR0YWNoZWQgc3lzdGVtIG1lbW9yeSwgdGhlIGRlc2ln
-biBwcmluY2lwbGUgaGVyZSBpcwp0byBjbG9uZSBleGlzdGluZyBjb250cm9scyBmcm9tIG90aGVy
-IGNvbnRyb2xsZXJzIHdoZXJlIHRob3NlIGNvbnRyb2xzCmFyZSB1c2VkIGZvciB0aGUgc2FtZSBm
-dW5kYW1lbnRhbCBwdXJwb3NlLiAgRm9yIGV4YW1wbGUsIHJhdGhlciB0aGFuCmludmVudGluZyBu
-ZXcgYnV0IHNpbWlsYXIgY29udHJvbHMgZm9yIG1hbmFnaW5nIG1lbW9yeSBhbGxvY2F0aW9uIGFu
-ZAp3b3JrbG9hZCBpc29sYXRpb24gYW5kIHNjaGVkdWxpbmcsIHdlIGNsb25lIChpbiBuYW1lIGFu
-ZCBhcyBwb3NzaWJsZSBpbgpmdW5jdGlvbmFsaXR5KSBjb250cm9scyBmcm9tIGZvbGxvd2luZyBj
-b250cm9sbGVyczogQ1BVLCBDUFVTRVQsIGFuZCBNRU0uClRoZSBjb250cm9scyBmb3VuZCBpbiB0
-aG9zZSBjb250cm9sbGVycyBhcmUgd2VsbCB1bmRlcnN0b29kIGFscmVhZHkgYnkKc3lzdGVtIGFk
-bWluaXN0cmF0b3JzIGFuZCB0aGUgaW50ZW50IGhlcmUgaXMgdG8gcHJvdmlkZSB0aGVzZSBjb250
-cm9scwpmb3IgdXNlIHdpdGggYWNjZWxhcmF0b3IgYW5kIEdQVSBkZXZpY2VzIHZpYSB0aGUgRFJN
-IGNvbnRyb2xsZXIuCgpSRkMgbm90ZToKSW4gZmFjdCwgdG8gbWFrZSB0aGUgYWJvdmUgcG9pbnQg
-bW9yZSBzdHJvbmdseSwgb25lIHN1Z2dlc3Rpb24gaXMgdG8KcmVuYW1lIHRoaXMgY2dyb3VwIGNv
-bnRyb2xsZXIgYXMgWFBVIGluc3RlYWQgb2YgdGhlIGN1cnJlbnQgRFJNLgpUaGlzIG1ha2VzIGl0
-IGNsZWFyIHRoaXMgaXMgbm90IEdQVS1zcGVjaWZpYyBhbmQgbm8gcmVhc29uIHRvIG1ha2UgdGhp
-cwpyZXN0cmljdGVkIHRvIGRyaXZlcnMgdW5kZXIgZHJpdmVycy9ncHUvZHJtLy4KClsxXSBodHRw
-czovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9hcmNoaXZlcy9kcmktZGV2ZWwvMjAxOS1BdWd1c3Qv
-MjMzNDYzLmh0bWwKWzJdIGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL2FyY2hpdmVzL2Ry
-aS1kZXZlbC8yMDE5LU1heS8yMTYzNzMuaHRtbAoKU2lnbmVkLW9mZi1ieTogQnJpYW4gV2VsdHkg
-PGJyaWFuLndlbHR5QGludGVsLmNvbT4KLS0tCiBEb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nn
-cm91cC12Mi5yc3QgfCA4OSArKysrKysrKysrKysrKysrKysrKysrKysrCiAxIGZpbGUgY2hhbmdl
-ZCwgODkgaW5zZXJ0aW9ucygrKQoKZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vYWRtaW4tZ3Vp
-ZGUvY2dyb3VwLXYyLnJzdCBiL0RvY3VtZW50YXRpb24vYWRtaW4tZ3VpZGUvY2dyb3VwLXYyLnJz
-dAppbmRleCA1MzYxZWJlYzMzNjEuLjJhNzEzMDU5Y2NiZCAxMDA2NDQKLS0tIGEvRG9jdW1lbnRh
-dGlvbi9hZG1pbi1ndWlkZS9jZ3JvdXAtdjIucnN0CisrKyBiL0RvY3VtZW50YXRpb24vYWRtaW4t
-Z3VpZGUvY2dyb3VwLXYyLnJzdApAQCAtMjA1MCw2ICsyMDUwLDk1IEBAIFJETUEgSW50ZXJmYWNl
-IEZpbGVzCiAJICBtbHg0XzAgaGNhX2hhbmRsZT0xIGhjYV9vYmplY3Q9MjAKIAkgIG9jcmRtYTEg
-aGNhX2hhbmRsZT0xIGhjYV9vYmplY3Q9MjMKIAorRFJNCistLS0tCisKK1RoZSAiZHJtIiBjb250
-cm9sbGVyIHJlZ3VsYXRlcyB0aGUgZGlzdHJpYnV0aW9uIGFuZCBhY2NvdW50aW5nIG9mCityZXNv
-dXJjZXMgd2l0aGluIGEgR1BVIGRldmljZSAob3Igb3RoZXIgc2ltaWxhciBhY2NlbGVyYXRvciBk
-ZXZpY2UpLCBidXQKK29ubHkgdGhvc2UgY29udHJvbGxlZCBieSBkZXZpY2UgZHJpdmVycyB1bmRl
-ciBkcml2ZXJzL2dwdS9kcm0vIGFuZCB0aHVzCit3aGljaCByZWdpc3RlciB3aXRoIERSTS4KKwor
-QXMgYW4gYWNjZWxlcmF0b3Igb3IgR1BVIGRldmljZSBpcyBzaW1pbGFyIGluIG1hbnkgcmVzcGVj
-dHMgdG8gYSBDUFUKK3dpdGggKG9yIHdpdGhvdXQpIGF0dGFjaGVkIHN5c3RlbSBtZW1vcnksIHRo
-ZSBkZXNpZ24gcHJpbmNpcGxlIGhlcmUgaXMKK3RvIGNsb25lIGV4aXN0aW5nIGNvbnRyb2xzIGZy
-b20gb3RoZXIgY29udHJvbGxlcnMgd2hlcmUgdGhvc2UgY29udHJvbHMKK2FyZSB1c2VkIGZvciB0
-aGUgc2FtZSBmdW5kYW1lbnRhbCBwdXJwb3NlLiAgRm9yIGV4YW1wbGUsIHJhdGhlciB0aGFuCitp
-bnZlbnRpbmcgbmV3IGJ1dCBzaW1pbGFyIGNvbnRyb2xzIGZvciBtYW5hZ2luZyBtZW1vcnkgYWxs
-b2NhdGlvbiBhbmQKK3dvcmtsb2FkIGlzb2xhdGlvbiBhbmQgc2NoZWR1bGluZywgd2UgY2xvbmUg
-KGluIG5hbWUgYW5kIGFzIHBvc3NpYmxlIGluCitmdW5jdGlvbmFsaXR5KSBjb250cm9scyBmcm9t
-IGZvbGxvd2luZyBjb250cm9sbGVyczogQ1BVLCBDUFVTRVQsIGFuZCBNRU0uCitUaGUgY29udHJv
-bHMgZm91bmQgaW4gdGhvc2UgY29udHJvbGxlcnMgYXJlIHdlbGwgdW5kZXJzdG9vZCBhbHJlYWR5
-IGJ5CitzeXN0ZW0gYWRtaW5pc3RyYXRvcnMgYW5kIHRoZSBpbnRlbnQgaGVyZSBpcyB0byBwcm92
-aWRlIHRoZXNlIGNvbnRyb2xzCitmb3IgdXNlIHdpdGggYWNjZWxhcmF0b3IgYW5kIEdQVSBkZXZp
-Y2VzIHZpYSB0aGUgRFJNIGNvbnRyb2xsZXIuCisKK1JGQyBub3RlOgorSW4gZmFjdCwgdG8gbWFr
-ZSB0aGUgYWJvdmUgcG9pbnQgbW9yZSBzdHJvbmdseSwgb25lIHN1Z2dlc3Rpb24gaXMgdG8KK3Jl
-bmFtZSB0aGlzIGNncm91cCBjb250cm9sbGVyIGFzIFhQVSBpbnN0ZWFkIG9mIHRoZSBjdXJyZW50
-IERSTS4KK1RoaXMgbWFrZXMgaXQgY2xlYXIgdGhpcyBpcyBub3QgR1BVLXNwZWNpZmljIGFuZCBu
-byByZWFzb24gdG8gbWFrZSB0aGlzCityZXN0cmljdGVkIHRvIGRyaXZlcnMgdW5kZXIgZHJpdmVy
-cy9ncHUvZHJtLy4KKworRFJNIEludGVyZmFjZSBGaWxlcworfn5+fn5+fn5+fn5+fn5+fn5+fgor
-CitEUk0gY29udHJvbGxlciBzdXBwb3J0cyB1c2FnZSBvZiBtdWx0aXBsZSBEUk0gZGV2aWNlcyB3
-aXRoaW4gYSBjZ3JvdXAuCitBcyBzdWNoLCBmb3IgYWxsIGludGVyZmFjZSBmaWxlcywgb3V0cHV0
-IGlzIGtleWVkIGJ5IGRldmljZSBuYW1lIGFuZCBpcworbm90IG9yZGVyZWQuCisKK1RoZSBmaXJz
-dCBzZXQgb2YgY29udHJvbCBmaWxlcyBhcmUgaW50ZW5kZWQgdG8gY2xvbmUgZnVuY3Rpb25hbGl0
-eSBmcm9tCitDUFVTRVRzIGFuZCB0aHVzIHByb3ZpZGUgYSBtZWNoYW5pc20gZm9yIGFzc2lnbmlu
-ZyBhIHNldCBvZiB3b3JrbG9hZAorZXhlY3V0aW9uIHVuaXRzIGFuZCBhIHNldCBvZiBhdHRhY2hl
-ZCBtZW1vcmllcyB0byBhIGNncm91cCBpbiBvcmRlciB0bworcHJvdmlkZSByZXNvdXJjZSBpc29s
-YXRpb24uICBUaGUgdGVybSAnd29ya2xvYWQgZXhlY3V0aW9uIHVuaXQnIGlzCit1bnJlYWxpc3Rp
-YyB0byBoYXZlIGEgY29tbW9uIHVuZGVybHlpbmcgaGFyZHdhcmUgaW1wbGVtZW50YXRpb24gYWNy
-b3NzCithbGwgZGV2aWNlcy4gIFRoZSBpbnRlbnQgaXMgdG8gcmVwcmVzZW50IHRoZSBhdmFpbGFi
-bGUgc2V0IG9mIGhhcmR3YXJlCityZXNvdXJjZXMgdGhhdCBwcm92aWRlcyBzY2hlZHVsaW5nIGFu
-ZC9vciBwYXJ0aXRpb25pbmcgb2Ygd29ya2xvYWRzLCBieQord2hpY2ggcG90ZW50aWFsbHkgdGhp
-cyBtYXBzIHRvICdHUFUgY29yZXMnIG9yIHRvICdoYXJkd2FyZSBlbmdpbmVzJy4KKworICBncHVz
-ZXQudW5pdHMKKyAgZ3B1c2V0LnVuaXRzLmVmZmVjdGl2ZQorICBncHVzZXQudW5pdHMucGFydGl0
-aW9uCisKKyAgZ3B1c2V0Lm1lbXMKKyAgZ3B1c2V0Lm1lbXMuZWZmZWN0aXZlCisgIGdwdXNldC5t
-ZW1zLnBhcnRpdGlvbgorCitbQXMgdGhpcyBpcyBhbiBSRkMsIGVhY2ggY29udHJvbCBhYm92ZSBp
-cyBub3QgeWV0IGRlc2NyaWJlZC4gIEZvciBub3csCitwbGVhc2UgcmVmZXIgdG8gQ1BVU0VUIGlu
-dGVyZmFjZSBmaWxlIGRvY3VtZW50YXRpb24gYXMgdGhlc2UgYXJlIGludGVuZGVkCit0byBwcm92
-aWRlIGVxdWl2YWxlbnQgZnVuY3Rpb25hbGl0eS5dCisKK1RoZSBuZXh0IHNldCBvZiBjb250cm9s
-IGZpbGVzIGFyZSBpbnRlbmRlZCB0byBjbG9uZSBmdW5jdGlvbmFsaXR5IGZyb20KK0NQVSBjb250
-cm9sbGVyIGFuZCB0aHVzIHByb3ZpZGUgYSBtZWNoYW5pc20gdG8gaW5mbHVlbmNlIHdvcmtsb2Fk
-CitzY2hlZHVsaW5nLgorCisgIHNjaGVkLm1heAorICBzY2hlZC5zdGF0cworICBzY2hlZC53ZWln
-aHQKKyAgc2NoZWQud2VpZ2h0Lm5pY2UKKworW0FzIHRoaXMgaXMgYW4gUkZDLCBlYWNoIGNvbnRy
-b2wgYWJvdmUgaXMgbm90IHlldCBkZXNjcmliZWQuICBGb3Igbm93LAorcGxlYXNlIHJlZmVyIHRv
-IENQVSBpbnRlcmZhY2UgZmlsZSBkb2N1bWVudGF0aW9uIGFzIHRoZXNlIGFyZSBpbnRlbmRlZAor
-dG8gcHJvdmlkZSBlcXVpdmFsZW50IGZ1bmN0aW9uYWxpdHkuXQorCitUaGUgbmV4dCBzZXQgb2Yg
-Y29udHJvbCBmaWxlcyBhcmUgaW50ZW5kZWQgdG8gY2xvbmUgZnVuY3Rpb25hbGl0eSBmcm9tCit0
-aGUgTUVNIGNvbnRyb2xsZXIgYW5kIHRodXMgcHJvdmlkZSBhIG1lY2hhbmlzbSBmb3IgcmVndWxh
-dGluZyBhbGxvY2F0aW9uCithbmQgYWNjb3VudGluZyBvZiBhdHRhY2hlZCBtZW1vcnkuICBBbGwg
-bWVtb3J5IGFtb3VudHMgYXJlIGluIGJ5dGVzLgorCisgIG1lbW9yeS5jdXJyZW50CisgIG1lbW9y
-eS5ldmVudHMKKyAgbWVtb3J5LmhpZ2gKKyAgbWVtb3J5LmxvdworICBtZW1vcnkubWF4CisgIG1l
-bW9yeS5taW4KKyAgbWVtb3J5LnN0YXQKKyAgbWVtb3J5LnN3YXAuY3VycmVudAorICBtZW1vcnku
-c3dhcC5tYXgKKworUG90ZW50aWFsbHksIHdpdGggc3Vic3RhbnRpYWwganVzdGlmY2lhdGlvbiwg
-dGhlIGFib3ZlIGNhbiBiZSBleHBhbmRlZAoraW4gdGhlIGZ1dHVyZSB3aXRoIG5ldyBtZW1vcnku
-eHh4Lnl5eSBzZXQgb2YgY29udHJvbHMgZm9yIGFkZGl0aW9uYWwKK21lbW9yeSAndHlwZXMnIG9y
-ICdwbGFjZW1lbnQgcmVnaW9ucycgdGhhdCBhcmUgdW5pcXVlIGZyb20gZWFjaCBvdGhlcgorYW5k
-IHdhcnJhbnQgc2VwYXJhdGUgY29udHJvbHMsIChzdWNoIGFzIG1lbW9yeS5zd2FwLnl5eSkuCisK
-K1tBcyB0aGlzIGlzIGFuIFJGQywgZWFjaCBjb250cm9sIGFib3ZlIGlzIG5vdCB5ZXQgZGVzY3Jp
-YmVkLiAgRm9yIG5vdywKK3BsZWFzZSByZWZlciB0byBNRU0gaW50ZXJmYWNlIGZpbGUgZG9jdW1l
-bnRhdGlvbiBhcyB0aGVzZSBhcmUgaW50ZW5kZWQKK3RvIHByb3ZpZGUgZXF1aXZhbGVudCBmdW5j
-dGlvbmFsaXR5Ll0KKwogCiBNaXNjCiAtLS0tCi0tIAoyLjIxLjAKCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJp
-LWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9y
-Zy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
+Hello,
+
+Currently, there are three IDs which are being used to identify a
+cgroup.
+
+1. cgroup->id
+2. cgroupfs 32bit ino
+3. cgroupfs 32bit ino + 32bit gen
+
+All three IDs are visible to userland through different interfaces.
+This is very confusing and #1 can't even be resolved to cgroups from
+userland.
+
+A 64bit number is sufficient to identify a cgroup instance uniquely
+and ino_t is 64bit on all archs except for alpha.  There's no reason
+for three different IDs at all.  This patchset updates kernfs so that
+it supports 64bit ino and associated exportfs operations and unifies
+the cgroup IDs.
+
+* On 64bit ino archs, ino is kernfs node ID which is also the cgroup
+  ID.  The ino can be passed directly into open_by_handle_at(2) w/ the
+  new key type FILEID_KERNFS.  Backward compatibility is maintained
+  for FILEID_INO32_GEN keys.
+
+* On 32bit ino archs, kernfs node ID is still 64bit and the cgroup ID.
+  ino is the low 32bits and gen is the high 32bits.  If the high
+  32bits is zero, open_by_handle_at(2) only matches the ino part of
+  the ID allowing userland to resolve inos to cgroups as long as
+  distinguishing recycled inos isn't necessary.
+
+This patchset contains the following 10 patches.
+
+ 0001-kernfs-fix-ino-wrap-around-detection.patch
+ 0002-writeback-use-ino_t-for-inodes-in-tracepoints.patch
+ 0003-netprio-use-css-ID-instead-of-cgroup-ID.patch
+ 0004-kernfs-use-dumber-locking-for-kernfs_find_and_get_no.patch
+ 0005-kernfs-kernfs_find_and_get_node_by_ino-should-only-l.patch
+ 0006-kernfs-convert-kernfs_node-id-from-union-kernfs_node.patch
+ 0007-kernfs-combine-ino-id-lookup-functions-into-kernfs_f.patch
+ 0008-kernfs-implement-custom-exportfs-ops-and-fid-type.patch
+ 0009-kernfs-use-64bit-inos-if-ino_t-is-64bit.patch
+ 0010-cgroup-use-cgrp-kn-id-as-the-cgroup-ID.patch
+
+0001 is a fix which should be backported through -stable.  0002 and
+0003 are prep patches.  0004-0009 make kernfs_node->id a u64 and use
+it as ino on 64bit ino archs.  0010 replaces cgroup->id with the
+kernfs node ID.
+
+Greg, how do you want to route the patches?  We can route 0001-0009
+through your tree and the last one through cgroup after pulling in.
+I'd be happy to route them all too.
+
+This patchset is also available in the following git branch.
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-unified-cgid
+
+diffstat follows.  Thanks.
+
+ fs/kernfs/dir.c                  |  101 +++++++++++++++++++-------------------
+ fs/kernfs/file.c                 |    4 -
+ fs/kernfs/inode.c                |    4 -
+ fs/kernfs/kernfs-internal.h      |    2 
+ fs/kernfs/mount.c                |  102 ++++++++++++++++++++++-----------------
+ include/linux/cgroup-defs.h      |   17 ------
+ include/linux/cgroup.h           |   26 ++++-----
+ include/linux/exportfs.h         |    5 +
+ include/linux/kernfs.h           |   57 ++++++++++++++-------
+ include/net/netprio_cgroup.h     |    2 
+ include/trace/events/cgroup.h    |    6 +-
+ include/trace/events/writeback.h |   92 +++++++++++++++++------------------
+ kernel/bpf/helpers.c             |    2 
+ kernel/bpf/local_storage.c       |    2 
+ kernel/cgroup/cgroup.c           |   81 ++++++++++--------------------
+ kernel/trace/blktrace.c          |   84 +++++++++++++++++---------------
+ net/core/filter.c                |    4 -
+ net/core/netprio_cgroup.c        |    8 +--
+ 18 files changed, 301 insertions(+), 298 deletions(-)
+
+--
+tejun
+
