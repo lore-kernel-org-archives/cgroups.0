@@ -1,35 +1,39 @@
 From: Valentin Schneider <valentin.schneider@arm.com>
-Subject: Re: [PATCH] sched/topology, cpuset: Account for housekeeping CPUs to
- avoid empty cpumasks
-Date: Mon, 4 Nov 2019 00:37:15 +0000
-Message-ID: <845e4aba-eee2-efd0-2902-1d956057059d@arm.com>
-References: <20191102001406.10208-1-valentin.schneider@arm.com>
- <20191103190957.GA39453@gmail.com>
+Subject: [PATCH v2] sched/topology, cpuset: Account for housekeeping CPUs to avoid empty cpumasks
+Date: Mon,  4 Nov 2019 00:39:06 +0000
+Message-ID: <20191104003906.31476-1-valentin.schneider@arm.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191103190957.GA39453@gmail.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Ingo Molnar <mingo@kernel.org>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, lizefan@huawei.com, tj@kernel.org, hannes@cmpxchg.org, peterz@infradead.org, vincent.guittot@linaro.org, Dietmar.Eggemann@arm.com, morten.rasmussen@arm.com, qperret@google.com, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny@suse.com>
+Content-Type: text/plain; charset="macroman"
+To: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: lizefan@huawei.com, tj@kernel.org, hannes@cmpxchg.org, mingo@kernel.org, peterz@infradead.org, vincent.guittot@linaro.org, Dietmar.Eggemann@arm.com, morten.rasmussen@arm.com, qperret@google.com, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
 
-On 03/11/2019 19:09, Ingo Molnar wrote:
-> This patch doesn't apply cleanly to Linus's latest tree - which tree is 
-> this against?
-> 
-
-This was against Linus' tree at the time (31408fbe33d1), but my local .patch
-doesn't apply either. I regenerated a fresh one and there's an off-by-one in
-original chunk size - I suspect my editor trying to be smart when I edited
-the changelog.
-
-I'll look into preventing this from happening again, in the meantime I'll
-send an apply-able version. Apologies for that mess.
-
-> Thanks,
-> 
-> 	Ingo
-> 
+TWljaGFsIG5vdGVkIHRoYXQgYSBjcHVzZXQncyBlZmZlY3RpdmVfY3B1cyBjYW4gYmUgYSBub24t
+ZW1weSBtYXNrLCBidXQKYmVjYXVzZSBvZiB0aGUgbWFza2luZyBkb25lIHdpdGggaG91c2VrZWVw
+aW5nX2NwdW1hc2soSEtfRkxBR19ET01BSU4pCmZ1cnRoZXIgZG93biB0aGUgbGluZSwgd2UgY2Fu
+IHN0aWxsIGVuZCB1cCB3aXRoIGFuIGVtcHR5IGNwdW1hc2sgYmVpbmcKcGFzc2VkIGRvd24gdG8g
+cGFydGl0aW9uX3NjaGVkX2RvbWFpbnNfbG9ja2VkKCkuCgpEbyB0aGUgcHJvcGVyIHRoaW5nIGFu
+ZCBkb24ndCBqdXN0IGNoZWNrIHRoZSBtYXNrIGlzIG5vbi1lbXB0eSAtIGNoZWNrCnRoYXQgaXRz
+IGludGVyc2VjdGlvbiB3aXRoIGhvdXNla2VlcGluZ19jcHVtYXNrKEhLX0ZMQUdfRE9NQUlOKSBp
+cwpub24tZW1wdHkuCgpGaXhlczogY2QxY2IzMzUwNTYxICgic2NoZWQvdG9wb2xvZ3k6IERvbid0
+IHRyeSB0byBidWlsZCBlbXB0eSBzY2hlZCBkb21haW5zIikKUmVwb3J0ZWQtYnk6IE1pY2hhbCBL
+b3V0bsO9IDxta291dG55QHN1c2UuY29tPgpTaWduZWQtb2ZmLWJ5OiBWYWxlbnRpbiBTY2huZWlk
+ZXIgPHZhbGVudGluLnNjaG5laWRlckBhcm0uY29tPgotLS0KIGtlcm5lbC9jZ3JvdXAvY3B1c2V0
+LmMgfCA4ICsrKysrKystCiAxIGZpbGUgY2hhbmdlZCwgNyBpbnNlcnRpb25zKCspLCAxIGRlbGV0
+aW9uKC0pCgpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9jcHVzZXQuYyBiL2tlcm5lbC9jZ3Jv
+dXAvY3B1c2V0LmMKaW5kZXggYzg3ZWU2NDEyYjM2Li5lNGMxMDc4NWRjN2MgMTAwNjQ0Ci0tLSBh
+L2tlcm5lbC9jZ3JvdXAvY3B1c2V0LmMKKysrIGIva2VybmVsL2Nncm91cC9jcHVzZXQuYwpAQCAt
+Nzk4LDggKzc5OCwxNCBAQCBzdGF0aWMgaW50IGdlbmVyYXRlX3NjaGVkX2RvbWFpbnMoY3B1bWFz
+a192YXJfdCAqKmRvbWFpbnMsCiAJCSAgICBjcHVtYXNrX3N1YnNldChjcC0+Y3B1c19hbGxvd2Vk
+LCB0b3BfY3B1c2V0LmVmZmVjdGl2ZV9jcHVzKSkKIAkJCWNvbnRpbnVlOwogCisJCS8qCisJCSAq
+IFNraXAgY3B1c2V0cyB0aGF0IHdvdWxkIGxlYWQgdG8gYW4gZW1wdHkgc2NoZWQgZG9tYWluLgor
+CQkgKiBUaGF0IGNvdWxkIGJlIGJlY2F1c2UgZWZmZWN0aXZlX2NwdXMgaXMgZW1wdHksIG9yIGJl
+Y2F1c2UKKwkJICogaXQncyBvbmx5IHNwYW5uaW5nIENQVXMgb3V0c2lkZSB0aGUgaG91c2VrZWVw
+aW5nIG1hc2suCisJCSAqLwogCQlpZiAoaXNfc2NoZWRfbG9hZF9iYWxhbmNlKGNwKSAmJgotCQkg
+ICAgIWNwdW1hc2tfZW1wdHkoY3AtPmVmZmVjdGl2ZV9jcHVzKSkKKwkJICAgIGNwdW1hc2tfaW50
+ZXJzZWN0cyhjcC0+ZWZmZWN0aXZlX2NwdXMsCisJCQkJICAgICAgIGhvdXNla2VlcGluZ19jcHVt
+YXNrKEhLX0ZMQUdfRE9NQUlOKSkpCiAJCQljc2FbY3NuKytdID0gY3A7CiAKIAkJLyogc2tpcCBA
+Y3AncyBzdWJ0cmVlIGlmIG5vdCBhIHBhcnRpdGlvbiByb290ICovCi0tIAoyLjIyLjAKCg==
