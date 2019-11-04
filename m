@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 07/10] kernfs: combine ino/id lookup functions into kernfs_find_and_get_node_by_id()
-Date: Mon,  4 Nov 2019 15:59:41 -0800
-Message-ID: <20191104235944.3470866-8-tj@kernel.org>
+Subject: [PATCH 04/10] kernfs: use dumber locking for kernfs_find_and_get_node_by_ino()
+Date: Mon,  4 Nov 2019 15:59:38 -0800
+Message-ID: <20191104235944.3470866-5-tj@kernel.org>
 References: <20191104235944.3470866-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=3QraoHZsGuroqETynPvsAI0rLlsKuBbiPFCIw5st0qQ=;
-        b=ZiqnWjuPIAZ7ywT4Ri+4vWI657wRjpF4Ite2x+tF2eGlTdXIeeAeoBL7LgclTVB4ej
-         wJGFCbzyiy77TkaCN8bzDdRAkGLlyOPv8ne/ICbMQOe6OkKLDobq1EaMy0g+yMSyafKa
-         tFuz9Ll0yYJn3aME22aTzMzziXc+qN2OI0yRX8Jqee1mKzzkyH6Pcd+3xnvCznmzw3bA
-         8JcKxdHgAbGrW20W74sc94jZ2PvLUVXw05Xq+bLC/cQQVTZIbTrWtCvuBJp59ZRby5Dp
-         P7WUGpWi9Lq4Tc5wRGjCueRsLMDqaF4cKBRR1FTB4ZrIWafjv7+BYA67IS9URQfJzcKf
-         rJEg==
+        bh=XdS82XwKAJYAYf10xCxmrjEq7ZEr5zc2RbCuNFEXBSg=;
+        b=W5IM6QSOl7ZvVzqGEhgoW0e6Bac4W/+Jhu72ASMECsFDNyiqxQgjYKeKHpAN6z3YRd
+         Z53IOJvoECiXq6AxjGYouP+1aU+1zIQ4VEEtCPCcaOrCzEfk9qRvQZgEsih90dM5IRkS
+         bSN3zMvYleoXtt+ASxJx+21/R6kJI7wd+pxAMd+DhS1a3+PrGVzGvlYxwU9ZhqI4rfRO
+         AJ0Q/xdIOcOGarTYPzAA+JhVnn9wnzVOyLlfoRwoE40UQs79un8RObydw/yYnlW1Ux3I
+         005AGNJKIfFwHfTbIh69ymRRLwHxS3RHgWLea7GOs7nJFk2jnOAieNAltI6yqNmr6q95
+         jK6Q==
 In-Reply-To: <20191104235944.3470866-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,164 +23,126 @@ Content-Transfer-Encoding: 7bit
 To: gregkh@linuxfoundation.org
 Cc: kernel-team@fb.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, namhyung@kernel.org, ast@kernel.org, daniel@iogearbox.net, Tejun Heo <tj@kernel.org>
 
-kernfs_find_and_get_node_by_ino() looks the kernfs_node matching the
-specified ino.  On top of that, kernfs_get_node_by_id() and
-kernfs_fh_get_inode() implement full ID matching by testing the rest
-of ID.
+kernfs_find_and_get_node_by_ino() uses RCU protection.  It's currently
+a bit buggy because it can look up a node which hasn't been activated
+yet and thus may end up exposing a node that the kernfs user is still
+prepping.
 
-On surface, confusingly, the two are slightly different in that the
-latter uses 0 gen as wildcard while the former doesn't - does it mean
-that the latter can't uniquely identify inodes w/ 0 gen?  In practice,
-this is a distinction without a difference because generation number
-starts at 1.  There are no actual IDs with 0 gen, so it can always
-safely used as wildcard.
+While it can be fixed by pushing it further in the current direction,
+it's already complicated and isn't clear whether the complexity is
+justified.  The main use of kernfs_find_and_get_node_by_ino() is for
+exportfs operations.  They aren't super hot and all the follow-up
+operations (e.g. mapping to path) use normal locking anyway.
 
-Let's simplify the code by renaming kernfs_find_and_get_node_by_ino()
-to kernfs_find_and_get_node_by_id(), moving all lookup logics into it,
-and removing now unnecessary kernfs_get_node_by_id().
+Let's switch to a dumber locking scheme and protect the lookup with
+kernfs_idr_lock.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Namhyung Kim <namhyung@kernel.org>
 ---
- fs/kernfs/dir.c             | 17 +++++++++++++----
- fs/kernfs/kernfs-internal.h |  2 --
- fs/kernfs/mount.c           | 26 ++------------------------
- include/linux/kernfs.h      |  3 ++-
- kernel/cgroup/cgroup.c      |  2 +-
- 5 files changed, 18 insertions(+), 32 deletions(-)
+ fs/kernfs/dir.c   | 45 +++++++++------------------------------------
+ fs/kernfs/mount.c | 11 +----------
+ 2 files changed, 10 insertions(+), 46 deletions(-)
 
 diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
-index c67afb591e5b..5dcf19d4adbc 100644
+index 7d4af6cea2a6..798f0f03b62b 100644
 --- a/fs/kernfs/dir.c
 +++ b/fs/kernfs/dir.c
-@@ -696,17 +696,22 @@ struct kernfs_node *kernfs_new_node(struct kernfs_node *parent,
- }
+@@ -508,10 +508,6 @@ void kernfs_put(struct kernfs_node *kn)
+ 	struct kernfs_node *parent;
+ 	struct kernfs_root *root;
  
- /*
-- * kernfs_find_and_get_node_by_ino - get kernfs_node from inode number
-+ * kernfs_find_and_get_node_by_id - get kernfs_node from node id
-  * @root: the kernfs root
-- * @ino: inode number
-+ * @id: the target node id
-+ *
-+ * @id's lower 32bits encode ino and upper gen.  If the gen portion is
-+ * zero, all generations are matched.
-  *
-  * RETURNS:
-  * NULL on failure. Return a kernfs node with reference counter incremented
-  */
--struct kernfs_node *kernfs_find_and_get_node_by_ino(struct kernfs_root *root,
--						    unsigned int ino)
-+struct kernfs_node *kernfs_find_and_get_node_by_id(struct kernfs_root *root,
-+						   u64 id)
+-	/*
+-	 * kernfs_node is freed with ->count 0, kernfs_find_and_get_node_by_ino
+-	 * depends on this to filter reused stale node
+-	 */
+ 	if (!kn || !atomic_dec_and_test(&kn->count))
+ 		return;
+ 	root = kernfs_root(kn);
+@@ -646,11 +642,7 @@ static struct kernfs_node *__kernfs_new_node(struct kernfs_root *root,
+ 	kn->id.ino = ret;
+ 	kn->id.generation = gen;
+ 
+-	/*
+-	 * set ino first. This RELEASE is paired with atomic_inc_not_zero in
+-	 * kernfs_find_and_get_node_by_ino
+-	 */
+-	atomic_set_release(&kn->count, 1);
++	atomic_set(&kn->count, 1);
+ 	atomic_set(&kn->active, KN_DEACTIVATED_BIAS);
+ 	RB_CLEAR_NODE(&kn->rb);
+ 
+@@ -716,38 +708,19 @@ struct kernfs_node *kernfs_find_and_get_node_by_ino(struct kernfs_root *root,
  {
  	struct kernfs_node *kn;
-+	ino_t ino = kernfs_id_ino(id);
-+	u32 gen = kernfs_id_gen(id);
  
- 	spin_lock(&kernfs_idr_lock);
- 
-@@ -714,6 +719,10 @@ struct kernfs_node *kernfs_find_and_get_node_by_ino(struct kernfs_root *root,
- 	if (!kn)
- 		goto err_unlock;
- 
-+	/* 0 matches all generations */
-+	if (unlikely(gen && kernfs_gen(kn) != gen))
-+		goto err_unlock;
+-	rcu_read_lock();
++	spin_lock(&kernfs_idr_lock);
 +
- 	/*
- 	 * ACTIVATED is protected with kernfs_mutex but it was clear when
- 	 * @kn was added to idr and we just wanna see it set.  No need to
-diff --git a/fs/kernfs/kernfs-internal.h b/fs/kernfs/kernfs-internal.h
-index 02ce570a9a3c..2f3c51d55261 100644
---- a/fs/kernfs/kernfs-internal.h
-+++ b/fs/kernfs/kernfs-internal.h
-@@ -109,8 +109,6 @@ struct kernfs_node *kernfs_new_node(struct kernfs_node *parent,
- 				    const char *name, umode_t mode,
- 				    kuid_t uid, kgid_t gid,
- 				    unsigned flags);
--struct kernfs_node *kernfs_find_and_get_node_by_ino(struct kernfs_root *root,
--						    unsigned int ino);
+ 	kn = idr_find(&root->ino_idr, ino);
+ 	if (!kn)
+-		goto out;
++		goto err_unlock;
  
- /*
-  * file.c
+-	/*
+-	 * Since kernfs_node is freed in RCU, it's possible an old node for ino
+-	 * is freed, but reused before RCU grace period. But a freed node (see
+-	 * kernfs_put) or an incompletedly initialized node (see
+-	 * __kernfs_new_node) should have 'count' 0. We can use this fact to
+-	 * filter out such node.
+-	 */
+-	if (!atomic_inc_not_zero(&kn->count)) {
+-		kn = NULL;
+-		goto out;
+-	}
+-
+-	/*
+-	 * The node could be a new node or a reused node. If it's a new node,
+-	 * we are ok. If it's reused because of RCU (because of
+-	 * SLAB_TYPESAFE_BY_RCU), the __kernfs_new_node always sets its 'ino'
+-	 * before 'count'. So if 'count' is uptodate, 'ino' should be uptodate,
+-	 * hence we can use 'ino' to filter stale node.
+-	 */
+-	if (kn->id.ino != ino)
+-		goto out;
+-	rcu_read_unlock();
++	if (unlikely(!atomic_inc_not_zero(&kn->count)))
++		goto err_unlock;
+ 
++	spin_unlock(&kernfs_idr_lock);
+ 	return kn;
+-out:
+-	rcu_read_unlock();
+-	kernfs_put(kn);
++err_unlock:
++	spin_unlock(&kernfs_idr_lock);
+ 	return NULL;
+ }
+ 
 diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
-index f05d5d6f926d..8aed2cccd002 100644
+index 6c12fac2c287..067b7c380056 100644
 --- a/fs/kernfs/mount.c
 +++ b/fs/kernfs/mount.c
-@@ -53,24 +53,6 @@ const struct super_operations kernfs_sops = {
- 	.show_path	= kernfs_sop_show_path,
- };
+@@ -363,18 +363,9 @@ void kernfs_kill_sb(struct super_block *sb)
  
--/*
-- * Similar to kernfs_fh_get_inode, this one gets kernfs node from inode
-- * number and generation
-- */
--struct kernfs_node *kernfs_get_node_by_id(struct kernfs_root *root, u64 id)
--{
--	struct kernfs_node *kn;
--
--	kn = kernfs_find_and_get_node_by_ino(root, kernfs_id_ino(id));
--	if (!kn)
--		return NULL;
--	if (kernfs_gen(kn) != kernfs_id_gen(id)) {
--		kernfs_put(kn);
--		return NULL;
--	}
--	return kn;
--}
--
- static struct inode *kernfs_fh_get_inode(struct super_block *sb,
- 		u64 ino, u32 generation)
+ void __init kernfs_init(void)
  {
-@@ -81,7 +63,8 @@ static struct inode *kernfs_fh_get_inode(struct super_block *sb,
- 	if (ino == 0)
- 		return ERR_PTR(-ESTALE);
+-
+-	/*
+-	 * the slab is freed in RCU context, so kernfs_find_and_get_node_by_ino
+-	 * can access the slab lock free. This could introduce stale nodes,
+-	 * please see how kernfs_find_and_get_node_by_ino filters out stale
+-	 * nodes.
+-	 */
+ 	kernfs_node_cache = kmem_cache_create("kernfs_node_cache",
+ 					      sizeof(struct kernfs_node),
+-					      0,
+-					      SLAB_PANIC | SLAB_TYPESAFE_BY_RCU,
+-					      NULL);
++					      0, SLAB_PANIC, NULL);
  
--	kn = kernfs_find_and_get_node_by_ino(info->root, ino);
-+	kn = kernfs_find_and_get_node_by_id(info->root,
-+					    ino | ((u64)generation << 32));
- 	if (!kn)
- 		return ERR_PTR(-ESTALE);
- 	inode = kernfs_get_inode(sb, kn);
-@@ -89,11 +72,6 @@ static struct inode *kernfs_fh_get_inode(struct super_block *sb,
- 	if (!inode)
- 		return ERR_PTR(-ESTALE);
- 
--	if (generation && inode->i_generation != generation) {
--		/* we didn't find the right inode.. */
--		iput(inode);
--		return ERR_PTR(-ESTALE);
--	}
- 	return inode;
- }
- 
-diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-index b2fc5c8ef6d9..38267cc9420c 100644
---- a/include/linux/kernfs.h
-+++ b/include/linux/kernfs.h
-@@ -393,7 +393,8 @@ void kernfs_kill_sb(struct super_block *sb);
- 
- void kernfs_init(void);
- 
--struct kernfs_node *kernfs_get_node_by_id(struct kernfs_root *root, u64 id);
-+struct kernfs_node *kernfs_find_and_get_node_by_id(struct kernfs_root *root,
-+						   u64 id);
- #else	/* CONFIG_KERNFS */
- 
- static inline enum kernfs_node_type kernfs_type(struct kernfs_node *kn)
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index c6bd1a5a1977..b5dcbee5aa6c 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -5790,7 +5790,7 @@ void cgroup_path_from_kernfs_id(u64 id, char *buf, size_t buflen)
- {
- 	struct kernfs_node *kn;
- 
--	kn = kernfs_get_node_by_id(cgrp_dfl_root.kf_root, id);
-+	kn = kernfs_find_and_get_node_by_id(cgrp_dfl_root.kf_root, id);
- 	if (!kn)
- 		return;
- 	kernfs_path(kn, buf, buflen);
+ 	/* Creates slab cache for kernfs inode attributes */
+ 	kernfs_iattrs_cache  = kmem_cache_create("kernfs_iattrs_cache",
 -- 
 2.17.1
 
