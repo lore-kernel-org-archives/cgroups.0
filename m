@@ -1,176 +1,52 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 08/10] kernfs: implement custom exportfs ops and fid type
-Date: Mon,  4 Nov 2019 15:59:42 -0800
-Message-ID: <20191104235944.3470866-9-tj@kernel.org>
-References: <20191104235944.3470866-1-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=6eyC/Pr88JMkuUtE27lkcLMpRj73Ok1FRh3V2w/GO4I=;
-        b=Q62vHfUhNt9gVSAnEvcyM8ffDXH8NhSIP3TqMk1IR19FwUBSa2gzv/2wfMDbMifc9H
-         F+qLKdXYhgWGXSHtzTNJJwJi66burHZmdJ8PcQSmyfrLXkJp1LQ4W1+yayNvceoV5g8+
-         uPW5TKW31CyyOARzDfc/1YHDXJkUQjsgSB6uf/743I3dTQXLu+3z5GTdmc0ZuNQeDuFw
-         ojaHyff3gkoH3T5F0PCF1nBR68waleyWMp332PeCJmaaY5G/NNUAkzN5cLzG7G2cXTOh
-         yyBke9TrRCMbslN7hYaNX4VbgPGetx5F/ZnhEbCWl/dhpZl17Rqwz2hnBeZamkvGtSz2
-         uxvA==
-In-Reply-To: <20191104235944.3470866-1-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
+Subject: Re: [RFC PATCH] cgroup: Document interface files and rationale for
+ DRM controller
+Date: Mon, 4 Nov 2019 16:15:05 -0800
+Message-ID: <20191105001505.GR3622521@devbig004.ftw2.facebook.com>
+References: <20191104220847.23283-1-brian.welty@intel.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <20191104220847.23283-1-brian.welty@intel.com>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: gregkh@linuxfoundation.org
-Cc: kernel-team@fb.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, namhyung@kernel.org, ast@kernel.org, daniel@iogearbox.net, Tejun Heo <tj@kernel.org>
+To: Brian Welty <brian.welty@intel.com>
+Cc: Leon Romanovsky <leon@kernel.org>, David Airlie <airlied@linux.ie>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Felix Kuehling <Felix.Kuehling@amd.com>, dri-devel@lists.freedesktop.org, Kenny Ho <Kenny.Ho@amd.com>, cgroups@vger.kernel.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>
 
-The current kernfs exportfs implementation uses the generic_fh_*()
-helpers and FILEID_INO32_GEN[_PARENT] which limits ino to 32bits.
-Let's implement custom exportfs operations and fid type to remove the
-restriction.
-
-* FILEID_KERNFS is a single u64 value whose content is
-  kernfs_node->id.  This is the only native fid type.
-
-* For backward compatibility with blk_log_action() path which exposes
-  (ino,gen) pairs which userland assembles into FILEID_INO32_GEN keys,
-  combine the generic keys into 64bit IDs in the same order.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Namhyung Kim <namhyung@kernel.org>
----
- fs/kernfs/mount.c        | 77 +++++++++++++++++++++++++++++++---------
- include/linux/exportfs.h |  5 +++
- 2 files changed, 66 insertions(+), 16 deletions(-)
-
-diff --git a/fs/kernfs/mount.c b/fs/kernfs/mount.c
-index 8aed2cccd002..37a1e5df117a 100644
---- a/fs/kernfs/mount.c
-+++ b/fs/kernfs/mount.c
-@@ -53,40 +53,84 @@ const struct super_operations kernfs_sops = {
- 	.show_path	= kernfs_sop_show_path,
- };
- 
--static struct inode *kernfs_fh_get_inode(struct super_block *sb,
--		u64 ino, u32 generation)
-+static int kernfs_encode_fh(struct inode *inode, __u32 *fh, int *max_len,
-+			    struct inode *parent)
-+{
-+	struct kernfs_node *kn = inode->i_private;
-+
-+	if (*max_len < 2) {
-+		*max_len = 2;
-+		return FILEID_INVALID;
-+	}
-+
-+	*max_len = 2;
-+	*(u64 *)fh = kn->id;
-+	return FILEID_KERNFS;
-+}
-+
-+static struct dentry *__kernfs_fh_to_dentry(struct super_block *sb,
-+					    struct fid *fid, int fh_len,
-+					    int fh_type, bool get_parent)
- {
- 	struct kernfs_super_info *info = kernfs_info(sb);
--	struct inode *inode;
- 	struct kernfs_node *kn;
-+	struct inode *inode;
-+	u64 id;
- 
--	if (ino == 0)
--		return ERR_PTR(-ESTALE);
-+	if (fh_len < 2)
-+		return NULL;
-+
-+	switch (fh_type) {
-+	case FILEID_KERNFS:
-+		id = *(u64 *)fid;
-+		break;
-+	case FILEID_INO32_GEN:
-+	case FILEID_INO32_GEN_PARENT:
-+		/*
-+		 * blk_log_action() exposes (ino,gen) pair without type and
-+		 * userland can call us with generic fid constructed from
-+		 * them.  Combine it back to ID.  See blk_log_action().
-+		 */
-+		id = ((u64)fid->i32.gen << 32) | fid->i32.ino;
-+		break;
-+	default:
-+		return NULL;
-+	}
- 
--	kn = kernfs_find_and_get_node_by_id(info->root,
--					    ino | ((u64)generation << 32));
-+	kn = kernfs_find_and_get_node_by_id(info->root, id);
- 	if (!kn)
- 		return ERR_PTR(-ESTALE);
-+
-+	if (get_parent) {
-+		struct kernfs_node *parent;
-+
-+		parent = kernfs_get_parent(kn);
-+		kernfs_put(kn);
-+		kn = parent;
-+		if (!kn)
-+			return ERR_PTR(-ESTALE);
-+	}
-+
- 	inode = kernfs_get_inode(sb, kn);
- 	kernfs_put(kn);
- 	if (!inode)
- 		return ERR_PTR(-ESTALE);
- 
--	return inode;
-+	return d_obtain_alias(inode);
- }
- 
--static struct dentry *kernfs_fh_to_dentry(struct super_block *sb, struct fid *fid,
--		int fh_len, int fh_type)
-+static struct dentry *kernfs_fh_to_dentry(struct super_block *sb,
-+					  struct fid *fid, int fh_len,
-+					  int fh_type)
- {
--	return generic_fh_to_dentry(sb, fid, fh_len, fh_type,
--				    kernfs_fh_get_inode);
-+	return __kernfs_fh_to_dentry(sb, fid, fh_len, fh_type, false);
- }
- 
--static struct dentry *kernfs_fh_to_parent(struct super_block *sb, struct fid *fid,
--		int fh_len, int fh_type)
-+static struct dentry *kernfs_fh_to_parent(struct super_block *sb,
-+					  struct fid *fid, int fh_len,
-+					  int fh_type)
- {
--	return generic_fh_to_parent(sb, fid, fh_len, fh_type,
--				    kernfs_fh_get_inode);
-+	return __kernfs_fh_to_dentry(sb, fid, fh_len, fh_type, true);
- }
- 
- static struct dentry *kernfs_get_parent_dentry(struct dentry *child)
-@@ -97,6 +141,7 @@ static struct dentry *kernfs_get_parent_dentry(struct dentry *child)
- }
- 
- static const struct export_operations kernfs_export_ops = {
-+	.encode_fh	= kernfs_encode_fh,
- 	.fh_to_dentry	= kernfs_fh_to_dentry,
- 	.fh_to_parent	= kernfs_fh_to_parent,
- 	.get_parent	= kernfs_get_parent_dentry,
-diff --git a/include/linux/exportfs.h b/include/linux/exportfs.h
-index cf6571fc9c01..d896b8657085 100644
---- a/include/linux/exportfs.h
-+++ b/include/linux/exportfs.h
-@@ -104,6 +104,11 @@ enum fid_type {
- 	 */
- 	FILEID_LUSTRE = 0x97,
- 
-+	/*
-+	 * 64 bit unique kernfs id
-+	 */
-+	FILEID_KERNFS = 0xfe,
-+
- 	/*
- 	 * Filesystems must not use 0xff file ID.
- 	 */
--- 
-2.17.1
-
+T24gTW9uLCBOb3YgMDQsIDIwMTkgYXQgMDU6MDg6NDdQTSAtMDUwMCwgQnJpYW4gV2VsdHkgd3Jv
+dGU6Cj4gKyAgZ3B1c2V0LnVuaXRzCj4gKyAgZ3B1c2V0LnVuaXRzLmVmZmVjdGl2ZQo+ICsgIGdw
+dXNldC51bml0cy5wYXJ0aXRpb24KPiArCj4gKyAgZ3B1c2V0Lm1lbXMKPiArICBncHVzZXQubWVt
+cy5lZmZlY3RpdmUKPiArICBncHVzZXQubWVtcy5wYXJ0aXRpb24KPiArCj4gKyAgc2NoZWQubWF4
+Cj4gKyAgc2NoZWQuc3RhdHMKPiArICBzY2hlZC53ZWlnaHQKPiArICBzY2hlZC53ZWlnaHQubmlj
+ZQo+ICsKPiArICBtZW1vcnkuY3VycmVudAo+ICsgIG1lbW9yeS5ldmVudHMKPiArICBtZW1vcnku
+aGlnaAo+ICsgIG1lbW9yeS5sb3cKPiArICBtZW1vcnkubWF4Cj4gKyAgbWVtb3J5Lm1pbgo+ICsg
+IG1lbW9yeS5zdGF0Cj4gKyAgbWVtb3J5LnN3YXAuY3VycmVudAo+ICsgIG1lbW9yeS5zd2FwLm1h
+eAoKSSBkb24ndCB1bmRlcnN0YW5kIHdoeSBpdCBuZWVkcyB0byByZXBsaWNhdGUgZXNzZW50aWFs
+bHkgKmFsbCogdGhlCmludGVyZmFjZXMgdGhhdCBzeXN0ZW0gcmVzb3VyY2VzIGFyZSBpbXBsZW1l
+bnRpbmcgZnJvbSB0aGUgZ2V0LWdvLgpTb21lIG9mIHRoZSBhYm92ZSBoYXZlIGludGVyc2VjdGlu
+ZyBmdW5jdGlvbmFsaXRpZXMgYW5kIGV4aXN0IG1vcmUgZm9yCmhpc3RvcmljYWwgcmVhc29ucyBh
+bmQgSSBmYWlsIHRvIHNlZSBob3cgZGlzdGluY3Rpb25zIGxpa2UgbWluIHZzLiBsb3cKYW5kIGhp
+Z2ggdnMuIG1heCB3b3VsZCBtYWtlIHNlbnNlIGZvciBncHVzLiAgQWxzbywgd2h5IHdvdWxkIGl0
+IGhhdmUgYQpzZXBhcmF0ZSBzd2FwIGxpbWl0IG9mIGl0cyBvd24/CgpQbGVhc2Ugc3RhcnQgd2l0
+aCBzb21ldGhpbmcgc21hbGwgYW5kIGludHVpdGl2ZS4gIEknbSBnb25uYSBuYWNrCmFueXRoaW5n
+IHdoaWNoIHNwcmF3bHMgb3V0IGxpa2UgdGhpcy4gIE1vc3QgbGlrZWx5LCB0aGVyZSdzIHN0aWxs
+IGEKdG9uIHlvdSBndXlzIG5lZWQgdG8gd29yayB0aHJvdWdoIHRvIHJlYWNoIHRoZSByZXNvdXJj
+ZSBtb2RlbCB3aGljaCBpcwphY3R1YWxseSB1c2VmdWwgYW5kIHRyeWluZyB0byBkZWZpbmUgYSBj
+b21wcmVoZW5zaXZlIGludGVyZmFjZSB1cGZyb250Cmxpa2UgdGhpcyBpcyBnb25uYSBsb29rIHJl
+YWxseSBzaWxseSBhbmQgd2lsbCBiZWNvbWUgYW4gdWdseSBkcmFnIGJ5CnRoZSB0aW1lIHRoZSBw
+cm9ibGVtIHNwYWNlIGlzIGFjdHVhbGx5IHVuZGVyc3Rvb2QuCgpJdCBkb2Vzbid0IHNlZW0gbGlr
+ZSB0aGlzIGlzIGNvbWluZyB0aHJvdWdoIGJ1dCBjYW4geW91IHBsZWFzZSBzdGFydAp3aXRoIGEg
+c2ltcGxlIHdlaWdodCBrbm9iPwoKVGhhbmtzLgoKLS0gCnRlanVuCl9fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJp
+LWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9y
+Zy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
