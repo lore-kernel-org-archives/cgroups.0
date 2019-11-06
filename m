@@ -1,65 +1,55 @@
-From: Brian Welty <brian.welty@intel.com>
-Subject: Re: [RFC PATCH] cgroup: Document interface files and rationale for
- DRM controller
-Date: Tue, 5 Nov 2019 16:08:22 -0800
-Message-ID: <d565fc2c-0bd0-a85a-c7ce-12ee5393154d@intel.com>
-References: <20191104220847.23283-1-brian.welty@intel.com>
- <20191105001505.GR3622521@devbig004.ftw2.facebook.com>
+From: Al Viro <viro@zeniv.linux.org.uk>
+Subject: Re: NULL pointer deref in put_fs_context with unprivileged LXC
+Date: Wed, 6 Nov 2019 07:24:07 +0000
+Message-ID: <20191106072407.GU26530@ZenIV.linux.org.uk>
+References: <20191010213512.GA875@gandi.net>
+ <20191011141403.ghjptf4nrttgg7jd@wittgenstein>
+ <20191105205830.GA871@gandi.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20191105001505.GR3622521@devbig004.ftw2.facebook.com>
-Content-Language: en-US
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20191105205830.GA871@gandi.net>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Leon Romanovsky <leon@kernel.org>, David Airlie <airlied@linux.ie>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Felix Kuehling <Felix.Kuehling@amd.com>, dri-devel@lists.freedesktop.org, Kenny Ho <Kenny.Ho@amd.com>, cgroups@vger.kernel.org, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>
+Content-Transfer-Encoding: 7bit
+To: Thibaut Sautereau <thibaut@sautereau.fr>
+Cc: Christian Brauner <christian.brauner@ubuntu.com>, dhowells@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, Christian Brauner <christian@brauner.io>, cgroups@vger.kernel.org
 
-Ck9uIDExLzQvMjAxOSA0OjE1IFBNLCBUZWp1biBIZW8gd3JvdGU6Cj4gT24gTW9uLCBOb3YgMDQs
-IDIwMTkgYXQgMDU6MDg6NDdQTSAtMDUwMCwgQnJpYW4gV2VsdHkgd3JvdGU6Cj4+ICsgIGdwdXNl
-dC51bml0cwo+PiArICBncHVzZXQudW5pdHMuZWZmZWN0aXZlCj4+ICsgIGdwdXNldC51bml0cy5w
-YXJ0aXRpb24KPj4gKwo+PiArICBncHVzZXQubWVtcwo+PiArICBncHVzZXQubWVtcy5lZmZlY3Rp
-dmUKPj4gKyAgZ3B1c2V0Lm1lbXMucGFydGl0aW9uCj4+ICsKPj4gKyAgc2NoZWQubWF4Cj4+ICsg
-IHNjaGVkLnN0YXRzCj4+ICsgIHNjaGVkLndlaWdodAo+PiArICBzY2hlZC53ZWlnaHQubmljZQo+
-PiArCj4+ICsgIG1lbW9yeS5jdXJyZW50Cj4+ICsgIG1lbW9yeS5ldmVudHMKPj4gKyAgbWVtb3J5
-LmhpZ2gKPj4gKyAgbWVtb3J5Lmxvdwo+PiArICBtZW1vcnkubWF4Cj4+ICsgIG1lbW9yeS5taW4K
-Pj4gKyAgbWVtb3J5LnN0YXQKPj4gKyAgbWVtb3J5LnN3YXAuY3VycmVudAo+PiArICBtZW1vcnku
-c3dhcC5tYXgKPiAKPiBJIGRvbid0IHVuZGVyc3RhbmQgd2h5IGl0IG5lZWRzIHRvIHJlcGxpY2F0
-ZSBlc3NlbnRpYWxseSAqYWxsKiB0aGUKPiBpbnRlcmZhY2VzIHRoYXQgc3lzdGVtIHJlc291cmNl
-cyBhcmUgaW1wbGVtZW50aW5nIGZyb20gdGhlIGdldC1nby4KPiBTb21lIG9mIHRoZSBhYm92ZSBo
-YXZlIGludGVyc2VjdGluZyBmdW5jdGlvbmFsaXRpZXMgYW5kIGV4aXN0IG1vcmUgZm9yCj4gaGlz
-dG9yaWNhbCByZWFzb25zIGFuZCBJIGZhaWwgdG8gc2VlIGhvdyBkaXN0aW5jdGlvbnMgbGlrZSBt
-aW4gdnMuIGxvdwo+IGFuZCBoaWdoIHZzLiBtYXggd291bGQgbWFrZSBzZW5zZSBmb3IgZ3B1cy4g
-IEFsc28sIHdoeSB3b3VsZCBpdCBoYXZlIGEKPiBzZXBhcmF0ZSBzd2FwIGxpbWl0IG9mIGl0cyBv
-d24/Cj4gCj4gUGxlYXNlIHN0YXJ0IHdpdGggc29tZXRoaW5nIHNtYWxsIGFuZCBpbnR1aXRpdmUu
-ICBJJ20gZ29ubmEgbmFjawo+IGFueXRoaW5nIHdoaWNoIHNwcmF3bHMgb3V0IGxpa2UgdGhpcy4g
-IE1vc3QgbGlrZWx5LCB0aGVyZSdzIHN0aWxsIGEKPiB0b24geW91IGd1eXMgbmVlZCB0byB3b3Jr
-IHRocm91Z2ggdG8gcmVhY2ggdGhlIHJlc291cmNlIG1vZGVsIHdoaWNoIGlzCj4gYWN0dWFsbHkg
-dXNlZnVsIGFuZCB0cnlpbmcgdG8gZGVmaW5lIGEgY29tcHJlaGVuc2l2ZSBpbnRlcmZhY2UgdXBm
-cm9udAo+IGxpa2UgdGhpcyBpcyBnb25uYSBsb29rIHJlYWxseSBzaWxseSBhbmQgd2lsbCBiZWNv
-bWUgYW4gdWdseSBkcmFnIGJ5Cj4gdGhlIHRpbWUgdGhlIHByb2JsZW0gc3BhY2UgaXMgYWN0dWFs
-bHkgdW5kZXJzdG9vZC4KPiAKPiBJdCBkb2Vzbid0IHNlZW0gbGlrZSB0aGlzIGlzIGNvbWluZyB0
-aHJvdWdoIGJ1dCBjYW4geW91IHBsZWFzZSBzdGFydAo+IHdpdGggYSBzaW1wbGUgd2VpZ2h0IGtu
-b2I/Cj4gCj4gVGhhbmtzLgo+IAoKVGhhbmtzIFRlanVuIGZvciB0aGUgZmVlZGJhY2suCkkgd2Fz
-IG1vcmUgaW50ZXJlc3RlZCBpbiBoZWFyaW5nIHlvdXIgdGhvdWdodHMgb24gd2hldGhlciB5b3Ug
-bGlrZQp0aGUgYXBwcm9hY2ggdG8gaGF2ZSBhIHNldCBvZiBjb250cm9scyB0aGF0IGFyZSBjb25z
-aXN0ZW50IHdpdGggCnNvbWUgc3Vic2V0IG9mIHRoZSBleGlzdGluZyBDUFUvTUVNIG9uZXMuICBB
-bnkgZmVlZGJhY2sgb24gdGhpcz8KRGlkbid0IHJlYWxseSBtZWFuIHRvIHN1Z2dlc3QgdGhhdCBh
-bGwgb2YgdGhlc2Ugd291bGQgYmUgaW5jbHVkZWQKZnJvbSB0aGUgc3RhcnQuCgpXb3VsZCB5b3Ug
-YWdyZWUgdGhhdCB0aGlzIHJlZHVjZWQgc2V0IGlzIGEgcmVhc29uYWJsZSBzdGFydGluZyBwb2lu
-dD8KKyAgc2NoZWQud2VpZ2h0CisgIG1lbW9yeS5jdXJyZW50CisgIG1lbW9yeS5tYXgKClRob3Vn
-aHRzIG9uIHdoZXRoZXIgdGhpcyBzaG91bGQgYmUgdmVyeSBHUFUtc3BlY2lmaWMgY2dyb3VwcyBj
-b250cm9sbGVyCm9yIHNob3VsZCBiZSBtb3JlIGZvcndhcmQgdGhpbmtpbmcgdG8gYmUgdXNlZnVs
-IGZvciBvdGhlciAnYWNjZWxlcmF0b3InCnR5cGUgZGV2aWNlcyBhcyB3ZWxsPwoKVGhhbmtzLAot
-QnJpYW4KCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18K
-ZHJpLWRldmVsIG1haWxpbmcgbGlzdApkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0
-dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVs
+On Tue, Nov 05, 2019 at 09:58:30PM +0100, Thibaut Sautereau wrote:
+
+> > > 	BUG: kernel NULL pointer dereference, address: 0000000000000043
+
+ERR_PTR(something)->d_sb, most likely.
+
+> > > 	493		if (fc->root) {
+> > > 	494			sb = fc->root->d_sb;
+> > > 	495			dput(fc->root);
+> > > 	496			fc->root = NULL;
+> > > 	497			deactivate_super(sb);
+> > > 	498		}
+
+> 	fs_context: DEBUG: fc->root = fffffffffffffff3
+> 	fs_context: DEBUG: fc->source = cgroup2
+
+Yup.  That'd be ERR_PTR(-13), i.e. ERR_PTR(-EACCES).  Most likely
+from
+                nsdentry = kernfs_node_dentry(cgrp->kn, sb);
+                dput(fc->root);
+                fc->root = nsdentry;
+                if (IS_ERR(nsdentry)) {
+                        ret = PTR_ERR(nsdentry);
+                        deactivate_locked_super(sb);
+                }
+
+in cgroup_do_get_tree().  As a quick test, try to add fc->root = NULL;
+next to that deactivate_locked_super(sb); inside the if (IS_ERR(...))
+body and see if it helps; it's not the best way to fix it (I'd rather
+go for
+                if (IS_ERR(nsdentry)) {
+                        ret = PTR_ERR(nsdentry);
+                        deactivate_locked_super(sb);
+			nsdentry = NULL;
+                }
+                fc->root = nsdentry;
+), but it would serve to verify that this is the source of that crap.
