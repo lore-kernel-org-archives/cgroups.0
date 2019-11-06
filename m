@@ -1,69 +1,78 @@
-From: Thibaut Sautereau <thibaut@sautereau.fr>
-Subject: Re: NULL pointer deref in put_fs_context with unprivileged LXC
-Date: Wed, 6 Nov 2019 22:06:46 +0100
-Message-ID: <20191106210646.GA1495@gandi.net>
-References: <20191010213512.GA875@gandi.net>
- <20191011141403.ghjptf4nrttgg7jd@wittgenstein>
- <20191105205830.GA871@gandi.net>
- <20191106072407.GU26530@ZenIV.linux.org.uk>
-Mime-Version: 1.0
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCHSET block/for-next] blk-cgroup: use cgroup rstat for IO stats
+Date: Wed,  6 Nov 2019 13:58:33 -0800
+Message-ID: <20191106215838.3973497-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20191106072407.GU26530@ZenIV.linux.org.uk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=F/vADG/hnX91+J7ThLwtAYWMOuLxbrgnZjiawQ6+D0Y=;
+        b=q2VSHe3BIF6UMDNGvfoCyruwPT+QTt7bIiqj/Y/OpXbDSN0H/U6rXx/s4A9GuWg6nf
+         px5rMM7KojYnyD9UkV5rleMeAiTaArnzKPjm55t/uKy9bToVgsHZukBqS1WD72CIFBFZ
+         zit7QP2NUwWuasFdJ09cPZjAYFv58s3yI9g6800mPgTIYB9BMUv0zz3EIuXlxFjoc0wL
+         kqierf07zxhTkBXeUfX/pV0sD84YyyNrlB5QceyrGZGEa/pCMeYEySW/g9XZ3skC5+Rc
+         Bs+2hGyrGuzAVsC82EL3/TMXo27JW6qboUrG9R/FURdupwEbwBrM3F1Rk/5tOvZ6SBPo
+         iO9g==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Christian Brauner <christian.brauner@ubuntu.com>, dhowells@redhat.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, Christian Brauner <christian@brauner.io>, cgroups@vger.kernel.org
+To: axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, kernel-team@fb.com
 
-On Wed, Nov 06, 2019 at 07:24:07AM +0000, Al Viro wrote:
-> On Tue, Nov 05, 2019 at 09:58:30PM +0100, Thibaut Sautereau wrote:
-> 
-> > > > 	BUG: kernel NULL pointer dereference, address: 0000000000000043
-> 
-> ERR_PTR(something)->d_sb, most likely.
-> 
-> > > > 	493		if (fc->root) {
-> > > > 	494			sb = fc->root->d_sb;
-> > > > 	495			dput(fc->root);
-> > > > 	496			fc->root = NULL;
-> > > > 	497			deactivate_super(sb);
-> > > > 	498		}
-> 
-> > 	fs_context: DEBUG: fc->root = fffffffffffffff3
-> > 	fs_context: DEBUG: fc->source = cgroup2
-> 
-> Yup.  That'd be ERR_PTR(-13), i.e. ERR_PTR(-EACCES).  Most likely
-> from
->                 nsdentry = kernfs_node_dentry(cgrp->kn, sb);
->                 dput(fc->root);
->                 fc->root = nsdentry;
->                 if (IS_ERR(nsdentry)) {
->                         ret = PTR_ERR(nsdentry);
->                         deactivate_locked_super(sb);
->                 }
-> 
-> in cgroup_do_get_tree().  As a quick test, try to add fc->root = NULL;
-> next to that deactivate_locked_super(sb); inside the if (IS_ERR(...))
-> body and see if it helps; it's not the best way to fix it (I'd rather
-> go for
->                 if (IS_ERR(nsdentry)) {
->                         ret = PTR_ERR(nsdentry);
->                         deactivate_locked_super(sb);
-> 			nsdentry = NULL;
->                 }
->                 fc->root = nsdentry;
-> ), but it would serve to verify that this is the source of that crap.
+Hello,
 
-Yes, you're absolutely right. Your first suggestion fixes the bug, as
-well as your second one. Thanks!
+blk-cgroup IO stats currently use blkg_rwstat which unforutnately
+requires walking all descendants recursively on read.  On systems with
+a large number of cgroups (dead or alive), this can make each stat
+read a substantially expensive operation.
 
-By the way, I had just finished the bisection, confirming that
-71d883c37e8d ("cgroup_do_mount(): massage calling conventions") brought
-the issue.
+This patch updates blk-cgroup to use cgroup rstat which makes stat
+reading O(# descendants which have been active since last reading)
+instead of O(# descendants).
 
-Do you want me to send a patch or are you dealing with that?
+ 0001-bfq-iosched-stop-using-blkg-stat_bytes-and-stat_ios.patch
+ 0002-blk-throtl-stop-using-blkg-stat_bytes-and-stat_ios.patch
+ 0003-blk-cgroup-remove-now-unused-blkg_print_stat_-bytes-.patch
+ 0004-blk-cgroup-reimplement-basic-IO-stats-using-cgroup-r.patch
+ 0005-blk-cgroup-separate-out-blkg_rwstat-under-CONFIG_BLK.patch
 
--- 
-Thibaut
+0001-0002 make bfq-iosched and blk-throtl use their own blkg_rwstat to
+track basic IO stats on cgroup1 instead of sharing blk-cgroup core's.
+0003 is a follow-up cleanup.
+
+0004 switches blk-cgroup to cgroup rstat.
+
+0005 moves blkg_rwstat to its own files and gate it under a config
+option as it's now only used by blk-throtl and bfq-iosched.
+
+The patchset is on top of
+
+  for-next/block 257855f86aa2 ("Merge branch 'for-5.4/block' into for-next")
++ [1] blkcg: make blkcg_print_stat() print stats only for online blkgs
+
+and also available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-blkcg-rstat
+
+Thanks.
+
+ block/Kconfig              |    4 
+ block/Kconfig.iosched      |    1 
+ block/Makefile             |    1 
+ block/bfq-cgroup.c         |   37 +++--
+ block/bfq-iosched.c        |    4 
+ block/bfq-iosched.h        |    6 
+ block/blk-cgroup-rwstat.c  |  129 +++++++++++++++++++
+ block/blk-cgroup-rwstat.h  |  149 ++++++++++++++++++++++
+ block/blk-cgroup.c         |  304 ++++++++++++++-------------------------------
+ block/blk-throttle.c       |   71 +++++++++-
+ include/linux/blk-cgroup.h |  198 +++++------------------------
+ 11 files changed, 517 insertions(+), 387 deletions(-)
+
+--
+tejun
+
+[1] http://lkml.kernel.org/r/20191105160951.GS3622521@devbig004.ftw2.facebook.com
+
