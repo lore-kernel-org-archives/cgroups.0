@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/5] blk-throtl: stop using blkg->stat_bytes and ->stat_ios
-Date: Wed,  6 Nov 2019 13:58:35 -0800
-Message-ID: <20191106215838.3973497-3-tj@kernel.org>
+Subject: [PATCH 4/5] blk-cgroup: reimplement basic IO stats using cgroup rstat
+Date: Wed,  6 Nov 2019 13:58:37 -0800
+Message-ID: <20191106215838.3973497-5-tj@kernel.org>
 References: <20191106215838.3973497-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=SCorZkPJP9TGXujGHT7jjDnVUj1sFVQI/cg2WsPyUwQ=;
-        b=O6u3QL+pWqJ27s+9Qlg6Ls4d/hivEDiry+YmAEebwOq0HAth8LCImFLsCGflFQhMxP
-         JPNwH/gdlL4PIslS1JrSBX1m8LqYlCnEY+qL+LY71V17cdjaz80gaFT4Bpoixkz6Igjy
-         aiwdEBX56IE6oNxlpRJJLI0JLRXyJoPPHvgJV7g1z0x4pd4KsRH3EC9q+fx+RXplCFDG
-         VaMDS9AWRV9YjY8W+Ih5eKph4DpX8vqU8kf5ryf5ta8Ix4HlWUEYKTLGT7c+/4u0/dS6
-         bLrPduUyEtv0p+NC7Yz0Wrcix42r09BcSzCXrz7Hu71a+PYBPtZbw5kHC3PPudWRBlDA
-         oAhQ==
+        bh=M0ZJUUbPmqjYlKgGOECjrMYkLXgYqIQ7ceZ3CEBiA7A=;
+        b=Xo2L6H2wxXhcRZTksxqGuxMdZXEsmYpb6HJTAX33hcMLWm0xMeoRZVlXVmNbEm9J8S
+         SlNNxRn9+Yx85U09NszzJ/+vW7SOJN1Duo/HvDFEE+W4pIMlL1QY5Wjm0MXigoshXy85
+         77+5TDv7gwCPqszVO2vYdUd0pwKkqvH2f8EAPKmCGYLPoS7SWSe7aVWFiGJMYpjWTwBN
+         V37SnFa6vtTToYfIbCnl2YP/Q1jLov6fPf2Py06Vl/3+xnvcaBwzGxulXHCrcrZpSk8O
+         Qf3aVxEvdnBZhFZAuNJSpiZWDPSeqceL71xt7YnldgtOGXvvymBVhPQN24W2kpNpScPV
+         MuPg==
 In-Reply-To: <20191106215838.3973497-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,153 +21,358 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>, Dan Schatzberg <dschatzberg@fb.com>, Daniel Xu <dlxu@fb.com>
 
-When used on cgroup1, blk-throtl uses the blkg->stat_bytes and
-->stat_ios from blk-cgroup core to populate four stat knobs.
-blk-cgroup core is moving away from blkg_rwstat to improve scalability
-and won't be able to support this usage.
+blk-cgroup has been using blkg_rwstat to track basic IO stats.
+Unfortunately, reading recursive stats scales badly as itinvolves
+walking all descendants.  On systems with a huge number of cgroups
+(dead or alive), this can lead to substantial CPU cost when reading IO
+stats.
 
-It isn't like the sharing gains all that much.  Let's break them out
-to dedicated rwstat counters which are updated when on cgroup1.
+This patch reimplements basic IO stats using cgroup rstat which uses
+more memory but makes recursive stat reading O(# descendants which
+have been active since last reading) instead of O(# descendants).
+
+* blk-cgroup core no longer uses sync/async stats.  Introduce new stat
+  enums - BLKG_IOSTAT_{READ|WRITE|DISCARD}.
+
+* Add blkg_iostat[_set] which encapsulates byte and io stats, last
+  values for propagation delta calculation and u64_stats_sync for
+  correctness on 32bit archs.
+
+* Update the new percpu stat counters directly and implement
+  blkcg_rstat_flush() to implement propagation.
+
+* blkg_print_stat() can now bring the stats up to date by calling
+  cgroup_rstat_flush() and print them instead of directly summing up
+  all descendants.
+
+* It now allocates 96 bytes per cpu.  It used to be 40 bytes.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Dan Schatzberg <dschatzberg@fb.com>
+Cc: Daniel Xu <dlxu@fb.com>
 ---
- block/blk-throttle.c | 70 ++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 61 insertions(+), 9 deletions(-)
+ block/blk-cgroup.c         | 124 +++++++++++++++++++++++++++++--------
+ include/linux/blk-cgroup.h |  48 ++++++++++++--
+ 2 files changed, 142 insertions(+), 30 deletions(-)
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 0445c998c377..6ac5b5d56170 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -176,6 +176,9 @@ struct throtl_grp {
- 	unsigned int bio_cnt; /* total bios */
- 	unsigned int bad_bio_cnt; /* bios exceeding latency threshold */
- 	unsigned long bio_cnt_reset_time;
-+
-+	struct blkg_rwstat stat_bytes;
-+	struct blkg_rwstat stat_ios;
- };
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index e23a21ba6d46..0b349f6a6a69 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -80,8 +80,7 @@ static void blkg_free(struct blkcg_gq *blkg)
+ 		if (blkg->pd[i])
+ 			blkcg_policy[i]->pd_free_fn(blkg->pd[i]);
  
- /* We measure latency for request size from <= 4k to >= 1M */
-@@ -489,6 +492,12 @@ static struct blkg_policy_data *throtl_pd_alloc(gfp_t gfp,
- 	if (!tg)
- 		return NULL;
+-	blkg_rwstat_exit(&blkg->stat_ios);
+-	blkg_rwstat_exit(&blkg->stat_bytes);
++	free_percpu(blkg->iostat_cpu);
+ 	percpu_ref_exit(&blkg->refcnt);
+ 	kfree(blkg);
+ }
+@@ -146,7 +145,7 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
+ 				   gfp_t gfp_mask)
+ {
+ 	struct blkcg_gq *blkg;
+-	int i;
++	int i, cpu;
  
-+	if (blkg_rwstat_init(&tg->stat_bytes, gfp))
-+		goto err_free_tg;
-+
-+	if (blkg_rwstat_init(&tg->stat_ios, gfp))
-+		goto err_exit_stat_bytes;
-+
- 	throtl_service_queue_init(&tg->service_queue);
+ 	/* alloc and init base part */
+ 	blkg = kzalloc_node(sizeof(*blkg), gfp_mask, q->node);
+@@ -156,8 +155,8 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
+ 	if (percpu_ref_init(&blkg->refcnt, blkg_release, 0, gfp_mask))
+ 		goto err_free;
  
- 	for (rw = READ; rw <= WRITE; rw++) {
-@@ -513,6 +522,12 @@ static struct blkg_policy_data *throtl_pd_alloc(gfp_t gfp,
- 	tg->idletime_threshold_conf = DFL_IDLE_THRESHOLD;
+-	if (blkg_rwstat_init(&blkg->stat_bytes, gfp_mask) ||
+-	    blkg_rwstat_init(&blkg->stat_ios, gfp_mask))
++	blkg->iostat_cpu = alloc_percpu_gfp(struct blkg_iostat_set, gfp_mask);
++	if (!blkg->iostat_cpu)
+ 		goto err_free;
  
- 	return &tg->pd;
+ 	blkg->q = q;
+@@ -167,6 +166,10 @@ static struct blkcg_gq *blkg_alloc(struct blkcg *blkcg, struct request_queue *q,
+ 	INIT_WORK(&blkg->async_bio_work, blkg_async_bio_workfn);
+ 	blkg->blkcg = blkcg;
+ 
++	u64_stats_init(&blkg->iostat.sync);
++	for_each_possible_cpu(cpu)
++		u64_stats_init(&per_cpu_ptr(blkg->iostat_cpu, cpu)->sync);
 +
-+err_exit_stat_bytes:
-+	blkg_rwstat_exit(&tg->stat_bytes);
-+err_free_tg:
-+	kfree(tg);
-+	return NULL;
+ 	for (i = 0; i < BLKCG_MAX_POLS; i++) {
+ 		struct blkcg_policy *pol = blkcg_policy[i];
+ 		struct blkg_policy_data *pd;
+@@ -393,7 +396,6 @@ struct blkcg_gq *blkg_lookup_create(struct blkcg *blkcg,
+ static void blkg_destroy(struct blkcg_gq *blkg)
+ {
+ 	struct blkcg *blkcg = blkg->blkcg;
+-	struct blkcg_gq *parent = blkg->parent;
+ 	int i;
+ 
+ 	lockdep_assert_held(&blkg->q->queue_lock);
+@@ -410,11 +412,6 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+ 			pol->pd_offline_fn(blkg->pd[i]);
+ 	}
+ 
+-	if (parent) {
+-		blkg_rwstat_add_aux(&parent->stat_bytes, &blkg->stat_bytes);
+-		blkg_rwstat_add_aux(&parent->stat_ios, &blkg->stat_ios);
+-	}
+-
+ 	blkg->online = false;
+ 
+ 	radix_tree_delete(&blkcg->blkg_tree, blkg->q->id);
+@@ -464,7 +461,7 @@ static int blkcg_reset_stats(struct cgroup_subsys_state *css,
+ {
+ 	struct blkcg *blkcg = css_to_blkcg(css);
+ 	struct blkcg_gq *blkg;
+-	int i;
++	int i, cpu;
+ 
+ 	mutex_lock(&blkcg_pol_mutex);
+ 	spin_lock_irq(&blkcg->lock);
+@@ -475,8 +472,12 @@ static int blkcg_reset_stats(struct cgroup_subsys_state *css,
+ 	 * anyway.  If you get hit by a race, retry.
+ 	 */
+ 	hlist_for_each_entry(blkg, &blkcg->blkg_list, blkcg_node) {
+-		blkg_rwstat_reset(&blkg->stat_bytes);
+-		blkg_rwstat_reset(&blkg->stat_ios);
++		for_each_possible_cpu(cpu) {
++			struct blkg_iostat_set *bis =
++				per_cpu_ptr(blkg->iostat_cpu, cpu);
++			memset(bis, 0, sizeof(*bis));
++		}
++		memset(&blkg->iostat, 0, sizeof(blkg->iostat));
+ 
+ 		for (i = 0; i < BLKCG_MAX_POLS; i++) {
+ 			struct blkcg_policy *pol = blkcg_policy[i];
+@@ -838,16 +839,18 @@ static int blkcg_print_stat(struct seq_file *sf, void *v)
+ 	struct blkcg *blkcg = css_to_blkcg(seq_css(sf));
+ 	struct blkcg_gq *blkg;
+ 
++	cgroup_rstat_flush(blkcg->css.cgroup);
+ 	rcu_read_lock();
+ 
+ 	hlist_for_each_entry_rcu(blkg, &blkcg->blkg_list, blkcg_node) {
++		struct blkg_iostat_set *bis = &blkg->iostat;
+ 		const char *dname;
+ 		char *buf;
+-		struct blkg_rwstat_sample rwstat;
+ 		u64 rbytes, wbytes, rios, wios, dbytes, dios;
+ 		size_t size = seq_get_buf(sf, &buf), off = 0;
+ 		int i;
+ 		bool has_stats = false;
++		unsigned seq;
+ 
+ 		spin_lock_irq(&blkg->q->queue_lock);
+ 
+@@ -866,17 +869,16 @@ static int blkcg_print_stat(struct seq_file *sf, void *v)
+ 		 */
+ 		off += scnprintf(buf+off, size-off, "%s ", dname);
+ 
+-		blkg_rwstat_recursive_sum(blkg, NULL,
+-				offsetof(struct blkcg_gq, stat_bytes), &rwstat);
+-		rbytes = rwstat.cnt[BLKG_RWSTAT_READ];
+-		wbytes = rwstat.cnt[BLKG_RWSTAT_WRITE];
+-		dbytes = rwstat.cnt[BLKG_RWSTAT_DISCARD];
++		do {
++			seq = u64_stats_fetch_begin(&bis->sync);
+ 
+-		blkg_rwstat_recursive_sum(blkg, NULL,
+-					offsetof(struct blkcg_gq, stat_ios), &rwstat);
+-		rios = rwstat.cnt[BLKG_RWSTAT_READ];
+-		wios = rwstat.cnt[BLKG_RWSTAT_WRITE];
+-		dios = rwstat.cnt[BLKG_RWSTAT_DISCARD];
++			rbytes = bis->cur.bytes[BLKG_IOSTAT_READ];
++			wbytes = bis->cur.bytes[BLKG_IOSTAT_WRITE];
++			dbytes = bis->cur.bytes[BLKG_IOSTAT_DISCARD];
++			rios = bis->cur.ios[BLKG_IOSTAT_READ];
++			wios = bis->cur.ios[BLKG_IOSTAT_WRITE];
++			dios = bis->cur.ios[BLKG_IOSTAT_DISCARD];
++		} while (u64_stats_fetch_retry(&bis->sync, seq));
+ 
+ 		if (rbytes || wbytes || rios || wios) {
+ 			has_stats = true;
+@@ -1212,6 +1214,77 @@ static int blkcg_can_attach(struct cgroup_taskset *tset)
+ 	return ret;
  }
  
- static void throtl_pd_init(struct blkg_policy_data *pd)
-@@ -611,6 +626,8 @@ static void throtl_pd_free(struct blkg_policy_data *pd)
- 	struct throtl_grp *tg = pd_to_tg(pd);
- 
- 	del_timer_sync(&tg->service_queue.pending_timer);
-+	blkg_rwstat_exit(&tg->stat_bytes);
-+	blkg_rwstat_exit(&tg->stat_ios);
- 	kfree(tg);
- }
- 
-@@ -1464,6 +1481,32 @@ static ssize_t tg_set_conf_uint(struct kernfs_open_file *of,
- 	return tg_set_conf(of, buf, nbytes, off, false);
- }
- 
-+static int tg_print_rwstat(struct seq_file *sf, void *v)
++static void blkg_iostat_set(struct blkg_iostat *dst, struct blkg_iostat *src)
 +{
-+	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
-+			  blkg_prfill_rwstat, &blkcg_policy_throtl,
-+			  seq_cft(sf)->private, true);
-+	return 0;
++	int i;
++
++	for (i = 0; i < BLKG_IOSTAT_NR; i++) {
++		dst->bytes[i] = src->bytes[i];
++		dst->ios[i] = src->ios[i];
++	}
 +}
 +
-+static u64 tg_prfill_rwstat_recursive(struct seq_file *sf,
-+				      struct blkg_policy_data *pd, int off)
++static void blkg_iostat_add(struct blkg_iostat *dst, struct blkg_iostat *src)
 +{
-+	struct blkg_rwstat_sample sum;
++	int i;
 +
-+	blkg_rwstat_recursive_sum(pd_to_blkg(pd), &blkcg_policy_throtl, off,
-+				  &sum);
-+	return __blkg_prfill_rwstat(sf, pd, &sum);
++	for (i = 0; i < BLKG_IOSTAT_NR; i++) {
++		dst->bytes[i] += src->bytes[i];
++		dst->ios[i] += src->ios[i];
++	}
 +}
 +
-+static int tg_print_rwstat_recursive(struct seq_file *sf, void *v)
++static void blkg_iostat_sub(struct blkg_iostat *dst, struct blkg_iostat *src)
 +{
-+	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
-+			  tg_prfill_rwstat_recursive, &blkcg_policy_throtl,
-+			  seq_cft(sf)->private, true);
-+	return 0;
++	int i;
++
++	for (i = 0; i < BLKG_IOSTAT_NR; i++) {
++		dst->bytes[i] -= src->bytes[i];
++		dst->ios[i] -= src->ios[i];
++	}
 +}
 +
- static struct cftype throtl_legacy_files[] = {
- 	{
- 		.name = "throttle.read_bps_device",
-@@ -1491,23 +1534,23 @@ static struct cftype throtl_legacy_files[] = {
- 	},
- 	{
- 		.name = "throttle.io_service_bytes",
--		.private = (unsigned long)&blkcg_policy_throtl,
--		.seq_show = blkg_print_stat_bytes,
-+		.private = offsetof(struct throtl_grp, stat_bytes),
-+		.seq_show = tg_print_rwstat,
- 	},
- 	{
- 		.name = "throttle.io_service_bytes_recursive",
--		.private = (unsigned long)&blkcg_policy_throtl,
--		.seq_show = blkg_print_stat_bytes_recursive,
-+		.private = offsetof(struct throtl_grp, stat_bytes),
-+		.seq_show = tg_print_rwstat_recursive,
- 	},
- 	{
- 		.name = "throttle.io_serviced",
--		.private = (unsigned long)&blkcg_policy_throtl,
--		.seq_show = blkg_print_stat_ios,
-+		.private = offsetof(struct throtl_grp, stat_ios),
-+		.seq_show = tg_print_rwstat,
- 	},
- 	{
- 		.name = "throttle.io_serviced_recursive",
--		.private = (unsigned long)&blkcg_policy_throtl,
--		.seq_show = blkg_print_stat_ios_recursive,
-+		.private = offsetof(struct throtl_grp, stat_ios),
-+		.seq_show = tg_print_rwstat_recursive,
- 	},
- 	{ }	/* terminate */
- };
-@@ -2127,7 +2170,16 @@ bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
- 	WARN_ON_ONCE(!rcu_read_lock_held());
- 
- 	/* see throtl_charge_bio() */
--	if (bio_flagged(bio, BIO_THROTTLED) || !tg->has_rules[rw])
-+	if (bio_flagged(bio, BIO_THROTTLED))
-+		goto out;
++static void blkcg_rstat_flush(struct cgroup_subsys_state *css, int cpu)
++{
++	struct blkcg *blkcg = css_to_blkcg(css);
++	struct blkcg_gq *blkg;
 +
-+	if (!cgroup_subsys_on_dfl(io_cgrp_subsys)) {
-+		blkg_rwstat_add(&tg->stat_bytes, bio->bi_opf,
-+				bio->bi_iter.bi_size);
-+		blkg_rwstat_add(&tg->stat_ios, bio->bi_opf, 1);
++	rcu_read_lock();
++
++	hlist_for_each_entry_rcu(blkg, &blkcg->blkg_list, blkcg_node) {
++		struct blkcg_gq *parent = blkg->parent;
++		struct blkg_iostat_set *bisc = per_cpu_ptr(blkg->iostat_cpu, cpu);
++		struct blkg_iostat cur, delta;
++		unsigned seq;
++
++		/* fetch the current per-cpu values */
++		do {
++			seq = u64_stats_fetch_begin(&bisc->sync);
++			blkg_iostat_set(&cur, &bisc->cur);
++		} while (u64_stats_fetch_retry(&bisc->sync, seq));
++
++		/* propagate percpu delta to global */
++		u64_stats_update_begin(&blkg->iostat.sync);
++		blkg_iostat_set(&delta, &cur);
++		blkg_iostat_sub(&delta, &bisc->last);
++		blkg_iostat_add(&blkg->iostat.cur, &delta);
++		blkg_iostat_add(&bisc->last, &delta);
++		u64_stats_update_end(&blkg->iostat.sync);
++
++		/* propagate global delta to parent */
++		if (parent) {
++			u64_stats_update_begin(&parent->iostat.sync);
++			blkg_iostat_set(&delta, &blkg->iostat.cur);
++			blkg_iostat_sub(&delta, &blkg->iostat.last);
++			blkg_iostat_add(&parent->iostat.cur, &delta);
++			blkg_iostat_add(&blkg->iostat.last, &delta);
++			u64_stats_update_end(&parent->iostat.sync);
++		}
 +	}
 +
-+	if (!tg->has_rules[rw])
- 		goto out;
++	rcu_read_unlock();
++}
++
+ static void blkcg_bind(struct cgroup_subsys_state *root_css)
+ {
+ 	int i;
+@@ -1244,6 +1317,7 @@ struct cgroup_subsys io_cgrp_subsys = {
+ 	.css_offline = blkcg_css_offline,
+ 	.css_free = blkcg_css_free,
+ 	.can_attach = blkcg_can_attach,
++	.css_rstat_flush = blkcg_rstat_flush,
+ 	.bind = blkcg_bind,
+ 	.dfl_cftypes = blkcg_files,
+ 	.legacy_cftypes = blkcg_legacy_files,
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 914ce55fa8c2..867ab391e409 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -15,7 +15,9 @@
+  */
  
- 	spin_lock_irq(&q->queue_lock);
+ #include <linux/cgroup.h>
++#include <linux/percpu.h>
+ #include <linux/percpu_counter.h>
++#include <linux/u64_stats_sync.h>
+ #include <linux/seq_file.h>
+ #include <linux/radix-tree.h>
+ #include <linux/blkdev.h>
+@@ -31,6 +33,14 @@
+ 
+ #ifdef CONFIG_BLK_CGROUP
+ 
++enum blkg_iostat_type {
++	BLKG_IOSTAT_READ,
++	BLKG_IOSTAT_WRITE,
++	BLKG_IOSTAT_DISCARD,
++
++	BLKG_IOSTAT_NR,
++};
++
+ enum blkg_rwstat_type {
+ 	BLKG_RWSTAT_READ,
+ 	BLKG_RWSTAT_WRITE,
+@@ -61,6 +71,17 @@ struct blkcg {
+ #endif
+ };
+ 
++struct blkg_iostat {
++	u64				bytes[BLKG_IOSTAT_NR];
++	u64				ios[BLKG_IOSTAT_NR];
++};
++
++struct blkg_iostat_set {
++	struct u64_stats_sync		sync;
++	struct blkg_iostat		cur;
++	struct blkg_iostat		last;
++};
++
+ /*
+  * blkg_[rw]stat->aux_cnt is excluded for local stats but included for
+  * recursive.  Used to carry stats of dead children.
+@@ -127,8 +148,8 @@ struct blkcg_gq {
+ 	/* is this blkg online? protected by both blkcg and q locks */
+ 	bool				online;
+ 
+-	struct blkg_rwstat		stat_bytes;
+-	struct blkg_rwstat		stat_ios;
++	struct blkg_iostat_set __percpu	*iostat_cpu;
++	struct blkg_iostat_set		iostat;
+ 
+ 	struct blkg_policy_data		*pd[BLKCG_MAX_POLS];
+ 
+@@ -740,15 +761,32 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 	throtl = blk_throtl_bio(q, blkg, bio);
+ 
+ 	if (!throtl) {
++		struct blkg_iostat_set *bis;
++		int rwd, cpu;
++
++		if (op_is_discard(bio->bi_opf))
++			rwd = BLKG_IOSTAT_DISCARD;
++		else if (op_is_write(bio->bi_opf))
++			rwd = BLKG_IOSTAT_WRITE;
++		else
++			rwd = BLKG_IOSTAT_READ;
++
++		cpu = get_cpu();
++		bis = per_cpu_ptr(blkg->iostat_cpu, cpu);
++		u64_stats_update_begin(&bis->sync);
++
+ 		/*
+ 		 * If the bio is flagged with BIO_QUEUE_ENTERED it means this
+ 		 * is a split bio and we would have already accounted for the
+ 		 * size of the bio.
+ 		 */
+ 		if (!bio_flagged(bio, BIO_QUEUE_ENTERED))
+-			blkg_rwstat_add(&blkg->stat_bytes, bio->bi_opf,
+-					bio->bi_iter.bi_size);
+-		blkg_rwstat_add(&blkg->stat_ios, bio->bi_opf, 1);
++			bis->cur.bytes[rwd] += bio->bi_iter.bi_size;
++		bis->cur.ios[rwd]++;
++
++		u64_stats_update_end(&bis->sync);
++		cgroup_rstat_updated(blkg->blkcg->css.cgroup, cpu);
++		put_cpu();
+ 	}
+ 
+ 	blkcg_bio_issue_init(bio);
 -- 
 2.17.1
 
