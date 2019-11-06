@@ -1,85 +1,135 @@
-From: Namhyung Kim <namhyung@kernel.org>
-Subject: Re: [PATCHSET cgroup/for-5.5] kernfs,cgroup: support 64bit inos and
- unify cgroup IDs
-Date: Wed, 6 Nov 2019 22:50:15 +0900
-Message-ID: <CAM9d7cjXX8aYYjJdnb0SUjBYwhOTWiD+V9fagUVnW9FUS6C=5g@mail.gmail.com>
-References: <20191104235944.3470866-1-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH cgroup/for-5.5] cgroup: use cgroup->last_bstat instead of
+ cgroup->bstat_pending for consistency
+Date: Wed, 6 Nov 2019 12:49:57 -0800
+Message-ID: <20191106204957.GT3622521@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191104235944.3470866-1-tj@kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=CiK8igEDVXgKaHvMads6gYnmVhNv244fVisSAjJVZyQ=;
+        b=L1igbyJIS3B3Z6CUwNO8Av0YgANed5N5Nac+ANz7oSf+L6b3WdT62vZknFaWMMHcto
+         yeHa5jGPJRCOXyTLOwq2RjTjSIFjqxWfke9qtXc2EWCRJZl8iTY8PuKsdkLuywa9qMXo
+         GUkxWVgHEuA0jWHXDQJtkKUPYDFOq5Y06GTwkgr1JPJILt5Pcc/CLL4bqhmkJtJYgRwz
+         JWVFI3EX9FJRqttzXCJVbIS5T7oxMsmG5p3M9WUDWTZoC6Xd7gbo0mXQ1ToeNkC9UGlm
+         2cpnIlYKVDXusG3s4V22kIvMBVmIOSjvYjcSne5VfMzjwJKOOAGAcwcrYXqO4YLcyx8M
+         P8GQ==
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, kernel-team@fb.com, linux-kernel <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>
+To: cgroups@vger.kernel.org
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, kernel-team@fb.com, linux-kernel@vger.kernel.org
 
-Hi Tejun,
+cgroup->bstat_pending is used to determine the base stat delta to
+propagate to the parent.  While correct, this is different from how
+percpu delta is determined for no good reason and the inconsistency
+makes the code more difficult to understand.
 
-On Tue, Nov 5, 2019 at 8:59 AM Tejun Heo <tj@kernel.org> wrote:
->
-> Hello,
->
-> Currently, there are three IDs which are being used to identify a
-> cgroup.
->
-> 1. cgroup->id
-> 2. cgroupfs 32bit ino
-> 3. cgroupfs 32bit ino + 32bit gen
->
-> All three IDs are visible to userland through different interfaces.
-> This is very confusing and #1 can't even be resolved to cgroups from
-> userland.
->
-> A 64bit number is sufficient to identify a cgroup instance uniquely
-> and ino_t is 64bit on all archs except for alpha.  There's no reason
-> for three different IDs at all.  This patchset updates kernfs so that
-> it supports 64bit ino and associated exportfs operations and unifies
-> the cgroup IDs.
->
-> * On 64bit ino archs, ino is kernfs node ID which is also the cgroup
->   ID.  The ino can be passed directly into open_by_handle_at(2) w/ the
->   new key type FILEID_KERNFS.  Backward compatibility is maintained
->   for FILEID_INO32_GEN keys.
->
-> * On 32bit ino archs, kernfs node ID is still 64bit and the cgroup ID.
->   ino is the low 32bits and gen is the high 32bits.  If the high
->   32bits is zero, open_by_handle_at(2) only matches the ino part of
->   the ID allowing userland to resolve inos to cgroups as long as
->   distinguishing recycled inos isn't necessary.
->
-> This patchset contains the following 10 patches.
->
->  0001-kernfs-fix-ino-wrap-around-detection.patch
->  0002-writeback-use-ino_t-for-inodes-in-tracepoints.patch
->  0003-netprio-use-css-ID-instead-of-cgroup-ID.patch
->  0004-kernfs-use-dumber-locking-for-kernfs_find_and_get_no.patch
->  0005-kernfs-kernfs_find_and_get_node_by_ino-should-only-l.patch
->  0006-kernfs-convert-kernfs_node-id-from-union-kernfs_node.patch
->  0007-kernfs-combine-ino-id-lookup-functions-into-kernfs_f.patch
->  0008-kernfs-implement-custom-exportfs-ops-and-fid-type.patch
->  0009-kernfs-use-64bit-inos-if-ino_t-is-64bit.patch
->  0010-cgroup-use-cgrp-kn-id-as-the-cgroup-ID.patch
->
-> 0001 is a fix which should be backported through -stable.  0002 and
-> 0003 are prep patches.  0004-0009 make kernfs_node->id a u64 and use
-> it as ino on 64bit ino archs.  0010 replaces cgroup->id with the
-> kernfs node ID.
->
-> Greg, how do you want to route the patches?  We can route 0001-0009
-> through your tree and the last one through cgroup after pulling in.
-> I'd be happy to route them all too.
->
-> This patchset is also available in the following git branch.
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-unified-cgid
->
-> diffstat follows.  Thanks.
+This patch makes parent propagation delta calculation use the same
+method as percpu to global propagation.
 
-Thanks a lot for doing this!  I've tested it with my perf cgroup patchset
-based on top of this series and it looks good.  You can add my
+* cgroup_base_stat_accumulate() is renamed to cgroup_base_stat_add()
+  and cgroup_base_stat_sub() is added.
 
-Tested-by: Namhyung Kim <namhyung@kernel.org>
+* percpu propagation calculation is updated to use the above helpers.
 
-Thanks
-Namhyung
+* cgroup->bstat_pending is replaced with cgroup->last_bstat and
+  updated to use the same calculation as percpu propagation.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+Applying to cgroup/for-5.5.
+
+Thanks.
+
+ include/linux/cgroup-defs.h |    2 -
+ kernel/cgroup/rstat.c       |   46 +++++++++++++++++++++++---------------------
+ 2 files changed, 26 insertions(+), 22 deletions(-)
+
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -458,7 +458,7 @@ struct cgroup {
+ 	struct list_head rstat_css_list;
+ 
+ 	/* cgroup basic resource statistics */
+-	struct cgroup_base_stat pending_bstat;	/* pending from children */
++	struct cgroup_base_stat last_bstat;
+ 	struct cgroup_base_stat bstat;
+ 	struct prev_cputime prev_cputime;	/* for printing out cputime */
+ 
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -304,44 +304,48 @@ void __init cgroup_rstat_boot(void)
+  * Functions for cgroup basic resource statistics implemented on top of
+  * rstat.
+  */
+-static void cgroup_base_stat_accumulate(struct cgroup_base_stat *dst_bstat,
+-					struct cgroup_base_stat *src_bstat)
++static void cgroup_base_stat_add(struct cgroup_base_stat *dst_bstat,
++				 struct cgroup_base_stat *src_bstat)
+ {
+ 	dst_bstat->cputime.utime += src_bstat->cputime.utime;
+ 	dst_bstat->cputime.stime += src_bstat->cputime.stime;
+ 	dst_bstat->cputime.sum_exec_runtime += src_bstat->cputime.sum_exec_runtime;
+ }
+ 
++static void cgroup_base_stat_sub(struct cgroup_base_stat *dst_bstat,
++				 struct cgroup_base_stat *src_bstat)
++{
++	dst_bstat->cputime.utime -= src_bstat->cputime.utime;
++	dst_bstat->cputime.stime -= src_bstat->cputime.stime;
++	dst_bstat->cputime.sum_exec_runtime -= src_bstat->cputime.sum_exec_runtime;
++}
++
+ static void cgroup_base_stat_flush(struct cgroup *cgrp, int cpu)
+ {
+ 	struct cgroup *parent = cgroup_parent(cgrp);
+ 	struct cgroup_rstat_cpu *rstatc = cgroup_rstat_cpu(cgrp, cpu);
+-	struct task_cputime *last_cputime = &rstatc->last_bstat.cputime;
+-	struct task_cputime cputime;
+-	struct cgroup_base_stat delta;
++	struct cgroup_base_stat cur, delta;
+ 	unsigned seq;
+ 
+ 	/* fetch the current per-cpu values */
+ 	do {
+ 		seq = __u64_stats_fetch_begin(&rstatc->bsync);
+-		cputime = rstatc->bstat.cputime;
++		cur.cputime = rstatc->bstat.cputime;
+ 	} while (__u64_stats_fetch_retry(&rstatc->bsync, seq));
+ 
+-	/* calculate the delta to propgate */
+-	delta.cputime.utime = cputime.utime - last_cputime->utime;
+-	delta.cputime.stime = cputime.stime - last_cputime->stime;
+-	delta.cputime.sum_exec_runtime = cputime.sum_exec_runtime -
+-					 last_cputime->sum_exec_runtime;
+-	*last_cputime = cputime;
+-
+-	/* transfer the pending stat into delta */
+-	cgroup_base_stat_accumulate(&delta, &cgrp->pending_bstat);
+-	memset(&cgrp->pending_bstat, 0, sizeof(cgrp->pending_bstat));
+-
+-	/* propagate delta into the global stat and the parent's pending */
+-	cgroup_base_stat_accumulate(&cgrp->bstat, &delta);
+-	if (parent)
+-		cgroup_base_stat_accumulate(&parent->pending_bstat, &delta);
++	/* propagate percpu delta to global */
++	delta = cur;
++	cgroup_base_stat_sub(&delta, &rstatc->last_bstat);
++	cgroup_base_stat_add(&cgrp->bstat, &delta);
++	cgroup_base_stat_add(&rstatc->last_bstat, &delta);
++
++	/* propagate global delta to parent */
++	if (parent) {
++		delta = cgrp->bstat;
++		cgroup_base_stat_sub(&delta, &cgrp->last_bstat);
++		cgroup_base_stat_add(&parent->bstat, &delta);
++		cgroup_base_stat_add(&cgrp->last_bstat, &delta);
++	}
+ }
+ 
+ static struct cgroup_rstat_cpu *
