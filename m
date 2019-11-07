@@ -1,22 +1,23 @@
 From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH 00/11] mm: fix page aging across multiple cgroups
-Date: Wed, 6 Nov 2019 18:50:25 -0800
-Message-ID: <CALvZod7821vuP_KcOKZkzKu-6b_kzDPrximi3E-Ld95fd=zbMg@mail.gmail.com>
-References: <20190603210746.15800-1-hannes@cmpxchg.org>
+Subject: Re: [PATCH 01/11] mm: vmscan: move inactive_list_is_low() swap check
+ to the caller
+Date: Wed, 6 Nov 2019 18:50:37 -0800
+Message-ID: <CALvZod64t1OGuhrvB1QChUYvUs2yQF-qAi5F=gcntHN84rr=sQ@mail.gmail.com>
+References: <20190603210746.15800-1-hannes@cmpxchg.org> <20190603210746.15800-2-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=sQYI1rvlkC0tvETg67Z/XAN6h11szq8NdU5Qx30NxZU=;
-        b=YYZerKDjzOjxCSCwAoDCdu2TpeLULDUr67RM6tHUhnlLSHIOBDTadlb85yJr6p3KJU
-         sZNan/dTMTOBCNtqPYuXZywBCYjBQ0SLnnFxutuOOZbgnsEUIUG4y6HKpgH7nO5dPjxE
-         G4HeVM6Kx273HLA3YqImK3zSc4BJbz1/RbZPDen67LZuVQ+SY84CED0nULACrZSw/PQ3
-         dBSln3MdhgMsS0AfDc7wtnyU/wN2pbolcvfb4til6CDH+N3fJbf49qTWi9QyG1Rmt15U
-         +mWPf0rKJNrMMwAv9Rm/TXlP0h5AXYxO45UjiC3K1K+IeKBsBlZGwfSclsNduUR2F59L
-         j5+w==
-In-Reply-To: <20190603210746.15800-1-hannes@cmpxchg.org>
+        bh=10UEJHReRRkCxqogp9ovKAQzTbWMZb9ETtZvBc2w3vc=;
+        b=n9PsUp0qLOLm3wGK6uOzCOXqKvmgPnWWAlsm+bH61fBp5I7s0DOeNJAHiWoawbMzlJ
+         UBNhIcvRd60O+T2/7puYtioivkiGfDSKcW95AogUygR40udqSIvMMm1ctuaW1MbeH7B2
+         nx2IDJ7a8R52fGrCK8GjN5xYz1k8FzHSiINa/nW+Xi1UOfMK1SSkhxWNO1O4WL4xNDy7
+         YFx8ofRoa/3PuOrCSE4b/8D478nKxV63gjcYW8a5n1W00TtkmSSR/ERQeOS0FJhWDwpi
+         MojGBQ5ILh+cI9z1z47DnjqqlWBvMytlSohM2JWKkAuA+it3n8s5M8f86M4QwUYvFHxv
+         hJpw==
+In-Reply-To: <20190603210746.15800-2-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -24,105 +25,65 @@ Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <kernel-team@fb.com>
 
-On Mon, Jun 3, 2019 at 2:59 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
+On Mon, Jun 3, 2019 at 3:05 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
 >
-> When applications are put into unconfigured cgroups for memory
-> accounting purposes, the cgrouping itself should not change the
-> behavior of the page reclaim code. We expect the VM to reclaim the
-> coldest pages in the system. But right now the VM can reclaim hot
-> pages in one cgroup while there is eligible cold cache in others.
+> inactive_list_is_low() should be about one thing: checking the ratio
+> between inactive and active list. Kitchensink checks like the one for
+> swap space makes the function hard to use and modify its
+> callsites. Luckly, most callers already have an understanding of the
+> swap situation, so it's easy to clean up.
 >
-> This is because one part of the reclaim algorithm isn't truly cgroup
-> hierarchy aware: the inactive/active list balancing. That is the part
-> that is supposed to protect hot cache data from one-off streaming IO.
+> get_scan_count() has its own, memcg-aware swap check, and doesn't even
+> get to the inactive_list_is_low() check on the anon list when there is
+> no swap space available.
 >
-> The recursive cgroup reclaim scheme will scan and rotate the physical
-> LRU lists of each eligible cgroup at the same rate in a round-robin
-> fashion, thereby establishing a relative order among the pages of all
-> those cgroups. However, the inactive/active balancing decisions are
-> made locally within each cgroup, so when a cgroup is running low on
-> cold pages, its hot pages will get reclaimed - even when sibling
-> cgroups have plenty of cold cache eligible in the same reclaim run.
+> shrink_list() is called on the results of get_scan_count(), so that
+> check is redundant too.
 >
-> For example:
+> age_active_anon() has its own totalswap_pages check right before it
+> checks the list proportions.
 >
->    [root@ham ~]# head -n1 /proc/meminfo
->    MemTotal:        1016336 kB
+> The shrink_node_memcg() site is the only one that doesn't do its own
+> swap check. Add it there.
 >
->    [root@ham ~]# ./reclaimtest2.sh
->    Establishing 50M active files in cgroup A...
->    Hot pages cached: 12800/12800 workingset-a
->    Linearly scanning through 18G of file data in cgroup B:
->    real    0m4.269s
->    user    0m0.051s
->    sys     0m4.182s
->    Hot pages cached: 134/12800 workingset-a
+> Then delete the swap check from inactive_list_is_low().
 >
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-Can you share reclaimtest2.sh as well? Maybe a selftest to
-monitor/test future changes.
+Reviewed-by: Shakeel Butt <shakeelb@google.com>
 
 
-> The streaming IO in B, which doesn't benefit from caching at all,
-> pushes out most of the workingset in A.
+> ---
+>  mm/vmscan.c | 9 +--------
+>  1 file changed, 1 insertion(+), 8 deletions(-)
 >
-> Solution
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 84dcb651d05c..f396424850aa 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -2165,13 +2165,6 @@ static bool inactive_list_is_low(struct lruvec *lruvec, bool file,
+>         unsigned long refaults;
+>         unsigned long gb;
 >
-> This series fixes the problem by elevating inactive/active balancing
-> decisions to the toplevel of the reclaim run. This is either a cgroup
-> that hit its limit, or straight-up global reclaim if there is physical
-> memory pressure. From there, it takes a recursive view of the cgroup
-> subtree to decide whether page deactivation is necessary.
+> -       /*
+> -        * If we don't have swap space, anonymous page deactivation
+> -        * is pointless.
+> -        */
+> -       if (!file && !total_swap_pages)
+> -               return false;
+> -
+>         inactive = lruvec_lru_size(lruvec, inactive_lru, sc->reclaim_idx);
+>         active = lruvec_lru_size(lruvec, active_lru, sc->reclaim_idx);
 >
-> In the test above, the VM will then recognize that cgroup B has plenty
-> of eligible cold cache, and that thet hot pages in A can be spared:
->
->    [root@ham ~]# ./reclaimtest2.sh
->    Establishing 50M active files in cgroup A...
->    Hot pages cached: 12800/12800 workingset-a
->    Linearly scanning through 18G of file data in cgroup B:
->    real    0m4.244s
->    user    0m0.064s
->    sys     0m4.177s
->    Hot pages cached: 12800/12800 workingset-a
->
-> Implementation
->
-> Whether active pages can be deactivated or not is influenced by two
-> factors: the inactive list dropping below a minimum size relative to
-> the active list, and the occurence of refaults.
->
-> After some cleanups and preparations, this patch series first moves
-> refault detection to the reclaim root, then enforces the minimum
-> inactive size based on a recursive view of the cgroup tree's LRUs.
->
-> History
->
-> Note that this actually never worked correctly in Linux cgroups. In
-> the past it worked for global reclaim and leaf limit reclaim only (we
-> used to have two physical LRU linkages per page), but it never worked
-> for intermediate limit reclaim over multiple leaf cgroups.
->
-> We're noticing this now because 1) we're putting everything into
-> cgroups for accounting, not just the things we want to control and 2)
-> we're moving away from leaf limits that invoke reclaim on individual
-> cgroups, toward large tree reclaim, triggered by high-level limits or
-> physical memory pressure, that is influenced by local protections such
-> as memory.low and memory.min instead.
->
-> Requirements
->
-> These changes are based on the fast recursive memcg stats merged in
-> 5.2-rc1. The patches are against v5.2-rc2-mmots-2019-05-29-20-56-12
-> plus the page cache fix in https://lkml.org/lkml/2019/5/24/813.
->
->  include/linux/memcontrol.h |  37 +--
->  include/linux/mmzone.h     |  30 +-
->  include/linux/swap.h       |   2 +-
->  mm/memcontrol.c            |   6 +-
->  mm/page_alloc.c            |   2 +-
->  mm/vmscan.c                | 667 ++++++++++++++++++++++---------------------
->  mm/workingset.c            |  74 +++--
->  7 files changed, 437 insertions(+), 381 deletions(-)
->
+> @@ -2592,7 +2585,7 @@ static void shrink_node_memcg(struct pglist_data *pgdat, struct mem_cgroup *memc
+>          * Even if we did not try to evict anon pages at all, we want to
+>          * rebalance the anon lru active/inactive ratio.
+>          */
+> -       if (inactive_list_is_low(lruvec, false, sc, true))
+> +       if (total_swap_pages && inactive_list_is_low(lruvec, false, sc, true))
+>                 shrink_active_list(SWAP_CLUSTER_MAX, lruvec,
+>                                    sc, LRU_ACTIVE_ANON);
+>  }
+> --
+> 2.21.0
 >
