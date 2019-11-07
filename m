@@ -1,39 +1,115 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 0.5/5] bfq-iosched: relocate bfqg_*rwstat*() helpers
-Date: Thu, 7 Nov 2019 12:08:15 -0700
-Message-ID: <4d34b6a3-b141-f0fe-c7e1-e68e0fa52cfb@kernel.dk>
-References: <20191106215838.3973497-1-tj@kernel.org>
- <20191107190459.GA3622521@devbig004.ftw2.facebook.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 1/6] bfq-iosched: relocate bfqg_*rwstat*() helpers
+Date: Thu,  7 Nov 2019 11:17:59 -0800
+Message-ID: <20191107191804.3735303-2-tj@kernel.org>
+References: <20191107191804.3735303-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=6tc+3dFnObbCsZTOmcaVyw6tfhQMQsGco5do8dKeQEQ=;
-        b=LgVB184nuWNpFfGTtXqtzbPQCgBsxaiS3I2ido28o3uv6Be63L007ZEgJmeI4p0/bU
-         gZ6XCsGvaUXpCS9kQrcCCvJGsC6gBbU5UgGuwiQXUL2Yq7wIEFglIILOgZw8P9sQ59j7
-         DVtDRA39e/w+eVu+5Fh80AmOIS+cIts7L5UOC6aEPlA7E1tDZ3rxeD/TiAUidkN3wOUr
-         1nHZaIYFTXT5S+tb7PTGosHYi4WLU/P4nMLLf2YXPVRMFdaZd4mZ8LM0dz/v2xb6ZclM
-         3VZLjZEqUWsplJQaLrY2K2NJQ4QLwMKeezr3/t5BIKT6nsMzzJ4vjASSNPhTr64cZv0u
-         0dSg==
-In-Reply-To: <20191107190459.GA3622521@devbig004.ftw2.facebook.com>
-Content-Language: en-US
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=znlRTNHoKykO2PNyEazvN0YZ+bFmJkjSeLacwzzLw1A=;
+        b=tjG1KjgaTrTGNnprsl2NxFJreLf/OjzVAt0A6QrnOxpwd0AHDEMI0Y26C72AY7F2MU
+         zKhDevIrcosd7yDgfQEfu6gx1ezxW3hiCHBjwwp9Hg0BRg9qmf3F7twiyESf28ieVBfz
+         M6EI3Yf4APy4CwFNOVkRfDMUUl876WTZNb9ueC3SyuC9KGpuY7sQJhS63dcc/tdTJa/q
+         vBv7EwAjxDKFuZtzStKbDkhBcy2q7W9qsFpmBNRh+coxxeF6GMqItIdziVMN/1NLCRjC
+         62tsHMUPgDU/e7x/ylQf7TzBAIcsOzKWB51wQp9jtbQjsS/lrgAT5PZYce/5/6+wojid
+         Y5Gw==
+In-Reply-To: <20191107191804.3735303-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, kernel-team@fb.com
+Content-Transfer-Encoding: 7bit
+To: axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-On 11/7/19 12:04 PM, Tejun Heo wrote:
-> Jens, this is an extra patch to help fixing the build bug when
-> !CONFIG_BFQ_CGROUP_DEBUG.  The git tree has been updated accordingly.
-> Please let me know if you want the whole series reposted.
+Collect them right under #ifdef CONFIG_BFQ_CGROUP_DEBUG.  The next
+patch will use them from !DEBUG path and this makes it easy to move
+them out of the ifdef block.
 
-I seem to run into issues applying the series with the 0.5 added first
-and with the updated patch 1. So maybe a resend isn't a bad idea :-)
+This is pure code reorganization.
 
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ block/bfq-cgroup.c | 46 +++++++++++++++++++++++-----------------------
+ 1 file changed, 23 insertions(+), 23 deletions(-)
+
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index 86a607cf19a1..d4755d4ad009 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -1058,17 +1058,34 @@ static ssize_t bfq_io_set_weight(struct kernfs_open_file *of,
+ }
+ 
+ #ifdef CONFIG_BFQ_CGROUP_DEBUG
+-static int bfqg_print_stat(struct seq_file *sf, void *v)
++static int bfqg_print_rwstat(struct seq_file *sf, void *v)
+ {
+-	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)), blkg_prfill_stat,
+-			  &blkcg_policy_bfq, seq_cft(sf)->private, false);
++	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)), blkg_prfill_rwstat,
++			  &blkcg_policy_bfq, seq_cft(sf)->private, true);
+ 	return 0;
+ }
+ 
+-static int bfqg_print_rwstat(struct seq_file *sf, void *v)
++static u64 bfqg_prfill_rwstat_recursive(struct seq_file *sf,
++					struct blkg_policy_data *pd, int off)
+ {
+-	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)), blkg_prfill_rwstat,
+-			  &blkcg_policy_bfq, seq_cft(sf)->private, true);
++	struct blkg_rwstat_sample sum;
++
++	blkg_rwstat_recursive_sum(pd_to_blkg(pd), &blkcg_policy_bfq, off, &sum);
++	return __blkg_prfill_rwstat(sf, pd, &sum);
++}
++
++static int bfqg_print_rwstat_recursive(struct seq_file *sf, void *v)
++{
++	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
++			  bfqg_prfill_rwstat_recursive, &blkcg_policy_bfq,
++			  seq_cft(sf)->private, true);
++	return 0;
++}
++
++static int bfqg_print_stat(struct seq_file *sf, void *v)
++{
++	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)), blkg_prfill_stat,
++			  &blkcg_policy_bfq, seq_cft(sf)->private, false);
+ 	return 0;
+ }
+ 
+@@ -1097,15 +1114,6 @@ static u64 bfqg_prfill_stat_recursive(struct seq_file *sf,
+ 	return __blkg_prfill_u64(sf, pd, sum);
+ }
+ 
+-static u64 bfqg_prfill_rwstat_recursive(struct seq_file *sf,
+-					struct blkg_policy_data *pd, int off)
+-{
+-	struct blkg_rwstat_sample sum;
+-
+-	blkg_rwstat_recursive_sum(pd_to_blkg(pd), &blkcg_policy_bfq, off, &sum);
+-	return __blkg_prfill_rwstat(sf, pd, &sum);
+-}
+-
+ static int bfqg_print_stat_recursive(struct seq_file *sf, void *v)
+ {
+ 	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
+@@ -1114,14 +1122,6 @@ static int bfqg_print_stat_recursive(struct seq_file *sf, void *v)
+ 	return 0;
+ }
+ 
+-static int bfqg_print_rwstat_recursive(struct seq_file *sf, void *v)
+-{
+-	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
+-			  bfqg_prfill_rwstat_recursive, &blkcg_policy_bfq,
+-			  seq_cft(sf)->private, true);
+-	return 0;
+-}
+-
+ static u64 bfqg_prfill_sectors(struct seq_file *sf, struct blkg_policy_data *pd,
+ 			       int off)
+ {
 -- 
-Jens Axboe
+2.17.1
 
