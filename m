@@ -1,44 +1,128 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH block/for-5.4-fixes] blkcg: make blkcg_print_stat() print
- stats only for online blkgs
-Date: Wed, 6 Nov 2019 17:08:59 -0700
-Message-ID: <1ef277bb-8591-6029-2e9b-319820b3460c@kernel.dk>
-References: <20191105160951.GS3622521@devbig004.ftw2.facebook.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH 00/11] mm: fix page aging across multiple cgroups
+Date: Wed, 6 Nov 2019 18:50:25 -0800
+Message-ID: <CALvZod7821vuP_KcOKZkzKu-6b_kzDPrximi3E-Ld95fd=zbMg@mail.gmail.com>
+References: <20190603210746.15800-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=nqDRoSA2IlRCgtZEklSoyPJxix3jduddAsTI1/jyNJM=;
-        b=X2Ic0fSApnzTHNdrcWe9ggsXClLt1ZYXt51dLoiznXpJfWYe3WV0JSVtA1y/6Be8bk
-         HohaOtxR35Sl1zMaaCuBEU2N7beBAJZ2RGI4bSzq0bz0ir/9PX0PQ4GkHuPfV3Tm1TiA
-         8gHEAUPHwZf8+bIjL1S08URkQ/1PEnfN2DsVLfp5tonTKKUgKFExNd3mP7Q9z+dZEdi+
-         kQegPZECwkYzCfuFG9PngeOxvXCXj1yp/FIhILtDJqzFKtbqNLiEjUhqqzmiufO0F/Em
-         9ORpFhWbqBXvN/KD6ROet7VPkhdoEDubSk9PGlBk5PGcpq0Xcu/jpcL/NGK10FpQBF/j
-         9YBg==
-In-Reply-To: <20191105160951.GS3622521@devbig004.ftw2.facebook.com>
-Content-Language: en-US
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=sQYI1rvlkC0tvETg67Z/XAN6h11szq8NdU5Qx30NxZU=;
+        b=YYZerKDjzOjxCSCwAoDCdu2TpeLULDUr67RM6tHUhnlLSHIOBDTadlb85yJr6p3KJU
+         sZNan/dTMTOBCNtqPYuXZywBCYjBQ0SLnnFxutuOOZbgnsEUIUG4y6HKpgH7nO5dPjxE
+         G4HeVM6Kx273HLA3YqImK3zSc4BJbz1/RbZPDen67LZuVQ+SY84CED0nULACrZSw/PQ3
+         dBSln3MdhgMsS0AfDc7wtnyU/wN2pbolcvfb4til6CDH+N3fJbf49qTWi9QyG1Rmt15U
+         +mWPf0rKJNrMMwAv9Rm/TXlP0h5AXYxO45UjiC3K1K+IeKBsBlZGwfSclsNduUR2F59L
+         j5+w==
+In-Reply-To: <20190603210746.15800-1-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Roman Gushchin <guro@fb.com>, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Josef Bacik <jbacik@fb.com>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <kernel-team@fb.com>
 
-On 11/5/19 9:09 AM, Tejun Heo wrote:
-> blkcg_print_stat() iterates blkgs under RCU and doesn't test whether
-> the blkg is online.  This can call into pd_stat_fn() on a pd which is
-> still being initialized leading to an oops.
-> 
-> The heaviest operation - recursively summing up rwstat counters - is
-> already done while holding the queue_lock.  Expand queue_lock to cover
-> the other operations and skip the blkg if it isn't online yet.  The
-> online state is protected by both blkcg and queue locks, so this
-> guarantees that only online blkgs are processed.
+On Mon, Jun 3, 2019 at 2:59 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
+>
+> When applications are put into unconfigured cgroups for memory
+> accounting purposes, the cgrouping itself should not change the
+> behavior of the page reclaim code. We expect the VM to reclaim the
+> coldest pages in the system. But right now the VM can reclaim hot
+> pages in one cgroup while there is eligible cold cache in others.
+>
+> This is because one part of the reclaim algorithm isn't truly cgroup
+> hierarchy aware: the inactive/active list balancing. That is the part
+> that is supposed to protect hot cache data from one-off streaming IO.
+>
+> The recursive cgroup reclaim scheme will scan and rotate the physical
+> LRU lists of each eligible cgroup at the same rate in a round-robin
+> fashion, thereby establishing a relative order among the pages of all
+> those cgroups. However, the inactive/active balancing decisions are
+> made locally within each cgroup, so when a cgroup is running low on
+> cold pages, its hot pages will get reclaimed - even when sibling
+> cgroups have plenty of cold cache eligible in the same reclaim run.
+>
+> For example:
+>
+>    [root@ham ~]# head -n1 /proc/meminfo
+>    MemTotal:        1016336 kB
+>
+>    [root@ham ~]# ./reclaimtest2.sh
+>    Establishing 50M active files in cgroup A...
+>    Hot pages cached: 12800/12800 workingset-a
+>    Linearly scanning through 18G of file data in cgroup B:
+>    real    0m4.269s
+>    user    0m0.051s
+>    sys     0m4.182s
+>    Hot pages cached: 134/12800 workingset-a
+>
 
-Applied, thanks Tejun.
+Can you share reclaimtest2.sh as well? Maybe a selftest to
+monitor/test future changes.
 
--- 
-Jens Axboe
 
+> The streaming IO in B, which doesn't benefit from caching at all,
+> pushes out most of the workingset in A.
+>
+> Solution
+>
+> This series fixes the problem by elevating inactive/active balancing
+> decisions to the toplevel of the reclaim run. This is either a cgroup
+> that hit its limit, or straight-up global reclaim if there is physical
+> memory pressure. From there, it takes a recursive view of the cgroup
+> subtree to decide whether page deactivation is necessary.
+>
+> In the test above, the VM will then recognize that cgroup B has plenty
+> of eligible cold cache, and that thet hot pages in A can be spared:
+>
+>    [root@ham ~]# ./reclaimtest2.sh
+>    Establishing 50M active files in cgroup A...
+>    Hot pages cached: 12800/12800 workingset-a
+>    Linearly scanning through 18G of file data in cgroup B:
+>    real    0m4.244s
+>    user    0m0.064s
+>    sys     0m4.177s
+>    Hot pages cached: 12800/12800 workingset-a
+>
+> Implementation
+>
+> Whether active pages can be deactivated or not is influenced by two
+> factors: the inactive list dropping below a minimum size relative to
+> the active list, and the occurence of refaults.
+>
+> After some cleanups and preparations, this patch series first moves
+> refault detection to the reclaim root, then enforces the minimum
+> inactive size based on a recursive view of the cgroup tree's LRUs.
+>
+> History
+>
+> Note that this actually never worked correctly in Linux cgroups. In
+> the past it worked for global reclaim and leaf limit reclaim only (we
+> used to have two physical LRU linkages per page), but it never worked
+> for intermediate limit reclaim over multiple leaf cgroups.
+>
+> We're noticing this now because 1) we're putting everything into
+> cgroups for accounting, not just the things we want to control and 2)
+> we're moving away from leaf limits that invoke reclaim on individual
+> cgroups, toward large tree reclaim, triggered by high-level limits or
+> physical memory pressure, that is influenced by local protections such
+> as memory.low and memory.min instead.
+>
+> Requirements
+>
+> These changes are based on the fast recursive memcg stats merged in
+> 5.2-rc1. The patches are against v5.2-rc2-mmots-2019-05-29-20-56-12
+> plus the page cache fix in https://lkml.org/lkml/2019/5/24/813.
+>
+>  include/linux/memcontrol.h |  37 +--
+>  include/linux/mmzone.h     |  30 +-
+>  include/linux/swap.h       |   2 +-
+>  mm/memcontrol.c            |   6 +-
+>  mm/page_alloc.c            |   2 +-
+>  mm/vmscan.c                | 667 ++++++++++++++++++++++---------------------
+>  mm/workingset.c            |  74 +++--
+>  7 files changed, 437 insertions(+), 381 deletions(-)
+>
+>
