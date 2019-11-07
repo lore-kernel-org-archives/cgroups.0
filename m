@@ -1,19 +1,19 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 3/6] blk-throtl: stop using blkg->stat_bytes and ->stat_ios
-Date: Thu,  7 Nov 2019 11:18:01 -0800
-Message-ID: <20191107191804.3735303-4-tj@kernel.org>
+Subject: [PATCH 4/6] blk-cgroup: remove now unused blkg_print_stat_{bytes|ios}_recursive()
+Date: Thu,  7 Nov 2019 11:18:02 -0800
+Message-ID: <20191107191804.3735303-5-tj@kernel.org>
 References: <20191107191804.3735303-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=vMqhWfpdfuPCtzz4h4xpyfgHaJP+ivcOVe0R+amrObc=;
-        b=HdZZU5I5vTMc9Ex/54W/e4TkSETgqYkiFfEYhMgNaJhQdd+onKikiaU2ZwcyX78T9f
-         Oa5tYEbglcQ7BNDDmKYsg/Cddj4nl1MvSwmLTVYa42IO8g21JU45R62X7j4feTUwd/zr
-         tr5/FsGA/y5AtFuz/eKR/ftmqQYxPlAtdqhorB/H7Px+w5ma+bMxZ5jMwQUIRnEmiSPB
-         t/A585WVXN8hr39fuKUNgmJ6HaC9CkgBbGu2mU2xpF+rsF/pUxKQ9P3EUPFYdJyr1X34
-         0ZR5335OuQ1I1sXKrBq99pb+4E3nds0D8vMjbXXIm/0D9bLv16oZBtAzgPHGpC0l2pJo
-         /tAQ==
+        bh=2Y+pHXtP5O8Okj4I0mI2qlT4EC3+7maC5emZuz1NNRA=;
+        b=dSIVX8HNakf4UCSDoL9GG1/oa+JSiZjL1/w344VGzrazd/6fAm080EaF9aM6QD3MFA
+         vq5u1kxJxiBZLyIF2H2xhW+la8wFC8tcKKkGNbQez6kyomQU1uijmoEMK9HT1AqS+CV3
+         vIYYkZKpcIM/GAewRf3OCKq81YJZ1gw7Dw2T86U5a3lNuiy0/4ScCO2uJeX+RsV7PgAq
+         UP1MEMD/D78B7sO0L+tyC6BPtLKx1QOf+C4p7t7ppanFT0Hp1KTAWvSpEOx9rjllz0T9
+         bsRnu/XNTsEeQckp1QUWnXntos/XMOMa9VPkmJTOUiue0zs7Fx6LmS7jqs8dQQuFi1y3
+         dFKA==
 In-Reply-To: <20191107191804.3735303-1-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,151 +23,124 @@ Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
 Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>
 
-When used on cgroup1, blk-throtl uses the blkg->stat_bytes and
-->stat_ios from blk-cgroup core to populate four stat knobs.
-blk-cgroup core is moving away from blkg_rwstat to improve scalability
-and won't be able to support this usage.
-
-It isn't like the sharing gains all that much.  Let's break them out
-to dedicated rwstat counters which are updated when on cgroup1.
+These don't have users anymore.  Remove them.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-throttle.c | 70 ++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 61 insertions(+), 9 deletions(-)
+ block/blk-cgroup.c         | 83 --------------------------------------
+ include/linux/blk-cgroup.h |  5 ---
+ 2 files changed, 88 deletions(-)
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 18f773e52dfb..2d0fc73d9781 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -176,6 +176,9 @@ struct throtl_grp {
- 	unsigned int bio_cnt; /* total bios */
- 	unsigned int bad_bio_cnt; /* bios exceeding latency threshold */
- 	unsigned long bio_cnt_reset_time;
-+
-+	struct blkg_rwstat stat_bytes;
-+	struct blkg_rwstat stat_ios;
- };
- 
- /* We measure latency for request size from <= 4k to >= 1M */
-@@ -489,6 +492,12 @@ static struct blkg_policy_data *throtl_pd_alloc(gfp_t gfp,
- 	if (!tg)
- 		return NULL;
- 
-+	if (blkg_rwstat_init(&tg->stat_bytes, gfp))
-+		goto err_free_tg;
-+
-+	if (blkg_rwstat_init(&tg->stat_ios, gfp))
-+		goto err_exit_stat_bytes;
-+
- 	throtl_service_queue_init(&tg->service_queue);
- 
- 	for (rw = READ; rw <= WRITE; rw++) {
-@@ -513,6 +522,12 @@ static struct blkg_policy_data *throtl_pd_alloc(gfp_t gfp,
- 	tg->idletime_threshold_conf = DFL_IDLE_THRESHOLD;
- 
- 	return &tg->pd;
-+
-+err_exit_stat_bytes:
-+	blkg_rwstat_exit(&tg->stat_bytes);
-+err_free_tg:
-+	kfree(tg);
-+	return NULL;
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 1eb8895be4c6..e7e93377e320 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -615,89 +615,6 @@ u64 blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
  }
+ EXPORT_SYMBOL_GPL(blkg_prfill_rwstat);
  
- static void throtl_pd_init(struct blkg_policy_data *pd)
-@@ -611,6 +626,8 @@ static void throtl_pd_free(struct blkg_policy_data *pd)
- 	struct throtl_grp *tg = pd_to_tg(pd);
+-static u64 blkg_prfill_rwstat_field(struct seq_file *sf,
+-				    struct blkg_policy_data *pd, int off)
+-{
+-	struct blkg_rwstat_sample rwstat = { };
+-
+-	blkg_rwstat_read((void *)pd->blkg + off, &rwstat);
+-	return __blkg_prfill_rwstat(sf, pd, &rwstat);
+-}
+-
+-/**
+- * blkg_print_stat_bytes - seq_show callback for blkg->stat_bytes
+- * @sf: seq_file to print to
+- * @v: unused
+- *
+- * To be used as cftype->seq_show to print blkg->stat_bytes.
+- * cftype->private must be set to the blkcg_policy.
+- */
+-int blkg_print_stat_bytes(struct seq_file *sf, void *v)
+-{
+-	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
+-			  blkg_prfill_rwstat_field, (void *)seq_cft(sf)->private,
+-			  offsetof(struct blkcg_gq, stat_bytes), true);
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(blkg_print_stat_bytes);
+-
+-/**
+- * blkg_print_stat_bytes - seq_show callback for blkg->stat_ios
+- * @sf: seq_file to print to
+- * @v: unused
+- *
+- * To be used as cftype->seq_show to print blkg->stat_ios.  cftype->private
+- * must be set to the blkcg_policy.
+- */
+-int blkg_print_stat_ios(struct seq_file *sf, void *v)
+-{
+-	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
+-			  blkg_prfill_rwstat_field, (void *)seq_cft(sf)->private,
+-			  offsetof(struct blkcg_gq, stat_ios), true);
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(blkg_print_stat_ios);
+-
+-static u64 blkg_prfill_rwstat_field_recursive(struct seq_file *sf,
+-					      struct blkg_policy_data *pd,
+-					      int off)
+-{
+-	struct blkg_rwstat_sample rwstat;
+-
+-	blkg_rwstat_recursive_sum(pd->blkg, NULL, off, &rwstat);
+-	return __blkg_prfill_rwstat(sf, pd, &rwstat);
+-}
+-
+-/**
+- * blkg_print_stat_bytes_recursive - recursive version of blkg_print_stat_bytes
+- * @sf: seq_file to print to
+- * @v: unused
+- */
+-int blkg_print_stat_bytes_recursive(struct seq_file *sf, void *v)
+-{
+-	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
+-			  blkg_prfill_rwstat_field_recursive,
+-			  (void *)seq_cft(sf)->private,
+-			  offsetof(struct blkcg_gq, stat_bytes), true);
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(blkg_print_stat_bytes_recursive);
+-
+-/**
+- * blkg_print_stat_ios_recursive - recursive version of blkg_print_stat_ios
+- * @sf: seq_file to print to
+- * @v: unused
+- */
+-int blkg_print_stat_ios_recursive(struct seq_file *sf, void *v)
+-{
+-	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
+-			  blkg_prfill_rwstat_field_recursive,
+-			  (void *)seq_cft(sf)->private,
+-			  offsetof(struct blkcg_gq, stat_ios), true);
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(blkg_print_stat_ios_recursive);
+-
+ /**
+  * blkg_rwstat_recursive_sum - collect hierarchical blkg_rwstat
+  * @blkg: blkg of interest
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index bed9e43f9426..914ce55fa8c2 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -220,11 +220,6 @@ u64 __blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
+ 			 const struct blkg_rwstat_sample *rwstat);
+ u64 blkg_prfill_rwstat(struct seq_file *sf, struct blkg_policy_data *pd,
+ 		       int off);
+-int blkg_print_stat_bytes(struct seq_file *sf, void *v);
+-int blkg_print_stat_ios(struct seq_file *sf, void *v);
+-int blkg_print_stat_bytes_recursive(struct seq_file *sf, void *v);
+-int blkg_print_stat_ios_recursive(struct seq_file *sf, void *v);
+-
+ void blkg_rwstat_recursive_sum(struct blkcg_gq *blkg, struct blkcg_policy *pol,
+ 		int off, struct blkg_rwstat_sample *sum);
  
- 	del_timer_sync(&tg->service_queue.pending_timer);
-+	blkg_rwstat_exit(&tg->stat_bytes);
-+	blkg_rwstat_exit(&tg->stat_ios);
- 	kfree(tg);
- }
- 
-@@ -1464,6 +1481,32 @@ static ssize_t tg_set_conf_uint(struct kernfs_open_file *of,
- 	return tg_set_conf(of, buf, nbytes, off, false);
- }
- 
-+static int tg_print_rwstat(struct seq_file *sf, void *v)
-+{
-+	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
-+			  blkg_prfill_rwstat, &blkcg_policy_throtl,
-+			  seq_cft(sf)->private, true);
-+	return 0;
-+}
-+
-+static u64 tg_prfill_rwstat_recursive(struct seq_file *sf,
-+				      struct blkg_policy_data *pd, int off)
-+{
-+	struct blkg_rwstat_sample sum;
-+
-+	blkg_rwstat_recursive_sum(pd_to_blkg(pd), &blkcg_policy_throtl, off,
-+				  &sum);
-+	return __blkg_prfill_rwstat(sf, pd, &sum);
-+}
-+
-+static int tg_print_rwstat_recursive(struct seq_file *sf, void *v)
-+{
-+	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)),
-+			  tg_prfill_rwstat_recursive, &blkcg_policy_throtl,
-+			  seq_cft(sf)->private, true);
-+	return 0;
-+}
-+
- static struct cftype throtl_legacy_files[] = {
- 	{
- 		.name = "throttle.read_bps_device",
-@@ -1491,23 +1534,23 @@ static struct cftype throtl_legacy_files[] = {
- 	},
- 	{
- 		.name = "throttle.io_service_bytes",
--		.private = (unsigned long)&blkcg_policy_throtl,
--		.seq_show = blkg_print_stat_bytes,
-+		.private = offsetof(struct throtl_grp, stat_bytes),
-+		.seq_show = tg_print_rwstat,
- 	},
- 	{
- 		.name = "throttle.io_service_bytes_recursive",
--		.private = (unsigned long)&blkcg_policy_throtl,
--		.seq_show = blkg_print_stat_bytes_recursive,
-+		.private = offsetof(struct throtl_grp, stat_bytes),
-+		.seq_show = tg_print_rwstat_recursive,
- 	},
- 	{
- 		.name = "throttle.io_serviced",
--		.private = (unsigned long)&blkcg_policy_throtl,
--		.seq_show = blkg_print_stat_ios,
-+		.private = offsetof(struct throtl_grp, stat_ios),
-+		.seq_show = tg_print_rwstat,
- 	},
- 	{
- 		.name = "throttle.io_serviced_recursive",
--		.private = (unsigned long)&blkcg_policy_throtl,
--		.seq_show = blkg_print_stat_ios_recursive,
-+		.private = offsetof(struct throtl_grp, stat_ios),
-+		.seq_show = tg_print_rwstat_recursive,
- 	},
- 	{ }	/* terminate */
- };
-@@ -2127,7 +2170,16 @@ bool blk_throtl_bio(struct request_queue *q, struct blkcg_gq *blkg,
- 	WARN_ON_ONCE(!rcu_read_lock_held());
- 
- 	/* see throtl_charge_bio() */
--	if (bio_flagged(bio, BIO_THROTTLED) || !tg->has_rules[rw])
-+	if (bio_flagged(bio, BIO_THROTTLED))
-+		goto out;
-+
-+	if (!cgroup_subsys_on_dfl(io_cgrp_subsys)) {
-+		blkg_rwstat_add(&tg->stat_bytes, bio->bi_opf,
-+				bio->bi_iter.bi_size);
-+		blkg_rwstat_add(&tg->stat_ios, bio->bi_opf, 1);
-+	}
-+
-+	if (!tg->has_rules[rw])
- 		goto out;
- 
- 	spin_lock_irq(&q->queue_lock);
 -- 
 2.17.1
 
