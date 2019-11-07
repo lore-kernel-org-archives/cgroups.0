@@ -1,197 +1,81 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/6] bfq-iosched: stop using blkg->stat_bytes and ->stat_ios
-Date: Thu,  7 Nov 2019 11:18:00 -0800
-Message-ID: <20191107191804.3735303-3-tj@kernel.org>
-References: <20191107191804.3735303-1-tj@kernel.org>
+Subject: [PATCHSET v2 block/for-next] blk-cgroup: use cgroup rstat for IO stats
+Date: Thu,  7 Nov 2019 11:17:58 -0800
+Message-ID: <20191107191804.3735303-1-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=xtRJy0h7C1YGD2EnSPEUZFAgaH1uL5OYTuzgSNt/iVM=;
-        b=pUB/azFAGpBRWFY58zdbH4OPq1uOjGqFXzihxWn4zu/4YeW/WZvJbE0anEgs1rKM7W
-         w5xuKjVjbn4yRzrZU8F4cFGMV5cKi/sxi5QdZhRhCcPBxyWgyf69B42xwceNgczzDmPs
-         bDhmlsYDKIGJASTMulgG5Z4D7ywSOz5h53ri3guJIyNhDRHzb7Ay93Eabv48ivCXbKl7
-         vdr8C9pSFfKMLW2q+9egxVRQUVC3ZBr6L2hSVkg4891f8OJkqVomgRB6VjmBoSogF6S1
-         W2yx1pYDTZ59sPZnlQBOeBJ1L7SYLjRvdUGRzwy7mr8E2TzTWwQ4JCUvj80Gsf7a+NhI
-         EYuA==
-In-Reply-To: <20191107191804.3735303-1-tj@kernel.org>
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=frzwKB0VNTg+ZAOVk2Hg0rgtTZGxKwYo7SANV2FiQrw=;
+        b=DOtNb0bgjksnLw/UHH2dC6pOHZ3neE0l5WG9BV60l4/UEztqwQIh3Pg8wei/4bfnwG
+         1/koANBb+xnwdqepckcyRxW7EZbM1yYcB8bDFXHcxqFGBFYWR4iU+WMfrZsOjMZ+fwUV
+         OUQIKOMoSdOOKaQYk8ot8vA+0aUqFHFToNT8yYqqBZSlq8IM3+umU2obkvdeVAng5xlX
+         d6VDCaVrc0TglUoj9RlpIRwN3JxRIGuABtOGAsznBkXRJGz8J99LsmyaCK7octLWtch0
+         ek+3emCiEQ6KPfRl3yVPqP8Js3Dhuz2LsjHUZf0tb8wnTgzoAyAYxH8Hh9oZnmqEd8Je
+         H2eQ==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, kernel-team@fb.com, Tejun Heo <tj@kernel.org>, Paolo Valente <paolo.valente@linaro.org>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, kernel-team@fb.com
 
-When used on cgroup1, bfq uses the blkg->stat_bytes and ->stat_ios
-from blk-cgroup core to populate six stat knobs.  blk-cgroup core is
-moving away from blkg_rwstat to improve scalability and won't be able
-to support this usage.
+Hello,
 
-It isn't like the sharing gains all that much.  Let's break it out to
-dedicated rwstat counters which are updated when on cgroup1.  This
-makes use of bfqg_*rwstat*() helpers outside of
-CONFIG_BFQ_CGROUP_DEBUG.  Move them out.
+v2: Build fix when !DEBUG.
 
-v2: Compile fix when !CONFIG_BFQ_CGROUP_DEBUG.
+blk-cgroup IO stats currently use blkg_rwstat which unforutnately
+requires walking all descendants recursively on read.  On systems with
+a large number of cgroups (dead or alive), this can make each stat
+read a substantially expensive operation.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Paolo Valente <paolo.valente@linaro.org>
----
- block/bfq-cgroup.c  | 39 +++++++++++++++++++++++++++------------
- block/bfq-iosched.c |  4 ++++
- block/bfq-iosched.h |  4 ++++
- 3 files changed, 35 insertions(+), 12 deletions(-)
+This patch updates blk-cgroup to use cgroup rstat which makes stat
+reading O(# descendants which have been active since last reading)
+instead of O(# descendants).
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index d4755d4ad009..cea0ae12f937 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -347,6 +347,14 @@ void bfqg_and_blkg_put(struct bfq_group *bfqg)
- 	bfqg_put(bfqg);
- }
- 
-+void bfqg_stats_update_legacy_io(struct request_queue *q, struct request *rq)
-+{
-+	struct bfq_group *bfqg = blkg_to_bfqg(rq->bio->bi_blkg);
-+
-+	blkg_rwstat_add(&bfqg->stats.bytes, rq->cmd_flags, blk_rq_bytes(rq));
-+	blkg_rwstat_add(&bfqg->stats.ios, rq->cmd_flags, 1);
-+}
-+
- /* @stats = 0 */
- static void bfqg_stats_reset(struct bfqg_stats *stats)
- {
-@@ -431,6 +439,8 @@ void bfq_init_entity(struct bfq_entity *entity, struct bfq_group *bfqg)
- 
- static void bfqg_stats_exit(struct bfqg_stats *stats)
- {
-+	blkg_rwstat_exit(&stats->bytes);
-+	blkg_rwstat_exit(&stats->ios);
- #ifdef CONFIG_BFQ_CGROUP_DEBUG
- 	blkg_rwstat_exit(&stats->merged);
- 	blkg_rwstat_exit(&stats->service_time);
-@@ -448,6 +458,10 @@ static void bfqg_stats_exit(struct bfqg_stats *stats)
- 
- static int bfqg_stats_init(struct bfqg_stats *stats, gfp_t gfp)
- {
-+	if (blkg_rwstat_init(&stats->bytes, gfp) ||
-+	    blkg_rwstat_init(&stats->ios, gfp))
-+		return -ENOMEM;
-+
- #ifdef CONFIG_BFQ_CGROUP_DEBUG
- 	if (blkg_rwstat_init(&stats->merged, gfp) ||
- 	    blkg_rwstat_init(&stats->service_time, gfp) ||
-@@ -1057,7 +1071,6 @@ static ssize_t bfq_io_set_weight(struct kernfs_open_file *of,
- 	return bfq_io_set_device_weight(of, buf, nbytes, off);
- }
- 
--#ifdef CONFIG_BFQ_CGROUP_DEBUG
- static int bfqg_print_rwstat(struct seq_file *sf, void *v)
- {
- 	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)), blkg_prfill_rwstat,
-@@ -1082,6 +1095,7 @@ static int bfqg_print_rwstat_recursive(struct seq_file *sf, void *v)
- 	return 0;
- }
- 
-+#ifdef CONFIG_BFQ_CGROUP_DEBUG
- static int bfqg_print_stat(struct seq_file *sf, void *v)
- {
- 	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)), blkg_prfill_stat,
-@@ -1125,7 +1139,8 @@ static int bfqg_print_stat_recursive(struct seq_file *sf, void *v)
- static u64 bfqg_prfill_sectors(struct seq_file *sf, struct blkg_policy_data *pd,
- 			       int off)
- {
--	u64 sum = blkg_rwstat_total(&pd->blkg->stat_bytes);
-+	struct bfq_group *bfqg = blkg_to_bfqg(pd->blkg);
-+	u64 sum = blkg_rwstat_total(&bfqg->stats.bytes);
- 
- 	return __blkg_prfill_u64(sf, pd, sum >> 9);
- }
-@@ -1142,8 +1157,8 @@ static u64 bfqg_prfill_sectors_recursive(struct seq_file *sf,
- {
- 	struct blkg_rwstat_sample tmp;
- 
--	blkg_rwstat_recursive_sum(pd->blkg, NULL,
--			offsetof(struct blkcg_gq, stat_bytes), &tmp);
-+	blkg_rwstat_recursive_sum(pd->blkg, &blkcg_policy_bfq,
-+			offsetof(struct bfq_group, stats.bytes), &tmp);
- 
- 	return __blkg_prfill_u64(sf, pd,
- 		(tmp.cnt[BLKG_RWSTAT_READ] + tmp.cnt[BLKG_RWSTAT_WRITE]) >> 9);
-@@ -1226,13 +1241,13 @@ struct cftype bfq_blkcg_legacy_files[] = {
- 	/* statistics, covers only the tasks in the bfqg */
- 	{
- 		.name = "bfq.io_service_bytes",
--		.private = (unsigned long)&blkcg_policy_bfq,
--		.seq_show = blkg_print_stat_bytes,
-+		.private = offsetof(struct bfq_group, stats.bytes),
-+		.seq_show = bfqg_print_rwstat,
- 	},
- 	{
- 		.name = "bfq.io_serviced",
--		.private = (unsigned long)&blkcg_policy_bfq,
--		.seq_show = blkg_print_stat_ios,
-+		.private = offsetof(struct bfq_group, stats.ios),
-+		.seq_show = bfqg_print_rwstat,
- 	},
- #ifdef CONFIG_BFQ_CGROUP_DEBUG
- 	{
-@@ -1269,13 +1284,13 @@ struct cftype bfq_blkcg_legacy_files[] = {
- 	/* the same statistics which cover the bfqg and its descendants */
- 	{
- 		.name = "bfq.io_service_bytes_recursive",
--		.private = (unsigned long)&blkcg_policy_bfq,
--		.seq_show = blkg_print_stat_bytes_recursive,
-+		.private = offsetof(struct bfq_group, stats.bytes),
-+		.seq_show = bfqg_print_rwstat_recursive,
- 	},
- 	{
- 		.name = "bfq.io_serviced_recursive",
--		.private = (unsigned long)&blkcg_policy_bfq,
--		.seq_show = blkg_print_stat_ios_recursive,
-+		.private = offsetof(struct bfq_group, stats.ios),
-+		.seq_show = bfqg_print_rwstat_recursive,
- 	},
- #ifdef CONFIG_BFQ_CGROUP_DEBUG
- 	{
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 0319d6339822..41d2d83c919b 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -5464,6 +5464,10 @@ static void bfq_insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
- 	bool idle_timer_disabled = false;
- 	unsigned int cmd_flags;
- 
-+#ifdef CONFIG_BFQ_GROUP_IOSCHED
-+	if (!cgroup_subsys_on_dfl(io_cgrp_subsys) && rq->bio)
-+		bfqg_stats_update_legacy_io(q, rq);
-+#endif
- 	spin_lock_irq(&bfqd->lock);
- 	if (blk_mq_sched_try_insert_merge(q, rq)) {
- 		spin_unlock_irq(&bfqd->lock);
-diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 5d1a519640f6..2676c06218f1 100644
---- a/block/bfq-iosched.h
-+++ b/block/bfq-iosched.h
-@@ -809,6 +809,9 @@ struct bfq_stat {
- };
- 
- struct bfqg_stats {
-+	/* basic stats */
-+	struct blkg_rwstat		bytes;
-+	struct blkg_rwstat		ios;
- #ifdef CONFIG_BFQ_CGROUP_DEBUG
- 	/* number of ios merged */
- 	struct blkg_rwstat		merged;
-@@ -956,6 +959,7 @@ void bfq_put_async_queues(struct bfq_data *bfqd, struct bfq_group *bfqg);
- 
- /* ---------------- cgroups-support interface ---------------- */
- 
-+void bfqg_stats_update_legacy_io(struct request_queue *q, struct request *rq);
- void bfqg_stats_update_io_add(struct bfq_group *bfqg, struct bfq_queue *bfqq,
- 			      unsigned int op);
- void bfqg_stats_update_io_remove(struct bfq_group *bfqg, unsigned int op);
--- 
-2.17.1
+ 0001-bfq-iosched-relocate-bfqg_-rwstat-helpers.patch
+ 0002-bfq-iosched-stop-using-blkg-stat_bytes-and-stat_ios.patch
+ 0003-blk-throtl-stop-using-blkg-stat_bytes-and-stat_ios.patch
+ 0004-blk-cgroup-remove-now-unused-blkg_print_stat_-bytes-.patch
+ 0005-blk-cgroup-reimplement-basic-IO-stats-using-cgroup-r.patch
+ 0006-blk-cgroup-separate-out-blkg_rwstat-under-CONFIG_BLK.patch
+
+0001-0003 make bfq-iosched and blk-throtl use their own blkg_rwstat to
+track basic IO stats on cgroup1 instead of sharing blk-cgroup core's.
+0004 is a follow-up cleanup.
+
+0005 switches blk-cgroup to cgroup rstat.
+
+0006 moves blkg_rwstat to its own files and gate it under a config
+option as it's now only used by blk-throtl and bfq-iosched.
+
+The patchset is on top of
+
+  block/for-next  40afbe18b03a ("Merge branch 'for-5.5/drivers-post' into for-next")
++ block/for-linus b0814361a25c ("blkcg: make blkcg_print_stat() print stats only for online blkgs")
+
+and also available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git review-blkcg-rstat
+
+Thanks.
+
+ block/Kconfig              |    4 
+ block/Kconfig.iosched      |    1 
+ block/Makefile             |    1 
+ block/bfq-cgroup.c         |   37 +++--
+ block/bfq-iosched.c        |    4 
+ block/bfq-iosched.h        |    6 
+ block/blk-cgroup-rwstat.c  |  129 +++++++++++++++++++
+ block/blk-cgroup-rwstat.h  |  149 ++++++++++++++++++++++
+ block/blk-cgroup.c         |  304 ++++++++++++++-------------------------------
+ block/blk-throttle.c       |   71 +++++++++-
+ include/linux/blk-cgroup.h |  198 +++++------------------------
+ 11 files changed, 517 insertions(+), 387 deletions(-)
+
+--
+tejun
+
+[1] http://lkml.kernel.org/r/20191105160951.GS3622521@devbig004.ftw2.facebook.com
 
