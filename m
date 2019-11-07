@@ -1,22 +1,22 @@
 From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH 03/11] mm: vmscan: simplify lruvec_lru_size()
-Date: Wed, 6 Nov 2019 18:51:02 -0800
-Message-ID: <CALvZod5ac0fmfD+92kg8nu4zV31ow95DJmvsTp8Rh4Ff+FhcXg@mail.gmail.com>
-References: <20190603210746.15800-1-hannes@cmpxchg.org> <20190603210746.15800-4-hannes@cmpxchg.org>
+Subject: Re: [PATCH 04/11] mm: vmscan: naming fixes: cgroup_reclaim() and writeback_working()
+Date: Wed, 6 Nov 2019 18:51:14 -0800
+Message-ID: <CALvZod4EyAX_Q-YdHkVOquL2dJYMYN7YNi3V0rZ0yDtB09SszQ@mail.gmail.com>
+References: <20190603210746.15800-1-hannes@cmpxchg.org> <20190603210746.15800-5-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=GKO7/fbdppvBINU5UzZk1jxJvjGwB3qbyKeLUMFG0WY=;
-        b=lHGybIy/4+Wd5Xs4rFF43Igo7QNmIxIkOuOeO28hVod0YQrbdceC97gt53BQZ/IXhX
-         5XUSf0vl69ZMl/BHL/QP2dXa5rAauS3uo4T33ETfaQHSlKrFGEKWmMkuA1mx95AcHix5
-         x+/uzcZlA1JTfMck4Lia9FP9eTVtJHq8rJTe6Zd977QZlsYRi4cOhgWUCFGnv2iXZiyA
-         1qfoMzmCQ3/yTKxORuIPubW5CpJM2JJczPR77EO8tyN+1q5X8jHiaB+vPpZ2r6SMTQNt
-         f+gBkwqBIA7GiVBBHaRKE5Ooff8jHI6UtIccu7HdP9NybJy8Dp0ur2UrYxED2hpmKSPf
-         PAUQ==
-In-Reply-To: <20190603210746.15800-4-hannes@cmpxchg.org>
+        bh=ZJgjLii01IGGdUCsYrzd4gYjlTvDiWueI/o8CqoLYI4=;
+        b=rlCeuEiCGh7lsXngMqUCH816OSSAwW5c+4c+hmAyE/ruz/i3CAd226pxUWdOkAwMV5
+         Y2vPchFkJoWzr8dSiKPbmMnzTpqFNJbj/npNbC+nwyeUh+2na5zPYMcupa7V219gY5QQ
+         n18znZB1l1X3eI473qpX5oK0eCLoYA1B+m8r/7RLgqyYxLeGsMSaAOjhI+N86Bf62IRp
+         UOSmS6XrKL8AfEu3nxL5/D2WQILh4cipww7Lqj2buj1l4CStbh2qig/SIowcQlgTPawz
+         SQDRqJ1/U/o4JxfoC54TRxE+NvVH3iM7YDzr9FAMUxVkuWmKtifVYfYytRvlQiN8++am
+         c88g==
+In-Reply-To: <20190603210746.15800-5-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -24,65 +24,179 @@ Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Suren Baghdasaryan <surenb@google.com>, Michal Hocko <mhocko@suse.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <kernel-team@fb.com>
 
-On Mon, Jun 3, 2019 at 2:59 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
+On Mon, Jun 3, 2019 at 3:02 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
 >
-> This function currently takes the node or lruvec size and subtracts
-> the zones that are excluded by the classzone index of the
-> allocation. It uses four different types of counters to do this.
+> Seven years after introducing the global_reclaim() function, I still
+> have to double take when reading a callsite. I don't know how others
+> do it. This is a terrible name.
 >
-> Just add up the eligible zones.
+> Invert the meaning and rename it to cgroup_reclaim().
+>
+> [ After all, "global reclaim" is just regular reclaim invoked from the
+>   page allocator. It's reclaim on behalf of a cgroup limit that is a
+>   special case of reclaim, and should be explicit - not the reverse. ]
+>
+
+Not really confusing for me at least but no objection on cgroup_reclaim().
+
+> sane_reclaim() isn't very descriptive either: it tests whether we can
+> use the regular writeback throttling - available during regular page
+> reclaim or cgroup2 limit reclaim - or need to use the broken
+> wait_on_page_writeback() method. Rename it to writeback_working().
+
+Totally agree here.
+
 >
 > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-
-I think this became part of other series. Anyways:
 
 Reviewed-by: Shakeel Butt <shakeelb@google.com>
 
 
 > ---
->  mm/vmscan.c | 19 +++++--------------
->  1 file changed, 5 insertions(+), 14 deletions(-)
+>  mm/vmscan.c | 38 ++++++++++++++++++--------------------
+>  1 file changed, 18 insertions(+), 20 deletions(-)
 >
 > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 853be16ee5e2..69c4c82a9b5a 100644
+> index 69c4c82a9b5a..afd5e2432a8e 100644
 > --- a/mm/vmscan.c
 > +++ b/mm/vmscan.c
-> @@ -342,30 +342,21 @@ unsigned long zone_reclaimable_pages(struct zone *zone)
->   */
->  unsigned long lruvec_lru_size(struct lruvec *lruvec, enum lru_list lru, int zone_idx)
+> @@ -239,13 +239,13 @@ static void unregister_memcg_shrinker(struct shrinker *shrinker)
+>  #endif /* CONFIG_MEMCG_KMEM */
+>
+>  #ifdef CONFIG_MEMCG
+> -static bool global_reclaim(struct scan_control *sc)
+> +static bool cgroup_reclaim(struct scan_control *sc)
 >  {
-> -       unsigned long lru_size;
-> +       unsigned long size = 0;
->         int zid;
->
-> -       if (!mem_cgroup_disabled())
-> -               lru_size = lruvec_page_state_local(lruvec, NR_LRU_BASE + lru);
-> -       else
-> -               lru_size = node_page_state(lruvec_pgdat(lruvec), NR_LRU_BASE + lru);
-> -
-> -       for (zid = zone_idx + 1; zid < MAX_NR_ZONES; zid++) {
-> +       for (zid = 0; zid <= zone_idx; zid++) {
->                 struct zone *zone = &lruvec_pgdat(lruvec)->node_zones[zid];
-> -               unsigned long size;
->
->                 if (!managed_zone(zone))
->                         continue;
->
->                 if (!mem_cgroup_disabled())
-> -                       size = mem_cgroup_get_zone_lru_size(lruvec, lru, zid);
-> +                       size += mem_cgroup_get_zone_lru_size(lruvec, lru, zid);
->                 else
-> -                       size = zone_page_state(&lruvec_pgdat(lruvec)->node_zones[zid],
-> -                                      NR_ZONE_LRU_BASE + lru);
-> -               lru_size -= min(size, lru_size);
-> +                       size += zone_page_state(zone, NR_ZONE_LRU_BASE + lru);
->         }
-> -
-> -       return lru_size;
-> +       return size;
->
+> -       return !sc->target_mem_cgroup;
+> +       return sc->target_mem_cgroup;
 >  }
 >
+>  /**
+> - * sane_reclaim - is the usual dirty throttling mechanism operational?
+> + * writeback_working - is the usual dirty throttling mechanism unavailable?
+>   * @sc: scan_control in question
+>   *
+>   * The normal page dirty throttling mechanism in balance_dirty_pages() is
+> @@ -257,11 +257,9 @@ static bool global_reclaim(struct scan_control *sc)
+>   * This function tests whether the vmscan currently in progress can assume
+>   * that the normal dirty throttling mechanism is operational.
+>   */
+> -static bool sane_reclaim(struct scan_control *sc)
+> +static bool writeback_working(struct scan_control *sc)
+>  {
+> -       struct mem_cgroup *memcg = sc->target_mem_cgroup;
+> -
+> -       if (!memcg)
+> +       if (!cgroup_reclaim(sc))
+>                 return true;
+>  #ifdef CONFIG_CGROUP_WRITEBACK
+>         if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
+> @@ -293,12 +291,12 @@ static bool memcg_congested(pg_data_t *pgdat,
+>
+>  }
+>  #else
+> -static bool global_reclaim(struct scan_control *sc)
+> +static bool cgroup_reclaim(struct scan_control *sc)
+>  {
+> -       return true;
+> +       return false;
+>  }
+>
+> -static bool sane_reclaim(struct scan_control *sc)
+> +static bool writeback_working(struct scan_control *sc)
+>  {
+>         return true;
+>  }
+> @@ -1211,7 +1209,7 @@ static unsigned long shrink_page_list(struct list_head *page_list,
+>                                 goto activate_locked;
+>
+>                         /* Case 2 above */
+> -                       } else if (sane_reclaim(sc) ||
+> +                       } else if (writeback_working(sc) ||
+>                             !PageReclaim(page) || !may_enter_fs) {
+>                                 /*
+>                                  * This is slightly racy - end_page_writeback()
+> @@ -1806,7 +1804,7 @@ static int too_many_isolated(struct pglist_data *pgdat, int file,
+>         if (current_is_kswapd())
+>                 return 0;
+>
+> -       if (!sane_reclaim(sc))
+> +       if (!writeback_working(sc))
+>                 return 0;
+>
+>         if (file) {
+> @@ -1957,7 +1955,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+>         reclaim_stat->recent_scanned[file] += nr_taken;
+>
+>         item = current_is_kswapd() ? PGSCAN_KSWAPD : PGSCAN_DIRECT;
+> -       if (global_reclaim(sc))
+> +       if (!cgroup_reclaim(sc))
+>                 __count_vm_events(item, nr_scanned);
+>         __count_memcg_events(lruvec_memcg(lruvec), item, nr_scanned);
+>         spin_unlock_irq(&pgdat->lru_lock);
+> @@ -1971,7 +1969,7 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
+>         spin_lock_irq(&pgdat->lru_lock);
+>
+>         item = current_is_kswapd() ? PGSTEAL_KSWAPD : PGSTEAL_DIRECT;
+> -       if (global_reclaim(sc))
+> +       if (!cgroup_reclaim(sc))
+>                 __count_vm_events(item, nr_reclaimed);
+>         __count_memcg_events(lruvec_memcg(lruvec), item, nr_reclaimed);
+>         reclaim_stat->recent_rotated[0] += stat.nr_activate[0];
+> @@ -2239,7 +2237,7 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
+>          * using the memory controller's swap limit feature would be
+>          * too expensive.
+>          */
+> -       if (!global_reclaim(sc) && !swappiness) {
+> +       if (cgroup_reclaim(sc) && !swappiness) {
+>                 scan_balance = SCAN_FILE;
+>                 goto out;
+>         }
+> @@ -2263,7 +2261,7 @@ static void get_scan_count(struct lruvec *lruvec, struct mem_cgroup *memcg,
+>          * thrashing file LRU becomes infinitely more attractive than
+>          * anon pages.  Try to detect this based on file LRU size.
+>          */
+> -       if (global_reclaim(sc)) {
+> +       if (!cgroup_reclaim(sc)) {
+>                 unsigned long pgdatfile;
+>                 unsigned long pgdatfree;
+>                 int z;
+> @@ -2494,7 +2492,7 @@ static void shrink_node_memcg(struct pglist_data *pgdat, struct mem_cgroup *memc
+>          * abort proportional reclaim if either the file or anon lru has already
+>          * dropped to zero at the first pass.
+>          */
+> -       scan_adjusted = (global_reclaim(sc) && !current_is_kswapd() &&
+> +       scan_adjusted = (!cgroup_reclaim(sc) && !current_is_kswapd() &&
+>                          sc->priority == DEF_PRIORITY);
+>
+>         blk_start_plug(&plug);
+> @@ -2816,7 +2814,7 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+>                  * Legacy memcg will stall in page writeback so avoid forcibly
+>                  * stalling in wait_iff_congested().
+>                  */
+> -               if (!global_reclaim(sc) && sane_reclaim(sc) &&
+> +               if (cgroup_reclaim(sc) && writeback_working(sc) &&
+>                     sc->nr.dirty && sc->nr.dirty == sc->nr.congested)
+>                         set_memcg_congestion(pgdat, root, true);
+>
+> @@ -2911,7 +2909,7 @@ static void shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
+>                  * Take care memory controller reclaiming has small influence
+>                  * to global LRU.
+>                  */
+> -               if (global_reclaim(sc)) {
+> +               if (!cgroup_reclaim(sc)) {
+>                         if (!cpuset_zone_allowed(zone,
+>                                                  GFP_KERNEL | __GFP_HARDWALL))
+>                                 continue;
+> @@ -3011,7 +3009,7 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+>  retry:
+>         delayacct_freepages_start();
+>
+> -       if (global_reclaim(sc))
+> +       if (!cgroup_reclaim(sc))
+>                 __count_zid_vm_events(ALLOCSTALL, sc->reclaim_idx, 1);
+>
+>         do {
 > --
 > 2.21.0
 >
