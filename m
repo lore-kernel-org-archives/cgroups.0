@@ -1,40 +1,48 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH -next] mm/vmscan: fix an undefined behavior for zone id
-Date: Mon, 11 Nov 2019 14:28:12 +0100
-Message-ID: <20191111132812.GK1396@dhcp22.suse.cz>
-References: <20191108204407.1435-1-cai@lca.pw>
- <64E60F6F-7582-427B-8DD5-EF97B1656F5A@lca.pw>
- <20191111130516.GA891635@chrisdown.name>
- <20191111131427.GB891635@chrisdown.name>
+From: Chris Down <chris@chrisdown.name>
+Subject: [PATCH] docs: cgroup: mm: Fix spelling of "list"
+Date: Mon, 11 Nov 2019 14:44:38 +0000
+Message-ID: <20191111144438.GA11327@chrisdown.name>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=jpUzAZEpApOMVMIW0Fqf4/xrL7Q7nYI9jKjTWCa/2z8=;
+        b=OS76QWxrRsPKqu6mUeCbMb9Joyk0TTB7Vdtx082xBJahs8lh9PNXAOwoS8XFicAgnI
+         S/inQqa37xoc1IvkPXcEYEx81Bda9cHzMfpc6CFPjL+XDAaptyTPwCVnrscdIIwD1Bcc
+         L8WJGGl/hHN28w0gmLwzm7pWVT5CtEgO2zfj0=
 Content-Disposition: inline
-In-Reply-To: <20191111131427.GB891635@chrisdown.name>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Chris Down <chris@chrisdown.name>
-Cc: Qian Cai <cai@lca.pw>, akpm@linux-foundation.org, hannes@cmpxchg.org, guro@fb.com, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, kernel-team@fb.com
 
-On Mon 11-11-19 13:14:27, Chris Down wrote:
-> Chris Down writes:
-> > Ah, I just saw this in my local checkout and thought it was from my
-> > changes, until I saw it's also on clean mmots checkout. Thanks for the
-> > fixup!
-> 
-> Also, does this mean we should change callers that may pass through
-> zone_idx=MAX_NR_ZONES to become MAX_NR_ZONES-1 in a separate commit, then
-> remove this interim fixup? I'm worried otherwise we might paper over real
-> issues in future.
+Signed-off-by: Chris Down <chris@chrisdown.name>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: kernel-team@fb.com
+---
+ Documentation/admin-guide/cgroup-v2.rst | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Yes, removing this special casing is reasonable. I am not sure
-MAX_NR_ZONES - 1 is a better choice though. It is error prone and
-zone_idx is the highest zone we should consider and MAX_NR_ZONES - 1
-be ZONE_DEVICE if it is configured. But ZONE_DEVICE is really standing
-outside of MM reclaim code AFAIK. It would be probably better to have
-MAX_LRU_ZONE (equal to MOVABLE) and use it instead.
-
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index ed9123155e03..0704552ed94f 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1335,7 +1335,7 @@ PAGE_SIZE multiple when read back.
+ 
+ 	  pgdeactivate
+ 
+-		Amount of pages moved to the inactive LRU lis
++		Amount of pages moved to the inactive LRU list
+ 
+ 	  pglazyfree
+ 
 -- 
-Michal Hocko
-SUSE Labs
+2.24.0
+
