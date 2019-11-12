@@ -1,94 +1,85 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 3/3] mm: vmscan: enforce inactive:active ratio at the
- reclaim root
-Date: Tue, 12 Nov 2019 13:00:19 -0500
-Message-ID: <20191112180019.GB178331@cmpxchg.org>
-References: <20191107205334.158354-1-hannes@cmpxchg.org>
- <20191107205334.158354-4-hannes@cmpxchg.org>
- <CAJuCfpHSTr8Vt+Tj-Hj4OBYHq1ucw7_B1VoVWKEHQVPHaMhUdA@mail.gmail.com>
+Subject: Re: [PATCH -next] mm/vmscan: fix an undefined behavior for zone id
+Date: Tue, 12 Nov 2019 13:20:17 -0500
+Message-ID: <20191112182017.GB179587@cmpxchg.org>
+References: <20191108204407.1435-1-cai@lca.pw>
+ <64E60F6F-7582-427B-8DD5-EF97B1656F5A@lca.pw>
+ <20191111130516.GA891635@chrisdown.name>
+ <20191111131427.GB891635@chrisdown.name>
+ <20191111132812.GK1396@dhcp22.suse.cz>
+ <20191112145942.GA168812@cmpxchg.org>
+ <20191112152750.GA512@dhcp22.suse.cz>
+ <20191112161658.GF168812@cmpxchg.org>
+ <20191112163156.GB512@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=06+tOajz4B6gePUoYXEIPar3gvZ/gJqmbgnyOgTIPAU=;
-        b=ZQNd+lcnkEIXb4CIVCUUvF0shtw2ailj89aCGb0NVz9uUKnnUYfYju6n2m5EPh9upa
-         xxaH1JcRBZS05oi4qgAdE9Vtn1wbsYAsKC91Sa6KV3uU4jVyzCQ3msh6LHd8K20oyOX0
-         b17taRXMabKP1dKvpzPw8zj8rrahWqzoza8Hhs5SxQ9/qffyLciJXEv3mXIZGv7LIsyy
-         4ZR8FFIzTj7jW98nE7yYeYihDbvKD1xx5IxxVB2F/h2kqtc+KomQ916B3tFlQqQWbqF6
-         4k2QurV0KK7G4oJIbvG/LBxRoivl/07+p7Hc0GGnYJ5zip5Xet/r7DWNRmncK6lJF+MA
-         WGOQ==
+        bh=w8YEl8DjjpzVT+jv1JTvmwB07dFEMqomlwwTe3310pY=;
+        b=KGZv5hfKhSeMlIk3qURodC/bAqExsgUF/6lSCR5KsnlI2hk1Vvt1Ez2XgZxpFXA6M5
+         8NVnX35tumAMf8vnwXOFXvzbSO92tizrnnR0oG2BuR4cvUtk5ck7y7zDzOFViLG0BLii
+         LlqvsQXofXqmA6yYdPv+ou1g+Dj4+W+uI7q/VBfOGf1zGxNnhbdp7/C+cgP1Pchyt/Fa
+         nm4DL5uBVj/MkkJRMhVmzu8uNlKaGah+hX5o7Ukk+f2wXdl67Dpk/sfK9/hOPNH1GcT5
+         IyMHcklOBzKmgmgdX/rKt3LxiEfgOiElsQ7rJpf5BAx81/PxDpbMsgGNxbZOrH/gntTJ
+         PSOQ==
 Content-Disposition: inline
-In-Reply-To: <CAJuCfpHSTr8Vt+Tj-Hj4OBYHq1ucw7_B1VoVWKEHQVPHaMhUdA@mail.gmail.com>
+In-Reply-To: <20191112163156.GB512@dhcp22.suse.cz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Shakeel Butt <shakeelb@google.com>, Rik van Riel <riel@surriel.com>, Michal Hocko <mhocko@suse.com>, linux-mm <linux-mm@kvack.org>, cgroups mailinglist <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-team@fb.com
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Chris Down <chris@chrisdown.name>, Qian Cai <cai@lca.pw>, akpm@linux-foundation.org, guro@fb.com, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, Nov 10, 2019 at 06:15:50PM -0800, Suren Baghdasaryan wrote:
-> On Thu, Nov 7, 2019 at 12:53 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
-> > @@ -2758,7 +2775,17 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
-> >                         total_high_wmark += high_wmark_pages(zone);
-> >                 }
-> >
-> > -               sc->file_is_tiny = file + free <= total_high_wmark;
-> > +               /*
-> > +                * Consider anon: if that's low too, this isn't a
-> > +                * runaway file reclaim problem, but rather just
-> > +                * extreme pressure. Reclaim as per usual then.
-> > +                */
-> > +               anon = node_page_state(pgdat, NR_INACTIVE_ANON);
-> > +
-> > +               sc->file_is_tiny =
-> > +                       file + free <= total_high_wmark &&
-> > +                       !(sc->may_deactivate & DEACTIVATE_ANON) &&
-> > +                       anon >> sc->priority;
+On Tue, Nov 12, 2019 at 05:31:56PM +0100, Michal Hocko wrote:
+> On Tue 12-11-19 11:16:58, Johannes Weiner wrote:
+> > On Tue, Nov 12, 2019 at 04:27:50PM +0100, Michal Hocko wrote:
+> > > lruvec_lru_size is explicitly documented to use MAX_NR_ZONES for all
+> > > LRUs and git grep says there are more instances outside of
+> > > get_scan_count. So all of them have to be fixed.
+> > 
+> > Which ones?
+> > 
+> > [hannes@computer linux]$ git grep lruvec_lru_size
+> > include/linux/mmzone.h:extern unsigned long lruvec_lru_size(struct lruvec *lruvec, enum lru_list lru, int zone_idx);
+> > mm/vmscan.c: * lruvec_lru_size -  Returns the number of pages on the given LRU list.
+> > mm/vmscan.c:unsigned long lruvec_lru_size(struct lruvec *lruvec, enum lru_list lru, int zone_idx)
+> > mm/vmscan.c:    anon  = lruvec_lru_size(lruvec, LRU_ACTIVE_ANON, MAX_NR_ZONES - 1) +
+> > mm/vmscan.c:            lruvec_lru_size(lruvec, LRU_INACTIVE_ANON, MAX_NR_ZONES - 1);
+> > mm/vmscan.c:    file  = lruvec_lru_size(lruvec, LRU_ACTIVE_FILE, MAX_NR_ZONES - 1) +
+> > mm/vmscan.c:            lruvec_lru_size(lruvec, LRU_INACTIVE_FILE, MAX_NR_ZONES - 1);
+> > mm/vmscan.c:            lruvec_size = lruvec_lru_size(lruvec, lru, sc->reclaim_idx);
+> > [hannes@computer linux]$
 > 
-> The name of file_is_tiny flag seems to not correspond with its actual
-> semantics anymore. Maybe rename it into "skip_file"?
+> I have checked the Linus tree but now double checked with the current
+> next
+> $ git describe next/master
+> next-20191112
+> $ git grep "lruvec_lru_size.*MAX_NR_ZONES" next/master
+> next/master:mm/vmscan.c:                        lruvec_lru_size(lruvec, inactive_lru, MAX_NR_ZONES), inactive,
+> next/master:mm/vmscan.c:                        lruvec_lru_size(lruvec, active_lru, MAX_NR_ZONES), active,
+> next/master:mm/vmscan.c:        anon  = lruvec_lru_size(lruvec, LRU_ACTIVE_ANON, MAX_NR_ZONES) +
+> next/master:mm/vmscan.c:                lruvec_lru_size(lruvec, LRU_INACTIVE_ANON, MAX_NR_ZONES);
+> next/master:mm/vmscan.c:        file  = lruvec_lru_size(lruvec, LRU_ACTIVE_FILE, MAX_NR_ZONES) +
+> next/master:mm/vmscan.c:                lruvec_lru_size(lruvec, LRU_INACTIVE_FILE, MAX_NR_ZONES);
+> next/master:mm/workingset.c:    active_file = lruvec_lru_size(lruvec, LRU_ACTIVE_FILE, MAX_NR_ZONES);
+> 
+> are there any changes which didn't make it to linux next yet?
 
-I'm not a fan of file_is_tiny, but I also don't like skip_file. IMO
-it's better to have it describe a situation instead of an action, in
-case we later want to take additional action for that situation.
+Aaahh, that makes sense. I was looking at the latest mmots which
+has
 
-Any other ideas? ;)
+- mm: vmscan: detect file thrashing at the reclaim root
+- mm: vmscan: enforce inactive:active ratio at the reclaim root
 
-> I'm confused about why !(sc->may_deactivate & DEACTIVATE_ANON) should
-> be a prerequisite for skipping file LRU reclaim. IIUC this means we
-> will skip reclaiming from file LRU only when anonymous page
-> deactivation is not allowed. Could you please add a comment explaining
-> this?
+Those replace the inactive_is_low and the workingset callsites with
+the recursive lruvec_page_state(). It looks like that isn't in next -
+and while I hope it'll make it into 5.5, it might not. So we need a
+fix that considers the other callsites as well.
 
-The comment above this check tries to explain it: the definition of
-file being "tiny" is dependent on the availability of anon. It's a
-relative comparison.
+Qian's patches that Andrew already has will be good then, as it
+reduces the churn to those other callsites that are in flux.
 
-If file only has a few pages, and anon is easily reclaimable (does not
-require deactivation to reclaim pages), then file is "tiny" and we
-should go after the more plentiful anon pages.
-
-If anon is under duress, too, this preference doesn't make sense and
-we should just reclaim both lists equally, as per usual.
-
-Note that I'm not introducing this constraint, I'm just changing how
-it's implemented. From the patch:
-
-> >         /*
-> >          * If the system is almost out of file pages, force-scan anon.
-> > -        * But only if there are enough inactive anonymous pages on
-> > -        * the LRU. Otherwise, the small LRU gets thrashed.
-> >          */
-> > -       if (sc->file_is_tiny &&
-> > -           !inactive_list_is_low(lruvec, false, sc, false) &&
-> > -           lruvec_lru_size(lruvec, LRU_INACTIVE_ANON,
-> > -                           sc->reclaim_idx) >> sc->priority) {
-> > +       if (sc->file_is_tiny) {
-> >                 scan_balance = SCAN_ANON;
-> >                 goto out;
-> >         }
-
-So it's always been checking whether reclaim would deactivate anon,
-and whether inactive_anon has sufficient pages for this priority.
+We can clean things up when the dust settles.
