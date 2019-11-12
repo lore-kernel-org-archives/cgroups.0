@@ -1,25 +1,25 @@
 From: Suren Baghdasaryan <surenb@google.com>
-Subject: Re: [PATCH 3/3] mm: vmscan: enforce inactive:active ratio at the
- reclaim root
-Date: Tue, 12 Nov 2019 12:34:03 -0800
-Message-ID: <CAJuCfpFtJcp8Ry7eC=1SbQwn2rgxvKO1Ej_QjxBxEPY_dYsjBg@mail.gmail.com>
-References: <20191107205334.158354-1-hannes@cmpxchg.org> <20191107205334.158354-4-hannes@cmpxchg.org>
- <CAJuCfpHSTr8Vt+Tj-Hj4OBYHq1ucw7_B1VoVWKEHQVPHaMhUdA@mail.gmail.com>
- <20191112180019.GB178331@cmpxchg.org> <CAJuCfpFJ-tzqc6Ng-6ntQn46iatgOdLF5PY6WAcOHVvGSQGwMg@mail.gmail.com>
+Subject: Re: [PATCH 2/3] mm: vmscan: detect file thrashing at the reclaim root
+Date: Tue, 12 Nov 2019 12:35:46 -0800
+Message-ID: <CAJuCfpH_9_S_pSku+BBe3-7sctmjQwCuBHNg_rp5wDr=fF6D0A@mail.gmail.com>
+References: <20191107205334.158354-1-hannes@cmpxchg.org> <20191107205334.158354-3-hannes@cmpxchg.org>
+ <CAJuCfpFtr9ODyOEJWt+=z=fnR0j8CJPSfhN+50N=d4SjLO-Z7A@mail.gmail.com>
+ <20191112174533.GA178331@cmpxchg.org> <CAJuCfpHSMcXOZ4zF7X3FVbnyOL_HNgepNYCYsVdcs_gT3Gtm3Q@mail.gmail.com>
+ <20191112185932.GC179587@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=w2HWZCYTuyG/iiIWgucV3SL/wKiXCiXBU5oRVlG/JoY=;
-        b=nIfBYYpx2BPy8Ny2KgYnvusMIUoId7JvzJVuq3x4uT3Ce5l33QonIgnPodqpzgfLnk
-         KwUjAuYZyyC504ndkw8KH/zz1rB8QWChYirmO4TSeQRJ6uW970ne8kuJ64kiTf0mP6tZ
-         9ZZS1D4Xr29niL4OXMBJhIWVbzrtBr4f5Gfee8T9zAZSGa+P8TpFWxnmeZbIMKgJCZ30
-         +1tG1fXzk837jA0obwmLORJ95JlTbdlhD4AAy0UG/RNvvw71D1IifjG6atHbmC0HWnxf
-         bjCtQ/mXtEzj3NNFH/q/nufeqZqdwQMDoM+7iXWW0rH2UrGK1DgF9QP5YIrOobEwuu7e
-         uzuQ==
-In-Reply-To: <CAJuCfpFJ-tzqc6Ng-6ntQn46iatgOdLF5PY6WAcOHVvGSQGwMg@mail.gmail.com>
+        bh=szdw8t9B42/4/cNhYqo19gfrxOuMxRXBv0qv4PANfYk=;
+        b=r7sVXLCumfB11AuMztsUR3o8f9V356UpMRPQ0PC8s9rtg/GkSoDvhc0mNnrc+If5dH
+         sECt/dps2b6HtAXTbbz6fLSRkLRNHMhi1U+PU+cB6xqm6cfaGjTvnHsjWssgRTIlsdRp
+         JzukyEmtUn+3YQV8wAH2Z/Lr81N7w7OFbanN1N6j+9py43dsR8Vlt+ATI4kduM12WXWD
+         RXj2/HzrUS/ZsgAN+ED+vjtDxeu2sTUlHemNDNe03AkIr+akv+MAMrTt9Zra+ukW4YAH
+         h17XqL1PjxDEZ1UybGc1DaXoo3QTWLKiDtLyHaUHLl0E+/G8Z3vkwrErZUOjnBgXR05O
+         xjeA==
+In-Reply-To: <20191112185932.GC179587@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -27,98 +27,86 @@ Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Shakeel Butt <shakeelb@google.com>, Rik van Riel <riel@surriel.com>, Michal Hocko <mhocko@suse.com>, linux-mm <linux-mm@kvack.org>, cgroups mailinglist <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, kernel-team@fb.com
 
-On Tue, Nov 12, 2019 at 11:13 AM Suren Baghdasaryan <surenb@google.com> wrote:
+On Tue, Nov 12, 2019 at 10:59 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
 >
-> On Tue, Nov 12, 2019 at 10:00 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
-> >
-> > On Sun, Nov 10, 2019 at 06:15:50PM -0800, Suren Baghdasaryan wrote:
-> > > On Thu, Nov 7, 2019 at 12:53 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
-> > > > @@ -2758,7 +2775,17 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
-> > > >                         total_high_wmark += high_wmark_pages(zone);
-> > > >                 }
-> > > >
-> > > > -               sc->file_is_tiny = file + free <= total_high_wmark;
-> > > > +               /*
-> > > > +                * Consider anon: if that's low too, this isn't a
-> > > > +                * runaway file reclaim problem, but rather just
-> > > > +                * extreme pressure. Reclaim as per usual then.
-> > > > +                */
-> > > > +               anon = node_page_state(pgdat, NR_INACTIVE_ANON);
-> > > > +
-> > > > +               sc->file_is_tiny =
-> > > > +                       file + free <= total_high_wmark &&
-> > > > +                       !(sc->may_deactivate & DEACTIVATE_ANON) &&
-> > > > +                       anon >> sc->priority;
+> On Tue, Nov 12, 2019 at 10:45:44AM -0800, Suren Baghdasaryan wrote:
+> > On Tue, Nov 12, 2019 at 9:45 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
 > > >
-> > > The name of file_is_tiny flag seems to not correspond with its actual
-> > > semantics anymore. Maybe rename it into "skip_file"?
+> > > On Sun, Nov 10, 2019 at 06:01:18PM -0800, Suren Baghdasaryan wrote:
+> > > > On Thu, Nov 7, 2019 at 12:53 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
+> > > > >
+> > > > > We use refault information to determine whether the cache workingset
+> > > > > is stable or transitioning, and dynamically adjust the inactive:active
+> > > > > file LRU ratio so as to maximize protection from one-off cache during
+> > > > > stable periods, and minimize IO during transitions.
+> > > > >
+> > > > > With cgroups and their nested LRU lists, we currently don't do this
+> > > > > correctly. While recursive cgroup reclaim establishes a relative LRU
+> > > > > order among the pages of all involved cgroups, refaults only affect
+> > > > > the local LRU order in the cgroup in which they are occuring. As a
+> > > > > result, cache transitions can take longer in a cgrouped system as the
+> > > > > active pages of sibling cgroups aren't challenged when they should be.
+> > > > >
+> > > > > [ Right now, this is somewhat theoretical, because the siblings, under
+> > > > >   continued regular reclaim pressure, should eventually run out of
+> > > > >   inactive pages - and since inactive:active *size* balancing is also
+> > > > >   done on a cgroup-local level, we will challenge the active pages
+> > > > >   eventually in most cases. But the next patch will move that relative
+> > > > >   size enforcement to the reclaim root as well, and then this patch
+> > > > >   here will be necessary to propagate refault pressure to siblings. ]
+> > > > >
+> > > > > This patch moves refault detection to the root of reclaim. Instead of
+> > > > > remembering the cgroup owner of an evicted page, remember the cgroup
+> > > > > that caused the reclaim to happen. When refaults later occur, they'll
+> > > > > correctly influence the cross-cgroup LRU order that reclaim follows.
+> > > >
+> > > > I spent some time thinking about the idea of calculating refault
+> > > > distance using target_memcg's inactive_age and then activating
+> > > > refaulted page in (possibly) another memcg and I am still having
+> > > > trouble convincing myself that this should work correctly. However I
+> > > > also was unable to convince myself otherwise... We use refault
+> > > > distance to calculate the deficit in inactive LRU space and then
+> > > > activate the refaulted page if that distance is less that
+> > > > active+inactive LRU size. However making that decision based on LRU
+> > > > sizes of one memcg and then activating the page in another one seems
+> > > > very counterintuitive to me. Maybe that's just me though...
+> > >
+> > > It's not activating in a random, unrelated memcg - it's the parental
+> > > relationship that makes it work.
+> > >
+> > > If you have a cgroup tree
+> > >
+> > >         root
+> > >          |
+> > >          A
+> > >         / \
+> > >        B1 B2
+> > >
+> > > and reclaim is driven by a limit in A, we are reclaiming the pages in
+> > > B1 and B2 as if they were on a single LRU list A (it's approximated by
+> > > the round-robin reclaim and has some caveats, but that's the idea).
+> > >
+> > > So when a page that belongs to B2 gets evicted, it gets evicted from
+> > > virtual LRU list A. When it refaults later, we make the (in)active
+> > > size and distance comparisons against virtual LRU list A as well.
+> > >
+> > > The pages on the physical LRU list B2 are not just ordered relative to
+> > > its B2 peers, they are also ordered relative to the pages in B1. And
+> > > that of course is necessary if we want fair competition between them
+> > > under shared reclaim pressure from A.
 > >
-> > I'm not a fan of file_is_tiny, but I also don't like skip_file. IMO
-> > it's better to have it describe a situation instead of an action, in
-> > case we later want to take additional action for that situation.
-> >
-> > Any other ideas? ;)
+> > Thanks for clarification. The testcase in your description when group
+> > B has a large inactive cache which does not get reclaimed while its
+> > sibling group A has to drop its active cache got me under the
+> > impression that sibling cgroups (in your reply above B1 and B2) can
+> > cause memory pressure in each other. Maybe that's not a legit case and
+> > B1 would not cause pressure in B2 without causing pressure in their
+> > shared parent A? It now makes more sense to me and I want to confirm
+> > that is the case.
 >
-> All other ideas still yield verbs (like sc->prefer_anon). Maybe then
-> add some comment at the file_is_tiny declaration that it represents
-> not only the fact that the file LRU is too small to reclaim but also
-> that there are easily reclaimable anon pages?
->
-> >
-> > > I'm confused about why !(sc->may_deactivate & DEACTIVATE_ANON) should
-> > > be a prerequisite for skipping file LRU reclaim. IIUC this means we
-> > > will skip reclaiming from file LRU only when anonymous page
-> > > deactivation is not allowed. Could you please add a comment explaining
-> > > this?
-> >
-> > The comment above this check tries to explain it: the definition of
-> > file being "tiny" is dependent on the availability of anon. It's a
-> > relative comparison.
-> >
-> > If file only has a few pages, and anon is easily reclaimable (does not
-> > require deactivation to reclaim pages), then file is "tiny" and we
-> > should go after the more plentiful anon pages.
->
-> Your above explanation is much clearer to me than the one in the comment :)
->
-> >
-> > If anon is under duress, too, this preference doesn't make sense and
-> > we should just reclaim both lists equally, as per usual.
-> >
-> > Note that I'm not introducing this constraint, I'm just changing how
-> > it's implemented. From the patch:
-> >
-> > > >         /*
-> > > >          * If the system is almost out of file pages, force-scan anon.
-> > > > -        * But only if there are enough inactive anonymous pages on
-> > > > -        * the LRU. Otherwise, the small LRU gets thrashed.
-> > > >          */
-> > > > -       if (sc->file_is_tiny &&
-> > > > -           !inactive_list_is_low(lruvec, false, sc, false) &&
-> > > > -           lruvec_lru_size(lruvec, LRU_INACTIVE_ANON,
-> > > > -                           sc->reclaim_idx) >> sc->priority) {
-> > > > +       if (sc->file_is_tiny) {
-> > > >                 scan_balance = SCAN_ANON;
-> > > >                 goto out;
-> > > >         }
-> >
-> > So it's always been checking whether reclaim would deactivate anon,
-> > and whether inactive_anon has sufficient pages for this priority.
->
-> I didn't realize !inactive_list_is_low(lruvec, false, sc, false) is
-> effectively the same as !(sc->may_deactivate & DEACTIVATE_ANON) but
-> after re-reading the patch that makes sense... Except when
-> force_deactivate==true, in which case shouldn't you consider
-> NR_ACTIVE_ANON as easily reclaimable too? IOW should it be smth like
-> this:
->
-> anon = node_page_state(pgdat, NR_INACTIVE_ANON) +
-> (sc->force_deactivate ? node_page_state(pgdat, NR_ACTIVE_ANON) : 0);
->
-> ?
+> Yes. I'm sorry if this was misleading. They should only cause pressure
+> onto each other by causing pressure on A; and then reclaim in A treats
+> them as one combined pool of pages.
 
-On second thought that proposal would not be correct since
-deactivation is not the same as reclaim... So the way it is now looks
-correct.
 
 Reviewed-by: Suren Baghdasaryan <surenb@google.com>
