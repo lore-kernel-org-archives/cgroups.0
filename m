@@ -1,37 +1,32 @@
-From: Tejun Heo <tj@kernel.org>
+From: Greg KH <gregkh@linuxfoundation.org>
 Subject: Re: [PATCHSET cgroup/for-5.5] kernfs,cgroup: support 64bit inos and
  unify cgroup IDs
-Date: Tue, 12 Nov 2019 07:51:14 -0800
-Message-ID: <20191112155114.GF4163745@devbig004.ftw2.facebook.com>
+Date: Tue, 12 Nov 2019 17:08:20 +0100
+Message-ID: <20191112160820.GA1685314@kroah.com>
 References: <20191104235944.3470866-1-tj@kernel.org>
+ <20191112155114.GF4163745@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=rIVoNOz4T7j7fSaGQI1Ha0h4ohKX0AGKJfytZEHxESg=;
-        b=ZNPttLUmJUEbIG2K/YbRhC/Z7rYwyz9P92jlUaFydZKGLbX6+HsM7LimBSZqqCYqhb
-         pYlmXL/tMccVeT08++KILqaPrN2fJxvS+XEsi/RZSvJlJJDuYtsd8w8NjSWVexMJQJvr
-         SCzmFhiXL6du2CYTWsOWOTRLaCvbr6P+n0W858JFXSF9iIVREf66fjuwFoTLvsBtX+81
-         CcaSPZJ4VMhwhvR0DdywQnv1Ru5LW7BRRLbk0Qf+S33Nf6jBIx/p2xDtplYQKX0PxDO5
-         wh6TW07Yjvs17D5M4Ab3OOLXWm7UnokqPlv0dYCPO4bVJMzkYQ05HJZ/OZ/+BReSS3t8
-         xWcg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1573574905;
+        bh=F7Oqc0NxmF2ZrnvLzaUQ+E39TJo13Hl0CGan0+wgTp8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=OzFTos7eruaTOsKE5+72Q7SXyMSuITi7cu2SZ4CfLIj4ijcK4cj6dbrsSOAppb/cb
+         Zq6QaiB1bFPqt14BKIn2ojvLBPV7IT19ic/k0oN5mpbLVP1IYHWTGvVoYWVJgh1p+7
+         GR2k3dw1z4y0xR5ET1oNIKJXtq1FUREH4o109kgI=
 Content-Disposition: inline
-In-Reply-To: <20191104235944.3470866-1-tj@kernel.org>
+In-Reply-To: <20191112155114.GF4163745@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: gregkh@linuxfoundation.org
+To: Tejun Heo <tj@kernel.org>
 Cc: kernel-team@fb.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, namhyung@kernel.org, ast@kernel.org, daniel@iogearbox.net
 
-Hello, Greg.
+On Tue, Nov 12, 2019 at 07:51:14AM -0800, Tejun Heo wrote:
+> Hello, Greg.
+> 
+> A gentle ping.  I can route these through cgroup/for-5.5 if you're
+> okay with the patch series.
 
-A gentle ping.  I can route these through cgroup/for-5.5 if you're
-okay with the patch series.
-
-Thanks.
-
--- 
-tejun
+Oops, let me go review...
