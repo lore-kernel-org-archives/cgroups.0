@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v2 7/8] mm/lru: likely enhancement
-Date: Tue, 12 Nov 2019 22:06:27 +0800
-Message-ID: <1573567588-47048-8-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v2 2/8] mm/lruvec: add irqsave flags into lruvec struct
+Date: Tue, 12 Nov 2019 22:06:22 +0800
+Message-ID: <1573567588-47048-3-git-send-email-alex.shi@linux.alibaba.com>
 References: <1573567588-47048-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1573567588-47048-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -11,84 +11,49 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: alex.shi@linux.alibaba.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>
+Cc: Vlastimil Babka <vbabka@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Michal Hocko <mhocko@suse.com>, Wei Yang <richard.weiyang@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Arun KS <arunks@codeaurora.org>, Rong Chen <rong.a.chen@intel.com>
 
-Use likely() to remove speculations according to pagevec usage mode.
+We need a flags vaiable to save state when do irqsave action, declare it
+here would make code more clear/clean.
 
+Rong Chen <rong.a.chen@intel.com> report the flag variable needs to move
+the tail of lruvec struct otherwise it causes 18% regressions of
+vm-scalability testing on his machine. Add the flags and lru_lock to
+both near struct tail.
+
+Originally-from: Hugh Dickins <hughd@google.com>
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Roman Gushchin <guro@fb.com>
-Cc: Shakeel Butt <shakeelb@google.com>
-Cc: Chris Down <chris@chrisdown.name>
+Cc: Vlastimil Babka <vbabka@suse.cz>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Michal Hocko <mhocko@suse.com>
+Cc: Mel Gorman <mgorman@techsingularity.net>
+Cc: Wei Yang <richard.weiyang@gmail.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Arun KS <arunks@codeaurora.org>
 Cc: Tejun Heo <tj@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: linux-kernel@vger.kernel.org
+Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+CC: Rong Chen <rong.a.chen@intel.com>
 Cc: cgroups@vger.kernel.org
 Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
 ---
- include/linux/memcontrol.h | 8 ++++----
- mm/memcontrol.c            | 4 ++--
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ include/linux/mmzone.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index f869897a68f0..2a6d7a503452 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -1307,12 +1307,12 @@ static inline struct lruvec *relock_page_lruvec_irq(struct page *page,
- 	struct pglist_data *pgdat = page_pgdat(page);
- 	struct lruvec *lruvec;
- 
--	if (!locked_lruvec)
-+	if (unlikely(!locked_lruvec))
- 		goto lock;
- 
- 	lruvec = mem_cgroup_page_lruvec(page, pgdat);
- 
--	if (locked_lruvec == lruvec)
-+	if (likely(locked_lruvec == lruvec))
- 		return lruvec;
- 
- 	spin_unlock_irq(&locked_lruvec->lru_lock);
-@@ -1329,12 +1329,12 @@ static inline struct lruvec *relock_page_lruvec_irqsave(struct page *page,
- 	struct pglist_data *pgdat = page_pgdat(page);
- 	struct lruvec *lruvec;
- 
--	if (!locked_lruvec)
-+	if (unlikely(!locked_lruvec))
- 		goto lock;
- 
- 	lruvec = mem_cgroup_page_lruvec(page, pgdat);
- 
--	if (locked_lruvec == lruvec)
-+	if (likely(locked_lruvec == lruvec))
- 		return lruvec;
- 
- 	spin_unlock_irqrestore(&locked_lruvec->lru_lock, locked_lruvec->flags);
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d2539bac4677..d95adf49fae3 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1273,7 +1273,7 @@ struct lruvec *lock_page_lruvec_irq(struct page *page,
- 	spin_lock_irq(&lruvec->lru_lock);
- 
- 	/* lruvec may changed in commit_charge() */
--	if (lruvec != mem_cgroup_page_lruvec(page, pgdat)) {
-+	if (unlikely(lruvec != mem_cgroup_page_lruvec(page, pgdat))) {
- 		spin_unlock_irq(&lruvec->lru_lock);
- 		goto again;
- 	}
-@@ -1291,7 +1291,7 @@ struct lruvec *lock_page_lruvec_irqsave(struct page *page,
- 	spin_lock_irqsave(&lruvec->lru_lock, lruvec->flags);
- 
- 	/* lruvec may changed in commit_charge() */
--	if (lruvec != mem_cgroup_page_lruvec(page, pgdat)) {
-+	if (unlikely(lruvec != mem_cgroup_page_lruvec(page, pgdat))) {
- 		spin_unlock_irqrestore(&lruvec->lru_lock, lruvec->flags);
- 		goto again;
- 	}
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index 787a42d527a2..da00615baa52 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -305,6 +305,8 @@ struct lruvec {
+ 	unsigned long			refaults;
+ 	/* per lruvec lru_lock for memcg */
+ 	spinlock_t			lru_lock;
++	/* flags for irqsave */
++	unsigned long			flags;
+ #ifdef CONFIG_MEMCG
+ 	struct pglist_data *pgdat;
+ #endif
 -- 
 1.8.3.1
 
