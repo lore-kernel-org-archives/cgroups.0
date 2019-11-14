@@ -1,43 +1,33 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v2 4/8] mm/lru: only change the lru_lock iff page's lruvec
- is different
-Date: Thu, 14 Nov 2019 14:01:06 +0800
-Message-ID: <ba11d04a-def4-10b3-0b4e-4194e0ee2318@linux.alibaba.com>
+Subject: Re: [PATCH v2 6/8] mm/lru: remove rcu_read_lock to fix performance
+ regression
+Date: Thu, 14 Nov 2019 14:02:20 +0800
+Message-ID: <e286a02f-f377-34a9-a195-b827c54b969d@linux.alibaba.com>
 References: <1573567588-47048-1-git-send-email-alex.shi@linux.alibaba.com>
- <1573567588-47048-5-git-send-email-alex.shi@linux.alibaba.com>
- <20191112143624.GA7934@bombadil.infradead.org>
- <297ad71c-081c-f7e1-d640-8720a0eeeeba@linux.alibaba.com>
- <20191113134502.GD7934@bombadil.infradead.org>
+ <1573567588-47048-7-git-send-email-alex.shi@linux.alibaba.com>
+ <20191112143844.GB7934@bombadil.infradead.org>
+ <a6bb6739-cc00-cf9f-cd69-6016ce93e054@linux.alibaba.com>
+ <20191113114045.GZ3016@techsingularity.net>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191113134502.GD7934@bombadil.infradead.org>
+In-Reply-To: <20191113114045.GZ3016@techsingularity.net>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: Matthew Wilcox <willy@infradead.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>, Vlastimil Babka <vbabka@suse.cz>, Andrey Ryabinin <aryabinin@virtuozzo.com>, swkhack <swkhack@gmail.com>, "Potyra, Stefan" <Stefan.Potyra@elektrobit.com>, Jason Gunthorpe <jgg@ziepe.ca>, Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, Peng Fan <peng.fan@n>
+To: Mel Gorman <mgorman@techsingularity.net>
+Cc: Matthew Wilcox <willy@infradead.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>
 
 
 
-在 2019/11/13 下午9:45, Matthew Wilcox 写道:
->>> Why not simply:
->>>
->>> 	rcu_read_lock();
->>> 	lruvec = mem_cgroup_page_lruvec(page, pgdat);
->>> 	rcu_read_unlock();
->>>
->>> 	if (locked_lruvec == lruvec)
->> The rcu_read_unlock here is for guarding the locked_lruvec/lruvec comparsion.
->> Otherwise memcg/lruvec maybe changed, like, from memcg migration etc. I guess.
-> How does holding the RCU lock guard the comparison?  You're comparing two
-> pointers for equality.  Nothing any other CPU can do at this point will
-> change the results of that comparison.
+在 2019/11/13 下午7:40, Mel Gorman 写道:
+>> Hi Matthew,
+>>
+>> Very sorry for your time! The main reasons I use a separate patch since a, Intel 0day asking me to credit their are founding, and I don't know how to give a clearly/elegant explanation for a non-exist regression in a fixed patch. b, this regression is kindly pretty tricky.  Maybe it's better saying thanks in version change log of cover-letter?
+>>
+> Add something like this to the patch
 > 
+> [lkp@intel.com: Fix RCU-related regression reported by LKP robot]
+> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
 
-Hi Matthew, Thanks for reply!
-
-The reason of guarding lruvec compasion here is a bit undistinct, in fact, it guards the page's memcg from free/migrate etc, since the lruvec is kind of binding to each of memcg. The detailed explanation could be found in lock_page_memcg().
-
-Thanks
-Alex
+It's a good idea! Thanks a lot, Mel!
