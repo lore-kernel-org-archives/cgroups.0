@@ -1,62 +1,61 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH -next] writeback: fix -Wformat compilation warnings
-Date: Thu, 14 Nov 2019 11:21:18 -0800
-Message-ID: <20191114192118.GK4163745@devbig004.ftw2.facebook.com>
-References: <1573751861-10303-1-git-send-email-cai@lca.pw>
+Subject: [PATCH block/for-next] blk-cgroup: cgroup_rstat_updated() shouldn't
+ be called on cgroup1
+Date: Thu, 14 Nov 2019 14:31:28 -0800
+Message-ID: <20191114223128.GM4163745@devbig004.ftw2.facebook.com>
+References: <20191107191804.3735303-1-tj@kernel.org>
+ <20191107191804.3735303-6-tj@kernel.org>
+ <cd3ebcee-6819-a09b-aeba-de6817f32cde@ti.com>
+ <20191113163501.GI4163745@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=V8JOYrhFKJZsjLpy3zbICgm56f832zoaBb4LCM6R/wE=;
-        b=SSPWq/TOhRhkWt64BoCNntBWMb/TucJ3AIdHYBXY2nyWahkTra09hFT8GSEsnolfnM
-         xD4C/j9iKWF72fTVou2+nt+/RsWRC+pDpOOaOTEmLX/TiN06RAsPWbN1SGpX2IGMDH+A
-         5WlVvsj2+2L0ufhWln/MYkO13Ie8z2hOaGr6N6H1Sw3QVcIaSwEbn/pxeaKEc8NZMTIq
-         5xmtxuj3Rk2WBNAhicO9mPb+pg7s8lub70oiaCN0Kwe6rdb92t+SjQvGsMiyB2THTDrc
-         uSN/dNw4lQuOeskHze8uTQtjD5stAKCzHc0EPVaiszH2k3oZ1IH0C37Lguc88/qZe+wV
-         R6vw==
+        bh=qyKgxDIoS90Bkq4dmLrHtgbONXS0B4JMDXYzM2TILvI=;
+        b=GjsvHBt7MeaEC6ypDHcPMK+s4FU+jBrqyBph1dVSDP6GI5ClRgEmnDD2Hk2fNzRKfP
+         z1IBWzaXJeLT1ubyYe0TtRTwRHibve7KSwuFU33vAAOEpobMcSrWuQ3RkD3VWfOXdiw+
+         /F6IS2oY+rtMYJbeX32d60XzvRfhF6RTC+Yo7K8KSxkwrnBg+/QuORoDoyMOkTLoTiCS
+         cYMhyizV/A9PpsvWwZCI7AtDdcMg+ynVXanL2cPjXHkTxdbe2sU7/EbnEdoX9XBFAdkT
+         Ek/6EdXl/XqBOKYkXJzKA/M2VGzSA5+TFpXf43Fkow8BNPoSwm0aO5y6L6wtVTBapJo/
+         0gSg==
 Content-Disposition: inline
-In-Reply-To: <1573751861-10303-1-git-send-email-cai@lca.pw>
+In-Reply-To: <20191113163501.GI4163745@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Qian Cai <cai@lca.pw>
-Cc: jack@suse.cz, gregkh@linuxfoundation.org, cgroups@vger.kernel.org, heiko.carstens@de.ibm.com, gor@linux.ibm.com, borntraeger@de.ibm.com, linux-s390@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Faiz Abbas <faiz_abbas@ti.com>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, kernel-team@fb.com, Dan Schatzberg <dschatzberg@fb.com>, Daniel Xu <dlxu@fb.com>
 
-On Thu, Nov 14, 2019 at 12:17:41PM -0500, Qian Cai wrote:
-> The commit f05499a06fb4 ("writeback: use ino_t for inodes in
-> tracepoints") introduced a lot of GCC compilation warnings on s390,
-> 
-> In file included from ./include/trace/define_trace.h:102,
->                  from ./include/trace/events/writeback.h:904,
->                  from fs/fs-writeback.c:82:
-> ./include/trace/events/writeback.h: In function
-> 'trace_raw_output_writeback_page_template':
-> ./include/trace/events/writeback.h:76:12: warning: format '%lu' expects
-> argument of type 'long unsigned int', but argument 4 has type 'ino_t'
-> {aka 'unsigned int'} [-Wformat=]
->   TP_printk("bdi %s: ino=%lu index=%lu",
->             ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-> ./include/trace/trace_events.h:360:22: note: in definition of macro
-> 'DECLARE_EVENT_CLASS'
->   trace_seq_printf(s, print);     \
->                       ^~~~~
-> ./include/trace/events/writeback.h:76:2: note: in expansion of macro
-> 'TP_printk'
->   TP_printk("bdi %s: ino=%lu index=%lu",
->   ^~~~~~~~~
-> 
-> Fix them by adding necessary casts where ino_t could be either "unsigned
-> int" or "unsigned long".
-> 
-> Fixes: f05499a06fb4 ("writeback: use ino_t for inodes in tracepoints")
-> Signed-off-by: Qian Cai <cai@lca.pw>
+Currently, cgroup rstat is supported only on cgroup2 hierarchy and
+rstat functions shouldn't be called on cgroup1 cgroups.  While
+converting blk-cgroup core statistics to rstat, f73316482977
+("blk-cgroup: reimplement basic IO stats using cgroup rstat")
+accidentally ended up calling cgroup_rstat_updated() on cgroup1
+cgroups causing crashes.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+Longer term, we probably should add cgroup1 support to rstat but for
+now let's mask the call directly.
 
-Thanks.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Fixes: f73316482977 ("blk-cgroup: reimplement basic IO stats using cgroup rstat")
+---
+ include/linux/blk-cgroup.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
--- 
-tejun
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index 48a66738143d..19394c77ed99 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -626,7 +626,8 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 		bis->cur.ios[rwd]++;
+ 
+ 		u64_stats_update_end(&bis->sync);
+-		cgroup_rstat_updated(blkg->blkcg->css.cgroup, cpu);
++		if (cgroup_subsys_on_dfl(io_cgrp_subsys))
++			cgroup_rstat_updated(blkg->blkcg->css.cgroup, cpu);
+ 		put_cpu();
+ 	}
+ 
