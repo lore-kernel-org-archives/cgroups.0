@@ -1,33 +1,51 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v2 6/8] mm/lru: remove rcu_read_lock to fix performance
- regression
-Date: Thu, 14 Nov 2019 14:02:20 +0800
-Message-ID: <e286a02f-f377-34a9-a195-b827c54b969d@linux.alibaba.com>
-References: <1573567588-47048-1-git-send-email-alex.shi@linux.alibaba.com>
- <1573567588-47048-7-git-send-email-alex.shi@linux.alibaba.com>
- <20191112143844.GB7934@bombadil.infradead.org>
- <a6bb6739-cc00-cf9f-cd69-6016ce93e054@linux.alibaba.com>
- <20191113114045.GZ3016@techsingularity.net>
+From: Ionela Voinescu <ionela.voinescu@arm.com>
+Subject: Re: [PATCH 5/6] blk-cgroup: reimplement basic IO stats using cgroup
+ rstat
+Date: Thu, 14 Nov 2019 12:17:43 +0000
+Message-ID: <3c76ab1f-6836-fb60-11ed-25d6db9a2a57@arm.com>
+References: <20191107191804.3735303-1-tj@kernel.org>
+ <20191107191804.3735303-6-tj@kernel.org>
+ <cd3ebcee-6819-a09b-aeba-de6817f32cde@ti.com>
+ <20191113163501.GI4163745@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191113114045.GZ3016@techsingularity.net>
+In-Reply-To: <20191113163501.GI4163745@devbig004.ftw2.facebook.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Mel Gorman <mgorman@techsingularity.net>
-Cc: Matthew Wilcox <willy@infradead.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj@kernel.org>, Faiz Abbas <faiz_abbas@ti.com>
+Cc: axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, kernel-team@fb.com, Dan Schatzberg <dschatzberg@fb.com>, Daniel Xu <dlxu@fb.com>
 
+Hi Tejun,
 
-
-在 2019/11/13 下午7:40, Mel Gorman 写道:
->> Hi Matthew,
->>
->> Very sorry for your time! The main reasons I use a separate patch since a, Intel 0day asking me to credit their are founding, and I don't know how to give a clearly/elegant explanation for a non-exist regression in a fixed patch. b, this regression is kindly pretty tricky.  Maybe it's better saying thanks in version change log of cover-letter?
->>
-> Add something like this to the patch
+On 13/11/2019 16:35, Tejun Heo wrote:
+> Hello,
 > 
-> [lkp@intel.com: Fix RCU-related regression reported by LKP robot]
-> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+> Can you please see whether the following patch fixes the issue?
+> 
 
-It's a good idea! Thanks a lot, Mel!
+This patch does fix the issue for me.
+
+
+Thanks,
+Ionela.
+
+> Thanks.
+> 
+> diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+> index 48a66738143d..19394c77ed99 100644
+> --- a/include/linux/blk-cgroup.h
+> +++ b/include/linux/blk-cgroup.h
+> @@ -626,7 +626,8 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+>  		bis->cur.ios[rwd]++;
+>  
+>  		u64_stats_update_end(&bis->sync);
+> -		cgroup_rstat_updated(blkg->blkcg->css.cgroup, cpu);
+> +		if (cgroup_subsys_on_dfl(io_cgrp_subsys))
+> +			cgroup_rstat_updated(blkg->blkcg->css.cgroup, cpu);
+>  		put_cpu();
+>  	}
+>  
+> 
