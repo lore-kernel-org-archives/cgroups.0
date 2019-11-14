@@ -1,61 +1,49 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH block/for-next] blk-cgroup: cgroup_rstat_updated() shouldn't
- be called on cgroup1
-Date: Thu, 14 Nov 2019 14:31:28 -0800
-Message-ID: <20191114223128.GM4163745@devbig004.ftw2.facebook.com>
-References: <20191107191804.3735303-1-tj@kernel.org>
- <20191107191804.3735303-6-tj@kernel.org>
- <cd3ebcee-6819-a09b-aeba-de6817f32cde@ti.com>
- <20191113163501.GI4163745@devbig004.ftw2.facebook.com>
+Subject: Re: linux-next: arm32: beagleboard x15: WARNING: CPU: 0 PID: 0 at
+ /usr/src/kernel/kernel/cgroup/cgroup.c:1969 cgroup_setup_root+0x36c/0x4e8
+Date: Thu, 14 Nov 2019 14:42:13 -0800
+Message-ID: <20191114224213.GN4163745@devbig004.ftw2.facebook.com>
+References: <CA+G9fYviReoG+gq=Jm8yQOMd01j2opae5p+VTGGMK7aLn0xWgw@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=qyKgxDIoS90Bkq4dmLrHtgbONXS0B4JMDXYzM2TILvI=;
-        b=GjsvHBt7MeaEC6ypDHcPMK+s4FU+jBrqyBph1dVSDP6GI5ClRgEmnDD2Hk2fNzRKfP
-         z1IBWzaXJeLT1ubyYe0TtRTwRHibve7KSwuFU33vAAOEpobMcSrWuQ3RkD3VWfOXdiw+
-         /F6IS2oY+rtMYJbeX32d60XzvRfhF6RTC+Yo7K8KSxkwrnBg+/QuORoDoyMOkTLoTiCS
-         cYMhyizV/A9PpsvWwZCI7AtDdcMg+ynVXanL2cPjXHkTxdbe2sU7/EbnEdoX9XBFAdkT
-         Ek/6EdXl/XqBOKYkXJzKA/M2VGzSA5+TFpXf43Fkow8BNPoSwm0aO5y6L6wtVTBapJo/
-         0gSg==
+        bh=ojnBoVhRYBbbCku6o5OhWdqFFJEnFiZ4I+6b/GkoBQg=;
+        b=trF141knO9ioTtIa22bXyKIHKH4GLkubkdpaZr1p66/+mAnS94hwyTuqJPEpeDTdcK
+         MRnCl8OXpIg1M8eDQmjQPZWi676P7i1N5qlBXHT96lVpD41/u6XK+f01o/wVTMYdghmM
+         afyaTE0ClSOVWSwOfLOp/XKVxNs0m3hlegXjlIYwiKOrmRmudrMRcY5mjWvP32mSZxQF
+         kRlRt+udROlAYRStA84rdML/0FveL4AzC/OvVehfYFSmUP6YUaD5H6gEDRxO0XZt4y1X
+         tyRYUQjDBh4UErUv6KNQpQOu/xkl8aL+n5hsLT7cGwcWWUhxAZRdKspN5q12+EHTH04y
+         2W2Q==
 Content-Disposition: inline
-In-Reply-To: <20191113163501.GI4163745@devbig004.ftw2.facebook.com>
+In-Reply-To: <CA+G9fYviReoG+gq=Jm8yQOMd01j2opae5p+VTGGMK7aLn0xWgw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Faiz Abbas <faiz_abbas@ti.com>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, kernel-team@fb.com, Dan Schatzberg <dschatzberg@fb.com>, Daniel Xu <dlxu@fb.com>
+To: Naresh Kamboju <naresh.kamboju@linaro.org>
+Cc: cgroups@vger.kernel.org, Linux-Next Mailing List <linux-next@vger.kernel.org>, namhyung@kernel.org, open list <linux-kernel@vger.kernel.org>, lkft-triage@lists.linaro.org, lizefan@huawei.com, hannes@cmpxchg.org, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, kafai@fb.com, Song Liu <songliubraving@fb.com>
 
-Currently, cgroup rstat is supported only on cgroup2 hierarchy and
-rstat functions shouldn't be called on cgroup1 cgroups.  While
-converting blk-cgroup core statistics to rstat, f73316482977
-("blk-cgroup: reimplement basic IO stats using cgroup rstat")
-accidentally ended up calling cgroup_rstat_updated() on cgroup1
-cgroups causing crashes.
+Hello, Naresh.
 
-Longer term, we probably should add cgroup1 support to rstat but for
-now let's mask the call directly.
+On Thu, Nov 14, 2019 at 11:02:53AM +0530, Naresh Kamboju wrote:
+> [    0.015402] WARNING: CPU: 0 PID: 0 at /usr/src/kernel/kernel/cgroup/cgroup.c:1969
+> cgroup_setup_root+0x36c/0x4e8
+...
+> [    0.015726] [<c053ac48>] (cgroup_setup_root) from [<c1c2a260>]
+> (cgroup_init+0x108/0x560)
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Fixes: f73316482977 ("blk-cgroup: reimplement basic IO stats using cgroup rstat")
----
- include/linux/blk-cgroup.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+So, that's saying that the initial kernfs_node ino allocation returned
+something other than 1.  Hmmm... x86_32 works fine.  What does the
+following say?
 
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index 48a66738143d..19394c77ed99 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -626,7 +626,8 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 		bis->cur.ios[rwd]++;
- 
- 		u64_stats_update_end(&bis->sync);
--		cgroup_rstat_updated(blkg->blkcg->css.cgroup, cpu);
-+		if (cgroup_subsys_on_dfl(io_cgrp_subsys))
-+			cgroup_rstat_updated(blkg->blkcg->css.cgroup, cpu);
- 		put_cpu();
- 	}
- 
+# mkdir -p /tmp/cgroup2
+# mount -t cgroup2 none /tmp/cgroup2
+# ls -lid /tmp/cgroup2
+
+Thanks.
+
+-- 
+tejun
