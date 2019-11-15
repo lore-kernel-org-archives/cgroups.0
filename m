@@ -1,56 +1,43 @@
-From: Naresh Kamboju <naresh.kamboju@linaro.org>
-Subject: Re: linux-next: arm32: beagleboard x15: WARNING: CPU: 0 PID: 0 at
- /usr/src/kernel/kernel/cgroup/cgroup.c:1969 cgroup_setup_root+0x36c/0x4e8
-Date: Fri, 15 Nov 2019 14:28:43 +0530
-Message-ID: <CA+G9fYu-w+3qgkGet4B4NeBxQNaXoWij49j0WRwPAYELgakb6w@mail.gmail.com>
-References: <CA+G9fYviReoG+gq=Jm8yQOMd01j2opae5p+VTGGMK7aLn0xWgw@mail.gmail.com>
- <20191114224213.GN4163745@devbig004.ftw2.facebook.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH -next] writeback: fix -Wformat compilation warnings
+Date: Fri, 15 Nov 2019 06:55:40 -0800
+Message-ID: <20191115145540.GP4163745@devbig004.ftw2.facebook.com>
+References: <20191114192118.GK4163745@devbig004.ftw2.facebook.com>
+ <9D52EBB0-BE48-4C59-9145-857C3247B20D@lca.pw>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Z+pg9wj7yRXgLDbaXk97MrdYcFuUJiaocpSFiWUQa1o=;
-        b=UTHgI7il6nkwPJ5t8b7FMh0XJmESz0IGK7rLutWB2vw6I0WyJlHZc5HzSJe9OJO/Ja
-         cy90XKj0jyihqQIuf3/Ck0cF/JNi8a+GasJC5mVdphNQ7QLH8qwoPiyf5YOLM25O8vUE
-         e8HS4mV64/idioykbqun7VK9SHxe/G39ajtZOMaPkNT4mZiM3aHLURCdjKP3qGnV9YAF
-         qZfzHyhsp1iwHI3ganjVtmXZ/Z8kRYHYojIyVFx6IdWBhExFxC+EmY3F7bcGcsbuVv1A
-         3GVwJ9NAqejEzjvYAnJylfaw7p8QaRTdtXztlHIoB5j4SiHJJMjpmlprWqNwfzWFc3or
-         IsUA==
-In-Reply-To: <20191114224213.GN4163745@devbig004.ftw2.facebook.com>
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=Zw8wOIY8mNW318y4fP6Jxq3gT3vqgJzWHMf4m4vqBkE=;
+        b=LOwhHWT22OBlnSHpiAikAbBxvHi30RL+IBBMK3PZmWUq7XqPuvbKJEfQy7BEfPpdlv
+         PDNIAjAA4N3FXDU8H58bSN56ATiyHLx4x8buRO+Hxlba3zpFVM2r4JpDGyuTGGGwi7aF
+         FYRhIQMJkwzlYGlsYp/gg7t5RbyFY5War7OLnNH1qNaMHu47Q4FY0jB8nkU2JFHldK5K
+         wq7+4tF720mjj22BlYNKBQe2Ofr4DGbLwH9EOy+rZqbjGNnlS1GSHHQT6vC8l0T12R6K
+         26UFB0OGwj7m2Qzbvc6mS9htstuHMHdO2zhxhXzalpDma/QrGMslY9aCcRvKcNMt3Zqe
+         07jA==
+Content-Disposition: inline
+In-Reply-To: <9D52EBB0-BE48-4C59-9145-857C3247B20D@lca.pw>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: cgroups@vger.kernel.org, Linux-Next Mailing List <linux-next@vger.kernel.org>, namhyung@kernel.org, open list <linux-kernel@vger.kernel.org>, lkft-triage@lists.linaro.org, lizefan@huawei.com, hannes@cmpxchg.org, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, kafai@fb.com, Song Liu <songliubraving@fb.com>
+To: Qian Cai <cai@lca.pw>
+Cc: jack@suse.cz, gregkh@linuxfoundation.org, cgroups@vger.kernel.org, heiko.carstens@de.ibm.com, gor@linux.ibm.com, borntraeger@de.ibm.com, linux-s390@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org
 
-Hi Tejun,
+On Thu, Nov 14, 2019 at 07:26:21PM -0500, Qian Cai wrote:
+> 
+> 
+> > On Nov 14, 2019, at 2:21 PM, Tejun Heo <tj@kernel.org> wrote:
+> > 
+> > Acked-by: Tejun Heo <tj@kernel.org>
+> 
+> Tejun, suppose you will take this patch via your tree together with the series or should I Cc Andrew who normally handle this file?
 
-On Fri, 15 Nov 2019 at 04:12, Tejun Heo <tj@kernel.org> wrote:
-> > [    0.015402] WARNING: CPU: 0 PID: 0 at /usr/src/kernel/kernel/cgroup/cgroup.c:1969
-> > cgroup_setup_root+0x36c/0x4e8
-> ...
-> > [    0.015726] [<c053ac48>] (cgroup_setup_root) from [<c1c2a260>]
-> > (cgroup_init+0x108/0x560)
->
-> So, that's saying that the initial kernfs_node ino allocation returned
-> something other than 1.  Hmmm... x86_32 works fine.  What does the
-> following say?
->
-> # mkdir -p /tmp/cgroup2
-> # mount -t cgroup2 none /tmp/cgroup2
-> # ls -lid /tmp/cgroup2
+Patches in this area usually goes through Jens's block tree.
 
+Thanks.
 
- mkdir -p /tmp/cgroup2
- mount -t cgroup2 none /tmp/cgroup2
- ls -lid /tmp/cgroup2
- 1 dr-xr-xr-x 5 root root 0 Nov 15 08:00 /tmp/cgroup2
-
-
-Full test log link,
-https://lkft.validation.linaro.org/scheduler/job/1011451#L1170
-
-- Naresh
+-- 
+tejun
