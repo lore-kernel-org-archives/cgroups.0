@@ -1,68 +1,59 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v3 0/8] per lruvec lru_lock for memcg
-Date: Sat, 16 Nov 2019 11:14:59 +0800
-Message-ID: <1573874106-23802-1-git-send-email-alex.shi@linux.alibaba.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH v3 2/7] mm/lruvec: add irqsave flags into lruvec struct
+Date: Sat, 16 Nov 2019 11:15:01 +0800
+Message-ID: <1573874106-23802-3-git-send-email-alex.shi@linux.alibaba.com>
+References: <1573874106-23802-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1573874106-23802-1-git-send-email-alex.shi@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: alex.shi@linux.alibaba.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org
+Cc: Vlastimil Babka <vbabka@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Michal Hocko <mhocko@suse.com>, Wei Yang <richard.weiyang@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Arun KS <arunks@codeaurora.org>, Rong Chen <rong.a.chen@intel.com>
 
-Hi all,
+We need a irqflags vaiable to save state when do irqsave action, declare
+it here would make code more clear/clean.
 
-This patchset move lru_lock into lruvec, give a lru_lock for each of
-lruvec, thus bring a lru_lock for each of memcg per node.
+Rong Chen <rong.a.chen@intel.com> reported the 'irqflags' variable need
+move to the tail of lruvec struct otherwise it causes 18% regressions of
+vm-scalability testing on his machine. So add the flags and lru_lock to
+both near struct tail, even I have no clue of this perf losing.
 
-According to Daniel Jordan's suggestion, I run 64 'dd' with on 32
-containers on my 2s* 8 core * HT box with the modefied case:
-  https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/tree/case-lru-file-readtwice
+Originally-from: Hugh Dickins <hughd@google.com>
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Vlastimil Babka <vbabka@suse.cz>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Michal Hocko <mhocko@suse.com>
+Cc: Mel Gorman <mgorman@techsingularity.net>
+Cc: Wei Yang <richard.weiyang@gmail.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Arun KS <arunks@codeaurora.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+CC: Rong Chen <rong.a.chen@intel.com>
+Cc: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
+---
+ include/linux/mmzone.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-With this change above lru_lock censitive testing improved 17% with multiple
-containers scenario. And no performance lose w/o mem_cgroup.
-
-Thanks Hugh Dickins and Konstantin Khlebnikov, they both bring the same idea
-7 years ago. Now I believe considering my testing result, and google internal
-using fact. This feather is clearly benefit multi-container user.
-
-So I like to introduce it here.
-
-v3: rebase on linux-next, and fold the relock fix patch into introduceing patch
-
-v2: bypass a performance regression bug and fix some function issues
-
-v1: initial version, aim testing show 5% performance incrase
-
-Alex Shi (7):
-  mm/lru: add per lruvec lock for memcg
-  mm/lruvec: add irqsave flags into lruvec struct
-  mm/lru: replace pgdat lru_lock with lruvec lock
-  mm/lru: only change the lru_lock iff page's lruvec is different
-  mm/pgdat: remove pgdat lru_lock
-  mm/lru: likely enhancement
-  mm/lru: revise the comments of lru_lock
-
- Documentation/admin-guide/cgroup-v1/memcg_test.rst | 15 +----
- Documentation/admin-guide/cgroup-v1/memory.rst     |  6 +-
- Documentation/trace/events-kmem.rst                |  2 +-
- Documentation/vm/unevictable-lru.rst               | 22 +++----
- include/linux/memcontrol.h                         | 67 +++++++++++++++++++
- include/linux/mm_types.h                           |  2 +-
- include/linux/mmzone.h                             |  7 +-
- mm/compaction.c                                    | 62 +++++++++++------
- mm/filemap.c                                       |  4 +-
- mm/huge_memory.c                                   | 16 ++---
- mm/memcontrol.c                                    | 64 ++++++++++++++----
- mm/mlock.c                                         | 27 ++++----
- mm/mmzone.c                                        |  1 +
- mm/page_alloc.c                                    |  1 -
- mm/page_idle.c                                     |  5 +-
- mm/rmap.c                                          |  2 +-
- mm/swap.c                                          | 77 +++++++++-------------
- mm/vmscan.c                                        | 74 +++++++++++----------
- 18 files changed, 277 insertions(+), 177 deletions(-)
-
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index a13b8a602ee5..9b8b8daf4e03 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -269,6 +269,8 @@ struct lruvec {
+ 	unsigned long			flags;
+ 	/* per lruvec lru_lock for memcg */
+ 	spinlock_t			lru_lock;
++	/* flags for irqsave */
++	unsigned long			irqflags;
+ #ifdef CONFIG_MEMCG
+ 	struct pglist_data *pgdat;
+ #endif
 -- 
 1.8.3.1
 
