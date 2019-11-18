@@ -1,57 +1,40 @@
-From: Wenkuan Wang <wwk0817@gmail.com>
-Subject: Re: [PATCH v8 5/9] hugetlb: disable region_add file_region coalescing
-Date: Sun, 17 Nov 2019 19:03:16 +0800
-Message-ID: <010d5a90-3ebf-30e5-8829-a61f01b6f620@gmail.com>
-References: <20191030013701.39647-1-almasrymina@google.com>
- <20191030013701.39647-5-almasrymina@google.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: Re: [PATCH v3 1/7] mm/lru: add per lruvec lock for memcg
+Date: Mon, 18 Nov 2019 10:44:57 +0800
+Message-ID: <e707fd66-16c2-8523-dd8b-860b5b6bb11d@linux.alibaba.com>
+References: <1573874106-23802-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1573874106-23802-2-git-send-email-alex.shi@linux.alibaba.com>
+ <CALvZod77568+TozRXpERDDap__jbj+oJBY8zD=UBd40XNJC2zg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=oidSitOSx3wz/zOT9+cz4soIOB6y/ZqJ5xkv2u37mMg=;
-        b=jJEJMNfRpHtXmJckbTZB9ZNHCq2xiXBw90gY9gIbEXxRovl7hLntxcbbaAJAf2ud+b
-         MXSNvcdZDb+0nshW/ucfoHsxQ8QRBHxgRSL5szZH88Wyc09iVGespARjnFZ+xtCUCsX4
-         QeAd9DLUmgCNls3d3COIAwF12Lgg3kyUymoZejLgB9wVH8w6evTKORKdk+n2d5Jftvcc
-         FPi2UbmDvlAMhMpG6uftA5lkaa/oMW3HLrOKZHXfX9i8BLGQF/9S3WakXBP3t1bJi7+u
-         HaMNelmGG9FA6kvTeLFdgDEtFNwk5rBux4rm6+hvJms+0BAmsI1d43UY0aYqS79CZYDL
-         tCeg==
-In-Reply-To: <20191030013701.39647-5-almasrymina@google.com>
-Content-Language: en-US
+In-Reply-To: <CALvZod77568+TozRXpERDDap__jbj+oJBY8zD=UBd40XNJC2zg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Mina Almasry <almasrymina@google.com>, mike.kravetz@oracle.com
-Cc: shuah@kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, aneesh.kumar@linux.vnet.ibm.com
+Content-Type: text/plain; charset="utf-8"
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Daniel Jordan <daniel.m.jordan@oracle.com>, Yang Shi <yang.shi@linux.alibaba.com>, Matthew Wilcox <willy@infradead.org>, Vlastimil Babka <vbabka@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Michal Hocko <mhocko@suse.com>, Wei Yang <richard.weiyang@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Arun KS <arunks@codeaurora.org>
 
 
 
-On 10/30/19 9:36 AM, Mina Almasry wrote:
-> /* Must be called with resv->lock held. Calling this with count_only == true
-> * will count the number of pages to be added but will not modify the linked
-> - * list.
-> + * list. If regions_needed != NULL and count_only == true, then regions_needed
-> + * will indicate the number of file_regions needed in the cache to carry out to
-> + * add the regions for this range.
-> */
-> static long add_reservation_in_range(struct resv_map *resv, long f, long t,
+在 2019/11/16 下午2:28, Shakeel Butt 写道:
+> On Fri, Nov 15, 2019 at 7:15 PM Alex Shi <alex.shi@linux.alibaba.com> wrote:
+>>
+>> Currently memcg still use per node pgdat->lru_lock to guard its lruvec.
+>> That causes some lru_lock contention in a high container density system.
+>>
+>> If we can use per lruvec lock, that could relief much of the lru_lock
+>> contention.
+>>
+>> The later patches will replace the pgdat->lru_lock with lruvec->lru_lock
+>> and show the performance benefit by benchmarks.
+> 
+> Merge this patch with actual usage. No need to have a separate patch.
 
-Hi Mina,
+Thanks for comment, Shakeel!
 
-Would you please share which tree this patch set used? this patch 5/9 can't be
-applied with Linus's tree and add_reservation_in_range can't be found.
+Yes, but considering the 3rd, huge and un-splitable patch of actully replacing, I'd rather to pull sth out from 
+it. Ty to make patches a bit more readable, Do you think so?
 
 Thanks
-Wenkuan
-
-> - bool count_only)
-> + long *regions_needed, bool count_only)
-> {
-> - long chg = 0;
-> + long add = 0;
-> struct list_head *head = &resv->regions;
-> + long last_accounted_offset = f;
-> struct file_region *rg = NULL, *trg = NULL, *nrg = NULL;
-> - /* Locate the region we are before or
+Alex
