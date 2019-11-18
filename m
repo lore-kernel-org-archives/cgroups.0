@@ -1,40 +1,37 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v3 1/7] mm/lru: add per lruvec lock for memcg
-Date: Mon, 18 Nov 2019 10:44:57 +0800
-Message-ID: <e707fd66-16c2-8523-dd8b-860b5b6bb11d@linux.alibaba.com>
+Subject: Re: [PATCH v3 2/7] mm/lruvec: add irqsave flags into lruvec struct
+Date: Mon, 18 Nov 2019 10:52:40 +0800
+Message-ID: <de24def3-3593-a2f7-ab73-5ac379c1e5ca@linux.alibaba.com>
 References: <1573874106-23802-1-git-send-email-alex.shi@linux.alibaba.com>
- <1573874106-23802-2-git-send-email-alex.shi@linux.alibaba.com>
- <CALvZod77568+TozRXpERDDap__jbj+oJBY8zD=UBd40XNJC2zg@mail.gmail.com>
+ <1573874106-23802-3-git-send-email-alex.shi@linux.alibaba.com>
+ <CALvZod5xuetOb8Vunhgjp69-HcrnHgGHZKKyjVBo3tmoc3WqaA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CALvZod77568+TozRXpERDDap__jbj+oJBY8zD=UBd40XNJC2zg@mail.gmail.com>
+In-Reply-To: <CALvZod5xuetOb8Vunhgjp69-HcrnHgGHZKKyjVBo3tmoc3WqaA@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
 To: Shakeel Butt <shakeelb@google.com>
-Cc: Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Daniel Jordan <daniel.m.jordan@oracle.com>, Yang Shi <yang.shi@linux.alibaba.com>, Matthew Wilcox <willy@infradead.org>, Vlastimil Babka <vbabka@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Michal Hocko <mhocko@suse.com>, Wei Yang <richard.weiyang@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Arun KS <arunks@codeaurora.org>
+Cc: Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Daniel Jordan <daniel.m.jordan@oracle.com>, Yang Shi <yang.shi@linux.alibaba.com>, Matthew Wilcox <willy@infradead.org>, Vlastimil Babka <vbabka@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Michal Hocko <mhocko@suse.com>, Wei Yang <richard.weiyang@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Arun KS <arunks@codeaurora.org>, Rong Chen <rong.a.chen@intel.com>
 
 
 
-在 2019/11/16 下午2:28, Shakeel Butt 写道:
+在 2019/11/16 下午2:31, Shakeel Butt 写道:
 > On Fri, Nov 15, 2019 at 7:15 PM Alex Shi <alex.shi@linux.alibaba.com> wrote:
+>> We need a irqflags vaiable to save state when do irqsave action, declare
+>> it here would make code more clear/clean.
 >>
->> Currently memcg still use per node pgdat->lru_lock to guard its lruvec.
->> That causes some lru_lock contention in a high container density system.
->>
->> If we can use per lruvec lock, that could relief much of the lru_lock
->> contention.
->>
->> The later patches will replace the pgdat->lru_lock with lruvec->lru_lock
->> and show the performance benefit by benchmarks.
+>> Rong Chen <rong.a.chen@intel.com> reported the 'irqflags' variable need
+>> move to the tail of lruvec struct otherwise it causes 18% regressions of
+>> vm-scalability testing on his machine. So add the flags and lru_lock to
+>> both near struct tail, even I have no clue of this perf losing.
+> Regressions compared to what? Also no need to have a separate patch.
 > 
-> Merge this patch with actual usage. No need to have a separate patch.
 
-Thanks for comment, Shakeel!
-
-Yes, but considering the 3rd, huge and un-splitable patch of actully replacing, I'd rather to pull sth out from 
-it. Ty to make patches a bit more readable, Do you think so?
+Thanks for question, Shakeel, 
+I will change the commit log and mention the original place: the head of lruvec struct.
+As to the folding, the 3rd is already toooo long. May I leave it here to relief a littel bit burden on reading?
 
 Thanks
 Alex
