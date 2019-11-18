@@ -1,37 +1,48 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v3 1/7] mm/lru: add per lruvec lock for memcg
-Date: Mon, 18 Nov 2019 20:37:46 +0800
-Message-ID: <512d72e0-7b1d-4424-7cc4-7b963b9cbc7f@linux.alibaba.com>
-References: <1573874106-23802-1-git-send-email-alex.shi@linux.alibaba.com>
- <1573874106-23802-2-git-send-email-alex.shi@linux.alibaba.com>
- <CALvZod77568+TozRXpERDDap__jbj+oJBY8zD=UBd40XNJC2zg@mail.gmail.com>
- <e707fd66-16c2-8523-dd8b-860b5b6bb11d@linux.alibaba.com>
- <20191118120815.GF20752@bombadil.infradead.org>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH block/for-next] blk-cgroup: cgroup_rstat_updated()
+ shouldn't be called on cgroup1
+Date: Mon, 18 Nov 2019 08:41:14 -0700
+Message-ID: <091022e8-e6a1-178d-80cd-b2a070d3519f@kernel.dk>
+References: <20191107191804.3735303-1-tj@kernel.org>
+ <20191107191804.3735303-6-tj@kernel.org>
+ <cd3ebcee-6819-a09b-aeba-de6817f32cde@ti.com>
+ <20191113163501.GI4163745@devbig004.ftw2.facebook.com>
+ <20191114223128.GM4163745@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191118120815.GF20752@bombadil.infradead.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=LDK9yK9BoIJXiRshGH8S+ARb//vvA/0NHK9tQB/EqPk=;
+        b=JaQ3lkdxJbg8bC1c3jS+KwvIPC4OYHwwfxOOr83yS4U4QDzFNnWNlZ/p8PuJ96np2E
+         fSAKxEDc8Nlw46j0x8sDTkmy8rEIthr/WFem2d8bAl0iNj18msLAPp9+Qqw8SvjrYFOj
+         3EJP2rizmnWjpUQ81QDQLHav2Tp5HVA4u81MwCU4l9mmA08xnqINakg2qQ0Qqif/jPDU
+         cj76eJwfOZnRj3nWeBGiV/PEuiL0fSFQfPs36u/4sn+YKAJg5MIM0MMYKTeugndAPPka
+         ajIMC8PlwEyo22uO2Ji9NNlBpygJnk5UjX4ca26Yx50OfsMWk84dbtjiEcKRS6BQEBNE
+         yt5g==
+In-Reply-To: <20191114223128.GM4163745@devbig004.ftw2.facebook.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Shakeel Butt <shakeelb@google.com>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Daniel Jordan <daniel.m.jordan@oracle.com>, Yang Shi <yang.shi@linux.alibaba.com>, Vlastimil Babka <vbabka@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Michal Hocko <mhocko@suse.com>, Wei Yang <richard.weiyang@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Arun KS <arunks@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj@kernel.org>
+Cc: Faiz Abbas <faiz_abbas@ti.com>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, kernel-team@fb.com, Dan Schatzberg <dschatzberg@fb.com>, Daniel Xu <dlxu@fb.com>
 
+On 11/14/19 3:31 PM, Tejun Heo wrote:
+> Currently, cgroup rstat is supported only on cgroup2 hierarchy and
+> rstat functions shouldn't be called on cgroup1 cgroups.  While
+> converting blk-cgroup core statistics to rstat, f73316482977
+> ("blk-cgroup: reimplement basic IO stats using cgroup rstat")
+> accidentally ended up calling cgroup_rstat_updated() on cgroup1
+> cgroups causing crashes.
+> 
+> Longer term, we probably should add cgroup1 support to rstat but for
+> now let's mask the call directly.
 
+Applied, thanks.
 
-在 2019/11/18 下午8:08, Matthew Wilcox 写道:
->>> Merge this patch with actual usage. No need to have a separate patch.
->> Thanks for comment, Shakeel!
->>
->> Yes, but considering the 3rd, huge and un-splitable patch of actully replacing, I'd rather to pull sth out from 
->> it. Ty to make patches a bit more readable, Do you think so?
-> This method of splitting the patches doesn't help with the reviewability of
-> the patch series.
+-- 
+Jens Axboe
 
-Hi Matthew,
-
-Thanks for comments!
-I will fold them into the 3rd patch as you are all insist on this. :)
-
-Thanks
-Alex
