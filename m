@@ -1,37 +1,66 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v3 2/7] mm/lruvec: add irqsave flags into lruvec struct
-Date: Mon, 18 Nov 2019 10:52:40 +0800
-Message-ID: <de24def3-3593-a2f7-ab73-5ac379c1e5ca@linux.alibaba.com>
-References: <1573874106-23802-1-git-send-email-alex.shi@linux.alibaba.com>
- <1573874106-23802-3-git-send-email-alex.shi@linux.alibaba.com>
- <CALvZod5xuetOb8Vunhgjp69-HcrnHgGHZKKyjVBo3tmoc3WqaA@mail.gmail.com>
+From: Faiz Abbas <faiz_abbas@ti.com>
+Subject: Re: [PATCH block/for-next] blk-cgroup: cgroup_rstat_updated()
+ shouldn't be called on cgroup1
+Date: Mon, 18 Nov 2019 14:09:40 +0530
+Message-ID: <6f791736-2728-be53-9544-e0a0f0d09dd0@ti.com>
+References: <20191107191804.3735303-1-tj@kernel.org>
+ <20191107191804.3735303-6-tj@kernel.org>
+ <cd3ebcee-6819-a09b-aeba-de6817f32cde@ti.com>
+ <20191113163501.GI4163745@devbig004.ftw2.facebook.com>
+ <20191114223128.GM4163745@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CALvZod5xuetOb8Vunhgjp69-HcrnHgGHZKKyjVBo3tmoc3WqaA@mail.gmail.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1574066328;
+        bh=2FmC6WnguELH0WljaqAvUXHz4oovTIg5XA3M9m7laOM=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=JQk58HK+KG2z9Y7+qVN3JLPmEHQ+wsw40VdDVyonlPjWTyUovUDwXsKg1NKgobvMG
+         bMeoY97hekPv8YSMIffnOMGmbk6NqrB+OONU9gvN1GMg5ZC4CsTUDHdz3DUrVk3pZ7
+         D8vjzUdjnTP5OwUMqW61010vvke/PcVkUYYejwB8=
+In-Reply-To: <20191114223128.GM4163745@devbig004.ftw2.facebook.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Daniel Jordan <daniel.m.jordan@oracle.com>, Yang Shi <yang.shi@linux.alibaba.com>, Matthew Wilcox <willy@infradead.org>, Vlastimil Babka <vbabka@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Michal Hocko <mhocko@suse.com>, Wei Yang <richard.weiyang@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Arun KS <arunks@codeaurora.org>, Rong Chen <rong.a.chen@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, kernel-team@fb.com, Dan Schatzberg <dschatzberg@fb.com>, Daniel Xu <dlxu@fb.com>
 
+Hi,
 
-
-在 2019/11/16 下午2:31, Shakeel Butt 写道:
-> On Fri, Nov 15, 2019 at 7:15 PM Alex Shi <alex.shi@linux.alibaba.com> wrote:
->> We need a irqflags vaiable to save state when do irqsave action, declare
->> it here would make code more clear/clean.
->>
->> Rong Chen <rong.a.chen@intel.com> reported the 'irqflags' variable need
->> move to the tail of lruvec struct otherwise it causes 18% regressions of
->> vm-scalability testing on his machine. So add the flags and lru_lock to
->> both near struct tail, even I have no clue of this perf losing.
-> Regressions compared to what? Also no need to have a separate patch.
+On 15/11/19 4:01 AM, Tejun Heo wrote:
+> Currently, cgroup rstat is supported only on cgroup2 hierarchy and
+> rstat functions shouldn't be called on cgroup1 cgroups.  While
+> converting blk-cgroup core statistics to rstat, f73316482977
+> ("blk-cgroup: reimplement basic IO stats using cgroup rstat")
+> accidentally ended up calling cgroup_rstat_updated() on cgroup1
+> cgroups causing crashes.
+> 
+> Longer term, we probably should add cgroup1 support to rstat but for
+> now let's mask the call directly.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Fixes: f73316482977 ("blk-cgroup: reimplement basic IO stats using cgroup rstat")
+Tested-by: Faiz Abbas <faiz_abbas@ti.com>
+> ---
+>  include/linux/blk-cgroup.h |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+> index 48a66738143d..19394c77ed99 100644
+> --- a/include/linux/blk-cgroup.h
+> +++ b/include/linux/blk-cgroup.h
+> @@ -626,7 +626,8 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+>  		bis->cur.ios[rwd]++;
+>  
+>  		u64_stats_update_end(&bis->sync);
+> -		cgroup_rstat_updated(blkg->blkcg->css.cgroup, cpu);
+> +		if (cgroup_subsys_on_dfl(io_cgrp_subsys))
+> +			cgroup_rstat_updated(blkg->blkcg->css.cgroup, cpu);
+>  		put_cpu();
+>  	}
+>  
 > 
 
-Thanks for question, Shakeel, 
-I will change the commit log and mention the original place: the head of lruvec struct.
-As to the folding, the 3rd is already toooo long. May I leave it here to relief a littel bit burden on reading?
-
-Thanks
-Alex
+Thanks,
+Faiz
