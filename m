@@ -1,56 +1,69 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v3 3/7] mm/lru: replace pgdat lru_lock with lruvec lock
-Date: Mon, 18 Nov 2019 11:11:26 -0500
-Message-ID: <20191118161126.GB365174@cmpxchg.org>
-References: <1573874106-23802-1-git-send-email-alex.shi@linux.alibaba.com>
- <1573874106-23802-4-git-send-email-alex.shi@linux.alibaba.com>
+From: Mina Almasry <almasrymina@google.com>
+Subject: Re: [PATCH v8 5/9] hugetlb: disable region_add file_region coalescing
+Date: Mon, 18 Nov 2019 11:41:19 -0800
+Message-ID: <CAHS8izMWi0BXyiv+Nx4PSV+QkN8beHn0WH9HwwjsMJacwRntvw@mail.gmail.com>
+References: <20191030013701.39647-1-almasrymina@google.com>
+ <20191030013701.39647-5-almasrymina@google.com> <010d5a90-3ebf-30e5-8829-a61f01b6f620@gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=j0SqAQT8llYIw4e/49l3a9ohNbFeVl5zPNeEm/Wp4s0=;
-        b=D4nk0Siou5s/cqdoqRqvYGa8zjueKxO+SjyVZm6/zT83sFfDUd2SnGh1k9QnwDRDrx
-         CH6WGIyRKE0rF+mnWZMd8pHyYqF+YLfdNHGtqMo/fOoR4AXXtBL0Cj7J0CMVPjVHqH1A
-         5p89M+K8M+qZDQsxCDXAtPbwLRRrKzSr3XyWyZ95bNw/QI/aHZbmCL8249BGxWEd1uNi
-         NmxnkCqIoZnTJ4pMiiNzMsyDF7nPDvcgoyhCtivfuijsRgBIc92NpnNww90o0JoHuJom
-         W1UH6Cibz2Uc69M0LwpMJivjKj1PUsQuKOhtJZg9yyVl2bQ6Et0jog0H3A2vuFx+O7mN
-         fvRQ==
-Content-Disposition: inline
-In-Reply-To: <1573874106-23802-4-git-send-email-alex.shi@linux.alibaba.com>
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=X3o0IsIZAZ7wZG7kNKtDTIC/+CrHgjEOKYqn/GJZgow=;
+        b=IP57T3BawVyl+urI2HsWXb3a52KJBX1CVpOTmaws+YDj5nD8X94w/onrfLkCgdDNod
+         wN66e0baMmlaayqO4Q3w/oj9JHMWfC3vyWSS1dnr+ktELyPIKg2CPpNZiEgrMSyTARJu
+         MfEDJNd3GECOcxNV2Pt9Tm1NrDZr2sdTONBOAecH5v7zpR37Y5ZQyPSy9rL9hesTYa8F
+         VW9wgwHLCxTr2sng/rdtXaBI/SkDjMD/wHYF3gAaCdx5bPmqjM/knxvxIJbignzjLPiF
+         vrWTBmmunBhanAtLrzaAHfQoJFRV4XID3x2sLXwQ9ZkWVk8rMiynFeppf12qstMIXUF1
+         0AxA==
+In-Reply-To: <010d5a90-3ebf-30e5-8829-a61f01b6f620@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>, Vlastimil Babka <vbabka@suse.cz>, Qian Cai <cai@lca.pw>, Andrey Ryabinin <aryabinin@virtuozzo.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Rientjes <rientjes@google.c>
+To: Wenkuan Wang <wwk0817@gmail.com>
+Cc: Mike Kravetz <mike.kravetz@oracle.com>, shuah <shuah@kernel.org>, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>
 
-On Sat, Nov 16, 2019 at 11:15:02AM +0800, Alex Shi wrote:
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 62470325f9bc..cf274739e619 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1246,6 +1246,42 @@ struct lruvec *mem_cgroup_page_lruvec(struct page *page, struct pglist_data *pgd
->  	return lruvec;
->  }
->  
-> +struct lruvec *lock_page_lruvec_irq(struct page *page,
-> +					struct pglist_data *pgdat)
-> +{
-> +	struct lruvec *lruvec;
-> +
-> +again:
-> +	lruvec = mem_cgroup_page_lruvec(page, pgdat);
-> +	spin_lock_irq(&lruvec->lru_lock);
+> On 10/30/19 9:36 AM, Mina Almasry wrote:
+> > /* Must be called with resv->lock held. Calling this with count_only == true
+> > * will count the number of pages to be added but will not modify the linked
+> > - * list.
+> > + * list. If regions_needed != NULL and count_only == true, then regions_needed
+> > + * will indicate the number of file_regions needed in the cache to carry out to
+> > + * add the regions for this range.
+> > */
+> > static long add_reservation_in_range(struct resv_map *resv, long f, long t,
+>
+> Hi Mina,
+>
+> Would you please share which tree this patch set used? this patch 5/9 can't be
+> applied with Linus's tree and add_reservation_in_range can't be found.
+>
+> Thanks
+> Wenkuan
 
-This isn't safe. Nothing prevents the page from being moved to a
-different memcg in between these two operations, and the lruvec having
-been freed by the time you try to acquire the spinlock.
+Sorry for the late reply. Locally I have this patchset on top of
+linus/master and a patchset that added add_reservation_in_range.
 
-You need to use the rcu lock to dereference page->mem_cgroup and its
-lruvec when coming from the page like this.
+But, this patchset can be rebased on top of this commit with 'minimal'
+merge conflicts:
 
-You also need to use page_memcg_rcu() to insert the appropriate
-lockless access barriers, which mem_cgroup_page_lruvec() does not do
-since it's designed for use with pgdat->lru_lock.
+commit c1ca56bab12f3 (tag: v5.4-rc7-mmots-2019-11-15-18-40, github-akpm/master)
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+
+    pci: test for unexpectedly disabled bridges
+
+It's the latest mmotm I find on https://github.com/hnaz/linux-mm.git.
+My next patchset will be rebased on top mmotm.
+
+>
+> > - bool count_only)
+> > + long *regions_needed, bool count_only)
+> > {
+> > - long chg = 0;
+> > + long add = 0;
+> > struct list_head *head = &resv->regions;
+> > + long last_accounted_offset = f;
+> > struct file_region *rg = NULL, *trg = NULL, *nrg = NULL;
+> > - /* Locate the region we are before or
