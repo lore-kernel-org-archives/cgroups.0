@@ -1,43 +1,80 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v3 3/7] mm/lru: replace pgdat lru_lock with lruvec lock
-Date: Tue, 19 Nov 2019 18:14:26 +0800
-Message-ID: <45d33a1f-07a2-c0f5-d715-ef3396b1e9c1@linux.alibaba.com>
-References: <1573874106-23802-1-git-send-email-alex.shi@linux.alibaba.com>
- <1573874106-23802-4-git-send-email-alex.shi@linux.alibaba.com>
- <20191116043806.GD20752@bombadil.infradead.org>
- <0bfa9a03-b095-df83-9cfd-146da9aab89a@linux.alibaba.com>
- <20191118121451.GG20752@bombadil.infradead.org>
- <296c7202-930e-4027-2e92-b8c64a908d88@linux.alibaba.com>
- <20191118123452.GM20752@bombadil.infradead.org>
+Subject: [PATCH v4 0/9] per lruvec lru_lock for memcg
+Date: Tue, 19 Nov 2019 20:23:14 +0800
+Message-ID: <1574166203-151975-1-git-send-email-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191118123452.GM20752@bombadil.infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Matthew Wilcox <willy@infradead.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>, Vlastimil Babka <vbabka@suse.cz>, Qian Cai <cai@lca.pw>, Andrey Ryabinin <aryabinin@virtuozzo.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Rientjes <>
+To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com, hannes@cmpxchg.org
+Cc: Alex Shi <alex.shi@linux.alibaba.com>
+
+Hi all,
+
+This patchset move lru_lock into lruvec, give a lru_lock for each of
+lruvec, thus bring a lru_lock for each of memcg per node.
+
+According to Daniel Jordan's suggestion, I run 64 'dd' with on 32
+containers on my 2s* 8 core * HT box with the modefied case:
+  https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/tree/case-lru-file-readtwice
+
+With this change above lru_lock censitive testing improved 17% with multiple
+containers scenario. And no performance lose w/o mem_cgroup.
+
+Thanks Hugh Dickins and Konstantin Khlebnikov, they both brought the same idea
+7 years ago. Now I believe considering my testing result, and google internal
+using fact. This feature is clearly benefit multi-container users.
+
+So I'd like to introduce it here.
+
+Thanks all the comments from Hugh Dickins, Konstantin Khlebnikov, Daniel Jordan, 
+Johannes Weiner, Mel Gorman, Shakeel Butt, Rong Chen, Fengguang Wu, Yun Wang etc.
+
+v4: 
+  a, fix the page->mem_cgroup dereferencing issue, thanks Johannes Weiner
+  b, remove the irqsave flags changes, thanks Metthew Wilcox
+  c, merge/split patches for better understanding and bisection purpose
+
+v3: rebase on linux-next, and fold the relock fix patch into introduceing patch
+
+v2: bypass a performance regression bug and fix some function issues
+
+v1: initial version, aim testing show 5% performance increase
 
 
+Alex Shi (9):
+  mm/swap: fix uninitialized compiler warning
+  mm/huge_memory: fix uninitialized compiler warning
+  mm/lru: replace pgdat lru_lock with lruvec lock
+  mm/mlock: only change the lru_lock iff page's lruvec is different
+  mm/swap: only change the lru_lock iff page's lruvec is different
+  mm/vmscan: only change the lru_lock iff page's lruvec is different
+  mm/pgdat: remove pgdat lru_lock
+  mm/lru: likely enhancement
+  mm/lru: revise the comments of lru_lock
 
-> 
->>>> As your concern for a 'new' caller, since __split_huge_page is a static helper here, no distub for anyothers.
->>> Even though it's static, there may be other callers within the same file.
->>> Or somebody may decide to make it non-static in the future.  I think it's
->>> actually clearer to keep the irqflags as a separate parameter.
->>>
->>
->> But it's no one else using this function now. and no one get disturb, right? It's non sense to consider a 'possibility' issue.
-> 
-> It is not nonsense to consider the complexity of the mm!  Your patch makes
-> it harder to understand unnecessarily.  Please be considerate of the other
-> programmers who must build on what you have created.
-> 
+ Documentation/admin-guide/cgroup-v1/memcg_test.rst | 15 +----
+ Documentation/admin-guide/cgroup-v1/memory.rst     |  6 +-
+ Documentation/trace/events-kmem.rst                |  2 +-
+ Documentation/vm/unevictable-lru.rst               | 22 +++----
+ include/linux/memcontrol.h                         | 68 ++++++++++++++++++++
+ include/linux/mm_types.h                           |  2 +-
+ include/linux/mmzone.h                             |  5 +-
+ mm/compaction.c                                    | 67 +++++++++++++------
+ mm/filemap.c                                       |  4 +-
+ mm/huge_memory.c                                   | 17 ++---
+ mm/memcontrol.c                                    | 75 +++++++++++++++++-----
+ mm/mlock.c                                         | 27 ++++----
+ mm/mmzone.c                                        |  1 +
+ mm/page_alloc.c                                    |  1 -
+ mm/page_idle.c                                     |  5 +-
+ mm/rmap.c                                          |  2 +-
+ mm/swap.c                                          | 74 +++++++++------------
+ mm/vmscan.c                                        | 74 ++++++++++-----------
+ 18 files changed, 287 insertions(+), 180 deletions(-)
 
-I believe the 'flags' parameter are using __split_huge_page is just for irqsave/restore of lru_lock, so move it into lruvec should be reduce the parameter jumping in caller/callee.
-But in another side, the flags opitimze isn't close related with lru_lock change, and better to be split out.
-So thanks for your comments, I will remove this part for this patchset.
+-- 
+1.8.3.1
 
-Thanks!
-Alex
