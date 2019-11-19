@@ -1,90 +1,32 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v3 3/7] mm/lru: replace pgdat lru_lock with lruvec lock
-Date: Tue, 19 Nov 2019 18:04:35 +0800
-Message-ID: <85702d50-daf0-ece8-9a5d-e4b860ef2f99@linux.alibaba.com>
+Subject: Re: [PATCH v3 1/7] mm/lru: add per lruvec lock for memcg
+Date: Tue, 19 Nov 2019 18:05:39 +0800
+Message-ID: <9bfbd4f0-3502-7186-34ad-d302bb526fc7@linux.alibaba.com>
 References: <1573874106-23802-1-git-send-email-alex.shi@linux.alibaba.com>
- <1573874106-23802-4-git-send-email-alex.shi@linux.alibaba.com>
- <20191118161126.GB365174@cmpxchg.org>
+ <1573874106-23802-2-git-send-email-alex.shi@linux.alibaba.com>
+ <CALvZod77568+TozRXpERDDap__jbj+oJBY8zD=UBd40XNJC2zg@mail.gmail.com>
+ <e707fd66-16c2-8523-dd8b-860b5b6bb11d@linux.alibaba.com>
+ <20191118120815.GF20752@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191118161126.GB365174@cmpxchg.org>
+In-Reply-To: <20191118120815.GF20752@bombadil.infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>, Vlastimil Babka <vbabka@suse.cz>, Qian Cai <cai@lca.pw>, Andrey Ryabinin <aryabinin@virtuozzo.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Rientjes <rientjes@google.c>
+Content-Type: text/plain; charset="utf-8"
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Shakeel Butt <shakeelb@google.com>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Daniel Jordan <daniel.m.jordan@oracle.com>, Yang Shi <yang.shi@linux.alibaba.com>, Vlastimil Babka <vbabka@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Michal Hocko <mhocko@suse.com>, Wei Yang <richard.weiyang@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Arun KS <arunks@codeaurora.org>
 
 
 
-=D4=DA 2019/11/19 =C9=CF=CE=E712:11, Johannes Weiner =D0=B4=B5=C0:
-> On Sat, Nov 16, 2019 at 11:15:02AM +0800, Alex Shi wrote:
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 62470325f9bc..cf274739e619 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -1246,6 +1246,42 @@ struct lruvec *mem_cgroup_page_lruvec(struct page=
- *page, struct pglist_data *pgd
->>  	return lruvec;
->>  }
->> =20
->> +struct lruvec *lock_page_lruvec_irq(struct page *page,
->> +					struct pglist_data *pgdat)
->> +{
->> +	struct lruvec *lruvec;
->> +
->> +again:
->> +	lruvec =3D mem_cgroup_page_lruvec(page, pgdat);
->> +	spin_lock_irq(&lruvec->lru_lock);
->=20
-> This isn't safe. Nothing prevents the page from being moved to a
-> different memcg in between these two operations, and the lruvec having
-> been freed by the time you try to acquire the spinlock.
->=20
-> You need to use the rcu lock to dereference page->mem_cgroup and its
-> lruvec when coming from the page like this.
+在 2019/11/18 下午8:08, Matthew Wilcox 写道:
+>> Thanks for comment, Shakeel!
+>>
+>> Yes, but considering the 3rd, huge and un-splitable patch of actully replacing, I'd rather to pull sth out from 
+>> it. Ty to make patches a bit more readable, Do you think so?
+> This method of splitting the patches doesn't help with the reviewability of
+> the patch series.
 
-Hi Johannes,
+thanks for comments! I will reorg my patchset for better understanding.
 
-Yes, you are right. Thank a lot to point out this!
-Could we use rcu lock to guard the lruvec till lruvec->lru_lock getten?
-
-+struct lruvec *lock_page_lruvec_irq(struct page *page,
-+                                       struct pglist_data *pgdat)
-+{
-+       struct lruvec *lruvec;
-+
-+again:
-+       rcu_read_lock();
-+       lruvec =3D mem_cgroup_page_lruvec(page, pgdat);
-+       spin_lock_irq(&lruvec->lru_lock);
-+       rcu_read_unlock();
-+
-+       /* lruvec may changed in commit_charge() */
-+       if (lruvec !=3D mem_cgroup_page_lruvec(page, pgdat)) {
-+               spin_unlock_irq(&lruvec->lru_lock);
-+               goto again;
-+       }
-+
-+       return lruvec;
-+}
->=20
-> You also need to use page_memcg_rcu() to insert the appropriate
-> lockless access barriers, which mem_cgroup_page_lruvec() does not do
-> since it's designed for use with pgdat->lru_lock.
->=20
-
-Since the page_memcg_rcu can not know it under a spin_lock, guess the follo=
-wing enhance is fine:
-@@ -1225,7 +1224,7 @@ struct lruvec *mem_cgroup_page_lruvec(struct page *pa=
-ge, struct pglist_data *pgd
-                goto out;
-        }
-
--       memcg =3D page->mem_cgroup;
-+       memcg =3D READ_ONCE(page->mem_cgroup);
-        /*
-
-
-Millions thanks!
 Alex
