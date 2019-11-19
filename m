@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v4 6/9] mm/vmscan: only change the lru_lock iff page's lruvec is different
-Date: Tue, 19 Nov 2019 20:23:20 +0800
-Message-ID: <1574166203-151975-7-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v4 8/9] mm/lru: likely enhancement
+Date: Tue, 19 Nov 2019 20:23:22 +0800
+Message-ID: <1574166203-151975-9-git-send-email-alex.shi@linux.alibaba.com>
 References: <1574166203-151975-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1574166203-151975-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -11,9 +11,9 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com, hannes@cmpxchg.org
-Cc: Alex Shi <alex.shi@linux.alibaba.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>, Vlastimil Babka <vbabka@suse.cz>, Andrey Ryabinin <aryabinin@virtuozzo.com>, swkhack <swkhack@gmail.com>, "Potyra, Stefan" <Stefan.Potyra@elektrobit.com>, Jason Gunthorpe <jgg@ziepe.ca>, Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, Peng Fan <peng.fan@nxp.com>, Nikolay Borisov <nborisov@suse.com>, Ira Weiny <ira.weiny@intel.com>, Kirill Tkhai <ktkhai@virtuozzo.com>, Yafang Shao <laoar.shao@gmail.com>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>
 
-Used relock_page_lruvec in more places for spin_lock reducing.
+Use likely() to remove speculations according to pagevec usage.
 
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
 Cc: Johannes Weiner <hannes@cmpxchg.org>
@@ -23,105 +23,72 @@ Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: Roman Gushchin <guro@fb.com>
 Cc: Shakeel Butt <shakeelb@google.com>
 Cc: Chris Down <chris@chrisdown.name>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: swkhack <swkhack@gmail.com>
-Cc: "Potyra, Stefan" <Stefan.Potyra@elektrobit.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Cc: Peng Fan <peng.fan@nxp.com>
-Cc: Nikolay Borisov <nborisov@suse.com>
-Cc: Ira Weiny <ira.weiny@intel.com>
-Cc: Kirill Tkhai <ktkhai@virtuozzo.com>
-Cc: Yang Shi <yang.shi@linux.alibaba.com>
-Cc: Yafang Shao <laoar.shao@gmail.com>
-Cc: Mel Gorman <mgorman@techsingularity.net>
-Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Cc: Hugh Dickins <hughd@google.com>
 Cc: Tejun Heo <tj@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
 Cc: linux-kernel@vger.kernel.org
 Cc: cgroups@vger.kernel.org
 Cc: linux-mm@kvack.org
 ---
- mm/vmscan.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ include/linux/memcontrol.h | 8 ++++----
+ mm/memcontrol.c            | 4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 3cdf343e7a27..ba57c55a6a41 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -1825,22 +1825,25 @@ static int too_many_isolated(struct pglist_data *pgdat, int file,
-  * Returns the number of pages moved to the given lruvec.
-  */
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 19ff453e2822..1787bbc4b059 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1298,12 +1298,12 @@ static inline struct lruvec *relock_page_lruvec_irq(struct page *page,
+ 	struct pglist_data *pgdat = page_pgdat(page);
+ 	struct lruvec *lruvec;
  
--static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
-+static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *llvec,
- 						     struct list_head *list)
- {
- 	int nr_pages, nr_moved = 0;
- 	LIST_HEAD(pages_to_free);
- 	struct page *page;
- 	enum lru_list lru;
-+	struct lruvec *lruvec = llvec;
+-	if (!locked_lruvec)
++	if (unlikely(!locked_lruvec))
+ 		goto lock;
  
- 	while (!list_empty(list)) {
- 		page = lru_to_page(list);
-+		lruvec = relock_page_lruvec_irq(page, lruvec);
-+
- 		VM_BUG_ON_PAGE(PageLRU(page), page);
- 		if (unlikely(!page_evictable(page))) {
- 			list_del(&page->lru);
- 			spin_unlock_irq(&lruvec->lru_lock);
-+			lruvec = NULL;
- 			putback_lru_page(page);
--			spin_lock_irq(&lruvec->lru_lock);
- 			continue;
- 		}
+ 	lruvec = mem_cgroup_page_lruvec(page, pgdat);
  
-@@ -1858,8 +1861,8 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
+-	if (locked_lruvec == lruvec)
++	if (likely(locked_lruvec == lruvec))
+ 		return lruvec;
  
- 			if (unlikely(PageCompound(page))) {
- 				spin_unlock_irq(&lruvec->lru_lock);
-+				lruvec = NULL;
- 				(*get_compound_page_dtor(page))(page);
--				spin_lock_irq(&lruvec->lru_lock);
- 			} else
- 				list_add(&page->lru, &pages_to_free);
- 		} else {
-@@ -1867,6 +1870,11 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
- 		}
+ 	spin_unlock_irq(&locked_lruvec->lru_lock);
+@@ -1320,12 +1320,12 @@ static inline struct lruvec *relock_page_lruvec_irqsave(struct page *page,
+ 	struct pglist_data *pgdat = page_pgdat(page);
+ 	struct lruvec *lruvec;
+ 
+-	if (!locked_lruvec)
++	if (unlikely(!locked_lruvec))
+ 		goto lock;
+ 
+ 	lruvec = mem_cgroup_page_lruvec(page, pgdat);
+ 
+-	if (locked_lruvec == lruvec)
++	if (likely(locked_lruvec == lruvec))
+ 		return lruvec;
+ 
+ 	spin_unlock_irqrestore(&locked_lruvec->lru_lock, *flags);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 7e6387ad01f0..8c3ba90bdefc 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1257,7 +1257,7 @@ struct lruvec *lock_page_lruvec_irq(struct page *page,
+ 	rcu_read_unlock();
+ 
+ 	/* lruvec may changed in commit_charge() */
+-	if (lruvec != mem_cgroup_page_lruvec(page, pgdat)) {
++	if (unlikely(lruvec != mem_cgroup_page_lruvec(page, pgdat))) {
+ 		spin_unlock_irq(&lruvec->lru_lock);
+ 		goto again;
  	}
+@@ -1277,7 +1277,7 @@ struct lruvec *lock_page_lruvec_irqsave(struct page *page,
+ 	rcu_read_unlock();
  
-+	if (lruvec != llvec) {
-+		if (lruvec)
-+			spin_unlock_irq(&lruvec->lru_lock);
-+		spin_lock_irq(&llvec->lru_lock);
-+	}
- 	/*
- 	 * To save our caller's stack, now use input list for pages to free.
- 	 */
-@@ -4289,18 +4297,10 @@ void check_move_unevictable_pages(struct pagevec *pvec)
- 
- 	for (i = 0; i < pvec->nr; i++) {
- 		struct page *page = pvec->pages[i];
--		struct pglist_data *pgdat = page_pgdat(page);
--		struct lruvec *new_lruvec = mem_cgroup_page_lruvec(page, pgdat);
--
- 
- 		pgscanned++;
- 
--		if (lruvec != new_lruvec) {
--			if (lruvec)
--				spin_unlock_irq(&lruvec->lru_lock);
--			lruvec = new_lruvec;
--			spin_lock_irq(&lruvec->lru_lock);
--		}
-+		lruvec = relock_page_lruvec_irq(page, lruvec);
- 
- 		if (!PageLRU(page) || !PageUnevictable(page))
- 			continue;
+ 	/* lruvec may changed in commit_charge() */
+-	if (lruvec != mem_cgroup_page_lruvec(page, pgdat)) {
++	if (unlikely(lruvec != mem_cgroup_page_lruvec(page, pgdat))) {
+ 		spin_unlock_irqrestore(&lruvec->lru_lock, *flags);
+ 		goto again;
+ 	}
 -- 
 1.8.3.1
 
