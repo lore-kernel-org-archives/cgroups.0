@@ -1,42 +1,60 @@
-From: Xianting Tian <xianting_tian@126.com>
-Subject: [PATCH] bfq: Replace kmalloc_node with kzalloc_node
-Date: Tue, 19 Nov 2019 10:02:26 -0500
-Message-ID: <1574175746-8809-1-git-send-email-xianting_tian@126.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v4 1/9] mm/swap: fix uninitialized compiler warning
+Date: Tue, 19 Nov 2019 10:41:38 -0500
+Message-ID: <20191119154138.GB382712@cmpxchg.org>
+References: <1574166203-151975-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1574166203-151975-2-git-send-email-alex.shi@linux.alibaba.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=126.com;
-        s=s110527; h=From:Subject:Date:Message-Id; bh=ECh/gxGvyp9KSqXajL
-        yZib+zF6gPBMDIeYZREp09BV4=; b=lI9rukbzWZ6xgpv1+CFDPY6+fj9Ivfp2JU
-        Bljz1Y6yJsW4Bcj8k8VczsLLdQpMwGQ22GX9Yl1/cPzGzMCJx1tnt63brEUshgqx
-        LAhZV1mMpc0A5dHWeW/+El2RKQchrLG2Y861Grsq55zDUEXLDnp6nv+iAVTRBs9p
-        zd1pGJbcg=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to
+         :user-agent;
+        bh=s1bq7+cOv9v3qwlU6gAe5f/6wD81CFSArjCOgnPV2zo=;
+        b=yB8b7itby2xJJEdH7wfhMdISJn7yj0OPf6+/xk6WSX8SqbJPJt+sq4eFvNicdyug6m
+         TM2uLIeizmWzrpI6V0peXhVjzQEJuS8YApUE1CENkFwRuBJjQfmghRJveMDzA/KqqV1L
+         P1/MOVjxZ9JOA9tuCi5XyR9gWzEaP8OmU+0WyIkppFH5fM088hQekVTHL7Rm7mPJUbiK
+         IsmlHQ2g1cao+y/FNhK3v+EXNkCUxjFCO2U00x37INvJX7zK6gyEONARrOtFM0zOdtiS
+         eo9EVWFsFYBMjaIrTgVGRonvwE3m8ZRtTTSF+eKPMtPX1yRk+Zwak6B3Ms5MBtmMvqX3
+         Fn6g==
+Content-Disposition: inline
+In-Reply-To: <1574166203-151975-2-git-send-email-alex.shi@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com
 
-Replace kmalloc_node with kzalloc_node
+On Tue, Nov 19, 2019 at 08:23:15PM +0800, Alex Shi wrote:
+>   ../mm/swap.c: In function ‘__page_cache_release’:
+>   ../mm/swap.c:67:10: warning: ‘flags’ may be used uninitialized in this
+>   function [-Wmaybe-uninitialized]
+>        lruvec = lock_page_lruvec_irqsave(page, pgdat, flags);
+>        ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Signed-off-by: Xianting Tian <xianting_tian@126.com>
----
- block/bfq-cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+At this point in the series, there is no lock_page_lruvec_irqsave()
+yet, so this patch is out of order. Please don't do that. It's very
+hard to review patches that depend on later changes to make sense.
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 86a607c..9a84d79 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -1385,7 +1385,7 @@ struct bfq_group *bfq_create_group_hierarchy(struct bfq_data *bfqd, int node)
- 	struct bfq_group *bfqg;
- 	int i;
- 
--	bfqg = kmalloc_node(sizeof(*bfqg), GFP_KERNEL | __GFP_ZERO, node);
-+	bfqg = kzalloc_node(sizeof(*bfqg), GFP_KERNEL, node);
- 	if (!bfqg)
- 		return NULL;
- 
--- 
-1.8.3.1
+> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: linux-mm@kvack.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  mm/swap.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mm/swap.c b/mm/swap.c
+> index 5341ae93861f..c36a10244d07 100644
+> --- a/mm/swap.c
+> +++ b/mm/swap.c
+> @@ -62,7 +62,7 @@ static void __page_cache_release(struct page *page)
+>  	if (PageLRU(page)) {
+>  		pg_data_t *pgdat = page_pgdat(page);
+>  		struct lruvec *lruvec;
+> -		unsigned long flags;
+> +		unsigned long flags = 0;
 
+Use unintialized_var() for these cases to make the intent clear.
