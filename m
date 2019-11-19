@@ -1,37 +1,43 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
 Subject: Re: [PATCH v3 3/7] mm/lru: replace pgdat lru_lock with lruvec lock
-Date: Tue, 19 Nov 2019 18:10:09 +0800
-Message-ID: <1199177d-6f34-3aae-3eb6-8fac42f070a1@linux.alibaba.com>
+Date: Tue, 19 Nov 2019 18:14:26 +0800
+Message-ID: <45d33a1f-07a2-c0f5-d715-ef3396b1e9c1@linux.alibaba.com>
 References: <1573874106-23802-1-git-send-email-alex.shi@linux.alibaba.com>
  <1573874106-23802-4-git-send-email-alex.shi@linux.alibaba.com>
- <20191119021058.auxc6g7vmgf7d5gg@ca-dmjordan1.us.oracle.com>
+ <20191116043806.GD20752@bombadil.infradead.org>
+ <0bfa9a03-b095-df83-9cfd-146da9aab89a@linux.alibaba.com>
+ <20191118121451.GG20752@bombadil.infradead.org>
+ <296c7202-930e-4027-2e92-b8c64a908d88@linux.alibaba.com>
+ <20191118123452.GM20752@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191119021058.auxc6g7vmgf7d5gg@ca-dmjordan1.us.oracle.com>
+In-Reply-To: <20191118123452.GM20752@bombadil.infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Daniel Jordan <daniel.m.jordan@oracle.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, yang.shi@linux.alibaba.com, willy@infradead.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>, Vlastimil Babka <vbabka@suse.cz>, Qian Cai <cai@lca.pw>, Andrey Ryabinin <aryabinin@virtuozzo.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Rientjes <rientje>
+Content-Type: text/plain; charset="us-ascii"
+To: Matthew Wilcox <willy@infradead.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>, Vlastimil Babka <vbabka@suse.cz>, Qian Cai <cai@lca.pw>, Andrey Ryabinin <aryabinin@virtuozzo.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Rientjes <>
 
 
 
-=D4=DA 2019/11/19 =C9=CF=CE=E710:10, Daniel Jordan =D0=B4=B5=C0:
->> -	if (pgdat)
->> -		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
->> +
->>  	release_pages(pvec->pages, pvec->nr);
->>  	pagevec_reinit(pvec);
->>  }
-> Why can't you keep the locking pattern where we only drop and reacquire i=
-f the
-> lruvec changes?  It'd save a lot of locks and unlocks if most pages were =
-from
-> the same memcg and node, or the memory controller were unused.
->=20
+> 
+>>>> As your concern for a 'new' caller, since __split_huge_page is a static helper here, no distub for anyothers.
+>>> Even though it's static, there may be other callers within the same file.
+>>> Or somebody may decide to make it non-static in the future.  I think it's
+>>> actually clearer to keep the irqflags as a separate parameter.
+>>>
+>>
+>> But it's no one else using this function now. and no one get disturb, right? It's non sense to consider a 'possibility' issue.
+> 
+> It is not nonsense to consider the complexity of the mm!  Your patch makes
+> it harder to understand unnecessarily.  Please be considerate of the other
+> programmers who must build on what you have created.
+> 
 
-Good catching! This issue will be fixed in the next patch which introduce r=
-elock_ function.
+I believe the 'flags' parameter are using __split_huge_page is just for irqsave/restore of lru_lock, so move it into lruvec should be reduce the parameter jumping in caller/callee.
+But in another side, the flags opitimze isn't close related with lru_lock change, and better to be split out.
+So thanks for your comments, I will remove this part for this patchset.
 
 Thanks!
+Alex
