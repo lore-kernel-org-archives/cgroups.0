@@ -1,38 +1,60 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v4 2/9] mm/huge_memory: fix uninitialized compiler warning
-Date: Tue, 19 Nov 2019 10:42:17 -0500
-Message-ID: <20191119154217.GC382712@cmpxchg.org>
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v4 3/9] mm/lru: replace pgdat lru_lock with lruvec lock
+Date: Tue, 19 Nov 2019 07:57:04 -0800
+Message-ID: <20191119155704.GP20752@bombadil.infradead.org>
 References: <1574166203-151975-1-git-send-email-alex.shi@linux.alibaba.com>
- <1574166203-151975-3-git-send-email-alex.shi@linux.alibaba.com>
+ <1574166203-151975-4-git-send-email-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=nWs/1bjDvNuzUJtmMQammwiguABeAIM4rx8Ev82Odj4=;
-        b=us8sMchDRqbzZLY+8PM7/pe8WsLDZaohdyGl7R3EeSoWSvgvizJcLMF0BSaCEqsdy4
-         NSYDM17Ete2jESTbIDna9vtA0dUXsmg6bBXQOCH48RDKNzLBxQ6mlp7dlkil/PAQ5hl4
-         kxrZ3bqxv5B9F8bKvIHUq5QUdUopVtt0xgGF3OfR4oa410peA1MSURbcEDbJvRagtXXW
-         +SqQC2r8fKOXJEA7CxMEGgKlIO7ejUpU40J+VxnUNJ6vEHK8//vMrnAp2qoHjQxavaiI
-         vz7OWx7ODCOY89S+kEdO/+LJrWWnNLTcSyv0Maq4YAOgtfhCfquKCCUXG3oySb+mCvBb
-         38tQ==
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=W1uhPT3svlAF0ny/aKL/GHGJkaklH1eD5N8ZBRDMDjQ=; b=Xfdf/vrhOYcquHoQNoWpTcYtN
+        kuKDO7Bj0HAO9PGeYCNBHKD8xBrQdnj0NBMreHHZsj6FewQ1lt2CJRl5hZh7TsQLGgENhL3m9Y2vg
+        hgFjZX+aDnEaE4AoEMRRRAl7sFpRoDW7RF27nGb6Djf9AI9Tj5n16mNuwfZMKDqQd48sFww3pKSoO
+        A3tzKcDLGANz00inclHZMDPUpgPNRT5lBfyG4pYvTruFLURextxyUhR1r2/NAqX65anAsLCtSBbTG
+        fcpQx31yG7SOO80NCnOArA/EM6w9iLaF4Y5dqIt2zQua0YL/9XPDRqNicbv1QzgepjAfcZST2eANh
 Content-Disposition: inline
-In-Reply-To: <1574166203-151975-3-git-send-email-alex.shi@linux.alibaba.com>
+In-Reply-To: <1574166203-151975-4-git-send-email-alex.shi@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, shakeelb@google.com, hannes@cmpxchg.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>, Vlastimil Babka <vbabka@suse.cz>, Qian Cai <cai@lca.pw>, Andrey Ryabinin <aryabinin@virtuozzo.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Rientjes <rientjes@google.com>, Aneesh Kum
 
-On Tue, Nov 19, 2019 at 08:23:16PM +0800, Alex Shi wrote:
-> ../mm/huge_memory.c: In function ‘split_huge_page_to_list’:
-> ../mm/huge_memory.c:2766:9: warning: ‘flags’ may be used uninitialized
-> in this function [-Wmaybe-uninitialized]
->   lruvec = lock_page_lruvec_irqsave(head, pgdata, flags);
->   ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+On Tue, Nov 19, 2019 at 08:23:17PM +0800, Alex Shi wrote:
+> +static inline struct lruvec *lock_page_lruvec_irqsave(struct page *page,
+> +				struct pglist_data *pgdat, unsigned long *flags)
+> +{
+> +	struct lruvec *lruvec = mem_cgroup_page_lruvec(page, pgdat);
+> +
+> +	spin_lock_irqsave(&lruvec->lru_lock, *flags);
+> +
+> +	return lruvec;
+> +}
 
-Like with the previous patch, there is no lock_page_lruvec_irqsave()
-at this point in the series.
+This should be a macro, not a function.  You basically can't do this;
+spin_lock_irqsave needs to write to a variable which can then be passed
+to spin_unlock_irqrestore().  What you're doing here will dereference the
+pointer in _this_ function, but won't propagate the modified value back to
+the caller.  I suppose you could do something like this ...
+
+static inline struct lruvec *lock_page_lruvec_irqsave(struct page *page,
+			struct pglist_data *pgdat, unsigned long *flagsp)
+{
+	unsigned long flags;
+	struct lruvec *lruvec = mem_cgroup_page_lruvec(page, pgdat);
+
+	spin_lock_irqsave(&lruvec->lru_lock, flags);
+	*flagsp = flags;
+
+	return lruvec;
+}
+
+Almost certainly easier to write a macro though.
+
+You shouldn't need the two prior patches with this kind of change.
