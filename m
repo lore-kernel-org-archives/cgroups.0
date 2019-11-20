@@ -1,54 +1,66 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v4 1/9] mm/swap: fix uninitialized compiler warning
-Date: Wed, 20 Nov 2019 19:42:46 +0800
-Message-ID: <919a5a57-1b7a-b109-491f-2b8b099390fe@linux.alibaba.com>
+Subject: Re: [PATCH v4 9/9] mm/lru: revise the comments of lru_lock
+Date: Wed, 20 Nov 2019 19:48:57 +0800
+Message-ID: <f122583d-8041-3c05-1177-1a0d43e69e4f@linux.alibaba.com>
 References: <1574166203-151975-1-git-send-email-alex.shi@linux.alibaba.com>
- <1574166203-151975-2-git-send-email-alex.shi@linux.alibaba.com>
- <20191119154138.GB382712@cmpxchg.org>
+ <1574166203-151975-10-git-send-email-alex.shi@linux.alibaba.com>
+ <20191119161958.GE382712@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191119154138.GB382712@cmpxchg.org>
+In-Reply-To: <20191119161958.GE382712@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="iso-8859-1"
 To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com, Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Vlastimil Babka <vbabka@suse.cz>, Ira Weiny <ira.weiny@intel.com>, Jesper Dangaard Brouer <brouer@redhat.com>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Jann Horn <jannh@google.com>, Logan Gunthorpe <logang@deltatee.com>, Souptick Joarder <jrdr.linux@gmail.com>, Ralph Campbell <rcampbell@nvidia.com>, "Tobin C. Harding" <tobin@kernel.org>, Michal Hocko <mhocko@suse.com>, Oscar Salvador <osalvado>
 
 
 
-在 2019/11/19 下午11:41, Johannes Weiner 写道:
-> On Tue, Nov 19, 2019 at 08:23:15PM +0800, Alex Shi wrote:
->>   ../mm/swap.c: In function ‘__page_cache_release’:
->>   ../mm/swap.c:67:10: warning: ‘flags’ may be used uninitialized in this
->>   function [-Wmaybe-uninitialized]
->>        lruvec = lock_page_lruvec_irqsave(page, pgdat, flags);
->>        ~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> At this point in the series, there is no lock_page_lruvec_irqsave()
-> yet, so this patch is out of order. Please don't do that. It's very
-> hard to review patches that depend on later changes to make sense.
-> 
-
-Sorry, I will be more careful on this.
-
->> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
->> Cc: Andrew Morton <akpm@linux-foundation.org>
->> Cc: linux-mm@kvack.org
->> Cc: linux-kernel@vger.kernel.org
->> ---
->>  mm/swap.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
+=D4=DA 2019/11/20 =C9=CF=CE=E712:19, Johannes Weiner =D0=B4=B5=C0:
+> On Tue, Nov 19, 2019 at 08:23:23PM +0800, Alex Shi wrote:
+>> Since we changed the pgdat->lru_lock to lruvec->lru_lock, it's time to
+>> fix the incorrect comments in code. Also fixed some zone->lru_lock comme=
+nt
+>> error from ancient time. etc.
 >>
->> diff --git a/mm/swap.c b/mm/swap.c
->> index 5341ae93861f..c36a10244d07 100644
->> --- a/mm/swap.c
->> +++ b/mm/swap.c
->> @@ -62,7 +62,7 @@ static void __page_cache_release(struct page *page)
->>  	if (PageLRU(page)) {
->>  		pg_data_t *pgdat = page_pgdat(page);
->>  		struct lruvec *lruvec;
->> -		unsigned long flags;
->> +		unsigned long flags = 0;
-> Use unintialized_var() for these cases to make the intent clear.
+>> Originally-from: Hugh Dickins <hughd@google.com>
+>=20
+> You can resubmit a patch written by somebody else, but you need to
+> preserve authorship such that git can attribute it properly:
+>=20
+> 	From: Hugh Dickins <hughd@google.com>
+>=20
+> in the patch header, as well as
+>=20
+> 	Signed-off-by: Hugh Dickins <hughd@google.com>
+>=20
+> in the changelog tags. It should look something like this:
+>=20
+> ---
+> From: Hugh Dickins <hughd@google.com>
+> Subject: [PATCH] mm/memcg: update lru_lock Doc and comments
+>=20
+> Update scattered references from "zone_lru_lock" to "lruvec->lru_lock"
+> (in low-level descriptions) or "lruvec lock" (where that reads better).
+>=20
+> In the course of doing so, update lock ordering comments in mm/rmap.c
+> and mm/filemap.c and Documentation/cgroups/memory.txt - slightly, with
+> no attempt to be complete (swap_lock, in particular, left out-of-date).
+> Remove allusions to set_page_dirty under page_remove_rmap: gone in v3.9.
+>=20
+> memcg_test.txt looks quite out-of-date: just give LRU a short paragraph.
+> Replaced zone by node throughout unevictable-lru.txt (except for stats).
+> Leave Documentation/locking/lockstat.txt untouched this time: it doesn't
+> matter if that still refers to zone->lru_lock, along with other history.
+>=20
+> I struggled to understand the comment above move_pages_to_lru() (surely
+> it never calls page_referenced()), and eventually realized that most of
+> it had got separated from shrink_active_list(): move that comment back.
+>=20
+> Signed-off-by: Hugh Dickins <hughd@google.com>
+> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+> ---
+>=20
 
-Thanks for suggestion!
+Thanks for teaching!
