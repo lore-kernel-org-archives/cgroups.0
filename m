@@ -1,37 +1,66 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 2/7] mm/lruvec: add irqsave flags into lruvec struct
-Date: Thu, 21 Nov 2019 22:46:45 -0800
-Message-ID: <20191122064645.GA11261@infradead.org>
-References: <1573874106-23802-1-git-send-email-alex.shi@linux.alibaba.com>
- <1573874106-23802-3-git-send-email-alex.shi@linux.alibaba.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: mount cgroup with "already mounted or cgroup busy"
+Date: Fri, 22 Nov 2019 16:19:48 +0100
+Message-ID: <20191122151948.GB14375@blackbody.suse.cz>
+References: <11be9352e1e54ebebad078b1dac7b670@baidu.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="yEPQxsgoJgBvi8ip"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=56NFxkQajPmvDuPj0+mInO1dB9fS9ic2p3t8jjTTnT8=; b=EjUXwdtNnarR65rFcGxuixa2O
-        e7UMLMjrC758Xq1yeX6ddusBTj36Wzx3nKqKwEWkTt/f30C1Oi+1S+efS4YieSrU3XWOqQgqzRAp7
-        hnFB5NFxatYKTBlTm200UgQHvnqlmKasGp/4GdRbSRDeNgEbxv1PXlaXRcqVp8dvyhwhyDmWa1npX
-        0MUJo17reqmttsVjpgr9kybJWBvj8xpAG9VdCyM/vF0HKLXhtA7SfIEke6JxzvXUPot5Y7FB3ayU7
-        VI4rz7FUkVuP3mEkPNL1cu6Q7kO1O7SrzH2wKLYIhTda/+iaffzu+TT7YKgOj5TnanRJ0VOwNvhjk
 Content-Disposition: inline
-In-Reply-To: <1573874106-23802-3-git-send-email-alex.shi@linux.alibaba.com>
+In-Reply-To: <11be9352e1e54ebebad078b1dac7b670@baidu.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, Vlastimil Babka <vbabka@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Michal Hocko <mhocko@suse.com>, Wei Yang <richard.weiyang@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Arun KS <arunks@codeaurora.org>, Rong Chen <rong.a.chen@intel.com>
+To: "Li,Rongqing" <lirongqing@baidu.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>, "lizefan@huawei.com" <lizefan@huawei.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
 
-On Sat, Nov 16, 2019 at 11:15:01AM +0800, Alex Shi wrote:
-> We need a irqflags vaiable to save state when do irqsave action, declare
-> it here would make code more clear/clean.
 
-This patch is wrong on multiple levels.  Adding a field without the
-users is completely pointless.  And as a general pattern we never
-add the irqsave flags to sturctures.  They are an intimate part of the
-calling conventions, and storing them in a structure will lead to
-subtile bugs.
+--yEPQxsgoJgBvi8ip
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hello Li.
+
+On Wed, Oct 30, 2019 at 09:32:41AM +0000, "Li,Rongqing" <lirongqing@baidu.c=
+om> wrote:
+> I meet a issue, and not sure if it is normal
+It is a consequence of how cgroup state is retained.
+
+I considered a "trivial" fix, however, I learnt later it'd be a revert
+(and hence regression) of=20
+	3c606d35fe97 "cgroup: prevent mount hang due to memory controller lifetime"
+
+> Using the below script, the last line mount will fail after unmount
+> And it will fail until reboot system
+The cause is that controllers remained pinned to the same root.
+You can unpin them by mounting/unmounting again attached to the same
+root (i.e. cpu,cpuset again).
+
+(Perhaps the logic in cgroup1_root_to_use may be changed to cope better
+with the "stateless" controllers.)
+
+Michal
+
+--yEPQxsgoJgBvi8ip
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAl3X/JAACgkQia1+riC5
+qSjBrw//bqjJVzaKkfcqi3QnWN7tcJnRB4kscGgj394bxZWDEaDCt5hnUblyD85Z
+MNTSmkcTGGhGjRmnjKDYPDXr18PaOvVZu5etkpGYCza7SZ/g/MH/9W3DstVwVOzA
+UudRbYwOHwieb93kKPNeE+uVKiKmXT+5AEpDCgqiQKPKRtdwRkJnxBPe0+Ii/cj3
+YCo4ydhMQoDv5k7Vze1ZCLS3zAKNDJQQmcp3lPaBCDdlkTe0VE6DGFJwhQmZE3S0
+4ezWkuDKpY+ab429voibjKskWfmfZI7miX6iMcx7txe1o8EYzMoKmCexWusNCSSa
+x7Eoi5pLmj+FK0DbMU+3H3mH2h/W0YmeK/d5ZbYI33R8DTRt2vPQgH3WiSVVqtay
+IITNljYshLP0VPWPUM+lWtO0QZzAhUGDAWpIXVclr1OymQxa9k/fRDrho+138QNM
+8RChlt82rkXeF9v8OfgdZx8vvJVfCfxzKf61R2RK1qas8LB+F87m2hSjUfwAUX0K
+BW5LTyyPwu7Fgj8bq8W1wNPk425QwZHYk83uPJnFXLiimUR5jK5Ixs1iT++l7Aci
+E7dZsX3bVcaCx2YCFA1TYjF3eTqu4fKooChHQT3RNTHXcIbQHmvaZLpGhWVNk8EW
+gZ39bdXJYxxLBpSIDmoiDOWkjMREW1dRZjMrN3pkHWPEcl0AsOw=
+=WHd6
+-----END PGP SIGNATURE-----
+
+--yEPQxsgoJgBvi8ip--
