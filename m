@@ -1,120 +1,96 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v4 3/9] mm/lru: replace pgdat lru_lock with lruvec lock
-Date: Sun, 24 Nov 2019 23:19:06 +0800
-Message-ID: <bfc046bc-05fb-37d3-12cf-c302d5429f17@linux.alibaba.com>
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Subject: Re: [PATCH v4 0/9] per lruvec lru_lock for memcg
+Date: Sun, 24 Nov 2019 18:49:12 +0300
+Message-ID: <aa5499cd-7947-39a5-fc17-bd277be25764@yandex-team.ru>
 References: <1574166203-151975-1-git-send-email-alex.shi@linux.alibaba.com>
- <1574166203-151975-4-git-send-email-alex.shi@linux.alibaba.com>
- <20191119160456.GD382712@cmpxchg.org>
- <bcf6a952-5b92-50ad-cfc1-f4d9f8f63172@linux.alibaba.com>
- <20191121220613.GB487872@cmpxchg.org>
- <d3bbbbf5-52c5-374c-0897-899e787cecb4@linux.alibaba.com>
- <20191122161652.GA489821@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191122161652.GA489821@cmpxchg.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+        t=1574610554; bh=xtZMdOlBBD6/tHCSTsT3VJTA4BP38M0wqgm8PCbdSww=;
+        h=In-Reply-To:References:Date:Message-ID:From:To:Subject;
+        b=MBoMvaPppgK0GxCmI2p5BcEvddMbXZWFVzL7R2jU6Eyf7NVspC2cX7UWwhdzVP/dj
+         WCX5ndwJ78ehhcYOrRzg5mBqGOgU0BM2QfVThrsXhkDu8RSu9GuxtwK15PTx3z7EpO
+         2mNysXX3J3U24MmLaOkzECiCW8l76VStCEApt11g=
+In-Reply-To: <1574166203-151975-1-git-send-email-alex.shi@linux.alibaba.com>
+Content-Language: en-CA
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>, Vlastimil Babka <vbabka@suse.cz>, Qian Cai <cai@lca.pw>, Andrey Ryabinin <aryabinin@virtuozzo.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Rientjes <rientjes@google.com>, Aneesh Ku
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Alex Shi <alex.shi@linux.alibaba.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com, hannes@cmpxchg.org
 
+On 19/11/2019 15.23, Alex Shi wrote:
+> Hi all,
+> 
+> This patchset move lru_lock into lruvec, give a lru_lock for each of
+> lruvec, thus bring a lru_lock for each of memcg per node.
+> 
+> According to Daniel Jordan's suggestion, I run 64 'dd' with on 32
+> containers on my 2s* 8 core * HT box with the modefied case:
+>    https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/tree/case-lru-file-readtwice
+> 
+> With this change above lru_lock censitive testing improved 17% with multiple
+> containers scenario. And no performance lose w/o mem_cgroup.
 
+Splitting lru_lock isn't only option for solving this lock contention.
+Also it doesn't help if all this happens in one cgroup.
 
-在 2019/11/23 上午12:16, Johannes Weiner 写道:
-> On Fri, Nov 22, 2019 at 10:36:32AM +0800, Alex Shi wrote:
->> 在 2019/11/22 上午6:06, Johannes Weiner 写道:
->>> If we could restrict lock_page_lruvec() to working only on PageLRU
->>> pages, we could fix the problem with memory barriers. But this won't
->>> work for split_huge_page(), which is AFAICT the only user that needs
->>> to freeze the lru state of a page that could be isolated elsewhere.
->>>
->>> So AFAICS the only option is to lock out mem_cgroup_move_account()
->>> entirely when the lru_lock is held. Which I guess should be fine.
->>
->> I guess we can try from lock_page_memcg, is that a good start?
-> 
-> Yes.
-> 
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index 7e6387ad01f0..f4bbbf72c5b8 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -1224,7 +1224,7 @@ struct lruvec *mem_cgroup_page_lruvec(struct page *page, struct pglist_data *pgd
->>                 goto out;
->>         }
->>
->> -       memcg = page->mem_cgroup;
->> +       memcg = lock_page_memcg(page);
->>         /*
->>          * Swapcache readahead pages are added to the LRU - and
->>          * possibly migrated - before they are charged.
-> 
-> test_clear_page_writeback() calls this function with that lock already
-> held so that would deadlock. Let's keep locking in lock_page_lruvec().
-> 
-> lock_page_lruvec():
-> 
-> 	memcg = lock_page_memcg(page);
-> 	lruvec = mem_cgroup_lruvec(page_pgdat(page), memcg);
-> 
-> 	spin_lock_irqsave(&lruvec->lru_lock, *flags);
-> 	return lruvec;
-> 
-> unlock_lruvec();
-> 
-> 	spin_unlock_irqrestore(&lruvec->lru_lock);
-> 	__unlock_page_memcg(lruvec_memcg(lruvec));
-> 
-> The lock ordering should be fine as well. But it might be a good idea
-> to stick a might_lock(&memcg->move_lock) in lock_page_memcg() before
-> that atomic_read() and test with lockdep enabled.
+I think better batching could solve more problems with less overhead.
 
-Hi Johannes,
-
-Thanks a lot for the suggestion. I will look into this and try.
+Like larger per-cpu vectors or queues for each numa node or even for each lruvec.
+This will preliminarily sort and aggregate pages so actual modification under
+lru_lock will be much cheaper and fine grained.
 
 > 
+> Thanks Hugh Dickins and Konstantin Khlebnikov, they both brought the same idea
+> 7 years ago. Now I believe considering my testing result, and google internal
+> using fact. This feature is clearly benefit multi-container users.
 > 
-> But that leaves me with one more worry: compaction. We locked out
-> charge moving now, so between that and knowing that the page is alive,
-> we have page->mem_cgroup stable. But compaction doesn't know whether
-> the page is alive - it comes from a pfn and finds out using PageLRU.
+> So I'd like to introduce it here.
 > 
-> In the current code, pgdat->lru_lock remains the same before and after
-> the page is charged to a cgroup, so once compaction has that locked
-> and it observes PageLRU, it can go ahead and isolate the page.
+> Thanks all the comments from Hugh Dickins, Konstantin Khlebnikov, Daniel Jordan,
+> Johannes Weiner, Mel Gorman, Shakeel Butt, Rong Chen, Fengguang Wu, Yun Wang etc.
 > 
-> But lruvec->lru_lock changes during charging, and then compaction may
-> hold the wrong lock during isolation:
+> v4:
+>    a, fix the page->mem_cgroup dereferencing issue, thanks Johannes Weiner
+>    b, remove the irqsave flags changes, thanks Metthew Wilcox
+>    c, merge/split patches for better understanding and bisection purpose
 > 
-> compaction:				generic_file_buffered_read:
+> v3: rebase on linux-next, and fold the relock fix patch into introduceing patch
 > 
-> 					page_cache_alloc()
+> v2: bypass a performance regression bug and fix some function issues
 > 
-> !PageBuddy()
+> v1: initial version, aim testing show 5% performance increase
 > 
-> lock_page_lruvec(page)
->   lruvec = mem_cgroup_page_lruvec()
->   spin_lock(&lruvec->lru_lock)
->   if lruvec != mem_cgroup_page_lruvec()
->     goto again
 > 
-> 					add_to_page_cache_lru()
-> 					  mem_cgroup_commit_charge()
-> 					    page->mem_cgroup = foo
-> 					  lru_cache_add()
-> 					    __pagevec_lru_add()
-> 					      SetPageLRU()
+> Alex Shi (9):
+>    mm/swap: fix uninitialized compiler warning
+>    mm/huge_memory: fix uninitialized compiler warning
+>    mm/lru: replace pgdat lru_lock with lruvec lock
+>    mm/mlock: only change the lru_lock iff page's lruvec is different
+>    mm/swap: only change the lru_lock iff page's lruvec is different
+>    mm/vmscan: only change the lru_lock iff page's lruvec is different
+>    mm/pgdat: remove pgdat lru_lock
+>    mm/lru: likely enhancement
+>    mm/lru: revise the comments of lru_lock
 > 
-> if PageLRU(page):
->   __isolate_lru_page()
+>   Documentation/admin-guide/cgroup-v1/memcg_test.rst | 15 +----
+>   Documentation/admin-guide/cgroup-v1/memory.rst     |  6 +-
+>   Documentation/trace/events-kmem.rst                |  2 +-
+>   Documentation/vm/unevictable-lru.rst               | 22 +++----
+>   include/linux/memcontrol.h                         | 68 ++++++++++++++++++++
+>   include/linux/mm_types.h                           |  2 +-
+>   include/linux/mmzone.h                             |  5 +-
+>   mm/compaction.c                                    | 67 +++++++++++++------
+>   mm/filemap.c                                       |  4 +-
+>   mm/huge_memory.c                                   | 17 ++---
+>   mm/memcontrol.c                                    | 75 +++++++++++++++++-----
+>   mm/mlock.c                                         | 27 ++++----
+>   mm/mmzone.c                                        |  1 +
+>   mm/page_alloc.c                                    |  1 -
+>   mm/page_idle.c                                     |  5 +-
+>   mm/rmap.c                                          |  2 +-
+>   mm/swap.c                                          | 74 +++++++++------------
+>   mm/vmscan.c                                        | 74 ++++++++++-----------
+>   18 files changed, 287 insertions(+), 180 deletions(-)
 > 
-> I don't see what prevents the lruvec from changing under compaction,
-> neither in your patches nor in Hugh's. Maybe I'm missing something?
-
-Yes, it's a problem. 
-Guess we could move the lruvec recheck after PageLRU() test in compaction. Then it could be safe, and add a bit more burden on compaction should be fine.  at last we have no disturb to file read.
-
-Thanks
-Alex
