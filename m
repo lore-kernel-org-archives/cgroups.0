@@ -1,140 +1,81 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] cgroup changes for v5.5-rc1
-Date: Mon, 25 Nov 2019 08:11:41 -0800
-Message-ID: <20191125161141.GC2867037@devbig004.ftw2.facebook.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v4 3/9] mm/lru: replace pgdat lru_lock with lruvec lock
+Date: Mon, 25 Nov 2019 09:27:25 -0800
+Message-ID: <CALvZod4ZKh3HbDWJz5-tD9Q0gcMUjWmqzBGUD-ejOLCoS7ga2w@mail.gmail.com>
+References: <1574166203-151975-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1574166203-151975-4-git-send-email-alex.shi@linux.alibaba.com>
+ <20191119160456.GD382712@cmpxchg.org> <bcf6a952-5b92-50ad-cfc1-f4d9f8f63172@linux.alibaba.com>
+ <20191121220613.GB487872@cmpxchg.org> <d3bbbbf5-52c5-374c-0897-899e787cecb4@linux.alibaba.com>
+ <20191122161652.GA489821@cmpxchg.org> <e629f595-df0a-71b2-35b4-b266ba1d0431@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:content-transfer-encoding:user-agent;
-        bh=PsI4yZtUmbMwiHynlpswlFtIawc/jhnogyFzjtBl7eU=;
-        b=YiccQRIt/381JV3wKlX3qKTo/qvot6ogYibsfv73ierej9fCq6YCsy5c9orqQhVVRP
-         4S1XADPjHaOddI9LGQ90lqf5MD3L7iW0OpHHffbi+2q68ebCBgXisqN9JBvKxdk6cju9
-         T56M1ith/oVge9bsLR4OKhM5N3arTcVOVIaBirHLFbWtR39HcTYiJncGp6BS4vJVWjTk
-         NNJlKTq2Q1X5Iz8zf/R4WXs2dyVMgaKHAeEB4pOf47BByhM2q5dSevua7cSDS2yWDaFy
-         dZ6RENtiwPndYnavbh+cBygZIyEwtPZeeraBssBVWszRz30+c/7cFQF/E6gnTZ6TuaWP
-         oPXQ==
-Content-Disposition: inline
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Ehtg0LDgFByK5WRliTFTt8kMCURVP50x4sdG0deprfY=;
+        b=MsGNoi87guRmgvoKPI/D/lOK0M/mezTFZNaBeRkMe12Xdy9kJ4sQT0icrrtk/cQ7I+
+         XoOUItIX1FSBnkYcrZNSLWVdkvbyYY40szlADlj3lWhFlS5quaL3NVAC+VY+2TVDe7jI
+         KJ+irc2cGqgmeHCwls2VTypiKNL4znvvZVBq7mEG+h2OaXeYPNK1I5f176snrGp3GBXx
+         B8P0Z1NJcl6VH8gT+6fWXSAYEvX+5xYGf7Dpzb4m5qVgjkm4VYf1mvMik/y5MBs39Mlc
+         IptXJd/rvAlz7G/M0cIit1TcxUUhwgZJZwIepPVz//Hd5W1aQ7RNB1qVciD6Jo0S4AlO
+         3PJQ==
+In-Reply-To: <e629f595-df0a-71b2-35b4-b266ba1d0431@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Daniel Jordan <daniel.m.jordan@oracle.com>, Yang Shi <yang.shi@linux.alibaba.com>, Matthew Wilcox <willy@infradead.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>, Vlastimil Babka <vbabka@suse.cz>, Qian Cai <cai@lca.pw>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Kirill A. Shu
 
-Hello,
+On Mon, Nov 25, 2019 at 1:26 AM Alex Shi <alex.shi@linux.alibaba.com> wrote:
+>
+>
+> >
+> > But that leaves me with one more worry: compaction. We locked out
+> > charge moving now, so between that and knowing that the page is alive,
+> > we have page->mem_cgroup stable. But compaction doesn't know whether
+> > the page is alive - it comes from a pfn and finds out using PageLRU.
+> >
+> > In the current code, pgdat->lru_lock remains the same before and after
+> > the page is charged to a cgroup, so once compaction has that locked
+> > and it observes PageLRU, it can go ahead and isolate the page.
+> >
+> > But lruvec->lru_lock changes during charging, and then compaction may
+> > hold the wrong lock during isolation:
+> >
+> > compaction:                           generic_file_buffered_read:
+> >
+> >                                       page_cache_alloc()
+> >
+> > !PageBuddy()
+> >
+> > lock_page_lruvec(page)
+> >   lruvec = mem_cgroup_page_lruvec()
+> >   spin_lock(&lruvec->lru_lock)
+> >   if lruvec != mem_cgroup_page_lruvec()
+> >     goto again
+> >
+> >                                       add_to_page_cache_lru()
+> >                                         mem_cgroup_commit_charge()
+> >                                           page->mem_cgroup = foo
+> >                                         lru_cache_add()
+> >                                           __pagevec_lru_add()
+> >                                             SetPageLRU()
+> >
+> > if PageLRU(page):
+> >   __isolate_lru_page()
+> >
+> > I don't see what prevents the lruvec from changing under compaction,
+> > neither in your patches nor in Hugh's. Maybe I'm missing something?
+> >
+>
+> Hi Johannes,
+>
+> It looks my patch do the lruvec recheck/relock after PageLRU in compaction.c.
+> It should be fine for your question. So I will try more testing after all changes.
 
-There are several notable changes in this pull request.
+Actually no, unless PageLRU check and taking lruvec lock are atomic,
+the race mentioned by Johannes still exist.
 
-* Single thread migrating itself has been optimized so that it doesn't
-  need threadgroup rwsem anymore.
-
-* Freezer optimization to avoid unnecessary frozen state changes.
-
-* cgroup ID unification so that cgroup fs ino is the only unique ID
-  used for the cgroup and can be used to directly look up live cgroups
-  through filehandle interface on 64bit ino archs.  On 32bit archs,
-  cgroup fs ino is still the only ID in use but it is only unique when
-  combined with gen.
-
-* selftest and other changes.
-
-Thanks.
-
-The following changes since commit da0c9ea146cbe92b832f1b0f694840ea8eb33cce:
-
-  Linux 5.4-rc2 (2019-10-06 14:27:30 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.5
-
-for you to fetch changes up to 40363cf13999ee4fb3b5c1e67fa5e6f0e9da34bd:
-
-  writeback: fix -Wformat compilation warnings (2019-11-25 07:50:41 -0800)
-
-----------------------------------------------------------------
-Aleksa Sarai (1):
-      cgroup: pids: use atomic64_t for pids->limit
-
-Chris Down (1):
-      docs: cgroup: mm: Fix spelling of "list"
-
-Hewenliang (1):
-      kselftests: cgroup: Avoid the reuse of fd after it is deallocated
-
-Honglei Wang (1):
-      cgroup: freezer: don't change task and cgroups status unnecessarily
-
-Miaohe Lin (1):
-      cgroup: short-circuit current_cgns_cgroup_from_root() on the default =
-hierarchy
-
-Michal Koutn=FD (5):
-      cgroup: Update comments about task exit path
-      cgroup: Optimize single thread migration
-      selftests: cgroup: Simplify task self migration
-      selftests: cgroup: Add task migration tests
-      selftests: cgroup: Run test_core under interfering stress
-
-Qian Cai (1):
-      writeback: fix -Wformat compilation warnings
-
-Tejun Heo (13):
-      cgroup: remove cgroup_enable_task_cg_lists() optimization
-      cgroup: use cgroup->last_bstat instead of cgroup->bstat_pending for c=
-onsistency
-      kernfs: fix ino wrap-around detection
-      writeback: use ino_t for inodes in tracepoints
-      netprio: use css ID instead of cgroup ID
-      kernfs: use dumber locking for kernfs_find_and_get_node_by_ino()
-      kernfs: kernfs_find_and_get_node_by_ino() should only look up activat=
-ed nodes
-      kernfs: convert kernfs_node->id from union kernfs_node_id to u64
-      kernfs: combine ino/id lookup functions into kernfs_find_and_get_node=
-_by_id()
-      kernfs: implement custom exportfs ops and fid type
-      kernfs: use 64bit inos if ino_t is 64bit
-      cgroup: use cgrp->kn->id as the cgroup ID
-      cgroup: fix incorrect WARN_ON_ONCE() in cgroup_setup_root()
-
- Documentation/admin-guide/cgroup-v2.rst       |   2 +-
- fs/kernfs/dir.c                               | 101 ++++----
- fs/kernfs/file.c                              |   4 +-
- fs/kernfs/inode.c                             |   4 +-
- fs/kernfs/kernfs-internal.h                   |   2 -
- fs/kernfs/mount.c                             | 102 ++++----
- include/linux/cgroup-defs.h                   |  19 +-
- include/linux/cgroup.h                        |  27 +--
- include/linux/exportfs.h                      |   5 +
- include/linux/kernfs.h                        |  57 +++--
- include/net/netprio_cgroup.h                  |   2 +-
- include/trace/events/cgroup.h                 |   6 +-
- include/trace/events/writeback.h              | 140 +++++------
- kernel/bpf/helpers.c                          |   2 +-
- kernel/bpf/local_storage.c                    |   2 +-
- kernel/cgroup/cgroup-internal.h               |   5 +-
- kernel/cgroup/cgroup-v1.c                     |   5 +-
- kernel/cgroup/cgroup.c                        | 325 ++++++++--------------=
-----
- kernel/cgroup/cpuset.c                        |   2 -
- kernel/cgroup/freezer.c                       |   9 +
- kernel/cgroup/pids.c                          |  11 +-
- kernel/cgroup/rstat.c                         |  46 ++--
- kernel/trace/blktrace.c                       |  84 ++++---
- net/core/filter.c                             |   4 +-
- net/core/netprio_cgroup.c                     |   8 +-
- tools/testing/selftests/cgroup/Makefile       |   4 +-
- tools/testing/selftests/cgroup/cgroup_util.c  |  42 +++-
- tools/testing/selftests/cgroup/cgroup_util.h  |   6 +-
- tools/testing/selftests/cgroup/test_core.c    | 146 ++++++++++++
- tools/testing/selftests/cgroup/test_freezer.c |   3 +-
- tools/testing/selftests/cgroup/test_stress.sh |   4 +
- tools/testing/selftests/cgroup/with_stress.sh | 101 ++++++++
- 32 files changed, 746 insertions(+), 534 deletions(-)
- create mode 100755 tools/testing/selftests/cgroup/test_stress.sh
- create mode 100755 tools/testing/selftests/cgroup/with_stress.sh
-
---=20
-tejun
+Shakeel
