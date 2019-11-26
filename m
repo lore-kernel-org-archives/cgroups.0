@@ -1,147 +1,34 @@
-From: Mike Kravetz <mike.kravetz@oracle.com>
-Subject: Re: [PATCH v8 2/9] hugetlb_cgroup: add interface for charge/uncharge
- hugetlb reservations
-Date: Mon, 25 Nov 2019 16:05:06 -0800
-Message-ID: <3b65b0ac-54ed-6e0d-706c-358d85057403@oracle.com>
-References: <20191030013701.39647-1-almasrymina@google.com>
- <20191030013701.39647-2-almasrymina@google.com>
- <9e10c273-f0ab-4173-570e-26c314b989fb@oracle.com>
- <CAHS8izMMK2cQMSmnteXA7YTFp2ZoZEm5kUwf8=+6nA+BC49XAQ@mail.gmail.com>
- <3f30658c-0e3d-7d5c-4de9-1526b9bac3ce@oracle.com>
- <CAHS8izNgRZxJKgOfAkDAG9j_=TB=2v0hQyYpQQKCf8xb3rQkVg@mail.gmail.com>
- <d94501f3-66cf-95b1-1159-e003207e3969@oracle.com>
- <CAHS8izMFAYTgxym-Hzb_JmkTK1N_S9tGN71uS6MFV+R7swYu5A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: pr-tracker-bot@kernel.org
+Subject: Re: [GIT PULL] cgroup changes for v5.5-rc1
+Date: Tue, 26 Nov 2019 04:25:12 +0000
+Message-ID: <157474231271.2264.520778310881589506.pr-tracker-bot@kernel.org>
+References: <20191125161141.GC2867037@devbig004.ftw2.facebook.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=mHXanxHdP89INCbUw8YABR16c/whANpUfRsLAPuh01A=;
- b=m5xHGr4g40ZJdiTPttDJBElLhud2J2DhoU1Ixt/I8KETzr0Dy3UBnO+yFzOygDoXtuRy
- YPxAiCoG3nGJfj8q7P+njVUsI42z/iHXthO8REKiLUtS7Ly0aScuvnzGeBvlZBQ+AKjV
- IhoX/l/j9XJiJUIb9/awfG5kN8RkT2JJERpBup8RR7qIAL32Da+M6la7Lw4bRY4JrBOr
- iYWVXWBOqZGQMsLqPSIS0vz91cUNLV0pYBEVjeLiCV/e/4h/ei+3Eho4cOtl+YVnpcZW
- 7W/opzCZQgmgt+f1qjYa4f8oW/tPZFoV4KGuw/Bpm/OQnzJrBp8IT5tEEh4vrrSb/TCe lA== 
-In-Reply-To: <CAHS8izMFAYTgxym-Hzb_JmkTK1N_S9tGN71uS6MFV+R7swYu5A@mail.gmail.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1574742312;
+        bh=R/KFf5m9GbCJyVgo07wMJFyL07/ToffG8zlz88J6Riw=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=iQ0xkjoQN/3szAcEuN1tQANNbw/vlDWSHUYMcHes7Yped865JpLh6UtCPfaC5Tuy7
+         Etnnwh5Kjq25L7TFOvZoq4kFovO/H2xJf5Jd+hV44JvryiOS9mN4wvnl+/NIHkCss0
+         2a9+mZRjhPKHx1+/2VsgH3xU1Qnp6hdXD/RCmTpw=
+In-Reply-To: <20191125161141.GC2867037@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Mina Almasry <almasrymina@google.com>, Shakeel Butt <shakeelb@google.com>, David Rientjes <rientjes@google.com>
-Cc: shuah <shuah@kernel.org>, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
 
-On 11/25/19 12:26 PM, Mina Almasry wrote:
-> On Fri, Nov 8, 2019 at 4:46 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
->>
->> On 11/8/19 4:40 PM, Mina Almasry wrote:
->>> On Fri, Nov 8, 2019 at 4:01 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
->>>>
->>>> On 11/8/19 3:48 PM, Mina Almasry wrote:
->>>>> On Thu, Nov 7, 2019 at 4:57 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
->>>>>>
->>>>>> On 10/29/19 6:36 PM, Mina Almasry wrote:
->>>>>>>
->>>>>>> +static void hugetlb_cgroup_move_parent_reservation(int idx,
->>>>>>> +                                                struct hugetlb_cgroup *h_cg)
->>>>>>> +{
->>>>>>> +     struct hugetlb_cgroup *parent = parent_hugetlb_cgroup(h_cg);
->>>>>>> +
->>>>>>> +     /* Move the reservation counters. */
->>>>>>> +     if (!parent_hugetlb_cgroup(h_cg)) {
->>>>>>> +             parent = root_h_cgroup;
->>>>>>> +             /* root has no limit */
->>>>>>> +             page_counter_charge(
->>>>>>> +                     &root_h_cgroup->reserved_hugepage[idx],
->>>>>>> +                     page_counter_read(
->>>>>>> +                             hugetlb_cgroup_get_counter(h_cg, idx, true)));
->>>>>>> +     }
->>>>>>> +
->>>>>>> +     /* Take the pages off the local counter */
->>>>>>> +     page_counter_cancel(
->>>>>>> +             hugetlb_cgroup_get_counter(h_cg, idx, true),
->>>>>>> +             page_counter_read(hugetlb_cgroup_get_counter(h_cg, idx, true)));
->>>>>>> +}
->>>>>>
->>>>>> I know next to nothing about cgroups and am just comparing this to the
->>>>>> existing hugetlb_cgroup_move_parent() routine.  hugetlb_cgroup_move_parent
->>>>>> updates the cgroup pointer in each page being moved.  Do we need to do
->>>>>> something similar for reservations being moved (move pointer in reservation)?
->>>>>>
->>>>>
->>>>> Oh, good catch. Yes I need to be doing that. I should probably
->>>>> consolidate those routines so the code doesn't miss things like this.
->>>>
->>>> This might get a bit ugly/complicated?  Seems like you will need to examine
->>>> all hugetlbfs inodes and vma's mapping those inodes.
->>>>
->>>
->>> Hmm yes on closer look it does seem like this is not straightforward.
->>> I'll write a test that does this reparenting so I can start running
->>> into the issue and poke for solutions. Off the top of my head, I think
->>> maybe we can just not reparent the hugetlb reservations - the
->>> hugetlb_cgroup stays alive until all its memory is uncharged. That
->>> shouldn't be too bad. Today, I think memcg doesn't reparent memory
->>> when it gets offlined.
->>>
->>> I'll poke at this a bit and come back with suggestions, you may want
->>> to hold off reviewing the rest of the patches until then.
->>
->>
->> Ok, if we start considering what the correct cgroup reparenting semantics
->> should be it would be good to get input from others with more cgroup
->> experience.
->>
-> 
-> So I looked into this and prototyped a couple of solutions:
-> 
-> 1. We could repartent the hugetlb reservation using the same approach
-> that today we repartent hugetlb faults. Basically today faulted
-> hugetlb pages live on hstate->hugepage_activelist. When a hugetlb
-> cgroup gets offlined, this list is transversed and any pages on it
-> that point to the cgroup being offlined and reparented. hugetlb_lock
-> is used to make sure cgroup offlining doesn't race with a page being
-> freed. I can add another list, but one that has pointers to the
-> reservations made. When the cgroup is being offlined, it transverses
-> this list, and reparents any reservations (which will need to acquire
-> the proper resv_map->lock to do the parenting). hugetlb_lock needs
-> also to be acquired here to make sure that resv_map release doesn't
-> race with another thread reparenting the memory in that resv map.
-> 
-> Pros: Maintains current parenting behavior, and makes sure that
-> reparenting of reservations works exactly the same way as reparenting
-> of hugetlb faults.
-> Cons: Code is a bit complex. There may be subtle object lifetime bugs,
-> since I'm not 100% sure acquiring hugetlb_lock removes all races.
-> 
-> 2. We could just not reparent hugetlb reservations. I.e. on hugetlb
-> cgroup offlining, the hugetlb faults get reparented (which maintains
-> current user facing behavior), but hugetlb reservation charges remain
-> charged to the hugetlb cgroup. The cgroup lives as a zombie until all
-> the reservations are uncharged.
-> 
-> Pros: Much easier implementation. Converges behavior of memcg and
-> hugetlb cgroup, since memcg also doesn't reparent memory charged to
-> it.
-> Cons: Behavior change as hugetlb cgroups will become zombies if there
-> are reservations charged to them. I've discussed offlist with Shakeel,
-> and AFAICT there are absolutely no user facing behavior change to
-> zombie cgroups. Only if the user is specifically detecting for
-> zombies.
-> 
-> I'm torn between these 2 options right now, but leaning towards #2. I
-> think I will propose #2 in a patch for review, and if anyone is broken
-> by that (again, my understanding is that is very unlikely), then I
-> propose a patch that reverts the changes in #2 and implements the
-> changes in #1.
+The pull request you sent on Mon, 25 Nov 2019 08:11:41 -0800:
 
-I of course like option #2 because it introduces fewer (if any) additional
-changes to the hugetlb reservation code for non-cgroup users. :)
+> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.5
 
-> Any feedback from Shakeel or other people with cgroup expertise
-> (especially for hugetlb cgroup or memcg)  is very useful here.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/1b96a41b420972f8ba563373de8154d59d5b2208
 
-Yes, that would be very helpful.
+Thank you!
 
 -- 
-Mike Kravetz
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
