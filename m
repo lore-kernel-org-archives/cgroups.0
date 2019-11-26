@@ -1,215 +1,147 @@
-From: Mina Almasry <almasrymina@google.com>
+From: Mike Kravetz <mike.kravetz@oracle.com>
 Subject: Re: [PATCH v8 2/9] hugetlb_cgroup: add interface for charge/uncharge
  hugetlb reservations
-Date: Mon, 25 Nov 2019 12:26:04 -0800
-Message-ID: <CAHS8izMFAYTgxym-Hzb_JmkTK1N_S9tGN71uS6MFV+R7swYu5A@mail.gmail.com>
+Date: Mon, 25 Nov 2019 16:05:06 -0800
+Message-ID: <3b65b0ac-54ed-6e0d-706c-358d85057403@oracle.com>
 References: <20191030013701.39647-1-almasrymina@google.com>
- <20191030013701.39647-2-almasrymina@google.com> <9e10c273-f0ab-4173-570e-26c314b989fb@oracle.com>
+ <20191030013701.39647-2-almasrymina@google.com>
+ <9e10c273-f0ab-4173-570e-26c314b989fb@oracle.com>
  <CAHS8izMMK2cQMSmnteXA7YTFp2ZoZEm5kUwf8=+6nA+BC49XAQ@mail.gmail.com>
- <3f30658c-0e3d-7d5c-4de9-1526b9bac3ce@oracle.com> <CAHS8izNgRZxJKgOfAkDAG9j_=TB=2v0hQyYpQQKCf8xb3rQkVg@mail.gmail.com>
+ <3f30658c-0e3d-7d5c-4de9-1526b9bac3ce@oracle.com>
+ <CAHS8izNgRZxJKgOfAkDAG9j_=TB=2v0hQyYpQQKCf8xb3rQkVg@mail.gmail.com>
  <d94501f3-66cf-95b1-1159-e003207e3969@oracle.com>
+ <CAHS8izMFAYTgxym-Hzb_JmkTK1N_S9tGN71uS6MFV+R7swYu5A@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=DKKdY/q3lNftQghtZeAaOsYK6znTtzTrgTi/w5h+tow=;
-        b=TlytCtiMUHVpaQyaQIuS+rZUry8rmKjF69OSJud5A0h2Wr9KYlctd0s43Ead2AEqNp
-         X6V6cB54kskX1GRqSX3ve28ajyhml9zHZCf7uy5D06qcjHyFFGD1hsrXkJQA0m16bsog
-         N/Wwv9aYcvmUjT2XkiYdGFxY0Hma59mOFL8O3d44Uw3A0z/gz6fmvbKA0sx/FIP28OLU
-         utPxVKdL5V9bpE7zZ5KBuFf3Lg2Ee/xdg0IZUoJf0kpu62dJ5uG7ifmtfUVFJ08OSvof
-         oqrHPhZroXZVM/1tpIwFSwtQyH/OmZc4VfeuCk8Ky8Mx4XPkF5b8yO6YhQ5sIQA9S4r5
-         RglA==
-In-Reply-To: <d94501f3-66cf-95b1-1159-e003207e3969@oracle.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2019-08-05;
+ bh=mHXanxHdP89INCbUw8YABR16c/whANpUfRsLAPuh01A=;
+ b=m5xHGr4g40ZJdiTPttDJBElLhud2J2DhoU1Ixt/I8KETzr0Dy3UBnO+yFzOygDoXtuRy
+ YPxAiCoG3nGJfj8q7P+njVUsI42z/iHXthO8REKiLUtS7Ly0aScuvnzGeBvlZBQ+AKjV
+ IhoX/l/j9XJiJUIb9/awfG5kN8RkT2JJERpBup8RR7qIAL32Da+M6la7Lw4bRY4JrBOr
+ iYWVXWBOqZGQMsLqPSIS0vz91cUNLV0pYBEVjeLiCV/e/4h/ei+3Eho4cOtl+YVnpcZW
+ 7W/opzCZQgmgt+f1qjYa4f8oW/tPZFoV4KGuw/Bpm/OQnzJrBp8IT5tEEh4vrrSb/TCe lA== 
+In-Reply-To: <CAHS8izMFAYTgxym-Hzb_JmkTK1N_S9tGN71uS6MFV+R7swYu5A@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Mike Kravetz <mike.kravetz@oracle.com>, Shakeel Butt <shakeelb@google.com>, David Rientjes <rientjes@google.com>
+To: Mina Almasry <almasrymina@google.com>, Shakeel Butt <shakeelb@google.com>, David Rientjes <rientjes@google.com>
 Cc: shuah <shuah@kernel.org>, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>
 
-On Fri, Nov 8, 2019 at 4:46 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
->
-> On 11/8/19 4:40 PM, Mina Almasry wrote:
-> > On Fri, Nov 8, 2019 at 4:01 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
-> >>
-> >> On 11/8/19 3:48 PM, Mina Almasry wrote:
-> >>> On Thu, Nov 7, 2019 at 4:57 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
-> >>>>
-> >>>> On 10/29/19 6:36 PM, Mina Almasry wrote:
-> >>>>> @@ -22,27 +22,35 @@ struct hugetlb_cgroup;
-> >>>>>   * Minimum page order trackable by hugetlb cgroup.
-> >>>>>   * At least 3 pages are necessary for all the tracking information.
-> >>>>>   */
-> >>>>> -#define HUGETLB_CGROUP_MIN_ORDER     2
-> >>>>> +#define HUGETLB_CGROUP_MIN_ORDER 3
-> >>>>
-> >>>> Correct me if misremembering, but I think the reson you changed this was
-> >>>> so that you could use page[3].private.  Correct?
-> >>>> In that case isn't page[3] the last page of an order 2 allocation?
-> >>>> If my understanding is correct, then leave HUGETLB_CGROUP_MIN_ORDER as is
-> >>>> and update the preceding comment to say that at least 4 pages are necessary.
-> >>>>
-> >>>
-> >>> Yes, I just misunderstood what MIN_ORDER means. I'll revert the code change.
-> >>
-> >> But, do update the comment please.
-> >>
-> >
-> > Will do.
-> >
-> >> <snip>
-> >>>>> @@ -85,18 +89,32 @@ static void hugetlb_cgroup_init(struct hugetlb_cgroup *h_cgroup,
-> >>>>>       int idx;
-> >>>>>
-> >>>>>       for (idx = 0; idx < HUGE_MAX_HSTATE; idx++) {
-> >>>>> -             struct page_counter *counter = &h_cgroup->hugepage[idx];
-> >>>>>               struct page_counter *parent = NULL;
-> >>>>
-> >>>> Should we perhaps rename 'parent' to 'fault_parent' to be consistent?
-> >>>
-> >>> Yes that makes sense; will do.
-> >>>
-> >>>> That makes me think if perhaps the naming in the previous patch should
-> >>>> be more explicit.  Make the existing names explicitly contin 'fault' as
-> >>>> the new names contain 'reservation'.
-> >>>> Just a thought.
-> >>>>
-> >>>
-> >>> You mean change the names of the actual user-facing files? I'm all for
-> >>> better names but that would break existing users that read/write the
-> >>> hugetlb_cgroup.2MB.usage_in_bytes/limit_in_bytes users, and so I would
-> >>> assume is a no-go.
-> >>>
-> >>
-> >> I was thinking about internal variables/definitions such as:
-> >>
-> >> +enum {
-> >> + /* Tracks hugetlb memory faulted in. */
-> >> + HUGETLB_RES_USAGE,
-> >> + /* Tracks hugetlb memory reserved. */
-> >> + HUGETLB_RES_RESERVATION_USAGE,
-> >> + /* Limit for hugetlb memory faulted in. */
-> >> + HUGETLB_RES_LIMIT,
-> >> + /* Limit for hugetlb memory reserved. */
-> >> + HUGETLB_RES_RESERVATION_LIMIT,
-> >> + /* Max usage for hugetlb memory faulted in. */
-> >> + HUGETLB_RES_MAX_USAGE,
-> >> + /* Max usage for hugetlb memory reserved. */
-> >> + HUGETLB_RES_RESERVATION_MAX_USAGE,
-> >> + /* Faulted memory accounting fail count. */
-> >> + HUGETLB_RES_FAILCNT,
-> >> + /* Reserved memory accounting fail count. */
-> >> + HUGETLB_RES_RESERVATION_FAILCNT,
-> >> + HUGETLB_RES_NULL,
-> >> + HUGETLB_RES_MAX,
-> >> +};
-> >>
-> >> But, I guess the existing definitions (such as HUGETLB_RES_LIMIT) correspond
-> >> closely to the externally visible name.  In that case, you should leave them
-> >> as is and ignore my comment.
-> >>
-> >> <ship>
-> >>>>> @@ -126,6 +144,26 @@ static void hugetlb_cgroup_css_free(struct cgroup_subsys_state *css)
-> >>>>>       kfree(h_cgroup);
-> >>>>>  }
-> >>>>>
-> >>>>> +static void hugetlb_cgroup_move_parent_reservation(int idx,
-> >>>>> +                                                struct hugetlb_cgroup *h_cg)
-> >>>>> +{
-> >>>>> +     struct hugetlb_cgroup *parent = parent_hugetlb_cgroup(h_cg);
-> >>>>> +
-> >>>>> +     /* Move the reservation counters. */
-> >>>>> +     if (!parent_hugetlb_cgroup(h_cg)) {
-> >>>>> +             parent = root_h_cgroup;
-> >>>>> +             /* root has no limit */
-> >>>>> +             page_counter_charge(
-> >>>>> +                     &root_h_cgroup->reserved_hugepage[idx],
-> >>>>> +                     page_counter_read(
-> >>>>> +                             hugetlb_cgroup_get_counter(h_cg, idx, true)));
-> >>>>> +     }
-> >>>>> +
-> >>>>> +     /* Take the pages off the local counter */
-> >>>>> +     page_counter_cancel(
-> >>>>> +             hugetlb_cgroup_get_counter(h_cg, idx, true),
-> >>>>> +             page_counter_read(hugetlb_cgroup_get_counter(h_cg, idx, true)));
-> >>>>> +}
-> >>>>
-> >>>> I know next to nothing about cgroups and am just comparing this to the
-> >>>> existing hugetlb_cgroup_move_parent() routine.  hugetlb_cgroup_move_parent
-> >>>> updates the cgroup pointer in each page being moved.  Do we need to do
-> >>>> something similar for reservations being moved (move pointer in reservation)?
-> >>>>
-> >>>
-> >>> Oh, good catch. Yes I need to be doing that. I should probably
-> >>> consolidate those routines so the code doesn't miss things like this.
-> >>
-> >> This might get a bit ugly/complicated?  Seems like you will need to examine
-> >> all hugetlbfs inodes and vma's mapping those inodes.
-> >>
-> >
-> > Hmm yes on closer look it does seem like this is not straightforward.
-> > I'll write a test that does this reparenting so I can start running
-> > into the issue and poke for solutions. Off the top of my head, I think
-> > maybe we can just not reparent the hugetlb reservations - the
-> > hugetlb_cgroup stays alive until all its memory is uncharged. That
-> > shouldn't be too bad. Today, I think memcg doesn't reparent memory
-> > when it gets offlined.
-> >
-> > I'll poke at this a bit and come back with suggestions, you may want
-> > to hold off reviewing the rest of the patches until then.
->
->
-> Ok, if we start considering what the correct cgroup reparenting semantics
-> should be it would be good to get input from others with more cgroup
-> experience.
->
+On 11/25/19 12:26 PM, Mina Almasry wrote:
+> On Fri, Nov 8, 2019 at 4:46 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
+>>
+>> On 11/8/19 4:40 PM, Mina Almasry wrote:
+>>> On Fri, Nov 8, 2019 at 4:01 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
+>>>>
+>>>> On 11/8/19 3:48 PM, Mina Almasry wrote:
+>>>>> On Thu, Nov 7, 2019 at 4:57 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
+>>>>>>
+>>>>>> On 10/29/19 6:36 PM, Mina Almasry wrote:
+>>>>>>>
+>>>>>>> +static void hugetlb_cgroup_move_parent_reservation(int idx,
+>>>>>>> +                                                struct hugetlb_cgroup *h_cg)
+>>>>>>> +{
+>>>>>>> +     struct hugetlb_cgroup *parent = parent_hugetlb_cgroup(h_cg);
+>>>>>>> +
+>>>>>>> +     /* Move the reservation counters. */
+>>>>>>> +     if (!parent_hugetlb_cgroup(h_cg)) {
+>>>>>>> +             parent = root_h_cgroup;
+>>>>>>> +             /* root has no limit */
+>>>>>>> +             page_counter_charge(
+>>>>>>> +                     &root_h_cgroup->reserved_hugepage[idx],
+>>>>>>> +                     page_counter_read(
+>>>>>>> +                             hugetlb_cgroup_get_counter(h_cg, idx, true)));
+>>>>>>> +     }
+>>>>>>> +
+>>>>>>> +     /* Take the pages off the local counter */
+>>>>>>> +     page_counter_cancel(
+>>>>>>> +             hugetlb_cgroup_get_counter(h_cg, idx, true),
+>>>>>>> +             page_counter_read(hugetlb_cgroup_get_counter(h_cg, idx, true)));
+>>>>>>> +}
+>>>>>>
+>>>>>> I know next to nothing about cgroups and am just comparing this to the
+>>>>>> existing hugetlb_cgroup_move_parent() routine.  hugetlb_cgroup_move_parent
+>>>>>> updates the cgroup pointer in each page being moved.  Do we need to do
+>>>>>> something similar for reservations being moved (move pointer in reservation)?
+>>>>>>
+>>>>>
+>>>>> Oh, good catch. Yes I need to be doing that. I should probably
+>>>>> consolidate those routines so the code doesn't miss things like this.
+>>>>
+>>>> This might get a bit ugly/complicated?  Seems like you will need to examine
+>>>> all hugetlbfs inodes and vma's mapping those inodes.
+>>>>
+>>>
+>>> Hmm yes on closer look it does seem like this is not straightforward.
+>>> I'll write a test that does this reparenting so I can start running
+>>> into the issue and poke for solutions. Off the top of my head, I think
+>>> maybe we can just not reparent the hugetlb reservations - the
+>>> hugetlb_cgroup stays alive until all its memory is uncharged. That
+>>> shouldn't be too bad. Today, I think memcg doesn't reparent memory
+>>> when it gets offlined.
+>>>
+>>> I'll poke at this a bit and come back with suggestions, you may want
+>>> to hold off reviewing the rest of the patches until then.
+>>
+>>
+>> Ok, if we start considering what the correct cgroup reparenting semantics
+>> should be it would be good to get input from others with more cgroup
+>> experience.
+>>
+> 
+> So I looked into this and prototyped a couple of solutions:
+> 
+> 1. We could repartent the hugetlb reservation using the same approach
+> that today we repartent hugetlb faults. Basically today faulted
+> hugetlb pages live on hstate->hugepage_activelist. When a hugetlb
+> cgroup gets offlined, this list is transversed and any pages on it
+> that point to the cgroup being offlined and reparented. hugetlb_lock
+> is used to make sure cgroup offlining doesn't race with a page being
+> freed. I can add another list, but one that has pointers to the
+> reservations made. When the cgroup is being offlined, it transverses
+> this list, and reparents any reservations (which will need to acquire
+> the proper resv_map->lock to do the parenting). hugetlb_lock needs
+> also to be acquired here to make sure that resv_map release doesn't
+> race with another thread reparenting the memory in that resv map.
+> 
+> Pros: Maintains current parenting behavior, and makes sure that
+> reparenting of reservations works exactly the same way as reparenting
+> of hugetlb faults.
+> Cons: Code is a bit complex. There may be subtle object lifetime bugs,
+> since I'm not 100% sure acquiring hugetlb_lock removes all races.
+> 
+> 2. We could just not reparent hugetlb reservations. I.e. on hugetlb
+> cgroup offlining, the hugetlb faults get reparented (which maintains
+> current user facing behavior), but hugetlb reservation charges remain
+> charged to the hugetlb cgroup. The cgroup lives as a zombie until all
+> the reservations are uncharged.
+> 
+> Pros: Much easier implementation. Converges behavior of memcg and
+> hugetlb cgroup, since memcg also doesn't reparent memory charged to
+> it.
+> Cons: Behavior change as hugetlb cgroups will become zombies if there
+> are reservations charged to them. I've discussed offlist with Shakeel,
+> and AFAICT there are absolutely no user facing behavior change to
+> zombie cgroups. Only if the user is specifically detecting for
+> zombies.
+> 
+> I'm torn between these 2 options right now, but leaning towards #2. I
+> think I will propose #2 in a patch for review, and if anyone is broken
+> by that (again, my understanding is that is very unlikely), then I
+> propose a patch that reverts the changes in #2 and implements the
+> changes in #1.
 
-So I looked into this and prototyped a couple of solutions:
+I of course like option #2 because it introduces fewer (if any) additional
+changes to the hugetlb reservation code for non-cgroup users. :)
 
-1. We could repartent the hugetlb reservation using the same approach
-that today we repartent hugetlb faults. Basically today faulted
-hugetlb pages live on hstate->hugepage_activelist. When a hugetlb
-cgroup gets offlined, this list is transversed and any pages on it
-that point to the cgroup being offlined and reparented. hugetlb_lock
-is used to make sure cgroup offlining doesn't race with a page being
-freed. I can add another list, but one that has pointers to the
-reservations made. When the cgroup is being offlined, it transverses
-this list, and reparents any reservations (which will need to acquire
-the proper resv_map->lock to do the parenting). hugetlb_lock needs
-also to be acquired here to make sure that resv_map release doesn't
-race with another thread reparenting the memory in that resv map.
+> Any feedback from Shakeel or other people with cgroup expertise
+> (especially for hugetlb cgroup or memcg)  is very useful here.
 
-Pros: Maintains current parenting behavior, and makes sure that
-reparenting of reservations works exactly the same way as reparenting
-of hugetlb faults.
-Cons: Code is a bit complex. There may be subtle object lifetime bugs,
-since I'm not 100% sure acquiring hugetlb_lock removes all races.
+Yes, that would be very helpful.
 
-2. We could just not reparent hugetlb reservations. I.e. on hugetlb
-cgroup offlining, the hugetlb faults get reparented (which maintains
-current user facing behavior), but hugetlb reservation charges remain
-charged to the hugetlb cgroup. The cgroup lives as a zombie until all
-the reservations are uncharged.
-
-Pros: Much easier implementation. Converges behavior of memcg and
-hugetlb cgroup, since memcg also doesn't reparent memory charged to
-it.
-Cons: Behavior change as hugetlb cgroups will become zombies if there
-are reservations charged to them. I've discussed offlist with Shakeel,
-and AFAICT there are absolutely no user facing behavior change to
-zombie cgroups. Only if the user is specifically detecting for
-zombies.
-
-I'm torn between these 2 options right now, but leaning towards #2. I
-think I will propose #2 in a patch for review, and if anyone is broken
-by that (again, my understanding is that is very unlikely), then I
-propose a patch that reverts the changes in #2 and implements the
-changes in #1.
-
-Any feedback from Shakeel or other people with cgroup expertise
-(especially for hugetlb cgroup or memcg)  is very useful here.
-
-> --
-> Mike Kravetz
+-- 
+Mike Kravetz
