@@ -1,489 +1,416 @@
-From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Subject: [PATCH v2] sched/fair: add burst to cgroup cpu bandwidth controller
-Date: Tue, 26 Nov 2019 13:56:50 +0300
-Message-ID: <157476581065.5793.4518979877345136813.stgit@buzz>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH 3/3] mm: vmscan: enforce inactive:active ratio at the
+ reclaim root
+Date: Wed, 27 Nov 2019 14:16:29 -0800
+Message-ID: <CALvZod4pYjeDc97R=8C0UVOxi-hOcXznxy5OrX2e-ESm411DUg@mail.gmail.com>
+References: <20191107205334.158354-1-hannes@cmpxchg.org> <20191107205334.158354-4-hannes@cmpxchg.org>
+ <CALvZod4EX4xJkQpmB4UJZqA+bWOoK_5B4Eq-kQECTfzQG2cJJQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-        t=1574765812; bh=rRX08X5vnB0tfemRl/DGX272Ijw2tUKRMJmuwVa1BiY=;
-        h=Message-ID:Date:To:From:Subject:Cc;
-        b=hD/MnHWvIGWKIx8rSmPBj5wBNKA60vAjcpuxNyh4QshQN1DZoYcyzeGCBFm47EhIA
-         cFA/bwnLg2oeER9JXY6/kpHtM12gl0BWqhxTMHHnyxGtYRmo/5HJ1jRooZpjM2C0o5
-         tBQyroGYYO99VuiKoOeRP+1vNPTPALKbTpOWYLqk=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Lem1U5AcwxE30cM5ZAuxFykgfvrtAmfGta1E6+S/wG0=;
+        b=I7f0LadNRduIYDKwLDjGidmPjeOttDnp4vhEN4R5CYb1tn6OsACjo5cxxQNlfs16rr
+         Te+EOLFEZWgTOChGVZq3s9fwPr2fnkKazlQC2jfe6HY1M/9d+6mMdrlds1uEaqim8JI4
+         5EYRkv48/JpLucyhZxvWwxCRKbCoarzzyl/xA3Yve4oviQnjvxb6mJaaRJzrxkJiK6do
+         Y2V7rhNCbPIB7ohYl7o8d25xN2Q/O6fQuu51F2UO90aLHT8HRHrZ3qsKXEAn3cmsSw2K
+         LVf23gpuBPFhB7if1M6LhuakPZKHq6vnixMaCWJfV08FGB8eYrduIhpMHNk9olU4dr05
+         +n+w==
+In-Reply-To: <CALvZod4EX4xJkQpmB4UJZqA+bWOoK_5B4Eq-kQECTfzQG2cJJQ@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Peter Zijlstra <peterz@infradead.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Ingo Molnar <mingo@redhat.com>, Mel Gorman <mgorman@suse.de>, Cong Wang <xiyou.wangcong@gmail.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Dave Chiluk <chiluk+linux@indeed.com>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Suren Baghdasaryan <surenb@google.com>, Rik van Riel <riel@surriel.com>, Michal Hocko <mhocko@suse.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <kernel-team@fb.com>
 
-Currently CFS bandwidth controller assigns cpu.cfs_quota_us runtime into
-global pool every cpu.cfs_period_us. All unused runtime is expired.
+On Thu, Nov 14, 2019 at 4:29 PM Shakeel Butt <shakeelb@google.com> wrote:
+>
+> On Thu, Nov 7, 2019 at 12:53 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
+> >
+> > We split the LRU lists into inactive and an active parts to maximize
+> > workingset protection while allowing just enough inactive cache space
+> > to faciltate readahead and writeback for one-off file accesses (e.g. a
+> > linear scan through a file, or logging); or just enough inactive anon
+> > to maintain recent reference information when reclaim needs to swap.
+> >
+> > With cgroups and their nested LRU lists, we currently don't do this
+> > correctly. While recursive cgroup reclaim establishes a relative LRU
+> > order among the pages of all involved cgroups, inactive:active size
+> > decisions are done on a per-cgroup level. As a result, we'll reclaim a
+> > cgroup's workingset when it doesn't have cold pages, even when one of
+> > its siblings has plenty of it that should be reclaimed first.
+> >
+> > For example: workload A has 50M worth of hot cache but doesn't do any
+> > one-off file accesses; meanwhile, parallel workload B scans files and
+> > rarely accesses the same page twice.
+> >
+> > If these workloads were to run in an uncgrouped system, A would be
+> > protected from the high rate of cache faults from B. But if they were
+> > put in parallel cgroups for memory accounting purposes, B's fast cache
+> > fault rate would push out the hot cache pages of A. This is unexpected
+> > and undesirable - the "scan resistance" of the page cache is broken.
+> >
+> > This patch moves inactive:active size balancing decisions to the root
+> > of reclaim - the same level where the LRU order is established.
+> >
+> > It does this by looking at the recursize size of the inactive and the
+> > active file sets of the cgroup subtree at the beginning of the reclaim
+> > cycle, and then making a decision - scan or skip active pages - that
+> > applies throughout the entire run and to every cgroup involved.
+>
+> Oh ok, this answer my question on previous patch. The reclaim root
+> looks at the full tree inactive and active count to make decisions and
+> thus active list of some descendant cgroup will be protected from the
+> inactive list of its sibling.
+>
+> >
+> > With that in place, in the test above, the VM will recognize that
+> > there are plenty of inactive pages in the combined cache set of
+> > workloads A and B and prefer the one-off cache in B over the hot pages
+> > in A. The scan resistance of the cache is restored.
+> >
+> > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-Since commit de53fd7aedb1 ("sched/fair: Fix low cpu usage with high
-throttling by removing expiration of cpu-local slices") slice assigned
-to cpu does not expire. This allows to serve tiny bursts (upto 1ms),
-but this runtime pool is cpu-bound and not transferred between cpus.
+Forgot to add:
 
-Setup for interactive workload with irregular cpu consumption have to set
-quota according to relatively short spikes of cpu usage. This eliminates
-possibility of control for average cpu usage. Increasing period and quota
-proportionally for getting bigger runtime chunks is not an option because
-if even bigger spike deplete global pool then execution will stuck until
-end of period and next refill.
+Reviewed-by: Shakeel Butt <shakeelb@google.com>
 
-This patch adds limited accumulation of unused runtime from past periods.
-Accumulated runtime does not expire. It stays in global pool and could be
-used by any cpu. Average cpu usage stays limited with quota / period,
-but spiky workload could use more cpu power for a short period of time.
-
-Size of pool for burst runtime is set in attribute cpu.cfs_burst_us.
-Default is 0, which reflects current behavior.
-
-Statistics for used bust runtime is shown in cpu.stat as "burst_time".
-
-Example setup:
-
-cpu.cfs_period_us = 100000
-cpu.cfs_quota_us = 200000
-cpu.cfs_burst_us = 300000
-
-Average cpu usage stays limited with 2 cpus (quota / period), but cgroup
-could accumulate runtime (burst) and for 100ms could utilize up to 5 cpus
-(quota / period + burst / 100ms), or 3 cpus for 300ms, an so on.
-
-For example, in this cgroup sample workload with bursts:
-
-fio --name=test --ioengine=cpuio --time_based=1 --runtime=600 \
-	   --cpuload=10 --cpuchunks=100000 --numjobs=5
-
-has 50% average cpu usage without throttling. Without enabling bursts
-same command can utilize only 25% cpu and 25% time will be throttled.
-
-Implementation is simple. All logic is in __refill_cfs_bandwidth_runtime().
-Burst pool is kept in common pool thus runtime distribution is unchanged.
-The rest changes are interface for cgroup and cgroup2.
-
-For cgroup2 burst is set as third number in attribute cpu.max:
-cpu.max = $QUOTA $PERIOD $BURST
-
-At changing setup cgroup gets full charge of runtime and burst runtime.
-
-Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Cc: Dave Chiluk <chiluk+linux@indeed.com>
-Cc: Cong Wang <xiyou.wangcong@gmail.com>
-
----
-
-v2: fix spelling, add refilling burst runtime at changing setup per Dave Chiluk
-
-v1: https://lore.kernel.org/lkml/157312875706.707.12248531434112979828.stgit@buzz/
-
-Cong Wang proposed similar feature: https://lore.kernel.org/patchwork/patch/907450/
-But with changing default behavior and without statistics.
----
- Documentation/admin-guide/cgroup-v2.rst |   15 +++--
- Documentation/scheduler/sched-bwc.rst   |    8 ++-
- kernel/sched/core.c                     |   94 +++++++++++++++++++++++++------
- kernel/sched/fair.c                     |   34 +++++++++--
- kernel/sched/sched.h                    |    4 +
- 5 files changed, 124 insertions(+), 31 deletions(-)
-
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 5361ebec3361..8c3cc3d882ba 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -981,11 +981,12 @@ All time durations are in microseconds.
- 	- user_usec
- 	- system_usec
- 
--	and the following three when the controller is enabled:
-+	and the following four when the controller is enabled:
- 
- 	- nr_periods
- 	- nr_throttled
- 	- throttled_usec
-+	- burst_usec
- 
-   cpu.weight
- 	A read-write single value file which exists on non-root
-@@ -1006,16 +1007,18 @@ All time durations are in microseconds.
- 	the closest approximation of the current weight.
- 
-   cpu.max
--	A read-write two value file which exists on non-root cgroups.
--	The default is "max 100000".
-+	A read-write 1..3 values file which exists on non-root cgroups.
-+	The default is "max 100000 0".
- 
- 	The maximum bandwidth limit.  It's in the following format::
- 
--	  $MAX $PERIOD
-+	  $MAX $PERIOD $BURST
- 
- 	which indicates that the group may consume upto $MAX in each
--	$PERIOD duration.  "max" for $MAX indicates no limit.  If only
--	one number is written, $MAX is updated.
-+	$PERIOD duration and accumulates upto $BURST time for bursts.
-+
-+	"max" for $MAX indicates no limit.
-+	If only one number is written, $MAX is updated.
- 
-   cpu.pressure
- 	A read-only nested-key file which exists on non-root cgroups.
-diff --git a/Documentation/scheduler/sched-bwc.rst b/Documentation/scheduler/sched-bwc.rst
-index 9801d6b284b1..59de2ebe11b3 100644
---- a/Documentation/scheduler/sched-bwc.rst
-+++ b/Documentation/scheduler/sched-bwc.rst
-@@ -27,12 +27,14 @@ Quota and period are managed within the cpu subsystem via cgroupfs.
- 
- cpu.cfs_quota_us: the total available run-time within a period (in microseconds)
- cpu.cfs_period_us: the length of a period (in microseconds)
-+cpu.cfs_burst_us: the maxumum size of burst run-time pool (in microseconds)
- cpu.stat: exports throttling statistics [explained further below]
- 
- The default values are::
- 
- 	cpu.cfs_period_us=100ms
--	cpu.cfs_quota=-1
-+	cpu.cfs_quota_us=-1
-+	cpu.cfs_burst_us=0
- 
- A value of -1 for cpu.cfs_quota_us indicates that the group does not have any
- bandwidth restriction in place, such a group is described as an unconstrained
-@@ -51,6 +53,9 @@ and return the group to an unconstrained state once more.
- Any updates to a group's bandwidth specification will result in it becoming
- unthrottled if it is in a constrained state.
- 
-+Writing positive value into cpu.cfs_burst_us allows unused quota to
-+accumulate up to this value and be used later in addition to assigned quota.
-+
- System wide settings
- --------------------
- For efficiency run-time is transferred between the global pool and CPU local
-@@ -75,6 +80,7 @@ cpu.stat:
- - nr_throttled: Number of times the group has been throttled/limited.
- - throttled_time: The total time duration (in nanoseconds) for which entities
-   of the group have been throttled.
-+- burst_time: The total running time consumed from burst pool.
- 
- This interface is read-only.
- 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 44123b4d14e8..c4c8ef521e7c 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -7364,7 +7364,8 @@ static const u64 min_cfs_quota_period = 1 * NSEC_PER_MSEC; /* 1ms */
- 
- static int __cfs_schedulable(struct task_group *tg, u64 period, u64 runtime);
- 
--static int tg_set_cfs_bandwidth(struct task_group *tg, u64 period, u64 quota)
-+static int tg_set_cfs_bandwidth(struct task_group *tg, u64 period, u64 quota,
-+				u64 burst)
- {
- 	int i, ret = 0, runtime_enabled, runtime_was_enabled;
- 	struct cfs_bandwidth *cfs_b = &tg->cfs_bandwidth;
-@@ -7409,12 +7410,17 @@ static int tg_set_cfs_bandwidth(struct task_group *tg, u64 period, u64 quota)
- 	raw_spin_lock_irq(&cfs_b->lock);
- 	cfs_b->period = ns_to_ktime(period);
- 	cfs_b->quota = quota;
-+	cfs_b->burst = burst;
- 
--	__refill_cfs_bandwidth_runtime(cfs_b);
--
--	/* Restart the period timer (if active) to handle new period expiry: */
--	if (runtime_enabled)
-+	/*
-+	 * Restart the period timer (if active) to handle new period expiry.
-+	 * And refill runtime and burst-runtime to full charge.
-+	 */
-+	if (runtime_enabled) {
-+		cfs_b->burst_runtime = burst;
-+		cfs_b->runtime = quota + burst;
- 		start_cfs_bandwidth(cfs_b);
-+	}
- 
- 	raw_spin_unlock_irq(&cfs_b->lock);
- 
-@@ -7442,9 +7448,10 @@ static int tg_set_cfs_bandwidth(struct task_group *tg, u64 period, u64 quota)
- 
- static int tg_set_cfs_quota(struct task_group *tg, long cfs_quota_us)
- {
--	u64 quota, period;
-+	u64 quota, period, burst;
- 
- 	period = ktime_to_ns(tg->cfs_bandwidth.period);
-+	burst = tg->cfs_bandwidth.burst;
- 	if (cfs_quota_us < 0)
- 		quota = RUNTIME_INF;
- 	else if ((u64)cfs_quota_us <= U64_MAX / NSEC_PER_USEC)
-@@ -7452,7 +7459,7 @@ static int tg_set_cfs_quota(struct task_group *tg, long cfs_quota_us)
- 	else
- 		return -EINVAL;
- 
--	return tg_set_cfs_bandwidth(tg, period, quota);
-+	return tg_set_cfs_bandwidth(tg, period, quota, burst);
- }
- 
- static long tg_get_cfs_quota(struct task_group *tg)
-@@ -7470,15 +7477,16 @@ static long tg_get_cfs_quota(struct task_group *tg)
- 
- static int tg_set_cfs_period(struct task_group *tg, long cfs_period_us)
- {
--	u64 quota, period;
-+	u64 quota, period, burst;
- 
- 	if ((u64)cfs_period_us > U64_MAX / NSEC_PER_USEC)
- 		return -EINVAL;
- 
- 	period = (u64)cfs_period_us * NSEC_PER_USEC;
- 	quota = tg->cfs_bandwidth.quota;
-+	burst = tg->cfs_bandwidth.burst;
- 
--	return tg_set_cfs_bandwidth(tg, period, quota);
-+	return tg_set_cfs_bandwidth(tg, period, quota, burst);
- }
- 
- static long tg_get_cfs_period(struct task_group *tg)
-@@ -7491,6 +7499,28 @@ static long tg_get_cfs_period(struct task_group *tg)
- 	return cfs_period_us;
- }
- 
-+static long tg_get_cfs_burst(struct task_group *tg)
-+{
-+	u64 cfs_burst_us = tg->cfs_bandwidth.burst;
-+
-+	do_div(cfs_burst_us, NSEC_PER_USEC);
-+	return cfs_burst_us;
-+}
-+
-+static int tg_set_cfs_burst(struct task_group *tg, long cfs_burst_us)
-+{
-+	u64 quota, period, burst;
-+
-+	if ((u64)cfs_burst_us > U64_MAX / NSEC_PER_USEC)
-+		return -EINVAL;
-+
-+	period = ktime_to_ns(tg->cfs_bandwidth.period);
-+	quota = tg->cfs_bandwidth.quota;
-+	burst = (u64)cfs_burst_us * NSEC_PER_USEC;
-+
-+	return tg_set_cfs_bandwidth(tg, period, quota, burst);
-+}
-+
- static s64 cpu_cfs_quota_read_s64(struct cgroup_subsys_state *css,
- 				  struct cftype *cft)
- {
-@@ -7515,6 +7545,18 @@ static int cpu_cfs_period_write_u64(struct cgroup_subsys_state *css,
- 	return tg_set_cfs_period(css_tg(css), cfs_period_us);
- }
- 
-+static u64 cpu_cfs_burst_read_u64(struct cgroup_subsys_state *css,
-+				  struct cftype *cft)
-+{
-+	return tg_get_cfs_burst(css_tg(css));
-+}
-+
-+static int cpu_cfs_burst_write_u64(struct cgroup_subsys_state *css,
-+				   struct cftype *cftype, u64 cfs_burst_us)
-+{
-+	return tg_set_cfs_burst(css_tg(css), cfs_burst_us);
-+}
-+
- struct cfs_schedulable_data {
- 	struct task_group *tg;
- 	u64 period, quota;
-@@ -7606,6 +7648,7 @@ static int cpu_cfs_stat_show(struct seq_file *sf, void *v)
- 	seq_printf(sf, "nr_periods %d\n", cfs_b->nr_periods);
- 	seq_printf(sf, "nr_throttled %d\n", cfs_b->nr_throttled);
- 	seq_printf(sf, "throttled_time %llu\n", cfs_b->throttled_time);
-+	seq_printf(sf, "burst_time %llu\n", cfs_b->burst_time);
- 
- 	if (schedstat_enabled() && tg != &root_task_group) {
- 		u64 ws = 0;
-@@ -7667,6 +7710,11 @@ static struct cftype cpu_legacy_files[] = {
- 		.read_u64 = cpu_cfs_period_read_u64,
- 		.write_u64 = cpu_cfs_period_write_u64,
- 	},
-+	{
-+		.name = "cfs_burst_us",
-+		.read_u64 = cpu_cfs_burst_read_u64,
-+		.write_u64 = cpu_cfs_burst_write_u64,
-+	},
- 	{
- 		.name = "stat",
- 		.seq_show = cpu_cfs_stat_show,
-@@ -7709,15 +7757,20 @@ static int cpu_extra_stat_show(struct seq_file *sf,
- 		struct task_group *tg = css_tg(css);
- 		struct cfs_bandwidth *cfs_b = &tg->cfs_bandwidth;
- 		u64 throttled_usec;
-+		u64 burst_usec;
- 
- 		throttled_usec = cfs_b->throttled_time;
- 		do_div(throttled_usec, NSEC_PER_USEC);
- 
-+		burst_usec = cfs_b->burst_time;
-+		do_div(burst_usec, NSEC_PER_USEC);
-+
- 		seq_printf(sf, "nr_periods %d\n"
- 			   "nr_throttled %d\n"
--			   "throttled_usec %llu\n",
-+			   "throttled_usec %llu\n"
-+			   "burst_usec %llu\n",
- 			   cfs_b->nr_periods, cfs_b->nr_throttled,
--			   throttled_usec);
-+			   throttled_usec, burst_usec);
- 	}
- #endif
- 	return 0;
-@@ -7787,26 +7840,29 @@ static int cpu_weight_nice_write_s64(struct cgroup_subsys_state *css,
- #endif
- 
- static void __maybe_unused cpu_period_quota_print(struct seq_file *sf,
--						  long period, long quota)
-+						  long period, long quota,
-+						  long burst)
- {
- 	if (quota < 0)
- 		seq_puts(sf, "max");
- 	else
- 		seq_printf(sf, "%ld", quota);
- 
--	seq_printf(sf, " %ld\n", period);
-+	seq_printf(sf, " %ld %ld\n", period, burst);
- }
- 
- /* caller should put the current value in *@periodp before calling */
- static int __maybe_unused cpu_period_quota_parse(char *buf,
--						 u64 *periodp, u64 *quotap)
-+						 u64 *periodp, u64 *quotap,
-+						 s64 *burstp)
- {
- 	char tok[21];	/* U64_MAX */
- 
--	if (sscanf(buf, "%20s %llu", tok, periodp) < 1)
-+	if (sscanf(buf, "%20s %llu %llu", tok, periodp, burstp) < 1)
- 		return -EINVAL;
- 
- 	*periodp *= NSEC_PER_USEC;
-+	*burstp *= NSEC_PER_USEC;
- 
- 	if (sscanf(tok, "%llu", quotap))
- 		*quotap *= NSEC_PER_USEC;
-@@ -7823,7 +7879,8 @@ static int cpu_max_show(struct seq_file *sf, void *v)
- {
- 	struct task_group *tg = css_tg(seq_css(sf));
- 
--	cpu_period_quota_print(sf, tg_get_cfs_period(tg), tg_get_cfs_quota(tg));
-+	cpu_period_quota_print(sf, tg_get_cfs_period(tg), tg_get_cfs_quota(tg),
-+			       tg_get_cfs_burst(tg));
- 	return 0;
- }
- 
-@@ -7832,12 +7889,13 @@ static ssize_t cpu_max_write(struct kernfs_open_file *of,
- {
- 	struct task_group *tg = css_tg(of_css(of));
- 	u64 period = tg_get_cfs_period(tg);
-+	s64 burst = tg_get_cfs_burst(tg);
- 	u64 quota;
- 	int ret;
- 
--	ret = cpu_period_quota_parse(buf, &period, &quota);
-+	ret = cpu_period_quota_parse(buf, &period, &quota, &burst);
- 	if (!ret)
--		ret = tg_set_cfs_bandwidth(tg, period, quota);
-+		ret = tg_set_cfs_bandwidth(tg, period, quota, burst);
- 	return ret ?: nbytes;
- }
- #endif
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 69a81a5709ff..f32b72496932 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -4353,16 +4353,26 @@ static inline u64 sched_cfs_bandwidth_slice(void)
- }
- 
- /*
-- * Replenish runtime according to assigned quota. We use sched_clock_cpu
-- * directly instead of rq->clock to avoid adding additional synchronization
-- * around rq->lock.
-+ * Replenish runtime according to assigned quota.
-+ * Called only if quota != RUNTIME_INF.
-  *
-  * requires cfs_b->lock
-  */
- void __refill_cfs_bandwidth_runtime(struct cfs_bandwidth *cfs_b)
- {
--	if (cfs_b->quota != RUNTIME_INF)
--		cfs_b->runtime = cfs_b->quota;
-+	u64 runtime = cfs_b->runtime;
-+
-+	/*
-+	 * Preserve past runtime up to burst size. If remaining runtime lower
-+	 * than previous burst runtime then account delta as used burst time.
-+	 */
-+	if (runtime > cfs_b->burst)
-+		runtime = cfs_b->burst;
-+	else if (runtime < cfs_b->burst_runtime)
-+		cfs_b->burst_time += cfs_b->burst_runtime - runtime;
-+
-+	cfs_b->burst_runtime = runtime;
-+	cfs_b->runtime = runtime + cfs_b->quota;
- }
- 
- static inline struct cfs_bandwidth *tg_cfs_bandwidth(struct task_group *tg)
-@@ -4968,6 +4978,9 @@ void init_cfs_bandwidth(struct cfs_bandwidth *cfs_b)
- 	cfs_b->runtime = 0;
- 	cfs_b->quota = RUNTIME_INF;
- 	cfs_b->period = ns_to_ktime(default_cfs_period());
-+	cfs_b->burst = 0;
-+	cfs_b->burst_runtime = 0;
-+	cfs_b->burst_time = 0;
- 
- 	INIT_LIST_HEAD(&cfs_b->throttled_cfs_rq);
- 	hrtimer_init(&cfs_b->period_timer, CLOCK_MONOTONIC, HRTIMER_MODE_ABS_PINNED);
-@@ -4986,14 +4999,23 @@ static void init_cfs_rq_runtime(struct cfs_rq *cfs_rq)
- 
- void start_cfs_bandwidth(struct cfs_bandwidth *cfs_b)
- {
-+	u64 overrun;
-+
- 	lockdep_assert_held(&cfs_b->lock);
- 
- 	if (cfs_b->period_active)
- 		return;
- 
- 	cfs_b->period_active = 1;
--	hrtimer_forward_now(&cfs_b->period_timer, cfs_b->period);
-+	overrun = hrtimer_forward_now(&cfs_b->period_timer, cfs_b->period);
- 	hrtimer_start_expires(&cfs_b->period_timer, HRTIMER_MODE_ABS_PINNED);
-+
-+	/*
-+	 * Refill runtime for periods of inactivity and current.
-+	 * __refill_cfs_bandwidth_runtime() will cut excess.
-+	 */
-+	cfs_b->runtime += cfs_b->quota * overrun;
-+	__refill_cfs_bandwidth_runtime(cfs_b);
- }
- 
- static void destroy_cfs_bandwidth(struct cfs_bandwidth *cfs_b)
-diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index c8870c5bd7df..6edf6155e4f6 100644
---- a/kernel/sched/sched.h
-+++ b/kernel/sched/sched.h
-@@ -344,10 +344,14 @@ struct cfs_bandwidth {
- 	struct hrtimer		slack_timer;
- 	struct list_head	throttled_cfs_rq;
- 
-+	u64			burst;
-+	u64			burst_runtime;
-+
- 	/* Statistics: */
- 	int			nr_periods;
- 	int			nr_throttled;
- 	u64			throttled_time;
-+	u64			burst_time;
- #endif
- };
- 
-
+>
+> BTW no love for the anon memory? The whole "workingset" mechanism only
+> works for file pages. Are there any plans to extend it for anon as
+> well?
+>
+> > ---
+> >  include/linux/mmzone.h |   4 +-
+> >  mm/vmscan.c            | 185 ++++++++++++++++++++++++++---------------
+> >  2 files changed, 118 insertions(+), 71 deletions(-)
+> >
+> > diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+> > index 7a09087e8c77..454a230ad417 100644
+> > --- a/include/linux/mmzone.h
+> > +++ b/include/linux/mmzone.h
+> > @@ -229,12 +229,12 @@ enum lru_list {
+> >
+> >  #define for_each_evictable_lru(lru) for (lru = 0; lru <= LRU_ACTIVE_FILE; lru++)
+> >
+> > -static inline int is_file_lru(enum lru_list lru)
+> > +static inline bool is_file_lru(enum lru_list lru)
+> >  {
+> >         return (lru == LRU_INACTIVE_FILE || lru == LRU_ACTIVE_FILE);
+> >  }
+> >
+> > -static inline int is_active_lru(enum lru_list lru)
+> > +static inline bool is_active_lru(enum lru_list lru)
+> >  {
+> >         return (lru == LRU_ACTIVE_ANON || lru == LRU_ACTIVE_FILE);
+> >  }
+> > diff --git a/mm/vmscan.c b/mm/vmscan.c
+> > index 527617ee9b73..df859b1d583c 100644
+> > --- a/mm/vmscan.c
+> > +++ b/mm/vmscan.c
+> > @@ -79,6 +79,13 @@ struct scan_control {
+> >          */
+> >         struct mem_cgroup *target_mem_cgroup;
+> >
+> > +       /* Can active pages be deactivated as part of reclaim? */
+> > +#define DEACTIVATE_ANON 1
+> > +#define DEACTIVATE_FILE 2
+> > +       unsigned int may_deactivate:2;
+> > +       unsigned int force_deactivate:1;
+> > +       unsigned int skipped_deactivate:1;
+> > +
+> >         /* Writepage batching in laptop mode; RECLAIM_WRITE */
+> >         unsigned int may_writepage:1;
+> >
+> > @@ -101,6 +108,9 @@ struct scan_control {
+> >         /* One of the zones is ready for compaction */
+> >         unsigned int compaction_ready:1;
+> >
+> > +       /* There is easily reclaimable cold cache in the current node */
+> > +       unsigned int cache_trim_mode:1;
+> > +
+> >         /* The file pages on the current node are dangerously low */
+> >         unsigned int file_is_tiny:1;
+> >
+> > @@ -2154,6 +2164,20 @@ unsigned long reclaim_pages(struct list_head *page_list)
+> >         return nr_reclaimed;
+> >  }
+> >
+> > +static unsigned long shrink_list(enum lru_list lru, unsigned long nr_to_scan,
+> > +                                struct lruvec *lruvec, struct scan_control *sc)
+> > +{
+> > +       if (is_active_lru(lru)) {
+> > +               if (sc->may_deactivate & (1 << is_file_lru(lru)))
+> > +                       shrink_active_list(nr_to_scan, lruvec, sc, lru);
+> > +               else
+> > +                       sc->skipped_deactivate = 1;
+> > +               return 0;
+> > +       }
+> > +
+> > +       return shrink_inactive_list(nr_to_scan, lruvec, sc, lru);
+> > +}
+> > +
+> >  /*
+> >   * The inactive anon list should be small enough that the VM never has
+> >   * to do too much work.
+> > @@ -2182,59 +2206,25 @@ unsigned long reclaim_pages(struct list_head *page_list)
+> >   *    1TB     101        10GB
+> >   *   10TB     320        32GB
+> >   */
+> > -static bool inactive_list_is_low(struct lruvec *lruvec, bool file,
+> > -                                struct scan_control *sc, bool trace)
+> > +static bool inactive_is_low(struct lruvec *lruvec, enum lru_list inactive_lru)
+> >  {
+> > -       enum lru_list active_lru = file * LRU_FILE + LRU_ACTIVE;
+> > -       struct pglist_data *pgdat = lruvec_pgdat(lruvec);
+> > -       enum lru_list inactive_lru = file * LRU_FILE;
+> > +       enum lru_list active_lru = inactive_lru + LRU_ACTIVE;
+> >         unsigned long inactive, active;
+> >         unsigned long inactive_ratio;
+> > -       struct lruvec *target_lruvec;
+> > -       unsigned long refaults;
+> >         unsigned long gb;
+> >
+> > -       inactive = lruvec_lru_size(lruvec, inactive_lru, sc->reclaim_idx);
+> > -       active = lruvec_lru_size(lruvec, active_lru, sc->reclaim_idx);
+> > +       inactive = lruvec_page_state(lruvec, inactive_lru);
+> > +       active = lruvec_page_state(lruvec, active_lru);
+> >
+> > -       /*
+> > -        * When refaults are being observed, it means a new workingset
+> > -        * is being established. Disable active list protection to get
+> > -        * rid of the stale workingset quickly.
+> > -        */
+> > -       target_lruvec = mem_cgroup_lruvec(sc->target_mem_cgroup, pgdat);
+> > -       refaults = lruvec_page_state(target_lruvec, WORKINGSET_ACTIVATE);
+> > -       if (file && target_lruvec->refaults != refaults) {
+> > -               inactive_ratio = 0;
+> > -       } else {
+> > -               gb = (inactive + active) >> (30 - PAGE_SHIFT);
+> > -               if (gb)
+> > -                       inactive_ratio = int_sqrt(10 * gb);
+> > -               else
+> > -                       inactive_ratio = 1;
+> > -       }
+> > -
+> > -       if (trace)
+> > -               trace_mm_vmscan_inactive_list_is_low(pgdat->node_id, sc->reclaim_idx,
+> > -                       lruvec_lru_size(lruvec, inactive_lru, MAX_NR_ZONES), inactive,
+> > -                       lruvec_lru_size(lruvec, active_lru, MAX_NR_ZONES), active,
+> > -                       inactive_ratio, file);
+> > +       gb = (inactive + active) >> (30 - PAGE_SHIFT);
+> > +       if (gb)
+> > +               inactive_ratio = int_sqrt(10 * gb);
+> > +       else
+> > +               inactive_ratio = 1;
+> >
+> >         return inactive * inactive_ratio < active;
+> >  }
+> >
+> > -static unsigned long shrink_list(enum lru_list lru, unsigned long nr_to_scan,
+> > -                                struct lruvec *lruvec, struct scan_control *sc)
+> > -{
+> > -       if (is_active_lru(lru)) {
+> > -               if (inactive_list_is_low(lruvec, is_file_lru(lru), sc, true))
+> > -                       shrink_active_list(nr_to_scan, lruvec, sc, lru);
+> > -               return 0;
+> > -       }
+> > -
+> > -       return shrink_inactive_list(nr_to_scan, lruvec, sc, lru);
+> > -}
+> > -
+> >  enum scan_balance {
+> >         SCAN_EQUAL,
+> >         SCAN_FRACT,
+> > @@ -2296,28 +2286,17 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
+> >
+> >         /*
+> >          * If the system is almost out of file pages, force-scan anon.
+> > -        * But only if there are enough inactive anonymous pages on
+> > -        * the LRU. Otherwise, the small LRU gets thrashed.
+> >          */
+> > -       if (sc->file_is_tiny &&
+> > -           !inactive_list_is_low(lruvec, false, sc, false) &&
+> > -           lruvec_lru_size(lruvec, LRU_INACTIVE_ANON,
+> > -                           sc->reclaim_idx) >> sc->priority) {
+> > +       if (sc->file_is_tiny) {
+> >                 scan_balance = SCAN_ANON;
+> >                 goto out;
+> >         }
+> >
+> >         /*
+> > -        * If there is enough inactive page cache, i.e. if the size of the
+> > -        * inactive list is greater than that of the active list *and* the
+> > -        * inactive list actually has some pages to scan on this priority, we
+> > -        * do not reclaim anything from the anonymous working set right now.
+> > -        * Without the second condition we could end up never scanning an
+> > -        * lruvec even if it has plenty of old anonymous pages unless the
+> > -        * system is under heavy pressure.
+> > +        * If there is enough inactive page cache, we do not reclaim
+> > +        * anything from the anonymous working right now.
+> >          */
+> > -       if (!inactive_list_is_low(lruvec, true, sc, false) &&
+> > -           lruvec_lru_size(lruvec, LRU_INACTIVE_FILE, sc->reclaim_idx) >> sc->priority) {
+> > +       if (sc->cache_trim_mode) {
+> >                 scan_balance = SCAN_FILE;
+> >                 goto out;
+> >         }
+> > @@ -2582,7 +2561,7 @@ static void shrink_lruvec(struct lruvec *lruvec, struct scan_control *sc)
+> >          * Even if we did not try to evict anon pages at all, we want to
+> >          * rebalance the anon lru active/inactive ratio.
+> >          */
+> > -       if (total_swap_pages && inactive_list_is_low(lruvec, false, sc, true))
+> > +       if (total_swap_pages && inactive_is_low(lruvec, LRU_INACTIVE_ANON))
+> >                 shrink_active_list(SWAP_CLUSTER_MAX, lruvec,
+> >                                    sc, LRU_ACTIVE_ANON);
+> >  }
+> > @@ -2722,6 +2701,7 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+> >         unsigned long nr_reclaimed, nr_scanned;
+> >         struct lruvec *target_lruvec;
+> >         bool reclaimable = false;
+> > +       unsigned long file;
+> >
+> >         target_lruvec = mem_cgroup_lruvec(sc->target_mem_cgroup, pgdat);
+> >
+> > @@ -2731,6 +2711,44 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+> >         nr_reclaimed = sc->nr_reclaimed;
+> >         nr_scanned = sc->nr_scanned;
+> >
+> > +       /*
+> > +        * Target desirable inactive:active list ratios for the anon
+> > +        * and file LRU lists.
+> > +        */
+> > +       if (!sc->force_deactivate) {
+> > +               unsigned long refaults;
+> > +
+> > +               if (inactive_is_low(target_lruvec, LRU_INACTIVE_ANON))
+> > +                       sc->may_deactivate |= DEACTIVATE_ANON;
+> > +               else
+> > +                       sc->may_deactivate &= ~DEACTIVATE_ANON;
+> > +
+> > +               /*
+> > +                * When refaults are being observed, it means a new
+> > +                * workingset is being established. Deactivate to get
+> > +                * rid of any stale active pages quickly.
+> > +                */
+> > +               refaults = lruvec_page_state(target_lruvec,
+> > +                                            WORKINGSET_ACTIVATE);
+> > +               if (refaults != target_lruvec->refaults ||
+> > +                   inactive_is_low(target_lruvec, LRU_INACTIVE_FILE))
+> > +                       sc->may_deactivate |= DEACTIVATE_FILE;
+> > +               else
+> > +                       sc->may_deactivate &= ~DEACTIVATE_FILE;
+> > +       } else
+> > +               sc->may_deactivate = DEACTIVATE_ANON | DEACTIVATE_FILE;
+> > +
+> > +       /*
+> > +        * If we have plenty of inactive file pages that aren't
+> > +        * thrashing, try to reclaim those first before touching
+> > +        * anonymous pages.
+> > +        */
+> > +       file = lruvec_page_state(target_lruvec, LRU_INACTIVE_FILE);
+> > +       if (file >> sc->priority && !(sc->may_deactivate & DEACTIVATE_FILE))
+> > +               sc->cache_trim_mode = 1;
+> > +       else
+> > +               sc->cache_trim_mode = 0;
+> > +
+> >         /*
+> >          * Prevent the reclaimer from falling into the cache trap: as
+> >          * cache pages start out inactive, every cache fault will tip
+> > @@ -2741,10 +2759,9 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+> >          * anon pages.  Try to detect this based on file LRU size.
+> >          */
+> >         if (!cgroup_reclaim(sc)) {
+> > -               unsigned long file;
+> > -               unsigned long free;
+> > -               int z;
+> >                 unsigned long total_high_wmark = 0;
+> > +               unsigned long free, anon;
+> > +               int z;
+> >
+> >                 free = sum_zone_node_page_state(pgdat->node_id, NR_FREE_PAGES);
+> >                 file = node_page_state(pgdat, NR_ACTIVE_FILE) +
+> > @@ -2758,7 +2775,17 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+> >                         total_high_wmark += high_wmark_pages(zone);
+> >                 }
+> >
+> > -               sc->file_is_tiny = file + free <= total_high_wmark;
+> > +               /*
+> > +                * Consider anon: if that's low too, this isn't a
+> > +                * runaway file reclaim problem, but rather just
+> > +                * extreme pressure. Reclaim as per usual then.
+> > +                */
+> > +               anon = node_page_state(pgdat, NR_INACTIVE_ANON);
+> > +
+> > +               sc->file_is_tiny =
+> > +                       file + free <= total_high_wmark &&
+> > +                       !(sc->may_deactivate & DEACTIVATE_ANON) &&
+> > +                       anon >> sc->priority;
+> >         }
+> >
+> >         shrink_node_memcgs(pgdat, sc);
+> > @@ -3062,9 +3089,27 @@ static unsigned long do_try_to_free_pages(struct zonelist *zonelist,
+> >         if (sc->compaction_ready)
+> >                 return 1;
+> >
+> > +       /*
+> > +        * We make inactive:active ratio decisions based on the node's
+> > +        * composition of memory, but a restrictive reclaim_idx or a
+> > +        * memory.low cgroup setting can exempt large amounts of
+> > +        * memory from reclaim. Neither of which are very common, so
+> > +        * instead of doing costly eligibility calculations of the
+> > +        * entire cgroup subtree up front, we assume the estimates are
+> > +        * good, and retry with forcible deactivation if that fails.
+> > +        */
+> > +       if (sc->skipped_deactivate) {
+> > +               sc->priority = initial_priority;
+> > +               sc->force_deactivate = 1;
+> > +               sc->skipped_deactivate = 0;
+> > +               goto retry;
+> > +       }
+> > +
+>
+> Not really an objection but in the worst case this will double the
+> cost of direct reclaim.
+>
+> >         /* Untapped cgroup reserves?  Don't OOM, retry. */
+> >         if (sc->memcg_low_skipped) {
+> >                 sc->priority = initial_priority;
+> > +               sc->force_deactivate = 0;
+> > +               sc->skipped_deactivate = 0;
+> >                 sc->memcg_low_reclaim = 1;
+> >                 sc->memcg_low_skipped = 0;
+> >                 goto retry;
+> > @@ -3347,18 +3392,20 @@ static void age_active_anon(struct pglist_data *pgdat,
+> >                                 struct scan_control *sc)
+> >  {
+> >         struct mem_cgroup *memcg;
+> > +       struct lruvec *lruvec;
+> >
+> >         if (!total_swap_pages)
+> >                 return;
+> >
+> > +       lruvec = mem_cgroup_lruvec(NULL, pgdat);
+> > +       if (!inactive_is_low(lruvec, LRU_INACTIVE_ANON))
+> > +               return;
+> > +
+> >         memcg = mem_cgroup_iter(NULL, NULL, NULL);
+> >         do {
+> > -               struct lruvec *lruvec = mem_cgroup_lruvec(memcg, pgdat);
+> > -
+> > -               if (inactive_list_is_low(lruvec, false, sc, true))
+> > -                       shrink_active_list(SWAP_CLUSTER_MAX, lruvec,
+> > -                                          sc, LRU_ACTIVE_ANON);
+> > -
+> > +               lruvec = mem_cgroup_lruvec(memcg, pgdat);
+> > +               shrink_active_list(SWAP_CLUSTER_MAX, lruvec,
+> > +                                  sc, LRU_ACTIVE_ANON);
+> >                 memcg = mem_cgroup_iter(NULL, memcg, NULL);
+> >         } while (memcg);
+> >  }
+> > --
+> > 2.24.0
+> >
