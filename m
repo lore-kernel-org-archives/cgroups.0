@@ -1,55 +1,79 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Subject: Re: [PATCH] bfq: Replace kmalloc_node with kzalloc_node
-Date: Tue, 3 Dec 2019 16:01:46 +0100
-Message-ID: <20191203150146.GC20677@blackbody.suse.cz>
-References: <1574175746-8809-1-git-send-email-xianting_tian@126.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH] mm: fix hanging shrinker management on long
+ do_shrink_slab
+Date: Wed, 4 Dec 2019 09:35:14 +0100
+Message-ID: <20191204083514.GC25242@dhcp22.suse.cz>
+References: <20191129214541.3110-1-ptikhomirov@virtuozzo.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="RIYY1s2vRbPFwWeW"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1574175746-8809-1-git-send-email-xianting_tian@126.com>
+In-Reply-To: <20191129214541.3110-1-ptikhomirov@virtuozzo.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Xianting Tian <xianting_tian@126.com>
-Cc: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Yang Shi <yang.shi@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Konstantin Khorenko <khorenko@virtuozzo.com>, Kirill Tkhai <ktkhai@virtuozzo.com>, Andrey Ryabinin <aryabinin@virtuozzo.com>
 
+On Sat 30-11-19 00:45:41, Pavel Tikhomirov wrote:
+> We have a problem that shrinker_rwsem can be held for a long time for
+> read in shrink_slab, at the same time any process which is trying to
+> manage shrinkers hangs.
+> 
+> The shrinker_rwsem is taken in shrink_slab while traversing shrinker_list.
+> It tries to shrink something on nfs (hard) but nfs server is dead at
+> these moment already and rpc will never succeed. Generally any shrinker
+> can take significant time to do_shrink_slab, so it's a bad idea to hold
+> the list lock here.
 
---RIYY1s2vRbPFwWeW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Yes, this is a known problem and people have already tried to address it
+in the past. Have you checked previous attempts? SRCU based one
+http://lkml.kernel.org/r/153365347929.19074.12509495712735843805.stgit@localhost.localdomain
+but I believe there were others (I only had this one in my notes).
+Please make sure to Cc Dave Chinner when posting a next version because
+he had some concerns about the change of the behavior.
 
-Hi Xianting.
+> We have a similar problem in shrink_slab_memcg, except that we are
+> traversing shrinker_map+shrinker_idr there.
+> 
+> The idea of the patch is to inc a refcount to the chosen shrinker so it
+> won't disappear and release shrinker_rwsem while we are in
+> do_shrink_slab, after that we will reacquire shrinker_rwsem, dec
+> the refcount and continue the traversal.
 
-On Tue, Nov 19, 2019 at 10:02:26AM -0500, Xianting Tian <xianting_tian@126.=
-com> wrote:
-> Replace kmalloc_node with kzalloc_node
-IIUC, your patch makes no functional change and from the message it's
-not clear what's the motivation. Could you please make the commit
-message more descriptive so that it can be evaluated?=20
+The reference count part makes sense to me. RCU role needs a better
+explanation. Also do you have any reason to not use completion for
+the final step? Openconding essentially the same concept sounds a bit
+awkward to me.
 
-Michal
+> We also need a wait_queue so that unregister_shrinker can wait for the
+> refcnt to become zero. Only after these we can safely remove the
+> shrinker from list and idr, and free the shrinker.
+[...]
+>   crash> bt ...
+>   PID: 18739  TASK: ...  CPU: 3   COMMAND: "bash"
+>    #0 [...] __schedule at ...
+>    #1 [...] schedule at ...
+>    #2 [...] rpc_wait_bit_killable at ... [sunrpc]
+>    #3 [...] __wait_on_bit at ...
+>    #4 [...] out_of_line_wait_on_bit at ...
+>    #5 [...] _nfs4_proc_delegreturn at ... [nfsv4]
+>    #6 [...] nfs4_proc_delegreturn at ... [nfsv4]
+>    #7 [...] nfs_do_return_delegation at ... [nfsv4]
+>    #8 [...] nfs4_evict_inode at ... [nfsv4]
+>    #9 [...] evict at ...
+>   #10 [...] dispose_list at ...
+>   #11 [...] prune_icache_sb at ...
+>   #12 [...] super_cache_scan at ...
+>   #13 [...] do_shrink_slab at ...
 
---RIYY1s2vRbPFwWeW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+Are NFS people aware of this? Because this is simply not acceptable
+behavior. Memory reclaim cannot be block indefinitely or for a long
+time. There must be a way to simply give up if the underlying inode
+cannot be reclaimed.
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAl3meNEACgkQia1+riC5
-qSjn/g/8DG+H4X+mWCbTBkuvpAzj2IA506EgGD7wEwtgteQBnS2xH2M81ub5aoN3
-hXXgwOGkqDD3A5TMunkWI5xSLgVZ2VafksCTJiCc67GPl6VjdeQZqwdH9g0XIexm
-IivfMGzgu5bMwv/phg3vus/kEOswc+vDY+kdyUaB9wL2gObQucdUWUrNx6/pqpM6
-v9U18KP6e5tmMubOFeawMEGKgeBqRlib9xylpKH/YuJbov9HQbZx2PN3LeP8E0bM
-5+GGdRMjMp8xd5xydruOnw/+0STQ2rYbm2yvEYlpUHu/G/YEi+oHcePaO6vI+Bfc
-QdEpbtuNqbkf9xDECElg09WOxs0KF+lAOoBXIUkYueCYL3noVnwQd8qj35zUuRee
-SRgUQngz2xPgAJVTkLajR/SilEBVdxX5WHhwsrEE/MUUGOS83STW5oosjSjrAH/i
-3U/LYrBAyEkOPcMWPQz0XxYV16Qa4ngK3rTAWh9WKnvk1yPYK1e2TaTxW5FGR/wj
-hokBpZ2IpMpD/eu1RQjAZH90JcQMsXXH5yxHLD3RH7zQ6kabbrbv4nYV44Oce1/l
-BLWZQhGVNtZvzrHZcd0RhLnrtP2Km+iB3KPvL9H5D1wDWr3Wj+6kmE9NiZMkmcjO
-hU67jTSELMNbLREnZx3Tc575bQKyOxcMpxoJljDr/7ht9LKD9jM=
-=ePfG
------END PGP SIGNATURE-----
-
---RIYY1s2vRbPFwWeW--
+I still have to think about the proposed solution. It sounds a bit over
+complicated to me.
+-- 
+Michal Hocko
+SUSE Labs
