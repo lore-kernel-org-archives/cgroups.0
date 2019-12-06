@@ -1,79 +1,96 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] mm: fix hanging shrinker management on long
  do_shrink_slab
-Date: Wed, 4 Dec 2019 09:35:14 +0100
-Message-ID: <20191204083514.GC25242@dhcp22.suse.cz>
+Date: Fri, 6 Dec 2019 13:09:53 +1100
+Message-ID: <20191206020953.GS2695@dread.disaster.area>
 References: <20191129214541.3110-1-ptikhomirov@virtuozzo.com>
+ <4e2d959a-0b0e-30aa-59b4-8e37728e9793@virtuozzo.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20191129214541.3110-1-ptikhomirov@virtuozzo.com>
+In-Reply-To: <4e2d959a-0b0e-30aa-59b4-8e37728e9793@virtuozzo.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Yang Shi <yang.shi@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Konstantin Khorenko <khorenko@virtuozzo.com>, Kirill Tkhai <ktkhai@virtuozzo.com>, Andrey Ryabinin <aryabinin@virtuozzo.com>
+To: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Yang Shi <yang.shi@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Konstantin Khorenko <khorenko@virtuozzo.com>, Kirill Tkhai <ktkhai@virtuozzo.com>, Trond Myklebust <trond.myklebust@hammerspace.com>, Anna Schumaker <anna.schumaker@netapp.com>, "J. Bruce Fields" <bfields@fieldses.org>
 
-On Sat 30-11-19 00:45:41, Pavel Tikhomirov wrote:
-> We have a problem that shrinker_rwsem can be held for a long time for
-> read in shrink_slab, at the same time any process which is trying to
-> manage shrinkers hangs.
+[please cc me on future shrinker infrastructure modifications]
+
+On Mon, Dec 02, 2019 at 07:36:03PM +0300, Andrey Ryabinin wrote:
 > 
-> The shrinker_rwsem is taken in shrink_slab while traversing shrinker_list.
-> It tries to shrink something on nfs (hard) but nfs server is dead at
-> these moment already and rpc will never succeed. Generally any shrinker
-> can take significant time to do_shrink_slab, so it's a bad idea to hold
-> the list lock here.
+> On 11/30/19 12:45 AM, Pavel Tikhomirov wrote:
+> > We have a problem that shrinker_rwsem can be held for a long time for
+> > read in shrink_slab, at the same time any process which is trying to
+> > manage shrinkers hangs.
+> > 
+> > The shrinker_rwsem is taken in shrink_slab while traversing shrinker_list.
+> > It tries to shrink something on nfs (hard) but nfs server is dead at
+> > these moment already and rpc will never succeed. Generally any shrinker
+> > can take significant time to do_shrink_slab, so it's a bad idea to hold
+> > the list lock here.
 
-Yes, this is a known problem and people have already tried to address it
-in the past. Have you checked previous attempts? SRCU based one
-http://lkml.kernel.org/r/153365347929.19074.12509495712735843805.stgit@localhost.localdomain
-but I believe there were others (I only had this one in my notes).
-Please make sure to Cc Dave Chinner when posting a next version because
-he had some concerns about the change of the behavior.
+registering/unregistering a shrinker is not a performance critical
+task. If a shrinker is blocking for a long time, then we need to
+work to fix the shrinker implementation because blocking is a much
+bigger problem than just register/unregister.
 
-> We have a similar problem in shrink_slab_memcg, except that we are
-> traversing shrinker_map+shrinker_idr there.
-> 
-> The idea of the patch is to inc a refcount to the chosen shrinker so it
-> won't disappear and release shrinker_rwsem while we are in
-> do_shrink_slab, after that we will reacquire shrinker_rwsem, dec
-> the refcount and continue the traversal.
+> > The idea of the patch is to inc a refcount to the chosen shrinker so it
+> > won't disappear and release shrinker_rwsem while we are in
+> > do_shrink_slab, after that we will reacquire shrinker_rwsem, dec
+> > the refcount and continue the traversal.
 
-The reference count part makes sense to me. RCU role needs a better
-explanation. Also do you have any reason to not use completion for
-the final step? Openconding essentially the same concept sounds a bit
-awkward to me.
+This is going to cause a *lot* of traffic on the shrinker rwsem.
+It's already a pretty hot lock on large machines under memory
+pressure (think thousands of tasks all doing direct reclaim across
+hundreds of CPUs), and so changing them to cycle the rwsem on every
+shrinker that will only make this worse. Esepcially when we consider
+that there may be hundreds to thousands of registered shrinker
+instances on large machines.
 
-> We also need a wait_queue so that unregister_shrinker can wait for the
-> refcnt to become zero. Only after these we can safely remove the
-> shrinker from list and idr, and free the shrinker.
-[...]
->   crash> bt ...
->   PID: 18739  TASK: ...  CPU: 3   COMMAND: "bash"
->    #0 [...] __schedule at ...
->    #1 [...] schedule at ...
->    #2 [...] rpc_wait_bit_killable at ... [sunrpc]
->    #3 [...] __wait_on_bit at ...
->    #4 [...] out_of_line_wait_on_bit at ...
->    #5 [...] _nfs4_proc_delegreturn at ... [nfsv4]
->    #6 [...] nfs4_proc_delegreturn at ... [nfsv4]
->    #7 [...] nfs_do_return_delegation at ... [nfsv4]
->    #8 [...] nfs4_evict_inode at ... [nfsv4]
->    #9 [...] evict at ...
->   #10 [...] dispose_list at ...
->   #11 [...] prune_icache_sb at ...
->   #12 [...] super_cache_scan at ...
->   #13 [...] do_shrink_slab at ...
+As an example of how frequent cycling of a global lock in shrinker
+instances causes issues, we used to take references to superblock
+shrinker count invocations to guarantee existence. This was found to
+be a scalability limitation when lots of near-empty superblocks were
+present in a system (see commit d23da150a37c ("fs/superblock: avoid
+locking counting inodes and dentries before reclaiming them")).
 
-Are NFS people aware of this? Because this is simply not acceptable
-behavior. Memory reclaim cannot be block indefinitely or for a long
-time. There must be a way to simply give up if the underlying inode
-cannot be reclaimed.
+This alleviated the problem for a while, but soon we had problems
+with just taking a reference to the superblock in the callbacks that
+did actual work. Hence we changed it to just take a per-superblock
+rwsem to get rid of the global sb_lock spinlock in this path. See
+commit eb6ef3df4faa ("trylock_super(): replacement for
+grab_super_passive()". Now we don't have a scalability problem.
 
-I still have to think about the proposed solution. It sounds a bit over
-complicated to me.
+IOWs, we already know that cycling a global rwsem on every
+individual shrinker invocation is going to cause noticable
+scalability problems. Hence I don't think that this sort of "cycle
+the global rwsem faster to reduce [un]register latency" solution is
+going to fly because of the runtime performance regressions it will
+introduce....
+
+> I don't think this patch solves the problem, it only fixes one minor symptom of it.
+> The actual problem here the reclaim hang in the nfs.
+
+The nfs client is waiting on the NFS server to respond. It may
+actually be that the server has hung, not the client...
+
+> It means that any process, including kswapd, may go into nfs inode reclaim and stuck there.
+
+*nod*
+
+> I think this should be handled on nfs/vfs level by making  inode eviction during reclaim more asynchronous.
+
+That's what we are trying to do with similar blocking based issues
+in XFS inode reclaim. It's not simple, though, because these days
+memory reclaim is like a bowl full of spaghetti covered with a
+delicious sauce of non-obvious heuristics and broken
+functionality....
+
+Cheers,
+
+Dave.
 -- 
-Michal Hocko
-SUSE Labs
+Dave Chinner
+david@fromorbit.com
