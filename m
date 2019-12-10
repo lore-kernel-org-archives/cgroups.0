@@ -1,68 +1,83 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] mm: fix hanging shrinker management on long
- do_shrink_slab
-Date: Tue, 10 Dec 2019 12:20:36 +1100
-Message-ID: <20191210012036.GB19213@dread.disaster.area>
-References: <20191129214541.3110-1-ptikhomirov@virtuozzo.com>
- <4e2d959a-0b0e-30aa-59b4-8e37728e9793@virtuozzo.com>
- <20191206020953.GS2695@dread.disaster.area>
- <CALvZod4YrnLLbaqTrZR92Y45rd4G+UzcqrkwAptJGJ2Kc8i6Og@mail.gmail.com>
-Mime-Version: 1.0
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: [PATCH v5 4/8] mm/mlock: optimize munlock_pagevec by relocking
+Date: Tue, 10 Dec 2019 19:46:20 +0800
+Message-ID: <1575978384-222381-5-git-send-email-alex.shi@linux.alibaba.com>
+References: <1575978384-222381-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CALvZod4YrnLLbaqTrZR92Y45rd4G+UzcqrkwAptJGJ2Kc8i6Og@mail.gmail.com>
+In-Reply-To: <1575978384-222381-1-git-send-email-alex.shi@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>, Pavel Tikhomirov <ptikhomirov@virtuozzo.com>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Chris Down <chris@chrisdown.name>, Yang Shi <yang.shi@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Konstantin Khorenko <khorenko@virtuozzo.com>, Kirill Tkhai <ktkhai@virtuozzo.com>, Trond Myklebust <trond.myklebust@hammerspace.com>, Anna Schumaker <anna.schumaker@netapp.com>
+To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com, hannes@cmpxchg.org
+Cc: Alex Shi <alex.shi@linux.alibaba.com>
 
-On Fri, Dec 06, 2019 at 09:11:25AM -0800, Shakeel Butt wrote:
-> On Thu, Dec 5, 2019 at 6:10 PM Dave Chinner <david@fromorbit.com> wrote:
-> > If a shrinker is blocking for a long time, then we need to
-> > work to fix the shrinker implementation because blocking is a much
-> > bigger problem than just register/unregister.
-> >
-> 
-> Yes, we should be fixing the implementations of all shrinkers and yes
-> it is bigger issue but we can also fix register/unregister isolation
-> issue in parallel. Fixing all shrinkers would a tedious and long task
-> and we should not block fixing isolation issue on it.
+During the pagevec locking, a new page's lruvec is may same as
+previous one. Thus we could save a re-locking, and only
+change lock iff lruvec is newer.
 
-"fixing all shrinkers" is a bit of hyperbole - you've identified
-only one instance where blocking is causing you problems. Indeed,
-most shrinkers are already non-blocking and won't cause you any
-problems at all.
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>
+---
+ mm/mlock.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-> > IOWs, we already know that cycling a global rwsem on every
-> > individual shrinker invocation is going to cause noticable
-> > scalability problems. Hence I don't think that this sort of "cycle
-> > the global rwsem faster to reduce [un]register latency" solution is
-> > going to fly because of the runtime performance regressions it will
-> > introduce....
-> >
-> 
-> I agree with your scalability concern (though others would argue to
-> first demonstrate the issue before adding more sophisticated scalable
-> code).
-
-Look at the git history. We *know* this is a problem, so anyone
-arguing that we have to prove it can go take a long walk of a short
-plank....
-
-> Most memory reclaim code is written without the performance or
-> scalability concern, maybe we should switch our thinking.
-
-I think there's a lot of core mm and other developers that would
-disagree with you there. With respect to shrinkers, we've been
-directly concerned about performance and scalability of the
-individual instances as well as the infrastructure for at least the
-last decade....
-
-Cheers,
-
-Dave.
+diff --git a/mm/mlock.c b/mm/mlock.c
+index 10d15f58b061..050f999eadb1 100644
+--- a/mm/mlock.c
++++ b/mm/mlock.c
+@@ -289,6 +289,7 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ {
+ 	int i;
+ 	int nr = pagevec_count(pvec);
++	int delta_munlocked = -nr;
+ 	struct pagevec pvec_putback;
+ 	struct lruvec *lruvec = NULL;
+ 	int pgrescued = 0;
+@@ -299,20 +300,19 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ 	for (i = 0; i < nr; i++) {
+ 		struct page *page = pvec->pages[i];
+ 
+-		lruvec = lock_page_lruvec_irq(page);
++		lruvec = relock_page_lruvec_irq(page, lruvec);
+ 
+ 		if (TestClearPageMlocked(page)) {
+ 			/*
+ 			 * We already have pin from follow_page_mask()
+ 			 * so we can spare the get_page() here.
+ 			 */
+-			if (__munlock_isolate_lru_page(page, lruvec, false)) {
+-				__mod_zone_page_state(zone, NR_MLOCK,  -1);
+-				unlock_page_lruvec_irq(lruvec);
++			if (__munlock_isolate_lru_page(page, lruvec, false))
+ 				continue;
+-			} else
++			else
+ 				__munlock_isolation_failed(page);
+-		}
++		} else
++			delta_munlocked++;
+ 
+ 		/*
+ 		 * We won't be munlocking this page in the next phase
+@@ -322,8 +322,10 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ 		 */
+ 		pagevec_add(&pvec_putback, pvec->pages[i]);
+ 		pvec->pages[i] = NULL;
+-		unlock_page_lruvec_irq(lruvec);
+ 	}
++	__mod_zone_page_state(zone, NR_MLOCK, delta_munlocked);
++	if (lruvec)
++		unlock_page_lruvec_irq(lruvec);
+ 
+ 	/* Now we can release pins of pages that we are not munlocking */
+ 	pagevec_release(&pvec_putback);
 -- 
-Dave Chinner
-david@fromorbit.com
+1.8.3.1
+
