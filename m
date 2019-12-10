@@ -1,52 +1,69 @@
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v5 2/8] mm/lru: replace pgdat lru_lock with lruvec lock
-Date: Tue, 10 Dec 2019 05:41:33 -0800
-Message-ID: <20191210134133.GI32169@bombadil.infradead.org>
-References: <1575978384-222381-1-git-send-email-alex.shi@linux.alibaba.com>
- <1575978384-222381-3-git-send-email-alex.shi@linux.alibaba.com>
+From: chengkaitao <pilgrimtao@gmail.com>
+Subject: [PATCH] mm: cleanup some useless code
+Date: Tue, 10 Dec 2019 05:49:10 -0800
+Message-ID: <20191210134911.2570-1-pilgrimtao@gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=ftX9rvm1yHZa4SUpNOQRgZGTA7du9HcjWYSa3Fi88Wo=; b=jAqsM/qUhmvw4P1Bolh5cygJ3
-        hsbrlYtszIVFAu/Uxu1V6Mj+pSAeMQtx72QJYGIrX/2dGESI0JBL14Wij2exyavRDLZNVsksN3Qxt
-        bIt9sgdQlvH0PRlPFwCCqIFQY/QBgOYVpcCEAcLzEFHU7lm62M+Ztlz7ihaJBlweBioVHZ+aZLGCL
-        PVJUwBX1ySkYfQB3iBmM0v8qqtPK4pH68epCCof/Nf4eDtD7UyK+wqHG5ESjWPmmDEW3JeICjR//W
-        HWCQQ1osShwzmfRxfa0z2pi4zet4xq5yEJXubTH6Mad7F1c9b1jRoTy+rogQZ89lu3LQkdP+pnAT1
-Content-Disposition: inline
-In-Reply-To: <1575978384-222381-3-git-send-email-alex.shi@linux.alibaba.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=2GTyISog1VX8yYAJFI+c/tQ5PL+DROiS/ITcUOlh5Cs=;
+        b=c0FEADODck6cpIJJgtjKYAmemgt9mpnPLYw9O4bu5TW3TNCwI8b5q6ij8BkpCd0nYy
+         6WxeFlUsOR7ofa8ZCWHs2hL8pJhGd7QjnStKiCJQkdx9MmdUCP2gGFzs4F8ZOLi1AUq1
+         XYKwagD4yz/ZaQSs00mW5W5UC8JxZU1zLoHRSeDLI20r60Mw+pFb95bJtmHUs87j3z6U
+         7vq+E8Gwe5pO9Zd2/h8+yHu/llz8RZR6RilV1lzKEupKwljmIfGEce8rCkKB5Zg3RVrw
+         eXHGyM0pFtCiBBgQELyAUveIWL7Dc/o9mCkNnlBczw5Oejrclpe54hMvdzAAl5QZ6XTQ
+         nJtA==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, shakeelb@google.com, hannes@cmpxchg.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>, Vlastimil Babka <vbabka@suse.cz>, Qian Cai <cai@lca.pw>, Andrey Ryabinin <aryabinin@virtuozzo.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Rientjes <rientjes@google.com>, Aneesh Kum
+To: hannes@cmpxchg.org
+Cc: mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, smuchun@gmail.com, Kaitao Cheng <pilgrimtao@gmail.com>
 
-On Tue, Dec 10, 2019 at 07:46:18PM +0800, Alex Shi wrote:
-> -static void lock_page_lru(struct page *page, int *isolated)
-> +static struct lruvec *lock_page_lru(struct page *page, int *isolated)
->  {
-> -	pg_data_t *pgdat = page_pgdat(page);
-> +	struct lruvec *lruvec = lock_page_lruvec_irq(page);
->  
-> -	spin_lock_irq(&pgdat->lru_lock);
->  	if (PageLRU(page)) {
-> -		struct lruvec *lruvec;
->  
-> -		lruvec = mem_cgroup_page_lruvec(page, pgdat);
->  		ClearPageLRU(page);
->  		del_page_from_lru_list(page, lruvec, page_lru(page));
->  		*isolated = 1;
->  	} else
->  		*isolated = 0;
-> +
-> +	return lruvec;
->  }
+From: Kaitao Cheng <pilgrimtao@gmail.com>
 
-I still don't understand how this is supposed to work for !PageLRU
-pages.  Which lruvec have you locked if this page isn't on an LRU?
+There is a duplicate PageTransHuge, because hpage_nr_pages have
+the same one.
+
+Signed-off-by: Kaitao Cheng <pilgrimtao@gmail.com>
+---
+ mm/memcontrol.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index bc01423277c5..870284d3ee9d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6678,7 +6678,6 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage)
+ {
+ 	struct mem_cgroup *memcg;
+ 	unsigned int nr_pages;
+-	bool compound;
+ 	unsigned long flags;
+ 
+ 	VM_BUG_ON_PAGE(!PageLocked(oldpage), oldpage);
+@@ -6700,8 +6699,7 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage)
+ 		return;
+ 
+ 	/* Force-charge the new page. The old one will be freed soon */
+-	compound = PageTransHuge(newpage);
+-	nr_pages = compound ? hpage_nr_pages(newpage) : 1;
++	nr_pages = hpage_nr_pages(newpage);
+ 
+ 	page_counter_charge(&memcg->memory, nr_pages);
+ 	if (do_memsw_account())
+@@ -6711,7 +6709,8 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage)
+ 	commit_charge(newpage, memcg, false);
+ 
+ 	local_irq_save(flags);
+-	mem_cgroup_charge_statistics(memcg, newpage, compound, nr_pages);
++	mem_cgroup_charge_statistics(memcg, newpage, PageTransHuge(newpage),
++			nr_pages);
+ 	memcg_check_events(memcg, newpage);
+ 	local_irq_restore(flags);
+ }
+-- 
+2.20.1
 
