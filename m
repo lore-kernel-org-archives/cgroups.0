@@ -1,78 +1,50 @@
-From: chengkaitao <pilgrimtao@gmail.com>
-Subject: [PATCH v2] mm: cleanup some useless code
-Date: Tue, 10 Dec 2019 08:04:50 -0800
-Message-ID: <20191210160450.3395-1-pilgrimtao@gmail.com>
+From: Chris Down <chris@chrisdown.name>
+Subject: Re: [PATCH v2] mm: cleanup some useless code
+Date: Tue, 10 Dec 2019 21:04:03 +0000
+Message-ID: <20191210210403.GA455280@chrisdown.name>
+References: <20191210160450.3395-1-pilgrimtao@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=emGhzWuhNPjt1BJOm+vTsDQa4JuHnONtolq4L0YAYQ8=;
-        b=eny3JXx2eahzZo3X31J0NB5EmLHKTOLzfIfOxR4z3ENiB1Iof+3JuFqpyvxRWvP4Pu
-         fTylmtLSdoRXhWcJpw6qqXHQo3alRswnSIpp0AnOv6CzOgaxFODrXQWyIjvEwZEsrIB4
-         WmCMT9eiUFYON+w7Ci5J22Zo5o+uMk5PDckFgxqAaEocNlmYdSm8fZHFeXRis1P+lrjQ
-         DqGC8eVJXFytcZFNdUpWzOD/tLgWw6HWuFcaFbjO9acQjWg38quHgp5HUFwE8mHGKjGD
-         RGaVQeqzNVgpLerJQ23QVALPzOL8cZStwWdXtH73Rnb56gTLJRufPy1w7SjKlZJuPiBb
-         dXhQ==
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=t5wRb0HVinMm6EfDaWAnO/a1Sj3+z3DX/7PLYloGfXc=;
+        b=OjVkow0SpbjcoF1OWjpltk1vI3YxAw2jQt8Cq6d1x/Btjj1F3u4QeDCqIVyZYELWWn
+         lXo4Q8crVZNDfrrurZiFUJUCwelB3pjClmCwC1fxlalGIcZiAwo5pMgLil3e2tONS9X5
+         v7g3C9cMkECg6NxNdXCychqgWcQNo1wWAF9mk=
+Content-Disposition: inline
+In-Reply-To: <20191210160450.3395-1-pilgrimtao@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: hannes@cmpxchg.org
-Cc: mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, smuchun@gmail.com, Kaitao Cheng <pilgrimtao@gmail.com>, Michal Hocko <mhocko@suse.com>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Transfer-Encoding: 7bit
+To: chengkaitao <pilgrimtao@gmail.com>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, smuchun@gmail.com, Michal Hocko <mhocko@suse.com>
 
-From: Kaitao Cheng <pilgrimtao@gmail.com>
+chengkaitao writes:
+>Subject: Re: [PATCH v2] mm: cleanup some useless code
 
-Compound pages handling in mem_cgroup_migrate is more convoluted than
-necessary. The state is duplicated in compound variable and the same
-could be achieved by PageTransHuge check which is trivial and
-hpage_nr_pages is already PageTransHuge aware.
+Can you please write a more descriptive commit title? Seeing this in the commit 
+history tells the reader nothing, "code" could mean anything from a state 
+machine to a boolean, and "cleanup" could mean anything from some complex 
+refactoring to something trivial like this, and right now I have to look and 
+see the individual commit. This patch is really just deduplication of effort.
 
-It is much simpler to just use hpage_nr_pages for nr_pages and replace
-the local variable by PageTransHuge check directly
+Perhaps:
 
-Signed-off-by: Kaitao Cheng <pilgrimtao@gmail.com>
-Acked-by: Michal Hocko <mhocko@suse.com>
----
-Change in v2:
-	Update commit message
+     mm, memcg: Don't check PageTransHuge before calling hpage_nr_pages
 
- mm/memcontrol.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+>It is much simpler to just use hpage_nr_pages for nr_pages and replace
+>the local variable by PageTransHuge check directly
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index bc01423277c5..870284d3ee9d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6678,7 +6678,6 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage)
- {
- 	struct mem_cgroup *memcg;
- 	unsigned int nr_pages;
--	bool compound;
- 	unsigned long flags;
- 
- 	VM_BUG_ON_PAGE(!PageLocked(oldpage), oldpage);
-@@ -6700,8 +6699,7 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage)
- 		return;
- 
- 	/* Force-charge the new page. The old one will be freed soon */
--	compound = PageTransHuge(newpage);
--	nr_pages = compound ? hpage_nr_pages(newpage) : 1;
-+	nr_pages = hpage_nr_pages(newpage);
- 
- 	page_counter_charge(&memcg->memory, nr_pages);
- 	if (do_memsw_account())
-@@ -6711,7 +6709,8 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage)
- 	commit_charge(newpage, memcg, false);
- 
- 	local_irq_save(flags);
--	mem_cgroup_charge_statistics(memcg, newpage, compound, nr_pages);
-+	mem_cgroup_charge_statistics(memcg, newpage, PageTransHuge(newpage),
-+			nr_pages);
- 	memcg_check_events(memcg, newpage);
- 	local_irq_restore(flags);
- }
--- 
-2.20.1
+Heh, calling it "much" simpler seems a bit excessive. I mean, the code is just 
+as readable in both cases, but if it's going to go in, then that's fine. Any 
+merge conflict should be trivial enough to fix.
 
+>Signed-off-by: Kaitao Cheng <pilgrimtao@gmail.com>
+>Acked-by: Michal Hocko <mhocko@suse.com>
+
+I'm indifferent to this patch, but after the title change:
+
+Acked-by: Chris Down <chris@chrisdown.name>
