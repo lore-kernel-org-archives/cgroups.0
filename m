@@ -1,62 +1,290 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 0/3] mm: memcontrol: recursive memory protection
-Date: Fri, 13 Dec 2019 14:21:55 -0500
-Message-ID: <20191213192158.188939-1-hannes@cmpxchg.org>
+Subject: [PATCH 2/3] mm: memcontrol: clean up and document effective low/min calculations
+Date: Fri, 13 Dec 2019 14:21:57 -0500
+Message-ID: <20191213192158.188939-3-hannes@cmpxchg.org>
+References: <20191213192158.188939-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Md8aPp7pWyGuw5IIpUNdRQgPAvuPZuMepp2Ahz2Nx4M=;
-        b=wgSZLGRUOXwzFB4dfBnzTeSU23C7S7RRsjtSNusnCzXmKwnqrtYtHchbbxHW6dqapq
-         MjghPETHNvKrpaC4P42jqcAt5wpcqzU0OADzTYo1e7xY99FcQTby3wlOrGvEBtpkc3L2
-         6G0T1SS8d+6LQjg38Y2yKe6cLvZylqzSJ+aEhVQjCpBshBp3/jeI6QsuKw3DcOyxqTBC
-         MsKge1RHa22f8HtCjtNI02qMb+YOCDmCOgVfeMTTv/2eA/4D6h9d1lEZPJxI6dUoIiQa
-         sp8jbhVfvh+id58flVOEQZM5L+C5XnCBhhgjSG85RPGD9hI6Pm1nbl37bI40mNck5b3M
-         gQpw==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=Ls8wrlESclxVq3FWZo1eL09b2RRlMQtABmUSobhX+h4=;
+        b=lZ9bjJS5Z8k4/MLIlRP/BYAnRVGwWQQ3CgZMTx0IRCiXdLNyvaEG0mUPyHZoCXDVqR
+         7l3k5fqaJC4ezU1alx/DqAD3PlK+3vxqGvA6A/3XaHSkScWEp8gn0ktcS31ZGjn4nh69
+         GXINwN6Q3qLPvv6WdLQGvfHD6BAMUQh3nVsze6hH7daRqyCS/bY5us0iGTOkO3KXVjfd
+         FxZgf3rxLhc1JXfcOC83ZkinubQ4iuzMKVr42zoHrKV0gQR2479UnJ7S6dtEpE4ppblA
+         pwjjtNHtW5vRpcJwQK80kGz1o29UYS4WMtpvY4AnvVCKI8nHQS1yawAv32umi9PnGTy5
+         CgQA==
+In-Reply-To: <20191213192158.188939-1-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-The current memory.low (and memory.min) semantics require protection
-to be assigned to a cgroup in an untinterrupted chain from the
-top-level cgroup all the way to the leaf.
+The effective protection of any given cgroup is a somewhat complicated
+construct that depends on the ancestor's configuration, siblings'
+configurations, as well as current memory utilization in all these
+groups. It's done this way to satisfy hierarchical delegation
+requirements while also making the configuration semantics flexible
+and expressive in complex real life scenarios.
 
-In practice, we want to protect entire cgroup subtrees from each other
-(system management software vs. workload), but we would like the VM to
-balance memory optimally *within* each subtree, without having to make
-explicit weight allocations among individual components. The current
-semantics make that impossible.
+Unfortunately, all the rules and requirements are sparsely documented,
+and the code is a little too clever in merging different scenarios
+into a single min() expression. This makes it hard to reason about the
+implementation and avoid breaking semantics when making changes to it.
 
-This patch series extends memory.low/min such that the knobs apply
-recursively to the entire subtree. Users can still assign explicit
-protection to subgroups, but if they don't, the protection set by the
-parent cgroup will be distributed dynamically such that children
-compete freely - as if no memory control were enabled inside the
-subtree - but enjoy protection from neighboring trees.
+This patch documents each semantic rule individually and splits out
+the handling of the overcommit case from the regular case.
 
-Patch #1 fixes an existing bug that can give a cgroup tree more
-protection than it should receive as per ancestor configuration.
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ mm/memcontrol.c | 191 ++++++++++++++++++++++++++----------------------
+ 1 file changed, 105 insertions(+), 86 deletions(-)
 
-Patch #2 simplifies and documents the existing code to make it easier
-to reason about the changes in the next patch.
-
-Patch #3 finally implements recursive memory protection semantics.
-
-Because of a risk of regressing legacy setups, the new semantics are
-hidden behind a cgroup2 mount option, 'memory_recursiveprot'.
-
-More details in patch #3.
-
- Documentation/admin-guide/cgroup-v2.rst |  11 ++
- include/linux/cgroup-defs.h             |   5 +
- kernel/cgroup/cgroup.c                  |  17 ++-
- mm/memcontrol.c                         | 241 +++++++++++++++++++-----------
- mm/page_counter.c                       |  12 +-
- 5 files changed, 190 insertions(+), 96 deletions(-)
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 874a0b00f89b..ac9a3a170bec 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6204,65 +6204,55 @@ struct cgroup_subsys memory_cgrp_subsys = {
+ 	.early_init = 0,
+ };
+ 
+-/**
+- * mem_cgroup_protected - check if memory consumption is in the normal range
+- * @root: the top ancestor of the sub-tree being checked
+- * @memcg: the memory cgroup to check
+- *
+- * WARNING: This function is not stateless! It can only be used as part
+- *          of a top-down tree iteration, not for isolated queries.
+- *
+- * Returns one of the following:
+- *   MEMCG_PROT_NONE: cgroup memory is not protected
+- *   MEMCG_PROT_LOW: cgroup memory is protected as long there is
+- *     an unprotected supply of reclaimable memory from other cgroups.
+- *   MEMCG_PROT_MIN: cgroup memory is protected
+- *
+- * @root is exclusive; it is never protected when looked at directly
++/*
++ * This function calculates an individual cgroup's effective
++ * protection which is derived from its own memory.min/low, its
++ * parent's and siblings' settings, as well as the actual memory
++ * distribution in the tree.
+  *
+- * To provide a proper hierarchical behavior, effective memory.min/low values
+- * are used. Below is the description of how effective memory.low is calculated.
+- * Effective memory.min values is calculated in the same way.
++ * The following rules apply to the effective protection values:
+  *
+- * Effective memory.low is always equal or less than the original memory.low.
+- * If there is no memory.low overcommittment (which is always true for
+- * top-level memory cgroups), these two values are equal.
+- * Otherwise, it's a part of parent's effective memory.low,
+- * calculated as a cgroup's memory.low usage divided by sum of sibling's
+- * memory.low usages, where memory.low usage is the size of actually
+- * protected memory.
++ * 1. At the first level of reclaim, effective protection is equal to
++ *    the declared protection in memory.min and memory.low.
+  *
+- *                                             low_usage
+- * elow = min( memory.low, parent->elow * ------------------ ),
+- *                                        siblings_low_usage
++ * 2. To enable safe delegation of the protection configuration, at
++ *    subsequent levels the effective protection is capped to the
++ *    parent's effective protection.
+  *
+- * low_usage = min(memory.low, memory.current)
++ * 3. To make complex and dynamic subtrees easier to configure, the
++ *    user is allowed to overcommit the declared protection at a given
++ *    level. If that is the case, the parent's effective protection is
++ *    distributed to the children in proportion to how much protection
++ *    they have declared and how much of it they are utilizing.
+  *
++ *    This makes distribution proportional, but also work-conserving:
++ *    if one cgroup claims much more protection than it uses memory,
++ *    the unused remainder is available to its siblings.
+  *
+- * Such definition of the effective memory.low provides the expected
+- * hierarchical behavior: parent's memory.low value is limiting
+- * children, unprotected memory is reclaimed first and cgroups,
+- * which are not using their guarantee do not affect actual memory
+- * distribution.
++ *    Consider the following example tree:
+  *
+- * For example, if there are memcgs A, A/B, A/C, A/D and A/E:
++ *        A      A/memory.low = 2G, A/memory.current = 6G
++ *       //\\
++ *      BC  DE   B/memory.low = 3G  B/memory.current = 2G
++ *               C/memory.low = 1G  C/memory.current = 2G
++ *               D/memory.low = 0   D/memory.current = 2G
++ *               E/memory.low = 10G E/memory.current = 0
+  *
+- *     A      A/memory.low = 2G, A/memory.current = 6G
+- *    //\\
+- *   BC  DE   B/memory.low = 3G  B/memory.current = 2G
+- *            C/memory.low = 1G  C/memory.current = 2G
+- *            D/memory.low = 0   D/memory.current = 2G
+- *            E/memory.low = 10G E/memory.current = 0
++ *    and memory pressure is applied, the following memory
++ *    distribution is expected (approximately*):
+  *
+- * and the memory pressure is applied, the following memory distribution
+- * is expected (approximately):
++ *      A/memory.current = 2G
++ *      B/memory.current = 1.3G
++ *      C/memory.current = 0.6G
++ *      D/memory.current = 0
++ *      E/memory.current = 0
+  *
+- *     A/memory.current = 2G
++ *    *assuming equal allocation rate and reclaimability
+  *
+- *     B/memory.current = 1.3G
+- *     C/memory.current = 0.6G
+- *     D/memory.current = 0
+- *     E/memory.current = 0
++ * 4. Conversely, when the declared protection is undercommitted at a
++ *    given level, the distribution of the larger parental protection
++ *    budget is NOT proportional. A cgroup's protection from a sibling
++ *    is capped to its own memory.min/low setting.
+  *
+  * These calculations require constant tracking of the actual low usages
+  * (see propagate_protected_usage()), as well as recursive calculation of
+@@ -6272,12 +6262,64 @@ struct cgroup_subsys memory_cgrp_subsys = {
+  * for next usage. This part is intentionally racy, but it's ok,
+  * as memory.low is a best-effort mechanism.
+  */
++static unsigned long effective_protection(unsigned long usage,
++					  unsigned long setting,
++					  unsigned long parent_effective,
++					  unsigned long siblings_protected)
++{
++	unsigned long protected;
++
++	protected = min(usage, setting);
++	/*
++	 * If all cgroups at this level combined claim and use more
++	 * protection then what the parent affords them, distribute
++	 * shares in proportion to utilization.
++	 *
++	 * We are using actual utilization rather than the statically
++	 * claimed protection in order to be work-conserving: claimed
++	 * but unused protection is available to siblings that would
++	 * otherwise get a smaller chunk than what they claimed.
++	 */
++	if (siblings_protected > parent_effective)
++		return protected * parent_effective / siblings_protected;
++
++	/*
++	 * Ok, utilized protection of all children is within what the
++	 * parent affords them, so we know whatever this child claims
++	 * and utilizes is effectively protected.
++	 *
++	 * If there is unprotected usage beyond this value, reclaim
++	 * will apply pressure in proportion to that amount.
++	 *
++	 * If there is unutilized protection, the cgroup will be fully
++	 * shielded from reclaim, but we do return a smaller value for
++	 * protection than what the group could enjoy in theory. This
++	 * is okay. With the overcommit distribution above, effective
++	 * protection is always dependent on how memory is actually
++	 * consumed among the siblings anyway.
++	 */
++	return protected;
++}
++
++/**
++ * mem_cgroup_protected - check if memory consumption is in the normal range
++ * @root: the top ancestor of the sub-tree being checked
++ * @memcg: the memory cgroup to check
++ *
++ * WARNING: This function is not stateless! It can only be used as part
++ *          of a top-down tree iteration, not for isolated queries.
++ *
++ * Returns one of the following:
++ *   MEMCG_PROT_NONE: cgroup memory is not protected
++ *   MEMCG_PROT_LOW: cgroup memory is protected as long there is
++ *     an unprotected supply of reclaimable memory from other cgroups.
++ *   MEMCG_PROT_MIN: cgroup memory is protected
++ */
+ enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
+ 						struct mem_cgroup *memcg)
+ {
+ 	struct mem_cgroup *parent;
+-	unsigned long emin, parent_emin;
+-	unsigned long elow, parent_elow;
++	unsigned long emin, elow;
+ 	unsigned long usage;
+ 
+ 	if (mem_cgroup_disabled())
+@@ -6292,52 +6334,29 @@ enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
+ 	if (!usage)
+ 		return MEMCG_PROT_NONE;
+ 
+-	emin = memcg->memory.min;
+-	elow = memcg->memory.low;
+-
+ 	parent = parent_mem_cgroup(memcg);
+ 	/* No parent means a non-hierarchical mode on v1 memcg */
+ 	if (!parent)
+ 		return MEMCG_PROT_NONE;
+ 
+-	if (parent == root)
+-		goto exit;
+-
+-	parent_emin = READ_ONCE(parent->memory.emin);
+-	emin = min(emin, parent_emin);
+-	if (emin && parent_emin) {
+-		unsigned long min_usage, siblings_min_usage;
+-
+-		min_usage = min(usage, memcg->memory.min);
+-		siblings_min_usage = atomic_long_read(
+-			&parent->memory.children_min_usage);
+-
+-		if (min_usage && siblings_min_usage)
+-			emin = min(emin, parent_emin * min_usage /
+-				   siblings_min_usage);
++	if (parent == root) {
++		memcg->memory.emin = memcg->memory.min;
++		memcg->memory.elow = memcg->memory.low;
++		goto out;
+ 	}
+ 
+-	parent_elow = READ_ONCE(parent->memory.elow);
+-	elow = min(elow, parent_elow);
+-	if (elow && parent_elow) {
+-		unsigned long low_usage, siblings_low_usage;
+-
+-		low_usage = min(usage, memcg->memory.low);
+-		siblings_low_usage = atomic_long_read(
+-			&parent->memory.children_low_usage);
++	memcg->memory.emin = effective_protection(usage,
++			memcg->memory.min, READ_ONCE(parent->memory.emin),
++			atomic_long_read(&parent->memory.children_min_usage));
+ 
+-		if (low_usage && siblings_low_usage)
+-			elow = min(elow, parent_elow * low_usage /
+-				   siblings_low_usage);
+-	}
+-
+-exit:
+-	memcg->memory.emin = emin;
+-	memcg->memory.elow = elow;
++	memcg->memory.elow = effective_protection(usage,
++			memcg->memory.low, READ_ONCE(parent->memory.elow),
++			atomic_long_read(&parent->memory.children_low_usage));
+ 
+-	if (usage <= emin)
++out:
++	if (usage <= memcg->memory.emin)
+ 		return MEMCG_PROT_MIN;
+-	else if (usage <= elow)
++	else if (usage <= memcg->memory.elow)
+ 		return MEMCG_PROT_LOW;
+ 	else
+ 		return MEMCG_PROT_NONE;
+-- 
+2.24.0
 
