@@ -1,78 +1,44 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] mm: memcontrol.c: move mem_cgroup_id_get_many under
- CONFIG_MMU
-Date: Tue, 17 Dec 2019 10:53:29 +0100
-Message-ID: <20191217095329.GD31063@dhcp22.suse.cz>
-References: <87fthjh2ib.wl-kuninori.morimoto.gx@renesas.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: Re: [PATCH v6 02/10] mm/lru: replace pgdat lru_lock with lruvec lock
+Date: Tue, 17 Dec 2019 21:11:18 +0800
+Message-ID: <a7b5c7bb-022f-60de-2d61-696915df002a@linux.alibaba.com>
+References: <1576488386-32544-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1576488386-32544-3-git-send-email-alex.shi@linux.alibaba.com>
+ <20191216121427.GZ32169@bombadil.infradead.org>
+ <286c11c2-480f-37d6-e9fe-91822f862cd6@linux.alibaba.com>
+ <20191217021613.GB32169@bombadil.infradead.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <87fthjh2ib.wl-kuninori.morimoto.gx@renesas.com>
+In-Reply-To: <20191217021613.GB32169@bombadil.infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: Matthew Wilcox <willy@infradead.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, shakeelb@google.com, hannes@cmpxchg.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>, Vlastimil Babka <vbabka@suse.cz>, Qian Cai <cai@lca.pw>, Andrey Ryabinin <aryabinin@virtuozzo.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Rientjes <rientjes@google.com>, Aneesh Kum
 
-On Tue 17-12-19 15:47:40, Kuninori Morimoto wrote:
-> From: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
+
+
+在 2019/12/17 上午10:16, Matthew Wilcox 写道:
+>>> You still didn't fix this function.  Go back and look at my comment from
+>>> the last time you sent this patch set.
+>>>
+>> Sorry for the misunderstanding. I guess what your want is fold the patch 9th into this, is that right?
+>> Any comments for the 9th patch?
+> I didn't get as far as looking at the ninth patch because I saw this
+> one was wrong and stopped looking.  This is not the first time *with
+> this patch set* that you've been told to *fix the patch*, not submit
+> something that's broken and fix it in a later patch.
 > 
-> mem_cgroup_id_get_many() is used under CONFIG_MMU.
+> I'll look at patch 9 later.
 
-Not really. It is used when SWAP is enabled currently. But it is not
-really bound to the swap functionality by any means. It just happens
-that we do not have other users currently. We might put it under
-CONFIG_SWAP but I do not really think it is a big improvement.
 
-> This patch moves it to under CONFIG_MMU.
-> We will get below warning without this patch
-> if .config doesn't have CONFIG_MMU.
-> 
-> 	LINUX/mm/memcontrol.c:4814:13: warning: 'mem_cgroup_id_get_many'\
-> 		defined but not used [-Wunused-function]
-> 	static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned int n)
-> 	^~~~~~~~~~~~~~~~~~~~~~
+Thanks a lot for the nice cocaching and quick response!
 
-Is this warning really a big deal? The function is not used, alright,
-and the compiler will likely just drop it.
+What the problem for me here is I didn't find a bug here. From the commit_charge's explanations and mem_cgroup_commit_charge comments, as well as call path when lrucare is ture, The lock is just to guard the task migration(which would be lead to move_account) So, It's just a clean up to give up locking when !PageLRU in patch 9. And even w/o patch 9, the page just locked root_mem_cgroup's lru_lock, same as old function does, while the page isn't on any LRU. Useless, but it's still safe.
 
-> Signed-off-by: Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>
-> ---
->  mm/memcontrol.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index c5b5f74..8a157ef 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4811,11 +4811,6 @@ static void mem_cgroup_id_remove(struct mem_cgroup *memcg)
->  	}
->  }
->  
-> -static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned int n)
-> -{
-> -	refcount_add(n, &memcg->id.ref);
-> -}
-> -
->  static void mem_cgroup_id_put_many(struct mem_cgroup *memcg, unsigned int n)
->  {
->  	if (refcount_sub_and_test(n, &memcg->id.ref)) {
-> @@ -5153,6 +5148,11 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
->  }
->  
->  #ifdef CONFIG_MMU
-> +static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned int n)
-> +{
-> +	refcount_add(n, &memcg->id.ref);
-> +}
-> +
->  /* Handlers for move charge at task migration. */
->  static int mem_cgroup_do_precharge(unsigned long count)
->  {
-> -- 
-> 2.7.4
+Do you mind to point out anything else I missed?
 
--- 
-Michal Hocko
-SUSE Labs
+Thanks a lot!
+Alex
+
