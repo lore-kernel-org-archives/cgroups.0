@@ -1,45 +1,51 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH block/for-5.5-fixes] iocost: over-budget forced IOs should
- schedule async delay
-Date: Mon, 16 Dec 2019 16:10:32 -0700
-Message-ID: <fc474a2f-4e1b-8c9f-06bf-b479f7455c77@kernel.dk>
-References: <20191216213400.GA2914998@devbig004.ftw2.facebook.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: Re: [PATCH v6 02/10] mm/lru: replace pgdat lru_lock with lruvec lock
+Date: Tue, 17 Dec 2019 09:30:13 +0800
+Message-ID: <286c11c2-480f-37d6-e9fe-91822f862cd6@linux.alibaba.com>
+References: <1576488386-32544-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1576488386-32544-3-git-send-email-alex.shi@linux.alibaba.com>
+ <20191216121427.GZ32169@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=dCnC/jfvEWt+z7fAdBW+xSdl7SEaUneQSHaq+EB0tW8=;
-        b=A860KQ4K3o5h8+6NmyV0mWqxB7G9iucprwDUlid50DJIt930o0EdvyrIQmDddU8BU/
-         bII7+rThzGEDdo1NoanT+8dfcEbll4RsPU/2r2erpSocVBIUD8HBJv/ZJ1ydcHCtI1Np
-         V5hqkNOaMZx3TmRNaZ1sCyvu6URHi990RaWsTjZd+axtL0dF6DkRNbqZoRcqmNkY3QEg
-         /8Ycnsxw0i50SdGvYuPFBq+MGZ3yMfzTwU5bQEeG8LS4MaZ+3mbDQgvVmTM7dSPBmjhD
-         lNQlUwedlAFoXrSrY7l3oXi86KE2p/ZLiYZxfh48oTu9MZ9P07dNtHABxC7j6VZJvVAt
-         3M8g==
-In-Reply-To: <20191216213400.GA2914998@devbig004.ftw2.facebook.com>
-Content-Language: en-US
+In-Reply-To: <20191216121427.GZ32169@bombadil.infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-block@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Josef Bacik <josef@toxicpanda.com>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Matthew Wilcox <willy@infradead.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, shakeelb@google.com, hannes@cmpxchg.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>, Vlastimil Babka <vbabka@suse.cz>, Qian Cai <cai@lca.pw>, Andrey Ryabinin <aryabinin@virtuozzo.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Rientjes <rientjes@google.com>, Aneesh Kum
 
-On 12/16/19 2:34 PM, Tejun Heo wrote:
-> When over-budget IOs are force-issued through root cgroup,
-> iocg_kick_delay() adjusts the async delay accordingly but doesn't
-> actually schedule async throttle for the issuing task.  This bug is
-> pretty well masked because sooner or later the offending threads are
-> gonna get directly throttled on regular IOs or have async delay
-> scheduled by mem_cgroup_throttle_swaprate().
-> 
-> However, it can affect control quality on filesystem metadata heavy
-> operations.  Let's fix it by invoking blkcg_schedule_throttle() when
-> iocg_kick_delay() says async delay is needed.
 
-Applied, thanks Tejun.
 
--- 
-Jens Axboe
+=D4=DA 2019/12/16 =CF=C2=CE=E78:14, Matthew Wilcox =D0=B4=B5=C0:
+> On Mon, Dec 16, 2019 at 05:26:18PM +0800, Alex Shi wrote:
+>> -static void lock_page_lru(struct page *page, int *isolated)
+>> +static struct lruvec *lock_page_lru(struct page *page, int *isolated)
+>>  {
+>> -	pg_data_t *pgdat =3D page_pgdat(page);
+>> +	struct lruvec *lruvec =3D lock_page_lruvec_irq(page);
+>> =20
+>> -	spin_lock_irq(&pgdat->lru_lock);
+>>  	if (PageLRU(page)) {
+>> -		struct lruvec *lruvec;
+>> =20
+>> -		lruvec =3D mem_cgroup_page_lruvec(page, pgdat);
+>>  		ClearPageLRU(page);
+>>  		del_page_from_lru_list(page, lruvec, page_lru(page));
+>>  		*isolated =3D 1;
+>>  	} else
+>>  		*isolated =3D 0;
+>> +
+>> +	return lruvec;
+>>  }
+>=20
+> You still didn't fix this function.  Go back and look at my comment from
+> the last time you sent this patch set.
+>=20
 
+Sorry for the misunderstanding. I guess what your want is fold the patch 9t=
+h into this, is that right?
+Any comments for the 9th patch?
+
+Thanks
+Alex
