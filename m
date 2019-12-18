@@ -1,550 +1,262 @@
-From: Mina Almasry <almasrymina@google.com>
-Subject: [PATCH v9 4/8] hugetlb: disable region_add file_region coalescing
-Date: Tue, 17 Dec 2019 15:16:11 -0800
-Message-ID: <20191217231615.164161-4-almasrymina@google.com>
-References: <20191217231615.164161-1-almasrymina@google.com>
-Mime-Version: 1.0
+From: Hui Zhu <teawaterz@linux.alibaba.com>
+Subject: [PATCH] mm: vmscan: memcg: Add global shrink priority
+Date: Wed, 18 Dec 2019 17:42:59 +0800
+Message-ID: <1576662179-16861-1-git-send-email-teawaterz@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=fTVIJElalvmhQcv6zCj5CfRWey5jujNpNV62myM6KqA=;
-        b=lJKGasHN1Vsxb/CCKpDadNM0XjWtPgrjSccXZB+PhyLTmYpAT7CEhD0kilSarDhwNW
-         T98dril0kPOjmk7nV85UsMRoifQEHOS61paWif5xaq2hJuN8ca5a0SbDUKpK4TYklube
-         wmaMy9FeSagZXnwkjHd6r2HM7W/k1HKLUk5A+Nvkp+BpKWkAokX/Qxo7AVekAMGjvU1B
-         nsybNtM5yqJH4bTVfxKhow4d2KGWf+kfnFPQhqN39rwvlYAxNur72wWwF6/rhu6Uei6K
-         FL9BXIVsI0/UMnrK33MAIr2YcVxuhQiVvchOIuYO17BimZVTFeG0TkGR0f6/ToX+iWtG
-         RsBw==
-In-Reply-To: <20191217231615.164161-1-almasrymina@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: mike.kravetz@oracle.com
-Cc: shuah@kernel.org, almasrymina@google.com, rientjes@google.com, shakeelb@google.com, gthelen@google.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, aneesh.kumar@linux.vnet.ibm.com, mkoutny@suse.com
+To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, guro@fb.com, shakeelb@google.com, chris@chrisdown.name, yang.shi@linux.alibaba.com, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-A follow up patch in this series adds hugetlb cgroup uncharge info the
-file_region entries in resv->regions. The cgroup uncharge info may
-differ for different regions, so they can no longer be coalesced at
-region_add time. So, disable region coalescing in region_add in this
-patch.
+Currently, memcg has some config to limit memory usage and config
+the shrink behavior.
+In the memory-constrained environment, put different priority tasks
+into different cgroups with different memory limits to protect the
+performance of the high priority tasks.  Because the global memory
+shrink will affect the performance of all tasks.  The memory limit
+cgroup can make shrink happen inside the cgroup.  Then it can decrease
+the memory shrink of the high priority task to protect its performance.
 
-Behavior change:
+But the memory footprint of the task is not static.  It will change as
+the working pressure changes.  And the version changes will affect it too.
+Then set the appropriate memory limit to decrease the global memory shrink
+is a difficult job and lead to wasted memory or performance loss sometimes.
 
-Say a resv_map exists like this [0->1], [2->3], and [5->6].
+This commit adds global shrink priority to memcg to try to handle this
+problem.
+The default global shrink priority of each cgroup is DEF_PRIORITY.
+Its behavior in global shrink is not changed.
+And when global shrink priority of a cgroup is smaller than DEF_PRIORITY,
+its memory will be shrink when memcg->global_shrink_priority greater than
+or equal to sc->priority.
 
-Then a region_chg/add call comes in region_chg/add(f=0, t=5).
+The following is an example to use global shrink priority in a VM that
+has 2 CPUs, 1G memory and 4G swap:
+ # These are test shells that call usemem that get from
+ # https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git
+cat 1.sh
+sleep 9999
+ # -s 3600: Sleep 3600 seconds after test complete then usemem will
+ # not release the memory at once.
+ # -Z:  read memory again after access the memory.
+ # The first time access memory need shrink memory to allocate page.
+ # Then the access speed of high priority will not increase a lot.
+ # The read again speed of high priority will increase.
+ # $((850 * 1024 * 1024 + 8)): Different sizes are used to distinguish
+ # the results of the two tests.
+usemem -s 3600 -Z -a -n 1 $((850 * 1024 * 1024 + 8))
+cat 2.sh
+sleep 9999
+usemem -s 3600 -Z -a -n 1 $((850 * 1024 * 1024))
 
-Old code would generate resv->regions: [0->5], [5->6].
-New code would generate resv->regions: [0->1], [1->2], [2->3], [3->5],
-[5->6].
+ # Setup swap
+swapon /swapfile
+ # Setup 2 cgroups
+mkdir /sys/fs/cgroup/memory/t1/
+mkdir /sys/fs/cgroup/memory/t2/
 
-Special care needs to be taken to handle the resv->adds_in_progress
-variable correctly. In the past, only 1 region would be added for every
-region_chg and region_add call. But now, each call may add multiple
-regions, so we can no longer increment adds_in_progress by 1 in region_chg,
-or decrement adds_in_progress by 1 after region_add or region_abort. Instead,
-region_chg calls add_reservation_in_range() to count the number of regions
-needed and allocates those, and that info is passed to region_add and
-region_abort to decrement adds_in_progress correctly.
+ # Run tests with same global shrink priority
+cat /sys/fs/cgroup/memory/t1/memory.global_shrink_priority
+12
+cat /sys/fs/cgroup/memory/t2/memory.global_shrink_priority
+12
+echo $$ > /sys/fs/cgroup/memory/t1/cgroup.procs
+sh 1.sh &
+echo $$ > /sys/fs/cgroup/memory/t2/cgroup.procs
+sh 2.sh &
+echo $$ > /sys/fs/cgroup/memory/cgroup.procs
+killall sleep
+ # This the test results
+1002700800 bytes / 2360359 usecs = 414852 KB/s
+1002700809 bytes / 2676181 usecs = 365894 KB/s
+read again 891289600 bytes / 13515142 usecs = 64401 KB/s
+read again 891289608 bytes / 13252268 usecs = 65679 KB/s
+killall usemem
 
-We've also modified the assumption that region_add after region_chg
-never fails. region_chg now pre-allocates at least 1 region for
-region_add. If region_add needs more regions than region_chg has
-allocated for it, then it may fail.
+ # Run tests with 12 and 8
+cat /sys/fs/cgroup/memory/t1/memory.global_shrink_priority
+12
+echo 8 > /sys/fs/cgroup/memory/t2/memory.global_shrink_priority
+echo $$ > /sys/fs/cgroup/memory/t1/cgroup.procs
+sh 1.sh &
+echo $$ > /sys/fs/cgroup/memory/t2/cgroup.procs
+sh 2.sh &
+echo $$ > /sys/fs/cgroup/memory/cgroup.procs
+killall sleep
+ # This the test results
+1002700800 bytes / 1809056 usecs = 541276 KB/s
+1002700809 bytes / 2184337 usecs = 448282 KB/s
+read again 891289600 bytes / 6666224 usecs = 130568 KB/s
+read again 891289608 bytes / 9171440 usecs = 94903 KB/s
+killall usemem
 
-Signed-off-by: Mina Almasry <almasrymina@google.com>
-Reviewed-by: Mike Kravetz <mike.kravetz@oracle.com>
+ # This is the test results of 12 and 6
+1002700800 bytes / 1827914 usecs = 535692 KB/s
+1002700809 bytes / 2135124 usecs = 458615 KB/s
+read again 891289600 bytes / 1498419 usecs = 580878 KB/s
+read again 891289608 bytes / 7328362 usecs = 118771 KB/s
 
+Signed-off-by: Hui Zhu <teawaterz@linux.alibaba.com>
 ---
+ include/linux/memcontrol.h |  2 ++
+ mm/memcontrol.c            | 32 ++++++++++++++++++++++++++++++++
+ mm/vmscan.c                | 39 ++++++++++++++++++++++++++++++++++++---
+ 3 files changed, 70 insertions(+), 3 deletions(-)
 
-Changes in v9:
-- Added clarifications in the comments and addressed minor issues from
-code review.
-Changes in v7:
-- region_chg no longer allocates (t-f) / 2 file_region entries.
-Changes in v6:
-- Fix bug in number of region_caches allocated by region_chg
-
----
- mm/hugetlb.c | 327 +++++++++++++++++++++++++++++++++++----------------
- 1 file changed, 223 insertions(+), 104 deletions(-)
-
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index 7782977970301..3f70742e3aee4 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -244,110 +244,179 @@ struct file_region {
- 	long to;
- };
-
-+/* Helper that removes a struct file_region from the resv_map cache and returns
-+ * it for use.
-+ */
-+static struct file_region *
-+get_file_region_entry_from_cache(struct resv_map *resv, long from, long to)
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index a7a0a1a5..8ad2437 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -244,6 +244,8 @@ struct mem_cgroup {
+ 	/* OOM-Killer disable */
+ 	int		oom_kill_disable;
+ 
++	s8 global_shrink_priority;
++
+ 	/* memory.events and memory.events.local */
+ 	struct cgroup_file events_file;
+ 	struct cgroup_file events_local_file;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c5b5f74..39fdc84 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4646,6 +4646,32 @@ static ssize_t memcg_write_event_control(struct kernfs_open_file *of,
+ 	return ret;
+ }
+ 
++static ssize_t mem_global_shrink_priority_write(struct kernfs_open_file *of,
++				char *buf, size_t nbytes, loff_t off)
 +{
-+	struct file_region *nrg = NULL;
++	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
++	s8 val;
++	int ret;
 +
-+	VM_BUG_ON(resv->region_cache_count <= 0);
++	ret = kstrtos8(buf, 0, &val);
++	if (ret < 0)
++		return ret;
++	if (val > DEF_PRIORITY)
++		return -EINVAL;
 +
-+	resv->region_cache_count--;
-+	nrg = list_first_entry(&resv->region_cache, struct file_region, link);
-+	VM_BUG_ON(!nrg);
-+	list_del(&nrg->link);
++	memcg->global_shrink_priority = val;
 +
-+	nrg->from = from;
-+	nrg->to = to;
-+
-+	return nrg;
++	return nbytes;
 +}
 +
- /* Must be called with resv->lock held. Calling this with count_only == true
-  * will count the number of pages to be added but will not modify the linked
-- * list.
-+ * list. If regions_needed != NULL and count_only == true, then regions_needed
-+ * will indicate the number of file_regions needed in the cache to carry out to
-+ * add the regions for this range.
-  */
- static long add_reservation_in_range(struct resv_map *resv, long f, long t,
--				     bool count_only)
-+				     long *regions_needed, bool count_only)
++static s64 mem_global_shrink_priority_read(struct cgroup_subsys_state *css,
++					struct cftype *cft)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
++
++	return memcg->global_shrink_priority;
++}
++
+ static struct cftype mem_cgroup_legacy_files[] = {
+ 	{
+ 		.name = "usage_in_bytes",
+@@ -4774,6 +4800,11 @@ static struct cftype mem_cgroup_legacy_files[] = {
+ 		.write = mem_cgroup_reset,
+ 		.read_u64 = mem_cgroup_read_u64,
+ 	},
++	{
++		.name = "global_shrink_priority",
++		.write = mem_global_shrink_priority_write,
++		.read_s64 = mem_global_shrink_priority_read,
++	},
+ 	{ },	/* terminate */
+ };
+ 
+@@ -4996,6 +5027,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ 
+ 	memcg->high = PAGE_COUNTER_MAX;
+ 	memcg->soft_limit = PAGE_COUNTER_MAX;
++	memcg->global_shrink_priority = DEF_PRIORITY;
+ 	if (parent) {
+ 		memcg->swappiness = mem_cgroup_swappiness(parent);
+ 		memcg->oom_kill_disable = parent->oom_kill_disable;
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 74e8edc..5e11d45 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2637,17 +2637,33 @@ static inline bool should_continue_reclaim(struct pglist_data *pgdat,
+ 	return inactive_lru_pages > pages_for_compaction;
+ }
+ 
++static bool get_is_global_shrink(struct scan_control *sc)
++{
++	if (!sc->target_mem_cgroup ||
++		mem_cgroup_is_root(sc->target_mem_cgroup))
++		return true;
++
++	return false;
++}
++
+ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
  {
--	long chg = 0;
-+	long add = 0;
- 	struct list_head *head = &resv->regions;
-+	long last_accounted_offset = f;
- 	struct file_region *rg = NULL, *trg = NULL, *nrg = NULL;
-
--	/* Locate the region we are before or in. */
--	list_for_each_entry(rg, head, link)
--		if (f <= rg->to)
--			break;
--
--	/* Round our left edge to the current segment if it encloses us. */
--	if (f > rg->from)
--		f = rg->from;
-+	if (regions_needed)
-+		*regions_needed = 0;
-
--	chg = t - f;
-+	/* In this loop, we essentially handle an entry for the range
-+	 * [last_accounted_offset, rg->from), at every iteration, with some
-+	 * bounds checking.
-+	 */
-+	list_for_each_entry_safe(rg, trg, head, link) {
-+		/* Skip irrelevant regions that start before our range. */
-+		if (rg->from < f) {
-+			/* If this region ends after the last accounted offset,
-+			 * then we need to update last_accounted_offset.
-+			 */
-+			if (rg->to > last_accounted_offset)
-+				last_accounted_offset = rg->to;
+ 	struct mem_cgroup *target_memcg = sc->target_mem_cgroup;
+ 	struct mem_cgroup *memcg;
++	bool is_global_shrink = get_is_global_shrink(sc);
+ 
+ 	memcg = mem_cgroup_iter(target_memcg, NULL, NULL);
+ 	do {
+-		struct lruvec *lruvec = mem_cgroup_lruvec(memcg, pgdat);
++		struct lruvec *lruvec;
+ 		unsigned long reclaimed;
+ 		unsigned long scanned;
+ 
++		if (is_global_shrink &&
++			memcg->global_shrink_priority < sc->priority)
 +			continue;
-+		}
-
--	/* Check for and consume any regions we now overlap with. */
--	nrg = rg;
--	list_for_each_entry_safe(rg, trg, rg->link.prev, link) {
--		if (&rg->link == head)
--			break;
-+		/* When we find a region that starts beyond our range, we've
-+		 * finished.
-+		 */
- 		if (rg->from > t)
- 			break;
-
--		/* We overlap with this area, if it extends further than
--		 * us then we must extend ourselves.  Account for its
--		 * existing reservation.
-+		/* Add an entry for last_accounted_offset -> rg->from, and
-+		 * update last_accounted_offset.
- 		 */
--		if (rg->to > t) {
--			chg += rg->to - t;
--			t = rg->to;
-+		if (rg->from > last_accounted_offset) {
-+			add += rg->from - last_accounted_offset;
-+			if (!count_only) {
-+				nrg = get_file_region_entry_from_cache(
-+					resv, last_accounted_offset, rg->from);
-+				list_add(&nrg->link, rg->link.prev);
-+			} else if (regions_needed)
-+				*regions_needed += 1;
- 		}
--		chg -= rg->to - rg->from;
-
--		if (!count_only && rg != nrg) {
--			list_del(&rg->link);
--			kfree(rg);
--		}
-+		last_accounted_offset = rg->to;
- 	}
-
--	if (!count_only) {
--		nrg->from = f;
--		nrg->to = t;
-+	/* Handle the case where our range extends beyond
-+	 * last_accounted_offset.
-+	 */
-+	if (last_accounted_offset < t) {
-+		add += t - last_accounted_offset;
-+		if (!count_only) {
-+			nrg = get_file_region_entry_from_cache(
-+				resv, last_accounted_offset, t);
-+			list_add(&nrg->link, rg->link.prev);
-+		} else if (regions_needed)
-+			*regions_needed += 1;
- 	}
-
--	return chg;
-+	return add;
- }
-
- /*
-  * Add the huge page range represented by [f, t) to the reserve
-- * map.  Existing regions will be expanded to accommodate the specified
-- * range, or a region will be taken from the cache.  Sufficient regions
-- * must exist in the cache due to the previous call to region_chg with
-- * the same range.
-+ * map.  Regions will be taken from the cache to fill in this range.
-+ * Sufficient regions should exist in the cache due to the previous
-+ * call to region_chg with the same range, but in some cases the cache will not
-+ * have sufficient entries due to races with other code doing region_add or
-+ * region_del.  The extra needed entries will be allocated.
-  *
-- * Return the number of new huge pages added to the map.  This
-- * number is greater than or equal to zero.
-+ * regions_needed is the out value provided by a previous call to region_chg.
-+ *
-+ * Return the number of new huge pages added to the map.  This number is greater
-+ * than or equal to zero.  If file_region entries needed to be allocated for
-+ * this operation and we were not able to allocate, it ruturns -ENOMEM.
-+ * region_add of regions of length 1 never allocate file_regions and cannot
-+ * fail; region_chg will always allocate at least 1 entry and a region_add for
-+ * 1 page will only require at most 1 entry.
-  */
--static long region_add(struct resv_map *resv, long f, long t)
-+static long region_add(struct resv_map *resv, long f, long t,
-+		       long in_regions_needed)
- {
--	struct list_head *head = &resv->regions;
--	struct file_region *rg, *nrg;
--	long add = 0;
-+	long add = 0, actual_regions_needed = 0, i = 0;
-+	struct file_region *trg = NULL, *rg = NULL;
-+	struct list_head allocated_regions;
 +
-+	INIT_LIST_HEAD(&allocated_regions);
-
- 	spin_lock(&resv->lock);
--	/* Locate the region we are either in or before. */
--	list_for_each_entry(rg, head, link)
--		if (f <= rg->to)
--			break;
-+retry:
++		lruvec = mem_cgroup_lruvec(memcg, pgdat);
 +
-+	/* Count how many regions are actually needed to execute this add. */
-+	add_reservation_in_range(resv, f, t, &actual_regions_needed, true);
-
- 	/*
--	 * If no region exists which can be expanded to include the
--	 * specified range, pull a region descriptor from the cache
--	 * and use it for this range.
-+	 * Check for sufficient descriptors in the cache to accommodate
-+	 * this add operation. Note that actual_regions_needed may be greater
-+	 * than in_regions_needed. In this case, we need to make sure that we
-+	 * allocate extra entries, such that we have enough for all the
-+	 * existing adds_in_progress, plus the excess needed for this
-+	 * operation.
- 	 */
--	if (&rg->link == head || t < rg->from) {
--		VM_BUG_ON(resv->region_cache_count <= 0);
-+	if (resv->region_cache_count <
-+	    resv->adds_in_progress +
-+		    (actual_regions_needed - in_regions_needed)) {
-+		/* region_add operation of range 1 should never need to
-+		 * allocate file_region entries.
-+		 */
-+		VM_BUG_ON(t - f <= 1);
-
--		resv->region_cache_count--;
--		nrg = list_first_entry(&resv->region_cache, struct file_region,
--					link);
--		list_del(&nrg->link);
-+		/* Must drop lock to allocate a new descriptor. */
-+		spin_unlock(&resv->lock);
-+		for (i = 0; i < (actual_regions_needed - in_regions_needed);
-+		     i++) {
-+			trg = kmalloc(sizeof(*trg), GFP_KERNEL);
-+			if (!trg)
-+				goto out_of_memory;
-+			list_add(&trg->link, &allocated_regions);
-+		}
-+		spin_lock(&resv->lock);
-
--		nrg->from = f;
--		nrg->to = t;
--		list_add(&nrg->link, rg->link.prev);
-+		list_for_each_entry_safe(rg, trg, &allocated_regions, link) {
-+			list_del(&rg->link);
-+			list_add(&rg->link, &resv->region_cache);
-+			resv->region_cache_count++;
-+		}
-
--		add += t - f;
--		goto out_locked;
-+		goto retry;
- 	}
-
--	add = add_reservation_in_range(resv, f, t, false);
-+	add = add_reservation_in_range(resv, f, t, NULL, false);
-+
-+	resv->adds_in_progress -= in_regions_needed;
-
--out_locked:
--	resv->adds_in_progress--;
- 	spin_unlock(&resv->lock);
- 	VM_BUG_ON(add < 0);
- 	return add;
-+
-+out_of_memory:
-+	list_for_each_entry_safe(rg, trg, &allocated_regions, link) {
-+		list_del(&rg->link);
-+		kfree(rg);
-+	}
-+	return -ENOMEM;
- }
-
- /*
-@@ -357,49 +426,79 @@ static long region_add(struct resv_map *resv, long f, long t)
-  * call to region_add that will actually modify the reserve
-  * map to add the specified range [f, t).  region_chg does
-  * not change the number of huge pages represented by the
-- * map.  A new file_region structure is added to the cache
-- * as a placeholder, so that the subsequent region_add
-- * call will have all the regions it needs and will not fail.
-+ * map.  A number of new file_region structures is added to the cache as a
-+ * placeholder, for the subsequent region_add call to use. At least 1
-+ * file_region structure is added.
-+ *
-+ * out_regions_needed is the number of regions added to the
-+ * resv->adds_in_progress.  This value needs to be provided to a follow up call
-+ * to region_add or region_abort for proper accounting.
-  *
-  * Returns the number of huge pages that need to be added to the existing
-  * reservation map for the range [f, t).  This number is greater or equal to
-  * zero.  -ENOMEM is returned if a new file_region structure or cache entry
-  * is needed and can not be allocated.
-  */
--static long region_chg(struct resv_map *resv, long f, long t)
-+static long region_chg(struct resv_map *resv, long f, long t,
-+		       long *out_regions_needed)
- {
--	long chg = 0;
-+	struct file_region *trg = NULL, *rg = NULL;
-+	long chg = 0, i = 0, to_allocate = 0;
-+	struct list_head allocated_regions;
-+
-+	INIT_LIST_HEAD(&allocated_regions);
-
- 	spin_lock(&resv->lock);
--retry_locked:
--	resv->adds_in_progress++;
-+
-+	/* Count how many hugepages in this range are NOT respresented. */
-+	chg = add_reservation_in_range(resv, f, t, out_regions_needed, true);
-+
-+	if (*out_regions_needed == 0)
-+		*out_regions_needed = 1;
-+
-+	resv->adds_in_progress += *out_regions_needed;
-
- 	/*
- 	 * Check for sufficient descriptors in the cache to accommodate
- 	 * the number of in progress add operations.
- 	 */
--	if (resv->adds_in_progress > resv->region_cache_count) {
--		struct file_region *trg;
--
--		VM_BUG_ON(resv->adds_in_progress - resv->region_cache_count > 1);
--		/* Must drop lock to allocate a new descriptor. */
--		resv->adds_in_progress--;
-+	while (resv->region_cache_count < resv->adds_in_progress) {
-+		to_allocate = resv->adds_in_progress - resv->region_cache_count;
-+
-+		/* Must drop lock to allocate a new descriptor. Note that even
-+		 * though we drop the lock here, we do not make another call to
-+		 * add_reservation_in_range after re-acquiring the lock.
-+		 * Essentially this branch makes sure that we have enough
-+		 * descriptors in the cache as suggested by the first call to
-+		 * add_reservation_in_range. If more regions turn out to be
-+		 * required, region_add will deal with it.
-+		 */
- 		spin_unlock(&resv->lock);
--
--		trg = kmalloc(sizeof(*trg), GFP_KERNEL);
--		if (!trg)
--			return -ENOMEM;
-+		for (i = 0; i < to_allocate; i++) {
-+			trg = kmalloc(sizeof(*trg), GFP_KERNEL);
-+			if (!trg)
-+				goto out_of_memory;
-+			list_add(&trg->link, &allocated_regions);
-+		}
-
- 		spin_lock(&resv->lock);
--		list_add(&trg->link, &resv->region_cache);
--		resv->region_cache_count++;
--		goto retry_locked;
--	}
-
--	chg = add_reservation_in_range(resv, f, t, true);
-+		list_for_each_entry_safe(rg, trg, &allocated_regions, link) {
-+			list_del(&rg->link);
-+			list_add(&rg->link, &resv->region_cache);
-+			resv->region_cache_count++;
-+		}
-+	}
-
- 	spin_unlock(&resv->lock);
- 	return chg;
-+
-+out_of_memory:
-+	list_for_each_entry_safe(rg, trg, &allocated_regions, link) {
-+		list_del(&rg->link);
-+		kfree(rg);
-+	}
-+	return -ENOMEM;
- }
-
- /*
-@@ -407,17 +506,20 @@ static long region_chg(struct resv_map *resv, long f, long t)
-  * of the resv_map keeps track of the operations in progress between
-  * calls to region_chg and region_add.  Operations are sometimes
-  * aborted after the call to region_chg.  In such cases, region_abort
-- * is called to decrement the adds_in_progress counter.
-+ * is called to decrement the adds_in_progress counter. regions_needed
-+ * is the value returned by the region_chg call, it is used to decrement
-+ * the adds_in_progress counter.
-  *
-  * NOTE: The range arguments [f, t) are not needed or used in this
-  * routine.  They are kept to make reading the calling code easier as
-  * arguments will match the associated region_chg call.
-  */
--static void region_abort(struct resv_map *resv, long f, long t)
-+static void region_abort(struct resv_map *resv, long f, long t,
-+			 long regions_needed)
- {
- 	spin_lock(&resv->lock);
- 	VM_BUG_ON(!resv->region_cache_count);
--	resv->adds_in_progress--;
-+	resv->adds_in_progress -= regions_needed;
- 	spin_unlock(&resv->lock);
- }
-
-@@ -1834,6 +1936,7 @@ static long __vma_reservation_common(struct hstate *h,
- 	struct resv_map *resv;
- 	pgoff_t idx;
- 	long ret;
-+	long dummy_out_regions_needed;
-
- 	resv = vma_resv_map(vma);
- 	if (!resv)
-@@ -1842,20 +1945,29 @@ static long __vma_reservation_common(struct hstate *h,
- 	idx = vma_hugecache_offset(h, vma, addr);
- 	switch (mode) {
- 	case VMA_NEEDS_RESV:
--		ret = region_chg(resv, idx, idx + 1);
-+		ret = region_chg(resv, idx, idx + 1, &dummy_out_regions_needed);
-+		/* We assume that vma_reservation_* routines always operate on
-+		 * 1 page, and that adding to resv map a 1 page entry can only
-+		 * ever require 1 region.
-+		 */
-+		VM_BUG_ON(dummy_out_regions_needed != 1);
- 		break;
- 	case VMA_COMMIT_RESV:
--		ret = region_add(resv, idx, idx + 1);
-+		ret = region_add(resv, idx, idx + 1, 1);
-+		/* region_add calls of range 1 should never fail. */
-+		VM_BUG_ON(ret < 0);
- 		break;
- 	case VMA_END_RESV:
--		region_abort(resv, idx, idx + 1);
-+		region_abort(resv, idx, idx + 1, 1);
- 		ret = 0;
- 		break;
- 	case VMA_ADD_RESV:
--		if (vma->vm_flags & VM_MAYSHARE)
--			ret = region_add(resv, idx, idx + 1);
--		else {
--			region_abort(resv, idx, idx + 1);
-+		if (vma->vm_flags & VM_MAYSHARE) {
-+			ret = region_add(resv, idx, idx + 1, 1);
-+			/* region_add calls of range 1 should never fail. */
-+			VM_BUG_ON(ret < 0);
-+		} else {
-+			region_abort(resv, idx, idx + 1, 1);
- 			ret = region_del(resv, idx, idx + 1);
- 		}
- 		break;
-@@ -4523,12 +4635,12 @@ int hugetlb_reserve_pages(struct inode *inode,
- 					struct vm_area_struct *vma,
- 					vm_flags_t vm_flags)
- {
--	long ret, chg;
-+	long ret, chg, add = -1;
- 	struct hstate *h = hstate_inode(inode);
- 	struct hugepage_subpool *spool = subpool_inode(inode);
- 	struct resv_map *resv_map;
- 	struct hugetlb_cgroup *h_cg;
--	long gbl_reserve;
-+	long gbl_reserve, regions_needed = 0;
-
- 	/* This should never happen */
- 	if (from > to) {
-@@ -4558,7 +4670,7 @@ int hugetlb_reserve_pages(struct inode *inode,
- 		 */
- 		resv_map = inode_resv_map(inode);
-
--		chg = region_chg(resv_map, from, to);
-+		chg = region_chg(resv_map, from, to, &regions_needed);
-
- 	} else {
- 		/* Private mapping. */
-@@ -4628,9 +4740,14 @@ int hugetlb_reserve_pages(struct inode *inode,
- 	 * else has to be done for private mappings here
- 	 */
- 	if (!vma || vma->vm_flags & VM_MAYSHARE) {
--		long add = region_add(resv_map, from, to);
--
--		if (unlikely(chg > add)) {
-+		add = region_add(resv_map, from, to, regions_needed);
-+
-+		if (unlikely(add < 0)) {
-+			hugetlb_acct_memory(h, -gbl_reserve);
-+			/* put back original number of pages, chg */
-+			(void)hugepage_subpool_put_pages(spool, chg);
-+			goto out_err;
-+		} else if (unlikely(chg > add)) {
+ 		switch (mem_cgroup_protected(target_memcg, memcg)) {
+ 		case MEMCG_PROT_MIN:
  			/*
- 			 * pages in this range were added to the reserve
- 			 * map between region_chg and region_add.  This
-@@ -4648,9 +4765,11 @@ int hugetlb_reserve_pages(struct inode *inode,
- 	return 0;
- out_err:
- 	if (!vma || vma->vm_flags & VM_MAYSHARE)
--		/* Don't call region_abort if region_chg failed */
--		if (chg >= 0)
--			region_abort(resv_map, from, to);
-+		/* Only call region_abort if the region_chg succeeded but the
-+		 * region_add failed or didn't run.
+@@ -2682,11 +2698,21 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
+ 		reclaimed = sc->nr_reclaimed;
+ 		scanned = sc->nr_scanned;
+ 
++		if (is_global_shrink &&
++			memcg->global_shrink_priority != DEF_PRIORITY)
++			sc->priority += DEF_PRIORITY
++					- memcg->global_shrink_priority;
++
+ 		shrink_lruvec(lruvec, sc);
+ 
+ 		shrink_slab(sc->gfp_mask, pgdat->node_id, memcg,
+ 			    sc->priority);
+ 
++		if (is_global_shrink &&
++			memcg->global_shrink_priority != DEF_PRIORITY)
++			sc->priority -= DEF_PRIORITY
++					- memcg->global_shrink_priority;
++
+ 		/* Record the group's reclaim efficiency */
+ 		vmpressure(sc->gfp_mask, memcg, false,
+ 			   sc->nr_scanned - scanned,
+@@ -3395,11 +3421,18 @@ static void age_active_anon(struct pglist_data *pgdat,
+ 
+ 	memcg = mem_cgroup_iter(NULL, NULL, NULL);
+ 	do {
++		if (memcg->global_shrink_priority < sc->priority)
++			continue;
++
+ 		lruvec = mem_cgroup_lruvec(memcg, pgdat);
++		/*
++		 * Not set sc->priority according even if this is
++		 * a global shrink because nr_to_scan is set to
++		 * SWAP_CLUSTER_MAX and there is not other part use it.
 +		 */
-+		if (chg >= 0 && add < 0)
-+			region_abort(resv_map, from, to, regions_needed);
- 	if (vma && is_vma_resv_set(vma, HPAGE_RESV_OWNER))
- 		kref_put(&resv_map->refs, resv_map_release);
- 	return ret;
---
-2.24.1.735.g03f4e72817-goog
+ 		shrink_active_list(SWAP_CLUSTER_MAX, lruvec,
+ 				   sc, LRU_ACTIVE_ANON);
+-		memcg = mem_cgroup_iter(NULL, memcg, NULL);
+-	} while (memcg);
++	} while ((memcg = mem_cgroup_iter(NULL, memcg, NULL)));
+ }
+ 
+ static bool pgdat_watermark_boosted(pg_data_t *pgdat, int classzone_idx)
+-- 
+2.7.4
+
