@@ -1,7 +1,7 @@
 From: Christian Brauner <christian.brauner@ubuntu.com>
 Subject: Re: [PATCH 1/3] cgroup: unify attach permission checking
-Date: Thu, 19 Dec 2019 00:46:33 +0100
-Message-ID: <20191218234632.3xpobnq6efprohal@wittgenstein>
+Date: Thu, 19 Dec 2019 01:39:54 +0100
+Message-ID: <20191219003953.y26rclexqwijxmvz@wittgenstein>
 References: <20191218173516.7875-1-christian.brauner@ubuntu.com>
  <20191218173516.7875-2-christian.brauner@ubuntu.com>
 Mime-Version: 1.0
@@ -68,6 +68,11 @@ On Wed, Dec 18, 2019 at 06:35:14PM +0100, Christian Brauner wrote:
 > +				     struct super_block *sb, bool thread)
 > +{
 > +	int ret;
+
+This needs to be
+
+ret = 0
+
 > +
 > +	ret = cgroup_procs_write_permission(src_cgrp, dst_cgrp, sb);
 > +	if (ret)
@@ -82,18 +87,7 @@ On Wed, Dec 18, 2019 at 06:35:14PM +0100, Christian Brauner wrote:
 > +		ret = -EOPNOTSUPP;
 > +
 > +	return 0;
-> +}
-> +
->  static ssize_t cgroup_procs_write(struct kernfs_open_file *of,
->  				  char *buf, size_t nbytes, loff_t off)
->  {
-> @@ -4712,8 +4735,8 @@ static ssize_t cgroup_procs_write(struct kernfs_open_file *of,
->  	src_cgrp = task_cgroup_from_root(task, &cgrp_dfl_root);
->  	spin_unlock_irq(&css_set_lock);
->  
-> -	ret = cgroup_procs_write_permission(src_cgrp, dst_cgrp,
-> -					    of->file->f_path.dentry->d_sb);
-> +	ret = cgroup_attach_permissions(src_cgrp, dst_cgrp,
-> +					of->file->f_path.dentry->d_sb, true);
 
-typo: s/true/false/
+and this
+
+return ret;
