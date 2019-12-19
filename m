@@ -1,61 +1,67 @@
-From: Chris Down <chris@chrisdown.name>
-Subject: Re: [PATCH] mm: vmscan: memcg: Add global shrink priority
-Date: Thu, 19 Dec 2019 11:26:18 +0000
-Message-ID: <20191219112618.GA72828@chrisdown.name>
-References: <1576662179-16861-1-git-send-email-teawaterz@linux.alibaba.com>
- <20191218140952.GA255739@chrisdown.name>
- <25AA9500-B249-42C2-B162-2B8D4EE83BB0@linux.alibaba.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH v2 0/3] mm: memcontrol: recursive memory protection
+Date: Thu, 19 Dec 2019 15:07:15 -0500
+Message-ID: <20191219200718.15696-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=ZxINuY2pTedRL5AOR8tT78C1M2jclzElPJ7W9Ytee4A=;
-        b=Nj6BUQEZ+CRfeqS8i/TOUwhdSD/LqqktFae+t7JfgDcNBTv07sDWW+AN6qK4jJxq2b
-         bD96kwCBm+NCxbmhwMq95YWUG6nwJtQUz+B0gWcpUboDbYAvGxtqalmKIIDrPQsdQakD
-         0vumq1+lukQ7gHQ8kRlgoND+EH8XGHRzhB5Qw=
-Content-Disposition: inline
-In-Reply-To: <25AA9500-B249-42C2-B162-2B8D4EE83BB0@linux.alibaba.com>
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=oYiIu2mk1O8LA2y0MiTcNVGhftZjp6jwMi9mmwJQac4=;
+        b=fj3AGRXKmJEfNgQiRcISC7HVWkSocovlBpyW/qprUYO7Mqg0zHOgkFsuEL7bj09x0e
+         GNo2GUYrsgl7gu9dZcbcOreUdSZizGPe/8vnYBkegdu2BxjdPOUvTm4HQ1/a3N5I0rXy
+         9qpO/VYJ59U2ZDJGyC2A1xNdpYrFDsJ9gEb5CkN+86hhOcJ6Cn8RTlBgbbxf4iDPI0Tg
+         YA+xDeChfCuXtKz4PvRQ6A8oZN68sfPVub+RuWdmP+SXFjeLsXVA8d9CtSWvc4YGlADS
+         a3oNuCkGPu+UUDyczUUDqcEq9SzvZUSvXzvruEBOZhoP+9RWO3jTbPYNnqin1YdpVr/y
+         er1Q==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: teawater <teawaterz@linux.alibaba.com>
-Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, guro@fb.com, shakeelb@google.com, Yang Shi <yang.shi@linux.alibaba.com>, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="us-ascii"
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@suse.com>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Hi Hui,
+Changes since v1:
+- improved Changelogs based on the discussion with Roman. Thanks!
+- fix div0 when recursive & fixed protection is combined
+- fix an unused compiler warning
 
-teawater writes:
->Memory.min, low, high can affect the global shrink behavior.  They can help 
->task keep some pages to help protect performance.
->
->But what I want is the low priority tasks (the tasks that performance is not 
->very important) do more shrink first.  And when low priority tasks doesn’t 
->have enough pages to be dropped and system need more free page, shrink the 
->high priority task’s pages.  Because at this time, system’s stable is more 
->important than the performance of priority task.
->With memory.min and memory.low, I have no idea to config them to support this.  
->That is why I add global shrink priority.
+The current memory.low (and memory.min) semantics require protection
+to be assigned to a cgroup in an untinterrupted chain from the
+top-level cgroup all the way to the leaf.
 
-For sure, that's what I'm suggesting you use memory.{min,low} for -- you define 
-some subset of the cgroup hierarchy as "protected", and then you bias reclaim 
-away from protected cgroups (and thus *towards* unprotected cgroups) by biasing 
-the size of LRU scanning. See my patch that went into 5.4 and the examples in 
-the commit message:
+In practice, we want to protect entire cgroup subtrees from each other
+(system management software vs. workload), but we would like the VM to
+balance memory optimally *within* each subtree, without having to make
+explicit weight allocations among individual components. The current
+semantics make that impossible.
 
-     commit 9783aa9917f8ae24759e67bf882f1aba32fe4ea1
-     Author: Chris Down <chris@chrisdown.name>
-     Date:   Sun Oct 6 17:58:32 2019 -0700
+This patch series extends memory.low/min such that the knobs apply
+recursively to the entire subtree. Users can still assign explicit
+protection to subgroups, but if they don't, the protection set by the
+parent cgroup will be distributed dynamically such that children
+compete freely - as if no memory control were enabled inside the
+subtree - but enjoy protection from neighboring trees.
 
-         mm, memcg: proportional memory.{low,min} reclaim
+Patch #1 fixes an existing bug that can give a cgroup tree more
+protection than it should receive as per ancestor configuration.
 
-You can see how we're using memory.{low,min} to achieve this in this case 
-study[0]. It's not exactly equivalent technically to your solution, but the end 
-goals are similar.
+Patch #2 simplifies and documents the existing code to make it easier
+to reason about the changes in the next patch.
 
-Thanks,
+Patch #3 finally implements recursive memory protection semantics.
 
-Chris
+Because of a risk of regressing legacy setups, the new semantics are
+hidden behind a cgroup2 mount option, 'memory_recursiveprot'.
 
-0: https://facebookmicrosites.github.io/cgroup2/docs/overview.html#case-study-the-fbtax2-project
+More details in patch #3.
+
+ Documentation/admin-guide/cgroup-v2.rst |  11 ++
+ include/linux/cgroup-defs.h             |   5 +
+ kernel/cgroup/cgroup.c                  |  17 ++-
+ mm/memcontrol.c                         | 243 +++++++++++++++++++-----------
+ mm/page_counter.c                       |  12 +-
+ 5 files changed, 192 insertions(+), 96 deletions(-)
+
+
