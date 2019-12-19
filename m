@@ -1,73 +1,61 @@
-From: Pavel Tikhomirov <ptikhomirov@virtuozzo.com>
-Subject: Re: [PATCH] mm: fix hanging shrinker management on long
- do_shrink_slab
-Date: Thu, 19 Dec 2019 10:35:57 +0000
-Message-ID: <ed839995-9f49-19b6-a46a-5f777cd8f52b@virtuozzo.com>
-References: <20191129214541.3110-1-ptikhomirov@virtuozzo.com>
- <4e2d959a-0b0e-30aa-59b4-8e37728e9793@virtuozzo.com>
- <20191206020953.GS2695@dread.disaster.area>
- <CALvZod4YrnLLbaqTrZR92Y45rd4G+UzcqrkwAptJGJ2Kc8i6Og@mail.gmail.com>
- <20191210012036.GB19213@dread.disaster.area>
+From: Chris Down <chris@chrisdown.name>
+Subject: Re: [PATCH] mm: vmscan: memcg: Add global shrink priority
+Date: Thu, 19 Dec 2019 11:26:18 +0000
+Message-ID: <20191219112618.GA72828@chrisdown.name>
+References: <1576662179-16861-1-git-send-email-teawaterz@linux.alibaba.com>
+ <20191218140952.GA255739@chrisdown.name>
+ <25AA9500-B249-42C2-B162-2B8D4EE83BB0@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JcwfFu1mR4xBLsmZ0mx4t5sLfk53PAGoZYfAL4tpybk=;
- b=tTyR/Z5NNRnNeDyaQ0rCT0PoLM0as721x3mUZEDG+apjNd9BwRN2UvwjXytwj6lle0JH6FmkhWJqDxkgRghmt7hC7Jan6tC2EWzTxWJBvmuK9OmjEldbKw5V2qN181iQ6WImKnFugo7emdRHaiK1gBdQriVQu8m/siJPyjmjZ78=
-In-Reply-To: <20191210012036.GB19213@dread.disaster.area>
-Content-Language: en-US
-Content-ID: <4006B78015E8C64783ABBF308E03CE78@eurprd08.prod.outlook.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=ZxINuY2pTedRL5AOR8tT78C1M2jclzElPJ7W9Ytee4A=;
+        b=Nj6BUQEZ+CRfeqS8i/TOUwhdSD/LqqktFae+t7JfgDcNBTv07sDWW+AN6qK4jJxq2b
+         bD96kwCBm+NCxbmhwMq95YWUG6nwJtQUz+B0gWcpUboDbYAvGxtqalmKIIDrPQsdQakD
+         0vumq1+lukQ7gHQ8kRlgoND+EH8XGHRzhB5Qw=
+Content-Disposition: inline
+In-Reply-To: <25AA9500-B249-42C2-B162-2B8D4EE83BB0@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Dave Chinner <david@fromorbit.com>, Shakeel Butt <shakeelb@google.com>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Chris Down <chris@chrisdown.name>, Yang Shi <yang.shi@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Konstantin Khorenko <khorenko@virtuozzo.com>, Kirill Tkhai <ktkhai@virtuozzo.com>, Trond Myklebust <trond.myklebust@hammerspace.com>, Anna Schumaker <anna.schumaker@netapp.com>, "J. Bruce Fields" <bfields@fieldses.org>, Ch
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: teawater <teawaterz@linux.alibaba.com>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, guro@fb.com, shakeelb@google.com, Yang Shi <yang.shi@linux.alibaba.com>, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-T24gMTIvMTAvMTkgNDoyMCBBTSwgRGF2ZSBDaGlubmVyIHdyb3RlOg0KPiBPbiBGcmksIERlYyAw
-NiwgMjAxOSBhdCAwOToxMToyNUFNIC0wODAwLCBTaGFrZWVsIEJ1dHQgd3JvdGU6DQo+PiBPbiBU
-aHUsIERlYyA1LCAyMDE5IGF0IDY6MTAgUE0gRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQu
-Y29tPiB3cm90ZToNCj4+PiBJZiBhIHNocmlua2VyIGlzIGJsb2NraW5nIGZvciBhIGxvbmcgdGlt
-ZSwgdGhlbiB3ZSBuZWVkIHRvDQo+Pj4gd29yayB0byBmaXggdGhlIHNocmlua2VyIGltcGxlbWVu
-dGF0aW9uIGJlY2F1c2UgYmxvY2tpbmcgaXMgYSBtdWNoDQo+Pj4gYmlnZ2VyIHByb2JsZW0gdGhh
-biBqdXN0IHJlZ2lzdGVyL3VucmVnaXN0ZXIuDQo+Pj4NCj4+DQo+PiBZZXMsIHdlIHNob3VsZCBi
-ZSBmaXhpbmcgdGhlIGltcGxlbWVudGF0aW9ucyBvZiBhbGwgc2hyaW5rZXJzIGFuZCB5ZXMNCj4+
-IGl0IGlzIGJpZ2dlciBpc3N1ZSBidXQgd2UgY2FuIGFsc28gZml4IHJlZ2lzdGVyL3VucmVnaXN0
-ZXIgaXNvbGF0aW9uDQo+PiBpc3N1ZSBpbiBwYXJhbGxlbC4gRml4aW5nIGFsbCBzaHJpbmtlcnMg
-d291bGQgYSB0ZWRpb3VzIGFuZCBsb25nIHRhc2sNCj4+IGFuZCB3ZSBzaG91bGQgbm90IGJsb2Nr
-IGZpeGluZyBpc29sYXRpb24gaXNzdWUgb24gaXQuDQo+IA0KPiAiZml4aW5nIGFsbCBzaHJpbmtl
-cnMiIGlzIGEgYml0IG9mIGh5cGVyYm9sZSAtIHlvdSd2ZSBpZGVudGlmaWVkDQo+IG9ubHkgb25l
-IGluc3RhbmNlIHdoZXJlIGJsb2NraW5nIGlzIGNhdXNpbmcgeW91IHByb2JsZW1zLiBJbmRlZWQs
-DQo+IG1vc3Qgc2hyaW5rZXJzIGFyZSBhbHJlYWR5IG5vbi1ibG9ja2luZyBhbmQgd29uJ3QgY2F1
-c2UgeW91IGFueQ0KPiBwcm9ibGVtcyBhdCBhbGwuDQo+IA0KPj4+IElPV3MsIHdlIGFscmVhZHkg
-a25vdyB0aGF0IGN5Y2xpbmcgYSBnbG9iYWwgcndzZW0gb24gZXZlcnkNCj4+PiBpbmRpdmlkdWFs
-IHNocmlua2VyIGludm9jYXRpb24gaXMgZ29pbmcgdG8gY2F1c2Ugbm90aWNhYmxlDQo+Pj4gc2Nh
-bGFiaWxpdHkgcHJvYmxlbXMuIEhlbmNlIEkgZG9uJ3QgdGhpbmsgdGhhdCB0aGlzIHNvcnQgb2Yg
-ImN5Y2xlDQo+Pj4gdGhlIGdsb2JhbCByd3NlbSBmYXN0ZXIgdG8gcmVkdWNlIFt1bl1yZWdpc3Rl
-ciBsYXRlbmN5IiBzb2x1dGlvbiBpcw0KPj4+IGdvaW5nIHRvIGZseSBiZWNhdXNlIG9mIHRoZSBy
-dW50aW1lIHBlcmZvcm1hbmNlIHJlZ3Jlc3Npb25zIGl0IHdpbGwNCj4+PiBpbnRyb2R1Y2UuLi4u
-DQo+Pj4NCj4+DQo+PiBJIGFncmVlIHdpdGggeW91ciBzY2FsYWJpbGl0eSBjb25jZXJuICh0aG91
-Z2ggb3RoZXJzIHdvdWxkIGFyZ3VlIHRvDQo+PiBmaXJzdCBkZW1vbnN0cmF0ZSB0aGUgaXNzdWUg
-YmVmb3JlIGFkZGluZyBtb3JlIHNvcGhpc3RpY2F0ZWQgc2NhbGFibGUNCj4+IGNvZGUpLg0KPiAN
-Cj4gTG9vayBhdCB0aGUgZ2l0IGhpc3RvcnkuIFdlICprbm93KiB0aGlzIGlzIGEgcHJvYmxlbSwg
-c28gYW55b25lDQo+IGFyZ3VpbmcgdGhhdCB3ZSBoYXZlIHRvIHByb3ZlIGl0IGNhbiBnbyB0YWtl
-IGEgbG9uZyB3YWxrIG9mIGEgc2hvcnQNCj4gcGxhbmsuLi4uDQo+IA0KPj4gTW9zdCBtZW1vcnkg
-cmVjbGFpbSBjb2RlIGlzIHdyaXR0ZW4gd2l0aG91dCB0aGUgcGVyZm9ybWFuY2Ugb3INCj4+IHNj
-YWxhYmlsaXR5IGNvbmNlcm4sIG1heWJlIHdlIHNob3VsZCBzd2l0Y2ggb3VyIHRoaW5raW5nLg0K
-PiANCj4gSSB0aGluayB0aGVyZSdzIGEgbG90IG9mIGNvcmUgbW0gYW5kIG90aGVyIGRldmVsb3Bl
-cnMgdGhhdCB3b3VsZA0KPiBkaXNhZ3JlZSB3aXRoIHlvdSB0aGVyZS4gV2l0aCByZXNwZWN0IHRv
-IHNocmlua2Vycywgd2UndmUgYmVlbg0KPiBkaXJlY3RseSBjb25jZXJuZWQgYWJvdXQgcGVyZm9y
-bWFuY2UgYW5kIHNjYWxhYmlsaXR5IG9mIHRoZQ0KPiBpbmRpdmlkdWFsIGluc3RhbmNlcyBhcyB3
-ZWxsIGFzIHRoZSBpbmZyYXN0cnVjdHVyZSBmb3IgYXQgbGVhc3QgdGhlDQo+IGxhc3QgZGVjYWRl
-Li4uLg0KPiANCj4gQ2hlZXJzLA0KPiANCj4gRGF2ZS4NCj4gDQoNClRoYW5rcyBhIGxvdCBmb3Ig
-eW91ciByZXBsaWVzLCBub3cgSSBzZWUgdGhhdCB0aGUgY29yZSBvZiB0aGUgcHJvYmxlbSBpcyAN
-CmluIG5mcyBoYW5nLCBiZWZvcmUgdGhhdCBJIHdhcyB1bnN1cmUgaWYgaXQncyBPSyB0byBoYXZl
-IHN1Y2ggYSBoYW5nIGluIA0KZG9fc2hyaW5rX3NsYWIuDQoNCkkgaGF2ZSBhIHBvc3NpYmx5IGJh
-ZCBpZGVhIG9uIGhvdyBteSBwYXRjaCBjYW4gc3RpbGwgd29yay4gV2hhdCBpZiB3ZSANCnVzZSB1
-bmxvY2svcmVmY291bnQgd2F5IG9ubHkgZm9yIG5mcy1zaHJpbmtlcnM/IEl0IHdpbGwgc3RpbGwg
-Z2l2ZSBhIA0KcGVyZm9ybWFuY2UgcGVuYWx0eSBpZiBvbmUgaGFzIG1hbnkgbmZzIG1vdW50cywg
-YnV0IGZvciB0aG9zZSB3aG8gaGFzIA0KbGl0dGxlIG51bWJlciBvZiBuZnMgbW91bnRzIHRoZSBw
-ZW5hbHR5IHdvdWxkIGJlIGxlc3MuIEFuZCB0aGlzIHdvdWxkIGJlIA0KYSBzbWFsbCBpc29sYXRp
-b24gaW1wcm92ZW1lbnQgZm9yIG5mcyB1c2Vycy4NCg0KLS0gDQpCZXN0IHJlZ2FyZHMsIFRpa2hv
-bWlyb3YgUGF2ZWwNClNvZnR3YXJlIERldmVsb3BlciwgVmlydHVvenpvLg0K
+Hi Hui,
+
+teawater writes:
+>Memory.min, low, high can affect the global shrink behavior.  They can help 
+>task keep some pages to help protect performance.
+>
+>But what I want is the low priority tasks (the tasks that performance is not 
+>very important) do more shrink first.  And when low priority tasks doesn’t 
+>have enough pages to be dropped and system need more free page, shrink the 
+>high priority task’s pages.  Because at this time, system’s stable is more 
+>important than the performance of priority task.
+>With memory.min and memory.low, I have no idea to config them to support this.  
+>That is why I add global shrink priority.
+
+For sure, that's what I'm suggesting you use memory.{min,low} for -- you define 
+some subset of the cgroup hierarchy as "protected", and then you bias reclaim 
+away from protected cgroups (and thus *towards* unprotected cgroups) by biasing 
+the size of LRU scanning. See my patch that went into 5.4 and the examples in 
+the commit message:
+
+     commit 9783aa9917f8ae24759e67bf882f1aba32fe4ea1
+     Author: Chris Down <chris@chrisdown.name>
+     Date:   Sun Oct 6 17:58:32 2019 -0700
+
+         mm, memcg: proportional memory.{low,min} reclaim
+
+You can see how we're using memory.{low,min} to achieve this in this case 
+study[0]. It's not exactly equivalent technically to your solution, but the end 
+goals are similar.
+
+Thanks,
+
+Chris
+
+0: https://facebookmicrosites.github.io/cgroup2/docs/overview.html#case-study-the-fbtax2-project
