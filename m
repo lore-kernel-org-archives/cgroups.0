@@ -1,93 +1,90 @@
-From: Christian Brauner <christian.brauner@ubuntu.com>
-Subject: Re: [PATCH 1/3] cgroup: unify attach permission checking
-Date: Thu, 19 Dec 2019 01:39:54 +0100
-Message-ID: <20191219003953.y26rclexqwijxmvz@wittgenstein>
-References: <20191218173516.7875-1-christian.brauner@ubuntu.com>
- <20191218173516.7875-2-christian.brauner@ubuntu.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v9 1/8] hugetlb_cgroup: Add hugetlb_cgroup reservation
+ counter
+Date: Wed, 18 Dec 2019 17:12:54 -0800
+Message-ID: <20191218171254.79664a964c0c61e6054dff64@linux-foundation.org>
+References: <20191217231615.164161-1-almasrymina@google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20191218173516.7875-2-christian.brauner@ubuntu.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1576717975;
+        bh=EnDbUNs/vALEvcA8Z9IMx3LTjG39IibUT3Ww5yvhwFY=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=Vt7ZmhZL4/z+GEPYZsGwvLn9s0Enyv8//u9UmcZY0C7jMBx40N5FHa7TnUecE/lUS
+         3CkvMLNFZ7D13BfI9AeDbJK8xptCUiHyeApiQsLcjvk2ZKhKTmC6HdRP1msxv00ol5
+         /W+nVAbaoumyeUvxDFGy4GSPw4QXqEnoA7n2e90w=
+In-Reply-To: <20191217231615.164161-1-almasrymina@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org
+To: Mina Almasry <almasrymina@google.com>
+Cc: mike.kravetz@oracle.com, shuah@kernel.org, rientjes@google.com, shakeelb@google.com, gthelen@google.com, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, aneesh.kumar@linux.vnet.ibm.com, mkoutny@suse.com, Hillf Danton <hdanton@sina.com>, Giuseppe Scrivano <gscrivan@redhat.com>, Tejun Heo <tj@kernel.org>
 
-On Wed, Dec 18, 2019 at 06:35:14PM +0100, Christian Brauner wrote:
-> The core codepaths to check whether a process can be attached to a
-> cgroup are the same for threads and thread-group leaders. Only a small
-> piece of code verifying that source and destination cgroup are in the
-> same domain differentiates the thread permission checking from
-> thread-group leader permission checking.
-> Since cgroup_migrate_vet_dst() only matters cgroup2 - it is a noop on
-> cgroup1 - we can move it out of cgroup_attach_task().
-> All checks can now be consolidated into a new helper
-> cgroup_attach_permissions() callable from both cgroup_procs_write() and
-> cgroup_threads_write().
+On Tue, 17 Dec 2019 15:16:08 -0800 Mina Almasry <almasrymina@google.com> wrote:
+
+> These counters will track hugetlb reservations rather than hugetlb
+> memory faulted in. This patch only adds the counter, following patches
+> add the charging and uncharging of the counter.
 > 
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Li Zefan <lizefan@huawei.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: cgroups@vger.kernel.org
-> Signed-off-by: Christian Brauner <christian.brauner@ubuntu.com>
-> ---
->  kernel/cgroup/cgroup.c | 46 +++++++++++++++++++++++++++++-------------
->  1 file changed, 32 insertions(+), 14 deletions(-)
+> This is patch 1 of an 8 patch series.
 > 
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index 735af8f15f95..5ee06c1f7456 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -2719,11 +2719,7 @@ int cgroup_attach_task(struct cgroup *dst_cgrp, struct task_struct *leader,
->  {
->  	DEFINE_CGROUP_MGCTX(mgctx);
->  	struct task_struct *task;
-> -	int ret;
-> -
-> -	ret = cgroup_migrate_vet_dst(dst_cgrp);
-> -	if (ret)
-> -		return ret;
-> +	int ret = 0;
->  
->  	/* look up all src csets */
->  	spin_lock_irq(&css_set_lock);
-> @@ -4690,6 +4686,33 @@ static int cgroup_procs_write_permission(struct cgroup *src_cgrp,
->  	return 0;
->  }
->  
-> +static inline bool cgroup_same_domain(const struct cgroup *src_cgrp,
-> +				      const struct cgroup *dst_cgrp)
-> +{
-> +	return src_cgrp->dom_cgrp == dst_cgrp->dom_cgrp;
-> +}
-> +
-> +static int cgroup_attach_permissions(struct cgroup *src_cgrp,
-> +				     struct cgroup *dst_cgrp,
-> +				     struct super_block *sb, bool thread)
-> +{
-> +	int ret;
+> Problem:
+> Currently tasks attempting to allocate more hugetlb memory than is available get
+> a failure at mmap/shmget time. This is thanks to Hugetlbfs Reservations [1].
+> However, if a task attempts to allocate hugetlb memory only more than its
+> hugetlb_cgroup limit allows, the kernel will allow the mmap/shmget call,
+> but will SIGBUS the task when it attempts to fault the memory in.
+> 
+> We have developers interested in using hugetlb_cgroups, and they have expressed
+> dissatisfaction regarding this behavior. We'd like to improve this
+> behavior such that tasks violating the hugetlb_cgroup limits get an error on
+> mmap/shmget time, rather than getting SIGBUS'd when they try to fault
+> the excess memory in.
+> 
+> The underlying problem is that today's hugetlb_cgroup accounting happens
+> at hugetlb memory *fault* time, rather than at *reservation* time.
+> Thus, enforcing the hugetlb_cgroup limit only happens at fault time, and
+> the offending task gets SIGBUS'd.
+> 
+> Proposed Solution:
+> A new page counter named hugetlb.xMB.reservation_[limit|usage]_in_bytes. This
+> counter has slightly different semantics than
+> hugetlb.xMB.[limit|usage]_in_bytes:
+> 
+> - While usage_in_bytes tracks all *faulted* hugetlb memory,
+> reservation_usage_in_bytes tracks all *reserved* hugetlb memory and
+> hugetlb memory faulted in without a prior reservation.
+> 
+> - If a task attempts to reserve more memory than limit_in_bytes allows,
+> the kernel will allow it to do so. But if a task attempts to reserve
+> more memory than reservation_limit_in_bytes, the kernel will fail this
+> reservation.
+> 
+> This proposal is implemented in this patch series, with tests to verify
+> functionality and show the usage. We also added cgroup-v2 support to
+> hugetlb_cgroup so that the new use cases can be extended to v2.
 
-This needs to be
+This would make
+http://lkml.kernel.org/r/20191216193831.540953-1-gscrivan@redhat.com
+obsolete?
 
-ret = 0
 
-> +
-> +	ret = cgroup_procs_write_permission(src_cgrp, dst_cgrp, sb);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ret = cgroup_migrate_vet_dst(dst_cgrp);
-> +	if (ret)
-> +		return ret;
-> +
-> +	if (thread &&
-> +	    !cgroup_same_domain(src_cgrp->dom_cgrp, dst_cgrp->dom_cgrp))
-> +		ret = -EOPNOTSUPP;
-> +
-> +	return 0;
+> Alternatives considered:
+> 1. A new cgroup, instead of only a new page_counter attached to
+>    the existing hugetlb_cgroup. Adding a new cgroup seemed like a lot of code
+>    duplication with hugetlb_cgroup. Keeping hugetlb related page counters under
+>    hugetlb_cgroup seemed cleaner as well.
+> 
+> 2. Instead of adding a new counter, we considered adding a sysctl that modifies
+>    the behavior of hugetlb.xMB.[limit|usage]_in_bytes, to do accounting at
+>    reservation time rather than fault time. Adding a new page_counter seems
+>    better as userspace could, if it wants, choose to enforce different cgroups
+>    differently: one via limit_in_bytes, and another via
+>    reservation_limit_in_bytes. This could be very useful if you're
+>    transitioning how hugetlb memory is partitioned on your system one
+>    cgroup at a time, for example. Also, someone may find usage for both
+>    limit_in_bytes and reservation_limit_in_bytes concurrently, and this
+>    approach gives them the option to do so.
+> 
 
-and this
-
-return ret;
