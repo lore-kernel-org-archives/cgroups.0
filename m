@@ -1,75 +1,81 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] oom: choose a more suitable process to kill while all
- processes are not killable
-Date: Fri, 20 Dec 2019 12:37:44 +0100
-Message-ID: <20191220113744.GF20332@dhcp22.suse.cz>
-References: <1576823172-25943-1-git-send-email-zgpeng.linux@gmail.com>
- <20191220071334.GB20332@dhcp22.suse.cz>
- <CAE5vP3mHjdM-PwjUURwXgZDfgQ0b2BbgHkWZCHe-ysSmZ58pFw@mail.gmail.com>
+From: Oleg Nesterov <oleg@redhat.com>
+Subject: Re: [PATCH 2/3] clone3: allow spawning processes into cgroups
+Date: Fri, 20 Dec 2019 21:36:50 +0100
+Message-ID: <20191220203650.GA15133@redhat.com>
+References: <20191218173516.7875-1-christian.brauner@ubuntu.com>
+ <20191218173516.7875-3-christian.brauner@ubuntu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1576874220;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=4jjRnLYjGrqgF7WL+aNzr4dW0tQZdCM9Qqr1PxQyLYQ=;
+        b=CPOUv+luqofKZe6ideEHXXcBsW3L4JPJKOxZSWOLEzNIqorxihmH7DX20/QiFvEZbw/oXY
+        OgeIexMwwdPL7Ar5aOK9UdWOWoTzXsiVY82r9FG3pokzhelvGsYqgUssOYcpmM2i0t7DnD
+        GX2/D6kcUnlioYNtT4iC4Q0Fdivl1jU=
 Content-Disposition: inline
-In-Reply-To: <CAE5vP3mHjdM-PwjUURwXgZDfgQ0b2BbgHkWZCHe-ysSmZ58pFw@mail.gmail.com>
+In-Reply-To: <20191218173516.7875-3-christian.brauner@ubuntu.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: =?utf-8?B?5b2t5b+X5Yia?= <zgpeng.linux@gmail.com>
-Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, zgpeng <zgpeng@tencent.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Christian Brauner <christian.brauner@ubuntu.com>
+Cc: linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Ingo Molnar <mingo@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Peter Zijlstra <peterz@infradead.org>, cgroups@vger.kernel.org
 
-[Please do not top post]
+On 12/18, Christian Brauner wrote:
+>
+> This adds support for creating a process in a different cgroup than its
+> parent.
 
-On Fri 20-12-19 17:56:20, 彭志刚 wrote:
-> certainly.
-> 
-> Steps to reproduce:
-> (1)Create a mm cgroup and set memory.limit_in_bytes
-> (2)Move the bash process to the newly created cgroup, and set the
-> oom_score_adj of the  bash process to -998.
-> (3)In bash, start multiple processes, each process consumes different
-> memory until cgroup oom is triggered.
-> 
-> The triggered phenomenon is shown below. We can see that when cgroup oom
-> happened, process 23777 was killed, but in fact, 23772 consumes more memory;
-> 
-> [  591.000970] Tasks state (memory values in pages):
-> [  591.000970] [  pid  ]   uid  tgid total_vm      rss pgtables_bytes swapents oom_score_adj name
-> [  591.000973] [  23344]     0 23344     2863      923    61440        0        -998 bash
-> [  591.000975] [  23714]     0 23714    27522    25935   258048        0        -998 test
-> [  591.000976] [  23772]     0 23772   104622   103032   876544        0        -998 test
+Cough... I will not comment the intent ;) I can't review the cgroup patches
+anyway.
 
-points = 103032 + 0 + 876544/4096 = 103246
+However,
 
-> [  591.000978] [  23777]     0 23777    78922    77335   667648        0        -998 test
+> +int cgroup_lock_fork(struct kernel_clone_args *kargs)
+> +	__acquires(&cgroup_mutex)
+> +{
+> +	struct cgroup *cgrp;
+> +
+> +	if (!(kargs->flags & CLONE_INTO_CGROUP))
+> +		return 0;
+> +
+> +	cgrp = kargs->cgrp;
+> +	if (!cgrp)
+> +		return 0;
+> +
+> +	mutex_lock(&cgroup_mutex);
+> +
+> +	if (!cgroup_is_dead(cgrp))
+> +		return 0;
+> +
+> +	mutex_unlock(&cgroup_mutex);
+> +	return -ENODEV;
 
-points = 77335 + 0 + 667648/4096 = 77498
+...
 
-It is not clear what is the actual hard limit but let's assume that
-rss+page_tables is the only charged memory (or at least the majority of
-it). That would be 207680 so the normalized oom_score_adj would be
--206586 which is way too big for both tasks so from the OOM killer
-perspective both tasks are equal.
+> @@ -2172,7 +2172,7 @@ static __latent_entropy struct task_struct *copy_process(
+>  	 * between here and cgroup_post_fork() if an organisation operation is in
+>  	 * progress.
+>  	 */
+> -	retval = cgroup_can_fork(p);
+> +	retval = cgroup_can_fork(current, p, args);
+>  	if (retval)
+>  		goto bad_fork_cgroup_threadgroup_change_end;
+>  
+> @@ -2226,6 +2226,10 @@ static __latent_entropy struct task_struct *copy_process(
+>  		goto bad_fork_cancel_cgroup;
+>  	}
+>  
+> +	retval = cgroup_lock_fork(args);
 
-The question is whether this is a bug or a (mis)feature. The
-oom_score_adj je documented as follows:
-Documentation/filesystems/proc.txt
-: Consequently, it is very simple for userspace to define the amount of memory to
-: consider for each task.  Setting a /proc/<pid>/oom_score_adj value of +500, for
-: example, is roughly equivalent to allowing the remainder of tasks sharing the
-: same system, cpuset, mempolicy, or memory controller resources to use at least
-: 50% more memory.  A value of -500, on the other hand, would be roughly
-: equivalent to discounting 50% of the task's allowed memory from being considered
-: as scoring against the task.
+mutex_lock() under spin_lock() ??
 
-Which implies that we are talking about the budget based on a usable
-memory (aka hard limit in this case). I do agree that the semantic is
-awkward. I know there are usecases which try to use the existing scheme
-for oom_score_adj to fine tune oom decisions and I am worried your patch
-might break those.
 
-That being said, I am not sure this change is safe wrt. to backward
-compatibility. I would rather recommend to not using oom_score_adj for
-anything but OOM_SCORE_ADJ_MIN resp OOM_SCORE_ADJ_MAX.
--- 
-Michal Hocko
-SUSE Labs
+just in case, note that mutex_lock(&cgroup_mutex) is not safe even under
+cgroup_threadgroup_change_begin(), this can deadlock.
+
+Oleg.
+
