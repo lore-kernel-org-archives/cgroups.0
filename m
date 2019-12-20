@@ -1,74 +1,68 @@
-From: Roman Gushchin <guro@fb.com>
+From: Chris Down <chris@chrisdown.name>
 Subject: Re: [PATCH v2 0/3] mm: memcontrol: recursive memory protection
-Date: Fri, 20 Dec 2019 04:06:22 +0000
-Message-ID: <20191220040618.GA8069@localhost.localdomain>
+Date: Fri, 20 Dec 2019 04:29:23 +0000
+Message-ID: <20191220042923.GA388018@chrisdown.name>
 References: <20191219200718.15696-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type : content-id
- : content-transfer-encoding : mime-version; s=facebook;
- bh=Sn8mdDEZbmlAseTcnBwC4N9LFeeFcWpfGwn1PGVmyY8=;
- b=GPmOI/HWcKnxg7HnTO1FwOjg0Q7Cy8Zm+Q5z1xLXncu66dTMEVGL1LwUJkfg60PWdYam
- tJOL+C7zdoAIjA8vRDBQI07uIRL5/Hj+G7K6vb83qp4cyZKuxOfR0lCtcOSi/Vp/M/KI
- YfXmpNSua/RGYvodwUd+ifVPcdAE5d5zQ0g= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Sn8mdDEZbmlAseTcnBwC4N9LFeeFcWpfGwn1PGVmyY8=;
- b=ZABfVH0t5DzZpNrVRqKHif4o/rRO+S4OE71/DkDPLJ5+TcVeIdwpe9jDAH//9HKT9oqlBk2xW951mjogBqimcQ8Xor6JJcurRn21Kgryoy32yuYHZocL6GjYiq2oqi4FN7C5tPWLBTTR+g/hBSlwl8UvmhG1FpU27gBfanBzzsY=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=yRRnujDGn+DKixV01iK1kQ9R1Hb6ldjE0k/esoxvtVg=;
+        b=A0aDjvyHIdJhLqDtp99NMEN/80Jxl6wvh+lvb7+lH/qp6guNY98LBPwD0tcfMsFfk6
+         g6s7MAEi2vlSscOrVsRDLJm1UzTKiVag9IlTkT+joi/WQhHf0NJ5d4IHH/ekSVlZyili
+         wBB35uFGXtDvGNNUvJK8qm8EHrv+BJC+5cCJs=
+Content-Disposition: inline
 In-Reply-To: <20191219200718.15696-1-hannes@cmpxchg.org>
-Content-Language: en-US
-Content-ID: <CAFF278338101D4AB85FB890F3EC784B@namprd15.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.com>, Tejun Heo <tj@kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Kernel Team <Kernel-team@fb.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@suse.com>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Thu, Dec 19, 2019 at 03:07:15PM -0500, Johannes Weiner wrote:
-> Changes since v1:
-> - improved Changelogs based on the discussion with Roman. Thanks!
-> - fix div0 when recursive & fixed protection is combined
-> - fix an unused compiler warning
->=20
-> The current memory.low (and memory.min) semantics require protection
-> to be assigned to a cgroup in an untinterrupted chain from the
-> top-level cgroup all the way to the leaf.
->=20
-> In practice, we want to protect entire cgroup subtrees from each other
-> (system management software vs. workload), but we would like the VM to
-> balance memory optimally *within* each subtree, without having to make
-> explicit weight allocations among individual components. The current
-> semantics make that impossible.
->=20
-> This patch series extends memory.low/min such that the knobs apply
-> recursively to the entire subtree. Users can still assign explicit
-> protection to subgroups, but if they don't, the protection set by the
-> parent cgroup will be distributed dynamically such that children
-> compete freely - as if no memory control were enabled inside the
-> subtree - but enjoy protection from neighboring trees.
->=20
-> Patch #1 fixes an existing bug that can give a cgroup tree more
-> protection than it should receive as per ancestor configuration.
->=20
-> Patch #2 simplifies and documents the existing code to make it easier
-> to reason about the changes in the next patch.
->=20
-> Patch #3 finally implements recursive memory protection semantics.
->=20
-> Because of a risk of regressing legacy setups, the new semantics are
-> hidden behind a cgroup2 mount option, 'memory_recursiveprot'.
+Johannes Weiner writes:
+>Changes since v1:
+>- improved Changelogs based on the discussion with Roman. Thanks!
+>- fix div0 when recursive & fixed protection is combined
+>- fix an unused compiler warning
+>
+>The current memory.low (and memory.min) semantics require protection
+>to be assigned to a cgroup in an untinterrupted chain from the
+>top-level cgroup all the way to the leaf.
+>
+>In practice, we want to protect entire cgroup subtrees from each other
+>(system management software vs. workload), but we would like the VM to
+>balance memory optimally *within* each subtree, without having to make
+>explicit weight allocations among individual components. The current
+>semantics make that impossible.
+>
+>This patch series extends memory.low/min such that the knobs apply
+>recursively to the entire subtree. Users can still assign explicit
+>protection to subgroups, but if they don't, the protection set by the
+>parent cgroup will be distributed dynamically such that children
+>compete freely - as if no memory control were enabled inside the
+>subtree - but enjoy protection from neighboring trees.
 
-I really like the new semantics: it looks nice and doesn't require
-any new magic values aka "bypass", which have been discussed previously.
-The ability to disable the protection for a particular cgroup inside
-the protected sub-tree looks overvalued: I don't have any practical
-example when it makes any sense. So it's totally worth it to sacrifice
-it. Thank you for adding comments to the changelog!
+Thanks, from experience working with these semantics in userspace, I agree that 
+this design makes it easier to configure the protections in a way that is 
+meaningful.
 
-Acked-by: Roman Gushchin <guro@fb.com>
-for the series.
+For the series:
 
-Thanks!
+Acked-by: Chris Down <chris@chrisdown.name>
+
+>Patch #1 fixes an existing bug that can give a cgroup tree more
+>protection than it should receive as per ancestor configuration.
+>
+>Patch #2 simplifies and documents the existing code to make it easier
+>to reason about the changes in the next patch.
+>
+>Patch #3 finally implements recursive memory protection semantics.
+
+Just as an off-topic aside, although I'm sure you already have it in mind, we 
+should definitely make sure to clearly point this out to those in the container 
+management tooling space who are in the process of moving to support/default to 
+v2. For example, I wonder about CoreOS' systemwide strategy around memory 
+management and whether it can benefit from this.
