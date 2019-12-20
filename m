@@ -1,30 +1,48 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH] oom: choose a more suitable process to kill while all
- processes are not killable
-Date: Fri, 20 Dec 2019 08:13:34 +0100
-Message-ID: <20191220071334.GB20332@dhcp22.suse.cz>
-References: <1576823172-25943-1-git-send-email-zgpeng.linux@gmail.com>
-Mime-Version: 1.0
+From: teawater <teawaterz@linux.alibaba.com>
+Subject: Re: [PATCH] mm: vmscan: memcg: Add global shrink priority
+Date: Fri, 20 Dec 2019 15:48:49 +0800
+Message-ID: <1A189775-3B43-4C49-B827-15D001C2D2FC@linux.alibaba.com>
+References: <1576662179-16861-1-git-send-email-teawaterz@linux.alibaba.com>
+ <20191218140952.GA255739@chrisdown.name>
+ <25AA9500-B249-42C2-B162-2B8D4EE83BB0@linux.alibaba.com>
+ <20191219112618.GA72828@chrisdown.name>
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1576823172-25943-1-git-send-email-zgpeng.linux@gmail.com>
+In-Reply-To: <20191219112618.GA72828@chrisdown.name>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: zgpeng.linux@gmail.com
-Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com, shakeelb@google.com, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, zgpeng <zgpeng@tencent.com>
+Content-Type: text/plain; charset="gb2312"
+To: Chris Down <chris@chrisdown.name>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, shakeelb@google.com, Yang Shi <yang.shi@linux.alibaba.com>, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Fri 20-12-19 14:26:12, zgpeng.linux@gmail.com wrote:
-> From: zgpeng <zgpeng@tencent.com>
-> 
-> It has been found in multiple business scenarios that when a oom occurs
-> in a cgroup, the process that consumes the most memory in the cgroup is 
-> not killed first. Analysis of the reasons found that each process in the
-> cgroup oom_score_adj is set to -998, oom_badness in the calculation of 
-> points, if points is negative, uniformly set it to 1.
-
-Can you provide an example of the oom report?
--- 
-Michal Hocko
-SUSE Labs
+Cgo+INTaIDIwMTnE6jEy1MIxOcjVo6wxOToyNqOsQ2hyaXMgRG93biA8Y2hyaXNAY2hyaXNkb3du
+Lm5hbWU+INC0tcCjugo+IAo+IEhpIEh1aSwKPiAKPiB0ZWF3YXRlciB3cml0ZXM6Cj4+IE1lbW9y
+eS5taW4sIGxvdywgaGlnaCBjYW4gYWZmZWN0IHRoZSBnbG9iYWwgc2hyaW5rIGJlaGF2aW9yLiAg
+VGhleSBjYW4gaGVscCB0YXNrIGtlZXAgc29tZSBwYWdlcyB0byBoZWxwIHByb3RlY3QgcGVyZm9y
+bWFuY2UuCj4+IAo+PiBCdXQgd2hhdCBJIHdhbnQgaXMgdGhlIGxvdyBwcmlvcml0eSB0YXNrcyAo
+dGhlIHRhc2tzIHRoYXQgcGVyZm9ybWFuY2UgaXMgbm90IHZlcnkgaW1wb3J0YW50KSBkbyBtb3Jl
+IHNocmluayBmaXJzdC4gIEFuZCB3aGVuIGxvdyBwcmlvcml0eSB0YXNrcyBkb2VzbqGvdCBoYXZl
+IGVub3VnaCBwYWdlcyB0byBiZSBkcm9wcGVkIGFuZCBzeXN0ZW0gbmVlZCBtb3JlIGZyZWUgcGFn
+ZSwgc2hyaW5rIHRoZSBoaWdoIHByaW9yaXR5IHRhc2uhr3MgcGFnZXMuICBCZWNhdXNlIGF0IHRo
+aXMgdGltZSwgc3lzdGVtoa9zIHN0YWJsZSBpcyBtb3JlIGltcG9ydGFudCB0aGFuIHRoZSBwZXJm
+b3JtYW5jZSBvZiBwcmlvcml0eSB0YXNrLgo+PiBXaXRoIG1lbW9yeS5taW4gYW5kIG1lbW9yeS5s
+b3csIEkgaGF2ZSBubyBpZGVhIHRvIGNvbmZpZyB0aGVtIHRvIHN1cHBvcnQgdGhpcy4gIFRoYXQg
+aXMgd2h5IEkgYWRkIGdsb2JhbCBzaHJpbmsgcHJpb3JpdHkuCj4gCj4gRm9yIHN1cmUsIHRoYXQn
+cyB3aGF0IEknbSBzdWdnZXN0aW5nIHlvdSB1c2UgbWVtb3J5LnttaW4sbG93fSBmb3IgLS0geW91
+IGRlZmluZSBzb21lIHN1YnNldCBvZiB0aGUgY2dyb3VwIGhpZXJhcmNoeSBhcyAicHJvdGVjdGVk
+IiwgYW5kIHRoZW4geW91IGJpYXMgcmVjbGFpbSBhd2F5IGZyb20gcHJvdGVjdGVkIGNncm91cHMg
+KGFuZCB0aHVzICp0b3dhcmRzKiB1bnByb3RlY3RlZCBjZ3JvdXBzKSBieSBiaWFzaW5nIHRoZSBz
+aXplIG9mIExSVSBzY2FubmluZy4gU2VlIG15IHBhdGNoIHRoYXQgd2VudCBpbnRvIDUuNCBhbmQg
+dGhlIGV4YW1wbGVzIGluIHRoZSBjb21taXQgbWVzc2FnZToKPiAKPiAgICBjb21taXQgOTc4M2Fh
+OTkxN2Y4YWUyNDc1OWU2N2JmODgyZjFhYmEzMmZlNGVhMQo+ICAgIEF1dGhvcjogQ2hyaXMgRG93
+biA8Y2hyaXNAY2hyaXNkb3duLm5hbWU+Cj4gICAgRGF0ZTogICBTdW4gT2N0IDYgMTc6NTg6MzIg
+MjAxOSAtMDcwMAo+IAo+ICAgICAgICBtbSwgbWVtY2c6IHByb3BvcnRpb25hbCBtZW1vcnkue2xv
+dyxtaW59IHJlY2xhaW0KPiAKPiBZb3UgY2FuIHNlZSBob3cgd2UncmUgdXNpbmcgbWVtb3J5Lnts
+b3csbWlufSB0byBhY2hpZXZlIHRoaXMgaW4gdGhpcyBjYXNlIHN0dWR5WzBdLiBJdCdzIG5vdCBl
+eGFjdGx5IGVxdWl2YWxlbnQgdGVjaG5pY2FsbHkgdG8geW91ciBzb2x1dGlvbiwgYnV0IHRoZSBl
+bmQgZ29hbHMgYXJlIHNpbWlsYXIuCj4gCj4gVGhhbmtzLAo+IAo+IENocmlzCj4gCj4gMDogaHR0
+cHM6Ly9mYWNlYm9va21pY3Jvc2l0ZXMuZ2l0aHViLmlvL2Nncm91cDIvZG9jcy9vdmVydmlldy5o
+dG1sI2Nhc2Utc3R1ZHktdGhlLWZidGF4Mi1wcm9qZWN0CgpIaSBDaHJpcywKClJlYWxseSBhcHBy
+ZWNpYXRlIGZvciB5b3VyIGhlbHAuICBJIHdpbGwgdHJ5IHRvIHVzZSBpdCBoYW5kbGUgbXkgcHJv
+YmxlbS4KCkJlc3QsCkh1aQo=
