@@ -1,48 +1,75 @@
-From: teawater <teawaterz@linux.alibaba.com>
-Subject: Re: [PATCH] mm: vmscan: memcg: Add global shrink priority
-Date: Fri, 20 Dec 2019 15:48:49 +0800
-Message-ID: <1A189775-3B43-4C49-B827-15D001C2D2FC@linux.alibaba.com>
-References: <1576662179-16861-1-git-send-email-teawaterz@linux.alibaba.com>
- <20191218140952.GA255739@chrisdown.name>
- <25AA9500-B249-42C2-B162-2B8D4EE83BB0@linux.alibaba.com>
- <20191219112618.GA72828@chrisdown.name>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
-Content-Transfer-Encoding: base64
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH] oom: choose a more suitable process to kill while all
+ processes are not killable
+Date: Fri, 20 Dec 2019 12:37:44 +0100
+Message-ID: <20191220113744.GF20332@dhcp22.suse.cz>
+References: <1576823172-25943-1-git-send-email-zgpeng.linux@gmail.com>
+ <20191220071334.GB20332@dhcp22.suse.cz>
+ <CAE5vP3mHjdM-PwjUURwXgZDfgQ0b2BbgHkWZCHe-ysSmZ58pFw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191219112618.GA72828@chrisdown.name>
+Content-Disposition: inline
+In-Reply-To: <CAE5vP3mHjdM-PwjUURwXgZDfgQ0b2BbgHkWZCHe-ysSmZ58pFw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="gb2312"
-To: Chris Down <chris@chrisdown.name>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, shakeelb@google.com, Yang Shi <yang.shi@linux.alibaba.com>, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="utf-8"
+To: =?utf-8?B?5b2t5b+X5Yia?= <zgpeng.linux@gmail.com>
+Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, zgpeng <zgpeng@tencent.com>
 
-Cgo+INTaIDIwMTnE6jEy1MIxOcjVo6wxOToyNqOsQ2hyaXMgRG93biA8Y2hyaXNAY2hyaXNkb3du
-Lm5hbWU+INC0tcCjugo+IAo+IEhpIEh1aSwKPiAKPiB0ZWF3YXRlciB3cml0ZXM6Cj4+IE1lbW9y
-eS5taW4sIGxvdywgaGlnaCBjYW4gYWZmZWN0IHRoZSBnbG9iYWwgc2hyaW5rIGJlaGF2aW9yLiAg
-VGhleSBjYW4gaGVscCB0YXNrIGtlZXAgc29tZSBwYWdlcyB0byBoZWxwIHByb3RlY3QgcGVyZm9y
-bWFuY2UuCj4+IAo+PiBCdXQgd2hhdCBJIHdhbnQgaXMgdGhlIGxvdyBwcmlvcml0eSB0YXNrcyAo
-dGhlIHRhc2tzIHRoYXQgcGVyZm9ybWFuY2UgaXMgbm90IHZlcnkgaW1wb3J0YW50KSBkbyBtb3Jl
-IHNocmluayBmaXJzdC4gIEFuZCB3aGVuIGxvdyBwcmlvcml0eSB0YXNrcyBkb2VzbqGvdCBoYXZl
-IGVub3VnaCBwYWdlcyB0byBiZSBkcm9wcGVkIGFuZCBzeXN0ZW0gbmVlZCBtb3JlIGZyZWUgcGFn
-ZSwgc2hyaW5rIHRoZSBoaWdoIHByaW9yaXR5IHRhc2uhr3MgcGFnZXMuICBCZWNhdXNlIGF0IHRo
-aXMgdGltZSwgc3lzdGVtoa9zIHN0YWJsZSBpcyBtb3JlIGltcG9ydGFudCB0aGFuIHRoZSBwZXJm
-b3JtYW5jZSBvZiBwcmlvcml0eSB0YXNrLgo+PiBXaXRoIG1lbW9yeS5taW4gYW5kIG1lbW9yeS5s
-b3csIEkgaGF2ZSBubyBpZGVhIHRvIGNvbmZpZyB0aGVtIHRvIHN1cHBvcnQgdGhpcy4gIFRoYXQg
-aXMgd2h5IEkgYWRkIGdsb2JhbCBzaHJpbmsgcHJpb3JpdHkuCj4gCj4gRm9yIHN1cmUsIHRoYXQn
-cyB3aGF0IEknbSBzdWdnZXN0aW5nIHlvdSB1c2UgbWVtb3J5LnttaW4sbG93fSBmb3IgLS0geW91
-IGRlZmluZSBzb21lIHN1YnNldCBvZiB0aGUgY2dyb3VwIGhpZXJhcmNoeSBhcyAicHJvdGVjdGVk
-IiwgYW5kIHRoZW4geW91IGJpYXMgcmVjbGFpbSBhd2F5IGZyb20gcHJvdGVjdGVkIGNncm91cHMg
-KGFuZCB0aHVzICp0b3dhcmRzKiB1bnByb3RlY3RlZCBjZ3JvdXBzKSBieSBiaWFzaW5nIHRoZSBz
-aXplIG9mIExSVSBzY2FubmluZy4gU2VlIG15IHBhdGNoIHRoYXQgd2VudCBpbnRvIDUuNCBhbmQg
-dGhlIGV4YW1wbGVzIGluIHRoZSBjb21taXQgbWVzc2FnZToKPiAKPiAgICBjb21taXQgOTc4M2Fh
-OTkxN2Y4YWUyNDc1OWU2N2JmODgyZjFhYmEzMmZlNGVhMQo+ICAgIEF1dGhvcjogQ2hyaXMgRG93
-biA8Y2hyaXNAY2hyaXNkb3duLm5hbWU+Cj4gICAgRGF0ZTogICBTdW4gT2N0IDYgMTc6NTg6MzIg
-MjAxOSAtMDcwMAo+IAo+ICAgICAgICBtbSwgbWVtY2c6IHByb3BvcnRpb25hbCBtZW1vcnkue2xv
-dyxtaW59IHJlY2xhaW0KPiAKPiBZb3UgY2FuIHNlZSBob3cgd2UncmUgdXNpbmcgbWVtb3J5Lnts
-b3csbWlufSB0byBhY2hpZXZlIHRoaXMgaW4gdGhpcyBjYXNlIHN0dWR5WzBdLiBJdCdzIG5vdCBl
-eGFjdGx5IGVxdWl2YWxlbnQgdGVjaG5pY2FsbHkgdG8geW91ciBzb2x1dGlvbiwgYnV0IHRoZSBl
-bmQgZ29hbHMgYXJlIHNpbWlsYXIuCj4gCj4gVGhhbmtzLAo+IAo+IENocmlzCj4gCj4gMDogaHR0
-cHM6Ly9mYWNlYm9va21pY3Jvc2l0ZXMuZ2l0aHViLmlvL2Nncm91cDIvZG9jcy9vdmVydmlldy5o
-dG1sI2Nhc2Utc3R1ZHktdGhlLWZidGF4Mi1wcm9qZWN0CgpIaSBDaHJpcywKClJlYWxseSBhcHBy
-ZWNpYXRlIGZvciB5b3VyIGhlbHAuICBJIHdpbGwgdHJ5IHRvIHVzZSBpdCBoYW5kbGUgbXkgcHJv
-YmxlbS4KCkJlc3QsCkh1aQo=
+[Please do not top post]
+
+On Fri 20-12-19 17:56:20, 彭志刚 wrote:
+> certainly.
+> 
+> Steps to reproduce:
+> (1)Create a mm cgroup and set memory.limit_in_bytes
+> (2)Move the bash process to the newly created cgroup, and set the
+> oom_score_adj of the  bash process to -998.
+> (3)In bash, start multiple processes, each process consumes different
+> memory until cgroup oom is triggered.
+> 
+> The triggered phenomenon is shown below. We can see that when cgroup oom
+> happened, process 23777 was killed, but in fact, 23772 consumes more memory;
+> 
+> [  591.000970] Tasks state (memory values in pages):
+> [  591.000970] [  pid  ]   uid  tgid total_vm      rss pgtables_bytes swapents oom_score_adj name
+> [  591.000973] [  23344]     0 23344     2863      923    61440        0        -998 bash
+> [  591.000975] [  23714]     0 23714    27522    25935   258048        0        -998 test
+> [  591.000976] [  23772]     0 23772   104622   103032   876544        0        -998 test
+
+points = 103032 + 0 + 876544/4096 = 103246
+
+> [  591.000978] [  23777]     0 23777    78922    77335   667648        0        -998 test
+
+points = 77335 + 0 + 667648/4096 = 77498
+
+It is not clear what is the actual hard limit but let's assume that
+rss+page_tables is the only charged memory (or at least the majority of
+it). That would be 207680 so the normalized oom_score_adj would be
+-206586 which is way too big for both tasks so from the OOM killer
+perspective both tasks are equal.
+
+The question is whether this is a bug or a (mis)feature. The
+oom_score_adj je documented as follows:
+Documentation/filesystems/proc.txt
+: Consequently, it is very simple for userspace to define the amount of memory to
+: consider for each task.  Setting a /proc/<pid>/oom_score_adj value of +500, for
+: example, is roughly equivalent to allowing the remainder of tasks sharing the
+: same system, cpuset, mempolicy, or memory controller resources to use at least
+: 50% more memory.  A value of -500, on the other hand, would be roughly
+: equivalent to discounting 50% of the task's allowed memory from being considered
+: as scoring against the task.
+
+Which implies that we are talking about the budget based on a usable
+memory (aka hard limit in this case). I do agree that the semantic is
+awkward. I know there are usecases which try to use the existing scheme
+for oom_score_adj to fine tune oom decisions and I am worried your patch
+might break those.
+
+That being said, I am not sure this change is safe wrt. to backward
+compatibility. I would rather recommend to not using oom_score_adj for
+anything but OOM_SCORE_ADJ_MIN resp OOM_SCORE_ADJ_MAX.
+-- 
+Michal Hocko
+SUSE Labs
