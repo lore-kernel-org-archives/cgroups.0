@@ -1,117 +1,82 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v7 00/10] per lruvec lru_lock for memcg
-Date: Wed, 25 Dec 2019 17:04:16 +0800
-Message-ID: <1577264666-246071-1-git-send-email-alex.shi@linux.alibaba.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH v7 05/10] mm/mlock: optimize munlock_pagevec by relocking
+Date: Wed, 25 Dec 2019 17:04:21 +0800
+Message-ID: <1577264666-246071-6-git-send-email-alex.shi@linux.alibaba.com>
+References: <1577264666-246071-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1577264666-246071-1-git-send-email-alex.shi@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com, hannes@cmpxchg.org
 
-Hi all,
+During the pagevec locking, a new page's lruvec is may same as
+previous one. Thus we could save a re-locking, and only
+change lock iff lruvec is newer.
 
-Merry Christmas! :)
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: Andrew Morton <akpm@linux-foundation.org>
+---
+ mm/mlock.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-This patchset move lru_lock into lruvec, give a lru_lock for each of
-lruvec, thus bring a lru_lock for each of memcg per node.
-
-We introduce function lock_page_lruvec, which will lock the page's
-memcg and then memcg's lruvec->lru_lock(Thanks Johannes Weiner,
-Hugh Dickins and Konstantin Khlebnikov suggestion/reminder) to replace
-old pgdat->lru_lock.
-
-Following to Daniel Jordan's suggestion, I run 208 'dd' with on 104
-containers on a 2s * 26cores * HT box with a modefied case:
-  https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/tree/case-lru-file-readtwice
-
-With this patchset, the readtwice performance increased about 80%
-with containers. And no performance drops w/o container.
-
-Another way to guard move_account is by lru_lock instead of move_lock 
-Considering the memcg move task path:
-   mem_cgroup_move_task:
-     mem_cgroup_move_charge:
-	lru_add_drain_all();
-	atomic_inc(&mc.from->moving_account); //ask lruvec's move_lock
-	synchronize_rcu();
-	walk_parge_range: do charge_walk_ops(mem_cgroup_move_charge_pte_range):
-	   isolate_lru_page();
-	   mem_cgroup_move_account(page,)
-		spin_lock(&from->move_lock) 
-		page->mem_cgroup = to;
-		spin_unlock(&from->move_lock) 
-	   putback_lru_page(page)
-
-to guard 'page->mem_cgroup = to' by to_vec->lru_lock has the similar effect with
-move_lock. So for performance reason, both solutions are same.
-
-Thanks Hugh Dickins and Konstantin Khlebnikov, they both brought the same idea
-7 years ago.
-
-Thanks all the comments from Hugh Dickins, Konstantin Khlebnikov, Daniel Jordan, 
-Johannes Weiner, Mel Gorman, Shakeel Butt, Rong Chen, Fengguang Wu, Yun Wang etc.
-and some testing support from Intel 0days!
-
-v7,
-  a, rebase on v5.5-rc3, 
-  b, move the lock_page_lru() clean up before lock replace.
-
-v6, 
-  a, rebase on v5.5-rc2, and do retesting.
-  b, pick up Johanness' comments change and a lock_page_lru cleanup.
-
-v5,
-  a, locking page's memcg according JohannesW suggestion
-  b, using macro for non memcg, according to Johanness and Metthew's suggestion.
-
-v4: 
-  a, fix the page->mem_cgroup dereferencing issue, thanks Johannes Weiner
-  b, remove the irqsave flags changes, thanks Metthew Wilcox
-  c, merge/split patches for better understanding and bisection purpose
-
-v3: rebase on linux-next, and fold the relock fix patch into introduceing patch
-
-v2: bypass a performance regression bug and fix some function issues
-
-v1: initial version, aim testing show 5% performance increase on a 16 threads box.
-
-
-Alex Shi (9):
-  mm/vmscan: remove unnecessary lruvec adding
-  mm/memcg: fold lru_lock in lock_page_lru
-  mm/lru: replace pgdat lru_lock with lruvec lock
-  mm/lru: introduce the relock_page_lruvec function
-  mm/mlock: optimize munlock_pagevec by relocking
-  mm/swap: only change the lru_lock iff page's lruvec is different
-  mm/pgdat: remove pgdat lru_lock
-  mm/lru: add debug checking for page memcg moving
-  mm/memcg: add debug checking in lock_page_memcg
-
-Hugh Dickins (1):
-  mm/lru: revise the comments of lru_lock
-
- Documentation/admin-guide/cgroup-v1/memcg_test.rst | 15 +---
- Documentation/admin-guide/cgroup-v1/memory.rst     |  6 +-
- Documentation/trace/events-kmem.rst                |  2 +-
- Documentation/vm/unevictable-lru.rst               | 22 ++---
- include/linux/memcontrol.h                         | 63 ++++++++++++++
- include/linux/mm_types.h                           |  2 +-
- include/linux/mmzone.h                             |  5 +-
- mm/compaction.c                                    | 59 ++++++++-----
- mm/filemap.c                                       |  4 +-
- mm/huge_memory.c                                   | 18 ++--
- mm/memcontrol.c                                    | 84 +++++++++++++++----
- mm/mlock.c                                         | 28 +++----
- mm/mmzone.c                                        |  1 +
- mm/page_alloc.c                                    |  1 -
- mm/page_idle.c                                     |  7 +-
- mm/rmap.c                                          |  2 +-
- mm/swap.c                                          | 75 +++++++----------
- mm/vmscan.c                                        | 98 ++++++++++++----------
- 18 files changed, 297 insertions(+), 195 deletions(-)
-
+diff --git a/mm/mlock.c b/mm/mlock.c
+index 10d15f58b061..050f999eadb1 100644
+--- a/mm/mlock.c
++++ b/mm/mlock.c
+@@ -289,6 +289,7 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ {
+ 	int i;
+ 	int nr = pagevec_count(pvec);
++	int delta_munlocked = -nr;
+ 	struct pagevec pvec_putback;
+ 	struct lruvec *lruvec = NULL;
+ 	int pgrescued = 0;
+@@ -299,20 +300,19 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ 	for (i = 0; i < nr; i++) {
+ 		struct page *page = pvec->pages[i];
+ 
+-		lruvec = lock_page_lruvec_irq(page);
++		lruvec = relock_page_lruvec_irq(page, lruvec);
+ 
+ 		if (TestClearPageMlocked(page)) {
+ 			/*
+ 			 * We already have pin from follow_page_mask()
+ 			 * so we can spare the get_page() here.
+ 			 */
+-			if (__munlock_isolate_lru_page(page, lruvec, false)) {
+-				__mod_zone_page_state(zone, NR_MLOCK,  -1);
+-				unlock_page_lruvec_irq(lruvec);
++			if (__munlock_isolate_lru_page(page, lruvec, false))
+ 				continue;
+-			} else
++			else
+ 				__munlock_isolation_failed(page);
+-		}
++		} else
++			delta_munlocked++;
+ 
+ 		/*
+ 		 * We won't be munlocking this page in the next phase
+@@ -322,8 +322,10 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ 		 */
+ 		pagevec_add(&pvec_putback, pvec->pages[i]);
+ 		pvec->pages[i] = NULL;
+-		unlock_page_lruvec_irq(lruvec);
+ 	}
++	__mod_zone_page_state(zone, NR_MLOCK, delta_munlocked);
++	if (lruvec)
++		unlock_page_lruvec_irq(lruvec);
+ 
+ 	/* Now we can release pins of pages that we are not munlocking */
+ 	pagevec_release(&pvec_putback);
 -- 
 1.8.3.1
 
