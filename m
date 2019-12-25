@@ -1,75 +1,71 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v7 09/10] mm/lru: add debug checking for page memcg moving
-Date: Wed, 25 Dec 2019 17:04:25 +0800
-Message-ID: <1577264666-246071-10-git-send-email-alex.shi@linux.alibaba.com>
-References: <1577264666-246071-1-git-send-email-alex.shi@linux.alibaba.com>
+From: Chris Down <chris@chrisdown.name>
+Subject: Re: [RFC] memcg: Add swappiness to cgroup2
+Date: Wed, 25 Dec 2019 14:05:46 +0000
+Message-ID: <20191225140546.GA311630@chrisdown.name>
+References: <1577252208-32419-1-git-send-email-teawater@gmail.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1577264666-246071-1-git-send-email-alex.shi@linux.alibaba.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=PaDmMxkiRy/WmC12erbAUHsnmEtdYs1r3ps1zkcgWAw=;
+        b=dj9kUX7cO9CfQ0vYnu5g3KXmO6JhCagGhOV4IqNaW87UuclAEzzGxEeHbcInmbtxqV
+         OTO0VWnbb+87Kf8YZB5UqxkkEHoCB1F/RLgqzLcQJiMEBmz9yznlTFDsFGo9tW626Hnj
+         O3+BJexc5zq7YN4nzlzC/8FHKHufQKUeyGKzU=
+Content-Disposition: inline
+In-Reply-To: <1577252208-32419-1-git-send-email-teawater@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 Content-Transfer-Encoding: 7bit
-To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com, hannes@cmpxchg.org
-Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+To: Hui Zhu <teawater@gmail.com>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Hui Zhu <teawaterz@linux.alibaba.com>
 
-This debug patch could give some clues if there are sth out of
-consideration.
+Hi Hui,
 
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: cgroups@vger.kernel.org
-Cc: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org
----
- mm/compaction.c | 4 ++++
- mm/memcontrol.c | 8 ++++++++
- 2 files changed, 12 insertions(+)
+Hui Zhu writes:
+>Even if cgroup2 has swap.max, swappiness is still a very useful config.
+>This commit add swappiness to cgroup2.
 
-diff --git a/mm/compaction.c b/mm/compaction.c
-index 8c0a2da217d8..f47820355b66 100644
---- a/mm/compaction.c
-+++ b/mm/compaction.c
-@@ -971,6 +971,10 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 			compact_lock_irqsave(&lruvec->lru_lock, &flags, cc);
- 			locked_lruvec = lruvec;
- 
-+#ifdef	CONFIG_MEMCG
-+			if (!mem_cgroup_disabled())
-+				VM_BUG_ON_PAGE(lruvec_memcg(lruvec) != page->mem_cgroup, page);
-+#endif
- 			/* Try get exclusive access under lock */
- 			if (!skip_updated) {
- 				skip_updated = true;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1b69e27d1b9f..33bf086faed0 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1247,6 +1247,10 @@ struct lruvec *lock_page_lruvec_irq(struct page *page)
- 	lruvec = mem_cgroup_lruvec(memcg, page_pgdat(page));
- 	spin_lock_irq(&lruvec->lru_lock);
- 
-+#ifdef CONFIG_MEMCG
-+	if (!mem_cgroup_disabled())
-+		VM_BUG_ON_PAGE(lruvec_memcg(lruvec) != page->mem_cgroup, page);
-+#endif
- 	return lruvec;
- }
- 
-@@ -1259,6 +1263,10 @@ struct lruvec *lock_page_lruvec_irqsave(struct page *page, unsigned long *flags)
- 	lruvec = mem_cgroup_lruvec(memcg, page_pgdat(page));
- 	spin_lock_irqsave(&lruvec->lru_lock, *flags);
- 
-+#ifdef CONFIG_MEMCG
-+	if (!mem_cgroup_disabled())
-+		VM_BUG_ON_PAGE(lruvec_memcg(lruvec) != page->mem_cgroup, page);
-+#endif
- 	return lruvec;
- }
- 
--- 
-1.8.3.1
+When submitting patches like this, it's important to explain *why* you want it 
+and what evidence there is. For example, how should one use this to compose a 
+reasonable system? Why aren't existing protection controls sufficient for your 
+use case? Where's the data?
 
+Also, why would swappiness be something cgroup-specific instead of 
+hardware-specific, when desired swappiness is really largely about the hardware 
+you have in your system?
+
+I struggle to think of situations where per-cgroup swappiness would be useful, 
+since it's really not a workload-specific setting.
+
+Thanks,
+
+Chris
+
+>Signed-off-by: Hui Zhu <teawaterz@linux.alibaba.com>
+>---
+> mm/memcontrol.c | 5 +++++
+> 1 file changed, 5 insertions(+)
+>
+>diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>index c5b5f74..e966396 100644
+>--- a/mm/memcontrol.c
+>+++ b/mm/memcontrol.c
+>@@ -7143,6 +7143,11 @@ static struct cftype swap_files[] = {
+> 		.file_offset = offsetof(struct mem_cgroup, swap_events_file),
+> 		.seq_show = swap_events_show,
+> 	},
+>+	{
+>+		.name = "swappiness",
+>+		.read_u64 = mem_cgroup_swappiness_read,
+>+		.write_u64 = mem_cgroup_swappiness_write,
+>+	},
+> 	{ }	/* terminate */
+> };
+>
+>-- 
+>2.7.4
+>
+>
