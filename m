@@ -1,71 +1,58 @@
-From: Chris Down <chris@chrisdown.name>
+From: teawater <teawaterz@linux.alibaba.com>
 Subject: Re: [RFC] memcg: Add swappiness to cgroup2
-Date: Wed, 25 Dec 2019 14:05:46 +0000
-Message-ID: <20191225140546.GA311630@chrisdown.name>
+Date: Thu, 26 Dec 2019 14:56:40 +0800
+Message-ID: <6E9887B9-EEF7-406E-90D4-3FAEFE0A505E@linux.alibaba.com>
 References: <1577252208-32419-1-git-send-email-teawater@gmail.com>
-Mime-Version: 1.0
+ <20191225140546.GA311630@chrisdown.name>
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=PaDmMxkiRy/WmC12erbAUHsnmEtdYs1r3ps1zkcgWAw=;
-        b=dj9kUX7cO9CfQ0vYnu5g3KXmO6JhCagGhOV4IqNaW87UuclAEzzGxEeHbcInmbtxqV
-         OTO0VWnbb+87Kf8YZB5UqxkkEHoCB1F/RLgqzLcQJiMEBmz9yznlTFDsFGo9tW626Hnj
-         O3+BJexc5zq7YN4nzlzC/8FHKHufQKUeyGKzU=
-Content-Disposition: inline
-In-Reply-To: <1577252208-32419-1-git-send-email-teawater@gmail.com>
+In-Reply-To: <20191225140546.GA311630@chrisdown.name>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-Content-Transfer-Encoding: 7bit
-To: Hui Zhu <teawater@gmail.com>
-Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Hui Zhu <teawaterz@linux.alibaba.com>
+Content-Type: text/plain; charset="gb2312"
+To: Chris Down <chris@chrisdown.name>
+Cc: Hui Zhu <teawater@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, vdavydov.dev@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-Hi Hui,
-
-Hui Zhu writes:
->Even if cgroup2 has swap.max, swappiness is still a very useful config.
->This commit add swappiness to cgroup2.
-
-When submitting patches like this, it's important to explain *why* you want it 
-and what evidence there is. For example, how should one use this to compose a 
-reasonable system? Why aren't existing protection controls sufficient for your 
-use case? Where's the data?
-
-Also, why would swappiness be something cgroup-specific instead of 
-hardware-specific, when desired swappiness is really largely about the hardware 
-you have in your system?
-
-I struggle to think of situations where per-cgroup swappiness would be useful, 
-since it's really not a workload-specific setting.
-
-Thanks,
-
-Chris
-
->Signed-off-by: Hui Zhu <teawaterz@linux.alibaba.com>
->---
-> mm/memcontrol.c | 5 +++++
-> 1 file changed, 5 insertions(+)
->
->diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->index c5b5f74..e966396 100644
->--- a/mm/memcontrol.c
->+++ b/mm/memcontrol.c
->@@ -7143,6 +7143,11 @@ static struct cftype swap_files[] = {
-> 		.file_offset = offsetof(struct mem_cgroup, swap_events_file),
-> 		.seq_show = swap_events_show,
-> 	},
->+	{
->+		.name = "swappiness",
->+		.read_u64 = mem_cgroup_swappiness_read,
->+		.write_u64 = mem_cgroup_swappiness_write,
->+	},
-> 	{ }	/* terminate */
-> };
->
->-- 
->2.7.4
->
->
+Cgo+INTaIDIwMTnE6jEy1MIyNcjVo6wyMjowNaOsQ2hyaXMgRG93biA8Y2hyaXNAY2hyaXNkb3du
+Lm5hbWU+INC0tcCjugo+IAo+IEhpIEh1aSwKPiAKPiBIdWkgWmh1IHdyaXRlczoKPj4gRXZlbiBp
+ZiBjZ3JvdXAyIGhhcyBzd2FwLm1heCwgc3dhcHBpbmVzcyBpcyBzdGlsbCBhIHZlcnkgdXNlZnVs
+IGNvbmZpZy4KPj4gVGhpcyBjb21taXQgYWRkIHN3YXBwaW5lc3MgdG8gY2dyb3VwMi4KPiAKPiBX
+aGVuIHN1Ym1pdHRpbmcgcGF0Y2hlcyBsaWtlIHRoaXMsIGl0J3MgaW1wb3J0YW50IHRvIGV4cGxh
+aW4gKndoeSogeW91IHdhbnQgaXQgYW5kIHdoYXQgZXZpZGVuY2UgdGhlcmUgaXMuIEZvciBleGFt
+cGxlLCBob3cgc2hvdWxkIG9uZSB1c2UgdGhpcyB0byBjb21wb3NlIGEgcmVhc29uYWJsZSBzeXN0
+ZW0/IFdoeSBhcmVuJ3QgZXhpc3RpbmcgcHJvdGVjdGlvbiBjb250cm9scyBzdWZmaWNpZW50IGZv
+ciB5b3VyIHVzZSBjYXNlPyBXaGVyZSdzIHRoZSBkYXRhPwo+IAo+IEFsc28sIHdoeSB3b3VsZCBz
+d2FwcGluZXNzIGJlIHNvbWV0aGluZyBjZ3JvdXAtc3BlY2lmaWMgaW5zdGVhZCBvZiBoYXJkd2Fy
+ZS1zcGVjaWZpYywgd2hlbiBkZXNpcmVkIHN3YXBwaW5lc3MgaXMgcmVhbGx5IGxhcmdlbHkgYWJv
+dXQgdGhlIGhhcmR3YXJlIHlvdSBoYXZlIGluIHlvdXIgc3lzdGVtPwo+IAo+IEkgc3RydWdnbGUg
+dG8gdGhpbmsgb2Ygc2l0dWF0aW9ucyB3aGVyZSBwZXItY2dyb3VwIHN3YXBwaW5lc3Mgd291bGQg
+YmUgdXNlZnVsLCBzaW5jZSBpdCdzIHJlYWxseSBub3QgYSB3b3JrbG9hZC1zcGVjaWZpYyBzZXR0
+aW5nLgoKCkhpIENocmlzLAoKTXkgdGhvdWdodCBhYm91dCBwZXItY2dyb3VwIHN3YXBwaW5lc3Mg
+aXMgZGlmZmVyZW50IGFwcGxpY2F0aW9ucyBzaG91bGQgaGF2ZSBkaWZmZXJlbnQgbWVtb3J5IGZv
+b3RwcmludC4KRm9yIGV4YW1wbGUsIGFuIGFwcGxpY2F0aW9uIGRvZXMgYSBsb3Qgb2YgZmlsZSBh
+Y2Nlc3Mgd29yayBpbiBhIG1lbW9yeS1jb25zdHJhaW5lZCBlbnZpcm9ubWVudC4gIEl0cyBwZXJm
+b3JtYW5jZSBkZXBlbmQgb24gdGhlIGZpbGUgYWNjZXNzIHNwZWVkLiAgS2VlcCBtb3JlIGZpbGUg
+Y2FjaGUgd2lsbCBnb29kIGZvciBpdC4gIFRoZW4gbW9yZSBzd2FwcGluZXNzIHdpbGwgZ29vZCBm
+b3IgaXQsIGVzcGVjaWFsbHkgd2l0aCB0aGUgaGlnaCBzcGVlZCBzd2FwIGRldmljZSh6cmFtL3pz
+d2FwKS4KQW5kIGluIHRoZSBzYW1lIGVudmlyb25tZW50LCBhbiBhcHBsaWNhdGlvbiB0aGF0IGFj
+Y2VzcyBhbm9uIG1lbW9yeSBhIGxvdCBvZiB0aW1lcy4gIFVzZSBsb3cgc3dhcGluZXNzIHdpbGwg
+Z29vZCBmb3IgaXRzIHBlcmZvcm1hbmNlLiAgQnV0IGp1c3QgbGV0IGl0IG5vdCB0byBzd2FwIGlz
+IG5vdCBhIGdvb2QgZm9yIGl0IGJlY2F1c2UgdGhlIGNvZGUgaXMgaW5zaWRlIGZpbGUgY2FjaGUu
+ICBKdXN0IGRyb3AgdGhlIGZpbGUgY2FjaGUgd2lsbCBkZWNyZWFzZSB0aGUgYXBwbGljYXRpb24g
+c3BlZWQgc29tZXRpbWUuCkJvdGggb2YgdGhlbSBhcmUgZXh0cmVtZSBleGFtcGxlcy4gIE90aGVy
+IGFwcGxpY2F0aW9ucyBtYXliZSBhY2Nlc3MgYm90aCBmaWxlIGFuZCBhbm9uLiAgTWF5YmUgZGVm
+aW5lIGEgc3BlY2lhbCBzd2FwaW5lc3MgaXMgZ29vZCBmb3IgaXQuCgpUaGlzIGlzIHdoYXQgSSB0
+aG91Z2h0IGFib3V0IGFkZCBzd2FwcGluZXNzIHRvIGNncm91cDIuCgpCZXN0LApIdWkKCj4gCj4g
+VGhhbmtzLAo+IAo+IENocmlzCj4gCj4+IFNpZ25lZC1vZmYtYnk6IEh1aSBaaHUgPHRlYXdhdGVy
+ekBsaW51eC5hbGliYWJhLmNvbT4KPj4gLS0tCj4+IG1tL21lbWNvbnRyb2wuYyB8IDUgKysrKysK
+Pj4gMSBmaWxlIGNoYW5nZWQsIDUgaW5zZXJ0aW9ucygrKQo+PiAKPj4gZGlmZiAtLWdpdCBhL21t
+L21lbWNvbnRyb2wuYyBiL21tL21lbWNvbnRyb2wuYwo+PiBpbmRleCBjNWI1Zjc0Li5lOTY2Mzk2
+IDEwMDY0NAo+PiAtLS0gYS9tbS9tZW1jb250cm9sLmMKPj4gKysrIGIvbW0vbWVtY29udHJvbC5j
+Cj4+IEBAIC03MTQzLDYgKzcxNDMsMTEgQEAgc3RhdGljIHN0cnVjdCBjZnR5cGUgc3dhcF9maWxl
+c1tdID0gewo+PiAJCS5maWxlX29mZnNldCA9IG9mZnNldG9mKHN0cnVjdCBtZW1fY2dyb3VwLCBz
+d2FwX2V2ZW50c19maWxlKSwKPj4gCQkuc2VxX3Nob3cgPSBzd2FwX2V2ZW50c19zaG93LAo+PiAJ
+fSwKPj4gKwl7Cj4+ICsJCS5uYW1lID0gInN3YXBwaW5lc3MiLAo+PiArCQkucmVhZF91NjQgPSBt
+ZW1fY2dyb3VwX3N3YXBwaW5lc3NfcmVhZCwKPj4gKwkJLndyaXRlX3U2NCA9IG1lbV9jZ3JvdXBf
+c3dhcHBpbmVzc193cml0ZSwKPj4gKwl9LAo+PiAJeyB9CS8qIHRlcm1pbmF0ZSAqLwo+PiB9Owo+
+PiAKPj4gLS0gCj4+IDIuNy40Cj4+IAoK
