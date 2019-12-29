@@ -1,60 +1,49 @@
-From: teawater <teawaterz@linux.alibaba.com>
+From: Chris Down <chris@chrisdown.name>
 Subject: Re: [PATCH] mm: vmscan: memcg: Add global shrink priority
-Date: Sun, 29 Dec 2019 21:38:00 +0800
-Message-ID: <1E6A7BC4-A983-4C65-9DA9-4D3A26D4D31D@linux.alibaba.com>
+Date: Sun, 29 Dec 2019 14:02:40 +0000
+Message-ID: <20191229140240.GB612003@chrisdown.name>
 References: <1576662179-16861-1-git-send-email-teawaterz@linux.alibaba.com>
  <20191218140952.GA255739@chrisdown.name>
  <25AA9500-B249-42C2-B162-2B8D4EE83BB0@linux.alibaba.com>
  <20191219112618.GA72828@chrisdown.name>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
-Content-Transfer-Encoding: base64
+ <1E6A7BC4-A983-4C65-9DA9-4D3A26D4D31D@linux.alibaba.com>
+Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20191219112618.GA72828@chrisdown.name>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=tVdSh5eigGfpfZbcGPOwFmTu1bT8ccSTdspsY1KsgDw=;
+        b=QYExPAlecIZL1gnZxQC2xAYNOQMYgcCITRyrl9YRy7vqXB90bkcdXQ0PNNPKj+EfIY
+         XbxHnw6z/MYyt8nlFYs49bKYSGMGMdpvYQ4QZkCFEDPLndQdvuyJElvqaxMHi909zBA1
+         Yn5uZ2Ws6avDpxFA76+O6cfBw5jIPVmBer4XQ=
+Content-Disposition: inline
+In-Reply-To: <1E6A7BC4-A983-4C65-9DA9-4D3A26D4D31D@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="gb2312"
-To: Chris Down <chris@chrisdown.name>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Transfer-Encoding: 7bit
+To: teawater <teawaterz@linux.alibaba.com>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Yang Shi <yang.shi@linux.alibaba.com>, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-Cgo+INTaIDIwMTnE6jEy1MIxOcjVo6wxOToyNqOsQ2hyaXMgRG93biA8Y2hyaXNAY2hyaXNkb3du
-Lm5hbWU+INC0tcCjugo+IAo+IEhpIEh1aSwKPiAKPiB0ZWF3YXRlciB3cml0ZXM6Cj4+IE1lbW9y
-eS5taW4sIGxvdywgaGlnaCBjYW4gYWZmZWN0IHRoZSBnbG9iYWwgc2hyaW5rIGJlaGF2aW9yLiAg
-VGhleSBjYW4gaGVscCB0YXNrIGtlZXAgc29tZSBwYWdlcyB0byBoZWxwIHByb3RlY3QgcGVyZm9y
-bWFuY2UuCj4+IAo+PiBCdXQgd2hhdCBJIHdhbnQgaXMgdGhlIGxvdyBwcmlvcml0eSB0YXNrcyAo
-dGhlIHRhc2tzIHRoYXQgcGVyZm9ybWFuY2UgaXMgbm90IHZlcnkgaW1wb3J0YW50KSBkbyBtb3Jl
-IHNocmluayBmaXJzdC4gIEFuZCB3aGVuIGxvdyBwcmlvcml0eSB0YXNrcyBkb2VzbqGvdCBoYXZl
-IGVub3VnaCBwYWdlcyB0byBiZSBkcm9wcGVkIGFuZCBzeXN0ZW0gbmVlZCBtb3JlIGZyZWUgcGFn
-ZSwgc2hyaW5rIHRoZSBoaWdoIHByaW9yaXR5IHRhc2uhr3MgcGFnZXMuICBCZWNhdXNlIGF0IHRo
-aXMgdGltZSwgc3lzdGVtoa9zIHN0YWJsZSBpcyBtb3JlIGltcG9ydGFudCB0aGFuIHRoZSBwZXJm
-b3JtYW5jZSBvZiBwcmlvcml0eSB0YXNrLgo+PiBXaXRoIG1lbW9yeS5taW4gYW5kIG1lbW9yeS5s
-b3csIEkgaGF2ZSBubyBpZGVhIHRvIGNvbmZpZyB0aGVtIHRvIHN1cHBvcnQgdGhpcy4gIFRoYXQg
-aXMgd2h5IEkgYWRkIGdsb2JhbCBzaHJpbmsgcHJpb3JpdHkuCj4gCj4gRm9yIHN1cmUsIHRoYXQn
-cyB3aGF0IEknbSBzdWdnZXN0aW5nIHlvdSB1c2UgbWVtb3J5LnttaW4sbG93fSBmb3IgLS0geW91
-IGRlZmluZSBzb21lIHN1YnNldCBvZiB0aGUgY2dyb3VwIGhpZXJhcmNoeSBhcyAicHJvdGVjdGVk
-IiwgYW5kIHRoZW4geW91IGJpYXMgcmVjbGFpbSBhd2F5IGZyb20gcHJvdGVjdGVkIGNncm91cHMg
-KGFuZCB0aHVzICp0b3dhcmRzKiB1bnByb3RlY3RlZCBjZ3JvdXBzKSBieSBiaWFzaW5nIHRoZSBz
-aXplIG9mIExSVSBzY2FubmluZy4gU2VlIG15IHBhdGNoIHRoYXQgd2VudCBpbnRvIDUuNCBhbmQg
-dGhlIGV4YW1wbGVzIGluIHRoZSBjb21taXQgbWVzc2FnZToKPiAKPiAgICBjb21taXQgOTc4M2Fh
-OTkxN2Y4YWUyNDc1OWU2N2JmODgyZjFhYmEzMmZlNGVhMQo+ICAgIEF1dGhvcjogQ2hyaXMgRG93
-biA8Y2hyaXNAY2hyaXNkb3duLm5hbWU+Cj4gICAgRGF0ZTogICBTdW4gT2N0IDYgMTc6NTg6MzIg
-MjAxOSAtMDcwMAo+IAo+ICAgICAgICBtbSwgbWVtY2c6IHByb3BvcnRpb25hbCBtZW1vcnkue2xv
-dyxtaW59IHJlY2xhaW0KPiAKPiBZb3UgY2FuIHNlZSBob3cgd2UncmUgdXNpbmcgbWVtb3J5Lnts
-b3csbWlufSB0byBhY2hpZXZlIHRoaXMgaW4gdGhpcyBjYXNlIHN0dWR5WzBdLiBJdCdzIG5vdCBl
-eGFjdGx5IGVxdWl2YWxlbnQgdGVjaG5pY2FsbHkgdG8geW91ciBzb2x1dGlvbiwgYnV0IHRoZSBl
-bmQgZ29hbHMgYXJlIHNpbWlsYXIuCj4gCj4gVGhhbmtzLAo+IAo+IENocmlzCj4gCj4gMDogaHR0
-cHM6Ly9mYWNlYm9va21pY3Jvc2l0ZXMuZ2l0aHViLmlvL2Nncm91cDIvZG9jcy9vdmVydmlldy5o
-dG1sI2Nhc2Utc3R1ZHktdGhlLWZidGF4Mi1wcm9qZWN0CgpIaSBDaHJpcywKCkkgaGF2ZSBhbm90
-aGVyIGlkZWEgYWJvdXQgZ2xvYmFsIHNocmluayBwcmlvcml0eS4KCkluIHRoZSBtZW1vcnktY29u
-c3RyYWluZWQgYW5kIGNvbXBsZXggbXVsdGl0YXNraW5nIGVudmlyb25tZW50IHN1Y2ggYXMgYW4g
-QW5kcm9pZCBzeXN0ZW0gbWF5IHJlcXVpcmUgbW9yZSBjb21wbGV4IHBlcmZvcm1hbmNlIHByaW9y
-aXR5LgpGb3IgZXhhbXBsZSwgdGhlIHRhc2tzIG9mIGFwcCBpbiB0aGUgZm9udCwgdGhleSBuZWVk
-IGhpZ2ggcHJpb3JpdHkgYmVjYXVzZSBsb3cgcHJpb3JpdHkgd2lsbCBhZmZlY3QgdGhlIHVzZXIg
-ZXhwZXJpZW5jZSBhdCBvbmNlLgpUaGUgdGFza3Mgb2YgYXBwIGluIGJhY2tncm91bmQgc2hvdWxk
-IGhhdmUgbG93ZXIgcHJpb3JpdHkgdGhhbiB0aGUgZmlyc3Qgb25lLiAgQW5kIHNvbWV0aW1lLCBl
-YWNoIGFwcCBzaG91bGQgaGF2ZSBkaWZmZXJlbnQgcHJpb3JpdHkuICBCZWNhdXNlIHNvbWUgYXBw
-cyBhcmUgZnJlcXVlbnRseSB1c2VkLiAgVGhleSBzaG91bGQgaGF2ZSBoaWdoIHByaW9yaXR5IHRo
-YW4gb3RoZXIgYmFja2dyb3VuZCBhcHBzLgpUaGUgZGFlbW9ucyBzaG91bGQgaGF2ZSBsb3dlciBw
-cmlvcml0eSB0aGFuIGJhY2tncm91bmQgYXBwcy4gIEJlY2F1c2UgbW9zdCBvZiB0aGVtIHdpbGwg
-bm90IGFmZmVjdCB0aGUgdXNlciBleHBlcmllbmNlLgoKRG8geW91IHRoaW5rIHRoaXMgZW52aXJv
-bm1lbnQgaXMgc3VpdGFibGUgZm9yIGdsb2JhbCBzaHJpbmsgcHJpb3JpdHkuCgpCZXN0LApIdWkK
-Cgo=
+Hi Hui,
+
+teawater writes:
+>In the memory-constrained and complex multitasking environment such as an Android system may require more complex performance priority.
+>For example, the tasks of app in the font, they need high priority because low priority will affect the user experience at once.
+>The tasks of app in background should have lower priority than the first one.  And sometime, each app should have different priority.  Because some apps are frequently used.  They should have high priority than other background apps.
+>The daemons should have lower priority than background apps.  Because most of them will not affect the user experience.
+
+In general I don't think it's meaningful to speculate about whether it would 
+help or not without data and evidence gathering. It would really depend on how 
+the system is composed overall. Is this a real problem you're seeing, or just 
+something hypothetical?
+
+If there is a real case to discuss, we can certainly discuss it. That said, at 
+the very least I think the API needs to be easier to reason about rather than 
+just exposing mm internals, and there needs to be a demonstration that it 
+solves a real problem and existing controls are insufficient :-)
+
+Thanks,
+
+Chris
