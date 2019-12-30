@@ -1,49 +1,44 @@
-From: Chris Down <chris@chrisdown.name>
+From: teawater <teawaterz@linux.alibaba.com>
 Subject: Re: [PATCH] mm: vmscan: memcg: Add global shrink priority
-Date: Sun, 29 Dec 2019 14:02:40 +0000
-Message-ID: <20191229140240.GB612003@chrisdown.name>
+Date: Mon, 30 Dec 2019 11:32:36 +0800
+Message-ID: <07AF5F95-23CB-4A7E-A9DA-8F67E22A7195@linux.alibaba.com>
 References: <1576662179-16861-1-git-send-email-teawaterz@linux.alibaba.com>
  <20191218140952.GA255739@chrisdown.name>
  <25AA9500-B249-42C2-B162-2B8D4EE83BB0@linux.alibaba.com>
  <20191219112618.GA72828@chrisdown.name>
  <1E6A7BC4-A983-4C65-9DA9-4D3A26D4D31D@linux.alibaba.com>
-Mime-Version: 1.0
+ <20191229140240.GB612003@chrisdown.name>
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=tVdSh5eigGfpfZbcGPOwFmTu1bT8ccSTdspsY1KsgDw=;
-        b=QYExPAlecIZL1gnZxQC2xAYNOQMYgcCITRyrl9YRy7vqXB90bkcdXQ0PNNPKj+EfIY
-         XbxHnw6z/MYyt8nlFYs49bKYSGMGMdpvYQ4QZkCFEDPLndQdvuyJElvqaxMHi909zBA1
-         Yn5uZ2Ws6avDpxFA76+O6cfBw5jIPVmBer4XQ=
-Content-Disposition: inline
-In-Reply-To: <1E6A7BC4-A983-4C65-9DA9-4D3A26D4D31D@linux.alibaba.com>
+In-Reply-To: <20191229140240.GB612003@chrisdown.name>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-Content-Transfer-Encoding: 7bit
-To: teawater <teawaterz@linux.alibaba.com>
+Content-Type: text/plain; charset="gb2312"
+To: Chris Down <chris@chrisdown.name>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Yang Shi <yang.shi@linux.alibaba.com>, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-Hi Hui,
-
-teawater writes:
->In the memory-constrained and complex multitasking environment such as an Android system may require more complex performance priority.
->For example, the tasks of app in the font, they need high priority because low priority will affect the user experience at once.
->The tasks of app in background should have lower priority than the first one.  And sometime, each app should have different priority.  Because some apps are frequently used.  They should have high priority than other background apps.
->The daemons should have lower priority than background apps.  Because most of them will not affect the user experience.
-
-In general I don't think it's meaningful to speculate about whether it would 
-help or not without data and evidence gathering. It would really depend on how 
-the system is composed overall. Is this a real problem you're seeing, or just 
-something hypothetical?
-
-If there is a real case to discuss, we can certainly discuss it. That said, at 
-the very least I think the API needs to be easier to reason about rather than 
-just exposing mm internals, and there needs to be a demonstration that it 
-solves a real problem and existing controls are insufficient :-)
-
-Thanks,
-
-Chris
+Cgo+INTaIDIwMTnE6jEy1MIyOcjVo6wyMjowMqOsQ2hyaXMgRG93biA8Y2hyaXNAY2hyaXNkb3du
+Lm5hbWU+INC0tcCjugo+IAo+IEhpIEh1aSwKPiAKPiB0ZWF3YXRlciB3cml0ZXM6Cj4+IEluIHRo
+ZSBtZW1vcnktY29uc3RyYWluZWQgYW5kIGNvbXBsZXggbXVsdGl0YXNraW5nIGVudmlyb25tZW50
+IHN1Y2ggYXMgYW4gQW5kcm9pZCBzeXN0ZW0gbWF5IHJlcXVpcmUgbW9yZSBjb21wbGV4IHBlcmZv
+cm1hbmNlIHByaW9yaXR5Lgo+PiBGb3IgZXhhbXBsZSwgdGhlIHRhc2tzIG9mIGFwcCBpbiB0aGUg
+Zm9udCwgdGhleSBuZWVkIGhpZ2ggcHJpb3JpdHkgYmVjYXVzZSBsb3cgcHJpb3JpdHkgd2lsbCBh
+ZmZlY3QgdGhlIHVzZXIgZXhwZXJpZW5jZSBhdCBvbmNlLgo+PiBUaGUgdGFza3Mgb2YgYXBwIGlu
+IGJhY2tncm91bmQgc2hvdWxkIGhhdmUgbG93ZXIgcHJpb3JpdHkgdGhhbiB0aGUgZmlyc3Qgb25l
+LiAgQW5kIHNvbWV0aW1lLCBlYWNoIGFwcCBzaG91bGQgaGF2ZSBkaWZmZXJlbnQgcHJpb3JpdHku
+ICBCZWNhdXNlIHNvbWUgYXBwcyBhcmUgZnJlcXVlbnRseSB1c2VkLiAgVGhleSBzaG91bGQgaGF2
+ZSBoaWdoIHByaW9yaXR5IHRoYW4gb3RoZXIgYmFja2dyb3VuZCBhcHBzLgo+PiBUaGUgZGFlbW9u
+cyBzaG91bGQgaGF2ZSBsb3dlciBwcmlvcml0eSB0aGFuIGJhY2tncm91bmQgYXBwcy4gIEJlY2F1
+c2UgbW9zdCBvZiB0aGVtIHdpbGwgbm90IGFmZmVjdCB0aGUgdXNlciBleHBlcmllbmNlLgo+IAo+
+IEluIGdlbmVyYWwgSSBkb24ndCB0aGluayBpdCdzIG1lYW5pbmdmdWwgdG8gc3BlY3VsYXRlIGFi
+b3V0IHdoZXRoZXIgaXQgd291bGQgaGVscCBvciBub3Qgd2l0aG91dCBkYXRhIGFuZCBldmlkZW5j
+ZSBnYXRoZXJpbmcuIEl0IHdvdWxkIHJlYWxseSBkZXBlbmQgb24gaG93IHRoZSBzeXN0ZW0gaXMg
+Y29tcG9zZWQgb3ZlcmFsbC4gSXMgdGhpcyBhIHJlYWwgcHJvYmxlbSB5b3UncmUgc2VlaW5nLCBv
+ciBqdXN0IHNvbWV0aGluZyBoeXBvdGhldGljYWw/Cj4gCj4gSWYgdGhlcmUgaXMgYSByZWFsIGNh
+c2UgdG8gZGlzY3Vzcywgd2UgY2FuIGNlcnRhaW5seSBkaXNjdXNzIGl0LiBUaGF0IHNhaWQsIGF0
+IHRoZSB2ZXJ5IGxlYXN0IEkgdGhpbmsgdGhlIEFQSSBuZWVkcyB0byBiZSBlYXNpZXIgdG8gcmVh
+c29uIGFib3V0IHJhdGhlciB0aGFuIGp1c3QgZXhwb3NpbmcgbW0gaW50ZXJuYWxzLCBhbmQgdGhl
+cmUgbmVlZHMgdG8gYmUgYSBkZW1vbnN0cmF0aW9uIHRoYXQgaXQgc29sdmVzIGEgcmVhbCBwcm9i
+bGVtIGFuZCBleGlzdGluZyBjb250cm9scyBhcmUgaW5zdWZmaWNpZW50IDotKQo+IAo+IFRoYW5r
+cywKPiAKPiBDaHJpcwoKVGhhbmtzISAgQWdyZWUgd2l0aCB5b3UuCgpCZXN0LApIdWkK
