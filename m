@@ -1,33 +1,48 @@
 From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v7 00/10] per lruvec lru_lock for memcg
-Date: Tue, 31 Dec 2019 15:05:14 -0800
-Message-ID: <20191231150514.61c2b8c8354320f09b09f377@linux-foundation.org>
-References: <1577264666-246071-1-git-send-email-alex.shi@linux.alibaba.com>
+Subject: Re: [RFC] memcg: Add swappiness to cgroup2
+Date: Tue, 31 Dec 2019 15:16:21 -0800
+Message-ID: <20191231151621.8f1565ef8736233dbf60bca7@linux-foundation.org>
+References: <1577252208-32419-1-git-send-email-teawater@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1577833515;
-        bh=2JRDEcONOOpeU0TxkjV7WoTCxeEf9fZaWWxMhwx7i8o=;
+        s=default; t=1577834182;
+        bh=T1TP9OS5NPYDy/yeJXg2yUzaWY4igVKAIiTXgalOvCw=;
         h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=MRddLrwYS3egNicCrnLw9LAAmaqqevPs4Ss/3/JtxisDiy01nCs2CsIvKPioA/l6N
-         pHwlAnwDnZkgDa37ZpauBUhVd5ELv4fybysP9M7sUxY35hNWTScoYqRGoH8pRWOw9b
-         YdpRaUNRvib77Pmt+6vVPW285q1Umj9w2d7O0Vbo=
-In-Reply-To: <1577264666-246071-1-git-send-email-alex.shi@linux.alibaba.com>
+        b=H8M60uzpbqD2/72X0HwITZluZ6clbGOPd0ijAz1VhVr5Z3LM/3znM7GQRZUzyjNBR
+         xvZ7i5CxutBqkLsKTIoT323gNM9oT82/jm2X97XHDvrHW2KzDaxjgLPiE3uwaTW9W9
+         rk/vwiiwutPleNfxOzsVVXKrv0aHHhiWL2fqqikU=
+In-Reply-To: <1577252208-32419-1-git-send-email-teawater@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com, hannes@cmpxchg.org
+To: Hui Zhu <teawater@gmail.com>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Hui Zhu <teawaterz@linux.alibaba.com>
 
-On Wed, 25 Dec 2019 17:04:16 +0800 Alex Shi <alex.shi@linux.alibaba.com> wrote:
+On Wed, 25 Dec 2019 13:36:48 +0800 Hui Zhu <teawater@gmail.com> wrote:
 
-> This patchset move lru_lock into lruvec, give a lru_lock for each of
-> lruvec, thus bring a lru_lock for each of memcg per node.
+> Even if cgroup2 has swap.max, swappiness is still a very useful config.
+> This commit add swappiness to cgroup2.
+> 
+> ...
+>
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -7143,6 +7143,11 @@ static struct cftype swap_files[] = {
+>  		.file_offset = offsetof(struct mem_cgroup, swap_events_file),
+>  		.seq_show = swap_events_show,
+>  	},
+> +	{
+> +		.name = "swappiness",
+> +		.read_u64 = mem_cgroup_swappiness_read,
+> +		.write_u64 = mem_cgroup_swappiness_write,
+> +	},
+>  	{ }	/* terminate */
+>  };
 
-I see that there has been plenty of feedback on previous versions, but
-no acked/reviewed tags as yet.
+There should be a Documentation/ update with this?
 
-I think I'll take a pass for now, see what the audience feedback looks
-like ;)
+
+
 
