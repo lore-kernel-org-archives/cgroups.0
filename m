@@ -1,48 +1,31 @@
-From: Andrew Morton <akpm@linux-foundation.org>
+From: teawater <teawaterz@linux.alibaba.com>
 Subject: Re: [RFC] memcg: Add swappiness to cgroup2
-Date: Tue, 31 Dec 2019 15:16:21 -0800
-Message-ID: <20191231151621.8f1565ef8736233dbf60bca7@linux-foundation.org>
+Date: Thu, 2 Jan 2020 09:44:25 +0800
+Message-ID: <DC612002-1238-4B8D-B9FA-E4197D995099@linux.alibaba.com>
 References: <1577252208-32419-1-git-send-email-teawater@gmail.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+ <20191231151621.8f1565ef8736233dbf60bca7@linux-foundation.org>
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1577834182;
-        bh=T1TP9OS5NPYDy/yeJXg2yUzaWY4igVKAIiTXgalOvCw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=H8M60uzpbqD2/72X0HwITZluZ6clbGOPd0ijAz1VhVr5Z3LM/3znM7GQRZUzyjNBR
-         xvZ7i5CxutBqkLsKTIoT323gNM9oT82/jm2X97XHDvrHW2KzDaxjgLPiE3uwaTW9W9
-         rk/vwiiwutPleNfxOzsVVXKrv0aHHhiWL2fqqikU=
-In-Reply-To: <1577252208-32419-1-git-send-email-teawater@gmail.com>
+In-Reply-To: <20191231151621.8f1565ef8736233dbf60bca7@linux-foundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Hui Zhu <teawater@gmail.com>
-Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Hui Zhu <teawaterz@linux.alibaba.com>
+Content-Type: text/plain; charset="gb2312"
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Hui Zhu <teawater@gmail.com>, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, 25 Dec 2019 13:36:48 +0800 Hui Zhu <teawater@gmail.com> wrote:
-
-> Even if cgroup2 has swap.max, swappiness is still a very useful config.
-> This commit add swappiness to cgroup2.
-> 
-> ...
->
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -7143,6 +7143,11 @@ static struct cftype swap_files[] = {
->  		.file_offset = offsetof(struct mem_cgroup, swap_events_file),
->  		.seq_show = swap_events_show,
->  	},
-> +	{
-> +		.name = "swappiness",
-> +		.read_u64 = mem_cgroup_swappiness_read,
-> +		.write_u64 = mem_cgroup_swappiness_write,
-> +	},
->  	{ }	/* terminate */
->  };
-
-There should be a Documentation/ update with this?
-
-
-
-
+Cgo+INTaIDIwMjDE6jHUwjHI1aOsMDc6MTajrEFuZHJldyBNb3J0b24gPGFrcG1AbGludXgtZm91
+bmRhdGlvbi5vcmc+INC0tcCjugo+IAo+IE9uIFdlZCwgMjUgRGVjIDIwMTkgMTM6MzY6NDggKzA4
+MDAgSHVpIFpodSA8dGVhd2F0ZXJAZ21haWwuY29tPiB3cm90ZToKPiAKPj4gRXZlbiBpZiBjZ3Jv
+dXAyIGhhcyBzd2FwLm1heCwgc3dhcHBpbmVzcyBpcyBzdGlsbCBhIHZlcnkgdXNlZnVsIGNvbmZp
+Zy4KPj4gVGhpcyBjb21taXQgYWRkIHN3YXBwaW5lc3MgdG8gY2dyb3VwMi4KPj4gCj4+IC4uLgo+
+PiAKPj4gLS0tIGEvbW0vbWVtY29udHJvbC5jCj4+ICsrKyBiL21tL21lbWNvbnRyb2wuYwo+PiBA
+QCAtNzE0Myw2ICs3MTQzLDExIEBAIHN0YXRpYyBzdHJ1Y3QgY2Z0eXBlIHN3YXBfZmlsZXNbXSA9
+IHsKPj4gCQkuZmlsZV9vZmZzZXQgPSBvZmZzZXRvZihzdHJ1Y3QgbWVtX2Nncm91cCwgc3dhcF9l
+dmVudHNfZmlsZSksCj4+IAkJLnNlcV9zaG93ID0gc3dhcF9ldmVudHNfc2hvdywKPj4gCX0sCj4+
+ICsJewo+PiArCQkubmFtZSA9ICJzd2FwcGluZXNzIiwKPj4gKwkJLnJlYWRfdTY0ID0gbWVtX2Nn
+cm91cF9zd2FwcGluZXNzX3JlYWQsCj4+ICsJCS53cml0ZV91NjQgPSBtZW1fY2dyb3VwX3N3YXBw
+aW5lc3Nfd3JpdGUsCj4+ICsJfSwKPj4gCXsgfQkvKiB0ZXJtaW5hdGUgKi8KPj4gfTsKPiAKPiBU
+aGVyZSBzaG91bGQgYmUgYSBEb2N1bWVudGF0aW9uLyB1cGRhdGUgd2l0aCB0aGlzPwo+IAoKSGkg
+QW5kcmV3LAoKSSB3aWxsIHBvc3QgYSBuZXcgdmVyc2lvbiB3aXRoIERvY3VtZW50YXRpb24vIHVw
+ZGF0ZS4KClRoYW5rcywKSHVpCgo+IAo+IAoKCgo=
