@@ -1,77 +1,55 @@
 From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [RFC PATCH] mm: thp: grab the lock before manipulation defer list
-Date: Mon, 6 Jan 2020 11:23:45 +0100
-Message-ID: <20200106102345.GE12699@dhcp22.suse.cz>
-References: <20200103143407.1089-1-richardw.yang@linux.intel.com>
+Subject: Re: [RFC] memcg: Add swappiness to cgroup2
+Date: Mon, 6 Jan 2020 14:10:20 +0100
+Message-ID: <20200106131020.GC9198@dhcp22.suse.cz>
+References: <1577252208-32419-1-git-send-email-teawater@gmail.com>
+ <20191225140546.GA311630@chrisdown.name>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20200103143407.1089-1-richardw.yang@linux.intel.com>
+In-Reply-To: <20191225140546.GA311630@chrisdown.name>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Wei Yang <richardw.yang@linux.intel.com>
-Cc: hannes@cmpxchg.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, kirill.shutemov@linux.intel.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, yang.shi@linux.alibaba.com
+To: Chris Down <chris@chrisdown.name>
+Cc: Hui Zhu <teawater@gmail.com>, hannes@cmpxchg.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Hui Zhu <teawaterz@linux.alibaba.com>
 
-On Fri 03-01-20 22:34:07, Wei Yang wrote:
-> As all the other places, we grab the lock before manipulate the defer list.
-> Current implementation may face a race condition.
+On Wed 25-12-19 14:05:46, Chris Down wrote:
+> Hi Hui,
+> 
+> Hui Zhu writes:
+> > Even if cgroup2 has swap.max, swappiness is still a very useful config.
+> > This commit add swappiness to cgroup2.
+> 
+> When submitting patches like this, it's important to explain *why* you want
+> it and what evidence there is. For example, how should one use this to
+> compose a reasonable system? Why aren't existing protection controls
+> sufficient for your use case? Where's the data?
 
-Please always make sure to describe the effect of the change. Why a racy
-list_empty check matters?
+Agreed!
 
-> Fixes: 87eaceb3faa5 ("mm: thp: make deferred split shrinker memcg aware")
-> 
-> Signed-off-by: Wei Yang <richardw.yang@linux.intel.com>
-> 
-> ---
-> I notice the difference during code reading and just confused about the
-> difference. No specific test is done since limited knowledge about cgroup.
-> 
-> Maybe I miss something important?
-> ---
->  mm/memcontrol.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index bc01423277c5..62b7ec34ef1a 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5368,12 +5368,12 @@ static int mem_cgroup_move_account(struct page *page,
->  	}
->  
->  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> +	spin_lock(&from->deferred_split_queue.split_queue_lock);
->  	if (compound && !list_empty(page_deferred_list(page))) {
-> -		spin_lock(&from->deferred_split_queue.split_queue_lock);
->  		list_del_init(page_deferred_list(page));
->  		from->deferred_split_queue.split_queue_len--;
-> -		spin_unlock(&from->deferred_split_queue.split_queue_lock);
->  	}
-> +	spin_unlock(&from->deferred_split_queue.split_queue_lock);
->  #endif
->  	/*
->  	 * It is safe to change page->mem_cgroup here because the page
-> @@ -5385,13 +5385,13 @@ static int mem_cgroup_move_account(struct page *page,
->  	page->mem_cgroup = to;
->  
->  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> +	spin_lock(&to->deferred_split_queue.split_queue_lock);
->  	if (compound && list_empty(page_deferred_list(page))) {
-> -		spin_lock(&to->deferred_split_queue.split_queue_lock);
->  		list_add_tail(page_deferred_list(page),
->  			      &to->deferred_split_queue.split_queue);
->  		to->deferred_split_queue.split_queue_len++;
-> -		spin_unlock(&to->deferred_split_queue.split_queue_lock);
->  	}
-> +	spin_unlock(&to->deferred_split_queue.split_queue_lock);
->  #endif
->  
->  	spin_unlock_irqrestore(&from->move_lock, flags);
-> -- 
-> 2.17.1
+> Also, why would swappiness be something cgroup-specific instead of
+> hardware-specific, when desired swappiness is really largely about the
+> hardware you have in your system?
 
+I am not really sure I agree here though. Swappiness has been
+traditionally more about workload because it has been believed that it
+is a preference of the workload whether the anonymous or disk based
+memory is more important. Whether this is a good interface is debatable
+of course but time has shown that it is extremely hard to tune.
+
+Not to mention that swappiness has been ignored for years for vast
+majority workloads because of the highly biased file LRU reclaim.
+
+At the time when cgroup v2 was introduced it'd been claimed that we
+do not want to copy the v1 swappiness logic because of the semantic
+shortcomings and that a better tuning should developed in future
+replacing even the global knob. AFAIR Johannes wanted to have a refault
+vs. cost based file/anon balancing.
+
+The lack of a sensible hierarchical behavior has been even a stronger
+argument.
 -- 
 Michal Hocko
 SUSE Labs
