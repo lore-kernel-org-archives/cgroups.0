@@ -1,41 +1,145 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [RFC PATCH] mm: thp: grab the lock before manipulation defer list
-Date: Tue, 7 Jan 2020 09:38:08 +0100
-Message-ID: <20200107083808.GC32178@dhcp22.suse.cz>
-References: <20200103143407.1089-1-richardw.yang@linux.intel.com>
- <20200106102345.GE12699@dhcp22.suse.cz>
- <20200107012241.GA15341@richard>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 2/3] clone3: allow spawning processes into cgroups
+Date: Tue, 7 Jan 2020 08:32:04 -0800
+Message-ID: <20200107163204.GB2677547@devbig004.ftw2.facebook.com>
+References: <20191223061504.28716-1-christian.brauner@ubuntu.com>
+ <20191223061504.28716-3-christian.brauner@ubuntu.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=EXsf8J2QF1KRZGOWtWEWKs3DqNsHO+r1D8ycqowGQlM=;
+        b=bpRgbibs09Jn+oJ4pkmpZxvOzcsIbPknZDJvb/ZdoOwcbUl9jZGlIt0DfiIaEjT6QW
+         coEf6/E77CcxXC0xbC5PJ9s8eHtuBzuJbpxgQsoSHTc8rM+L+nrZrWeNcln8h4wFFx7S
+         F4a8YQE+xax5Y0q9xJYPR86MejdYk2Zy/hUn4t9Ile5YLCPWnpWI87S1iyvUflERv8nt
+         RSGna/fvRYXretBqqkt2E/XeQj5hWAkmx50e05o3/Ub/lC/1VePZ5YZDLnzx6Hy8ogzl
+         nKXDeEDrCYfqM3MEU7bINrBeoab7FcgNIrE6VNqZF7MfYIQNuSrlyziWX2lNyXRJhZT+
+         wavw==
 Content-Disposition: inline
-In-Reply-To: <20200107012241.GA15341@richard>
+In-Reply-To: <20191223061504.28716-3-christian.brauner@ubuntu.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Wei Yang <richardw.yang@linux.intel.com>
-Cc: hannes@cmpxchg.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, kirill.shutemov@linux.intel.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, yang.shi@linux.alibaba.com
+To: Christian Brauner <christian.brauner@ubuntu.com>
+Cc: linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Oleg Nesterov <oleg@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Peter Zijlstra <peterz@infradead.org>, cgroups@vger.kernel.org
 
-On Tue 07-01-20 09:22:41, Wei Yang wrote:
-> On Mon, Jan 06, 2020 at 11:23:45AM +0100, Michal Hocko wrote:
-> >On Fri 03-01-20 22:34:07, Wei Yang wrote:
-> >> As all the other places, we grab the lock before manipulate the defer list.
-> >> Current implementation may face a race condition.
-> >
-> >Please always make sure to describe the effect of the change. Why a racy
-> >list_empty check matters?
-> >
-> 
-> Hmm... access the list without proper lock leads to many bad behaviors.
+On Mon, Dec 23, 2019 at 07:15:03AM +0100, Christian Brauner wrote:
+> +static struct cgroup *cgroup_get_from_file(struct file *f)
+> +{
+> +	struct cgroup_subsys_state *css;
+> +	struct cgroup *cgrp;
+> +
+> +	css = css_tryget_online_from_dir(f->f_path.dentry, NULL);
+> +	if (IS_ERR(css))
+> +		return ERR_CAST(css);
+> +
+> +	cgrp = css->cgroup;
+> +	if (!cgroup_on_dfl(cgrp)) {
+> +		cgroup_put(cgrp);
+> +		return ERR_PTR(-EBADF);
+> +	}
+> +
+> +	return cgrp;
+> +}
 
-My point is that the changelog should describe that bad behavior.
+It's minor but can you put this refactoring into a separate patch?
 
-> For example, if we grab the lock after checking list_empty, the page may
-> already be removed from list in split_huge_page_list. And then list_del_init
-> would trigger bug.
+...
+> +static int cgroup_css_set_fork(struct task_struct *parent,
+> +			       struct kernel_clone_args *kargs)
+> +	__acquires(&cgroup_mutex) __acquires(&cgroup_threadgroup_rwsem)
+> +{
+> +	int ret;
+> +	struct cgroup *dst_cgrp = NULL, *src_cgrp;
+> +	struct css_set *cset;
+> +	struct super_block *sb;
+> +	struct file *f;
+> +
+> +	if (kargs->flags & CLONE_INTO_CGROUP) {
+> +		ret = mutex_lock_killable(&cgroup_mutex);
+> +		if (ret)
+> +			return ret;
+> +	}
 
-And how does list_empty check under the lock guarantee that the page is
-on the deferred list?
+I don't think this is necessary.  cgroup_mutex should always only be
+held for a finite enough time; otherwise, processes would get stuck on
+random cgroupfs accesses or even /proc/self/cgroup.
+
+...
+> +	spin_lock_irq(&css_set_lock);
+> +	src_cgrp = task_cgroup_from_root(parent, &cgrp_dfl_root);
+> +	spin_unlock_irq(&css_set_lock);
+
+You can simply do cset->dfl_root here, which is consistent with other
+code paths which know that they want the dfl cgroup.
+
+> +	ret = cgroup_attach_permissions(src_cgrp, dst_cgrp, sb,
+> +					!!(kargs->flags & CLONE_THREAD));
+> +	if (ret)
+> +		goto err;
+
+So, the existing perm check depends on the fact that for the write
+operation to have started, it already should have passed write perm
+check on the destination cgroup.procs file.  We're missing that here,
+so we prolly need to check that explicitly.
+
+> @@ -214,13 +215,21 @@ static void pids_cancel_attach(struct cgroup_taskset *tset)
+> +static int pids_can_fork(struct task_struct *parent, struct task_struct *child,
+> +			 struct kernel_clone_args *args)
+>  {
+> +	struct css_set *new_cset = NULL;
+>  	struct cgroup_subsys_state *css;
+>  	struct pids_cgroup *pids;
+>  	int err;
+>  
+> -	css = task_css_check(current, pids_cgrp_id, true);
+> +	if (args)
+> +		new_cset = args->cset;
+> +
+> +	if (!new_cset)
+> +		css = task_css_check(current, pids_cgrp_id, true);
+> +	else
+> +		css = new_cset->subsys[pids_cgrp_id];
+
+Heh, this kinda sucks.  Would it be better to pass in the new css into
+the callbacks rather than clone args?
+
+> diff --git a/kernel/fork.c b/kernel/fork.c
+> index 2508a4f238a3..1604552f7cd3 100644
+> --- a/kernel/fork.c
+> +++ b/kernel/fork.c
+> @@ -2165,16 +2165,15 @@ static __latent_entropy struct task_struct *copy_process(
+>  	INIT_LIST_HEAD(&p->thread_group);
+>  	p->task_works = NULL;
+>  
+> -	cgroup_threadgroup_change_begin(current);
+>  	/*
+>  	 * Ensure that the cgroup subsystem policies allow the new process to be
+>  	 * forked. It should be noted the the new process's css_set can be changed
+>  	 * between here and cgroup_post_fork() if an organisation operation is in
+>  	 * progress.
+>  	 */
+> -	retval = cgroup_can_fork(p);
+> +	retval = cgroup_can_fork(current, p, args);
+>  	if (retval)
+> -		goto bad_fork_cgroup_threadgroup_change_end;
+> +		goto bad_fork_put_pidfd;
+>  
+>  	/*
+>  	 * From this point on we must avoid any synchronous user-space
+
+Maybe we can move these changes into a prep patch together with the
+get_from_file change so that this patch only contains the actual
+feature implementation?
+
+Other than that, looks good to me.  Once the above review points are
+addressed and Oleg is okay with it, I'll be happy to route this
+through the cgroup tree.
+
+Thanks so much for working on this.  This is really cool.
+
 -- 
-Michal Hocko
-SUSE Labs
+tejun
