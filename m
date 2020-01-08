@@ -1,83 +1,79 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [RFC PATCH] mm: thp: grab the lock before manipulation defer list
-Date: Wed, 8 Jan 2020 10:40:41 +0100
-Message-ID: <20200108094041.GQ32178@dhcp22.suse.cz>
-References: <20200103143407.1089-1-richardw.yang@linux.intel.com>
- <20200106102345.GE12699@dhcp22.suse.cz>
- <20200107012241.GA15341@richard>
- <20200107083808.GC32178@dhcp22.suse.cz>
- <20200108003543.GA13943@richard>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Subject: Re: [PATCH v2 2/3] clone3: allow spawning processes into cgroups
+Date: Wed, 8 Jan 2020 17:01:02 +0100
+Message-ID: <20200108160102.GA17415@blackbody.suse.cz>
+References: <20191223061504.28716-1-christian.brauner@ubuntu.com>
+ <20191223061504.28716-3-christian.brauner@ubuntu.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="G4iJoqBmSsgzjUCe"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20200108003543.GA13943@richard>
+In-Reply-To: <20191223061504.28716-3-christian.brauner@ubuntu.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Wei Yang <richardw.yang@linux.intel.com>
-Cc: hannes@cmpxchg.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, kirill.shutemov@linux.intel.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, yang.shi@linux.alibaba.com
+To: Christian Brauner <christian.brauner@ubuntu.com>
+Cc: linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Ingo Molnar <mingo@redhat.com>, Oleg Nesterov <oleg@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Peter Zijlstra <peterz@infradead.org>, cgroups@vger.kernel.org
 
-On Wed 08-01-20 08:35:43, Wei Yang wrote:
-> On Tue, Jan 07, 2020 at 09:38:08AM +0100, Michal Hocko wrote:
-> >On Tue 07-01-20 09:22:41, Wei Yang wrote:
-> >> On Mon, Jan 06, 2020 at 11:23:45AM +0100, Michal Hocko wrote:
-> >> >On Fri 03-01-20 22:34:07, Wei Yang wrote:
-> >> >> As all the other places, we grab the lock before manipulate the defer list.
-> >> >> Current implementation may face a race condition.
-> >> >
-> >> >Please always make sure to describe the effect of the change. Why a racy
-> >> >list_empty check matters?
-> >> >
-> >> 
-> >> Hmm... access the list without proper lock leads to many bad behaviors.
-> >
-> >My point is that the changelog should describe that bad behavior.
-> >
-> >> For example, if we grab the lock after checking list_empty, the page may
-> >> already be removed from list in split_huge_page_list. And then list_del_init
-> >> would trigger bug.
-> >
-> >And how does list_empty check under the lock guarantee that the page is
-> >on the deferred list?
-> 
-> Just one confusion, is this kind of description basic concept of concurrent
-> programming? How detail level we need to describe the effect?
 
-When I write changelogs for patches like this I usually describe, what
-is the potential race - e.g.
-	CPU1			CPU2
-	path1			path2
-	  check			  lock
-	  			    operation2
-				  unlock
-	    lock
-	    # check might not hold anymore
-	    operation1
-	    unlock
+--G4iJoqBmSsgzjUCe
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-and what is the effect of the race - e.g. a crash, data corruption,
-pointless attempt for operation1 which fails with user visible effect
-etc.
-This helps reviewers and everybody reading the code in the future to
-understand the locking scheme.
+On Mon, Dec 23, 2019 at 07:15:03AM +0100, Christian Brauner <christian.brau=
+ner@ubuntu.com> wrote:
+> This adds support for creating a process in a different cgroup than its
+> parent.
+Binding fork and migration together looks useful.
 
-> To me, grab the lock before accessing the critical section is obvious.
+> --- a/kernel/cgroup/cgroup.c
+> +++ b/kernel/cgroup/cgroup.c
+> @@ -5882,21 +5882,176 @@ void cgroup_fork(struct task_struct *child)
+>  	INIT_LIST_HEAD(&child->cg_list);
+Just a nitpick, I noticed the comment for cgroup_fork should be updated
+too (generic migration happens in cgroup_post_fork).
 
-It might be obvious but in many cases it is useful to minimize the
-locking and do a potentially race check before the lock is taken if the
-resulting operation can handle that.
+> --- a/kernel/fork.c
+> +++ b/kernel/fork.c
+> [...]
+> @@ -2279,8 +2278,7 @@ static __latent_entropy struct task_struct *copy_pr=
+ocess(
+>  	write_unlock_irq(&tasklist_lock);
+> =20
+>  	proc_fork_connector(p);
+> -	cgroup_post_fork(p);
+> -	cgroup_threadgroup_change_end(current);
+> +	cgroup_post_fork(current, p, args);
+I can see that when CLONE_INTO_CGROUP | CLONE_NEWCGROUP is passed, then
+the child's cgroup NS will be rooted at parent's css set
+(copy_namespaces precedes cgroup_post_fork).
 
-> list_empty and list_del should be the critical section. And the
-> lock should protect the whole critical section instead of part of it.
+Wouldn't it make better sense if this flags combination resulted in
+child's NS rooted in its css set?
 
-I am not disputing that. What I am trying to say is that the changelog
-should described the problem in the first place.
+Michal
 
-Moreover, look at the code you are trying to fix. Sure extending the
-locking seem straightforward but does it result in a correct code
-though? See my question in the previous email. How do we know that the
-page is actually enqued in a non-empty list?
--- 
-Michal Hocko
-SUSE Labs
+
+--G4iJoqBmSsgzjUCe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAl4V/LkACgkQia1+riC5
+qSh7ww/+JtgrB5RnfOwdlpOAFEIzNIFUXCtwsKQCZ+yWH6llH6b4JzLIIjX3S5Eq
+/99Cm3s9+6TG6Wr534KUcCfml7nToo/efiRjjuf0j0ZAPPR5y9s58s/qqH4oakiD
+2j4/FI86+StapFYGv8yJlQ59DZkFoDIYrPu1cYGYVzqcCo0TBSfmIK3kcO6OBA0O
+Z1aDXQGz0svw5ssVNMpOp/3P74ctvohlNAgYLNELbeMOoR6JFEiVug0kfQh1E8mo
+pPQUt1wsDNAB81h1i/5JKlkS7uYbIeDsV0i/aRM+2NGs323mDKK9iSm8EBXRhCWX
+1Y6+PuBLp7ZRPISsBZT+8jCsAwuBo2y48dw/KORd2BdBpZrxF2yLwRZNC2oRPuWX
+suMafu+vnI9ompGkrlgs0sFGiYMQiBmM0MtBCYD8MfEiJjPxGn6b17bSBNRxyzOa
+Jq1SjbPrWGWy/Pz+2CGFJstRJVsISBJbEejmBhDCo9MviK3V+2LDu0mYPvGXzJ/d
+2Kgslb9sdTQbSgeIQy+qcn9mWHZAfuyxC5i+7DJ/bE7l4bofN3TmkeFBriq9D4vU
+NELLJCnhQ7kDFhaTkFzMRrBMbkpG5Och8XfWFQDw4uskjTe8w9nORAsq/HtA/Ldv
+EHVorBc5qw9PReix/NFxNKD7vQHD0qwqHkG4h9QQbmsrtKB1/lQ=
+=atMP
+-----END PGP SIGNATURE-----
+
+--G4iJoqBmSsgzjUCe--
