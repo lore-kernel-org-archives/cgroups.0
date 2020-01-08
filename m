@@ -1,79 +1,159 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+From: Christian Brauner <christian.brauner@ubuntu.com>
 Subject: Re: [PATCH v2 2/3] clone3: allow spawning processes into cgroups
-Date: Wed, 8 Jan 2020 17:01:02 +0100
-Message-ID: <20200108160102.GA17415@blackbody.suse.cz>
+Date: Wed, 8 Jan 2020 19:09:07 +0100
+Message-ID: <20200108180906.l4mvtdmh7nm2z7sc@wittgenstein>
 References: <20191223061504.28716-1-christian.brauner@ubuntu.com>
  <20191223061504.28716-3-christian.brauner@ubuntu.com>
+ <20200107163204.GB2677547@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="G4iJoqBmSsgzjUCe"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20191223061504.28716-3-christian.brauner@ubuntu.com>
+In-Reply-To: <20200107163204.GB2677547@devbig004.ftw2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Christian Brauner <christian.brauner@ubuntu.com>
-Cc: linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Ingo Molnar <mingo@redhat.com>, Oleg Nesterov <oleg@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Peter Zijlstra <peterz@infradead.org>, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Oleg Nesterov <oleg@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Peter Zijlstra <peterz@infradead.org>, cgroups@vger.kernel.org
 
+On Tue, Jan 07, 2020 at 08:32:04AM -0800, Tejun Heo wrote:
+> On Mon, Dec 23, 2019 at 07:15:03AM +0100, Christian Brauner wrote:
+> > +static struct cgroup *cgroup_get_from_file(struct file *f)
+> > +{
+> > +	struct cgroup_subsys_state *css;
+> > +	struct cgroup *cgrp;
+> > +
+> > +	css = css_tryget_online_from_dir(f->f_path.dentry, NULL);
+> > +	if (IS_ERR(css))
+> > +		return ERR_CAST(css);
+> > +
+> > +	cgrp = css->cgroup;
+> > +	if (!cgroup_on_dfl(cgrp)) {
+> > +		cgroup_put(cgrp);
+> > +		return ERR_PTR(-EBADF);
+> > +	}
+> > +
+> > +	return cgrp;
+> > +}
+> 
+> It's minor but can you put this refactoring into a separate patch?
 
---G4iJoqBmSsgzjUCe
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Yep, will do.
 
-On Mon, Dec 23, 2019 at 07:15:03AM +0100, Christian Brauner <christian.brau=
-ner@ubuntu.com> wrote:
-> This adds support for creating a process in a different cgroup than its
-> parent.
-Binding fork and migration together looks useful.
+> 
+> ...
+> > +static int cgroup_css_set_fork(struct task_struct *parent,
+> > +			       struct kernel_clone_args *kargs)
+> > +	__acquires(&cgroup_mutex) __acquires(&cgroup_threadgroup_rwsem)
+> > +{
+> > +	int ret;
+> > +	struct cgroup *dst_cgrp = NULL, *src_cgrp;
+> > +	struct css_set *cset;
+> > +	struct super_block *sb;
+> > +	struct file *f;
+> > +
+> > +	if (kargs->flags & CLONE_INTO_CGROUP) {
+> > +		ret = mutex_lock_killable(&cgroup_mutex);
+> > +		if (ret)
+> > +			return ret;
+> > +	}
+> 
+> I don't think this is necessary.  cgroup_mutex should always only be
+> held for a finite enough time; otherwise, processes would get stuck on
+> random cgroupfs accesses or even /proc/self/cgroup.
 
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -5882,21 +5882,176 @@ void cgroup_fork(struct task_struct *child)
->  	INIT_LIST_HEAD(&child->cg_list);
-Just a nitpick, I noticed the comment for cgroup_fork should be updated
-too (generic migration happens in cgroup_post_fork).
+Ok, so a simple mutex_lock() should suffice then.
 
-> --- a/kernel/fork.c
-> +++ b/kernel/fork.c
-> [...]
-> @@ -2279,8 +2278,7 @@ static __latent_entropy struct task_struct *copy_pr=
-ocess(
->  	write_unlock_irq(&tasklist_lock);
-> =20
->  	proc_fork_connector(p);
-> -	cgroup_post_fork(p);
-> -	cgroup_threadgroup_change_end(current);
-> +	cgroup_post_fork(current, p, args);
-I can see that when CLONE_INTO_CGROUP | CLONE_NEWCGROUP is passed, then
-the child's cgroup NS will be rooted at parent's css set
-(copy_namespaces precedes cgroup_post_fork).
+> 
+> ...
+> > +	spin_lock_irq(&css_set_lock);
+> > +	src_cgrp = task_cgroup_from_root(parent, &cgrp_dfl_root);
+> > +	spin_unlock_irq(&css_set_lock);
+> 
+> You can simply do cset->dfl_root here, which is consistent with other
+> code paths which know that they want the dfl cgroup.
 
-Wouldn't it make better sense if this flags combination resulted in
-child's NS rooted in its css set?
+Ah, great!
 
-Michal
+> 
+> > +	ret = cgroup_attach_permissions(src_cgrp, dst_cgrp, sb,
+> > +					!!(kargs->flags & CLONE_THREAD));
+> > +	if (ret)
+> > +		goto err;
+> 
+> So, the existing perm check depends on the fact that for the write
+> operation to have started, it already should have passed write perm
+> check on the destination cgroup.procs file.  We're missing that here,
+> so we prolly need to check that explicitly.
 
+I need to look into this before I can say yay or nay. :)
 
---G4iJoqBmSsgzjUCe
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+> 
+> > @@ -214,13 +215,21 @@ static void pids_cancel_attach(struct cgroup_taskset *tset)
+> > +static int pids_can_fork(struct task_struct *parent, struct task_struct *child,
+> > +			 struct kernel_clone_args *args)
+> >  {
+> > +	struct css_set *new_cset = NULL;
+> >  	struct cgroup_subsys_state *css;
+> >  	struct pids_cgroup *pids;
+> >  	int err;
+> >  
+> > -	css = task_css_check(current, pids_cgrp_id, true);
+> > +	if (args)
+> > +		new_cset = args->cset;
+> > +
+> > +	if (!new_cset)
+> > +		css = task_css_check(current, pids_cgrp_id, true);
+> > +	else
+> > +		css = new_cset->subsys[pids_cgrp_id];
+> 
+> Heh, this kinda sucks.  Would it be better to pass in the new css into
+> the callbacks rather than clone args?
 
------BEGIN PGP SIGNATURE-----
+Hm, maybe. My reasoning was that the can_fork callbacks are really only
+ever used when - well - fork()ing/clone{3}()ing. Additionally, I was
+trying to make sure that struct css_set doesn't show up in too many
+places outside of cgroup core. But I'm fine with changing this to just
+take the css_set directly. Let's try that...
 
-iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAl4V/LkACgkQia1+riC5
-qSh7ww/+JtgrB5RnfOwdlpOAFEIzNIFUXCtwsKQCZ+yWH6llH6b4JzLIIjX3S5Eq
-/99Cm3s9+6TG6Wr534KUcCfml7nToo/efiRjjuf0j0ZAPPR5y9s58s/qqH4oakiD
-2j4/FI86+StapFYGv8yJlQ59DZkFoDIYrPu1cYGYVzqcCo0TBSfmIK3kcO6OBA0O
-Z1aDXQGz0svw5ssVNMpOp/3P74ctvohlNAgYLNELbeMOoR6JFEiVug0kfQh1E8mo
-pPQUt1wsDNAB81h1i/5JKlkS7uYbIeDsV0i/aRM+2NGs323mDKK9iSm8EBXRhCWX
-1Y6+PuBLp7ZRPISsBZT+8jCsAwuBo2y48dw/KORd2BdBpZrxF2yLwRZNC2oRPuWX
-suMafu+vnI9ompGkrlgs0sFGiYMQiBmM0MtBCYD8MfEiJjPxGn6b17bSBNRxyzOa
-Jq1SjbPrWGWy/Pz+2CGFJstRJVsISBJbEejmBhDCo9MviK3V+2LDu0mYPvGXzJ/d
-2Kgslb9sdTQbSgeIQy+qcn9mWHZAfuyxC5i+7DJ/bE7l4bofN3TmkeFBriq9D4vU
-NELLJCnhQ7kDFhaTkFzMRrBMbkpG5Och8XfWFQDw4uskjTe8w9nORAsq/HtA/Ldv
-EHVorBc5qw9PReix/NFxNKD7vQHD0qwqHkG4h9QQbmsrtKB1/lQ=
-=atMP
------END PGP SIGNATURE-----
+> 
+> > diff --git a/kernel/fork.c b/kernel/fork.c
+> > index 2508a4f238a3..1604552f7cd3 100644
+> > --- a/kernel/fork.c
+> > +++ b/kernel/fork.c
+> > @@ -2165,16 +2165,15 @@ static __latent_entropy struct task_struct *copy_process(
+> >  	INIT_LIST_HEAD(&p->thread_group);
+> >  	p->task_works = NULL;
+> >  
+> > -	cgroup_threadgroup_change_begin(current);
+> >  	/*
+> >  	 * Ensure that the cgroup subsystem policies allow the new process to be
+> >  	 * forked. It should be noted the the new process's css_set can be changed
+> >  	 * between here and cgroup_post_fork() if an organisation operation is in
+> >  	 * progress.
+> >  	 */
+> > -	retval = cgroup_can_fork(p);
+> > +	retval = cgroup_can_fork(current, p, args);
+> >  	if (retval)
+> > -		goto bad_fork_cgroup_threadgroup_change_end;
+> > +		goto bad_fork_put_pidfd;
+> >  
+> >  	/*
+> >  	 * From this point on we must avoid any synchronous user-space
+> 
+> Maybe we can move these changes into a prep patch together with the
+> get_from_file change so that this patch only contains the actual
+> feature implementation?
 
---G4iJoqBmSsgzjUCe--
+Should be doable!
+
+> 
+> Other than that, looks good to me.  Once the above review points are
+> addressed and Oleg is okay with it, I'll be happy to route this
+> through the cgroup tree.
+> 
+> Thanks so much for working on this.  This is really cool.
+
+Thanks and I agree! :)
+
+Christian
