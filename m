@@ -1,89 +1,66 @@
-From: Wei Yang <richardw.yang@linux.intel.com>
-Subject: [Patch v2] mm: thp: grab the lock before manipulation defer list
-Date: Thu,  9 Jan 2020 22:30:54 +0800
-Message-ID: <20200109143054.13203-1-richardw.yang@linux.intel.com>
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
+Subject: [PATCH] cgroup: Prevent double killing of css when enabling threaded cgroup
+Date: Thu,  9 Jan 2020 16:05:59 +0100
+Message-ID: <20200109150559.14457-1-mkoutny@suse.com>
+References: <20191219022716.o7vxxia6o67tyfmf@wittgenstein>
+Mime-Version: 1.0
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20191219022716.o7vxxia6o67tyfmf@wittgenstein>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, kirill.shutemov@linux.intel.com, yang.shi@linux.alibaba.com, alexander.duyck@gmail.com, rientjes@google.com, Wei Yang <richardw.yang@linux.intel.com>
+Content-Type: text/plain; charset="macroman"
+To: cgroups@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org, Christian Brauner <christian.brauner@ubuntu.com>
 
-As all the other places, we grab the lock before manipulate the defer list.
-Current implementation may face a race condition.
-
-For example, the potential race would be:
-
-    CPU1                      CPU2
-    mem_cgroup_move_account   split_huge_page_to_list
-      !list_empty
-                                lock
-                                !list_empty
-                                list_del
-                                unlock
-      lock
-      # !list_empty might not hold anymore
-      list_del_init
-      unlock
-
-When this sequence happens, the list_del_init() in
-mem_cgroup_move_account() would crash if CONFIG_DEBUG_LIST since the
-page is already been removed by list_del in split_huge_page_to_list().
-
-Fixes: 87eaceb3faa5 ("mm: thp: make deferred split shrinker memcg aware")
-
-Signed-off-by: Wei Yang <richardw.yang@linux.intel.com>
-Acked-by: David Rientjes <rientjes@google.com>
-
----
-v2:
-  * move check on compound outside suggested by Alexander
-  * an example of the race condition, suggested by Michal
----
- mm/memcontrol.c | 18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index bc01423277c5..1492eefe4f3c 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5368,10 +5368,12 @@ static int mem_cgroup_move_account(struct page *page,
- 	}
- 
- #ifdef CONFIG_TRANSPARENT_HUGEPAGE
--	if (compound && !list_empty(page_deferred_list(page))) {
-+	if (compound) {
- 		spin_lock(&from->deferred_split_queue.split_queue_lock);
--		list_del_init(page_deferred_list(page));
--		from->deferred_split_queue.split_queue_len--;
-+		if (!list_empty(page_deferred_list(page))) {
-+			list_del_init(page_deferred_list(page));
-+			from->deferred_split_queue.split_queue_len--;
-+		}
- 		spin_unlock(&from->deferred_split_queue.split_queue_lock);
- 	}
- #endif
-@@ -5385,11 +5387,13 @@ static int mem_cgroup_move_account(struct page *page,
- 	page->mem_cgroup = to;
- 
- #ifdef CONFIG_TRANSPARENT_HUGEPAGE
--	if (compound && list_empty(page_deferred_list(page))) {
-+	if (compound) {
- 		spin_lock(&to->deferred_split_queue.split_queue_lock);
--		list_add_tail(page_deferred_list(page),
--			      &to->deferred_split_queue.split_queue);
--		to->deferred_split_queue.split_queue_len++;
-+		if (list_empty(page_deferred_list(page))) {
-+			list_add_tail(page_deferred_list(page),
-+				      &to->deferred_split_queue.split_queue);
-+			to->deferred_split_queue.split_queue_len++;
-+		}
- 		spin_unlock(&to->deferred_split_queue.split_queue_lock);
- 	}
- #endif
--- 
-2.17.1
-
-
+VGhlIHRlc3RfY2djb3JlX25vX2ludGVybmFsX3Byb2Nlc3NfY29uc3RyYWludF9vbl90aHJlYWRz
+IHNlbGZ0ZXN0IHdoZW4KcnVubmluZyB3aXRoIHN1YnN5c3RlbSBjb250cm9sbGluZyBub2lzZSB0
+cmlnZ2VycyB0d28gd2FybmluZ3M6Cgo+IFsgIDU5Ny40NDMxMTVdIFdBUk5JTkc6IENQVTogMSBQ
+SUQ6IDI4MTY3IGF0IGtlcm5lbC9jZ3JvdXAvY2dyb3VwLmM6MzEzMSBjZ3JvdXBfYXBwbHlfY29u
+dHJvbF9lbmFibGUrMHhlMC8weDNmMAo+IFsgIDU5Ny40NDM0MTNdIFdBUk5JTkc6IENQVTogMSBQ
+SUQ6IDI4MTY3IGF0IGtlcm5lbC9jZ3JvdXAvY2dyb3VwLmM6MzE3NyBjZ3JvdXBfYXBwbHlfY29u
+dHJvbF9kaXNhYmxlKzB4YTYvMHgxNjAKCkJvdGggc3RlbSBmcm9tIGEgY2FsbCB0byBjZ3JvdXBf
+dHlwZV93cml0ZS4gVGhlIGZpcnN0IHdhcm5pbmcgd2FzIGFsc28KdHJpZ2dlcmVkIGJ5IHN5emth
+bGxlci4KCldoZW4gd2UncmUgc3dpdGNoaW5nIGNncm91cCB0byB0aHJlYWRlZCBtb2RlIHNob3J0
+bHkgYWZ0ZXIgYSBzdWJzeXN0ZW0Kd2FzIGRpc2FibGVkIG9uIGl0LCB3ZSBjYW4gc2VlIHRoZSBy
+ZXNwZWN0aXZlIHN1YnN5c3RlbSBjc3MgZHlpbmcgdGhlcmUuCgpUaGUgd2FybmluZyBpbiBjZ3Jv
+dXBfYXBwbHlfY29udHJvbF9lbmFibGUgaXMgaGFybWxlc3MgaW4gdGhpcyBjYXNlCnNpbmNlIHdl
+J3JlIG5vdCBhZGRpbmcgbmV3IHN1YnN5cyBhbnl3YXkuClRoZSB3YXJuaW5nIGluIGNncm91cF9h
+cHBseV9jb250cm9sX2Rpc2FibGUgaW5kaWNhdGVzIGFuIGF0dGVtcHQgdG8ga2lsbApjc3Mgb2Yg
+cmVjZW50bHkgZGlzYWJsZWQgc3Vic3lzdGVtIHJlcGVhdGVkbHkuCgpUaGUgY29tbWl0IHByZXZl
+bnRzIHRoZXNlIHNpdHVhdGlvbnMgYnkgbWFraW5nIGNncm91cF90eXBlX3dyaXRlIHdhaXQKZm9y
+IGFsbCBkeWluZyBjc3NlcyB0byBnbyBhd2F5IGJlZm9yZSByZS1hcHBseWluZyBzdWJ0cmVlIGNv
+bnRyb2xzLgpXaGVuIGF0IGl0LCB0aGUgbG9jYXRpb25zIG9mIFdBUk5fT05fT05DRSBjYWxscyBh
+cmUgbW92ZWQgc28gdGhhdAp3YXJuaW5nIGlzIHRyaWdnZXJlZCBvbmx5IHdoZW4gd2UgYXJlIGFi
+b3V0IHRvIG1pc3VzZSB0aGUgZHlpbmcgY3NzLgoKUmVwb3J0ZWQtYnk6IHN5emJvdCs1NDkzYjJh
+NTRkMzFkNmFlYTYyOUBzeXprYWxsZXIuYXBwc3BvdG1haWwuY29tClJlcG9ydGVkLWJ5OiBDaHJp
+c3RpYW4gQnJhdW5lciA8Y2hyaXN0aWFuLmJyYXVuZXJAdWJ1bnR1LmNvbT4KU2lnbmVkLW9mZi1i
+eTogTWljaGFsIEtvdXRuw70gPG1rb3V0bnlAc3VzZS5jb20+Ci0tLQoga2VybmVsL2Nncm91cC9j
+Z3JvdXAuYyB8IDExICsrKysrKy0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgNiBpbnNlcnRpb25zKCsp
+LCA1IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMgYi9r
+ZXJuZWwvY2dyb3VwL2Nncm91cC5jCmluZGV4IDUzMDk4YzFkNDVlMi4uOTdjYzcxMzA3OWRmIDEw
+MDY0NAotLS0gYS9rZXJuZWwvY2dyb3VwL2Nncm91cC5jCisrKyBiL2tlcm5lbC9jZ3JvdXAvY2dy
+b3VwLmMKQEAgLTMwNTQsOCArMzA1NCw2IEBAIHN0YXRpYyBpbnQgY2dyb3VwX2FwcGx5X2NvbnRy
+b2xfZW5hYmxlKHN0cnVjdCBjZ3JvdXAgKmNncnApCiAJCWZvcl9lYWNoX3N1YnN5cyhzcywgc3Np
+ZCkgewogCQkJc3RydWN0IGNncm91cF9zdWJzeXNfc3RhdGUgKmNzcyA9IGNncm91cF9jc3MoZHNj
+dCwgc3MpOwogCi0JCQlXQVJOX09OX09OQ0UoY3NzICYmIHBlcmNwdV9yZWZfaXNfZHlpbmcoJmNz
+cy0+cmVmY250KSk7Ci0KIAkJCWlmICghKGNncm91cF9zc19tYXNrKGRzY3QpICYgKDEgPDwgc3Mt
+PmlkKSkpCiAJCQkJY29udGludWU7CiAKQEAgLTMwNjUsNiArMzA2Myw4IEBAIHN0YXRpYyBpbnQg
+Y2dyb3VwX2FwcGx5X2NvbnRyb2xfZW5hYmxlKHN0cnVjdCBjZ3JvdXAgKmNncnApCiAJCQkJCXJl
+dHVybiBQVFJfRVJSKGNzcyk7CiAJCQl9CiAKKwkJCVdBUk5fT05fT05DRShwZXJjcHVfcmVmX2lz
+X2R5aW5nKCZjc3MtPnJlZmNudCkpOworCiAJCQlpZiAoY3NzX3Zpc2libGUoY3NzKSkgewogCQkJ
+CXJldCA9IGNzc19wb3B1bGF0ZV9kaXIoY3NzKTsKIAkJCQlpZiAocmV0KQpAQCAtMzEwMCwxMSAr
+MzEwMCwxMSBAQCBzdGF0aWMgdm9pZCBjZ3JvdXBfYXBwbHlfY29udHJvbF9kaXNhYmxlKHN0cnVj
+dCBjZ3JvdXAgKmNncnApCiAJCWZvcl9lYWNoX3N1YnN5cyhzcywgc3NpZCkgewogCQkJc3RydWN0
+IGNncm91cF9zdWJzeXNfc3RhdGUgKmNzcyA9IGNncm91cF9jc3MoZHNjdCwgc3MpOwogCi0JCQlX
+QVJOX09OX09OQ0UoY3NzICYmIHBlcmNwdV9yZWZfaXNfZHlpbmcoJmNzcy0+cmVmY250KSk7Ci0K
+IAkJCWlmICghY3NzKQogCQkJCWNvbnRpbnVlOwogCisJCQlXQVJOX09OX09OQ0UocGVyY3B1X3Jl
+Zl9pc19keWluZygmY3NzLT5yZWZjbnQpKTsKKwogCQkJaWYgKGNzcy0+cGFyZW50ICYmCiAJCQkg
+ICAgIShjZ3JvdXBfc3NfbWFzayhkc2N0KSAmICgxIDw8IHNzLT5pZCkpKSB7CiAJCQkJa2lsbF9j
+c3MoY3NzKTsKQEAgLTMzOTEsNyArMzM5MSw4IEBAIHN0YXRpYyBzc2l6ZV90IGNncm91cF90eXBl
+X3dyaXRlKHN0cnVjdCBrZXJuZnNfb3Blbl9maWxlICpvZiwgY2hhciAqYnVmLAogCWlmIChzdHJj
+bXAoc3Ryc3RyaXAoYnVmKSwgInRocmVhZGVkIikpCiAJCXJldHVybiAtRUlOVkFMOwogCi0JY2dy
+cCA9IGNncm91cF9rbl9sb2NrX2xpdmUob2YtPmtuLCBmYWxzZSk7CisJLyogZHJhaW4gZHlpbmcg
+Y3NzZXMgYmVmb3JlIHdlIHJlLWFwcGx5ICh0aHJlYWRlZCkgc3VidHJlZSBjb250cm9sICovCisJ
+Y2dycCA9IGNncm91cF9rbl9sb2NrX2xpdmUob2YtPmtuLCB0cnVlKTsKIAlpZiAoIWNncnApCiAJ
+CXJldHVybiAtRU5PRU5UOwogCi0tIAoyLjI0LjEKCg==
