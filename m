@@ -1,7 +1,7 @@
 From: Wei Yang <richardw.yang@linux.intel.com>
 Subject: Re: [RFC PATCH] mm: thp: grab the lock before manipulation defer list
-Date: Thu, 9 Jan 2020 10:03:19 +0800
-Message-ID: <20200109020319.GB31041__14363.0136315309$1578535478$gmane$org@richard>
+Date: Thu, 9 Jan 2020 11:18:21 +0800
+Message-ID: <20200109031821.GA5206@richard>
 References: <20200103143407.1089-1-richardw.yang@linux.intel.com>
  <20200106102345.GE12699@dhcp22.suse.cz>
  <20200107012241.GA15341@richard>
@@ -59,40 +59,32 @@ On Wed, Jan 08, 2020 at 10:40:41AM +0100, Michal Hocko wrote:
 >	    operation1
 >	    unlock
 >
-
-Nice, I would prepare a changelog like this.
-
 >and what is the effect of the race - e.g. a crash, data corruption,
 >pointless attempt for operation1 which fails with user visible effect
 >etc.
->This helps reviewers and everybody reading the code in the future to
->understand the locking scheme.
->
->> To me, grab the lock before accessing the critical section is obvious.
->
->It might be obvious but in many cases it is useful to minimize the
->locking and do a potentially race check before the lock is taken if the
->resulting operation can handle that.
->
->> list_empty and list_del should be the critical section. And the
->> lock should protect the whole critical section instead of part of it.
->
->I am not disputing that. What I am trying to say is that the changelog
->should described the problem in the first place.
->
->Moreover, look at the code you are trying to fix. Sure extending the
->locking seem straightforward but does it result in a correct code
->though? See my question in the previous email. How do we know that the
->page is actually enqued in a non-empty list?
 
-I may not get your point for the last sentence.
+Hi, Michal, here is my attempt for an example. Hope this one looks good to
+you.
 
-The list_empty() doesn't check the queue is empty but check the list, here is
-the page, is not enqueued into any list. Is this your concern?
 
->-- 
->Michal Hocko
->SUSE Labs
+    For example, the potential race would be:
+    
+        CPU1                      CPU2
+        mem_cgroup_move_account   split_huge_page_to_list
+          !list_empty
+                                    lock
+                                    !list_empty
+                                    list_del
+                                    unlock
+          lock
+          # !list_empty might not hold anymore
+          list_del_init
+          unlock
+    
+    When this sequence happens, the list_del_init() in
+    mem_cgroup_move_account() would crash since the page is already been
+    removed by list_del in split_huge_page_to_list().
+
 
 -- 
 Wei Yang
