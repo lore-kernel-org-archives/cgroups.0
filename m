@@ -1,18 +1,18 @@
 From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: [RFC PATCH] mm: thp: grab the lock before manipulation defer list
-Date: Thu, 9 Jan 2020 09:34:38 +0100
-Message-ID: <20200109083438.GG4951@dhcp22.suse.cz>
+Date: Thu, 9 Jan 2020 09:36:41 +0100
+Message-ID: <20200109083641.GH4951@dhcp22.suse.cz>
 References: <20200103143407.1089-1-richardw.yang@linux.intel.com>
  <20200106102345.GE12699@dhcp22.suse.cz>
  <20200107012241.GA15341@richard>
  <20200107083808.GC32178@dhcp22.suse.cz>
  <20200108003543.GA13943@richard>
  <20200108094041.GQ32178@dhcp22.suse.cz>
- <20200109020319.GB31041@richard>
+ <20200109031821.GA5206@richard>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20200109020319.GB31041@richard>
+In-Reply-To: <20200109031821.GA5206@richard>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -20,22 +20,76 @@ Content-Transfer-Encoding: 7bit
 To: Wei Yang <richardw.yang@linux.intel.com>
 Cc: hannes@cmpxchg.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, kirill.shutemov@linux.intel.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, yang.shi@linux.alibaba.com
 
-On Thu 09-01-20 10:03:19, Wei Yang wrote:
+On Thu 09-01-20 11:18:21, Wei Yang wrote:
 > On Wed, Jan 08, 2020 at 10:40:41AM +0100, Michal Hocko wrote:
-[...]
-> >Moreover, look at the code you are trying to fix. Sure extending the
-> >locking seem straightforward but does it result in a correct code
-> >though? See my question in the previous email. How do we know that the
-> >page is actually enqued in a non-empty list?
+> >On Wed 08-01-20 08:35:43, Wei Yang wrote:
+> >> On Tue, Jan 07, 2020 at 09:38:08AM +0100, Michal Hocko wrote:
+> >> >On Tue 07-01-20 09:22:41, Wei Yang wrote:
+> >> >> On Mon, Jan 06, 2020 at 11:23:45AM +0100, Michal Hocko wrote:
+> >> >> >On Fri 03-01-20 22:34:07, Wei Yang wrote:
+> >> >> >> As all the other places, we grab the lock before manipulate the defer list.
+> >> >> >> Current implementation may face a race condition.
+> >> >> >
+> >> >> >Please always make sure to describe the effect of the change. Why a racy
+> >> >> >list_empty check matters?
+> >> >> >
+> >> >> 
+> >> >> Hmm... access the list without proper lock leads to many bad behaviors.
+> >> >
+> >> >My point is that the changelog should describe that bad behavior.
+> >> >
+> >> >> For example, if we grab the lock after checking list_empty, the page may
+> >> >> already be removed from list in split_huge_page_list. And then list_del_init
+> >> >> would trigger bug.
+> >> >
+> >> >And how does list_empty check under the lock guarantee that the page is
+> >> >on the deferred list?
+> >> 
+> >> Just one confusion, is this kind of description basic concept of concurrent
+> >> programming? How detail level we need to describe the effect?
+> >
+> >When I write changelogs for patches like this I usually describe, what
+> >is the potential race - e.g.
+> >	CPU1			CPU2
+> >	path1			path2
+> >	  check			  lock
+> >	  			    operation2
+> >				  unlock
+> >	    lock
+> >	    # check might not hold anymore
+> >	    operation1
+> >	    unlock
+> >
+> >and what is the effect of the race - e.g. a crash, data corruption,
+> >pointless attempt for operation1 which fails with user visible effect
+> >etc.
 > 
-> I may not get your point for the last sentence.
+> Hi, Michal, here is my attempt for an example. Hope this one looks good to
+> you.
 > 
-> The list_empty() doesn't check the queue is empty but check the list, here is
-> the page, is not enqueued into any list. Is this your concern?
+> 
+>     For example, the potential race would be:
+>     
+>         CPU1                      CPU2
+>         mem_cgroup_move_account   split_huge_page_to_list
+>           !list_empty
+>                                     lock
+>                                     !list_empty
+>                                     list_del
+>                                     unlock
+>           lock
+>           # !list_empty might not hold anymore
+>           list_del_init
+>           unlock
+>     
+>     When this sequence happens, the list_del_init() in
+>     mem_cgroup_move_account() would crash since the page is already been
+>     removed by list_del in split_huge_page_to_list().
 
-My bad. For some reason I have misread the code and thought this was
-get_deferred_split_queue rather than page_deferred_list. Sorry about the
-confusion.
+Yes this looks much more informative. I would just add that this will
+crash if CONFIG_DEBUG_LIST.
+
+Thanks!
 -- 
 Michal Hocko
 SUSE Labs
