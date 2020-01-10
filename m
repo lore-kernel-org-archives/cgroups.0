@@ -1,99 +1,54 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [Patch v2] mm: thp: grab the lock before manipulation defer list
-Date: Thu, 9 Jan 2020 19:58:44 +0100
-Message-ID: <20200109185844.GW4951@dhcp22.suse.cz>
-References: <20200109143054.13203-1-richardw.yang@linux.intel.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: Re: [PATCH v7 00/10] per lruvec lru_lock for memcg
+Date: Fri, 10 Jan 2020 10:01:27 +0800
+Message-ID: <d2efad94-750b-3298-8859-84bccc6ecf06@linux.alibaba.com>
+References: <1577264666-246071-1-git-send-email-alex.shi@linux.alibaba.com>
+ <20191231150514.61c2b8c8354320f09b09f377@linux-foundation.org>
+ <944f0f6a-466a-7ce3-524c-f6db86fd0891@linux.alibaba.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20200109143054.13203-1-richardw.yang@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <944f0f6a-466a-7ce3-524c-f6db86fd0891@linux.alibaba.com>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Wei Yang <richardw.yang@linux.intel.com>
-Cc: hannes@cmpxchg.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, kirill.shutemov@linux.intel.com, yang.shi@linux.alibaba.com, alexander.duyck@gmail.com, rientjes@google.com
+Content-Type: text/plain; charset="gb2312"
+To: hannes@cmpxchg.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com
 
-On Thu 09-01-20 22:30:54, Wei Yang wrote:
-> As all the other places, we grab the lock before manipulate the defer list.
-> Current implementation may face a race condition.
-> 
-> For example, the potential race would be:
-> 
->     CPU1                      CPU2
->     mem_cgroup_move_account   split_huge_page_to_list
->       !list_empty
->                                 lock
->                                 !list_empty
->                                 list_del
->                                 unlock
->       lock
->       # !list_empty might not hold anymore
->       list_del_init
->       unlock
-> 
-> When this sequence happens, the list_del_init() in
-> mem_cgroup_move_account() would crash if CONFIG_DEBUG_LIST since the
-> page is already been removed by list_del in split_huge_page_to_list().
-> 
-> Fixes: 87eaceb3faa5 ("mm: thp: make deferred split shrinker memcg aware")
-> 
-> Signed-off-by: Wei Yang <richardw.yang@linux.intel.com>
-> Acked-by: David Rientjes <rientjes@google.com>
 
-Thanks a lot for the changelog approvements!
-Acked-by: Michal Hocko <mhocko@suse.com>
 
-> 
-> ---
-> v2:
->   * move check on compound outside suggested by Alexander
->   * an example of the race condition, suggested by Michal
-> ---
->  mm/memcontrol.c | 18 +++++++++++-------
->  1 file changed, 11 insertions(+), 7 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index bc01423277c5..1492eefe4f3c 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5368,10 +5368,12 @@ static int mem_cgroup_move_account(struct page *page,
->  	}
->  
->  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> -	if (compound && !list_empty(page_deferred_list(page))) {
-> +	if (compound) {
->  		spin_lock(&from->deferred_split_queue.split_queue_lock);
-> -		list_del_init(page_deferred_list(page));
-> -		from->deferred_split_queue.split_queue_len--;
-> +		if (!list_empty(page_deferred_list(page))) {
-> +			list_del_init(page_deferred_list(page));
-> +			from->deferred_split_queue.split_queue_len--;
-> +		}
->  		spin_unlock(&from->deferred_split_queue.split_queue_lock);
->  	}
->  #endif
-> @@ -5385,11 +5387,13 @@ static int mem_cgroup_move_account(struct page *page,
->  	page->mem_cgroup = to;
->  
->  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> -	if (compound && list_empty(page_deferred_list(page))) {
-> +	if (compound) {
->  		spin_lock(&to->deferred_split_queue.split_queue_lock);
-> -		list_add_tail(page_deferred_list(page),
-> -			      &to->deferred_split_queue.split_queue);
-> -		to->deferred_split_queue.split_queue_len++;
-> +		if (list_empty(page_deferred_list(page))) {
-> +			list_add_tail(page_deferred_list(page),
-> +				      &to->deferred_split_queue.split_queue);
-> +			to->deferred_split_queue.split_queue_len++;
-> +		}
->  		spin_unlock(&to->deferred_split_queue.split_queue_lock);
->  	}
->  #endif
-> -- 
-> 2.17.1
+=D4=DA 2020/1/2 =CF=C2=CE=E76:21, Alex Shi =D0=B4=B5=C0:
+>=20
+>=20
+> =D4=DA 2020/1/1 =C9=CF=CE=E77:05, Andrew Morton =D0=B4=B5=C0:
+>> On Wed, 25 Dec 2019 17:04:16 +0800 Alex Shi <alex.shi@linux.alibaba.co=
+m> wrote:
+>>
+>>> This patchset move lru_lock into lruvec, give a lru_lock for each of
+>>> lruvec, thus bring a lru_lock for each of memcg per node.
+>>
+>> I see that there has been plenty of feedback on previous versions, but
+>> no acked/reviewed tags as yet.
+>>
+>> I think I'll take a pass for now, see what the audience feedback looks
+>> like ;)
+>>
+>=20
 
--- 
-Michal Hocko
-SUSE Labs
+Hi Johannes,
+
+Any comments of this version? :)
+
+Thanks
+Alex
+
+>=20
+> Thanks a lot! Andrew.
+>=20
+> Please drop the 10th patch since it's for debug only and cost performan=
+ce drop.
+>=20
+> Best regards & Happy new year! :)
+> Alex
+>=20
+
