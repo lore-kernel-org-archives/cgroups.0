@@ -1,129 +1,60 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH v7 02/10] mm/memcg: fold lru_lock in lock_page_lru
-Date: Mon, 13 Jan 2020 20:47:25 +0800
-Message-ID: <a095d80d-8e34-c84f-e4be-085a5aae1929@linux.alibaba.com>
-References: <1577264666-246071-1-git-send-email-alex.shi@linux.alibaba.com>
- <1577264666-246071-3-git-send-email-alex.shi@linux.alibaba.com>
- <36d7e390-a3d1-908c-d181-4a9e9c8d3d98@yandex-team.ru>
- <952d02c2-8aa5-40bb-88bb-c43dee65c8bc@linux.alibaba.com>
- <2ba8a04e-d8e0-1d50-addc-dbe1b4d8e0f1@yandex-team.ru>
+From: Qiang Yu <qiang.yu@amd.com>
+Subject: [PATCH RFC 0/3] mm/memcontrol drm/ttm: charge ttm buffer backed by
+ system memory
+Date: Mon, 13 Jan 2020 23:35:40 +0800
+Message-ID: <20200113153543.24957-1-qiang.yu@amd.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <2ba8a04e-d8e0-1d50-addc-dbe1b4d8e0f1-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=amdcloud.onmicrosoft.com; s=selector2-amdcloud-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=rsmRFEVmj30XrwddG2qG6+/9LY7okiYo3z6I6OKGbrs=;
+ b=derinofgmcsleCAXhujSxeIKTxTl2BzgWy+LVErHA29fDH2jrgZT60u4tanLCqHi05pQiT2Vcp9ND265z/Szh2rn8o4q/0X0/NG4Q9WNRtGVqPoIkSrjflFK+XlmhgNasTzdMYDUY2lMG5ft3kI14ELG9WR0ddT3cyt+bBhkzFk=
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: linux-mm@kvack.org, cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org
+Cc: David Airlie <airlied@linux.ie>, Kenny Ho <kenny.ho@amd.com>, Michal Hocko <mhocko@kernel.org>, Qiang Yu <qiang.yu@amd.com>, Huang Rui <ray.huang@amd.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Christian Koenig <christian.koenig@amd.com>
 
+Buffers created by GPU driver could be huge (often several MB and even hundred
+or thousand MB). Some GPU driver call drm_gem_get_pages() which uses shmem to
+allocate these buffers which will charge memcg already, while some GPU driver
+like amdgpu use TTM which just allocate these system memory backed buffers with
+alloc_pages() so won't charge memcg currently.
 
+Not like pure kernel memory, GPU buffer need to be mapped to user space for user
+filling data and command then let GPU hardware consume these buffers. So it is
+not proper to use memcg kmem by adding __GFP_ACCOUNT to alloc_pages gfp flags.
 
-在 2020/1/13 下午5:55, Konstantin Khlebnikov 写道:
->>>>
->>>> index c5b5f74cfd4d..0ad10caabc3d 100644
->>>> --- a/mm/memcontrol.c
->>>> +++ b/mm/memcontrol.c
->>>> @@ -2572,12 +2572,11 @@ static void cancel_charge(struct mem_cgroup *memcg, unsigned int nr_pages)
->>>>      static void lock_page_lru(struct page *page, int *isolated)
->>>>    {
->>>> -    pg_data_t *pgdat = page_pgdat(page);
->>>> -
->>>> -    spin_lock_irq(&pgdat->lru_lock);
->>>>        if (PageLRU(page)) {
->>>> +        pg_data_t *pgdat = page_pgdat(page);
->>>>            struct lruvec *lruvec;
->>>>    +        spin_lock_irq(&pgdat->lru_lock);
->>>
->>> That's wrong. Here PageLRU must be checked again under lru_lock.
->> Hi, Konstantin,
->>
->> For logical remain, we can get the lock and then release for !PageLRU.
->> but I still can figure out the problem scenario. Would like to give more hints?
-> 
-> That's trivial race: page could be isolated from lru between
-> 
-> if (PageLRU(page))
-> and
-> spin_lock_irq(&pgdat->lru_lock);
+Another reason is back memory of GPU buffer may be allocated latter after the
+buffer object is created, and even in other processes. So we need to record the
+memcg when buffer object creation, then charge it latter when needed.
 
-yes, it could be a problem. guess the following change could helpful:
-I will update it in new version.
+TTM will use a page pool acting as a cache for write-combine/no-cache pages.
+So adding new GFP flags for alloc_pages also does not work.
 
-Thanks a lot!
-Alex
+Qiang Yu (3):
+  mm: memcontrol: add mem_cgroup_(un)charge_drvmem
+  mm: memcontrol: record driver memory statistics
+  drm/ttm: support memcg for ttm_tt
 
--static void lock_page_lru(struct page *page, int *isolated)
--{
--       pg_data_t *pgdat = page_pgdat(page);
--
--       spin_lock_irq(&pgdat->lru_lock);
--       if (PageLRU(page)) {
--               struct lruvec *lruvec;
--
--               lruvec = mem_cgroup_page_lruvec(page, pgdat);
--               ClearPageLRU(page);
--               del_page_from_lru_list(page, lruvec, page_lru(page));
--               *isolated = 1;
--       } else
--               *isolated = 0;
--}
--
--static void unlock_page_lru(struct page *page, int isolated)
--{
--       pg_data_t *pgdat = page_pgdat(page);
--
--       if (isolated) {
--               struct lruvec *lruvec;
--
--               lruvec = mem_cgroup_page_lruvec(page, pgdat);
--               VM_BUG_ON_PAGE(PageLRU(page), page);
--               SetPageLRU(page);
--               add_page_to_lru_list(page, lruvec, page_lru(page));
--       }
--       spin_unlock_irq(&pgdat->lru_lock);
--}
--
- static void commit_charge(struct page *page, struct mem_cgroup *memcg,
-                          bool lrucare)
- {
--       int isolated;
-+       struct lruvec *lruvec = NULL;
+ drivers/gpu/drm/ttm/ttm_bo.c         | 10 +++++
+ drivers/gpu/drm/ttm/ttm_page_alloc.c | 18 ++++++++-
+ drivers/gpu/drm/ttm/ttm_tt.c         |  3 ++
+ include/drm/ttm/ttm_bo_api.h         |  5 +++
+ include/drm/ttm/ttm_tt.h             |  4 ++
+ include/linux/memcontrol.h           | 22 +++++++++++
+ mm/memcontrol.c                      | 58 ++++++++++++++++++++++++++++
+ 7 files changed, 119 insertions(+), 1 deletion(-)
 
-        VM_BUG_ON_PAGE(page->mem_cgroup, page);
-
-@@ -2612,8 +2617,16 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
-         * In some cases, SwapCache and FUSE(splice_buf->radixtree), the page
-         * may already be on some other mem_cgroup's LRU.  Take care of it.
-         */
--       if (lrucare)
--               lock_page_lru(page, &isolated);
-+       if (lrucare) {
-+               lruvec = lock_page_lruvec_irq(page);
-+               if (likely(PageLRU(page))) {
-+                       ClearPageLRU(page);
-+                       del_page_from_lru_list(page, lruvec, page_lru(page));
-+               } else {
-+                       unlock_page_lruvec_irq(lruvec);
-+                       lruvec = NULL;
-+               }
-+       }
-
-        /*
-         * Nobody should be changing or seriously looking at
-@@ -2631,8 +2644,15 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
-         */
-        page->mem_cgroup = memcg;
-
--       if (lrucare)
--               unlock_page_lru(page, isolated);
-+       if (lrucare && lruvec) {
-+               unlock_page_lruvec_irq(lruvec);
-+               lruvec = lock_page_lruvec_irq(page);
-+
-+               VM_BUG_ON_PAGE(PageLRU(page), page);
-+               SetPageLRU(page);
-+               add_page_to_lru_list(page, lruvec, page_lru(page));
-+               unlock_page_lruvec_irq(lruvec);
-+       }
- }
+-- 
+2.17.1
