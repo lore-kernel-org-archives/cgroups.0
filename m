@@ -1,47 +1,66 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
 Subject: Re: [Patch v2] mm: thp: grab the lock before manipulation defer list
-Date: Tue, 14 Jan 2020 10:31:22 +0100
-Message-ID: <20200114093122.GH19428@dhcp22.suse.cz>
+Date: Tue, 14 Jan 2020 13:31:12 +0300
+Message-ID: <20200114103112.o6ozdbkfnzdsc2ke@box>
 References: <20200109143054.13203-1-richardw.yang@linux.intel.com>
  <20200111000352.efy6krudecpshezh@box>
+ <20200114093122.GH19428@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <owner-linux-mm@kvack.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=shutemov-name.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=gH2onGwJqIgSVIVO9iF6x/48+kAkgINLPogWn+IxdXo=;
+        b=CWwvQIMaFeGbGcccImhlvs+GWFEMa+s41DfLTdi1dEYXmM/c9ttvKpEVFZ3dqVHpAZ
+         J1ZSto4Ma/A2rGpMzgBYWcSOtodiUWd8S/F3Qs5FtRli34jgB7d8FirhpsFA09NtKmiL
+         7wggFVGtiFPUYJIFhzWaKeeGtyqMEDkyRMWSqSJBQzTt3IG/infOvP9BWGKVH9rGn/k0
+         yXN0lMiLBlXfnNRVSj6EykH/yYhTGG3+qiiJ7+LK9ocNN9jYW+lId5t9wGBLib03Lyv/
+         J4G7pK3IEIDviBleMQLqtKlxPxv0OcSo4pVcwadkegBN/Uwrg3xsYNLaBTHmyFqcX+uh
+         ut3Q==
 Content-Disposition: inline
-In-Reply-To: <20200111000352.efy6krudecpshezh@box>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20200114093122.GH19428@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
-Cc: Wei Yang <richardw.yang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Wei Yang <richardw.yang@linux.intel.com>, hannes@cmpxchg.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, kirill.shutemov@linux.intel.com, yang.shi@linux.alibaba.com, alexander.duyck@gmail.com, rientjes@google.com
 
-On Sat 11-01-20 03:03:52, Kirill A. Shutemov wrote:
-> On Thu, Jan 09, 2020 at 10:30:54PM +0800, Wei Yang wrote:
-> > As all the other places, we grab the lock before manipulate the defer list.
-> > Current implementation may face a race condition.
+On Tue, Jan 14, 2020 at 10:31:22AM +0100, Michal Hocko wrote:
+> On Sat 11-01-20 03:03:52, Kirill A. Shutemov wrote:
+> > On Thu, Jan 09, 2020 at 10:30:54PM +0800, Wei Yang wrote:
+> > > As all the other places, we grab the lock before manipulate the defer list.
+> > > Current implementation may face a race condition.
+> > > 
+> > > For example, the potential race would be:
+> > > 
+> > >     CPU1                      CPU2
+> > >     mem_cgroup_move_account   split_huge_page_to_list
+> > >       !list_empty
+> > >                                 lock
+> > >                                 !list_empty
+> > >                                 list_del
+> > >                                 unlock
+> > >       lock
+> > >       # !list_empty might not hold anymore
+> > >       list_del_init
+> > >       unlock
 > > 
-> > For example, the potential race would be:
+> > I don't think this particular race is possible. Both parties take page
+> > lock before messing with deferred queue, but anytway:
 > > 
-> >     CPU1                      CPU2
-> >     mem_cgroup_move_account   split_huge_page_to_list
-> >       !list_empty
-> >                                 lock
-> >                                 !list_empty
-> >                                 list_del
-> >                                 unlock
-> >       lock
-> >       # !list_empty might not hold anymore
-> >       list_del_init
-> >       unlock
+> > Acked-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
 > 
-> I don't think this particular race is possible. Both parties take page
-> lock before messing with deferred queue, but anytway:
-> 
-> Acked-by: Kirill A. Shutemov <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> I am confused, if the above race is not possible then what would be a
+> real race? We really do not want to have a patch with a misleading
+> changelog, do we?
 
-I am confused, if the above race is not possible then what would be a
-real race? We really do not want to have a patch with a misleading
-changelog, do we?
+The alternative is to make sure that all page_deferred_list() called with
+page lock taken.
+
+I'll look into it.
+
 -- 
-Michal Hocko
-SUSE Labs
+ Kirill A. Shutemov
+
