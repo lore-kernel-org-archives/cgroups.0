@@ -1,68 +1,169 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH v7 03/10] mm/lru: replace pgdat lru_lock with lruvec lock
-Date: Tue, 14 Jan 2020 14:33:58 +0800
-Message-ID: <677cb490-35a4-4186-0935-6d71305a3a3e@linux.alibaba.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: Re: [PATCH v7 00/10] per lruvec lru_lock for memcg
+Date: Tue, 14 Jan 2020 17:14:54 +0800
+Message-ID: <641e4c96-c79f-fbdd-9762-f4608961423c@linux.alibaba.com>
 References: <1577264666-246071-1-git-send-email-alex.shi@linux.alibaba.com>
- <1577264666-246071-4-git-send-email-alex.shi@linux.alibaba.com>
- <20200113154116.mwly5hl5yfvjkzl2@ca-dmjordan1.us.oracle.com>
+ <20191231150514.61c2b8c8354320f09b09f377@linux-foundation.org>
+ <944f0f6a-466a-7ce3-524c-f6db86fd0891@linux.alibaba.com>
+ <d2efad94-750b-3298-8859-84bccc6ecf06@linux.alibaba.com>
+ <alpine.LSU.2.11.2001130032170.1103@eggly.anvils>
+ <24d671ac-36ef-8883-ad94-1bd497d46783@linux.alibaba.com>
+ <alpine.LSU.2.11.2001131157500.1084@eggly.anvils>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200113154116.mwly5hl5yfvjkzl2-S51bK0XF4qpuJJETbFA3a0B3C2bhBk7L0E9HWUfgJXw@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LSU.2.11.2001131157500.1084@eggly.anvils>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Qian Cai <cai-J5quhbR+WMc@public.gmane.org>, Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Aneesh Kumar K.V
+Content-Type: text/plain; charset="us-ascii"
+To: Hugh Dickins <hughd@google.com>
+Cc: hannes@cmpxchg.org, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, mgorman@techsingularity.net, tj@kernel.org, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com
 
 
+> I tried with the mods you had appended, from [PATCH v7 02/10]
+> discussion with Konstantion: no, still crashes in a similar way.> 
+> Does your github tree have other changes too?  I see it says "Latest
+> commit e05d0dd 22 days ago", which doesn't seem to fit.  Afraid I
+> don't have time to test many variations.
 
-=D4=DA 2020/1/13 =CF=C2=CE=E711:41, Daniel Jordan =D0=B4=B5=C0:
-> Hi Alex,
->=20
-> On Wed, Dec 25, 2019 at 05:04:19PM +0800, Alex Shi wrote:
->> @@ -900,6 +904,29 @@ static inline struct lruvec *mem_cgroup_page_lruvec=
-(struct page *page,
->>  {
->>  	return &pgdat->__lruvec;
->>  }
->> +#define lock_page_lruvec_irq(page)			\
->> +({							\
->> +	struct pglist_data *pgdat =3D page_pgdat(page);	\
->> +	spin_lock_irq(&pgdat->__lruvec.lru_lock);	\
->> +	&pgdat->__lruvec;				\
->> +})
->> +
->> +#define lock_page_lruvec_irqsave(page, flagsp)			\
->> +({								\
->> +	struct pglist_data *pgdat =3D page_pgdat(page);		\
->> +	spin_lock_irqsave(&pgdat->__lruvec.lru_lock, *flagsp);	\
->> +	&pgdat->__lruvec;					\
->> +})
->> +
->> +#define unlock_page_lruvec_irq(lruvec)			\
->> +({							\
->> +	spin_unlock_irq(&lruvec->lru_lock);		\
->> +})
->> +
->> +#define unlock_page_lruvec_irqrestore(lruvec, flags)		\
->> +({								\
->> +	spin_unlock_irqrestore(&lruvec->lru_lock, flags);	\
->> +})
->=20
-> Noticed this while testing your series.  These are safe as inline functio=
-ns, so
-> I think you may have gotten the wrong impression when Johannes made this =
-point:
->=20
-> https://lore.kernel.org/linux-mm/20191119164448.GA396644-druUgvl0LCNAfugR=
-pC6u6w@public.gmane.org/
->=20
+Thanks a lot for testing! the github version is same as your tested.
+The github branches page has a bug, it don't show correct update time.
+https://github.com/alexshi/linux/branches while detailed page does. 
+https://github.com/alexshi/linux/tree/lru-next 
+> 
+> It looks like, in my case, systemd was usually jumping in and doing
+> something with shmem (perhaps via memfd) that read back from swap
+> and triggered the crash without any further intervention from me.
+> 
+> So please try booting with mem=700M and 1.5G swap,
+> mount -t tmpfs -o size=470M tmpfs /tst
+> cp /dev/zero /tst; cp /tst/zero /dev/null
+> 
+> That's enough to crash it for me, without getting into any losetup or
+> systemd complications. But you might have to adjust the numbers to be
+> sure of writing out and reading back from swap.
+> 
+> It's swap to SSD in my case, don't think that matters. I happen to
+> run with swappiness 100 (precisely to help generate swap problems),
+> but swappiness 60 is good enough to get these crashes.
+> 
 
-Thanks for reminder! Daniel!
+I did use 700M memory and 1.5G swapfile in my qemu, but with a swapfile
+not a disk.
+qemu-system-x86_64  -smp 4 -enable-kvm -cpu SandyBridge \
+	-m 700M -kernel /home/kuiliang.as/linux/qemulru/arch/x86/boot/bzImage \
+	-append "earlyprintk=ttyS0 root=/dev/sda1 console=ttyS0 debug crashkernel=128M printk.devkmsg=on " \
+	-hda /home/kuiliang.as/rootimages/CentOS-7-x86_64-Azure-1703.qcow2 \
+	-hdb /home/kuiliang.as/rootimages/hdb.qcow2 \
+	--nographic \
 
-I write them to macro, since I guess it's more favorite for some guys. It's=
- do a bit more neat than function although cost a bit readablity.=20
+Anyway, although I didn't reproduced the bug. but I found a bug in my
+debug function:
+	VM_BUG_ON_PAGE(lruvec_memcg(lruvec) != page->mem_cgroup, page);
 
-Thanks a lot! :)
+ if !page->mem_cgroup, the bug could be triggered, so, seems it's a bug
+for debug function, not real issue. The 9th patch should be replaced by
+the following new patch. 
+
+Many thanks for testing!
 Alex
+
+From ac6d3e2bcfba5727d5c03f9655bb0c7443f655eb Mon Sep 17 00:00:00 2001
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Date: Mon, 23 Dec 2019 13:33:54 +0800
+Subject: [PATCH v8 8/9] mm/lru: add debug checking for page memcg moving
+
+This debug patch could give some clues if there are sth out of
+consideration.
+
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
+---
+ include/linux/memcontrol.h |  5 +++++
+ mm/compaction.c            |  2 ++
+ mm/memcontrol.c            | 13 +++++++++++++
+ 3 files changed, 20 insertions(+)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 09e861df48e8..ece88bb11d0f 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -421,6 +421,7 @@ struct lruvec *lock_page_lruvec_irq(struct page *);
+ struct lruvec *lock_page_lruvec_irqsave(struct page *, unsigned long*);
+ void unlock_page_lruvec_irq(struct lruvec *);
+ void unlock_page_lruvec_irqrestore(struct lruvec *, unsigned long);
++void lruvec_memcg_debug(struct lruvec *lruvec, struct page *page);
+ 
+ struct mem_cgroup *mem_cgroup_from_task(struct task_struct *p);
+ 
+@@ -1183,6 +1184,10 @@ static inline
+ void count_memcg_event_mm(struct mm_struct *mm, enum vm_event_item idx)
+ {
+ }
++
++static inline void lruvec_memcg_debug(struct lruvec *lruvec, struct page *page)
++{
++}
+ #endif /* CONFIG_MEMCG */
+ 
+ /* idx can be of type enum memcg_stat_item or node_stat_item */
+diff --git a/mm/compaction.c b/mm/compaction.c
+index 8c0a2da217d8..151242817bf4 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -971,6 +971,8 @@ isolate_migratepages_block(struct compact_control *cc, unsigned long low_pfn,
+ 			compact_lock_irqsave(&lruvec->lru_lock, &flags, cc);
+ 			locked_lruvec = lruvec;
+ 
++			lruvec_memcg_debug(lruvec, page);
++
+ 			/* Try get exclusive access under lock */
+ 			if (!skip_updated) {
+ 				skip_updated = true;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 00fef8ddbd08..a473da8d2275 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1238,6 +1238,17 @@ struct lruvec *mem_cgroup_page_lruvec(struct page *page, struct pglist_data *pgd
+ 	return lruvec;
+ }
+ 
++void lruvec_memcg_debug(struct lruvec *lruvec, struct page *page)
++{
++	if (mem_cgroup_disabled())
++		return;
++
++	if (!page->mem_cgroup)
++		VM_BUG_ON_PAGE(lruvec_memcg(lruvec) != root_mem_cgroup, page);
++	else
++		VM_BUG_ON_PAGE(lruvec_memcg(lruvec) != page->mem_cgroup, page);
++}
++
+ struct lruvec *lock_page_lruvec_irq(struct page *page)
+ {
+ 	struct lruvec *lruvec;
+@@ -1247,6 +1258,7 @@ struct lruvec *lock_page_lruvec_irq(struct page *page)
+ 	lruvec = mem_cgroup_lruvec(memcg, page_pgdat(page));
+ 	spin_lock_irq(&lruvec->lru_lock);
+ 
++	lruvec_memcg_debug(lruvec, page);
+ 	return lruvec;
+ }
+ 
+@@ -1259,6 +1271,7 @@ struct lruvec *lock_page_lruvec_irqsave(struct page *page, unsigned long *flags)
+ 	lruvec = mem_cgroup_lruvec(memcg, page_pgdat(page));
+ 	spin_lock_irqsave(&lruvec->lru_lock, *flags);
+ 
++	lruvec_memcg_debug(lruvec, page);
+ 	return lruvec;
+ }
+ 
+-- 
+2.22.0
+
