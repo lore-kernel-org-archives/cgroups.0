@@ -1,39 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup: fix function name in comment
-Date: Wed, 15 Jan 2020 07:59:12 -0800
-Message-ID: <20200115155912.GE2677547@devbig004.ftw2.facebook.com>
-References: <20200110072320.85605-1-chenzhou10@huawei.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: Prevent double killing of css when enabling
+ threaded cgroup
+Date: Wed, 15 Jan 2020 08:07:46 -0800
+Message-ID: <20200115160746.GG2677547@devbig004.ftw2.facebook.com>
+References: <20191219022716.o7vxxia6o67tyfmf@wittgenstein>
+ <20200109150559.14457-1-mkoutny@suse.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=BHlo4uJGdkpMotzf6l1LEH0nK2SaURIBMqF7pq0+cPE=;
-        b=LwRP9gLUlXJubGXbdTk+FhYOQlXwRmMsHlEe55cVAnjtJ90OQMIoErVrPpruu18dlX
-         gk9SxqoS+xp621iP9KezoinvlIWqxdUruCqdIjGT0wMVd8oFC9Hg0l/mGm/aa6G5lQnS
-         myUuH1Il7L7qvg1vzJD0Vh6JhzHuENKoLY8+i/CJDR+TmGEE48+64nxI9QGLCtwwK9vi
-         7Tj+N4LP7dU3wf5k7tQAeD5e2WyyViFDeBQwyWar+u9GbQ43KtAhQveaJbuzQ9yweZvN
-         izYsaa3bnk/z3Y6bjHTITWkMD1RyD3Vg5f9jUU4DXO63KMPxIx07fcmj0nmVRg/5LRSS
-         y6Qw==
+         :content-disposition:content-transfer-encoding:in-reply-to
+         :user-agent;
+        bh=zSIfSAzXaUnmeHj5yAo3f8W68OERKqDK+WA3I8DQXME=;
+        b=djnWz5Uv5uxqmn8ZPz8gXmpXymRwdVRfn2Ka203Vjcor3GCoGHr4bsAzTivzjFgh6U
+         qt/PLBVgXNj39rkovMYAxr5MF2wYd7D1+Yjilxz02n8uXjasXFbCy4q2YPMX0PGg9Q7v
+         AFifPDmKFtqeQ5zKZkysF5IAlIlXIeTd/hR03AhLB7eM7sj1erDyBl6wQXZRkYGb04Qc
+         bbJD7lp2zBvZqlWNllNjM1DJCYEHr14B0QQmorF72OTclYQWbKGU8GwceQF01uoCFeuJ
+         PyGvhCAJEeDDu1VnZ2Dtc4Q53lNCP8LEMHDLfgq8EWFk/DBWB8cK2hTbyI/Ixct35Pyg
+         iNxA==
 Content-Disposition: inline
-In-Reply-To: <20200110072320.85605-1-chenzhou10@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20200109150559.14457-1-mkoutny-IBi9RG/b67k@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Chen Zhou <chenzhou10@huawei.com>
-Cc: lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-On Fri, Jan 10, 2020 at 03:23:20PM +0800, Chen Zhou wrote:
-> Function name cgroup_rstat_cpu_pop_upated() in comment should be
-> cgroup_rstat_cpu_pop_updated().
-> 
-> Signed-off-by: Chen Zhou <chenzhou10@huawei.com>
+On Thu, Jan 09, 2020 at 04:05:59PM +0100, Michal Koutn=FD wrote:
+> The commit prevents these situations by making cgroup_type_write wait
+> for all dying csses to go away before re-applying subtree controls.
+> When at it, the locations of WARN_ON_ONCE calls are moved so that
+> warning is triggered only when we are about to misuse the dying css.
 
 Applied to cgroup/for-5.6.
 
 Thanks.
 
--- 
+--=20
 tejun
