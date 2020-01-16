@@ -1,114 +1,65 @@
-From: Kirill Tkhai <ktkhai@virtuozzo.com>
-Subject: Re: [Patch v3] mm: thp: grab the lock before manipulation defer list
-Date: Fri, 17 Jan 2020 12:26:20 +0300
-Message-ID: <b67fe2bb-e7a6-29fe-925e-dd1ae176cc4b@virtuozzo.com>
-References: <20200116013100.7679-1-richardw.yang@linux.intel.com>
- <0bb34c4a-97c7-0b3c-cf43-8af6cf9c4396@virtuozzo.com>
- <alpine.DEB.2.21.2001161357240.109233@chino.kir.corp.google.com>
- <20200117091002.GM19428@dhcp22.suse.cz>
+From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 2/3] clone3: allow spawning processes into cgroups
+Date: Fri, 17 Jan 2020 00:57:22 +0100
+Message-ID: <20200116235721.tnadjblifqirg5bo@wittgenstein>
+References: <20191223061504.28716-1-christian.brauner@ubuntu.com>
+ <20191223061504.28716-3-christian.brauner@ubuntu.com>
+ <20200108160102.GA17415@blackbody.suse.cz>
+ <20200108181049.ysmo73celrt4bvo2@wittgenstein>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200117091002.GM19428@dhcp22.suse.cz>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20200108181049.ysmo73celrt4bvo2@wittgenstein>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@kernel.org>, David Rientjes <rientjes@google.com>
-Cc: Wei Yang <richardw.yang@linux.intel.com>, hannes@cmpxchg.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, kirill.shutemov@linux.intel.com, yang.shi@linux.alibaba.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, alexander.duyck@gmail.com, stable@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 17.01.2020 12:10, Michal Hocko wrote:
-> On Thu 16-01-20 14:01:59, David Rientjes wrote:
->> On Thu, 16 Jan 2020, Kirill Tkhai wrote:
->>
->>>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->>>> index c5b5f74cfd4d..6450bbe394e2 100644
->>>> --- a/mm/memcontrol.c
->>>> +++ b/mm/memcontrol.c
->>>> @@ -5360,10 +5360,12 @@ static int 	(struct page *page,
->>>>  	}
->>>>  
->>>>  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
->>>> -	if (compound && !list_empty(page_deferred_list(page))) {
->>>> +	if (compound) {
->>>>  		spin_lock(&from->deferred_split_queue.split_queue_lock);
->>>> -		list_del_init(page_deferred_list(page));
->>>> -		from->deferred_split_queue.split_queue_len--;
->>>> +		if (!list_empty(page_deferred_list(page))) {
->>>> +			list_del_init(page_deferred_list(page));
->>>> +			from->deferred_split_queue.split_queue_len--;
->>>> +		}
->>>>  		spin_unlock(&from->deferred_split_queue.split_queue_lock);
->>>>  	}
->>>>  #endif
->>>> @@ -5377,11 +5379,13 @@ static int mem_cgroup_move_account(struct page *page,
->>>>  	page->mem_cgroup = to;
->>>>  
->>>>  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
->>>> -	if (compound && list_empty(page_deferred_list(page))) {
->>>> +	if (compound) {
->>>>  		spin_lock(&to->deferred_split_queue.split_queue_lock);
->>>> -		list_add_tail(page_deferred_list(page),
->>>> -			      &to->deferred_split_queue.split_queue);
->>>> -		to->deferred_split_queue.split_queue_len++;
->>>> +		if (list_empty(page_deferred_list(page))) {
->>>> +			list_add_tail(page_deferred_list(page),
->>>> +				      &to->deferred_split_queue.split_queue);
->>>> +			to->deferred_split_queue.split_queue_len++;
->>>> +		}
->>>>  		spin_unlock(&to->deferred_split_queue.split_queue_lock);
->>>>  	}
->>>>  #endif
->>>
->>> The patch looks OK for me. But there is another question. I forget, why we unconditionally
->>> add a page with empty deferred list to deferred_split_queue. Shouldn't we also check that
->>> it was initially in the list? Something like:
->>>
->>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->>> index d4394ae4e5be..0be0136adaa6 100644
->>> --- a/mm/memcontrol.c
->>> +++ b/mm/memcontrol.c
->>> @@ -5289,6 +5289,7 @@ static int mem_cgroup_move_account(struct page *page,
->>>  	struct pglist_data *pgdat;
->>>  	unsigned long flags;
->>>  	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
->>> +	bool split = false;
->>>  	int ret;
->>>  	bool anon;
->>>  
->>> @@ -5346,6 +5347,7 @@ static int mem_cgroup_move_account(struct page *page,
->>>  		if (!list_empty(page_deferred_list(page))) {
->>>  			list_del_init(page_deferred_list(page));
->>>  			from->deferred_split_queue.split_queue_len--;
->>> +			split = true;
->>>  		}
->>>  		spin_unlock(&from->deferred_split_queue.split_queue_lock);
->>>  	}
->>> @@ -5360,7 +5362,7 @@ static int mem_cgroup_move_account(struct page *page,
->>>  	page->mem_cgroup = to;
->>>  
->>>  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
->>> -	if (compound) {
->>> +	if (compound && split) {
->>>  		spin_lock(&to->deferred_split_queue.split_queue_lock);
->>>  		if (list_empty(page_deferred_list(page))) {
->>>  			list_add_tail(page_deferred_list(page),
->>>
->>
->> I think that's a good point, especially considering that the current code 
->> appears to unconditionally place any compound page on the deferred split 
->> queue of the destination memcg.  The correct list that it should appear 
->> on, I believe, depends on whether the pmd has been split for the process 
->> being moved: note the MC_TARGET_PAGE caveat in 
->> mem_cgroup_move_charge_pte_range() that does not move the charge for 
->> compound pages with split pmds.  So when mem_cgroup_move_account() is 
->> called with compound == true, we're moving the charge of the entire 
->> compound page: why would it appear on that memcg's deferred split queue?
-> 
-> I believe Kirill asked how do we know that the page should be actually
-> added to the deferred list just from the list_empty check. In other
-> words what if the page hasn't been split at all?
+On Wed, Jan 08, 2020 at 07:10:49PM +0100, Christian Brauner wrote:
+> On Wed, Jan 08, 2020 at 05:01:02PM +0100, Michal Koutn=C3=BD wrote:
+> > On Mon, Dec 23, 2019 at 07:15:03AM +0100, Christian Brauner <christian.=
+brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> wrote:
+> > > This adds support for creating a process in a different cgroup than i=
+ts
+> > > parent.
+> > Binding fork and migration together looks useful.
+> >=20
+> > > --- a/kernel/cgroup/cgroup.c
+> > > +++ b/kernel/cgroup/cgroup.c
+> > > @@ -5882,21 +5882,176 @@ void cgroup_fork(struct task_struct *child)
+> > >  	INIT_LIST_HEAD(&child->cg_list);
+> > Just a nitpick, I noticed the comment for cgroup_fork should be updated
+> > too (generic migration happens in cgroup_post_fork).
+>=20
+> Thanks.
+>=20
+> >=20
+> > > --- a/kernel/fork.c
+> > > +++ b/kernel/fork.c
+> > > [...]
+> > > @@ -2279,8 +2278,7 @@ static __latent_entropy struct task_struct *cop=
+y_process(
+> > >  	write_unlock_irq(&tasklist_lock);
+> > > =20
+> > >  	proc_fork_connector(p);
+> > > -	cgroup_post_fork(p);
+> > > -	cgroup_threadgroup_change_end(current);
+> > > +	cgroup_post_fork(current, p, args);
+> > I can see that when CLONE_INTO_CGROUP | CLONE_NEWCGROUP is passed, then
+> > the child's cgroup NS will be rooted at parent's css set
+> > (copy_namespaces precedes cgroup_post_fork).
+> >=20
+> > Wouldn't it make better sense if this flags combination resulted in
+> > child's NS rooted in its css set?
+>=20
+> I need to take a closer look but it sounds like we should move the
+> copying of the cgroup namespace to a later point; but again I need to
+> look into this.
 
-Yes, I'm talking about this. Function mem_cgroup_move_account() adds every
-huge page to the deferred list, while we need to do that only for pages,
-which are queued for splitting...
+Ok, this is way simpler I think, we just set the root_cset of the new
+cgroup namespace to the child's cset in cgroup_post_fork() if
+CLONE_NEWCGROUP is requested.
+
+Christian
