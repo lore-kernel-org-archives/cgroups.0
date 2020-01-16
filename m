@@ -1,375 +1,103 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v8 08/10] mm/lru: revise the comments of lru_lock
-Date: Thu, 16 Jan 2020 11:05:07 +0800
-Message-ID: <1579143909-156105-9-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH v8 01/10] mm/vmscan: remove unnecessary lruvec adding
+Date: Thu, 16 Jan 2020 11:05:00 +0800
+Message-ID: <1579143909-156105-2-git-send-email-alex.shi@linux.alibaba.com>
 References: <1579143909-156105-1-git-send-email-alex.shi@linux.alibaba.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1579143909-156105-1-git-send-email-alex.shi@linux.alibaba.com>
-Sender: owner-linux-mm@kvack.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1579143909-156105-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com, hannes@cmpxchg.org
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Vlastimil Babka <vbabka@suse.cz>, Ira Weiny <ira.weiny@intel.com>, Jesper Dangaard Brouer <brouer@redhat.com>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Jann Horn <jannh@google.com>, Logan Gunthorpe <logang@deltatee.com>, Souptick Joarder <jrdr.linux@gmail.com>, Ralph Campbell <rcampbell@nvidia.com>, "Tobin C. Harding" <tobin@kernel.org>, Michal Hocko <mhocko@suse.com>, Oscar Salvador <osalvador@suse.de>, Wei Yang <richard.weiyang@gmail.com>, Arun KS <arunks@codeaurora.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Amir Goldstein <amir73il@gmail.com>, Dave Chinner <dchinner@redhat.com>, Josef Bacik <josef@toxicpanda.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, Mike Kravetz <mike.kravetz@oracle.com>, Kirill
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: yun.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org
 
-From: Hugh Dickins <hughd@google.com>
+We don't have to add a freeable page into lru and then remove from it.
+This change saves a couple of actions and makes the moving more clear.
 
-Since we changed the pgdat->lru_lock to lruvec->lru_lock, it's time to
-fix the incorrect comments in code. Also fixed some zone->lru_lock commen=
-t
-error from ancient time. etc.
+The SetPageLRU needs to be kept here for list intergrity.
+Otherwise:
+ #0 mave_pages_to_lru              #1 release_pages
+                                   if (put_page_testzero())
+ if !put_page_testzero
+                                     !PageLRU //skip lru_lock
+                                       list_add(&page->lru,);
+   list_add(&page->lru,) //corrupt
 
-Signed-off-by: Hugh Dickins <hughd@google.com>
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Ira Weiny <ira.weiny@intel.com>
-Cc: Jesper Dangaard Brouer <brouer@redhat.com>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: Jann Horn <jannh@google.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>
-Cc: Souptick Joarder <jrdr.linux@gmail.com>
-Cc: Ralph Campbell <rcampbell@nvidia.com>
-Cc: "Tobin C. Harding" <tobin@kernel.org>
-Cc: Michal Hocko <mhocko@suse.com>
-Cc: Oscar Salvador <osalvador@suse.de>
-Cc: Mel Gorman <mgorman@techsingularity.net>
-Cc: Wei Yang <richard.weiyang@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Arun KS <arunks@codeaurora.org>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: Josef Bacik <josef@toxicpanda.com>
-Cc: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
-Cc: "J=C3=A9r=C3=B4me Glisse" <jglisse@redhat.com>
-Cc: Mike Kravetz <mike.kravetz@oracle.com>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: Kirill Tkhai <ktkhai@virtuozzo.com>
-Cc: Daniel Jordan <daniel.m.jordan@oracle.com>
-Cc: Yafang Shao <laoar.shao@gmail.com>
-Cc: Yang Shi <yang.shi@linux.alibaba.com>
-Cc: cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: yun.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
- Documentation/admin-guide/cgroup-v1/memcg_test.rst | 15 +++------------
- Documentation/admin-guide/cgroup-v1/memory.rst     |  6 +++---
- Documentation/trace/events-kmem.rst                |  2 +-
- Documentation/vm/unevictable-lru.rst               | 22 ++++++++--------=
-------
- include/linux/mm_types.h                           |  2 +-
- include/linux/mmzone.h                             |  2 +-
- mm/filemap.c                                       |  4 ++--
- mm/rmap.c                                          |  2 +-
- mm/vmscan.c                                        | 12 ++++++++----
- 9 files changed, 28 insertions(+), 39 deletions(-)
+ mm/vmscan.c | 32 +++++++++++++++++++++-----------
+ 1 file changed, 21 insertions(+), 11 deletions(-)
 
-diff --git a/Documentation/admin-guide/cgroup-v1/memcg_test.rst b/Documen=
-tation/admin-guide/cgroup-v1/memcg_test.rst
-index 3f7115e07b5d..0b9f91589d3d 100644
---- a/Documentation/admin-guide/cgroup-v1/memcg_test.rst
-+++ b/Documentation/admin-guide/cgroup-v1/memcg_test.rst
-@@ -133,18 +133,9 @@ Under below explanation, we assume CONFIG_MEM_RES_CT=
-RL_SWAP=3Dy.
-=20
- 8. LRU
- =3D=3D=3D=3D=3D=3D
--        Each memcg has its own private LRU. Now, its handling is under g=
-lobal
--	VM's control (means that it's handled under global pgdat->lru_lock).
--	Almost all routines around memcg's LRU is called by global LRU's
--	list management functions under pgdat->lru_lock.
--
--	A special function is mem_cgroup_isolate_pages(). This scans
--	memcg's private LRU and call __isolate_lru_page() to extract a page
--	from LRU.
--
--	(By __isolate_lru_page(), the page is removed from both of global and
--	private LRU.)
--
-+	Each memcg has its own vector of LRUs (inactive anon, active anon,
-+	inactive file, active file, unevictable) of pages from each node,
-+	each LRU handled under a single lru_lock for that memcg and node.
-=20
- 9. Typical Tests.
- =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentati=
-on/admin-guide/cgroup-v1/memory.rst
-index 0ae4f564c2d6..60d97e8b7f3c 100644
---- a/Documentation/admin-guide/cgroup-v1/memory.rst
-+++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-@@ -297,13 +297,13 @@ When oom event notifier is registered, event will b=
-e delivered.
-=20
-    PG_locked.
-      mm->page_table_lock
--         pgdat->lru_lock
-+         lruvec->lru_lock
- 	   lock_page_cgroup.
-=20
-   In many cases, just lock_page_cgroup() is called.
-=20
--  per-zone-per-cgroup LRU (cgroup's private LRU) is just guarded by
--  pgdat->lru_lock, it has no lock of its own.
-+  per-node-per-cgroup LRU (cgroup's private LRU) is just guarded by
-+  lruvec->lru_lock, it has no lock of its own.
-=20
- 2.7 Kernel Memory Extension (CONFIG_MEMCG_KMEM)
- -----------------------------------------------
-diff --git a/Documentation/trace/events-kmem.rst b/Documentation/trace/ev=
-ents-kmem.rst
-index 555484110e36..68fa75247488 100644
---- a/Documentation/trace/events-kmem.rst
-+++ b/Documentation/trace/events-kmem.rst
-@@ -69,7 +69,7 @@ When pages are freed in batch, the also mm_page_free_ba=
-tched is triggered.
- Broadly speaking, pages are taken off the LRU lock in bulk and
- freed in batch with a page list. Significant amounts of activity here co=
-uld
- indicate that the system is under memory pressure and can also indicate
--contention on the zone->lru_lock.
-+contention on the lruvec->lru_lock.
-=20
- 4. Per-CPU Allocator Activity
- =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D
-diff --git a/Documentation/vm/unevictable-lru.rst b/Documentation/vm/unev=
-ictable-lru.rst
-index 17d0861b0f1d..0e1490524f53 100644
---- a/Documentation/vm/unevictable-lru.rst
-+++ b/Documentation/vm/unevictable-lru.rst
-@@ -33,7 +33,7 @@ reclaim in Linux.  The problems have been observed at c=
-ustomer sites on large
- memory x86_64 systems.
-=20
- To illustrate this with an example, a non-NUMA x86_64 platform with 128G=
-B of
--main memory will have over 32 million 4k pages in a single zone.  When a=
- large
-+main memory will have over 32 million 4k pages in a single node.  When a=
- large
- fraction of these pages are not evictable for any reason [see below], vm=
-scan
- will spend a lot of time scanning the LRU lists looking for the small fr=
-action
- of pages that are evictable.  This can result in a situation where all C=
-PUs are
-@@ -55,7 +55,7 @@ unevictable, either by definition or by circumstance, i=
-n the future.
- The Unevictable Page List
- -------------------------
-=20
--The Unevictable LRU infrastructure consists of an additional, per-zone, =
-LRU list
-+The Unevictable LRU infrastructure consists of an additional, per-node, =
-LRU list
- called the "unevictable" list and an associated page flag, PG_unevictabl=
-e, to
- indicate that the page is being managed on the unevictable list.
-=20
-@@ -84,15 +84,9 @@ The unevictable list does not differentiate between fi=
-le-backed and anonymous,
- swap-backed pages.  This differentiation is only important while the pag=
-es are,
- in fact, evictable.
-=20
--The unevictable list benefits from the "arrayification" of the per-zone =
-LRU
-+The unevictable list benefits from the "arrayification" of the per-node =
-LRU
- lists and statistics originally proposed and posted by Christoph Lameter=
-.
-=20
--The unevictable list does not use the LRU pagevec mechanism. Rather,
--unevictable pages are placed directly on the page's zone's unevictable l=
-ist
--under the zone lru_lock.  This allows us to prevent the stranding of pag=
-es on
--the unevictable list when one task has the page isolated from the LRU an=
-d other
--tasks are changing the "evictability" state of the page.
--
-=20
- Memory Control Group Interaction
- --------------------------------
-@@ -101,8 +95,8 @@ The unevictable LRU facility interacts with the memory=
- control group [aka
- memory controller; see Documentation/admin-guide/cgroup-v1/memory.rst] b=
-y extending the
- lru_list enum.
-=20
--The memory controller data structure automatically gets a per-zone unevi=
-ctable
--list as a result of the "arrayification" of the per-zone LRU lists (one =
-per
-+The memory controller data structure automatically gets a per-node unevi=
-ctable
-+list as a result of the "arrayification" of the per-node LRU lists (one =
-per
- lru_list enum element).  The memory controller tracks the movement of pa=
-ges to
- and from the unevictable list.
-=20
-@@ -196,7 +190,7 @@ for the sake of expediency, to leave a unevictable pa=
-ge on one of the regular
- active/inactive LRU lists for vmscan to deal with.  vmscan checks for su=
-ch
- pages in all of the shrink_{active|inactive|page}_list() functions and w=
-ill
- "cull" such pages that it encounters: that is, it diverts those pages to=
- the
--unevictable list for the zone being scanned.
-+unevictable list for the node being scanned.
-=20
- There may be situations where a page is mapped into a VM_LOCKED VMA, but=
- the
- page is not marked as PG_mlocked.  Such pages will make it all the way t=
-o
-@@ -328,7 +322,7 @@ If the page was NOT already mlocked, mlock_vma_page()=
- attempts to isolate the
- page from the LRU, as it is likely on the appropriate active or inactive=
- list
- at that time.  If the isolate_lru_page() succeeds, mlock_vma_page() will=
- put
- back the page - by calling putback_lru_page() - which will notice that t=
-he page
--is now mlocked and divert the page to the zone's unevictable list.  If
-+is now mlocked and divert the page to the node's unevictable list.  If
- mlock_vma_page() is unable to isolate the page from the LRU, vmscan will=
- handle
- it later if and when it attempts to reclaim the page.
-=20
-@@ -603,7 +597,7 @@ Some examples of these unevictable pages on the LRU l=
-ists are:
-      unevictable list in mlock_vma_page().
-=20
- shrink_inactive_list() also diverts any unevictable pages that it finds =
-on the
--inactive lists to the appropriate zone's unevictable list.
-+inactive lists to the appropriate node's unevictable list.
-=20
- shrink_inactive_list() should only see SHM_LOCK'd pages that became SHM_=
-LOCK'd
- after shrink_active_list() had moved them to the inactive list, or pages=
- mapped
-diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
-index 270aa8fd2800..ff08a6a8145c 100644
---- a/include/linux/mm_types.h
-+++ b/include/linux/mm_types.h
-@@ -78,7 +78,7 @@ struct page {
- 		struct {	/* Page cache and anonymous pages */
- 			/**
- 			 * @lru: Pageout list, eg. active_list protected by
--			 * pgdat->lru_lock.  Sometimes used as a generic list
-+			 * lruvec->lru_lock.  Sometimes used as a generic list
- 			 * by the page owner.
- 			 */
- 			struct list_head lru;
-diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-index 7db0cec19aa0..d73be191e9f8 100644
---- a/include/linux/mmzone.h
-+++ b/include/linux/mmzone.h
-@@ -159,7 +159,7 @@ static inline bool free_area_empty(struct free_area *=
-area, int migratetype)
- struct pglist_data;
-=20
- /*
-- * zone->lock and the zone lru_lock are two of the hottest locks in the =
-kernel.
-+ * zone->lock and the lru_lock are two of the hottest locks in the kerne=
-l.
-  * So add a wild amount of padding here to ensure that they fall into se=
-parate
-  * cachelines.  There are very few zone structures in the machine, so sp=
-ace
-  * consumption is not a concern here.
-diff --git a/mm/filemap.c b/mm/filemap.c
-index bf6aa30be58d..6dcdf06660fb 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -101,8 +101,8 @@
-  *    ->swap_lock		(try_to_unmap_one)
-  *    ->private_lock		(try_to_unmap_one)
-  *    ->i_pages lock		(try_to_unmap_one)
-- *    ->pgdat->lru_lock		(follow_page->mark_page_accessed)
-- *    ->pgdat->lru_lock		(check_pte_range->isolate_lru_page)
-+ *    ->lruvec->lru_lock	(follow_page->mark_page_accessed)
-+ *    ->lruvec->lru_lock	(check_pte_range->isolate_lru_page)
-  *    ->private_lock		(page_remove_rmap->set_page_dirty)
-  *    ->i_pages lock		(page_remove_rmap->set_page_dirty)
-  *    bdi.wb->list_lock		(page_remove_rmap->set_page_dirty)
-diff --git a/mm/rmap.c b/mm/rmap.c
-index b3e381919835..39052794cb46 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -27,7 +27,7 @@
-  *         mapping->i_mmap_rwsem
-  *           anon_vma->rwsem
-  *             mm->page_table_lock or pte_lock
-- *               pgdat->lru_lock (in mark_page_accessed, isolate_lru_pag=
-e)
-+ *               lruvec->lru_lock (in mark_page_accessed, isolate_lru_pa=
-ge)
-  *               swap_lock (in swap_duplicate, swap_info_get)
-  *                 mmlist_lock (in mmput, drain_mmlist and others)
-  *                 mapping->private_lock (in __set_page_dirty_buffers)
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index ee20a64a7ccc..2a3fca20d456 100644
+index 572fb17c6273..a270d32bdb94 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -1626,14 +1626,16 @@ static __always_inline void update_lru_sizes(stru=
-ct lruvec *lruvec,
- }
-=20
- /**
-- * pgdat->lru_lock is heavily contended.  Some of the functions that
-+ * Isolating page from the lruvec to fill in @dst list by nr_to_scan tim=
-es.
-+ *
-+ * lruvec->lru_lock is heavily contended.  Some of the functions that
-  * shrink the lists perform better by taking out a batch of pages
-  * and working on them outside the LRU lock.
-  *
-  * For pagecache intensive workloads, this function is the hottest
-  * spot in the kernel (apart from copy_*_user functions).
-  *
-- * Appropriate locks must be held before calling this function.
-+ * Lru_lock must be held before calling this function.
-  *
-  * @nr_to_scan:	The number of eligible pages to look through on the list=
-.
-  * @lruvec:	The LRU vector to pull pages from.
-@@ -1820,14 +1822,16 @@ static int too_many_isolated(struct pglist_data *=
-pgdat, int file,
-=20
- /*
-  * This moves pages from @list to corresponding LRU list.
-+ * The pages from @list is out of any lruvec, and in the end list reuses=
- as
-+ * pages_to_free list.
-  *
-  * We move them the other way if the page is referenced by one or more
-  * processes, from rmap.
-  *
-  * If the pages are mostly unmapped, the processing is fast and it is
-- * appropriate to hold zone_lru_lock across the whole operation.  But if
-+ * appropriate to hold lru_lock across the whole operation.  But if
-  * the pages are mapped, the processing is slow (page_referenced()) so w=
-e
-- * should drop zone_lru_lock around each page.  It's impossible to balan=
-ce
-+ * should drop lru_lock around each page.  It's impossible to balance
-  * this, so instead we remove the pages from the LRU while processing th=
-em.
-  * It is safe to rely on PG_active against the non-LRU pages in here bec=
-ause
-  * nobody will play with that bit on a non-LRU page.
---=20
+@@ -1852,26 +1852,29 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
+ 	while (!list_empty(list)) {
+ 		page = lru_to_page(list);
+ 		VM_BUG_ON_PAGE(PageLRU(page), page);
++		list_del(&page->lru);
+ 		if (unlikely(!page_evictable(page))) {
+-			list_del(&page->lru);
+ 			spin_unlock_irq(&pgdat->lru_lock);
+ 			putback_lru_page(page);
+ 			spin_lock_irq(&pgdat->lru_lock);
+ 			continue;
+ 		}
+-		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+ 
++		/*
++		 * The SetPageLRU needs to be kept here for list intergrity.
++		 * Otherwise:
++		 *   #0 mave_pages_to_lru              #1 release_pages
++		 *   				       if (put_page_testzero())
++		 *   if !put_page_testzero
++		 *				         !PageLRU //skip lru_lock
++		 *                                         list_add(&page->lru,);
++		 *     list_add(&page->lru,) //corrupt
++		 */
+ 		SetPageLRU(page);
+-		lru = page_lru(page);
+-
+-		nr_pages = hpage_nr_pages(page);
+-		update_lru_size(lruvec, lru, page_zonenum(page), nr_pages);
+-		list_move(&page->lru, &lruvec->lists[lru]);
+ 
+-		if (put_page_testzero(page)) {
++		if (unlikely(put_page_testzero(page))) {
+ 			__ClearPageLRU(page);
+ 			__ClearPageActive(page);
+-			del_page_from_lru_list(page, lruvec, lru);
+ 
+ 			if (unlikely(PageCompound(page))) {
+ 				spin_unlock_irq(&pgdat->lru_lock);
+@@ -1879,9 +1882,16 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
+ 				spin_lock_irq(&pgdat->lru_lock);
+ 			} else
+ 				list_add(&page->lru, &pages_to_free);
+-		} else {
+-			nr_moved += nr_pages;
++			continue;
+ 		}
++
++		lruvec = mem_cgroup_page_lruvec(page, pgdat);
++		lru = page_lru(page);
++		nr_pages = hpage_nr_pages(page);
++
++		update_lru_size(lruvec, lru, page_zonenum(page), nr_pages);
++		list_add(&page->lru, &lruvec->lists[lru]);
++		nr_moved += nr_pages;
+ 	}
+ 
+ 	/*
+-- 
 1.8.3.1
-
 
