@@ -1,178 +1,131 @@
-From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/2] cgroup: allow deletion of cgroups containing only dying processes
-Date: Wed, 15 Jan 2020 20:36:11 -0800
-Message-ID: <20200116043612.52782-1-surenb@google.com>
+From: Kirill Tkhai <ktkhai-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [Patch v3] mm: thp: grab the lock before manipulation defer list
+Date: Thu, 16 Jan 2020 12:35:00 +0300
+Message-ID: <0bb34c4a-97c7-0b3c-cf43-8af6cf9c4396@virtuozzo.com>
+References: <20200116013100.7679-1-richardw.yang@linux.intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=iNg4g6cNRZYUNuBsTO74IwcH6tuAcaZ/nzmuUCgI7YQ=;
-        b=fN56Jr4nvW06HTQ13RJneqj6X8lflgmq6jlCoKsIPmknMl26RPKWCz8YEw1tHa1jYz
-         2FHoKNebeuIlL6IVX9VRKW/oUm9eaZqm+8btqLQ+Nlcd1VZiHbmg/BoKSpmF3FoJIoqo
-         6288KMRzjyYttljMBr1z60uAlr8s/UoWzpL6nPgZWUat7AqhnKexYi5cfsk+npyXYqtZ
-         3A+h/dAOOUB0LJrFQh2qEQP/OiXhnOm9Q9/zvYNeu8l66371mJxlH2QimcYGjNM3gCyf
-         QWaNg/ehOECHaLWi6uhhJ/vhW8Z0wBC8Td+0KrpsYSt+KrXhE1CCQbHvIvlrocKve+JL
-         vPIA==
+In-Reply-To: <20200116013100.7679-1-richardw.yang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Content-Language: en-US
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linger.lee-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, tomcherry-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org
+To: Wei Yang <richardw.yang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-A cgroup containing only dying tasks will be seen as empty when a userspace
-process reads its cgroup.procs or cgroup.tasks files. It should be safe to
-delete such a cgroup as it is considered empty. However if one of the dying
-tasks did not reach cgroup_exit then an attempt to delete the cgroup will
-fail with EBUSY because cgroup_is_populated() will not consider it empty
-until all tasks reach cgroup_exit. Such a condition can be triggered when
-a task consumes large amounts of memory and spends enough time in exit_mm
-to create delay between the moment it is flagged as PF_EXITING and the
-moment it reaches cgroup_exit.
-Fix this by detecting cgroups containing only dying tasks during cgroup
-destruction and proceeding with it while postponing the final step of
-releasing the last reference until the last task reaches cgroup_exit.
+On 16.01.2020 04:31, Wei Yang wrote:
+> As all the other places, we grab the lock before manipulate the defer list.
+> Current implementation may face a race condition.
+> 
+> For example, the potential race would be:
+> 
+>     CPU1                      CPU2
+>     mem_cgroup_move_account   deferred_split_huge_page
+>       list_empty
+>                                 lock
+>                                 list_empty
+>                                 list_add_tail
+>                                 unlock
+>       lock
+>       # list_empty might not hold anymore
+>       list_add_tail
+>       unlock
+> 
+> When this sequence happens, the list_add_tail() in
+> mem_cgroup_move_account() corrupt the list since which is already been
+> added to some split_queue in split_huge_page_to_list().
+> 
+> Besides this, David Rientjes points out the split_queue_len would be in
+> a wrong state, which would be a significant issue for shrinkers.
+> 
+> Fixes: 87eaceb3faa5 ("mm: thp: make deferred split shrinker memcg aware")
+> 
+> Signed-off-by: Wei Yang <richardw.yang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>    [5.4+]
+> 
+> ---
+> v3:
+>   * remove all review/ack tag since rewrite the changelog
+>   * use deferred_split_huge_page as the example of race
+>   * add cc stable 5.4+ tag as suggested by David Rientjes
+> 
+> v2:
+>   * move check on compound outside suggested by Alexander
+>   * an example of the race condition, suggested by Michal
+> ---
+>  mm/memcontrol.c | 18 +++++++++++-------
+>  1 file changed, 11 insertions(+), 7 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index c5b5f74cfd4d..6450bbe394e2 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -5360,10 +5360,12 @@ static int mem_cgroup_move_account(struct page *page,
+>  	}
+>  
+>  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> -	if (compound && !list_empty(page_deferred_list(page))) {
+> +	if (compound) {
+>  		spin_lock(&from->deferred_split_queue.split_queue_lock);
+> -		list_del_init(page_deferred_list(page));
+> -		from->deferred_split_queue.split_queue_len--;
+> +		if (!list_empty(page_deferred_list(page))) {
+> +			list_del_init(page_deferred_list(page));
+> +			from->deferred_split_queue.split_queue_len--;
+> +		}
+>  		spin_unlock(&from->deferred_split_queue.split_queue_lock);
+>  	}
+>  #endif
+> @@ -5377,11 +5379,13 @@ static int mem_cgroup_move_account(struct page *page,
+>  	page->mem_cgroup = to;
+>  
+>  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> -	if (compound && list_empty(page_deferred_list(page))) {
+> +	if (compound) {
+>  		spin_lock(&to->deferred_split_queue.split_queue_lock);
+> -		list_add_tail(page_deferred_list(page),
+> -			      &to->deferred_split_queue.split_queue);
+> -		to->deferred_split_queue.split_queue_len++;
+> +		if (list_empty(page_deferred_list(page))) {
+> +			list_add_tail(page_deferred_list(page),
+> +				      &to->deferred_split_queue.split_queue);
+> +			to->deferred_split_queue.split_queue_len++;
+> +		}
+>  		spin_unlock(&to->deferred_split_queue.split_queue_lock);
+>  	}
+>  #endif
 
-Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Reported-by: JeiFeng Lee <linger.lee-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
-Fixes: c03cd7738a83 ("cgroup: Include dying leaders with live threads in PROCS iterations")
----
- include/linux/cgroup-defs.h |  3 ++
- kernel/cgroup/cgroup.c      | 65 +++++++++++++++++++++++++++++++++----
- 2 files changed, 61 insertions(+), 7 deletions(-)
+The patch looks OK for me. But there is another question. I forget, why we unconditionally
+add a page with empty deferred list to deferred_split_queue. Shouldn't we also check that
+it was initially in the list? Something like:
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 63097cb243cb..f9bcccbac8dd 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -71,6 +71,9 @@ enum {
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d4394ae4e5be..0be0136adaa6 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5289,6 +5289,7 @@ static int mem_cgroup_move_account(struct page *page,
+ 	struct pglist_data *pgdat;
+ 	unsigned long flags;
+ 	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
++	bool split = false;
+ 	int ret;
+ 	bool anon;
  
- 	/* Cgroup is frozen. */
- 	CGRP_FROZEN,
-+
-+	/* Cgroup is dead. */
-+	CGRP_DEAD,
- };
+@@ -5346,6 +5347,7 @@ static int mem_cgroup_move_account(struct page *page,
+ 		if (!list_empty(page_deferred_list(page))) {
+ 			list_del_init(page_deferred_list(page));
+ 			from->deferred_split_queue.split_queue_len--;
++			split = true;
+ 		}
+ 		spin_unlock(&from->deferred_split_queue.split_queue_lock);
+ 	}
+@@ -5360,7 +5362,7 @@ static int mem_cgroup_move_account(struct page *page,
+ 	page->mem_cgroup = to;
  
- /* cgroup_root->flags */
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 735af8f15f95..a99ebddd37d9 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -795,10 +795,11 @@ static bool css_set_populated(struct css_set *cset)
-  * that the content of the interface file has changed.  This can be used to
-  * detect when @cgrp and its descendants become populated or empty.
-  */
--static void cgroup_update_populated(struct cgroup *cgrp, bool populated)
-+static bool cgroup_update_populated(struct cgroup *cgrp, bool populated)
- {
- 	struct cgroup *child = NULL;
- 	int adj = populated ? 1 : -1;
-+	bool state_change = false;
- 
- 	lockdep_assert_held(&css_set_lock);
- 
-@@ -817,6 +818,7 @@ static void cgroup_update_populated(struct cgroup *cgrp, bool populated)
- 		if (was_populated == cgroup_is_populated(cgrp))
- 			break;
- 
-+		state_change = true;
- 		cgroup1_check_for_release(cgrp);
- 		TRACE_CGROUP_PATH(notify_populated, cgrp,
- 				  cgroup_is_populated(cgrp));
-@@ -825,6 +827,21 @@ static void cgroup_update_populated(struct cgroup *cgrp, bool populated)
- 		child = cgrp;
- 		cgrp = cgroup_parent(cgrp);
- 	} while (cgrp);
-+
-+	return state_change;
-+}
-+
-+static void cgroup_prune_dead(struct cgroup *cgrp)
-+{
-+	lockdep_assert_held(&css_set_lock);
-+
-+	do {
-+		/* put the base reference if cgroup was already destroyed */
-+		if (!cgroup_is_populated(cgrp) &&
-+		    test_bit(CGRP_DEAD, &cgrp->flags))
-+			percpu_ref_kill(&cgrp->self.refcnt);
-+		cgrp = cgroup_parent(cgrp);
-+	} while (cgrp);
- }
- 
- /**
-@@ -838,11 +855,15 @@ static void cgroup_update_populated(struct cgroup *cgrp, bool populated)
- static void css_set_update_populated(struct css_set *cset, bool populated)
- {
- 	struct cgrp_cset_link *link;
-+	bool state_change;
- 
- 	lockdep_assert_held(&css_set_lock);
- 
--	list_for_each_entry(link, &cset->cgrp_links, cgrp_link)
--		cgroup_update_populated(link->cgrp, populated);
-+	list_for_each_entry(link, &cset->cgrp_links, cgrp_link) {
-+		state_change = cgroup_update_populated(link->cgrp, populated);
-+		if (state_change && !populated)
-+			cgroup_prune_dead(link->cgrp);
-+	}
- }
- 
- /*
-@@ -5458,8 +5479,26 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 	 * Only migration can raise populated from zero and we're already
- 	 * holding cgroup_mutex.
- 	 */
--	if (cgroup_is_populated(cgrp))
--		return -EBUSY;
-+	if (cgroup_is_populated(cgrp)) {
-+		struct css_task_iter it;
-+		struct task_struct *task;
-+
-+		/*
-+		 * cgroup_is_populated does not account for exiting tasks
-+		 * that did not reach cgroup_exit yet. Check if all the tasks
-+		 * in this cgroup are exiting.
-+		 */
-+		css_task_iter_start(&cgrp->self, 0, &it);
-+		do {
-+			task = css_task_iter_next(&it);
-+		} while (task && (task->flags & PF_EXITING));
-+		css_task_iter_end(&it);
-+
-+		if (task) {
-+			/* cgroup is indeed populated */
-+			return -EBUSY;
-+		}
-+	}
- 
- 	/*
- 	 * Make sure there's no live children.  We can't test emptiness of
-@@ -5510,8 +5549,20 @@ static int cgroup_destroy_locked(struct cgroup *cgrp)
- 
- 	cgroup_bpf_offline(cgrp);
- 
--	/* put the base reference */
--	percpu_ref_kill(&cgrp->self.refcnt);
-+	/*
-+	 * Take css_set_lock because of the possible race with
-+	 * cgroup_update_populated.
-+	 */
-+	spin_lock_irq(&css_set_lock);
-+	/* The last task might have died since we last checked */
-+	if (cgroup_is_populated(cgrp)) {
-+		/* mark cgroup for future destruction */
-+		set_bit(CGRP_DEAD, &cgrp->flags);
-+	} else {
-+		/* put the base reference */
-+		percpu_ref_kill(&cgrp->self.refcnt);
-+	}
-+	spin_unlock_irq(&css_set_lock);
- 
- 	return 0;
- };
--- 
-2.25.0.rc1.283.g88dfdc4193-goog
-
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-	if (compound) {
++	if (compound && split) {
+ 		spin_lock(&to->deferred_split_queue.split_queue_lock);
+ 		if (list_empty(page_deferred_list(page))) {
+ 			list_add_tail(page_deferred_list(page),
