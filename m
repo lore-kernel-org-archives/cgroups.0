@@ -1,42 +1,96 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Prevent double killing of css when enabling
- threaded cgroup
-Date: Wed, 15 Jan 2020 08:07:46 -0800
-Message-ID: <20200115160746.GG2677547@devbig004.ftw2.facebook.com>
-References: <20191219022716.o7vxxia6o67tyfmf@wittgenstein>
- <20200109150559.14457-1-mkoutny@suse.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+From: Wei Yang <richardw.yang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: [Patch v3] mm: thp: grab the lock before manipulation defer list
+Date: Thu, 16 Jan 2020 09:31:00 +0800
+Message-ID: <20200116013100.7679-1-richardw.yang@linux.intel.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=zSIfSAzXaUnmeHj5yAo3f8W68OERKqDK+WA3I8DQXME=;
-        b=djnWz5Uv5uxqmn8ZPz8gXmpXymRwdVRfn2Ka203Vjcor3GCoGHr4bsAzTivzjFgh6U
-         qt/PLBVgXNj39rkovMYAxr5MF2wYd7D1+Yjilxz02n8uXjasXFbCy4q2YPMX0PGg9Q7v
-         AFifPDmKFtqeQ5zKZkysF5IAlIlXIeTd/hR03AhLB7eM7sj1erDyBl6wQXZRkYGb04Qc
-         bbJD7lp2zBvZqlWNllNjM1DJCYEHr14B0QQmorF72OTclYQWbKGU8GwceQF01uoCFeuJ
-         PyGvhCAJEeDDu1VnZ2Dtc4Q53lNCP8LEMHDLfgq8EWFk/DBWB8cK2hTbyI/Ixct35Pyg
-         iNxA==
-Content-Disposition: inline
-In-Reply-To: <20200109150559.14457-1-mkoutny-IBi9RG/b67k@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ktkhai-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org, kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Wei Yang <richardw.yang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Jan 09, 2020 at 04:05:59PM +0100, Michal Koutn=FD wrote:
-> The commit prevents these situations by making cgroup_type_write wait
-> for all dying csses to go away before re-applying subtree controls.
-> When at it, the locations of WARN_ON_ONCE calls are moved so that
-> warning is triggered only when we are about to misuse the dying css.
+As all the other places, we grab the lock before manipulate the defer list.
+Current implementation may face a race condition.
 
-Applied to cgroup/for-5.6.
+For example, the potential race would be:
 
-Thanks.
+    CPU1                      CPU2
+    mem_cgroup_move_account   deferred_split_huge_page
+      list_empty
+                                lock
+                                list_empty
+                                list_add_tail
+                                unlock
+      lock
+      # list_empty might not hold anymore
+      list_add_tail
+      unlock
 
---=20
-tejun
+When this sequence happens, the list_add_tail() in
+mem_cgroup_move_account() corrupt the list since which is already been
+added to some split_queue in split_huge_page_to_list().
+
+Besides this, David Rientjes points out the split_queue_len would be in
+a wrong state, which would be a significant issue for shrinkers.
+
+Fixes: 87eaceb3faa5 ("mm: thp: make deferred split shrinker memcg aware")
+
+Signed-off-by: Wei Yang <richardw.yang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>    [5.4+]
+
+---
+v3:
+  * remove all review/ack tag since rewrite the changelog
+  * use deferred_split_huge_page as the example of race
+  * add cc stable 5.4+ tag as suggested by David Rientjes
+
+v2:
+  * move check on compound outside suggested by Alexander
+  * an example of the race condition, suggested by Michal
+---
+ mm/memcontrol.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c5b5f74cfd4d..6450bbe394e2 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5360,10 +5360,12 @@ static int mem_cgroup_move_account(struct page *page,
+ 	}
+ 
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-	if (compound && !list_empty(page_deferred_list(page))) {
++	if (compound) {
+ 		spin_lock(&from->deferred_split_queue.split_queue_lock);
+-		list_del_init(page_deferred_list(page));
+-		from->deferred_split_queue.split_queue_len--;
++		if (!list_empty(page_deferred_list(page))) {
++			list_del_init(page_deferred_list(page));
++			from->deferred_split_queue.split_queue_len--;
++		}
+ 		spin_unlock(&from->deferred_split_queue.split_queue_lock);
+ 	}
+ #endif
+@@ -5377,11 +5379,13 @@ static int mem_cgroup_move_account(struct page *page,
+ 	page->mem_cgroup = to;
+ 
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-	if (compound && list_empty(page_deferred_list(page))) {
++	if (compound) {
+ 		spin_lock(&to->deferred_split_queue.split_queue_lock);
+-		list_add_tail(page_deferred_list(page),
+-			      &to->deferred_split_queue.split_queue);
+-		to->deferred_split_queue.split_queue_len++;
++		if (list_empty(page_deferred_list(page))) {
++			list_add_tail(page_deferred_list(page),
++				      &to->deferred_split_queue.split_queue);
++			to->deferred_split_queue.split_queue_len++;
++		}
+ 		spin_unlock(&to->deferred_split_queue.split_queue_lock);
+ 	}
+ #endif
+-- 
+2.17.1
+
