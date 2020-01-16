@@ -1,112 +1,129 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [Patch v3] mm: thp: grab the lock before manipulation defer
- list
-Date: Thu, 16 Jan 2020 14:01:59 -0800 (PST)
-Message-ID: <alpine.DEB.2.21.2001161357240.109233@chino.kir.corp.google.com>
-References: <20200116013100.7679-1-richardw.yang@linux.intel.com> <0bb34c4a-97c7-0b3c-cf43-8af6cf9c4396@virtuozzo.com>
+From: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v10 1/8] hugetlb_cgroup: Add hugetlb_cgroup reservation
+ counter
+Date: Thu, 16 Jan 2020 14:44:45 -0800
+Message-ID: <bbc968ae-b379-c207-268e-16004d9cff96@oracle.com>
+References: <20200115012651.228058-1-almasrymina@google.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=3l1bLmmeM9s291uP94O9U/aPjNKzd/SwoB7qzxFa1R0=;
-        b=pZIi5sE/9TH17JjoL4l5dJZZrLpm7nc9kqlJkmnnzJuXTFlpU/YTZtduls0CTZLNQm
-         E6ll5YpO8ByoE0nF7TJYBSt49NmIhu3tapebJ0GHzTHlrn11c9dfl4pg11YGNTtRTxRR
-         g6ct6R0KdTbp94x6U595KvssLi8FgrCtpq3PPgsq7ZGsbVAGcsoE8WV0gRTaMptR7kLu
-         Avzv6iRXqtNfuUucdsVE8Dx8aZKT07u4EELR1eoXNKnKFbnCN1FSuHa3xuv9FxuzLVhY
-         UCe+3l+fC3JBlJNBgau4SWMziDCNmnvE5ZBSRsIY9lzxnRJqtiLV5b10eh8jS8HfF/jk
-         VwwQ==
-In-Reply-To: <0bb34c4a-97c7-0b3c-cf43-8af6cf9c4396@virtuozzo.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2019-08-05;
+ bh=jlzdnATHqqaoRnZjE+SFSnSnRkAzXmaHY4RqPn2GR14=;
+ b=Hb3TDPh83eiTfrX6Rmpx/FtUaekfBHuaXEkqSQU3gyu4w+ATUwFA9Z6N8AdSNh/mfyJ/
+ XKSNvGJ6mOHHCrwI9Dq0fHCsLbg6Z/guPvZlAqt+Q+1p6BY8Wz7cGuDiAr9kmmG19tss
+ kDzNdcWehvTlQ53be0RNk1ZxEYvVo03BQeCQ7dAnA+JEGfMxSv+PAffV1eQTcbZ8ADSQ
+ hbET9KgS1x/+fDtnS+JxuXAlcEVwgp3UvQv/B7JMW7l8ItY+FJDHzdleu3E57tozfGGE
+ hYDS+uA3y6Y20pq/21gAeMm477K7JJkwgEGgQnZqJTxANQjOda6Rq3dLaSugaf+c0qDa gA== 
+In-Reply-To: <20200115012651.228058-1-almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Kirill Tkhai <ktkhai@virtuozzo.com>
-Cc: Wei Yang <richardw.yang@linux.intel.com>, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, kirill.shutemov@linux.intel.com, yang.shi@linux.alibaba.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, alexander.duyck@gmail.com, stable@vger.kernel.org
+To: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Cc: shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
 
-On Thu, 16 Jan 2020, Kirill Tkhai wrote:
+On 1/14/20 5:26 PM, Mina Almasry wrote:
+> These counters will track hugetlb reservations rather than hugetlb
+> memory faulted in. This patch only adds the counter, following patches
+> add the charging and uncharging of the counter.
+> 
+> This is patch 1 of an 8 patch series.
+> 
+> Problem:
+> Currently tasks attempting to reserve more hugetlb memory than is available get
+> a failure at mmap/shmget time. This is thanks to Hugetlbfs Reservations [1].
+> However, if a task attempts to reserve hugetlb memory only more than its
 
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index c5b5f74cfd4d..6450bbe394e2 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -5360,10 +5360,12 @@ static int mem_cgroup_move_account(struct page *page,
-> >  	}
-> >  
-> >  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> > -	if (compound && !list_empty(page_deferred_list(page))) {
-> > +	if (compound) {
-> >  		spin_lock(&from->deferred_split_queue.split_queue_lock);
-> > -		list_del_init(page_deferred_list(page));
-> > -		from->deferred_split_queue.split_queue_len--;
-> > +		if (!list_empty(page_deferred_list(page))) {
-> > +			list_del_init(page_deferred_list(page));
-> > +			from->deferred_split_queue.split_queue_len--;
-> > +		}
-> >  		spin_unlock(&from->deferred_split_queue.split_queue_lock);
-> >  	}
-> >  #endif
-> > @@ -5377,11 +5379,13 @@ static int mem_cgroup_move_account(struct page *page,
-> >  	page->mem_cgroup = to;
-> >  
-> >  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> > -	if (compound && list_empty(page_deferred_list(page))) {
-> > +	if (compound) {
-> >  		spin_lock(&to->deferred_split_queue.split_queue_lock);
-> > -		list_add_tail(page_deferred_list(page),
-> > -			      &to->deferred_split_queue.split_queue);
-> > -		to->deferred_split_queue.split_queue_len++;
-> > +		if (list_empty(page_deferred_list(page))) {
-> > +			list_add_tail(page_deferred_list(page),
-> > +				      &to->deferred_split_queue.split_queue);
-> > +			to->deferred_split_queue.split_queue_len++;
-> > +		}
-> >  		spin_unlock(&to->deferred_split_queue.split_queue_lock);
-> >  	}
-> >  #endif
-> 
-> The patch looks OK for me. But there is another question. I forget, why we unconditionally
-> add a page with empty deferred list to deferred_split_queue. Shouldn't we also check that
-> it was initially in the list? Something like:
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index d4394ae4e5be..0be0136adaa6 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5289,6 +5289,7 @@ static int mem_cgroup_move_account(struct page *page,
->  	struct pglist_data *pgdat;
->  	unsigned long flags;
->  	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
-> +	bool split = false;
->  	int ret;
->  	bool anon;
->  
-> @@ -5346,6 +5347,7 @@ static int mem_cgroup_move_account(struct page *page,
->  		if (!list_empty(page_deferred_list(page))) {
->  			list_del_init(page_deferred_list(page));
->  			from->deferred_split_queue.split_queue_len--;
-> +			split = true;
->  		}
->  		spin_unlock(&from->deferred_split_queue.split_queue_lock);
->  	}
-> @@ -5360,7 +5362,7 @@ static int mem_cgroup_move_account(struct page *page,
->  	page->mem_cgroup = to;
->  
->  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> -	if (compound) {
-> +	if (compound && split) {
->  		spin_lock(&to->deferred_split_queue.split_queue_lock);
->  		if (list_empty(page_deferred_list(page))) {
->  			list_add_tail(page_deferred_list(page),
-> 
+*reword*
+However, if a task attempts to reserve more hugetlb memory than its
 
-I think that's a good point, especially considering that the current code 
-appears to unconditionally place any compound page on the deferred split 
-queue of the destination memcg.  The correct list that it should appear 
-on, I believe, depends on whether the pmd has been split for the process 
-being moved: note the MC_TARGET_PAGE caveat in 
-mem_cgroup_move_charge_pte_range() that does not move the charge for 
-compound pages with split pmds.  So when mem_cgroup_move_account() is 
-called with compound == true, we're moving the charge of the entire 
-compound page: why would it appear on that memcg's deferred split queue?
+> hugetlb_cgroup limit allows, the kernel will allow the mmap/shmget call,
+> but will SIGBUS the task when it attempts to fault the memory in.
+
+*reword*
+but will SIGBUS the task when it attempts to fault in the  excess memory.
+
+> 
+> We have users hitting their hugetlb_cgroup limits and thus we've been
+> looking at this failure mode. We'd like to improve this behavior such that users
+> violating the hugetlb_cgroup limits get an error on mmap/shmget time, rather
+> than getting SIGBUS'd when they try to fault the excess memory in. This
+> gives the user an opportunity to fallback more gracefully to
+> non-hugetlbfs memory for example.
+> 
+> The underlying problem is that today's hugetlb_cgroup accounting happens
+> at hugetlb memory *fault* time, rather than at *reservation* time.
+> Thus, enforcing the hugetlb_cgroup limit only happens at fault time, and
+> the offending task gets SIGBUS'd.
+> 
+> Proposed Solution:
+> A new page counter named
+> 'hugetlb.xMB.reservation_[limit|usage|max_usage]_in_bytes'. This counter has
+> slightly different semantics than
+
+You changed the name to 'hugetlb.xMB.resv_[limit|usage|max_usage]_in_bytes'
+in the code, but left this description.
+
+Also, David suggested 'rsvd' as the abbreviation to use here.  I would also
+prefer that name to be consistent with other hugetlb interfaces.
+
+> 'hugetlb.xMB.[limit|usage|max_usage]_in_bytes':
+> 
+> - While usage_in_bytes tracks all *faulted* hugetlb memory,
+> reservation_usage_in_bytes tracks all *reserved* hugetlb memory and
+> hugetlb memory faulted in without a prior reservation.
+> 
+> - If a task attempts to reserve more memory than limit_in_bytes allows,
+> the kernel will allow it to do so. But if a task attempts to reserve
+> more memory than reservation_limit_in_bytes, the kernel will fail this
+> reservation.
+> 
+> This proposal is implemented in this patch series, with tests to verify
+> functionality and show the usage.
+> 
+> Alternatives considered:
+> 1. A new cgroup, instead of only a new page_counter attached to
+>    the existing hugetlb_cgroup. Adding a new cgroup seemed like a lot of code
+>    duplication with hugetlb_cgroup. Keeping hugetlb related page counters under
+>    hugetlb_cgroup seemed cleaner as well.
+> 
+> 2. Instead of adding a new counter, we considered adding a sysctl that modifies
+>    the behavior of hugetlb.xMB.[limit|usage]_in_bytes, to do accounting at
+>    reservation time rather than fault time. Adding a new page_counter seems
+>    better as userspace could, if it wants, choose to enforce different cgroups
+>    differently: one via limit_in_bytes, and another via
+>    reservation_limit_in_bytes. This could be very useful if you're
+>    transitioning how hugetlb memory is partitioned on your system one
+>    cgroup at a time, for example. Also, someone may find usage for both
+>    limit_in_bytes and reservation_limit_in_bytes concurrently, and this
+>    approach gives them the option to do so.
+> 
+> Testing:
+> - Added tests passing.
+> - Used libhugetlbfs for regression testing.
+> 
+> [1]: https://www.kernel.org/doc/html/latest/vm/hugetlbfs_reserv.html
+> 
+> Signed-off-by: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> 
+> ---
+> Changes in v10:
+> - Renamed reservation_* to resv.*
+> 
+> ---
+>  include/linux/hugetlb.h |   4 +-
+>  mm/hugetlb_cgroup.c     | 115 +++++++++++++++++++++++++++++++++++-----
+>  2 files changed, 104 insertions(+), 15 deletions(-)
+
+The code looks fine to me.
+
+With the commit message and naming updates, I will add a Reviewed-by:
+
+Please do wait a few/several days before sending a revised edition to
+make sure we get all feedback.  I really would like to get comments from
+people more familiar with cgroups.
+
+-- 
+Mike Kravetz
