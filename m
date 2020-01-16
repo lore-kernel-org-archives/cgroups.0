@@ -1,131 +1,121 @@
-From: Kirill Tkhai <ktkhai-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: [Patch v3] mm: thp: grab the lock before manipulation defer list
-Date: Thu, 16 Jan 2020 12:35:00 +0300
-Message-ID: <0bb34c4a-97c7-0b3c-cf43-8af6cf9c4396@virtuozzo.com>
-References: <20200116013100.7679-1-richardw.yang@linux.intel.com>
+From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 2/3] clone3: allow spawning processes into cgroups
+Date: Thu, 16 Jan 2020 13:29:44 +0100
+Message-ID: <20200116122944.nj3e66eusxu6sb44@wittgenstein>
+References: <20191223061504.28716-1-christian.brauner@ubuntu.com>
+ <20191223061504.28716-3-christian.brauner@ubuntu.com>
+ <20200107163204.GB2677547@devbig004.ftw2.facebook.com>
+ <20200108180906.l4mvtdmh7nm2z7sc@wittgenstein>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200116013100.7679-1-richardw.yang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20200108180906.l4mvtdmh7nm2z7sc@wittgenstein>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Wei Yang <richardw.yang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 16.01.2020 04:31, Wei Yang wrote:
-> As all the other places, we grab the lock before manipulate the defer list.
-> Current implementation may face a race condition.
+On Wed, Jan 08, 2020 at 07:09:07PM +0100, Christian Brauner wrote:
+> On Tue, Jan 07, 2020 at 08:32:04AM -0800, Tejun Heo wrote:
+> > On Mon, Dec 23, 2019 at 07:15:03AM +0100, Christian Brauner wrote:
+> > > +static struct cgroup *cgroup_get_from_file(struct file *f)
+> > > +{
+> > > +	struct cgroup_subsys_state *css;
+> > > +	struct cgroup *cgrp;
+> > > +
+> > > +	css = css_tryget_online_from_dir(f->f_path.dentry, NULL);
+> > > +	if (IS_ERR(css))
+> > > +		return ERR_CAST(css);
+> > > +
+> > > +	cgrp = css->cgroup;
+> > > +	if (!cgroup_on_dfl(cgrp)) {
+> > > +		cgroup_put(cgrp);
+> > > +		return ERR_PTR(-EBADF);
+> > > +	}
+> > > +
+> > > +	return cgrp;
+> > > +}
+> > 
+> > It's minor but can you put this refactoring into a separate patch?
 > 
-> For example, the potential race would be:
+> Yep, will do.
 > 
->     CPU1                      CPU2
->     mem_cgroup_move_account   deferred_split_huge_page
->       list_empty
->                                 lock
->                                 list_empty
->                                 list_add_tail
->                                 unlock
->       lock
->       # list_empty might not hold anymore
->       list_add_tail
->       unlock
+> > 
+> > ...
+> > > +static int cgroup_css_set_fork(struct task_struct *parent,
+> > > +			       struct kernel_clone_args *kargs)
+> > > +	__acquires(&cgroup_mutex) __acquires(&cgroup_threadgroup_rwsem)
+> > > +{
+> > > +	int ret;
+> > > +	struct cgroup *dst_cgrp = NULL, *src_cgrp;
+> > > +	struct css_set *cset;
+> > > +	struct super_block *sb;
+> > > +	struct file *f;
+> > > +
+> > > +	if (kargs->flags & CLONE_INTO_CGROUP) {
+> > > +		ret = mutex_lock_killable(&cgroup_mutex);
+> > > +		if (ret)
+> > > +			return ret;
+> > > +	}
+> > 
+> > I don't think this is necessary.  cgroup_mutex should always only be
+> > held for a finite enough time; otherwise, processes would get stuck on
+> > random cgroupfs accesses or even /proc/self/cgroup.
 > 
-> When this sequence happens, the list_add_tail() in
-> mem_cgroup_move_account() corrupt the list since which is already been
-> added to some split_queue in split_huge_page_to_list().
+> Ok, so a simple mutex_lock() should suffice then.
 > 
-> Besides this, David Rientjes points out the split_queue_len would be in
-> a wrong state, which would be a significant issue for shrinkers.
+> > 
+> > ...
+> > > +	spin_lock_irq(&css_set_lock);
+> > > +	src_cgrp = task_cgroup_from_root(parent, &cgrp_dfl_root);
+> > > +	spin_unlock_irq(&css_set_lock);
+> > 
+> > You can simply do cset->dfl_root here, which is consistent with other
+> > code paths which know that they want the dfl cgroup.
 > 
-> Fixes: 87eaceb3faa5 ("mm: thp: make deferred split shrinker memcg aware")
+> Ah, great!
 > 
-> Signed-off-by: Wei Yang <richardw.yang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-> Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>    [5.4+]
+> > 
+> > > +	ret = cgroup_attach_permissions(src_cgrp, dst_cgrp, sb,
+> > > +					!!(kargs->flags & CLONE_THREAD));
+> > > +	if (ret)
+> > > +		goto err;
+> > 
+> > So, the existing perm check depends on the fact that for the write
+> > operation to have started, it already should have passed write perm
+> > check on the destination cgroup.procs file.  We're missing that here,
+> > so we prolly need to check that explicitly.
 > 
-> ---
-> v3:
->   * remove all review/ack tag since rewrite the changelog
->   * use deferred_split_huge_page as the example of race
->   * add cc stable 5.4+ tag as suggested by David Rientjes
-> 
-> v2:
->   * move check on compound outside suggested by Alexander
->   * an example of the race condition, suggested by Michal
-> ---
->  mm/memcontrol.c | 18 +++++++++++-------
->  1 file changed, 11 insertions(+), 7 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index c5b5f74cfd4d..6450bbe394e2 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5360,10 +5360,12 @@ static int mem_cgroup_move_account(struct page *page,
->  	}
->  
->  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> -	if (compound && !list_empty(page_deferred_list(page))) {
-> +	if (compound) {
->  		spin_lock(&from->deferred_split_queue.split_queue_lock);
-> -		list_del_init(page_deferred_list(page));
-> -		from->deferred_split_queue.split_queue_len--;
-> +		if (!list_empty(page_deferred_list(page))) {
-> +			list_del_init(page_deferred_list(page));
-> +			from->deferred_split_queue.split_queue_len--;
-> +		}
->  		spin_unlock(&from->deferred_split_queue.split_queue_lock);
->  	}
->  #endif
-> @@ -5377,11 +5379,13 @@ static int mem_cgroup_move_account(struct page *page,
->  	page->mem_cgroup = to;
->  
->  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> -	if (compound && list_empty(page_deferred_list(page))) {
-> +	if (compound) {
->  		spin_lock(&to->deferred_split_queue.split_queue_lock);
-> -		list_add_tail(page_deferred_list(page),
-> -			      &to->deferred_split_queue.split_queue);
-> -		to->deferred_split_queue.split_queue_len++;
-> +		if (list_empty(page_deferred_list(page))) {
-> +			list_add_tail(page_deferred_list(page),
-> +				      &to->deferred_split_queue.split_queue);
-> +			to->deferred_split_queue.split_queue_len++;
-> +		}
->  		spin_unlock(&to->deferred_split_queue.split_queue_lock);
->  	}
->  #endif
+> I need to look into this before I can say yay or nay. :)
 
-The patch looks OK for me. But there is another question. I forget, why we unconditionally
-add a page with empty deferred list to deferred_split_queue. Shouldn't we also check that
-it was initially in the list? Something like:
+Could it be that you misread cgroup_attach_permissions()? Because it
+does check for write permissions on the destination cgroup.procs file.
+That's why I've added the cgroup_get_from_file() helper. :) See:
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d4394ae4e5be..0be0136adaa6 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5289,6 +5289,7 @@ static int mem_cgroup_move_account(struct page *page,
- 	struct pglist_data *pgdat;
- 	unsigned long flags;
- 	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
-+	bool split = false;
- 	int ret;
- 	bool anon;
- 
-@@ -5346,6 +5347,7 @@ static int mem_cgroup_move_account(struct page *page,
- 		if (!list_empty(page_deferred_list(page))) {
- 			list_del_init(page_deferred_list(page));
- 			from->deferred_split_queue.split_queue_len--;
-+			split = true;
- 		}
- 		spin_unlock(&from->deferred_split_queue.split_queue_lock);
- 	}
-@@ -5360,7 +5362,7 @@ static int mem_cgroup_move_account(struct page *page,
- 	page->mem_cgroup = to;
- 
- #ifdef CONFIG_TRANSPARENT_HUGEPAGE
--	if (compound) {
-+	if (compound && split) {
- 		spin_lock(&to->deferred_split_queue.split_queue_lock);
- 		if (list_empty(page_deferred_list(page))) {
- 			list_add_tail(page_deferred_list(page),
+static int cgroup_attach_permissions(struct cgroup *src_cgrp,
+				     struct cgroup *dst_cgrp,
+				     struct super_block *sb, bool thread)
+{
+	int ret = 0;
+
+	ret = cgroup_procs_write_permission(src_cgrp, dst_cgrp, sb);
+	if (ret)
+		return ret;
+
+	ret = cgroup_migrate_vet_dst(dst_cgrp);
+	if (ret)
+		return ret;
+
+	if (thread &&
+	    !cgroup_same_domain(src_cgrp->dom_cgrp, dst_cgrp->dom_cgrp))
+		ret = -EOPNOTSUPP;
+
+	return ret;
+}
+
+Maybe I'm misunderstanding though. :)
+
+Thanks!
+Christian
