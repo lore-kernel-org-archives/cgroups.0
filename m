@@ -1,121 +1,177 @@
-From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 2/3] clone3: allow spawning processes into cgroups
-Date: Thu, 16 Jan 2020 13:29:44 +0100
-Message-ID: <20200116122944.nj3e66eusxu6sb44@wittgenstein>
-References: <20191223061504.28716-1-christian.brauner@ubuntu.com>
- <20191223061504.28716-3-christian.brauner@ubuntu.com>
- <20200107163204.GB2677547@devbig004.ftw2.facebook.com>
- <20200108180906.l4mvtdmh7nm2z7sc@wittgenstein>
+From: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:for-5.6] BUILD SUCCESS
+ 3bc0bb36fa30e95ca829e9cf480e1ef7f7638333
+Date: Fri, 17 Jan 2020 02:13:59 +0800
+Message-ID: <5e20a7e7.fGZcorw6FCRN/xvP%lkp@intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20200108180906.l4mvtdmh7nm2z7sc@wittgenstein>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jan 08, 2020 at 07:09:07PM +0100, Christian Brauner wrote:
-> On Tue, Jan 07, 2020 at 08:32:04AM -0800, Tejun Heo wrote:
-> > On Mon, Dec 23, 2019 at 07:15:03AM +0100, Christian Brauner wrote:
-> > > +static struct cgroup *cgroup_get_from_file(struct file *f)
-> > > +{
-> > > +	struct cgroup_subsys_state *css;
-> > > +	struct cgroup *cgrp;
-> > > +
-> > > +	css = css_tryget_online_from_dir(f->f_path.dentry, NULL);
-> > > +	if (IS_ERR(css))
-> > > +		return ERR_CAST(css);
-> > > +
-> > > +	cgrp = css->cgroup;
-> > > +	if (!cgroup_on_dfl(cgrp)) {
-> > > +		cgroup_put(cgrp);
-> > > +		return ERR_PTR(-EBADF);
-> > > +	}
-> > > +
-> > > +	return cgrp;
-> > > +}
-> > 
-> > It's minor but can you put this refactoring into a separate patch?
-> 
-> Yep, will do.
-> 
-> > 
-> > ...
-> > > +static int cgroup_css_set_fork(struct task_struct *parent,
-> > > +			       struct kernel_clone_args *kargs)
-> > > +	__acquires(&cgroup_mutex) __acquires(&cgroup_threadgroup_rwsem)
-> > > +{
-> > > +	int ret;
-> > > +	struct cgroup *dst_cgrp = NULL, *src_cgrp;
-> > > +	struct css_set *cset;
-> > > +	struct super_block *sb;
-> > > +	struct file *f;
-> > > +
-> > > +	if (kargs->flags & CLONE_INTO_CGROUP) {
-> > > +		ret = mutex_lock_killable(&cgroup_mutex);
-> > > +		if (ret)
-> > > +			return ret;
-> > > +	}
-> > 
-> > I don't think this is necessary.  cgroup_mutex should always only be
-> > held for a finite enough time; otherwise, processes would get stuck on
-> > random cgroupfs accesses or even /proc/self/cgroup.
-> 
-> Ok, so a simple mutex_lock() should suffice then.
-> 
-> > 
-> > ...
-> > > +	spin_lock_irq(&css_set_lock);
-> > > +	src_cgrp = task_cgroup_from_root(parent, &cgrp_dfl_root);
-> > > +	spin_unlock_irq(&css_set_lock);
-> > 
-> > You can simply do cset->dfl_root here, which is consistent with other
-> > code paths which know that they want the dfl cgroup.
-> 
-> Ah, great!
-> 
-> > 
-> > > +	ret = cgroup_attach_permissions(src_cgrp, dst_cgrp, sb,
-> > > +					!!(kargs->flags & CLONE_THREAD));
-> > > +	if (ret)
-> > > +		goto err;
-> > 
-> > So, the existing perm check depends on the fact that for the write
-> > operation to have started, it already should have passed write perm
-> > check on the destination cgroup.procs file.  We're missing that here,
-> > so we prolly need to check that explicitly.
-> 
-> I need to look into this before I can say yay or nay. :)
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git  for-5.6
+branch HEAD: 3bc0bb36fa30e95ca829e9cf480e1ef7f7638333  cgroup: Prevent double killing of css when enabling threaded cgroup
 
-Could it be that you misread cgroup_attach_permissions()? Because it
-does check for write permissions on the destination cgroup.procs file.
-That's why I've added the cgroup_get_from_file() helper. :) See:
+elapsed time: 788m
 
-static int cgroup_attach_permissions(struct cgroup *src_cgrp,
-				     struct cgroup *dst_cgrp,
-				     struct super_block *sb, bool thread)
-{
-	int ret = 0;
+configs tested: 148
+configs skipped: 0
 
-	ret = cgroup_procs_write_permission(src_cgrp, dst_cgrp, sb);
-	if (ret)
-		return ret;
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-	ret = cgroup_migrate_vet_dst(dst_cgrp);
-	if (ret)
-		return ret;
+parisc                            allnoconfig
+parisc                            allyesonfig
+parisc                         b180_defconfig
+parisc                        c3000_defconfig
+parisc                              defconfig
+um                                  defconfig
+um                             i386_defconfig
+um                           x86_64_defconfig
+alpha                               defconfig
+csky                                defconfig
+nds32                             allnoconfig
+nds32                               defconfig
+mips                           32r2_defconfig
+mips                         64r6el_defconfig
+mips                             allmodconfig
+mips                              allnoconfig
+mips                             allyesconfig
+mips                      fuloong2e_defconfig
+mips                      malta_kvm_defconfig
+x86_64               randconfig-b001-20200116
+x86_64               randconfig-b002-20200116
+x86_64               randconfig-b003-20200116
+i386                 randconfig-b001-20200116
+i386                 randconfig-b002-20200116
+i386                 randconfig-b003-20200116
+h8300                     edosk2674_defconfig
+h8300                    h8300h-sim_defconfig
+h8300                       h8s-sim_defconfig
+m68k                             allmodconfig
+m68k                       m5475evb_defconfig
+m68k                          multi_defconfig
+m68k                           sun3_defconfig
+sh                               allmodconfig
+sh                                allnoconfig
+sh                          rsk7269_defconfig
+sh                  sh7785lcr_32bit_defconfig
+sh                            titan_defconfig
+c6x                              allyesconfig
+c6x                        evmc6678_defconfig
+nios2                         10m50_defconfig
+nios2                         3c120_defconfig
+openrisc                    or1ksim_defconfig
+openrisc                 simple_smp_defconfig
+xtensa                       common_defconfig
+xtensa                          iss_defconfig
+arc                              allyesconfig
+arc                                 defconfig
+microblaze                      mmu_defconfig
+microblaze                    nommu_defconfig
+powerpc                           allnoconfig
+powerpc                             defconfig
+powerpc                       ppc64_defconfig
+powerpc                          rhel-kconfig
+alpha                randconfig-a001-20200116
+m68k                 randconfig-a001-20200116
+mips                 randconfig-a001-20200116
+nds32                randconfig-a001-20200116
+parisc               randconfig-a001-20200116
+riscv                randconfig-a001-20200116
+arc                  randconfig-a001-20200116
+arm                  randconfig-a001-20200116
+arm64                randconfig-a001-20200116
+ia64                 randconfig-a001-20200116
+powerpc              randconfig-a001-20200116
+sparc                randconfig-a001-20200116
+x86_64                              fedora-25
+x86_64                                  kexec
+x86_64                                    lkp
+x86_64                                   rhel
+x86_64                               rhel-7.6
+s390                             alldefconfig
+s390                             allmodconfig
+s390                              allnoconfig
+s390                             allyesconfig
+s390                          debug_defconfig
+s390                                defconfig
+s390                       zfcpdump_defconfig
+sparc                            allyesconfig
+sparc                               defconfig
+sparc64                          allmodconfig
+sparc64                           allnoconfig
+sparc64                          allyesconfig
+sparc64                             defconfig
+ia64                                defconfig
+riscv                            allmodconfig
+riscv                             allnoconfig
+riscv                            allyesconfig
+riscv                               defconfig
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+i386                             alldefconfig
+i386                              allnoconfig
+i386                             allyesconfig
+i386                                defconfig
+x86_64               randconfig-d001-20200116
+x86_64               randconfig-d002-20200116
+x86_64               randconfig-d003-20200116
+i386                 randconfig-d001-20200116
+i386                 randconfig-d002-20200116
+i386                 randconfig-d003-20200116
+ia64                             alldefconfig
+ia64                             allmodconfig
+ia64                              allnoconfig
+ia64                             allyesconfig
+x86_64               randconfig-a001-20200116
+x86_64               randconfig-a002-20200116
+x86_64               randconfig-a003-20200116
+i386                 randconfig-a001-20200116
+i386                 randconfig-a002-20200116
+i386                 randconfig-a003-20200116
+arc                  randconfig-a001-20200117
+arm                  randconfig-a001-20200117
+arm64                randconfig-a001-20200117
+ia64                 randconfig-a001-20200117
+powerpc              randconfig-a001-20200117
+sparc                randconfig-a001-20200117
+arm                              allmodconfig
+arm                               allnoconfig
+arm                              allyesconfig
+arm                         at91_dt_defconfig
+arm                           efm32_defconfig
+arm                          exynos_defconfig
+arm                        multi_v5_defconfig
+arm                        multi_v7_defconfig
+arm                        shmobile_defconfig
+arm                           sunxi_defconfig
+arm64                            allmodconfig
+arm64                             allnoconfig
+arm64                            allyesconfig
+arm64                               defconfig
+x86_64               randconfig-d001-20200117
+x86_64               randconfig-d002-20200117
+x86_64               randconfig-d003-20200117
+i386                 randconfig-d001-20200117
+i386                 randconfig-d002-20200117
+i386                 randconfig-d003-20200117
+alpha                randconfig-a001-20200117
+m68k                 randconfig-a001-20200117
+mips                 randconfig-a001-20200117
+nds32                randconfig-a001-20200117
+parisc               randconfig-a001-20200117
+riscv                randconfig-a001-20200117
+x86_64               randconfig-e001-20200117
+x86_64               randconfig-e002-20200117
+x86_64               randconfig-e003-20200117
+i386                 randconfig-e001-20200117
+i386                 randconfig-e002-20200117
+i386                 randconfig-e003-20200117
 
-	if (thread &&
-	    !cgroup_same_domain(src_cgrp->dom_cgrp, dst_cgrp->dom_cgrp))
-		ret = -EOPNOTSUPP;
-
-	return ret;
-}
-
-Maybe I'm misunderstanding though. :)
-
-Thanks!
-Christian
+---
+0-DAY kernel test infrastructure                 Open Source Technology Center
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org Intel Corporation
