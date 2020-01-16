@@ -1,127 +1,75 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v8 02/10] mm/memcg: fold lock_page_lru into commit_charge
-Date: Thu, 16 Jan 2020 11:05:01 +0800
-Message-ID: <1579143909-156105-3-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v8 06/10] mm/swap: only change the lru_lock iff page's lruvec is different
+Date: Thu, 16 Jan 2020 11:05:05 +0800
+Message-ID: <1579143909-156105-7-git-send-email-alex.shi@linux.alibaba.com>
 References: <1579143909-156105-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1579143909-156105-1-git-send-email-alex.shi@linux.alibaba.com>
-Sender: owner-linux-mm@kvack.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com, hannes@cmpxchg.org
-Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, Yafang Shao <laoar.shao@gmail.com>
 
-As Konstantin Khlebnikov mentioned:
-
-	Also I don't like these functions:
-	- called lock/unlock but actually also isolates
-	- used just once
-	- pgdat evaluated twice
-
-Cleanup and fold these functions into commit_charge. It also reduces
-lock time while lrucare && !PageLRU.
+Since we introduced relock_page_lruvec, we could use it in more place
+to reduce spin_locks.
 
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
 Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Cc: Yafang Shao <laoar.shao@gmail.com>
+Cc: Mel Gorman <mgorman@techsingularity.net>
+Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: linux-kernel@vger.kernel.org
 Cc: cgroups@vger.kernel.org
 Cc: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org
 ---
- mm/memcontrol.c | 57 ++++++++++++++++++++-------------------------------------
- 1 file changed, 20 insertions(+), 37 deletions(-)
+ mm/swap.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c5b5f74cfd4d..d92538a9185c 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2570,41 +2570,11 @@ static void cancel_charge(struct mem_cgroup *memcg, unsigned int nr_pages)
- 	css_put_many(&memcg->css, nr_pages);
- }
+diff --git a/mm/swap.c b/mm/swap.c
+index 97e108be4f92..84a845968e1d 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -196,11 +196,12 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
+ 	for (i = 0; i < pagevec_count(pvec); i++) {
+ 		struct page *page = pvec->pages[i];
  
--static void lock_page_lru(struct page *page, int *isolated)
--{
--	pg_data_t *pgdat = page_pgdat(page);
--
--	spin_lock_irq(&pgdat->lru_lock);
--	if (PageLRU(page)) {
--		struct lruvec *lruvec;
--
--		lruvec = mem_cgroup_page_lruvec(page, pgdat);
--		ClearPageLRU(page);
--		del_page_from_lru_list(page, lruvec, page_lru(page));
--		*isolated = 1;
--	} else
--		*isolated = 0;
--}
--
--static void unlock_page_lru(struct page *page, int isolated)
--{
--	pg_data_t *pgdat = page_pgdat(page);
--
--	if (isolated) {
--		struct lruvec *lruvec;
--
--		lruvec = mem_cgroup_page_lruvec(page, pgdat);
--		VM_BUG_ON_PAGE(PageLRU(page), page);
--		SetPageLRU(page);
--		add_page_to_lru_list(page, lruvec, page_lru(page));
--	}
--	spin_unlock_irq(&pgdat->lru_lock);
--}
--
- static void commit_charge(struct page *page, struct mem_cgroup *memcg,
- 			  bool lrucare)
- {
--	int isolated;
-+	struct lruvec *lruvec = NULL;
-+	pg_data_t *pgdat;
+-		lruvec = lock_page_lruvec_irqsave(page, &flags);
++		lruvec = relock_page_lruvec_irqsave(page, lruvec, &flags);
  
- 	VM_BUG_ON_PAGE(page->mem_cgroup, page);
+ 		(*move_fn)(page, lruvec, arg);
+-		unlock_page_lruvec_irqrestore(lruvec, flags);
+ 	}
++	if (lruvec)
++		unlock_page_lruvec_irqrestore(lruvec, flags);
  
-@@ -2612,9 +2582,17 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
- 	 * In some cases, SwapCache and FUSE(splice_buf->radixtree), the page
- 	 * may already be on some other mem_cgroup's LRU.  Take care of it.
- 	 */
--	if (lrucare)
--		lock_page_lru(page, &isolated);
--
-+	if (lrucare) {
-+		pgdat = page_pgdat(page);
-+		spin_lock_irq(&pgdat->lru_lock);
-+
-+		if (PageLRU(page)) {
-+			lruvec = mem_cgroup_page_lruvec(page, pgdat);
-+			ClearPageLRU(page);
-+			del_page_from_lru_list(page, lruvec, page_lru(page));
-+		} else
-+			spin_unlock_irq(&pgdat->lru_lock);
-+	}
- 	/*
- 	 * Nobody should be changing or seriously looking at
- 	 * page->mem_cgroup at this point:
-@@ -2631,8 +2609,13 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
- 	 */
- 	page->mem_cgroup = memcg;
+ 	release_pages(pvec->pages, pvec->nr);
+ 	pagevec_reinit(pvec);
+@@ -819,14 +820,11 @@ void release_pages(struct page **pages, int nr)
+ 		}
  
--	if (lrucare)
--		unlock_page_lru(page, isolated);
-+	if (lrucare && lruvec) {
-+		lruvec = mem_cgroup_page_lruvec(page, pgdat);
-+		VM_BUG_ON_PAGE(PageLRU(page), page);
-+		SetPageLRU(page);
-+		add_page_to_lru_list(page, lruvec, page_lru(page));
-+		spin_unlock_irq(&pgdat->lru_lock);
-+	}
- }
+ 		if (PageLRU(page)) {
+-			struct lruvec *new_lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
++			struct lruvec *pre_lruvec = lruvec;
  
- #ifdef CONFIG_MEMCG_KMEM
+-			if (new_lruvec != lruvec) {
+-				if (lruvec)
+-					unlock_page_lruvec_irqrestore(lruvec, flags);
++			lruvec = relock_page_lruvec_irqsave(page, lruvec, &flags);
++			if (pre_lruvec != lruvec)
+ 				lock_batch = 0;
+-				lruvec = lock_page_lruvec_irqsave(page, &flags);
+-			}
+ 
+ 			VM_BUG_ON_PAGE(!PageLRU(page), page);
+ 			__ClearPageLRU(page);
 -- 
 1.8.3.1
-
 
