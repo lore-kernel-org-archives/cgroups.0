@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v8 05/10] mm/mlock: optimize munlock_pagevec by relocking
-Date: Thu, 16 Jan 2020 11:05:04 +0800
-Message-ID: <1579143909-156105-6-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v8 09/10] mm/lru: add debug checking for page memcg moving
+Date: Thu, 16 Jan 2020 11:05:08 +0800
+Message-ID: <1579143909-156105-10-git-send-email-alex.shi@linux.alibaba.com>
 References: <1579143909-156105-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <owner-linux-mm@kvack.org>
 In-Reply-To: <1579143909-156105-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -11,72 +11,104 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com, hannes@cmpxchg.org
+Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
 
-During the pagevec locking, a new page's lruvec is may same as
-previous one. Thus we could save a re-locking, and only
-change lock iff lruvec is newer.
+This debug patch could give some clues if there are sth out of
+consideration.
+
+Hugh Dickins report a bug of this patch, Thanks!
 
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
 Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Hugh Dickins <hughd@google.com>
-Cc: linux-kernel@vger.kernel.org
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: cgroups@vger.kernel.org
 Cc: linux-mm@kvack.org
-Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org
 ---
- mm/mlock.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ include/linux/memcontrol.h |  5 +++++
+ mm/compaction.c            |  2 ++
+ mm/memcontrol.c            | 15 +++++++++++++++
+ 3 files changed, 22 insertions(+)
 
-diff --git a/mm/mlock.c b/mm/mlock.c
-index 10d15f58b061..050f999eadb1 100644
---- a/mm/mlock.c
-+++ b/mm/mlock.c
-@@ -289,6 +289,7 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 09e861df48e8..ece88bb11d0f 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -421,6 +421,7 @@ static inline struct lruvec *mem_cgroup_lruvec(struct mem_cgroup *memcg,
+ struct lruvec *lock_page_lruvec_irqsave(struct page *, unsigned long*);
+ void unlock_page_lruvec_irq(struct lruvec *);
+ void unlock_page_lruvec_irqrestore(struct lruvec *, unsigned long);
++void lruvec_memcg_debug(struct lruvec *lruvec, struct page *page);
+ 
+ struct mem_cgroup *mem_cgroup_from_task(struct task_struct *p);
+ 
+@@ -1183,6 +1184,10 @@ static inline void count_memcg_page_event(struct page *page,
+ void count_memcg_event_mm(struct mm_struct *mm, enum vm_event_item idx)
  {
- 	int i;
- 	int nr = pagevec_count(pvec);
-+	int delta_munlocked = -nr;
- 	struct pagevec pvec_putback;
- 	struct lruvec *lruvec = NULL;
- 	int pgrescued = 0;
-@@ -299,20 +300,19 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
- 	for (i = 0; i < nr; i++) {
- 		struct page *page = pvec->pages[i];
+ }
++
++static inline void lruvec_memcg_debug(struct lruvec *lruvec, struct page *page)
++{
++}
+ #endif /* CONFIG_MEMCG */
  
--		lruvec = lock_page_lruvec_irq(page);
-+		lruvec = relock_page_lruvec_irq(page, lruvec);
+ /* idx can be of type enum memcg_stat_item or node_stat_item */
+diff --git a/mm/compaction.c b/mm/compaction.c
+index 8c0a2da217d8..151242817bf4 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -971,6 +971,8 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 			compact_lock_irqsave(&lruvec->lru_lock, &flags, cc);
+ 			locked_lruvec = lruvec;
  
- 		if (TestClearPageMlocked(page)) {
- 			/*
- 			 * We already have pin from follow_page_mask()
- 			 * so we can spare the get_page() here.
- 			 */
--			if (__munlock_isolate_lru_page(page, lruvec, false)) {
--				__mod_zone_page_state(zone, NR_MLOCK,  -1);
--				unlock_page_lruvec_irq(lruvec);
-+			if (__munlock_isolate_lru_page(page, lruvec, false))
- 				continue;
--			} else
-+			else
- 				__munlock_isolation_failed(page);
--		}
-+		} else
-+			delta_munlocked++;
++			lruvec_memcg_debug(lruvec, page);
++
+ 			/* Try get exclusive access under lock */
+ 			if (!skip_updated) {
+ 				skip_updated = true;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 00fef8ddbd08..a567fd868739 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1238,6 +1238,19 @@ struct lruvec *mem_cgroup_page_lruvec(struct page *page, struct pglist_data *pgd
+ 	return lruvec;
+ }
  
- 		/*
- 		 * We won't be munlocking this page in the next phase
-@@ -322,8 +322,10 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
- 		 */
- 		pagevec_add(&pvec_putback, pvec->pages[i]);
- 		pvec->pages[i] = NULL;
--		unlock_page_lruvec_irq(lruvec);
- 	}
-+	__mod_zone_page_state(zone, NR_MLOCK, delta_munlocked);
-+	if (lruvec)
-+		unlock_page_lruvec_irq(lruvec);
++void lruvec_memcg_debug(struct lruvec *lruvec, struct page *page)
++{
++#ifdef  CONFIG_DEBUG_VM
++	if (mem_cgroup_disabled())
++		return;
++
++	if (!page->mem_cgroup)
++		VM_BUG_ON_PAGE(lruvec_memcg(lruvec) != root_mem_cgroup, page);
++	else
++		VM_BUG_ON_PAGE(lruvec_memcg(lruvec) != page->mem_cgroup, page);
++#endif
++}
++
+ struct lruvec *lock_page_lruvec_irq(struct page *page)
+ {
+ 	struct lruvec *lruvec;
+@@ -1247,6 +1260,7 @@ struct lruvec *lock_page_lruvec_irq(struct page *page)
+ 	lruvec = mem_cgroup_lruvec(memcg, page_pgdat(page));
+ 	spin_lock_irq(&lruvec->lru_lock);
  
- 	/* Now we can release pins of pages that we are not munlocking */
- 	pagevec_release(&pvec_putback);
++	lruvec_memcg_debug(lruvec, page);
+ 	return lruvec;
+ }
+ 
+@@ -1259,6 +1273,7 @@ struct lruvec *lock_page_lruvec_irqsave(struct page *page, unsigned long *flags)
+ 	lruvec = mem_cgroup_lruvec(memcg, page_pgdat(page));
+ 	spin_lock_irqsave(&lruvec->lru_lock, *flags);
+ 
++	lruvec_memcg_debug(lruvec, page);
+ 	return lruvec;
+ }
+ 
 -- 
 1.8.3.1
 
