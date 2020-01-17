@@ -1,138 +1,65 @@
-From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 1/6] cgroup: unify attach permission checking
-Date: Fri, 17 Jan 2020 19:12:14 +0100
-Message-ID: <20200117181219.14542-2-christian.brauner@ubuntu.com>
-References: <20200117181219.14542-1-christian.brauner@ubuntu.com>
+From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 2/3] cgroup: Iterate tasks that did not finish do_exit()
+Date: Fri, 17 Jan 2020 10:41:29 -0800
+Message-ID: <CAJuCfpFqEUVFXsjD8XcCKsGXKTf72r0Ek5_1yqu_k5UZAssKTw@mail.gmail.com>
+References: <20200116043612.52782-1-surenb@google.com> <20200117151533.12381-1-mkoutny@suse.com>
+ <20200117151533.12381-3-mkoutny@suse.com> <20200117172806.GK2677547@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200117181219.14542-1-christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=Hl2KZMvca+Q8kuDbq/WhLs/Rb2uaYU/dE+p/JdLh8Ok=;
+        b=pya+t3ljvih0NEjKSrRArdnH313MxZONXt8kTq2RCSmOCsZP7KR3baPZAFPehTPQxx
+         VuKQfkLNIc4O7hDdNydFUo+Rit+LleyvNPqIqy5948KMTJxnyj2MVgDSFofqnZqQS5Nx
+         Or3Zo594/EnJk39EWoCRDMjG4V8NF2BmHRXws3l/1nFpofa/+Bvxs6YNhCcdsqG7x3wk
+         vR24AbaUtYr8X6KA5iQGuwz6Z7LgbIrcG2vC/4HLMaSGjk6nSLQU3vF89b7ikkhwAMpc
+         A800IqSQpGRJuHLz6yxrYHsfaVbVemOGjrYeY0sTZTYGZtjBtpiMZzaKyNvlSn/ysOZH
+         U/KQ==
+In-Reply-To: <20200117172806.GK2677547-LpCCV3molIbIZ9tKgghJQw2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-9"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, kernel-team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, JeiFeng Lee <linger.lee-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Tom Cherry <tomcherry-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-The core codepaths to check whether a process can be attached to a
-cgroup are the same for threads and thread-group leaders. Only a small
-piece of code verifying that source and destination cgroup are in the
-same domain differentiates the thread permission checking from
-thread-group leader permission checking.
-Since cgroup_migrate_vet_dst() only matters cgroup2 - it is a noop on
-cgroup1 - we can move it out of cgroup_attach_task().
-All checks can now be consolidated into a new helper
-cgroup_attach_permissions() callable from both cgroup_procs_write() and
-cgroup_threads_write().
+On Fri, Jan 17, 2020 at 9:28 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>
+> On Fri, Jan 17, 2020 at 04:15:32PM +0100, Michal Koutn=C3=BD wrote:
+> > PF_EXITING is set earlier than actual removal from css_set when a task
+> > is exitting. This can confuse cgroup.procs readers who see no PF_EXITIN=
+G
+> > tasks, however, rmdir is checking against css_set membership so it can
+> > transitionally fail with EBUSY.
+> >
+> > Fix this by listing tasks that weren't unlinked from css_set active
+> > lists.
+> > It may happen that other users of the task iterator (without
+> > CSS_TASK_ITER_PROCS) spot a PF_EXITING task before cgroup_exit(). This
+> > is equal to the state before commit c03cd7738a83 ("cgroup: Include dyin=
+g
+> > leaders with live threads in PROCS iterations") but it may be reviewed
+> > later.
 
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Signed-off-by: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
----
-/* v1 */
-Link: https://lore.kernel.org/r/20191218173516.7875-2-christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org
+Tested-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-/* v2 */
-Link: https://lore.kernel.org/r/20191223061504.28716-2-christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org
-- Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>:
-  - Fix return value of cgroup_attach_permissions. It used to return 0
-    when it should've returned -EOPNOTSUPP.
-  - Fix call to cgroup_attach_permissions() in cgroup_procs_write(). It
-    accidently specified that a thread was moved causing an additional
-    check for domain-group equality to be executed that is not needed.
+>
+> Yeah, this looks fine to me.  Any chance you can order this before the
+> clean up so that we can mark it for -stable.
+>
 
-/* v3 */
-Link: https://lore.kernel.org/r/20200117002143.15559-2-christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org
-unchanged
++1 for reordering. Makes it easier to backport.
+Thanks,
+Suren.
 
-/* v4 */
-unchanged
----
- kernel/cgroup/cgroup.c | 46 +++++++++++++++++++++++++++++-------------
- 1 file changed, 32 insertions(+), 14 deletions(-)
-
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 735af8f15f95..ad1f9fea5c14 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -2719,11 +2719,7 @@ int cgroup_attach_task(struct cgroup *dst_cgrp, struct task_struct *leader,
- {
- 	DEFINE_CGROUP_MGCTX(mgctx);
- 	struct task_struct *task;
--	int ret;
--
--	ret = cgroup_migrate_vet_dst(dst_cgrp);
--	if (ret)
--		return ret;
-+	int ret = 0;
- 
- 	/* look up all src csets */
- 	spin_lock_irq(&css_set_lock);
-@@ -4690,6 +4686,33 @@ static int cgroup_procs_write_permission(struct cgroup *src_cgrp,
- 	return 0;
- }
- 
-+static inline bool cgroup_same_domain(const struct cgroup *src_cgrp,
-+				      const struct cgroup *dst_cgrp)
-+{
-+	return src_cgrp->dom_cgrp == dst_cgrp->dom_cgrp;
-+}
-+
-+static int cgroup_attach_permissions(struct cgroup *src_cgrp,
-+				     struct cgroup *dst_cgrp,
-+				     struct super_block *sb, bool thread)
-+{
-+	int ret = 0;
-+
-+	ret = cgroup_procs_write_permission(src_cgrp, dst_cgrp, sb);
-+	if (ret)
-+		return ret;
-+
-+	ret = cgroup_migrate_vet_dst(dst_cgrp);
-+	if (ret)
-+		return ret;
-+
-+	if (thread &&
-+	    !cgroup_same_domain(src_cgrp->dom_cgrp, dst_cgrp->dom_cgrp))
-+		ret = -EOPNOTSUPP;
-+
-+	return ret;
-+}
-+
- static ssize_t cgroup_procs_write(struct kernfs_open_file *of,
- 				  char *buf, size_t nbytes, loff_t off)
- {
-@@ -4712,8 +4735,8 @@ static ssize_t cgroup_procs_write(struct kernfs_open_file *of,
- 	src_cgrp = task_cgroup_from_root(task, &cgrp_dfl_root);
- 	spin_unlock_irq(&css_set_lock);
- 
--	ret = cgroup_procs_write_permission(src_cgrp, dst_cgrp,
--					    of->file->f_path.dentry->d_sb);
-+	ret = cgroup_attach_permissions(src_cgrp, dst_cgrp,
-+					of->file->f_path.dentry->d_sb, false);
- 	if (ret)
- 		goto out_finish;
- 
-@@ -4757,16 +4780,11 @@ static ssize_t cgroup_threads_write(struct kernfs_open_file *of,
- 	spin_unlock_irq(&css_set_lock);
- 
- 	/* thread migrations follow the cgroup.procs delegation rule */
--	ret = cgroup_procs_write_permission(src_cgrp, dst_cgrp,
--					    of->file->f_path.dentry->d_sb);
-+	ret = cgroup_attach_permissions(src_cgrp, dst_cgrp,
-+					of->file->f_path.dentry->d_sb, true);
- 	if (ret)
- 		goto out_finish;
- 
--	/* and must be contained in the same domain */
--	ret = -EOPNOTSUPP;
--	if (src_cgrp->dom_cgrp != dst_cgrp->dom_cgrp)
--		goto out_finish;
--
- 	ret = cgroup_attach_task(dst_cgrp, task, false);
- 
- out_finish:
--- 
-2.25.0
-
+> Thanks.
+>
+> --
+> tejun
+>
+> --
+> To unsubscribe from this group and stop receiving emails from it, send an=
+ email to kernel-team+unsubscribe-z5hGa2qSFaTowKkBSvOlow@public.gmane.org
+>
