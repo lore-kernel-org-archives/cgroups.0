@@ -1,55 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/3] cgroup: Unify css_set task lists
-Date: Fri, 17 Jan 2020 08:59:18 -0800
-Message-ID: <20200117165918.GJ2677547@devbig004.ftw2.facebook.com>
-References: <20200116043612.52782-1-surenb@google.com>
- <20200117151533.12381-1-mkoutny@suse.com>
- <20200117151533.12381-2-mkoutny@suse.com>
+From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 2/3] clone3: allow spawning processes into cgroups
+Date: Fri, 17 Jan 2020 18:12:28 +0100
+Message-ID: <20200117171228.evtvrny3v7zjcocd@wittgenstein>
+References: <20191223061504.28716-1-christian.brauner@ubuntu.com>
+ <20191223061504.28716-3-christian.brauner@ubuntu.com>
+ <20200107163204.GB2677547@devbig004.ftw2.facebook.com>
+ <20200108180906.l4mvtdmh7nm2z7sc@wittgenstein>
+ <20200116122944.nj3e66eusxu6sb44@wittgenstein>
+ <20200117165311.GH2677547@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=zUnqRXYQtoyEF5UfPwWmYzCrDBoI5jZ6BUT1W4OJSHA=;
-        b=dNwidGHTaO65iLrmuRFYsedrAORZcj1dlBJc6RMBU146ZCPVPbdo76G9xqEUHi/4Pt
-         EOjOovq0mE5jq+flTugwLRNLMe/HfRwsgkV8518vOU7/DmxMI7XRE8vFRc/XRTgb/ICe
-         rDke18QDeVAgygvYrcv/rpZui2Gx8OXVHY42jmMcwi2MkfLMXzY2zcHKratTxPYePE5C
-         6/+6UJTgCLdF/6Q0CmUKGsNVRYhdpnM89yIl1USuXStY8jSq35oPPXc0UDZcFon7c8E7
-         I38FBOrLF5KnNZx0uQLQ11UdW+T1YiVS3L6zDZSMoGQuQQo1a/NONcwN9ay/gtbQB1Jz
-         70Xw==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20200117151533.12381-2-mkoutny@suse.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20200117165311.GH2677547-LpCCV3molIbIZ9tKgghJQw2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, alex.shi@linux.alibaba.com, guro@fb.com, kernel-team@android.com, linger.lee@mediatek.com, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, linux-mediatek@lists.infradead.org, matthias.bgg@gmail.com, shuah@kernel.org, tomcherry@google.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Jan 17, 2020 at 04:15:31PM +0100, Michal Koutn=FD wrote:
-> We track tasks of css_set in three different lists. The iterators
-> unnecessarily process each list specially.
-> Use an array of lists and simplify the iterator code. This is
-> refactoring with no intended functional change.
->=20
-> Signed-off-by: Michal Koutn=FD <mkoutny@suse.com>
-> ---
->  include/linux/cgroup-defs.h | 15 ++++---
->  include/linux/cgroup.h      |  4 +-
->  kernel/cgroup/cgroup.c      | 81 +++++++++++++++++++------------------
->  kernel/cgroup/debug.c       | 16 ++++----
->  4 files changed, 60 insertions(+), 56 deletions(-)
+On Fri, Jan 17, 2020 at 08:53:11AM -0800, Tejun Heo wrote:
+> Hello, Christian.
+> 
+> Sorry about late reply.
+> 
+> On Thu, Jan 16, 2020 at 01:29:44PM +0100, Christian Brauner wrote:
+> > Could it be that you misread cgroup_attach_permissions()? Because it
+> > does check for write permissions on the destination cgroup.procs file.
+> > That's why I've added the cgroup_get_from_file() helper. :) See:
+> > 
+> > static int cgroup_attach_permissions(struct cgroup *src_cgrp,
+> > 				     struct cgroup *dst_cgrp,
+> > 				     struct super_block *sb, bool thread)
+> > {
+> > 	int ret = 0;
+> > 
+> > 	ret = cgroup_procs_write_permission(src_cgrp, dst_cgrp, sb);
+> > 	if (ret)
+> > 		return ret;
+> 
+> So, if you look at cgroup_procs_write_permission(), it's only checking
+> the write perm of the common ancestor, not the destination because it
+> assumes that the destination is already checked by the vfs layer, and
+> we need to check both.
 
-So, I get the urge to move the lists into an array and thought about
-doing that while adding the third list for sure.  However, it does
-make code paths which don't walk all lists wordier and the code path
-is already tricky like hell.  Given that there aren't that many places
-which loop over the lists, if you really wanna clean it up, maybe add
-an interator over the lists so that both parts of code can look lean?
+Ok, gimme 20 min.
 
-Thanks.
-
---=20
-tejun
+Thanks!
+Christian
