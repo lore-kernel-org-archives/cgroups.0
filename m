@@ -1,79 +1,91 @@
-From: Suren Baghdasaryan <surenb@google.com>
-Subject: Re: [PATCH 0/3] cgroup: Iterate tasks that did not finish do_exit()
-Date: Fri, 17 Jan 2020 09:30:15 -0800
-Message-ID: <CAJuCfpHkOz1LmygyxC9VxXux8_TFmEGr-BsAs-EadKt=AkZyiQ@mail.gmail.com>
-References: <20200116043612.52782-1-surenb@google.com> <20200117151533.12381-1-mkoutny@suse.com>
+From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v4 4/6] cgroup: add cgroup_may_write() helper
+Date: Fri, 17 Jan 2020 19:12:17 +0100
+Message-ID: <20200117181219.14542-5-christian.brauner@ubuntu.com>
+References: <20200117181219.14542-1-christian.brauner@ubuntu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=s/Igl7jec5R8DMF3nyQFihy0XoNH7LpzgEc781wHBbE=;
-        b=IfI2V2VjiHDEyMxVeB6DJUwZfuJaVSwdWaVbiW2tG1VzG5iMe4Fmndr3Dh8Y5KaF7g
-         SbVP5Ca373H4SpjZNwlaPj0ajlmO5/0RXj4cboBUBjlynN2ihp0sj5+LxlF9hYR3Gs5D
-         5Qv2rZh4Yzvc8lS4UP3Ac5LRe5cw1v+Y0yJdR8pwwdPPusdbhjfrDBsi13y8DYwoaakI
-         cuAz6BXfPrsKPA1w9FiWbzNzE9zzgpb3Rr4pw20A0bJZFGooUMKUtslJ3QXvxVnMh650
-         IIszWgCEmch4wXJw0b3IsDeqswH27TUpZ2/KnyYvteCdFYD5butLob8faQQd6VS5iI6D
-         fZyA==
-In-Reply-To: <20200117151533.12381-1-mkoutny@suse.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200117181219.14542-1-christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: cgroups mailinglist <cgroups@vger.kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, alex.shi@linux.alibaba.com, Roman Gushchin <guro@fb.com>, kernel-team <kernel-team@android.com>, JeiFeng Lee <linger.lee@mediatek.com>, linux-arm-kernel@lists.infradead.org, LKML <linux-kernel@vger.kernel.org>, linux-kselftest@vger.kernel.org, linux-mediatek@lists.infradead.org, matthias.bgg@gmail.com, shuah@kernel.org, Tom Cherry <tomcherry@google.com>
+Content-Type: text/plain; charset="us-ascii"
+To: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Michal,
+Add a cgroup_may_write() helper which we can use in the
+CLONE_INTO_CGROUP patch series to verify that we can write to the
+destination cgroup.
 
-On Fri, Jan 17, 2020 at 7:15 AM Michal Koutn=C3=BD <mkoutny@suse.com> wrote=
-:
->
-> Hi,
-> I was looking into the issue and came up with an alternative solution tha=
-t
-> changes task iteration to be consistent with cgroup_is_populated() check =
-and
-> moving the responsibility to check PF_EXITING on the consumers of iterato=
-r API.
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+---
+/* v1 */
+patch not present
 
-Yeah, that was my first thought which basically reverts a part of
-c03cd7738a83. When I first brought up this issue in the other email
-thread, Tejun's comment was "the right thing to do is allowing
-destruction of cgroups w/ only
-dead processes in it". I assumed, maybe incorrectly, that the desire
-here is not to include dying processes into cgroup.procs but to allow
-cgroups with dying processes to be deleted.
+/* v2 */
+patch not present
 
-To be clear, either way is fine with me since both ways solve the
-issue and this way the code is definitely simpler. I'll rerun the
-tests with your patches just to confirm the issue is gone.
-Thanks!
+/* v3 */
+patch not present
 
-> I haven't check your approach thoroughly, however, it appears to me it
-> complicates (already non-trivial) cgroup destruction path. I ran your sel=
-ftest
-> on the iterators approach and it proved working.
->
->
-> Michal Koutn=C3=BD (2):
->   cgroup: Unify css_set task lists
->   cgroup: Iterate tasks that did not finish do_exit()
->
-> Suren Baghdasaryan (1):
->   kselftest/cgroup: add cgroup destruction test
->
->  include/linux/cgroup-defs.h                |  15 ++-
->  include/linux/cgroup.h                     |   4 +-
->  kernel/cgroup/cgroup.c                     |  86 ++++++++--------
->  kernel/cgroup/debug.c                      |  16 ++-
->  tools/testing/selftests/cgroup/test_core.c | 113 +++++++++++++++++++++
->  5 files changed, 176 insertions(+), 58 deletions(-)
->
-> --
-> 2.24.1
->
-> --
-> To unsubscribe from this group and stop receiving emails from it, send an=
- email to kernel-team+unsubscribe@android.com.
->
+/* v4 */
+patch introduced
+---
+ kernel/cgroup/cgroup.c | 24 +++++++++++++++++-------
+ 1 file changed, 17 insertions(+), 7 deletions(-)
+
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 49d8cf087e10..b110b435ae49 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -4649,13 +4649,28 @@ static int cgroup_procs_show(struct seq_file *s, void *v)
+ 	return 0;
+ }
+ 
++static int cgroup_may_write(const struct cgroup *cgrp, struct super_block *sb)
++{
++	int ret;
++	struct inode *inode;
++
++	lockdep_assert_held(&cgroup_mutex);
++
++	inode = kernfs_get_inode(sb, cgrp->procs_file.kn);
++	if (!inode)
++		return -ENOMEM;
++
++	ret = inode_permission(inode, MAY_WRITE);
++	iput(inode);
++	return ret;
++}
++
+ static int cgroup_procs_write_permission(struct cgroup *src_cgrp,
+ 					 struct cgroup *dst_cgrp,
+ 					 struct super_block *sb)
+ {
+ 	struct cgroup_namespace *ns = current->nsproxy->cgroup_ns;
+ 	struct cgroup *com_cgrp = src_cgrp;
+-	struct inode *inode;
+ 	int ret;
+ 
+ 	lockdep_assert_held(&cgroup_mutex);
+@@ -4665,12 +4680,7 @@ static int cgroup_procs_write_permission(struct cgroup *src_cgrp,
+ 		com_cgrp = cgroup_parent(com_cgrp);
+ 
+ 	/* %current should be authorized to migrate to the common ancestor */
+-	inode = kernfs_get_inode(sb, com_cgrp->procs_file.kn);
+-	if (!inode)
+-		return -ENOMEM;
+-
+-	ret = inode_permission(inode, MAY_WRITE);
+-	iput(inode);
++	ret = cgroup_may_write(com_cgrp, sb);
+ 	if (ret)
+ 		return ret;
+ 
+-- 
+2.25.0
+
