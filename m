@@ -1,78 +1,205 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-Subject: [PATCH 3/3] kselftest/cgroup: add cgroup destruction test
-Date: Fri, 17 Jan 2020 16:15:33 +0100
-Message-ID: <20200117151533.12381-4-mkoutny@suse.com>
-References: <20200116043612.52782-1-surenb@google.com>
- <20200117151533.12381-1-mkoutny@suse.com>
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
+Subject: Re: [Patch v3] mm: thp: grab the lock before manipulation defer list
+Date: Fri, 17 Jan 2020 18:38:39 +0300
+Message-ID: <20200117153839.pcnfomzuaha3dafh@box>
+References: <20200116013100.7679-1-richardw.yang@linux.intel.com>
+ <0bb34c4a-97c7-0b3c-cf43-8af6cf9c4396@virtuozzo.com>
+ <alpine.DEB.2.21.2001161357240.109233@chino.kir.corp.google.com>
+ <20200117091002.GM19428@dhcp22.suse.cz>
+ <alpine.DEB.2.21.2001170125350.20618@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200117151533.12381-1-mkoutny@suse.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=shutemov-name.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=5CjcNzOgQBmyIcnlhVOCHh9LmCSADzB4xHyoB2q1Vjs=;
+        b=1+vrAV7y4/yxDZYqJkvlHyCZRpYBgGdFyxJ7KIeKbpHtoUPDOyPX6e7BIM7zwU4DLL
+         0EM5K9CR2K6Im20ZKgF3p8ZeRE4e83kp+T4XK2JgU3GSOqJok0G8UfPYz3hNQaunRGVr
+         MfEDAbb74mdg+cUIdfYnA/gHmah0ng091NQv3qNjxB4tir/aLyyRHdqkg1qNfMMv/5af
+         ZWfu7kcfP8Vu3FPEFUh5Y8bPghSo/bgWGg9OihgLXVvh7uLAghuBEhYcCgDKoE50EINe
+         xUpPhsJ41KiezPUpHha861faGDxWqLfPdKcK5VpstLgrSvF2edmeSkakgXNRFIMoTvGJ
+         4anQ==
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.21.2001170125350.20618@chino.kir.corp.google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: cgroups@vger.kernel.org
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, alex.shi@linux.alibaba.com, guro@fb.com, kernel-team@android.com, linger.lee@mediatek.com, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, linux-mediatek@lists.infradead.org, matthias.bgg@gmail.com, shuah@kernel.org, tomcherry@google.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes@google.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Kirill Tkhai <ktkhai@virtuozzo.com>, Wei Yang <richardw.yang@linux.intel.com>, hannes@cmpxchg.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, kirill.shutemov@linux.intel.com, yang.shi@linux.alibaba.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, alexander.duyck@gmail.com, stable@vger.kernel.org
 
-RnJvbTogU3VyZW4gQmFnaGRhc2FyeWFuIDxzdXJlbmJAZ29vZ2xlLmNvbT4KCkFkZCBuZXcgdGVz
-dCB0byB2ZXJpZnkgdGhhdCBhIGNncm91cCB3aXRoIGRlYWQgcHJvY2Vzc2VzIGNhbiBiZSBkZXN0
-cm95ZWQuClRoZSB0ZXN0IHNwYXducyBhIGNoaWxkIHByb2Nlc3Mgd2hpY2ggYWxsb2NhdGVzIGFu
-ZCB0b3VjaGVzIDEwME1CIG9mIFJBTQp0byBlbnN1cmUgcHJvbG9uZ2VkIGV4aXQuIFN1YnNlcXVl
-bnRseSBpdCBraWxscyB0aGUgY2hpbGQsIHdhaXRzIHVudGlsCnRoZSBjZ3JvdXAgY29udGFpbmlu
-ZyB0aGUgY2hpbGQgaXMgZW1wdHkgYW5kIGRlc3Ryb3lzIHRoZSBjZ3JvdXAuCgpTaWduZWQtb2Zm
-LWJ5OiBTdXJlbiBCYWdoZGFzYXJ5YW4gPHN1cmVuYkBnb29nbGUuY29tPgpTaWduZWQtb2ZmLWJ5
-OiBNaWNoYWwgS291dG7DvSA8bWtvdXRueUBzdXNlLmNvbT4KLS0tCiB0b29scy90ZXN0aW5nL3Nl
-bGZ0ZXN0cy9jZ3JvdXAvdGVzdF9jb3JlLmMgfCAxMTMgKysrKysrKysrKysrKysrKysrKysrCiAx
-IGZpbGUgY2hhbmdlZCwgMTEzIGluc2VydGlvbnMoKykKCmRpZmYgLS1naXQgYS90b29scy90ZXN0
-aW5nL3NlbGZ0ZXN0cy9jZ3JvdXAvdGVzdF9jb3JlLmMgYi90b29scy90ZXN0aW5nL3NlbGZ0ZXN0
-cy9jZ3JvdXAvdGVzdF9jb3JlLmMKaW5kZXggYzVjYTY2OWZlYjJiLi4yYTUyNDJlYzFhNDkgMTAw
-NjQ0Ci0tLSBhL3Rvb2xzL3Rlc3Rpbmcvc2VsZnRlc3RzL2Nncm91cC90ZXN0X2NvcmUuYworKysg
-Yi90b29scy90ZXN0aW5nL3NlbGZ0ZXN0cy9jZ3JvdXAvdGVzdF9jb3JlLmMKQEAgLTIsNyArMiwx
-MCBAQAogCiAjaW5jbHVkZSA8bGludXgvbGltaXRzLmg+CiAjaW5jbHVkZSA8c3lzL3R5cGVzLmg+
-CisjaW5jbHVkZSA8c3lzL21tYW4uaD4KKyNpbmNsdWRlIDxzeXMvd2FpdC5oPgogI2luY2x1ZGUg
-PHVuaXN0ZC5oPgorI2luY2x1ZGUgPGZjbnRsLmg+CiAjaW5jbHVkZSA8c3RkaW8uaD4KICNpbmNs
-dWRlIDxlcnJuby5oPgogI2luY2x1ZGUgPHNpZ25hbC5oPgpAQCAtMTIsNiArMTUsMTE1IEBACiAj
-aW5jbHVkZSAiLi4va3NlbGZ0ZXN0LmgiCiAjaW5jbHVkZSAiY2dyb3VwX3V0aWwuaCIKIAorc3Rh
-dGljIGludCB0b3VjaF9hbm9uKGNoYXIgKmJ1Ziwgc2l6ZV90IHNpemUpCit7CisJaW50IGZkOwor
-CWNoYXIgKnBvcyA9IGJ1ZjsKKworCWZkID0gb3BlbigiL2Rldi91cmFuZG9tIiwgT19SRE9OTFkp
-OworCWlmIChmZCA8IDApCisJCXJldHVybiAtMTsKKworCXdoaWxlIChzaXplID4gMCkgeworCQlz
-c2l6ZV90IHJldCA9IHJlYWQoZmQsIHBvcywgc2l6ZSk7CisKKwkJaWYgKHJldCA8IDApIHsKKwkJ
-CWlmIChlcnJubyAhPSBFSU5UUikgeworCQkJCWNsb3NlKGZkKTsKKwkJCQlyZXR1cm4gLTE7CisJ
-CQl9CisJCX0gZWxzZSB7CisJCQlwb3MgKz0gcmV0OworCQkJc2l6ZSAtPSByZXQ7CisJCX0KKwl9
-CisJY2xvc2UoZmQpOworCisJcmV0dXJuIDA7Cit9CisKK3N0YXRpYyBpbnQgYWxsb2NfYW5kX3Rv
-dWNoX2Fub25fbm9leGl0KGNvbnN0IGNoYXIgKmNncm91cCwgdm9pZCAqYXJnKQoreworCWludCBw
-cGlkID0gZ2V0cHBpZCgpOworCXNpemVfdCBzaXplID0gKHNpemVfdClhcmc7CisJdm9pZCAqYnVm
-OworCisJYnVmID0gbW1hcChOVUxMLCBzaXplLCBQUk9UX1JFQUQgfCBQUk9UX1dSSVRFLCBNQVBf
-UFJJVkFURSB8IE1BUF9BTk9OLAorCQkgICAwLCAwKTsKKwlpZiAoYnVmID09IE1BUF9GQUlMRUQp
-CisJCXJldHVybiAtMTsKKworCWlmICh0b3VjaF9hbm9uKChjaGFyICopYnVmLCBzaXplKSkgewor
-CQltdW5tYXAoYnVmLCBzaXplKTsKKwkJcmV0dXJuIC0xOworCX0KKworCXdoaWxlIChnZXRwcGlk
-KCkgPT0gcHBpZCkKKwkJc2xlZXAoMSk7CisKKwltdW5tYXAoYnVmLCBzaXplKTsKKwlyZXR1cm4g
-MDsKK30KKworLyoKKyAqIENyZWF0ZSBhIGNoaWxkIHByb2Nlc3MgdGhhdCBhbGxvY2F0ZXMgYW5k
-IHRvdWNoZXMgMTAwTUIsIHRoZW4gd2FpdHMgdG8gYmUKKyAqIGtpbGxlZC4gV2FpdCB1bnRpbCB0
-aGUgY2hpbGQgaXMgYXR0YWNoZWQgdG8gdGhlIGNncm91cCwga2lsbCBhbGwgcHJvY2Vzc2VzCisg
-KiBpbiB0aGF0IGNncm91cCBhbmQgd2FpdCB1bnRpbCAiY2dyb3VwLmV2ZW50cyIgaXMgZW1wdHku
-IEF0IHRoaXMgcG9pbnQgdHJ5IHRvCisgKiBkZXN0cm95IHRoZSBlbXB0eSBjZ3JvdXAuIFRoZSB0
-ZXN0IGhlbHBzIGRldGVjdCByYWNlIGNvbmRpdGlvbnMgYmV0d2VlbgorICogZHlpbmcgcHJvY2Vz
-c2VzIGxlYXZpbmcgdGhlIGNncm91cCBhbmQgY2dyb3VwIGRlc3RydWN0aW9uIHBhdGguCisgKi8K
-K3N0YXRpYyBpbnQgdGVzdF9jZ2NvcmVfZGVzdHJveShjb25zdCBjaGFyICpyb290KQoreworCWlu
-dCByZXQgPSBLU0ZUX0ZBSUw7CisJY2hhciAqY2dfdGVzdCA9IE5VTEw7CisJaW50IGNoaWxkX3Bp
-ZDsKKwljaGFyIGJ1ZltQQUdFX1NJWkVdOworCisJY2dfdGVzdCA9IGNnX25hbWUocm9vdCwgImNn
-X3Rlc3QiKTsKKworCWlmICghY2dfdGVzdCkKKwkJZ290byBjbGVhbnVwOworCisJZm9yIChpbnQg
-aSA9IDA7IGkgPCAxMDsgaSsrKSB7CisJCWlmIChjZ19jcmVhdGUoY2dfdGVzdCkpCisJCQlnb3Rv
-IGNsZWFudXA7CisKKwkJY2hpbGRfcGlkID0gY2dfcnVuX25vd2FpdChjZ190ZXN0LCBhbGxvY19h
-bmRfdG91Y2hfYW5vbl9ub2V4aXQsCisJCQkJCSAgKHZvaWQgKikgTUIoMTAwKSk7CisKKwkJaWYg
-KGNoaWxkX3BpZCA8IDApCisJCQlnb3RvIGNsZWFudXA7CisKKwkJLyogd2FpdCBmb3IgdGhlIGNo
-aWxkIHRvIGVudGVyIGNncm91cCAqLworCQlpZiAoY2dfd2FpdF9mb3JfcHJvY19jb3VudChjZ190
-ZXN0LCAxKSkKKwkJCWdvdG8gY2xlYW51cDsKKworCQlpZiAoY2dfa2lsbGFsbChjZ190ZXN0KSkK
-KwkJCWdvdG8gY2xlYW51cDsKKworCQkvKiB3YWl0IGZvciBjZ3JvdXAgdG8gYmUgZW1wdHkgKi8K
-KwkJd2hpbGUgKDEpIHsKKwkJCWlmIChjZ19yZWFkKGNnX3Rlc3QsICJjZ3JvdXAucHJvY3MiLCBi
-dWYsIHNpemVvZihidWYpKSkKKwkJCQlnb3RvIGNsZWFudXA7CisJCQlpZiAoYnVmWzBdID09ICdc
-MCcpCisJCQkJYnJlYWs7CisJCQl1c2xlZXAoMTAwMCk7CisJCX0KKworCQlpZiAocm1kaXIoY2df
-dGVzdCkpCisJCQlnb3RvIGNsZWFudXA7CisKKwkJaWYgKHdhaXRwaWQoY2hpbGRfcGlkLCBOVUxM
-LCAwKSA8IDApCisJCQlnb3RvIGNsZWFudXA7CisJfQorCXJldCA9IEtTRlRfUEFTUzsKK2NsZWFu
-dXA6CisJaWYgKGNnX3Rlc3QpCisJCWNnX2Rlc3Ryb3koY2dfdGVzdCk7CisJZnJlZShjZ190ZXN0
-KTsKKwlyZXR1cm4gcmV0OworfQorCiAvKgogICogQSgwKSAtIEIoMCkgLSBDKDEpCiAgKiAgICAg
-ICAgXCBEKDApCkBAIC01MTIsNiArNjI0LDcgQEAgc3RydWN0IGNvcmVjZ190ZXN0IHsKIAlUKHRl
-c3RfY2djb3JlX3BvcHVsYXRlZCksCiAJVCh0ZXN0X2NnY29yZV9wcm9jX21pZ3JhdGlvbiksCiAJ
-VCh0ZXN0X2NnY29yZV90aHJlYWRfbWlncmF0aW9uKSwKKwlUKHRlc3RfY2djb3JlX2Rlc3Ryb3kp
-LAogfTsKICN1bmRlZiBUCiAKLS0gCjIuMjQuMQoK
+On Fri, Jan 17, 2020 at 01:31:50AM -0800, David Rientjes wrote:
+> On Fri, 17 Jan 2020, Michal Hocko wrote:
+> 
+> > On Thu 16-01-20 14:01:59, David Rientjes wrote:
+> > > On Thu, 16 Jan 2020, Kirill Tkhai wrote:
+> > > 
+> > > > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > > > > index c5b5f74cfd4d..6450bbe394e2 100644
+> > > > > --- a/mm/memcontrol.c
+> > > > > +++ b/mm/memcontrol.c
+> > > > > @@ -5360,10 +5360,12 @@ static int mem_cgroup_move_account(struct page *page,
+> > > > >  	}
+> > > > >  
+> > > > >  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> > > > > -	if (compound && !list_empty(page_deferred_list(page))) {
+> > > > > +	if (compound) {
+> > > > >  		spin_lock(&from->deferred_split_queue.split_queue_lock);
+> > > > > -		list_del_init(page_deferred_list(page));
+> > > > > -		from->deferred_split_queue.split_queue_len--;
+> > > > > +		if (!list_empty(page_deferred_list(page))) {
+> > > > > +			list_del_init(page_deferred_list(page));
+> > > > > +			from->deferred_split_queue.split_queue_len--;
+> > > > > +		}
+> > > > >  		spin_unlock(&from->deferred_split_queue.split_queue_lock);
+> > > > >  	}
+> > > > >  #endif
+> > > > > @@ -5377,11 +5379,13 @@ static int mem_cgroup_move_account(struct page *page,
+> > > > >  	page->mem_cgroup = to;
+> > > > >  
+> > > > >  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> > > > > -	if (compound && list_empty(page_deferred_list(page))) {
+> > > > > +	if (compound) {
+> > > > >  		spin_lock(&to->deferred_split_queue.split_queue_lock);
+> > > > > -		list_add_tail(page_deferred_list(page),
+> > > > > -			      &to->deferred_split_queue.split_queue);
+> > > > > -		to->deferred_split_queue.split_queue_len++;
+> > > > > +		if (list_empty(page_deferred_list(page))) {
+> > > > > +			list_add_tail(page_deferred_list(page),
+> > > > > +				      &to->deferred_split_queue.split_queue);
+> > > > > +			to->deferred_split_queue.split_queue_len++;
+> > > > > +		}
+> > > > >  		spin_unlock(&to->deferred_split_queue.split_queue_lock);
+> > > > >  	}
+> > > > >  #endif
+> > > > 
+> > > > The patch looks OK for me. But there is another question. I forget, why we unconditionally
+> > > > add a page with empty deferred list to deferred_split_queue. Shouldn't we also check that
+> > > > it was initially in the list? Something like:
+> > > > 
+> > > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > > > index d4394ae4e5be..0be0136adaa6 100644
+> > > > --- a/mm/memcontrol.c
+> > > > +++ b/mm/memcontrol.c
+> > > > @@ -5289,6 +5289,7 @@ static int mem_cgroup_move_account(struct page *page,
+> > > >  	struct pglist_data *pgdat;
+> > > >  	unsigned long flags;
+> > > >  	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
+> > > > +	bool split = false;
+> > > >  	int ret;
+> > > >  	bool anon;
+> > > >  
+> > > > @@ -5346,6 +5347,7 @@ static int mem_cgroup_move_account(struct page *page,
+> > > >  		if (!list_empty(page_deferred_list(page))) {
+> > > >  			list_del_init(page_deferred_list(page));
+> > > >  			from->deferred_split_queue.split_queue_len--;
+> > > > +			split = true;
+> > > >  		}
+> > > >  		spin_unlock(&from->deferred_split_queue.split_queue_lock);
+> > > >  	}
+> > > > @@ -5360,7 +5362,7 @@ static int mem_cgroup_move_account(struct page *page,
+> > > >  	page->mem_cgroup = to;
+> > > >  
+> > > >  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> > > > -	if (compound) {
+> > > > +	if (compound && split) {
+> > > >  		spin_lock(&to->deferred_split_queue.split_queue_lock);
+> > > >  		if (list_empty(page_deferred_list(page))) {
+> > > >  			list_add_tail(page_deferred_list(page),
+> > > > 
+> > > 
+> > > I think that's a good point, especially considering that the current code 
+> > > appears to unconditionally place any compound page on the deferred split 
+> > > queue of the destination memcg.  The correct list that it should appear 
+> > > on, I believe, depends on whether the pmd has been split for the process 
+> > > being moved: note the MC_TARGET_PAGE caveat in 
+> > > mem_cgroup_move_charge_pte_range() that does not move the charge for 
+> > > compound pages with split pmds.  So when mem_cgroup_move_account() is 
+> > > called with compound == true, we're moving the charge of the entire 
+> > > compound page: why would it appear on that memcg's deferred split queue?
+> > 
+> > I believe Kirill asked how do we know that the page should be actually
+> > added to the deferred list just from the list_empty check. In other
+> > words what if the page hasn't been split at all?
+> > 
+> 
+> Right, and I don't think that it necessarily is and the second 
+> conditional in Wei's patch will always succeed unless we have raced.  That 
+> patch is for a lock concern but I think Kirill's question has uncovered 
+> something more interesting.
+> 
+> Kirill S would definitely be best to answer Kirill T's question, but from 
+> my understanding when mem_cgroup_move_account() is called with 
+> compound == true that we always have an intact pmd (we never migrate 
+> partial page charges for pages on the deferred split queue with the 
+> current charge migration implementation) and thus the underlying page is 
+> not eligible to be split and shouldn't be on the deferred split queue.
+> 
+> In other words, a page being on the deferred split queue for a memcg 
+> should only happen when it is charged to that memcg.  (This wasn't the 
+> case when we only had per-node split queues.)  I think that's currently 
+> broken in mem_cgroup_move_account() before Wei's patch.
+
+Right. It's broken indeed.
+
+We are dealing with anon page here. And it cannot be on deferred list as
+long as it's mapped with PMD. We cannot get compound == true &&
+!list_empty() on the (first) enter to the function. Any PMD-mapped page
+will be put onto deferred by the function. This is wrong.
+
+The fix is not obvious.
+
+This comment got in mem_cgroup_move_charge_pte_range() my attention:
+
+			/*
+			 * We can have a part of the split pmd here. Moving it
+			 * can be done but it would be too convoluted so simply
+			 * ignore such a partial THP and keep it in original
+			 * memcg. There should be somebody mapping the head.
+			 */
+
+That's exactly the case we care about: PTE-mapped THP that has to be split
+under load. We don't move charge of them between memcgs and therefore we
+should not move the page to different memcg.
+
+I guess this will do the trick :P
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c5b5f74cfd4d..e87ee4c10f6e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5359,14 +5359,6 @@ static int mem_cgroup_move_account(struct page *page,
+ 		__mod_lruvec_state(to_vec, NR_WRITEBACK, nr_pages);
+ 	}
+ 
+-#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-	if (compound && !list_empty(page_deferred_list(page))) {
+-		spin_lock(&from->deferred_split_queue.split_queue_lock);
+-		list_del_init(page_deferred_list(page));
+-		from->deferred_split_queue.split_queue_len--;
+-		spin_unlock(&from->deferred_split_queue.split_queue_lock);
+-	}
+-#endif
+ 	/*
+ 	 * It is safe to change page->mem_cgroup here because the page
+ 	 * is referenced, charged, and isolated - we can't race with
+@@ -5376,16 +5368,6 @@ static int mem_cgroup_move_account(struct page *page,
+ 	/* caller should have done css_get */
+ 	page->mem_cgroup = to;
+ 
+-#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-	if (compound && list_empty(page_deferred_list(page))) {
+-		spin_lock(&to->deferred_split_queue.split_queue_lock);
+-		list_add_tail(page_deferred_list(page),
+-			      &to->deferred_split_queue.split_queue);
+-		to->deferred_split_queue.split_queue_len++;
+-		spin_unlock(&to->deferred_split_queue.split_queue_lock);
+-	}
+-#endif
+-
+ 	spin_unlock_irqrestore(&from->move_lock, flags);
+ 
+ 	ret = 0;
+-- 
+ Kirill A. Shutemov
