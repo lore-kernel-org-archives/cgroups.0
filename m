@@ -1,150 +1,33 @@
-From: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-next] BUILD SUCCESS
- 0c10e327ee039a156c0cbc2ddbf2a1f7d5e23633
-Date: Fri, 17 Jan 2020 21:46:02 +0800
-Message-ID: <5e21ba9a.icP53A8EWz388FmS%lkp@intel.com>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
+Subject: [PATCH 0/3] cgroup: Iterate tasks that did not finish do_exit()
+Date: Fri, 17 Jan 2020 16:15:30 +0100
+Message-ID: <20200117151533.12381-1-mkoutny@suse.com>
+References: <20200116043612.52782-1-surenb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20200116043612.52782-1-surenb@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="macroman"
+To: cgroups@vger.kernel.org
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, alex.shi@linux.alibaba.com, guro@fb.com, kernel-team@android.com, linger.lee@mediatek.com, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, linux-mediatek@lists.infradead.org, matthias.bgg@gmail.com, shuah@kernel.org, tomcherry@google.com
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git  for-next
-branch HEAD: 0c10e327ee039a156c0cbc2ddbf2a1f7d5e23633  Merge branch 'for-5.6' into for-next
-
-elapsed time: 1960m
-
-configs tested: 121
-configs skipped: 1
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-arc                              allyesconfig
-arc                                 defconfig
-microblaze                      mmu_defconfig
-microblaze                    nommu_defconfig
-powerpc                           allnoconfig
-powerpc                             defconfig
-powerpc                       ppc64_defconfig
-powerpc                          rhel-kconfig
-um                                  defconfig
-um                             i386_defconfig
-um                           x86_64_defconfig
-s390                              allnoconfig
-s390                             alldefconfig
-s390                          debug_defconfig
-s390                             allmodconfig
-s390                                defconfig
-s390                       zfcpdump_defconfig
-s390                             allyesconfig
-csky                 randconfig-a001-20200117
-openrisc             randconfig-a001-20200117
-s390                 randconfig-a001-20200117
-sh                   randconfig-a001-20200117
-xtensa               randconfig-a001-20200117
-h8300                     edosk2674_defconfig
-h8300                    h8300h-sim_defconfig
-h8300                       h8s-sim_defconfig
-m68k                             allmodconfig
-m68k                       m5475evb_defconfig
-m68k                          multi_defconfig
-m68k                           sun3_defconfig
-alpha                               defconfig
-csky                                defconfig
-nds32                             allnoconfig
-nds32                               defconfig
-c6x                              allyesconfig
-c6x                        evmc6678_defconfig
-nios2                         10m50_defconfig
-nios2                         3c120_defconfig
-openrisc                    or1ksim_defconfig
-openrisc                 simple_smp_defconfig
-xtensa                       common_defconfig
-xtensa                          iss_defconfig
-arc                  randconfig-a001-20200116
-arm                  randconfig-a001-20200116
-arm64                randconfig-a001-20200116
-ia64                 randconfig-a001-20200116
-powerpc              randconfig-a001-20200116
-sparc                randconfig-a001-20200116
-x86_64                              fedora-25
-x86_64                                  kexec
-x86_64                                    lkp
-x86_64                                   rhel
-x86_64                               rhel-7.6
-arm                              allmodconfig
-arm                               allnoconfig
-arm                              allyesconfig
-arm                         at91_dt_defconfig
-arm                           efm32_defconfig
-arm                          exynos_defconfig
-arm                        multi_v5_defconfig
-arm                        multi_v7_defconfig
-arm                        shmobile_defconfig
-arm                           sunxi_defconfig
-arm64                            allmodconfig
-arm64                             allnoconfig
-arm64                            allyesconfig
-arm64                               defconfig
-ia64                                defconfig
-i386                              allnoconfig
-i386                                defconfig
-i386                             alldefconfig
-parisc                        c3000_defconfig
-parisc                         b180_defconfig
-parisc                              defconfig
-parisc                            allnoconfig
-riscv                            allmodconfig
-riscv                             allnoconfig
-riscv                            allyesconfig
-riscv                               defconfig
-riscv                    nommu_virt_defconfig
-riscv                          rv32_defconfig
-sparc64              randconfig-a001-20200117
-microblaze           randconfig-a001-20200117
-nios2                randconfig-a001-20200117
-c6x                  randconfig-a001-20200117
-h8300                randconfig-a001-20200117
-ia64                             allmodconfig
-ia64                              allnoconfig
-ia64                             allyesconfig
-ia64                             alldefconfig
-alpha                randconfig-a001-20200116
-m68k                 randconfig-a001-20200116
-mips                 randconfig-a001-20200116
-nds32                randconfig-a001-20200116
-parisc               randconfig-a001-20200116
-riscv                randconfig-a001-20200116
-sparc64                          allmodconfig
-sparc                            allyesconfig
-sparc64                          allyesconfig
-sparc                               defconfig
-sparc64                           allnoconfig
-sparc64                             defconfig
-parisc                            allyesonfig
-mips                           32r2_defconfig
-mips                         64r6el_defconfig
-mips                             allmodconfig
-mips                              allnoconfig
-mips                             allyesconfig
-mips                      fuloong2e_defconfig
-mips                      malta_kvm_defconfig
-x86_64               randconfig-d001-20200116
-x86_64               randconfig-d002-20200116
-x86_64               randconfig-d003-20200116
-i386                 randconfig-d001-20200116
-i386                 randconfig-d002-20200116
-i386                 randconfig-d003-20200116
-sh                               allmodconfig
-sh                                allnoconfig
-sh                          rsk7269_defconfig
-sh                  sh7785lcr_32bit_defconfig
-sh                            titan_defconfig
-
----
-0-DAY kernel test infrastructure                 Open Source Technology Center
-https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org Intel Corporation
+SGksCkkgd2FzIGxvb2tpbmcgaW50byB0aGUgaXNzdWUgYW5kIGNhbWUgdXAgd2l0aCBhbiBhbHRl
+cm5hdGl2ZSBzb2x1dGlvbiB0aGF0CmNoYW5nZXMgdGFzayBpdGVyYXRpb24gdG8gYmUgY29uc2lz
+dGVudCB3aXRoIGNncm91cF9pc19wb3B1bGF0ZWQoKSBjaGVjayBhbmQKbW92aW5nIHRoZSByZXNw
+b25zaWJpbGl0eSB0byBjaGVjayBQRl9FWElUSU5HIG9uIHRoZSBjb25zdW1lcnMgb2YgaXRlcmF0
+b3IgQVBJLgoKSSBoYXZlbid0IGNoZWNrIHlvdXIgYXBwcm9hY2ggdGhvcm91Z2hseSwgaG93ZXZl
+ciwgaXQgYXBwZWFycyB0byBtZSBpdApjb21wbGljYXRlcyAoYWxyZWFkeSBub24tdHJpdmlhbCkg
+Y2dyb3VwIGRlc3RydWN0aW9uIHBhdGguIEkgcmFuIHlvdXIgc2VsZnRlc3QKb24gdGhlIGl0ZXJh
+dG9ycyBhcHByb2FjaCBhbmQgaXQgcHJvdmVkIHdvcmtpbmcuCgpNaWNoYWwgS291dG7DvSAoMik6
+CiAgY2dyb3VwOiBVbmlmeSBjc3Nfc2V0IHRhc2sgbGlzdHMKICBjZ3JvdXA6IEl0ZXJhdGUgdGFz
+a3MgdGhhdCBkaWQgbm90IGZpbmlzaCBkb19leGl0KCkKClN1cmVuIEJhZ2hkYXNhcnlhbiAoMSk6
+CiAga3NlbGZ0ZXN0L2Nncm91cDogYWRkIGNncm91cCBkZXN0cnVjdGlvbiB0ZXN0CgogaW5jbHVk
+ZS9saW51eC9jZ3JvdXAtZGVmcy5oICAgICAgICAgICAgICAgIHwgIDE1ICsrLQogaW5jbHVkZS9s
+aW51eC9jZ3JvdXAuaCAgICAgICAgICAgICAgICAgICAgIHwgICA0ICstCiBrZXJuZWwvY2dyb3Vw
+L2Nncm91cC5jICAgICAgICAgICAgICAgICAgICAgfCAgODYgKysrKysrKystLS0tLS0tLQoga2Vy
+bmVsL2Nncm91cC9kZWJ1Zy5jICAgICAgICAgICAgICAgICAgICAgIHwgIDE2ICsrLQogdG9vbHMv
+dGVzdGluZy9zZWxmdGVzdHMvY2dyb3VwL3Rlc3RfY29yZS5jIHwgMTEzICsrKysrKysrKysrKysr
+KysrKysrKwogNSBmaWxlcyBjaGFuZ2VkLCAxNzYgaW5zZXJ0aW9ucygrKSwgNTggZGVsZXRpb25z
+KC0pCgotLSAKMi4yNC4xCgo=
