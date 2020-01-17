@@ -1,72 +1,66 @@
-From: Mina Almasry <almasrymina@google.com>
-Subject: Re: [PATCH v10 2/8] hugetlb_cgroup: add interface for charge/uncharge
- hugetlb reservations
-Date: Fri, 17 Jan 2020 11:34:38 -0800
-Message-ID: <CAHS8izMRrOOMV3v3gEuFHcX-YfQ5YOywGFu+K4-9zMXrAGFYbQ@mail.gmail.com>
-References: <20200115012651.228058-1-almasrymina@google.com>
- <20200115012651.228058-2-almasrymina@google.com> <7e1d2c5f-3b07-4d16-9e1b-bd89d25e7fb3@oracle.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH cgroup/for-5.6] iocost: Fix iocost_monitor.py due to helper
+ type mismatch
+Date: Fri, 17 Jan 2020 11:58:42 -0800
+Message-ID: <20200117195842.GL2677547@devbig004.ftw2.facebook.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=wnbjoT0j5ag9BS3W7d99gmYHDerGz9fZIduxI8d9DlM=;
-        b=TT8zNjpuzdDlDWtxUF3ROPfakHa88TVeTCCzR5vCXgxUY7gnjtDdV908bvnyE5y4oV
-         QU36Uh70B8zBcLbEC5WsV9OQuSgknaM4MnZ+6jDRyDTKzq1HngpAdAAs3mElPkgX1Ngs
-         w8RxWNVZZmLjGd/pbBFQ57NF0JHpuxd7a1wSLqAAJwqSwurny5s+HaCNXAxlSd2TrGbE
-         I0HJnlRsjj6jLQu5Cu7qeoUYEz1c4KM83fzEb63Qt4ALXNdDhAqG60fYhmckugqonIpN
-         Q31HLAuMmqxdrdOBjnJmAuE2XH93asNdBTd9rXjxonqLYa1bomCyyydoau0rPmn4pocx
-         0aNQ==
-In-Reply-To: <7e1d2c5f-3b07-4d16-9e1b-bd89d25e7fb3@oracle.com>
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=sPdxpH8MyQUiW9CeltxFRckECiJJQpVH4BhIsZDdF38=;
+        b=mByunD+oO3XP1Dvhlmwzm3IO5l5bbxtR7KUnDCY2fpWJT/NmUuwRdNyextOSNzsTbh
+         p1gZ8nAYOytmy0hv1bgACpmjM4b3notpx/+JJTVlex00JnhTF7bGcNsjcI/THfBE3Qyo
+         R4rAF4E7PF6FZQMtIJ8e8X575u4L5RanoVjGr8A+00GRsQpGRq2o9krqCew2n/JGLYeO
+         20sgCShe0s/t7ZZUPjr96nhEyqh0hdnY/kK0QJKAQOo5qftObgn04Tn1AlWqtR34mnJ/
+         6kM0MiKYxqsyaC8byA0bW/WnqYXKH9thF+JXmJSwOK4jmHgKVglXwUZpsMXZvfnjFqYl
+         I4Kg==
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mike Kravetz <mike.kravetz@oracle.com>
-Cc: David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, shuah <shuah@kernel.org>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>
+To: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Omar Sandoval <osandov@fb.com>, kernel-team@fb.com
 
-On Fri, Jan 17, 2020 at 11:26 AM Mike Kravetz <mike.kravetz@oracle.com> wrote:
->
-> On 1/14/20 5:26 PM, Mina Almasry wrote:
-> > Augments hugetlb_cgroup_charge_cgroup to be able to charge hugetlb
-> > usage or hugetlb reservation counter.
-> >
-> > Adds a new interface to uncharge a hugetlb_cgroup counter via
-> > hugetlb_cgroup_uncharge_counter.
-> >
-> > Integrates the counter with hugetlb_cgroup, via hugetlb_cgroup_init,
-> > hugetlb_cgroup_have_usage, and hugetlb_cgroup_css_offline.
-> >
-> > Signed-off-by: Mina Almasry <almasrymina@google.com>
-> >
-> > ---
-> >
-> > Changes in v10:
-> > - Added missing VM_BUG_ON
->
-> Thanks for addressing my comments.
-> I see that patch 8 was updated to address David's comments.  I will also
-> review patch 8 later.
->
-> I am again requesting that someone with more cgroup experience comment on
-> this patch.  I do not have enough experience to determine if the code to
-> not reparent/zombie cgroup is correct.
->
+From 9ea37e24d4a95dd934a0600d65caa25e409705bb Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Fri, 17 Jan 2020 11:54:35 -0800
 
-Thank you very much for your continued reviews and I'm sorry I'm
-having so much trouble getting anyone with cgroup experience to look
-deeply into this. My guess is that it's not very active feature and
-the patchseries is long and complex so folks are not interested.
-Nevertheless I'm continually poking David and Shakeel and they will
-hopefully continue to look into this.
+iocost_monitor.py broke with recent versions of drgn due to helper
+being stricter about types.  Fix it so that it uses the correct type.
 
-FWIW, I have a test for repartenting/counting zombies and the tests at
-least don't uncover any problems.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Suggested-by: Omar Sandoval <osandov@fb.com>
+---
+Applied to cgroup/for-5.6.
 
-> For now,
-> Acked-by: Mike Kravetz <mike.kravetz@oracle.com>
-> while waiting for cgroup comments.
->
-> --
-> Mike Kravetz
+ tools/cgroup/iocost_monitor.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/tools/cgroup/iocost_monitor.py b/tools/cgroup/iocost_monitor.py
+index f79b23582a1d..7427a5ee761b 100644
+--- a/tools/cgroup/iocost_monitor.py
++++ b/tools/cgroup/iocost_monitor.py
+@@ -72,7 +72,7 @@ autop_names = {
+         name = BlkgIterator.blkcg_name(blkcg)
+         path = parent_path + '/' + name if parent_path else name
+         blkg = drgn.Object(prog, 'struct blkcg_gq',
+-                           address=radix_tree_lookup(blkcg.blkg_tree, q_id))
++                           address=radix_tree_lookup(blkcg.blkg_tree.address_of_(), q_id))
+         if not blkg.address_:
+             return
+ 
+@@ -228,7 +228,7 @@ q_id = None
+ root_iocg = None
+ ioc = None
+ 
+-for i, ptr in radix_tree_for_each(blkcg_root.blkg_tree):
++for i, ptr in radix_tree_for_each(blkcg_root.blkg_tree.address_of_()):
+     blkg = drgn.Object(prog, 'struct blkcg_gq', address=ptr)
+     try:
+         if devname == blkg.q.kobj.parent.name.string_().decode('utf-8'):
+-- 
+2.17.1
+
