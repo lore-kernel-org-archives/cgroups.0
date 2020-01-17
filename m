@@ -1,65 +1,98 @@
 From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 2/3] clone3: allow spawning processes into cgroups
-Date: Fri, 17 Jan 2020 00:57:22 +0100
-Message-ID: <20200116235721.tnadjblifqirg5bo@wittgenstein>
-References: <20191223061504.28716-1-christian.brauner@ubuntu.com>
- <20191223061504.28716-3-christian.brauner@ubuntu.com>
- <20200108160102.GA17415@blackbody.suse.cz>
- <20200108181049.ysmo73celrt4bvo2@wittgenstein>
+Subject: [PATCH v3 2/5] cgroup: add cgroup_get_from_file() helper
+Date: Fri, 17 Jan 2020 01:21:40 +0100
+Message-ID: <20200117002143.15559-3-christian.brauner@ubuntu.com>
+References: <20200117002143.15559-1-christian.brauner@ubuntu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20200108181049.ysmo73celrt4bvo2@wittgenstein>
+In-Reply-To: <20200117002143.15559-1-christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jan 08, 2020 at 07:10:49PM +0100, Christian Brauner wrote:
-> On Wed, Jan 08, 2020 at 05:01:02PM +0100, Michal Koutn=C3=BD wrote:
-> > On Mon, Dec 23, 2019 at 07:15:03AM +0100, Christian Brauner <christian.=
-brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> wrote:
-> > > This adds support for creating a process in a different cgroup than i=
-ts
-> > > parent.
-> > Binding fork and migration together looks useful.
-> >=20
-> > > --- a/kernel/cgroup/cgroup.c
-> > > +++ b/kernel/cgroup/cgroup.c
-> > > @@ -5882,21 +5882,176 @@ void cgroup_fork(struct task_struct *child)
-> > >  	INIT_LIST_HEAD(&child->cg_list);
-> > Just a nitpick, I noticed the comment for cgroup_fork should be updated
-> > too (generic migration happens in cgroup_post_fork).
->=20
-> Thanks.
->=20
-> >=20
-> > > --- a/kernel/fork.c
-> > > +++ b/kernel/fork.c
-> > > [...]
-> > > @@ -2279,8 +2278,7 @@ static __latent_entropy struct task_struct *cop=
-y_process(
-> > >  	write_unlock_irq(&tasklist_lock);
-> > > =20
-> > >  	proc_fork_connector(p);
-> > > -	cgroup_post_fork(p);
-> > > -	cgroup_threadgroup_change_end(current);
-> > > +	cgroup_post_fork(current, p, args);
-> > I can see that when CLONE_INTO_CGROUP | CLONE_NEWCGROUP is passed, then
-> > the child's cgroup NS will be rooted at parent's css set
-> > (copy_namespaces precedes cgroup_post_fork).
-> >=20
-> > Wouldn't it make better sense if this flags combination resulted in
-> > child's NS rooted in its css set?
->=20
-> I need to take a closer look but it sounds like we should move the
-> copying of the cgroup namespace to a later point; but again I need to
-> look into this.
+Add a helper cgroup_get_from_file(). The helper will be used in
+subsequent patches to retrieve a cgroup while holding a reference to the
+struct file it was taken from.
 
-Ok, this is way simpler I think, we just set the root_cset of the new
-cgroup namespace to the child's cset in cgroup_post_fork() if
-CLONE_NEWCGROUP is requested.
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+---
+/* v1 */
+patch not present
 
-Christian
+/* v2 */
+patch not present
+
+/* v3 */
+patch introduced
+- Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>:
+  - split cgroup_get_from_file() changes into separate commmit
+---
+ kernel/cgroup/cgroup.c | 30 +++++++++++++++++++-----------
+ 1 file changed, 19 insertions(+), 11 deletions(-)
+
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index ad1f9fea5c14..f05efc2677c8 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -5882,6 +5882,24 @@ void cgroup_fork(struct task_struct *child)
+ 	INIT_LIST_HEAD(&child->cg_list);
+ }
+ 
++static struct cgroup *cgroup_get_from_file(struct file *f)
++{
++	struct cgroup_subsys_state *css;
++	struct cgroup *cgrp;
++
++	css = css_tryget_online_from_dir(f->f_path.dentry, NULL);
++	if (IS_ERR(css))
++		return ERR_CAST(css);
++
++	cgrp = css->cgroup;
++	if (!cgroup_on_dfl(cgrp)) {
++		cgroup_put(cgrp);
++		return ERR_PTR(-EBADF);
++	}
++
++	return cgrp;
++}
++
+ /**
+  * cgroup_can_fork - called on a new task before the process is exposed
+  * @child: the task in question.
+@@ -6170,7 +6188,6 @@ EXPORT_SYMBOL_GPL(cgroup_get_from_path);
+  */
+ struct cgroup *cgroup_get_from_fd(int fd)
+ {
+-	struct cgroup_subsys_state *css;
+ 	struct cgroup *cgrp;
+ 	struct file *f;
+ 
+@@ -6178,17 +6195,8 @@ struct cgroup *cgroup_get_from_fd(int fd)
+ 	if (!f)
+ 		return ERR_PTR(-EBADF);
+ 
+-	css = css_tryget_online_from_dir(f->f_path.dentry, NULL);
++	cgrp = cgroup_get_from_file(f);
+ 	fput(f);
+-	if (IS_ERR(css))
+-		return ERR_CAST(css);
+-
+-	cgrp = css->cgroup;
+-	if (!cgroup_on_dfl(cgrp)) {
+-		cgroup_put(cgrp);
+-		return ERR_PTR(-EBADF);
+-	}
+-
+ 	return cgrp;
+ }
+ EXPORT_SYMBOL_GPL(cgroup_get_from_fd);
+-- 
+2.25.0
+
