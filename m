@@ -1,58 +1,105 @@
-From: madhuparnabhowmik10-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Subject: [PATCH] cgroup.c: Use built-in RCU list checking
-Date: Sat, 18 Jan 2020 08:40:51 +0530
-Message-ID: <20200118031051.28776-1-madhuparnabhowmik10@gmail.com>
+From: Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [Patch v4] mm: thp: remove the defer list related code since this
+ will not happen
+Date: Fri, 17 Jan 2020 21:30:45 -0800
+Message-ID: <25e1226a-9cce-6a75-f0e9-b42f5afa22da@linux.alibaba.com>
+References: <20200117233836.3434-1-richardw.yang@linux.intel.com>
+ <e73272a8-87e9-5e22-4f78-588b640f4fc4@linux.alibaba.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=kCkFnYkawO75Slclr1NGNbFjc/K/Z8ax1mgdyxXyluc=;
-        b=kFFMSn6GQbVrsB7xcz6GHNYsvWVsZtZLtyarkvcW4Qjn8R2Vlklx5fkrNTwwRZulTD
-         Jjnj/FKMP1+IzHx8ruolwTiB6z+Z3Y8NZWo1QTXIis3LaKm2v0/NYOdnner2pO9hrV3U
-         Ock9seKbMjAL63Xn7eeqrCFS6F4e3bYHJIFHESFv0x7zzpG5oh2xf5aR0alR+kcSYnxC
-         LG9Aeugqhvwf/kv2MkGt9FH7Y2RXdgoKAowTagWQUeVtagogRbE2cDQ/xhduU5oOB2Hz
-         CMgcvKpqoCE6iquWtUM+Fqj57BHjyIdrVoGA6eEf5Rud/K6I9FFqrL1asp7kDWRlW57+
-         0S7A==
+In-Reply-To: <e73272a8-87e9-5e22-4f78-588b640f4fc4-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Content-Language: en-US
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org, rcu-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, frextrite-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Madhuparna Bhowmik <madhuparnabhowmik10-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+To: Wei Yang <richardw.yang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, ktkhai-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org, kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Madhuparna Bhowmik <madhuparnabhowmik10-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-list_for_each_entry_rcu has built-in RCU and lock checking.
-Pass cond argument to list_for_each_entry_rcu() to silence
-false lockdep warning when  CONFIG_PROVE_RCU_LIST is enabled
-by default.
 
-Even though the function css_next_child() already checks if
-cgroup_mutex or rcu_read_lock() is held using
-cgroup_assert_mutex_or_rcu_locked(), there is a need to pass
-cond to list_for_each_entry_rcu() to avoid false positive
-lockdep warning.
+On 1/17/20 4:57 PM, Yang Shi wrote:
+>
+>
+> On 1/17/20 3:38 PM, Wei Yang wrote:
+>> If compound is true, this means it is a PMD mapped THP. Which implies
+>> the page is not linked to any defer list. So the first code chunk will
+>> not be executed.
+>>
+>> Also with this reason, it would not be proper to add this page to a
+>> defer list. So the second code chunk is not correct.
+>>
+>> Based on this, we should remove the defer list related code.
+>>
+>> Fixes: 87eaceb3faa5 ("mm: thp: make deferred split shrinker memcg 
+>> aware")
+>>
+>> Signed-off-by: Wei Yang <richardw.yang-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+>> Suggested-by: Kirill A. Shutemov <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+>> Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>    [5.4+]
+>>
+>> ---
+>> v4:
+>>    * finally we identified the related code is not necessary and not
+>>      correct, just remove it
+>>    * thanks to Kirill T first spot some problem
+>
+> Thanks for debugging and figuring this out. Acked-by: Yang Shi 
+> <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 
-Signed-off-by: Madhuparna Bhowmik <madhuparnabhowmik10-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
- kernel/cgroup/cgroup.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+BTW, the patch itself is fine, but the subject looks really confusing. 
+It sounds like we would remove all deferred list code. I'd suggest 
+rephrase it to:
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 735af8f15f95..c2959764ad95 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -4152,7 +4152,8 @@ struct cgroup_subsys_state *css_next_child(struct cgroup_subsys_state *pos,
- 	} else if (likely(!(pos->flags & CSS_RELEASED))) {
- 		next = list_entry_rcu(pos->sibling.next, struct cgroup_subsys_state, sibling);
- 	} else {
--		list_for_each_entry_rcu(next, &parent->children, sibling)
-+		list_for_each_entry_rcu(next, &parent->children, sibling,
-+					lockdep_is_held(&cgroup_mutex))
- 			if (next->serial_nr > pos->serial_nr)
- 				break;
- 	}
--- 
-2.17.1
+mm: thp: don't need care deferred split queue in memcg charge move path
+
+>
+>> v3:
+>>    * remove all review/ack tag since rewrite the changelog
+>>    * use deferred_split_huge_page as the example of race
+>>    * add cc stable 5.4+ tag as suggested by David Rientjes
+>>
+>> v2:
+>>    * move check on compound outside suggested by Alexander
+>>    * an example of the race condition, suggested by Michal
+>> ---
+>>   mm/memcontrol.c | 18 ------------------
+>>   1 file changed, 18 deletions(-)
+>>
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index 6c83cf4ed970..27c231bf4565 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -5340,14 +5340,6 @@ static int mem_cgroup_move_account(struct page 
+>> *page,
+>>           __mod_lruvec_state(to_vec, NR_WRITEBACK, nr_pages);
+>>       }
+>>   -#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+>> -    if (compound && !list_empty(page_deferred_list(page))) {
+>> - spin_lock(&from->deferred_split_queue.split_queue_lock);
+>> -        list_del_init(page_deferred_list(page));
+>> -        from->deferred_split_queue.split_queue_len--;
+>> - spin_unlock(&from->deferred_split_queue.split_queue_lock);
+>> -    }
+>> -#endif
+>>       /*
+>>        * It is safe to change page->mem_cgroup here because the page
+>>        * is referenced, charged, and isolated - we can't race with
+>> @@ -5357,16 +5349,6 @@ static int mem_cgroup_move_account(struct page 
+>> *page,
+>>       /* caller should have done css_get */
+>>       page->mem_cgroup = to;
+>>   -#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+>> -    if (compound && list_empty(page_deferred_list(page))) {
+>> - spin_lock(&to->deferred_split_queue.split_queue_lock);
+>> -        list_add_tail(page_deferred_list(page),
+>> - &to->deferred_split_queue.split_queue);
+>> -        to->deferred_split_queue.split_queue_len++;
+>> - spin_unlock(&to->deferred_split_queue.split_queue_lock);
+>> -    }
+>> -#endif
+>> -
+>>       spin_unlock_irqrestore(&from->move_lock, flags);
+>>         ret = 0;
+>
 
