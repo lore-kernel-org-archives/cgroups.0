@@ -1,263 +1,226 @@
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
-Subject: Re: [PATCH RFC 3/3] drm/ttm: support memcg for ttm_tt
-Date: Sun, 19 Jan 2020 14:03:58 +0100
-Message-ID: <0164fcbf-393a-237f-69d7-aa26dabe6ad9@amd.com>
-References: <20200113153543.24957-1-qiang.yu@amd.com>
- <20200113153543.24957-4-qiang.yu@amd.com>
- <f2075f28-94a2-1206-ba58-a3a6a32393f3@amd.com>
- <CAKGbVbv7P-S_NUYpqQ5opDbXBHRb4rq6m95372nOuZ8kMvGnBQ@mail.gmail.com>
+From: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:for-5.6] BUILD SUCCESS
+ 9ea37e24d4a95dd934a0600d65caa25e409705bb
+Date: Mon, 20 Jan 2020 01:31:00 +0800
+Message-ID: <5e249254.NBZ2jtXZ0hKyu27B%lkp@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=amdcloud.onmicrosoft.com; s=selector2-amdcloud-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0Lc3KPrSxN4ypxUGuaIhLzwAb/+yrCobaCHQgDGRk9Q=;
- b=iWTCYkYeY7NTtgfDfHmx4h66voULX2xbgR06XKj/F0tgzopXvax2aWlCfEuYAGwKNR/mKmJzVVFS8QvbjfEjtneF4zDzuP0mzEfrpFusRQZeNd/Yh8faEggDGYTeM0CUnS8VUzasAYQlVASKHlhMq0NiIMUgWYP/XbS1Zx46RKQ=
-In-Reply-To: <CAKGbVbv7P-S_NUYpqQ5opDbXBHRb4rq6m95372nOuZ8kMvGnBQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: en-US
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Qiang Yu <yuq825-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Qiang Yu <qiang.yu-5C7GfCeVMHo@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Kenny Ho <kenny.ho-5C7GfCeVMHo@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Huang Rui <ray.huang-5C7GfCeVMHo@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Am 19.01.20 um 03:47 schrieb Qiang Yu:
-> On Mon, Jan 13, 2020 at 11:56 PM Christian K=C3=B6nig
-> <christian.koenig-5C7GfCeVMHo@public.gmane.org> wrote:
->> Am 13.01.20 um 16:35 schrieb Qiang Yu:
->>> Charge TTM allocated system memory to memory cgroup which will
->>> limit the memory usage of a group of processes.
->> NAK to the whole approach. This belongs into the GEM or driver layer,
->> but not into TTM.
->>
-> Sorry for responding late.
->
-> GEM layer seems not a proper place to handle this as:
-> 1. it is not aware of the back storage (system mem or device mem) unless
-> we add this information up to GEM which I think is not appropriate
-> 2. system memory allocated by GEM with drm_gem_get_pages() is already
-> charged to memcg, it's only the ttm system memory not charged to memcg
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git  for-5.6
+branch HEAD: 9ea37e24d4a95dd934a0600d65caa25e409705bb  iocost: Fix iocost_monitor.py due to helper type mismatch
 
-The key point is that we already discussed this on the mailing list and=20
-GEM was agreed on to be the right place for this.
+elapsed time: 2436m
 
-That's the reason why the Intel developers already proposed a way to=20
-expose the buffer location in GEM.
+configs tested: 197
+configs skipped: 0
 
-Please sync up with Kenny who is leading the development efforts and=20
-with the Intel developers before warming up an old discussion again.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Adding that to TTM is an absolute no-go from my maintainers perspective.
+x86_64               randconfig-g001-20200119
+x86_64               randconfig-g002-20200119
+x86_64               randconfig-g003-20200119
+i386                 randconfig-g001-20200119
+i386                 randconfig-g002-20200119
+i386                 randconfig-g003-20200119
+x86_64               randconfig-c001-20200119
+x86_64               randconfig-c002-20200119
+x86_64               randconfig-c003-20200119
+i386                 randconfig-c001-20200119
+i386                 randconfig-c002-20200119
+i386                 randconfig-c003-20200119
+i386                             allyesconfig
+sh                               allmodconfig
+sh                                allnoconfig
+sh                          rsk7269_defconfig
+sh                  sh7785lcr_32bit_defconfig
+sh                            titan_defconfig
+alpha                               defconfig
+csky                                defconfig
+nds32                             allnoconfig
+nds32                               defconfig
+x86_64               randconfig-f001-20200119
+x86_64               randconfig-f002-20200119
+x86_64               randconfig-f003-20200119
+i386                 randconfig-f001-20200119
+i386                 randconfig-f002-20200119
+i386                 randconfig-f003-20200119
+microblaze                      mmu_defconfig
+um                             i386_defconfig
+x86_64               randconfig-e001-20200119
+x86_64               randconfig-e002-20200119
+x86_64               randconfig-e003-20200119
+i386                 randconfig-e001-20200119
+i386                 randconfig-e002-20200119
+i386                 randconfig-e003-20200119
+arm                              allmodconfig
+arm64                            allmodconfig
+parisc                            allnoconfig
+parisc                            allyesonfig
+parisc                         b180_defconfig
+parisc                        c3000_defconfig
+parisc                              defconfig
+arc                              allyesconfig
+arc                                 defconfig
+microblaze                    nommu_defconfig
+powerpc                           allnoconfig
+powerpc                             defconfig
+powerpc                       ppc64_defconfig
+powerpc                          rhel-kconfig
+alpha                randconfig-a001-20200119
+m68k                 randconfig-a001-20200119
+mips                 randconfig-a001-20200119
+nds32                randconfig-a001-20200119
+parisc               randconfig-a001-20200119
+riscv                randconfig-a001-20200119
+i386                             alldefconfig
+i386                              allnoconfig
+i386                                defconfig
+x86_64               randconfig-h001-20200119
+x86_64               randconfig-h002-20200119
+x86_64               randconfig-h003-20200119
+i386                 randconfig-h001-20200119
+i386                 randconfig-h002-20200119
+i386                 randconfig-h003-20200119
+x86_64                                    lkp
+x86_64                                   rhel
+x86_64                               rhel-7.6
+x86_64                              fedora-25
+x86_64                                  kexec
+arc                  randconfig-a001-20200119
+arm                  randconfig-a001-20200119
+arm64                randconfig-a001-20200119
+ia64                 randconfig-a001-20200119
+powerpc              randconfig-a001-20200119
+sparc                randconfig-a001-20200119
+h8300                     edosk2674_defconfig
+h8300                    h8300h-sim_defconfig
+h8300                       h8s-sim_defconfig
+m68k                             allmodconfig
+m68k                       m5475evb_defconfig
+m68k                          multi_defconfig
+m68k                           sun3_defconfig
+sparc                            allyesconfig
+x86_64               randconfig-b001-20200119
+x86_64               randconfig-b002-20200119
+x86_64               randconfig-b003-20200119
+i386                 randconfig-b001-20200119
+i386                 randconfig-b002-20200119
+i386                 randconfig-b003-20200119
+mips                           32r2_defconfig
+mips                         64r6el_defconfig
+mips                             allmodconfig
+mips                              allnoconfig
+mips                             allyesconfig
+mips                      fuloong2e_defconfig
+mips                      malta_kvm_defconfig
+c6x                              allyesconfig
+c6x                        evmc6678_defconfig
+nios2                         10m50_defconfig
+nios2                         3c120_defconfig
+openrisc                    or1ksim_defconfig
+openrisc                 simple_smp_defconfig
+xtensa                       common_defconfig
+xtensa                          iss_defconfig
+sparc                               defconfig
+sparc64                          allmodconfig
+sparc64                           allnoconfig
+sparc64                          allyesconfig
+sparc64                             defconfig
+csky                 randconfig-a001-20200119
+openrisc             randconfig-a001-20200119
+s390                 randconfig-a001-20200119
+sh                   randconfig-a001-20200119
+xtensa               randconfig-a001-20200119
+ia64                             alldefconfig
+ia64                             allmodconfig
+ia64                              allnoconfig
+ia64                             allyesconfig
+ia64                                defconfig
+c6x                  randconfig-a001-20200119
+h8300                randconfig-a001-20200119
+microblaze           randconfig-a001-20200119
+nios2                randconfig-a001-20200119
+sparc64              randconfig-a001-20200119
+x86_64               randconfig-d001-20200119
+x86_64               randconfig-d002-20200119
+x86_64               randconfig-d003-20200119
+i386                 randconfig-d001-20200119
+i386                 randconfig-d002-20200119
+i386                 randconfig-d003-20200119
+x86_64               randconfig-a001-20200119
+x86_64               randconfig-a002-20200119
+x86_64               randconfig-a003-20200119
+i386                 randconfig-a001-20200119
+i386                 randconfig-a002-20200119
+i386                 randconfig-a003-20200119
+arm                               allnoconfig
+arm                              allyesconfig
+arm                         at91_dt_defconfig
+arm                           efm32_defconfig
+arm                          exynos_defconfig
+arm                        multi_v5_defconfig
+arm                        multi_v7_defconfig
+arm                        shmobile_defconfig
+arm                           sunxi_defconfig
+arm64                             allnoconfig
+arm64                            allyesconfig
+arm64                               defconfig
+um                                  defconfig
+um                           x86_64_defconfig
+alpha                randconfig-a001-20200118
+m68k                 randconfig-a001-20200118
+mips                 randconfig-a001-20200118
+nds32                randconfig-a001-20200118
+parisc               randconfig-a001-20200118
+riscv                randconfig-a001-20200118
+riscv                            allmodconfig
+riscv                             allnoconfig
+riscv                            allyesconfig
+riscv                               defconfig
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+x86_64               randconfig-b001-20200118
+x86_64               randconfig-b002-20200118
+x86_64               randconfig-b003-20200118
+i386                 randconfig-b001-20200118
+i386                 randconfig-b002-20200118
+i386                 randconfig-b003-20200118
+x86_64               randconfig-d001-20200118
+x86_64               randconfig-d002-20200118
+x86_64               randconfig-d003-20200118
+i386                 randconfig-d001-20200118
+i386                 randconfig-d002-20200118
+i386                 randconfig-d003-20200118
+s390                             alldefconfig
+s390                             allmodconfig
+s390                              allnoconfig
+s390                             allyesconfig
+s390                          debug_defconfig
+s390                                defconfig
+s390                       zfcpdump_defconfig
+csky                 randconfig-a001-20200118
+openrisc             randconfig-a001-20200118
+s390                 randconfig-a001-20200118
+sh                   randconfig-a001-20200118
+xtensa               randconfig-a001-20200118
+c6x                  randconfig-a001-20200118
+h8300                randconfig-a001-20200118
+microblaze           randconfig-a001-20200118
+nios2                randconfig-a001-20200118
+sparc64              randconfig-a001-20200118
+c6x                  randconfig-a001-20200120
+h8300                randconfig-a001-20200120
+microblaze           randconfig-a001-20200120
+nios2                randconfig-a001-20200120
+sparc64              randconfig-a001-20200120
 
->
-> Implement in driver like amdgpu is an option. But seems the problem is in=
-side
-> TTM which does not charge pages allocated by itself to memcg, won't it be
-> better to solve it in TTM so that all drivers using it can benefit? Or yo=
-u just
-> think we should not rely on memcg for GPU system memory limitation?
->
->>> The memory is always charged to the control group of task which
->>> create this buffer object and when it's created. For example,
->>> when a buffer is created by process A and exported to process B,
->>> then process B populate this buffer, the memory is still charged
->>> to process A's memcg; if a buffer is created by process A when in
->>> memcg B, then A is moved to memcg C and populate this buffer, it
->>> will charge memcg B.
->> This is actually the most common use case for graphics application where
->> the X server allocates most of the backing store.
->>
->> So we need a better handling than just accounting the memory to whoever
->> allocated it first.
->>
-> You mean the application based on DRI2 and X11 protocol draw? I think this
-> is still reasonable to charge xserver for the memory, because xserver all=
-ocate
-> the buffer and share to application which is its design and implementation
-> nature. With DRI3, the buffer is allocated by application, also
-> suitable for this
-> approach.
-
-That is a way to simplistic.
-
-Again we already discussed this and the agreed compromise is to charge=20
-the application which is using the memory and not who has allocated it.
-
-So you need to add the charge on importing a buffer and not just when it=20
-is created.
-
-Regards,
-Christian.
-
->
-> Regards,
-> Qiang
->
->> Regards,
->> Christian.
->>
->>> Signed-off-by: Qiang Yu <qiang.yu-5C7GfCeVMHo@public.gmane.org>
->>> ---
->>>    drivers/gpu/drm/ttm/ttm_bo.c         | 10 ++++++++++
->>>    drivers/gpu/drm/ttm/ttm_page_alloc.c | 18 +++++++++++++++++-
->>>    drivers/gpu/drm/ttm/ttm_tt.c         |  3 +++
->>>    include/drm/ttm/ttm_bo_api.h         |  5 +++++
->>>    include/drm/ttm/ttm_tt.h             |  4 ++++
->>>    5 files changed, 39 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/gpu/drm/ttm/ttm_bo.c b/drivers/gpu/drm/ttm/ttm_bo.c
->>> index 8d91b0428af1..4e64846ee523 100644
->>> --- a/drivers/gpu/drm/ttm/ttm_bo.c
->>> +++ b/drivers/gpu/drm/ttm/ttm_bo.c
->>> @@ -42,6 +42,7 @@
->>>    #include <linux/module.h>
->>>    #include <linux/atomic.h>
->>>    #include <linux/dma-resv.h>
->>> +#include <linux/memcontrol.h>
->>>
->>>    static void ttm_bo_global_kobj_release(struct kobject *kobj);
->>>
->>> @@ -162,6 +163,10 @@ static void ttm_bo_release_list(struct kref *list_=
-kref)
->>>        if (!ttm_bo_uses_embedded_gem_object(bo))
->>>                dma_resv_fini(&bo->base._resv);
->>>        mutex_destroy(&bo->wu_mutex);
->>> +#ifdef CONFIG_MEMCG
->>> +     if (bo->memcg)
->>> +             css_put(&bo->memcg->css);
->>> +#endif
->>>        bo->destroy(bo);
->>>        ttm_mem_global_free(&ttm_mem_glob, acc_size);
->>>    }
->>> @@ -1330,6 +1335,11 @@ int ttm_bo_init_reserved(struct ttm_bo_device *b=
-dev,
->>>        }
->>>        atomic_inc(&ttm_bo_glob.bo_count);
->>>
->>> +#ifdef CONFIG_MEMCG
->>> +     if (bo->type =3D=3D ttm_bo_type_device)
->>> +             bo->memcg =3D mem_cgroup_driver_get_from_current();
->>> +#endif
->>> +
->>>        /*
->>>         * For ttm_bo_type_device buffers, allocate
->>>         * address space from the device.
->>> diff --git a/drivers/gpu/drm/ttm/ttm_page_alloc.c b/drivers/gpu/drm/ttm=
-/ttm_page_alloc.c
->>> index b40a4678c296..ecd1831a1d38 100644
->>> --- a/drivers/gpu/drm/ttm/ttm_page_alloc.c
->>> +++ b/drivers/gpu/drm/ttm/ttm_page_alloc.c
->>> @@ -42,7 +42,7 @@
->>>    #include <linux/seq_file.h> /* for seq_printf */
->>>    #include <linux/slab.h>
->>>    #include <linux/dma-mapping.h>
->>> -
->>> +#include <linux/memcontrol.h>
->>>    #include <linux/atomic.h>
->>>
->>>    #include <drm/ttm/ttm_bo_driver.h>
->>> @@ -1045,6 +1045,11 @@ ttm_pool_unpopulate_helper(struct ttm_tt *ttm, u=
-nsigned mem_count_update)
->>>        ttm_put_pages(ttm->pages, ttm->num_pages, ttm->page_flags,
->>>                      ttm->caching_state);
->>>        ttm->state =3D tt_unpopulated;
->>> +
->>> +#ifdef CONFIG_MEMCG
->>> +     if (ttm->memcg)
->>> +             mem_cgroup_uncharge_drvmem(ttm->memcg, ttm->num_pages);
->>> +#endif
->>>    }
->>>
->>>    int ttm_pool_populate(struct ttm_tt *ttm, struct ttm_operation_ctx *=
-ctx)
->>> @@ -1059,6 +1064,17 @@ int ttm_pool_populate(struct ttm_tt *ttm, struct=
- ttm_operation_ctx *ctx)
->>>        if (ttm_check_under_lowerlimit(mem_glob, ttm->num_pages, ctx))
->>>                return -ENOMEM;
->>>
->>> +#ifdef CONFIG_MEMCG
->>> +     if (ttm->memcg) {
->>> +             gfp_t gfp_flags =3D GFP_USER;
->>> +             if (ttm->page_flags & TTM_PAGE_FLAG_NO_RETRY)
->>> +                     gfp_flags |=3D __GFP_RETRY_MAYFAIL;
->>> +             ret =3D mem_cgroup_charge_drvmem(ttm->memcg, gfp_flags, t=
-tm->num_pages);
->>> +             if (ret)
->>> +                     return ret;
->>> +     }
->>> +#endif
->>> +
->>>        ret =3D ttm_get_pages(ttm->pages, ttm->num_pages, ttm->page_flag=
-s,
->>>                            ttm->caching_state);
->>>        if (unlikely(ret !=3D 0)) {
->>> diff --git a/drivers/gpu/drm/ttm/ttm_tt.c b/drivers/gpu/drm/ttm/ttm_tt.c
->>> index e0e9b4f69db6..1acb153084e1 100644
->>> --- a/drivers/gpu/drm/ttm/ttm_tt.c
->>> +++ b/drivers/gpu/drm/ttm/ttm_tt.c
->>> @@ -233,6 +233,9 @@ void ttm_tt_init_fields(struct ttm_tt *ttm, struct =
-ttm_buffer_object *bo,
->>>        ttm->state =3D tt_unpopulated;
->>>        ttm->swap_storage =3D NULL;
->>>        ttm->sg =3D bo->sg;
->>> +#ifdef CONFIG_MEMCG
->>> +     ttm->memcg =3D bo->memcg;
->>> +#endif
->>>    }
->>>
->>>    int ttm_tt_init(struct ttm_tt *ttm, struct ttm_buffer_object *bo,
->>> diff --git a/include/drm/ttm/ttm_bo_api.h b/include/drm/ttm/ttm_bo_api.h
->>> index 65e399d280f7..95a08e81a73e 100644
->>> --- a/include/drm/ttm/ttm_bo_api.h
->>> +++ b/include/drm/ttm/ttm_bo_api.h
->>> @@ -54,6 +54,8 @@ struct ttm_place;
->>>
->>>    struct ttm_lru_bulk_move;
->>>
->>> +struct mem_cgroup;
->>> +
->>>    /**
->>>     * struct ttm_bus_placement
->>>     *
->>> @@ -180,6 +182,9 @@ struct ttm_buffer_object {
->>>        void (*destroy) (struct ttm_buffer_object *);
->>>        unsigned long num_pages;
->>>        size_t acc_size;
->>> +#ifdef CONFIG_MEMCG
->>> +     struct mem_cgroup *memcg;
->>> +#endif
->>>
->>>        /**
->>>        * Members not needing protection.
->>> diff --git a/include/drm/ttm/ttm_tt.h b/include/drm/ttm/ttm_tt.h
->>> index c0e928abf592..10fb5a557b95 100644
->>> --- a/include/drm/ttm/ttm_tt.h
->>> +++ b/include/drm/ttm/ttm_tt.h
->>> @@ -33,6 +33,7 @@ struct ttm_tt;
->>>    struct ttm_mem_reg;
->>>    struct ttm_buffer_object;
->>>    struct ttm_operation_ctx;
->>> +struct mem_cgroup;
->>>
->>>    #define TTM_PAGE_FLAG_WRITE           (1 << 3)
->>>    #define TTM_PAGE_FLAG_SWAPPED         (1 << 4)
->>> @@ -116,6 +117,9 @@ struct ttm_tt {
->>>                tt_unbound,
->>>                tt_unpopulated,
->>>        } state;
->>> +#ifdef CONFIG_MEMCG
->>> +     struct mem_cgroup *memcg;
->>> +#endif
->>>    };
->>>
->>>    /**
->> _______________________________________________
->> dri-devel mailing list
->> dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
->> https://nam11.safelinks.protection.outlook.com/?url=3Dhttps%3A%2F%2Flist=
-s.freedesktop.org%2Fmailman%2Flistinfo%2Fdri-devel&amp;data=3D02%7C01%7Cchr=
-istian.koenig%40amd.com%7C5d3b70a43b80444c550808d79c89e968%7C3dd8961fe4884e=
-608e11a82d994e183d%7C0%7C0%7C637149988466853762&amp;sdata=3Dni3ku7nC%2FD5E8=
-kivppfuuF7ZoiyfLQ8L3Y4j9IfHYUU%3D&amp;reserved=3D0
-
+---
+0-DAY kernel test infrastructure                 Open Source Technology Center
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org Intel Corporation
