@@ -1,171 +1,91 @@
-From: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-next] BUILD INCOMPLETE
- c00ec3075b3aab38dd8fb674a8ccfbb08a3090ea
-Date: Mon, 20 Jan 2020 09:10:02 +0800
-Message-ID: <5e24fdea.0EjUS2V02ntPB60Z%lkp@intel.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [Patch v4] mm: thp: remove the defer list related code since
+ this will not happen
+Date: Mon, 20 Jan 2020 08:22:37 +0100
+Message-ID: <20200120072237.GA18451@dhcp22.suse.cz>
+References: <20200117233836.3434-1-richardw.yang@linux.intel.com>
+ <20200118145421.0ab96d5d9bea21a3339d52fe@linux-foundation.org>
+ <alpine.DEB.2.21.2001181525250.27051@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.21.2001181525250.27051@chino.kir.corp.google.com>
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Wei Yang <richardw.yang@linux.intel.com>, hannes@cmpxchg.org, vdavydov.dev@gmail.com, ktkhai@virtuozzo.com, kirill.shutemov@linux.intel.com, yang.shi@linux.alibaba.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, alexander.duyck@gmail.com, stable@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git  for-next
-branch HEAD: c00ec3075b3aab38dd8fb674a8ccfbb08a3090ea  Merge branch 'for-5.6' into for-next
+On Sat 18-01-20 15:36:06, David Rientjes wrote:
+> On Sat, 18 Jan 2020, Andrew Morton wrote:
+> 
+> > On Sat, 18 Jan 2020 07:38:36 +0800 Wei Yang <richardw.yang@linux.intel.com> wrote:
+> > 
+> > > If compound is true, this means it is a PMD mapped THP. Which implies
+> > > the page is not linked to any defer list. So the first code chunk will
+> > > not be executed.
+> > > 
+> > > Also with this reason, it would not be proper to add this page to a
+> > > defer list. So the second code chunk is not correct.
+> > > 
+> > > Based on this, we should remove the defer list related code.
+> > > 
+> > > Fixes: 87eaceb3faa5 ("mm: thp: make deferred split shrinker memcg aware")
+> > > 
+> > > Signed-off-by: Wei Yang <richardw.yang@linux.intel.com>
+> > > Suggested-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+> > > Cc: <stable@vger.kernel.org>    [5.4+]
+> > 
+> > This patch is identical to "mm: thp: grab the lock before manipulating
+> > defer list", which is rather confusing.  Please let people know when
+> > this sort of thing is done.
+> > 
+> > The earlier changelog mentioned a possible race condition.  This
+> > changelog does not.  In fact this changelog fails to provide any
+> > description of any userspace-visible runtime effects of the bug. 
+> > Please send along such a description for inclusion, as always.
+> > 
+> 
+> The locking concern that Wei was originally looking at is no longer an 
+> issue because we determined that the code in question could simply be 
+> removed.
+> 
+> I think the following can be added to the changelog:
+> 
+> ----->o-----
+> 
+> When migrating memcg charges of thp memory, there are two possibilities:
+> 
+>  (1) The underlying compound page is mapped by a pmd and thus does is not 
+>      on a deferred split queue (it's mapped), or
+> 
+>  (2) The compound page is not mapped by a pmd and is awaiting split on a
+>      deferred split queue.
+> 
+> The current charge migration implementation does *not* migrate charges for 
+> thp memory on the deferred split queue, it only migrates charges for pages 
+> that are mapped by a pmd.
+> 
+> Thus, to migrate charges, the underlying compound page cannot be on a 
+> deferred split queue; no list manipulation needs to be done in 
+> mem_cgroup_move_account().
+> 
+> With the current code, the underlying compound page is moved to the 
+> deferred split queue of the memcg its memory is not charged to, so 
+> susbequent reclaim will consider these pages for the wrong memcg.  Remove 
+> the deferred split queue handling in mem_cgroup_move_account() entirely.
 
-TIMEOUT after 2895m
+I believe this still doesn't describe the underlying problem to the full
+extent. What happens with the page on the deferred list when it
+shouldn't be there in fact? Unless I am missing something deferred_split_scan
+will simply split that huge page. Which is a bit unfortunate but nothing
+really critical. This should be mentioned in the changelog.
 
+With that clarified, feel free to add
 
-Sorry we cannot finish the testset for your branch within a reasonable time.
-It's our fault -- either some build server is down or some build worker is busy
-doing bisects for _other_ trees. The branch will get more complete coverage and
-possible error reports when our build infrastructure is restored or catches up.
-There will be no more build success notification for this branch head, but you
-can expect reasonably good test coverage after waiting for 1 day.
+Acked-by: Michal Hocko <mhocko@suse.com>
 
-configs timed out: 10
-
-i386                             alldefconfig
-i386                              allnoconfig
-i386                             allyesconfig
-i386                                defconfig
-riscv                            allmodconfig
-riscv                             allnoconfig
-riscv                            allyesconfig
-riscv                               defconfig
-riscv                    nommu_virt_defconfig
-riscv                          rv32_defconfig
-
-configs tested: 124
-configs skipped: 0
-
-arm                         at91_dt_defconfig
-arm64                               defconfig
-arm                        multi_v5_defconfig
-arm64                            allyesconfig
-arm                               allnoconfig
-arm                           efm32_defconfig
-arm                           sunxi_defconfig
-arm64                             allnoconfig
-arm64                            allmodconfig
-arm                          exynos_defconfig
-arm                        shmobile_defconfig
-arm                        multi_v7_defconfig
-sh                               allmodconfig
-sh                                allnoconfig
-sh                          rsk7269_defconfig
-sh                  sh7785lcr_32bit_defconfig
-sh                            titan_defconfig
-alpha                               defconfig
-csky                                defconfig
-nds32                             allnoconfig
-nds32                               defconfig
-arc                              allyesconfig
-arc                                 defconfig
-microblaze                      mmu_defconfig
-microblaze                    nommu_defconfig
-powerpc                           allnoconfig
-powerpc                             defconfig
-powerpc                       ppc64_defconfig
-powerpc                          rhel-kconfig
-ia64                             alldefconfig
-ia64                             allmodconfig
-ia64                              allnoconfig
-ia64                             allyesconfig
-ia64                                defconfig
-alpha                randconfig-a001-20200118
-m68k                 randconfig-a001-20200118
-mips                 randconfig-a001-20200118
-nds32                randconfig-a001-20200118
-parisc               randconfig-a001-20200118
-riscv                randconfig-a001-20200118
-c6x                              allyesconfig
-c6x                        evmc6678_defconfig
-nios2                         10m50_defconfig
-nios2                         3c120_defconfig
-openrisc                    or1ksim_defconfig
-openrisc                 simple_smp_defconfig
-xtensa                       common_defconfig
-xtensa                          iss_defconfig
-x86_64                              fedora-25
-x86_64                                  kexec
-x86_64                                    lkp
-x86_64                                   rhel
-x86_64                               rhel-7.6
-x86_64               randconfig-b001-20200118
-x86_64               randconfig-b002-20200118
-x86_64               randconfig-b003-20200118
-i386                 randconfig-b001-20200118
-i386                 randconfig-b002-20200118
-i386                 randconfig-b003-20200118
-x86_64               randconfig-d001-20200118
-x86_64               randconfig-d002-20200118
-x86_64               randconfig-d003-20200118
-i386                 randconfig-d001-20200118
-i386                 randconfig-d002-20200118
-i386                 randconfig-d003-20200118
-parisc                            allnoconfig
-parisc                            allyesonfig
-parisc                         b180_defconfig
-parisc                        c3000_defconfig
-parisc                              defconfig
-sparc                            allyesconfig
-sparc                               defconfig
-sparc64                          allmodconfig
-sparc64                           allnoconfig
-sparc64                          allyesconfig
-sparc64                             defconfig
-csky                 randconfig-a001-20200118
-openrisc             randconfig-a001-20200118
-s390                 randconfig-a001-20200118
-sh                   randconfig-a001-20200118
-xtensa               randconfig-a001-20200118
-c6x                  randconfig-a001-20200118
-h8300                randconfig-a001-20200118
-microblaze           randconfig-a001-20200118
-nios2                randconfig-a001-20200118
-sparc64              randconfig-a001-20200118
-s390                              allnoconfig
-s390                             alldefconfig
-s390                          debug_defconfig
-s390                             allmodconfig
-s390                                defconfig
-s390                       zfcpdump_defconfig
-s390                             allyesconfig
-um                                  defconfig
-um                             i386_defconfig
-um                           x86_64_defconfig
-arm                              allmodconfig
-arm                              allyesconfig
-x86_64               randconfig-e001-20200118
-i386                 randconfig-e001-20200118
-i386                 randconfig-e002-20200118
-x86_64               randconfig-e002-20200118
-x86_64               randconfig-e003-20200118
-i386                 randconfig-e003-20200118
-arm64                randconfig-a001-20200120
-powerpc              randconfig-a001-20200120
-ia64                 randconfig-a001-20200120
-arm                  randconfig-a001-20200120
-arc                  randconfig-a001-20200120
-sparc                randconfig-a001-20200120
-h8300                     edosk2674_defconfig
-h8300                    h8300h-sim_defconfig
-h8300                       h8s-sim_defconfig
-m68k                             allmodconfig
-m68k                       m5475evb_defconfig
-m68k                          multi_defconfig
-m68k                           sun3_defconfig
-mips                           32r2_defconfig
-mips                         64r6el_defconfig
-mips                             allmodconfig
-mips                              allnoconfig
-mips                             allyesconfig
-mips                      fuloong2e_defconfig
-mips                      malta_kvm_defconfig
-
----
-0-DAY kernel test infrastructure                 Open Source Technology Center
-https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org Intel Corporation
+-- 
+Michal Hocko
+SUSE Labs
