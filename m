@@ -1,49 +1,44 @@
-From: Oleg Nesterov <oleg@redhat.com>
+From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH v4 3/6] cgroup: refactor fork helpers
-Date: Mon, 20 Jan 2020 15:22:03 +0100
-Message-ID: <20200120142202.GC30403@redhat.com>
+Date: Mon, 20 Jan 2020 15:33:30 +0100
+Message-ID: <20200120143329.o7cmmemfqexk3x37@wittgenstein>
 References: <20200117181219.14542-1-christian.brauner@ubuntu.com>
  <20200117181219.14542-4-christian.brauner@ubuntu.com>
  <20200120140029.GB30403@redhat.com>
  <20200120140452.qyjogmmhyqc3gxon@wittgenstein>
+ <20200120142202.GC30403@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1579530129;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=PWUAb8tz3AF3amrWTTvwK6sWsIt1KM7KTKlRn37IBoI=;
-        b=DhyAIzlXBQJX48Nrtt9eyRBpojky86u6rI3fU1wFLsYUxMb3F2Ig1pZVMsXNrQWJr7D+W7
-        kFxNWl6qo89TvoYDrB0UIUNyjU5FZJ6DQpvYRKR7vtcmiU4IsDo2PmMs3IDqz/pO+X80JX
-        DiwnbLZrHFlVC/SKz2rfQ083rS6+o2I=
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20200120140452.qyjogmmhyqc3gxon@wittgenstein>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20200120142202.GC30403-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christian Brauner <christian.brauner@ubuntu.com>
-Cc: linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org
+To: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 01/20, Christian Brauner wrote:
->
-> On Mon, Jan 20, 2020 at 03:00:30PM +0100, Oleg Nesterov wrote:
-> > This is probably the only patch in series I can understand ;)
+On Mon, Jan 20, 2020 at 03:22:03PM +0100, Oleg Nesterov wrote:
+> On 01/20, Christian Brauner wrote:
 > >
-> > To me it looks like a good cleanup regardless, but
-> >
-> > On 01/17, Christian Brauner wrote:
+> > On Mon, Jan 20, 2020 at 03:00:30PM +0100, Oleg Nesterov wrote:
+> > > This is probably the only patch in series I can understand ;)
 > > >
-> > > The patch just passes in the parent task_struct
+> > > To me it looks like a good cleanup regardless, but
+> > >
+> > > On 01/17, Christian Brauner wrote:
+> > > >
+> > > > The patch just passes in the parent task_struct
+> > >
+> > > For what? "parent" is always "current", no?
 > >
-> > For what? "parent" is always "current", no?
->
-> Yes. What exactly are you hinting at? :) Would you prefer that the
-> commit message speaks of "current" instead of "parent"?
+> > Yes. What exactly are you hinting at? :) Would you prefer that the
+> > commit message speaks of "current" instead of "parent"?
+> 
+> I meant, I don't understand why did you add the new "parent" arg,
+> cgroup_xxx_fork() can simply use "current" ?
 
-I meant, I don't understand why did you add the new "parent" arg,
-cgroup_xxx_fork() can simply use "current" ?
+There's no specific reason behind it. I don't care much whether it's an
+arg or we just grab current in each helper directly.
 
-Oleg.
-
+Christian
