@@ -1,93 +1,105 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [Patch v4] mm: thp: remove the defer list related code since
- this will not happen
-Date: Wed, 22 Jan 2020 09:14:06 +0100
-Message-ID: <20200122081406.GO29276@dhcp22.suse.cz>
-References: <20200117233836.3434-1-richardw.yang@linux.intel.com>
- <20200118145421.0ab96d5d9bea21a3339d52fe@linux-foundation.org>
- <alpine.DEB.2.21.2001181525250.27051@chino.kir.corp.google.com>
- <20200120072237.GA18451@dhcp22.suse.cz>
- <alpine.DEB.2.21.2001201307520.259466@chino.kir.corp.google.com>
- <20200120212726.GB29276@dhcp22.suse.cz>
- <alpine.DEB.2.21.2001211500250.157547@chino.kir.corp.google.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH v8 03/10] mm/lru: replace pgdat lru_lock with lruvec lock
+Date: Wed, 22 Jan 2020 20:01:29 +0800
+Message-ID: <0bd0a561-93cc-11b6-1eae-24b450b0f033@linux.alibaba.com>
+References: <1579143909-156105-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1579143909-156105-4-git-send-email-alex.shi@linux.alibaba.com>
+ <20200116215222.GA64230@cmpxchg.org>
+ <9ee80b68-a78f-714a-c727-1f6d2b4f87ea@linux.alibaba.com>
+ <20200121160005.GA69293@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.21.2001211500250.157547@chino.kir.corp.google.com>
-Sender: stable-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200121160005.GA69293-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Wei Yang <richardw.yang@linux.intel.com>, hannes@cmpxchg.org, vdavydov.dev@gmail.com, ktkhai@virtuozzo.com, kirill.shutemov@linux.intel.com, yang.shi@linux.alibaba.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, alexander.duyck@gmail.com, stable@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Qian Cai <cai-J5quhbR+WMc@public.gmane.org>, Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Aneesh Ku
 
-On Tue 21-01-20 15:08:39, David Rientjes wrote:
-> On Mon, 20 Jan 2020, Michal Hocko wrote:
+
+
+在 2020/1/22 上午12:00, Johannes Weiner 写道:
+> On Mon, Jan 20, 2020 at 08:58:09PM +0800, Alex Shi wrote:
+>>
+>>
+>> 在 2020/1/17 上午5:52, Johannes Weiner 写道:
+>>
+>>> You simply cannot serialize on page->mem_cgroup->lruvec when
+>>> page->mem_cgroup isn't stable. You need to serialize on the page
+>>> itself, one way or another, to make this work.
+>>>
+>>>
+>>> So here is a crazy idea that may be worth exploring:
+>>>
+>>> Right now, pgdat->lru_lock protects both PageLRU *and* the lruvec's
+>>> linked list.
+>>>
+>>> Can we make PageLRU atomic and use it to stabilize the lru_lock
+>>> instead, and then use the lru_lock only serialize list operations?
+>>>
+>>
+>> Hi Johannes,
+>>
+>> I am trying to figure out the solution of atomic PageLRU, but is 
+>> blocked by the following sitations, when PageLRU and lru list was protected
+>> together under lru_lock, the PageLRU could be a indicator if page on lru list
+>> But now seems it can't be the indicator anymore.
+>> Could you give more clues of stabilization usage of PageLRU?
 > 
-> > > > > When migrating memcg charges of thp memory, there are two possibilities:
-> > > > > 
-> > > > >  (1) The underlying compound page is mapped by a pmd and thus does is not 
-> > > > >      on a deferred split queue (it's mapped), or
-> > > > > 
-> > > > >  (2) The compound page is not mapped by a pmd and is awaiting split on a
-> > > > >      deferred split queue.
-> > > > > 
-> > > > > The current charge migration implementation does *not* migrate charges for 
-> > > > > thp memory on the deferred split queue, it only migrates charges for pages 
-> > > > > that are mapped by a pmd.
-> > > > > 
-> > > > > Thus, to migrate charges, the underlying compound page cannot be on a 
-> > > > > deferred split queue; no list manipulation needs to be done in 
-> > > > > mem_cgroup_move_account().
-> > > > > 
-> > > > > With the current code, the underlying compound page is moved to the 
-> > > > > deferred split queue of the memcg its memory is not charged to, so 
-> > > > > susbequent reclaim will consider these pages for the wrong memcg.  Remove 
-> > > > > the deferred split queue handling in mem_cgroup_move_account() entirely.
-> > > > 
-> > > > I believe this still doesn't describe the underlying problem to the full
-> > > > extent. What happens with the page on the deferred list when it
-> > > > shouldn't be there in fact? Unless I am missing something deferred_split_scan
-> > > > will simply split that huge page. Which is a bit unfortunate but nothing
-> > > > really critical. This should be mentioned in the changelog.
-> > > > 
-> > > 
-> > > Are you referring to a compound page on the deferred split queue before a 
-> > > task is moved?  I'm not sure this is within the scope of Wei's patch.. 
-> > > this is simply preventing a page from being moved to the deferred split
-> > > queue of a memcg that it is not charged to.  Is there a concern about why 
-> > > this code can be removed or a suggestion on something else it should be 
-> > > doing instead?
-> > 
-> > No, I do not have any concern about the patch itslef. It is that the
-> > changelog doesn't decribe the user visible effect. All I am saying is
-> > that the current code splits THPs of moved pages under memory pressure
-> > even if that is not needed. And that is a clear bug.
+> There are two types of PageLRU checks: optimistic and deterministic.
 > 
-> Ah, gotcha.  I tried to do this in the final paragraph of my amedment to 
-> Wei's patch and why it's important that this is marked as stable.
+> The check in activate_page() for example is optimistic and the result
+> unstable, but that's okay, because if we miss a page here and there
+> it's not the end of the world.
+> 
+> But the check in __activate_page() is deterministic, because we need
+> to be sure before del_page_from_lru_list(). Currently it's made
+> deterministic by testing under the lock: whoever acquires the lock
+> first gets to touch the LRU state. The same can be done with an atomic
+> TestClearPagLRU: whoever clears the flag first gets to touch the LRU
+> state (the lock is then only acquired to not corrupt the linked list,
+> in case somebody adds or removes a different page at the same time).
 
-I considered "susbequent reclaim will consider these pages for the wrong
-memcg." quite unclear TBH.
- 
-> The current code in 5.4 from commit 87eaceb3faa59 places any migrated 
-> compound page onto the deferred split queue of the destination memcg 
-> regardless of whether it has a mapping pmd 
-> (list_empty(page_deferred_list()) was already false) or it does not have a 
-> mapping pmd (but is now on the wrong queue).  For the latter, 
-> can_split_huge_page() can help for the actual split but not for the 
-> removal of the page that is now erroneously on the queue.
+Hi Johannes,
 
-Does that mean that those fully mapped THPs are not going to be split?
+Thanks a lot for detailed explanations! I just gonna to take 2 weeks holiday
+from tomorrow as Chinese new year season with families. I am very sorry for 
+can not hang on this for a while.
 
-> For the former, 
-> memcg reclaim would not see the pages that it should split under memcg 
-> pressure so we'll see the same memcg oom conditions we saw before the 
-> deferred split shrinker became SHRINKER_MEMCG_AWARE: unnecessary ooms.
+> 
+> I.e. in my proposal, if you want to get a stable read of PageLRU, you
+> have to clear it atomically. But AFAICS, everybody who currently does
+> need a stable read either already clears it or can easily be converted
+> to clear it and then set it again (like __activate_page and friends).
+> 
+>> __page_cache_release/release_pages/compaction            __pagevec_lru_add
+>> if (TestClearPageLRU(page))                              if (!PageLRU())
+>>                                                                 lruvec_lock();
+>>                                                                 list_add();
+>>         			                                lruvec_unlock();
+>>         			                                SetPageLRU() //position 1
+>>         lock_page_lruvec_irqsave(page, &flags);
+>>         del_page_from_lru_list(page, lruvec, ..);
+>>         unlock_page_lruvec_irqrestore(lruvec, flags);
+>>                                                                 SetPageLRU() //position 2
+> 
+> Hm, that's not how __pagevec_lru_add() looks. In fact,
+> __pagevec_lru_add_fn() has a BUG_ON(PageLRU).
+> 
+> That's because only one thread can own the isolation state at a time.
+> 
+> If PageLRU is set, only one thread can claim it. Right now, whoever
+> takes the lock first and clears it wins. When we replace it with
+> TestClearPageLRU, it's the same thing: only one thread can win.
+> 
+> And you cannot set PageLRU, unless you own it. Either you isolated the
+> page using TestClearPageLRU, or you allocated a new page.
 
-OK, this is yet another user visibile effect and it would be better to
-mention it explicitly in the changelog. 
+Yes I understand isolatation would exclusive by PageLRU, but forgive my
+stupid, I didn't figure out how a new page lruvec adding could be blocked.
 
--- 
-Michal Hocko
-SUSE Labs
+Anyway, I will try my best to catch up after holiday.
+
+Many thanks for nice cocaching!
+Alex
