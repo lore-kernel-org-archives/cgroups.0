@@ -1,60 +1,41 @@
-From: David Rientjes <rientjes@google.com>
-Subject: Re: [Patch v4] mm: thp: remove the defer list related code since
- this will not happen
-Date: Wed, 22 Jan 2020 15:39:16 -0800 (PST)
-Message-ID: <alpine.DEB.2.21.2001221534510.159514@chino.kir.corp.google.com>
-References: <20200117233836.3434-1-richardw.yang@linux.intel.com> <20200118145421.0ab96d5d9bea21a3339d52fe@linux-foundation.org> <alpine.DEB.2.21.2001181525250.27051@chino.kir.corp.google.com> <20200120072237.GA18451@dhcp22.suse.cz>
- <alpine.DEB.2.21.2001201307520.259466@chino.kir.corp.google.com> <20200120212726.GB29276@dhcp22.suse.cz> <alpine.DEB.2.21.2001211500250.157547@chino.kir.corp.google.com> <20200122081406.GO29276@dhcp22.suse.cz>
+From: Sandipan Das <sandipan-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+Subject: Re: [PATCH v10 7/8] hugetlb_cgroup: Add hugetlb_cgroup reservation
+ tests
+Date: Thu, 23 Jan 2020 14:45:34 +0530
+Message-ID: <7ce6d59f-fd73-c529-2ad6-edda9937966d@linux.ibm.com>
+References: <20200115012651.228058-1-almasrymina@google.com>
+ <20200115012651.228058-7-almasrymina@google.com>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=YNvajkPj2BUn62eVSIlq+7puNDrKQpZK5MXXRGczBsE=;
-        b=WZJFiO4NDHzrXRTXfEk15plzqfBCf/XF0WnvEGStfqkfZ8Fj/EQr8PPvQ1mLAYqSCP
-         v+tE914RPXI/94X6Y2Ek89gj39gHYxA1NTi3sKa6IgtxsqR7fEYjau6jIW00dazgJtqm
-         NZx1MnFTfqkmUSUZZeskkvhavOEJCNt5fV+mYrZt5vPpBAD/vBNFA/RgfJYLX8D9PJaA
-         G3KnjIHOycLCS+ldcv/ah1Uk5FmX3GkTjliBdERDyczvEhEsSyWkRdr9Dv0Y86tQcqZ1
-         /LhnvAT2PoZqjNrkdXKx4QNEIv+ukhBvwK0989ik3JobGkgCQ3qE+FM9Wjg3YeOp+dJQ
-         Gk/Q==
-In-Reply-To: <20200122081406.GO29276@dhcp22.suse.cz>
-Sender: stable-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200115012651.228058-7-almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Wei Yang <richardw.yang@linux.intel.com>, hannes@cmpxchg.org, vdavydov.dev@gmail.com, ktkhai@virtuozzo.com, kirill.shutemov@linux.intel.com, yang.shi@linux.alibaba.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, alexander.duyck@gmail.com, stable@vger.kernel.org
+To: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, aneesh.kumar-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
 
-On Wed, 22 Jan 2020, Michal Hocko wrote:
+Hi,
 
-> > The current code in 5.4 from commit 87eaceb3faa59 places any migrated 
-> > compound page onto the deferred split queue of the destination memcg 
-> > regardless of whether it has a mapping pmd 
-> > (list_empty(page_deferred_list()) was already false) or it does not have a 
-> > mapping pmd (but is now on the wrong queue).  For the latter, 
-> > can_split_huge_page() can help for the actual split but not for the 
-> > removal of the page that is now erroneously on the queue.
+On 15/01/20 6:56 am, Mina Almasry wrote:
+> The tests use both shared and private mapped hugetlb memory, and
+> monitors the hugetlb usage counter as well as the hugetlb reservation
+> counter. They test different configurations such as hugetlb memory usage
+> via hugetlbfs, or MAP_HUGETLB, or shmget/shmat, and with and without
+> MAP_POPULATE.
 > 
-> Does that mean that those fully mapped THPs are not going to be split?
+> Also add test for hugetlb reservation reparenting, since this is
+> a subtle issue.
 > 
-
-It believe it should but deferred_split_scan() also won't take it off the 
-wrong split queue so it will remain there and any other checks for 
-page_deferred_list(page) will succeed.
-
-> > For the former, 
-> > memcg reclaim would not see the pages that it should split under memcg 
-> > pressure so we'll see the same memcg oom conditions we saw before the 
-> > deferred split shrinker became SHRINKER_MEMCG_AWARE: unnecessary ooms.
-> 
-> OK, this is yet another user visibile effect and it would be better to
-> mention it explicitly in the changelog. 
+> Signed-off-by: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 > 
 
-Ok, feel free to add to the last paragraph:
+For powerpc64, either 16MB/16GB or 2MB/1GB huge pages are supported depending
+on the MMU type (Hash or Radix). I was just running these tests on a powerpc64
+system with Hash MMU and ran into problems because the tests assume that the
+hugepage size is always 2MB. Can you determine the huge page size at runtime?
 
-Memcg reclaim would not see the compound pages that it should split under 
-memcg pressure so we'll otherwise see the same memcg oom conditions we saw 
-before the deferred split shrinker became SHRINKER_MEMCG_AWARE: 
-unnecessary ooms.
+
+- Sandipan
+
