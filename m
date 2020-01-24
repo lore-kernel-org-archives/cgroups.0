@@ -1,93 +1,173 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-Subject: [PATCH v2 2/3] cgroup: Clean up css_set task traversal
-Date: Fri, 24 Jan 2020 12:40:16 +0100
-Message-ID: <20200124114017.8363-3-mkoutny@suse.com>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [PATCH v2 3/3] kselftest/cgroup: add cgroup destruction test
+Date: Fri, 24 Jan 2020 12:40:17 +0100
+Message-ID: <20200124114017.8363-4-mkoutny@suse.com>
 References: <20200120145635.GA30904@blackbody.suse.cz>
  <20200124114017.8363-1-mkoutny@suse.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200124114017.8363-1-mkoutny@suse.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200124114017.8363-1-mkoutny-IBi9RG/b67k@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: cgroups@vger.kernel.org
-Cc: alex.shi@linux.alibaba.com, guro@fb.com, hannes@cmpxchg.org, kernel-team@android.com, linger.lee@mediatek.com, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org, linux-mediatek@lists.infradead.org, lizefan@huawei.com, matthias.bgg@gmail.com, shuah@kernel.org, surenb@google.com, tj@kernel.org, tomcherry@google.com
+Content-Type: text/plain; charset="utf-8"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, linger.lee-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tomcherry-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-Y3NzX3Rhc2tfaXRlciBzdG9yZXMgcG9pbnRlciB0byBoZWFkIG9mIGVhY2ggaXRlcmFibGUgbGlz
-dCwgdGhpcyBkYXRlcwpiYWNrIHRvIGNvbW1pdCAwZjBhMmI0ZmE2MjEgKCJjZ3JvdXA6IHJlb3Jn
-YW5pemUgY3NzX3Rhc2tfaXRlciIpIHdoZW4gd2UKZGlkIG5vdCBzdG9yZSBjdXJfY3NldC4gTGV0
-IHVzIHV0aWxpemUgbGlzdCBoZWFkcyBkaXJlY3RseSBpbiBjdXJfY3NldAphbmQgc3RyZWFtbGlu
-ZSBjc3NfdGFza19pdGVyX2FkdmFuY2VfY3NzX3NldCBhIGJpdC4gVGhpcyBpcyBubwppbnRlbnRp
-b25hbCBmdW5jdGlvbiBjaGFuZ2UuCgpTaWduZWQtb2ZmLWJ5OiBNaWNoYWwgS291dG7DvSA8bWtv
-dXRueUBzdXNlLmNvbT4KLS0tCiBpbmNsdWRlL2xpbnV4L2Nncm91cC5oIHwgIDMgLS0tCiBrZXJu
-ZWwvY2dyb3VwL2Nncm91cC5jIHwgNjEgKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tCiAyIGZpbGVzIGNoYW5nZWQsIDI4IGluc2VydGlvbnMoKyksIDM2IGRlbGV0aW9u
-cygtKQoKZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvY2dyb3VwLmggYi9pbmNsdWRlL2xpbnV4
-L2Nncm91cC5oCmluZGV4IGU3NWQyMTkxMjI2Yi4uZjEyMTliOTI3ODE3IDEwMDY0NAotLS0gYS9p
-bmNsdWRlL2xpbnV4L2Nncm91cC5oCisrKyBiL2luY2x1ZGUvbGludXgvY2dyb3VwLmgKQEAgLTU4
-LDkgKzU4LDYgQEAgc3RydWN0IGNzc190YXNrX2l0ZXIgewogCXN0cnVjdCBsaXN0X2hlYWQJCSp0
-Y3NldF9oZWFkOwogCiAJc3RydWN0IGxpc3RfaGVhZAkJKnRhc2tfcG9zOwotCXN0cnVjdCBsaXN0
-X2hlYWQJCSp0YXNrc19oZWFkOwotCXN0cnVjdCBsaXN0X2hlYWQJCSptZ190YXNrc19oZWFkOwot
-CXN0cnVjdCBsaXN0X2hlYWQJCSpkeWluZ190YXNrc19oZWFkOwogCiAJc3RydWN0IGxpc3RfaGVh
-ZAkJKmN1cl90YXNrc19oZWFkOwogCXN0cnVjdCBjc3Nfc2V0CQkJKmN1cl9jc2V0OwpkaWZmIC0t
-Z2l0IGEva2VybmVsL2Nncm91cC9jZ3JvdXAuYyBiL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMKaW5k
-ZXggYTZlMzYxOWUwMTNiLi4xNGUwZTM2MGEyYjQgMTAwNjQ0Ci0tLSBhL2tlcm5lbC9jZ3JvdXAv
-Y2dyb3VwLmMKKysrIGIva2VybmVsL2Nncm91cC9jZ3JvdXAuYwpAQCAtNDM5NSwyOSArNDM5NSwy
-NCBAQCBzdGF0aWMgdm9pZCBjc3NfdGFza19pdGVyX2FkdmFuY2VfY3NzX3NldChzdHJ1Y3QgY3Nz
-X3Rhc2tfaXRlciAqaXQpCiAKIAlsb2NrZGVwX2Fzc2VydF9oZWxkKCZjc3Nfc2V0X2xvY2spOwog
-Ci0JLyogQWR2YW5jZSB0byB0aGUgbmV4dCBub24tZW1wdHkgY3NzX3NldCAqLwotCWRvIHsKLQkJ
-Y3NldCA9IGNzc190YXNrX2l0ZXJfbmV4dF9jc3Nfc2V0KGl0KTsKLQkJaWYgKCFjc2V0KSB7Ci0J
-CQlpdC0+dGFza19wb3MgPSBOVUxMOwotCQkJcmV0dXJuOworCS8qIEFkdmFuY2UgdG8gdGhlIG5l
-eHQgbm9uLWVtcHR5IGNzc19zZXQgYW5kIGZpbmQgZmlyc3Qgbm9uLWVtcHR5IHRhc2tzIGxpc3Qq
-LworCXdoaWxlICgoY3NldCA9IGNzc190YXNrX2l0ZXJfbmV4dF9jc3Nfc2V0KGl0KSkpIHsKKwkJ
-aWYgKCFsaXN0X2VtcHR5KCZjc2V0LT50YXNrcykpIHsKKwkJCWl0LT5jdXJfdGFza3NfaGVhZCA9
-ICZjc2V0LT50YXNrczsKKwkJCWJyZWFrOworCQl9IGVsc2UgaWYgKCFsaXN0X2VtcHR5KCZjc2V0
-LT5tZ190YXNrcykpIHsKKwkJCWl0LT5jdXJfdGFza3NfaGVhZCA9ICZjc2V0LT5tZ190YXNrczsK
-KwkJCWJyZWFrOworCQl9IGVsc2UgaWYgKCFsaXN0X2VtcHR5KCZjc2V0LT5keWluZ190YXNrcykp
-IHsKKwkJCWl0LT5jdXJfdGFza3NfaGVhZCA9ICZjc2V0LT5keWluZ190YXNrczsKKwkJCWJyZWFr
-OwogCQl9Ci0JfSB3aGlsZSAoIWNzc19zZXRfcG9wdWxhdGVkKGNzZXQpICYmIGxpc3RfZW1wdHko
-JmNzZXQtPmR5aW5nX3Rhc2tzKSk7Ci0KLQlpZiAoIWxpc3RfZW1wdHkoJmNzZXQtPnRhc2tzKSkg
-ewotCQlpdC0+dGFza19wb3MgPSBjc2V0LT50YXNrcy5uZXh0OwotCQlpdC0+Y3VyX3Rhc2tzX2hl
-YWQgPSAmY3NldC0+dGFza3M7Ci0JfSBlbHNlIGlmICghbGlzdF9lbXB0eSgmY3NldC0+bWdfdGFz
-a3MpKSB7Ci0JCWl0LT50YXNrX3BvcyA9IGNzZXQtPm1nX3Rhc2tzLm5leHQ7Ci0JCWl0LT5jdXJf
-dGFza3NfaGVhZCA9ICZjc2V0LT5tZ190YXNrczsKLQl9IGVsc2UgewotCQlpdC0+dGFza19wb3Mg
-PSBjc2V0LT5keWluZ190YXNrcy5uZXh0OwotCQlpdC0+Y3VyX3Rhc2tzX2hlYWQgPSAmY3NldC0+
-ZHlpbmdfdGFza3M7CiAJfQotCi0JaXQtPnRhc2tzX2hlYWQgPSAmY3NldC0+dGFza3M7Ci0JaXQt
-Pm1nX3Rhc2tzX2hlYWQgPSAmY3NldC0+bWdfdGFza3M7Ci0JaXQtPmR5aW5nX3Rhc2tzX2hlYWQg
-PSAmY3NldC0+ZHlpbmdfdGFza3M7CisJaWYgKCFjc2V0KSB7CisJCWl0LT50YXNrX3BvcyA9IE5V
-TEw7CisJCXJldHVybjsKKwl9CisJaXQtPnRhc2tfcG9zID0gaXQtPmN1cl90YXNrc19oZWFkLT5u
-ZXh0OwogCiAJLyoKIAkgKiBXZSBkb24ndCBrZWVwIGNzc19zZXRzIGxvY2tlZCBhY3Jvc3MgaXRl
-cmF0aW9uIHN0ZXBzIGFuZCB0aHVzCkBAIC00NDYyLDI0ICs0NDU3LDI0IEBAIHN0YXRpYyB2b2lk
-IGNzc190YXNrX2l0ZXJfYWR2YW5jZShzdHJ1Y3QgY3NzX3Rhc2tfaXRlciAqaXQpCiByZXBlYXQ6
-CiAJaWYgKGl0LT50YXNrX3BvcykgewogCQkvKgotCQkgKiBBZHZhbmNlIGl0ZXJhdG9yIHRvIGZp
-bmQgbmV4dCBlbnRyeS4gIGNzZXQtPnRhc2tzIGlzCi0JCSAqIGNvbnN1bWVkIGZpcnN0IGFuZCB0
-aGVuIC0+bWdfdGFza3MuICBBZnRlciAtPm1nX3Rhc2tzLAotCQkgKiB3ZSBtb3ZlIG9udG8gdGhl
-IG5leHQgY3NldC4KKwkJICogQWR2YW5jZSBpdGVyYXRvciB0byBmaW5kIG5leHQgZW50cnkuIFdl
-IGdvIHRocm91Z2ggY3NldAorCQkgKiB0YXNrcywgbWdfdGFza3MgYW5kIGR5aW5nX3Rhc2tzLCB3
-aGVuIGNvbnN1bWVkIHdlIG1vdmUgb250bworCQkgKiB0aGUgbmV4dCBjc2V0LgogCQkgKi8KIAkJ
-aWYgKGl0LT5mbGFncyAmIENTU19UQVNLX0lURVJfU0tJUFBFRCkKIAkJCWl0LT5mbGFncyAmPSB+
-Q1NTX1RBU0tfSVRFUl9TS0lQUEVEOwogCQllbHNlCiAJCQlpdC0+dGFza19wb3MgPSBpdC0+dGFz
-a19wb3MtPm5leHQ7CiAKLQkJaWYgKGl0LT50YXNrX3BvcyA9PSBpdC0+dGFza3NfaGVhZCkgewot
-CQkJaXQtPnRhc2tfcG9zID0gaXQtPm1nX3Rhc2tzX2hlYWQtPm5leHQ7Ci0JCQlpdC0+Y3VyX3Rh
-c2tzX2hlYWQgPSBpdC0+bWdfdGFza3NfaGVhZDsKKwkJaWYgKGl0LT50YXNrX3BvcyA9PSAmaXQt
-PmN1cl9jc2V0LT50YXNrcykgeworCQkJaXQtPmN1cl90YXNrc19oZWFkID0gJml0LT5jdXJfY3Nl
-dC0+bWdfdGFza3M7CisJCQlpdC0+dGFza19wb3MgPSBpdC0+Y3VyX3Rhc2tzX2hlYWQtPm5leHQ7
-CiAJCX0KLQkJaWYgKGl0LT50YXNrX3BvcyA9PSBpdC0+bWdfdGFza3NfaGVhZCkgewotCQkJaXQt
-PnRhc2tfcG9zID0gaXQtPmR5aW5nX3Rhc2tzX2hlYWQtPm5leHQ7Ci0JCQlpdC0+Y3VyX3Rhc2tz
-X2hlYWQgPSBpdC0+ZHlpbmdfdGFza3NfaGVhZDsKKwkJaWYgKGl0LT50YXNrX3BvcyA9PSAmaXQt
-PmN1cl9jc2V0LT5tZ190YXNrcykgeworCQkJaXQtPmN1cl90YXNrc19oZWFkID0gJml0LT5jdXJf
-Y3NldC0+ZHlpbmdfdGFza3M7CisJCQlpdC0+dGFza19wb3MgPSBpdC0+Y3VyX3Rhc2tzX2hlYWQt
-Pm5leHQ7CiAJCX0KLQkJaWYgKGl0LT50YXNrX3BvcyA9PSBpdC0+ZHlpbmdfdGFza3NfaGVhZCkK
-KwkJaWYgKGl0LT50YXNrX3BvcyA9PSAmaXQtPmN1cl9jc2V0LT5keWluZ190YXNrcykKIAkJCWNz
-c190YXNrX2l0ZXJfYWR2YW5jZV9jc3Nfc2V0KGl0KTsKIAl9IGVsc2UgewogCQkvKiBjYWxsZWQg
-ZnJvbSBzdGFydCwgcHJvY2VlZCB0byB0aGUgZmlyc3QgY3NldCAqLwpAQCAtNDQ5NywxMiArNDQ5
-MiwxMiBAQCBzdGF0aWMgdm9pZCBjc3NfdGFza19pdGVyX2FkdmFuY2Uoc3RydWN0IGNzc190YXNr
-X2l0ZXIgKml0KQogCQkJZ290byByZXBlYXQ7CiAKIAkJLyogYW5kIGR5aW5nIGxlYWRlcnMgdy9v
-IGxpdmUgbWVtYmVyIHRocmVhZHMgKi8KLQkJaWYgKGl0LT5jdXJfdGFza3NfaGVhZCA9PSBpdC0+
-ZHlpbmdfdGFza3NfaGVhZCAmJgorCQlpZiAoaXQtPmN1cl90YXNrc19oZWFkID09ICZpdC0+Y3Vy
-X2NzZXQtPmR5aW5nX3Rhc2tzICYmCiAJCSAgICAhYXRvbWljX3JlYWQoJnRhc2stPnNpZ25hbC0+
-bGl2ZSkpCiAJCQlnb3RvIHJlcGVhdDsKIAl9IGVsc2UgewogCQkvKiBza2lwIGFsbCBkeWluZyBv
-bmVzICovCi0JCWlmIChpdC0+Y3VyX3Rhc2tzX2hlYWQgPT0gaXQtPmR5aW5nX3Rhc2tzX2hlYWQp
-CisJCWlmIChpdC0+Y3VyX3Rhc2tzX2hlYWQgPT0gJml0LT5jdXJfY3NldC0+ZHlpbmdfdGFza3Mp
-CiAJCQlnb3RvIHJlcGVhdDsKIAl9CiB9Ci0tIAoyLjI0LjEKCg==
+From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+
+Add new test to verify that a cgroup with dead processes can be destroyed.
+The test spawns a child process which allocates and touches 100MB of RAM
+to ensure prolonged exit. Subsequently it kills the child, waits until
+the cgroup containing the child is empty and destroys the cgroup.
+
+Signed-off-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+[mkoutny-IBi9RG/b67k@public.gmane.org: Fix typo in test_cgcore_destroy comment]
+Acked-by: Michal Koutný <mkoutny-IBi9RG/b67k@public.gmane.org>
+Signed-off-by: Michal Koutný <mkoutny-IBi9RG/b67k@public.gmane.org>
+---
+ tools/testing/selftests/cgroup/test_core.c | 113 +++++++++++++++++++++
+ 1 file changed, 113 insertions(+)
+
+diff --git a/tools/testing/selftests/cgroup/test_core.c b/tools/testing/selftests/cgroup/test_core.c
+index c5ca669feb2b..76c9dd578ba5 100644
+--- a/tools/testing/selftests/cgroup/test_core.c
++++ b/tools/testing/selftests/cgroup/test_core.c
+@@ -2,7 +2,10 @@
+ 
+ #include <linux/limits.h>
+ #include <sys/types.h>
++#include <sys/mman.h>
++#include <sys/wait.h>
+ #include <unistd.h>
++#include <fcntl.h>
+ #include <stdio.h>
+ #include <errno.h>
+ #include <signal.h>
+@@ -12,6 +15,115 @@
+ #include "../kselftest.h"
+ #include "cgroup_util.h"
+ 
++static int touch_anon(char *buf, size_t size)
++{
++	int fd;
++	char *pos = buf;
++
++	fd = open("/dev/urandom", O_RDONLY);
++	if (fd < 0)
++		return -1;
++
++	while (size > 0) {
++		ssize_t ret = read(fd, pos, size);
++
++		if (ret < 0) {
++			if (errno != EINTR) {
++				close(fd);
++				return -1;
++			}
++		} else {
++			pos += ret;
++			size -= ret;
++		}
++	}
++	close(fd);
++
++	return 0;
++}
++
++static int alloc_and_touch_anon_noexit(const char *cgroup, void *arg)
++{
++	int ppid = getppid();
++	size_t size = (size_t)arg;
++	void *buf;
++
++	buf = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON,
++		   0, 0);
++	if (buf == MAP_FAILED)
++		return -1;
++
++	if (touch_anon((char *)buf, size)) {
++		munmap(buf, size);
++		return -1;
++	}
++
++	while (getppid() == ppid)
++		sleep(1);
++
++	munmap(buf, size);
++	return 0;
++}
++
++/*
++ * Create a child process that allocates and touches 100MB, then waits to be
++ * killed. Wait until the child is attached to the cgroup, kill all processes
++ * in that cgroup and wait until "cgroup.procs" is empty. At this point try to
++ * destroy the empty cgroup. The test helps detect race conditions between
++ * dying processes leaving the cgroup and cgroup destruction path.
++ */
++static int test_cgcore_destroy(const char *root)
++{
++	int ret = KSFT_FAIL;
++	char *cg_test = NULL;
++	int child_pid;
++	char buf[PAGE_SIZE];
++
++	cg_test = cg_name(root, "cg_test");
++
++	if (!cg_test)
++		goto cleanup;
++
++	for (int i = 0; i < 10; i++) {
++		if (cg_create(cg_test))
++			goto cleanup;
++
++		child_pid = cg_run_nowait(cg_test, alloc_and_touch_anon_noexit,
++					  (void *) MB(100));
++
++		if (child_pid < 0)
++			goto cleanup;
++
++		/* wait for the child to enter cgroup */
++		if (cg_wait_for_proc_count(cg_test, 1))
++			goto cleanup;
++
++		if (cg_killall(cg_test))
++			goto cleanup;
++
++		/* wait for cgroup to be empty */
++		while (1) {
++			if (cg_read(cg_test, "cgroup.procs", buf, sizeof(buf)))
++				goto cleanup;
++			if (buf[0] == '\0')
++				break;
++			usleep(1000);
++		}
++
++		if (rmdir(cg_test))
++			goto cleanup;
++
++		if (waitpid(child_pid, NULL, 0) < 0)
++			goto cleanup;
++	}
++	ret = KSFT_PASS;
++cleanup:
++	if (cg_test)
++		cg_destroy(cg_test);
++	free(cg_test);
++	return ret;
++}
++
+ /*
+  * A(0) - B(0) - C(1)
+  *        \ D(0)
+@@ -512,6 +624,7 @@ struct corecg_test {
+ 	T(test_cgcore_populated),
+ 	T(test_cgcore_proc_migration),
+ 	T(test_cgcore_thread_migration),
++	T(test_cgcore_destroy),
+ };
+ #undef T
+ 
+-- 
+2.24.1
+
