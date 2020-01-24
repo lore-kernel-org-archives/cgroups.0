@@ -1,37 +1,74 @@
-From: Mina Almasry <almasrymina@google.com>
-Subject: Re: [PATCH v10 7/8] hugetlb_cgroup: Add hugetlb_cgroup reservation tests
-Date: Thu, 23 Jan 2020 12:05:30 -0800
-Message-ID: <CAHS8izNmhxja_0+b2DudpXB+1DQfpnjUu+Qak+wnsApgYrvU=Q@mail.gmail.com>
-References: <20200115012651.228058-1-almasrymina@google.com>
- <20200115012651.228058-7-almasrymina@google.com> <7ce6d59f-fd73-c529-2ad6-edda9937966d@linux.ibm.com>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [PATCH v2 1/3] cgroup: Iterate tasks that did not finish do_exit()
+Date: Fri, 24 Jan 2020 12:40:15 +0100
+Message-ID: <20200124114017.8363-2-mkoutny@suse.com>
+References: <20200120145635.GA30904@blackbody.suse.cz>
+ <20200124114017.8363-1-mkoutny@suse.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=VyznYH5jQ6Vy0xxWHMJMOnmd05+7Te8s8tuSLOem1vc=;
-        b=NEFtawHLgzySPes5yhMKn043r+gEGRFGKhG2aJibWy+YdIIw0CJVynUf/h7t5SDCAn
-         YCLGg0okwgHeebwoD2fSmlXxTPzE+8OqgOFxOfSXKIjZI6xLy+zqNphZwdd2Tl3HNdb9
-         F+bOjMFMa/rjrcxnOi4Uv4WZy/wdxN2W8Nb0aKewvUoYFlPfCCwLGvMXURaKpP3IPhAy
-         Vp7d3t7P3GCpDZy5GL/uWB/BtJVgZPiTYeU3t+OjdbL0MzYC+L/KPsM2qvjVN1iPjPEf
-         Ccr0Fq0QlZZfD85rtYSLJWpgC5B4L6fMT7Gk1Ub9GJZ/JSAOlZbDhxtdfgH8LTyMuqxP
-         +XHQ==
-In-Reply-To: <7ce6d59f-fd73-c529-2ad6-edda9937966d@linux.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200124114017.8363-1-mkoutny-IBi9RG/b67k@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Sandipan Das <sandipan@linux.ibm.com>
-Cc: Mike Kravetz <mike.kravetz@oracle.com>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, shuah <shuah@kernel.org>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, Aneesh Kumar <aneesh.kumar@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="macroman"
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org, linger.lee-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tomcherry-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-On Thu, Jan 23, 2020 at 1:15 AM Sandipan Das <sandipan@linux.ibm.com> wrote:
->
-> For powerpc64, either 16MB/16GB or 2MB/1GB huge pages are supported depending
-> on the MMU type (Hash or Radix). I was just running these tests on a powerpc64
-> system with Hash MMU and ran into problems because the tests assume that the
-> hugepage size is always 2MB. Can you determine the huge page size at runtime?
->
-
-Absolutely. Let me try to reproduce this failure and it should be
-fixed in the next patchset version.
+UEZfRVhJVElORyBpcyBzZXQgZWFybGllciB0aGFuIGFjdHVhbCByZW1vdmFsIGZyb20gY3NzX3Nl
+dCB3aGVuIGEgdGFzawppcyBleGl0dGluZy4gVGhpcyBjYW4gY29uZnVzZSBjZ3JvdXAucHJvY3Mg
+cmVhZGVycyB3aG8gc2VlIG5vIFBGX0VYSVRJTkcKdGFza3MsIGhvd2V2ZXIsIHJtZGlyIGlzIGNo
+ZWNraW5nIGFnYWluc3QgY3NzX3NldCBtZW1iZXJzaGlwIHNvIGl0IGNhbgp0cmFuc2l0aW9uYWxs
+eSBmYWlsIHdpdGggRUJVU1kuCgpGaXggdGhpcyBieSBsaXN0aW5nIHRhc2tzIHRoYXQgd2VyZW4n
+dCB1bmxpbmtlZCBmcm9tIGNzc19zZXQgYWN0aXZlCmxpc3RzLgpJdCBtYXkgaGFwcGVuIHRoYXQg
+b3RoZXIgdXNlcnMgb2YgdGhlIHRhc2sgaXRlcmF0b3IgKHdpdGhvdXQKQ1NTX1RBU0tfSVRFUl9Q
+Uk9DUykgc3BvdCBhIFBGX0VYSVRJTkcgdGFzayBiZWZvcmUgY2dyb3VwX2V4aXQoKS4gVGhpcwpp
+cyBlcXVhbCB0byB0aGUgc3RhdGUgYmVmb3JlIGNvbW1pdCBjMDNjZDc3MzhhODMgKCJjZ3JvdXA6
+IEluY2x1ZGUgZHlpbmcKbGVhZGVycyB3aXRoIGxpdmUgdGhyZWFkcyBpbiBQUk9DUyBpdGVyYXRp
+b25zIikgYnV0IGl0IG1heSBiZSByZXZpZXdlZApsYXRlci4KClJlcG9ydGVkLWJ5OiBTdXJlbiBC
+YWdoZGFzYXJ5YW4gPHN1cmVuYi1ocElxc0Q0QUtsZlFUMGRaUitBbGZBQHB1YmxpYy5nbWFuZS5v
+cmc+CkZpeGVzOiBjMDNjZDc3MzhhODMgKCJjZ3JvdXA6IEluY2x1ZGUgZHlpbmcgbGVhZGVycyB3
+aXRoIGxpdmUgdGhyZWFkcyBpbiBQUk9DUyBpdGVyYXRpb25zIikKU2lnbmVkLW9mZi1ieTogTWlj
+aGFsIEtvdXRuw70gPG1rb3V0bnktSUJpOVJHL2I2N2tAcHVibGljLmdtYW5lLm9yZz4KLS0tCiBp
+bmNsdWRlL2xpbnV4L2Nncm91cC5oIHwgIDEgKwoga2VybmVsL2Nncm91cC9jZ3JvdXAuYyB8IDIz
+ICsrKysrKysrKysrKysrKystLS0tLS0tCiAyIGZpbGVzIGNoYW5nZWQsIDE3IGluc2VydGlvbnMo
+KyksIDcgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9jZ3JvdXAuaCBi
+L2luY2x1ZGUvbGludXgvY2dyb3VwLmgKaW5kZXggZDdkZGViZDBjZGVjLi5lNzVkMjE5MTIyNmIg
+MTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGludXgvY2dyb3VwLmgKKysrIGIvaW5jbHVkZS9saW51eC9j
+Z3JvdXAuaApAQCAtNjIsNiArNjIsNyBAQCBzdHJ1Y3QgY3NzX3Rhc2tfaXRlciB7CiAJc3RydWN0
+IGxpc3RfaGVhZAkJKm1nX3Rhc2tzX2hlYWQ7CiAJc3RydWN0IGxpc3RfaGVhZAkJKmR5aW5nX3Rh
+c2tzX2hlYWQ7CiAKKwlzdHJ1Y3QgbGlzdF9oZWFkCQkqY3VyX3Rhc2tzX2hlYWQ7CiAJc3RydWN0
+IGNzc19zZXQJCQkqY3VyX2NzZXQ7CiAJc3RydWN0IGNzc19zZXQJCQkqY3VyX2Rjc2V0OwogCXN0
+cnVjdCB0YXNrX3N0cnVjdAkJKmN1cl90YXNrOwpkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91cC9j
+Z3JvdXAuYyBiL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMKaW5kZXggNzM1YWY4ZjE1Zjk1Li5hNmUz
+NjE5ZTAxM2IgMTAwNjQ0Ci0tLSBhL2tlcm5lbC9jZ3JvdXAvY2dyb3VwLmMKKysrIGIva2VybmVs
+L2Nncm91cC9jZ3JvdXAuYwpAQCAtNDQwNCwxMiArNDQwNCwxNiBAQCBzdGF0aWMgdm9pZCBjc3Nf
+dGFza19pdGVyX2FkdmFuY2VfY3NzX3NldChzdHJ1Y3QgY3NzX3Rhc2tfaXRlciAqaXQpCiAJCX0K
+IAl9IHdoaWxlICghY3NzX3NldF9wb3B1bGF0ZWQoY3NldCkgJiYgbGlzdF9lbXB0eSgmY3NldC0+
+ZHlpbmdfdGFza3MpKTsKIAotCWlmICghbGlzdF9lbXB0eSgmY3NldC0+dGFza3MpKQorCWlmICgh
+bGlzdF9lbXB0eSgmY3NldC0+dGFza3MpKSB7CiAJCWl0LT50YXNrX3BvcyA9IGNzZXQtPnRhc2tz
+Lm5leHQ7Ci0JZWxzZSBpZiAoIWxpc3RfZW1wdHkoJmNzZXQtPm1nX3Rhc2tzKSkKKwkJaXQtPmN1
+cl90YXNrc19oZWFkID0gJmNzZXQtPnRhc2tzOworCX0gZWxzZSBpZiAoIWxpc3RfZW1wdHkoJmNz
+ZXQtPm1nX3Rhc2tzKSkgewogCQlpdC0+dGFza19wb3MgPSBjc2V0LT5tZ190YXNrcy5uZXh0Owot
+CWVsc2UKKwkJaXQtPmN1cl90YXNrc19oZWFkID0gJmNzZXQtPm1nX3Rhc2tzOworCX0gZWxzZSB7
+CiAJCWl0LT50YXNrX3BvcyA9IGNzZXQtPmR5aW5nX3Rhc2tzLm5leHQ7CisJCWl0LT5jdXJfdGFz
+a3NfaGVhZCA9ICZjc2V0LT5keWluZ190YXNrczsKKwl9CiAKIAlpdC0+dGFza3NfaGVhZCA9ICZj
+c2V0LT50YXNrczsKIAlpdC0+bWdfdGFza3NfaGVhZCA9ICZjc2V0LT5tZ190YXNrczsKQEAgLTQ0
+NjcsMTAgKzQ0NzEsMTQgQEAgc3RhdGljIHZvaWQgY3NzX3Rhc2tfaXRlcl9hZHZhbmNlKHN0cnVj
+dCBjc3NfdGFza19pdGVyICppdCkKIAkJZWxzZQogCQkJaXQtPnRhc2tfcG9zID0gaXQtPnRhc2tf
+cG9zLT5uZXh0OwogCi0JCWlmIChpdC0+dGFza19wb3MgPT0gaXQtPnRhc2tzX2hlYWQpCisJCWlm
+IChpdC0+dGFza19wb3MgPT0gaXQtPnRhc2tzX2hlYWQpIHsKIAkJCWl0LT50YXNrX3BvcyA9IGl0
+LT5tZ190YXNrc19oZWFkLT5uZXh0OwotCQlpZiAoaXQtPnRhc2tfcG9zID09IGl0LT5tZ190YXNr
+c19oZWFkKQorCQkJaXQtPmN1cl90YXNrc19oZWFkID0gaXQtPm1nX3Rhc2tzX2hlYWQ7CisJCX0K
+KwkJaWYgKGl0LT50YXNrX3BvcyA9PSBpdC0+bWdfdGFza3NfaGVhZCkgewogCQkJaXQtPnRhc2tf
+cG9zID0gaXQtPmR5aW5nX3Rhc2tzX2hlYWQtPm5leHQ7CisJCQlpdC0+Y3VyX3Rhc2tzX2hlYWQg
+PSBpdC0+ZHlpbmdfdGFza3NfaGVhZDsKKwkJfQogCQlpZiAoaXQtPnRhc2tfcG9zID09IGl0LT5k
+eWluZ190YXNrc19oZWFkKQogCQkJY3NzX3Rhc2tfaXRlcl9hZHZhbmNlX2Nzc19zZXQoaXQpOwog
+CX0gZWxzZSB7CkBAIC00NDg5LDExICs0NDk3LDEyIEBAIHN0YXRpYyB2b2lkIGNzc190YXNrX2l0
+ZXJfYWR2YW5jZShzdHJ1Y3QgY3NzX3Rhc2tfaXRlciAqaXQpCiAJCQlnb3RvIHJlcGVhdDsKIAog
+CQkvKiBhbmQgZHlpbmcgbGVhZGVycyB3L28gbGl2ZSBtZW1iZXIgdGhyZWFkcyAqLwotCQlpZiAo
+IWF0b21pY19yZWFkKCZ0YXNrLT5zaWduYWwtPmxpdmUpKQorCQlpZiAoaXQtPmN1cl90YXNrc19o
+ZWFkID09IGl0LT5keWluZ190YXNrc19oZWFkICYmCisJCSAgICAhYXRvbWljX3JlYWQoJnRhc2st
+PnNpZ25hbC0+bGl2ZSkpCiAJCQlnb3RvIHJlcGVhdDsKIAl9IGVsc2UgewogCQkvKiBza2lwIGFs
+bCBkeWluZyBvbmVzICovCi0JCWlmICh0YXNrLT5mbGFncyAmIFBGX0VYSVRJTkcpCisJCWlmIChp
+dC0+Y3VyX3Rhc2tzX2hlYWQgPT0gaXQtPmR5aW5nX3Rhc2tzX2hlYWQpCiAJCQlnb3RvIHJlcGVh
+dDsKIAl9CiB9Ci0tIAoyLjI0LjEKCg==
