@@ -1,58 +1,148 @@
-From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: cgroup.procs output problem
-Date: Fri, 24 Jan 2020 15:02:16 +0300
-Message-ID: <ff3de0d7-b7fe-a12f-f816-3d6f0166e93f@virtuozzo.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Subject: [PATCH] cpuset: Make cpuset hotplug synchronous
+Date: Fri, 24 Jan 2020 20:37:29 +0530
+Message-ID: <1579878449-10164-1-git-send-email-prsood@codeaurora.org>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1579878470; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=V/z/hpUlTROc4VymAW3Gg8iFQOabyB5bs0q3YT2E7aw=; b=mJIdQdAwUjsFtN+kpNoSIhKKSV/3rsYOom/WC9XEu+1ZGiXhcA8d4ycjSGPZNrzpBmhB9ngf
+ dSd+DWd/ymcLDyxko9DWbjU3LMUrY18om2XCuQOSugSYv976OIV882eFrm8K+Ey91sMrlZOk
+ rBaeXxQBYvXL38FeW2h0vvWEi8s=
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
 
-Dear Tejun and cgroups mailing list users.
+Hi Tejun & Peter,
 
-During validation of patches for cgoups I've noticed strange behaviour in cgroup v2 
+It seems that after following patch we can make cpuset_hotplug_workfn
+synchronous:
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/kernel/cgroup/cpuset.c?h=v5.5-rc7&id=d74b27d63a8bebe2fe634944e4ebdc7b10db7a39
 
-dd with bs=1 reads each 2nd line of cgroup.proc and cgroup.threads file
 
-on Fedora 31 node
+Could you please share your opinion on the same and below patch. 
 
-[test@localhost ~]$ dd if=/sys/fs/cgroup/cgroup.procs  bs=1 | wc
-195+0 records in
-195+0 records out
-195 bytes copied, 0,000149534 s, 1,3 MB/s
-     54      54     195
+Thanks,
+Prateek
 
-VvS: it reads 54 lines
+>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8
 
-[test@localhost ~]$ dd if=/sys/fs/cgroup/cgroup.procs  bs=1000 | wc
-0+1 records in
-0+1 records out
-389 bytes copied, 6,6956e-05 s, 5,8 MB/s
-    108     108     389
+Convert cpuset_hotplug_workfn() into synchronous call for cpu hotplug
+path. For memory hotplug path it still gets queued as a work item.
 
-following one reads twice more, 108 lines.
+Since cpuset_hotplug_workfn() can be made synchronous for cpu hotplug
+path, it is not required to wait for cpuset hotplug while thawing
+processes.
 
-[test@localhost ~]$ dd if=/sys/fs/cgroup/cgroup.procs  bs=1 | wc
-195+0 records in
-195+0 records out
-195 bytes copied, 0,000123775 s, 1,6 MB/s
-     54      54     195
+Signed-off-by: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+---
+ include/linux/cpuset.h |  3 ---
+ kernel/cgroup/cpuset.c | 31 +++++++++++++++++++------------
+ kernel/power/process.c |  2 --
+ 3 files changed, 19 insertions(+), 17 deletions(-)
 
-following dd bs=1 reads 54 lines again
-
-[test@localhost ~]$ uname -a
-Linux localhost.localdomain 5.5.0-rc6-00150-g82efece #7 SMP Fri Jan 24 12:05:04 MSK 2020 x86_64 x86_64 x86_64 GNU/Linux
-[test@localhost ~]$ mount | grep cgroup
-cgroup2 on /sys/fs/cgroup type cgroup2 (rw,nosuid,nodev,noexec,relatime,nsdelegate)
-
-I prepared patches for .next seq_file funictions.
-https://bugzilla.kernel.org/show_bug.cgi?id=206283
-during its validation I've noticed described problem,
-and did not found its reason yet.
-
-Thank you,
-   Vasily Averin
+diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
+index 04c20de66..cede4cb 100644
+--- a/include/linux/cpuset.h
++++ b/include/linux/cpuset.h
+@@ -54,7 +54,6 @@ static inline void cpuset_dec(void)
+ extern void cpuset_init_smp(void);
+ extern void cpuset_force_rebuild(void);
+ extern void cpuset_update_active_cpus(void);
+-extern void cpuset_wait_for_hotplug(void);
+ extern void cpuset_read_lock(void);
+ extern void cpuset_read_unlock(void);
+ extern void cpuset_cpus_allowed(struct task_struct *p, struct cpumask *mask);
+@@ -176,8 +175,6 @@ static inline void cpuset_update_active_cpus(void)
+ 	partition_sched_domains(1, NULL, NULL);
+ }
+ 
+-static inline void cpuset_wait_for_hotplug(void) { }
+-
+ static inline void cpuset_read_lock(void) { }
+ static inline void cpuset_read_unlock(void) { }
+ 
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 58f5073..cafd4d2 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -3101,7 +3101,7 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+ }
+ 
+ /**
+- * cpuset_hotplug_workfn - handle CPU/memory hotunplug for a cpuset
++ * cpuset_hotplug - handle CPU/memory hotunplug for a cpuset
+  *
+  * This function is called after either CPU or memory configuration has
+  * changed and updates cpuset accordingly.  The top_cpuset is always
+@@ -3116,7 +3116,7 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
+  * Note that CPU offlining during suspend is ignored.  We don't modify
+  * cpusets across suspend/resume cycles at all.
+  */
+-static void cpuset_hotplug_workfn(struct work_struct *work)
++static void cpuset_hotplug(bool use_cpu_hp_lock)
+ {
+ 	static cpumask_t new_cpus;
+ 	static nodemask_t new_mems;
+@@ -3201,25 +3201,32 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
+ 	/* rebuild sched domains if cpus_allowed has changed */
+ 	if (cpus_updated || force_rebuild) {
+ 		force_rebuild = false;
+-		rebuild_sched_domains();
++		if (use_cpu_hp_lock)
++			rebuild_sched_domains();
++		else {
++			/* Acquiring cpu_hotplug_lock is not required.
++			 * When cpuset_hotplug() is called in hotplug path,
++			 * cpu_hotplug_lock is held by the hotplug context
++			 * which is waiting for cpuhp_thread_fun to indicate
++			 * completion of callback.
++			*/
++			percpu_down_write(&cpuset_rwsem);
++			rebuild_sched_domains_locked();
++			percpu_up_write(&cpuset_rwsem);
++		}
+ 	}
+ 
+ 	free_cpumasks(NULL, ptmp);
+ }
+ 
+-void cpuset_update_active_cpus(void)
++static void cpuset_hotplug_workfn(struct work_struct *work)
+ {
+-	/*
+-	 * We're inside cpu hotplug critical region which usually nests
+-	 * inside cgroup synchronization.  Bounce actual hotplug processing
+-	 * to a work item to avoid reverse locking order.
+-	 */
+-	schedule_work(&cpuset_hotplug_work);
++	cpuset_hotplug(true);
+ }
+ 
+-void cpuset_wait_for_hotplug(void)
++void cpuset_update_active_cpus(void)
+ {
+-	flush_work(&cpuset_hotplug_work);
++	cpuset_hotplug(false);
+ }
+ 
+ /*
+diff --git a/kernel/power/process.c b/kernel/power/process.c
+index 4b6a54d..08f7019 100644
+--- a/kernel/power/process.c
++++ b/kernel/power/process.c
+@@ -204,8 +204,6 @@ void thaw_processes(void)
+ 	__usermodehelper_set_disable_depth(UMH_FREEZING);
+ 	thaw_workqueues();
+ 
+-	cpuset_wait_for_hotplug();
+-
+ 	read_lock(&tasklist_lock);
+ 	for_each_process_thread(g, p) {
+ 		/* No other threads should have PF_SUSPEND_TASK set */
+-- 
+Qualcomm India Private Limited, on behalf of Qualcomm Innovation Center, Inc., 
+is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
