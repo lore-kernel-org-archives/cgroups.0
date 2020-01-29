@@ -1,147 +1,35 @@
 From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v5 5/6] clone3: allow spawning processes into cgroups
-Date: Wed, 29 Jan 2020 14:27:19 +0100
-Message-ID: <20200129132719.GD11384@blackbody.suse.cz>
-References: <20200121154844.411-1-christian.brauner@ubuntu.com>
- <20200121154844.411-6-christian.brauner@ubuntu.com>
+Subject: Re: [PATCH] cgroup.c: Use built-in RCU list checking
+Date: Wed, 29 Jan 2020 15:22:55 +0100
+Message-ID: <20200129142255.GE11384@blackbody.suse.cz>
+References: <20200118031051.28776-1-madhuparnabhowmik10@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20200121154844.411-6-christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20200118031051.28776-1-madhuparnabhowmik10-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: madhuparnabhowmik10-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org, rcu-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, frextrite-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
 Hello.
 
-On Tue, Jan 21, 2020 at 04:48:43PM +0100, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> wrote:
-> +static int cgroup_css_set_fork(struct kernel_clone_args *kargs)
-> +	__acquires(&cgroup_mutex) __acquires(&cgroup_threadgroup_rwsem)
-> +{
-> +	int ret;
-> +	struct cgroup *dst_cgrp = NULL;
-> +	struct css_set *cset;
-> +	struct super_block *sb;
-> +	struct file *f;
-> +
-> +	if (kargs->flags & CLONE_INTO_CGROUP)
-> +		mutex_lock(&cgroup_mutex);
-> +
-> +	cgroup_threadgroup_change_begin(current);
-> +
-> +	spin_lock_irq(&css_set_lock);
-> +	cset = task_css_set(current);
-> +	get_css_set(cset);
-> +	spin_unlock_irq(&css_set_lock);
-> +
-> +	if (!(kargs->flags & CLONE_INTO_CGROUP)) {
-> +		kargs->cset = cset;
-Where is this css_set put when CLONE_INTO_CGROUP isn't used?
-(Aha, it's passed to child's tsk->cgroups but see my other note below.)
+On Sat, Jan 18, 2020 at 08:40:51AM +0530, madhuparnabhowmik10-Re5JQEeQqe8Av=
+xtiuMwx3w@public.gmane.org wrote:
+> From: Madhuparna Bhowmik <madhuparnabhowmik10-Re5JQEeQqe8AvxtiuMwx3w@publ=
+ic.gmane.org>
+>=20
+> list_for_each_entry_rcu has built-in RCU and lock checking.
+> Pass cond argument to list_for_each_entry_rcu() to silence
+> false lockdep warning when  CONFIG_PROVE_RCU_LIST is enabled
+> by default.
+I assume if you've seen the RCU warning, you haven't seen the warning
+from cgroup_assert_mutex_or_rcu_locked() above.=20
 
-> +	dst_cgrp = cgroup_get_from_file(f);
-> +	if (IS_ERR(dst_cgrp)) {
-> +		ret = PTR_ERR(dst_cgrp);
-> +		dst_cgrp = NULL;
-> +		goto err;
-> +	}
-> +
-> +	/*
-> +	 * Verify that we the target cgroup is writable for us. This is
-> +	 * usually done by the vfs layer but since we're not going through
-> +	 * the vfs layer here we need to do it "manually".
-> +	 */
-> +	ret = cgroup_may_write(dst_cgrp, sb);
-> +	if (ret)
-> +		goto err;
-> +
-> +	ret = cgroup_attach_permissions(cset->dfl_cgrp, dst_cgrp, sb,
-> +					!!(kargs->flags & CLONE_THREAD));
-> +	if (ret)
-> +		goto err;
-> +
-> +	kargs->cset = find_css_set(cset, dst_cgrp);
-> +	if (!kargs->cset) {
-> +		ret = -ENOMEM;
-> +		goto err;
-> +	}
-> +
-> +	if (cgroup_is_dead(dst_cgrp)) {
-> +		ret = -ENODEV;
-> +		goto err;
-> +	}
-I'd move this check right after cgroup_get_from_file. The fork-migration
-path is synchrinized via cgroup_mutex with cgroup_destroy_locked and
-there's no need checking permissions on cgroup that's going away anyway.
+The patch makes sense to me from the consistency POV.
 
+Acked-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
 
-> +static void cgroup_css_set_put_fork(struct kernel_clone_args *kargs)
-> +	__releases(&cgroup_threadgroup_rwsem) __releases(&cgroup_mutex)
-> +{
-> +	cgroup_threadgroup_change_end(current);
-> +
-> +	if (kargs->flags & CLONE_INTO_CGROUP) {
-> +		struct cgroup *cgrp = kargs->cgrp;
-> +		struct css_set *cset = kargs->cset;
-> +
-> +		mutex_unlock(&cgroup_mutex);
-> +
-> +		if (cset) {
-> +			put_css_set(cset);
-> +			kargs->cset = NULL;
-> +		}
-> +
-> +		if (cgrp) {
-> +			cgroup_put(cgrp);
-> +			kargs->cgrp = NULL;
-> +		}
-> +	}
-I don't see any function problem with this ordering, however, I'd
-prefer symmetry with the "allocation" path (in cgroup_css_set_fork),
-i.e. cgroup_put, put_css_set and lastly mutex_unlock.
-
-> +void cgroup_post_fork(struct task_struct *child,
-> +		      struct kernel_clone_args *kargs)
-> +	__releases(&cgroup_threadgroup_rwsem) __releases(&cgroup_mutex)
->  {
->  	struct cgroup_subsys *ss;
-> -	struct css_set *cset;
-> +	struct css_set *cset = kargs->cset;
->  	int i;
->  
->  	spin_lock_irq(&css_set_lock);
->  
->  	WARN_ON_ONCE(!list_empty(&child->cg_list));
-> -	cset = task_css_set(current); /* current is @child's parent */
-> -	get_css_set(cset);
->  	cset->nr_tasks++;
->  	css_set_move_task(child, NULL, cset, false);
-So, the reference is passed over from kargs->cset to task->cgroups. I
-think it's necessary to zero kargs->cset in order to prevent droping the 
-reference in cgroup_css_set_put_fork.
-Perhaps, a general comment about css_set whereabouts during fork and
-kargs passing would be useful.
-
-> @@ -6016,6 +6146,17 @@ void cgroup_post_fork(struct task_struct *child)
->  	} while_each_subsys_mask();
->  
->  	cgroup_threadgroup_change_end(current);
-> +
-> +	if (kargs->flags & CLONE_INTO_CGROUP) {
-> +		mutex_unlock(&cgroup_mutex);
-> +
-> +		cgroup_put(kargs->cgrp);
-> +		kargs->cgrp = NULL;
-> +	}
-> +
-> +	/* Make the new cset the root_cset of the new cgroup namespace. */
-> +	if (kargs->flags & CLONE_NEWCGROUP)
-> +		child->nsproxy->cgroup_ns->root_cset = cset;
-root_cset reference (from copy_cgroup_ns) seems leaked here and where is
-the additional reference to new cset obtained?
-
-Thanks,
 Michal
