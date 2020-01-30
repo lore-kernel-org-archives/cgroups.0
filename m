@@ -1,95 +1,218 @@
-From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: [PATCH v2 2/2 RESEND] cgroup: cgroup_procs_next should increase
- position index
-Date: Thu, 30 Jan 2020 13:34:59 +0300
-Message-ID: <821bde4f-bdaf-994c-d864-a8a97d7d6b13@virtuozzo.com>
-References: <20200128172737.GA21791@blackbody.suse.cz>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH v2 1/3] mm: memcontrol: fix memory.low proportional
+ distribution
+Date: Thu, 30 Jan 2020 12:49:29 +0100
+Message-ID: <20200130114929.GT24244@dhcp22.suse.cz>
+References: <20191219200718.15696-1-hannes@cmpxchg.org>
+ <20191219200718.15696-2-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200128172737.GA21791-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
-Content-Language: en-US
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20191219200718.15696-2-hannes@cmpxchg.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-If seq_file .next fuction does not change position index,
-read after some lseek can generate unexpected output:
+On Thu 19-12-19 15:07:16, Johannes Weiner wrote:
+> When memory.low is overcommitted - i.e. the children claim more
+> protection than their shared ancestor grants them - the allowance is
+> distributed in proportion to how much each sibling uses their own
+> declared protection:
 
-1) dd bs=1 skip output of each 2nd elements
-$ dd if=/sys/fs/cgroup/cgroup.procs bs=8 count=1
-2
-3
-4
-5
-1+0 records in
-1+0 records out
-8 bytes copied, 0,000267297 s, 29,9 kB/s
-[test@localhost ~]$ dd if=/sys/fs/cgroup/cgroup.procs bs=1 count=8
-2
-4 <<< NB! 3 was skipped
-6 <<<    ... and 5 too
-8 <<<    ... and 7 
-8+0 records in
-8+0 records out
-8 bytes copied, 5,2123e-05 s, 153 kB/s
+Has there ever been any actual explanation why do we care about
+overcommitted protection? I have got back to email threads when
+the effective hierarchical protection has been proposed.
+http://lkml.kernel.org/r/20180320223353.5673-1-guro@fb.com talks about
+some "leaf memory cgroups are more valuable than others" which sounds ok
+but it doesn't explain why children have to overcommit parent in the
+first place. Do we have any other documentation to explain the usecase?
 
- This happen because __cgroup_procs_start() makes an extra
- extra cgroup_procs_next() call
+> 
+> 	low_usage = min(memory.low, memory.current)
+> 	elow = parent_elow * (low_usage / siblings_low_usage)
+> 
+> However, siblings_low_usage is not the sum of all low_usages. It sums
+> up the usages of *only those cgroups that are within their memory.low*
+> That means that low_usage can be *bigger* than siblings_low_usage, and
+> consequently the total protection afforded to the children can be
+> bigger than what the ancestor grants the subtree.
+> 
+> Consider three groups where two are in excess of their protection:
+> 
+>   A/memory.low = 10G
+>   A/A1/memory.low = 10G, memory.current = 20G
+>   A/A2/memory.low = 10G, memory.current = 20G
+>   A/A3/memory.low = 10G, memory.current =  8G
+>   siblings_low_usage = 8G (only A3 contributes)
+> 
+>   A1/elow = parent_elow(10G) * low_usage(10G) / siblings_low_usage(8G) = 12.5G -> 10G
+>   A2/elow = parent_elow(10G) * low_usage(10G) / siblings_low_usage(8G) = 12.5G -> 10G
+>   A3/elow = parent_elow(10G) * low_usage(8G) / siblings_low_usage(8G) = 10.0G
+> 
+>   (the 12.5G are capped to the explicit memory.low setting of 10G)
+> 
+> With that, the sum of all awarded protection below A is 30G, when A
+> only grants 10G for the entire subtree.
+> 
+> What does this mean in practice? A1 and A2 would still be in excess of
+> their 10G allowance and would be reclaimed, whereas A3 would not. As
+> they eventually drop below their protection setting, they would be
+> counted in siblings_low_usage again and the error would right itself.
+> 
+> When reclaim was applied in a binary fashion (cgroup is reclaimed when
+> it's above its protection, otherwise it's skipped) this would actually
+> work out just fine. However, since 1bc63fb1272b ("mm, memcg: make scan
+> aggression always exclude protection"), reclaim pressure is scaled to
+> how much a cgroup is above its protection. As a result this
+> calculation error unduly skews pressure away from A1 and A2 toward the
+> rest of the system.
 
-2) read after lseek beyond end of file generates whole last line.
-3) read after lseek into middle of last line generates
-expected rest of last line and unexpected whole line once again.
+Just to make sure I fully follow. The overall excess over protection is
+38G in your example (for A) while the reclaim would only scan 20G for
+this hierarchy until the error starts to fixup because
+siblings_low_usage would get back into sync, correct?
 
-Additionally patch removes an extra position index changes in
-__cgroup_procs_start()
+> But why did we do it like this in the first place?
+> 
+> The reasoning behind exempting groups in excess from
+> siblings_low_usage was to go after them first during reclaim in an
+> overcommitted subtree:
+> 
+>   A/memory.low = 2G, memory.current = 4G
+>   A/A1/memory.low = 3G, memory.current = 2G
+>   A/A2/memory.low = 1G, memory.current = 2G
+> 
+>   siblings_low_usage = 2G (only A1 contributes)
+>   A1/elow = parent_elow(2G) * low_usage(2G) / siblings_low_usage(2G) = 2G
+>   A2/elow = parent_elow(2G) * low_usage(1G) / siblings_low_usage(2G) = 1G
+> 
+> While the children combined are overcomitting A and are technically
+> both at fault, A2 is actively declaring unprotected memory and we
+> would like to reclaim that first.
+> 
+> However, while this sounds like a noble goal on the face of it, it
+> doesn't make much difference in actual memory distribution: Because A
+> is overcommitted, reclaim will not stop once A2 gets pushed back to
+> within its allowance; we'll have to reclaim A1 either way. The end
+> result is still that protection is distributed proportionally, with A1
+> getting 3/4 (1.5G) and A2 getting 1/4 (0.5G) of A's allowance.
+> 
+> [ If A weren't overcommitted, it wouldn't make a difference since each
+>   cgroup would just get the protection it declares:
+> 
+>   A/memory.low = 2G, memory.current = 3G
+>   A/A1/memory.low = 1G, memory.current = 1G
+>   A/A2/memory.low = 1G, memory.current = 2G
+> 
+>   With the current calculation:
+> 
+>   siblings_low_usage = 1G (only A1 contributes)
+>   A1/elow = parent_elow(2G) * low_usage(1G) / siblings_low_usage(1G) = 2G -> 1G
+>   A2/elow = parent_elow(2G) * low_usage(1G) / siblings_low_usage(1G) = 2G -> 1G
+> 
+>   Including excess groups in siblings_low_usage:
+> 
+>   siblings_low_usage = 2G
+>   A1/elow = parent_elow(2G) * low_usage(1G) / siblings_low_usage(2G) = 1G -> 1G
+>   A2/elow = parent_elow(2G) * low_usage(1G) / siblings_low_usage(2G) = 1G -> 1G ]
+> 
+> Simplify the calculation and fix the proportional reclaim bug by
+> including excess cgroups in siblings_low_usage.
 
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-https://bugzilla.kernel.org/show_bug.cgi?id=206283
-Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
----
- kernel/cgroup/cgroup.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 735af8f..9d06eb5 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -4599,6 +4599,9 @@ static void *cgroup_procs_next(struct seq_file *s, void *v, loff_t *pos)
- 	struct kernfs_open_file *of = s->private;
- 	struct css_task_iter *it = of->priv;
+I think it would be better to also show the initial example with the
+overcommitted protection because this is the primary usecase this patch
+is targeting in the first place.
+   A/memory.low = 10G
+   A/A1/memory.low = 10G, memory.current = 20G
+   A/A2/memory.low = 10G, memory.current = 20G
+   A/A3/memory.low = 10G, memory.current =  8G
+   siblings_low_usage = 28G
  
-+	if (pos)
-+		(*pos)++;
-+
- 	return css_task_iter_next(it);
- }
- 
-@@ -4614,7 +4617,7 @@ static void *__cgroup_procs_start(struct seq_file *s, loff_t *pos,
- 	 * from position 0, so we can simply keep iterating on !0 *pos.
- 	 */
- 	if (!it) {
--		if (WARN_ON_ONCE((*pos)++))
-+		if (WARN_ON_ONCE((*pos)))
- 			return ERR_PTR(-EINVAL);
- 
- 		it = kzalloc(sizeof(*it), GFP_KERNEL);
-@@ -4622,10 +4625,11 @@ static void *__cgroup_procs_start(struct seq_file *s, loff_t *pos,
- 			return ERR_PTR(-ENOMEM);
- 		of->priv = it;
- 		css_task_iter_start(&cgrp->self, iter_flags, it);
--	} else if (!(*pos)++) {
-+	} else if (!(*pos)) {
- 		css_task_iter_end(it);
- 		css_task_iter_start(&cgrp->self, iter_flags, it);
--	}
-+	} else
-+		return it->cur_task;
- 
- 	return cgroup_procs_next(s, NULL, NULL);
- }
+   A1/elow = parent_elow(10G) * low_usage(10G) / siblings_low_usage(28G) = 3.5G
+   A2/elow = parent_elow(10G) * low_usage(10G) / siblings_low_usage(28G) = 3.5G
+   A3/elow = parent_elow(10G) * low_usage(8G) / siblings_low_usage(28G) = 2.8G
+
+so wrt the global reclaim we have 38G of reclaimable memory with 38G
+excess over A's protection. It is true that A3 will get reclaimed way
+before A1, A2 reach their protection which might be just good enough to
+satisfy the external memory pressure because it is not really likely
+that the global pressure would require more than 20G dropped all at
+once, right?
+
+That being said I can see the problem with the existing implementation
+and how you workaround it. I am still unclear about why should we care
+about overcommit on the protection that much and in that light the patch
+makes more sense because it doesn't overflow the memory pressure to
+outside.
+Longer term, though, do we really have to care about this scenario? If
+yes, can we have it documented?
+
+Do we want a fixes tag here? There are two changes that need to be
+applied together to have a visible effect.
+
+Fixes: 1bc63fb1272b ("mm, memcg: make scan aggression always exclude protection")
+Fixes: 230671533d64 ("mm: memory.low hierarchical behavior")
+
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+
+Acked-by: Michal Hocko <mhocko@suse.com>
+
+> ---
+>  mm/memcontrol.c   |  4 +---
+>  mm/page_counter.c | 12 ++----------
+>  2 files changed, 3 insertions(+), 13 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index c5b5f74cfd4d..874a0b00f89b 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -6236,9 +6236,7 @@ struct cgroup_subsys memory_cgrp_subsys = {
+>   * elow = min( memory.low, parent->elow * ------------------ ),
+>   *                                        siblings_low_usage
+>   *
+> - *             | memory.current, if memory.current < memory.low
+> - * low_usage = |
+> - *	       | 0, otherwise.
+> + * low_usage = min(memory.low, memory.current)
+>   *
+>   *
+>   * Such definition of the effective memory.low provides the expected
+> diff --git a/mm/page_counter.c b/mm/page_counter.c
+> index de31470655f6..75d53f15f040 100644
+> --- a/mm/page_counter.c
+> +++ b/mm/page_counter.c
+> @@ -23,11 +23,7 @@ static void propagate_protected_usage(struct page_counter *c,
+>  		return;
+>  
+>  	if (c->min || atomic_long_read(&c->min_usage)) {
+> -		if (usage <= c->min)
+> -			protected = usage;
+> -		else
+> -			protected = 0;
+> -
+> +		protected = min(usage, c->min);
+>  		old_protected = atomic_long_xchg(&c->min_usage, protected);
+>  		delta = protected - old_protected;
+>  		if (delta)
+> @@ -35,11 +31,7 @@ static void propagate_protected_usage(struct page_counter *c,
+>  	}
+>  
+>  	if (c->low || atomic_long_read(&c->low_usage)) {
+> -		if (usage <= c->low)
+> -			protected = usage;
+> -		else
+> -			protected = 0;
+> -
+> +		protected = min(usage, c->low);
+>  		old_protected = atomic_long_xchg(&c->low_usage, protected);
+>  		delta = protected - old_protected;
+>  		if (delta)
+> -- 
+> 2.24.1
+
 -- 
-1.8.3.1
-
+Michal Hocko
+SUSE Labs
