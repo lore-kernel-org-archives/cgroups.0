@@ -1,66 +1,41 @@
-From: Mike Kravetz <mike.kravetz@oracle.com>
-Subject: Re: [PATCH v10 2/8] hugetlb_cgroup: add interface for charge/uncharge
- hugetlb reservations
-Date: Wed, 29 Jan 2020 16:41:51 -0800
-Message-ID: <43930e45-7505-1fc2-36ac-69a91a00a336@oracle.com>
+From: Sandipan Das <sandipan@linux.ibm.com>
+Subject: Re: [PATCH v10 7/8] hugetlb_cgroup: Add hugetlb_cgroup reservation
+ tests
+Date: Thu, 30 Jan 2020 11:41:15 +0530
+Message-ID: <98c83a41-b864-5950-488c-443f6ef60b91@linux.ibm.com>
 References: <20200115012651.228058-1-almasrymina@google.com>
- <20200115012651.228058-2-almasrymina@google.com>
- <alpine.DEB.2.21.2001291312490.175731@chino.kir.corp.google.com>
+ <20200115012651.228058-7-almasrymina@google.com>
+ <7ce6d59f-fd73-c529-2ad6-edda9937966d@linux.ibm.com>
+ <alpine.DEB.2.21.2001291257510.175731@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=HxaL1diqaEv286OlhDwXeFz8SznwXgpMh0T9XvkcS/4=;
- b=LJ9NJDtZ0xIKPfo7TT45ZkKFwtd9FFccN180bLdE9yns4f+qBam/ogmCeWLDlc2ZNCAg
- I+FH9dVYVyMPmEjJyYU2ddfw6f4duwPwx7jCXuAMw49PxmA2JGAHhY+J6wfFjaA7rC0U
- DY1g+95BqBT5v8sSEvlm9s55Xe2OpckmxNgf+UDRxw9DGZC/CBpXQu/Jm/LchvMU/aOV
- jxoV82UQsrwH/kS3aw+K7BHRBy3utlkidz/84ERau0SgG7q+VrCvTzEVbwPHN2HxtklE
- 6Zm2vdYAvRE7A2FV5xurm72isVkq0rcJ2EYPCZe5og/YSoQpt08U8mwyHjf9aqRw9SXQ Cw== 
-In-Reply-To: <alpine.DEB.2.21.2001291312490.175731@chino.kir.corp.google.com>
+In-Reply-To: <alpine.DEB.2.21.2001291257510.175731@chino.kir.corp.google.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: David Rientjes <rientjes@google.com>, Mina Almasry <almasrymina@google.com>
-Cc: shakeelb@google.com, shuah@kernel.org, gthelen@google.com, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, aneesh.kumar@linux.vnet.ibm.com
+To: David Rientjes <rientjes@google.com>
+Cc: Mina Almasry <almasrymina@google.com>, mike.kravetz@oracle.com, shakeelb@google.com, shuah@kernel.org, gthelen@google.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org, aneesh.kumar@linux.vnet.ibm.com
 
-On 1/29/20 1:21 PM, David Rientjes wrote:
-> On Tue, 14 Jan 2020, Mina Almasry wrote:
-> 
->> diff --git a/include/linux/hugetlb_cgroup.h b/include/linux/hugetlb_cgroup.h
->> index 063962f6dfc6a..eab8a70d5bcb5 100644
->> --- a/include/linux/hugetlb_cgroup.h
->> +++ b/include/linux/hugetlb_cgroup.h
->> @@ -20,29 +20,37 @@
->>  struct hugetlb_cgroup;
->>  /*
->>   * Minimum page order trackable by hugetlb cgroup.
->> - * At least 3 pages are necessary for all the tracking information.
->> + * At least 4 pages are necessary for all the tracking information.
->>   */
->>  #define HUGETLB_CGROUP_MIN_ORDER	2
-> 
-> I always struggle with a way to document and protect these types of 
-> usages.  In this case, we are using the private filed of tail pages; in 
-> thp code, we enumerate these usages separately in struct page: see "Tail 
-> pages of compound page" comment in the union.  Using the private field is 
-> fine to store a pointer to the hugetlb_cgroup, but I'm wondering if we can 
-> document or protect against future patches not understanding this usage.  
-> Otherwise it's implicit beyond this comment.
-> 
-> Maybe an expanded comment here is the only thing that is needed because 
-> it's unique to struct hugetlb_cgroup that describes what struct page 
-> represents for the second, third, and (now) fourth tail page.
+Hi David,
 
-I think that expanding the comment may be sufficient.  Let's at least
-document what the private field of the of the tail pages are used for
-WRT cgroups.
-Second tail page (hpage[2]) usage cgroup
-Third tail page (hpage[3]) reservation cgroup
+On 30/01/20 2:30 am, David Rientjes wrote:
+> On Thu, 23 Jan 2020, Sandipan Das wrote:
+> 
+>> For powerpc64, either 16MB/16GB or 2MB/1GB huge pages are supported depending
+>> on the MMU type (Hash or Radix). I was just running these tests on a powerpc64
+>> system with Hash MMU and ran into problems because the tests assume that the
+>> hugepage size is always 2MB. Can you determine the huge page size at runtime?
+>>
+> 
+> I assume this is only testing failures of the tools/testing/selftests 
+> additions that hardcode 2MB paths and not a kernel problem?  In other 
+> words, you can still boot, reserve, alloc, and free hugetlb pages on ppc 
+> after this patchset without using the selftests?
+> 
 
-BTW, we are just adding usage of the third tail page IIUC.  The comment
-that 4 pages are necessary includes the head page.
--- 
-Mike Kravetz
+Yes, its just the hardcoded paths. I didn't run into any kernel problems.
+
+- Sandipan
+
