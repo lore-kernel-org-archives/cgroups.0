@@ -1,165 +1,32 @@
-From: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Subject: Re: [PATCH] cpuset: Make cpuset hotplug synchronous
-Date: Sat, 1 Feb 2020 08:33:34 +0530
-Message-ID: <ee889f30-cb81-e0a8-6068-715ca3399fdd@codeaurora.org>
-References: <1579878449-10164-1-git-send-email-prsood@codeaurora.org>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH v4 4/5] genirq/affinity: allow driver's discontigous affinity set
+Date: Sat, 01 Feb 2020 10:08:36 +0100
+Message-ID: <871rrevfmz.fsf@nanos.tec.linutronix.de>
+References: <cover.1580211965.git.zhangweiping@didiglobal.com> <c044e71afa25fdf65ca9abd21f8a5032e1b424eb.1580211965.git.zhangweiping@didiglobal.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1580526232; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=g5YJIU6HDhXQS6ErNdq09HhEEvdNuOxlw+HNgly7NMk=; b=ta1Ei4Za54Ucb5OXUsg5q18ZTkdXBfHmq4AzUTSEtCyR4bvq32tlaAkyNyXgQifSsnUZmC4y
- NJH74Gjc1ybgMwKEsyTluUNbQulnIs2ZU8uJ0RpUvQy/Uz+vpKDJL7F2IDVeaeZaqpK3O+qu
- p0BjFWZD1sE3x8XST2hxynIP/KQ=
-In-Reply-To: <1579878449-10164-1-git-send-email-prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Content-Language: en-US
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <c044e71afa25fdf65ca9abd21f8a5032e1b424eb.1580211965.git.zhangweiping@didiglobal.com>
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Weiping Zhang <zhangweiping@didiglobal.com>, axboe@kernel.dk, tj@kernel.org, hch@lst.de, bvanassche@acm.org, keith.busch@intel.com, minwoo.im.dev@gmail.com, edmund.nadolski@intel.com
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-nvme@lists.infradead.org
 
-Hi Tejun & Peter,
+Weiping Zhang <zhangweiping@didiglobal.com> writes:
 
-Could you please share your feedback on this patch for making
+> nvme driver will add 4 sets for supporting NVMe weighted round robin,
+> and some of these sets may be empty(depends on user configuration),
+> so each particular set is assigned one static index for avoiding the
+> management trouble, then the empty set will be been by
+> irq_create_affinity_masks().
 
-cpuset_hotplug_workfn synchronous.
+What's the point of an empty interrupt set in the first place? This does
+not make sense and smells like a really bad hack.
 
+Can you please explain in detail why this is required and why it
+actually makes sense?
 
 Thanks,
 
-Prateek
-
-On 1/24/2020 8:37 PM, Prateek Sood wrote:
-> Hi Tejun & Peter,
->
-> It seems that after following patch we can make cpuset_hotplug_workfn
-> synchronous:
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/kernel/cgroup/cpuset.c?h=v5.5-rc7&id=d74b27d63a8bebe2fe634944e4ebdc7b10db7a39
->
->
-> Could you please share your opinion on the same and below patch.
->
-> Thanks,
-> Prateek
->
->> 8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8>8
-> Convert cpuset_hotplug_workfn() into synchronous call for cpu hotplug
-> path. For memory hotplug path it still gets queued as a work item.
->
-> Since cpuset_hotplug_workfn() can be made synchronous for cpu hotplug
-> path, it is not required to wait for cpuset hotplug while thawing
-> processes.
->
-> Signed-off-by: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-> ---
->   include/linux/cpuset.h |  3 ---
->   kernel/cgroup/cpuset.c | 31 +++++++++++++++++++------------
->   kernel/power/process.c |  2 --
->   3 files changed, 19 insertions(+), 17 deletions(-)
->
-> diff --git a/include/linux/cpuset.h b/include/linux/cpuset.h
-> index 04c20de66..cede4cb 100644
-> --- a/include/linux/cpuset.h
-> +++ b/include/linux/cpuset.h
-> @@ -54,7 +54,6 @@ static inline void cpuset_dec(void)
->   extern void cpuset_init_smp(void);
->   extern void cpuset_force_rebuild(void);
->   extern void cpuset_update_active_cpus(void);
-> -extern void cpuset_wait_for_hotplug(void);
->   extern void cpuset_read_lock(void);
->   extern void cpuset_read_unlock(void);
->   extern void cpuset_cpus_allowed(struct task_struct *p, struct cpumask *mask);
-> @@ -176,8 +175,6 @@ static inline void cpuset_update_active_cpus(void)
->   	partition_sched_domains(1, NULL, NULL);
->   }
->   
-> -static inline void cpuset_wait_for_hotplug(void) { }
-> -
->   static inline void cpuset_read_lock(void) { }
->   static inline void cpuset_read_unlock(void) { }
->   
-> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-> index 58f5073..cafd4d2 100644
-> --- a/kernel/cgroup/cpuset.c
-> +++ b/kernel/cgroup/cpuset.c
-> @@ -3101,7 +3101,7 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
->   }
->   
->   /**
-> - * cpuset_hotplug_workfn - handle CPU/memory hotunplug for a cpuset
-> + * cpuset_hotplug - handle CPU/memory hotunplug for a cpuset
->    *
->    * This function is called after either CPU or memory configuration has
->    * changed and updates cpuset accordingly.  The top_cpuset is always
-> @@ -3116,7 +3116,7 @@ static void cpuset_hotplug_update_tasks(struct cpuset *cs, struct tmpmasks *tmp)
->    * Note that CPU offlining during suspend is ignored.  We don't modify
->    * cpusets across suspend/resume cycles at all.
->    */
-> -static void cpuset_hotplug_workfn(struct work_struct *work)
-> +static void cpuset_hotplug(bool use_cpu_hp_lock)
->   {
->   	static cpumask_t new_cpus;
->   	static nodemask_t new_mems;
-> @@ -3201,25 +3201,32 @@ static void cpuset_hotplug_workfn(struct work_struct *work)
->   	/* rebuild sched domains if cpus_allowed has changed */
->   	if (cpus_updated || force_rebuild) {
->   		force_rebuild = false;
-> -		rebuild_sched_domains();
-> +		if (use_cpu_hp_lock)
-> +			rebuild_sched_domains();
-> +		else {
-> +			/* Acquiring cpu_hotplug_lock is not required.
-> +			 * When cpuset_hotplug() is called in hotplug path,
-> +			 * cpu_hotplug_lock is held by the hotplug context
-> +			 * which is waiting for cpuhp_thread_fun to indicate
-> +			 * completion of callback.
-> +			*/
-> +			percpu_down_write(&cpuset_rwsem);
-> +			rebuild_sched_domains_locked();
-> +			percpu_up_write(&cpuset_rwsem);
-> +		}
->   	}
->   
->   	free_cpumasks(NULL, ptmp);
->   }
->   
-> -void cpuset_update_active_cpus(void)
-> +static void cpuset_hotplug_workfn(struct work_struct *work)
->   {
-> -	/*
-> -	 * We're inside cpu hotplug critical region which usually nests
-> -	 * inside cgroup synchronization.  Bounce actual hotplug processing
-> -	 * to a work item to avoid reverse locking order.
-> -	 */
-> -	schedule_work(&cpuset_hotplug_work);
-> +	cpuset_hotplug(true);
->   }
->   
-> -void cpuset_wait_for_hotplug(void)
-> +void cpuset_update_active_cpus(void)
->   {
-> -	flush_work(&cpuset_hotplug_work);
-> +	cpuset_hotplug(false);
->   }
->   
->   /*
-> diff --git a/kernel/power/process.c b/kernel/power/process.c
-> index 4b6a54d..08f7019 100644
-> --- a/kernel/power/process.c
-> +++ b/kernel/power/process.c
-> @@ -204,8 +204,6 @@ void thaw_processes(void)
->   	__usermodehelper_set_disable_depth(UMH_FREEZING);
->   	thaw_workqueues();
->   
-> -	cpuset_wait_for_hotplug();
-> -
->   	read_lock(&tasklist_lock);
->   	for_each_process_thread(g, p) {
->   		/* No other threads should have PF_SUSPEND_TASK set */
-
--- 
-Qualcomm India Private Limited, on behalf of Qualcomm Innovation
-Center, Inc., is a member of Code Aurora Forum, a Linux Foundation
-Collaborative Project
+        tglx
