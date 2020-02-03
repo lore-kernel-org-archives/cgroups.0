@@ -1,63 +1,157 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v2 1/3] mm: memcontrol: fix memory.low proportional
- distribution
-Date: Mon, 3 Feb 2020 13:38:47 -0800
-Message-ID: <20200203213847.GC6781@xps.dhcp.thefacebook.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v2 3/3] mm: memcontrol: recursive memory.low protection
+Date: Mon, 3 Feb 2020 16:52:01 -0500
+Message-ID: <20200203215201.GD6380@cmpxchg.org>
 References: <20191219200718.15696-1-hannes@cmpxchg.org>
- <20191219200718.15696-2-hannes@cmpxchg.org>
- <20200130114929.GT24244@dhcp22.suse.cz>
- <20200203212136.GC6380@cmpxchg.org>
+ <20191219200718.15696-4-hannes@cmpxchg.org>
+ <20200130170020.GZ24244@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=z8vaPmr1J/X4HytSD9N8H1eOBNjqroXNsZTca+fabFA=;
- b=ZJ32gcKJsylxcLCrwNW61ytuECYC7DEFHmErJPEKKSaXnxS1cON0QgScjqlRGo3vx7Ge
- IIyCao3+H1z5TRsUEsnnAPjinlzUNf2hYZlkdrfFMSnRWz9JPhbdifN2E/lOiKUQ4cMC
- DsCdK7Avkdn+Dt9nYVTWu478gdlZox0zW7s= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=z8vaPmr1J/X4HytSD9N8H1eOBNjqroXNsZTca+fabFA=;
- b=SVQPYrnGz3eqv0qKmSV+29OOP26Gbrh0mJEfb84yT5WMAPcLGf1Br7yRdyXezB2wlpFrlQgSHbC+t7Q+4pzRaRxW2wFbdzT23p1T7yP2QblX7T3u2Hzb7cA4g1iPKqflWt6A3lTLRN8g19miqppKb8sOYpgU+Mz8eRImhRir+cI=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=V51SDVF0mKXCbTNKSToYu7ZilLaxAU/vCwK4/RCrZA4=;
+        b=giRevXzDJvug1jZpCW5DGCFjfiH6/eaG6UsakDYaGiO7cfEKkOaBQ6TNSAKlW9XAwG
+         4YNHeU90opOhqWzmFCgFfeNg1w8W6TKjPCzhkwBMJU1c9713Ky7nj03p4pioBcnIo/eY
+         Uf6aOI5dUz5IE5D49KI7or77gL0ex18cpdaMI9cyvKg5Uqn4+6/7az2y1E2YsYog/Uox
+         ISxPU/FtGg4aWoSb2335LPuVR7I///3vnMUSCgQ5+XFuan+0Ih6u5eZI1rGNIAozfRm+
+         P26rmvDM830Xm1RHTJylmglELqOIczAw52rIBGAH1L22d2ck1R7xRoizPugv/ZXXGpnn
+         BdjA==
 Content-Disposition: inline
-In-Reply-To: <20200203212136.GC6380-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20200130170020.GZ24244-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Mon, Feb 03, 2020 at 04:21:36PM -0500, Johannes Weiner wrote:
-> On Thu, Jan 30, 2020 at 12:49:29PM +0100, Michal Hocko wrote:
-> > On Thu 19-12-19 15:07:16, Johannes Weiner wrote:
-> > > When memory.low is overcommitted - i.e. the children claim more
-> > > protection than their shared ancestor grants them - the allowance is
-> > > distributed in proportion to how much each sibling uses their own
-> > > declared protection:
+On Thu, Jan 30, 2020 at 06:00:20PM +0100, Michal Hocko wrote:
+> On Thu 19-12-19 15:07:18, Johannes Weiner wrote:
+> > Right now, the effective protection of any given cgroup is capped by
+> > its own explicit memory.low setting, regardless of what the parent
+> > says. The reasons for this are mostly historical and ease of
+> > implementation: to make delegation of memory.low safe, effective
+> > protection is the min() of all memory.low up the tree.
 > > 
-> > Has there ever been any actual explanation why do we care about
-> > overcommitted protection? I have got back to email threads when
-> > the effective hierarchical protection has been proposed.
-> > http://lkml.kernel.org/r/20180320223353.5673-1-guro-b10kYP2dOMg@public.gmane.org talks about
-> > some "leaf memory cgroups are more valuable than others" which sounds ok
-> > but it doesn't explain why children have to overcommit parent in the
-> > first place. Do we have any other documentation to explain the usecase?
+> > Unfortunately, this limitation makes it impossible to protect an
+> > entire subtree from another without forcing the user to make explicit
+> > protection allocations all the way to the leaf cgroups - something
+> > that is highly undesirable in real life scenarios.
+> > 
+> > Consider memory in a data center host. At the cgroup top level, we
+> > have a distinction between system management software and the actual
+> > workload the system is executing. Both branches are further subdivided
+> > into individual services, job components etc.
+> > 
+> > We want to protect the workload as a whole from the system management
+> > software, but that doesn't mean we want to protect and prioritize
+> > individual workload wrt each other. Their memory demand can vary over
+> > time, and we'd want the VM to simply cache the hottest data within the
+> > workload subtree. Yet, the current memory.low limitations force us to
+> > allocate a fixed amount of protection to each workload component in
+> > order to get protection from system management software in
+> > general. This results in very inefficient resource distribution.
 > 
-> I don't think we properly documented it, no. Maybe Roman can elaborate
-> on that a bit more since he added it.
+> I do agree that configuring the reclaim protection is not an easy task.
+> Especially in a deeper reclaim hierarchy. systemd tends to create a deep
+> and commonly shared subtrees. So having a protected workload really
+> requires to be put directly into a new first level cgroup in practice
+> AFAICT. That is a simpler example though. Just imagine you want to
+> protect a certain user slice.
 
-There is simple no way to prevent it. Cgroup v2 UI allows to set any values,
-and they are never changed automatically on e.g. parent's value change.
+Can you elaborate a bit on this? I don't quite understand the two
+usecases you are contrasting here.
 
-So the system has to perform reasonably for all possible configurations.
+> You seem to be facing a different problem though IIUC. You know how much
+> memory you want to protect and you do not have to care about the cgroup
+> hierarchy up but you do not know/care how to distribute that protection
+> among workloads running under that protection. I agree that this is a
+> reasonable usecase.
 
-Before introducing of effective protections it was way too defensive:
-it was super easy to disable the protection by exceeding the protection
-value on some level. So it wasn't possible to rely on it in production.
+I'm not sure I'm parsing this right, but the use case is this:
 
-So disabling the protection in case of over-commitment isn't a good option
-too.
+When I'm running a multi-component workload on a host without any
+cgrouping, the individual components compete over the host's memory
+based on rate of allocation, how often they reference their memory and
+so forth. It's a need-based distribution of pages, and the weight can
+change as demand changes throughout the life of the workload.
 
-Thanks!
+If I now stick several of such workloads into a containerized
+environment, I want to use memory.low to assign each workload as a
+whole a chunk of memory it can use - I don't want to assign fixed-size
+subchunks to each individual component of each workload! I want the
+same free competition *within* the workload while setting clear rules
+for competition *between* the different workloads.
+
+[ What I can do today to achieve this is disable the memory controller
+  for the subgroups. When I do this, all pages of the workload are on
+  one single LRU that is protected by one single memory.low.
+
+  But obviously I lose any detailed accounting as well.
+
+  This patch allows me to have the same recursive protection semantics
+  while retaining accounting. ]
+
+> Those both problems however show that we have a more general
+> configurability problem for both leaf and intermediate nodes. They are
+> both a result of strong requirements imposed by delegation as you have
+> noted above. I am thinking didn't we just go too rigid here?
+
+The requirement for delegation is that child groups cannot claim more
+than the parent affords. Is that the restriction you are referring to?
+
+> Delegation points are certainly a security boundary and they should
+> be treated like that but do we really need a strong containment when
+> the reclaim protection is under admin full control? Does the admin
+> really have to reconfigure a large part of the hierarchy to protect a
+> particular subtree?
+> 
+> I do not have a great answer on how to implement this unfortunately. The
+> best I could come up with was to add a "$inherited_protection" magic
+> value to distinguish from an explicit >=0 protection. What's the
+> difference? $inherited_protection would be a default and it would always
+> refer to the closest explicit protection up the hierarchy (with 0 as a
+> default if there is none defined).
+>         A
+>        / \
+>       B   C (low=10G)
+>          / \
+>         D   E (low = 5G)
+> 
+> A, B don't get any protection (low=0). C gets protection (10G) and
+> distributes the pressure to D, E when in excess. D inherits (low=10G)
+> and E overrides the protection to 5G.
+> 
+> That would help both usecases AFAICS while the delegation should be
+> still possible (configure the delegation point with an explicit
+> value). I have very likely not thought that through completely.  Does
+> that sound like a completely insane idea?
+> 
+> Or do you think that the two usecases are simply impossible to handle
+> at the same time?
+
+Doesn't my patch accomplish this?
+
+Any cgroup or group of cgroups still cannot claim more than the
+ancestral protection for the subtree. If a cgroup says 10G, the sum of
+all children's protection will never exceed that. This ensures
+delegation is safe.
+
+But once an ancestor does declare protection, that value automatically
+applies recursively to the entire subtree. The subtree can *chose* to
+assign fixed shares of that to its cgroups. But it doesn't have to.
+
+While designing this, I also thought about a new magic token for the
+memory.low to distinguish "inherit" from 0 (or other values smaller
+than what the parent affords). But the only thing it buys you is that
+you allow children to *opt out* of protection the parent prescribes.
+And I'm not sure that's a valid usecase: If the parent specifies that
+a subtree shall receive a protection of 10G compared to other subtrees
+at that level, does it really make sense for children to opt out and
+reduce the subtree's protection?
+
+IMO, no. A cgroup should be able to influence competition among its
+children, it should not be able to change the rules of competition
+among its ancestors.
