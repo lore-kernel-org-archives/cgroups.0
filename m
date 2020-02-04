@@ -1,37 +1,53 @@
-From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+From: Peter Zijlstra <peterz@infradead.org>
 Subject: Re: [PATCH v5 5/6] clone3: allow spawning processes into cgroups
-Date: Tue, 4 Feb 2020 12:13:07 +0100
-Message-ID: <20200204111307.hxtundpcneju2y7n@wittgenstein>
+Date: Tue, 4 Feb 2020 12:53:51 +0100
+Message-ID: <20200204115351.GD14879@hirez.programming.kicks-ass.net>
 References: <20200121154844.411-1-christian.brauner@ubuntu.com>
  <20200121154844.411-6-christian.brauner@ubuntu.com>
- <20200129132719.GD11384@blackbody.suse.cz>
- <20200202093702.cdlyytywty7hk3rn@wittgenstein>
- <20200203143228.GC13360@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=iUu18RYN80bzMMLTjBJu6yIsP2v0nDSnUCJt6N21n6A=; b=KVQzzxEwjH+T/QHWi2sBA9hSk6
+        3YEa05Z7jzH6PZOqAtx4/80TcdwU6pRdSk3UvqNI1dESExgcgU2hjTDEsqQmuyiYsTDnja/tuV3st
+        3RmlufXrmB7hhAKpM0FEgnpJygQRQYRvW4Q4ykMQulQ8ZYF48NxRwKxawmmhDojuEdD4JdRyIcj4N
+        NTx9eVuWxbmDL2N5LFEycSeQT//85aGCNXPB+CK6skMQ9QS3TW3c0S9Rr/w1hATzWkrqaTKAt1dGm
+        Qfa+g7v+keGDGVuq6+CWBBrBPkPQ6g6NLiIKKTPEAHnA3ueQON4a/Cc4uEPOJzhbBBzXoZ2h35PAX
+        qEaDf1Rg==;
 Content-Disposition: inline
-In-Reply-To: <20200203143228.GC13360-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
-Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20200121154844.411-6-christian.brauner@ubuntu.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Christian Brauner <christian.brauner@ubuntu.com>
+Cc: linux-api@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Oleg Nesterov <oleg@redhat.com>, Ingo Molnar <mingo@redhat.com>, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org
 
-On Mon, Feb 03, 2020 at 03:32:28PM +0100, Michal Koutn=C3=BD wrote:
-> On Sun, Feb 02, 2020 at 10:37:02AM +0100, Christian Brauner <christian.br=
-auner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> wrote:
-> > cgroup_post_fork() is called past the point of no return for fork and
-> > cgroup_css_set_put_fork() is explicitly documented as only being
-> > callable before forks point of no return:
-> I missed this and somehow incorrectly assumed it's called at the end of
-> fork too. I find the css_set refcounting correct now.
->=20
-> BTW any reason why not to utilize cgroup_css_set_put_fork() for the
-> regular cleanup in cgroup_post_fork() too?
+On Tue, Jan 21, 2020 at 04:48:43PM +0100, Christian Brauner wrote:
+> This adds support for creating a process in a different cgroup than its
+> parent. Callers can limit and account processes and threads right from
+> the moment they are spawned:
+> - A service manager can directly spawn new services into dedicated
+>   cgroups.
+> - A process can be directly created in a frozen cgroup and will be
+>   frozen as well.
+> - The initial accounting jitter experienced by process supervisors and
+>   daemons is eliminated with this.
+> - Threaded applications or even thread implementations can choose to
+>   create a specific cgroup layout where each thread is spawned
+>   directly into a dedicated cgroup.
+> 
+> This feature is limited to the unified hierarchy. Callers need to pass
+> an directory file descriptor for the target cgroup. The caller can
+> choose to pass an O_PATH file descriptor. All usual migration
+> restrictions apply, i.e. there can be no processes in inner nodes. In
+> general, creating a process directly in a target cgroup adheres to all
+> migration restrictions.
 
-Hmyeah, should be doable if we do:
-kargs->cset =3D NULL;
-cgroup_css_set_put_fork(kargs);
+AFAICT, he *big* win here is avoiding the write side of the
+cgroup_threadgroup_rwsem. Or am I mis-reading the patch?
 
-Christian
+That global lock is what makes moving tasks/threads around super
+expensive, avoiding that by use of this clone() variant wins the day.
