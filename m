@@ -1,52 +1,99 @@
-From: Sandipan Das <sandipan@linux.ibm.com>
-Subject: Re: [PATCH v11 8/9] hugetlb_cgroup: Add hugetlb_cgroup reservation
- tests
-Date: Wed, 5 Feb 2020 18:12:37 +0530
-Message-ID: <a980c9f7-2759-45a7-1add-89a390b79b39@linux.ibm.com>
-References: <20200203232248.104733-1-almasrymina@google.com>
- <20200203232248.104733-8-almasrymina@google.com>
- <0fa5d77c-d115-1e30-cb17-d6a48c916922@linux.ibm.com>
- <CAHS8izPobKi_w8R4pTt_UyfxzBJJYuNUw+Z6hgFfvZ1Xma__YA@mail.gmail.com>
- <CAHS8izNmSYumXpYXT1d8tAm36=-BRjXqdCDjLB6UNMwn5xhPZg@mail.gmail.com>
+From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v6 4/6] cgroup: add cgroup_may_write() helper
+Date: Wed,  5 Feb 2020 14:26:21 +0100
+Message-ID: <20200205132623.670015-5-christian.brauner@ubuntu.com>
+References: <20200205132623.670015-1-christian.brauner@ubuntu.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAHS8izNmSYumXpYXT1d8tAm36=-BRjXqdCDjLB6UNMwn5xhPZg@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200205132623.670015-1-christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Mina Almasry <almasrymina@google.com>
-Cc: Mike Kravetz <mike.kravetz@oracle.com>, shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org
+To: linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi,
+Add a cgroup_may_write() helper which we can use in the
+CLONE_INTO_CGROUP patch series to verify that we can write to the
+destination cgroup.
 
-On 05/02/20 4:03 am, Mina Almasry wrote:
-> On Tue, Feb 4, 2020 at 12:36 PM Mina Almasry <almasrymina@google.com> wrote:
->>
->> So the problem in this log seems to be that this log line is missing:
->>     echo Waiting for hugetlb memory to reach size $size.
->>
->> The way the test works is that it starts a process that writes the
->> hugetlb memory, then it *should* wait until the memory is written,
->> then it should record the cgroup accounting and kill the process. It
->> seems from your log that the wait doesn't happen, so the test
->> continues before the background process has had time to write the
->> memory properly. Essentially wait_for_hugetlb_memory_to_get_written()
->> never gets called in your log.
->>
->> Can you try this additional attached diff on top of your changes? I
->> attached the diff and pasted the same here, hopefully one works for
->> you:
->> ...
-> 
-> I got my hands on a machine with 16MB default hugepage size and
-> charge_reserved_hugetlb.sh passes now after my changes. Please let me
-> know if you still run into issues.
-> 
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+---
+/* v1 */
+patch not present
 
-With your updates, the tests are passing. Ran the tests on a ppc64 system
-that uses radix MMU (2MB hugepages) and everything passed there as well.
+/* v2 */
+patch not present
 
-- Sandipan
+/* v3 */
+patch not present
+
+/* v4 */
+Link: https://lore.kernel.org/r/20200117181219.14542-5-christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org
+patch introduced
+
+/* v5 */
+Link: https://lore.kernel.org/r/20200121154844.411-5-christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org
+unchanged
+
+/* v6 */
+unchanged
+---
+ kernel/cgroup/cgroup.c | 24 +++++++++++++++++-------
+ 1 file changed, 17 insertions(+), 7 deletions(-)
+
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 991f10662e95..43c841596226 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -4649,13 +4649,28 @@ static int cgroup_procs_show(struct seq_file *s, void *v)
+ 	return 0;
+ }
+ 
++static int cgroup_may_write(const struct cgroup *cgrp, struct super_block *sb)
++{
++	int ret;
++	struct inode *inode;
++
++	lockdep_assert_held(&cgroup_mutex);
++
++	inode = kernfs_get_inode(sb, cgrp->procs_file.kn);
++	if (!inode)
++		return -ENOMEM;
++
++	ret = inode_permission(inode, MAY_WRITE);
++	iput(inode);
++	return ret;
++}
++
+ static int cgroup_procs_write_permission(struct cgroup *src_cgrp,
+ 					 struct cgroup *dst_cgrp,
+ 					 struct super_block *sb)
+ {
+ 	struct cgroup_namespace *ns = current->nsproxy->cgroup_ns;
+ 	struct cgroup *com_cgrp = src_cgrp;
+-	struct inode *inode;
+ 	int ret;
+ 
+ 	lockdep_assert_held(&cgroup_mutex);
+@@ -4665,12 +4680,7 @@ static int cgroup_procs_write_permission(struct cgroup *src_cgrp,
+ 		com_cgrp = cgroup_parent(com_cgrp);
+ 
+ 	/* %current should be authorized to migrate to the common ancestor */
+-	inode = kernfs_get_inode(sb, com_cgrp->procs_file.kn);
+-	if (!inode)
+-		return -ENOMEM;
+-
+-	ret = inode_permission(inode, MAY_WRITE);
+-	iput(inode);
++	ret = cgroup_may_write(com_cgrp, sb);
+ 	if (ret)
+ 		return ret;
+ 
+-- 
+2.25.0
 
