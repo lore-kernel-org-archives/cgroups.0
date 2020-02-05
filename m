@@ -1,133 +1,107 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-Subject: [RFC PATCH v2 1/3] cgroup/pids: Separate semantics of pids.events related to pids.max
-Date: Wed,  5 Feb 2020 14:44:24 +0100
-Message-ID: <20200205134426.10570-2-mkoutny@suse.com>
-References: <20191128172612.10259-1-mkoutny@suse.com>
- <20200205134426.10570-1-mkoutny@suse.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200205134426.10570-1-mkoutny@suse.com>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] mm, memcg: fix build error around the usage of kmem_caches
+Date: Wed,  5 Feb 2020 12:03:35 -0500
+Message-ID: <1580922215-5272-1-git-send-email-laoar.shao@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=BpKT67FLDttHow1r3K4wuKV8cB597M2lQmxM3PivZvk=;
+        b=brNPJ8bc7c6wFuqJgrS1FFBkILkxYNu0YhqjEyJ1g6cXJT7J7RE1XxdExWiWTzVNQ2
+         O16cxlFkBHFKZAdktZey/jmg6fFkZ393oJzaucgu9b8RGTBsTVlIHogCWnIw61Sg2yGu
+         OdKiBSAx+cx2fGz9i5Lny5MWk+HwwyxwAicOtQ27Jf3PVoy21aOiJPxGG7qvtx805Ixi
+         b+m5JOOUL1SI5HIQ5rhWj5JDMJXGEoTwcU7gSB5RKAmN6y09v+pYZtUyqmjzgI2NnutI
+         eAadYYs8sScqxUHq1dOfRz6EMyFO8F/qMMatvhbXRCInJZcGuKBfleOiEc0lCCzbgcsJ
+         /G3A==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: cgroups@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Aleksa Sarai <cyphar@cyphar.com>, linux-kernel@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Q3VycmVudGx5LCB3aGVuIHBpZHMubWF4IGxpbWl0IGlzIGJyZWFjaGVkIGluIHRoZSBoaWVyYXJj
-aHksIHRoZSBldmVudAppcyBjb3VudGVkIGFuZCByZXBvcnRlZCBpbiB0aGUgY2dyb3VwIHdoZXJl
-IHRoZSBmb3JraW5nIHRhc2sgcmVzaWRlcy4KClRoaXMgZGVjb3VwbGVzIHRoZSBsaW1pdCBhbmQg
-dGhlIG5vdGlmaWNhdGlvbiBjYXVzZWQgYnkgdGhlIGxpbWl0IG1ha2luZwppdCBoYXJkIHRvIGRl
-dGVjdCB3aGVuIHRoZSBhY3R1YWwgbGltaXQgd2FzIGVmZmVjdGVkLgoKTGV0J3MgaW50cm9kdWNl
-IG5ldyBldmVudHM6CgkgIG1heAoJCVRoZSBudW1iZXIgb2YgdGltZXMgdGhlIGxpbWl0IG9mIHRo
-ZSBjZ3JvdXAgd2FzIGhpdC4KCgkgIG1heC5pbXBvc2VkCgkJVGhlIG51bWJlciBvZiB0aW1lcyBm
-b3JrIGZhaWxlZCBpbiB0aGUgY2dyb3VwIGJlY2F1c2Ugb2Ygc2VsZgoJCW9yIGFuY2VzdG9yIGxp
-bWl0LgoKU2luY2UgaXQgY2hhbmdlcyBzZW1hbnRpY3Mgb2YgdGhlIG9yaWdpbmFsICJtYXgiIGV2
-ZW50LCB3ZSBpbnRyb2R1Y2UKdGhpcyBjaGFuZ2Ugb25seSBpbiB0aGUgdjIgQVBJIG9mIHRoZSBj
-b250cm9sbGVyLgoKU3VnZ2VzdGVkLWJ5OiBUZWp1biBIZW8gPHRqQGtlcm5lbC5vcmc+ClNpZ25l
-ZC1vZmYtYnk6IE1pY2hhbCBLb3V0bsO9IDxta291dG55QHN1c2UuY29tPgotLS0KIERvY3VtZW50
-YXRpb24vYWRtaW4tZ3VpZGUvY2dyb3VwLXYxL3BpZHMucnN0IHwgIDMgKy0KIERvY3VtZW50YXRp
-b24vYWRtaW4tZ3VpZGUvY2dyb3VwLXYyLnJzdCAgICAgIHwgMTIgKysrKwoga2VybmVsL2Nncm91
-cC9waWRzLmMgICAgICAgICAgICAgICAgICAgICAgICAgfCA3MiArKysrKysrKysrKysrKysrKy0t
-LQogMyBmaWxlcyBjaGFuZ2VkLCA3NyBpbnNlcnRpb25zKCspLCAxMCBkZWxldGlvbnMoLSkKCmRp
-ZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nncm91cC12MS9waWRzLnJzdCBi
-L0RvY3VtZW50YXRpb24vYWRtaW4tZ3VpZGUvY2dyb3VwLXYxL3BpZHMucnN0CmluZGV4IDZhY2Vi
-ZDllNzJjOC4uMGY5ZjlhN2IxZjZjIDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0aW9uL2FkbWluLWd1
-aWRlL2Nncm91cC12MS9waWRzLnJzdAorKysgYi9Eb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nn
-cm91cC12MS9waWRzLnJzdApAQCAtMzYsNyArMzYsOCBAQCBzdXBlcnNldCBvZiBwYXJlbnQvY2hp
-bGQvcGlkcy5jdXJyZW50LgogCiBUaGUgcGlkcy5ldmVudHMgZmlsZSBjb250YWlucyBldmVudCBj
-b3VudGVyczoKIAotICAtIG1heDogTnVtYmVyIG9mIHRpbWVzIGZvcmsgZmFpbGVkIGJlY2F1c2Ug
-bGltaXQgd2FzIGhpdC4KKyAgLSBtYXg6IE51bWJlciBvZiB0aW1lcyBmb3JrIGZhaWxlZCBpbiB0
-aGUgY2dyb3VwIGJlY2F1c2UgbGltaXQgd2FzIGhpdCBpbgorICAgIHNlbGYgb3IgYW5jZXN0b3Jz
-LgogCiBFeGFtcGxlCiAtLS0tLS0tCmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL2FkbWluLWd1
-aWRlL2Nncm91cC12Mi5yc3QgYi9Eb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nncm91cC12Mi5y
-c3QKaW5kZXggM2Y4MDE0NjFmMGYzLi4zOGVkZWI3OWMyZDggMTAwNjQ0Ci0tLSBhL0RvY3VtZW50
-YXRpb24vYWRtaW4tZ3VpZGUvY2dyb3VwLXYyLnJzdAorKysgYi9Eb2N1bWVudGF0aW9uL2FkbWlu
-LWd1aWRlL2Nncm91cC12Mi5yc3QKQEAgLTE4MTYsNiArMTgxNiwxOCBAQCBQSUQgSW50ZXJmYWNl
-IEZpbGVzCiAJVGhlIG51bWJlciBvZiBwcm9jZXNzZXMgY3VycmVudGx5IGluIHRoZSBjZ3JvdXAg
-YW5kIGl0cwogCWRlc2NlbmRhbnRzLgogCisgIHBpZHMuZXZlbnRzCisJQSByZWFkLW9ubHkgZmxh
-dC1rZXllZCBmaWxlIHdoaWNoIGV4aXN0cyBvbiBub24tcm9vdCBjZ3JvdXBzLiAgVW5sZXNzCisJ
-c3BlY2lmaWVkIG90aGVyd2lzZSwgYSB2YWx1ZSBjaGFuZ2UgaW4gdGhpcyBmaWxlIGdlbmVyYXRl
-cyBhIGZpbGUgbW9kaWZpZWQKKwlldmVudC4gVGhlIGZvbGxvd2luZyBlbnRyaWVzIGFyZSBkZWZp
-bmVkLgorCisJICBtYXgKKwkJVGhlIG51bWJlciBvZiB0aW1lcyB0aGUgbGltaXQgb2YgdGhlIGNn
-cm91cCB3YXMgaGl0LgorCisJICBtYXguaW1wb3NlZAorCQlUaGUgbnVtYmVyIG9mIHRpbWVzIGZv
-cmsgZmFpbGVkIGluIHRoZSBjZ3JvdXAgYmVjYXVzZSBvZiBzZWxmCisJCW9yIGFuY2VzdG9yIGxp
-bWl0LgorCiBPcmdhbmlzYXRpb25hbCBvcGVyYXRpb25zIGFyZSBub3QgYmxvY2tlZCBieSBjZ3Jv
-dXAgcG9saWNpZXMsIHNvIGl0IGlzCiBwb3NzaWJsZSB0byBoYXZlIHBpZHMuY3VycmVudCA+IHBp
-ZHMubWF4LiAgVGhpcyBjYW4gYmUgZG9uZSBieSBlaXRoZXIKIHNldHRpbmcgdGhlIGxpbWl0IHRv
-IGJlIHNtYWxsZXIgdGhhbiBwaWRzLmN1cnJlbnQsIG9yIGF0dGFjaGluZyBlbm91Z2gKZGlmZiAt
-LWdpdCBhL2tlcm5lbC9jZ3JvdXAvcGlkcy5jIGIva2VybmVsL2Nncm91cC9waWRzLmMKaW5kZXgg
-MTM4MDU5ZWI3MzBkLi5iYmZiMmZiNTYwMjkgMTAwNjQ0Ci0tLSBhL2tlcm5lbC9jZ3JvdXAvcGlk
-cy5jCisrKyBiL2tlcm5lbC9jZ3JvdXAvcGlkcy5jCkBAIC01MCw4ICs1MCwxNyBAQCBzdHJ1Y3Qg
-cGlkc19jZ3JvdXAgewogCS8qIEhhbmRsZSBmb3IgInBpZHMuZXZlbnRzIiAqLwogCXN0cnVjdCBj
-Z3JvdXBfZmlsZQkJZXZlbnRzX2ZpbGU7CiAKLQkvKiBOdW1iZXIgb2YgdGltZXMgZm9yayBmYWls
-ZWQgYmVjYXVzZSBsaW1pdCB3YXMgaGl0LiAqLworCS8qCisJICogTnVtYmVyIG9mIHRpbWVzIGZv
-cmsgZmFpbGVkIGluIHN1YnRyZWUgYmVjYXVzZSB0aGlzIHBpZHNfY2dyb3VwCisJICogbGltaXQg
-d2FzIGhpdC4KKwkgKi8KIAlhdG9taWM2NF90CQkJZXZlbnRzX2xpbWl0OworCisJLyoKKwkgKiBO
-dW1iZXIgb2YgdGltZXMgZm9yayBmYWlsZWQgaW4gdGhpcyBwaWRzX2Nncm91cCBiZWNhdXNlIGFu
-Y2VzdG9yCisJICogbGltaXQgd2FzIGhpdC4KKwkgKi8KKwlhdG9taWM2NF90CQkJZXZlbnRzX2xp
-bWl0X2ltcG9zZWQ7CiB9OwogCiBzdGF0aWMgc3RydWN0IHBpZHNfY2dyb3VwICpjc3NfcGlkcyhz
-dHJ1Y3QgY2dyb3VwX3N1YnN5c19zdGF0ZSAqY3NzKQpAQCAtNzYsNiArODUsNyBAQCBwaWRzX2Nz
-c19hbGxvYyhzdHJ1Y3QgY2dyb3VwX3N1YnN5c19zdGF0ZSAqcGFyZW50KQogCWF0b21pYzY0X3Nl
-dCgmcGlkcy0+Y291bnRlciwgMCk7CiAJYXRvbWljNjRfc2V0KCZwaWRzLT5saW1pdCwgUElEU19N
-QVgpOwogCWF0b21pYzY0X3NldCgmcGlkcy0+ZXZlbnRzX2xpbWl0LCAwKTsKKwlhdG9taWM2NF9z
-ZXQoJnBpZHMtPmV2ZW50c19saW1pdF9pbXBvc2VkLCAwKTsKIAlyZXR1cm4gJnBpZHMtPmNzczsK
-IH0KIApAQCAtMTQwLDcgKzE1MCw4IEBAIHN0YXRpYyB2b2lkIHBpZHNfY2hhcmdlKHN0cnVjdCBw
-aWRzX2Nncm91cCAqcGlkcywgaW50IG51bSkKICAqIHRoZSBuZXcgdmFsdWUgdG8gZXhjZWVkIHRo
-ZSBoaWVyYXJjaGljYWwgbGltaXQuIFJldHVybnMgMCBpZiB0aGUgY2hhcmdlCiAgKiBzdWNjZWVk
-ZWQsIG90aGVyd2lzZSAtRUFHQUlOLgogICovCi1zdGF0aWMgaW50IHBpZHNfdHJ5X2NoYXJnZShz
-dHJ1Y3QgcGlkc19jZ3JvdXAgKnBpZHMsIGludCBudW0pCitzdGF0aWMgaW50IHBpZHNfdHJ5X2No
-YXJnZShzdHJ1Y3QgcGlkc19jZ3JvdXAgKnBpZHMsIGludCBudW0sCisJCQkgICBzdHJ1Y3QgcGlk
-c19jZ3JvdXAgKipmYWlsKQogewogCXN0cnVjdCBwaWRzX2Nncm91cCAqcCwgKnE7CiAKQEAgLTE1
-Myw4ICsxNjQsMTAgQEAgc3RhdGljIGludCBwaWRzX3RyeV9jaGFyZ2Uoc3RydWN0IHBpZHNfY2dy
-b3VwICpwaWRzLCBpbnQgbnVtKQogCQkgKiBwLT5saW1pdCBpcyAlUElEU19NQVggdGhlbiB3ZSBr
-bm93IHRoYXQgdGhpcyB0ZXN0IHdpbGwgbmV2ZXIKIAkJICogZmFpbC4KIAkJICovCi0JCWlmIChu
-ZXcgPiBsaW1pdCkKKwkJaWYgKG5ldyA+IGxpbWl0KSB7CisJCQkqZmFpbCA9IHA7CiAJCQlnb3Rv
-IHJldmVydDsKKwkJfQogCX0KIAogCXJldHVybiAwOwpAQCAtMjE3LDIwICsyMzAsMjkgQEAgc3Rh
-dGljIHZvaWQgcGlkc19jYW5jZWxfYXR0YWNoKHN0cnVjdCBjZ3JvdXBfdGFza3NldCAqdHNldCkK
-IHN0YXRpYyBpbnQgcGlkc19jYW5fZm9yayhzdHJ1Y3QgdGFza19zdHJ1Y3QgKnRhc2spCiB7CiAJ
-c3RydWN0IGNncm91cF9zdWJzeXNfc3RhdGUgKmNzczsKLQlzdHJ1Y3QgcGlkc19jZ3JvdXAgKnBp
-ZHM7CisJc3RydWN0IHBpZHNfY2dyb3VwICpwaWRzLCAqcGlkc19vdmVyX2xpbWl0OwogCWludCBl
-cnI7CiAKIAljc3MgPSB0YXNrX2Nzc19jaGVjayhjdXJyZW50LCBwaWRzX2NncnBfaWQsIHRydWUp
-OwogCXBpZHMgPSBjc3NfcGlkcyhjc3MpOwotCWVyciA9IHBpZHNfdHJ5X2NoYXJnZShwaWRzLCAx
-KTsKKwllcnIgPSBwaWRzX3RyeV9jaGFyZ2UocGlkcywgMSwgJnBpZHNfb3Zlcl9saW1pdCk7CiAJ
-aWYgKGVycikgewotCQkvKiBPbmx5IGxvZyB0aGUgZmlyc3QgdGltZSBldmVudHNfbGltaXQgaXMg
-aW5jcmVtZW50ZWQuICovCi0JCWlmIChhdG9taWM2NF9pbmNfcmV0dXJuKCZwaWRzLT5ldmVudHNf
-bGltaXQpID09IDEpIHsKKwkJLyogQmFja3dhcmRzIGNvbXBhdGliaWxpdHkgb24gdjEgd2hlcmUg
-ZXZlbnRzIHdlcmUgbm90aWZpZWQgaW4KKwkJICogbGVhdmVzLiAqLworCQlpZiAoIWNncm91cF9z
-dWJzeXNfb25fZGZsKHBpZHNfY2dycF9zdWJzeXMpKQorCQkJcGlkc19vdmVyX2xpbWl0ID0gcGlk
-czsKKworCQkvKiBPbmx5IGxvZyB0aGUgZmlyc3QgdGltZSBldmVudHNfbGltaXRfaW1wb3NlZCBp
-cyBpbmNyZW1lbnRlZC4gKi8KKwkJaWYgKGF0b21pYzY0X2luY19yZXR1cm4oJnBpZHMtPmV2ZW50
-c19saW1pdF9pbXBvc2VkKSA9PSAxKSB7CiAJCQlwcl9pbmZvKCJjZ3JvdXA6IGZvcmsgcmVqZWN0
-ZWQgYnkgcGlkcyBjb250cm9sbGVyIGluICIpOwotCQkJcHJfY29udF9jZ3JvdXBfcGF0aChjc3Mt
-PmNncm91cCk7CisJCQlwcl9jb250X2Nncm91cF9wYXRoKHBpZHMtPmNzcy5jZ3JvdXApOwogCQkJ
-cHJfY29udCgiXG4iKTsKIAkJfQorCQlhdG9taWM2NF9pbmMoJnBpZHNfb3Zlcl9saW1pdC0+ZXZl
-bnRzX2xpbWl0KTsKKwogCQljZ3JvdXBfZmlsZV9ub3RpZnkoJnBpZHMtPmV2ZW50c19maWxlKTsK
-KwkJaWYgKHBpZHNfb3Zlcl9saW1pdCAhPSBwaWRzKQorCQkJY2dyb3VwX2ZpbGVfbm90aWZ5KCZw
-aWRzX292ZXJfbGltaXQtPmV2ZW50c19maWxlKTsKIAl9CiAJcmV0dXJuIGVycjsKIH0KQEAgLTMw
-OSw2ICszMzEsMTcgQEAgc3RhdGljIGludCBwaWRzX2V2ZW50c19zaG93KHN0cnVjdCBzZXFfZmls
-ZSAqc2YsIHZvaWQgKnYpCiAJc3RydWN0IHBpZHNfY2dyb3VwICpwaWRzID0gY3NzX3BpZHMoc2Vx
-X2NzcyhzZikpOwogCiAJc2VxX3ByaW50ZihzZiwgIm1heCAlbGxkXG4iLCAoczY0KWF0b21pYzY0
-X3JlYWQoJnBpZHMtPmV2ZW50c19saW1pdCkpOworCXNlcV9wcmludGYoc2YsICJtYXguaW1wb3Nl
-ZCAlbGxkXG4iLAorCQkgICAoczY0KWF0b21pYzY0X3JlYWQoJnBpZHMtPmV2ZW50c19saW1pdF9p
-bXBvc2VkKSk7CisJcmV0dXJuIDA7Cit9CisKK3N0YXRpYyBpbnQgcGlkc19ldmVudHNfc2hvd19s
-ZWdhY3koc3RydWN0IHNlcV9maWxlICpzZiwgdm9pZCAqdikKK3sKKwlzdHJ1Y3QgcGlkc19jZ3Jv
-dXAgKnBpZHMgPSBjc3NfcGlkcyhzZXFfY3NzKHNmKSk7CisKKwlzZXFfcHJpbnRmKHNmLCAibWF4
-ICVsbGRcbiIsCisJCSAgIChzNjQpYXRvbWljNjRfcmVhZCgmcGlkcy0+ZXZlbnRzX2xpbWl0X2lt
-cG9zZWQpKTsKIAlyZXR1cm4gMDsKIH0KIApAQCAtMzMzLDYgKzM2NiwyNyBAQCBzdGF0aWMgc3Ry
-dWN0IGNmdHlwZSBwaWRzX2ZpbGVzW10gPSB7CiAJeyB9CS8qIHRlcm1pbmF0ZSAqLwogfTsKIAor
-c3RhdGljIHN0cnVjdCBjZnR5cGUgcGlkc19maWxlc19sZWdhY3lbXSA9IHsKKwl7CisJCS5uYW1l
-ID0gIm1heCIsCisJCS53cml0ZSA9IHBpZHNfbWF4X3dyaXRlLAorCQkuc2VxX3Nob3cgPSBwaWRz
-X21heF9zaG93LAorCQkuZmxhZ3MgPSBDRlRZUEVfTk9UX09OX1JPT1QsCisJfSwKKwl7CisJCS5u
-YW1lID0gImN1cnJlbnQiLAorCQkucmVhZF9zNjQgPSBwaWRzX2N1cnJlbnRfcmVhZCwKKwkJLmZs
-YWdzID0gQ0ZUWVBFX05PVF9PTl9ST09ULAorCX0sCisJeworCQkubmFtZSA9ICJldmVudHMiLAor
-CQkuc2VxX3Nob3cgPSBwaWRzX2V2ZW50c19zaG93X2xlZ2FjeSwKKwkJLmZpbGVfb2Zmc2V0ID0g
-b2Zmc2V0b2Yoc3RydWN0IHBpZHNfY2dyb3VwLCBldmVudHNfZmlsZSksCisJCS5mbGFncyA9IENG
-VFlQRV9OT1RfT05fUk9PVCwKKwl9LAorCXsgfQkvKiB0ZXJtaW5hdGUgKi8KK307CisKIHN0cnVj
-dCBjZ3JvdXBfc3Vic3lzIHBpZHNfY2dycF9zdWJzeXMgPSB7CiAJLmNzc19hbGxvYwk9IHBpZHNf
-Y3NzX2FsbG9jLAogCS5jc3NfZnJlZQk9IHBpZHNfY3NzX2ZyZWUsCkBAIC0zNDEsNyArMzk1LDcg
-QEAgc3RydWN0IGNncm91cF9zdWJzeXMgcGlkc19jZ3JwX3N1YnN5cyA9IHsKIAkuY2FuX2ZvcmsJ
-PSBwaWRzX2Nhbl9mb3JrLAogCS5jYW5jZWxfZm9yawk9IHBpZHNfY2FuY2VsX2ZvcmssCiAJLnJl
-bGVhc2UJPSBwaWRzX3JlbGVhc2UsCi0JLmxlZ2FjeV9jZnR5cGVzCT0gcGlkc19maWxlcywKIAku
-ZGZsX2NmdHlwZXMJPSBwaWRzX2ZpbGVzLAorCS5sZWdhY3lfY2Z0eXBlcwk9IHBpZHNfZmlsZXNf
-bGVnYWN5LAogCS50aHJlYWRlZAk9IHRydWUsCiB9OwotLSAKMi4yNC4xCgo=
+When I manually set default n to MEMCG_KMEM in init/Kconfig, bellow error
+occurs,
+
+mm/slab_common.c: In function 'memcg_slab_start':
+mm/slab_common.c:1530:30: error: 'struct mem_cgroup' has no member named
+'kmem_caches'
+  return seq_list_start(&memcg->kmem_caches, *pos);
+                              ^
+mm/slab_common.c: In function 'memcg_slab_next':
+mm/slab_common.c:1537:32: error: 'struct mem_cgroup' has no member named
+'kmem_caches'
+  return seq_list_next(p, &memcg->kmem_caches, pos);
+                                ^
+mm/slab_common.c: In function 'memcg_slab_show':
+mm/slab_common.c:1551:16: error: 'struct mem_cgroup' has no member named
+'kmem_caches'
+  if (p == memcg->kmem_caches.next)
+                ^
+  CC      arch/x86/xen/smp.o
+mm/slab_common.c: In function 'memcg_slab_start':
+mm/slab_common.c:1531:1: warning: control reaches end of non-void function
+[-Wreturn-type]
+ }
+ ^
+mm/slab_common.c: In function 'memcg_slab_next':
+mm/slab_common.c:1538:1: warning: control reaches end of non-void function
+[-Wreturn-type]
+ }
+ ^
+
+That's because kmem_caches is defined only when CONFIG_MEMCG_KMEM is set,
+while memcg_slab_start() will use it no matter CONFIG_MEMCG_KMEM is defined
+or not.
+
+By the way, the reason I mannuly undefined CONFIG_MEMCG_KMEM is to verify
+whether my some other code change is still stable when CONFIG_MEMCG_KMEM is
+not set. Unfortunately, the existing code has been already unstable since
+v4.11.
+
+Fixes: bc2791f857e1 ("slab: link memcg kmem_caches on their associated memory cgroup")
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ mm/memcontrol.c  | 2 ++
+ mm/slab_common.c | 2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 6f6dc8712e39..43f0125b45bb 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4723,6 +4723,7 @@ static struct cftype mem_cgroup_legacy_files[] = {
+ 		.write = mem_cgroup_reset,
+ 		.read_u64 = mem_cgroup_read_u64,
+ 	},
++#ifdef CONFIG_MEMCG_KMEM
+ #if defined(CONFIG_SLAB) || defined(CONFIG_SLUB_DEBUG)
+ 	{
+ 		.name = "kmem.slabinfo",
+@@ -4731,6 +4732,7 @@ static struct cftype mem_cgroup_legacy_files[] = {
+ 		.seq_stop = memcg_slab_stop,
+ 		.seq_show = memcg_slab_show,
+ 	},
++#endif
+ #endif
+ 	{
+ 		.name = "kmem.tcp.limit_in_bytes",
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index 1907cb2903c7..5282f881d2f5 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -1521,7 +1521,7 @@ void dump_unreclaimable_slab(void)
+ 	mutex_unlock(&slab_mutex);
+ }
+ 
+-#if defined(CONFIG_MEMCG)
++#if defined(CONFIG_MEMCG_KMEM)
+ void *memcg_slab_start(struct seq_file *m, loff_t *pos)
+ {
+ 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
+-- 
+2.14.1
+
