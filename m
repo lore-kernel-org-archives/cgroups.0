@@ -1,100 +1,142 @@
-From: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm, memcg: fix build error around the usage of
- kmem_caches
-Date: Wed, 5 Feb 2020 18:18:56 +0100
-Message-ID: <1ef8ee2e-0f50-fcd6-ae13-d6524fcf9764@redhat.com>
-References: <1580922215-5272-1-git-send-email-laoar.shao@gmail.com>
+From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 1/3] cgroup: Iterate tasks that did not finish do_exit()
+Date: Wed, 5 Feb 2020 09:27:45 -0800
+Message-ID: <CAJuCfpEq9c6cdEdqZOq6KDmxSHLNzby=46psRYpGxYhDT31yew@mail.gmail.com>
+References: <20200120145635.GA30904@blackbody.suse.cz> <20200124114017.8363-1-mkoutny@suse.com>
+ <20200124114017.8363-2-mkoutny@suse.com> <CAJuCfpGjC=YwY=oNnYFNDp2nCuR9YhSU95=xbbeoDEheemte+Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1580923157;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=gIyB4KCgThCAN1Ny4WvXktKwaa2MWcRreFTLvoHvsE0=;
-        b=Yz8Sb8f1Ywqf9q8P9XbuM5jSqdFvd++E86E0a2hfusFBph/TLY2hyD8xl37cO4iEJmEmal
-        3apMS3bF87xK0+gAm/t7LixyYvGQ9P7lqRJEo4KVO5opFwbJ0d+ehTSjaoY9HQO/UpJS+6
-        jeFLQHvllp19McpGd1IHCXHfifbz2nY=
-In-Reply-To: <1580922215-5272-1-git-send-email-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=/J7K6eoBY50PYm0N/u4X3+dlKUZnt64LaOlAE9qk+tY=;
+        b=lJaz2HSL0GodXUnBdAWn5vXGicOnSOjlEzL6WRhsXUYvoCwf2EksV/H80DsSr0HvVU
+         jf5gZF9txDXrM3yAMqWtQrJa6rF6ZxYg2ABlbXin3ylMvhed2NeSefp4yc29oR7AO7Kq
+         SForPuVGtkLxc0SWSZpIfaM7l+JRe3quj6YnZtk6CLCdH6Ya1+FowX4QH8PE8atAmrxL
+         2mwslJZqu1/pZH8QJ9X3mo5JZXE2zX0ovIXlKc9ZS9JoWrcs0qZi3ZNp1BsgCSehUGC7
+         pVPo2EESWoXfB1s0YdZHI7GfTR2svAMgYjRNn51zpIpuaTZN19/bg1o9tYC2NLTZCylr
+         L8ig==
+In-Reply-To: <CAJuCfpGjC=YwY=oNnYFNDp2nCuR9YhSU95=xbbeoDEheemte+Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kernel-team <kernel-team-z5hGa2qSFaRBDgjK7y7TUQ@public.gmane.org>, JeiFeng Lee <linger.lee-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tom Cherry <tomcherry-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 05.02.20 18:03, Yafang Shao wrote:
-> When I manually set default n to MEMCG_KMEM in init/Kconfig, bellow error
-> occurs,
-> 
-> mm/slab_common.c: In function 'memcg_slab_start':
-> mm/slab_common.c:1530:30: error: 'struct mem_cgroup' has no member named
-> 'kmem_caches'
->   return seq_list_start(&memcg->kmem_caches, *pos);
->                               ^
-> mm/slab_common.c: In function 'memcg_slab_next':
-> mm/slab_common.c:1537:32: error: 'struct mem_cgroup' has no member named
-> 'kmem_caches'
->   return seq_list_next(p, &memcg->kmem_caches, pos);
->                                 ^
-> mm/slab_common.c: In function 'memcg_slab_show':
-> mm/slab_common.c:1551:16: error: 'struct mem_cgroup' has no member named
-> 'kmem_caches'
->   if (p == memcg->kmem_caches.next)
->                 ^
->   CC      arch/x86/xen/smp.o
-> mm/slab_common.c: In function 'memcg_slab_start':
-> mm/slab_common.c:1531:1: warning: control reaches end of non-void function
-> [-Wreturn-type]
->  }
->  ^
-> mm/slab_common.c: In function 'memcg_slab_next':
-> mm/slab_common.c:1538:1: warning: control reaches end of non-void function
-> [-Wreturn-type]
->  }
->  ^
-> 
-> That's because kmem_caches is defined only when CONFIG_MEMCG_KMEM is set,
-> while memcg_slab_start() will use it no matter CONFIG_MEMCG_KMEM is defined
-> or not.
-> 
-> By the way, the reason I mannuly undefined CONFIG_MEMCG_KMEM is to verify
-> whether my some other code change is still stable when CONFIG_MEMCG_KMEM is
-> not set. Unfortunately, the existing code has been already unstable since
-> v4.11.
-> 
-> Fixes: bc2791f857e1 ("slab: link memcg kmem_caches on their associated memory cgroup")
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> ---
->  mm/memcontrol.c  | 2 ++
->  mm/slab_common.c | 2 +-
->  2 files changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 6f6dc8712e39..43f0125b45bb 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -4723,6 +4723,7 @@ static struct cftype mem_cgroup_legacy_files[] = {
->  		.write = mem_cgroup_reset,
->  		.read_u64 = mem_cgroup_read_u64,
->  	},
-> +#ifdef CONFIG_MEMCG_KMEM
->  #if defined(CONFIG_SLAB) || defined(CONFIG_SLUB_DEBUG)
+On Fri, Jan 24, 2020 at 2:56 PM Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrot=
+e:
+>
+> On Fri, Jan 24, 2020 at 3:40 AM Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org> wro=
+te:
+> >
+> > PF_EXITING is set earlier than actual removal from css_set when a task
+> > is exitting. This can confuse cgroup.procs readers who see no PF_EXITIN=
+G
+> > tasks, however, rmdir is checking against css_set membership so it can
+> > transitionally fail with EBUSY.
+> >
+> > Fix this by listing tasks that weren't unlinked from css_set active
+> > lists.
+> > It may happen that other users of the task iterator (without
+> > CSS_TASK_ITER_PROCS) spot a PF_EXITING task before cgroup_exit(). This
+> > is equal to the state before commit c03cd7738a83 ("cgroup: Include dyin=
+g
+> > leaders with live threads in PROCS iterations") but it may be reviewed
+> > later.
+> >
+> > Reported-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > Fixes: c03cd7738a83 ("cgroup: Include dying leaders with live threads i=
+n PROCS iterations")
+> > Signed-off-by: Michal Koutn=C3=BD <mkoutny-IBi9RG/b67k@public.gmane.org>
+> > ---
+> >  include/linux/cgroup.h |  1 +
+> >  kernel/cgroup/cgroup.c | 23 ++++++++++++++++-------
+> >  2 files changed, 17 insertions(+), 7 deletions(-)
+> >
+> > diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+> > index d7ddebd0cdec..e75d2191226b 100644
+> > --- a/include/linux/cgroup.h
+> > +++ b/include/linux/cgroup.h
+> > @@ -62,6 +62,7 @@ struct css_task_iter {
+> >         struct list_head                *mg_tasks_head;
+> >         struct list_head                *dying_tasks_head;
+> >
+> > +       struct list_head                *cur_tasks_head;
+> >         struct css_set                  *cur_cset;
+> >         struct css_set                  *cur_dcset;
+> >         struct task_struct              *cur_task;
+> > diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+> > index 735af8f15f95..a6e3619e013b 100644
+> > --- a/kernel/cgroup/cgroup.c
+> > +++ b/kernel/cgroup/cgroup.c
+> > @@ -4404,12 +4404,16 @@ static void css_task_iter_advance_css_set(struc=
+t css_task_iter *it)
+> >                 }
+> >         } while (!css_set_populated(cset) && list_empty(&cset->dying_ta=
+sks));
+> >
+> > -       if (!list_empty(&cset->tasks))
+> > +       if (!list_empty(&cset->tasks)) {
+> >                 it->task_pos =3D cset->tasks.next;
+> > -       else if (!list_empty(&cset->mg_tasks))
+> > +               it->cur_tasks_head =3D &cset->tasks;
+> > +       } else if (!list_empty(&cset->mg_tasks)) {
+> >                 it->task_pos =3D cset->mg_tasks.next;
+> > -       else
+> > +               it->cur_tasks_head =3D &cset->mg_tasks;
+> > +       } else {
+> >                 it->task_pos =3D cset->dying_tasks.next;
+> > +               it->cur_tasks_head =3D &cset->dying_tasks;
+> > +       }
+> >
+> >         it->tasks_head =3D &cset->tasks;
+> >         it->mg_tasks_head =3D &cset->mg_tasks;
+> > @@ -4467,10 +4471,14 @@ static void css_task_iter_advance(struct css_ta=
+sk_iter *it)
+> >                 else
+> >                         it->task_pos =3D it->task_pos->next;
+> >
+> > -               if (it->task_pos =3D=3D it->tasks_head)
+> > +               if (it->task_pos =3D=3D it->tasks_head) {
+> >                         it->task_pos =3D it->mg_tasks_head->next;
+> > -               if (it->task_pos =3D=3D it->mg_tasks_head)
+> > +                       it->cur_tasks_head =3D it->mg_tasks_head;
+> > +               }
+> > +               if (it->task_pos =3D=3D it->mg_tasks_head) {
+> >                         it->task_pos =3D it->dying_tasks_head->next;
+> > +                       it->cur_tasks_head =3D it->dying_tasks_head;
+> > +               }
+> >                 if (it->task_pos =3D=3D it->dying_tasks_head)
+> >                         css_task_iter_advance_css_set(it);
+> >         } else {
+> > @@ -4489,11 +4497,12 @@ static void css_task_iter_advance(struct css_ta=
+sk_iter *it)
+> >                         goto repeat;
+> >
+> >                 /* and dying leaders w/o live member threads */
+> > -               if (!atomic_read(&task->signal->live))
+> > +               if (it->cur_tasks_head =3D=3D it->dying_tasks_head &&
+> > +                   !atomic_read(&task->signal->live))
+> >                         goto repeat;
+> >         } else {
+> >                 /* skip all dying ones */
+> > -               if (task->flags & PF_EXITING)
+> > +               if (it->cur_tasks_head =3D=3D it->dying_tasks_head)
+> >                         goto repeat;
+> >         }
+> >  }
+> > --
+> > 2.24.1
+> >
+>
+> Tested-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>
+> Thanks!
 
-Not sure if
-
-#if defined(CONFIG_MEMCG_KMEM) && \
-    (defined(CONFIG_SLAB) || defined(CONFIG_SLUB_DEBUG))
-
-is preffered
-
-
--- 
-Thanks,
-
-David / dhildenb
-
+Hi Folks,
+If this new version looks good could we get an Ack please? I need to
+start backporting this fix to Android and would like a confirmation
+before doing so.
+Thanks!
