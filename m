@@ -1,104 +1,73 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 2/2] loop: charge i/o per cgroup
-Date: Thu, 6 Feb 2020 10:46:24 -0500
-Message-ID: <20200206154624.GB24735@cmpxchg.org>
-References: <20200205223348.880610-1-dschatzberg@fb.com>
- <20200205223348.880610-3-dschatzberg@fb.com>
+From: Mina Almasry <almasrymina@google.com>
+Subject: Re: [PATCH v11 2/9] hugetlb_cgroup: add interface for charge/uncharge
+ hugetlb reservations
+Date: Thu, 6 Feb 2020 10:16:01 -0800
+Message-ID: <CAHS8izOYB3cz+EP4G8qNJygO7Zjq6AFbpnGrjthCXKi4DHUx3A@mail.gmail.com>
+References: <20200203232248.104733-1-almasrymina@google.com>
+ <20200203232248.104733-2-almasrymina@google.com> <a48fbdd1-fc0e-f17d-09c2-1492c8466254@oracle.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=kRRvyBPWT8Es74STxomqTpDHCa76gQjLB2CCJUssayM=;
-        b=0gXevC6aEU0IZUlb9/scF02jWHTiU00qYk9LUijF/5hdiUCvqa3NevcaCnTmUvmIZJ
-         CYl8Ti03GJNi5pVRpJqPN5HOA8djad0yBQW9pK1tLsRFlhHCIXSm+pLiNRbNLQAJyYBb
-         8hB7k5FpnOV9OvPz6HvFNMEhfAGLY8OO2Tbooi/mlTZ1d0gBgQ7mhUyPkm0pn09Lr09x
-         dhaCfJ5w00U3iDJU2nz/apuWVj+wqT0tTZZjH+MAiTH97+aChNnm99JtRN1E3cl5C62J
-         uG+Z9gfVIqQMx3/mFI+VdLgQ+QdjDNLLJ5HtIe8hotQ+LY7VXECCoCGTXi7SuNk1OtnH
-         8ujQ==
-Content-Disposition: inline
-In-Reply-To: <20200205223348.880610-3-dschatzberg@fb.com>
-Sender: linux-block-owner@vger.kernel.org
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=hqXyWTPsRk1sbEhv4F9kR6Aqgito1sCOBhDIlov5OKo=;
+        b=kPIbp8EjtDr3arTeSUaNQfsuunB6rDyUC15mM8xmbQzCU6cCM9dZcABgKrZu4aA4ot
+         zGuPoZjW03Kp1BP9L3alLJLvShDanfAxcTC0vG5bq/BAE5FXyJVYDAKHvx5m39Yiv3MX
+         3y6ca5OVMQ8AlQEMGZpuo2T9mcNKYt6EI8Z4OfEFgWzxk2cutJWG3VAKPyeJMZETw3Se
+         7IhrMnmTt3fKkQ7CP84POfDcoJX7OVACnImZLwfi4pnotY7FBPiwV+g1jHcv+pYo2k/3
+         zhAr8gEiBDGGaCaQ9VTVp+Kqfq3MxqzKgQw5MLl4pU9oEDHH8EUydogxSexQaL4d5J7x
+         ogaA==
+In-Reply-To: <a48fbdd1-fc0e-f17d-09c2-1492c8466254@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dan Schatzberg <dschatzberg@fb.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm@kvack.org>
+To: Mike Kravetz <mike.kravetz@oracle.com>
+Cc: shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org
 
-Hello Dan,
+On Wed, Feb 5, 2020 at 2:08 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
+>
+> On 2/3/20 3:22 PM, Mina Almasry wrote:
+> > Augments hugetlb_cgroup_charge_cgroup to be able to charge hugetlb
+> > usage or hugetlb reservation counter.
+> >
+> > Adds a new interface to uncharge a hugetlb_cgroup counter via
+> > hugetlb_cgroup_uncharge_counter.
+> >
+> > Integrates the counter with hugetlb_cgroup, via hugetlb_cgroup_init,
+> > hugetlb_cgroup_have_usage, and hugetlb_cgroup_css_offline.
+> >
+> > Signed-off-by: Mina Almasry <almasrymina@google.com>
+> > Acked-by: Mike Kravetz <mike.kravetz@oracle.com>
+> > Acked-by: David Rientjes <rientjes@google.com>
+> >
+> > ---
+> >
+> > Changes in v11:
+> > - Changed all 'reserved' or 'reservation' to 'rsvd' to reflect the user
+> > interface.
+>
+> Thanks.
+>
+> Small nit,
+>
+> > @@ -450,8 +496,7 @@ static ssize_t hugetlb_cgroup_reset(struct kernfs_open_file *of,
+> >       struct hugetlb_cgroup *h_cg = hugetlb_cgroup_from_css(of_css(of));
+> >
+> >       counter = &h_cg->hugepage[MEMFILE_IDX(of_cft(of)->private)];
+> > -     rsvd_counter =
+> > -             &h_cg->rsvd_hugepage[MEMFILE_IDX(of_cft(of)->private)];
+> > +     rsvd_counter = &h_cg->rsvd_hugepage[MEMFILE_IDX(of_cft(of)->private)];
+> >
+>
+> That looks like a change just to reformat a line added in the first patch?
+>
+> >       switch (MEMFILE_ATTR(of_cft(of)->private)) {
+> >       case RES_MAX_USAGE:
+>
 
-On Wed, Feb 05, 2020 at 02:33:48PM -0800, Dan Schatzberg wrote:
-> @@ -1925,14 +1990,13 @@ static blk_status_t loop_queue_rq(struct blk_mq_hw_ctx *hctx,
->  	}
->  
->  	/* always use the first bio's css */
-> +	cmd->blk_css = NULL;
->  #ifdef CONFIG_BLK_CGROUP
-> -	if (cmd->use_aio && rq->bio && rq->bio->bi_blkg) {
-> -		cmd->css = &bio_blkcg(rq->bio)->css;
-> -		css_get(cmd->css);
-> -	} else
-> +	if (rq->bio && rq->bio->bi_blkg)
-> +		cmd->blk_css = &bio_blkcg(rq->bio)->css;
->  #endif
-> -		cmd->css = NULL;
-> -	kthread_queue_work(&lo->worker, &cmd->work);
-> +
-> +	loop_queue_work(lo, cmd);
->  
->  	return BLK_STS_OK;
->  }
-> @@ -1942,6 +2006,9 @@ static void loop_handle_cmd(struct loop_cmd *cmd)
->  	struct request *rq = blk_mq_rq_from_pdu(cmd);
->  	const bool write = op_is_write(req_op(rq));
->  	struct loop_device *lo = rq->q->queuedata;
-> +#ifdef CONFIG_MEMCG
-> +	struct cgroup_subsys_state *mem_css;
-> +#endif
->  	int ret = 0;
->  
->  	if (write && (lo->lo_flags & LO_FLAGS_READ_ONLY)) {
-> @@ -1949,8 +2016,24 @@ static void loop_handle_cmd(struct loop_cmd *cmd)
->  		goto failed;
->  	}
->  
-> +	if (cmd->blk_css) {
-> +#ifdef CONFIG_MEMCG
-> +		mem_css = cgroup_get_e_css(cmd->blk_css->cgroup,
-> +					&memory_cgrp_subsys);
-> +		memalloc_use_memcg(mem_cgroup_from_css(mem_css));
-> +#endif
-> +		kthread_associate_blkcg(cmd->blk_css);
-> +	}
-> +
->  	ret = do_req_filebacked(lo, rq);
-> - failed:
-> +
-> +	if (cmd->blk_css) {
-> +		kthread_associate_blkcg(NULL);
-> +#ifdef CONFIG_MEMCG
-> +		memalloc_unuse_memcg();
-> +#endif
+Gah, my bad. I'll move this to patch 1.
 
-cgroup_get_e_css() acquires a reference, it looks like you're missing
-a css_put() here.
-
-I also wonder why you look up blk_css and mem_css in separate
-places. Since you already renamed cmd->css to cmd->blk_css, can you
-also add cmd->mem_css and pair up their lookup and refcounting?
-
-This should make loop_handle_cmd() a bit more straight-forward:
-
-	if (cmd->blk_css)
-		kthread_associate_blkcg(cmd->blk_css);
-	if (cmd->mem_css)
-		memalloc_use_memcg(mem_cgroup_from_css(mem_css));
-
-	ret = do_req_filebacked(lo, rq);
-
-	memalloc_unuse_memcg();
-	kthread_associate_blkcg(NULL);
-
-All these functions have dummy implementations for !CONFIG_BLK_CGROUP,
-!CONFIG_MEMCG etc., so it shouldn't require any additional ifdefs.
+> --
+> Mike Kravetz
