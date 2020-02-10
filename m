@@ -1,60 +1,44 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+From: Qian Cai <cai@lca.pw>
 Subject: Re: [PATCH] mm/memcontrol: fix a data race in scan count
-Date: Sun, 9 Feb 2020 20:28:40 -0800
-Message-ID: <20200209202840.2bf97ffcfa811550d733c461@linux-foundation.org>
-References: <20200206034945.2481-1-cai@lca.pw>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581308920;
-        bh=l1OeRezZzhe+y0mBNHwN5J5otTAGBbttv+vIF5SGOJk=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=16CmDXbCPWS2GhluQtjfPjZiGcRa6DeS3CtEcGMYB8mhvGi20OtXYMbMkIR31W+2C
-         5zAWDQKxBkgmbnZRu1EFfvvbU9j9vaofeckw1R3rowBSLuusqh01YIjP8JbNd3cLww
-         44VYaNI4cEWAIktNi/gYtd6WzPyBlKFY/59jKcLo=
-In-Reply-To: <20200206034945.2481-1-cai-J5quhbR+WMc@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Date: Sun, 9 Feb 2020 23:44:26 -0500
+Message-ID: <6E237CA6-8968-4207-A9BB-1D18CB30822B@lca.pw>
+References: <20200209202840.2bf97ffcfa811550d733c461@linux-foundation.org>
+Mime-Version: 1.0 (1.0)
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=lca.pw; s=google;
+        h=content-transfer-encoding:from:mime-version:subject:date:message-id
+         :references:cc:in-reply-to:to;
+        bh=YyeG7ioMptg4bos9WvsiCAkWTH6MJSyQRYyd9Ee7o3E=;
+        b=CPdOs3rbLRg9yoyCDZ5FfBtSmUGg5ALJ1rif3cwywsjGy6iXqxjHOs2/coCTOgCWM5
+         skYy1c97oA7WOyENX5nrTq+i258mB5kN1lJ6844lZuBZ55mg3HCR3yJ2k3FqbD698WH9
+         1ypDv2ONkoc6fKwj3eSu5D3ygeQmlfVUjzau9YjRVEkOQGPXAaizsj9SOgiQQBOFpL15
+         GEiBmgJL5ZzsZP6WJoCEU8kAS/fwjWnPtNJjv3BBVhfnqza6eZKIcp/nCD2NX1Tnt2dp
+         4FBNLfo7cGYWsbrfhI6Cbvxgs0IhF0Nt4PpEXKMRJcM6jnyLoPKKXvFbPUS1Glf1qWMw
+         ZbYQ==
+In-Reply-To: <20200209202840.2bf97ffcfa811550d733c461@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Qian Cai <cai-J5quhbR+WMc@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-
-On Wed,  5 Feb 2020 22:49:45 -0500 Qian Cai <cai-J5quhbR+WMc@public.gmane.org> wrote:
-
-> struct mem_cgroup_per_node mz.lru_zone_size[zone_idx][lru] could be
-> accessed concurrently as noticed by KCSAN,
-> 
-> ...
->
->  Reported by Kernel Concurrency Sanitizer on:
->  CPU: 95 PID: 50964 Comm: cc1 Tainted: G        W  O L    5.5.0-next-20200204+ #6
->  Hardware name: HPE ProLiant DL385 Gen10/ProLiant DL385 Gen10, BIOS A40 07/10/2019
-> 
-> The write is under lru_lock, but the read is done as lockless. The scan
-> count is used to determine how aggressively the anon and file LRU lists
-> should be scanned. Load tearing could generate an inefficient heuristic,
-> so fix it by adding READ_ONCE() for the read.
-> 
-> ...
->
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -533,7 +533,7 @@ unsigned long mem_cgroup_get_zone_lru_size(struct lruvec *lruvec,
->  	struct mem_cgroup_per_node *mz;
->  
->  	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
-> -	return mz->lru_zone_size[zone_idx][lru];
-> +	return READ_ONCE(mz->lru_zone_size[zone_idx][lru]);
->  }
-
-I worry about the readability/maintainability of these things.  A naive
-reader who comes upon this code will wonder "why the heck is it using
-READ_ONCE?".  A possibly lengthy trawl through the git history will
-reveal the reason but that's rather unkind.  Wouldn't a simple
-
-	/* modified under lru_lock, so use READ_ONCE */
-
-improve the situation?
+Content-Type: text/plain; charset="windows-1252"
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
 
+
+> On Feb 9, 2020, at 11:28 PM, Andrew Morton <akpm@linux-foundation.org> wro=
+te:
+>=20
+> I worry about the readability/maintainability of these things.  A naive
+> reader who comes upon this code will wonder "why the heck is it using
+> READ_ONCE?".  A possibly lengthy trawl through the git history will
+> reveal the reason but that's rather unkind.  Wouldn't a simple
+>=20
+>    /* modified under lru_lock, so use READ_ONCE */
+>=20
+> improve the situation?
+
+Sure. I just don=E2=80=99t remember there are many places in the existing co=
+de which put comments for READ_ONCE() and WRITE_ONCE(). For example, kernel/=
+locking/osq_lock.c and kernel/rcu/srcutree.c, but I suppose every subsystem c=
+ould be different.=
