@@ -1,63 +1,33 @@
-From: Mike Kravetz <mike.kravetz@oracle.com>
-Subject: Re: [PATCH v11 6/9] hugetlb_cgroup: support noreserve mappings
-Date: Tue, 11 Feb 2020 13:51:33 -0800
-Message-ID: <6b097a9d-3b2c-94cb-21a8-7e7a55a8f635@oracle.com>
-References: <20200203232248.104733-1-almasrymina@google.com>
- <20200203232248.104733-6-almasrymina@google.com>
- <6cc406e7-757f-4922-ffc0-681df3ee0d18@oracle.com>
- <CAHS8izMGreJgOhG8ivE2OH9bq98BmvxAqtBc=M9waTqOKv3eeQ@mail.gmail.com>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH v12 1/9] hugetlb_cgroup: Add hugetlb_cgroup reservation
+ counter
+Date: Tue, 11 Feb 2020 15:19:06 -0800
+Message-ID: <20200211151906.637d1703e4756066583b89da@linux-foundation.org>
+References: <20200211213128.73302-1-almasrymina@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=q9CJH8blGd3JpsYmKV23Sgj8OEPJrRzAG9QrB6xaUUE=;
- b=gTnVVwFTBUdHJ9eyfYo5Hmcz5SmP6JFCX2FdoK9AAaKAy4pE/nPnVjvP2xA7yiAfSd51
- SV13Y+41lw/40Kz8+mkudhl4f25TKjG6pcLy27qm48RMTaC31bmONVIJdhxVoo6f3goM
- C+YrHyyim7kYOG4Zw1kkJb0PCJVT/QrAg1sN1TutWMj6YwjBqqkHVBWAJyf4LfxJN06C
- rH742UiXRU9FP7n9X6y6xBK/4QFovcvcwQZfpxznZUnsuJN0op3wgzcN8edxuaS1tjHD
- KQQdbyS8QaaV1L8dDKyhbmpWXBuTF6xK/4sVabr5eeelDDl4MbC9owbEyJZZZAUOOpXF vg== 
-In-Reply-To: <CAHS8izMGreJgOhG8ivE2OH9bq98BmvxAqtBc=M9waTqOKv3eeQ@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1581463147;
+        bh=0TVKSVRJRv/z3S7kxpkrJCMjT/X+SvLuGM2qOdND2sw=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=Cu3jAtewRRDlmCAw+wkXwFQAflXIRX/nRaeTMPRBLFRtS7HfQmFogOcd+JSX1pXmr
+         o4zDJhRMBWqCseqvBTHft9sdTDjPjqye7WP/eoKKRudXmhnqi/G3pDQuYo4BuRJ3eq
+         VIyVuHqInOEuCzLbUH7F3jI64oVXTL59gXIYLT3s=
+In-Reply-To: <20200211213128.73302-1-almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Mina Almasry <almasrymina@google.com>
-Cc: shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, open list <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org
+To: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2/11/20 1:35 PM, Mina Almasry wrote:
-> On Thu, Feb 6, 2020 at 2:31 PM Mike Kravetz <mike.kravetz@oracle.com> wrote:
->> On 2/3/20 3:22 PM, Mina Almasry wrote:
->>> +++ b/mm/hugetlb.c
->>> @@ -1339,6 +1339,9 @@ static void __free_huge_page(struct page *page)
->>>       clear_page_huge_active(page);
->>>       hugetlb_cgroup_uncharge_page(hstate_index(h), pages_per_huge_page(h),
->>>                                    page, false);
->>> +     hugetlb_cgroup_uncharge_page(hstate_index(h), pages_per_huge_page(h),
->>> +                                  page, true);
->>> +
->>
->> When looking at the code without change markings, the two above lines
->> look so similar my first thought is there must be a mistake.
->>
->> A suggestion for better code readability:
->> - hugetlb_cgroup_uncharge_page could just take "struct hstate *h" and
->>   get both hstate_index(h) and pages_per_huge_page(h).
->> - Perhaps make hugetlb_cgroup_uncharge_page and
->>   hugetlb_cgroup_uncharge_page_rsvd be wrappers around a common routine.
->>   Then the above would look like:
->>
->>   hugetlb_cgroup_uncharge_page(h, page);
->>   hugetlb_cgroup_uncharge_page_rsvd(h, page);
->>
-> 
-> I did modify the interfaces to this, as it's much better for
-> readability indeed. Unfortunately the patch the adds interfaces
-> probably needs a re-review now as it's changed quite a bit, I did not
-> carry your or David's Reviewed-by.
+On Tue, 11 Feb 2020 13:31:20 -0800 Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 
-No worries.  Happy to review again.
+> These counters will track hugetlb reservations rather than hugetlb
+> memory faulted in. This patch only adds the counter, following patches
+> add the charging and uncharging of the counter.
 
--- 
-Mike Kravetz
+We're still pretty thin on review here, but as it's v12 and Mike
+appears to be signed up to look at this work, I'll add them to -next to
+help move things forward.
+
