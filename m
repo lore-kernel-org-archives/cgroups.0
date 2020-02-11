@@ -1,58 +1,63 @@
-From: Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org>
-Subject: [PATCH] cgroup/cpuset: Fix a race condition when reading cpuset.*
-Date: Tue, 11 Feb 2020 14:15:54 +0000
-Message-ID: <20200211141554.24181-1-qais.yousef@arm.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH] memcg: lost css_put in memcg_expand_shrinker_maps()
+Date: Tue, 11 Feb 2020 06:44:04 -0800
+Message-ID: <20200211144404.GB480760@tower.DHCP.thefacebook.com>
+References: <c98414fb-7e1f-da0f-867a-9340ec4bd30b@virtuozzo.com>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=898GNIYJYiCvxqLwhhSO7pZniKBGW1/77sws03+Vo/o=;
+ b=hEWH7kaFExfm/zUnj507655AaP9x3dZlggEInPKOfljx8ZauVJ8Y4d35MCWPmpYw+7GN
+ lHhqzEHITYOLqYeWGpKqXbBcjhbx5s0nDfd+crnQJo91VjzpdC+weA6aiWS8LuULh3XH
+ QCdxxo0qvk5JHdnPuDVEbvDaAI5iU7rCl1s= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=898GNIYJYiCvxqLwhhSO7pZniKBGW1/77sws03+Vo/o=;
+ b=PRK9wpjp32GGpnjmCOX3Xnv2J2D7h42S/QfStXYrZYmvSTlz377kqWZFVTF4ydHkaHp3apT9Zvru/qI9pk89SUhEfDk5Aa+XXB6Z5jp0Oddct1EZQkGA2YHaY5N+9CP0NgfpvrmEQkBKT36/k69S1H257CKy6wrO123WoSCLilw=
+Content-Disposition: inline
+In-Reply-To: <c98414fb-7e1f-da0f-867a-9340ec4bd30b-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org>
+To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kirill Tkhai <ktkhai-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-LTP cpuset_hotplug_test.sh was failing with the following error message
+On Tue, Feb 11, 2020 at 02:20:10PM +0300, Vasily Averin wrote:
+> for_each_mem_cgroup() increases css reference counter for memory cgroup
+> and requires to use mem_cgroup_iter_break() if the walk is cancelled.
+> 
+> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Fixes commit 0a4465d34028("mm, memcg: assign memcg-aware shrinkers bitmap to memcg")
+> 
+> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-	cpuset_hotplug 1 TFAIL: root group's cpus isn't expected(Result: 0-5, Expect: 0,2-5).
+Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-Which is due to a race condition between cpu hotplug operation and
-reading cpuset.cpus file.
+Thank you!
 
-When a cpu is onlined/offlined, cpuset schedules a workqueue to sync its
-internal data structures with the new values. If a read happens during
-this window, the user will read a stale value, hence triggering the
-failure above.
-
-To fix the issue make sure cpuset_wait_for_hotplug() is called before
-allowing any value to be read, hence forcing the synchronization to
-happen before the read.
-
-I ran 500 iterations with this fix applied with no failure triggered.
-
-Signed-off-by: Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org>
----
-
-I think it's okay to flush the workqueue from the read context? We do it on the
-write, so I assumed it's okay on the read too. But it'd be good to confirm it
-doesn't break any rule I'm not aware of.
-
- kernel/cgroup/cpuset.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 58f5073acff7..593055522626 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -2405,6 +2405,9 @@ static int cpuset_common_seq_show(struct seq_file *sf, void *v)
- 	cpuset_filetype_t type = seq_cft(sf)->private;
- 	int ret = 0;
- 
-+	/* Ensure all hotplug ops were done before reading any value */
-+	cpuset_wait_for_hotplug();
-+
- 	spin_lock_irq(&callback_lock);
- 
- 	switch (type) {
--- 
-2.17.1
-
+> ---
+>  mm/memcontrol.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 6c83cf4..e2da615 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -409,8 +409,10 @@ int memcg_expand_shrinker_maps(int new_id)
+>  		if (mem_cgroup_is_root(memcg))
+>  			continue;
+>  		ret = memcg_expand_one_shrinker_map(memcg, size, old_size);
+> -		if (ret)
+> +		if (ret) {
+> +			mem_cgroup_iter_break(NULL, memcg);
+>  			goto unlock;
+> +		}
+>  	}
+>  unlock:
+>  	if (!ret)
+> -- 
+> 1.8.3.1
+> 
