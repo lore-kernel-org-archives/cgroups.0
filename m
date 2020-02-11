@@ -1,63 +1,156 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH] memcg: lost css_put in memcg_expand_shrinker_maps()
-Date: Tue, 11 Feb 2020 06:44:04 -0800
-Message-ID: <20200211144404.GB480760@tower.DHCP.thefacebook.com>
-References: <c98414fb-7e1f-da0f-867a-9340ec4bd30b@virtuozzo.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 3/3] mm: memcontrol: recursive memory.low protection
+Date: Tue, 11 Feb 2020 17:47:53 +0100
+Message-ID: <20200211164753.GQ10636@dhcp22.suse.cz>
+References: <20191219200718.15696-1-hannes@cmpxchg.org>
+ <20191219200718.15696-4-hannes@cmpxchg.org>
+ <20200130170020.GZ24244@dhcp22.suse.cz>
+ <20200203215201.GD6380@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=898GNIYJYiCvxqLwhhSO7pZniKBGW1/77sws03+Vo/o=;
- b=hEWH7kaFExfm/zUnj507655AaP9x3dZlggEInPKOfljx8ZauVJ8Y4d35MCWPmpYw+7GN
- lHhqzEHITYOLqYeWGpKqXbBcjhbx5s0nDfd+crnQJo91VjzpdC+weA6aiWS8LuULh3XH
- QCdxxo0qvk5JHdnPuDVEbvDaAI5iU7rCl1s= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=898GNIYJYiCvxqLwhhSO7pZniKBGW1/77sws03+Vo/o=;
- b=PRK9wpjp32GGpnjmCOX3Xnv2J2D7h42S/QfStXYrZYmvSTlz377kqWZFVTF4ydHkaHp3apT9Zvru/qI9pk89SUhEfDk5Aa+XXB6Z5jp0Oddct1EZQkGA2YHaY5N+9CP0NgfpvrmEQkBKT36/k69S1H257CKy6wrO123WoSCLilw=
 Content-Disposition: inline
-In-Reply-To: <c98414fb-7e1f-da0f-867a-9340ec4bd30b-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+In-Reply-To: <20200203215201.GD6380-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kirill Tkhai <ktkhai-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Tue, Feb 11, 2020 at 02:20:10PM +0300, Vasily Averin wrote:
-> for_each_mem_cgroup() increases css reference counter for memory cgroup
-> and requires to use mem_cgroup_iter_break() if the walk is cancelled.
+On Mon 03-02-20 16:52:01, Johannes Weiner wrote:
+> On Thu, Jan 30, 2020 at 06:00:20PM +0100, Michal Hocko wrote:
+> > On Thu 19-12-19 15:07:18, Johannes Weiner wrote:
+> > > Right now, the effective protection of any given cgroup is capped by
+> > > its own explicit memory.low setting, regardless of what the parent
+> > > says. The reasons for this are mostly historical and ease of
+> > > implementation: to make delegation of memory.low safe, effective
+> > > protection is the min() of all memory.low up the tree.
+> > > 
+> > > Unfortunately, this limitation makes it impossible to protect an
+> > > entire subtree from another without forcing the user to make explicit
+> > > protection allocations all the way to the leaf cgroups - something
+> > > that is highly undesirable in real life scenarios.
+> > > 
+> > > Consider memory in a data center host. At the cgroup top level, we
+> > > have a distinction between system management software and the actual
+> > > workload the system is executing. Both branches are further subdivided
+> > > into individual services, job components etc.
+> > > 
+> > > We want to protect the workload as a whole from the system management
+> > > software, but that doesn't mean we want to protect and prioritize
+> > > individual workload wrt each other. Their memory demand can vary over
+> > > time, and we'd want the VM to simply cache the hottest data within the
+> > > workload subtree. Yet, the current memory.low limitations force us to
+> > > allocate a fixed amount of protection to each workload component in
+> > > order to get protection from system management software in
+> > > general. This results in very inefficient resource distribution.
+> > 
+> > I do agree that configuring the reclaim protection is not an easy task.
+> > Especially in a deeper reclaim hierarchy. systemd tends to create a deep
+> > and commonly shared subtrees. So having a protected workload really
+> > requires to be put directly into a new first level cgroup in practice
+> > AFAICT. That is a simpler example though. Just imagine you want to
+> > protect a certain user slice.
 > 
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Fixes commit 0a4465d34028("mm, memcg: assign memcg-aware shrinkers bitmap to memcg")
-> 
-> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+> Can you elaborate a bit on this? I don't quite understand the two
+> usecases you are contrasting here.
 
-Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-
-Thank you!
-
-> ---
->  mm/memcontrol.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+Essentially this is about two different usecases. The first one is about
+protecting a hierarchy and spreading the protection among different
+workloads and the second is how to protect an inner memcg without
+configuring protection all the way up the hierarchy.
+ 
+> > You seem to be facing a different problem though IIUC. You know how much
+> > memory you want to protect and you do not have to care about the cgroup
+> > hierarchy up but you do not know/care how to distribute that protection
+> > among workloads running under that protection. I agree that this is a
+> > reasonable usecase.
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 6c83cf4..e2da615 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -409,8 +409,10 @@ int memcg_expand_shrinker_maps(int new_id)
->  		if (mem_cgroup_is_root(memcg))
->  			continue;
->  		ret = memcg_expand_one_shrinker_map(memcg, size, old_size);
-> -		if (ret)
-> +		if (ret) {
-> +			mem_cgroup_iter_break(NULL, memcg);
->  			goto unlock;
-> +		}
->  	}
->  unlock:
->  	if (!ret)
-> -- 
-> 1.8.3.1
+> I'm not sure I'm parsing this right, but the use case is this:
 > 
+> When I'm running a multi-component workload on a host without any
+> cgrouping, the individual components compete over the host's memory
+> based on rate of allocation, how often they reference their memory and
+> so forth. It's a need-based distribution of pages, and the weight can
+> change as demand changes throughout the life of the workload.
+> 
+> If I now stick several of such workloads into a containerized
+> environment, I want to use memory.low to assign each workload as a
+> whole a chunk of memory it can use - I don't want to assign fixed-size
+> subchunks to each individual component of each workload! I want the
+> same free competition *within* the workload while setting clear rules
+> for competition *between* the different workloads.
+
+Yeah, that matches my understanding of the problem your are trying to
+solve here.
+> 
+> [ What I can do today to achieve this is disable the memory controller
+>   for the subgroups. When I do this, all pages of the workload are on
+>   one single LRU that is protected by one single memory.low.
+> 
+>   But obviously I lose any detailed accounting as well.
+> 
+>   This patch allows me to have the same recursive protection semantics
+>   while retaining accounting. ]
+> 
+> > Those both problems however show that we have a more general
+> > configurability problem for both leaf and intermediate nodes. They are
+> > both a result of strong requirements imposed by delegation as you have
+> > noted above. I am thinking didn't we just go too rigid here?
+> 
+> The requirement for delegation is that child groups cannot claim more
+> than the parent affords. Is that the restriction you are referring to?
+
+yes.
+
+> > Delegation points are certainly a security boundary and they should
+> > be treated like that but do we really need a strong containment when
+> > the reclaim protection is under admin full control? Does the admin
+> > really have to reconfigure a large part of the hierarchy to protect a
+> > particular subtree?
+> > 
+> > I do not have a great answer on how to implement this unfortunately. The
+> > best I could come up with was to add a "$inherited_protection" magic
+> > value to distinguish from an explicit >=0 protection. What's the
+> > difference? $inherited_protection would be a default and it would always
+> > refer to the closest explicit protection up the hierarchy (with 0 as a
+> > default if there is none defined).
+> >         A
+> >        / \
+> >       B   C (low=10G)
+> >          / \
+> >         D   E (low = 5G)
+> > 
+> > A, B don't get any protection (low=0). C gets protection (10G) and
+> > distributes the pressure to D, E when in excess. D inherits (low=10G)
+> > and E overrides the protection to 5G.
+> > 
+> > That would help both usecases AFAICS while the delegation should be
+> > still possible (configure the delegation point with an explicit
+> > value). I have very likely not thought that through completely.  Does
+> > that sound like a completely insane idea?
+> > 
+> > Or do you think that the two usecases are simply impossible to handle
+> > at the same time?
+> 
+> Doesn't my patch accomplish this?
+
+Unless I am missing something then I am afraid it doesn't. Say you have a
+default systemd cgroup deployment (aka deeper cgroup hierarchy with
+slices and scopes) and now you want to grant a reclaim protection on a
+leaf cgroup (or even a whole slice that is not really important). All the
+hierarchy up the tree has the protection set to 0 by default, right? You
+simply cannot get that protection. You would need to configure the
+protection up the hierarchy and that is really cumbersome.
+
+> Any cgroup or group of cgroups still cannot claim more than the
+> ancestral protection for the subtree. If a cgroup says 10G, the sum of
+> all children's protection will never exceed that. This ensures
+> delegation is safe.
+
+Right. And delegation usecase really requres that. No question about
+that. I am merely arguing that if you do not delegate then this is way
+too strict.
+-- 
+Michal Hocko
+SUSE Labs
