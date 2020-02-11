@@ -1,156 +1,399 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 3/3] mm: memcontrol: recursive memory.low protection
-Date: Tue, 11 Feb 2020 17:47:53 +0100
-Message-ID: <20200211164753.GQ10636@dhcp22.suse.cz>
-References: <20191219200718.15696-1-hannes@cmpxchg.org>
- <20191219200718.15696-4-hannes@cmpxchg.org>
- <20200130170020.GZ24244@dhcp22.suse.cz>
- <20200203215201.GD6380@cmpxchg.org>
+From: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v12 1/9] hugetlb_cgroup: Add hugetlb_cgroup reservation counter
+Date: Tue, 11 Feb 2020 13:31:20 -0800
+Message-ID: <20200211213128.73302-1-almasrymina@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20200203215201.GD6380-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=c+fsn30b3pWjnYOr6E6zF4UMAJj0Yx+BEAwnB5sP5J8=;
+        b=o72uVg9sJpd+UvYFuuzb65EzpdlHVgYlzpuacdYP9/+wTv2Z4axtnAWPKWaSxG6IpQ
+         i9dcYqDm3EvPgsU/gGmlv2hTh3VcuRQMBXk2ozPhdauogUYRRANuln5bEnykkP+r283Z
+         y23eVMMdbUea3L6hEh3nAVGVTJqqrXlksY/MBw3ew1KYrFawiAyBXrY1U2TJkaUQBdpC
+         Nk+mZAJJfw5/PcOuC0WhR0edQwbSvlAULRVTswulrGNWxCSBfahLjUWCi7m5hR7p0llS
+         GQweJbD6gKuLzUzXqd9B0/10J5D4hSIEkG/TTKksfnHRk0yRCplQk0U2I9jQLPOOf0Mf
+         S5Iw==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+Cc: shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon 03-02-20 16:52:01, Johannes Weiner wrote:
-> On Thu, Jan 30, 2020 at 06:00:20PM +0100, Michal Hocko wrote:
-> > On Thu 19-12-19 15:07:18, Johannes Weiner wrote:
-> > > Right now, the effective protection of any given cgroup is capped by
-> > > its own explicit memory.low setting, regardless of what the parent
-> > > says. The reasons for this are mostly historical and ease of
-> > > implementation: to make delegation of memory.low safe, effective
-> > > protection is the min() of all memory.low up the tree.
-> > > 
-> > > Unfortunately, this limitation makes it impossible to protect an
-> > > entire subtree from another without forcing the user to make explicit
-> > > protection allocations all the way to the leaf cgroups - something
-> > > that is highly undesirable in real life scenarios.
-> > > 
-> > > Consider memory in a data center host. At the cgroup top level, we
-> > > have a distinction between system management software and the actual
-> > > workload the system is executing. Both branches are further subdivided
-> > > into individual services, job components etc.
-> > > 
-> > > We want to protect the workload as a whole from the system management
-> > > software, but that doesn't mean we want to protect and prioritize
-> > > individual workload wrt each other. Their memory demand can vary over
-> > > time, and we'd want the VM to simply cache the hottest data within the
-> > > workload subtree. Yet, the current memory.low limitations force us to
-> > > allocate a fixed amount of protection to each workload component in
-> > > order to get protection from system management software in
-> > > general. This results in very inefficient resource distribution.
-> > 
-> > I do agree that configuring the reclaim protection is not an easy task.
-> > Especially in a deeper reclaim hierarchy. systemd tends to create a deep
-> > and commonly shared subtrees. So having a protected workload really
-> > requires to be put directly into a new first level cgroup in practice
-> > AFAICT. That is a simpler example though. Just imagine you want to
-> > protect a certain user slice.
-> 
-> Can you elaborate a bit on this? I don't quite understand the two
-> usecases you are contrasting here.
+These counters will track hugetlb reservations rather than hugetlb
+memory faulted in. This patch only adds the counter, following patches
+add the charging and uncharging of the counter.
 
-Essentially this is about two different usecases. The first one is about
-protecting a hierarchy and spreading the protection among different
-workloads and the second is how to protect an inner memcg without
-configuring protection all the way up the hierarchy.
- 
-> > You seem to be facing a different problem though IIUC. You know how much
-> > memory you want to protect and you do not have to care about the cgroup
-> > hierarchy up but you do not know/care how to distribute that protection
-> > among workloads running under that protection. I agree that this is a
-> > reasonable usecase.
-> 
-> I'm not sure I'm parsing this right, but the use case is this:
-> 
-> When I'm running a multi-component workload on a host without any
-> cgrouping, the individual components compete over the host's memory
-> based on rate of allocation, how often they reference their memory and
-> so forth. It's a need-based distribution of pages, and the weight can
-> change as demand changes throughout the life of the workload.
-> 
-> If I now stick several of such workloads into a containerized
-> environment, I want to use memory.low to assign each workload as a
-> whole a chunk of memory it can use - I don't want to assign fixed-size
-> subchunks to each individual component of each workload! I want the
-> same free competition *within* the workload while setting clear rules
-> for competition *between* the different workloads.
+This is patch 1 of an 9 patch series.
 
-Yeah, that matches my understanding of the problem your are trying to
-solve here.
-> 
-> [ What I can do today to achieve this is disable the memory controller
->   for the subgroups. When I do this, all pages of the workload are on
->   one single LRU that is protected by one single memory.low.
-> 
->   But obviously I lose any detailed accounting as well.
-> 
->   This patch allows me to have the same recursive protection semantics
->   while retaining accounting. ]
-> 
-> > Those both problems however show that we have a more general
-> > configurability problem for both leaf and intermediate nodes. They are
-> > both a result of strong requirements imposed by delegation as you have
-> > noted above. I am thinking didn't we just go too rigid here?
-> 
-> The requirement for delegation is that child groups cannot claim more
-> than the parent affords. Is that the restriction you are referring to?
+Problem:
+Currently tasks attempting to reserve more hugetlb memory than is
+available get a failure at mmap/shmget time. This is thanks to
+Hugetlbfs Reservations [1].  However, if a task attempts to reserve
+more hugetlb memory than its hugetlb_cgroup limit allows, the kernel
+will allow the mmap/shmget call, but will SIGBUS the task when it
+attempts to fault in the excess memory.
 
-yes.
+We have users hitting their hugetlb_cgroup limits and thus we've been
+looking at this failure mode. We'd like to improve this behavior such
+that users violating the hugetlb_cgroup limits get an error on
+mmap/shmget time, rather than getting SIGBUS'd when they try to fault
+the excess memory in. This gives the user an opportunity to fallback
+more gracefully to non-hugetlbfs memory for example.
 
-> > Delegation points are certainly a security boundary and they should
-> > be treated like that but do we really need a strong containment when
-> > the reclaim protection is under admin full control? Does the admin
-> > really have to reconfigure a large part of the hierarchy to protect a
-> > particular subtree?
-> > 
-> > I do not have a great answer on how to implement this unfortunately. The
-> > best I could come up with was to add a "$inherited_protection" magic
-> > value to distinguish from an explicit >=0 protection. What's the
-> > difference? $inherited_protection would be a default and it would always
-> > refer to the closest explicit protection up the hierarchy (with 0 as a
-> > default if there is none defined).
-> >         A
-> >        / \
-> >       B   C (low=10G)
-> >          / \
-> >         D   E (low = 5G)
-> > 
-> > A, B don't get any protection (low=0). C gets protection (10G) and
-> > distributes the pressure to D, E when in excess. D inherits (low=10G)
-> > and E overrides the protection to 5G.
-> > 
-> > That would help both usecases AFAICS while the delegation should be
-> > still possible (configure the delegation point with an explicit
-> > value). I have very likely not thought that through completely.  Does
-> > that sound like a completely insane idea?
-> > 
-> > Or do you think that the two usecases are simply impossible to handle
-> > at the same time?
-> 
-> Doesn't my patch accomplish this?
+The underlying problem is that today's hugetlb_cgroup accounting happens
+at hugetlb memory *fault* time, rather than at *reservation* time.
+Thus, enforcing the hugetlb_cgroup limit only happens at fault time, and
+the offending task gets SIGBUS'd.
 
-Unless I am missing something then I am afraid it doesn't. Say you have a
-default systemd cgroup deployment (aka deeper cgroup hierarchy with
-slices and scopes) and now you want to grant a reclaim protection on a
-leaf cgroup (or even a whole slice that is not really important). All the
-hierarchy up the tree has the protection set to 0 by default, right? You
-simply cannot get that protection. You would need to configure the
-protection up the hierarchy and that is really cumbersome.
+Proposed Solution:
+A new page counter named
+'hugetlb.xMB.rsvd.[limit|usage|max_usage]_in_bytes'. This counter has
+slightly different semantics than
+'hugetlb.xMB.[limit|usage|max_usage]_in_bytes':
 
-> Any cgroup or group of cgroups still cannot claim more than the
-> ancestral protection for the subtree. If a cgroup says 10G, the sum of
-> all children's protection will never exceed that. This ensures
-> delegation is safe.
+- While usage_in_bytes tracks all *faulted* hugetlb memory,
+rsvd.usage_in_bytes tracks all *reserved* hugetlb memory and
+hugetlb memory faulted in without a prior reservation.
 
-Right. And delegation usecase really requres that. No question about
-that. I am merely arguing that if you do not delegate then this is way
-too strict.
--- 
-Michal Hocko
-SUSE Labs
+- If a task attempts to reserve more memory than limit_in_bytes allows,
+the kernel will allow it to do so. But if a task attempts to reserve
+more memory than rsvd.limit_in_bytes, the kernel will fail this
+reservation.
+
+This proposal is implemented in this patch series, with tests to verify
+functionality and show the usage.
+
+Alternatives considered:
+1. A new cgroup, instead of only a new page_counter attached to
+   the existing hugetlb_cgroup. Adding a new cgroup seemed like a lot
+   of code duplication with hugetlb_cgroup. Keeping hugetlb related
+   page counters under hugetlb_cgroup seemed cleaner as well.
+
+2. Instead of adding a new counter, we considered adding a sysctl that
+   modifies the behavior of hugetlb.xMB.[limit|usage]_in_bytes, to do
+   accounting at reservation time rather than fault time. Adding a new
+   page_counter seems better as userspace could, if it wants, choose to
+   enforce different cgroups differently: one via limit_in_bytes, and
+   another via rsvd.limit_in_bytes.  This could be very useful if
+   you're transitioning how hugetlb memory is partitioned on your system
+   one cgroup at a time, for example. Also, someone may find usage for
+   both limit_in_bytes and rsvd.limit_in_bytes concurrently, and this
+   approach gives them the option to do so.
+
+Testing:
+- Added tests passing.
+- Used libhugetlbfs for regression testing.
+
+[1]: https://www.kernel.org/doc/html/latest/vm/hugetlbfs_reserv.html
+
+Signed-off-by: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Reviewed-by: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+
+---
+Changes in v12:
+- Minor code formatting.
+
+Changes in v11:
+- Renamed resv.* or 'reservation' or 'reserved' to rsvd.*
+- Renamed hugetlb_cgroup_get_counter() to
+hugetlb_cgroup_counter_from_cgroup().
+
+Changes in v10:
+- Renamed reservation_* to resv.*
+
+---
+ include/linux/hugetlb.h |   4 +-
+ mm/hugetlb_cgroup.c     | 115 +++++++++++++++++++++++++++++++++++-----
+ 2 files changed, 104 insertions(+), 15 deletions(-)
+
+diff --git a/include/linux/hugetlb.h b/include/linux/hugetlb.h
+index 1e897e4168ac1..dea6143aa0685 100644
+--- a/include/linux/hugetlb.h
++++ b/include/linux/hugetlb.h
+@@ -432,8 +432,8 @@ struct hstate {
+ 	unsigned int surplus_huge_pages_node[MAX_NUMNODES];
+ #ifdef CONFIG_CGROUP_HUGETLB
+ 	/* cgroup control files */
+-	struct cftype cgroup_files_dfl[5];
+-	struct cftype cgroup_files_legacy[5];
++	struct cftype cgroup_files_dfl[7];
++	struct cftype cgroup_files_legacy[9];
+ #endif
+ 	char name[HSTATE_NAME_LEN];
+ };
+diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
+index e434b05416c68..08b2adcdb5c1c 100644
+--- a/mm/hugetlb_cgroup.c
++++ b/mm/hugetlb_cgroup.c
+@@ -36,6 +36,11 @@ struct hugetlb_cgroup {
+ 	 */
+ 	struct page_counter hugepage[HUGE_MAX_HSTATE];
+
++	/*
++	 * the counter to account for hugepage reservations from hugetlb.
++	 */
++	struct page_counter rsvd_hugepage[HUGE_MAX_HSTATE];
++
+ 	atomic_long_t events[HUGE_MAX_HSTATE][HUGETLB_NR_MEMORY_EVENTS];
+ 	atomic_long_t events_local[HUGE_MAX_HSTATE][HUGETLB_NR_MEMORY_EVENTS];
+
+@@ -55,6 +60,15 @@ struct hugetlb_cgroup {
+
+ static struct hugetlb_cgroup *root_h_cgroup __read_mostly;
+
++static inline struct page_counter *
++hugetlb_cgroup_counter_from_cgroup(struct hugetlb_cgroup *h_cg, int idx,
++				   bool rsvd)
++{
++	if (rsvd)
++		return &h_cg->rsvd_hugepage[idx];
++	return &h_cg->hugepage[idx];
++}
++
+ static inline
+ struct hugetlb_cgroup *hugetlb_cgroup_from_css(struct cgroup_subsys_state *s)
+ {
+@@ -295,28 +309,42 @@ void hugetlb_cgroup_uncharge_cgroup(int idx, unsigned long nr_pages,
+
+ enum {
+ 	RES_USAGE,
++	RES_RSVD_USAGE,
+ 	RES_LIMIT,
++	RES_RSVD_LIMIT,
+ 	RES_MAX_USAGE,
++	RES_RSVD_MAX_USAGE,
+ 	RES_FAILCNT,
++	RES_RSVD_FAILCNT,
+ };
+
+ static u64 hugetlb_cgroup_read_u64(struct cgroup_subsys_state *css,
+ 				   struct cftype *cft)
+ {
+ 	struct page_counter *counter;
++	struct page_counter *rsvd_counter;
+ 	struct hugetlb_cgroup *h_cg = hugetlb_cgroup_from_css(css);
+
+ 	counter = &h_cg->hugepage[MEMFILE_IDX(cft->private)];
++	rsvd_counter = &h_cg->rsvd_hugepage[MEMFILE_IDX(cft->private)];
+
+ 	switch (MEMFILE_ATTR(cft->private)) {
+ 	case RES_USAGE:
+ 		return (u64)page_counter_read(counter) * PAGE_SIZE;
++	case RES_RSVD_USAGE:
++		return (u64)page_counter_read(rsvd_counter) * PAGE_SIZE;
+ 	case RES_LIMIT:
+ 		return (u64)counter->max * PAGE_SIZE;
++	case RES_RSVD_LIMIT:
++		return (u64)rsvd_counter->max * PAGE_SIZE;
+ 	case RES_MAX_USAGE:
+ 		return (u64)counter->watermark * PAGE_SIZE;
++	case RES_RSVD_MAX_USAGE:
++		return (u64)rsvd_counter->watermark * PAGE_SIZE;
+ 	case RES_FAILCNT:
+ 		return counter->failcnt;
++	case RES_RSVD_FAILCNT:
++		return rsvd_counter->failcnt;
+ 	default:
+ 		BUG();
+ 	}
+@@ -338,10 +366,16 @@ static int hugetlb_cgroup_read_u64_max(struct seq_file *seq, void *v)
+ 			   1 << huge_page_order(&hstates[idx]));
+
+ 	switch (MEMFILE_ATTR(cft->private)) {
++	case RES_RSVD_USAGE:
++		counter = &h_cg->rsvd_hugepage[idx];
++		/* Fall through. */
+ 	case RES_USAGE:
+ 		val = (u64)page_counter_read(counter);
+ 		seq_printf(seq, "%llu\n", val * PAGE_SIZE);
+ 		break;
++	case RES_RSVD_LIMIT:
++		counter = &h_cg->rsvd_hugepage[idx];
++		/* Fall through. */
+ 	case RES_LIMIT:
+ 		val = (u64)counter->max;
+ 		if (val == limit)
+@@ -365,6 +399,7 @@ static ssize_t hugetlb_cgroup_write(struct kernfs_open_file *of,
+ 	int ret, idx;
+ 	unsigned long nr_pages;
+ 	struct hugetlb_cgroup *h_cg = hugetlb_cgroup_from_css(of_css(of));
++	bool rsvd = false;
+
+ 	if (hugetlb_cgroup_is_root(h_cg)) /* Can't set limit on root */
+ 		return -EINVAL;
+@@ -378,9 +413,14 @@ static ssize_t hugetlb_cgroup_write(struct kernfs_open_file *of,
+ 	nr_pages = round_down(nr_pages, 1 << huge_page_order(&hstates[idx]));
+
+ 	switch (MEMFILE_ATTR(of_cft(of)->private)) {
++	case RES_RSVD_LIMIT:
++		rsvd = true;
++		/* Fall through. */
+ 	case RES_LIMIT:
+ 		mutex_lock(&hugetlb_limit_mutex);
+-		ret = page_counter_set_max(&h_cg->hugepage[idx], nr_pages);
++		ret = page_counter_set_max(
++			hugetlb_cgroup_counter_from_cgroup(h_cg, idx, rsvd),
++			nr_pages);
+ 		mutex_unlock(&hugetlb_limit_mutex);
+ 		break;
+ 	default:
+@@ -406,18 +446,25 @@ static ssize_t hugetlb_cgroup_reset(struct kernfs_open_file *of,
+ 				    char *buf, size_t nbytes, loff_t off)
+ {
+ 	int ret = 0;
+-	struct page_counter *counter;
++	struct page_counter *counter, *rsvd_counter;
+ 	struct hugetlb_cgroup *h_cg = hugetlb_cgroup_from_css(of_css(of));
+
+ 	counter = &h_cg->hugepage[MEMFILE_IDX(of_cft(of)->private)];
++	rsvd_counter = &h_cg->rsvd_hugepage[MEMFILE_IDX(of_cft(of)->private)];
+
+ 	switch (MEMFILE_ATTR(of_cft(of)->private)) {
+ 	case RES_MAX_USAGE:
+ 		page_counter_reset_watermark(counter);
+ 		break;
++	case RES_RSVD_MAX_USAGE:
++		page_counter_reset_watermark(rsvd_counter);
++		break;
+ 	case RES_FAILCNT:
+ 		counter->failcnt = 0;
+ 		break;
++	case RES_RSVD_FAILCNT:
++		rsvd_counter->failcnt = 0;
++		break;
+ 	default:
+ 		ret = -EINVAL;
+ 		break;
+@@ -472,7 +519,7 @@ static void __init __hugetlb_cgroup_file_dfl_init(int idx)
+ 	struct hstate *h = &hstates[idx];
+
+ 	/* format the size */
+-	mem_fmt(buf, 32, huge_page_size(h));
++	mem_fmt(buf, sizeof(buf), huge_page_size(h));
+
+ 	/* Add the limit file */
+ 	cft = &h->cgroup_files_dfl[0];
+@@ -482,15 +529,30 @@ static void __init __hugetlb_cgroup_file_dfl_init(int idx)
+ 	cft->write = hugetlb_cgroup_write_dfl;
+ 	cft->flags = CFTYPE_NOT_ON_ROOT;
+
+-	/* Add the current usage file */
++	/* Add the reservation limit file */
+ 	cft = &h->cgroup_files_dfl[1];
++	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.rsvd.max", buf);
++	cft->private = MEMFILE_PRIVATE(idx, RES_RSVD_LIMIT);
++	cft->seq_show = hugetlb_cgroup_read_u64_max;
++	cft->write = hugetlb_cgroup_write_dfl;
++	cft->flags = CFTYPE_NOT_ON_ROOT;
++
++	/* Add the current usage file */
++	cft = &h->cgroup_files_dfl[2];
+ 	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.current", buf);
+ 	cft->private = MEMFILE_PRIVATE(idx, RES_USAGE);
+ 	cft->seq_show = hugetlb_cgroup_read_u64_max;
+ 	cft->flags = CFTYPE_NOT_ON_ROOT;
+
++	/* Add the current reservation usage file */
++	cft = &h->cgroup_files_dfl[3];
++	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.rsvd.current", buf);
++	cft->private = MEMFILE_PRIVATE(idx, RES_RSVD_USAGE);
++	cft->seq_show = hugetlb_cgroup_read_u64_max;
++	cft->flags = CFTYPE_NOT_ON_ROOT;
++
+ 	/* Add the events file */
+-	cft = &h->cgroup_files_dfl[2];
++	cft = &h->cgroup_files_dfl[4];
+ 	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.events", buf);
+ 	cft->private = MEMFILE_PRIVATE(idx, 0);
+ 	cft->seq_show = hugetlb_events_show;
+@@ -498,7 +560,7 @@ static void __init __hugetlb_cgroup_file_dfl_init(int idx)
+ 	cft->flags = CFTYPE_NOT_ON_ROOT;
+
+ 	/* Add the events.local file */
+-	cft = &h->cgroup_files_dfl[3];
++	cft = &h->cgroup_files_dfl[5];
+ 	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.events.local", buf);
+ 	cft->private = MEMFILE_PRIVATE(idx, 0);
+ 	cft->seq_show = hugetlb_events_local_show;
+@@ -507,7 +569,7 @@ static void __init __hugetlb_cgroup_file_dfl_init(int idx)
+ 	cft->flags = CFTYPE_NOT_ON_ROOT;
+
+ 	/* NULL terminate the last cft */
+-	cft = &h->cgroup_files_dfl[4];
++	cft = &h->cgroup_files_dfl[6];
+ 	memset(cft, 0, sizeof(*cft));
+
+ 	WARN_ON(cgroup_add_dfl_cftypes(&hugetlb_cgrp_subsys,
+@@ -521,7 +583,7 @@ static void __init __hugetlb_cgroup_file_legacy_init(int idx)
+ 	struct hstate *h = &hstates[idx];
+
+ 	/* format the size */
+-	mem_fmt(buf, 32, huge_page_size(h));
++	mem_fmt(buf, sizeof(buf), huge_page_size(h));
+
+ 	/* Add the limit file */
+ 	cft = &h->cgroup_files_legacy[0];
+@@ -530,28 +592,55 @@ static void __init __hugetlb_cgroup_file_legacy_init(int idx)
+ 	cft->read_u64 = hugetlb_cgroup_read_u64;
+ 	cft->write = hugetlb_cgroup_write_legacy;
+
+-	/* Add the usage file */
++	/* Add the reservation limit file */
+ 	cft = &h->cgroup_files_legacy[1];
++	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.rsvd.limit_in_bytes", buf);
++	cft->private = MEMFILE_PRIVATE(idx, RES_RSVD_LIMIT);
++	cft->read_u64 = hugetlb_cgroup_read_u64;
++	cft->write = hugetlb_cgroup_write_legacy;
++
++	/* Add the usage file */
++	cft = &h->cgroup_files_legacy[2];
+ 	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.usage_in_bytes", buf);
+ 	cft->private = MEMFILE_PRIVATE(idx, RES_USAGE);
+ 	cft->read_u64 = hugetlb_cgroup_read_u64;
+
++	/* Add the reservation usage file */
++	cft = &h->cgroup_files_legacy[3];
++	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.rsvd.usage_in_bytes", buf);
++	cft->private = MEMFILE_PRIVATE(idx, RES_RSVD_USAGE);
++	cft->read_u64 = hugetlb_cgroup_read_u64;
++
+ 	/* Add the MAX usage file */
+-	cft = &h->cgroup_files_legacy[2];
++	cft = &h->cgroup_files_legacy[4];
+ 	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.max_usage_in_bytes", buf);
+ 	cft->private = MEMFILE_PRIVATE(idx, RES_MAX_USAGE);
+ 	cft->write = hugetlb_cgroup_reset;
+ 	cft->read_u64 = hugetlb_cgroup_read_u64;
+
++	/* Add the MAX reservation usage file */
++	cft = &h->cgroup_files_legacy[5];
++	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.rsvd.max_usage_in_bytes", buf);
++	cft->private = MEMFILE_PRIVATE(idx, RES_RSVD_MAX_USAGE);
++	cft->write = hugetlb_cgroup_reset;
++	cft->read_u64 = hugetlb_cgroup_read_u64;
++
+ 	/* Add the failcntfile */
+-	cft = &h->cgroup_files_legacy[3];
++	cft = &h->cgroup_files_legacy[6];
+ 	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.failcnt", buf);
+-	cft->private  = MEMFILE_PRIVATE(idx, RES_FAILCNT);
++	cft->private = MEMFILE_PRIVATE(idx, RES_FAILCNT);
++	cft->write = hugetlb_cgroup_reset;
++	cft->read_u64 = hugetlb_cgroup_read_u64;
++
++	/* Add the reservation failcntfile */
++	cft = &h->cgroup_files_legacy[7];
++	snprintf(cft->name, MAX_CFTYPE_NAME, "%s.rsvd.failcnt", buf);
++	cft->private = MEMFILE_PRIVATE(idx, RES_RSVD_FAILCNT);
+ 	cft->write = hugetlb_cgroup_reset;
+ 	cft->read_u64 = hugetlb_cgroup_read_u64;
+
+ 	/* NULL terminate the last cft */
+-	cft = &h->cgroup_files_legacy[4];
++	cft = &h->cgroup_files_legacy[8];
+ 	memset(cft, 0, sizeof(*cft));
+
+ 	WARN_ON(cgroup_add_legacy_cftypes(&hugetlb_cgrp_subsys,
