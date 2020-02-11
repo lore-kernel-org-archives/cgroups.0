@@ -1,50 +1,51 @@
-From: Kirill Tkhai <ktkhai-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: Re: [PATCH] memcg: lost css_put in memcg_expand_shrinker_maps()
-Date: Tue, 11 Feb 2020 14:32:10 +0300
-Message-ID: <995ffe9f-14c6-39ea-31b9-52194fa1da54@virtuozzo.com>
-References: <c98414fb-7e1f-da0f-867a-9340ec4bd30b@virtuozzo.com>
+From: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
+Subject: Re: [RFC] why can't dynamic isolation just like the static way
+Date: Tue, 11 Feb 2020 08:54:43 -0500
+Message-ID: <20200211085443.2a112c03@gandalf.local.home>
+References: <fed10a26-7423-23b5-316c-c74d354870dd@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <c98414fb-7e1f-da0f-867a-9340ec4bd30b-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Content-Language: en-US
+In-Reply-To: <fed10a26-7423-23b5-316c-c74d354870dd-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: =?UTF-8?B?546L6LSH?= <yun.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, "open list:SCHEDULER" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 11.02.2020 14:20, Vasily Averin wrote:
-> for_each_mem_cgroup() increases css reference counter for memory cgroup
-> and requires to use mem_cgroup_iter_break() if the walk is cancelled.
-> 
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Fixes commit 0a4465d34028("mm, memcg: assign memcg-aware shrinkers bitmap to memcg")
-> 
-> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-Acked-by: Kirill Tkhai <ktkhai-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+You forgot to include the cgroup maintainers.
 
-Thanks!
+-- Steve
 
-> ---
->  mm/memcontrol.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+
+On Tue, 11 Feb 2020 16:17:34 +0800
+王贇 <yun.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org> wrote:
+
+> Hi, folks
 > 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 6c83cf4..e2da615 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -409,8 +409,10 @@ int memcg_expand_shrinker_maps(int new_id)
->  		if (mem_cgroup_is_root(memcg))
->  			continue;
->  		ret = memcg_expand_one_shrinker_map(memcg, size, old_size);
-> -		if (ret)
-> +		if (ret) {
-> +			mem_cgroup_iter_break(NULL, memcg);
->  			goto unlock;
-> +		}
->  	}
->  unlock:
->  	if (!ret)
+> We are dealing with isolcpus these days and try to do the isolation
+> dynamically.
 > 
+> The kernel doc lead us into the cpuset.sched_load_balance, it's fine
+> to achieve the dynamic isolation with it, however we got problem with
+> the systemd stuff.
+> 
+> It's keeping create cgroup with sched_load_balance enabled on default,
+> while the cpus are overlapped with the isolated ones, which lead into
+> sched domain rebuild and these cpus become non-isolated.
+> 
+> We're just looking forward an easy way to dynamic isolate some cpus,
+> just like the isolation parameter, but sched_load_balance forcing us
+> to dealing with the management of cgroups, we really don't get the
+> point in here...
+> 
+> Why do we have to mix the isolation with cgroups? Why not just provide
+> a proc entry to read cpumask and rebuild the domains?
+> 
+> Please let us know if there is any good reason to make the dynamic
+> isolation in that way, appreciated in advance :-)
+> 
+> Regards,
+> Michael Wang
 
