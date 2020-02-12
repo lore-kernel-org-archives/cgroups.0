@@ -1,33 +1,54 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH v12 1/9] hugetlb_cgroup: Add hugetlb_cgroup reservation
- counter
-Date: Tue, 11 Feb 2020 15:19:06 -0800
-Message-ID: <20200211151906.637d1703e4756066583b89da@linux-foundation.org>
+From: Sandipan Das <sandipan@linux.ibm.com>
+Subject: Re: [PATCH v12 8/9] hugetlb_cgroup: Add hugetlb_cgroup reservation
+ tests
+Date: Wed, 12 Feb 2020 14:20:41 +0530
+Message-ID: <37a49c35-567f-1663-33cd-3dac150020a0@linux.ibm.com>
 References: <20200211213128.73302-1-almasrymina@google.com>
+ <20200211213128.73302-8-almasrymina@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581463147;
-        bh=0TVKSVRJRv/z3S7kxpkrJCMjT/X+SvLuGM2qOdND2sw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=Cu3jAtewRRDlmCAw+wkXwFQAflXIRX/nRaeTMPRBLFRtS7HfQmFogOcd+JSX1pXmr
-         o4zDJhRMBWqCseqvBTHft9sdTDjPjqye7WP/eoKKRudXmhnqi/G3pDQuYo4BuRJ3eq
-         VIyVuHqInOEuCzLbUH7F3jI64oVXTL59gXIYLT3s=
-In-Reply-To: <20200211213128.73302-1-almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20200211213128.73302-8-almasrymina@google.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Mina Almasry <almasrymina@google.com>, mike.kravetz@oracle.com
+Cc: shuah@kernel.org, rientjes@google.com, shakeelb@google.com, gthelen@google.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org
 
-On Tue, 11 Feb 2020 13:31:20 -0800 Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 
-> These counters will track hugetlb reservations rather than hugetlb
-> memory faulted in. This patch only adds the counter, following patches
-> add the charging and uncharging of the counter.
 
-We're still pretty thin on review here, but as it's v12 and Mike
-appears to be signed up to look at this work, I'll add them to -next to
-help move things forward.
+On 12/02/20 3:01 am, Mina Almasry wrote:
+> The tests use both shared and private mapped hugetlb memory, and
+> monitors the hugetlb usage counter as well as the hugetlb reservation
+> counter. They test different configurations such as hugetlb memory usage
+> via hugetlbfs, or MAP_HUGETLB, or shmget/shmat, and with and without
+> MAP_POPULATE.
+> 
+> Also add test for hugetlb reservation reparenting, since this is
+> a subtle issue.
+> 
+> Signed-off-by: Mina Almasry <almasrymina@google.com>
+> Cc: sandipan@linux.ibm.com
+> 
+> 
+> ---
+> 
+> Changes in v12:
+> - Fixed tests on machines with non-2MB default hugepage size.
+> Changes in v11:
+> - Modify test to not assume 2MB hugepage size.
+> - Updated resv.* to rsvd.*
+> Changes in v10:
+> - Updated tests to resv.* name changes.
+> Changes in v9:
+> - Added tests for hugetlb reparenting.
+> - Make tests explicitly support cgroup v1 and v2 via script argument.
+> Changes in v6:
+> - Updates tests for cgroups-v2 and NORESERVE allocations.
+> 
+
+For powerpc64,
+
+Tested-by: Sandipan Das <sandipan@linux.ibm.com>
 
