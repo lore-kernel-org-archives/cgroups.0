@@ -1,45 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup.c: Use built-in RCU list checking
-Date: Wed, 12 Feb 2020 17:12:49 -0500
-Message-ID: <20200212221249.GJ80993@mtj.thefacebook.com>
-References: <20200118031051.28776-1-madhuparnabhowmik10@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cpuset: Make cpuset hotplug synchronous
+Date: Wed, 12 Feb 2020 17:14:27 -0500
+Message-ID: <20200212221427.GK80993@mtj.thefacebook.com>
+References: <1579878449-10164-1-git-send-email-prsood@codeaurora.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=htZSNJ3oIZAPreJh5xh8HpLPmxowkMMDY5AHwsIFPU4=;
-        b=JgbLnHXZBEJ6fny9Cf39uzWywqhTZCEc9XA7HjonBYcbbBVxey3E8jGB1bPKWVrUdH
-         MDi2aKPGMfYktEAwxum6w8vAcuQKbRKfvpUwLIGwLk3/YmeHtcygHekDiNYf5+9Q3/ti
-         zacH6LhE208pGea8c9ESgsdYtAeXB4ezKvDfBqcv9jlPHtgoFYltXKi/V/yrcVbYwnku
-         X3bNAPwE8YMLtOxeeS52qw2JNI4UFj3sP6w3f4vVctpZ6uj6fLe0Dq1xLddiXOyyjYKa
-         A7dAQszw4h0EP/fqdq1NQXGkBCDWNQkAIM2qeUiWaw6Udu9cErLrvXzo/wABUaU4uD/W
-         FynQ==
+        bh=5wn2A1jq0XAt6mjZPfnCGuSlCgwymyCtNgjaq2MIIL0=;
+        b=HxEDbSsr9BgQr15mCFJj3TWx3sPLSUD5N0qYHcOx8MwhQiP8y3Tk9tBhxRFMFAYY81
+         hJSaxoCfVkUEYhuG6xPSj2HdgdvdQY7DBc3EBu0eP0Fvc7Ecv4/6RPLUqQUlMekefnnY
+         1sK5x721YdF2+BxwX/kHdJrC6z4VFFECqzlEubpnCEVRrcIfvskSDtn4JHPwOyC1SdBv
+         opFqzlqR0GqYEDFVbmCbWasZErcV1JHRWnaAzu97nTJ0JY10CfXNed1I7VoBTJgV8Idw
+         WPzxiITJLJgL6k6pD4TmeGWYbAfK54WeGZ7hJtYoNiRLf/YRw6uLL6hsA2C8JIsOt2IE
+         PYGg==
 Content-Disposition: inline
-In-Reply-To: <20200118031051.28776-1-madhuparnabhowmik10@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1579878449-10164-1-git-send-email-prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: madhuparnabhowmik10@gmail.com
-Cc: lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, joel@joelfernandes.org, rcu@vger.kernel.org, frextrite@gmail.com
+To: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Cc: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sat, Jan 18, 2020 at 08:40:51AM +0530, madhuparnabhowmik10@gmail.com wrote:
-> From: Madhuparna Bhowmik <madhuparnabhowmik10@gmail.com>
+On Fri, Jan 24, 2020 at 08:37:29PM +0530, Prateek Sood wrote:
+> Convert cpuset_hotplug_workfn() into synchronous call for cpu hotplug
+> path. For memory hotplug path it still gets queued as a work item.
 > 
-> list_for_each_entry_rcu has built-in RCU and lock checking.
-> Pass cond argument to list_for_each_entry_rcu() to silence
-> false lockdep warning when  CONFIG_PROVE_RCU_LIST is enabled
-> by default.
+> Since cpuset_hotplug_workfn() can be made synchronous for cpu hotplug
+> path, it is not required to wait for cpuset hotplug while thawing
+> processes.
 > 
-> Even though the function css_next_child() already checks if
-> cgroup_mutex or rcu_read_lock() is held using
-> cgroup_assert_mutex_or_rcu_locked(), there is a need to pass
-> cond to list_for_each_entry_rcu() to avoid false positive
-> lockdep warning.
-> 
-> Signed-off-by: Madhuparna Bhowmik <madhuparnabhowmik10@gmail.com>
+> Signed-off-by: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
 
 Applied to cgroup/for-5.7.
 
