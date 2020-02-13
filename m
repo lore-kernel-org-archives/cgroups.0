@@ -1,221 +1,107 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/2] loop: charge i/o per cgroup
-Date: Wed, 12 Feb 2020 19:07:54 -0500
-Message-ID: <20200213000754.GD88887@mtj.thefacebook.com>
-References: <20200205223348.880610-1-dschatzberg@fb.com>
- <20200205223348.880610-3-dschatzberg@fb.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 3/3] mm: memcontrol: recursive memory.low protection
+Date: Thu, 13 Feb 2020 08:40:49 +0100
+Message-ID: <20200213074049.GA31689@dhcp22.suse.cz>
+References: <20191219200718.15696-1-hannes@cmpxchg.org>
+ <20191219200718.15696-4-hannes@cmpxchg.org>
+ <20200130170020.GZ24244@dhcp22.suse.cz>
+ <20200203215201.GD6380@cmpxchg.org>
+ <20200211164753.GQ10636@dhcp22.suse.cz>
+ <20200212170826.GC180867@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=Xp7j+w+mSRWprEP7jKf4yInMPuuxYmE0Jx4GMGEDPCQ=;
-        b=jmvVOhaXi+4hUwokVKiclEzfFZs0kumgKecddVwQJ6W4BYeb4eunfR42QH1BanKgXe
-         MWQhbMX2xwNbvy0w6kTd2sh93gkpDWROStsMnfu41dD9mtVfKl5N/rEJCKmqqY4aoAcn
-         kpev9dqGLS1dzO5YtQPFJGED458NEkCaq8BEWGqGQcyVhuH/okSHYJfODuu/8aZmP4cG
-         C3ZXndp9Fcx2UthovyxMFXfFmE7hwC77Y/SZbgnh3Ul4OJATixPYCRxJfupisKXfC2C1
-         oGZSd76/0NwAuj1H3V+4klnwdDUYqolEtgnvSXfBSw3iRwkHKOmYNLCadx1UHUFV8fTN
-         Nsbw==
 Content-Disposition: inline
-In-Reply-To: <20200205223348.880610-3-dschatzberg-b10kYP2dOMg@public.gmane.org>
+In-Reply-To: <20200212170826.GC180867-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dan Schatzberg <dschatzberg-b10kYP2dOMg@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "open list:BLOCK LAYER" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hello,
+On Wed 12-02-20 12:08:26, Johannes Weiner wrote:
+> On Tue, Feb 11, 2020 at 05:47:53PM +0100, Michal Hocko wrote:
+> > Unless I am missing something then I am afraid it doesn't. Say you have a
+> > default systemd cgroup deployment (aka deeper cgroup hierarchy with
+> > slices and scopes) and now you want to grant a reclaim protection on a
+> > leaf cgroup (or even a whole slice that is not really important). All the
+> > hierarchy up the tree has the protection set to 0 by default, right? You
+> > simply cannot get that protection. You would need to configure the
+> > protection up the hierarchy and that is really cumbersome.
+> 
+> Okay, I think I know what you mean. Let's say you have a tree like
+> this:
+> 
+>                           A
+>                          / \
+>                         B1  B2
+>                        / \   \
+>                       C1 C2   C3
+> 
+> and there is no actual delegation point - everything belongs to the
+> same user / trust domain. C1 sets memory.low to 10G, but its parents
+> set nothing. You're saying we should honor the 10G protection during
+> global and limit reclaims anywhere in the tree?
 
-On Wed, Feb 05, 2020 at 02:33:48PM -0800, Dan Schatzberg wrote:
-> -static int loop_kthread_worker_fn(void *worker_ptr)
-> -{
-> -	current->flags |= PF_LESS_THROTTLE | PF_MEMALLOC_NOIO;
-> -	return kthread_worker_fn(worker_ptr);
-> +	flush_workqueue(lo->workqueue);
-> +	destroy_workqueue(lo->workqueue);
+No, only in the C1 which sets the limit, because that is the woriking
+set we want to protect.
 
-destroy_workqueue() implies draining, so the explicit flush isn't
-necessary.
+> Now let's consider there is a delegation point at B1: we set up and
+> trust B1, but not its children. What effect would the C1 protection
+> have then? Would we ignore it during global and A reclaim, but honor
+> it when there is B1 limit reclaim?
 
->  static int loop_prepare_queue(struct loop_device *lo)
->  {
-> +	lo->workqueue = alloc_workqueue("loop%d",
-> +					WQ_FREEZABLE | WQ_MEM_RECLAIM |
-> +					WQ_HIGHPRI,
-> +					lo->lo_number);
-> +	if (IS_ERR(lo->workqueue))
->  		return -ENOMEM;
+In the scheme with the inherited protection it would act as the gate
+and require an explicit low limit setup defaulting to 0 if none is
+specified.
 
-Given that these can be pretty cpu intensive and a single work item
-can be saturated by multiple cpus keepings queueing bios, it probably
-would be better to use an unbound workqueue (WQ_UNBOUND) and let the
-scheduler figure out.
+> Doing an explicit downward propagation from the root to C1 *could* be
+> tedious, but I can't think of a scenario where it's completely
+> impossible. Especially because we allow proportional distribution when
+> the limit is overcommitted and you don't have to be 100% accurate.
 
-> +struct loop_worker {
-> +	struct rb_node rb_node;
-> +	struct work_struct work;
-> +	struct list_head cmd_list;
-> +	struct loop_device *lo;
-> +	int css_id;
-> +};
-> +
-> +static void loop_workfn(struct work_struct *work);
-> +static void loop_rootcg_workfn(struct work_struct *work);
-> +
-> +static void loop_queue_on_rootcg_locked(struct loop_device *lo,
-> +					struct loop_cmd *cmd)
-> +{
+So let's see how that works in practice, say a multi workload setup
+with a complex/deep cgroup hierachies (e.g. your above example). No
+delegation point this time.
 
-lockdep_assert_held() here?
+C1 asks for low=1G while using 500M, C3 low=100M using 80M.  B1 and
+B2 are completely independent workloads and the same applies to C2 which
+doesn't ask for any protection at all? C2 uses 100M. Now the admin has
+to propagate protection upwards so B1 low=1G, B2 low=100M and A low=1G,
+right? Let's say we have a global reclaim due to external pressure that
+originates from outside of A hierarchy (it is not overcommited on the
+protection).
 
-> +	list_add_tail(&cmd->list_entry, &lo->rootcg_cmd_list);
-> +	if (list_is_first(&cmd->list_entry, &lo->rootcg_cmd_list))
-> +		queue_work(lo->workqueue, &lo->rootcg_work);
+Unless I miss something C2 would get a protection even though nobody
+asked for it.
 
-I'd just call queue_work() without the preceding check. Trying to
-requeue an active work item is pretty cheap.
+> And the clarity that comes with being explicit is an asset too,
+> IMO. Since it has an effect at the reclaim level, it's not a bad thing
+> to have that effect *visible* in the settings at that level as well:
+> the protected memory doesn't come out of thin air, it's delegated down
+> from the top where memory pressure originates.
 
-> +}
-> +
-> +static void loop_queue_work(struct loop_device *lo, struct loop_cmd *cmd)
-> +{
-> +	struct rb_node **node = &(lo->worker_tree.rb_node), *parent = NULL;
-                                 ^
-                                 This isn't necessary, right?
+So how are we going to deal with hierarchies where the actual workload
+of interest is a leaf deeper in the hierarchy and the upper levels of
+the hierarchy are shared between unrelated workloads?  Look at how
+systemd organizes system into cgroups for example (slices vs. scopes)
+and say you want to add a protection to a single user or a service.
+ 
+> My patch is different. It allows a configuration that simply isn't
+> possible today: protecting C1 and C2 from C3, without having to
+> protect C1 and C2 from each other.
+> 
+> So I don't think requiring an uninterrupted, authorized chain of
+> protection from the top is necessarily wrong. In fact, I think it has
+> benefits. But requiring the protection chain to go all the way to the
+> leaves for it to have any effect, that is a real problem, and it can't
+> be worked around.
 
-> +	struct loop_worker *cur_worker, *worker = NULL;
-> +	int css_id = 0;
-> +
-> +	if (cmd->blk_css)
-
-We usually use blkcg_css as the name.
-
-> +		css_id = cmd->blk_css->id;
-> +
-> +	spin_lock_irq(&lo->lo_lock);
-> +
-> +	if (!css_id) {
-> +		loop_queue_on_rootcg_locked(lo, cmd);
-> +		goto out;
-> +	}
-> +	node = &(lo->worker_tree.rb_node);
-> +
-> +	while (*node) {
-> +		parent = *node;
-> +		cur_worker = container_of(*node, struct loop_worker, rb_node);
-> +		if (cur_worker->css_id == css_id) {
-> +			worker = cur_worker;
-> +			break;
-> +		} else if (cur_worker->css_id < 0) {
-> +			node = &((*node)->rb_left);
-                                 ^
-                                I'd keep only the inner parentheses.
-
-> +		} else {
-> +			node = &((*node)->rb_right);
-> +		}
-> +	}
-> +	if (worker) {
-> +		list_add_tail(&cmd->list_entry, &worker->cmd_list);
-
-Maybe goto and unindent else block?
-
-> +	} else {
-> +		worker = kmalloc(sizeof(struct loop_worker), GFP_NOIO);
-
-I think the gpf flag combo you wanna use is GFP_NOWAIT | __GFP_NOWARN
-- we don't wanna enter direct reclaim from here or generate warnings.
-Also, I personally tend to use kzalloc() for small stuff by default as
-it doesn't really cost anything while making things easier / safer
-later when adding new fields, but up to you.
-
-> +		/*
-> +		 * In the event we cannot allocate a worker, just
-> +		 * queue on the rootcg worker
-> +		 */
-> +		if (!worker) {
-> +			loop_queue_on_rootcg_locked(lo, cmd);
-> +			goto out;
-> +		}
-> +		worker->css_id = css_id;
-
-Maybe blkcg_css_id would be clearer? Your call for sure tho.
-
-> +		INIT_WORK(&worker->work, loop_workfn);
-> +		INIT_LIST_HEAD(&worker->cmd_list);
-> +		worker->lo = lo;
-> +		rb_link_node(&worker->rb_node, parent, node);
-> +		rb_insert_color(&worker->rb_node, &lo->worker_tree);
-> +		list_add_tail(&cmd->list_entry, &worker->cmd_list);
-> +		queue_work(lo->workqueue, &worker->work);
-
-It might be better to share the above two lines between existing and
-new worker paths. I think you're missing queue_work() for the former.
-
-> @@ -1942,6 +2006,9 @@ static void loop_handle_cmd(struct loop_cmd *cmd)
->  	struct request *rq = blk_mq_rq_from_pdu(cmd);
->  	const bool write = op_is_write(req_op(rq));
->  	struct loop_device *lo = rq->q->queuedata;
-> +#ifdef CONFIG_MEMCG
-> +	struct cgroup_subsys_state *mem_css;
-
-memcg_css is what we've been using; however, I kinda like blk/mem_css.
-Maybe we should rename the others. Please feel free to leave as-is.
-
-> @@ -1958,26 +2041,50 @@ static void loop_handle_cmd(struct loop_cmd *cmd)
->  	}
->  }
->  
-> +static void loop_process_work(struct loop_worker *worker,
-> +			struct list_head *cmd_list, struct loop_device *lo)
->  {
-> +	int orig_flags = current->flags;
-> +	struct loop_cmd *cmd;
-> +
-> +	while (1) {
-> +		spin_lock_irq(&lo->lo_lock);
-> +		if (list_empty(cmd_list)) {
-
-Maybe break here and cleanup at the end of the function?
-
-> +			if (worker)
-> +				rb_erase(&worker->rb_node, &lo->worker_tree);
-> +			spin_unlock_irq(&lo->lo_lock);
-> +			kfree(worker);
-> +			current->flags = orig_flags;
-
-I wonder whether we wanna keep them around for a bit. A lot of IO
-patterns involve brief think times between accesses and this would be
-constantly creating and destroying constantly.
-
-> +			return;
-> +		}
->  
-> +		cmd = container_of(
-> +			cmd_list->next, struct loop_cmd, list_entry);
-> +		list_del(cmd_list->next);
-> +		spin_unlock_irq(&lo->lo_lock);
-> +		current->flags |= PF_LESS_THROTTLE | PF_MEMALLOC_NOIO;
-
-I think we can set this at the head of the function and
-
-> +		loop_handle_cmd(cmd);
-> +		current->flags = orig_flags;
-
-restore them before returning.
-
-> @@ -587,6 +587,7 @@ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgrp,
->  	rcu_read_unlock();
->  	return css;
->  }
-> +EXPORT_SYMBOL_GPL(cgroup_get_e_css);
-
-Can you please mention the above in the changelog? Also, it'd be great
-to have rationales there too.
-
-Thanks.
-
+Yes I do agree that the problem you are dealing with is slightly
+different. My main point was that you are already introducing a new
+semantic which is not fully backward compatible and I figured we have
+more problems in the area and maybe we can introduce a semantic to
+handle both above mentioned scenarios while doing that.
 -- 
-tejun
+Michal Hocko
+SUSE Labs
