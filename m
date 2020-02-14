@@ -1,385 +1,435 @@
 From: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
-Subject: [PATCH 03/11] drm, cgroup: Initialize drmcg properties
-Date: Fri, 14 Feb 2020 10:56:42 -0500
-Message-ID: <20200214155650.21203-4-Kenny.Ho@amd.com>
+Subject: [PATCH 04/11] drm, cgroup: Add total GEM buffer allocation stats
+Date: Fri, 14 Feb 2020 10:56:43 -0500
+Message-ID: <20200214155650.21203-5-Kenny.Ho@amd.com>
 References: <20200214155650.21203-1-Kenny.Ho@amd.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=amdcloud.onmicrosoft.com; s=selector2-amdcloud-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CV7hGKAQeTmH37PsOyv+FEVbtbyZ1TJI7sXBsy6xaBQ=;
- b=uIWnIxTcOFpBfiPcqKacFI19Kf+Wa31RvTsYiNGnMeORaE/yoeLkidMNg95XyOPLXUPETTymHFanVCM8X81aYyHQ0Qr+pTQMQoGb9dcfnNP3GZ6iNxDybtlEROnwueuLyyBGUFB7+0L8WAf8ut7MmZ6AGE+tBkYI4k1jkEJbkVg=
+ bh=R9GfjKmC6WE9KgF6VLgLnREHgTv0N9zlsmLGWtvhZZk=;
+ b=JllNquCxGdAyRzGcbJyQgkkiuFrHa/7lIhyBCSeyUqYXGGaCUtGxLZYJekFw8HceqmrcQuQLICMA2hAnkEsfNmSEbYLPnIpxXPc5ZqUz4YGPyfaMpvGlkY2u+knAWb1zfihsbAixou99R8gJMA6WvmefqsC9OmgUW1PIUOMRUEk=
 In-Reply-To: <20200214155650.21203-1-Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 To: y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, alexander.deucher-5C7GfCeVMHo@public.gmane.org, christian.koenig-5C7GfCeVMHo@public.gmane.org, felix.kuehling-5C7GfCeVMHo@public.gmane.org, joseph.greathouse-5C7GfCeVMHo@public.gmane.org, jsparks-WVYJKLFxKCc@public.gmane.org, lkaplan-WVYJKLFxKCc@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, nirmoy.das-5C7GfCeVMHo@public.gmane.org, damon.mcdougall-5C7GfCeVMHo@public.gmane.org, juan.zuniga-anaya-5C7GfCeVMHo@public.gmane.org
 Cc: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
 
-drmcg initialization involves allocating a per cgroup, per device data
-structure and setting the defaults.  There are two entry points for
-drmcg init:
+The drm resource being measured here is the GEM buffer objects.  User
+applications allocate and free these buffers.  In addition, a process
+can allocate a buffer and share it with another process.  The consumer
+of a shared buffer can also outlive the allocator of the buffer.
 
-1) When struct drmcg is created via css_alloc, initialization is done
-for each device
+For the purpose of cgroup accounting and limiting, ownership of the
+buffer is deemed to be the cgroup for which the allocating process
+belongs to.  There is one cgroup stats per drm device.  Each allocation
+is charged to the owning cgroup as well as all its ancestors.
 
-2) When DRM devices are created after drmcgs are created
-  a) Per device drmcg data structure is allocated at the beginning of
-  DRM device creation such that drmcg can begin tracking usage
-  statistics
-  b) At the end of DRM device creation, drmcg_register_dev will update in
-  case device specific defaults need to be applied.
+Similar to the memory cgroup, migrating a process to a different cgroup
+does not move the GEM buffer usages that the process started while in
+previous cgroup, to the new cgroup.
 
-Entry point #2 usually applies to the root cgroup since it can be
-created before DRM devices are available.  The drmcg controller will go
-through all existing drm cgroups and initialize them with the new device
-accordingly.
+The following is an example to illustrate some of the operations.  Given
+the following cgroup hierarchy (The letters are cgroup names with R
+being the root cgroup.  The numbers in brackets are processes.  The
+processes are placed with cgroup's 'No Internal Process Constraint' in
+mind, so no process is placed in cgroup B.)
 
-Change-Id: I64e421d8dfcc22ee8282cc1305960e20c2704db7
+R (4, 5) ------ A (6)
+ \
+  B ---- C (7,8)
+   \
+    D (9)
+
+Here is a list of operation and the associated effect on the size
+track by the cgroups (for simplicity, each buffer is 1 unit in size.)
+
+==  ==  ==  ==  ==  ===================================================
+R   A   B   C   D   Ops
+==  ==  ==  ==  ==  ===================================================
+1   0   0   0   0   4 allocated a buffer
+1   0   0   0   0   4 shared a buffer with 5
+1   0   0   0   0   4 shared a buffer with 9
+2   0   1   0   1   9 allocated a buffer
+3   0   2   1   1   7 allocated a buffer
+3   0   2   1   1   7 shared a buffer with 8
+3   0   2   1   1   7 sharing with 9
+3   0   2   1   1   7 release a buffer
+3   0   2   1   1   7 migrate to cgroup D
+3   0   2   1   1   9 release a buffer from 7
+2   0   1   0   1   8 release a buffer from 7 (last ref to shared buf)
+==  ==  ==  ==  ==  ===================================================
+
+drm.buffer.stats
+        A read-only flat-keyed file which exists on all cgroups.  Each
+        entry is keyed by the drm device's major:minor.
+
+        Total GEM buffer allocation in bytes.
+
+Change-Id: Ibc1f646ca7dbc588e2d11802b156b524696a23e7
 Signed-off-by: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
 ---
- drivers/gpu/drm/drm_drv.c  |   4 ++
- include/drm/drm_cgroup.h   |  18 +++++++
- include/drm/drm_device.h   |   7 +++
- include/drm/drm_drv.h      |   9 ++++
- include/linux/cgroup_drm.h |  12 +++++
- kernel/cgroup/drm.c        | 105 +++++++++++++++++++++++++++++++++++++
- 6 files changed, 155 insertions(+)
+ Documentation/admin-guide/cgroup-v2.rst |  50 +++++++++-
+ drivers/gpu/drm/drm_gem.c               |   9 ++
+ include/drm/drm_cgroup.h                |  16 +++
+ include/drm/drm_gem.h                   |  10 ++
+ include/linux/cgroup_drm.h              |   6 ++
+ kernel/cgroup/drm.c                     | 126 ++++++++++++++++++++++++
+ 6 files changed, 216 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/gpu/drm/drm_drv.c b/drivers/gpu/drm/drm_drv.c
-index 8e59cc5a5bde..44a66edc81c2 100644
---- a/drivers/gpu/drm/drm_drv.c
-+++ b/drivers/gpu/drm/drm_drv.c
-@@ -643,6 +643,7 @@ int drm_dev_init(struct drm_device *dev,
- 	mutex_init(&dev->filelist_mutex);
- 	mutex_init(&dev->clientlist_mutex);
- 	mutex_init(&dev->master_mutex);
-+	mutex_init(&dev->drmcg_mutex);
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 384db8df0f30..2d8162c109f3 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -63,6 +63,7 @@ v1 is available under Documentation/admin-guide/cgroup-v1/.
+        5-7-1. RDMA Interface Files
+      5-8. DRM
+        5-8-1. DRM Interface Files
++       5-8-2. GEM Buffer Ownership
+      5-9. Misc
+        5-9-1. perf_event
+      5-N. Non-normative information
+@@ -2062,7 +2063,54 @@ of DRM (Direct Rendering Manager) and GPU-related resources.
+ DRM Interface Files
+ ~~~~~~~~~~~~~~~~~~~~
  
- 	dev->anon_inode = drm_fs_inode_new();
- 	if (IS_ERR(dev->anon_inode)) {
-@@ -679,6 +680,7 @@ int drm_dev_init(struct drm_device *dev,
- 	if (ret)
- 		goto err_setunique;
+-TODO
++  drm.buffer.stats
++	A read-only flat-keyed file which exists on all cgroups.  Each
++	entry is keyed by the drm device's major:minor.
++
++	Total GEM buffer allocation in bytes.
++
++GEM Buffer Ownership
++~~~~~~~~~~~~~~~~~~~~
++
++For the purpose of cgroup accounting and limiting, ownership of the
++buffer is deemed to be the cgroup for which the allocating process
++belongs to.  There is one cgroup stats per drm device.  Each allocation
++is charged to the owning cgroup as well as all its ancestors.
++
++Similar to the memory cgroup, migrating a process to a different cgroup
++does not move the GEM buffer usages that the process started while in
++previous cgroup, to the new cgroup.
++
++The following is an example to illustrate some of the operations.  Given
++the following cgroup hierarchy (The letters are cgroup names with R
++being the root cgroup.  The numbers in brackets are processes.  The
++processes are placed with cgroup's 'No Internal Process Constraint' in
++mind, so no process is placed in cgroup B.)
++
++R (4, 5) ------ A (6)
++ \
++  B ---- C (7,8)
++   \
++    D (9)
++
++Here is a list of operation and the associated effect on the size
++track by the cgroups (for simplicity, each buffer is 1 unit in size.)
++
++==  ==  ==  ==  ==  ===================================================
++R   A   B   C   D   Ops
++==  ==  ==  ==  ==  ===================================================
++1   0   0   0   0   4 allocated a buffer
++1   0   0   0   0   4 shared a buffer with 5
++1   0   0   0   0   4 shared a buffer with 9
++2   0   1   0   1   9 allocated a buffer
++3   0   2   1   1   7 allocated a buffer
++3   0   2   1   1   7 shared a buffer with 8
++3   0   2   1   1   7 sharing with 9
++3   0   2   1   1   7 release a buffer
++3   0   2   1   1   7 migrate to cgroup D
++3   0   2   1   1   9 release a buffer from 7
++2   0   1   0   1   8 release a buffer from 7 (last ref to shared buf)
++==  ==  ==  ==  ==  ===================================================
  
-+	drmcg_device_early_init(dev);
- 	return 0;
  
- err_setunique:
-@@ -693,6 +695,7 @@ int drm_dev_init(struct drm_device *dev,
- 	drm_fs_inode_free(dev->anon_inode);
- err_free:
- 	put_device(dev->dev);
-+	mutex_destroy(&dev->drmcg_mutex);
- 	mutex_destroy(&dev->master_mutex);
- 	mutex_destroy(&dev->clientlist_mutex);
- 	mutex_destroy(&dev->filelist_mutex);
-@@ -769,6 +772,7 @@ void drm_dev_fini(struct drm_device *dev)
+ Misc
+diff --git a/drivers/gpu/drm/drm_gem.c b/drivers/gpu/drm/drm_gem.c
+index 2f2b889096b0..d158470edd98 100644
+--- a/drivers/gpu/drm/drm_gem.c
++++ b/drivers/gpu/drm/drm_gem.c
+@@ -38,6 +38,7 @@
+ #include <linux/dma-buf.h>
+ #include <linux/mem_encrypt.h>
+ #include <linux/pagevec.h>
++#include <linux/cgroup_drm.h>
  
- 	put_device(dev->dev);
+ #include <drm/drm.h>
+ #include <drm/drm_device.h>
+@@ -46,6 +47,7 @@
+ #include <drm/drm_gem.h>
+ #include <drm/drm_print.h>
+ #include <drm/drm_vma_manager.h>
++#include <drm/drm_cgroup.h>
  
-+	mutex_destroy(&dev->drmcg_mutex);
- 	mutex_destroy(&dev->master_mutex);
- 	mutex_destroy(&dev->clientlist_mutex);
- 	mutex_destroy(&dev->filelist_mutex);
+ #include "drm_internal.h"
+ 
+@@ -164,6 +166,9 @@ void drm_gem_private_object_init(struct drm_device *dev,
+ 		obj->resv = &obj->_resv;
+ 
+ 	drm_vma_node_reset(&obj->vma_node);
++
++	obj->drmcg = drmcg_get(current);
++	drmcg_chg_bo_alloc(obj->drmcg, dev, size);
+ }
+ EXPORT_SYMBOL(drm_gem_private_object_init);
+ 
+@@ -957,6 +962,10 @@ drm_gem_object_release(struct drm_gem_object *obj)
+ 		fput(obj->filp);
+ 
+ 	dma_resv_fini(&obj->_resv);
++
++	drmcg_unchg_bo_alloc(obj->drmcg, obj->dev, obj->size);
++	drmcg_put(obj->drmcg);
++
+ 	drm_gem_free_mmap_offset(obj);
+ }
+ EXPORT_SYMBOL(drm_gem_object_release);
 diff --git a/include/drm/drm_cgroup.h b/include/drm/drm_cgroup.h
-index 530c9a0b3238..fda426fba035 100644
+index fda426fba035..1eb3012e16a1 100644
 --- a/include/drm/drm_cgroup.h
 +++ b/include/drm/drm_cgroup.h
-@@ -4,8 +4,17 @@
- #ifndef __DRM_CGROUP_H__
- #define __DRM_CGROUP_H__
+@@ -26,6 +26,12 @@ void drmcg_unregister_dev(struct drm_device *dev);
  
-+#include <linux/cgroup_drm.h>
+ void drmcg_device_early_init(struct drm_device *device);
+ 
++void drmcg_chg_bo_alloc(struct drmcg *drmcg, struct drm_device *dev,
++		size_t size);
 +
- #ifdef CONFIG_CGROUP_DRM
- 
-+/**
-+ * Per DRM device properties for DRM cgroup controller for the purpose
-+ * of storing per device defaults
-+ */
-+struct drmcg_props {
-+};
-+
- void drmcg_bind(struct drm_minor (*(*acq_dm)(unsigned int minor_id)),
- 		void (*put_ddev)(struct drm_device *dev));
- 
-@@ -15,8 +24,13 @@ void drmcg_register_dev(struct drm_device *dev);
- 
- void drmcg_unregister_dev(struct drm_device *dev);
- 
-+void drmcg_device_early_init(struct drm_device *device);
++void drmcg_unchg_bo_alloc(struct drmcg *drmcg, struct drm_device *dev,
++		size_t size);
 +
  #else
  
-+struct drmcg_props {
-+};
-+
- static inline void drmcg_bind(
- 		struct drm_minor (*(*acq_dm)(unsigned int minor_id)),
- 		void (*put_ddev)(struct drm_device *dev))
-@@ -35,5 +49,9 @@ static inline void drmcg_unregister_dev(struct drm_device *dev)
+ struct drmcg_props {
+@@ -53,5 +59,15 @@ static inline void drmcg_device_early_init(struct drm_device *device)
  {
  }
  
-+static inline void drmcg_device_early_init(struct drm_device *device)
++static inline void drmcg_chg_bo_alloc(struct drmcg *drmcg,
++		struct drm_device *dev,	size_t size)
++{
++}
++
++static inline void drmcg_unchg_bo_alloc(struct drmcg *drmcg,
++		struct drm_device *dev,	size_t size)
 +{
 +}
 +
  #endif /* CONFIG_CGROUP_DRM */
  #endif /* __DRM_CGROUP_H__ */
-diff --git a/include/drm/drm_device.h b/include/drm/drm_device.h
-index 1acfc3bbd3fb..a94598b8f670 100644
---- a/include/drm/drm_device.h
-+++ b/include/drm/drm_device.h
-@@ -8,6 +8,7 @@
- 
- #include <drm/drm_hashtab.h>
- #include <drm/drm_mode_config.h>
-+#include <drm/drm_cgroup.h>
- 
- struct drm_driver;
- struct drm_minor;
-@@ -308,6 +309,12 @@ struct drm_device {
- 	 */
- 	struct drm_fb_helper *fb_helper;
- 
-+        /** \name DRM Cgroup */
-+	/*@{ */
-+	struct mutex drmcg_mutex;
-+	struct drmcg_props drmcg_props;
-+	/*@} */
-+
- 	/* Everything below here is for legacy driver, never use! */
- 	/* private: */
- #if IS_ENABLED(CONFIG_DRM_LEGACY)
-diff --git a/include/drm/drm_drv.h b/include/drm/drm_drv.h
-index cf13470810a5..1f65ac4d9bbf 100644
---- a/include/drm/drm_drv.h
-+++ b/include/drm/drm_drv.h
-@@ -715,6 +715,15 @@ struct drm_driver {
- 			    struct drm_device *dev,
- 			    uint32_t handle);
- 
-+	/**
-+	 * @drmcg_custom_init
-+	 *
-+	 * Optional callback used to initialize drm cgroup per device properties
-+	 * such as resource limit defaults.
-+	 */
-+	void (*drmcg_custom_init)(struct drm_device *dev,
-+			struct drmcg_props *props);
-+
- 	/**
- 	 * @gem_vm_ops: Driver private ops for this object
+diff --git a/include/drm/drm_gem.h b/include/drm/drm_gem.h
+index 97a48165642c..6ac7018923f7 100644
+--- a/include/drm/drm_gem.h
++++ b/include/drm/drm_gem.h
+@@ -312,6 +312,16 @@ struct drm_gem_object {
  	 *
+ 	 */
+ 	const struct drm_gem_object_funcs *funcs;
++
++	/**
++	 * @drmcg:
++	 *
++	 * DRM cgroup this GEM object belongs to.
++	 *
++	 * This is used to track and limit the amount of GEM objects a user
++	 * can allocate.
++	 */
++	struct drmcg *drmcg;
+ };
+ 
+ /**
 diff --git a/include/linux/cgroup_drm.h b/include/linux/cgroup_drm.h
-index 854591bbb430..2014097eb75c 100644
+index 2014097eb75c..174ab50701ef 100644
 --- a/include/linux/cgroup_drm.h
 +++ b/include/linux/cgroup_drm.h
-@@ -4,6 +4,7 @@
- #ifndef _CGROUP_DRM_H
- #define _CGROUP_DRM_H
+@@ -11,6 +11,11 @@
+ /* limit defined per the way drm_minor_alloc operates */
+ #define MAX_DRM_DEV (64 * DRM_MINOR_RENDER)
  
-+#include <linux/mutex.h>
- #include <linux/cgroup.h>
- #include <drm/drm_file.h>
- 
-@@ -12,11 +13,19 @@
- 
++enum drmcg_res_type {
++	DRMCG_TYPE_BO_TOTAL,
++	__DRMCG_TYPE_LAST,
++};
++
  #ifdef CONFIG_CGROUP_DRM
  
-+/**
-+ * Per DRM cgroup, per device resources (such as statistics and limits)
-+ */
-+struct drmcg_device_resource {
-+	/* for per device stats */
-+};
-+
  /**
-  * The DRM cgroup controller data structure.
+@@ -18,6 +23,7 @@
   */
- struct drmcg {
- 	struct cgroup_subsys_state	css;
-+	struct drmcg_device_resource	*dev_resources[MAX_DRM_DEV];
+ struct drmcg_device_resource {
+ 	/* for per device stats */
++	s64			bo_stats_total_allocated;
  };
  
  /**
-@@ -70,6 +79,9 @@ static inline struct drmcg *drmcg_parent(struct drmcg *cg)
- 
- #else /* CONFIG_CGROUP_DRM */
- 
-+struct drmcg_device_resource {
-+};
-+
- struct drmcg {
- };
- 
 diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
-index 37f98dc47268..30fd9aeffbe7 100644
+index 30fd9aeffbe7..425566753a5c 100644
 --- a/kernel/cgroup/drm.c
 +++ b/kernel/cgroup/drm.c
-@@ -1,11 +1,17 @@
- // SPDX-License-Identifier: MIT
- // Copyright 2019 Advanced Micro Devices, Inc.
- #include <linux/bitmap.h>
-+#include <linux/export.h>
- #include <linux/mutex.h>
- #include <linux/slab.h>
- #include <linux/cgroup.h>
-+#include <linux/fs.h>
-+#include <linux/seq_file.h>
-+#include <linux/mutex.h>
-+#include <linux/kernel.h>
- #include <linux/cgroup_drm.h>
+@@ -13,6 +13,7 @@
  #include <drm/drm_file.h>
-+#include <drm/drm_drv.h>
+ #include <drm/drm_drv.h>
  #include <drm/drm_device.h>
++#include <drm/drm_ioctl.h>
  #include <drm/drm_cgroup.h>
  
-@@ -54,6 +60,47 @@ void drmcg_unbind(void)
- }
- EXPORT_SYMBOL(drmcg_unbind);
+ static struct drmcg *root_drmcg __read_mostly;
+@@ -26,6 +27,18 @@ static struct drm_minor (*(*acquire_drm_minor)(unsigned int minor_id));
  
-+/* caller must hold dev->drmcg_mutex */
-+static inline int init_drmcg_single(struct drmcg *drmcg, struct drm_device *dev)
-+{
-+	int minor = dev->primary->index;
-+	struct drmcg_device_resource *ddr = drmcg->dev_resources[minor];
+ static void (*put_drm_dev)(struct drm_device *dev);
+ 
++#define DRMCG_CTF_PRIV_SIZE 3
++#define DRMCG_CTF_PRIV_MASK GENMASK((DRMCG_CTF_PRIV_SIZE - 1), 0)
++#define DRMCG_CTF_PRIV(res_type, f_type)  ((res_type) <<\
++		DRMCG_CTF_PRIV_SIZE | (f_type))
++#define DRMCG_CTF_PRIV2RESTYPE(priv) ((priv) >> DRMCG_CTF_PRIV_SIZE)
++#define DRMCG_CTF_PRIV2FTYPE(priv) ((priv) & DRMCG_CTF_PRIV_MASK)
 +
-+	if (ddr == NULL) {
-+		ddr = kzalloc(sizeof(struct drmcg_device_resource),
-+			GFP_KERNEL);
 +
-+		if (!ddr)
-+			return -ENOMEM;
-+	}
-+
-+	drmcg->dev_resources[minor] = ddr;
-+
-+	/* set defaults here */
-+
-+	return 0;
-+}
-+
-+static inline void drmcg_update_cg_tree(struct drm_device *dev)
-+{
-+	struct cgroup_subsys_state *pos;
-+	struct drmcg *child;
-+
-+	if (root_drmcg == NULL)
-+		return;
-+
-+	/* init cgroups created before registration (i.e. root cgroup) */
-+
-+	/* use cgroup_mutex instead of rcu_read_lock because
-+	 * init_drmcg_single has alloc which may sleep */
-+	mutex_lock(&cgroup_mutex);
-+	css_for_each_descendant_pre(pos, &root_drmcg->css) {
-+		child = css_to_drmcg(pos);
-+		init_drmcg_single(child, dev);
-+	}
-+	mutex_unlock(&cgroup_mutex);
-+}
++enum drmcg_file_type {
++	DRMCG_FTYPE_STATS,
++};
 +
  /**
-  * drmcg_register_dev - register a DRM device for usage in drm cgroup
-  * @dev: DRM device
-@@ -71,6 +118,13 @@ void drmcg_register_dev(struct drm_device *dev)
+  * drmcg_bind - Bind DRM subsystem to cgroup subsystem
+  * @acq_dm: function pointer to the drm_minor_acquire function
+@@ -252,7 +265,66 @@ drmcg_css_alloc(struct cgroup_subsys_state *parent_css)
+ 	return &drmcg->css;
+ }
  
- 	mutex_lock(&drmcg_mutex);
- 	set_bit(dev->primary->index, known_devs);
-+
-+	if (dev->driver->drmcg_custom_init)
-+	{
-+		dev->driver->drmcg_custom_init(dev, &dev->drmcg_props);
-+
-+		drmcg_update_cg_tree(dev);
++static void drmcg_print_stats(struct drmcg_device_resource *ddr,
++		struct seq_file *sf, enum drmcg_res_type type)
++{
++	if (ddr == NULL) {
++		seq_puts(sf, "\n");
++		return;
 +	}
- 	mutex_unlock(&drmcg_mutex);
- }
- EXPORT_SYMBOL(drmcg_register_dev);
-@@ -137,23 +191,61 @@ static int drm_minor_for_each(int (*fn)(int id, void *p, void *data),
- 	return rc;
- }
- 
-+static int drmcg_css_free_fn(int id, void *ptr, void *data)
++
++	switch (type) {
++	case DRMCG_TYPE_BO_TOTAL:
++		seq_printf(sf, "%lld\n", ddr->bo_stats_total_allocated);
++		break;
++	default:
++		seq_puts(sf, "\n");
++		break;
++	}
++}
++
++static int drmcg_seq_show_fn(int id, void *ptr, void *data)
 +{
 +	struct drm_minor *minor = ptr;
-+	struct drmcg *drmcg = data;
++	struct seq_file *sf = data;
++	struct drmcg *drmcg = css_to_drmcg(seq_css(sf));
++	enum drmcg_file_type f_type =
++		DRMCG_CTF_PRIV2FTYPE(seq_cft(sf)->private);
++	enum drmcg_res_type type =
++		DRMCG_CTF_PRIV2RESTYPE(seq_cft(sf)->private);
++	struct drmcg_device_resource *ddr;
 +
 +	if (minor->type != DRM_MINOR_PRIMARY)
 +		return 0;
 +
-+	kfree(drmcg->dev_resources[minor->index]);
++	ddr = drmcg->dev_resources[minor->index];
++
++	seq_printf(sf, "%d:%d ", DRM_MAJOR, minor->index);
++
++	switch (f_type) {
++	case DRMCG_FTYPE_STATS:
++		drmcg_print_stats(ddr, sf, type);
++		break;
++	default:
++		seq_puts(sf, "\n");
++		break;
++	}
 +
 +	return 0;
 +}
 +
- static void drmcg_css_free(struct cgroup_subsys_state *css)
- {
- 	struct drmcg *drmcg = css_to_drmcg(css);
- 
-+	drm_minor_for_each(&drmcg_css_free_fn, drmcg);
-+
- 	kfree(drmcg);
- }
- 
-+static int init_drmcg_fn(int id, void *ptr, void *data)
++int drmcg_seq_show(struct seq_file *sf, void *v)
 +{
-+	struct drm_minor *minor = ptr;
-+	struct drmcg *drmcg = data;
-+	int rc;
-+
-+	if (minor->type != DRM_MINOR_PRIMARY)
-+		return 0;
-+
-+	mutex_lock(&minor->dev->drmcg_mutex);
-+	rc = init_drmcg_single(drmcg, minor->dev);
-+	mutex_unlock(&minor->dev->drmcg_mutex);
-+
-+	return rc;
++	return drm_minor_for_each(&drmcg_seq_show_fn, sf);
 +}
 +
- static struct cgroup_subsys_state *
- drmcg_css_alloc(struct cgroup_subsys_state *parent_css)
- {
- 	struct drmcg *parent = css_to_drmcg(parent_css);
- 	struct drmcg *drmcg;
-+	int rc;
- 
- 	drmcg = kzalloc(sizeof(struct drmcg), GFP_KERNEL);
- 	if (!drmcg)
- 		return ERR_PTR(-ENOMEM);
- 
-+	rc = drm_minor_for_each(&init_drmcg_fn, drmcg);
-+	if (rc) {
-+		drmcg_css_free(&drmcg->css);
-+		return ERR_PTR(rc);
-+	}
-+
- 	if (!parent)
- 		root_drmcg = drmcg;
- 
-@@ -171,3 +263,16 @@ struct cgroup_subsys drm_cgrp_subsys = {
- 	.legacy_cftypes	= files,
- 	.dfl_cftypes	= files,
+ struct cftype files[] = {
++	{
++		.name = "buffer.total.stats",
++		.seq_show = drmcg_seq_show,
++		.private = DRMCG_CTF_PRIV(DRMCG_TYPE_BO_TOTAL,
++						DRMCG_FTYPE_STATS),
++	},
+ 	{ }	/* terminate */
  };
+ 
+@@ -276,3 +348,57 @@ void drmcg_device_early_init(struct drm_device *dev)
+ 	drmcg_update_cg_tree(dev);
+ }
+ EXPORT_SYMBOL(drmcg_device_early_init);
 +
 +/**
-+ * drmcg_device_early_init - initialize device specific resources for DRM cgroups
-+ * @dev: the target DRM device
++ * drmcg_chg_bo_alloc - charge GEM buffer usage for a device and cgroup
++ * @drmcg: the DRM cgroup to be charged to
++ * @dev: the device the usage should be charged to
++ * @size: size of the GEM buffer to be accounted for
 + *
-+ * Allocate and initialize device specific resources for existing DRM cgroups.
-+ * Typically only the root cgroup exists before the initialization of @dev.
++ * This function should be called when a new GEM buffer is allocated to account
++ * for the utilization.  This should not be called when the buffer is shared (
++ * the GEM buffer's reference count being incremented.)
 + */
-+void drmcg_device_early_init(struct drm_device *dev)
++void drmcg_chg_bo_alloc(struct drmcg *drmcg, struct drm_device *dev,
++		size_t size)
 +{
-+	drmcg_update_cg_tree(dev);
++	struct drmcg_device_resource *ddr;
++	int devIdx = dev->primary->index;
++
++	if (drmcg == NULL)
++		return;
++
++	mutex_lock(&dev->drmcg_mutex);
++	for ( ; drmcg != NULL; drmcg = drmcg_parent(drmcg)) {
++		ddr = drmcg->dev_resources[devIdx];
++
++		ddr->bo_stats_total_allocated += (s64)size;
++	}
++	mutex_unlock(&dev->drmcg_mutex);
 +}
-+EXPORT_SYMBOL(drmcg_device_early_init);
++EXPORT_SYMBOL(drmcg_chg_bo_alloc);
++
++/**
++ * drmcg_unchg_bo_alloc -
++ * @drmcg: the DRM cgroup to uncharge from
++ * @dev: the device the usage should be removed from
++ * @size: size of the GEM buffer to be accounted for
++ *
++ * This function should be called when the GEM buffer is about to be freed (
++ * not simply when the GEM buffer's reference count is being decremented.)
++ */
++void drmcg_unchg_bo_alloc(struct drmcg *drmcg, struct drm_device *dev,
++		size_t size)
++{
++	int devIdx = dev->primary->index;
++
++	if (drmcg == NULL)
++		return;
++
++	mutex_lock(&dev->drmcg_mutex);
++	for ( ; drmcg != NULL; drmcg = drmcg_parent(drmcg))
++		drmcg->dev_resources[devIdx]->bo_stats_total_allocated
++			-= (s64)size;
++	mutex_unlock(&dev->drmcg_mutex);
++}
++EXPORT_SYMBOL(drmcg_unchg_bo_alloc);
 -- 
 2.25.0
-
