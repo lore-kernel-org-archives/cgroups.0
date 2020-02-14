@@ -1,7 +1,7 @@
 From: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
-Subject: [PATCH 09/11] drm, cgroup: Introduce lgpu as DRM cgroup resource
-Date: Fri, 14 Feb 2020 10:56:48 -0500
-Message-ID: <20200214155650.21203-10-Kenny.Ho@amd.com>
+Subject: [PATCH 07/11] drm, cgroup: Add total GEM buffer allocation limit
+Date: Fri, 14 Feb 2020 10:56:46 -0500
+Message-ID: <20200214155650.21203-8-Kenny.Ho@amd.com>
 References: <20200214155650.21203-1-Kenny.Ho@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -10,8 +10,8 @@ Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=amdcloud.onmicrosoft.com; s=selector2-amdcloud-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=KLv/u15lZ9XpkHbBOGen0kbWuhUNiUYh6hxxozpkJkA=;
- b=GJbqEog+gKWYrhcPDPaxc6xgwPaohE/K+eH+rdNLmRXaY2wxnbs8QN4t/oYQjg68LGn1kAEVMfpyAfmqyWQx/07YNx7M3e1TTMdZkor0vGrp26kJPLoUZEO0RBzBuYf9Rb/QJoqY/LqiVtxI3+luThQHxCDclHa7se7sXKrw0AU=
+ bh=nE+NdonnuiVF4c6wxyhLbj83GLvODHYdGsIm5dEwkuI=;
+ b=1FBWZJEhqFZCpmkPnCBXH2j2roBNkfrqzt0uZM3ousA7cuRla0gWQa7Qhjf2JAgyW1jGD1+78DAGALOpFg3LkLQBx/stRX+ZR6QAkQKpytRzS9/v/4dtZMN8FrlqBA35aH8LhmW1Jii9ve9BBLzhvraZkktdHi+xOT/DErfL8V4=
 In-Reply-To: <20200214155650.21203-1-Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
@@ -26,672 +26,548 @@ Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane
 To: y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, alexander.deucher-5C7GfCeVMHo@public.gmane.org, christian.koenig-5C7GfCeVMHo@public.gmane.org, felix.kuehling-5C7GfCeVMHo@public.gmane.org, joseph.greathouse-5C7GfCeVMHo@public.gmane.org, jsparks-WVYJKLFxKCc@public.gmane.org, lkaplan-WVYJKLFxKCc@public.gmane.org, daniel-/w4YWyX8dFk@public.gmane.org, nirmoy.das-5C7GfCeVMHo@public.gmane.org, damon.mcdougall-5C7GfCeVMHo@public.gmane.org, juan.zuniga-anaya-5C7GfCeVMHo@public.gmane.org
 Cc: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
 
-drm.lgpu
-      A read-write nested-keyed file which exists on all cgroups.
-      Each entry is keyed by the DRM device's major:minor.
+The drm resource being limited here is the GEM buffer objects.  User
+applications allocate and free these buffers.  In addition, a process
+can allocate a buffer and share it with another process.  The consumer
+of a shared buffer can also outlive the allocator of the buffer.
 
-      lgpu stands for logical GPU, it is an abstraction used to
-      subdivide a physical DRM device for the purpose of resource
-      management.  This file stores user configuration while the
-      drm.lgpu.effective reflects the actual allocation after
-      considering the relationship between the cgroups and their
-      configurations.
+For the purpose of cgroup accounting and limiting, ownership of the
+buffer is deemed to be the cgroup for which the allocating process
+belongs to.  There is one cgroup limit per drm device.
 
-      The lgpu is a discrete quantity that is device specific (i.e.
-      some DRM devices may have 64 lgpus while others may have 100
-      lgpus.)  The lgpu is a single quantity that can be allocated
-      in three different ways denoted by the following nested keys.
+The limiting functionality is added to the previous stats collection
+function.  The drm_gem_private_object_init is modified to have a return
+value to allow failure due to cgroup limit.
 
-        =====     ==============================================
-        weight    Allocate by proportion in relationship with
-                  active sibling cgroups
-        count     Allocate by amount statically, treat lgpu as
-                  anonymous resources
-        list      Allocate statically, treat lgpu as named
-                  resource
-        =====     ==============================================
+The try_chg function only fails if the DRM cgroup properties has
+limit_enforced set to true for the DRM device.  This is to allow the DRM
+cgroup controller to collect usage stats without enforcing the limits.
 
-      For example:
-      226:0 weight=100 count=256 list=0-255
-      226:1 weight=100 count=4 list=0,2,4,6
-      226:2 weight=100 count=32 list=32-63
-      226:3 weight=100 count=0 list=
-      226:4 weight=500 count=0 list=
+drm.buffer.default
+        A read-only flat-keyed file which exists on the root cgroup.
+        Each entry is keyed by the drm device's major:minor.
 
-      lgpu is represented by a bitmap and uses the bitmap_parselist
-      kernel function so the list key input format is a
-      comma-separated list of decimal numbers and ranges.
+        Default limits on the total GEM buffer allocation in bytes.
 
-      Consecutively set bits are shown as two hyphen-separated decimal
-      numbers, the smallest and largest bit numbers set in the range.
-      Optionally each range can be postfixed to denote that only parts
-      of it should be set.  The range will divided to groups of
-      specific size.
-      Syntax: range:used_size/group_size
-      Example: 0-1023:2/256 ==> 0,1,256,257,512,513,768,769
+drm.buffer.max
+        A read-write flat-keyed file which exists on all cgroups.  Each
+        entry is keyed by the drm device's major:minor.
 
-      The count key is the hamming weight / hweight of the bitmap.
+        Per device limits on the total GEM buffer allocation in byte.
+        This is a hard limit.  Attempts in allocating beyond the cgroup
+        limit will result in ENOMEM.  Shorthand understood by memparse
+        (such as k, m, g) can be used.
 
-      Weight, count and list accept the max and default keywords.
+        Set allocation limit for /dev/dri/card1 to 1GB
+        echo "226:1 1g" > drm.buffer.total.max
 
-      Some DRM devices may only support lgpu as anonymous resources.
-      In such case, the significance of the position of the set bits
-      in list will be ignored.
+        Set allocation limit for /dev/dri/card0 to 512MB
+        echo "226:0 512m" > drm.buffer.total.max
 
-      The weight quantity is only in effect when static allocation
-      is not used (by setting count=0) for this cgroup.  The weight
-      quantity distributes lgpus that are not statically allocated by
-      the siblings.  For example, given siblings cgroupA, cgroupB and
-      cgroupC for a DRM device that has 64 lgpus, if cgroupA occupies
-      0-63, no lgpu is available to be distributed by weight.
-      Similarly, if cgroupA has list=0-31 and cgroupB has list=16-63,
-      cgroupC will be starved if it tries to allocate by weight.
-
-      On the other hand, if cgroupA has weight=100 count=0, cgroupB
-      has list=16-47, and cgroupC has weight=100 count=0, then 32
-      lgpus are available to be distributed evenly between cgroupA
-      and cgroupC.  In drm.lgpu.effective, cgroupA will have
-      list=0-15 and cgroupC will have list=48-63.
-
-      This lgpu resource supports the 'allocation' and 'weight'
-      resource distribution model.
-
-drm.lgpu.effective
-      A read-only nested-keyed file which exists on all cgroups.
-      Each entry is keyed by the DRM device's major:minor.
-
-      lgpu stands for logical GPU, it is an abstraction used to
-      subdivide a physical DRM device for the purpose of resource
-      management.  This file reflects the actual allocation after
-      considering the relationship between the cgroups and their
-      configurations in drm.lgpu.
-
-Change-Id: Idde0ef9a331fd67bb9c7eb8ef9978439e6452488
+Change-Id: Id3265bbd0fafe84a16b59617df79bd32196160be
 Signed-off-by: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
 ---
- Documentation/admin-guide/cgroup-v2.rst |  80 ++++++
- include/drm/drm_cgroup.h                |   3 +
- include/linux/cgroup_drm.h              |  22 ++
- kernel/cgroup/drm.c                     | 324 +++++++++++++++++++++++-
- 4 files changed, 427 insertions(+), 2 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst    |  21 ++
+ drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c    |  19 ++
+ drivers/gpu/drm/amd/amdgpu/amdgpu_object.c |   6 +-
+ drivers/gpu/drm/drm_gem.c                  |  11 +-
+ include/drm/drm_cgroup.h                   |   8 +-
+ include/drm/drm_gem.h                      |   2 +-
+ include/linux/cgroup_drm.h                 |   1 +
+ kernel/cgroup/drm.c                        | 227 ++++++++++++++++++++-
+ 8 files changed, 278 insertions(+), 17 deletions(-)
 
 diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index ce5dc027366a..d8a41956e5c7 100644
+index 19fcf54ace83..064172df63e2 100644
 --- a/Documentation/admin-guide/cgroup-v2.rst
 +++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -2120,6 +2120,86 @@ DRM Interface Files
- 	Set largest allocation for /dev/dri/card1 to 4MB
- 	echo "226:1 4m" > drm.buffer.peak.max
+@@ -2081,6 +2081,27 @@ DRM Interface Files
  
-+  drm.lgpu
-+	A read-write nested-keyed file which exists on all cgroups.
-+	Each entry is keyed by the DRM device's major:minor.
+ 	Total number of GEM buffer allocated.
+ 
++  drm.buffer.default
++	A read-only flat-keyed file which exists on the root cgroup.
++	Each entry is keyed by the drm device's major:minor.
 +
-+	lgpu stands for logical GPU, it is an abstraction used to
-+	subdivide a physical DRM device for the purpose of resource
-+	management.  This file stores user configuration while the
-+        drm.lgpu.effective reflects the actual allocation after
-+        considering the relationship between the cgroups and their
-+        configurations.
++	Default limits on the total GEM buffer allocation in bytes.
 +
-+	The lgpu is a discrete quantity that is device specific (i.e.
-+	some DRM devices may have 64 lgpus while others may have 100
-+	lgpus.)  The lgpu is a single quantity that can be allocated
-+        in three different ways denoted by the following nested keys.
++  drm.buffer.max
++	A read-write flat-keyed file which exists on all cgroups.  Each
++	entry is keyed by the drm device's major:minor.
 +
-+	  =====     ==============================================
-+	  weight    Allocate by proportion in relationship with
-+                    active sibling cgroups
-+	  count     Allocate by amount statically, treat lgpu as
-+                    anonymous resources
-+	  list      Allocate statically, treat lgpu as named
-+                    resource
-+	  =====     ==============================================
++	Per device limits on the total GEM buffer allocation in byte.
++	This is a hard limit.  Attempts in allocating beyond the cgroup
++	limit will result in ENOMEM.  Shorthand understood by memparse
++	(such as k, m, g) can be used.
 +
-+	For example:
-+	226:0 weight=100 count=256 list=0-255
-+	226:1 weight=100 count=4 list=0,2,4,6
-+	226:2 weight=100 count=32 list=32-63
-+	226:3 weight=100 count=0 list=
-+	226:4 weight=500 count=0 list=
++	Set allocation limit for /dev/dri/card1 to 1GB
++	echo "226:1 1g" > drm.buffer.total.max
 +
-+	lgpu is represented by a bitmap and uses the bitmap_parselist
-+	kernel function so the list key input format is a
-+	comma-separated list of decimal numbers and ranges.
-+
-+	Consecutively set bits are shown as two hyphen-separated decimal
-+	numbers, the smallest and largest bit numbers set in the range.
-+	Optionally each range can be postfixed to denote that only parts
-+	of it should be set.  The range will divided to groups of
-+	specific size.
-+	Syntax: range:used_size/group_size
-+	Example: 0-1023:2/256 ==> 0,1,256,257,512,513,768,769
-+
-+	The count key is the hamming weight / hweight of the bitmap.
-+
-+	Weight, count and list accept the max and default keywords.
-+
-+	Some DRM devices may only support lgpu as anonymous resources.
-+	In such case, the significance of the position of the set bits
-+	in list will be ignored.
-+
-+	The weight quantity is only in effect when static allocation
-+	is not used (by setting count=0) for this cgroup.  The weight
-+	quantity distributes lgpus that are not statically allocated by
-+	the siblings.  For example, given siblings cgroupA, cgroupB and
-+	cgroupC for a DRM device that has 64 lgpus, if cgroupA occupies
-+	0-63, no lgpu is available to be distributed by weight.
-+	Similarly, if cgroupA has list=0-31 and cgroupB has list=16-63,
-+	cgroupC will be starved if it tries to allocate by weight.
-+
-+	On the other hand, if cgroupA has weight=100 count=0, cgroupB
-+	has list=16-47, and cgroupC has weight=100 count=0, then 32
-+	lgpus are available to be distributed evenly between cgroupA
-+	and cgroupC.  In drm.lgpu.effective, cgroupA will have
-+	list=0-15 and cgroupC will have list=48-63.
-+
-+	This lgpu resource supports the 'allocation' and 'weight'
-+	resource distribution model.
-+
-+  drm.lgpu.effective
-+	A read-only nested-keyed file which exists on all cgroups.
-+	Each entry is keyed by the DRM device's major:minor.
-+
-+	lgpu stands for logical GPU, it is an abstraction used to
-+	subdivide a physical DRM device for the purpose of resource
-+	management.  This file reflects the actual allocation after
-+        considering the relationship between the cgroups and their
-+        configurations in drm.lgpu.
++	Set allocation limit for /dev/dri/card0 to 512MB
++	echo "226:0 512m" > drm.buffer.total.max
 +
  GEM Buffer Ownership
  ~~~~~~~~~~~~~~~~~~~~
  
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
+index f28d040de3ce..3ebef1d62346 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_drv.c
+@@ -1397,6 +1397,23 @@ amdgpu_get_crtc_scanout_position(struct drm_device *dev, unsigned int pipe,
+ 						  stime, etime, mode);
+ }
+ 
++#ifdef CONFIG_CGROUP_DRM
++
++static void amdgpu_drmcg_custom_init(struct drm_device *dev,
++	struct drmcg_props *props)
++{
++	props->limit_enforced = true;
++}
++
++#else
++
++static void amdgpu_drmcg_custom_init(struct drm_device *dev,
++	struct drmcg_props *props)
++{
++}
++
++#endif /* CONFIG_CGROUP_DRM */
++
+ static struct drm_driver kms_driver = {
+ 	.driver_features =
+ 	    DRIVER_USE_AGP | DRIVER_ATOMIC |
+@@ -1430,6 +1447,8 @@ static struct drm_driver kms_driver = {
+ 	.gem_prime_vunmap = amdgpu_gem_prime_vunmap,
+ 	.gem_prime_mmap = amdgpu_gem_prime_mmap,
+ 
++	.drmcg_custom_init = amdgpu_drmcg_custom_init,
++
+ 	.name = DRIVER_NAME,
+ 	.desc = DRIVER_DESC,
+ 	.date = DRIVER_DATE,
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_object.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_object.c
+index 46c76e2e1281..b81c608cb2cc 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_object.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_object.c
+@@ -34,6 +34,7 @@
+ 
+ #include <drm/amdgpu_drm.h>
+ #include <drm/drm_cache.h>
++#include <drm/drm_cgroup.h>
+ #include "amdgpu.h"
+ #include "amdgpu_trace.h"
+ #include "amdgpu_amdkfd.h"
+@@ -551,7 +552,10 @@ static int amdgpu_bo_do_create(struct amdgpu_device *adev,
+ 	bo = kzalloc(sizeof(struct amdgpu_bo), GFP_KERNEL);
+ 	if (bo == NULL)
+ 		return -ENOMEM;
+-	drm_gem_private_object_init(adev->ddev, &bo->tbo.base, size);
++	if (!drm_gem_private_object_init(adev->ddev, &bo->tbo.base, size)) {
++		kfree(bo);
++		return -ENOMEM;
++	}
+ 	INIT_LIST_HEAD(&bo->shadow_list);
+ 	bo->vm_bo = NULL;
+ 	bo->preferred_domains = bp->preferred_domain ? bp->preferred_domain :
+diff --git a/drivers/gpu/drm/drm_gem.c b/drivers/gpu/drm/drm_gem.c
+index d158470edd98..06e7576f1758 100644
+--- a/drivers/gpu/drm/drm_gem.c
++++ b/drivers/gpu/drm/drm_gem.c
+@@ -150,11 +150,17 @@ EXPORT_SYMBOL(drm_gem_object_init);
+  * no GEM provided backing store. Instead the caller is responsible for
+  * backing the object and handling it.
+  */
+-void drm_gem_private_object_init(struct drm_device *dev,
++bool drm_gem_private_object_init(struct drm_device *dev,
+ 				 struct drm_gem_object *obj, size_t size)
+ {
+ 	BUG_ON((size & (PAGE_SIZE - 1)) != 0);
+ 
++	obj->drmcg = drmcg_get(current);
++	if (!drmcg_try_chg_bo_alloc(obj->drmcg, dev, size)) {
++		drmcg_put(obj->drmcg);
++		obj->drmcg = NULL;
++		return false;
++	}
+ 	obj->dev = dev;
+ 	obj->filp = NULL;
+ 
+@@ -167,8 +173,7 @@ void drm_gem_private_object_init(struct drm_device *dev,
+ 
+ 	drm_vma_node_reset(&obj->vma_node);
+ 
+-	obj->drmcg = drmcg_get(current);
+-	drmcg_chg_bo_alloc(obj->drmcg, dev, size);
++	return true;
+ }
+ EXPORT_SYMBOL(drm_gem_private_object_init);
+ 
 diff --git a/include/drm/drm_cgroup.h b/include/drm/drm_cgroup.h
-index 2b41d4d22e33..619a110cc748 100644
+index 1eb3012e16a1..2783e56690db 100644
 --- a/include/drm/drm_cgroup.h
 +++ b/include/drm/drm_cgroup.h
-@@ -17,6 +17,9 @@ struct drmcg_props {
- 
- 	s64			bo_limits_total_allocated_default;
- 	s64			bo_limits_peak_allocated_default;
+@@ -13,6 +13,9 @@
+  * of storing per device defaults
+  */
+ struct drmcg_props {
++	bool			limit_enforced;
 +
-+	int			lgpu_capacity;
-+	DECLARE_BITMAP(lgpu_slots, MAX_DRMCG_LGPU_CAPACITY);
++	s64			bo_limits_total_allocated_default;
  };
  
  void drmcg_bind(struct drm_minor (*(*acq_dm)(unsigned int minor_id)),
+@@ -26,7 +29,7 @@ void drmcg_unregister_dev(struct drm_device *dev);
+ 
+ void drmcg_device_early_init(struct drm_device *device);
+ 
+-void drmcg_chg_bo_alloc(struct drmcg *drmcg, struct drm_device *dev,
++bool drmcg_try_chg_bo_alloc(struct drmcg *drmcg, struct drm_device *dev,
+ 		size_t size);
+ 
+ void drmcg_unchg_bo_alloc(struct drmcg *drmcg, struct drm_device *dev,
+@@ -59,9 +62,10 @@ static inline void drmcg_device_early_init(struct drm_device *device)
+ {
+ }
+ 
+-static inline void drmcg_chg_bo_alloc(struct drmcg *drmcg,
++static inline bool drmcg_try_chg_bo_alloc(struct drmcg *drmcg,
+ 		struct drm_device *dev,	size_t size)
+ {
++	return true;
+ }
+ 
+ static inline void drmcg_unchg_bo_alloc(struct drmcg *drmcg,
+diff --git a/include/drm/drm_gem.h b/include/drm/drm_gem.h
+index 6ac7018923f7..5748845c45eb 100644
+--- a/include/drm/drm_gem.h
++++ b/include/drm/drm_gem.h
+@@ -354,7 +354,7 @@ void drm_gem_object_release(struct drm_gem_object *obj);
+ void drm_gem_object_free(struct kref *kref);
+ int drm_gem_object_init(struct drm_device *dev,
+ 			struct drm_gem_object *obj, size_t size);
+-void drm_gem_private_object_init(struct drm_device *dev,
++bool drm_gem_private_object_init(struct drm_device *dev,
+ 				 struct drm_gem_object *obj, size_t size);
+ void drm_gem_vm_open(struct vm_area_struct *vma);
+ void drm_gem_vm_close(struct vm_area_struct *vma);
 diff --git a/include/linux/cgroup_drm.h b/include/linux/cgroup_drm.h
-index eae400f3d9b4..bb09704e7f71 100644
+index 51a0cd37da92..b03d90623763 100644
 --- a/include/linux/cgroup_drm.h
 +++ b/include/linux/cgroup_drm.h
-@@ -11,10 +11,14 @@
- /* limit defined per the way drm_minor_alloc operates */
- #define MAX_DRM_DEV (64 * DRM_MINOR_RENDER)
+@@ -26,6 +26,7 @@ enum drmcg_res_type {
+ struct drmcg_device_resource {
+ 	/* for per device stats */
+ 	s64			bo_stats_total_allocated;
++	s64			bo_limits_total_allocated;
  
-+#define MAX_DRMCG_LGPU_CAPACITY 256
-+
- enum drmcg_res_type {
- 	DRMCG_TYPE_BO_TOTAL,
- 	DRMCG_TYPE_BO_PEAK,
- 	DRMCG_TYPE_BO_COUNT,
-+	DRMCG_TYPE_LGPU,
-+	DRMCG_TYPE_LGPU_EFF,
- 	__DRMCG_TYPE_LAST,
- };
+ 	s64			bo_stats_peak_allocated;
  
-@@ -32,6 +36,24 @@ struct drmcg_device_resource {
- 	s64			bo_limits_peak_allocated;
- 
- 	s64			bo_stats_count_allocated;
-+
-+	/**
-+	 * Logical GPU
-+	 *
-+	 * *_cfg are properties configured by users
-+	 * *_eff are the effective properties being applied to the hardware
-+         * *_stg is used to calculate _eff before applying to _eff
-+	 * after considering the entire hierarchy
-+	 */
-+	DECLARE_BITMAP(lgpu_stg, MAX_DRMCG_LGPU_CAPACITY);
-+	/* user configurations */
-+	s64			lgpu_weight_cfg;
-+	DECLARE_BITMAP(lgpu_cfg, MAX_DRMCG_LGPU_CAPACITY);
-+	/* effective lgpu for the cgroup after considering
-+	 * relationship with other cgroup
-+	 */
-+	s64			lgpu_count_eff;
-+	DECLARE_BITMAP(lgpu_eff, MAX_DRMCG_LGPU_CAPACITY);
- };
- 
- /**
 diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
-index 5fcbbc13fa1c..a4e88a3704bb 100644
+index bc162aa9971d..ee85482edd90 100644
 --- a/kernel/cgroup/drm.c
 +++ b/kernel/cgroup/drm.c
-@@ -9,6 +9,7 @@
- #include <linux/seq_file.h>
- #include <linux/mutex.h>
- #include <linux/kernel.h>
-+#include <linux/bitmap.h>
- #include <linux/cgroup_drm.h>
- #include <drm/drm_file.h>
- #include <drm/drm_drv.h>
-@@ -41,6 +42,10 @@ enum drmcg_file_type {
- 	DRMCG_FTYPE_DEFAULT,
+@@ -37,6 +37,8 @@ static void (*put_drm_dev)(struct drm_device *dev);
+ 
+ enum drmcg_file_type {
+ 	DRMCG_FTYPE_STATS,
++	DRMCG_FTYPE_LIMIT,
++	DRMCG_FTYPE_DEFAULT,
  };
  
-+#define LGPU_LIMITS_NAME_LIST "list"
-+#define LGPU_LIMITS_NAME_COUNT "count"
-+#define LGPU_LIMITS_NAME_WEIGHT "weight"
-+
  /**
-  * drmcg_bind - Bind DRM subsystem to cgroup subsystem
-  * @acq_dm: function pointer to the drm_minor_acquire function
-@@ -98,6 +103,13 @@ static inline int init_drmcg_single(struct drmcg *drmcg, struct drm_device *dev)
- 	ddr->bo_limits_peak_allocated =
- 		dev->drmcg_props.bo_limits_peak_allocated_default;
+@@ -90,6 +92,8 @@ static inline int init_drmcg_single(struct drmcg *drmcg, struct drm_device *dev)
+ 	drmcg->dev_resources[minor] = ddr;
  
-+	bitmap_copy(ddr->lgpu_cfg, dev->drmcg_props.lgpu_slots,
-+			MAX_DRMCG_LGPU_CAPACITY);
-+	bitmap_copy(ddr->lgpu_stg, dev->drmcg_props.lgpu_slots,
-+			MAX_DRMCG_LGPU_CAPACITY);
-+
-+	ddr->lgpu_weight_cfg = CGROUP_WEIGHT_DFL;
-+
+ 	/* set defaults here */
++	ddr->bo_limits_total_allocated =
++		dev->drmcg_props.bo_limits_total_allocated_default;
+ 
  	return 0;
  }
- 
-@@ -121,6 +133,120 @@ static inline void drmcg_update_cg_tree(struct drm_device *dev)
- 	mutex_unlock(&cgroup_mutex);
+@@ -289,6 +293,38 @@ static void drmcg_print_stats(struct drmcg_device_resource *ddr,
+ 	}
  }
  
-+static void drmcg_calculate_effective_lgpu(struct drm_device *dev,
-+		const unsigned long *free_static,
-+		const unsigned long *free_weighted,
-+		struct drmcg *parent_drmcg)
++static void drmcg_print_limits(struct drmcg_device_resource *ddr,
++		struct seq_file *sf, enum drmcg_res_type type)
 +{
-+	int capacity = dev->drmcg_props.lgpu_capacity;
-+	DECLARE_BITMAP(lgpu_unused, MAX_DRMCG_LGPU_CAPACITY);
-+	DECLARE_BITMAP(lgpu_by_weight, MAX_DRMCG_LGPU_CAPACITY);
-+	struct drmcg_device_resource *parent_ddr;
-+	struct drmcg_device_resource *ddr;
-+	int minor = dev->primary->index;
-+	struct cgroup_subsys_state *pos;
-+	struct drmcg *child;
-+	s64 weight_sum = 0;
-+	s64 unused;
-+
-+	parent_ddr = parent_drmcg->dev_resources[minor];
-+
-+	if (bitmap_empty(parent_ddr->lgpu_cfg, capacity))
-+		/* no static cfg, use weight for calculating the effective */
-+		bitmap_copy(parent_ddr->lgpu_stg, free_weighted, capacity);
-+	else
-+		/* lgpu statically configured, use the overlap as effective */
-+		bitmap_and(parent_ddr->lgpu_stg, free_static,
-+				parent_ddr->lgpu_cfg, capacity);
-+
-+	/* calculate lgpu available for distribution by weight for children */
-+	bitmap_copy(lgpu_unused, parent_ddr->lgpu_stg, capacity);
-+	css_for_each_child(pos, &parent_drmcg->css) {
-+		child = css_to_drmcg(pos);
-+		ddr = child->dev_resources[minor];
-+
-+		if (bitmap_empty(ddr->lgpu_cfg, capacity))
-+			/* no static allocation, participate in weight dist */
-+			weight_sum += ddr->lgpu_weight_cfg;
-+		else
-+			/* take out statically allocated lgpu by siblings */
-+			bitmap_andnot(lgpu_unused, lgpu_unused, ddr->lgpu_cfg,
-+					capacity);
-+	}
-+
-+	unused = bitmap_weight(lgpu_unused, capacity);
-+
-+	css_for_each_child(pos, &parent_drmcg->css) {
-+		child = css_to_drmcg(pos);
-+		ddr = child->dev_resources[minor];
-+
-+		bitmap_zero(lgpu_by_weight, capacity);
-+		/* no static allocation, participate in weight distribution */
-+		if (bitmap_empty(ddr->lgpu_cfg, capacity)) {
-+			int c;
-+			int p = 0;
-+
-+			for (c = ddr->lgpu_weight_cfg * unused / weight_sum;
-+					c > 0; c--) {
-+				p = find_next_bit(lgpu_unused, capacity, p);
-+				if (p < capacity) {
-+					clear_bit(p, lgpu_unused);
-+					set_bit(p, lgpu_by_weight);
-+				}
-+			}
-+
-+		}
-+
-+		drmcg_calculate_effective_lgpu(dev, parent_ddr->lgpu_stg,
-+				lgpu_by_weight, child);
-+	}
-+}
-+
-+static void drmcg_apply_effective_lgpu(struct drm_device *dev)
-+{
-+	int capacity = dev->drmcg_props.lgpu_capacity;
-+	int minor = dev->primary->index;
-+	struct drmcg_device_resource *ddr;
-+	struct cgroup_subsys_state *pos;
-+	struct drmcg *drmcg;
-+
-+	if (root_drmcg == NULL) {
-+		WARN_ON(root_drmcg == NULL);
++	if (ddr == NULL) {
++		seq_puts(sf, "\n");
 +		return;
 +	}
 +
-+	rcu_read_lock();
-+
-+	/* process the entire cgroup tree from root to simplify the algorithm */
-+	drmcg_calculate_effective_lgpu(dev, dev->drmcg_props.lgpu_slots,
-+			dev->drmcg_props.lgpu_slots, root_drmcg);
-+
-+	/* apply changes to effective only if there is a change */
-+	css_for_each_descendant_pre(pos, &root_drmcg->css) {
-+		drmcg = css_to_drmcg(pos);
-+		ddr = drmcg->dev_resources[minor];
-+
-+		if (!bitmap_equal(ddr->lgpu_stg, ddr->lgpu_eff, capacity)) {
-+			bitmap_copy(ddr->lgpu_eff, ddr->lgpu_stg, capacity);
-+			ddr->lgpu_count_eff =
-+				bitmap_weight(ddr->lgpu_eff, capacity);
-+		}
-+	}
-+	rcu_read_unlock();
-+}
-+
-+static void drmcg_apply_effective(enum drmcg_res_type type,
-+		struct drm_device *dev, struct drmcg *changed_drmcg)
-+{
 +	switch (type) {
-+	case DRMCG_TYPE_LGPU:
-+		drmcg_apply_effective_lgpu(dev);
++	case DRMCG_TYPE_BO_TOTAL:
++		seq_printf(sf, "%lld\n", ddr->bo_limits_total_allocated);
 +		break;
 +	default:
++		seq_puts(sf, "\n");
 +		break;
 +	}
 +}
 +
- /**
-  * drmcg_register_dev - register a DRM device for usage in drm cgroup
-  * @dev: DRM device
-@@ -143,7 +269,13 @@ void drmcg_register_dev(struct drm_device *dev)
- 	{
- 		dev->driver->drmcg_custom_init(dev, &dev->drmcg_props);
- 
-+		WARN_ON(dev->drmcg_props.lgpu_capacity !=
-+				bitmap_weight(dev->drmcg_props.lgpu_slots,
-+					MAX_DRMCG_LGPU_CAPACITY));
++static void drmcg_print_default(struct drmcg_props *props,
++		struct seq_file *sf, enum drmcg_res_type type)
++{
++	switch (type) {
++	case DRMCG_TYPE_BO_TOTAL:
++		seq_printf(sf, "%lld\n",
++			props->bo_limits_total_allocated_default);
++		break;
++	default:
++		seq_puts(sf, "\n");
++		break;
++	}
++}
 +
- 		drmcg_update_cg_tree(dev);
-+
-+		drmcg_apply_effective(DRMCG_TYPE_LGPU, dev, root_drmcg);
- 	}
- 	mutex_unlock(&drmcg_mutex);
- }
-@@ -297,7 +429,8 @@ static void drmcg_print_stats(struct drmcg_device_resource *ddr,
- }
- 
- static void drmcg_print_limits(struct drmcg_device_resource *ddr,
--		struct seq_file *sf, enum drmcg_res_type type)
-+		struct seq_file *sf, enum drmcg_res_type type,
-+		struct drm_device *dev)
+ static int drmcg_seq_show_fn(int id, void *ptr, void *data)
  {
- 	if (ddr == NULL) {
- 		seq_puts(sf, "\n");
-@@ -311,6 +444,25 @@ static void drmcg_print_limits(struct drmcg_device_resource *ddr,
- 	case DRMCG_TYPE_BO_PEAK:
- 		seq_printf(sf, "%lld\n", ddr->bo_limits_peak_allocated);
- 		break;
-+	case DRMCG_TYPE_LGPU:
-+		seq_printf(sf, "%s=%lld %s=%d %s=%*pbl\n",
-+				LGPU_LIMITS_NAME_WEIGHT,
-+				ddr->lgpu_weight_cfg,
-+				LGPU_LIMITS_NAME_COUNT,
-+				bitmap_weight(ddr->lgpu_cfg,
-+					dev->drmcg_props.lgpu_capacity),
-+				LGPU_LIMITS_NAME_LIST,
-+				dev->drmcg_props.lgpu_capacity,
-+				ddr->lgpu_cfg);
-+		break;
-+	case DRMCG_TYPE_LGPU_EFF:
-+		seq_printf(sf, "%s=%lld %s=%*pbl\n",
-+				LGPU_LIMITS_NAME_COUNT,
-+				ddr->lgpu_count_eff,
-+				LGPU_LIMITS_NAME_LIST,
-+				dev->drmcg_props.lgpu_capacity,
-+				ddr->lgpu_eff);
-+		break;
- 	default:
- 		seq_puts(sf, "\n");
- 		break;
-@@ -329,6 +481,17 @@ static void drmcg_print_default(struct drmcg_props *props,
- 		seq_printf(sf, "%lld\n",
- 			props->bo_limits_peak_allocated_default);
- 		break;
-+	case DRMCG_TYPE_LGPU:
-+		seq_printf(sf, "%s=%d %s=%d %s=%*pbl\n",
-+				LGPU_LIMITS_NAME_WEIGHT,
-+				CGROUP_WEIGHT_DFL,
-+				LGPU_LIMITS_NAME_COUNT,
-+				bitmap_weight(props->lgpu_slots,
-+					props->lgpu_capacity),
-+				LGPU_LIMITS_NAME_LIST,
-+				props->lgpu_capacity,
-+				props->lgpu_slots);
-+		break;
- 	default:
- 		seq_puts(sf, "\n");
- 		break;
-@@ -358,7 +521,7 @@ static int drmcg_seq_show_fn(int id, void *ptr, void *data)
+ 	struct drm_minor *minor = ptr;
+@@ -311,6 +347,12 @@ static int drmcg_seq_show_fn(int id, void *ptr, void *data)
+ 	case DRMCG_FTYPE_STATS:
  		drmcg_print_stats(ddr, sf, type);
  		break;
- 	case DRMCG_FTYPE_LIMIT:
--		drmcg_print_limits(ddr, sf, type);
-+		drmcg_print_limits(ddr, sf, type, minor->dev);
++	case DRMCG_FTYPE_LIMIT:
++		drmcg_print_limits(ddr, sf, type);
++		break;
++	case DRMCG_FTYPE_DEFAULT:
++		drmcg_print_default(&minor->dev->drmcg_props, sf, type);
++		break;
+ 	default:
+ 		seq_puts(sf, "\n");
  		break;
- 	case DRMCG_FTYPE_DEFAULT:
- 		drmcg_print_default(&minor->dev->drmcg_props, sf, type);
-@@ -415,6 +578,115 @@ static int drmcg_process_limit_s64_val(char *sval, bool is_mem,
- 	return rc;
+@@ -324,6 +366,130 @@ int drmcg_seq_show(struct seq_file *sf, void *v)
+ 	return drm_minor_for_each(&drmcg_seq_show_fn, sf);
  }
  
-+static void drmcg_nested_limit_parse(struct kernfs_open_file *of,
-+		struct drm_device *dev, char *attrs)
++static void drmcg_pr_cft_err(const struct drmcg *drmcg,
++		int rc, const char *cft_name, int minor)
 +{
-+	DECLARE_BITMAP(tmp_bitmap, MAX_DRMCG_LGPU_CAPACITY);
-+	DECLARE_BITMAP(chk_bitmap, MAX_DRMCG_LGPU_CAPACITY);
-+	enum drmcg_res_type type =
-+		DRMCG_CTF_PRIV2RESTYPE(of_cft(of)->private);
-+	struct drmcg *drmcg = css_to_drmcg(of_css(of));
-+	struct drmcg_props *props = &dev->drmcg_props;
-+	char *cft_name = of_cft(of)->name;
-+	int minor = dev->primary->index;
-+	char *nested = strstrip(attrs);
-+	struct drmcg_device_resource *ddr =
-+		drmcg->dev_resources[minor];
-+	char *attr;
-+	char sname[256];
-+	char sval[256];
-+	s64 val;
-+	int rc;
-+
-+	while (nested != NULL) {
-+		attr = strsep(&nested, " ");
-+
-+		if (sscanf(attr, "%255[^=]=%255[^=]", sname, sval) != 2)
-+			continue;
-+
-+		switch (type) {
-+		case DRMCG_TYPE_LGPU:
-+			if (strncmp(sname, LGPU_LIMITS_NAME_LIST, 256) &&
-+				strncmp(sname, LGPU_LIMITS_NAME_COUNT, 256) &&
-+				strncmp(sname, LGPU_LIMITS_NAME_WEIGHT, 256))
-+				continue;
-+
-+			if (strncmp(sname, LGPU_LIMITS_NAME_WEIGHT, 256) &&
-+					(!strcmp("max", sval) ||
-+					!strcmp("default", sval))) {
-+				bitmap_copy(ddr->lgpu_cfg, props->lgpu_slots,
-+						props->lgpu_capacity);
-+
-+				continue;
-+			}
-+
-+			if (strncmp(sname, LGPU_LIMITS_NAME_WEIGHT, 256) == 0) {
-+				rc = drmcg_process_limit_s64_val(sval,
-+					false, CGROUP_WEIGHT_DFL,
-+					CGROUP_WEIGHT_MAX, &val);
-+
-+				if (rc || val < CGROUP_WEIGHT_MIN ||
-+						val > CGROUP_WEIGHT_MAX) {
-+					drmcg_pr_cft_err(drmcg, rc, cft_name,
-+							minor);
-+					continue;
-+				}
-+
-+				ddr->lgpu_weight_cfg = val;
-+				continue;
-+			}
-+
-+			if (strncmp(sname, LGPU_LIMITS_NAME_COUNT, 256) == 0) {
-+				rc = drmcg_process_limit_s64_val(sval,
-+					false, props->lgpu_capacity,
-+					props->lgpu_capacity, &val);
-+
-+				if (rc || val < 0) {
-+					drmcg_pr_cft_err(drmcg, rc, cft_name,
-+							minor);
-+					continue;
-+				}
-+
-+				bitmap_zero(tmp_bitmap,
-+						MAX_DRMCG_LGPU_CAPACITY);
-+				bitmap_set(tmp_bitmap, 0, val);
-+			}
-+
-+			if (strncmp(sname, LGPU_LIMITS_NAME_LIST, 256) == 0) {
-+				rc = bitmap_parselist(sval, tmp_bitmap,
-+						MAX_DRMCG_LGPU_CAPACITY);
-+
-+				if (rc) {
-+					drmcg_pr_cft_err(drmcg, rc, cft_name,
-+							minor);
-+					continue;
-+				}
-+
-+				bitmap_andnot(chk_bitmap, tmp_bitmap,
-+					props->lgpu_slots,
-+					MAX_DRMCG_LGPU_CAPACITY);
-+
-+				/* user setting does not intersect with
-+				 * available lgpu */
-+				if (!bitmap_empty(chk_bitmap,
-+						MAX_DRMCG_LGPU_CAPACITY)) {
-+					drmcg_pr_cft_err(drmcg, 0, cft_name,
-+							minor);
-+					continue;
-+				}
-+			}
-+
-+			bitmap_copy(ddr->lgpu_cfg, tmp_bitmap,
-+					props->lgpu_capacity);
-+
-+			break; /* DRMCG_TYPE_LGPU */
-+		default:
-+			break;
-+		} /* switch (type) */
-+	}
++	pr_err("drmcg: error parsing %s, minor %d, rc %d ",
++			cft_name, minor, rc);
++	pr_cont_cgroup_name(drmcg->css.cgroup);
++	pr_cont("\n");
 +}
 +
++static int drmcg_process_limit_s64_val(char *sval, bool is_mem,
++			s64 def_val, s64 max_val, s64 *ret_val)
++{
++	int rc = strcmp("max", sval);
 +
- /**
-  * drmcg_limit_write - parse cgroup interface files to obtain user config
-  *
-@@ -499,9 +771,15 @@ static ssize_t drmcg_limit_write(struct kernfs_open_file *of, char *buf,
- 
- 			ddr->bo_limits_peak_allocated = val;
- 			break;
-+		case DRMCG_TYPE_LGPU:
-+			drmcg_nested_limit_parse(of, dm->dev, sattr);
++
++	if (!rc)
++		*ret_val = max_val;
++	else {
++		rc = strcmp("default", sval);
++
++		if (!rc)
++			*ret_val = def_val;
++	}
++
++	if (rc) {
++		if (is_mem) {
++			*ret_val = memparse(sval, NULL);
++			rc = 0;
++		} else {
++			rc = kstrtoll(sval, 0, ret_val);
++		}
++	}
++
++	if (*ret_val > max_val)
++		rc = -EINVAL;
++
++	return rc;
++}
++
++/**
++ * drmcg_limit_write - parse cgroup interface files to obtain user config
++ *
++ * Minimal value check to keep track of user intent.  For example, user
++ * can specify limits greater than the values allowed by the parents.
++ * This way, the user configuration is kept and comes into effect if and
++ * when parents' limits are relaxed.
++ */
++static ssize_t drmcg_limit_write(struct kernfs_open_file *of, char *buf,
++		size_t nbytes, loff_t off)
++{
++	struct drmcg *drmcg = css_to_drmcg(of_css(of));
++	enum drmcg_res_type type =
++		DRMCG_CTF_PRIV2RESTYPE(of_cft(of)->private);
++	char *cft_name = of_cft(of)->name;
++	char *limits = strstrip(buf);
++	struct drmcg_device_resource *ddr;
++	struct drmcg_props *props;
++	struct drm_minor *dm;
++	char *line;
++	char sattr[256];
++	s64 val;
++	int rc;
++	int minor;
++
++	while (limits != NULL) {
++		line =  strsep(&limits, "\n");
++
++		if (sscanf(line,
++			__stringify(DRM_MAJOR)":%u %255[^\t\n]",
++							&minor, sattr) != 2) {
++			pr_err("drmcg: error parsing %s ", cft_name);
++			pr_cont_cgroup_name(drmcg->css.cgroup);
++			pr_cont("\n");
++
++			continue;
++		}
++
++		mutex_lock(&drmcg_mutex);
++		if (acquire_drm_minor)
++			dm = acquire_drm_minor(minor);
++		else
++			dm = NULL;
++		mutex_unlock(&drmcg_mutex);
++
++		if (IS_ERR_OR_NULL(dm)) {
++			pr_err("drmcg: invalid minor %d for %s ",
++					minor, cft_name);
++			pr_cont_cgroup_name(drmcg->css.cgroup);
++			pr_cont("\n");
++
++			continue;
++		}
++
++		mutex_lock(&dm->dev->drmcg_mutex);
++		ddr = drmcg->dev_resources[minor];
++		props = &dm->dev->drmcg_props;
++		switch (type) {
++		case DRMCG_TYPE_BO_TOTAL:
++			rc = drmcg_process_limit_s64_val(sattr, true,
++				props->bo_limits_total_allocated_default,
++				S64_MAX,
++				&val);
++
++			if (rc || val < 0) {
++				drmcg_pr_cft_err(drmcg, rc, cft_name, minor);
++				break;
++			}
++
++			ddr->bo_limits_total_allocated = val;
 +			break;
- 		default:
- 			break;
- 		}
++		default:
++			break;
++		}
++		mutex_unlock(&dm->dev->drmcg_mutex);
 +
-+		drmcg_apply_effective(type, dm->dev, drmcg);
++		mutex_lock(&drmcg_mutex);
++		if (put_drm_dev)
++			put_drm_dev(dm->dev); /* release from acquire */
++		mutex_unlock(&drmcg_mutex);
++	}
 +
- 		mutex_unlock(&dm->dev->drmcg_mutex);
- 
- 		mutex_lock(&drmcg_mutex);
-@@ -560,12 +838,51 @@ struct cftype files[] = {
- 		.private = DRMCG_CTF_PRIV(DRMCG_TYPE_BO_COUNT,
++	return nbytes;
++}
++
+ struct cftype files[] = {
+ 	{
+ 		.name = "buffer.total.stats",
+@@ -331,6 +497,20 @@ struct cftype files[] = {
+ 		.private = DRMCG_CTF_PRIV(DRMCG_TYPE_BO_TOTAL,
  						DRMCG_FTYPE_STATS),
  	},
 +	{
-+		.name = "lgpu",
-+		.seq_show = drmcg_seq_show,
-+		.write = drmcg_limit_write,
-+		.private = DRMCG_CTF_PRIV(DRMCG_TYPE_LGPU,
-+						DRMCG_FTYPE_LIMIT),
-+	},
-+	{
-+		.name = "lgpu.default",
++		.name = "buffer.total.default",
 +		.seq_show = drmcg_seq_show,
 +		.flags = CFTYPE_ONLY_ON_ROOT,
-+		.private = DRMCG_CTF_PRIV(DRMCG_TYPE_LGPU,
++		.private = DRMCG_CTF_PRIV(DRMCG_TYPE_BO_TOTAL,
 +						DRMCG_FTYPE_DEFAULT),
 +	},
 +	{
-+		.name = "lgpu.effective",
++		.name = "buffer.total.max",
++		.write = drmcg_limit_write,
 +		.seq_show = drmcg_seq_show,
-+		.private = DRMCG_CTF_PRIV(DRMCG_TYPE_LGPU_EFF,
++		.private = DRMCG_CTF_PRIV(DRMCG_TYPE_BO_TOTAL,
 +						DRMCG_FTYPE_LIMIT),
 +	},
- 	{ }	/* terminate */
- };
- 
-+static int drmcg_online_fn(int id, void *ptr, void *data)
-+{
-+	struct drm_minor *minor = ptr;
-+	struct drmcg *drmcg = data;
+ 	{
+ 		.name = "buffer.peak.stats",
+ 		.seq_show = drmcg_seq_show,
+@@ -363,12 +543,16 @@ struct cgroup_subsys drm_cgrp_subsys = {
+  */
+ void drmcg_device_early_init(struct drm_device *dev)
+ {
++	dev->drmcg_props.limit_enforced = false;
 +
-+	if (minor->type != DRM_MINOR_PRIMARY)
-+		return 0;
-+
-+	drmcg_apply_effective(DRMCG_TYPE_LGPU, minor->dev, drmcg);
-+
-+	return 0;
-+}
-+
-+static int drmcg_css_online(struct cgroup_subsys_state *css)
-+{
-+	return drm_minor_for_each(&drmcg_online_fn, css_to_drmcg(css));
-+}
-+
- struct cgroup_subsys drm_cgrp_subsys = {
- 	.css_alloc	= drmcg_css_alloc,
- 	.css_free	= drmcg_css_free,
-+	.css_online	= drmcg_css_online,
- 	.early_init	= false,
- 	.legacy_cftypes	= files,
- 	.dfl_cftypes	= files,
-@@ -585,6 +902,9 @@ void drmcg_device_early_init(struct drm_device *dev)
- 	dev->drmcg_props.bo_limits_total_allocated_default = S64_MAX;
- 	dev->drmcg_props.bo_limits_peak_allocated_default = S64_MAX;
- 
-+	dev->drmcg_props.lgpu_capacity = MAX_DRMCG_LGPU_CAPACITY;
-+	bitmap_fill(dev->drmcg_props.lgpu_slots, MAX_DRMCG_LGPU_CAPACITY);
++	dev->drmcg_props.bo_limits_total_allocated_default = S64_MAX;
 +
  	drmcg_update_cg_tree(dev);
  }
  EXPORT_SYMBOL(drmcg_device_early_init);
+ 
+ /**
+- * drmcg_chg_bo_alloc - charge GEM buffer usage for a device and cgroup
++ * drmcg_try_chg_bo_alloc - charge GEM buffer usage for a device and cgroup
+  * @drmcg: the DRM cgroup to be charged to
+  * @dev: the device the usage should be charged to
+  * @size: size of the GEM buffer to be accounted for
+@@ -377,29 +561,52 @@ EXPORT_SYMBOL(drmcg_device_early_init);
+  * for the utilization.  This should not be called when the buffer is shared (
+  * the GEM buffer's reference count being incremented.)
+  */
+-void drmcg_chg_bo_alloc(struct drmcg *drmcg, struct drm_device *dev,
++bool drmcg_try_chg_bo_alloc(struct drmcg *drmcg, struct drm_device *dev,
+ 		size_t size)
+ {
+ 	struct drmcg_device_resource *ddr;
+ 	int devIdx = dev->primary->index;
++	struct drmcg_props *props = &dev->drmcg_props;
++	struct drmcg *drmcg_cur = drmcg;
++	bool result = true;
++	s64 delta = 0;
+ 
+ 	if (drmcg == NULL)
+-		return;
++		return true;
+ 
+ 	mutex_lock(&dev->drmcg_mutex);
+-	for ( ; drmcg != NULL; drmcg = drmcg_parent(drmcg)) {
+-		ddr = drmcg->dev_resources[devIdx];
++	if (props->limit_enforced) {
++		for ( ; drmcg != NULL; drmcg = drmcg_parent(drmcg)) {
++			ddr = drmcg->dev_resources[devIdx];
++			delta = ddr->bo_limits_total_allocated -
++					ddr->bo_stats_total_allocated;
++
++			if (delta <= 0 || size > delta) {
++				result = false;
++				break;
++			}
++		}
++	}
++
++	drmcg = drmcg_cur;
++
++	if (result || !props->limit_enforced) {
++		for ( ; drmcg != NULL; drmcg = drmcg_parent(drmcg)) {
++			ddr = drmcg->dev_resources[devIdx];
+ 
+-		ddr->bo_stats_total_allocated += (s64)size;
++			ddr->bo_stats_total_allocated += (s64)size;
+ 
+-		if (ddr->bo_stats_peak_allocated < (s64)size)
+-			ddr->bo_stats_peak_allocated = (s64)size;
++			if (ddr->bo_stats_peak_allocated < (s64)size)
++				ddr->bo_stats_peak_allocated = (s64)size;
+ 
+-		ddr->bo_stats_count_allocated++;
++			ddr->bo_stats_count_allocated++;
++		}
+ 	}
+ 	mutex_unlock(&dev->drmcg_mutex);
++
++	return result;
+ }
+-EXPORT_SYMBOL(drmcg_chg_bo_alloc);
++EXPORT_SYMBOL(drmcg_try_chg_bo_alloc);
+ 
+ /**
+  * drmcg_unchg_bo_alloc -
 -- 
 2.25.0
