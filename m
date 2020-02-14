@@ -1,57 +1,57 @@
-From: Jason Ekstrand <jason-fQELhIk9awXprZlt/sZkLg@public.gmane.org>
+From: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
 Subject: Re: [PATCH 09/11] drm, cgroup: Introduce lgpu as DRM cgroup resource
-Date: Fri, 14 Feb 2020 11:48:54 -0600
-Message-ID: <CAOFGe97nwqtuvskxSTrYC2hWN26yjaZ1OT4eAPj0NsBhU2zeuQ@mail.gmail.com>
+Date: Fri, 14 Feb 2020 19:34:01 +0100
+Message-ID: <20200214183401.GY2363188@phenom.ffwll.local>
 References: <20200214155650.21203-1-Kenny.Ho@amd.com>
  <20200214155650.21203-10-Kenny.Ho@amd.com>
  <CAOFGe96N5gG+08rQCRC+diHKDAfxPFYEnVxDS8_udvjcBYgsPg@mail.gmail.com>
  <CAOWid-f62Uv=GZXX2V2BsQGM5A1JJG_qmyrOwd=KwZBx_sr-bg@mail.gmail.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ffwll.ch; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=UwfUwACS9lqkj3jN/nWrwyFfyHnffMJ00TYHBUfg53Y=;
+        b=U69au+APJ1LoyLjDLVw4jIOypYLHnbPhS8AJZ6mH385uTLbaYReOLPRoUlG3jtkZC6
+         IxywgoREuAft+TUjDx0dkZf5yUf6lOslI6W02amj1M7zoyv0vs13ug8aeRcUaUTgP+ak
+         bSBx8milEO2Ds/W263lvrxQnVebh+WO+TuVP8=
+Content-Disposition: inline
+In-Reply-To: <CAOWid-f62Uv=GZXX2V2BsQGM5A1JJG_qmyrOwd=KwZBx_sr-bg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=jlekstrand-net.20150623.gappssmtp.com; s=20150623;
- h=mime-version:references:in-reply-to:from:date:message-id:subject:to
- :cc:content-transfer-encoding;
- bh=VCKPbbT0sT/BX4J6H81+BCxuWuxOcW2XwAeJoWuJnU8=;
- b=njyDWzh1v2QU5Hj0QpxTqKbIju0F5IodS018xuZ7yOBFHkojdzZaeyWLBlC2AcOUeJ
- JcV5oVZZoiSlhNmgBxVlBHeA1FjmfhyOj7o3gQ2cG2TQtSZJb2n/YyrA3VThlWFVn5BV
- FG1cGccmwxRTVvIVmPjATMhmSJhittKO6QJUIWbTjX6zwWDus/q+QWy6WHFPnW/+QyEB
- woFNRYtPls6eYeZvrp7Hmx5iJwCTIpSY7OfYl/aoN14dDCcpD88nqjeMV8dUIfqaMeop
- qRjMaiQXjChSV0boCPzyHm1sRuRBtak6bZbmENeGxTMcGUZWw/QaKncQQOL+ycnqDMnw
- 7M0A==
-In-Reply-To: <CAOWid-f62Uv=GZXX2V2BsQGM5A1JJG_qmyrOwd=KwZBx_sr-bg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 To: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: juan.zuniga-anaya-5C7GfCeVMHo@public.gmane.org, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx mailing list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, nirmoy.das-5C7GfCeVMHo@public.gmane.org, Maling list - DRI developers <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "Greathouse,
- Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, damon.mcdougall-5C7GfCeVMHo@public.gmane.org
+Cc: Jason Ekstrand <jason-fQELhIk9awXprZlt/sZkLg@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Maling list - DRI developers <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, amd-gfx mailing list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, "Greathouse, Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, lkaplan-WVYJKLFxKCc@public.gmane.org, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, nirmoy.das-5C7GfCeVMHo@public.gmane.org, damon.mcdougall-5C7GfCeVMHo@public.gmane.org, juan.zuniga-anaya-5C7GfCeVMHo@public.gmane.org
 
-On Fri, Feb 14, 2020 at 11:08 AM Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
+On Fri, Feb 14, 2020 at 12:08:35PM -0500, Kenny Ho wrote:
 > Hi Jason,
->
+> 
 > Thanks for the review.
->
+> 
 > On Fri, Feb 14, 2020 at 11:44 AM Jason Ekstrand <jason-fQELhIk9awXprZlt/sZkLg@public.gmane.org> wrote:
 > >
 > > Pardon my ignorance but I'm a bit confused by this.  What is a "logical GPU"?  What are we subdividing?  Are we carving up memory?  Compute power?  Both?
->
+> 
 > The intention is compute but it is up to the individual drm driver to decide.
->
+
+I think guidance from Tejun in previos discussions was pretty clear that
+he expects cgroups to be both a) standardized and c) sufficient clear
+meaning that end-users have a clear understanding of what happens when
+they change the resource allocation.
+
+I'm not sure lgpu here, at least as specified, passes either. But I also
+don't have much clue, so pulled Jason in - he understands how this all
+gets reflected to userspace apis a lot better than me.
+-Daniel
+
+
+> 
 > > If it's carving up compute power, what's actually being carved up?  Time?  Execution units/waves/threads?  Even if that's the case, what advantage does it give to have it in terms of a fixed set of lgpus where each cgroup gets to pick a fixed set.  Does affinity matter that much?  Why not just say how many waves the GPU supports and that they have to be allocated in chunks of 16 waves (pulling a number out of thin air) and let the cgroup specify how many waves it wants.
 > >
 > > Don't get me wrong here.  I'm all for the notion of being able to use cgroups to carve up GPU compute resources.  However, this sounds to me like the most AMD-specific solution possible.  We (Intel) could probably do some sort of carving up as well but we'd likely want to do it with preemption and time-slicing rather than handing out specific EUs.
->
+> 
 > This has been discussed in the RFC before
 > (https://www.spinics.net/lists/cgroups/msg23469.html.)  As mentioned
 > before, the idea of a compute unit is hardly an AMD specific thing as
@@ -68,31 +68,10 @@ On Fri, Feb 14, 2020 at 11:08 AM Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public
 > out of 100" is entirely up to Intel (time slice if you like, change to
 > specific EUs later if you like, or make it driver configurable to
 > support both if you like.)
-
-Sure, there's an OpenCL thing.  However, just because there's an
-OpenCL thing doesn't mean that it's as standardized as it looks. :-(
-In particular,
-
- 1. The OpenCL thing has a query first to ask the driver what kind of
-carving up of the GPU is allowed
- 2. When clCreateSubdevices is called, the type of partitioning is
-specified so they can specifically ask for devices grouped by shared
-L2 cache, for instance.
- 3. Just because the API exists and everyone implements it doesn't
-mean that everyone implements it usefully.  From my reading of the
-spec, it looks like the API is very much designed towards a CPU
-implementation of OpenCL.  The Intel OpenCL GPU compute drivers, for
-instance, implement it as a total no-op and no real sub-dividing is
-allowed.
-
-That said, that doesn't necessarily mean that carving up units of
-compute power is a bad plan.  It's just unclear (as Daniel said on the
-above referenced chain) what those units mean.  Maybe it's ok if they
-mean nothing or if their meaning is HW-specific?
-
+> 
 > Regards,
 > Kenny
->
+> 
 > >
 > > On Fri, Feb 14, 2020 at 9:57 AM Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org> wrote:
 > >>
@@ -770,3 +749,8 @@ mean nothing or if their meaning is HW-specific?
 > >> dri-devel mailing list
 > >> dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
 > >> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+
+-- 
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
