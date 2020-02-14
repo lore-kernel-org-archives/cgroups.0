@@ -1,66 +1,56 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 09/11] drm, cgroup: Introduce lgpu as DRM cgroup resource
-Date: Fri, 14 Feb 2020 16:15:28 -0500
-Message-ID: <20200214211528.GB218629@mtj.thefacebook.com>
-References: <20200214155650.21203-1-Kenny.Ho@amd.com>
- <20200214155650.21203-10-Kenny.Ho@amd.com>
- <CAOFGe96N5gG+08rQCRC+diHKDAfxPFYEnVxDS8_udvjcBYgsPg@mail.gmail.com>
- <CAOWid-f62Uv=GZXX2V2BsQGM5A1JJG_qmyrOwd=KwZBx_sr-bg@mail.gmail.com>
- <20200214183401.GY2363188@phenom.ffwll.local>
- <CAOWid-caJHeXUnQv3MOi=9U+vdBLfewN+CrA-7jRrz0VXqatbQ@mail.gmail.com>
- <20200214191754.GA218629@mtj.thefacebook.com>
- <CAOWid-dA2Ad-FTZDDLOs4pperYbsru9cknSuXo_2ajpPbQH0Xg@mail.gmail.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH] memcg: net: do not associate sock with unrelated memcg
+Date: Fri, 14 Feb 2020 13:47:30 -0800
+Message-ID: <20200214214730.GA99109@carbon.DHCP.thefacebook.com>
+References: <20200214071233.100682-1-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=oZCVTJqDOaYO0qLkkhU/b4V9LR30/p6GYzU8hBz9PHo=;
-        b=fFy3EPOllhkeZuzDwhQeqY7WkzV5jBRVVniJ7hseWZc2SSWEnQ9ce7rP0M2cQrtBfW
-         7hjXGLyLSXhHOn7Wn+bbVWsEqqTZXjwGqwLKmERklVLh+nVry9j8yIENTvW6e8r4nLyB
-         9+1r3RfKg8wimtCMuqW6k29EPOP8HHgvs89vRtxhFp3zep4Zkk4/9YolWCEC3bn9RGho
-         HpB2Vbx1/sAk8/99Vg8kA9lMEMqsw7ZFsczNvCPnDn09+DCLogmOtCPSh0PAJbq4xZfO
-         UxpTTCCq/EU7xB/PwUDxql5HhYbniZ8ZFh0GUFh+BY+u/OR21TGFiOJr2voMSp/WIyOB
-         Edrg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=piEDK3sQ58eGY88b0/ZoEju6n9YkDVBjwZwW0orWUZc=;
+ b=Nir3ex2agghP9Ed5QjdUx56ukqp2kn9k+JkuhD0a/nGfW0uYNlEGyLl7oD9PnREtL/je
+ AYsNky2Pwa7LOXcI+MFkqjD+ss4EFBvLYonnv9rBFAOAQ2R61N5rDwedy7970QuI1gFe
+ /iTzSNUJb3bXnh0WQOgGqRmHOr53qYH79ig= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=piEDK3sQ58eGY88b0/ZoEju6n9YkDVBjwZwW0orWUZc=;
+ b=bBQfcFyNWqOmDbVEkww4oMNcUKDrez8i2Prqf/aouOklZ31aQvtjKEr6SNR27+56SoQg5jL1qQQBN7tXB5Men73i6Zi3/qOpJqzQoGG/LVr8Aj0xXwSTwuQUFlawu97ruwk+NuC4SQcRD+YkpvtjsUXYHgPB/TjgTcQkGw1iNuE=
 Content-Disposition: inline
-In-Reply-To: <CAOWid-dA2Ad-FTZDDLOs4pperYbsru9cknSuXo_2ajpPbQH0Xg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20200214071233.100682-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Jason Ekstrand <jason-fQELhIk9awXprZlt/sZkLg@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Maling list - DRI developers <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, amd-gfx mailing list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, "Greathouse, Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, lkaplan-WVYJKLFxKCc@public.gmane.org, nirmoy.das-5C7GfCeVMHo@public.gmane.org, damon.mcdougall-5C7GfCeVMHo@public.gmane.org, juan.zuniga-anaya-5C7GfCeVMHo@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Feb 14, 2020 at 03:28:40PM -0500, Kenny Ho wrote:
-> Can you elaborate, per your understanding, how the lgpu weight
-> attribute differ from the io.weight you suggested?  Is it merely a
+Hello, Shakeel!
 
-Oh, it's the non-weight part which is problematic.
+On Thu, Feb 13, 2020 at 11:12:33PM -0800, Shakeel Butt wrote:
+> We are testing network memory accounting in our setup and noticed
+> inconsistent network memory usage and often unrelated memcgs network
+> usage correlates with testing workload. On further inspection, it seems
+> like mem_cgroup_sk_alloc() is broken in irq context specially for
+> cgroup v1.
 
-> formatting/naming issue or is it the implementation details that you
-> find troubling?  From my perspective, the weight attribute implements
-> as you suggested back in RFCv4 (proportional control on top of a unit
-> - either physical or time unit.)
+A great catch!
+
 > 
-> Perhaps more explicit questions would help me understand what you
-> mean. If I remove the 'list' and 'count' attributes leaving just
-> weight, is that satisfactory?  Are you saying the idea of affinity or
-
-At least from interface pov, yes, although I think it should be clear
-what the weight controls.
-
-> named-resource is banned from cgroup entirely (even though it exists
-> in the form of cpuset already and users are interested in having such
-> options [i.e. userspace OpenCL] when needed?)
+> mem_cgroup_sk_alloc() can be called in irq context and kind
+> of assumes that it can only happen from sk_clone_lock() and the source
+> sock object has already associated memcg. However in cgroup v1, where
+> network memory accounting is opt-in, the source sock can be not
+> associated with any memcg and the new cloned sock can get associated
+> with unrelated interrupted memcg.
 > 
-> To be clear, I am not saying no proportional control.  I am saying
-> give the user the options, which is what has been implemented.
+> Cgroup v2 can also suffer if the source sock object was created by
+> process in the root memcg or if sk_alloc() is called in irq context.
 
-We can get there if we *really* have to but not from the get-go but
-I'd rather avoid affinities if at all possible.
+Do you mind sharing a call trace?
 
-Thanks.
+Also, shouldn't cgroup_sk_alloc() be changed in a similar way?
 
--- 
-tejun
+Thanks!
+
+Roman
