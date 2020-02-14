@@ -1,7 +1,7 @@
-From: Jason Ekstrand <jason-fQELhIk9awXprZlt/sZkLg@public.gmane.org>
+From: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH 09/11] drm, cgroup: Introduce lgpu as DRM cgroup resource
-Date: Fri, 14 Feb 2020 10:59:23 -0600
-Message-ID: <CAOFGe94=vqFEU_ULyoQ=WPz-JjcOEXTkrY8W7SsF2QeOxBfWEg@mail.gmail.com>
+Date: Fri, 14 Feb 2020 12:08:35 -0500
+Message-ID: <CAOWid-f62Uv=GZXX2V2BsQGM5A1JJG_qmyrOwd=KwZBx_sr-bg@mail.gmail.com>
 References: <20200214155650.21203-1-Kenny.Ho@amd.com>
  <20200214155650.21203-10-Kenny.Ho@amd.com>
  <CAOFGe96N5gG+08rQCRC+diHKDAfxPFYEnVxDS8_udvjcBYgsPg@mail.gmail.com>
@@ -9,17 +9,16 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=jlekstrand-net.20150623.gappssmtp.com; s=20150623;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20161025;
  h=mime-version:references:in-reply-to:from:date:message-id:subject:to
  :cc:content-transfer-encoding;
- bh=zQET2SWePAJHC5EHLg4nL/UHPX4TOmdQlwDQSD1yBRU=;
- b=jxaDxrhTS2j/WU6i6mWG1dncKx/D05CV5ryV0kK43IO1YI14tc8bK+TW5WaEBW+WW9
- 9aKHpU0z+5yJc32jHo2Ai0DLDakL0YS0brdcNRTIAeXMEeQqTHHIfxYnBe3N5H5pe6LZ
- pfa6rf4t33ie+jgBu4T/jqkzQpoBVCjbh0O8oyZfWsh6iVybWL45Uwep/F6I7/+Nhny1
- AykU27vVEgaPcFuyEHdXHPe9WRfTjbBXD90LMkkXOwHmUmWFiVF8DkKDxsRjO7gva/Rg
- nqH/wvz9zmFHTACXFf3MB1yK/jj/qiv7xqbvkbuBZ0jbEDDHg9ApVR1zt3sHMJ9dt9TZ
- hAPw==
+ bh=Rc05Jw2jcIY6Tk9luxB2qNAUA7nD4IKbOzgJ1s31oiE=;
+ b=pFBKb/sDm28yjbGME9ToZOVxKo+vZjURKMiQiVVwKAHHdJenwCwfcTgQN6H+QZdIiN
+ MSvrwkXI7T/Plxn9sstDgcj8GREI11QHsk9wMiz7BuNxWTpEJqEjGEXdvqj0/Vo8PWyy
+ iqvojITR+6eEL8llKf+IvkIZLdmPH1fx2c/EZDyw2i8P/YWHYo4jpTMFK4469WTpKzBP
+ 1uA6QAmaABBIBgUCj4jpqxXgtn6xGqqKOQnrNE8DaYMmCaQZYkPcMYRXtx7OYpadhPyx
+ no+t7bWO8tY6B0LJ18svDOEpHc1Vw60QOVd2YZz6yI8Re+RrrrQDCyjJkidwOuqksFL9
+ bf/Q==
 In-Reply-To: <CAOFGe96N5gG+08rQCRC+diHKDAfxPFYEnVxDS8_udvjcBYgsPg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
@@ -31,31 +30,44 @@ List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
  <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
 Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
 Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>
-Cc: juan.zuniga-anaya-5C7GfCeVMHo@public.gmane.org, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, felix.kuehling-5C7GfCeVMHo@public.gmane.org, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx mailing list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, alexander.deucher-5C7GfCeVMHo@public.gmane.org, nirmoy.das-5C7GfCeVMHo@public.gmane.org, y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Maling list - DRI developers <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, joseph.greathouse-5C7GfCeVMHo@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, damon.mcdougall-5C7GfCeVMHo@public.gmane.org
+To: Jason Ekstrand <jason-fQELhIk9awXprZlt/sZkLg@public.gmane.org>
+Cc: juan.zuniga-anaya-5C7GfCeVMHo@public.gmane.org, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, amd-gfx mailing list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, nirmoy.das-5C7GfCeVMHo@public.gmane.org, Maling list - DRI developers <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "Greathouse,
+ Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, damon.mcdougall-5C7GfCeVMHo@public.gmane.org
 
-On Fri, Feb 14, 2020 at 10:44 AM Jason Ekstrand <jason-fQELhIk9awXprZlt/sZkLg@public.gmane.org> wrote:
+Hi Jason,
+
+Thanks for the review.
+
+On Fri, Feb 14, 2020 at 11:44 AM Jason Ekstrand <jason-fQELhIk9awXprZlt/sZkLg@public.gmane.org> wrote:
 >
 > Pardon my ignorance but I'm a bit confused by this.  What is a "logical GPU"?  What are we subdividing?  Are we carving up memory?  Compute power?  Both?
->
-> If it's carving up memory, why aren't we just measuring it in megabytes?
->
+
+The intention is compute but it is up to the individual drm driver to decide.
+
 > If it's carving up compute power, what's actually being carved up?  Time?  Execution units/waves/threads?  Even if that's the case, what advantage does it give to have it in terms of a fixed set of lgpus where each cgroup gets to pick a fixed set.  Does affinity matter that much?  Why not just say how many waves the GPU supports and that they have to be allocated in chunks of 16 waves (pulling a number out of thin air) and let the cgroup specify how many waves it wants.
-
-One more question:  If I'm a userspace driver, and there are 14 lgpus
-allocated to my cgroup, does that mean I have 14 GPUs?  Or does that
-mean I have one GPU with 14 units of compute power?
-
+>
 > Don't get me wrong here.  I'm all for the notion of being able to use cgroups to carve up GPU compute resources.  However, this sounds to me like the most AMD-specific solution possible.  We (Intel) could probably do some sort of carving up as well but we'd likely want to do it with preemption and time-slicing rather than handing out specific EUs.
 
-Ok, so "most AMD-specific solution possible" probably wasn't fair.
-However, it does seem like an unnecessarily rigid solution to me.
-Maybe there's something I'm not getting?
+This has been discussed in the RFC before
+(https://www.spinics.net/lists/cgroups/msg23469.html.)  As mentioned
+before, the idea of a compute unit is hardly an AMD specific thing as
+it is in the OpenCL standard and part of the architecture of many
+different vendors.  In addition, the interface presented here supports
+Intel's use case.  What you described is what I considered as the
+"anonymous resources" view of the lgpu.  What you/Intel can do, is to
+register your device to drmcg to have 100 lgpu and users can specify
+simply by count.  So if they want to allocate 5% for a cgroup, they
+would set count=5.  Per the documentation in this patch: "Some DRM
+devices may only support lgpu as anonymous resources.  In such case,
+the significance of the position of the set bits in list will be
+ignored."  What Intel does with the user expressed configuration of "5
+out of 100" is entirely up to Intel (time slice if you like, change to
+specific EUs later if you like, or make it driver configurable to
+support both if you like.)
 
---Jason
+Regards,
+Kenny
 
-> --Jason
->
 >
 > On Fri, Feb 14, 2020 at 9:57 AM Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org> wrote:
 >>
