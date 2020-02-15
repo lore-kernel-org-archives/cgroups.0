@@ -1,78 +1,280 @@
-From: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v12 4/9] hugetlb: disable region_add file_region
- coalescing
-Date: Fri, 14 Feb 2020 17:27:40 -0800
-Message-ID: <21db60be-221d-339c-412a-6bb2509c4262@oracle.com>
-References: <20200211213128.73302-1-almasrymina@google.com>
- <20200211213128.73302-4-almasrymina@google.com>
+From: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:for-5.7] BUILD SUCCESS
+ 9bd5910d7f3db2f65be139d2679dd9daa4a3419a
+Date: Sat, 15 Feb 2020 09:38:48 +0800
+Message-ID: <5e474ba8.XXTo6+rDfXJsYrWo%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=c25DV/PWTqDQtmzKwshNZ8aSa23KEScWw4d7ve/5NJo=;
- b=OKBBBUD9klBKnQJPAy1l96os99u0TJPrIDcVjhk4lbLvt3KprfUhWhgGr+FS9n6/JAxg
- 2mieSPv7cApr2dOfIAt57zcjnFDpyiqXZaBS45Ina3pMnzwMh6e1MbKzTlRP/x5Tmr7Y
- XMPZ78oB/138uxSXwoWAwogpCMLCw1FYzKO1VbhLrE6NL28kbfH09iSPr4WqXJgJFQz3
- yEjcXLzp+8IRl+BT22PoFC+PGHpdLpvRJpZfKzp4D6cPfnx+P7CEFFy2Ez+BJHl2ZrnT
- M2/Hjfz7iMDQKP0+3dpqhVgFI005GmvQUV/fi0iLDojmp5bMogQ2qdhLe90oWmSX570V tw== 
-In-Reply-To: <20200211213128.73302-4-almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2/11/20 1:31 PM, Mina Almasry wrote:
-> A follow up patch in this series adds hugetlb cgroup uncharge info the
-> file_region entries in resv->regions. The cgroup uncharge info may
-> differ for different regions, so they can no longer be coalesced at
-> region_add time. So, disable region coalescing in region_add in this
-> patch.
-> 
-> Behavior change:
-> 
-> Say a resv_map exists like this [0->1], [2->3], and [5->6].
-> 
-> Then a region_chg/add call comes in region_chg/add(f=0, t=5).
-> 
-> Old code would generate resv->regions: [0->5], [5->6].
-> New code would generate resv->regions: [0->1], [1->2], [2->3], [3->5],
-> [5->6].
-> 
-> Special care needs to be taken to handle the resv->adds_in_progress
-> variable correctly. In the past, only 1 region would be added for every
-> region_chg and region_add call. But now, each call may add multiple
-> regions, so we can no longer increment adds_in_progress by 1 in region_chg,
-> or decrement adds_in_progress by 1 after region_add or region_abort. Instead,
-> region_chg calls add_reservation_in_range() to count the number of regions
-> needed and allocates those, and that info is passed to region_add and
-> region_abort to decrement adds_in_progress correctly.
-> 
-> We've also modified the assumption that region_add after region_chg
-> never fails. region_chg now pre-allocates at least 1 region for
-> region_add. If region_add needs more regions than region_chg has
-> allocated for it, then it may fail.
-> 
-> Signed-off-by: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git  for-5.7
+branch HEAD: 9bd5910d7f3db2f65be139d2679dd9daa4a3419a  selftests/cgroup: add tests for cloning into cgroups
 
-Reviewed-by: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+elapsed time: 2886m
 
-My reason for previously asking my Reviewed-by be removed is because I did
-not realize the suboptimal behavior for private mappings would be addressed
-in a subsequent patch.  That should be OK as nobody should be using just
-part of this series.  If we need to respin, it might be worth noting this in
-the commit message.  Something like:
-With file_region coalescing disabled, private mappings will have one
-file_region for each page in the mapping.  This suboptimal behavior will
-be addressed in a later patch in this series.
+configs tested: 251
+configs skipped: 0
 
-> ---
-> 
-> Changes in v12:
-> - Removed Mike's Reviewed-by until coalescing is reviewed per his
-> request.
-> - Added VM_BUG_ON that was mistakingly in a follow up patch.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+arm                              allmodconfig
+arm                               allnoconfig
+arm                              allyesconfig
+arm                         at91_dt_defconfig
+arm                           efm32_defconfig
+arm                          exynos_defconfig
+arm                        multi_v5_defconfig
+arm                        multi_v7_defconfig
+arm                        shmobile_defconfig
+arm                           sunxi_defconfig
+arm64                            allmodconfig
+arm64                             allnoconfig
+arm64                            allyesconfig
+arm64                               defconfig
+sparc                            allyesconfig
+m68k                       m5475evb_defconfig
+c6x                              allyesconfig
+xtensa                          iss_defconfig
+powerpc                             defconfig
+riscv                               defconfig
+sh                  sh7785lcr_32bit_defconfig
+ia64                              allnoconfig
+csky                                defconfig
+nds32                               defconfig
+powerpc                           allnoconfig
+sparc64                          allmodconfig
+i386                              allnoconfig
+riscv                            allmodconfig
+alpha                               defconfig
+riscv                    nommu_virt_defconfig
+nios2                         3c120_defconfig
+arc                              allyesconfig
+m68k                           sun3_defconfig
+s390                             alldefconfig
+mips                              allnoconfig
+powerpc                       ppc64_defconfig
+mips                      fuloong2e_defconfig
+s390                             allmodconfig
+parisc                         b180_defconfig
+sparc64                           allnoconfig
+m68k                          multi_defconfig
+nds32                             allnoconfig
+arc                                 defconfig
+sh                                allnoconfig
+parisc                            allnoconfig
+microblaze                      mmu_defconfig
+ia64                                defconfig
+um                             i386_defconfig
+riscv                             allnoconfig
+openrisc                 simple_smp_defconfig
+s390                                defconfig
+s390                              allnoconfig
+mips                      malta_kvm_defconfig
+s390                             allyesconfig
+s390                       zfcpdump_defconfig
+mips                             allmodconfig
+parisc                              defconfig
+ia64                             allyesconfig
+microblaze                    nommu_defconfig
+sh                            titan_defconfig
+xtensa                       common_defconfig
+um                                  defconfig
+i386                             alldefconfig
+i386                             allyesconfig
+i386                                defconfig
+ia64                             allmodconfig
+ia64                             alldefconfig
+c6x                        evmc6678_defconfig
+nios2                         10m50_defconfig
+openrisc                    or1ksim_defconfig
+h8300                     edosk2674_defconfig
+h8300                    h8300h-sim_defconfig
+h8300                       h8s-sim_defconfig
+m68k                             allmodconfig
+powerpc                          rhel-kconfig
+mips                           32r2_defconfig
+mips                         64r6el_defconfig
+mips                             allyesconfig
+parisc                           allyesconfig
+parisc                        c3000_defconfig
+x86_64               randconfig-a001-20200213
+x86_64               randconfig-a002-20200213
+x86_64               randconfig-a003-20200213
+i386                 randconfig-a001-20200213
+i386                 randconfig-a002-20200213
+i386                 randconfig-a003-20200213
+x86_64               randconfig-a001-20200214
+x86_64               randconfig-a002-20200214
+x86_64               randconfig-a003-20200214
+i386                 randconfig-a001-20200214
+i386                 randconfig-a002-20200214
+i386                 randconfig-a003-20200214
+x86_64               randconfig-a001-20200215
+x86_64               randconfig-a002-20200215
+x86_64               randconfig-a003-20200215
+i386                 randconfig-a001-20200215
+i386                 randconfig-a002-20200215
+i386                 randconfig-a003-20200215
+alpha                randconfig-a001-20200214
+m68k                 randconfig-a001-20200214
+mips                 randconfig-a001-20200214
+nds32                randconfig-a001-20200214
+parisc               randconfig-a001-20200214
+alpha                randconfig-a001-20200213
+m68k                 randconfig-a001-20200213
+mips                 randconfig-a001-20200213
+nds32                randconfig-a001-20200213
+parisc               randconfig-a001-20200213
+riscv                randconfig-a001-20200213
+c6x                  randconfig-a001-20200213
+h8300                randconfig-a001-20200213
+microblaze           randconfig-a001-20200213
+nios2                randconfig-a001-20200213
+sparc64              randconfig-a001-20200213
+c6x                  randconfig-a001-20200214
+h8300                randconfig-a001-20200214
+microblaze           randconfig-a001-20200214
+nios2                randconfig-a001-20200214
+sparc64              randconfig-a001-20200214
+c6x                  randconfig-a001-20200215
+h8300                randconfig-a001-20200215
+microblaze           randconfig-a001-20200215
+nios2                randconfig-a001-20200215
+sparc64              randconfig-a001-20200215
+csky                 randconfig-a001-20200214
+openrisc             randconfig-a001-20200214
+s390                 randconfig-a001-20200214
+sh                   randconfig-a001-20200214
+xtensa               randconfig-a001-20200214
+openrisc             randconfig-a001-20200213
+sh                   randconfig-a001-20200213
+csky                 randconfig-a001-20200213
+s390                 randconfig-a001-20200213
+xtensa               randconfig-a001-20200213
+x86_64               randconfig-b002-20200213
+i386                 randconfig-b002-20200213
+x86_64               randconfig-b001-20200213
+i386                 randconfig-b001-20200213
+i386                 randconfig-b003-20200213
+x86_64               randconfig-b003-20200213
+x86_64               randconfig-b001-20200214
+x86_64               randconfig-b002-20200214
+x86_64               randconfig-b003-20200214
+i386                 randconfig-b001-20200214
+i386                 randconfig-b002-20200214
+i386                 randconfig-b003-20200214
+x86_64               randconfig-c001-20200213
+x86_64               randconfig-c002-20200213
+x86_64               randconfig-c003-20200213
+i386                 randconfig-c001-20200213
+i386                 randconfig-c002-20200213
+i386                 randconfig-c003-20200213
+x86_64               randconfig-c001-20200214
+x86_64               randconfig-c002-20200214
+x86_64               randconfig-c003-20200214
+i386                 randconfig-c001-20200214
+i386                 randconfig-c002-20200214
+i386                 randconfig-c003-20200214
+x86_64               randconfig-d001-20200213
+x86_64               randconfig-d002-20200213
+x86_64               randconfig-d003-20200213
+i386                 randconfig-d001-20200213
+i386                 randconfig-d002-20200213
+i386                 randconfig-d003-20200213
+x86_64               randconfig-d001-20200214
+x86_64               randconfig-d002-20200214
+x86_64               randconfig-d003-20200214
+i386                 randconfig-d001-20200214
+i386                 randconfig-d002-20200214
+i386                 randconfig-d003-20200214
+x86_64               randconfig-e001-20200213
+x86_64               randconfig-e002-20200213
+x86_64               randconfig-e003-20200213
+i386                 randconfig-e001-20200213
+i386                 randconfig-e002-20200213
+i386                 randconfig-e003-20200213
+x86_64               randconfig-e001-20200214
+x86_64               randconfig-e002-20200214
+x86_64               randconfig-e003-20200214
+i386                 randconfig-e001-20200214
+i386                 randconfig-e002-20200214
+i386                 randconfig-e003-20200214
+x86_64               randconfig-f001-20200213
+x86_64               randconfig-f002-20200213
+x86_64               randconfig-f003-20200213
+i386                 randconfig-f001-20200213
+i386                 randconfig-f002-20200213
+i386                 randconfig-f003-20200213
+x86_64               randconfig-f001-20200214
+x86_64               randconfig-f002-20200214
+x86_64               randconfig-f003-20200214
+i386                 randconfig-f001-20200214
+i386                 randconfig-f002-20200214
+i386                 randconfig-f003-20200214
+x86_64               randconfig-g001-20200213
+x86_64               randconfig-g002-20200213
+x86_64               randconfig-g003-20200213
+i386                 randconfig-g001-20200213
+i386                 randconfig-g002-20200213
+i386                 randconfig-g003-20200213
+x86_64               randconfig-g001-20200214
+x86_64               randconfig-g002-20200214
+x86_64               randconfig-g003-20200214
+i386                 randconfig-g001-20200214
+i386                 randconfig-g002-20200214
+i386                 randconfig-g003-20200214
+x86_64               randconfig-g001-20200215
+x86_64               randconfig-g002-20200215
+x86_64               randconfig-g003-20200215
+i386                 randconfig-g001-20200215
+i386                 randconfig-g002-20200215
+i386                 randconfig-g003-20200215
+x86_64               randconfig-h001-20200214
+x86_64               randconfig-h002-20200214
+x86_64               randconfig-h003-20200214
+i386                 randconfig-h001-20200214
+i386                 randconfig-h002-20200214
+i386                 randconfig-h003-20200214
+x86_64               randconfig-h001-20200213
+x86_64               randconfig-h002-20200213
+x86_64               randconfig-h003-20200213
+i386                 randconfig-h001-20200213
+i386                 randconfig-h002-20200213
+i386                 randconfig-h003-20200213
+arc                  randconfig-a001-20200213
+arm                  randconfig-a001-20200213
+arm64                randconfig-a001-20200213
+ia64                 randconfig-a001-20200213
+powerpc              randconfig-a001-20200213
+sparc                randconfig-a001-20200213
+arc                  randconfig-a001-20200214
+arm                  randconfig-a001-20200214
+arm64                randconfig-a001-20200214
+ia64                 randconfig-a001-20200214
+powerpc              randconfig-a001-20200214
+sparc                randconfig-a001-20200214
+riscv                            allyesconfig
+riscv                          rv32_defconfig
+s390                          debug_defconfig
+sh                               allmodconfig
+sh                          rsk7269_defconfig
+sparc                               defconfig
+sparc64                          allyesconfig
+sparc64                             defconfig
+um                           x86_64_defconfig
+x86_64                              fedora-25
+x86_64                                  kexec
+x86_64                                    lkp
+x86_64                                   rhel
+x86_64                         rhel-7.2-clear
+x86_64                               rhel-7.6
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
