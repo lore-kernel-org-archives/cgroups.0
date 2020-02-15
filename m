@@ -1,61 +1,53 @@
-From: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] cgroup: memcg: net: do not associate sock with
- unrelated cgroup
-Date: Fri, 14 Feb 2020 16:11:24 -0800
-Message-ID: <CANn89iKq5r7aCDdpTXzfvDbhHYgnTGhgyTG5_rLbcSeeF8uJJQ@mail.gmail.com>
-References: <20200214222415.181467-1-shakeelb@google.com> <CANn89iLe7KVjaechEhtV4=QRy4s8qBQDiX9e8LX_xq8tunrQNA@mail.gmail.com>
- <CALvZod5RoE3V7HteKqqDEfCgY8pDok6PWHrpu8trB1vyuK2UHA@mail.gmail.com>
- <CANn89i+-GJgD4-YnF9yKhDvG48OK8XtM7oB9gw6njeb_ZbdpDw@mail.gmail.com> <CALvZod4kU=tWcWbu4pWBrHUcxgTnKj_2fEEdnBeU+F0kox0Hig@mail.gmail.com>
+From: Mike Kravetz <mike.kravetz@oracle.com>
+Subject: Re: [PATCH v12 2/9] hugetlb_cgroup: add interface for charge/uncharge
+ hugetlb reservations
+Date: Fri, 14 Feb 2020 16:50:25 -0800
+Message-ID: <791880db-bdb0-8d34-ea9a-be6e4996fc0d@oracle.com>
+References: <20200211213128.73302-1-almasrymina@google.com>
+ <20200211213128.73302-2-almasrymina@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Qj2zBbkIxBGfCERuHV86VP5E7OnuA4mxy13S+8Juj1A=;
-        b=mQXv020xrGiFQVRcG+t3iVDyjz5L4TGdw0U6fbXeCwxrDC4hDSpg0HBUuUifRpC35r
-         IAr+R+LZdTurVkQIlblgBmObc9b8hX5L2QMJXSgw+ykNNQcG5LVdhpwoKmSquITh5FDc
-         me1wYFI8+0AcXmPj9ameun83h8tbAFaCzlBQVnK9wL0CfDhdWHFsRLu+6RaIUliQg3mx
-         FEvcu8Ar1zcLaMHBuLvh3rsYsOfl0C2RlyfjNt65BG+ROrPNebXJjL0UYf9LxR0gYO5q
-         4Entvu6OAzKq+H8KYWL1LRp/fdJbWViG6JTmq3xbcl9LNkt596K8wSd8/aHFGmc4lO1e
-         VG0A==
-In-Reply-To: <CALvZod4kU=tWcWbu4pWBrHUcxgTnKj_2fEEdnBeU+F0kox0Hig-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=O1PJ+4+ziITIIDCQTVcIjvVNxViqJQWUnTHw+Th26V8=;
+ b=VXZRxTZQ2qgIBBqwFKH5ijK5H99sawjGv5ald0By6jX1Lyxvfz1CSEpnTKO9TShUc4rp
+ Fdi7ymZp/8MLDbLW2oOwyfGP0SahHyWAz92R/QHuRAr0c0YnEYA3eTzqLGH/dj4oP1oZ
+ JohC9KPdlZ5EO5xstF2wwWW2Q3oFRhj4wXenabQyba1lf2h+TCbBJ9XIlPv2NT36HyG/
+ Q8Rw9N49X+QgjyPPJl2vjWzBeD/8tSnw9fGmxB0+bj7nZ4iOQTeoLJ0f5cI3MQ0pv1Qy
+ FSX/vBG8atTSoS3+yvp1A7W6hpcnNYiJyNtSU6StqUmoVPZtOr67iRIMMR/qJjFOOj7q 0A== 
+In-Reply-To: <20200211213128.73302-2-almasrymina@google.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Mina Almasry <almasrymina@google.com>
+Cc: shuah@kernel.org, rientjes@google.com, shakeelb@google.com, gthelen@google.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org
 
-On Fri, Feb 14, 2020 at 4:04 PM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-> On Fri, Feb 14, 2020 at 3:12 PM Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >
-> > On Fri, Feb 14, 2020 at 2:48 PM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >
-> > >
-> > > I think in the current code if the association is skipped at
-> > > allocation time then the sock will remain unassociated for its
-> > > lifetime.
-> > >
-> > > Maybe we can add the association in the later stages but it seems like
-> > > it is not a simple task i.e. edbe69ef2c90f ("Revert "defer call to
-> > > mem_cgroup_sk_alloc()"").
-> >
-> > Half TCP sockets are passive, so this means that 50% of TCP sockets
-> > won't be charged.
-> > (the socket cloning always happens from BH context)
-> >
-> > I think this deserves a comment in the changelog or documentation,
-> > otherwise some people might think
-> > using memcg will make them safe.
->
-> Thanks I will update the changelog. Also is inet_csk_accept() the
-> right place for delayed cgroup/memcg binding (if we decide to do
-> that). I am wondering if we can force charge the memcg during late
-> binding to cater the issue fixed in edbe69ef2c90f.
->
+On 2/11/20 1:31 PM, Mina Almasry wrote:
+> Augments hugetlb_cgroup_charge_cgroup to be able to charge hugetlb
+> usage or hugetlb reservation counter.
+> 
+> Adds a new interface to uncharge a hugetlb_cgroup counter via
+> hugetlb_cgroup_uncharge_counter.
+> 
+> Integrates the counter with hugetlb_cgroup, via hugetlb_cgroup_init,
+> hugetlb_cgroup_have_usage, and hugetlb_cgroup_css_offline.
+> 
+> Signed-off-by: Mina Almasry <almasrymina@google.com>
+> 
 
-Yes, this is exactly why accept() would be the natural choice.
+Thanks for the suggested changes.  It will make the code easier to
+read and understand.
 
-You  do not want to test/change the binding at sendmsg()/recvmsg() time, right ?
+Acked-by: Mike Kravetz <mike.kravetz@oracle.com
+
+> ---
+> 
+> Changes in v12:
+> - Instead of true/false param for rsvd or non-rsvd calls, now there is:
+> hugetlb_cgroup_*() call for non-rsvd
+> hugetlb_cgroup_*_rsvd() call for rsvd
+> __hugetlb_cgroup_*(, bool) for both.
+> - Removed review tags as this patch changed quite a bit.
