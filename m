@@ -1,23 +1,22 @@
 From: David Rientjes <rientjes@google.com>
-Subject: Re: [PATCH v12 5/9] hugetlb_cgroup: add accounting for shared
- mappings
-Date: Sat, 15 Feb 2020 17:29:06 -0800 (PST)
-Message-ID: <alpine.DEB.2.21.2002151728250.244463@chino.kir.corp.google.com>
-References: <20200211213128.73302-1-almasrymina@google.com> <20200211213128.73302-5-almasrymina@google.com>
+Subject: Re: [PATCH v12 7/9] hugetlb: support file_region coalescing again
+Date: Sat, 15 Feb 2020 17:29:59 -0800 (PST)
+Message-ID: <alpine.DEB.2.21.2002151729470.244463@chino.kir.corp.google.com>
+References: <20200211213128.73302-1-almasrymina@google.com> <20200211213128.73302-7-almasrymina@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:from:to:cc:subject:in-reply-to:message-id:references
          :user-agent:mime-version;
-        bh=vFO8RYQ8FlPE3NMfWDMQg3z8BnL2LFOQ1aCp2wNf0j0=;
-        b=UT5y7eB27mtmBLa9qTJY5GoNQuboQGZtdwfzReReOwUaVVOzs3n/h9Ba5B4+RntXCc
-         W1HLiL5YMb1prRJyisKY/4AyutIk6MxcInq+taUJe61ASvIaUoTX0W1yeVlJTkr2L0yy
-         Z3GZggc+OUPDOdBhQ0DJ6Ykh4gvxbTjTWcMManFakBmoxbGTXMvJ4M3UFkEjFGElSKiK
-         eN1DWddOuAh6EgdiDyjMRu2QKSwZyN8l5Lyk1v5HDOtCCBbEl0Zg2qdgq3RGqYmGsGq0
-         tHcRjJPPPzpU9hR1e2942b2sR9rjzicAMAJmllqUTzPah+NVj/FQiWIRoWMnJmEdNM/l
-         7h5g==
-In-Reply-To: <20200211213128.73302-5-almasrymina@google.com>
+        bh=H1J2XGmudHXtmp+DJfVLIIqWxd4GHWG0D55ayu8ofeI=;
+        b=gFq89J3C6y2E3dC6eJosGCejVHswqtg68Tow44UbrH2gVrpogK7qFB1KHIIqqUr7bn
+         tF6i1gknCrbwVMRuZQ5ME8rn/UmTXJDDfhHRV6pW2PIY5pqan+jFUw+/kb92UAgwLVbj
+         T/G17QADHWbAVrR3b1QVTsvF3ed/aWsXDnw5zV2uSZHZk/45sRr34UPnEUrZgMEdy6J6
+         YqeWVAyXZWILuihYlGoDPXdNP++ifAKU+tFKpgmi8EBlQR2AX2NbhCSBXI96xRW5tjuA
+         ImAmKQCewP/SSbyC0hOD2KKx7/xtU+uyWnFN+4DYSnSZDjveEXzbpjxCsl1eW+3zXMKv
+         iahQ==
+In-Reply-To: <20200211213128.73302-7-almasrymina@google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -27,21 +26,20 @@ Cc: mike.kravetz@oracle.com, shuah@kernel.org, shakeelb@google.com, gthelen@goog
 
 On Tue, 11 Feb 2020, Mina Almasry wrote:
 
-> For shared mappings, the pointer to the hugetlb_cgroup to uncharge lives
-> in the resv_map entries, in file_region->reservation_counter.
+> An earlier patch in this series disabled file_region coalescing in order
+> to hang the hugetlb_cgroup uncharge info on the file_region entries.
 > 
-> After a call to region_chg, we charge the approprate hugetlb_cgroup, and if
-> successful, we pass on the hugetlb_cgroup info to a follow up region_add call.
-> When a file_region entry is added to the resv_map via region_add, we put the
-> pointer to that cgroup in file_region->reservation_counter. If charging doesn't
-> succeed, we report the error to the caller, so that the kernel fails the
-> reservation.
+> This patch re-adds support for coalescing of file_region entries.
+> Essentially everytime we add an entry, we call a recursive function that
+> tries to coalesce the added region with the regions next to it. The
+> worst case call depth for this function is 3: one to coalesce with the
+> region next to it, one to coalesce to the region prev, and one to reach
+> the base case.
 > 
-> On region_del, which is when the hugetlb memory is unreserved, we also uncharge
-> the file_region->reservation_counter.
+> This is an important performance optimization as private mappings add
+> their entries page by page, and we could incur big performance costs for
+> large mappings with lots of file_region entries in their resv_map.
 > 
 > Signed-off-by: Mina Almasry <almasrymina@google.com>
-> 
 
-Does this develop a dependency on hugetlb_cgroup.h in hugetlb.h?  Or maybe 
-we only need a forward declaration of struct file_region there?
+Acked-by: David Rientjes <rientjes@google.com>
