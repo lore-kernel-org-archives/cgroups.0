@@ -1,131 +1,134 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2 3/3] mm: memcontrol: recursive memory.low protection
-Date: Tue, 18 Feb 2020 14:52:53 -0500
-Message-ID: <20200218195253.GA13406@cmpxchg.org>
-References: <20200213135348.GF88887@mtj.thefacebook.com>
- <20200213154731.GE31689@dhcp22.suse.cz>
- <20200213155249.GI88887@mtj.thefacebook.com>
- <20200213163636.GH31689@dhcp22.suse.cz>
- <20200213165711.GJ88887@mtj.thefacebook.com>
- <20200214071537.GL31689@dhcp22.suse.cz>
- <20200214135728.GK88887@mtj.thefacebook.com>
- <20200214151318.GC31689@dhcp22.suse.cz>
- <20200214165311.GA253674@cmpxchg.org>
- <20200217084100.GE31531@dhcp22.suse.cz>
+From: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v12 6/9] hugetlb_cgroup: support noreserve mappings
+Date: Tue, 18 Feb 2020 12:57:36 -0800
+Message-ID: <ace490c3-03b3-da85-bbdf-00959a71ff2f@oracle.com>
+References: <20200211213128.73302-1-almasrymina@google.com>
+ <20200211213128.73302-6-almasrymina@google.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=IIIglP3lrK/bbp+/obNoUshm2KDGr/A+JSgxj0zWQRM=;
-        b=ELdiNAZK1VKWaWwrqcP20fOHQWrj6DQbxwmx7w0WY0RLNf/+TiQXVgXp1SSUSKJ7Dc
-         kX1M4c0YRCIaN75Ek1yR4KFIY5VdTQfcF9se/BPJhGkT2OPjhWSJQKJhsiCcsh6Eki4s
-         3+SBBD6Kj8S+CT9mZAZRvesFECSrv9uyfF51ktO6kaaXsF9bJblm+VGhyV+zzhmts4tc
-         k+x6QSZV8M/4Qtwim/E8ujQMPG7bhKOnWnqe0puPTTsYp9q8UBjZXBJH1BEizh9M8L65
-         s4DOQB6B2yOIslgio1SC9jx+Hm1muU3oRTPIHTJ4epmQ2XW+bjJA9IgL8jWoqqohTn1R
-         Jhww==
-Content-Disposition: inline
-In-Reply-To: <20200217084100.GE31531-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=BtjGqj+3jNiQRHCMij91pFpkChLnYumQhRXFWLWiTKc=;
+ b=knIApa8S39JVJ40ICW9Cl3OBBL1pEfta3YUmcensHG8JUob3YXeVTh1ez5jwgX1DJxuo
+ NfRZzI+s6OCctl4tK3wKYdBs9Qg7LK0q+c6gqxLpSou+OAF0vln2dzJfe0XIkiaOqyVY
+ UyT1wzT1lyLD2OfL4SEjXPqLla0h7Bu9x03zzlxkI9Sl5juEyNY8ylHykH+CnKGuauJO
+ kNp95zuJo+0Ax0cCEwc/bK1nKtxEynhTgSEBxUSnlKJrcW5tHTrk+0AxyDfhrKtYseHC
+ pJ6XkBuyBTNXMgOK6PWbMbdKZ/nRwWxszM3ci0gKeV7q70iFFs66ad30d7J+hDSijhzC lw== 
+In-Reply-To: <20200211213128.73302-6-almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Feb 17, 2020 at 09:41:00AM +0100, Michal Hocko wrote:
-> On Fri 14-02-20 11:53:11, Johannes Weiner wrote:
-> [...]
-> > The proper solution to implement the kind of resource hierarchy you
-> > want to express in cgroup2 is to reflect it in the cgroup tree. Yes,
-> > the_workload might have been started by user 100 in session c2, but in
-> > terms of resources, it's prioritized over system.slice and user.slice,
-> > and so that's the level where it needs to sit:
-> > 
-> >                                root
-> >                        /        |                 \
-> >                system.slice  user.slice       the_workload
-> >                /    |           |
-> >            cron  journal     user-100.slice
-> >                                 |
-> >                              session-c2.scope
-> >                                 |
-> >                              misc
-> > 
-> > Then you can configure not just memory.low, but also a proper io
-> > weight and a cpu weight. And the tree correctly reflects where the
-> > workload is in the pecking order of who gets access to resources.
+On 2/11/20 1:31 PM, Mina Almasry wrote:
+> Support MAP_NORESERVE accounting as part of the new counter.
 > 
-> I have already mentioned that this would be the only solution when the
-> protection would work, right. But I am also saying that this a trivial
-> example where you simply _can_ move your workload to the 1st level. What
-> about those that need to reflect organization into the hierarchy. Please
-> have a look at http://lkml.kernel.org/r/20200214075916.GM31689-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org
-> Are you saying they are just not supported? Are they supposed to use
-> cgroup v1 for the organization and v2 for the resource control?
+> For each hugepage allocation, at allocation time we check if there is
+> a reservation for this allocation or not. If there is a reservation for
+> this allocation, then this allocation was charged at reservation time,
+> and we don't re-account it. If there is no reserevation for this
+> allocation, we charge the appropriate hugetlb_cgroup.
+> 
+> The hugetlb_cgroup to uncharge for this allocation is stored in
+> page[3].private. We use new APIs added in an earlier patch to set this
+> pointer.
+> 
+> Signed-off-by: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> 
+> ---
+> 
+> Changes in v12:
+> - Minor rebase to new interface for readability.
+> 
+> Changes in v10:
+> - Refactored deferred_reserve check.
+> 
+> ---
+>  mm/hugetlb.c | 27 ++++++++++++++++++++++++++-
+>  1 file changed, 26 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+> index a9171c3cbed6b..2d62dd35399db 100644
+> --- a/mm/hugetlb.c
+> +++ b/mm/hugetlb.c
+> @@ -1342,6 +1342,8 @@ static void __free_huge_page(struct page *page)
+>  	clear_page_huge_active(page);
+>  	hugetlb_cgroup_uncharge_page(hstate_index(h),
+>  				     pages_per_huge_page(h), page);
+> +	hugetlb_cgroup_uncharge_page_rsvd(hstate_index(h),
+> +					  pages_per_huge_page(h), page);
+>  	if (restore_reserve)
+>  		h->resv_huge_pages++;
+> 
+> @@ -2175,6 +2177,7 @@ struct page *alloc_huge_page(struct vm_area_struct *vma,
+>  	long gbl_chg;
+>  	int ret, idx;
+>  	struct hugetlb_cgroup *h_cg;
+> +	bool deferred_reserve;
+> 
+>  	idx = hstate_index(h);
+>  	/*
+> @@ -2212,9 +2215,19 @@ struct page *alloc_huge_page(struct vm_area_struct *vma,
+>  			gbl_chg = 1;
+>  	}
+> 
+> +	/* If this allocation is not consuming a reservation, charge it now.
+> +	 */
+> +	deferred_reserve = map_chg || avoid_reserve || !vma_resv_map(vma);
+> +	if (deferred_reserve) {
+> +		ret = hugetlb_cgroup_charge_cgroup_rsvd(
+> +			idx, pages_per_huge_page(h), &h_cg);
+> +		if (ret)
+> +			goto out_subpool_put;
+> +	}
+> +
+>  	ret = hugetlb_cgroup_charge_cgroup(idx, pages_per_huge_page(h), &h_cg);
+>  	if (ret)
+> -		goto out_subpool_put;
+> +		goto out_uncharge_cgroup_reservation;
+> 
+>  	spin_lock(&hugetlb_lock);
+>  	/*
+> @@ -2237,6 +2250,14 @@ struct page *alloc_huge_page(struct vm_area_struct *vma,
+>  		/* Fall through */
+>  	}
+>  	hugetlb_cgroup_commit_charge(idx, pages_per_huge_page(h), h_cg, page);
+> +	/* If allocation is not consuming a reservation, also store the
+> +	 * hugetlb_cgroup pointer on the page.
+> +	 */
+> +	if (deferred_reserve) {
+> +		hugetlb_cgroup_commit_charge_rsvd(idx, pages_per_huge_page(h),
+> +						  h_cg, page);
+> +	}
+> +
 
-From that email:
+This started before your new code, but those two cgroup_commit_charge calls
+could/should be done outside the hugetlb_lock.  No need to change as it is
+not a big deal.  Those calls only set fields in the page structs.
 
-    > Let me give you an example. Say you have a DB workload which is the
-    > primary thing running on your system and which you want to protect from
-    > an unrelated activity (backups, frontends, etc). Running it inside a
-    > cgroup with memory.low while other components in other cgroups without
-    > any protection achieves that. If those cgroups are top level then this
-    > is simple and straightforward configuration.
-    > 
-    > Things would get much more tricky if you want run the same workload
-    > deeper down the hierarchy - e.g. run it in a container. Now your
-    > "root" has to use an explicit low protection as well and all other
-    > potential cgroups that are in the same sub-hierarchy (read in the same
-    > container) need to opt-out from the protection because they are not
-    > meant to be protected.
+Reviewed-by: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
-You can't prioritize some parts of a cgroup higher than the outside of
-the cgroup, and other parts lower than the outside. That's just not
-something that can be sanely supported from the controller interface.
+-- 
+Mike Kravetz
 
-However, that doesn't mean this usecase isn't supported. You *can*
-always split cgroups for separate resource policies.
-
-And you *can* split cgroups for group labeling purposes too (tracking
-stuff that belongs to a certain user).
-
-So in the scenario where you have an important database and a
-not-so-important secondary workload, and you want them to run them
-containerized, there are two possible scenarios:
-
-- The workloads are co-dependent (e.g. a logging service for the
-  db). In that case you actually need to protect them equally,
-  otherwise you'll have priority inversions, where the primary gets
-  backed up behind the secondary in some form or another.
-
-- The workloads don't interact with each other. In that case, you can
-  create two separate containers, one high-pri, one low-pri, and run
-  them in parallel. They can share filesystem data, page cache
-  etc. where appropriate, so this isn't a problem.
-
-  The fact that they belong to the same team/organization/"user"
-  e.g. is an attribute that can be tracked from userspace and isn't
-  material from a kernel interface POV.
-
-  You just have two cgroups instead of one to track; but those cgroups
-  will still contain stuff like setsid(), setuid() etc. so users
-  cannot escape whatever policy/containment you implement for them.
-
-    > In short we simply have to live with usecases where the cgroup hierarchy
-    > follows the "logical" workload organization at the higher level more
-    > than resource control. This is the case for systemd as well btw.
-    > Workloads are organized into slices and scopes without any direct
-    > relation to resources in mind.
-
-As I said in the previous email: Yes, per default, because it starts
-everything in a single resource domain. But it has all necessary
-support for dividing the tree into disjunct resource domains.
-
-    > Does this make it more clear what I am thinking about? Does it sound
-    > like a legit usecase?
-
-The desired behavior is legit, but you have to split the cgroups on
-conflicting attributes - whether organizational or policy-related -
-for properly expressing what you want from the kernel.
+>  	spin_unlock(&hugetlb_lock);
+> 
+>  	set_page_private(page, (unsigned long)spool);
+> @@ -2261,6 +2282,10 @@ struct page *alloc_huge_page(struct vm_area_struct *vma,
+> 
+>  out_uncharge_cgroup:
+>  	hugetlb_cgroup_uncharge_cgroup(idx, pages_per_huge_page(h), h_cg);
+> +out_uncharge_cgroup_reservation:
+> +	if (deferred_reserve)
+> +		hugetlb_cgroup_uncharge_cgroup_rsvd(idx, pages_per_huge_page(h),
+> +						    h_cg);
+>  out_subpool_put:
+>  	if (map_chg || avoid_reserve)
+>  		hugepage_subpool_put_pages(spool, 1);
+> --
+> 2.25.0.225.g125e21ebc7-goog
+> 
