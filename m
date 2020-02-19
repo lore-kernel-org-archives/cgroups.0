@@ -1,69 +1,56 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 09/11] drm, cgroup: Introduce lgpu as DRM cgroup resource
-Date: Wed, 19 Feb 2020 13:38:41 -0500
-Message-ID: <20200219183841.GA54486@cmpxchg.org>
-References: <20200214155650.21203-1-Kenny.Ho@amd.com>
- <20200214155650.21203-10-Kenny.Ho@amd.com>
- <CAOFGe96N5gG+08rQCRC+diHKDAfxPFYEnVxDS8_udvjcBYgsPg@mail.gmail.com>
- <CAOWid-f62Uv=GZXX2V2BsQGM5A1JJG_qmyrOwd=KwZBx_sr-bg@mail.gmail.com>
- <20200214183401.GY2363188@phenom.ffwll.local>
- <CAOWid-caJHeXUnQv3MOi=9U+vdBLfewN+CrA-7jRrz0VXqatbQ@mail.gmail.com>
- <20200214191754.GA218629@mtj.thefacebook.com>
- <20200219161850.GB13406@cmpxchg.org>
- <CAOWid-e=7V4TUqK_h5Gs9dUXqH-Vgr-Go8c1dCkMux98Vdd1sQ@mail.gmail.com>
+From: Tycho Andersen <tycho@tycho.ws>
+Subject: [PATCH] cgroup1: don't call release_agent when it is ""
+Date: Wed, 19 Feb 2020 12:01:29 -0700
+Message-ID: <20200219190129.6899-1-tycho@tycho.ws>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=8Doxcme7+jrZwJS6ST/rzTNwpMBSbirxVwxv1qEdw5s=;
-        b=rYeKImttZI7x6bzjER2czevU8xhzoiO0fHOwBWL2BT4hsGECSGmyqPgoGTV4CucsBZ
-         uTnJoXNwR7UAglw3UPw1NxLU5ddpTksdSVtT5QjXF1AnurYfoBBc8IdvY2YodtGt8z0M
-         QacjY8wuodiTGBs0IVVATW2YMRzBMkLiyZHVjGvvF9BNoW9pjzl8ft6Qnc6yAvcSuxDs
-         UzhfJPLoXJgkQP5KuxvV/2RNezt7UtdUOKjQ2fR59CK2Jo345MJFsX4yD2NmH1oVRyhb
-         ArUtmfikqkqsHkSnUBKIK5mbtPTvuTR16p7k9MSKdETJT+ebL/CRLYK+ZgbmmphjUcH0
-         eXwg==
-Content-Disposition: inline
-In-Reply-To: <CAOWid-e=7V4TUqK_h5Gs9dUXqH-Vgr-Go8c1dCkMux98Vdd1sQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=tycho-ws.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Gaq6NM5o+UM+pFOLAVDFZv0/RMH6toB+rITqZIOsMYE=;
+        b=lLfi6cyMIxFEgNuwaGXNFp+Ts5Y/KtKR4ejCootJgO0ckrc0gRvgZ7nZudfZhjQoBI
+         Q+Knj9pxcd3wq4LHf974POD/1Hnc1WLhh+kb4jKuK0df5rwk2iv1uTnor3Qx5iHTuPG0
+         6K4HnlgfXU5h6k7AIRjJaZLVQOz6UOuRrMgB8+OAD6HMboRGS5lIdf7dZ6Ucih5+R7Yl
+         Rog2cqFxxqxQHrPhjPpD2KCEN9OsLng7bSpIYqsSPDMDkmsISBpLWbLW2+0qZvzT1V07
+         z5vq1ehXDwR3+F8rgzV7zl1I6T57sNXV+zO+rlE6KPJkoXVN3bBVWhpnq9CEo2lp5Kyv
+         f3fg==
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Jason Ekstrand <jason-fQELhIk9awXprZlt/sZkLg@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Maling list - DRI developers <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, amd-gfx mailing list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, "Greathouse, Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, lkaplan-WVYJKLFxKCc@public.gmane.org, nirmoy.das-5C7GfCeVMHo@public.gmane.org, damon.mcdougall-5C7GfCeVMHo@public.gmane.org, juan.zuniga-anaya-5C7GfCeVMHo@public.gmane.org
+To: cgroups@vger.kernel.org
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Serge Hallyn <serge@hallyn.com>, linux-kernel@vger.kernel.org, Tycho Andersen <tycho@tycho.ws>
 
-On Wed, Feb 19, 2020 at 11:28:48AM -0500, Kenny Ho wrote:
-> On Wed, Feb 19, 2020 at 11:18 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> >
-> > Yes, I'd go with absolute units when it comes to memory, because it's
-> > not a renewable resource like CPU and IO, and so we do have cliff
-> > behavior around the edge where you transition from ok to not-enough.
-> >
-> > memory.low is a bit in flux right now, so if anything is unclear
-> > around its semantics, please feel free to reach out.
-> 
-> I am not familiar with the discussion, would you point me to a
-> relevant thread please?
+Older (and maybe current) versions of systemd set release_agent to "" when
+shutting down, but do not set notify_on_release to 0.
 
-Here is a cleanup patch, not yet merged, that documents the exact
-semantics and behavioral considerations:
+Since 64e90a8acb85 ("Introduce STATIC_USERMODEHELPER to mediate
+call_usermodehelper()"), we filter out such calls when the user mode helper
+path is "". However, when used in conjunction with an actual (i.e. non "")
+STATIC_USERMODEHELPER, the path is never "", so the real usermode helper
+will be called with argv[0] == "".
 
-https://lore.kernel.org/linux-mm/20191213192158.188939-3-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org/
+Let's avoid this by not invoking the release_agent when it is "".
 
-But the high-level idea is this: you assign each cgroup or cgroup
-subtree a chunk of the resource that it's guaranteed to be able to
-consume. It *can* consume beyond that threshold if available, but that
-overage may get reclaimed again if somebody else needs it instead.
+Signed-off-by: Tycho Andersen <tycho@tycho.ws>
+---
+ kernel/cgroup/cgroup-v1.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This allows you to do a ballpark distribution of the resource between
-different workloads, while the kernel retains the ability to optimize
-allocation of spare resources - because in practice, workload demand
-varies over time, workloads disappear and new ones start up etc.
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index be1a1c83cdd1..b3626c3c6f92 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -782,7 +782,7 @@ void cgroup1_release_agent(struct work_struct *work)
+ 
+ 	pathbuf = kmalloc(PATH_MAX, GFP_KERNEL);
+ 	agentbuf = kstrdup(cgrp->root->release_agent_path, GFP_KERNEL);
+-	if (!pathbuf || !agentbuf)
++	if (!pathbuf || !agentbuf || !strlen(agentbuf))
+ 		goto out;
+ 
+ 	spin_lock_irq(&css_set_lock);
+-- 
+2.20.1
 
-> In addition, is there some kind of order of preference for
-> implementing low vs high vs max?
-
-If you implement only one allocation model, the preference would be on
-memory.low. Limits are rigid and per definition waste resources, so in
-practice we're moving away from them.
