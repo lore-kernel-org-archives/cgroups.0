@@ -1,209 +1,69 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: asynchronous reclaim for memory.high
-Date: Wed, 19 Feb 2020 19:37:31 +0100
-Message-ID: <20200219183731.GC11847@dhcp22.suse.cz>
-References: <20200219181219.54356-1-hannes@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 09/11] drm, cgroup: Introduce lgpu as DRM cgroup resource
+Date: Wed, 19 Feb 2020 13:38:41 -0500
+Message-ID: <20200219183841.GA54486@cmpxchg.org>
+References: <20200214155650.21203-1-Kenny.Ho@amd.com>
+ <20200214155650.21203-10-Kenny.Ho@amd.com>
+ <CAOFGe96N5gG+08rQCRC+diHKDAfxPFYEnVxDS8_udvjcBYgsPg@mail.gmail.com>
+ <CAOWid-f62Uv=GZXX2V2BsQGM5A1JJG_qmyrOwd=KwZBx_sr-bg@mail.gmail.com>
+ <20200214183401.GY2363188@phenom.ffwll.local>
+ <CAOWid-caJHeXUnQv3MOi=9U+vdBLfewN+CrA-7jRrz0VXqatbQ@mail.gmail.com>
+ <20200214191754.GA218629@mtj.thefacebook.com>
+ <20200219161850.GB13406@cmpxchg.org>
+ <CAOWid-e=7V4TUqK_h5Gs9dUXqH-Vgr-Go8c1dCkMux98Vdd1sQ@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=8Doxcme7+jrZwJS6ST/rzTNwpMBSbirxVwxv1qEdw5s=;
+        b=rYeKImttZI7x6bzjER2czevU8xhzoiO0fHOwBWL2BT4hsGECSGmyqPgoGTV4CucsBZ
+         uTnJoXNwR7UAglw3UPw1NxLU5ddpTksdSVtT5QjXF1AnurYfoBBc8IdvY2YodtGt8z0M
+         QacjY8wuodiTGBs0IVVATW2YMRzBMkLiyZHVjGvvF9BNoW9pjzl8ft6Qnc6yAvcSuxDs
+         UzhfJPLoXJgkQP5KuxvV/2RNezt7UtdUOKjQ2fR59CK2Jo345MJFsX4yD2NmH1oVRyhb
+         ArUtmfikqkqsHkSnUBKIK5mbtPTvuTR16p7k9MSKdETJT+ebL/CRLYK+ZgbmmphjUcH0
+         eXwg==
 Content-Disposition: inline
-In-Reply-To: <20200219181219.54356-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <CAOWid-e=7V4TUqK_h5Gs9dUXqH-Vgr-Go8c1dCkMux98Vdd1sQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Jason Ekstrand <jason-fQELhIk9awXprZlt/sZkLg@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Maling list - DRI developers <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, amd-gfx mailing list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, "Greathouse, Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, lkaplan-WVYJKLFxKCc@public.gmane.org, nirmoy.das-5C7GfCeVMHo@public.gmane.org, damon.mcdougall-5C7GfCeVMHo@public.gmane.org, juan.zuniga-anaya-5C7GfCeVMHo@public.gmane.org
 
-On Wed 19-02-20 13:12:19, Johannes Weiner wrote:
-> We have received regression reports from users whose workloads moved
-> into containers and subsequently encountered new latencies. For some
-> users these were a nuisance, but for some it meant missing their SLA
-> response times. We tracked those delays down to cgroup limits, which
-> inject direct reclaim stalls into the workload where previously all
-> reclaim was handled my kswapd.
-
-I am curious why is this unexpected when the high limit is explicitly
-documented as a throttling mechanism.
-
-> This patch adds asynchronous reclaim to the memory.high cgroup limit
-> while keeping direct reclaim as a fallback. In our testing, this
-> eliminated all direct reclaim from the affected workload.
-
-Who is accounted for all the work? Unless I am missing something this
-just gets hidden in the system activity and that might hurt the
-isolation. I do see how moving the work to a different context is
-desirable but this work has to be accounted properly when it is going to
-become a normal mode of operation (rather than a rare exception like the
-existing irq context handling).
-
-> memory.high has a grace buffer of about 4% between when it becomes
-> exceeded and when allocating threads get throttled. We can use the
-> same buffer for the async reclaimer to operate in. If the worker
-> cannot keep up and the grace buffer is exceeded, allocating threads
-> will fall back to direct reclaim before getting throttled.
+On Wed, Feb 19, 2020 at 11:28:48AM -0500, Kenny Ho wrote:
+> On Wed, Feb 19, 2020 at 11:18 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+> >
+> > Yes, I'd go with absolute units when it comes to memory, because it's
+> > not a renewable resource like CPU and IO, and so we do have cliff
+> > behavior around the edge where you transition from ok to not-enough.
+> >
+> > memory.low is a bit in flux right now, so if anything is unclear
+> > around its semantics, please feel free to reach out.
 > 
-> For irq-context, there's already async memory.high enforcement. Re-use
-> that work item for all allocating contexts, but switch it to the
-> unbound workqueue so reclaim work doesn't compete with the workload.
-> The work item is per cgroup, which means the workqueue infrastructure
-> will create at maximum one worker thread per reclaiming cgroup.
-> 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> ---
->  mm/memcontrol.c | 60 +++++++++++++++++++++++++++++++++++++------------
->  mm/vmscan.c     | 10 +++++++--
->  2 files changed, 54 insertions(+), 16 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index cf02e3ef3ed9..bad838d9c2bb 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1446,6 +1446,10 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
->  	seq_buf_printf(&s, "pgsteal %lu\n",
->  		       memcg_events(memcg, PGSTEAL_KSWAPD) +
->  		       memcg_events(memcg, PGSTEAL_DIRECT));
-> +	seq_buf_printf(&s, "pgscan_direct %lu\n",
-> +		       memcg_events(memcg, PGSCAN_DIRECT));
-> +	seq_buf_printf(&s, "pgsteal_direct %lu\n",
-> +		       memcg_events(memcg, PGSTEAL_DIRECT));
->  	seq_buf_printf(&s, "%s %lu\n", vm_event_name(PGACTIVATE),
->  		       memcg_events(memcg, PGACTIVATE));
->  	seq_buf_printf(&s, "%s %lu\n", vm_event_name(PGDEACTIVATE),
-> @@ -2235,10 +2239,19 @@ static void reclaim_high(struct mem_cgroup *memcg,
->  
->  static void high_work_func(struct work_struct *work)
->  {
-> +	unsigned long high, usage;
->  	struct mem_cgroup *memcg;
->  
->  	memcg = container_of(work, struct mem_cgroup, high_work);
-> -	reclaim_high(memcg, MEMCG_CHARGE_BATCH, GFP_KERNEL);
-> +
-> +	high = READ_ONCE(memcg->high);
-> +	usage = page_counter_read(&memcg->memory);
-> +
-> +	if (usage <= high)
-> +		return;
-> +
-> +	set_worker_desc("cswapd/%llx", cgroup_id(memcg->css.cgroup));
-> +	reclaim_high(memcg, usage - high, GFP_KERNEL);
->  }
->  
->  /*
-> @@ -2304,15 +2317,22 @@ void mem_cgroup_handle_over_high(void)
->  	unsigned long pflags;
->  	unsigned long penalty_jiffies, overage;
->  	unsigned int nr_pages = current->memcg_nr_pages_over_high;
-> +	bool tried_direct_reclaim = false;
->  	struct mem_cgroup *memcg;
->  
->  	if (likely(!nr_pages))
->  		return;
->  
-> -	memcg = get_mem_cgroup_from_mm(current->mm);
-> -	reclaim_high(memcg, nr_pages, GFP_KERNEL);
->  	current->memcg_nr_pages_over_high = 0;
->  
-> +	memcg = get_mem_cgroup_from_mm(current->mm);
-> +	high = READ_ONCE(memcg->high);
-> +recheck:
-> +	usage = page_counter_read(&memcg->memory);
-> +
-> +	if (usage <= high)
-> +		goto out;
-> +
->  	/*
->  	 * memory.high is breached and reclaim is unable to keep up. Throttle
->  	 * allocators proactively to slow down excessive growth.
-> @@ -2325,12 +2345,6 @@ void mem_cgroup_handle_over_high(void)
->  	 * overage amount.
->  	 */
->  
-> -	usage = page_counter_read(&memcg->memory);
-> -	high = READ_ONCE(memcg->high);
-> -
-> -	if (usage <= high)
-> -		goto out;
-> -
->  	/*
->  	 * Prevent division by 0 in overage calculation by acting as if it was a
->  	 * threshold of 1 page
-> @@ -2369,6 +2383,16 @@ void mem_cgroup_handle_over_high(void)
->  	if (penalty_jiffies <= HZ / 100)
->  		goto out;
->  
-> +	/*
-> +	 * It's possible async reclaim just isn't able to keep
-> +	 * up. Before we go to sleep, try direct reclaim.
-> +	 */
-> +	if (!tried_direct_reclaim) {
-> +		reclaim_high(memcg, nr_pages, GFP_KERNEL);
-> +		tried_direct_reclaim = true;
-> +		goto recheck;
-> +	}
-> +
->  	/*
->  	 * If we exit early, we're guaranteed to die (since
->  	 * schedule_timeout_killable sets TASK_KILLABLE). This means we don't
-> @@ -2544,13 +2568,21 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  	 */
->  	do {
->  		if (page_counter_read(&memcg->memory) > memcg->high) {
-> +			/*
-> +			 * Kick off the async reclaimer, which should
-> +			 * be doing most of the work to avoid latency
-> +			 * in the workload. But also check in on its
-> +			 * progress before resuming to userspace, in
-> +			 * case we need to do direct reclaim, or even
-> +			 * throttle the allocating thread if reclaim
-> +			 * cannot keep up with allocation demand.
-> +			 */
-> +			queue_work(system_unbound_wq, &memcg->high_work);
->  			/* Don't bother a random interrupted task */
-> -			if (in_interrupt()) {
-> -				schedule_work(&memcg->high_work);
-> -				break;
-> +			if (!in_interrupt()) {
-> +				current->memcg_nr_pages_over_high += batch;
-> +				set_notify_resume(current);
->  			}
-> -			current->memcg_nr_pages_over_high += batch;
-> -			set_notify_resume(current);
->  			break;
->  		}
->  	} while ((memcg = parent_mem_cgroup(memcg)));
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 74e8edce83ca..d6085115c7f2 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -1947,7 +1947,10 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
->  	__mod_node_page_state(pgdat, NR_ISOLATED_ANON + file, nr_taken);
->  	reclaim_stat->recent_scanned[file] += nr_taken;
->  
-> -	item = current_is_kswapd() ? PGSCAN_KSWAPD : PGSCAN_DIRECT;
-> +	if (current_is_kswapd() || (cgroup_reclaim(sc) && current_work()))
-> +		item = PGSCAN_KSWAPD;
-> +	else
-> +		item = PGSCAN_DIRECT;
->  	if (!cgroup_reclaim(sc))
->  		__count_vm_events(item, nr_scanned);
->  	__count_memcg_events(lruvec_memcg(lruvec), item, nr_scanned);
-> @@ -1961,7 +1964,10 @@ shrink_inactive_list(unsigned long nr_to_scan, struct lruvec *lruvec,
->  
->  	spin_lock_irq(&pgdat->lru_lock);
->  
-> -	item = current_is_kswapd() ? PGSTEAL_KSWAPD : PGSTEAL_DIRECT;
-> +	if (current_is_kswapd() || (cgroup_reclaim(sc) && current_work()))
-> +		item = PGSTEAL_KSWAPD;
-> +	else
-> +		item = PGSTEAL_DIRECT;
->  	if (!cgroup_reclaim(sc))
->  		__count_vm_events(item, nr_reclaimed);
->  	__count_memcg_events(lruvec_memcg(lruvec), item, nr_reclaimed);
-> -- 
-> 2.24.1
-> 
+> I am not familiar with the discussion, would you point me to a
+> relevant thread please?
 
--- 
-Michal Hocko
-SUSE Labs
+Here is a cleanup patch, not yet merged, that documents the exact
+semantics and behavioral considerations:
+
+https://lore.kernel.org/linux-mm/20191213192158.188939-3-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org/
+
+But the high-level idea is this: you assign each cgroup or cgroup
+subtree a chunk of the resource that it's guaranteed to be able to
+consume. It *can* consume beyond that threshold if available, but that
+overage may get reclaimed again if somebody else needs it instead.
+
+This allows you to do a ballpark distribution of the resource between
+different workloads, while the kernel retains the ability to optimize
+allocation of spare resources - because in practice, workload demand
+varies over time, workloads disappear and new ones start up etc.
+
+> In addition, is there some kind of order of preference for
+> implementing low vs high vs max?
+
+If you implement only one allocation model, the preference would be on
+memory.low. Limits are rigid and per definition waste resources, so in
+practice we're moving away from them.
