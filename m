@@ -1,68 +1,108 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: asynchronous reclaim for memory.high
-Date: Thu, 20 Feb 2020 10:56:51 -0500
-Message-ID: <20200220155651.GG698990@mtj.thefacebook.com>
-References: <20200219181219.54356-1-hannes@cmpxchg.org>
- <20200219183731.GC11847@dhcp22.suse.cz>
- <20200219191618.GB54486@cmpxchg.org>
- <20200219195332.GE11847@dhcp22.suse.cz>
- <20200219214112.4kt573kyzbvmbvn3@ca-dmjordan1.us.oracle.com>
- <20200219220859.GF54486@cmpxchg.org>
- <20200220154524.dql3i5brnjjwecft@ca-dmjordan1.us.oracle.com>
+From: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH v3 0/3] Charge loop device i/o to issuing cgroup
+Date: Thu, 20 Feb 2020 11:51:50 -0500
+Message-ID: <cover.1582216294.git.schatzberg.dan@gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=WrIAIkuYfbohT4URY+WT9f9IMynxvVzhUx7hJqz7oAk=;
-        b=ESOkYp4wOyqNJWtsVeoAd/ssWk0nvkvCqnwMaCaF3sumNcZ7bZUGH+0ucazaesndy0
-         yirD6ztauUJJvTh2k0qQOCMIuSy8y0I5Op0djhJN8tXc86SkhYb3GRAvPH0Xdg20PLhR
-         tkP4CLoOD5zcFyv/N+6KLjwu32UptfltbOtBQhs2lFBq9bhdey1qQykNbSqzme1HWTvF
-         YJKe9824y9fv3QDFnPj2iRvGn8faVc36cGixbcfn6JihAAnsRa6TRztLTkXfYeKmfck4
-         JQ0bQjj5RuwY3aPQVQLPJ5lDRI+ouoTLCgEgk4zeilfjXu6dAxWPxxTsm/zvTFmQrkVB
-         y1rw==
-Content-Disposition: inline
-In-Reply-To: <20200220154524.dql3i5brnjjwecft-S51bK0XF4qpuJJETbFA3a0B3C2bhBk7L0E9HWUfgJXw@public.gmane.org>
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=6XRtdyMfa57xpaqGTGErpzosHOBJSLkhLdrjsJIgZOk=;
+        b=GMVJvohK6Uqosdx++Q1UIJDcIwc443iVBHapmNkU3PGw0Gp/Zvb4sb4UC5bp2Vqnjh
+         3CNcPOyt+wKRKUoubWndo5lXBiYketttaeW/0TFZNT506r2ehW2MDLqDwKxIN4eTRL6l
+         Bbe/9ss0aC0grEW3nn0C41VmK4UZ0iE4dj4Z897q8UHKgHY2T1n9bsgu9G2OYcIDvx+B
+         u5klU2+Lw4xtVQXGaop6kWnEt+i2w3JLr/ZPKKBW51NDmVrAy3ZO3uQda80EIss6Qyv+
+         H/1orrfd8yQMyvriQ2xSQnzBmiCfFYpDXHVpOfkmdv3fLAt2kdPWJQVF2RC+gEgheTWP
+         kuGQ==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+To: 
+Cc: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, "open list:BLOCK LAYER" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP CGROUP" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP - MEMORY RESOURCE
+        CONTROLLER MEMCG" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-On Thu, Feb 20, 2020 at 10:45:24AM -0500, Daniel Jordan wrote:
-> Ok, consistency with io and memory is one advantage to doing it that way.
-> Creating kthreads in cgroups also seems viable so far, and it's unclear whether
-> either approach is significantly simpler or more maintainable than the other,
-> at least to me.
+Changes since V2:
 
-The problem with separate kthread approach is that many of these work
-units are tiny, and cgroup membership might not be known or doesn't
-agree with the processing context from the beginning
+* Deferred destruction of workqueue items so in the common case there
+  is no allocation needed
 
-For example, the ownership of network packets can't be determined till
-processing has progressed quite a bit in shared contexts and each item
-too small to bounce around. The only viable way I can think of
-splitting aggregate overhead according to the number of packets (or
-some other trivially measureable quntity) processed.
+Changes since V1:
 
-Anything sitting in reclaim layer is the same. Reclaim should be
-charged to the cgroup whose memory is reclaimed *but* shouldn't block
-other cgroups which are waiting for that memory. It has to happen in
-the context of the highest priority entity waiting for memory but the
-costs incurred must be charged to the memory owners.
+* Split out and reordered patches so cgroup charging changes are
+  separate from kworker -> workqueue change
 
-So, one way or the other, I think we'll need back charging and once
-back charging is needed for big ticket items like network and reclaim,
-it's kinda silly to use separate mechanisms for other stuff.
+* Add mem_css to struct loop_cmd to simplify logic
 
-> Is someone on your side working on remote charging right now?  I was planning
-> to post an RFD comparing these soon and it would make sense to include them.
+The loop device runs all i/o to the backing file on a separate kworker
+thread which results in all i/o being charged to the root cgroup. This
+allows a loop device to be used to trivially bypass resource limits
+and other policy. This patch series fixes this gap in accounting.
 
-It's been on the to do list but nobody is working on it yet.
+A simple script to demonstrate this behavior on cgroupv2 machine:
 
-Thanks.
+'''
+#!/bin/bash
+set -e
+
+CGROUP=/sys/fs/cgroup/test.slice
+LOOP_DEV=/dev/loop0
+
+if [[ ! -d $CGROUP ]]
+then
+    sudo mkdir $CGROUP
+fi
+
+grep oom_kill $CGROUP/memory.events
+
+# Set a memory limit, write more than that limit to tmpfs -> OOM kill
+sudo unshare -m bash -c "
+echo \$\$ > $CGROUP/cgroup.procs;
+echo 0 > $CGROUP/memory.swap.max;
+echo 64M > $CGROUP/memory.max;
+mount -t tmpfs -o size=512m tmpfs /tmp;
+dd if=/dev/zero of=/tmp/file bs=1M count=256" || true
+
+grep oom_kill $CGROUP/memory.events
+
+# Set a memory limit, write more than that limit through loopback
+# device -> no OOM kill
+sudo unshare -m bash -c "
+echo \$\$ > $CGROUP/cgroup.procs;
+echo 0 > $CGROUP/memory.swap.max;
+echo 64M > $CGROUP/memory.max;
+mount -t tmpfs -o size=512m tmpfs /tmp;
+truncate -s 512m /tmp/backing_file
+losetup $LOOP_DEV /tmp/backing_file
+dd if=/dev/zero of=$LOOP_DEV bs=1M count=256;
+losetup -D $LOOP_DEV" || true
+
+grep oom_kill $CGROUP/memory.events
+'''
+
+Naively charging cgroups could result in priority inversions through
+the single kworker thread in the case where multiple cgroups are
+reading/writing to the same loop device. This patch series does some
+minor modification to the loop driver so that each cgroup can make
+forward progress independently to avoid this inversion.
+
+With this patch series applied, the above script triggers OOM kills
+when writing through the loop device as expected.
+
+Dan Schatzberg (3):
+  loop: Use worker per cgroup instead of kworker
+  mm: Charge active memcg when no mm is set
+  loop: Charge i/o to mem and blk cg
+
+ drivers/block/loop.c       | 229 +++++++++++++++++++++++++++++++------
+ drivers/block/loop.h       |  14 ++-
+ include/linux/memcontrol.h |   6 +
+ kernel/cgroup/cgroup.c     |   1 +
+ mm/memcontrol.c            |  11 +-
+ mm/shmem.c                 |   2 +-
+ 6 files changed, 217 insertions(+), 46 deletions(-)
 
 -- 
-tejun
+2.17.1
+
