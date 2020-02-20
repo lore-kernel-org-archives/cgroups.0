@@ -1,38 +1,51 @@
-From: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v12 9/9] hugetlb_cgroup: Add hugetlb_cgroup reservation
- docs
-Date: Wed, 19 Feb 2020 16:18:47 -0800
-Message-ID: <5f57d4c2-8bf2-e544-a7ba-efb8fe64a25a@oracle.com>
-References: <20200211213128.73302-1-almasrymina@google.com>
- <20200211213128.73302-9-almasrymina@google.com>
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Subject: Re: [PATCH v2] sched/fair: add burst to cgroup cpu bandwidth
+ controller
+Date: Thu, 20 Feb 2020 11:52:43 +0300
+Message-ID: <98998672-4fab-2bb2-5f2d-fd6d83025036@yandex-team.ru>
+References: <157476581065.5793.4518979877345136813.stgit@buzz>
+ <CAC=E7cU8TeNHDRnrHiFxmiHUKviVU9KaDvMq-U16VRgcohg6-w@mail.gmail.com>
+ <xm268sl5uhgo.fsf@bsegall-linux.svl.corp.google.com>
+ <CAC=E7cUgALi4g19GsDZQemHafQfaSpjY1XUo3Swrv_g1PaWejQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=QWEL2irsvo55ZuVX9rYS+HXpqn01G2Z2MKSCHVrtka0=;
- b=h+lPWXRDgcy4sltXvrrlq8TtBRRSGu1GpX2n8kLYsVaj23Kj2NTvbXVhIcN/t70jst+9
- kF28bH7om4O7uLeBN2un5zoRztPAWsuOF/V0BJavu2kqNnJKfFlaSu/aV3xKDy7VRnir
- tLDY+Q2jKzLPwdSJpMGdEpJQCKxPs1lma9evBRE+YEatgLTQbNZYyjAisVNyMO2/Ec/W
- FUa8piTrGfjGvcNnsJBwWbiHbOn2FSxVjmJMNU7wu5RJG+DMuc40SK1MV7pUz/NO09Ng
- i6OECB/9lwTQxut22NGK+6i0BJdcFG7dNCSxvg/roTyLV3uKJBlvqjI4SZozllsVyaTG uA== 
-In-Reply-To: <20200211213128.73302-9-almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+        t=1582188764; bh=aG3Ei0HHrgrm5hahSqfhzECWrrr1Sfgr3ScUKH/KTBA=;
+        h=In-Reply-To:Message-ID:From:Date:References:To:Subject:Cc;
+        b=DMtrzoek+TmVbTa6j2DbONx0J+k79QrdkWNyMyV/0sJKcJppkPl2lCC3ecUFzsZYV
+         b4hrr8Sf5vN3p2xJyA1xY+YxSViH21C5E+HOXnvmpfVyNQtC51bo1wl0sUpksXW4ga
+         jrAUTseUglLkNENA9nvhf8/k8QqFaHdfP09YPiuI=
+In-Reply-To: <CAC=E7cUgALi4g19GsDZQemHafQfaSpjY1XUo3Swrv_g1PaWejQ@mail.gmail.com>
+Content-Language: en-CA
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Dave Chiluk <chiluk+linux@indeed.com>, Ben Segall <bsegall@google.com>
+Cc: Peter Zijlstra <peterz@infradead.org>, cgroups@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>, Mel Gorman <mgorman@suse.de>, Cong Wang <xiyou.wangcong@gmail.com>, Dietmar Eggemann <dietmar.eggemann@arm.com>
 
-On 2/11/20 1:31 PM, Mina Almasry wrote:
-> Add docs for how to use hugetlb_cgroup reservations, and their behavior.
+On 17/02/2020 22.56, Dave Chiluk wrote:
+> On Fri, Feb 14, 2020 at 12:55 PM <bsegall@google.com> wrote:
+>> I'm not sure that starting with full burst runtime is best, though it
+>> definitely seems likely to be one of those things where sometimes it's
+>> what you want and sometimes it's not.
 > 
-> Signed-off-by: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> We (Indeed) definitely want to start with a full burst bank in most
+> cases, as this would help with slow/throttled start-up times for our
+> Jitted and interpreter-based language applications.  I agree that it
+> would be nice to have it be configurable.
+> 
+> Dave.
+> fyi.  Unfortunately, this e-mail may be temporarily turned off for the
+> next few weeks, I apologize in advance for any bounced messages to me.
+> 
 
-Thanks for updating the documentation.
+How much burst time you are planning to use?
 
-Acked-by: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+On our side common setup should be like this:
 
--- 
-Mike Kravetz
+cpu.cfs_period_us = 100ms
+cpu.cfs_quota_us = 100ms * X
+cpu.cfs_burst_us = clamp(400ms * X, 100ms, 100ms * NR_CPUS)
+
+Where is X is a cpu power in cpus.
