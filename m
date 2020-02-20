@@ -1,80 +1,107 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v3 1/3] loop: Use worker per cgroup instead of kworker
-Date: Thu, 20 Feb 2020 12:50:02 -0500
-Message-ID: <20200220175002.GJ54486@cmpxchg.org>
-References: <cover.1582216294.git.schatzberg.dan@gmail.com>
- <118a1bd99d12f1980c7fc01ab732b40ffd8f0537.1582216294.git.schatzberg.dan@gmail.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3 2/3] mm: Charge active memcg when no mm is set
+Date: Thu, 20 Feb 2020 10:14:45 -0800
+Message-ID: <CALvZod5bDQvYHTMCHoWbhiEbcBs4KATv=QLdjjivJ33kb6ZY+w@mail.gmail.com>
+References: <cover.1582216294.git.schatzberg.dan@gmail.com> <0a27b6fcbd1f7af104d7f4cf0adc6a31e0e7dd19.1582216294.git.schatzberg.dan@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=9LcvSEumTmXyuKFplLOO57e96BKQQeEk4RY39TL+hio=;
-        b=VHirKNJDDO682guKBEd7Lh4Sdhh51LWyOruN25/r3aHd6uttqamXF0Y2SA7SURFcGF
-         9L68VvTMCycQxV8a8PVSRKwVlrRBX6dROpPZI2+TYVXxntJtO4mJrARFdxtJn8K2f0LX
-         7jmviilTZKEOD7cXwUqgwwYTXTAlVCWI4H8HphGY1AyOS0JkzhcsRMoHBwScPbu+Eghl
-         lr3mqrpjO/hI6Mqqpdz1bwAZpagS8xbsNMtYg/gVu4+EkG2nZ7e+seyK7JK9UOIIsSbW
-         iktcaKz88wwRW8q1+2Iz7hLBH+IFUEheTfhVWoJQBx196zKDvstwAtnve1heQWmWVFey
-         OZHA==
-Content-Disposition: inline
-In-Reply-To: <118a1bd99d12f1980c7fc01ab732b40ffd8f0537.1582216294.git.schatzberg.dan@gmail.com>
-Sender: linux-block-owner@vger.kernel.org
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=uUKdgkaufxLmLYOt3TduZTiePIKaOkl8sejxXEeQJug=;
+        b=uEXDpSnvxNGx/1g8in8h2Lps6UF2cwI0Ci30lm3NqVXZaApTkzuDK+720dgSH9vb6k
+         KPzL7duyHh9m0BqEDV45tazOognY/d0scMRdl2OcG1JPE/lSbuZQK0NgSRFEE6JZ1ocE
+         bqLEMcVwBuFDRo16e9ImN9DFgGBbY4Rh3WKWen7Cz5Tan7f1NIIGTAN0UdCsrXlhKb2x
+         xp82sXN5MddaQ9Fo3jlxRRZOvEG5C3dmzkLPX1is1Moe0S017U8Ajd4vA0J68kr+ivdJ
+         DDHGyxImOHKFItW4eCZUYeAX2LdHOyh93fukcpNbkzLACAa56EL81Jnugc/MS1xxyks7
+         aVSg==
+In-Reply-To: <0a27b6fcbd1f7af104d7f4cf0adc6a31e0e7dd19.1582216294.git.schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dan Schatzberg <schatzberg.dan@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Yang Shi <yang.shi@linux.alibaba.com>, Thomas Gleixner <tglx@linutronix.de>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm@kvack.org>
+To: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, "open list:BLOCK LAYER" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-Hello Dan,
+On Thu, Feb 20, 2020 at 8:52 AM Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>
+> memalloc_use_memcg() worked for kernel allocations but was silently
+> ignored for user pages.
+>
+> This patch establishes a precedence order for who gets charged:
+>
+> 1. If there is a memcg associated with the page already, that memcg is
+>    charged. This happens during swapin.
+>
+> 2. If an explicit mm is passed, mm->memcg is charged. This happens
+>    during page faults, which can be triggered in remote VMs (eg gup).
+>
+> 3. Otherwise consult the current process context. If it has configured
+>    a current->active_memcg, use that.
 
-On Thu, Feb 20, 2020 at 11:51:51AM -0500, Dan Schatzberg wrote:
-> +static void loop_process_work(struct loop_worker *worker,
-> +			struct list_head *cmd_list, struct loop_device *lo)
-> +{
-> +	int orig_flags = current->flags;
-> +	struct loop_cmd *cmd;
-> +
-> +	current->flags |= PF_LESS_THROTTLE | PF_MEMALLOC_NOIO;
-> +	while (1) {
-> +		spin_lock_irq(&lo->lo_lock);
-> +		if (list_empty(cmd_list))
-> +			break;
-> +
-> +		cmd = container_of(
-> +			cmd_list->next, struct loop_cmd, list_entry);
-> +		list_del(cmd_list->next);
-> +		spin_unlock_irq(&lo->lo_lock);
-> +		loop_handle_cmd(cmd);
-> +		cond_resched();
-> +	}
+What if css_tryget_online(current->active_memcg) in
+get_mem_cgroup_from_current() fails? Do we want to change this to
+css_tryget() and even if that fails should we fallback to
+root_mem_cgroup or current->mm->memcg?
 
-The loop structure tripped me up, because it's not immediately obvious
-that the lock will be held coming out. How about the following to make
-the lock section stand out visually?
-
-	spin_lock_irq(&lo->lo_lock);
-	while (!list_empty(cmd_list)) {
-		cmd = container_of(cmd_list->next, struct loop_cmd, list_entry);
-		list_del(&cmd->list_entry);
-		spin_unlock_irq(&lo->lo_lock);		
-
-		loop_handle_cmd(cmd);
-		cond_resched();
-
-		spin_lock_irq(&lo->lo_lock);
-	}
-
-> -	loop_handle_cmd(cmd);
-> +	/*
-> +	 * We only add to the idle list if there are no pending cmds
-> +	 * *and* the worker will not run again which ensures that it
-> +	 * is safe to free any worker on the idle list
-> +	 */
-> +	if (worker && !work_pending(&worker->work)) {
-> +		worker->last_ran_at = jiffies;
-> +		list_add_tail(&worker->idle_list, &lo->idle_worker_list);
-> +		loop_set_timer(lo);
-> +	}
-> +	spin_unlock_irq(&lo->lo_lock);
-> +	current->flags = orig_flags;
+> Otherwise, current->mm->memcg.
+>
+> Previously, if a NULL mm was passed to mem_cgroup_try_charge (case 3) it
+> would always charge the root cgroup. Now it looks up the current
+> active_memcg first (falling back to charging the root cgroup if not
+> set).
+>
+> Signed-off-by: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> ---
+>  mm/memcontrol.c | 11 ++++++++---
+>  mm/shmem.c      |  2 +-
+>  2 files changed, 9 insertions(+), 4 deletions(-)
+>
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 6f6dc8712e39..b174aff4f069 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -6317,7 +6317,8 @@ enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
+>   * @compound: charge the page as compound or small page
+>   *
+>   * Try to charge @page to the memcg that @mm belongs to, reclaiming
+> - * pages according to @gfp_mask if necessary.
+> + * pages according to @gfp_mask if necessary. If @mm is NULL, try to
+> + * charge to the active memcg.
+>   *
+>   * Returns 0 on success, with *@memcgp pointing to the charged memcg.
+>   * Otherwise, an error code is returned.
+> @@ -6361,8 +6362,12 @@ int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
+>                 }
+>         }
+>
+> -       if (!memcg)
+> -               memcg = get_mem_cgroup_from_mm(mm);
+> +       if (!memcg) {
+> +               if (!mm)
+> +                       memcg = get_mem_cgroup_from_current();
+> +               else
+> +                       memcg = get_mem_cgroup_from_mm(mm);
+> +       }
+>
+>         ret = try_charge(memcg, gfp_mask, nr_pages);
+>
+> diff --git a/mm/shmem.c b/mm/shmem.c
+> index c8f7540ef048..7c7f5acf89d6 100644
+> --- a/mm/shmem.c
+> +++ b/mm/shmem.c
+> @@ -1766,7 +1766,7 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
+>         }
+>
+>         sbinfo = SHMEM_SB(inode->i_sb);
+> -       charge_mm = vma ? vma->vm_mm : current->mm;
+> +       charge_mm = vma ? vma->vm_mm : NULL;
+>
+>         page = find_lock_entry(mapping, index);
+>         if (xa_is_value(page)) {
+> --
+> 2.17.1
+>
