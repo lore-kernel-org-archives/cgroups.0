@@ -1,52 +1,101 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3 2/3] mm: Charge active memcg when no mm is set
-Date: Thu, 20 Feb 2020 13:15:05 -0800
-Message-ID: <CALvZod4OJhoLQxHeUKwN4FC-W0YnSpQCb5ZAwOef0rjAExtw5w@mail.gmail.com>
-References: <cover.1582216294.git.schatzberg.dan@gmail.com> <0a27b6fcbd1f7af104d7f4cf0adc6a31e0e7dd19.1582216294.git.schatzberg.dan@gmail.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v3 1/3] loop: Use worker per cgroup instead of kworker
+Date: Thu, 20 Feb 2020 17:00:09 -0500
+Message-ID: <20200220220009.GA68937@cmpxchg.org>
+References: <cover.1582216294.git.schatzberg.dan@gmail.com>
+ <118a1bd99d12f1980c7fc01ab732b40ffd8f0537.1582216294.git.schatzberg.dan@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=VtH6MBxxbzar9OipIWWKPkk5V8ZZykX/4RLjsMCgSw0=;
-        b=itJvvjLTjnAztaW3ELzLWWOItRSpx0VEbznSWQRD2w5LWICCqXBPNEHhDU5rFKFP6Q
-         vuyEYtotOdCIFIz1XJec20kXLy25/JiQ6uw+0bgl/zEfBCQyL6qIxrsqZdnFBw+0pOa6
-         dhuSeGnzbUKkl20/CUxAFyxo57oxShrr081lqlT55iOBkdQo+UkLgySNpVO0kGfAe3h5
-         PMbTsKhsLUG0Oh3M0J9t4j+UdalOyoi/arcDlydpv0KIHUjajmBRd+IRjc3Ds7lsHaBK
-         OQOIgksxwxaYbkPodvrysTB+g9laG5Peu7Mo06tw+vP91Kj31rabF/tyoXRamNVQmH2F
-         8CTg==
-In-Reply-To: <0a27b6fcbd1f7af104d7f4cf0adc6a31e0e7dd19.1582216294.git.schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=4DEb+MFtlfOkYpWfs64nM33/4kdQBlL8UrNBhh3ectk=;
+        b=Kmj9oigm0jMnd4HOhL2kj5adwwG8XTmckWqG+btnWkfj+uDXxwZkdqrxOQ7PGHF76d
+         UQIhwBsksdU7D+Tr0CtIQnWeoDw2S0FzAeaOZkKFaGQjh+4tG+7lcFKp1TJdyxwnWBvz
+         0xMlnq2i02KkLLLUS3e6GXooE84fiTc0bIa0MWZiFa5PTTiLv4F1ka6+J2bubbPVkwSF
+         irbntREuc6iemK8X0WglElHqFXvXyME57ic83jBhi08/Z35rZMunYsQcPNE+C4gQG3TA
+         oGV2OVyd97f+UK61/rT8CudV1HpMf+Y52tCRrkdnvwvKDGVKpsp7LtK+f5lf8R+fTbSD
+         4wUg==
+Content-Disposition: inline
+In-Reply-To: <118a1bd99d12f1980c7fc01ab732b40ffd8f0537.1582216294.git.schatzberg.dan@gmail.com>
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, "open list:BLOCK LAYER" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Dan Schatzberg <schatzberg.dan@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Yang Shi <yang.shi@linux.alibaba.com>, Thomas Gleixner <tglx@linutronix.de>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm@kvack.org>
 
-On Thu, Feb 20, 2020 at 8:52 AM Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
-> memalloc_use_memcg() worked for kernel allocations but was silently
-> ignored for user pages.
->
-> This patch establishes a precedence order for who gets charged:
->
-> 1. If there is a memcg associated with the page already, that memcg is
->    charged. This happens during swapin.
->
-> 2. If an explicit mm is passed, mm->memcg is charged. This happens
->    during page faults, which can be triggered in remote VMs (eg gup).
->
-> 3. Otherwise consult the current process context. If it has configured
->    a current->active_memcg, use that. Otherwise, current->mm->memcg.
->
-> Previously, if a NULL mm was passed to mem_cgroup_try_charge (case 3) it
-> would always charge the root cgroup. Now it looks up the current
-> active_memcg first (falling back to charging the root cgroup if not
-> set).
->
-> Signed-off-by: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+On Thu, Feb 20, 2020 at 11:51:51AM -0500, Dan Schatzberg wrote:
+> Existing uses of loop device may have multiple cgroups reading/writing
+> to the same device. Simply charging resources for I/O to the backing
+> file could result in priority inversion where one cgroup gets
+> synchronously blocked, holding up all other I/O to the loop device.
+> 
+> In order to avoid this priority inversion, we use a single workqueue
+> where each work item is a "struct loop_worker" which contains a queue of
+> struct loop_cmds to issue. The loop device maintains a tree mapping blk
+> css_id -> loop_worker. This allows each cgroup to independently make
+> forward progress issuing I/O to the backing file.
+> 
+> There is also a single queue for I/O associated with the rootcg which
+> can be used in cases of extreme memory shortage where we cannot allocate
+> a loop_worker.
+> 
+> The locking for the tree and queues is fairly heavy handed - we acquire
+> the per-loop-device spinlock any time either is accessed. The existing
+> implementation serializes all I/O through a single thread anyways, so I
+> don't believe this is any worse.
+> 
+> Signed-off-by: Dan Schatzberg <schatzberg.dan@gmail.com>
 
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+FWIW, this looks good to me, please feel free to include:
+
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+
+I have only some minor style nitpicks (along with the other email I
+sent earlier on this patch), that would be nice to get fixed:
+
+> +static void loop_queue_work(struct loop_device *lo, struct loop_cmd *cmd)
+> +{
+> +	struct rb_node **node = &(lo->worker_tree.rb_node), *parent = NULL;
+> +	struct loop_worker *cur_worker, *worker = NULL;
+> +	struct work_struct *work;
+> +	struct list_head *cmd_list;
+> +
+> +	spin_lock_irq(&lo->lo_lock);
+> +
+> +	if (!cmd->css)
+> +		goto queue_work;
+> +
+> +	node = &(lo->worker_tree.rb_node);
+
+-> and . are > &, the parentheses aren't necessary.
+
+> +	while (*node) {
+> +		parent = *node;
+> +		cur_worker = container_of(*node, struct loop_worker, rb_node);
+> +		if ((long)cur_worker->css == (long)cmd->css) {
+
+The casts aren't necessary, but they made me doubt myself and look up
+the types. I wouldn't add them just to be symmetrical with the other
+arm of the branch.
+
+> +			worker = cur_worker;
+> +			break;
+> +		} else if ((long)cur_worker->css < (long)cmd->css) {
+> +			node = &((*node)->rb_left);
+> +		} else {
+> +			node = &((*node)->rb_right);
+
+The outer parentheses aren't necessary.
+
+> +		}
+> +	}
+> +	if (worker)
+> +		goto queue_work;
+> +
+> +	worker = kzalloc(sizeof(struct loop_worker), 
+> +			GFP_NOWAIT | __GFP_NOWARN);
+
+This fits on an 80 character line.
