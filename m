@@ -1,72 +1,108 @@
-From: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 09/11] drm, cgroup: Introduce lgpu as DRM cgroup resource
-Date: Fri, 21 Feb 2020 00:59:55 -0500
-Message-ID: <CAOWid-dLs079jHAVoDeJ2Ung1Tti0Jszhd-0D2RYPOjuWnTprQ@mail.gmail.com>
-References: <20200214155650.21203-1-Kenny.Ho@amd.com> <20200214155650.21203-10-Kenny.Ho@amd.com>
- <CAOFGe96N5gG+08rQCRC+diHKDAfxPFYEnVxDS8_udvjcBYgsPg@mail.gmail.com>
- <CAOWid-f62Uv=GZXX2V2BsQGM5A1JJG_qmyrOwd=KwZBx_sr-bg@mail.gmail.com>
- <20200214183401.GY2363188@phenom.ffwll.local> <CAOWid-caJHeXUnQv3MOi=9U+vdBLfewN+CrA-7jRrz0VXqatbQ@mail.gmail.com>
- <20200214191754.GA218629@mtj.thefacebook.com> <20200219161850.GB13406@cmpxchg.org>
- <CAOWid-e=7V4TUqK_h5Gs9dUXqH-Vgr-Go8c1dCkMux98Vdd1sQ@mail.gmail.com> <20200219183841.GA54486@cmpxchg.org>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 3/3] mm: memcontrol: recursive memory.low protection
+Date: Fri, 21 Feb 2020 11:11:47 +0100
+Message-ID: <20200221101147.GO20509@dhcp22.suse.cz>
+References: <20200213154731.GE31689@dhcp22.suse.cz>
+ <20200213155249.GI88887@mtj.thefacebook.com>
+ <20200213163636.GH31689@dhcp22.suse.cz>
+ <20200213165711.GJ88887@mtj.thefacebook.com>
+ <20200214071537.GL31689@dhcp22.suse.cz>
+ <20200214135728.GK88887@mtj.thefacebook.com>
+ <20200214151318.GC31689@dhcp22.suse.cz>
+ <20200214165311.GA253674@cmpxchg.org>
+ <20200217084100.GE31531@dhcp22.suse.cz>
+ <20200218195253.GA13406@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=H7aXQTqmLNxvdPr5mBNnJfbo38LB1xJHVHK2rWbKEqw=;
-        b=MOqfv/kaObHJEU4A0mnaFSEPVoAQ+XzGpPBw1qUzIDChC2bV5Xis329ghi0OSMUe2T
-         YhVicpLrQndbQZs6riGjFqTmtdy+EMbG4jyCnKVus42lLRijK/C+rJhfwsU1A1+dZ2oq
-         x9Iy53HEEPilEHf0enrdVhBui0Cuk44XNN8OwtHBWBHJG4b2EaSDPRDTxw6C8lUt5zYA
-         mHMjTP2udC0KW3zyt6aJmu5BQahyQw6PpXAAISnMF6MG4/nYxe6+8f552zlV89Bl8i8e
-         Rq9Iqy2Y+S2iwCZPuVrxEqWRujTeaoMDyqLddd6W1ztvZrcj+S68m6+yNug0QMoHvJop
-         m+Pg==
-In-Reply-To: <20200219183841.GA54486-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20200218195253.GA13406-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Jason Ekstrand <jason-fQELhIk9awXprZlt/sZkLg@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Maling list - DRI developers <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, amd-gfx mailing list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, "Greathouse, Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, lkaplan-WVYJKLFxKCc@public.gmane.org, nirmoy.das-5C7GfCeVMHo@public.gmane.org, damon.mcdougall-5C7GfCeVMHo@public.gmane.org, juan.zuniga-anaya-5C7GfCeVMHo@public.gmane.org
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Thanks, I will take a look.
+[Sorry I didn't get to this email thread sooner]
 
-Regards,
-Kenny
+On Tue 18-02-20 14:52:53, Johannes Weiner wrote:
+> On Mon, Feb 17, 2020 at 09:41:00AM +0100, Michal Hocko wrote:
+> > On Fri 14-02-20 11:53:11, Johannes Weiner wrote:
+> > [...]
+> > > The proper solution to implement the kind of resource hierarchy you
+> > > want to express in cgroup2 is to reflect it in the cgroup tree. Yes,
+> > > the_workload might have been started by user 100 in session c2, but in
+> > > terms of resources, it's prioritized over system.slice and user.slice,
+> > > and so that's the level where it needs to sit:
+> > > 
+> > >                                root
+> > >                        /        |                 \
+> > >                system.slice  user.slice       the_workload
+> > >                /    |           |
+> > >            cron  journal     user-100.slice
+> > >                                 |
+> > >                              session-c2.scope
+> > >                                 |
+> > >                              misc
+> > > 
+> > > Then you can configure not just memory.low, but also a proper io
+> > > weight and a cpu weight. And the tree correctly reflects where the
+> > > workload is in the pecking order of who gets access to resources.
+> > 
+> > I have already mentioned that this would be the only solution when the
+> > protection would work, right. But I am also saying that this a trivial
+> > example where you simply _can_ move your workload to the 1st level. What
+> > about those that need to reflect organization into the hierarchy. Please
+> > have a look at http://lkml.kernel.org/r/20200214075916.GM31689-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org
+> > Are you saying they are just not supported? Are they supposed to use
+> > cgroup v1 for the organization and v2 for the resource control?
+> 
+> >From that email:
+> 
+>     > Let me give you an example. Say you have a DB workload which is the
+>     > primary thing running on your system and which you want to protect from
+>     > an unrelated activity (backups, frontends, etc). Running it inside a
+>     > cgroup with memory.low while other components in other cgroups without
+>     > any protection achieves that. If those cgroups are top level then this
+>     > is simple and straightforward configuration.
+>     > 
+>     > Things would get much more tricky if you want run the same workload
+>     > deeper down the hierarchy - e.g. run it in a container. Now your
+>     > "root" has to use an explicit low protection as well and all other
+>     > potential cgroups that are in the same sub-hierarchy (read in the same
+>     > container) need to opt-out from the protection because they are not
+>     > meant to be protected.
+> 
+> You can't prioritize some parts of a cgroup higher than the outside of
+> the cgroup, and other parts lower than the outside. That's just not
+> something that can be sanely supported from the controller interface.
 
-On Wed, Feb 19, 2020 at 1:38 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-> On Wed, Feb 19, 2020 at 11:28:48AM -0500, Kenny Ho wrote:
-> > On Wed, Feb 19, 2020 at 11:18 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> > >
-> > > Yes, I'd go with absolute units when it comes to memory, because it's
-> > > not a renewable resource like CPU and IO, and so we do have cliff
-> > > behavior around the edge where you transition from ok to not-enough.
-> > >
-> > > memory.low is a bit in flux right now, so if anything is unclear
-> > > around its semantics, please feel free to reach out.
-> >
-> > I am not familiar with the discussion, would you point me to a
-> > relevant thread please?
->
-> Here is a cleanup patch, not yet merged, that documents the exact
-> semantics and behavioral considerations:
->
-> https://lore.kernel.org/linux-mm/20191213192158.188939-3-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org/
->
-> But the high-level idea is this: you assign each cgroup or cgroup
-> subtree a chunk of the resource that it's guaranteed to be able to
-> consume. It *can* consume beyond that threshold if available, but that
-> overage may get reclaimed again if somebody else needs it instead.
->
-> This allows you to do a ballpark distribution of the resource between
-> different workloads, while the kernel retains the ability to optimize
-> allocation of spare resources - because in practice, workload demand
-> varies over time, workloads disappear and new ones start up etc.
->
-> > In addition, is there some kind of order of preference for
-> > implementing low vs high vs max?
->
-> If you implement only one allocation model, the preference would be on
-> memory.low. Limits are rigid and per definition waste resources, so in
-> practice we're moving away from them.
+I am sorry but I do not follow. We do allow to opt out from the reclaim
+protection with the current semantic and it seems to be reasonably sane.
+I also have hard time to grasp what you actually mean by the above.
+Let's say you have hiearchy where you split out low limit unevenly
+              root (5G of memory)
+             /    \
+   (low 3G) A      D (low 1,5G)
+           / \
+ (low 1G) B   C (low 2G)
+
+B gets lower priority than C and D while C gets higher priority than
+D? Is there any problem with such a configuration from the semantic
+point of view?
+
+> However, that doesn't mean this usecase isn't supported. You *can*
+> always split cgroups for separate resource policies.
+
+What if the split up is not possible or impractical. Let's say you want
+to control how much CPU share does your container workload get comparing
+to other containers running on the system? Or let's say you want to
+treat the whole container as a single entity from the OOM perspective
+(this would be an example of the logical organization constrain) because
+you do not want to leave any part of that workload lingering behind if
+the global OOM kicks in. I am pretty sure there are many other reasons
+to run related workload that doesn't really share the memory protection
+demand under a shared cgroup hierarchy.
+-- 
+Michal Hocko
+SUSE Labs
