@@ -1,84 +1,48 @@
-From: Andrew Morton <akpm@linux-foundation.org>
+From: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH v12 1/9] hugetlb_cgroup: Add hugetlb_cgroup reservation
  counter
-Date: Thu, 20 Feb 2020 16:28:13 -0800
-Message-ID: <20200220162813.aea8a14fe050473b73440323@linux-foundation.org>
+Date: Thu, 20 Feb 2020 16:41:21 -0800
+Message-ID: <0cdd654b-a1f6-fea2-e448-209fbbe14b5c@oracle.com>
 References: <20200211213128.73302-1-almasrymina@google.com>
-        <20200211151906.637d1703e4756066583b89da@linux-foundation.org>
-        <CAHS8izPUFQWq3PzhhRzp7u11173_-cmRkNuQWEswS51Xz6ZM0Q@mail.gmail.com>
-        <20200219130648.83e6810848774c6fd649c445@linux-foundation.org>
-        <CAHS8izN_FJektipBwiLsCO8ysMTM7k=CR_k3OV7+_y0ZbrGw+A@mail.gmail.com>
+ <20200211151906.637d1703e4756066583b89da@linux-foundation.org>
+ <CAHS8izPUFQWq3PzhhRzp7u11173_-cmRkNuQWEswS51Xz6ZM0Q@mail.gmail.com>
+ <20200219130648.83e6810848774c6fd649c445@linux-foundation.org>
+ <CAHS8izN_FJektipBwiLsCO8ysMTM7k=CR_k3OV7+_y0ZbrGw+A@mail.gmail.com>
+ <20200220162813.aea8a14fe050473b73440323@linux-foundation.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1582244894;
-        bh=iy0LlJf0YHN6ZiB0CWT2PCAoHpieaL2qiC0LKqJ6REI=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=qXQ/8DH62yQvvP+ax4QYdXSpzMD5FkJ2DlWZDkJKgFg8dybzdwDhQwZsD9md/tPjD
-         17v/H6SMbm/TbAi6jT0/0YUTYrsQ/O8vp5l8HO5qA7JxT2e5ID4FhAYVuQonqCfxC3
-         t5P3D5LiwKfs4u2qShYXa40c00d9UCQ4ULRHbxyA=
-In-Reply-To: <CAHS8izN_FJektipBwiLsCO8ysMTM7k=CR_k3OV7+_y0ZbrGw+A@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=8UF7TnpDrogK96GK/v9GR0EULypgZZOqVd00Gzxcx2g=;
+ b=Kqdfpqf6nhyy75vO7hhM1Vjoqo3tKVUKImo42gDEp8MsD2AhfTKY+04p/JTeQJrqsJJy
+ lq+fKYoaEmEeH1xYK3IeSV7GRNo/+VWCvDKUYaxnWVYWEoFj2SsW7hELlojWZe66vHPW
+ uYzDPfOCgODK+goPQLGPLw6BIkENnOStx74jU8f/pSrRiC/bsGSyaS6YuvWlYrLNssVS
+ AkRGApqDJgDgO1XXsjdwKFK+QpLstrVh/K8ypUixojwuwdkaiSe7Q9JwtEwwhofXvQe+
+ GMjcpYm+pXhxhu1qrpS5ne5oReqegqTyjXo5pZJi2Q5sOPln90lHKnN6SnCCJmHQM/NL Ww== 
+In-Reply-To: <20200220162813.aea8a14fe050473b73440323-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Mina Almasry <almasrymina@google.com>
-Cc: Mike Kravetz <mike.kravetz@oracle.com>, shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, open list <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: shuah <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, 20 Feb 2020 11:22:58 -0800 Mina Almasry <almasrymina@google.com> wrote:
-
-> On Wed, Feb 19, 2020 at 1:06 PM Andrew Morton <akpm@linux-foundation.org> wrote:
-> >
-> > On Wed, 19 Feb 2020 11:05:41 -0800 Mina Almasry <almasrymina@google.com> wrote:
-> >
-> > > On Tue, Feb 11, 2020 at 3:19 PM Andrew Morton <akpm@linux-foundation.org> wrote:
-> > > >
-> > > > On Tue, 11 Feb 2020 13:31:20 -0800 Mina Almasry <almasrymina@google.com> wrote:
-> > > >
-> > > > > These counters will track hugetlb reservations rather than hugetlb
-> > > > > memory faulted in. This patch only adds the counter, following patches
-> > > > > add the charging and uncharging of the counter.
-> > > >
-> > > > We're still pretty thin on review here, but as it's v12 and Mike
-> > > > appears to be signed up to look at this work, I'll add them to -next to
-> > > > help move things forward.
-> > > >
-> > >
-> > > Hi Andrew,
-> > >
-> > > Since the patches were merged into -next there have been build fixes
-> > > and test fixes and some review comments. Would you like me to submit
-> > > *new* patches to address these, or would you like me to squash the
-> > > fixes into my existing patch series and submit another iteration of
-> > > the patch series?
-> >
-> > What you did worked OK ;)
-> >
-> > Please check the end result next time I release a kernel.
+On 2/20/20 4:28 PM, Andrew Morton wrote:
+> It all looks pretty good and I expect we can get everything into
+> 5.7-rc1, unless some issues pop up.
 > 
-> Thanks Andrew! Things definitely moved along after the patchseries got
-> into -next :D
-> 
-> By my count I think all my patches outside of the tests patch have
-> been acked or reviewed. When you have a chance I have a couple of
-> questions:
-> 
-> 1. For the non-tests patch, anything pending on those preventing
-> eventual submission to linus's tree?
-> 2. For the tests patch, I only have a Tested-by from Sandipan. Is that
-> good enough? If the worst comes to worst and I don't get a review on
-> that patch I would rather (if possible) that 'tests' patch can be
-> dropped while I nag folks for a review, rather than block submission
-> of the entire patch series. I ask because it's been out for review for
-> some time and it's the one I got least discussion on so I'm not sure
-> I'll have a review by the time it's needed.
-> 
+> It's unclear to me whether
+> http://lkml.kernel.org/r/CAHS8izOTipknnYaKz=FdzL-7yW-Z61ck1yPnYWixyMSJuTUYLQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org
+> was going to result in an update?
 
-It all looks pretty good and I expect we can get everything into
-5.7-rc1, unless some issues pop up.
+Yes there was,
 
-It's unclear to me whether
-http://lkml.kernel.org/r/CAHS8izOTipknnYaKz=FdzL-7yW-Z61ck1yPnYWixyMSJuTUYLQ@mail.gmail.com
-was going to result in an update?
+https://lore.kernel.org/linux-mm/20200219233610.13808-1-almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
 
-
+BTW, I've been through the selftest code at a high level.  Not at the level
+of detail Shuah may provide.  I am just happy that Mina provided a relatively
+comprehensive test for this new functionality.  Will give it an ACK shortly.
+-- 
+Mike Kravetz
