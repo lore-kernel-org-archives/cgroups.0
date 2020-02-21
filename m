@@ -1,123 +1,98 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2 3/3] mm: memcontrol: recursive memory.low protection
-Date: Fri, 21 Feb 2020 13:58:39 -0500
-Message-ID: <20200221185839.GB70967@cmpxchg.org>
-References: <20191219200718.15696-1-hannes@cmpxchg.org>
- <20191219200718.15696-4-hannes@cmpxchg.org>
- <20200221171256.GB23476@blackbody.suse.cz>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] memcg: css_tryget_online cleanups
+Date: Fri, 21 Feb 2020 11:59:19 -0800
+Message-ID: <20200221195919.186576-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=X7YUq5od3M/2TN7ugJSsAL6lYQ9XwqefEDuKdD1PqAs=;
-        b=JNcMF1TjdTarFup/EM8aDwnWuLH7JKMWtkRBV5PEvy6I11QbX9XV9KabcTJwlFsfw8
-         9Mr36EBYX5+iDFB4slTWF2XJcOssDO8Nvrvo6lIxxSqK1tMXigmetsyqBAhgthsN7Vk+
-         TmL7rEVZElRAYyeueFB9I+Xo0NBdkFO310ycJcMKTYwGg3OI//YYJqoXBhJ27f0P/OOq
-         Zatjps8RSeTWtkagG8iXf73fOkNNiMNoUp2w413Z3sFEmkjizzvq9GbwLUafA0v/5D+0
-         Dvs2bD5w356Iti/lU8nFJCMMH6hXuWhBDe3VGT6oDofIuwwoAArYnqgwsXKskSvy8Ndc
-         N39Q==
-Content-Disposition: inline
-In-Reply-To: <20200221171256.GB23476-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=RAIlg0f7zdLpk9f1Byl/cwdgiwxUwp6aSHTCC3RY/oM=;
+        b=v6Kq5LL08ClIooNXUY3nDPFgWPI70VdsrwNaD3pbavipoxOiOoJyBhjmpWp2d+htUB
+         m12EesD8fukKMUJgNl4xdfmT5c4OuYOuWvovtiV/dIcx06EuCYYHAaYKg+UbNAUEEzSM
+         ONFjph/fYxjmElgTODoeSFzmqW+oSCSmZ8ZawNY1iqbXHr5bruclTHeD11A4dQjQfXGw
+         49pd1mMKkQG1ID5JtkSlnlZlPqYRvQTiR9HOKLRd7gC03H5pOmZPXoCOy0yDYXMIiDm1
+         da5HxInP1D2BW9gLZlZZGSQYD0BGCRoO0uuaIEUAEBJfFHICupfExZrs6Xfln9y7SURv
+         PJrg==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Fri, Feb 21, 2020 at 06:12:56PM +0100, Michal Koutn=FD wrote:
-> On Thu, Dec 19, 2019 at 03:07:18PM -0500, Johannes Weiner <hannes-druUgvl=
-0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> > Unfortunately, this limitation makes it impossible to protect an
-> > entire subtree from another without forcing the user to make explicit
-> > protection allocations all the way to the leaf cgroups - something
-> > that is highly undesirable in real life scenarios.
-> I see that the jobs in descedant cgroups don't know (or care) what
-> protection is above them and hence the implicit distribution is sensible
-> here.
->=20
-> However, the protection your case requires can already be reached thanks
-> to the the hierachical capping and overcommit normalization -- you can
-> set memory.low to "max" at all the non-caring descendants.
-> IIUC, that is the same as setting zeroes (after your patch) and relying
-> on the recursive distribution of unused protection -- or is there a
-> mistake in my reasonineg?
+Currently multiple locations in memcg code, css_tryget_online() is being
+used. However it doesn't matter whether the cgroup is online for the
+callers. Online used to matter when we had reparenting on offlining and
+we needed a way to prevent new ones from showing up.
 
-That is correct, but it comes with major problems. We did in fact try
-exactly this as a workaround in our fleet, but had to revert and
-develop the patch we are discussing now instead.
+The failure case for couple of these css_tryget_online usage is to
+fallback to root_mem_cgroup which kind of make bypassing the memcg
+limits possible for some workloads. For example creating an inotify
+group in a subcontainer and then deleting that container after moving the
+process to a different container will make all the event objects
+allocated for that group to the root_mem_cgroup. So, using
+css_tryget_online() is dangerous for such cases.
 
-The reason is this: max isn't a "don't care" value. It's just a high
-number with actual meaning in the configuration, and that interferes
-when you try to compose it with other settings, such as limits.
+Two locations still use the online version. The swapin of offlined
+memcg's pages and the memcg kmem cache creation. The kmem cache indeed
+needs the online version as the kernel does the reparenting of memcg
+kmem caches. For the swapin case, it has been left for later as the
+fallback is not really that concerning.
 
-Here is a configuration we actually use in practice:
+Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-                workload.slice (memory.low=3D20G)
-                /                      \
-              job (max=3D12G, low=3D10G)    job2 (max=3D12G, low=3D10G)
-             /   \
-           task logger
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 63bb6a2aab81..75fa8123909e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -656,7 +656,7 @@ __mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_node *mctz)
+ 	 */
+ 	__mem_cgroup_remove_exceeded(mz, mctz);
+ 	if (!soft_limit_excess(mz->memcg) ||
+-	    !css_tryget_online(&mz->memcg->css))
++	    !css_tryget(&mz->memcg->css))
+ 		goto retry;
+ done:
+ 	return mz;
+@@ -962,7 +962,8 @@ struct mem_cgroup *get_mem_cgroup_from_page(struct page *page)
+ 		return NULL;
+ 
+ 	rcu_read_lock();
+-	if (!memcg || !css_tryget_online(&memcg->css))
++	/* Page should not get uncharged and freed memcg under us. */
++	if (!memcg || WARN_ON(!css_tryget(&memcg->css)))
+ 		memcg = root_mem_cgroup;
+ 	rcu_read_unlock();
+ 	return memcg;
+@@ -975,10 +976,13 @@ EXPORT_SYMBOL(get_mem_cgroup_from_page);
+ static __always_inline struct mem_cgroup *get_mem_cgroup_from_current(void)
+ {
+ 	if (unlikely(current->active_memcg)) {
+-		struct mem_cgroup *memcg = root_mem_cgroup;
++		struct mem_cgroup *memcg;
+ 
+ 		rcu_read_lock();
+-		if (css_tryget_online(&current->active_memcg->css))
++		/* current->active_memcg must hold a ref. */
++		if (WARN_ON(!css_tryget(&current->active_memcg->css)))
++			memcg = root_mem_cgroup;
++		else
+ 			memcg = current->active_memcg;
+ 		rcu_read_unlock();
+ 		return memcg;
+@@ -6703,7 +6707,7 @@ void mem_cgroup_sk_alloc(struct sock *sk)
+ 		goto out;
+ 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && !memcg->tcpmem_active)
+ 		goto out;
+-	if (css_tryget_online(&memcg->css))
++	if (css_tryget(&memcg->css))
+ 		sk->sk_memcg = memcg;
+ out:
+ 	rcu_read_unlock();
+-- 
+2.25.0.265.gbab2e86ba0-goog
 
-The idea is that we want to mostly protect the workload from other
-stuff running in the system (low=3D20G), but we also want to catch a job
-when it goes wild, to ensure reproducibility in testing regardless of
-how loaded the host otherwise is (max=3D12G).
-
-When you set task's and logger's memory.low to "max" or 10G or any
-bogus number like this, a limit reclaim in job treats this as origin
-protection and tries hard to avoid reclaiming anything in either of
-the two cgroups. memory.events::low skyrockets even though no intended
-protection was violated, we'll have reclaim latencies (especially when
-there are a few dying cgroups accumluated in subtree).
-
-So we had to undo this setting because of workload performance and
-problems with monitoring workload health (the bogus low events).
-
-The secondary problem with requiring explicit downward propagation is
-that you may want to protect all jobs on the host from system
-management software, as a very high-level host configuration. But a
-random job that gets scheduled on a host, that lives in a delegated
-cgroup and namespace, and creates its own nested tree of cgroups to
-manage stuff - that job can't possibly *know* about the top-level host
-protection that lies beyond the delegation point and outside its own
-namespace, and that it needs to propagate protection against rpm
-upgrades into its own leaf groups for each tasklet and component.
-
-Again, in practice we have found this to be totally unmanageable and
-routinely first forgot and then had trouble hacking the propagation
-into random jobs that create their own groups.
-
-[ And these job subgroups don't even use their *own* memory.low
-  prioritization between siblings yet - god knows how you would
-  integrate that with the values that you may inherit from higher
-  level ancestors. ]
-
-And when you add new hardware configurations, you cannot just make a
-top-level change in the host config, you have to update all the job
-specs of workloads running in the fleet.
-
-My patch brings memory configuration in line with other cgroup2
-controllers. You can make a high-level decision to prioritize one
-subtree over another, just like a top-level weight assignment in CPU
-or IO, and then you can delegate the subtree to a different entity
-that doesn't need to be aware of and reflect that decision all the way
-down the tree in its own settings.
-
-And of course can compose it properly with limits.
-
-> So in my view, the recursive distribution doesn't bring anything new,
-> however, its new semantics of memory.low doesn't allow turning the
-> protection off in a protected subtree (delegating the decision to
-> distribute protection within parent bounds is IMO a valid use case).
-
-I've made the case why it's not a supported usecase, and why it is a
-meaningless configuration in practice due to the way other controllers
-already behave.
-
-I think at this point in the discussion, the only thing I can do is
-remind you that the behavior I'm introducing is gated behind a mount
-option that nobody is forced to enable if they insist on disagreeing
-against all evidence to the contrary.
