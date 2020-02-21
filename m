@@ -1,42 +1,84 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v3 3/3] loop: Charge i/o to mem and blk cg
-Date: Thu, 20 Feb 2020 17:02:38 -0500
-Message-ID: <20200220220238.GB68937@cmpxchg.org>
-References: <cover.1582216294.git.schatzberg.dan@gmail.com>
- <78060dcbf6578b4da6081f9f48b24b33726c5083.1582216295.git.schatzberg.dan@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v12 1/9] hugetlb_cgroup: Add hugetlb_cgroup reservation
+ counter
+Date: Thu, 20 Feb 2020 16:28:13 -0800
+Message-ID: <20200220162813.aea8a14fe050473b73440323@linux-foundation.org>
+References: <20200211213128.73302-1-almasrymina@google.com>
+        <20200211151906.637d1703e4756066583b89da@linux-foundation.org>
+        <CAHS8izPUFQWq3PzhhRzp7u11173_-cmRkNuQWEswS51Xz6ZM0Q@mail.gmail.com>
+        <20200219130648.83e6810848774c6fd649c445@linux-foundation.org>
+        <CAHS8izN_FJektipBwiLsCO8ysMTM7k=CR_k3OV7+_y0ZbrGw+A@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=Qs+LhNiBMIj9A7PLEkqadpwwdn4t7ZJVTcZjDGn03PM=;
-        b=1sM+flAalAjdf9H+ABF4RBpnc7mgf/EB1PkQ3GIvPhatEPuYG/+kZZYytUx2breYo9
-         oBS4Cz3/NHUDHKrF1wClmlsU2wMQWRh9jUeUVFlKDnYU1XDy2DbPjMAN6/dFKk+WparC
-         n2mnFSbEJsFPwZS1Vkfj9gnphTLnT9mqRYcdYb3mcnuK5c108UQ0b24WLrAoGSNFpyha
-         iPLMyEc4PN5W+kfi2o4BOepzuEVVQ0MwF8HwWATiYKm8p4b2uSETdNaNTVOHwu7ULX5K
-         9cl6gc557oQYGhjYLQyYi1BtFt0PWyzSVcxVJSRFwVQAzbgf64CESMf7EXkdNMTvkNc/
-         T1Tw==
-Content-Disposition: inline
-In-Reply-To: <78060dcbf6578b4da6081f9f48b24b33726c5083.1582216295.git.schatzberg.dan@gmail.com>
-Sender: linux-block-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1582244894;
+        bh=iy0LlJf0YHN6ZiB0CWT2PCAoHpieaL2qiC0LKqJ6REI=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=qXQ/8DH62yQvvP+ax4QYdXSpzMD5FkJ2DlWZDkJKgFg8dybzdwDhQwZsD9md/tPjD
+         17v/H6SMbm/TbAi6jT0/0YUTYrsQ/O8vp5l8HO5qA7JxT2e5ID4FhAYVuQonqCfxC3
+         t5P3D5LiwKfs4u2qShYXa40c00d9UCQ4ULRHbxyA=
+In-Reply-To: <CAHS8izN_FJektipBwiLsCO8ysMTM7k=CR_k3OV7+_y0ZbrGw+A@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Dan Schatzberg <schatzberg.dan@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Yang Shi <yang.shi@linux.alibaba.com>, Thomas Gleixner <tglx@linutronix.de>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm@kvack.org>
+To: Mina Almasry <almasrymina@google.com>
+Cc: Mike Kravetz <mike.kravetz@oracle.com>, shuah <shuah@kernel.org>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, Greg Thelen <gthelen@google.com>, open list <linux-kernel@vger.kernel.org>, Linux-MM <linux-mm@kvack.org>, linux-kselftest@vger.kernel.org, cgroups@vger.kernel.org
 
-On Thu, Feb 20, 2020 at 11:51:53AM -0500, Dan Schatzberg wrote:
-> The current code only associates with the existing blkcg when aio is
-> used to access the backing file. This patch covers all types of i/o to
-> the backing file and also associates the memcg so if the backing file is
-> on tmpfs, memory is charged appropriately.
+On Thu, 20 Feb 2020 11:22:58 -0800 Mina Almasry <almasrymina@google.com> wrote:
+
+> On Wed, Feb 19, 2020 at 1:06 PM Andrew Morton <akpm@linux-foundation.org> wrote:
+> >
+> > On Wed, 19 Feb 2020 11:05:41 -0800 Mina Almasry <almasrymina@google.com> wrote:
+> >
+> > > On Tue, Feb 11, 2020 at 3:19 PM Andrew Morton <akpm@linux-foundation.org> wrote:
+> > > >
+> > > > On Tue, 11 Feb 2020 13:31:20 -0800 Mina Almasry <almasrymina@google.com> wrote:
+> > > >
+> > > > > These counters will track hugetlb reservations rather than hugetlb
+> > > > > memory faulted in. This patch only adds the counter, following patches
+> > > > > add the charging and uncharging of the counter.
+> > > >
+> > > > We're still pretty thin on review here, but as it's v12 and Mike
+> > > > appears to be signed up to look at this work, I'll add them to -next to
+> > > > help move things forward.
+> > > >
+> > >
+> > > Hi Andrew,
+> > >
+> > > Since the patches were merged into -next there have been build fixes
+> > > and test fixes and some review comments. Would you like me to submit
+> > > *new* patches to address these, or would you like me to squash the
+> > > fixes into my existing patch series and submit another iteration of
+> > > the patch series?
+> >
+> > What you did worked OK ;)
+> >
+> > Please check the end result next time I release a kernel.
 > 
-> This patch also exports cgroup_get_e_css so it can be used by the loop
-> module.
+> Thanks Andrew! Things definitely moved along after the patchseries got
+> into -next :D
 > 
-> Signed-off-by: Dan Schatzberg <schatzberg.dan@gmail.com>
+> By my count I think all my patches outside of the tests patch have
+> been acked or reviewed. When you have a chance I have a couple of
+> questions:
+> 
+> 1. For the non-tests patch, anything pending on those preventing
+> eventual submission to linus's tree?
+> 2. For the tests patch, I only have a Tested-by from Sandipan. Is that
+> good enough? If the worst comes to worst and I don't get a review on
+> that patch I would rather (if possible) that 'tests' patch can be
+> dropped while I nag folks for a review, rather than block submission
+> of the entire patch series. I ask because it's been out for review for
+> some time and it's the one I got least discussion on so I'm not sure
+> I'll have a review by the time it's needed.
+> 
 
-The cgroup bits look good to me.
+It all looks pretty good and I expect we can get everything into
+5.7-rc1, unless some issues pop up.
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+It's unclear to me whether
+http://lkml.kernel.org/r/CAHS8izOTipknnYaKz=FdzL-7yW-Z61ck1yPnYWixyMSJuTUYLQ@mail.gmail.com
+was going to result in an update?
+
+
