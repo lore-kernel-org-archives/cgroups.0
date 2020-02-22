@@ -1,65 +1,63 @@
-From: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v12 1/9] hugetlb_cgroup: Add hugetlb_cgroup reservation counter
-Date: Fri, 21 Feb 2020 12:19:22 -0800
-Message-ID: <CAHS8izPB1vwuZVFha+5_ca9gKC7UceDdJFJZe9eb-T43a6GF8A@mail.gmail.com>
-References: <20200211213128.73302-1-almasrymina@google.com>
- <20200211151906.637d1703e4756066583b89da@linux-foundation.org>
- <CAHS8izPUFQWq3PzhhRzp7u11173_-cmRkNuQWEswS51Xz6ZM0Q@mail.gmail.com> <20200219130648.83e6810848774c6fd649c445@linux-foundation.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] net: memcg: late association of sock to memcg
+Date: Fri, 21 Feb 2020 17:04:56 -0800
+Message-ID: <20200222010456.40635-1-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=OfpZw+eQB6iSYwMvRBzJaMRaqdbsGid5gEGpxbg9sSM=;
-        b=uEcpgNIxyzARyyktOQSbbTIs3P/w6TgKfs9rTrYnQfUyOtw+Y/jWrbLk7GkpTw92F7
-         YHwCKs5T5uF+WI5VOd8W3VJSXefpdWblnH2gBQoZnI+NHI3YMXR7Z3urY25D/8f0kt+5
-         ettm551MbN+59D/LxW/SLaMiPedHQ9kOlXA3X8v3r5noGfJwngzmXCWszw3mqnCjIzvo
-         r7Z6FaMc9KsSbykj/UPyzOLNB2wYbJqvXWsCv08JWsILT0TMm+92HS6wbrXIHvqew/Kd
-         4mh4l1iYel1wAbHtHlNBjxSVzH58UCi+aOlqSAai7VkXTKw6DzwAqSLjD83fek6LJzR4
-         Swfw==
-In-Reply-To: <20200219130648.83e6810848774c6fd649c445-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=/3yl8VhgDmjkXmLfWG6CmIalz2F0UKze8er/2PUvhvg=;
+        b=Ymt8dFnWLKbA5tN9IDfmujvOxbWEG48HlhlzvroTZMjYPzSWjt8utQxlTL3bXJPDYx
+         3+TiA/F/b9pYowmG3T3VbN/DGLEOC2bKTeD5ayJ2A5UsPgaDnjvvNH9PposF/IfzuLNU
+         qPiH1MUNmwrRUgprTKTn+LoFP4wLI9l538CvuVVlgYb0B5bgOpORGGZ5hL6/+iBY5dTl
+         GGDZy85UVPb6XXZEBAg8tDB2ikz64+InMXYMGnjlQIl+q5P81K6yA3IIrP0cxI7g2DiY
+         45WmsE4Hy/XwAldUMG09+sOyAdKtSqw1bGbN4rfRiDpOgO3mSN3xbiRp9ddpm4e2Mq6M
+         7rZg==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, shuah <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kselftest-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Alexey Kuznetsov <kuznet-v/Mj1YrvjDBInbfyfbPRSQ@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hideaki YOSHIFUJI <yoshfuji-VfPWfsRibaP+Ru+s062T9g@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Wed, Feb 19, 2020 at 1:06 PM Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
->
-> On Wed, 19 Feb 2020 11:05:41 -0800 Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-> > On Tue, Feb 11, 2020 at 3:19 PM Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
-> > >
-> > > On Tue, 11 Feb 2020 13:31:20 -0800 Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> > >
-> > > > These counters will track hugetlb reservations rather than hugetlb
-> > > > memory faulted in. This patch only adds the counter, following patches
-> > > > add the charging and uncharging of the counter.
-> > >
-> > > We're still pretty thin on review here, but as it's v12 and Mike
-> > > appears to be signed up to look at this work, I'll add them to -next to
-> > > help move things forward.
-> > >
-> >
-> > Hi Andrew,
-> >
-> > Since the patches were merged into -next there have been build fixes
-> > and test fixes and some review comments. Would you like me to submit
-> > *new* patches to address these, or would you like me to squash the
-> > fixes into my existing patch series and submit another iteration of
-> > the patch series?
->
-> What you did worked OK ;)
->
-> Please check the end result next time I release a kernel.
+If a TCP socket is allocated in IRQ context or cloned from unassociated
+(i.e. not associated to a memcg) in IRQ context then it will remain
+unassociated for its whole life. Almost half of the TCPs created on the
+system are created in IRQ context, so, memory used by suck sockets will
+not be accounted by the memcg.
 
-Hey Andrew,
+This issue is more widespread in cgroup v1 where network memory
+accounting is opt-in but it can happen in cgroup v2 if the source socket
+for the cloning was created in root memcg.
 
-Thanks for taking in the patset and fixes. Only pending change in the
-latest -next tree is this one:
-https://lore.kernel.org/linux-mm/20200219233610.13808-1-almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
+To fix the issue, just do the late association of the unassociated
+sockets at accept() time in the process context and then force charge
+the memory buffer already reserved by the socket.
 
-It's reviewed by Mike here:
-https://lore.kernel.org/linux-mm/a0d7b8e1-cb43-3b43-68c3-55631f2ce199-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org/
+Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ net/ipv4/inet_connection_sock.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/net/ipv4/inet_connection_sock.c b/net/ipv4/inet_connection_sock.c
+index a4db79b1b643..df9c8ef024a2 100644
+--- a/net/ipv4/inet_connection_sock.c
++++ b/net/ipv4/inet_connection_sock.c
+@@ -482,6 +482,13 @@ struct sock *inet_csk_accept(struct sock *sk, int flags, int *err, bool kern)
+ 		}
+ 		spin_unlock_bh(&queue->fastopenq.lock);
+ 	}
++
++	if (mem_cgroup_sockets_enabled && !newsk->sk_memcg) {
++		mem_cgroup_sk_alloc(newsk);
++		if (newsk->sk_memcg)
++			mem_cgroup_charge_skmem(newsk->sk_memcg,
++					sk_mem_pages(newsk->sk_forward_alloc));
++	}
+ out:
+ 	release_sock(sk);
+ 	if (req)
+-- 
+2.25.0.265.gbab2e86ba0-goog
+
