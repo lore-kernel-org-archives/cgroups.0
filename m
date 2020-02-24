@@ -1,67 +1,78 @@
-From: Hugh Dickins <hughd@google.com>
-Subject: Re: [PATCH v3 2/3] mm: Charge active memcg when no mm is set
-Date: Sun, 23 Feb 2020 17:11:12 -0800 (PST)
-Message-ID: <alpine.LSU.2.11.2002231710420.7354@eggly.anvils>
-References: <cover.1582216294.git.schatzberg.dan@gmail.com> <0a27b6fcbd1f7af104d7f4cf0adc6a31e0e7dd19.1582216294.git.schatzberg.dan@gmail.com> <alpine.LSU.2.11.2002231058520.5735@eggly.anvils>
+From: Qian Cai <cai@lca.pw>
+Subject: [PATCH] cgroup: fix psi_show() crash on 32bit ino archs
+Date: Sun, 23 Feb 2020 22:00:07 -0500
+Message-ID: <20200224030007.3990-1-cai@lca.pw>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=HX1fJHLiNwnVKz7r+onFwX/niXbmKqUAA8UMhmaKQVk=;
-        b=kvTvYofZbz9U3B5NUoEdMRddWJRK/T6OWfWosieMYrRCRmBG6eds6cFCmkYooinSxb
-         8VPn/Y70cjNOolZdgXXxZbXrOgCEDWU+L7iglCMwW+DF/5BFvXKY0G0dPLuQ4lQmY5WP
-         JNK5G2q80TrH67xVPlf3bovornkAJZFsIRARlH+qEnAVUsgB1s6isDKWXfcJA0FwjoBY
-         nRdSBFeW6FTnlcgIbbxsM8b/CY2eBs+XAdfipDCubdL5u0kKxae5lEJ6Fy2NEr7PkG2O
-         ATHNhSb++IjMLmUksnNBie+sd/AN3rJrbjO2Xqcd8JLvVZlsIYm7dt+uer/M20dGt1FP
-         48pA==
-In-Reply-To: <alpine.LSU.2.11.2002231058520.5735@eggly.anvils>
+        d=lca.pw; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=axj+zYhKgui/GRpLokmGt4hkOovhk9D4qksINrRJ1Ak=;
+        b=f419reAEsjTeJdGXZaoZyZpTiWQNTrZvDjlFHYNYo6hws9F1baASusMDFHpIAblfCn
+         MDrLtDYdBa37g4PRqNh/MPFrxz5Z85DqSVa6Dzdzins0kWeNGM++kzZ0/peBTuhv9UYm
+         aqGxFrqA+fqrkOxvGd/d+j1ZSxUtdy6ueQ5HDJ85/8FME2IJ4a9dzvWa2g8Srhpt9dSf
+         561JzE6H7EI7d1vJtVqCtT6ZWFOhOjkAtZhzDP0P1Qvn7+S9o3evgs8TcB+UVGHp4XcP
+         ATkJnrGXsGL3fYd3Qd07QCnJZ7a7tiJwhOXEUedVP4rxKZTn6s6ROrRoHLSPBHZS/RnR
+         e2mA==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Dan Schatzberg <schatzberg.dan@gmail.com>
-Cc: Hugh Dickins <hughd@google.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Yang Shi <yang.shi@linux.alibaba.com>, Thomas Gleixner <tglx@linutronix.de>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm@kvack.org>
+Content-Type: text/plain; charset="us-ascii"
+To: tj@kernel.org
+Cc: lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Qian Cai <cai@lca.pw>
 
-On Sun, 23 Feb 2020, Hugh Dickins wrote:
-> On Thu, 20 Feb 2020, Dan Schatzberg wrote:
-> 
-> > memalloc_use_memcg() worked for kernel allocations but was silently
-> > ignored for user pages.
-> > 
-> > This patch establishes a precedence order for who gets charged:
-> > 
-> > 1. If there is a memcg associated with the page already, that memcg is
-> >    charged. This happens during swapin.
-> > 
-> > 2. If an explicit mm is passed, mm->memcg is charged. This happens
-> >    during page faults, which can be triggered in remote VMs (eg gup).
-> > 
-> > 3. Otherwise consult the current process context. If it has configured
-> >    a current->active_memcg, use that. Otherwise, current->mm->memcg.
-> > 
-> > Previously, if a NULL mm was passed to mem_cgroup_try_charge (case 3) it
-> > would always charge the root cgroup. Now it looks up the current
-> > active_memcg first (falling back to charging the root cgroup if not
-> > set).
-> > 
-> > Signed-off-by: Dan Schatzberg <schatzberg.dan@gmail.com>
-> > Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-> > Acked-by: Tejun Heo <tj@kernel.org>
-> 
-> Acked-by: Hugh Dickins <hughd@google.com>
-> 
-> Yes, internally we have some further not-yet-upstreamed complications
-> here (mainly, the "memcg=" mount option for all charges on a tmpfs to
-> be charged to that memcg); but what you're doing here does not obstruct
-> adding that later, they fit in well with the hierarchy that you (and
-> Johannes) mapped out above, and it's really an improvement for shmem
-> not to be referring to current there - thanks.
+Similar to the commit d7495343228f ("cgroup: fix incorrect
+WARN_ON_ONCE() in cgroup_setup_root()"), cgroup_id(root_cgrp) does not
+equal to 1 on 32bit ino archs which triggers all sorts of issues with
+psi_show() on s390x. For example,
 
-I acked slightly too soon. There are two other uses of "try_charge" in
-mm/shmem.c: we can be confident that the userfaultfd one knows what mm
-it's dealing with, but the shmem_swapin_page() instance has a similar
-use of current->mm, that you also want to adjust to NULL, don't you?
+ BUG: KASAN: slab-out-of-bounds in collect_percpu_times+0x2d0/
+ Read of size 4 at addr 000000001e0ce000 by task read_all/3667
+ collect_percpu_times+0x2d0/0x798
+ psi_show+0x7c/0x2a8
+ seq_read+0x2ac/0x830
+ vfs_read+0x92/0x150
+ ksys_read+0xe2/0x188
+ system_call+0xd8/0x2b4
 
-Hugh
+Fix it by using cgroup_ino().
+
+Fixes: 743210386c03 ("cgroup: use cgrp->kn->id as the cgroup ID")
+Signed-off-by: Qian Cai <cai@lca.pw>
+---
+ kernel/cgroup/cgroup.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 75f687301bbf..cd5f41289f7d 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -3542,21 +3542,21 @@ static int cpu_stat_show(struct seq_file *seq, void *v)
+ static int cgroup_io_pressure_show(struct seq_file *seq, void *v)
+ {
+ 	struct cgroup *cgrp = seq_css(seq)->cgroup;
+-	struct psi_group *psi = cgroup_id(cgrp) == 1 ? &psi_system : &cgrp->psi;
++	struct psi_group *psi = cgroup_ino(cgrp) == 1 ? &psi_system : &cgrp->psi;
+ 
+ 	return psi_show(seq, psi, PSI_IO);
+ }
+ static int cgroup_memory_pressure_show(struct seq_file *seq, void *v)
+ {
+ 	struct cgroup *cgrp = seq_css(seq)->cgroup;
+-	struct psi_group *psi = cgroup_id(cgrp) == 1 ? &psi_system : &cgrp->psi;
++	struct psi_group *psi = cgroup_ino(cgrp) == 1 ? &psi_system : &cgrp->psi;
+ 
+ 	return psi_show(seq, psi, PSI_MEM);
+ }
+ static int cgroup_cpu_pressure_show(struct seq_file *seq, void *v)
+ {
+ 	struct cgroup *cgrp = seq_css(seq)->cgroup;
+-	struct psi_group *psi = cgroup_id(cgrp) == 1 ? &psi_system : &cgrp->psi;
++	struct psi_group *psi = cgroup_ino(cgrp) == 1 ? &psi_system : &cgrp->psi;
+ 
+ 	return psi_show(seq, psi, PSI_CPU);
+ }
+-- 
+2.21.0 (Apple Git-122.2)
+
