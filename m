@@ -1,114 +1,111 @@
 From: Dan Schatzberg <schatzberg.dan@gmail.com>
-Subject: [PATCH v3 0/3] Charge loop device i/o to issuing cgroup
-Date: Mon, 24 Feb 2020 17:17:44 -0500
-Message-ID: <cover.1582581887.git.schatzberg.dan@gmail.com>
+Subject: [PATCH v3 2/3] mm: Charge active memcg when no mm is set
+Date: Mon, 24 Feb 2020 17:17:46 -0500
+Message-ID: <4456276af198412b2d41cd09d246cd20e0c6d22a.1582581887.git.schatzberg.dan@gmail.com>
+References: <cover.1582581887.git.schatzberg.dan@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=tuG46v7pUNtXQODDHrjX+i51IKR3M2oYfS7laFORPp4=;
-        b=XEpAdGo026I77uzxt7/HRuwG0Z3ke5/JatppxUYtFyVC7CZO/badnU2tLHdHpc7SQs
-         LxRFS9iknH4NyfX/AQqvLkzYm0urksQlsKHuN5mQwQ2OSRx8CermDM7iWC9OTgoj7LDw
-         qpOIhqv5qlSSt4FWsAmR/8ZEEwtKaLN9TECZ6IGCtzzy+ulUSUz2nw1DP1/DSnxY5EcI
-         4hBqe8dOgP+t95iSSDy1aS67ojRZrqZiTQFfAFBxWBE1AayChECN+sXvulVRYglTIkEq
-         wzdtBxOaWYMUH+YEG9gFBXdZF41ySIe+aKtyt/pXvBIaw4SBHmwq0f9riXNn4n3sb5BN
-         Tc9w==
-Sender: linux-kernel-owner@vger.kernel.org
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=SCkGRqTJz70QV81Hpnays5VS0skwnz1lHvPTyvLahTQ=;
+        b=LPtAbAQL+o6zGkxQYVl6oUm314BGitf+8dwHRfBTwvX2vCIWMWsdxtAx6cO5EURiDw
+         hT86AELE/sWFsqn9UE2P89uSDbn1Pcd+L92hHaxnAInur0nmUwg1wBcQ495+4XM5EjC1
+         tO9EoQDeJhaVKrF0wydjSdqi6PRYB+QUTgmBr899l6OOHs9b1EiWl6VS8He+h2WW/9G7
+         tWhj3S5Fw0ZbWtgq6sa+QVDF1vnINI+i2RL1yrpk2XdzXISlUSDia42BCLI6PAhbCocY
+         5S9Qq1UTq0TgT5HKK7tcjG32nutDmkHKGgw24VRqDVYre0dFT/dxZMP95KgmYJQxLARY
+         5CWw==
+In-Reply-To: <cover.1582581887.git.schatzberg.dan@gmail.com>
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: 
 Cc: Dan Schatzberg <schatzberg.dan@gmail.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Yang Shi <yang.shi@linux.alibaba.com>, Thomas Gleixner <tglx@linutronix.de>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP CGROUP" <cgroups@vger.kernel.org>, "open list:CONTROL GROUP - MEMORY RESOURCE
         CONTROLLER MEMCG" <linux-mm@kvack.org>
 
-Changes since V3:
+memalloc_use_memcg() worked for kernel allocations but was silently
+ignored for user pages.
 
-* Fix race on loop device destruction and deferred worker cleanup
-* Ensure charge on shmem_swapin_page works just like getpage
-* Minor style changes
+This patch establishes a precedence order for who gets charged:
 
-Changes since V2:
+1. If there is a memcg associated with the page already, that memcg is
+   charged. This happens during swapin.
 
-* Deferred destruction of workqueue items so in the common case there
-  is no allocation needed
+2. If an explicit mm is passed, mm->memcg is charged. This happens
+   during page faults, which can be triggered in remote VMs (eg gup).
 
-Changes since V1:
+3. Otherwise consult the current process context. If it has configured
+   a current->active_memcg, use that. Otherwise, current->mm->memcg.
 
-* Split out and reordered patches so cgroup charging changes are
-  separate from kworker -> workqueue change
+Previously, if a NULL mm was passed to mem_cgroup_try_charge (case 3) it
+would always charge the root cgroup. Now it looks up the current
+active_memcg first (falling back to charging the root cgroup if not
+set).
 
-* Add mem_css to struct loop_cmd to simplify logic
+Signed-off-by: Dan Schatzberg <schatzberg.dan@gmail.com>
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Acked-by: Tejun Heo <tj@kernel.org>
+Acked-by: Chris Down <chris@chrisdown.name>
+Reviewed-by: Shakeel Butt <shakeelb@google.com>
+Signed-off-by: Dan Schatzberg <schatzberg.dan@gmail.com>
+---
+ mm/memcontrol.c | 11 ++++++++---
+ mm/shmem.c      |  4 ++--
+ 2 files changed, 10 insertions(+), 5 deletions(-)
 
-The loop device runs all i/o to the backing file on a separate kworker
-thread which results in all i/o being charged to the root cgroup. This
-allows a loop device to be used to trivially bypass resource limits
-and other policy. This patch series fixes this gap in accounting.
-
-A simple script to demonstrate this behavior on cgroupv2 machine:
-
-'''
-#!/bin/bash
-set -e
-
-CGROUP=/sys/fs/cgroup/test.slice
-LOOP_DEV=/dev/loop0
-
-if [[ ! -d $CGROUP ]]
-then
-    sudo mkdir $CGROUP
-fi
-
-grep oom_kill $CGROUP/memory.events
-
-# Set a memory limit, write more than that limit to tmpfs -> OOM kill
-sudo unshare -m bash -c "
-echo \$\$ > $CGROUP/cgroup.procs;
-echo 0 > $CGROUP/memory.swap.max;
-echo 64M > $CGROUP/memory.max;
-mount -t tmpfs -o size=512m tmpfs /tmp;
-dd if=/dev/zero of=/tmp/file bs=1M count=256" || true
-
-grep oom_kill $CGROUP/memory.events
-
-# Set a memory limit, write more than that limit through loopback
-# device -> no OOM kill
-sudo unshare -m bash -c "
-echo \$\$ > $CGROUP/cgroup.procs;
-echo 0 > $CGROUP/memory.swap.max;
-echo 64M > $CGROUP/memory.max;
-mount -t tmpfs -o size=512m tmpfs /tmp;
-truncate -s 512m /tmp/backing_file
-losetup $LOOP_DEV /tmp/backing_file
-dd if=/dev/zero of=$LOOP_DEV bs=1M count=256;
-losetup -D $LOOP_DEV" || true
-
-grep oom_kill $CGROUP/memory.events
-'''
-
-Naively charging cgroups could result in priority inversions through
-the single kworker thread in the case where multiple cgroups are
-reading/writing to the same loop device. This patch series does some
-minor modification to the loop driver so that each cgroup can make
-forward progress independently to avoid this inversion.
-
-With this patch series applied, the above script triggers OOM kills
-when writing through the loop device as expected.
-
-Dan Schatzberg (3):
-  loop: Use worker per cgroup instead of kworker
-  mm: Charge active memcg when no mm is set
-  loop: Charge i/o to mem and blk cg
-
- drivers/block/loop.c       | 246 +++++++++++++++++++++++++++++++------
- drivers/block/loop.h       |  14 ++-
- include/linux/memcontrol.h |   6 +
- kernel/cgroup/cgroup.c     |   1 +
- mm/memcontrol.c            |  11 +-
- mm/shmem.c                 |   4 +-
- 6 files changed, 235 insertions(+), 47 deletions(-)
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d09776cd6e10..222e4aac0c85 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6319,7 +6319,8 @@ enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
+  * @compound: charge the page as compound or small page
+  *
+  * Try to charge @page to the memcg that @mm belongs to, reclaiming
+- * pages according to @gfp_mask if necessary.
++ * pages according to @gfp_mask if necessary. If @mm is NULL, try to
++ * charge to the active memcg.
+  *
+  * Returns 0 on success, with *@memcgp pointing to the charged memcg.
+  * Otherwise, an error code is returned.
+@@ -6363,8 +6364,12 @@ int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
+ 		}
+ 	}
+ 
+-	if (!memcg)
+-		memcg = get_mem_cgroup_from_mm(mm);
++	if (!memcg) {
++		if (!mm)
++			memcg = get_mem_cgroup_from_current();
++		else
++			memcg = get_mem_cgroup_from_mm(mm);
++	}
+ 
+ 	ret = try_charge(memcg, gfp_mask, nr_pages);
+ 
+diff --git a/mm/shmem.c b/mm/shmem.c
+index c8f7540ef048..8664c97851f2 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -1631,7 +1631,7 @@ static int shmem_swapin_page(struct inode *inode, pgoff_t index,
+ {
+ 	struct address_space *mapping = inode->i_mapping;
+ 	struct shmem_inode_info *info = SHMEM_I(inode);
+-	struct mm_struct *charge_mm = vma ? vma->vm_mm : current->mm;
++	struct mm_struct *charge_mm = vma ? vma->vm_mm : NULL;
+ 	struct mem_cgroup *memcg;
+ 	struct page *page;
+ 	swp_entry_t swap;
+@@ -1766,7 +1766,7 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
+ 	}
+ 
+ 	sbinfo = SHMEM_SB(inode->i_sb);
+-	charge_mm = vma ? vma->vm_mm : current->mm;
++	charge_mm = vma ? vma->vm_mm : NULL;
+ 
+ 	page = find_lock_entry(mapping, index);
+ 	if (xa_is_value(page)) {
 -- 
 2.17.1
 
