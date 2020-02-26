@@ -1,108 +1,62 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2 2/3] mm: memcontrol: clean up and document effective
- low/min calculations
-Date: Wed, 26 Feb 2020 14:40:25 -0500
-Message-ID: <20200226194025.GA30206@cmpxchg.org>
-References: <20191219200718.15696-1-hannes@cmpxchg.org>
- <20191219200718.15696-3-hannes@cmpxchg.org>
- <20200221171024.GA23476@blackbody.suse.cz>
- <20200225184014.GC10257@cmpxchg.org>
- <20200226164632.GL27066@blackbody.suse.cz>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v3] cgroup: memcg: net: do not associate sock with
+ unrelated cgroup
+Date: Wed, 26 Feb 2020 12:02:31 -0800
+Message-ID: <CALvZod5TsauERhaCqa1OZp4FaX4nq_UBL84=siESEG=Uk4LYuQ@mail.gmail.com>
+References: <20200221014604.126118-1-shakeelb@google.com> <20200226.110749.77396284962321904.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=82BmcmIVU/khlxiiYLp8kss4jd0AD0u0A2zzeUS4+kw=;
-        b=WEj7yOV9SDW39LsGpGcXtu4EXCsXQZqx+4Ofd8PWITH80J16ytU6qapFwuTqcwcLNb
-         vCXFym+WS7inLUTrgz7QI0EaJuLjT7HQRP/QAblVFLjMClW5mLBLmnxaZ4m0pQ80OcOk
-         vXFZ3mHk9v47818QjdvLM4zepljBKzCNfMrzZMI3CUlVfYAm3HRd6XY6n+2NaDTGI26g
-         +k01NPC4NLEbl7ruddjxdoJgnGvsgArEemcZ6TUGlSGiYw/dpd6q5FRUqa/mo/NvZ/C6
-         Uo/XN+iJPNnoCUwrPzn1xeDTsGfyWm2O2BGwNWyYaBVmjZp96ZEN4nEUFu2hg85iCWVS
-         kSbA==
-Content-Disposition: inline
-In-Reply-To: <20200226164632.GL27066-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=oYPZLk9fblhfI7X9fM3xbDPsnJvljmxVNytskCU+vlA=;
+        b=UyP5fnk2tcq/pPIf8UiuwxkR5072gZy0q/BJ2uagssjQU8qPl2XlFZef/INcAqm/G/
+         AIzv7Fc+eTguGy7/felWPoIFpMQfSwUovQC59vXMK3nK9Vld9VdxSJVDicbvgWOoN9Hc
+         lp6Ttr3B2PC+IVX+BU48YAaEoSpQUtEPZEVOyu252uIIjzfQutowIm9kF5gwglA+Mga6
+         WWmBOfvwOmDJ4tDldTih3mXrVaeidJaV15tBRGEoVRZ4mnxtChsEM3sWHWTcRg38Tv9P
+         1liVai5ZMM8MDyDZbBiD/OsEkAEtf+9uLwxyaxcV1jCFl7V2wMCKotF0lyMmLkNbF9cb
+         35sQ==
+In-Reply-To: <20200226.110749.77396284962321904.davem@davemloft.net>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: David Miller <davem@davemloft.net>
+Cc: Eric Dumazet <edumazet@google.com>, Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Greg Thelen <gthelen@google.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, netdev <netdev@vger.kernel.org>
 
-On Wed, Feb 26, 2020 at 05:46:32PM +0100, Michal Koutn=FD wrote:
-> On Tue, Feb 25, 2020 at 01:40:14PM -0500, Johannes Weiner <hannes-druUgvl=
-0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> > Hm, this example doesn't change with my patch because there is no
-> > "floating" protection that gets distributed among the siblings.
-> Maybe it had changed even earlier and the example obsoleted.
->=20
-> > In my testing with the above parameters, the equilibrium still comes
-> > out to roughly this distribution.
-> I'm attaching my test (10-times smaller) and I'm getting these results:
->=20
-> > /sys/fs/cgroup/test.slice/memory.current:838750208
-> > /sys/fs/cgroup/test.slice/pressure.service/memory.current:616972288
-> > /sys/fs/cgroup/test.slice/test-A.slice/memory.current:221782016
-> > /sys/fs/cgroup/test.slice/test-A.slice/B.service/memory.current:1234288=
-64
-> > /sys/fs/cgroup/test.slice/test-A.slice/C.service/memory.current:93495296
-> > /sys/fs/cgroup/test.slice/test-A.slice/D.service/memory.current:4702208
-> > /sys/fs/cgroup/test.slice/test-A.slice/E.service/memory.current:155648
->=20
-> (I'm running that on 5.6.0-rc2 + first two patches of your series.)
->=20
-> That's IMO closer to the my simulation (1.16:0.84)
-> than the example prediction (1.3:0.6)
+On Wed, Feb 26, 2020 at 11:07 AM David Miller <davem@davemloft.net> wrote:
+>
+> From: Shakeel Butt <shakeelb@google.com>
+> Date: Thu, 20 Feb 2020 17:46:04 -0800
+>
+> > We are testing network memory accounting in our setup and noticed
+> > inconsistent network memory usage and often unrelated cgroups network
+> > usage correlates with testing workload. On further inspection, it
+> > seems like mem_cgroup_sk_alloc() and cgroup_sk_alloc() are broken in
+> > IRQ context specially for cgroup v1.
+> >
+> > mem_cgroup_sk_alloc() and cgroup_sk_alloc() can be called in IRQ context
+> > and kind of assumes that this can only happen from sk_clone_lock()
+> > and the source sock object has already associated cgroup. However in
+> > cgroup v1, where network memory accounting is opt-in, the source sock
+> > can be unassociated with any cgroup and the new cloned sock can get
+> > associated with unrelated interrupted cgroup.
+> >
+> > Cgroup v2 can also suffer if the source sock object was created by
+> > process in the root cgroup or if sk_alloc() is called in IRQ context.
+> > The fix is to just do nothing in interrupt.
+> >
+> > WARNING: Please note that about half of the TCP sockets are allocated
+> > from the IRQ context, so, memory used by such sockets will not be
+> > accouted by the memcg.
+>
+> Then if we do this then we have to have some kind of subsequent change
+> to attach these sockets to the correct cgroup, right?
 
-I think you're correct about the moving points of equilibrium. I'm
-going to experiment more with your script. I had written it off as
-noise from LRU rotations, reclaim concurrency etc. but your script
-shows that these points do shift around as the input parameters
-change. This is useful, thanks.
+Currently we can potentially charge wrong cgroup. With this patch that
+will be fixed but potentially half of sockets remain unaccounted. I
+have a followup (incomplete) patch [1] to fix that. I will send the
+next version soon.
 
-But AFAICS, my patches here do not change or introduce this behavior
-so it's a longer-standing issue.
-
-> > It's just to illustrate the pressure weight, not to reflect each
-> > factor that can influence the equilibrium.
-> But it's good to have some idea about the equilibrium when configuring
-> the values.=20
-
-Agreed.
-
-> > > > @@ -6272,12 +6262,63 @@ struct cgroup_subsys memory_cgrp_subsys =3D=
- {
-> > > >   * for next usage. This part is intentionally racy, but it's ok,
-> > > >   * as memory.low is a best-effort mechanism.
-> > > Although it's a different issue but since this updates the docs I'm
-> > > mentioning it -- we treat memory.min the same, i.e. it's subject to t=
-he
-> > > same race, however, it's not meant to be best effort. I didn't look i=
-nto
-> > > outcomes of potential misaccounting but the comment seems to miss imp=
-act
-> > > on memory.min protection.
-> >=20
-> > Yeah I think we can delete that bit.
-> Erm, which part?
-> Make the racy behavior undocumented or that it applies both memory.low
-> and memory.min?
-
-I'm honestly not sure what it's trying to say. Reclaim and charging
-can happen concurrently, so the protection enforcement, whether it's
-min or low, has always been racy. Even OOM itself is racy.
-
-Caching the parental value while iterating over a group of siblings
-shouldn't fundamentally alter that outcome. We do enough priority
-iterations and reclaim loops from the allocator that we shouldn't see
-premature OOMs or apply totally incorrect balances because of that.
-
-So IMO the statement that "this is racy, but low is best-effort
-anyway, so it's okay" is misleading. I think more accurate would be to
-say that reclaim is fundamentally racy, so a bit of additional noise
-here doesn't matter.
-
-Either way, I don't find this paragraph all that useful. If you think
-it's informative, could you please let me know which important aspect
-it communicates? Otherwise, I'm inclined to delete it.
+[1] https://lore.kernel.org/linux-mm/20200222010456.40635-1-shakeelb@google.com/
