@@ -1,195 +1,319 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH 2/3] mm: memcontrol: clean up and document effective low/min calculations
-Date: Thu, 27 Feb 2020 14:56:05 -0500
-Message-ID: <20200227195606.46212-3-hannes@cmpxchg.org>
+Subject: [PATCH 3/3] mm: memcontrol: recursive memory.low protection
+Date: Thu, 27 Feb 2020 14:56:06 -0500
+Message-ID: <20200227195606.46212-4-hannes@cmpxchg.org>
 References: <20200227195606.46212-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=lDjWpH6grOtzg9jRElfS3afP9Xx2wYz4tow/cIPwfsc=;
-        b=GtZ5uMsWMd0OMOb6SUGkO7O7QOsQlQ2mg1L95hluFzKdMMLVIVxeBRjFb8F4ekY6L7
-         hVVHDzVeb+davTH5VCuhL/S5/vyR9rGlbZ2lxozVr2eibCvgyB0/8N0LBkp6p3njyCbZ
-         TpwBdF0uJ7pwBd9bBqns/9B2UrTm3nWPDYxwX/urJ12eHqGk/TDNKwyauQpqzmZxzpkT
-         9/aXGKfJBvTY18ut5BORUiVgRYls+okYGQRe5Xxtt2mBmwmMoeYzeLbduzMDUN78zJb2
-         dxhteMd7aK8qHaMmCadWzEm8hvaDK8Z63EtOXJMI+RFbiYpU5EpN60n01BPGArtq0kll
-         YbhA==
+        bh=3S75USrJcvg7+14y2qoSr0W2vyLWm3IhoTMN6tsWJzg=;
+        b=a0Uh+0/NzVTWut0foQw1rsKmUUAr2GBVpYMifrpAh0mLWUF4UcX39JJTxul+5VTETA
+         2H5mtw8r8rQOH0i9OXw3fmFtr+tO1Di/FGo1CEl4bdmnHYOifhR8MsV9t/Pp9ydvSZWZ
+         awIFXmOHjuGDKvpCAeAmuNvRTqEx/Hk5nwAFJ0NzzURtbg7pOXfVbLi02ycND+vrsQyQ
+         2D+a+vrVzEjEM2Ly0Ro4WKWgGcVOeFks5Rb+BBrxz5eZR/D5HAZp09i5stguskXK9QZH
+         tOcoJcCk+VJce1WPPpw+mIe3sCwr4OOZbN1V0apfNv71cUaa+NFONrk+BZbp6u8z9Kbj
+         /Pfw==
 In-Reply-To: <20200227195606.46212-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
+Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-VGhlIGVmZmVjdGl2ZSBwcm90ZWN0aW9uIG9mIGFueSBnaXZlbiBjZ3JvdXAgaXMgYSBzb21ld2hh
-dCBjb21wbGljYXRlZApjb25zdHJ1Y3QgdGhhdCBkZXBlbmRzIG9uIHRoZSBhbmNlc3RvcidzIGNv
-bmZpZ3VyYXRpb24sIHNpYmxpbmdzJwpjb25maWd1cmF0aW9ucywgYXMgd2VsbCBhcyBjdXJyZW50
-IG1lbW9yeSB1dGlsaXphdGlvbiBpbiBhbGwgdGhlc2UKZ3JvdXBzLiBJdCdzIGRvbmUgdGhpcyB3
-YXkgdG8gc2F0aXNmeSBoaWVyYXJjaGljYWwgZGVsZWdhdGlvbgpyZXF1aXJlbWVudHMgd2hpbGUg
-YWxzbyBtYWtpbmcgdGhlIGNvbmZpZ3VyYXRpb24gc2VtYW50aWNzIGZsZXhpYmxlCmFuZCBleHBy
-ZXNzaXZlIGluIGNvbXBsZXggcmVhbCBsaWZlIHNjZW5hcmlvcy4KClVuZm9ydHVuYXRlbHksIGFs
-bCB0aGUgcnVsZXMgYW5kIHJlcXVpcmVtZW50cyBhcmUgc3BhcnNlbHkgZG9jdW1lbnRlZCwKYW5k
-IHRoZSBjb2RlIGlzIGEgbGl0dGxlIHRvbyBjbGV2ZXIgaW4gbWVyZ2luZyBkaWZmZXJlbnQgc2Nl
-bmFyaW9zCmludG8gYSBzaW5nbGUgbWluKCkgZXhwcmVzc2lvbi4gVGhpcyBtYWtlcyBpdCBoYXJk
-IHRvIHJlYXNvbiBhYm91dCB0aGUKaW1wbGVtZW50YXRpb24gYW5kIGF2b2lkIGJyZWFraW5nIHNl
-bWFudGljcyB3aGVuIG1ha2luZyBjaGFuZ2VzIHRvIGl0LgoKVGhpcyBwYXRjaCBkb2N1bWVudHMg
-ZWFjaCBzZW1hbnRpYyBydWxlIGluZGl2aWR1YWxseSBhbmQgc3BsaXRzIG91dAp0aGUgaGFuZGxp
-bmcgb2YgdGhlIG92ZXJjb21taXQgY2FzZSBmcm9tIHRoZSByZWd1bGFyIGNhc2UuCgpNaWNoYWwg
-S291dG7DvSBhbHNvIHBvaW50cyBvdXQgdGhhdCB0aGUgcG9pbnRzIG9mIGVxdWlsaWJyaXVtIGFz
-CmRlc2NyaWJlZCBpbiB0aGUgZXhpc3RpbmcgZXhhbXBsZSBzY2VuYXJpb3MgYXJlbid0IGFjdHVh
-bGx5CmFjY3VyYXRlLiBEZWxldGUgdGhlc2UgZXhhbXBsZXMgZm9yIG5vdyB0byBhdm9pZCBjb25m
-dXNpb24uCgpBY2tlZC1ieTogVGVqdW4gSGVvIDx0ai1EZ0VqVCtBaTJ5Z2RubSt5Uk9mRTBBQHB1
-YmxpYy5nbWFuZS5vcmc+CkFja2VkLWJ5OiBSb21hbiBHdXNoY2hpbiA8Z3Vyby1iMTBrWVAyZE9N
-Z0BwdWJsaWMuZ21hbmUub3JnPgpBY2tlZC1ieTogQ2hyaXMgRG93biA8Y2hyaXMtNkJpMTU1MGlP
-cUVuelo2bVJBbTk4Z0BwdWJsaWMuZ21hbmUub3JnPgpBY2tlZC1ieTogTWljaGFsIEhvY2tvIDxt
-aG9ja28tSUJpOVJHL2I2N2tAcHVibGljLmdtYW5lLm9yZz4KU2lnbmVkLW9mZi1ieTogSm9oYW5u
-ZXMgV2VpbmVyIDxoYW5uZXMtZHJ1VWd2bDBMQ05BZnVnUnBDNnU2d0BwdWJsaWMuZ21hbmUub3Jn
-PgotLS0KIG1tL21lbWNvbnRyb2wuYyB8IDE3NSArKysrKysrKysrKysrKysrKysrKysrKy0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCA4MyBpbnNlcnRpb25zKCspLCA5
-MiBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9tbS9tZW1jb250cm9sLmMgYi9tbS9tZW1jb250
-cm9sLmMKaW5kZXggODc0YTBiMDBmODliLi44MzZjNTIxYmQ2MWYgMTAwNjQ0Ci0tLSBhL21tL21l
-bWNvbnRyb2wuYworKysgYi9tbS9tZW1jb250cm9sLmMKQEAgLTYyMDQsNiArNjIwNCw3NiBAQCBz
-dHJ1Y3QgY2dyb3VwX3N1YnN5cyBtZW1vcnlfY2dycF9zdWJzeXMgPSB7CiAJLmVhcmx5X2luaXQg
-PSAwLAogfTsKIAorLyoKKyAqIFRoaXMgZnVuY3Rpb24gY2FsY3VsYXRlcyBhbiBpbmRpdmlkdWFs
-IGNncm91cCdzIGVmZmVjdGl2ZQorICogcHJvdGVjdGlvbiB3aGljaCBpcyBkZXJpdmVkIGZyb20g
-aXRzIG93biBtZW1vcnkubWluL2xvdywgaXRzCisgKiBwYXJlbnQncyBhbmQgc2libGluZ3MnIHNl
-dHRpbmdzLCBhcyB3ZWxsIGFzIHRoZSBhY3R1YWwgbWVtb3J5CisgKiBkaXN0cmlidXRpb24gaW4g
-dGhlIHRyZWUuCisgKgorICogVGhlIGZvbGxvd2luZyBydWxlcyBhcHBseSB0byB0aGUgZWZmZWN0
-aXZlIHByb3RlY3Rpb24gdmFsdWVzOgorICoKKyAqIDEuIEF0IHRoZSBmaXJzdCBsZXZlbCBvZiBy
-ZWNsYWltLCBlZmZlY3RpdmUgcHJvdGVjdGlvbiBpcyBlcXVhbCB0bworICogICAgdGhlIGRlY2xh
-cmVkIHByb3RlY3Rpb24gaW4gbWVtb3J5Lm1pbiBhbmQgbWVtb3J5Lmxvdy4KKyAqCisgKiAyLiBU
-byBlbmFibGUgc2FmZSBkZWxlZ2F0aW9uIG9mIHRoZSBwcm90ZWN0aW9uIGNvbmZpZ3VyYXRpb24s
-IGF0CisgKiAgICBzdWJzZXF1ZW50IGxldmVscyB0aGUgZWZmZWN0aXZlIHByb3RlY3Rpb24gaXMg
-Y2FwcGVkIHRvIHRoZQorICogICAgcGFyZW50J3MgZWZmZWN0aXZlIHByb3RlY3Rpb24uCisgKgor
-ICogMy4gVG8gbWFrZSBjb21wbGV4IGFuZCBkeW5hbWljIHN1YnRyZWVzIGVhc2llciB0byBjb25m
-aWd1cmUsIHRoZQorICogICAgdXNlciBpcyBhbGxvd2VkIHRvIG92ZXJjb21taXQgdGhlIGRlY2xh
-cmVkIHByb3RlY3Rpb24gYXQgYSBnaXZlbgorICogICAgbGV2ZWwuIElmIHRoYXQgaXMgdGhlIGNh
-c2UsIHRoZSBwYXJlbnQncyBlZmZlY3RpdmUgcHJvdGVjdGlvbiBpcworICogICAgZGlzdHJpYnV0
-ZWQgdG8gdGhlIGNoaWxkcmVuIGluIHByb3BvcnRpb24gdG8gaG93IG11Y2ggcHJvdGVjdGlvbgor
-ICogICAgdGhleSBoYXZlIGRlY2xhcmVkIGFuZCBob3cgbXVjaCBvZiBpdCB0aGV5IGFyZSB1dGls
-aXppbmcuCisgKgorICogICAgVGhpcyBtYWtlcyBkaXN0cmlidXRpb24gcHJvcG9ydGlvbmFsLCBi
-dXQgYWxzbyB3b3JrLWNvbnNlcnZpbmc6CisgKiAgICBpZiBvbmUgY2dyb3VwIGNsYWltcyBtdWNo
-IG1vcmUgcHJvdGVjdGlvbiB0aGFuIGl0IHVzZXMgbWVtb3J5LAorICogICAgdGhlIHVudXNlZCBy
-ZW1haW5kZXIgaXMgYXZhaWxhYmxlIHRvIGl0cyBzaWJsaW5ncy4KKyAqCisgKiA0LiBDb252ZXJz
-ZWx5LCB3aGVuIHRoZSBkZWNsYXJlZCBwcm90ZWN0aW9uIGlzIHVuZGVyY29tbWl0dGVkIGF0IGEK
-KyAqICAgIGdpdmVuIGxldmVsLCB0aGUgZGlzdHJpYnV0aW9uIG9mIHRoZSBsYXJnZXIgcGFyZW50
-YWwgcHJvdGVjdGlvbgorICogICAgYnVkZ2V0IGlzIE5PVCBwcm9wb3J0aW9uYWwuIEEgY2dyb3Vw
-J3MgcHJvdGVjdGlvbiBmcm9tIGEgc2libGluZworICogICAgaXMgY2FwcGVkIHRvIGl0cyBvd24g
-bWVtb3J5Lm1pbi9sb3cgc2V0dGluZy4KKyAqCisgKi8KK3N0YXRpYyB1bnNpZ25lZCBsb25nIGVm
-ZmVjdGl2ZV9wcm90ZWN0aW9uKHVuc2lnbmVkIGxvbmcgdXNhZ2UsCisJCQkJCSAgdW5zaWduZWQg
-bG9uZyBzZXR0aW5nLAorCQkJCQkgIHVuc2lnbmVkIGxvbmcgcGFyZW50X2VmZmVjdGl2ZSwKKwkJ
-CQkJICB1bnNpZ25lZCBsb25nIHNpYmxpbmdzX3Byb3RlY3RlZCkKK3sKKwl1bnNpZ25lZCBsb25n
-IHByb3RlY3RlZDsKKworCXByb3RlY3RlZCA9IG1pbih1c2FnZSwgc2V0dGluZyk7CisJLyoKKwkg
-KiBJZiBhbGwgY2dyb3VwcyBhdCB0aGlzIGxldmVsIGNvbWJpbmVkIGNsYWltIGFuZCB1c2UgbW9y
-ZQorCSAqIHByb3RlY3Rpb24gdGhlbiB3aGF0IHRoZSBwYXJlbnQgYWZmb3JkcyB0aGVtLCBkaXN0
-cmlidXRlCisJICogc2hhcmVzIGluIHByb3BvcnRpb24gdG8gdXRpbGl6YXRpb24uCisJICoKKwkg
-KiBXZSBhcmUgdXNpbmcgYWN0dWFsIHV0aWxpemF0aW9uIHJhdGhlciB0aGFuIHRoZSBzdGF0aWNh
-bGx5CisJICogY2xhaW1lZCBwcm90ZWN0aW9uIGluIG9yZGVyIHRvIGJlIHdvcmstY29uc2Vydmlu
-ZzogY2xhaW1lZAorCSAqIGJ1dCB1bnVzZWQgcHJvdGVjdGlvbiBpcyBhdmFpbGFibGUgdG8gc2li
-bGluZ3MgdGhhdCB3b3VsZAorCSAqIG90aGVyd2lzZSBnZXQgYSBzbWFsbGVyIGNodW5rIHRoYW4g
-d2hhdCB0aGV5IGNsYWltZWQuCisJICovCisJaWYgKHNpYmxpbmdzX3Byb3RlY3RlZCA+IHBhcmVu
-dF9lZmZlY3RpdmUpCisJCXJldHVybiBwcm90ZWN0ZWQgKiBwYXJlbnRfZWZmZWN0aXZlIC8gc2li
-bGluZ3NfcHJvdGVjdGVkOworCisJLyoKKwkgKiBPaywgdXRpbGl6ZWQgcHJvdGVjdGlvbiBvZiBh
-bGwgY2hpbGRyZW4gaXMgd2l0aGluIHdoYXQgdGhlCisJICogcGFyZW50IGFmZm9yZHMgdGhlbSwg
-c28gd2Uga25vdyB3aGF0ZXZlciB0aGlzIGNoaWxkIGNsYWltcworCSAqIGFuZCB1dGlsaXplcyBp
-cyBlZmZlY3RpdmVseSBwcm90ZWN0ZWQuCisJICoKKwkgKiBJZiB0aGVyZSBpcyB1bnByb3RlY3Rl
-ZCB1c2FnZSBiZXlvbmQgdGhpcyB2YWx1ZSwgcmVjbGFpbQorCSAqIHdpbGwgYXBwbHkgcHJlc3N1
-cmUgaW4gcHJvcG9ydGlvbiB0byB0aGF0IGFtb3VudC4KKwkgKgorCSAqIElmIHRoZXJlIGlzIHVu
-dXRpbGl6ZWQgcHJvdGVjdGlvbiwgdGhlIGNncm91cCB3aWxsIGJlIGZ1bGx5CisJICogc2hpZWxk
-ZWQgZnJvbSByZWNsYWltLCBidXQgd2UgZG8gcmV0dXJuIGEgc21hbGxlciB2YWx1ZSBmb3IKKwkg
-KiBwcm90ZWN0aW9uIHRoYW4gd2hhdCB0aGUgZ3JvdXAgY291bGQgZW5qb3kgaW4gdGhlb3J5LiBU
-aGlzCisJICogaXMgb2theS4gV2l0aCB0aGUgb3ZlcmNvbW1pdCBkaXN0cmlidXRpb24gYWJvdmUs
-IGVmZmVjdGl2ZQorCSAqIHByb3RlY3Rpb24gaXMgYWx3YXlzIGRlcGVuZGVudCBvbiBob3cgbWVt
-b3J5IGlzIGFjdHVhbGx5CisJICogY29uc3VtZWQgYW1vbmcgdGhlIHNpYmxpbmdzIGFueXdheS4K
-KwkgKi8KKwlyZXR1cm4gcHJvdGVjdGVkOworfQorCiAvKioKICAqIG1lbV9jZ3JvdXBfcHJvdGVj
-dGVkIC0gY2hlY2sgaWYgbWVtb3J5IGNvbnN1bXB0aW9uIGlzIGluIHRoZSBub3JtYWwgcmFuZ2UK
-ICAqIEByb290OiB0aGUgdG9wIGFuY2VzdG9yIG9mIHRoZSBzdWItdHJlZSBiZWluZyBjaGVja2Vk
-CkBAIC02MjE3LDY3ICs2Mjg3LDExIEBAIHN0cnVjdCBjZ3JvdXBfc3Vic3lzIG1lbW9yeV9jZ3Jw
-X3N1YnN5cyA9IHsKICAqICAgTUVNQ0dfUFJPVF9MT1c6IGNncm91cCBtZW1vcnkgaXMgcHJvdGVj
-dGVkIGFzIGxvbmcgdGhlcmUgaXMKICAqICAgICBhbiB1bnByb3RlY3RlZCBzdXBwbHkgb2YgcmVj
-bGFpbWFibGUgbWVtb3J5IGZyb20gb3RoZXIgY2dyb3Vwcy4KICAqICAgTUVNQ0dfUFJPVF9NSU46
-IGNncm91cCBtZW1vcnkgaXMgcHJvdGVjdGVkCi0gKgotICogQHJvb3QgaXMgZXhjbHVzaXZlOyBp
-dCBpcyBuZXZlciBwcm90ZWN0ZWQgd2hlbiBsb29rZWQgYXQgZGlyZWN0bHkKLSAqCi0gKiBUbyBw
-cm92aWRlIGEgcHJvcGVyIGhpZXJhcmNoaWNhbCBiZWhhdmlvciwgZWZmZWN0aXZlIG1lbW9yeS5t
-aW4vbG93IHZhbHVlcwotICogYXJlIHVzZWQuIEJlbG93IGlzIHRoZSBkZXNjcmlwdGlvbiBvZiBo
-b3cgZWZmZWN0aXZlIG1lbW9yeS5sb3cgaXMgY2FsY3VsYXRlZC4KLSAqIEVmZmVjdGl2ZSBtZW1v
-cnkubWluIHZhbHVlcyBpcyBjYWxjdWxhdGVkIGluIHRoZSBzYW1lIHdheS4KLSAqCi0gKiBFZmZl
-Y3RpdmUgbWVtb3J5LmxvdyBpcyBhbHdheXMgZXF1YWwgb3IgbGVzcyB0aGFuIHRoZSBvcmlnaW5h
-bCBtZW1vcnkubG93LgotICogSWYgdGhlcmUgaXMgbm8gbWVtb3J5LmxvdyBvdmVyY29tbWl0dG1l
-bnQgKHdoaWNoIGlzIGFsd2F5cyB0cnVlIGZvcgotICogdG9wLWxldmVsIG1lbW9yeSBjZ3JvdXBz
-KSwgdGhlc2UgdHdvIHZhbHVlcyBhcmUgZXF1YWwuCi0gKiBPdGhlcndpc2UsIGl0J3MgYSBwYXJ0
-IG9mIHBhcmVudCdzIGVmZmVjdGl2ZSBtZW1vcnkubG93LAotICogY2FsY3VsYXRlZCBhcyBhIGNn
-cm91cCdzIG1lbW9yeS5sb3cgdXNhZ2UgZGl2aWRlZCBieSBzdW0gb2Ygc2libGluZydzCi0gKiBt
-ZW1vcnkubG93IHVzYWdlcywgd2hlcmUgbWVtb3J5LmxvdyB1c2FnZSBpcyB0aGUgc2l6ZSBvZiBh
-Y3R1YWxseQotICogcHJvdGVjdGVkIG1lbW9yeS4KLSAqCi0gKiAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgIGxvd191c2FnZQotICogZWxvdyA9IG1pbiggbWVtb3J5
-LmxvdywgcGFyZW50LT5lbG93ICogLS0tLS0tLS0tLS0tLS0tLS0tICksCi0gKiAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzaWJsaW5nc19sb3dfdXNhZ2UKLSAqCi0gKiBs
-b3dfdXNhZ2UgPSBtaW4obWVtb3J5LmxvdywgbWVtb3J5LmN1cnJlbnQpCi0gKgotICoKLSAqIFN1
-Y2ggZGVmaW5pdGlvbiBvZiB0aGUgZWZmZWN0aXZlIG1lbW9yeS5sb3cgcHJvdmlkZXMgdGhlIGV4
-cGVjdGVkCi0gKiBoaWVyYXJjaGljYWwgYmVoYXZpb3I6IHBhcmVudCdzIG1lbW9yeS5sb3cgdmFs
-dWUgaXMgbGltaXRpbmcKLSAqIGNoaWxkcmVuLCB1bnByb3RlY3RlZCBtZW1vcnkgaXMgcmVjbGFp
-bWVkIGZpcnN0IGFuZCBjZ3JvdXBzLAotICogd2hpY2ggYXJlIG5vdCB1c2luZyB0aGVpciBndWFy
-YW50ZWUgZG8gbm90IGFmZmVjdCBhY3R1YWwgbWVtb3J5Ci0gKiBkaXN0cmlidXRpb24uCi0gKgot
-ICogRm9yIGV4YW1wbGUsIGlmIHRoZXJlIGFyZSBtZW1jZ3MgQSwgQS9CLCBBL0MsIEEvRCBhbmQg
-QS9FOgotICoKLSAqICAgICBBICAgICAgQS9tZW1vcnkubG93ID0gMkcsIEEvbWVtb3J5LmN1cnJl
-bnQgPSA2RwotICogICAgLy9cXAotICogICBCQyAgREUgICBCL21lbW9yeS5sb3cgPSAzRyAgQi9t
-ZW1vcnkuY3VycmVudCA9IDJHCi0gKiAgICAgICAgICAgIEMvbWVtb3J5LmxvdyA9IDFHICBDL21l
-bW9yeS5jdXJyZW50ID0gMkcKLSAqICAgICAgICAgICAgRC9tZW1vcnkubG93ID0gMCAgIEQvbWVt
-b3J5LmN1cnJlbnQgPSAyRwotICogICAgICAgICAgICBFL21lbW9yeS5sb3cgPSAxMEcgRS9tZW1v
-cnkuY3VycmVudCA9IDAKLSAqCi0gKiBhbmQgdGhlIG1lbW9yeSBwcmVzc3VyZSBpcyBhcHBsaWVk
-LCB0aGUgZm9sbG93aW5nIG1lbW9yeSBkaXN0cmlidXRpb24KLSAqIGlzIGV4cGVjdGVkIChhcHBy
-b3hpbWF0ZWx5KToKLSAqCi0gKiAgICAgQS9tZW1vcnkuY3VycmVudCA9IDJHCi0gKgotICogICAg
-IEIvbWVtb3J5LmN1cnJlbnQgPSAxLjNHCi0gKiAgICAgQy9tZW1vcnkuY3VycmVudCA9IDAuNkcK
-LSAqICAgICBEL21lbW9yeS5jdXJyZW50ID0gMAotICogICAgIEUvbWVtb3J5LmN1cnJlbnQgPSAw
-Ci0gKgotICogVGhlc2UgY2FsY3VsYXRpb25zIHJlcXVpcmUgY29uc3RhbnQgdHJhY2tpbmcgb2Yg
-dGhlIGFjdHVhbCBsb3cgdXNhZ2VzCi0gKiAoc2VlIHByb3BhZ2F0ZV9wcm90ZWN0ZWRfdXNhZ2Uo
-KSksIGFzIHdlbGwgYXMgcmVjdXJzaXZlIGNhbGN1bGF0aW9uIG9mCi0gKiBlZmZlY3RpdmUgbWVt
-b3J5LmxvdyB2YWx1ZXMuIEJ1dCBhcyB3ZSBkbyBjYWxsIG1lbV9jZ3JvdXBfcHJvdGVjdGVkKCkK
-LSAqIHBhdGggZm9yIGVhY2ggbWVtb3J5IGNncm91cCB0b3AtZG93biBmcm9tIHRoZSByZWNsYWlt
-LAotICogaXQncyBwb3NzaWJsZSB0byBvcHRpbWl6ZSB0aGlzIHBhcnQsIGFuZCBzYXZlIGNhbGN1
-bGF0ZWQgZWxvdwotICogZm9yIG5leHQgdXNhZ2UuIFRoaXMgcGFydCBpcyBpbnRlbnRpb25hbGx5
-IHJhY3ksIGJ1dCBpdCdzIG9rLAotICogYXMgbWVtb3J5LmxvdyBpcyBhIGJlc3QtZWZmb3J0IG1l
-Y2hhbmlzbS4KICAqLwogZW51bSBtZW1fY2dyb3VwX3Byb3RlY3Rpb24gbWVtX2Nncm91cF9wcm90
-ZWN0ZWQoc3RydWN0IG1lbV9jZ3JvdXAgKnJvb3QsCiAJCQkJCQlzdHJ1Y3QgbWVtX2Nncm91cCAq
-bWVtY2cpCiB7CiAJc3RydWN0IG1lbV9jZ3JvdXAgKnBhcmVudDsKLQl1bnNpZ25lZCBsb25nIGVt
-aW4sIHBhcmVudF9lbWluOwotCXVuc2lnbmVkIGxvbmcgZWxvdywgcGFyZW50X2Vsb3c7CiAJdW5z
-aWduZWQgbG9uZyB1c2FnZTsKIAogCWlmIChtZW1fY2dyb3VwX2Rpc2FibGVkKCkpCkBAIC02Mjky
-LDUyICs2MzA2LDI5IEBAIGVudW0gbWVtX2Nncm91cF9wcm90ZWN0aW9uIG1lbV9jZ3JvdXBfcHJv
-dGVjdGVkKHN0cnVjdCBtZW1fY2dyb3VwICpyb290LAogCWlmICghdXNhZ2UpCiAJCXJldHVybiBN
-RU1DR19QUk9UX05PTkU7CiAKLQllbWluID0gbWVtY2ctPm1lbW9yeS5taW47Ci0JZWxvdyA9IG1l
-bWNnLT5tZW1vcnkubG93OwotCiAJcGFyZW50ID0gcGFyZW50X21lbV9jZ3JvdXAobWVtY2cpOwog
-CS8qIE5vIHBhcmVudCBtZWFucyBhIG5vbi1oaWVyYXJjaGljYWwgbW9kZSBvbiB2MSBtZW1jZyAq
-LwogCWlmICghcGFyZW50KQogCQlyZXR1cm4gTUVNQ0dfUFJPVF9OT05FOwogCi0JaWYgKHBhcmVu
-dCA9PSByb290KQotCQlnb3RvIGV4aXQ7Ci0KLQlwYXJlbnRfZW1pbiA9IFJFQURfT05DRShwYXJl
-bnQtPm1lbW9yeS5lbWluKTsKLQllbWluID0gbWluKGVtaW4sIHBhcmVudF9lbWluKTsKLQlpZiAo
-ZW1pbiAmJiBwYXJlbnRfZW1pbikgewotCQl1bnNpZ25lZCBsb25nIG1pbl91c2FnZSwgc2libGlu
-Z3NfbWluX3VzYWdlOwotCi0JCW1pbl91c2FnZSA9IG1pbih1c2FnZSwgbWVtY2ctPm1lbW9yeS5t
-aW4pOwotCQlzaWJsaW5nc19taW5fdXNhZ2UgPSBhdG9taWNfbG9uZ19yZWFkKAotCQkJJnBhcmVu
-dC0+bWVtb3J5LmNoaWxkcmVuX21pbl91c2FnZSk7Ci0KLQkJaWYgKG1pbl91c2FnZSAmJiBzaWJs
-aW5nc19taW5fdXNhZ2UpCi0JCQllbWluID0gbWluKGVtaW4sIHBhcmVudF9lbWluICogbWluX3Vz
-YWdlIC8KLQkJCQkgICBzaWJsaW5nc19taW5fdXNhZ2UpOworCWlmIChwYXJlbnQgPT0gcm9vdCkg
-eworCQltZW1jZy0+bWVtb3J5LmVtaW4gPSBtZW1jZy0+bWVtb3J5Lm1pbjsKKwkJbWVtY2ctPm1l
-bW9yeS5lbG93ID0gbWVtY2ctPm1lbW9yeS5sb3c7CisJCWdvdG8gb3V0OwogCX0KIAotCXBhcmVu
-dF9lbG93ID0gUkVBRF9PTkNFKHBhcmVudC0+bWVtb3J5LmVsb3cpOwotCWVsb3cgPSBtaW4oZWxv
-dywgcGFyZW50X2Vsb3cpOwotCWlmIChlbG93ICYmIHBhcmVudF9lbG93KSB7Ci0JCXVuc2lnbmVk
-IGxvbmcgbG93X3VzYWdlLCBzaWJsaW5nc19sb3dfdXNhZ2U7Ci0KLQkJbG93X3VzYWdlID0gbWlu
-KHVzYWdlLCBtZW1jZy0+bWVtb3J5Lmxvdyk7Ci0JCXNpYmxpbmdzX2xvd191c2FnZSA9IGF0b21p
-Y19sb25nX3JlYWQoCi0JCQkmcGFyZW50LT5tZW1vcnkuY2hpbGRyZW5fbG93X3VzYWdlKTsKKwlt
-ZW1jZy0+bWVtb3J5LmVtaW4gPSBlZmZlY3RpdmVfcHJvdGVjdGlvbih1c2FnZSwKKwkJCW1lbWNn
-LT5tZW1vcnkubWluLCBSRUFEX09OQ0UocGFyZW50LT5tZW1vcnkuZW1pbiksCisJCQlhdG9taWNf
-bG9uZ19yZWFkKCZwYXJlbnQtPm1lbW9yeS5jaGlsZHJlbl9taW5fdXNhZ2UpKTsKIAotCQlpZiAo
-bG93X3VzYWdlICYmIHNpYmxpbmdzX2xvd191c2FnZSkKLQkJCWVsb3cgPSBtaW4oZWxvdywgcGFy
-ZW50X2Vsb3cgKiBsb3dfdXNhZ2UgLwotCQkJCSAgIHNpYmxpbmdzX2xvd191c2FnZSk7Ci0JfQor
-CW1lbWNnLT5tZW1vcnkuZWxvdyA9IGVmZmVjdGl2ZV9wcm90ZWN0aW9uKHVzYWdlLAorCQkJbWVt
-Y2ctPm1lbW9yeS5sb3csIFJFQURfT05DRShwYXJlbnQtPm1lbW9yeS5lbG93KSwKKwkJCWF0b21p
-Y19sb25nX3JlYWQoJnBhcmVudC0+bWVtb3J5LmNoaWxkcmVuX2xvd191c2FnZSkpOwogCi1leGl0
-OgotCW1lbWNnLT5tZW1vcnkuZW1pbiA9IGVtaW47Ci0JbWVtY2ctPm1lbW9yeS5lbG93ID0gZWxv
-dzsKLQotCWlmICh1c2FnZSA8PSBlbWluKQorb3V0OgorCWlmICh1c2FnZSA8PSBtZW1jZy0+bWVt
-b3J5LmVtaW4pCiAJCXJldHVybiBNRU1DR19QUk9UX01JTjsKLQllbHNlIGlmICh1c2FnZSA8PSBl
-bG93KQorCWVsc2UgaWYgKHVzYWdlIDw9IG1lbWNnLT5tZW1vcnkuZWxvdykKIAkJcmV0dXJuIE1F
-TUNHX1BST1RfTE9XOwogCWVsc2UKIAkJcmV0dXJuIE1FTUNHX1BST1RfTk9ORTsKLS0gCjIuMjQu
-MQoK
+Right now, the effective protection of any given cgroup is capped by
+its own explicit memory.low setting, regardless of what the parent
+says. The reasons for this are mostly historical and ease of
+implementation: to make delegation of memory.low safe, effective
+protection is the min() of all memory.low up the tree.
+
+Unfortunately, this limitation makes it impossible to protect an
+entire subtree from another without forcing the user to make explicit
+protection allocations all the way to the leaf cgroups - something
+that is highly undesirable in real life scenarios.
+
+Consider memory in a data center host. At the cgroup top level, we
+have a distinction between system management software and the actual
+workload the system is executing. Both branches are further subdivided
+into individual services, job components etc.
+
+We want to protect the workload as a whole from the system management
+software, but that doesn't mean we want to protect and prioritize
+individual workload wrt each other. Their memory demand can vary over
+time, and we'd want the VM to simply cache the hottest data within the
+workload subtree. Yet, the current memory.low limitations force us to
+allocate a fixed amount of protection to each workload component in
+order to get protection from system management software in
+general. This results in very inefficient resource distribution.
+
+Another concern with mandating downward allocation is that, as the
+complexity of the cgroup tree grows, it gets harder for the lower
+levels to be informed about decisions made at the host-level. Consider
+a container inside a namespace that in turn creates its own nested
+tree of cgroups to run multiple workloads. It'd be extremely difficult
+to configure memory.low parameters in those leaf cgroups that on one
+hand balance pressure among siblings as the container desires, while
+also reflecting the host-level protection from e.g. rpm upgrades, that
+lie beyond one or more delegation and namespacing points in the tree.
+
+It's highly unusual from a cgroup interface POV that nested levels
+have to be aware of and reflect decisions made at higher levels for
+them to be effective.
+
+To enable such use cases and scale configurability for complex trees,
+this patch implements a resource inheritance model for memory that is
+similar to how the CPU and the IO controller implement work-conserving
+resource allocations: a share of a resource allocated to a subree
+always applies to the entire subtree recursively, while allowing, but
+not mandating, children to further specify distribution rules.
+
+That means that if protection is explicitly allocated among siblings,
+those configured shares are being followed during page reclaim just
+like they are now. However, if the memory.low set at a higher level is
+not fully claimed by the children in that subtree, the "floating"
+remainder is applied to each cgroup in the tree in proportion to its
+size. Since reclaim pressure is applied in proportion to size as well,
+each child in that tree gets the same boost, and the effect is neutral
+among siblings - with respect to each other, they behave as if no
+memory control was enabled at all, and the VM simply balances the
+memory demands optimally within the subtree. But collectively those
+cgroups enjoy a boost over the cgroups in neighboring trees.
+
+E.g. a leaf cgroup with a memory.low setting of 0 no longer means that
+it's not getting a share of the hierarchically assigned resource, just
+that it doesn't claim a fixed amount of it to protect from its siblings.
+
+This allows us to recursively protect one subtree (workload) from
+another (system management), while letting subgroups compete freely
+among each other - without having to assign fixed shares to each leaf,
+and without nested groups having to echo higher-level settings.
+
+The floating protection composes naturally with fixed
+protection. Consider the following example tree:
+
+		A            A: low = 2G
+               / \          A1: low = 1G
+              A1 A2         A2: low = 0G
+
+As outside pressure is applied to this tree, A1 will enjoy a fixed
+protection from A2 of 1G, but the remaining, unclaimed 1G from A is
+split evenly among A1 and A2, coming out to 1.5G and 0.5G.
+
+There is a slight risk of regressing theoretical setups where the
+top-level cgroups don't know about the true budgeting and set bogusly
+high "bypass" values that are meaningfully allocated down the
+tree. Such setups would rely on unclaimed protection to be discarded,
+and distributing it would change the intended behavior. Be safe and
+hide the new behavior behind a mount option, 'memory_recursiveprot'.
+
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Acked-by: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+ Documentation/admin-guide/cgroup-v2.rst | 11 ++++++
+ include/linux/cgroup-defs.h             |  5 +++
+ kernel/cgroup/cgroup.c                  | 17 ++++++++-
+ mm/memcontrol.c                         | 51 +++++++++++++++++++++++--
+ 4 files changed, 79 insertions(+), 5 deletions(-)
+
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 0636bcb60b5a..e569d83621da 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -186,6 +186,17 @@ cgroup v2 currently supports the following mount options.
+         modified through remount from the init namespace. The mount
+         option is ignored on non-init namespace mounts.
+ 
++  memory_recursiveprot
++
++        Recursively apply memory.min and memory.low protection to
++        entire subtrees, without requiring explicit downward
++        propagation into leaf cgroups.  This allows protecting entire
++        subtrees from one another, while retaining free competition
++        within those subtrees.  This should have been the default
++        behavior but is a mount-option to avoid regressing setups
++        relying on the original semantics (e.g. specifying bogusly
++        high 'bypass' protection values at higher tree levels).
++
+ 
+ Organizing Processes and Threads
+ --------------------------------
+diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
+index 63097cb243cb..e1fafed22db1 100644
+--- a/include/linux/cgroup-defs.h
++++ b/include/linux/cgroup-defs.h
+@@ -94,6 +94,11 @@ enum {
+ 	 * Enable legacy local memory.events.
+ 	 */
+ 	CGRP_ROOT_MEMORY_LOCAL_EVENTS = (1 << 5),
++
++	/*
++	 * Enable recursive subtree protection
++	 */
++	CGRP_ROOT_MEMORY_RECURSIVE_PROT = (1 << 6),
+ };
+ 
+ /* cftype->flags */
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 735af8f15f95..a2f8d2ab8dec 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -1813,12 +1813,14 @@ int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
+ enum cgroup2_param {
+ 	Opt_nsdelegate,
+ 	Opt_memory_localevents,
++	Opt_memory_recursiveprot,
+ 	nr__cgroup2_params
+ };
+ 
+ static const struct fs_parameter_spec cgroup2_param_specs[] = {
+ 	fsparam_flag("nsdelegate",		Opt_nsdelegate),
+ 	fsparam_flag("memory_localevents",	Opt_memory_localevents),
++	fsparam_flag("memory_recursiveprot",	Opt_memory_recursiveprot),
+ 	{}
+ };
+ 
+@@ -1844,6 +1846,9 @@ static int cgroup2_parse_param(struct fs_context *fc, struct fs_parameter *param
+ 	case Opt_memory_localevents:
+ 		ctx->flags |= CGRP_ROOT_MEMORY_LOCAL_EVENTS;
+ 		return 0;
++	case Opt_memory_recursiveprot:
++		ctx->flags |= CGRP_ROOT_MEMORY_RECURSIVE_PROT;
++		return 0;
+ 	}
+ 	return -EINVAL;
+ }
+@@ -1860,6 +1865,11 @@ static void apply_cgroup_root_flags(unsigned int root_flags)
+ 			cgrp_dfl_root.flags |= CGRP_ROOT_MEMORY_LOCAL_EVENTS;
+ 		else
+ 			cgrp_dfl_root.flags &= ~CGRP_ROOT_MEMORY_LOCAL_EVENTS;
++
++		if (root_flags & CGRP_ROOT_MEMORY_RECURSIVE_PROT)
++			cgrp_dfl_root.flags |= CGRP_ROOT_MEMORY_RECURSIVE_PROT;
++		else
++			cgrp_dfl_root.flags &= ~CGRP_ROOT_MEMORY_RECURSIVE_PROT;
+ 	}
+ }
+ 
+@@ -1869,6 +1879,8 @@ static int cgroup_show_options(struct seq_file *seq, struct kernfs_root *kf_root
+ 		seq_puts(seq, ",nsdelegate");
+ 	if (cgrp_dfl_root.flags & CGRP_ROOT_MEMORY_LOCAL_EVENTS)
+ 		seq_puts(seq, ",memory_localevents");
++	if (cgrp_dfl_root.flags & CGRP_ROOT_MEMORY_RECURSIVE_PROT)
++		seq_puts(seq, ",memory_recursiveprot");
+ 	return 0;
+ }
+ 
+@@ -6364,7 +6376,10 @@ static struct kobj_attribute cgroup_delegate_attr = __ATTR_RO(delegate);
+ static ssize_t features_show(struct kobject *kobj, struct kobj_attribute *attr,
+ 			     char *buf)
+ {
+-	return snprintf(buf, PAGE_SIZE, "nsdelegate\nmemory_localevents\n");
++	return snprintf(buf, PAGE_SIZE,
++			"nsdelegate\n"
++			"memory_localevents\n"
++			"memory_recursiveprot\n");
+ }
+ static struct kobj_attribute cgroup_features_attr = __ATTR_RO(features);
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 836c521bd61f..0dd5d5f70593 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6234,13 +6234,27 @@ struct cgroup_subsys memory_cgrp_subsys = {
+  *    budget is NOT proportional. A cgroup's protection from a sibling
+  *    is capped to its own memory.min/low setting.
+  *
++ * 5. However, to allow protecting recursive subtrees from each other
++ *    without having to declare each individual cgroup's fixed share
++ *    of the ancestor's claim to protection, any unutilized -
++ *    "floating" - protection from up the tree is distributed in
++ *    proportion to each cgroup's *usage*. This makes the protection
++ *    neutral wrt sibling cgroups and lets them compete freely over
++ *    the shared parental protection budget, but it protects the
++ *    subtree as a whole from neighboring subtrees.
++ *
++ * Note that 4. and 5. are not in conflict: 4. is about protecting
++ * against immediate siblings whereas 5. is about protecting against
++ * neighboring subtrees.
+  */
+ static unsigned long effective_protection(unsigned long usage,
++					  unsigned long parent_usage,
+ 					  unsigned long setting,
+ 					  unsigned long parent_effective,
+ 					  unsigned long siblings_protected)
+ {
+ 	unsigned long protected;
++	unsigned long ep;
+ 
+ 	protected = min(usage, setting);
+ 	/*
+@@ -6271,7 +6285,34 @@ static unsigned long effective_protection(unsigned long usage,
+ 	 * protection is always dependent on how memory is actually
+ 	 * consumed among the siblings anyway.
+ 	 */
+-	return protected;
++	ep = protected;
++
++	/*
++	 * If the children aren't claiming (all of) the protection
++	 * afforded to them by the parent, distribute the remainder in
++	 * proportion to the (unprotected) memory of each cgroup. That
++	 * way, cgroups that aren't explicitly prioritized wrt each
++	 * other compete freely over the allowance, but they are
++	 * collectively protected from neighboring trees.
++	 *
++	 * We're using unprotected memory for the weight so that if
++	 * some cgroups DO claim explicit protection, we don't protect
++	 * the same bytes twice.
++	 */
++	if (!(cgrp_dfl_root.flags & CGRP_ROOT_MEMORY_RECURSIVE_PROT))
++		return ep;
++
++	if (parent_effective > siblings_protected && usage > protected) {
++		unsigned long unclaimed;
++
++		unclaimed = parent_effective - siblings_protected;
++		unclaimed *= usage - protected;
++		unclaimed /= parent_usage - siblings_protected;
++
++		ep += unclaimed;
++	}
++
++	return ep;
+ }
+ 
+ /**
+@@ -6291,8 +6332,8 @@ static unsigned long effective_protection(unsigned long usage,
+ enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
+ 						struct mem_cgroup *memcg)
+ {
++	unsigned long usage, parent_usage;
+ 	struct mem_cgroup *parent;
+-	unsigned long usage;
+ 
+ 	if (mem_cgroup_disabled())
+ 		return MEMCG_PROT_NONE;
+@@ -6317,11 +6358,13 @@ enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
+ 		goto out;
+ 	}
+ 
+-	memcg->memory.emin = effective_protection(usage,
++	parent_usage = page_counter_read(&parent->memory);
++
++	memcg->memory.emin = effective_protection(usage, parent_usage,
+ 			memcg->memory.min, READ_ONCE(parent->memory.emin),
+ 			atomic_long_read(&parent->memory.children_min_usage));
+ 
+-	memcg->memory.elow = effective_protection(usage,
++	memcg->memory.elow = effective_protection(usage, parent_usage,
+ 			memcg->memory.low, READ_ONCE(parent->memory.elow),
+ 			atomic_long_read(&parent->memory.children_low_usage));
+ 
+-- 
+2.24.1
+
