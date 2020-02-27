@@ -1,16 +1,10 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2 3/3] mm: memcontrol: recursive memory.low protection
-Date: Thu, 27 Feb 2020 10:06:19 -0500
-Message-ID: <20200227150619.GD39625@cmpxchg.org>
-References: <20191219200718.15696-1-hannes@cmpxchg.org>
- <20191219200718.15696-4-hannes@cmpxchg.org>
- <20200221171256.GB23476@blackbody.suse.cz>
- <20200221185839.GB70967@cmpxchg.org>
- <20200225133720.GA6709@blackbody.suse.cz>
- <20200225150304.GA10257@cmpxchg.org>
- <20200226132237.GA16746@blackbody.suse.cz>
- <20200226150548.GD10257@cmpxchg.org>
- <20200227133544.GA20690@blackbody.suse.cz>
+Subject: Re: [PATCH v3 1/3] loop: Use worker per cgroup instead of kworker
+Date: Thu, 27 Feb 2020 13:14:30 -0500
+Message-ID: <20200227181430.GA44024@cmpxchg.org>
+References: <cover.1582581887.git.schatzberg.dan@gmail.com>
+ <eab018412a0c9feb573d757b1bbd5f58b33e2a8d.1582581887.git.schatzberg.dan@gmail.com>
+ <1582736558.7365.131.camel@lca.pw>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -18,174 +12,101 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=WksUni8+9tZQpyBBuW8X+gQa0Tzb8KbHzuJ7Pnkh/HQ=;
-        b=ft/OwHMQDXoySzRqQhM3Euo4A8IQtSI4XRc6MrV9HF/5UZVkMmhLm3EdhFy/hV2Hpc
-         klL0cyKlgdB6phi95cveN+byBtSBglXzhMEGp1eiB7TRhsTx8n1KXNLSRPpMyjbfHIBy
-         Tmqw9y6EzckW1TmrvhJrxR/pKLrHTLwF/1YoEdAfxhHQh75FxQKtVeOvMX+8l9EvL0Ds
-         htDpu+IKmiWP9dlRUBMPtkxDF79ciUtFrcIMoN+RVVsmz4xShEm5FaKzgfw2ihNc9iOB
-         n3trkJsrqwxJqjgh3aokOJ1N5DxKbNiAHOH0kP2mwLqIW7Ge410QDJDU/mCSdvt4SaXa
-         qJXA==
+        bh=19sQdZH67v9yOy/BduEXSg0i7G3USqaAUKmseX8opy0=;
+        b=0IG8plhA6YTGx0j6rHUrt9WyouEz5FGMjybnDuDbUR7axVZhu+rgZlDa76gtdh8YwP
+         /BhvP4PrfAUfKbf4wWhSFJOqBrI7JQ+9WpS63f7uxvjPet4NPXoB3dmwuNdmFwjnk4FX
+         1jVKXf8c2T1gFBZuOnwIqt51u2dUPq1cgjvR7zFm0WU9lL6ANWW6XIFJIHX6vK0OhLS1
+         J7DzHM0N4FEAk+lKkdDVdPBUOvPR0KzwO8QnjgEOy/J9Ojgvd04vxXAf02MIPcEGOpxb
+         EivvMkXIRJkPfKGgDKl8kcG3bTQe25P1HIgY1nQs6rbBZBfIFa/9YWSNslzmqZbSVSLN
+         u4lw==
 Content-Disposition: inline
-In-Reply-To: <20200227133544.GA20690-9OudH3eul5jcvrawFnH+a6VXKuFTiq87@public.gmane.org>
+In-Reply-To: <1582736558.7365.131.camel-J5quhbR+WMc@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Qian Cai <cai-J5quhbR+WMc@public.gmane.org>
+Cc: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, "open list:BLOCK LAYER" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-On Thu, Feb 27, 2020 at 02:35:44PM +0100, Michal Koutn=FD wrote:
-> On Wed, Feb 26, 2020 at 10:05:48AM -0500, Johannes Weiner <hannes-druUgvl=
-0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> > I don't see a fundamental difference between them. And that in turn
-> > makes it hard for me to accept that hierarchical inheritance rules
-> > should be different.
-> I'll try coming up with some better examples for the difference that I
-> perceive.
+On Wed, Feb 26, 2020 at 12:02:38PM -0500, Qian Cai wrote:
+> On Mon, 2020-02-24 at 17:17 -0500, Dan Schatzberg wrote:
+> > Existing uses of loop device may have multiple cgroups reading/writing
+> > to the same device. Simply charging resources for I/O to the backing
+> > file could result in priority inversion where one cgroup gets
+> > synchronously blocked, holding up all other I/O to the loop device.
+> >=20
+> > In order to avoid this priority inversion, we use a single workqueue
+> > where each work item is a "struct loop_worker" which contains a queue of
+> > struct loop_cmds to issue. The loop device maintains a tree mapping blk
+> > css_id -> loop_worker. This allows each cgroup to independently make
+> > forward progress issuing I/O to the backing file.
+> >=20
+> > There is also a single queue for I/O associated with the rootcg which
+> > can be used in cases of extreme memory shortage where we cannot allocate
+> > a loop_worker.
+> >=20
+> > The locking for the tree and queues is fairly heavy handed - we acquire
+> > the per-loop-device spinlock any time either is accessed. The existing
+> > implementation serializes all I/O through a single thread anyways, so I
+> > don't believe this is any worse.
+> >=20
+> > Signed-off-by: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@pu=
+blic.gmane.org>
+> > Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.o=
+rg>
 >=20
-> > "Wrong" isn't the right term. Is it what you wanted to express in your
-> > configuration?
-> I want to express absolute amount of memory (ideally representing
-> workingset size) under protection.
+> The locking in loop_free_idle_workers() will trigger this with sysfs read=
+ing,
 >=20
-> IIUC, you want to express general relative priorities of B vs C when
-> some outer metric has to be maintained given you reach both limits of
-> memory and IO.
-
-It's been our experience that it's basically impossible to control for
-memory without having it result in IO contention.
-
-You acknowledge below that this effect may be noticable in some
-situations. It's been our experience, however, that this effect is so
-pronounced over a wide variety of workloads and host configurations
-that exclusive memory control is not a practical application for
-anything but niche cases - if they exist at all.
-
-> > You are talking about a mathematical truth on a per-controller
-> > basis. What I'm saying is that I don't see how this is useful for real
-> > workloads, their relative priorities, and the performance expectations
-> > users have from these priorities.
-> =20
-> > With a priority inversion like this, there is no actual performance
-> > isolation or containerization going on here - which is the whole point
-> > of cgroups and resource control.
-> I acknowledge that by pressing too much along one dimension (memory) you
-> induce expansion in other dimension (IO) and that may become noticable in
-> siblings (expansion over saturation [1]). But that's expected when only
-> weights are in use. If you wanted to hide the effect of workload B to C,
-> B would need real limit.
->
-> [I beg to disagree that containerization is whole point of cgroups, it's
-> large part of it, hence the isolation needn't be necessarily
-> bi-directional.]
-
-I said "isolation or containerization", and it really isn't a stretch
-to see how the the intended isolation can break down in this example.
-
-You could set an IO limit on the scape goat to keep it from inheriting
-the higher IO priority from its parent.
-
-But you could also just set a memory limit on the scape goat to keep
-it from inheriting the higher memory allowance from the parent.
-
-Between all this, I really don't see an argument here to make the
-memory hierarchy semantics different from the other controllers.
-
-> > My objection is to opting out of protection against cousins (thus
-> > overriding parental resource assignment), not against siblings.
-> Just to sync up the terminology - I'm calling this protection against
-> uncles (the composition/structure under them is irrelevant).
-> And the limitation comes from grandparent or higher (or global).
-
-Yes, either way works.
-
-> ...and the overriden parental resource assignment is the expansion on
-> non-memory dimension (IO/CPU).
+> [ 7080.047167] LTP: starting read_all_sys (read_all -d /sys -q -r 10)
+> [ 7239.842276] cpufreq transition table exceeds PAGE_SIZE. Disabling
 >=20
-> > Correct, but you can change the tree to this:
-> >=20
-> >      A.low=3D10G
-> >      `- A1.low=3D10G
-> >         `- B.low=3D0G
-> >         `- C.low=3D0G
-> >      `- D.low=3D0G
-> >=20
-> > to express
-> >=20
-> > A1 > D
-> >  B =3D C
-> That sort of works (if I give up the scapegoat). Although I have trouble
-> that I have to copy the value from A to A1, I could have done that with
-> previous hierarchy and simply set B.low=3DC.low=3D10G.
+> [ 7247.054961] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> [ 7247.054971] WARNING: SOFTIRQ-safe -> SOFTIRQ-unsafe lock order detected
+> [ 7247.054983] 5.6.0-rc3-next-20200226 #2 Tainted: G=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0O=A0=A0=A0=A0=A0
+> [ 7247.054992] -----------------------------------------------------
+> [ 7247.055002] read_all/8513 [HC0[0]:SC0[0]:HE0:SE1] is trying to acquire:
+> [ 7247.055014] c0000006844864c8 (&fs->seq){+.+.}, at: file_path+0x24/0x40
+> [ 7247.055041]=A0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0and this task is already hol=
+ding:
+> [ 7247.055061] c0002006bab8b928 (&(&lo->lo_lock)->rlock){..-.}, at:
+> loop_attr_do_show_backing_file+0x3c/0x120 [loop]
+> [ 7247.055078] which would create a new lock dependency:
+> [ 7247.055105]=A0=A0(&(&lo->lo_lock)->rlock){..-.} -> (&fs->seq){+.+.}
+> [ 7247.055125]=A0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0but this new dependency conn=
+ects a SOFTIRQ-irq-safe lock:
+> [ 7247.055155]=A0=A0(&(&lo->lo_lock)->rlock){..-.}
+> [ 7247.055156]=A0
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0... which became SOFTIRQ-irq=
+-safe at:
+> [ 7247.055196]=A0=A0=A0lock_acquire+0x130/0x360
+> [ 7247.055221]=A0=A0=A0_raw_spin_lock_irq+0x68/0x90
+> [ 7247.055230]=A0=A0=A0loop_free_idle_workers+0x44/0x3f0 [loop]
+> [ 7247.055242]=A0=A0=A0call_timer_fn+0x110/0x5f0
+> [ 7247.055260]=A0=A0=A0run_timer_softirq+0x8f8/0x9f0
+> [ 7247.055278]=A0=A0=A0__do_softirq+0x34c/0x8c8
+> [ 7247.055288]=A0=A0=A0irq_exit+0x16c/0x1d0
+> [ 7247.055298]=A0=A0=A0timer_interrupt+0x1f0/0x680
+> [ 7247.055308]=A0=A0=A0decrementer_common+0x124/0x130
+> [ 7247.055328]=A0=A0=A0arch_local_irq_restore.part.8+0x34/0x90
+> [ 7247.055352]=A0=A0=A0cpuidle_enter_state+0x11c/0x8f0
+> [ 7247.055361]=A0=A0=A0cpuidle_enter+0x50/0x70
+> [ 7247.055389]=A0=A0=A0call_cpuidle+0x4c/0x90
+> [ 7247.055398]=A0=A0=A0do_idle+0x378/0x470
+> [ 7247.055414]=A0=A0=A0cpu_startup_entry+0x3c/0x40
+> [ 7247.055442]=A0=A0=A0start_secondary+0x7a8/0xa80
+> [ 7247.055461]=A0=A0=A0start_secondary_prolog+0x10/0x14
 
-D is still the scape goat for B and C..?
+That's kind of hilarious.
 
-> > That is, I would like to see an argument for this setup:
-> >=20
-> >      A			=09
-> >      `- B		io.weight=3D200          memory.low=3D10G
-> >         `- D		io.weight=3D100 (e.g.)   memory.low=3D10G
-> >         `- E		io.weight=3D100 (e.g.)   memory.low=3D0
-> >      `- C		io.weight=3D50           memory.low=3D5G
-> >=20
-> > Where E has no memory protection against C, but E has IO priority over
-> > C. That's the configuration that cannot be expressed with a recursive
-> > memory.low, but since it involves priority inversions it's not useful
-> > to actually isolate and containerize workloads.
-> But there can be no cousin (uncle) or more precisely it's the global
-> rest that we don't mind to affect.
+So even though it's a spin_lock_irq(), suggesting it's used from both
+process and irq context, Dan appears to be adding the first user that
+actually runs from irq context. It looks like it should have been a
+regular spinlock all along. Until now, anyway.
 
-Okay, hold on.
-
-You wouldn't care about starving the rest of the system of IO and
-CPU. But the objection to my patch is that you want to give memory
-back to avoid undue burden on the rest of the system?
-
-Can we please stop talking about such contrived hypotheticals and
-discuss real computer systems that real people actually care about?
-
-> > > I'd say that protected memory is a disposable resource in contrast wi=
-th
-> > > CPU/IO. If you don't have latter, you don't progress; if you lack the
-> > > former, you are refaulting but can make progress. Even more, you shou=
-ld
-> > > be able to give up memory.min.
-> >=20
-> > Eh, I'm not buying that. You cannot run without memory either. If
-> > somebody reclaims a page between you faulting it in and you resuming
-> > to userspace, there is no forward progress.
-> I made a hasty argument (misinterpretting the constant outer reclaim
-> pressure). So that wasn't the fundamental difference.
->=20
-> The second part -- memory.min is subject to equal calculation as
-> memory.low. Do you find the scape goat preventing OOM in grand-parent
-> (or higher) subtree also a misfeature/artifact?
-
-What about CPU and IO?
-
-If you knew exactly that the scape goat doesn't need the memory, you
-could set a memory limit on it - just like you could set a limit on
-CPU and IO cycles to "give back" resources from inside a tree.
-
-If you don't know exactly how much of the scape goat's memory is and
-isn't needed, the additional paging risk from getting it wrong would
-be to the detriment of both your workload and the rest of the system -
-your attempt to be good to the rest of the system suddenly turns into
-a negative-sum game.
-
-I fundamentally do not understand the practical application of the
-configuration you are arguing tooth and nail needs to be supported.
-
-If this is a dealbreaker, surely in a month of discussion and 30+
-emails, it should have been possible to come up with *one* example of
-a real workload and host configuration for which the ability to
-dissent from the hierarchical memory allocation (but oddly, not other
-resources) is the *only* way to express working resource isolation.
-
-As it stands, I have provided examples of real workloads and host
-configs that can't be expressed with the current semantics. As such, I
-would like to move ahead with my changes. They are gated behind a
-mount option, so pose no risk to the elusive setups you envision. We
-can always implement the inheritance scheme you propose once we have
-concrete examples of real life scenarios that aren't otherwise doable,
-but there is certainly not enough evidence to make me implement it now
-as a condition for merging my patches.
+Fixing it should be straight-forward. Use get_file() under lock to pin
+the file, drop the lock to do file_path(), release file with fput().
