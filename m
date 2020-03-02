@@ -1,87 +1,102 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH] cgroup-v1: freezer: optionally killable freezer
-Date: Mon, 2 Mar 2020 10:27:09 -0800
-Message-ID: <20200302182709.GA527458@carbon.dhcp.thefacebook.com>
-References: <20200219183231.50985-1-balejs@google.com>
- <20200229005131.GB9813@google.com>
- <20200229184300.GA484762@carbon.DHCP.thefacebook.com>
- <20200301162003.GA186618@google.com>
- <20200302165330.GA505299@carbon.DHCP.thefacebook.com>
- <CAJuCfpEk4gz9YKVuRBW4E-Up_LSGWCSpyJft4y+rOjyPSa08Zg@mail.gmail.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH v2] memcg: css_tryget_online cleanups
+Date: Mon,  2 Mar 2020 12:31:09 -0800
+Message-ID: <20200302203109.179417-1-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=mKd9uf1AgIDe5RNlalxdwF40OJYaXAH05DlEkFeGAsY=;
- b=ixoPNZXaA2QRyu0yDpo4myO+kTuLHe6Qy/5WZdgzJ3L6eZ7ntd8hPWelws79Ec4QXFuC
- 5Lfsei94Ek3d7AoRTEkv3xOgA9+jpR2tDjDWk5JJ2/oVk8jJNcLCNgMzF/26tlXmXYGU
- /XF2w1e7SJfNmKhVa6rm/0MYShtDz0Cs1rU= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=mKd9uf1AgIDe5RNlalxdwF40OJYaXAH05DlEkFeGAsY=;
- b=CUzk0WsDAo7GnQn8y7+gAjXpowmapBWEl1tCXmtuwo9JWvMQNtnvQnD5XSG3SOTI1QtsLNopdqHaRXtekksRjslvmG9ep90/bmsA14umZrxE3iiouMoc0O/GupIe7q+f1oxyS0q0NLuuZhqCq0ZOX+8bVfJS5sjOTnhhQEI3w/s=
-Content-Disposition: inline
-In-Reply-To: <CAJuCfpEk4gz9YKVuRBW4E-Up_LSGWCSpyJft4y+rOjyPSa08Zg@mail.gmail.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=aihQYJyYU6rAhab/wfRsprbv1ChtTTWAtf4Gs/sLtew=;
+        b=EmoWHNnC3GmmT1fQR4b+eNyOdqxc4dSP/L7Ck/cPjz+laobHXJTPYrpx6RnpfnaYg6
+         jEMR+ZJHob86afxd2iTqe6yl770MccPz7Wh36Z4R4VrTdc+lLhVIEt5QhgGHfH3JKnMX
+         LmIiCk/pzyCz5X/MBG+RRUZScnKlzLvV+MRsjaCSzrFr0TQHCz1s9Ukdrr7ysc4QXlWk
+         9HBbsfEeNsl+HQ8ISF5IrV2CxIGOXxjfH1iLOvlp8vR61axv/mmUt3fUvD06zF4Mfe2E
+         aTV/Gun0pcpO9Bgwg+qfQEOQP/kVby/EzuJDx7Nlt22XEx74ouhjFFP/INIB86ECjh0Z
+         OtZw==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Suren Baghdasaryan <surenb@google.com>
-Cc: Marco Ballesio <balejs@google.com>, Tejun Heo <tj@kernel.org>, cgroups mailinglist <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, rjw@rjwysocki.net, pavel@ucw.cz, len.brown@intel.com, linux-doc@vger.kernel.org, linux-pm@vger.kernel.org, Minchan Kim <minchan@google.com>, Daniel Colascione <dancol@google.com>
+To: Roman Gushchin <guro@fb.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
 
-On Mon, Mar 02, 2020 at 09:46:36AM -0800, Suren Baghdasaryan wrote:
-> On Mon, Mar 2, 2020 at 8:53 AM Roman Gushchin <guro@fb.com> wrote:
-> >
-> > On Sun, Mar 01, 2020 at 08:20:03AM -0800, Marco Ballesio wrote:
-> > > On Sat, Feb 29, 2020 at 10:43:00AM -0800, Roman Gushchin wrote:
-> > > > On Fri, Feb 28, 2020 at 04:51:31PM -0800, Marco Ballesio wrote:
-> > > > > Hi all,
-> > > > >
-> > > > > did anyone have time to look into my proposal and, in case, are there
-> > > > > any suggestions, ideas or comments about it?
-> > > >
-> > > > Hello, Marco!
-> > > >
-> > > > I'm sorry, somehow I missed the original letter.
-> > > >
-> > > > In general the cgroup v1 interface is considered frozen. Are there any particular
-> > > > reasons why you want to extend the v1 freezer rather than use the v2 version of it?
-> > > >
-> > > > You don't even need to fully convert to cgroup v2 in order to do it, some v1
-> > > > controllers can still be used.
-> > > >
-> > > > Thanks!
-> > > >
-> > > > Roman
-> > >
-> > > Hi Roman,
-> > >
-> > > When compared with backports of v2 features and their dependency chains, this
-> > > patch would be easier to carry in Android common. The potential is to have
-> > > killability for frozen processes on hw currently in use.
-> >
-> 
-> Hi Roman,
-> 
-> > I see...
-> >
-> > The implementation looks good to me, but I really not sure if adding new control files
-> > to cgroup v1 is a good idea at this point. Are there any plans in the Android world
-> > to move forward to cgroup v2? If not, why not?
-> 
-> There are plans to prototype that and gradually move from cgroups v1
-> to v2 at least for some cgroup controllers (the ones that can use
-> unified hierarchy). Creating an additional per-process cgroup v2
-> hierarchy only for freezer would be a high price to pay today. In the
-> future when we migrate some controllers to v2 the price will be
-> amortized and we will probably be able to do that.
+Currently multiple locations in memcg code, css_tryget_online() is being
+used. However it doesn't matter whether the cgroup is online for the
+callers. Online used to matter when we had reparenting on offlining and
+we needed a way to prevent new ones from showing up.
 
-I see... Thanks for the explanation, Suren!
+The failure case for couple of these css_tryget_online usage is to
+fallback to root_mem_cgroup which kind of make bypassing the memcg
+limits possible for some workloads. For example creating an inotify
+group in a subcontainer and then deleting that container after moving the
+process to a different container will make all the event objects
+allocated for that group to the root_mem_cgroup. So, using
+css_tryget_online() is dangerous for such cases.
 
-Overall the idea of extending the frozen v1 interface looks dubious to me.
-Especially if it's only required during the transition to v2.
+Two locations still use the online version. The swapin of offlined
+memcg's pages and the memcg kmem cache creation. The kmem cache indeed
+needs the online version as the kernel does the reparenting of memcg
+kmem caches. For the swapin case, it has been left for later as the
+fallback is not really that concerning.
 
-But of course the decision is on maintainers.
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
+---
 
-Thanks!
+Changes since v1:
+- replaced WARN_ON with WARN_ON_ONCE
+
+ mm/memcontrol.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 62b574d0cd3c..75d8883bf975 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -656,7 +656,7 @@ __mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_node *mctz)
+ 	 */
+ 	__mem_cgroup_remove_exceeded(mz, mctz);
+ 	if (!soft_limit_excess(mz->memcg) ||
+-	    !css_tryget_online(&mz->memcg->css))
++	    !css_tryget(&mz->memcg->css))
+ 		goto retry;
+ done:
+ 	return mz;
+@@ -961,7 +961,8 @@ struct mem_cgroup *get_mem_cgroup_from_page(struct page *page)
+ 		return NULL;
+ 
+ 	rcu_read_lock();
+-	if (!memcg || !css_tryget_online(&memcg->css))
++	/* Page should not get uncharged and freed memcg under us. */
++	if (!memcg || WARN_ON_ONCE(!css_tryget(&memcg->css)))
+ 		memcg = root_mem_cgroup;
+ 	rcu_read_unlock();
+ 	return memcg;
+@@ -974,10 +975,13 @@ EXPORT_SYMBOL(get_mem_cgroup_from_page);
+ static __always_inline struct mem_cgroup *get_mem_cgroup_from_current(void)
+ {
+ 	if (unlikely(current->active_memcg)) {
+-		struct mem_cgroup *memcg = root_mem_cgroup;
++		struct mem_cgroup *memcg;
+ 
+ 		rcu_read_lock();
+-		if (css_tryget_online(&current->active_memcg->css))
++		/* current->active_memcg must hold a ref. */
++		if (WARN_ON_ONCE(!css_tryget(&current->active_memcg->css)))
++			memcg = root_mem_cgroup;
++		else
+ 			memcg = current->active_memcg;
+ 		rcu_read_unlock();
+ 		return memcg;
+@@ -6732,7 +6736,7 @@ void mem_cgroup_sk_alloc(struct sock *sk)
+ 		goto out;
+ 	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && !memcg->tcpmem_active)
+ 		goto out;
+-	if (css_tryget_online(&memcg->css))
++	if (css_tryget(&memcg->css))
+ 		sk->sk_memcg = memcg;
+ out:
+ 	rcu_read_unlock();
+-- 
+2.25.0.265.gbab2e86ba0-goog
+
