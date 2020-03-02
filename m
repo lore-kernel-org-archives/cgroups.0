@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v9 12/20] mm/mlock: clean up __munlock_isolate_lru_page
-Date: Mon,  2 Mar 2020 19:00:22 +0800
-Message-ID: <1583146830-169516-13-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v9 19/20] mm/lru: add debug checking for page memcg moving
+Date: Mon,  2 Mar 2020 19:00:29 +0800
+Message-ID: <1583146830-169516-20-git-send-email-alex.shi@linux.alibaba.com>
 References: <1583146830-169516-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1583146830-169516-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -13,94 +13,101 @@ Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com
 Cc: Alex Shi <alex.shi@linux.alibaba.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-clean up __munlock_isolate_lru_page func for later lru lock change.
-No functional change.
+This debug patch could give some clues if there are sth out of
+consideration.
+
+Hugh Dickins reported a bug of this patch, Thanks!
 
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Hugh Dickins <hughd@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: cgroups@vger.kernel.org
 Cc: linux-mm@kvack.org
 Cc: linux-kernel@vger.kernel.org
 ---
- mm/mlock.c | 47 ++++++++++++++++++-----------------------------
- 1 file changed, 18 insertions(+), 29 deletions(-)
+ include/linux/memcontrol.h |  6 ++++++
+ mm/compaction.c            |  2 ++
+ mm/memcontrol.c            | 15 +++++++++++++++
+ 3 files changed, 23 insertions(+)
 
-diff --git a/mm/mlock.c b/mm/mlock.c
-index 7ddc52ca14b1..a43b3da78541 100644
---- a/mm/mlock.c
-+++ b/mm/mlock.c
-@@ -103,25 +103,6 @@ void mlock_vma_page(struct page *page)
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index f60009580d2a..27c7bbe82125 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -431,6 +431,8 @@ struct lruvec *lock_page_lruvec_irqsave(struct page *page,
+ void unlock_page_lruvec_irq(struct lruvec *lruvec);
+ void unlock_page_lruvec_irqrestore(struct lruvec *lruvec, unsigned long flags);
+ 
++void lruvec_memcg_debug(struct lruvec *lruvec, struct page *page);
++
+ static inline
+ struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *css){
+ 	return css ? container_of(css, struct mem_cgroup, css) : NULL;
+@@ -1191,6 +1193,10 @@ static inline void count_memcg_page_event(struct page *page,
+ void count_memcg_event_mm(struct mm_struct *mm, enum vm_event_item idx)
+ {
+ }
++
++static inline void lruvec_memcg_debug(struct lruvec *lruvec, struct page *page)
++{
++}
+ #endif /* CONFIG_MEMCG */
+ 
+ /* idx can be of type enum memcg_stat_item or node_stat_item */
+diff --git a/mm/compaction.c b/mm/compaction.c
+index 4a773f0ffedf..40c270bd5092 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -984,6 +984,8 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 			compact_lock_irqsave(&lruvec->lru_lock, &flags, cc);
+ 			locked_lruvec = lruvec;
+ 
++			lruvec_memcg_debug(lruvec, page);
++
+ 			/* Try get exclusive access under lock */
+ 			if (!skip_updated) {
+ 				skip_updated = true;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 099926efbb48..2d71e53ead88 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1240,6 +1240,19 @@ struct lruvec *mem_cgroup_page_lruvec(struct page *page, struct pglist_data *pgd
+ 	return lruvec;
  }
  
- /*
-- * Isolate a page from LRU with optional get_page() pin.
-- * Assumes lru_lock already held and page already pinned.
-- */
--static bool __munlock_isolate_lru_page(struct page *page, bool getpage)
--{
--	if (TestClearPageLRU(page)) {
--		struct lruvec *lruvec;
--
--		lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
--		if (getpage)
--			get_page(page);
--		del_page_from_lru_list(page, lruvec, page_lru(page));
--		return true;
--	}
--
--	return false;
--}
--
--/*
-  * Finish munlock after successful page isolation
-  *
-  * Page must be locked. This is a wrapper for try_to_munlock()
-@@ -311,26 +292,34 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
- 	spin_lock_irq(&zone->zone_pgdat->lru_lock);
- 	for (i = 0; i < nr; i++) {
- 		struct page *page = pvec->pages[i];
-+		struct lruvec *lruvec;
- 
--		if (TestClearPageMlocked(page)) {
--			/*
--			 * We already have pin from follow_page_mask()
--			 * so we can spare the get_page() here.
--			 */
--			if (__munlock_isolate_lru_page(page, false))
--				continue;
--			else
--				__munlock_isolation_failed(page);
--		} else {
-+		if (!TestClearPageMlocked(page)) {
- 			delta_munlocked++;
-+			goto putback;
-+		}
++void lruvec_memcg_debug(struct lruvec *lruvec, struct page *page)
++{
++#ifdef CONFIG_DEBUG_VM
++	if (mem_cgroup_disabled())
++		return;
 +
-+		if (!TestClearPageLRU(page)) {
-+			__munlock_isolation_failed(page);
-+			goto putback;
- 		}
- 
- 		/*
-+		 * Isolate this page.
-+		 * We already have pin from follow_page_mask()
-+		 * so we can spare the get_page() here.
-+		 */
-+		lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
-+		del_page_from_lru_list(page, lruvec, page_lru(page));
-+		continue;
++	if (!page->mem_cgroup)
++		VM_BUG_ON_PAGE(lruvec_memcg(lruvec) != root_mem_cgroup, page);
++	else
++		VM_BUG_ON_PAGE(lruvec_memcg(lruvec) != page->mem_cgroup, page);
++#endif
++}
 +
-+		/*
- 		 * We won't be munlocking this page in the next phase
- 		 * but we still need to release the follow_page_mask()
- 		 * pin. We cannot do it under lru_lock however. If it's
- 		 * the last pin, __page_cache_release() would deadlock.
- 		 */
-+putback:
- 		pagevec_add(&pvec_putback, pvec->pages[i]);
- 		pvec->pages[i] = NULL;
- 	}
+ /* page must be isolated */
+ struct lruvec *lock_page_lruvec_irq(struct page *page)
+ {
+@@ -1248,6 +1261,7 @@ struct lruvec *lock_page_lruvec_irq(struct page *page)
+ 	lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+ 	spin_lock_irq(&lruvec->lru_lock);
+ 
++	lruvec_memcg_debug(lruvec, page);
+ 	return lruvec;
+ }
+ 
+@@ -1258,6 +1272,7 @@ struct lruvec *lock_page_lruvec_irqsave(struct page *page, unsigned long *flags)
+ 	lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+ 	spin_lock_irqsave(&lruvec->lru_lock, *flags);
+ 
++	lruvec_memcg_debug(lruvec, page);
+ 	return lruvec;
+ }
+ 
 -- 
 1.8.3.1
 
