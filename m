@@ -1,73 +1,215 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v9 05/20] mm/thp: clean up lru_add_page_tail
-Date: Mon,  2 Mar 2020 19:00:15 +0800
-Message-ID: <1583146830-169516-6-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: [PATCH v9 08/20] mm/lru: add page isolation precondition in __isolate_lru_page
+Date: Mon,  2 Mar 2020 19:00:18 +0800
+Message-ID: <1583146830-169516-9-git-send-email-alex.shi@linux.alibaba.com>
 References: <1583146830-169516-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1583146830-169516-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1583146830-169516-1-git-send-email-alex.shi@linux.alibaba.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
-Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: cgroups@vger.kernel.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org
 
-Since the first parameter is only used by head page, it's better to make
-it stright. And no needs to keep head checking:
-	VM_BUG_ON_PAGE(!PageHead(page), page);
+Johannes Weiner has suggested:
+"
+So here is a crazy idea that may be worth exploring:
 
-Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Right now, pgdat->lru_lock protects both PageLRU *and* the lruvec's
+linked list.
+
+Can we make PageLRU atomic and use it to stabilize the lru_lock
+instead, and then use the lru_lock only serialize list operations?
+...
+"
+
+Yes, this patch is doing so on  __isolate_lru_page which is the core
+page isolation func in compaction and shrinking path.
+
+This patch move clear page lru action before compaction getting lru_lock,
+makes it as a necessary condition for page isolation. Hence, PageLRU may
+be cleared druing shrink_inactive_list path for isolation reason. If so,
+we can skip that page's in reclaim.
+
+It's a preparation for later per memcg lru_lock change.
+
+Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
 ---
- mm/huge_memory.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+ include/linux/swap.h |  2 +-
+ mm/compaction.c      | 25 +++++++++++++++++--------
+ mm/vmscan.c          | 48 ++++++++++++++++++++++++++----------------------
+ 3 files changed, 44 insertions(+), 31 deletions(-)
 
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index acef164a8981..599367d25fca 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -2445,21 +2445,20 @@ static void remap_page(struct page *page)
- 	}
- }
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index c555e8f161ad..69f0794f1da3 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -351,7 +351,7 @@ extern void lru_cache_add_active_or_unevictable(struct page *page,
+ extern unsigned long zone_reclaimable_pages(struct zone *zone);
+ extern unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
+ 					gfp_t gfp_mask, nodemask_t *mask);
+-extern int __isolate_lru_page(struct page *page, isolate_mode_t mode);
++extern int __isolate_lru_page_prepare(struct page *page, isolate_mode_t mode);
+ extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+ 						  unsigned long nr_pages,
+ 						  gfp_t gfp_mask,
+diff --git a/mm/compaction.c b/mm/compaction.c
+index 672d3c78c6ab..1baba328d089 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -948,6 +948,23 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 		if (!(cc->gfp_mask & __GFP_FS) && page_mapping(page))
+ 			goto isolate_fail;
  
--void lru_add_page_tail(struct page *page, struct page *page_tail,
-+void lru_add_page_tail(struct page *head, struct page *page_tail,
- 		       struct lruvec *lruvec, struct list_head *list)
++		if (__isolate_lru_page_prepare(page, isolate_mode) != 0)
++			goto isolate_fail;
++
++		/*
++		 * Be careful not to clear PageLRU until after we're
++		 * sure the page is not being freed elsewhere -- the
++		 * page release code relies on it.
++		 */
++		if (unlikely(!get_page_unless_zero(page)))
++			goto isolate_fail;
++
++		/* Try isolate the page */
++		if (!TestClearPageLRU(page)) {
++			put_page(page);
++			goto isolate_fail;
++		}
++
+ 		/* If we already hold the lock, we can skip some rechecking */
+ 		if (!locked) {
+ 			locked = compact_lock_irqsave(&pgdat->lru_lock,
+@@ -960,10 +977,6 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 					goto isolate_abort;
+ 			}
+ 
+-			/* Recheck PageLRU and PageCompound under lock */
+-			if (!PageLRU(page))
+-				goto isolate_fail;
+-
+ 			/*
+ 			 * Page become compound since the non-locked check,
+ 			 * and it's on LRU. It can only be a THP so the order
+@@ -977,10 +990,6 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 
+ 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+ 
+-		/* Try isolate the page */
+-		if (__isolate_lru_page(page, isolate_mode) != 0)
+-			goto isolate_fail;
+-
+ 		VM_BUG_ON_PAGE(PageCompound(page), page);
+ 
+ 		/* Successfully isolated */
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 8958454d50fe..bc2ec3fe4f48 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1522,20 +1522,20 @@ unsigned long reclaim_clean_pages_from_list(struct zone *zone,
+  *
+  * returns 0 on success, -ve errno on failure.
+  */
+-int __isolate_lru_page(struct page *page, isolate_mode_t mode)
++int __isolate_lru_page_prepare(struct page *page, isolate_mode_t mode)
  {
- 	const int file = 0;
+ 	int ret = -EINVAL;
  
--	VM_BUG_ON_PAGE(!PageHead(page), page);
--	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
--	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
-+	VM_BUG_ON_PAGE(PageCompound(page_tail), head);
-+	VM_BUG_ON_PAGE(PageLRU(page_tail), head);
- 	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
+-	/* Only take pages on the LRU. */
+-	if (!PageLRU(page))
+-		return ret;
+-
+ 	/* Compaction should not handle unevictable pages but CMA can do so */
+ 	if (PageUnevictable(page) && !(mode & ISOLATE_UNEVICTABLE))
+ 		return ret;
  
- 	if (!list)
- 		SetPageLRU(page_tail);
+ 	ret = -EBUSY;
  
--	if (likely(PageLRU(page)))
--		list_add_tail(&page_tail->lru, &page->lru);
-+	if (likely(PageLRU(head)))
-+		list_add_tail(&page_tail->lru, &head->lru);
- 	else if (list) {
- 		/* page reclaim is reclaiming a huge page */
- 		get_page(page_tail);
-@@ -2476,7 +2475,7 @@ void lru_add_page_tail(struct page *page, struct page *page_tail,
- 					  page_lru(page_tail));
- 	}
++	/* Only take pages on the LRU. */
++	if (!PageLRU(page))
++		return ret;
++
+ 	/*
+ 	 * To minimise LRU disruption, the caller can indicate that it only
+ 	 * wants to isolate pages it will be able to operate on without
+@@ -1576,20 +1576,9 @@ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
+ 	if ((mode & ISOLATE_UNMAPPED) && page_mapped(page))
+ 		return ret;
  
--	if (!PageUnevictable(page))
-+	if (!PageUnevictable(head))
- 		update_page_reclaim_stat(lruvec, file, PageActive(page_tail));
+-	if (likely(get_page_unless_zero(page))) {
+-		/*
+-		 * Be careful not to clear PageLRU until after we're
+-		 * sure the page is not being freed elsewhere -- the
+-		 * page release code relies on it.
+-		 */
+-		ClearPageLRU(page);
+-		ret = 0;
+-	}
+-
+-	return ret;
++	return 0;
  }
  
+-
+ /*
+  * Update LRU sizes after isolating pages. The LRU size updates must
+  * be complete before mem_cgroup_update_lru_size due to a santity check.
+@@ -1653,8 +1642,6 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
+ 		page = lru_to_page(src);
+ 		prefetchw_prev_lru_page(page, src, flags);
+ 
+-		VM_BUG_ON_PAGE(!PageLRU(page), page);
+-
+ 		nr_pages = compound_nr(page);
+ 		total_scan += nr_pages;
+ 
+@@ -1675,17 +1662,34 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
+ 		 * only when the page is being freed somewhere else.
+ 		 */
+ 		scan += nr_pages;
+-		switch (__isolate_lru_page(page, mode)) {
++		switch (__isolate_lru_page_prepare(page, mode)) {
+ 		case 0:
++			/*
++			 * Be careful not to clear PageLRU until after we're
++			 * sure the page is not being freed elsewhere -- the
++			 * page release code relies on it.
++			 */
++			if (unlikely(!get_page_unless_zero(page)))
++				goto busy;
++
++			if (!TestClearPageLRU(page)) {
++				/*
++				 * This page may in other isolation path,
++				 * but we still hold lru_lock.
++				 */
++				put_page(page);
++				goto busy;
++			}
++
+ 			nr_taken += nr_pages;
+ 			nr_zone_taken[page_zonenum(page)] += nr_pages;
+ 			list_move(&page->lru, dst);
+ 			break;
+-
++busy:
+ 		case -EBUSY:
+ 			/* else it is being freed elsewhere */
+ 			list_move(&page->lru, src);
+-			continue;
++			break;
+ 
+ 		default:
+ 			BUG();
 -- 
 1.8.3.1
 
