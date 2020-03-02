@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v9 01/20] mm/vmscan: remove unnecessary lruvec adding
-Date: Mon,  2 Mar 2020 19:00:11 +0800
-Message-ID: <1583146830-169516-2-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v9 12/20] mm/mlock: clean up __munlock_isolate_lru_page
+Date: Mon,  2 Mar 2020 19:00:22 +0800
+Message-ID: <1583146830-169516-13-git-send-email-alex.shi@linux.alibaba.com>
 References: <1583146830-169516-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1583146830-169516-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -13,92 +13,94 @@ Content-Transfer-Encoding: 7bit
 To: cgroups@vger.kernel.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com
 Cc: Alex Shi <alex.shi@linux.alibaba.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-We don't have to add a freeable page into lru and then remove from it.
-This change saves a couple of actions and makes the moving more clear.
-
-The SetPageLRU needs to be kept here for list intergrity.
-Otherwise:
- #0 mave_pages_to_lru              #1 release_pages
-                                   if (put_page_testzero())
- if !put_page_testzero
-                                     !PageLRU //skip lru_lock
-                                       list_add(&page->lru,)
-   list_add(&page->lru,) //corrupt
+clean up __munlock_isolate_lru_page func for later lru lock change.
+No functional change.
 
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Matthew Wilcox <willy@infradead.org>
 Cc: Hugh Dickins <hughd@google.com>
 Cc: linux-mm@kvack.org
 Cc: linux-kernel@vger.kernel.org
 ---
- mm/vmscan.c | 32 +++++++++++++++++++++-----------
- 1 file changed, 21 insertions(+), 11 deletions(-)
+ mm/mlock.c | 47 ++++++++++++++++++-----------------------------
+ 1 file changed, 18 insertions(+), 29 deletions(-)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 876370565455..dcdd33f65f43 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -1838,26 +1838,29 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
- 	while (!list_empty(list)) {
- 		page = lru_to_page(list);
- 		VM_BUG_ON_PAGE(PageLRU(page), page);
-+		list_del(&page->lru);
- 		if (unlikely(!page_evictable(page))) {
--			list_del(&page->lru);
- 			spin_unlock_irq(&pgdat->lru_lock);
- 			putback_lru_page(page);
- 			spin_lock_irq(&pgdat->lru_lock);
- 			continue;
- 		}
--		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+diff --git a/mm/mlock.c b/mm/mlock.c
+index 7ddc52ca14b1..a43b3da78541 100644
+--- a/mm/mlock.c
++++ b/mm/mlock.c
+@@ -103,25 +103,6 @@ void mlock_vma_page(struct page *page)
+ }
  
-+		/*
-+		 * The SetPageLRU needs to be kept here for list intergrity.
-+		 * Otherwise:
-+		 *   #0 mave_pages_to_lru              #1 release_pages
-+		 *				       if (put_page_testzero())
-+		 *   if !put_page_testzero
-+		 *				         !PageLRU //skip lru_lock
-+		 *                                         list_add(&page->lru,)
-+		 *     list_add(&page->lru,) //corrupt
-+		 */
- 		SetPageLRU(page);
--		lru = page_lru(page);
+ /*
+- * Isolate a page from LRU with optional get_page() pin.
+- * Assumes lru_lock already held and page already pinned.
+- */
+-static bool __munlock_isolate_lru_page(struct page *page, bool getpage)
+-{
+-	if (TestClearPageLRU(page)) {
+-		struct lruvec *lruvec;
 -
--		nr_pages = hpage_nr_pages(page);
--		update_lru_size(lruvec, lru, page_zonenum(page), nr_pages);
--		list_move(&page->lru, &lruvec->lists[lru]);
+-		lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+-		if (getpage)
+-			get_page(page);
+-		del_page_from_lru_list(page, lruvec, page_lru(page));
+-		return true;
+-	}
+-
+-	return false;
+-}
+-
+-/*
+  * Finish munlock after successful page isolation
+  *
+  * Page must be locked. This is a wrapper for try_to_munlock()
+@@ -311,26 +292,34 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ 	spin_lock_irq(&zone->zone_pgdat->lru_lock);
+ 	for (i = 0; i < nr; i++) {
+ 		struct page *page = pvec->pages[i];
++		struct lruvec *lruvec;
  
--		if (put_page_testzero(page)) {
-+		if (unlikely(put_page_testzero(page))) {
- 			__ClearPageLRU(page);
- 			__ClearPageActive(page);
--			del_page_from_lru_list(page, lruvec, lru);
- 
- 			if (unlikely(PageCompound(page))) {
- 				spin_unlock_irq(&pgdat->lru_lock);
-@@ -1865,9 +1868,16 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
- 				spin_lock_irq(&pgdat->lru_lock);
- 			} else
- 				list_add(&page->lru, &pages_to_free);
+-		if (TestClearPageMlocked(page)) {
+-			/*
+-			 * We already have pin from follow_page_mask()
+-			 * so we can spare the get_page() here.
+-			 */
+-			if (__munlock_isolate_lru_page(page, false))
+-				continue;
+-			else
+-				__munlock_isolation_failed(page);
 -		} else {
--			nr_moved += nr_pages;
-+			continue;
++		if (!TestClearPageMlocked(page)) {
+ 			delta_munlocked++;
++			goto putback;
++		}
++
++		if (!TestClearPageLRU(page)) {
++			__munlock_isolation_failed(page);
++			goto putback;
  		}
-+
-+		lruvec = mem_cgroup_page_lruvec(page, pgdat);
-+		lru = page_lru(page);
-+		nr_pages = hpage_nr_pages(page);
-+
-+		update_lru_size(lruvec, lru, page_zonenum(page), nr_pages);
-+		list_add(&page->lru, &lruvec->lists[lru]);
-+		nr_moved += nr_pages;
- 	}
  
- 	/*
+ 		/*
++		 * Isolate this page.
++		 * We already have pin from follow_page_mask()
++		 * so we can spare the get_page() here.
++		 */
++		lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
++		del_page_from_lru_list(page, lruvec, page_lru(page));
++		continue;
++
++		/*
+ 		 * We won't be munlocking this page in the next phase
+ 		 * but we still need to release the follow_page_mask()
+ 		 * pin. We cannot do it under lru_lock however. If it's
+ 		 * the last pin, __page_cache_release() would deadlock.
+ 		 */
++putback:
+ 		pagevec_add(&pvec_putback, pvec->pages[i]);
+ 		pvec->pages[i] = NULL;
+ 	}
 -- 
 1.8.3.1
 
