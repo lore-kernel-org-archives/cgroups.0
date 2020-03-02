@@ -1,50 +1,58 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v9 07/20] mm/lru: introduce TestClearPageLRU
-Date: Mon, 2 Mar 2020 14:11:44 -0800
-Message-ID: <20200302141144.b30abe0d89306fd387e13a92@linux-foundation.org>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH v9 00/21] per lruvec lru_lock for memcg
+Date: Mon, 2 Mar 2020 14:12:02 -0800
+Message-ID: <20200302141202.91d88e8b730b194a8bd8fa7d@linux-foundation.org>
 References: <1583146830-169516-1-git-send-email-alex.shi@linux.alibaba.com>
-        <1583146830-169516-8-git-send-email-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1583187105;
-        bh=nmmuEpxmCjc0aKsztvjVXQXja7/rg6W/P3XUJuNzzKc=;
+        s=default; t=1583187123;
+        bh=u00owx5AeCvb4Q/OakL2XqFZQBlbOD3X9KlvMyZ6N/Q=;
         h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=0q18elEUkRaxUtioBVBS0syNq3bikiyHmmqzQeYjY9AB/5R2JiOBn5bl54IyRZzmt
-         nLXzchT4MCXx8AoVjhcjC4USN/LyuG9qHeJn15K86f757YVqpUM0rb9wmH5F0hqdSj
-         AWBD+bnAAE4uWywcgoAr66YGhiWsV1IXA2regTt8=
-In-Reply-To: <1583146830-169516-8-git-send-email-alex.shi@linux.alibaba.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        b=g/RKQreadIbBaR77IOPoErtcimfL0iyJfsZUocHcMLCEY4S5MOvpM6dIKJ8P5bcJc
+         LueHo/4by5fhWowdKPvagGgYH/8DV3KR6B9Nr0oVZf8sHcKAbyInhLkyD7bswHtkGk
+         7Hgt9ic26m0ALwoXf49r1dkSLRGJyBUY5dAZTR5k=
+In-Reply-To: <1583146830-169516-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: cgroups@vger.kernel.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-kernel@vger.kernel.org, linux-mm@kvack.org
+To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
 
-On Mon,  2 Mar 2020 19:00:17 +0800 Alex Shi <alex.shi@linux.alibaba.com> wrote:
+On Mon,  2 Mar 2020 19:00:10 +0800 Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org> wrote:
 
-> Combined PageLRU check and ClearPageLRU into one function by new
-> introduced func TestClearPageLRU. This function will be used as page
-> isolation precondition.
+> Hi all,
 > 
-> No functional change yet.
+> This patchset mainly includes 3 parts:
+> 1, some code cleanup and minimum optimization as a preparation.
+> 2, use TestCleanPageLRU as page isolation's precondition
+> 3, replace per node lru_lock with per memcg per node lru_lock
 > 
-> ...
->
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2588,9 +2588,8 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
->  		pgdat = page_pgdat(page);
->  		spin_lock_irq(&pgdat->lru_lock);
->  
-> -		if (PageLRU(page)) {
-> +		if (TestClearPageLRU(page)) {
->  			lruvec = mem_cgroup_page_lruvec(page, pgdat);
-> -			ClearPageLRU(page);
->  			del_page_from_lru_list(page, lruvec, page_lru(page));
->  		} else
+> The keypoint of this patchset is moving lru_lock into lruvec, give a 
+> lru_lock for each of lruvec, thus bring a lru_lock for each of memcg 
+> per node. So on a large node machine, each of memcg don't suffer from
+> per node pgdat->lru_lock waiting. They could go fast with their self
+> lru_lock now.
+> 
+> Since lruvec belongs to each memcg, the critical point is to keep
+> page's memcg stable, so we take PageLRU as its isolation's precondition.
+> Thanks for Johannes Weiner help and suggestion!
+> 
+> Following Daniel Jordan's suggestion, I have run 208 'dd' with on 104
+> containers on a 2s * 26cores * HT box with a modefied case:
+>   https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/tree/case-lru-file-readtwice
+> 
+> With this patchset, the readtwice performance increased about 80%
+> in concurrent containers.
+> 
+> Thanks Hugh Dickins and Konstantin Khlebnikov, they both brought this
+> idea 8 years ago, and others who give comments as well: Daniel Jordan, 
+> Mel Gorman, Shakeel Butt, Matthew Wilcox etc.
+> 
+> Thanks for Testing support from Intel 0day and Rong Chen, Fengguang Wu,
+> and Yun Wang.
 
-The code will now get exclusive access of the page->flags cacheline and
-will dirty that cacheline, even for !PageLRU() pages.  What is the
-performance impact of this?
-
+I'm not seeing a lot of evidence of review and test activity yet.  But
+I think I'll grab patches 01-06 as they look like fairly
+straightforward improvements.
