@@ -1,61 +1,68 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v9 03/20] mm/page_idle: no unlikely double check for idle page counting
-Date: Mon,  2 Mar 2020 19:00:13 +0800
-Message-ID: <1583146830-169516-4-git-send-email-alex.shi@linux.alibaba.com>
-References: <1583146830-169516-1-git-send-email-alex.shi@linux.alibaba.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH] cgroup-v1: freezer: optionally killable freezer
+Date: Mon, 2 Mar 2020 08:53:30 -0800
+Message-ID: <20200302165330.GA505299@carbon.DHCP.thefacebook.com>
+References: <20200219183231.50985-1-balejs@google.com>
+ <20200229005131.GB9813@google.com>
+ <20200229184300.GA484762@carbon.DHCP.thefacebook.com>
+ <20200301162003.GA186618@google.com>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1583146830-169516-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=6GrNg9i1YqRPzEEyPjUgEb5cDEPYnvaI57FJcWEvnSw=;
+ b=ZNgnTEB+gN/WxsS6aWcUaQ1DeaaVCAqYC1JJBRl0UrNpSVOo2OyOJt3pt0KToDulRZyx
+ DS51tZBEFYMx1dC15nn7+Kz1ciKyAT1t9GlsvZDmudYX7H5IDqK3Jp8cexgedz4b4juJ
+ MDkDgqpOo22kF/1euNB7CaC/14Z1s66CSD0= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=6GrNg9i1YqRPzEEyPjUgEb5cDEPYnvaI57FJcWEvnSw=;
+ b=lGZ+GZtdaGGXcII/1E3OcFE9XMze4bCJtlMv3IV2JXe+S6yruLKgSYBjY+wX7Vr0j/k7HxVXkXhRyJp4CV8l62kqs9qk4o1AA0wqTyJ3OiQmPU74lD6gwetk0L5JX2J/0jFofGgcbMoGMgR1itTaa3Z02/EkyKRjdTuSm/PotzQ=
+Content-Disposition: inline
+In-Reply-To: <20200301162003.GA186618-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
-Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Marco Ballesio <balejs-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org, pavel-+ZI9xUNit7I@public.gmane.org, len.brown-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, minchan-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dancol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-As func comments mentioned, few isolated page missing be tolerated.
-So why not do further to drop the unlikely double check. That won't
-cause more idle pages, but reduce a lock contention.
+On Sun, Mar 01, 2020 at 08:20:03AM -0800, Marco Ballesio wrote:
+> On Sat, Feb 29, 2020 at 10:43:00AM -0800, Roman Gushchin wrote:
+> > On Fri, Feb 28, 2020 at 04:51:31PM -0800, Marco Ballesio wrote:
+> > > Hi all,
+> > > 
+> > > did anyone have time to look into my proposal and, in case, are there
+> > > any suggestions, ideas or comments about it?
+> > 
+> > Hello, Marco!
+> > 
+> > I'm sorry, somehow I missed the original letter.
+> > 
+> > In general the cgroup v1 interface is considered frozen. Are there any particular
+> > reasons why you want to extend the v1 freezer rather than use the v2 version of it?
+> > 
+> > You don't even need to fully convert to cgroup v2 in order to do it, some v1
+> > controllers can still be used.
+> > 
+> > Thanks!
+> > 
+> > Roman
+> 
+> Hi Roman,
+> 
+> When compared with backports of v2 features and their dependency chains, this
+> patch would be easier to carry in Android common. The potential is to have
+> killability for frozen processes on hw currently in use.
 
-This is also a preparation for later new page isolation feature.
+I see...
 
-Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
----
- mm/page_idle.c | 8 --------
- 1 file changed, 8 deletions(-)
+The implementation looks good to me, but I really not sure if adding new control files
+to cgroup v1 is a good idea at this point. Are there any plans in the Android world
+to move forward to cgroup v2? If not, why not?
+If there are any specific issues/dependencies, let's discuss and resolve them.
 
-diff --git a/mm/page_idle.c b/mm/page_idle.c
-index 295512465065..914df63948b1 100644
---- a/mm/page_idle.c
-+++ b/mm/page_idle.c
-@@ -31,7 +31,6 @@
- static struct page *page_idle_get_page(unsigned long pfn)
- {
- 	struct page *page;
--	pg_data_t *pgdat;
- 
- 	if (!pfn_valid(pfn))
- 		return NULL;
-@@ -41,13 +40,6 @@ static struct page *page_idle_get_page(unsigned long pfn)
- 	    !get_page_unless_zero(page))
- 		return NULL;
- 
--	pgdat = page_pgdat(page);
--	spin_lock_irq(&pgdat->lru_lock);
--	if (unlikely(!PageLRU(page))) {
--		put_page(page);
--		page = NULL;
--	}
--	spin_unlock_irq(&pgdat->lru_lock);
- 	return page;
- }
- 
--- 
-1.8.3.1
+Thanks!
 
+Roman
