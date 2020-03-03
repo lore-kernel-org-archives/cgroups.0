@@ -1,60 +1,55 @@
-From: Daniel Xu <dxu@dxuuu.xyz>
-Subject: [PATCH 0/2] Support user xattrs in cgroupfs
-Date: Mon,  2 Mar 2020 17:38:59 -0800
-Message-ID: <20200303013901.32150-1-dxu@dxuuu.xyz>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH v9 07/20] mm/lru: introduce TestClearPageLRU
+Date: Tue, 3 Mar 2020 12:11:34 +0800
+Message-ID: <9cacdc21-9c1f-2a17-05cb-e9cf2959cef5@linux.alibaba.com>
+References: <1583146830-169516-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1583146830-169516-8-git-send-email-alex.shi@linux.alibaba.com>
+ <20200302141144.b30abe0d89306fd387e13a92@linux-foundation.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dxuuu.xyz; h=
-        from:to:cc:subject:date:message-id:mime-version
-        :content-transfer-encoding; s=fm2; bh=ysvyyNqelCZVTgBcWzOEvvcC33
-        cx9jhu4emdd18b2bk=; b=ZU+Ln5Z7UWVizqx8sTVNu/iUB+0/wVA9ON3/keSvmx
-        6qKz93LZGBkkkhXsqYKQVmUgXq3Kx6mLxObp7W0USNaKcxx6ZLs94nRxRvxRJk0b
-        wDrYfvhB5Nl6hli4IdzXRTHsAWgd5K5wu6zpIikd9WjLbIgjCY66tu2FAuk5ebcW
-        Z/d9Ascb3JCubO9bDhoDRFJLUZBXiQ0+5pgfCAJd1BiYVPEv3B5cN7sz24SaVQqn
-        lRn7gzvHqaVUq6ObNKQz23h7BrShEYykLDCAm/ytEhjceRNB62Fgh8nNhnsfVpoF
-        BbLCFGZlbFI9uBxLDu4Jf0bUZVJHKMT9D+ApfW6S6o1g==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-transfer-encoding:date:from
-        :message-id:mime-version:subject:to:x-me-proxy:x-me-proxy
-        :x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=ysvyyNqelCZVTgBcW
-        zOEvvcC33cx9jhu4emdd18b2bk=; b=pQ+Z4iPiki3atQvxFQd7Wp1p9TQ0ukQeE
-        Nqltpy/aJyklL7PFMEzMqolOTsVTa9PRw5em6tmS+mSpVerlwVzDd/WSEqJetCWA
-        T/vMDAaBdCklHQXKBBYJiWgFm9d0xnP806c1b7ZdjNmmFpgZCS2ZQRt4qF4xBDof
-        PpzgMnvlxx+XVY/ND+i1h4aI1Mv0z+ideY46KStLp4k8bVQAh/eL9KiJdjecSS3h
-        F7c1RpjW4cq8wj76bWq8RM518eQyFo492vTuQPP+HQTG6ghW82+sNLPatQjZFzQD
-        vlisC/6lKPFOEbY1t1d79pCa70fqOdd4hSyLxGSvE6/tVXOv4XD4w==
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200302141144.b30abe0d89306fd387e13a92-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: cgroups@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org
-Cc: Daniel Xu <dxu@dxuuu.xyz>, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, kernel-team@fb.com
+Content-Type: text/plain; charset="iso-8859-1"
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-User extended attributes are useful as metadata storage for kernfs
-consumers like cgroups. Especially in the case of cgroups, it is useful
-to have a central metadata store that multiple processes/services can
-use to coordinate actions.
 
-A concrete example is for userspace out of memory killers. We want to
-let delegated cgroup subtree owners (running as non-root) to be able to
-say "please avoid killing this cgroup". In server environments this is
-less important as everyone is running as root. But for desktop linux,
-this is more important.
 
-The first patch introduces a new flag, KERNFS_ROOT_SUPPORT_USER_XATTR,
-that lets kernfs consumers enable user xattr support. The second patch
-turns on this feature for cgroupfs.
+=D4=DA 2020/3/3 =C9=CF=CE=E76:11, Andrew Morton =D0=B4=B5=C0:
+>> -		if (PageLRU(page)) {
+>> +		if (TestClearPageLRU(page)) {
+>>  			lruvec =3D mem_cgroup_page_lruvec(page, pgdat);
+>> -			ClearPageLRU(page);
+>>  			del_page_from_lru_list(page, lruvec, page_lru(page));
+>>  		} else
+>=20
+> The code will now get exclusive access of the page->flags cacheline and
+> will dirty that cacheline, even for !PageLRU() pages.  What is the
+> performance impact of this?
+>=20
 
-Daniel Xu (2):
-  kernfs: Add option to enable user xattrs
-  cgroupfs: Support user xattrs
+Hi Andrew,
 
- fs/kernfs/inode.c           | 47 +++++++++++++++++++++++++++++++++++++
- fs/kernfs/kernfs-internal.h |  1 +
- include/linux/kernfs.h      |  6 +++++
- kernel/cgroup/cgroup.c      |  3 ++-
- 4 files changed, 56 insertions(+), 1 deletion(-)
+Thanks a lot for comments!
 
--- 
-2.21.1
+I was tested the whole patchset with fengguang's case-lru-file-readtwice
+https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/
+which is most sensitive case on PageLRU I found. There are no clear perform=
+ance
+drop.
 
+On this single patch, I just test the same case again, there is still no pe=
+rf
+drop. some data is here on my 96 threads machine:
+
+		no lock_dep	w lock_dep and few other debug option
+w this patch, 	50.96MB/s		32.93MB/s
+w/o this patch, 50.50MB/s		33.53MB/s
+
+
+And also no any warning from Intel 0day yet.
+
+Thanks a lot!
+Alex
