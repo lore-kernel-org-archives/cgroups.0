@@ -1,44 +1,66 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH 0/2] Support user xattrs in cgroupfs
-Date: Tue, 3 Mar 2020 08:50:54 -0800
-Message-ID: <CALvZod5m3otRRqcLBebbgiZbhoYWAMbMg+ESkacJuj64OP=H4Q@mail.gmail.com>
-References: <20200303013901.32150-1-dxu@dxuuu.xyz>
-Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=qHOn5vqQErDHAkJzL6biRHoTSOSlgdzSHmMDR1rwOSw=;
-        b=PrhC/74bze2iem1KsYtIHMvUu/v2Av2MYk8EydsyRsT6ErJ1YQjmNh0R/wDKNLwWyQ
-         giq1Pswj3xm3xsbBxVlb00LD6jgh8VspNAcUdojVVHgzs6YNMORKfgfiLcxXKihiD2U4
-         VPumlwmRJK94sUJBBlqZZYGZUQDwIbA2T5iHVgWPvH96kjWeV0LugsEESIk6ALCIRDQm
-         RBXbpHeIFbrG+TdqIZuAbNbugBhyCIMZGQaFYAf3mlAz6FH7d7jAZcPCS1yweB7G38bo
-         a3New9pxIAHaKb1Yr5Al4Jz6nhSG737F7DafcGI95pWkYx4GRRGQsLd7Cs4k3E6agMnj
-         8xSg==
-In-Reply-To: <20200303013901.32150-1-dxu@dxuuu.xyz>
-Sender: linux-kernel-owner@vger.kernel.org
+From: "Daniel Xu" <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>
+Subject: Re: [PATCH 1/2] kernfs: Add option to enable user xattrs
+Date: Tue, 03 Mar 2020 11:19:57 -0800
+Message-ID: <C11FYO0Q9WJU.2MLRRFOQ3E878@dlxu-fedora-R90QNFJV>
+References: <20200303131921.GB5186@mtj.thefacebook.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dxuuu.xyz; h=
+        content-transfer-encoding:content-type:in-reply-to:date:cc
+        :subject:from:to:message-id; s=fm2; bh=SqCNlbZH8ocvAyttYISsWHKwX
+        84caUapAFPB6jsa97s=; b=g6MaKLrIMsUaGb1UjRYqWoDzQokUD1CiYDB2v26mW
+        DaLlYLeLS7bZH7ruoRAUXrskg5Y8BaC9PXkjU2hPgmq8izaqMud9Tf7NAMApdcsm
+        1DMGlUcfDbgoQ73mk1gXpgpYEYWhDMMHAvAJBxiUJJbqPy/HgFuVAbgTZo5ewc+e
+        ZHbIdhNrL5oxK8ZS6wQDnO7h5PKRmE/68zdbtwSERuEPnTXqJ864sZOJCaKDIY9J
+        wNDjUp2bwIpEAhvIDOejKoYuc+GGqVAJ/elOHfpr8s01lJs5PWJqRU6wpFkffqBa
+        Y74qFJOEjUzr2YHxRJTbx/d1sxGvY88cg/WMYzP3gzlLA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:content-type
+        :date:from:in-reply-to:message-id:subject:to:x-me-proxy
+        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=SqCNlb
+        ZH8ocvAyttYISsWHKwX84caUapAFPB6jsa97s=; b=0/MOFvBYBmX+f+lBEXqMky
+        oN3rZdVK00aHz/c17ts+U4rsUj52+C9HYF0NvUUndt5SOkFjjdh/GhpwptYNCh5h
+        yWgQn+HqrM52+LP4mCbY5uWJmAisbdVEyVSdDifufbXkUoU3xIBBof/638HM7AVq
+        XENKYXuvw34Ef9rCRVP1jhTmgJpzOJZZJ7NjU1/1klDWGX2IUjzXf/BNETHDfNes
+        83Z5l8wPs8FefxVKPihttZe3qe46c8WJwzuIwO8cdsxvCiMcIAJKJP5w9ScyO8ja
+        kQ3QIEEowvN9T6p/8eSjPaevEZ6OXVNmYS+bTyb8HRXyju3/HD7jcqXrMcnHnVDg
+        ==
+In-Reply-To: <20200303131921.GB5186-146+VewaZzwNjtGbbfXrCEEOCMrvLtNR@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Daniel Xu <dxu@dxuuu.xyz>
-Cc: Cgroups <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kernel Team <kernel-team@fb.com>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hi Daniel,
-
-On Mon, Mar 2, 2020 at 5:42 PM Daniel Xu <dxu@dxuuu.xyz> wrote:
+On Tue Mar 3, 2020 at 8:19 AM, Tejun Heo wrote:
+> Hello,
 >
-> User extended attributes are useful as metadata storage for kernfs
-> consumers like cgroups. Especially in the case of cgroups, it is useful
-> to have a central metadata store that multiple processes/services can
-> use to coordinate actions.
+>=20
+> On Mon, Mar 02, 2020 at 05:39:00PM -0800, Daniel Xu wrote:
+> > +static int kernfs_vfs_user_xattr_set(const struct xattr_handler *handl=
+er,
+> > +				     struct dentry *unused, struct inode *inode,
+> > +				     const char *suffix, const void *value,
+> > +				     size_t size, int flags)
+> > +{
+> ...
+> > +	if (value && atomic_inc_return(nr) > KERNFS_MAX_USER_XATTRS) {
+> > +		ret =3D -ENOSPC;
+> > +		goto dec_out;
+> > +	}
 >
-> A concrete example is for userspace out of memory killers. We want to
-> let delegated cgroup subtree owners (running as non-root) to be able to
-> say "please avoid killing this cgroup". In server environments this is
-> less important as everyone is running as root.
+>=20
+> So, we limit the number of user xattrs here but
+>
+>=20
+> > +	ret =3D kernfs_vfs_xattr_set(handler, unused, inode, suffix, value,
+> > +				   size, flags);
+>
+>=20
+> This will call into simple_xattr_set() which doesn't put any further
+> restriction on size and just calls GFP_KERNEL kmalloc on it allowing
+> users incur high-order allocations. Maybe it'd make sense to limit
+> both the number and size?
 
-I would recommend removing the "everyone is running as root" statement
-as it is not generally true.
-
-Shakeel
+Ah yeah good point. Will add.
