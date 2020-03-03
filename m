@@ -1,66 +1,44 @@
-From: Benjamin Berg <benjamin-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
-Subject: Re: [BUG] NULL pointer de-ref when setting io.cost.qos on LUKS
- devices
-Date: Tue, 03 Mar 2020 15:40:38 +0100
-Message-ID: <24bd31cdaa3ea945908bc11cea05d6aae6929240.camel@sipsolutions.net>
-References: <1dbdcbb0c8db70a08aac467311a80abcf7779575.camel@sipsolutions.net>
-         <20200303141902.GB189690@mtj.thefacebook.com>
-         (sfid-20200303_151905_302479_14795E89)
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH 0/2] Support user xattrs in cgroupfs
+Date: Tue, 3 Mar 2020 08:50:54 -0800
+Message-ID: <CALvZod5m3otRRqcLBebbgiZbhoYWAMbMg+ESkacJuj64OP=H4Q@mail.gmail.com>
+References: <20200303013901.32150-1-dxu@dxuuu.xyz>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-j4uCKWQWPoDS0sEousKX"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200303141902.GB189690-146+VewaZzwNjtGbbfXrCEEOCMrvLtNR@public.gmane.org> (sfid-20200303_151905_302479_14795E89)
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=qHOn5vqQErDHAkJzL6biRHoTSOSlgdzSHmMDR1rwOSw=;
+        b=PrhC/74bze2iem1KsYtIHMvUu/v2Av2MYk8EydsyRsT6ErJ1YQjmNh0R/wDKNLwWyQ
+         giq1Pswj3xm3xsbBxVlb00LD6jgh8VspNAcUdojVVHgzs6YNMORKfgfiLcxXKihiD2U4
+         VPumlwmRJK94sUJBBlqZZYGZUQDwIbA2T5iHVgWPvH96kjWeV0LugsEESIk6ALCIRDQm
+         RBXbpHeIFbrG+TdqIZuAbNbugBhyCIMZGQaFYAf3mlAz6FH7d7jAZcPCS1yweB7G38bo
+         a3New9pxIAHaKb1Yr5Al4Jz6nhSG737F7DafcGI95pWkYx4GRRGQsLd7Cs4k3E6agMnj
+         8xSg==
+In-Reply-To: <20200303013901.32150-1-dxu@dxuuu.xyz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-
-
---=-j4uCKWQWPoDS0sEousKX
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2020-03-03 at 09:19 -0500, Tejun Heo wrote:
-> Hello,
->=20
-> On Tue, Mar 03, 2020 at 03:13:10PM +0100, Benjamin Berg wrote:
-> > so, I tried to set io.latency for some cgroups for the root device,
-> > which is ext4 inside LVM inside LUKS.
->=20
-> It's pointless on compound devices. I think the right thing to do here
-> is disallowing to enable it on those devices.
-
-I believe systemd tries to resolve to /dev/sda but that seems to fail
-for me. So I think there is a bug in that code; I'll verify that and
-submit a fix if so.
-
-Which device should actually be selected? Is it /dev/sda or the mapper
-device that / is mounted from?
-
-Benjamin
-
---=-j4uCKWQWPoDS0sEousKX
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+To: Daniel Xu <dxu@dxuuu.xyz>
+Cc: Cgroups <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, LKML <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kernel Team <kernel-team@fb.com>
 
------BEGIN PGP SIGNATURE-----
+Hi Daniel,
 
-iQIzBAABCAAdFiEED2NO4vMS33W8E4AFq6ZWhpmFY3AFAl5ebGYACgkQq6ZWhpmF
-Y3DTFw//VcGWBCbgwz1EKl5qv3UCTAc1Ra0D+vtWN6PD21vXyMF+gU4yrxIF5ZO4
-aW4FwhM0MgmrBRsgew/6pH1TkIsE8bIlh1h8fi921ISOVYygvu0QRKuQ6Gll1trA
-+yS+J9e9NrDAio1xPkopG/Lf/ZiyO9a88aeiGckEQ7j3xXEW4pCM42gttYoLugh3
-qVI8vTvj1Ns0SCQ/qq25UH2Tk5h7IUA4efmNbeZElDGRBBAKhSGNg4r9zLZFVdU9
-4PPQ69jBTXjK5uB2x6DuroH5vYHOlJcRb0yaZpFOMqbk5QoaXfi094gKBVllqdLB
-hAI0P3lR64xQhmSkP7J4Y8zkhDQMKiCFxbJDAk6a/HQmYSb3fc7tX7yBljZWI2HK
-Cthf7MGU3+ElqevQ8a/bglssB8Rw1ufoxOgh1TDDRSRVXmRm2szUY2V/EVQYqlT/
-aqpogxLDCYKluvn6N6wAGLV1hPIeuUo6Ld34f0lcA69c/dccdBQ+CCM6ToAHvfMl
-+YQAN6cN2mV1iRKzjq3O3beVV1ueoOtaHDKbuHy22c7SqRx1mwZUuyydfuGpLNSv
-djo9Y9LPMBVL+hHkDNNtHFmV7vguTEqirD6nnoKj/HtUofyS9o/Ylh9EOhkr1eMi
-9Q4cjZG2ydksugCidpVDL1ZbkeeFNH5OnJ4ZIWH0lvCy3y0dzHo=
-=NGp6
------END PGP SIGNATURE-----
+On Mon, Mar 2, 2020 at 5:42 PM Daniel Xu <dxu@dxuuu.xyz> wrote:
+>
+> User extended attributes are useful as metadata storage for kernfs
+> consumers like cgroups. Especially in the case of cgroups, it is useful
+> to have a central metadata store that multiple processes/services can
+> use to coordinate actions.
+>
+> A concrete example is for userspace out of memory killers. We want to
+> let delegated cgroup subtree owners (running as non-root) to be able to
+> say "please avoid killing this cgroup". In server environments this is
+> less important as everyone is running as root.
 
---=-j4uCKWQWPoDS0sEousKX--
+I would recommend removing the "everyone is running as root" statement
+as it is not generally true.
 
+Shakeel
