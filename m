@@ -1,54 +1,141 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH v9 07/20] mm/lru: introduce TestClearPageLRU
-Date: Wed, 4 Mar 2020 17:37:31 +0800
-Message-ID: <60d253bb-33d0-4328-bfde-3b7c26435cde@linux.alibaba.com>
-References: <1583146830-169516-1-git-send-email-alex.shi@linux.alibaba.com>
- <1583146830-169516-8-git-send-email-alex.shi@linux.alibaba.com>
- <20200302141144.b30abe0d89306fd387e13a92@linux-foundation.org>
- <9cacdc21-9c1f-2a17-05cb-e9cf2959cef5@linux.alibaba.com>
- <20200303164659.b3a30ab9d68c9ed82299a29c@linux-foundation.org>
- <6d155f79-8ba2-b322-4e92-311e7be98f79@linux.alibaba.com>
- <20200304090301.GB5972@shao2-debian>
+From: Benjamin Berg <benjamin-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
+Subject: Memory reclaim protection and cgroup nesting (desktop use)
+Date: Wed, 04 Mar 2020 10:44:44 +0100
+Message-ID: <d4826b9e568f1ab7df19f94c409df11956a8e262.camel@sipsolutions.net>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-X/bjWAe/RYw/yZnfBd4v"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200304090301.GB5972@shao2-debian>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Rong Chen <rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
 
+--=-X/bjWAe/RYw/yZnfBd4v
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-在 2020/3/4 下午5:03, Rong Chen 写道:
->> Hi Andrew,
->>
->> Thanks a lot for comments!
->> Yes, this patch is essential for all next.
->>
->> Consider the normal memory testing would focus on user page, that probabably with PageLRU. 
->>
->> Fengguang's vm-scalibicase-small-allocs which used a lots vm_area_struct slab, which may
->> got some impact. 0day/Cheng Rong is working on the test. In my roughly testing, it may drop 5% on my
->> 96threads/394GB machine.
->>
->> Thanks
->> Alex
-> Hi,
-> 
-> We only tested one case and found a slight regression of vm-scalability.median from this patch set:
-> 
-> Test case: small allocs
-> =========================================================================================
-> compiler/cpufreq_governor/kconfig/rootfs/runtime/tbox_group/test/testcase/ucode:
->   gcc-7/performance/x86_64-rhel-7.6/debian-x86_64-20191114.cgz/300s/lkp-ivb-d02/small-allocs/vm-scalability/0x21
+Hi,
 
-It's a very acceptable result!
+TL;DR: I seem to need memory.min/memory.max to be set on each child
+cgroup and not just the parents. Is this expected?
 
-Thanks a lot for so quick testing! I believe your results would be far more stable than me. :)
 
-(My testing show quit different result in 2 reboot(1.3% or 6.6% drop). Maybe sth wrong for me in this case.)
+I have been experimenting with using cgroups to protect a GNOME
+session. The intention is that the GNOME Shell itself and important
+other services remain responsive, even if the application workload is
+thrashing. The long term goal here is to bridge the time until an OOM
+killer like oomd would get the system back into normal conditions using
+memory pressure information.
 
-Thanks for your report!
-Alex
+Note that I have done these tests without any swap and with huge
+memory.min/memory.low values. I consider this scenario pathological,
+however, it seems like a reasonable way to really exercise the cgroup
+reclaim protection logic.
+
+The resulting cgroup hierarchy looked something like:
+
+-.slice
+=E2=94=9C=E2=94=80user.slice
+=E2=94=82 =E2=94=94=E2=94=80user-1000.slice
+=E2=94=82   =E2=94=9C=E2=94=80user-HmGangybm7RTDjBF/Jpztg@public.gmane.org
+=E2=94=82   =E2=94=82 =E2=94=9C=E2=94=80session.slice
+=E2=94=82   =E2=94=82 =E2=94=82 =E2=94=9C=E2=94=80gsd-*.service
+=E2=94=82   =E2=94=82 =E2=94=82 =E2=94=82 =E2=94=94=E2=94=80208803 /usr/lib=
+exec/gsd-rfkill
+=E2=94=82   =E2=94=82 =E2=94=82 =E2=94=9C=E2=94=80gnome-shell-wayland.servi=
+ce
+=E2=94=82   =E2=94=82 =E2=94=82 =E2=94=82 =E2=94=9C=E2=94=80208493 /usr/bin=
+/gnome-shell
+=E2=94=82   =E2=94=82 =E2=94=82 =E2=94=82 =E2=94=9C=E2=94=80208549 /usr/bin=
+/Xwayland :0 -rootless -noreset -accessx -core -auth /run/user/1000/.mutter=
+-Xwayla>
+=E2=94=82   =E2=94=82 =E2=94=82 =E2=94=82 =E2=94=94=E2=94=80 =E2=80=A6
+=E2=94=82   =E2=94=82 =E2=94=94=E2=94=80apps.slice
+=E2=94=82   =E2=94=82   =E2=94=9C=E2=94=80gnome-launched-tracker-miner-fs.d=
+esktop-208880.scope
+=E2=94=82   =E2=94=82   =E2=94=82 =E2=94=94=E2=94=80208880 /usr/libexec/tra=
+cker-miner-fs
+=E2=94=82   =E2=94=82   =E2=94=9C=E2=94=80dbus-:1.2-org.gnome.OnlineAccount=
+s@0.service
+=E2=94=82   =E2=94=82   =E2=94=82 =E2=94=94=E2=94=80208668 /usr/libexec/goa=
+-daemon
+=E2=94=82   =E2=94=82   =E2=94=9C=E2=94=80flatpak-org.gnome.Fractal-210350.=
+scope
+=E2=94=82   =E2=94=82   =E2=94=9C=E2=94=80gnome-terminal-server.service
+=E2=94=82   =E2=94=82   =E2=94=82 =E2=94=9C=E2=94=80209261 /usr/libexec/gno=
+me-terminal-server
+=E2=94=82   =E2=94=82   =E2=94=82 =E2=94=9C=E2=94=80209434 bash
+=E2=94=82   =E2=94=82   =E2=94=82 =E2=94=94=E2=94=80 =E2=80=A6 including th=
+e test load i.e. "make -j32" of a C++ code
+
+
+I also enabled the CPU and IO controllers in my tests, but I don't
+think that is as relevant. The main thing is that I set
+  memory.min: 2GiB
+  memory.low: 4GiB
+
+using systemd on all of
+
+ * user.slice,
+ * user-1000.slice,
+ * user-j7y+/WGsDUWKtF1m3vyIGg@public.gmane.org,
+ * session.slice and
+ * everything inside session.slice
+   (i.e. gnome-shell-wayland.service, gsd-*.service, =E2=80=A6)
+
+excluding apps.slice from protection.
+
+(In a realistic scenario I expect to have swap and then reserving maybe
+a few hundred MiB; DAMON might help with finding good values.)
+
+
+At that point, the protection started working pretty much flawlessly.
+i.e. my gnome-shell would continue to run without major page faulting
+even though everything in apps.slice was thrashing heavily. The
+mouse/keyboard remained completely responsive, and interacting with
+applications ended up working much better thanks to knowing where input
+was going. Even if the applications themselves took seconds to react.
+
+So far, so good. What surprises me is that I needed to set the
+protection on the child cgroups (i.e. gnome-shell-wayland.service).
+Without this, it would not work (reliably) and my gnome-shell would
+still have a lot of re-faults to load libraries and other mmap'ed data
+back into memory (I used "perf --no-syscalls -F" to trace this and
+observed these to be repeatedly for the same pages loading e.g.
+functions for execution).
+
+Due to accounting effects, I would expect re-faults to happen up to one
+time in this scenario. At that point the page in question will be
+accounted against the shell's cgroup and reclaim protection could kick
+in. Unfortunately, that did not seem to happen unless the shell's
+cgroup itself had protections and not just all of its parents.
+
+Is it expected that I need to set limits on each child?
+
+Benjamin
+
+--=-X/bjWAe/RYw/yZnfBd4v
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEED2NO4vMS33W8E4AFq6ZWhpmFY3AFAl5feI0ACgkQq6ZWhpmF
+Y3AWGw/9HeiEx6iQ3yGu+Al2MmjgsXcOk3kpHJshbHFACzCT89QaAaHUMfUen3yV
+MUe92csEBuIcRVf0qMFvgMHpcHNT+O8K5aymgw+Hhs74MveMs2qyi1RQ0lw6ooqo
+qABY6uLspyZWQxzgIlJmIzZvlKUwS07CR7SulBBYxtRQSrdsHIq9J/R0Wpt9RD7L
+QI5cWpPqCm8GlqBbtGyaK78kN00oS1LlivSsdMbPEffDZG4XCsJv2+BQDLgiFfPu
+KlropNo+djQVQ/ccLa4ZXxIC0uoxVZbU6hy4D3G6xLckqmRN5xEWQmtjRS/4NMz8
+LH9eD1/j2rv4jcoIhndWtqNGy8xSaN72HK9Cor9sujud4qZkUS2oG30m5BQEtSM8
+nwJETv4euIP1bVw9URoEtt3Rwli9DuBVoTBUSJGtu8JfopNdezwckfldCGe0Hekg
+R99dsqpKf+kThq29tRfRcbCPZU7Lrkn3/lPIBpJEf9VZuL8mx70j+mouSBWSA8R4
+HHXxkzDU9YBneROgcFgjAOgrhM54pcfAIRexbmjJX1jiZ2WkurfO6QlaNsT54Vkz
+fto8/aE+MIR5qBmAFWRbmypZVOL1Od/j0X7w2CmDavOcDQqdS25BoHSvpTBITjYM
+bfLrEnh7CjStdaXNLIBbY3Orbzz5MNkXolqsKtLM2DKE3vqtSVQ=
+=YegP
+-----END PGP SIGNATURE-----
+
+--=-X/bjWAe/RYw/yZnfBd4v--
+
