@@ -1,153 +1,47 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] memcg: optimize memory.numa_stat like memory.stat
-Date: Tue,  3 Mar 2020 18:20:58 -0800
-Message-ID: <20200304022058.248270-1-shakeelb@google.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH v9 07/20] mm/lru: introduce TestClearPageLRU
+Date: Wed, 4 Mar 2020 15:06:48 +0800
+Message-ID: <6d155f79-8ba2-b322-4e92-311e7be98f79@linux.alibaba.com>
+References: <1583146830-169516-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1583146830-169516-8-git-send-email-alex.shi@linux.alibaba.com>
+ <20200302141144.b30abe0d89306fd387e13a92@linux-foundation.org>
+ <9cacdc21-9c1f-2a17-05cb-e9cf2959cef5@linux.alibaba.com>
+ <20200303164659.b3a30ab9d68c9ed82299a29c@linux-foundation.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=+xah7E//6pVRKdaZXmFI1T6nfuFUo9iVXUkHyM4jmQo=;
-        b=TZwFCinuj11xZdNvspmekDI0x79O/EQihOSSmxMSVxtrpfdyMQkBRLLvD95CEFCzpX
-         LLJPxfEnWDkieQxh7QIxWxbToGfC+DMpLfbgM4udxeAy8K5yQHCP1k4fD6xZVxK51r2m
-         uCNK6OZd3TSqEautzdRJCITCLeqff8iyKCZFyG01AxM0dPjwy0pwIyjdDBheYzwyIB3M
-         b21oYiHUF7a9PAjanaiCpWH4aFMeYD4jjLh872JSJ0BGqqi1PHtAr+BikLaErcxfrWv+
-         U1c2HZsQTLpu4Y39JF9rjKug9K9KM/Wd6WgOrSRcCsD9Dn0Qs8DAYqL4Shs4nsmMLQXh
-         vgFQ==
+In-Reply-To: <20200303164659.b3a30ab9d68c9ed82299a29c-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Rong Chen <rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Currently reading memory.numa_stat traverses the underlying memcg tree
-multiple times to accumulate the stats to present the hierarchical view
-of the memcg tree. However the kernel already maintains the hierarchical
-view of the stats and use it in memory.stat. Just use the same mechanism
-in memory.numa_stat as well.
 
-I ran a simple benchmark which reads root_mem_cgroup's memory.numa_stat
-file in the presense of 10000 memcgs. The results are:
 
-Without the patch:
-$ time cat /dev/cgroup/memory/memory.numa_stat > /dev/null
+在 2020/3/4 上午8:46, Andrew Morton 写道:
+> 
+> Well, any difference would be small and the numbers did get a bit
+> lower, albeit probably within the margin of error.
+> 
+> But you know, if someone were to send a patch which micro-optimized
+> some code by replacing 'TestClearXXX()' with `if PageXXX()
+> ClearPageXXX()', I would happily merge it!
+> 
+> Is this change essential to the overall patchset?  If not, I'd be
+> inclined to skip it?
+> 
 
-real    0m0.700s
-user    0m0.001s
-sys     0m0.697s
+Hi Andrew,
 
-With the patch:
-$ time cat /dev/cgroup/memory/memory.numa_stat > /dev/null
+Thanks a lot for comments!
+Yes, this patch is essential for all next.
 
-real    0m0.001s
-user    0m0.001s
-sys     0m0.000s
+Consider the normal memory testing would focus on user page, that probabably with PageLRU. 
 
-Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- mm/memcontrol.c | 52 +++++++++++++++++++++++++------------------------
- 1 file changed, 27 insertions(+), 25 deletions(-)
+Fengguang's vm-scalibicase-small-allocs which used a lots vm_area_struct slab, which may
+got some impact. 0day/Cheng Rong is working on the test. In my roughly testing, it may drop 5% on my
+96threads/394GB machine.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 63bb6a2aab81..d5485fa8a345 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3614,32 +3614,40 @@ static int mem_cgroup_move_charge_write(struct cgroup_subsys_state *css,
- #define LRU_ALL	     ((1 << NR_LRU_LISTS) - 1)
- 
- static unsigned long mem_cgroup_node_nr_lru_pages(struct mem_cgroup *memcg,
--					   int nid, unsigned int lru_mask)
-+				int nid, unsigned int lru_mask, bool tree)
- {
- 	struct lruvec *lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
- 	unsigned long nr = 0;
- 	enum lru_list lru;
-+	unsigned long (*page_state)(struct lruvec *lruvec,
-+				    enum node_stat_item idx);
- 
- 	VM_BUG_ON((unsigned)nid >= nr_node_ids);
- 
-+	page_state = tree ? lruvec_page_state : lruvec_page_state_local;
-+
- 	for_each_lru(lru) {
- 		if (!(BIT(lru) & lru_mask))
- 			continue;
--		nr += lruvec_page_state_local(lruvec, NR_LRU_BASE + lru);
-+		nr += page_state(lruvec, NR_LRU_BASE + lru);
- 	}
- 	return nr;
- }
- 
- static unsigned long mem_cgroup_nr_lru_pages(struct mem_cgroup *memcg,
--					     unsigned int lru_mask)
-+					     unsigned int lru_mask,
-+					     bool tree)
- {
- 	unsigned long nr = 0;
- 	enum lru_list lru;
-+	unsigned long (*page_state)(struct mem_cgroup *memcg, int idx);
-+
-+	page_state = tree ? memcg_page_state : memcg_page_state_local;
- 
- 	for_each_lru(lru) {
- 		if (!(BIT(lru) & lru_mask))
- 			continue;
--		nr += memcg_page_state_local(memcg, NR_LRU_BASE + lru);
-+		nr += page_state(memcg, NR_LRU_BASE + lru);
- 	}
- 	return nr;
- }
-@@ -3659,34 +3667,28 @@ static int memcg_numa_stat_show(struct seq_file *m, void *v)
- 	};
- 	const struct numa_stat *stat;
- 	int nid;
--	unsigned long nr;
- 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
- 
- 	for (stat = stats; stat < stats + ARRAY_SIZE(stats); stat++) {
--		nr = mem_cgroup_nr_lru_pages(memcg, stat->lru_mask);
--		seq_printf(m, "%s=%lu", stat->name, nr);
--		for_each_node_state(nid, N_MEMORY) {
--			nr = mem_cgroup_node_nr_lru_pages(memcg, nid,
--							  stat->lru_mask);
--			seq_printf(m, " N%d=%lu", nid, nr);
--		}
-+		seq_printf(m, "%s=%lu", stat->name,
-+			   mem_cgroup_nr_lru_pages(memcg, stat->lru_mask,
-+						   false));
-+		for_each_node_state(nid, N_MEMORY)
-+			seq_printf(m, " N%d=%lu", nid,
-+				   mem_cgroup_node_nr_lru_pages(memcg, nid,
-+							stat->lru_mask, false));
- 		seq_putc(m, '\n');
- 	}
- 
- 	for (stat = stats; stat < stats + ARRAY_SIZE(stats); stat++) {
--		struct mem_cgroup *iter;
--
--		nr = 0;
--		for_each_mem_cgroup_tree(iter, memcg)
--			nr += mem_cgroup_nr_lru_pages(iter, stat->lru_mask);
--		seq_printf(m, "hierarchical_%s=%lu", stat->name, nr);
--		for_each_node_state(nid, N_MEMORY) {
--			nr = 0;
--			for_each_mem_cgroup_tree(iter, memcg)
--				nr += mem_cgroup_node_nr_lru_pages(
--					iter, nid, stat->lru_mask);
--			seq_printf(m, " N%d=%lu", nid, nr);
--		}
-+
-+		seq_printf(m, "hierarchical_%s=%lu", stat->name,
-+			   mem_cgroup_nr_lru_pages(memcg, stat->lru_mask,
-+						   true));
-+		for_each_node_state(nid, N_MEMORY)
-+			seq_printf(m, " N%d=%lu", nid,
-+				   mem_cgroup_node_nr_lru_pages(memcg, nid,
-+							stat->lru_mask, true));
- 		seq_putc(m, '\n');
- 	}
- 
--- 
-2.25.0.265.gbab2e86ba0-goog
-
+Thanks
+Alex
