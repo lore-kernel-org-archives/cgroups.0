@@ -1,54 +1,53 @@
-From: Vincenzo Frascino <vincenzo.frascino-5wv7dgnIgG8@public.gmane.org>
-Subject: [PATCH] mm: Make mem_cgroup_id_get_many dependent on MMU and MEMCG_SWAP
-Date: Wed,  4 Mar 2020 14:23:48 +0000
-Message-ID: <20200304142348.48167-1-vincenzo.frascino@arm.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] cgroup: fix psi_show() crash on 32bit ino archs
+Date: Wed, 4 Mar 2020 11:16:17 -0500
+Message-ID: <20200304161617.GD189690@mtj.thefacebook.com>
+References: <20200224030007.3990-1-cai@lca.pw>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=OEItHJAQEWgalgushQTyB6lGoSgH6c+Ihc2zlQhimRs=;
+        b=iJ1CkyFBT9pLUqQUYEJHfFfgobiSXkCa+gyEfu/r3m/nYu56CBIc7Cmo/JYsEAaGZY
+         ba9/Ekd3G41hhc/4iiI/n4g0XusrQmPo+SxgGdUWZy2n9lx3I9ZXwkx04MCXqzlU4ka4
+         XQHuzeA39YDcvWJiFXA2ci723xtXQ+zb3+/5mqPAJQrnnNpL65UjmYc0eGLJFkyswMVj
+         eGdu2sd9zNi0KhNe0VuHjb9/dXmpJL6hL7oBxOgexpS/3Wq25Y6+IvFJuEHpnJ/DjeZH
+         7JnJGAE1EWOs+MNiyDYfg9aT3r/JGukHN6Em5A24jD3em2tJ2bHSloYD9bSjubUo6ZlB
+         D5fQ==
+Content-Disposition: inline
+In-Reply-To: <20200224030007.3990-1-cai-J5quhbR+WMc@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Vincenzo Frascino <vincenzo.frascino-5wv7dgnIgG8@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Qian Cai <cai-J5quhbR+WMc@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-mem_cgroup_id_get_many() is currently used only when MMU or MEMCG_SWAP
-configuration options are enabled. Having them disabled triggers the
-following warning at compile time:
+On Sun, Feb 23, 2020 at 10:00:07PM -0500, Qian Cai wrote:
+> Similar to the commit d7495343228f ("cgroup: fix incorrect
+> WARN_ON_ONCE() in cgroup_setup_root()"), cgroup_id(root_cgrp) does not
+> equal to 1 on 32bit ino archs which triggers all sorts of issues with
+> psi_show() on s390x. For example,
+> 
+>  BUG: KASAN: slab-out-of-bounds in collect_percpu_times+0x2d0/
+>  Read of size 4 at addr 000000001e0ce000 by task read_all/3667
+>  collect_percpu_times+0x2d0/0x798
+>  psi_show+0x7c/0x2a8
+>  seq_read+0x2ac/0x830
+>  vfs_read+0x92/0x150
+>  ksys_read+0xe2/0x188
+>  system_call+0xd8/0x2b4
+> 
+> Fix it by using cgroup_ino().
+> 
+> Fixes: 743210386c03 ("cgroup: use cgrp->kn->id as the cgroup ID")
+> Signed-off-by: Qian Cai <cai-J5quhbR+WMc@public.gmane.org>
 
-linux/mm/memcontrol.c:4797:13: warning: ‘mem_cgroup_id_get_many’ defined
-but not used [-Wunused-function]
- static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned
- int n)
+Applied to cgroup/for-5.6-fixes.
 
-Make mem_cgroup_id_get_many() dependent on MMU and MEMCG_SWAP to address
-the issue.
+Thanks.
 
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Signed-off-by: Vincenzo Frascino <vincenzo.frascino-5wv7dgnIgG8@public.gmane.org>
----
- mm/memcontrol.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d09776cd6e10..628cebeb4bdd 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -4794,10 +4794,12 @@ static void mem_cgroup_id_remove(struct mem_cgroup *memcg)
- 	}
- }
- 
-+#if defined(CONFIG_MEMCG_SWAP) || defined(CONFIG_MMU)
- static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned int n)
- {
- 	refcount_add(n, &memcg->id.ref);
- }
-+#endif
- 
- static void mem_cgroup_id_put_many(struct mem_cgroup *memcg, unsigned int n)
- {
 -- 
-2.25.1
-
+tejun
