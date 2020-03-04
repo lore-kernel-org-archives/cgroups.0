@@ -1,53 +1,66 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [BUG] NULL pointer de-ref when setting io.cost.qos on LUKS
- devices
-Date: Wed, 4 Mar 2020 11:42:05 -0500
-Message-ID: <20200304164205.GH189690@mtj.thefacebook.com>
-References: <1dbdcbb0c8db70a08aac467311a80abcf7779575.camel@sipsolutions.net>
- <20200303141902.GB189690@mtj.thefacebook.com>
- <24bd31cdaa3ea945908bc11cea05d6aae6929240.camel@sipsolutions.net>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] mm: Make mem_cgroup_id_get_many dependent on MMU and
+ MEMCG_SWAP
+Date: Wed, 4 Mar 2020 17:53:36 +0100
+Message-ID: <20200304165336.GO16139@dhcp22.suse.cz>
+References: <20200304142348.48167-1-vincenzo.frascino@arm.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=0xLBL5fJTc5AsUQPy+WSwVwS7vBKnygmPmF5kHtg+Ko=;
-        b=JphAytlDLBqcavrEVXy4D+clSdLG2pVQ4Y2FDvGxgP1eYafwN2BgQyrmHd/m1j2EMy
-         XoEpWt39eUtxargjw6ERdE8tFwlleRpoM6V+skpSS4BGl1/6SLlj1SsCqwFjXCuhLkOc
-         6Qbk+dx1Mn5nqQNwgcVNUTF662gbRJqeXMwEtgLE/rr+AqJWKyGVunibVo0v0VFjWGuY
-         l2WjaUuHbgVEbtKZlJFPCixJXAKkVg9LDKA6uICAsFSvQwrw6mxT60AsjL2lBgm9Fqn0
-         bVOK3H/IhhzfnFZ79b1uD8SJsUFzpuLHdwJWmU5gVyIJstRv3OIZfKslcZpafLFQVdKB
-         mBtg==
 Content-Disposition: inline
-In-Reply-To: <24bd31cdaa3ea945908bc11cea05d6aae6929240.camel-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
+In-Reply-To: <20200304142348.48167-1-vincenzo.frascino-5wv7dgnIgG8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Benjamin Berg <benjamin-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Vincenzo Frascino <vincenzo.frascino-5wv7dgnIgG8@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Hello, Benjamin.
-
-On Tue, Mar 03, 2020 at 03:40:38PM +0100, Benjamin Berg wrote:
-> I believe systemd tries to resolve to /dev/sda but that seems to fail
-> for me. So I think there is a bug in that code; I'll verify that and
-> submit a fix if so.
+On Wed 04-03-20 14:23:48, Vincenzo Frascino wrote:
+> mem_cgroup_id_get_many() is currently used only when MMU or MEMCG_SWAP
+> configuration options are enabled. Having them disabled triggers the
+> following warning at compile time:
 > 
-> Which device should actually be selected? Is it /dev/sda or the mapper
-> device that / is mounted from?
+> linux/mm/memcontrol.c:4797:13: warning: ‘mem_cgroup_id_get_many’ defined
+> but not used [-Wunused-function]
+>  static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned
+>  int n)
+> 
+> Make mem_cgroup_id_get_many() dependent on MMU and MEMCG_SWAP to address
+> the issue.
 
-Right now, the situation isn't great with dm. When pagecache
-writebacks go through dm, in some cases including dm-crypt, the cgroup
-ownership information is completely lost and all writes end up being
-issued as the root cgroup, so it breaks down when dm is in use.
+A similar patch has been proposed recently
+http://lkml.kernel.org/r/87fthjh2ib.wl-kuninori.morimoto.gx-zM6kxYcvzFDowKkBSvOlow@public.gmane.org
+The conclusion was that the warning is not really worth adding code.
 
-In the longer term, what we wanna do is controlling at physical
-devices (sda here) and then updating dm so that it can maintain and
-propagate the ownership correctly but we aren't there yet.
-
-Thanks.
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Signed-off-by: Vincenzo Frascino <vincenzo.frascino-5wv7dgnIgG8@public.gmane.org>
+> ---
+>  mm/memcontrol.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index d09776cd6e10..628cebeb4bdd 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4794,10 +4794,12 @@ static void mem_cgroup_id_remove(struct mem_cgroup *memcg)
+>  	}
+>  }
+>  
+> +#if defined(CONFIG_MEMCG_SWAP) || defined(CONFIG_MMU)
+>  static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned int n)
+>  {
+>  	refcount_add(n, &memcg->id.ref);
+>  }
+> +#endif
+>  
+>  static void mem_cgroup_id_put_many(struct mem_cgroup *memcg, unsigned int n)
+>  {
+> -- 
+> 2.25.1
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
