@@ -1,74 +1,50 @@
-From: Vincenzo Frascino <vincenzo.frascino@arm.com>
-Subject: Re: [PATCH] mm: Make mem_cgroup_id_get_many dependent on MMU and
- MEMCG_SWAP
-Date: Thu, 5 Mar 2020 16:21:28 +0000
-Message-ID: <a3e7f3a7-dee4-c05e-2d75-65a0d30e6401@arm.com>
-References: <20200304142348.48167-1-vincenzo.frascino@arm.com>
- <20200304165336.GO16139@dhcp22.suse.cz>
- <8c489836-b824-184e-7cfe-25e55ab73000@arm.com>
- <20200305160929.GA1166@cmpxchg.org>
+From: Vincenzo Frascino <vincenzo.frascino-5wv7dgnIgG8@public.gmane.org>
+Subject: [PATCH v2] mm: Make mem_cgroup_id_get_many() __maybe_unused
+Date: Thu,  5 Mar 2020 16:43:54 +0000
+Message-ID: <20200305164354.48147-1-vincenzo.frascino@arm.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200305160929.GA1166@cmpxchg.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Vincenzo Frascino <vincenzo.frascino-5wv7dgnIgG8@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Hi Johannes,
+mem_cgroup_id_get_many() is currently used only when MMU or MEMCG_SWAP
+configuration options are enabled. Having them disabled triggers the
+following warning at compile time:
 
-On 3/5/20 4:09 PM, Johannes Weiner wrote:
-> On Thu, Mar 05, 2020 at 09:49:23AM +0000, Vincenzo Frascino wrote:
->> Hi Michal,
->>
->> On 3/4/20 4:53 PM, Michal Hocko wrote:
->>> On Wed 04-03-20 14:23:48, Vincenzo Frascino wrote:
->>>> mem_cgroup_id_get_many() is currently used only when MMU or MEMCG_SWAP
->>>> configuration options are enabled. Having them disabled triggers the
->>>> following warning at compile time:
->>>>
->>>> linux/mm/memcontrol.c:4797:13: warning: ‘mem_cgroup_id_get_many’ defined
->>>> but not used [-Wunused-function]
->>>>  static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned
->>>>  int n)
->>>>
->>>> Make mem_cgroup_id_get_many() dependent on MMU and MEMCG_SWAP to address
->>>> the issue.
->>>
->>> A similar patch has been proposed recently
->>> http://lkml.kernel.org/r/87fthjh2ib.wl-kuninori.morimoto.gx@renesas.com.
->>> The conclusion was that the warning is not really worth adding code.
->>>
->>
->> Thank you for pointing this out, I was not aware of it. I understand that you
->> are against "#ifdeffery" in this case, but isn't it the case of adding at least
->> __maybe_unused? This would prevent people from reporting it over and over again
->> and you to have to push them back :) Let me know what do you think, in case I am
->> happy to change my patch accordingly.
-> 
-> I would ack a patch that adds __maybe_unused.
-> 
-> This is a tiny function. If we keep it around a few releases after
-> removing the last user, it costs us absolutely nothing. Eventually
-> somebody will notice and send a patch to remove it. No big deal.
-> 
-> There is, however, real cost in keeping bogus warnings around and
-> telling people to ignore them. It's actively lowering the
-> signal-to-noise ratio and normalizing warnings to developers. That's
-> the kind of thing that will actually hide problems in the kernel.
-> 
-> We know that the function can be unused in certain scenarios. It's
-> silly to let the compiler continue to warn about it. That's exactly
-> what __maybe_unused is for, so let's use it here.
-> 
+linux/mm/memcontrol.c:4797:13: warning: ‘mem_cgroup_id_get_many’ defined
+but not used [-Wunused-function]
+ static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned
+ int n)
 
-I agree with what you are saying. I am going to change my patch accordingly.
+Make mem_cgroup_id_get_many() __maybe_unused to address the issue.
 
-Thank you.
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Signed-off-by: Vincenzo Frascino <vincenzo.frascino-5wv7dgnIgG8@public.gmane.org>
+---
+ mm/memcontrol.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d09776cd6e10..2b9533ed52f5 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -4794,7 +4794,8 @@ static void mem_cgroup_id_remove(struct mem_cgroup *memcg)
+ 	}
+ }
+ 
+-static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned int n)
++static void __maybe_unused mem_cgroup_id_get_many(struct mem_cgroup *memcg,
++						  unsigned int n)
+ {
+ 	refcount_add(n, &memcg->id.ref);
+ }
 -- 
-Regards,
-Vincenzo
+2.25.1
+
