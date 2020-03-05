@@ -1,135 +1,101 @@
-From: Daniel Xu <dxu@dxuuu.xyz>
-Subject: [PATCH v2 2/4] kernfs: Add removed_size out param for simple_xattr_set
-Date: Thu,  5 Mar 2020 13:16:30 -0800
-Message-ID: <20200305211632.15369-3-dxu@dxuuu.xyz>
-References: <20200305211632.15369-1-dxu@dxuuu.xyz>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3] net: memcg: late association of sock to memcg
+Date: Thu, 5 Mar 2020 13:59:37 -0800
+Message-ID: <CALvZod68Raqfa2ZJOfF_OOQdb-hxkOs54G5KK3VQnUdxiZ=KTQ@mail.gmail.com>
+References: <20200305205525.245058-1-shakeelb@google.com> <9505d35b-f9fc-149b-6df5-e65ad95acabb@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dxuuu.xyz; h=
-        from:to:cc:subject:date:message-id:in-reply-to:references
-        :mime-version:content-transfer-encoding; s=fm2; bh=lc0QBU1yCIerk
-        rnOWmO0QlaRB2GRt3K2i1+d3aZJ1TU=; b=sicxL9wmiwBe+sqV6OzjfsxNNC5cM
-        OL8PUiuU4z/6bW8GeMnHQ881pNYEpwWhe6Z2c/OYYqPR3PZWsVNl0oUaN53IDV3O
-        A+mfezR7QYu0HhReZMgm7PGJxJ5NnYVah2p831BCR5a5ATs8BS7s7nZzM+B9CwOs
-        ulNzOkjcCEmr63Z3X/RerQPlwjzAz1PZYZKeWeUfepgzJGxvCu+g4dvWTVwjMAPM
-        NJxiVXHOXmmNTBspWj33i53TEVIzm8dtBMMcfzseaWOoh5xBJXgT6xEm2xK7D44a
-        8H13tZs0Bb9Mr4AVvc70fq7ocNcLO8V/clPfDm1WJ49Pne0mCS+kjLMbQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-transfer-encoding:date:from
-        :in-reply-to:message-id:mime-version:references:subject:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm2; bh=lc0QBU1yCIerkrnOWmO0QlaRB2GRt3K2i1+d3aZJ1TU=; b=wGSyBhJA
-        WCUrhe9ttgzuIakkGKdTbreNT5uDRVozrEM1batQ7GkcHOOuiVhQ/pKv+8lm6odO
-        rsFJNNWTbLCzzfo1fHvIQHsnfGh7PeX6qpir4OY08eJuSt17JQWFSFwSny6Id5pY
-        HNclTdYTv+a9PCotBMcYd5bbKckjRr1zL65Pe/2l3tIoAwXZ6qooZGA9XehG9dEQ
-        L53ZIeKEnuI6YN4/qW0lDef3FGbIZJpEIYLBizeWp7LA63GI5X+VfRDpEyJEydPw
-        drkKoP1uuRlFBVGzGhTUk5/FG0ShrAWL66tgirjaV2AV1o7iHLHmJUWeF4NDMF0o
-        jMMPKK8K5uELUQ==
-In-Reply-To: <20200305211632.15369-1-dxu@dxuuu.xyz>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=GZ9X7pBOQ32PghBEC4+dP85I/S+wu1As9RhQFRnXXto=;
+        b=lSsXtoDIO0iLHjqPicvvXtqjyT7OR/kBmY+VLmgBRevQBgKkkDTBQRGLxzsgcELH6t
+         gqiGETJBzstXBAnv9oYvbcIBIz89GpuahxVSYeZiGIBZ4JvWLqjwVYKVD1bfwB074NTL
+         9MZik/rr8kw3M1VyRiiRn60Ts6yKRUKNcOSsYWGch+SBvf7epfYp8rNztCtiP/kPuX9K
+         10Bcd7ggd2vSizpgzvw3rq7TbbT5qAgso27hxp1LZMY9bXozbQWsZzRKL1BXWCK66cCq
+         FzIrI80C7cvzbZRPcHeBZj4Pxdrxrivy0+6UjMRhYPpEW17iy/T0kUB0lmxycqhI6IJV
+         wl0w==
+In-Reply-To: <9505d35b-f9fc-149b-6df5-e65ad95acabb-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: cgroups@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org
-Cc: Daniel Xu <dxu@dxuuu.xyz>, shakeelb@google.com, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, kernel-team@fb.com
+Content-Transfer-Encoding: 7bit
+To: Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Alexey Kuznetsov <kuznet-v/Mj1YrvjDBInbfyfbPRSQ@public.gmane.org>, Hideaki YOSHIFUJI <yoshfuji-VfPWfsRibaP+Ru+s062T9g@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-This helps set up size accounting in the next commit. Without this out
-param, it's difficult to find out the removed xattr size without taking
-a lock for longer and walking the xattr linked list twice.
+On Thu, Mar 5, 2020 at 1:17 PM Eric Dumazet <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>
+>
+>
+> On 3/5/20 12:55 PM, Shakeel Butt wrote:
+> > If a TCP socket is allocated in IRQ context or cloned from unassociated
+> > (i.e. not associated to a memcg) in IRQ context then it will remain
+> > unassociated for its whole life. Almost half of the TCPs created on the
+> > system are created in IRQ context, so, memory used by such sockets will
+> > not be accounted by the memcg.
+> >
+> > This issue is more widespread in cgroup v1 where network memory
+> > accounting is opt-in but it can happen in cgroup v2 if the source socket
+> > for the cloning was created in root memcg.
+> >
+> > To fix the issue, just do the late association of the unassociated
+> > sockets at accept() time in the process context and then force charge
+> > the memory buffer already reserved by the socket.
+> >
+> > Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > ---
+> > Changes since v2:
+> > - Additional check for charging.
+> > - Release the sock after charging.
+> >
+> > Changes since v1:
+> > - added sk->sk_rmem_alloc to initial charging.
+> > - added synchronization to get memory usage and set sk_memcg race-free.
+> >
+> >  net/ipv4/inet_connection_sock.c | 20 ++++++++++++++++++++
+> >  1 file changed, 20 insertions(+)
+> >
+> > diff --git a/net/ipv4/inet_connection_sock.c b/net/ipv4/inet_connection_sock.c
+> > index a4db79b1b643..5face55cf818 100644
+> > --- a/net/ipv4/inet_connection_sock.c
+> > +++ b/net/ipv4/inet_connection_sock.c
+> > @@ -482,6 +482,26 @@ struct sock *inet_csk_accept(struct sock *sk, int flags, int *err, bool kern)
+> >               }
+> >               spin_unlock_bh(&queue->fastopenq.lock);
+> >       }
+> > +
+> > +     if (mem_cgroup_sockets_enabled && !newsk->sk_memcg) {
+> > +             int amt;
+> > +
+> > +             /* atomically get the memory usage, set and charge the
+> > +              * sk->sk_memcg.
+> > +              */
+> > +             lock_sock(newsk);
+> > +
+> > +             /* The sk has not been accepted yet, no need to look at
+> > +              * sk->sk_wmem_queued.
+> > +              */
+> > +             amt = sk_mem_pages(newsk->sk_forward_alloc +
+> > +                                atomic_read(&sk->sk_rmem_alloc));
+> > +             mem_cgroup_sk_alloc(newsk);
+> > +             if (newsk->sk_memcg && amt)
+> > +                     mem_cgroup_charge_skmem(newsk->sk_memcg, amt);
+> > +
+> > +             release_sock(newsk);
+> > +     }
+> >  out:
+> >       release_sock(sk);
+> >       if (req)
+> >
+>
+> This patch looks fine, but why keeping the mem_cgroup_sk_alloc(newsk);
+> in sk_clone_lock() ?
+>
+> Note that all TCP sk_clone_lock() calls happen in softirq context.
 
-Signed-off-by: Daniel Xu <dxu@dxuuu.xyz>
----
- fs/kernfs/inode.c     |  2 +-
- fs/xattr.c            | 11 ++++++++++-
- include/linux/xattr.h |  3 ++-
- mm/shmem.c            |  2 +-
- 4 files changed, 14 insertions(+), 4 deletions(-)
+So, basically re-doing something like 9f1c2674b328 ("net: memcontrol:
+defer call to mem_cgroup_sk_alloc()") in this patch. I am fine with
+that.
 
-diff --git a/fs/kernfs/inode.c b/fs/kernfs/inode.c
-index d0f7a5abd9a9..5f10ae95fbfa 100644
---- a/fs/kernfs/inode.c
-+++ b/fs/kernfs/inode.c
-@@ -303,7 +303,7 @@ int kernfs_xattr_set(struct kernfs_node *kn, const char *name,
- 	if (!attrs)
- 		return -ENOMEM;
- 
--	return simple_xattr_set(&attrs->xattrs, name, value, size, flags);
-+	return simple_xattr_set(&attrs->xattrs, name, value, size, flags, NULL);
- }
- 
- static int kernfs_vfs_xattr_get(const struct xattr_handler *handler,
-diff --git a/fs/xattr.c b/fs/xattr.c
-index 0d3c9b4d1914..e13265e65871 100644
---- a/fs/xattr.c
-+++ b/fs/xattr.c
-@@ -860,6 +860,7 @@ int simple_xattr_get(struct simple_xattrs *xattrs, const char *name,
-  * @value: value of the xattr. If %NULL, will remove the attribute.
-  * @size: size of the new xattr
-  * @flags: %XATTR_{CREATE|REPLACE}
-+ * @removed_size: returns size of the removed xattr, -1 if none removed
-  *
-  * %XATTR_CREATE is set, the xattr shouldn't exist already; otherwise fails
-  * with -EEXIST.  If %XATTR_REPLACE is set, the xattr should exist;
-@@ -868,7 +869,8 @@ int simple_xattr_get(struct simple_xattrs *xattrs, const char *name,
-  * Returns 0 on success, -errno on failure.
-  */
- int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
--		     const void *value, size_t size, int flags)
-+		     const void *value, size_t size, int flags,
-+		     ssize_t *removed_size)
- {
- 	struct simple_xattr *xattr;
- 	struct simple_xattr *new_xattr = NULL;
-@@ -895,8 +897,12 @@ int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
- 				err = -EEXIST;
- 			} else if (new_xattr) {
- 				list_replace(&xattr->list, &new_xattr->list);
-+				if (removed_size)
-+					*removed_size = xattr->size;
- 			} else {
- 				list_del(&xattr->list);
-+				if (removed_size)
-+					*removed_size = xattr->size;
- 			}
- 			goto out;
- 		}
-@@ -908,6 +914,9 @@ int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
- 		list_add(&new_xattr->list, &xattrs->head);
- 		xattr = NULL;
- 	}
-+
-+	if (removed_size)
-+		*removed_size = -1;
- out:
- 	spin_unlock(&xattrs->lock);
- 	if (xattr) {
-diff --git a/include/linux/xattr.h b/include/linux/xattr.h
-index 6dad031be3c2..4cf6e11f4a3c 100644
---- a/include/linux/xattr.h
-+++ b/include/linux/xattr.h
-@@ -102,7 +102,8 @@ struct simple_xattr *simple_xattr_alloc(const void *value, size_t size);
- int simple_xattr_get(struct simple_xattrs *xattrs, const char *name,
- 		     void *buffer, size_t size);
- int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
--		     const void *value, size_t size, int flags);
-+		     const void *value, size_t size, int flags,
-+		     ssize_t *removed_size);
- ssize_t simple_xattr_list(struct inode *inode, struct simple_xattrs *xattrs, char *buffer,
- 			  size_t size);
- void simple_xattr_list_add(struct simple_xattrs *xattrs,
-diff --git a/mm/shmem.c b/mm/shmem.c
-index aad3ba74b0e9..f47347cb30f6 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -3243,7 +3243,7 @@ static int shmem_xattr_handler_set(const struct xattr_handler *handler,
- 	struct shmem_inode_info *info = SHMEM_I(inode);
- 
- 	name = xattr_full_name(handler, name);
--	return simple_xattr_set(&info->xattrs, name, value, size, flags);
-+	return simple_xattr_set(&info->xattrs, name, value, size, flags, NULL);
- }
- 
- static const struct xattr_handler shmem_security_xattr_handler = {
--- 
-2.21.1
-
+Roman, any concerns?
