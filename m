@@ -1,79 +1,71 @@
-From: Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>
-Subject: [PATCH v2 1/4] kernfs: kvmalloc xattr value instead of kmalloc
-Date: Thu,  5 Mar 2020 13:16:29 -0800
-Message-ID: <20200305211632.15369-2-dxu@dxuuu.xyz>
-References: <20200305211632.15369-1-dxu@dxuuu.xyz>
+From: Daniel Xu <dxu@dxuuu.xyz>
+Subject: [PATCH v2 0/4] Support user xattrs in cgroupfs
+Date: Thu,  5 Mar 2020 13:16:28 -0800
+Message-ID: <20200305211632.15369-1-dxu@dxuuu.xyz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dxuuu.xyz; h=
-        from:to:cc:subject:date:message-id:in-reply-to:references
-        :mime-version:content-transfer-encoding; s=fm2; bh=ux2TDbebxuteV
-        tSjPdu5QbynJeWd1LoiKrJmNCdzdIM=; b=GPK4Fjmyow4b3ce4kYCAUlYC8pM5w
-        S6doYRhglZqqqTQ8e4SnwlqC72XpMG+wH5+g5fvKILm4d7P1x/8qzwnFkO7fATxY
-        XSCCKQkYuU3QjUtEIxXyAKsLC8y49lD8Vc7n+4hosNaaMHby6nZ1cEzEiZNleRWp
-        VExbaKmXKBtyDsRpn8M2zyhjyDbzQsPK1SYYga+5Q4G/ONgN/2er1ZghXm25CdJz
-        B/66CVk1f8VmlSEBowHV33Ij3+OrzVLxz7Eo6RLwj3HYZpy7xyaGa8zX/hUBAK/e
-        Zljcpt/lXRiO5GGxOGz498ePOhomk3Qb4CEO2MHasA6YUdQo8iZRLLxQg==
+        from:to:cc:subject:date:message-id:mime-version
+        :content-transfer-encoding; s=fm2; bh=XdQ+RswJL5NMl40GJb5WlNSbRs
+        qA/OCEL8OeWLu2sac=; b=1DIq3i5Mt+pRb3sS1NWiHTIjIc5XjG+qFV/shkSg7t
+        5ImiieuJc4T4WVs/zoYa7Opp1+m7pH9G1ywxke1GdTvSA0D6G96Ypqyn224PyUdS
+        Dt0umj6zdkKMZ2YGrmwIAWok2NXr9Tku7MZZtrV7BF9vat0KOt2ivalobkI+wEso
+        /LLMrwm9UlLUAeBQBqRUIcfQ6o83Sh+jJT+f7KkmmIRKgglgu3duqYD56XcrfG68
+        wv9M2S9gYjpsDSJC90uC2Yog1ruukVZKUc4ItroCh99rAi4mD/I9mMc8Ly+b4GYP
+        1wErySk6oWNXkoObGVZnuPKyPUbfTkgGwPotTBU0tczw==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:content-transfer-encoding:date:from
-        :in-reply-to:message-id:mime-version:references:subject:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm2; bh=ux2TDbebxuteVtSjPdu5QbynJeWd1LoiKrJmNCdzdIM=; b=OahLzm5/
-        l9ZomGwWpevlziasrzFQPQc80mfo6qhSO7nvBJZ5IFXZomkMr/qbAdybc2RspJwl
-        Sk5X4YwkQhBS3ulFV/cZKr2mGxNd5jgSmKUdyfS3/CTL/vGqlWBzWdNUNubFO58t
-        P35KYmtKQXPjLsiw4TBCvjEi424qD2w7JDThS1VFTmhULS7qqI0g5yiF9AyBQTdn
-        0a3SWYmxS9i8XY1rLtlEV9OjmzwXOnZKHZO/u4qULhr9ttZT73hL7RYk7UN295YX
-        CWT9OYqxheGNH/ERun/QIzFbQiTbLpqp9rD9jnpD3t15RiI9fvYilLVhmJ0WomFU
-        19CjkzIqH81BdQ==
-In-Reply-To: <20200305211632.15369-1-dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        :message-id:mime-version:subject:to:x-me-proxy:x-me-proxy
+        :x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=XdQ+RswJL5NMl40GJ
+        b5WlNSbRsqA/OCEL8OeWLu2sac=; b=0OTpwfocD7+OQI1L/9PVGL6W/rkk4lJ5y
+        v1IhvdOz0k7PzDsjzl/lDBL7ZRH4VLbYmc7cy7u3SGOEvXfKEiP63tOzyLWPu270
+        bbgUhagy20rsMqAc962xRxJWU5KjqJn6TPwNSh7KvCeu/EvMU5wgzXiZDMzGnapu
+        286DLXK2xBiqxQAlitIsFKACqGingzdu0HEuZkA43ztVr7xD2U6ALuvefGASqIhr
+        9J1fdZOLlmJacgqwjZdHv9qXxFBF5qbEZzkpRvAozkJhetGr6MWhbHXbztqnQWiq
+        zbkIILNl6BCnf/PEXKGRjRSOE7gqQUHkQsl/Q7mh7y677UxS1AF0A==
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: cgroups@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org
+Cc: Daniel Xu <dxu@dxuuu.xyz>, shakeelb@google.com, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, kernel-team@fb.com
 
-It's not really necessary to have contiguous physical memory for xattr
-values. We no longer need to worry about higher order allocations
-failing with kvmalloc, especially because the xattr size limit is at
-64K.
+User extended attributes are useful as metadata storage for kernfs
+consumers like cgroups. Especially in the case of cgroups, it is useful
+to have a central metadata store that multiple processes/services can
+use to coordinate actions.
 
-Signed-off-by: Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>
----
- fs/xattr.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+A concrete example is for userspace out of memory killers. We want to
+let delegated cgroup subtree owners (running as non-root) to be able to
+say "please avoid killing this cgroup". This is especially important for
+desktop linux as delegated subtrees owners are less likely to run as
+root.
 
-diff --git a/fs/xattr.c b/fs/xattr.c
-index 90dd78f0eb27..0d3c9b4d1914 100644
---- a/fs/xattr.c
-+++ b/fs/xattr.c
-@@ -817,7 +817,7 @@ struct simple_xattr *simple_xattr_alloc(const void *value, size_t size)
- 	if (len < sizeof(*new_xattr))
- 		return NULL;
- 
--	new_xattr = kmalloc(len, GFP_KERNEL);
-+	new_xattr = kvmalloc(len, GFP_KERNEL);
- 	if (!new_xattr)
- 		return NULL;
- 
-@@ -882,7 +882,7 @@ int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
- 
- 		new_xattr->name = kstrdup(name, GFP_KERNEL);
- 		if (!new_xattr->name) {
--			kfree(new_xattr);
-+			kvfree(new_xattr);
- 			return -ENOMEM;
- 		}
- 	}
-@@ -912,7 +912,7 @@ int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
- 	spin_unlock(&xattrs->lock);
- 	if (xattr) {
- 		kfree(xattr->name);
--		kfree(xattr);
-+		kvfree(xattr);
- 	}
- 	return err;
- 
+The first two commits set up some stuff for the third commit which
+intro introduce a new flag, KERNFS_ROOT_SUPPORT_USER_XATTR,
+that lets kernfs consumers enable user xattr support. The final commit
+turns on user xattr support for cgroupfs.
+
+Changes from v1:
+- use kvmalloc for xattr values
+- modify simple_xattr_set to return removed size
+- add accounting for total user xattr size per cgroup
+
+Daniel Xu (4):
+  kernfs: kvmalloc xattr value instead of kmalloc
+  kernfs: Add removed_size out param for simple_xattr_set
+  kernfs: Add option to enable user xattrs
+  cgroupfs: Support user xattrs
+
+ fs/kernfs/inode.c           | 91 ++++++++++++++++++++++++++++++++++++-
+ fs/kernfs/kernfs-internal.h |  2 +
+ fs/xattr.c                  | 17 +++++--
+ include/linux/kernfs.h      | 11 ++++-
+ include/linux/xattr.h       |  3 +-
+ kernel/cgroup/cgroup.c      |  3 +-
+ mm/shmem.c                  |  2 +-
+ 7 files changed, 119 insertions(+), 10 deletions(-)
+
 -- 
 2.21.1
 
