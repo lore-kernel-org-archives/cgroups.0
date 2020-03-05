@@ -1,220 +1,94 @@
-From: Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>
-Subject: [PATCH v2 3/4] kernfs: Add option to enable user xattrs
-Date: Thu,  5 Mar 2020 13:16:31 -0800
-Message-ID: <20200305211632.15369-4-dxu@dxuuu.xyz>
-References: <20200305211632.15369-1-dxu@dxuuu.xyz>
+From: Eric Dumazet <eric.dumazet@gmail.com>
+Subject: Re: [PATCH v3] net: memcg: late association of sock to memcg
+Date: Thu, 5 Mar 2020 13:17:09 -0800
+Message-ID: <9505d35b-f9fc-149b-6df5-e65ad95acabb@gmail.com>
+References: <20200305205525.245058-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dxuuu.xyz; h=
-        from:to:cc:subject:date:message-id:in-reply-to:references
-        :mime-version:content-transfer-encoding; s=fm2; bh=M+E5QimJJ7S/c
-        0nKhArR5IdwBJvASG/qtOi1ZOkT6yA=; b=RttiWcZO+PdSXEE+KsQx/dSlOr8YV
-        h9aSp6oZFw0vCpd5xCYNmPbZy7wgYpto9CRxx635Hdu7cCM/JECkl+xY2wJG4hai
-        FLSpZfakIHwrMWPANvfGOab003opNvHcfdb1F1WRqg/p94Mhxz7XnzS6Zq06oihT
-        yEqAgnf7Vav+CU48CMfourjkkxg8WIkUyDahF6VoAHrLzpBKscTDF0oeBRdLlHpl
-        uU7qs7xYXpTTHWqZTw+pnnyLOahJeOgrbYq1G37cCuNq2xKwHSCnPzH2F+OA+vxh
-        LOLV1+QtMhH2ivo3RlugDmw10UYYs2HAkMTXjP+TQlUTuKh73nvBpQs7Q==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-transfer-encoding:date:from
-        :in-reply-to:message-id:mime-version:references:subject:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm2; bh=M+E5QimJJ7S/c0nKhArR5IdwBJvASG/qtOi1ZOkT6yA=; b=JBTQRkKp
-        UqLFsth9OoPCGb3I2r186opnlu22MVpWi/HdgleQZR9ZUExbLu6RjfgG6FlWH7d2
-        jg1/3QvrYKoT/+ZTryxuLS8X+0Yh/9sg2vntiNzHH83QA8lOKXknaDITLMn7WpjS
-        tLJGKiWi3jJYeekImgKSOUnZ+C6Xa+QMkqb+2EgNxBF8WLm573G9mb1h4GSIORZl
-        FhNWPe4SRT3TT3Xdi223yZIZa3YquuSNCvPwWXtI3Ti63WheEpRPU84Vqk6No7Vu
-        xlfISxaSgPZ6x3fUoU5bjfsn41G6nPlsHLCTn2+awRtB3erGSUVhAw2t+M5xi2E6
-        UI6bscKZ+krR0Q==
-In-Reply-To: <20200305211632.15369-1-dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=sMCdEJuXdOhoW7m3gO5zM39AjW+YF/Rrads4zZrd1kg=;
+        b=QLDq4YaDIhaMBuukLE9flkTFbc+QtHMA/oiSdyTDoEucukwkh/qEIOtiLrIaSPrTK6
+         IbBwi9DE4rWJY/cRk6jqyRNQWADhqF4G3vuMdui0IZQ7kCZlXSJ6hvraMZnX89JIvTfq
+         BHstEMkSF+S53O+U2m43bKmbZaKOP7JCwhNQoCViZCDX8rGi8rzzaJV2caPcb181w2cV
+         5Ih7zwO2yZySaFOkknNUNLu46EQk/KI0nqyA5a2gSpyIvBCNIcrXNyv4auEuOR6S6rYO
+         wM8iKHLjtq8nNk20lh0Jm32XL9MiJhdHR8jU/J+3piz5zb/m8XsTiWgpo/DSCYRlR3js
+         37Gw==
+In-Reply-To: <20200305205525.245058-1-shakeelb@google.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Shakeel Butt <shakeelb@google.com>, Eric Dumazet <edumazet@google.com>, Roman Gushchin <guro@fb.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "David S . Miller" <davem@davemloft.net>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-User extended attributes are useful as metadata storage for kernfs
-consumers like cgroups. Especially in the case of cgroups, it is useful
-to have a central metadata store that multiple processes/services can
-use to coordinate actions.
 
-A concrete example is for userspace out of memory killers. We want to
-let delegated cgroup subtree owners (running as non-root) to be able to
-say "please avoid killing this cgroup". This is especially important for
-desktop linux as delegated subtrees owners are less likely to run as
-root.
 
-This patch introduces a new flag, KERNFS_ROOT_SUPPORT_USER_XATTR, that
-lets kernfs consumers enable user xattr support. An initial limit of 128
-entries or 128KB -- whichever is hit first -- is placed per cgroup
-because xattrs come from kernel memory and we don't want to let
-unprivileged users accidentally eat up too much kernel memory.
+On 3/5/20 12:55 PM, Shakeel Butt wrote:
+> If a TCP socket is allocated in IRQ context or cloned from unassociated
+> (i.e. not associated to a memcg) in IRQ context then it will remain
+> unassociated for its whole life. Almost half of the TCPs created on the
+> system are created in IRQ context, so, memory used by such sockets will
+> not be accounted by the memcg.
+> 
+> This issue is more widespread in cgroup v1 where network memory
+> accounting is opt-in but it can happen in cgroup v2 if the source socket
+> for the cloning was created in root memcg.
+> 
+> To fix the issue, just do the late association of the unassociated
+> sockets at accept() time in the process context and then force charge
+> the memory buffer already reserved by the socket.
+> 
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> ---
+> Changes since v2:
+> - Additional check for charging.
+> - Release the sock after charging.
+> 
+> Changes since v1:
+> - added sk->sk_rmem_alloc to initial charging.
+> - added synchronization to get memory usage and set sk_memcg race-free.
+> 
+>  net/ipv4/inet_connection_sock.c | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
+> 
+> diff --git a/net/ipv4/inet_connection_sock.c b/net/ipv4/inet_connection_sock.c
+> index a4db79b1b643..5face55cf818 100644
+> --- a/net/ipv4/inet_connection_sock.c
+> +++ b/net/ipv4/inet_connection_sock.c
+> @@ -482,6 +482,26 @@ struct sock *inet_csk_accept(struct sock *sk, int flags, int *err, bool kern)
+>  		}
+>  		spin_unlock_bh(&queue->fastopenq.lock);
+>  	}
+> +
+> +	if (mem_cgroup_sockets_enabled && !newsk->sk_memcg) {
+> +		int amt;
+> +
+> +		/* atomically get the memory usage, set and charge the
+> +		 * sk->sk_memcg.
+> +		 */
+> +		lock_sock(newsk);
+> +
+> +		/* The sk has not been accepted yet, no need to look at
+> +		 * sk->sk_wmem_queued.
+> +		 */
+> +		amt = sk_mem_pages(newsk->sk_forward_alloc +
+> +				   atomic_read(&sk->sk_rmem_alloc));
+> +		mem_cgroup_sk_alloc(newsk);
+> +		if (newsk->sk_memcg && amt)
+> +			mem_cgroup_charge_skmem(newsk->sk_memcg, amt);
+> +
+> +		release_sock(newsk);
+> +	}
+>  out:
+>  	release_sock(sk);
+>  	if (req)
+> 
 
-Signed-off-by: Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>
----
- fs/kernfs/inode.c           | 89 +++++++++++++++++++++++++++++++++++++
- fs/kernfs/kernfs-internal.h |  2 +
- include/linux/kernfs.h      | 11 ++++-
- 3 files changed, 100 insertions(+), 2 deletions(-)
+This patch looks fine, but why keeping the mem_cgroup_sk_alloc(newsk);
+in sk_clone_lock() ?
 
-diff --git a/fs/kernfs/inode.c b/fs/kernfs/inode.c
-index 5f10ae95fbfa..fc2469a20fed 100644
---- a/fs/kernfs/inode.c
-+++ b/fs/kernfs/inode.c
-@@ -53,6 +53,8 @@ static struct kernfs_iattrs *__kernfs_iattrs(struct kernfs_node *kn, int alloc)
- 	kn->iattr->ia_ctime = kn->iattr->ia_atime;
- 
- 	simple_xattrs_init(&kn->iattr->xattrs);
-+	atomic_set(&kn->iattr->nr_user_xattrs, 0);
-+	atomic_set(&kn->iattr->user_xattr_size, 0);
- out_unlock:
- 	ret = kn->iattr;
- 	mutex_unlock(&iattr_mutex);
-@@ -327,6 +329,86 @@ static int kernfs_vfs_xattr_set(const struct xattr_handler *handler,
- 	return kernfs_xattr_set(kn, name, value, size, flags);
- }
- 
-+static int kernfs_vfs_user_xattr_add(struct kernfs_node *kn,
-+				     const char *full_name,
-+				     struct simple_xattrs *xattrs,
-+				     const void *value, size_t size, int flags)
-+{
-+	atomic_t *sz = &kn->iattr->user_xattr_size;
-+	atomic_t *nr = &kn->iattr->nr_user_xattrs;
-+	ssize_t removed_size;
-+	int ret;
-+
-+	if (atomic_inc_return(nr) > KERNFS_MAX_USER_XATTRS) {
-+		ret = -ENOSPC;
-+		goto dec_count_out;
-+	}
-+
-+	if (atomic_add_return(size, sz) > KERNFS_USER_XATTR_SIZE_LIMIT) {
-+		ret = -ENOSPC;
-+		goto dec_size_out;
-+	}
-+
-+	ret = simple_xattr_set(xattrs, full_name, value, size, flags,
-+			       &removed_size);
-+
-+	if (!ret && removed_size >= 0)
-+		size = removed_size;
-+	else if (!ret)
-+		return 0;
-+dec_size_out:
-+	atomic_sub(size, sz);
-+dec_count_out:
-+	atomic_dec(nr);
-+	return ret;
-+}
-+
-+static int kernfs_vfs_user_xattr_rm(struct kernfs_node *kn,
-+				    const char *full_name,
-+				    struct simple_xattrs *xattrs,
-+				    const void *value, size_t size, int flags)
-+{
-+	atomic_t *sz = &kn->iattr->user_xattr_size;
-+	atomic_t *nr = &kn->iattr->nr_user_xattrs;
-+	ssize_t removed_size;
-+	int ret;
-+
-+	ret = simple_xattr_set(xattrs, full_name, value, size, flags,
-+			       &removed_size);
-+
-+	if (removed_size >= 0) {
-+		atomic_sub(removed_size, sz);
-+		atomic_dec(nr);
-+	}
-+
-+	return ret;
-+}
-+
-+static int kernfs_vfs_user_xattr_set(const struct xattr_handler *handler,
-+				     struct dentry *unused, struct inode *inode,
-+				     const char *suffix, const void *value,
-+				     size_t size, int flags)
-+{
-+	const char *full_name = xattr_full_name(handler, suffix);
-+	struct kernfs_node *kn = inode->i_private;
-+	struct kernfs_iattrs *attrs;
-+
-+	if (!(kernfs_root(kn)->flags & KERNFS_ROOT_SUPPORT_USER_XATTR))
-+		return -EOPNOTSUPP;
-+
-+	attrs = kernfs_iattrs(kn);
-+	if (!attrs)
-+		return -ENOMEM;
-+
-+	if (value)
-+		return kernfs_vfs_user_xattr_add(kn, full_name, &attrs->xattrs,
-+						 value, size, flags);
-+	else
-+		return kernfs_vfs_user_xattr_rm(kn, full_name, &attrs->xattrs,
-+						value, size, flags);
-+
-+}
-+
- static const struct xattr_handler kernfs_trusted_xattr_handler = {
- 	.prefix = XATTR_TRUSTED_PREFIX,
- 	.get = kernfs_vfs_xattr_get,
-@@ -339,8 +421,15 @@ static const struct xattr_handler kernfs_security_xattr_handler = {
- 	.set = kernfs_vfs_xattr_set,
- };
- 
-+static const struct xattr_handler kernfs_user_xattr_handler = {
-+	.prefix = XATTR_USER_PREFIX,
-+	.get = kernfs_vfs_xattr_get,
-+	.set = kernfs_vfs_user_xattr_set,
-+};
-+
- const struct xattr_handler *kernfs_xattr_handlers[] = {
- 	&kernfs_trusted_xattr_handler,
- 	&kernfs_security_xattr_handler,
-+	&kernfs_user_xattr_handler,
- 	NULL
- };
-diff --git a/fs/kernfs/kernfs-internal.h b/fs/kernfs/kernfs-internal.h
-index 2f3c51d55261..7ee97ef59184 100644
---- a/fs/kernfs/kernfs-internal.h
-+++ b/fs/kernfs/kernfs-internal.h
-@@ -26,6 +26,8 @@ struct kernfs_iattrs {
- 	struct timespec64	ia_ctime;
- 
- 	struct simple_xattrs	xattrs;
-+	atomic_t		nr_user_xattrs;
-+	atomic_t		user_xattr_size;
- };
- 
- /* +1 to avoid triggering overflow warning when negating it */
-diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-index dded2e5a9f42..89f6a4214a70 100644
---- a/include/linux/kernfs.h
-+++ b/include/linux/kernfs.h
-@@ -37,8 +37,10 @@ enum kernfs_node_type {
- 	KERNFS_LINK		= 0x0004,
- };
- 
--#define KERNFS_TYPE_MASK	0x000f
--#define KERNFS_FLAG_MASK	~KERNFS_TYPE_MASK
-+#define KERNFS_TYPE_MASK		0x000f
-+#define KERNFS_FLAG_MASK		~KERNFS_TYPE_MASK
-+#define KERNFS_MAX_USER_XATTRS		128
-+#define KERNFS_USER_XATTR_SIZE_LIMIT	(128 << 10)
- 
- enum kernfs_node_flag {
- 	KERNFS_ACTIVATED	= 0x0010,
-@@ -78,6 +80,11 @@ enum kernfs_root_flag {
- 	 * fhandle to access nodes of the fs.
- 	 */
- 	KERNFS_ROOT_SUPPORT_EXPORTOP		= 0x0004,
-+
-+	/*
-+	 * Support user xattrs to be written to nodes rooted at this root.
-+	 */
-+	KERNFS_ROOT_SUPPORT_USER_XATTR		= 0x0008,
- };
- 
- /* type-specific structures for kernfs_node union members */
--- 
-2.21.1
-
+Note that all TCP sk_clone_lock() calls happen in softirq context.
