@@ -1,68 +1,63 @@
-From: Benjamin Berg <benjamin-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
-Subject: Re: [BUG] NULL pointer de-ref when setting io.cost.qos on LUKS
- devices
-Date: Thu, 05 Mar 2020 11:31:29 +0100
-Message-ID: <71515f7a143937ab9ab11625485659bb7288f024.camel@sipsolutions.net>
-References: <1dbdcbb0c8db70a08aac467311a80abcf7779575.camel@sipsolutions.net>
-         <20200303141902.GB189690@mtj.thefacebook.com>
-         <24bd31cdaa3ea945908bc11cea05d6aae6929240.camel@sipsolutions.net>
-         <20200304164205.GH189690@mtj.thefacebook.com>
-         (sfid-20200304_174209_151624_50E7536A)
+From: Vincenzo Frascino <vincenzo.frascino@arm.com>
+Subject: Re: [PATCH] mm: Make mem_cgroup_id_get_many dependent on MMU and
+ MEMCG_SWAP
+Date: Thu, 5 Mar 2020 10:46:21 +0000
+Message-ID: <acf13158-40a3-4027-f36a-25d24efe3242@arm.com>
+References: <20200304142348.48167-1-vincenzo.frascino@arm.com>
+ <20200304165336.GO16139@dhcp22.suse.cz>
+ <8c489836-b824-184e-7cfe-25e55ab73000@arm.com>
+ <20200305100023.GR16139@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-mcjR0yXznIKw1TEhCYUl"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200304164205.GH189690-146+VewaZzwNjtGbbfXrCEEOCMrvLtNR@public.gmane.org> (sfid-20200304_174209_151624_50E7536A)
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20200305100023.GR16139@dhcp22.suse.cz>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Michal Hocko <mhocko@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
 
+Hi Michal,
 
---=-mcjR0yXznIKw1TEhCYUl
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On 3/5/20 10:00 AM, Michal Hocko wrote:
+> On Thu 05-03-20 09:49:23, Vincenzo Frascino wrote:
+>> Hi Michal,
+>>
+>> On 3/4/20 4:53 PM, Michal Hocko wrote:
+>>> On Wed 04-03-20 14:23:48, Vincenzo Frascino wrote:
+>>>> mem_cgroup_id_get_many() is currently used only when MMU or MEMCG_SWAP
+>>>> configuration options are enabled. Having them disabled triggers the
+>>>> following warning at compile time:
+>>>>
+>>>> linux/mm/memcontrol.c:4797:13: warning: ‘mem_cgroup_id_get_many’ defined
+>>>> but not used [-Wunused-function]
+>>>>  static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned
+>>>>  int n)
+>>>>
+>>>> Make mem_cgroup_id_get_many() dependent on MMU and MEMCG_SWAP to address
+>>>> the issue.
+>>>
+>>> A similar patch has been proposed recently
+>>> http://lkml.kernel.org/r/87fthjh2ib.wl-kuninori.morimoto.gx@renesas.com.
+>>> The conclusion was that the warning is not really worth adding code.
+>>>
+>>
+>> Thank you for pointing this out, I was not aware of it. I understand that you
+>> are against "#ifdeffery" in this case, but isn't it the case of adding at least
+>> __maybe_unused? This would prevent people from reporting it over and over again
+>> and you to have to push them back :) Let me know what do you think, in case I am
+>> happy to change my patch accordingly.
+> 
+> We have discussed __maybe_unused in the email thread as well. I am not a
+> great fan of that as mentioed there.
+> 
 
-On Wed, 2020-03-04 at 11:42 -0500, Tejun Heo wrote:
-> [SNIP]
->=20
-> Right now, the situation isn't great with dm. When pagecache
-> writebacks go through dm, in some cases including dm-crypt, the cgroup
-> ownership information is completely lost and all writes end up being
-> issued as the root cgroup, so it breaks down when dm is in use.
+I am aware of this. I was just exploring if there was a possibility of
+addressing the warning, since if we leave all the warnings in scenarios like
+randconfig can cause confusion in between real and non real issues.
+Is there anything we can do?
 
-Fair enough.
-
-> In the longer term, what we wanna do is controlling at physical
-> devices (sda here) and then updating dm so that it can maintain and
-> propagate the ownership correctly but we aren't there yet.
-
-Perfect, so what I am seeing is really just a small systemd bug. Thansk
-for confirming, I'll submit a patch to fix it.
-
-Benjamin
-
---=-mcjR0yXznIKw1TEhCYUl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEED2NO4vMS33W8E4AFq6ZWhpmFY3AFAl5g1QEACgkQq6ZWhpmF
-Y3DEqg//VPcO2qUEZ7XODL8iSVDhK1pGXv5KSILnsiTyDXo4wHPND3tNcpOAceU+
-l1fufTA2LMbXtH1BMPmlEL/lMQK27IUss0J3PyihPBWjdC31KTpxixCr/61mERo6
-zQSnGGUYoNsVwyMP8kl5DcNFscY42fOcnx5Ot5GdfYrw35Lqniv7OctQyCXU5vAD
-MeEbW2jE7J8vusMMr4Bn68fIUuXYLE1Thx0FIn4HtH9mpyQsfyXFDGqq/92AHbsS
-SpP3H+iVjOf0v5oAV+0NZMu6HE5o+g36HpvS4UzODdLynfYkmFPcwoxpfUQ9bDT/
-Yrv7uAUvlikRekvPNo3TBg3Yh8oIuri+tVvTZzgdnldyDPU8RhQjd6q11XR7OASb
-tFONjiI5w2xzLmuY96R7KHac31O0zEmNDpYSGOx56HCLu7gx4mkU4usdDB0IqRbZ
-iawu0jvpwRhneDW3p5mQDm2DMRcAuAAX9NviezqktvRkzfwgJyeyeQzhwEy24a2J
-cgVAT6f5KVi+JE0NWaCS17GIL2vPmRB/pbbE6KIi9+5ZFRtby6ppU6W8QLXb5c8d
-jzcgIMuL2HB/YWCqvMR4ZQukPD/TnaCvLiA8zof1PboGXh7vPxMPfoladjCUEFS7
-IPA2B4YjF3TZtr8AIqgmi5qrg+BCJVtaKp0shvrpJzA1v5SDsqU=
-=PIRG
------END PGP SIGNATURE-----
-
---=-mcjR0yXznIKw1TEhCYUl--
-
+-- 
+Regards,
+Vincenzo
