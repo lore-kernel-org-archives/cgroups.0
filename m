@@ -1,63 +1,238 @@
-From: Vincenzo Frascino <vincenzo.frascino@arm.com>
-Subject: Re: [PATCH] mm: Make mem_cgroup_id_get_many dependent on MMU and
- MEMCG_SWAP
-Date: Thu, 5 Mar 2020 10:46:21 +0000
-Message-ID: <acf13158-40a3-4027-f36a-25d24efe3242@arm.com>
-References: <20200304142348.48167-1-vincenzo.frascino@arm.com>
- <20200304165336.GO16139@dhcp22.suse.cz>
- <8c489836-b824-184e-7cfe-25e55ab73000@arm.com>
- <20200305100023.GR16139@dhcp22.suse.cz>
+From: Benjamin Berg <benjamin-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
+Subject: Re: Memory reclaim protection and cgroup nesting (desktop use)
+Date: Thu, 05 Mar 2020 14:13:58 +0100
+Message-ID: <4d3e00457bba40b25f3ac4fd376ba7306ffc4e68.camel@sipsolutions.net>
+References: <d4826b9e568f1ab7df19f94c409df11956a8e262.camel@sipsolutions.net>
+         <20200304163044.GF189690@mtj.thefacebook.com>
+         (sfid-20200304_173047_938875_870FD3F3)
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200305100023.GR16139@dhcp22.suse.cz>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-w13sUwChv92X5R0vevXM"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200304163044.GF189690-146+VewaZzwNjtGbbfXrCEEOCMrvLtNR@public.gmane.org> (sfid-20200304_173047_938875_870FD3F3)
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Michal Hocko <mhocko@kernel.org>
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Hi Michal,
 
-On 3/5/20 10:00 AM, Michal Hocko wrote:
-> On Thu 05-03-20 09:49:23, Vincenzo Frascino wrote:
->> Hi Michal,
->>
->> On 3/4/20 4:53 PM, Michal Hocko wrote:
->>> On Wed 04-03-20 14:23:48, Vincenzo Frascino wrote:
->>>> mem_cgroup_id_get_many() is currently used only when MMU or MEMCG_SWAP
->>>> configuration options are enabled. Having them disabled triggers the
->>>> following warning at compile time:
->>>>
->>>> linux/mm/memcontrol.c:4797:13: warning: ‘mem_cgroup_id_get_many’ defined
->>>> but not used [-Wunused-function]
->>>>  static void mem_cgroup_id_get_many(struct mem_cgroup *memcg, unsigned
->>>>  int n)
->>>>
->>>> Make mem_cgroup_id_get_many() dependent on MMU and MEMCG_SWAP to address
->>>> the issue.
->>>
->>> A similar patch has been proposed recently
->>> http://lkml.kernel.org/r/87fthjh2ib.wl-kuninori.morimoto.gx@renesas.com.
->>> The conclusion was that the warning is not really worth adding code.
->>>
->>
->> Thank you for pointing this out, I was not aware of it. I understand that you
->> are against "#ifdeffery" in this case, but isn't it the case of adding at least
->> __maybe_unused? This would prevent people from reporting it over and over again
->> and you to have to push them back :) Let me know what do you think, in case I am
->> happy to change my patch accordingly.
-> 
-> We have discussed __maybe_unused in the email thread as well. I am not a
-> great fan of that as mentioed there.
-> 
+--=-w13sUwChv92X5R0vevXM
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-I am aware of this. I was just exploring if there was a possibility of
-addressing the warning, since if we leave all the warnings in scenarios like
-randconfig can cause confusion in between real and non real issues.
-Is there anything we can do?
+On Wed, 2020-03-04 at 11:30 -0500, Tejun Heo wrote:
+> Hello,
+>=20
+> (cc'ing Johannes and quoting whole msg)
+>=20
+> On Wed, Mar 04, 2020 at 10:44:44AM +0100, Benjamin Berg wrote:
+> > Hi,
+> >=20
+> > TL;DR: I seem to need memory.min/memory.max to be set on each child
+> > cgroup and not just the parents. Is this expected?
+>=20
+> Yes, currently. However, v5.7+ will have a cgroup2 mount option to
+> propagate protection automatically.
+>=20
+>   https://lore.kernel.org/linux-mm/20191219200718.15696-4-hannes@cmpxchg.=
+org/
 
--- 
-Regards,
-Vincenzo
+Oh, that is an interesting discussion/development, thanks for the
+pointer!
+
+I think that mount option is great. It is also interesting to see that
+I could achieve a similar effect by disabling the memory controller.
+That makes sense, but it had not occurred to me.
+
+
+A major discussion point seemed to be that cgroups should be grouped by
+their resource management needs rather than a logical hierarchy. I
+think that the resource management needs actually map well enough to
+the logical hierarchy in our case. The hierarchy looks like:
+
+                         root
+                       /     \
+           system.slice       user.slice
+          /    |              |         \
+      cron  journal    user-1000.slice   user-1001.slice
+                              |                      \
+                      user-HmGangybm7RTDjBF/Jpztg@public.gmane.org            [SAME]
+                        |          |
+                   apps.slice   session.slice
+                       |             |
+                  unprotected    protected
+
+Where the tree underneath user-HmGangybm7RTDjBF/Jpztg@public.gmane.org is managed separately from
+the rest. Moving parts of this tree to other locations would require
+interactions between two systemd processes.
+
+But, all layers can actually have a purpose:
+ * user.slice:
+   - Admin/distribution defines resource guarantees/constraints that
+     apply to all users as a group.
+     (Assuming a single user system, the same guarantees as below.)
+   - i.e. it defines the separation of system services vs. user.
+ * user-.slice:
+   - Admin defines resource guarantees/constrains for a single user
+   - A separate policy dynamically changes this depending on whether
+     the user is currently active (on seat0). Ensuring only the
+     active user is benefiting.
+ * user-HmGangybm7RTDjBF/Jpztg@public.gmane.org:
+   - Nothing needed here, just the point where resource management
+     is delegated to the users control.
+ * session.slice:
+   - User/session manages resources to ensure UI responsiveness
+
+I think this actually makes sense. Both from an hierarchical point of
+view and also for configuring resources. In particular the user-.slice
+layer is important, because this grouping allows us to dynamically
+adjust resource management. The obvious thing we can do there is to
+prioritise the currently active user while also lowering resource
+allocations for inactive users (e.g. graphical greeter still running in
+the background).
+
+Note, that from my point of view the scenario that most concerns me is
+a resource competition between session.slice and its siblings. This
+makes the hierarchy above even less important; we just need to give the
+user enough control to do resource allocations within their own
+subtree.
+
+So, it seems to me that the suggested mount option should work well in
+our scenario.
+
+Benjamin
+
+
+> > I have been experimenting with using cgroups to protect a GNOME
+> > session. The intention is that the GNOME Shell itself and important
+> > other services remain responsive, even if the application workload is
+> > thrashing. The long term goal here is to bridge the time until an OOM
+> > killer like oomd would get the system back into normal conditions using
+> > memory pressure information.
+> >=20
+> > Note that I have done these tests without any swap and with huge
+> > memory.min/memory.low values. I consider this scenario pathological,
+> > however, it seems like a reasonable way to really exercise the cgroup
+> > reclaim protection logic.
+>=20
+> It's incomplete and more brittle in that the kernel has to treat a
+> large portion of memory usage as essentially memlocked.
+>=20
+> > The resulting cgroup hierarchy looked something like:
+> >=20
+> > -.slice
+> > =E2=94=9C=E2=94=80user.slice
+> > =E2=94=82 =E2=94=94=E2=94=80user-1000.slice
+> > =E2=94=82   =E2=94=9C=E2=94=80user-HmGangybm7RTDjBF/Jpztg@public.gmane.org
+> > =E2=94=82   =E2=94=82 =E2=94=9C=E2=94=80session.slice
+> > =E2=94=82   =E2=94=82 =E2=94=82 =E2=94=9C=E2=94=80gsd-*.service
+> > =E2=94=82   =E2=94=82 =E2=94=82 =E2=94=82 =E2=94=94=E2=94=80208803 /usr=
+/libexec/gsd-rfkill
+> > =E2=94=82   =E2=94=82 =E2=94=82 =E2=94=9C=E2=94=80gnome-shell-wayland.s=
+ervice
+> > =E2=94=82   =E2=94=82 =E2=94=82 =E2=94=82 =E2=94=9C=E2=94=80208493 /usr=
+/bin/gnome-shell
+> > =E2=94=82   =E2=94=82 =E2=94=82 =E2=94=82 =E2=94=9C=E2=94=80208549 /usr=
+/bin/Xwayland :0 -rootless -noreset -accessx
+> > -core -auth /run/user/1000/.mutter-Xwayla>
+> > =E2=94=82   =E2=94=82 =E2=94=82 =E2=94=82 =E2=94=94=E2=94=80 =E2=80=A6
+> > =E2=94=82   =E2=94=82 =E2=94=94=E2=94=80apps.slice
+> > =E2=94=82   =E2=94=82   =E2=94=9C=E2=94=80gnome-launched-tracker-miner-=
+fs.desktop-208880.scope
+> > =E2=94=82   =E2=94=82   =E2=94=82 =E2=94=94=E2=94=80208880 /usr/libexec=
+/tracker-miner-fs
+> > =E2=94=82   =E2=94=82   =E2=94=9C=E2=94=80dbus-:1.2-org.gnome.OnlineAcc=
+ounts@0.service
+> > =E2=94=82   =E2=94=82   =E2=94=82 =E2=94=94=E2=94=80208668 /usr/libexec=
+/goa-daemon
+> > =E2=94=82   =E2=94=82   =E2=94=9C=E2=94=80flatpak-org.gnome.Fractal-210=
+350.scope
+> > =E2=94=82   =E2=94=82   =E2=94=9C=E2=94=80gnome-terminal-server.service
+> > =E2=94=82   =E2=94=82   =E2=94=82 =E2=94=9C=E2=94=80209261 /usr/libexec=
+/gnome-terminal-server
+> > =E2=94=82   =E2=94=82   =E2=94=82 =E2=94=9C=E2=94=80209434 bash
+> > =E2=94=82   =E2=94=82   =E2=94=82 =E2=94=94=E2=94=80 =E2=80=A6 includin=
+g the test load i.e. "make -j32" of a C++
+> > code
+> >=20
+> >=20
+> > I also enabled the CPU and IO controllers in my tests, but I don't
+> > think that is as relevant. The main thing is that I set
+>=20
+> CPU control isn't but IO is. Without working IO isolation, it's
+> relatively easy to drive the system into the ground given enough
+> stress ouside the protected area.
+>=20
+> >   memory.min: 2GiB
+> >   memory.low: 4GiB
+> >=20
+> > using systemd on all of
+> >=20
+> >  * user.slice,
+> >  * user-1000.slice,
+> >  * user-j7y+/WGsDUWKtF1m3vyIGg@public.gmane.org,
+> >  * session.slice and
+> >  * everything inside session.slice
+> >    (i.e. gnome-shell-wayland.service, gsd-*.service, =E2=80=A6)
+> >=20
+> > excluding apps.slice from protection.
+> >=20
+> > (In a realistic scenario I expect to have swap and then reserving maybe
+> > a few hundred MiB; DAMON might help with finding good values.)
+>=20
+> What's DAMON?
+>=20
+> > At that point, the protection started working pretty much flawlessly.
+> > i.e. my gnome-shell would continue to run without major page faulting
+> > even though everything in apps.slice was thrashing heavily. The
+> > mouse/keyboard remained completely responsive, and interacting with
+> > applications ended up working much better thanks to knowing where input
+> > was going. Even if the applications themselves took seconds to react.
+> >=20
+> > So far, so good. What surprises me is that I needed to set the
+> > protection on the child cgroups (i.e. gnome-shell-wayland.service).
+> > Without this, it would not work (reliably) and my gnome-shell would
+> > still have a lot of re-faults to load libraries and other mmap'ed data
+> > back into memory (I used "perf --no-syscalls -F" to trace this and
+> > observed these to be repeatedly for the same pages loading e.g.
+> > functions for execution).
+> >=20
+> > Due to accounting effects, I would expect re-faults to happen up to one
+> > time in this scenario. At that point the page in question will be
+> > accounted against the shell's cgroup and reclaim protection could kick
+> > in. Unfortunately, that did not seem to happen unless the shell's
+> > cgroup itself had protections and not just all of its parents.
+> >=20
+> > Is it expected that I need to set limits on each child?
+>=20
+> Yes, right now, memory.low needs to be configured all the way down to
+> the leaf to be effective, which can be rather cumbersome. As written
+> above, future kernels will be easier to work with in this respect.
+>=20
+> Thanks.
+>=20
+
+--=-w13sUwChv92X5R0vevXM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEED2NO4vMS33W8E4AFq6ZWhpmFY3AFAl5g+xYACgkQq6ZWhpmF
+Y3C6zhAAjU01MqlPqogmB/brIp8Kk/15NivzhgoO7pk30vBNDQ37fhwnRhLWLGGj
+jRgPcWDDtS6fWi15GUdqm1bgM2yUeacBJ/LT0OLswp0tPDIhsH26adVOMKwa2EOd
+lNTXR6GhmneT4MJVk/RcUmGdl6f22vUS98DI1StwweA4TUj4MdWALRkMYf0UogHK
+efulEApoIWWYUQ7vfoEDoO083+iUt6FDX2aSJsTYVq86yhCBq8CmQrWCvxb2S1ku
+epCuC6qI661nG+A2RrzirNfNVHhWYFi5WZlwmsyShv4S6nAUbEiRXjTreKbME63c
+rIbb+9wfBestWFoiaLmmumDaWCoKTHjE0AAf8SGgoYX/a6SAgZqCMK/ZeARuYhCE
+ZS2vy5jMHEH5hwYTaDjCk2hZzF7zyYxp66pOJAKAnwXrtPpd6tiNi7YNQldI4QJW
+RIC1aS4kEklAq2FibTcFNsT4JLmWdxcXs0cI46q9ZJRNTNAik51OzNcU02OZHIbI
+Wypwq3eIGwtKySe4gvCyGy/wyiJF70BP44DRcYchBPYlegxbhVoH5N+811xV0kTe
+I5w20XVmPreashBTp3pifsDtLuKC8dLrSH1YvW7RsgdtESIq7igTQu1Y5ex2bx2L
+M3K/vNlPA8CdDrF5aphvbe1uR8JhMEZTiETNIuK0rUEnG//HrxI=
+=DxZM
+-----END PGP SIGNATURE-----
+
+--=-w13sUwChv92X5R0vevXM--
+
