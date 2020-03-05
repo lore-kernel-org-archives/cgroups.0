@@ -1,84 +1,79 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3] net: memcg: late association of sock to memcg
-Date: Thu,  5 Mar 2020 12:55:25 -0800
-Message-ID: <20200305205525.245058-1-shakeelb@google.com>
+From: Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>
+Subject: [PATCH v2 1/4] kernfs: kvmalloc xattr value instead of kmalloc
+Date: Thu,  5 Mar 2020 13:16:29 -0800
+Message-ID: <20200305211632.15369-2-dxu@dxuuu.xyz>
+References: <20200305211632.15369-1-dxu@dxuuu.xyz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=mljG1c45tyBHCNvH//AiEZZTlDTTk3P0kV7UDMwCvTs=;
-        b=DiLLZ921cvStv9VpgT9chw1u+67yb+Jf1wZHKgKeRrtR6Vd+VVjzBFoE3075eabKkB
-         vL9Q1THdoudDtlzUB2SlXnPecVbbuAg124mgQ8cq9H95q1YMiqQXbrNKd7dT2fAnUn3n
-         dPRVeotMzxE6Byy9sl8GMe1jbOn5REl2Dx/4Jw3dbu3R5Z0VldYTbblzUPZ/nq/hvU5m
-         UW41Z7wBfxhTTlXQkI1TtX3zZrz8D1ZvUtgjIr8/MH5OdVN/TMfeA6uQ38HLwN+syvBs
-         NSC1Z9sBv8MySgOXqKr3+c5YO5Dh9yruYybkpx5dtHt7G3kaEndhLvrvjxgKLh+C3qkQ
-         DSTA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dxuuu.xyz; h=
+        from:to:cc:subject:date:message-id:in-reply-to:references
+        :mime-version:content-transfer-encoding; s=fm2; bh=ux2TDbebxuteV
+        tSjPdu5QbynJeWd1LoiKrJmNCdzdIM=; b=GPK4Fjmyow4b3ce4kYCAUlYC8pM5w
+        S6doYRhglZqqqTQ8e4SnwlqC72XpMG+wH5+g5fvKILm4d7P1x/8qzwnFkO7fATxY
+        XSCCKQkYuU3QjUtEIxXyAKsLC8y49lD8Vc7n+4hosNaaMHby6nZ1cEzEiZNleRWp
+        VExbaKmXKBtyDsRpn8M2zyhjyDbzQsPK1SYYga+5Q4G/ONgN/2er1ZghXm25CdJz
+        B/66CVk1f8VmlSEBowHV33Ij3+OrzVLxz7Eo6RLwj3HYZpy7xyaGa8zX/hUBAK/e
+        Zljcpt/lXRiO5GGxOGz498ePOhomk3Qb4CEO2MHasA6YUdQo8iZRLLxQg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:date:from
+        :in-reply-to:message-id:mime-version:references:subject:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm2; bh=ux2TDbebxuteVtSjPdu5QbynJeWd1LoiKrJmNCdzdIM=; b=OahLzm5/
+        l9ZomGwWpevlziasrzFQPQc80mfo6qhSO7nvBJZ5IFXZomkMr/qbAdybc2RspJwl
+        Sk5X4YwkQhBS3ulFV/cZKr2mGxNd5jgSmKUdyfS3/CTL/vGqlWBzWdNUNubFO58t
+        P35KYmtKQXPjLsiw4TBCvjEi424qD2w7JDThS1VFTmhULS7qqI0g5yiF9AyBQTdn
+        0a3SWYmxS9i8XY1rLtlEV9OjmzwXOnZKHZO/u4qULhr9ttZT73hL7RYk7UN295YX
+        CWT9OYqxheGNH/ERun/QIzFbQiTbLpqp9rD9jnpD3t15RiI9fvYilLVhmJ0WomFU
+        19CjkzIqH81BdQ==
+In-Reply-To: <20200305211632.15369-1-dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Alexey Kuznetsov <kuznet-v/Mj1YrvjDBInbfyfbPRSQ@public.gmane.org>, Hideaki YOSHIFUJI <yoshfuji-VfPWfsRibaP+Ru+s062T9g@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-If a TCP socket is allocated in IRQ context or cloned from unassociated
-(i.e. not associated to a memcg) in IRQ context then it will remain
-unassociated for its whole life. Almost half of the TCPs created on the
-system are created in IRQ context, so, memory used by such sockets will
-not be accounted by the memcg.
+It's not really necessary to have contiguous physical memory for xattr
+values. We no longer need to worry about higher order allocations
+failing with kvmalloc, especially because the xattr size limit is at
+64K.
 
-This issue is more widespread in cgroup v1 where network memory
-accounting is opt-in but it can happen in cgroup v2 if the source socket
-for the cloning was created in root memcg.
-
-To fix the issue, just do the late association of the unassociated
-sockets at accept() time in the process context and then force charge
-the memory buffer already reserved by the socket.
-
-Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>
 ---
-Changes since v2:
-- Additional check for charging.
-- Release the sock after charging.
+ fs/xattr.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Changes since v1:
-- added sk->sk_rmem_alloc to initial charging.
-- added synchronization to get memory usage and set sk_memcg race-free.
-
- net/ipv4/inet_connection_sock.c | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
-
-diff --git a/net/ipv4/inet_connection_sock.c b/net/ipv4/inet_connection_sock.c
-index a4db79b1b643..5face55cf818 100644
---- a/net/ipv4/inet_connection_sock.c
-+++ b/net/ipv4/inet_connection_sock.c
-@@ -482,6 +482,26 @@ struct sock *inet_csk_accept(struct sock *sk, int flags, int *err, bool kern)
+diff --git a/fs/xattr.c b/fs/xattr.c
+index 90dd78f0eb27..0d3c9b4d1914 100644
+--- a/fs/xattr.c
++++ b/fs/xattr.c
+@@ -817,7 +817,7 @@ struct simple_xattr *simple_xattr_alloc(const void *value, size_t size)
+ 	if (len < sizeof(*new_xattr))
+ 		return NULL;
+ 
+-	new_xattr = kmalloc(len, GFP_KERNEL);
++	new_xattr = kvmalloc(len, GFP_KERNEL);
+ 	if (!new_xattr)
+ 		return NULL;
+ 
+@@ -882,7 +882,7 @@ int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
+ 
+ 		new_xattr->name = kstrdup(name, GFP_KERNEL);
+ 		if (!new_xattr->name) {
+-			kfree(new_xattr);
++			kvfree(new_xattr);
+ 			return -ENOMEM;
  		}
- 		spin_unlock_bh(&queue->fastopenq.lock);
  	}
-+
-+	if (mem_cgroup_sockets_enabled && !newsk->sk_memcg) {
-+		int amt;
-+
-+		/* atomically get the memory usage, set and charge the
-+		 * sk->sk_memcg.
-+		 */
-+		lock_sock(newsk);
-+
-+		/* The sk has not been accepted yet, no need to look at
-+		 * sk->sk_wmem_queued.
-+		 */
-+		amt = sk_mem_pages(newsk->sk_forward_alloc +
-+				   atomic_read(&sk->sk_rmem_alloc));
-+		mem_cgroup_sk_alloc(newsk);
-+		if (newsk->sk_memcg && amt)
-+			mem_cgroup_charge_skmem(newsk->sk_memcg, amt);
-+
-+		release_sock(newsk);
-+	}
- out:
- 	release_sock(sk);
- 	if (req)
+@@ -912,7 +912,7 @@ int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
+ 	spin_unlock(&xattrs->lock);
+ 	if (xattr) {
+ 		kfree(xattr->name);
+-		kfree(xattr);
++		kvfree(xattr);
+ 	}
+ 	return err;
+ 
 -- 
-2.25.0.265.gbab2e86ba0-goog
+2.21.1
 
