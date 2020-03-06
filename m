@@ -1,125 +1,40 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] memcg: optimize memory.numa_stat like memory.stat
-Date: Thu, 5 Mar 2020 20:54:39 -0800
-Message-ID: <CALvZod7W-Qwa4BRKW0_Ts5f68fwkcqD72SF_4NqZRgEMgA_1-g@mail.gmail.com>
-References: <20200304022058.248270-1-shakeelb@google.com> <20200305204109.be23f5053e2368d3b8ccaa06@linux-foundation.org>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH v2 1/4] kernfs: kvmalloc xattr value instead of kmalloc
+Date: Fri, 06 Mar 2020 00:49:51 -0800
+Message-ID: <58c6e6dafabea52e5b030d18b83c13e4f43ab8e3.camel@perches.com>
+References: <20200305211632.15369-1-dxu@dxuuu.xyz>
+         <20200305211632.15369-2-dxu@dxuuu.xyz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=MpUAWMUZ0nsUfjEg79z9N04zH9L3RObZfUg0695PRvk=;
-        b=PThzNVAb6Nb1Dfs+tTbDHirwjN0U1rIcenmtDKH0p7vqy2XWlgokbVbIYqRGQWFwQX
-         wwtqxkSLN5LqkNYuJQRcOhRxIMHGiB52X8885xTN1Myga1uwq+A3689vLEHE1jTa9yvt
-         7p3DuEO/yvgD5KYCwWVI26lI8BEi7fd4TcJ6H66rZmbwyUyFA4HwuceyNgXIqEhNftSH
-         j7M3EqnuUOqbrpoAG/FjA5ik4f0oHTQaSJU1TUGatZqv6BXBcRSbZTf7geDYUr6yKBLM
-         7PQ1WOzT/U618Jey0i7perutOpaK+eqOQK48LGrLLzqKLr264H8nNi2YvS2phDsTB20r
-         4yQw==
-In-Reply-To: <20200305204109.be23f5053e2368d3b8ccaa06-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20200305211632.15369-2-dxu@dxuuu.xyz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Daniel Xu <dxu@dxuuu.xyz>, cgroups@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org
+Cc: shakeelb@google.com, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, kernel-team@fb.com
 
-On Thu, Mar 5, 2020 at 8:41 PM Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
->
-> On Tue,  3 Mar 2020 18:20:58 -0800 Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-> > Currently reading memory.numa_stat traverses the underlying memcg tree
-> > multiple times to accumulate the stats to present the hierarchical view
-> > of the memcg tree. However the kernel already maintains the hierarchical
-> > view of the stats and use it in memory.stat. Just use the same mechanism
-> > in memory.numa_stat as well.
-> >
-> > I ran a simple benchmark which reads root_mem_cgroup's memory.numa_stat
-> > file in the presense of 10000 memcgs. The results are:
-> >
-> > Without the patch:
-> > $ time cat /dev/cgroup/memory/memory.numa_stat > /dev/null
-> >
-> > real    0m0.700s
-> > user    0m0.001s
-> > sys     0m0.697s
-> >
-> > With the patch:
-> > $ time cat /dev/cgroup/memory/memory.numa_stat > /dev/null
-> >
-> > real    0m0.001s
-> > user    0m0.001s
-> > sys     0m0.000s
-> >
->
-> Can't you do better than that ;)
->
-> >
-> > +     page_state = tree ? lruvec_page_state : lruvec_page_state_local;
-> > ...
-> >
-> > +     page_state = tree ? memcg_page_state : memcg_page_state_local;
-> >
->
-> All four of these functions are inlined.  Taking their address in this
-> fashion will force the compiler to generate out-of-line copies.
->
-> If we do it the uglier-and-maybe-a-bit-slower way:
->
-> --- a/mm/memcontrol.c~memcg-optimize-memorynuma_stat-like-memorystat-fix
-> +++ a/mm/memcontrol.c
-> @@ -3658,17 +3658,16 @@ static unsigned long mem_cgroup_node_nr_
->         struct lruvec *lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
->         unsigned long nr = 0;
->         enum lru_list lru;
-> -       unsigned long (*page_state)(struct lruvec *lruvec,
-> -                                   enum node_stat_item idx);
->
->         VM_BUG_ON((unsigned)nid >= nr_node_ids);
->
-> -       page_state = tree ? lruvec_page_state : lruvec_page_state_local;
-> -
->         for_each_lru(lru) {
->                 if (!(BIT(lru) & lru_mask))
->                         continue;
-> -               nr += page_state(lruvec, NR_LRU_BASE + lru);
-> +               if (tree)
-> +                       nr += lruvec_page_state(lruvec, NR_LRU_BASE + lru);
-> +               else
-> +                       nr += lruvec_page_state_local(lruvec, NR_LRU_BASE + lru);
->         }
->         return nr;
->  }
-> @@ -3679,14 +3678,14 @@ static unsigned long mem_cgroup_nr_lru_p
->  {
->         unsigned long nr = 0;
->         enum lru_list lru;
-> -       unsigned long (*page_state)(struct mem_cgroup *memcg, int idx);
-> -
-> -       page_state = tree ? memcg_page_state : memcg_page_state_local;
->
->         for_each_lru(lru) {
->                 if (!(BIT(lru) & lru_mask))
->                         continue;
-> -               nr += page_state(memcg, NR_LRU_BASE + lru);
-> +               if (tree)
-> +                       nr += memcg_page_state(memcg, NR_LRU_BASE + lru);
-> +               else
-> +                       nr += memcg_page_state_local(memcg, NR_LRU_BASE + lru);
->         }
->         return nr;
->  }
->
-> Then we get:
->
->                      text    data     bss     dec     hex filename
-> now:               106705   35641    1024  143370   2300a mm/memcontrol.o
-> shakeel:           107111   35657    1024  143792   231b0 mm/memcontrol.o
-> shakeel+the-above: 106805   35657    1024  143486   2307e mm/memcontrol.o
->
-> Which do we prefer?  The 100-byte patch or the 406-byte patch?
+On Thu, 2020-03-05 at 13:16 -0800, Daniel Xu wrote:
+> It's not really necessary to have contiguous physical memory for xattr
+> values. We no longer need to worry about higher order allocations
+> failing with kvmalloc, especially because the xattr size limit is at
+> 64K.
 
-I would go with the 100-byte one. The for-loop is just 5 iteration, so
-doing a check in each iteration should not be an issue.
+So why use vmalloc memory at all?
 
-Shakeel
+> diff --git a/fs/xattr.c b/fs/xattr.c
+']
+> @@ -817,7 +817,7 @@ struct simple_xattr *simple_xattr_alloc(const void *value, size_t size)
+>  	if (len < sizeof(*new_xattr))
+>  		return NULL;
+>  
+> -	new_xattr = kmalloc(len, GFP_KERNEL);
+> +	new_xattr = kvmalloc(len, GFP_KERNEL);
+
+Why is this sensible?
+vmalloc memory is a much more limited resource.
+
+Also, it seems as if the function should set
+new_xattr->name to NULL before the return.
+
+
