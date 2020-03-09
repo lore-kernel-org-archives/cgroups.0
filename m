@@ -1,82 +1,42 @@
 From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Subject: Re: linux-next test error: BUG: using __this_cpu_read() in
  preemptible code in __mod_memcg_state
-Date: Mon, 9 Mar 2020 17:56:04 +0800
-Message-ID: <5b1196be-09ce-51f7-f5e7-63f2e597f91e@linux.alibaba.com>
+Date: Mon, 9 Mar 2020 21:26:59 +0800
+Message-ID: <d3fb0593-e483-3b69-bf2c-99ad6cd03567@linux.alibaba.com>
 References: <00000000000022640205a04a20d8@google.com>
  <20200309092423.2ww3aw6yfyce7yty@box>
+ <5b1196be-09ce-51f7-f5e7-63f2e597f91e@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200309092423.2ww3aw6yfyce7yty@box>
+In-Reply-To: <5b1196be-09ce-51f7-f5e7-63f2e597f91e-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-9"
+Content-Type: text/plain; charset="gb2312"
 To: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, syzbot <syzbot+826543256ed3b8c37f62-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
 Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-
-
-=D4=DA 2020/3/9 =CF=C2=CE=E75:24, Kirill A. Shutemov =D0=B4=B5=C0:
->> check_preemption_disabled: 3 callbacks suppressed
->> BUG: using __this_cpu_read() in preemptible [00000000] code: syz-fuzzer/=
-9432
->> caller is __mod_memcg_state+0x27/0x1a0 mm/memcontrol.c:689
->> CPU: 1 PID: 9432 Comm: syz-fuzzer Not tainted 5.6.0-rc4-next-20200306-sy=
-zkaller #0
->> Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS =
-Google 01/01/2011
->> Call Trace:
->>  __dump_stack lib/dump_stack.c:77 [inline]
->>  dump_stack+0x188/0x20d lib/dump_stack.c:118
->>  check_preemption_disabled lib/smp_processor_id.c:47 [inline]
->>  __this_cpu_preempt_check.cold+0x84/0x90 lib/smp_processor_id.c:64
->>  __mod_memcg_state+0x27/0x1a0 mm/memcontrol.c:689
->>  __split_huge_page mm/huge_memory.c:2575 [inline]
->>  split_huge_page_to_list+0x124b/0x3380 mm/huge_memory.c:2862
->>  split_huge_page include/linux/huge_mm.h:167 [inline]
-> It looks like a regression due to c8cba0cc2a80 ("mm/thp: narrow lru
-> locking").
-
-yes, I guess so.
-
-In this patch, I am very bold to move the lru unlock from before=20
-'remap_page(head);' up to before 'ClearPageCompound(head);' which is
-often checked in lrulock. I want to know which part that real should
-stay in lru_lock.=20
-
-So revert this patch or move it back or move after ClearPageCompound
-should fix this problem.=20
-
-In the weekend and today, I tried a lot to reproduce this bug on my 2
-machines, but still can't. :~(
-
-Many thanks to give a try!
-
-Thank
-Alex=20
-
-line 2605 mm/huge_memory.c:
-        spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-
-        ClearPageCompound(head);
-
-        split_page_owner(head, HPAGE_PMD_ORDER);
-
-        /* See comment in __split_huge_page_tail() */
-        if (PageAnon(head)) {
-                /* Additional pin to swap cache */
-                if (PageSwapCache(head)) {
-                        page_ref_add(head, 2);
-                        xa_unlock(&swap_cache->i_pages);
-                } else {
-                        page_ref_inc(head);
-                }
-        } else {
-                /* Additional pin to page cache */
-                page_ref_add(head, 2);
-                xa_unlock(&head->mapping->i_pages);
-        }
-
-        remap_page(head);
-
+CgrU2iAyMDIwLzMvOSDPws7nNTo1NiwgQWxleCBTaGkg0LS1wDoKPiAKPiAKPiDU2iAyMDIwLzMv
+OSDPws7nNToyNCwgS2lyaWxsIEEuIFNodXRlbW92INC0tcA6Cj4+PiBjaGVja19wcmVlbXB0aW9u
+X2Rpc2FibGVkOiAzIGNhbGxiYWNrcyBzdXBwcmVzc2VkCj4+PiBCVUc6IHVzaW5nIF9fdGhpc19j
+cHVfcmVhZCgpIGluIHByZWVtcHRpYmxlIFswMDAwMDAwMF0gY29kZTogc3l6LWZ1enplci85NDMy
+Cj4+PiBjYWxsZXIgaXMgX19tb2RfbWVtY2dfc3RhdGUrMHgyNy8weDFhMCBtbS9tZW1jb250cm9s
+LmM6Njg5Cj4+PiBDUFU6IDEgUElEOiA5NDMyIENvbW06IHN5ei1mdXp6ZXIgTm90IHRhaW50ZWQg
+NS42LjAtcmM0LW5leHQtMjAyMDAzMDYtc3l6a2FsbGVyICMwCj4+PiBIYXJkd2FyZSBuYW1lOiBH
+b29nbGUgR29vZ2xlIENvbXB1dGUgRW5naW5lL0dvb2dsZSBDb21wdXRlIEVuZ2luZSwgQklPUyBH
+b29nbGUgMDEvMDEvMjAxMQo+Pj4gQ2FsbCBUcmFjZToKPj4+ICBfX2R1bXBfc3RhY2sgbGliL2R1
+bXBfc3RhY2suYzo3NyBbaW5saW5lXQo+Pj4gIGR1bXBfc3RhY2srMHgxODgvMHgyMGQgbGliL2R1
+bXBfc3RhY2suYzoxMTgKPj4+ICBjaGVja19wcmVlbXB0aW9uX2Rpc2FibGVkIGxpYi9zbXBfcHJv
+Y2Vzc29yX2lkLmM6NDcgW2lubGluZV0KPj4+ICBfX3RoaXNfY3B1X3ByZWVtcHRfY2hlY2suY29s
+ZCsweDg0LzB4OTAgbGliL3NtcF9wcm9jZXNzb3JfaWQuYzo2NAo+Pj4gIF9fbW9kX21lbWNnX3N0
+YXRlKzB4MjcvMHgxYTAgbW0vbWVtY29udHJvbC5jOjY4OQo+Pj4gIF9fc3BsaXRfaHVnZV9wYWdl
+IG1tL2h1Z2VfbWVtb3J5LmM6MjU3NSBbaW5saW5lXQo+Pj4gIHNwbGl0X2h1Z2VfcGFnZV90b19s
+aXN0KzB4MTI0Yi8weDMzODAgbW0vaHVnZV9tZW1vcnkuYzoyODYyCj4+PiAgc3BsaXRfaHVnZV9w
+YWdlIGluY2x1ZGUvbGludXgvaHVnZV9tbS5oOjE2NyBbaW5saW5lXQo+PiBJdCBsb29rcyBsaWtl
+IGEgcmVncmVzc2lvbiBkdWUgdG8gYzhjYmEwY2MyYTgwICgibW0vdGhwOiBuYXJyb3cgbHJ1Cj4+
+IGxvY2tpbmciKS4KPiAKPiB5ZXMsIEkgZ3Vlc3Mgc28uCgpZZXMsIGl0IGlzIGEgc3R1cGlkIG1p
+c3Rha2UgdG8gcHVsbCBvdXQgbG9jayBmb3IgX19tb2RfbWVtY2dfc3RhdGUgd2hpY2gKc2hvdWxk
+IGJlIGluIGEgbG9jay4KCnJldmVydCB0aGlzIHBhdGNoIHNob3VsZCBiZSBhbGwgZmluZSwgc2lu
+Y2UgQ2xlYXJQYWdlQ29tcG91bmQgYW5kIHBhZ2VfcmVmX2luYwpsYXRlciBtYXkgcmVsYXRlZCB3
+aXRoIGxydV9saXN0IHZhbGlkIGlzc3VlIGluIHJlbGVhc2VfcGdlcy4KCgpTb3JyeSBmb3IgdGhl
+IGRpc2FzdGVyIQoKQWxleAo=
