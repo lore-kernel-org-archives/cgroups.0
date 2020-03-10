@@ -1,36 +1,34 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH v4 2/2] net: memcg: late association of sock to memcg
-Date: Tue, 10 Mar 2020 15:34:08 -0700 (PDT)
-Message-ID: <20200310.153408.209273615201195266.davem@davemloft.net>
-References: <20200310051606.33121-1-shakeelb@google.com>
-        <20200310051606.33121-2-shakeelb@google.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20200310051606.33121-2-shakeelb@google.com>
-Sender: netdev-owner@vger.kernel.org
+From: pr-tracker-bot-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Subject: Re: [GIT PULL] cgroup fixes for v5.6-rc5
+Date: Tue, 10 Mar 2020 22:35:08 +0000
+Message-ID: <158387970815.8298.8296123785213357417.pr-tracker-bot@kernel.org>
+References: <20200310144107.GC79873@mtj.duckdns.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1583879708;
+        bh=OiyOwPBVVsas1wr/EMz3KIDf/El4Sdt80DfMU4nueaI=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=KzZcV/6pdNuM5Vfj24L6tV5gCNCdVVhFUyIYd6UY7i3kfqf4ftpFgP7WXcL1k0r9i
+         /2FtboX6xtBA7rytUsTTMD+ZmcpbQu/Cp7dCvD7tBt2hKZs2rRYfSkEJ6oYJxbfL9Z
+         0ufL/w+zbHyXy6Y4VajDQlbMnus5cSbvpBa/8TjM=
+In-Reply-To: <20200310144107.GC79873-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: Text/Plain; charset="us-ascii"
-To: shakeelb@google.com
-Cc: edumazet@google.com, guro@fb.com, hannes@cmpxchg.org, mhocko@kernel.org, gthelen@google.com, akpm@linux-foundation.org, kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Shakeel Butt <shakeelb@google.com>
-Date: Mon,  9 Mar 2020 22:16:06 -0700
+The pull request you sent on Tue, 10 Mar 2020 10:41:07 -0400:
 
-> If a TCP socket is allocated in IRQ context or cloned from unassociated
-> (i.e. not associated to a memcg) in IRQ context then it will remain
-> unassociated for its whole life. Almost half of the TCPs created on the
-> system are created in IRQ context, so, memory used by such sockets will
-> not be accounted by the memcg.
-> 
-> This issue is more widespread in cgroup v1 where network memory
-> accounting is opt-in but it can happen in cgroup v2 if the source socket
-> for the cloning was created in root memcg.
-> 
-> To fix the issue, just do the association of the sockets at the accept()
-> time in the process context and then force charge the memory buffer
-> already used and reserved by the socket.
-> 
-> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.6-fixes
 
-Applied and queued up for -stable.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/e941484541036ba3652b658ed5536c7bca5bdb89
+
+Thank you!
+
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
