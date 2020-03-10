@@ -1,129 +1,156 @@
-From: syzbot <syzbot+cac0c4e204952cf449b1@syzkaller.appspotmail.com>
-Subject: KASAN: slab-out-of-bounds Read in cgroup_file_notify
-Date: Tue, 10 Mar 2020 08:55:14 -0700
-Message-ID: <00000000000041c6c205a08225dc@google.com>
-Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
-Sender: netdev-owner@vger.kernel.org
+From: "Daniel Xu" <dxu@dxuuu.xyz>
+Subject: Re: [PATCH v2 2/4] kernfs: Add removed_size out param for
+ simple_xattr_set
+Date: Tue, 10 Mar 2020 11:20:44 -0700
+Message-ID: <C17D34QG2G67.2DUOCLCXQI4RP@dlxu-fedora-R90QNFJV>
+References: <20200305211632.15369-3-dxu@dxuuu.xyz>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dxuuu.xyz; h=
+        content-transfer-encoding:content-type:in-reply-to:date:from:to
+        :cc:subject:message-id; s=fm2; bh=5FlyFofPg7aTv586jLAdhujdZkMVwt
+        aTjltq0mF7OD8=; b=xafPDPpdBEzAXboC3WYjQSk+mV62smjUftt64gACW+cqGt
+        DY8Phzta7VFFjeCpoi7FJdgH/SyE+Md2cIFy9+YXBY3cMvJ6bpwchWu0c1a961LE
+        VhldM8gONOE7T+y9GoJDQg4MGwroYLlhNAlcqzaWY1RlPVWy7biAiBnI8OYPx+N8
+        Eo+psPb6sqNiud9CNJKC8+WCqWvnkGCFmFLoFl97Wes0FpjTA9p4rvwuJpNM/Gz8
+        XEQf9m8bC2y6JyFVFgN0WrriCDG9r5SWlQCYNbqOv3tendXIjfYNQHd7gCnGVC6M
+        6NoFHPpRZqu1FjZHdfhNKxG/oBay4qAUSN2SZueQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:content-type
+        :date:from:in-reply-to:message-id:subject:to:x-me-proxy
+        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=5FlyFo
+        fPg7aTv586jLAdhujdZkMVwtaTjltq0mF7OD8=; b=m+m1A427Im9IndTacGJN53
+        l3uFWjdDGVJgIJERUsd8aO6kPEy3U0s565d+ThVRcz1GdpdziGnJWD4S9Md6pInU
+        ivy9e7yLt7d/DLkQ0ibHSHwyDUg7HB0toh5vIb/WtFYDN5xczG/On08I6P73lp1L
+        PMgD2uuBWvSm0XWQjP1dUpp5iwc5G4cN9hwZMBazyRDkfGg6OKFbxTgj/wKHevxX
+        dRmd/d53V63SxH/63KnU7gjKQ7NoXbdHUXNzkAWVq5JZgCB2R9Fe+sXH2fEAH7Ek
+        3rWm6xUKoe3uRofBvIQ1BLV8CLjSE7xQVsi2wf3M1ImPgJVtWwM2OIFmNGYA/X6w
+        ==
+In-Reply-To: <20200305211632.15369-3-dxu@dxuuu.xyz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, almasrymina@google.com, andriin@fb.com, ast@kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, christian@brauner.io, daniel@iogearbox.net, hannes@cmpxchg.org, kafai@fb.com, linux-kernel@vger.kernel.org, lizefan@huawei.com, netdev@vger.kernel.org, sfr@canb.auug.org.au, songliubraving@fb.com, syzkaller-bugs@googlegroups.com, tj@kernel.org, yhs@fb.com
+To: Daniel Xu <dxu@dxuuu.xyz>, cgroups@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, viro@zeniv.linux.org.uk
+Cc: Daniel Xu <dxu@dxuuu.xyz>, shakeelb@google.com, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, kernel-team@fb.com
 
-Hello,
+On Thu Mar 5, 2020 at 1:16 PM, Daniel Xu wrote:
+> This helps set up size accounting in the next commit. Without this out
+> param, it's difficult to find out the removed xattr size without taking
+> a lock for longer and walking the xattr linked list twice.
+>
+>=20
+> Signed-off-by: Daniel Xu <dxu@dxuuu.xyz>
+> ---
+> fs/kernfs/inode.c | 2 +-
+> fs/xattr.c | 11 ++++++++++-
+> include/linux/xattr.h | 3 ++-
+> mm/shmem.c | 2 +-
+> 4 files changed, 14 insertions(+), 4 deletions(-)
+>
+>=20
+> diff --git a/fs/kernfs/inode.c b/fs/kernfs/inode.c
+> index d0f7a5abd9a9..5f10ae95fbfa 100644
+> --- a/fs/kernfs/inode.c
+> +++ b/fs/kernfs/inode.c
+> @@ -303,7 +303,7 @@ int kernfs_xattr_set(struct kernfs_node *kn, const
+> char *name,
+> if (!attrs)
+> return -ENOMEM;
+> =20
+> - return simple_xattr_set(&attrs->xattrs, name, value, size, flags);
+> + return simple_xattr_set(&attrs->xattrs, name, value, size, flags,
+> NULL);
+> }
+> =20
+> static int kernfs_vfs_xattr_get(const struct xattr_handler *handler,
+> diff --git a/fs/xattr.c b/fs/xattr.c
+> index 0d3c9b4d1914..e13265e65871 100644
+> --- a/fs/xattr.c
+> +++ b/fs/xattr.c
+> @@ -860,6 +860,7 @@ int simple_xattr_get(struct simple_xattrs *xattrs,
+> const char *name,
+> * @value: value of the xattr. If %NULL, will remove the attribute.
+> * @size: size of the new xattr
+> * @flags: %XATTR_{CREATE|REPLACE}
+> + * @removed_size: returns size of the removed xattr, -1 if none removed
+> *
+> * %XATTR_CREATE is set, the xattr shouldn't exist already; otherwise
+> fails
+> * with -EEXIST. If %XATTR_REPLACE is set, the xattr should exist;
+> @@ -868,7 +869,8 @@ int simple_xattr_get(struct simple_xattrs *xattrs,
+> const char *name,
+> * Returns 0 on success, -errno on failure.
+> */
+> int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
+> - const void *value, size_t size, int flags)
+> + const void *value, size_t size, int flags,
+> + ssize_t *removed_size)
+> {
+> struct simple_xattr *xattr;
+> struct simple_xattr *new_xattr =3D NULL;
+> @@ -895,8 +897,12 @@ int simple_xattr_set(struct simple_xattrs *xattrs,
+> const char *name,
+> err =3D -EEXIST;
+> } else if (new_xattr) {
+> list_replace(&xattr->list, &new_xattr->list);
+> + if (removed_size)
+> + *removed_size =3D xattr->size;
+> } else {
+> list_del(&xattr->list);
+> + if (removed_size)
+> + *removed_size =3D xattr->size;
+> }
+> goto out;
+> }
+> @@ -908,6 +914,9 @@ int simple_xattr_set(struct simple_xattrs *xattrs,
+> const char *name,
+> list_add(&new_xattr->list, &xattrs->head);
+> xattr =3D NULL;
+> }
+> +
+> + if (removed_size)
+> + *removed_size =3D -1;
+> out:
+> spin_unlock(&xattrs->lock);
+> if (xattr) {
+> diff --git a/include/linux/xattr.h b/include/linux/xattr.h
+> index 6dad031be3c2..4cf6e11f4a3c 100644
+> --- a/include/linux/xattr.h
+> +++ b/include/linux/xattr.h
+> @@ -102,7 +102,8 @@ struct simple_xattr *simple_xattr_alloc(const void
+> *value, size_t size);
+> int simple_xattr_get(struct simple_xattrs *xattrs, const char *name,
+> void *buffer, size_t size);
+> int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
+> - const void *value, size_t size, int flags);
+> + const void *value, size_t size, int flags,
+> + ssize_t *removed_size);
+> ssize_t simple_xattr_list(struct inode *inode, struct simple_xattrs
+> *xattrs, char *buffer,
+> size_t size);
+> void simple_xattr_list_add(struct simple_xattrs *xattrs,
+> diff --git a/mm/shmem.c b/mm/shmem.c
+> index aad3ba74b0e9..f47347cb30f6 100644
+> --- a/mm/shmem.c
+> +++ b/mm/shmem.c
+> @@ -3243,7 +3243,7 @@ static int shmem_xattr_handler_set(const struct
+> xattr_handler *handler,
+> struct shmem_inode_info *info =3D SHMEM_I(inode);
+> =20
+> name =3D xattr_full_name(handler, name);
+> - return simple_xattr_set(&info->xattrs, name, value, size, flags);
+> + return simple_xattr_set(&info->xattrs, name, value, size, flags,
+> NULL);
+> }
+> =20
+> static const struct xattr_handler shmem_security_xattr_handler =3D {
+> --
+> 2.21.1
+>
+>=20
 
-syzbot found the following crash on:
+Adding Al Viro, who I forgot to add in the initial send. Will remember
+on future sends.
 
-HEAD commit:    c99b17ac Add linux-next specific files for 20200225
-git tree:       linux-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=1610d70de00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=6b7ebe4bd0931c45
-dashboard link: https://syzkaller.appspot.com/bug?extid=cac0c4e204952cf449b1
-compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1242e1fde00000
-C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1110d70de00000
-
-The bug was bisected to:
-
-commit 6863de00e5400b534cd4e3869ffbc8f94da41dfc
-Author: Mina Almasry <almasrymina@google.com>
-Date:   Thu Feb 20 03:55:30 2020 +0000
-
-    hugetlb_cgroup: add accounting for shared mappings
-
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=12a17f0de00000
-final crash:    https://syzkaller.appspot.com/x/report.txt?x=11a17f0de00000
-console output: https://syzkaller.appspot.com/x/log.txt?x=16a17f0de00000
-
-IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+cac0c4e204952cf449b1@syzkaller.appspotmail.com
-Fixes: 6863de00e540 ("hugetlb_cgroup: add accounting for shared mappings")
-
-==================================================================
-BUG: KASAN: slab-out-of-bounds in cgroup_file_notify+0x16a/0x1b0 kernel/cgroup/cgroup.c:4084
-Read of size 8 at addr ffff88821b77c4c8 by task syz-executor540/9589
-
-CPU: 0 PID: 9589 Comm: syz-executor540 Not tainted 5.6.0-rc3-next-20200225-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-Call Trace:
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0x197/0x210 lib/dump_stack.c:118
- print_address_description.constprop.0.cold+0xd4/0x30b mm/kasan/report.c:374
- __kasan_report.cold+0x1b/0x32 mm/kasan/report.c:506
- kasan_report+0x12/0x20 mm/kasan/common.c:641
- __asan_report_load8_noabort+0x14/0x20 mm/kasan/generic_report.c:135
- cgroup_file_notify+0x16a/0x1b0 kernel/cgroup/cgroup.c:4084
- hugetlb_event mm/hugetlb_cgroup.c:224 [inline]
- __hugetlb_cgroup_charge_cgroup+0x88c/0xf10 mm/hugetlb_cgroup.c:262
- hugetlb_cgroup_charge_cgroup_rsvd+0x2b/0x40 mm/hugetlb_cgroup.c:286
- hugetlb_reserve_pages+0x2c2/0xce0 mm/hugetlb.c:4891
- hugetlb_file_setup+0x26a/0x671 fs/hugetlbfs/inode.c:1423
- newseg+0x4a3/0xf40 ipc/shm.c:652
- ipcget_new ipc/util.c:344 [inline]
- ipcget+0x105/0xd40 ipc/util.c:643
- ksys_shmget ipc/shm.c:742 [inline]
- __do_sys_shmget ipc/shm.c:747 [inline]
- __se_sys_shmget ipc/shm.c:745 [inline]
- __x64_sys_shmget+0x146/0x1d0 ipc/shm.c:745
- do_syscall_64+0xfa/0x790 arch/x86/entry/common.c:295
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
-RIP: 0033:0x440119
-Code: 18 89 d0 c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 00 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 0f 83 fb 13 fc ff c3 66 2e 0f 1f 84 00 00 00 00
-RSP: 002b:00007ffd5e1db3e8 EFLAGS: 00000246 ORIG_RAX: 000000000000001d
-RAX: ffffffffffffffda RBX: 00000000004002c8 RCX: 0000000000440119
-RDX: 0000000000004800 RSI: fffffffffeffffff RDI: 0000000000000000
-RBP: 00000000006ca018 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000020ffc000 R11: 0000000000000246 R12: 00000000004019a0
-R13: 0000000000401a30 R14: 0000000000000000 R15: 0000000000000000
-
-Allocated by task 0:
- save_stack+0x23/0x90 mm/kasan/common.c:72
- set_track mm/kasan/common.c:80 [inline]
- __kasan_kmalloc mm/kasan/common.c:515 [inline]
- __kasan_kmalloc.constprop.0+0xcf/0xe0 mm/kasan/common.c:488
- kasan_kmalloc+0x9/0x10 mm/kasan/common.c:529
- kmem_cache_alloc_trace+0x158/0x790 mm/slab.c:3551
- kmalloc include/linux/slab.h:555 [inline]
- kzalloc include/linux/slab.h:669 [inline]
- hugetlb_cgroup_css_alloc+0x4f/0x320 mm/hugetlb_cgroup.c:138
- cgroup_init_subsys+0x1d9/0x4a7 kernel/cgroup/cgroup.c:5582
- cgroup_init+0x34a/0xa4c kernel/cgroup/cgroup.c:5708
- start_kernel+0xe2d/0xe8f init/main.c:987
- x86_64_start_reservations+0x29/0x2b arch/x86/kernel/head64.c:490
- x86_64_start_kernel+0x77/0x7b arch/x86/kernel/head64.c:471
- secondary_startup_64+0xa4/0xb0 arch/x86/kernel/head_64.S:242
-
-Freed by task 0:
-(stack is not available)
-
-The buggy address belongs to the object at ffff88821b77c000
- which belongs to the cache kmalloc-2k of size 2048
-The buggy address is located 1224 bytes inside of
- 2048-byte region [ffff88821b77c000, ffff88821b77c800)
-The buggy address belongs to the page:
-page:ffffea00086ddf00 refcount:1 mapcount:0 mapping:000000005a8512d0 index:0x0
-flags: 0x57ffe0000000200(slab)
-raw: 057ffe0000000200 ffffea00086dde48 ffffea00086ddf88 ffff8880aa400e00
-raw: 0000000000000000 ffff88821b77c000 0000000100000001 0000000000000000
-page dumped because: kasan: bad access detected
-
-Memory state around the buggy address:
- ffff88821b77c380: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
- ffff88821b77c400: 00 00 00 00 00 00 00 00 00 00 fc fc fc fc fc fc
->ffff88821b77c480: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-                                              ^
- ffff88821b77c500: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
- ffff88821b77c580: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-==================================================================
-
-
----
-This bug is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this bug report. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
-syzbot can test patches for this bug, for details see:
-https://goo.gl/tpsmEJ#testing-patches
+Daniel
