@@ -1,50 +1,73 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCHv2] memcg: fix NULL pointer dereference in
- __mem_cgroup_usage_unregister_event
-Date: Tue, 10 Mar 2020 12:17:10 +0100
-Message-ID: <20200310111710.GF8447@dhcp22.suse.cz>
-References: <077a6f67-aefa-4591-efec-f2f3af2b0b02@gmail.com>
- <20200310094836.GD8447@dhcp22.suse.cz>
- <20200310104149.5c3pc75y6ny5hixb@box>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup fixes for v5.6-rc5
+Date: Tue, 10 Mar 2020 10:41:07 -0400
+Message-ID: <20200310144107.GC79873@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:content-transfer-encoding;
+        bh=zPdEJtfsWlHG8dbwVXY1UpzdzNB128A7aRa0k6lQHIw=;
+        b=sA6mq68sWeiOnv4cAOeCHl2yqaec100bLnaugDj+ojD5TqX1jGIVOlurFThAETQ2w6
+         Art7sk0xX3cW9CyolyGK/VJ6temfhI9jJ3i/BskQ1Tq6M9rSRRiSCrCD8uqMWFPH4C84
+         FbAuFKHRgJP12WOg99EuW8gKe7HZ9lCdC92x52GlyoB6lGL6lViNPOtWyPBYqfTZ8WxQ
+         aY18b7C1UB/5CjhjNRY+TnFENEgIFYxlkISxDwTZcBuvghmqZDZDwyOKpHCY34M57qqR
+         tVJESZ/bP2mNEoc2b/o+LU9EQi+kRrFPaWHHnWH0bNd4fssZSm3hCW/iUklOO/HHMPCf
+         Os2Q==
 Content-Disposition: inline
-In-Reply-To: <20200310104149.5c3pc75y6ny5hixb@box>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "Kirill A. Shutemov" <kirill@shutemov.name>
-Cc: brookxu <brookxu.cn@gmail.com>, hannes@cmpxchg.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 10-03-20 13:41:49, Kirill A. Shutemov wrote:
-> On Tue, Mar 10, 2020 at 10:48:36AM +0100, Michal Hocko wrote:
-> > [Cc Kirill, I didn't realize he has implemented this code]
-> 
-> My first non-trivial mm contribution :P
+Hello, Linus.
 
-Everybody has to pay for sins of youth :p
+* cgroup.procs listing related fixes. It didn't interlock properly
+  with exiting tasks leaving a short window where a cgroup has empty
+  cgroup.procs but still can't be removed and misbehaved on short
+  reads.
 
-[...]
+* psi_show() crash fix on 32bit ino archs.
 
-> > It seems that the code has been broken since 2c488db27b61 ("memcg: clean
-> > up memory thresholds"). We've had 371528caec55 ("mm: memcg: Correct
-> > unregistring of events attached to the same eventfd") but it didn't
-> > catch this case for some reason. Unless I am missing something the code
-> > was broken back then already. Kirill please double check after me.
-> 
-> I think the issue exitsted before 2c488db27b61. The fields had different
-> names back then.
-> 
-> The logic to make unregister never-fail is added in 907860ed381a
-> ("cgroups: make cftype.unregister_event() void-returning"). I believe the
-> Fixes should point there.
+* Empty release_agent handling fix.
 
-Yes, you seem to be right. It doesn't make a difference much as both
-went in to the same kernel but a proper Fixes tag is really valuable.
+Thanks.
 
-Thanks for looking into that.
+The following changes since commit 0bf999f9c5e74c7ecf9dafb527146601e5c848b9:
 
--- 
-Michal Hocko
-SUSE Labs
+  linux/pipe_fs_i.h: fix kernel-doc warnings after @wait was split (2020-02=
+-12 11:54:08 -0800)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.6-fixes
+
+for you to fetch changes up to 2e5383d7904e60529136727e49629a82058a5607:
+
+  cgroup1: don't call release_agent when it is "" (2020-03-04 11:53:33 -050=
+0)
+
+----------------------------------------------------------------
+Michal Koutn=FD (1):
+      cgroup: Iterate tasks that did not finish do_exit()
+
+Qian Cai (1):
+      cgroup: fix psi_show() crash on 32bit ino archs
+
+Tycho Andersen (1):
+      cgroup1: don't call release_agent when it is ""
+
+Vasily Averin (2):
+      cgroup-v1: cgroup_pidlist_next should update position index
+      cgroup: cgroup_procs_next should increase position index
+
+ include/linux/cgroup.h    |  1 +
+ kernel/cgroup/cgroup-v1.c |  3 ++-
+ kernel/cgroup/cgroup.c    | 39 ++++++++++++++++++++++++++-------------
+ 3 files changed, 29 insertions(+), 14 deletions(-)
+
+--=20
+tejun
