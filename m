@@ -1,56 +1,52 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 1/4] kernfs: kvmalloc xattr value instead of kmalloc
-Date: Tue, 10 Mar 2020 13:41:57 -0700
-Message-ID: <CALvZod6mcoKTqi=OvyHQLbm1LszijDV-traf4Rx9oXmLSZe-Gg@mail.gmail.com>
-References: <CALvZod62gypsxCYOpGsR6SWwp7roh8eEEKvZ8WNFtjB0bH=okg@mail.gmail.com>
- <C17G1V88F2XD.EQFO8E8QX1YO@dlxu-fedora-R90QNFJV>
+From: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [GIT PULL] cgroup fixes for v5.6-rc5
+Date: Tue, 10 Mar 2020 15:14:13 -0700
+Message-ID: <CAHk-=wi=5p6s_BmPAg5EF8Joe5d-6iAjQq6-Le7+xf5Gq-ZTfw@mail.gmail.com>
+References: <20200310144107.GC79873@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
+        d=linux-foundation.org; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=/deQQvgAa+oP9j87xo/rUZaCa5U0Y9db6yvuNAirEL0=;
-        b=Ai8FMPZwPDU7dLeUmmQ5IrGiGriK5BF4c8C/goY7nt9A9p0gwe5maK+FI7+io4/LeT
-         TH75Po6PkJ8cLhul21gKVq5bWmL9bTskL2/wNLmg/UhfqLGQmIZTlDwwzbG4bhIx/8Wv
-         nl67KGQquy1o2acEsx4cOKOda/SY8w9A9rZBy4UxDDi2XSDeodDuMiMmGE448FGGfIHQ
-         US1d67PAbkslxP0i5Ev6LK+9hnyhEL4jnDxjpu/dzCkvxOA6VRtuB0PUXr6qtk9lROVD
-         NYYE3TiPoonSAGo6CIxmgX00jAcsnM1upezPCYcMpmmNna94s8ehKfcP/zP+lB6K5b1w
-         sjHQ==
-In-Reply-To: <C17G1V88F2XD.EQFO8E8QX1YO@dlxu-fedora-R90QNFJV>
+        bh=A0DJ1QWaOzdShQUNy+Xq2LWv3cgxACTM1sGjd/lAyrQ=;
+        b=PE12SCsWX0jtdXlLC7s8SBu/WbwEPg5yee5goR2A9E7eXbONG+zY2j3g8MU5gMY4cI
+         gpQVYpf4gr8akr8301HuU4d0RZVExceNqTnoiuhQMQQ+S4LimrjudwbtXD7qVESq+I3Y
+         YunNWg0f3xQ13/vVv6+VaMcob/DyVA/vCVF3c=
+In-Reply-To: <20200310144107.GC79873-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>
-Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Tue, Mar 10, 2020 at 1:40 PM Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org> wrote:
+On Tue, Mar 10, 2020 at 7:41 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
 >
-> Hi Shakeel,
->
-> On Tue Mar 10, 2020 at 12:40 PM, Shakeel Butt wrote:
-> > Hi Daniel,
-> >
-> >
-> > On Thu, Mar 5, 2020 at 1:16 PM Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org> wrote:
-> > >
-> > > It's not really necessary to have contiguous physical memory for xattr
-> > > values. We no longer need to worry about higher order allocations
-> > > failing with kvmalloc, especially because the xattr size limit is at
-> > > 64K.
-> > >
-> > > Signed-off-by: Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>
-> >
-> >
-> > The patch looks fine to me. However the commit message is too cryptic
-> > i.e. hard to get the motivation behind the change.
-> >
->
-> Thanks for taking a look. The real reason I did it was because Tejun
-> said so :).
->
-> Tejun, is there a larger reason?
->
+> * Empty release_agent handling fix.
 
-I understand the reason. I am just suggesting to rephrase it to be more clear.
+Pulled. However, I gagged a bit when I saw the code:
+
+        if (!pathbuf || !agentbuf || !strlen(agentbuf))
+
+yeah, I really hope that the compiler is smart enough to just optimize
+that, but we shouldn't assume that the compiler is that smart.
+
+The proper way to test for "empty string" is to just check the first
+character for NUL:
+
+        if (!pathbuf || !agentbuf || !*agentbuf)
+
+which doesn't require the compiler to have a pattern for "oh, I can
+test for a zero strlen without actually calling strlen".
+
+Also, wouldn't it be nice to test for the empty string before you even
+bother to kstrdup() it? Even before you
+
+Finally, shouldn't we technically hold the release_agent_path_lock
+while looking at it?
+
+Small details, and I've taken the pull, but the lack of locking does
+seem to be an actual (if perhaps fairly theoretical) bug, no?
+
+                 Linus
