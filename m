@@ -1,133 +1,165 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 2/2] net: memcg: late association of sock to memcg
-Date: Mon,  9 Mar 2020 22:16:06 -0700
-Message-ID: <20200310051606.33121-2-shakeelb@google.com>
-References: <20200310051606.33121-1-shakeelb@google.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCHv2] memcg: fix NULL pointer dereference in
+ __mem_cgroup_usage_unregister_event
+Date: Tue, 10 Mar 2020 10:48:36 +0100
+Message-ID: <20200310094836.GD8447@dhcp22.suse.cz>
+References: <077a6f67-aefa-4591-efec-f2f3af2b0b02@gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=TNtB+QSpy4uNCr/VYeHhGUHpJm44aSfYPkSBHYJ0zsw=;
-        b=WSg4BIUKLHoYQm/UXhi2utv1mRHFPdRhsVGHEtX37hLa6oKvf+GiEOyE40iROyKSf+
-         L8F8KCMSY/cpHRmKMpDK5fpqRQM8P7TbJm/Y+ZT7w3HU2m09s3n7nYI66paQrMjhnAsx
-         oSA3qeYL4hyN6rQC8zQrXFwCNsA67HPzYJJVlVE5ai9KnE1ahr9W70vJ+Tpw3xqWS5h2
-         OQY2h9TXySmUQic68Xmva58powbgn/8Fcnq6BG1k1/u742vQOOniW8UqSBo1e3jGV6Eg
-         zzbwVCS93BgxblcxdJjABsarILtkj4oJJpF9GaltxoxQuwVY2OU2qJz6tVGcGaCL6x5s
-         miZw==
-In-Reply-To: <20200310051606.33121-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <077a6f67-aefa-4591-efec-f2f3af2b0b02-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Alexey Kuznetsov <kuznet-v/Mj1YrvjDBInbfyfbPRSQ@public.gmane.org>, Hideaki YOSHIFUJI <yoshfuji-VfPWfsRibaP+Ru+s062T9g@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-If a TCP socket is allocated in IRQ context or cloned from unassociated
-(i.e. not associated to a memcg) in IRQ context then it will remain
-unassociated for its whole life. Almost half of the TCPs created on the
-system are created in IRQ context, so, memory used by such sockets will
-not be accounted by the memcg.
+[Cc Kirill, I didn't realize he has implemented this code]
 
-This issue is more widespread in cgroup v1 where network memory
-accounting is opt-in but it can happen in cgroup v2 if the source socket
-for the cloning was created in root memcg.
+On Fri 06-03-20 09:02:02, brookxu wrote:
+> From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+>=20
+> An eventfd monitors multiple memory thresholds of the cgroup, closes them,
+> the kernel deletes all events related to this eventfd. Before all events
+> are deleted, another eventfd monitors the memory threshold of this cgroup,
+> leading to a crash:
+>=20
+> [=A0 135.675108] BUG: kernel NULL pointer dereference, address: 000000000=
+0000004
+> [=A0 135.675350] #PF: supervisor write access in kernel mode
+> [=A0 135.675579] #PF: error_code(0x0002) - not-present page
+> [=A0 135.675816] PGD 800000033058e067 P4D 800000033058e067 PUD 3355ce067 =
+PMD 0
+> [=A0 135.676080] Oops: 0002 [#1] SMP PTI
+> [=A0 135.676332] CPU: 2 PID: 14012 Comm: kworker/2:6 Kdump: loaded Not ta=
+inted 5.6.0-rc4 #3
+> [=A0 135.676610] Hardware name: LENOVO 20AWS01K00/20AWS01K00, BIOS GLET70=
+WW (2.24 ) 05/21/2014
+> [=A0 135.676909] Workqueue: events memcg_event_remove
+> [=A0 135.677192] RIP: 0010:__mem_cgroup_usage_unregister_event+0xb3/0x190
+> [=A0 135.677825] RSP: 0018:ffffb47e01c4fe18 EFLAGS: 00010202
+> [=A0 135.678186] RAX: 0000000000000001 RBX: ffff8bb223a8a000 RCX: 0000000=
+000000001
+> [=A0 135.678548] RDX: 0000000000000001 RSI: ffff8bb22fb83540 RDI: 0000000=
+000000001
+> [=A0 135.678912] RBP: ffffb47e01c4fe48 R08: 0000000000000000 R09: 0000000=
+000000010
+> [=A0 135.679287] R10: 000000000000000c R11: 071c71c71c71c71c R12: ffff8bb=
+226aba880
+> [=A0 135.679670] R13: ffff8bb223a8a480 R14: 0000000000000000 R15: 0000000=
+000000000
+> [=A0 135.680066] FS:=A0 0000000000000000(0000) GS:ffff8bb242680000(0000) =
+knlGS:0000000000000000
+> [=A0 135.680475] CS:=A0 0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [=A0 135.680894] CR2: 0000000000000004 CR3: 000000032c29c003 CR4: 0000000=
+0001606e0
+> [=A0 135.681325] Call Trace:
+> [=A0 135.681763]=A0 memcg_event_remove+0x32/0x90
+> [=A0 135.682209]=A0 process_one_work+0x172/0x380
+> [=A0 135.682657]=A0 worker_thread+0x49/0x3f0
+> [=A0 135.683111]=A0 kthread+0xf8/0x130
+> [=A0 135.683570]=A0 ? max_active_store+0x80/0x80
+> [=A0 135.684034]=A0 ? kthread_bind+0x10/0x10
+> [=A0 135.684506]=A0 ret_from_fork+0x35/0x40
+> [=A0 135.689733] CR2: 0000000000000004
+>=20
+> We can reproduce this problem in the following ways:
+> =A0
+> 1. We create a new cgroup subdirectory and a new eventfd, and then we
+> =A0=A0 monitor multiple memory thresholds of the cgroup through this even=
+tfd.
+> 2. closing this eventfd, and __mem_cgroup_usage_unregister_event () will =
+be
+> =A0=A0 called multiple times to delete all events related to this eventfd.
+>=20
+> The first time __mem_cgroup_usage_unregister_event() is called, the kernel
+> will clear all items related to this eventfd in thresholds-> primary.Since
+> there is currently only one eventfd, thresholds-> primary becomes empty,
+> so the kernel will set thresholds-> primary and hresholds-> spare to NULL.
+> If at this time, the user creates a new eventfd and monitor the memory
+> threshold of this cgroup, kernel will re-initialize thresholds-> primary.
+> Then when __mem_cgroup_usage_unregister_event () is called for the second
+> time, because thresholds-> primary is not empty, the system will access
+> thresholds-> spare, but thresholds-> spare is NULL, which will trigger a
+> crash.
+>=20
+> In general, the longer it takes to delete all events related to this
+> eventfd, the easier it is to trigger this problem.
+>=20
+> The solution is to check whether the thresholds associated with the event=
+fd
+> has been cleared when deleting the event. If so, we do nothing.
+>=20
+> Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.=
+org>
 
-To fix the issue, just do the association of the sockets at the accept()
-time in the process context and then force charge the memory buffer
-already used and reserved by the socket.
+The fix looks reasonable to me
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
-Changes since v3:
-- Moved the memcg association completely at accept time.
+It seems that the code has been broken since 2c488db27b61 ("memcg: clean
+up memory thresholds"). We've had 371528caec55 ("mm: memcg: Correct
+unregistring of events attached to the same eventfd") but it didn't
+catch this case for some reason. Unless I am missing something the code
+was broken back then already. Kirill please double check after me.
 
-Changes since v2:
-- Additional check for charging.
-- Release the sock after charging.
+So if I am not wrong then we want
+Fixes: 2c488db27b61 ("memcg: clean up memory thresholds")
+Cc: stable
 
-Changes since v1:
-- added sk->sk_rmem_alloc to initial charging.
-- added synchronization to get memory usage and set sk_memcg race-free.
+sounds appropriate because this seems to be user trigerable.
 
- mm/memcontrol.c                 | 14 --------------
- net/core/sock.c                 |  5 ++++-
- net/ipv4/inet_connection_sock.c | 20 ++++++++++++++++++++
- 3 files changed, 24 insertions(+), 15 deletions(-)
+Thanks for preparing the patch!
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 06a889b0538b..351603c6c1c9 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6737,20 +6737,6 @@ void mem_cgroup_sk_alloc(struct sock *sk)
- 	if (!mem_cgroup_sockets_enabled)
- 		return;
- 
--	/*
--	 * Socket cloning can throw us here with sk_memcg already
--	 * filled. It won't however, necessarily happen from
--	 * process context. So the test for root memcg given
--	 * the current task's memcg won't help us in this case.
--	 *
--	 * Respecting the original socket's memcg is a better
--	 * decision in this case.
--	 */
--	if (sk->sk_memcg) {
--		css_get(&sk->sk_memcg->css);
--		return;
--	}
--
- 	/* Do not associate the sock with unrelated interrupted task's memcg. */
- 	if (in_interrupt())
- 		return;
-diff --git a/net/core/sock.c b/net/core/sock.c
-index e4af4dbc1c9e..0fc8937a7ff4 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -1832,7 +1832,10 @@ struct sock *sk_clone_lock(const struct sock *sk, const gfp_t priority)
- 		atomic_set(&newsk->sk_zckey, 0);
- 
- 		sock_reset_flag(newsk, SOCK_DONE);
--		mem_cgroup_sk_alloc(newsk);
-+
-+		/* sk->sk_memcg will be populated at accept() time */
-+		newsk->sk_memcg = NULL;
-+
- 		cgroup_sk_alloc(&newsk->sk_cgrp_data);
- 
- 		rcu_read_lock();
-diff --git a/net/ipv4/inet_connection_sock.c b/net/ipv4/inet_connection_sock.c
-index a4db79b1b643..65a3b2565102 100644
---- a/net/ipv4/inet_connection_sock.c
-+++ b/net/ipv4/inet_connection_sock.c
-@@ -482,6 +482,26 @@ struct sock *inet_csk_accept(struct sock *sk, int flags, int *err, bool kern)
- 		}
- 		spin_unlock_bh(&queue->fastopenq.lock);
- 	}
-+
-+	if (mem_cgroup_sockets_enabled) {
-+		int amt;
-+
-+		/* atomically get the memory usage, set and charge the
-+		 * sk->sk_memcg.
-+		 */
-+		lock_sock(newsk);
-+
-+		/* The sk has not been accepted yet, no need to look at
-+		 * sk->sk_wmem_queued.
-+		 */
-+		amt = sk_mem_pages(newsk->sk_forward_alloc +
-+				   atomic_read(&sk->sk_rmem_alloc));
-+		mem_cgroup_sk_alloc(newsk);
-+		if (newsk->sk_memcg && amt)
-+			mem_cgroup_charge_skmem(newsk->sk_memcg, amt);
-+
-+		release_sock(newsk);
-+	}
- out:
- 	release_sock(sk);
- 	if (req)
--- 
-2.25.1.481.gfbce0eb801-goog
+Btw. you should double check your email sender because it seemed to
+whitespace damaged the patch (\t -> spaces). Please use git send-email
+instead.
 
+> ---
+> =A0mm/memcontrol.c | 10 ++++++++--
+> =A01 file changed, 8 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index d09776c..4575a58 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -4027,7 +4027,7 @@ static void __mem_cgroup_usage_unregister_event(str=
+uct mem_cgroup *memcg,
+> =A0=A0=A0=A0 struct mem_cgroup_thresholds *thresholds;
+> =A0=A0=A0=A0 struct mem_cgroup_threshold_ary *new;
+> =A0=A0=A0=A0 unsigned long usage;
+> -=A0=A0=A0 int i, j, size;
+> +=A0=A0=A0 int i, j, size, entries;
+> =A0
+> =A0=A0=A0=A0 mutex_lock(&memcg->thresholds_lock);
+> =A0
+> @@ -4047,12 +4047,18 @@ static void __mem_cgroup_usage_unregister_event(s=
+truct mem_cgroup *memcg,
+> =A0=A0=A0=A0 __mem_cgroup_threshold(memcg, type =3D=3D _MEMSWAP);
+> =A0
+> =A0=A0=A0=A0 /* Calculate new number of threshold */
+> -=A0=A0=A0 size =3D 0;
+> +=A0=A0=A0 size =3D entries =3D 0;
+> =A0=A0=A0=A0 for (i =3D 0; i < thresholds->primary->size; i++) {
+> =A0=A0=A0=A0 =A0=A0=A0 if (thresholds->primary->entries[i].eventfd !=3D e=
+ventfd)
+> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 size++;
+> +=A0=A0=A0 =A0=A0=A0 else
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 entries++;
+> =A0=A0=A0=A0 }
+> =A0
+> +=A0=A0=A0 /* If items related to eventfd have been cleared, nothing to d=
+o */
+> +=A0=A0=A0 if (!entries)
+> +=A0=A0=A0 =A0=A0=A0 goto unlock;
+> +
+> =A0=A0=A0=A0 new =3D thresholds->spare;
+> =A0
+> =A0=A0=A0=A0 /* Set thresholds array to NULL if we don't have thresholds =
+*/
+> --=20
+> 1.8.3.1
+
+--=20
+Michal Hocko
+SUSE Labs
