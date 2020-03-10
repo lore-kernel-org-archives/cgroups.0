@@ -1,49 +1,36 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH v4 1/2] cgroup: memcg: net: do not associate sock with
- unrelated cgroup
-Date: Tue, 10 Mar 2020 15:34:00 -0700 (PDT)
-Message-ID: <20200310.153400.1874430252406858978.davem@davemloft.net>
+Subject: Re: [PATCH v4 2/2] net: memcg: late association of sock to memcg
+Date: Tue, 10 Mar 2020 15:34:08 -0700 (PDT)
+Message-ID: <20200310.153408.209273615201195266.davem@davemloft.net>
 References: <20200310051606.33121-1-shakeelb@google.com>
+        <20200310051606.33121-2-shakeelb@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200310051606.33121-1-shakeelb@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20200310051606.33121-2-shakeelb@google.com>
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: Text/Plain; charset="us-ascii"
 To: shakeelb@google.com
 Cc: edumazet@google.com, guro@fb.com, hannes@cmpxchg.org, mhocko@kernel.org, gthelen@google.com, akpm@linux-foundation.org, kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org, netdev@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
 From: Shakeel Butt <shakeelb@google.com>
-Date: Mon,  9 Mar 2020 22:16:05 -0700
+Date: Mon,  9 Mar 2020 22:16:06 -0700
 
-> We are testing network memory accounting in our setup and noticed
-> inconsistent network memory usage and often unrelated cgroups network
-> usage correlates with testing workload. On further inspection, it
-> seems like mem_cgroup_sk_alloc() and cgroup_sk_alloc() are broken in
-> irq context specially for cgroup v1.
+> If a TCP socket is allocated in IRQ context or cloned from unassociated
+> (i.e. not associated to a memcg) in IRQ context then it will remain
+> unassociated for its whole life. Almost half of the TCPs created on the
+> system are created in IRQ context, so, memory used by such sockets will
+> not be accounted by the memcg.
 > 
-> mem_cgroup_sk_alloc() and cgroup_sk_alloc() can be called in irq context
-> and kind of assumes that this can only happen from sk_clone_lock()
-> and the source sock object has already associated cgroup. However in
-> cgroup v1, where network memory accounting is opt-in, the source sock
-> can be unassociated with any cgroup and the new cloned sock can get
-> associated with unrelated interrupted cgroup.
+> This issue is more widespread in cgroup v1 where network memory
+> accounting is opt-in but it can happen in cgroup v2 if the source socket
+> for the cloning was created in root memcg.
 > 
-> Cgroup v2 can also suffer if the source sock object was created by
-> process in the root cgroup or if sk_alloc() is called in irq context.
-> The fix is to just do nothing in interrupt.
+> To fix the issue, just do the association of the sockets at the accept()
+> time in the process context and then force charge the memory buffer
+> already used and reserved by the socket.
 > 
-> WARNING: Please note that about half of the TCP sockets are allocated
-> from the IRQ context, so, memory used by such sockets will not be
-> accouted by the memcg.
-> 
-> The stack trace of mem_cgroup_sk_alloc() from IRQ-context:
- ...
-> The stack trace of mem_cgroup_sk_alloc() from IRQ-context:
-> Fixes: 2d7580738345 ("mm: memcontrol: consolidate cgroup socket tracking")
-> Fixes: d979a39d7242 ("cgroup: duplicate cgroup reference when cloning sockets")
 > Signed-off-by: Shakeel Butt <shakeelb@google.com>
-> Reviewed-by: Roman Gushchin <guro@fb.com>
 
 Applied and queued up for -stable.
