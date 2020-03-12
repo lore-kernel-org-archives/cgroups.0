@@ -1,72 +1,79 @@
-From: Mathieu Desnoyers <mathieu.desnoyers-vg+e7yoeK/dWk0Htik3J/w@public.gmane.org>
-Subject: Re: [regression] cpuset: offlined CPUs removed from affinity masks
-Date: Thu, 12 Mar 2020 15:47:50 -0400 (EDT)
-Message-ID: <1289608777.27165.1584042470528.JavaMail.zimbra@efficios.com>
-References: <1251528473.590671.1579196495905.JavaMail.zimbra@efficios.com> <20200219154740.GD698990@mtj.thefacebook.com> <59426509.702.1582127435733.JavaMail.zimbra@efficios.com> <20200219155202.GE698990@mtj.thefacebook.com> <1358308409.804.1582128519523.JavaMail.zimbra@efficios.com> <20200219161222.GF698990@mtj.thefacebook.com> <316507033.21078.1583597207356.JavaMail.zimbra@efficios.com> <20200312182618.GE79873@mtj.duckdns.org>
+From: Daniel Xu <dxu@dxuuu.xyz>
+Subject: [PATCH v3 1/4] kernfs: kvmalloc xattr value instead of kmalloc
+Date: Thu, 12 Mar 2020 13:03:14 -0700
+Message-ID: <20200312200317.31736-2-dxu@dxuuu.xyz>
+References: <20200312200317.31736-1-dxu@dxuuu.xyz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Filter: OpenDKIM Filter v2.10.3 mail.efficios.com ABCFB283B3C
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
-        s=default; t=1584042470;
-        bh=A1HR5wx2ul5UN/781Z2t5qlpWkPcTJFFf8FZtwQy6S0=;
-        h=Date:From:To:Message-ID:MIME-Version;
-        b=I7XIwjfakzD+Ifo0HlzHk72yMKTKFW2SQR4uZPsMLjCFAmT7H1X/5XqyV/9FAMR2X
-         DM+oMyxtBE/rnPjt2hW3PHY0fE2DtI2XgYspcckeHbnchZwyywjLDAL1q4e3ksB/6O
-         snuzo2y365fmrlkxdgMu6d0AgnN1i4koJP5A5ytLg83TOm2AbvaOpV7QZf9FX+tCQT
-         VKCU7vvkuDNQe7FCkW89i/BkBJckT6wuK2DWcKceDq6A4DYE17lKOklXKgQHzv/Zot
-         ln1eVE+etQHwwZrsd+kaVMlfnJ3OYrGZvNIxNx68XFgZ887Oo7/wao7M1PUiCsFU96
-         bhr2lRGbzncQA==
-In-Reply-To: <20200312182618.GE79873-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dxuuu.xyz; h=
+        from:to:cc:subject:date:message-id:in-reply-to:references
+        :mime-version:content-transfer-encoding; s=fm3; bh=oNeib/zSSc/Ml
+        kvsC3EDiuR3sxV3CwZWI/SYjFLvvIM=; b=cIkAcMhS3F04KFXhXECfvihZaf8SY
+        lPxqdOqgjYNwFGO9F5UFYat0HY5wgx6OW9YDVKODzOcamBNuRf/kw83vHAvatcnn
+        2HmDqZ+OlK3yfReHpgShA/10rN2lvn71rZZ8rjfiVoJHROORqAtZf+opPmyxnUaY
+        3fw5n5SZP7/tQHVCy2Vo2aUafyrv4otknmDIUa22Mn1A5bRdRq0ovugHYUodg4wd
+        sIoICvzv2uEic/aE9lkSWANZmYgCoygfY3CLbKdJg37+KyNM7wBBnIJ4So9aFuqv
+        /H0Pk1edYdg4OwDiZqF2Ui+9iEpqB19qnPaPYtDjmmcn+P5EdQP50ozQg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:date:from
+        :in-reply-to:message-id:mime-version:references:subject:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm2; bh=oNeib/zSSc/MlkvsC3EDiuR3sxV3CwZWI/SYjFLvvIM=; b=vyqXOR93
+        COmOhbX1RIN751Q5MG7SCcb03XDg3em6YYUQyr8Kd5M461/4aEC5mJrT2lGFiUtG
+        y7FDLsoh4+qQGwsXSKwMKu4KYfsj7slwQ0RdEE1hiTVoQDwVhOu/Z6uD7/Z4nItZ
+        6SLYaIU/YliddTr0RbbAocMOOoIparKJCDVvhV70o+2ojBT5PQRIeAeBnzUAp9Xk
+        kFSz3Kn6XolT2J0bEywrHa9mN53odhfbcN+sTduAqGfKFUTeIpLWla9vZ2UEIMpp
+        rCpo+umVFTPRBYkg2aSTrPcTbi3rDYPUajO83kpUrG/bpECikiTrzDvaDixm33Vi
+        k4ySUJvfmisOsw==
+In-Reply-To: <20200312200317.31736-1-dxu@dxuuu.xyz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Valentin Schneider <valentin.schneider-5wv7dgnIgG8@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+To: cgroups@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, viro@zeniv.linux.org.uk
+Cc: Daniel Xu <dxu@dxuuu.xyz>, shakeelb@google.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, kernel-team@fb.com
 
------ On Mar 12, 2020, at 2:26 PM, Tejun Heo tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org wrote:
+xattr values have a 64k maximum size. This can result in an order 4
+kmalloc request which can be difficult to fulfill. Since xattrs do not
+need physically contiguous memory, we can switch to kvmalloc and not
+have to worry about higher order allocations failing.
 
-> Hello,
-> 
-> On Sat, Mar 07, 2020 at 11:06:47AM -0500, Mathieu Desnoyers wrote:
->> Looking into solving this, one key issue seems to get in the way: cpuset
->> appear to care about not allowing to create a cpuset which has no currently
->> active CPU where to run, e.g.:
-> ...
->> Clearly, there is an intent that cpusets take the active mask into
->> account to prohibit creating an empty cpuset, but nothing prevents
->> cpu hotplug from creating an empty cpuset.
->> 
->> I wonder how to solve this inconsistency ?
-> 
-> Please try cpuset in cgroup2. It shouldn't have those issues.
+Signed-off-by: Daniel Xu <dxu@dxuuu.xyz>
+---
+ fs/xattr.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-After figuring how to use cgroup2 (systemd.unified_cgroup_hierarchy=1 boot
-parameter helped tremendously), and testing similar scenarios, it indeed
-seems to have a much saner behavior than cgroup1.
-
-Considering that the allowed cpu mask is weird wrt cgroup1 and cpu hotplug,
-and that cgroup2 allows thread-level granularity, it does not make much sense
-to prevent the pin_on_cpu() system call I am working on from pinning
-on cpus which are not present in the allowed mask.
-
-I'm currently investigating approaches that would detect situations
-where a thread is pinned onto a CPU which is not part of its allowed
-mask, and set the task prio at MAX_PRIO-1 (the lowest fair priority
-possible) in those cases.
-
-The basic idea is to allow applications to pin to every possible cpu, but
-not allow them to use this to consume a lot of cpu time on CPUs they
-are not allowed to run.
-
-Thoughts ?
-
-Thanks,
-
-Mathieu
-
-
+diff --git a/fs/xattr.c b/fs/xattr.c
+index 90dd78f0eb27..0d3c9b4d1914 100644
+--- a/fs/xattr.c
++++ b/fs/xattr.c
+@@ -817,7 +817,7 @@ struct simple_xattr *simple_xattr_alloc(const void *value, size_t size)
+ 	if (len < sizeof(*new_xattr))
+ 		return NULL;
+ 
+-	new_xattr = kmalloc(len, GFP_KERNEL);
++	new_xattr = kvmalloc(len, GFP_KERNEL);
+ 	if (!new_xattr)
+ 		return NULL;
+ 
+@@ -882,7 +882,7 @@ int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
+ 
+ 		new_xattr->name = kstrdup(name, GFP_KERNEL);
+ 		if (!new_xattr->name) {
+-			kfree(new_xattr);
++			kvfree(new_xattr);
+ 			return -ENOMEM;
+ 		}
+ 	}
+@@ -912,7 +912,7 @@ int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
+ 	spin_unlock(&xattrs->lock);
+ 	if (xattr) {
+ 		kfree(xattr->name);
+-		kfree(xattr);
++		kvfree(xattr);
+ 	}
+ 	return err;
+ 
 -- 
-Mathieu Desnoyers
-EfficiOS Inc.
-http://www.efficios.com
+2.21.1
+
