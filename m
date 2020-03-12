@@ -1,52 +1,53 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [regression] cpuset: offlined CPUs removed from affinity masks
-Date: Thu, 12 Mar 2020 14:26:19 -0400
-Message-ID: <20200312182618.GE79873@mtj.duckdns.org>
-References: <1251528473.590671.1579196495905.JavaMail.zimbra@efficios.com>
- <20200219151922.GB698990@mtj.thefacebook.com>
- <1589496945.670.1582126985824.JavaMail.zimbra@efficios.com>
- <20200219154740.GD698990@mtj.thefacebook.com>
- <59426509.702.1582127435733.JavaMail.zimbra@efficios.com>
- <20200219155202.GE698990@mtj.thefacebook.com>
- <1358308409.804.1582128519523.JavaMail.zimbra@efficios.com>
- <20200219161222.GF698990@mtj.thefacebook.com>
- <316507033.21078.1583597207356.JavaMail.zimbra@efficios.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: KASAN: slab-out-of-bounds Read in cgroup_file_notify
+Date: Thu, 12 Mar 2020 14:28:26 -0400
+Message-ID: <20200312182826.GG79873@mtj.duckdns.org>
+References: <00000000000041c6c205a08225dc@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=eViXmXzzaMR0CsZTGCPQ+TrKF+BfmVsvrf179rOhgZI=;
-        b=vaPuM3qaA0oNIgyjxBq9fo3DjzTSplT6RX2awoFL63OjPQPW+ohK7ZmosBeMwA33rp
-         gl4GllPZLcLHYZjGqrIAb/x62R4MxbseghAwoKVUWsFKml4ds2fxEWkE9HZwDll19KCn
-         +Qmm33d/9prjdKrV8qLAkUOCwW/Ea0XxuIeTMbHrR2CbhUESvN7ZOnpAX2IWxAiyHYiO
-         5K3TXt2oMTzXZSTkU86QSSKimtBUmLZGpezZ/So5SG5QdO/JbE9q+Tfj2/Hv0NoOlagI
-         01At2u7pl/YpF9OLfCOZvE2pgd/wPC2cfGrm2fjJhcbN6NhoXPI1h8i0Eut9nII5A4zE
-         v+KA==
+        bh=Z1+jrFk0l780LY82KtgQMlOjuOPnOSNUeBpKHT6Qy6g=;
+        b=Im3J3CT7QT/G7DEOXBPU5qa5NpzXZfgFk285tuuYBMicpySswnkSvESZnO6jErqFRd
+         UPjDpp+0r/vIODgW1k2ShKCiqBy9MmTZB95AFcHg6b7GeSpKBLUrNugoVoATGkaO79DP
+         mcRtqwQ/zX3X63/A+7p6exSokHYdR7eIJBUgv5B5sY+P2DtU9pohuGZNPHsQfo0VFSI2
+         VxQkQ/6aIBCgeOjZES4EHfdnoV985yMvsQIIreKQVnp8LIh6qsdqDWBCyvkBNnEKbegw
+         eLunF7LsF0q/MWSdI3ei6mjKA8959FeSB1VKEpCNXBnaDb99LSD6iiIueYU9p8geMzQv
+         814Q==
 Content-Disposition: inline
-In-Reply-To: <316507033.21078.1583597207356.JavaMail.zimbra-vg+e7yoeK/dWk0Htik3J/w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <00000000000041c6c205a08225dc@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mathieu Desnoyers <mathieu.desnoyers-vg+e7yoeK/dWk0Htik3J/w@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Valentin Schneider <valentin.schneider-5wv7dgnIgG8@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+To: almasrymina@google.com, syzbot <syzbot+cac0c4e204952cf449b1@syzkaller.appspotmail.com>
+Cc: akpm@linux-foundation.org, andriin@fb.com, ast@kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, christian@brauner.io, daniel@iogearbox.net, hannes@cmpxchg.org, kafai@fb.com, linux-kernel@vger.kernel.org, lizefan@huawei.com, netdev@vger.kernel.org, sfr@canb.auug.org.au, songliubraving@fb.com, syzkaller-bugs@googlegroups.com, yhs@fb.com
 
-Hello,
-
-On Sat, Mar 07, 2020 at 11:06:47AM -0500, Mathieu Desnoyers wrote:
-> Looking into solving this, one key issue seems to get in the way: cpuset
-> appear to care about not allowing to create a cpuset which has no currently
-> active CPU where to run, e.g.:
-...
-> Clearly, there is an intent that cpusets take the active mask into
-> account to prohibit creating an empty cpuset, but nothing prevents
-> cpu hotplug from creating an empty cpuset.
+On Tue, Mar 10, 2020 at 08:55:14AM -0700, syzbot wrote:
+> Hello,
 > 
-> I wonder how to solve this inconsistency ?
+> syzbot found the following crash on:
+> 
+> HEAD commit:    c99b17ac Add linux-next specific files for 20200225
+> git tree:       linux-next
+> console output: https://syzkaller.appspot.com/x/log.txt?x=1610d70de00000
+> kernel config:  https://syzkaller.appspot.com/x/.config?x=6b7ebe4bd0931c45
+> dashboard link: https://syzkaller.appspot.com/bug?extid=cac0c4e204952cf449b1
+> compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
+> syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1242e1fde00000
+> C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1110d70de00000
+> 
+> The bug was bisected to:
+> 
+> commit 6863de00e5400b534cd4e3869ffbc8f94da41dfc
+> Author: Mina Almasry <almasrymina@google.com>
+> Date:   Thu Feb 20 03:55:30 2020 +0000
+> 
+>     hugetlb_cgroup: add accounting for shared mappings
 
-Please try cpuset in cgroup2. It shouldn't have those issues.
+Mina, can you please take a look at this?
 
 Thanks.
 
