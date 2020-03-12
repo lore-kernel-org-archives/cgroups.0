@@ -1,76 +1,72 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [GIT PULL] cgroup fixes for v5.6-rc5
-Date: Thu, 12 Mar 2020 15:25:34 -0400
-Message-ID: <20200312192534.GI79873@mtj.duckdns.org>
-References: <20200310144107.GC79873@mtj.duckdns.org>
- <CAHk-=wi=5p6s_BmPAg5EF8Joe5d-6iAjQq6-Le7+xf5Gq-ZTfw@mail.gmail.com>
+From: Mathieu Desnoyers <mathieu.desnoyers-vg+e7yoeK/dWk0Htik3J/w@public.gmane.org>
+Subject: Re: [regression] cpuset: offlined CPUs removed from affinity masks
+Date: Thu, 12 Mar 2020 15:47:50 -0400 (EDT)
+Message-ID: <1289608777.27165.1584042470528.JavaMail.zimbra@efficios.com>
+References: <1251528473.590671.1579196495905.JavaMail.zimbra@efficios.com> <20200219154740.GD698990@mtj.thefacebook.com> <59426509.702.1582127435733.JavaMail.zimbra@efficios.com> <20200219155202.GE698990@mtj.thefacebook.com> <1358308409.804.1582128519523.JavaMail.zimbra@efficios.com> <20200219161222.GF698990@mtj.thefacebook.com> <316507033.21078.1583597207356.JavaMail.zimbra@efficios.com> <20200312182618.GE79873@mtj.duckdns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=kSRZhT64+sxW9xDyUZ3l/rkvlLGuZc8V6ZIjw4qfv1c=;
-        b=c8JNPsVOXsaM4NWGf5pmxx6t2jZJ9I/3H+dCm28qDP91leSkivH4V1ku7Ah5fTzuIr
-         mDDxhTl0Z+3F/VqMr32cZhGDAVLTkEfnUpc4To6HefgYByEn9GROeiJp9SWAP5U2KjIi
-         CgELBvkumf8LAQpOk8GAtfQaKbCH5SfoCD4YVX05pYHi9SyL8qi5Sne/gvQh3mZNZ1e3
-         V6UH2z3SAj3jKoS9kgVFWJKTYWcdHeXVYMBOlkdd2PNfDpqkYnBLFKZiZhOJp4y63QOy
-         IASsb0FnjvJnnpl47Dr6siPjMTSjxO7SWShEsI7guYWLZSwqRuwQg61K7PiPPhbEeYrQ
-         JhQQ==
-Content-Disposition: inline
-In-Reply-To: <CAHk-=wi=5p6s_BmPAg5EF8Joe5d-6iAjQq6-Le7+xf5Gq-ZTfw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Filter: OpenDKIM Filter v2.10.3 mail.efficios.com ABCFB283B3C
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=efficios.com;
+        s=default; t=1584042470;
+        bh=A1HR5wx2ul5UN/781Z2t5qlpWkPcTJFFf8FZtwQy6S0=;
+        h=Date:From:To:Message-ID:MIME-Version;
+        b=I7XIwjfakzD+Ifo0HlzHk72yMKTKFW2SQR4uZPsMLjCFAmT7H1X/5XqyV/9FAMR2X
+         DM+oMyxtBE/rnPjt2hW3PHY0fE2DtI2XgYspcckeHbnchZwyywjLDAL1q4e3ksB/6O
+         snuzo2y365fmrlkxdgMu6d0AgnN1i4koJP5A5ytLg83TOm2AbvaOpV7QZf9FX+tCQT
+         VKCU7vvkuDNQe7FCkW89i/BkBJckT6wuK2DWcKceDq6A4DYE17lKOklXKgQHzv/Zot
+         ln1eVE+etQHwwZrsd+kaVMlfnJ3OYrGZvNIxNx68XFgZ887Oo7/wao7M1PUiCsFU96
+         bhr2lRGbzncQA==
+In-Reply-To: <20200312182618.GE79873-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Valentin Schneider <valentin.schneider-5wv7dgnIgG8@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 
-Hello, Linus.
+----- On Mar 12, 2020, at 2:26 PM, Tejun Heo tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org wrote:
 
-On Tue, Mar 10, 2020 at 03:14:13PM -0700, Linus Torvalds wrote:
-> On Tue, Mar 10, 2020 at 7:41 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> >
-> > * Empty release_agent handling fix.
+> Hello,
 > 
-> Pulled. However, I gagged a bit when I saw the code:
+> On Sat, Mar 07, 2020 at 11:06:47AM -0500, Mathieu Desnoyers wrote:
+>> Looking into solving this, one key issue seems to get in the way: cpuset
+>> appear to care about not allowing to create a cpuset which has no currently
+>> active CPU where to run, e.g.:
+> ...
+>> Clearly, there is an intent that cpusets take the active mask into
+>> account to prohibit creating an empty cpuset, but nothing prevents
+>> cpu hotplug from creating an empty cpuset.
+>> 
+>> I wonder how to solve this inconsistency ?
 > 
->         if (!pathbuf || !agentbuf || !strlen(agentbuf))
+> Please try cpuset in cgroup2. It shouldn't have those issues.
 
-Hahaha, yeah, I can see that. I think it might have been copied from
-the commit it refers to - 64e90a8acb85 which contains the following
-snippet.
+After figuring how to use cgroup2 (systemd.unified_cgroup_hierarchy=1 boot
+parameter helped tremendously), and testing similar scenarios, it indeed
+seems to have a much saner behavior than cgroup1.
 
-       /*
-        * If there is no binary for us to call, then just return and get out of
-        * here.  This allows us to set STATIC_USERMODEHELPER_PATH to "" and
-        * disable all call_usermodehelper() calls.
-        */
-       if (strlen(sub_info->path) == 0)
-               goto out;
+Considering that the allowed cpu mask is weird wrt cgroup1 and cpu hotplug,
+and that cgroup2 allows thread-level granularity, it does not make much sense
+to prevent the pin_on_cpu() system call I am working on from pinning
+on cpus which are not present in the allowed mask.
 
-> Also, wouldn't it be nice to test for the empty string before you even
-> bother to kstrdup() it? Even before you
+I'm currently investigating approaches that would detect situations
+where a thread is pinned onto a CPU which is not part of its allowed
+mask, and set the task prio at MAX_PRIO-1 (the lowest fair priority
+possible) in those cases.
 
-Let me restructure the code a bit.
+The basic idea is to allow applications to pin to every possible cpu, but
+not allow them to use this to consume a lot of cpu time on CPUs they
+are not allowed to run.
 
-> Finally, shouldn't we technically hold the release_agent_path_lock
-> while looking at it?
+Thoughts ?
 
-The release_agent_path is protected by both locks - cgroup_mutex and
-release_agent_path_lock, so readers can hold either cgroup_mutex or
-the path_lock. Here, it's holding the mutex, so it should be fine.
-IIRC, it used to be protected by cgroup_mutex (or whatever was
-equivalent) and the extra lock was added to break some cyclic
-dependency. Hmm... might as well drop the cgroup_mutex protection and
-always use the spinlock.
+Thanks,
 
-> Small details, and I've taken the pull, but the lack of locking does
-> seem to be an actual (if perhaps fairly theoretical) bug, no?
+Mathieu
 
-Will queue cleanup patches for the next window.
-
-Thanks.
 
 -- 
-tejun
+Mathieu Desnoyers
+EfficiOS Inc.
+http://www.efficios.com
