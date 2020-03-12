@@ -1,83 +1,36 @@
-From: "Daniel Xu" <dxu@dxuuu.xyz>
-Subject: Re: [PATCH v3 0/4] Support user xattrs in cgroupfs
-Date: Thu, 12 Mar 2020 13:09:25 -0700
-Message-ID: <C194NG2LLD6S.362U6UUAHUZHJ@maharaja>
-References: <20200312200317.31736-1-dxu@dxuuu.xyz>
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dxuuu.xyz; h=
-        content-transfer-encoding:content-type:in-reply-to:date:cc
-        :subject:from:to:message-id; s=fm3; bh=TkJOJLPVp9faa1mlhe8Ka531E
-        s7yGnp/Tphg5hzuUU8=; b=T+yUk47hFlOHjRn12B9u9KT0HtJPJLz1E/ckWYq5J
-        vAR+/LQBkLjcqMF3677DoeBEwqunJPTuR09mF8ENbyFV2BsF5J8Lxhp8jK3ReqRl
-        /KyQltyDjkgVBmBR1EAuqWIs769+xwjl1UPZimmTpKIQr0bAG/hiLnW6YltCp+Z/
-        Ei5h/zT3CR3M4ps3FamtB9yoXJwaY2kk7jSlFfxvP9YDUeGD2JQYq2QnWhAaDrYU
-        85e60jUSfJ0wlO5ETVgHQfFL1quOSmCI0VQ0pD5TDGvRaeXnHmmxWVPGi7XSlvCR
-        UGxPLAGksufrrus1BdmH2F3cgYHx6U5Q+hBAlleaQZcug==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-transfer-encoding:content-type
-        :date:from:in-reply-to:message-id:subject:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=TkJOJL
-        PVp9faa1mlhe8Ka531Es7yGnp/Tphg5hzuUU8=; b=iJayL43GkTly9KNOWB0gzT
-        H8IsVgSNkBk2o9ZrV8MxT3+cjAiifroKAJS0BeT+17ySgqzw8C6NR54jEzWe0Yiq
-        42InrLIcfkteTLOCPJRig44nvNlH1IAQEML1aZOf3cW4WdtzS9Oq1oI7drK7MsIa
-        ggmar1FXyV6uo48uNagvnvPZ0suA6qEAAw0eUsjLr28kCiELQ4zAts+QsZxb0g9D
-        1GDYgq2l9RKOqThE4sQrc1/vOcga61tjdVhvKQEFUyqmbNR3TJsTecyeBMczNhrV
-        hsRWKao5SPxuBauArJHGlsxiESggFEpCvXbA0TOvPjt0G2EbqpO41pkwtGfqchbA
-        ==
-In-Reply-To: <20200312200317.31736-1-dxu@dxuuu.xyz>
-Sender: linux-fsdevel-owner@vger.kernel.org
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3 1/4] kernfs: kvmalloc xattr value instead of kmalloc
+Date: Thu, 12 Mar 2020 14:03:46 -0700
+Message-ID: <CALvZod6TxCGiJbPo-4R_qXC7OqWS0LgRRWZwvbaPbWMDRyt0Zg@mail.gmail.com>
+References: <20200312200317.31736-1-dxu@dxuuu.xyz> <20200312200317.31736-2-dxu@dxuuu.xyz>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=XGC2JJk9vuAk10qDqdB2GLLddE8al5n+2YMC135z7/8=;
+        b=MFTyMtEC8VknjT1M8lTiyfKxTFtMZJGkKIC0Q3oqOBDGa3g7UxELEJgqZr7dTBhnIG
+         ixxjSyj0q8phoYnlMZJjGME2GUQgh5pAAf63BjeJByJJ4nZMO2g6msnLMwkVnTSld628
+         vXs1tw38JrliwAzoTQUwm3ZeVer/mVXmouFDIIUPlCeQb2Nnr2ECpnwVzd8Jffnq847L
+         QiNrse6GGv2M8iuU1adL+6yqgUds3KlBE9zfU7rjhCZkAWZ684caGPSNeM+QM5CCAgI5
+         LkUHNmV2YZhICiXf1Xvd3CowoD/bfyFvW7OM0jlAFTbwuSoxJyiwC8MhcFET48g1KhFy
+         su1Q==
+In-Reply-To: <20200312200317.31736-2-dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Daniel Xu <dxu@dxuuu.xyz>, cgroups@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, viro@zeniv.linux.org.uk
-Cc: Daniel Xu <dxu@dxuuu.xyz>, shakeelb@google.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, kernel-team@fb.com
+Content-Transfer-Encoding: 7bit
+To: Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>
 
-On Thu Mar 12, 2020 at 6:03 AM PST, Daniel Xu wrote:
-> User extended attributes are useful as metadata storage for kernfs
-> consumers like cgroups. Especially in the case of cgroups, it is useful
-> to have a central metadata store that multiple processes/services can
-> use to coordinate actions.
+On Thu, Mar 12, 2020 at 1:03 PM Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org> wrote:
 >
-> A concrete example is for userspace out of memory killers. We want to
-> let delegated cgroup subtree owners (running as non-root) to be able to
-> say "please avoid killing this cgroup". This is especially important for
-> desktop linux as delegated subtrees owners are less likely to run as
-> root.
+> xattr values have a 64k maximum size. This can result in an order 4
+> kmalloc request which can be difficult to fulfill. Since xattrs do not
+> need physically contiguous memory, we can switch to kvmalloc and not
+> have to worry about higher order allocations failing.
 >
-> The first two commits set up some stuff for the third commit which
-> intro introduce a new flag, KERNFS_ROOT_SUPPORT_USER_XATTR,
-> that lets kernfs consumers enable user xattr support. The final commit
-> turns on user xattr support for cgroupfs.
->
-> Changes from v2:
-> - Rephrased commit message for "kernfs: kvmalloc xattr value instead of
-> kmalloc"
->
-> Changes from v1:
-> - use kvmalloc for xattr values
-> - modify simple_xattr_set to return removed size
-> - add accounting for total user xattr size per cgroup
->
-> Daniel Xu (4):
-> kernfs: kvmalloc xattr value instead of kmalloc
-> kernfs: Add removed_size out param for simple_xattr_set
-> kernfs: Add option to enable user xattrs
-> cgroupfs: Support user xattrs
->
-> Daniel Xu (4):
-> kernfs: kvmalloc xattr value instead of kmalloc
-> kernfs: Add removed_size out param for simple_xattr_set
-> kernfs: Add option to enable user xattrs
-> cgroupfs: Support user xattrs
->
-> fs/kernfs/inode.c | 91 ++++++++++++++++++++++++++++++++++++-
-> fs/kernfs/kernfs-internal.h | 2 +
-> fs/xattr.c | 17 +++++--
-> include/linux/kernfs.h | 11 ++++-
-> include/linux/xattr.h | 3 +-
-> kernel/cgroup/cgroup.c | 3 +-
-> mm/shmem.c | 2 +-
-> 7 files changed, 119 insertions(+), 10 deletions(-)
+> Signed-off-by: Daniel Xu <dxu-zUS5+7O8QwqlVyrhU4qvOw@public.gmane.org>
 
-Gah, messed up the copy paste. Let me know if you want a resend.
+Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
