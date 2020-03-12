@@ -1,75 +1,61 @@
-From: Chris Down <chris@chrisdown.name>
-Subject: [PATCH 5/6] mm, memcg: Prevent memory.swap.max load tearing
-Date: Thu, 12 Mar 2020 17:33:11 +0000
-Message-ID: <bbec2c3d822217334855c8877a9d28b2a6d395fb.1584034301.git.chris@chrisdown.name>
+From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Subject: [PATCH 6/6] mm, memcg: Prevent mem_cgroup_protected store tearing
+Date: Thu, 12 Mar 2020 17:33:16 +0000
+Message-ID: <d1e9fbc0379fe8db475d82c8b6fbe048876e12ae.1584034301.git.chris@chrisdown.name>
 References: <cover.1584034301.git.chris@chrisdown.name>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chrisdown.name; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=urzcg1/zbcSllHCQ82ap2K/ib0OV1jVM8zTOxSBSSFk=;
-        b=L2f+CaL9yyAPG75AYGECf5KTcw7S8M4rdsMmRBSZMeGR8jRzPXKEG698E3haidM1SB
-         EphvHD/U1lU3Tsfx19T+saKeeS1FVjHvlGAnaixK8Xiuvpf85YAi1FH8cmHHyStdVQ6x
-         s3ChNGG7YtV2ejMML1Tln752ExwS8WXNN1Xzw=
+        bh=NoiaqPMaLbyoL7WcV9VE9eKkmobOKnQ4L0s3bngIbSs=;
+        b=qaWsULht3bWoY5iXQLEcDGdBTFV6hjN7lpV33RTCtB3xWc1PLX/WRxZQohX8Xrl/9w
+         UmohlrmtFgTmdaoEpFrPYYLSu55234z8uvo9TnjcyiBJbYmm2fJpmw10ZPHUC3T9G4Z3
+         CvKX3yFDACoE48iNQsDgNcSOYv8fqeVuxR4Rk=
 Content-Disposition: inline
-In-Reply-To: <cover.1584034301.git.chris@chrisdown.name>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <cover.1584034301.git.chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-The write side of this is xchg()/smp_mb(), so that's all good. Just a
-few sites missing a READ_ONCE.
+The read side of this is all protected, but we can still tear if
+multiple iterations of mem_cgroup_protected are going at the same time.
 
-Signed-off-by: Chris Down <chris@chrisdown.name>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Roman Gushchin <guro@fb.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: linux-mm@kvack.org
-Cc: cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: kernel-team@fb.com
+There's some intentional racing in mem_cgroup_protected which is ok, but
+load/store tearing should be avoided.
+
+Signed-off-by: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: kernel-team-b10kYP2dOMg@public.gmane.org
 ---
- mm/memcontrol.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ mm/memcontrol.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e0ed790a2a8c..57048a38c75d 100644
+index 57048a38c75d..e9af606238ab 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -1511,7 +1511,7 @@ void mem_cgroup_print_oom_meminfo(struct mem_cgroup *memcg)
- 	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
- 		pr_info("swap: usage %llukB, limit %llukB, failcnt %lu\n",
- 			K((u64)page_counter_read(&memcg->swap)),
--			K((u64)memcg->swap.max), memcg->swap.failcnt);
-+			K((u64)READ_ONCE(memcg->swap.max)), memcg->swap.failcnt);
- 	else {
- 		pr_info("memory+swap: usage %llukB, limit %llukB, failcnt %lu\n",
- 			K((u64)page_counter_read(&memcg->memsw)),
-@@ -1544,7 +1544,7 @@ unsigned long mem_cgroup_get_max(struct mem_cgroup *memcg)
- 		unsigned long swap_max;
- 
- 		memsw_max = memcg->memsw.max;
--		swap_max = memcg->swap.max;
-+		swap_max = READ_ONCE(memcg->swap.max);
- 		swap_max = min(swap_max, (unsigned long)total_swap_pages);
- 		max = min(max + swap_max, memsw_max);
+@@ -6301,8 +6301,8 @@ enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
  	}
-@@ -7025,7 +7025,8 @@ bool mem_cgroup_swap_full(struct page *page)
- 		return false;
  
- 	for (; memcg != root_mem_cgroup; memcg = parent_mem_cgroup(memcg))
--		if (page_counter_read(&memcg->swap) * 2 >= memcg->swap.max)
-+		if (page_counter_read(&memcg->swap) * 2 >=
-+		    READ_ONCE(memcg->swap.max))
- 			return true;
+ exit:
+-	memcg->memory.emin = emin;
+-	memcg->memory.elow = elow;
++	WRITE_ONCE(memcg->memory.emin, emin);
++	WRITE_ONCE(memcg->memory.elow, elow);
  
- 	return false;
+ 	if (usage <= emin)
+ 		return MEMCG_PROT_MIN;
 -- 
 2.25.1
 
