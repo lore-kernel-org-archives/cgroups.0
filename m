@@ -1,7 +1,7 @@
 From: Chris Down <chris@chrisdown.name>
-Subject: [PATCH 4/6] mm, memcg: Prevent memory.min load/store tearing
-Date: Thu, 12 Mar 2020 17:33:07 +0000
-Message-ID: <e809b4e6b0c1626dac6945970de06409a180ee65.1584034301.git.chris@chrisdown.name>
+Subject: [PATCH 5/6] mm, memcg: Prevent memory.swap.max load tearing
+Date: Thu, 12 Mar 2020 17:33:11 +0000
+Message-ID: <bbec2c3d822217334855c8877a9d28b2a6d395fb.1584034301.git.chris@chrisdown.name>
 References: <cover.1584034301.git.chris@chrisdown.name>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -9,10 +9,10 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chrisdown.name; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=XlHPYdHYVGL+ZH9Fy2ExhyAo23ZIkMLKS1ZUcqxxQY0=;
-        b=up0/TKVQ7COgyqEd0H7isdZkegQuEbx6al4+9E95wP3QiMQsdxvH9836eQ+LluSIC5
-         RrbHhXsGGbJAFQXjNgehCBmeLiF93Sg8ahlpsQiK3ct/C8obWCIZR0CUU9z9GnAc5QUt
-         /KMm82i4Ln7WBp4XE3Bm+5wpBL7eIdIAKbhSk=
+        bh=urzcg1/zbcSllHCQ82ap2K/ib0OV1jVM8zTOxSBSSFk=;
+        b=L2f+CaL9yyAPG75AYGECf5KTcw7S8M4rdsMmRBSZMeGR8jRzPXKEG698E3haidM1SB
+         EphvHD/U1lU3Tsfx19T+saKeeS1FVjHvlGAnaixK8Xiuvpf85YAi1FH8cmHHyStdVQ6x
+         s3ChNGG7YtV2ejMML1Tln752ExwS8WXNN1Xzw=
 Content-Disposition: inline
 In-Reply-To: <cover.1584034301.git.chris@chrisdown.name>
 Sender: linux-kernel-owner@vger.kernel.org
@@ -22,8 +22,8 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-This can be set concurrently with reads, which may cause the wrong value
-to be propagated.
+The write side of this is xchg()/smp_mb(), so that's all good. Just a
+few sites missing a READ_ONCE.
 
 Signed-off-by: Chris Down <chris@chrisdown.name>
 Cc: Andrew Morton <akpm@linux-foundation.org>
@@ -35,65 +35,41 @@ Cc: cgroups@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
 Cc: kernel-team@fb.com
 ---
- mm/memcontrol.c   |  4 ++--
- mm/page_counter.c | 10 ++++++----
- 2 files changed, 8 insertions(+), 6 deletions(-)
+ mm/memcontrol.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index c85a304fa4a1..e0ed790a2a8c 100644
+index e0ed790a2a8c..57048a38c75d 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -6261,7 +6261,7 @@ enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
- 	if (!usage)
- 		return MEMCG_PROT_NONE;
+@@ -1511,7 +1511,7 @@ void mem_cgroup_print_oom_meminfo(struct mem_cgroup *memcg)
+ 	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
+ 		pr_info("swap: usage %llukB, limit %llukB, failcnt %lu\n",
+ 			K((u64)page_counter_read(&memcg->swap)),
+-			K((u64)memcg->swap.max), memcg->swap.failcnt);
++			K((u64)READ_ONCE(memcg->swap.max)), memcg->swap.failcnt);
+ 	else {
+ 		pr_info("memory+swap: usage %llukB, limit %llukB, failcnt %lu\n",
+ 			K((u64)page_counter_read(&memcg->memsw)),
+@@ -1544,7 +1544,7 @@ unsigned long mem_cgroup_get_max(struct mem_cgroup *memcg)
+ 		unsigned long swap_max;
  
--	emin = memcg->memory.min;
-+	emin = READ_ONCE(memcg->memory.min);
- 	elow = READ_ONCE(memcg->memory.low);
+ 		memsw_max = memcg->memsw.max;
+-		swap_max = memcg->swap.max;
++		swap_max = READ_ONCE(memcg->swap.max);
+ 		swap_max = min(swap_max, (unsigned long)total_swap_pages);
+ 		max = min(max + swap_max, memsw_max);
+ 	}
+@@ -7025,7 +7025,8 @@ bool mem_cgroup_swap_full(struct page *page)
+ 		return false;
  
- 	parent = parent_mem_cgroup(memcg);
-@@ -6277,7 +6277,7 @@ enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
- 	if (emin && parent_emin) {
- 		unsigned long min_usage, siblings_min_usage;
+ 	for (; memcg != root_mem_cgroup; memcg = parent_mem_cgroup(memcg))
+-		if (page_counter_read(&memcg->swap) * 2 >= memcg->swap.max)
++		if (page_counter_read(&memcg->swap) * 2 >=
++		    READ_ONCE(memcg->swap.max))
+ 			return true;
  
--		min_usage = min(usage, memcg->memory.min);
-+		min_usage = min(usage, READ_ONCE(memcg->memory.min));
- 		siblings_min_usage = atomic_long_read(
- 			&parent->memory.children_min_usage);
- 
-diff --git a/mm/page_counter.c b/mm/page_counter.c
-index 18b7f779f2e2..ae471c7d255f 100644
---- a/mm/page_counter.c
-+++ b/mm/page_counter.c
-@@ -17,14 +17,16 @@ static void propagate_protected_usage(struct page_counter *c,
- 				      unsigned long usage)
- {
- 	unsigned long protected, old_protected;
--	unsigned long low;
-+	unsigned long low, min;
- 	long delta;
- 
- 	if (!c->parent)
- 		return;
- 
--	if (c->min || atomic_long_read(&c->min_usage)) {
--		if (usage <= c->min)
-+	min = READ_ONCE(c->min);
-+
-+	if (min || atomic_long_read(&c->min_usage)) {
-+		if (usage <= min)
- 			protected = usage;
- 		else
- 			protected = 0;
-@@ -217,7 +219,7 @@ void page_counter_set_min(struct page_counter *counter, unsigned long nr_pages)
- {
- 	struct page_counter *c;
- 
--	counter->min = nr_pages;
-+	WRITE_ONCE(counter->min, nr_pages);
- 
- 	for (c = counter; c; c = c->parent)
- 		propagate_protected_usage(c, atomic_long_read(&c->usage));
+ 	return false;
 -- 
 2.25.1
 
