@@ -1,31 +1,31 @@
 From: Daniel Xu <dxu@dxuuu.xyz>
-Subject: [PATCH v3 1/4] kernfs: kvmalloc xattr value instead of kmalloc
-Date: Thu, 12 Mar 2020 13:03:14 -0700
-Message-ID: <20200312200317.31736-2-dxu@dxuuu.xyz>
+Subject: [PATCH v3 2/4] kernfs: Add removed_size out param for simple_xattr_set
+Date: Thu, 12 Mar 2020 13:03:15 -0700
+Message-ID: <20200312200317.31736-3-dxu@dxuuu.xyz>
 References: <20200312200317.31736-1-dxu@dxuuu.xyz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=dxuuu.xyz; h=
         from:to:cc:subject:date:message-id:in-reply-to:references
-        :mime-version:content-transfer-encoding; s=fm3; bh=oNeib/zSSc/Ml
-        kvsC3EDiuR3sxV3CwZWI/SYjFLvvIM=; b=cIkAcMhS3F04KFXhXECfvihZaf8SY
-        lPxqdOqgjYNwFGO9F5UFYat0HY5wgx6OW9YDVKODzOcamBNuRf/kw83vHAvatcnn
-        2HmDqZ+OlK3yfReHpgShA/10rN2lvn71rZZ8rjfiVoJHROORqAtZf+opPmyxnUaY
-        3fw5n5SZP7/tQHVCy2Vo2aUafyrv4otknmDIUa22Mn1A5bRdRq0ovugHYUodg4wd
-        sIoICvzv2uEic/aE9lkSWANZmYgCoygfY3CLbKdJg37+KyNM7wBBnIJ4So9aFuqv
-        /H0Pk1edYdg4OwDiZqF2Ui+9iEpqB19qnPaPYtDjmmcn+P5EdQP50ozQg==
+        :mime-version:content-transfer-encoding; s=fm3; bh=lc0QBU1yCIerk
+        rnOWmO0QlaRB2GRt3K2i1+d3aZJ1TU=; b=rDGyrd1qXQhmJNxyGEJTIKdXNpvk2
+        6HawOHFoz8yCMXOKKZ/VIV5qcRV+7qC3tpjzEp2yC4IT4wkf1BdOKG84aj0b7+DM
+        vKrQlXX+LaWRowVMS9SLI7bavbOP8FTu9390Fsp83Y7ZD5kM0BcOIy2H3Q16AIU2
+        DaGLWo9FeLnXhPnknu6xO9XFKjwSsX5Lj/rJWzxhSMmQ0jA68tDpb8n/g88wMTYB
+        M4+cVBSNX0OSnKW5+zJlEObnIPjzBIn2RTG1sNXem6IDTysTIDu8oFtNbhx6m0Xb
+        SZKkW5vqx8HhTb+gDY9wtbAdZJPOHWQYmY6LSnGdskDg1J3TxpAvjJMgQ==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:content-transfer-encoding:date:from
         :in-reply-to:message-id:mime-version:references:subject:to
         :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm2; bh=oNeib/zSSc/MlkvsC3EDiuR3sxV3CwZWI/SYjFLvvIM=; b=vyqXOR93
-        COmOhbX1RIN751Q5MG7SCcb03XDg3em6YYUQyr8Kd5M461/4aEC5mJrT2lGFiUtG
-        y7FDLsoh4+qQGwsXSKwMKu4KYfsj7slwQ0RdEE1hiTVoQDwVhOu/Z6uD7/Z4nItZ
-        6SLYaIU/YliddTr0RbbAocMOOoIparKJCDVvhV70o+2ojBT5PQRIeAeBnzUAp9Xk
-        kFSz3Kn6XolT2J0bEywrHa9mN53odhfbcN+sTduAqGfKFUTeIpLWla9vZ2UEIMpp
-        rCpo+umVFTPRBYkg2aSTrPcTbi3rDYPUajO83kpUrG/bpECikiTrzDvaDixm33Vi
-        k4ySUJvfmisOsw==
+        fm2; bh=lc0QBU1yCIerkrnOWmO0QlaRB2GRt3K2i1+d3aZJ1TU=; b=iFzwbcct
+        UCOxSBqTN8CK+6W9LnsaokHTueIJo8EnO8cpKrME2fheloysFXc1SzGYzT3BJU/I
+        pJ6d9hH6XOTQp8Jga7CcbczS7ZKYZIhGLtGZV5BzX9jtQc251JjS3s//z/7DAf4x
+        vadUU3qwt+vH3o+zCADdq6GDixb7K7TzGe7k4B1gUU+intq/ari8Gd2xDECuT284
+        0fif09ZiDVBJ24SZr7We2nl6OhinwhRZ1gYySeyn9nnrN9+Hm7N3cKfzz0dxstys
+        ismVDWeGYPEd9mwkEqmHaNe36Pad/CWeyxAs+p+LSdlI6fB5TfRrNbyJY4kDXpYz
+        2EUzruzapS9QUg==
 In-Reply-To: <20200312200317.31736-1-dxu@dxuuu.xyz>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -33,47 +33,103 @@ Content-Type: text/plain; charset="us-ascii"
 To: cgroups@vger.kernel.org, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, viro@zeniv.linux.org.uk
 Cc: Daniel Xu <dxu@dxuuu.xyz>, shakeelb@google.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org, kernel-team@fb.com
 
-xattr values have a 64k maximum size. This can result in an order 4
-kmalloc request which can be difficult to fulfill. Since xattrs do not
-need physically contiguous memory, we can switch to kvmalloc and not
-have to worry about higher order allocations failing.
+This helps set up size accounting in the next commit. Without this out
+param, it's difficult to find out the removed xattr size without taking
+a lock for longer and walking the xattr linked list twice.
 
 Signed-off-by: Daniel Xu <dxu@dxuuu.xyz>
 ---
- fs/xattr.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ fs/kernfs/inode.c     |  2 +-
+ fs/xattr.c            | 11 ++++++++++-
+ include/linux/xattr.h |  3 ++-
+ mm/shmem.c            |  2 +-
+ 4 files changed, 14 insertions(+), 4 deletions(-)
 
+diff --git a/fs/kernfs/inode.c b/fs/kernfs/inode.c
+index d0f7a5abd9a9..5f10ae95fbfa 100644
+--- a/fs/kernfs/inode.c
++++ b/fs/kernfs/inode.c
+@@ -303,7 +303,7 @@ int kernfs_xattr_set(struct kernfs_node *kn, const char *name,
+ 	if (!attrs)
+ 		return -ENOMEM;
+ 
+-	return simple_xattr_set(&attrs->xattrs, name, value, size, flags);
++	return simple_xattr_set(&attrs->xattrs, name, value, size, flags, NULL);
+ }
+ 
+ static int kernfs_vfs_xattr_get(const struct xattr_handler *handler,
 diff --git a/fs/xattr.c b/fs/xattr.c
-index 90dd78f0eb27..0d3c9b4d1914 100644
+index 0d3c9b4d1914..e13265e65871 100644
 --- a/fs/xattr.c
 +++ b/fs/xattr.c
-@@ -817,7 +817,7 @@ struct simple_xattr *simple_xattr_alloc(const void *value, size_t size)
- 	if (len < sizeof(*new_xattr))
- 		return NULL;
- 
--	new_xattr = kmalloc(len, GFP_KERNEL);
-+	new_xattr = kvmalloc(len, GFP_KERNEL);
- 	if (!new_xattr)
- 		return NULL;
- 
-@@ -882,7 +882,7 @@ int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
- 
- 		new_xattr->name = kstrdup(name, GFP_KERNEL);
- 		if (!new_xattr->name) {
--			kfree(new_xattr);
-+			kvfree(new_xattr);
- 			return -ENOMEM;
+@@ -860,6 +860,7 @@ int simple_xattr_get(struct simple_xattrs *xattrs, const char *name,
+  * @value: value of the xattr. If %NULL, will remove the attribute.
+  * @size: size of the new xattr
+  * @flags: %XATTR_{CREATE|REPLACE}
++ * @removed_size: returns size of the removed xattr, -1 if none removed
+  *
+  * %XATTR_CREATE is set, the xattr shouldn't exist already; otherwise fails
+  * with -EEXIST.  If %XATTR_REPLACE is set, the xattr should exist;
+@@ -868,7 +869,8 @@ int simple_xattr_get(struct simple_xattrs *xattrs, const char *name,
+  * Returns 0 on success, -errno on failure.
+  */
+ int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
+-		     const void *value, size_t size, int flags)
++		     const void *value, size_t size, int flags,
++		     ssize_t *removed_size)
+ {
+ 	struct simple_xattr *xattr;
+ 	struct simple_xattr *new_xattr = NULL;
+@@ -895,8 +897,12 @@ int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
+ 				err = -EEXIST;
+ 			} else if (new_xattr) {
+ 				list_replace(&xattr->list, &new_xattr->list);
++				if (removed_size)
++					*removed_size = xattr->size;
+ 			} else {
+ 				list_del(&xattr->list);
++				if (removed_size)
++					*removed_size = xattr->size;
+ 			}
+ 			goto out;
  		}
+@@ -908,6 +914,9 @@ int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
+ 		list_add(&new_xattr->list, &xattrs->head);
+ 		xattr = NULL;
  	}
-@@ -912,7 +912,7 @@ int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
++
++	if (removed_size)
++		*removed_size = -1;
+ out:
  	spin_unlock(&xattrs->lock);
  	if (xattr) {
- 		kfree(xattr->name);
--		kfree(xattr);
-+		kvfree(xattr);
- 	}
- 	return err;
+diff --git a/include/linux/xattr.h b/include/linux/xattr.h
+index 6dad031be3c2..4cf6e11f4a3c 100644
+--- a/include/linux/xattr.h
++++ b/include/linux/xattr.h
+@@ -102,7 +102,8 @@ struct simple_xattr *simple_xattr_alloc(const void *value, size_t size);
+ int simple_xattr_get(struct simple_xattrs *xattrs, const char *name,
+ 		     void *buffer, size_t size);
+ int simple_xattr_set(struct simple_xattrs *xattrs, const char *name,
+-		     const void *value, size_t size, int flags);
++		     const void *value, size_t size, int flags,
++		     ssize_t *removed_size);
+ ssize_t simple_xattr_list(struct inode *inode, struct simple_xattrs *xattrs, char *buffer,
+ 			  size_t size);
+ void simple_xattr_list_add(struct simple_xattrs *xattrs,
+diff --git a/mm/shmem.c b/mm/shmem.c
+index aad3ba74b0e9..f47347cb30f6 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -3243,7 +3243,7 @@ static int shmem_xattr_handler_set(const struct xattr_handler *handler,
+ 	struct shmem_inode_info *info = SHMEM_I(inode);
  
+ 	name = xattr_full_name(handler, name);
+-	return simple_xattr_set(&info->xattrs, name, value, size, flags);
++	return simple_xattr_set(&info->xattrs, name, value, size, flags, NULL);
+ }
+ 
+ static const struct xattr_handler shmem_security_xattr_handler = {
 -- 
 2.21.1
 
