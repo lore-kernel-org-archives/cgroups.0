@@ -1,186 +1,68 @@
-From: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-next] BUILD SUCCESS
- ef2289f941de0feaf8db305bea0ef4eb4c8403e7
-Date: Fri, 13 Mar 2020 12:59:10 +0800
-Message-ID: <5e6b131e.Eb2wNWdRHWlf1Id7%lkp@intel.com>
+From: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: KASAN: slab-out-of-bounds Read in cgroup_file_notify
+Date: Fri, 13 Mar 2020 15:43:08 -0700
+Message-ID: <CAHS8izMpBXsv_fvy5Qw8CcjBivpfgec+r39+aFScgNDtUTdSqA@mail.gmail.com>
+References: <00000000000041c6c205a08225dc@google.com> <20200312182826.GG79873@mtj.duckdns.org>
+ <CAHS8izPySSO07dHi3OZ_1uXjmMCGnNMWey+o-qwFM7GnD7oSHw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=MFjCvufz4qYwDEr+hp+Lr4gi77q6/a3rGxqdBQ0RGh0=;
+        b=hXcW2YUeO7771pgMZQkpwWmDZERH1p2Fm3PKienj099vaUMe3Qcl+GfrrGnyRTugmy
+         hOnPmmf61cOuY/9YM1n1YJDgIF/bzZkQ/SKe2ooZAlXOFVBwIbdf8NnqTwiRIUPwuyDu
+         gq3dsr7QjFlNCbKk0FVRt2dnIYW73J+gylAUjLTdaMQSAQ/34Wi3jetakzQOmExGLLbw
+         8OEa3IZy8OX7Im6ZIDSkOYCwptISjIO0eg7A4GLNypa3yVBcCLvJb7t8YlEPeGHfRL5j
+         ldPvDbHUiWlCrcDekAFVZa0WqguFkec5Hxe/880sV0TtxrYvDnRso7ck3UIuBr42iaBG
+         4qsA==
+In-Reply-To: <CAHS8izPySSO07dHi3OZ_1uXjmMCGnNMWey+o-qwFM7GnD7oSHw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Giuseppe Scrivano <gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: syzbot <syzbot+cac0c4e204952cf449b1-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, andriin-b10kYP2dOMg@public.gmane.org, ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kafai-b10kYP2dOMg@public.gmane.org, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git  for-next
-branch HEAD: ef2289f941de0feaf8db305bea0ef4eb4c8403e7  Merge branch 'for-5.7' into for-next
+On Thu, Mar 12, 2020 at 2:06 PM Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> On Thu, Mar 12, 2020 at 11:28 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> >
+> > On Tue, Mar 10, 2020 at 08:55:14AM -0700, syzbot wrote:
+> > > Hello,
+> > >
+> > > syzbot found the following crash on:
+> > >
+> > > HEAD commit:    c99b17ac Add linux-next specific files for 20200225
+> > > git tree:       linux-next
+> > > console output: https://syzkaller.appspot.com/x/log.txt?x=1610d70de00000
+> > > kernel config:  https://syzkaller.appspot.com/x/.config?x=6b7ebe4bd0931c45
+> > > dashboard link: https://syzkaller.appspot.com/bug?extid=cac0c4e204952cf449b1
+> > > compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
+> > > syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=1242e1fde00000
+> > > C reproducer:   https://syzkaller.appspot.com/x/repro.c?x=1110d70de00000
+> > >
+> > > The bug was bisected to:
+> > >
+> > > commit 6863de00e5400b534cd4e3869ffbc8f94da41dfc
+> > > Author: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > > Date:   Thu Feb 20 03:55:30 2020 +0000
+> > >
+> > >     hugetlb_cgroup: add accounting for shared mappings
+> >
+> > Mina, can you please take a look at this?
+> >
+>
+> Gah, I missed the original syzbot email but I just saw this. I'll take a look.
+>
 
-elapsed time: 484m
+This was easy enough to track down, I just sent out a fix:
+https://lore.kernel.org/linux-mm/20200313223920.124230-1-almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-configs tested: 157
-configs skipped: 0
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-arm                              allmodconfig
-arm                               allnoconfig
-arm                              allyesconfig
-arm64                            allmodconfig
-arm64                             allnoconfig
-arm64                            allyesconfig
-arm                         at91_dt_defconfig
-arm                           efm32_defconfig
-arm                          exynos_defconfig
-arm                        multi_v5_defconfig
-arm                        multi_v7_defconfig
-arm                        shmobile_defconfig
-arm                           sunxi_defconfig
-arm64                               defconfig
-sparc                            allyesconfig
-i386                             allyesconfig
-openrisc                    or1ksim_defconfig
-s390                             allmodconfig
-openrisc                 simple_smp_defconfig
-i386                              allnoconfig
-i386                             alldefconfig
-i386                                defconfig
-ia64                             alldefconfig
-ia64                             allmodconfig
-ia64                              allnoconfig
-ia64                             allyesconfig
-ia64                                defconfig
-c6x                              allyesconfig
-c6x                        evmc6678_defconfig
-nios2                         10m50_defconfig
-nios2                         3c120_defconfig
-xtensa                       common_defconfig
-xtensa                          iss_defconfig
-alpha                               defconfig
-csky                                defconfig
-nds32                             allnoconfig
-nds32                               defconfig
-h8300                     edosk2674_defconfig
-h8300                    h8300h-sim_defconfig
-h8300                       h8s-sim_defconfig
-m68k                             allmodconfig
-m68k                       m5475evb_defconfig
-m68k                          multi_defconfig
-m68k                           sun3_defconfig
-arc                              allyesconfig
-arc                                 defconfig
-microblaze                      mmu_defconfig
-microblaze                    nommu_defconfig
-powerpc                           allnoconfig
-powerpc                             defconfig
-powerpc                       ppc64_defconfig
-powerpc                          rhel-kconfig
-mips                           32r2_defconfig
-mips                         64r6el_defconfig
-mips                             allmodconfig
-mips                              allnoconfig
-mips                             allyesconfig
-mips                      fuloong2e_defconfig
-mips                      malta_kvm_defconfig
-parisc                            allnoconfig
-parisc                           allyesconfig
-parisc                generic-32bit_defconfig
-parisc                generic-64bit_defconfig
-x86_64               randconfig-a001-20200313
-x86_64               randconfig-a002-20200313
-x86_64               randconfig-a003-20200313
-i386                 randconfig-a001-20200313
-i386                 randconfig-a002-20200313
-i386                 randconfig-a003-20200313
-alpha                randconfig-a001-20200312
-m68k                 randconfig-a001-20200312
-mips                 randconfig-a001-20200312
-nds32                randconfig-a001-20200312
-parisc               randconfig-a001-20200312
-riscv                randconfig-a001-20200312
-c6x                  randconfig-a001-20200313
-h8300                randconfig-a001-20200313
-microblaze           randconfig-a001-20200313
-nios2                randconfig-a001-20200313
-sparc64              randconfig-a001-20200313
-c6x                  randconfig-a001-20200312
-h8300                randconfig-a001-20200312
-microblaze           randconfig-a001-20200312
-nios2                randconfig-a001-20200312
-sparc64              randconfig-a001-20200312
-csky                 randconfig-a001-20200312
-openrisc             randconfig-a001-20200312
-s390                 randconfig-a001-20200312
-sh                   randconfig-a001-20200312
-xtensa               randconfig-a001-20200312
-x86_64               randconfig-c001-20200311
-x86_64               randconfig-c002-20200311
-x86_64               randconfig-c003-20200311
-i386                 randconfig-c001-20200311
-i386                 randconfig-c002-20200311
-i386                 randconfig-c003-20200311
-x86_64               randconfig-e001-20200312
-x86_64               randconfig-e002-20200312
-x86_64               randconfig-e003-20200312
-i386                 randconfig-e001-20200312
-i386                 randconfig-e002-20200312
-i386                 randconfig-e003-20200312
-x86_64               randconfig-f001-20200312
-x86_64               randconfig-f002-20200312
-x86_64               randconfig-f003-20200312
-i386                 randconfig-f001-20200312
-i386                 randconfig-f002-20200312
-i386                 randconfig-f003-20200312
-x86_64               randconfig-g001-20200312
-x86_64               randconfig-g002-20200312
-x86_64               randconfig-g003-20200312
-i386                 randconfig-g001-20200312
-i386                 randconfig-g002-20200312
-i386                 randconfig-g003-20200312
-arc                  randconfig-a001-20200313
-ia64                 randconfig-a001-20200313
-arm                  randconfig-a001-20200313
-arm64                randconfig-a001-20200313
-powerpc              randconfig-a001-20200313
-sparc                randconfig-a001-20200313
-arc                  randconfig-a001-20200312
-arm                  randconfig-a001-20200312
-arm64                randconfig-a001-20200312
-ia64                 randconfig-a001-20200312
-powerpc              randconfig-a001-20200312
-sparc                randconfig-a001-20200312
-riscv                            allmodconfig
-riscv                             allnoconfig
-riscv                            allyesconfig
-riscv                               defconfig
-riscv                    nommu_virt_defconfig
-riscv                          rv32_defconfig
-s390                       zfcpdump_defconfig
-s390                          debug_defconfig
-s390                             allyesconfig
-s390                              allnoconfig
-s390                             alldefconfig
-s390                                defconfig
-sh                               allmodconfig
-sh                                allnoconfig
-sh                          rsk7269_defconfig
-sh                  sh7785lcr_32bit_defconfig
-sh                            titan_defconfig
-sparc                               defconfig
-sparc64                             defconfig
-sparc64                           allnoconfig
-sparc64                          allyesconfig
-sparc64                          allmodconfig
-um                                  defconfig
-um                             i386_defconfig
-um                           x86_64_defconfig
-x86_64                              fedora-25
-x86_64                                  kexec
-x86_64                                    lkp
-x86_64                                   rhel
-x86_64                         rhel-7.2-clear
-x86_64                               rhel-7.6
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+BTW, even though this was bisected to my patch, the root cause seems
+to be a mistake in commit faced7e0806cf ("mm: hugetlb controller for
+cgroups v2"), which is not only in linux-next but also in linus's tree
+(I did not check if it's in stable). If my fix is reviewed, the patch
+should be sent there as well. I'll make the same comment on the above
+thread as well.
