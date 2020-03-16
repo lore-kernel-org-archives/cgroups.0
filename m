@@ -1,19 +1,19 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.4 34/35] block, bfq: fix overwrite of bfq_group pointer in bfq_find_set_group()
-Date: Sun, 15 Mar 2020 22:34:10 -0400
-Message-ID: <20200316023411.1263-34-sashal@kernel.org>
-References: <20200316023411.1263-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.5 39/41] block, bfq: fix overwrite of bfq_group pointer in bfq_find_set_group()
+Date: Sun, 15 Mar 2020 22:33:17 -0400
+Message-ID: <20200316023319.749-39-sashal@kernel.org>
+References: <20200316023319.749-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584326091;
-        bh=OGv4NJMH6egSO3CM+oM4/EP7ikbuiFpvtEs66GSlFxA=;
+        s=default; t=1584326047;
+        bh=cffXXnGE5zy+o0fQH1NWf2WJWAmcQ27vougEbStwcsU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Nal4SxkVifYfOzHjgZJOKQfGU7HRzJMLKeFkO1olo2uVviykxF0hkN/YOHASBbYu+
-         jLzA/8pcWUoqurVRMgqVHMXKJ4hgnfblRF6PXTqjLy2VEi+CpFjUq9P+5x1gXwxugW
-         JWgdaJy7rJh0NyThkAk+3GEl34YqoYZIQw+AOpsI=
-In-Reply-To: <20200316023411.1263-1-sashal@kernel.org>
+        b=xjsVeYfcWjO9C279RjU3/chEWtdpX8INw1vpxs6vBl5SeWXCiwZ8N8+bZ/KA6I4t/
+         4xGDERwyVn6wRYLWVb9vshoy7tuWROknbvdhUfzCmMjcKf6Omn5tkc6FEpkAbZyRRu
+         jAOvyLQ7ZVkE5/MTLu8Q2D70nvLEn7VRs7msW0gw=
+In-Reply-To: <20200316023319.749-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -53,10 +53,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index d0e36d6522649..86cd718e0380b 100644
+index 5a64607ce7744..facbf4db19428 100644
 --- a/block/bfq-cgroup.c
 +++ b/block/bfq-cgroup.c
-@@ -593,12 +593,13 @@ struct bfq_group *bfq_find_set_group(struct bfq_data *bfqd,
+@@ -610,12 +610,13 @@ struct bfq_group *bfq_find_set_group(struct bfq_data *bfqd,
  	 */
  	entity = &bfqg->entity;
  	for_each_entity(entity) {
