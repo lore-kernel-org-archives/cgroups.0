@@ -1,47 +1,193 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 0/3] psi: cpu.pressure cgroup fix & MAINTAINERS update
-Date: Mon, 16 Mar 2020 15:13:30 -0400
-Message-ID: <20200316191333.115523-1-hannes@cmpxchg.org>
+Subject: [PATCH 1/3] psi: fix cpu.pressure for cpu.max and competing cgroups
+Date: Mon, 16 Mar 2020 15:13:31 -0400
+Message-ID: <20200316191333.115523-2-hannes@cmpxchg.org>
+References: <20200316191333.115523-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=hQ6KfYR9gsZkcfMfYyRVmhCMb80+DstZqdWe5a9vHYQ=;
-        b=msdHOOStVPMDS4Mqi0Uw5qYY3xmOx/awlB/N7lszPYI/CkuBwbE2ctj8Cktbsgy/M/
-         YhyH+WEXvueDCguQlgjMpZTsrtXUqpZzT4q9I74W0tplZSCZpgZDs5KsIkXdKGwjmhJ3
-         WBjoWnH+yLuK/luBrjtZbREo1xGzazEEcK0iuQDrplBar6wkYUFAG5Ry1haIEijIC8G8
-         uQGuyulp7IRd8+TMJuwRTO1exTFxEKvHkEyMq5aUs7EPp7zLQo47w7g9vtfod0B5YRBR
-         X7M1JBEWs1VgBIR7abel2WyB1OUeuApmBML954516LCrA2QGW1K0r67VmqHE6dz4uglp
-         lOJA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=HClDbHcToluJ6uFsLTnoDEA3ZtCwPAYPbZR3l472Wo4=;
+        b=KOgCti6JTFX/q6zu/ytDpttfs4YfoZ4KSBJ8ZnM6MCvHyUgC4xFTSI6Q0rlG1y4c7G
+         UQcdo3bXYqUMQ26Q7VgKmA6mEe52gHRoSPdbHUtGNPrZeCGFSzSGBmJxk7En5KwC5Jj6
+         DV+Zup73f+0TVdmxFIYz9Mj00IW0k6k4Gn9s7LEUTQhXUnJdFOJZGGNFPzS0QKdRNGxP
+         YaakwSACFil0yXorFAQHrPHRnlSja7Y2m0DIhyZ8/bpd81Haw/NcSEqA2cmbiIVkk/Va
+         OA+ES94LNdGMl8J86cOG8lWNObY8UQh3RFJAtmJ0GnHq7NYAXzdVLWzGPWiA78xll8HP
+         j+Dw==
+In-Reply-To: <20200316191333.115523-1-hannes@cmpxchg.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Peter Zijlstra <peterz@infradead.org>
 Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Hello Peter,
+For simplicity, cpu pressure is defined as having more than one
+runnable task on a given CPU. This works on the system-level, but it
+has limitations in a cgrouped reality: When cpu.max is in use, it
+doesn't capture the time in which a task is not executing on the CPU
+due to throttling. Likewise, it doesn't capture the time in which a
+competing cgroup is occupying the CPU - meaning it only reflects
+cgroup-internal competitive pressure, not outside pressure.
 
-Patch 1 implements the cpu.pressure fix for cgroups we were looking at
-recently, 2 is the cgroup hierarchy walk optimization you proposed.
+Enable tracking of currently executing tasks, and then change the
+definition of cpu pressure in a cgroup from
 
-Patch 3 adds a MAINTAINER entry for psi, as at least one person tried
-looking for it and couldn't find it.
+	NR_RUNNING > 1
 
-If they look alright to you, it'd be great to get them into 5.7.
+to
 
-Based on 5.6-rc6.
+	NR_RUNNING > ON_CPU
 
-Thanks
+which will capture the effects of cpu.max as well as competition from
+outside the cgroup.
 
- MAINTAINERS               |  6 +++
- include/linux/psi.h       |  2 +
- include/linux/psi_types.h | 10 ++++-
- kernel/sched/core.c       |  2 +
- kernel/sched/psi.c        | 99 +++++++++++++++++++++++++++++++++------------
- kernel/sched/stats.h      | 21 ++++++++++
- 6 files changed, 114 insertions(+), 26 deletions(-)
+After this patch, a cgroup running `stress -c 1` with a cpu.max
+setting of 5000 10000 shows ~50% continuous CPU pressure.
 
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ include/linux/psi_types.h | 10 +++++++++-
+ kernel/sched/core.c       |  2 ++
+ kernel/sched/psi.c        | 12 +++++++-----
+ kernel/sched/stats.h      | 28 ++++++++++++++++++++++++++++
+ 4 files changed, 46 insertions(+), 6 deletions(-)
+
+diff --git a/include/linux/psi_types.h b/include/linux/psi_types.h
+index 07aaf9b82241..4b7258495a04 100644
+--- a/include/linux/psi_types.h
++++ b/include/linux/psi_types.h
+@@ -14,13 +14,21 @@ enum psi_task_count {
+ 	NR_IOWAIT,
+ 	NR_MEMSTALL,
+ 	NR_RUNNING,
+-	NR_PSI_TASK_COUNTS = 3,
++	/*
++	 * This can't have values other than 0 or 1 and could be
++	 * implemented as a bit flag. But for now we still have room
++	 * in the first cacheline of psi_group_cpu, and this way we
++	 * don't have to special case any state tracking for it.
++	 */
++	NR_ONCPU,
++	NR_PSI_TASK_COUNTS = 4,
+ };
+ 
+ /* Task state bitmasks */
+ #define TSK_IOWAIT	(1 << NR_IOWAIT)
+ #define TSK_MEMSTALL	(1 << NR_MEMSTALL)
+ #define TSK_RUNNING	(1 << NR_RUNNING)
++#define TSK_ONCPU	(1 << NR_ONCPU)
+ 
+ /* Resources that workloads could be stalled on */
+ enum psi_res {
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index 1a9983da4408..f920fbf5dcd1 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -4074,6 +4074,8 @@ static void __sched notrace __schedule(bool preempt)
+ 		 */
+ 		++*switch_count;
+ 
++		psi_sched_switch(prev, next, !task_on_rq_queued(prev));
++
+ 		trace_sched_switch(preempt, prev, next);
+ 
+ 		/* Also unlocks the rq: */
+diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
+index 028520702717..50128297a4f9 100644
+--- a/kernel/sched/psi.c
++++ b/kernel/sched/psi.c
+@@ -225,7 +225,7 @@ static bool test_state(unsigned int *tasks, enum psi_states state)
+ 	case PSI_MEM_FULL:
+ 		return tasks[NR_MEMSTALL] && !tasks[NR_RUNNING];
+ 	case PSI_CPU_SOME:
+-		return tasks[NR_RUNNING] > 1;
++		return tasks[NR_RUNNING] > tasks[NR_ONCPU];
+ 	case PSI_NONIDLE:
+ 		return tasks[NR_IOWAIT] || tasks[NR_MEMSTALL] ||
+ 			tasks[NR_RUNNING];
+@@ -695,10 +695,10 @@ static u32 psi_group_change(struct psi_group *group, int cpu,
+ 		if (!(m & (1 << t)))
+ 			continue;
+ 		if (groupc->tasks[t] == 0 && !psi_bug) {
+-			printk_deferred(KERN_ERR "psi: task underflow! cpu=%d t=%d tasks=[%u %u %u] clear=%x set=%x\n",
++			printk_deferred(KERN_ERR "psi: task underflow! cpu=%d t=%d tasks=[%u %u %u %u] clear=%x set=%x\n",
+ 					cpu, t, groupc->tasks[0],
+ 					groupc->tasks[1], groupc->tasks[2],
+-					clear, set);
++					groupc->tasks[3], clear, set);
+ 			psi_bug = 1;
+ 		}
+ 		groupc->tasks[t]--;
+@@ -916,9 +916,11 @@ void cgroup_move_task(struct task_struct *task, struct css_set *to)
+ 
+ 	rq = task_rq_lock(task, &rf);
+ 
+-	if (task_on_rq_queued(task))
++	if (task_on_rq_queued(task)) {
+ 		task_flags = TSK_RUNNING;
+-	else if (task->in_iowait)
++		if (task_current(rq, task))
++			task_flags |= TSK_ONCPU;
++	} else if (task->in_iowait)
+ 		task_flags = TSK_IOWAIT;
+ 
+ 	if (task->flags & PF_MEMSTALL)
+diff --git a/kernel/sched/stats.h b/kernel/sched/stats.h
+index ba683fe81a6e..6ff0ac1a803f 100644
+--- a/kernel/sched/stats.h
++++ b/kernel/sched/stats.h
+@@ -93,6 +93,14 @@ static inline void psi_dequeue(struct task_struct *p, bool sleep)
+ 		if (p->flags & PF_MEMSTALL)
+ 			clear |= TSK_MEMSTALL;
+ 	} else {
++		/*
++		 * When a task sleeps, schedule() dequeues it before
++		 * switching to the next one. Merge the clearing of
++		 * TSK_RUNNING and TSK_ONCPU to save an unnecessary
++		 * psi_task_change() call in psi_sched_switch().
++		 */
++		clear |= TSK_ONCPU;
++
+ 		if (p->in_iowait)
+ 			set |= TSK_IOWAIT;
+ 	}
+@@ -126,6 +134,23 @@ static inline void psi_ttwu_dequeue(struct task_struct *p)
+ 	}
+ }
+ 
++static inline void psi_sched_switch(struct task_struct *prev,
++				    struct task_struct *next,
++				    bool sleep)
++{
++	if (static_branch_likely(&psi_disabled))
++		return;
++
++	/*
++	 * Clear the TSK_ONCPU state if the task was preempted. If
++	 * it's a voluntary sleep, dequeue will have taken care of it.
++	 */
++	if (!sleep)
++		psi_task_change(prev, TSK_ONCPU, 0);
++
++	psi_task_change(next, 0, TSK_ONCPU);
++}
++
+ static inline void psi_task_tick(struct rq *rq)
+ {
+ 	if (static_branch_likely(&psi_disabled))
+@@ -138,6 +163,9 @@ static inline void psi_task_tick(struct rq *rq)
+ static inline void psi_enqueue(struct task_struct *p, bool wakeup) {}
+ static inline void psi_dequeue(struct task_struct *p, bool sleep) {}
+ static inline void psi_ttwu_dequeue(struct task_struct *p) {}
++static inline void psi_sched_switch(struct task_struct *prev,
++				    struct task_struct *next,
++				    bool sleep) {}
+ static inline void psi_task_tick(struct rq *rq) {}
+ #endif /* CONFIG_PSI */
+ 
+-- 
+2.25.1
 
