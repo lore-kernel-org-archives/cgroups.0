@@ -1,79 +1,228 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.5 39/41] block, bfq: fix overwrite of bfq_group pointer in bfq_find_set_group()
-Date: Sun, 15 Mar 2020 22:33:17 -0400
-Message-ID: <20200316023319.749-39-sashal@kernel.org>
-References: <20200316023319.749-1-sashal@kernel.org>
+From: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:for-5.7] BUILD SUCCESS
+ e7b20d97967c2995700041f0348ea33047e5c942
+Date: Mon, 16 Mar 2020 16:54:25 +0800
+Message-ID: <5e6f3ec1.q/qfKzDVYp5BKut0%lkp@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584326047;
-        bh=cffXXnGE5zy+o0fQH1NWf2WJWAmcQ27vougEbStwcsU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=xjsVeYfcWjO9C279RjU3/chEWtdpX8INw1vpxs6vBl5SeWXCiwZ8N8+bZ/KA6I4t/
-         4xGDERwyVn6wRYLWVb9vshoy7tuWROknbvdhUfzCmMjcKf6Omn5tkc6FEpkAbZyRRu
-         jAOvyLQ7ZVkE5/MTLu8Q2D70nvLEn7VRs7msW0gw=
-In-Reply-To: <20200316023319.749-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Carlo Nonato <carlo.nonato95@gmail.com>, Kwon Je Oh <kwonje.oh2@gmail.com>, Paolo Valente <paolo.valente@linaro.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, linux-block@vger.kernel.org, cgroups@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Carlo Nonato <carlo.nonato95@gmail.com>
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git  for-5.7
+branch HEAD: e7b20d97967c2995700041f0348ea33047e5c942  cgroup: Restructure release_agent_path handling
 
-[ Upstream commit 14afc59361976c0ba39e3a9589c3eaa43ebc7e1d ]
+elapsed time: 5039m
 
-The bfq_find_set_group() function takes as input a blkcg (which represents
-a cgroup) and retrieves the corresponding bfq_group, then it updates the
-bfq internal group hierarchy (see comments inside the function for why
-this is needed) and finally it returns the bfq_group.
-In the hierarchy update cycle, the pointer holding the correct bfq_group
-that has to be returned is mistakenly used to traverse the hierarchy
-bottom to top, meaning that in each iteration it gets overwritten with the
-parent of the current group. Since the update cycle stops at root's
-children (depth = 2), the overwrite becomes a problem only if the blkcg
-describes a cgroup at a hierarchy level deeper than that (depth > 2). In
-this case the root's child that happens to be also an ancestor of the
-correct bfq_group is returned. The main consequence is that processes
-contained in a cgroup at depth greater than 2 are wrongly placed in the
-group described above by BFQ.
+configs tested: 199
+configs skipped: 0
 
-This commits fixes this problem by using a different bfq_group pointer in
-the update cycle in order to avoid the overwrite of the variable holding
-the original group reference.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Reported-by: Kwon Je Oh <kwonje.oh2@gmail.com>
-Signed-off-by: Carlo Nonato <carlo.nonato95@gmail.com>
-Signed-off-by: Paolo Valente <paolo.valente@linaro.org>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+arm                              allmodconfig
+arm                               allnoconfig
+arm                              allyesconfig
+arm64                            allmodconfig
+arm64                             allnoconfig
+arm64                            allyesconfig
+arm                           efm32_defconfig
+arm                         at91_dt_defconfig
+arm                        shmobile_defconfig
+arm64                               defconfig
+arm                          exynos_defconfig
+arm                        multi_v5_defconfig
+arm                           sunxi_defconfig
+arm                        multi_v7_defconfig
+sparc                            allyesconfig
+i386                             allyesconfig
+openrisc                    or1ksim_defconfig
+openrisc                 simple_smp_defconfig
+s390                             allmodconfig
+parisc                generic-32bit_defconfig
+s390                             alldefconfig
+um                                  defconfig
+ia64                                defconfig
+powerpc                             defconfig
+s390                                defconfig
+i386                              allnoconfig
+i386                             alldefconfig
+i386                                defconfig
+ia64                             alldefconfig
+ia64                             allmodconfig
+ia64                              allnoconfig
+ia64                             allyesconfig
+c6x                              allyesconfig
+c6x                        evmc6678_defconfig
+nios2                         10m50_defconfig
+nios2                         3c120_defconfig
+xtensa                       common_defconfig
+xtensa                          iss_defconfig
+alpha                               defconfig
+csky                                defconfig
+nds32                             allnoconfig
+nds32                               defconfig
+h8300                     edosk2674_defconfig
+h8300                    h8300h-sim_defconfig
+h8300                       h8s-sim_defconfig
+m68k                             allmodconfig
+m68k                       m5475evb_defconfig
+m68k                          multi_defconfig
+m68k                           sun3_defconfig
+arc                              allyesconfig
+arc                                 defconfig
+microblaze                      mmu_defconfig
+microblaze                    nommu_defconfig
+powerpc                           allnoconfig
+powerpc                       ppc64_defconfig
+powerpc                          rhel-kconfig
+mips                           32r2_defconfig
+mips                         64r6el_defconfig
+mips                             allmodconfig
+mips                              allnoconfig
+mips                             allyesconfig
+mips                      fuloong2e_defconfig
+mips                      malta_kvm_defconfig
+parisc                            allnoconfig
+parisc                           allyesconfig
+parisc                generic-64bit_defconfig
+x86_64               randconfig-a001-20200313
+x86_64               randconfig-a002-20200313
+x86_64               randconfig-a003-20200313
+i386                 randconfig-a001-20200313
+i386                 randconfig-a002-20200313
+i386                 randconfig-a003-20200313
+x86_64               randconfig-a001-20200311
+x86_64               randconfig-a002-20200311
+x86_64               randconfig-a003-20200311
+i386                 randconfig-a001-20200311
+i386                 randconfig-a002-20200311
+i386                 randconfig-a003-20200311
+alpha                randconfig-a001-20200312
+m68k                 randconfig-a001-20200312
+mips                 randconfig-a001-20200312
+nds32                randconfig-a001-20200312
+parisc               randconfig-a001-20200312
+riscv                randconfig-a001-20200312
+c6x                  randconfig-a001-20200312
+h8300                randconfig-a001-20200312
+microblaze           randconfig-a001-20200312
+nios2                randconfig-a001-20200312
+sparc64              randconfig-a001-20200312
+csky                 randconfig-a001-20200316
+openrisc             randconfig-a001-20200316
+s390                 randconfig-a001-20200316
+sh                   randconfig-a001-20200316
+xtensa               randconfig-a001-20200316
+csky                 randconfig-a001-20200312
+openrisc             randconfig-a001-20200312
+s390                 randconfig-a001-20200312
+sh                   randconfig-a001-20200312
+xtensa               randconfig-a001-20200312
+x86_64               randconfig-b001-20200311
+x86_64               randconfig-b002-20200311
+x86_64               randconfig-b003-20200311
+i386                 randconfig-b001-20200311
+i386                 randconfig-b002-20200311
+i386                 randconfig-b003-20200311
+x86_64               randconfig-c001-20200311
+x86_64               randconfig-c002-20200311
+x86_64               randconfig-c003-20200311
+i386                 randconfig-c001-20200311
+i386                 randconfig-c002-20200311
+i386                 randconfig-c003-20200311
+x86_64               randconfig-c001-20200313
+x86_64               randconfig-c002-20200313
+x86_64               randconfig-c003-20200313
+i386                 randconfig-c001-20200313
+i386                 randconfig-c002-20200313
+i386                 randconfig-c003-20200313
+x86_64               randconfig-d001-20200313
+x86_64               randconfig-d002-20200313
+x86_64               randconfig-d003-20200313
+i386                 randconfig-d001-20200313
+i386                 randconfig-d002-20200313
+i386                 randconfig-d003-20200313
+x86_64               randconfig-d001-20200316
+x86_64               randconfig-d002-20200316
+x86_64               randconfig-d003-20200316
+i386                 randconfig-d001-20200316
+i386                 randconfig-d002-20200316
+i386                 randconfig-d003-20200316
+x86_64               randconfig-e001-20200316
+x86_64               randconfig-e002-20200316
+x86_64               randconfig-e003-20200316
+i386                 randconfig-e001-20200316
+i386                 randconfig-e002-20200316
+i386                 randconfig-e003-20200316
+x86_64               randconfig-e001-20200312
+x86_64               randconfig-e002-20200312
+x86_64               randconfig-e003-20200312
+i386                 randconfig-e001-20200312
+i386                 randconfig-e002-20200312
+i386                 randconfig-e003-20200312
+x86_64               randconfig-e003-20200313
+i386                 randconfig-e003-20200313
+i386                 randconfig-e002-20200313
+x86_64               randconfig-e002-20200313
+x86_64               randconfig-e001-20200313
+i386                 randconfig-e001-20200313
+x86_64               randconfig-f001-20200312
+x86_64               randconfig-f002-20200312
+x86_64               randconfig-f003-20200312
+i386                 randconfig-f001-20200312
+i386                 randconfig-f002-20200312
+i386                 randconfig-f003-20200312
+x86_64               randconfig-h001-20200312
+x86_64               randconfig-h002-20200312
+x86_64               randconfig-h003-20200312
+i386                 randconfig-h001-20200312
+i386                 randconfig-h002-20200312
+i386                 randconfig-h003-20200312
+x86_64               randconfig-h001-20200316
+x86_64               randconfig-h002-20200316
+x86_64               randconfig-h003-20200316
+i386                 randconfig-h001-20200316
+i386                 randconfig-h002-20200316
+i386                 randconfig-h003-20200316
+arc                  randconfig-a001-20200312
+arm                  randconfig-a001-20200312
+arm64                randconfig-a001-20200312
+ia64                 randconfig-a001-20200312
+powerpc              randconfig-a001-20200312
+sparc                randconfig-a001-20200312
+riscv                            allmodconfig
+riscv                             allnoconfig
+riscv                            allyesconfig
+riscv                               defconfig
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+s390                              allnoconfig
+s390                             allyesconfig
+s390                          debug_defconfig
+s390                       zfcpdump_defconfig
+sh                               allmodconfig
+sh                                allnoconfig
+sh                          rsk7269_defconfig
+sh                  sh7785lcr_32bit_defconfig
+sh                            titan_defconfig
+sparc                               defconfig
+sparc64                          allmodconfig
+sparc64                           allnoconfig
+sparc64                          allyesconfig
+sparc64                             defconfig
+um                             i386_defconfig
+um                           x86_64_defconfig
+x86_64                              fedora-25
+x86_64                                  kexec
+x86_64                                    lkp
+x86_64                                   rhel
+x86_64                         rhel-7.2-clear
+x86_64                               rhel-7.6
+
 ---
- block/bfq-cgroup.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 5a64607ce7744..facbf4db19428 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -610,12 +610,13 @@ struct bfq_group *bfq_find_set_group(struct bfq_data *bfqd,
- 	 */
- 	entity = &bfqg->entity;
- 	for_each_entity(entity) {
--		bfqg = container_of(entity, struct bfq_group, entity);
--		if (bfqg != bfqd->root_group) {
--			parent = bfqg_parent(bfqg);
-+		struct bfq_group *curr_bfqg = container_of(entity,
-+						struct bfq_group, entity);
-+		if (curr_bfqg != bfqd->root_group) {
-+			parent = bfqg_parent(curr_bfqg);
- 			if (!parent)
- 				parent = bfqd->root_group;
--			bfq_group_set_parent(bfqg, parent);
-+			bfq_group_set_parent(curr_bfqg, parent);
- 		}
- 	}
- 
--- 
-2.20.1
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
