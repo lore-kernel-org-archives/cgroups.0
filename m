@@ -1,20 +1,20 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 19/20] block, bfq: fix overwrite of bfq_group pointer in bfq_find_set_group()
-Date: Sun, 15 Mar 2020 22:34:52 -0400
-Message-ID: <20200316023453.1800-19-sashal@kernel.org>
-References: <20200316023453.1800-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 34/35] block, bfq: fix overwrite of bfq_group pointer in bfq_find_set_group()
+Date: Sun, 15 Mar 2020 22:34:10 -0400
+Message-ID: <20200316023411.1263-34-sashal@kernel.org>
+References: <20200316023411.1263-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584326117;
-        bh=Qb3WFXji45qyPaTvm2PnxhbwUJAHncNwwNgYzamZ68Q=;
+        s=default; t=1584326091;
+        bh=OGv4NJMH6egSO3CM+oM4/EP7ikbuiFpvtEs66GSlFxA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oNqpx6BBB7i1Le3J8uIKkaPuhDpE8hptxsfpykuG2lFAt7jooPJ4O8pHF6zCWr9k3
-         EcsT38KQEzXQFAMeXlK95k+pvohRduxB4mFU6jqRy6aAL7cVkCtb1SmN8JpMz56Rpq
-         ig2Qo3DAqzRcproDPMDFULmIvcbIKUcXcBfLU8A0=
-In-Reply-To: <20200316023453.1800-1-sashal@kernel.org>
-Sender: linux-block-owner@vger.kernel.org
+        b=Nal4SxkVifYfOzHjgZJOKQfGU7HRzJMLKeFkO1olo2uVviykxF0hkN/YOHASBbYu+
+         jLzA/8pcWUoqurVRMgqVHMXKJ4hgnfblRF6PXTqjLy2VEi+CpFjUq9P+5x1gXwxugW
+         JWgdaJy7rJh0NyThkAk+3GEl34YqoYZIQw+AOpsI=
+In-Reply-To: <20200316023411.1263-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
@@ -53,10 +53,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 9fe5952d117d5..ecd3d0ec2f3b6 100644
+index d0e36d6522649..86cd718e0380b 100644
 --- a/block/bfq-cgroup.c
 +++ b/block/bfq-cgroup.c
-@@ -525,12 +525,13 @@ struct bfq_group *bfq_find_set_group(struct bfq_data *bfqd,
+@@ -593,12 +593,13 @@ struct bfq_group *bfq_find_set_group(struct bfq_data *bfqd,
  	 */
  	entity = &bfqg->entity;
  	for_each_entity(entity) {
