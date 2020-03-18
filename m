@@ -1,120 +1,60 @@
-From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 5.4 02/73] cgroup: Iterate tasks that did not finish do_exit()
-Date: Wed, 18 Mar 2020 16:52:26 -0400
-Message-ID: <20200318205337.16279-2-sashal@kernel.org>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 25/73] cgroup1: don't call release_agent when it is ""
+Date: Wed, 18 Mar 2020 16:52:49 -0400
+Message-ID: <20200318205337.16279-25-sashal@kernel.org>
 References: <20200318205337.16279-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584564820;
-        bh=CP9TqCmkgrHCPPusIn95TMjjPdjHEBSKfNkWw9xBLok=;
+        s=default; t=1584564847;
+        bh=0geW2N5yklwjKb6rivq1v7IxgkL4xJnOpRV3pgTthvg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=AXVsWULsKPZZYQO6x4M94xtQcmtkWWZWc3KRAarY9MwtyJFHbA7un2oWNSr9Aj0Aq
-         8hjVEfpX+kH4z3lzrm16FQYH+mxtnNz62ddPqawrUW03jswmhntGgILRycLjerWujc
-         s1F0+vUFyeaUEe283dcwLHFlEBN6ni76b9OcC7eE=
-In-Reply-To: <20200318205337.16279-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        b=WP39XUgrySw46+NnDtGuF3S5N0/h7hM+2w0wipJ4OzloiEwWsG6C0GN/NKJ7qZKb6
+         L9ROFnGf2hR+DRhjDOpxTHZU9rZqnSclx8rRh/tXymKAQWAz8ntk0+LTpROrA1HgFM
+         ZtO3OIuEMV31o8/hWhwEjotYxnMonACcQq+o1FFQ=
+In-Reply-To: <20200318205337.16279-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Tycho Andersen <tycho@tycho.ws>, Tejun Heo <tj@kernel.org>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org
 
-From: Michal Koutný <mkoutny-IBi9RG/b67k@public.gmane.org>
+From: Tycho Andersen <tycho@tycho.ws>
 
-[ Upstream commit 9c974c77246460fa6a92c18554c3311c8c83c160 ]
+[ Upstream commit 2e5383d7904e60529136727e49629a82058a5607 ]
 
-PF_EXITING is set earlier than actual removal from css_set when a task
-is exitting. This can confuse cgroup.procs readers who see no PF_EXITING
-tasks, however, rmdir is checking against css_set membership so it can
-transitionally fail with EBUSY.
+Older (and maybe current) versions of systemd set release_agent to "" when
+shutting down, but do not set notify_on_release to 0.
 
-Fix this by listing tasks that weren't unlinked from css_set active
-lists.
-It may happen that other users of the task iterator (without
-CSS_TASK_ITER_PROCS) spot a PF_EXITING task before cgroup_exit(). This
-is equal to the state before commit c03cd7738a83 ("cgroup: Include dying
-leaders with live threads in PROCS iterations") but it may be reviewed
-later.
+Since 64e90a8acb85 ("Introduce STATIC_USERMODEHELPER to mediate
+call_usermodehelper()"), we filter out such calls when the user mode helper
+path is "". However, when used in conjunction with an actual (i.e. non "")
+STATIC_USERMODEHELPER, the path is never "", so the real usermode helper
+will be called with argv[0] == "".
 
-Reported-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Fixes: c03cd7738a83 ("cgroup: Include dying leaders with live threads in PROCS iterations")
-Signed-off-by: Michal Koutný <mkoutny-IBi9RG/b67k@public.gmane.org>
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Let's avoid this by not invoking the release_agent when it is "".
+
+Signed-off-by: Tycho Andersen <tycho@tycho.ws>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- include/linux/cgroup.h |  1 +
- kernel/cgroup/cgroup.c | 23 ++++++++++++++++-------
- 2 files changed, 17 insertions(+), 7 deletions(-)
+ kernel/cgroup/cgroup-v1.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 3ba3e6da13a6f..57577075d2049 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -62,6 +62,7 @@ struct css_task_iter {
- 	struct list_head		*mg_tasks_head;
- 	struct list_head		*dying_tasks_head;
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 2db582706ec5c..f684c82efc2ea 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -784,7 +784,7 @@ void cgroup1_release_agent(struct work_struct *work)
  
-+	struct list_head		*cur_tasks_head;
- 	struct css_set			*cur_cset;
- 	struct css_set			*cur_dcset;
- 	struct task_struct		*cur_task;
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 595c52d59f310..a1236b1b80383 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -4461,12 +4461,16 @@ static void css_task_iter_advance_css_set(struct css_task_iter *it)
- 		}
- 	} while (!css_set_populated(cset) && list_empty(&cset->dying_tasks));
+ 	pathbuf = kmalloc(PATH_MAX, GFP_KERNEL);
+ 	agentbuf = kstrdup(cgrp->root->release_agent_path, GFP_KERNEL);
+-	if (!pathbuf || !agentbuf)
++	if (!pathbuf || !agentbuf || !strlen(agentbuf))
+ 		goto out;
  
--	if (!list_empty(&cset->tasks))
-+	if (!list_empty(&cset->tasks)) {
- 		it->task_pos = cset->tasks.next;
--	else if (!list_empty(&cset->mg_tasks))
-+		it->cur_tasks_head = &cset->tasks;
-+	} else if (!list_empty(&cset->mg_tasks)) {
- 		it->task_pos = cset->mg_tasks.next;
--	else
-+		it->cur_tasks_head = &cset->mg_tasks;
-+	} else {
- 		it->task_pos = cset->dying_tasks.next;
-+		it->cur_tasks_head = &cset->dying_tasks;
-+	}
- 
- 	it->tasks_head = &cset->tasks;
- 	it->mg_tasks_head = &cset->mg_tasks;
-@@ -4524,10 +4528,14 @@ static void css_task_iter_advance(struct css_task_iter *it)
- 		else
- 			it->task_pos = it->task_pos->next;
- 
--		if (it->task_pos == it->tasks_head)
-+		if (it->task_pos == it->tasks_head) {
- 			it->task_pos = it->mg_tasks_head->next;
--		if (it->task_pos == it->mg_tasks_head)
-+			it->cur_tasks_head = it->mg_tasks_head;
-+		}
-+		if (it->task_pos == it->mg_tasks_head) {
- 			it->task_pos = it->dying_tasks_head->next;
-+			it->cur_tasks_head = it->dying_tasks_head;
-+		}
- 		if (it->task_pos == it->dying_tasks_head)
- 			css_task_iter_advance_css_set(it);
- 	} else {
-@@ -4546,11 +4554,12 @@ static void css_task_iter_advance(struct css_task_iter *it)
- 			goto repeat;
- 
- 		/* and dying leaders w/o live member threads */
--		if (!atomic_read(&task->signal->live))
-+		if (it->cur_tasks_head == it->dying_tasks_head &&
-+		    !atomic_read(&task->signal->live))
- 			goto repeat;
- 	} else {
- 		/* skip all dying ones */
--		if (task->flags & PF_EXITING)
-+		if (it->cur_tasks_head == it->dying_tasks_head)
- 			goto repeat;
- 	}
- }
+ 	spin_lock_irq(&css_set_lock);
 -- 
 2.20.1
 
