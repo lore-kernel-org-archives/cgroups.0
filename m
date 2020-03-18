@@ -1,75 +1,60 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.19 01/37] cgroup-v1: cgroup_pidlist_next should update position index
-Date: Wed, 18 Mar 2020 16:54:33 -0400
-Message-ID: <20200318205509.17053-1-sashal@kernel.org>
+From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH AUTOSEL 4.19 19/37] cgroup1: don't call release_agent when it is ""
+Date: Wed, 18 Mar 2020 16:54:51 -0400
+Message-ID: <20200318205509.17053-19-sashal@kernel.org>
+References: <20200318205509.17053-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584564911;
-        bh=V4XcCi4zI+m4Y89ggKKf+m+BzhB6paEjnpHJR1dUQbY=;
-        h=From:To:Cc:Subject:Date:From;
-        b=CZLyyrZdXbnBL0Ra4FUCOyjQjnDP85Yv0Ct8ndGon4Y2wEmDEklb7RZjVR0L6vOsi
-         bwL+NcsUzl/x0eeaXefvxoxPP8ecs37DH35KNx85h3pKWRsqCo/p1DgKi9yIXKOMKS
-         OojtKtS/rB8fRygMUml+rZtpOrf5kHsyVKbAsfDM=
-Sender: linux-kernel-owner@vger.kernel.org
+        s=default; t=1584564932;
+        bh=CZB+KZiYdArxmr34T50wC1U0sriUX3k/RvRcHsuKGS4=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=phPvVC6O5fVNmxyP1UYkBIAzD33fMGIIHF8aPMjiVW0dLx/sI+pQnHDVA0uGSNGWb
+         1KSdtD8d9ap4om8glS8LVf7/mePVgsW/XS9vbyBY5sRbEoB0/qdUTPtPHqMUGl5FKv
+         b98hzqeK7owxdsupzgerKz/diFpjzi28YhnnWdYs=
+In-Reply-To: <20200318205509.17053-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Vasily Averin <vvs@virtuozzo.com>, Tejun Heo <tj@kernel.org>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Tycho Andersen <tycho-E0fblnxP3wo@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Vasily Averin <vvs@virtuozzo.com>
+From: Tycho Andersen <tycho-E0fblnxP3wo@public.gmane.org>
 
-[ Upstream commit db8dd9697238be70a6b4f9d0284cd89f59c0e070 ]
+[ Upstream commit 2e5383d7904e60529136727e49629a82058a5607 ]
 
-if seq_file .next fuction does not change position index,
-read after some lseek can generate unexpected output.
+Older (and maybe current) versions of systemd set release_agent to "" when
+shutting down, but do not set notify_on_release to 0.
 
- # mount | grep cgroup
- # dd if=/mnt/cgroup.procs bs=1  # normal output
-...
-1294
-1295
-1296
-1304
-1382
-584+0 records in
-584+0 records out
-584 bytes copied
+Since 64e90a8acb85 ("Introduce STATIC_USERMODEHELPER to mediate
+call_usermodehelper()"), we filter out such calls when the user mode helper
+path is "". However, when used in conjunction with an actual (i.e. non "")
+STATIC_USERMODEHELPER, the path is never "", so the real usermode helper
+will be called with argv[0] == "".
 
-dd: /mnt/cgroup.procs: cannot skip to specified offset
-83  <<< generates end of last line
-1383  <<< ... and whole last line once again
-0+1 records in
-0+1 records out
-8 bytes copied
+Let's avoid this by not invoking the release_agent when it is "".
 
-dd: /mnt/cgroup.procs: cannot skip to specified offset
-1386  <<< generates last line anyway
-0+1 records in
-0+1 records out
-5 bytes copied
-
-https://bugzilla.kernel.org/show_bug.cgi?id=206283
-Signed-off-by: Vasily Averin <vvs@virtuozzo.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Tycho Andersen <tycho-E0fblnxP3wo@public.gmane.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- kernel/cgroup/cgroup-v1.c | 1 +
- 1 file changed, 1 insertion(+)
+ kernel/cgroup/cgroup-v1.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 51063e7a93c28..c9628b9a41d23 100644
+index c9628b9a41d23..dd8bdbfbbde1e 100644
 --- a/kernel/cgroup/cgroup-v1.c
 +++ b/kernel/cgroup/cgroup-v1.c
-@@ -501,6 +501,7 @@ static void *cgroup_pidlist_next(struct seq_file *s, void *v, loff_t *pos)
- 	 */
- 	p++;
- 	if (p >= end) {
-+		(*pos)++;
- 		return NULL;
- 	} else {
- 		*pos = *p;
+@@ -812,7 +812,7 @@ void cgroup1_release_agent(struct work_struct *work)
+ 
+ 	pathbuf = kmalloc(PATH_MAX, GFP_KERNEL);
+ 	agentbuf = kstrdup(cgrp->root->release_agent_path, GFP_KERNEL);
+-	if (!pathbuf || !agentbuf)
++	if (!pathbuf || !agentbuf || !strlen(agentbuf))
+ 		goto out;
+ 
+ 	spin_lock_irq(&css_set_lock);
 -- 
 2.20.1
 
