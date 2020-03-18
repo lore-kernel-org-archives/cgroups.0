@@ -1,26 +1,26 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.5 02/84] cgroup: Iterate tasks that did not finish do_exit()
-Date: Wed, 18 Mar 2020 16:51:59 -0400
-Message-ID: <20200318205321.16066-2-sashal@kernel.org>
-References: <20200318205321.16066-1-sashal@kernel.org>
+From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH AUTOSEL 5.4 02/73] cgroup: Iterate tasks that did not finish do_exit()
+Date: Wed, 18 Mar 2020 16:52:26 -0400
+Message-ID: <20200318205337.16279-2-sashal@kernel.org>
+References: <20200318205337.16279-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584564804;
-        bh=/ijMBUVOAd1AwPp1HZkRJKEm3Cv2b9QjgAdRy3XoOeY=;
+        s=default; t=1584564820;
+        bh=CP9TqCmkgrHCPPusIn95TMjjPdjHEBSKfNkWw9xBLok=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=M+T+B1dUvfgGjXJwpc4YkCku8kmRRt0hz+yHOBcdB82c/5VtHcum4yXZPOD2HVXlE
-         avgHbYgbMv4NApm7hH/7ETShxZIctLWwCQbIrK36ORko5OZE5kHZIGejsmBM6BBljx
-         nIZYmIUjFGHCtSVboV91CzIrbnQZYshkzF97gjPg=
-In-Reply-To: <20200318205321.16066-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+        b=AXVsWULsKPZZYQO6x4M94xtQcmtkWWZWc3KRAarY9MwtyJFHbA7un2oWNSr9Aj0Aq
+         8hjVEfpX+kH4z3lzrm16FQYH+mxtnNz62ddPqawrUW03jswmhntGgILRycLjerWujc
+         s1F0+vUFyeaUEe283dcwLHFlEBN6ni76b9OcC7eE=
+In-Reply-To: <20200318205337.16279-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Michal Koutný <mkoutny@suse.com>
+From: Michal Koutný <mkoutny-IBi9RG/b67k@public.gmane.org>
 
 [ Upstream commit 9c974c77246460fa6a92c18554c3311c8c83c160 ]
 
@@ -37,18 +37,18 @@ is equal to the state before commit c03cd7738a83 ("cgroup: Include dying
 leaders with live threads in PROCS iterations") but it may be reviewed
 later.
 
-Reported-by: Suren Baghdasaryan <surenb@google.com>
+Reported-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Fixes: c03cd7738a83 ("cgroup: Include dying leaders with live threads in PROCS iterations")
-Signed-off-by: Michal Koutný <mkoutny@suse.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Michal Koutný <mkoutny-IBi9RG/b67k@public.gmane.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
  include/linux/cgroup.h |  1 +
  kernel/cgroup/cgroup.c | 23 ++++++++++++++++-------
  2 files changed, 17 insertions(+), 7 deletions(-)
 
 diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index d7ddebd0cdec2..e75d2191226b9 100644
+index 3ba3e6da13a6f..57577075d2049 100644
 --- a/include/linux/cgroup.h
 +++ b/include/linux/cgroup.h
 @@ -62,6 +62,7 @@ struct css_task_iter {
@@ -60,10 +60,10 @@ index d7ddebd0cdec2..e75d2191226b9 100644
  	struct css_set			*cur_dcset;
  	struct task_struct		*cur_task;
 diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 30892c4759b49..fb25d56586583 100644
+index 595c52d59f310..a1236b1b80383 100644
 --- a/kernel/cgroup/cgroup.c
 +++ b/kernel/cgroup/cgroup.c
-@@ -4405,12 +4405,16 @@ static void css_task_iter_advance_css_set(struct css_task_iter *it)
+@@ -4461,12 +4461,16 @@ static void css_task_iter_advance_css_set(struct css_task_iter *it)
  		}
  	} while (!css_set_populated(cset) && list_empty(&cset->dying_tasks));
  
@@ -83,7 +83,7 @@ index 30892c4759b49..fb25d56586583 100644
  
  	it->tasks_head = &cset->tasks;
  	it->mg_tasks_head = &cset->mg_tasks;
-@@ -4468,10 +4472,14 @@ static void css_task_iter_advance(struct css_task_iter *it)
+@@ -4524,10 +4528,14 @@ static void css_task_iter_advance(struct css_task_iter *it)
  		else
  			it->task_pos = it->task_pos->next;
  
@@ -100,7 +100,7 @@ index 30892c4759b49..fb25d56586583 100644
  		if (it->task_pos == it->dying_tasks_head)
  			css_task_iter_advance_css_set(it);
  	} else {
-@@ -4490,11 +4498,12 @@ static void css_task_iter_advance(struct css_task_iter *it)
+@@ -4546,11 +4554,12 @@ static void css_task_iter_advance(struct css_task_iter *it)
  			goto repeat;
  
  		/* and dying leaders w/o live member threads */
