@@ -1,67 +1,75 @@
-From: Qais Yousef <qais.yousef@arm.com>
-Subject: Re: [PATCH v2] sched/cpuset: distribute tasks within affinity masks
-Date: Wed, 18 Mar 2020 11:34:56 +0000
-Message-ID: <20200318113456.3h64jpyb6xiczhcj@e107158-lin.cambridge.arm.com>
-References: <20200311010113.136465-1-joshdon@google.com>
- <20200311140533.pclgecwhbpqzyrks@e107158-lin.cambridge.arm.com>
- <20200317192401.GE20713@hirez.programming.kicks-ass.net>
- <CABk29NuAYvkqNmZZ6cjZBC6=hv--2siPPjZG-BUpNewxm02O6A@mail.gmail.com>
+From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH AUTOSEL 5.5 01/84] cgroup-v1: cgroup_pidlist_next should update position index
+Date: Wed, 18 Mar 2020 16:51:58 -0400
+Message-ID: <20200318205321.16066-1-sashal@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CABk29NuAYvkqNmZZ6cjZBC6=hv--2siPPjZG-BUpNewxm02O6A@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1584564803;
+        bh=rY05YLwtbtXzyT165RkLIipQqmrwA6WUFyYk2qA7868=;
+        h=From:To:Cc:Subject:Date:From;
+        b=MFWj37g4/xef/y5znjvVQhQm+jTIn74eqyqUdQodP0LqvOodTKabK4H7meezvgFsL
+         piZnLOYXWkJiX253JXXlDXlLSNHsB5gDLjihnS1qQ4/kiC2wlh8fJ+C1JhYoMZIkXT
+         gXjHw/fQSEMz3/j3lG2h4imhV4SASba1Kb2LMRCE=
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Josh Don <joshdon@google.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, linux-kernel <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Paul Turner <pjt@google.com>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 03/17/20 14:35, Josh Don wrote:
-> On Wed, Mar 11, 2020 at 7:05 AM Qais Yousef <qais.yousef@arm.com> wrote:
-> >
-> > This actually helps me fix a similar problem I faced in RT [1]. If multiple RT
-> > tasks wakeup at the same time we get a 'thundering herd' issue where they all
-> > end up going to the same CPU, just to be pushed out again.
-> >
-> > Beside this will help fix another problem for RT tasks fitness, which is
-> > a manifestation of the problem above. If two tasks wake up at the same time and
-> > they happen to run on a little cpu (but request to run on a big one), one of
-> > them will end up being migrated because find_lowest_rq() will return the first
-> > cpu in the mask for both tasks.
-> >
-> > I tested the API (not the change in sched/core.c) and it looks good to me.
-> 
-> Nice, glad that the API already has another use case. Thanks for taking a look.
-> 
-> > nit: cpumask_first_and() is better here?
-> 
-> Yea, I would also prefer to use it, but the definition of
-> cpumask_first_and() follows this section, as it itself uses
-> cpumask_next_and().
-> 
-> > It might be a good idea to split the API from the user too.
-> 
-> Not sure what you mean by this, could you clarify?
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-I meant it'd be a good idea to split the cpumask API into its own patch and
-have a separate patch for the user in sched/core.c. But that was a small nit.
-If the user (in sched/core.c) somehow introduces a regression, reverting it
-separately should be trivial.
+[ Upstream commit db8dd9697238be70a6b4f9d0284cd89f59c0e070 ]
 
-Thanks
+if seq_file .next fuction does not change position index,
+read after some lseek can generate unexpected output.
 
---
-Qais Yousef
+ # mount | grep cgroup
+ # dd if=/mnt/cgroup.procs bs=1  # normal output
+...
+1294
+1295
+1296
+1304
+1382
+584+0 records in
+584+0 records out
+584 bytes copied
 
-> 
-> On Tue, Mar 17, 2020 at 12:24 PM Peter Zijlstra <peterz@infradead.org> wrote:
-> >
-> > > Anyway, for the API.
-> > >
-> > > Reviewed-by: Qais Yousef <qais.yousef@arm.com>
-> > > Tested-by: Qais Yousef <qais.yousef@arm.com>
-> >
-> > Thanks guys!
-> 
-> Thanks Peter, any other comments or are you happy with merging this patch as-is?
+dd: /mnt/cgroup.procs: cannot skip to specified offset
+83  <<< generates end of last line
+1383  <<< ... and whole last line once again
+0+1 records in
+0+1 records out
+8 bytes copied
+
+dd: /mnt/cgroup.procs: cannot skip to specified offset
+1386  <<< generates last line anyway
+0+1 records in
+0+1 records out
+5 bytes copied
+
+https://bugzilla.kernel.org/show_bug.cgi?id=206283
+Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ kernel/cgroup/cgroup-v1.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 09f3a413f6f89..84bedb87ae137 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -473,6 +473,7 @@ static void *cgroup_pidlist_next(struct seq_file *s, void *v, loff_t *pos)
+ 	 */
+ 	p++;
+ 	if (p >= end) {
++		(*pos)++;
+ 		return NULL;
+ 	} else {
+ 		*pos = *p;
+-- 
+2.20.1
+
