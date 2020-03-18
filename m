@@ -1,75 +1,120 @@
-From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 5.5 01/84] cgroup-v1: cgroup_pidlist_next should update position index
-Date: Wed, 18 Mar 2020 16:51:58 -0400
-Message-ID: <20200318205321.16066-1-sashal@kernel.org>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.5 02/84] cgroup: Iterate tasks that did not finish do_exit()
+Date: Wed, 18 Mar 2020 16:51:59 -0400
+Message-ID: <20200318205321.16066-2-sashal@kernel.org>
+References: <20200318205321.16066-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1584564803;
-        bh=rY05YLwtbtXzyT165RkLIipQqmrwA6WUFyYk2qA7868=;
-        h=From:To:Cc:Subject:Date:From;
-        b=MFWj37g4/xef/y5znjvVQhQm+jTIn74eqyqUdQodP0LqvOodTKabK4H7meezvgFsL
-         piZnLOYXWkJiX253JXXlDXlLSNHsB5gDLjihnS1qQ4/kiC2wlh8fJ+C1JhYoMZIkXT
-         gXjHw/fQSEMz3/j3lG2h4imhV4SASba1Kb2LMRCE=
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        s=default; t=1584564804;
+        bh=/ijMBUVOAd1AwPp1HZkRJKEm3Cv2b9QjgAdRy3XoOeY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=M+T+B1dUvfgGjXJwpc4YkCku8kmRRt0hz+yHOBcdB82c/5VtHcum4yXZPOD2HVXlE
+         avgHbYgbMv4NApm7hH/7ETShxZIctLWwCQbIrK36ORko5OZE5kHZIGejsmBM6BBljx
+         nIZYmIUjFGHCtSVboV91CzIrbnQZYshkzF97gjPg=
+In-Reply-To: <20200318205321.16066-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org
 
-From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+From: Michal Koutný <mkoutny@suse.com>
 
-[ Upstream commit db8dd9697238be70a6b4f9d0284cd89f59c0e070 ]
+[ Upstream commit 9c974c77246460fa6a92c18554c3311c8c83c160 ]
 
-if seq_file .next fuction does not change position index,
-read after some lseek can generate unexpected output.
+PF_EXITING is set earlier than actual removal from css_set when a task
+is exitting. This can confuse cgroup.procs readers who see no PF_EXITING
+tasks, however, rmdir is checking against css_set membership so it can
+transitionally fail with EBUSY.
 
- # mount | grep cgroup
- # dd if=/mnt/cgroup.procs bs=1  # normal output
-...
-1294
-1295
-1296
-1304
-1382
-584+0 records in
-584+0 records out
-584 bytes copied
+Fix this by listing tasks that weren't unlinked from css_set active
+lists.
+It may happen that other users of the task iterator (without
+CSS_TASK_ITER_PROCS) spot a PF_EXITING task before cgroup_exit(). This
+is equal to the state before commit c03cd7738a83 ("cgroup: Include dying
+leaders with live threads in PROCS iterations") but it may be reviewed
+later.
 
-dd: /mnt/cgroup.procs: cannot skip to specified offset
-83  <<< generates end of last line
-1383  <<< ... and whole last line once again
-0+1 records in
-0+1 records out
-8 bytes copied
-
-dd: /mnt/cgroup.procs: cannot skip to specified offset
-1386  <<< generates last line anyway
-0+1 records in
-0+1 records out
-5 bytes copied
-
-https://bugzilla.kernel.org/show_bug.cgi?id=206283
-Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reported-by: Suren Baghdasaryan <surenb@google.com>
+Fixes: c03cd7738a83 ("cgroup: Include dying leaders with live threads in PROCS iterations")
+Signed-off-by: Michal Koutný <mkoutny@suse.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- kernel/cgroup/cgroup-v1.c | 1 +
- 1 file changed, 1 insertion(+)
+ include/linux/cgroup.h |  1 +
+ kernel/cgroup/cgroup.c | 23 ++++++++++++++++-------
+ 2 files changed, 17 insertions(+), 7 deletions(-)
 
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 09f3a413f6f89..84bedb87ae137 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -473,6 +473,7 @@ static void *cgroup_pidlist_next(struct seq_file *s, void *v, loff_t *pos)
- 	 */
- 	p++;
- 	if (p >= end) {
-+		(*pos)++;
- 		return NULL;
+diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
+index d7ddebd0cdec2..e75d2191226b9 100644
+--- a/include/linux/cgroup.h
++++ b/include/linux/cgroup.h
+@@ -62,6 +62,7 @@ struct css_task_iter {
+ 	struct list_head		*mg_tasks_head;
+ 	struct list_head		*dying_tasks_head;
+ 
++	struct list_head		*cur_tasks_head;
+ 	struct css_set			*cur_cset;
+ 	struct css_set			*cur_dcset;
+ 	struct task_struct		*cur_task;
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 30892c4759b49..fb25d56586583 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -4405,12 +4405,16 @@ static void css_task_iter_advance_css_set(struct css_task_iter *it)
+ 		}
+ 	} while (!css_set_populated(cset) && list_empty(&cset->dying_tasks));
+ 
+-	if (!list_empty(&cset->tasks))
++	if (!list_empty(&cset->tasks)) {
+ 		it->task_pos = cset->tasks.next;
+-	else if (!list_empty(&cset->mg_tasks))
++		it->cur_tasks_head = &cset->tasks;
++	} else if (!list_empty(&cset->mg_tasks)) {
+ 		it->task_pos = cset->mg_tasks.next;
+-	else
++		it->cur_tasks_head = &cset->mg_tasks;
++	} else {
+ 		it->task_pos = cset->dying_tasks.next;
++		it->cur_tasks_head = &cset->dying_tasks;
++	}
+ 
+ 	it->tasks_head = &cset->tasks;
+ 	it->mg_tasks_head = &cset->mg_tasks;
+@@ -4468,10 +4472,14 @@ static void css_task_iter_advance(struct css_task_iter *it)
+ 		else
+ 			it->task_pos = it->task_pos->next;
+ 
+-		if (it->task_pos == it->tasks_head)
++		if (it->task_pos == it->tasks_head) {
+ 			it->task_pos = it->mg_tasks_head->next;
+-		if (it->task_pos == it->mg_tasks_head)
++			it->cur_tasks_head = it->mg_tasks_head;
++		}
++		if (it->task_pos == it->mg_tasks_head) {
+ 			it->task_pos = it->dying_tasks_head->next;
++			it->cur_tasks_head = it->dying_tasks_head;
++		}
+ 		if (it->task_pos == it->dying_tasks_head)
+ 			css_task_iter_advance_css_set(it);
  	} else {
- 		*pos = *p;
+@@ -4490,11 +4498,12 @@ static void css_task_iter_advance(struct css_task_iter *it)
+ 			goto repeat;
+ 
+ 		/* and dying leaders w/o live member threads */
+-		if (!atomic_read(&task->signal->live))
++		if (it->cur_tasks_head == it->dying_tasks_head &&
++		    !atomic_read(&task->signal->live))
+ 			goto repeat;
+ 	} else {
+ 		/* skip all dying ones */
+-		if (task->flags & PF_EXITING)
++		if (it->cur_tasks_head == it->dying_tasks_head)
+ 			goto repeat;
+ 	}
+ }
 -- 
 2.20.1
 
