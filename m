@@ -1,44 +1,70 @@
-From: Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org>
-Subject: Re: [PATCH v2] sched/cpuset: distribute tasks within affinity masks
-Date: Fri, 20 Mar 2020 11:28:26 +0000
-Message-ID: <20200320112825.gn5glqsy6uebxp3w@e107158-lin.cambridge.arm.com>
-References: <20200311010113.136465-1-joshdon@google.com>
- <20200311140533.pclgecwhbpqzyrks@e107158-lin.cambridge.arm.com>
- <20200317192401.GE20713@hirez.programming.kicks-ass.net>
- <CABk29NuAYvkqNmZZ6cjZBC6=hv--2siPPjZG-BUpNewxm02O6A@mail.gmail.com>
- <20200318113456.3h64jpyb6xiczhcj@e107158-lin.cambridge.arm.com>
- <CABk29NvvJCYyEnEkDt4JgZacf6XLd+0wxx_BNGnX8oZcrBp4EA@mail.gmail.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [RFC] memcg: fix default behaviour of non-overridden
+ memcg.swappiness
+Date: Fri, 20 Mar 2020 14:44:28 +0100
+Message-ID: <20200320134428.GG24409@dhcp22.suse.cz>
+References: <BL0PR02MB560170CD4D4245D4B89BC22EE9F40@BL0PR02MB5601.namprd02.prod.outlook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CABk29NvvJCYyEnEkDt4JgZacf6XLd+0wxx_BNGnX8oZcrBp4EA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <BL0PR02MB560170CD4D4245D4B89BC22EE9F40@BL0PR02MB5601.namprd02.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Josh Don <joshdon-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Turner <pjt-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Ivan Teterevkov <ivan.teterevkov@nutanix.com>
+Cc: "rientjes@google.com" <rientjes@google.com>, "willy@infradead.org" <willy@infradead.org>, "vbabka@suse.cz" <vbabka@suse.cz>, "tj@kernel.org" <tj@kernel.org>, "lizefan@huawei.com" <lizefan@huawei.com>, "hannes@cmpxchg.org" <hannes@cmpxchg.org>, "corbet@lwn.net" <corbet@lwn.net>, "vdavydov.dev@gmail.com" <vdavydov.dev@gmail.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "guro@fb.com" <guro@fb.com>, "shakeelb@google.com" <shakeelb@google.com>, "chris@chrisdown.name" <chris@chrisdown.name>, "yang.shi@linux.alibaba.com" <yang.shi@linux.alibaba.com>, "tglx@linutronix.de" <tglx@linutronix.de>, "minchan@kernel.org" <minchan@kernel.org>, "ying.huang@intel.com" <ying.huang@intel.com>, "ziqian.lzq@antfin.com" <ziqian.lzq@antfin.com>, cgroups@vger.kerne
 
-On 03/19/20 15:45, Josh Don wrote:
-> On Wed, Mar 18, 2020 at 4:35 AM Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org> wrote:
-> >
-> > On 03/17/20 14:35, Josh Don wrote:
-> > > On Wed, Mar 11, 2020 at 7:05 AM Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org> wrote:
-> > > >
-> > > > It might be a good idea to split the API from the user too.
-> > >
-> > > Not sure what you mean by this, could you clarify?
-> >
-> > I meant it'd be a good idea to split the cpumask API into its own patch and
-> > have a separate patch for the user in sched/core.c. But that was a small nit.
-> > If the user (in sched/core.c) somehow introduces a regression, reverting it
-> > separately should be trivial.
-> >
-> > Thanks
+On Thu 19-03-20 17:38:30, Ivan Teterevkov wrote:
+> This patch tries to resolve uncertainty around the memcg.swappiness when
+> it's not overridden by the user: shall there be the latest vm_swappiness
+> or the value captured at the moment when the cgroup was created?
 > 
-> Ah, yes I agree that sounds like a good idea, I can do that.
-> 
-> Peter, any other nit before I re-send?
+> I'm sitting on the fence with regards to this patch because cgroup v1 is
+> considered legacy nowadays and the semantics of "swappiness" is already
+> overwhelmed. However, the patch might be considered as a "fix" because
+> looking at the documentation [1] one might have the impression that it's
+> the latest /proc/sys/vm/swappiness value that should be found in the
+> memcg.swappiness unless it's overridden or inherited from a cgroup where
+> it was overridden when the given cgroup was created.
 
-AFAICT it was already picked up, so no need to resend to fix the nits from my
-side.
+Could you be more specific what makes you think this? Let me quote the
+whole thing here
+: 5.3 swappiness
+: --------------
+: 
+: Overrides /proc/sys/vm/swappiness for the particular group. The tunable
+: in the root cgroup corresponds to the global swappiness setting.
+: 
+: Please note that unlike during the global reclaim, limit reclaim
+: enforces that 0 swappiness really prevents from any swapping even if
+: there is a swap storage available. This might lead to memcg OOM killer
+: if there are no file pages to reclaim.
+
+I do not want to pick on words here but to me it sounds this tunable is
+clearly documented as the explicit override for the global value. The
+root memcg corresponds to the global limit because root tends to be
+special in many other aspects. But in general, the semantic of knobs is
+that they do not unexpectedly change their values without an explicit
+user/admin intervention.
+> 
+> Also, shall this magic -1 be exposed to the user? I think it's a "no",
+> but what if the user wants to un-override the memcg.swappiness...
+
+If we are to use such a semantic then it absolutely has to be an opt-in
+behavior and expressed in some way to the user space (e.g. a symbolic
+name referring to the global setting).
+> 
+> What do you reckon?
+
+I am not convinced we need it. There would have to be a real life
+usecase that cannot really work with the current semantic. I remember
+that this has been brought up when discussing early swappiness
+initialization [1]. But it seems there is a much better solution for
+that problem [2].
+
+[1] http://lkml.kernel.org/r/BL0PR02MB560167492CA4094C91589930E9FC0@BL0PR02MB5601.namprd02.prod.outlook.com
+[2] http://lkml.kernel.org/r/20200317132105.24555-1-vbabka@suse.cz
+-- 
+Michal Hocko
+SUSE Labs
