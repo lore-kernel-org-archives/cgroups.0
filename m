@@ -1,123 +1,77 @@
-From: Weiping Zhang <zhangweiping-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
-Subject: [RFC 2/3] bio: track timestamp of submitting bio the disk driver
-Date: Sat, 21 Mar 2020 09:21:12 +0800
-Message-ID: <178d7f1408a7d6465840c8d8730dd490cecf96b0.1584728740.git.zhangweiping@didiglobal.com>
+From: Weiping Zhang <zhangweiping@didiglobal.com>
+Subject: [RFC 1/3] update the real issue size when bio_split
+Date: Sat, 21 Mar 2020 09:21:04 +0800
+Message-ID: <c35d6607d06b9cdad280f0e0f612e57910bbd4e4.1584728740.git.zhangweiping@didiglobal.com>
 References: <cover.1584728740.git.zhangweiping@didiglobal.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <cover.1584728740.git.zhangweiping-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <cover.1584728740.git.zhangweiping@didiglobal.com>
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: axboe@kernel.dk, tj@kernel.org
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org
 
-Change-Id: Ibb9caf20616f83e111113ab5c824c05930c0e523
-Signed-off-by: Weiping Zhang <zhangweiping-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
+The split.bi_iter.bi_size was copied from @bio,
+bi_issue was initialized in this flow:
+bio_clone_fast->__bio_clone_fast->blkcg_bio_issue_init
+
+So the split->bi_issue has a wrong size, so update the size
+at here.
+
+Change-Id: I1f9c8c973ac1d41f4aea17a9a766b4c4d532f642
+Signed-off-by: Weiping Zhang <zhangweiping@didiglobal.com>
 ---
- block/blk-mq.c             |  3 +++
- include/linux/blk-cgroup.h |  6 ++++++
- include/linux/blk_types.h  | 29 +++++++++++++++++++++++++++++
- 3 files changed, 38 insertions(+)
+ block/bio.c               | 13 +++++++++++++
+ include/linux/blk_types.h |  9 +++++++++
+ 2 files changed, 22 insertions(+)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 5b2e6550e0b6..53db008ac8d0 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -652,6 +652,7 @@ EXPORT_SYMBOL(blk_mq_complete_request);
- void blk_mq_start_request(struct request *rq)
- {
- 	struct request_queue *q = rq->q;
-+	struct bio *bio;
+diff --git a/block/bio.c b/block/bio.c
+index 0985f3422556..8654c4d692e5 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1911,6 +1911,19 @@ struct bio *bio_split(struct bio *bio, int sectors,
  
- 	trace_block_rq_issue(q, rq);
+ 	split->bi_iter.bi_size = sectors << 9;
  
-@@ -660,6 +661,8 @@ void blk_mq_start_request(struct request *rq)
- 		rq->stats_sectors = blk_rq_sectors(rq);
- 		rq->rq_flags |= RQF_STATS;
- 		rq_qos_issue(q, rq);
-+		__rq_for_each_bio(bio, rq)
-+			blkcg_bio_start_init(bio);
- 	}
- 
- 	WARN_ON_ONCE(blk_mq_rq_state(rq) != MQ_RQ_IDLE);
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index e4a6949fd171..9720f04a9523 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -579,6 +579,11 @@ static inline void blkcg_bio_issue_init(struct bio *bio)
- 	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
- }
- 
-+static inline void blkcg_bio_start_init(struct bio *bio)
-+{
-+	bio_start_init(&bio->bi_start);
-+}
++	/*
++	 * reinit bio->bi_issue, the split.bi_iter.bi_size was copied
++	 * from @bio, bi_issue was initialized in this flow:
++	 * bio_clone_fast->__bio_clone_fast->blkcg_bio_issue_init
++	 *
++	 * So the split->bi_issue has a wrong size, so update the size
++	 * at here.
++	 *
++	 * Actually, we can just use blkcg_bio_issue_init, there is just
++	 * a bit difference for the issue_time.
++	 */
++	bio_issue_update_size(&split->bi_issue, bio_sectors(split));
 +
- static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 					 struct bio *bio)
- {
-@@ -738,6 +743,7 @@ static inline void blkg_get(struct blkcg_gq *blkg) { }
- static inline void blkg_put(struct blkcg_gq *blkg) { }
+ 	if (bio_integrity(split))
+ 		bio_integrity_trim(split);
  
- static inline bool blkcg_punt_bio_submit(struct bio *bio) { return false; }
-++static inline void blkcg_bio_start_init(struct bio *bio) { }
- static inline void blkcg_bio_issue_init(struct bio *bio) { }
- static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 					 struct bio *bio) { return true; }
 diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index 56e41ef3e827..30dc3a73235f 100644
+index 70254ae11769..56e41ef3e827 100644
 --- a/include/linux/blk_types.h
 +++ b/include/linux/blk_types.h
-@@ -109,10 +109,38 @@ static inline bool blk_path_error(blk_status_t error)
- /* Reserved bit for blk-throtl */
- #define BIO_ISSUE_THROTL_SKIP_LATENCY (1ULL << 63)
+@@ -128,6 +128,15 @@ static inline sector_t bio_issue_size(struct bio_issue *issue)
+ 	return ((issue->value & BIO_ISSUE_SIZE_MASK) >> BIO_ISSUE_SIZE_SHIFT);
+ }
  
-+/* submit bio to block layer */
- struct bio_issue {
- 	u64 value;
- };
- 
-+/*
-+ * submit bio to the disk driver layer
-+ *
-+ * 63:51	reserved
-+ * 50:0		bits: start time of bio
-+ *
-+ * same bitmask as bi_issue
-+ */
-+struct bio_start {
-+	u64 value;
-+};
-+
-+static inline u64 __bio_start_time(u64 time)
++static inline void bio_issue_update_size(struct bio_issue *issue, sector_t size)
 +{
-+	return time & BIO_ISSUE_TIME_MASK;
++	size &= (1ULL << BIO_ISSUE_SIZE_BITS) - 1;
++	/* set all _issue_size bits to 1 */
++	issue->value |= (u64)BIO_ISSUE_SIZE_MASK;
++	/* set new size */
++	issue->value &= ((u64)size << BIO_ISSUE_SIZE_SHIFT);
 +}
 +
-+static inline u64 bio_start_time(struct bio_start *start)
-+{
-+	return __bio_start_time(start->value);
-+}
-+
-+static inline void bio_start_init(struct bio_start *start)
-+{
-+	start->value = ktime_get_ns() & BIO_ISSUE_TIME_MASK;
-+}
-+
- static inline u64 __bio_issue_time(u64 time)
+ static inline void bio_issue_init(struct bio_issue *issue,
+ 				       sector_t size)
  {
- 	return time & BIO_ISSUE_TIME_MASK;
-@@ -178,6 +206,7 @@ struct bio {
- 	 */
- 	struct blkcg_gq		*bi_blkg;
- 	struct bio_issue	bi_issue;
-+	struct bio_start	bi_start;
- #ifdef CONFIG_BLK_CGROUP_IOCOST
- 	u64			bi_iocost_cost;
- #endif
 -- 
 2.18.1
 
