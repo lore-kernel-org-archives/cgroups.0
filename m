@@ -1,99 +1,123 @@
-From: Weiping Zhang <zhangweiping@didiglobal.com>
-Subject: [RFC 0/3] blkcg: add blk-iotrack
-Date: Sat, 21 Mar 2020 09:20:36 +0800
-Message-ID: <cover.1584728740.git.zhangweiping@didiglobal.com>
+From: Weiping Zhang <zhangweiping-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
+Subject: [RFC 2/3] bio: track timestamp of submitting bio the disk driver
+Date: Sat, 21 Mar 2020 09:21:12 +0800
+Message-ID: <178d7f1408a7d6465840c8d8730dd490cecf96b0.1584728740.git.zhangweiping@didiglobal.com>
+References: <cover.1584728740.git.zhangweiping@didiglobal.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-Sender: linux-block-owner@vger.kernel.org
+In-Reply-To: <cover.1584728740.git.zhangweiping-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: axboe@kernel.dk, tj@kernel.org
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi all,
+Change-Id: Ibb9caf20616f83e111113ab5c824c05930c0e523
+Signed-off-by: Weiping Zhang <zhangweiping-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
+---
+ block/blk-mq.c             |  3 +++
+ include/linux/blk-cgroup.h |  6 ++++++
+ include/linux/blk_types.h  | 29 +++++++++++++++++++++++++++++
+ 3 files changed, 38 insertions(+)
 
-This patchset try to add a monitor-only module blk-iotrack for block
-cgroup.
-
-It contains kernel space blk-iotrack and user space tools iotrack, and
-you can also write your own tool to do more data analysis.
-
-blk-iotrack was designed to track various io statistic of block cgroup,
-it is based on rq_qos framework. It only tracks io and does not do any
-throttlling.
-
-Compare to blk-iolatency, it provides 8 configurable latency buckets,
-/sys/fs/cgroup/io.iotrack.lat_thresh, blk-iotrack will account the
-number of IOs whose latency less than corresponding threshold. In this
-way we can get the cgroup's latency distribution. The default latency
-bucket is 50us, 100us, 200us, 400us, 1ms, 2ms, 4ms, 8ms.
-
-Compare to io.stat.{rbytes,wbytes,rios,wios,dbytes,dios}, it account
-IOs when IO completed, instead of submited. If IO was throttled by
-io scheduler or other throttle policy, then there is a gap, these
-IOs have not been completed yet.
-
-The previous patch has record the timestamp for each bio, when it
-was issued to the disk driver. Then we can get the disk latency in
-rq_qos_done_bio, this is also be called D2C time. In rq_qos_done_bio,
-blk-iotrack also record total latency(now - bio_issue_time), actually
-it can be treated as the Q2C time. In this way, we can get the percentile
-%d2c=D2C/Q2C for each cgroup. It's very useful to detect the main latency
-is from disk or software e.g. io scheduler or other block cgroup throttle
-policy.
-
-The user space tool, which called iotrack, used to collect these basic
-io statistics and then generate more valuable metrics at cgroup level.
-From iotrack, you can get a cgroup's percentile for io, bytes,
-total_time and disk_time of the whole disk. It can easily to evaluate
-the real weight of the weight based policy(bfq, blk-iocost).
-There are lots of metrics for read and write generate by iotrack,
-for more details, please visit: https://github.com/dublio/iotrack.
-
-Test result for two fio with randread 4K,
-test1 cgroup bfq weight = 800
-test2 cgroup bfq weight = 100
-
-Device      io/s   MB/s    %io    %MB    %tm   %dtm  %d2c %hit0 %hit1 %hit2 %hit3 %hit4 %hit5  %hit6  %hit7 cgroup
-nvme1n1 44588.00 174.17 100.00 100.00 100.00 100.00 38.46  0.25 45.27 95.90 98.33 99.47 99.85  99.92  99.95 /
-nvme1n1 30206.00 117.99  67.74  67.74  29.44  67.29 87.90  0.35 47.82 99.22 99.98 99.99 99.99 100.00 100.00 /test1
-nvme1n1 14370.00  56.13  32.23  32.23  70.55  32.69 17.82  0.03 39.89 88.92 94.88 98.37 99.53  99.77  99.85 /test2
-
-* The root block cgroup "/" shows the io statistics for whole ssd disk.
-
-* test1 use disk's %67 iops and bps.
-
-* %dtm stands for the on disk time, test1 cgroup get 67% of whole disk,
-	that means test1 gets more disk time than test2.
-
-* For test's %d2c, there is only 17% latency cost at hardware disk,
-	that means the main latency cames from software, it was
-	throttled by softwre.
-
-
-The patch1 and patch2 are preapre patch.
-The last patch implement blk-iotrack.
-
-Weiping Zhang (3):
-  update the real issue size when bio_split
-  bio: track timestamp of submitting bio the disk driver
-  blkcg: add blk-iotrack
-
- block/Kconfig              |   6 +
- block/Makefile             |   1 +
- block/bio.c                |  13 ++
- block/blk-cgroup.c         |   4 +
- block/blk-iotrack.c        | 436 +++++++++++++++++++++++++++++++++++++
- block/blk-mq.c             |   3 +
- block/blk-rq-qos.h         |   3 +
- block/blk.h                |   7 +
- include/linux/blk-cgroup.h |   6 +
- include/linux/blk_types.h  |  38 ++++
- 10 files changed, 517 insertions(+)
- create mode 100644 block/blk-iotrack.c
-
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 5b2e6550e0b6..53db008ac8d0 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -652,6 +652,7 @@ EXPORT_SYMBOL(blk_mq_complete_request);
+ void blk_mq_start_request(struct request *rq)
+ {
+ 	struct request_queue *q = rq->q;
++	struct bio *bio;
+ 
+ 	trace_block_rq_issue(q, rq);
+ 
+@@ -660,6 +661,8 @@ void blk_mq_start_request(struct request *rq)
+ 		rq->stats_sectors = blk_rq_sectors(rq);
+ 		rq->rq_flags |= RQF_STATS;
+ 		rq_qos_issue(q, rq);
++		__rq_for_each_bio(bio, rq)
++			blkcg_bio_start_init(bio);
+ 	}
+ 
+ 	WARN_ON_ONCE(blk_mq_rq_state(rq) != MQ_RQ_IDLE);
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index e4a6949fd171..9720f04a9523 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -579,6 +579,11 @@ static inline void blkcg_bio_issue_init(struct bio *bio)
+ 	bio_issue_init(&bio->bi_issue, bio_sectors(bio));
+ }
+ 
++static inline void blkcg_bio_start_init(struct bio *bio)
++{
++	bio_start_init(&bio->bi_start);
++}
++
+ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 					 struct bio *bio)
+ {
+@@ -738,6 +743,7 @@ static inline void blkg_get(struct blkcg_gq *blkg) { }
+ static inline void blkg_put(struct blkcg_gq *blkg) { }
+ 
+ static inline bool blkcg_punt_bio_submit(struct bio *bio) { return false; }
+++static inline void blkcg_bio_start_init(struct bio *bio) { }
+ static inline void blkcg_bio_issue_init(struct bio *bio) { }
+ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 					 struct bio *bio) { return true; }
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 56e41ef3e827..30dc3a73235f 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -109,10 +109,38 @@ static inline bool blk_path_error(blk_status_t error)
+ /* Reserved bit for blk-throtl */
+ #define BIO_ISSUE_THROTL_SKIP_LATENCY (1ULL << 63)
+ 
++/* submit bio to block layer */
+ struct bio_issue {
+ 	u64 value;
+ };
+ 
++/*
++ * submit bio to the disk driver layer
++ *
++ * 63:51	reserved
++ * 50:0		bits: start time of bio
++ *
++ * same bitmask as bi_issue
++ */
++struct bio_start {
++	u64 value;
++};
++
++static inline u64 __bio_start_time(u64 time)
++{
++	return time & BIO_ISSUE_TIME_MASK;
++}
++
++static inline u64 bio_start_time(struct bio_start *start)
++{
++	return __bio_start_time(start->value);
++}
++
++static inline void bio_start_init(struct bio_start *start)
++{
++	start->value = ktime_get_ns() & BIO_ISSUE_TIME_MASK;
++}
++
+ static inline u64 __bio_issue_time(u64 time)
+ {
+ 	return time & BIO_ISSUE_TIME_MASK;
+@@ -178,6 +206,7 @@ struct bio {
+ 	 */
+ 	struct blkcg_gq		*bi_blkg;
+ 	struct bio_issue	bi_issue;
++	struct bio_start	bi_start;
+ #ifdef CONFIG_BLK_CGROUP_IOCOST
+ 	u64			bi_iocost_cost;
+ #endif
 -- 
 2.18.1
 
