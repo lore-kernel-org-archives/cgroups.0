@@ -1,10 +1,21 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: "Kirill A. Shutemov" <kirill@shutemov.name>
 Subject: Re: [PATCH] mm, memcg: Add memory.transparent_hugepage_disabled
-Date: Tue, 24 Mar 2020 12:00:34 +0100
-Message-ID: <20200324110034.GH19542@dhcp22.suse.cz>
+Date: Tue, 24 Mar 2020 15:17:58 +0300
+Message-ID: <20200324121758.paxxthsi2f4hngfa@box>
 References: <1585045916-27339-1-git-send-email-teawater@gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=shutemov-name.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=1SPUCMMR/pnomJcGWLTMgKFX0vHSGUAZoz9GUYMTj4o=;
+        b=tilrUvK9V7AIYx6emcjcWpLXFQEyHa+05bdQDIoIywZX2y3SMoEqBFiAybQqeaoQmH
+         qCW38SL4fJ5VBAOb8iFlk///0sNWC25UhpYQQWKRgBijygrHu0xvBAtqsphh+EUTl/O2
+         G/N7sSiUT0spzki5rmzIRfzFDkF3rhztgtSZFIbBY7oBrWXTwy66j+A3LVnCQDsi7qDk
+         /Mt7MYFlctk0gdfk6O3vSL+Tj6CY4O0eXlyiZi2ju9Ktl4TK6O0hsWQBgPzPB8PW2grU
+         HFeLO7sow8tEfwRFWJ+cSErDCMq4U85TpHZyFV3YvgQJyUfiAMty/XMOrODGeLxAgSoU
+         xXgg==
 Content-Disposition: inline
 In-Reply-To: <1585045916-27339-1-git-send-email-teawater@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
@@ -12,188 +23,13 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Hui Zhu <teawater@gmail.com>
-Cc: hannes@cmpxchg.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, hughd@google.com, yang.shi@linux.alibaba.com, kirill@shutemov.name, dan.j.williams@intel.com, aneesh.kumar@linux.ibm.com, sean.j.christopherson@intel.com, thellstrom@vmware.com, guro@fb.com, shakeelb@google.com, chris@chrisdown.name, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Hui Zhu <teawaterz@linux.alibaba.com>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, hughd@google.com, yang.shi@linux.alibaba.com, dan.j.williams@intel.com, aneesh.kumar@linux.ibm.com, sean.j.christopherson@intel.com, thellstrom@vmware.com, guro@fb.com, shakeelb@google.com, chris@chrisdown.name, tj@kernel.org, tglx@linutronix.de, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Hui Zhu <teawaterz@linux.alibaba.com>
 
-On Tue 24-03-20 18:31:56, Hui Zhu wrote:
+On Tue, Mar 24, 2020 at 06:31:56PM +0800, Hui Zhu wrote:
 > /sys/kernel/mm/transparent_hugepage/enabled is the only interface to
 > control if the application can use THP in system level.
-> Sometime, we would not want an application use THP even if
-> transparent_hugepage/enabled is set to "always" or "madvise" because
-> thp may need more cpu and memory resources in some cases.
 
-Could you specify that sometime by a real usecase in the memcg context
-please?
-
-> This commit add a new interface memory.transparent_hugepage_disabled
-> in memcg.
-> When it set to 1, the application inside the cgroup cannot use THP
-> except dax.
-
-Why should this interface differ from the global semantic. How does it
-relate to the kcompactd. Your patch also doesn't seem to define this
-knob to have hierarchical semantic. Why?
-
-All that being said, this patch is lacking both proper justification and
-the semantic is dubious to be honest. I have also say that I am not a
-great fan. THP semantic is overly complex already and adding more on top
-would require really strong usecase.
-
-> Signed-off-by: Hui Zhu <teawaterz@linux.alibaba.com>
-> ---
->  include/linux/huge_mm.h    | 18 ++++++++++++++++--
->  include/linux/memcontrol.h |  2 ++
->  mm/memcontrol.c            | 42 ++++++++++++++++++++++++++++++++++++++++++
->  mm/shmem.c                 |  4 ++++
->  4 files changed, 64 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
-> index 5aca3d1..fd81479 100644
-> --- a/include/linux/huge_mm.h
-> +++ b/include/linux/huge_mm.h
-> @@ -91,6 +91,16 @@ extern bool is_vma_temporary_stack(struct vm_area_struct *vma);
->  
->  extern unsigned long transparent_hugepage_flags;
->  
-> +#ifdef CONFIG_MEMCG
-> +extern bool memcg_transparent_hugepage_disabled(struct vm_area_struct *vma);
-> +#else
-> +static inline bool
-> +memcg_transparent_hugepage_disabled(struct vm_area_struct *vma)
-> +{
-> +	return false;
-> +}
-> +#endif
-> +
->  /*
->   * to be used on vmas which are known to support THP.
->   * Use transparent_hugepage_enabled otherwise
-> @@ -106,8 +116,6 @@ static inline bool __transparent_hugepage_enabled(struct vm_area_struct *vma)
->  	if (test_bit(MMF_DISABLE_THP, &vma->vm_mm->flags))
->  		return false;
->  
-> -	if (transparent_hugepage_flags & (1 << TRANSPARENT_HUGEPAGE_FLAG))
-> -		return true;
->  	/*
->  	 * For dax vmas, try to always use hugepage mappings. If the kernel does
->  	 * not support hugepages, fsdax mappings will fallback to PAGE_SIZE
-> @@ -117,6 +125,12 @@ static inline bool __transparent_hugepage_enabled(struct vm_area_struct *vma)
->  	if (vma_is_dax(vma))
->  		return true;
->  
-> +	if (memcg_transparent_hugepage_disabled(vma))
-> +		return false;
-> +
-> +	if (transparent_hugepage_flags & (1 << TRANSPARENT_HUGEPAGE_FLAG))
-> +		return true;
-> +
->  	if (transparent_hugepage_flags &
->  				(1 << TRANSPARENT_HUGEPAGE_REQ_MADV_FLAG))
->  		return !!(vma->vm_flags & VM_HUGEPAGE);
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index a7a0a1a5..abc3142 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -320,6 +320,8 @@ struct mem_cgroup {
->  
->  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
->  	struct deferred_split deferred_split_queue;
-> +
-> +	bool transparent_hugepage_disabled;
->  #endif
->  
->  	struct mem_cgroup_per_node *nodeinfo[0];
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 7a4bd8b..b6d91b6 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5011,6 +5011,14 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
->  	if (parent) {
->  		memcg->swappiness = mem_cgroup_swappiness(parent);
->  		memcg->oom_kill_disable = parent->oom_kill_disable;
-> +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> +		memcg->transparent_hugepage_disabled
-> +			= parent->transparent_hugepage_disabled;
-> +#endif
-> +	} else {
-> +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> +		memcg->transparent_hugepage_disabled = false;
-> +#endif
->  	}
->  	if (parent && parent->use_hierarchy) {
->  		memcg->use_hierarchy = true;
-> @@ -6126,6 +6134,24 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
->  	return nbytes;
->  }
->  
-> +static u64 transparent_hugepage_disabled_read(struct cgroup_subsys_state *css,
-> +					      struct cftype *cft)
-> +{
-> +	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-> +
-> +	return memcg->transparent_hugepage_disabled;
-> +}
-> +
-> +static int transparent_hugepage_disabled_write(struct cgroup_subsys_state *css,
-> +					       struct cftype *cft, u64 val)
-> +{
-> +	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-> +
-> +	memcg->transparent_hugepage_disabled = !!val;
-> +
-> +	return 0;
-> +}
-> +
->  static struct cftype memory_files[] = {
->  	{
->  		.name = "current",
-> @@ -6179,6 +6205,12 @@ static struct cftype memory_files[] = {
->  		.seq_show = memory_oom_group_show,
->  		.write = memory_oom_group_write,
->  	},
-> +	{
-> +		.name = "transparent_hugepage_disabled",
-> +		.flags = CFTYPE_NOT_ON_ROOT,
-> +		.read_u64 = transparent_hugepage_disabled_read,
-> +		.write_u64 = transparent_hugepage_disabled_write,
-> +	},
->  	{ }	/* terminate */
->  };
->  
-> @@ -6787,6 +6819,16 @@ void mem_cgroup_uncharge_skmem(struct mem_cgroup *memcg, unsigned int nr_pages)
->  	refill_stock(memcg, nr_pages);
->  }
->  
-> +bool memcg_transparent_hugepage_disabled(struct vm_area_struct *vma)
-> +{
-> +	struct mem_cgroup *memcg = get_mem_cgroup_from_mm(vma->vm_mm);
-> +
-> +	if (memcg && memcg->transparent_hugepage_disabled)
-> +		return true;
-> +
-> +	return false;
-> +}
-> +
->  static int __init cgroup_memory(char *s)
->  {
->  	char *token;
-> diff --git a/mm/shmem.c b/mm/shmem.c
-> index aad3ba7..253b63b 100644
-> --- a/mm/shmem.c
-> +++ b/mm/shmem.c
-> @@ -1810,6 +1810,10 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
->  		goto alloc_nohuge;
->  	if (shmem_huge == SHMEM_HUGE_DENY || sgp_huge == SGP_NOHUGE)
->  		goto alloc_nohuge;
-> +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> +	if (memcg_transparent_hugepage_disabled(vma))
-> +		goto alloc_nohuge;
-> +#endif
->  	if (shmem_huge == SHMEM_HUGE_FORCE)
->  		goto alloc_huge;
->  	switch (sbinfo->huge) {
-> -- 
-> 2.7.4
+No. We have prctl(PR_SET_THP_DISABLE) too.
 
 -- 
-Michal Hocko
-SUSE Labs
+ Kirill A. Shutemov
