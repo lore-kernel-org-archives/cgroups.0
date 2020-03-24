@@ -1,54 +1,56 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] mm, memcg: Add memory.transparent_hugepage_disabled
-Date: Tue, 24 Mar 2020 14:17:36 +0100
-Message-ID: <20200324131736.GN19542@dhcp22.suse.cz>
-References: <1585045916-27339-1-git-send-email-teawater@gmail.com>
- <20200324110034.GH19542@dhcp22.suse.cz>
- <816B70EC-20AD-4BB8-AD13-4F5640EBAB35@linux.alibaba.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [regression] cpuset: offlined CPUs removed from affinity masks
+Date: Tue, 24 Mar 2020 14:01:39 -0400
+Message-ID: <20200324180139.GB162390@mtj.duckdns.org>
+References: <1251528473.590671.1579196495905.JavaMail.zimbra@efficios.com>
+ <20200219154740.GD698990@mtj.thefacebook.com>
+ <59426509.702.1582127435733.JavaMail.zimbra@efficios.com>
+ <20200219155202.GE698990@mtj.thefacebook.com>
+ <1358308409.804.1582128519523.JavaMail.zimbra@efficios.com>
+ <20200219161222.GF698990@mtj.thefacebook.com>
+ <316507033.21078.1583597207356.JavaMail.zimbra@efficios.com>
+ <20200312182618.GE79873@mtj.duckdns.org>
+ <1289608777.27165.1584042470528.JavaMail.zimbra@efficios.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=WTcUW0G2da/p6PXHgnEzI2FtMutVR8dAOTnWSKNo/+8=;
+        b=fVKbJ0LHDno6UVMja5OyHYNwO6yCqhK1y3EJW23eRpqc3oLwkZVCCHkDqeP7sKA+QB
+         ODf5aQrksDN+cOXyxvOmleitLuwhhjOcSmmOPRq+sIxi7IPWAxkAtnfM9pr1O7dG8fWc
+         fvVPXU9zFB5XG8M+QtnplZPCqJiQrEy4ILlta4NAGap3zegdIxwUwOOYc3/NRmsIUsMw
+         SH0lejDsepTjd9xxpMTjPsXy/MOuCQQx8SP/fiDqNPD5Vt2DrkKQkqWmR3U/1F0eYeoU
+         Wl+Y11QpqpR7GbWrfdwyu1zHn1YLiX5j697r1x9qCTyKa6s1KGptQW9O2TCjdN7KsvGf
+         G9sw==
 Content-Disposition: inline
-In-Reply-To: <816B70EC-20AD-4BB8-AD13-4F5640EBAB35-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+In-Reply-To: <1289608777.27165.1584042470528.JavaMail.zimbra-vg+e7yoeK/dWk0Htik3J/w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: teawater <teawaterz-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Hui Zhu <teawater-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, thellstrom-pghWNbHTmq7QT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Mathieu Desnoyers <mathieu.desnoyers-vg+e7yoeK/dWk0Htik3J/w@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Valentin Schneider <valentin.schneider-5wv7dgnIgG8@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 
-On Tue 24-03-20 20:30:32, teawater wrote:
-> 
-> 
-> > 2020年3月24日 19:00，Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> 写道：
-> > 
-> > On Tue 24-03-20 18:31:56, Hui Zhu wrote:
-> >> /sys/kernel/mm/transparent_hugepage/enabled is the only interface to
-> >> control if the application can use THP in system level.
-> >> Sometime, we would not want an application use THP even if
-> >> transparent_hugepage/enabled is set to "always" or "madvise" because
-> >> thp may need more cpu and memory resources in some cases.
-> > 
-> > Could you specify that sometime by a real usecase in the memcg context
-> > please?
-> 
-> 
-> Thanks for your review.
-> 
-> We use thp+balloon to supply more memory flexibility for vm.
-> https://lore.kernel.org/linux-mm/1584893097-12317-1-git-send-email-teawater-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org/
-> This is another thread that I am working around thp+balloon.
-> 
-> Other applications are already deployed on these machines.  The
-> transparent_hugepage/enabled is set to never because they used to have
-> a lot of THP related performance issues.  And some of them may call
-> madvise thp with itself.
+Sorry about long delay.
 
-If they call madvise then they clearly indicate they prefer THP
-regardless the cost. So I really fail to see what memcg specific tuning
-brings in.
+On Thu, Mar 12, 2020 at 03:47:50PM -0400, Mathieu Desnoyers wrote:
+> The basic idea is to allow applications to pin to every possible cpu, but
+> not allow them to use this to consume a lot of cpu time on CPUs they
+> are not allowed to run.
+> 
+> Thoughts ?
 
-Could you be more specific about the usecase that cannot work with the
-existing THP tuning?
+One thing that we learned is that priority alone isn't enough in isolating cpu
+consumptions no matter how low the priority may be if the workload is latency
+sensitive. The actual computation capacity of cpus gets saturated way before cpu
+time is saturated and latency impact from lowered mips becomes noticeable. So,
+depending on workloads, allowing threads to run at the lowest priority on
+disallowed cpus might not lead to behaviors that users expect but I have no idea
+what kind of usage models you have on mind for the new system call.
+
+Thanks.
+
 -- 
-Michal Hocko
-SUSE Labs
+tejun
