@@ -1,46 +1,38 @@
-From: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 00/11] new cgroup controller for gpu/drm subsystem
-Date: Tue, 24 Mar 2020 14:49:27 -0400
-Message-ID: <CAOWid-cS-5YkFBLACotkZZCH0RSjHH94_r3VFH8vEPOubzSpPA@mail.gmail.com>
-References: <20200226190152.16131-1-Kenny.Ho@amd.com> <CAOWid-eyMGZfOyfEQikwCmPnKxx6MnTm17pBvPeNpgKWi0xN-w@mail.gmail.com>
- <20200324184633.GH162390@mtj.duckdns.org>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm, memcg: Add memory.transparent_hugepage_disabled
+Date: Tue, 24 Mar 2020 12:17:11 -0700 (PDT)
+Message-ID: <alpine.DEB.2.21.2003241215580.34058@chino.kir.corp.google.com>
+References: <1585045916-27339-1-git-send-email-teawater@gmail.com> <20200324121758.paxxthsi2f4hngfa@box>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=+Bn2txemVnNW3tHUFGp2WOb1jH3UpeSV6hCDyIGrExc=;
-        b=RNFkkhe84ZEGayHB8baD92NZqRNYMXvMXE6mRhmjiQa6+aEXFVM7MbYvmyJIdKpcyL
-         P0Kt/3R2vW84P4s/9DAgLdNeg35C5fOZkjEhyT13/ZCUR+gG626E0DClz8eIGUTN4nKh
-         kPtmyz2MZ8OtHGbxKYWz0+VZ3mQ3xF5qLTcUcbUjDvhp3hca4DAJ/qNdW2MiOi5eR3i0
-         RLCdb2fIDqmg5ainr8H58LNrwP4j2Jnrr8FDHiGROvKA7RIu/LOsoSvLChS7sTz6LFpj
-         ywjdBuh7EW9/2VFW49Duuk5GS0Htz5fgT9QzmpTW7cYC62W0m/UhGfP0tDnBfRz2EzUV
-         K6dQ==
-In-Reply-To: <20200324184633.GH162390-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=Rh4HBg/agEMeOOZna2pzZhd8r6lKpuw8m53EKKUPZHc=;
+        b=tIMOfdTlHbbOdLWgQGt6oJeQvoMFtQVTFpy2pLi7nTYBlhcgtjoQBFLNrAmUCFix+T
+         Wp/wocBxPQTXgY7/RgRBxViOlX3qvt4qAYEk/YW1KHupUy3P9tp2KaMOzrX0R6sTFgf6
+         PliVP2qUb/uLXnzP8BjH8l1c4dAaUAh3rFpjd7ig+b66BRc+pgAFmsMRdIB6fEqjczvQ
+         yQTmo6/rDRuUJ5/DZl7UmqTf1BXpa/ALNbK4+wuduHiTGxYnqbqiVNJ6K3EZFv9wHg8E
+         xLxeTBC5Y9IaRg2G++TFA5LGhvZDI2ZYBb4si3IViJ1w3uXfMxd2yLIR9+XuIcNGFgWl
+         9f3w==
+In-Reply-To: <20200324121758.paxxthsi2f4hngfa@box>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, "Greathouse, Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org
+To: "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Cc: Hui Zhu <teawater-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, aneesh.kumar-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, sean.j.christopherson-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, thellstrom-pghWNbHTmq7QT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Hui Zhu <teawaterz-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 
-Hi Tejun,
+On Tue, 24 Mar 2020, Kirill A. Shutemov wrote:
 
-Can you elaborate more on what are the missing pieces?
+> On Tue, Mar 24, 2020 at 06:31:56PM +0800, Hui Zhu wrote:
+> > /sys/kernel/mm/transparent_hugepage/enabled is the only interface to
+> > control if the application can use THP in system level.
+> 
+> No. We have prctl(PR_SET_THP_DISABLE) too.
+> 
 
-Regards,
-Kenny
-
-On Tue, Mar 24, 2020 at 2:46 PM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->
-> On Tue, Mar 17, 2020 at 12:03:20PM -0400, Kenny Ho wrote:
-> > What's your thoughts on this latest series?
->
-> My overall impression is that the feedbacks aren't being incorporated throughly
-> / sufficiently.
->
-> Thanks.
->
-> --
-> tejun
+Yeah, I think this is the key point since this can be inherited across 
+fork and thus you already have the ability to disable thp for a process 
+where you cannot even modify the binary to do MADV_NOHUGEPAGE.
