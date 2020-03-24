@@ -1,46 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup-v1: freezer: optionally killable freezer
-Date: Tue, 24 Mar 2020 14:26:15 -0400
-Message-ID: <20200324182615.GF162390@mtj.duckdns.org>
-References: <20200219183231.50985-1-balejs@google.com>
- <20200303134855.GA186184@mtj.thefacebook.com>
- <CAKOZuevzE=0Oa8gn--rkVJ8t69S+o2vK--pki65XXg6EVuOhMQ@mail.gmail.com>
- <20200320201038.GB79184@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC 0/3] blkcg: add blk-iotrack
+Date: Tue, 24 Mar 2020 14:27:25 -0400
+Message-ID: <20200324182725.GG162390@mtj.duckdns.org>
+References: <cover.1584728740.git.zhangweiping@didiglobal.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+        h=sender:date:from:to:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=VKDCXEZ42UY913CTtFDT6Viou96lkFeyc6FJl6g05Vg=;
-        b=AkI4Xkx1tlFJcJ9dNLecf4+W/yiyVYQzQJjxQEP3fsUyxtJlsDPsp2922A08nOHUqt
-         Raz6pWjrCl2Hhym8BGoSwUNuuPSH9d7vYfRnfoGLRBR/CRLOXfi4zD6n1d5fSUpIvQFH
-         G5SdqFXcT/F1KCp2Jmv8aiswNEn5y/cJFvk9n9q+ccGDLGwlnioNCKkDSHsNmzL95JtU
-         pURc9Y4b8prbYmhRvfO+VUUnf+r33J9ni46guh0TYipbbdvAZhJ7v5nxJcAVMvEu04Wz
-         kEBSWZbCndALY8ZvcfA6P1KQIOyEPipSsEPBC1fuESUBy2/Xy1bELlSr4o1v/OGJeB1M
-         HkyQ==
+        bh=x+AJ73g67Lv+1tYqp3JK2cKPMpi2aKN3Up6Cs52zqao=;
+        b=vPcBHMCUcEGWwF6ReF3V5Oj14G9fzThxHKTmhQWjdrqvvIU9w3190k+I52sQr16+Ij
+         oLI36ieeOKdcMESeKCP0s24tJvKWfCQUYwfrD41UAeIb0gw84GL36gxKS0INNJBA5pzu
+         y5iXEEJRgq7+T+bK1a76JZ/eLF7uVGK7Be8OZlrMhcSQ28zyswt2Lwj3o3NDu8M04eBq
+         jbpWIyfyWojPE0y1UPULVXZCGWsxOa4n1gQa07TQR0uAgB2ZDs+J/hPstNCRW6pycLVy
+         VbFTImV9nQ8yIf6tFuqUAFcBDKV2V3X9WYdzJ7gF4668/MFNL0sPsMeCdVxmyPlTzz/Q
+         qdMA==
 Content-Disposition: inline
-In-Reply-To: <20200320201038.GB79184@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <cover.1584728740.git.zhangweiping-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Marco Ballesio <balejs@google.com>
-Cc: Daniel Colascione <dancol@google.com>, Roman Gushchin <guro@fb.com>, cgroups@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, lizefan@huawei.com, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, rjw@rjwysocki.net, Pavel Machek <pavel@ucw.cz>, len.brown@intel.com, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, linux-pm@vger.kernel.org, Minchan Kim <minchan@google.com>, Suren Baghdasaryan <surenb@google.com>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
-
-On Fri, Mar 20, 2020 at 01:10:38PM -0700, Marco Ballesio wrote:
-> It might also be desirable for userland to have a way to modify the behavior of
-> an already mounted v1 freezer.
+On Sat, Mar 21, 2020 at 09:20:36AM +0800, Weiping Zhang wrote:
+> The user space tool, which called iotrack, used to collect these basic
+> io statistics and then generate more valuable metrics at cgroup level.
+> From iotrack, you can get a cgroup's percentile for io, bytes,
+> total_time and disk_time of the whole disk. It can easily to evaluate
+> the real weight of the weight based policy(bfq, blk-iocost).
+> There are lots of metrics for read and write generate by iotrack,
+> for more details, please visit: https://github.com/dublio/iotrack.
 > 
-> Tejun, would it be acceptable to have a flag but disable it by default, hiding
-> it behind a kernel configuration option?
+> Test result for two fio with randread 4K,
+> test1 cgroup bfq weight = 800
+> test2 cgroup bfq weight = 100
+> 
+> Device      io/s   MB/s    %io    %MB    %tm   %dtm  %d2c %hit0 %hit1 %hit2 %hit3 %hit4 %hit5  %hit6  %hit7 cgroup
+> nvme1n1 44588.00 174.17 100.00 100.00 100.00 100.00 38.46  0.25 45.27 95.90 98.33 99.47 99.85  99.92  99.95 /
+> nvme1n1 30206.00 117.99  67.74  67.74  29.44  67.29 87.90  0.35 47.82 99.22 99.98 99.99 99.99 100.00 100.00 /test1
+> nvme1n1 14370.00  56.13  32.23  32.23  70.55  32.69 17.82  0.03 39.89 88.92 94.88 98.37 99.53  99.77  99.85 /test2
 
-Given how dead-end this is, I'm not sure this needs to be upstream. Can you give
-me some rationales?
-
-Thanks.
+Maybe this'd be better done with bpf?
 
 -- 
 tejun
