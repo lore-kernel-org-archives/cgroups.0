@@ -1,43 +1,75 @@
-From: Joel Fernandes <joel@joelfernandes.org>
-Subject: Re: [PATCH RFC] cpuset: Make cpusets get restored on hotplug
-Date: Thu, 26 Mar 2020 23:32:25 -0400
-Message-ID: <20200327033225.GA250520@google.com>
-References: <20200326191623.129285-1-joel@joelfernandes.org>
- <20200326192035.GO162390@mtj.duckdns.org>
- <20200326194448.GA133524@google.com>
- <972a5c1b-6721-ac20-cec5-617af67e617d@redhat.com>
- <CAPz6YkVUsDz456z8-X2G_EDd-uet1rRNnh2sDUpdcoWp_fkDDw@mail.gmail.com>
- <20200326201649.GQ162390@mtj.duckdns.org>
- <20200326202340.GA146657@google.com>
- <592d4120-0b42-4607-5efd-fb2d4d29f0cc@redhat.com>
+From: Weiping Zhang <zhangweiping@didiglobal.com>
+Subject: [RFC PATCH v2 1/3] bio: update the real issue size when bio_split
+Date: Fri, 27 Mar 2020 14:28:50 +0800
+Message-ID: <20200327062850.GA12578@192.168.3.9>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=joelfernandes.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=r71azbnhZkfrbX5EBuBZs+Z142rnXfAai7VBmmvucRQ=;
-        b=k/l+7EzRvmXCev0yuQZ0c5mJXHjOLfvHQv5AbXX/oUQO+o9lT3gePYJcarWNlmcpCv
-         ClHFnZTbq4sfmSoo8TOlCB6tzUEW7P/5gEYXFW/YRX3Pkssb9HoAXHR4MzQS6h3cMcRV
-         nsx+2eXk4NImybe1UdIJbSYaSvypRWxcmZktI=
-Content-Disposition: inline
-In-Reply-To: <592d4120-0b42-4607-5efd-fb2d4d29f0cc@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-block-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Sonny Rao <sonnyrao@google.com>, linux-kernel@vger.kernel.org, Dmitry Shmidt <dimitrysh@google.com>, Amit Pundir <amit.pundir@linaro.org>, kernel-team@android.com, Jesse Barnes <jsbarnes@google.com>, vpillai@digitalocean.com, Peter Zijlstra <peterz@infradead.org>, Guenter Roeck <groeck@chromium.org>, Greg Kerr <kerrnel@google.com>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, Li Zefan <lizefan@huawei.com>
+To: axboe@kernel.dk, tj@kernel.org
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org
 
-On Thu, Mar 26, 2020 at 09:26:51PM -0400, Waiman Long wrote:
-[...]
-> I think the problem is that the v2_mode mount option is not that well
-> documented. Maybe I should send a patch to add some some description
-> about it in cgroup-v2.rst or cgroup-v1/cpusets.rst.
+The split.bi_iter.bi_size was copied from @bio,
+bi_issue was initialized in this flow:
+bio_clone_fast->__bio_clone_fast->blkcg_bio_issue_init
 
-That is definitely worth it and I would fully support that.
+So the split->bi_issue has a wrong size, so update the size
+at here.
 
-thanks,
+Change-Id: I1f9c8c973ac1d41f4aea17a9a766b4c4d532f642
+Signed-off-by: Weiping Zhang <zhangweiping@didiglobal.com>
+---
+ block/bio.c               | 13 +++++++++++++
+ include/linux/blk_types.h |  9 +++++++++
+ 2 files changed, 22 insertions(+)
 
- - Joel
+diff --git a/block/bio.c b/block/bio.c
+index 0985f3422556..8654c4d692e5 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1911,6 +1911,19 @@ struct bio *bio_split(struct bio *bio, int sectors,
+ 
+ 	split->bi_iter.bi_size = sectors << 9;
+ 
++	/*
++	 * reinit bio->bi_issue, the split.bi_iter.bi_size was copied
++	 * from @bio, bi_issue was initialized in this flow:
++	 * bio_clone_fast->__bio_clone_fast->blkcg_bio_issue_init
++	 *
++	 * So the split->bi_issue has a wrong size, so update the size
++	 * at here.
++	 *
++	 * Actually, we can just use blkcg_bio_issue_init, there is just
++	 * a bit difference for the issue_time.
++	 */
++	bio_issue_update_size(&split->bi_issue, bio_sectors(split));
++
+ 	if (bio_integrity(split))
+ 		bio_integrity_trim(split);
+ 
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 70254ae11769..fea81e3775c4 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -128,6 +128,15 @@ static inline sector_t bio_issue_size(struct bio_issue *issue)
+ 	return ((issue->value & BIO_ISSUE_SIZE_MASK) >> BIO_ISSUE_SIZE_SHIFT);
+ }
+ 
++static inline void bio_issue_update_size(struct bio_issue *issue, sector_t size)
++{
++	size &= (1ULL << BIO_ISSUE_SIZE_BITS) - 1;
++	/* clear issue_size bits to 0 */
++	issue->value &= ~(u64)BIO_ISSUE_SIZE_MASK;
++	/* set new size */
++	issue->value |= ((u64)size << BIO_ISSUE_SIZE_SHIFT);
++}
++
+ static inline void bio_issue_init(struct bio_issue *issue,
+ 				       sector_t size)
+ {
+-- 
+2.18.1
 
