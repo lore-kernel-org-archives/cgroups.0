@@ -1,74 +1,29 @@
-From: Chris Down <chris@chrisdown.name>
-Subject: [PATCH] mm, memcg: Do not high throttle allocators based on
+From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Subject: Re: [PATCH] mm, memcg: Do not high throttle allocators based on
  wraparound
-Date: Tue, 31 Mar 2020 16:24:24 +0100
-Message-ID: <20200331152424.GA1019937@chrisdown.name>
+Date: Tue, 31 Mar 2020 16:25:34 +0100
+Message-ID: <20200331152534.GA972283@chrisdown.name>
+References: <20200331152424.GA1019937@chrisdown.name>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition;
-        bh=6PtH4wzWMiH5JmxAt904ilpPuqtvXlZEsu04wa6si/k=;
-        b=P8qu2lfTpI9t1V10h5AQtX1pY3rsMg/xWtmYiBZTO8QwsPjlZ48gV9R/FoFJmeJWE0
-         6N9UVOHFvpnOaSH+7UMgcWEAHiG7XS3XGxcYf4DGWJ7JjdHdvf5MBmfs7Auv00Bns8rd
-         7JaAJ9XeB4dUlJrtAGbvmVJaQ85yG05sxP8nA=
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=YTzVrLlnv/U861L9j2OH30y80LBa/uThEvzXvP/gh2c=;
+        b=MX3SlhqtOgu7+xXPL0VtCywalercn8WvcRrstjEE7UrqsuB7MOfCn54non2gPg5X59
+         uLet+fnVhtkcLmoWl91/g5RA8oxVdZsQT8JOjXegkF08l25QW2YHmBU2fGuolcm2oQCG
+         THSGdBz4PAgk6GtfOmO2lXmtTDQFqofruA8cA=
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20200331152424.GA1019937-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Jakub Kicinski <kuba@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-From: Jakub Kicinski <kuba@kernel.org>
+Andrew, this is a pretty bad one that could definitely affect memory.high 
+users. We should probably expedite it going in.
 
-If a cgroup violates its memory.high constraints, we may end
-up unduly penalising it. For example, for the following hierarchy:
-
-A:   max high, 20 usage
-A/B: 9 high, 10 usage
-A/C: max high, 10 usage
-
-We would end up doing the following calculation below when calculating
-high delay for A/B:
-
-A/B: 10 - 9 = 1...
-A:   20 - PAGE_COUNTER_MAX = 21, so set max_overage to 21.
-
-This gets worse with higher disparities in usage in the parent.
-
-I have no idea how this disappeared from the final version of the patch,
-but it is certainly Not Good(tm). This wasn't obvious in testing
-because, for a simple cgroup hierarchy with only one child, the result
-is usually roughly the same. It's only in more complex hierarchies that
-things go really awry (although still, the effects are limited to a
-maximum of 2 seconds in schedule_timeout_killable at a maximum).
-
-[chris@chrisdown.name: changelog]
-
-Fixes: e26733e0d0ec ("mm, memcg: throttle allocators based on ancestral memory.high")
-Signed-off-by: Jakub Kicinski <kuba@kernel.org>
-Signed-off-by: Chris Down <chris@chrisdown.name>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: stable@vger.kernel.org # 5.4.x
----
- mm/memcontrol.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index eecf003b0c56..75a978307863 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2336,6 +2336,9 @@ static unsigned long calculate_high_delay(struct mem_cgroup *memcg,
- 		usage = page_counter_read(&memcg->memory);
- 		high = READ_ONCE(memcg->high);
- 
-+		if (usage <= high)
-+			continue;
-+
- 		/*
- 		 * Prevent division by 0 in overage calculation by acting as if
- 		 * it was a threshold of 1 page
--- 
-2.26.0
-
+Sorry for the trouble, especially on a -stable patch...
