@@ -1,59 +1,83 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v5 0/4] Add support Weighted Round Robin for blkcg and
- nvme
-Date: Tue, 31 Mar 2020 11:54:09 -0400
-Message-ID: <20200331155409.GU162390@mtj.duckdns.org>
-References: <cover.1580786525.git.zhangweiping@didiglobal.com>
- <20200204154200.GA5831@redsun51.ssa.fujisawa.hgst.com>
- <CAA70yB5qAj8YnNiPVD5zmPrrTr0A0F3v2cC6t2S1Fb0kiECLfw@mail.gmail.com>
- <CAA70yB62_6JD_8dJTGPjnjJfyJSa1xqiCVwwNYtsTCUXQR5uCA@mail.gmail.com>
- <20200331143635.GS162390@mtj.duckdns.org>
- <CAA70yB51=VQrL+2wC+DL8cYmGVACb2_w5UHc4XFn7MgZjUJaeg@mail.gmail.com>
- <20200331155139.GT162390@mtj.duckdns.org>
- <20200331155257.GA22994@lst.de>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] mm, memcg: Do not high throttle allocators based on
+ wraparound
+Date: Tue, 31 Mar 2020 17:57:52 +0200
+Message-ID: <20200331155752.GN30449@dhcp22.suse.cz>
+References: <20200331152424.GA1019937@chrisdown.name>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=SHD4oM9r2sY9bG2/tzxFgd57vQnlmusmcQcj5Ymeb3s=;
-        b=Z4CMhZHYQT1X347W8+1lC5u9LQ5mHIJZphRCvvEblXanKGSYoIkW7bTLK+NbufhxbM
-         2qTH+w3XzPzvREJaLy4ve4EYsiykme0xfAhW2/8gEYRErstb+RePZcICGsRbuvJimOOl
-         833WeRueB3PLEY+SgL7+vhNTHVKz6fJEzzYfuNjKf8gJgFv7KfkVyAIKDO0vaZ3eWbgC
-         6pOvT/qG4HwaDX0vLCp55yLR4xjOYPj0tIiDh1RWy5JPcHOVrwCOzEkwDijahfSdP77i
-         e1R2YOIK1+aHNMGlYER963UFU4JKSxL+NRgZb/BQ1j4MV3pb4QF30GRBpSmzfinzgv+k
-         o7jw==
 Content-Disposition: inline
-In-Reply-To: <20200331155257.GA22994-jcswGhMUV9g@public.gmane.org>
+In-Reply-To: <20200331152424.GA1019937-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Weiping Zhang <zwp10758-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Keith Busch <kbusch-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, Minwoo Im <minwoo.im.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ming Lei <ming.lei-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Nadolski, Edmund" <edmund.nadolski-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Tue, Mar 31, 2020 at 05:52:57PM +0200, Christoph Hellwig wrote:
-> On Tue, Mar 31, 2020 at 11:51:39AM -0400, Tejun Heo wrote:
-> > Hello,
-> > 
-> > On Tue, Mar 31, 2020 at 11:47:41PM +0800, Weiping Zhang wrote:
-> > > Do you means drop the "io.wrr" or "blkio.wrr" in cgroup, and use a
-> > > dedicated interface
-> > > like /dev/xxx or /proc/xxx?
-> > 
-> > Yes, something along that line. Given that it's nvme specific, it'd be best if
-> > the interface reflects that too - e.g. through a file under
-> > /sys/block/nvme*/device/. Jens, Christoph, what do you guys think?
+On Tue 31-03-20 16:24:24, Chris Down wrote:
+> From: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 > 
-> I'm pretty sure I voiced my opinion before - I think the NVMe WRR
-> queueing concept is completely broken and I do not thing we should
-> support it at all.
+> If a cgroup violates its memory.high constraints, we may end
+> up unduly penalising it. For example, for the following hierarchy:
+> 
+> A:   max high, 20 usage
+> A/B: 9 high, 10 usage
+> A/C: max high, 10 usage
+> 
+> We would end up doing the following calculation below when calculating
+> high delay for A/B:
+> 
+> A/B: 10 - 9 = 1...
+> A:   20 - PAGE_COUNTER_MAX = 21, so set max_overage to 21.
+> 
+> This gets worse with higher disparities in usage in the parent.
+> 
+> I have no idea how this disappeared from the final version of the patch,
+> but it is certainly Not Good(tm). This wasn't obvious in testing
+> because, for a simple cgroup hierarchy with only one child, the result
+> is usually roughly the same. It's only in more complex hierarchies that
+> things go really awry (although still, the effects are limited to a
+> maximum of 2 seconds in schedule_timeout_killable at a maximum).
 
-Ah, okay, I completely forgot about that. I don't have a strong opinion either
-way.
+I find this paragraph rather confusing. This is essentially an unsigned
+underflow when any of the memcg up the hierarchy is below the high
+limit, right?  There doesn't really seem anything complex in such a
+hierarchy.
 
-Thanks.
+> [chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org: changelog]
+> 
+> Fixes: e26733e0d0ec ("mm, memcg: throttle allocators based on ancestral memory.high")
+> Signed-off-by: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Signed-off-by: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 5.4.x
+
+To the patch
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+
+> ---
+>  mm/memcontrol.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index eecf003b0c56..75a978307863 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2336,6 +2336,9 @@ static unsigned long calculate_high_delay(struct mem_cgroup *memcg,
+>  		usage = page_counter_read(&memcg->memory);
+>  		high = READ_ONCE(memcg->high);
+>  
+> +		if (usage <= high)
+> +			continue;
+> +
+>  		/*
+>  		 * Prevent division by 0 in overage calculation by acting as if
+>  		 * it was a threshold of 1 page
+> -- 
+> 2.26.0
+> 
 
 -- 
-tejun
+Michal Hocko
+SUSE Labs
