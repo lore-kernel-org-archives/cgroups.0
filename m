@@ -1,214 +1,70 @@
-From: Paolo Valente <paolo.valente@linaro.org>
-Subject: Re: [PATCH v5 0/4] Add support Weighted Round Robin for blkcg and
- nvme
-Date: Tue, 31 Mar 2020 12:29:05 +0200
-Message-ID: <7CD57B83-F067-4918-878C-BAC413C6A2B3@linaro.org>
-References: <cover.1580786525.git.zhangweiping@didiglobal.com>
- <20200204154200.GA5831@redsun51.ssa.fujisawa.hgst.com>
- <CAA70yB5qAj8YnNiPVD5zmPrrTr0A0F3v2cC6t2S1Fb0kiECLfw@mail.gmail.com>
- <CAA70yB62_6JD_8dJTGPjnjJfyJSa1xqiCVwwNYtsTCUXQR5uCA@mail.gmail.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+From: Weiping Zhang <zwp10758-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC PATCH v2 2/3] bio: track timestamp of submitting bio the
+ disk driver
+Date: Tue, 31 Mar 2020 18:56:49 +0800
+Message-ID: <CAA70yB5JeK0F_N_qcCaBeAUUUU=8TErV9EXONRGDmqkJ8bKRvA@mail.gmail.com>
+References: <20200327062859.GA12588@192.168.3.9> <20200331082505.GA14655@infradead.org>
+ <CAA70yB5cWESKW600Lwoi8toPaiDtOVH53P8GSou6uukmX5mvgQ@mail.gmail.com> <20200331091644.GB12040@infradead.org>
+Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=O4fIR3uoc5tVQMLd54nQw5z05MiLWlZQFph3hoh5hlM=;
-        b=BNREeNvNYwgfnw6nTJqmTLlP6Ea59Qm5Qn9DlWzIViFO3TYt8sSdmxxdNLK1HWoYhr
-         EEVgwsusv7KukwJhgMKIXZfFxJYtQO3HNis6RMwQx5eaUw24hmzKLlSi5i340BJIvyUw
-         3UO6IGaAHT9Wthrglu4j6CEdAPPSSY3E/4aIGksvtJAwRjWuZxmDfMI5XcjYMsFhlGBG
-         U3K4rtw1sC7/dokiyiCS22py0flzcgUHorFO8UoxUKRbEBSkajxJWP4kV4EqxZxmiqjb
-         uxhGvDruvvKjg5dixW/8hWDYchtK+krYB9BkZSOyRmpjIazTKIyehYAarmvrj3XVJf2+
-         mw0Q==
-In-Reply-To: <CAA70yB62_6JD_8dJTGPjnjJfyJSa1xqiCVwwNYtsTCUXQR5uCA@mail.gmail.com>
-Sender: linux-block-owner@vger.kernel.org
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=D4IVQ7JDKhY91r0DBf8xKIDAIEvpogwte6mgLoTb3Oc=;
+        b=JfkWb4TT+RcwZGVAEmdXuwffw1dfSxUEjBTdhxma75/CCqNb0D+er5mivvJaJjGP/f
+         nzZmBa0fReQdx/vRYCYbYL8WNExei7LxxJ3+VUiJqprPDJE+QUJeLaKcmPyF1Ph+2GLV
+         GKOAdUZFS7j8nQwKD9Am+IBe0SGt5rJK2um1HUW01epaPSrjSVSU1tRREn/Rbyi2CYza
+         mS0cKkM9E5HARhZxH7ix4FvpdQRAR/X06gn/xxUhcYFy8hEiu8CU2IotM9TqUyc02ujX
+         F+HjHjz25LhISTm3rPs0U6d4JmKL8Vhf7PmA4vLYnImRPA8EjrCyQitAFbHhvw9QZzUA
+         b4eA==
+In-Reply-To: <20200331091644.GB12040-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Weiping Zhang <zwp10758@gmail.com>
-Cc: Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart Van Assche <bvanassche@acm.org>, Minwoo Im <minwoo.im.dev@gmail.com>, Thomas Gleixner <tglx@linutronix.de>, Ming Lei <ming.lei@redhat.com>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> =E4=BA=8E2020=E5=B9=B43=E6=9C=8831=E6=
+=97=A5=E5=91=A8=E4=BA=8C =E4=B8=8B=E5=8D=885:16=E5=86=99=E9=81=93=EF=BC=9A
+>
+> On Tue, Mar 31, 2020 at 04:45:33PM +0800, Weiping Zhang wrote:
+> > Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> =E4=BA=8E2020=E5=B9=B43=E6=9C=883=
+1=E6=97=A5=E5=91=A8=E4=BA=8C =E4=B8=8B=E5=8D=884:25=E5=86=99=E9=81=93=EF=BC=
+=9A
+> > >
+> > > On Fri, Mar 27, 2020 at 02:28:59PM +0800, Weiping Zhang wrote:
+> > > > Change-Id: Ibb9caf20616f83e111113ab5c824c05930c0e523
+> > > > Signed-off-by: Weiping Zhang <zhangweiping-+mmu7dyatJ+Rq8AjE7tl8g@public.gmane.org>
+> > >
+> > > This needs a commit description and loose the weird change id.
+> > >
+> > OK, I rewirte commit description, it record the timestamp of issue bio
+> > to the disk driver,
+> > then we can get the delta time in rq_qos_done_bio. It's same as the D2C=
+ time
+> > of blktrace.
+> > > I also think oyu need to fins a way to not bloat the bio even more,
+> > > cgroup is a really bad offender for bio size.
+> > struct request {
+> >     u64 io_start_time_ns;
+> > also record this timestamp, I'll check if we can use it.
+>
+> But except for a few exceptions bios are never issued directly to the
+> driver, requests are.  And the few exception (rsxx, umem) probably should
+> be rewritten to use requests.  And with generic_{start,end}_io_acct we
+> already have helpers to track bio based stats, which we should not
+> duplicate just for cgroups.
+generic_{start,end}_io_acct and blk_account_io_done,
+these two method use the a timeline (part->stamp), but cgroup doesn't have,
+so cgroup cann't use these general helper to counting the total io ticks
+for read,write and others. Block cgroup use delta =3D now -
+bio->bi_issue[issue_time]
+to counting total io ticks.
 
+How about move it into the blk-iotrack code, rq_qos_issue will call the
+rq_qos_ops.issue,  then if user doesn't enable blk-iotrack, these code
+will not be executed.
 
-> Il giorno 31 mar 2020, alle ore 08:17, Weiping Zhang =
-<zwp10758@gmail.com> ha scritto:
->=20
->>> On the driver implementation, the number of module parameters being
->>> added here is problematic. We already have 2 special classes of =
-queues,
->>> and defining this at the module level is considered too coarse when
->>> the system has different devices on opposite ends of the capability
->>> spectrum. For example, users want polled queues for the fast =
-devices,
->>> and none for the slower tier. We just don't have a good mechanism to
->>> define per-controller resources, and more queue classes will make =
-this
->>> problem worse.
->>>=20
->> We can add a new "string" module parameter, which contains a model =
-number,
->> in most cases, the save product with a common prefix model number, so
->> in this way
->> nvme can distinguish the different performance devices(hign or low =
-end).
->> Before create io queue, nvme driver can get the device's Model =
-number(40 Bytes),
->> then nvme driver can compare device's model number with module =
-parameter, to
->> decide how many io queues for each disk;
->>=20
->> /* if model_number is MODEL_ANY, these parameters will be applied to
->> all nvme devices. */
->> char dev_io_queues[1024] =3D "model_number=3DMODEL_ANY,
->> poll=3D0,read=3D0,wrr_low=3D0,wrr_medium=3D0,wrr_high=3D0,wrr_urgent=3D=
-0";
->> /* these paramters only affect nvme disk whose model number is "XXX" =
-*/
->> char dev_io_queues[1024] =3D "model_number=3DXXX,
->> poll=3D1,read=3D2,wrr_low=3D3,wrr_medium=3D4,wrr_high=3D5,wrr_urgent=3D=
-0;";
->>=20
->> struct dev_io_queues {
->>        char model_number[40];
->>        unsigned int poll;
->>        unsgined int read;
->>        unsigned int wrr_low;
->>        unsigned int wrr_medium;
->>        unsigned int wrr_high;
->>        unsigned int wrr_urgent;
->> };
->>=20
->> We can use these two variable to store io queue configurations:
->>=20
->> /* default values for the all disk, except whose model number is not
->> in io_queues_cfg */
->> struct dev_io_queues io_queues_def =3D {};
->>=20
->> /* user defined values for a specific model number */
->> struct dev_io_queues io_queues_cfg =3D {};
->>=20
->> If we need multiple configurations( > 2), we can also extend
->> dev_io_queues to support it.
->>=20
->=20
-> Hi Maintainers,
->=20
-> If we add patch to support these queue count at controller level,
-> instead moudle level,
-> shall we add WRR ?
->=20
-> Recently I do some cgroup io weight testing,
-> https://github.com/dublio/iotrack/wiki/cgroup-io-weight-test
-> I think a proper io weight policy
-> should consider high weight cgroup's iops, latency and also take whole
-> disk's throughput
-> into account, that is to say, the policy should do more carfully trade
-> off between cgroup's
-> IO performance and whole disk's throughput. I know one policy cannot
-> do all things perfectly,
-> but from the test result nvme-wrr can work well.
->=20
-> =46rom the following test result, nvme-wrr work well for both cgroup's
-> latency, iops, and whole
-> disk's throughput.
->=20
-> Notes:
-> blk-iocost: only set qos.model, not set percentage latency.
-> nvme-wrr: set weight by:
->    h=3D64;m=3D32;l=3D8;ab=3D0; nvme set-feature /dev/nvme1n1 -f 1 -v =
-$(printf
-> "0x%x\n" $(($ab<<0|$l<<8|$m<<16|$h<<24)))
->    echo "$major:$minor high" > /sys/fs/cgroup/test1/io.wrr
->    echo "$major:$minor low" > /sys/fs/cgroup/test2/io.wrr
->=20
->=20
-> Randread vs Randread:
-> cgroup.test1.weight : cgroup.test2.weight =3D 8 : 1
-> high weight cgroup test1: randread, fio: numjobs=3D8, iodepth=3D32, =
-bs=3D4K
-> low  weight cgroup test2: randread, fio: numjobs=3D8, iodepth=3D32, =
-bs=3D4K
->=20
-> test case         bw         iops       rd_avg_lat   wr_avg_lat
-> rd_p99_lat   wr_p99_lat
-> =
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> bfq_test1         767226     191806     1333.30      0.00
-> 536.00       0.00
-> bfq_test2         94607      23651      10816.06     0.00
-> 610.00       0.00
-> iocost_test1      1457718    364429     701.76       0.00
-> 1630.00      0.00
-> iocost_test2      1466337    366584     697.62       0.00
-> 1613.00      0.00
-> none_test1        1456585    364146     702.22       0.00
-> 1646.00      0.00
-> none_test2        1463090    365772     699.12       0.00
-> 1613.00      0.00
-> wrr_test1         2635391    658847     387.94       0.00
-> 1236.00      0.00
-> wrr_test2         365428     91357      2801.00      0.00
-> 5537.00      0.00
->=20
-> =
-https://github.com/dublio/iotrack/wiki/cgroup-io-weight-test#215-summary-f=
-io-output
->=20
->=20
-
-Glad to see that BFQ meets weights.  Sad to see how it is suffering in
-terms of IOPS on your system.
-
-Good job with your scheduler!
-
-However, as for I/O control, the hard-to-control cases are not the
-ones with constantly-full deep queues.  BFQ complexity stems from the
-need to control also the tough cases.  An example is sync I/O with
-I/O depth one against async I/O.  On the other hand, those use cases
-may not be of interest for your scheduler.
-
-Thanks,
-Paolo
-
-> Randread vs Seq Write:
-> cgroup.test1.weight : cgroup.test2.weight =3D 8 : 1
-> high weight cgroup test1: randread, fio: numjobs=3D8, iodepth=3D32, =
-bs=3D4K
-> low  weight cgroup test2: seq write, fio: numjobs=3D1, iodepth=3D32, =
-bs=3D256K
->=20
-> test case      bw         iops       rd_avg_lat   wr_avg_lat
-> rd_p99_lat   wr_p99_lat
-> =
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> bfq_test1      814327     203581     1256.19      0.00         593.00  =
-     0.00
-> bfq_test2      104758     409        0.00         78196.32     0.00
->     1052770.00
-> iocost_test1   270467     67616      3784.02      0.00         9371.00 =
-     0.00
-> iocost_test2   1541575    6021       0.00         5313.02      0.00
->     6848.00
-> none_test1     271708     67927      3767.01      0.00         9502.00 =
-     0.00
-> none_test2     1541951    6023       0.00         5311.50      0.00
->     6848.00
-> wrr_test1      775005     193751     1320.17      0.00         4112.00 =
-     0.00
-> wrr_test2      1198319    4680       0.00         6835.30      0.00
->     8847.00
->=20
->=20
-> =
-https://github.com/dublio/iotrack/wiki/cgroup-io-weight-test#225-summary-f=
-io-output
->=20
-> Thanks
-> Weiping
-
+Thanks
