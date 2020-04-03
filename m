@@ -1,120 +1,43 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup changes for v5.7-rc1
-Date: Fri, 3 Apr 2020 11:52:43 -0400
-Message-ID: <20200403155243.GF162390@mtj.duckdns.org>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2] docs: cgroup-v1: Document the cpuset_v2_mode mount
+ option
+Date: Fri, 3 Apr 2020 12:10:23 -0400
+Message-ID: <1434c1e9-bc2d-f21e-a9a8-060c1812fc8e@redhat.com>
+References: <20200330140615.25549-1-longman@redhat.com>
+ <20200403154343.GE162390@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:content-transfer-encoding;
-        bh=Za/htZk64WGRnsEWR8r2929pAGBMjmkKLkKsEbUZhBs=;
-        b=D/f3vfZFF1SiLQnrJ7rrb/lAykV3v6OqChYhbcgVee38gxZWZfqb0GD7NQUHUUEVnP
-         CotxEZoNUSzeFNJzkp3sTAhsrGhzfdahKtgmqAYQTlFKsUg2QTt6klbDdtCNxX3UKD+A
-         HL1AE7mC8xc5PbraXwCj0VYCmbNcFq91kAurjBJOjxbt2m3UDImWk0FWUOlqFeP//Pmp
-         OckC5PpYrSEXC7t7QwWuEbz2HOMGVVjhbqZqOPa6opx3L0ghYVH/Ure9CjImZ+4T5LLZ
-         ReOeb1smxypWR2ST/UZJICBAKdLT4UkpAUQrx5wlUL+Wl7R7JPmLHY/Vfo7d4V9vMCre
-         Ml+A==
-Content-Disposition: inline
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1585930230;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=eP7ClUiEc6wxzyPpIfOZtYlk/BTjbvCUBAhRW9+z9Mo=;
+        b=KISY7B6KF9UnK+isdnAurvtOU0HpzSqYfaX30O35CMC+k6u82VmBU14oozoerdR0cav/k2
+        vNFgkSGNxo5DFb7/l7jLs00ErePfRS7kuKONvES619dSzyCaSWzEKOYZNLGM8t9+HYdKy5
+        BqtBaqh9y2gcIH/0Liq+lfKtHc9Cvc8=
+In-Reply-To: <20200403154343.GE162390-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Content-Language: en-US
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joel Fernandes <joel-QYYGw3jwrUn5owFQY34kdNi2O/JbrIOy@public.gmane.org>, Sonny Rao <sonnyrao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Hello, Linus.
+On 4/3/20 11:43 AM, Tejun Heo wrote:
+> On Mon, Mar 30, 2020 at 10:06:15AM -0400, Waiman Long wrote:
+>> The cpuset in cgroup v1 accepts a special "cpuset_v2_mode" mount
+>> option that make cpuset.cpus and cpuset.mems behave more like those in
+>> cgroup v2.  Document it to make other people more aware of this feature
+>> that can be useful in some circumstances.
+>>
+>> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Applied to cgroup/for-5.7.
+>
+> Thanks.
+>
+Thanks,
+Longman
 
-* Christian extended clone3 so that processes can be spawned into cgroups
-  directly. This is not only neat in terms of semantics but also avoids gra=
-bbing
-  the global cgroup_threadgroup_rwsem for migration.
-
-* Daniel added !root xattr support to cgroupfs. Userland already uses xattr=
-s on
-  cgroupfs for bookkeeping. This will allow delegated cgroups to support su=
-ch
-  usages.
-
-* Prateek tried to make cpuset hotplug handling synchronous but that led to
-  possible deadlock scenarios. Reverted.
-
-* Other minor changes including release_agent_path handling cleanup.
-
-Thanks.
-
-The following changes since commit 2e5383d7904e60529136727e49629a82058a5607:
-
-  cgroup1: don't call release_agent when it is "" (2020-03-04 11:53:33 -050=
-0)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.7
-
-for you to fetch changes up to 0c05b9bdbfe52ad9b391a28dd26f047715627e0c:
-
-  docs: cgroup-v1: Document the cpuset_v2_mode mount option (2020-04-03 11:=
-42:56 -0400)
-
-----------------------------------------------------------------
-Christian Brauner (6):
-      cgroup: unify attach permission checking
-      cgroup: add cgroup_get_from_file() helper
-      cgroup: refactor fork helpers
-      cgroup: add cgroup_may_write() helper
-      clone3: allow spawning processes into cgroups
-      selftests/cgroup: add tests for cloning into cgroups
-
-Daniel Xu (4):
-      kernfs: kvmalloc xattr value instead of kmalloc
-      kernfs: Add removed_size out param for simple_xattr_set
-      kernfs: Add option to enable user xattrs
-      cgroupfs: Support user xattrs
-
-Madhuparna Bhowmik (1):
-      cgroup.c: Use built-in RCU list checking
-
-Michal Koutn=FD (1):
-      cgroup: Clean up css_set task traversal
-
-Prateek Sood (1):
-      cpuset: Make cpuset hotplug synchronous
-
-Suren Baghdasaryan (1):
-      kselftest/cgroup: add cgroup destruction test
-
-Tejun Heo (3):
-      Merge branch 'for-5.6-fixes' into for-5.7
-      cgroup: Restructure release_agent_path handling
-      Revert "cpuset: Make cpuset hotplug synchronous"
-
-Waiman Long (1):
-      docs: cgroup-v1: Document the cpuset_v2_mode mount option
-
- Documentation/admin-guide/cgroup-v1/cpusets.rst   |  11 +
- fs/kernfs/inode.c                                 |  91 +++++-
- fs/kernfs/kernfs-internal.h                       |   2 +
- fs/xattr.c                                        |  17 +-
- include/linux/cgroup-defs.h                       |   5 +-
- include/linux/cgroup.h                            |  23 +-
- include/linux/kernfs.h                            |  11 +-
- include/linux/sched/task.h                        |   4 +
- include/linux/xattr.h                             |   3 +-
- include/uapi/linux/sched.h                        |   5 +
- kernel/cgroup/cgroup-v1.c                         |  34 +-
- kernel/cgroup/cgroup.c                            | 361 ++++++++++++++++--=
-----
- kernel/cgroup/cpuset.c                            |   8 +-
- kernel/cgroup/pids.c                              |  15 +-
- kernel/fork.c                                     |  19 +-
- mm/shmem.c                                        |   2 +-
- tools/testing/selftests/cgroup/Makefile           |   6 +-
- tools/testing/selftests/cgroup/cgroup_util.c      | 126 ++++++++
- tools/testing/selftests/cgroup/cgroup_util.h      |   4 +
- tools/testing/selftests/cgroup/test_core.c        | 177 +++++++++++
- tools/testing/selftests/clone3/clone3_selftests.h |  19 +-
- 21 files changed, 795 insertions(+), 148 deletions(-)
-
---=20
-tejun
