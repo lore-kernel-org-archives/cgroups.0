@@ -1,48 +1,99 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH] mm, memcg: Bypass high reclaim iteration for cgroup
- hierarchy root
-Date: Thu, 2 Apr 2020 11:18:52 -0400
-Message-ID: <20200402151852.GD2089@cmpxchg.org>
-References: <20200312164137.GA1753625@chrisdown.name>
+From: Dmitry Yakunin <zeil@yandex-team.ru>
+Subject: [PATCH v3 net] inet_diag: add cgroup id attribute
+Date: Fri, 3 Apr 2020 12:56:27 +0300
+Message-ID: <20200403095627.GA85072@yandex-team.ru>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=X4md8GfFb/AZLlmWivRcEwSCP4uBimc7oKbXY4Cuzbs=;
-        b=L/SnQjBfnp5fEn4nBLMR6OIrZCUsqaFG32VM3D8P0P8Lj/uoYnjkRyEnuYvXsJsAKt
-         c4igzrWSnvwBSj3E7mr0QbuhFJhboCmmv66EkfRKM8dykWur9UCs7QjwYmhFzRp4O+A4
-         SnrLBfG8ir/Oio7mvh4OgFCEi2cahY9VIyMpFSkHRdm41lB0/v0GSq1mKWVd2TiCyBlN
-         hI6cIgvd6bBViEDgjTfBgb3PQnim/I28LCR10Uk8FN4kj7u9VdBwqKzsszZNJndU/ap/
-         B/jD43fEcMR1E7yUPLdB4B9rCGNhvxza6rn5dvPkZt/C61cv9D6z0rzi3GwPV+Lp5T9D
-         VM4g==
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+        t=1585907792; bh=quoFiDMrc4n64AIBxbW1ayY5jdo/MDfLHVb25p4vCC0=;
+        h=Message-ID:Subject:To:From:Date:Cc;
+        b=qfW4f15gWBYhHThlb6i7AgwCc9v26b0hEDJ8cy40bXs5eVJKV6dpInZkz3DcGxcdp
+         Ie2esvZimeok6tAjsZgmVd2DsR9t7SxHYvCAp65argc/j3dqJ8BUOkgjNnLkEk/zHR
+         sTpRoYpL5qrjJVNEdfLcWhdcmkW88Lju8xzivL+0=
 Content-Disposition: inline
-In-Reply-To: <20200312164137.GA1753625-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: davem@davemloft.net, netdev@vger.kernel.org
+Cc: khlebnikov@yandex-team.ru, cgroups@vger.kernel.org, bpf@vger.kernel.org
 
-On Thu, Mar 12, 2020 at 04:41:37PM +0000, Chris Down wrote:
-> The root of the hierarchy cannot have high set, so we will never reclaim
-> based on it. This makes that clearer and avoids another entry.
-> 
-> Signed-off-by: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: kernel-team-b10kYP2dOMg@public.gmane.org
+This patch adds cgroup v2 ID to common inet diag message attributes.
+Cgroup v2 ID is kernfs ID (ino or ino+gen). This attribute allows filter
+inet diag output by cgroup ID obtained by name_to_handle_at() syscall.
+When net_cls or net_prio cgroup is activated this ID is equal to 1 (root
+cgroup ID) for newly created sockets.
 
-This makes sense, memory.high doesn't exist on the root.
+Some notes about this ID:
 
-And the mem_cgroup_is_root() check, a simple pointer comparison, is
-cheaper than reading the page_counter atomic and memcg->high (which we
-already know to be PAGE_COUNTER_MAX).
+1) gets initialized in socket() syscall
+2) incoming socket gets ID from listening socket
+   (not during accept() syscall)
+3) not changed when process get moved to another cgroup
+4) can point to deleted cgroup (refcounting)
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+v2:
+  - use CONFIG_SOCK_CGROUP_DATA instead if CONFIG_CGROUPS
+
+v3:
+  - fix attr size by using nla_total_size_64bit() (Eric Dumazet)
+  - more detailed commit message (Konstantin Khlebnikov)
+
+Signed-off-by: Dmitry Yakunin <zeil@yandex-team.ru>
+Reviewed-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+---
+ include/linux/inet_diag.h      | 6 +++++-
+ include/uapi/linux/inet_diag.h | 1 +
+ net/ipv4/inet_diag.c           | 7 +++++++
+ 3 files changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/include/linux/inet_diag.h b/include/linux/inet_diag.h
+index c91cf2d..0696f86 100644
+--- a/include/linux/inet_diag.h
++++ b/include/linux/inet_diag.h
+@@ -66,7 +66,11 @@ static inline size_t inet_diag_msg_attrs_size(void)
+ 		+ nla_total_size(1)  /* INET_DIAG_SKV6ONLY */
+ #endif
+ 		+ nla_total_size(4)  /* INET_DIAG_MARK */
+-		+ nla_total_size(4); /* INET_DIAG_CLASS_ID */
++		+ nla_total_size(4)  /* INET_DIAG_CLASS_ID */
++#ifdef CONFIG_SOCK_CGROUP_DATA
++		+ nla_total_size_64bit(sizeof(u64))  /* INET_DIAG_CGROUP_ID */
++#endif
++		;
+ }
+ int inet_diag_msg_attrs_fill(struct sock *sk, struct sk_buff *skb,
+ 			     struct inet_diag_msg *r, int ext,
+diff --git a/include/uapi/linux/inet_diag.h b/include/uapi/linux/inet_diag.h
+index a1ff345..dc87ad6 100644
+--- a/include/uapi/linux/inet_diag.h
++++ b/include/uapi/linux/inet_diag.h
+@@ -154,6 +154,7 @@ enum {
+ 	INET_DIAG_CLASS_ID,	/* request as INET_DIAG_TCLASS */
+ 	INET_DIAG_MD5SIG,
+ 	INET_DIAG_ULP_INFO,
++	INET_DIAG_CGROUP_ID,
+ 	__INET_DIAG_MAX,
+ };
+ 
+diff --git a/net/ipv4/inet_diag.c b/net/ipv4/inet_diag.c
+index 8c83775..17e3c52 100644
+--- a/net/ipv4/inet_diag.c
++++ b/net/ipv4/inet_diag.c
+@@ -161,6 +161,13 @@ int inet_diag_msg_attrs_fill(struct sock *sk, struct sk_buff *skb,
+ 			goto errout;
+ 	}
+ 
++#ifdef CONFIG_SOCK_CGROUP_DATA
++	if (nla_put_u64_64bit(skb, INET_DIAG_CGROUP_ID,
++			      cgroup_id(sock_cgroup_ptr(&sk->sk_cgrp_data)),
++			      INET_DIAG_PAD))
++		goto errout;
++#endif
++
+ 	r->idiag_uid = from_kuid_munged(user_ns, sock_i_uid(sk));
+ 	r->idiag_inode = sock_i_ino(sk);
+ 
+-- 
+2.7.4
+
