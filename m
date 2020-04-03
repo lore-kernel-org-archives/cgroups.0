@@ -1,55 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Deadlock due to "cpuset: Make cpuset hotplug synchronous"
-Date: Fri, 3 Apr 2020 10:55:23 -0400
-Message-ID: <20200403145523.GC162390@mtj.duckdns.org>
-References: <F0388D99-84D7-453B-9B6B-EEFF0E7BE4CC@lca.pw>
- <20200325191922.GM162390@mtj.duckdns.org>
- <20200326101529.xh763j5frq2r7mqv@e107158-lin>
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Subject: Re: [PATCH v3 net] inet_diag: add cgroup id attribute
+Date: Fri, 3 Apr 2020 17:56:01 +0300
+Message-ID: <20ba0af2-66df-00da-104a-512990c316d8@yandex-team.ru>
+References: <20200403095627.GA85072@yandex-team.ru>
+ <20200403133817.GW162390@mtj.duckdns.org>
+ <c28be8aa-d91c-3827-7e99-f92ad05ef6f1@yandex-team.ru>
+ <20200403144505.GZ162390@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=WueqobVTQhcuC12qhXxBjSlUXTsOjQxipqHLExYdXc0=;
-        b=r1b480yVF4TVvjrmu9e9b50NuC47Vk3m0YSl40WOSeQXq8lJeps/ADO+KJNjeKJzJj
-         aGGZJZfUuaq3cRlitmPYQ2IQv77nhZDHwTOFW4atm0XMsImQWiDGLolaa9PagsIpXjgb
-         EM2oNoZdvmXAhaoNA0X7jbbK3rIy8dL8zcXGxbVDVblZmNjnIRyoagBiqvD5Wg0DfMft
-         Je19HLCWupm6dDLYgsaD2ZSvaSjPdO2mdFOlfM68Q7pRDcuIodjlvnxsEyHv1ozQY4VN
-         td2ZZZmZjc3IOVeCUgGknW+DVuUoBKjpERAgu440DgNTZua5AIfvoANdbzhN23UAUpXq
-         kuTQ==
-Content-Disposition: inline
-In-Reply-To: <20200326101529.xh763j5frq2r7mqv@e107158-lin>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+        t=1585925762; bh=Q7u3ANbO873KS0xB1AbSi27nApxQH0XfixpEWRWSarw=;
+        h=In-Reply-To:Message-ID:From:Date:References:To:Subject:Cc;
+        b=J6f1621N+JkGjuHiNs0fLjRg3rqlb5JEvKks79Yh6gBTXRN8g2wXq65tTVJ1QCYf2
+         WIumpNhxdwK8ZKcQ/IkNJNH93yaiVHKhcjr5LiC++PYqpLxnEdqiRCIaegB/5Uxaxa
+         ZkZiPi4CFs9Nj9IPk0+iAWwQpvYwovMIBYVKmWZg=
+In-Reply-To: <20200403144505.GZ162390@mtj.duckdns.org>
+Content-Language: en-CA
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Qais Yousef <qais.yousef@arm.com>
-Cc: Qian Cai <cai@lca.pw>, Prateek Sood <prsood@codeaurora.org>, Li Zefan <lizefan@huawei.com>, cgroups@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Tejun Heo <tj@kernel.org>
+Cc: Dmitry Yakunin <zeil@yandex-team.ru>, davem@davemloft.net, netdev@vger.kernel.org, cgroups@vger.kernel.org, bpf@vger.kernel.org
 
-On Thu, Mar 26, 2020 at 10:15:32AM +0000, Qais Yousef wrote:
-> On 03/25/20 15:19, Tejun Heo wrote:
-> > On Wed, Mar 25, 2020 at 03:16:56PM -0400, Qian Cai wrote:
-> > > The linux-next commit a49e4629b5ed (“cpuset: Make cpuset hotplug synchronous”)
-> > > introduced real deadlocks with CPU hotplug as showed in the lockdep splat, since it is
-> > > now making a relation from cpu_hotplug_lock —> cgroup_mutex.
-> > 
-> > Prateek, can you please take a look? Given that the merge window is just around
-> > the corner, we might have to revert and retry later if it can't be resolved
-> > quickly.
+On 03/04/2020 17.45, Tejun Heo wrote:
+> On Fri, Apr 03, 2020 at 05:37:17PM +0300, Konstantin Khlebnikov wrote:
+>>> How would this work with things like inetd? Would it make sense to associate the
+>>> socket on the first actual send/recv?
+>>
+>> First send/recv seems too intrusive.
 > 
-> I've ran cpuset_hotplug and cpuhotplug LTP tests using next-20200325 but
-> couldn't reproduce it.
+> Intrusive in terms of?
+
+In term of adding more code to networking fast paths.
+
 > 
-> Hopefully that can be fixed, but if you had to revert it, do you mind picking
-> this instead to fix the LTP issue I encountered before?
+>> Setsockopt to change association to current cgroup (or by id) seems more reasonable.
 > 
-> 	https://lore.kernel.org/lkml/20200211141554.24181-1-qais.yousef@arm.com/
+> I'm not sure about exposing it as an explicit interface.
 
-So, I'd rather not, for now anyway. It isn't a real problem and I don't wanna
-add a wait vector there.
+Yep, it's better to create thing in right place from the beginning.
+Current behaviour isn't bad, just not obvious (and barely documented).
+That's why I've asked Dmitry to add these notes.
 
-Thanks.
-
--- 
-tejun
+> 
+> Thanks.
+> 
