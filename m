@@ -1,43 +1,49 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v3 net] inet_diag: add cgroup id attribute
-Date: Fri, 3 Apr 2020 10:45:05 -0400
-Message-ID: <20200403144505.GZ162390@mtj.duckdns.org>
-References: <20200403095627.GA85072@yandex-team.ru>
- <20200403133817.GW162390@mtj.duckdns.org>
- <c28be8aa-d91c-3827-7e99-f92ad05ef6f1@yandex-team.ru>
+Subject: Re: Deadlock due to "cpuset: Make cpuset hotplug synchronous"
+Date: Fri, 3 Apr 2020 10:54:18 -0400
+Message-ID: <20200403145418.GB162390@mtj.duckdns.org>
+References: <F0388D99-84D7-453B-9B6B-EEFF0E7BE4CC@lca.pw>
+ <20200325191922.GM162390@mtj.duckdns.org>
+ <6AD62381-394F-4742-816B-12DE67DE9788@lca.pw>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=MqUKZEQW4ktugpJoN6yg32u1OINgXC5Ef9CKI/ulXcE=;
-        b=qHuagVSw8AoY49GuqNt4Gyp4jl3Y5A6Zny5YowwmaLIOfUdkYqgJrdhGbLqAbimiOd
-         IWVRwHVhkr5RChCnMkes71SpREXTrBmXtegDcscwc3bIqR71AJW0Lgxu+I0+Yl5TFmzy
-         akUWBL5VTWVFteCSVIoQRGM8dGqqLIVdX16P+sSXDAZhNrPmnHuOc/lxMlLaIUZ05MrD
-         TxkS3mAR4Kn6N3Z08aEICPf0TNg3yyw/OYdL1SLobcYzYmO3TlUCYSQiVcbyrwo2s/EV
-         I558rvJoaucMCbX7w+2g7eQdntMf+OaN5JtcILeNSEJcKHCa5C3E5HuyrDSUU9MUp3Bn
-         GqrA==
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=Qyus9wEurAIsnv0KktXUQAPVSjugd3/P/58Fl3RicEU=;
+        b=AsMjO4gFG/KXUlzlax7BKYVPEzhqXKQC1Xgj+6ktBQX8c79pf9D9fDvjN0PhCoBALB
+         NYUDhQGz+MFxBY/tKwUkORWhVJPah3s36fFIe1usQXybxHqknrWgb5LGQopO7mDMwt9s
+         13PIz1GKaNUteJUiZr2asCr+CwNxf/FALTr+MP6W0AcE3pvVmgltqKj+MVNIP6QzaUzF
+         vyBN0pHykga9tV1YgB6OqZy9QlylEz2/psehTECYZtoRFA+proI997MDHcKhy3Su8HJz
+         dv7wL63P4+DjSgV/KuLlWlKFoiQ+EEZI3keIoEGHiKIoEcRVx9H8q8cDQWx4re3y3U38
+         +9Mg==
 Content-Disposition: inline
-In-Reply-To: <c28be8aa-d91c-3827-7e99-f92ad05ef6f1-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
+In-Reply-To: <6AD62381-394F-4742-816B-12DE67DE9788-J5quhbR+WMc@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
-Cc: Dmitry Yakunin <zeil-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Qian Cai <cai-J5quhbR+WMc@public.gmane.org>
+Cc: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Fri, Apr 03, 2020 at 05:37:17PM +0300, Konstantin Khlebnikov wrote:
-> > How would this work with things like inetd? Would it make sense to associate the
-> > socket on the first actual send/recv?
+On Wed, Apr 01, 2020 at 10:00:31PM -0400, Qian Cai wrote:
 > 
-> First send/recv seems too intrusive.
+> 
+> > On Mar 25, 2020, at 3:19 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> > 
+> > On Wed, Mar 25, 2020 at 03:16:56PM -0400, Qian Cai wrote:
+> >> The linux-next commit a49e4629b5ed (“cpuset: Make cpuset hotplug synchronous”)
+> >> introduced real deadlocks with CPU hotplug as showed in the lockdep splat, since it is
+> >> now making a relation from cpu_hotplug_lock —> cgroup_mutex.
+> > 
+> > Prateek, can you please take a look? Given that the merge window is just around
+> > the corner, we might have to revert and retry later if it can't be resolved
+> > quickly.
+> 
+> Tejun, can you back off this commit now given it seems nobody is trying to rescue it?
 
-Intrusive in terms of?
-
-> Setsockopt to change association to current cgroup (or by id) seems more reasonable.
-
-I'm not sure about exposing it as an explicit interface.
+Yeah, gonna revert it before sending out the pull request.
 
 Thanks.
 
