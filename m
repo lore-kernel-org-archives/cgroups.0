@@ -1,225 +1,101 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 1/5] blk-iocost: switch to fixed non-auto-decaying use_delay
-Date: Wed,  8 Apr 2020 16:14:46 -0400
-Message-ID: <20200408201450.3959560-2-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 2/5] block: add request->io_data_len
+Date: Wed,  8 Apr 2020 16:14:47 -0400
+Message-ID: <20200408201450.3959560-3-tj@kernel.org>
 References: <20200408201450.3959560-1-tj@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=alpxsM/abPDA1/mjXIVosAx6OTqAHRRnuUUJrYCfVtA=;
-        b=JpVYHe+hBeOTw/UTMJ/u+ltNZG1zrXA1nkJhyBcw0TYcodxkSu3qqPgDAfqxTlosIP
-         IOZ+dxch6p+vEiT1gAAFKX2EpXlObPAyCG0QxBEYhMt4SYvbFV+cHfe1JRG4jMWTk2sk
-         r0C9oHK2xMZ2Kn9/okBz1zl2KS9edOhYjNcbbQkQkrdwIEaXD5ANmrM00fH7D4c00TyI
-         heTWDSRMSY/k1m80XCJg4Acf/XTG1grj4E/VO/ts8l3aJj6HTuptMFb89nXCCQ0cs2/t
-         A6e3wnW4sTqACSK3k5UVcUH9Si3hsoIjWqxF/knUGaq1jDZpXsX75zLwOU1bodlZ1HTR
-         r7DQ==
-In-Reply-To: <20200408201450.3959560-1-tj@kernel.org>
-Sender: linux-block-owner@vger.kernel.org
+        bh=Ih5upVjhUxfYMhdnP4A5/T8a9y3p/p63bXQ1Cpw5ptI=;
+        b=ahdDMthtvdSscTfVMy/vrgXkEE6ZLB/M6Kqlcr4R1o5OQHWIEAP1lo7TbzBshjqpCi
+         ijZq34NRYb1Wu/xEtN7bQcDJNh6Gv/5gE9N3nKqoQdfjvMtx9Gohf9fADM/CRUc3c/CZ
+         9rKw14KxaKSEjoftno62YvA0eZ0wBdQOFpRG0QiJgot3SK8khszhzpQKBdBkDxhpXX7u
+         pXyrkGGwxgGc35KEFON+hvf2NVTqYgULNGVY6GczJRq/gohaYTmvIkP5/Jn6AD8sm5jA
+         UFDc3fRkF6wXTWUq86zn7wMUK4PuykXM3UtoOcF6+Nw2CiBwktkCj78chNE6Gia7VXd3
+         2qhw==
+In-Reply-To: <20200408201450.3959560-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: axboe@kernel.dk
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@vger.kernel.org, cgroups@vger.kernel.org, newella@fb.com, josef@toxicpanda.com, Tejun Heo <tj@kernel.org>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, newella-b10kYP2dOMg@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-The use_delay mechanism was introduced by blk-iolatency to hold memory
-allocators accountable for the reclaim and other shared IOs they cause. The
-duration of the delay is dynamically balanced between iolatency increasing the
-value on each target miss and it auto-decaying as time passes and threads get
-delayed on it.
+Currently, at the time of completeion, there's no way of knowing how big a
+request was. blk-iocost will need this information to account for IO size when
+calculating expected latencies.
 
-While this works well for iolatency, iocost's control model isn't compatible
-with it. There is no repeated "violation" events which can be balanced against
-auto-decaying. iocost instead knows how much a given cgroup is over budget and
-wants to prevent that cgroup from issuing IOs while over budget. Until now,
-iocost has been adding the cost of force-issued IOs. However, this doesn't
-reflect the amount which is already over budget and is simply not enough to
-counter the auto-decaying allowing anon-memory leaking low priority cgroup to
-go over its alloted share of IOs.
+This patch adds rq->io_data_len which remembers blk_rq_bytes() at the time the
+request gets issued. The field is enabled iff CONFIG_BLK_IO_DATA_LEN is set and
+doesn't increase the size of the struct even when enabled.
 
-As auto-decaying doesn't make much sense for iocost, this patch introduces a
-different mode of operation for use_delay - when blkcg_set_delay() are used
-insted of blkcg_add/use_delay(), the delay duration is not auto-decayed until it
-is explicitly cleared with blkcg_clear_delay(). iocost is updated to keep the
-delay duration synchronized to the budget overage amount.
-
-With this change, iocost can effectively police cgroups which generate
-significant amount of force-issued IOs.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Josef Bacik <josef@toxicpanda.com>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-cgroup.c         |  6 ++++++
- block/blk-iocost.c         | 23 ++++++++------------
- include/linux/blk-cgroup.h | 43 +++++++++++++++++++++++++++++---------
- 3 files changed, 48 insertions(+), 24 deletions(-)
+ block/Kconfig          | 3 +++
+ block/blk-mq.c         | 6 ++++++
+ include/linux/blkdev.h | 8 ++++++++
+ 3 files changed, 17 insertions(+)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index c15a26096038..3ee9df979ff2 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -1514,6 +1514,10 @@ static void blkcg_scale_delay(struct blkcg_gq *blkg, u64 now)
- {
- 	u64 old = atomic64_read(&blkg->delay_start);
+diff --git a/block/Kconfig b/block/Kconfig
+index 3bc76bb113a0..48308e600dc8 100644
+--- a/block/Kconfig
++++ b/block/Kconfig
+@@ -26,6 +26,9 @@ menuconfig BLOCK
  
-+	/* negative use_delay means no scaling, see blkcg_set_delay() */
-+	if (atomic_read(&blkg->use_delay) < 0)
-+		return;
+ if BLOCK
+ 
++config BLK_RQ_IO_DATA_LEN
++	bool
 +
- 	/*
- 	 * We only want to scale down every second.  The idea here is that we
- 	 * want to delay people for min(delay_nsec, NSEC_PER_SEC) in a certain
-@@ -1701,6 +1705,8 @@ void blkcg_schedule_throttle(struct request_queue *q, bool use_memdelay)
-  */
- void blkcg_add_delay(struct blkcg_gq *blkg, u64 now, u64 delta)
- {
-+	if (WARN_ON_ONCE(atomic_read(&blkg->use_delay) < 0))
-+		return;
- 	blkcg_scale_delay(blkg, now);
- 	atomic64_add(delta, &blkg->delay_nsec);
- }
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index db35ee682294..a8e99ef76a08 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -1209,14 +1209,14 @@ static enum hrtimer_restart iocg_waitq_timer_fn(struct hrtimer *timer)
- 	return HRTIMER_NORESTART;
- }
+ config BLK_RQ_ALLOC_TIME
+ 	bool
  
--static bool iocg_kick_delay(struct ioc_gq *iocg, struct ioc_now *now, u64 cost)
-+static bool iocg_kick_delay(struct ioc_gq *iocg, struct ioc_now *now)
- {
- 	struct ioc *ioc = iocg->ioc;
- 	struct blkcg_gq *blkg = iocg_to_blkg(iocg);
- 	u64 vtime = atomic64_read(&iocg->vtime);
- 	u64 vmargin = ioc->margin_us * now->vrate;
- 	u64 margin_ns = ioc->margin_us * NSEC_PER_USEC;
--	u64 expires, oexpires;
-+	u64 delta_ns, expires, oexpires;
- 	u32 hw_inuse;
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index f6291ceedee4..64ed22712fe4 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -415,6 +415,9 @@ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
+ 		return ERR_PTR(-EWOULDBLOCK);
  
- 	/* debt-adjust vtime */
-@@ -1233,15 +1233,10 @@ static bool iocg_kick_delay(struct ioc_gq *iocg, struct ioc_now *now, u64 cost)
- 		return false;
+ 	rq->__data_len = 0;
++#ifdef CONFIG_BLK_RQ_IO_DATA_LEN
++	rq->io_data_len = 0;
++#endif
+ 	rq->__sector = (sector_t) -1;
+ 	rq->bio = rq->biotail = NULL;
+ 	return rq;
+@@ -655,6 +658,9 @@ void blk_mq_start_request(struct request *rq)
  
- 	/* use delay */
--	if (cost) {
--		u64 cost_ns = DIV64_U64_ROUND_UP(cost * NSEC_PER_USEC,
--						 now->vrate);
--		blkcg_add_delay(blkg, now->now_ns, cost_ns);
--	}
--	blkcg_use_delay(blkg);
--
--	expires = now->now_ns + DIV64_U64_ROUND_UP(vtime - now->vnow,
--						   now->vrate) * NSEC_PER_USEC;
-+	delta_ns = DIV64_U64_ROUND_UP(vtime - now->vnow,
-+				      now->vrate) * NSEC_PER_USEC;
-+	blkcg_set_delay(blkg, delta_ns);
-+	expires = now->now_ns + delta_ns;
+ 	trace_block_rq_issue(q, rq);
  
- 	/* if already active and close enough, don't bother */
- 	oexpires = ktime_to_ns(hrtimer_get_softexpires(&iocg->delay_timer));
-@@ -1260,7 +1255,7 @@ static enum hrtimer_restart iocg_delay_timer_fn(struct hrtimer *timer)
- 	struct ioc_now now;
++#ifdef CONFIG_BLK_RQ_IO_DATA_LEN
++	rq->io_data_len = blk_rq_bytes(rq);
++#endif
+ 	if (test_bit(QUEUE_FLAG_STATS, &q->queue_flags)) {
+ 		rq->io_start_time_ns = ktime_get_ns();
+ 		rq->stats_sectors = blk_rq_sectors(rq);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 32868fbedc9e..bfd34c6a27ef 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -142,6 +142,14 @@ struct request {
  
- 	ioc_now(iocg->ioc, &now);
--	iocg_kick_delay(iocg, &now, 0);
-+	iocg_kick_delay(iocg, &now);
+ 	/* the following two fields are internal, NEVER access directly */
+ 	unsigned int __data_len;	/* total data len */
++#ifdef CONFIG_BLK_RQ_IO_DATA_LEN
++	/*
++	 * Total data len at the time of issue. This doesn't get deducted by
++	 * blk_update_request() and can be used by completion path to determine
++	 * the request size.
++	 */
++	unsigned int io_data_len;
++#endif
+ 	sector_t __sector;		/* sector cursor */
  
- 	return HRTIMER_NORESTART;
- }
-@@ -1378,7 +1373,7 @@ static void ioc_timer_fn(struct timer_list *timer)
- 		    atomic64_read(&iocg->abs_vdebt)) {
- 			/* might be oversleeping vtime / hweight changes, kick */
- 			iocg_kick_waitq(iocg, &now);
--			iocg_kick_delay(iocg, &now, 0);
-+			iocg_kick_delay(iocg, &now);
- 		} else if (iocg_is_idle(iocg)) {
- 			/* no waiter and idle, deactivate */
- 			iocg->last_inuse = iocg->inuse;
-@@ -1737,7 +1732,7 @@ static void ioc_rqos_throttle(struct rq_qos *rqos, struct bio *bio)
- 	 */
- 	if (bio_issue_as_root_blkg(bio) || fatal_signal_pending(current)) {
- 		atomic64_add(abs_cost, &iocg->abs_vdebt);
--		if (iocg_kick_delay(iocg, &now, cost))
-+		if (iocg_kick_delay(iocg, &now))
- 			blkcg_schedule_throttle(rqos->q,
- 					(bio->bi_opf & REQ_SWAP) == REQ_SWAP);
- 		return;
-diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
-index e4a6949fd171..a95cd4c8a3fb 100644
---- a/include/linux/blk-cgroup.h
-+++ b/include/linux/blk-cgroup.h
-@@ -638,6 +638,8 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
- 
- static inline void blkcg_use_delay(struct blkcg_gq *blkg)
- {
-+	if (WARN_ON_ONCE(atomic_read(&blkg->use_delay) < 0))
-+		return;
- 	if (atomic_add_return(1, &blkg->use_delay) == 1)
- 		atomic_inc(&blkg->blkcg->css.cgroup->congestion_count);
- }
-@@ -646,6 +648,8 @@ static inline int blkcg_unuse_delay(struct blkcg_gq *blkg)
- {
- 	int old = atomic_read(&blkg->use_delay);
- 
-+	if (WARN_ON_ONCE(old < 0))
-+		return 0;
- 	if (old == 0)
- 		return 0;
- 
-@@ -670,20 +674,39 @@ static inline int blkcg_unuse_delay(struct blkcg_gq *blkg)
- 	return 1;
- }
- 
-+/**
-+ * blkcg_set_delay - Enable allocator delay mechanism with the specified delay amount
-+ * @blkg: target blkg
-+ * @delay: delay duration in nsecs
-+ *
-+ * When enabled with this function, the delay is not decayed and must be
-+ * explicitly cleared with blkcg_clear_delay(). Must not be mixed with
-+ * blkcg_[un]use_delay() and blkcg_add_delay() usages.
-+ */
-+static inline void blkcg_set_delay(struct blkcg_gq *blkg, u64 delay)
-+{
-+	int old = atomic_read(&blkg->use_delay);
-+
-+	/* We only want 1 person setting the congestion count for this blkg. */
-+	if (!old && atomic_cmpxchg(&blkg->use_delay, old, -1) == old)
-+		atomic_inc(&blkg->blkcg->css.cgroup->congestion_count);
-+
-+	atomic64_set(&blkg->delay_nsec, delay);
-+}
-+
-+/**
-+ * blkcg_clear_delay - Disable allocator delay mechanism
-+ * @blkg: target blkg
-+ *
-+ * Disable use_delay mechanism. See blkcg_set_delay().
-+ */
- static inline void blkcg_clear_delay(struct blkcg_gq *blkg)
- {
- 	int old = atomic_read(&blkg->use_delay);
--	if (!old)
--		return;
-+
- 	/* We only want 1 person clearing the congestion count for this blkg. */
--	while (old) {
--		int cur = atomic_cmpxchg(&blkg->use_delay, old, 0);
--		if (cur == old) {
--			atomic_dec(&blkg->blkcg->css.cgroup->congestion_count);
--			break;
--		}
--		old = cur;
--	}
-+	if (old && atomic_cmpxchg(&blkg->use_delay, old, 0) == old)
-+		atomic_dec(&blkg->blkcg->css.cgroup->congestion_count);
- }
- 
- void blkcg_add_delay(struct blkcg_gq *blkg, u64 now, u64 delta);
+ 	struct bio *bio;
 -- 
 2.25.1
 
