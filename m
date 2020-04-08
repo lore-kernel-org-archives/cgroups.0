@@ -1,61 +1,98 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 4/5] iocost_monitor: exit successfully if interval is zero
-Date: Wed,  8 Apr 2020 16:14:49 -0400
-Message-ID: <20200408201450.3959560-5-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 5/5] iocost_monitor: drop string wrap around numbers when outputting json
+Date: Wed,  8 Apr 2020 16:14:50 -0400
+Message-ID: <20200408201450.3959560-6-tj@kernel.org>
 References: <20200408201450.3959560-1-tj@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=vrEanY8wxDtok+RTWBGcNDaSQ4QB8ANJ03cLIKdV4tg=;
-        b=ex4iZHeH4DOVQuYBmfQMJJYYtzF1WGnnyQk5oSf5kQrIww5/9iaUeRu+xrFcO35QBm
-         uTEZUmfC8pKrLoa6CIk++HA89Fr1LmqClmiDzN9WbnfFagMGE44s/rkrv9pp8Ez3VOaL
-         rYDsmvOpo6L1AUjud8ciac302OSNuwwlHqWUmgAYPehNYqfBKvjNUkRh79ZIcW0cr/xP
-         HGSpOuYozYntvjo/7Wq4Pa/GI11OHsXmIQa2eLRaJ23D16kgN/GmYDGXACIPyUzyQsme
-         mWTyM2ehCqgLfRKNhKnyQWWwhUhCsgWwlUjpZX6XpYvz3DKyIhCmpO6sSDNjZB6RGAb5
-         HCVg==
-In-Reply-To: <20200408201450.3959560-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=+BQj1JBsSqI5aXq/pqViTsj/4QvWCDvVD92VTzp4arE=;
+        b=qKboPNy2/dnjhxkRbRhKQPht9hywFpKyf4i8CXsAR9zg0nhM5XrScSCIvpHz7F0eji
+         41v6ZqceIMREH0c+nwCHi/waR3Ax0Z7sTe6ayepIgXW86yw+orBD/g82g9KzmM/mt7Yj
+         m0ZW8Z3YolR7v0+IcLE06O2273fnL6vM0Hx/8bihQL47lmFAqRRjUELts2RQ99MA9z0/
+         bIcqmVBOHyjQcf56HDHd/4w3zJzm29ZiAxwDKFbiPTJCKLXgWyTAraN3q7jQekCPAror
+         cvCUcZxY2v+v7Vi4wuY70fic7qGswgC1yMzn9eLdmP4ah89UPOUE/XZU96WuffzSkn9E
+         tn9g==
+In-Reply-To: <20200408201450.3959560-1-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, newella-b10kYP2dOMg@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: axboe@kernel.dk
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@vger.kernel.org, cgroups@vger.kernel.org, newella@fb.com, josef@toxicpanda.com, Tejun Heo <tj@kernel.org>
 
-This is to help external tools to decide whether iocost_monitor has all its
-requirements met or not based on the exit status of an -i0 run.
+Wrapping numbers in strings is used by some to work around bit-width issues in
+some enviroments. The problem isn't innate to json and the workaround seems to
+cause more integration problems than help. Let's drop the string wrapping.
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- tools/cgroup/iocost_monitor.py | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ tools/cgroup/iocost_monitor.py | 42 +++++++++++++++++-----------------
+ 1 file changed, 21 insertions(+), 21 deletions(-)
 
 diff --git a/tools/cgroup/iocost_monitor.py b/tools/cgroup/iocost_monitor.py
-index 7427a5ee761b..eb2363b868c5 100644
+index eb2363b868c5..188b3379b9a1 100644
 --- a/tools/cgroup/iocost_monitor.py
 +++ b/tools/cgroup/iocost_monitor.py
-@@ -28,7 +28,8 @@ parser.add_argument('devname', metavar='DEV',
- parser.add_argument('--cgroup', action='append', metavar='REGEX',
-                     help='Regex for target cgroups, ')
- parser.add_argument('--interval', '-i', metavar='SECONDS', type=float, default=1,
--                    help='Monitoring interval in seconds')
-+                    help='Monitoring interval in seconds (0 exits immediately '
-+                    'after checking requirements)')
- parser.add_argument('--json', action='store_true',
-                     help='Output in json')
- args = parser.parse_args()
-@@ -243,6 +244,9 @@ ioc = None
- if ioc is None:
-     err(f'Could not find ioc for {devname}');
+@@ -113,14 +113,14 @@ autop_names = {
  
-+if interval == 0:
-+    sys.exit(0)
-+
- # Keep printing
- while True:
-     now = time.time()
+     def dict(self, now):
+         return { 'device'               : devname,
+-                 'timestamp'            : str(now),
+-                 'enabled'              : str(int(self.enabled)),
+-                 'running'              : str(int(self.running)),
+-                 'period_ms'            : str(self.period_ms),
+-                 'period_at'            : str(self.period_at),
+-                 'period_vtime_at'      : str(self.vperiod_at),
+-                 'busy_level'           : str(self.busy_level),
+-                 'vrate_pct'            : str(self.vrate_pct), }
++                 'timestamp'            : now,
++                 'enabled'              : self.enabled,
++                 'running'              : self.running,
++                 'period_ms'            : self.period_ms,
++                 'period_at'            : self.period_at,
++                 'period_vtime_at'      : self.vperiod_at,
++                 'busy_level'           : self.busy_level,
++                 'vrate_pct'            : self.vrate_pct, }
+ 
+     def table_preamble_str(self):
+         state = ('RUN' if self.running else 'IDLE') if self.enabled else 'OFF'
+@@ -175,19 +175,19 @@ autop_names = {
+ 
+     def dict(self, now, path):
+         out = { 'cgroup'                : path,
+-                'timestamp'             : str(now),
+-                'is_active'             : str(int(self.is_active)),
+-                'weight'                : str(self.weight),
+-                'weight_active'         : str(self.active),
+-                'weight_inuse'          : str(self.inuse),
+-                'hweight_active_pct'    : str(self.hwa_pct),
+-                'hweight_inuse_pct'     : str(self.hwi_pct),
+-                'inflight_pct'          : str(self.inflight_pct),
+-                'debt_ms'               : str(self.debt_ms),
+-                'use_delay'             : str(self.use_delay),
+-                'delay_ms'              : str(self.delay_ms),
+-                'usage_pct'             : str(self.usage),
+-                'address'               : str(hex(self.address)) }
++                'timestamp'             : now,
++                'is_active'             : self.is_active,
++                'weight'                : self.weight,
++                'weight_active'         : self.active,
++                'weight_inuse'          : self.inuse,
++                'hweight_active_pct'    : self.hwa_pct,
++                'hweight_inuse_pct'     : self.hwi_pct,
++                'inflight_pct'          : self.inflight_pct,
++                'debt_ms'               : self.debt_ms,
++                'use_delay'             : self.use_delay,
++                'delay_ms'              : self.delay_ms,
++                'usage_pct'             : self.usage,
++                'address'               : self.address }
+         for i in range(len(self.usages)):
+             out[f'usage_pct_{i}'] = str(self.usages[i])
+         return out
 -- 
 2.25.1
 
