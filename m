@@ -1,26 +1,26 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.5 30/56] block, bfq: move forward the getting of an extra ref in bfq_bfqq_move
-Date: Thu,  9 Apr 2020 23:47:34 -0400
-Message-ID: <20200410034800.8381-30-sashal@kernel.org>
-References: <20200410034800.8381-1-sashal@kernel.org>
+From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH AUTOSEL 5.4 22/46] block, bfq: move forward the getting of an extra ref in bfq_bfqq_move
+Date: Thu,  9 Apr 2020 23:48:45 -0400
+Message-ID: <20200410034909.8922-22-sashal@kernel.org>
+References: <20200410034909.8922-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586490516;
-        bh=kRzMbY3EgV4E6Qm3X/KDl19rd8PRqtZJwSZTVXijMQk=;
+        s=default; t=1586490576;
+        bh=HeFoJtQMHA3FTTcjMfTXMgiQSyrQtjY1Nu2+TAJH6kg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ou76GEutbHPYvOXZCQMe5VdiEGGF0KQaqL9Nx6CUD44ac/iPSoq8qWkaV960qMuDE
-         nuGl8W205d5Nz4NhhxM0NM4VhqNXq09zF9tON1r2Zn9Q/QPUveZr5dWG7ojNOAeog4
-         By6ht53HsR2ZhOUmVBeAf2eq3P83EoTy/U9aKuzQ=
-In-Reply-To: <20200410034800.8381-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        b=TTTy5YoJ5A6V1JGZI9bwSVxjfyA/hT+1IVH6dWPVF3654oBPjIh8h7PvWlwrT4Xfq
+         wxdulwjQF+GPbvGbeTLLloOahNVGImKEQ0aKe6czOqFcyZ/ibWdk64I2ZygCjw3vGX
+         mS/ZfMCaAd4kMIW9cKYGggOXuDvtZny/KL/a4/j4=
+In-Reply-To: <20200410034909.8922-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Paolo Valente <paolo.valente@linaro.org>, cki-project@redhat.com, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, linux-block@vger.kernel.org, cgroups@vger.kernel.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, cki-project-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Paolo Valente <paolo.valente@linaro.org>
+From: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 
 [ Upstream commit fd1bb3ae54a9a2e0c42709de861c69aa146b8955 ]
 
@@ -37,20 +37,20 @@ simply moving forward the getting of the extra reference already
 introduced by commit ecedd3d7e199 ("block, bfq: get extra ref to
 prevent a queue from being freed during a group move").
 
-Reported-by: cki-project@redhat.com
-Tested-by: cki-project@redhat.com
-Signed-off-by: Paolo Valente <paolo.valente@linaro.org>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Reported-by: cki-project-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Tested-by: cki-project-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Signed-off-by: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
  block/bfq-cgroup.c | 14 +++++++-------
  1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 5a64607ce7744..a6d42339fb342 100644
+index 86cd718e0380b..5611769e15690 100644
 --- a/block/bfq-cgroup.c
 +++ b/block/bfq-cgroup.c
-@@ -641,6 +641,12 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+@@ -625,6 +625,12 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
  {
  	struct bfq_entity *entity = &bfqq->entity;
  
@@ -63,7 +63,7 @@ index 5a64607ce7744..a6d42339fb342 100644
  	/* If bfqq is empty, then bfq_bfqq_expire also invokes
  	 * bfq_del_bfqq_busy, thereby removing bfqq and its entity
  	 * from data structures related to current group. Otherwise we
-@@ -651,12 +657,6 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+@@ -635,12 +641,6 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
  		bfq_bfqq_expire(bfqd, bfqd->in_service_queue,
  				false, BFQQE_PREEMPTED);
  
@@ -76,7 +76,7 @@ index 5a64607ce7744..a6d42339fb342 100644
  	if (bfq_bfqq_busy(bfqq))
  		bfq_deactivate_bfqq(bfqd, bfqq, false, false);
  	else if (entity->on_st)
-@@ -676,7 +676,7 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+@@ -660,7 +660,7 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
  
  	if (!bfqd->in_service_queue && !bfqd->rq_in_driver)
  		bfq_schedule_dispatch(bfqd);
