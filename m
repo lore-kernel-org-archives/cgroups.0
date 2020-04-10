@@ -1,90 +1,201 @@
-From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 5.4 22/46] block, bfq: move forward the getting of an extra ref in bfq_bfqq_move
-Date: Thu,  9 Apr 2020 23:48:45 -0400
-Message-ID: <20200410034909.8922-22-sashal@kernel.org>
-References: <20200410034909.8922-1-sashal@kernel.org>
+From: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:for-next] BUILD SUCCESS
+ 772b3140669246e1ab32392c490d338e2eb7b803
+Date: Fri, 10 Apr 2020 11:49:14 +0800
+Message-ID: <5e8fecba.1ihuJ6Z/y63P8zvK%lkp@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586490576;
-        bh=HeFoJtQMHA3FTTcjMfTXMgiQSyrQtjY1Nu2+TAJH6kg=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TTTy5YoJ5A6V1JGZI9bwSVxjfyA/hT+1IVH6dWPVF3654oBPjIh8h7PvWlwrT4Xfq
-         wxdulwjQF+GPbvGbeTLLloOahNVGImKEQ0aKe6czOqFcyZ/ibWdk64I2ZygCjw3vGX
-         mS/ZfMCaAd4kMIW9cKYGggOXuDvtZny/KL/a4/j4=
-In-Reply-To: <20200410034909.8922-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, cki-project-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git  for-next
+branch HEAD: 772b3140669246e1ab32392c490d338e2eb7b803  xattr: fix uninitialized out-param
 
-[ Upstream commit fd1bb3ae54a9a2e0c42709de861c69aa146b8955 ]
+elapsed time: 483m
 
-Commit ecedd3d7e199 ("block, bfq: get extra ref to prevent a queue
-from being freed during a group move") gets an extra reference to a
-bfq_queue before possibly deactivating it (temporarily), in
-bfq_bfqq_move(). This prevents the bfq_queue from disappearing before
-being reactivated in its new group.
+configs tested: 172
+configs skipped: 0
 
-Yet, the bfq_queue may also be expired (i.e., its service may be
-stopped) before the bfq_queue is deactivated. And also an expiration
-may lead to a premature freeing. This commit fixes this issue by
-simply moving forward the getting of the extra reference already
-introduced by commit ecedd3d7e199 ("block, bfq: get extra ref to
-prevent a queue from being freed during a group move").
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-Reported-by: cki-project-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Tested-by: cki-project-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Signed-off-by: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+arm                              allmodconfig
+arm                               allnoconfig
+arm                              allyesconfig
+arm64                            allmodconfig
+arm64                             allnoconfig
+arm64                            allyesconfig
+arm                         at91_dt_defconfig
+arm                           efm32_defconfig
+arm                          exynos_defconfig
+arm                        multi_v5_defconfig
+arm                        multi_v7_defconfig
+arm                        shmobile_defconfig
+arm                           sunxi_defconfig
+arm64                               defconfig
+sparc                            allyesconfig
+openrisc                    or1ksim_defconfig
+s390                              allnoconfig
+i386                              allnoconfig
+i386                             allyesconfig
+i386                             alldefconfig
+i386                                defconfig
+i386                              debian-10.3
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                              allnoconfig
+ia64                             allyesconfig
+ia64                             alldefconfig
+c6x                              allyesconfig
+c6x                        evmc6678_defconfig
+nios2                         10m50_defconfig
+nios2                         3c120_defconfig
+openrisc                 simple_smp_defconfig
+xtensa                       common_defconfig
+xtensa                          iss_defconfig
+alpha                               defconfig
+csky                                defconfig
+nds32                             allnoconfig
+nds32                               defconfig
+h8300                       h8s-sim_defconfig
+h8300                     edosk2674_defconfig
+m68k                       m5475evb_defconfig
+m68k                             allmodconfig
+h8300                    h8300h-sim_defconfig
+m68k                           sun3_defconfig
+m68k                          multi_defconfig
+arc                              allyesconfig
+arc                                 defconfig
+microblaze                      mmu_defconfig
+microblaze                    nommu_defconfig
+powerpc                           allnoconfig
+powerpc                             defconfig
+powerpc                       ppc64_defconfig
+powerpc                          rhel-kconfig
+mips                           32r2_defconfig
+mips                         64r6el_defconfig
+mips                             allmodconfig
+mips                              allnoconfig
+mips                             allyesconfig
+mips                      fuloong2e_defconfig
+mips                      malta_kvm_defconfig
+parisc                            allnoconfig
+parisc                generic-64bit_defconfig
+parisc                generic-32bit_defconfig
+parisc                           allyesconfig
+x86_64               randconfig-a001-20200410
+x86_64               randconfig-a002-20200410
+x86_64               randconfig-a003-20200410
+i386                 randconfig-a001-20200410
+i386                 randconfig-a002-20200410
+i386                 randconfig-a003-20200410
+alpha                randconfig-a001-20200409
+m68k                 randconfig-a001-20200409
+mips                 randconfig-a001-20200409
+nds32                randconfig-a001-20200409
+parisc               randconfig-a001-20200409
+riscv                randconfig-a001-20200409
+c6x                  randconfig-a001-20200410
+h8300                randconfig-a001-20200410
+microblaze           randconfig-a001-20200410
+nios2                randconfig-a001-20200410
+sparc64              randconfig-a001-20200410
+s390                 randconfig-a001-20200409
+xtensa               randconfig-a001-20200409
+csky                 randconfig-a001-20200409
+openrisc             randconfig-a001-20200409
+sh                   randconfig-a001-20200409
+x86_64               randconfig-b001-20200410
+x86_64               randconfig-b002-20200410
+x86_64               randconfig-b003-20200410
+i386                 randconfig-b001-20200410
+i386                 randconfig-b002-20200410
+i386                 randconfig-b003-20200410
+x86_64               randconfig-c001-20200409
+x86_64               randconfig-c002-20200409
+x86_64               randconfig-c003-20200409
+i386                 randconfig-c001-20200409
+i386                 randconfig-c002-20200409
+i386                 randconfig-c003-20200409
+x86_64               randconfig-d001-20200410
+x86_64               randconfig-d002-20200410
+x86_64               randconfig-d003-20200410
+i386                 randconfig-d001-20200410
+i386                 randconfig-d002-20200410
+i386                 randconfig-d003-20200410
+x86_64               randconfig-e001-20200410
+x86_64               randconfig-e002-20200410
+x86_64               randconfig-e003-20200410
+i386                 randconfig-e001-20200410
+i386                 randconfig-e002-20200410
+i386                 randconfig-e003-20200410
+x86_64               randconfig-e001-20200409
+x86_64               randconfig-e002-20200409
+x86_64               randconfig-e003-20200409
+i386                 randconfig-e001-20200409
+i386                 randconfig-e002-20200409
+i386                 randconfig-e003-20200409
+x86_64               randconfig-f001-20200409
+x86_64               randconfig-f002-20200409
+x86_64               randconfig-f003-20200409
+i386                 randconfig-f001-20200409
+i386                 randconfig-f002-20200409
+i386                 randconfig-f003-20200409
+x86_64               randconfig-g001-20200410
+x86_64               randconfig-g002-20200410
+x86_64               randconfig-g003-20200410
+i386                 randconfig-g001-20200410
+i386                 randconfig-g002-20200410
+i386                 randconfig-g003-20200410
+x86_64               randconfig-h001-20200409
+x86_64               randconfig-h002-20200409
+x86_64               randconfig-h003-20200409
+i386                 randconfig-h001-20200409
+i386                 randconfig-h002-20200409
+i386                 randconfig-h003-20200409
+arc                  randconfig-a001-20200409
+arm                  randconfig-a001-20200409
+arm64                randconfig-a001-20200409
+ia64                 randconfig-a001-20200409
+powerpc              randconfig-a001-20200409
+sparc                randconfig-a001-20200409
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+s390                             alldefconfig
+s390                             allmodconfig
+s390                             allyesconfig
+s390                          debug_defconfig
+s390                                defconfig
+s390                       zfcpdump_defconfig
+sh                          rsk7269_defconfig
+sh                               allmodconfig
+sh                            titan_defconfig
+sh                  sh7785lcr_32bit_defconfig
+sh                                allnoconfig
+sparc                               defconfig
+sparc64                          allmodconfig
+sparc64                           allnoconfig
+sparc64                          allyesconfig
+sparc64                             defconfig
+um                           x86_64_defconfig
+um                             i386_defconfig
+um                                  defconfig
+x86_64                              fedora-25
+x86_64                                  kexec
+x86_64                                    lkp
+x86_64                                   rhel
+x86_64                         rhel-7.2-clear
+x86_64                               rhel-7.6
+x86_64                    rhel-7.6-kselftests
+
 ---
- block/bfq-cgroup.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index 86cd718e0380b..5611769e15690 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -625,6 +625,12 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- {
- 	struct bfq_entity *entity = &bfqq->entity;
- 
-+	/*
-+	 * Get extra reference to prevent bfqq from being freed in
-+	 * next possible expire or deactivate.
-+	 */
-+	bfqq->ref++;
-+
- 	/* If bfqq is empty, then bfq_bfqq_expire also invokes
- 	 * bfq_del_bfqq_busy, thereby removing bfqq and its entity
- 	 * from data structures related to current group. Otherwise we
-@@ -635,12 +641,6 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 		bfq_bfqq_expire(bfqd, bfqd->in_service_queue,
- 				false, BFQQE_PREEMPTED);
- 
--	/*
--	 * get extra reference to prevent bfqq from being freed in
--	 * next possible deactivate
--	 */
--	bfqq->ref++;
--
- 	if (bfq_bfqq_busy(bfqq))
- 		bfq_deactivate_bfqq(bfqd, bfqq, false, false);
- 	else if (entity->on_st)
-@@ -660,7 +660,7 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 
- 	if (!bfqd->in_service_queue && !bfqd->rq_in_driver)
- 		bfq_schedule_dispatch(bfqd);
--	/* release extra ref taken above */
-+	/* release extra ref taken above, bfqq may happen to be freed now */
- 	bfq_put_queue(bfqq);
- }
- 
--- 
-2.20.1
-
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
