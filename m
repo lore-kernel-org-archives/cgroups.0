@@ -1,19 +1,19 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.6 40/68] block, bfq: move forward the getting of an extra ref in bfq_bfqq_move
-Date: Thu,  9 Apr 2020 23:46:05 -0400
-Message-ID: <20200410034634.7731-40-sashal@kernel.org>
-References: <20200410034634.7731-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.5 30/56] block, bfq: move forward the getting of an extra ref in bfq_bfqq_move
+Date: Thu,  9 Apr 2020 23:47:34 -0400
+Message-ID: <20200410034800.8381-30-sashal@kernel.org>
+References: <20200410034800.8381-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586490444;
-        bh=bZPiNyvVGdaJKBKZrFOz0pBhySVoMImQT9fF9e1eZP4=;
+        s=default; t=1586490516;
+        bh=kRzMbY3EgV4E6Qm3X/KDl19rd8PRqtZJwSZTVXijMQk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=h6U4SCiBUP8aRkTqLiM8MPfi1XifpHsabye4o65xbcfRtSHnBhgn5kr0MOBXXmBE2
-         pFNVOkgKov+54jJSvO0ZAOesLiif2r/joFbhdhtH3HHqdXF7RELG6K823e8WFhXRfT
-         avbdbEsjQmzTDwCj8TpWCUhU20lA9FZzcvuxH6T4=
-In-Reply-To: <20200410034634.7731-1-sashal@kernel.org>
+        b=Ou76GEutbHPYvOXZCQMe5VdiEGGF0KQaqL9Nx6CUD44ac/iPSoq8qWkaV960qMuDE
+         nuGl8W205d5Nz4NhhxM0NM4VhqNXq09zF9tON1r2Zn9Q/QPUveZr5dWG7ojNOAeog4
+         By6ht53HsR2ZhOUmVBeAf2eq3P83EoTy/U9aKuzQ=
+In-Reply-To: <20200410034800.8381-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -47,10 +47,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index f0ff6654af289..9d963ed518d1f 100644
+index 5a64607ce7744..a6d42339fb342 100644
 --- a/block/bfq-cgroup.c
 +++ b/block/bfq-cgroup.c
-@@ -642,6 +642,12 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+@@ -641,6 +641,12 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
  {
  	struct bfq_entity *entity = &bfqq->entity;
  
@@ -63,7 +63,7 @@ index f0ff6654af289..9d963ed518d1f 100644
  	/* If bfqq is empty, then bfq_bfqq_expire also invokes
  	 * bfq_del_bfqq_busy, thereby removing bfqq and its entity
  	 * from data structures related to current group. Otherwise we
-@@ -652,12 +658,6 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+@@ -651,12 +657,6 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
  		bfq_bfqq_expire(bfqd, bfqd->in_service_queue,
  				false, BFQQE_PREEMPTED);
  
@@ -75,8 +75,8 @@ index f0ff6654af289..9d963ed518d1f 100644
 -
  	if (bfq_bfqq_busy(bfqq))
  		bfq_deactivate_bfqq(bfqd, bfqq, false, false);
- 	else if (entity->on_st_or_in_serv)
-@@ -677,7 +677,7 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+ 	else if (entity->on_st)
+@@ -676,7 +676,7 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
  
  	if (!bfqd->in_service_queue && !bfqd->rq_in_driver)
  		bfq_schedule_dispatch(bfqd);
