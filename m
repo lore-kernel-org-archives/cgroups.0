@@ -1,159 +1,73 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v8 03/10] mm/lru: replace pgdat lru_lock with lruvec lock
-Date: Mon, 13 Apr 2020 18:48:22 +0800
-Message-ID: <cdcdb710-1d78-6fac-48d7-35519ddcdc6a@linux.alibaba.com>
-References: <1579143909-156105-1-git-send-email-alex.shi@linux.alibaba.com>
- <1579143909-156105-4-git-send-email-alex.shi@linux.alibaba.com>
- <20200116215222.GA64230@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/5] block: add request->io_data_len
+Date: Mon, 13 Apr 2020 09:52:12 -0400
+Message-ID: <20200413135212.GA60335@mtj.duckdns.org>
+References: <20200408201450.3959560-1-tj@kernel.org>
+ <20200408201450.3959560-3-tj@kernel.org>
+ <b027a718-1c76-6e34-1edb-5435a5605d35@acm.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200116215222.GA64230@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=pEQ2ZN/sQMUNp0cAGyj+0Oo/y3A6wiKh+7dkMJzMwVI=;
+        b=MRSZ1qTh0me/yxxie/3CYFIGX8lrDC3ISjXJe6J7lVXk3NNURSYMsAEkOVRdvkUZVL
+         K97VBE5C8GBEcLI1j6snQqwxNHlR4+HRv+4c/KG8wrRFOyycSy4N/YUZrTbaWF/itcdj
+         cB85PL1NzoFmMsWzbeHhQx6dVVQzIf3ZmbjjAeD+6Zxf9S4eQh8M7DkjB6DbllIxcu9+
+         EKj5ePFmNh8aNV2InN7y+YDDIRVaayW85AjvKvBf+4LPxQciv2SkXZe9Pwsh7Sb+gzyp
+         dfQBXRF70YH8Zx2h75h9z8upaN74WXugMBbMvCCiTmq4wrRoQAEL6eB/jTiTQivTf8P6
+         cxJQ==
+Content-Disposition: inline
+In-Reply-To: <b027a718-1c76-6e34-1edb-5435a5605d35-HInyCGIudOg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, shakeelb@google.com, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Roman Gushchin <guro@fb.com>, Chris Down <chris@chrisdown.name>, Thomas Gleixner <tglx@linutronix.de>, Vlastimil Babka <vbabka@suse.cz>, Qian Cai <cai@lca.pw>, Andrey Ryabinin <aryabinin@virtuozzo.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, Andrea Arcangeli <aarcange@redhat.com>, David Rientjes <rientjes@google.com>, Aneesh Ku
+Content-Transfer-Encoding: 7bit
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, newella-b10kYP2dOMg@public.gmane.org, josef-DigfWCa+lFGyeJad7bwFQA@public.gmane.org
 
-> In a previous review, I pointed out the following race condition
-> between page charging and compaction:
-> 
-> compaction:				generic_file_buffered_read:
-> 
-> 					page_cache_alloc()
-> 
-> !PageBuddy()
-> 
-> lock_page_lruvec(page)
->   lruvec = mem_cgroup_page_lruvec()
->   spin_lock(&lruvec->lru_lock)
->   if lruvec != mem_cgroup_page_lruvec()
->     goto again
-> 
-> 					add_to_page_cache_lru()
-> 					  mem_cgroup_commit_charge()
-> 					    page->mem_cgroup = foo
-> 					  lru_cache_add()
-> 					    __pagevec_lru_add()
-> 					      SetPageLRU()
-> 
-> if PageLRU(page):
->   __isolate_lru_page()
-> 
-> As far as I can see, you have not addressed this. You have added
-> lock_page_memcg(), but that prevents charged pages from moving between
-> cgroups, it does not prevent newly allocated pages from being charged.
-> 
-> It doesn't matter how many times you check the lruvec before and after
-> locking - if you're looking at a free page, it might get allocated,
-> charged and put on a new lruvec after you're done checking, and then
-> you isolate a page from an unlocked lruvec.
-> 
-> You simply cannot serialize on page->mem_cgroup->lruvec when
-> page->mem_cgroup isn't stable. You need to serialize on the page
-> itself, one way or another, to make this work.
-> 
-> 
-> So here is a crazy idea that may be worth exploring:
-> 
-> Right now, pgdat->lru_lock protects both PageLRU *and* the lruvec's
-> linked list.
-> 
-> Can we make PageLRU atomic and use it to stabilize the lru_lock
-> instead, and then use the lru_lock only serialize list operations?
-> 
-> I.e. in compaction, you'd do
-> 
-> 	if (!TestClearPageLRU(page))
-> 		goto isolate_fail;
-> 	/*
-> 	 * We isolated the page's LRU state and thereby locked out all
-> 	 * other isolators, including cgroup page moving, page reclaim,
-> 	 * page freeing etc. That means page->mem_cgroup is now stable
-> 	 * and we can safely look up the correct lruvec and take the
-> 	 * page off its physical LRU list.
-> 	 */
-> 	lruvec = mem_cgroup_page_lruvec(page);
-> 	spin_lock_irq(&lruvec->lru_lock);
-> 	del_page_from_lru_list(page, lruvec, page_lru(page));
-> 
-> Putback would mostly remain the same (although you could take the
-> PageLRU setting out of the list update locked section, as long as it's
-> set after the page is physically linked):
-> 
-> 	/* LRU isolation pins page->mem_cgroup */
-> 	lruvec = mem_cgroup_page_lruvec(page)
-> 	spin_lock_irq(&lruvec->lru_lock);
-> 	add_page_to_lru_list(...);
-> 	spin_unlock_irq(&lruvec->lru_lock);
-> 
-> 	SetPageLRU(page);
-> 
-> And you'd have to carefully review and rework other sites that rely on
-> PageLRU: reclaim, __page_cache_release(), __activate_page() etc.
-> 
-> Especially things like activate_page(), which used to only check
-> PageLRU to shuffle the page on the LRU list would now have to briefly
-> clear PageLRU and then set it again afterwards.
-> 
-> However, aside from a bit more churn in those cases, and the
-> unfortunate additional atomic operations, I currently can't think of a
-> fundamental reason why this wouldn't work.
-> 
-> Hugh, what do you think?
-> 
+Hello,
 
-Hi Johannes
-
-As to the idea of TestClearPageLRU, we except the following scenario
-    compaction                       commit_charge
-                                     if (TestClearPageLRU)
-        !TestClearPageLRU                 lock_page_lruvec
-            goto isolate_fail;            del_from_lru_list
-                                          unlock_page_lruvec
-
-But there is a difficult situation to handle:
-
-   compaction                        commit_charge
-        TestClearPageLRU
-                                    !TestClearPageLRU
-
-                                    page possible state:
-                                    a, reclaiming, b, moving between lru list, c, migrating, like in compaction
-                                    d, mlocking,   e, split_huge_page,
-
-If the page lru bit was cleared in commit_charge with lrucare,
-we still have no idea if the page was isolated by the reason from a~e
-or the page is never on LRU, to deal with different reasons is high cost.
-
-So as to the above issue you mentioned, Maybe the better idea is to
-set lrucare when do mem_cgroup_commit_charge(), since the charge action
-is not often. What's your idea of this solution?
-
-Thanks
-Alex
-
-> compaction:				generic_file_buffered_read:
+On Wed, Apr 08, 2020 at 08:44:17PM -0700, Bart Van Assche wrote:
+> On 2020-04-08 13:14, Tejun Heo wrote:
+> > diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> > index 32868fbedc9e..bfd34c6a27ef 100644
+> > --- a/include/linux/blkdev.h
+> > +++ b/include/linux/blkdev.h
+> > @@ -142,6 +142,14 @@ struct request {
+> >  
+> >  	/* the following two fields are internal, NEVER access directly */
+> >  	unsigned int __data_len;	/* total data len */
+> > +#ifdef CONFIG_BLK_RQ_IO_DATA_LEN
+> > +	/*
+> > +	 * Total data len at the time of issue. This doesn't get deducted by
+> > +	 * blk_update_request() and can be used by completion path to determine
+> > +	 * the request size.
+> > +	 */
+> > +	unsigned int io_data_len;
+> > +#endif
+> >  	sector_t __sector;		/* sector cursor */
+> >  
+> >  	struct bio *bio;
 > 
-> 					page_cache_alloc()
-> 
-> !PageBuddy()
-> 
-> lock_page_lruvec(page)
->   lruvec = mem_cgroup_page_lruvec()
->   spin_lock(&lruvec->lru_lock)
->   if lruvec != mem_cgroup_page_lruvec()
->     goto again
-> 
-> 					add_to_page_cache_lru()
-> 					  mem_cgroup_commit_charge()
+> So we have one struct member with the description "total data len" and
+> another struct member with the description "total data len at the time
+> of issue"? How could one not get confused by these descriptions?
 
-					 //do charge with lrucare
-					 spin_lock(&lruvec->lru_lock)
-> 					    page->mem_cgroup = foo
-> 					  lru_cache_add()
-> 					    __pagevec_lru_add()
-> 					      SetPageLRU()
-> 
-> if PageLRU(page):
->   __isolate_lru_page()
+The new one explicitly says it doesn't get deducted by update_request.
+
+> This change makes the comment above __data_len incorrect. Please update
+> that comment or move io_data_len in front of that comment.
+
+Sure.
+
+> How does this change interact with the code in drivers/scsi/sd.c that
+> manipulates __data_len directly?
+
+It doesn't.
+
+Thanks.
+
+-- 
+tejun
