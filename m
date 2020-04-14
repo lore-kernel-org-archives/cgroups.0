@@ -1,50 +1,206 @@
-From: svc_lmoiseichuk-baZASSJvGmz3oGB3hsPCZA@public.gmane.org
-Subject: [PATCH 0/2] memcg, vmpressure: expose vmpressure controls
-Date: Mon, 13 Apr 2020 17:57:48 -0400
-Message-ID: <20200413215750.7239-1-lmoiseichuk@magicleap.com>
+From: kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:iocost-delay-latency-v2] BUILD SUCCESS
+ 976c606e1fcbe2d164fe1ea545f772f74717c0db
+Date: Tue, 14 Apr 2020 08:29:20 +0800
+Message-ID: <5e9503e0.TXfhaeH+Ac5Ukf2K%lkp@intel.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=magicleap.com; h=from : to : cc :
- subject : date : message-id; s=pp09042018;
- bh=ULBffSSWiOkyC0UR59o7WDkKeU3p81EFjrY635dhS+U=;
- b=f3l7rFKUzkcoM6KQGgSHmVZAnhe+VEgmqVy8P01gzUxXpL0G+NXbe/XkGqleHPFiixKV
- TlG93I2LrH/G50XHWYew5i6AdBfLnn/UGJT+S7/Lcbl0RGgqvbsLgUpvSXKuLGcCD2ke
- EHtw38bz/CTf5A16HfMnE1dvMYM0zOjWKUgJOPtXg7CwB2j9+r8pGdRKoE92yOnLzP5d
- GYXNr6BxD82wIEM6k24soPhE7u0N7gfeiZHFlKr7iNBfAPt5sd/iCN595/zzxwMUI4kW
- ZEDycoNnI+LC+t0wIB1OgDJUrLVdQscEH5e/sv3/P5oNAvbKKeMilD4oYS1G7OmvkEn6 0g== 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=magicleap.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=ULBffSSWiOkyC0UR59o7WDkKeU3p81EFjrY635dhS+U=;
-        b=ph7XMJp0u7u47D42UuMsJEZo++sq1SAbd5hRXfZm9Ps9o3lAWcIxA//cc06JvLdvwD
-         b/E+KO4wT1LoNQEZwQriMNexQ1kyJBtVgSr+DVf7Auy4GmYerSyxUCFnVE/dNm4Sb7wy
-         xBeHz8K1IG5SP1hfUz4D0vI77KEpmBbo6BZb4=
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vinmenon-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Leonid Moiseichuk <lmoiseichuk-baZASSJvGmz3oGB3hsPCZA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Leonid Moiseichuk <lmoiseichuk-baZASSJvGmz3oGB3hsPCZA@public.gmane.org>
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git  iocost-delay-latency-v2
+branch HEAD: 976c606e1fcbe2d164fe1ea545f772f74717c0db  iocost_monitor: drop string wrap around numbers when outputting json
 
-Small tweak to populate vmpressure parameters to userspace without
-any built-in logic change.
+elapsed time: 484m
 
-The vmpressure is used actively (e.g. on Android) to track mm stress.
-vmpressure parameters selected empiricaly quite long time ago and not
-always suitable for modern memory configurations.
+configs tested: 177
+configs skipped: 0
 
-Leonid Moiseichuk (2):
-  memcg: expose vmpressure knobs
-  memcg, vmpressure: expose vmpressure controls
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
- .../admin-guide/cgroup-v1/memory.rst          |  12 +-
- include/linux/vmpressure.h                    |  35 ++++++
- mm/memcontrol.c                               | 113 ++++++++++++++++++
- mm/vmpressure.c                               | 101 +++++++---------
- 4 files changed, 200 insertions(+), 61 deletions(-)
+arm                              allmodconfig
+arm                               allnoconfig
+arm                              allyesconfig
+arm64                            allmodconfig
+arm64                             allnoconfig
+arm64                            allyesconfig
+arm                           efm32_defconfig
+arm                         at91_dt_defconfig
+arm                        shmobile_defconfig
+arm64                               defconfig
+arm                          exynos_defconfig
+arm                        multi_v5_defconfig
+arm                           sunxi_defconfig
+arm                        multi_v7_defconfig
+sparc                            allyesconfig
+um                           x86_64_defconfig
+h8300                    h8300h-sim_defconfig
+m68k                          multi_defconfig
+microblaze                      mmu_defconfig
+ia64                                defconfig
+powerpc                             defconfig
+riscv                            allmodconfig
+nios2                         10m50_defconfig
+openrisc                 simple_smp_defconfig
+sh                               allmodconfig
+i386                              allnoconfig
+i386                             alldefconfig
+i386                             allyesconfig
+i386                              debian-10.3
+i386                                defconfig
+ia64                             alldefconfig
+ia64                             allmodconfig
+ia64                              allnoconfig
+ia64                             allyesconfig
+c6x                              allyesconfig
+c6x                        evmc6678_defconfig
+nios2                         3c120_defconfig
+openrisc                    or1ksim_defconfig
+xtensa                       common_defconfig
+xtensa                          iss_defconfig
+alpha                               defconfig
+csky                                defconfig
+nds32                             allnoconfig
+nds32                               defconfig
+h8300                     edosk2674_defconfig
+h8300                       h8s-sim_defconfig
+m68k                             allmodconfig
+m68k                       m5475evb_defconfig
+m68k                           sun3_defconfig
+arc                              allyesconfig
+arc                                 defconfig
+microblaze                    nommu_defconfig
+powerpc                           allnoconfig
+powerpc                       ppc64_defconfig
+powerpc                          rhel-kconfig
+mips                           32r2_defconfig
+mips                         64r6el_defconfig
+mips                             allmodconfig
+mips                              allnoconfig
+mips                             allyesconfig
+mips                      fuloong2e_defconfig
+mips                      malta_kvm_defconfig
+parisc                            allnoconfig
+parisc                           allyesconfig
+parisc                generic-32bit_defconfig
+parisc                generic-64bit_defconfig
+x86_64               randconfig-a001-20200414
+x86_64               randconfig-a002-20200414
+x86_64               randconfig-a003-20200414
+i386                 randconfig-a001-20200414
+i386                 randconfig-a002-20200414
+i386                 randconfig-a003-20200414
+alpha                randconfig-a001-20200413
+m68k                 randconfig-a001-20200413
+mips                 randconfig-a001-20200413
+nds32                randconfig-a001-20200413
+parisc               randconfig-a001-20200413
+c6x                  randconfig-a001-20200413
+h8300                randconfig-a001-20200413
+microblaze           randconfig-a001-20200413
+nios2                randconfig-a001-20200413
+sparc64              randconfig-a001-20200413
+s390                 randconfig-a001-20200413
+xtensa               randconfig-a001-20200413
+sh                   randconfig-a001-20200413
+openrisc             randconfig-a001-20200413
+csky                 randconfig-a001-20200413
+x86_64               randconfig-b001-20200413
+x86_64               randconfig-b002-20200413
+x86_64               randconfig-b003-20200413
+i386                 randconfig-b001-20200413
+i386                 randconfig-b002-20200413
+i386                 randconfig-b003-20200413
+x86_64               randconfig-b001-20200414
+x86_64               randconfig-b002-20200414
+x86_64               randconfig-b003-20200414
+i386                 randconfig-b001-20200414
+i386                 randconfig-b002-20200414
+i386                 randconfig-b003-20200414
+x86_64               randconfig-c001-20200413
+x86_64               randconfig-c002-20200413
+x86_64               randconfig-c003-20200413
+i386                 randconfig-c001-20200413
+i386                 randconfig-c002-20200413
+i386                 randconfig-c003-20200413
+x86_64               randconfig-d001-20200413
+x86_64               randconfig-d002-20200413
+x86_64               randconfig-d003-20200413
+i386                 randconfig-d001-20200413
+i386                 randconfig-d002-20200413
+i386                 randconfig-d003-20200413
+x86_64               randconfig-e001-20200413
+x86_64               randconfig-e002-20200413
+x86_64               randconfig-e003-20200413
+i386                 randconfig-e001-20200413
+i386                 randconfig-e002-20200413
+i386                 randconfig-e003-20200413
+x86_64               randconfig-f001-20200413
+x86_64               randconfig-f002-20200413
+x86_64               randconfig-f003-20200413
+i386                 randconfig-f001-20200413
+i386                 randconfig-f002-20200413
+i386                 randconfig-f003-20200413
+x86_64               randconfig-g001-20200413
+x86_64               randconfig-g002-20200413
+x86_64               randconfig-g003-20200413
+i386                 randconfig-g001-20200413
+i386                 randconfig-g002-20200413
+i386                 randconfig-g003-20200413
+x86_64               randconfig-h001-20200413
+x86_64               randconfig-h002-20200413
+x86_64               randconfig-h003-20200413
+i386                 randconfig-h001-20200413
+i386                 randconfig-h002-20200413
+i386                 randconfig-h003-20200413
+x86_64               randconfig-h001-20200414
+x86_64               randconfig-h002-20200414
+x86_64               randconfig-h003-20200414
+i386                 randconfig-h001-20200414
+i386                 randconfig-h002-20200414
+i386                 randconfig-h003-20200414
+arc                  randconfig-a001-20200413
+arm                  randconfig-a001-20200413
+arm64                randconfig-a001-20200413
+ia64                 randconfig-a001-20200413
+powerpc              randconfig-a001-20200413
+sparc                randconfig-a001-20200413
+riscv                             allnoconfig
+riscv                            allyesconfig
+riscv                               defconfig
+riscv                    nommu_virt_defconfig
+riscv                          rv32_defconfig
+s390                             alldefconfig
+s390                             allmodconfig
+s390                              allnoconfig
+s390                             allyesconfig
+s390                          debug_defconfig
+s390                                defconfig
+s390                       zfcpdump_defconfig
+sh                                allnoconfig
+sh                          rsk7269_defconfig
+sh                  sh7785lcr_32bit_defconfig
+sh                            titan_defconfig
+sparc                               defconfig
+sparc64                          allmodconfig
+sparc64                           allnoconfig
+sparc64                          allyesconfig
+sparc64                             defconfig
+um                                  defconfig
+um                             i386_defconfig
+x86_64                                   rhel
+x86_64                               rhel-7.6
+x86_64                    rhel-7.6-kselftests
+x86_64                         rhel-7.2-clear
+x86_64                                    lkp
+x86_64                              fedora-25
+x86_64                                  kexec
 
--- 
-2.17.1
-
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
