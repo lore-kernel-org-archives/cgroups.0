@@ -1,25 +1,23 @@
 From: svc_lmoiseichuk-baZASSJvGmz3oGB3hsPCZA@public.gmane.org
-Subject: [PATCH v1 1/2] memcg, vmpressure: expose vmpressure controls
-Date: Tue, 14 Apr 2020 13:18:39 -0400
-Message-ID: <20200414171840.22053-2-lmoiseichuk@magicleap.com>
-References: <20200414171840.22053-1-lmoiseichuk@magicleap.com>
+Subject: [PATCH v1 0/2] memcg, vmpressure: expose vmpressure controls
+Date: Tue, 14 Apr 2020 13:18:38 -0400
+Message-ID: <20200414171840.22053-1-lmoiseichuk@magicleap.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=magicleap.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=pp09042018;
- bh=w/qRpVJWlv8XupjZp41y7klSw+TDxGexre95wiqpeCI=;
- b=pgH5rboVZk+3nYg7mmd6Ld7nY9hS6e+WeeHzj89AhxHvXqjz7XwQ5o6LV2375Ez/ZvUx
- EuCHniD600/Hv+mtSvUMX8HTmClj0K4lVpCBzyPHMjro+fbq2ahF0iH8OMl8p5vo+dod
- SDBu6GxsOoShOwtdcCDjhbaocRDalnSlEgNL+2tl5CdZ/jrEJEtV22AxrWZyjFlr1mML
- t7iOVEvN4i1ubdXu2B1RHs1QCZKrmFhVb7Mo/AatkIvmsryloaYAbVx3CyvrqL5BpO1F
- mp+Hcez+8FnUHYx5UVvqfN5cjcc1kDV/4KIYfm63KiJEbV4pfE0jDhWT/SKJLurOToZM Yw== 
+ subject : date : message-id; s=pp09042018;
+ bh=fZfKoumGyhhUhnpNwaeOKlaokdakEYLl+yjOnNzfDuU=;
+ b=T8Ct4Rx2tHtkz81wq8vzedPGxgcA6aZW6p3BL3PWnZThs1D12eKpvtd5QvUAY4N/1p3c
+ xUNpgfLk9TDuTAyE1l/7blDaHTYH5umMY8wRxe0W+mak4P0QgWoBdpvA4QZ68TPdyZY8
+ G7RZUZk63CMomWdDs4p5XKaLMEiVjz5TQCYckGT2yMC74l9QhbNpWsg3qYO3/3KsiGke
+ JCqFfltrdIOhlwJp5fJtfUPIj9AYsqbq8+FzDaHBXfe8QyrTqIgNoLgJ35zjntD7THuz
+ yya+IBKmEWSzqeDEyYpanB1aA8dnbZKnfy0uIE7k5O2SZbCI580Q8gImtpGEYi5HWDC/ Bw== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=magicleap.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=w/qRpVJWlv8XupjZp41y7klSw+TDxGexre95wiqpeCI=;
-        b=RzPGP4DK8FNrCIIritILyTbfeuCXhJPbCca+J7GL5RxguH77pGXSgz4gM+ADjSWDvL
-         2Ns9zskvWM7zDx9uyod0wd0uM5YgnBPYbr1Egz2KPQkS+B+8EtrDkIa4ukU5iBYJ8jJg
-         N07bD6qSQ+GwcUoS4UUcUKEIbU7o4COcBNtHU=
-In-Reply-To: <20200414171840.22053-1-lmoiseichuk-baZASSJvGmz3oGB3hsPCZA@public.gmane.org>
+        h=from:to:cc:subject:date:message-id;
+        bh=fZfKoumGyhhUhnpNwaeOKlaokdakEYLl+yjOnNzfDuU=;
+        b=ourVl67jKozOKoolrod7Y9uQdDWgHTTaTEH/KkTHbV6Y/dHW1i7oI92eRF32DP8nhK
+         fJ4cIK6hodc50LQgxYD11GJBsjoJzC1ZUvtcAXQ80iXRF5CGt69KT2IttWIIr3eOPVMn
+         m9jhKhNytrOs8ZXV85c4Lldjf15CljMyGN6to=
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -30,53 +28,44 @@ Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, rientjes-hpIqsD4AKlf
 
 From: Leonid Moiseichuk <lmoiseichuk-baZASSJvGmz3oGB3hsPCZA@public.gmane.org>
 
-Updated documentation for populating memcg vmpressure controls
-with legacy defaults:
-- memory.pressure_window (512 or SWAP_CLUSTER_MAX * 16)
-- memory.pressure_level_critical_prio (3)
-- memory.pressure_level_medium (60)
-- memory.pressure_level_critical (95)
+Small tweak to populate vmpressure parameters to userspace without
+any built-in logic change.
 
-Signed-off-by: Leonid Moiseichuk <lmoiseichuk-baZASSJvGmz3oGB3hsPCZA@public.gmane.org>
----
- Documentation/admin-guide/cgroup-v1/memory.rst | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+The vmpressure is used actively (e.g. on Android) to track mm stress.
+vmpressure parameters selected empiricaly quite long time ago and not
+always suitable for modern memory configurations. Modern 8 GB devices
+starts triggering medium threshold when about 3 GB memory not used,
+and situation with 12 and 16 GB devices even worse.
 
-diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
-index 0ae4f564c2d6..42508123a8e1 100644
---- a/Documentation/admin-guide/cgroup-v1/memory.rst
-+++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-@@ -79,6 +79,12 @@ Brief summary of control files.
-  memory.use_hierarchy		     set/show hierarchical account enabled
-  memory.force_empty		     trigger forced page reclaim
-  memory.pressure_level		     set memory pressure notifications
-+ memory.pressure_window 	     set window size for scanned pages, better
-+				     to perform it as vmscan reclaimer logic
-+				     in chunks in multiple SWAP_CLUSTER_MAX
-+ memory.pressure_level_critical_prio vmscan priority for critical level
-+ memory.pressure_level_medium	     medium level pressure percents
-+ memory.pressure_level_critical      critical level pressure percents
-  memory.swappiness		     set/show swappiness parameter of vmscan
- 				     (See sysctl's vm.swappiness)
-  memory.move_charge_at_immigrate     set/show controls of moving charges
-@@ -893,12 +899,16 @@ pressure, the system might be making swap, paging out active file caches,
- etc. Upon this event applications may decide to further analyze
- vmstat/zoneinfo/memcg or internal memory usage statistics and free any
- resources that can be easily reconstructed or re-read from a disk.
-+The level threshold could be tuned using memory.pressure_level_medium.
- 
- The "critical" level means that the system is actively thrashing, it is
- about to out of memory (OOM) or even the in-kernel OOM killer is on its
- way to trigger. Applications should do whatever they can to help the
- system. It might be too late to consult with vmstat or any other
--statistics, so it's advisable to take an immediate action.
-+statistics, so it's advisable to take an immediate action. The level
-+threshold could be tuned using memory.pressure_level_critical. Number
-+of pages and vmscan priority handled as memory.pressure_window and
-+memory.pressure_level_critical_prio.
- 
- By default, events are propagated upward until the event is handled, i.e. the
- events are not pass-through. For example, you have three cgroups: A->B->C. Now
+Testing performed:
+
+* Build kernel for x86-64 and aarch64 (Tegra X2 SoC)
+* Booted and checked that all properties published
+* Tuned settings and observed adequate response
+* sysbench and memory bubble application (memsize from lmbench)
+  used to verify reactions
+
+Change Log:
+
+  v1:
+
+  => updated commit with 8 GB numbers per Michal Hocko request
+
+  v0:
+
+  => initial implementation
+  => tested on x86-64 and aarch64
+
+Leonid Moiseichuk (2):
+  memcg, vmpressure: expose vmpressure controls
+  memcg, vmpressure: expose vmpressure controls
+
+ .../admin-guide/cgroup-v1/memory.rst          |  12 +-
+ include/linux/vmpressure.h                    |  35 ++++++
+ mm/memcontrol.c                               | 113 ++++++++++++++++++
+ mm/vmpressure.c                               | 101 +++++++---------
+ 4 files changed, 200 insertions(+), 61 deletions(-)
+
 -- 
 2.17.1
 
