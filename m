@@ -1,231 +1,158 @@
-From: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
-Subject: Re: [PATCH v2 00/11] new cgroup controller for gpu/drm subsystem
-Date: Tue, 14 Apr 2020 17:01:12 +0200
-Message-ID: <CAKMK7uFhKf+OTDccATmB7UU2DBgGjVThCkaXR09YTjjyMOUbQw@mail.gmail.com>
-References: <20200226190152.16131-1-Kenny.Ho@amd.com>
- <CAOWid-eyMGZfOyfEQikwCmPnKxx6MnTm17pBvPeNpgKWi0xN-w@mail.gmail.com>
- <20200324184633.GH162390@mtj.duckdns.org>
- <CAOWid-cS-5YkFBLACotkZZCH0RSjHH94_r3VFH8vEPOubzSpPA@mail.gmail.com>
- <20200413191136.GI60335@mtj.duckdns.org>
- <20200414122015.GR3456981@phenom.ffwll.local>
- <CAOWid-f-XWyg0o3znH28xYndZ0OMzWfv3OOuWw08iJDKjrqFGA@mail.gmail.com>
- <CAKMK7uEs5QvUrxKcTFksO30D+x=XJnV+_TA-ebawcihtLqDG0Q@mail.gmail.com>
- <CAOWid-fwEOk+4CvUAumo=byWpq4vVUoCiwW1N6F-0aEd6G7d4A@mail.gmail.com>
- <CAKMK7uHwX9NbGb1ptnP=CAwxDayfM_z9kvFMMb=YiH+ynjNqKQ@mail.gmail.com>
- <CAOWid-dJckd8kV57MKNA_W83SN4OHnOGPURL7oOm-SqoYRLX=w@mail.gmail.com>
- <CAKMK7uGWxE-gDa25mi4EtLqPKZZfacm0VhTem=StHAQABRAkUQ@mail.gmail.com>
- <CAOWid-eaASFFdA5zLxaLO72OGsUVz_BgM-sGP2OQykXCzizmnw@mail.gmail.com>
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons-ud5FBsm0p/xEiooADzr8i9i2O/JbrIOy@public.gmane.org>
+Subject: Re: Memory CG and 5.1 to 5.6 uprade slows backup
+Date: Tue, 14 Apr 2020 17:09:03 +0200
+Message-ID: <20200414170903.4f28c29f@hemera.lan.sysophe.eu>
+References: <20200409112505.2e1fc150@hemera.lan.sysophe.eu>
+        <20200409094615.GE18386@dhcp22.suse.cz>
+        <20200409121733.1a5ba17c@hemera.lan.sysophe.eu>
+        <20200409103400.GF18386@dhcp22.suse.cz>
+        <20200409170926.182354c3@hemera.lan.sysophe.eu>
+        <20200409152540.GP18386@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ffwll.ch; s=google;
- h=mime-version:references:in-reply-to:from:date:message-id:subject:to
- :cc; bh=87uEDRgYBCTZ9ZGhNXT345rhZUziBXz/6VeMrHYuaGA=;
- b=Uo45K4TIq0I/2MTkOMo7tBXwHslmlFNCEPrwQOGU6huiC2UfFPZm8/aA9fEfDGKGPJ
- aoh+PoIHZQ7b/H4Wcg1X0FXPFh9MFmmW92cStC9UklR9JxawoMK043lyrJdNOU4lpVT0
- UDU5qR9LNOuY7628tO8avdsttXnWgVppmtnag=
-In-Reply-To: <CAOWid-eaASFFdA5zLxaLO72OGsUVz_BgM-sGP2OQykXCzizmnw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "Kuehling, Felix" <felix.kuehling-5C7GfCeVMHo@public.gmane.org>, jsparks-WVYJKLFxKCc@public.gmane.org, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, lkaplan-WVYJKLFxKCc@public.gmane.org, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, "Greathouse,
- Joseph" <joseph.greathouse-5C7GfCeVMHo@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200409152540.GP18386-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
 
-On Tue, Apr 14, 2020 at 4:29 PM Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
-> On Tue, Apr 14, 2020 at 10:04 AM Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org> wrote:
-> >
-> > This has _nothing_ to do with Intel (I think over the past 25 years or
-> > so intel has implemented all 4 versions of gpu splitting that I
-> > listed, but not entirely sure).
-> >
-> > So again pls less tribal fighting, more collaboration. If you can't do
-> > that, let's pick nouveau/nvidia as arbitrary neutral ground.
->
-> So are you saying Intel has implemented a form of masking before?  I
-> don't think we need to just pick a vendor as a neutral ground.  The
-> idea of spatial sharing vs time sharing is not vendor specific... it's
-> not even GPU specific.  This is why I asked the two questions below.
->
-> > > Perhaps the following questions can help keep the discussion technical:
-> > > 1)  Is it possible to implement non-work-conserving distribution of
-> > > GPU without spatial sharing?  (If yes, I'd love to hear a suggestion,
-> > > if not...question 2.)
-> > > 2)  If spatial sharing is required to support GPU HPC use cases, what
-> > > would you implement if you have the hardware support today?
-> >
-> > The thing we can currently do in upstream (from how I'm understanding
-> > hw) is assign entire PCI devices to containers, so essentially only
-> > the entire /dev/dri/* cdev. That works, and it works across all
-> > drivers we have in upstream right now.
-> >
-> > Anything more fine-grained I don't think is currently possible,
-> > because everyone has a different idea of how to split up gpus. It
-> > would be nice to have it, but in upstream, cross-vendor, I'm just not
-> > seeing it happen right now.
->
-> I understand the reality, but what would you implement to support the
-> concept (GPU in HPC, which you said you are not against) if you have
-> the hw support today?  How would you support low-jitter/low-latency
-> sharing of a single GPU if you have whatever hardware support you need
-> today?
+Hi Michal, Chris,
 
-Whatever works on my gpu.
+I can reproduce very easily with basic commands on a idle system with
+just a reasonably filled partition and lots of (free) RAM and running:
+  bash -c 'echo $$ > $path/to/cgroup/cgroup.procs; tar -zc -C /export . > /dev/null'
+where tar is running all alone in its cgroup with
+  memory.high = 1024M
+  memory.max  = 1152M   (high + 128M)
 
-But there's a huge difference between what I can do for Intel, with my
-Intel hat on, and ship that on some random intel-only repo or DKMS.
-And what makes sense to push to upstream, because on upstream it needs
-to be cross vendor and have reasonably clear semantics so that admins
-understand it no matter whether you plug in an amd, nvidia or whatever
-else gpu.
+At the start
+  memory.stat:pgscan 0
+  memory.stat:pgsteal 0
+once pressure is "high" and tar gets throttled both values increase
+concurrently by 64 once every 2 seconds.
 
-Yes this sucks, but as long as all the hw vendors insist on
-differentiating here there's not much we can do. Maybe in the future
-the VF stuff might help, but I'm not super hopeful that's actually
-going to happen all that well. And the VF stuff at least works the
-same way as what we currently can do already, with assigning an entire
-/dev/dri/render* node to a container.
+Cgroup's memory.current starts 0 and grows up to memory.high and then
+pressure starts.
+  memory.stat:inactive_file 910192640
+  memory.stat:active_file 61501440
+active_file remains low (64M) while inactive_file is high (most of the
+1024M allowed)
 
-If you want more fine-grained then you (as a user) need to have
-containers for amd, and different container isolation for nvidia, and
-different container isolation for intel, and different container
-isolation for $next_vendor, and so on. We can't just wish that there's
-a standard way to manage this when there isn't. And merging
-non-standard ways to split up gpus with cgroups, one for each gpu
-vendor (generation maybe even?) just isn't going to work in upstream.
-
-And really that's not a huge deal, because on the userspace side for
-HPC it's the exact same sorry state of affairs, with cuda, rocm and
-the oneapie effort from intel (not counting a bunch of things various
-vendors tried to pull off on the soc side of things, there's even more
-fun there). Standardizing the kernel management while you still need
-to have different container images (these userspace generally have a
-really hard time co-existing) isn't solving any real-world user
-problems.
-
-So yeah it sucks if you're a gpu compute user in some kind of server
-setting :-/ And there's not really much I can do to fix this, except
-tell vendors that everyone doing their own thing wont work (in
-upstream, it'll work totally in all the vendor driver trees and
-stacks, can't stop that).
--Daniel
-
-> Regards,
-> Kenny
->
->
-> > > On Tue, Apr 14, 2020 at 9:26 AM Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org> wrote:
-> > > >
-> > > > On Tue, Apr 14, 2020 at 3:14 PM Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> > > > >
-> > > > > Ok.  I was hoping you can clarify the contradiction between the
-> > > > > existance of the spec below and your "not something any other gpu can
-> > > > > reasonably support" statement.  I mean, OneAPI is Intel's spec and
-> > > > > doesn't that at least make SubDevice support "reasonable" for one more
-> > > > > vendor?
-> > > > >
-> > > > > Partisanship aside, as a drm co-maintainer, do you really not see the
-> > > > > need for non-work-conserving way of distributing GPU as a resource?
-> > > > > You recognized the latencies involved (although that's really just
-> > > > > part of the story... time sharing is never going to be good enough
-> > > > > even if your switching cost is zero.)  As a drm co-maintainer, are you
-> > > > > suggesting GPU has no place in the HPC use case?
-> > > >
-> > > >  So I did chat with people and my understanding for how this subdevice
-> > > > stuff works is roughly, from least to most fine grained support:
-> > > > - Not possible at all, hw doesn't have any such support
-> > > > - The hw is actually not a single gpu, but a bunch of chips behind a
-> > > > magic bridge/interconnect, and there's a scheduler load-balancing
-> > > > stuff and you can't actually run on all "cores" in parallel with one
-> > > > compute/3d job. So subdevices just give you some of these cores, but
-> > > > from client api pov they're exactly as powerful as the full device. So
-> > > > this kinda works like assigning an entire NUMA node, including all the
-> > > > cpu cores and memory bandwidth and everything.
-> > > > - Hw has multiple "engines" which share resources (like compute cores
-> > > > or whatever) behind the scenes. There's no control over how this
-> > > > sharing works really, and whether you have guarantees about minimal
-> > > > execution resources or not. This kinda works like hyperthreading.
-> > > > - Then finally we have the CU mask thing amdgpu has. Which works like
-> > > > what you're proposing, works on amd.
-> > > >
-> > > > So this isn't something that I think we should standardize in a
-> > > > resource management framework like cgroups. Because it's a complete
-> > > > mess. Note that _all_ the above things (including the "no subdevices"
-> > > > one) are valid implementations of "subdevices" in the various specs.
-> > > >
-> > > > Now on your question on "why was this added to various standards?"
-> > > > because opencl has that too (and the rocm thing, and everything else
-> > > > it seems). What I heard is that a few people pushed really hard, and
-> > > > no one objected hard enough (because not having subdevices is a
-> > > > standards compliant implementation), so that's why it happened. Just
-> > > > because it's in various standards doesn't mean that a) it's actually
-> > > > standardized in a useful fashion and b) something we should just
-> > > > blindly adopt.
-> > > >
-> > > > Also like where exactly did you understand that I'm against gpus in
-> > > > HPC uses cases. Approaching this in a slightly less tribal way would
-> > > > really, really help to get something landed (which I'd like to see
-> > > > happen, personally). Always spinning this as an Intel vs AMD thing
-> > > > like you do here with every reply really doesn't help moving this in.
-> > > >
-> > > > So yeah stricter isolation is something customers want, it's just not
-> > > > something we can really give out right now at a level below the
-> > > > device.
-> > > > -Daniel
-> > > >
-> > > > >
-> > > > > Regards,
-> > > > > Kenny
-> > > > >
-> > > > > On Tue, Apr 14, 2020 at 8:52 AM Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org> wrote:
-> > > > > >
-> > > > > > On Tue, Apr 14, 2020 at 2:47 PM Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> > > > > > > On Tue, Apr 14, 2020 at 8:20 AM Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org> wrote:
-> > > > > > > > My understanding from talking with a few other folks is that
-> > > > > > > > the cpumask-style CU-weight thing is not something any other gpu can
-> > > > > > > > reasonably support (and we have about 6+ of those in-tree)
-> > > > > > >
-> > > > > > > How does Intel plan to support the SubDevice API as described in your
-> > > > > > > own spec here:
-> > > > > > > https://spec.oneapi.com/versions/0.7/oneL0/core/INTRO.html#subdevice-support
-> > > > > >
-> > > > > > I can't talk about whether future products might or might not support
-> > > > > > stuff and in what form exactly they might support stuff or not support
-> > > > > > stuff. Or why exactly that's even in the spec there or not.
-> > > > > >
-> > > > > > Geez
-> > > > > > -Daniel
-> > > > > > --
-> > > > > > Daniel Vetter
-> > > > > > Software Engineer, Intel Corporation
-> > > > > > +41 (0) 79 365 57 48 - http://blog.ffwll.ch
-> > > >
-> > > >
-> > > >
-> > > > --
-> > > > Daniel Vetter
-> > > > Software Engineer, Intel Corporation
-> > > > +41 (0) 79 365 57 48 - http://blog.ffwll.ch
-> >
-> >
-> >
-> > --
-> > Daniel Vetter
-> > Software Engineer, Intel Corporation
-> > +41 (0) 79 365 57 48 - http://blog.ffwll.ch
+Somehow reclaim does not consider the inactive_file or tries to reclaim
+in too small pieces compared to memory turnover in the cgroup.
 
 
+Event having memory.max being just a single page (4096 bytes) larger
+than memory.high brings the same throttling behavior.
+Changing memory.max to match memory.high gets reclaim to work without
+throttling.
 
--- 
-Daniel Vetter
-Software Engineer, Intel Corporation
-+41 (0) 79 365 57 48 - http://blog.ffwll.ch
+
+Bruno
+
+
+On Thu, 9 Apr 2020 17:25:40 Michal Hocko wrote:
+> On Thu 09-04-20 17:09:26, Bruno Prémont wrote:
+> > On Thu, 9 Apr 2020 12:34:00 +0200Michal Hocko wrote:
+> >   
+> > > On Thu 09-04-20 12:17:33, Bruno Prémont wrote:  
+> > > > On Thu, 9 Apr 2020 11:46:15 Michal Hocko wrote:    
+> > > > > [Cc Chris]
+> > > > > 
+> > > > > On Thu 09-04-20 11:25:05, Bruno Prémont wrote:    
+> > > > > > Hi,
+> > > > > > 
+> > > > > > Upgrading from 5.1 kernel to 5.6 kernel on a production system using
+> > > > > > cgroups (v2) and having backup process in a memory.high=2G cgroup
+> > > > > > sees backup being highly throttled (there are about 1.5T to be
+> > > > > > backuped).      
+> > > > > 
+> > > > > What does /proc/sys/vm/dirty_* say?    
+> > > > 
+> > > > /proc/sys/vm/dirty_background_bytes:0
+> > > > /proc/sys/vm/dirty_background_ratio:10
+> > > > /proc/sys/vm/dirty_bytes:0
+> > > > /proc/sys/vm/dirty_expire_centisecs:3000
+> > > > /proc/sys/vm/dirty_ratio:20
+> > > > /proc/sys/vm/dirty_writeback_centisecs:500    
+> > > 
+> > > Sorry, but I forgot ask for the total amount of memory. But it seems
+> > > this is 64GB and 10% dirty ration might mean a lot of dirty memory.
+> > > Does the same happen if you reduce those knobs to something smaller than
+> > > 2G? _bytes alternatives should be useful for that purpose.  
+> > 
+> > Well, tuning it to /proc/sys/vm/dirty_background_bytes:268435456
+> > /proc/sys/vm/dirty_background_ratio:0
+> > /proc/sys/vm/dirty_bytes:536870912
+> > /proc/sys/vm/dirty_expire_centisecs:3000
+> > /proc/sys/vm/dirty_ratio:0
+> > /proc/sys/vm/dirty_writeback_centisecs:500
+> > does not make any difference.  
+> 
+> OK, it was a wild guess because cgroup v2 should be able to throttle
+> heavy writers and be memcg aware AFAIR. But good to have it confirmed.
+> 
+> [...]
+> 
+> > > > > Is it possible that the reclaim is not making progress on too many
+> > > > > dirty pages and that triggers the back off mechanism that has been
+> > > > > implemented recently in  5.4 (have a look at 0e4b01df8659 ("mm,
+> > > > > memcg: throttle allocators when failing reclaim over memory.high")
+> > > > > and e26733e0d0ec ("mm, memcg: throttle allocators based on
+> > > > > ancestral memory.high").    
+> > > > 
+> > > > Could be though in that case it's throttling the wrong task/cgroup
+> > > > as far as I can see (at least from cgroup's memory stats) or being
+> > > > blocked by state external to the cgroup.
+> > > > Will have a look at those patches so get a better idea at what they
+> > > > change.    
+> > > 
+> > > Could you check where is the task of your interest throttled?
+> > > /proc/<pid>/stack should give you a clue.  
+> > 
+> > As guessed by Chris, it's
+> > [<0>] mem_cgroup_handle_over_high+0x121/0x170
+> > [<0>] exit_to_usermode_loop+0x67/0xa0
+> > [<0>] do_syscall_64+0x149/0x170
+> > [<0>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
+> > 
+> > 
+> > And I know no way to tell kernel "drop all caches" for a specific cgroup
+> > nor how to list the inactive files assigned to a given cgroup (knowing
+> > which ones they are and their idle state could help understanding why
+> > they aren't being reclaimed).
+> > 
+> > 
+> > 
+> > Could it be that cache is being prevented from being reclaimed by a task
+> > in another cgroup?
+> > 
+> > e.g.
+> >   cgroup/system/backup
+> >     first reads $files (reads each once)
+> >   cgroup/workload/bla
+> >     second&more reads $files
+> > 
+> > Would $files remain associated to cgroup/system/backup and not
+> > reclaimed there instead of being reassigned to cgroup/workload/bla?  
+> 
+> No, page cache is first-touch-gets-charged. But there is certainly a
+> interference possible if the memory is somehow pinned - e.g. mlock - by
+> a task from another cgroup or internally by FS.
+> 
+> Your earlier stat snapshot doesn't indicate a big problem with the
+> reclaim though:
+> 
+> memory.stat:pgscan 47519855
+> memory.stat:pgsteal 44933838
+> 
+> This tells the overall reclaim effectiveness was 94%. Could you try to
+> gather snapshots with a 1s granularity starting before your run your
+> backup to see how those numbers evolve? Ideally with timestamps to
+> compare with the actual stall information.
+> 
+> Another option would be to enable vmscan tracepoints but let's try with
+> stats first.
+
