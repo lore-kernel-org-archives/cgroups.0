@@ -1,71 +1,60 @@
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons-ud5FBsm0p/xEiooADzr8i9i2O/JbrIOy@public.gmane.org>
-Subject: Re: Memory CG and 5.1 to 5.6 uprade slows backup
-Date: Wed, 15 Apr 2020 13:37:28 +0200
-Message-ID: <20200415133728.3f58d46e@hemera.lan.sysophe.eu>
-References: <20200409094615.GE18386@dhcp22.suse.cz>
-        <20200409121733.1a5ba17c@hemera.lan.sysophe.eu>
-        <20200409103400.GF18386@dhcp22.suse.cz>
-        <20200409170926.182354c3@hemera.lan.sysophe.eu>
-        <20200409152540.GP18386@dhcp22.suse.cz>
-        <20200410091525.287062fa@hemera.lan.sysophe.eu>
-        <20200410104343.5bcde519@hemera.lan.sysophe.eu>
-        <20200410115010.1d9f6a3f@hemera.lan.sysophe.eu>
-        <20200414163134.GQ4629@dhcp22.suse.cz>
-        <20200415121753.3c8d700b@hemera.lan.sysophe.eu>
-        <20200415102442.GE4629@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 0/2] memcg, vmpressure: expose vmpressure controls
+Date: Wed, 15 Apr 2020 14:28:57 +0200
+Message-ID: <20200415122857.GL4629@dhcp22.suse.cz>
+References: <20200413215750.7239-1-lmoiseichuk@magicleap.com>
+ <20200414113730.GH4629@dhcp22.suse.cz>
+ <CAELvCDTGnpA4WBAMZjGSLTrg2-Dbb3kTmLjMTw_JLYXBdvpcxw@mail.gmail.com>
+ <20200414184917.GT4629@dhcp22.suse.cz>
+ <CAELvCDQRYmTZrGSwBUjnRJB3kfB_5JOJ5ELdGv+tkCyhvM=x9A@mail.gmail.com>
+ <20200415075136.GY4629@dhcp22.suse.cz>
+ <CAELvCDRpVi4zjpHCw1oeY=GXf8XO2TXGUFAwztvydS27Q8L9Sw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200415102442.GE4629-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAELvCDRpVi4zjpHCw1oeY=GXf8XO2TXGUFAwztvydS27Q8L9Sw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Leonid Moiseichuk <lmoiseichuk-baZASSJvGmz3oGB3hsPCZA@public.gmane.org>
+Cc: svc lmoiseichuk <svc_lmoiseichuk-baZASSJvGmz3oGB3hsPCZA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vinmenon-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Wed, 15 Apr 2020 12:24:42 Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@pu=
-blic.gmane.org> wrote:
-> On Wed 15-04-20 12:17:53, Bruno Pr=C3=A9mont wrote:
-> [...]
-> > > Anyway the following simply tracing patch should give a better clue.
-> > > The output will appear in the trace buffer (mount tracefs and read
-> > > trace_pipe file). =20
-> >=20
-> > This is the output I get on 5.6.4 with simple tar -zc call (max=3Dhigh+=
-4096):
-> >   tar-16943 [000] ....  1098.796955: mem_cgroup_handle_over_high: memcg=
-_nr_pages_over_high:1 penalty_jiffies:200 current:262122 high:262144
-> >   tar-16943 [000] ....  1100.876794: mem_cgroup_handle_over_high: memcg=
-_nr_pages_over_high:1 penalty_jiffies:200 current:262122 high:262144
-> >   tar-16943 [000] ....  1102.956636: mem_cgroup_handle_over_high: memcg=
-_nr_pages_over_high:1 penalty_jiffies:200 current:262120 high:262144
-> >   tar-16943 [000] ....  1105.037388: mem_cgroup_handle_over_high: memcg=
-_nr_pages_over_high:1 penalty_jiffies:200 current:262121 high:262144
-> >   tar-16943 [000] ....  1107.117246: mem_cgroup_handle_over_high: memcg=
-_nr_pages_over_high:1 penalty_jiffies:200 current:262122 high:262144 =20
->=20
-> OK, that points to the underflow fix.
->=20
-> >=20
-> > With 5.7-rc1 it runs just fine, pressure remains zero and no output in =
-trace_pipe or throttling.
-> >=20
-> > So the fixes that went in there do fix it.
-> > Now matter of cherry-picking the right ones... e26733e0d0ec and its fix=
-e's fix,
-> > maybe some others (will start with those tagged for stable). =20
->=20
-> I have seen Greg picking up this for stable trees so it should show up
-> there soon.
+On Wed 15-04-20 08:17:42, Leonid Moiseichuk wrote:
+> As Chris Down stated cgroups v1 frozen, so no API changes in the mainline
+> kernel.
 
-Applying just 9b8b17541f13809d06f6f873325305ddbb760e3e which went to
-stable-rc for 5.6.5 gets things running fine where.
-(e26733e0d0ec seems to have gone in shortly prior to 5.6 release, need
-to improve my git-foo to locate commits between tags!)
+Yes, this is true, _but_ if there are clear shortcomings in the existing
+vmpressure implementation which could be addressed reasonably then there
+is no reason to ignore them.
 
-So yes it's the fix.
+[...]
 
-Thanks,
-Bruno
+> > I still find this very confusing because the amount of used memory is
+> > not really important. It really only depends on the reclaim activity and
+> > that is either the memcg or the global reclaim. And you are getting
+> > critical levels only if the reclaim is failing to reclaim way too many
+> > pages.
+> >
+> 
+> OK, agree from that point of view.
+> But for larger systems reclaiming happens not so often and we can
+> use larger window sizes to have better memory utilization approximation.
 
-> Thanks!
+Nobody is saying the the window size has to be fixed. This all can be
+auto tuned in the kernel.  It would, however, require to define what
+"better utilization approximation" means much more specifically.
+
+[...]
+> > This looks more like a problem of vmpressure implementation than
+> > something you want to workaround by tuning to me.
+> >
+> Basically it is how it works - collect the scanned page and activate worker
+> activity to update the current level.
+
+That is the case only for some vmpressure invocations. And your data
+suggest that those might lead to misleading results. So this is likely
+good to focus on and find out whether this can be addressed.
+-- 
+Michal Hocko
+SUSE Labs
