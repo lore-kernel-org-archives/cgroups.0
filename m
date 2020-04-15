@@ -1,60 +1,31 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 0/2] memcg, vmpressure: expose vmpressure controls
-Date: Wed, 15 Apr 2020 14:28:57 +0200
-Message-ID: <20200415122857.GL4629@dhcp22.suse.cz>
-References: <20200413215750.7239-1-lmoiseichuk@magicleap.com>
- <20200414113730.GH4629@dhcp22.suse.cz>
- <CAELvCDTGnpA4WBAMZjGSLTrg2-Dbb3kTmLjMTw_JLYXBdvpcxw@mail.gmail.com>
- <20200414184917.GT4629@dhcp22.suse.cz>
- <CAELvCDQRYmTZrGSwBUjnRJB3kfB_5JOJ5ELdGv+tkCyhvM=x9A@mail.gmail.com>
- <20200415075136.GY4629@dhcp22.suse.cz>
- <CAELvCDRpVi4zjpHCw1oeY=GXf8XO2TXGUFAwztvydS27Q8L9Sw@mail.gmail.com>
+From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] clone3: fix cgroup argument sanity check
+Date: Wed, 15 Apr 2020 14:38:15 +0200
+Message-ID: <20200415123815.qrc7m2ddboh645uo@wittgenstein>
+References: <20200412202533.GA29554@asgard.redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CAELvCDRpVi4zjpHCw1oeY=GXf8XO2TXGUFAwztvydS27Q8L9Sw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <20200412202533.GA29554-ZbobWygYI+YXGNroddHbYwC/G2K4zDHf@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Leonid Moiseichuk <lmoiseichuk-baZASSJvGmz3oGB3hsPCZA@public.gmane.org>
-Cc: svc lmoiseichuk <svc_lmoiseichuk-baZASSJvGmz3oGB3hsPCZA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vinmenon-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org, andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Eugene Syromiatnikov <esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian Brauner <christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Dmitry V. Levin" <ldv-u2l5PoMzF/Vg9hUCZPvPmw@public.gmane.org>
 
-On Wed 15-04-20 08:17:42, Leonid Moiseichuk wrote:
-> As Chris Down stated cgroups v1 frozen, so no API changes in the mainline
-> kernel.
-
-Yes, this is true, _but_ if there are clear shortcomings in the existing
-vmpressure implementation which could be addressed reasonably then there
-is no reason to ignore them.
-
-[...]
-
-> > I still find this very confusing because the amount of used memory is
-> > not really important. It really only depends on the reclaim activity and
-> > that is either the memcg or the global reclaim. And you are getting
-> > critical levels only if the reclaim is failing to reclaim way too many
-> > pages.
-> >
+On Sun, Apr 12, 2020 at 10:25:33PM +0200, Eugene Syromiatnikov wrote:
+> Checking that cgroup field value of struct clone_args is less than 0
+> is useless, as it is defined as unsigned 64-bit integer.  Moreover,
+> it doesn't catch the situations where its higher bits are lost during
+> the assignment to the cgroup field of the cgroup field of the internal
+> struct kernel_clone_args (where it is declared as signed 32-bit
+> integer), so it is still possible to pass garbage there.  A check
+> against INT_MAX solves both these issues.
 > 
-> OK, agree from that point of view.
-> But for larger systems reclaiming happens not so often and we can
-> use larger window sizes to have better memory utilization approximation.
+> Fixes: ef2c41cf38a7559b ("clone3: allow spawning processes into cgroups")
+> Signed-off-by: Eugene Syromiatnikov <esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Acked-by: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
 
-Nobody is saying the the window size has to be fixed. This all can be
-auto tuned in the kernel.  It would, however, require to define what
-"better utilization approximation" means much more specifically.
-
-[...]
-> > This looks more like a problem of vmpressure implementation than
-> > something you want to workaround by tuning to me.
-> >
-> Basically it is how it works - collect the scanned page and activate worker
-> activity to update the current level.
-
-That is the case only for some vmpressure invocations. And your data
-suggest that those might lead to misleading results. So this is likely
-good to focus on and find out whether this can be addressed.
--- 
-Michal Hocko
-SUSE Labs
+Applied, thanks!
+Christian
