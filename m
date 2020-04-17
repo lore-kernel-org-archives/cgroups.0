@@ -1,76 +1,106 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/2] memcg: folding CONFIG_MEMCG_SWAP as default
-Date: Fri, 17 Apr 2020 10:35:53 -0700
-Message-ID: <CALvZod5DT-2TB-6KFZshmSt=wq+jg5+b5aAsWequP8zxs+tMpQ@mail.gmail.com>
-References: <1587134624-184860-1-git-send-email-alex.shi@linux.alibaba.com>
- <20200417155317.GS26707@dhcp22.suse.cz> <CALvZod7Xa4Xs=7zC8OZ7GOfvfDBv+yNbGCzBxeoMgAeRGRtw0A@mail.gmail.com>
- <20200417165442.GT26707@dhcp22.suse.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 0/3] memcg: Slow down swap allocation as the available
+ space gets depleted
+Date: Fri, 17 Apr 2020 13:36:15 -0400
+Message-ID: <20200417173615.GB43469@mtj.thefacebook.com>
+References: <20200417010617.927266-1-kuba@kernel.org>
+ <CALvZod78ZUhU+yr2x1h_gv+VgVGTPnSSGKh_+fd+MeiAKreJvg@mail.gmail.com>
+ <20200417162355.GA43469@mtj.thefacebook.com>
+ <CALvZod4ftvXCu8SbQUXwTGVvx5K2+at9h30r28chZLXEB1JdfQ@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Hg6IIRdiW7K53TeUTBkQvnSYbhXlq293hVwvftTtBpY=;
-        b=Vwy15InWoEv70r74M82Y4LbZS+npes2VXDKaQjvNzJCyqXXde6NHxQmepyDO1vO1Ed
-         QDNopRM8cYIGGVlIEjKd+dGyO5LuF1d+Q2N/vxATnmmxvpcx+M0krPVJ1FqlJ7cqNwKo
-         abPmzqwu2buigwodzTtOZwOtMqDaU+rl6ytqqrGgQCavM2QpTg5jlHsA4MT8wIDgkznQ
-         JW2QXCTMfMZAsl8/CeoVzsVwyLAzmmoN1DUqVnO9Xr2rEQjGt+dDHagHVSfVGsFNJCTC
-         n2/DA4IBZ9iunwXNNtnrGUlBMZeYdzqgKOc97c2kAxzVrGkAkc9ui2UYAmYpuHqRWJpF
-         UdGw==
-In-Reply-To: <20200417165442.GT26707-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=F+HgM45oFlXbwupYfko4Yr92PXppTYIX/jM7xHjwT0U=;
+        b=TiLFh5ajMpb02YUYYwgGkQ0XhhZQEV+TBGxC+xQc3+dlMsyhZIaiuXTuOE434f7iy0
+         iBhpQpKLim2K9grkhWBnI2xw9MaXHiSsUNeNask+Dpb2SuecIn1YI3kZ4pvvl7fhPFZX
+         JzhmT252wqxAw1h1u6+3OIExrRKHTEhlm1o6Jn9aTlSDIdYk1GAEgVtejsHyqIuJY3pa
+         C6ghblGdWFUWyBWkNA/mSnIv9AxI9ET5ZTr0gqqqJUw/7/uGX5c+2ocP/RkfH1T7qZBV
+         4lkpuiDmL37+pFz2W+R4SRfb/jN+BaJHHZdhaUuN/0jbSFXEjXGDGrWy2tBnnkhiDqmZ
+         fl+w==
+Content-Disposition: inline
+In-Reply-To: <CALvZod4ftvXCu8SbQUXwTGVvx5K2+at9h30r28chZLXEB1JdfQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, Apr 17, 2020 at 9:54 AM Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->
-> On Fri 17-04-20 09:41:04, Shakeel Butt wrote:
-> > On Fri, Apr 17, 2020 at 9:03 AM Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> > >
-> > > On Fri 17-04-20 22:43:43, Alex Shi wrote:
-> > > > This patch fold MEMCG_SWAP feature into kernel as default function. That
-> > > > required a short size memcg id for each of page. As Johannes mentioned
-> > > >
-> > > > "the overhead of tracking is tiny - 512k per G of swap (0.04%).'
-> > > >
-> > > > So all swapout page could be tracked for its memcg id.
-> > >
-> > > I am perfectly OK with dropping the CONFIG_MEMCG_SWAP. The code that is
-> > > guarded by it is negligible and the resulting code is much easier to
-> > > read so no objection on that front. I just do not really see any real
-> > > reason to flip the default for cgroup v1. Why do we want/need that?
-> > >
+Hello,
+
+On Fri, Apr 17, 2020 at 10:18:15AM -0700, Shakeel Butt wrote:
+> > There currently are issues with anonymous memory management which makes them
+> > different / worse than page cache but I don't follow why swapping
+> > necessarily means that isolation is broken. Page refaults don't indicate
+> > that memory isolation is broken after all.
+> 
+> Sorry, I meant the performance isolation. Direct reclaim does not
+> really differentiate who to stall and whose CPU to use.
+
+Can you please elaborate concrete scenarios? I'm having a hard time seeing
+differences from page cache.
+
+> > > memcg limit reclaim and memcg limits are overcommitted. Shouldn't
+> > > running out of swap will trigger the OOM earlier which should be
+> > > better than impacting the whole system.
 > >
-> > Yes, the changelog is lacking the motivation of this change. This is
-> > proposed by Johannes and I was actually expecting the patch from him.
-> > The motivation is to make the things simpler for per-memcg LRU locking
-> > and workingset for anon memory (Johannes has described these really
-> > well, lemme find the email). If we keep the differentiation between
-> > cgroup v1 and v2, then there is actually no point of this cleanup as
-> > per-memcg LRU locking and anon workingset still has to handle the
-> > !do_swap_account case.
->
-> All those details really have to go into the changelog. I have to say
-> that I still do not understand why the actual accounting swap or not
-> makes any difference for per per-memcg LRU.
+> > The primary scenario which was being considered was undercommitted
+> > protections but I don't think that makes any relevant differences.
+> >
+> 
+> What is undercommitted protections? Does it mean there is still swap
+> available on the system but the memcg is hitting its swap limit?
 
-Here is Johannes explanation:
-https://lore.kernel.org/linux-mm/20200413180725.GA99267-druUgvl0LCNAfugRpC6u6w@public.gmane.org/
+Hahaha, I assumed you were talking about memory.high/max and was saying that
+the primary scenarios that were being considered was usage of memory.low
+interacting with swap. Again, can you please give an concrete example so
+that we don't misunderstand each other?
 
-> Especially when your patch
+> > This is exactly similar to delay injection for memory.high. What's desired
+> > is slowing down the workload as the available resource is depleted so that
+> > the resource shortage presents as gradual degradation of performance and
+> > matching increase in resource PSI. This allows the situation to be detected
+> > and handled from userland while avoiding sudden and unpredictable behavior
+> > changes.
+> >
+> 
+> Let me try to understand this with an example. Memcg 'A' has
 
-You mean Alex's patch.
+Ah, you already went there. Great.
 
-> keeps the kernel command line parameter still in place.
->
-> Anyway, it would be much more simpler to have a patch that drops the
-> CONFIG_MEMCG_SWAP and a separate one which switches the default
-> beahvior. I am not saying I am ok with the later but if the
-> justification is convincing then I might change my mind.
-> --
-> Michal Hocko
-> SUSE Labs
+> memory.high = 100 MiB, memory.max = 150 MiB and memory.swap.max = 50
+> MiB. When A's usage goes over 100 MiB, it will reclaim the anon, file
+> and kmem. The anon will go to swap and increase its swap usage until
+> it hits the limit. Now the 'A' reclaim_high has fewer things (file &
+> kmem) to reclaim but the mem_cgroup_handle_over_high() will keep A's
+> increase in usage in check.
+> 
+> So, my question is: should the slowdown by memory.high depends on the
+> reclaimable memory? If there is no reclaimable memory and the job hits
+> memory.high, should the kernel slow it down to crawl until the PSI
+> monitor comes and decides what to do. If I understand correctly, the
+> problem is the kernel slow down is not successful when reclaimable
+> memory is very low. Please correct me if I am wrong.
+
+In combination with memory.high, swap slowdown may not be necessary because
+memory.high's slow down mechanism is already there to handle "can't swap"
+scenario whether that's because swap is disabled wholesale, limited or
+depleted. However, please consider the following scenario.
+
+cgroup A has memory.low protection and no other restrictions. cgroup B has
+no protection and has access to swap. When B's memory starts bloating and
+gets the system under memory contention, it'll start consuming swap until it
+can't. When swap becomes depleted for B, there's nothing holding it back and
+B will start eating into A's protection.
+
+The proposed mechanism just plugs another vector for the same condition
+where anonymous memory management breaks down because they can no longer be
+reclaimed due to swap unavailability.
+
+Thanks.
+
+-- 
+tejun
