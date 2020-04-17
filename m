@@ -1,265 +1,44 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 3/3] mm: automatically penalize tasks with high swap use
-Date: Fri, 17 Apr 2020 09:37:16 +0200
-Message-ID: <20200417073716.GG26707@dhcp22.suse.cz>
-References: <20200417010617.927266-1-kuba@kernel.org>
- <20200417010617.927266-4-kuba@kernel.org>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH v8 03/10] mm/lru: replace pgdat lru_lock with lruvec lock
+Date: Fri, 17 Apr 2020 21:18:36 +0800
+Message-ID: <6c114a89-7120-13d2-35ee-85c1e2933fca@linux.alibaba.com>
+References: <1579143909-156105-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1579143909-156105-4-git-send-email-alex.shi@linux.alibaba.com>
+ <20200116215222.GA64230@cmpxchg.org>
+ <cdcdb710-1d78-6fac-48d7-35519ddcdc6a@linux.alibaba.com>
+ <20200413180725.GA99267@cmpxchg.org>
+ <8e7bf170-2bb5-f862-c12b-809f7f7d96cb@linux.alibaba.com>
+ <20200414163114.GA136578@cmpxchg.org>
+ <54af0662-cbb4-88c7-7eae-f969684025dd@linux.alibaba.com>
+ <0bed9f1a-400d-d9a9-aeb4-de1dd9ccbb45@linux.alibaba.com>
+ <20200416152830.GA195132@cmpxchg.org>
+ <CALvZod4bdmkd_YG=96O8+zCSCFNpsBQiN+3Cq+6oD7jn3GTYog@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20200417010617.927266-4-kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <CALvZod4bdmkd_YG=96O8+zCSCFNpsBQiN+3Cq+6oD7jn3GTYog-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Qian Cai <cai-J5quhbR+WMc@public.gmane.org>, Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-On Thu 16-04-20 18:06:17, Jakub Kicinski wrote:
-> Add a memory.swap.high knob, which functions in a similar way
-> to memory.high, but with a less steep slope.
 
-This really begs for more details. What does "similar way to
-memory.high" mean? Because my first thought would be that the swap usage
-will be throttled and kept at the swap.high level. From a quick look at
-the patch you only do throttling. There is no swap space reclaim to keep
-the usage at the level. So unless I am missing something this is very
-confusing and it doesn't really fit into high limit semantic.
 
-This changelog also doesn't describe any usecase.
-
-> Use one counter for number of pages allocated under pressure
-> to save struct task space and avoid two separate hierarchy
-> walks on the hot path.
+在 2020/4/17 上午1:47, Shakeel Butt 写道:
+> I think this would be a very good cleanup and will make the code much
+> more readable. I totally agree to keep this separate from the other
+> work. Please do CC me the series once it's ready.
 > 
-> Use swap.high when deciding if swap is full.
-> Perform reclaim and count memory over high events.
+> Now regarding the per-memcg LRU locks, Alex, did you get the chance to
+> try the workload Hugh has provided? I was planning of posting Hugh's
+> patch series but Hugh advised me to wait for your & Johannes's
+> response since you both have already invested a lot of time in your
+> series and I do want to see how Johannes's TestClearPageLRU() idea
+> will look like, so, I will hold off for now.
 > 
-> Signed-off-by: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> --
-> change log including private exchanges with Johannes:
-> 
-> v0.4:
->  - count the events only for the highest offender
->  - don't schedule_work for swap
->  - take high into account in mem_cgroup_swap_full()
-> v0.3:
->  - rebase
->  - use one nr_pages
->  - s/overage_shf/cost_shift/
-> v0.2:
->  - move to counting overage in try_charge()
->  - add comment about slope being more gradual
-> ---
->  include/linux/memcontrol.h |  4 ++
->  mm/memcontrol.c            | 94 +++++++++++++++++++++++++++++++++++---
->  2 files changed, 91 insertions(+), 7 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index d630af1a4e17..b52f7dcddfa1 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -45,6 +45,7 @@ enum memcg_memory_event {
->  	MEMCG_MAX,
->  	MEMCG_OOM,
->  	MEMCG_OOM_KILL,
-> +	MEMCG_SWAP_HIGH,
->  	MEMCG_SWAP_MAX,
->  	MEMCG_SWAP_FAIL,
->  	MEMCG_NR_MEMORY_EVENTS,
-> @@ -218,6 +219,9 @@ struct mem_cgroup {
->  	/* Upper bound of normal memory consumption range */
->  	unsigned long high;
->  
-> +	/* Upper bound of swap consumption range */
-> +	unsigned long swap_high;
-> +
->  	/* Range enforcement for interrupt charges */
->  	struct work_struct high_work;
->  
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 90266c04fd76..7d0895c0d903 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2351,12 +2351,34 @@ static u64 mem_find_max_overage(struct mem_cgroup *memcg)
->  	return max_overage;
->  }
->  
-> +static u64 swap_find_max_overage(struct mem_cgroup *memcg)
-> +{
-> +	u64 overage, max_overage = 0;
-> +	struct mem_cgroup *max_cg;
-> +
-> +	do {
-> +		overage = calculate_overage(page_counter_read(&memcg->swap),
-> +					    READ_ONCE(memcg->swap_high));
-> +		if (overage > max_overage) {
-> +			max_overage = overage;
-> +			max_cg = memcg;
-> +		}
-> +	} while ((memcg = parent_mem_cgroup(memcg)) &&
-> +		 !mem_cgroup_is_root(memcg));
-> +
-> +	if (max_overage)
-> +		memcg_memory_event(max_cg, MEMCG_SWAP_HIGH);
-> +
-> +	return max_overage;
-> +}
-> +
->  /*
->   * Get the number of jiffies that we should penalise a mischievous cgroup which
->   * is exceeding its memory.high by checking both it and its ancestors.
->   */
->  static unsigned long calculate_high_delay(struct mem_cgroup *memcg,
->  					  unsigned int nr_pages,
-> +					  unsigned char cost_shift,
->  					  u64 max_overage)
->  {
->  	unsigned long penalty_jiffies;
-> @@ -2364,6 +2386,9 @@ static unsigned long calculate_high_delay(struct mem_cgroup *memcg,
->  	if (!max_overage)
->  		return 0;
->  
-> +	if (cost_shift)
-> +		max_overage >>= cost_shift;
-> +
->  	/*
->  	 * We use overage compared to memory.high to calculate the number of
->  	 * jiffies to sleep (penalty_jiffies). Ideally this value should be
-> @@ -2409,9 +2434,16 @@ void mem_cgroup_handle_over_high(void)
->  	 * memory.high is breached and reclaim is unable to keep up. Throttle
->  	 * allocators proactively to slow down excessive growth.
->  	 */
-> -	penalty_jiffies = calculate_high_delay(memcg, nr_pages,
-> +	penalty_jiffies = calculate_high_delay(memcg, nr_pages, 0,
->  					       mem_find_max_overage(memcg));
->  
-> +	/*
-> +	 * Make the swap curve more gradual, swap can be considered "cheaper",
-> +	 * and is allocated in larger chunks. We want the delays to be gradual.
-> +	 */
-> +	penalty_jiffies += calculate_high_delay(memcg, nr_pages, 2,
-> +						swap_find_max_overage(memcg));
-> +
->  	/*
->  	 * Clamp the max delay per usermode return so as to still keep the
->  	 * application moving forwards and also permit diagnostics, albeit
-> @@ -2602,12 +2634,23 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
->  	 * reclaim, the cost of mismatch is negligible.
->  	 */
->  	do {
-> -		if (page_counter_read(&memcg->memory) > READ_ONCE(memcg->high)) {
-> -			/* Don't bother a random interrupted task */
-> -			if (in_interrupt()) {
-> +		bool mem_high, swap_high;
-> +
-> +		mem_high = page_counter_read(&memcg->memory) >
-> +			READ_ONCE(memcg->high);
-> +		swap_high = page_counter_read(&memcg->swap) >
-> +			READ_ONCE(memcg->swap_high);
-> +
-> +		/* Don't bother a random interrupted task */
-> +		if (in_interrupt()) {
-> +			if (mem_high) {
->  				schedule_work(&memcg->high_work);
->  				break;
->  			}
-> +			continue;
-> +		}
-> +
-> +		if (mem_high || swap_high) {
->  			current->memcg_nr_pages_over_high += batch;
->  			set_notify_resume(current);
->  			break;
-> @@ -5071,6 +5114,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
->  
->  	WRITE_ONCE(memcg->high, PAGE_COUNTER_MAX);
->  	memcg->soft_limit = PAGE_COUNTER_MAX;
-> +	WRITE_ONCE(memcg->swap_high, PAGE_COUNTER_MAX);
->  	if (parent) {
->  		memcg->swappiness = mem_cgroup_swappiness(parent);
->  		memcg->oom_kill_disable = parent->oom_kill_disable;
-> @@ -5224,6 +5268,7 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
->  	page_counter_set_low(&memcg->memory, 0);
->  	WRITE_ONCE(memcg->high, PAGE_COUNTER_MAX);
->  	memcg->soft_limit = PAGE_COUNTER_MAX;
-> +	WRITE_ONCE(memcg->swap_high, PAGE_COUNTER_MAX);
->  	memcg_wb_domain_size_changed(memcg);
->  }
->  
-> @@ -7137,10 +7182,13 @@ bool mem_cgroup_swap_full(struct page *page)
->  	if (!memcg)
->  		return false;
->  
-> -	for (; memcg != root_mem_cgroup; memcg = parent_mem_cgroup(memcg))
-> -		if (page_counter_read(&memcg->swap) * 2 >=
-> -		    READ_ONCE(memcg->swap.max))
-> +	for (; memcg != root_mem_cgroup; memcg = parent_mem_cgroup(memcg)) {
-> +		unsigned long usage = page_counter_read(&memcg->swap);
-> +
-> +		if (usage * 2 >= READ_ONCE(memcg->swap_high) ||
-> +		    usage * 2 >= READ_ONCE(memcg->swap.max))
->  			return true;
-> +	}
->  
->  	return false;
->  }
-> @@ -7170,6 +7218,30 @@ static u64 swap_current_read(struct cgroup_subsys_state *css,
->  	return (u64)page_counter_read(&memcg->swap) * PAGE_SIZE;
->  }
->  
-> +static int swap_high_show(struct seq_file *m, void *v)
-> +{
-> +	unsigned long high = READ_ONCE(mem_cgroup_from_seq(m)->swap_high);
-> +
-> +	return seq_puts_memcg_tunable(m, high);
-> +}
-> +
-> +static ssize_t swap_high_write(struct kernfs_open_file *of,
-> +			       char *buf, size_t nbytes, loff_t off)
-> +{
-> +	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-> +	unsigned long high;
-> +	int err;
-> +
-> +	buf = strstrip(buf);
-> +	err = page_counter_memparse(buf, "max", &high);
-> +	if (err)
-> +		return err;
-> +
-> +	WRITE_ONCE(memcg->swap_high, high);
-> +
-> +	return nbytes;
-> +}
-> +
->  static int swap_max_show(struct seq_file *m, void *v)
->  {
->  	return seq_puts_memcg_tunable(m,
-> @@ -7197,6 +7269,8 @@ static int swap_events_show(struct seq_file *m, void *v)
->  {
->  	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
->  
-> +	seq_printf(m, "high %lu\n",
-> +		   atomic_long_read(&memcg->memory_events[MEMCG_SWAP_HIGH]));
->  	seq_printf(m, "max %lu\n",
->  		   atomic_long_read(&memcg->memory_events[MEMCG_SWAP_MAX]));
->  	seq_printf(m, "fail %lu\n",
-> @@ -7211,6 +7285,12 @@ static struct cftype swap_files[] = {
->  		.flags = CFTYPE_NOT_ON_ROOT,
->  		.read_u64 = swap_current_read,
->  	},
-> +	{
-> +		.name = "swap.high",
-> +		.flags = CFTYPE_NOT_ON_ROOT,
-> +		.seq_show = swap_high_show,
-> +		.write = swap_high_write,
-> +	},
->  	{
->  		.name = "swap.max",
->  		.flags = CFTYPE_NOT_ON_ROOT,
-> -- 
-> 2.25.2
 
--- 
-Michal Hocko
-SUSE Labs
+Hugh Dickin's testcase is great. It reveal the race on memcg charge in hours.
+
+Thanks
+Alex
