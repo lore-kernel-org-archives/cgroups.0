@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH 17/18] mm: memcontrol: delete unused lrucare handling
-Date: Mon, 20 Apr 2020 18:11:25 -0400
-Message-ID: <20200420221126.341272-18-hannes@cmpxchg.org>
+Subject: [PATCH 15/18] mm: memcontrol: make swap tracking an integral part of memory control
+Date: Mon, 20 Apr 2020 18:11:23 -0400
+Message-ID: <20200420221126.341272-16-hannes@cmpxchg.org>
 References: <20200420221126.341272-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,13 +10,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=PncRoalTORTzbPDipW6LC/3hBRJEv36Hcb5+zF4gMQI=;
-        b=lD2oKzCp8iMw2/AoEsPsa7wNaiC7gPfC/xtQbGFpVKtiYZcZw1aaTPz3iutggIrJYj
-         +F39OgqOjUV24z5rbhHJ0hRn7w+tBm0XBBT7c1Hmxu0UF5Y+Ggh+HK6Kostsdj/NyvyH
-         EvFx5J+8al9GXzRRuJ3vDEWRZckh7TPr5J+sH+iEGksj7idRcraj57Nkv8ntPVxnw1hI
-         Es0XUIHbguzDRlfAFCk9aHkdV2KUD9nI9sHGr9WFre3CS53I8JC2//bxVqEsp8NV4vLb
-         erMHFO1mmEvAsoU7i168DpDvh3bNY1WtbSXX62iEASE2Lqz20vy20jkDFpc01nai5awo
-         ERxg==
+        bh=V4CmxDg+3coaIxVQQ6Fk3kZAAIUOYIee+X4KkV8yAVM=;
+        b=MF0CGwjxMBjGHHBS16rqAWiBnZrzf0N5/QjQTnOFf+30YkHPHBfowHzmz9DIUe26mS
+         l9uCKuBwM5ZK5nFU/hwm9oUngNggWIb/HuU1HoR7VfqqlTA/vzjoc45ET5j5/UI77eEP
+         5jWFWOa1fw0jSwXTNTuwXiDOq4HR6zobgLBOsfGSFpUnZkdbyvj94x6P5mV+jVfAjahY
+         rD5N9bew9iZ9yN7KybLgwrX4G0gfrFlYMQWw4OflRYFzf5QUPQJ0xvvI1sBnC8uXHVZj
+         pTpI074+gs4At+LTUCZclNDS2VQDdKRm05pQOctSvXdj46dflNH/cz59xkfMIczD0jHu
+         ae4A==
 In-Reply-To: <20200420221126.341272-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,326 +24,227 @@ Content-Type: text/plain; charset="us-ascii"
 To: Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
+Without swap page tracking, users that are otherwise memory controlled
+can easily escape their containment and allocate significant amounts
+of memory that they're not being charged for. That's because swap does
+readahead, but without the cgroup records of who owned the page at
+swapout, readahead pages don't get charged until somebody actually
+faults them into their page table and we can identify an owner task.
+This can be maliciously exploited with MADV_WILLNEED, which triggers
+arbitrary readahead allocations without charging the pages.
+
+Make swap swap page tracking an integral part of memcg and remove the
+Kconfig options. In the first place, it was only made configurable to
+allow users to save some memory. But the overhead of tracking cgroup
+ownership per swap page is minimal - 2 byte per page, or 512k per 1G
+of swap, or 0.04%. Saving that at the expense of broken containment
+semantics is not something we should present as a coequal option.
+
+The swapaccount=0 boot option will continue to exist, and it will
+eliminate the page_counter overhead and hide the swap control files,
+but it won't disable swap slot ownership tracking.
+
+This patch makes sure we always have the cgroup records at swapin
+time; the next patch will fix the actual bug by charging readahead
+swap pages at swapin time rather than at fault time.
+
 Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
- include/linux/memcontrol.h |  5 ++--
- kernel/events/uprobes.c    |  3 +-
- mm/filemap.c               |  2 +-
- mm/huge_memory.c           |  7 ++---
- mm/khugepaged.c            |  4 +--
- mm/memcontrol.c            | 57 +++-----------------------------------
- mm/memory.c                |  8 +++---
- mm/migrate.c               |  2 +-
- mm/shmem.c                 |  2 +-
- mm/swap_state.c            |  2 +-
- mm/userfaultfd.c           |  2 +-
- 11 files changed, 21 insertions(+), 73 deletions(-)
+ init/Kconfig     | 17 +----------------
+ mm/memcontrol.c  | 48 +++++++++++++++++-------------------------------
+ mm/swap_cgroup.c |  6 ------
+ 3 files changed, 18 insertions(+), 53 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index d458f1d90aa4..4b868e5a687f 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -357,8 +357,7 @@ static inline unsigned long mem_cgroup_protection(struct mem_cgroup *memcg,
- enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
- 						struct mem_cgroup *memcg);
+diff --git a/init/Kconfig b/init/Kconfig
+index 9e22ee8fbd75..39cdb13168cf 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -835,24 +835,9 @@ config MEMCG
+ 	  Provides control over the memory footprint of tasks in a cgroup.
  
--int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask,
--		      bool lrucare);
-+int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask);
+ config MEMCG_SWAP
+-	bool "Swap controller"
++	bool
+ 	depends on MEMCG && SWAP
+-	help
+-	  Provides control over the swap space consumed by tasks in a cgroup.
+-
+-config MEMCG_SWAP_ENABLED
+-	bool "Swap controller enabled by default"
+-	depends on MEMCG_SWAP
+ 	default y
+-	help
+-	  Memory Resource Controller Swap Extension comes with its price in
+-	  a bigger memory consumption. General purpose distribution kernels
+-	  which want to enable the feature but keep it disabled by default
+-	  and let the user enable it by swapaccount=1 boot command line
+-	  parameter should have this option unselected.
+-	  For those who want to have the feature enabled by default should
+-	  select this option (if, for some reason, they need to disable it
+-	  then swapaccount=0 does the trick).
  
- void mem_cgroup_uncharge(struct page *page);
- void mem_cgroup_uncharge_list(struct list_head *page_list);
-@@ -839,7 +838,7 @@ static inline enum mem_cgroup_protection mem_cgroup_protected(
- }
- 
- static inline int mem_cgroup_charge(struct page *page, struct mm_struct *mm,
--				    gfp_t gfp_mask, bool lrucare)
-+				    gfp_t gfp_mask)
- {
- 	return 0;
- }
-diff --git a/kernel/events/uprobes.c b/kernel/events/uprobes.c
-index 4253c153e985..eddc8db96027 100644
---- a/kernel/events/uprobes.c
-+++ b/kernel/events/uprobes.c
-@@ -167,8 +167,7 @@ static int __replace_page(struct vm_area_struct *vma, unsigned long addr,
- 				addr + PAGE_SIZE);
- 
- 	if (new_page) {
--		err = mem_cgroup_charge(new_page, vma->vm_mm, GFP_KERNEL,
--					false);
-+		err = mem_cgroup_charge(new_page, vma->vm_mm, GFP_KERNEL);
- 		if (err)
- 			return err;
- 	}
-diff --git a/mm/filemap.c b/mm/filemap.c
-index a10bd6696049..f73b221314df 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -845,7 +845,7 @@ static int __add_to_page_cache_locked(struct page *page,
- 	page->index = offset;
- 
- 	if (!huge) {
--		error = mem_cgroup_charge(page, current->mm, gfp_mask, false);
-+		error = mem_cgroup_charge(page, current->mm, gfp_mask);
- 		if (error)
- 			goto error;
- 	}
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 0b33eaf0740a..35a716720e26 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -593,7 +593,7 @@ static vm_fault_t __do_huge_pmd_anonymous_page(struct vm_fault *vmf,
- 
- 	VM_BUG_ON_PAGE(!PageCompound(page), page);
- 
--	if (mem_cgroup_charge(page, vma->vm_mm, gfp, false)) {
-+	if (mem_cgroup_charge(page, vma->vm_mm, gfp)) {
- 		put_page(page);
- 		count_vm_event(THP_FAULT_FALLBACK);
- 		count_vm_event(THP_FAULT_FALLBACK_CHARGE);
-@@ -1276,7 +1276,7 @@ static vm_fault_t do_huge_pmd_wp_page_fallback(struct vm_fault *vmf,
- 					       vmf->address, page_to_nid(page));
- 		if (unlikely(!pages[i] ||
- 			     mem_cgroup_charge(pages[i], vma->vm_mm,
--					       GFP_KERNEL, false))) {
-+					       GFP_KERNEL))) {
- 			if (pages[i])
- 				put_page(pages[i]);
- 			while (--i >= 0)
-@@ -1430,8 +1430,7 @@ vm_fault_t do_huge_pmd_wp_page(struct vm_fault *vmf, pmd_t orig_pmd)
- 		goto out;
- 	}
- 
--	if (unlikely(mem_cgroup_charge(new_page, vma->vm_mm, huge_gfp,
--				       false))) {
-+	if (unlikely(mem_cgroup_charge(new_page, vma->vm_mm, huge_gfp))) {
- 		put_page(new_page);
- 		split_huge_pmd(vma, vmf->pmd, vmf->address);
- 		if (page)
-diff --git a/mm/khugepaged.c b/mm/khugepaged.c
-index 5cf8082fb038..28c6d84db4ee 100644
---- a/mm/khugepaged.c
-+++ b/mm/khugepaged.c
-@@ -973,7 +973,7 @@ static void collapse_huge_page(struct mm_struct *mm,
- 		goto out_nolock;
- 	}
- 
--	if (unlikely(mem_cgroup_charge(new_page, mm, gfp, false))) {
-+	if (unlikely(mem_cgroup_charge(new_page, mm, gfp))) {
- 		result = SCAN_CGROUP_CHARGE_FAIL;
- 		goto out_nolock;
- 	}
-@@ -1527,7 +1527,7 @@ static void collapse_file(struct mm_struct *mm,
- 		goto out;
- 	}
- 
--	if (unlikely(mem_cgroup_charge(new_page, mm, gfp, false))) {
-+	if (unlikely(mem_cgroup_charge(new_page, mm, gfp))) {
- 		result = SCAN_CGROUP_CHARGE_FAIL;
- 		goto out;
- 	}
+ config MEMCG_KMEM
+ 	bool
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1d7408a8744a..a8cce52b6b4d 100644
+index 5558777023e7..1d7408a8744a 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2601,51 +2601,9 @@ static void cancel_charge(struct mem_cgroup *memcg, unsigned int nr_pages)
- 	css_put_many(&memcg->css, nr_pages);
- }
+@@ -83,14 +83,10 @@ static bool cgroup_memory_nokmem;
  
--static void lock_page_lru(struct page *page, int *isolated)
-+static void commit_charge(struct page *page, struct mem_cgroup *memcg)
- {
--	pg_data_t *pgdat = page_pgdat(page);
--
--	spin_lock_irq(&pgdat->lru_lock);
--	if (PageLRU(page)) {
--		struct lruvec *lruvec;
--
--		lruvec = mem_cgroup_page_lruvec(page, pgdat);
--		ClearPageLRU(page);
--		del_page_from_lru_list(page, lruvec, page_lru(page));
--		*isolated = 1;
--	} else
--		*isolated = 0;
--}
--
--static void unlock_page_lru(struct page *page, int isolated)
--{
--	pg_data_t *pgdat = page_pgdat(page);
--
--	if (isolated) {
--		struct lruvec *lruvec;
--
--		lruvec = mem_cgroup_page_lruvec(page, pgdat);
--		VM_BUG_ON_PAGE(PageLRU(page), page);
--		SetPageLRU(page);
--		add_page_to_lru_list(page, lruvec, page_lru(page));
--	}
--	spin_unlock_irq(&pgdat->lru_lock);
--}
--
--static void commit_charge(struct page *page, struct mem_cgroup *memcg,
--			  bool lrucare)
--{
--	int isolated;
--
- 	VM_BUG_ON_PAGE(page->mem_cgroup, page);
--
--	/*
--	 * In some cases, SwapCache and FUSE(splice_buf->radixtree), the page
--	 * may already be on some other mem_cgroup's LRU.  Take care of it.
--	 */
--	if (lrucare)
--		lock_page_lru(page, &isolated);
--
- 	/*
- 	 * Nobody should be changing or seriously looking at
- 	 * page->mem_cgroup at this point:
-@@ -2661,9 +2619,6 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg,
- 	 *   have the page locked
+ /* Whether the swap controller is active */
+ #ifdef CONFIG_MEMCG_SWAP
+-#ifdef CONFIG_MEMCG_SWAP_ENABLED
+ bool cgroup_memory_noswap __read_mostly;
+ #else
+-bool cgroup_memory_noswap __read_mostly = 1;
+-#endif /* CONFIG_MEMCG_SWAP_ENABLED */
+-#else
+ #define cgroup_memory_noswap		1
+-#endif /* CONFIG_MEMCG_SWAP */
++#endif
+ 
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ static DECLARE_WAIT_QUEUE_HEAD(memcg_cgwb_frn_waitq);
+@@ -5290,8 +5286,7 @@ static struct page *mc_handle_swap_pte(struct vm_area_struct *vma,
+ 	 * we call find_get_page() with swapper_space directly.
  	 */
- 	page->mem_cgroup = memcg;
--
--	if (lrucare)
--		unlock_page_lru(page, isolated);
+ 	page = find_get_page(swap_address_space(ent), swp_offset(ent));
+-	if (do_memsw_account())
+-		entry->val = ent.val;
++	entry->val = ent.val;
+ 
+ 	return page;
  }
- 
- #ifdef CONFIG_MEMCG_KMEM
-@@ -6433,22 +6388,18 @@ enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
-  * @page: page to charge
-  * @mm: mm context of the victim
-  * @gfp_mask: reclaim mode
-- * @lrucare: page might be on the LRU already
-  *
-  * Try to charge @page to the memcg that @mm belongs to, reclaiming
-  * pages according to @gfp_mask if necessary.
-  *
-  * Returns 0 on success. Otherwise, an error code is returned.
-  */
--int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask,
--		      bool lrucare)
-+int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask)
- {
- 	unsigned int nr_pages = hpage_nr_pages(page);
- 	struct mem_cgroup *memcg = NULL;
- 	int ret = 0;
- 
--	VM_BUG_ON_PAGE(PageLRU(page) && !lrucare, page);
--
- 	if (mem_cgroup_disabled())
+@@ -5325,8 +5320,7 @@ static struct page *mc_handle_file_pte(struct vm_area_struct *vma,
+ 		page = find_get_entry(mapping, pgoff);
+ 		if (xa_is_value(page)) {
+ 			swp_entry_t swp = radix_to_swp_entry(page);
+-			if (do_memsw_account())
+-				*entry = swp;
++			*entry = swp;
+ 			page = find_get_page(swap_address_space(swp),
+ 					     swp_offset(swp));
+ 		}
+@@ -6459,6 +6453,9 @@ int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask,
  		goto out;
  
-@@ -6482,7 +6433,7 @@ int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask,
- 	if (ret)
- 		goto out_put;
+ 	if (PageSwapCache(page)) {
++		swp_entry_t ent = { .val = page_private(page), };
++		unsigned short id;
++
+ 		/*
+ 		 * Every swap fault against a single page tries to charge the
+ 		 * page, bail as early as possible.  shmem_unuse() encounters
+@@ -6470,17 +6467,12 @@ int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask,
+ 		if (compound_head(page)->mem_cgroup)
+ 			goto out;
  
--	commit_charge(page, memcg, lrucare);
-+	commit_charge(page, memcg);
- 
- 	local_irq_disable();
- 	mem_cgroup_charge_statistics(memcg, page, nr_pages);
-@@ -6685,7 +6636,7 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage)
- 		page_counter_charge(&memcg->memsw, nr_pages);
- 	css_get_many(&memcg->css, nr_pages);
- 
--	commit_charge(newpage, memcg, false);
-+	commit_charge(newpage, memcg);
- 
- 	local_irq_save(flags);
- 	mem_cgroup_charge_statistics(memcg, newpage, nr_pages);
-diff --git a/mm/memory.c b/mm/memory.c
-index 5d266532fc40..0ad4db56bea2 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -2677,7 +2677,7 @@ static vm_fault_t wp_page_copy(struct vm_fault *vmf)
- 		}
+-		if (!cgroup_memory_noswap) {
+-			swp_entry_t ent = { .val = page_private(page), };
+-			unsigned short id;
+-
+-			id = lookup_swap_cgroup_id(ent);
+-			rcu_read_lock();
+-			memcg = mem_cgroup_from_id(id);
+-			if (memcg && !css_tryget_online(&memcg->css))
+-				memcg = NULL;
+-			rcu_read_unlock();
+-		}
++		id = lookup_swap_cgroup_id(ent);
++		rcu_read_lock();
++		memcg = mem_cgroup_from_id(id);
++		if (memcg && !css_tryget_online(&memcg->css))
++			memcg = NULL;
++		rcu_read_unlock();
  	}
  
--	if (mem_cgroup_charge(new_page, mm, GFP_KERNEL, false))
-+	if (mem_cgroup_charge(new_page, mm, GFP_KERNEL))
- 		goto oom_free_new;
- 	cgroup_throttle_swaprate(new_page, GFP_KERNEL);
+ 	if (!memcg)
+@@ -6497,7 +6489,7 @@ int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask,
+ 	memcg_check_events(memcg, page);
+ 	local_irq_enable();
  
-@@ -3136,7 +3136,7 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
- 				/* Tell memcg to use swap ownership records */
- 				SetPageSwapCache(page);
- 				err = mem_cgroup_charge(page, vma->vm_mm,
--							GFP_KERNEL, false);
-+							GFP_KERNEL);
- 				ClearPageSwapCache(page);
- 				if (err)
- 					goto out_page;
-@@ -3360,7 +3360,7 @@ static vm_fault_t do_anonymous_page(struct vm_fault *vmf)
- 	if (!page)
- 		goto oom;
+-	if (do_memsw_account() && PageSwapCache(page)) {
++	if (PageSwapCache(page)) {
+ 		swp_entry_t entry = { .val = page_private(page) };
+ 		/*
+ 		 * The swap entry might not get freed for a long time,
+@@ -6884,9 +6876,6 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+ 	VM_BUG_ON_PAGE(PageLRU(page), page);
+ 	VM_BUG_ON_PAGE(page_count(page), page);
  
--	if (mem_cgroup_charge(page, vma->vm_mm, GFP_KERNEL, false))
-+	if (mem_cgroup_charge(page, vma->vm_mm, GFP_KERNEL))
- 		goto oom_free_page;
- 	cgroup_throttle_swaprate(page, GFP_KERNEL);
+-	if (!do_memsw_account())
+-		return;
+-
+ 	memcg = page->mem_cgroup;
  
-@@ -3856,7 +3856,7 @@ static vm_fault_t do_cow_fault(struct vm_fault *vmf)
- 	if (!vmf->cow_page)
- 		return VM_FAULT_OOM;
+ 	/* Readahead page, never charged */
+@@ -6913,7 +6902,7 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+ 	if (!mem_cgroup_is_root(memcg))
+ 		page_counter_uncharge(&memcg->memory, nr_entries);
  
--	if (mem_cgroup_charge(vmf->cow_page, vma->vm_mm, GFP_KERNEL, false)) {
-+	if (mem_cgroup_charge(vmf->cow_page, vma->vm_mm, GFP_KERNEL)) {
- 		put_page(vmf->cow_page);
- 		return VM_FAULT_OOM;
- 	}
-diff --git a/mm/migrate.c b/mm/migrate.c
-index a3361c744069..ced652d069ee 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -2792,7 +2792,7 @@ static void migrate_vma_insert_page(struct migrate_vma *migrate,
+-	if (memcg != swap_memcg) {
++	if (do_memsw_account() && memcg != swap_memcg) {
+ 		if (!mem_cgroup_is_root(swap_memcg))
+ 			page_counter_charge(&swap_memcg->memsw, nr_entries);
+ 		page_counter_uncharge(&memcg->memsw, nr_entries);
+@@ -6949,7 +6938,7 @@ int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
+ 	struct mem_cgroup *memcg;
+ 	unsigned short oldid;
  
- 	if (unlikely(anon_vma_prepare(vma)))
- 		goto abort;
--	if (mem_cgroup_charge(page, vma->vm_mm, GFP_KERNEL, false))
-+	if (mem_cgroup_charge(page, vma->vm_mm, GFP_KERNEL))
- 		goto abort;
+-	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) || cgroup_memory_noswap)
++	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
+ 		return 0;
  
- 	/*
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 966f150a4823..add10d448bc6 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -624,7 +624,7 @@ static int shmem_add_to_page_cache(struct page *page,
- 	page->index = index;
+ 	memcg = page->mem_cgroup;
+@@ -6965,7 +6954,7 @@ int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
  
- 	if (!PageSwapCache(page)) {
--		error = mem_cgroup_charge(page, charge_mm, gfp, false);
-+		error = mem_cgroup_charge(page, charge_mm, gfp);
- 		if (error) {
- 			if (PageTransHuge(page)) {
- 				count_vm_event(THP_FILE_FALLBACK);
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index f3b9073bfff3..26fded65c30d 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -427,7 +427,7 @@ struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
- 	if (add_to_swap_cache(page, entry, gfp_mask & GFP_KERNEL))
- 		goto fail_unlock;
+ 	memcg = mem_cgroup_id_get_online(memcg);
  
--	if (mem_cgroup_charge(page, NULL, gfp_mask & GFP_KERNEL, false))
-+	if (mem_cgroup_charge(page, NULL, gfp_mask & GFP_KERNEL))
- 		goto fail_delete;
+-	if (!mem_cgroup_is_root(memcg) &&
++	if (!cgroup_memory_noswap && !mem_cgroup_is_root(memcg) &&
+ 	    !page_counter_try_charge(&memcg->swap, nr_pages, &counter)) {
+ 		memcg_memory_event(memcg, MEMCG_SWAP_MAX);
+ 		memcg_memory_event(memcg, MEMCG_SWAP_FAIL);
+@@ -6993,14 +6982,11 @@ void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_pages)
+ 	struct mem_cgroup *memcg;
+ 	unsigned short id;
  
- 	/* Initiate read into locked page */
-diff --git a/mm/userfaultfd.c b/mm/userfaultfd.c
-index 2745489415cc..7f5194046b01 100644
---- a/mm/userfaultfd.c
-+++ b/mm/userfaultfd.c
-@@ -96,7 +96,7 @@ static int mcopy_atomic_pte(struct mm_struct *dst_mm,
- 	__SetPageUptodate(page);
+-	if (cgroup_memory_noswap)
+-		return;
+-
+ 	id = swap_cgroup_record(entry, 0, nr_pages);
+ 	rcu_read_lock();
+ 	memcg = mem_cgroup_from_id(id);
+ 	if (memcg) {
+-		if (!mem_cgroup_is_root(memcg)) {
++		if (!cgroup_memory_noswap && !mem_cgroup_is_root(memcg)) {
+ 			if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
+ 				page_counter_uncharge(&memcg->swap, nr_pages);
+ 			else
+diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
+index 7aa764f09079..7f34343c075a 100644
+--- a/mm/swap_cgroup.c
++++ b/mm/swap_cgroup.c
+@@ -171,9 +171,6 @@ int swap_cgroup_swapon(int type, unsigned long max_pages)
+ 	unsigned long length;
+ 	struct swap_cgroup_ctrl *ctrl;
  
- 	ret = -ENOMEM;
--	if (mem_cgroup_charge(page, dst_mm, GFP_KERNEL, false))
-+	if (mem_cgroup_charge(page, dst_mm, GFP_KERNEL))
- 		goto out_release;
+-	if (cgroup_memory_noswap)
+-		return 0;
+-
+ 	length = DIV_ROUND_UP(max_pages, SC_PER_PAGE);
+ 	array_size = length * sizeof(void *);
  
- 	_dst_pte = pte_mkdirty(mk_pte(page, dst_vma->vm_page_prot));
+@@ -209,9 +206,6 @@ void swap_cgroup_swapoff(int type)
+ 	unsigned long i, length;
+ 	struct swap_cgroup_ctrl *ctrl;
+ 
+-	if (cgroup_memory_noswap)
+-		return;
+-
+ 	mutex_lock(&swap_cgroup_mutex);
+ 	ctrl = &swap_cgroup_ctrl[type];
+ 	map = ctrl->map;
 -- 
 2.26.0
 
