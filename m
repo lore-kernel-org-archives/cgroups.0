@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH 01/18] mm: fix NUMA node file count error in replace_page_cache()
-Date: Mon, 20 Apr 2020 18:11:09 -0400
-Message-ID: <20200420221126.341272-2-hannes@cmpxchg.org>
+Subject: [PATCH 02/18] mm: memcontrol: fix theoretical race in charge moving
+Date: Mon, 20 Apr 2020 18:11:10 -0400
+Message-ID: <20200420221126.341272-3-hannes@cmpxchg.org>
 References: <20200420221126.341272-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,13 +10,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=n0En7iea1xuMHdBkCdJ+zycx29vIdm+FB4ZhZph/8RA=;
-        b=ytVzBYSdrTwoP1lGYSOvOioRHuNpY59hcJqq6rdmPp/5WO7TBcNl+19HabZo6xw4Rn
-         qLw3rumZnC1nnA9CsqRYaFeBEQD6N7IHV688IAD/9h72nTicP9Z+17XYXG5QVZCsrAFM
-         ACZguEsWBuUoSAgQM3X5NiaJFIpG+c+2GUyyd7eyG+fx1d+7jgnDJrGO0cezEkC0xZvM
-         8nV42K2p735E7d91FlpY76Qo2jRCyJQLC/ai+GQ8n01nlL5u7xhMbp3N1ZagriVA9qSs
-         aWd/SqscVR7WQIhKv6hgAz1fo5DFtX84tROp4i33h+wmrEm2cTskKSZqtiIbyvR4mzAe
-         sGvQ==
+        bh=T7/z7NMewJSIi2itFoYhlm0aJz+TzGla37jQr9d/NIQ=;
+        b=DkH0cJIWSxLVdQu3FuqQ6xuCWHM39JsPRR6UFozRIF79nnzQlMdLi7EsaGotcqDA0e
+         mNCEoz7y0HOoBLz8deGU0CU2oVJztygMslxineP4v3GTFiAHGm4eQpca6dq0xW06C/MO
+         CoLBEidF1VHQMiolPK5tH8rqy/W4Ht/Xog9SjtOCtiUV2iJOwa5jS1H+H5ZbxvEqqoSs
+         /i7hQwgNO2XWIRMa1RxwCGoLHG+Lo3vjNXq7LMVY+yWi8szuGGn4UDdrP9UJoEmYZxO3
+         oAfPtfRd37MeP5qQNnUbjZPMqHQLwi8MrXy+3jsseVCy4fJ0jGfuLZghtHfEHs57jIfS
+         Mz4g==
 In-Reply-To: <20200420221126.341272-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -24,35 +24,87 @@ Content-Type: text/plain; charset="us-ascii"
 To: Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-When replacing one page with another one in the cache, we have to
-decrease the file count of the old page's NUMA node and increase the
-one of the new NUMA node, otherwise the old node leaks the count and
-the new node eventually underflows its counter.
+The move_lock is a per-memcg lock, but the VM accounting code that
+needs to acquire it comes from the page and follows page->mem_cgroup
+under RCU protection. That means that the page becomes unlocked not
+when we drop the move_lock, but when we update page->mem_cgroup. And
+that assignment doesn't imply any memory ordering. If that pointer
+write gets reordered against the reads of the page state -
+page_mapped, PageDirty etc. the state may change while we rely on it
+being stable and we can end up corrupting the counters.
 
-Fixes: 74d609585d8b ("page cache: Add and replace pages using the XArray")
+Place an SMP memory barrier to make sure we're done with all page
+state by the time the new page->mem_cgroup becomes visible.
+
+Also replace the open-coded move_lock with a lock_page_memcg() to make
+it more obvious what we're serializing against.
+
 Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
- mm/filemap.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ mm/memcontrol.c | 26 ++++++++++++++------------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 23a051a7ef0f..49e3b5da0216 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -808,11 +808,11 @@ int replace_page_cache_page(struct page *old, struct page *new, gfp_t gfp_mask)
- 	old->mapping = NULL;
- 	/* hugetlb pages do not participate in page cache accounting. */
- 	if (!PageHuge(old))
--		__dec_node_page_state(new, NR_FILE_PAGES);
-+		__dec_node_page_state(old, NR_FILE_PAGES);
- 	if (!PageHuge(new))
- 		__inc_node_page_state(new, NR_FILE_PAGES);
- 	if (PageSwapBacked(old))
--		__dec_node_page_state(new, NR_SHMEM);
-+		__dec_node_page_state(old, NR_SHMEM);
- 	if (PageSwapBacked(new))
- 		__inc_node_page_state(new, NR_SHMEM);
- 	xas_unlock_irqrestore(&xas, flags);
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 5beea03dd58a..41f5ed79272e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5372,7 +5372,6 @@ static int mem_cgroup_move_account(struct page *page,
+ {
+ 	struct lruvec *from_vec, *to_vec;
+ 	struct pglist_data *pgdat;
+-	unsigned long flags;
+ 	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
+ 	int ret;
+ 	bool anon;
+@@ -5399,18 +5398,13 @@ static int mem_cgroup_move_account(struct page *page,
+ 	from_vec = mem_cgroup_lruvec(from, pgdat);
+ 	to_vec = mem_cgroup_lruvec(to, pgdat);
+ 
+-	spin_lock_irqsave(&from->move_lock, flags);
++	lock_page_memcg(page);
+ 
+ 	if (!anon && page_mapped(page)) {
+ 		__mod_lruvec_state(from_vec, NR_FILE_MAPPED, -nr_pages);
+ 		__mod_lruvec_state(to_vec, NR_FILE_MAPPED, nr_pages);
+ 	}
+ 
+-	/*
+-	 * move_lock grabbed above and caller set from->moving_account, so
+-	 * mod_memcg_page_state will serialize updates to PageDirty.
+-	 * So mapping should be stable for dirty pages.
+-	 */
+ 	if (!anon && PageDirty(page)) {
+ 		struct address_space *mapping = page_mapping(page);
+ 
+@@ -5426,15 +5420,23 @@ static int mem_cgroup_move_account(struct page *page,
+ 	}
+ 
+ 	/*
++	 * All state has been migrated, let's switch to the new memcg.
++	 *
+ 	 * It is safe to change page->mem_cgroup here because the page
+-	 * is referenced, charged, and isolated - we can't race with
+-	 * uncharging, charging, migration, or LRU putback.
++	 * is referenced, charged, isolated, and locked: we can't race
++	 * with (un)charging, migration, LRU putback, or anything else
++	 * that would rely on a stable page->mem_cgroup.
++	 *
++	 * Note that lock_page_memcg is a memcg lock, not a page lock,
++	 * to save space. As soon as we switch page->mem_cgroup to a
++	 * new memcg that isn't locked, the above state can change
++	 * concurrently again. Make sure we're truly done with it.
+ 	 */
++	smp_mb();
+ 
+-	/* caller should have done css_get */
+-	page->mem_cgroup = to;
++	page->mem_cgroup = to; 	/* caller should have done css_get */
+ 
+-	spin_unlock_irqrestore(&from->move_lock, flags);
++	__unlock_page_memcg(from);
+ 
+ 	ret = 0;
+ 
 -- 
 2.26.0
 
