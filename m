@@ -1,92 +1,77 @@
-From: syzbot <syzbot+5b142e89a1b402a24801-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
-Subject: WARNING in cgroup_apply_control_disable
-Date: Tue, 21 Apr 2020 02:36:14 -0700
-Message-ID: <00000000000026f90605a3c9bf64@google.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 0/3] memcg: Slow down swap allocation as the available
+ space gets depleted
+Date: Tue, 21 Apr 2020 13:06:12 +0200
+Message-ID: <20200421110612.GD27314@dhcp22.suse.cz>
+References: <CALvZod4ftvXCu8SbQUXwTGVvx5K2+at9h30r28chZLXEB1JdfQ@mail.gmail.com>
+ <20200417173615.GB43469@mtj.thefacebook.com>
+ <CALvZod7-r0OrJ+-_uCy_p3BU3348ve2+YatiSdLvFaVqcqCs=w@mail.gmail.com>
+ <20200417193539.GC43469@mtj.thefacebook.com>
+ <CALvZod6LT25t9aAA1KHmf1U4-L8zSjUXQ4VQvX4cMT1A+R_g+w@mail.gmail.com>
+ <20200417225941.GE43469@mtj.thefacebook.com>
+ <CALvZod6M4OsM-t8m_KX9wCkEutdwUMgbP9682eHGQor9JvO_BQ@mail.gmail.com>
+ <20200420164740.GF43469@mtj.thefacebook.com>
+ <20200420170318.GV27314@dhcp22.suse.cz>
+ <20200420170650.GA169746@mtj.thefacebook.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20200420170650.GA169746-146+VewaZzwNjtGbbfXrCEEOCMrvLtNR@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: andriin-b10kYP2dOMg@public.gmane.org, ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, kpsingh-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hello,
+On Mon 20-04-20 13:06:50, Tejun Heo wrote:
+> Hello,
+> 
+> On Mon, Apr 20, 2020 at 07:03:18PM +0200, Michal Hocko wrote:
+> > I have asked about the semantic of this know already and didn't really
+> > get any real answer. So how does swap.high fit into high limit semantic
+> > when it doesn't act as a limit. Considering that we cannot reclaim swap
+> > space I find this really hard to grasp.
+> 
+> memory.high slow down is for the case when memory reclaim can't be depended
+> upon for throttling, right? This is the same. Swap can't be reclaimed so the
+> backpressure is applied by slowing down the source, the same way memory.high
+> does.
 
-syzbot found the following crash on:
+Hmm, but the two differ quite considerably that we do not reclaim any
+swap which means that while no reclaimable memory at all is pretty much
+the corner case (essentially OOM) the no reclaimable swap is always in
+that state. So whenever you hit the high limit there is no other way
+then rely on userspace to unmap swap backed memory or increase the limit.
+Without that there is always throttling. The question also is what do
+you want to throttle in that case? Any swap backed allocation or swap
+based reclaim? The patch throttles any allocations unless I am
+misreading. This means that also any other !swap backed allocations get
+throttled as soon as the swap quota is reached. Is this really desirable
+behavior? I would find it quite surprising to say the least.
 
-HEAD commit:    7a56db02 Merge tag 'nfs-for-5.7-3' of git://git.linux-nfs...
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=11e336abe00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=5d351a1019ed81a2
-dashboard link: https://syzkaller.appspot.com/bug?extid=5b142e89a1b402a24801
-compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
-syz repro:      https://syzkaller.appspot.com/x/repro.syz?x=10f0c6abe00000
+I am also not sure about the isolation aspect. Because an external
+memory pressure might have pushed out memory to the swap and then the
+workload is throttled based on an external event. Compare that to the
+memory.high throttling which is not directly affected by the external
+pressure.
 
-Bisection is inconclusive: the bug happens on the oldest tested release.
+There is also an aspect of non-determinism. There is no control over
+the file vs. swap backed reclaim decision for memcgs. That means that
+behavior is going to be very dependent on the internal implementation of
+the reclaim. More swapping is going to fill up swap quota quicker.
 
-bisection log:  https://syzkaller.appspot.com/x/bisect.txt?x=1113ec5fe00000
-final crash:    https://syzkaller.appspot.com/x/report.txt?x=1313ec5fe00000
-console output: https://syzkaller.appspot.com/x/log.txt?x=1513ec5fe00000
+> It fits together with memory.low in that it prevents runaway anon allocation
+> when swap can't be allocated anymore. It's addressing the same problem that
+> memory.high slowdown does. It's just a different vector.
 
-IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+5b142e89a1b402a24801-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
-
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 8613 at kernel/cgroup/cgroup.c:3111 cgroup_apply_control_disable+0x404/0x4d0 kernel/cgroup/cgroup.c:3111
-Kernel panic - not syncing: panic_on_warn set ...
-CPU: 0 PID: 8613 Comm: syz-executor.1 Not tainted 5.7.0-rc1-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-Call Trace:
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0x188/0x20d lib/dump_stack.c:118
- panic+0x2e3/0x75c kernel/panic.c:221
- __warn.cold+0x2f/0x35 kernel/panic.c:582
- report_bug+0x27b/0x2f0 lib/bug.c:195
- fixup_bug arch/x86/kernel/traps.c:175 [inline]
- fixup_bug arch/x86/kernel/traps.c:170 [inline]
- do_error_trap+0x12b/0x220 arch/x86/kernel/traps.c:267
- do_invalid_op+0x32/0x40 arch/x86/kernel/traps.c:286
- invalid_op+0x23/0x30 arch/x86/entry/entry_64.S:1027
-RIP: 0010:cgroup_apply_control_disable+0x404/0x4d0 kernel/cgroup/cgroup.c:3111
-Code: ff ff ff e8 5e 9c 06 00 48 89 ef 41 ff d5 e9 1a ff ff ff e8 4e 9c 06 00 48 89 ef e8 b6 e5 fe ff e9 08 ff ff ff e8 3c 9c 06 00 <0f> 0b e9 ab fd ff ff 48 83 c4 30 5b 5d 41 5c 41 5d 41 5e 41 5f e9
-RSP: 0018:ffffc90005247a90 EFLAGS: 00010293
-RAX: ffff888096aba5c0 RBX: dffffc0000000000 RCX: ffffffff816c956d
-RDX: 0000000000000000 RSI: ffffffff816c97c4 RDI: 0000000000000007
-RBP: ffff8880a601b000 R08: ffff888096aba5c0 R09: ffffed1015cc7104
-R10: ffff8880ae63881b R11: ffffed1015cc7103 R12: 0000000000000008
-R13: 0000000000000002 R14: ffffffff89a30640 R15: ffff8880917de000
- cgroup_finalize_control kernel/cgroup/cgroup.c:3178 [inline]
- rebind_subsystems+0x3cd/0xb00 kernel/cgroup/cgroup.c:1750
- cgroup_setup_root+0x36a/0xa30 kernel/cgroup/cgroup.c:1984
- cgroup1_root_to_use kernel/cgroup/cgroup-v1.c:1190 [inline]
- cgroup1_get_tree+0xd69/0x13b6 kernel/cgroup/cgroup-v1.c:1207
- vfs_get_tree+0x89/0x2f0 fs/super.c:1547
- do_new_mount fs/namespace.c:2816 [inline]
- do_mount+0x1306/0x1b30 fs/namespace.c:3141
- __do_sys_mount fs/namespace.c:3350 [inline]
- __se_sys_mount fs/namespace.c:3327 [inline]
- __x64_sys_mount+0x18f/0x230 fs/namespace.c:3327
- do_syscall_64+0xf6/0x7d0 arch/x86/entry/common.c:295
- entry_SYSCALL_64_after_hwframe+0x49/0xb3
-RIP: 0033:0x45f2da
-Code: b8 a6 00 00 00 0f 05 48 3d 01 f0 ff ff 0f 83 4d 8c fb ff c3 66 2e 0f 1f 84 00 00 00 00 00 66 90 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 0f 83 2a 8c fb ff c3 66 0f 1f 84 00 00 00 00 00
-RSP: 002b:00007ffc7dbf09e8 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
-RAX: ffffffffffffffda RBX: 00007ffc7dbf0a40 RCX: 000000000045f2da
-RDX: 00000000004cad69 RSI: 00000000004c1465 RDI: 00000000004c1428
-RBP: 0000000000000000 R08: 00000000004cf6b0 R09: 000000000000001c
-R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000418390
-R13: 00007ffc7dbf0c68 R14: 0000000000000000 R15: 0000000000000000
-Kernel Offset: disabled
-Rebooting in 86400 seconds..
-
-
----
-This bug is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-
-syzbot will keep track of this bug report. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
-For information about bisection process see: https://goo.gl/tpsmEJ#bisection
-syzbot can test patches for this bug, for details see:
-https://goo.gl/tpsmEJ#testing-patches
+I suspect that the problem is more related to the swap being handled as
+a separate resource. And it is still not clear to me why it is easier
+for you to tune swap.high than memory.high. You have said that you do
+not want to set up memory.high because it is harder to tune but I do
+not see why swap is easier in this regards. Maybe it is just that the
+swap is almost never used so a bad estimate is much easier to tolerate
+and you really do care about runaways?
+-- 
+Michal Hocko
+SUSE Labs
