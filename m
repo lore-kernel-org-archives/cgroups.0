@@ -1,14 +1,14 @@
 From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH 06/18] mm: memcontrol: prepare uncharging for removal of
+Subject: Re: [PATCH 07/18] mm: memcontrol: prepare move_account for removal of
  private page type counters
-Date: Tue, 21 Apr 2020 17:12:51 +0800
-Message-ID: <20065063-d508-5bb9-572e-ebcb2e41cf85@linux.alibaba.com>
+Date: Tue, 21 Apr 2020 17:13:52 +0800
+Message-ID: <fc09bc07-b958-420f-654c-af28f656cb3b@linux.alibaba.com>
 References: <20200420221126.341272-1-hannes@cmpxchg.org>
- <20200420221126.341272-7-hannes@cmpxchg.org>
+ <20200420221126.341272-8-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200420221126.341272-7-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20200420221126.341272-8-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"
@@ -18,11 +18,13 @@ Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickin
 
 
 =D4=DA 2020/4/21 =C9=CF=CE=E76:11, Johannes Weiner =D0=B4=B5=C0:
-> The uncharge batching code adds up the anon, file, kmem counts to
-> determine the total number of pages to uncharge and references to
-> drop. But the next patches will remove the anon and file counters.
+> When memcg uses the generic vmstat counters, it doesn't need to do
+> anything at charging and uncharging time. It does, however, need to
+> migrate counts when pages move to a different cgroup in move_account.
 >=20
-> Maintain an aggregate nr_pages in the uncharge_gather struct.
+> Prepare the move_account function for the arrival of NR_FILE_PAGES,
+> NR_ANON_MAPPED, NR_ANON_THPS etc. by having a branch for files and a
+> branch for anon, which can then divided into sub-branches.
 >=20
 > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gman=
 e.org>
