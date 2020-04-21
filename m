@@ -1,14 +1,13 @@
 From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH 03/18] mm: memcontrol: drop @compound parameter from memcg
- charging API
-Date: Tue, 21 Apr 2020 17:11:08 +0800
-Message-ID: <73c1a95f-fee9-716d-c72f-85585de13f2f@linux.alibaba.com>
+Subject: Re: [PATCH 04/18] mm: memcontrol: move out cgroup swaprate throttling
+Date: Tue, 21 Apr 2020 17:11:35 +0800
+Message-ID: <37002d8a-1711-4ec7-af57-1072a397ced3@linux.alibaba.com>
 References: <20200420221126.341272-1-hannes@cmpxchg.org>
- <20200420221126.341272-4-hannes@cmpxchg.org>
+ <20200420221126.341272-5-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200420221126.341272-4-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20200420221126.341272-5-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"
@@ -18,25 +17,17 @@ Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickin
 
 
 =D4=DA 2020/4/21 =C9=CF=CE=E76:11, Johannes Weiner =D0=B4=B5=C0:
-> The memcg charging API carries a boolean @compound parameter that
-> tells whether the page we're dealing with is a hugepage.
-> mem_cgroup_commit_charge() has another boolean @lrucare that indicates
-> whether the page needs LRU locking or not while charging. The majority
-> of callsites know those parameters at compile time, which results in a
-> lot of naked "false, false" argument lists. This makes for cryptic
-> code and is a breeding ground for subtle mistakes.
+> The cgroup swaprate throttling is about matching new anon allocations
+> to the rate of available IO when that is being throttled. It's the io
+> controller hooking into the VM, rather than a memory controller thing.
 >=20
-> Thankfully, the huge page state can be inferred from the page itself
-> and doesn't need to be passed along. This is safe because charging
-> completes before the page is published and somebody may split it.
+> Rename mem_cgroup_throttle_swaprate() to cgroup_throttle_swaprate(),
+> and drop the @memcg argument which is only used to check whether the
+> preceding page charge has succeeded and the fault is proceeding.
 >=20
-> Simplify the callsites by removing @compound, and let memcg infer the
-> state by using hpage_nr_pages() unconditionally. That function does
-> PageTransHuge() to identify huge pages, which also helpfully asserts
-> that nobody passes in tail pages by accident.
->=20
-> The following patches will introduce a new charging API, best not to
-> carry over unnecessary weight.
+> We could decouple the call from mem_cgroup_try_charge() here as well,
+> but that would cause unnecessary churn: the following patches convert
+> all callsites to a new charge API and we'll decouple as we go along.
 >=20
 > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gman=
 e.org>
