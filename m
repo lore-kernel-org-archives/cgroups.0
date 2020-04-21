@@ -1,51 +1,81 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 15/18] mm: memcontrol: make swap tracking an integral
- part of memory control
-Date: Tue, 21 Apr 2020 10:39:23 -0400
-Message-ID: <20200421143923.GC341682@cmpxchg.org>
-References: <20200420221126.341272-1-hannes@cmpxchg.org>
- <20200420221126.341272-16-hannes@cmpxchg.org>
- <e9d58c82-d746-dcd0-d9e3-6322014a3b03@linux.alibaba.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 0/3] memcg: Slow down swap allocation as the available
+ space gets depleted
+Date: Tue, 21 Apr 2020 11:20:47 -0400
+Message-ID: <20200421152047.GA5462@mtj.thefacebook.com>
+References: <20200417173615.GB43469@mtj.thefacebook.com>
+ <CALvZod7-r0OrJ+-_uCy_p3BU3348ve2+YatiSdLvFaVqcqCs=w@mail.gmail.com>
+ <20200417193539.GC43469@mtj.thefacebook.com>
+ <CALvZod6LT25t9aAA1KHmf1U4-L8zSjUXQ4VQvX4cMT1A+R_g+w@mail.gmail.com>
+ <20200417225941.GE43469@mtj.thefacebook.com>
+ <CALvZod6M4OsM-t8m_KX9wCkEutdwUMgbP9682eHGQor9JvO_BQ@mail.gmail.com>
+ <20200420164740.GF43469@mtj.thefacebook.com>
+ <20200420170318.GV27314@dhcp22.suse.cz>
+ <20200420170650.GA169746@mtj.thefacebook.com>
+ <20200421110612.GD27314@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=FUghwdK61ELIcdqNXkNEUPkemM8u8aFA3cSbQm57Oy0=;
-        b=gFxehvHGSNlG++mszljqSCAK7x9JFhjfQndMRxcNzeicsRBEWHLOnuSk7TV/f0lpJS
-         hI40Kn4d4RhA2dhOIjiFgB4c9koyFw954Gi9PeFxAZnTNJx7vt622EPZLNpn9eUYH9le
-         O9pbbJh5hVwKmuS42wfYZ3Y+WPU27d7VfvhPFCoLpJ467jhpzjCYj6m1WrPsIbmBx/Kr
-         4h/THAUC+GEjA1w+FrC360VuFTaR4mLjUzraOoMvViF56WaYnVAS8b6VWjmlABi86u0L
-         2yIVk9FFEx1KfLomk93emTZXN5qcyqBBKpgW+00of/GRzhQUA58c3n0SxXHmwIwDoTJh
-         opFQ==
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=jwGeQzDdrOzdJlAD0ghWVZoxVjm5XtEA2WK3XkkvxyQ=;
+        b=FXrADtfByQlNUBEu1vViyehbFKOhBU4dp73jUXSMQGEAoigcpdrozcO5N83yOhXOq7
+         +ukk+fWtA9qV3xkAfsTaSRJ9oHuy247FfqCAQoc9ctvnDd5qagUr9M9GMJRKjbEypcuE
+         y7tMsSMoVKMH0y8GXyRFyqKVVXLlvT5p+2bN225RNns1qJ4BaWr90ubNBeg0E8aZa1cP
+         vdmlxNuhT6GxrpDAx8ygVkMC6JUmhFQjeD0e6jYj7GGdQZEIQFikaRxvASiVC9jWHSst
+         KWoB96kLu/3CiDEYFNffV1ofM8GWKhn4Z7D8wyf0iLMsCXR5Np1H2q+J9zCgeSt2ZI82
+         H3Eg==
 Content-Disposition: inline
-In-Reply-To: <e9d58c82-d746-dcd0-d9e3-6322014a3b03-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+In-Reply-To: <20200421110612.GD27314-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hi Alex,
+Hello,
 
-thanks for your quick review so far, I'll add the tags to the patches.
+On Tue, Apr 21, 2020 at 01:06:12PM +0200, Michal Hocko wrote:
+> I suspect that the problem is more related to the swap being handled as
+> a separate resource. And it is still not clear to me why it is easier
+> for you to tune swap.high than memory.high. You have said that you do
+> not want to set up memory.high because it is harder to tune but I do
+> not see why swap is easier in this regards. Maybe it is just that the
+> swap is almost never used so a bad estimate is much easier to tolerate
+> and you really do care about runaways?
 
-On Tue, Apr 21, 2020 at 05:27:30PM +0800, Alex Shi wrote:
-> 
-> 
-> 在 2020/4/21 上午6:11, Johannes Weiner 写道:
-> > The swapaccount=0 boot option will continue to exist, and it will
-> > eliminate the page_counter overhead and hide the swap control files,
-> > but it won't disable swap slot ownership tracking.
-> 
-> May we add extra explanation for this change to user? and the default
-> memsw limitations?
+Johannes responded a lot better. I'm just gonna add a bit here.
 
-Can you elaborate what you think is missing and where you would like
-to see it documented?
+Swap is intertwined with memory but is a very different resource from
+memory. You can't seriously equate primary and secondary storages. We never
+want to underutilize memory but we never want to completely fill up
+secondary storage. They're exactly the opposite in that sense. It's not that
+protection schemes can't apply to swap but that such level of dynamic
+control isn't required because simple upper limit is useful and easy enough.
 
-From a semantics POV, nothing changes with this patch. The memsw limit
-defaults to "max", so it doesn't exert any control per default. The
-only difference is whether we maintain swap records or not.
+Another backing point I want to raise is that the abrupt transition which
+happens on swap depletion is a real problem that userspace has been trying
+to work around. memory.low based protection and oomd is an obvious example
+but not the only one. earlyoom[1] is an independent project which predates
+all these things and kills when swap runs low to protect the system from
+going down the gutter.
+
+In this respect, both oomd and earlyoom basically do the same thing but
+they're racing against the kernel filling up the space. Once the swap space
+is gone, the programs themselves might not be able to make reasonable
+forward progress. The only measure they can currently employ is polling more
+frequently and killing ealier so that swap space never actually runs out,
+but it's a silly and losing game as the underyling device gets faster and
+faster.
+
+Note that at least fedora is considering including either earlyoom or oomd
+by default. The problem addressed by swap.high is real and immediate.
+
+Thanks.
+
+-- 
+tejun
+
+[1] https://github.com/rfjakob/earlyoom
