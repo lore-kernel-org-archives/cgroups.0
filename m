@@ -1,14 +1,14 @@
 From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH 18/18] mm: memcontrol: update page->mem_cgroup stability
- rules
-Date: Tue, 21 Apr 2020 17:20:59 +0800
-Message-ID: <1f905391-5676-2db6-efb9-74ade130740e@linux.alibaba.com>
+Subject: Re: [PATCH 16/18] mm: memcontrol: charge swapin pages on
+ instantiation
+Date: Tue, 21 Apr 2020 17:21:26 +0800
+Message-ID: <6f03ed4e-f917-2ccc-26c0-c438c84d3d97@linux.alibaba.com>
 References: <20200420221126.341272-1-hannes@cmpxchg.org>
- <20200420221126.341272-19-hannes@cmpxchg.org>
+ <20200420221126.341272-17-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200420221126.341272-19-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20200420221126.341272-17-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"
@@ -18,76 +18,31 @@ Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickin
 
 
 =D4=DA 2020/4/21 =C9=CF=CE=E76:11, Johannes Weiner =D0=B4=B5=C0:
-> The previous patches have simplified the access rules around
-> page->mem_cgroup somewhat:
+> Right now, users that are otherwise memory controlled can easily
+> escape their containment and allocate significant amounts of memory
+> that they're not being charged for. That's because swap readahead
+> pages are not being charged until somebody actually faults them into
+> their page table. This can be exploited with MADV_WILLNEED, which
+> triggers arbitrary readahead allocations without charging the pages.
 >=20
-> 1. We never change page->mem_cgroup while the page is isolated by
->    somebody else. This was by far the biggest exception to our rules
->    and it didn't stop at lock_page() or lock_page_memcg().
+> There are additional problems with the delayed charging of swap pages:
 >=20
-> 2. We charge pages before they get put into page tables now, so the
->    somewhat fishy rule about "can be in page table as long as it's
->    still locked" is now gone and boiled down to having an exclusive
->    reference to the page.
+> 1. To implement refault/workingset detection for anonymous pages, we
+>    need to have a target LRU available at swapin time, but the LRU is
+>    not determinable until the page has been charged.
 >=20
-> Document the new rules. Any of the following will stabilize the
-> page->mem_cgroup association:
+> 2. To implement per-cgroup LRU locking, we need page->mem_cgroup to be
+>    stable when the page is isolated from the LRU; otherwise, the locks
+>    change under us. But swapcache gets charged after it's already on
+>    the LRU, and even if we cannot isolate it ourselves (since charging
+>    is not exactly optional).
 >=20
-> - the page lock
-> - LRU isolation
-> - lock_page_memcg()
-> - exclusive access to the page
+> The previous patch ensured we always maintain cgroup ownership records
+> for swap pages. This patch moves the swapcache charging point from the
+> fault handler to swapin time to fix all of the above problems.
 >=20
 > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gman=
 e.org>
 
 Reviewed-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gma=
 ne.org>
-
-> ---
->  mm/memcontrol.c | 21 +++++++--------------
->  1 file changed, 7 insertions(+), 14 deletions(-)
->=20
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index a8cce52b6b4d..7b63260c9b57 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1201,9 +1201,8 @@ int mem_cgroup_scan_tasks(struct mem_cgroup *memcg,
->   * @page: the page
->   * @pgdat: pgdat of the page
->   *
-> - * This function is only safe when following the LRU page isolation
-> - * and putback protocol: the LRU lock must be held, and the page must
-> - * either be PageLRU() or the caller must have isolated/allocated it.
-> + * This function relies on page->mem_cgroup being stable - see the
-> + * access rules in commit_charge().
->   */
->  struct lruvec *mem_cgroup_page_lruvec(struct page *page, struct pglist_d=
-ata *pgdat)
->  {
-> @@ -2605,18 +2604,12 @@ static void commit_charge(struct page *page, stru=
-ct mem_cgroup *memcg)
->  {
->  	VM_BUG_ON_PAGE(page->mem_cgroup, page);
->  	/*
-> -	 * Nobody should be changing or seriously looking at
-> -	 * page->mem_cgroup at this point:
-> -	 *
-> -	 * - the page is uncharged
-> -	 *
-> -	 * - the page is off-LRU
-> -	 *
-> -	 * - an anonymous fault has exclusive page access, except for
-> -	 *   a locked page table
-> +	 * Any of the following ensures page->mem_cgroup stability:
->  	 *
-> -	 * - a page cache insertion, a swapin fault, or a migration
-> -	 *   have the page locked
-> +	 * - the page lock
-> +	 * - LRU isolation
-> +	 * - lock_page_memcg()
-> +	 * - exclusive reference
->  	 */
->  	page->mem_cgroup =3D memcg;
->  }
->=20
