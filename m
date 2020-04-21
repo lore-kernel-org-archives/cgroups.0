@@ -1,13 +1,14 @@
 From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH 04/18] mm: memcontrol: move out cgroup swaprate throttling
-Date: Tue, 21 Apr 2020 17:11:35 +0800
-Message-ID: <37002d8a-1711-4ec7-af57-1072a397ced3@linux.alibaba.com>
+Subject: Re: [PATCH 05/18] mm: memcontrol: convert page cache to a new
+ mem_cgroup_charge() API
+Date: Tue, 21 Apr 2020 17:12:11 +0800
+Message-ID: <e3d70030-a9ae-a679-9cf9-1cd5b680650e@linux.alibaba.com>
 References: <20200420221126.341272-1-hannes@cmpxchg.org>
- <20200420221126.341272-5-hannes@cmpxchg.org>
+ <20200420221126.341272-6-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200420221126.341272-5-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20200420221126.341272-6-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"
@@ -17,20 +18,35 @@ Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickin
 
 
 =D4=DA 2020/4/21 =C9=CF=CE=E76:11, Johannes Weiner =D0=B4=B5=C0:
-> The cgroup swaprate throttling is about matching new anon allocations
-> to the rate of available IO when that is being throttled. It's the io
-> controller hooking into the VM, rather than a memory controller thing.
+> The try/commit/cancel protocol that memcg uses dates back to when
+> pages used to be uncharged upon removal from the page cache, and thus
+> couldn't be committed before the insertion had succeeded. Nowadays,
+> pages are uncharged when they are physically freed; it doesn't matter
+> whether the insertion was successful or not. For the page cache, the
+> transaction dance has become unnecessary.
 >=20
-> Rename mem_cgroup_throttle_swaprate() to cgroup_throttle_swaprate(),
-> and drop the @memcg argument which is only used to check whether the
-> preceding page charge has succeeded and the fault is proceeding.
+> Introduce a mem_cgroup_charge() function that simply charges a newly
+> allocated page to a cgroup and sets up page->mem_cgroup in one single
+> step. If the insertion fails, the caller doesn't have to do anything
+> but free/put the page.
 >=20
-> We could decouple the call from mem_cgroup_try_charge() here as well,
-> but that would cause unnecessary churn: the following patches convert
-> all callsites to a new charge API and we'll decouple as we go along.
+> Then switch the page cache over to this new API.
+>=20
+> Subsequent patches will also convert anon pages, but it needs a bit
+> more prep work. Right now, memcg depends on page->mapping being
+> already set up at the time of charging, so that it can maintain its
+> own MEMCG_CACHE and MEMCG_RSS counters. For anon, page->mapping is set
+> under the same pte lock under which the page is publishd, so a single
+> charge point that can block doesn't work there just yet.
+>=20
+> The following prep patches will replace the private memcg counters
+> with the generic vmstat counters, thus removing the page->mapping
+> dependency, then complete the transition to the new single-point
+> charge API and delete the old transactional scheme.
 >=20
 > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gman=
 e.org>
+> ---
 
 Reviewed-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gma=
 ne.org>
