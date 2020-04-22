@@ -1,145 +1,87 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 0/3] memcg: Slow down swap allocation as the available
- space gets depleted
-Date: Tue, 21 Apr 2020 15:39:01 -0700
-Message-ID: <CALvZod4gwBxT=nYnO8eEHr3jrffoMBoLpaB_uHMWL1VAi8XH4Q@mail.gmail.com>
-References: <20200417193539.GC43469@mtj.thefacebook.com> <CALvZod6LT25t9aAA1KHmf1U4-L8zSjUXQ4VQvX4cMT1A+R_g+w@mail.gmail.com>
- <20200417225941.GE43469@mtj.thefacebook.com> <CALvZod6M4OsM-t8m_KX9wCkEutdwUMgbP9682eHGQor9JvO_BQ@mail.gmail.com>
- <20200420164740.GF43469@mtj.thefacebook.com> <20200420170318.GV27314@dhcp22.suse.cz>
- <20200420170650.GA169746@mtj.thefacebook.com> <20200421110612.GD27314@dhcp22.suse.cz>
- <20200421142746.GA341682@cmpxchg.org> <CALvZod650M1_46R4OiS1mug+LKbjD=1s_xqckh9T6V8fPjct2g@mail.gmail.com>
- <20200421215946.GA347151@cmpxchg.org>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH 15/18] mm: memcontrol: make swap tracking an integral part
+ of memory control
+Date: Wed, 22 Apr 2020 11:14:40 +0800
+Message-ID: <2721c508-9b32-d0e7-454d-386129bfda1b@linux.alibaba.com>
+References: <20200420221126.341272-1-hannes@cmpxchg.org>
+ <20200420221126.341272-16-hannes@cmpxchg.org>
+ <e9d58c82-d746-dcd0-d9e3-6322014a3b03@linux.alibaba.com>
+ <20200421143923.GC341682@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=HBADq5i/qFEsn3GD0ObPojywM7FchlLznipuc6KZVGk=;
-        b=tlhk58r6FhjvjTbo2qnJ7nV8jbf0+1sAG9VaNItYxrAEl8vFoPRgpoZA/hT7gbpjCS
-         BlH9CtDPSyfIn2TJofxkZ2QsXsD/XTdu0BQZ4InaxQgWyxDf/56LZnO+Mtm/11B4kVp2
-         sn6RZ4D0Qsa44zjS4Jd9TBvQ/TAcvHrzsxOMR5uzTLvHcDaPuqdsIi2DSx+VonQwuHR3
-         sNiTejBmcczR82S2KK6s69uAuPlDvsUE1IIunFPs4BQg4rIF7hhUdAullCTZ7riYjqjr
-         b054fxXCd/CQFBlS24oYnpNQqZmUYDYdmGyxI4yhjC5BYM6qB2hC0+wAlMTCcHkAdnRs
-         XhKg==
-In-Reply-To: <20200421215946.GA347151-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20200421143923.GC341682-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
 To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Tue, Apr 21, 2020 at 2:59 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-[snip]
->
-> We do control very aggressive batch jobs to the extent where they have
-> negligible latency impact on interactive services running on the same
-> hosts. All the tools to do that are upstream and/or public, but it's
-> still pretty new stuff (memory.low, io.cost, cpu headroom control,
-> freezer) and they need to be put together just right.
->
-> We're working on a demo application that showcases how it all fits
-> together and hope to be ready to publish it soon.
->
 
-That would be awesome.
 
->
-[snip]
-> >
-> > What do you mean by not interchangeable? If I keep the hot memory (or
-> > workingset) of a job in DRAM and cold memory in swap and control the
-> > rate of refaults by controlling the definition of cold memory then I
-> > am using the DRAM and swap interchangeably and transparently to the
-> > job (that is what we actually do).
->
-> Right, that's a more precise definition than my randomly chosen "80%"
-> number above. There are parts of a workload's memory access curve
-> (where x is distinct data accessed and y is the access frequency) that
-> don't need to stay in RAM permanently and can be got on-demand from
-> secondary storage without violating the workload's throughput/latency
-> requirements. For that part, RAM, swap, disk can be interchangeable.
->
-> I'm was specifically talking about the other half of that curve, and
-> meant to imply that that's usually bigger than 20%. Usually ;-)
->
-> I.e. we cannot say: workload x gets 10G of ram or swap, and it doesn't
-> matter whether it gets it in ram or in swap. There is a line somewhere
-> in between, and it'll vary with workload requirements, access patterns
-> and IO speed. But no workload can actually run with 10G of swap and 0
-> bytes worth of direct access memory, right?
+在 2020/4/21 下午10:39, Johannes Weiner 写道:
+> Hi Alex,
+> 
+> thanks for your quick review so far, I'll add the tags to the patches.
+> 
+> On Tue, Apr 21, 2020 at 05:27:30PM +0800, Alex Shi wrote:
+>>
+>>
+>> 在 2020/4/21 上午6:11, Johannes Weiner 写道:
+>>> The swapaccount=0 boot option will continue to exist, and it will
+>>> eliminate the page_counter overhead and hide the swap control files,
+>>> but it won't disable swap slot ownership tracking.
+>>
+>> May we add extra explanation for this change to user? and the default
+>> memsw limitations?
+> 
+> Can you elaborate what you think is missing and where you would like
+> to see it documented?
+> 
+Maybe the following doc change is better after whole patchset? 
+Guess users would would happy to know details of this change.
 
-Yes.
+Also as to the RSS account name change, I don't know if it's good to polish
+them in docs.
 
->
-> Since you said before you're using combined memory+swap limits, I'm
-> assuming that you configure the resource as interchangeable, but still
-> have some form of determining where that cutoff line is between them -
-> either by tuning proactive reclaim toward that line or having OOM kill
-> policies when the line is crossed and latencies are violated?
->
+Thanks
+Alex
 
-Yes, more specifically tuning proactive reclaim towards that line. We
-define that line in terms of acceptable refault rate for the job. The
-acceptable refault rate is measured through re-use and idle page
-histograms (these histograms are collected through our internal
-implementation of Page Idle Tracking). I am planning to upstream and
-open-source these.
+diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
+index 0ae4f564c2d6..1fd0878089fe 100644
+--- a/Documentation/admin-guide/cgroup-v1/memory.rst
++++ b/Documentation/admin-guide/cgroup-v1/memory.rst
+@@ -199,11 +199,11 @@ An RSS page is unaccounted when it's fully unmapped. A PageCache page is
+ unaccounted when it's removed from radix-tree. Even if RSS pages are fully
+ unmapped (by kswapd), they may exist as SwapCache in the system until they
+ are really freed. Such SwapCaches are also accounted.
+-A swapped-in page is not accounted until it's mapped.
++A swapped-in page is accounted after adding into swapcache.
 
-> > I am also wondering if you guys explored the in-memory compression
-> > based swap medium and if there are any reasons to not follow that
-> > route.
->
-> We played around with it, but I'm ambivalent about it.
->
-> You need to identify that perfect "warm" middle section of the
-> workingset curve that is 1) cold enough to not need permanent direct
-> access memory, yet 2) warm enough to justify allocating RAM to it.
->
-> A lot of our workloads have a distinguishable hot set and various
-> amounts of fairly cold data during stable states, with not too much
-> middle ground in between where compressed swap would really shine.
->
-> Do you use compressed swap fairly universally, or more specifically
-> for certain workloads?
->
+ Note: The kernel does swapin-readahead and reads multiple swaps at once.
+-This means swapped-in pages may contain pages for other tasks than a task
+-causing page fault. So, we avoid accounting at swap-in I/O.
++Since page's memcg recorded into swap whatever memsw enabled, the page will
++be accounted after swapin.
 
-Yes, we are using it fairly universally. There are few exceptions like
-user space net and storage drivers.
+ At page migration, accounting information is kept.
 
-> > Oh you mentioned DAX, that brings to mind a very interesting topic.
-> > Are you guys exploring the idea of using PMEM as a cheap slow memory?
-> > It is byte-addressable, so, regarding memcg accounting, will you treat
-> > it as a memory or a separate resource like swap in v2? How does your
-> > memory overcommit model work with such a type of memory?
->
-> I think we (the kernel MM community, not we as in FB) are still some
-> ways away from having dynamic/transparent data placement for pmem the
-> same way we have for RAM. But I expect the kernel's high-level default
-> strategy to be similar: order virtual memory (the data) by access
-> frequency and distribute across physical memory/storage accordingly.
->
-> (With pmem being divided into volatile space and filesystem space,
-> where volatile space holds colder anon pages (and, if there is still a
-> disk, disk cache), and the sizing decisions between them being similar
-> as the ones we use for swap and filesystem today).
->
-> I expect cgroup policy to be separate, because to users the
-> performance difference matters. We won't want greedy batch
-> applications displacing latency sensitive ones from RAM into pmem,
-> just like we don't want this displacement into secondary storage
-> today. Other than that, there isn't too much difference to users,
-> because paging is already transparent - an mmapped() file looks the
-> same whether it's backed by RAM, by disk or by pmem. The difference is
-> access latencies and the aggregate throughput loss they add up to. So
-> I could see pmem cgroup limits and protections (for the volatile space
-> portion) the same way we have RAM limits and protections.
->
-> But yeah, I think this is going a bit off topic ;-)
+@@ -230,10 +230,10 @@ caller of swapoff rather than the users of shmem.
+ 2.4 Swap Extension (CONFIG_MEMCG_SWAP)
+ --------------------------------------
 
-That's really interesting. Thanks for appeasing my curiosity.
+-Swap Extension allows you to record charge for swap. A swapped-in page is
+-charged back to original page allocator if possible.
++Swap usage is always recorded for each of cgroup. Swap Extension allows you to
++read and limit it.
 
-thanks,
-Shakeel
+-When swap is accounted, following files are added.
++When swap is limited, following files are added.
+
+  - memory.memsw.usage_in_bytes.
+  - memory.memsw.limit_in_bytes.
+
+> From a semantics POV, nothing changes with this patch. The memsw limit
+> defaults to "max", so it doesn't exert any control per default. The
+> only difference is whether we maintain swap records or not.
+> 
