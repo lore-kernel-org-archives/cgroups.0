@@ -1,68 +1,107 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 15/18] mm: memcontrol: make swap tracking an integral
- part of memory control
-Date: Thu, 23 Apr 2020 23:01:17 -0400
-Message-ID: <20200424030117.GC464082@cmpxchg.org>
-References: <20200420221126.341272-1-hannes@cmpxchg.org>
- <20200420221126.341272-16-hannes@cmpxchg.org>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 0/3] memcg: Slow down swap allocation as the available
+ space gets depleted
+Date: Fri, 24 Apr 2020 17:05:10 +0200
+Message-ID: <20200424150510.GH11591@dhcp22.suse.cz>
+References: <20200421110612.GD27314@dhcp22.suse.cz>
+ <20200421142746.GA341682@cmpxchg.org>
+ <20200421161138.GL27314@dhcp22.suse.cz>
+ <20200421165601.GA345998@cmpxchg.org>
+ <20200422132632.GG30312@dhcp22.suse.cz>
+ <20200422141514.GA362484@cmpxchg.org>
+ <20200422154318.GK30312@dhcp22.suse.cz>
+ <20200422171328.GC362484@cmpxchg.org>
+ <20200422184921.GB4206@dhcp22.suse.cz>
+ <20200423150015.GE362484@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=kyzduwWV8InceUnIl0vidH/X3bbDtm0JxJsBZQHUEsg=;
-        b=xCajfsFC29zFs0ldyM1nenfzOzJDtFNYbMcgKb1rYjfjosHZZWeWeXnPI+8bxZ2ntm
-         XHXSecOpa9F53pVydA37qwBNQQz3IM8/taC9P6tAXhUnpQt/iT4a01qo0tF1UzjpM1pl
-         9weajk44I9MEZiCL03RFgeD8nMd6M1w7/fZJVwQ9w0ADRRNU6IYndhE3AF/qOVSxKDnx
-         voK4SCOCZVyquDhFXfze9UC5Qoftazh/65yyjBEJeOa43yxDbu4gxT1oLoaN8bh/AsTH
-         9tc/JQBlf043Zpg9/w1+sY2RY/7r2b4k7AZyRfSTf+lRVIRzyrXJ5E4L4HDmZr5V+x+J
-         G9zA==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20200420221126.341272-16-hannes@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20200423150015.GE362484-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Joonsoo Kim <js1304@gmail.com>, Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Shakeel Butt <shakeelb@google.com>, Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.com>, "Kirill A. Shutemov" <kirill@shutemov.name>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Mon, Apr 20, 2020 at 06:11:23PM -0400, Johannes Weiner wrote:
-> @@ -6884,9 +6876,6 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
->  	VM_BUG_ON_PAGE(PageLRU(page), page);
->  	VM_BUG_ON_PAGE(page_count(page), page);
->  
-> -	if (!do_memsw_account())
-> -		return;
-> -
->  	memcg = page->mem_cgroup;
->  
->  	/* Readahead page, never charged */
+On Thu 23-04-20 11:00:15, Johannes Weiner wrote:
+> On Wed, Apr 22, 2020 at 08:49:21PM +0200, Michal Hocko wrote:
+> > On Wed 22-04-20 13:13:28, Johannes Weiner wrote:
+> > > On Wed, Apr 22, 2020 at 05:43:18PM +0200, Michal Hocko wrote:
+> > > > On Wed 22-04-20 10:15:14, Johannes Weiner wrote:
+> > > > I am also missing some information about what the user can actually do
+> > > > about this situation and call out explicitly that the throttling is
+> > > > not going away until the swap usage is shrunk and the kernel is not
+> > > > capable of doing that on its own without a help from the userspace. This
+> > > > is really different from memory.high which has means to deal with the
+> > > > excess and shrink it down in most cases. The following would clarify it
+> > > 
+> > > I think we may be talking past each other. The user can do the same
+> > > thing as in any OOM situation: wait for the kill.
+> > 
+> > That assumes that reaching swap.high is going to converge to the OOM
+> > eventually. And that is far from the general case. There might be a
+> > lot of other reclaimable memory to reclaim and stay in the current
+> > state.
+> 
+> No, that's really the general case. And that's based on what users
+> widely experience, including us at FB. When swap is full, it's over.
+> Multiple parties have independently reached this conclusion.
 
-I messed up here.
+But we are talking about two things. You seem to be focusing on the full
+swap (quota) while I am talking about swap.high which doesn't imply
+that the quota/full swap is going to be reached soon.
 
-mem_cgroup_swapout() must not run on cgroup2, because cgroup2 uses
-mem_cgroup_try_charge_swap() instead. Both record a swap entry and
-running them both will trigger a VM_BUG_ON() on an existing record.
+[...]
 
-I'm actually somewhat baffled why this didn't trigger in my
-MADV_PAGEOUT -> MADV_WILLNEED swap test. memory.max driven swapout
-triggered it right away.
+> The assymetry you see between memory.high and swap.high comes from the
+> page cache. memory.high can set a stop to the mindless expansion of
+> the file cache and remove *unused* cache pages from the application's
+> workingset. It cannot permanently remove used cache pages, they'll
+> just refault. So unused cache is where reclaim is useful.
 
-!do_memsw_account() needs to be !cgroup_subsys_on_dfl(memory_cgrp_subsys)
+Exactly! And I have seen memory.high being used to throttle huge page
+cache producers to not disrupt other workloads.
+ 
+> Once the workload expands its set of *used* pages past memory.high, we
+> are talking about indefinite slowdowns / OOM situations. Because at
+> that point, reclaim cannot push the workload back and everything will
+> be okay: the pages it takes off mean refaults and continued reclaim,
+> i.e. throttling. You get slowed down either way, and whether you
+> reclaim or sleep() is - to the workload - an accounting difference.
+>
+> Reclaim does NOT have the power to help the workload get better. It
+> can only do amputations to protect the rest of the system, but it
+> cannot reduce the number of pages the workload is trying to access.
 
-> @@ -6913,7 +6902,7 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
->  	if (!mem_cgroup_is_root(memcg))
->  		page_counter_uncharge(&memcg->memory, nr_entries);
->  
-> -	if (memcg != swap_memcg) {
-> +	if (do_memsw_account() && memcg != swap_memcg) {
->  		if (!mem_cgroup_is_root(swap_memcg))
->  			page_counter_charge(&swap_memcg->memsw, nr_entries);
->  		page_counter_uncharge(&memcg->memsw, nr_entries);
+Yes I do agree with you here and I believe this scenario wasn't really
+what the dispute is about. As soon as the real working set doesn't
+fit into the high limit and still growing then you are effectively
+OOM and either you do handle that from the userspace or you have to
+waaaaaaaaait for the kernel oom killer to trigger.
 
-And this can be !cgroup_memory_noswap instead. It'll do the same
-thing, but will be clearer.
+But I believe this scenario is much easier to understand because the
+memory consumption is growing. What I find largely unintuitive from the
+user POV is that the throttling will remain in place without a userspace
+intervention even when there is no runaway.
 
-I'll have it fixed in version 2.
+Let me give you an example. Say you have a peak load which pushes
+out a large part of an idle memory to swap. So much it fills up the
+swap.high. The peak eventually finishes freeing up its resources.  The
+swap situation remains the same because that memory is not refaulted and
+we do not pro-actively swap in memory (aka reclaim the swap space). You
+are left with throttling even though the overall memcg consumption is
+really low. Kernel is currently not able to do anything about that
+and the userspace would need to be aware of the situation to fault in
+swapped out memory back to get a normal behavior. Do you think this
+is something so obvious that people would keep it in mind when using
+swap.high?
 
+Anyway, it seems that we are not making progress here. As I've said I
+believe that swap.high might lead to a surprising behavior and therefore
+I would appreciate more clarity in the documentation. If you see a
+problem with that for some reason then I can live with that. This is not
+a reason to nack.
+-- 
+Michal Hocko
+SUSE Labs
