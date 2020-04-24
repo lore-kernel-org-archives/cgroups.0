@@ -1,53 +1,70 @@
-From: Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 18/18] mm: memcontrol: update page->mem_cgroup stability
- rules
-Date: Fri, 24 Apr 2020 09:48:03 +0900
-Message-ID: <20200424004802.GH13929@js1304-desktop>
-References: <20200420221126.341272-1-hannes@cmpxchg.org>
- <20200420221126.341272-19-hannes@cmpxchg.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] memcg: optimize memory.numa_stat like memory.stat
+Date: Thu, 23 Apr 2020 22:38:52 -0400
+Message-ID: <20200424023852.GA464082@cmpxchg.org>
+References: <20200304022058.248270-1-shakeelb@google.com>
+ <20200305204109.be23f5053e2368d3b8ccaa06@linux-foundation.org>
+ <CALvZod7W-Qwa4BRKW0_Ts5f68fwkcqD72SF_4NqZRgEMgA_1-g@mail.gmail.com>
+ <CALvZod4R68wNgzOF9dN=i6LwyUYMBhvM7SXaRJGW9Wn_SmeGGA@mail.gmail.com>
+ <20200423161009.973c645420a4d17ded2a67ee@linux-foundation.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=zMf6cL1D7YLD6iKlsLUtZolXbcpW+JOh8oh3DueIiGs=;
-        b=PXqYHe3fZr6F5VO5PPWJRdaX2re6I1g9UbEo9QM37Hn0kGaTttdie8rMhVReN9olrZ
-         mj3+Ef0v8a3XQSPAy053pkkFrikfZjRCT2Jv5Sh4f4gU/d+iyAZ66puFzr5nLojFlZ2I
-         tXzQ8xlKFsayg+zOrwrUhyDcRUZKYVhrqsXPGihrVqSvC474hoNk2qnfuw3XHtfvdAZO
-         jxi3NYcXf4yLR9KZv3pTHXVb84HwVxx+cqXSiMO8ZbF/5bRl4R14tiIfYA556cGqakEU
-         CJa4TitRC2rE5XkA6TiJ4A7/w4t7SOGDdgYqtFWx/pounou3MUkeeKOCD77arEOVqZUu
-         yiHA==
+         :content-disposition:in-reply-to;
+        bh=ldECbwkx2KzC+gjraTT+5K+gEB5icL0nRQIC9XPuGkU=;
+        b=Ddtvcj1n3A2iRjbjaGXKb42PeJjcfV41WkfP5jznQsOoAXtq4Aq0YAI+jC0sCsKnvx
+         3ZUlrZSEr3HUWZp9NZZUR0WJE+gtm9Uewof/FeE8jRb+3r2wee/XOWlmOAmQMF85e2cW
+         QBsM3r65qePLq09dyRU//VQ1HxsdWxOOkQ5hV/kB6m09C/86n/XsphQWiUecxZrtcy5j
+         EFolcHbY7QejWuMaqC22oW+PcDruwHWEGwRIKo9ovvU5K4MZuxo++hLjAlegnyZ2T3hU
+         mBUEvRefs3krgdLJT5E4/GkLAylz+osjnZ55rZwa2wXOUEN0L6QFj3VRgJErkjjZe4Gy
+         UfrA==
 Content-Disposition: inline
-In-Reply-To: <20200420221126.341272-19-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20200423161009.973c645420a4d17ded2a67ee@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Mon, Apr 20, 2020 at 06:11:26PM -0400, Johannes Weiner wrote:
-> The previous patches have simplified the access rules around
-> page->mem_cgroup somewhat:
+On Thu, Apr 23, 2020 at 04:10:09PM -0700, Andrew Morton wrote:
+> From: Shakeel Butt <shakeelb@google.com>
+> Subject: mm/memcg: optimize memory.numa_stat like memory.stat
 > 
-> 1. We never change page->mem_cgroup while the page is isolated by
->    somebody else. This was by far the biggest exception to our rules
->    and it didn't stop at lock_page() or lock_page_memcg().
+> Currently reading memory.numa_stat traverses the underlying memcg tree
+> multiple times to accumulate the stats to present the hierarchical view of
+> the memcg tree.  However the kernel already maintains the hierarchical
+> view of the stats and use it in memory.stat.  Just use the same mechanism
+> in memory.numa_stat as well.
 > 
-> 2. We charge pages before they get put into page tables now, so the
->    somewhat fishy rule about "can be in page table as long as it's
->    still locked" is now gone and boiled down to having an exclusive
->    reference to the page.
+> I ran a simple benchmark which reads root_mem_cgroup's memory.numa_stat
+> file in the presense of 10000 memcgs.  The results are:
 > 
-> Document the new rules. Any of the following will stabilize the
-> page->mem_cgroup association:
+> Without the patch:
+> $ time cat /dev/cgroup/memory/memory.numa_stat > /dev/null
 > 
-> - the page lock
-> - LRU isolation
-> - lock_page_memcg()
-> - exclusive access to the page
+> real    0m0.700s
+> user    0m0.001s
+> sys     0m0.697s
 > 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> With the patch:
+> $ time cat /dev/cgroup/memory/memory.numa_stat > /dev/null
+> 
+> real    0m0.001s
+> user    0m0.001s
+> sys     0m0.000s
+> 
+> [akpm@linux-foundation.org: avoid forcing out-of-line code generation]
+> Link: http://lkml.kernel.org/r/20200304022058.248270-1-shakeelb@google.com
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> Reviewed-by: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Roman Gushchin <guro@fb.com>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-Reviewed-by: Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
+Ouch, yes. That makes sense.
+
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
