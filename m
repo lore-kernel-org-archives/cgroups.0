@@ -1,241 +1,187 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v10 01/15] mm/swap: use vmf clean up swapin funcs parameters
-Date: Mon, 27 Apr 2020 15:02:50 +0800
-Message-ID: <1587970985-21629-2-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: [PATCH v10 09/15] mm/compaction: do page isolation first in compaction
+Date: Mon, 27 Apr 2020 15:02:58 +0800
+Message-ID: <1587970985-21629-10-git-send-email-alex.shi@linux.alibaba.com>
 References: <1587970985-21629-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1587970985-21629-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1587970985-21629-1-git-send-email-alex.shi@linux.alibaba.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Seth Jennings <sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dan Streetman <ddstreet-EkmVulN54Sk@public.gmane.org>, Vitaly Wool <vitaly.wool-OWPKS81ov/FWk0Htik3J/w@public.gmane.org>
+To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com
+Cc: Alex Shi <alex.shi@linux.alibaba.com>
 
-Folding parameter struct vm_area_struct *vma, unsigned long addr into
-struct vm_fault vmf, this makes func path more readble.
+Johannes Weiner has suggested:
+"So here is a crazy idea that may be worth exploring:
 
-Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Seth Jennings <sjenning-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Dan Streetman <ddstreet-EkmVulN54Sk@public.gmane.org>
-Cc: Vitaly Wool <vitaly.wool-OWPKS81ov/FWk0Htik3J/w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Right now, pgdat->lru_lock protects both PageLRU *and* the lruvec's
+linked list.
+
+Can we make PageLRU atomic and use it to stabilize the lru_lock
+instead, and then use the lru_lock only serialize list operations?
+..."
+
+Yes, this patch is doing so on  __isolate_lru_page which is the core
+page isolation func in compaction and shrinking path.
+With this patch, the compaction will only deal the PageLRU set and now
+isolated pages to skip the just alloced page which no LRU bit. And the
+isolation could exclusive the other isolations in memcg move_account,
+page migrations and thp split_huge_page.
+
+As a side effect, PageLRU may be cleared during shrink_inactive_list
+path for isolation reason. If so, we can skip that page.
+
+Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
 ---
- include/linux/swap.h |  6 ++----
- mm/madvise.c         | 11 +++++++----
- mm/swap_state.c      | 23 ++++++++++-------------
- mm/swapfile.c        |  8 +++++---
- mm/zswap.c           |  3 ++-
- 5 files changed, 26 insertions(+), 25 deletions(-)
+ include/linux/swap.h |  2 +-
+ mm/compaction.c      | 25 +++++++++++++++++--------
+ mm/vmscan.c          | 38 ++++++++++++++++++++++----------------
+ 3 files changed, 40 insertions(+), 25 deletions(-)
 
 diff --git a/include/linux/swap.h b/include/linux/swap.h
-index c453d08e07fb..6ca3adf62fe0 100644
+index 4e13d0bb8e82..20e4b9f93529 100644
 --- a/include/linux/swap.h
 +++ b/include/linux/swap.h
-@@ -417,11 +417,9 @@ extern struct page *lookup_swap_cache(swp_entry_t entry,
- 				      struct vm_area_struct *vma,
- 				      unsigned long addr);
- extern struct page *read_swap_cache_async(swp_entry_t, gfp_t,
--			struct vm_area_struct *vma, unsigned long addr,
--			bool do_poll);
-+				struct vm_fault *vmf, bool do_poll);
- extern struct page *__read_swap_cache_async(swp_entry_t, gfp_t,
--			struct vm_area_struct *vma, unsigned long addr,
--			bool *new_page_allocated);
-+				struct vm_fault *vmf, bool *new_page_allocated);
- extern struct page *swap_cluster_readahead(swp_entry_t entry, gfp_t flag,
- 				struct vm_fault *vmf);
- extern struct page *swapin_readahead(swp_entry_t entry, gfp_t flag,
-diff --git a/mm/madvise.c b/mm/madvise.c
-index 4bb30ed6c8d2..e9bd80087dbb 100644
---- a/mm/madvise.c
-+++ b/mm/madvise.c
-@@ -184,8 +184,8 @@ static int swapin_walk_pmd_entry(pmd_t *pmd, unsigned long start,
- 	unsigned long end, struct mm_walk *walk)
- {
- 	pte_t *orig_pte;
--	struct vm_area_struct *vma = walk->private;
- 	unsigned long index;
-+	struct vm_fault vmf = { .vma = walk->private};
+@@ -351,7 +351,7 @@ extern void lru_cache_add_active_or_unevictable(struct page *page,
+ extern unsigned long zone_reclaimable_pages(struct zone *zone);
+ extern unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
+ 					gfp_t gfp_mask, nodemask_t *mask);
+-extern int __isolate_lru_page(struct page *page, isolate_mode_t mode);
++extern int __isolate_lru_page_prepare(struct page *page, isolate_mode_t mode);
+ extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+ 						  unsigned long nr_pages,
+ 						  gfp_t gfp_mask,
+diff --git a/mm/compaction.c b/mm/compaction.c
+index 46f0fcc93081..3d33f36e2126 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -950,6 +950,23 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 		if (!(cc->gfp_mask & __GFP_FS) && page_mapping(page))
+ 			goto isolate_fail;
  
- 	if (pmd_none_or_trans_huge_or_clear_bad(pmd))
- 		return 0;
-@@ -196,7 +196,8 @@ static int swapin_walk_pmd_entry(pmd_t *pmd, unsigned long start,
- 		struct page *page;
- 		spinlock_t *ptl;
++		if (__isolate_lru_page_prepare(page, isolate_mode) != 0)
++			goto isolate_fail;
++
++		/*
++		 * Be careful not to clear PageLRU until after we're
++		 * sure the page is not being freed elsewhere -- the
++		 * page release code relies on it.
++		 */
++		if (unlikely(!get_page_unless_zero(page)))
++			goto isolate_fail;
++
++		/* Try isolate the page */
++		if (!TestClearPageLRU(page)) {
++			put_page(page);
++			goto isolate_fail;
++		}
++
+ 		/* If we already hold the lock, we can skip some rechecking */
+ 		if (!locked) {
+ 			locked = compact_lock_irqsave(&pgdat->lru_lock,
+@@ -962,10 +979,6 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 					goto isolate_abort;
+ 			}
  
--		orig_pte = pte_offset_map_lock(vma->vm_mm, pmd, start, &ptl);
-+		orig_pte = pte_offset_map_lock(vmf.vma->vm_mm,
-+						pmd, start, &ptl);
- 		pte = *(orig_pte + ((index - start) / PAGE_SIZE));
- 		pte_unmap_unlock(orig_pte, ptl);
+-			/* Recheck PageLRU and PageCompound under lock */
+-			if (!PageLRU(page))
+-				goto isolate_fail;
+-
+ 			/*
+ 			 * Page become compound since the non-locked check,
+ 			 * and it's on LRU. It can only be a THP so the order
+@@ -979,10 +992,6 @@ static bool too_many_isolated(pg_data_t *pgdat)
  
-@@ -206,8 +207,9 @@ static int swapin_walk_pmd_entry(pmd_t *pmd, unsigned long start,
- 		if (unlikely(non_swap_entry(entry)))
- 			continue;
+ 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
  
-+		vmf.address = index;
- 		page = read_swap_cache_async(entry, GFP_HIGHUSER_MOVABLE,
--							vma, index, false);
-+							&vmf, false);
- 		if (page)
- 			put_page(page);
- 	}
-@@ -226,6 +228,7 @@ static void force_shm_swapin_readahead(struct vm_area_struct *vma,
- 	pgoff_t index;
- 	struct page *page;
- 	swp_entry_t swap;
-+	struct vm_fault vmf = { .vma = NULL, .address = 0};
- 
- 	for (; start < end; start += PAGE_SIZE) {
- 		index = ((start - vma->vm_start) >> PAGE_SHIFT) + vma->vm_pgoff;
-@@ -238,7 +241,7 @@ static void force_shm_swapin_readahead(struct vm_area_struct *vma,
- 		}
- 		swap = radix_to_swp_entry(page);
- 		page = read_swap_cache_async(swap, GFP_HIGHUSER_MOVABLE,
--							NULL, 0, false);
-+							&vmf, false);
- 		if (page)
- 			put_page(page);
- 	}
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index 26fded65c30d..b056c7ec941f 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -357,11 +357,12 @@ struct page *lookup_swap_cache(swp_entry_t entry, struct vm_area_struct *vma,
- }
- 
- struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
--			struct vm_area_struct *vma, unsigned long addr,
--			bool *new_page_allocated)
-+			struct vm_fault *vmf, bool *new_page_allocated)
- {
- 	struct swap_info_struct *si;
- 	struct page *page;
-+	struct vm_area_struct *vma = vmf->vma;
-+	unsigned long addr = vmf->address;
- 
- 	*new_page_allocated = false;
- 
-@@ -453,11 +454,11 @@ struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
-  * the swap entry is no longer in use.
+-		/* Try isolate the page */
+-		if (__isolate_lru_page(page, isolate_mode) != 0)
+-			goto isolate_fail;
+-
+ 		/* The whole page is taken off the LRU; skip the tail pages. */
+ 		if (PageCompound(page))
+ 			low_pfn += compound_nr(page) - 1;
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 50566056b95a..33568e795640 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1521,7 +1521,7 @@ unsigned long reclaim_clean_pages_from_list(struct zone *zone,
+  *
+  * returns 0 on success, -ve errno on failure.
   */
- struct page *read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
--		struct vm_area_struct *vma, unsigned long addr, bool do_poll)
-+					struct vm_fault *vmf, bool do_poll)
+-int __isolate_lru_page(struct page *page, isolate_mode_t mode)
++int __isolate_lru_page_prepare(struct page *page, isolate_mode_t mode)
  {
- 	bool page_was_allocated;
- 	struct page *retpage = __read_swap_cache_async(entry, gfp_mask,
--			vma, addr, &page_was_allocated);
-+						vmf, &page_was_allocated);
+ 	int ret = -EINVAL;
  
- 	if (page_was_allocated)
- 		swap_readpage(retpage, do_poll);
-@@ -554,8 +555,6 @@ struct page *swap_cluster_readahead(swp_entry_t entry, gfp_t gfp_mask,
- 	struct swap_info_struct *si = swp_swap_info(entry);
- 	struct blk_plug plug;
- 	bool do_poll = true, page_allocated;
--	struct vm_area_struct *vma = vmf->vma;
--	unsigned long addr = vmf->address;
+@@ -1575,20 +1575,9 @@ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
+ 	if ((mode & ISOLATE_UNMAPPED) && page_mapped(page))
+ 		return ret;
  
- 	mask = swapin_nr_pages(offset) - 1;
- 	if (!mask)
-@@ -582,7 +581,7 @@ struct page *swap_cluster_readahead(swp_entry_t entry, gfp_t gfp_mask,
- 		/* Ok, do the async read-ahead now */
- 		page = __read_swap_cache_async(
- 			swp_entry(swp_type(entry), offset),
--			gfp_mask, vma, addr, &page_allocated);
-+			gfp_mask, vmf, &page_allocated);
- 		if (!page)
- 			continue;
- 		if (page_allocated) {
-@@ -598,7 +597,7 @@ struct page *swap_cluster_readahead(swp_entry_t entry, gfp_t gfp_mask,
- 
- 	lru_add_drain();	/* Push any new pages onto the LRU now */
- skip:
--	return read_swap_cache_async(entry, gfp_mask, vma, addr, do_poll);
-+	return read_swap_cache_async(entry, gfp_mask, vmf, do_poll);
+-	if (likely(get_page_unless_zero(page))) {
+-		/*
+-		 * Be careful not to clear PageLRU until after we're
+-		 * sure the page is not being freed elsewhere -- the
+-		 * page release code relies on it.
+-		 */
+-		ClearPageLRU(page);
+-		ret = 0;
+-	}
+-
+-	return ret;
++	return 0;
  }
  
- int init_swap_address_space(unsigned int type, unsigned long nr_pages)
-@@ -730,7 +729,6 @@ static struct page *swap_vma_readahead(swp_entry_t fentry, gfp_t gfp_mask,
- 				       struct vm_fault *vmf)
- {
- 	struct blk_plug plug;
--	struct vm_area_struct *vma = vmf->vma;
- 	struct page *page;
- 	pte_t *pte, pentry;
- 	swp_entry_t entry;
-@@ -753,8 +751,8 @@ static struct page *swap_vma_readahead(swp_entry_t fentry, gfp_t gfp_mask,
- 		entry = pte_to_swp_entry(pentry);
- 		if (unlikely(non_swap_entry(entry)))
- 			continue;
--		page = __read_swap_cache_async(entry, gfp_mask, vma,
--					       vmf->address, &page_allocated);
-+		page = __read_swap_cache_async(entry, gfp_mask, vmf,
-+					       &page_allocated);
- 		if (!page)
- 			continue;
- 		if (page_allocated) {
-@@ -769,8 +767,7 @@ static struct page *swap_vma_readahead(swp_entry_t fentry, gfp_t gfp_mask,
- 	blk_finish_plug(&plug);
- 	lru_add_drain();
- skip:
--	return read_swap_cache_async(fentry, gfp_mask, vma, vmf->address,
--				     ra_info.win == 1);
-+	return read_swap_cache_async(fentry, gfp_mask, vmf, ra_info.win == 1);
- }
+-
+ /*
+  * Update LRU sizes after isolating pages. The LRU size updates must
+  * be complete before mem_cgroup_update_lru_size due to a santity check.
+@@ -1672,17 +1661,34 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
+ 		 * only when the page is being freed somewhere else.
+ 		 */
+ 		scan += nr_pages;
+-		switch (__isolate_lru_page(page, mode)) {
++		switch (__isolate_lru_page_prepare(page, mode)) {
+ 		case 0:
++			/*
++			 * Be careful not to clear PageLRU until after we're
++			 * sure the page is not being freed elsewhere -- the
++			 * page release code relies on it.
++			 */
++			if (unlikely(!get_page_unless_zero(page)))
++				goto busy;
++
++			if (!TestClearPageLRU(page)) {
++				/*
++				 * This page may in other isolation path,
++				 * but we still hold lru_lock.
++				 */
++				put_page(page);
++				goto busy;
++			}
++
+ 			nr_taken += nr_pages;
+ 			nr_zone_taken[page_zonenum(page)] += nr_pages;
+ 			list_move(&page->lru, dst);
+ 			break;
+-
++busy:
+ 		case -EBUSY:
+ 			/* else it is being freed elsewhere */
+ 			list_move(&page->lru, src);
+-			continue;
++			break;
  
- /**
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index e41074848f25..0c4d604fbf8d 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -1850,12 +1850,14 @@ static inline int pte_same_as_swp(pte_t pte, pte_t swp_pte)
-  * just let do_wp_page work it out if a write is requested later - to
-  * force COW, vm_page_prot omits write permission from any private vma.
-  */
--static int unuse_pte(struct vm_area_struct *vma, pmd_t *pmd,
--		unsigned long addr, swp_entry_t entry, struct page *page)
-+static int unuse_pte(struct vm_fault *vmf, swp_entry_t entry, struct page *page)
- {
- 	struct page *swapcache;
- 	spinlock_t *ptl;
- 	pte_t *pte;
-+	struct vm_area_struct *vma = vmf->vma;
-+	unsigned long addr = vmf->address;
-+	pmd_t *pmd = vmf->pmd;
- 	int ret = 1;
- 
- 	swapcache = page;
-@@ -1938,7 +1940,7 @@ static int unuse_pte_range(struct vm_area_struct *vma, pmd_t *pmd,
- 
- 		lock_page(page);
- 		wait_on_page_writeback(page);
--		ret = unuse_pte(vma, pmd, addr, entry, page);
-+		ret = unuse_pte(&vmf, entry, page);
- 		if (ret < 0) {
- 			unlock_page(page);
- 			put_page(page);
-diff --git a/mm/zswap.c b/mm/zswap.c
-index fbb782924ccc..ef5a3fe442d6 100644
---- a/mm/zswap.c
-+++ b/mm/zswap.c
-@@ -846,9 +846,10 @@ static int zswap_get_swap_cache_page(swp_entry_t entry,
- 				struct page **retpage)
- {
- 	bool page_was_allocated;
-+	struct vm_fault vmf = { .vma = NULL, .address = 0};
- 
- 	*retpage = __read_swap_cache_async(entry, GFP_KERNEL,
--			NULL, 0, &page_was_allocated);
-+			&vmf, &page_was_allocated);
- 	if (page_was_allocated)
- 		return ZSWAP_SWAPCACHE_NEW;
- 	if (!*retpage)
+ 		default:
+ 			BUG();
 -- 
 1.8.3.1
 
