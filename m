@@ -1,17 +1,17 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [PATCH v2 4/4] mm/slub: Fix sysfs shrink circular locking dependency
-Date: Mon, 27 Apr 2020 19:56:21 -0400
-Message-ID: <20200427235621.7823-5-longman@redhat.com>
+Subject: [PATCH v2 3/4] mm/slub: Fix another circular locking dependency in slab_attr_store()
+Date: Mon, 27 Apr 2020 19:56:20 -0400
+Message-ID: <20200427235621.7823-4-longman@redhat.com>
 References: <20200427235621.7823-1-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588031811;
+        s=mimecast20190719; t=1588031810;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=qCIbPd4z+LsfKk+IqgZJljs6Wparbj+tB3otWihkQ10=;
-        b=Bx3jM5Mcv+ejkUcUJsMHp79kfoeQ1CXgBM2qcLexgKkcbfv0crGVy2cIzoYIv9XjS7PV7X
-        11Bq/FxJpXNOhv6UsiY53pOrChnuycYdYdaXvxluVITKJ5nSNJaHpPkZu8/f+uh9XfaITA
-        HPhXhABHKa0paY6B7YFgFVsdq9FelbM=
+        bh=hKMGvop5RUwWSaAIrxGf06+2WG92KPK2um2wWjE0aqI=;
+        b=FgUaCwP5/4VVeP3CbMFUJg5qVFyi5aOIZ+d0dW4mbXXR4u7MmWFDuCvFdr7yJZPKMaSpBc
+        rZ33PARjnls7yRfjBV9zNPEqnm60/Z/5LBXMAyQlwmjD92KSgUSptL2Yw05q8L7IQ/7wVy
+        6aX1kAX+53fNi1jCA6qX+3uIREXwyVM=
 In-Reply-To: <20200427235621.7823-1-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,110 +21,118 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
 Cc: linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>, Qian Cai <cai@lca.pw>, Waiman Long <longman@redhat.com>
 
-A lockdep splat is observed by echoing "1" to the shrink sysfs file
-and then shutting down the system:
+It turns out that switching from slab_mutex to memcg_cache_ids_sem in
+slab_attr_store() does not completely eliminate circular locking dependency
+as shown by the following lockdep splat when the system is shut down:
 
-[  167.473392] Chain exists of:
-[  167.473392]   kn->count#279 --> mem_hotplug_lock.rw_sem --> slab_mutex
-[  167.473392]
-[  167.484323]  Possible unsafe locking scenario:
-[  167.484323]
-[  167.490273]        CPU0                    CPU1
-[  167.494825]        ----                    ----
-[  167.499376]   lock(slab_mutex);
-[  167.502530]                                lock(mem_hotplug_lock.rw_sem);
-[  167.509356]                                lock(slab_mutex);
-[  167.515044]   lock(kn->count#279);
-[  167.518462]
-[  167.518462]  *** DEADLOCK ***
+[ 2095.079697] Chain exists of:
+[ 2095.079697]   kn->count#278 --> memcg_cache_ids_sem --> slab_mutex
+[ 2095.079697]
+[ 2095.090278]  Possible unsafe locking scenario:
+[ 2095.090278]
+[ 2095.096227]        CPU0                    CPU1
+[ 2095.100779]        ----                    ----
+[ 2095.105331]   lock(slab_mutex);
+[ 2095.108486]                                lock(memcg_cache_ids_sem);
+[ 2095.114961]                                lock(slab_mutex);
+[ 2095.120649]   lock(kn->count#278);
+[ 2095.124068]
+[ 2095.124068]  *** DEADLOCK ***
 
-It is because of the get_online_cpus() and get_online_mems() calls in
-kmem_cache_shrink() invoked via the shrink sysfs file. To fix that, we
-have to use trylock to get the memory and cpu hotplug read locks. Since
-hotplug events are rare, it should be fine to refuse a kmem caches
-shrink operation when some hotplug events are in progress.
+To eliminate this possibility, we have to use trylock to acquire
+memcg_cache_ids_sem. Unlikely slab_mutex which can be acquired in
+many places, the memcg_cache_ids_sem write lock is only acquired
+in memcg_alloc_cache_id() to double the size of memcg_nr_cache_ids.
+So the chance of successive calls to memcg_alloc_cache_id() within
+a short time is pretty low. As a result, we can retry the read lock
+acquisition a few times if the first attempt fails.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- include/linux/memory_hotplug.h |  2 ++
- mm/memory_hotplug.c            |  5 +++++
- mm/slub.c                      | 19 +++++++++++++++----
- 3 files changed, 22 insertions(+), 4 deletions(-)
+ include/linux/memcontrol.h |  1 +
+ mm/memcontrol.c            |  5 +++++
+ mm/slub.c                  | 25 +++++++++++++++++++++++--
+ 3 files changed, 29 insertions(+), 2 deletions(-)
 
-diff --git a/include/linux/memory_hotplug.h b/include/linux/memory_hotplug.h
-index 93d9ada74ddd..4ec4b0a2f0fa 100644
---- a/include/linux/memory_hotplug.h
-+++ b/include/linux/memory_hotplug.h
-@@ -231,6 +231,7 @@ extern void get_page_bootmem(unsigned long ingo, struct page *page,
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index d275c72c4f8e..9285f14965b1 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1379,6 +1379,7 @@ extern struct workqueue_struct *memcg_kmem_cache_wq;
+ extern int memcg_nr_cache_ids;
+ void memcg_get_cache_ids(void);
+ void memcg_put_cache_ids(void);
++int  memcg_tryget_cache_ids(void);
  
- void get_online_mems(void);
- void put_online_mems(void);
-+int  tryget_online_mems(void);
- 
- void mem_hotplug_begin(void);
- void mem_hotplug_done(void);
-@@ -274,6 +275,7 @@ static inline int try_online_node(int nid)
- 
- static inline void get_online_mems(void) {}
- static inline void put_online_mems(void) {}
-+static inline int  tryget_online_mems(void) { return 1; }
- 
- static inline void mem_hotplug_begin(void) {}
- static inline void mem_hotplug_done(void) {}
-diff --git a/mm/memory_hotplug.c b/mm/memory_hotplug.c
-index fc0aad0bc1f5..38f9ccec9259 100644
---- a/mm/memory_hotplug.c
-+++ b/mm/memory_hotplug.c
-@@ -59,6 +59,11 @@ void get_online_mems(void)
- 	percpu_down_read(&mem_hotplug_lock);
+ /*
+  * Helper macro to loop through all memcg-specific caches. Callers must still
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 5beea03dd58a..9fa8535ff72a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -279,6 +279,11 @@ void memcg_get_cache_ids(void)
+ 	down_read(&memcg_cache_ids_sem);
  }
  
-+int tryget_online_mems(void)
++int memcg_tryget_cache_ids(void)
 +{
-+	return percpu_down_read_trylock(&mem_hotplug_lock);
++	return down_read_trylock(&memcg_cache_ids_sem);
 +}
 +
- void put_online_mems(void)
+ void memcg_put_cache_ids(void)
  {
- 	percpu_up_read(&mem_hotplug_lock);
+ 	up_read(&memcg_cache_ids_sem);
 diff --git a/mm/slub.c b/mm/slub.c
-index cf2114ca27f7..c4977ac3271b 100644
+index 44cb5215c17f..cf2114ca27f7 100644
 --- a/mm/slub.c
 +++ b/mm/slub.c
-@@ -5343,10 +5343,20 @@ static ssize_t shrink_show(struct kmem_cache *s, char *buf)
- static ssize_t shrink_store(struct kmem_cache *s,
- 			const char *buf, size_t length)
- {
--	if (buf[0] == '1')
--		kmem_cache_shrink(s);
--	else
-+	if (buf[0] != '1')
- 		return -EINVAL;
-+
-+	if (!cpus_read_trylock())
-+		return -EBUSY;
-+	if (!tryget_online_mems()) {
-+		length = -EBUSY;
-+		goto cpus_unlock_out;
-+	}
-+	kasan_cache_shrink(s);
-+	__kmem_cache_shrink(s);
-+	put_online_mems();
-+cpus_unlock_out:
-+	cpus_read_unlock();
- 	return length;
- }
- SLAB_ATTR(shrink);
-@@ -5654,7 +5664,8 @@ static ssize_t slab_attr_store(struct kobject *kobj,
+@@ -34,6 +34,7 @@
+ #include <linux/prefetch.h>
+ #include <linux/memcontrol.h>
+ #include <linux/random.h>
++#include <linux/delay.h>
  
- 		for (idx = 0; idx < cnt; idx++) {
- 			c = pcaches[idx];
--			attribute->store(c, buf, len);
-+			if (attribute->store(c, buf, len) == -EBUSY)
-+				err = -EBUSY;
- 			percpu_ref_put(&c->memcg_params.refcnt);
- 		}
- 		kfree(pcaches);
+ #include <trace/events/kmem.h>
+ 
+@@ -5572,6 +5573,7 @@ static ssize_t slab_attr_store(struct kobject *kobj,
+ 	    !list_empty(&s->memcg_params.children)) {
+ 		struct kmem_cache *c, **pcaches;
+ 		int idx, max, cnt = 0;
++		int retries = 3;
+ 		size_t size, old = s->max_attr_size;
+ 		struct memcg_cache_array *arr;
+ 
+@@ -5585,9 +5587,28 @@ static ssize_t slab_attr_store(struct kobject *kobj,
+ 			old = cmpxchg(&s->max_attr_size, size, len);
+ 		} while (old != size);
+ 
+-		memcg_get_cache_ids();
+-		max = memcg_nr_cache_ids;
++		/*
++		 * To avoid the following circular lock chain
++		 *
++		 *   kn->count#278 --> memcg_cache_ids_sem --> slab_mutex
++		 *
++		 * We need to use trylock to acquire memcg_cache_ids_sem.
++		 *
++		 * Since the write lock is acquired only in
++		 * memcg_alloc_cache_id() to double the size of
++		 * memcg_nr_cache_ids. The chance of successive
++		 * memcg_alloc_cache_id() calls within a short time is
++		 * very low except at the beginning where the number of
++		 * memory cgroups is low. So we retry a few times to get
++		 * the memcg_cache_ids_sem read lock.
++		 */
++		while (!memcg_tryget_cache_ids()) {
++			if (retries-- <= 0)
++				return -EBUSY;
++			msleep(100);
++		}
+ 
++		max = memcg_nr_cache_ids;
+ 		pcaches = kmalloc_array(max, sizeof(void *), GFP_KERNEL);
+ 		if (!pcaches) {
+ 			memcg_put_cache_ids();
 -- 
 2.18.1
 
