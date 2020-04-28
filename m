@@ -1,37 +1,122 @@
-From: Qian Cai <cai@lca.pw>
-Subject: Re: [PATCH v2 4/4] mm/slub: Fix sysfs shrink circular locking dependency
-Date: Mon, 27 Apr 2020 22:11:13 -0400
-Message-ID: <28BB8A1C-CFDF-4F5A-8686-537C3CE04818@lca.pw>
-References: <dbbfe685-7374-9a96-b7c2-684142746e30@redhat.com>
-Mime-Version: 1.0 (1.0)
+From: Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 16/18] mm: memcontrol: charge swapin pages on instantiation
+Date: Tue, 28 Apr 2020 15:49:41 +0900
+Message-ID: <CAAmzW4PQ=Bs=GcCWkORx6YDF-35TaeCYULprVqnVpCBSP9S0Kg@mail.gmail.com>
+References: <20200420221126.341272-1-hannes@cmpxchg.org> <20200420221126.341272-17-hannes@cmpxchg.org>
+ <20200424004441.GF13929@js1304-desktop> <20200424025135.GB464082@cmpxchg.org>
+Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lca.pw; s=google;
-        h=content-transfer-encoding:from:mime-version:subject:date:message-id
-         :references:cc:in-reply-to:to;
-        bh=7634cSYNnkEeZLF9qaQ+2AgpibDUSOrBUl4aX1MYmtc=;
-        b=ZRkzebefYI8C8YM+yiMqJuIxbcoHVPnVIoxvoL8/hgvaR74uXvHOvFl4346qeUIuUr
-         7GZbXnz+22W3LePUoSJ2gWqSXyMqfX1aUWsfxdOmpYbgkh8OzGZ3kG4YzmdclLPek/RO
-         oVJAxqoWqeclY26sXJcQs4W2JfjNzlx4Ey0FoMnFAYL9UxTnrZyoZzIjUm4gp+ozkZZB
-         vFMTJiTsxGPCrFmtoqo4y0cxos0KVXLX5nMiiWNh/Qy+CCpNKygxhfkIy3hgeOu7PyAq
-         oi2Y0OKlopHWpUuBSkiL0Ed0d0RcX12M4Hl2WS0lsStn0GM0VeqsPhoQqU3g67mlydnw
-         wclw==
-In-Reply-To: <dbbfe685-7374-9a96-b7c2-684142746e30@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=LDAfY6IMuAEGrWvee7RhilnIfuGLqiwe5VYND28O0Zw=;
+        b=NXZIXjwpYXLULNObRahj5gByNuIc0r19/uWT7O/oda8walfipdmJpBY1rPc1D8E4XV
+         Mcp5AxJAEhso0Yggwa9MT5aH7XfYpfIGWcpEN73Q5c8eVUJkXLKNkOzv8kS+d6p2/+bi
+         MSqgWc2wMs+ad4oOVM/k6Bb3hzv8ZjKuqoWeMfOjn79WRW7GuQhUQKpJkY8MnrC4ADZ7
+         XHVb+d9PA9QiMKEayiG9jqLeZr2bvDrNDlMsleqnn0mOFmuTZQFSTCQ+oVp0+Xd2Cs48
+         lCHRe4JRhamssskAVpjbzRGiOlB88EYJQcZMmijyfAHcHsHVxYsBwL9LzXPXPeA9aVE1
+         euxQ==
+In-Reply-To: <20200424025135.GB464082-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: Waiman Long <longman@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kernel-team-b10kYP2dOMg@public.gmane.org
 
+2020=EB=85=84 4=EC=9B=94 24=EC=9D=BC (=EA=B8=88) =EC=98=A4=EC=A0=84 11:51, =
+Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>=EB=8B=98=EC=9D=B4 =EC=9E=91=EC=84=B1:
+>
+> On Fri, Apr 24, 2020 at 09:44:42AM +0900, Joonsoo Kim wrote:
+> > On Mon, Apr 20, 2020 at 06:11:24PM -0400, Johannes Weiner wrote:
+> > > @@ -412,31 +407,43 @@ struct page *__read_swap_cache_async(swp_entry_=
+t entry, gfp_t gfp_mask,
+> > >                      */
+> > >                     cond_resched();
+> > >                     continue;
+> > > -           } else if (err)         /* swp entry is obsolete ? */
+> > > -                   break;
+> > > -
+> > > -           /* May fail (-ENOMEM) if XArray node allocation failed. *=
+/
+> > > -           __SetPageLocked(new_page);
+> > > -           __SetPageSwapBacked(new_page);
+> > > -           err =3D add_to_swap_cache(new_page, entry, gfp_mask & GFP=
+_KERNEL);
+> > > -           if (likely(!err)) {
+> > > -                   /* Initiate read into locked page */
+> > > -                   SetPageWorkingset(new_page);
+> > > -                   lru_cache_add_anon(new_page);
+> > > -                   *new_page_allocated =3D true;
+> > > -                   return new_page;
+> > >             }
+> > > -           __ClearPageLocked(new_page);
+> > > -           /*
+> > > -            * add_to_swap_cache() doesn't return -EEXIST, so we can =
+safely
+> > > -            * clear SWAP_HAS_CACHE flag.
+> > > -            */
+> > > -           put_swap_page(new_page, entry);
+> > > -   } while (err !=3D -ENOMEM);
+> > > +           if (err)                /* swp entry is obsolete ? */
+> > > +                   return NULL;
+> >
+> > "if (err)" is not needed since "!err" is already exiting the loop.
+>
+> But we don't want to leave the loop, we want to leave the
+> function. For example, if swapcache_prepare() says the entry is gone
+> (-ENOENT), we don't want to exit the loop and allocate a page for it.
 
+Yes, so I said "if (err)" is not needed.
+Just "return NULL;" would be enough.
 
-> On Apr 27, 2020, at 9:39 PM, Waiman Long <longman@redhat.com> wrote:
->=20
-> The sequence that was prevented by this patch is "kn->count --> mem_hotplu=
-g_lock.rwsem". This sequence isn't directly in the splat. Once this link is b=
-roken, the 3-lock circular loop cannot be formed. Maybe I should modify the c=
-ommit log to make this point more clear.
+> > > +
+> > > +   /*
+> > > +    * The swap entry is ours to swap in. Prepare a new page.
+> > > +    */
+> > > +
+> > > +   page =3D alloc_page_vma(gfp_mask, vma, addr);
+> > > +   if (!page)
+> > > +           goto fail_free;
+> > > +
+> > > +   __SetPageLocked(page);
+> > > +   __SetPageSwapBacked(page);
+> > > +
+> > > +   /* May fail (-ENOMEM) if XArray node allocation failed. */
+> > > +   if (add_to_swap_cache(page, entry, gfp_mask & GFP_KERNEL))
+> > > +           goto fail_unlock;
+> > > +
+> > > +   if (mem_cgroup_charge(page, NULL, gfp_mask & GFP_KERNEL, false))
+> > > +           goto fail_delete;
+> > > +
+> >
+> > I think that following order of operations is better than yours.
+> >
+> > 1. page alloc
+> > 2. memcg charge
+> > 3. swapcache_prepare
+> > 4. add_to_swap_cache
+> >
+> > Reason is that page allocation and memcg charging could take for a
+> > long time due to reclaim and other tasks waiting this swapcache page
+> > could be blocked inbetween swapcache_prepare() and add_to_swap_cache().
+>
+> I see how that would be preferable, but memcg charging actually needs
+> the swap(cache) information to figure out the cgroup that owned it at
+> swapout, then uncharge the swapcache and drop the swap cgroup record.
+>
+> Maybe it could be done, but I'm not sure that level of surgery would
+> be worth the benefits? Whoever else would be trying to swap the page
+> in at the same time is likely in the same memory situation, and would
+> not necessarily be able to allocate pages any faster.
 
-I don=E2=80=99t know what you are talking about. Once trylock succeed once, y=
-ou will have kn->count =E2=80=94> cpu/memory_hotplug_lock.=
+Hmm, at least, some modifications are needed since waiting task would do
+busy waiting in the loop and it wastes overall system cpu time.
+
+I still think that changing operation order is better since it's possible t=
+hat
+later task allocates a page faster though it's not usual case. However, I
+also agree your reasoning so will not insist more.
+
+Thanks.
