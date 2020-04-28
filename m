@@ -1,76 +1,37 @@
-From: Waiman Long <longman@redhat.com>
-Subject: Re: [PATCH v2 4/4] mm/slub: Fix sysfs shrink circular locking
- dependency
-Date: Mon, 27 Apr 2020 21:39:44 -0400
-Message-ID: <dbbfe685-7374-9a96-b7c2-684142746e30@redhat.com>
-References: <20200427235621.7823-5-longman@redhat.com>
- <55509F31-A503-4148-B209-B4D062AD0ED7@lca.pw>
-Mime-Version: 1.0
+From: Qian Cai <cai@lca.pw>
+Subject: Re: [PATCH v2 4/4] mm/slub: Fix sysfs shrink circular locking dependency
+Date: Mon, 27 Apr 2020 22:11:13 -0400
+Message-ID: <28BB8A1C-CFDF-4F5A-8686-537C3CE04818@lca.pw>
+References: <dbbfe685-7374-9a96-b7c2-684142746e30@redhat.com>
+Mime-Version: 1.0 (1.0)
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588037995;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=AWt0oKx+pB01zuowl3HYopTA8sOUDIn9j7BD+UlNWuQ=;
-        b=Ouxne/IIEAnH0KL7fRqf8jqXc+MyoCV+MG/DFOHJ2JUOiZWOuIpHSckKTXcIFMkQAxrB7G
-        58ELjB7iHbLsKus6uw70DYwyKKInSklS92JQ/pOnZKSYmGcT+mpp5ETiS+GfH5pZN24O8Y
-        1qHmFOMifiyQz0FKGI+wCgOVSAFj2ss=
-In-Reply-To: <55509F31-A503-4148-B209-B4D062AD0ED7@lca.pw>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=lca.pw; s=google;
+        h=content-transfer-encoding:from:mime-version:subject:date:message-id
+         :references:cc:in-reply-to:to;
+        bh=7634cSYNnkEeZLF9qaQ+2AgpibDUSOrBUl4aX1MYmtc=;
+        b=ZRkzebefYI8C8YM+yiMqJuIxbcoHVPnVIoxvoL8/hgvaR74uXvHOvFl4346qeUIuUr
+         7GZbXnz+22W3LePUoSJ2gWqSXyMqfX1aUWsfxdOmpYbgkh8OzGZ3kG4YzmdclLPek/RO
+         oVJAxqoWqeclY26sXJcQs4W2JfjNzlx4Ey0FoMnFAYL9UxTnrZyoZzIjUm4gp+ozkZZB
+         vFMTJiTsxGPCrFmtoqo4y0cxos0KVXLX5nMiiWNh/Qy+CCpNKygxhfkIy3hgeOu7PyAq
+         oi2Y0OKlopHWpUuBSkiL0Ed0d0RcX12M4Hl2WS0lsStn0GM0VeqsPhoQqU3g67mlydnw
+         wclw==
+In-Reply-To: <dbbfe685-7374-9a96-b7c2-684142746e30@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Qian Cai <cai@lca.pw>
+Content-Type: text/plain; charset="utf-8"
+To: Waiman Long <longman@redhat.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>
 
-On 4/27/20 8:13 PM, Qian Cai wrote:
->
->> On Apr 27, 2020, at 7:56 PM, Waiman Long <longman@redhat.com> wrote:
->>
->> A lockdep splat is observed by echoing "1" to the shrink sysfs file
->> and then shutting down the system:
->>
->> [  167.473392] Chain exists of:
->> [  167.473392]   kn->count#279 --> mem_hotplug_lock.rw_sem --> slab_mu=
-tex
->> [  167.473392]
->> [  167.484323]  Possible unsafe locking scenario:
->> [  167.484323]
->> [  167.490273]        CPU0                    CPU1
->> [  167.494825]        ----                    ----
->> [  167.499376]   lock(slab_mutex);
->> [  167.502530]                                lock(mem_hotplug_lock.rw=
-_sem);
->> [  167.509356]                                lock(slab_mutex);
->> [  167.515044]   lock(kn->count#279);
->> [  167.518462]
->> [  167.518462]  *** DEADLOCK ***
->>
->> It is because of the get_online_cpus() and get_online_mems() calls in
->> kmem_cache_shrink() invoked via the shrink sysfs file. To fix that, we
->> have to use trylock to get the memory and cpu hotplug read locks. Sinc=
-e
->> hotplug events are rare, it should be fine to refuse a kmem caches
->> shrink operation when some hotplug events are in progress.
-> I don=E2=80=99t understand how trylock could prevent a splat. The funda=
-mental issue is that in sysfs slab store case, the locking order (once tr=
-ylock succeed) is,
->
-> kn->count =E2=80=94> cpu/memory_hotplug
->
-> But we have the existing reverse chain everywhere.
->
-> cpu/memory_hotplug =E2=80=94> slab_mutex =E2=80=94> kn->count
->
-The sequence that was prevented by this patch is "kn->count -->=20
-mem_hotplug_lock.rwsem". This sequence isn't directly in the splat. Once=20
-this link is broken, the 3-lock circular loop cannot be formed. Maybe I=20
-should modify the commit log to make this point more clear.
-
-Cheers,
-Longman
 
 
+> On Apr 27, 2020, at 9:39 PM, Waiman Long <longman@redhat.com> wrote:
+>=20
+> The sequence that was prevented by this patch is "kn->count --> mem_hotplu=
+g_lock.rwsem". This sequence isn't directly in the splat. Once this link is b=
+roken, the 3-lock circular loop cannot be formed. Maybe I should modify the c=
+ommit log to make this point more clear.
+
+I don=E2=80=99t know what you are talking about. Once trylock succeed once, y=
+ou will have kn->count =E2=80=94> cpu/memory_hotplug_lock.=
