@@ -1,137 +1,123 @@
-From: Yafang Shao <laoar.shao@gmail.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [PATCH 1/2] mm, memcg: Avoid stale protection values when cgroup
  is above protection
-Date: Wed, 29 Apr 2020 18:53:03 +0800
-Message-ID: <CALOAHbAosoU=+iPgD+TeU_iDXTV7W_WcFdKCi2fdwwyvutG2zQ@mail.gmail.com>
-References: <cover.1588092152.git.chris@chrisdown.name> <d454fca5d6b38b74d8dc35141e8519b02089a698.1588092152.git.chris@chrisdown.name>
+Date: Wed, 29 Apr 2020 10:03:30 -0400
+Message-ID: <20200429140330.GA5054@cmpxchg.org>
+References: <cover.1588092152.git.chris@chrisdown.name>
+ <d454fca5d6b38b74d8dc35141e8519b02089a698.1588092152.git.chris@chrisdown.name>
  <20200429101510.GA28637@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=O+RxET0x+5VztvWmaNq+4wuYITGQNc1qhSl70TM00l4=;
-        b=dOc7FDNQvz5BsTcW0cOnufOwvSjbv61MVv9RSAGMws+vx8KCvc8/vpeiHrKOJdcHde
-         TYpJT0Ag+yxX6IFD9nEwVCTI8R4bmztJX4yGtfp7gdVtw6OoB5REcVRi9kRUBp6h3veK
-         Yt/kDMGzLq06ib6OsCIik3S3dED/SLRyF+/ALZlFF48V9f2hjVZZ2FtS7+3WjCrOWY8c
-         VL9Kwx/Os8TBQAAuwEhW39IhBLm36dijb1ZJmqy0FqWVFSjOUSnB0RE/y8YGwG4hZ0iR
-         Q+IwZQKlrgRWGXr5fK8XiBhbUV/M+2UFShTT7PuigRTl0DFjGmts/G3fjRUPkznuXEH8
-         R5vQ==
-In-Reply-To: <20200429101510.GA28637@dhcp22.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=3AIdfHtqoNsFBzshUFCQLbur342SiMxvBTxBWk02TNs=;
+        b=Z29GhzAshaBzwKo0DDBUn+TJtaUBjsuW0107/RWcL4BRG19OLBEyxAdycULUE+WSKj
+         cBaOxrI9tgM4HLh4Oap3ItOhRh6fOO8ghJ5gBawufm1ciYNynW0iSO3Hojo2mnCLaylF
+         YEwECLyVFEiKYavaRD/vtGTKNyJIIP6DtfEnTNDKrCj5cndhve6ozi8Yq1Gymk7qKzkh
+         9nCRNm0q5RFhvgVCbRfVwM9EmcIMYYD90xCU7ObMq59Lxx2JBz4EH3Tjno0hxptvKui7
+         SDCZE2HvLnOd61BAFSR0x4m/UaXIlcc5dFs0ow+NXWUAkHs/jxVwux4H/L1zjDSWJ1sN
+         w+wA==
+Content-Disposition: inline
+In-Reply-To: <20200429101510.GA28637-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Apr 29, 2020 at 6:15 PM Michal Hocko <mhocko@kernel.org> wrote:
->
+On Wed, Apr 29, 2020 at 12:15:10PM +0200, Michal Hocko wrote:
 > On Tue 28-04-20 19:26:47, Chris Down wrote:
-> > From: Yafang Shao <laoar.shao@gmail.com>
-> >
+> > From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > 
 > > A cgroup can have both memory protection and a memory limit to isolate
 > > it from its siblings in both directions - for example, to prevent it
 > > from being shrunk below 2G under high pressure from outside, but also
 > > from growing beyond 4G under low pressure.
-> >
+> > 
 > > Commit 9783aa9917f8 ("mm, memcg: proportional memory.{low,min} reclaim")
 > > implemented proportional scan pressure so that multiple siblings in
 > > excess of their protection settings don't get reclaimed equally but
 > > instead in accordance to their unprotected portion.
-> >
+> > 
 > > During limit reclaim, this proportionality shouldn't apply of course:
 > > there is no competition, all pressure is from within the cgroup and
 > > should be applied as such. Reclaim should operate at full efficiency.
-> >
+> > 
 > > However, mem_cgroup_protected() never expected anybody to look at the
 > > effective protection values when it indicated that the cgroup is above
 > > its protection. As a result, a query during limit reclaim may return
 > > stale protection values that were calculated by a previous reclaim cycle
 > > in which the cgroup did have siblings.
-> >
+> > 
 > > When this happens, reclaim is unnecessarily hesitant and potentially
 > > slow to meet the desired limit. In theory this could lead to premature
 > > OOM kills, although it's not obvious this has occurred in practice.
->
+> 
 > Thanks this describes the underlying problem. I would be also explicit
 > that the issue should be visible only on tail memcgs which have both
 > max/high and protection configured and the effect depends on the
 > difference between the two (the smaller it is the largrger the effect).
->
+> 
 > There is no mention about the fix. The patch resets effective values for
 > the reclaim root and I've had some concerns about that
-> http://lkml.kernel.org/r/20200424162103.GK11591@dhcp22.suse.cz.
+> http://lkml.kernel.org/r/20200424162103.GK11591-2MMpYkNvuYA6bu5BqYkRsg@public.gmane.org
 > Johannes has argued that other races are possible and I didn't get to
 > think about it thoroughly. But this patch is introducing a new
-> possibility of breaking protection.
-
-Agreed with Michal that more writes will cause more bugs.
-We should operate the volatile emin and elow as less as possible.
-
->  If we want to have a quick and
+> possibility of breaking protection. If we want to have a quick and
 > simple fix that would be easier to backport to older kernels then I
 > would feel much better if we simply workedaround the problem as
-> suggested earlier http://lkml.kernel.org/r/20200423061629.24185-1-laoar.shao@gmail.com
-
-+1
-
-This should be the right workaround to fix the current issue and it is
-worth to be backported to the stable kernel.
-
+> suggested earlier http://lkml.kernel.org/r/20200423061629.24185-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 > We can rework the effective values calculation to be more robust against
 > races on top of that because this is likely a more tricky thing to do.
->
-> > Fixes: 9783aa9917f8 ("mm, memcg: proportional memory.{low,min} reclaim")
-> > Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
-> > Signed-off-by: Chris Down <chris@chrisdown.name>
-> > Cc: Johannes Weiner <hannes@cmpxchg.org>
-> > Cc: Michal Hocko <mhocko@kernel.org>
-> > Cc: Roman Gushchin <guro@fb.com>
-> >
-> > [hannes@cmpxchg.org: rework code comment]
-> > [hannes@cmpxchg.org: changelog]
-> > [chris@chrisdown.name: fix store tear]
-> > [chris@chrisdown.name: retitle]
-> > ---
-> >  mm/memcontrol.c | 13 ++++++++++++-
-> >  1 file changed, 12 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 0be00826b832..b0374be44e9e 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -6392,8 +6392,19 @@ enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
-> >
-> >       if (!root)
-> >               root = root_mem_cgroup;
-> > -     if (memcg == root)
-> > +     if (memcg == root) {
-> > +             /*
-> > +              * The cgroup is the reclaim root in this reclaim
-> > +              * cycle, and therefore not protected. But it may have
-> > +              * stale effective protection values from previous
-> > +              * cycles in which it was not the reclaim root - for
-> > +              * example, global reclaim followed by limit reclaim.
-> > +              * Reset these values for mem_cgroup_protection().
-> > +              */
-> > +             WRITE_ONCE(memcg->memory.emin, 0);
-> > +             WRITE_ONCE(memcg->memory.elow, 0);
-> >               return MEMCG_PROT_NONE;
-> > +     }
-> >
-> >       usage = page_counter_read(&memcg->memory);
-> >       if (!usage)
-> > --
-> > 2.26.2
->
-> --
-> Michal Hocko
-> SUSE Labs
 
+Well, can you please *do* think more thoroughly about what I wrote,
+instead of pushing for an alternative patch on gut feeling alone?
 
+Especially when you imply that this should be a stable patch.
 
--- 
-Thanks
-Yafang
+Not only does your alternative patch not protect against the race you
+are worried about, the race itself doesn't matter. Racing reclaimers
+will write their competing views of the world into the shared state on
+all other levels anyway.
+
+And that's okay. If the configuration and memory usage is such that
+there is at least one reclaimer that scans without any protection
+(like a limit reclaimer), it's not a problem when a second reclaimer
+that meant to do protected global reclaim will also do one iteration
+without protection. It's no different than if a second thread had
+entered limit reclaim through another internal allocation.
+
+There is no semantical violation with the race in your patch or the
+race in this patch. Any effective protection that becomes visible is
+1) permitted by the configuration, but 2) also triggered *right now*
+by an acute need to reclaim memory with these parameters.
+
+The *right now* part is important. That's what's broken before either
+patch, and that's what we're fixing: to see really, really *old* stale
+that might not be representative of the config semantics anymore.
+
+Since you haven't linked to my email, here is my counter argument to
+the alternative patch "fixing" this race somehow.
+
+A reclaim:
+
+  root
+     `- A (low=2G, max=3G -> elow=0)
+        `- A1 (low=0G -> elow=0)
+
+Global reclaim:
+
+  root
+     `- A (low=2G, max=3G -> elow=2G)
+        `- A1 (low=0G -> elow=2G)
+
+During global reclaim, A1 is supposed to have 2G effective low
+protection. If A limit reclaim races, it can set A1's elow to
+0. Global reclaim will now query mem_cgroup_protection(root, A1), the
+root == memcg check you insist we add will fail and it'll reclaim A1
+without protection.
+
+The alternative patch is nothing except slightly worse code.
