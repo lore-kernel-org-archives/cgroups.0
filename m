@@ -1,73 +1,180 @@
-From: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v5 0/4] Charge loop device i/o to issuing cgroup
-Date: Wed, 29 Apr 2020 18:21:20 +0200
-Message-ID: <20200429162120.GB12716@quack2.suse.cz>
-References: <20200428161355.6377-1-schatzberg.dan@gmail.com>
- <20200428214653.GD2005@dread.disaster.area>
- <20200429102540.GA12716@quack2.suse.cz>
- <20200429142230.GE5462@mtj.thefacebook.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 1/2] mm, memcg: Avoid stale protection values when cgroup
+ is above protection
+Date: Wed, 29 Apr 2020 12:56:27 -0400
+Message-ID: <20200429165627.GA24768@cmpxchg.org>
+References: <cover.1588092152.git.chris@chrisdown.name>
+ <d454fca5d6b38b74d8dc35141e8519b02089a698.1588092152.git.chris@chrisdown.name>
+ <20200429101510.GA28637@dhcp22.suse.cz>
+ <20200429140330.GA5054@cmpxchg.org>
+ <20200429150414.GI28637@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=rnHHxaQhtT4+RdRDGU5tOE+9a9rrpNd1LdRaMA/8Xws=;
+        b=FvcA1FjygqWE42unECNdDBWBlDyRl6w5nneqciqqk+57WN0ZdyDO6khok8kIDfjNuk
+         fAGZ9N28xSsYZPPUmEqUALlpo2Yb+Q6xQMtLX3Bu2UqauKHvzReNsR4x0dLu7pVondaP
+         NuiMQ9QOMCj93k0M3T29tJbkldsoUpHqoP6DDWrOEEIPaTfKgJ1U0WTgqR3H2FB+bzAP
+         JHKyV+U7REU96PTrWNZ0wkeHwhy+D7NiK2DmEHNClIfJASJdO3iHTsY5EnKRCxN0hgLz
+         xhSVEIVZD7MKcIJih1Wwz02CwM2l4WwkdpGReuC+8V1P0sdL3hgqnFGkXvSgV4C+6B7x
+         g3KQ==
 Content-Disposition: inline
-In-Reply-To: <20200429142230.GE5462-146+VewaZzwNjtGbbfXrCEEOCMrvLtNR@public.gmane.org>
+In-Reply-To: <20200429150414.GI28637-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Peter Zijlstra (Intel)" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Mathieu Desnoyers <mathieu.desnoyers-vg+e7yoeK/dWk0Htik3J/w@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1562vlLw7lfJaRg@public.gmane.org>
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed 29-04-20 10:22:30, Tejun Heo wrote:
-> Hello,
-> 
-> On Wed, Apr 29, 2020 at 12:25:40PM +0200, Jan Kara wrote:
-> > Yeah, I was thinking about the same when reading the patch series
-> > description. We already have some cgroup workarounds for btrfs kthreads if
-> > I remember correctly, we have cgroup handling for flush workers, now we are
-> > adding cgroup handling for loopback device workers, and soon I'd expect
-> > someone comes with a need for DM/MD worker processes and IMHO it's getting
-> > out of hands because the complexity spreads through the kernel with every
-> > subsystem comming with slightly different solution to the problem and also
-> > the number of kthreads gets multiplied by the number of cgroups. So I
-> > agree some generic solution how to approach IO throttling of kthreads /
-> > workers would be desirable.
+On Wed, Apr 29, 2020 at 05:04:14PM +0200, Michal Hocko wrote:
+> On Wed 29-04-20 10:03:30, Johannes Weiner wrote:
+> > On Wed, Apr 29, 2020 at 12:15:10PM +0200, Michal Hocko wrote:
+> > > On Tue 28-04-20 19:26:47, Chris Down wrote:
+> > > > From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> > > > 
+> > > > A cgroup can have both memory protection and a memory limit to isolate
+> > > > it from its siblings in both directions - for example, to prevent it
+> > > > from being shrunk below 2G under high pressure from outside, but also
+> > > > from growing beyond 4G under low pressure.
+> > > > 
+> > > > Commit 9783aa9917f8 ("mm, memcg: proportional memory.{low,min} reclaim")
+> > > > implemented proportional scan pressure so that multiple siblings in
+> > > > excess of their protection settings don't get reclaimed equally but
+> > > > instead in accordance to their unprotected portion.
+> > > > 
+> > > > During limit reclaim, this proportionality shouldn't apply of course:
+> > > > there is no competition, all pressure is from within the cgroup and
+> > > > should be applied as such. Reclaim should operate at full efficiency.
+> > > > 
+> > > > However, mem_cgroup_protected() never expected anybody to look at the
+> > > > effective protection values when it indicated that the cgroup is above
+> > > > its protection. As a result, a query during limit reclaim may return
+> > > > stale protection values that were calculated by a previous reclaim cycle
+> > > > in which the cgroup did have siblings.
+> > > > 
+> > > > When this happens, reclaim is unnecessarily hesitant and potentially
+> > > > slow to meet the desired limit. In theory this could lead to premature
+> > > > OOM kills, although it's not obvious this has occurred in practice.
+> > > 
+> > > Thanks this describes the underlying problem. I would be also explicit
+> > > that the issue should be visible only on tail memcgs which have both
+> > > max/high and protection configured and the effect depends on the
+> > > difference between the two (the smaller it is the largrger the effect).
+> > > 
+> > > There is no mention about the fix. The patch resets effective values for
+> > > the reclaim root and I've had some concerns about that
+> > > http://lkml.kernel.org/r/20200424162103.GK11591-2MMpYkNvuYA6bu5BqYkRsg@public.gmane.org
+> > > Johannes has argued that other races are possible and I didn't get to
+> > > think about it thoroughly. But this patch is introducing a new
+> > > possibility of breaking protection. If we want to have a quick and
+> > > simple fix that would be easier to backport to older kernels then I
+> > > would feel much better if we simply workedaround the problem as
+> > > suggested earlier http://lkml.kernel.org/r/20200423061629.24185-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+> > > We can rework the effective values calculation to be more robust against
+> > > races on top of that because this is likely a more tricky thing to do.
 > > 
-> > OTOH I don't have a great idea how the generic infrastructure should look
-> > like...
+> > Well, can you please *do* think more thoroughly about what I wrote,
+> > instead of pushing for an alternative patch on gut feeling alone?
+> > 
+> > Especially when you imply that this should be a stable patch.
 > 
-> I don't really see a way around that. The only generic solution would be
-> letting all IOs through as root and handle everything through backcharging,
-> which we already can do as backcharging is already in use to handle metadata
-> updates which can't be controlled directly. However, doing that for all IOs
-> would make the control quality a lot worse as all control would be based on
-> first incurring deficit and then try to punish the issuer after the fact.
+> The patch has a Fixes tag and so it is not unrealistic to assume that it
+> will hit older trees. I wasn't really implying stable tree backport and
+> I do not think this is a stable material.
 
-Yeah, it will be probably somewhat worse but OTOH given we'd track the IO
-balance per cgroup there will deficit only when a cgroup is starting so it
-could be bearable. I'm more concerned about issues like that for some IO
-controllers (e.g. for blk-iolatency or for the work preserving
-controllers), it is not obvious how to sensibly estimate some cost to
-charge to a cgroup since these controllers are more about giving priority
-to IO of some cgroup in presence of IO from another cgroup rather than some
-hard throughput limit or something like that.
+Okay, thanks for clarifying.
 
-> The infrastructure work done to make IO control work for btrfs is generic
-> and the changes needed on btrfs side was pretty small. Most of the work was
-> identifying non-regular IO pathways (bouncing through different kthreads and
-> whatnot) and making sure they're annotating IO ownership and the needed
-> mechanism correctly. The biggest challenge probably is ensuring that the
-> filesystem doesn't add ordering dependency between separate data IOs, which
-> is a nice property to have with or without cgroup support.
+> > Not only does your alternative patch not protect against the race you
+> > are worried about, the race itself doesn't matter. Racing reclaimers
+> > will write their competing views of the world into the shared state on
+> > all other levels anyway.
+> > 
+> > And that's okay. If the configuration and memory usage is such that
+> > there is at least one reclaimer that scans without any protection
+> > (like a limit reclaimer), it's not a problem when a second reclaimer
+> > that meant to do protected global reclaim will also do one iteration
+> > without protection. It's no different than if a second thread had
+> > entered limit reclaim through another internal allocation.
 > 
-> That leaves the nesting drivers, loop and md/dm. Given that they sit in the
-> middle of IO stack and proxy a lot of its roles, they'll have to be updated
-> to be transparent in terms of cgroup ownership if IO control is gonna work
-> through them. Maybe we can have a common infra shared between loop, dm and
-> md but they aren't many and may also be sufficiently different. idk
+> Yes I do agree here.
 
-Yeah, as I said, I don't really have a better alternative :-|
+Okay.
 
-								Honza
--- 
-Jan Kara <jack-IBi9RG/b67k@public.gmane.org>
-SUSE Labs, CR
+> > There is no semantical violation with the race in your patch or the
+> > race in this patch. Any effective protection that becomes visible is
+> > 1) permitted by the configuration, but 2) also triggered *right now*
+> > by an acute need to reclaim memory with these parameters.
+> > 
+> > The *right now* part is important. That's what's broken before either
+> > patch, and that's what we're fixing: to see really, really *old* stale
+> > that might not be representative of the config semantics anymore.
+> 
+> No disagreement here either. But please remember that the example I've
+> given is a clear violation of the protection. Let me paste it here so
+> that we have both examples in one email:
+> : Let's have global and A's reclaim in parallel:
+> :  |
+> :  A (low=2G, usage = 3G, max = 3G, children_low_usage = 1.5G)
+> :  |\
+> :  | C (low = 1G, usage = 2.5G)
+> :  B (low = 1G, usage = 0.5G)
+> : 
+> : for A reclaim we have
+> : B.elow = B.low
+> : C.elow = C.low
+> : 
+> : For the global reclaim
+> : A.elow = A.low
+> : B.elow = min(B.usage, B.low) because children_low_usage <= A.elow
+> : C.elow = min(C.usage, C.low)
+> : 
+> : With the effective values reseting we have A reclaim
+> : A.elow = 0
+> : B.elow = B.low
+> : C.elow = C.low
+> : 
+> : and global reclaim could see the above and then
+> : B.elow = C.elow = 0 because children_low_usage > A.elow
+> 
+> I hope we both agree that B shouldn't be reclaimed whether the reclaim
+> comes from A or above A. The race is not possible with with the patch
+> working around the problem in mem_cgroup_protection().
+
+Okay, I misread this the first time.
+
+The problem is that in limit reclaim we reset A.elow in anticipation
+of treating B and C as the top-level groups of our scan cycle and will
+be using their B.low and C.low verbatim. Global reclaim can then visit
+them before us and propagate A.elow=0 down to them.
+
+But doesn't this problem cut both ways? Say you have the following
+subtree:
+
+	A (memory.max=10G, memory.low=2G)
+	`- A1 (memory.low=max)
+	`- A2 (memory.low=max)
+	`- A3 (memory.low=0)
+
+A similar race can give A1 and A2 absolute exemption from global
+reclaim instead of proportional distribution of the parental 2G.
+
+The chances of that happening could be boosted maliciously by
+triggering many short limit reclaim invocations, like ioless cache
+from sparse files, to keep overwriting A1.elow and A2.elow to max.
+
+I think to address this, we need a more comprehensive solution and
+introduce some form of serialization. I'm not sure yet how that would
+look like yet.
+
+I'm still not sure it's worth having a somewhat ugly workaround in
+mem_cgroup_protection() to protect against half of the bug. If you
+think so, the full problem should at least be documented and marked
+XXX or something.
+
+In practice, I doubt this matters all that much because limit reclaim
+and global reclaim tend to occur in complementary
+containerization/isolation strategies, not heavily simultaneously.
