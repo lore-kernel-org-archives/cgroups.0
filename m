@@ -1,98 +1,71 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 1/2] mm, memcg: Avoid stale protection values when cgroup
- is above protection
-Date: Wed, 29 Apr 2020 10:19:45 -0400
-Message-ID: <20200429141945.GB5054@cmpxchg.org>
-References: <cover.1588092152.git.chris@chrisdown.name>
- <d454fca5d6b38b74d8dc35141e8519b02089a698.1588092152.git.chris@chrisdown.name>
- <20200429101510.GA28637@dhcp22.suse.cz>
- <CALOAHbAosoU=+iPgD+TeU_iDXTV7W_WcFdKCi2fdwwyvutG2zQ@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v5 0/4] Charge loop device i/o to issuing cgroup
+Date: Wed, 29 Apr 2020 10:22:30 -0400
+Message-ID: <20200429142230.GE5462@mtj.thefacebook.com>
+References: <20200428161355.6377-1-schatzberg.dan@gmail.com>
+ <20200428214653.GD2005@dread.disaster.area>
+ <20200429102540.GA12716@quack2.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=WY+s1xElLyYapOX+xyVfCwGq2ouDJfw9qAn8e1SedMM=;
-        b=sM10OsRR0LNY4pcjhbdJnhoISXS/L4LnoeViGpuwZ2v+5WA8cDi0zGpia6vF/Lnywe
-         9yDC5Ysp9d3GxBOYO/Jy5r525crsR9ZR6Pel0O38S0Xl0kMiRfmh7zpL/aA3BBu81rMm
-         tmR84XZpKOhWYZyP9PUd9L+TFewI/8EMjEjYSUpVDVJ6+3CAapKUaVFTXct61QYcva81
-         gvSR+ox35ebLokYCKn2R0DeTO0+BRyx56hxhXWqLfCHar8ss9urE1ne3VXSINkkEOwdA
-         5+q38c+uJC7z15wq2a3UQbl+6dVrM4vvJ4ZWX9Y2UXi2JxONkL/tF3icTij/9A/Vqv9y
-         GtaQ==
+        bh=U7CYd6LIahwn6A9pI4DbAiS85+k2nqU8qqxir3NJPME=;
+        b=PeLTcvnmSUGReSfTmkROy81aqLORMcNPoEzmktkHawEeaPG9HbIpOgkxRx5xsqTpQN
+         9WOnAOZe+xH0FileYYcNrelmGXfu6azM0W+0j00Gqz4DY4IH06QvwINlT5pc+HSxL/pK
+         tL9rAA6decLe+wa6vxDWO8g3zqtmubZwuiwPEoUptoWJA3+7KoA+MkgAtnVVhQJUM9DY
+         wpTIQHbFB4U9kPA+rHftrWb7uGODB+OAnl59MfqEMDVGQdAPHEeoDvi1SxtdIuuy/avM
+         iKMnjfgO8zhSUvKYO2UoRaNkEWLAgHOzWvKrcLOGJ2S3I72q5M8zGXeI3EwZ/vf7SFyv
+         ke6A==
 Content-Disposition: inline
-In-Reply-To: <CALOAHbAosoU=+iPgD+TeU_iDXTV7W_WcFdKCi2fdwwyvutG2zQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20200429102540.GA12716@quack2.suse.cz>
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Jan Kara <jack@suse.cz>
+Cc: Dave Chinner <david@fromorbit.com>, Dan Schatzberg <schatzberg.dan@gmail.com>, Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>, Amir Goldstein <amir73il@gmail.com>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Yang Shi <yang.shi@linux.alibaba.com>, Ingo Molnar <mingo@kernel.org>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Andrea
 
-On Wed, Apr 29, 2020 at 06:53:03PM +0800, Yafang Shao wrote:
-> On Wed, Apr 29, 2020 at 6:15 PM Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> >
-> > On Tue 28-04-20 19:26:47, Chris Down wrote:
-> > > From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> > >
-> > > A cgroup can have both memory protection and a memory limit to isolate
-> > > it from its siblings in both directions - for example, to prevent it
-> > > from being shrunk below 2G under high pressure from outside, but also
-> > > from growing beyond 4G under low pressure.
-> > >
-> > > Commit 9783aa9917f8 ("mm, memcg: proportional memory.{low,min} reclaim")
-> > > implemented proportional scan pressure so that multiple siblings in
-> > > excess of their protection settings don't get reclaimed equally but
-> > > instead in accordance to their unprotected portion.
-> > >
-> > > During limit reclaim, this proportionality shouldn't apply of course:
-> > > there is no competition, all pressure is from within the cgroup and
-> > > should be applied as such. Reclaim should operate at full efficiency.
-> > >
-> > > However, mem_cgroup_protected() never expected anybody to look at the
-> > > effective protection values when it indicated that the cgroup is above
-> > > its protection. As a result, a query during limit reclaim may return
-> > > stale protection values that were calculated by a previous reclaim cycle
-> > > in which the cgroup did have siblings.
-> > >
-> > > When this happens, reclaim is unnecessarily hesitant and potentially
-> > > slow to meet the desired limit. In theory this could lead to premature
-> > > OOM kills, although it's not obvious this has occurred in practice.
-> >
-> > Thanks this describes the underlying problem. I would be also explicit
-> > that the issue should be visible only on tail memcgs which have both
-> > max/high and protection configured and the effect depends on the
-> > difference between the two (the smaller it is the largrger the effect).
-> >
-> > There is no mention about the fix. The patch resets effective values for
-> > the reclaim root and I've had some concerns about that
-> > http://lkml.kernel.org/r/20200424162103.GK11591-2MMpYkNvuYA6bu5BqYkRsg@public.gmane.org
-> > Johannes has argued that other races are possible and I didn't get to
-> > think about it thoroughly. But this patch is introducing a new
-> > possibility of breaking protection.
+Hello,
+
+On Wed, Apr 29, 2020 at 12:25:40PM +0200, Jan Kara wrote:
+> Yeah, I was thinking about the same when reading the patch series
+> description. We already have some cgroup workarounds for btrfs kthreads if
+> I remember correctly, we have cgroup handling for flush workers, now we are
+> adding cgroup handling for loopback device workers, and soon I'd expect
+> someone comes with a need for DM/MD worker processes and IMHO it's getting
+> out of hands because the complexity spreads through the kernel with every
+> subsystem comming with slightly different solution to the problem and also
+> the number of kthreads gets multiplied by the number of cgroups. So I
+> agree some generic solution how to approach IO throttling of kthreads /
+> workers would be desirable.
 > 
-> Agreed with Michal that more writes will cause more bugs.
-> We should operate the volatile emin and elow as less as possible.
+> OTOH I don't have a great idea how the generic infrastructure should look
+> like...
 
-That's not a technical argument.
+I don't really see a way around that. The only generic solution would be
+letting all IOs through as root and handle everything through backcharging,
+which we already can do as backcharging is already in use to handle metadata
+updates which can't be controlled directly. However, doing that for all IOs
+would make the control quality a lot worse as all control would be based on
+first incurring deficit and then try to punish the issuer after the fact.
 
-If races are a problem, it doesn't matter that they're rare. If
-they're not a problem, it doesn't matter that they're frequent.
+The infrastructure work done to make IO control work for btrfs is generic
+and the changes needed on btrfs side was pretty small. Most of the work was
+identifying non-regular IO pathways (bouncing through different kthreads and
+whatnot) and making sure they're annotating IO ownership and the needed
+mechanism correctly. The biggest challenge probably is ensuring that the
+filesystem doesn't add ordering dependency between separate data IOs, which
+is a nice property to have with or without cgroup support.
 
-> >  If we want to have a quick and
-> > simple fix that would be easier to backport to older kernels then I
-> > would feel much better if we simply workedaround the problem as
-> > suggested earlier http://lkml.kernel.org/r/20200423061629.24185-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-> 
-> +1
-> 
-> This should be the right workaround to fix the current issue and it is
-> worth to be backported to the stable kernel.
+That leaves the nesting drivers, loop and md/dm. Given that they sit in the
+middle of IO stack and proxy a lot of its roles, they'll have to be updated
+to be transparent in terms of cgroup ownership if IO control is gonna work
+through them. Maybe we can have a common infra shared between loop, dm and
+md but they aren't many and may also be sufficiently different. idk
 
-From Documentation/process/stable-kernel-rules.rst:
+Thanks.
 
- - It must fix a real bug that bothers people (not a, "This could be a
-   problem..." type thing).
-
-There hasn't been a mention of this affecting real workloads in the
-submission history of this patch, so it doesn't qualify for -stable.
+-- 
+tejun
