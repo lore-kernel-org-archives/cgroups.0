@@ -1,34 +1,37 @@
-From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [PATCH 1/2] mm, memcg: Avoid stale protection values when cgroup
  is above protection
-Date: Wed, 29 Apr 2020 22:17:21 +0800
-Message-ID: <CALOAHbCC-oT+CwzyokNfomEMf0GdzpipBeZJjnnE8RrPPZ_Maw@mail.gmail.com>
-References: <cover.1588092152.git.chris@chrisdown.name> <d454fca5d6b38b74d8dc35141e8519b02089a698.1588092152.git.chris@chrisdown.name>
- <20200429101510.GA28637@dhcp22.suse.cz> <20200429140330.GA5054@cmpxchg.org>
+Date: Wed, 29 Apr 2020 10:19:45 -0400
+Message-ID: <20200429141945.GB5054@cmpxchg.org>
+References: <cover.1588092152.git.chris@chrisdown.name>
+ <d454fca5d6b38b74d8dc35141e8519b02089a698.1588092152.git.chris@chrisdown.name>
+ <20200429101510.GA28637@dhcp22.suse.cz>
+ <CALOAHbAosoU=+iPgD+TeU_iDXTV7W_WcFdKCi2fdwwyvutG2zQ@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=cpXUf/vkO/R5yvacaxjyLtNiC2qft6yapuPXFNqdrtk=;
-        b=l8kNMZolNNRTje0ib1VyxH/4hTylfD414hWySHi/Pk5fJDdLTzmXJ+tL4bwZfbBrwe
-         x5aQaQIkJtYncgehYFquzLcHki7V2njzUJqCVP9iQ4Zunpp44t4JYWi3j/io5iVnRoMW
-         1xmQhmWhiq1P4108Evf5bFjMHPtdpV9v9Eo8PShJ2xq8IAGkmu6K6Y0S8RD5YrFN9b2p
-         hK94zWWO+FvBM3q9jwp82O5zwEgl4eGa3nIGqGMoH0cdScve/oMIdgpnQ/+y0515LRFF
-         o/6JUz4+Ndj+GUQiqd43ji0ijprsKeJTzaOCV8jQTMhGPObZdjzrM2buPfhN4z6lbB/+
-         gOBQ==
-In-Reply-To: <20200429140330.GA5054-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=WY+s1xElLyYapOX+xyVfCwGq2ouDJfw9qAn8e1SedMM=;
+        b=sM10OsRR0LNY4pcjhbdJnhoISXS/L4LnoeViGpuwZ2v+5WA8cDi0zGpia6vF/Lnywe
+         9yDC5Ysp9d3GxBOYO/Jy5r525crsR9ZR6Pel0O38S0Xl0kMiRfmh7zpL/aA3BBu81rMm
+         tmR84XZpKOhWYZyP9PUd9L+TFewI/8EMjEjYSUpVDVJ6+3CAapKUaVFTXct61QYcva81
+         gvSR+ox35ebLokYCKn2R0DeTO0+BRyx56hxhXWqLfCHar8ss9urE1ne3VXSINkkEOwdA
+         5+q38c+uJC7z15wq2a3UQbl+6dVrM4vvJ4ZWX9Y2UXi2JxONkL/tF3icTij/9A/Vqv9y
+         GtaQ==
+Content-Disposition: inline
+In-Reply-To: <CALOAHbAosoU=+iPgD+TeU_iDXTV7W_WcFdKCi2fdwwyvutG2zQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+To: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Wed, Apr 29, 2020 at 10:03 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-> On Wed, Apr 29, 2020 at 12:15:10PM +0200, Michal Hocko wrote:
+On Wed, Apr 29, 2020 at 06:53:03PM +0800, Yafang Shao wrote:
+> On Wed, Apr 29, 2020 at 6:15 PM Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> >
 > > On Tue 28-04-20 19:26:47, Chris Down wrote:
 > > > From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 > > >
@@ -66,75 +69,30 @@ On Wed, Apr 29, 2020 at 10:03 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@
 > > http://lkml.kernel.org/r/20200424162103.GK11591-2MMpYkNvuYA6bu5BqYkRsg@public.gmane.org
 > > Johannes has argued that other races are possible and I didn't get to
 > > think about it thoroughly. But this patch is introducing a new
-> > possibility of breaking protection. If we want to have a quick and
+> > possibility of breaking protection.
+> 
+> Agreed with Michal that more writes will cause more bugs.
+> We should operate the volatile emin and elow as less as possible.
+
+That's not a technical argument.
+
+If races are a problem, it doesn't matter that they're rare. If
+they're not a problem, it doesn't matter that they're frequent.
+
+> >  If we want to have a quick and
 > > simple fix that would be easier to backport to older kernels then I
 > > would feel much better if we simply workedaround the problem as
 > > suggested earlier http://lkml.kernel.org/r/20200423061629.24185-1-laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-> > We can rework the effective values calculation to be more robust against
-> > races on top of that because this is likely a more tricky thing to do.
->
-> Well, can you please *do* think more thoroughly about what I wrote,
-> instead of pushing for an alternative patch on gut feeling alone?
->
-> Especially when you imply that this should be a stable patch.
->
-> Not only does your alternative patch not protect against the race you
-> are worried about, the race itself doesn't matter. Racing reclaimers
-> will write their competing views of the world into the shared state on
-> all other levels anyway.
->
-> And that's okay. If the configuration and memory usage is such that
-> there is at least one reclaimer that scans without any protection
-> (like a limit reclaimer), it's not a problem when a second reclaimer
-> that meant to do protected global reclaim will also do one iteration
-> without protection. It's no different than if a second thread had
-> entered limit reclaim through another internal allocation.
->
-> There is no semantical violation with the race in your patch or the
-> race in this patch. Any effective protection that becomes visible is
-> 1) permitted by the configuration, but 2) also triggered *right now*
-> by an acute need to reclaim memory with these parameters.
->
-> The *right now* part is important. That's what's broken before either
-> patch, and that's what we're fixing: to see really, really *old* stale
-> that might not be representative of the config semantics anymore.
->
-> Since you haven't linked to my email, here is my counter argument to
-> the alternative patch "fixing" this race somehow.
->
-> A reclaim:
->
->   root
->      `- A (low=2G, max=3G -> elow=0)
->         `- A1 (low=0G -> elow=0)
->
-> Global reclaim:
->
->   root
->      `- A (low=2G, max=3G -> elow=2G)
->         `- A1 (low=0G -> elow=2G)
->
-> During global reclaim, A1 is supposed to have 2G effective low
-> protection. If A limit reclaim races, it can set A1's elow to
-> 0.
+> 
+> +1
+> 
+> This should be the right workaround to fix the current issue and it is
+> worth to be backported to the stable kernel.
 
-Before the commit  8a931f801340c2be ("mm: memcontrol: recursive
-memory.low protection"), the A1's elow should be 0, while after this
-commit A1's elow is 2G.
-That is a behavior change.
+From Documentation/process/stable-kernel-rules.rst:
 
-Then this case gives us another example why accessing emin and elow in
-the very deap reclaiming code (get_scan_count) is the root of ALL
-EVIL.
+ - It must fix a real bug that bothers people (not a, "This could be a
+   problem..." type thing).
 
->  Global reclaim will now query mem_cgroup_protection(root, A1), the
-> root == memcg check you insist we add will fail and it'll reclaim A1
-> without protection.
->
-> The alternative patch is nothing except slightly worse code.
-
-
-
--- 
-Thanks
-Yafang
+There hasn't been a mention of this affecting real workloads in the
+submission history of this patch, so it doesn't qualify for -stable.
