@@ -1,80 +1,148 @@
-From: Qian Cai <cai@lca.pw>
-Subject: Re: [PATCH v2 4/4] mm/slub: Fix sysfs shrink circular locking
- dependency
-Date: Tue, 28 Apr 2020 22:52:48 -0400
-Message-ID: <0310F66F-0ECB-43BF-B86F-3BDB74F51B06@lca.pw>
-References: <dbbfe685-7374-9a96-b7c2-684142746e30@redhat.com>
- <28BB8A1C-CFDF-4F5A-8686-537C3CE04818@lca.pw>
- <56327de0-fa44-d5f3-2409-69cf2b97a209@redhat.com>
-Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.80.23.2.2\))
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lca.pw; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=ZuYhQOwVqj5I2l0C3mwcWWBRC4vXsL2shmKKYh/lrQg=;
-        b=aCmH7CwlwPl/0ya/suzFuA1fMGqaCRqlG1An9hZRxqlWrWA87i8lAzj19h17I7fVNY
-         SkAcbxzKv2yVzNDU26bW9XPSlaGn08IkxBernQCD5ymMMy10wMAO4iA5SlJgrV6/rHaR
-         UR10WckaYKHTF8QxLVBLYtLz+jd+e24vryNXvlfdrfdWXTi/pS4/yFmx45AuBPT1atFY
-         e3xpNkyL5b2gkq9kVYEGW7ICo5ondTQiiXBy7zypoc2So3d00g3auY/sQKGU43yMdxoG
-         ehNkl1Lxa29e4IJt1e3V3D0XETFGEopBpDd1nTLMoOy1Y1xIImQCuF2KMJqnHHy7H+M9
-         uy/g==
-In-Reply-To: <56327de0-fa44-d5f3-2409-69cf2b97a209@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 0/3] memcg: Slow down swap allocation as the available
+ space gets depleted
+Date: Wed, 29 Apr 2020 11:55:09 +0200
+Message-ID: <20200429095509.GY28637@dhcp22.suse.cz>
+References: <20200421161138.GL27314@dhcp22.suse.cz>
+ <20200421165601.GA345998@cmpxchg.org>
+ <20200422132632.GG30312@dhcp22.suse.cz>
+ <20200422141514.GA362484@cmpxchg.org>
+ <20200422154318.GK30312@dhcp22.suse.cz>
+ <20200422171328.GC362484@cmpxchg.org>
+ <20200422184921.GB4206@dhcp22.suse.cz>
+ <20200423150015.GE362484@cmpxchg.org>
+ <20200424150510.GH11591@dhcp22.suse.cz>
+ <20200428142432.GA78561@cmpxchg.org>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20200428142432.GA78561-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Waiman Long <longman@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Juri Lelli <juri.lelli@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
+On Tue 28-04-20 10:24:32, Johannes Weiner wrote:
+> On Fri, Apr 24, 2020 at 05:05:10PM +0200, Michal Hocko wrote:
+> > On Thu 23-04-20 11:00:15, Johannes Weiner wrote:
+> > > On Wed, Apr 22, 2020 at 08:49:21PM +0200, Michal Hocko wrote:
+> > > > On Wed 22-04-20 13:13:28, Johannes Weiner wrote:
+> > > > > On Wed, Apr 22, 2020 at 05:43:18PM +0200, Michal Hocko wrote:
+> > > > > > On Wed 22-04-20 10:15:14, Johannes Weiner wrote:
+> > > > > > I am also missing some information about what the user can actually do
+> > > > > > about this situation and call out explicitly that the throttling is
+> > > > > > not going away until the swap usage is shrunk and the kernel is not
+> > > > > > capable of doing that on its own without a help from the userspace. This
+> > > > > > is really different from memory.high which has means to deal with the
+> > > > > > excess and shrink it down in most cases. The following would clarify it
+> > > > > 
+> > > > > I think we may be talking past each other. The user can do the same
+> > > > > thing as in any OOM situation: wait for the kill.
+> > > > 
+> > > > That assumes that reaching swap.high is going to converge to the OOM
+> > > > eventually. And that is far from the general case. There might be a
+> > > > lot of other reclaimable memory to reclaim and stay in the current
+> > > > state.
+> > > 
+> > > No, that's really the general case. And that's based on what users
+> > > widely experience, including us at FB. When swap is full, it's over.
+> > > Multiple parties have independently reached this conclusion.
+> > 
+> > But we are talking about two things. You seem to be focusing on the full
+> > swap (quota) while I am talking about swap.high which doesn't imply
+> > that the quota/full swap is going to be reached soon.
+> 
+> Hm, I'm not quite sure I understand. swap.high is supposed to set this
+> quota. It's supposed to say: the workload has now shown such an
+> appetite for swap that it's unlikely to survive for much longer - draw
+> out its death just long enough for userspace OOM handling.
+> 
+> Maybe this is our misunderstanding?
 
+Probably. We already have a quota for swap (swap.max). Workload is not
+allowed to swap out when the quota is reached. swap.high is supposed to
+act as a preliminary action towards slowing down swap consumption beyond
+its limit.
 
-> On Apr 28, 2020, at 10:06 AM, Waiman Long <longman@redhat.com> wrote:
->=20
-> On 4/27/20 10:11 PM, Qian Cai wrote:
->>=20
->>> On Apr 27, 2020, at 9:39 PM, Waiman Long <longman@redhat.com> wrote:
->>>=20
->>> The sequence that was prevented by this patch is "kn->count --> =
-mem_hotplug_lock.rwsem". This sequence isn't directly in the splat. Once =
-this link is broken, the 3-lock circular loop cannot be formed. Maybe I =
-should modify the commit log to make this point more clear.
->> I don=E2=80=99t know what you are talking about. Once trylock succeed =
-once, you will have kn->count =E2=80=94> cpu/memory_hotplug_lock.
->>=20
-> Trylock is handled differently from lockdep's perspective as trylock =
-can failed. When trylock succeeds, the critical section is executed. As =
-long as it doesn't try to acquire another lock in the circular chain, =
-the execution will finish at some point and release the lock. On the =
-other hand, if another task has already held all those locks, the =
-trylock will fail and held locks should be released. Again, no deadlock =
-will happen.
+> It certainly doesn't make much sense to set swap.high to 0 or
+> relatively low values. Should we add the above to the doc text?
+> 
+> > > Once the workload expands its set of *used* pages past memory.high, we
+> > > are talking about indefinite slowdowns / OOM situations. Because at
+> > > that point, reclaim cannot push the workload back and everything will
+> > > be okay: the pages it takes off mean refaults and continued reclaim,
+> > > i.e. throttling. You get slowed down either way, and whether you
+> > > reclaim or sleep() is - to the workload - an accounting difference.
+> > >
+> > > Reclaim does NOT have the power to help the workload get better. It
+> > > can only do amputations to protect the rest of the system, but it
+> > > cannot reduce the number of pages the workload is trying to access.
+> > 
+> > Yes I do agree with you here and I believe this scenario wasn't really
+> > what the dispute is about. As soon as the real working set doesn't
+> > fit into the high limit and still growing then you are effectively
+> > OOM and either you do handle that from the userspace or you have to
+> > waaaaaaaaait for the kernel oom killer to trigger.
+> > 
+> > But I believe this scenario is much easier to understand because the
+> > memory consumption is growing. What I find largely unintuitive from the
+> > user POV is that the throttling will remain in place without a userspace
+> > intervention even when there is no runaway.
+> > 
+> > Let me give you an example. Say you have a peak load which pushes
+> > out a large part of an idle memory to swap. So much it fills up the
+> > swap.high. The peak eventually finishes freeing up its resources.  The
+> > swap situation remains the same because that memory is not refaulted and
+> > we do not pro-actively swap in memory (aka reclaim the swap space). You
+> > are left with throttling even though the overall memcg consumption is
+> > really low. Kernel is currently not able to do anything about that
+> > and the userspace would need to be aware of the situation to fault in
+> > swapped out memory back to get a normal behavior. Do you think this
+> > is something so obvious that people would keep it in mind when using
+> > swap.high?
+> 
+> Okay, thanks for clarifying, I understand your concern now.
 
-So once,
+Great that we are on the same page!
 
-CPU0 (trylock succeed):
-kn->count =E2=80=94> cpu/memory_hotplug_lock.
+[...]
 
-Did you mean that lockdep will not record this existing chain?
+> No, I agree we should document this. How about the following?
+> 
+>   memory.swap.high
+>        A read-write single value file which exists on non-root
+>        cgroups.  The default is "max".
+> 
+>        Swap usage throttle limit.  If a cgroup's swap usage exceeds
+>        this limit, all its further allocations will be throttled to
+>        allow userspace to implement custom out-of-memory procedures.
+> 
+>        This limit marks a point of no return for the cgroup. It is NOT
+>        designed to manage the amount of swapping a workload does
+>        during regular operation. Compare to memory.swap.max, which
+>        prohibits swapping past a set amount, but lets the cgroup
+>        continue unimpeded as long as other memory can be reclaimed.
 
-If it did. Then later, are you still sure that CPU1 (via memcg path =
-below) will still be impossible to trigger a splat just because lockdep =
-will be able to tell that those arennon-exclusive =
-(cpu/memory_hotplug_lock) locks instead?
+OK, this makes the intented use much more clear. I believe that it would
+be helpful to also add your note that the value should be set to "we
+don't expect healthy workloads to get here".
 
- cpu/memory_hotplug_lock -> kn->count
+The usecase is quite narrow and I expect people will start asking about
+something to help to manage the swap space somehow and this will not be
+a good fit. This would require much more work to achieve a sane semantic
+though. I am not aware of usacases at this moment so this is really hard
+to argue about. I hope this will not backfire when we reach that point
+though.
 
-[  290.805818] -> #3 (kn->count#86){++++}-{0:0}:
-[  290.811954]        __kernfs_remove+0x455/0x4c0
-[  290.816428]        kernfs_remove+0x23/0x40
-[  290.820554]        sysfs_remove_dir+0x74/0x80
-[  290.824947]        kobject_del+0x57/0xa0
-[  290.828905]        sysfs_slab_unlink+0x1c/0x20
-[  290.833377]        shutdown_cache+0x15d/0x1c0
-[  290.837964]        kmemcg_cache_shutdown_fn+0xe/0x20
-[  290.842963]        kmemcg_workfn+0x35/0x50   <=E2=80=94=E2=80=94 =
-cpu/memory_hotplug_lock
-[  290.847095]        process_one_work+0x57e/0xb90
-[  290.851658]        worker_thread+0x63/0x5b0
-[  290.855872]        kthread+0x1f7/0x220
-[  290.859653]        ret_from_fork+0x27/0x50=
+That being said, I am not a huge fan of the new interface but I can see
+how it can be useful. I will not ack the patchset but I will not block
+it either.
+
+Thanks for refining the documentation and please make sure that
+changelogs in the next version describe the intented usecase as
+mentioned in this email thread.
+-- 
+Michal Hocko
+SUSE Labs
