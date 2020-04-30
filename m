@@ -1,51 +1,75 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH] memcg: oom: ignore oom warnings from memory.max
-Date: Thu, 30 Apr 2020 13:23:19 -0700
-Message-ID: <20200430202319.GF339283@carbon.dhcp.thefacebook.com>
-References: <20200430182712.237526-1-shakeelb@google.com>
- <20200430190610.GD339283@carbon.dhcp.thefacebook.com>
- <20200430193049.GB2436@cmpxchg.org>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCHSET v2 block/for-5.8] iocost: improve use_delay and latency
+ target handling
+Date: Thu, 30 Apr 2020 15:55:30 -0600
+Message-ID: <6ee6360e-1a35-874c-2263-6fb21da66591@kernel.dk>
+References: <20200413162758.97252-1-tj@kernel.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=RCCXWDjVRlwpddUB4DfuXqXk65Tcvr+BQrgC6dU4n3Y=;
- b=DRHrq5ZeTcX9SCKsKRJolng7HMcc8vMJqdritvpAE4Iyvz36N8e2C6vBX+SixpmGqp/T
- 0N3h1E+H6RkdJDhIYEka6xP9tWeeMK9/ri1lkv1bRuxGqPw68D5elzVf5rlx5sLE+1Li
- XBoJFG8uUTvTo16YKWayP8uFfL5e8ZADTdE= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RCCXWDjVRlwpddUB4DfuXqXk65Tcvr+BQrgC6dU4n3Y=;
- b=el021WNRoYt4oU9x6jdtZmIKUSwZCUJRGK5G8Af46n9hsXTc8NmVj4bkx1KWtdFY/KUzx3afaR+pffbFNbrwFt+gjtdHQGfejdKVx57GIZA08hKLlx/EqxucCbTWPC8AqT8N4vNvyhwQTOnMGJS4etKzIdgQ3C3WOiXRT22cKIU=
-Content-Disposition: inline
-In-Reply-To: <20200430193049.GB2436-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=rYEprxh5hRkyIRk0SZJ1yYwJF2zaPFW1K1pdxuC7Zuc=;
+        b=0YJweBxdqRGXk8CKADPYZT2TDMDjlejyhecZFIP6Pdqu2Rol0vua+RkjawOc6lW+4C
+         uye8FqmbkqGQFahJuYyZ/sVkYDn8YKcognO7HZN5LGsmML6yIXlmeCxIkANnyZNQ1gTG
+         /9xSR/dOm1broZSmXWyPapxeqpe3M9DwJQedEjQkHUFGZC4OxPB9a94qfaCo8FkfLTG2
+         z4UdgSMg6xqZqbdaMkkKFbSj8MCsvkht1TJbHhLVLcwEjDr92euBMUJXifl8yCQybF3i
+         0VWB+PK6QrXPrkeZTzbIW4Ds0P1gdgZDHzx3P27ENgTnRXQIqNtK/jjJtTG7opYmGATG
+         kgeg==
+In-Reply-To: <20200413162758.97252-1-tj@kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, newella@fb.com, josef@toxicpanda.com, asml.silence@gmail.com, ming.lei@redhat.com, bvanassche@acm.org
 
-On Thu, Apr 30, 2020 at 03:30:49PM -0400, Johannes Weiner wrote:
-> On Thu, Apr 30, 2020 at 12:06:10PM -0700, Roman Gushchin wrote:
-> > On Thu, Apr 30, 2020 at 11:27:12AM -0700, Shakeel Butt wrote:
-> > > @@ -6106,7 +6107,7 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
-> > >  		}
-> > >  
-> > >  		memcg_memory_event(memcg, MEMCG_OOM);
-> > > -		if (!mem_cgroup_out_of_memory(memcg, GFP_KERNEL, 0))
-> > > +		if (!mem_cgroup_out_of_memory(memcg, GFP_KERNEL, 0, true))
-> > 
-> > I wonder if we can handle it automatically from the oom_killer side?
-> > We can suppress warnings if oc->memcg is set and the cgroup scanning
-> > showed that there are no belonging processes?
+On 4/13/20 10:27 AM, Tejun Heo wrote:
+> Changes from v1[1]
 > 
-> Note that we do remote charging for certain consumers, where memory
-> gets charged from the outside of the cgroup.
+> * Dropped 0002-block-add-request-io_data_len.patch and updated to use
+>   rq->stats_sectors instead as suggested by Pavel Begunkov.
 > 
-> We would want to know if these cause OOMs on an empty cgroup, rather
-> than force-charge the allocations quietly.
+> This patchset improves the following two iocost control behaviors.
 > 
+> * iocost was failing to punish heavy shared IO generators (file metadata, memory
+>   reclaim) through use_delay mechanism - use_delay automatically decays which
+>   works well for iolatency but doesn't match how iocost behaves. This led to
+>   e.g. memory bombs which generate a lot of swap IOs to use over their allotted
+>   amount. This is fixed by adding non-decaying use_delay mechanism.
+> 
+> * The same latency targets were being applied regardless of the IO sizes. While
+>   this works fine for loose targets, it gets in the way when trying to tigthen
+>   them - a latency target adequate for a 4k IO is too short for a 1 meg IO.
+>   iocost now discounts the size portion of cost when testing whether a given IO
+>   met or missed its latency target.
+> 
+> While at it, it also makes minor changse to iocost_monitor.py.
+> 
+> This patchset contains the following five patches.
+> 
+>  0001-blk-iocost-switch-to-fixed-non-auto-decaying-use_del.patch
+>  0002-blk-iocost-account-for-IO-size-when-testing-latencie.patch
+>  0003-iocost_monitor-exit-successfully-if-interval-is-zero.patch
+>  0004-iocost_monitor-drop-string-wrap-around-numbers-when-.patch
+> 
+> and is also available in the following git branch.
+> 
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git iocost-delay-latency-v2
+> 
+> diffstat follows. Thanks.
+> 
+>  block/Kconfig                  |    1 
+>  block/blk-cgroup.c             |    6 ++++
+>  block/blk-iocost.c             |   56 +++++++++++++++++++++++++++++------------
+>  include/linux/blk-cgroup.h     |   43 ++++++++++++++++++++++++-------
+>  tools/cgroup/iocost_monitor.py |   48 +++++++++++++++++++----------------
+>  5 files changed, 106 insertions(+), 48 deletions(-)
 
-Yeah, good point.
+Applied, thanks Tejun.
+
+-- 
+Jens Axboe
+
