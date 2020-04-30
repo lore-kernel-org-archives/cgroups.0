@@ -1,324 +1,120 @@
-From: Dmitry Yakunin <zeil@yandex-team.ru>
-Subject: [PATCH iproute2-next 2/2] ss: add support for cgroup v2 information and filtering
-Date: Thu, 30 Apr 2020 18:52:45 +0300
-Message-ID: <20200430155245.83364-3-zeil@yandex-team.ru>
-References: <20200430155245.83364-1-zeil@yandex-team.ru>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH 1/2] mm, memcg: Avoid stale protection values when cgroup
+ is above protection
+Date: Thu, 30 Apr 2020 10:17:16 -0700
+Message-ID: <20200430171716.GB339283@carbon.dhcp.thefacebook.com>
+References: <cover.1588092152.git.chris@chrisdown.name>
+ <d454fca5d6b38b74d8dc35141e8519b02089a698.1588092152.git.chris@chrisdown.name>
+ <20200429101510.GA28637@dhcp22.suse.cz>
+ <20200429140330.GA5054@cmpxchg.org>
+ <20200429150414.GI28637@dhcp22.suse.cz>
+ <20200429165627.GA24768@cmpxchg.org>
+ <20200430145721.GF12655@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <netdev-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-        t=1588261984; bh=gdzeTGVZ6a92XTHXTR/IU8ctQrdTLBYx/L72zKJnp20=;
-        h=In-Reply-To:Message-Id:References:Date:Subject:To:From:Cc;
-        b=QJdX/rliUG2R5fAshlAedZorZ1Y2BtBRShAOZhP/6f3PzFhPIuZcYHmB8mvhckODc
-         dcFnWbfUv3FOJ3ykmg50d8fbhyqhys3TuHTJa6UWN7Y3jm7YdyfwO3c1pTexaUe0i4
-         c1BUTJXBODXvvTZImr4I2WEXIxEeAnvXpNYkz9f0=
-In-Reply-To: <20200430155245.83364-1-zeil@yandex-team.ru>
-Sender: netdev-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=a7sxeF2d5y5y2WLPeH6+YxlwtfDmnaRPsZHXN9Zo3ns=;
+ b=UwYx/u+0fh241hUNcZgGKqHL5V4ELty2RWpCdqgMT0ZBbPxqdU0Fhqfi75w7nViPe61G
+ /nslJTapzyDzqKfO/nu764IjVrHPiMp/1mdYpj8Q9fEtvtKTcah9+yEP1LcTi4GYvg/d
+ A6pRWbpmk0PJe6L3ND12b3RmWUold9m26TU= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=a7sxeF2d5y5y2WLPeH6+YxlwtfDmnaRPsZHXN9Zo3ns=;
+ b=IiYRJSAG8ViIvXxNl8nEmF22Bx8P+m9axmITxNB/qM9OFs7hvByoOT9FvSDdCWa/m7mU2YiC7sGwOFAXwneX1d+M2K+Z1vVdL+p+HEjTvuA6qLq4WzWaVuQW9TlG3Lx61ZcuaZBuDUwENC2n9j9aQWaM3wVVMa1zVd3uyJ/26m8=
+Content-Disposition: inline
+In-Reply-To: <20200430145721.GF12655@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: netdev@vger.kernel.org
-Cc: khlebnikov@yandex-team.ru, cgroups@vger.kernel.org, bpf@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Chris Down <chris@chrisdown.name>, Andrew Morton <akpm@linux-foundation.org>, Yafang Shao <laoar.shao@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This patch introduces two new features: obtaining cgroup information and
-filtering sockets by cgroups. These features work based on cgroup v2 ID
-field in the socket (kernel should be compiled with CONFIG_SOCK_CGROUP_DATA).
+On Thu, Apr 30, 2020 at 04:57:21PM +0200, Michal Hocko wrote:
+> On Wed 29-04-20 12:56:27, Johannes Weiner wrote:
+> [...]
+> > I think to address this, we need a more comprehensive solution and
+> > introduce some form of serialization. I'm not sure yet how that would
+> > look like yet.
+> 
+> Yeah, that is what I've tried to express earlier and that is why I would
+> rather go with an uglier workaround for now and think about a more
+> robust effective values calculation on top.
+>  
+> > I'm still not sure it's worth having a somewhat ugly workaround in
+> > mem_cgroup_protection() to protect against half of the bug. If you
+> > think so, the full problem should at least be documented and marked
+> > XXX or something.
+> 
+> Yes, this makes sense to me. What about the following?
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index 1b4150ff64be..50ffbc17cdd8 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -350,6 +350,42 @@ static inline unsigned long mem_cgroup_protection(struct mem_cgroup *memcg,
+>  	if (mem_cgroup_disabled())
+>  		return 0;
+>  
+> +	/*
+> +	 * There is no reclaim protection applied to a targeted reclaim.
+> +	 * We are special casing this specific case here because
+> +	 * mem_cgroup_protected calculation is not robust enough to keep
+> +	 * the protection invariant for calculated effective values for
+> +	 * parallel reclaimers with different reclaim target. This is
+> +	 * especially a problem for tail memcgs (as they have pages on LRU)
+> +	 * which would want to have effective values 0 for targeted reclaim
+> +	 * but a different value for external reclaim.
+> +	 *
+> +	 * Example
+> +	 * Let's have global and A's reclaim in parallel:
+> +	 *  |
+> +	 *  A (low=2G, usage = 3G, max = 3G, children_low_usage = 1.5G)
+> +	 *  |\
+> +	 *  | C (low = 1G, usage = 2.5G)
+> +	 *  B (low = 1G, usage = 0.5G)
+> +	 *
+> +	 * For the global reclaim
+> +	 * A.elow = A.low
+> +	 * B.elow = min(B.usage, B.low) because children_low_usage <= A.elow
+> +	 * C.elow = min(C.usage, C.low)
+> +	 *
+> +	 * With the effective values resetting we have A reclaim
+> +	 * A.elow = 0
+> +	 * B.elow = B.low
+> +	 * C.elow = C.low
+> +	 *
+> +	 * If the global reclaim races with A's reclaim then
+> +	 * B.elow = C.elow = 0 because children_low_usage > A.elow)
+> +	 * is possible and reclaiming B would be violating the protection.
+> +	 *
+> +	 */
+> +	if (memcg == root)
+> +		return 0;
+> +
+>  	if (in_low_reclaim)
+>  		return READ_ONCE(memcg->memory.emin);
+>  
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 05b4ec2c6499..df88a22f09bc 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -6385,6 +6385,14 @@ enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
+>  
+>  	if (!root)
+>  		root = root_mem_cgroup;
+> +
+> +	/*
+> +	 * Effective values of the reclaim targets are ignored so they
+> +	 * can be stale. Have a look at mem_cgroup_protection for more
+> +	 * details.
+> +	 * TODO: calculation should be more robust so that we do not need
+> +	 * that special casing.
+> +	 */
+>  	if (memcg == root)
+>  		return MEMCG_PROT_NONE;
 
-Cgroup information can be obtained by specifying --cgroup flag and now contains
-only pathname. For faster pathname lookups cgroup cache is implemented. This
-cache is filled on ss startup and missed entries are resolved and saved
-on the fly.
+Acked-by: Roman Gushchin <guro@fb.com>
 
-Cgroup filter extends EXPRESSION and allows to specify cgroup pathname
-(relative or absolute) to obtain sockets attached only to this cgroup.
-Filter syntax: ss [ cgroup PATHNAME ]
-Examples:
-    ss -a cgroup /sys/fs/cgroup/unified (or ss -a cgroup .)
-    ss -a cgroup /sys/fs/cgroup/unified/cgroup1 (or ss -a cgroup cgroup1)
-
-Signed-off-by: Dmitry Yakunin <zeil@yandex-team.ru>
-Reviewed-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
----
- include/uapi/linux/inet_diag.h |  2 ++
- man/man8/ss.8                  |  9 +++++++
- misc/ss.c                      | 61 ++++++++++++++++++++++++++++++++++++++++++
- misc/ssfilter.h                |  2 ++
- misc/ssfilter.y                | 22 ++++++++++++++-
- 5 files changed, 95 insertions(+), 1 deletion(-)
-
-diff --git a/include/uapi/linux/inet_diag.h b/include/uapi/linux/inet_diag.h
-index 0c1c781..f009abf 100644
---- a/include/uapi/linux/inet_diag.h
-+++ b/include/uapi/linux/inet_diag.h
-@@ -96,6 +96,7 @@ enum {
- 	INET_DIAG_BC_MARK_COND,
- 	INET_DIAG_BC_S_EQ,
- 	INET_DIAG_BC_D_EQ,
-+	INET_DIAG_BC_CGROUP_COND,   /* u64 cgroup v2 ID */
- };
- 
- struct inet_diag_hostcond {
-@@ -157,6 +158,7 @@ enum {
- 	INET_DIAG_MD5SIG,
- 	INET_DIAG_ULP_INFO,
- 	INET_DIAG_SK_BPF_STORAGES,
-+	INET_DIAG_CGROUP_ID,
- 	__INET_DIAG_MAX,
- };
- 
-diff --git a/man/man8/ss.8 b/man/man8/ss.8
-index 023d771..894cb20 100644
---- a/man/man8/ss.8
-+++ b/man/man8/ss.8
-@@ -281,6 +281,15 @@ Class id set by net_cls cgroup. If class is zero this shows priority
- set by SO_PRIORITY.
- .RE
- .TP
-+.B \-\-cgroup
-+Show cgroup information. Below fields may appear:
-+.RS
-+.P
-+.TP
-+.B cgroup
-+Cgroup v2 pathname. This pathname is relative to the mount point of the hierarchy.
-+.RE
-+.TP
- .B \-K, \-\-kill
- Attempts to forcibly close sockets. This option displays sockets that are
- successfully closed and silently skips sockets that the kernel does not support
-diff --git a/misc/ss.c b/misc/ss.c
-index 3ef151f..7b1c94b 100644
---- a/misc/ss.c
-+++ b/misc/ss.c
-@@ -36,6 +36,7 @@
- #include "namespace.h"
- #include "SNAPSHOT.h"
- #include "rt_names.h"
-+#include "cg_map.h"
- 
- #include <linux/tcp.h>
- #include <linux/sock_diag.h>
-@@ -122,6 +123,7 @@ static int follow_events;
- static int sctp_ino;
- static int show_tipcinfo;
- static int show_tos;
-+static int show_cgroup;
- int oneline;
- 
- enum col_id {
-@@ -797,6 +799,7 @@ struct sockstat {
- 	char *name;
- 	char *peer_name;
- 	__u32		    mark;
-+	__u64		    cgroup_id;
- };
- 
- struct dctcpstat {
-@@ -1417,6 +1420,9 @@ static void sock_details_print(struct sockstat *s)
- 
- 	if (s->mark)
- 		out(" fwmark:0x%x", s->mark);
-+
-+	if (s->cgroup_id)
-+		out(" cgroup:%s", cg_id_to_path(s->cgroup_id));
- }
- 
- static void sock_addr_print(const char *addr, char *delim, const char *port,
-@@ -1643,6 +1649,7 @@ struct aafilter {
- 	unsigned int	iface;
- 	__u32		mark;
- 	__u32		mask;
-+	__u64		cgroup_id;
- 	struct aafilter *next;
- };
- 
-@@ -1771,6 +1778,12 @@ static int run_ssfilter(struct ssfilter *f, struct sockstat *s)
- 
- 		return (s->mark & a->mask) == a->mark;
- 	}
-+		case SSF_CGROUPCOND:
-+	{
-+		struct aafilter *a = (void *)f->pred;
-+
-+		return s->cgroup_id == a->cgroup_id;
-+	}
- 		/* Yup. It is recursion. Sorry. */
- 		case SSF_AND:
- 		return run_ssfilter(f->pred, s) && run_ssfilter(f->post, s);
-@@ -1963,6 +1976,23 @@ static int ssfilter_bytecompile(struct ssfilter *f, char **bytecode)
- 
- 		return inslen;
- 	}
-+		case SSF_CGROUPCOND:
-+	{
-+		struct aafilter *a = (void *)f->pred;
-+		struct instr {
-+			struct inet_diag_bc_op op;
-+			__u64 cgroup_id;
-+		} __attribute__((packed));
-+		int inslen = sizeof(struct instr);
-+
-+		if (!(*bytecode = malloc(inslen))) abort();
-+		((struct instr *)*bytecode)[0] = (struct instr) {
-+			{ INET_DIAG_BC_CGROUP_COND, inslen, inslen + 4 },
-+			a->cgroup_id,
-+		};
-+
-+		return inslen;
-+	}
- 		default:
- 		abort();
- 	}
-@@ -2300,6 +2330,22 @@ void *parse_markmask(const char *markmask)
- 	return res;
- }
- 
-+void *parse_cgroupcond(const char *path)
-+{
-+	struct aafilter *res;
-+	__u64 id;
-+
-+	id = get_cgroup2_id(path);
-+	if (!id)
-+		return NULL;
-+
-+	res = malloc(sizeof(*res));
-+	if (res)
-+		res->cgroup_id = id;
-+
-+	return res;
-+}
-+
- static void proc_ctx_print(struct sockstat *s)
- {
- 	char *buf;
-@@ -3095,6 +3141,9 @@ static void parse_diag_msg(struct nlmsghdr *nlh, struct sockstat *s)
- 	s->mark = 0;
- 	if (tb[INET_DIAG_MARK])
- 		s->mark = rta_getattr_u32(tb[INET_DIAG_MARK]);
-+	s->cgroup_id = 0;
-+	if (tb[INET_DIAG_CGROUP_ID])
-+		s->cgroup_id = rta_getattr_u64(tb[INET_DIAG_CGROUP_ID]);
- 	if (tb[INET_DIAG_PROTOCOL])
- 		s->raw_prot = rta_getattr_u8(tb[INET_DIAG_PROTOCOL]);
- 	else
-@@ -3162,6 +3211,11 @@ static int inet_show_sock(struct nlmsghdr *nlh,
- 			out(" class_id:%#x", rta_getattr_u32(tb[INET_DIAG_CLASS_ID]));
- 	}
- 
-+	if (show_cgroup) {
-+		if (tb[INET_DIAG_CGROUP_ID])
-+			out(" cgroup:%s", cg_id_to_path(rta_getattr_u64(tb[INET_DIAG_CGROUP_ID])));
-+	}
-+
- 	if (show_mem || (show_tcpinfo && s->type != IPPROTO_UDP)) {
- 		if (!oneline)
- 			out("\n\t");
-@@ -4987,6 +5041,7 @@ static void _usage(FILE *dest)
- "       --tipcinfo      show internal tipc socket information\n"
- "   -s, --summary       show socket usage summary\n"
- "       --tos           show tos and priority information\n"
-+"       --cgroup        show cgroup information\n"
- "   -b, --bpf           show bpf filter socket information\n"
- "   -E, --events        continually display sockets as they are destroyed\n"
- "   -Z, --context       display process SELinux security contexts\n"
-@@ -5097,6 +5152,8 @@ static int scan_state(const char *state)
- /* Values of 'x' are already used so a non-character is used */
- #define OPT_XDPSOCK 260
- 
-+#define OPT_CGROUP 261
-+
- static const struct option long_opts[] = {
- 	{ "numeric", 0, 0, 'n' },
- 	{ "resolve", 0, 0, 'r' },
-@@ -5133,6 +5190,7 @@ static const struct option long_opts[] = {
- 	{ "net", 1, 0, 'N' },
- 	{ "tipcinfo", 0, 0, OPT_TIPCINFO},
- 	{ "tos", 0, 0, OPT_TOS },
-+	{ "cgroup", 0, 0, OPT_CGROUP },
- 	{ "kill", 0, 0, 'K' },
- 	{ "no-header", 0, 0, 'H' },
- 	{ "xdp", 0, 0, OPT_XDPSOCK},
-@@ -5320,6 +5378,9 @@ int main(int argc, char *argv[])
- 		case OPT_TOS:
- 			show_tos = 1;
- 			break;
-+		case OPT_CGROUP:
-+			show_cgroup = 1;
-+			break;
- 		case 'K':
- 			current_filter.kill = 1;
- 			break;
-diff --git a/misc/ssfilter.h b/misc/ssfilter.h
-index f5b0bc8..d85c084 100644
---- a/misc/ssfilter.h
-+++ b/misc/ssfilter.h
-@@ -11,6 +11,7 @@
- #define SSF_S_AUTO  9
- #define SSF_DEVCOND 10
- #define SSF_MARKMASK 11
-+#define SSF_CGROUPCOND 12
- 
- #include <stdbool.h>
- 
-@@ -25,3 +26,4 @@ int ssfilter_parse(struct ssfilter **f, int argc, char **argv, FILE *fp);
- void *parse_hostcond(char *addr, bool is_port);
- void *parse_devcond(char *name);
- void *parse_markmask(const char *markmask);
-+void *parse_cgroupcond(const char *path);
-diff --git a/misc/ssfilter.y b/misc/ssfilter.y
-index a901ae7..b417579 100644
---- a/misc/ssfilter.y
-+++ b/misc/ssfilter.y
-@@ -36,7 +36,7 @@ static void yyerror(char *s)
- 
- %}
- 
--%token HOSTCOND DCOND SCOND DPORT SPORT LEQ GEQ NEQ AUTOBOUND DEVCOND DEVNAME MARKMASK FWMARK
-+%token HOSTCOND DCOND SCOND DPORT SPORT LEQ GEQ NEQ AUTOBOUND DEVCOND DEVNAME MARKMASK FWMARK CGROUPCOND CGROUPPATH
- %left '|'
- %left '&'
- %nonassoc '!'
-@@ -156,6 +156,14 @@ expr:	'(' exprlist ')'
-         {
-                 $$ = alloc_node(SSF_NOT, alloc_node(SSF_MARKMASK, $3));
-         }
-+        | CGROUPPATH eq CGROUPCOND
-+        {
-+                $$ = alloc_node(SSF_CGROUPCOND, $3);
-+        }
-+        | CGROUPPATH NEQ CGROUPCOND
-+        {
-+                $$ = alloc_node(SSF_NOT, alloc_node(SSF_CGROUPCOND, $3));
-+        }
-         | AUTOBOUND
-         {
-                 $$ = alloc_node(SSF_S_AUTO, NULL);
-@@ -276,6 +284,10 @@ int yylex(void)
- 		tok_type = FWMARK;
- 		return FWMARK;
- 	}
-+	if (strcmp(curtok, "cgroup") == 0) {
-+		tok_type = CGROUPPATH;
-+		return CGROUPPATH;
-+	}
- 	if (strcmp(curtok, ">=") == 0 ||
- 	    strcmp(curtok, "ge") == 0 ||
- 	    strcmp(curtok, "geq") == 0)
-@@ -318,6 +330,14 @@ int yylex(void)
- 		}
- 		return MARKMASK;
- 	}
-+	if (tok_type == CGROUPPATH) {
-+		yylval = (void*)parse_cgroupcond(curtok);
-+		if (yylval == NULL) {
-+			fprintf(stderr, "Cannot parse cgroup %s.\n", curtok);
-+			exit(1);
-+		}
-+		return CGROUPCOND;
-+	}
- 	yylval = (void*)parse_hostcond(curtok, tok_type == SPORT || tok_type == DPORT);
- 	if (yylval == NULL) {
- 		fprintf(stderr, "Cannot parse dst/src address.\n");
--- 
-2.7.4
-
+Thanks!
