@@ -1,41 +1,46 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [PATCH] memcg: oom: ignore oom warnings from memory.max
-Date: Thu, 30 Apr 2020 15:29:07 -0400
-Message-ID: <20200430192907.GA2436@cmpxchg.org>
+Date: Thu, 30 Apr 2020 15:30:49 -0400
+Message-ID: <20200430193049.GB2436@cmpxchg.org>
 References: <20200430182712.237526-1-shakeelb@google.com>
+ <20200430190610.GD339283@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=/eq6aHDyq4eplML2a4cRLGlwq126IAji+Fvgv3MjJ3w=;
-        b=b4OU7wwbA3wxPurcG9pIX2GntI2Xn9noV/RldtqK/ry2Aih34RZFyG37mvEUhqPgUJ
-         FZuolZ4rblAdaMTfLS/iPurKZ2F/6LgIKXT/SPaEjMRd+QYwp0iY0BM+tlLBA7fvDX0b
-         PoKDmL7E0sHYEdt3HL88joyXkVl1giGBlW/wGc0A4Z+11ui4tXTZR9v+/zrk6N9GA6vQ
-         haEP1z4FLxKtLHf0Jh1JXqAuHFmIlunGDsdbG4opwBuPEkRLvy8YZ6HWRP9GmVpISVqB
-         FH581z7KqQk9BGUSOLm3k9zUxr+9oN1hYP+uY2Iia++2Azdeu1TiYpS2K1o6nZxcsaMj
-         dT1A==
+        bh=d1RAIbvoo2s7JffYGXt74NgzLodAkoT3ooI15LWHF58=;
+        b=vzffAZXtvSvTwq5dKjdHWx63DCplLMxMCM5nmf/g/K/RG0YfleeYDmRvgKuHb4ZBAd
+         w2YgrTnrZz0xNEdHNQvnr7Rr9/lSsOBtgCIVzJqTwCkFrrJTKZfScnqXAh9N/HKrOH5p
+         KDqWBDqRw8t0gcyIWMhcT6dVIVWd5hyJ0rx8dtXwXNRdAbkhSU9h1IjLTpcwxaWWEZ2W
+         j4Zq1oNj1y0SZjQ8iuchSaNHjfge8ycZcukkuoKnOhqvm6D39kHQPGmFg2cEjgxGWAI0
+         hvKc8DOcxkrD73j0wcVJDnqYPs/j7QqmM26IJdQVHb4T3TCVOqF6M9Jzr4l4JQqJO4lb
+         SgXw==
 Content-Disposition: inline
-In-Reply-To: <20200430182712.237526-1-shakeelb@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20200430190610.GD339283-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Apr 30, 2020 at 11:27:12AM -0700, Shakeel Butt wrote:
-> Lowering memory.max can trigger an oom-kill if the reclaim does not
-> succeed. However if oom-killer does not find a process for killing, it
-> dumps a lot of warnings.
+On Thu, Apr 30, 2020 at 12:06:10PM -0700, Roman Gushchin wrote:
+> On Thu, Apr 30, 2020 at 11:27:12AM -0700, Shakeel Butt wrote:
+> > @@ -6106,7 +6107,7 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
+> >  		}
+> >  
+> >  		memcg_memory_event(memcg, MEMCG_OOM);
+> > -		if (!mem_cgroup_out_of_memory(memcg, GFP_KERNEL, 0))
+> > +		if (!mem_cgroup_out_of_memory(memcg, GFP_KERNEL, 0, true))
 > 
-> Deleting a memcg does not reclaim memory from it and the memory can
-> linger till there is a memory pressure. One normal way to proactively
-> reclaim such memory is to set memory.max to 0 just before deleting the
-> memcg. However if some of the memcg's memory is pinned by others, this
-> operation can trigger an oom-kill without any process and thus can log a
-> lot un-needed warnings. So, ignore all such warnings from memory.max.
+> I wonder if we can handle it automatically from the oom_killer side?
+> We can suppress warnings if oc->memcg is set and the cgroup scanning
+> showed that there are no belonging processes?
 
-Can't you set memory.high=0 instead? It does the reclaim portion of
-memory.max, without the actual OOM killing that causes you problems.
+Note that we do remote charging for certain consumers, where memory
+gets charged from the outside of the cgroup.
+
+We would want to know if these cause OOMs on an empty cgroup, rather
+than force-charge the allocations quietly.
