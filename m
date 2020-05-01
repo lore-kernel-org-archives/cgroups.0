@@ -1,138 +1,152 @@
-From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 1/2] mm, memcg: Avoid stale protection values when cgroup
- is above protection
-Date: Fri, 1 May 2020 07:59:57 +0800
-Message-ID: <CALOAHbBub_oojkb5DpXUoHV=-e9PDAeVzJvKvDtyk-9Jg6_Pkw@mail.gmail.com>
-References: <cover.1588092152.git.chris@chrisdown.name> <d454fca5d6b38b74d8dc35141e8519b02089a698.1588092152.git.chris@chrisdown.name>
- <20200429101510.GA28637@dhcp22.suse.cz> <20200429140330.GA5054@cmpxchg.org>
- <20200429150414.GI28637@dhcp22.suse.cz> <20200429165627.GA24768@cmpxchg.org> <20200430145721.GF12655@dhcp22.suse.cz>
+From: Yafang Shao <laoar.shao@gmail.com>
+Subject: Re: [PATCH] memcg: oom: ignore oom warnings from memory.max
+Date: Fri, 1 May 2020 09:39:24 +0800
+Message-ID: <CALOAHbC4WY00yQ46b8CFqVQ3S=JSJxE2HR00TtMqXOWLRPRZ8w@mail.gmail.com>
+References: <20200430182712.237526-1-shakeelb@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=mOWNIHM3btZ9j8NGTIPkfbXQJm50r4PKpoMQv4LKbCU=;
-        b=TOA/ANfb70xaeNIZuwPe7XM6HwdhADVz6L1VFwi33HMb/y5M5WgGTtZpDZ8WlZjY+s
-         xFY3SD+a5uwlNQCX0ZZ30liXUSeyUwQ4/PePP7Ta2QfGSPDRtU8sygsaBZbpQ/XD4US4
-         gj99XYNqk93FaBc/yFpxyenl4NfN4hIhvPjMIgNN2tLL7WhxcWoYaOG6iC1w+kVfJ4Sh
-         TWt9bMNxfD7/wzCIh5RzTmAHqnQua/zu9GmPI66+VnLZ56vD6wgxB92fHKLOlw3zA6NB
-         XxrU2jcjVQS2AVlubjNuSb0wg9qgF/ANq+MixLoLAbQaEvrX0pCBj0f8Dvyi4Y4GWoEh
-         S0xA==
-In-Reply-To: <20200430145721.GF12655-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=9kEjlo9klnfQZPRmxb764xpSlEiJoEeAxtPwpEWsyW8=;
+        b=aeTR70bQPdhn7Tq42eH9wJCqPBsI8z+1fnVg9Sp1WiL/y90sV5ktBNmBHZI4N8MO4B
+         xrgA5Gnrqf57Shq4bgUrhgVjbUUcLmd3kckR0w89uFJtMZ2OKBZr9zM1EXSqaQK6mhOy
+         A5Fe63ZfurRQ8pVW1kE9UwEZEvF+c4iLHutlCqcshY+L2RPb3sR9Ei0HGePE1c/SkbZV
+         WO/oF8lUVItDI18HzZvm/RWyLyufmnxXW941m0b9CDslbASKKECozA4yZJZFQbMCgE7S
+         5aEkNxO+2XseuXmRdXYIgasPV26hZcZNY6Gn6jf0Eiu5hbGNf9ar+yhp67lgVqm7kzmq
+         tR1A==
+In-Reply-To: <20200430182712.237526-1-shakeelb@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Thu, Apr 30, 2020 at 10:57 PM Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+On Fri, May 1, 2020 at 2:27 AM Shakeel Butt <shakeelb@google.com> wrote:
 >
-> On Wed 29-04-20 12:56:27, Johannes Weiner wrote:
-> [...]
-> > I think to address this, we need a more comprehensive solution and
-> > introduce some form of serialization. I'm not sure yet how that would
-> > look like yet.
->
-> Yeah, that is what I've tried to express earlier and that is why I would
-> rather go with an uglier workaround for now and think about a more
-> robust effective values calculation on top.
+> Lowering memory.max can trigger an oom-kill if the reclaim does not
+> succeed. However if oom-killer does not find a process for killing, it
+> dumps a lot of warnings.
 >
 
-Agreed.
-If there's a more robust effective values calculation on top, then we
-don't need to hack it here and there.
+I have been confused by this behavior for several months and I think
+it will confuse more memcg users.
+We should keep the memcg oom behavior consistent with system oom - no
+oom kill if no process.
 
-> > I'm still not sure it's worth having a somewhat ugly workaround in
-> > mem_cgroup_protection() to protect against half of the bug. If you
-> > think so, the full problem should at least be documented and marked
-> > XXX or something.
+What about bellow change ?
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index e28098e13f1c..25fbc37a747f 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6086,6 +6086,9 @@ static ssize_t memory_max_write(struct
+kernfs_open_file *of,
+                        continue;
+                }
+
++               if (!cgroup_is_populated(memcg->css.cgroup))
++                       break;
++
+                memcg_memory_event(memcg, MEMCG_OOM);
+                if (!mem_cgroup_out_of_memory(memcg, GFP_KERNEL, 0))
+                        break;
+
+> Deleting a memcg does not reclaim memory from it and the memory can
+> linger till there is a memory pressure. One normal way to proactively
+> reclaim such memory is to set memory.max to 0 just before deleting the
+> memcg. However if some of the memcg's memory is pinned by others, this
+> operation can trigger an oom-kill without any process and thus can log a
+> lot un-needed warnings. So, ignore all such warnings from memory.max.
 >
-> Yes, this makes sense to me. What about the following?
-
-Many thanks for the explaination on this workaround.
-With this explanation, I think the others will have a clear idea why
-we must add this ugly workaround here.
-
-
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 1b4150ff64be..50ffbc17cdd8 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -350,6 +350,42 @@ static inline unsigned long mem_cgroup_protection(struct mem_cgroup *memcg,
->         if (mem_cgroup_disabled())
->                 return 0;
+> Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> ---
+>  include/linux/oom.h | 3 +++
+>  mm/memcontrol.c     | 9 +++++----
+>  mm/oom_kill.c       | 2 +-
+>  3 files changed, 9 insertions(+), 5 deletions(-)
 >
-> +       /*
-> +        * There is no reclaim protection applied to a targeted reclaim.
-> +        * We are special casing this specific case here because
-> +        * mem_cgroup_protected calculation is not robust enough to keep
-> +        * the protection invariant for calculated effective values for
-> +        * parallel reclaimers with different reclaim target. This is
-> +        * especially a problem for tail memcgs (as they have pages on LRU)
-> +        * which would want to have effective values 0 for targeted reclaim
-> +        * but a different value for external reclaim.
-> +        *
-> +        * Example
-> +        * Let's have global and A's reclaim in parallel:
-> +        *  |
-> +        *  A (low=2G, usage = 3G, max = 3G, children_low_usage = 1.5G)
-> +        *  |\
-> +        *  | C (low = 1G, usage = 2.5G)
-> +        *  B (low = 1G, usage = 0.5G)
-> +        *
-> +        * For the global reclaim
-> +        * A.elow = A.low
-> +        * B.elow = min(B.usage, B.low) because children_low_usage <= A.elow
-> +        * C.elow = min(C.usage, C.low)
-> +        *
-> +        * With the effective values resetting we have A reclaim
-> +        * A.elow = 0
-> +        * B.elow = B.low
-> +        * C.elow = C.low
-> +        *
-> +        * If the global reclaim races with A's reclaim then
-> +        * B.elow = C.elow = 0 because children_low_usage > A.elow)
-> +        * is possible and reclaiming B would be violating the protection.
-> +        *
-> +        */
-> +       if (memcg == root)
-> +               return 0;
+> diff --git a/include/linux/oom.h b/include/linux/oom.h
+> index c696c265f019..6345dc55df64 100644
+> --- a/include/linux/oom.h
+> +++ b/include/linux/oom.h
+> @@ -52,6 +52,9 @@ struct oom_control {
+>
+>         /* Used to print the constraint info. */
+>         enum oom_constraint constraint;
 > +
->         if (in_low_reclaim)
->                 return READ_ONCE(memcg->memory.emin);
+> +       /* Do not warn even if there is no process to be killed. */
+> +       bool no_warn;
+>  };
 >
+>  extern struct mutex oom_lock;
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 05b4ec2c6499..df88a22f09bc 100644
+> index 317dbbaac603..a1f00d9b9bb0 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -6385,6 +6385,14 @@ enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
+> @@ -1571,7 +1571,7 @@ unsigned long mem_cgroup_size(struct mem_cgroup *memcg)
+>  }
 >
->         if (!root)
->                 root = root_mem_cgroup;
-> +
-> +       /*
-> +        * Effective values of the reclaim targets are ignored so they
-> +        * can be stale. Have a look at mem_cgroup_protection for more
-> +        * details.
-> +        * TODO: calculation should be more robust so that we do not need
-> +        * that special casing.
-> +        */
->         if (memcg == root)
->                 return MEMCG_PROT_NONE;
+>  static bool mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> -                                    int order)
+> +                                    int order, bool no_warn)
+>  {
+>         struct oom_control oc = {
+>                 .zonelist = NULL,
+> @@ -1579,6 +1579,7 @@ static bool mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>                 .memcg = memcg,
+>                 .gfp_mask = gfp_mask,
+>                 .order = order,
+> +               .no_warn = no_warn,
+>         };
+>         bool ret;
 >
+> @@ -1821,7 +1822,7 @@ static enum oom_status mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int
+>                 mem_cgroup_oom_notify(memcg);
 >
-> > In practice, I doubt this matters all that much because limit reclaim
-> > and global reclaim tend to occur in complementary
-> > containerization/isolation strategies, not heavily simultaneously.
+>         mem_cgroup_unmark_under_oom(memcg);
+> -       if (mem_cgroup_out_of_memory(memcg, mask, order))
+> +       if (mem_cgroup_out_of_memory(memcg, mask, order, false))
+>                 ret = OOM_SUCCESS;
+>         else
+>                 ret = OOM_FAILED;
+> @@ -1880,7 +1881,7 @@ bool mem_cgroup_oom_synchronize(bool handle)
+>                 mem_cgroup_unmark_under_oom(memcg);
+>                 finish_wait(&memcg_oom_waitq, &owait.wait);
+>                 mem_cgroup_out_of_memory(memcg, current->memcg_oom_gfp_mask,
+> -                                        current->memcg_oom_order);
+> +                                        current->memcg_oom_order, false);
+>         } else {
+>                 schedule();
+>                 mem_cgroup_unmark_under_oom(memcg);
+> @@ -6106,7 +6107,7 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
+>                 }
 >
-> I would expect that as well but this is always hard to tell.
+>                 memcg_memory_event(memcg, MEMCG_OOM);
+> -               if (!mem_cgroup_out_of_memory(memcg, GFP_KERNEL, 0))
+> +               if (!mem_cgroup_out_of_memory(memcg, GFP_KERNEL, 0, true))
+>                         break;
+>         }
 >
+> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+> index 463b3d74a64a..5ace39f6fe1e 100644
+> --- a/mm/oom_kill.c
+> +++ b/mm/oom_kill.c
+> @@ -1098,7 +1098,7 @@ bool out_of_memory(struct oom_control *oc)
+>
+>         select_bad_process(oc);
+>         /* Found nothing?!?! */
+> -       if (!oc->chosen) {
+> +       if (!oc->chosen && !oc->no_warn) {
+>                 dump_header(oc, NULL);
+>                 pr_warn("Out of memory and no killable processes...\n");
+>                 /*
 > --
-> Michal Hocko
-> SUSE Labs
-
+> 2.26.2.526.g744177e7f7-goog
+>
+>
 
 
 -- 
