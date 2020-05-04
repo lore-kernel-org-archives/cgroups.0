@@ -1,47 +1,158 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Shakeel Butt <shakeelb@google.com>
 Subject: Re: [PATCH] memcg: oom: ignore oom warnings from memory.max
-Date: Mon, 4 May 2020 10:03:08 +0200
-Message-ID: <20200504080308.GI22838@dhcp22.suse.cz>
-References: <20200430182712.237526-1-shakeelb@google.com>
- <CALOAHbC4WY00yQ46b8CFqVQ3S=JSJxE2HR00TtMqXOWLRPRZ8w@mail.gmail.com>
- <20200504070301.GC22838@dhcp22.suse.cz>
- <CALOAHbCJBaa26m2cUkE0evwDnSFvUPrdBg9=WMjC7Yt_33-BJQ@mail.gmail.com>
- <20200504073549.GE22838@dhcp22.suse.cz>
- <CALOAHbDd8hjURSi9jAdjQTbSLDvu9vkOkjS1hZNn04G8Yj7WdQ@mail.gmail.com>
+Date: Mon, 4 May 2020 06:54:40 -0700
+Message-ID: <CALvZod5Ao2PEFPEOckW6URBfxisp9nNpNeon1GuctuHehqk_6Q@mail.gmail.com>
+References: <20200430182712.237526-1-shakeelb@google.com> <20200504065600.GA22838@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CALOAHbDd8hjURSi9jAdjQTbSLDvu9vkOkjS1hZNn04G8Yj7WdQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=qVLyyN3yDodf1IeoqdYhIU2b08myf8w4Qqrbvm4OznY=;
+        b=idQo3VGpbrqwIifYmGR0a0EXYGiEZ9XzDk3FKw23XHc0K6JEMrIfLIXOVpTHNFxVn4
+         fBXdc2Lv5STOs92mF4cOx5Fgbw6cZB7lLAUwRSCndR8WE7SqYkkp0kd2ath7wKjM/kmR
+         GpgDMOzcLcBtpac0PraW4Rb6j0W+PMPs7VY6T9IQZNpz7uy2sIejK6HuQEk4VBeCTCtu
+         ABxBnFOxp4m++CoMNOGY0n4RQm2I4KU9I5AEi8M/D35y0+Jt5CCmzdyC9n1tPH2Rf2Po
+         /P3E0CMiEvFpTfV4zclQnU0CT4fPDqPRXyj1jRqfeg/x9ydp3iz1Tv3oudmuJXUcguuQ
+         3M0Q==
+In-Reply-To: <20200504065600.GA22838@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Mon 04-05-20 15:40:18, Yafang Shao wrote:
-> On Mon, May 4, 2020 at 3:35 PM Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> >
-> > On Mon 04-05-20 15:26:52, Yafang Shao wrote:
-[...]
-> > > As explianed above, no eligible task is different from no task.
-> > > If there are some candidates but no one is eligible, the system will panic.
-> > > While if there's no task, it is definitely no OOM, because that's an
-> > > improssible thing for the system.
-> >
-> > This is very much possible situation when all eligible tasks have been
-> > already killed but they didn't really help to resolve the oom situation
-> > - e.g. in kernel memory leak or unbounded shmem consumption etc...
-> >
-> 
-> That's still an impossible thing, because many tasks are invisible to
-> the oom killer.
-> See oom_unkillable_task().
+On Sun, May 3, 2020 at 11:56 PM Michal Hocko <mhocko@kernel.org> wrote:
+>
+> On Thu 30-04-20 11:27:12, Shakeel Butt wrote:
+> > Lowering memory.max can trigger an oom-kill if the reclaim does not
+> > succeed. However if oom-killer does not find a process for killing, it
+> > dumps a lot of warnings.
+>
+> It shouldn't dump much more than the regular OOM report AFAICS. Sure
+> there is "Out of memory and no killable processes..." message printed as
+> well but is that a real problem?
+>
+> > Deleting a memcg does not reclaim memory from it and the memory can
+> > linger till there is a memory pressure. One normal way to proactively
+> > reclaim such memory is to set memory.max to 0 just before deleting the
+> > memcg. However if some of the memcg's memory is pinned by others, this
+> > operation can trigger an oom-kill without any process and thus can log a
+> > lot un-needed warnings. So, ignore all such warnings from memory.max.
+>
+> OK, I can see why you might want to use memory.max for that purpose but
+> I do not really understand why the oom report is a problem here.
 
-I do not follow, really. oom_unkillable_task only says that global init
-cannot be killed and that it doesn't make any sense to kill kernel
-threads as they do not own any mm normally.
+It may not be a problem for an individual or small scale deployment
+but when "sweep before tear down" is the part of the workflow for
+thousands of machines cycling through hundreds of thousands of cgroups
+then we can potentially flood the logs with not useful dumps and may
+hide (or overflow) any useful information in the logs.
 
--- 
-Michal Hocko
-SUSE Labs
+> memory.max can trigger the oom kill and user should be expecting the oom
+> report under that condition. Why is "no eligible task" so special? Is it
+> because you know that there won't be any tasks for your particular case?
+> What about other use cases where memory.max is not used as a "sweep
+> before tear down"?
+
+What other such use-cases would be? The only use-case I can envision
+of adjusting limits dynamically of a live cgroup are resource
+managers. However for cgroup v2, memory.high is the recommended way to
+limit the usage, so, why would resource managers be changing
+memory.max instead of memory.high? I am not sure. What do you think?
+FB is moving away from limits setting, so, not sure if they have
+thought of these cases.
+
+BTW for such use-cases, shouldn't we be taking the memcg's oom_lock?
+
+>
+> > Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> > ---
+> >  include/linux/oom.h | 3 +++
+> >  mm/memcontrol.c     | 9 +++++----
+> >  mm/oom_kill.c       | 2 +-
+> >  3 files changed, 9 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/include/linux/oom.h b/include/linux/oom.h
+> > index c696c265f019..6345dc55df64 100644
+> > --- a/include/linux/oom.h
+> > +++ b/include/linux/oom.h
+> > @@ -52,6 +52,9 @@ struct oom_control {
+> >
+> >       /* Used to print the constraint info. */
+> >       enum oom_constraint constraint;
+> > +
+> > +     /* Do not warn even if there is no process to be killed. */
+> > +     bool no_warn;
+> >  };
+> >
+> >  extern struct mutex oom_lock;
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 317dbbaac603..a1f00d9b9bb0 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -1571,7 +1571,7 @@ unsigned long mem_cgroup_size(struct mem_cgroup *memcg)
+> >  }
+> >
+> >  static bool mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> > -                                  int order)
+> > +                                  int order, bool no_warn)
+> >  {
+> >       struct oom_control oc = {
+> >               .zonelist = NULL,
+> > @@ -1579,6 +1579,7 @@ static bool mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> >               .memcg = memcg,
+> >               .gfp_mask = gfp_mask,
+> >               .order = order,
+> > +             .no_warn = no_warn,
+> >       };
+> >       bool ret;
+> >
+> > @@ -1821,7 +1822,7 @@ static enum oom_status mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int
+> >               mem_cgroup_oom_notify(memcg);
+> >
+> >       mem_cgroup_unmark_under_oom(memcg);
+> > -     if (mem_cgroup_out_of_memory(memcg, mask, order))
+> > +     if (mem_cgroup_out_of_memory(memcg, mask, order, false))
+> >               ret = OOM_SUCCESS;
+> >       else
+> >               ret = OOM_FAILED;
+> > @@ -1880,7 +1881,7 @@ bool mem_cgroup_oom_synchronize(bool handle)
+> >               mem_cgroup_unmark_under_oom(memcg);
+> >               finish_wait(&memcg_oom_waitq, &owait.wait);
+> >               mem_cgroup_out_of_memory(memcg, current->memcg_oom_gfp_mask,
+> > -                                      current->memcg_oom_order);
+> > +                                      current->memcg_oom_order, false);
+> >       } else {
+> >               schedule();
+> >               mem_cgroup_unmark_under_oom(memcg);
+> > @@ -6106,7 +6107,7 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
+> >               }
+> >
+> >               memcg_memory_event(memcg, MEMCG_OOM);
+> > -             if (!mem_cgroup_out_of_memory(memcg, GFP_KERNEL, 0))
+> > +             if (!mem_cgroup_out_of_memory(memcg, GFP_KERNEL, 0, true))
+> >                       break;
+> >       }
+> >
+> > diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+> > index 463b3d74a64a..5ace39f6fe1e 100644
+> > --- a/mm/oom_kill.c
+> > +++ b/mm/oom_kill.c
+> > @@ -1098,7 +1098,7 @@ bool out_of_memory(struct oom_control *oc)
+> >
+> >       select_bad_process(oc);
+> >       /* Found nothing?!?! */
+> > -     if (!oc->chosen) {
+> > +     if (!oc->chosen && !oc->no_warn) {
+> >               dump_header(oc, NULL);
+> >               pr_warn("Out of memory and no killable processes...\n");
+> >               /*
+> > --
+> > 2.26.2.526.g744177e7f7-goog
+>
+> --
+> Michal Hocko
+> SUSE Labs
