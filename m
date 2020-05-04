@@ -1,98 +1,128 @@
-From: Yang Yingliang <yangyingliang@huawei.com>
-Subject: cgroup pointed by sock is leaked on mode switch
-Date: Sat, 2 May 2020 18:27:21 +0800
-Message-ID: <03dab6ab-0ffe-3cae-193f-a7f84e9b14c5@huawei.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] memcg: oom: ignore oom warnings from memory.max
+Date: Mon, 4 May 2020 08:56:00 +0200
+Message-ID: <20200504065600.GA22838@dhcp22.suse.cz>
+References: <20200430182712.237526-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20200430182712.237526-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: tj@kernel.org
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, "Libin (Huawei)" <huawei.libin@huawei.com>, yangyingliang@huawei.com, guofan5@huawei.com, wangkefeng.wang@huawei.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi,
+On Thu 30-04-20 11:27:12, Shakeel Butt wrote:
+> Lowering memory.max can trigger an oom-kill if the reclaim does not
+> succeed. However if oom-killer does not find a process for killing, it
+> dumps a lot of warnings.
 
-I got an oom panic because cgroup is leaked.
+It shouldn't dump much more than the regular OOM report AFAICS. Sure
+there is "Out of memory and no killable processes..." message printed as
+well but is that a real problem?
 
-Here is the steps :
-   - run a docker with --cap-add sys_admin parameter and the systemd 
-process in the docker uses both cgroupv1 and cgroupv2
-   - ssh/exit from host to docker repeately
+> Deleting a memcg does not reclaim memory from it and the memory can
+> linger till there is a memory pressure. One normal way to proactively
+> reclaim such memory is to set memory.max to 0 just before deleting the
+> memcg. However if some of the memcg's memory is pinned by others, this
+> operation can trigger an oom-kill without any process and thus can log a
+> lot un-needed warnings. So, ignore all such warnings from memory.max.
 
-I find the number nr_dying_descendants is increasing:
-linux-dVpNUK:~ # find /sys/fs/cgroup/ -name cgroup.stat -exec grep 
-'^nr_dying_descendants [^0]'  {} +
-/sys/fs/cgroup/unified/cgroup.stat:nr_dying_descendants 80
-/sys/fs/cgroup/unified/system.slice/cgroup.stat:nr_dying_descendants 1
-/sys/fs/cgroup/unified/system.slice/system-hostos.slice/cgroup.stat:nr_dying_descendants 
-1
-/sys/fs/cgroup/unified/lxc/cgroup.stat:nr_dying_descendants 79
-/sys/fs/cgroup/unified/lxc/5f1fdb8c54fa40c3e599613dab6e4815058b76ebada8a27bc1fe80c0d4801764/cgroup.stat:nr_dying_descendants 
-78
-/sys/fs/cgroup/unified/lxc/5f1fdb8c54fa40c3e599613dab6e4815058b76ebada8a27bc1fe80c0d4801764/system.slice/cgroup.stat:nr_dying_descendants 
-78
+OK, I can see why you might want to use memory.max for that purpose but
+I do not really understand why the oom report is a problem here.
+memory.max can trigger the oom kill and user should be expecting the oom
+report under that condition. Why is "no eligible task" so special? Is it
+because you know that there won't be any tasks for your particular case?
+What about other use cases where memory.max is not used as a "sweep
+before tear down"?
 
+> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+>  include/linux/oom.h | 3 +++
+>  mm/memcontrol.c     | 9 +++++----
+>  mm/oom_kill.c       | 2 +-
+>  3 files changed, 9 insertions(+), 5 deletions(-)
+> 
+> diff --git a/include/linux/oom.h b/include/linux/oom.h
+> index c696c265f019..6345dc55df64 100644
+> --- a/include/linux/oom.h
+> +++ b/include/linux/oom.h
+> @@ -52,6 +52,9 @@ struct oom_control {
+>  
+>  	/* Used to print the constraint info. */
+>  	enum oom_constraint constraint;
+> +
+> +	/* Do not warn even if there is no process to be killed. */
+> +	bool no_warn;
+>  };
+>  
+>  extern struct mutex oom_lock;
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 317dbbaac603..a1f00d9b9bb0 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1571,7 +1571,7 @@ unsigned long mem_cgroup_size(struct mem_cgroup *memcg)
+>  }
+>  
+>  static bool mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> -				     int order)
+> +				     int order, bool no_warn)
+>  {
+>  	struct oom_control oc = {
+>  		.zonelist = NULL,
+> @@ -1579,6 +1579,7 @@ static bool mem_cgroup_out_of_memory(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  		.memcg = memcg,
+>  		.gfp_mask = gfp_mask,
+>  		.order = order,
+> +		.no_warn = no_warn,
+>  	};
+>  	bool ret;
+>  
+> @@ -1821,7 +1822,7 @@ static enum oom_status mem_cgroup_oom(struct mem_cgroup *memcg, gfp_t mask, int
+>  		mem_cgroup_oom_notify(memcg);
+>  
+>  	mem_cgroup_unmark_under_oom(memcg);
+> -	if (mem_cgroup_out_of_memory(memcg, mask, order))
+> +	if (mem_cgroup_out_of_memory(memcg, mask, order, false))
+>  		ret = OOM_SUCCESS;
+>  	else
+>  		ret = OOM_FAILED;
+> @@ -1880,7 +1881,7 @@ bool mem_cgroup_oom_synchronize(bool handle)
+>  		mem_cgroup_unmark_under_oom(memcg);
+>  		finish_wait(&memcg_oom_waitq, &owait.wait);
+>  		mem_cgroup_out_of_memory(memcg, current->memcg_oom_gfp_mask,
+> -					 current->memcg_oom_order);
+> +					 current->memcg_oom_order, false);
+>  	} else {
+>  		schedule();
+>  		mem_cgroup_unmark_under_oom(memcg);
+> @@ -6106,7 +6107,7 @@ static ssize_t memory_max_write(struct kernfs_open_file *of,
+>  		}
+>  
+>  		memcg_memory_event(memcg, MEMCG_OOM);
+> -		if (!mem_cgroup_out_of_memory(memcg, GFP_KERNEL, 0))
+> +		if (!mem_cgroup_out_of_memory(memcg, GFP_KERNEL, 0, true))
+>  			break;
+>  	}
+>  
+> diff --git a/mm/oom_kill.c b/mm/oom_kill.c
+> index 463b3d74a64a..5ace39f6fe1e 100644
+> --- a/mm/oom_kill.c
+> +++ b/mm/oom_kill.c
+> @@ -1098,7 +1098,7 @@ bool out_of_memory(struct oom_control *oc)
+>  
+>  	select_bad_process(oc);
+>  	/* Found nothing?!?! */
+> -	if (!oc->chosen) {
+> +	if (!oc->chosen && !oc->no_warn) {
+>  		dump_header(oc, NULL);
+>  		pr_warn("Out of memory and no killable processes...\n");
+>  		/*
+> -- 
+> 2.26.2.526.g744177e7f7-goog
 
-The situation is as same as the commit bd1060a1d671 ("sock, cgroup: add 
-sock->sk_cgroup") describes.
-"On mode switch, cgroup references which are already being pointed to by 
-socks may be leaked."
-
-Do we have a fix for this leak now ?
-
-Or how  about fix this by record the cgrp2 pointer, then put it when sk 
-is freeing like this:
-
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index d9bd671105e2..cbb1e76ea305 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -770,6 +770,7 @@ struct sock_cgroup_data {
-  #endif
-          u64        val;
-      };
-+    struct cgroup *cgrpv2;
-  };
-
-  /*
-@@ -802,6 +803,7 @@ static inline void sock_cgroup_set_prioidx(struct 
-sock_cgroup_data *skcd,
-          return;
-
-      if (!(skcd_buf.is_data & 1)) {
-+        WRITE_ONCE(skcd->cgrpv2, skcd_buf.val);
-          skcd_buf.val = 0;
-          skcd_buf.is_data = 1;
-      }
-@@ -819,6 +821,7 @@ static inline void sock_cgroup_set_classid(struct 
-sock_cgroup_data *skcd,
-          return;
-
-      if (!(skcd_buf.is_data & 1)) {
-+        WRITE_ONCE(skcd->cgrpv2, skcd_buf.val);
-          skcd_buf.val = 0;
-          skcd_buf.is_data = 1;
-      }
-diff --git a/net/core/sock.c b/net/core/sock.c
-index a0dda2bf9d7c..7c761ef2d32e 100644
---- a/net/core/sock.c
-+++ b/net/core/sock.c
-@@ -1520,6 +1520,10 @@ static void sk_prot_free(struct proto *prot, 
-struct sock *sk)
-      slab = prot->slab;
-
-      cgroup_sk_free(&sk->sk_cgrp_data);
-+    if (sk->sk_cgrp_data.cgrpv2) {
-+        cgroup_put(sk->sk_cgrp_data.cgrpv2);
-+        sk->sk_cgrp_data.cgrpv2 = NULL;
-+    }
-      mem_cgroup_sk_free(sk);
-      security_sk_free(sk);
-      if (slab != NULL)
-
-
-Thanks,
-Yang
-
+-- 
+Michal Hocko
+SUSE Labs
