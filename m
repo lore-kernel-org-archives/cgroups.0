@@ -1,226 +1,315 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH 1/2] mm, memcg: Avoid stale protection values when cgroup
- is above protection
-Date: Mon, 4 May 2020 15:59:10 -0700
-Message-ID: <20200504225910.GB20009@carbon.dhcp.thefacebook.com>
-References: <cover.1588092152.git.chris@chrisdown.name>
- <d454fca5d6b38b74d8dc35141e8519b02089a698.1588092152.git.chris@chrisdown.name>
- <20200429101510.GA28637@dhcp22.suse.cz>
- <20200429140330.GA5054@cmpxchg.org>
- <20200429150414.GI28637@dhcp22.suse.cz>
- <20200429165627.GA24768@cmpxchg.org>
- <20200430145721.GF12655@dhcp22.suse.cz>
- <CALOAHbBub_oojkb5DpXUoHV=-e9PDAeVzJvKvDtyk-9Jg6_Pkw@mail.gmail.com>
- <20200504072342.GD22838@dhcp22.suse.cz>
+From: Tejun Heo <tj@kernel.org>
+Subject: [block/for-5.7] iocost: protect iocg->abs_vdebt with iocg->waitq.lock
+Date: Mon, 4 May 2020 19:27:54 -0400
+Message-ID: <20200504232754.GB3209250@mtj.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=qk7zY96zEAYh4rvMwIjk8A7NLJslV82xfWPmoz/2mbU=;
- b=fIxd66/reIR7EQggwvNULLm2WznRadcpp00bKTN9nPdo9AQsKFgcRkaUSKlvWXvhSZUD
- 7kRxyDnQdOk7SkLoGzC2jWHJihgTPNgso0cKuErKZwxW3n9zYYziw1m9udpl4UgrFhs2
- 18d7OqBpWhbXu/d9tEld+EGgi06etafX4UM= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qk7zY96zEAYh4rvMwIjk8A7NLJslV82xfWPmoz/2mbU=;
- b=PUIRW1JkeV41KwtyqG4/E+k1B8wpw4w1VD9eOsNSiaGvKcmBaEKyhxcIYToRbe0Qwg3EktK6A/tKx1eE2Ny/xS1SbFGfKGjUjfKthsG2uJG5VflXo8Bx0Iq1JaM0t9B7bzunPHUYZQUzn8xXzlrRxLnv59YGgzktA7Wmfu7wE1o=
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=ip3zhTzFNO8GaDSRR5Xv3BK5YgA2YXgYzXwyja3RCNc=;
+        b=uJZyLFH7OYZRQopRfg8qLOZSE+chPXLsRuaPH2UtwWV2adHuHG980H3af9BMlE2Fjb
+         pqyFPQyiG6weqr2LIpMsxpcgeu2rij/dY+GAc7rOWgQasesMzK6EI9RehyqdQq7pUTPQ
+         Z2jAhRNEZxvliEHRbRI0xQ9HNHbj6UI+9hZxr3jFBFFclkzKvoQHyPWuBATQXVpHtSe4
+         +wFeEzG/1uLqh5N/MU4bgmFYBEcr9zYt+FOqSCWZLIATYXo10kR5oFNPZXrnw+OcivOJ
+         P/XTWWbf1kEsdGGHH1X2lBNIKDrnDz8UL/7EWglUibLhiK3QbGi6Wp/97YiKdemTPg1R
+         tXdA==
 Content-Disposition: inline
-In-Reply-To: <20200504072342.GD22838-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: axboe@kernel.dk
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org, Vlad Dmitriev <vvd@fb.com>
 
-On Mon, May 04, 2020 at 09:23:42AM +0200, Michal Hocko wrote:
-> On Fri 01-05-20 07:59:57, Yafang Shao wrote:
-> > On Thu, Apr 30, 2020 at 10:57 PM Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> > >
-> > > On Wed 29-04-20 12:56:27, Johannes Weiner wrote:
-> > > [...]
-> > > > I think to address this, we need a more comprehensive solution and
-> > > > introduce some form of serialization. I'm not sure yet how that would
-> > > > look like yet.
-> > >
-> > > Yeah, that is what I've tried to express earlier and that is why I would
-> > > rather go with an uglier workaround for now and think about a more
-> > > robust effective values calculation on top.
-> > >
-> > 
-> > Agreed.
-> > If there's a more robust effective values calculation on top, then we
-> > don't need to hack it here and there.
-> > 
-> > > > I'm still not sure it's worth having a somewhat ugly workaround in
-> > > > mem_cgroup_protection() to protect against half of the bug. If you
-> > > > think so, the full problem should at least be documented and marked
-> > > > XXX or something.
-> > >
-> > > Yes, this makes sense to me. What about the following?
-> > 
-> > Many thanks for the explaination on this workaround.
-> > With this explanation, I think the others will have a clear idea why
-> > we must add this ugly workaround here.
-> 
-> OK, this would be the patch with the full changelog. If both Chris and
-> Johannes are ok with this I would suggest replacing the one Andrew took
-> already
-> 
-> 
-> From dfcdbfd336d2d23195ec9d90e6e58898f49f8998 Mon Sep 17 00:00:00 2001
-> From: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Date: Mon, 4 May 2020 09:10:03 +0200
-> Subject: [PATCH] mm, memcg: Avoid stale protection values when cgroup is above
->  protection
-> 
-> A cgroup can have both memory protection and a memory limit to isolate
-> it from its siblings in both directions - for example, to prevent it
-> from being shrunk below 2G under high pressure from outside, but also
-> from growing beyond 4G under low pressure.
-> 
-> Commit 9783aa9917f8 ("mm, memcg: proportional memory.{low,min} reclaim")
-> implemented proportional scan pressure so that multiple siblings in
-> excess of their protection settings don't get reclaimed equally but
-> instead in accordance to their unprotected portion.
-> 
-> During limit reclaim, this proportionality shouldn't apply of course:
-> there is no competition, all pressure is from within the cgroup and
-> should be applied as such. Reclaim should operate at full efficiency.
-> 
-> However, mem_cgroup_protected() never expected anybody to look at the
-> effective protection values when it indicated that the cgroup is above
-> its protection. As a result, a query during limit reclaim may return
-> stale protection values that were calculated by a previous reclaim cycle
-> in which the cgroup did have siblings.
-> 
-> When this happens, reclaim is unnecessarily hesitant and potentially
-> slow to meet the desired limit. In theory this could lead to premature
-> OOM kills, although it's not obvious this has occurred in practice.
-> 
-> Workaround the problem by special casing reclaim roots in
-> mem_cgroup_protection. These memcgs are never participating in the
-> reclaim protection because the reclaim is internal.
-> 
-> We have to ignore effective protection values for reclaim roots because
-> mem_cgroup_protected might be called from racing reclaim contexts with
-> different roots. Calculation is relying on root -> leaf tree traversal
-> therefore top-down reclaim protection invariants should hold. The only
-> exception is the reclaim root which should have effective protection set
-> to 0 but that would be problematic for the following setup:
->  Let's have global and A's reclaim in parallel:
->   |
->   A (low=2G, usage = 3G, max = 3G, children_low_usage = 1.5G)
->   |\
->   | C (low = 1G, usage = 2.5G)
->   B (low = 1G, usage = 0.5G)
-> 
->  for A reclaim we have
->  B.elow = B.low
->  C.elow = C.low
-> 
->  For the global reclaim
->  A.elow = A.low
->  B.elow = min(B.usage, B.low) because children_low_usage <= A.elow
->  C.elow = min(C.usage, C.low)
-> 
->  With the effective values resetting we have A reclaim
->  A.elow = 0
->  B.elow = B.low
->  C.elow = C.low
-> 
->  and global reclaim could see the above and then
->  B.elow = C.elow = 0 because children_low_usage > A.elow
-> 
-> Which means that protected memcgs would get reclaimed.
-> 
-> In future we would like to make mem_cgroup_protected more robust against
-> racing reclaim contexts but that is likely more complex solution that
-> this simple workaround.
-> 
-> [hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org - large part of the changelog]
-> [mhocko-IBi9RG/b67k@public.gmane.org - workaround explanation]
-> Fixes: 9783aa9917f8 ("mm, memcg: proportional memory.{low,min} reclaim")
-> Signed-off-by: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Signed-off-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: iocost: protect iocg->abs_vdebt with iocg->waitq.lock
 
-Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+abs_vdebt is an atomic_64 which tracks how much over budget a given cgroup
+is and controls the activation of use_delay mechanism. Once a cgroup goes
+over budget from forced IOs, it has to pay it back with its future budget.
+The progress guarantee on debt paying comes from the iocg being active -
+active iocgs are processed by the periodic timer, which ensures that as time
+passes the debts dissipate and the iocg returns to normal operation.
 
-> ---
->  include/linux/memcontrol.h | 36 ++++++++++++++++++++++++++++++++++++
->  mm/memcontrol.c            |  8 ++++++++
->  2 files changed, 44 insertions(+)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 1b4150ff64be..50ffbc17cdd8 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -350,6 +350,42 @@ static inline unsigned long mem_cgroup_protection(struct mem_cgroup *memcg,
->  	if (mem_cgroup_disabled())
->  		return 0;
->  
-> +	/*
-> +	 * There is no reclaim protection applied to a targeted reclaim.
-> +	 * We are special casing this specific case here because
-> +	 * mem_cgroup_protected calculation is not robust enough to keep
-> +	 * the protection invariant for calculated effective values for
-> +	 * parallel reclaimers with different reclaim target. This is
-> +	 * especially a problem for tail memcgs (as they have pages on LRU)
-> +	 * which would want to have effective values 0 for targeted reclaim
-> +	 * but a different value for external reclaim.
-> +	 *
-> +	 * Example
-> +	 * Let's have global and A's reclaim in parallel:
-> +	 *  |
-> +	 *  A (low=2G, usage = 3G, max = 3G, children_low_usage = 1.5G)
-> +	 *  |\
-> +	 *  | C (low = 1G, usage = 2.5G)
-> +	 *  B (low = 1G, usage = 0.5G)
-> +	 *
-> +	 * For the global reclaim
-> +	 * A.elow = A.low
-> +	 * B.elow = min(B.usage, B.low) because children_low_usage <= A.elow
-> +	 * C.elow = min(C.usage, C.low)
-> +	 *
-> +	 * With the effective values resetting we have A reclaim
-> +	 * A.elow = 0
-> +	 * B.elow = B.low
-> +	 * C.elow = C.low
-> +	 *
-> +	 * If the global reclaim races with A's reclaim then
-> +	 * B.elow = C.elow = 0 because children_low_usage > A.elow)
-> +	 * is possible and reclaiming B would be violating the protection.
-> +	 *
-> +	 */
-> +	if (memcg == root)
-> +		return 0;
-> +
->  	if (in_low_reclaim)
->  		return READ_ONCE(memcg->memory.emin);
->  
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 05b4ec2c6499..df88a22f09bc 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -6385,6 +6385,14 @@ enum mem_cgroup_protection mem_cgroup_protected(struct mem_cgroup *root,
->  
->  	if (!root)
->  		root = root_mem_cgroup;
-> +
-> +	/*
-> +	 * Effective values of the reclaim targets are ignored so they
-> +	 * can be stale. Have a look at mem_cgroup_protection for more
-> +	 * details.
-> +	 * TODO: calculation should be more robust so that we do not need
-> +	 * that special casing.
-> +	 */
->  	if (memcg == root)
->  		return MEMCG_PROT_NONE;
->  
-> -- 
-> 2.25.1
-> 
-> -- 
-> Michal Hocko
-> SUSE Labs
+However, both iocg activation and vdebt handling are asynchronous and a
+sequence like the following may happen.
+
+1. The iocg is in the process of being deactivated by the periodic timer.
+
+2. A bio enters ioc_rqos_throttle(), calls iocg_activate() which returns
+   without anything because it still sees that the iocg is already active.
+
+3. The iocg is deactivated.
+
+4. The bio from #2 is over budget but needs to be forced. It increases
+   abs_vdebt and goes over the threshold and enables use_delay.
+
+5. IO control is enabled for the iocg's subtree and now IOs are attributed
+   to the descendant cgroups and the iocg itself no longer issues IOs.
+
+This leaves the iocg with stuck abs_vdebt - it has debt but inactive and no
+further IOs which can activate it. This can end up unduly punishing all the
+descendants cgroups.
+
+The usual throttling path has the same issue - the iocg must be active while
+throttled to ensure that future event will wake it up - and solves the
+problem by synchronizing the throttling path with a spinlock. abs_vdebt
+handling is another form of overage handling and shares a lot of
+characteristics including the fact that it isn't in the hottest path.
+
+This patch fixes the above and other possible races by strictly
+synchronizing abs_vdebt and use_delay handling with iocg->waitq.lock.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Vlad Dmitriev <vvd@fb.com>
+Cc: stable@vger.kernel.org # v5.4+
+Fixes: e1518f63f246 ("blk-iocost: Don't let merges push vtime into the future")
+---
+ block/blk-iocost.c             |  117 ++++++++++++++++++++++++-----------------
+ tools/cgroup/iocost_monitor.py |    7 ++
+ 2 files changed, 77 insertions(+), 47 deletions(-)
+
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -466,7 +466,7 @@ struct ioc_gq {
+ 	 */
+ 	atomic64_t			vtime;
+ 	atomic64_t			done_vtime;
+-	atomic64_t			abs_vdebt;
++	u64				abs_vdebt;
+ 	u64				last_vtime;
+ 
+ 	/*
+@@ -1142,7 +1142,7 @@ static void iocg_kick_waitq(struct ioc_g
+ 	struct iocg_wake_ctx ctx = { .iocg = iocg };
+ 	u64 margin_ns = (u64)(ioc->period_us *
+ 			      WAITQ_TIMER_MARGIN_PCT / 100) * NSEC_PER_USEC;
+-	u64 abs_vdebt, vdebt, vshortage, expires, oexpires;
++	u64 vdebt, vshortage, expires, oexpires;
+ 	s64 vbudget;
+ 	u32 hw_inuse;
+ 
+@@ -1152,18 +1152,15 @@ static void iocg_kick_waitq(struct ioc_g
+ 	vbudget = now->vnow - atomic64_read(&iocg->vtime);
+ 
+ 	/* pay off debt */
+-	abs_vdebt = atomic64_read(&iocg->abs_vdebt);
+-	vdebt = abs_cost_to_cost(abs_vdebt, hw_inuse);
++	vdebt = abs_cost_to_cost(iocg->abs_vdebt, hw_inuse);
+ 	if (vdebt && vbudget > 0) {
+ 		u64 delta = min_t(u64, vbudget, vdebt);
+ 		u64 abs_delta = min(cost_to_abs_cost(delta, hw_inuse),
+-				    abs_vdebt);
++				    iocg->abs_vdebt);
+ 
+ 		atomic64_add(delta, &iocg->vtime);
+ 		atomic64_add(delta, &iocg->done_vtime);
+-		atomic64_sub(abs_delta, &iocg->abs_vdebt);
+-		if (WARN_ON_ONCE(atomic64_read(&iocg->abs_vdebt) < 0))
+-			atomic64_set(&iocg->abs_vdebt, 0);
++		iocg->abs_vdebt -= abs_delta;
+ 	}
+ 
+ 	/*
+@@ -1219,12 +1216,18 @@ static bool iocg_kick_delay(struct ioc_g
+ 	u64 expires, oexpires;
+ 	u32 hw_inuse;
+ 
++	lockdep_assert_held(&iocg->waitq.lock);
++
+ 	/* debt-adjust vtime */
+ 	current_hweight(iocg, NULL, &hw_inuse);
+-	vtime += abs_cost_to_cost(atomic64_read(&iocg->abs_vdebt), hw_inuse);
++	vtime += abs_cost_to_cost(iocg->abs_vdebt, hw_inuse);
+ 
+-	/* clear or maintain depending on the overage */
+-	if (time_before_eq64(vtime, now->vnow)) {
++	/*
++	 * Clear or maintain depending on the overage. Non-zero vdebt is what
++	 * guarantees that @iocg is online and future iocg_kick_delay() will
++	 * clear use_delay. Don't leave it on when there's no vdebt.
++	 */
++	if (!iocg->abs_vdebt || time_before_eq64(vtime, now->vnow)) {
+ 		blkcg_clear_delay(blkg);
+ 		return false;
+ 	}
+@@ -1258,9 +1261,12 @@ static enum hrtimer_restart iocg_delay_t
+ {
+ 	struct ioc_gq *iocg = container_of(timer, struct ioc_gq, delay_timer);
+ 	struct ioc_now now;
++	unsigned long flags;
+ 
++	spin_lock_irqsave(&iocg->waitq.lock, flags);
+ 	ioc_now(iocg->ioc, &now);
+ 	iocg_kick_delay(iocg, &now, 0);
++	spin_unlock_irqrestore(&iocg->waitq.lock, flags);
+ 
+ 	return HRTIMER_NORESTART;
+ }
+@@ -1368,14 +1374,13 @@ static void ioc_timer_fn(struct timer_li
+ 	 * should have woken up in the last period and expire idle iocgs.
+ 	 */
+ 	list_for_each_entry_safe(iocg, tiocg, &ioc->active_iocgs, active_list) {
+-		if (!waitqueue_active(&iocg->waitq) &&
+-		    !atomic64_read(&iocg->abs_vdebt) && !iocg_is_idle(iocg))
++		if (!waitqueue_active(&iocg->waitq) && iocg->abs_vdebt &&
++		    !iocg_is_idle(iocg))
+ 			continue;
+ 
+ 		spin_lock(&iocg->waitq.lock);
+ 
+-		if (waitqueue_active(&iocg->waitq) ||
+-		    atomic64_read(&iocg->abs_vdebt)) {
++		if (waitqueue_active(&iocg->waitq) || iocg->abs_vdebt) {
+ 			/* might be oversleeping vtime / hweight changes, kick */
+ 			iocg_kick_waitq(iocg, &now);
+ 			iocg_kick_delay(iocg, &now, 0);
+@@ -1718,28 +1723,49 @@ static void ioc_rqos_throttle(struct rq_
+ 	 * tests are racy but the races aren't systemic - we only miss once
+ 	 * in a while which is fine.
+ 	 */
+-	if (!waitqueue_active(&iocg->waitq) &&
+-	    !atomic64_read(&iocg->abs_vdebt) &&
++	if (!waitqueue_active(&iocg->waitq) && !iocg->abs_vdebt &&
+ 	    time_before_eq64(vtime + cost, now.vnow)) {
+ 		iocg_commit_bio(iocg, bio, cost);
+ 		return;
+ 	}
+ 
+ 	/*
+-	 * We're over budget.  If @bio has to be issued regardless,
+-	 * remember the abs_cost instead of advancing vtime.
+-	 * iocg_kick_waitq() will pay off the debt before waking more IOs.
++	 * We activated above but w/o any synchronization. Deactivation is
++	 * synchronized with waitq.lock and we won't get deactivated as long
++	 * as we're waiting or has debt, so we're good if we're activated
++	 * here. In the unlikely case that we aren't, just issue the IO.
++	 */
++	spin_lock_irq(&iocg->waitq.lock);
++
++	if (unlikely(list_empty(&iocg->active_list))) {
++		spin_unlock_irq(&iocg->waitq.lock);
++		iocg_commit_bio(iocg, bio, cost);
++		return;
++	}
++
++	/*
++	 * We're over budget. If @bio has to be issued regardless, remember
++	 * the abs_cost instead of advancing vtime. iocg_kick_waitq() will pay
++	 * off the debt before waking more IOs.
++	 *
+ 	 * This way, the debt is continuously paid off each period with the
+-	 * actual budget available to the cgroup.  If we just wound vtime,
+-	 * we would incorrectly use the current hw_inuse for the entire
+-	 * amount which, for example, can lead to the cgroup staying
+-	 * blocked for a long time even with substantially raised hw_inuse.
++	 * actual budget available to the cgroup. If we just wound vtime, we
++	 * would incorrectly use the current hw_inuse for the entire amount
++	 * which, for example, can lead to the cgroup staying blocked for a
++	 * long time even with substantially raised hw_inuse.
++	 *
++	 * An iocg with vdebt should stay online so that the timer can keep
++	 * deducting its vdebt and [de]activate use_delay mechanism
++	 * accordingly. We don't want to race against the timer trying to
++	 * clear them and leave @iocg inactive w/ dangling use_delay heavily
++	 * penalizing the cgroup and its descendants.
+ 	 */
+ 	if (bio_issue_as_root_blkg(bio) || fatal_signal_pending(current)) {
+-		atomic64_add(abs_cost, &iocg->abs_vdebt);
++		iocg->abs_vdebt += abs_cost;
+ 		if (iocg_kick_delay(iocg, &now, cost))
+ 			blkcg_schedule_throttle(rqos->q,
+ 					(bio->bi_opf & REQ_SWAP) == REQ_SWAP);
++		spin_unlock_irq(&iocg->waitq.lock);
+ 		return;
+ 	}
+ 
+@@ -1756,20 +1782,6 @@ static void ioc_rqos_throttle(struct rq_
+ 	 * All waiters are on iocg->waitq and the wait states are
+ 	 * synchronized using waitq.lock.
+ 	 */
+-	spin_lock_irq(&iocg->waitq.lock);
+-
+-	/*
+-	 * We activated above but w/o any synchronization.  Deactivation is
+-	 * synchronized with waitq.lock and we won't get deactivated as
+-	 * long as we're waiting, so we're good if we're activated here.
+-	 * In the unlikely case that we are deactivated, just issue the IO.
+-	 */
+-	if (unlikely(list_empty(&iocg->active_list))) {
+-		spin_unlock_irq(&iocg->waitq.lock);
+-		iocg_commit_bio(iocg, bio, cost);
+-		return;
+-	}
+-
+ 	init_waitqueue_func_entry(&wait.wait, iocg_wake_fn);
+ 	wait.wait.private = current;
+ 	wait.bio = bio;
+@@ -1801,6 +1813,7 @@ static void ioc_rqos_merge(struct rq_qos
+ 	struct ioc_now now;
+ 	u32 hw_inuse;
+ 	u64 abs_cost, cost;
++	unsigned long flags;
+ 
+ 	/* bypass if disabled or for root cgroup */
+ 	if (!ioc->enabled || !iocg->level)
+@@ -1820,15 +1833,28 @@ static void ioc_rqos_merge(struct rq_qos
+ 		iocg->cursor = bio_end;
+ 
+ 	/*
+-	 * Charge if there's enough vtime budget and the existing request
+-	 * has cost assigned.  Otherwise, account it as debt.  See debt
+-	 * handling in ioc_rqos_throttle() for details.
++	 * Charge if there's enough vtime budget and the existing request has
++	 * cost assigned.
+ 	 */
+ 	if (rq->bio && rq->bio->bi_iocost_cost &&
+-	    time_before_eq64(atomic64_read(&iocg->vtime) + cost, now.vnow))
++	    time_before_eq64(atomic64_read(&iocg->vtime) + cost, now.vnow)) {
+ 		iocg_commit_bio(iocg, bio, cost);
+-	else
+-		atomic64_add(abs_cost, &iocg->abs_vdebt);
++		return;
++	}
++
++	/*
++	 * Otherwise, account it as debt if @iocg is online, which it should
++	 * be for the vast majority of cases. See debt handling in
++	 * ioc_rqos_throttle() for details.
++	 */
++	spin_lock_irqsave(&iocg->waitq.lock, flags);
++	if (likely(!list_empty(&iocg->active_list))) {
++		iocg->abs_vdebt += abs_cost;
++		iocg_kick_delay(iocg, &now, cost);
++	} else {
++		iocg_commit_bio(iocg, bio, cost);
++	}
++	spin_unlock_irqrestore(&iocg->waitq.lock, flags);
+ }
+ 
+ static void ioc_rqos_done_bio(struct rq_qos *rqos, struct bio *bio)
+@@ -1998,7 +2024,6 @@ static void ioc_pd_init(struct blkg_poli
+ 	iocg->ioc = ioc;
+ 	atomic64_set(&iocg->vtime, now.vnow);
+ 	atomic64_set(&iocg->done_vtime, now.vnow);
+-	atomic64_set(&iocg->abs_vdebt, 0);
+ 	atomic64_set(&iocg->active_period, atomic64_read(&ioc->cur_period));
+ 	INIT_LIST_HEAD(&iocg->active_list);
+ 	iocg->hweight_active = HWEIGHT_WHOLE;
+--- a/tools/cgroup/iocost_monitor.py
++++ b/tools/cgroup/iocost_monitor.py
+@@ -159,7 +159,12 @@ class IocgStat:
+         else:
+             self.inflight_pct = 0
+ 
+-        self.debt_ms = iocg.abs_vdebt.counter.value_() / VTIME_PER_USEC / 1000
++        # vdebt used to be an atomic64_t and is now u64, support both
++        try:
++            self.debt_ms = iocg.abs_vdebt.counter.value_() / VTIME_PER_USEC / 1000
++        except:
++            self.debt_ms = iocg.abs_vdebt.value_() / VTIME_PER_USEC / 1000
++
+         self.use_delay = blkg.use_delay.counter.value_()
+         self.delay_ms = blkg.delay_nsec.counter.value_() / 1_000_000
+ 
