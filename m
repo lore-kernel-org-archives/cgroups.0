@@ -1,89 +1,99 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v5 0/4] Charge loop device i/o to issuing cgroup
-Date: Tue, 5 May 2020 11:38:34 -0400
-Message-ID: <20200505153834.GA12217@mtj.thefacebook.com>
-References: <20200428161355.6377-1-schatzberg.dan@gmail.com>
- <20200428214653.GD2005@dread.disaster.area>
- <20200429102540.GA12716@quack2.suse.cz>
- <20200505064114.GI2005@dread.disaster.area>
+From: David Ahern <dsahern@gmail.com>
+Subject: Re: [PATCH iproute2-next 1/2] ss: introduce cgroup2 cache and helper
+ functions
+Date: Tue, 5 May 2020 09:42:13 -0600
+Message-ID: <7edb94ab-badb-e2f5-42fc-f04d38d29791@gmail.com>
+References: <20200430155245.83364-1-zeil@yandex-team.ru>
+ <20200430155245.83364-2-zeil@yandex-team.ru>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=BXdArichtJxJSpMdJATI60C/n/3lvsy1fL/KOG1aR0o=;
-        b=Qgxse7dVakSkufrx/Jt+udb+ymexH65VUMnEUWLtLKEfqRpwkmZlz5vI4O25vYATuy
-         VVaC5aOnEDpNMe0z4vb1MBK8RuTdKfE1z+9MXMsUa8Z7ppPI9jeLSH+Y8Hs6hSeLIt7Z
-         XdQeFLLxaDYlVJjnLRQT2fRAPqAx2+GxrlAFS5lYDNwWv5TZOo8aje30hyhqww7q5VgE
-         hFxkjqHOBiRON9nOAlxbQxTz+54tsN16QGn69GNDWSv9wEK3DmoNTZSaJqVrx9A7Mk8y
-         00VmVkyFxFDtx76koAUjHf4CeJ1KqeHm5lGGRIjrmR90TSFZ8z6JZKNkLs+fowxAlB76
-         0AAg==
-Content-Disposition: inline
-In-Reply-To: <20200505064114.GI2005-pA1nmv6sEBkOM8BvhN4Z8vybgvtCy99p@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=OdSiaVzqGpXkKErkBltChUbo57smog+mPGXXST7mpwE=;
+        b=swOHeOWR+HuU6TtVziCADaRF6lOWBfKvUpUX8SVljvZscu1Iz4LWJEZNcUdU9+cjIo
+         WGjooglq64KqR0LMuLqXbZlaVO0oqb9oEZNJok4mBm7CtcG4YI4KDq0vHslEFi/ZAyb9
+         8ij98N+MzWxd9N5Iwgi9cbUBr3ErTo8StfSvrSJ7Lx1ItCjO3+dLF4Jie5eGLEZ6uafD
+         2BEirE8E9hyHYFrtmuhamxMUqyYbUNpWtJr1pxMaznzCpHVKheb+MFVKn5Y7eHigvybY
+         xblDiVnKGSO1YOVZCBOhDyivCijimZrtwgQUMs6QzuaU2V0EFW5hbL22ycsa7Hc27KUL
+         dPuQ==
+In-Reply-To: <20200430155245.83364-2-zeil@yandex-team.ru>
+Content-Language: en-US
+Sender: netdev-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
-Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Peter Zijlstra (Intel)" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Mathieu Desnoyers <mathieu.desnoyers-vg+e7yoeK/dWk0Htik3J/w@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Andrea Arcangeli <aarcange@redha>
+To: Dmitry Yakunin <zeil@yandex-team.ru>, netdev@vger.kernel.org
+Cc: khlebnikov@yandex-team.ru, cgroups@vger.kernel.org, bpf@vger.kernel.org
 
-Hello, Dave.
+global comment. iproute2 uses the net coding style of reverse xmas tree
+for declarations. There are a number of places that need to be fixed up.
 
-On Tue, May 05, 2020 at 04:41:14PM +1000, Dave Chinner wrote:
-> > OTOH I don't have a great idea how the generic infrastructure should look
-> > like...
-> 
-> I haven't given it any thought - it's not something I have any
-> bandwidth to spend time on.  I'll happily review a unified
-> generic cgroup-aware kthread-based IO dispatch mechanism, but I
-> don't have the time to design and implement that myself....
-> 
-> OTOH, I will make time to stop people screwing up filesystems and
-> block devices with questionable complexity and unique, storage
-> device dependent userspace visible error behaviour. This sort of
-> change is objectively worse for users than not supporting the
-> functionality in the first place.
+On 4/30/20 9:52 AM, Dmitry Yakunin wrote:
+> diff --git a/lib/cg_map.c b/lib/cg_map.c
+> new file mode 100644
+> index 0000000..0a1d834
+> --- /dev/null
+> +++ b/lib/cg_map.c
+> @@ -0,0 +1,133 @@
+> +/*
+> + * cg_map.c	cgroup v2 cache
+> + *
+> + *		This program is free software; you can redistribute it and/or
+> + *		modify it under the terms of the GNU General Public License
+> + *		as published by the Free Software Foundation; either version
+> + *		2 of the License, or (at your option) any later version.
 
-That probably is too strong a position to hold without spending at least
-some thoughts on a subject, whatever the subject may be, and it doesn't seem
-like your understanding of userspace implications is accurate.
+Drop the boilerplate in favor of SPDX line
 
-I don't necessarily disagree that it'd be nice to have a common
-infrastructure and there may be some part which can actually be factored
-out. However, there isn't gonna be a magic bullet which magically makes
-every IO thing in the kernel cgroup aware automatically. Please consider the
-followings.
+> + *
+> + * Authors:	Dmitry Yakunin <zeil@yandex-team.ru>
+> + */
+> +
+> +#include <stdlib.h>
+> +#include <string.h>
+> +#include <stdio.h>
+> +#include <stdbool.h>
+> +#include <linux/types.h>
+> +#include <linux/limits.h>
+> +#include <ftw.h>
+> +
+> +#include "cg_map.h"
+> +#include "list.h"
+> +#include "utils.h"
+> +
+> +struct cg_cache {
+> +	struct hlist_node id_hash;
+> +	__u64	id;
+> +	char	path[];
+> +};
+> +
+> +#define IDMAP_SIZE	1024
+> +static struct hlist_head id_head[IDMAP_SIZE];
+> +
+> +static struct cg_cache *cg_get_by_id(__u64 id)
+> +{
+> +	struct hlist_node *n;
+> +	unsigned int h = id & (IDMAP_SIZE - 1);
+> +
+> +	hlist_for_each(n, &id_head[h]) {
+> +		struct cg_cache *cg
+> +			= container_of(n, struct cg_cache, id_hash);
 
-* Avoding IO priority inversions requires splitting IO channels according to
-  cgroups and working around (e.g. with backcharging) when they can't be.
-  It's a substantial feature which may require substantial changes. Each IO
-  subsystem has different constraints and existing structures and many of
-  them would require their own solutions. It's not different from different
-  filesystems needing their own solutions for similar problems.
+Don't split the line like that. Since you need 2 lines just do:
++		struct cg_cache *cg;
++
++		cg = container_of(n, struct cg_cache, id_hash);
 
-* Because different filesystems and IO stacking layers already have their
-  own internal infrastructure, the right way to add cgroup support is
-  adapting to and modifying the existing infrastructure rather than trying
-  to restructure them to use the same cgroup mechanism, which I don't think
-  would be possible in many cases.
+> +		if (cg->id == id)
+> +			return cg;
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
 
-* Among the three IO stacking / redirecting mechanisms - md/dm, loop and
-  fuse - the requirements and what's possible vary quite a bit. md/dm
-  definitely need to support full-on IO channel splitting cgroup support.
-  loop can go either way, but given existing uses, full splitting makes a
-  sense. fuse, as it currently stands, can't support that because the
-  priority inversions extend all the way to userspace and the kernel API
-  isn't built for that. If it wants to support cgroup containment, each
-  instance would have to be assigned to a cgroup.
 
-Between dm/md and loop, it's maybe possible that some of the sub-threading
-code can be reused, but I don't see a point in blocking loop updates given
-that it clearly fixes userspace visible malfunctions, is not that much code
-and how the shared code should look is unclear yet. We'll be able to answer
-the sharing question when we actually get to dm/md conversion.
 
-Thanks.
 
--- 
-tejun
