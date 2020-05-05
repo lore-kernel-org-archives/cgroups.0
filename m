@@ -1,96 +1,89 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] memcg: oom: ignore oom warnings from memory.max
-Date: Tue, 5 May 2020 08:35:45 -0700
-Message-ID: <CALvZod48mu1w=fjpD=GXqCMdNq_8rExQ177_EP+Lx+TvR6fw+w@mail.gmail.com>
-References: <20200430182712.237526-1-shakeelb@google.com> <20200504065600.GA22838@dhcp22.suse.cz>
- <CALvZod5Ao2PEFPEOckW6URBfxisp9nNpNeon1GuctuHehqk_6Q@mail.gmail.com>
- <20200504141136.GR22838@dhcp22.suse.cz> <CALvZod7Ls7rTDOr5vXwEiPneLqbq3JoxfFBxZZ71YWgvLkNr5A@mail.gmail.com>
- <20200504150052.GT22838@dhcp22.suse.cz> <CALvZod7EeQm-T4dsBddfMY_szYw3m8gRh5R5GfjQiuQAtCocug@mail.gmail.com>
- <20200504160613.GU22838@dhcp22.suse.cz> <CALvZod79hWns9366B+8ZK2Roz8c+vkdA80HqFNMep56_pumdRQ@mail.gmail.com>
- <20200505152712.GB58018@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v5 0/4] Charge loop device i/o to issuing cgroup
+Date: Tue, 5 May 2020 11:38:34 -0400
+Message-ID: <20200505153834.GA12217@mtj.thefacebook.com>
+References: <20200428161355.6377-1-schatzberg.dan@gmail.com>
+ <20200428214653.GD2005@dread.disaster.area>
+ <20200429102540.GA12716@quack2.suse.cz>
+ <20200505064114.GI2005@dread.disaster.area>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=huzUgNgktrhOCuskegeISs0vb5n+2XRI/TAh0nK4ACg=;
-        b=o/lrwQCJd50bIYfIsq0VJczMjBR58BsANK+atKw0wvz6n+yx9YZx/Nc940iF+0GKBy
-         hLX1vW57uKXqlQoqbEXWwWB2OPzsPSs/1Xv/IRnVkZZWUic1oqJOZTjNYVBgM85e4p9T
-         q8V0YzTKSnkWNS653jK6QCarT5rXXuYcYhLL6Xto3yX0F2uUtYNLwFfjKikUad8LtsLY
-         ciEJ2WNrIfEJBpPgnOwymUO911icskpbfrUvh1BEasE+MWoaV1+0SJoxVx7syjB0Tn6T
-         ClJ0LaUAT1XBPSTG5mhidZZSbLV0oOhaHpAYDKo6GLj1Yk57GrgqZdRwIiAP3TPvUzfi
-         scRw==
-In-Reply-To: <20200505152712.GB58018-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=BXdArichtJxJSpMdJATI60C/n/3lvsy1fL/KOG1aR0o=;
+        b=Qgxse7dVakSkufrx/Jt+udb+ymexH65VUMnEUWLtLKEfqRpwkmZlz5vI4O25vYATuy
+         VVaC5aOnEDpNMe0z4vb1MBK8RuTdKfE1z+9MXMsUa8Z7ppPI9jeLSH+Y8Hs6hSeLIt7Z
+         XdQeFLLxaDYlVJjnLRQT2fRAPqAx2+GxrlAFS5lYDNwWv5TZOo8aje30hyhqww7q5VgE
+         hFxkjqHOBiRON9nOAlxbQxTz+54tsN16QGn69GNDWSv9wEK3DmoNTZSaJqVrx9A7Mk8y
+         00VmVkyFxFDtx76koAUjHf4CeJ1KqeHm5lGGRIjrmR90TSFZ8z6JZKNkLs+fowxAlB76
+         0AAg==
+Content-Disposition: inline
+In-Reply-To: <20200505064114.GI2005-pA1nmv6sEBkOM8BvhN4Z8vybgvtCy99p@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
+Cc: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Peter Zijlstra (Intel)" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Mathieu Desnoyers <mathieu.desnoyers-vg+e7yoeK/dWk0Htik3J/w@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Andrea Arcangeli <aarcange@redha>
 
-On Tue, May 5, 2020 at 8:27 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-> On Mon, May 04, 2020 at 12:23:51PM -0700, Shakeel Butt wrote:
-> > On Mon, May 4, 2020 at 9:06 AM Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> > > I really hate to repeat myself but this is no different from a regular
-> > > oom situation.
-> >
-> > Conceptually yes there is no difference but there is no *divine
-> > restriction* to not make a difference if there is a real world
-> > use-case which would benefit from it.
->
-> I would wholeheartedly agree with this in general.
->
-> However, we're talking about the very semantics that set memory.max
-> apart from memory.high: triggering OOM kills to enforce the limit.
->
-> > > when the kernel cannot act and mentions that along with the
-> > > oom report so that whoever consumes that information can debug or act on
-> > > that fact.
-> > >
-> > > Silencing the oom report is simply removing a potentially useful
-> > > aid to debug further a potential problem.
-> >
-> > *Potentially* useful for debugging versus actually beneficial for
-> > "sweep before tear down" use-case. Also I am not saying to make "no
-> > dumps for memory.max when no eligible tasks" a set in stone rule. We
-> > can always reevaluate when such information will actually be useful.
-> >
-> > Johannes/Andrew, what's your opinion?
->
-> I still think that if you want to sweep without triggering OOMs,
-> memory.high has the matching semantics.
->
-> As you pointed out, it doesn't work well for foreign charges, but that
-> is more of a limitation in the implementation than in the semantics:
->
->         /*
->          * If the hierarchy is above the normal consumption range, schedule
->          * reclaim on returning to userland.  We can perform reclaim here
->          * if __GFP_RECLAIM but let's always punt for simplicity and so that
->          * GFP_KERNEL can consistently be used during reclaim.  @memcg is
->          * not recorded as it most likely matches current's and won't
->          * change in the meantime.  As high limit is checked again before
->          * reclaim, the cost of mismatch is negligible.
->          */
->
-> Wouldn't it be more useful to fix that instead? It shouldn't be much
-> of a code change to do sync reclaim in try_charge().
+Hello, Dave.
 
-Sync reclaim would really simplify the remote charging case. Though
-should sync reclaim only be done for remote charging or for all?
+On Tue, May 05, 2020 at 04:41:14PM +1000, Dave Chinner wrote:
+> > OTOH I don't have a great idea how the generic infrastructure should look
+> > like...
+> 
+> I haven't given it any thought - it's not something I have any
+> bandwidth to spend time on.  I'll happily review a unified
+> generic cgroup-aware kthread-based IO dispatch mechanism, but I
+> don't have the time to design and implement that myself....
+> 
+> OTOH, I will make time to stop people screwing up filesystems and
+> block devices with questionable complexity and unique, storage
+> device dependent userspace visible error behaviour. This sort of
+> change is objectively worse for users than not supporting the
+> functionality in the first place.
 
->
-> Then you could express all things that you asked for without changing
-> any user-visible semantics: sweep an empty cgroup as well as possible,
-> do not oom on remaining charges that continue to be used by processes
-> outside the cgroup, do trigger oom on new foreign charges appearing
-> due to a misconfiguration.
->
->         echo 0 > memory.high
->         cat memory.current > memory.max
->
-> Would this work for you?
+That probably is too strong a position to hold without spending at least
+some thoughts on a subject, whatever the subject may be, and it doesn't seem
+like your understanding of userspace implications is accurate.
 
-Yes that would work. I will work on a patch.
+I don't necessarily disagree that it'd be nice to have a common
+infrastructure and there may be some part which can actually be factored
+out. However, there isn't gonna be a magic bullet which magically makes
+every IO thing in the kernel cgroup aware automatically. Please consider the
+followings.
+
+* Avoding IO priority inversions requires splitting IO channels according to
+  cgroups and working around (e.g. with backcharging) when they can't be.
+  It's a substantial feature which may require substantial changes. Each IO
+  subsystem has different constraints and existing structures and many of
+  them would require their own solutions. It's not different from different
+  filesystems needing their own solutions for similar problems.
+
+* Because different filesystems and IO stacking layers already have their
+  own internal infrastructure, the right way to add cgroup support is
+  adapting to and modifying the existing infrastructure rather than trying
+  to restructure them to use the same cgroup mechanism, which I don't think
+  would be possible in many cases.
+
+* Among the three IO stacking / redirecting mechanisms - md/dm, loop and
+  fuse - the requirements and what's possible vary quite a bit. md/dm
+  definitely need to support full-on IO channel splitting cgroup support.
+  loop can go either way, but given existing uses, full splitting makes a
+  sense. fuse, as it currently stands, can't support that because the
+  priority inversions extend all the way to userspace and the kernel API
+  isn't built for that. If it wants to support cgroup containment, each
+  instance would have to be assigned to a cgroup.
+
+Between dm/md and loop, it's maybe possible that some of the sub-threading
+code can be reused, but I don't see a point in blocking loop updates given
+that it clearly fixes userspace visible malfunctions, is not that much code
+and how the shared code should look is unclear yet. We'll be able to answer
+the sharing question when we actually get to dm/md conversion.
+
+Thanks.
+
+-- 
+tejun
