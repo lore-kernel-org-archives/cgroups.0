@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [PATCH] memcg: oom: ignore oom warnings from memory.max
-Date: Tue, 5 May 2020 12:40:31 -0400
-Message-ID: <20200505164031.GC58018@cmpxchg.org>
+Date: Tue, 5 May 2020 12:57:34 -0400
+Message-ID: <20200505165734.GD58018@cmpxchg.org>
 References: <20200504065600.GA22838@dhcp22.suse.cz>
  <CALvZod5Ao2PEFPEOckW6URBfxisp9nNpNeon1GuctuHehqk_6Q@mail.gmail.com>
  <20200504141136.GR22838@dhcp22.suse.cz>
@@ -10,23 +10,23 @@ References: <20200504065600.GA22838@dhcp22.suse.cz>
  <CALvZod7EeQm-T4dsBddfMY_szYw3m8gRh5R5GfjQiuQAtCocug@mail.gmail.com>
  <20200504160613.GU22838@dhcp22.suse.cz>
  <CALvZod79hWns9366B+8ZK2Roz8c+vkdA80HqFNMep56_pumdRQ@mail.gmail.com>
- <20200505152712.GB58018@cmpxchg.org>
- <CALvZod48mu1w=fjpD=GXqCMdNq_8rExQ177_EP+Lx+TvR6fw+w@mail.gmail.com>
+ <20200505071324.GB16322@dhcp22.suse.cz>
+ <CALvZod5H-fDbvu73=hkzN0Man_+03ZW0d5zc1N0YObVHSiy0Tw@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=l2bZJQmx2yOdyRWXMcVA9Hr5m54Y4Z+/y8vz43EAX8c=;
-        b=HGTZoh4KeqX6Uji51n5Dqfk0eq1uWiMkwpLlCbtNM2ptuSoknJ3SJokShT9RddkiiA
-         dyCYk+AJUScVGogd3LbtB5qGZ7TArY1dddPKiSFnpH2cT1Er1UBaOgmvSOKhQwwtxgU7
-         An/Xfou2A/jLmU+WaypU/qBQLQ9I0Lwq3cDA60/Pk0qRhkEN6COva+m26DdvjqiwoqG8
-         omVIPq8k/FOSepfH7rvaBuy3OYeTlxnsee55DCHQ2VjVtOHDuqUv+Vdtppv0fnaFmxUE
-         rjObgvGNPkng+b4UO4ikBvcvtv6Y+HXUE9neG4LXYuvRdX1LjY30KRhklHfrHkFnsIwa
-         vqTg==
+        bh=fEeh741pti+zQtUqiU+d//divWdQ0COuz+a61BTeqwc=;
+        b=YSNRusfE9U5u8q3v9LefCY1rU6K93jnDg4I/Se7sXa6/yvJwAIFJruFuN/+VjtbSYG
+         WLGgbW8jcLo909cVZHzUEp9Vl+j+1knpGhiLLF/8yO7xI4PhQHn2jKn/XZ+7gIEL8BH/
+         PhBIW0QTlorsqAK3ECYQ7eylm0EjiRTeEix3nV7MDzfl4adlAlpi/WyRmqf5Ia/KQN4O
+         w1BXffany2R/o7burzJHOvzi7xx7uGRaTy/SVArfU9go+3KLVzW3kV2yZOZWk8hdENnp
+         gMwRI/VptGu32D36XJgI8z1S2S8eSXN0uchSFh2cN9VI3jrNmhOGTKXONkufx5pguBgZ
+         O5Ow==
 Content-Disposition: inline
-In-Reply-To: <CALvZod48mu1w=fjpD=GXqCMdNq_8rExQ177_EP+Lx+TvR6fw+w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <CALvZod5H-fDbvu73=hkzN0Man_+03ZW0d5zc1N0YObVHSiy0Tw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -34,68 +34,32 @@ Content-Transfer-Encoding: 7bit
 To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Tue, May 05, 2020 at 08:35:45AM -0700, Shakeel Butt wrote:
-> On Tue, May 5, 2020 at 8:27 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> >
-> > On Mon, May 04, 2020 at 12:23:51PM -0700, Shakeel Butt wrote:
-> > > On Mon, May 4, 2020 at 9:06 AM Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> > > > I really hate to repeat myself but this is no different from a regular
-> > > > oom situation.
-> > >
-> > > Conceptually yes there is no difference but there is no *divine
-> > > restriction* to not make a difference if there is a real world
-> > > use-case which would benefit from it.
-> >
-> > I would wholeheartedly agree with this in general.
-> >
-> > However, we're talking about the very semantics that set memory.max
-> > apart from memory.high: triggering OOM kills to enforce the limit.
-> >
-> > > > when the kernel cannot act and mentions that along with the
-> > > > oom report so that whoever consumes that information can debug or act on
-> > > > that fact.
-> > > >
-> > > > Silencing the oom report is simply removing a potentially useful
-> > > > aid to debug further a potential problem.
-> > >
-> > > *Potentially* useful for debugging versus actually beneficial for
-> > > "sweep before tear down" use-case. Also I am not saying to make "no
-> > > dumps for memory.max when no eligible tasks" a set in stone rule. We
-> > > can always reevaluate when such information will actually be useful.
-> > >
-> > > Johannes/Andrew, what's your opinion?
-> >
-> > I still think that if you want to sweep without triggering OOMs,
-> > memory.high has the matching semantics.
-> >
-> > As you pointed out, it doesn't work well for foreign charges, but that
-> > is more of a limitation in the implementation than in the semantics:
-> >
-> >         /*
-> >          * If the hierarchy is above the normal consumption range, schedule
-> >          * reclaim on returning to userland.  We can perform reclaim here
-> >          * if __GFP_RECLAIM but let's always punt for simplicity and so that
-> >          * GFP_KERNEL can consistently be used during reclaim.  @memcg is
-> >          * not recorded as it most likely matches current's and won't
-> >          * change in the meantime.  As high limit is checked again before
-> >          * reclaim, the cost of mismatch is negligible.
-> >          */
-> >
-> > Wouldn't it be more useful to fix that instead? It shouldn't be much
-> > of a code change to do sync reclaim in try_charge().
+On Tue, May 05, 2020 at 08:03:17AM -0700, Shakeel Butt wrote:
+> On Tue, May 5, 2020 at 12:13 AM Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> > So instead of potentially removing a useful information can we focus on
+> > the remote charging side of the problem and deal with it in a sensible
+> > way? That would make memory.high usable for your usecase and I still
+> > believe that this is what you should be using in the first place.
 > 
-> Sync reclaim would really simplify the remote charging case. Though
-> should sync reclaim only be done for remote charging or for all?
+> We talked about this at LSFMM'19 and I think the decision was to not
+> fix high reclaim for remote memcg until it will be an actual issue. I
+> suppose now we can treat it as an actual issue.
+> 
+> There are a couple of open questions:
+> 1) Should the remote chargers be throttled and do the high reclaim?
 
-I would do it for all __GFP_RECLAIM callers, no need to special case
-remote charging unnecessarily IMO.
+I would say it depends on the caller. We may need both: a centralized
+charger like a kthread that does work on behalf of many cgroups should
+not be throttled, or we risk priority inversions - maybe not even held
+up for reclaim, although that would need some thinking about
+memory.max as well - whether remote charges should be allowed to
+overrun memory.max temporarily, and we punt all reclaim from such
+contexts to a worker. (Preferrably, in the future, with all the cpu
+cycles of that worker accounted to the cgroup. We want that for
+kswapd-style background reclaim as well).
 
-We can do both the reclaim as well as the penalty throttling
-synchronously, i.e. all of mem_cgroup_handle_over_high(). And then
-punt to the userspace resume when we either didn't reclaim or are
-still over the threshold after reclaim.
-
-Btw we should probably kick off high_work rather than set userspace
-resume on foreign charges, right? Otherwise we may not reclaim at all
-when we push a group over its limit from outside (and in a
-!__GFP_RECLAIM context).
+We do similar things with IO for example, when offloading IO to a
+central kthread. The kthread is allowed to proceed past a cgroup's
+allowance in order to make forward progress, and the cgroup will be
+forced to pay up retroactively when it comes back for more of the
+resource.
