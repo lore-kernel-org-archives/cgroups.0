@@ -1,64 +1,69 @@
-From: David Ahern <dsahern@gmail.com>
-Subject: Re: [PATCH iproute2-next 2/2] ss: add support for cgroup v2
- information and filtering
-Date: Tue, 5 May 2020 09:50:04 -0600
-Message-ID: <72f12b35-0dd2-81b2-aeb1-52822c7fe03a@gmail.com>
-References: <20200430155245.83364-1-zeil@yandex-team.ru>
- <20200430155245.83364-3-zeil@yandex-team.ru>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: cgroup pointed by sock is leaked on mode switch
+Date: Tue, 5 May 2020 12:06:39 -0400
+Message-ID: <20200505160639.GG12217@mtj.thefacebook.com>
+References: <03dab6ab-0ffe-3cae-193f-a7f84e9b14c5@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=yJr8RqITkDOSGCYSWIKgpqgvoSgqR2F95IvJn3b0ji4=;
-        b=jc0CkDP2R64dQQyGSslB9qk/kYm/zxhSNRdlUNAK+ACzkAtWZbgvmHATjia5aFel8o
-         ElMXA5x7gAZLp3+uLkYOhyRcrFWJzBB/UbPMP13/+JUlYldi3ceOhNrLPAIajFuWghfe
-         4abpBFl5979n9mX1uHFxWoL3nV6mUZe8yOGN+Bl8VdaKGIiqUGLfZujSE7nvS5iT3xK+
-         V0jzCJNs2wlkSo9P7QPvg/3iAR3omJKATAltVkVslcBb+lVAdSBiXwGwpJFPfRMQb+c8
-         alpJv9gVvRJeXd7dOw9ON+bWn+LD7wulFhfsvjoZHRydZtGMgT+f6giTXOtbUq8aipyo
-         EjYg==
-In-Reply-To: <20200430155245.83364-3-zeil@yandex-team.ru>
-Content-Language: en-US
-Sender: netdev-owner@vger.kernel.org
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=bv8d5auwv8WPKBW85dEhvwg9llp+d9U+MUHdBWxQ/AA=;
+        b=YXZUrR/FBzuSZDfpKyddp1h4Q3IEai/+synGatezI1urLNAo/GqDaNbGAM9LoDkeJA
+         gzaObuXQxJdC3rrvG/FR/5EeiUTZlK6odsPf1p2j4udJUVYqoD/ixxWPQ3wlnh6Ugoj0
+         vYy2wGt9ujB5Jsvwcbjm+GoiqKD2A2/exauGq8LvJ2S4UBZhS+fXlOwif5kPyc9klZmB
+         9pp6rHNVpVcYYqLKhsd8OLFqIo0pi5jKkzudk8kKoFvPirFDS9eZPbtzFjaqUlvibmD1
+         zA1nh/SEvZlB/pAWTKki+2g6j2zyhskCgHDaHXMFDI2s+KdFCtrcgdJ2wtHFQf42tAqX
+         W3kQ==
+Content-Disposition: inline
+In-Reply-To: <03dab6ab-0ffe-3cae-193f-a7f84e9b14c5@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Dmitry Yakunin <zeil@yandex-team.ru>, netdev@vger.kernel.org
-Cc: khlebnikov@yandex-team.ru, cgroups@vger.kernel.org, bpf@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Yang Yingliang <yangyingliang@huawei.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, netdev@vger.kernel.org, "Libin (Huawei)" <huawei.libin@huawei.com>, guofan5@huawei.com, wangkefeng.wang@huawei.com
 
-On 4/30/20 9:52 AM, Dmitry Yakunin wrote:
-> This patch introduces two new features: obtaining cgroup information and
-> filtering sockets by cgroups. These features work based on cgroup v2 ID
-> field in the socket (kernel should be compiled with CONFIG_SOCK_CGROUP_DATA).
-> 
-> Cgroup information can be obtained by specifying --cgroup flag and now contains
-> only pathname. For faster pathname lookups cgroup cache is implemented. This
-> cache is filled on ss startup and missed entries are resolved and saved
-> on the fly.
-> 
-> Cgroup filter extends EXPRESSION and allows to specify cgroup pathname
-> (relative or absolute) to obtain sockets attached only to this cgroup.
-> Filter syntax: ss [ cgroup PATHNAME ]
-> Examples:
->     ss -a cgroup /sys/fs/cgroup/unified (or ss -a cgroup .)
->     ss -a cgroup /sys/fs/cgroup/unified/cgroup1 (or ss -a cgroup cgroup1)
-> 
+Hello, Yang.
 
-on a kernel without support for this feature:
+On Sat, May 02, 2020 at 06:27:21PM +0800, Yang Yingliang wrote:
+> I find the number nr_dying_descendants is increasing:
+> linux-dVpNUK:~ # find /sys/fs/cgroup/ -name cgroup.stat -exec grep
+> '^nr_dying_descendants [^0]'=A0 {} +
+> /sys/fs/cgroup/unified/cgroup.stat:nr_dying_descendants 80
+> /sys/fs/cgroup/unified/system.slice/cgroup.stat:nr_dying_descendants 1
+> /sys/fs/cgroup/unified/system.slice/system-hostos.slice/cgroup.stat:nr_dy=
+ing_descendants
+> 1
+> /sys/fs/cgroup/unified/lxc/cgroup.stat:nr_dying_descendants 79
+> /sys/fs/cgroup/unified/lxc/5f1fdb8c54fa40c3e599613dab6e4815058b76ebada8a2=
+7bc1fe80c0d4801764/cgroup.stat:nr_dying_descendants
+> 78
+> /sys/fs/cgroup/unified/lxc/5f1fdb8c54fa40c3e599613dab6e4815058b76ebada8a2=
+7bc1fe80c0d4801764/system.slice/cgroup.stat:nr_dying_descendants
+> 78
 
-$ misc/ss -a cgroup /sys/fs/cgroup/unified
-RTNETLINK answers: Invalid argument
-RTNETLINK answers: Invalid argument
-RTNETLINK answers: Invalid argument
-RTNETLINK answers: Invalid argument
-RTNETLINK answers: Invalid argument
-RTNETLINK answers: Invalid argument
-RTNETLINK answers: Invalid argument
-RTNETLINK answers: Invalid argument
-RTNETLINK answers: Invalid argument
-Netid    State    Recv-Q    Send-Q       Local Address:Port         Peer
-Address:Port    Process
+Those numbers are nowhere close to causing oom issues. There are some
+aspects of page and other cache draining which is being improved but unless
+you're seeing numbers multiple orders of magnitude higher, this isn't the
+source of your problem.
 
-New iproute2 can be run on older kernels, so errors should be cleanly
-handled.
+> The situation is as same as the commit bd1060a1d671 ("sock, cgroup: add
+> sock->sk_cgroup") describes.
+> "On mode switch, cgroup references which are already being pointed to by
+> socks may be leaked."
+
+I'm doubtful that you're hitting that issue. Mode switching means memcg
+being switched between cgroup1 and cgroup2 hierarchies, which is unlikely to
+be what's happening when you're launching docker containers.
+
+The first step would be identifying where memory is going and finding out
+whether memcg is actually being switched between cgroup1 and 2 - look at the
+hierarchy number in /proc/cgroups, if that's switching between 0 and
+someting not zero, it is switching.
+
+Thanks.
+
+--=20
+tejun
