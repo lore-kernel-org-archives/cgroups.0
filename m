@@ -1,52 +1,68 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] memcg: effective memory.high reclaim for remote charging
-Date: Thu, 7 May 2020 19:49:49 +0200
-Message-ID: <20200507174949.GN6345@dhcp22.suse.cz>
-References: <20200507163301.229070-1-shakeelb@google.com>
- <20200507164653.GM6345@dhcp22.suse.cz>
- <CALvZod5TmAnDoueej1nu5_VV9rQa6VYVRXqCYuh63P5HN-o9Sw@mail.gmail.com>
+From: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
+Subject: [PATCH] doc: cgroup: update note about conditions when oom killer is
+ invoked
+Date: Fri, 08 May 2020 17:16:29 +0300
+Message-ID: <158894738928.208854.5244393925922074518.stgit@buzz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CALvZod5TmAnDoueej1nu5_VV9rQa6VYVRXqCYuh63P5HN-o9Sw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
+        t=1588947391; bh=Kz8084Qd+ukMFtBduY70Wrn/hOXrye0GrRmcB96gXCQ=;
+        h=Message-ID:Date:To:From:Subject:Cc;
+        b=Dj8/u6gZYmMA/f3gA/Gqiy6C2yfCTKO//L+zyCsxYhibDXK2RnLGgmSAlaRXqqzlw
+         Tq4x4ndeaEZyJGVAZxWLr/JJnElxICKB49ARgoON0n79PGht6cp9Htyk3J3iszXQle
+         cbNDkAqPk/3XuNtXYZDXX5+C1gTBipR7wPmNTtdg=
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-On Thu 07-05-20 10:00:07, Shakeel Butt wrote:
-> On Thu, May 7, 2020 at 9:47 AM Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> >
-> > On Thu 07-05-20 09:33:01, Shakeel Butt wrote:
-> > [...]
-> > > @@ -2600,8 +2596,23 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
-> > >                               schedule_work(&memcg->high_work);
-> > >                               break;
-> > >                       }
-> > > -                     current->memcg_nr_pages_over_high += batch;
-> > > -                     set_notify_resume(current);
-> > > +
-> > > +                     if (gfpflags_allow_blocking(gfp_mask))
-> > > +                             reclaim_over_high(memcg, gfp_mask, batch);
-> > > +
-> > > +                     if (page_counter_read(&memcg->memory) <=
-> > > +                         READ_ONCE(memcg->high))
-> > > +                             break;
-> >
-> > I am half way to a long weekend so bear with me. Shouldn't this be continue? The
-> > parent memcg might be still in excess even the child got reclaimed,
-> > right?
-> >
-> 
-> The reclaim_high() actually already does this walk up to the root and
-> reclaim from ones who are still over their high limit. Though having
-> 'continue' here is correct too.
+Starting from v4.19 commit 29ef680ae7c2 ("memcg, oom: move out_of_memory
+back to the charge path") cgroup oom killer is no longer invoked only from
+page faults. Now it implements the same semantics as global OOM killer:
+allocation context invokes OOM killer and keeps retrying until success.
 
-Ohh, right. As I've said weekend brain. I will have a proper look next
-week. This just hit my eyes.
+Signed-off-by: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
+---
+ Documentation/admin-guide/cgroup-v2.rst |   17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
 
--- 
-Michal Hocko
-SUSE Labs
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index bcc80269bb6a..1bb9a8f6ebe1 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1172,6 +1172,13 @@ PAGE_SIZE multiple when read back.
+ 	Under certain circumstances, the usage may go over the limit
+ 	temporarily.
+ 
++	In default configuration regular 0-order allocation always
++	succeed unless OOM killer choose current task as a victim.
++
++	Some kinds of allocations don't invoke the OOM killer.
++	Caller could retry them differently, return into userspace
++	as -ENOMEM or silently ignore in cases like disk readahead.
++
+ 	This is the ultimate protection mechanism.  As long as the
+ 	high limit is used and monitored properly, this limit's
+ 	utility is limited to providing the final safety net.
+@@ -1228,17 +1235,9 @@ PAGE_SIZE multiple when read back.
+ 		The number of time the cgroup's memory usage was
+ 		reached the limit and allocation was about to fail.
+ 
+-		Depending on context result could be invocation of OOM
+-		killer and retrying allocation or failing allocation.
+-
+-		Failed allocation in its turn could be returned into
+-		userspace as -ENOMEM or silently ignored in cases like
+-		disk readahead.  For now OOM in memory cgroup kills
+-		tasks iff shortage has happened inside page fault.
+-
+ 		This event is not raised if the OOM killer is not
+ 		considered as an option, e.g. for failed high-order
+-		allocations.
++		allocations or if caller asked to not retry attempts.
+ 
+ 	  oom_kill
+ 		The number of processes belonging to this cgroup
+
