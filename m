@@ -1,94 +1,108 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH 07/19] mm: memcontrol: prepare move_account for removal of private page type counters
-Date: Fri,  8 May 2020 14:30:54 -0400
-Message-ID: <20200508183105.225460-8-hannes@cmpxchg.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH 08/19] mm: memcontrol: prepare cgroup vmstat infrastructure for native anon counters
+Date: Fri,  8 May 2020 14:30:55 -0400
+Message-ID: <20200508183105.225460-9-hannes@cmpxchg.org>
 References: <20200508183105.225460-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=OfCvK5ICX9RLV3lPlzIAY41JRodQH86fFkwrgQlSEf8=;
-        b=CmwijAWGrB9GpiDIRRkJD4jSnT43gKAmAnGfjMaA25Kt/6/LLUOt4eOCmLPfSIMGOT
-         aW9ShVJ6f895PpkJvDJVVoFWx5BgKEjpiM1k6aB0HHEse5SZQ2jgfYQwrhgGFc295/53
-         c0firhINkXK8AhvGbh6gPtL7EkztISznspA8/2XedHiWj27+y2kPRk+C3Qyyd37UqCb/
-         Llgeupzc7yudqB6GBoOzm51I3hJ4r0VphHkIxYSiDfkxQJHcvK4xfuG+CLwHYBO4dkIO
-         LbKGvdO0IK037kd4xPNaYTmJxNke7bjWj88R1s0cINtHKjji7z8isPYV8KpPWPEjBxTw
-         d/wg==
-In-Reply-To: <20200508183105.225460-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=OaPQ/6k0L3jh0C6o7CfSb8YWPSRRpIDUVegV83C74dM=;
+        b=zsUtCnonxo6Zog/FPVNSwTnBaCeM0640kwri6ouMQy5dP2WS5K0VL3Uvua0clO1WBf
+         BRitoPXoqUDeRAN3oCRArMc0i5WyRWV5zibXNnGvLKFsfxZfB46eyMtJ1T+ADLs86OCv
+         LZx/kJXhWDmi573Z9v9iEtE7MPuSnPQAeSsW9ktSHlahFKAGyE3tgF/3HMfZppUOuR2T
+         vtpeWzPAdHEQDHLQ+DLtQo6+dje3HLAIlF7UMTktdJowPW9vr1UAxTEoHprG65c/iRSm
+         pLM0u4C80GxbnbdQrdhxsGROOssrDKHBbDmYIIdnn4iZb4ScmI8zkH0K8z67JNA8P1nt
+         w/ww==
+In-Reply-To: <20200508183105.225460-1-hannes@cmpxchg.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, Joonsoo Kim <js1304@gmail.com>, Shakeel Butt <shakeelb@google.com>, Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.com>, "Kirill A. Shutemov" <kirill@shutemov.name>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-When memcg uses the generic vmstat counters, it doesn't need to do
-anything at charging and uncharging time. It does, however, need to
-migrate counts when pages move to a different cgroup in move_account.
+Anonymous compound pages can be mapped by ptes, which means that if we
+want to track NR_MAPPED_ANON, NR_ANON_THPS on a per-cgroup basis, we
+have to be prepared to see tail pages in our accounting functions.
 
-Prepare the move_account function for the arrival of NR_FILE_PAGES,
-NR_ANON_MAPPED, NR_ANON_THPS etc. by having a branch for files and a
-branch for anon, which can then divided into sub-branches.
+Make mod_lruvec_page_state() and lock_page_memcg() deal with tail
+pages correctly, namely by redirecting to the head page which has the
+page->mem_cgroup set up.
 
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Reviewed-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Reviewed-by: Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Reviewed-by: Joonsoo Kim <iamjoonsoo.kim@lge.com>
 ---
- mm/memcontrol.c | 25 +++++++++++++------------
- 1 file changed, 13 insertions(+), 12 deletions(-)
+ include/linux/memcontrol.h | 5 +++--
+ mm/memcontrol.c            | 9 ++++++---
+ 2 files changed, 9 insertions(+), 5 deletions(-)
 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 57339514d960..5b110ac7dd83 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -723,16 +723,17 @@ static inline void mod_lruvec_state(struct lruvec *lruvec,
+ static inline void __mod_lruvec_page_state(struct page *page,
+ 					   enum node_stat_item idx, int val)
+ {
++	struct page *head = compound_head(page); /* rmap on tail pages */
+ 	pg_data_t *pgdat = page_pgdat(page);
+ 	struct lruvec *lruvec;
+ 
+ 	/* Untracked pages have no memcg, no lruvec. Update only the node */
+-	if (!page->mem_cgroup) {
++	if (!head->mem_cgroup) {
+ 		__mod_node_page_state(pgdat, idx, val);
+ 		return;
+ 	}
+ 
+-	lruvec = mem_cgroup_lruvec(page->mem_cgroup, pgdat);
++	lruvec = mem_cgroup_lruvec(head->mem_cgroup, pgdat);
+ 	__mod_lruvec_state(lruvec, idx, val);
+ }
+ 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a5efdad77be4..fe4212db8411 100644
+index fe4212db8411..b7be4cd6ddc5 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -5378,7 +5378,6 @@ static int mem_cgroup_move_account(struct page *page,
- 	struct pglist_data *pgdat;
- 	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
- 	int ret;
--	bool anon;
+@@ -1979,6 +1979,7 @@ void mem_cgroup_print_oom_group(struct mem_cgroup *memcg)
+  */
+ struct mem_cgroup *lock_page_memcg(struct page *page)
+ {
++	struct page *head = compound_head(page); /* rmap on tail pages */
+ 	struct mem_cgroup *memcg;
+ 	unsigned long flags;
  
- 	VM_BUG_ON(from == to);
- 	VM_BUG_ON_PAGE(PageLRU(page), page);
-@@ -5396,25 +5395,27 @@ static int mem_cgroup_move_account(struct page *page,
- 	if (page->mem_cgroup != from)
- 		goto out_unlock;
+@@ -1998,7 +1999,7 @@ struct mem_cgroup *lock_page_memcg(struct page *page)
+ 	if (mem_cgroup_disabled())
+ 		return NULL;
+ again:
+-	memcg = page->mem_cgroup;
++	memcg = head->mem_cgroup;
+ 	if (unlikely(!memcg))
+ 		return NULL;
  
--	anon = PageAnon(page);
--
- 	pgdat = page_pgdat(page);
- 	from_vec = mem_cgroup_lruvec(from, pgdat);
- 	to_vec = mem_cgroup_lruvec(to, pgdat);
+@@ -2006,7 +2007,7 @@ struct mem_cgroup *lock_page_memcg(struct page *page)
+ 		return memcg;
  
- 	lock_page_memcg(page);
- 
--	if (!anon && page_mapped(page)) {
--		__mod_lruvec_state(from_vec, NR_FILE_MAPPED, -nr_pages);
--		__mod_lruvec_state(to_vec, NR_FILE_MAPPED, nr_pages);
--	}
-+	if (!PageAnon(page)) {
-+		if (page_mapped(page)) {
-+			__mod_lruvec_state(from_vec, NR_FILE_MAPPED, -nr_pages);
-+			__mod_lruvec_state(to_vec, NR_FILE_MAPPED, nr_pages);
-+		}
- 
--	if (!anon && PageDirty(page)) {
--		struct address_space *mapping = page_mapping(page);
-+		if (PageDirty(page)) {
-+			struct address_space *mapping = page_mapping(page);
- 
--		if (mapping_cap_account_dirty(mapping)) {
--			__mod_lruvec_state(from_vec, NR_FILE_DIRTY, -nr_pages);
--			__mod_lruvec_state(to_vec, NR_FILE_DIRTY, nr_pages);
-+			if (mapping_cap_account_dirty(mapping)) {
-+				__mod_lruvec_state(from_vec, NR_FILE_DIRTY,
-+						   -nr_pages);
-+				__mod_lruvec_state(to_vec, NR_FILE_DIRTY,
-+						   nr_pages);
-+			}
- 		}
+ 	spin_lock_irqsave(&memcg->move_lock, flags);
+-	if (memcg != page->mem_cgroup) {
++	if (memcg != head->mem_cgroup) {
+ 		spin_unlock_irqrestore(&memcg->move_lock, flags);
+ 		goto again;
  	}
+@@ -2049,7 +2050,9 @@ void __unlock_page_memcg(struct mem_cgroup *memcg)
+  */
+ void unlock_page_memcg(struct page *page)
+ {
+-	__unlock_page_memcg(page->mem_cgroup);
++	struct page *head = compound_head(page);
++
++	__unlock_page_memcg(head->mem_cgroup);
+ }
+ EXPORT_SYMBOL(unlock_page_memcg);
  
 -- 
 2.26.2
