@@ -1,123 +1,95 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 04/19] mm: memcontrol: move out cgroup swaprate throttling
-Date: Fri,  8 May 2020 14:30:51 -0400
-Message-ID: <20200508183105.225460-5-hannes@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [PATCH 07/19] mm: memcontrol: prepare move_account for removal of private page type counters
+Date: Fri,  8 May 2020 14:30:54 -0400
+Message-ID: <20200508183105.225460-8-hannes@cmpxchg.org>
 References: <20200508183105.225460-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=tJumjdWPL8ImmNUzRG9WEC1TfJwykzONtYCeiyJV9G4=;
-        b=pxoqGiGXEuav96/KW40PHN/56mIPcv+pG8bFWXckn7KWmaroqEIKnTBtfp2ivpknd5
-         eUpMr7sVbK7wX5G7uKSEf6hU2QLAr9AEmkT21qOLTwpAVEFYgmqlYrmbipLmLqyW+aEg
-         ZhH0rgKtQ7J9/dzwlS7Saf/IslIKpJyNjugFrVQaBFZAetBkf2SmcUJpvZMK224rS+sI
-         7ZWJEzgwBB3geO6LRoXV6e6KGSiF+SXl75wg2aniVze4+KdN6IR370Kh08YZ+2h72JEY
-         /nnZCbfLQYr3kMrU7gIvvm8tBrJnemtlzyBLO7s+HDGXMNiJFvXkQqDGmd7mhPa7/s4o
-         y7TA==
-In-Reply-To: <20200508183105.225460-1-hannes@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=OfCvK5ICX9RLV3lPlzIAY41JRodQH86fFkwrgQlSEf8=;
+        b=CmwijAWGrB9GpiDIRRkJD4jSnT43gKAmAnGfjMaA25Kt/6/LLUOt4eOCmLPfSIMGOT
+         aW9ShVJ6f895PpkJvDJVVoFWx5BgKEjpiM1k6aB0HHEse5SZQ2jgfYQwrhgGFc295/53
+         c0firhINkXK8AhvGbh6gPtL7EkztISznspA8/2XedHiWj27+y2kPRk+C3Qyyd37UqCb/
+         Llgeupzc7yudqB6GBoOzm51I3hJ4r0VphHkIxYSiDfkxQJHcvK4xfuG+CLwHYBO4dkIO
+         LbKGvdO0IK037kd4xPNaYTmJxNke7bjWj88R1s0cINtHKjji7z8isPYV8KpPWPEjBxTw
+         d/wg==
+In-Reply-To: <20200508183105.225460-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Alex Shi <alex.shi@linux.alibaba.com>, Joonsoo Kim <js1304@gmail.com>, Shakeel Butt <shakeelb@google.com>, Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.com>, "Kirill A. Shutemov" <kirill@shutemov.name>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-The cgroup swaprate throttling is about matching new anon allocations
-to the rate of available IO when that is being throttled. It's the io
-controller hooking into the VM, rather than a memory controller thing.
+When memcg uses the generic vmstat counters, it doesn't need to do
+anything at charging and uncharging time. It does, however, need to
+migrate counts when pages move to a different cgroup in move_account.
 
-Rename mem_cgroup_throttle_swaprate() to cgroup_throttle_swaprate(),
-and drop the @memcg argument which is only used to check whether the
-preceding page charge has succeeded and the fault is proceeding.
+Prepare the move_account function for the arrival of NR_FILE_PAGES,
+NR_ANON_MAPPED, NR_ANON_THPS etc. by having a branch for files and a
+branch for anon, which can then divided into sub-branches.
 
-We could decouple the call from mem_cgroup_try_charge() here as well,
-but that would cause unnecessary churn: the following patches convert
-all callsites to a new charge API and we'll decouple as we go along.
-
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-Reviewed-by: Alex Shi <alex.shi@linux.alibaba.com>
-Reviewed-by: Joonsoo Kim <iamjoonsoo.kim@lge.com>
-Reviewed-by: Shakeel Butt <shakeelb@google.com>
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Reviewed-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Reviewed-by: Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
 ---
- include/linux/swap.h |  6 ++----
- mm/memcontrol.c      |  5 ++---
- mm/swapfile.c        | 14 +++++++-------
- 3 files changed, 11 insertions(+), 14 deletions(-)
+ mm/memcontrol.c | 25 +++++++++++++------------
+ 1 file changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 873bf5206afb..b42fb47d8cbe 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -650,11 +650,9 @@ static inline int mem_cgroup_swappiness(struct mem_cgroup *mem)
- #endif
- 
- #if defined(CONFIG_SWAP) && defined(CONFIG_MEMCG) && defined(CONFIG_BLK_CGROUP)
--extern void mem_cgroup_throttle_swaprate(struct mem_cgroup *memcg, int node,
--					 gfp_t gfp_mask);
-+extern void cgroup_throttle_swaprate(struct page *page, gfp_t gfp_mask);
- #else
--static inline void mem_cgroup_throttle_swaprate(struct mem_cgroup *memcg,
--						int node, gfp_t gfp_mask)
-+static inline void cgroup_throttle_swaprate(struct page *page, gfp_t gfp_mask)
- {
- }
- #endif
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 13da46a5d8ae..8188d462d7ce 100644
+index a5efdad77be4..fe4212db8411 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -6494,12 +6494,11 @@ int mem_cgroup_try_charge(struct page *page, struct mm_struct *mm,
- int mem_cgroup_try_charge_delay(struct page *page, struct mm_struct *mm,
- 			  gfp_t gfp_mask, struct mem_cgroup **memcgp)
- {
--	struct mem_cgroup *memcg;
+@@ -5378,7 +5378,6 @@ static int mem_cgroup_move_account(struct page *page,
+ 	struct pglist_data *pgdat;
+ 	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
  	int ret;
+-	bool anon;
  
- 	ret = mem_cgroup_try_charge(page, mm, gfp_mask, memcgp);
--	memcg = *memcgp;
--	mem_cgroup_throttle_swaprate(memcg, page_to_nid(page), gfp_mask);
-+	if (*memcgp)
-+		cgroup_throttle_swaprate(page, gfp_mask);
- 	return ret;
- }
+ 	VM_BUG_ON(from == to);
+ 	VM_BUG_ON_PAGE(PageLRU(page), page);
+@@ -5396,25 +5395,27 @@ static int mem_cgroup_move_account(struct page *page,
+ 	if (page->mem_cgroup != from)
+ 		goto out_unlock;
  
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index 15e5f8f290cc..ad42eac1822d 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -3748,11 +3748,12 @@ static void free_swap_count_continuations(struct swap_info_struct *si)
- }
+-	anon = PageAnon(page);
+-
+ 	pgdat = page_pgdat(page);
+ 	from_vec = mem_cgroup_lruvec(from, pgdat);
+ 	to_vec = mem_cgroup_lruvec(to, pgdat);
  
- #if defined(CONFIG_MEMCG) && defined(CONFIG_BLK_CGROUP)
--void mem_cgroup_throttle_swaprate(struct mem_cgroup *memcg, int node,
--				  gfp_t gfp_mask)
-+void cgroup_throttle_swaprate(struct page *page, gfp_t gfp_mask)
- {
- 	struct swap_info_struct *si, *next;
--	if (!(gfp_mask & __GFP_IO) || !memcg)
-+	int nid = page_to_nid(page);
-+
-+	if (!(gfp_mask & __GFP_IO))
- 		return;
+ 	lock_page_memcg(page);
  
- 	if (!blk_cgroup_congested())
-@@ -3766,11 +3767,10 @@ void mem_cgroup_throttle_swaprate(struct mem_cgroup *memcg, int node,
- 		return;
+-	if (!anon && page_mapped(page)) {
+-		__mod_lruvec_state(from_vec, NR_FILE_MAPPED, -nr_pages);
+-		__mod_lruvec_state(to_vec, NR_FILE_MAPPED, nr_pages);
+-	}
++	if (!PageAnon(page)) {
++		if (page_mapped(page)) {
++			__mod_lruvec_state(from_vec, NR_FILE_MAPPED, -nr_pages);
++			__mod_lruvec_state(to_vec, NR_FILE_MAPPED, nr_pages);
++		}
  
- 	spin_lock(&swap_avail_lock);
--	plist_for_each_entry_safe(si, next, &swap_avail_heads[node],
--				  avail_lists[node]) {
-+	plist_for_each_entry_safe(si, next, &swap_avail_heads[nid],
-+				  avail_lists[nid]) {
- 		if (si->bdev) {
--			blkcg_schedule_throttle(bdev_get_queue(si->bdev),
--						true);
-+			blkcg_schedule_throttle(bdev_get_queue(si->bdev), true);
- 			break;
+-	if (!anon && PageDirty(page)) {
+-		struct address_space *mapping = page_mapping(page);
++		if (PageDirty(page)) {
++			struct address_space *mapping = page_mapping(page);
+ 
+-		if (mapping_cap_account_dirty(mapping)) {
+-			__mod_lruvec_state(from_vec, NR_FILE_DIRTY, -nr_pages);
+-			__mod_lruvec_state(to_vec, NR_FILE_DIRTY, nr_pages);
++			if (mapping_cap_account_dirty(mapping)) {
++				__mod_lruvec_state(from_vec, NR_FILE_DIRTY,
++						   -nr_pages);
++				__mod_lruvec_state(to_vec, NR_FILE_DIRTY,
++						   nr_pages);
++			}
  		}
  	}
+ 
 -- 
 2.26.2
 
