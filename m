@@ -1,39 +1,46 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 2/3] mm: swap: memcg: fix memcg stats for huge pages
-Date: Fri, 8 May 2020 17:56:16 -0400
-Message-ID: <20200508215616.GD226164@cmpxchg.org>
-References: <20200508212215.181307-1-shakeelb@google.com>
- <20200508212215.181307-2-shakeelb@google.com>
-Mime-Version: 1.0
+From: Guoqing Jiang <guoqing.jiang-8+5b1tb3oTXfrHaScsAUWw@public.gmane.org>
+Subject: [PATCH 0/4] cleanup for blk-wbt and blk-throttle
+Date: Sat,  9 May 2020 00:00:11 +0200
+Message-ID: <20200508220015.11528-1-guoqing.jiang@cloud.ionos.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=8zne5kD9U815Qp7lQoOfSkfWPnKdq4UH7l4ACZ1laQI=;
-        b=rVWxHIzDFvif9rrgKfKEzuzUqpug84jgH+pn6g2K+if7ys4WCpoBTPfsO3vQPvKAhN
-         yVfFa2Lp+fBa+5PTkzDejJhE9e4mKzNB4oFie8Fb4O99NmTGN8QvA+xTxmSSZnk3ibBc
-         HY2i6VFZUdjANcY0MDN1d4b9v0m8v8op+VhiOv7vwRUaW0FVadyL0QI7pMaOVKtzkkDK
-         eICt41IJctDdTY3MUPL17fid7XHKjjKefy0raEReMlnpRuJoXM9b+XyKVFxobwnSPF9F
-         Mh/uSrnjUReBhhaHgRTzE7vs/YNfmZ2ip7aKqPqWJrOr4nWGMCvhk2K4BK7cIVcztiM7
-         Ocsw==
-Content-Disposition: inline
-In-Reply-To: <20200508212215.181307-2-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        d=cloud.ionos.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=HJaSGZ1p1+2gTGleg/polxs+Iy4GGrNGzSb8aVDGzrQ=;
+        b=IaPO7e8heLcfhT9bkoaHzPo555GzJw1+LYpUUo0zXxp4egYkIo8uKH2hJ12Gf60np7
+         6ThjNHhMdYtWeGtQ+yVnic8OSNXCdGjK1zQbTpFLQTCWUwFjUVW+F9PW+u3ohqNYIVDv
+         4ryJk5yYm5OV9PVscfngBf44Qc+EJWGxjQI4lgGJ5f0Tf+UlZs3H+iK1ZX4x0ZO0ghfE
+         dcmCNmAKY5bQs3/rA/aOm8iIOQ67grMUEvIYLLFIO2VnxdUs2VL7ERL+yM6M7YZo8KwA
+         AuByX002gvPWVYrIud5jWNMQbrHgHcvgTMKrg0tvYmEfqaMjftdBCj11iZVHhw+zemO4
+         +GIw==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Guoqing Jiang <guoqing.jiang-8+5b1tb3oTXfrHaScsAUWw@public.gmane.org>
 
-On Fri, May 08, 2020 at 02:22:14PM -0700, Shakeel Butt wrote:
-> The commit 2262185c5b28 ("mm: per-cgroup memory reclaim stats") added
-> PGLAZYFREE, PGACTIVATE & PGDEACTIVATE stats for cgroups but missed
-> couple of places and PGLAZYFREE missed huge page handling. Fix that.
-> Also for PGLAZYFREE use the irq-unsafe function to update as the irq is
-> already disabled.
-> 
-> Fixes: 2262185c5b28 ("mm: per-cgroup memory reclaim stats")
-> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Hi,
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Find some functions can be removed since there is no caller of them when
+read the code.
+
+Thanks,
+Guoqing   
+
+Guoqing Jiang (4):
+  blk-throttle: remove blk_throtl_drain
+  blk-throttle: remove tg_drain_bios
+  blk-wbt: remove wbt_update_limits
+  blk-wbt: rename __wbt_update_limits to wbt_update_limits
+
+ block/blk-throttle.c | 63 --------------------------------------------
+ block/blk-wbt.c      | 16 +++--------
+ block/blk-wbt.h      |  4 ---
+ block/blk.h          |  2 --
+ 4 files changed, 4 insertions(+), 81 deletions(-)
+
+-- 
+2.17.1
+
