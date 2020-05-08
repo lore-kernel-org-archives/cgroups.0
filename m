@@ -1,400 +1,104 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH 05/19] mm: memcontrol: convert page cache to a new mem_cgroup_charge() API
-Date: Fri,  8 May 2020 14:30:52 -0400
-Message-ID: <20200508183105.225460-6-hannes@cmpxchg.org>
-References: <20200508183105.225460-1-hannes@cmpxchg.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/3] mm: swap: fix vmstats for huge pages
+Date: Fri,  8 May 2020 14:22:13 -0700
+Message-ID: <20200508212215.181307-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=+wiSpoRwEYHspeJR8Gv0Gu4T5Xv9UOTe+wucWrpXt8k=;
-        b=0dNh/IWjZhFeTttoqMZV3YkHGhFdx1nKm+z7iXFYwNPsE4TgXsSlPwNl2kG1f3JNT5
-         B80FQ1DT4047uhoF2ZBWq4o7SPVd3kgFtcKcxEImqkNDQt+DWx4KyZQcIFngsTOnhKpj
-         dHb0jE/VejcpqnB3aOM3cUpil9G2W/fjOIzZHFlh+LBDAxMs1XgHnw+s91McJM32p5BQ
-         lbekYEKAng1XPr9ZUs48f+qrUjZ5IgiXu+lQzYTkgVZMA5gl1TqO0l1pTDq32iDA5KT+
-         O8UToaKQsPLT316j4fCDASk1nFCQSWQxBr5Bo7ySM+Tmc8L7czbQ09L16kx70+rVrOLC
-         A1zw==
-In-Reply-To: <20200508183105.225460-1-hannes@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=H7ED1E6iU6GJrL2T+LX5Bj/uEQY3JnE8s7k3T/+egkg=;
+        b=XY5On+GozPMjP6G7zkPxPhW0eE2rp4+jjdvdyV+TE6avG+bX2A6pptdCo2RW+Rn3no
+         KQU1jyKtWYfy9dkYUy4EImZ9+uEOAdDNPH0YwlyphH5/olIWRcFiT8PHrG0uYO6VgAgO
+         E/dVasAEh4SuLPL7R9m2RQCh6iAMAIo8SZvlMpxpYiJTLphr4eSjp2MuwGrDq5yyaNzx
+         4N+w8pQqM2elRyzuI36Dqha8UAGJbBpiCNZBetFNyysG+bhxK79vAv6P6/dmFhDWQ0cZ
+         53BuMgiu5tPKdTehsHF+yErNAw9OFP+cGYZN4uCLlChZJodaZgBljzVYxcpHxpU3zoun
+         Gm9A==
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Alex Shi <alex.shi@linux.alibaba.com>, Joonsoo Kim <js1304@gmail.com>, Shakeel Butt <shakeelb@google.com>, Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.com>, "Kirill A. Shutemov" <kirill@shutemov.name>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+Content-Transfer-Encoding: 7bit
+To: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-The try/commit/cancel protocol that memcg uses dates back to when
-pages used to be uncharged upon removal from the page cache, and thus
-couldn't be committed before the insertion had succeeded. Nowadays,
-pages are uncharged when they are physically freed; it doesn't matter
-whether the insertion was successful or not. For the page cache, the
-transaction dance has become unnecessary.
+Many of the callbacks called by pagevec_lru_move_fn() do not correctly
+update the vmstats for huge pages. Fix that. Also __pagevec_lru_add_fn()
+use the irq-unsafe alternative to update the stat as the irqs are
+already disabled.
 
-Introduce a mem_cgroup_charge() function that simply charges a newly
-allocated page to a cgroup and sets up page->mem_cgroup in one single
-step. If the insertion fails, the caller doesn't have to do anything
-but free/put the page.
-
-Then switch the page cache over to this new API.
-
-Subsequent patches will also convert anon pages, but it needs a bit
-more prep work. Right now, memcg depends on page->mapping being
-already set up at the time of charging, so that it can maintain its
-own MEMCG_CACHE and MEMCG_RSS counters. For anon, page->mapping is set
-under the same pte lock under which the page is publishd, so a single
-charge point that can block doesn't work there just yet.
-
-The following prep patches will replace the private memcg counters
-with the generic vmstat counters, thus removing the page->mapping
-dependency, then complete the transition to the new single-point
-charge API and delete the old transactional scheme.
-
-v2: leave shmem swapcache when charging fails to avoid double IO (Joonsoo)
-
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-Reviewed-by: Alex Shi <alex.shi@linux.alibaba.com>
+Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/memcontrol.h | 10 +++++
- mm/filemap.c               | 24 +++++------
- mm/memcontrol.c            | 29 ++++++++++++-
- mm/shmem.c                 | 88 ++++++++++++++++----------------------
- 4 files changed, 85 insertions(+), 66 deletions(-)
+ mm/swap.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 30292d57c8af..57339514d960 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -379,6 +379,10 @@ int mem_cgroup_try_charge_delay(struct page *page, struct mm_struct *mm,
- void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
- 			      bool lrucare);
- void mem_cgroup_cancel_charge(struct page *page, struct mem_cgroup *memcg);
-+
-+int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask,
-+		      bool lrucare);
-+
- void mem_cgroup_uncharge(struct page *page);
- void mem_cgroup_uncharge_list(struct list_head *page_list);
- 
-@@ -893,6 +897,12 @@ static inline void mem_cgroup_cancel_charge(struct page *page,
- {
+diff --git a/mm/swap.c b/mm/swap.c
+index a37bd7b202ac..3dbef6517cac 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -225,7 +225,7 @@ static void pagevec_move_tail_fn(struct page *page, struct lruvec *lruvec,
+ 		del_page_from_lru_list(page, lruvec, page_lru(page));
+ 		ClearPageActive(page);
+ 		add_page_to_lru_list_tail(page, lruvec, page_lru(page));
+-		(*pgmoved)++;
++		(*pgmoved) += hpage_nr_pages(page);
+ 	}
  }
  
-+static inline int mem_cgroup_charge(struct page *page, struct mm_struct *mm,
-+				    gfp_t gfp_mask, bool lrucare)
-+{
-+	return 0;
-+}
-+
- static inline void mem_cgroup_uncharge(struct page *page)
- {
+@@ -285,7 +285,7 @@ static void __activate_page(struct page *page, struct lruvec *lruvec,
+ 		add_page_to_lru_list(page, lruvec, lru);
+ 		trace_mm_lru_activate(page);
+ 
+-		__count_vm_event(PGACTIVATE);
++		__count_vm_events(PGACTIVATE, hpage_nr_pages(page));
+ 		update_page_reclaim_stat(lruvec, file, 1);
+ 	}
  }
-diff --git a/mm/filemap.c b/mm/filemap.c
-index ce200386736c..ee9882509566 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -832,7 +832,6 @@ static int __add_to_page_cache_locked(struct page *page,
+@@ -503,6 +503,7 @@ static void lru_deactivate_file_fn(struct page *page, struct lruvec *lruvec,
  {
- 	XA_STATE(xas, &mapping->i_pages, offset);
- 	int huge = PageHuge(page);
--	struct mem_cgroup *memcg;
- 	int error;
- 	void *old;
+ 	int lru, file;
+ 	bool active;
++	int nr_pages = hpage_nr_pages(page);
  
-@@ -840,17 +839,16 @@ static int __add_to_page_cache_locked(struct page *page,
- 	VM_BUG_ON_PAGE(PageSwapBacked(page), page);
- 	mapping_set_update(&xas, mapping);
- 
--	if (!huge) {
--		error = mem_cgroup_try_charge(page, current->mm,
--					      gfp_mask, &memcg);
--		if (error)
--			return error;
--	}
--
- 	get_page(page);
- 	page->mapping = mapping;
- 	page->index = offset;
- 
-+	if (!huge) {
-+		error = mem_cgroup_charge(page, current->mm, gfp_mask, false);
-+		if (error)
-+			goto error;
-+	}
-+
- 	do {
- 		xas_lock_irq(&xas);
- 		old = xas_load(&xas);
-@@ -874,20 +872,18 @@ static int __add_to_page_cache_locked(struct page *page,
- 		xas_unlock_irq(&xas);
- 	} while (xas_nomem(&xas, gfp_mask & GFP_RECLAIM_MASK));
- 
--	if (xas_error(&xas))
-+	if (xas_error(&xas)) {
-+		error = xas_error(&xas);
- 		goto error;
-+	}
- 
--	if (!huge)
--		mem_cgroup_commit_charge(page, memcg, false);
- 	trace_mm_filemap_add_to_page_cache(page);
- 	return 0;
- error:
- 	page->mapping = NULL;
- 	/* Leave page->index set: truncation relies upon it */
--	if (!huge)
--		mem_cgroup_cancel_charge(page, memcg);
- 	put_page(page);
--	return xas_error(&xas);
-+	return error;
- }
- ALLOW_ERROR_INJECTION(__add_to_page_cache_locked, ERRNO);
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 8188d462d7ce..1d45a09b334f 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6578,6 +6578,33 @@ void mem_cgroup_cancel_charge(struct page *page, struct mem_cgroup *memcg)
- 	cancel_charge(memcg, nr_pages);
- }
- 
-+/**
-+ * mem_cgroup_charge - charge a newly allocated page to a cgroup
-+ * @page: page to charge
-+ * @mm: mm context of the victim
-+ * @gfp_mask: reclaim mode
-+ * @lrucare: page might be on the LRU already
-+ *
-+ * Try to charge @page to the memcg that @mm belongs to, reclaiming
-+ * pages according to @gfp_mask if necessary.
-+ *
-+ * Returns 0 on success. Otherwise, an error code is returned.
-+ */
-+int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask,
-+		      bool lrucare)
-+{
-+	struct mem_cgroup *memcg;
-+	int ret;
-+
-+	VM_BUG_ON_PAGE(!page->mapping, page);
-+
-+	ret = mem_cgroup_try_charge(page, mm, gfp_mask, &memcg);
-+	if (ret)
-+		return ret;
-+	mem_cgroup_commit_charge(page, memcg, lrucare);
-+	return 0;
-+}
-+
- struct uncharge_gather {
- 	struct mem_cgroup *memcg;
- 	unsigned long pgpgout;
-@@ -6625,8 +6652,6 @@ static void uncharge_batch(const struct uncharge_gather *ug)
- static void uncharge_page(struct page *page, struct uncharge_gather *ug)
- {
- 	VM_BUG_ON_PAGE(PageLRU(page), page);
--	VM_BUG_ON_PAGE(page_count(page) && !is_zone_device_page(page) &&
--			!PageHWPoison(page) , page);
- 
- 	if (!page->mem_cgroup)
+ 	if (!PageLRU(page))
  		return;
-diff --git a/mm/shmem.c b/mm/shmem.c
-index d505b6cce4ab..afd5a057ebb7 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -605,11 +605,13 @@ static inline bool is_huge_enabled(struct shmem_sb_info *sbinfo)
-  */
- static int shmem_add_to_page_cache(struct page *page,
- 				   struct address_space *mapping,
--				   pgoff_t index, void *expected, gfp_t gfp)
-+				   pgoff_t index, void *expected, gfp_t gfp,
-+				   struct mm_struct *charge_mm)
- {
- 	XA_STATE_ORDER(xas, &mapping->i_pages, index, compound_order(page));
- 	unsigned long i = 0;
- 	unsigned long nr = compound_nr(page);
-+	int error;
- 
- 	VM_BUG_ON_PAGE(PageTail(page), page);
- 	VM_BUG_ON_PAGE(index != round_down(index, nr), page);
-@@ -621,12 +623,22 @@ static int shmem_add_to_page_cache(struct page *page,
- 	page->mapping = mapping;
- 	page->index = index;
- 
-+	error = mem_cgroup_charge(page, charge_mm, gfp, PageSwapCache(page));
-+	if (error) {
-+		if (!PageSwapCache(page) && PageTransHuge(page)) {
-+			count_vm_event(THP_FILE_FALLBACK);
-+			count_vm_event(THP_FILE_FALLBACK_CHARGE);
-+		}
-+		goto error;
-+	}
-+	cgroup_throttle_swaprate(page, gfp);
-+
- 	do {
- 		void *entry;
- 		xas_lock_irq(&xas);
- 		entry = xas_find_conflict(&xas);
- 		if (entry != expected)
--			xas_set_err(&xas, -EEXIST);
-+			xas_set_err(&xas, expected ? -ENOENT : -EEXIST);
- 		xas_create_range(&xas);
- 		if (xas_error(&xas))
- 			goto unlock;
-@@ -648,12 +660,15 @@ static int shmem_add_to_page_cache(struct page *page,
- 	} while (xas_nomem(&xas, gfp));
- 
- 	if (xas_error(&xas)) {
--		page->mapping = NULL;
--		page_ref_sub(page, nr);
--		return xas_error(&xas);
-+		error = xas_error(&xas);
-+		goto error;
+@@ -536,11 +537,11 @@ static void lru_deactivate_file_fn(struct page *page, struct lruvec *lruvec,
+ 		 * We moves tha page into tail of inactive.
+ 		 */
+ 		add_page_to_lru_list_tail(page, lruvec, lru);
+-		__count_vm_event(PGROTATED);
++		__count_vm_events(PGROTATED, nr_pages);
  	}
  
- 	return 0;
-+error:
-+	page->mapping = NULL;
-+	page_ref_sub(page, nr);
-+	return error;
+ 	if (active)
+-		__count_vm_event(PGDEACTIVATE);
++		__count_vm_events(PGDEACTIVATE, nr_pages);
+ 	update_page_reclaim_stat(lruvec, file, 0);
  }
  
- /*
-@@ -1619,7 +1634,6 @@ static int shmem_swapin_page(struct inode *inode, pgoff_t index,
- 	struct address_space *mapping = inode->i_mapping;
- 	struct shmem_inode_info *info = SHMEM_I(inode);
- 	struct mm_struct *charge_mm = vma ? vma->vm_mm : current->mm;
--	struct mem_cgroup *memcg;
- 	struct page *page;
- 	swp_entry_t swap;
- 	int error;
-@@ -1664,29 +1678,23 @@ static int shmem_swapin_page(struct inode *inode, pgoff_t index,
- 			goto failed;
+@@ -929,6 +930,7 @@ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec,
+ {
+ 	enum lru_list lru;
+ 	int was_unevictable = TestClearPageUnevictable(page);
++	int nr_pages = hpage_nr_pages(page);
+ 
+ 	VM_BUG_ON_PAGE(PageLRU(page), page);
+ 
+@@ -966,13 +968,13 @@ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec,
+ 		update_page_reclaim_stat(lruvec, page_is_file_lru(page),
+ 					 PageActive(page));
+ 		if (was_unevictable)
+-			count_vm_event(UNEVICTABLE_PGRESCUED);
++			__count_vm_events(UNEVICTABLE_PGRESCUED, nr_pages);
+ 	} else {
+ 		lru = LRU_UNEVICTABLE;
+ 		ClearPageActive(page);
+ 		SetPageUnevictable(page);
+ 		if (!was_unevictable)
+-			count_vm_event(UNEVICTABLE_PGCULLED);
++			__count_vm_events(UNEVICTABLE_PGCULLED, nr_pages);
  	}
  
--	error = mem_cgroup_try_charge_delay(page, charge_mm, gfp, &memcg);
--	if (!error) {
--		error = shmem_add_to_page_cache(page, mapping, index,
--						swp_to_radix_entry(swap), gfp);
-+	error = shmem_add_to_page_cache(page, mapping, index,
-+					swp_to_radix_entry(swap), gfp,
-+					charge_mm);
-+	if (error) {
- 		/*
--		 * We already confirmed swap under page lock, and make
--		 * no memory allocation here, so usually no possibility
--		 * of error; but free_swap_and_cache() only trylocks a
--		 * page, so it is just possible that the entry has been
--		 * truncated or holepunched since swap was confirmed.
-+		 * We already confirmed swap under page lock, but
-+		 * free_swap_and_cache() only trylocks a page, so it
-+		 * is just possible that the entry has been truncated
-+		 * or holepunched since swap was confirmed.
- 		 * shmem_undo_range() will have done some of the
- 		 * unaccounting, now delete_from_swap_cache() will do
- 		 * the rest.
- 		 */
--		if (error) {
--			mem_cgroup_cancel_charge(page, memcg);
-+		if (error == -ENOENT)
- 			delete_from_swap_cache(page);
--		}
--	}
--	if (error)
- 		goto failed;
--
--	mem_cgroup_commit_charge(page, memcg, true);
-+	}
- 
- 	spin_lock_irq(&info->lock);
- 	info->swapped--;
-@@ -1733,7 +1741,6 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
- 	struct shmem_inode_info *info = SHMEM_I(inode);
- 	struct shmem_sb_info *sbinfo;
- 	struct mm_struct *charge_mm;
--	struct mem_cgroup *memcg;
- 	struct page *page;
- 	enum sgp_type sgp_huge = sgp;
- 	pgoff_t hindex = index;
-@@ -1858,21 +1865,11 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
- 	if (sgp == SGP_WRITE)
- 		__SetPageReferenced(page);
- 
--	error = mem_cgroup_try_charge_delay(page, charge_mm, gfp, &memcg);
--	if (error) {
--		if (PageTransHuge(page)) {
--			count_vm_event(THP_FILE_FALLBACK);
--			count_vm_event(THP_FILE_FALLBACK_CHARGE);
--		}
--		goto unacct;
--	}
- 	error = shmem_add_to_page_cache(page, mapping, hindex,
--					NULL, gfp & GFP_RECLAIM_MASK);
--	if (error) {
--		mem_cgroup_cancel_charge(page, memcg);
-+					NULL, gfp & GFP_RECLAIM_MASK,
-+					charge_mm);
-+	if (error)
- 		goto unacct;
--	}
--	mem_cgroup_commit_charge(page, memcg, false);
- 	lru_cache_add_anon(page);
- 
- 	spin_lock_irq(&info->lock);
-@@ -2310,7 +2307,6 @@ static int shmem_mfill_atomic_pte(struct mm_struct *dst_mm,
- 	struct address_space *mapping = inode->i_mapping;
- 	gfp_t gfp = mapping_gfp_mask(mapping);
- 	pgoff_t pgoff = linear_page_index(dst_vma, dst_addr);
--	struct mem_cgroup *memcg;
- 	spinlock_t *ptl;
- 	void *page_kaddr;
- 	struct page *page;
-@@ -2360,16 +2356,10 @@ static int shmem_mfill_atomic_pte(struct mm_struct *dst_mm,
- 	if (unlikely(offset >= max_off))
- 		goto out_release;
- 
--	ret = mem_cgroup_try_charge_delay(page, dst_mm, gfp, &memcg);
--	if (ret)
--		goto out_release;
--
- 	ret = shmem_add_to_page_cache(page, mapping, pgoff, NULL,
--						gfp & GFP_RECLAIM_MASK);
-+				      gfp & GFP_RECLAIM_MASK, dst_mm);
- 	if (ret)
--		goto out_release_uncharge;
--
--	mem_cgroup_commit_charge(page, memcg, false);
-+		goto out_release;
- 
- 	_dst_pte = mk_pte(page, dst_vma->vm_page_prot);
- 	if (dst_vma->vm_flags & VM_WRITE)
-@@ -2390,11 +2380,11 @@ static int shmem_mfill_atomic_pte(struct mm_struct *dst_mm,
- 	ret = -EFAULT;
- 	max_off = DIV_ROUND_UP(i_size_read(inode), PAGE_SIZE);
- 	if (unlikely(offset >= max_off))
--		goto out_release_uncharge_unlock;
-+		goto out_release_unlock;
- 
- 	ret = -EEXIST;
- 	if (!pte_none(*dst_pte))
--		goto out_release_uncharge_unlock;
-+		goto out_release_unlock;
- 
- 	lru_cache_add_anon(page);
- 
-@@ -2415,12 +2405,10 @@ static int shmem_mfill_atomic_pte(struct mm_struct *dst_mm,
- 	ret = 0;
- out:
- 	return ret;
--out_release_uncharge_unlock:
-+out_release_unlock:
- 	pte_unmap_unlock(dst_pte, ptl);
- 	ClearPageDirty(page);
- 	delete_from_page_cache(page);
--out_release_uncharge:
--	mem_cgroup_cancel_charge(page, memcg);
- out_release:
- 	unlock_page(page);
- 	put_page(page);
+ 	add_page_to_lru_list(page, lruvec, lru);
 -- 
-2.26.2
+2.26.2.645.ge9eca65c58-goog
 
