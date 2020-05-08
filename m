@@ -1,67 +1,100 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: [PATCH] memcg: expose root cgroup's memory.stat
-Date: Fri,  8 May 2020 10:06:30 -0700
-Message-ID: <20200508170630.94406-1-shakeelb@google.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH 00/19 V2] mm: memcontrol: charge swapin pages on instantiation
+Date: Fri,  8 May 2020 14:30:47 -0400
+Message-ID: <20200508183105.225460-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=BNj9Z6arsMIsAVorXWKDmEgiJTCFic/kTsm/LbalWf8=;
-        b=cWd8iE2BULhsuzGBLhEY2ZykQklRkw+mBHU/UMcTu++CnkoD19Vwbyu9ZXAq+Hvjm3
-         eKnZGz1RV/GJTLIu+z8x3At8UyE3gi6rwQ2pKfNtHATsjtlhYJDACFP5XqkImrYM4REU
-         o+Cqrm1AXu9jkv3QQPIjtPsZLxcHhocu8oRlAndWoiWFd4gsXxte2X28wRZ3L6ck0q1U
-         fbOVueB3efN0mUTnXzEm1dz447Ij8sdDOPniira68MQcgRhGm0xO5FH37HOmdlVHeoTl
-         61LMlaKmNqqB299IJUdkAwrLrEj457QuNL3sBadYKkE8dCyJi8rIl7w0ts4Nwgy2jbxC
-         Z4MQ==
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=tzWVqUZtLwqxtxfWgFUyBr2nPkF3oxF3sVG4yWWQyv0=;
+        b=Es4bHoTBFJW5deY/BPRm1w9FSHwlvLmnWbWr+JMeXV7lwHag/PJFMjSaaSHRkttda9
+         ZBGMCqHHpexqozMp7joxpOR/FUBqY4fzUJeehlqLgHU0RSat1rj9Q+Xtcmcvp/Xucdmv
+         EnHLzezIGvS2TdqxgQDzPqk6rWL/2RluSz8ZmEOU+wRKHuUmU8j/94jtvQvm3nrbytof
+         CdDhhdVB5sBwTOP033+p/Ezivg7PnuZbXkMxxaA96tDTehDT8E1FkIS2v56S5APkj/yu
+         qL5aCzZbbv0Y8ZY71fsPZmTIfK34i9XIhBcwDrRYYPwGqqTYiLOaoXXXHrj+OeSpZIhe
+         IWgQ==
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Mel Gorman <mgorman@suse.de>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Yafang Shao <laoar.shao@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, Joonsoo Kim <js1304@gmail.com>, Shakeel Butt <shakeelb@google.com>, Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.com>, "Kirill A. Shutemov" <kirill@shutemov.name>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-One way to measure the efficiency of memory reclaim is to look at the
-ratio (pgscan+pfrefill)/pgsteal. However at the moment these stats are
-not updated consistently at the system level and the ratio of these are
-not very meaningful. The pgsteal and pgscan are updated for only global
-reclaim while pgrefill gets updated for global as well as cgroup
-reclaim.
+This patch series reworks memcg to charge swapin pages directly at
+swapin time, rather than at fault time, which may be much later, or
+not happen at all.
 
-Please note that this difference is only for system level vmstats. The
-cgroup stats returned by memory.stat are actually consistent. The
-cgroup's pgsteal contains number of reclaimed pages for global as well
-as cgroup reclaim. So, one way to get the system level stats is to get
-these stats from root's memory.stat, so, expose memory.stat for the root
-cgroup.
+Changes in version 2:
+- prevent double charges on pre-allocated hugepages in khugepaged
+- leave shmem swapcache when charging fails to avoid double IO (Joonsoo)
+- fix temporary accounting bug by switching rmap<->commit (Joonsoo)
+- fix double swap charge bug in cgroup1/cgroup2 code gating
+- simplify swapin error checking (Joonsoo)
+- mm: memcontrol: document the new swap control behavior (Alex)
+- review tags
 
-	from Johannes Weiner:
-	There are subtle differences between /proc/vmstat and
-	memory.stat, and cgroup-aware code that wants to watch the full
-	hierarchy currently has to know about these intricacies and
-	translate semantics back and forth.
+The delayed swapin charging scheme we have right now causes problems:
 
-	Generally having the fully recursive memory.stat at the root
-	level could help a broader range of usecases.
+- Alex's per-cgroup lru_lock patches rely on pages that have been
+  isolated from the LRU to have a stable page->mem_cgroup; otherwise
+  the lock may change underneath him. Swapcache pages are charged only
+  after they are added to the LRU, and charging doesn't follow the LRU
+  isolation protocol.
 
-Signed-off-by: Shakeel Butt <shakeelb@google.com>
-Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
----
- mm/memcontrol.c | 1 -
- 1 file changed, 1 deletion(-)
+- Joonsoo's anon workingset patches need a suitable LRU at the time
+  the page enters the swap cache and displaces the non-resident
+  info. But the correct LRU is only available after charging.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 05dcb72314b5..c300d52c07a5 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6230,7 +6230,6 @@ static struct cftype memory_files[] = {
- 	},
- 	{
- 		.name = "stat",
--		.flags = CFTYPE_NOT_ON_ROOT,
- 		.seq_show = memory_stat_show,
- 	},
- 	{
--- 
-2.26.2.645.ge9eca65c58-goog
+- It's a containment hole / DoS vector. Users can trigger arbitrarily
+  large swap readahead using MADV_WILLNEED. The memory is never
+  charged unless somebody actually touches it.
 
+- It complicates the page->mem_cgroup stabilization rules
+
+In order to charge pages directly at swapin time, the memcg code base
+needs to be prepared, and several overdue cleanups become a necessity:
+
+To charge pages at swapin time, we need to always have cgroup
+ownership tracking of swap records. We also cannot rely on
+page->mapping to tell apart page types at charge time, because that's
+only set up during a page fault.
+
+To eliminate the page->mapping dependency, memcg needs to ditch its
+private page type counters (MEMCG_CACHE, MEMCG_RSS, NR_SHMEM) in favor
+of the generic vmstat counters and accounting sites, such as
+NR_FILE_PAGES, NR_ANON_MAPPED etc.
+
+To switch to generic vmstat counters, the charge sequence must be
+adjusted such that page->mem_cgroup is set up by the time these
+counters are modified.
+
+The series is structured as follows:
+
+1. Bug fixes
+2. Decoupling charging from rmap
+3. Swap controller integration into memcg
+4. Direct swapin charging
+
+Based on v5.7-rc3-mmots-2020-05-01-20-14.
+
+ Documentation/admin-guide/cgroup-v1/memory.rst |  19 +-
+ include/linux/memcontrol.h                     |  53 +--
+ include/linux/mm.h                             |   4 +-
+ include/linux/swap.h                           |   6 +-
+ init/Kconfig                                   |  17 +-
+ kernel/events/uprobes.c                        |  10 +-
+ mm/filemap.c                                   |  43 +--
+ mm/huge_memory.c                               |  13 +-
+ mm/khugepaged.c                                |  29 +-
+ mm/memcontrol.c                                | 449 +++++++----------------
+ mm/memory.c                                    |  51 +--
+ mm/migrate.c                                   |  20 +-
+ mm/rmap.c                                      |  53 +--
+ mm/shmem.c                                     | 108 +++---
+ mm/swap_cgroup.c                               |   6 -
+ mm/swap_state.c                                |  89 ++---
+ mm/swapfile.c                                  |  25 +-
+ mm/userfaultfd.c                               |   5 +-
+ 18 files changed, 367 insertions(+), 633 deletions(-)
