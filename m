@@ -1,115 +1,59 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: [PATCH 3/3] mm: swap: fix update_page_reclaim_stat for huge pages
-Date: Fri,  8 May 2020 14:22:15 -0700
-Message-ID: <20200508212215.181307-3-shakeelb@google.com>
-References: <20200508212215.181307-1-shakeelb@google.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH] memcg: expose root cgroup's memory.stat
+Date: Fri, 8 May 2020 17:44:05 -0400
+Message-ID: <20200508214405.GA226164@cmpxchg.org>
+References: <20200508170630.94406-1-shakeelb@google.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=+lPomwo6gVp+8sIw/I2u7q5nAUGKdenRSc6ButB2wWA=;
-        b=Y/d3gs9c8fLWvNo8cv/JRlC7Gdv90wnQcNRlqk6pT0nZP3sUowsrJKLy1ajL1gCIKP
-         BNUeVyKZcJBZjS+0eDdZFhjTK3KefN3ABh56eoNStvjd714RuGjuUnA3L4xeJIFNUkAY
-         bO0mV9zYI5WmPppNa8u/mIKGLHCWC/TjhPqGsKKMVtsXjIEUy6r5sxDfnrG5LunrIWzK
-         c4P45AcNlm8NzX8yWiwIltielavQyQsD9QYT1cC7LRok37X0rUT9i2vJ4vjVhIsWoAUZ
-         ZCn8t+LqSaHTPehqaJHQ7MaZ0Cg0xB93YKJMmUk8rRApPNqqK1qZub7KUWVS80QT7IRV
-         OJow==
-In-Reply-To: <20200508212215.181307-1-shakeelb@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=hfgFNTJ/A8Lg7nI9g+Xp3FmILdU0dHMohrFwQmfLQXo=;
+        b=BO4e5bD/Q+sMJjS2zPBJ9fA0BfYUE6sPFxYwsNOwSV4A2F0R22Kk02cgB2O7t3YZjN
+         WXq235+CpxzxCfyxC4UYLkH/H+vrK1wMRWc3F3A11zVLIM3R2j0B/m2cBQTChZS2n/IP
+         ycONKTo/SlL6z7hvTvz8LF/MSBS+pQTo+GfyZVFUF2s22DI7IQqTmOIRk93B6ONU/3d+
+         Pq1q9czvaqdabgSzhAER31wB8ODppfSiaxEfMXyIsYMZeQmm7jGvrzMFyqWdkB6tXXwH
+         A2Lb4VY/NrvuvTG+OprSMVStvHwAZoJcabj5QflkXcTJuSH6Gb0UOWCFSguBlgr8iiZr
+         7VuQ==
+Content-Disposition: inline
+In-Reply-To: <20200508170630.94406-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Mel Gorman <mgorman@suse.de>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Yafang Shao <laoar.shao@gmail.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Currently update_page_reclaim_stat() updates the lruvec.reclaim_stats
-just once for a page irrespective if a page is huge or not. Fix that by
-passing the hpage_nr_pages(page) to it.
+On Fri, May 08, 2020 at 10:06:30AM -0700, Shakeel Butt wrote:
+> One way to measure the efficiency of memory reclaim is to look at the
+> ratio (pgscan+pfrefill)/pgsteal. However at the moment these stats are
+> not updated consistently at the system level and the ratio of these are
+> not very meaningful. The pgsteal and pgscan are updated for only global
+> reclaim while pgrefill gets updated for global as well as cgroup
+> reclaim.
+> 
+> Please note that this difference is only for system level vmstats. The
+> cgroup stats returned by memory.stat are actually consistent. The
+> cgroup's pgsteal contains number of reclaimed pages for global as well
+> as cgroup reclaim. So, one way to get the system level stats is to get
+> these stats from root's memory.stat, so, expose memory.stat for the root
+> cgroup.
+> 
+> 	from Johannes Weiner:
+> 	There are subtle differences between /proc/vmstat and
+> 	memory.stat, and cgroup-aware code that wants to watch the full
+> 	hierarchy currently has to know about these intricacies and
+> 	translate semantics back and forth.
+> 
+> 	Generally having the fully recursive memory.stat at the root
+> 	level could help a broader range of usecases.
 
-Signed-off-by: Shakeel Butt <shakeelb@google.com>
----
- mm/swap.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+The changelog begs the question why we don't just "fix" the
+system-level stats. It may be useful to include the conclusions from
+that discussion, and why there is value in keeping the stats this way.
 
-diff --git a/mm/swap.c b/mm/swap.c
-index 4eb179ee0b72..dc7297cb76a0 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -262,14 +262,14 @@ void rotate_reclaimable_page(struct page *page)
- 	}
- }
- 
--static void update_page_reclaim_stat(struct lruvec *lruvec,
--				     int file, int rotated)
-+static void update_page_reclaim_stat(struct lruvec *lruvec, int file,
-+				     int rotated, int nr_pages)
- {
- 	struct zone_reclaim_stat *reclaim_stat = &lruvec->reclaim_stat;
- 
--	reclaim_stat->recent_scanned[file]++;
-+	reclaim_stat->recent_scanned[file] += nr_pages;
- 	if (rotated)
--		reclaim_stat->recent_rotated[file]++;
-+		reclaim_stat->recent_rotated[file] += nr_pages;
- }
- 
- static void __activate_page(struct page *page, struct lruvec *lruvec,
-@@ -288,7 +288,7 @@ static void __activate_page(struct page *page, struct lruvec *lruvec,
- 
- 		__count_vm_events(PGACTIVATE, nr_pages);
- 		__count_memcg_events(lruvec_memcg(lruvec), PGACTIVATE, nr_pages);
--		update_page_reclaim_stat(lruvec, file, 1);
-+		update_page_reclaim_stat(lruvec, file, 1, nr_pages);
- 	}
- }
- 
-@@ -546,7 +546,7 @@ static void lru_deactivate_file_fn(struct page *page, struct lruvec *lruvec,
- 		__count_vm_events(PGDEACTIVATE, nr_pages);
- 		__count_memcg_events(lruvec_memcg(lruvec), PGDEACTIVATE, nr_pages);
- 	}
--	update_page_reclaim_stat(lruvec, file, 0);
-+	update_page_reclaim_stat(lruvec, file, 0, nr_pages);
- }
- 
- static void lru_deactivate_fn(struct page *page, struct lruvec *lruvec,
-@@ -564,7 +564,7 @@ static void lru_deactivate_fn(struct page *page, struct lruvec *lruvec,
- 
- 		__count_vm_events(PGDEACTIVATE, nr_pages);
- 		__count_memcg_events(lruvec_memcg(lruvec), PGDEACTIVATE, nr_pages);
--		update_page_reclaim_stat(lruvec, file, 0);
-+		update_page_reclaim_stat(lruvec, file, 0, nr_pages);
- 	}
- }
- 
-@@ -590,7 +590,7 @@ static void lru_lazyfree_fn(struct page *page, struct lruvec *lruvec,
- 
- 		__count_vm_events(PGLAZYFREE, nr_pages);
- 		__count_memcg_events(lruvec_memcg(lruvec), PGLAZYFREE, nr_pages);
--		update_page_reclaim_stat(lruvec, 1, 0);
-+		update_page_reclaim_stat(lruvec, 1, 0, nr_pages);
- 	}
- }
- 
-@@ -928,7 +928,7 @@ void lru_add_page_tail(struct page *page, struct page *page_tail,
- 	}
- 
- 	if (!PageUnevictable(page))
--		update_page_reclaim_stat(lruvec, file, PageActive(page_tail));
-+		update_page_reclaim_stat(lruvec, file, PageActive(page_tail), 1);
- }
- #endif /* CONFIG_TRANSPARENT_HUGEPAGE */
- 
-@@ -973,7 +973,7 @@ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec,
- 	if (page_evictable(page)) {
- 		lru = page_lru(page);
- 		update_page_reclaim_stat(lruvec, page_is_file_lru(page),
--					 PageActive(page));
-+					 PageActive(page), nr_pages);
- 		if (was_unevictable)
- 			__count_vm_events(UNEVICTABLE_PGRESCUED, nr_pages);
- 	} else {
--- 
-2.26.2.645.ge9eca65c58-goog
+> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
