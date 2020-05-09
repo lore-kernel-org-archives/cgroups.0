@@ -1,10 +1,12 @@
 From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] netprio_cgroup: Fix unlimited memory leak of v2 cgroup
-Date: Sat, 9 May 2020 11:19:39 +0800
-Message-ID: <939566f5-abe3-3526-d4ff-ec6bf8e8c138@huawei.com>
+Subject: [PATCH v2] netprio_cgroup: Fix unlimited memory leak of v2 cgroups
+Date: Sat, 9 May 2020 11:32:10 +0800
+Message-ID: <2fcd921d-8f42-9d33-951c-899d0bbdd92d@huawei.com>
+References: <939566f5-abe3-3526-d4ff-ec6bf8e8c138@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <939566f5-abe3-3526-d4ff-ec6bf8e8c138-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -34,22 +36,25 @@ Reported-by: Yang Yingliang <yangyingliang-hv44wF8Li93QT0dZR+AlfA@public.gmane.o
 Tested-by: Yang Yingliang <yangyingliang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
+
+forgot to rebase to the latest kernel.
+
+---
  net/core/netprio_cgroup.c | 2 ++
  1 file changed, 2 insertions(+)
 
 diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
-index b905747..2397866 100644
+index 8881dd9..9bd4cab 100644
 --- a/net/core/netprio_cgroup.c
 +++ b/net/core/netprio_cgroup.c
-@@ -240,6 +240,8 @@ static void net_prio_attach(struct cgroup_taskset *tset)
+@@ -236,6 +236,8 @@ static void net_prio_attach(struct cgroup_taskset *tset)
  	struct task_struct *p;
  	struct cgroup_subsys_state *css;
  
 +	cgroup_sk_alloc_disable();
 +
  	cgroup_taskset_for_each(p, css, tset) {
- 		void *v = (void *)(unsigned long)css->cgroup->id;
+ 		void *v = (void *)(unsigned long)css->id;
  
 -- 
 2.7.4
-
