@@ -1,91 +1,79 @@
-From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Subject: Re: [PATCH] doc: cgroup: update note about conditions when oom killer
- is invoked
-Date: Mon, 11 May 2020 12:34:00 +0300
-Message-ID: <0ddb8e58-5bfd-7754-6979-4276acf5b4c8@yandex-team.ru>
-References: <158894738928.208854.5244393925922074518.stgit@buzz>
- <20200511083904.GB29153@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] memcg: effective memory.high reclaim for remote charging
+Date: Mon, 11 May 2020 12:07:11 +0200
+Message-ID: <20200511100711.GD29153@dhcp22.suse.cz>
+References: <20200507163301.229070-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru; s=default;
-        t=1589189642; bh=MGEF9xP5Qv6FPGCxjbJhWxmWFx6dPI6oeezhHBsf+rc=;
-        h=In-Reply-To:Message-ID:From:Date:References:To:Subject:Cc;
-        b=mwS7DMSvBj3jlt9a2sJJCwLOkbkP58CsD+3SORjXLPm3zW7gkn/BKPM+pVY/cY8Kd
-         KtQfD44pPGcoG4Unlp3e9zHUPnnQ/juS1UrcPZfdE1r+UuTCYen3qntrUl4pCIQLdR
-         ftmD1pKYDy0WojoV1lcmwF07jbHqD+hRwG1y/XHw=
-In-Reply-To: <20200511083904.GB29153@dhcp22.suse.cz>
-Content-Language: en-CA
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20200507163301.229070-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, Roman Gushchin <guro@fb.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-
-
-On 11/05/2020 11.39, Michal Hocko wrote:
-> On Fri 08-05-20 17:16:29, Konstantin Khlebnikov wrote:
->> Starting from v4.19 commit 29ef680ae7c2 ("memcg, oom: move out_of_memory
->> back to the charge path") cgroup oom killer is no longer invoked only from
->> page faults. Now it implements the same semantics as global OOM killer:
->> allocation context invokes OOM killer and keeps retrying until success.
->>
->> Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+On Thu 07-05-20 09:33:01, Shakeel Butt wrote:
+> Currently the reclaim of excessive usage over memory.high is scheduled
+> to run on returning to the userland. The main reason behind this
+> approach was simplicity i.e. always reclaim with GFP_KERNEL context.
+> However the underlying assumptions behind this approach are: the current
+> task shares the memcg hierarchy with the given memcg and the memcg of
+> the current task most probably will not change on return to userland.
 > 
-> Acked-by: Michal Hocko <mhocko@suse.com>
+> With the remote charging, the first assumption breaks and it allows the
+> usage to grow way beyond the memory.high as the reclaim and the
+> throttling becomes ineffective.
 > 
->> ---
->>   Documentation/admin-guide/cgroup-v2.rst |   17 ++++++++---------
->>   1 file changed, 8 insertions(+), 9 deletions(-)
->>
->> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
->> index bcc80269bb6a..1bb9a8f6ebe1 100644
->> --- a/Documentation/admin-guide/cgroup-v2.rst
->> +++ b/Documentation/admin-guide/cgroup-v2.rst
->> @@ -1172,6 +1172,13 @@ PAGE_SIZE multiple when read back.
->>   	Under certain circumstances, the usage may go over the limit
->>   	temporarily.
->>   
->> +	In default configuration regular 0-order allocation always
->> +	succeed unless OOM killer choose current task as a victim.
->> +
->> +	Some kinds of allocations don't invoke the OOM killer.
->> +	Caller could retry them differently, return into userspace
->> +	as -ENOMEM or silently ignore in cases like disk readahead.
+> This patch forces the synchronous reclaim and potentially throttling for
+> the callers with context that allows blocking. For unblockable callers
+> or whose synch high reclaim is still not successful, a high reclaim is
+> scheduled either to return-to-userland if current task shares the
+> hierarchy with the given memcg or to system work queue.
 > 
-> I would probably add -EFAULT but the less error codes we document the
-> better.
+> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Yeah, EFAULT was a most obscure result of memory shortage.
-Fortunately with new behaviour this shouldn't happens a lot.
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-Actually where it is still possible? THP always fallback to 0-order.
-I mean EFAULT could appear inside kernel only if task is killed so
-nobody would see it.
+I would just make the early break a bit more clear.
 
+[...]
+> @@ -2600,8 +2596,23 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  				schedule_work(&memcg->high_work);
+>  				break;
+>  			}
+> -			current->memcg_nr_pages_over_high += batch;
+> -			set_notify_resume(current);
+> +
+> +			if (gfpflags_allow_blocking(gfp_mask))
+> +				reclaim_over_high(memcg, gfp_mask, batch);
+> +
+
+			/*
+			 * reclaim_over_high reclaims parents up the
+			 * hierarchy so we can break out early here.
+			 */
+> +			if (page_counter_read(&memcg->memory) <=
+> +			    READ_ONCE(memcg->high))
+> +				break;
+> +			/*
+> +			 * The above reclaim might not be able to do much. Punt
+> +			 * the high reclaim to return to userland if the current
+> +			 * task shares the hierarchy.
+> +			 */
+> +			if (current->mm && mm_match_cgroup(current->mm, memcg)) {
+> +				current->memcg_nr_pages_over_high += batch;
+> +				set_notify_resume(current);
+> +			} else
+> +				schedule_work(&memcg->high_work);
+>  			break;
+>  		}
+>  	} while ((memcg = parent_mem_cgroup(memcg)));
+> -- 
+> 2.26.2.526.g744177e7f7-goog
 > 
->> +
->>   	This is the ultimate protection mechanism.  As long as the
->>   	high limit is used and monitored properly, this limit's
->>   	utility is limited to providing the final safety net.
->> @@ -1228,17 +1235,9 @@ PAGE_SIZE multiple when read back.
->>   		The number of time the cgroup's memory usage was
->>   		reached the limit and allocation was about to fail.
->>   
->> -		Depending on context result could be invocation of OOM
->> -		killer and retrying allocation or failing allocation.
->> -
->> -		Failed allocation in its turn could be returned into
->> -		userspace as -ENOMEM or silently ignored in cases like
->> -		disk readahead.  For now OOM in memory cgroup kills
->> -		tasks iff shortage has happened inside page fault.
->> -
->>   		This event is not raised if the OOM killer is not
->>   		considered as an option, e.g. for failed high-order
->> -		allocations.
->> +		allocations or if caller asked to not retry attempts.
->>   
->>   	  oom_kill
->>   		The number of processes belonging to this cgroup
-> 
+
+-- 
+Michal Hocko
+SUSE Labs
