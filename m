@@ -1,8 +1,8 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH 05/18] mm: memcontrol: convert page cache to a new
  mem_cgroup_charge() API
-Date: Mon, 11 May 2020 14:10:56 -0400
-Message-ID: <20200511181056.GA339505@cmpxchg.org>
+Date: Mon, 11 May 2020 14:12:17 -0400
+Message-ID: <20200511181217.GB339505@cmpxchg.org>
 References: <20200420221126.341272-1-hannes@cmpxchg.org>
  <20200420221126.341272-6-hannes@cmpxchg.org>
  <20200422064041.GE6780@js1304-desktop>
@@ -12,211 +12,393 @@ References: <20200420221126.341272-1-hannes@cmpxchg.org>
  <alpine.LSU.2.11.2005102350360.2769@eggly.anvils>
  <20200511150648.GA306292@cmpxchg.org>
  <alpine.LSU.2.11.2005110912180.3431@eggly.anvils>
+ <20200511181056.GA339505@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=MI5GKMcoK4TviI3WF6z6u2HB9Cfoz7+kubiJIKPYUWE=;
-        b=AEN8KkiYPYwfVSoQVqseYwpocY1TfVhiJYojiwk9th6YQc7qtPSkgavtSovEINxz+R
-         0ECszgowJK/0/emZehvREB809fbDq2GbZI2obor9CmziGW7xJyuK/u8Oy6SI9NHsqLez
-         Y8Gv5epSujXxBkLACxGUJOvgqGByBKB7fC0YdMOPR8+rcxcYRDrm8+FMAHJtwgS/3Y72
-         pHR6CbIk9t8T52OraTDDW2Kz5xQVwpLpLNebFASCtJk1e0EitOX/Ttvg/gYW2AM7zuc3
-         SjdsmY4O6mRhUFIHy6vZ9P46vi/szWL1zQkIM9zqmjnzdwCDCFFw6RuCsNGQw7DE2ZUo
-         Am/g==
+        bh=zkDVL6MvW8WSIQ5Mjj12wIdfJyoGic/GAL7tCV6iez0=;
+        b=k4y4Q0vn1Q7ckeOWMSDRnHl/6eyp6Eius6E6WMfA2zuc5F3ReUA4iW8IOb1tVTYZro
+         Isa3WDsioQ+3gp+ddvoX7AjECZaw4vYe1+Fs7TDVg8YB/VSnsUmKYVKq8BvTtQd5limj
+         0lE1e0TqAMtEqFk9MOyVBN9Qymem0hGJxSna+plw7Gzu9PbiiZ3JOF2snDfApAT5M2+q
+         4egHCh+tppFdmpNvDfV7E0JrsyXGUYm44oLGjZpEBl9R1502VVUsf+vTJYf8EWm896Ab
+         Pbx2JEQUiA/3rK/NXWMkYbSjAzTuN/aawGKaxNCSGYHV7eQAwesSoUttPhFhuttIXf8A
+         XaEA==
 Content-Disposition: inline
-In-Reply-To: <alpine.LSU.2.11.2005110912180.3431-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20200511181056.GA339505@cmpxchg.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Hugh Dickins <hughd@google.com>
+Cc: Joonsoo Kim <js1304@gmail.com>, Alex Shi <alex.shi@linux.alibaba.com>, Shakeel Butt <shakeelb@google.com>, Michal Hocko <mhocko@suse.com>, "Kirill A. Shutemov" <kirill@shutemov.name>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Andrew Morton <akpm@linux-foundation.org>
 
-On Mon, May 11, 2020 at 09:32:16AM -0700, Hugh Dickins wrote:
-> On Mon, 11 May 2020, Johannes Weiner wrote:
-> > On Mon, May 11, 2020 at 12:38:04AM -0700, Hugh Dickins wrote:
-> > > On Fri, 8 May 2020, Johannes Weiner wrote:
-> > > > 
-> > > > I looked at this some more, as well as compared it to non-shmem
-> > > > swapping. My conclusion is - and Hugh may correct me on this - that
-> > > > the deletion looks mandatory but is actually an optimization. Page
-> > > > reclaim will ultimately pick these pages up.
-> > > > 
-> > > > When non-shmem pages are swapped in by readahead (locked until IO
-> > > > completes) and their page tables are simultaneously unmapped, the
-> > > > zap_pte_range() code calls free_swap_and_cache() and the locked pages
-> > > > are stranded in the swap cache with no page table references. We rely
-> > > > on page reclaim to pick them up later on.
-> > > > 
-> > > > The same appears to be true for shmem. If the references to the swap
-> > > > page are zapped while we're trying to swap in, we can strand the page
-> > > > in the swap cache. But it's not up to swapin to detect this reliably,
-> > > > it just frees the page more quickly than having to wait for reclaim.
-> > > 
-> > > I think you've got all that exactly right, thanks for working it out.
-> > > It originates from v3.7's 215c02bc33bb ("tmpfs: fix shmem_getpage_gfp()
-> > > VM_BUG_ON") - in which I also had to thank you.
-> > 
-> > I should have looked where it actually came from - I had forgotten
-> > about that patch!
-> > 
-> > > I think I chose to do the delete_from_swap_cache() right there, partly
-> > > because of following shmem_unuse_inode() code which already did that,
-> > > partly on the basis that while we have to observe the case then it's
-> > > better to clean it up, and partly out of guilt that our page lock here
-> > > is what had prevented shmem_undo_range() from completing its job; but
-> > > I believe you're right that unused swapcache reclaim would sort it out
-> > > eventually.
-> > 
-> > That makes sense to me.
-> > 
-> > > > diff --git a/mm/shmem.c b/mm/shmem.c
-> > > > index e80167927dce..236642775f89 100644
-> > > > --- a/mm/shmem.c
-> > > > +++ b/mm/shmem.c
-> > > > @@ -640,7 +640,7 @@ static int shmem_add_to_page_cache(struct page *page,
-> > > >  		xas_lock_irq(&xas);
-> > > >  		entry = xas_find_conflict(&xas);
-> > > >  		if (entry != expected)
-> > > > -			xas_set_err(&xas, -EEXIST);
-> > > > +			xas_set_err(&xas, expected ? -ENOENT : -EEXIST);
-> > > 
-> > > Two things on this.
-> > > 
-> > > Minor matter of taste, I'd prefer that as
-> > > 			xas_set_err(&xas, entry ? -EEXIST : -ENOENT);
-> > > which would be more general and more understandable -
-> > > but what you have written should be fine for the actual callers.
-> > 
-> > Yes, checking `expected' was to differentiate the behavior depending
-> > on the callsite. But testing `entry' is more obvious in that location.
-> > 
-> > > Except... I think returning -ENOENT there will not work correctly,
-> > > in the case of a punched hole.  Because (unless you've reworked it
-> > > and I just haven't looked) shmem_getpage_gfp() knows to retry in
-> > > the case of -EEXIST, but -ENOENT will percolate up to shmem_fault()
-> > > and result in a SIGBUS, or a read/write error, when the hole should
-> > > just get refilled instead.
-> > 
-> > Good catch, I had indeed missed that. I'm going to make it retry on
-> > -ENOENT as well.
-> > 
-> > We could have it go directly to allocating a new page, but it seems
-> > unnecessarily complicated: we've already been retrying in this
-> > situation until now, so I would stick to "there was a race, retry."
-> > 
-> > > Not something that needs fixing in a hurry (it took trinity to
-> > > generate this racy case in the first place), I'll take another look
-> > > once I've pulled it into a tree (or collected next mmotm) - unless
-> > > you've already have changed it around by then.
-> > 
-> > Attaching a delta fix based on your observations.
-> > 
-> > Andrew, barring any objections to this, could you please fold it into
-> > the version you have in your tree already?
-> 
-> Not so strong as an objection, and I won't get to see whether your
-> retry on -ENOENT is good (can -ENOENT arrive at that point from any
-> other case, that might endlessly retry?) until I've got the full
-> context; but I had arrived at the opposite conclusion overnight.
-> 
-> Given that this case only appeared with a fuzzer, and stale swapcache
-> reclaim is anyway relied upon to clean up after plenty of other such
-> races, I think we should agree that I over-complicated the VM_BUG_ON
-> removal originally, and it's best to kill that delete_from_swap_cache(),
-> and the comment having to explain it, and your EEXIST/ENOENT distinction.
-> 
-> (I haven't checked, but I suspect that the shmem_unuse_inode() case
-> that I copied from, actually really needed to delete_from_swap_cache(),
-> in order to swapoff the page without full retry of the big swapoff loop.)
+On Mon, May 11, 2020 at 02:10:58PM -0400, Johannes Weiner wrote:
+> From fc9dcaf68c8b54baf365cd670fb5780c7f0d243f Mon Sep 17 00:00:00 2001
+> From: Johannes Weiner <hannes@cmpxchg.org>
+> Date: Mon, 11 May 2020 12:59:08 -0400
+> Subject: [PATCH] mm: shmem: remove rare optimization when swapin races with
+>  hole punching
 
-Since commit b56a2d8af914 ("mm: rid swapoff of quadratic complexity"),
-shmem_unuse_inode() doesn't have its own copy anymore - it uses
-shmem_swapin_page().
-
-However, that commit appears to have made shmem's private call to
-delete_from_swap_cache() obsolete as well. Whereas before this change
-we fully relied on shmem_unuse() to find and clear a shmem swap entry
-and its swapcache page, we now only need it to clean out shmem's
-private state in the inode, as it's followed by a loop over all
-remaining swap slots, calling try_to_free_swap() on stragglers.
-
-Unless I missed something, it's still merely an optimization, and we
-can delete it for simplicity:
+And a new, conflict-resolved version of the patch this thread is
+attached to:
 
 ---
+From 7f630d9bc5d6f692298fd906edd5f48070b257c7 Mon Sep 17 00:00:00 2001
+From: Johannes Weiner <hannes@cmpxchg.org>
+Date: Thu, 16 Apr 2020 15:08:07 -0400
+Subject: [PATCH] mm: memcontrol: convert page cache to a new
+ mem_cgroup_charge() API
 
-From fc9dcaf68c8b54baf365cd670fb5780c7f0d243f Mon Sep 17 00:00:00 2001
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Date: Mon, 11 May 2020 12:59:08 -0400
-Subject: [PATCH] mm: shmem: remove rare optimization when swapin races with
- hole punching
+The try/commit/cancel protocol that memcg uses dates back to when
+pages used to be uncharged upon removal from the page cache, and thus
+couldn't be committed before the insertion had succeeded. Nowadays,
+pages are uncharged when they are physically freed; it doesn't matter
+whether the insertion was successful or not. For the page cache, the
+transaction dance has become unnecessary.
 
-Commit 215c02bc33bb ("tmpfs: fix shmem_getpage_gfp() VM_BUG_ON")
-recognized that hole punching can race with swapin and removed the
-BUG_ON() for a truncated entry from the swapin path.
+Introduce a mem_cgroup_charge() function that simply charges a newly
+allocated page to a cgroup and sets up page->mem_cgroup in one single
+step. If the insertion fails, the caller doesn't have to do anything
+but free/put the page.
 
-The patch also added a swapcache deletion to optimize this rare case:
-Since swapin has the page locked, and free_swap_and_cache() merely
-trylocks, this situation can leave the page stranded in
-swapcache. Usually, page reclaim picks up stale swapcache pages, and
-the race can happen at any other time when the page is locked. (The
-same happens for non-shmem swapin racing with page table zapping.) The
-thinking here was: we already observed the race and we have the page
-locked, we may as well do the cleanup instead of waiting for reclaim.
+Then switch the page cache over to this new API.
 
-However, this optimization complicates the next patch which moves the
-cgroup charging code around. As this is just a minor speedup for a
-race condition that is so rare that it required a fuzzer to trigger
-the original BUG_ON(), it's no longer worth the complications.
+Subsequent patches will also convert anon pages, but it needs a bit
+more prep work. Right now, memcg depends on page->mapping being
+already set up at the time of charging, so that it can maintain its
+own MEMCG_CACHE and MEMCG_RSS counters. For anon, page->mapping is set
+under the same pte lock under which the page is publishd, so a single
+charge point that can block doesn't work there just yet.
 
-Suggested-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+The following prep patches will replace the private memcg counters
+with the generic vmstat counters, thus removing the page->mapping
+dependency, then complete the transition to the new single-point
+charge API and delete the old transactional scheme.
+
+v2: leave shmem swapcache when charging fails to avoid double IO (Joonsoo)
+v3: rebase on preceeding shmem simplification patch
+
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Reviewed-by: Alex Shi <alex.shi@linux.alibaba.com>
 ---
- mm/shmem.c | 25 +++++++------------------
- 1 file changed, 7 insertions(+), 18 deletions(-)
+ include/linux/memcontrol.h | 10 ++++++
+ mm/filemap.c               | 24 ++++++-------
+ mm/memcontrol.c            | 29 +++++++++++++--
+ mm/shmem.c                 | 73 ++++++++++++++++----------------------
+ 4 files changed, 77 insertions(+), 59 deletions(-)
 
-diff --git a/mm/shmem.c b/mm/shmem.c
-index d505b6cce4ab..729bbb3513cd 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -1665,27 +1665,16 @@ static int shmem_swapin_page(struct inode *inode, pgoff_t index,
- 	}
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 30292d57c8af..57339514d960 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -379,6 +379,10 @@ int mem_cgroup_try_charge_delay(struct page *page, struct mm_struct *mm,
+ void mem_cgroup_commit_charge(struct page *page, struct mem_cgroup *memcg,
+ 			      bool lrucare);
+ void mem_cgroup_cancel_charge(struct page *page, struct mem_cgroup *memcg);
++
++int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask,
++		      bool lrucare);
++
+ void mem_cgroup_uncharge(struct page *page);
+ void mem_cgroup_uncharge_list(struct list_head *page_list);
  
- 	error = mem_cgroup_try_charge_delay(page, charge_mm, gfp, &memcg);
--	if (!error) {
--		error = shmem_add_to_page_cache(page, mapping, index,
--						swp_to_radix_entry(swap), gfp);
--		/*
--		 * We already confirmed swap under page lock, and make
--		 * no memory allocation here, so usually no possibility
--		 * of error; but free_swap_and_cache() only trylocks a
--		 * page, so it is just possible that the entry has been
--		 * truncated or holepunched since swap was confirmed.
--		 * shmem_undo_range() will have done some of the
--		 * unaccounting, now delete_from_swap_cache() will do
--		 * the rest.
--		 */
--		if (error) {
--			mem_cgroup_cancel_charge(page, memcg);
--			delete_from_swap_cache(page);
--		}
+@@ -893,6 +897,12 @@ static inline void mem_cgroup_cancel_charge(struct page *page,
+ {
+ }
+ 
++static inline int mem_cgroup_charge(struct page *page, struct mm_struct *mm,
++				    gfp_t gfp_mask, bool lrucare)
++{
++	return 0;
++}
++
+ static inline void mem_cgroup_uncharge(struct page *page)
+ {
+ }
+diff --git a/mm/filemap.c b/mm/filemap.c
+index ce200386736c..ee9882509566 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -832,7 +832,6 @@ static int __add_to_page_cache_locked(struct page *page,
+ {
+ 	XA_STATE(xas, &mapping->i_pages, offset);
+ 	int huge = PageHuge(page);
+-	struct mem_cgroup *memcg;
+ 	int error;
+ 	void *old;
+ 
+@@ -840,17 +839,16 @@ static int __add_to_page_cache_locked(struct page *page,
+ 	VM_BUG_ON_PAGE(PageSwapBacked(page), page);
+ 	mapping_set_update(&xas, mapping);
+ 
+-	if (!huge) {
+-		error = mem_cgroup_try_charge(page, current->mm,
+-					      gfp_mask, &memcg);
+-		if (error)
+-			return error;
 -	}
- 	if (error)
- 		goto failed;
+-
+ 	get_page(page);
+ 	page->mapping = mapping;
+ 	page->index = offset;
  
-+	error = shmem_add_to_page_cache(page, mapping, index,
-+					swp_to_radix_entry(swap), gfp);
-+	if (error) {
-+		mem_cgroup_cancel_charge(page, memcg);
-+		goto failed;
++	if (!huge) {
++		error = mem_cgroup_charge(page, current->mm, gfp_mask, false);
++		if (error)
++			goto error;
 +	}
 +
- 	mem_cgroup_commit_charge(page, memcg, true);
+ 	do {
+ 		xas_lock_irq(&xas);
+ 		old = xas_load(&xas);
+@@ -874,20 +872,18 @@ static int __add_to_page_cache_locked(struct page *page,
+ 		xas_unlock_irq(&xas);
+ 	} while (xas_nomem(&xas, gfp_mask & GFP_RECLAIM_MASK));
+ 
+-	if (xas_error(&xas))
++	if (xas_error(&xas)) {
++		error = xas_error(&xas);
+ 		goto error;
++	}
+ 
+-	if (!huge)
+-		mem_cgroup_commit_charge(page, memcg, false);
+ 	trace_mm_filemap_add_to_page_cache(page);
+ 	return 0;
+ error:
+ 	page->mapping = NULL;
+ 	/* Leave page->index set: truncation relies upon it */
+-	if (!huge)
+-		mem_cgroup_cancel_charge(page, memcg);
+ 	put_page(page);
+-	return xas_error(&xas);
++	return error;
+ }
+ ALLOW_ERROR_INJECTION(__add_to_page_cache_locked, ERRNO);
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 8188d462d7ce..1d45a09b334f 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6578,6 +6578,33 @@ void mem_cgroup_cancel_charge(struct page *page, struct mem_cgroup *memcg)
+ 	cancel_charge(memcg, nr_pages);
+ }
+ 
++/**
++ * mem_cgroup_charge - charge a newly allocated page to a cgroup
++ * @page: page to charge
++ * @mm: mm context of the victim
++ * @gfp_mask: reclaim mode
++ * @lrucare: page might be on the LRU already
++ *
++ * Try to charge @page to the memcg that @mm belongs to, reclaiming
++ * pages according to @gfp_mask if necessary.
++ *
++ * Returns 0 on success. Otherwise, an error code is returned.
++ */
++int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask,
++		      bool lrucare)
++{
++	struct mem_cgroup *memcg;
++	int ret;
++
++	VM_BUG_ON_PAGE(!page->mapping, page);
++
++	ret = mem_cgroup_try_charge(page, mm, gfp_mask, &memcg);
++	if (ret)
++		return ret;
++	mem_cgroup_commit_charge(page, memcg, lrucare);
++	return 0;
++}
++
+ struct uncharge_gather {
+ 	struct mem_cgroup *memcg;
+ 	unsigned long pgpgout;
+@@ -6625,8 +6652,6 @@ static void uncharge_batch(const struct uncharge_gather *ug)
+ static void uncharge_page(struct page *page, struct uncharge_gather *ug)
+ {
+ 	VM_BUG_ON_PAGE(PageLRU(page), page);
+-	VM_BUG_ON_PAGE(page_count(page) && !is_zone_device_page(page) &&
+-			!PageHWPoison(page) , page);
+ 
+ 	if (!page->mem_cgroup)
+ 		return;
+diff --git a/mm/shmem.c b/mm/shmem.c
+index 729bbb3513cd..0d9615723152 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -605,11 +605,13 @@ static inline bool is_huge_enabled(struct shmem_sb_info *sbinfo)
+  */
+ static int shmem_add_to_page_cache(struct page *page,
+ 				   struct address_space *mapping,
+-				   pgoff_t index, void *expected, gfp_t gfp)
++				   pgoff_t index, void *expected, gfp_t gfp,
++				   struct mm_struct *charge_mm)
+ {
+ 	XA_STATE_ORDER(xas, &mapping->i_pages, index, compound_order(page));
+ 	unsigned long i = 0;
+ 	unsigned long nr = compound_nr(page);
++	int error;
+ 
+ 	VM_BUG_ON_PAGE(PageTail(page), page);
+ 	VM_BUG_ON_PAGE(index != round_down(index, nr), page);
+@@ -621,6 +623,16 @@ static int shmem_add_to_page_cache(struct page *page,
+ 	page->mapping = mapping;
+ 	page->index = index;
+ 
++	error = mem_cgroup_charge(page, charge_mm, gfp, PageSwapCache(page));
++	if (error) {
++		if (!PageSwapCache(page) && PageTransHuge(page)) {
++			count_vm_event(THP_FILE_FALLBACK);
++			count_vm_event(THP_FILE_FALLBACK_CHARGE);
++		}
++		goto error;
++	}
++	cgroup_throttle_swaprate(page, gfp);
++
+ 	do {
+ 		void *entry;
+ 		xas_lock_irq(&xas);
+@@ -648,12 +660,15 @@ static int shmem_add_to_page_cache(struct page *page,
+ 	} while (xas_nomem(&xas, gfp));
+ 
+ 	if (xas_error(&xas)) {
+-		page->mapping = NULL;
+-		page_ref_sub(page, nr);
+-		return xas_error(&xas);
++		error = xas_error(&xas);
++		goto error;
+ 	}
+ 
+ 	return 0;
++error:
++	page->mapping = NULL;
++	page_ref_sub(page, nr);
++	return error;
+ }
+ 
+ /*
+@@ -1619,7 +1634,6 @@ static int shmem_swapin_page(struct inode *inode, pgoff_t index,
+ 	struct address_space *mapping = inode->i_mapping;
+ 	struct shmem_inode_info *info = SHMEM_I(inode);
+ 	struct mm_struct *charge_mm = vma ? vma->vm_mm : current->mm;
+-	struct mem_cgroup *memcg;
+ 	struct page *page;
+ 	swp_entry_t swap;
+ 	int error;
+@@ -1664,18 +1678,11 @@ static int shmem_swapin_page(struct inode *inode, pgoff_t index,
+ 			goto failed;
+ 	}
+ 
+-	error = mem_cgroup_try_charge_delay(page, charge_mm, gfp, &memcg);
+-	if (error)
+-		goto failed;
+-
+ 	error = shmem_add_to_page_cache(page, mapping, index,
+-					swp_to_radix_entry(swap), gfp);
+-	if (error) {
+-		mem_cgroup_cancel_charge(page, memcg);
++					swp_to_radix_entry(swap), gfp,
++					charge_mm);
++	if (error)
+ 		goto failed;
+-	}
+-
+-	mem_cgroup_commit_charge(page, memcg, true);
  
  	spin_lock_irq(&info->lock);
+ 	info->swapped--;
+@@ -1722,7 +1729,6 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
+ 	struct shmem_inode_info *info = SHMEM_I(inode);
+ 	struct shmem_sb_info *sbinfo;
+ 	struct mm_struct *charge_mm;
+-	struct mem_cgroup *memcg;
+ 	struct page *page;
+ 	enum sgp_type sgp_huge = sgp;
+ 	pgoff_t hindex = index;
+@@ -1847,21 +1853,11 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
+ 	if (sgp == SGP_WRITE)
+ 		__SetPageReferenced(page);
+ 
+-	error = mem_cgroup_try_charge_delay(page, charge_mm, gfp, &memcg);
+-	if (error) {
+-		if (PageTransHuge(page)) {
+-			count_vm_event(THP_FILE_FALLBACK);
+-			count_vm_event(THP_FILE_FALLBACK_CHARGE);
+-		}
+-		goto unacct;
+-	}
+ 	error = shmem_add_to_page_cache(page, mapping, hindex,
+-					NULL, gfp & GFP_RECLAIM_MASK);
+-	if (error) {
+-		mem_cgroup_cancel_charge(page, memcg);
++					NULL, gfp & GFP_RECLAIM_MASK,
++					charge_mm);
++	if (error)
+ 		goto unacct;
+-	}
+-	mem_cgroup_commit_charge(page, memcg, false);
+ 	lru_cache_add_anon(page);
+ 
+ 	spin_lock_irq(&info->lock);
+@@ -2299,7 +2295,6 @@ static int shmem_mfill_atomic_pte(struct mm_struct *dst_mm,
+ 	struct address_space *mapping = inode->i_mapping;
+ 	gfp_t gfp = mapping_gfp_mask(mapping);
+ 	pgoff_t pgoff = linear_page_index(dst_vma, dst_addr);
+-	struct mem_cgroup *memcg;
+ 	spinlock_t *ptl;
+ 	void *page_kaddr;
+ 	struct page *page;
+@@ -2349,16 +2344,10 @@ static int shmem_mfill_atomic_pte(struct mm_struct *dst_mm,
+ 	if (unlikely(offset >= max_off))
+ 		goto out_release;
+ 
+-	ret = mem_cgroup_try_charge_delay(page, dst_mm, gfp, &memcg);
+-	if (ret)
+-		goto out_release;
+-
+ 	ret = shmem_add_to_page_cache(page, mapping, pgoff, NULL,
+-						gfp & GFP_RECLAIM_MASK);
++				      gfp & GFP_RECLAIM_MASK, dst_mm);
+ 	if (ret)
+-		goto out_release_uncharge;
+-
+-	mem_cgroup_commit_charge(page, memcg, false);
++		goto out_release;
+ 
+ 	_dst_pte = mk_pte(page, dst_vma->vm_page_prot);
+ 	if (dst_vma->vm_flags & VM_WRITE)
+@@ -2379,11 +2368,11 @@ static int shmem_mfill_atomic_pte(struct mm_struct *dst_mm,
+ 	ret = -EFAULT;
+ 	max_off = DIV_ROUND_UP(i_size_read(inode), PAGE_SIZE);
+ 	if (unlikely(offset >= max_off))
+-		goto out_release_uncharge_unlock;
++		goto out_release_unlock;
+ 
+ 	ret = -EEXIST;
+ 	if (!pte_none(*dst_pte))
+-		goto out_release_uncharge_unlock;
++		goto out_release_unlock;
+ 
+ 	lru_cache_add_anon(page);
+ 
+@@ -2404,12 +2393,10 @@ static int shmem_mfill_atomic_pte(struct mm_struct *dst_mm,
+ 	ret = 0;
+ out:
+ 	return ret;
+-out_release_uncharge_unlock:
++out_release_unlock:
+ 	pte_unmap_unlock(dst_pte, ptl);
+ 	ClearPageDirty(page);
+ 	delete_from_page_cache(page);
+-out_release_uncharge:
+-	mem_cgroup_cancel_charge(page, memcg);
+ out_release:
+ 	unlock_page(page);
+ 	put_page(page);
 -- 
 2.26.2
 
