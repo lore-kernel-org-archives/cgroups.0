@@ -1,36 +1,41 @@
-From: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH v5 0/4] Charge loop device i/o to issuing cgroup
-Date: Tue, 12 May 2020 09:25:21 -0400
-Message-ID: <20200512132521.GA28700@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
+Date: Tue, 12 May 2020 06:35:45 -0700
+Message-ID: <20200512133545.GA26535@infradead.org>
 References: <20200428161355.6377-1-schatzberg.dan@gmail.com>
+ <20200512132521.GA28700@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=PTFxC40Ec7wOMd+ERavExEghGhS6XBq7Wvj2fntglJ8=;
-        b=FDNc3WJa0vcrIlXtpcLbJPEaHig6WYKGXLTihc5rLW4Tn+74OO99gK4BHreesy1ChH
-         SC++AU7M8QcXLivZnsUyba7/CKQp5QHeH8x8ErzhuMiVTXM+aAxN7tbY2CtOUE+1jXWy
-         QU3jhaZOLsHZw1Suudr7VLD+FYipFu/z6+6zO3/Ub5WbDJ5BsRpXTUaLJ8s7H4Nmk2y2
-         sNHLjeYp/Z4VcDlAKwu3npXk/EXLKV+UdHeEYXbeaKJQOoblqk1Bz3iVz1W8SaTPJ6dm
-         xfvM09tdptP49PnjyL/56fp5zzMY/iAab+1OfbdRzHsoRzoe3uIZkVjVLGoBnh1gWDTn
-         BS8w==
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=rMH+9QgUtTVvwUjMFs5R0kAMnSoYcqtdBp9bIG81UY8=; b=DStgMniB6mmhqq2+TCJtvFKba6
+        8jzL11QfzrdLwH+aW4ipFz6eHpZGYLeuVvZ4ip+kknFX4C0X/jT7C2ds7mbsAjc757W7RAFhts7lc
+        QlLgzrXlQ7CU1I1upcvPe0frQgORmA8tTcgf90GgFA3YUjrs9uKTTA51saW0Qsx1h8DalMS/Z1E32
+        l4WCjcj2kG86ripIglQm59Qot22JT45WiImx35jxW3awum6slfEPJLzonIvewi5DIuqfZKCpOg/p/
+        PXHgn/VFY2Fk4xqpO/LIgAB9p0I5DDpYwctAIeZ8T5KD6Jy/EiQ4ZHOHULBT6mkxchECcZ13o7K01
+        +Jr8CRRw==;
 Content-Disposition: inline
-In-Reply-To: <20200428161355.6377-1-schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20200512132521.GA28700@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Peter Zijlstra (Intel)" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Mathieu Desnoyers <mathieu.desnoyers-vg+e7yoeK/dWk0Htik3J/w@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Thomas
+To: Dan Schatzberg <schatzberg.dan@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Yang Shi <yang.shi@linux.alibaba.com>, Ingo Molnar <mingo@kernel.org>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Andrea Arcangeli <aarcange@redhat.com>, Thomas
 
-Seems like discussion on this patch series has died down. There's been
-a concern raised that we could generalize infrastructure across loop,
-md, etc. This may be possible, in the future, but it isn't clear to me
-how this would look like. I'm inclined to fix the existing issue with
-loop devices now (this is a problem we hit at FB) and address
-consolidation with other cases if and when those are addressed.
+On Tue, May 12, 2020 at 09:25:21AM -0400, Dan Schatzberg wrote:
+> Seems like discussion on this patch series has died down. There's been
+> a concern raised that we could generalize infrastructure across loop,
+> md, etc. This may be possible, in the future, but it isn't clear to me
+> how this would look like. I'm inclined to fix the existing issue with
+> loop devices now (this is a problem we hit at FB) and address
+> consolidation with other cases if and when those are addressed.
+> 
+> Jens, you've expressed interest in seeing this series go through the
+> block tree so I'm interested in your perspective here. Barring any
+> concrete implementation bugs, would you be okay merging this version?
 
-Jens, you've expressed interest in seeing this series go through the
-block tree so I'm interested in your perspective here. Barring any
-concrete implementation bugs, would you be okay merging this version?
+Independ of any higher level issues you need to sort out the spinlock
+mess I pointed out.
