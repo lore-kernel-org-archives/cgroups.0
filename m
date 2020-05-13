@@ -1,76 +1,81 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] memcg: Fix memcg_kmem_bypass() for remote memcg charging
-Date: Wed, 13 May 2020 05:22:13 -0700
-Message-ID: <CALvZod5EzSAdFJh-wjN9TfdUwsjL5Zfn6xao5S9nWvhiL+oL+w@mail.gmail.com>
-References: <e6927a82-949c-bdfd-d717-0a14743c6759@huawei.com>
- <20200513090502.GV29153@dhcp22.suse.cz> <76f71776-d049-7407-8574-86b6e9d80704@huawei.com>
- <20200513112905.GX29153@dhcp22.suse.cz> <3a721f62-5a66-8bc5-247b-5c8b7c51c555@huawei.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 00/19 V2] mm: memcontrol: charge swapin pages on
+ instantiation
+Date: Wed, 13 May 2020 08:35:45 -0400
+Message-ID: <20200513123545.GB488426@cmpxchg.org>
+References: <20200508183105.225460-1-hannes@cmpxchg.org>
+ <20200513113032.GA93568@dev-dsk-sblbir-1c-a524888b.ap-northeast-1.amazon.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=G4WVF9KPrx80M2FEl5rcn7EVSYU4t2bvsS4X5mKVR70=;
-        b=TibQPMRLGxR/UEGYf/uFO/xAeZsv+91v7ZJOOVnjVs2cosCRf8uOioq3qh0ur1V4La
-         1fK6QMjhpmQdwIPDMsCDRH5WV3DO2lKFnntzgNopufNe8gCTrVOioUHqzfGsxJS8MG3V
-         Tvee5Ni+saMMCCjEu7sMr/N/e5OA3iCLTq/k63XGROTwmFwu960Je6JaAhw8883Zu4Qb
-         hBgX9CJgSd4aYUcNKVCOVzqCY8zMGIgu4UXWrjxkt8h3/JcAUKUn2oy0wN+TdIVC27qE
-         PMDDLVSKbdD/uEKND56/OKBgrawT/iLgTJNg7md7s4/aAbpEbNJ1wFNa/PQop3myu8AE
-         SLSQ==
-In-Reply-To: <3a721f62-5a66-8bc5-247b-5c8b7c51c555-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=XPrK4VVoXQ0vmjjlKF3mWEEfj4+VgK3r8tZECPQos5E=;
+        b=zFqMJydTAPVLxNLXFDGmaVOy8rh6YFK1hKv2Qx0WWlU5242a2O1SoY314bSQ3vHLYG
+         fnm+ll+8xNx0LDpF6ao7AIhPzgBKjsrAzDSVrxXrFWjn0wXikhgApqIaBZ6RRowBmUQr
+         TUHGa7lNx1EMlc4ISPqhND0a1EIPh/7bboJjlqyL+qejWBjIlcT2We1UYz8lcIF8MLfW
+         qfVBuPWRVXCRGYQqNlL/jtMkttkRSBjwdJyyusuu69L1QxXCCbZoUKdMgs67WIohRC9o
+         wilWL6mdq85EgIOi/9ZWphJ3CgLHhOjTSLJM16IGS3GGtyZSM0LJFF+1GAyQb0+JP1J3
+         cqkg==
+Content-Disposition: inline
+In-Reply-To: <20200513113032.GA93568-NRm0YHp59q3WjiIBzMsuWuWgrJflrKkg5MPKucqWqmtRpfTj4gZeKJvkWQ9sCspaVpNB7YpNyf8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+To: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Wed, May 13, 2020 at 4:47 AM Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
->
-> While trying to use remote memcg charging in an out-of-tree kernel module
-> I found it's not working, because the current thread is a workqueue thread.
->
-> As we will probably encounter this issue in the future as the users of
-> memalloc_use_memcg() grow, it's better we fix it now.
->
-> Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
->
-> v2: add a comment as sugguested by Michal. and add changelog to explain why
-> upstream kernel needs this fix.
->
-> ---
->
->  mm/memcontrol.c | 3 +++
->  1 file changed, 3 insertions(+)
->
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index a3b97f1..43a12ed 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2802,6 +2802,9 @@ static void memcg_schedule_kmem_cache_create(struct mem_cgroup *memcg,
->
->  static inline bool memcg_kmem_bypass(void)
->  {
-> +       /* Allow remote memcg charging in kthread contexts. */
-> +       if (unlikely(current->active_memcg))
-> +               return false;
+Hello Balbir!
 
-What about __GFP_ACCOUNT allocations in the interrupt context?
+On Wed, May 13, 2020 at 11:30:32AM +0000, Balbir Singh wrote:
+> On Fri, May 08, 2020 at 02:30:47PM -0400, Johannes Weiner wrote:
+> > To eliminate the page->mapping dependency, memcg needs to ditch its
+> > private page type counters (MEMCG_CACHE, MEMCG_RSS, NR_SHMEM) in favor
+> > of the generic vmstat counters and accounting sites, such as
+> > NR_FILE_PAGES, NR_ANON_MAPPED etc.
+> 
+> Could you elaborate on what this means and the implications of this on
+> user space programs?
 
-e.g.
+This has no bearing on userspace. It's just simplifying how
+memory.stat is implemented. The output is the same.
 
-memalloc_use_memcg(memcg);
---->interrupt
---->alloc_page(GFP_KERNEL_ACCOUNT) in interrupt context.
-alloc_page(GFP_KERNEL_ACCOUNT);
-memalloc_unuse_memcg();
+For the full story:
 
+In the past, memcg has done its own accounting to produce a breakdown
+of consumers in memory.stat. When a page was charged, we relied on
+knowing whether it's a file, anon or shmem page, and had our own
+MEMCG_RSS, MEMCG_CACHE, MEMCG_SHMEM counters.
 
->         if (in_interrupt() || !current->mm || (current->flags & PF_KTHREAD))
->                 return true;
->         return false;
-> --
-> 2.7.4
->
+As the general VM code already does this type of classification to
+produce /proc/vmstat, this meant unnecessary duplication: more places
+to bump counters, more places that have to make sure the page state is
+stable in all the right ways, more dependencies on when it's safe to
+call the charge and the uncharge callbacks.
+
+A while ago we added per-cgroup arrays of the vmstat counters and a
+cgroup-aware accounting callback (mod_lruvec_state) that can be a
+drop-in replacement for the generic VM code (mod_node_state and
+friends). We already had some counters converted over to that.
+
+These patches just do more of that conversion from private memcg
+accounting to having callbacks into generic VM accounting sites.
+
+Instead of testing PageAnon() and accounting MEMCG_CACHE/MEMCG_RSS in
+the charge code, we switch __add_to_page_cache_locked() and
+page_add_new_anon_rmap() to the cgroup-aware mod_lruvec_page_state()
+to bump our per-cgroup NR_FILE_PAGES and NR_ANON_MAPPED counters along
+with the node and global counters.
+
+As a result, the memcg gets a breakdown for memory.stat without having
+to have private knowledge of what a page cache page is - how to test
+it, when it's safe to test it, whether there can be huge pages in the
+page cache, etc. pp. Memcg can focus on counting bytes, and the VM
+code that is specialized in dealing with the page cache (or anon
+pages, or shmem pages) can fill in those kinds of details for us.
+
+Less dependencies, less duplication, simpler API rules.
+
+The memory.stat output is the same, it's just much simpler code.
