@@ -1,91 +1,52 @@
-From: Balbir Singh <bsingharora@gmail.com>
-Subject: Re: [PATCH 00/19 V2] mm: memcontrol: charge swapin pages on
- instantiation
-Date: Wed, 13 May 2020 11:30:32 +0000
-Message-ID: <20200513113032.GA93568@dev-dsk-sblbir-1c-a524888b.ap-northeast-1.amazon.com>
-References: <20200508183105.225460-1-hannes@cmpxchg.org>
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v2] memcg: Fix memcg_kmem_bypass() for remote memcg charging
+Date: Wed, 13 May 2020 19:47:49 +0800
+Message-ID: <3a721f62-5a66-8bc5-247b-5c8b7c51c555@huawei.com>
+References: <e6927a82-949c-bdfd-d717-0a14743c6759@huawei.com>
+ <20200513090502.GV29153@dhcp22.suse.cz>
+ <76f71776-d049-7407-8574-86b6e9d80704@huawei.com>
+ <20200513112905.GX29153@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:date:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=2Ktd5bounBb85k+GhDJYQBKwGNjtE8xOQJSWOO0qVps=;
-        b=hfgNGCstCMJHb8IVTFUEeL+3JGilD81+7rwOcqzOpwjQoMrYv2Z5LeMUCzJ8pzCf9p
-         8oqSZVzVevLUBq3aqDYXpA5ZPorxTlk4GyVcCXcXtDCgg7rf32OqplGewGX/Tq71KaH0
-         6x4rjEaB8R/x8vYndWFQEzIeiZi6qCG+t/GUzp8QQzYxcta8Da+BQ1XqadEpTVA62rkk
-         zElKLJwK03h9CYhA0lS21Apb7+3W2n0SDgmVpoyRqDKhiNiSbPAdNABETh7/377aNjfT
-         BOlkWnf4jhBvUOSUv52te1U6tfHKfFNhSm+45+yDmrE3aEbTj6mQI4lzTBQIqGH/hj/R
-         mnSw==
-Content-Disposition: inline
-In-Reply-To: <20200508183105.225460-1-hannes@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200513112905.GX29153-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Alex Shi <alex.shi@linux.alibaba.com>, Joonsoo Kim <js1304@gmail.com>, Shakeel Butt <shakeelb@google.com>, Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.com>, "Kirill A. Shutemov" <kirill@shutemov.name>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Fri, May 08, 2020 at 02:30:47PM -0400, Johannes Weiner wrote:
-> This patch series reworks memcg to charge swapin pages directly at
-> swapin time, rather than at fault time, which may be much later, or
-> not happen at all.
-> 
-> Changes in version 2:
-> - prevent double charges on pre-allocated hugepages in khugepaged
-> - leave shmem swapcache when charging fails to avoid double IO (Joonsoo)
-> - fix temporary accounting bug by switching rmap<->commit (Joonsoo)
-> - fix double swap charge bug in cgroup1/cgroup2 code gating
-> - simplify swapin error checking (Joonsoo)
-> - mm: memcontrol: document the new swap control behavior (Alex)
-> - review tags
-> 
-> The delayed swapin charging scheme we have right now causes problems:
-> 
-> - Alex's per-cgroup lru_lock patches rely on pages that have been
->   isolated from the LRU to have a stable page->mem_cgroup; otherwise
->   the lock may change underneath him. Swapcache pages are charged only
->   after they are added to the LRU, and charging doesn't follow the LRU
->   isolation protocol.
-> 
-> - Joonsoo's anon workingset patches need a suitable LRU at the time
->   the page enters the swap cache and displaces the non-resident
->   info. But the correct LRU is only available after charging.
-> 
-> - It's a containment hole / DoS vector. Users can trigger arbitrarily
->   large swap readahead using MADV_WILLNEED. The memory is never
->   charged unless somebody actually touches it.
-> 
-> - It complicates the page->mem_cgroup stabilization rules
-> 
-> In order to charge pages directly at swapin time, the memcg code base
-> needs to be prepared, and several overdue cleanups become a necessity:
-> 
-> To charge pages at swapin time, we need to always have cgroup
-> ownership tracking of swap records. We also cannot rely on
-> page->mapping to tell apart page types at charge time, because that's
-> only set up during a page fault.
-> 
-> To eliminate the page->mapping dependency, memcg needs to ditch its
-> private page type counters (MEMCG_CACHE, MEMCG_RSS, NR_SHMEM) in favor
-> of the generic vmstat counters and accounting sites, such as
-> NR_FILE_PAGES, NR_ANON_MAPPED etc.
+While trying to use remote memcg charging in an out-of-tree kernel module
+I found it's not working, because the current thread is a workqueue thread.
 
-Could you elaborate on what this means and the implications of this on
-user space programs?
+As we will probably encounter this issue in the future as the users of
+memalloc_use_memcg() grow, it's better we fix it now.
 
-> 
-> To switch to generic vmstat counters, the charge sequence must be
-> adjusted such that page->mem_cgroup is set up by the time these
-> counters are modified.
-> 
-> The series is structured as follows:
-> 
-> 1. Bug fixes
-> 2. Decoupling charging from rmap
-> 3. Swap controller integration into memcg
-> 4. Direct swapin charging
->
+Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
 
-Thanks,
-Balbir Singh. 
+v2: add a comment as sugguested by Michal. and add changelog to explain why
+upstream kernel needs this fix.
+
+---
+
+ mm/memcontrol.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index a3b97f1..43a12ed 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2802,6 +2802,9 @@ static void memcg_schedule_kmem_cache_create(struct mem_cgroup *memcg,
+ 
+ static inline bool memcg_kmem_bypass(void)
+ {
++	/* Allow remote memcg charging in kthread contexts. */
++	if (unlikely(current->active_memcg))
++		return false;
+ 	if (in_interrupt() || !current->mm || (current->flags & PF_KTHREAD))
+ 		return true;
+ 	return false;
+-- 
+2.7.4
+
