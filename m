@@ -1,76 +1,78 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: =?utf-8?B?4p2MIEZBSUw=?= =?utf-8?Q?=3A?= Test report for
- kernel?5.7.0-rc5-51f14e2.cki (arm-next)
-Date: Wed, 13 May 2020 11:51:14 -0400
-Message-ID: <20200513155114.GF16815@mtj.duckdns.org>
-References: <cki.495C39BD1A.T35Z6VDJPY@redhat.com>
- <20200513060321.GA17433@willie-the-truck>
- <1322199095.22739428.1589365183678.JavaMail.zimbra@redhat.com>
- <1039472143.12305448.1589384415559.JavaMail.zimbra@redhat.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH v2] memcg: Fix memcg_kmem_bypass() for remote memcg
+ charging
+Date: Wed, 13 May 2020 09:11:10 -0700
+Message-ID: <20200513161110.GA70427@carbon.DHCP.thefacebook.com>
+References: <e6927a82-949c-bdfd-d717-0a14743c6759@huawei.com>
+ <20200513090502.GV29153@dhcp22.suse.cz>
+ <76f71776-d049-7407-8574-86b6e9d80704@huawei.com>
+ <20200513112905.GX29153@dhcp22.suse.cz>
+ <3a721f62-5a66-8bc5-247b-5c8b7c51c555@huawei.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=rLEeAmSBwjT3ETZ4wrXG/Y/gbcP+c03guOC0q4Y8fXA=;
-        b=CxGZlnCeO8Z+6gWlkyNbL90JiSBlEzm6ThptrdmeTLYbrTmiUMlAF6eHDx9NV4zeGb
-         6Rz3PQV5R2XN9pUf4xmN1IKVyaF3WVMHV2UboX5qGevLW946cEuuraERFw9eQEGrXbKC
-         ZEtxxPGYbrPUoeWB24ML8Lrx5iuNxW9EkzdqgnkAEasHh2uQH+0JMGCCrdUhLWCvQxBk
-         JnuFgJC9Q7HhNbdxW6kBxmZQg/NA4JNrsvfHwgltLePF6FTwiQ/6ToQYL4IHmpzv3H5S
-         y/cem8PayEiSqD2aA8SYbHiKZP+VpyM2Tnbb7hjAsHqXaRo4rS7TuE99ktMAowj5sh3E
-         V6OQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=igsYSo8Rnj6AmhEEXQNL3hz7d88Zd8kYSLUh0Cs0nos=;
+ b=MXedZEZyw5bxnxbfGeyniV729AsiWCIr0AWvMRoaQlNsZgqidsm5cDO4xBi1dX61FP3k
+ IXylAtDI0wxu6hpx9mISYBvsm8sJ4ir1KQyo5FiY5+Ot8DSBpSa/DqTBqhnlWvtZFrGE
+ cuNNBjLP1514vRzJrVy4Rkly8ptPEENb7z0= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=igsYSo8Rnj6AmhEEXQNL3hz7d88Zd8kYSLUh0Cs0nos=;
+ b=MJZvbtQGba6MreT5VR30DnXgtFKRGpjEiagFzp6TTr2Q9+MiynUxof2a5t+wc8GI6Eln+rcObrXkW8fvNdtDgns0GYzadcHEVRCQlbdXR4Cx86CMrTWXgUTX8Hz1ojygmHY2YBmKU17f6jDaXdAg+DrRXuLYmWJEzdvJ7/eznFs=
 Content-Disposition: inline
-In-Reply-To: <1039472143.12305448.1589384415559.JavaMail.zimbra-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <3a721f62-5a66-8bc5-247b-5c8b7c51c555-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jan Stancek <jstancek-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Veronika Kabatova <vkabatov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Memory Management <mm-qe-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, CKI Project <cki-project-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, catalin marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, LTP List <ltp-cunTk1MwBs91InPhgRC9rw@public.gmane.org>
+To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Wed, May 13, 2020 at 11:40:15AM -0400, Jan Stancek wrote:
-> In LTP issue above it was clear that memory controller is in use.
-> Here it looks like some lingering reference to cpuset controller
-> that can't be seen in sysfs.
+On Wed, May 13, 2020 at 07:47:49PM +0800, Zefan Li wrote:
+> While trying to use remote memcg charging in an out-of-tree kernel module
+> I found it's not working, because the current thread is a workqueue thread.
 > 
-> It's triggered by podman tests actually:
-> 1. run podman tests
-> 2. mount -t cgroup -ocpuset cpuset /mnt/cpuset/ -> EBUSY
+> As we will probably encounter this issue in the future as the users of
+> memalloc_use_memcg() grow, it's better we fix it now.
 > 
-> # mount | grep cgroup
-> cgroup2 on /sys/fs/cgroup type cgroup2 (rw,nosuid,nodev,noexec,relatime,seclabel)
+> Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> ---
 > 
-> # grep cpuset -r /sys/fs/cgroup/
-> /sys/fs/cgroup/cgroup.controllers:cpuset cpu io memory pids
+> v2: add a comment as sugguested by Michal. and add changelog to explain why
+> upstream kernel needs this fix.
 > 
-> And yet, v1 cgroup fails to mount:
+> ---
 > 
-> # mount -t cgroup -ocpuset cpuset /mnt/cpuset/
-> mount: /mnt/cpuset: cpuset already mounted or mount point busy.
+>  mm/memcontrol.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index a3b97f1..43a12ed 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2802,6 +2802,9 @@ static void memcg_schedule_kmem_cache_create(struct mem_cgroup *memcg,
+>  
+>  static inline bool memcg_kmem_bypass(void)
+>  {
+> +	/* Allow remote memcg charging in kthread contexts. */
+> +	if (unlikely(current->active_memcg))
+> +		return false;
+>  	if (in_interrupt() || !current->mm || (current->flags & PF_KTHREAD))
+>  		return true;
 
-While if a regression it may point to a newly introduced behavior, in
-general, dynamically reassigning cgroup controllers to a different version
-hierarchy after active use is not something fully supported. From cgroup2
-documentation:
+Shakeel is right about interrupts. How about something like this?
 
-  A controller can be moved across hierarchies only after the controller is
-  no longer referenced in its current hierarchy. Because per-cgroup
-  controller states are destroyed asynchronously and controllers may have
-  lingering references, a controller may not show up immediately on the v2
-  hierarchy after the final umount of the previous hierarchy. Similarly, a
-  controller should be fully disabled to be moved out of the unified
-  hierarchy and it may take some time for the disabled controller to become
-  available for other hierarchies; furthermore, due to inter-controller
-  dependencies, other controllers may need to be disabled too.
+static inline bool memcg_kmem_bypass(void)
+{
+	if (in_interrupt())
+		return true;
 
-  While useful for development and manual configurations, moving controllers
-  dynamically between the v2 and other hierarchies is strongly discouraged
-  for production use. It is recommended to decide the hierarchies and
-  controller associations before starting using the controllers after system
-  boot.
+	if ((!current->mm || current->flags & PF_KTHREAD) && !current->active_memcg)
+		return true;
 
-Thanks.
+	return false;
+}
 
--- 
-tejun
+Thanks!
