@@ -1,72 +1,56 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2] memcg: Fix memcg_kmem_bypass() for remote memcg
- charging
-Date: Fri, 15 May 2020 10:34:58 +0200
-Message-ID: <20200515083458.GK29153@dhcp22.suse.cz>
-References: <e6927a82-949c-bdfd-d717-0a14743c6759@huawei.com>
- <20200513090502.GV29153@dhcp22.suse.cz>
- <76f71776-d049-7407-8574-86b6e9d80704@huawei.com>
- <20200513112905.GX29153@dhcp22.suse.cz>
- <3a721f62-5a66-8bc5-247b-5c8b7c51c555@huawei.com>
- <20200513161110.GA70427@carbon.DHCP.thefacebook.com>
- <20e89344-cf00-8b0c-64c3-0ac7efd601e6@huawei.com>
- <20200514225259.GA81563@carbon.dhcp.thefacebook.com>
- <20200515065645.GD29153@dhcp22.suse.cz>
- <bad0e16b-7141-94c0-45f6-6ed03926b5f8@huawei.com>
+From: "Michael Kerrisk (man-pages)" <mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] clone.2: Document CLONE_INTO_CGROUP
+Date: Fri, 15 May 2020 13:41:46 +0200
+Message-ID: <CAKgNAkhXxWFE8msNkJ3117ChacWsfiMsBptZsVJOnxGtuDTX0Q@mail.gmail.com>
+References: <CAKgNAkhL0zCj11LS9vfae872YVeRsxdz20sZWuXdi+UjH21=0g@mail.gmail.com>
+ <20200410104132.294639-1-christian@brauner.io> <b7550fcd-ba12-e64a-3228-e6668b31a8a7@gmail.com>
+ <CAKgNAkhQr+sKGAu+KcxPEsuwG3kjQOyzVW7E1yM9cMtSZrhW9A@mail.gmail.com> <20200423101420.udkmlhnfg57lsshi@wittgenstein>
+Reply-To: mtk.manpages-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <bad0e16b-7141-94c0-45f6-6ed03926b5f8-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
+         :subject:to:cc;
+        bh=RWK3xRBK3vF039IvGRjdVtIEkl1uwsII0GmOE8enEhg=;
+        b=AQ9HX6rwWWp133kyVs2PIJL5t+b/npGe7W2nKwSP00VnDRcm0saijkshcdRXR10VlL
+         N3QvsCS9Nf+I1JhMOMiw+s9X5sS4vLhmyuKy3L+93WpWfow7gI05+dOZYGAI5r4cU8y1
+         rJx1+S0EECUThKB3RqnhXEQreTT8itZR/odWs96CLWvXaxSos2ymicfJwUvXxUq2Cyaf
+         KnRBdDXaLTKwoY3NlxhBOVeOCPlpn00Mf7t+vRbun0vUbFkFWOI+2VVcglalTkwpQD0C
+         ktLCP3/1ggat4CkA0bkiK1Ciph/UfOrPoEWagk2/a3RWjWai3Tb1ecqCvmVFj90S59jX
+         vAPQ==
+In-Reply-To: <20200423101420.udkmlhnfg57lsshi@wittgenstein>
+Sender: linux-api-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Cc: Christian Brauner <christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux API <linux-api-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-man <linux-man-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Oleg Nesterov <oleg-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Fri 15-05-20 16:20:04, Li Zefan wrote:
-> On 2020/5/15 14:56, Michal Hocko wrote:
-> > On Thu 14-05-20 15:52:59, Roman Gushchin wrote:
-[...]
-> >>> I thought the user should ensure not do this, but now I think it makes sense to just bypass
-> >>> the interrupt case.
-> >>
-> >> I think now it's mostly a legacy of the opt-out kernel memory accounting.
-> >> Actually we can relax this requirement by forcibly overcommit the memory cgroup
-> >> if the allocation is happening from the irq context, and punish it afterwards.
-> >> Idk how much we wanna this, hopefully nobody is allocating large non-temporarily
-> >> objects from an irq.
-> > 
-> > I do not think we want to pretend that remote charging from the IRQ
-> > context is supported. Why don't we simply WARN_ON(in_interrupt()) there?
-> > 
-> 
-> How about:
-> 
-> static inline bool memcg_kmem_bypass(void)
-> {
->         if (in_interrupt()) {
->                 WARN_ON(current->active_memcg);
->                 return true;
->         }
+Hello Christian,
 
-Why not simply 
+Ping!
 
-	if (WARN_ON_ONCE(in_interrupt())
-		return true;
+Thanks,
 
-the idea is that we want to catch any __GFP_ACCOUNT user from IRQ
-context because this just doesn't work and we do not plan to support it
-for now and foreseeable future. If this is reduced only to active_memcg
-then we are only getting a partial picture.
-		
-> 
->         /* Allow remote memcg charging in kthread contexts. */
->         if ((!current->mm || (current->flags & PF_KTHREAD)) && !current->active_memcg)
->                 return true;
->         return false;
-> }
+Michael
+
+On Thu, 23 Apr 2020 at 12:14, Christian Brauner
+<christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> On Tue, Apr 21, 2020 at 04:30:46PM +0200, Michael Kerrisk (man-pages) wrote:
+> > Hi Christian,
+> >
+> > Ping!
+>
+> Will likely take a few days until I can get around to prepare a second
+> version. Sorry for the delay!
+>
+> Christian
+
+
 
 -- 
-Michal Hocko
-SUSE Labs
+Michael Kerrisk
+Linux man-pages maintainer; http://www.kernel.org/doc/man-pages/
+Linux/UNIX System Programming Training: http://man7.org/training/
