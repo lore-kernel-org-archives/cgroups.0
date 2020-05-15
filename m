@@ -1,92 +1,99 @@
 From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2] memcg: Fix memcg_kmem_bypass() for remote memcg
- charging
-Date: Fri, 15 May 2020 08:56:45 +0200
-Message-ID: <20200515065645.GD29153@dhcp22.suse.cz>
-References: <e6927a82-949c-bdfd-d717-0a14743c6759@huawei.com>
- <20200513090502.GV29153@dhcp22.suse.cz>
- <76f71776-d049-7407-8574-86b6e9d80704@huawei.com>
- <20200513112905.GX29153@dhcp22.suse.cz>
- <3a721f62-5a66-8bc5-247b-5c8b7c51c555@huawei.com>
- <20200513161110.GA70427@carbon.DHCP.thefacebook.com>
- <20e89344-cf00-8b0c-64c3-0ac7efd601e6@huawei.com>
- <20200514225259.GA81563@carbon.dhcp.thefacebook.com>
+Subject: Re: [PATCH mm v2 3/3] mm: automatically penalize tasks with high
+ swap use
+Date: Fri, 15 May 2020 09:14:58 +0200
+Message-ID: <20200515071458.GE29153@dhcp22.suse.cz>
+References: <20200511225516.2431921-1-kuba@kernel.org>
+ <20200511225516.2431921-4-kuba@kernel.org>
+ <20200512072634.GP29153@dhcp22.suse.cz>
+ <20200512105536.748da94e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <20200513083249.GS29153@dhcp22.suse.cz>
+ <20200513113623.0659e4c4@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <20200514074246.GZ29153@dhcp22.suse.cz>
+ <20200514202130.GA591266@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20200514225259.GA81563-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+In-Reply-To: <20200514202130.GA591266-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-On Thu 14-05-20 15:52:59, Roman Gushchin wrote:
-> On Thu, May 14, 2020 at 09:16:29AM +0800, Zefan Li wrote:
-> > On 2020/5/14 0:11, Roman Gushchin wrote:
-> > > On Wed, May 13, 2020 at 07:47:49PM +0800, Zefan Li wrote:
-> > >> While trying to use remote memcg charging in an out-of-tree kernel module
-> > >> I found it's not working, because the current thread is a workqueue thread.
-> > >>
-> > >> As we will probably encounter this issue in the future as the users of
-> > >> memalloc_use_memcg() grow, it's better we fix it now.
-> > >>
-> > >> Signed-off-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> > >> ---
-> > >>
-> > >> v2: add a comment as sugguested by Michal. and add changelog to explain why
-> > >> upstream kernel needs this fix.
-> > >>
-> > >> ---
-> > >>
-> > >>  mm/memcontrol.c | 3 +++
-> > >>  1 file changed, 3 insertions(+)
-> > >>
-> > >> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > >> index a3b97f1..43a12ed 100644
-> > >> --- a/mm/memcontrol.c
-> > >> +++ b/mm/memcontrol.c
-> > >> @@ -2802,6 +2802,9 @@ static void memcg_schedule_kmem_cache_create(struct mem_cgroup *memcg,
-> > >>  
-> > >>  static inline bool memcg_kmem_bypass(void)
-> > >>  {
-> > >> +	/* Allow remote memcg charging in kthread contexts. */
-> > >> +	if (unlikely(current->active_memcg))
-> > >> +		return false;
-> > >>  	if (in_interrupt() || !current->mm || (current->flags & PF_KTHREAD))
-> > >>  		return true;
+On Thu 14-05-20 16:21:30, Johannes Weiner wrote:
+> On Thu, May 14, 2020 at 09:42:46AM +0200, Michal Hocko wrote:
+> > On Wed 13-05-20 11:36:23, Jakub Kicinski wrote:
+> > > On Wed, 13 May 2020 10:32:49 +0200 Michal Hocko wrote:
+> > > > On Tue 12-05-20 10:55:36, Jakub Kicinski wrote:
+> > > > > On Tue, 12 May 2020 09:26:34 +0200 Michal Hocko wrote:  
+> > > > > > On Mon 11-05-20 15:55:16, Jakub Kicinski wrote:  
+> > > > > > > Use swap.high when deciding if swap is full.    
+> > > > > > 
+> > > > > > Please be more specific why.  
+> > > > > 
+> > > > > How about:
+> > > > > 
+> > > > >     Use swap.high when deciding if swap is full to influence ongoing
+> > > > >     swap reclaim in a best effort manner.  
+> > > > 
+> > > > This is still way too vague. The crux is why should we treat hard and
+> > > > high swap limit the same for mem_cgroup_swap_full purpose. Please
+> > > > note that I am not saying this is wrong. I am asking for a more
+> > > > detailed explanation mostly because I would bet that somebody
+> > > > stumbles over this sooner or later.
 > > > 
-> > > Shakeel is right about interrupts. How about something like this?
-> > > 
-> > > static inline bool memcg_kmem_bypass(void)
-> > > {
-> > > 	if (in_interrupt())
-> > > 		return true;
-> > > 
-> > > 	if ((!current->mm || current->flags & PF_KTHREAD) && !current->active_memcg)
-> > > 		return true;
-> > > 
-> > > 	return false;
-> > > }
-> > > 
+> > > Stumbles in what way?
 > > 
-> > I thought the user should ensure not do this, but now I think it makes sense to just bypass
-> > the interrupt case.
+> > Reading the code and trying to understand why this particular decision
+> > has been made. Because it might be surprising that the hard and high
+> > limits are treated same here.
 > 
-> I think now it's mostly a legacy of the opt-out kernel memory accounting.
-> Actually we can relax this requirement by forcibly overcommit the memory cgroup
-> if the allocation is happening from the irq context, and punish it afterwards.
-> Idk how much we wanna this, hopefully nobody is allocating large non-temporarily
-> objects from an irq.
+> I don't quite understand the controversy.
 
-I do not think we want to pretend that remote charging from the IRQ
-context is supported. Why don't we simply WARN_ON(in_interrupt()) there?
+I do not think there is any controversy. All I am asking for is a
+clarification because this is non-intuitive.
+ 
+> The idea behind "swap full" is that as long as the workload has plenty
+> of swap space available and it's not changing its memory contents, it
+> makes sense to generously hold on to copies of data in the swap
+> device, even after the swapin. A later reclaim cycle can drop the page
+> without any IO. Trading disk space for IO.
+> 
+> But the only two ways to reclaim a swap slot is when they're faulted
+> in and the references go away, or by scanning the virtual address space
+> like swapoff does - which is very expensive (one could argue it's too
+> expensive even for swapoff, it's often more practical to just reboot).
+> 
+> So at some point in the fill level, we have to start freeing up swap
+> slots on fault/swapin. Otherwise we could eventually run out of swap
+> slots while they're filled with copies of data that is also in RAM.
+> 
+> We don't want to OOM a workload because its available swap space is
+> filled with redundant cache.
 
+Thanks this is a useful summary.
+ 
+> That applies to physical swap limits, swap.max, and naturally also to
+> swap.high which is a limit to implement userspace OOM for swap space
+> exhaustion.
 > 
-> Will you send a v3?
+> > > Isn't it expected for the kernel to take reasonable precautions to
+> > > avoid hitting limits?
+> > 
+> > Isn't the throttling itself the precautious? How does the swap cache
+> > and its control via mem_cgroup_swap_full interact here. See? This is
+> > what I am asking to have explained in the changelog.
 > 
-> Thanks!
+> It sounds like we need better documentation of what vm_swap_full() and
+> friends are there for. It should have been obvious why swap.high - a
+> limit on available swap space - hooks into it.
+
+Agreed. The primary source for a confusion is the naming here. Because
+vm_swap_full doesn't really try to tell that the swap is full. It merely
+tries to tell that it is getting full and so duplicated data should be
+dropped.
 
 -- 
 Michal Hocko
