@@ -1,49 +1,111 @@
-From: Wu Bo <wubo40@huawei.com>
-Subject: [PATCH] blkcg:fixes memory leaks in blkg_conf_prep()
-Date: Fri, 15 May 2020 20:24:03 +0800
-Message-ID: <1589545443-151387-1-git-send-email-wubo40@huawei.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] memcg: expose root cgroup's memory.stat
+Date: Fri, 15 May 2020 09:24:21 -0400
+Message-ID: <20200515132421.GC591266@cmpxchg.org>
+References: <20200508170630.94406-1-shakeelb@google.com>
+ <20200508214405.GA226164@cmpxchg.org>
+ <CALvZod5VHHUV+_AXs4+5sLOPGyxm709kQ1q=uHMPVxW8pwXZ=g@mail.gmail.com>
+ <20200515082955.GJ29153@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-Sender: linux-block-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=QaWgWrHuxPFWiLAhp4MGw0Ee13FyqS0FhmE2+InAr5c=;
+        b=Y0Zf8seELSKB++cOysfnNke0Q1k76yTJbnwd9rRfJFzYLkxIfL9/nlC1CVvTkXY1r9
+         X237RzZx508nP1DQhXxUfM8ufYAA/sDlD7aXCy1RECkqi3B88KBqXqAgLfXdeea+JOKP
+         sr2HNKzwKT7a/5CHP+mQyk4HPqmfnePuexg9SGO+XsHXBaYAmhb3LohQz8G652U4JNdY
+         435kJdjSIfXUjHSpqzxa2p+WSHdqN33IjL7oO0ZM4yziSaY7z58qoJOvFZhf5gANOz29
+         cJF7y8i/lutV2jpKNQPdSLpWfP9YWiF7zl3araZDTay9TmA9VA9SJMWWSaxODkYdbBr5
+         t/LA==
+Content-Disposition: inline
+In-Reply-To: <20200515082955.GJ29153@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, axboe@kernel.dk
-Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, liuzhiqiang26@huawei.com, linfeilong@huawei.com, wubo40@huawei.com
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Shakeel Butt <shakeelb@google.com>, Mel Gorman <mgorman@suse.de>, Roman Gushchin <guro@fb.com>, Andrew Morton <akpm@linux-foundation.org>, Yafang Shao <laoar.shao@gmail.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-blkg_conf_prep():
- 
-new_blkg = blkg_alloc(pos, q, GFP_KERNEL);
-...
-blkg = blkg_lookup_check(pos, pol, q);
-if (IS_ERR(blkg)) {
-	ret = PTR_ERR(blkg);
-	goto fail_unlock;
-}
-...
+On Fri, May 15, 2020 at 10:29:55AM +0200, Michal Hocko wrote:
+> On Sat 09-05-20 07:06:38, Shakeel Butt wrote:
+> > On Fri, May 8, 2020 at 2:44 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
+> > >
+> > > On Fri, May 08, 2020 at 10:06:30AM -0700, Shakeel Butt wrote:
+> > > > One way to measure the efficiency of memory reclaim is to look at the
+> > > > ratio (pgscan+pfrefill)/pgsteal. However at the moment these stats are
+> > > > not updated consistently at the system level and the ratio of these are
+> > > > not very meaningful. The pgsteal and pgscan are updated for only global
+> > > > reclaim while pgrefill gets updated for global as well as cgroup
+> > > > reclaim.
+> > > >
+> > > > Please note that this difference is only for system level vmstats. The
+> > > > cgroup stats returned by memory.stat are actually consistent. The
+> > > > cgroup's pgsteal contains number of reclaimed pages for global as well
+> > > > as cgroup reclaim. So, one way to get the system level stats is to get
+> > > > these stats from root's memory.stat, so, expose memory.stat for the root
+> > > > cgroup.
+> > > >
+> > > >       from Johannes Weiner:
+> > > >       There are subtle differences between /proc/vmstat and
+> > > >       memory.stat, and cgroup-aware code that wants to watch the full
+> > > >       hierarchy currently has to know about these intricacies and
+> > > >       translate semantics back and forth.
+> 
+> Can we have those subtle differences documented please?
+> 
+> > > >
+> > > >       Generally having the fully recursive memory.stat at the root
+> > > >       level could help a broader range of usecases.
+> > >
+> > > The changelog begs the question why we don't just "fix" the
+> > > system-level stats. It may be useful to include the conclusions from
+> > > that discussion, and why there is value in keeping the stats this way.
+> > >
+> > 
+> > Right. Andrew, can you please add the following para to the changelog?
+> > 
+> > Why not fix the stats by including both the global and cgroup reclaim
+> > activity instead of exposing root cgroup's memory.stat? The reason is
+> > the benefit of having metrics exposing the activity that happens
+> > purely due to machine capacity rather than localized activity that
+> > happens due to the limits throughout the cgroup tree. Additionally
+> > there are userspace tools like sysstat(sar) which reads these stats to
+> > inform about the system level reclaim activity. So, we should not
+> > break such use-cases.
+> > 
+> > > > Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> > > > Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
+> > >
+> > > Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> > 
+> > Thanks a lot.
+> 
+> I was quite surprised that the patch is so simple TBH. For some reason
+> I've still had memories that we do not account for root memcg (likely
+> because mem_cgroup_is_root(memcg) bail out in the try_charge. But stats
+> are slightly different here.
 
+Yep, we skip the page_counter for root, but keep in mind that cgroup1
+*does* have a root-level memory.stat, so (for the most part) we've
+been keeping consumer stats for the root level the whole time.
 
-if calling blkg_lookup_check() failed, at the IS_ERR block, 
-the new_blkg should be free before goto lable fail_unlock
-in blkg_conf_prep() function.
+> counters because they are not really all the same. E.g.
+> - mem_cgroup_charge_statistics accounts for each memcg
 
-Signed-off-by: Wu Bo <wubo40@huawei.com>
----
- block/blk-cgroup.c | 1 +
- 1 file changed, 1 insertion(+)
+Yep, that's heritage from cgroup1.
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 930212c..afeb769 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -682,6 +682,7 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
- 		blkg = blkg_lookup_check(pos, pol, q);
- 		if (IS_ERR(blkg)) {
- 			ret = PTR_ERR(blkg);
-+			blkg_free(new_blkg);
- 			goto fail_unlock;
- 		}
- 
--- 
-1.8.3.1
+> - memcg_charge_kernel_stack relies on pages being associated with a
+>   memcg and that in turn relies on __memcg_kmem_charge_page which bails
+>   out on root memcg
 
+You're right. It should only bypass the page_counter, but still set
+page->mem_cgroup = root_mem_cgroup, just like user pages.
+
+This counter also doesn't get exported on cgroup1, so it would indeed
+be a new bug. It needs to be fixed before this patch here.
+
+> - memcg_charge_slab (NR_SLAB*) skips over root memcg as well
+
+Same thing with these two.
