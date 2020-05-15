@@ -1,90 +1,128 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v2] memcg: Fix memcg_kmem_bypass() for remote memcg
- charging
-Date: Fri, 15 May 2020 10:31:10 -0700
-Message-ID: <20200515173110.GB94522@carbon.DHCP.thefacebook.com>
-References: <76f71776-d049-7407-8574-86b6e9d80704@huawei.com>
- <20200513112905.GX29153@dhcp22.suse.cz>
- <3a721f62-5a66-8bc5-247b-5c8b7c51c555@huawei.com>
- <20200513161110.GA70427@carbon.DHCP.thefacebook.com>
- <20e89344-cf00-8b0c-64c3-0ac7efd601e6@huawei.com>
- <20200514225259.GA81563@carbon.dhcp.thefacebook.com>
- <20200515065645.GD29153@dhcp22.suse.cz>
- <bad0e16b-7141-94c0-45f6-6ed03926b5f8@huawei.com>
- <20200515083458.GK29153@dhcp22.suse.cz>
- <CALvZod64-Yc0firp9C8MNhEaF6FTiKmSx2B3HOrvi8GkyOD-7g@mail.gmail.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH] memcg: expose root cgroup's memory.stat
+Date: Fri, 15 May 2020 10:49:22 -0700
+Message-ID: <CALvZod5EHzK-UzS9WgkzpZ2T+WwA8LottxrTzUi3qFwvUbOk4w@mail.gmail.com>
+References: <20200508170630.94406-1-shakeelb@google.com> <20200508214405.GA226164@cmpxchg.org>
+ <CALvZod5VHHUV+_AXs4+5sLOPGyxm709kQ1q=uHMPVxW8pwXZ=g@mail.gmail.com>
+ <20200515082955.GJ29153@dhcp22.suse.cz> <20200515132421.GC591266@cmpxchg.org>
+ <CALvZod7SdgXv0Dmm3q5H=EH4dzg8pXZenMUaDObfoRv5EX-Pkw@mail.gmail.com> <20200515150026.GA94522@carbon.DHCP.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=fff8INmGrPkWukb8lVnvz9ySQRHkmmYenu+695toJNM=;
- b=Zj7VKKXIsVYd6CL6TxyVbOP2Tw8JZGDckYQuhpuYW04ELNBFvp+8RTwDXeAXXN4RKm39
- p856DYK2gQCvHBxxLqdfy4WffN22iKOOS19wX7edYwkRl8AGbwYVH5JgOqb5UyQzB8JK
- 5Q/UDSyw0NsVRvOVY7ybQ7zq0KSZnUxuP/I= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fff8INmGrPkWukb8lVnvz9ySQRHkmmYenu+695toJNM=;
- b=ZpivsFou4ZAroJgfmSyZHI6M7YFqMr50u/n9jVhREWDfsVFJbq1XUJRvbGJ6zl5MWMc9+s+gDzTawbhWCySBLDoDRmAHDsviLzPfk1h6rsHqmmfPYXraRiV/Jy3PJohqzXBLf7qFxcUPwFpohqbD48sueFgopG9QCUfd/gHiuwk=
-Content-Disposition: inline
-In-Reply-To: <CALvZod64-Yc0firp9C8MNhEaF6FTiKmSx2B3HOrvi8GkyOD-7g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=UaYQTSaq9VZj8MAel6SAXsrwR35YF1SYRI2VQ4Ly89w=;
+        b=ByCFc5MixtBs6AIiuvjXgLX8ciepEzcgMdBfkabVnYTEguZvFgct4xZxiY5o28FfEo
+         /PBXJDk4bkppu1q48kIDeQC++nBqpVLtTif9qjyJETTP9M3e+pnxJkYmtcgOTkLsERga
+         AA7gynk9XbG6MPGlazZvj+UUttrdRaeKr36ULZmiDOHwd8AoLTkl1NP4XRtXOPYsJMOz
+         yvHiTJCMMd3aKBelaqHfPXPxzszh5IFHoBWdsGR2ucpZOzNa9FbE/xPsZSySmoAuRw0+
+         UUyYMytNomyz+jTuObIOKbCJwnuQ0PkBPQhWfvtoco6xTPkkLwCx1S4kJ2FTycMc7gFt
+         FaZQ==
+In-Reply-To: <20200515150026.GA94522@carbon.DHCP.thefacebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+To: Roman Gushchin <guro@fb.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Mel Gorman <mgorman@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Yafang Shao <laoar.shao@gmail.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Fri, May 15, 2020 at 09:22:25AM -0700, Shakeel Butt wrote:
-> On Fri, May 15, 2020 at 1:35 AM Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> >
-> > On Fri 15-05-20 16:20:04, Li Zefan wrote:
-> > > On 2020/5/15 14:56, Michal Hocko wrote:
-> > > > On Thu 14-05-20 15:52:59, Roman Gushchin wrote:
-> > [...]
-> > > >>> I thought the user should ensure not do this, but now I think it makes sense to just bypass
-> > > >>> the interrupt case.
-> > > >>
-> > > >> I think now it's mostly a legacy of the opt-out kernel memory accounting.
-> > > >> Actually we can relax this requirement by forcibly overcommit the memory cgroup
-> > > >> if the allocation is happening from the irq context, and punish it afterwards.
-> > > >> Idk how much we wanna this, hopefully nobody is allocating large non-temporarily
-> > > >> objects from an irq.
-> > > >
-> > > > I do not think we want to pretend that remote charging from the IRQ
-> > > > context is supported. Why don't we simply WARN_ON(in_interrupt()) there?
-> > > >
+On Fri, May 15, 2020 at 8:00 AM Roman Gushchin <guro@fb.com> wrote:
+>
+> On Fri, May 15, 2020 at 06:44:44AM -0700, Shakeel Butt wrote:
+> > On Fri, May 15, 2020 at 6:24 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
 > > >
-> > > How about:
+> > > On Fri, May 15, 2020 at 10:29:55AM +0200, Michal Hocko wrote:
+> > > > On Sat 09-05-20 07:06:38, Shakeel Butt wrote:
+> > > > > On Fri, May 8, 2020 at 2:44 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
+> > > > > >
+> > > > > > On Fri, May 08, 2020 at 10:06:30AM -0700, Shakeel Butt wrote:
+> > > > > > > One way to measure the efficiency of memory reclaim is to look at the
+> > > > > > > ratio (pgscan+pfrefill)/pgsteal. However at the moment these stats are
+> > > > > > > not updated consistently at the system level and the ratio of these are
+> > > > > > > not very meaningful. The pgsteal and pgscan are updated for only global
+> > > > > > > reclaim while pgrefill gets updated for global as well as cgroup
+> > > > > > > reclaim.
+> > > > > > >
+> > > > > > > Please note that this difference is only for system level vmstats. The
+> > > > > > > cgroup stats returned by memory.stat are actually consistent. The
+> > > > > > > cgroup's pgsteal contains number of reclaimed pages for global as well
+> > > > > > > as cgroup reclaim. So, one way to get the system level stats is to get
+> > > > > > > these stats from root's memory.stat, so, expose memory.stat for the root
+> > > > > > > cgroup.
+> > > > > > >
+> > > > > > >       from Johannes Weiner:
+> > > > > > >       There are subtle differences between /proc/vmstat and
+> > > > > > >       memory.stat, and cgroup-aware code that wants to watch the full
+> > > > > > >       hierarchy currently has to know about these intricacies and
+> > > > > > >       translate semantics back and forth.
+> > > >
+> > > > Can we have those subtle differences documented please?
+> > > >
+> > > > > > >
+> > > > > > >       Generally having the fully recursive memory.stat at the root
+> > > > > > >       level could help a broader range of usecases.
+> > > > > >
+> > > > > > The changelog begs the question why we don't just "fix" the
+> > > > > > system-level stats. It may be useful to include the conclusions from
+> > > > > > that discussion, and why there is value in keeping the stats this way.
+> > > > > >
+> > > > >
+> > > > > Right. Andrew, can you please add the following para to the changelog?
+> > > > >
+> > > > > Why not fix the stats by including both the global and cgroup reclaim
+> > > > > activity instead of exposing root cgroup's memory.stat? The reason is
+> > > > > the benefit of having metrics exposing the activity that happens
+> > > > > purely due to machine capacity rather than localized activity that
+> > > > > happens due to the limits throughout the cgroup tree. Additionally
+> > > > > there are userspace tools like sysstat(sar) which reads these stats to
+> > > > > inform about the system level reclaim activity. So, we should not
+> > > > > break such use-cases.
+> > > > >
+> > > > > > > Signed-off-by: Shakeel Butt <shakeelb@google.com>
+> > > > > > > Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
+> > > > > >
+> > > > > > Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> > > > >
+> > > > > Thanks a lot.
+> > > >
+> > > > I was quite surprised that the patch is so simple TBH. For some reason
+> > > > I've still had memories that we do not account for root memcg (likely
+> > > > because mem_cgroup_is_root(memcg) bail out in the try_charge. But stats
+> > > > are slightly different here.
 > > >
-> > > static inline bool memcg_kmem_bypass(void)
-> > > {
-> > >         if (in_interrupt()) {
-> > >                 WARN_ON(current->active_memcg);
-> > >                 return true;
-> > >         }
-> >
-> > Why not simply
-> >
-> >         if (WARN_ON_ONCE(in_interrupt())
-> >                 return true;
-> >
-> > the idea is that we want to catch any __GFP_ACCOUNT user from IRQ
-> > context because this just doesn't work and we do not plan to support it
-> > for now and foreseeable future.
+> > > Yep, we skip the page_counter for root, but keep in mind that cgroup1
+> > > *does* have a root-level memory.stat, so (for the most part) we've
+> > > been keeping consumer stats for the root level the whole time.
+> > >
+> > > > counters because they are not really all the same. E.g.
+> > > > - mem_cgroup_charge_statistics accounts for each memcg
+> > >
+> > > Yep, that's heritage from cgroup1.
+> > >
+> > > > - memcg_charge_kernel_stack relies on pages being associated with a
+> > > >   memcg and that in turn relies on __memcg_kmem_charge_page which bails
+> > > >   out on root memcg
+> > >
+> > > You're right. It should only bypass the page_counter, but still set
+> > > page->mem_cgroup = root_mem_cgroup, just like user pages.
+>
+> What about kernel threads? We consider them belonging to the root memory
+> cgroup. Should their memory consumption being considered in root-level stats?
+>
+> I'm not sure we really want it, but I guess we need to document how
+> kernel threads are handled.
+>
 
-Actually, why not?
-It should be fairly simple, especially after the rework of the slab controller.
+What will be the cons of updating root-level stats for kthreads?
 
-> If this is reduced only to active_memcg
-> > then we are only getting a partial picture.
+> > >
+> > > This counter also doesn't get exported on cgroup1, so it would indeed
+> > > be a new bug. It needs to be fixed before this patch here.
+> > >
+> > > > - memcg_charge_slab (NR_SLAB*) skips over root memcg as well
+> > >
+> > > Same thing with these two.
 > >
-> 
-> There are SLAB_ACCOUNT kmem caches which do allocations in IRQ context
-> (see sk_prot_alloc()), so, either we make charging work in IRQ or no
-> warnings at all.
-
-I agree. Actually, there is nothing wrong to warn about, it's just a limitation
-of the current accounting implementation.
-
-Thanks!
+> > Yes, we skip page_counter for root but not the stats. I will go over
+> > all the stats and make sure we are not skipping the stats for root.
