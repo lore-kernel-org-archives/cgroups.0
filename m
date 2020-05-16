@@ -1,70 +1,69 @@
-From: Shakeel Butt <shakeelb@google.com>
+From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
 Subject: Re: [PATCH] memcg: expose root cgroup's memory.stat
-Date: Fri, 15 May 2020 17:13:12 -0700
-Message-ID: <CALvZod7rCcs+-1mmu4w3wRpuZ=op6LE2y3sG1xA2ZrSNJOG-mw@mail.gmail.com>
-References: <20200508170630.94406-1-shakeelb@google.com> <20200508214405.GA226164@cmpxchg.org>
- <CALvZod5VHHUV+_AXs4+5sLOPGyxm709kQ1q=uHMPVxW8pwXZ=g@mail.gmail.com>
- <20200515082955.GJ29153@dhcp22.suse.cz> <20200515132421.GC591266@cmpxchg.org>
- <CALvZod7SdgXv0Dmm3q5H=EH4dzg8pXZenMUaDObfoRv5EX-Pkw@mail.gmail.com>
- <20200515150026.GA94522@carbon.DHCP.thefacebook.com> <CALvZod5EHzK-UzS9WgkzpZ2T+WwA8LottxrTzUi3qFwvUbOk4w@mail.gmail.com>
- <20200515180906.GA630613@cmpxchg.org>
+Date: Sat, 16 May 2020 02:42:47 +0100
+Message-ID: <20200516014247.GA8578@chrisdown.name>
+References: <20200508170630.94406-1-shakeelb@google.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=QTdULXcDq8mWIqVt/vb5iveO+2D6SqGvUKrtXPTBlEY=;
-        b=khnNG9GzJUWCDxebtBF/4SavVHZ5K1XVmzcmgB8knXpmAzpoznXX+GI9LUIEsyDAcp
-         GUkYxYruKzYaE5t9D9vzn9Z7zJ7WMbaTwiH7VLJ9NQc8HeZWG7+fDpWgURK/eWD/DH4O
-         ejsL7skauXPqicLPunbijV2jvsyfstyagkjzmcTAr/665lf8yhJBCrE07ofIUASR7iA2
-         BOkXaXCY41lrexJKBFg1zxnhmDIfyPzIKpXlLzSFJ/VPZ51QjyNaGayYpEKSTbDZlDkb
-         FFO1Lh0zAS2dlKKwpAwHMOdvzL+cLdkPzJCUogXkEGptCbxijQgqiaBsvY72KFyF0FX2
-         1ZJw==
-In-Reply-To: <20200515180906.GA630613@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=kS8OYMG072jDcI6wkY/z+PD46Du/tMZhKnhnXKRsoeo=;
+        b=AH0puOca79INHP4Gyjk8o8AyxnmdUlm/s7CIZkXpa4xvSasJLmdH8L2vWT0y+OPoA2
+         I0dBbUpqu90pgUFRkEbf4DKo2KVJwQ7QIFWnpt9s6w4TNSbgkI5skacNqeGVjFYdGK2v
+         XfuM/QsPsOjBfWclFvjZVsVcN2YdvdcuqqfPA=
+Content-Disposition: inline
+In-Reply-To: <20200508170630.94406-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Mel Gorman <mgorman@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Yafang Shao <laoar.shao@gmail.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, May 15, 2020 at 11:09 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
->
-> On Fri, May 15, 2020 at 10:49:22AM -0700, Shakeel Butt wrote:
-> > On Fri, May 15, 2020 at 8:00 AM Roman Gushchin <guro@fb.com> wrote:
-> > > On Fri, May 15, 2020 at 06:44:44AM -0700, Shakeel Butt wrote:
-> > > > On Fri, May 15, 2020 at 6:24 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
-> > > > > You're right. It should only bypass the page_counter, but still set
-> > > > > page->mem_cgroup = root_mem_cgroup, just like user pages.
-> > >
-> > > What about kernel threads? We consider them belonging to the root memory
-> > > cgroup. Should their memory consumption being considered in root-level stats?
-> > >
-> > > I'm not sure we really want it, but I guess we need to document how
-> > > kernel threads are handled.
-> >
-> > What will be the cons of updating root-level stats for kthreads?
->
-> Should kernel threads be doing GFP_ACCOUNT allocations without
-> memalloc_use_memcg()? GFP_ACCOUNT implies that the memory consumption
-> can be significant and should be attributed to userspace activity.
->
-> If the kernel thread has no userspace entity to blame, it seems to
-> imply the same thing as a !GFP_ACCOUNT allocation: shared public
-> infrastructure, not interesting to account to any specific cgroup.
->
-> I'm not sure if we have such allocations right now. But IMO we should
-> not account anything from kthreads, or interrupts for that matter,
-> /unless/ there is a specific active_memcg that was set by the kthread
-> or the interrupt.
+Hey Shakeel,
 
-I totally agree with you but I think your response is about memory
-charging in IRQ/kthread context, a topic of a parallel patch from
-Zefan Li at [1].
+Shakeel Butt writes:
+>One way to measure the efficiency of memory reclaim is to look at the
+>ratio (pgscan+pfrefill)/pgsteal. However at the moment these stats are
+>not updated consistently at the system level and the ratio of these are
+>not very meaningful. The pgsteal and pgscan are updated for only global
+>reclaim while pgrefill gets updated for global as well as cgroup
+>reclaim.
+>
+>Please note that this difference is only for system level vmstats. The
+>cgroup stats returned by memory.stat are actually consistent. The
+>cgroup's pgsteal contains number of reclaimed pages for global as well
+>as cgroup reclaim. So, one way to get the system level stats is to get
+>these stats from root's memory.stat, so, expose memory.stat for the root
+>cgroup.
+>
+>	from Johannes Weiner:
+>	There are subtle differences between /proc/vmstat and
+>	memory.stat, and cgroup-aware code that wants to watch the full
+>	hierarchy currently has to know about these intricacies and
+>	translate semantics back and forth.
+>
+>	Generally having the fully recursive memory.stat at the root
+>	level could help a broader range of usecases.
+>
+>Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Here we are discussing stats update for kthreads e.g. should we update
-root memcg's MEMCG_KERNEL_STACK_KB stat when we allocate stack for
-kernel threads?
+The patch looks great, thanks. To that extent you can add my ack:
 
-[1] http://lkml.kernel.org/r/3a721f62-5a66-8bc5-247b-5c8b7c51c555@huawei.com
+Acked-by: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+
+One concern about the API now exposed, though: to a new cgroup v2 user this 
+looks fairly dodgy as a sole stat file (except for cgroup.stat) at the root. If 
+I used cgroup v2 for the first time and only saw memory.stat and cgroup.stat 
+there, but for some reason io.stat and cpu.stat are not available at the root 
+but are available everywhere else, I think my first thought would be that the 
+cgroup v2 developers must have been on some strong stuff when they came up with 
+this ;-)
+
+Even if they're only really duplicating information available elsewhere right 
+now, have you considered exposing the rest of the stat files as well so that 
+the API maintains a bit more consistency? As a bonus, that also means userspace 
+applications can parse in the same way from the root down.
