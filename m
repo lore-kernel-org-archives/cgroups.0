@@ -1,69 +1,44 @@
-From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Subject: Re: [PATCH] memcg: expose root cgroup's memory.stat
-Date: Sat, 16 May 2020 02:42:47 +0100
-Message-ID: <20200516014247.GA8578@chrisdown.name>
-References: <20200508170630.94406-1-shakeelb@google.com>
-Mime-Version: 1.0
+From: Qian Cai <cai-J5quhbR+WMc@public.gmane.org>
+Subject: Re: [PATCH v2 4/4] mm/slub: Fix sysfs shrink circular locking dependency
+Date: Sat, 16 May 2020 21:46:05 -0400
+Message-ID: <62C1A69E-A14F-42EE-970F-ABAEA2782256@lca.pw>
+References: <56327de0-fa44-d5f3-2409-69cf2b97a209@redhat.com>
+Mime-Version: 1.0 (1.0)
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=kS8OYMG072jDcI6wkY/z+PD46Du/tMZhKnhnXKRsoeo=;
-        b=AH0puOca79INHP4Gyjk8o8AyxnmdUlm/s7CIZkXpa4xvSasJLmdH8L2vWT0y+OPoA2
-         I0dBbUpqu90pgUFRkEbf4DKo2KVJwQ7QIFWnpt9s6w4TNSbgkI5skacNqeGVjFYdGK2v
-         XfuM/QsPsOjBfWclFvjZVsVcN2YdvdcuqqfPA=
-Content-Disposition: inline
-In-Reply-To: <20200508170630.94406-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        d=lca.pw; s=google;
+        h=content-transfer-encoding:from:mime-version:subject:date:message-id
+         :references:cc:in-reply-to:to;
+        bh=v8/1I95wcTj1mWlxsoep0Hvc73TKsH79uHMoZbzZUWA=;
+        b=mTuyBRurXQZEK9utptTiC11aN2pRP5dmNcE3mS9JBiWGvq+XHi1IprBG0ma5RZ8d1B
+         mq/y+wqaSGx+FRZ55wJjSWJknBkFCrIAqsYJSJG+IJNbVLUiZY0PjS65iNMYjH5poapJ
+         ano66ITpWYc7rAQifzLH5VBHZaDrUFXLp87bcqJILV29+PDGdX7D8K7W9M26JKqOX6FC
+         aQiPnMJf1SdeDID06QRXlqxWkRGX8BJvxwE8AUiQJvRghyyLv3dtN/xklxayHY2TAiOW
+         QudmNWPFzxw7MllH6ftOp0wvqb3tMAV8Mda48M/0Wy7idJzc4TBrjXekP9QxEtS5uGvd
+         wtyw==
+In-Reply-To: <56327de0-fa44-d5f3-2409-69cf2b97a209-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Hey Shakeel,
 
-Shakeel Butt writes:
->One way to measure the efficiency of memory reclaim is to look at the
->ratio (pgscan+pfrefill)/pgsteal. However at the moment these stats are
->not updated consistently at the system level and the ratio of these are
->not very meaningful. The pgsteal and pgscan are updated for only global
->reclaim while pgrefill gets updated for global as well as cgroup
->reclaim.
->
->Please note that this difference is only for system level vmstats. The
->cgroup stats returned by memory.stat are actually consistent. The
->cgroup's pgsteal contains number of reclaimed pages for global as well
->as cgroup reclaim. So, one way to get the system level stats is to get
->these stats from root's memory.stat, so, expose memory.stat for the root
->cgroup.
->
->	from Johannes Weiner:
->	There are subtle differences between /proc/vmstat and
->	memory.stat, and cgroup-aware code that wants to watch the full
->	hierarchy currently has to know about these intricacies and
->	translate semantics back and forth.
->
->	Generally having the fully recursive memory.stat at the root
->	level could help a broader range of usecases.
->
->Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
->Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-The patch looks great, thanks. To that extent you can add my ack:
+> On Apr 28, 2020, at 10:07 AM, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+>=20
+> Trylock is handled differently from lockdep's perspective as trylock can f=
+ailed. When trylock succeeds, the critical section is executed. As long as i=
+t doesn't try to acquire another lock in the circular chain, the execution w=
+ill finish at some point and release the lock. On the other hand, if another=
+ task has already held all those locks, the trylock will fail and held locks=
+ should be released. Again, no deadlock will happen.
 
-Acked-by: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Ok, I can see that in validate_chain() especially mentioned,
 
-One concern about the API now exposed, though: to a new cgroup v2 user this 
-looks fairly dodgy as a sole stat file (except for cgroup.stat) at the root. If 
-I used cgroup v2 for the first time and only saw memory.stat and cgroup.stat 
-there, but for some reason io.stat and cpu.stat are not available at the root 
-but are available everywhere else, I think my first thought would be that the 
-cgroup v2 developers must have been on some strong stuff when they came up with 
-this ;-)
+=E2=80=9CTrylock needs to maintain the stack of held locks, but it does not a=
+dd new dependencies, because trylock can be done in any order.=E2=80=9D
 
-Even if they're only really duplicating information available elsewhere right 
-now, have you considered exposing the rest of the stat files as well so that 
-the API maintains a bit more consistency? As a bonus, that also means userspace 
-applications can parse in the same way from the root down.
+So, I agree this trylock trick could really work. Especially, I don=E2=80=99=
+t know any other better way to fix this.=
