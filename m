@@ -1,18 +1,18 @@
 From: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH mm v4 1/4] mm: prepare for swap over-high accounting and penalty calculation
-Date: Tue, 19 May 2020 10:19:35 -0700
-Message-ID: <20200519171938.3569605-2-kuba@kernel.org>
+Subject: [PATCH mm v4 2/4] mm: move penalty delay clamping out of calculate_high_delay()
+Date: Tue, 19 May 2020 10:19:36 -0700
+Message-ID: <20200519171938.3569605-3-kuba@kernel.org>
 References: <20200519171938.3569605-1-kuba@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1589908785;
-        bh=p/WRKDpR4OiAdIgsquUImCU3vJcPgxBFC/6dc0T5BHU=;
+        s=default; t=1589908786;
+        bh=zU6BYtpx72jVihkxFVAWHDj5teHYoyigohzs9US3qOE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=gfvNriG9x6TQOYG8Tg6AfDFSQdgTsUbQpVLmeFCPS+bv8LwRcRkdIVpJLdf3fdzR1
-         tThkWBrSy9glsONue/h0lfDRRkbAI7pa05QGf7ZYKhnELFJqoVTJmR8F28ujXmov8Y
-         51C7fupqqdTAjvGLQNh7QBzCUdB2fGN7yx2er5Fg=
+        b=JfArE+DcUqMaPPcH22CmjeNr+UUcveoCTLxPwwCXAl4yzL4t/o8xCIn/rC0bu6w1t
+         FIQx4izTk1vUtqunaed9xnCxYL46+rhD6slzqJZ2qfV9L2HVIt7eyI66Jc+Ben4V0B
+         mTW6IdrolslgP0tN6vnR5aW5YQGaeoD3obXlzh7s=
 In-Reply-To: <20200519171938.3569605-1-kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -20,105 +20,50 @@ Content-Type: text/plain; charset="us-ascii"
 To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Slice the memory overage calculation logic a little bit so we can
-reuse it to apply a similar penalty to the swap. The logic which
-accesses the memory-specific fields (use and high values) has to
-be taken out of calculate_high_delay().
+We will want to call calculate_high_delay() twice - once for
+memory and once for swap, and we should apply the clamp value
+to sum of the penalties. Clamping has to be applied outside
+of calculate_high_delay().
 
 Signed-off-by: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- mm/memcontrol.c | 62 ++++++++++++++++++++++++++++---------------------
- 1 file changed, 35 insertions(+), 27 deletions(-)
+ mm/memcontrol.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 2df9510b7d64..0d05e6a593f5 100644
+index 0d05e6a593f5..dd8605a9137a 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2302,41 +2302,48 @@ static void high_work_func(struct work_struct *work)
-  #define MEMCG_DELAY_PRECISION_SHIFT 20
-  #define MEMCG_DELAY_SCALING_SHIFT 14
- 
--/*
-- * Get the number of jiffies that we should penalise a mischievous cgroup which
-- * is exceeding its memory.high by checking both it and its ancestors.
-- */
--static unsigned long calculate_high_delay(struct mem_cgroup *memcg,
--					  unsigned int nr_pages)
-+static u64 calculate_overage(unsigned long usage, unsigned long high)
- {
--	unsigned long penalty_jiffies;
--	u64 max_overage = 0;
--
--	do {
--		unsigned long usage, high;
--		u64 overage;
-+	u64 overage;
- 
--		usage = page_counter_read(&memcg->memory);
--		high = READ_ONCE(memcg->high);
-+	if (usage <= high)
-+		return 0;
- 
--		if (usage <= high)
--			continue;
-+	/*
-+	 * Prevent division by 0 in overage calculation by acting as if
-+	 * it was a threshold of 1 page
-+	 */
-+	high = max(high, 1UL);
- 
--		/*
--		 * Prevent division by 0 in overage calculation by acting as if
--		 * it was a threshold of 1 page
--		 */
--		high = max(high, 1UL);
-+	overage = usage - high;
-+	overage <<= MEMCG_DELAY_PRECISION_SHIFT;
-+	return div64_u64(overage, high);
-+}
- 
--		overage = usage - high;
--		overage <<= MEMCG_DELAY_PRECISION_SHIFT;
--		overage = div64_u64(overage, high);
-+static u64 mem_find_max_overage(struct mem_cgroup *memcg)
-+{
-+	u64 overage, max_overage = 0;
- 
--		if (overage > max_overage)
--			max_overage = overage;
-+	do {
-+		overage = calculate_overage(page_counter_read(&memcg->memory),
-+					    READ_ONCE(memcg->high));
-+		max_overage = max(overage, max_overage);
- 	} while ((memcg = parent_mem_cgroup(memcg)) &&
- 		 !mem_cgroup_is_root(memcg));
- 
-+	return max_overage;
-+}
-+
-+/*
-+ * Get the number of jiffies that we should penalise a mischievous cgroup which
-+ * is exceeding its memory.high by checking both it and its ancestors.
-+ */
-+static unsigned long calculate_high_delay(struct mem_cgroup *memcg,
-+					  unsigned int nr_pages,
-+					  u64 max_overage)
-+{
-+	unsigned long penalty_jiffies;
-+
- 	if (!max_overage)
- 		return 0;
- 
-@@ -2392,7 +2399,8 @@ void mem_cgroup_handle_over_high(void)
- 	 * memory.high is breached and reclaim is unable to keep up. Throttle
- 	 * allocators proactively to slow down excessive growth.
+@@ -2367,14 +2367,7 @@ static unsigned long calculate_high_delay(struct mem_cgroup *memcg,
+ 	 * MEMCG_CHARGE_BATCH pages is nominal, so work out how much smaller or
+ 	 * larger the current charge patch is than that.
  	 */
--	penalty_jiffies = calculate_high_delay(memcg, nr_pages);
-+	penalty_jiffies = calculate_high_delay(memcg, nr_pages,
-+					       mem_find_max_overage(memcg));
+-	penalty_jiffies = penalty_jiffies * nr_pages / MEMCG_CHARGE_BATCH;
+-
+-	/*
+-	 * Clamp the max delay per usermode return so as to still keep the
+-	 * application moving forwards and also permit diagnostics, albeit
+-	 * extremely slowly.
+-	 */
+-	return min(penalty_jiffies, MEMCG_MAX_HIGH_DELAY_JIFFIES);
++	return penalty_jiffies * nr_pages / MEMCG_CHARGE_BATCH;
+ }
  
+ /*
+@@ -2402,6 +2395,13 @@ void mem_cgroup_handle_over_high(void)
+ 	penalty_jiffies = calculate_high_delay(memcg, nr_pages,
+ 					       mem_find_max_overage(memcg));
+ 
++	/*
++	 * Clamp the max delay per usermode return so as to still keep the
++	 * application moving forwards and also permit diagnostics, albeit
++	 * extremely slowly.
++	 */
++	penalty_jiffies = min(penalty_jiffies, MEMCG_MAX_HIGH_DELAY_JIFFIES);
++
  	/*
  	 * Don't sleep if the amount of jiffies this memcg owes us is so low
+ 	 * that it's not even worth doing, in an attempt to be nice to those who
 -- 
 2.25.4
 
