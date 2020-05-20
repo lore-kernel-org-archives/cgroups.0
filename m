@@ -1,23 +1,22 @@
 From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH mm v4 1/4] mm: prepare for swap over-high accounting and
- penalty calculation
-Date: Tue, 19 May 2020 18:38:24 -0700
-Message-ID: <CALvZod66pJ0iP40n+-N3wZCRiM7AuwcrMWx5nu5-ZEqhWzfoTA@mail.gmail.com>
-References: <20200519171938.3569605-1-kuba@kernel.org> <20200519171938.3569605-2-kuba@kernel.org>
+Subject: Re: [PATCH mm v4 2/4] mm: move penalty delay clamping out of calculate_high_delay()
+Date: Tue, 19 May 2020 18:40:19 -0700
+Message-ID: <CALvZod7UNtiebGvsB6tPXCBPZ0vFjreJ7LwyM=D5LdFpAh9Jfg@mail.gmail.com>
+References: <20200519171938.3569605-1-kuba@kernel.org> <20200519171938.3569605-3-kuba@kernel.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=wp6yM374SAibTrarxPnW2QuRcQ8ZTv0Nb2h0Ye6/kEg=;
-        b=uulinYLhsvfZVnTYwjEQphJFr342xI5I6a3rn5kvcU02c0T5EWd7KeyG1taB59rcr6
-         lHLtdaknZUCThMfwoFb2bMFBouixn/8lQNcbXD16mvPEVfH3DZzrzR3fnNcyBL4NZZu4
-         cClnAC67SoFzH87oGdTZPYEP3qjp/5J/A2acf+DUFBKb0Q75h7TH0DyG3eP5iku/AvY6
-         MC9zgb4pC5wLyacw+AMwF98uyNJm/JlIDrRGrARSbZghkGeS2E9t77kSYLAHpQcCsZMi
-         MzK8fk2Yp9h/SiCWzBAW1hvRLZaO4MPgofxbKTj8zA2CQ6XZlj2Amdcl0cP1Vwq/nL3k
-         vnvw==
-In-Reply-To: <20200519171938.3569605-2-kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        bh=AB3UrpKdSYqNoKld+7/yBXeix6D5EW8de7N53rttU58=;
+        b=ZUbKC5RNgCvyOLKPhsbIJ57dk4je8Jxm8s6LskPkh9P6Xf0Gw5nSczmWdhwSu4jd27
+         CwTWLhpkwuskeAVzCFYT9z1qB3DX9iXCCx2xazjxq9DBsjXCSbrBiUP5c9xBuRgw8KSt
+         N/yUCpmbRIKBOsVPAIEBjZgL6DVOnCqsrspO3TSfpZEU32dF4FZv1GRdPw0C2bvIqonN
+         jV3kRZrJoV+9+nIz9nbL8s8jvHGS3ZzZ2V1LuzGp0LDxKHGhXP+g6dzVa94utIFjlAxC
+         V3ZXsHx4ZJWlmIJqT1gUZgQCnyi19eL65wL4H1n7HyQ48/X/m87Ko+zlz2hx/DOBfq2U
+         Yu/w==
+In-Reply-To: <20200519171938.3569605-3-kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -27,10 +26,10 @@ Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linu
 
 On Tue, May 19, 2020 at 10:19 AM Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
 >
-> Slice the memory overage calculation logic a little bit so we can
-> reuse it to apply a similar penalty to the swap. The logic which
-> accesses the memory-specific fields (use and high values) has to
-> be taken out of calculate_high_delay().
+> We will want to call calculate_high_delay() twice - once for
+> memory and once for swap, and we should apply the clamp value
+> to sum of the penalties. Clamping has to be applied outside
+> of calculate_high_delay().
 >
 > Signed-off-by: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
