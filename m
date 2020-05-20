@@ -1,91 +1,65 @@
-From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Subject: Re: [PATCH] mm, memcg: reclaim more aggressively before high
- allocator throttling
-Date: Wed, 20 May 2020 21:26:50 +0100
-Message-ID: <20200520202650.GB558281@chrisdown.name>
-References: <20200520143712.GA749486@chrisdown.name>
- <20200520160756.GE6462@dhcp22.suse.cz>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH] mm, memcg: unify reclaim retry limits with page
+ allocator
+Date: Wed, 20 May 2020 16:40:37 -0700
+Message-ID: <20200520164037.e3598bc902e39415f4c263e7@linux-foundation.org>
+References: <20200520163142.GA808793@chrisdown.name>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=pyAjRlnWUUT1mywco3FJeiLGJZLmkRz0VQZk3yUWI70=;
-        b=PGibgYQ1AtG2afha5buPGXZKWooA7vXxvQmNmO1Idq+C1zDslsESBmlsaVApchVa1L
-         glQJr13dgRd6TvmwuLCmKqJbXvyxIQU3mUqKj5WsYxSaRPgBreBPMdk+Dj13fIlUFGXk
-         IeF+KqfHBc9dvaXAutyupqPzuLkHNVKW3WeOo=
-Content-Disposition: inline
-In-Reply-To: <20200520160756.GE6462-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1590018038;
+        bh=yJQr4N2gMImcjIgh4e+Nb6eX8prUZSgWAz7fgEAtjn8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=uUzCdsJ4dPUOGOhbWC7K6acCbXeqRHR+0qzMhgjEOxgVke9kEnBa7JF5kx3vHFzK1
+         2JDsO09C77U5VjEP7YTXkaq7ElxS7VohANm9CztE2bI+QoaSzLs8/SxR/44jb4IDIo
+         fHiF99y61RmpcSRtu67jCykydgbedxtWxWl3l/8Y=
+In-Reply-To: <20200520163142.GA808793-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Michal Hocko writes:
->Let me try to understand the actual problem. The high memory reclaim has
->a target which is proportional to the amount of charged memory. For most
->requests that would be SWAP_CLUSTER_MAX though (resp. N times that where
->N is the number of memcgs in excess up the hierarchy). I can see to be
->insufficient if the memcg is already in a large excess but if the
->reclaim can make a forward progress this should just work fine because
->each charging context should reclaim at least the contributed amount.
+On Wed, 20 May 2020 17:31:42 +0100 Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org> wrote:
+
+> Reclaim retries have been set to 5 since the beginning of time in
+> 66e1707bc346 ("Memory controller: add per cgroup LRU and reclaim").
+> However, we now have a generally agreed-upon standard for page reclaim:
+> MAX_RECLAIM_RETRIES (currently 16), added many years later in
+> 0a0337e0d1d1 ("mm, oom: rework oom detection").
+> 
+> In the absence of a compelling reason to declare an OOM earlier in memcg
+> context than page allocator context, it seems reasonable to supplant
+> MEM_CGROUP_RECLAIM_RETRIES with MAX_RECLAIM_RETRIES, making the page
+> allocator and memcg internals more similar in semantics when reclaim
+> fails to produce results, avoiding premature OOMs or throttling.
+> 
+> ...
 >
->Do you have any insight on why this doesn't work in your situation?
->Especially with such a large inactive file list I would be really
->surprised if the reclaim was not able to make a forward progress.
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -73,9 +73,6 @@ EXPORT_SYMBOL(memory_cgrp_subsys);
+>  
+>  struct mem_cgroup *root_mem_cgroup __read_mostly;
+>  
+> -/* The number of times we should retry reclaim failures before giving up. */
 
-Reclaim can fail for any number of reasons, which is why we have retries 
-sprinkled all over for it already. It doesn't seem hard to believe that it 
-might just fail for transient reasons and drive us deeper into the hole as a 
-result.
+hm, what tree is this against?
 
-In this case, a.) the application is producing tons of dirty pages, and b.) we 
-have really heavy systemwide I/O contention on the affected machines. This high 
-load is one of the reasons that direct and kswapd reclaim cannot keep up, and 
-thus nr_pages can become a number of orders of magnitude larger than 
-SWAP_CLUSTER_MAX. This is trivially reproducible on these machines, it's not an 
-edge case.
+> -#define MEM_CGROUP_RECLAIM_RETRIES	5
+> -
+>  /* Socket memory accounting disabled? */
+>  static bool cgroup_memory_nosocket;
+>  
+> @@ -2386,7 +2383,7 @@ void mem_cgroup_handle_over_high(void)
+>  	unsigned long pflags;
+>  	unsigned long nr_reclaimed;
+>  	unsigned int nr_pages = current->memcg_nr_pages_over_high;
+> -	int nr_retries = MEM_CGROUP_RECLAIM_RETRIES;
+> +	int nr_retries = MAX_RECLAIM_RETRIES;
 
-Putting a trace_printk("%d\n", __LINE__) at non-successful reclaim in 
-shrink_page_list shows that what's happening is always (and I really mean 
-always) the "dirty page and you're not kswapd" check, as expected:
+I can't seem to find a tree in which mem_cgroup_handle_over_high() has
+a local `nr_retries'.
 
-	if (PageDirty(page)) {
-		/*
-		 * Only kswapd can writeback filesystem pages
-		 * to avoid risk of stack overflow. But avoid
-		 * injecting inefficient single-page IO into
-		 * flusher writeback as much as possible: only
-		 * write pages when we've encountered many
-		 * dirty pages, and when we've already scanned
-		 * the rest of the LRU for clean pages and see
-		 * the same dirty pages again (PageReclaim).
-		 */
-		if (page_is_file_lru(page) &&
-			(!current_is_kswapd() || !PageReclaim(page) ||
-			!test_bit(PGDAT_DIRTY, &pgdat->flags))) {
-			/*
-			 * Immediately reclaim when written back.
-			 * Similar in principal to deactivate_page()
-			 * except we already have the page isolated
-			 * and know it's dirty
-			 */
-			inc_node_page_state(page, NR_VMSCAN_IMMEDIATE);
-			SetPageReclaim(page);
 
-			goto activate_locked;
-		}
-
->Now to your patch. I do not like it much to be honest.
->MEM_CGROUP_RECLAIM_RETRIES is quite arbitrary and I neither like it in
->memory_high_write because the that is an interruptible context so there
->shouldn't be a good reason to give up after $FOO number of failed
->attempts. try_charge and memory_max_write are slightly different because
->we are invoking OOM killer based on the number of failed attempts.
-
-As Johannes mentioned, the very intent of memory.high is to have it managed 
-using a userspace OOM killer, which monitors PSI. As such, I'm not sure this 
-distinction means much.
