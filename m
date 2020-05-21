@@ -1,203 +1,56 @@
-From: Hugh Dickins <hughd@google.com>
+From: Naresh Kamboju <naresh.kamboju@linaro.org>
 Subject: Re: mm: mkfs.ext4 invoked oom-killer on i386 - pagecache_get_page
-Date: Thu, 21 May 2020 13:06:28 -0700 (PDT)
-Message-ID: <alpine.LSU.2.11.2005211250130.1158@eggly.anvils>
-References: <CAK8P3a2T_j-Ynvhsqe_FCqS2-ZdLbo0oMbHhHChzMbryE0izAQ@mail.gmail.com> <20200519084535.GG32497@dhcp22.suse.cz> <CA+G9fYvzLm7n1BE7AJXd8_49fOgPgWWTiQ7sXkVre_zoERjQKg@mail.gmail.com> <CA+G9fYsXnwyGetj-vztAKPt8=jXrkY8QWe74u5EEA3XPW7aikQ@mail.gmail.com>
- <20200520190906.GA558281@chrisdown.name> <20200521095515.GK6462@dhcp22.suse.cz> <CA+G9fYvAB9F+Xo0vUsSveKnExkv3cV9-oOG9gBqGEcXsO95m0w@mail.gmail.com> <20200521105801.GL6462@dhcp22.suse.cz> <alpine.LSU.2.11.2005210504110.1185@eggly.anvils>
- <20200521124444.GP6462@dhcp22.suse.cz> <20200521191746.GB815980@cmpxchg.org>
+Date: Fri, 22 May 2020 02:23:09 +0530
+Message-ID: <CA+G9fYs2jg-j_5fdb0OW0G-JzDjN7b8d9qnX7uuk9p4c7mVSig@mail.gmail.com>
+References: <CA+G9fYu2ruH-8uxBHE0pdE6RgRTSx4QuQPAN=Nv3BCdRd2ouYA@mail.gmail.com>
+ <20200501135806.4eebf0b92f84ab60bba3e1e7@linux-foundation.org>
+ <CA+G9fYsiZ81pmawUY62K30B6ue+RXYod854RS91R2+F8ZO7Xvw@mail.gmail.com>
+ <20200519075213.GF32497@dhcp22.suse.cz> <CAK8P3a2T_j-Ynvhsqe_FCqS2-ZdLbo0oMbHhHChzMbryE0izAQ@mail.gmail.com>
+ <20200519084535.GG32497@dhcp22.suse.cz> <CA+G9fYvzLm7n1BE7AJXd8_49fOgPgWWTiQ7sXkVre_zoERjQKg@mail.gmail.com>
+ <CA+G9fYsXnwyGetj-vztAKPt8=jXrkY8QWe74u5EEA3XPW7aikQ@mail.gmail.com>
+ <20200520190906.GA558281@chrisdown.name> <20200521095515.GK6462@dhcp22.suse.cz>
+ <20200521163450.GV6462@dhcp22.suse.cz> <CA+G9fYuDWGZx50UpD+WcsDeHX9vi3hpksvBAWbMgRZadb0Pkww@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=Q6rxcBNQ1zsmubc3wyT3H/0+GkcW6r2VdtQUO7eVpuM=;
-        b=Fome3a6tpm2IBqz3WvlZB/B1A/bMjQGR4Zj3VuvRR2fGI5zsqnypeM4EFXp7Zf/dkf
-         +TfItzJkD9hawgb5bm56vbw/g3jnHiB3MwuunQxVQjjZPIBQa+DE+UeLxTQdkjyeyK9E
-         x9CwJpKLbls0MHOlo3DaVuOy9Q7wDf57b/LcBKb7miliwlmT1d2yLr9Al0TiVh3Cz84s
-         WtKQPSMPPIYL4P/iG+aJez3B20kIsGbSVnjHdAVcDONHn6cMfLgdb1vknLDIxjVEPS/R
-         9Kd1gWxXLudP3tpFVm0rQ1Rfv/WcdUi26P5BKq6QVYrtI8P/sdU9Laq+iPU2tKeNmFe+
-         S5cg==
-In-Reply-To: <20200521191746.GB815980@cmpxchg.org>
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=+fLCJ2GM93cwoKTZdZ4WFD0IYvwQ9ZS8NpXP6kyN8Oc=;
+        b=TBv65LdWvJKhGaaNuo9NEb78jnL9BrQAOtPhzoDfCosM1uH7i74IqGHCHmYGaJPdHz
+         CWCviqP1kSYaAcJp76r0NmD2UjTYe3MeXRUjZ7Gfj0csgNWpJcH5xbzTOLaFtf8uT5+3
+         /uM6hI+J/Gq/ki4ylpSu3zLN9n1wTEPzv14fLIVPyhMmtfoFCL62Kx4yZeWDBbv/l5w1
+         K39JR/uyz8X+Y20+CXNOcXbl3HbDDa7fsDpPrOTRV9Q5SbBB3Jb/BXIJzdJ9gGDiZkj+
+         XTUH4ek9bRuZIljRPeGI/rG4e1ojQtcnYVTE/xIktlVknSWMIJfaLJsufV1okj576bpp
+         EBuQ==
+In-Reply-To: <CA+G9fYuDWGZx50UpD+WcsDeHX9vi3hpksvBAWbMgRZadb0Pkww@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>, Hugh Dickins <hughd@google.com>, Naresh Kamboju <naresh.kamboju@linaro.org>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Anders Roxell <anders.roxell@linaro.org>, "Linux F2FS DEV, Mailing List" <linux-f2fs-devel@lists.sourceforge.net>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, open list <linux-kernel@vger.kernel.org>, Linux-Next Mailing List <linux-next@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Arnd Bergmann <arnd@arndb.de>, Andreas Dilger <adilger.kernel@dilger.ca>, Jaegeuk Kim <jaegeuk@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Chao Yu <chao@kernel.org>, Andrea Arcangeli <aarcange@redhat.com>, Ma
+To: Yafang Shao <laoar.shao@gmail.com>, Michal Hocko <mhocko@kernel.org>, Chris Down <chris@chrisdown.name>
+Cc: Anders Roxell <anders.roxell@linaro.org>, "Linux F2FS DEV, Mailing List" <linux-f2fs-devel@lists.sourceforge.net>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, open list <linux-kernel@vger.kernel.org>, Linux-Next Mailing List <linux-next@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Arnd Bergmann <arnd@arndb.de>, Andreas Dilger <adilger.kernel@dilger.ca>, Jaegeuk Kim <jaegeuk@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Chao Yu <chao@kernel.org>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Matthew Wilcox <willy@infradead.org>, Chao Yu <yuchao0@huawei.com>, lkft-triage@lists.linaro.org, Johannes Weiner <hannes@cmpxchg.org>, Roman
 
-On Thu, 21 May 2020, Johannes Weiner wrote:
-> 
-> Very much appreciate you guys tracking it down so quickly. Sorry about
-> the breakage.
-> 
-> I think mem_cgroup_disabled() checks are pretty good markers of public
-> entry points to the memcg API, so I'd prefer that even if a bit more
-> verbose. What do you think?
+My apology !
+As per the test results history this problem started happening from
+Bad : next-20200430 (still reproducible on next-20200519)
+Good : next-20200429
 
-An explicit mem_cgroup_disabled() check would be fine, but I must admit,
-the patch below is rather too verbose for my own taste.  Your call.
+The git tree / tag used for testing is from linux next-20200430 tag and reverted
+following three patches and oom-killer problem fixed.
 
-> 
-> ---
-> From cd373ec232942a9bc43ee5e7d2171352019a58fb Mon Sep 17 00:00:00 2001
-> From: Hugh Dickins <hughd@google.com>
-> Date: Thu, 21 May 2020 14:58:36 -0400
-> Subject: [PATCH] mm: memcontrol: prepare swap controller setup for integration
->  fix
-> 
-> Fix crash with cgroup_disable=memory:
-> 
-> > > > > + mkfs -t ext4 /dev/disk/by-id/ata-TOSHIBA_MG04ACA100N_Y8NRK0BPF6XF
-> > > > > mke2fs 1.43.8 (1-Jan-2018)
-> > > > > Creating filesystem with 244190646 4k blocks and 61054976 inodes
-> > > > > Filesystem UUID: 3bb1a285-2cb4-44b4-b6e8-62548f3ac620
-> > > > > Superblock backups stored on blocks:
-> > > > > 32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
-> > > > > 4096000, 7962624, 11239424, 20480000, 23887872, 71663616, 78675968,
-> > > > > 102400000, 214990848
-> > > > > Allocating group tables:    0/7453                           done
-> > > > > Writing inode tables:    0/7453                           done
-> > > > > Creating journal (262144 blocks): [   35.502102] BUG: kernel NULL
-> > > > > pointer dereference, address: 000000c8
-> > > > > [   35.508372] #PF: supervisor read access in kernel mode
-> > > > > [   35.513506] #PF: error_code(0x0000) - not-present page
-> > > > > [   35.518638] *pde = 00000000
-> > > > > [   35.521514] Oops: 0000 [#1] SMP
-> > > > > [   35.524652] CPU: 0 PID: 145 Comm: kswapd0 Not tainted
-> > > > > 5.7.0-rc6-next-20200519+ #1
-> > > > > [   35.532121] Hardware name: Supermicro SYS-5019S-ML/X11SSH-F, BIOS
-> > > > > 2.2 05/23/2018
-> > > > > [   35.539507] EIP: mem_cgroup_get_nr_swap_pages+0x28/0x60
-> 
-> do_memsw_account() used to be automatically false when the cgroup
-> controller was disabled. Now that it's replaced by
-> cgroup_memory_noswap, for which this isn't true, make the
-> mem_cgroup_disabled() checks explicit in the swap control API.
-> 
-> [hannes@cmpxchg.org: use mem_cgroup_disabled() in all API functions]
-> Reported-by: Naresh Kamboju <naresh.kamboju@linaro.org>
-> Debugged-by: Hugh Dickins <hughd@google.com>
-> Debugged-by: Michal Hocko <mhocko@kernel.org>
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> ---
->  mm/memcontrol.c | 47 +++++++++++++++++++++++++++++++++++++++++------
->  1 file changed, 41 insertions(+), 6 deletions(-)
+Revert "mm, memcg: avoid stale protection values when cgroup is above
+protection"
+Revert "mm, memcg: decouple e{low,min} state mutations from protectinn checks"
+Revert "mm-memcg-decouple-elowmin-state-mutations-from-protection-checks-fix"
 
-I'm certainly not against a mem_cgroup_disabled() check in the only
-place that's been observed to need it, as a fixup to merge into your
-original patch; but this seems rather an over-reaction - and I'm a
-little surprised that setting mem_cgroup_disabled() doesn't just
-force cgroup_memory_noswap, saving repetitious checks elsewhere
-(perhaps there's a difficulty in that, I haven't looked).
+Ref tree:
+https://github.com/roxell/linux/commits/my-next-20200430
 
-Historically, I think we've added mem_cgroup_disabled() checks
-(accessing a cacheline we'd rather avoid) where they're necessary,
-rather than at every "interface".
+Build images:
+https://builds.tuxbuild.com/whyTLI1O8s5HiILwpLTLtg/
 
-And you seem to be in a very "goto out" mood today - we all have
-our "goto out" days, alternating with our "return 0" days :)
+Test log:
+https://lkft.validation.linaro.org/scheduler/job/1444321#L1164
 
-Hugh
-
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 3e000a316b59..850bca380562 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -6811,6 +6811,9 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
->  	VM_BUG_ON_PAGE(PageLRU(page), page);
->  	VM_BUG_ON_PAGE(page_count(page), page);
->  
-> +	if (mem_cgroup_disabled())
-> +		return;
-> +
->  	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
->  		return;
->  
-> @@ -6876,6 +6879,10 @@ int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
->  	struct mem_cgroup *memcg;
->  	unsigned short oldid;
->  
-> +	if (mem_cgroup_disabled())
-> +		return 0;
-> +
-> +	/* Only cgroup2 has swap.max */
->  	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
->  		return 0;
->  
-> @@ -6920,6 +6927,9 @@ void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_pages)
->  	struct mem_cgroup *memcg;
->  	unsigned short id;
->  
-> +	if (mem_cgroup_disabled())
-> +		return;
-> +
->  	id = swap_cgroup_record(entry, 0, nr_pages);
->  	rcu_read_lock();
->  	memcg = mem_cgroup_from_id(id);
-> @@ -6940,12 +6950,25 @@ long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
->  {
->  	long nr_swap_pages = get_nr_swap_pages();
->  
-> -	if (cgroup_memory_noswap || !cgroup_subsys_on_dfl(memory_cgrp_subsys))
-> -		return nr_swap_pages;
-> +	if (mem_cgroup_disabled())
-> +		goto out;
-> +
-> +	/* Swap control disabled */
-> +	if (cgroup_memory_noswap)
-> +		goto out;
-> +
-> +	/*
-> +	 * Only cgroup2 has swap.max, cgroup1 does mem+sw accounting,
-> +	 * which does not place restrictions specifically on swap.
-> +	 */
-> +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
-> +		goto out;
-> +
->  	for (; memcg != root_mem_cgroup; memcg = parent_mem_cgroup(memcg))
->  		nr_swap_pages = min_t(long, nr_swap_pages,
->  				      READ_ONCE(memcg->swap.max) -
->  				      page_counter_read(&memcg->swap));
-> +out:
->  	return nr_swap_pages;
->  }
->  
-> @@ -6957,18 +6980,30 @@ bool mem_cgroup_swap_full(struct page *page)
->  
->  	if (vm_swap_full())
->  		return true;
-> -	if (cgroup_memory_noswap || !cgroup_subsys_on_dfl(memory_cgrp_subsys))
-> -		return false;
-> +
-> +	if (mem_cgroup_disabled())
-> +		goto out;
-> +
-> +	/* Swap control disabled */
-> +	if (cgroup_memory_noswap)
-> +		goto out;
-> +
-> +	/*
-> +	 * Only cgroup2 has swap.max, cgroup1 does mem+sw accounting,
-> +	 * which does not place restrictions specifically on swap.
-> +	 */
-> +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
-> +		goto out;
->  
->  	memcg = page->mem_cgroup;
->  	if (!memcg)
-> -		return false;
-> +		goto out;
->  
->  	for (; memcg != root_mem_cgroup; memcg = parent_mem_cgroup(memcg))
->  		if (page_counter_read(&memcg->swap) * 2 >=
->  		    READ_ONCE(memcg->swap.max))
->  			return true;
-> -
-> +out:
->  	return false;
->  }
->  
-> -- 
-> 2.26.2
+- Naresh
