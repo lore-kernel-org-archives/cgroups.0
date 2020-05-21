@@ -1,78 +1,45 @@
-From: Naresh Kamboju <naresh.kamboju@linaro.org>
+From: Arnd Bergmann <arnd@arndb.de>
 Subject: Re: mm: mkfs.ext4 invoked oom-killer on i386 - pagecache_get_page
-Date: Thu, 21 May 2020 14:52:08 +0530
-Message-ID: <CA+G9fYt1qvGQTAdUZ4WgitY18cydgnNzqu_fyoTtSm3W8JhF3w@mail.gmail.com>
+Date: Thu, 21 May 2020 11:35:49 +0200
+Message-ID: <CAK8P3a2Yna-BD+M6-+Y2Go_Y0ZXx8_7KMud7JxSfPbG8+-Q7Wg@mail.gmail.com>
 References: <CA+G9fYu2ruH-8uxBHE0pdE6RgRTSx4QuQPAN=Nv3BCdRd2ouYA@mail.gmail.com>
  <20200501135806.4eebf0b92f84ab60bba3e1e7@linux-foundation.org>
  <CA+G9fYsiZ81pmawUY62K30B6ue+RXYod854RS91R2+F8ZO7Xvw@mail.gmail.com>
  <20200519075213.GF32497@dhcp22.suse.cz> <CAK8P3a2T_j-Ynvhsqe_FCqS2-ZdLbo0oMbHhHChzMbryE0izAQ@mail.gmail.com>
  <20200519084535.GG32497@dhcp22.suse.cz> <CA+G9fYvzLm7n1BE7AJXd8_49fOgPgWWTiQ7sXkVre_zoERjQKg@mail.gmail.com>
- <CA+G9fYsXnwyGetj-vztAKPt8=jXrkY8QWe74u5EEA3XPW7aikQ@mail.gmail.com> <20200520190906.GA558281@chrisdown.name>
+ <CA+G9fYsXnwyGetj-vztAKPt8=jXrkY8QWe74u5EEA3XPW7aikQ@mail.gmail.com>
+ <20200520190906.GA558281@chrisdown.name> <CA+G9fYt1qvGQTAdUZ4WgitY18cydgnNzqu_fyoTtSm3W8JhF3w@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=FIbEyFSF9lKlh/sPieDWc1oRqrvi4vGBjOrvNTlDQgI=;
-        b=Cr+vYd5dIpgIP1m+dtPF8wLQuyM7qoaALMgtSirDDMRRIgqxpytD0hrSF2zko/x5mk
-         l/G2FXraKn8PMsmRDq4Un6jQXt2HJ4hL78VRPU+qdLES1+ToQVDFdGiGtpaOGLK7F2zM
-         6MKEL1a7yiV4ickufkf1ggX7LbmfPLokTuBN2TG1x20EISryRLnvWvNBgcl/y8m7/sVI
-         MO9cnUWS6iHrtzbq50+WiROYQCTdiEG/ExnjIv1i160UasocMEWgmgikQ3pbvdWCeIhi
-         xdBAwAYfUkhH3wWYCwg1eVm4WzkttSXEgcgDwM0Fh/LeRJSCjz+QgsRbYOOK7ojMzFLX
-         xICg==
-In-Reply-To: <20200520190906.GA558281@chrisdown.name>
-Sender: linux-block-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CA+G9fYt1qvGQTAdUZ4WgitY18cydgnNzqu_fyoTtSm3W8JhF3w@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Chris Down <chris@chrisdown.name>
-Cc: Yafang Shao <laoar.shao@gmail.com>, Michal Hocko <mhocko@kernel.org>, Anders Roxell <anders.roxell@linaro.org>, "Linux F2FS DEV, Mailing List" <linux-f2fs-devel@lists.sourceforge.net>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, open list <linux-kernel@vger.kernel.org>, Linux-Next Mailing List <linux-next@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Arnd Bergmann <arnd@arndb.de>, Andreas Dilger <adilger.kernel@dilger.ca>, Jaegeuk Kim <jaegeuk@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Chao Yu <chao@kernel.org>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Matthew Wilcox <willy@infradead.org>, Chao Yu <yuchao0@huawei.com>, lkft-triage
+To: Naresh Kamboju <naresh.kamboju@linaro.org>
+Cc: Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Michal Hocko <mhocko@kernel.org>, Anders Roxell <anders.roxell@linaro.org>, "Linux F2FS DEV, Mailing List" <linux-f2fs-devel@lists.sourceforge.net>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, open list <linux-kernel@vger.kernel.org>, Linux-Next Mailing List <linux-next@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Jaegeuk Kim <jaegeuk@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Chao Yu <chao@kernel.org>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Matthew Wilcox <willy@infradead.org>, Chao Yu <yuchao0@huawei.com>
 
-On Thu, 21 May 2020 at 00:39, Chris Down <chris@chrisdown.name> wrote:
->
-> Hi Naresh,
->
-> Naresh Kamboju writes:
-> >As a part of investigation on this issue LKFT teammate Anders Roxell
-> >git bisected the problem and found bad commit(s) which caused this problem.
-> >
-> >The following two patches have been reverted on next-20200519 and retested the
-> >reproducible steps and confirmed the test case mkfs -t ext4 got PASS.
-> >( invoked oom-killer is gone now)
-> >
-> >Revert "mm, memcg: avoid stale protection values when cgroup is above
-> >protection"
-> >    This reverts commit 23a53e1c02006120f89383270d46cbd040a70bc6.
-> >
-> >Revert "mm, memcg: decouple e{low,min} state mutations from protection
-> >checks"
-> >    This reverts commit 7b88906ab7399b58bb088c28befe50bcce076d82.
->
-> Thanks Anders and Naresh for tracking this down and reverting.
->
-> I'll take a look tomorrow. I don't see anything immediately obviously wrong in
-> either of those commits from a (very) cursory glance, but they should only be
-> taking effect if protections are set.
->
-> Since you have i386 hardware available, and I don't, could you please apply
-> only "avoid stale protection" again and check if it only happens with that
-> commit, or requires both? That would help narrow down the suspects.
+On Thu, May 21, 2020 at 11:22 AM Naresh Kamboju
+<naresh.kamboju@linaro.org> wrote:
+> On Thu, 21 May 2020 at 00:39, Chris Down <chris@chrisdown.name> wrote:
+> > Since you have i386 hardware available, and I don't, could you please apply
+> > only "avoid stale protection" again and check if it only happens with that
+> > commit, or requires both? That would help narrow down the suspects.
 
-Not both.
-The bad commit is
-"mm, memcg: decouple e{low,min} state mutations from protection checks"
+Note that Naresh is running an i386 kernel on regular 64-bit hardware that
+most people have access to.
 
->
-> Do you use any memcg protections in these tests?
-I see three MEMCG configs and please find the kernel config link
-for more details.
+> kernel config link,
+> https://builds.tuxbuild.com/8lg6WQibcwtQRRtIa0bcFA/kernel.config
 
-CONFIG_MEMCG=y
-CONFIG_MEMCG_SWAP=y
-CONFIG_MEMCG_KMEM=y
+Do you know if the same bug shows up running a kernel with that
+configuration in qemu? I would expect it to, and that would make
+it much easier to reproduce.
 
-kernel config link,
-https://builds.tuxbuild.com/8lg6WQibcwtQRRtIa0bcFA/kernel.config
+I would also not be surprised if it happens on all architectures but only
+shows up on the 32-bit arm and x86 machines first because they have
+a rather limited amount of lowmem. Maybe booting a 64-bit kernel
+with "mem=512M" and then running "dd if=/dev/sda of=/dev/null bs=1M"
+will also trigger it. I did not attempt to run this myself.
 
-- Naresh
+       Arnd
