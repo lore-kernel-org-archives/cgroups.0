@@ -1,172 +1,72 @@
-From: Yafang Shao <laoar.shao@gmail.com>
-Subject: Re: mm: mkfs.ext4 invoked oom-killer on i386 - pagecache_get_page
-Date: Thu, 21 May 2020 10:39:25 +0800
-Message-ID: <CALOAHbDMrHkNHTxeBWP22iTjJd+HfqfFhAfmC_m0jsVkhu5vEA@mail.gmail.com>
-References: <CA+G9fYu2ruH-8uxBHE0pdE6RgRTSx4QuQPAN=Nv3BCdRd2ouYA@mail.gmail.com>
- <20200501135806.4eebf0b92f84ab60bba3e1e7@linux-foundation.org>
- <CA+G9fYsiZ81pmawUY62K30B6ue+RXYod854RS91R2+F8ZO7Xvw@mail.gmail.com>
- <20200519075213.GF32497@dhcp22.suse.cz> <CAK8P3a2T_j-Ynvhsqe_FCqS2-ZdLbo0oMbHhHChzMbryE0izAQ@mail.gmail.com>
- <20200519084535.GG32497@dhcp22.suse.cz> <CA+G9fYvzLm7n1BE7AJXd8_49fOgPgWWTiQ7sXkVre_zoERjQKg@mail.gmail.com>
- <CA+G9fYsXnwyGetj-vztAKPt8=jXrkY8QWe74u5EEA3XPW7aikQ@mail.gmail.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] mm, memcg: reclaim more aggressively before high
+ allocator throttling
+Date: Thu, 21 May 2020 09:19:29 +0200
+Message-ID: <20200521071929.GH6462@dhcp22.suse.cz>
+References: <20200520143712.GA749486@chrisdown.name>
+ <20200520160756.GE6462@dhcp22.suse.cz>
+ <20200520202650.GB558281@chrisdown.name>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=/RCzazjPJQ1zcfvr5ivU8gZ2oW1vvouNHyaX2fPjs5o=;
-        b=JIZNHQnmERaJeRhfnEjjac0W+vknvOwLXY/d6ercTVMilrrz524WChiYGwFGcaHgFJ
-         K8JZk1i5INW6EyIXuYOyX2v32bfw6qRfgzQTQHHULRWMhQsYMBm89glhPbVBx2I6bwxs
-         j20/Yum6NRQKLWYNIxFRjPx0QViHZTbPlmI1fZzO6exUlTKfLwEVLiDwpVb7Qfp6TgJ/
-         snhs+KlBeHyRitCTHyRBIFjZ454fFCb9qrYuro47/SQk4QgBQgus3sRPgPYvG8W/Vui1
-         AknW2UXV00QW+opr5rDKKkCPY+BNrd0MlLO7V3cFfkCwusagGNkXGNtRMJgA5pK9QeWA
-         IAFQ==
-In-Reply-To: <CA+G9fYsXnwyGetj-vztAKPt8=jXrkY8QWe74u5EEA3XPW7aikQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20200520202650.GB558281-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Naresh Kamboju <naresh.kamboju@linaro.org>
-Cc: Chris Down <chris@chrisdown.name>, Michal Hocko <mhocko@kernel.org>, Anders Roxell <anders.roxell@linaro.org>, "Linux F2FS DEV, Mailing List" <linux-f2fs-devel@lists.sourceforge.net>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, open list <linux-kernel@vger.kernel.org>, Linux-Next Mailing List <linux-next@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Arnd Bergmann <arnd@arndb.de>, Andreas Dilger <adilger.kernel@dilger.ca>, Jaegeuk Kim <jaegeuk@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Chao Yu <chao@kernel.org>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Matthew Wilcox <willy@infradead.org>, Chao Yu <yuchao0@huawei.com>, 
+To: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Thu, May 21, 2020 at 2:00 AM Naresh Kamboju
-<naresh.kamboju@linaro.org> wrote:
->
-> On Wed, 20 May 2020 at 17:26, Naresh Kamboju <naresh.kamboju@linaro.org> wrote:
-> >
-> >
-> > This issue is specific on 32-bit architectures i386 and arm on linux-next tree.
-> > As per the test results history this problem started happening from
-> > Bad : next-20200430
-> > Good : next-20200429
-> >
-> > steps to reproduce:
-> > dd if=/dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190504A00573
-> > of=/dev/null bs=1M count=2048
-> > or
-> > mkfs -t ext4 /dev/disk/by-id/ata-SanDisk_SSD_PLUS_120GB_190804A00BE5
-> >
-> >
-> > Problem:
-> > [   38.802375] dd invoked oom-killer: gfp_mask=0x100cc0(GFP_USER),
-> > order=0, oom_score_adj=0
->
-> As a part of investigation on this issue LKFT teammate Anders Roxell
-> git bisected the problem and found bad commit(s) which caused this problem.
->
-> The following two patches have been reverted on next-20200519 and retested the
-> reproducible steps and confirmed the test case mkfs -t ext4 got PASS.
-> ( invoked oom-killer is gone now)
->
-> Revert "mm, memcg: avoid stale protection values when cgroup is above
-> protection"
->     This reverts commit 23a53e1c02006120f89383270d46cbd040a70bc6.
->
-> Revert "mm, memcg: decouple e{low,min} state mutations from protection
-> checks"
->     This reverts commit 7b88906ab7399b58bb088c28befe50bcce076d82.
->
+On Wed 20-05-20 21:26:50, Chris Down wrote:
+> Michal Hocko writes:
+> > Let me try to understand the actual problem. The high memory reclaim has
+> > a target which is proportional to the amount of charged memory. For most
+> > requests that would be SWAP_CLUSTER_MAX though (resp. N times that where
+> > N is the number of memcgs in excess up the hierarchy). I can see to be
+> > insufficient if the memcg is already in a large excess but if the
+> > reclaim can make a forward progress this should just work fine because
+> > each charging context should reclaim at least the contributed amount.
+> > 
+> > Do you have any insight on why this doesn't work in your situation?
+> > Especially with such a large inactive file list I would be really
+> > surprised if the reclaim was not able to make a forward progress.
+> 
+> Reclaim can fail for any number of reasons, which is why we have retries
+> sprinkled all over for it already. It doesn't seem hard to believe that it
+> might just fail for transient reasons and drive us deeper into the hole as a
+> result.
 
-My guess is that we made the same mistake in commit "mm, memcg:
-decouple e{low,min} state mutations from protection
-checks" that it read a stale memcg protection in
-mem_cgroup_below_low() and mem_cgroup_below_min().
+Reclaim can certainly fail. It is however surprising to see it fail with
+such a large inactive lru list and reasonably small reclaim target.
+Having the full LRU of dirty pages sounds a bit unusual, IO throttling
+for v2 and explicit throttling during the reclaim for v1 should prevent
+from that. If the reclaim gives up too easily then this should be
+addressed at the reclaim level.
 
-Bellow is a possble fix,
+> In this case, a.) the application is producing tons of dirty pages, and b.)
+> we have really heavy systemwide I/O contention on the affected machines.
+> This high load is one of the reasons that direct and kswapd reclaim cannot
+> keep up, and thus nr_pages can become a number of orders of magnitude larger
+> than SWAP_CLUSTER_MAX. This is trivially reproducible on these machines,
+> it's not an edge case.
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 7a2c56fc..6591b71 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -391,20 +391,28 @@ static inline unsigned long
-mem_cgroup_protection(struct mem_cgroup *root,
- void mem_cgroup_calculate_protection(struct mem_cgroup *root,
-                                     struct mem_cgroup *memcg);
+Please elaborate some more. memcg_nr_pages_over_high shouldn't really
+depend on the system wide activity. It should scale with the requested
+charges. So yes it can get large for something like a large read/write
+which does a lot of allocations in a single syscall before returning to
+the userspace.
+ 
+But ok, let's say that the reclaim target is large and then a single
+reclaim attempt might fail. Then I am wondering why your patch is not
+really targetting to reclaim memcg_nr_pages_over_high pages and instead
+push for reclaim down to the high limit.
 
--static inline bool mem_cgroup_below_low(struct mem_cgroup *memcg)
-+static inline bool mem_cgroup_below_low(struct mem_cgroup *root,
-+                                       struct mem_cgroup *memcg)
- {
-        if (mem_cgroup_disabled())
-                return false;
-
-+       if (root == memcg)
-+               return false;
-+
-        return READ_ONCE(memcg->memory.elow) >=
-                page_counter_read(&memcg->memory);
- }
-
--static inline bool mem_cgroup_below_min(struct mem_cgroup *memcg)
-+static inline bool mem_cgroup_below_min(struct mem_cgroup *root,
-+                                       struct mem_cgroup *memcg)
- {
-        if (mem_cgroup_disabled())
-                return false;
-
-+       if (root == memcg)
-+               return false;
-+
-        return READ_ONCE(memcg->memory.emin) >=
-                page_counter_read(&memcg->memory);
- }
-@@ -896,12 +904,14 @@ static inline void
-mem_cgroup_calculate_protection(struct mem_cgroup *root,
- {
- }
-
--static inline bool mem_cgroup_below_low(struct mem_cgroup *memcg)
-+static inline bool mem_cgroup_below_low(struct mem_cgroup *root,
-+                                       struct mem_cgroup *memcg)
- {
-        return false;
- }
-
--static inline bool mem_cgroup_below_min(struct mem_cgroup *memcg)
-+static inline bool mem_cgroup_below_min(struct mem_cgroup *root,
-+                                       struct mem_cgroup *memcg)
- {
-        return false;
- }
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index c71660e..fdcdd88 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -2637,13 +2637,13 @@ static void shrink_node_memcgs(pg_data_t
-*pgdat, struct scan_control *sc)
-
-                mem_cgroup_calculate_protection(target_memcg, memcg);
-
--               if (mem_cgroup_below_min(memcg)) {
-+               if (mem_cgroup_below_min(target_memcg, memcg)) {
-                        /*
-                         * Hard protection.
-                         * If there is no reclaimable memory, OOM.
-                         */
-                        continue;
--               } else if (mem_cgroup_below_low(memcg)) {
-+               } else if (mem_cgroup_below_low(target_memcg, memcg)) {
-                        /*
-                         * Soft protection.
-                         * Respect the protection only as long as
-
-
-
-
-
-> i386 test log shows mkfs -t ext4 pass
-> https://lkft.validation.linaro.org/scheduler/job/1443405#L1200
->
-> ref:
-> https://lore.kernel.org/linux-mm/cover.1588092152.git.chris@chrisdown.name/
-> https://lore.kernel.org/linux-mm/CA+G9fYvzLm7n1BE7AJXd8_49fOgPgWWTiQ7sXkVre_zoERjQKg@mail.gmail.com/T/#t
->
-> --
-> Linaro LKFT
-> https://lkft.linaro.org
-
-
-
---
-Thanks
-Yafang
+The main problem I see with that approach is that the loop could easily
+lead to reclaim unfairness when a heavy producer which doesn't leave the
+kernel (e.g. a large read/write call) can keep a different task doing
+all the reclaim work. The loop is effectivelly unbound when there is a
+reclaim progress and so the return to the userspace is by no means
+proportional to the requested memory/charge.
+-- 
+Michal Hocko
+SUSE Labs
