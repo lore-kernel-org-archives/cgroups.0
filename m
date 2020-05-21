@@ -1,62 +1,89 @@
-From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Subject: Re: [PATCH] mm, memcg: reclaim more aggressively before high
- allocator throttling
-Date: Thu, 21 May 2020 16:02:13 +0100
-Message-ID: <20200521150213.GH990580@chrisdown.name>
-References: <20200520143712.GA749486@chrisdown.name>
- <20200520160756.GE6462@dhcp22.suse.cz>
- <20200520165131.GB630613@cmpxchg.org>
- <20200520170430.GG6462@dhcp22.suse.cz>
- <20200520175135.GA793901@cmpxchg.org>
- <20200521073245.GI6462@dhcp22.suse.cz>
- <20200521135152.GA810429@cmpxchg.org>
- <20200521143515.GU6462@dhcp22.suse.cz>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: mm: mkfs.ext4 invoked oom-killer on i386 - pagecache_get_page
+Date: Thu, 21 May 2020 18:34:50 +0200
+Message-ID: <20200521163450.GV6462@dhcp22.suse.cz>
+References: <CA+G9fYu2ruH-8uxBHE0pdE6RgRTSx4QuQPAN=Nv3BCdRd2ouYA@mail.gmail.com>
+ <20200501135806.4eebf0b92f84ab60bba3e1e7@linux-foundation.org>
+ <CA+G9fYsiZ81pmawUY62K30B6ue+RXYod854RS91R2+F8ZO7Xvw@mail.gmail.com>
+ <20200519075213.GF32497@dhcp22.suse.cz>
+ <CAK8P3a2T_j-Ynvhsqe_FCqS2-ZdLbo0oMbHhHChzMbryE0izAQ@mail.gmail.com>
+ <20200519084535.GG32497@dhcp22.suse.cz>
+ <CA+G9fYvzLm7n1BE7AJXd8_49fOgPgWWTiQ7sXkVre_zoERjQKg@mail.gmail.com>
+ <CA+G9fYsXnwyGetj-vztAKPt8=jXrkY8QWe74u5EEA3XPW7aikQ@mail.gmail.com>
+ <20200520190906.GA558281@chrisdown.name>
+ <20200521095515.GK6462@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=L4UDchNoiuDX4tkUCL0dxdfAR6sFJ+v5DRcDTgeiOEA=;
-        b=SPCXhfg+nCTAzglbOSxpGGWlT4LbcyT5ov7iVCRWlOjDg9vw3QGDFNbTOWFcM0RhsX
-         2AiHhCFhMdO1ch6CMvgSCrtXVOLUYItHW4m86skN7YWl+QEHjVJ3hnwozUyrpbPbXJg9
-         3AqRr6E5qlhw697AgVjHizpUyQ1BeM3NRaHuE=
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20200521143515.GU6462-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20200521095515.GK6462@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Naresh Kamboju <naresh.kamboju@linaro.org>, Chris Down <chris@chrisdown.name>
+Cc: Yafang Shao <laoar.shao@gmail.com>, Anders Roxell <anders.roxell@linaro.org>, "Linux F2FS DEV, Mailing List" <linux-f2fs-devel@lists.sourceforge.net>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, open list <linux-kernel@vger.kernel.org>, Linux-Next Mailing List <linux-next@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Arnd Bergmann <arnd@arndb.de>, Andreas Dilger <adilger.kernel@dilger.ca>, Jaegeuk Kim <jaegeuk@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Chao Yu <chao@kernel.org>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Matthew Wilcox <willy@infradead.org>, Chao Yu <yuchao0@huawei.com>, lkft-triage@lists.linaro.org, Johannes Weiner <>
 
-Michal Hocko writes:
->> I have a good reason why we shouldn't: because it's special casing
->> memory.high from other forms of reclaim, and that is a maintainability
->> problem. We've recently been discussing ways to make the memory.high
->> implementation stand out less, not make it stand out even more. There
->> is no solid reason it should be different from memory.max reclaim,
->> except that it should sleep instead of invoke OOM at the end. It's
->> already a mess we're trying to get on top of and straighten out, and
->> you're proposing to add more kinks that will make this work harder.
->
->I do see your point of course. But I do not give the code consistency
->a higher priority than the potential unfairness aspect of the user
->visible behavior for something that can do better. Really the direct
->reclaim unfairness is really painfull and hard to explain to users. You
->can essentially only hand wave that system is struggling so fairness is
->not really a priority anymore.
+On Thu 21-05-20 11:55:16, Michal Hocko wrote:
+> On Wed 20-05-20 20:09:06, Chris Down wrote:
+> > Hi Naresh,
+> > 
+> > Naresh Kamboju writes:
+> > > As a part of investigation on this issue LKFT teammate Anders Roxell
+> > > git bisected the problem and found bad commit(s) which caused this problem.
+> > > 
+> > > The following two patches have been reverted on next-20200519 and retested the
+> > > reproducible steps and confirmed the test case mkfs -t ext4 got PASS.
+> > > ( invoked oom-killer is gone now)
+> > > 
+> > > Revert "mm, memcg: avoid stale protection values when cgroup is above
+> > > protection"
+> > >    This reverts commit 23a53e1c02006120f89383270d46cbd040a70bc6.
+> > > 
+> > > Revert "mm, memcg: decouple e{low,min} state mutations from protection
+> > > checks"
+> > >    This reverts commit 7b88906ab7399b58bb088c28befe50bcce076d82.
+> > 
+> > Thanks Anders and Naresh for tracking this down and reverting.
+> > 
+> > I'll take a look tomorrow. I don't see anything immediately obviously wrong
+> > in either of those commits from a (very) cursory glance, but they should
+> > only be taking effect if protections are set.
+> 
+> Agreed. If memory.{low,min} is not used then the patch should be
+> effectively a nop.
 
-It's not handwaving. When using cgroup features, including memory.high, the 
-unit for consideration is a cgroup, not a task. That we happen to act on 
-individual tasks in this case is just an implementation detail.
+I was staring into the code and do not see anything.  Could you give the
+following debugging patch a try and see whether it triggers?
 
-That one task in that cgroup is may be penalised "unfairly" is well within the 
-specification: we set limits as part of a cgroup, we account as part of a 
-cgroup, and we throttle and reclaim as part of a cgroup. We may make some very 
-rudimentary attempts to "be fair" on a per-task basis where that's trivial, but 
-that's just one-off niceties, not a statement of precedent.
-
-When exceeding memory.high, the contract is "this cgroup must immediately 
-attempt to shrink". Breaking it down per-task in terms of fairness at that 
-point doesn't make sense: all the tasks in one cgroup are in it together.
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index cc555903a332..df2e8df0eb71 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2404,6 +2404,8 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
+ 			 * sc->priority further than desirable.
+ 			 */
+ 			scan = max(scan, SWAP_CLUSTER_MAX);
++
++			trace_printk("scan:%lu protection:%lu\n", scan, protection);
+ 		} else {
+ 			scan = lruvec_size;
+ 		}
+@@ -2648,6 +2650,7 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
+ 		mem_cgroup_calculate_protection(target_memcg, memcg);
+ 
+ 		if (mem_cgroup_below_min(memcg)) {
++			trace_printk("under min:%lu emin:%lu\n", memcg->memory.min, memcg->memory.emin);
+ 			/*
+ 			 * Hard protection.
+ 			 * If there is no reclaimable memory, OOM.
+@@ -2660,6 +2663,7 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
+ 			 * there is an unprotected supply
+ 			 * of reclaimable memory from other cgroups.
+ 			 */
++			trace_printk("under low:%lu elow:%lu\n", memcg->memory.low, memcg->memory.elow);
+ 			if (!sc->memcg_low_reclaim) {
+ 				sc->memcg_low_skipped = 1;
+ 				continue;
+-- 
+Michal Hocko
+SUSE Labs
