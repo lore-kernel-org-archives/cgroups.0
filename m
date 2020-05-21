@@ -1,39 +1,69 @@
-From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Subject: Re: [PATCH] mm, memcg: unify reclaim retry limits with page allocator
-Date: Thu, 21 May 2020 00:49:56 +0100
-Message-ID: <20200520234956.GA892595@chrisdown.name>
-References: <20200520163142.GA808793@chrisdown.name>
- <20200520164037.e3598bc902e39415f4c263e7@linux-foundation.org>
- <20200520164243.56133fa135f65cc708e70ec0@linux-foundation.org>
+From: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH mm v5 2/4] mm: move penalty delay clamping out of calculate_high_delay()
+Date: Wed, 20 May 2020 17:20:08 -0700
+Message-ID: <20200521002010.3962544-3-kuba@kernel.org>
+References: <20200521002010.3962544-1-kuba@kernel.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=RUfnz+3+Nkh58pbHAS8sjZcUPVeApODwUMmXr4NI2ZY=;
-        b=cVDVhHg2q1D6nCUuevO4L9GrF42LCXBhesqGp2oqY+Szm4s6/HGyDkVnnMedHOHVZK
-         LykgwAJlryPBcvuXF2ra2GGQUtGGoixKRuBRkoY1hdDKfDap9f7d9cIDRAT5LFl2IHF2
-         KeOEFtHXVSe0jQ+iHUDUT/yqM7+JGeJa+akrM=
-Content-Disposition: inline
-In-Reply-To: <20200520164243.56133fa135f65cc708e70ec0-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1590020413;
+        bh=zU6BYtpx72jVihkxFVAWHDj5teHYoyigohzs9US3qOE=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=o9egyTEUq7YLzdpCBlvJq8lq/+mnZWgCfjCD9QSiDJjnuzu/76R/scH/aibS9AKXm
+         X8oXVqJ5Lzx2xh4oEJ8cPV1mGseCWsZVxErEh70AFSwxE++HpyTIxRCv/3O+GaHSHq
+         Zi2e2TASc5aOXyxzy/8pQ0LrxFSntkCo68A51HO0=
+In-Reply-To: <20200521002010.3962544-1-kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Hey Andrew,
+We will want to call calculate_high_delay() twice - once for
+memory and once for swap, and we should apply the clamp value
+to sum of the penalties. Clamping has to be applied outside
+of calculate_high_delay().
 
-Andrew Morton writes:
->Ah, my habit of working in reverse time order sometimes does this ;)
->
->I suggest that "mm, memcg: reclaim more aggressively before high
->allocator throttling" and this patch become a two-patch series?
+Signed-off-by: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ mm/memcontrol.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Sure, they can do (sorry, I meant to add a comment mentioning the dependency, 
-but forgot). I just didn't want to conflate discussion for both of them, since 
-they are separate in nature :-)
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 0d05e6a593f5..dd8605a9137a 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2367,14 +2367,7 @@ static unsigned long calculate_high_delay(struct mem_cgroup *memcg,
+ 	 * MEMCG_CHARGE_BATCH pages is nominal, so work out how much smaller or
+ 	 * larger the current charge patch is than that.
+ 	 */
+-	penalty_jiffies = penalty_jiffies * nr_pages / MEMCG_CHARGE_BATCH;
+-
+-	/*
+-	 * Clamp the max delay per usermode return so as to still keep the
+-	 * application moving forwards and also permit diagnostics, albeit
+-	 * extremely slowly.
+-	 */
+-	return min(penalty_jiffies, MEMCG_MAX_HIGH_DELAY_JIFFIES);
++	return penalty_jiffies * nr_pages / MEMCG_CHARGE_BATCH;
+ }
+ 
+ /*
+@@ -2402,6 +2395,13 @@ void mem_cgroup_handle_over_high(void)
+ 	penalty_jiffies = calculate_high_delay(memcg, nr_pages,
+ 					       mem_find_max_overage(memcg));
+ 
++	/*
++	 * Clamp the max delay per usermode return so as to still keep the
++	 * application moving forwards and also permit diagnostics, albeit
++	 * extremely slowly.
++	 */
++	penalty_jiffies = min(penalty_jiffies, MEMCG_MAX_HIGH_DELAY_JIFFIES);
++
+ 	/*
+ 	 * Don't sleep if the amount of jiffies this memcg owes us is so low
+ 	 * that it's not even worth doing, in an attempt to be nice to those who
+-- 
+2.25.4
 
-I'll hold off on sending v2 until the discussion with Michal is finished.
