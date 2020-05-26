@@ -1,51 +1,39 @@
-From: Dan Schatzberg <schatzberg.dan@gmail.com>
-Subject: Re: [PATCH v5 0/4] Charge loop device i/o to issuing cgroup
-Date: Tue, 26 May 2020 10:28:03 -0400
-Message-ID: <20200526142803.GA1061@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
-References: <20200428161355.6377-1-schatzberg.dan@gmail.com>
- <20200512132521.GA28700@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
- <20200512133545.GA26535@infradead.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH mm v5 RESEND 1/4] mm: prepare for swap over-high
+ accounting and penalty calculation
+Date: Tue, 26 May 2020 10:35:32 -0400
+Message-ID: <20200526143532.GA848026@cmpxchg.org>
+References: <20200521002411.3963032-1-kuba@kernel.org>
+ <20200521002411.3963032-2-kuba@kernel.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=0TJ6yYccZvVBdf4f/G2i6OowH5C25Z8m9Ap0zEnVgR8=;
-        b=TLMKcn3xE73A18nE6utedMS8Vz8HXK+b0q/Divfxr42WLvfCj1VnejFo7V5BPdLF0q
-         W+VJW80hsx5pkyn2afaGJzSd1NY9lzi/WflZh7Okd/ujLflmIzup/UUhAjVe3hjLW/ov
-         /ckbc/JaidWP13F1n6QRu3E3MBXNO+SL6qBL9nAMf03UnJq5zUo+MGasn74WqYB3nHlM
-         RMvAQzvfJ3xtHcnQf7mOLh7b54gRFUEIEGn2cQ5cWzw7drZMeoCaq8lvxlN5DiCjmw1j
-         OWij/qP1w+bHGLFTVBEmayKa6pI5nJLWTt6wzU97k3DMGp051NXEEKMYkQDFm1nLdmm9
-         mfkA==
+        bh=kbXXCHKsbJxEBFGuFNxmnV1nB1pn7eVIzOVnQZl39BE=;
+        b=L41qAU2gVYT6UQ3/bOvbAXNg6uvd0q5EUUFQIWCXmgMneAL7lD1EO+7yxopAGmBbf6
+         gGVngFiyuJSjMD2/r4cxhC6nCZjpKYWRUpQ4lVcjOr7I8x9nXJL+LTGwoJh6imPZ4pCW
+         BK0EI6BZWvYC6Q7984gFkoEgnMohmZO+bhIpboR9rO5xjdqymQVbE/TYU/pHJsbUnHGo
+         UeJSseAupE6xTe2UkbOBVICNEroCr0oe2oaH0xdJwz9R4KwPiT5Dw1C1vnZ49PK5BsRa
+         DQkaNdfm9ioT835YuZU7btJAX7o0+yeeLkYXr+b5WcxrQwbAA/N0oY2e1SqTvBmFePuH
+         P0Yg==
 Content-Disposition: inline
-In-Reply-To: <20200512133545.GA26535@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20200521002411.3963032-2-kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Yang Shi <yang.shi@linux.alibaba.com>, Ingo Molnar <mingo@kernel.org>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Andrea Arcangeli <aarcange@redhat.com>, Thomas
+To: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-On Tue, May 12, 2020 at 06:35:45AM -0700, Christoph Hellwig wrote:
-> On Tue, May 12, 2020 at 09:25:21AM -0400, Dan Schatzberg wrote:
-> > Seems like discussion on this patch series has died down. There's been
-> > a concern raised that we could generalize infrastructure across loop,
-> > md, etc. This may be possible, in the future, but it isn't clear to me
-> > how this would look like. I'm inclined to fix the existing issue with
-> > loop devices now (this is a problem we hit at FB) and address
-> > consolidation with other cases if and when those are addressed.
-> > 
-> > Jens, you've expressed interest in seeing this series go through the
-> > block tree so I'm interested in your perspective here. Barring any
-> > concrete implementation bugs, would you be okay merging this version?
+On Wed, May 20, 2020 at 05:24:08PM -0700, Jakub Kicinski wrote:
+> Slice the memory overage calculation logic a little bit so we can
+> reuse it to apply a similar penalty to the swap. The logic which
+> accesses the memory-specific fields (use and high values) has to
+> be taken out of calculate_high_delay().
 > 
-> Independ of any higher level issues you need to sort out the spinlock
-> mess I pointed out.
+> Signed-off-by: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Will do - I'll split out the lock-use refactor into a separate
-patch. Do you have particular concerns about re-using the existing
-spinlock? Its existing use is not contended so I didn't see any harm
-in extending its use. I'll add this justification to the commit
-message as well, but I'm tempted to leave the re-use as is instead of
-creating a new lock.
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
