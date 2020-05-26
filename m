@@ -1,143 +1,115 @@
-From: Boris Burkov <boris-UrQYPotlwNs@public.gmane.org>
-Subject: [PATCH cgroup/for-5.8] cgroup: add cpu.stat file to root cgroup
-Date: Tue, 26 May 2020 13:08:00 -0700
-Message-ID: <20200526200800.3969430-1-boris@bur.io>
+From: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH mm v5 RESEND 4/4] mm: automatically penalize tasks with
+ high swap use
+Date: Tue, 26 May 2020 13:11:57 -0700
+Message-ID: <20200526131157.79c17940@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
+References: <20200521002411.3963032-1-kuba@kernel.org>
+        <20200521002411.3963032-5-kuba@kernel.org>
+        <20200526153309.GD848026@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bur.io; h=from
-        :to:cc:subject:date:message-id:mime-version
-        :content-transfer-encoding; s=fm1; bh=LHN0JqCZjAhlY7hB0/Y3fto1Fs
-        QcamBNWhl7bqCCYFQ=; b=Tf85u/C9df53lBvUWR+YDqK8pTkDrlYwLiHV44qbkS
-        mnHeugttyrDec7o60NcUtnABRLdccSQKc7t59jSSHpVbVIAJrtb9dFc/tI/VCFik
-        ZmenzZbrOUgnS/E5bPrTAnCfY2QUl2V5PbiPLZ6nLYZR3eKjZUKpp9FCkaJb30yO
-        xHPJ/DJA2342C4+6ldrjdpka0rNkcWmswGMP/nbsL8819nj+hYgfqCBTdhVTldJq
-        ZE556X5zBI1eSwczYvHj0naUQeMjaUmhbdB4D/ZL+psVh7Pz15JWuFIRB//rpR0r
-        2AIZr2SY0irzoSvvg65uX40vdxoYuEbvGN3spSfXJEug==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-transfer-encoding:date:from
-        :message-id:mime-version:subject:to:x-me-proxy:x-me-proxy
-        :x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=LHN0JqCZjAhlY7hB0
-        /Y3fto1FsQcamBNWhl7bqCCYFQ=; b=wAS94y4Q5SKaY0h7NxjaHI5iBN210i57D
-        RMFJcWHfxHh4bN4m9zPx+8tecS3ekBMEiCwemkO5TjYMCd7bknJVCfTtp2A6Wr6o
-        TIAbO0h/HNHYhSlcdKB/c5NuXReBNeMfDL5B+uAz/G0R/84JOwTj4keSLoe7nT4n
-        0QWEJS7F/+XmhW8SAZjxGkxgHr8TUORJZsw7QuJscdG8dSLaJAv1JoutVw9numCH
-        WnY8Q6xN3xtlFgw3Dia2CU7YIiCCRAcZVfh5WoLmyyg0d3nExliI4pMUPGipDn5T
-        eFk9/hflNNQBnrXsfAA1IWt+S/KtY7yCCB0VMBe1DR+aLxSumqazA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1590523919;
+        bh=Lq/Sk1VoyMw9A5M35dRRIZ1osxdCzotsU9LLXg5dNDk=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=PN71YNbUpE9ADDgbIAYUJrWEu8Zu0Qp8ZjEl2B6L5sMWRZLy/2Y/JHJyzXPc1Ftta
+         I1bmCvzqvfSF0NirOuDchDW4LIuK8FQqsvzZImXe8eQ6CgwfRKtHWYAGt5X16UcIOT
+         P+AzyGV4PDKJd9jXussMUOrl8yxurNg+wySvOszw=
+In-Reply-To: <20200526153309.GD848026-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Boris Burkov <boris-UrQYPotlwNs@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-Currently, the root cgroup does not have a cpu.stat file. Add one which
-is consistent with /proc/stat to capture global cpu statistics that
-might not fall under cgroup accounting.
+On Tue, 26 May 2020 11:33:09 -0400 Johannes Weiner wrote:
+> On Wed, May 20, 2020 at 05:24:11PM -0700, Jakub Kicinski wrote:
+> > Add a memory.swap.high knob, which can be used to protect the system
+> > from SWAP exhaustion. The mechanism used for penalizing is similar
+> > to memory.high penalty (sleep on return to user space), but with
+> > a less steep slope.  
+> 
+> The last part is no longer true after incorporating Michal's feedback.
+>
+> > +	/*
+> > +	 * Make the swap curve more gradual, swap can be considered "cheaper",
+> > +	 * and is allocated in larger chunks. We want the delays to be gradual.
+> > +	 */  
+> 
+> This comment is also out-of-date, as the same curve is being applied.
 
-We haven't done this in the past because the data are already presented
-in /proc/stat and we didn't want to add overhead from collecting root
-cgroup stats when cgroups are configured, but no cgroups have been
-created.
-
-By keeping the data consistent with /proc/stat, I think we avoid the
-first problem, while improving the usability of cgroups stats.
-We avoid the second problem by computing the contents of cpu.stat from
-existing data collected for /proc/stat anyway.
-
-Signed-off-by: Boris Burkov <boris-UrQYPotlwNs@public.gmane.org>
-Suggested-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
- kernel/cgroup/cgroup.c |  1 -
- kernel/cgroup/rstat.c  | 60 ++++++++++++++++++++++++++++++++++++------
- 2 files changed, 52 insertions(+), 9 deletions(-)
-
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 557a9b9d2244..b8a75169c3e4 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -4881,7 +4881,6 @@ static struct cftype cgroup_base_files[] = {
- 	},
- 	{
- 		.name = "cpu.stat",
--		.flags = CFTYPE_NOT_ON_ROOT,
- 		.seq_show = cpu_stat_show,
- 	},
- #ifdef CONFIG_PSI
-diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
-index 41ca996568df..b6397a186ce9 100644
---- a/kernel/cgroup/rstat.c
-+++ b/kernel/cgroup/rstat.c
-@@ -389,18 +389,62 @@ void __cgroup_account_cputime_field(struct cgroup *cgrp,
- 	cgroup_base_stat_cputime_account_end(cgrp, rstatc);
- }
+Indeed :S
  
-+/*
-+ * compute the cputime for the root cgroup by getting the per cpu data
-+ * at a global level, then categorizing the fields in a manner consistent
-+ * with how it is done by __cgroup_account_cputime_field for each bit of
-+ * cpu time attributed to a cgroup.
-+ */
-+static void root_cgroup_cputime(struct task_cputime *cputime)
-+{
-+	int i;
-+
-+	cputime->stime = 0;
-+	cputime->utime = 0;
-+	cputime->sum_exec_runtime = 0;
-+	for_each_possible_cpu(i) {
-+		struct kernel_cpustat kcpustat;
-+		u64 *cpustat = kcpustat.cpustat;
-+		u64 user = 0;
-+		u64 sys = 0;
-+
-+		kcpustat_cpu_fetch(&kcpustat, i);
-+
-+		user += cpustat[CPUTIME_USER];
-+		user += cpustat[CPUTIME_NICE];
-+		cputime->utime += user;
-+
-+		sys += cpustat[CPUTIME_SYSTEM];
-+		sys += cpustat[CPUTIME_IRQ];
-+		sys += cpustat[CPUTIME_SOFTIRQ];
-+		cputime->stime += sys;
-+
-+		cputime->sum_exec_runtime += user;
-+		cputime->sum_exec_runtime += sys;
-+		cputime->sum_exec_runtime += cpustat[CPUTIME_STEAL];
-+		cputime->sum_exec_runtime += cpustat[CPUTIME_GUEST];
-+		cputime->sum_exec_runtime += cpustat[CPUTIME_GUEST_NICE];
-+	}
-+}
-+
- void cgroup_base_stat_cputime_show(struct seq_file *seq)
- {
- 	struct cgroup *cgrp = seq_css(seq)->cgroup;
- 	u64 usage, utime, stime;
--
--	if (!cgroup_parent(cgrp))
--		return;
--
--	cgroup_rstat_flush_hold(cgrp);
--	usage = cgrp->bstat.cputime.sum_exec_runtime;
--	cputime_adjust(&cgrp->bstat.cputime, &cgrp->prev_cputime, &utime, &stime);
--	cgroup_rstat_flush_release();
-+	struct task_cputime cputime;
-+
-+	if (cgroup_parent(cgrp)) {
-+		cgroup_rstat_flush_hold(cgrp);
-+		usage = cgrp->bstat.cputime.sum_exec_runtime;
-+		cputime_adjust(&cgrp->bstat.cputime, &cgrp->prev_cputime,
-+			       &utime, &stime);
-+		cgroup_rstat_flush_release();
-+	} else {
-+		root_cgroup_cputime(&cputime);
-+		usage = cputime.sum_exec_runtime;
-+		utime = cputime.utime;
-+		stime = cputime.stime;
-+	}
- 
- 	do_div(usage, NSEC_PER_USEC);
- 	do_div(utime, NSEC_PER_USEC);
--- 
-2.24.1
+> > +	penalty_jiffies += calculate_high_delay(memcg, nr_pages,
+> > +						swap_find_max_overage(memcg));
+> > +
+> >  	/*
+> >  	 * Clamp the max delay per usermode return so as to still keep the
+> >  	 * application moving forwards and also permit diagnostics, albeit
+> > @@ -2585,12 +2608,25 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> >  	 * reclaim, the cost of mismatch is negligible.
+> >  	 */
+> >  	do {
+> > -		if (page_counter_is_above_high(&memcg->memory)) {
+> > -			/* Don't bother a random interrupted task */
+> > -			if (in_interrupt()) {
+> > +		bool mem_high, swap_high;
+> > +
+> > +		mem_high = page_counter_is_above_high(&memcg->memory);
+> > +		swap_high = page_counter_is_above_high(&memcg->swap);  
+> 
+> Please open-code these checks instead - we don't really do getters and
+> predicates for these, and only have the setters because they are more
+> complicated operations.
 
+I added this helper because the calculation doesn't fit into 80 chars. 
+
+In particular reclaim_high will need a temporary variable or IMHO
+questionable line split.
+
+static void reclaim_high(struct mem_cgroup *memcg,
+			 unsigned int nr_pages,
+			 gfp_t gfp_mask)
+{
+	do {
+		if (!page_counter_is_above_high(&memcg->memory))
+			continue;
+		memcg_memory_event(memcg, MEMCG_HIGH);
+		try_to_free_mem_cgroup_pages(memcg, nr_pages, gfp_mask, true);
+	} while ((memcg = parent_mem_cgroup(memcg)) &&
+		 !mem_cgroup_is_root(memcg));
+}
+
+What's your preference? Mine is a helper, but I'm probably not
+sensitive enough to the ontology here :)
+
+> > +		if (mem_high || swap_high) {
+> > +			/* Use one counter for number of pages allocated
+> > +			 * under pressure to save struct task space and
+> > +			 * avoid two separate hierarchy walks.
+> > +			 /*
+> >  			current->memcg_nr_pages_over_high += batch;  
+> 
+> That comment style is leaking out of the networking code ;-) Please
+> use the customary style in this code base, /*\n *...
+> 
+> As for one counter instead of two: I'm not sure that question arises
+> in the reader. There have also been some questions recently what the
+> counter actually means. How about the following:
+> 
+> 			/*
+> 			 * The allocating tasks in this cgroup will need to do
+> 			 * reclaim or be throttled to prevent further growth
+> 			 * of the memory or swap footprints.
+> 			 *
+> 			 * Target some best-effort fairness between the tasks,
+> 			 * and distribute reclaim work and delay penalties
+> 			 * based on how much each task is actually allocating.
+> 			 */
+
+sounds good!
+
+> Otherwise, the patch looks good to me.
+
+Thanks!
