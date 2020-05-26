@@ -1,37 +1,42 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Remove stale comments
-Date: Tue, 26 May 2020 13:20:37 -0400
-Message-ID: <20200526172037.GC83516@mtj.thefacebook.com>
-References: <0ce73f20-6b19-38c7-81c5-b0b71013fcb7@huawei.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] blkcg:Fix memory leaks in blkg_conf_prep()
+Date: Tue, 26 May 2020 13:23:40 -0400
+Message-ID: <20200526172340.GD83516@mtj.thefacebook.com>
+References: <1589805366-328489-1-git-send-email-wubo40@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=5UGKXExeW+nhU16EFqfK9RzsDWq/8Qsk6MN8cmfOs4Q=;
-        b=fXVsQMGLbf3AGbHuPnQtv+E7wUV4PZgjmSB3XiMW5ldzvsV92NRJW0zZtBOWLkeWxg
-         itvONAkOSfEdL3l2EReMxObAhPx0DcObj7M8JTns9pgVP0V61MG3hM55v+dwzjjuMo01
-         zalrBdHDedUYhutoQlCSWg1o4Wc4WAlZgmbmXVbkZXBA1ELtSJ45Y5u/0fctnVJam8NM
-         IATgAm6VsAqHaPRC/MtWQTdDMcNPcDBMzHm7bfXZsW2IOHYLh4Dbu4bjtdYoEIXvjk9P
-         4rlmEoAjHS9+4V6WynMOk5TqiUnjVSE14QWM/3stzi476R5dxuxz1XjoygTNE2vP/XWd
-         3n8w==
+        bh=SYQZMFTEBJ18xeJeS1buRtQuG/fExe+cZBQxRWLCEdI=;
+        b=DBB2dXXyQS8i2KL6fgI0iY3v+kzmXamXskvxCjgHOeueAxTFhY4qC9ElWV+f2i479K
+         QgcXP98W5NFfdi6cLmwRIm5jRaajZ8Xq7c0jS72HCWME/8Aas5rcXPl/uwSEOB+PWYmO
+         Z3J++foQU1ozkoo2brpOSl+duSw8dye0KsWj/pmWQjzzjVRDRm7PUb6cnoCrFBZvZwMW
+         InpmBDBrFiYlJd+AhV8vkCA3HCv+Ri0pjM+wDegKgRiYKUdb2EOcEM6peCwi5NR1/peF
+         tGUKznRKDoHnuAvvD+pPYLR7nxGJWvxFBE7FlmmQc/4cwA0CRXHJEEDCXEqIH6PsKNep
+         vYRQ==
 Content-Disposition: inline
-In-Reply-To: <0ce73f20-6b19-38c7-81c5-b0b71013fcb7-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1589805366-328489-1-git-send-email-wubo40@huawei.com>
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Wu Bo <wubo40@huawei.com>
+Cc: axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, Markus.Elfring@web.de, linux-kernel@vger.kernel.org, liuzhiqiang26@huawei.com, linfeilong@huawei.com
 
-On Wed, May 13, 2020 at 10:13:11AM +0800, Zefan Li wrote:
-> - The default root is where we can create v2 cgroups.
-> - The __DEVEL__sane_behavior mount option has been removed long long ago.
+On Mon, May 18, 2020 at 08:36:06PM +0800, Wu Bo wrote:
+> From: Wu Bo <wubo40@huawei.com>
 > 
-> Signed-off-by: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> If a call of the function blkg_lookup_check() failed,
+> we should be release the previously allocated block group 
+> before jumping to the lable 'fail_unlock' in the implementation of 
+> the function blkg_conf_prep().
+> 
+> Suggested-by: Markus Elfring <Markus.Elfring@web.de>
+> Signed-off-by: Wu Bo <wubo40@huawei.com>
 
-Applied to cgroup/for-5.8.
+Acked-by: Tejun Heo <tj@kernel.org>
 
 Thanks.
 
