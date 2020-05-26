@@ -1,115 +1,54 @@
-From: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH mm v5 RESEND 4/4] mm: automatically penalize tasks with
- high swap use
-Date: Tue, 26 May 2020 13:11:57 -0700
-Message-ID: <20200526131157.79c17940@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
-References: <20200521002411.3963032-1-kuba@kernel.org>
-        <20200521002411.3963032-5-kuba@kernel.org>
-        <20200526153309.GD848026@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH cgroup/for-5.8] cgroup: add cpu.stat file to root cgroup
+Date: Tue, 26 May 2020 16:15:54 -0400
+Message-ID: <20200526201554.GH83516@mtj.thefacebook.com>
+References: <20200526200800.3969430-1-boris@bur.io>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1590523919;
-        bh=Lq/Sk1VoyMw9A5M35dRRIZ1osxdCzotsU9LLXg5dNDk=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=PN71YNbUpE9ADDgbIAYUJrWEu8Zu0Qp8ZjEl2B6L5sMWRZLy/2Y/JHJyzXPc1Ftta
-         I1bmCvzqvfSF0NirOuDchDW4LIuK8FQqsvzZImXe8eQ6CgwfRKtHWYAGt5X16UcIOT
-         P+AzyGV4PDKJd9jXussMUOrl8yxurNg+wySvOszw=
-In-Reply-To: <20200526153309.GD848026-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=OIlePaEo2DB2lWCSsF6hOGAO/zJmXGR+8z88QbPZwuA=;
+        b=vGsBr5wQpHw68zyoZJvgzHNbkgx9psh74mtNJxqpEOgwrQpmej8EZzHAX4XhlgkBAw
+         LMMIEgnCRPb4utbn/CnS0mmTr+9tLCJAcYDlmkThNex0SAFcxXvxSps/IwKCuihbUAKw
+         /YcMZCmkST4MESr2kDzOSDrPgMTVh1fkmousvPmqj4Hy3X3bCPQ3tan68m6KlRjj6Vfw
+         lyXF9bpOir119aygoHP9wIQ4fbD1LqHyTM0finKJh1dqqGmjdDn+ChV2eLSCqAIhqsiL
+         PW+Vqyz2HPxXk9Fl5HlmTArOGH2iJoMyRZoYlGJgHisGrNuaCiLCovFib5xYjl8eju23
+         E5Vw==
+Content-Disposition: inline
+In-Reply-To: <20200526200800.3969430-1-boris-UrQYPotlwNs@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Boris Burkov <boris-UrQYPotlwNs@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Tue, 26 May 2020 11:33:09 -0400 Johannes Weiner wrote:
-> On Wed, May 20, 2020 at 05:24:11PM -0700, Jakub Kicinski wrote:
-> > Add a memory.swap.high knob, which can be used to protect the system
-> > from SWAP exhaustion. The mechanism used for penalizing is similar
-> > to memory.high penalty (sleep on return to user space), but with
-> > a less steep slope.  
+Hello,
+
+On Tue, May 26, 2020 at 01:08:00PM -0700, Boris Burkov wrote:
+> Currently, the root cgroup does not have a cpu.stat file. Add one which
+> is consistent with /proc/stat to capture global cpu statistics that
+> might not fall under cgroup accounting.
 > 
-> The last part is no longer true after incorporating Michal's feedback.
->
-> > +	/*
-> > +	 * Make the swap curve more gradual, swap can be considered "cheaper",
-> > +	 * and is allocated in larger chunks. We want the delays to be gradual.
-> > +	 */  
+> We haven't done this in the past because the data are already presented
+> in /proc/stat and we didn't want to add overhead from collecting root
+> cgroup stats when cgroups are configured, but no cgroups have been
+> created.
 > 
-> This comment is also out-of-date, as the same curve is being applied.
-
-Indeed :S
- 
-> > +	penalty_jiffies += calculate_high_delay(memcg, nr_pages,
-> > +						swap_find_max_overage(memcg));
-> > +
-> >  	/*
-> >  	 * Clamp the max delay per usermode return so as to still keep the
-> >  	 * application moving forwards and also permit diagnostics, albeit
-> > @@ -2585,12 +2608,25 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
-> >  	 * reclaim, the cost of mismatch is negligible.
-> >  	 */
-> >  	do {
-> > -		if (page_counter_is_above_high(&memcg->memory)) {
-> > -			/* Don't bother a random interrupted task */
-> > -			if (in_interrupt()) {
-> > +		bool mem_high, swap_high;
-> > +
-> > +		mem_high = page_counter_is_above_high(&memcg->memory);
-> > +		swap_high = page_counter_is_above_high(&memcg->swap);  
+> By keeping the data consistent with /proc/stat, I think we avoid the
+> first problem, while improving the usability of cgroups stats.
+> We avoid the second problem by computing the contents of cpu.stat from
+> existing data collected for /proc/stat anyway.
 > 
-> Please open-code these checks instead - we don't really do getters and
-> predicates for these, and only have the setters because they are more
-> complicated operations.
+> Signed-off-by: Boris Burkov <boris-UrQYPotlwNs@public.gmane.org>
+> Suggested-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-I added this helper because the calculation doesn't fit into 80 chars. 
+If there are any objections, please holler. I'll wait a few days and
+route it through the cgroup tree.
 
-In particular reclaim_high will need a temporary variable or IMHO
-questionable line split.
+Thanks.
 
-static void reclaim_high(struct mem_cgroup *memcg,
-			 unsigned int nr_pages,
-			 gfp_t gfp_mask)
-{
-	do {
-		if (!page_counter_is_above_high(&memcg->memory))
-			continue;
-		memcg_memory_event(memcg, MEMCG_HIGH);
-		try_to_free_mem_cgroup_pages(memcg, nr_pages, gfp_mask, true);
-	} while ((memcg = parent_mem_cgroup(memcg)) &&
-		 !mem_cgroup_is_root(memcg));
-}
-
-What's your preference? Mine is a helper, but I'm probably not
-sensitive enough to the ontology here :)
-
-> > +		if (mem_high || swap_high) {
-> > +			/* Use one counter for number of pages allocated
-> > +			 * under pressure to save struct task space and
-> > +			 * avoid two separate hierarchy walks.
-> > +			 /*
-> >  			current->memcg_nr_pages_over_high += batch;  
-> 
-> That comment style is leaking out of the networking code ;-) Please
-> use the customary style in this code base, /*\n *...
-> 
-> As for one counter instead of two: I'm not sure that question arises
-> in the reader. There have also been some questions recently what the
-> counter actually means. How about the following:
-> 
-> 			/*
-> 			 * The allocating tasks in this cgroup will need to do
-> 			 * reclaim or be throttled to prevent further growth
-> 			 * of the memory or swap footprints.
-> 			 *
-> 			 * Target some best-effort fairness between the tasks,
-> 			 * and distribute reclaim work and delay penalties
-> 			 * based on how much each task is actually allocating.
-> 			 */
-
-sounds good!
-
-> Otherwise, the patch looks good to me.
-
-Thanks!
+-- 
+tejun
