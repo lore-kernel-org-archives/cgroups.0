@@ -1,39 +1,70 @@
-From: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH v5 0/4] Charge loop device i/o to issuing cgroup
-Date: Tue, 26 May 2020 22:09:22 -0700
-Message-ID: <20200527050922.GB31860@infradead.org>
-References: <20200428161355.6377-1-schatzberg.dan@gmail.com>
- <20200512132521.GA28700@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
- <20200512133545.GA26535@infradead.org>
- <20200526142803.GA1061@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [GIT PULL] cgroup fixes for v5.7-rc7
+Date: Wed, 27 May 2020 10:21:19 -0400
+Message-ID: <20200527142119.GJ83516@mtj.thefacebook.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=gHdtexCQGQRaatxx6IEb1gGC16jgjrLxhKEQOJ39uAQ=; b=kvM2IesnbKbAxu4uRnJqOjHn1U
-        OkIhbK/PCHpdiGv/c7IzpFly3ueziTlwNiOXh/Y+3tpsSWg3LMrjVQ+LMnF+zEUZNmqNw6Kl5OnQC
-        AFM8ATOv9heC9Nl0TZzyzRn1Cnh4gYHIngAMbimQN3Y4I0cpXIb2U3+NLOERIWMSbne/KPx/P0eB1
-        uR6Bp59hrw2Fe+P1qymKKKRIW6o6dnreDzWkemnh2tSCnLr4wc7/wD9Y8oXYIwiecGkPqEyWeNGTw
-        3dV84ae9v7pa1kHq0cQMpqc716FshZpviUGRx8aObBmHV3UBnQO0sia9QJcT5SegOXvISsfpGPctQ
-        ZVrM3Gvg==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=PmfbmDEwWXL4BvaLDwT2z4rZRjeL8v9u316orBCGPsE=;
+        b=DLCV/9qp/eo/ydm2hUV10ZlWLk6rheVtyjcRfQ+8f/LMjMkhpz22lWZg3MvQwxHhs3
+         CHOnqxsMW1BIGdZ94iLc0LS3sc5JXalpHzd4cF3cp9CRoHIpeC+gW/uyUxTJxfO8Ul4V
+         JVfrzYFZzKvBL8i6ZDDZH6H3rOlSXRc56iFSAvbsbXi59riI5jYGK3akTKSrsmErr/3L
+         rxAWXOu46hcqmboR1f1aK4GeJckXcTonukZOWfZs8jNdv1cGw91nHofl+lXy8bFjEqmN
+         j3tA9he2fixBEaLwxstJpyNbX0evnrPvVY1KrLt+BS4kr34o8Olnti7/MCLhB4E9PczS
+         PhDA==
 Content-Disposition: inline
-In-Reply-To: <20200526142803.GA1061-fkkBeQb8ge2DK6JXYb2XlJM2KBzDZLgSYRRNvcr/Vuo4Aut8bSbYrdcQFCl+OI4i@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Peter Zijlstra (Intel)" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Mathieu Desnoyers <mathieu.desnoyers-vg+e7yoeK/dWk0Htik3J/w@public.gmane.org>, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Andrea
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, May 26, 2020 at 10:28:03AM -0400, Dan Schatzberg wrote:
-> Will do - I'll split out the lock-use refactor into a separate
-> patch. Do you have particular concerns about re-using the existing
-> spinlock? Its existing use is not contended so I didn't see any harm
-> in extending its use. I'll add this justification to the commit
-> message as well, but I'm tempted to leave the re-use as is instead of
-> creating a new lock.
+Hello, Linus.
 
-Please don't share a lock for entirely separate critical sections that
-are used from different contexts.
+* Reverted stricter synchronization for cgroup recursive stats which was
+  prepping it for event counter usage which never got merged. The change was
+  causing performation regressions in some cases.
+
+* Restore bpf-based device-cgroup operation even when cgroup1 device cgroup
+  is disabled.
+
+* An out-param init fix.
+
+Thanks.
+
+The following changes since commit 87ebc45d2d32936fb1c8242032eb0b9bcd058858:
+
+  Merge tag 'arm64-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux (2020-04-09 11:04:16 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.7-fixes
+
+for you to fetch changes up to eec8fd0277e37cf447b88c6be181e81df867bcf1:
+
+  device_cgroup: Cleanup cgroup eBPF device filter code (2020-04-13 14:41:54 -0400)
+
+----------------------------------------------------------------
+Daniel Xu (1):
+      xattr: fix uninitialized out-param
+
+Odin Ugedal (1):
+      device_cgroup: Cleanup cgroup eBPF device filter code
+
+Tejun Heo (1):
+      Revert "cgroup: Add memory barriers to plug cgroup_rstat_updated() race window"
+
+ drivers/gpu/drm/amd/amdkfd/kfd_priv.h |  2 +-
+ fs/xattr.c                            |  6 +++---
+ include/linux/device_cgroup.h         | 14 +++++---------
+ kernel/cgroup/rstat.c                 | 16 +++-------------
+ security/Makefile                     |  2 +-
+ security/device_cgroup.c              | 19 ++++++++++++++++---
+ 6 files changed, 29 insertions(+), 30 deletions(-)
+
+-- 
+tejun
