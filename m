@@ -1,70 +1,85 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [GIT PULL] cgroup fixes for v5.7-rc7
-Date: Wed, 27 May 2020 10:21:19 -0400
-Message-ID: <20200527142119.GJ83516@mtj.thefacebook.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH mm v5 RESEND 4/4] mm: automatically penalize tasks with
+ high swap use
+Date: Wed, 27 May 2020 11:51:45 -0400
+Message-ID: <20200527155145.GA42293@cmpxchg.org>
+References: <20200521002411.3963032-1-kuba@kernel.org>
+ <20200521002411.3963032-5-kuba@kernel.org>
+ <20200526153309.GD848026@cmpxchg.org>
+ <20200526131157.79c17940@kicinski-fedora-PC1C0HJN.hsd1.ca.comcast.net>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=PmfbmDEwWXL4BvaLDwT2z4rZRjeL8v9u316orBCGPsE=;
-        b=DLCV/9qp/eo/ydm2hUV10ZlWLk6rheVtyjcRfQ+8f/LMjMkhpz22lWZg3MvQwxHhs3
-         CHOnqxsMW1BIGdZ94iLc0LS3sc5JXalpHzd4cF3cp9CRoHIpeC+gW/uyUxTJxfO8Ul4V
-         JVfrzYFZzKvBL8i6ZDDZH6H3rOlSXRc56iFSAvbsbXi59riI5jYGK3akTKSrsmErr/3L
-         rxAWXOu46hcqmboR1f1aK4GeJckXcTonukZOWfZs8jNdv1cGw91nHofl+lXy8bFjEqmN
-         j3tA9he2fixBEaLwxstJpyNbX0evnrPvVY1KrLt+BS4kr34o8Olnti7/MCLhB4E9PczS
-         PhDA==
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=rdavmOiaMpGhs7wGJxDamxnJAYZBuYUhq0aVlsOCRyA=;
+        b=gkwcO4FhZgIhYZsPq0f06YlHsoXzZTZD4TVMFnSEJkWPeA9sHjZUXP6LqDRXrFByd3
+         bpkQeH86yIluEzmWNr4jcXijjYwxnwPkG6/eNLkx9SqCD4gTIdChRNBbAOO3TrdVhR4a
+         XD5KwE9LvRhJPfvYJIaUtCMjIIaJ15va4wLU8VeM0JpBtqDJKbphSy7WWmuhvJGt0edS
+         sWuJlI2k79/88yc9j1dy9VpBs/vk6JSegkfvqmRkjZ4qkZnzIv6fra1YCa4B/t+Vy0A0
+         La7L5qUCLlpEhE5HT95drazFP1fL+jFlnNTHluO7f4pD776bkG2cWledK26hTkqE5rdW
+         +9dg==
 Content-Disposition: inline
+In-Reply-To: <20200526131157.79c17940-CbGlpYbfshD2+ikPA6JUzBDio8TIggjEF6tAq0aKN46Iz3nRy94yXOTW4wlIGRCZ@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 
-Hello, Linus.
+On Tue, May 26, 2020 at 01:11:57PM -0700, Jakub Kicinski wrote:
+> On Tue, 26 May 2020 11:33:09 -0400 Johannes Weiner wrote:
+> > On Wed, May 20, 2020 at 05:24:11PM -0700, Jakub Kicinski wrote:
+> > > +	penalty_jiffies += calculate_high_delay(memcg, nr_pages,
+> > > +						swap_find_max_overage(memcg));
+> > > +
+> > >  	/*
+> > >  	 * Clamp the max delay per usermode return so as to still keep the
+> > >  	 * application moving forwards and also permit diagnostics, albeit
+> > > @@ -2585,12 +2608,25 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+> > >  	 * reclaim, the cost of mismatch is negligible.
+> > >  	 */
+> > >  	do {
+> > > -		if (page_counter_is_above_high(&memcg->memory)) {
+> > > -			/* Don't bother a random interrupted task */
+> > > -			if (in_interrupt()) {
+> > > +		bool mem_high, swap_high;
+> > > +
+> > > +		mem_high = page_counter_is_above_high(&memcg->memory);
+> > > +		swap_high = page_counter_is_above_high(&memcg->swap);  
+> > 
+> > Please open-code these checks instead - we don't really do getters and
+> > predicates for these, and only have the setters because they are more
+> > complicated operations.
+> 
+> I added this helper because the calculation doesn't fit into 80 chars. 
+> 
+> In particular reclaim_high will need a temporary variable or IMHO
+> questionable line split.
+> 
+> static void reclaim_high(struct mem_cgroup *memcg,
+> 			 unsigned int nr_pages,
+> 			 gfp_t gfp_mask)
+> {
+> 	do {
+> 		if (!page_counter_is_above_high(&memcg->memory))
+> 			continue;
+> 		memcg_memory_event(memcg, MEMCG_HIGH);
+> 		try_to_free_mem_cgroup_pages(memcg, nr_pages, gfp_mask, true);
+> 	} while ((memcg = parent_mem_cgroup(memcg)) &&
+> 		 !mem_cgroup_is_root(memcg));
+> }
+> 
+> What's your preference? Mine is a helper, but I'm probably not
+> sensitive enough to the ontology here :)
 
-* Reverted stricter synchronization for cgroup recursive stats which was
-  prepping it for event counter usage which never got merged. The change was
-  causing performation regressions in some cases.
+		if (page_counter_read(&memcg->memory) <
+		    READ_ONCE(memcg->memory.high))
+			continue;
 
-* Restore bpf-based device-cgroup operation even when cgroup1 device cgroup
-  is disabled.
+should work fine. It's the same formatting in mem_cgroup_swap_full():
 
-* An out-param init fix.
-
-Thanks.
-
-The following changes since commit 87ebc45d2d32936fb1c8242032eb0b9bcd058858:
-
-  Merge tag 'arm64-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux (2020-04-09 11:04:16 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.7-fixes
-
-for you to fetch changes up to eec8fd0277e37cf447b88c6be181e81df867bcf1:
-
-  device_cgroup: Cleanup cgroup eBPF device filter code (2020-04-13 14:41:54 -0400)
-
-----------------------------------------------------------------
-Daniel Xu (1):
-      xattr: fix uninitialized out-param
-
-Odin Ugedal (1):
-      device_cgroup: Cleanup cgroup eBPF device filter code
-
-Tejun Heo (1):
-      Revert "cgroup: Add memory barriers to plug cgroup_rstat_updated() race window"
-
- drivers/gpu/drm/amd/amdkfd/kfd_priv.h |  2 +-
- fs/xattr.c                            |  6 +++---
- include/linux/device_cgroup.h         | 14 +++++---------
- kernel/cgroup/rstat.c                 | 16 +++-------------
- security/Makefile                     |  2 +-
- security/device_cgroup.c              | 19 ++++++++++++++++---
- 6 files changed, 29 insertions(+), 30 deletions(-)
-
--- 
-tejun
+		if (page_counter_read(&memcg->swap) * 2 >=
+		    READ_ONCE(memcg->swap.max))
