@@ -1,78 +1,171 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH mm v6 4/4] mm: automatically penalize tasks with high
- swap use
-Date: Wed, 27 May 2020 16:05:30 -0400
-Message-ID: <20200527200530.GA49331@cmpxchg.org>
-References: <20200527195846.102707-1-kuba@kernel.org>
- <20200527195846.102707-5-kuba@kernel.org>
+From: Boris Burkov <boris@bur.io>
+Subject: [PATCH v2 cgroup/for-5.8] cgroup: add cpu.stat file to root cgroup
+Date: Wed, 27 May 2020 14:43:19 -0700
+Message-ID: <20200527214316.524124-1-boris@bur.io>
+References: <20200527160821.GC42293@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=DWnL9S9WGTEGZuRBVdjP/jVDvy6htJ4NRm6fYZkzl3Y=;
-        b=NTm+WSC85vpDh39BbXIYKURNZHjJKrwLhW+pSwDVbOMtLjTg+sROC2r1TgnVF1OQJT
-         Z/+qWMAo9OaDwOtMZ35h9ZpEg8wgO3BAlWzDHpHSL5NVQUTCJ1bGJx6/6fy6SnXgg5Mm
-         sRcUXPwwx6KDFyRWDqCOVko4xkFYLQeK0SUcGUMRAQwpQ8znovQguw8tU8jubSm8NX5k
-         NN8fv1ZcfUBQ+ioRqagvGPVpPlH6peeyg50f2RCcHk36SNjEv1StDmpPr/igiJufMXgW
-         r0OPMvAGHcAZuM+FcFT10yaa7c005AJgEA5QQNidQmLv5eEj1zntOfSGbVcYC3MSQDkq
-         D0cQ==
-Content-Disposition: inline
-In-Reply-To: <20200527195846.102707-5-kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bur.io; h=from
+        :to:cc:subject:date:message-id:in-reply-to:references
+        :mime-version:content-transfer-encoding; s=fm1; bh=1uMfllCwGVRSV
+        eD897uL9SAlLt6bpaVgLEM5vf/6PXU=; b=n5jA1URN2O3JQQOPok0OlsSawfeLb
+        qbcVZyXyIOqc6v3EddUBeX2546X93UB6qLgI/tUrxtS7V7joMKVJch25KM6pi07J
+        2G4QRoB5Z5Gp6iLFfjIzZQgmBePIV+CiRnSljB8JMlMF8VryCaYpgdqvHH18HC2p
+        N9SfcT/g5sMGoAoJTlompcbWSatAW3SmDwAlwEqGhrZ2rb4h+ucztpJ7m+R/Y217
+        vD2l6OBFvxs3ylviaMh9x339IDg5qNBMRvKL0vW0qy8Kq/u6+YpzRcysjUnb6c23
+        oLZK0HZ1VskQV+FoPvUuwi6qoH4eYr22Dmn8DKgrQtCqsGkbBit2Y0Cdw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:date:from
+        :in-reply-to:message-id:mime-version:references:subject:to
+        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
+        fm2; bh=1uMfllCwGVRSVeD897uL9SAlLt6bpaVgLEM5vf/6PXU=; b=vhoXYIJy
+        /3lxQnWiTue+356RJ4otCRAQYzaNChiU+HSGfGb3JVGdhIs6J6jBuZ3DPWPe444H
+        OpqQccWga+AETOEIZwyUEWEiH6sJrqkOsSvpY2DlSnbsm+RFqzvTjBgVfKKewHwV
+        1XMl++ndMIQr5BGrEeBBG8qZ2zPnhgH1MbJBQ3kqtQBUpVn4cVfvahqL0wBR2zcV
+        PwLWrqQ5tCe1cA5UHpI/EIfMfgxeKKg2k7P4wauR3jXRa2qdDApY0sjFusDBgn+7
+        Zzk0eMXCjxFgWcVTecs325j0DHqERu/P8Qzc5J3B/igvzH9jRXjt3dIi8pmioNyu
+        ZTa2649CKs8xlA==
+In-Reply-To: <20200527160821.GC42293@cmpxchg.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Boris Burkov <boris@bur.io>
 
-On Wed, May 27, 2020 at 12:58:46PM -0700, Jakub Kicinski wrote:
-> Add a memory.swap.high knob, which can be used to protect the system
-> from SWAP exhaustion. The mechanism used for penalizing is similar
-> to memory.high penalty (sleep on return to user space).
-> 
-> That is not to say that the knob itself is equivalent to memory.high.
-> The objective is more to protect the system from potentially buggy
-> tasks consuming a lot of swap and impacting other tasks, or even
-> bringing the whole system to stand still with complete SWAP
-> exhaustion. Hopefully without the need to find per-task hard
-> limits.
-> 
-> Slowing misbehaving tasks down gradually allows user space oom
-> killers or other protection mechanisms to react. oomd and earlyoom
-> already do killing based on swap exhaustion, and memory.swap.high
-> protection will help implement such userspace oom policies more
-> reliably.
-> 
-> We can use one counter for number of pages allocated under
-> pressure to save struct task space and avoid two separate
-> hierarchy walks on the hot path. The exact overage is
-> calculated on return to user space, anyway.
-> 
-> Take the new high limit into account when determining if swap
-> is "full". Borrowing the explanation from Johannes:
-> 
->   The idea behind "swap full" is that as long as the workload has plenty
->   of swap space available and it's not changing its memory contents, it
->   makes sense to generously hold on to copies of data in the swap
->   device, even after the swapin. A later reclaim cycle can drop the page
->   without any IO. Trading disk space for IO.
-> 
->   But the only two ways to reclaim a swap slot is when they're faulted
->   in and the references go away, or by scanning the virtual address space
->   like swapoff does - which is very expensive (one could argue it's too
->   expensive even for swapoff, it's often more practical to just reboot).
-> 
->   So at some point in the fill level, we have to start freeing up swap
->   slots on fault/swapin. Otherwise we could eventually run out of swap
->   slots while they're filled with copies of data that is also in RAM.
-> 
->   We don't want to OOM a workload because its available swap space is
->   filled with redundant cache.
-> 
-> Signed-off-by: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Currently, the root cgroup does not have a cpu.stat file. Add one which
+is consistent with /proc/stat to capture global cpu statistics that
+might not fall under cgroup accounting.
 
-This looks great to me now, thanks Jakub!
+We haven't done this in the past because the data are already presented
+in /proc/stat and we didn't want to add overhead from collecting root
+cgroup stats when cgroups are configured, but no cgroups have been
+created.
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+By keeping the data consistent with /proc/stat, I think we avoid the
+first problem, while improving the usability of cgroups stats.
+We avoid the second problem by computing the contents of cpu.stat from
+existing data collected for /proc/stat anyway.
+
+Signed-off-by: Boris Burkov <boris@bur.io>
+Suggested-by: Tejun Heo <tj@kernel.org>
+---
+ Documentation/admin-guide/cgroup-v2.rst |  6 +--
+ kernel/cgroup/cgroup.c                  |  1 -
+ kernel/cgroup/rstat.c                   | 60 +++++++++++++++++++++----
+ 3 files changed, 54 insertions(+), 13 deletions(-)
+
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index fed4e1d2a343..fec2f13fe065 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -714,9 +714,7 @@ Conventions
+ - Settings for a single feature should be contained in a single file.
+ 
+ - The root cgroup should be exempt from resource control and thus
+-  shouldn't have resource control interface files.  Also,
+-  informational files on the root cgroup which end up showing global
+-  information available elsewhere shouldn't exist.
++  shouldn't have resource control interface files.
+ 
+ - The default time unit is microseconds.  If a different unit is ever
+   used, an explicit unit suffix must be present.
+@@ -985,7 +983,7 @@ CPU Interface Files
+ All time durations are in microseconds.
+ 
+   cpu.stat
+-	A read-only flat-keyed file which exists on non-root cgroups.
++	A read-only flat-keyed file.
+ 	This file exists whether the controller is enabled or not.
+ 
+ 	It always reports the following three stats:
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 557a9b9d2244..b8a75169c3e4 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -4881,7 +4881,6 @@ static struct cftype cgroup_base_files[] = {
+ 	},
+ 	{
+ 		.name = "cpu.stat",
+-		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.seq_show = cpu_stat_show,
+ 	},
+ #ifdef CONFIG_PSI
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index 41ca996568df..b6397a186ce9 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -389,18 +389,62 @@ void __cgroup_account_cputime_field(struct cgroup *cgrp,
+ 	cgroup_base_stat_cputime_account_end(cgrp, rstatc);
+ }
+ 
++/*
++ * compute the cputime for the root cgroup by getting the per cpu data
++ * at a global level, then categorizing the fields in a manner consistent
++ * with how it is done by __cgroup_account_cputime_field for each bit of
++ * cpu time attributed to a cgroup.
++ */
++static void root_cgroup_cputime(struct task_cputime *cputime)
++{
++	int i;
++
++	cputime->stime = 0;
++	cputime->utime = 0;
++	cputime->sum_exec_runtime = 0;
++	for_each_possible_cpu(i) {
++		struct kernel_cpustat kcpustat;
++		u64 *cpustat = kcpustat.cpustat;
++		u64 user = 0;
++		u64 sys = 0;
++
++		kcpustat_cpu_fetch(&kcpustat, i);
++
++		user += cpustat[CPUTIME_USER];
++		user += cpustat[CPUTIME_NICE];
++		cputime->utime += user;
++
++		sys += cpustat[CPUTIME_SYSTEM];
++		sys += cpustat[CPUTIME_IRQ];
++		sys += cpustat[CPUTIME_SOFTIRQ];
++		cputime->stime += sys;
++
++		cputime->sum_exec_runtime += user;
++		cputime->sum_exec_runtime += sys;
++		cputime->sum_exec_runtime += cpustat[CPUTIME_STEAL];
++		cputime->sum_exec_runtime += cpustat[CPUTIME_GUEST];
++		cputime->sum_exec_runtime += cpustat[CPUTIME_GUEST_NICE];
++	}
++}
++
+ void cgroup_base_stat_cputime_show(struct seq_file *seq)
+ {
+ 	struct cgroup *cgrp = seq_css(seq)->cgroup;
+ 	u64 usage, utime, stime;
+-
+-	if (!cgroup_parent(cgrp))
+-		return;
+-
+-	cgroup_rstat_flush_hold(cgrp);
+-	usage = cgrp->bstat.cputime.sum_exec_runtime;
+-	cputime_adjust(&cgrp->bstat.cputime, &cgrp->prev_cputime, &utime, &stime);
+-	cgroup_rstat_flush_release();
++	struct task_cputime cputime;
++
++	if (cgroup_parent(cgrp)) {
++		cgroup_rstat_flush_hold(cgrp);
++		usage = cgrp->bstat.cputime.sum_exec_runtime;
++		cputime_adjust(&cgrp->bstat.cputime, &cgrp->prev_cputime,
++			       &utime, &stime);
++		cgroup_rstat_flush_release();
++	} else {
++		root_cgroup_cputime(&cputime);
++		usage = cputime.sum_exec_runtime;
++		utime = cputime.utime;
++		stime = cputime.stime;
++	}
+ 
+ 	do_div(usage, NSEC_PER_USEC);
+ 	do_div(utime, NSEC_PER_USEC);
+-- 
+2.24.1
+
