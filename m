@@ -1,18 +1,18 @@
 From: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH mm v6 1/4] mm: prepare for swap over-high accounting and penalty calculation
-Date: Wed, 27 May 2020 12:58:43 -0700
-Message-ID: <20200527195846.102707-2-kuba@kernel.org>
+Subject: [PATCH mm v6 3/4] mm: move cgroup high memory limit setting into struct page_counter
+Date: Wed, 27 May 2020 12:58:45 -0700
+Message-ID: <20200527195846.102707-4-kuba@kernel.org>
 References: <20200527195846.102707-1-kuba@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1590609529;
-        bh=TTjwjThUPnckT7FXwDUS8DnDdw8pn0M/DmDiYGPzgbY=;
+        s=default; t=1590609531;
+        bh=PaTZJCrNc64FntwKudDXnQWYv1Hp7AiLvyNyWNhRgyI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HbGyec4tmm5vEBS/uCatUtKvMlUQaHopMfLBnAqMcdfUySubX4jq4Hir+PhGOua+/
-         KdzxyA1e21nusP2wgpCoRz3ie/GCD+p6UL2aKHnXRJvk10G70/mf/UvQt2v2NKwF+w
-         Ntw3iJzrv+B7k9ncDMKsZJ7d4lZB+ZRBkQmLccqc=
+        b=GHNe8Bkm1Lm/pq4i2IvVRQAjJfL9ERD2IztCcO7SKJJcmIA2OLpbzCmdyI+1Z4fPI
+         Zen2p3PfOuU43KW4H8HJyNMMZMJepoETzSIl9DouRteL6dg9sQ/GJdyb9gRcPmo2fe
+         oRpxR+PyZQ1Dzvf/wPXCNPdrbwJtY/0gXuzKfMAE=
 In-Reply-To: <20200527195846.102707-1-kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -20,107 +20,143 @@ Content-Type: text/plain; charset="us-ascii"
 To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Slice the memory overage calculation logic a little bit so we can
-reuse it to apply a similar penalty to the swap. The logic which
-accesses the memory-specific fields (use and high values) has to
-be taken out of calculate_high_delay().
+High memory limit is currently recorded directly in
+struct mem_cgroup. We are about to add a high limit
+for swap, move the field to struct page_counter and
+add some helpers.
 
 Signed-off-by: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+--
+v6: remove page_counter_is_above_high()
+v5: make page_counter_set_high() a static inline in the header
+v4: new patch
 ---
- mm/memcontrol.c | 62 ++++++++++++++++++++++++++++---------------------
- 1 file changed, 35 insertions(+), 27 deletions(-)
+ include/linux/memcontrol.h   |  3 ---
+ include/linux/page_counter.h |  8 ++++++++
+ mm/memcontrol.c              | 19 +++++++++++--------
+ 3 files changed, 19 insertions(+), 11 deletions(-)
 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 3632d062dc11..4c6da7eadaa7 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -212,9 +212,6 @@ struct mem_cgroup {
+ 	struct page_counter kmem;
+ 	struct page_counter tcpmem;
+ 
+-	/* Upper bound of normal memory consumption range */
+-	unsigned long high;
+-
+ 	/* Range enforcement for interrupt charges */
+ 	struct work_struct high_work;
+ 
+diff --git a/include/linux/page_counter.h b/include/linux/page_counter.h
+index bab7e57f659b..85bd413e784e 100644
+--- a/include/linux/page_counter.h
++++ b/include/linux/page_counter.h
+@@ -10,6 +10,7 @@ struct page_counter {
+ 	atomic_long_t usage;
+ 	unsigned long min;
+ 	unsigned long low;
++	unsigned long high;
+ 	unsigned long max;
+ 	struct page_counter *parent;
+ 
+@@ -55,6 +56,13 @@ bool page_counter_try_charge(struct page_counter *counter,
+ void page_counter_uncharge(struct page_counter *counter, unsigned long nr_pages);
+ void page_counter_set_min(struct page_counter *counter, unsigned long nr_pages);
+ void page_counter_set_low(struct page_counter *counter, unsigned long nr_pages);
++
++static inline void page_counter_set_high(struct page_counter *counter,
++					 unsigned long nr_pages)
++{
++	WRITE_ONCE(counter->high, nr_pages);
++}
++
+ int page_counter_set_max(struct page_counter *counter, unsigned long nr_pages);
+ int page_counter_memparse(const char *buf, const char *max,
+ 			  unsigned long *nr_pages);
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index f14da7a7348b..20ea7aea2292 100644
+index 3751e849f443..db5dc875addf 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2302,41 +2302,48 @@ static void high_work_func(struct work_struct *work)
-  #define MEMCG_DELAY_PRECISION_SHIFT 20
-  #define MEMCG_DELAY_SCALING_SHIFT 14
- 
--/*
-- * Get the number of jiffies that we should penalise a mischievous cgroup which
-- * is exceeding its memory.high by checking both it and its ancestors.
-- */
--static unsigned long calculate_high_delay(struct mem_cgroup *memcg,
--					  unsigned int nr_pages)
-+static u64 calculate_overage(unsigned long usage, unsigned long high)
+@@ -2233,7 +2233,8 @@ static void reclaim_high(struct mem_cgroup *memcg,
+ 			 gfp_t gfp_mask)
  {
--	unsigned long penalty_jiffies;
--	u64 max_overage = 0;
--
--	do {
--		unsigned long usage, high;
--		u64 overage;
-+	u64 overage;
+ 	do {
+-		if (page_counter_read(&memcg->memory) <= READ_ONCE(memcg->high))
++		if (page_counter_read(&memcg->memory) <=
++		    READ_ONCE(memcg->memory.high))
+ 			continue;
+ 		memcg_memory_event(memcg, MEMCG_HIGH);
+ 		try_to_free_mem_cgroup_pages(memcg, nr_pages, gfp_mask, true);
+@@ -2326,7 +2327,7 @@ static u64 mem_find_max_overage(struct mem_cgroup *memcg)
  
--		usage = page_counter_read(&memcg->memory);
--		high = READ_ONCE(memcg->high);
-+	if (usage <= high)
-+		return 0;
- 
--		if (usage <= high)
--			continue;
-+	/*
-+	 * Prevent division by 0 in overage calculation by acting as if
-+	 * it was a threshold of 1 page
-+	 */
-+	high = max(high, 1UL);
- 
--		/*
--		 * Prevent division by 0 in overage calculation by acting as if
--		 * it was a threshold of 1 page
--		 */
--		high = max(high, 1UL);
-+	overage = usage - high;
-+	overage <<= MEMCG_DELAY_PRECISION_SHIFT;
-+	return div64_u64(overage, high);
-+}
- 
--		overage = usage - high;
--		overage <<= MEMCG_DELAY_PRECISION_SHIFT;
--		overage = div64_u64(overage, high);
-+static u64 mem_find_max_overage(struct mem_cgroup *memcg)
-+{
-+	u64 overage, max_overage = 0;
- 
--		if (overage > max_overage)
--			max_overage = overage;
-+	do {
-+		overage = calculate_overage(page_counter_read(&memcg->memory),
-+					    READ_ONCE(memcg->high));
-+		max_overage = max(overage, max_overage);
+ 	do {
+ 		overage = calculate_overage(page_counter_read(&memcg->memory),
+-					    READ_ONCE(memcg->high));
++					    READ_ONCE(memcg->memory.high));
+ 		max_overage = max(overage, max_overage);
  	} while ((memcg = parent_mem_cgroup(memcg)) &&
  		 !mem_cgroup_is_root(memcg));
- 
-+	return max_overage;
-+}
-+
-+/*
-+ * Get the number of jiffies that we should penalise a mischievous cgroup which
-+ * is exceeding its memory.high by checking both it and its ancestors.
-+ */
-+static unsigned long calculate_high_delay(struct mem_cgroup *memcg,
-+					  unsigned int nr_pages,
-+					  u64 max_overage)
-+{
-+	unsigned long penalty_jiffies;
-+
- 	if (!max_overage)
- 		return 0;
- 
-@@ -2392,7 +2399,8 @@ void mem_cgroup_handle_over_high(void)
- 	 * memory.high is breached and reclaim is unable to keep up. Throttle
- 	 * allocators proactively to slow down excessive growth.
+@@ -2585,7 +2586,8 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	 * reclaim, the cost of mismatch is negligible.
  	 */
--	penalty_jiffies = calculate_high_delay(memcg, nr_pages);
-+	penalty_jiffies = calculate_high_delay(memcg, nr_pages,
-+					       mem_find_max_overage(memcg));
+ 	do {
+-		if (page_counter_read(&memcg->memory) > READ_ONCE(memcg->high)) {
++		if (page_counter_read(&memcg->memory) >
++		    READ_ONCE(memcg->memory.high)) {
+ 			/* Don't bother a random interrupted task */
+ 			if (in_interrupt()) {
+ 				schedule_work(&memcg->high_work);
+@@ -4280,7 +4282,7 @@ void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pfilepages,
  
- 	/*
- 	 * Don't sleep if the amount of jiffies this memcg owes us is so low
+ 	while ((parent = parent_mem_cgroup(memcg))) {
+ 		unsigned long ceiling = min(READ_ONCE(memcg->memory.max),
+-					    READ_ONCE(memcg->high));
++					    READ_ONCE(memcg->memory.high));
+ 		unsigned long used = page_counter_read(&memcg->memory);
+ 
+ 		*pheadroom = min(*pheadroom, ceiling - min(ceiling, used));
+@@ -5005,7 +5007,7 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ 	if (IS_ERR(memcg))
+ 		return ERR_CAST(memcg);
+ 
+-	WRITE_ONCE(memcg->high, PAGE_COUNTER_MAX);
++	page_counter_set_high(&memcg->memory, PAGE_COUNTER_MAX);
+ 	memcg->soft_limit = PAGE_COUNTER_MAX;
+ 	if (parent) {
+ 		memcg->swappiness = mem_cgroup_swappiness(parent);
+@@ -5158,7 +5160,7 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
+ 	page_counter_set_max(&memcg->tcpmem, PAGE_COUNTER_MAX);
+ 	page_counter_set_min(&memcg->memory, 0);
+ 	page_counter_set_low(&memcg->memory, 0);
+-	WRITE_ONCE(memcg->high, PAGE_COUNTER_MAX);
++	page_counter_set_high(&memcg->memory, PAGE_COUNTER_MAX);
+ 	memcg->soft_limit = PAGE_COUNTER_MAX;
+ 	memcg_wb_domain_size_changed(memcg);
+ }
+@@ -5978,7 +5980,8 @@ static ssize_t memory_low_write(struct kernfs_open_file *of,
+ 
+ static int memory_high_show(struct seq_file *m, void *v)
+ {
+-	return seq_puts_memcg_tunable(m, READ_ONCE(mem_cgroup_from_seq(m)->high));
++	return seq_puts_memcg_tunable(m,
++		READ_ONCE(mem_cgroup_from_seq(m)->memory.high));
+ }
+ 
+ static ssize_t memory_high_write(struct kernfs_open_file *of,
+@@ -5995,7 +5998,7 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
+ 	if (err)
+ 		return err;
+ 
+-	WRITE_ONCE(memcg->high, high);
++	page_counter_set_high(&memcg->memory, high);
+ 
+ 	for (;;) {
+ 		unsigned long nr_pages = page_counter_read(&memcg->memory);
 -- 
 2.25.4
 
