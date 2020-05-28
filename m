@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v11 04/16] mm/compaction: rename compact_deferred as compact_should_defer
-Date: Thu, 28 May 2020 19:00:46 +0800
-Message-ID: <1590663658-184131-5-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v11 13/16] mm/lru: introduce the relock_page_lruvec function
+Date: Thu, 28 May 2020 19:00:55 +0800
+Message-ID: <1590663658-184131-14-git-send-email-alex.shi@linux.alibaba.com>
 References: <1590663658-184131-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1590663658-184131-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -11,100 +11,165 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com
-Cc: Alex Shi <alex.shi@linux.alibaba.com>, Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>, Vlastimil Babka <vbabka@suse.cz>, Mike Kravetz <mike.kravetz@oracle.com>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, Thomas Gleixner <tglx@linutronix.de>, Andrey Ryabinin <aryabinin@virtuozzo.com>
 
-The compact_deferred is a defer suggestion check, deferring action does in
-defer_compaction not here. so, better rename it to avoid confusing.
+Use this new function to replace repeated same code.
 
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Steven Rostedt <rostedt@goodmis.org>
-Cc: Ingo Molnar <mingo@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Mike Kravetz <mike.kravetz@oracle.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Mel Gorman <mgorman@techsingularity.net>
+Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Tejun Heo <tj@kernel.org>
 Cc: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org
 Cc: linux-mm@kvack.org
 ---
- include/linux/compaction.h        | 4 ++--
- include/trace/events/compaction.h | 2 +-
- mm/compaction.c                   | 8 ++++----
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ include/linux/memcontrol.h | 36 ++++++++++++++++++++++++++++++++++++
+ mm/mlock.c                 |  9 +--------
+ mm/swap.c                  | 24 ++++++------------------
+ mm/vmscan.c                |  8 +-------
+ 4 files changed, 44 insertions(+), 33 deletions(-)
 
-diff --git a/include/linux/compaction.h b/include/linux/compaction.h
-index 3ed2f22b588a..9626f057b9f2 100644
---- a/include/linux/compaction.h
-+++ b/include/linux/compaction.h
-@@ -100,7 +100,7 @@ extern enum compact_result compaction_suitable(struct zone *zone, int order,
- 		unsigned int alloc_flags, int highest_zoneidx);
- 
- extern void defer_compaction(struct zone *zone, int order);
--extern bool compaction_deferred(struct zone *zone, int order);
-+extern bool compaction_should_defer(struct zone *zone, int order);
- extern void compaction_defer_reset(struct zone *zone, int order,
- 				bool alloc_success);
- extern bool compaction_restarting(struct zone *zone, int order);
-@@ -199,7 +199,7 @@ static inline void defer_compaction(struct zone *zone, int order)
- {
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index a4601169bf7d..ed09bf53c70f 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1313,6 +1313,42 @@ static inline struct lruvec *parent_lruvec(struct lruvec *lruvec)
+ 	return mem_cgroup_lruvec(memcg, lruvec_pgdat(lruvec));
  }
  
--static inline bool compaction_deferred(struct zone *zone, int order)
-+static inline bool compaction_should_defer(struct zone *zone, int order)
- {
- 	return true;
- }
-diff --git a/include/trace/events/compaction.h b/include/trace/events/compaction.h
-index 54e5bf081171..33633c71df04 100644
---- a/include/trace/events/compaction.h
-+++ b/include/trace/events/compaction.h
-@@ -274,7 +274,7 @@
- 		1UL << __entry->defer_shift)
- );
++/* Don't lock again iff page's lruvec locked */
++static inline struct lruvec *relock_page_lruvec_irq(struct page *page,
++		struct lruvec *locked_lruvec)
++{
++	struct pglist_data *pgdat = page_pgdat(page);
++	struct lruvec *lruvec;
++
++	lruvec = mem_cgroup_page_lruvec(page, pgdat);
++
++	if (likely(locked_lruvec == lruvec))
++		return lruvec;
++
++	if (unlikely(locked_lruvec))
++		unlock_page_lruvec_irq(locked_lruvec);
++
++	return lock_page_lruvec_irq(page);
++}
++
++/* Don't lock again iff page's lruvec locked */
++static inline struct lruvec *relock_page_lruvec_irqsave(struct page *page,
++		struct lruvec *locked_lruvec, unsigned long *flags)
++{
++	struct pglist_data *pgdat = page_pgdat(page);
++	struct lruvec *lruvec;
++
++	lruvec = mem_cgroup_page_lruvec(page, pgdat);
++
++	if (likely(locked_lruvec == lruvec))
++		return lruvec;
++
++	if (unlikely(locked_lruvec))
++		unlock_page_lruvec_irqrestore(locked_lruvec, *flags);
++
++	return lock_page_lruvec_irqsave(page, flags);
++}
++
+ #ifdef CONFIG_CGROUP_WRITEBACK
  
--DEFINE_EVENT(mm_compaction_defer_template, mm_compaction_deferred,
-+DEFINE_EVENT(mm_compaction_defer_template, mm_compaction_should_defer,
+ struct wb_domain *mem_cgroup_wb_domain(struct bdi_writeback *wb);
+diff --git a/mm/mlock.c b/mm/mlock.c
+index c1ef4ac7a744..5b79757e5d02 100644
+--- a/mm/mlock.c
++++ b/mm/mlock.c
+@@ -289,17 +289,10 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ 	/* Phase 1: page isolation */
+ 	for (i = 0; i < nr; i++) {
+ 		struct page *page = pvec->pages[i];
+-		struct lruvec *new_lruvec;
+ 		bool clearlru;
  
- 	TP_PROTO(struct zone *zone, int order),
+ 		clearlru = TestClearPageLRU(page);
+-
+-		new_lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+-		if (new_lruvec != lruvec) {
+-			if (lruvec)
+-				unlock_page_lruvec_irq(lruvec);
+-			lruvec = lock_page_lruvec_irq(page);
+-		}
++		lruvec = relock_page_lruvec_irq(page, lruvec);
  
-diff --git a/mm/compaction.c b/mm/compaction.c
-index 38cdf392837b..c359772dbfcc 100644
---- a/mm/compaction.c
-+++ b/mm/compaction.c
-@@ -154,7 +154,7 @@ void defer_compaction(struct zone *zone, int order)
- }
+ 		if (!TestClearPageMlocked(page)) {
+ 			delta_munlocked++;
+diff --git a/mm/swap.c b/mm/swap.c
+index 91ff3d4a7751..bea9497bbda3 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -190,15 +190,8 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
  
- /* Returns true if compaction should be skipped this time */
--bool compaction_deferred(struct zone *zone, int order)
-+bool compaction_should_defer(struct zone *zone, int order)
- {
- 	unsigned long defer_limit = 1UL << zone->compact_defer_shift;
+ 	for (i = 0; i < pagevec_count(pvec); i++) {
+ 		struct page *page = pvec->pages[i];
+-		struct lruvec *new_lruvec;
+-
+-		new_lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+-		if (lruvec != new_lruvec) {
+-			if (lruvec)
+-				unlock_page_lruvec_irqrestore(lruvec, flags);
+-			lruvec = lock_page_lruvec_irqsave(page, &flags);
+-		}
  
-@@ -168,7 +168,7 @@ bool compaction_deferred(struct zone *zone, int order)
- 	if (zone->compact_considered >= defer_limit)
- 		return false;
- 
--	trace_mm_compaction_deferred(zone, order);
-+	trace_mm_compaction_should_defer(zone, order);
- 
- 	return true;
- }
-@@ -2379,7 +2379,7 @@ enum compact_result try_to_compact_pages(gfp_t gfp_mask, unsigned int order,
- 		enum compact_result status;
- 
- 		if (prio > MIN_COMPACT_PRIORITY
--					&& compaction_deferred(zone, order)) {
-+				&& compaction_should_defer(zone, order)) {
- 			rc = max_t(enum compact_result, COMPACT_DEFERRED, rc);
- 			continue;
++		lruvec = relock_page_lruvec_irqsave(page, lruvec, &flags);
+ 		(*move_fn)(page, lruvec, arg);
+ 	}
+ 	if (lruvec)
+@@ -821,17 +814,12 @@ void release_pages(struct page **pages, int nr)
  		}
-@@ -2563,7 +2563,7 @@ static void kcompactd_do_work(pg_data_t *pgdat)
- 		if (!populated_zone(zone))
- 			continue;
  
--		if (compaction_deferred(zone, cc.order))
-+		if (compaction_should_defer(zone, cc.order))
- 			continue;
+ 		if (TestClearPageLRU(page)) {
+-			struct lruvec *new_lruvec;
+-
+-			new_lruvec = mem_cgroup_page_lruvec(page,
+-							page_pgdat(page));
+-			if (new_lruvec != lruvec) {
+-				if (lruvec)
+-					unlock_page_lruvec_irqrestore(lruvec,
+-									flags);
++			struct lruvec *pre_lruvec = lruvec;
++
++			lruvec = relock_page_lruvec_irqsave(page, lruvec,
++									&flags);
++			if (pre_lruvec != lruvec)
+ 				lock_batch = 0;
+-				lruvec = lock_page_lruvec_irqsave(page, &flags);
+-			}
  
- 		if (compaction_suitable(zone, cc.order, 0, zoneid) !=
+ 			del_page_from_lru_list(page, lruvec, page_off_lru(page));
+ 		}
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index c4c30b530876..7a0d4ac71558 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -4291,15 +4291,9 @@ void check_move_unevictable_pages(struct pagevec *pvec)
+ 
+ 	for (i = 0; i < pvec->nr; i++) {
+ 		struct page *page = pvec->pages[i];
+-		struct lruvec *new_lruvec;
+ 
+ 		pgscanned++;
+-		new_lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+-		if (lruvec != new_lruvec) {
+-			if (lruvec)
+-				unlock_page_lruvec_irq(lruvec);
+-			lruvec = lock_page_lruvec_irq(page);
+-		}
++		lruvec = relock_page_lruvec_irq(page, lruvec);
+ 
+ 		if (!PageLRU(page) || !PageUnevictable(page))
+ 			continue;
 -- 
 1.8.3.1
 
