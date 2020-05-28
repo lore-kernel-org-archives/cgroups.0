@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v11 16/16] mm/lru: revise the comments of lru_lock
-Date: Thu, 28 May 2020 19:00:58 +0800
-Message-ID: <1590663658-184131-17-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v11 10/16] mm/compaction: do page isolation first in compaction
+Date: Thu, 28 May 2020 19:00:52 +0800
+Message-ID: <1590663658-184131-11-git-send-email-alex.shi@linux.alibaba.com>
 References: <1590663658-184131-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1590663658-184131-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
@@ -11,287 +11,191 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Jann Horn <jannh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 
-From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Johannes Weiner has suggested:
+"So here is a crazy idea that may be worth exploring:
 
-Since we changed the pgdat->lru_lock to lruvec->lru_lock, it's time to
-fix the incorrect comments in code. Also fixed some zone->lru_lock comment
-error from ancient time. etc.
+Right now, pgdat->lru_lock protects both PageLRU *and* the lruvec's
+linked list.
 
-Signed-off-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Can we make PageLRU atomic and use it to stabilize the lru_lock
+instead, and then use the lru_lock only serialize list operations?
+..."
+
+Yes, this patch is doing so on  __isolate_lru_page which is the core
+page isolation func in compaction and shrinking path.
+With this patch, the compaction will only deal the PageLRU set and now
+isolated pages to skip the just alloced page which no LRU bit. And the
+isolation could exclusive the other isolations in memcg move_account,
+page migrations and thp split_huge_page.
+
+As a side effect, PageLRU may be cleared during shrink_inactive_list
+path for isolation reason. If so, we can skip that page.
+
+Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Jann Horn <jannh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 ---
- Documentation/admin-guide/cgroup-v1/memcg_test.rst | 15 +++------------
- Documentation/admin-guide/cgroup-v1/memory.rst     |  8 ++++----
- Documentation/trace/events-kmem.rst                |  2 +-
- Documentation/vm/unevictable-lru.rst               | 22 ++++++++--------------
- include/linux/mm_types.h                           |  2 +-
- include/linux/mmzone.h                             |  2 +-
- mm/filemap.c                                       |  4 ++--
- mm/memcontrol.c                                    |  2 +-
- mm/rmap.c                                          |  2 +-
- mm/vmscan.c                                        | 12 ++++++++----
- 10 files changed, 30 insertions(+), 41 deletions(-)
+ include/linux/swap.h |  2 +-
+ mm/compaction.c      | 33 +++++++++++++++++++++++----------
+ mm/vmscan.c          | 38 ++++++++++++++++++++++----------------
+ 3 files changed, 46 insertions(+), 27 deletions(-)
 
-diff --git a/Documentation/admin-guide/cgroup-v1/memcg_test.rst b/Documentation/admin-guide/cgroup-v1/memcg_test.rst
-index 3f7115e07b5d..0b9f91589d3d 100644
---- a/Documentation/admin-guide/cgroup-v1/memcg_test.rst
-+++ b/Documentation/admin-guide/cgroup-v1/memcg_test.rst
-@@ -133,18 +133,9 @@ Under below explanation, we assume CONFIG_MEM_RES_CTRL_SWAP=y.
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index d12ecacce307..8baf0c2928e2 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -356,7 +356,7 @@ extern void lru_cache_add_active_or_unevictable(struct page *page,
+ extern unsigned long zone_reclaimable_pages(struct zone *zone);
+ extern unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
+ 					gfp_t gfp_mask, nodemask_t *mask);
+-extern int __isolate_lru_page(struct page *page, isolate_mode_t mode);
++extern int __isolate_lru_page_prepare(struct page *page, isolate_mode_t mode);
+ extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+ 						  unsigned long nr_pages,
+ 						  gfp_t gfp_mask,
+diff --git a/mm/compaction.c b/mm/compaction.c
+index c359772dbfcc..c36d832b2a84 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -954,6 +954,23 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 		if (!(cc->gfp_mask & __GFP_FS) && page_mapping(page))
+ 			goto isolate_fail;
  
- 8. LRU
- ======
--        Each memcg has its own private LRU. Now, its handling is under global
--	VM's control (means that it's handled under global pgdat->lru_lock).
--	Almost all routines around memcg's LRU is called by global LRU's
--	list management functions under pgdat->lru_lock.
++		if (__isolate_lru_page_prepare(page, isolate_mode) != 0)
++			goto isolate_fail;
++
++		/*
++		 * Be careful not to clear PageLRU until after we're
++		 * sure the page is not being freed elsewhere -- the
++		 * page release code relies on it.
++		 */
++		if (unlikely(!get_page_unless_zero(page)))
++			goto isolate_fail;
++
++		/* Try isolate the page */
++		if (!TestClearPageLRU(page)) {
++			put_page(page);
++			goto isolate_fail;
++		}
++
+ 		/* If we already hold the lock, we can skip some rechecking */
+ 		if (!locked) {
+ 			locked = compact_lock_irqsave(&pgdat->lru_lock,
+@@ -966,10 +983,6 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 					goto isolate_abort;
+ 			}
+ 
+-			/* Recheck PageLRU and PageCompound under lock */
+-			if (!PageLRU(page))
+-				goto isolate_fail;
 -
--	A special function is mem_cgroup_isolate_pages(). This scans
--	memcg's private LRU and call __isolate_lru_page() to extract a page
--	from LRU.
+ 			/*
+ 			 * Page become compound since the non-locked check,
+ 			 * and it's on LRU. It can only be a THP so the order
+@@ -980,18 +993,18 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 				goto isolate_fail;
+ 			}
+ 
+-			/* Recheck page extra references under lock */
+-			if (page_count(page) > page_mapcount(page) +
++			/*
++			 * Recheck page extra references under lock. The
++			 * extra page_count comes from above
++			 * get_page_unless_zero().
++			 */
++			if (page_count(page) > page_mapcount(page) + 1 +
+ 				    (!PageAnon(page) || PageSwapCache(page)))
+ 				goto isolate_fail;
+ 		}
+ 
+ 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+ 
+-		/* Try isolate the page */
+-		if (__isolate_lru_page(page, isolate_mode) != 0)
+-			goto isolate_fail;
 -
--	(By __isolate_lru_page(), the page is removed from both of global and
--	private LRU.)
--
-+	Each memcg has its own vector of LRUs (inactive anon, active anon,
-+	inactive file, active file, unevictable) of pages from each node,
-+	each LRU handled under a single lru_lock for that memcg and node.
- 
- 9. Typical Tests.
- =================
-diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
-index 12757e63b26c..669277c82769 100644
---- a/Documentation/admin-guide/cgroup-v1/memory.rst
-+++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-@@ -292,13 +292,13 @@ When oom event notifier is registered, event will be delivered.
- 
-    PG_locked.
-      mm->page_table_lock
--         pgdat->lru_lock
--	   lock_page_cgroup.
-+       lruvec->lru_lock
-+	 lock_page_cgroup.
- 
-   In many cases, just lock_page_cgroup() is called.
- 
--  per-zone-per-cgroup LRU (cgroup's private LRU) is just guarded by
--  pgdat->lru_lock, it has no lock of its own.
-+  per-node-per-cgroup LRU (cgroup's private LRU) is just guarded by
-+  lruvec->lru_lock, it has no lock of its own.
- 
- 2.7 Kernel Memory Extension (CONFIG_MEMCG_KMEM)
- -----------------------------------------------
-diff --git a/Documentation/trace/events-kmem.rst b/Documentation/trace/events-kmem.rst
-index 555484110e36..68fa75247488 100644
---- a/Documentation/trace/events-kmem.rst
-+++ b/Documentation/trace/events-kmem.rst
-@@ -69,7 +69,7 @@ When pages are freed in batch, the also mm_page_free_batched is triggered.
- Broadly speaking, pages are taken off the LRU lock in bulk and
- freed in batch with a page list. Significant amounts of activity here could
- indicate that the system is under memory pressure and can also indicate
--contention on the zone->lru_lock.
-+contention on the lruvec->lru_lock.
- 
- 4. Per-CPU Allocator Activity
- =============================
-diff --git a/Documentation/vm/unevictable-lru.rst b/Documentation/vm/unevictable-lru.rst
-index 17d0861b0f1d..0e1490524f53 100644
---- a/Documentation/vm/unevictable-lru.rst
-+++ b/Documentation/vm/unevictable-lru.rst
-@@ -33,7 +33,7 @@ reclaim in Linux.  The problems have been observed at customer sites on large
- memory x86_64 systems.
- 
- To illustrate this with an example, a non-NUMA x86_64 platform with 128GB of
--main memory will have over 32 million 4k pages in a single zone.  When a large
-+main memory will have over 32 million 4k pages in a single node.  When a large
- fraction of these pages are not evictable for any reason [see below], vmscan
- will spend a lot of time scanning the LRU lists looking for the small fraction
- of pages that are evictable.  This can result in a situation where all CPUs are
-@@ -55,7 +55,7 @@ unevictable, either by definition or by circumstance, in the future.
- The Unevictable Page List
- -------------------------
- 
--The Unevictable LRU infrastructure consists of an additional, per-zone, LRU list
-+The Unevictable LRU infrastructure consists of an additional, per-node, LRU list
- called the "unevictable" list and an associated page flag, PG_unevictable, to
- indicate that the page is being managed on the unevictable list.
- 
-@@ -84,15 +84,9 @@ The unevictable list does not differentiate between file-backed and anonymous,
- swap-backed pages.  This differentiation is only important while the pages are,
- in fact, evictable.
- 
--The unevictable list benefits from the "arrayification" of the per-zone LRU
-+The unevictable list benefits from the "arrayification" of the per-node LRU
- lists and statistics originally proposed and posted by Christoph Lameter.
- 
--The unevictable list does not use the LRU pagevec mechanism. Rather,
--unevictable pages are placed directly on the page's zone's unevictable list
--under the zone lru_lock.  This allows us to prevent the stranding of pages on
--the unevictable list when one task has the page isolated from the LRU and other
--tasks are changing the "evictability" state of the page.
--
- 
- Memory Control Group Interaction
- --------------------------------
-@@ -101,8 +95,8 @@ The unevictable LRU facility interacts with the memory control group [aka
- memory controller; see Documentation/admin-guide/cgroup-v1/memory.rst] by extending the
- lru_list enum.
- 
--The memory controller data structure automatically gets a per-zone unevictable
--list as a result of the "arrayification" of the per-zone LRU lists (one per
-+The memory controller data structure automatically gets a per-node unevictable
-+list as a result of the "arrayification" of the per-node LRU lists (one per
- lru_list enum element).  The memory controller tracks the movement of pages to
- and from the unevictable list.
- 
-@@ -196,7 +190,7 @@ for the sake of expediency, to leave a unevictable page on one of the regular
- active/inactive LRU lists for vmscan to deal with.  vmscan checks for such
- pages in all of the shrink_{active|inactive|page}_list() functions and will
- "cull" such pages that it encounters: that is, it diverts those pages to the
--unevictable list for the zone being scanned.
-+unevictable list for the node being scanned.
- 
- There may be situations where a page is mapped into a VM_LOCKED VMA, but the
- page is not marked as PG_mlocked.  Such pages will make it all the way to
-@@ -328,7 +322,7 @@ If the page was NOT already mlocked, mlock_vma_page() attempts to isolate the
- page from the LRU, as it is likely on the appropriate active or inactive list
- at that time.  If the isolate_lru_page() succeeds, mlock_vma_page() will put
- back the page - by calling putback_lru_page() - which will notice that the page
--is now mlocked and divert the page to the zone's unevictable list.  If
-+is now mlocked and divert the page to the node's unevictable list.  If
- mlock_vma_page() is unable to isolate the page from the LRU, vmscan will handle
- it later if and when it attempts to reclaim the page.
- 
-@@ -603,7 +597,7 @@ Some examples of these unevictable pages on the LRU lists are:
-      unevictable list in mlock_vma_page().
- 
- shrink_inactive_list() also diverts any unevictable pages that it finds on the
--inactive lists to the appropriate zone's unevictable list.
-+inactive lists to the appropriate node's unevictable list.
- 
- shrink_inactive_list() should only see SHM_LOCK'd pages that became SHM_LOCK'd
- after shrink_active_list() had moved them to the inactive list, or pages mapped
-diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
-index ef6d3aface8a..6f2a61e35deb 100644
---- a/include/linux/mm_types.h
-+++ b/include/linux/mm_types.h
-@@ -78,7 +78,7 @@ struct page {
- 		struct {	/* Page cache and anonymous pages */
- 			/**
- 			 * @lru: Pageout list, eg. active_list protected by
--			 * pgdat->lru_lock.  Sometimes used as a generic list
-+			 * lruvec->lru_lock.  Sometimes used as a generic list
- 			 * by the page owner.
- 			 */
- 			struct list_head lru;
-diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-index 42e646f7f30d..1df5cd06da04 100644
---- a/include/linux/mmzone.h
-+++ b/include/linux/mmzone.h
-@@ -115,7 +115,7 @@ static inline bool free_area_empty(struct free_area *area, int migratetype)
- struct pglist_data;
- 
- /*
-- * zone->lock and the zone lru_lock are two of the hottest locks in the kernel.
-+ * zone->lock and the lru_lock are two of the hottest locks in the kernel.
-  * So add a wild amount of padding here to ensure that they fall into separate
-  * cachelines.  There are very few zone structures in the machine, so space
-  * consumption is not a concern here.
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 5fda0ed6ee19..147736acd6f2 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -101,8 +101,8 @@
-  *    ->swap_lock		(try_to_unmap_one)
-  *    ->private_lock		(try_to_unmap_one)
-  *    ->i_pages lock		(try_to_unmap_one)
-- *    ->pgdat->lru_lock		(follow_page->mark_page_accessed)
-- *    ->pgdat->lru_lock		(check_pte_range->isolate_lru_page)
-+ *    ->lruvec->lru_lock	(follow_page->mark_page_accessed)
-+ *    ->lruvec->lru_lock	(check_pte_range->isolate_lru_page)
-  *    ->private_lock		(page_remove_rmap->set_page_dirty)
-  *    ->i_pages lock		(page_remove_rmap->set_page_dirty)
-  *    bdi.wb->list_lock		(page_remove_rmap->set_page_dirty)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b106e3b86fff..ca4bbc25dde8 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3016,7 +3016,7 @@ void __memcg_kmem_uncharge_page(struct page *page, int order)
- #ifdef CONFIG_TRANSPARENT_HUGEPAGE
- 
- /*
-- * Because tail pages are not marked as "used", set it. We're under
-+ * Because tail pages are not marked as "used", set it. Don't need
-  * lruvec->lru_lock and migration entries setup in all page mappings.
-  */
- void mem_cgroup_split_huge_fixup(struct page *head)
-diff --git a/mm/rmap.c b/mm/rmap.c
-index ad4a0fdcc94c..d3717d21c992 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -28,7 +28,7 @@
-  *           hugetlb_fault_mutex (hugetlbfs specific page fault mutex)
-  *           anon_vma->rwsem
-  *             mm->page_table_lock or pte_lock
-- *               pgdat->lru_lock (in mark_page_accessed, isolate_lru_page)
-+ *               lruvec->lru_lock (in mark_page_accessed, isolate_lru_page)
-  *               swap_lock (in swap_duplicate, swap_info_get)
-  *                 mmlist_lock (in mmput, drain_mmlist and others)
-  *                 mapping->private_lock (in __set_page_dirty_buffers)
+ 		/* The whole page is taken off the LRU; skip the tail pages. */
+ 		if (PageCompound(page))
+ 			low_pfn += compound_nr(page) - 1;
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 672e7304f211..fb3a5e580a1e 100644
+index 8a88a907c19d..df0765203473 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -1619,14 +1619,16 @@ static __always_inline void update_lru_sizes(struct lruvec *lruvec,
+@@ -1543,7 +1543,7 @@ unsigned int reclaim_clean_pages_from_list(struct zone *zone,
+  *
+  * returns 0 on success, -ve errno on failure.
+  */
+-int __isolate_lru_page(struct page *page, isolate_mode_t mode)
++int __isolate_lru_page_prepare(struct page *page, isolate_mode_t mode)
+ {
+ 	int ret = -EINVAL;
+ 
+@@ -1597,20 +1597,9 @@ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
+ 	if ((mode & ISOLATE_UNMAPPED) && page_mapped(page))
+ 		return ret;
+ 
+-	if (likely(get_page_unless_zero(page))) {
+-		/*
+-		 * Be careful not to clear PageLRU until after we're
+-		 * sure the page is not being freed elsewhere -- the
+-		 * page release code relies on it.
+-		 */
+-		ClearPageLRU(page);
+-		ret = 0;
+-	}
+-
+-	return ret;
++	return 0;
  }
  
- /**
-- * pgdat->lru_lock is heavily contended.  Some of the functions that
-+ * Isolating page from the lruvec to fill in @dst list by nr_to_scan times.
-+ *
-+ * lruvec->lru_lock is heavily contended.  Some of the functions that
-  * shrink the lists perform better by taking out a batch of pages
-  * and working on them outside the LRU lock.
-  *
-  * For pagecache intensive workloads, this function is the hottest
-  * spot in the kernel (apart from copy_*_user functions).
-  *
-- * Appropriate locks must be held before calling this function.
-+ * Lru_lock must be held before calling this function.
-  *
-  * @nr_to_scan:	The number of eligible pages to look through on the list.
-  * @lruvec:	The LRU vector to pull pages from.
-@@ -1826,14 +1828,16 @@ static int too_many_isolated(struct pglist_data *pgdat, int file,
- 
+-
  /*
-  * This moves pages from @list to corresponding LRU list.
-+ * The pages from @list is out of any lruvec, and in the end list reuses as
-+ * pages_to_free list.
-  *
-  * We move them the other way if the page is referenced by one or more
-  * processes, from rmap.
-  *
-  * If the pages are mostly unmapped, the processing is fast and it is
-- * appropriate to hold zone_lru_lock across the whole operation.  But if
-+ * appropriate to hold lru_lock across the whole operation.  But if
-  * the pages are mapped, the processing is slow (page_referenced()) so we
-- * should drop zone_lru_lock around each page.  It's impossible to balance
-+ * should drop lru_lock around each page.  It's impossible to balance
-  * this, so instead we remove the pages from the LRU while processing them.
-  * It is safe to rely on PG_active against the non-LRU pages in here because
-  * nobody will play with that bit on a non-LRU page.
+  * Update LRU sizes after isolating pages. The LRU size updates must
+  * be complete before mem_cgroup_update_lru_size due to a sanity check.
+@@ -1690,17 +1679,34 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
+ 		 * only when the page is being freed somewhere else.
+ 		 */
+ 		scan += nr_pages;
+-		switch (__isolate_lru_page(page, mode)) {
++		switch (__isolate_lru_page_prepare(page, mode)) {
+ 		case 0:
++			/*
++			 * Be careful not to clear PageLRU until after we're
++			 * sure the page is not being freed elsewhere -- the
++			 * page release code relies on it.
++			 */
++			if (unlikely(!get_page_unless_zero(page)))
++				goto busy;
++
++			if (!TestClearPageLRU(page)) {
++				/*
++				 * This page may in other isolation path,
++				 * but we still hold lru_lock.
++				 */
++				put_page(page);
++				goto busy;
++			}
++
+ 			nr_taken += nr_pages;
+ 			nr_zone_taken[page_zonenum(page)] += nr_pages;
+ 			list_move(&page->lru, dst);
+ 			break;
+-
++busy:
+ 		case -EBUSY:
+ 			/* else it is being freed elsewhere */
+ 			list_move(&page->lru, src);
+-			continue;
++			break;
+ 
+ 		default:
+ 			BUG();
 -- 
 1.8.3.1
 
