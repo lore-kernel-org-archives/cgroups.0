@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v11 02/16] mm/page_idle: no unlikely double check for idle page counting
-Date: Thu, 28 May 2020 19:00:44 +0800
-Message-ID: <1590663658-184131-3-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v11 08/16] mm/memcg: add debug checking in lock_page_memcg
+Date: Thu, 28 May 2020 19:00:50 +0800
+Message-ID: <1590663658-184131-9-git-send-email-alex.shi@linux.alibaba.com>
 References: <1590663658-184131-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1590663658-184131-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
@@ -11,50 +11,40 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-As func comments mentioned, few isolated page missing be tolerated.
-So why not do further to drop the unlikely double check. That won't
-cause more idle pages, but reduce a lock contention.
+Add a debug checking in lock_page_memcg, then we could get alarm
+if anything wrong here.
 
-This is also a preparation for later new page isolation feature.
-
+Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
- mm/page_idle.c | 8 --------
- 1 file changed, 8 deletions(-)
+ mm/memcontrol.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/mm/page_idle.c b/mm/page_idle.c
-index 295512465065..914df63948b1 100644
---- a/mm/page_idle.c
-+++ b/mm/page_idle.c
-@@ -31,7 +31,6 @@
- static struct page *page_idle_get_page(unsigned long pfn)
- {
- 	struct page *page;
--	pg_data_t *pgdat;
- 
- 	if (!pfn_valid(pfn))
- 		return NULL;
-@@ -41,13 +40,6 @@ static struct page *page_idle_get_page(unsigned long pfn)
- 	    !get_page_unless_zero(page))
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d04f1e242d47..91b073891d06 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1983,6 +1983,12 @@ struct mem_cgroup *lock_page_memcg(struct page *page)
+ 	if (unlikely(!memcg))
  		return NULL;
  
--	pgdat = page_pgdat(page);
--	spin_lock_irq(&pgdat->lru_lock);
--	if (unlikely(!PageLRU(page))) {
--		put_page(page);
--		page = NULL;
--	}
--	spin_unlock_irq(&pgdat->lru_lock);
- 	return page;
- }
++#ifdef CONFIG_PROVE_LOCKING
++	local_irq_save(flags);
++	might_lock(&memcg->move_lock);
++	local_irq_restore(flags);
++#endif
++
+ 	if (atomic_read(&memcg->moving_account) <= 0)
+ 		return memcg;
  
 -- 
 1.8.3.1
