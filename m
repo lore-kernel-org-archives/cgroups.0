@@ -1,105 +1,55 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v11 01/16] mm/vmscan: remove unnecessary lruvec adding
-Date: Thu, 28 May 2020 19:00:43 +0800
-Message-ID: <1590663658-184131-2-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH v11 03/16] mm/compaction: correct the comments of compact_defer_shift
+Date: Thu, 28 May 2020 19:00:45 +0800
+Message-ID: <1590663658-184131-4-git-send-email-alex.shi@linux.alibaba.com>
 References: <1590663658-184131-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1590663658-184131-1-git-send-email-alex.shi@linux.alibaba.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1590663658-184131-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com
-Cc: Alex Shi <alex.shi@linux.alibaba.com>
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 
-We don't have to add a freeable page into lru and then remove from it.
-This change saves a couple of actions and makes the moving more clear.
+There is no compact_defer_limit. It should be compact_defer_shift in
+use. and add compact_order_failed explanation.
 
-The SetPageLRU needs to be kept here for list intergrity.
-Otherwise:
- #0 mave_pages_to_lru              #1 release_pages
-                                   if (put_page_testzero())
- if !put_page_testzero
-                                     !PageLRU //skip lru_lock
-                                       list_add(&page->lru,)
-   list_add(&page->lru,) //corrupt
-
-[akpm@linux-foundation.org: coding style fixes]
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
- mm/vmscan.c | 32 +++++++++++++++++++++-----------
- 1 file changed, 21 insertions(+), 11 deletions(-)
+ include/linux/mmzone.h | 1 +
+ mm/compaction.c        | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 3a482b22fe4e..d856a1545ad6 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -1855,26 +1855,29 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
- 	while (!list_empty(list)) {
- 		page = lru_to_page(list);
- 		VM_BUG_ON_PAGE(PageLRU(page), page);
-+		list_del(&page->lru);
- 		if (unlikely(!page_evictable(page))) {
--			list_del(&page->lru);
- 			spin_unlock_irq(&pgdat->lru_lock);
- 			putback_lru_page(page);
- 			spin_lock_irq(&pgdat->lru_lock);
- 			continue;
- 		}
--		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index d8cad09d34ff..545b663678ed 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -510,6 +510,7 @@ struct zone {
+ 	 * On compaction failure, 1<<compact_defer_shift compactions
+ 	 * are skipped before trying again. The number attempted since
+ 	 * last failure is tracked with compact_considered.
++	 * compact_order_failed is the minimum compaction failed order.
+ 	 */
+ 	unsigned int		compact_considered;
+ 	unsigned int		compact_defer_shift;
+diff --git a/mm/compaction.c b/mm/compaction.c
+index 478f6e754f38..38cdf392837b 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -136,7 +136,7 @@ void __ClearPageMovable(struct page *page)
  
-+		/*
-+		 * The SetPageLRU needs to be kept here for list intergrity.
-+		 * Otherwise:
-+		 *   #0 mave_pages_to_lru             #1 release_pages
-+		 *				      if (put_page_testzero())
-+		 *   if !put_page_testzero
-+		 *				        !PageLRU //skip lru_lock
-+		 *                                        list_add(&page->lru,)
-+		 *     list_add(&page->lru,) //corrupt
-+		 */
- 		SetPageLRU(page);
--		lru = page_lru(page);
--
--		nr_pages = hpage_nr_pages(page);
--		update_lru_size(lruvec, lru, page_zonenum(page), nr_pages);
--		list_move(&page->lru, &lruvec->lists[lru]);
- 
--		if (put_page_testzero(page)) {
-+		if (unlikely(put_page_testzero(page))) {
- 			__ClearPageLRU(page);
- 			__ClearPageActive(page);
--			del_page_from_lru_list(page, lruvec, lru);
- 
- 			if (unlikely(PageCompound(page))) {
- 				spin_unlock_irq(&pgdat->lru_lock);
-@@ -1882,9 +1885,16 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
- 				spin_lock_irq(&pgdat->lru_lock);
- 			} else
- 				list_add(&page->lru, &pages_to_free);
--		} else {
--			nr_moved += nr_pages;
-+			continue;
- 		}
-+
-+		lruvec = mem_cgroup_page_lruvec(page, pgdat);
-+		lru = page_lru(page);
-+		nr_pages = hpage_nr_pages(page);
-+
-+		update_lru_size(lruvec, lru, page_zonenum(page), nr_pages);
-+		list_add(&page->lru, &lruvec->lists[lru]);
-+		nr_moved += nr_pages;
- 	}
- 
- 	/*
+ /*
+  * Compaction is deferred when compaction fails to result in a page
+- * allocation success. 1 << compact_defer_limit compactions are skipped up
++ * allocation success. compact_defer_shift++, compactions are skipped up
+  * to a limit of 1 << COMPACT_MAX_DEFER_SHIFT
+  */
+ void defer_compaction(struct zone *zone, int order)
 -- 
 1.8.3.1
 
