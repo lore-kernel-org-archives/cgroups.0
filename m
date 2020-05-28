@@ -1,106 +1,110 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v11 00/16] per memcg lru lock
-Date: Thu, 28 May 2020 19:00:42 +0800
-Message-ID: <1590663658-184131-1-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v11 04/16] mm/compaction: rename compact_deferred as compact_should_defer
+Date: Thu, 28 May 2020 19:00:46 +0800
+Message-ID: <1590663658-184131-5-git-send-email-alex.shi@linux.alibaba.com>
+References: <1590663658-184131-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1590663658-184131-1-git-send-email-alex.shi@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com
-Cc: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>, Vlastimil Babka <vbabka@suse.cz>, Mike Kravetz <mike.kravetz@oracle.com>
 
-This is a new version which bases on linux-next 
+The compact_deferred is a defer suggestion check, deferring action does in
+defer_compaction not here. so, better rename it to avoid confusing.
 
-Johannes Weiner has suggested:
-"So here is a crazy idea that may be worth exploring:
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Steven Rostedt <rostedt@goodmis.org>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Vlastimil Babka <vbabka@suse.cz>
+Cc: Mike Kravetz <mike.kravetz@oracle.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
+---
+ include/linux/compaction.h        | 4 ++--
+ include/trace/events/compaction.h | 2 +-
+ mm/compaction.c                   | 8 ++++----
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-Right now, pgdat->lru_lock protects both PageLRU *and* the lruvec's
-linked list.
-
-Can we make PageLRU atomic and use it to stabilize the lru_lock
-instead, and then use the lru_lock only serialize list operations?
-..."
-
-With new memcg charge path and this solution, we could isolate
-LRU pages to exclusive visit them in compaction, page migration, reclaim,
-memcg move_accunt, huge page split etc scenarios while keeping pages' 
-memcg stable. Then possible to change per node lru locking to per memcg
-lru locking. As to pagevec_lru_move_fn funcs, it would be safe to let
-pages remain on lru list, lru lock could guard them for list integrity.
-
-The patchset includes 3 parts:
-1, some code cleanup and minimum optimization as a preparation.
-2, use TestCleanPageLRU as page isolation's precondition
-3, replace per node lru_lock with per memcg per node lru_lock
-
-The 3rd part moves per node lru_lock into lruvec, thus bring a lru_lock for
-each of memcg per node. So on a large machine, each of memcg don't
-have to suffer from per node pgdat->lru_lock competition. They could go
-fast with their self lru_lock
-
-Following Daniel Jordan's suggestion, I have run 208 'dd' with on 104
-containers on a 2s * 26cores * HT box with a modefied case:
-https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/tree/case-lru-file-readtwice
-
-With this patchset, the readtwice performance increased about 80%
-in concurrent containers.
-
-Thanks Hugh Dickins and Konstantin Khlebnikov, they both brought this
-idea 8 years ago, and others who give comments as well: Daniel Jordan, 
-Mel Gorman, Shakeel Butt, Matthew Wilcox etc.
-
-Thanks for Testing support from Intel 0day and Rong Chen, Fengguang Wu,
-and Yun Wang. Hugh Dickins also shared his kbuild-swap case. Thanks!
-
-
-Alex Shi (14):
-  mm/vmscan: remove unnecessary lruvec adding
-  mm/page_idle: no unlikely double check for idle page counting
-  mm/compaction: correct the comments of compact_defer_shift
-  mm/compaction: rename compact_deferred as compact_should_defer
-  mm/thp: move lru_add_page_tail func to huge_memory.c
-  mm/thp: clean up lru_add_page_tail
-  mm/thp: narrow lru locking
-  mm/memcg: add debug checking in lock_page_memcg
-  mm/lru: introduce TestClearPageLRU
-  mm/compaction: do page isolation first in compaction
-  mm/mlock: reorder isolation sequence during munlock
-  mm/lru: replace pgdat lru_lock with lruvec lock
-  mm/lru: introduce the relock_page_lruvec function
-  mm/pgdat: remove pgdat lru_lock
-
-Hugh Dickins (2):
-  mm/vmscan: use relock for move_pages_to_lru
-  mm/lru: revise the comments of lru_lock
-
- Documentation/admin-guide/cgroup-v1/memcg_test.rst |  15 +-
- Documentation/admin-guide/cgroup-v1/memory.rst     |   8 +-
- Documentation/trace/events-kmem.rst                |   2 +-
- Documentation/vm/unevictable-lru.rst               |  22 +--
- include/linux/compaction.h                         |   4 +-
- include/linux/memcontrol.h                         |  92 +++++++++++
- include/linux/mm_types.h                           |   2 +-
- include/linux/mmzone.h                             |   6 +-
- include/linux/page-flags.h                         |   1 +
- include/linux/swap.h                               |   4 +-
- include/trace/events/compaction.h                  |   2 +-
- mm/compaction.c                                    | 104 ++++++++-----
- mm/filemap.c                                       |   4 +-
- mm/huge_memory.c                                   |  51 +++++--
- mm/memcontrol.c                                    |  87 ++++++++++-
- mm/mlock.c                                         |  93 ++++++------
- mm/mmzone.c                                        |   1 +
- mm/page_alloc.c                                    |   1 -
- mm/page_idle.c                                     |   8 -
- mm/rmap.c                                          |   2 +-
- mm/swap.c                                          | 112 ++++----------
- mm/swap_state.c                                    |   6 +-
- mm/vmscan.c                                        | 168 +++++++++++----------
- mm/workingset.c                                    |   4 +-
- 24 files changed, 487 insertions(+), 312 deletions(-)
-
+diff --git a/include/linux/compaction.h b/include/linux/compaction.h
+index 3ed2f22b588a..9626f057b9f2 100644
+--- a/include/linux/compaction.h
++++ b/include/linux/compaction.h
+@@ -100,7 +100,7 @@ extern enum compact_result compaction_suitable(struct zone *zone, int order,
+ 		unsigned int alloc_flags, int highest_zoneidx);
+ 
+ extern void defer_compaction(struct zone *zone, int order);
+-extern bool compaction_deferred(struct zone *zone, int order);
++extern bool compaction_should_defer(struct zone *zone, int order);
+ extern void compaction_defer_reset(struct zone *zone, int order,
+ 				bool alloc_success);
+ extern bool compaction_restarting(struct zone *zone, int order);
+@@ -199,7 +199,7 @@ static inline void defer_compaction(struct zone *zone, int order)
+ {
+ }
+ 
+-static inline bool compaction_deferred(struct zone *zone, int order)
++static inline bool compaction_should_defer(struct zone *zone, int order)
+ {
+ 	return true;
+ }
+diff --git a/include/trace/events/compaction.h b/include/trace/events/compaction.h
+index 54e5bf081171..33633c71df04 100644
+--- a/include/trace/events/compaction.h
++++ b/include/trace/events/compaction.h
+@@ -274,7 +274,7 @@
+ 		1UL << __entry->defer_shift)
+ );
+ 
+-DEFINE_EVENT(mm_compaction_defer_template, mm_compaction_deferred,
++DEFINE_EVENT(mm_compaction_defer_template, mm_compaction_should_defer,
+ 
+ 	TP_PROTO(struct zone *zone, int order),
+ 
+diff --git a/mm/compaction.c b/mm/compaction.c
+index 38cdf392837b..c359772dbfcc 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -154,7 +154,7 @@ void defer_compaction(struct zone *zone, int order)
+ }
+ 
+ /* Returns true if compaction should be skipped this time */
+-bool compaction_deferred(struct zone *zone, int order)
++bool compaction_should_defer(struct zone *zone, int order)
+ {
+ 	unsigned long defer_limit = 1UL << zone->compact_defer_shift;
+ 
+@@ -168,7 +168,7 @@ bool compaction_deferred(struct zone *zone, int order)
+ 	if (zone->compact_considered >= defer_limit)
+ 		return false;
+ 
+-	trace_mm_compaction_deferred(zone, order);
++	trace_mm_compaction_should_defer(zone, order);
+ 
+ 	return true;
+ }
+@@ -2379,7 +2379,7 @@ enum compact_result try_to_compact_pages(gfp_t gfp_mask, unsigned int order,
+ 		enum compact_result status;
+ 
+ 		if (prio > MIN_COMPACT_PRIORITY
+-					&& compaction_deferred(zone, order)) {
++				&& compaction_should_defer(zone, order)) {
+ 			rc = max_t(enum compact_result, COMPACT_DEFERRED, rc);
+ 			continue;
+ 		}
+@@ -2563,7 +2563,7 @@ static void kcompactd_do_work(pg_data_t *pgdat)
+ 		if (!populated_zone(zone))
+ 			continue;
+ 
+-		if (compaction_deferred(zone, cc.order))
++		if (compaction_should_defer(zone, cc.order))
+ 			continue;
+ 
+ 		if (compaction_suitable(zone, cc.order, 0, zoneid) !=
 -- 
 1.8.3.1
 
