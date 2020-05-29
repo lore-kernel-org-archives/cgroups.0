@@ -1,54 +1,64 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: mm: mkfs.ext4 invoked oom-killer on i386 - pagecache_get_page
-Date: Fri, 29 May 2020 11:49:10 +0200
-Message-ID: <20200529094910.GH4406@dhcp22.suse.cz>
-References: <20200520190906.GA558281@chrisdown.name>
- <20200521095515.GK6462@dhcp22.suse.cz>
- <20200521163450.GV6462@dhcp22.suse.cz>
- <CA+G9fYuDWGZx50UpD+WcsDeHX9vi3hpksvBAWbMgRZadb0Pkww@mail.gmail.com>
- <CA+G9fYs2jg-j_5fdb0OW0G-JzDjN7b8d9qnX7uuk9p4c7mVSig@mail.gmail.com>
- <20200528150310.GG27484@dhcp22.suse.cz>
- <CA+G9fYvDXiZ9E9EfU6h0gsJ+xaXY77mRu9Jg+J7C=X4gJ3qvLg@mail.gmail.com>
- <20200528164121.GA839178@chrisdown.name>
- <CALOAHbAHGOsAUUM7qn=9L1u8kAf6Gztqt=SyHSmZ9XuYZWcKmg@mail.gmail.com>
- <20200529015644.GA84588@chrisdown.name>
+From: Chris Down <chris@chrisdown.name>
+Subject: Re: [PATCH] mm, memcg: reclaim more aggressively before high
+ allocator throttling
+Date: Fri, 29 May 2020 11:08:58 +0100
+Message-ID: <20200529100858.GA98458@chrisdown.name>
+References: <20200520175135.GA793901@cmpxchg.org>
+ <20200521073245.GI6462@dhcp22.suse.cz>
+ <20200521135152.GA810429@cmpxchg.org>
+ <20200521143515.GU6462@dhcp22.suse.cz>
+ <20200521163833.GA813446@cmpxchg.org>
+ <20200521173701.GX6462@dhcp22.suse.cz>
+ <20200521184505.GA815980@cmpxchg.org>
+ <20200528163101.GJ27484@dhcp22.suse.cz>
+ <20200528164848.GB839178@chrisdown.name>
+ <20200529073118.GE4406@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=EGCTr//CJ/0Q2eA0EeEmXyU8B15617Zs/uV0IexoscQ=;
+        b=Y11uIhOmRXyo7ieDj5COXVZGcR2zPt8sa+tZoxdWPwOhh82K5aMgVHdKX8MwCKQog6
+         R5xkeI26afEweBp7Mx7N7MkVhsgf+2kKhl8P2I8yKYZyAHWvoHSt/vK1imWNu4m3iKGH
+         pOwGMBJuSK1v0vztOth0Idw9xsAZeoIm1s9KQ=
 Content-Disposition: inline
-In-Reply-To: <20200529015644.GA84588-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20200529073118.GE4406@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 Content-Transfer-Encoding: 7bit
-To: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Cc: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Naresh Kamboju <naresh.kamboju-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Anders Roxell <anders.roxell-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Linux F2FS DEV, Mailing List" <linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, linux-ext4 <linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-Next Mailing List <linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Andreas Dilger <adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, Chao Yu <chao-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Chao Yu <yuchao0-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, lkf
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Fri 29-05-20 02:56:44, Chris Down wrote:
-> Yafang Shao writes:
-> > Look at this patch[1] carefully you will find that it introduces the
-> > same issue that I tried to fix in another patch [2]. Even more sad is
-> > these two patches are in the same patchset. Although this issue isn't
-> > related with the issue found by Naresh, we have to ask ourselves why
-> > we always make the same mistake ?
-> > One possible answer is that we always forget the lifecyle of
-> > memory.emin before we read it. memory.emin doesn't have the same
-> > lifecycle with the memcg, while it really has the same lifecyle with
-> > the reclaimer. IOW, once a reclaimer begins the protetion value should
-> > be set to 0, and after we traversal the memcg tree we calculate a
-> > protection value for this reclaimer, finnaly it disapears after the
-> > reclaimer stops. That is why I highly suggest to add an new protection
-> > member in scan_control before.
-> 
-> I agree with you that the e{min,low} lifecycle is confusing for everyone --
-> the only thing I've not seen confirmation of is any confirmed correlation
-> with the i386 oom killer issue. If you've validated that, I'd like to see
-> the data :-)
+Michal Hocko writes:
+>> > > task->memcg_nr_pages_over_high is not vague, it's a best-effort
+>> > > mechanism to distribute fairness. It's the current task's share of the
+>> > > cgroup's overage, and it allows us in the majority of situations to
+>> > > distribute reclaim work and sleeps in proportion to how much the task
+>> > > is actually at fault.
+>> >
+>> > Agreed. But this stops being the case as soon as the reclaim target has
+>> > been reached and new reclaim attempts are enforced because the memcg is
+>> > still above the high limit. Because then you have a completely different
+>> > reclaim target - get down to the limit. This would be especially visible
+>> > with a large memcg_nr_pages_over_high which could even lead to an over
+>> > reclaim.
+>>
+>> We actually over reclaim even before this patch -- this patch doesn't bring
+>> much new in that regard.
+>>
+>> Tracing try_to_free_pages for a cgroup at the memory.high threshold shows
+>> that before this change, we sometimes even reclaim on the order of twice the
+>> number of pages requested. For example, I see cases where we requested 1000
+>> pages to be reclaimed, but end up reclaiming 2000 in a single reclaim
+>> attempt.
+>
+>This is interesting and worth looking into. I am aware that we can
+>reclaim potentially much more pages during the icache reclaim and that
+>there was a heated discussion without any fix merged in the end IIRC.
+>Do you have any details?
 
-Agreed. Even if e{low,min} might still have some rough edges I am
-completely puzzled how we could end up oom if none of the protection
-path triggers which the additional debugging should confirm. Maybe my
-debugging patch is incomplete or used incorrectly (maybe it would be
-esier to use printk rather than trace_printk?).
--- 
-Michal Hocko
-SUSE Labs
+Sure, we can look into this more, but let's do it separately from this patch -- 
+I don't see that its merging should be contingent on that discussion :-)
