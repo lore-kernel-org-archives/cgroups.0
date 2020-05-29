@@ -1,62 +1,51 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] mm, memcg: reclaim more aggressively before high
- allocator throttling
-Date: Fri, 29 May 2020 12:14:12 +0200
-Message-ID: <20200529101412.GJ4406@dhcp22.suse.cz>
-References: <20200521073245.GI6462@dhcp22.suse.cz>
- <20200521135152.GA810429@cmpxchg.org>
- <20200521143515.GU6462@dhcp22.suse.cz>
- <20200521163833.GA813446@cmpxchg.org>
- <20200521173701.GX6462@dhcp22.suse.cz>
- <20200521184505.GA815980@cmpxchg.org>
- <20200528163101.GJ27484@dhcp22.suse.cz>
- <20200528164848.GB839178@chrisdown.name>
- <20200529073118.GE4406@dhcp22.suse.cz>
- <20200529100858.GA98458@chrisdown.name>
+From: Guoqing Jiang <guoqing.jiang-8+5b1tb3oTXfrHaScsAUWw@public.gmane.org>
+Subject: Re: [PATCH 0/4] cleanup for blk-wbt and blk-throttle
+Date: Fri, 29 May 2020 23:55:34 +0200
+Message-ID: <f308bc7f-083a-d0f3-aad2-b353c241dbde@cloud.ionos.com>
+References: <20200508220015.11528-1-guoqing.jiang@cloud.ionos.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20200529100858.GA98458-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=y+7fPyOVJN5kEZ9dPieR6MlsnghgeDslNqLeQyzk6T0=;
+        b=WZeC7eO7/F1ZaHD2HPukUdjFIz2gU316B+8AUCkZ3RKsm7iLEROxDs+nbuAmSb/M1D
+         oto7q3ImBObrsf7Z8ZjIa2xJvNFfpmhYKUXEMNdbGPul2Odv8xHsR0jxFRbs75pFsx8s
+         tEBmiGdLzbVZNYQ5xTX0vEWNkGPpXNroUaoy77ja1l5tGYab04onKEOIRN3Mi46GrMtQ
+         SetD/TtpId/Ilf7VGL1u8VPwxrB29EEl3tywWnAl0i+PVtPjDP3lxNZ07IpbuOUE4a55
+         fiblyxy3HtslcCuCq66nOo+R7FDVhxyx46HZvQ+KZjC/3rkGtvP+LfVqOmpJFfg5Znu7
+         Qzgg==
+In-Reply-To: <20200508220015.11528-1-guoqing.jiang-8+5b1tb3oTXfrHaScsAUWw@public.gmane.org>
+Content-Language: en-US
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 29-05-20 11:08:58, Chris Down wrote:
-> Michal Hocko writes:
-> > > > > task->memcg_nr_pages_over_high is not vague, it's a best-effort
-> > > > > mechanism to distribute fairness. It's the current task's share of the
-> > > > > cgroup's overage, and it allows us in the majority of situations to
-> > > > > distribute reclaim work and sleeps in proportion to how much the task
-> > > > > is actually at fault.
-> > > >
-> > > > Agreed. But this stops being the case as soon as the reclaim target has
-> > > > been reached and new reclaim attempts are enforced because the memcg is
-> > > > still above the high limit. Because then you have a completely different
-> > > > reclaim target - get down to the limit. This would be especially visible
-> > > > with a large memcg_nr_pages_over_high which could even lead to an over
-> > > > reclaim.
-> > > 
-> > > We actually over reclaim even before this patch -- this patch doesn't bring
-> > > much new in that regard.
-> > > 
-> > > Tracing try_to_free_pages for a cgroup at the memory.high threshold shows
-> > > that before this change, we sometimes even reclaim on the order of twice the
-> > > number of pages requested. For example, I see cases where we requested 1000
-> > > pages to be reclaimed, but end up reclaiming 2000 in a single reclaim
-> > > attempt.
-> > 
-> > This is interesting and worth looking into. I am aware that we can
-> > reclaim potentially much more pages during the icache reclaim and that
-> > there was a heated discussion without any fix merged in the end IIRC.
-> > Do you have any details?
-> 
-> Sure, we can look into this more, but let's do it separately from this patch
-> -- I don't see that its merging should be contingent on that discussion :-)
+Gently ping.
 
-Yes that is a separate issue.
--- 
-Michal Hocko
-SUSE Labs
+On 5/9/20 12:00 AM, Guoqing Jiang wrote:
+> Hi,
+>
+> Find some functions can be removed since there is no caller of them when
+> read the code.
+>
+> Thanks,
+> Guoqing
+>
+> Guoqing Jiang (4):
+>    blk-throttle: remove blk_throtl_drain
+>    blk-throttle: remove tg_drain_bios
+>    blk-wbt: remove wbt_update_limits
+>    blk-wbt: rename __wbt_update_limits to wbt_update_limits
+>
+>   block/blk-throttle.c | 63 --------------------------------------------
+>   block/blk-wbt.c      | 16 +++--------
+>   block/blk-wbt.h      |  4 ---
+>   block/blk.h          |  2 --
+>   4 files changed, 4 insertions(+), 81 deletions(-)
+>
+
