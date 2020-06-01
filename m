@@ -1,56 +1,57 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/2 blk-cgroup/for-5.8] blk-cgroup: show global disk
- stats in root cgroup io.stat
-Date: Mon, 1 Jun 2020 16:42:14 -0400
-Message-ID: <20200601204214.GF31548@mtj.thefacebook.com>
-References: <20200601154351.GD31548@mtj.thefacebook.com>
- <20200601201205.1658417-1-boris@bur.io>
+From: Boris Burkov <boris-UrQYPotlwNs@public.gmane.org>
+Subject: [PATCH] blk-cgroup: don't account iostat for root cgroup
+Date: Mon,  1 Jun 2020 16:11:41 -0700
+Message-ID: <20200601231141.2218370-1-boris@bur.io>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=nNZfm4KTFqe5hnlvYWDeBhcm8Ap+9mpyPFYJmsznAkM=;
-        b=t8euN+bSgRmxO9c8Y/F883WBGe4+MHcPeJWqbsm/Ga9gEIjuGubgttCJNl+uoAu4f2
-         WA3zDSPL6rLppywjj2lYh+yOrJLiGEntBUcihOjGwVwoOB+VIdBpDFHsUZKyLfQ2mqYV
-         RDtckfLXaIynwN3PFlN6VbNxg0/5w0I5jj3n0pEQotS8YPJ9NtJpK3PpqYr1y6OmuR72
-         DP+i/gUVvc8ImBV86uzJB2jknfWCq8ei32IFzdQbXhYFDor1nFtNyNC6g3NI2o2ixNLx
-         YX5Ej8xkJ/zLmgnXpj7IkDsfKCsuw621xmaC5Ff+cxGIH9ky6fFxr9V1lwO1sDKFQMHm
-         flMA==
-Content-Disposition: inline
-In-Reply-To: <20200601201205.1658417-1-boris-UrQYPotlwNs@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bur.io; h=from
+        :to:cc:subject:date:message-id:mime-version
+        :content-transfer-encoding; s=fm1; bh=EJxQtXEmzgFV7qYlHbiD6rvXvA
+        D6+GpjivfAKXYShn8=; b=pp/8RPm1nMDp8zDWGn+jMh9zTt5XUJaZJT5CvG0dcX
+        JRhtGOWyadjxXEh4fVuAcsq7QZZ+zbesJ2IUYWrXUcVzXmFHd1i3e+L2DhzM/yx5
+        IQ2i1htYsKcVQtZi6UFEJqUmkGpN21btMEvllx5NFZaCwLJVDDvSZoX5shfxHGzy
+        q9ZSZ6izbtxumf20J6CWzmEWtB/tk53hIAI+g91CvsyVaasvZ7hqTnMr//FEUT1c
+        LrpDWDXjwIwtI/FfH9dtaqpXvLvGGZwkoDzJM5y4fq9KGJK6I4BUrr/hQmYTq9FN
+        6V9Tya8NxGIILvr9/dwWfuDtlrEQTQtAHfWXb6VmZOmg==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:date:from
+        :message-id:mime-version:subject:to:x-me-proxy:x-me-proxy
+        :x-me-sender:x-me-sender:x-sasl-enc; s=fm2; bh=EJxQtXEmzgFV7qYlH
+        biD6rvXvAD6+GpjivfAKXYShn8=; b=A+2N0452c36DE0qjKhBkM9RicotCU+OXG
+        ZRRHrE+KyZdHSShWo/lWsb0ey7SWaUKHObn2xZiTSll0E38D+FBamXZ+hV6MLXFn
+        1qSTbnPBQJabyiC4iqyPb2BlwizRAIorwWZRQx8oLPD+5IhsVuugofC2/Vw3mhpv
+        /7zfOGE2VnvdDAg1QV5TQZv2q4tDFmhkHcrHtrmvZ5v/ZqV/8HEUmOGt+KLL0+KX
+        gp0WA+ZRhGh0m4opyE5Cc0lmBJNpwKBHCQrC6wIAXyzgSjN6Esp+CH53yWrtxn9U
+        dDSOtDwnI56QVbuUYiSGPP+Yom5QkttwYg08dBWl5odn/JpcWwOGw==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Boris Burkov <boris-UrQYPotlwNs@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, Boris Burkov <boris-UrQYPotlwNs@public.gmane.org>
 
-On Mon, Jun 01, 2020 at 01:12:05PM -0700, Boris Burkov wrote:
-> In order to improve consistency and usability in cgroup stat accounting,
-> we would like to support the root cgroup's io.stat.
-> 
-> Since the root cgroup has processes doing io even if the system has no
-> explicitly created cgroups, we need to be careful to avoid overhead in
-> that case.  For that reason, the rstat algorithms don't handle the root
-> cgroup, so just turning the file on wouldn't give correct statistics.
-> 
-> To get around this, we simulate flushing the iostat struct by filling it
-> out directly from global disk stats. The result is a root cgroup io.stat
-> file consistent with both /proc/diskstats and io.stat.
-> 
-> Note that in order to collect the disk stats, we needed to iterate over
-> devices. To facilitate that, we had to change the linkage of a disk_type
-> to external so that it can be used from blk-cgroup.c to iterate over
-> disks.
-> 
-> Signed-off-by: Boris Burkov <boris-UrQYPotlwNs@public.gmane.org>
-> Suggested-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+This data is never flushed by rstat, so it is never used. We shouldn't
+bother collecting it. We can access global disk stats to compute io
+statistics for the root cgroup.
 
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Boris Burkov <boris-UrQYPotlwNs@public.gmane.org>
+---
+ include/linux/blk-cgroup.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks.
-
+diff --git a/include/linux/blk-cgroup.h b/include/linux/blk-cgroup.h
+index a57ebe2f00ab..e9de4ec07182 100644
+--- a/include/linux/blk-cgroup.h
++++ b/include/linux/blk-cgroup.h
+@@ -591,7 +591,7 @@ static inline bool blkcg_bio_issue_check(struct request_queue *q,
+ 
+ 	throtl = blk_throtl_bio(q, blkg, bio);
+ 
+-	if (!throtl) {
++	if (blkg->parent && !throtl) {
+ 		struct blkg_iostat_set *bis;
+ 		int rwd, cpu;
+ 
 -- 
-tejun
+2.24.1
+
