@@ -1,201 +1,172 @@
-From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+From: Kees Cook <keescook@chromium.org>
 Subject: Re: [PATCH v3 1/4] fs, net: Standardize on file_receive helper to
  move fds across processes
-Date: Thu, 4 Jun 2020 03:24:52 +0200
-Message-ID: <20200604012452.vh33nufblowuxfed@wittgenstein>
+Date: Wed, 3 Jun 2020 19:22:57 -0700
+Message-ID: <202006031845.F587F85A@keescook>
 References: <20200603011044.7972-1-sargun@sargun.me>
  <20200603011044.7972-2-sargun@sargun.me>
+ <20200604012452.vh33nufblowuxfed@wittgenstein>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Yipjb/nJ+PoPYGY3bQlr0vEC5GDtsZwp9TVgxD0rnGk=;
+        b=Qn2BQw97F7bIZrtjDlecVedaFxpvLQXfHqx5ZIkhrdMftq1Uzxuvb3gxbs04al8f6z
+         dUNJTwOCuq0f5AzUIWaq/boxSUbsE7CQq5poZsErcM9jbnlKvwg3ugwzZmw6UY051thR
+         aeypVbCcCPa33vgHBqM+4kc/3K8/7P1pLFmH0=
 Content-Disposition: inline
-In-Reply-To: <20200603011044.7972-2-sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20200604012452.vh33nufblowuxfed@wittgenstein>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>
-Cc: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tycho Andersen <tycho-E0fblnxP3wo@public.gmane.org>, Matt Denton <mpdenton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jann Horn <jannh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Palmer <palmer-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Aleksa Sarai <cyphar-gVpy/LI/lHzQT0dZR+AlfA@public.gmane.org>, Robert Sesek <rsesek-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Giuseppe Scrivano <gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christian Brauner <christian.brauner@ubuntu.com>
+Cc: Sargun Dhillon <sargun@sargun.me>, linux-kernel@vger.kernel.org, Tycho Andersen <tycho@tycho.ws>, Matt Denton <mpdenton@google.com>, Jann Horn <jannh@google.com>, Chris Palmer <palmer@google.com>, Aleksa Sarai <cyphar@cyphar.com>, Robert Sesek <rsesek@google.com>, containers@lists.linux-foundation.org, Giuseppe Scrivano <gscrivan@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Daniel Wagner <daniel.wagner@bmw-carit.de>, "David S . Miller" <davem@davemloft.net>, John Fastabend <john.r.fastabend@intel.com>, Tejun Heo <tj@kernel.org>, stable@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Tue, Jun 02, 2020 at 06:10:41PM -0700, Sargun Dhillon wrote:
-> Previously there were two chunks of code where the logic to receive file
-> descriptors was duplicated in net. The compat version of copying
-> file descriptors via SCM_RIGHTS did not have logic to update cgroups.
-> Logic to change the cgroup data was added in:
-> commit 48a87cc26c13 ("net: netprio: fd passed in SCM_RIGHTS datagram not set correctly")
-> commit d84295067fc7 ("net: net_cls: fd passed in SCM_RIGHTS datagram not set correctly")
+On Thu, Jun 04, 2020 at 03:24:52AM +0200, Christian Brauner wrote:
+> On Tue, Jun 02, 2020 at 06:10:41PM -0700, Sargun Dhillon wrote:
+> > Previously there were two chunks of code where the logic to receive file
+> > descriptors was duplicated in net. The compat version of copying
+> > file descriptors via SCM_RIGHTS did not have logic to update cgroups.
+> > Logic to change the cgroup data was added in:
+> > commit 48a87cc26c13 ("net: netprio: fd passed in SCM_RIGHTS datagram not set correctly")
+> > commit d84295067fc7 ("net: net_cls: fd passed in SCM_RIGHTS datagram not set correctly")
+> > 
+> > This was not copied to the compat path. This commit fixes that, and thus
+> > should be cherry-picked into stable.
+> > 
+> > This introduces a helper (file_receive) which encapsulates the logic for
+> > handling calling security hooks as well as manipulating cgroup information.
+> > This helper can then be used other places in the kernel where file
+> > descriptors are copied between processes
+> > 
+> > I tested cgroup classid setting on both the compat (x32) path, and the
+> > native path to ensure that when moving the file descriptor the classid
+> > is set.
+> > 
+> > Signed-off-by: Sargun Dhillon <sargun@sargun.me>
+> > Suggested-by: Kees Cook <keescook@chromium.org>
+> > Cc: Al Viro <viro@zeniv.linux.org.uk>
+> > Cc: Christian Brauner <christian.brauner@ubuntu.com>
+> > Cc: Daniel Wagner <daniel.wagner@bmw-carit.de>
+> > Cc: David S. Miller <davem@davemloft.net>
+> > Cc: Jann Horn <jannh@google.com>,
+> > Cc: John Fastabend <john.r.fastabend@intel.com>
+> > Cc: Tejun Heo <tj@kernel.org>
+> > Cc: Tycho Andersen <tycho@tycho.ws>
+> > Cc: stable@vger.kernel.org
+> > Cc: cgroups@vger.kernel.org
+> > Cc: linux-fsdevel@vger.kernel.org
+> > Cc: linux-kernel@vger.kernel.org
+> > ---
+> >  fs/file.c            | 35 +++++++++++++++++++++++++++++++++++
+> >  include/linux/file.h |  1 +
+> >  net/compat.c         | 10 +++++-----
+> >  net/core/scm.c       | 14 ++++----------
+> >  4 files changed, 45 insertions(+), 15 deletions(-)
+> > 
+> > diff --git a/fs/file.c b/fs/file.c
+> > index abb8b7081d7a..5afd76fca8c2 100644
+> > --- a/fs/file.c
+> > +++ b/fs/file.c
+> > @@ -18,6 +18,9 @@
+> >  #include <linux/bitops.h>
+> >  #include <linux/spinlock.h>
+> >  #include <linux/rcupdate.h>
+> > +#include <net/sock.h>
+> > +#include <net/netprio_cgroup.h>
+> > +#include <net/cls_cgroup.h>
+> >  
+> >  unsigned int sysctl_nr_open __read_mostly = 1024*1024;
+> >  unsigned int sysctl_nr_open_min = BITS_PER_LONG;
+> > @@ -931,6 +934,38 @@ int replace_fd(unsigned fd, struct file *file, unsigned flags)
+> >  	return err;
+> >  }
+> >  
+> > +/*
+> > + * File Receive - Receive a file from another process
+> > + *
+> > + * This function is designed to receive files from other tasks. It encapsulates
+> > + * logic around security and cgroups. The file descriptor provided must be a
+> > + * freshly allocated (unused) file descriptor.
+> > + *
+> > + * This helper does not consume a reference to the file, so the caller must put
+> > + * their reference.
+> > + *
+> > + * Returns 0 upon success.
+> > + */
+> > +int file_receive(int fd, struct file *file)
 > 
-> This was not copied to the compat path. This commit fixes that, and thus
-> should be cherry-picked into stable.
+> This is all just a remote version of fd_install(), yet it deviates from
+> fd_install()'s semantics and naming. That's not great imho. What about
+> naming this something like:
 > 
-> This introduces a helper (file_receive) which encapsulates the logic for
-> handling calling security hooks as well as manipulating cgroup information.
-> This helper can then be used other places in the kernel where file
-> descriptors are copied between processes
+> fd_install_received()
 > 
-> I tested cgroup classid setting on both the compat (x32) path, and the
-> native path to ensure that when moving the file descriptor the classid
-> is set.
-> 
-> Signed-off-by: Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>
-> Suggested-by: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-> Cc: Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-> Cc: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-> Cc: Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>
-> Cc: David S. Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-> Cc: Jann Horn <jannh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>,
-> Cc: John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Tycho Andersen <tycho-E0fblnxP3wo@public.gmane.org>
-> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> ---
->  fs/file.c            | 35 +++++++++++++++++++++++++++++++++++
->  include/linux/file.h |  1 +
->  net/compat.c         | 10 +++++-----
->  net/core/scm.c       | 14 ++++----------
->  4 files changed, 45 insertions(+), 15 deletions(-)
-> 
-> diff --git a/fs/file.c b/fs/file.c
-> index abb8b7081d7a..5afd76fca8c2 100644
-> --- a/fs/file.c
-> +++ b/fs/file.c
-> @@ -18,6 +18,9 @@
->  #include <linux/bitops.h>
->  #include <linux/spinlock.h>
->  #include <linux/rcupdate.h>
-> +#include <net/sock.h>
-> +#include <net/netprio_cgroup.h>
-> +#include <net/cls_cgroup.h>
->  
->  unsigned int sysctl_nr_open __read_mostly = 1024*1024;
->  unsigned int sysctl_nr_open_min = BITS_PER_LONG;
-> @@ -931,6 +934,38 @@ int replace_fd(unsigned fd, struct file *file, unsigned flags)
->  	return err;
->  }
->  
-> +/*
-> + * File Receive - Receive a file from another process
-> + *
-> + * This function is designed to receive files from other tasks. It encapsulates
-> + * logic around security and cgroups. The file descriptor provided must be a
-> + * freshly allocated (unused) file descriptor.
-> + *
-> + * This helper does not consume a reference to the file, so the caller must put
-> + * their reference.
-> + *
-> + * Returns 0 upon success.
-> + */
-> +int file_receive(int fd, struct file *file)
+> and move the get_file() out of there so it has the same semantics as
+> fd_install(). It seems rather dangerous to have a function like
+> fd_install() that consumes a reference once it returned and another
+> version of this that is basically the same thing but doesn't consume a
+> reference because it takes its own. Seems an invitation for confusion.
+> Does that make sense?
 
-This is all just a remote version of fd_install(), yet it deviates from
-fd_install()'s semantics and naming. That's not great imho. What about
-naming this something like:
+We have some competing opinions on this, I guess. What I really don't
+like is the copy/pasting of the get_unused_fd_flags() and
+put_unused_fd() needed by (nearly) all the callers. If it's a helper, it
+should help. Specifically, I'd like to see this:
 
-fd_install_received()
+int file_receive(int fd, unsigned long flags, struct file *file,
+		 int __user *fdptr)
+{
+	struct socket *sock;
+	int err;
 
-and move the get_file() out of there so it has the same semantics as
-fd_install(). It seems rather dangerous to have a function like
-fd_install() that consumes a reference once it returned and another
-version of this that is basically the same thing but doesn't consume a
-reference because it takes its own. Seems an invitation for confusion.
-Does that make sense?
+	err = security_file_receive(file);
+	if (err)
+		return err;
 
-> +{
-> +	struct socket *sock;
-> +	int err;
-> +
-> +	err = security_file_receive(file);
-> +	if (err)
-> +		return err;
-> +
-> +	fd_install(fd, get_file(file));
-> +
-> +	sock = sock_from_file(file, &err);
-> +	if (sock) {
-> +		sock_update_netprioidx(&sock->sk->sk_cgrp_data);
-> +		sock_update_classid(&sock->sk->sk_cgrp_data);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static int ksys_dup3(unsigned int oldfd, unsigned int newfd, int flags)
->  {
->  	int err = -EBADF;
-> diff --git a/include/linux/file.h b/include/linux/file.h
-> index 142d102f285e..7b56dc23e560 100644
-> --- a/include/linux/file.h
-> +++ b/include/linux/file.h
-> @@ -94,4 +94,5 @@ extern void fd_install(unsigned int fd, struct file *file);
->  extern void flush_delayed_fput(void);
->  extern void __fput_sync(struct file *);
->  
-> +extern int file_receive(int fd, struct file *file);
->  #endif /* __LINUX_FILE_H */
-> diff --git a/net/compat.c b/net/compat.c
-> index 4bed96e84d9a..8ac0e7e09208 100644
-> --- a/net/compat.c
-> +++ b/net/compat.c
-> @@ -293,9 +293,6 @@ void scm_detach_fds_compat(struct msghdr *kmsg, struct scm_cookie *scm)
->  
->  	for (i = 0, cmfptr = (int __user *) CMSG_COMPAT_DATA(cm); i < fdmax; i++, cmfptr++) {
->  		int new_fd;
-> -		err = security_file_receive(fp[i]);
-> -		if (err)
-> -			break;
->  		err = get_unused_fd_flags(MSG_CMSG_CLOEXEC & kmsg->msg_flags
->  					  ? O_CLOEXEC : 0);
->  		if (err < 0)
-> @@ -306,8 +303,11 @@ void scm_detach_fds_compat(struct msghdr *kmsg, struct scm_cookie *scm)
->  			put_unused_fd(new_fd);
->  			break;
->  		}
-> -		/* Bump the usage count and install the file. */
-> -		fd_install(new_fd, get_file(fp[i]));
-> +		err = file_receive(new_fd, fp[i]);
-> +		if (err) {
-> +			put_unused_fd(new_fd);
-> +			break;
-> +		}
->  	}
->  
->  	if (i > 0) {
-> diff --git a/net/core/scm.c b/net/core/scm.c
-> index dc6fed1f221c..ba93abf2881b 100644
-> --- a/net/core/scm.c
-> +++ b/net/core/scm.c
-> @@ -303,11 +303,7 @@ void scm_detach_fds(struct msghdr *msg, struct scm_cookie *scm)
->  	for (i=0, cmfptr=(__force int __user *)CMSG_DATA(cm); i<fdmax;
->  	     i++, cmfptr++)
->  	{
-> -		struct socket *sock;
->  		int new_fd;
-> -		err = security_file_receive(fp[i]);
-> -		if (err)
-> -			break;
->  		err = get_unused_fd_flags(MSG_CMSG_CLOEXEC & msg->msg_flags
->  					  ? O_CLOEXEC : 0);
->  		if (err < 0)
-> @@ -318,13 +314,11 @@ void scm_detach_fds(struct msghdr *msg, struct scm_cookie *scm)
->  			put_unused_fd(new_fd);
->  			break;
->  		}
-> -		/* Bump the usage count and install the file. */
-> -		sock = sock_from_file(fp[i], &err);
-> -		if (sock) {
-> -			sock_update_netprioidx(&sock->sk->sk_cgrp_data);
-> -			sock_update_classid(&sock->sk->sk_cgrp_data);
-> +		err = file_receive(new_fd, fp[i]);
-> +		if (err) {
-> +			put_unused_fd(new_fd);
-> +			break;
->  		}
-> -		fd_install(new_fd, get_file(fp[i]));
->  	}
->  
->  	if (i > 0)
-> -- 
-> 2.25.1
-> 
+	if (fd < 0) {
+		/* Install new fd. */
+		int new_fd;
+
+		err = get_unused_fd_flags(flags);
+		if (err < 0)
+			return err;
+		new_fd = err;
+
+		/* Copy fd to any waiting user memory. */
+		if (fdptr) {
+			err = put_user(new_fd, fdptr);
+			if (err < 0) {
+				put_unused_fd(new_fd);
+				return err;
+			}
+		}
+		fd_install(new_fd, get_file(file));
+		fd = new_fd;
+	} else {
+		/* Replace existing fd. */
+		err = replace_fd(fd, file, flags);
+		if (err)
+			return err;
+	}
+
+	/* Bump the cgroup usage counts. */
+	sock = sock_from_file(fd, &err);
+	if (sock) {
+		sock_update_netprioidx(&sock->sk->sk_cgrp_data);
+		sock_update_classid(&sock->sk->sk_cgrp_data);
+	}
+
+	return fd;
+}
+
+If everyone else *really* prefers keeping the get_unused_fd_flags() /
+put_unused_fd() stuff outside the helper, then I guess I'll give up,
+but I think it is MUCH cleaner this way -- all 4 users trim down lots
+of code duplication.
+
+-- 
+Kees Cook
