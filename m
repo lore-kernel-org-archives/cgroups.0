@@ -1,22 +1,14 @@
-From: Sargun Dhillon <sargun@sargun.me>
+From: Christian Brauner <christian.brauner@ubuntu.com>
 Subject: Re: [PATCH v3 1/4] fs, net: Standardize on file_receive helper to
  move fds across processes
-Date: Thu, 4 Jun 2020 05:20:41 +0000
-Message-ID: <20200604052040.GA16501@ircssh-2.c.rugged-nimbus-611.internal>
+Date: Thu, 4 Jun 2020 14:52:26 +0200
+Message-ID: <20200604125226.eztfrpvvuji7cbb2@wittgenstein>
 References: <20200603011044.7972-1-sargun@sargun.me>
  <20200603011044.7972-2-sargun@sargun.me>
  <20200604012452.vh33nufblowuxfed@wittgenstein>
  <202006031845.F587F85A@keescook>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=sargun.me; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=oKNXmPZh2jB30BHUyHRPpl5a8wx5yENQJM5HVKTmIUg=;
-        b=054UqkhvVty3ow+lMQbK9j4Udt3zohY4MtWydjS8v+qaL1KEzL/lBvin5kq+w6wouX
-         hZI4wLQja9EIX1nva9plQnfwHl8FzoXwywvdWospv8P8d7E04VgKiRV9X8gRx2J9T1CC
-         JEXiaCtFU/kNPlAOilsNcnuQhrVealltviXyQ=
 Content-Disposition: inline
 In-Reply-To: <202006031845.F587F85A@keescook>
 Sender: linux-kernel-owner@vger.kernel.org
@@ -24,7 +16,7 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Kees Cook <keescook@chromium.org>
-Cc: Christian Brauner <christian.brauner@ubuntu.com>, linux-kernel@vger.kernel.org, Tycho Andersen <tycho@tycho.ws>, Matt Denton <mpdenton@google.com>, Jann Horn <jannh@google.com>, Chris Palmer <palmer@google.com>, Aleksa Sarai <cyphar@cyphar.com>, Robert Sesek <rsesek@google.com>, containers@lists.linux-foundation.org, Giuseppe Scrivano <gscrivan@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Al Viro <viro@zeniv.linux.org.uk>, "David S . Miller" <davem@davemloft.net>, Tejun Heo <tj@kernel.org>, stable@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: Sargun Dhillon <sargun@sargun.me>, linux-kernel@vger.kernel.org, Tycho Andersen <tycho@tycho.ws>, Matt Denton <mpdenton@google.com>, Jann Horn <jannh@google.com>, Chris Palmer <palmer@google.com>, Aleksa Sarai <cyphar@cyphar.com>, Robert Sesek <rsesek@google.com>, containers@lists.linux-foundation.org, Giuseppe Scrivano <gscrivan@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Daniel Wagner <daniel.wagner@bmw-carit.de>, "David S . Miller" <davem@davemloft.net>, John Fastabend <john.r.fastabend@intel.com>, Tejun Heo <tj@kernel.org>, stable@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
 On Wed, Jun 03, 2020 at 07:22:57PM -0700, Kees Cook wrote:
 > On Thu, Jun 04, 2020 at 03:24:52AM +0200, Christian Brauner wrote:
@@ -121,6 +113,48 @@ On Wed, Jun 03, 2020 at 07:22:57PM -0700, Kees Cook wrote:
 > 
 > int file_receive(int fd, unsigned long flags, struct file *file,
 > 		 int __user *fdptr)
+
+I still fail to see what this whole put_user() handling buys us at all
+and why this function needs to be anymore complicated then simply:
+
+fd_install_received(int fd, struct file *file)
+{
+	security_file_receive(file);
+ 
+ 	sock = sock_from_file(fd, &err);
+ 	if (sock) {
+ 		sock_update_netprioidx(&sock->sk->sk_cgrp_data);
+ 		sock_update_classid(&sock->sk->sk_cgrp_data);
+ 	}
+
+	fd_install();
+	return;
+}
+
+exactly like fd_install() but for received files.
+
+For scm you can fail somewhere in the middle of putting any number of
+file descriptors so you're left in a state with only a subset of
+requested file descriptors installed so it's not really useful there.
+And if you manage to install an fd but then fail to put_user() it
+userspace can simply check it's fds via proc and has to anyway on any
+scm message error. If you fail an scm message userspace better check
+their fds.
+For seccomp maybe but even there I doubt it and I still maintain that
+userspace screwing this up is on them which is how we do this most of
+the time. And for pidfd_getfd() this whole put_user() thing doesn't
+matter at all.
+
+It's much easier and clearer if we simply have a fd_install() -
+fd_install_received() parallelism where we follow an established
+convention. _But_ if that blocks you from making this generic enough
+then at least the replace_fd() vs fd_install() logic seems it shouldn't
+be in there. 
+
+And the function name really needs to drive home the point that it
+installs an fd into the tasks fdtable no matter what version you go
+with. file_receive() is really not accurate enough for this at all.
+
 > {
 > 	struct socket *sock;
 > 	int err;
@@ -172,51 +206,3 @@ On Wed, Jun 03, 2020 at 07:22:57PM -0700, Kees Cook wrote:
 > 
 > -- 
 > Kees Cook
-This seems weird that the function has two different return mechanisms
-depending on the value of fdptr, especially given that behaviour is
-only invoked by SCM, whereas the other callers (addfd, and pidfd_getfd)
-just want the FD value returned.
-
-Won't this produce a "bad" result, if the user does:
-
-struct msghdr msg = {};
-struct cmsghdr *cmsg;
-struct iovec io = {
-	.iov_base = &c,
-	.iov_len = 1,
-};
-
-msg.msg_iov = &io;
-msg.msg_iovlen = 1;
-msg.msg_control = NULL;
-msg.msg_controllen = sizeof(buf);
-
-recvmsg(sock, &msg, 0);
-----
-
-This will end up installing the FD, but it will efault, when
-scm_detach_fds tries to fill out the rest of the info. 
-
-I mean, we can easily solve this with a null pointer check
-in scm_detach_fds, but my fear is that user n will forget
-to do this, and make a mistake.
-
-Maybe it would be nice to have:
-
-/* Receives file descriptor and installs it in userspace at uptr. */
-static inline intfile_receive_user(struct file *file, unsigned long flags,
-				   int __user *fdptr)
-{
-	if (fdptr == NULL)
-		return -EFAULT;
-
-	return __file_receive(-1, flags, file, uptr);
-}
-
-And then just let pidfd_getfd, and seccomp_addfd call __file_receive
-directly, or offer a different helper like:
-
-static inline file_receive(long fd, struct *file, unsigned long flags)
-{
-	return __file_receive(fd, flags, file, NULL);
-}
