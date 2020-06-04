@@ -1,21 +1,21 @@
-From: Kees Cook <keescook@chromium.org>
+From: Sargun Dhillon <sargun@sargun.me>
 Subject: Re: [PATCH v3 1/4] fs, net: Standardize on file_receive helper to
  move fds across processes
-Date: Wed, 3 Jun 2020 19:22:57 -0700
-Message-ID: <202006031845.F587F85A@keescook>
+Date: Thu, 4 Jun 2020 03:39:07 +0000
+Message-ID: <20200604033907.GA16025@ircssh-2.c.rugged-nimbus-611.internal>
 References: <20200603011044.7972-1-sargun@sargun.me>
  <20200603011044.7972-2-sargun@sargun.me>
  <20200604012452.vh33nufblowuxfed@wittgenstein>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
+        d=sargun.me; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=Yipjb/nJ+PoPYGY3bQlr0vEC5GDtsZwp9TVgxD0rnGk=;
-        b=Qn2BQw97F7bIZrtjDlecVedaFxpvLQXfHqx5ZIkhrdMftq1Uzxuvb3gxbs04al8f6z
-         dUNJTwOCuq0f5AzUIWaq/boxSUbsE7CQq5poZsErcM9jbnlKvwg3ugwzZmw6UY051thR
-         aeypVbCcCPa33vgHBqM+4kc/3K8/7P1pLFmH0=
+         :content-disposition:in-reply-to:user-agent;
+        bh=JL8KAHI97qtguZ9Tb2fscmILbngbHV5HZl94fH1QWiU=;
+        b=BkAIZS5UfiiyWUPoA8i0jqjgQC/WADaVCEyErmWLwK8t3GHDHFMmZ0cWMKoqVrqQqf
+         GO+t+UGX7bnWxdI5DqxuR9Q92NU7fHo24UZMJGMnMMJRKYKo4x/F7pwAsbhyN7Gn60ju
+         n7q3PRtkSlmouoqf/iL9VnER2wtgOLpNaqOco=
 Content-Disposition: inline
 In-Reply-To: <20200604012452.vh33nufblowuxfed@wittgenstein>
 Sender: linux-kernel-owner@vger.kernel.org
@@ -23,7 +23,7 @@ List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Christian Brauner <christian.brauner@ubuntu.com>
-Cc: Sargun Dhillon <sargun@sargun.me>, linux-kernel@vger.kernel.org, Tycho Andersen <tycho@tycho.ws>, Matt Denton <mpdenton@google.com>, Jann Horn <jannh@google.com>, Chris Palmer <palmer@google.com>, Aleksa Sarai <cyphar@cyphar.com>, Robert Sesek <rsesek@google.com>, containers@lists.linux-foundation.org, Giuseppe Scrivano <gscrivan@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Daniel Wagner <daniel.wagner@bmw-carit.de>, "David S . Miller" <davem@davemloft.net>, John Fastabend <john.r.fastabend@intel.com>, Tejun Heo <tj@kernel.org>, stable@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org, Tycho Andersen <tycho@tycho.ws>, Matt Denton <mpdenton@google.com>, Jann Horn <jannh@google.com>, Chris Palmer <palmer@google.com>, Aleksa Sarai <cyphar@cyphar.com>, Robert Sesek <rsesek@google.com>, containers@lists.linux-foundation.org, Giuseppe Scrivano <gscrivan@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Daniel Wagner <daniel.wagner@bmw-carit.de>, "David S . Miller" <davem@davemloft.net>, John Fastabend <john.r.fastabend@intel.com>, Tejun Heo <tj@kernel.org>, stable@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
 On Thu, Jun 04, 2020 at 03:24:52AM +0200, Christian Brauner wrote:
 > On Tue, Jun 02, 2020 at 06:10:41PM -0700, Sargun Dhillon wrote:
@@ -111,62 +111,17 @@ On Thu, Jun 04, 2020 at 03:24:52AM +0200, Christian Brauner wrote:
 > version of this that is basically the same thing but doesn't consume a
 > reference because it takes its own. Seems an invitation for confusion.
 > Does that make sense?
+> 
+You're right. The reason for the difference in my mind is that fd_install
+always succeeds, whereas file_receive can fail. It's easier to do something
+like:
+fd_install(fd, get_file(f))
+vs.
+if (file_receive(fd, get_file(f))
+	fput(f);
 
-We have some competing opinions on this, I guess. What I really don't
-like is the copy/pasting of the get_unused_fd_flags() and
-put_unused_fd() needed by (nearly) all the callers. If it's a helper, it
-should help. Specifically, I'd like to see this:
+Alternatively, if the reference was always consumed, it is somewhat
+easier.
 
-int file_receive(int fd, unsigned long flags, struct file *file,
-		 int __user *fdptr)
-{
-	struct socket *sock;
-	int err;
-
-	err = security_file_receive(file);
-	if (err)
-		return err;
-
-	if (fd < 0) {
-		/* Install new fd. */
-		int new_fd;
-
-		err = get_unused_fd_flags(flags);
-		if (err < 0)
-			return err;
-		new_fd = err;
-
-		/* Copy fd to any waiting user memory. */
-		if (fdptr) {
-			err = put_user(new_fd, fdptr);
-			if (err < 0) {
-				put_unused_fd(new_fd);
-				return err;
-			}
-		}
-		fd_install(new_fd, get_file(file));
-		fd = new_fd;
-	} else {
-		/* Replace existing fd. */
-		err = replace_fd(fd, file, flags);
-		if (err)
-			return err;
-	}
-
-	/* Bump the cgroup usage counts. */
-	sock = sock_from_file(fd, &err);
-	if (sock) {
-		sock_update_netprioidx(&sock->sk->sk_cgrp_data);
-		sock_update_classid(&sock->sk->sk_cgrp_data);
-	}
-
-	return fd;
-}
-
-If everyone else *really* prefers keeping the get_unused_fd_flags() /
-put_unused_fd() stuff outside the helper, then I guess I'll give up,
-but I think it is MUCH cleaner this way -- all 4 users trim down lots
-of code duplication.
-
--- 
-Kees Cook
+I'm fine either way, but just explaining my reasoning for the difference
+in behaviour.
