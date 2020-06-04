@@ -1,75 +1,89 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH mm v6 4/4] mm: automatically penalize tasks with high
- swap use
-Date: Thu, 4 Jun 2020 17:57:00 +0200
-Message-ID: <20200604155700.GD4362@dhcp22.suse.cz>
-References: <20200527195846.102707-1-kuba@kernel.org>
- <20200527195846.102707-5-kuba@kernel.org>
+From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Virtual Linux Plumbers 2020: Containers and Checkpoint/Restore
+ microconference CFP Open until 20 July
+Date: Fri, 5 Jun 2020 00:06:37 +0200
+Message-ID: <20200604220637.d4ccmcsswi2ppniw@wittgenstein>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20200527195846.102707-5-kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, criu-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: =?utf-8?B?U3TDqXBoYW5l?= Graber <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>, Mike Rapoport <rppt-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
 
-On Wed 27-05-20 12:58:46, Jakub Kicinski wrote:
-> Add a memory.swap.high knob, which can be used to protect the system
-> from SWAP exhaustion. The mechanism used for penalizing is similar
-> to memory.high penalty (sleep on return to user space).
-> 
-> That is not to say that the knob itself is equivalent to memory.high.
-> The objective is more to protect the system from potentially buggy
-> tasks consuming a lot of swap and impacting other tasks, or even
-> bringing the whole system to stand still with complete SWAP
-> exhaustion. Hopefully without the need to find per-task hard
-> limits.
-> 
-> Slowing misbehaving tasks down gradually allows user space oom
-> killers or other protection mechanisms to react. oomd and earlyoom
-> already do killing based on swap exhaustion, and memory.swap.high
-> protection will help implement such userspace oom policies more
-> reliably.
-> 
-> We can use one counter for number of pages allocated under
-> pressure to save struct task space and avoid two separate
-> hierarchy walks on the hot path. The exact overage is
-> calculated on return to user space, anyway.
-> 
-> Take the new high limit into account when determining if swap
-> is "full". Borrowing the explanation from Johannes:
-> 
->   The idea behind "swap full" is that as long as the workload has plenty
->   of swap space available and it's not changing its memory contents, it
->   makes sense to generously hold on to copies of data in the swap
->   device, even after the swapin. A later reclaim cycle can drop the page
->   without any IO. Trading disk space for IO.
-> 
->   But the only two ways to reclaim a swap slot is when they're faulted
->   in and the references go away, or by scanning the virtual address space
->   like swapoff does - which is very expensive (one could argue it's too
->   expensive even for swapoff, it's often more practical to just reboot).
-> 
->   So at some point in the fill level, we have to start freeing up swap
->   slots on fault/swapin. Otherwise we could eventually run out of swap
->   slots while they're filled with copies of data that is also in RAM.
-> 
->   We don't want to OOM a workload because its available swap space is
->   filled with redundant cache.
-> 
-> Signed-off-by: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Hey everyone,
 
-I am sorry for being late here but thanks for adding clarifications
-which make the semantic much more clear now! Also thanks for simplifying 
-the throttling implementation. If a different scaling is needed then
-this can be added later on.
+We're happy to announce that the Container and Checkpoint/Restore
+microconference (MC) has been accepted as part of Linux Plumber's again!
+The Containers and Checkpoint/Restore MC at Linux Plumbers is the opportunity
+for kernel developers, runtime maintainers, and generally everyone working on
+containers and related technologies to talk about what they are up to and agree
+on the next major changes to kernel and userspace.
 
-I do not see any other problems with the patch.
+As we have already done the last years, the micro-conference also covers topic
+of the Checkpoint-Restore micro-conference.
 
-Thanks!
--- 
-Michal Hocko
-SUSE Labs
+Please note that LPC 2020 was originally set to be held in Halifax, Nova
+Scotia, Canada but has been moved to a virtual event in light of recent events.
+Please see our organizing comittee's blog on the Plumber's website [1]
+for more information.
+
+We expect to time limit presentations/demos to 15 minutes including questions.
+More open ended discussion topics will get up to 30 minutes allocated.
+
+In the spirit of a Plumber's microconference we especially appreciate topics
+pitching new ideas and features people have been thinking about. This is also
+the time to talk about your favorite kernel- or userspace problems. If you have
+a proposal how to solve them or if you just want to gather input and ideas from
+other developers this is the right place.
+
+Here are some ideas for topics:
+
+System call filtering and interception
+Hardware enforced container isolation
+New seccomp features
+New cgroup features
+Handling cgroup v1 on cgroup v2 only hosts and vica versa
+Performance improvement for containers (following Spectre/Meltdown mitigation)
+Time namespacing
+CGroupV2 developments
+LSM, IMA, EVM, keyrings inside containers
+UID shifting filesystem (shiftfs)
+New mount API
+New pidfd API
+New clone3 syscall
+CRIU integration with container engines and orchestration frameworks
+(In)stability of less commonly used kernel ABIs
+Checkpoint/Restore performance improvements
+Improving the state of userfaultfd and its adoption in container runtimes
+Speeding up container live migration
+Extending and virtualizing procfs
+Restricting path resolution
+Android containers and containers on Android
+Container Auditing and Monitoring
+Cgroups and Containers with Real-Time Scheduling
+
+Some of those are ideas in search of an acceptable solution, some are problems
+likely to affect all container runtimes some are coverage of very recent
+kernel work and how that can be used by userspace, and some are proposed kernel
+patches that need in-person discussion. This list is not meant to be
+exhaustive. If you have other ideas or work to discuss, please apply! Keep in
+mind both kernel- and userspace topics are acceptable!
+
+Please make your proposals on the Linux Plumber's website selecting the
+Containers and Checkpoint/Restore MC as the Track you're submitting at:
+
+https://linuxplumbersconf.org/event/7/abstracts/
+
+We’ll accept proposals for this micro-conference until the 20 of July 2020.
+
+This year’s edition of the micro-conference is organized and run by:
+
+Christian Brauner (Canonical Ltd.)
+Stéphane Graber (Canonical Ltd.)
+Mike Rapoport (IBM)
+
+[1]: https://www.linuxplumbersconf.org/blog/2020/linux-plumbers-conference-2020-goes-virtual/
+
