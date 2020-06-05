@@ -1,89 +1,301 @@
-From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Virtual Linux Plumbers 2020: Containers and Checkpoint/Restore
- microconference CFP Open until 20 July
-Date: Fri, 5 Jun 2020 00:06:37 +0200
-Message-ID: <20200604220637.d4ccmcsswi2ppniw@wittgenstein>
+From: Sargun Dhillon <sargun@sargun.me>
+Subject: Re: [PATCH v3 1/4] fs, net: Standardize on file_receive helper to
+ move fds across processes
+Date: Fri, 5 Jun 2020 07:54:36 +0000
+Message-ID: <20200605075435.GA3345@ircssh-2.c.rugged-nimbus-611.internal>
+References: <20200603011044.7972-1-sargun@sargun.me>
+ <20200603011044.7972-2-sargun@sargun.me>
+ <20200604012452.vh33nufblowuxfed@wittgenstein>
+ <202006031845.F587F85A@keescook>
+ <20200604125226.eztfrpvvuji7cbb2@wittgenstein>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=sargun.me; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=n3CbR66nPfpD0gS2lRT/W4hlXwXHn+0jPaByp2D7Ys4=;
+        b=t1xgUo7nYwNixWnmxgLBT7oUcykY44kUV/1DJgvAmFZE8wKYdPDHRItAsebPxPwlpG
+         9qGmmWtC3P6l8aKd6lz5Ufj75qysHw3dOkMIY69vD1fn+x1acWlT0fCL2Kw5df76B/RX
+         lgXHJSzCvbXxPeInThtUHKbu1aZndwqLkRT58=
 Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20200604125226.eztfrpvvuji7cbb2@wittgenstein>
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, criu-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: =?utf-8?B?U3TDqXBoYW5l?= Graber <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>, Mike Rapoport <rppt-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Christian Brauner <christian.brauner@ubuntu.com>
+Cc: Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org, Tycho Andersen <tycho@tycho.ws>, Matt Denton <mpdenton@google.com>, Jann Horn <jannh@google.com>, Chris Palmer <palmer@google.com>, Aleksa Sarai <cyphar@cyphar.com>, Robert Sesek <rsesek@google.com>, containers@lists.linux-foundation.org, Giuseppe Scrivano <gscrivan@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Daniel Wagner <daniel.wagner@bmw-carit.de>, "David S . Miller" <davem@davemloft.net>, John Fastabend <john.r.fastabend@intel.com>, Tejun Heo <tj@kernel.org>, stable@vger.kernel.org, cgroups@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Hey everyone,
+On Thu, Jun 04, 2020 at 02:52:26PM +0200, Christian Brauner wrote:
+> On Wed, Jun 03, 2020 at 07:22:57PM -0700, Kees Cook wrote:
+> > On Thu, Jun 04, 2020 at 03:24:52AM +0200, Christian Brauner wrote:
+> > > On Tue, Jun 02, 2020 at 06:10:41PM -0700, Sargun Dhillon wrote:
+> > > > Previously there were two chunks of code where the logic to receive file
+> > > > descriptors was duplicated in net. The compat version of copying
+> > > > file descriptors via SCM_RIGHTS did not have logic to update cgroups.
+> > > > Logic to change the cgroup data was added in:
+> > > > commit 48a87cc26c13 ("net: netprio: fd passed in SCM_RIGHTS datagram not set correctly")
+> > > > commit d84295067fc7 ("net: net_cls: fd passed in SCM_RIGHTS datagram not set correctly")
+> > > > 
+> > > > This was not copied to the compat path. This commit fixes that, and thus
+> > > > should be cherry-picked into stable.
+> > > > 
+> > > > This introduces a helper (file_receive) which encapsulates the logic for
+> > > > handling calling security hooks as well as manipulating cgroup information.
+> > > > This helper can then be used other places in the kernel where file
+> > > > descriptors are copied between processes
+> > > > 
+> > > > I tested cgroup classid setting on both the compat (x32) path, and the
+> > > > native path to ensure that when moving the file descriptor the classid
+> > > > is set.
+> > > > 
+> > > > Signed-off-by: Sargun Dhillon <sargun@sargun.me>
+> > > > Suggested-by: Kees Cook <keescook@chromium.org>
+> > > > Cc: Al Viro <viro@zeniv.linux.org.uk>
+> > > > Cc: Christian Brauner <christian.brauner@ubuntu.com>
+> > > > Cc: Daniel Wagner <daniel.wagner@bmw-carit.de>
+> > > > Cc: David S. Miller <davem@davemloft.net>
+> > > > Cc: Jann Horn <jannh@google.com>,
+> > > > Cc: John Fastabend <john.r.fastabend@intel.com>
+> > > > Cc: Tejun Heo <tj@kernel.org>
+> > > > Cc: Tycho Andersen <tycho@tycho.ws>
+> > > > Cc: stable@vger.kernel.org
+> > > > Cc: cgroups@vger.kernel.org
+> > > > Cc: linux-fsdevel@vger.kernel.org
+> > > > Cc: linux-kernel@vger.kernel.org
+> > > > ---
+> > > >  fs/file.c            | 35 +++++++++++++++++++++++++++++++++++
+> > > >  include/linux/file.h |  1 +
+> > > >  net/compat.c         | 10 +++++-----
+> > > >  net/core/scm.c       | 14 ++++----------
+> > > >  4 files changed, 45 insertions(+), 15 deletions(-)
+> > > > 
+> > > 
+> > > This is all just a remote version of fd_install(), yet it deviates from
+> > > fd_install()'s semantics and naming. That's not great imho. What about
+> > > naming this something like:
+> > > 
+> > > fd_install_received()
+> > > 
+> > > and move the get_file() out of there so it has the same semantics as
+> > > fd_install(). It seems rather dangerous to have a function like
+> > > fd_install() that consumes a reference once it returned and another
+> > > version of this that is basically the same thing but doesn't consume a
+> > > reference because it takes its own. Seems an invitation for confusion.
+> > > Does that make sense?
+> > 
+> > We have some competing opinions on this, I guess. What I really don't
+> > like is the copy/pasting of the get_unused_fd_flags() and
+> > put_unused_fd() needed by (nearly) all the callers. If it's a helper, it
+> > should help. Specifically, I'd like to see this:
+> > 
+> > int file_receive(int fd, unsigned long flags, struct file *file,
+> > 		 int __user *fdptr)
+> 
+> I still fail to see what this whole put_user() handling buys us at all
+> and why this function needs to be anymore complicated then simply:
+> 
+> fd_install_received(int fd, struct file *file)
+> {
+> 	security_file_receive(file);
+>  
+>  	sock = sock_from_file(fd, &err);
+>  	if (sock) {
+>  		sock_update_netprioidx(&sock->sk->sk_cgrp_data);
+>  		sock_update_classid(&sock->sk->sk_cgrp_data);
+>  	}
+> 
+> 	fd_install();
+> 	return;
+> }
+> 
+> exactly like fd_install() but for received files.
+> 
+> For scm you can fail somewhere in the middle of putting any number of
+> file descriptors so you're left in a state with only a subset of
+> requested file descriptors installed so it's not really useful there.
+> And if you manage to install an fd but then fail to put_user() it
+> userspace can simply check it's fds via proc and has to anyway on any
+> scm message error. If you fail an scm message userspace better check
+> their fds.
+> For seccomp maybe but even there I doubt it and I still maintain that
+> userspace screwing this up is on them which is how we do this most of
+> the time. And for pidfd_getfd() this whole put_user() thing doesn't
+> matter at all.
+> 
+> It's much easier and clearer if we simply have a fd_install() -
+> fd_install_received() parallelism where we follow an established
+> convention. _But_ if that blocks you from making this generic enough
+> then at least the replace_fd() vs fd_install() logic seems it shouldn't
+> be in there. 
+> 
+> And the function name really needs to drive home the point that it
+> installs an fd into the tasks fdtable no matter what version you go
+> with. file_receive() is really not accurate enough for this at all.
+> 
+> > {
+> > 	struct socket *sock;
+> > 	int err;
+> > 
+> > 	err = security_file_receive(file);
+> > 	if (err)
+> > 		return err;
+> > 
+> > 	if (fd < 0) {
+> > 		/* Install new fd. */
+> > 		int new_fd;
+> > 
+> > 		err = get_unused_fd_flags(flags);
+> > 		if (err < 0)
+> > 			return err;
+> > 		new_fd = err;
+> > 
+> > 		/* Copy fd to any waiting user memory. */
+> > 		if (fdptr) {
+> > 			err = put_user(new_fd, fdptr);
+> > 			if (err < 0) {
+> > 				put_unused_fd(new_fd);
+> > 				return err;
+> > 			}
+> > 		}
+> > 		fd_install(new_fd, get_file(file));
+> > 		fd = new_fd;
+> > 	} else {
+> > 		/* Replace existing fd. */
+> > 		err = replace_fd(fd, file, flags);
+> > 		if (err)
+> > 			return err;
+> > 	}
+> > 
+> > 	/* Bump the cgroup usage counts. */
+> > 	sock = sock_from_file(fd, &err);
+> > 	if (sock) {
+> > 		sock_update_netprioidx(&sock->sk->sk_cgrp_data);
+> > 		sock_update_classid(&sock->sk->sk_cgrp_data);
+> > 	}
+> > 
+> > 	return fd;
+> > }
+> > 
+> > If everyone else *really* prefers keeping the get_unused_fd_flags() /
+> > put_unused_fd() stuff outside the helper, then I guess I'll give up,
+> > but I think it is MUCH cleaner this way -- all 4 users trim down lots
+> > of code duplication.
+> > 
+> > -- 
+> > Kees Cook
+How about this:
 
-We're happy to announce that the Container and Checkpoint/Restore
-microconference (MC) has been accepted as part of Linux Plumber's again!
-The Containers and Checkpoint/Restore MC at Linux Plumbers is the opportunity
-for kernel developers, runtime maintainers, and generally everyone working on
-containers and related technologies to talk about what they are up to and agree
-on the next major changes to kernel and userspace.
 
-As we have already done the last years, the micro-conference also covers topic
-of the Checkpoint-Restore micro-conference.
+static int do_dup2(struct files_struct *files,
+	struct file *file, unsigned fd, unsigned flags)
+__releases(&files->file_lock)
+{
+	struct file *tofree;
+	struct fdtable *fdt;
 
-Please note that LPC 2020 was originally set to be held in Halifax, Nova
-Scotia, Canada but has been moved to a virtual event in light of recent events.
-Please see our organizing comittee's blog on the Plumber's website [1]
-for more information.
+	...
 
-We expect to time limit presentations/demos to 15 minutes including questions.
-More open ended discussion topics will get up to 30 minutes allocated.
+	/*
+	 * New bit, allowing the file to be null. Doesn't have the same
+	 * "sanity check" bits from __alloc_fd
+	 */
+	if (likely(file))
+		get_file(file);
+	rcu_assign_pointer(fdt->fd[fd], file);
 
-In the spirit of a Plumber's microconference we especially appreciate topics
-pitching new ideas and features people have been thinking about. This is also
-the time to talk about your favorite kernel- or userspace problems. If you have
-a proposal how to solve them or if you just want to gather input and ideas from
-other developers this is the right place.
+	__set_open_fd(fd, fdt);
 
-Here are some ideas for topics:
+	...
+}
 
-System call filtering and interception
-Hardware enforced container isolation
-New seccomp features
-New cgroup features
-Handling cgroup v1 on cgroup v2 only hosts and vica versa
-Performance improvement for containers (following Spectre/Meltdown mitigation)
-Time namespacing
-CGroupV2 developments
-LSM, IMA, EVM, keyrings inside containers
-UID shifting filesystem (shiftfs)
-New mount API
-New pidfd API
-New clone3 syscall
-CRIU integration with container engines and orchestration frameworks
-(In)stability of less commonly used kernel ABIs
-Checkpoint/Restore performance improvements
-Improving the state of userfaultfd and its adoption in container runtimes
-Speeding up container live migration
-Extending and virtualizing procfs
-Restricting path resolution
-Android containers and containers on Android
-Container Auditing and Monitoring
-Cgroups and Containers with Real-Time Scheduling
+/*
+ * File Receive - Receive a file from another process
+ *
+ * Encapsulates the logic to handle receiving a file from another task. It
+ * does not install the file descriptor. That is delegated to the user. If
+ * an error occurs that results in the file descriptor not being installed,
+ * they must put_unused_fd.
+ *
+ * fd should be >= 0 if you intend on replacing a file descriptor, or
+ * alternatively -1 if you want file_receive to allocate an FD for you
+ *
+ * Returns the fd number on success.
+ * Returns negative error code on failure.
+ *
+ */
+int file_receive(int fd, unsigned int flags, struct file *file)
+{
+	int err;
+	struct socket *sock;
+	struct files_struct *files = current->files;
 
-Some of those are ideas in search of an acceptable solution, some are problems
-likely to affect all container runtimes some are coverage of very recent
-kernel work and how that can be used by userspace, and some are proposed kernel
-patches that need in-person discussion. This list is not meant to be
-exhaustive. If you have other ideas or work to discuss, please apply! Keep in
-mind both kernel- and userspace topics are acceptable!
+	err = security_file_receive(file);
+	if (err)
+		return err;
 
-Please make your proposals on the Linux Plumber's website selecting the
-Containers and Checkpoint/Restore MC as the Track you're submitting at:
+	if (fd >= 0) {
+		if (fd >= rlimit(RLIMIT_NOFILE))
+			return -EBADF;
 
-https://linuxplumbersconf.org/event/7/abstracts/
+		spin_lock(&files->file_lock);
+		err = expand_files(files, fd);
+		if (err < 0) {
+			goto out_unlock;
+		}
 
-We’ll accept proposals for this micro-conference until the 20 of July 2020.
+		err = do_dup2(files, NULL, fd, flags);
+		if (err)
+			return err;
+	} else {
+		fd = get_unused_fd_flags(flags);
+		if (fd < 0)
+			return fd;
+	}
 
-This year’s edition of the micro-conference is organized and run by:
+	sock = sock_from_file(file, &err);
+	if (sock) {
+		sock_update_netprioidx(&sock->sk->sk_cgrp_data);
+		sock_update_classid(&sock->sk->sk_cgrp_data);
+	}
 
-Christian Brauner (Canonical Ltd.)
-Stéphane Graber (Canonical Ltd.)
-Mike Rapoport (IBM)
+	return fd;
 
-[1]: https://www.linuxplumbersconf.org/blog/2020/linux-plumbers-conference-2020-goes-virtual/
+out_unlock:
+	spin_unlock(&files->file_lock);
+	return err;
+}
+
+---
+
+then the code in scm.c:
+err = file_receive(-1, flags, fp[i]);
+if (err < 0)
+	break;
+
+new_fd = err;
+err = put_user(new_fd, cmfptr);
+if (err) {
+	put_unused_fd(new_fd);
+	break;
+}
+
+/* Bump the usage count and install the file. */
+fd_install(new_fd, get_file(fp[i]));
+
+And addfd:
+ret = file_receive(addfd->fd, addfd->flags, addfd->file);
+if (ret >= 0)
+	fd_install(ret, get_file(addfd->file));
+addfd->ret = ret;
+
+----
+
+This way there is:
+1. No "put_user" logic in file_receive
+2. Minimal (single) branching logic, unless there's something in between
+   the file_receive and installing the FD, such as put_user.
+3. Doesn't implement fd_install, so there's no ambiguity about it being
+   file_install_received vs. just the receive logic.
 
