@@ -1,9 +1,10 @@
-From: David Laight <David.Laight@ACULAB.COM>
-Subject: RE: [PATCH v3 1/4] fs, net: Standardize on file_receive helper to
+From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3 1/4] fs, net: Standardize on file_receive helper to
  move fds across processes
-Date: Wed, 10 Jun 2020 08:48:45 +0000
-Message-ID: <40d76a9a4525414a8c9809cd29a7ba8e@AcuMS.aculab.com>
-References: <20200603011044.7972-2-sargun@sargun.me>
+Date: Wed, 10 Jun 2020 11:30:54 +0200
+Message-ID: <20200610093054.z7hydwbcmh7ocanw@wittgenstein>
+References: <20200603011044.7972-1-sargun@sargun.me>
+ <20200603011044.7972-2-sargun@sargun.me>
  <20200604012452.vh33nufblowuxfed@wittgenstein>
  <202006031845.F587F85A@keescook>
  <20200604125226.eztfrpvvuji7cbb2@wittgenstein>
@@ -12,91 +13,118 @@ References: <20200603011044.7972-2-sargun@sargun.me>
  <20200609200346.3fthqgfyw3bxat6l@wittgenstein>
  <202006091346.66B79E07@keescook>
  <037A305F-B3F8-4CFA-B9F8-CD4C9EF9090B@ubuntu.com>
- <202006092227.D2D0E1F8F@keescook>
- <20200610081237.GA23425@ircssh-2.c.rugged-nimbus-611.internal>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20200610081237.GA23425@ircssh-2.c.rugged-nimbus-611.internal>
-Content-Language: en-US
-Sender: stable-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <037A305F-B3F8-4CFA-B9F8-CD4C9EF9090B-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: 'Sargun Dhillon' <sargun@sargun.me>, Kees Cook <keescook@chromium.org>
-Cc: Christian Brauner <christian.brauner@ubuntu.com>, "containers@lists.linux-foundation.org" <containers@lists.linux-foundation.org>, Giuseppe Scrivano <gscrivan@redhat.com>, Robert Sesek <rsesek@google.com>, Chris Palmer <palmer@google.com>, Jann Horn <jannh@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Daniel Wagner <daniel.wagner@bmw-carit.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Matt Denton <mpdenton@google.com>, John Fastabend <john.r.fastabend@intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "David S . Miller" <davem@davemloft.ne>
+Content-Transfer-Encoding: 7bit
+To: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Giuseppe Scrivano <gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Robert Sesek <rsesek-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Palmer <palmer-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jann Horn <jannh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matt Denton <mpdenton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 
-From: Sargun Dhillon
-> Sent: 10 June 2020 09:13
-> 
-> On Tue, Jun 09, 2020 at 10:27:54PM -0700, Kees Cook wrote:
-> > On Tue, Jun 09, 2020 at 11:27:30PM +0200, Christian Brauner wrote:
-> > > On June 9, 2020 10:55:42 PM GMT+02:00, Kees Cook <keescook@chromium.org> wrote:
-> > > >LOL. And while we were debating this, hch just went and cleaned stuff up:
-> > > >
-> > > >2618d530dd8b ("net/scm: cleanup scm_detach_fds")
-> > > >
-> > > >So, um, yeah, now my proposal is actually even closer to what we already
-> > > >have there. We just add the replace_fd() logic to __scm_install_fd() and
-> > > >we're done with it.
-> > >
-> > > Cool, you have a link? :)
+On Tue, Jun 09, 2020 at 11:27:30PM +0200, Christian Brauner wrote:
+> On June 9, 2020 10:55:42 PM GMT+02:00, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org> wrote:
+> >On Tue, Jun 09, 2020 at 10:03:46PM +0200, Christian Brauner wrote:
+> >> I'm looking at __scm_install_fd() and I wonder what specifically you
+> >> mean by that? The put_user() seems to be placed such that the install
+> >> occurrs only if it succeeded. Sure, it only handles a single fd but
+> >> whatever. Userspace knows that already. Just look at systemd when a
+> >msg
+> >> fails:
+> >> 
+> >> void cmsg_close_all(struct msghdr *mh) {
+> >>         struct cmsghdr *cmsg;
+> >> 
+> >>         assert(mh);
+> >> 
+> >>         CMSG_FOREACH(cmsg, mh)
+> >>                 if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type
+> >== SCM_RIGHTS)
+> >>                         close_many((int*) CMSG_DATA(cmsg),
+> >(cmsg->cmsg_len - CMSG_LEN(0)) / sizeof(int));
+> >> }
+> >> 
+> >> The only reasonable scenario for this whole mess I can think of is sm
+> >like (pseudo code):
+> >> 
+> >> fd_install_received(int fd, struct file *file)
+> >> {
+> >>  	sock = sock_from_file(fd, &err);
+> >>  	if (sock) {
+> >>  		sock_update_netprioidx(&sock->sk->sk_cgrp_data);
+> >>  		sock_update_classid(&sock->sk->sk_cgrp_data);
+> >>  	}
+> >> 
+> >> 	fd_install();
+> >> }
+> >> 
+> >> error = 0;
+> >> fdarray = malloc(fdmax);
+> >> for (i = 0; i < fdmax; i++) {
+> >> 	fdarray[i] = get_unused_fd_flags(o_flags);
+> >> 	if (fdarray[i] < 0) {
+> >> 		error = -EBADF;
+> >> 		break;
+> >> 	}
+> >> 
+> >> 	error = security_file_receive(file);
+> >> 	if (error)
+> >> 		break;
+> >> 
+> >> 	error = put_user(fd_array[i], ufd);
+> >> 	if (error)
+> >> 		break;
+> >> }
+> >> 
+> >> for (i = 0; i < fdmax; i++) {
+> >> 	if (error) {
+> >> 		/* ignore errors */
+> >> 		put_user(-EBADF, ufd); /* If this put_user() fails and the first
+> >one succeeded userspace might now close an fd it didn't intend to. */
+> >> 		put_unused_fd(fdarray[i]);
+> >> 	} else {
+> >> 		fd_install_received(fdarray[i], file);
+> >> 	}
+> >> }
 > >
-> > How about this:
+> >I see 4 cases of the same code pattern (get_unused_fd_flags(),
+> >sock_update_*(), fd_install()), one of them has this difficult
+> >put_user()
+> >in the middle, and one of them has a potential replace_fd() instead of
+> >the get_used/fd_install. So, to me, it makes sense to have a helper
+> >that
+> >encapsulates the common work that each of those call sites has to do,
+> >which I keep cringing at all these suggestions that leave portions of
+> >it
+> >outside the helper.
 > >
-> Thank you.
+> >If it's too ugly to keep the put_user() in the helper, then we can try
+> >what was suggested earlier, and just totally rework the failure path
+> >for
+> >SCM_RIGHTS.
 > >
-> https://git.kernel.org/pub/scm/linux/kernel/git/kees/linux.git/commit/?h=devel/seccomp/addfd/v3.1&id=b
-> b94586b9e7cc88e915536c2e9fb991a97b62416
+> >LOL. And while we were debating this, hch just went and cleaned stuff
+> >up:
 > >
-> > --
-> > Kees Cook
+> >2618d530dd8b ("net/scm: cleanup scm_detach_fds")
+> >
+> >So, um, yeah, now my proposal is actually even closer to what we
+> >already
+> >have there. We just add the replace_fd() logic to __scm_install_fd()
+> >and
+> >we're done with it.
 > 
-> +		if (ufd) {
-> +			error = put_user(new_fd, ufd);
-> +			if (error) {
-> +				put_unused_fd(new_fd);
-> +				return error;
-> +			}
-> + 		}
-> I'm fairly sure this introduces a bug[1] if the user does:
-> 
-> struct msghdr msg = {};
-> struct cmsghdr *cmsg;
-> struct iovec io = {
-> 	.iov_base = &c,
-> 	.iov_len = 1,
-> };
-> 
-> msg.msg_iov = &io;
-> msg.msg_iovlen = 1;
-> msg.msg_control = NULL;
-> msg.msg_controllen = sizeof(buf);
-> 
-> recvmsg(sock, &msg, 0);
-> 
-> They will have the FD installed, no error message, but FD number wont be written
-> to memory AFAICT. If two FDs are passed, you will get an efault. They will both
-> be installed, but memory wont be written to. Maybe instead of 0, make it a
-> poison pointer, or -1 instead?
+> Cool, you have a link? :)
 
-IMHO if the buffer isn't big enough the nothing should happen.
-(or maybe a few of the fds be returned and the others left for later.)
+For the record, as I didn't see this yesterday since I was already
+looking at a kernel with Christoph's changes. His changes just move the
+logic that was already there before into a separate helper.
 
-OTOH if the user passed an invalid address then installing the fd
-and returning EFAULT (and hence SIGSEGV) seems reasonable.
-Properly written apps just don't do that.
+So effectively nothing has changed semantically in the scm code at all.
 
-In essence the 'copy_to_user' is done by the wrapper code.
-The code filling in the CMSG buffer can be considered to be
-writing a kernel buffer.
+This is why I was asking yesterday what you meant by reworking the scm
+code's put_user() logic as it seems obviously correct as it is done now.
 
-IIRC other kernels (eg NetBSD) do the copies for ioctl() requests
-in the ioctl syscall wrapper.
-The IOW/IOR/IOWR flags have to be right.
-
-	David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
-
+Christian
