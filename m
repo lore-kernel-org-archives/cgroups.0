@@ -1,10 +1,9 @@
-From: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+From: Sargun Dhillon <sargun@sargun.me>
 Subject: Re: [PATCH v3 1/4] fs, net: Standardize on file_receive helper to
  move fds across processes
-Date: Tue, 9 Jun 2020 22:27:54 -0700
-Message-ID: <202006092227.D2D0E1F8F@keescook>
-References: <20200603011044.7972-1-sargun@sargun.me>
- <20200603011044.7972-2-sargun@sargun.me>
+Date: Wed, 10 Jun 2020 08:12:38 +0000
+Message-ID: <20200610081237.GA23425@ircssh-2.c.rugged-nimbus-611.internal>
+References: <20200603011044.7972-2-sargun@sargun.me>
  <20200604012452.vh33nufblowuxfed@wittgenstein>
  <202006031845.F587F85A@keescook>
  <20200604125226.eztfrpvvuji7cbb2@wittgenstein>
@@ -13,40 +12,107 @@ References: <20200603011044.7972-1-sargun@sargun.me>
  <20200609200346.3fthqgfyw3bxat6l@wittgenstein>
  <202006091346.66B79E07@keescook>
  <037A305F-B3F8-4CFA-B9F8-CD4C9EF9090B@ubuntu.com>
+ <202006092227.D2D0E1F8F@keescook>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
+        d=sargun.me; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=YuvdGzIyUzej8b6gdTa5D7P2JhC6M3cmDi3clfShF/E=;
-        b=PIgAxHYrxUvRr9+6B+Y6rNbCq5cYmCyrWJFoGVB5vsnqF1cxlaBH0TdQtEogAZhAkK
-         0IZo+oyIm9PFRRK9u2lfat+U9IAqccCDhsh4QXM2Gz3Qz/v7cJ50lWwTlK+oRjnhtS65
-         WPTyN5BUNxT9qFvRvz655OCTZSSLHH3QKWdPg=
+         :content-disposition:in-reply-to:user-agent;
+        bh=RQkLDm2OyY/FS3M4wUNUpYL3uyFZaGvTTxUYnj5+5u0=;
+        b=nI03ANMd7aBQf/IJrmaOWgFbNKk87eTPdr17BZT0Q368D+WxFJkHvpDctCS/hVgbyT
+         kVsyxxlLofq2LzBHJQHeL5sgW4BdwA/8TjesGJxuPUVxCVXjgL0xnTX8DntCK/Y5ZijX
+         psuGxMlO5RjaN5LuNj5pokTZLwnbyC0KnIpO8=
 Content-Disposition: inline
-In-Reply-To: <037A305F-B3F8-4CFA-B9F8-CD4C9EF9090B-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <202006092227.D2D0E1F8F@keescook>
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Giuseppe Scrivano <gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Robert Sesek <rsesek-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Palmer <palmer-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jann Horn <jannh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matt Denton <mpdenton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+To: Kees Cook <keescook@chromium.org>
+Cc: Christian Brauner <christian.brauner@ubuntu.com>, containers@lists.linux-foundation.org, Giuseppe Scrivano <gscrivan@redhat.com>, Robert Sesek <rsesek@google.com>, Chris Palmer <palmer@google.com>, Jann Horn <jannh@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Daniel Wagner <daniel.wagner@bmw-carit.de>, linux-kernel@vger.kernel.org, Matt Denton <mpdenton@google.com>, John Fastabend <john.r.fastabend@intel.com>, linux-fsdevel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, cgroups@vger.kernel.org, stable@vger.kernel.org, "David S . Miller" <davem@davemloft.net>
 
-On Tue, Jun 09, 2020 at 11:27:30PM +0200, Christian Brauner wrote:
-> On June 9, 2020 10:55:42 PM GMT+02:00, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org> wrote:
-> >LOL. And while we were debating this, hch just went and cleaned stuff up:
-> >
-> >2618d530dd8b ("net/scm: cleanup scm_detach_fds")
-> >
-> >So, um, yeah, now my proposal is actually even closer to what we already
-> >have there. We just add the replace_fd() logic to __scm_install_fd() and
-> >we're done with it.
+On Tue, Jun 09, 2020 at 10:27:54PM -0700, Kees Cook wrote:
+> On Tue, Jun 09, 2020 at 11:27:30PM +0200, Christian Brauner wrote:
+> > On June 9, 2020 10:55:42 PM GMT+02:00, Kees Cook <keescook@chromium.org> wrote:
+> > >LOL. And while we were debating this, hch just went and cleaned stuff up:
+> > >
+> > >2618d530dd8b ("net/scm: cleanup scm_detach_fds")
+> > >
+> > >So, um, yeah, now my proposal is actually even closer to what we already
+> > >have there. We just add the replace_fd() logic to __scm_install_fd() and
+> > >we're done with it.
+> > 
+> > Cool, you have a link? :)
 > 
-> Cool, you have a link? :)
+> How about this:
+> 
+Thank you.
+> https://git.kernel.org/pub/scm/linux/kernel/git/kees/linux.git/commit/?h=devel/seccomp/addfd/v3.1&id=bb94586b9e7cc88e915536c2e9fb991a97b62416
+> 
+> -- 
+> Kees Cook
 
-How about this:
++		if (ufd) {
++			error = put_user(new_fd, ufd);
++			if (error) {
++				put_unused_fd(new_fd);
++				return error;
++			}
++ 		}
+I'm fairly sure this introduces a bug[1] if the user does:
 
-https://git.kernel.org/pub/scm/linux/kernel/git/kees/linux.git/commit/?h=devel/seccomp/addfd/v3.1&id=bb94586b9e7cc88e915536c2e9fb991a97b62416
+struct msghdr msg = {};
+struct cmsghdr *cmsg;
+struct iovec io = {
+	.iov_base = &c,
+	.iov_len = 1,
+};
 
--- 
-Kees Cook
+msg.msg_iov = &io;
+msg.msg_iovlen = 1;
+msg.msg_control = NULL;
+msg.msg_controllen = sizeof(buf);
+
+recvmsg(sock, &msg, 0);
+
+They will have the FD installed, no error message, but FD number wont be written 
+to memory AFAICT. If two FDs are passed, you will get an efault. They will both
+be installed, but memory wont be written to. Maybe instead of 0, make it a
+poison pointer, or -1 instead?
+
+-----
+As an aside, all of this junk should be dropped:
++	ret = get_user(size, &uaddfd->size);
++	if (ret)
++		return ret;
++
++	ret = copy_struct_from_user(&addfd, sizeof(addfd), uaddfd, size);
++	if (ret)
++		return ret;
+
+and the size member of the seccomp_notif_addfd struct. I brought this up 
+off-list with Tycho that ioctls have the size of the struct embedded in them. We 
+should just use that. The ioctl definition is based on this[2]:
+#define _IOC(dir,type,nr,size) \
+	(((dir)  << _IOC_DIRSHIFT) | \
+	 ((type) << _IOC_TYPESHIFT) | \
+	 ((nr)   << _IOC_NRSHIFT) | \
+	 ((size) << _IOC_SIZESHIFT))
+
+
+We should just use copy_from_user for now. In the future, we can either 
+introduce new ioctl names for new structs, or extract the size dynamically from 
+the ioctl (and mask it out on the switch statement in seccomp_notify_ioctl.
+
+----
++#define SECCOMP_IOCTL_NOTIF_ADDFD	SECCOMP_IOR(3,	\
++						struct seccomp_notif_addfd)
+
+Lastly, what I believe to be a small mistake, it should be SECCOMP_IOW, based on 
+the documentation in ioctl.h -- "_IOW means userland is writing and kernel is 
+reading."
+
+
+[1]: https://lore.kernel.org/lkml/20200604052040.GA16501@ircssh-2.c.rugged-nimbus-611.internal/
+[2]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/include/uapi/asm-generic/ioctl.h?id=v5.7#n69
