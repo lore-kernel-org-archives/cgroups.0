@@ -1,8 +1,8 @@
 From: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 Subject: Re: [PATCH v3 1/4] fs, net: Standardize on file_receive helper to
  move fds across processes
-Date: Wed, 10 Jun 2020 10:10:33 -0700
-Message-ID: <202006101005.D1D19EE@keescook>
+Date: Wed, 10 Jun 2020 19:59:55 -0700
+Message-ID: <202006101953.899EFB53@keescook>
 References: <20200604012452.vh33nufblowuxfed@wittgenstein>
  <202006031845.F587F85A@keescook>
  <20200604125226.eztfrpvvuji7cbb2@wittgenstein>
@@ -19,10 +19,10 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=Wu1KxK3oWDaDyFouCR1IJCWRCCZuOnfSKhmf+rK5Zxw=;
-        b=oMmr18e2vlsUwaIbxh6CowxNZ5fXzjfgmkFL2R2jM2RUlcV/0jnVTduaVrPaFnDGs9
-         QDuR/bYJP+8NCw01k5v6u7s7UrHLS9i8UYMPU93hCzQfrKP3xRzfjAw0OBDtnOAgcdtQ
-         7KVFiv3APJf/AYGrTCrcwRMVTg4Dwe/DNZI54=
+        bh=lP4DTVpqVtxlC9MaFsoDN9/npQaHlEe1E0smsNRDWZY=;
+        b=ewreE9bF2kyTwnZRJ5UVCC2ltyCjUSmztW1aNJ6VlB/VObo3KwT+InjCahCm8eQgLV
+         uizAtftEHbnJZxdwxttgyeTlWySA8txlDR1rN9TjDc7oZrThm+OGpQjI+V2eFhNnaJEg
+         MdkJOgqIhqsMjDg3CaemZwzwEIfrizUaDagP4=
 Content-Disposition: inline
 In-Reply-To: <20200610081237.GA23425-du9IEJ8oIxHXYT48pCVpJ3c7ZZ+wIVaZYkHkVr5ML8kVGlcevz2xqA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
@@ -33,63 +33,6 @@ To: Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>
 Cc: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Giuseppe Scrivano <gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Robert Sesek <rsesek-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Palmer <palmer-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jann Horn <jannh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matt Denton <mpdenton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 
 On Wed, Jun 10, 2020 at 08:12:38AM +0000, Sargun Dhillon wrote:
-> On Tue, Jun 09, 2020 at 10:27:54PM -0700, Kees Cook wrote:
-> > On Tue, Jun 09, 2020 at 11:27:30PM +0200, Christian Brauner wrote:
-> > > On June 9, 2020 10:55:42 PM GMT+02:00, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org> wrote:
-> > > >LOL. And while we were debating this, hch just went and cleaned stuff up:
-> > > >
-> > > >2618d530dd8b ("net/scm: cleanup scm_detach_fds")
-> > > >
-> > > >So, um, yeah, now my proposal is actually even closer to what we already
-> > > >have there. We just add the replace_fd() logic to __scm_install_fd() and
-> > > >we're done with it.
-> > > 
-> > > Cool, you have a link? :)
-> > 
-> > How about this:
-> > 
-> Thank you.
-> > https://git.kernel.org/pub/scm/linux/kernel/git/kees/linux.git/commit/?h=devel/seccomp/addfd/v3.1&id=bb94586b9e7cc88e915536c2e9fb991a97b62416
-> > 
-> > -- 
-> > Kees Cook
-> 
-> +		if (ufd) {
-> +			error = put_user(new_fd, ufd);
-> +			if (error) {
-> +				put_unused_fd(new_fd);
-> +				return error;
-> +			}
-> + 		}
-> I'm fairly sure this introduces a bug[1] if the user does:
-
-Ah, sorry, I missed this before I posted my "v3.2" tree link.
-
-> 
-> struct msghdr msg = {};
-> struct cmsghdr *cmsg;
-> struct iovec io = {
-> 	.iov_base = &c,
-> 	.iov_len = 1,
-> };
-> 
-> msg.msg_iov = &io;
-> msg.msg_iovlen = 1;
-> msg.msg_control = NULL;
-> msg.msg_controllen = sizeof(buf);
-> 
-> recvmsg(sock, &msg, 0);
-> 
-> They will have the FD installed, no error message, but FD number wont be written 
-> to memory AFAICT. If two FDs are passed, you will get an efault. They will both
-> be installed, but memory wont be written to. Maybe instead of 0, make it a
-> poison pointer, or -1 instead?
-
-Hmmm. I see what you mean -- SCM_RIGHTS effectively _requires_ a valid
-__user pointer, so we can't use NULL to indicate "we don't want this".
-I'm not sure I can pass this through directly at all, though.
-
-> -----
 > As an aside, all of this junk should be dropped:
 > +	ret = get_user(size, &uaddfd->size);
 > +	if (ret)
@@ -113,8 +56,50 @@ I'm not sure I can pass this through directly at all, though.
 > introduce new ioctl names for new structs, or extract the size dynamically from 
 > the ioctl (and mask it out on the switch statement in seccomp_notify_ioctl.
 
-Okay, sounds good.
+Yeah, that seems reasonable. Here's the diff for that part:
 
+diff --git a/include/uapi/linux/seccomp.h b/include/uapi/linux/seccomp.h
+index 7b6028b399d8..98bf19b4e086 100644
+--- a/include/uapi/linux/seccomp.h
++++ b/include/uapi/linux/seccomp.h
+@@ -118,7 +118,6 @@ struct seccomp_notif_resp {
+ 
+ /**
+  * struct seccomp_notif_addfd
+- * @size: The size of the seccomp_notif_addfd datastructure
+  * @id: The ID of the seccomp notification
+  * @flags: SECCOMP_ADDFD_FLAG_*
+  * @srcfd: The local fd number
+@@ -126,7 +125,6 @@ struct seccomp_notif_resp {
+  * @newfd_flags: The O_* flags the remote FD should have applied
+  */
+ struct seccomp_notif_addfd {
+-	__u64 size;
+ 	__u64 id;
+ 	__u32 flags;
+ 	__u32 srcfd;
+diff --git a/kernel/seccomp.c b/kernel/seccomp.c
+index 3c913f3b8451..00cbdad6c480 100644
+--- a/kernel/seccomp.c
++++ b/kernel/seccomp.c
+@@ -1297,14 +1297,9 @@ static long seccomp_notify_addfd(struct seccomp_filter *filter,
+ 	struct seccomp_notif_addfd addfd;
+ 	struct seccomp_knotif *knotif;
+ 	struct seccomp_kaddfd kaddfd;
+-	u64 size;
+ 	int ret;
+ 
+-	ret = get_user(size, &uaddfd->size);
+-	if (ret)
+-		return ret;
+-
+-	ret = copy_struct_from_user(&addfd, sizeof(addfd), uaddfd, size);
++	ret = copy_from_user(&addfd, uaddfd, sizeof(addfd));
+ 	if (ret)
+ 		return ret;
+ 
+
+> 
 > ----
 > +#define SECCOMP_IOCTL_NOTIF_ADDFD	SECCOMP_IOR(3,	\
 > +						struct seccomp_notif_addfd)
@@ -123,7 +108,26 @@ Okay, sounds good.
 > the documentation in ioctl.h -- "_IOW means userland is writing and kernel is 
 > reading."
 
-Okay, let me tweak things and get a "v3.3". ;)
+Oooooh. Yeah; good catch. Uhm, that means SECCOMP_IOCTL_NOTIF_ID_VALID
+is wrong too, yes? Tycho, Christian, how disruptive would this be to
+fix? (Perhaps support both and deprecate the IOR version at some point
+in the future?)
+
+Diff for just addfd's change:
+
+diff --git a/include/uapi/linux/seccomp.h b/include/uapi/linux/seccomp.h
+index 7b6028b399d8..98bf19b4e086 100644
+--- a/include/uapi/linux/seccomp.h
++++ b/include/uapi/linux/seccomp.h
+@@ -146,7 +144,7 @@ struct seccomp_notif_addfd {
+ 						struct seccomp_notif_resp)
+ #define SECCOMP_IOCTL_NOTIF_ID_VALID	SECCOMP_IOR(2, __u64)
+ /* On success, the return value is the remote process's added fd number */
+-#define SECCOMP_IOCTL_NOTIF_ADDFD	SECCOMP_IOR(3,	\
++#define SECCOMP_IOCTL_NOTIF_ADDFD	SECCOMP_IOW(3,	\
+ 						struct seccomp_notif_addfd)
+ 
+ #endif /* _UAPI_LINUX_SECCOMP_H */
 
 -- 
 Kees Cook
