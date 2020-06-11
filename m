@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v12 15/16] mm/pgdat: remove pgdat lru_lock
-Date: Thu, 11 Jun 2020 14:16:48 +0800
-Message-ID: <1591856209-166869-16-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v12 14/16] mm/vmscan: use relock for move_pages_to_lru
+Date: Thu, 11 Jun 2020 14:16:47 +0800
+Message-ID: <1591856209-166869-15-git-send-email-alex.shi@linux.alibaba.com>
 References: <1591856209-166869-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1591856209-166869-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -11,46 +11,78 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>, Jann Horn <jannh@google.com>
 
-Now pgdat.lru_lock was replaced by lruvec lock. It's not used anymore.
+From: Hugh Dickins <hughd@google.com>
 
+Use the relock function to replace relocking action. And try to save few
+lock times.
+
+Signed-off-by: Hugh Dickins <hughd@google.com>
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
-Cc: Hugh Dickins <hughd@google.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Jann Horn <jannh@google.com>
+Cc: Mel Gorman <mgorman@techsingularity.net>
 Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Hugh Dickins <hughd@google.com>
 Cc: cgroups@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
 ---
- include/linux/mmzone.h | 1 -
- mm/page_alloc.c        | 1 -
- 2 files changed, 2 deletions(-)
+ mm/vmscan.c | 17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
 
-diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-index e178aa624e46..d32a17e1d8c2 100644
---- a/include/linux/mmzone.h
-+++ b/include/linux/mmzone.h
-@@ -723,7 +723,6 @@ struct deferred_split {
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 1253cdb16c96..d763cb307e92 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1854,15 +1854,15 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
+ 	enum lru_list lru;
  
- 	/* Write-intensive fields used by page reclaim */
- 	ZONE_PADDING(_pad1_)
--	spinlock_t		lru_lock;
+ 	while (!list_empty(list)) {
+-		struct lruvec *new_lruvec = NULL;
+-
+ 		page = lru_to_page(list);
+ 		VM_BUG_ON_PAGE(PageLRU(page), page);
+ 		list_del(&page->lru);
+ 		if (unlikely(!page_evictable(page))) {
+-			spin_unlock_irq(&lruvec->lru_lock);
++			if (lruvec) {
++				spin_unlock_irq(&lruvec->lru_lock);
++				lruvec = NULL;
++			}
+ 			putback_lru_page(page);
+-			spin_lock_irq(&lruvec->lru_lock);
+ 			continue;
+ 		}
  
- #ifdef CONFIG_DEFERRED_STRUCT_PAGE_INIT
- 	/*
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 48eb0f1410d4..05ce6e1a3098 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -6721,7 +6721,6 @@ static void __meminit pgdat_init_internals(struct pglist_data *pgdat)
- 	init_waitqueue_head(&pgdat->pfmemalloc_wait);
+@@ -1876,12 +1876,7 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
+ 		 *                                        list_add(&page->lru,)
+ 		 *     list_add(&page->lru,) //corrupt
+ 		 */
+-		new_lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+-		if (new_lruvec != lruvec) {
+-			if (lruvec)
+-				spin_unlock_irq(&lruvec->lru_lock);
+-			lruvec = lock_page_lruvec_irq(page);
+-		}
++		lruvec = relock_page_lruvec_irq(page, lruvec);
+ 		SetPageLRU(page);
  
- 	pgdat_page_ext_init(pgdat);
--	spin_lock_init(&pgdat->lru_lock);
- 	lruvec_init(&pgdat->__lruvec);
- }
+ 		if (unlikely(put_page_testzero(page))) {
+@@ -1890,8 +1885,8 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
  
+ 			if (unlikely(PageCompound(page))) {
+ 				spin_unlock_irq(&lruvec->lru_lock);
++				lruvec = NULL;
+ 				destroy_compound_page(page);
+-				spin_lock_irq(&lruvec->lru_lock);
+ 			} else
+ 				list_add(&page->lru, &pages_to_free);
+ 			continue;
 -- 
 1.8.3.1
 
