@@ -1,10 +1,9 @@
-From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+From: Sargun Dhillon <sargun@sargun.me>
 Subject: Re: [PATCH v3 1/4] fs, net: Standardize on file_receive helper to
  move fds across processes
-Date: Thu, 11 Jun 2020 12:01:14 +0200
-Message-ID: <20200611100114.awdjswsd7fdm2uzr@wittgenstein>
-References: <202006031845.F587F85A@keescook>
- <20200604125226.eztfrpvvuji7cbb2@wittgenstein>
+Date: Thu, 11 Jun 2020 10:39:23 +0000
+Message-ID: <20200611103922.GA30103@ircssh-2.c.rugged-nimbus-611.internal>
+References: <20200604125226.eztfrpvvuji7cbb2@wittgenstein>
  <20200605075435.GA3345@ircssh-2.c.rugged-nimbus-611.internal>
  <202006091235.930519F5B@keescook>
  <20200609200346.3fthqgfyw3bxat6l@wittgenstein>
@@ -13,158 +12,142 @@ References: <202006031845.F587F85A@keescook>
  <202006092227.D2D0E1F8F@keescook>
  <20200610081237.GA23425@ircssh-2.c.rugged-nimbus-611.internal>
  <202006101953.899EFB53@keescook>
+ <20200611091942.jni2glnpmxisnant@wittgenstein>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=sargun.me; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=09AhYfVptAXhl8RbRmV+vzYPYyK8rezI6f1741Byi5g=;
+        b=hXWw9qrKRCz4lCsZBfjd9GvLPINzD5z7fubizgxMT+JbNOAdKmYagKXytL8D+qGPRs
+         lmq7mz6l8u1AbkV3NVEYISeBNmcu3aUHaVlPzhm+AkMtv3s4lXT3XROD5xmQKChyhc2U
+         y0+7scW5saZn8EzuurZAZeWC3/gnoQi+Wfu4E=
 Content-Disposition: inline
-In-Reply-To: <202006101953.899EFB53@keescook>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20200611091942.jni2glnpmxisnant@wittgenstein>
+Sender: stable-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
-Cc: Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Giuseppe Scrivano <gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Robert Sesek <rsesek-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Palmer <palmer-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jann Horn <jannh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matt Denton <mpdenton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+To: Christian Brauner <christian.brauner@ubuntu.com>
+Cc: Kees Cook <keescook@chromium.org>, containers@lists.linux-foundation.org, Giuseppe Scrivano <gscrivan@redhat.com>, Robert Sesek <rsesek@google.com>, Chris Palmer <palmer@google.com>, Jann Horn <jannh@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Daniel Wagner <daniel.wagner@bmw-carit.de>, linux-kernel@vger.kernel.org, Matt Denton <mpdenton@google.com>, John Fastabend <john.r.fastabend@intel.com>, linux-fsdevel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, cgroups@vger.kernel.org, stable@vger.kernel.org, "David S . Miller" <davem@davemloft.net>
 
-On Wed, Jun 10, 2020 at 07:59:55PM -0700, Kees Cook wrote:
-> On Wed, Jun 10, 2020 at 08:12:38AM +0000, Sargun Dhillon wrote:
-> > As an aside, all of this junk should be dropped:
-> > +	ret = get_user(size, &uaddfd->size);
-> > +	if (ret)
-> > +		return ret;
-> > +
-> > +	ret = copy_struct_from_user(&addfd, sizeof(addfd), uaddfd, size);
-> > +	if (ret)
-> > +		return ret;
+On Thu, Jun 11, 2020 at 11:19:42AM +0200, Christian Brauner wrote:
+> On Wed, Jun 10, 2020 at 07:59:55PM -0700, Kees Cook wrote:
+> > On Wed, Jun 10, 2020 at 08:12:38AM +0000, Sargun Dhillon wrote:
+> > > As an aside, all of this junk should be dropped:
+> > > +	ret = get_user(size, &uaddfd->size);
+> > > +	if (ret)
+> > > +		return ret;
+> > > +
+> > > +	ret = copy_struct_from_user(&addfd, sizeof(addfd), uaddfd, size);
+> > > +	if (ret)
+> > > +		return ret;
+> > > 
+> > > and the size member of the seccomp_notif_addfd struct. I brought this up 
+> > > off-list with Tycho that ioctls have the size of the struct embedded in them. We 
+> > > should just use that. The ioctl definition is based on this[2]:
+> > > #define _IOC(dir,type,nr,size) \
+> > > 	(((dir)  << _IOC_DIRSHIFT) | \
+> > > 	 ((type) << _IOC_TYPESHIFT) | \
+> > > 	 ((nr)   << _IOC_NRSHIFT) | \
+> > > 	 ((size) << _IOC_SIZESHIFT))
+> > > 
+> > > 
+> > > We should just use copy_from_user for now. In the future, we can either 
+> > > introduce new ioctl names for new structs, or extract the size dynamically from 
+> > > the ioctl (and mask it out on the switch statement in seccomp_notify_ioctl.
 > > 
-> > and the size member of the seccomp_notif_addfd struct. I brought this up 
-> > off-list with Tycho that ioctls have the size of the struct embedded in them. We 
-> > should just use that. The ioctl definition is based on this[2]:
-> > #define _IOC(dir,type,nr,size) \
-> > 	(((dir)  << _IOC_DIRSHIFT) | \
-> > 	 ((type) << _IOC_TYPESHIFT) | \
-> > 	 ((nr)   << _IOC_NRSHIFT) | \
-> > 	 ((size) << _IOC_SIZESHIFT))
+> > Yeah, that seems reasonable. Here's the diff for that part:
 > > 
+> > diff --git a/include/uapi/linux/seccomp.h b/include/uapi/linux/seccomp.h
+> > index 7b6028b399d8..98bf19b4e086 100644
+> > --- a/include/uapi/linux/seccomp.h
+> > +++ b/include/uapi/linux/seccomp.h
+> > @@ -118,7 +118,6 @@ struct seccomp_notif_resp {
+> >  
+> >  /**
+> >   * struct seccomp_notif_addfd
+> > - * @size: The size of the seccomp_notif_addfd datastructure
+> >   * @id: The ID of the seccomp notification
+> >   * @flags: SECCOMP_ADDFD_FLAG_*
+> >   * @srcfd: The local fd number
+> > @@ -126,7 +125,6 @@ struct seccomp_notif_resp {
+> >   * @newfd_flags: The O_* flags the remote FD should have applied
+> >   */
+> >  struct seccomp_notif_addfd {
+> > -	__u64 size;
+> >  	__u64 id;
+> >  	__u32 flags;
+> >  	__u32 srcfd;
+> > diff --git a/kernel/seccomp.c b/kernel/seccomp.c
+> > index 3c913f3b8451..00cbdad6c480 100644
+> > --- a/kernel/seccomp.c
+> > +++ b/kernel/seccomp.c
+> > @@ -1297,14 +1297,9 @@ static long seccomp_notify_addfd(struct seccomp_filter *filter,
+> >  	struct seccomp_notif_addfd addfd;
+> >  	struct seccomp_knotif *knotif;
+> >  	struct seccomp_kaddfd kaddfd;
+> > -	u64 size;
+> >  	int ret;
+> >  
+> > -	ret = get_user(size, &uaddfd->size);
+> > -	if (ret)
+> > -		return ret;
+> > -
+> > -	ret = copy_struct_from_user(&addfd, sizeof(addfd), uaddfd, size);
+> > +	ret = copy_from_user(&addfd, uaddfd, sizeof(addfd));
+> >  	if (ret)
+> >  		return ret;
+> >  
 > > 
-> > We should just use copy_from_user for now. In the future, we can either 
-> > introduce new ioctl names for new structs, or extract the size dynamically from 
-> > the ioctl (and mask it out on the switch statement in seccomp_notify_ioctl.
-> 
-> Yeah, that seems reasonable. Here's the diff for that part:
-
-Why does it matter that the ioctl() has the size of the struct embedded
-within? Afaik, the kernel itself doesn't do anything with that size. It
-merely checks that the size is not pathological and it does so at
-compile time.
-
-#ifdef __CHECKER__
-#define _IOC_TYPECHECK(t) (sizeof(t))
-#else
-/* provoke compile error for invalid uses of size argument */
-extern unsigned int __invalid_size_argument_for_IOC;
-#define _IOC_TYPECHECK(t) \
-	((sizeof(t) == sizeof(t[1]) && \
-	  sizeof(t) < (1 << _IOC_SIZEBITS)) ? \
-	  sizeof(t) : __invalid_size_argument_for_IOC)
-#endif
-
-The size itself is not verified at runtime. copy_struct_from_user()
-still makes sense at least if we're going to allow expanding the struct
-in the future.
-
-Leaving that aside, the proposed direction here seems to mean that any
-change to the struct itself will immediately mean a new ioctl() but
-afaict, that also means a new struct. Since when you simply extend the
-struct for the sake of the new ioctl you also change the size for the
-ioctl.
-
-Sure, you can simply treat the struct coming through the old ioctl as
-being "capped" by e.g. hiding the size as suggested but then the gain
-by having two separate ioctls is 0 compared to simply versioning the
-struct with an explicit size member since the size encoded in the ioctl
-and the actual size of the struct don't line up anymore which is the
-only plus I can see for relying on _IOC_SIZE(). All this manages to do
-then is to make it more annoying for userspace since they now need to
-maintain multiple ioctls(). And if you have - however unlikely - say
-three different ioctls all to be used with a different struct size of
-the same struct I now need to know which ioctl() goes with which size of
-the struct (I guess you could append the size to the ioctl name?
-*shudder*). If you have the size in the struct itself you don't need to
-care about any of that.
-Maybe I'm not making sense or I misunderstand what's going on though.
-
-Christian
-
-> 
-> diff --git a/include/uapi/linux/seccomp.h b/include/uapi/linux/seccomp.h
-> index 7b6028b399d8..98bf19b4e086 100644
-> --- a/include/uapi/linux/seccomp.h
-> +++ b/include/uapi/linux/seccomp.h
-> @@ -118,7 +118,6 @@ struct seccomp_notif_resp {
->  
->  /**
->   * struct seccomp_notif_addfd
-> - * @size: The size of the seccomp_notif_addfd datastructure
->   * @id: The ID of the seccomp notification
->   * @flags: SECCOMP_ADDFD_FLAG_*
->   * @srcfd: The local fd number
-> @@ -126,7 +125,6 @@ struct seccomp_notif_resp {
->   * @newfd_flags: The O_* flags the remote FD should have applied
->   */
->  struct seccomp_notif_addfd {
-> -	__u64 size;
->  	__u64 id;
->  	__u32 flags;
->  	__u32 srcfd;
-> diff --git a/kernel/seccomp.c b/kernel/seccomp.c
-> index 3c913f3b8451..00cbdad6c480 100644
-> --- a/kernel/seccomp.c
-> +++ b/kernel/seccomp.c
-> @@ -1297,14 +1297,9 @@ static long seccomp_notify_addfd(struct seccomp_filter *filter,
->  	struct seccomp_notif_addfd addfd;
->  	struct seccomp_knotif *knotif;
->  	struct seccomp_kaddfd kaddfd;
-> -	u64 size;
->  	int ret;
->  
-> -	ret = get_user(size, &uaddfd->size);
-> -	if (ret)
-> -		return ret;
-> -
-> -	ret = copy_struct_from_user(&addfd, sizeof(addfd), uaddfd, size);
-> +	ret = copy_from_user(&addfd, uaddfd, sizeof(addfd));
->  	if (ret)
->  		return ret;
->  
-> 
+> > > 
+> > > ----
+> > > +#define SECCOMP_IOCTL_NOTIF_ADDFD	SECCOMP_IOR(3,	\
+> > > +						struct seccomp_notif_addfd)
+> > > 
+> > > Lastly, what I believe to be a small mistake, it should be SECCOMP_IOW, based on 
+> > > the documentation in ioctl.h -- "_IOW means userland is writing and kernel is 
+> > > reading."
 > > 
-> > ----
-> > +#define SECCOMP_IOCTL_NOTIF_ADDFD	SECCOMP_IOR(3,	\
-> > +						struct seccomp_notif_addfd)
-> > 
-> > Lastly, what I believe to be a small mistake, it should be SECCOMP_IOW, based on 
-> > the documentation in ioctl.h -- "_IOW means userland is writing and kernel is 
-> > reading."
+> > Oooooh. Yeah; good catch. Uhm, that means SECCOMP_IOCTL_NOTIF_ID_VALID
+> > is wrong too, yes? Tycho, Christian, how disruptive would this be to
+> > fix? (Perhaps support both and deprecate the IOR version at some point
+> > in the future?)
 > 
-> Oooooh. Yeah; good catch. Uhm, that means SECCOMP_IOCTL_NOTIF_ID_VALID
-> is wrong too, yes? Tycho, Christian, how disruptive would this be to
-> fix? (Perhaps support both and deprecate the IOR version at some point
-> in the future?)
+> We have custom defines in our source code, i.e.
+> #define SECCOMP_IOCTL_NOTIF_ID_VALID  SECCOMP_IOR(2, __u64)
+> so ideally we'd have a SECCOMP_IOCTL_NOTIF_ID_VALID_V2
 > 
-> Diff for just addfd's change:
+> Does that sound ok?
 > 
-> diff --git a/include/uapi/linux/seccomp.h b/include/uapi/linux/seccomp.h
-> index 7b6028b399d8..98bf19b4e086 100644
-> --- a/include/uapi/linux/seccomp.h
-> +++ b/include/uapi/linux/seccomp.h
-> @@ -146,7 +144,7 @@ struct seccomp_notif_addfd {
->  						struct seccomp_notif_resp)
->  #define SECCOMP_IOCTL_NOTIF_ID_VALID	SECCOMP_IOR(2, __u64)
->  /* On success, the return value is the remote process's added fd number */
-> -#define SECCOMP_IOCTL_NOTIF_ADDFD	SECCOMP_IOR(3,	\
-> +#define SECCOMP_IOCTL_NOTIF_ADDFD	SECCOMP_IOW(3,	\
->  						struct seccomp_notif_addfd)
->  
->  #endif /* _UAPI_LINUX_SECCOMP_H */
-> 
-> -- 
-> Kees Cook
+> Christian
+Why not change the public API in seccomp.h to:
+#define SECCOMP_IOCTL_NOTIF_ID_VALID	SECCOMP_IOW(2, __u64)
+
+And then in seccomp.c:
+#define SECCOMP_IOCTL_NOTIF_ID_VALID_OLD	SECCOMP_IOR(2, __u64)
+static long seccomp_notify_ioctl(struct file *file, unsigned int cmd,
+				 unsigned long arg)
+{
+	struct seccomp_filter *filter = file->private_data;
+	void __user *buf = (void __user *)arg;
+
+	switch (cmd) {
+	case SECCOMP_IOCTL_NOTIF_RECV:
+		return seccomp_notify_recv(filter, buf);
+	case SECCOMP_IOCTL_NOTIF_SEND:
+		return seccomp_notify_send(filter, buf);
+	case SECCOMP_IOCTL_NOTIF_ID_VALID_OLD:
+		pr_warn_once("Detected usage of legacy (incorrect) version of seccomp notifier notif_id_valid ioctl\n");
+	case SECCOMP_IOCTL_NOTIF_ID_VALID:
+		return seccomp_notify_id_valid(filter, buf);
+	default:
+		return -EINVAL;
+	}
+}
+---- 
+
+So, both will work fine, and whenevery anyone recompiles, or picks up new 
+headers, they will start calling the "right" one without a code change, and
+we wont break any userspace.
