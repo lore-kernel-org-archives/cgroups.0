@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v12 04/16] mm/compaction: rename compact_deferred as compact_should_defer
-Date: Thu, 11 Jun 2020 14:16:37 +0800
-Message-ID: <1591856209-166869-5-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v12 15/16] mm/pgdat: remove pgdat lru_lock
+Date: Thu, 11 Jun 2020 14:16:48 +0800
+Message-ID: <1591856209-166869-16-git-send-email-alex.shi@linux.alibaba.com>
 References: <1591856209-166869-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1591856209-166869-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -11,100 +11,46 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com
-Cc: Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>, Vlastimil Babka <vbabka@suse.cz>, Mike Kravetz <mike.kravetz@oracle.com>
 
-The compact_deferred is a defer suggestion check, deferring action does in
-defer_compaction not here. so, better rename it to avoid confusing.
+Now pgdat.lru_lock was replaced by lruvec lock. It's not used anymore.
 
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Steven Rostedt <rostedt@goodmis.org>
-Cc: Ingo Molnar <mingo@redhat.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Mike Kravetz <mike.kravetz@oracle.com>
-Cc: linux-kernel@vger.kernel.org
+Cc: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org
 ---
- include/linux/compaction.h        | 4 ++--
- include/trace/events/compaction.h | 2 +-
- mm/compaction.c                   | 8 ++++----
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ include/linux/mmzone.h | 1 -
+ mm/page_alloc.c        | 1 -
+ 2 files changed, 2 deletions(-)
 
-diff --git a/include/linux/compaction.h b/include/linux/compaction.h
-index 6fa0eea3f530..be9ed7437a38 100644
---- a/include/linux/compaction.h
-+++ b/include/linux/compaction.h
-@@ -100,7 +100,7 @@ extern enum compact_result compaction_suitable(struct zone *zone, int order,
- 		unsigned int alloc_flags, int highest_zoneidx);
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index e178aa624e46..d32a17e1d8c2 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -723,7 +723,6 @@ struct deferred_split {
  
- extern void defer_compaction(struct zone *zone, int order);
--extern bool compaction_deferred(struct zone *zone, int order);
-+extern bool compaction_should_defer(struct zone *zone, int order);
- extern void compaction_defer_reset(struct zone *zone, int order,
- 				bool alloc_success);
- extern bool compaction_restarting(struct zone *zone, int order);
-@@ -199,7 +199,7 @@ static inline void defer_compaction(struct zone *zone, int order)
- {
+ 	/* Write-intensive fields used by page reclaim */
+ 	ZONE_PADDING(_pad1_)
+-	spinlock_t		lru_lock;
+ 
+ #ifdef CONFIG_DEFERRED_STRUCT_PAGE_INIT
+ 	/*
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 48eb0f1410d4..05ce6e1a3098 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -6721,7 +6721,6 @@ static void __meminit pgdat_init_internals(struct pglist_data *pgdat)
+ 	init_waitqueue_head(&pgdat->pfmemalloc_wait);
+ 
+ 	pgdat_page_ext_init(pgdat);
+-	spin_lock_init(&pgdat->lru_lock);
+ 	lruvec_init(&pgdat->__lruvec);
  }
  
--static inline bool compaction_deferred(struct zone *zone, int order)
-+static inline bool compaction_should_defer(struct zone *zone, int order)
- {
- 	return true;
- }
-diff --git a/include/trace/events/compaction.h b/include/trace/events/compaction.h
-index 54e5bf081171..33633c71df04 100644
---- a/include/trace/events/compaction.h
-+++ b/include/trace/events/compaction.h
-@@ -274,7 +274,7 @@
- 		1UL << __entry->defer_shift)
- );
- 
--DEFINE_EVENT(mm_compaction_defer_template, mm_compaction_deferred,
-+DEFINE_EVENT(mm_compaction_defer_template, mm_compaction_should_defer,
- 
- 	TP_PROTO(struct zone *zone, int order),
- 
-diff --git a/mm/compaction.c b/mm/compaction.c
-index 48114f98e362..5d59e77cd424 100644
---- a/mm/compaction.c
-+++ b/mm/compaction.c
-@@ -154,7 +154,7 @@ void defer_compaction(struct zone *zone, int order)
- }
- 
- /* Returns true if compaction should be skipped this time */
--bool compaction_deferred(struct zone *zone, int order)
-+bool compaction_should_defer(struct zone *zone, int order)
- {
- 	unsigned long defer_limit = 1UL << zone->compact_defer_shift;
- 
-@@ -168,7 +168,7 @@ bool compaction_deferred(struct zone *zone, int order)
- 	if (zone->compact_considered >= defer_limit)
- 		return false;
- 
--	trace_mm_compaction_deferred(zone, order);
-+	trace_mm_compaction_should_defer(zone, order);
- 
- 	return true;
- }
-@@ -2366,7 +2366,7 @@ enum compact_result try_to_compact_pages(gfp_t gfp_mask, unsigned int order,
- 		enum compact_result status;
- 
- 		if (prio > MIN_COMPACT_PRIORITY
--					&& compaction_deferred(zone, order)) {
-+				&& compaction_should_defer(zone, order)) {
- 			rc = max_t(enum compact_result, COMPACT_DEFERRED, rc);
- 			continue;
- 		}
-@@ -2550,7 +2550,7 @@ static void kcompactd_do_work(pg_data_t *pgdat)
- 		if (!populated_zone(zone))
- 			continue;
- 
--		if (compaction_deferred(zone, cc.order))
-+		if (compaction_should_defer(zone, cc.order))
- 			continue;
- 
- 		if (compaction_suitable(zone, cc.order, 0, zoneid) !=
 -- 
 1.8.3.1
 
