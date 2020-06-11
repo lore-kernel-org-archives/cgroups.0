@@ -1,8 +1,10 @@
 From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v12 00/16] per memcg lru lock
-Date: Thu, 11 Jun 2020 14:16:33 +0800
-Message-ID: <1591856209-166869-1-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v12 01/16] mm/vmscan: remove unnecessary lruvec adding
+Date: Thu, 11 Jun 2020 14:16:34 +0800
+Message-ID: <1591856209-166869-2-git-send-email-alex.shi@linux.alibaba.com>
+References: <1591856209-166869-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1591856209-166869-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -10,98 +12,93 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-This is a new version which bases on v5.8, only change mm/compaction.c
-since mm-compaction-avoid-vm_bug_onpageslab-in-page_mapcount.patch 
-removed.
+We don't have to add a freeable page into lru and then remove from it.
+This change saves a couple of actions and makes the moving more clear.
 
-Johannes Weiner has suggested:
-"So here is a crazy idea that may be worth exploring:
+The SetPageLRU needs to be kept here for list intergrity.
+Otherwise:
+ #0 mave_pages_to_lru              #1 release_pages
+                                   if (put_page_testzero())
+ if !put_page_testzero
+                                     !PageLRU //skip lru_lock
+                                       list_add(&page->lru,)
+   list_add(&page->lru,) //corrupt
 
-Right now, pgdat->lru_lock protects both PageLRU *and* the lruvec's
-linked list.
+[akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org: coding style fixes]
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+---
+ mm/vmscan.c | 32 +++++++++++++++++++++-----------
+ 1 file changed, 21 insertions(+), 11 deletions(-)
 
-Can we make PageLRU atomic and use it to stabilize the lru_lock
-instead, and then use the lru_lock only serialize list operations?
-..."
-
-With new memcg charge path and this solution, we could isolate
-LRU pages to exclusive visit them in compaction, page migration, reclaim,
-memcg move_accunt, huge page split etc scenarios while keeping pages' 
-memcg stable. Then possible to change per node lru locking to per memcg
-lru locking. As to pagevec_lru_move_fn funcs, it would be safe to let
-pages remain on lru list, lru lock could guard them for list integrity.
-
-The patchset includes 3 parts:
-1, some code cleanup and minimum optimization as a preparation.
-2, use TestCleanPageLRU as page isolation's precondition
-3, replace per node lru_lock with per memcg per node lru_lock
-
-The 3rd part moves per node lru_lock into lruvec, thus bring a lru_lock for
-each of memcg per node. So on a large machine, each of memcg don't
-have to suffer from per node pgdat->lru_lock competition. They could go
-fast with their self lru_lock
-
-Following Daniel Jordan's suggestion, I have run 208 'dd' with on 104
-containers on a 2s * 26cores * HT box with a modefied case:
-https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/tree/case-lru-file-readtwice
-
-With this patchset, the readtwice performance increased about 80%
-in concurrent containers.
-
-Thanks Hugh Dickins and Konstantin Khlebnikov, they both brought this
-idea 8 years ago, and others who give comments as well: Daniel Jordan, 
-Mel Gorman, Shakeel Butt, Matthew Wilcox etc.
-
-Thanks for Testing support from Intel 0day and Rong Chen, Fengguang Wu,
-and Yun Wang. Hugh Dickins also shared his kbuild-swap case. Thanks!
-
-
-Alex Shi (14):
-  mm/vmscan: remove unnecessary lruvec adding
-  mm/page_idle: no unlikely double check for idle page counting
-  mm/compaction: correct the comments of compact_defer_shift
-  mm/compaction: rename compact_deferred as compact_should_defer
-  mm/thp: move lru_add_page_tail func to huge_memory.c
-  mm/thp: clean up lru_add_page_tail
-  mm/thp: narrow lru locking
-  mm/memcg: add debug checking in lock_page_memcg
-  mm/lru: introduce TestClearPageLRU
-  mm/compaction: do page isolation first in compaction
-  mm/mlock: reorder isolation sequence during munlock
-  mm/lru: replace pgdat lru_lock with lruvec lock
-  mm/lru: introduce the relock_page_lruvec function
-  mm/pgdat: remove pgdat lru_lock
-
-Hugh Dickins (2):
-  mm/vmscan: use relock for move_pages_to_lru
-  mm/lru: revise the comments of lru_lock
-
- Documentation/admin-guide/cgroup-v1/memcg_test.rst |  15 +-
- Documentation/admin-guide/cgroup-v1/memory.rst     |   8 +-
- Documentation/trace/events-kmem.rst                |   2 +-
- Documentation/vm/unevictable-lru.rst               |  22 +--
- include/linux/compaction.h                         |   4 +-
- include/linux/memcontrol.h                         |  92 +++++++++++
- include/linux/mm_types.h                           |   2 +-
- include/linux/mmzone.h                             |   6 +-
- include/linux/page-flags.h                         |   1 +
- include/linux/swap.h                               |   4 +-
- include/trace/events/compaction.h                  |   2 +-
- mm/compaction.c                                    |  96 +++++++-----
- mm/filemap.c                                       |   4 +-
- mm/huge_memory.c                                   |  51 +++++--
- mm/memcontrol.c                                    |  87 ++++++++++-
- mm/mlock.c                                         |  93 ++++++------
- mm/mmzone.c                                        |   1 +
- mm/page_alloc.c                                    |   1 -
- mm/page_idle.c                                     |   8 -
- mm/rmap.c                                          |   2 +-
- mm/swap.c                                          | 112 ++++----------
- mm/swap_state.c                                    |   6 +-
- mm/vmscan.c                                        | 168 +++++++++++----------
- mm/workingset.c                                    |   4 +-
- 24 files changed, 481 insertions(+), 310 deletions(-)
-
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index b6d84326bdf2..81228334f7d6 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1855,26 +1855,29 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
+ 	while (!list_empty(list)) {
+ 		page = lru_to_page(list);
+ 		VM_BUG_ON_PAGE(PageLRU(page), page);
++		list_del(&page->lru);
+ 		if (unlikely(!page_evictable(page))) {
+-			list_del(&page->lru);
+ 			spin_unlock_irq(&pgdat->lru_lock);
+ 			putback_lru_page(page);
+ 			spin_lock_irq(&pgdat->lru_lock);
+ 			continue;
+ 		}
+-		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+ 
++		/*
++		 * The SetPageLRU needs to be kept here for list intergrity.
++		 * Otherwise:
++		 *   #0 mave_pages_to_lru             #1 release_pages
++		 *				      if (put_page_testzero())
++		 *   if !put_page_testzero
++		 *				        !PageLRU //skip lru_lock
++		 *                                        list_add(&page->lru,)
++		 *     list_add(&page->lru,) //corrupt
++		 */
+ 		SetPageLRU(page);
+-		lru = page_lru(page);
+-
+-		nr_pages = hpage_nr_pages(page);
+-		update_lru_size(lruvec, lru, page_zonenum(page), nr_pages);
+-		list_move(&page->lru, &lruvec->lists[lru]);
+ 
+-		if (put_page_testzero(page)) {
++		if (unlikely(put_page_testzero(page))) {
+ 			__ClearPageLRU(page);
+ 			__ClearPageActive(page);
+-			del_page_from_lru_list(page, lruvec, lru);
+ 
+ 			if (unlikely(PageCompound(page))) {
+ 				spin_unlock_irq(&pgdat->lru_lock);
+@@ -1882,9 +1885,16 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
+ 				spin_lock_irq(&pgdat->lru_lock);
+ 			} else
+ 				list_add(&page->lru, &pages_to_free);
+-		} else {
+-			nr_moved += nr_pages;
++			continue;
+ 		}
++
++		lruvec = mem_cgroup_page_lruvec(page, pgdat);
++		lru = page_lru(page);
++		nr_pages = hpage_nr_pages(page);
++
++		update_lru_size(lruvec, lru, page_zonenum(page), nr_pages);
++		list_add(&page->lru, &lruvec->lists[lru]);
++		nr_moved += nr_pages;
+ 	}
+ 
+ 	/*
 -- 
 1.8.3.1
 
