@@ -1,91 +1,170 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: mm: mkfs.ext4 invoked oom-killer on i386 -
- pagecache_get_page
-Date: Thu, 11 Jun 2020 11:55:14 +0200
-Message-ID: <20200611095514.GD20450@dhcp22.suse.cz>
-References: <20200521095515.GK6462@dhcp22.suse.cz>
- <20200521163450.GV6462@dhcp22.suse.cz>
- <CA+G9fYuDWGZx50UpD+WcsDeHX9vi3hpksvBAWbMgRZadb0Pkww@mail.gmail.com>
- <CA+G9fYs2jg-j_5fdb0OW0G-JzDjN7b8d9qnX7uuk9p4c7mVSig@mail.gmail.com>
- <20200528150310.GG27484@dhcp22.suse.cz>
- <CA+G9fYvDXiZ9E9EfU6h0gsJ+xaXY77mRu9Jg+J7C=X4gJ3qvLg@mail.gmail.com>
- <20200528164121.GA839178@chrisdown.name>
- <CALOAHbAHGOsAUUM7qn=9L1u8kAf6Gztqt=SyHSmZ9XuYZWcKmg@mail.gmail.com>
- <20200529015644.GA84588@chrisdown.name>
- <20200529094910.GH4406@dhcp22.suse.cz>
+From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3 1/4] fs, net: Standardize on file_receive helper to
+ move fds across processes
+Date: Thu, 11 Jun 2020 12:01:14 +0200
+Message-ID: <20200611100114.awdjswsd7fdm2uzr@wittgenstein>
+References: <202006031845.F587F85A@keescook>
+ <20200604125226.eztfrpvvuji7cbb2@wittgenstein>
+ <20200605075435.GA3345@ircssh-2.c.rugged-nimbus-611.internal>
+ <202006091235.930519F5B@keescook>
+ <20200609200346.3fthqgfyw3bxat6l@wittgenstein>
+ <202006091346.66B79E07@keescook>
+ <037A305F-B3F8-4CFA-B9F8-CD4C9EF9090B@ubuntu.com>
+ <202006092227.D2D0E1F8F@keescook>
+ <20200610081237.GA23425@ircssh-2.c.rugged-nimbus-611.internal>
+ <202006101953.899EFB53@keescook>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <202006101953.899EFB53@keescook>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-f2fs-devel-bounces@lists.sourceforge.net>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- d=sourceforge.net; s=x; h=In-Reply-To:Content-Type:MIME-Version:References:
- Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:Content-Transfer-Encoding:
- Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
- Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
- List-Subscribe:List-Post:List-Owner:List-Archive;
- bh=OGc4Jynhv8J9+LXwEVD2pmhTRYA7A0SBRA8Y9bWfwBM=; b=NbRwHjro5uKKGxj1pa/HWs3Rpw
- N/Ti2SvefUjfAR4cc7Wxo9KekABOlUUvrfXUnkrU+wbHQBbTizuIUPhDOi2PduCAPlVSUeKm9exyA
- Qyf1BrG9sLXxV+fMMyQaA3Rj2b+tnHDFcmowoemo6+umQ4Feto3cmWoj5CrOxnUBaNu8=;
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sf.net; s=x
- ;
- h=In-Reply-To:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To
- :From:Date:Sender:Reply-To:Content-Transfer-Encoding:Content-ID:
- Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
- :Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
- List-Post:List-Owner:List-Archive;
- bh=OGc4Jynhv8J9+LXwEVD2pmhTRYA7A0SBRA8Y9bWfwBM=; b=JRlA6cuTJ5/7XsizC/DIRvnLDY
- FaasgBO4feiDDZORnKFxgo782s7XRgtWJqL/xLNYqe45ahPSj+MJqctElA+uKd3RkAZ3XetVhip1J
- LanQYa+3iHi0bxCzXkLBSxEa+Qf5yLzFe0g7Y4exPoMfCvK85hQK+jEmJIBUK9l/tEVk=;
-Content-Disposition: inline
-In-Reply-To: <20200529094910.GH4406@dhcp22.suse.cz>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/options/linux-f2fs-devel>, 
- <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-f2fs-devel>
-List-Post: <mailto:linux-f2fs-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-f2fs-devel>, 
- <mailto:linux-f2fs-devel-request@lists.sourceforge.net?subject=subscribe>
-Errors-To: linux-f2fs-devel-bounces@lists.sourceforge.net
-To: Chris Down <chris@chrisdown.name>, Naresh Kamboju <naresh.kamboju@linaro.org>
-Cc: lkft-triage@lists.linaro.org, linux-mm <linux-mm@kvack.org>, Yafang Shao <laoar.shao@gmail.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Jaegeuk Kim <jaegeuk@kernel.org>, Andrea Arcangeli <aarcange@redhat.com>, Anders Roxell <anders.roxell@linaro.org>, Hugh Dickins <hughd@google.com>, Matthew Wilcox <willy@infradead.org>, Linux-Next Mailing List <linux-next@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-block <linux-block@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, open list <linux-kernel@vger.kernel.org>, "Linux F2FS DEV, Mailing List" <linux-f2fs-devel@lists.sourceforge.net>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>
+To: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>, containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Giuseppe Scrivano <gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Robert Sesek <rsesek-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Palmer <palmer-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jann Horn <jannh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Daniel Wagner <daniel.wagner-98C5kh4wR6ohFhg+JK9F0w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matt Denton <mpdenton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, John Fastabend <john.r.fastabend-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 
-On Fri 29-05-20 11:49:20, Michal Hocko wrote:
-> On Fri 29-05-20 02:56:44, Chris Down wrote:
-> > Yafang Shao writes:
-> > > Look at this patch[1] carefully you will find that it introduces the
-> > > same issue that I tried to fix in another patch [2]. Even more sad is
-> > > these two patches are in the same patchset. Although this issue isn't
-> > > related with the issue found by Naresh, we have to ask ourselves why
-> > > we always make the same mistake ?
-> > > One possible answer is that we always forget the lifecyle of
-> > > memory.emin before we read it. memory.emin doesn't have the same
-> > > lifecycle with the memcg, while it really has the same lifecyle with
-> > > the reclaimer. IOW, once a reclaimer begins the protetion value should
-> > > be set to 0, and after we traversal the memcg tree we calculate a
-> > > protection value for this reclaimer, finnaly it disapears after the
-> > > reclaimer stops. That is why I highly suggest to add an new protection
-> > > member in scan_control before.
+On Wed, Jun 10, 2020 at 07:59:55PM -0700, Kees Cook wrote:
+> On Wed, Jun 10, 2020 at 08:12:38AM +0000, Sargun Dhillon wrote:
+> > As an aside, all of this junk should be dropped:
+> > +	ret = get_user(size, &uaddfd->size);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	ret = copy_struct_from_user(&addfd, sizeof(addfd), uaddfd, size);
+> > +	if (ret)
+> > +		return ret;
 > > 
-> > I agree with you that the e{min,low} lifecycle is confusing for everyone --
-> > the only thing I've not seen confirmation of is any confirmed correlation
-> > with the i386 oom killer issue. If you've validated that, I'd like to see
-> > the data :-)
+> > and the size member of the seccomp_notif_addfd struct. I brought this up 
+> > off-list with Tycho that ioctls have the size of the struct embedded in them. We 
+> > should just use that. The ioctl definition is based on this[2]:
+> > #define _IOC(dir,type,nr,size) \
+> > 	(((dir)  << _IOC_DIRSHIFT) | \
+> > 	 ((type) << _IOC_TYPESHIFT) | \
+> > 	 ((nr)   << _IOC_NRSHIFT) | \
+> > 	 ((size) << _IOC_SIZESHIFT))
+> > 
+> > 
+> > We should just use copy_from_user for now. In the future, we can either 
+> > introduce new ioctl names for new structs, or extract the size dynamically from 
+> > the ioctl (and mask it out on the switch statement in seccomp_notify_ioctl.
 > 
-> Agreed. Even if e{low,min} might still have some rough edges I am
-> completely puzzled how we could end up oom if none of the protection
-> path triggers which the additional debugging should confirm. Maybe my
-> debugging patch is incomplete or used incorrectly (maybe it would be
-> esier to use printk rather than trace_printk?).
+> Yeah, that seems reasonable. Here's the diff for that part:
 
-It would be really great if we could move forward. While the fix (which
-has been dropped from mmotm) is not super urgent I would really like to
-understand how it could hit the observed behavior. Can we double check
-that the debugging patch really doesn't trigger (e.g.
-s@trace_printk@printk in the first step)? I have checked it again but
-do not see any potential code path which would be affected by the patch
-yet not trigger any output. But another pair of eyes would be really
-great.
--- 
-Michal Hocko
-SUSE Labs
+Why does it matter that the ioctl() has the size of the struct embedded
+within? Afaik, the kernel itself doesn't do anything with that size. It
+merely checks that the size is not pathological and it does so at
+compile time.
+
+#ifdef __CHECKER__
+#define _IOC_TYPECHECK(t) (sizeof(t))
+#else
+/* provoke compile error for invalid uses of size argument */
+extern unsigned int __invalid_size_argument_for_IOC;
+#define _IOC_TYPECHECK(t) \
+	((sizeof(t) == sizeof(t[1]) && \
+	  sizeof(t) < (1 << _IOC_SIZEBITS)) ? \
+	  sizeof(t) : __invalid_size_argument_for_IOC)
+#endif
+
+The size itself is not verified at runtime. copy_struct_from_user()
+still makes sense at least if we're going to allow expanding the struct
+in the future.
+
+Leaving that aside, the proposed direction here seems to mean that any
+change to the struct itself will immediately mean a new ioctl() but
+afaict, that also means a new struct. Since when you simply extend the
+struct for the sake of the new ioctl you also change the size for the
+ioctl.
+
+Sure, you can simply treat the struct coming through the old ioctl as
+being "capped" by e.g. hiding the size as suggested but then the gain
+by having two separate ioctls is 0 compared to simply versioning the
+struct with an explicit size member since the size encoded in the ioctl
+and the actual size of the struct don't line up anymore which is the
+only plus I can see for relying on _IOC_SIZE(). All this manages to do
+then is to make it more annoying for userspace since they now need to
+maintain multiple ioctls(). And if you have - however unlikely - say
+three different ioctls all to be used with a different struct size of
+the same struct I now need to know which ioctl() goes with which size of
+the struct (I guess you could append the size to the ioctl name?
+*shudder*). If you have the size in the struct itself you don't need to
+care about any of that.
+Maybe I'm not making sense or I misunderstand what's going on though.
+
+Christian
+
+> 
+> diff --git a/include/uapi/linux/seccomp.h b/include/uapi/linux/seccomp.h
+> index 7b6028b399d8..98bf19b4e086 100644
+> --- a/include/uapi/linux/seccomp.h
+> +++ b/include/uapi/linux/seccomp.h
+> @@ -118,7 +118,6 @@ struct seccomp_notif_resp {
+>  
+>  /**
+>   * struct seccomp_notif_addfd
+> - * @size: The size of the seccomp_notif_addfd datastructure
+>   * @id: The ID of the seccomp notification
+>   * @flags: SECCOMP_ADDFD_FLAG_*
+>   * @srcfd: The local fd number
+> @@ -126,7 +125,6 @@ struct seccomp_notif_resp {
+>   * @newfd_flags: The O_* flags the remote FD should have applied
+>   */
+>  struct seccomp_notif_addfd {
+> -	__u64 size;
+>  	__u64 id;
+>  	__u32 flags;
+>  	__u32 srcfd;
+> diff --git a/kernel/seccomp.c b/kernel/seccomp.c
+> index 3c913f3b8451..00cbdad6c480 100644
+> --- a/kernel/seccomp.c
+> +++ b/kernel/seccomp.c
+> @@ -1297,14 +1297,9 @@ static long seccomp_notify_addfd(struct seccomp_filter *filter,
+>  	struct seccomp_notif_addfd addfd;
+>  	struct seccomp_knotif *knotif;
+>  	struct seccomp_kaddfd kaddfd;
+> -	u64 size;
+>  	int ret;
+>  
+> -	ret = get_user(size, &uaddfd->size);
+> -	if (ret)
+> -		return ret;
+> -
+> -	ret = copy_struct_from_user(&addfd, sizeof(addfd), uaddfd, size);
+> +	ret = copy_from_user(&addfd, uaddfd, sizeof(addfd));
+>  	if (ret)
+>  		return ret;
+>  
+> 
+> > 
+> > ----
+> > +#define SECCOMP_IOCTL_NOTIF_ADDFD	SECCOMP_IOR(3,	\
+> > +						struct seccomp_notif_addfd)
+> > 
+> > Lastly, what I believe to be a small mistake, it should be SECCOMP_IOW, based on 
+> > the documentation in ioctl.h -- "_IOW means userland is writing and kernel is 
+> > reading."
+> 
+> Oooooh. Yeah; good catch. Uhm, that means SECCOMP_IOCTL_NOTIF_ID_VALID
+> is wrong too, yes? Tycho, Christian, how disruptive would this be to
+> fix? (Perhaps support both and deprecate the IOR version at some point
+> in the future?)
+> 
+> Diff for just addfd's change:
+> 
+> diff --git a/include/uapi/linux/seccomp.h b/include/uapi/linux/seccomp.h
+> index 7b6028b399d8..98bf19b4e086 100644
+> --- a/include/uapi/linux/seccomp.h
+> +++ b/include/uapi/linux/seccomp.h
+> @@ -146,7 +144,7 @@ struct seccomp_notif_addfd {
+>  						struct seccomp_notif_resp)
+>  #define SECCOMP_IOCTL_NOTIF_ID_VALID	SECCOMP_IOR(2, __u64)
+>  /* On success, the return value is the remote process's added fd number */
+> -#define SECCOMP_IOCTL_NOTIF_ADDFD	SECCOMP_IOR(3,	\
+> +#define SECCOMP_IOCTL_NOTIF_ADDFD	SECCOMP_IOW(3,	\
+>  						struct seccomp_notif_addfd)
+>  
+>  #endif /* _UAPI_LINUX_SECCOMP_H */
+> 
+> -- 
+> Kees Cook
