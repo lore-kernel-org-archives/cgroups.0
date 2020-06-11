@@ -1,115 +1,52 @@
-From: Christian Brauner <christian.brauner@ubuntu.com>
-Subject: Re: [PATCH v3 1/4] fs, net: Standardize on file_receive helper to
- move fds across processes
-Date: Thu, 11 Jun 2020 11:19:42 +0200
-Message-ID: <20200611091942.jni2glnpmxisnant@wittgenstein>
-References: <202006031845.F587F85A@keescook>
- <20200604125226.eztfrpvvuji7cbb2@wittgenstein>
- <20200605075435.GA3345@ircssh-2.c.rugged-nimbus-611.internal>
- <202006091235.930519F5B@keescook>
- <20200609200346.3fthqgfyw3bxat6l@wittgenstein>
- <202006091346.66B79E07@keescook>
- <037A305F-B3F8-4CFA-B9F8-CD4C9EF9090B@ubuntu.com>
- <202006092227.D2D0E1F8F@keescook>
- <20200610081237.GA23425@ircssh-2.c.rugged-nimbus-611.internal>
- <202006101953.899EFB53@keescook>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 16/19] mm: memcontrol: charge swapin pages on
+ instantiation
+Date: Thu, 11 Jun 2020 11:35:23 +0200
+Message-ID: <20200611093523.GB20450@dhcp22.suse.cz>
+References: <20200508183105.225460-1-hannes@cmpxchg.org>
+ <20200508183105.225460-17-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <202006101953.899EFB53@keescook>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20200508183105.225460-17-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Kees Cook <keescook@chromium.org>
-Cc: Sargun Dhillon <sargun@sargun.me>, containers@lists.linux-foundation.org, Giuseppe Scrivano <gscrivan@redhat.com>, Robert Sesek <rsesek@google.com>, Chris Palmer <palmer@google.com>, Jann Horn <jannh@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Daniel Wagner <daniel.wagner@bmw-carit.de>, linux-kernel@vger.kernel.org, Matt Denton <mpdenton@google.com>, John Fastabend <john.r.fastabend@intel.com>, linux-fsdevel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, cgroups@vger.kernel.org, stable@vger.kernel.org, "David S . Miller" <davem@davemloft.net>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Wed, Jun 10, 2020 at 07:59:55PM -0700, Kees Cook wrote:
-> On Wed, Jun 10, 2020 at 08:12:38AM +0000, Sargun Dhillon wrote:
-> > As an aside, all of this junk should be dropped:
-> > +	ret = get_user(size, &uaddfd->size);
-> > +	if (ret)
-> > +		return ret;
-> > +
-> > +	ret = copy_struct_from_user(&addfd, sizeof(addfd), uaddfd, size);
-> > +	if (ret)
-> > +		return ret;
-> > 
-> > and the size member of the seccomp_notif_addfd struct. I brought this up 
-> > off-list with Tycho that ioctls have the size of the struct embedded in them. We 
-> > should just use that. The ioctl definition is based on this[2]:
-> > #define _IOC(dir,type,nr,size) \
-> > 	(((dir)  << _IOC_DIRSHIFT) | \
-> > 	 ((type) << _IOC_TYPESHIFT) | \
-> > 	 ((nr)   << _IOC_NRSHIFT) | \
-> > 	 ((size) << _IOC_SIZESHIFT))
-> > 
-> > 
-> > We should just use copy_from_user for now. In the future, we can either 
-> > introduce new ioctl names for new structs, or extract the size dynamically from 
-> > the ioctl (and mask it out on the switch statement in seccomp_notify_ioctl.
-> 
-> Yeah, that seems reasonable. Here's the diff for that part:
-> 
-> diff --git a/include/uapi/linux/seccomp.h b/include/uapi/linux/seccomp.h
-> index 7b6028b399d8..98bf19b4e086 100644
-> --- a/include/uapi/linux/seccomp.h
-> +++ b/include/uapi/linux/seccomp.h
-> @@ -118,7 +118,6 @@ struct seccomp_notif_resp {
->  
->  /**
->   * struct seccomp_notif_addfd
-> - * @size: The size of the seccomp_notif_addfd datastructure
->   * @id: The ID of the seccomp notification
->   * @flags: SECCOMP_ADDFD_FLAG_*
->   * @srcfd: The local fd number
-> @@ -126,7 +125,6 @@ struct seccomp_notif_resp {
->   * @newfd_flags: The O_* flags the remote FD should have applied
->   */
->  struct seccomp_notif_addfd {
-> -	__u64 size;
->  	__u64 id;
->  	__u32 flags;
->  	__u32 srcfd;
-> diff --git a/kernel/seccomp.c b/kernel/seccomp.c
-> index 3c913f3b8451..00cbdad6c480 100644
-> --- a/kernel/seccomp.c
-> +++ b/kernel/seccomp.c
-> @@ -1297,14 +1297,9 @@ static long seccomp_notify_addfd(struct seccomp_filter *filter,
->  	struct seccomp_notif_addfd addfd;
->  	struct seccomp_knotif *knotif;
->  	struct seccomp_kaddfd kaddfd;
-> -	u64 size;
->  	int ret;
->  
-> -	ret = get_user(size, &uaddfd->size);
-> -	if (ret)
-> -		return ret;
-> -
-> -	ret = copy_struct_from_user(&addfd, sizeof(addfd), uaddfd, size);
-> +	ret = copy_from_user(&addfd, uaddfd, sizeof(addfd));
->  	if (ret)
->  		return ret;
->  
-> 
-> > 
-> > ----
-> > +#define SECCOMP_IOCTL_NOTIF_ADDFD	SECCOMP_IOR(3,	\
-> > +						struct seccomp_notif_addfd)
-> > 
-> > Lastly, what I believe to be a small mistake, it should be SECCOMP_IOW, based on 
-> > the documentation in ioctl.h -- "_IOW means userland is writing and kernel is 
-> > reading."
-> 
-> Oooooh. Yeah; good catch. Uhm, that means SECCOMP_IOCTL_NOTIF_ID_VALID
-> is wrong too, yes? Tycho, Christian, how disruptive would this be to
-> fix? (Perhaps support both and deprecate the IOR version at some point
-> in the future?)
+On Fri 08-05-20 14:31:03, Johannes Weiner wrote:
+[...]
+> diff --git a/mm/memory.c b/mm/memory.c
+> index 832ee914cbcf..93900b121b6e 100644
+> --- a/mm/memory.c
+> +++ b/mm/memory.c
+> @@ -3125,9 +3125,20 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
+>  			page = alloc_page_vma(GFP_HIGHUSER_MOVABLE, vma,
+>  							vmf->address);
+>  			if (page) {
+> +				int err;
+> +
+>  				__SetPageLocked(page);
+>  				__SetPageSwapBacked(page);
+>  				set_page_private(page, entry.val);
+> +
+> +				/* Tell memcg to use swap ownership records */
+> +				SetPageSwapCache(page);
+> +				err = mem_cgroup_charge(page, vma->vm_mm,
+> +							GFP_KERNEL, false);
+> +				ClearPageSwapCache(page);
+> +				if (err)
+> +					goto out_page;
 
-We have custom defines in our source code, i.e.
-#define SECCOMP_IOCTL_NOTIF_ID_VALID  SECCOMP_IOR(2, __u64)
-so ideally we'd have a SECCOMP_IOCTL_NOTIF_ID_VALID_V2
+err would be a return value from try_charge and that can be -ENOMEM. Now
+we almost never return ENOMEM for GFP_KERNEL single page charge. Except
+for async OOM handling (oom_disabled v1). So this needs translation to
+VM_FAULT_OOM.
 
-Does that sound ok?
-
-Christian
+I am not an expert on the swap code so I might have missed some subtle
+issues but the rest of the patch seems reasonable to me.
+-- 
+Michal Hocko
+SUSE Labs
