@@ -1,46 +1,154 @@
-From: zzuedu2000-9Onoh4P/yGk@public.gmane.org
-Subject: [PATCH] Fix code style same in one function
-Date: Fri, 12 Jun 2020 21:54:59 +0800
-Message-ID: <20200612135459.28537-1-zzuedu2000@163.com>
+From: Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Subject: Re: [PATCH v3 1/4] fs, net: Standardize on file_receive helper to
+ move fds across processes
+Date: Fri, 12 Jun 2020 08:13:25 -0700
+Message-ID: <202006120806.E770867EF@keescook>
+References: <037A305F-B3F8-4CFA-B9F8-CD4C9EF9090B@ubuntu.com>
+ <202006092227.D2D0E1F8F@keescook>
+ <20200610081237.GA23425@ircssh-2.c.rugged-nimbus-611.internal>
+ <202006101953.899EFB53@keescook>
+ <20200611100114.awdjswsd7fdm2uzr@wittgenstein>
+ <20200611110630.GB30103@ircssh-2.c.rugged-nimbus-611.internal>
+ <067f494d55c14753a31657f958cb0a6e@AcuMS.aculab.com>
+ <202006111634.8237E6A5C6@keescook>
+ <94407449bedd4ba58d85446401ff0a42@AcuMS.aculab.com>
+ <20200612104629.GA15814@ircssh-2.c.rugged-nimbus-611.internal>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id; bh=L2UPa91bTaGr2nGxt5
-        46epMlCxYbdwpTFHQ6idsU4S4=; b=DUtxQ+F39DdxT4/o5nwzw+dQRvWV6hXvsh
-        cT+dsbwpbNQIrxYtZhf+JsJu7IGssukccNGHHleJPkYGyQmcDBM2Ki6cKLuwhgmj
-        3BnWVewvWWhTvxJCDgX4EC9NL3hZe9qdxJRUAIio2uII9TsLxK1Yv4hVpxl291HM
-        4Ye2IkZNA=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Pno+5kYSHMw8xwXOucwExt5jksL9Xbw8epr6Z7fMvHE=;
+        b=JSjDP2ux5xIsExDkMu+jKwnIWyDo4yP7FcO/2uWZWDhSupr7sF/6Bfpw0z0x2wQ2jD
+         j1ozQAHLCGlCTem8qZTE8r5BEHrMzvoaVFkJpu0QI/WYFW09ANKlCOnUPTxBzpCa6lzT
+         u+IsrxgbSZPWpttOWWycjfaNnRDFQE2NPKRQo=
+Content-Disposition: inline
+In-Reply-To: <20200612104629.GA15814-du9IEJ8oIxHXYT48pCVpJ3c7ZZ+wIVaZYkHkVr5ML8kVGlcevz2xqA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, weifenghai <zzuedu2000-9Onoh4P/yGk@public.gmane.org>
+To: Sargun Dhillon <sargun-GaZTRHToo+CzQB+pC5nmwQ@public.gmane.org>
+Cc: David Laight <David.Laight-ZS65k/vG3HxXrIkS9f7CXA@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Giuseppe Scrivano <gscrivan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Robert Sesek <rsesek-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Palmer <palmer-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jann Horn <jannh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Matt Denton <mpdenton-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
 
-From: weifenghai <zzuedu2000-9Onoh4P/yGk@public.gmane.org>
+On Fri, Jun 12, 2020 at 10:46:30AM +0000, Sargun Dhillon wrote:
+> My suggest, written out (no idea if this code actually works), is as follows:
+> 
+> ioctl.h:
+> /* This needs to be added */
+> #define IOCDIR_MASK	(_IOC_DIRMASK << _IOC_DIRSHIFT)
 
-One line similar code before in this function
+This exists already:
 
-Signed-off-by: weifenghai <zzuedu2000-9Onoh4P/yGk@public.gmane.org>
----
- kernel/cgroup/cgroup.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+#define _IOC_DIRMASK    ((1 << _IOC_DIRBITS)-1)
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 1ea181a58465..c3e6db6e44d8 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -4352,8 +4352,7 @@ static struct css_set *css_task_iter_next_css_set(struct css_task_iter *it)
- 	}
- 
- 	/* find the next cset */
--	l = it->cset_pos;
--	l = l->next;
-+	l = it->cset_pos->next;
- 	if (l == it->cset_head) {
- 		it->cset_pos = NULL;
- 		return NULL;
+> 
+> 
+> seccomp.h:
+> 
+> struct struct seccomp_notif_addfd {
+> 	__u64 fd;
+> 	...
+> }
+> 
+> /* or IOW? */
+> #define SECCOMP_IOCTL_NOTIF_ADDFD	SECCOMP_IOWR(3, struct seccomp_notif_addfd)
+> 
+> seccomp.c:
+> static long seccomp_notify_addfd(struct seccomp_filter *filter,
+> 				 struct seccomp_notif_addfd __user *uaddfd int size)
+> {
+> 	struct seccomp_notif_addfd addfd;
+> 	int ret;
+> 
+> 	if (size < 32)
+> 		return -EINVAL;
+> 	if (size > PAGE_SIZE)
+> 		return -E2BIG;
+
+(Tanget: what was the reason for copy_struct_from_user() not including
+the min/max check? I have a memory of Al objecting to having an
+"internal" limit?)
+
+> 
+> 	ret = copy_struct_from_user(&addfd, sizeof(addfd), uaddfd, size);
+> 	if (ret)
+> 		return ret;
+> 
+> 	...
+> }
+> 
+> /* Mask out size */
+> #define SIZE_MASK(cmd)	(~IOCSIZE_MASK & cmd)
+> 
+> /* Mask out direction */
+> #define DIR_MASK(cmd)	(~IOCDIR_MASK & cmd)
+> 
+> static long seccomp_notify_ioctl(struct file *file, unsigned int cmd,
+> 				 unsigned long arg)
+> {
+> 	struct seccomp_filter *filter = file->private_data;
+> 	void __user *buf = (void __user *)arg;
+> 
+> 	/* Fixed size ioctls. Can be converted later on? */
+> 	switch (cmd) {
+> 	case SECCOMP_IOCTL_NOTIF_RECV:
+> 		return seccomp_notify_recv(filter, buf);
+> 	case SECCOMP_IOCTL_NOTIF_SEND:
+> 		return seccomp_notify_send(filter, buf);
+> 	case SECCOMP_IOCTL_NOTIF_ID_VALID:
+> 		return seccomp_notify_id_valid(filter, buf);
+> 	}
+> 
+> 	/* Probably should make some nicer macros here */
+> 	switch (SIZE_MASK(DIR_MASK(cmd))) {
+> 	case SIZE_MASK(DIR_MASK(SECCOMP_IOCTL_NOTIF_ADDFD)):
+
+Ah yeah, I like this because of what you mention below: it's forward
+compat too. (I'd just use the ioctl masks directly...)
+
+	switch (cmd & ~(_IOC_SIZEMASK | _IOC_DIRMASK))
+
+> 		return seccomp_notify_addfd(filter, buf, _IOC_SIZE(cmd));
+
+I really like that this ends up having the same construction as a
+standard EA syscall: the size is part of the syscall arguments.
+
+> 	default:
+> 		return -EINVAL;
+> 	}
+> }
+> 
+> --------
+> 
+> What boxes does this tick?
+> * Forwards (and backwards) compatibility
+> * Applies to existing commands
+> * Command can be extended without requiring new ioctl to be defined
+
+(Technically, a new one is always redefined, but it's automatic in that
+the kernel needs to do nothing.)
+
+> * It well accomodates the future where we want to have a kernel
+>   helper copy the structures from userspace
+
+Yeah, this is a good solution.
+
+> The fact that the size of the argument struct, and the ioctl are defined in the 
+> same header gives us the ability to "cheat", and for the argument size to be 
+> included / embedded for free in the command passed to ioctl. In turn, this
+> gives us two benefits. First, it means we don't have to copy from user twice,
+> and can just do it all in one shot since the size is passed with the syscall
+> arguments. Second, it means that the user does not have to do the following:
+> 
+> seccomp_notif_addfd addfd = {};
+> addfd.size = sizeof(struct seccomp_notif_addfd)
+> 
+> Because sizeof(struct seccomp_notif_addfd) is embedded in 
+> SECCOMP_IOCTL_NOTIF_ADDFD based on the same headers they plucked the struct out of.
+
+Cool. I will do more patch reworking! ;)
+
 -- 
-2.17.1
-
-
+Kees Cook
