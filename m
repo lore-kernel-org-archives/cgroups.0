@@ -1,55 +1,46 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: mm: mkfs.ext4 invoked oom-killer on i386 - pagecache_get_page
-Date: Fri, 12 Jun 2020 14:09:04 +0200
-Message-ID: <20200612120904.GA8641@dhcp22.suse.cz>
-References: <CA+G9fYuDWGZx50UpD+WcsDeHX9vi3hpksvBAWbMgRZadb0Pkww@mail.gmail.com>
- <CA+G9fYs2jg-j_5fdb0OW0G-JzDjN7b8d9qnX7uuk9p4c7mVSig@mail.gmail.com>
- <20200528150310.GG27484@dhcp22.suse.cz>
- <CA+G9fYvDXiZ9E9EfU6h0gsJ+xaXY77mRu9Jg+J7C=X4gJ3qvLg@mail.gmail.com>
- <20200528164121.GA839178@chrisdown.name>
- <CALOAHbAHGOsAUUM7qn=9L1u8kAf6Gztqt=SyHSmZ9XuYZWcKmg@mail.gmail.com>
- <20200529015644.GA84588@chrisdown.name>
- <20200529094910.GH4406@dhcp22.suse.cz>
- <20200611095514.GD20450@dhcp22.suse.cz>
- <CA+G9fYsjH8vOTkSKGa5vgC=0fEXuC5UnGsZOirHxH9nOJSHPdA@mail.gmail.com>
-Mime-Version: 1.0
+From: zzuedu2000-9Onoh4P/yGk@public.gmane.org
+Subject: [PATCH] Fix code style same in one function
+Date: Fri, 12 Jun 2020 21:54:59 +0800
+Message-ID: <20200612135459.28537-1-zzuedu2000@163.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CA+G9fYsjH8vOTkSKGa5vgC=0fEXuC5UnGsZOirHxH9nOJSHPdA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id; bh=L2UPa91bTaGr2nGxt5
+        46epMlCxYbdwpTFHQ6idsU4S4=; b=DUtxQ+F39DdxT4/o5nwzw+dQRvWV6hXvsh
+        cT+dsbwpbNQIrxYtZhf+JsJu7IGssukccNGHHleJPkYGyQmcDBM2Ki6cKLuwhgmj
+        3BnWVewvWWhTvxJCDgX4EC9NL3hZe9qdxJRUAIio2uII9TsLxK1Yv4hVpxl291HM
+        4Ye2IkZNA=
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Naresh Kamboju <naresh.kamboju-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Anders Roxell <anders.roxell-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Linux F2FS DEV, Mailing List" <linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, linux-ext4 <linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-Next Mailing List <linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Andreas Dilger <adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, Chao Yu <chao-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Chao Yu <yuchao0-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, 
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, weifenghai <zzuedu2000-9Onoh4P/yGk@public.gmane.org>
 
-On Fri 12-06-20 15:13:22, Naresh Kamboju wrote:
-> On Thu, 11 Jun 2020 at 15:25, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> >
-> > On Fri 29-05-20 11:49:20, Michal Hocko wrote:
-> > > On Fri 29-05-20 02:56:44, Chris Down wrote:
-> > > > Yafang Shao writes:
-> > > Agreed. Even if e{low,min} might still have some rough edges I am
-> > > completely puzzled how we could end up oom if none of the protection
-> > > path triggers which the additional debugging should confirm. Maybe my
-> > > debugging patch is incomplete or used incorrectly (maybe it would be
-> > > esier to use printk rather than trace_printk?).
-> >
-> > It would be really great if we could move forward. While the fix (which
-> > has been dropped from mmotm) is not super urgent I would really like to
-> > understand how it could hit the observed behavior. Can we double check
-> > that the debugging patch really doesn't trigger (e.g.
-> > s@trace_printk@printk in the first step)?
-> 
-> Please suggest to me the way to get more debug information
-> by providing kernel debug patches and extra kernel configs.
-> 
-> I have applied your debug patch and tested on top on linux next 20200612
-> but did not find any printk output while running mkfs -t ext4 /drive test case.
+From: weifenghai <zzuedu2000-9Onoh4P/yGk@public.gmane.org>
 
-Have you tried s@trace_printk@printk@ in the patch? AFAIK trace_printk
-doesn't dump anything into the printk ring buffer. You would have to
-look into trace ring buffer.
+One line similar code before in this function
+
+Signed-off-by: weifenghai <zzuedu2000-9Onoh4P/yGk@public.gmane.org>
+---
+ kernel/cgroup/cgroup.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 1ea181a58465..c3e6db6e44d8 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -4352,8 +4352,7 @@ static struct css_set *css_task_iter_next_css_set(struct css_task_iter *it)
+ 	}
+ 
+ 	/* find the next cset */
+-	l = it->cset_pos;
+-	l = l->next;
++	l = it->cset_pos->next;
+ 	if (l == it->cset_head) {
+ 		it->cset_pos = NULL;
+ 		return NULL;
 -- 
-Michal Hocko
-SUSE Labs
+2.17.1
+
+
