@@ -1,54 +1,51 @@
-From: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Subject: Re: [PATCH] Fix code style in css_task_iter_next_css_set()
-Date: Sun, 14 Jun 2020 09:13:35 +0200
-Message-ID: <20200614071335.GB2629255@kroah.com>
-References: <52681580-7ab4-a73c-6c86-bc9872de4fe8@web.de>
+From: Muchun Song <songmuchun@bytedance.com>
+Subject: [PATCH] mm: memcontrol: Fix do not put the css reference
+Date: Sun, 14 Jun 2020 20:26:53 +0800
+Message-ID: <20200614122653.98829-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592118818;
-        bh=G0YkOo/zB1bFhEFNAvhbmUwDkAVvzsSd01JJOtcdihM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=absDd/JLqierYmu1LqtPo2LMI7JuTj4umdM9bXqwxtxIUU8GXB1zS18t9qaydSz4p
-         AmW3AgUxqPir6IBaoUHFlVbmi4L6GtaacX8QkTK64jO0PBj9aCiYbg6wM2aWHGjuED
-         KhOLrZVrEBSfcHFjKPWBQLntZ+wQYWYfXQab+2E8=
-Content-Disposition: inline
-In-Reply-To: <52681580-7ab4-a73c-6c86-bc9872de4fe8-S0/GAf8tV78@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=O3wDQLkjLZhz8HlGMqP3m6FBvc0T90YmqvSvkQbSHmY=;
+        b=UZdFv0Xir9MEd893nm2NsmxcmIkqD+9uJfe/NWiB6X4ESmnvYuGlbYeBwqpFlqO9RE
+         GEBYJJZFKnYz3RhjfSojLRVr5YVm5AGj/u7OUlKiuBC9pTCpa/UTUp4W0JS62X3RZVlN
+         yUkG04sIKOg+sRsa+nZB76FklBpGfLDF2tULWeLOIx3xRMLvhRlyusQ8swY5N6V6FueI
+         OgCRl6obnJBQmMr4UfhxeO0voZrS3sJhbQYyQanMRjl6HbdtGdAg8MKQCLIovef0xhA0
+         hY8ljJPDg1iToDvZczOb8CPHo34wtShhA11Rm7JQiD3cdRyhygvgKhIxkBp0UuA/gl99
+         oQpg==
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Markus Elfring <Markus.Elfring-S0/GAf8tV78@public.gmane.org>
-Cc: weifenghai <zzuedu2000-9Onoh4P/yGk@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org
+Cc: guro@fb.com, cai@lca.pw, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>
 
-On Fri, Jun 12, 2020 at 09:56:26PM +0200, Markus Elfring wrote:
-> > One line similar code before in this function
-> 
-> I suggest to improve the commit message.
-> How do you think about a wording variant like the following?
-> 
->    Combine two assignments for the variable “l” into one statement.
-> 
-> Regards,
-> Markus
+We should put the css reference when memory allocation failed.
 
-Hi,
+Fixes: f0a3a24b532d ("mm: memcg/slab: rework non-root kmem_cache lifecycle management")
+Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+---
+ mm/memcontrol.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-This is the semi-friendly patch-bot of Greg Kroah-Hartman.
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 0b38b6ad547d..2323d811ee8e 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2772,8 +2772,10 @@ static void memcg_schedule_kmem_cache_create(struct mem_cgroup *memcg,
+ 		return;
+ 
+ 	cw = kmalloc(sizeof(*cw), GFP_NOWAIT | __GFP_NOWARN);
+-	if (!cw)
++	if (!cw) {
++		css_put(&memcg->css);
+ 		return;
++	}
+ 
+ 	cw->memcg = memcg;
+ 	cw->cachep = cachep;
+-- 
+2.11.0
 
-Markus, you seem to have sent a nonsensical or otherwise pointless
-review comment to a patch submission on a Linux kernel developer mailing
-list.  I strongly suggest that you not do this anymore.  Please do not
-bother developers who are actively working to produce patches and
-features with comments that, in the end, are a waste of time.
-
-Patch submitter, please ignore Markus's suggestion; you do not need to
-follow it at all.  The person/bot/AI that sent it is being ignored by
-almost all Linux kernel maintainers for having a persistent pattern of
-behavior of producing distracting and pointless commentary, and
-inability to adapt to feedback.  Please feel free to also ignore emails
-from them.
-
-thanks,
-
-greg k-h's patch email bot
