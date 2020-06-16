@@ -1,63 +1,300 @@
-From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: handle div0 crash race condition in
- memory.low
-Date: Mon, 15 Jun 2020 16:09:11 +0100
-Message-ID: <20200615150911.GD157916@chrisdown.name>
-References: <20200615140658.601684-1-hannes@cmpxchg.org>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH v11 00/16] per memcg lru lock
+Date: Tue, 16 Jun 2020 14:14:19 +0800
+Message-ID: <cc471d42-4e7d-b8ec-bc2f-ee85090231fb@linux.alibaba.com>
+References: <1590663658-184131-1-git-send-email-alex.shi@linux.alibaba.com>
+ <alpine.LSU.2.11.2006072100390.2001@eggly.anvils>
+ <31943f08-a8e8-be38-24fb-ab9d25fd96ff@linux.alibaba.com>
+ <alpine.LSU.2.11.2006091904530.2779@eggly.anvils>
+ <730c595b-f4bf-b16a-562e-de25b9b7eb97@linux.alibaba.com>
+ <alpine.LSU.2.11.2006111409280.10801@eggly.anvils>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=I3pYBTJCH1fWxzUVivyIxWA31KHjVQXjnfV1c/iHSQ8=;
-        b=aPeEzEq8Bmncf5GDxG4bKMbLMmpAo3LrvR3mDRIGWrMYi8m0weo1We6uJeEyp/OCdf
-         /K4tB062Vr1+uzaRvdUPls1EMMG+6mqPlTcGG+J0AVYmUhkuQd4uuhW8AEwLZcc4EZoB
-         CSGBuXP88a9JMP/xuTmLWTkbgT6ick7fAsj5k=
-Content-Disposition: inline
-In-Reply-To: <20200615140658.601684-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <alpine.LSU.2.11.2006111409280.10801-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-Johannes Weiner writes:
->Tejun reports seeing rare div0 crashes in memory.low stress testing:
->
->[37228.504582] RIP: 0010:mem_cgroup_calculate_protection+0xed/0x150
->[37228.505059] Code: 0f 46 d1 4c 39 d8 72 57 f6 05 16 d6 42 01 40 74 1f 4c 39 d8 76 1a 4c 39 d1 76 15 4c 29 d1 4c 29 d8 4d 29 d9 31 d2 48 0f af c1 <49> f7 f1 49 01 c2 4c 89 96 38 01 00 00 5d c3 48 0f af c7 31 d2 49
->[37228.506254] RSP: 0018:ffffa14e01d6fcd0 EFLAGS: 00010246
->[37228.506769] RAX: 000000000243e384 RBX: 0000000000000000 RCX: 0000000000008f4b
->[37228.507319] RDX: 0000000000000000 RSI: ffff8b89bee84000 RDI: 0000000000000000
->[37228.507869] RBP: ffffa14e01d6fcd0 R08: ffff8b89ca7d40f8 R09: 0000000000000000
->[37228.508376] R10: 0000000000000000 R11: 00000000006422f7 R12: 0000000000000000
->[37228.508881] R13: ffff8b89d9617000 R14: ffff8b89bee84000 R15: ffffa14e01d6fdb8
->[37228.509397] FS:  0000000000000000(0000) GS:ffff8b8a1f1c0000(0000) knlGS:0000000000000000
->[37228.509917] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->[37228.510442] CR2: 00007f93b1fc175b CR3: 000000016100a000 CR4: 0000000000340ea0
->[37228.511076] Call Trace:
->[37228.511561]  shrink_node+0x1e5/0x6c0
->[37228.512044]  balance_pgdat+0x32d/0x5f0
->[37228.512521]  kswapd+0x1d7/0x3d0
->[37228.513346]  ? wait_woken+0x80/0x80
->[37228.514170]  kthread+0x11c/0x160
->[37228.514983]  ? balance_pgdat+0x5f0/0x5f0
->[37228.515797]  ? kthread_park+0x90/0x90
->[37228.516593]  ret_from_fork+0x1f/0x30
->
->This happens when parent_usage == siblings_protected. We check that
->usage is bigger than protected, which should imply parent_usage being
->bigger than siblings_protected. However, we don't read (or even
->update) these values atomically, and they can be out of sync as the
->memory state changes under us. A bit of fluctuation around the target
->protection isn't a big deal, but we need to handle the div0 case.
->
->Check the parent state explicitly to make sure we have a reasonable
->positive value for the divisor.
->
->Fixes: 8a931f801340 ("mm: memcontrol: recursive memory.low protection")
->Reported-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Acked-by: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+
+在 2020/6/12 上午6:09, Hugh Dickins 写道:
+>>> I thought that a very safe change, but best to do some test runs with
+>>> it in before finalizing. And was then unpleasantly surprised to hit a
+>>> VM_BUG_ON_PAGE(lruvec_memcg(lruvec) != page->mem_cgroup) from
+>>> lock_page_lruvec_irqsave < relock_page_lruvec < pagevec_lru_move_fn <
+>>> pagevec_move_tail < lru_add_drain_cpu after 6 hours on one machine.
+>>> Then similar but < rotate_reclaimable_page after 8 hours on another.
+>>>
+>>> Only seen once before: that's what drove me to add patch 4 (with 3 to
+>>> revert the locking before it): somehow, when adding the lruvec locking
+>>> there, I just took it for granted that your patchset would have the
+>>> appropriate locking (or TestClearPageLRU magic) at the other end.
+>>>
+>>> But apparently not. And I'm beginning to think that TestClearPageLRU
+>>> was just to distract the audience from the lack of proper locking.
+>>>
+>>> I have certainly not concluded that yet, but I'm having to think about
+>>> an area of the code which I'd imagined you had under control (and I'm
+>>> puzzled why my testing has found it so very hard to hit). If we're
+>>> lucky, I'll find that pagevec_move_tail is a special case, and
+>>> nothing much else needs changing; but I doubt that will be so.
+> ... shows that your locking primitives are not yet good enough
+> to handle the case when tasks are moved between memcgs with
+> move_charge_at_immigrate set.  "bin/cg m" in the tests I sent,
+> but today I'm changing its "seconds=60" to "seconds=1" in hope
+> of speeding up the reproduction.
+> 
+> Ah, good, two machines crashed in 1.5 hours: but I don't need to
+> examine the crashes, now that it's obvious there's no protection -
+> please, think about rotate_reclaimable_page() (there will be more
+> cases, but in practice that seems easiest to hit, so focus on that)
+> and how it is not protected from mem_cgroup_move_account().
+> 
+> I'm thinking too. Maybe judicious use of lock_page_memcg() can fix it
+> (8 years ago it was unsuitable, but a lot has changed for the better
+> since then); otherwise it's back to what I've been doing all along,
+> taking the likely lruvec lock, and checking under that lock whether
+> we have the right lock (as your lruvec_memcg_debug() does), retrying
+> if not. Which may be more efficient than involving lock_page_memcg().
+> 
+Hi Hugh,
+
+Thanks a lot for the report!
+
+Think again lru_move_fn and mem_cgroup_move_account relation. I found
+if we want to change the pgdat->lru_lock to memcg's lruvec lock, we have
+to serialize mem_cgroup_move_account during pagevec_lru_move_fn. Otherwise
+the possible bad scenario would like:
+
+        cpu 0                                   cpu 1
+    lruvec = mem_cgroup_page_lruvec()
+                                        if (!isolate_lru_page())
+                                                mem_cgroup_move_account
+
+    spin_lock_irqsave(&lruvec->lru_lock <== wrong lock.
+
+So we need the ClearPageLRU to block isolate_lru_page(), then serialize
+the memcg change here. Do relock check would get a mitigation, but not
+solution.
+
+The following patch fold vm event PGROTATED into pagevec_move_tail_fn
+and fixed this problem by ClearPageLRU before page moving between lru
+I will split them into 2 patches, and merge into v12 patchset.
+
+Reported-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+
+
+diff --git a/mm/swap.c b/mm/swap.c
+index eba0c17dffd8..fa211157bfec 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -200,8 +200,7 @@ int get_kernel_page(unsigned long start, int write, struct page **pages)
+ EXPORT_SYMBOL_GPL(get_kernel_page);
+ 
+ static void pagevec_lru_move_fn(struct pagevec *pvec,
+-	void (*move_fn)(struct page *page, struct lruvec *lruvec, void *arg),
+-	void *arg)
++	void (*move_fn)(struct page *page, struct lruvec *lruvec), bool add)
+ {
+ 	int i;
+ 	struct lruvec *lruvec = NULL;
+@@ -210,8 +209,14 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
+ 	for (i = 0; i < pagevec_count(pvec); i++) {
+ 		struct page *page = pvec->pages[i];
+ 
++		if (!add && !TestClearPageLRU(page))
++			continue;
++
+ 		lruvec = relock_page_lruvec_irqsave(page, lruvec, &flags);
+-		(*move_fn)(page, lruvec, arg);
++		(*move_fn)(page, lruvec);
++
++		if (!add)
++			SetPageLRU(page);
+ 	}
+ 	if (lruvec)
+ 		unlock_page_lruvec_irqrestore(lruvec, flags);
+@@ -219,35 +224,23 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
+ 	pagevec_reinit(pvec);
+ }
+ 
+-static void pagevec_move_tail_fn(struct page *page, struct lruvec *lruvec,
+-				 void *arg)
++static void pagevec_move_tail_fn(struct page *page, struct lruvec *lruvec)
+ {
+-	int *pgmoved = arg;
+-
+ 	if (PageLRU(page) && !PageUnevictable(page)) {
+ 		del_page_from_lru_list(page, lruvec, page_lru(page));
+ 		ClearPageActive(page);
+ 		add_page_to_lru_list_tail(page, lruvec, page_lru(page));
+-		(*pgmoved) += hpage_nr_pages(page);
++		__count_vm_events(PGROTATED, hpage_nr_pages(page));
+ 	}
+ }
+ 
+ /*
+- * pagevec_move_tail() must be called with IRQ disabled.
+- * Otherwise this may cause nasty races.
+- */
+-static void pagevec_move_tail(struct pagevec *pvec)
+-{
+-	int pgmoved = 0;
+-
+-	pagevec_lru_move_fn(pvec, pagevec_move_tail_fn, &pgmoved);
+-	__count_vm_events(PGROTATED, pgmoved);
+-}
+-
+-/*
+  * Writeback is about to end against a page which has been marked for immediate
+  * reclaim.  If it still appears to be reclaimable, move it to the tail of the
+  * inactive list.
++ *
++ * pagevec_move_tail_fn() must be called with IRQ disabled.
++ * Otherwise this may cause nasty races.
+  */
+ void rotate_reclaimable_page(struct page *page)
+ {
+@@ -260,7 +253,7 @@ void rotate_reclaimable_page(struct page *page)
+ 		local_lock_irqsave(&lru_rotate.lock, flags);
+ 		pvec = this_cpu_ptr(&lru_rotate.pvec);
+ 		if (!pagevec_add(pvec, page) || PageCompound(page))
+-			pagevec_move_tail(pvec);
++			pagevec_lru_move_fn(pvec, pagevec_move_tail_fn, false);
+ 		local_unlock_irqrestore(&lru_rotate.lock, flags);
+ 	}
+ }
+@@ -302,8 +295,7 @@ void lru_note_cost_page(struct page *page)
+ 		      page_is_file_lru(page), hpage_nr_pages(page));
+ }
+ 
+-static void __activate_page(struct page *page, struct lruvec *lruvec,
+-			    void *arg)
++static void __activate_page(struct page *page, struct lruvec *lruvec)
+ {
+ 	if (PageLRU(page) && !PageActive(page) && !PageUnevictable(page)) {
+ 		int lru = page_lru_base_type(page);
+@@ -327,7 +319,7 @@ static void activate_page_drain(int cpu)
+ 	struct pagevec *pvec = &per_cpu(lru_pvecs.activate_page, cpu);
+ 
+ 	if (pagevec_count(pvec))
+-		pagevec_lru_move_fn(pvec, __activate_page, NULL);
++		pagevec_lru_move_fn(pvec, __activate_page, false);
+ }
+ 
+ static bool need_activate_page_drain(int cpu)
+@@ -345,7 +337,7 @@ void activate_page(struct page *page)
+ 		pvec = this_cpu_ptr(&lru_pvecs.activate_page);
+ 		get_page(page);
+ 		if (!pagevec_add(pvec, page) || PageCompound(page))
+-			pagevec_lru_move_fn(pvec, __activate_page, NULL);
++			pagevec_lru_move_fn(pvec, __activate_page, false);
+ 		local_unlock(&lru_pvecs.lock);
+ 	}
+ }
+@@ -515,8 +507,7 @@ void lru_cache_add_active_or_unevictable(struct page *page,
+  * be write it out by flusher threads as this is much more effective
+  * than the single-page writeout from reclaim.
+  */
+-static void lru_deactivate_file_fn(struct page *page, struct lruvec *lruvec,
+-			      void *arg)
++static void lru_deactivate_file_fn(struct page *page, struct lruvec *lruvec)
+ {
+ 	int lru;
+ 	bool active;
+@@ -563,8 +554,7 @@ static void lru_deactivate_file_fn(struct page *page, struct lruvec *lruvec,
+ 	}
+ }
+ 
+-static void lru_deactivate_fn(struct page *page, struct lruvec *lruvec,
+-			    void *arg)
++static void lru_deactivate_fn(struct page *page, struct lruvec *lruvec)
+ {
+ 	if (PageLRU(page) && PageActive(page) && !PageUnevictable(page)) {
+ 		int lru = page_lru_base_type(page);
+@@ -581,8 +571,7 @@ static void lru_deactivate_fn(struct page *page, struct lruvec *lruvec,
+ 	}
+ }
+ 
+-static void lru_lazyfree_fn(struct page *page, struct lruvec *lruvec,
+-			    void *arg)
++static void lru_lazyfree_fn(struct page *page, struct lruvec *lruvec)
+ {
+ 	if (PageLRU(page) && PageAnon(page) && PageSwapBacked(page) &&
+ 	    !PageSwapCache(page) && !PageUnevictable(page)) {
+@@ -625,21 +614,21 @@ void lru_add_drain_cpu(int cpu)
+ 
+ 		/* No harm done if a racing interrupt already did this */
+ 		local_lock_irqsave(&lru_rotate.lock, flags);
+-		pagevec_move_tail(pvec);
++		pagevec_lru_move_fn(pvec, pagevec_move_tail_fn, false);
+ 		local_unlock_irqrestore(&lru_rotate.lock, flags);
+ 	}
+ 
+ 	pvec = &per_cpu(lru_pvecs.lru_deactivate_file, cpu);
+ 	if (pagevec_count(pvec))
+-		pagevec_lru_move_fn(pvec, lru_deactivate_file_fn, NULL);
++		pagevec_lru_move_fn(pvec, lru_deactivate_file_fn, false);
+ 
+ 	pvec = &per_cpu(lru_pvecs.lru_deactivate, cpu);
+ 	if (pagevec_count(pvec))
+-		pagevec_lru_move_fn(pvec, lru_deactivate_fn, NULL);
++		pagevec_lru_move_fn(pvec, lru_deactivate_fn, false);
+ 
+ 	pvec = &per_cpu(lru_pvecs.lru_lazyfree, cpu);
+ 	if (pagevec_count(pvec))
+-		pagevec_lru_move_fn(pvec, lru_lazyfree_fn, NULL);
++		pagevec_lru_move_fn(pvec, lru_lazyfree_fn, false);
+ 
+ 	activate_page_drain(cpu);
+ }
+@@ -668,7 +657,7 @@ void deactivate_file_page(struct page *page)
+ 		pvec = this_cpu_ptr(&lru_pvecs.lru_deactivate_file);
+ 
+ 		if (!pagevec_add(pvec, page) || PageCompound(page))
+-			pagevec_lru_move_fn(pvec, lru_deactivate_file_fn, NULL);
++			pagevec_lru_move_fn(pvec, lru_deactivate_file_fn, false);
+ 		local_unlock(&lru_pvecs.lock);
+ 	}
+ }
+@@ -690,7 +679,7 @@ void deactivate_page(struct page *page)
+ 		pvec = this_cpu_ptr(&lru_pvecs.lru_deactivate);
+ 		get_page(page);
+ 		if (!pagevec_add(pvec, page) || PageCompound(page))
+-			pagevec_lru_move_fn(pvec, lru_deactivate_fn, NULL);
++			pagevec_lru_move_fn(pvec, lru_deactivate_fn, false);
+ 		local_unlock(&lru_pvecs.lock);
+ 	}
+ }
+@@ -712,7 +701,7 @@ void mark_page_lazyfree(struct page *page)
+ 		pvec = this_cpu_ptr(&lru_pvecs.lru_lazyfree);
+ 		get_page(page);
+ 		if (!pagevec_add(pvec, page) || PageCompound(page))
+-			pagevec_lru_move_fn(pvec, lru_lazyfree_fn, NULL);
++			pagevec_lru_move_fn(pvec, lru_lazyfree_fn, false);
+ 		local_unlock(&lru_pvecs.lock);
+ 	}
+ }
+@@ -913,8 +902,7 @@ void __pagevec_release(struct pagevec *pvec)
+ }
+ EXPORT_SYMBOL(__pagevec_release);
+ 
+-static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec,
+-				 void *arg)
++static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec)
+ {
+ 	enum lru_list lru;
+ 	int was_unevictable = TestClearPageUnevictable(page);
+@@ -973,7 +961,7 @@ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec,
+  */
+ void __pagevec_lru_add(struct pagevec *pvec)
+ {
+-	pagevec_lru_move_fn(pvec, __pagevec_lru_add_fn, NULL);
++	pagevec_lru_move_fn(pvec, __pagevec_lru_add_fn, true);
+ }
+ 
+ /**
