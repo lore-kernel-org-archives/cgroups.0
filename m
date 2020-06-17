@@ -1,25 +1,28 @@
-From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH for 5.8] mm: do_swap_page fix up the error code instantiation
-Date: Wed, 17 Jun 2020 10:49:27 +0200
-Message-ID: <20200617084927.GK9499@dhcp22.suse.cz>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH for 5.8] mm: do_swap_page fix up the error code
+ instantiation
+Date: Wed, 17 Jun 2020 11:02:38 +0200
+Message-ID: <20200617090238.GL9499@dhcp22.suse.cz>
 References: <20200508183105.225460-1-hannes@cmpxchg.org>
  <20200508183105.225460-17-hannes@cmpxchg.org>
  <20200611093523.GB20450@dhcp22.suse.cz>
+ <20200617084927.GK9499@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20200611093523.GB20450-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20200617084927.GK9499@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Joonsoo Kim <js1304-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, Joonsoo Kim <js1304@gmail.com>, Shakeel Butt <shakeelb@google.com>, Hugh Dickins <hughd@google.com>, "Kirill A. Shutemov" <kirill@shutemov.name>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-I hope I haven't missed anything but the patch should be the following.
+Damn, I forgot to commit my last change (s@err@ret@). Sorry about the
+noise.
 
-From acd488c22b4bb2ee42526be8ca67145d5127b014 Mon Sep 17 00:00:00 2001
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+From 50297dd026ebf71fe901e1945a9ce1e8d8aa083b Mon Sep 17 00:00:00 2001
+From: Michal Hocko <mhocko@suse.com>
 Date: Wed, 17 Jun 2020 10:40:47 +0200
 Subject: [PATCH] mm: do_swap_page fix up the error code
 
@@ -33,13 +36,13 @@ VM_FAULT_OOM otherwise the the page fault path will not notify the
 userspace and wait for an action.
 
 Fixes: 4c6355b25e8b ("mm: memcontrol: charge swapin pages on instantiation")
-Signed-off-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Signed-off-by: Michal Hocko <mhocko@suse.com>
 ---
  mm/memory.c | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/mm/memory.c b/mm/memory.c
-index dc7f3543b1fd..d944b7946b27 100644
+index dc7f3543b1fd..1c632faa2611 100644
 --- a/mm/memory.c
 +++ b/mm/memory.c
 @@ -3140,8 +3140,10 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
@@ -48,7 +51,7 @@ index dc7f3543b1fd..d944b7946b27 100644
  				ClearPageSwapCache(page);
 -				if (err)
 +				if (err) {
-+					err = VM_FAULT_OOM;
++					ret = VM_FAULT_OOM;
  					goto out_page;
 +				}
  
