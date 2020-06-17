@@ -1,9 +1,8 @@
-From: Michal Hocko <mhocko@kernel.org>
+From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
 Subject: Re: mm: mkfs.ext4 invoked oom-killer on i386 - pagecache_get_page
-Date: Wed, 17 Jun 2020 15:59:51 +0200
-Message-ID: <20200617135951.GP9499@dhcp22.suse.cz>
-References: <CA+G9fYsiZ81pmawUY62K30B6ue+RXYod854RS91R2+F8ZO7Xvw@mail.gmail.com>
- <20200519075213.GF32497@dhcp22.suse.cz>
+Date: Wed, 17 Jun 2020 15:08:59 +0100
+Message-ID: <20200617140859.GB548179@chrisdown.name>
+References: <20200519075213.GF32497@dhcp22.suse.cz>
  <CAK8P3a2T_j-Ynvhsqe_FCqS2-ZdLbo0oMbHhHChzMbryE0izAQ@mail.gmail.com>
  <20200519084535.GG32497@dhcp22.suse.cz>
  <CA+G9fYvzLm7n1BE7AJXd8_49fOgPgWWTiQ7sXkVre_zoERjQKg@mail.gmail.com>
@@ -12,127 +11,31 @@ References: <CA+G9fYsiZ81pmawUY62K30B6ue+RXYod854RS91R2+F8ZO7Xvw@mail.gmail.com>
  <20200521095515.GK6462@dhcp22.suse.cz>
  <20200521163450.GV6462@dhcp22.suse.cz>
  <CA+G9fYsdsgRmwLtSKJSzB1eWcUQ1z-_aaU+BNcQpker34XT6_w@mail.gmail.com>
+ <20200617135951.GP9499@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <linux-ext4-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=Q/YL4Tzx4ADMiyqvj4Ve2wziFTGT/p0DVcYFG6HXk08=;
+        b=d+J+aw6Zm5XRvlxRf1UGsdkDdw/4mdWlAseuLVRmjuRl77imTs8xnEwfCx3+/GfmIn
+         bikdBwRjyQV2FhPxZDoxaryjSxXvxqhpXbUEuGGRJ6XKTOw9aHhfZNDGhlxVfd4s8+dB
+         zPJBHP+Y5JfMrXFtfl1BiiRwc2CLhSP1/aSVo=
 Content-Disposition: inline
-In-Reply-To: <CA+G9fYsdsgRmwLtSKJSzB1eWcUQ1z-_aaU+BNcQpker34XT6_w@mail.gmail.com>
-Sender: linux-ext4-owner@vger.kernel.org
+In-Reply-To: <20200617135951.GP9499-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
 Content-Transfer-Encoding: 7bit
-To: Naresh Kamboju <naresh.kamboju@linaro.org>
-Cc: Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Anders Roxell <anders.roxell@linaro.org>, "Linux F2FS DEV, Mailing List" <linux-f2fs-devel@lists.sourceforge.net>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, open list <linux-kernel@vger.kernel.org>, Linux-Next Mailing List <linux-next@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Arnd Bergmann <arnd@arndb.de>, Andreas Dilger <adilger.kernel@dilger.ca>, Jaegeuk Kim <jaegeuk@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Chao Yu <chao@kernel.org>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Matthew Wilcox <willy@infradead.org>, Chao Yu <yuchao0@huawei.com>, 
+To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Naresh Kamboju <naresh.kamboju-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Anders Roxell <anders.roxell-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Linux F2FS DEV, Mailing List" <linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, linux-ext4 <linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-Next Mailing List <linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Andreas Dilger <adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org>, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Theodore Ts'o <tytso-3s7WtUTddSA@public.gmane.org>, Chao Yu <chao-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Chao Yu <yuchao0-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, lkf
 
-On Wed 17-06-20 19:07:20, Naresh Kamboju wrote:
-> On Thu, 21 May 2020 at 22:04, Michal Hocko <mhocko@kernel.org> wrote:
-> >
-> > On Thu 21-05-20 11:55:16, Michal Hocko wrote:
-> > > On Wed 20-05-20 20:09:06, Chris Down wrote:
-> > > > Hi Naresh,
-> > > >
-> > > > Naresh Kamboju writes:
-> > > > > As a part of investigation on this issue LKFT teammate Anders Roxell
-> > > > > git bisected the problem and found bad commit(s) which caused this problem.
-> > > > >
-> > > > > The following two patches have been reverted on next-20200519 and retested the
-> > > > > reproducible steps and confirmed the test case mkfs -t ext4 got PASS.
-> > > > > ( invoked oom-killer is gone now)
-> > > > >
-> > > > > Revert "mm, memcg: avoid stale protection values when cgroup is above
-> > > > > protection"
-> > > > >    This reverts commit 23a53e1c02006120f89383270d46cbd040a70bc6.
-> > > > >
-> > > > > Revert "mm, memcg: decouple e{low,min} state mutations from protection
-> > > > > checks"
-> > > > >    This reverts commit 7b88906ab7399b58bb088c28befe50bcce076d82.
-> > > >
-> > > > Thanks Anders and Naresh for tracking this down and reverting.
-> > > >
-> > > > I'll take a look tomorrow. I don't see anything immediately obviously wrong
-> > > > in either of those commits from a (very) cursory glance, but they should
-> > > > only be taking effect if protections are set.
-> > >
-> > > Agreed. If memory.{low,min} is not used then the patch should be
-> > > effectively a nop.
-> >
-> > I was staring into the code and do not see anything.  Could you give the
-> > following debugging patch a try and see whether it triggers?
-> >
-> > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> > index cc555903a332..df2e8df0eb71 100644
-> > --- a/mm/vmscan.c
-> > +++ b/mm/vmscan.c
-> > @@ -2404,6 +2404,8 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
-> >                          * sc->priority further than desirable.
-> >                          */
-> >                         scan = max(scan, SWAP_CLUSTER_MAX);
-> > +
-> > +                       trace_printk("scan:%lu protection:%lu\n", scan, protection);
-> >                 } else {
-> >                         scan = lruvec_size;
-> >                 }
-> > @@ -2648,6 +2650,7 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
-> >                 mem_cgroup_calculate_protection(target_memcg, memcg);
-> >
-> >                 if (mem_cgroup_below_min(memcg)) {
-> > +                       trace_printk("under min:%lu emin:%lu\n", memcg->memory.min, memcg->memory.emin);
-> >                         /*
-> >                          * Hard protection.
-> >                          * If there is no reclaimable memory, OOM.
-> > @@ -2660,6 +2663,7 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
-> >                          * there is an unprotected supply
-> >                          * of reclaimable memory from other cgroups.
-> >                          */
-> > +                       trace_printk("under low:%lu elow:%lu\n", memcg->memory.low, memcg->memory.elow);
-> >                         if (!sc->memcg_low_reclaim) {
-> >                                 sc->memcg_low_skipped = 1;
-> >                                 continue;
-> 
-> As per your suggestions on debugging this problem,
-> trace_printk is replaced with printk and applied to your patch on top of the
-> problematic kernel and here is the test output and link.
-> 
-> mkfs -t ext4 /dev/disk/by-id/ata-TOSHIBA_MG04ACA100N_Y8RQK14KF6XF
-> mke2fs 1.43.8 (1-Jan-2018)
-> Creating filesystem with 244190646 4k blocks and 61054976 inodes
-> Filesystem UUID: 7c380766-0ed8-41ba-a0de-3c08e78f1891
-> Superblock backups stored on blocks:
-> 32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
-> 4096000, 7962624, 11239424, 20480000, 23887872, 71663616, 78675968,
-> 102400000, 214990848
-> Allocating group tables:    0/7453 done
-> Writing inode tables:    0/7453 done
-> Creating journal (262144 blocks): [   51.544525] under min:0 emin:0
-> [   51.845304] under min:0 emin:0
-> [   51.848738] under min:0 emin:0
-> [   51.858147] under min:0 emin:0
-> [   51.861333] under min:0 emin:0
-> [   51.862034] under min:0 emin:0
-> [   51.862442] under min:0 emin:0
-> [   51.862763] under min:0 emin:0
-> 
-> Full test log link,
-> https://lkft.validation.linaro.org/scheduler/job/1497412#L1451
+Michal Hocko writes:
+>and it makes some sense. Except for the root memcg where we do not
+>account any memory. Adding if (mem_cgroup_is_root(memcg)) return false;
+>should do the trick. The same is the case for mem_cgroup_below_low.
+>Could you give it a try please just to confirm?
 
-Thanks a lot. So it is clear that mem_cgroup_below_min got confused and
-reported protected cgroup. Both effective and real limits are 0 so there
-is no garbage in them. The problem is in mem_cgroup_below_* and it is
-quite obvious.
-
-We are doing the following
-+static inline bool mem_cgroup_below_min(struct mem_cgroup *memcg)
-+{
-+       if (mem_cgroup_disabled())
-+               return false;
-+
-+       return READ_ONCE(memcg->memory.emin) >=
-+               page_counter_read(&memcg->memory);
-+}
-
-and it makes some sense. Except for the root memcg where we do not
-account any memory. Adding if (mem_cgroup_is_root(memcg)) return false;
-should do the trick. The same is the case for mem_cgroup_below_low.
-Could you give it a try please just to confirm?
--- 
-Michal Hocko
-SUSE Labs
+Oh, of course :-) This seems more likely than what I proposed, and would be 
+great to test.
