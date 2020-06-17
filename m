@@ -1,7 +1,7 @@
-From: Chris Down <chris@chrisdown.name>
+From: Michal Hocko <mhocko@kernel.org>
 Subject: Re: mm: mkfs.ext4 invoked oom-killer on i386 - pagecache_get_page
-Date: Wed, 17 Jun 2020 14:57:58 +0100
-Message-ID: <20200617135758.GA548179@chrisdown.name>
+Date: Wed, 17 Jun 2020 15:59:51 +0200
+Message-ID: <20200617135951.GP9499@dhcp22.suse.cz>
 References: <CA+G9fYsiZ81pmawUY62K30B6ue+RXYod854RS91R2+F8ZO7Xvw@mail.gmail.com>
  <20200519075213.GF32497@dhcp22.suse.cz>
  <CAK8P3a2T_j-Ynvhsqe_FCqS2-ZdLbo0oMbHhHChzMbryE0izAQ@mail.gmail.com>
@@ -13,59 +13,126 @@ References: <CA+G9fYsiZ81pmawUY62K30B6ue+RXYod854RS91R2+F8ZO7Xvw@mail.gmail.com>
  <20200521163450.GV6462@dhcp22.suse.cz>
  <CA+G9fYsdsgRmwLtSKJSzB1eWcUQ1z-_aaU+BNcQpker34XT6_w@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=czz/LMTUSEyCUOCBc2bpVTh7IggBB8ARvYVKv0fzm0w=;
-        b=oHJZsmwDgazVpFYFy9f1b0DXnvsC0m5vxNXELt2qWUG2KfVfS0Fn9Az8Mm4tsT5Yun
-         T0BN8K2g46PCiRW5Vtd3CYq9U6e5qZuldGsqUGrQVKibeXmeDBk6U6AB2EVkl4AOMQoQ
-         bb1tNkHgfcvlaxd0Rj1tDcDG32lDe0/EQGnL4=
+Return-path: <linux-ext4-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <CA+G9fYsdsgRmwLtSKJSzB1eWcUQ1z-_aaU+BNcQpker34XT6_w@mail.gmail.com>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-ext4-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Naresh Kamboju <naresh.kamboju@linaro.org>
-Cc: Michal Hocko <mhocko@kernel.org>, Yafang Shao <laoar.shao@gmail.com>, Anders Roxell <anders.roxell@linaro.org>, "Linux F2FS DEV, Mailing List" <linux-f2fs-devel@lists.sourceforge.net>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, open list <linux-kernel@vger.kernel.org>, Linux-Next Mailing List <linux-next@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Arnd Bergmann <arnd@arndb.de>, Andreas Dilger <adilger.kernel@dilger.ca>, Jaegeuk Kim <jaegeuk@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Chao Yu <chao@kernel.org>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Matthew Wilcox <willy@infradead.org>, Chao Yu <yuchao0@huawei.com>, lkft-triage@l
+Cc: Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Anders Roxell <anders.roxell@linaro.org>, "Linux F2FS DEV, Mailing List" <linux-f2fs-devel@lists.sourceforge.net>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, open list <linux-kernel@vger.kernel.org>, Linux-Next Mailing List <linux-next@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Arnd Bergmann <arnd@arndb.de>, Andreas Dilger <adilger.kernel@dilger.ca>, Jaegeuk Kim <jaegeuk@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Chao Yu <chao@kernel.org>, Hugh Dickins <hughd@google.com>, Andrea Arcangeli <aarcange@redhat.com>, Matthew Wilcox <willy@infradead.org>, Chao Yu <yuchao0@huawei.com>, 
 
-Naresh Kamboju writes:
->mkfs -t ext4 /dev/disk/by-id/ata-TOSHIBA_MG04ACA100N_Y8RQK14KF6XF
->mke2fs 1.43.8 (1-Jan-2018)
->Creating filesystem with 244190646 4k blocks and 61054976 inodes
->Filesystem UUID: 7c380766-0ed8-41ba-a0de-3c08e78f1891
->Superblock backups stored on blocks:
->32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
->4096000, 7962624, 11239424, 20480000, 23887872, 71663616, 78675968,
->102400000, 214990848
->Allocating group tables:    0/7453 done
->Writing inode tables:    0/7453 done
->Creating journal (262144 blocks): [   51.544525] under min:0 emin:0
->[   51.845304] under min:0 emin:0
->[   51.848738] under min:0 emin:0
->[   51.858147] under min:0 emin:0
->[   51.861333] under min:0 emin:0
->[   51.862034] under min:0 emin:0
->[   51.862442] under min:0 emin:0
->[   51.862763] under min:0 emin:0
+On Wed 17-06-20 19:07:20, Naresh Kamboju wrote:
+> On Thu, 21 May 2020 at 22:04, Michal Hocko <mhocko@kernel.org> wrote:
+> >
+> > On Thu 21-05-20 11:55:16, Michal Hocko wrote:
+> > > On Wed 20-05-20 20:09:06, Chris Down wrote:
+> > > > Hi Naresh,
+> > > >
+> > > > Naresh Kamboju writes:
+> > > > > As a part of investigation on this issue LKFT teammate Anders Roxell
+> > > > > git bisected the problem and found bad commit(s) which caused this problem.
+> > > > >
+> > > > > The following two patches have been reverted on next-20200519 and retested the
+> > > > > reproducible steps and confirmed the test case mkfs -t ext4 got PASS.
+> > > > > ( invoked oom-killer is gone now)
+> > > > >
+> > > > > Revert "mm, memcg: avoid stale protection values when cgroup is above
+> > > > > protection"
+> > > > >    This reverts commit 23a53e1c02006120f89383270d46cbd040a70bc6.
+> > > > >
+> > > > > Revert "mm, memcg: decouple e{low,min} state mutations from protection
+> > > > > checks"
+> > > > >    This reverts commit 7b88906ab7399b58bb088c28befe50bcce076d82.
+> > > >
+> > > > Thanks Anders and Naresh for tracking this down and reverting.
+> > > >
+> > > > I'll take a look tomorrow. I don't see anything immediately obviously wrong
+> > > > in either of those commits from a (very) cursory glance, but they should
+> > > > only be taking effect if protections are set.
+> > >
+> > > Agreed. If memory.{low,min} is not used then the patch should be
+> > > effectively a nop.
+> >
+> > I was staring into the code and do not see anything.  Could you give the
+> > following debugging patch a try and see whether it triggers?
+> >
+> > diff --git a/mm/vmscan.c b/mm/vmscan.c
+> > index cc555903a332..df2e8df0eb71 100644
+> > --- a/mm/vmscan.c
+> > +++ b/mm/vmscan.c
+> > @@ -2404,6 +2404,8 @@ static void get_scan_count(struct lruvec *lruvec, struct scan_control *sc,
+> >                          * sc->priority further than desirable.
+> >                          */
+> >                         scan = max(scan, SWAP_CLUSTER_MAX);
+> > +
+> > +                       trace_printk("scan:%lu protection:%lu\n", scan, protection);
+> >                 } else {
+> >                         scan = lruvec_size;
+> >                 }
+> > @@ -2648,6 +2650,7 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
+> >                 mem_cgroup_calculate_protection(target_memcg, memcg);
+> >
+> >                 if (mem_cgroup_below_min(memcg)) {
+> > +                       trace_printk("under min:%lu emin:%lu\n", memcg->memory.min, memcg->memory.emin);
+> >                         /*
+> >                          * Hard protection.
+> >                          * If there is no reclaimable memory, OOM.
+> > @@ -2660,6 +2663,7 @@ static void shrink_node_memcgs(pg_data_t *pgdat, struct scan_control *sc)
+> >                          * there is an unprotected supply
+> >                          * of reclaimable memory from other cgroups.
+> >                          */
+> > +                       trace_printk("under low:%lu elow:%lu\n", memcg->memory.low, memcg->memory.elow);
+> >                         if (!sc->memcg_low_reclaim) {
+> >                                 sc->memcg_low_skipped = 1;
+> >                                 continue;
+> 
+> As per your suggestions on debugging this problem,
+> trace_printk is replaced with printk and applied to your patch on top of the
+> problematic kernel and here is the test output and link.
+> 
+> mkfs -t ext4 /dev/disk/by-id/ata-TOSHIBA_MG04ACA100N_Y8RQK14KF6XF
+> mke2fs 1.43.8 (1-Jan-2018)
+> Creating filesystem with 244190646 4k blocks and 61054976 inodes
+> Filesystem UUID: 7c380766-0ed8-41ba-a0de-3c08e78f1891
+> Superblock backups stored on blocks:
+> 32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
+> 4096000, 7962624, 11239424, 20480000, 23887872, 71663616, 78675968,
+> 102400000, 214990848
+> Allocating group tables:    0/7453 done
+> Writing inode tables:    0/7453 done
+> Creating journal (262144 blocks): [   51.544525] under min:0 emin:0
+> [   51.845304] under min:0 emin:0
+> [   51.848738] under min:0 emin:0
+> [   51.858147] under min:0 emin:0
+> [   51.861333] under min:0 emin:0
+> [   51.862034] under min:0 emin:0
+> [   51.862442] under min:0 emin:0
+> [   51.862763] under min:0 emin:0
+> 
+> Full test log link,
+> https://lkft.validation.linaro.org/scheduler/job/1497412#L1451
 
-Thanks, this helps a lot. Somehow we're entering mem_cgroup_below_min even when 
-min/emin is 0 (which should indeed be the case if you haven't set them in the 
-hierarchy).
+Thanks a lot. So it is clear that mem_cgroup_below_min got confused and
+reported protected cgroup. Both effective and real limits are 0 so there
+is no garbage in them. The problem is in mem_cgroup_below_* and it is
+quite obvious.
 
-My guess is that page_counter_read(&memcg->memory) is 0, which means 
-mem_cgroup_below_min will return 1.
+We are doing the following
++static inline bool mem_cgroup_below_min(struct mem_cgroup *memcg)
++{
++       if (mem_cgroup_disabled())
++               return false;
++
++       return READ_ONCE(memcg->memory.emin) >=
++               page_counter_read(&memcg->memory);
++}
 
-However, I don't know for sure why that should then result in the OOM killer 
-coming along. My guess is that since this memcg has 0 pages to scan anyway, we 
-enter premature OOM under some conditions. I don't know why we wouldn't have 
-hit that with the old version of mem_cgroup_protected that returned 
-MEMCG_PROT_* members, though.
-
-Can you please try the patch with the `>=` checks in mem_cgroup_below_min and 
-mem_cgroup_below_low changed to `>`? If that fixes it, then that gives a strong 
-hint about what's going on here.
-
-Thanks for your help!
+and it makes some sense. Except for the root memcg where we do not
+account any memory. Adding if (mem_cgroup_is_root(memcg)) return false;
+should do the trick. The same is the case for mem_cgroup_below_low.
+Could you give it a try please just to confirm?
+-- 
+Michal Hocko
+SUSE Labs
