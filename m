@@ -1,159 +1,61 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v13 13/18] mm/swap: serialize memcg changes during pagevec_lru_move_fn
-Date: Fri, 19 Jun 2020 16:33:51 +0800
-Message-ID: <1592555636-115095-14-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH v13 06/18] mm/thp: clean up lru_add_page_tail
+Date: Fri, 19 Jun 2020 16:33:44 +0800
+Message-ID: <1592555636-115095-7-git-send-email-alex.shi@linux.alibaba.com>
 References: <1592555636-115095-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1592555636-115095-1-git-send-email-alex.shi@linux.alibaba.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1592555636-115095-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-Hugh Dickins' found a memcg change bug on original version:
-If we want to change the pgdat->lru_lock to memcg's lruvec lock, we have
-to serialize mem_cgroup_move_account during pagevec_lru_move_fn. The
-possible bad scenario would like:
+Since the first parameter is only used by head page, it's better to make
+it explicit.
 
-	cpu 0					cpu 1
-lruvec = mem_cgroup_page_lruvec()
-					if (!isolate_lru_page())
-						mem_cgroup_move_account
-
-spin_lock_irqsave(&lruvec->lru_lock <== wrong lock.
-
-So we need the ClearPageLRU to block isolate_lru_page(), then serialize
-the memcg change here.
-
-Reported-by: Hugh Dickins <hughd@google.com>
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
- mm/swap.c | 31 +++++++++++++++++++------------
- 1 file changed, 19 insertions(+), 12 deletions(-)
+ mm/huge_memory.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/mm/swap.c b/mm/swap.c
-index 7ff9aa6a716a..cebb25ddeee7 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -203,7 +203,7 @@ int get_kernel_page(unsigned long start, int write, struct page **pages)
- EXPORT_SYMBOL_GPL(get_kernel_page);
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 9e050b13f597..b18f21da4dac 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2340,19 +2340,19 @@ static void remap_page(struct page *page)
+ 	}
+ }
  
- static void pagevec_lru_move_fn(struct pagevec *pvec,
--	void (*move_fn)(struct page *page, struct lruvec *lruvec))
-+	void (*move_fn)(struct page *page, struct lruvec *lruvec), bool add)
+-static void lru_add_page_tail(struct page *page, struct page *page_tail,
++static void lru_add_page_tail(struct page *head, struct page *page_tail,
+ 				struct lruvec *lruvec, struct list_head *list)
  {
- 	int i;
- 	struct pglist_data *pgdat = NULL;
-@@ -221,8 +221,15 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
- 			spin_lock_irqsave(&pgdat->lru_lock, flags);
- 		}
+-	VM_BUG_ON_PAGE(!PageHead(page), page);
+-	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
+-	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
++	VM_BUG_ON_PAGE(!PageHead(head), head);
++	VM_BUG_ON_PAGE(PageCompound(page_tail), head);
++	VM_BUG_ON_PAGE(PageLRU(page_tail), head);
+ 	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
  
-+		/* new page add to lru or page moving between lru */
-+		if (!add && !TestClearPageLRU(page))
-+			continue;
-+
- 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
- 		(*move_fn)(page, lruvec);
-+
-+		if (!add)
-+			SetPageLRU(page);
- 	}
- 	if (pgdat)
- 		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-@@ -259,7 +266,7 @@ void rotate_reclaimable_page(struct page *page)
- 		local_lock_irqsave(&lru_rotate.lock, flags);
- 		pvec = this_cpu_ptr(&lru_rotate.pvec);
- 		if (!pagevec_add(pvec, page) || PageCompound(page))
--			pagevec_lru_move_fn(pvec, pagevec_move_tail_fn);
-+			pagevec_lru_move_fn(pvec, pagevec_move_tail_fn, false);
- 		local_unlock_irqrestore(&lru_rotate.lock, flags);
- 	}
- }
-@@ -325,7 +332,7 @@ static void activate_page_drain(int cpu)
- 	struct pagevec *pvec = &per_cpu(lru_pvecs.activate_page, cpu);
+ 	if (!list)
+ 		SetPageLRU(page_tail);
  
- 	if (pagevec_count(pvec))
--		pagevec_lru_move_fn(pvec, __activate_page);
-+		pagevec_lru_move_fn(pvec, __activate_page, false);
- }
- 
- static bool need_activate_page_drain(int cpu)
-@@ -343,7 +350,7 @@ void activate_page(struct page *page)
- 		pvec = this_cpu_ptr(&lru_pvecs.activate_page);
- 		get_page(page);
- 		if (!pagevec_add(pvec, page) || PageCompound(page))
--			pagevec_lru_move_fn(pvec, __activate_page);
-+			pagevec_lru_move_fn(pvec, __activate_page, false);
- 		local_unlock(&lru_pvecs.lock);
- 	}
- }
-@@ -620,21 +627,21 @@ void lru_add_drain_cpu(int cpu)
- 
- 		/* No harm done if a racing interrupt already did this */
- 		local_lock_irqsave(&lru_rotate.lock, flags);
--		pagevec_lru_move_fn(pvec, pagevec_move_tail_fn);
-+		pagevec_lru_move_fn(pvec, pagevec_move_tail_fn, false);
- 		local_unlock_irqrestore(&lru_rotate.lock, flags);
- 	}
- 
- 	pvec = &per_cpu(lru_pvecs.lru_deactivate_file, cpu);
- 	if (pagevec_count(pvec))
--		pagevec_lru_move_fn(pvec, lru_deactivate_file_fn);
-+		pagevec_lru_move_fn(pvec, lru_deactivate_file_fn, false);
- 
- 	pvec = &per_cpu(lru_pvecs.lru_deactivate, cpu);
- 	if (pagevec_count(pvec))
--		pagevec_lru_move_fn(pvec, lru_deactivate_fn);
-+		pagevec_lru_move_fn(pvec, lru_deactivate_fn, false);
- 
- 	pvec = &per_cpu(lru_pvecs.lru_lazyfree, cpu);
- 	if (pagevec_count(pvec))
--		pagevec_lru_move_fn(pvec, lru_lazyfree_fn);
-+		pagevec_lru_move_fn(pvec, lru_lazyfree_fn, false);
- 
- 	activate_page_drain(cpu);
- }
-@@ -663,7 +670,7 @@ void deactivate_file_page(struct page *page)
- 		pvec = this_cpu_ptr(&lru_pvecs.lru_deactivate_file);
- 
- 		if (!pagevec_add(pvec, page) || PageCompound(page))
--			pagevec_lru_move_fn(pvec, lru_deactivate_file_fn);
-+			pagevec_lru_move_fn(pvec, lru_deactivate_file_fn, false);
- 		local_unlock(&lru_pvecs.lock);
- 	}
- }
-@@ -685,7 +692,7 @@ void deactivate_page(struct page *page)
- 		pvec = this_cpu_ptr(&lru_pvecs.lru_deactivate);
- 		get_page(page);
- 		if (!pagevec_add(pvec, page) || PageCompound(page))
--			pagevec_lru_move_fn(pvec, lru_deactivate_fn);
-+			pagevec_lru_move_fn(pvec, lru_deactivate_fn, false);
- 		local_unlock(&lru_pvecs.lock);
- 	}
- }
-@@ -707,7 +714,7 @@ void mark_page_lazyfree(struct page *page)
- 		pvec = this_cpu_ptr(&lru_pvecs.lru_lazyfree);
- 		get_page(page);
- 		if (!pagevec_add(pvec, page) || PageCompound(page))
--			pagevec_lru_move_fn(pvec, lru_lazyfree_fn);
-+			pagevec_lru_move_fn(pvec, lru_lazyfree_fn, false);
- 		local_unlock(&lru_pvecs.lock);
- 	}
- }
-@@ -975,7 +982,7 @@ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec)
-  */
- void __pagevec_lru_add(struct pagevec *pvec)
- {
--	pagevec_lru_move_fn(pvec, __pagevec_lru_add_fn);
-+	pagevec_lru_move_fn(pvec, __pagevec_lru_add_fn, true);
- }
- 
- /**
+-	if (likely(PageLRU(page)))
+-		list_add_tail(&page_tail->lru, &page->lru);
++	if (likely(PageLRU(head)))
++		list_add_tail(&page_tail->lru, &head->lru);
+ 	else if (list) {
+ 		/* page reclaim is reclaiming a huge page */
+ 		get_page(page_tail);
 -- 
 1.8.3.1
 
