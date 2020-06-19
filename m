@@ -1,110 +1,54 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v13 04/18] mm/compaction: rename compact_deferred as compact_should_defer
-Date: Fri, 19 Jun 2020 16:33:42 +0800
-Message-ID: <1592555636-115095-5-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: [PATCH v13 03/18] mm/compaction: correct the comments of compact_defer_shift
+Date: Fri, 19 Jun 2020 16:33:41 +0800
+Message-ID: <1592555636-115095-4-git-send-email-alex.shi@linux.alibaba.com>
 References: <1592555636-115095-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1592555636-115095-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1592555636-115095-1-git-send-email-alex.shi@linux.alibaba.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com
 
-The compact_deferred is a defer suggestion check, deferring action does in
-defer_compaction not here. so, better rename it to avoid confusing.
+There is no compact_defer_limit. It should be compact_defer_shift in
+use. and add compact_order_failed explanation.
 
-Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Cc: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
 ---
- include/linux/compaction.h        | 4 ++--
- include/trace/events/compaction.h | 2 +-
- mm/compaction.c                   | 8 ++++----
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ include/linux/mmzone.h | 1 +
+ mm/compaction.c        | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/compaction.h b/include/linux/compaction.h
-index 6fa0eea3f530..be9ed7437a38 100644
---- a/include/linux/compaction.h
-+++ b/include/linux/compaction.h
-@@ -100,7 +100,7 @@ extern enum compact_result compaction_suitable(struct zone *zone, int order,
- 		unsigned int alloc_flags, int highest_zoneidx);
- 
- extern void defer_compaction(struct zone *zone, int order);
--extern bool compaction_deferred(struct zone *zone, int order);
-+extern bool compaction_should_defer(struct zone *zone, int order);
- extern void compaction_defer_reset(struct zone *zone, int order,
- 				bool alloc_success);
- extern bool compaction_restarting(struct zone *zone, int order);
-@@ -199,7 +199,7 @@ static inline void defer_compaction(struct zone *zone, int order)
- {
- }
- 
--static inline bool compaction_deferred(struct zone *zone, int order)
-+static inline bool compaction_should_defer(struct zone *zone, int order)
- {
- 	return true;
- }
-diff --git a/include/trace/events/compaction.h b/include/trace/events/compaction.h
-index 54e5bf081171..33633c71df04 100644
---- a/include/trace/events/compaction.h
-+++ b/include/trace/events/compaction.h
-@@ -274,7 +274,7 @@
- 		1UL << __entry->defer_shift)
- );
- 
--DEFINE_EVENT(mm_compaction_defer_template, mm_compaction_deferred,
-+DEFINE_EVENT(mm_compaction_defer_template, mm_compaction_should_defer,
- 
- 	TP_PROTO(struct zone *zone, int order),
- 
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index c4c37fd12104..592ef93ae64c 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -512,6 +512,7 @@ struct zone {
+ 	 * On compaction failure, 1<<compact_defer_shift compactions
+ 	 * are skipped before trying again. The number attempted since
+ 	 * last failure is tracked with compact_considered.
++	 * compact_order_failed is the minimum compaction failed order.
+ 	 */
+ 	unsigned int		compact_considered;
+ 	unsigned int		compact_defer_shift;
 diff --git a/mm/compaction.c b/mm/compaction.c
-index 48114f98e362..5d59e77cd424 100644
+index fd988b7e5f2b..48114f98e362 100644
 --- a/mm/compaction.c
 +++ b/mm/compaction.c
-@@ -154,7 +154,7 @@ void defer_compaction(struct zone *zone, int order)
- }
+@@ -136,7 +136,7 @@ void __ClearPageMovable(struct page *page)
  
- /* Returns true if compaction should be skipped this time */
--bool compaction_deferred(struct zone *zone, int order)
-+bool compaction_should_defer(struct zone *zone, int order)
- {
- 	unsigned long defer_limit = 1UL << zone->compact_defer_shift;
- 
-@@ -168,7 +168,7 @@ bool compaction_deferred(struct zone *zone, int order)
- 	if (zone->compact_considered >= defer_limit)
- 		return false;
- 
--	trace_mm_compaction_deferred(zone, order);
-+	trace_mm_compaction_should_defer(zone, order);
- 
- 	return true;
- }
-@@ -2366,7 +2366,7 @@ enum compact_result try_to_compact_pages(gfp_t gfp_mask, unsigned int order,
- 		enum compact_result status;
- 
- 		if (prio > MIN_COMPACT_PRIORITY
--					&& compaction_deferred(zone, order)) {
-+				&& compaction_should_defer(zone, order)) {
- 			rc = max_t(enum compact_result, COMPACT_DEFERRED, rc);
- 			continue;
- 		}
-@@ -2550,7 +2550,7 @@ static void kcompactd_do_work(pg_data_t *pgdat)
- 		if (!populated_zone(zone))
- 			continue;
- 
--		if (compaction_deferred(zone, cc.order))
-+		if (compaction_should_defer(zone, cc.order))
- 			continue;
- 
- 		if (compaction_suitable(zone, cc.order, 0, zoneid) !=
+ /*
+  * Compaction is deferred when compaction fails to result in a page
+- * allocation success. 1 << compact_defer_limit compactions are skipped up
++ * allocation success. compact_defer_shift++, compactions are skipped up
+  * to a limit of 1 << COMPACT_MAX_DEFER_SHIFT
+  */
+ void defer_compaction(struct zone *zone, int order)
 -- 
 1.8.3.1
 
