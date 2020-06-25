@@ -1,203 +1,200 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: memcg missing charge when setting BPF
-Date: Tue, 23 Jun 2020 21:30:21 -0700
-Message-ID: <20200624043021.GA3669@carbon.dhcp.thefacebook.com>
-References: <1139555701.2821292.1592970418462.ref@mail.yahoo.com>
- <1139555701.2821292.1592970418462@mail.yahoo.com>
+From: "kernelci.org bot" <bot-ssFOTAMYnuFg9hUCZPvPmw@public.gmane.org>
+Subject: stable-rc/linux-5.6.y bisection: baseline.dmesg.crit on
+ bcm2837-rpi-3-b
+Date: Wed, 24 Jun 2020 22:24:57 -0700 (PDT)
+Message-ID: <5ef43529.1c69fb81.eac8c.85c7@mx.google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type :
- content-transfer-encoding : in-reply-to : mime-version; s=facebook;
- bh=j2101CErjOndZGUm/ygjJbsPSBU032t3FbmOjMUxhoE=;
- b=IyQta9mmaCNVA1OGp4EwEYPwsT3AitDcr9Wxj17xhEgSKcCzenO56hG33MtDKa/+rKfd
- 4htzNBkOdUEynwXKkNflD5QlD2dwL3WNvrLZe4Hi/8QxrDyN402zFDBABbcthQvuhzIv
- 6Rw20rpI5qpoF2MICAeW3emttMmYccFlaOE= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YI9ymdRiiHa+FT15ilKXN+zNYt3IVbTfgLFinUxjeZI=;
- b=WC997DORN03qqIliFGIVILO0nHiQq/A8Au7Ab4F/rlZVFlf8/xdzpIDbkCfYNfiSQjWkkSXLxTVdvhd0gr2avAOdXjl8QIhqE3/VhmL8O2Q+tKpYjmnM53o2uzoH98ywBbaQ9ivgLQeQ7Cj5X6sH5zKAQFR5yrE0UNaHboWywLk=
-Content-Disposition: inline
-In-Reply-To: <1139555701.2821292.1592970418462-sAHhhX/85wgbqTNvkayDYw@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernelci-org.20150623.gappssmtp.com; s=20150623;
+        h=message-id:date:mime-version:content-transfer-encoding:subject:to
+         :from:cc;
+        bh=Z9E9F9Mp7v+/S0R9P1itGC7yBfrOh2oBxXHNGIb7loA=;
+        b=nMN/B0Fu3KjiA2fcg1bSoSKiHUeeBUEEX6Df+GIYXDP3K9uQJYVhGttZqg9RGGgT9E
+         dzb7eTABCsvG2W+a2sbRVqLcsnN92KhwP+n1iwwCfhW4TBK0OIsVFgi6PJTJsKQ3C7kt
+         CHzE19cmYXd8r/gpZdxrlIZS3733JGo/R33+3Oem4pDj0fZAKKnc9uGmzYhaiwvmy0tb
+         idd8R7X8aKvc/LweVdp8wlxq9tkHjB4tlc4gjaQKLLRI9TlhfRyv5biEeeBRNAAF1fig
+         how/gndbd55D2G3Dx7NUays/1hjrm6JI7JSkR5mBxRWdUGKsZcUER9rXlJpE1xySUQjN
+         x0xw==
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Xie Xun <xiexun162534-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "shenwenbosmile-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <shenwenbosmile-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, gtucker-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello Xie!
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+* This automated bisection report was sent to you on the basis  *
+* that you may be involved with the breaking commit it has      *
+* found.  No manual investigation has been done to verify it,   *
+* and the root cause of the problem may be somewhere else.      *
+*                                                               *
+* If you do send a fix, please include this trailer:            *
+*   Reported-by: "kernelci.org bot" <bot-ssFOTAMYnuFg9hUCZPvPmw@public.gmane.org>          *
+*                                                               *
+* Hope this helps!                                              *
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-It's actually not a surprise, it's a known limitation/exception.
-Partially it was so because historically there was no way to account
-percpu memory, and some bpf maps can are using it quite extensively.
+stable-rc/linux-5.6.y bisection: baseline.dmesg.crit on bcm2837-rpi-3-b
 
-Fortunately, it changed recently, and 5.9 will likely get an ability
-to account percpu memory. The latest version of the patchset I've actually
-sent today:
-https://lore.kernel.org/linux-mm/20200623184515.4132564-1-guro-b10kYP2dOMg@=
-public.gmane.org/T/#m0be45dd71e6a238985181c213d9934731949c089
+Summary:
+  Start:      61aba373f570 Linux 5.6.19
+  Plain log:  https://storage.kernelci.org/stable-rc/linux-5.6.y/v5.6.19/ar=
+m64/defconfig/gcc-8/lab-baylibre/baseline-bcm2837-rpi-3-b.txt
+  HTML log:   https://storage.kernelci.org/stable-rc/linux-5.6.y/v5.6.19/ar=
+m64/defconfig/gcc-8/lab-baylibre/baseline-bcm2837-rpi-3-b.html
+  Result:     9cf5d5444c78 Revert "cgroup: Add memory barriers to plug cgro=
+up_rstat_updated() race window"
 
-I also have a patchset in work which adds a memcg accounting of bpf memory
-(programs and maps). I plan to send it upstream on the next week. If everyt=
-hing
-will go smoothly it might appear in 5.9 as well.
+Checks:
+  revert:     PASS
+  verify:     PASS
 
-Unfortunately the magnitude of required changes does not allow to backport
-these changes to older kernels.
+Parameters:
+  Tree:       stable-rc
+  URL:        https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-=
+stable-rc.git
+  Branch:     linux-5.6.y
+  Target:     bcm2837-rpi-3-b
+  CPU arch:   arm64
+  Lab:        lab-baylibre
+  Compiler:   gcc-8
+  Config:     defconfig
+  Test case:  baseline.dmesg.crit
 
-Thanks!
+Breaking commit found:
 
-PS I'll be completely offline till the end of the week. I'll respond all e-=
-mail
-on Monday, Jun 29th. Thanks!
+---------------------------------------------------------------------------=
+----
+commit 9cf5d5444c78c14bb9f90dd21cef361ee14ba64b
+Author: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Date:   Thu Apr 9 14:55:35 2020 -0400
 
+    Revert "cgroup: Add memory barriers to plug cgroup_rstat_updated() race=
+ window"
+    =
 
-On Wed, Jun 24, 2020 at 03:46:58AM +0000, Xie Xun wrote:
-> Hello,
->=20
-> I found that programs can consume much more memory than memcg limit by se=
-tting BPF for many times. It's because that allocations during setting BPF =
-are not charged by memcg.
->=20
->=20
-> Below is how I did it:
->=20
-> 1. Run Linux kernel in a QEMU virtual machine (x86_64) with 1GB physical =
-memory.
-> =A0=A0 The kernel is built with memcg and memcg kmem accounting enabled.
->=20
-> 2. Create a docker (runC) container, with memory limit 100MB.
->=20
-> =A0=A0 docker run --name debian --memory 100000000 --kernel-memory 500000=
-00 \
-> =A0=A0 debian:slim /bin/bash
->=20
-> 3. In the container, run a program to set BPF for many times. I use prctl=
- to set BPF.
->=20
-> =A0=A0 while(1)
-> =A0=A0=A0=A0 {
-> =A0=A0=A0=A0=A0=A0 prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &bpf);
-> =A0=A0=A0=A0 }
->=20
-> 4. Physical memory usage(the one by `free` or `top`) is increased by arou=
-nd 40MB,
-> =A0=A0 but memory usage of the container's memcg doesn't increase a lot (=
-around 100KB).
->=20
-> 5. Run several processes to set BPF, and almost all physical memory is co=
-nsumed.
-> =A0=A0 Sometimes some processes not in the container are also killed due =
-to OOM.
->=20
-> I also try this with user namespace on, and I can still kill host process=
-es inside container in this way. So this problem may be dangerous for conta=
-iners that based on cgroups.
->=20
->=20
-> kernel version: 5.3.6
-> kernel configuration: in attachment (CONFIG_MEMCG_KMEM is on)
->=20
->=20
-> This blog also shows this problem: https://urldefense.proofpoint.com/v2/u=
-rl?u=3Dhttps-3A__blog.xiexun.tech_break-2Dmemcg.html&d=3DDwIFaQ&c=3D5VD0RTt=
-NlTh3ycd41b3MUw&r=3DjJYgtDM7QT-W-Fz_d29HYQ&m=3DIBhsN9u88bNDFoDHNutIMKB-YrCv=
-COIvw-8z9RpB8RI&s=3DO1b3udJv7obq8vZ88-YPEDzs7hhGov3o_Txskn4IeyA&e=3D=20
->=20
->=20
-> Cause of this problem:
->=20
-> Memory allocations during setting BPF are not charged by memcg. For examp=
-le,
-> in kernel/bpf/core.c:bpf_prog_alloc, bpf_prog_alloc_no_stats and alloc_pe=
-rcpu_gfp
-> are called to allocate memory. However, neither of them are charged by me=
-mcg.
-> So if we trigger this path for many times, we can consume lots of memory,=
- without
-> increasing our memcg usage.
->=20
-> /* ------------ */
-> struct bpf_prog *bpf_prog_alloc(unsigned int size, gfp_t gfp_extra_flags)
-> {
-> =A0=A0 =A0gfp_t gfp_flags =3D GFP_KERNEL | __GFP_ZERO | gfp_extra_flags;
-> =A0=A0 =A0struct bpf_prog *prog;
-> =A0=A0 =A0int cpu;
->=20
-> =A0=A0 =A0prog =3D bpf_prog_alloc_no_stats(size, gfp_extra_flags);
-> =A0=A0 =A0if (!prog)
-> =A0=A0 =A0=A0=A0 =A0return NULL;
->=20
-> =A0=A0 =A0prog->aux->stats =3D alloc_percpu_gfp(struct bpf_prog_stats, gf=
-p_flags);
->=20
-> =A0=A0 =A0/* ... */
->=20
-> }
-> /* ------------ */
->=20
->=20
-> My program that sets BPF:
->=20
-> /* ------------ */
-> #include <unistd.h>
-> #include <sys/prctl.h>
-> #include <linux/prctl.h>
-> #include <linux/seccomp.h>
-> #include <linux/filter.h>
-> #include <linux/audit.h>
-> #include <linux/signal.h>
-> #include <sys/ptrace.h>
-> #include <stdio.h>
-> #include <errno.h>
->=20
-> int main()
-> {
-> =A0 struct sock_filter insns[] =3D
-> =A0=A0=A0 {
-> =A0=A0=A0=A0 {
-> =A0=A0=A0=A0=A0 .code =3D 0x6,
-> =A0=A0=A0=A0=A0 .jt =3D 0,
-> =A0=A0=A0=A0=A0 .jf =3D 0,
-> =A0=A0=A0=A0=A0 .k =3D SECCOMP_RET_ALLOW
-> =A0=A0=A0=A0 }
-> =A0=A0=A0 };
-> =A0 struct sock_fprog bpf =3D
-> =A0 {
-> =A0=A0 .len =3D 1,
-> =A0=A0 .filter =3D insns
-> =A0 };
-> =A0 int ret;
-> =A0
-> =A0 ret =3D prctl(PR_SET_NO_NEW_PRIVS, 1, NULL, 0, 0);
-> =A0 if (ret)
-> =A0=A0=A0 {
-> =A0=A0=A0=A0=A0 printf("error1 %d\n", errno);
-> =A0=A0=A0=A0=A0 return 1;
-> =A0=A0=A0 }
-> =A0 int count =3D 0;
-> =A0 while (1)
-> =A0=A0=A0 {
-> =A0=A0=A0=A0=A0 ret =3D prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &bpf);
-> =A0=A0=A0=A0=A0 if (ret)
-> =A0=A0=A0=A0=A0=A0=A0 {
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0 sleep(1);
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0 printf("error %d\n", errno);
-> =A0=A0=A0=A0=A0=A0=A0 }
-> =A0=A0=A0=A0=A0 else
-> =A0=A0=A0=A0=A0=A0=A0 {
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0 count++;
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0 printf("ok %d\n", count);
-> =A0=A0=A0=A0=A0=A0=A0 }
-> =A0=A0=A0 }
-> =A0 return 0;
-> }
-> /* ------------ */
->=20
->=20
-> Thanks,
-> Xie Xun
+    [ Upstream commit d8ef4b38cb69d907f9b0e889c44d05fc0f890977 ]
+    =
+
+    This reverts commit 9a9e97b2f1f2 ("cgroup: Add memory barriers to plug
+    cgroup_rstat_updated() race window").
+    =
+
+    The commit was added in anticipation of memcg rstat conversion which ne=
+eded
+    synchronous accounting for the event counters (e.g. oom kill count). Ho=
+wever,
+    the conversion didn't get merged due to percpu memory overhead concern =
+which
+    couldn't be addressed at the time.
+    =
+
+    Unfortunately, the patch's addition of smp_mb() to cgroup_rstat_updated=
+()
+    meant that every scheduling event now had to go through an additional f=
+ull
+    barrier and Mel Gorman noticed it as 1% regression in netperf UDP_STREA=
+M test.
+    =
+
+    There's no need to have this barrier in tree now and even if we need
+    synchronous accounting in the future, the right thing to do is separati=
+ng that
+    out to a separate function so that hot paths which don't care about
+    synchronous behavior don't have to pay the overhead of the full barrier=
+. Let's
+    revert.
+    =
+
+    Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+    Reported-by: Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>
+    Link: http://lkml.kernel.org/r/20200409154413.GK3818-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org
+    Cc: v4.18+
+    Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index 6f87352f8219..41ca996568df 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -33,12 +33,9 @@ void cgroup_rstat_updated(struct cgroup *cgrp, int cpu)
+ 		return;
+ =
+
+ 	/*
+-	 * Paired with the one in cgroup_rstat_cpu_pop_updated().  Either we
+-	 * see NULL updated_next or they see our updated stat.
+-	 */
+-	smp_mb();
+-
+-	/*
++	 * Speculative already-on-list test. This may race leading to
++	 * temporary inaccuracies, which is fine.
++	 *
+ 	 * Because @parent's updated_children is terminated with @parent
+ 	 * instead of NULL, we can tell whether @cgrp is on the list by
+ 	 * testing the next pointer for NULL.
+@@ -134,13 +131,6 @@ static struct cgroup *cgroup_rstat_cpu_pop_updated(str=
+uct cgroup *pos,
+ 		*nextp =3D rstatc->updated_next;
+ 		rstatc->updated_next =3D NULL;
+ =
+
+-		/*
+-		 * Paired with the one in cgroup_rstat_cpu_updated().
+-		 * Either they see NULL updated_next or we see their
+-		 * updated stat.
+-		 */
+-		smp_mb();
+-
+ 		return pos;
+ 	}
+---------------------------------------------------------------------------=
+----
 
 
+Git bisection log:
+
+---------------------------------------------------------------------------=
+----
+git bisect start
+# good: [7111951b8d4973bda27ff663f2cf18b663d15b48] Linux 5.6
+git bisect good 7111951b8d4973bda27ff663f2cf18b663d15b48
+# bad: [61aba373f5708f2aebc3f72078e51949a068aa6f] Linux 5.6.19
+git bisect bad 61aba373f5708f2aebc3f72078e51949a068aa6f
+# good: [0bc4d081e87ef8fd43baeed7141267e558896f86] RDMA/cm: Fix an error ch=
+eck in cm_alloc_id_priv()
+git bisect good 0bc4d081e87ef8fd43baeed7141267e558896f86
+# good: [0deceb85de592b89f6476e2bfcb5321a95d23126] dmaengine: owl: Use corr=
+ect lock in owl_dma_get_pchan()
+git bisect good 0deceb85de592b89f6476e2bfcb5321a95d23126
+# bad: [566f16e2d62fb3817529a05147ef46046ecffe6a] io_uring: initialize ctx-=
+>sqo_wait earlier
+git bisect bad 566f16e2d62fb3817529a05147ef46046ecffe6a
+# good: [23952755bc2f839844b5a60c29620cce98c9b09d] riscv: stacktrace: Fix u=
+ndefined reference to `walk_stackframe'
+git bisect good 23952755bc2f839844b5a60c29620cce98c9b09d
+# good: [be31933db49c8e3d81b96ee6bc9933d2adafe13d] drm/amd/display: Fix pot=
+ential integer wraparound resulting in a hang
+git bisect good be31933db49c8e3d81b96ee6bc9933d2adafe13d
+# good: [ee899046f79db390650e546446a7a0196788d39d] esp6: get the right prot=
+o for transport mode in esp6_gso_encap
+git bisect good ee899046f79db390650e546446a7a0196788d39d
+# good: [bdd07c33a3be1896ec1982fab1a2baf986fbe4dc] netfilter: conntrack: co=
+mparison of unsigned in cthelper confirmation
+git bisect good bdd07c33a3be1896ec1982fab1a2baf986fbe4dc
+# bad: [46f4a75fb5034c8d80a5388fe3bb46a8ed05df5b] ARC: [plat-eznps]: Restri=
+ct to CONFIG_ISA_ARCOMPACT
+git bisect bad 46f4a75fb5034c8d80a5388fe3bb46a8ed05df5b
+# good: [960a4cc3ec49f8292d0f837f0a6b28b03c54f042] Linux 5.6.16
+git bisect good 960a4cc3ec49f8292d0f837f0a6b28b03c54f042
+# bad: [9cf5d5444c78c14bb9f90dd21cef361ee14ba64b] Revert "cgroup: Add memor=
+y barriers to plug cgroup_rstat_updated() race window"
+git bisect bad 9cf5d5444c78c14bb9f90dd21cef361ee14ba64b
+# good: [2df9b670ad1a2120f54982e1b1dfd17a6ce3cc0c] x86/syscalls: Revert "x8=
+6/syscalls: Make __X32_SYSCALL_BIT be unsigned long"
+git bisect good 2df9b670ad1a2120f54982e1b1dfd17a6ce3cc0c
+# first bad commit: [9cf5d5444c78c14bb9f90dd21cef361ee14ba64b] Revert "cgro=
+up: Add memory barriers to plug cgroup_rstat_updated() race window"
+---------------------------------------------------------------------------=
+----
