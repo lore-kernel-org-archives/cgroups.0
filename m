@@ -1,179 +1,107 @@
-From: Guillaume Tucker <guillaume.tucker@collabora.com>
-Subject: Re: stable-rc/linux-5.6.y bisection: baseline.dmesg.crit on
- bcm2837-rpi-3-b
-Date: Thu, 25 Jun 2020 07:50:25 +0100
-Message-ID: <dd967873-e7ef-43da-26b5-d7def1ed7abc@collabora.com>
-References: <5ef43529.1c69fb81.eac8c.85c7@mx.google.com>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 02/14] block: remove bio_disassociate_blkg
+Date: Sat, 27 Jun 2020 09:31:47 +0200
+Message-ID: <20200627073159.2447325-3-hch@lst.de>
+References: <20200627073159.2447325-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5ef43529.1c69fb81.eac8c.85c7@mx.google.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=TqBMh8wKMnVF/qZj/bM6cnnHs8Yim2J3gFC2ELItu+s=; b=C+ZyH4XC/PkkkGo8OrL4qvcn92
+        TnizwBndOG4NHHJpYFLRpu8LYRZqZAN2x6fPq3HSY0c0038FlIUnkfpTHi3Qt2VhrxPFglng/X4Cc
+        aZdSwTUR1u/eINbQC2X9UvbpnjV1m7wgCSeWJCDjROxe87fuIzT0EQqaXmxcSmrm4yq1F+bzu8VUN
+        1HvaMG5Z4RE93Payt3MIpxhHccumVWuOutqXqy60zCifApzwCB2YgfFIETkyIrT0uDpmMHAqwsDmS
+        jmmV+CbyN7d3VFXs3yi5MBQmvswTJ9K17V+dHSM5wowN9H+wv4o0R17ejZHH5EoXtFjTRlYlOK53+
+        nUeLzM7Q==;
+In-Reply-To: <20200627073159.2447325-1-hch-jcswGhMUV9g@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>, Mel Gorman <mgorman@techsingularity.net>, Sasha Levin <sashal@kernel.org>
-Cc: Li Zefan <lizefan@huawei.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, cgroups@vger.kernel.org, Johannes Weiner <hannes@cmpxchg.org>, linux-kernel@vger.kernel.org
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On 25/06/2020 06:24, kernelci.org bot wrote:
-> * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-> * This automated bisection report was sent to you on the basis  *
-> * that you may be involved with the breaking commit it has      *
-> * found.  No manual investigation has been done to verify it,   *
-> * and the root cause of the problem may be somewhere else.      *
-> *                                                               *
-> * If you do send a fix, please include this trailer:            *
-> *   Reported-by: "kernelci.org bot" <bot@kernelci.org>          *
-> *                                                               *
-> * Hope this helps!                                              *
-> * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-> 
-> stable-rc/linux-5.6.y bisection: baseline.dmesg.crit on bcm2837-rpi-3-b
-> 
-> Summary:
->   Start:      61aba373f570 Linux 5.6.19
->   Plain log:  https://storage.kernelci.org/stable-rc/linux-5.6.y/v5.6.19/arm64/defconfig/gcc-8/lab-baylibre/baseline-bcm2837-rpi-3-b.txt
->   HTML log:   https://storage.kernelci.org/stable-rc/linux-5.6.y/v5.6.19/arm64/defconfig/gcc-8/lab-baylibre/baseline-bcm2837-rpi-3-b.html
->   Result:     9cf5d5444c78 Revert "cgroup: Add memory barriers to plug cgroup_rstat_updated() race window"
-> 
-> Checks:
->   revert:     PASS
->   verify:     PASS
-> 
-> Parameters:
->   Tree:       stable-rc
->   URL:        https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git
->   Branch:     linux-5.6.y
->   Target:     bcm2837-rpi-3-b
->   CPU arch:   arm64
->   Lab:        lab-baylibre
->   Compiler:   gcc-8
->   Config:     defconfig
->   Test case:  baseline.dmesg.crit
+bio_disassociate_blkg has two callers, of which one immediately assigns
+a new value to >bi_blkg.  Just open code the function in the two callers.
 
-The "crit" kernel message is:
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+---
+ block/bio.c         | 27 ++++++++-------------------
+ include/linux/bio.h |  2 --
+ 2 files changed, 8 insertions(+), 21 deletions(-)
 
-[   17.536674] hwmon hwmon1: Undervoltage detected!
-
-which is a known intermittent issue on rpi-3-b that is most
-likely to be unrelated to the patch found by this bisection.
-
-Maybe the bisection landed on this patch because it makes the
-undervoltage more likely by a side effect, if it affects timing
-or the binary size or addresses in very subtle ways.  But even
-then it wouldn't be a regression.
-
-We should stop running bisections on rpi-3-b, at least for this
-kernel error message, until it has been fixed to avoid future
-false positives.
-
-Sorry for the noise.
-
-Guillaume
-
-
-> Breaking commit found:
-> 
-> -------------------------------------------------------------------------------
-> commit 9cf5d5444c78c14bb9f90dd21cef361ee14ba64b
-> Author: Tejun Heo <tj@kernel.org>
-> Date:   Thu Apr 9 14:55:35 2020 -0400
-> 
->     Revert "cgroup: Add memory barriers to plug cgroup_rstat_updated() race window"
->     
->     [ Upstream commit d8ef4b38cb69d907f9b0e889c44d05fc0f890977 ]
->     
->     This reverts commit 9a9e97b2f1f2 ("cgroup: Add memory barriers to plug
->     cgroup_rstat_updated() race window").
->     
->     The commit was added in anticipation of memcg rstat conversion which needed
->     synchronous accounting for the event counters (e.g. oom kill count). However,
->     the conversion didn't get merged due to percpu memory overhead concern which
->     couldn't be addressed at the time.
->     
->     Unfortunately, the patch's addition of smp_mb() to cgroup_rstat_updated()
->     meant that every scheduling event now had to go through an additional full
->     barrier and Mel Gorman noticed it as 1% regression in netperf UDP_STREAM test.
->     
->     There's no need to have this barrier in tree now and even if we need
->     synchronous accounting in the future, the right thing to do is separating that
->     out to a separate function so that hot paths which don't care about
->     synchronous behavior don't have to pay the overhead of the full barrier. Let's
->     revert.
->     
->     Signed-off-by: Tejun Heo <tj@kernel.org>
->     Reported-by: Mel Gorman <mgorman@techsingularity.net>
->     Link: http://lkml.kernel.org/r/20200409154413.GK3818@techsingularity.net
->     Cc: v4.18+
->     Signed-off-by: Sasha Levin <sashal@kernel.org>
-> 
-> diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
-> index 6f87352f8219..41ca996568df 100644
-> --- a/kernel/cgroup/rstat.c
-> +++ b/kernel/cgroup/rstat.c
-> @@ -33,12 +33,9 @@ void cgroup_rstat_updated(struct cgroup *cgrp, int cpu)
->  		return;
->  
->  	/*
-> -	 * Paired with the one in cgroup_rstat_cpu_pop_updated().  Either we
-> -	 * see NULL updated_next or they see our updated stat.
-> -	 */
-> -	smp_mb();
-> -
-> -	/*
-> +	 * Speculative already-on-list test. This may race leading to
-> +	 * temporary inaccuracies, which is fine.
-> +	 *
->  	 * Because @parent's updated_children is terminated with @parent
->  	 * instead of NULL, we can tell whether @cgrp is on the list by
->  	 * testing the next pointer for NULL.
-> @@ -134,13 +131,6 @@ static struct cgroup *cgroup_rstat_cpu_pop_updated(struct cgroup *pos,
->  		*nextp = rstatc->updated_next;
->  		rstatc->updated_next = NULL;
->  
-> -		/*
-> -		 * Paired with the one in cgroup_rstat_cpu_updated().
-> -		 * Either they see NULL updated_next or we see their
-> -		 * updated stat.
-> -		 */
-> -		smp_mb();
-> -
->  		return pos;
->  	}
-> -------------------------------------------------------------------------------
-> 
-> 
-> Git bisection log:
-> 
-> -------------------------------------------------------------------------------
-> git bisect start
-> # good: [7111951b8d4973bda27ff663f2cf18b663d15b48] Linux 5.6
-> git bisect good 7111951b8d4973bda27ff663f2cf18b663d15b48
-> # bad: [61aba373f5708f2aebc3f72078e51949a068aa6f] Linux 5.6.19
-> git bisect bad 61aba373f5708f2aebc3f72078e51949a068aa6f
-> # good: [0bc4d081e87ef8fd43baeed7141267e558896f86] RDMA/cm: Fix an error check in cm_alloc_id_priv()
-> git bisect good 0bc4d081e87ef8fd43baeed7141267e558896f86
-> # good: [0deceb85de592b89f6476e2bfcb5321a95d23126] dmaengine: owl: Use correct lock in owl_dma_get_pchan()
-> git bisect good 0deceb85de592b89f6476e2bfcb5321a95d23126
-> # bad: [566f16e2d62fb3817529a05147ef46046ecffe6a] io_uring: initialize ctx->sqo_wait earlier
-> git bisect bad 566f16e2d62fb3817529a05147ef46046ecffe6a
-> # good: [23952755bc2f839844b5a60c29620cce98c9b09d] riscv: stacktrace: Fix undefined reference to `walk_stackframe'
-> git bisect good 23952755bc2f839844b5a60c29620cce98c9b09d
-> # good: [be31933db49c8e3d81b96ee6bc9933d2adafe13d] drm/amd/display: Fix potential integer wraparound resulting in a hang
-> git bisect good be31933db49c8e3d81b96ee6bc9933d2adafe13d
-> # good: [ee899046f79db390650e546446a7a0196788d39d] esp6: get the right proto for transport mode in esp6_gso_encap
-> git bisect good ee899046f79db390650e546446a7a0196788d39d
-> # good: [bdd07c33a3be1896ec1982fab1a2baf986fbe4dc] netfilter: conntrack: comparison of unsigned in cthelper confirmation
-> git bisect good bdd07c33a3be1896ec1982fab1a2baf986fbe4dc
-> # bad: [46f4a75fb5034c8d80a5388fe3bb46a8ed05df5b] ARC: [plat-eznps]: Restrict to CONFIG_ISA_ARCOMPACT
-> git bisect bad 46f4a75fb5034c8d80a5388fe3bb46a8ed05df5b
-> # good: [960a4cc3ec49f8292d0f837f0a6b28b03c54f042] Linux 5.6.16
-> git bisect good 960a4cc3ec49f8292d0f837f0a6b28b03c54f042
-> # bad: [9cf5d5444c78c14bb9f90dd21cef361ee14ba64b] Revert "cgroup: Add memory barriers to plug cgroup_rstat_updated() race window"
-> git bisect bad 9cf5d5444c78c14bb9f90dd21cef361ee14ba64b
-> # good: [2df9b670ad1a2120f54982e1b1dfd17a6ce3cc0c] x86/syscalls: Revert "x86/syscalls: Make __X32_SYSCALL_BIT be unsigned long"
-> git bisect good 2df9b670ad1a2120f54982e1b1dfd17a6ce3cc0c
-> # first bad commit: [9cf5d5444c78c14bb9f90dd21cef361ee14ba64b] Revert "cgroup: Add memory barriers to plug cgroup_rstat_updated() race window"
-> -------------------------------------------------------------------------------
-> 
+diff --git a/block/bio.c b/block/bio.c
+index fb5533416fa670..8aef4460b32e0e 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -234,8 +234,12 @@ struct bio_vec *bvec_alloc(gfp_t gfp_mask, int nr, unsigned long *idx,
+ 
+ void bio_uninit(struct bio *bio)
+ {
+-	bio_disassociate_blkg(bio);
+-
++#ifdef CONFIG_BLK_CGROUP
++	if (bio->bi_blkg) {
++		blkg_put(bio->bi_blkg);
++		bio->bi_blkg = NULL;
++	}
++#endif
+ 	if (bio_integrity(bio))
+ 		bio_integrity_free(bio);
+ 
+@@ -1625,21 +1629,6 @@ EXPORT_SYMBOL(bioset_init_from_src);
+ 
+ #ifdef CONFIG_BLK_CGROUP
+ 
+-/**
+- * bio_disassociate_blkg - puts back the blkg reference if associated
+- * @bio: target bio
+- *
+- * Helper to disassociate the blkg from @bio if a blkg is associated.
+- */
+-void bio_disassociate_blkg(struct bio *bio)
+-{
+-	if (bio->bi_blkg) {
+-		blkg_put(bio->bi_blkg);
+-		bio->bi_blkg = NULL;
+-	}
+-}
+-EXPORT_SYMBOL_GPL(bio_disassociate_blkg);
+-
+ /**
+  * __bio_associate_blkg - associate a bio with the a blkg
+  * @bio: target bio
+@@ -1656,8 +1645,8 @@ EXPORT_SYMBOL_GPL(bio_disassociate_blkg);
+  */
+ static void __bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
+ {
+-	bio_disassociate_blkg(bio);
+-
++	if (bio->bi_blkg)
++		blkg_put(bio->bi_blkg);
+ 	bio->bi_blkg = blkg_tryget_closest(blkg);
+ }
+ 
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 0282f8aa85935c..4cd229e175c058 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -497,13 +497,11 @@ static inline void bio_associate_blkg_from_page(struct bio *bio,
+ #endif
+ 
+ #ifdef CONFIG_BLK_CGROUP
+-void bio_disassociate_blkg(struct bio *bio);
+ void bio_associate_blkg(struct bio *bio);
+ void bio_associate_blkg_from_css(struct bio *bio,
+ 				 struct cgroup_subsys_state *css);
+ void bio_clone_blkg_association(struct bio *dst, struct bio *src);
+ #else	/* CONFIG_BLK_CGROUP */
+-static inline void bio_disassociate_blkg(struct bio *bio) { }
+ static inline void bio_associate_blkg(struct bio *bio) { }
+ static inline void bio_associate_blkg_from_css(struct bio *bio,
+ 					       struct cgroup_subsys_state *css)
+-- 
+2.26.2
 
