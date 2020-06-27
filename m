@@ -1,107 +1,62 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 02/14] block: remove bio_disassociate_blkg
-Date: Sat, 27 Jun 2020 09:31:47 +0200
-Message-ID: <20200627073159.2447325-3-hch@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 03/14] block: really clone the block cgroup in bio_clone_blkg_association
+Date: Sat, 27 Jun 2020 09:31:48 +0200
+Message-ID: <20200627073159.2447325-4-hch@lst.de>
 References: <20200627073159.2447325-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=TqBMh8wKMnVF/qZj/bM6cnnHs8Yim2J3gFC2ELItu+s=; b=C+ZyH4XC/PkkkGo8OrL4qvcn92
-        TnizwBndOG4NHHJpYFLRpu8LYRZqZAN2x6fPq3HSY0c0038FlIUnkfpTHi3Qt2VhrxPFglng/X4Cc
-        aZdSwTUR1u/eINbQC2X9UvbpnjV1m7wgCSeWJCDjROxe87fuIzT0EQqaXmxcSmrm4yq1F+bzu8VUN
-        1HvaMG5Z4RE93Payt3MIpxhHccumVWuOutqXqy60zCifApzwCB2YgfFIETkyIrT0uDpmMHAqwsDmS
-        jmmV+CbyN7d3VFXs3yi5MBQmvswTJ9K17V+dHSM5wowN9H+wv4o0R17ejZHH5EoXtFjTRlYlOK53+
-        nUeLzM7Q==;
-In-Reply-To: <20200627073159.2447325-1-hch-jcswGhMUV9g@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        bh=te67Kz6q7FtaNJUJ111t8gsYne197tgP/jW4K8xX9vA=; b=NllTbXB2YDFcVqcI043iyFsHwr
+        tt77jKmSatOzYm5rqro2913myOlHulKnX4dt+8MOfTpepgR6TO2fYBzD4y3xZLLq57sFsuQKwjUn/
+        lLsBuzEeKDXVHq14z0Y+4mUXx0ae20B6us+olRYV4IeSBgdmadhqE/mKZGOP0xLqG7DAOykeARTW8
+        Vjwxz8hyIJzVL46ScOCngCuMa5pAPZ9e4ExDnntp/DtIrhC5V8t0SDq3ssA0P/EEZesARi7JZ4vl/
+        YcKpLXYo8gmWNoJberB6ct7R0JEf97ic7E/wfDM/BF56/51DV1p8WH5aKgRth6mdXE0o4D8tMK60/
+        N0hDQYQg==;
+In-Reply-To: <20200627073159.2447325-1-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Dennis Zhou <dennis-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
+Cc: Dennis Zhou <dennis@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-bio_disassociate_blkg has two callers, of which one immediately assigns
-a new value to >bi_blkg.  Just open code the function in the two callers.
+bio_clone_blkg_association is supposed to clone the associatation, but
+actually ends up doing a search with a tryget.  As we know we have a
+reference on the source cgroup just get an unconditional additional
+reference to it and call it a day.  That also removes the need for
+a RCU critical section.
 
-Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/bio.c         | 27 ++++++++-------------------
- include/linux/bio.h |  2 --
- 2 files changed, 8 insertions(+), 21 deletions(-)
+ block/bio.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/block/bio.c b/block/bio.c
-index fb5533416fa670..8aef4460b32e0e 100644
+index 8aef4460b32e0e..e1d01acce8070c 100644
 --- a/block/bio.c
 +++ b/block/bio.c
-@@ -234,8 +234,12 @@ struct bio_vec *bvec_alloc(gfp_t gfp_mask, int nr, unsigned long *idx,
- 
- void bio_uninit(struct bio *bio)
- {
--	bio_disassociate_blkg(bio);
--
-+#ifdef CONFIG_BLK_CGROUP
-+	if (bio->bi_blkg) {
-+		blkg_put(bio->bi_blkg);
-+		bio->bi_blkg = NULL;
-+	}
-+#endif
- 	if (bio_integrity(bio))
- 		bio_integrity_free(bio);
- 
-@@ -1625,21 +1629,6 @@ EXPORT_SYMBOL(bioset_init_from_src);
- 
- #ifdef CONFIG_BLK_CGROUP
- 
--/**
-- * bio_disassociate_blkg - puts back the blkg reference if associated
-- * @bio: target bio
-- *
-- * Helper to disassociate the blkg from @bio if a blkg is associated.
-- */
--void bio_disassociate_blkg(struct bio *bio)
--{
--	if (bio->bi_blkg) {
--		blkg_put(bio->bi_blkg);
--		bio->bi_blkg = NULL;
--	}
--}
--EXPORT_SYMBOL_GPL(bio_disassociate_blkg);
--
- /**
-  * __bio_associate_blkg - associate a bio with the a blkg
-  * @bio: target bio
-@@ -1656,8 +1645,8 @@ EXPORT_SYMBOL_GPL(bio_disassociate_blkg);
+@@ -1737,12 +1737,12 @@ EXPORT_SYMBOL_GPL(bio_associate_blkg);
   */
- static void __bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
+ void bio_clone_blkg_association(struct bio *dst, struct bio *src)
  {
--	bio_disassociate_blkg(bio);
+-	rcu_read_lock();
 -
-+	if (bio->bi_blkg)
-+		blkg_put(bio->bi_blkg);
- 	bio->bi_blkg = blkg_tryget_closest(blkg);
+-	if (src->bi_blkg)
+-		__bio_associate_blkg(dst, src->bi_blkg);
+-
+-	rcu_read_unlock();
++	if (src->bi_blkg) {
++		if (dst->bi_blkg)
++			blkg_put(dst->bi_blkg);
++		blkg_get(src->bi_blkg);
++		dst->bi_blkg = src->bi_blkg;
++	}
  }
- 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 0282f8aa85935c..4cd229e175c058 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -497,13 +497,11 @@ static inline void bio_associate_blkg_from_page(struct bio *bio,
- #endif
- 
- #ifdef CONFIG_BLK_CGROUP
--void bio_disassociate_blkg(struct bio *bio);
- void bio_associate_blkg(struct bio *bio);
- void bio_associate_blkg_from_css(struct bio *bio,
- 				 struct cgroup_subsys_state *css);
- void bio_clone_blkg_association(struct bio *dst, struct bio *src);
- #else	/* CONFIG_BLK_CGROUP */
--static inline void bio_disassociate_blkg(struct bio *bio) { }
- static inline void bio_associate_blkg(struct bio *bio) { }
- static inline void bio_associate_blkg_from_css(struct bio *bio,
- 					       struct cgroup_subsys_state *css)
+ EXPORT_SYMBOL_GPL(bio_clone_blkg_association);
+ #endif /* CONFIG_BLK_CGROUP */
 -- 
 2.26.2
 
