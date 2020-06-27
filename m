@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/14] block: move bio_associate_blkg_from_page to mm/page_io.c
-Date: Sat, 27 Jun 2020 09:31:50 +0200
-Message-ID: <20200627073159.2447325-6-hch@lst.de>
+Subject: [PATCH 04/14] block: merge __bio_associate_blkg into bio_associate_blkg_from_css
+Date: Sat, 27 Jun 2020 09:31:49 +0200
+Message-ID: <20200627073159.2447325-5-hch@lst.de>
 References: <20200627073159.2447325-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,12 +10,12 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=Xpio8MsBnjn0ZZX6kn1sCcutxgSaexamcwAr94sVSxo=; b=lXKR3KOvyolkJvQ5vU5UcEIzmG
-        NYPk7kN3ZRmanvN7d8Wa79vMwEVXOCKwhA5cRXqxRnIzRaQKFfeyijCzahSTeBwTtWxQdOXhVpyO/
-        YuHacuqeUBjX3qf3iAdjhLyYUt1l/IQAcaFJsrw2gxdW0HYASxszrpqF1yn41OUOea6/fVJZr/T6K
-        60U+ok5Yg/ke/5eSyH/QCSPyx1bDiWE8jYVYGCoahVg4SZqCwkcX6+WR85l+0dHx4s82sh1IT7KeT
-        P3vou1PSNgXzRlYwf4Fvs1JsOZLLoK4ZGYC11tzwf5gfVLbj7i+vGui4+co9JaY7GjpfoIjre4B5O
-        CO34+0jQ==;
+        bh=LREORKkL9EawusRPfY+RfGgkga9SJryaB1y7sBbv+3c=; b=Y+/+SN3Nj38jfxO2i3lNtkEEEh
+        p5PU9kxKUEStA039sBaU80FUIIvTpcHFt36RI1FknpmJhMWGKFgiwg7s+Ms4DQI1MtXDPeUM0wIlV
+        38tOKbh9wlcT5Kj6Ny5CNIX5um8hs4EbmbRw5gwgMH3tffQVM7ubNGIG8NC+S/yEQMYZDHuLWxqmi
+        9IPc4iePF4IzCvsADXfxFap/nSeBhF4g2Upoi5yYBu1877xEsCRJU4tl1kUnbUmTivqgDceaxmw7y
+        X4I/EqORE71u36SwJMR6c7nexLlV+8Lg6IfBUPe9FwHt6SC1jFfbKqSNrFRrIuHZR74kmPbEayDff
+        UkYW2/YQ==;
 In-Reply-To: <20200627073159.2447325-1-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -23,100 +23,84 @@ Content-Type: text/plain; charset="us-ascii"
 To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
 Cc: Dennis Zhou <dennis@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-bio_associate_blkg_from_page is a special purpose helper for swap bios
-that doesn't need access to bio internals.  Move it to the swap code
-instead of having it in bio.c.
+Merge __bio_associate_blkg into the only caller, which allows to slightly
+reduce the RCU crticial section and better explain the code flow.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/bio.c         | 26 --------------------------
- include/linux/bio.h |  7 -------
- mm/page_io.c        | 17 +++++++++++++++++
- 3 files changed, 17 insertions(+), 33 deletions(-)
+ block/bio.c | 45 +++++++++++++--------------------------------
+ 1 file changed, 13 insertions(+), 32 deletions(-)
 
 diff --git a/block/bio.c b/block/bio.c
-index bc8de2432e3645..901d22715dd4f3 100644
+index e1d01acce8070c..bc8de2432e3645 100644
 --- a/block/bio.c
 +++ b/block/bio.c
-@@ -1659,32 +1659,6 @@ void bio_associate_blkg_from_css(struct bio *bio,
- }
- EXPORT_SYMBOL_GPL(bio_associate_blkg_from_css);
+@@ -1628,52 +1628,33 @@ int bioset_init_from_src(struct bio_set *bs, struct bio_set *src)
+ EXPORT_SYMBOL(bioset_init_from_src);
  
--#ifdef CONFIG_MEMCG
+ #ifdef CONFIG_BLK_CGROUP
+-
 -/**
-- * bio_associate_blkg_from_page - associate a bio with the page's blkg
+- * __bio_associate_blkg - associate a bio with the a blkg
 - * @bio: target bio
-- * @page: the page to lookup the blkcg from
+- * @blkg: the blkg to associate
 - *
-- * Associate @bio with the blkg from @page's owning memcg and the respective
-- * request_queue.  If cgroup_e_css returns %NULL, fall back to the queue's
-- * root_blkg.
+- * This tries to associate @bio with the specified @blkg.  Association failure
+- * is handled by walking up the blkg tree.  Therefore, the blkg associated can
+- * be anything between @blkg and the root_blkg.  This situation only happens
+- * when a cgroup is dying and then the remaining bios will spill to the closest
+- * alive blkg.
+- *
+- * A reference will be taken on the @blkg and will be released when @bio is
+- * freed.
 - */
--void bio_associate_blkg_from_page(struct bio *bio, struct page *page)
+-static void __bio_associate_blkg(struct bio *bio, struct blkcg_gq *blkg)
 -{
--	struct cgroup_subsys_state *css;
--
--	if (!page->mem_cgroup)
--		return;
--
--	rcu_read_lock();
--
--	css = cgroup_e_css(page->mem_cgroup->css.cgroup, &io_cgrp_subsys);
--	bio_associate_blkg_from_css(bio, css);
--
--	rcu_read_unlock();
+-	if (bio->bi_blkg)
+-		blkg_put(bio->bi_blkg);
+-	bio->bi_blkg = blkg_tryget_closest(blkg);
 -}
--#endif /* CONFIG_MEMCG */
 -
  /**
-  * bio_associate_blkg - associate a bio with a blkg
+  * bio_associate_blkg_from_css - associate a bio with a specified css
   * @bio: target bio
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 4cd229e175c058..c6d76538292644 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -489,13 +489,6 @@ do {						\
- #define bio_dev(bio) \
- 	disk_devt((bio)->bi_disk)
- 
--#if defined(CONFIG_MEMCG) && defined(CONFIG_BLK_CGROUP)
--void bio_associate_blkg_from_page(struct bio *bio, struct page *page);
--#else
--static inline void bio_associate_blkg_from_page(struct bio *bio,
--						struct page *page) { }
--#endif
--
- #ifdef CONFIG_BLK_CGROUP
- void bio_associate_blkg(struct bio *bio);
+  * @css: target css
+  *
+  * Associate @bio with the blkg found by combining the css's blkg and the
+- * request_queue of the @bio.  This falls back to the queue's root_blkg if
+- * the association fails with the css.
++ * request_queue of the @bio.  An association failure is handled by walking up
++ * the blkg tree.  Therefore, the blkg associated can be anything between @blkg
++ * and q->root_blkg.  This situation only happens when a cgroup is dying and
++ * then the remaining bios will spill to the closest alive blkg.
++ *
++ * A reference will be taken on the blkg and will be released when @bio is
++ * freed.
+  */
  void bio_associate_blkg_from_css(struct bio *bio,
-diff --git a/mm/page_io.c b/mm/page_io.c
-index e8726f3e3820bf..ccda7679008851 100644
---- a/mm/page_io.c
-+++ b/mm/page_io.c
-@@ -277,6 +277,23 @@ static inline void count_swpout_vm_event(struct page *page)
- 	count_vm_events(PSWPOUT, hpage_nr_pages(page));
- }
- 
-+#if defined(CONFIG_MEMCG) && defined(CONFIG_BLK_CGROUP)
-+static void bio_associate_blkg_from_page(struct bio *bio, struct page *page)
-+{
-+	struct cgroup_subsys_state *css;
-+
-+	if (!page->mem_cgroup)
-+		return;
-+
-+	rcu_read_lock();
-+	css = cgroup_e_css(page->mem_cgroup->css.cgroup, &io_cgrp_subsys);
-+	bio_associate_blkg_from_css(bio, css);
-+	rcu_read_unlock();
-+}
-+#else
-+#define bio_associate_blkg_from_page(bio, page)		do { } while (0)
-+#endif /* CONFIG_MEMCG && CONFIG_BLK_CGROUP */
-+
- int __swap_writepage(struct page *page, struct writeback_control *wbc,
- 		bio_end_io_t end_write_func)
+ 				 struct cgroup_subsys_state *css)
  {
+ 	struct request_queue *q = bio->bi_disk->queue;
+-	struct blkcg_gq *blkg;
++	struct blkcg_gq *blkg = q->root_blkg;
+ 
+-	rcu_read_lock();
++	if (bio->bi_blkg)
++		blkg_put(bio->bi_blkg);
+ 
+-	if (!css || !css->parent)
+-		blkg = q->root_blkg;
+-	else
++	rcu_read_lock();
++	if (css && css->parent)
+ 		blkg = blkg_lookup_create(css_to_blkcg(css), q);
+-
+-	__bio_associate_blkg(bio, blkg);
+-
++	bio->bi_blkg = blkg_tryget_closest(blkg);
+ 	rcu_read_unlock();
+ }
+ EXPORT_SYMBOL_GPL(bio_associate_blkg_from_css);
 -- 
 2.26.2
 
