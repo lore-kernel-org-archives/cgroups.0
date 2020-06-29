@@ -1,10 +1,10 @@
 From: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Subject: Re: [PATCH 05/14] block: move
- bio_associate_blkg_from_page to mm/page_io.c
-Date: Mon, 29 Jun 2020 09:59:05 +0000
-Message-ID: <SN4PR0401MB3598BAA43FFB5271003CA34B9B6E0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+Subject: Re: [PATCH 07/14] block: merge blkg_lookup_create and
+ __blkg_lookup_create
+Date: Mon, 29 Jun 2020 12:21:18 +0000
+Message-ID: <SN4PR0401MB35989164D23E31992F6750F69B6E0@SN4PR0401MB3598.namprd04.prod.outlook.com>
 References: <20200627073159.2447325-1-hch@lst.de>
-	<20200627073159.2447325-6-hch@lst.de>
+	<20200627073159.2447325-8-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
