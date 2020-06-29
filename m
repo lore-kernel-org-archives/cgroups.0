@@ -1,10 +1,10 @@
 From: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Subject: Re: [PATCH 05/14] block: move
- bio_associate_blkg_from_page to mm/page_io.c
-Date: Mon, 29 Jun 2020 10:08:28 +0000
-Message-ID: <SN4PR0401MB3598A350166C7B419FA8853F9B6E0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+Subject: Re: [PATCH 03/14] block: really clone the block cgroup
+ in bio_clone_blkg_association
+Date: Mon, 29 Jun 2020 09:37:36 +0000
+Message-ID: <SN4PR0401MB35984B689047ADE7AC38BF139B6E0@SN4PR0401MB3598.namprd04.prod.outlook.com>
 References: <20200627073159.2447325-1-hch@lst.de>
-	<20200627073159.2447325-6-hch@lst.de>
+	<20200627073159.2447325-4-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -23,12 +23,7 @@ Errors-To: dm-devel-bounces@redhat.com
 To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
 Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Johannes, "linux-mm@kvack.org" <linux-mm@kvack.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Li Zefan <lizefan@huawei.com>, Weiner <hannes@cmpxchg.org>, Dennis Zhou <dennis@kernel.org>
 
-On 27/06/2020 09:33, Christoph Hellwig wrote:
-> bio_associate_blkg_from_page is a special purpose helper for swap bios
-
-'for swapping' or 'to swap' I think.
-
-Otherwise,
+Looks good,
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
 
