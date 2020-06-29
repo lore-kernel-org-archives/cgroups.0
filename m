@@ -1,29 +1,54 @@
-From: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Subject: Re: [PATCH 06/14] block: move the bio cgroup
- associatation helpers to blk-cgroup.c
-Date: Mon, 29 Jun 2020 11:51:53 +0000
-Message-ID: <SN4PR0401MB3598CB2CD25407E4E2C036299B6E0@SN4PR0401MB3598.namprd04.prod.outlook.com>
-References: <20200627073159.2447325-1-hch@lst.de>
-	<20200627073159.2447325-7-hch@lst.de>
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] doc: cgroup: add f2fs and xfs to supported list for writeback
+Date: Mon, 29 Jun 2020 14:08:09 -0500
+Message-ID: <c8271324-9132-388c-5242-d7699f011892@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1593457705;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=n2qVe7QVtMWlsu3tW293XYJBZ3r5SYGfqQyhGd9NB2s=;
+        b=Ij4PBgcSg3Ntims8eYjhczQG0ARN8QglfAWrodFofst2aw7QaYiOcET3Hw72LrnenPGKes
+        0ZCiaX6ecA50df/o7VpoyZjad6QJlmHXU+17fcI0hsUFPZwB5BlSZ2ZdhtPaMs9X8O2wfb
+        +3QqEPmzBVN82VzSlgZ8g/Pwe4cSavg=
 Content-Language: en-US
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Johannes, "linux-mm@kvack.org" <linux-mm@kvack.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Li Zefan <lizefan@huawei.com>, Weiner <hannes@cmpxchg.org>, Dennis Zhou <dennis@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: linux-kernel@vger.kernel.org, linux-mm@kvack.org, Jonathan Corbet <corbet@lwn.net>
+Cc: cgroups@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs <linux-xfs@vger.kernel.org>
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+f2fs and xfs have both added support for cgroup writeback:
 
+578c647 f2fs: implement cgroup writeback support
+adfb5fb xfs: implement cgroup aware writeback
+
+so add them to the supported list in the docs.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+TBH I wonder about the wisdom of having this detail in
+the doc, as it apparently gets missed quite often ...
+
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index ce3e05e..4f82afa 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1684,9 +1684,9 @@ per-cgroup dirty memory states are examined and the more restrictive
+ of the two is enforced.
+ 
+ cgroup writeback requires explicit support from the underlying
+-filesystem.  Currently, cgroup writeback is implemented on ext2, ext4
+-and btrfs.  On other filesystems, all writeback IOs are attributed to
+-the root cgroup.
++filesystem.  Currently, cgroup writeback is implemented on ext2, ext4,
++btrfs, f2fs, and xfs.  On other filesystems, all writeback IOs are 
++attributed to the root cgroup.
+ 
+ There are inherent differences in memory and writeback management
+ which affects how cgroup ownership is tracked.  Memory is tracked per
 
