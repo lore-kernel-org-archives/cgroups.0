@@ -1,39 +1,41 @@
-From: Colin King <colin.king-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
-Subject: [PATCH][next] blk-cgroup: clean up indentation
-Date: Tue, 30 Jun 2020 16:54:41 +0100
-Message-ID: <20200630155441.518850-1-colin.king@canonical.com>
+From: Eric Sandeen <sandeen-+82itfer+wXR7s880joybQ@public.gmane.org>
+Subject: Re: [PATCH] doc: cgroup: add f2fs and xfs to supported list for
+ writeback
+Date: Tue, 30 Jun 2020 08:59:34 -0500
+Message-ID: <59265a9d-ee0f-4432-3f86-00d076aeb8e8@sandeen.net>
+References: <c8271324-9132-388c-5242-d7699f011892@redhat.com>
+ <20200630054217.GA27221@infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200630054217.GA27221-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Language: en-US
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Eric Sandeen <sandeen-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-xfs <linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-From: Colin Ian King <colin.king-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+On 6/30/20 12:42 AM, Christoph Hellwig wrote:
+> On Mon, Jun 29, 2020 at 02:08:09PM -0500, Eric Sandeen wrote:
+>> f2fs and xfs have both added support for cgroup writeback:
+>>
+>> 578c647 f2fs: implement cgroup writeback support
+>> adfb5fb xfs: implement cgroup aware writeback
+>>
+>> so add them to the supported list in the docs.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>> ---
+>>
+>> TBH I wonder about the wisdom of having this detail in
+>> the doc, as it apparently gets missed quite often ...
+> 
+> I'd rather remove the list of file systems.  It has no chance of
+> staying uptodate.
 
-There is a statement that is indented one level too deeply, fix it
-by removing a tab.
+Is there any way for a user to know whether a filesytem does or doesn't
+support it, in practice?
 
-Signed-off-by: Colin Ian King <colin.king-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
----
- block/blk-cgroup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 1ce94afc03bc..748c4b2a9273 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -1837,7 +1837,7 @@ void blk_cgroup_bio_start(struct bio *bio)
- 	 */
- 	if (!bio_flagged(bio, BIO_CGROUP_ACCT)) {
- 		bio_set_flag(bio, BIO_CGROUP_ACCT);
--			bis->cur.bytes[rwd] += bio->bi_iter.bi_size;
-+		bis->cur.bytes[rwd] += bio->bi_iter.bi_size;
- 	}
- 	bis->cur.ios[rwd]++;
- 
--- 
-2.27.0
-
+Thanks,
+-Eric
