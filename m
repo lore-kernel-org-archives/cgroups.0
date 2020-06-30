@@ -1,41 +1,38 @@
-From: Eric Sandeen <sandeen-+82itfer+wXR7s880joybQ@public.gmane.org>
-Subject: Re: [PATCH] doc: cgroup: add f2fs and xfs to supported list for
- writeback
-Date: Tue, 30 Jun 2020 08:59:34 -0500
-Message-ID: <59265a9d-ee0f-4432-3f86-00d076aeb8e8@sandeen.net>
-References: <c8271324-9132-388c-5242-d7699f011892@redhat.com>
- <20200630054217.GA27221@infradead.org>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH][next] blk-cgroup: clean up indentation
+Date: Tue, 30 Jun 2020 13:00:20 -0600
+Message-ID: <a75d74f9-88a6-7bfd-d0e2-b4f05c8aa7b7@kernel.dk>
+References: <20200630155441.518850-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200630054217.GA27221-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=xRcKUYv8vLMl07E2wdlABymQJFgrXbgTcbsQgAon5/Y=;
+        b=vIyCu074YMPyf2Ko3ofarVXk/Wxbl62AqwQ2UDR5UU8SRPqmxHf+1uFctP73i4xGPC
+         UM553wn8Jn7Gk7IP4wsYjza2xy5UHJ9ppYcm6xqsmpPYSzMvX5MI3I9jcHzI8qh1ENRr
+         RQh3zxcGI9lITyz/c6TlyJ62hLloJACxieH2CO9YJPxUfEnERzIVnVpoyyuLnqABUzc2
+         09OWpgauhVKk5aAcaly00m/Rujet839tXO72Wfoe8CtvLgFmE0jZ9v+vLMptv6Gm2sa1
+         BKCOPatyl/v4JwP7ZO5xvW2g1d755NzL78E+wbW3nNQFmF0bvWSogT/g28bJP0wQ5err
+         DAPA==
+In-Reply-To: <20200630155441.518850-1-colin.king@canonical.com>
 Content-Language: en-US
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Eric Sandeen <sandeen-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-xfs <linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Colin King <colin.king@canonical.com>, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 6/30/20 12:42 AM, Christoph Hellwig wrote:
-> On Mon, Jun 29, 2020 at 02:08:09PM -0500, Eric Sandeen wrote:
->> f2fs and xfs have both added support for cgroup writeback:
->>
->> 578c647 f2fs: implement cgroup writeback support
->> adfb5fb xfs: implement cgroup aware writeback
->>
->> so add them to the supported list in the docs.
->>
->> Signed-off-by: Eric Sandeen <sandeen-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> ---
->>
->> TBH I wonder about the wisdom of having this detail in
->> the doc, as it apparently gets missed quite often ...
+On 6/30/20 9:54 AM, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> I'd rather remove the list of file systems.  It has no chance of
-> staying uptodate.
+> There is a statement that is indented one level too deeply, fix it
+> by removing a tab.
 
-Is there any way for a user to know whether a filesytem does or doesn't
-support it, in practice?
+Applied, thanks.
 
-Thanks,
--Eric
+-- 
+Jens Axboe
+
