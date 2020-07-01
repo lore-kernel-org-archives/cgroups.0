@@ -1,45 +1,50 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/4] drbd: remove a bogus bdi_rw_congested call
-Date: Wed,  1 Jul 2020 11:06:19 +0200
-Message-ID: <20200701090622.3354860-2-hch@lst.de>
-References: <20200701090622.3354860-1-hch@lst.de>
+From: Eric Sandeen <sandeen-+82itfer+wXR7s880joybQ@public.gmane.org>
+Subject: Re: [PATCH] doc: cgroup: add f2fs and xfs to supported list for
+ writeback
+Date: Wed, 1 Jul 2020 08:25:05 -0500
+Message-ID: <fcd2ef0f-421e-5905-a6f6-a5147ab12b9f@sandeen.net>
+References: <c8271324-9132-388c-5242-d7699f011892@redhat.com>
+ <20200630054217.GA27221@infradead.org>
+ <59265a9d-ee0f-4432-3f86-00d076aeb8e8@sandeen.net>
+ <20200701083224.GI20101@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20200701090622.3354860-1-hch@lst.de>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-raid@vger.kernel.org, linux-mm@kvack.org, linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, drbd-dev@tron.linbit.com, dm-devel@redhat.com, Tejun Heo <tj@kernel.org>, cgroups@vger.kernel.org, linux-btrfs@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200701083224.GI20101-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Eric Sandeen <sandeen-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-xfs <linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-bdi_rw_congested returns congestion state, so calling it without
-looking at the return value doesn't make much sense.
+On 7/1/20 3:32 AM, Christoph Hellwig wrote:
+> On Tue, Jun 30, 2020 at 08:59:34AM -0500, Eric Sandeen wrote:
+>> On 6/30/20 12:42 AM, Christoph Hellwig wrote:
+>>> On Mon, Jun 29, 2020 at 02:08:09PM -0500, Eric Sandeen wrote:
+>>>> f2fs and xfs have both added support for cgroup writeback:
+>>>>
+>>>> 578c647 f2fs: implement cgroup writeback support
+>>>> adfb5fb xfs: implement cgroup aware writeback
+>>>>
+>>>> so add them to the supported list in the docs.
+>>>>
+>>>> Signed-off-by: Eric Sandeen <sandeen-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>>>> ---
+>>>>
+>>>> TBH I wonder about the wisdom of having this detail in
+>>>> the doc, as it apparently gets missed quite often ...
+>>>
+>>> I'd rather remove the list of file systems.  It has no chance of
+>>> staying uptodate.
+>>
+>> Is there any way for a user to know whether a filesytem does or doesn't
+>> support it, in practice?
+> 
+> git-grep SB_I_CGROUPWB
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/block/drbd/drbd_proc.c | 1 -
- 1 file changed, 1 deletion(-)
+Sure, but that's not quite what I meant by "a user" :)  So I'll take that
+as a no.
 
-diff --git a/drivers/block/drbd/drbd_proc.c b/drivers/block/drbd/drbd_proc.c
-index 1c41cd9982a257..3c0193de249830 100644
---- a/drivers/block/drbd/drbd_proc.c
-+++ b/drivers/block/drbd/drbd_proc.c
-@@ -265,7 +265,6 @@ int drbd_seq_show(struct seq_file *seq, void *v)
- 			seq_printf(seq, "%2d: cs:Unconfigured\n", i);
- 		} else {
- 			/* reset device->congestion_reason */
--			bdi_rw_congested(device->rq_queue->backing_dev_info);
- 
- 			nc = rcu_dereference(first_peer_device(device)->connection->net_conf);
- 			wp = nc ? nc->wire_protocol - DRBD_PROT_A + 'A' : ' ';
--- 
-2.26.2
+Thanks,
+-Eric
