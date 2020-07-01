@@ -1,50 +1,51 @@
-From: Eric Sandeen <sandeen-+82itfer+wXR7s880joybQ@public.gmane.org>
-Subject: Re: [PATCH] doc: cgroup: add f2fs and xfs to supported list for
- writeback
-Date: Wed, 1 Jul 2020 08:25:05 -0500
-Message-ID: <fcd2ef0f-421e-5905-a6f6-a5147ab12b9f@sandeen.net>
-References: <c8271324-9132-388c-5242-d7699f011892@redhat.com>
- <20200630054217.GA27221@infradead.org>
- <59265a9d-ee0f-4432-3f86-00d076aeb8e8@sandeen.net>
- <20200701083224.GI20101@infradead.org>
+From: David Sterba <dsterba@suse.cz>
+Subject: Re: [PATCH 4/4] writeback: remove bdi->congested_fn
+Date: Wed, 1 Jul 2020 16:48:06 +0200
+Message-ID: <20200701144805.GC27795@twin.jikos.cz>
+References: <20200701090622.3354860-1-hch@lst.de>
+ <20200701090622.3354860-5-hch@lst.de>
+Reply-To: dsterba@suse.cz
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200701083224.GI20101-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Content-Language: en-US
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20200701090622.3354860-5-hch@lst.de>
+Sender: linux-bcache-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Eric Sandeen <sandeen-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-xfs <linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, dm-devel@redhat.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, drbd-dev@tron.linbit.com, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
 
-On 7/1/20 3:32 AM, Christoph Hellwig wrote:
-> On Tue, Jun 30, 2020 at 08:59:34AM -0500, Eric Sandeen wrote:
->> On 6/30/20 12:42 AM, Christoph Hellwig wrote:
->>> On Mon, Jun 29, 2020 at 02:08:09PM -0500, Eric Sandeen wrote:
->>>> f2fs and xfs have both added support for cgroup writeback:
->>>>
->>>> 578c647 f2fs: implement cgroup writeback support
->>>> adfb5fb xfs: implement cgroup aware writeback
->>>>
->>>> so add them to the supported list in the docs.
->>>>
->>>> Signed-off-by: Eric Sandeen <sandeen-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->>>> ---
->>>>
->>>> TBH I wonder about the wisdom of having this detail in
->>>> the doc, as it apparently gets missed quite often ...
->>>
->>> I'd rather remove the list of file systems.  It has no chance of
->>> staying uptodate.
->>
->> Is there any way for a user to know whether a filesytem does or doesn't
->> support it, in practice?
+On Wed, Jul 01, 2020 at 11:06:22AM +0200, Christoph Hellwig wrote:
+> Except for pktdvd, the only places setting congested bits are file
+> systems that allocate their own backing_dev_info structures.  And
+> pktdvd is a deprecated driver that isn't useful in stack setup
+> either.  So remove the dead congested_fn stacking infrastructure.
 > 
-> git-grep SB_I_CGROUPWB
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/block/drbd/drbd_main.c   | 59 --------------------------------
+>  drivers/md/bcache/request.c      | 43 -----------------------
+>  drivers/md/bcache/super.c        |  1 -
+>  drivers/md/dm-cache-target.c     | 19 ----------
+>  drivers/md/dm-clone-target.c     | 15 --------
+>  drivers/md/dm-era-target.c       | 15 --------
+>  drivers/md/dm-raid.c             | 12 -------
+>  drivers/md/dm-table.c            | 37 +-------------------
+>  drivers/md/dm-thin.c             | 16 ---------
+>  drivers/md/dm.c                  | 33 ------------------
+>  drivers/md/dm.h                  |  1 -
+>  drivers/md/md-linear.c           | 24 -------------
+>  drivers/md/md-multipath.c        | 23 -------------
+>  drivers/md/md.c                  | 23 -------------
+>  drivers/md/md.h                  |  4 ---
+>  drivers/md/raid0.c               | 16 ---------
+>  drivers/md/raid1.c               | 31 -----------------
+>  drivers/md/raid10.c              | 26 --------------
+>  drivers/md/raid5.c               | 25 --------------
 
-Sure, but that's not quite what I meant by "a user" :)  So I'll take that
-as a no.
+For the btrfs bits
 
-Thanks,
--Eric
+>  fs/btrfs/disk-io.c               | 23 -------------
+
+Acked-by: David Sterba <dsterba@suse.com>
