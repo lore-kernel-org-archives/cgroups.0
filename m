@@ -1,51 +1,40 @@
-From: David Sterba <dsterba@suse.cz>
-Subject: Re: [PATCH 4/4] writeback: remove bdi->congested_fn
-Date: Wed, 1 Jul 2020 16:48:06 +0200
-Message-ID: <20200701144805.GC27795@twin.jikos.cz>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: remove dead bdi congestion leftovers
+Date: Wed, 1 Jul 2020 12:38:13 -0400
+Message-ID: <20200701163813.GA5046@mtj.thefacebook.com>
 References: <20200701090622.3354860-1-hch@lst.de>
- <20200701090622.3354860-5-hch@lst.de>
-Reply-To: dsterba@suse.cz
 Mime-Version: 1.0
-Return-path: <linux-bcache-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=tnWfjqu9qwTdD4KnQK/3+SjWTBx9SJibvmRRCZ2MKpw=;
+        b=U026WByv7++7/w1+Nu+RBzmT42CWmL089oP2jZPE4GfX8trhuMpatdvHRasGwxl1tp
+         esIRMJhHnW5uCzGbrrP5CE9k4nW7c65rE4KRI9NkWii4E6mEPbKGBXdTFeEP0b5/X8j1
+         RKDZhhs7eEWkZ9yrTYjSzyRQuzgfxSGkKewuCj72VWynBsVS+2Ska24TaCYNSUtYNx0h
+         tkr380dMygtpbEq4afb+a4dCf6bAwClROx8TUXDVt1XYAVILF8ZQdXine5RK1wrhdCLx
+         lurHJt08cKi6hQMnrm0IC1VIZZ5Da6Y0NgMH3p1I2KbSxRTE3WPzEilFi6RtD7avMeW2
+         +K0w==
 Content-Disposition: inline
-In-Reply-To: <20200701090622.3354860-5-hch@lst.de>
-Sender: linux-bcache-owner@vger.kernel.org
+In-Reply-To: <20200701090622.3354860-1-hch-jcswGhMUV9g@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, dm-devel@redhat.com, cgroups@vger.kernel.org, linux-block@vger.kernel.org, drbd-dev@tron.linbit.com, linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-btrfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Jul 01, 2020 at 11:06:22AM +0200, Christoph Hellwig wrote:
-> Except for pktdvd, the only places setting congested bits are file
-> systems that allocate their own backing_dev_info structures.  And
-> pktdvd is a deprecated driver that isn't useful in stack setup
-> either.  So remove the dead congested_fn stacking infrastructure.
+On Wed, Jul 01, 2020 at 11:06:18AM +0200, Christoph Hellwig wrote:
+> Hi Jens,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/block/drbd/drbd_main.c   | 59 --------------------------------
->  drivers/md/bcache/request.c      | 43 -----------------------
->  drivers/md/bcache/super.c        |  1 -
->  drivers/md/dm-cache-target.c     | 19 ----------
->  drivers/md/dm-clone-target.c     | 15 --------
->  drivers/md/dm-era-target.c       | 15 --------
->  drivers/md/dm-raid.c             | 12 -------
->  drivers/md/dm-table.c            | 37 +-------------------
->  drivers/md/dm-thin.c             | 16 ---------
->  drivers/md/dm.c                  | 33 ------------------
->  drivers/md/dm.h                  |  1 -
->  drivers/md/md-linear.c           | 24 -------------
->  drivers/md/md-multipath.c        | 23 -------------
->  drivers/md/md.c                  | 23 -------------
->  drivers/md/md.h                  |  4 ---
->  drivers/md/raid0.c               | 16 ---------
->  drivers/md/raid1.c               | 31 -----------------
->  drivers/md/raid10.c              | 26 --------------
->  drivers/md/raid5.c               | 25 --------------
+> we have a lot of bdi congestion related code that is left around without
+> any use.  This series removes it in preparation of sorting out the bdi
+> lifetime rules properly.
 
-For the btrfs bits
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
->  fs/btrfs/disk-io.c               | 23 -------------
+Thanks a lot for killing the dead code.
 
-Acked-by: David Sterba <dsterba@suse.com>
+-- 
+tejun
