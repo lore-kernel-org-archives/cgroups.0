@@ -1,314 +1,167 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [RFC PROPOSAL] memcg: per-memcg user space reclaim interface
-Date: Thu,  2 Jul 2020 08:22:22 -0700
-Message-ID: <20200702152222.2630760-1-shakeelb@google.com>
+From: Bhupesh Sharma <bhsharma@redhat.com>
+Subject: Re: [PATCH 1/2] mm/memcontrol: Fix OOPS inside mem_cgroup_get_nr_swap_pages()
+Date: Fri, 3 Jul 2020 00:25:29 +0530
+Message-ID: <CACi5LpPhCSzRbY=f0pAy5pMkgQWuScHs0qzChDZgy1hjYsjyRA@mail.gmail.com>
+References: <1593641660-13254-1-git-send-email-bhsharma@redhat.com>
+ <1593641660-13254-2-git-send-email-bhsharma@redhat.com> <20200702060024.GA18446@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=fvCHMx7ekQRuQtz/ZOAdDgYnmiZwvEUkEXK/eR9Jts4=;
-        b=pZubqb6XNvquvfKR87FBbq5Vq+bs6IEZhzmbISTfXpLxbmqp+7PQw1jW29cruGHIvp
-         etrXLrT+fa4/fz7tqOAAMxU8ovpL0XoFwnFidDwYzyz/PzCsuBdbHOev2Sl/46Qr9SVe
-         jkgdI72PaMDVR7hsWbbUSKpY02rCKqklL9ZMgCXoIhte1timnfpKbYYMnNjLT7OTuoI4
-         vG7axFjj/UF6SUcKWefpq7TvsZW9H20v2rJWXxpUcv83dsQV6S+lHWUZJfwzZfedLxmn
-         1JoiBWEKaVdB8MHVFp3x2Y+vtqio/oZV9HBvVfHLimPpVAdJSZYBvgezUyP23/lWxi8e
-         PsJw==
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1593716143;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Bv4WKkdC+fvRUd3hbwVt1FRHxjhG8fwl0G5V2XBrHX8=;
+        b=cit2iqZfBRoxxizb4uiXlJZ5TWVnOkpf1U7EppfFNdscIA/h68vwU5UfcwUx0DEIUO0gw+
+        MU+UICADfh4Z9G1sjTheObh/5158ggxBqesihKcPbEm+k3ZAtrRnI6Qzh3WbK0aK41YFme
+        j/ZaQDXba/kBsKXh+CsrPOzzZxfFQvA=
+In-Reply-To: <20200702060024.GA18446@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko@kernel.org>
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Bhupesh SHARMA <bhupesh.linux@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, James Morse <james.morse@arm.com>, Mark Rutland <mark.rutland@arm.com>, Will Deacon <will@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, kexec mailing list <kexec@lists.infradead.org>
 
-This is a proposal to expose an interface to the user space to trigger
-memory reclaim on a memory cgroup. The proposal contains potential use
-cases, benefits of the user space interface and potential implementation
-choices.
+Hi Michal,
 
-Use cases:
-----------
+On Thu, Jul 2, 2020 at 11:30 AM Michal Hocko <mhocko@kernel.org> wrote:
+>
+> On Thu 02-07-20 03:44:19, Bhupesh Sharma wrote:
+> > Prabhakar reported an OOPS inside mem_cgroup_get_nr_swap_pages()
+> > function in a corner case seen on some arm64 boards when kdump kernel
+> > runs with "cgroup_disable=memory" passed to the kdump kernel via
+> > bootargs.
+> >
+> > The root-cause behind the same is that currently mem_cgroup_swap_init()
+> > function is implemented as a subsys_initcall() call instead of a
+> > core_initcall(), this means 'cgroup_memory_noswap' still
+> > remains set to the default value (false) even when memcg is disabled via
+> > "cgroup_disable=memory" boot parameter.
+> >
+> > This may result in premature OOPS inside mem_cgroup_get_nr_swap_pages()
+> > function in corner cases:
+> >
+> >   [    0.265617] Unable to handle kernel NULL pointer dereference at virtual address 0000000000000188
+> >   [    0.274495] Mem abort info:
+> >   [    0.277311]   ESR = 0x96000006
+> >   [    0.280389]   EC = 0x25: DABT (current EL), IL = 32 bits
+> >   [    0.285751]   SET = 0, FnV = 0
+> >   [    0.288830]   EA = 0, S1PTW = 0
+> >   [    0.291995] Data abort info:
+> >   [    0.294897]   ISV = 0, ISS = 0x00000006
+> >   [    0.298765]   CM = 0, WnR = 0
+> >   [    0.301757] [0000000000000188] user address but active_mm is swapper
+> >   [    0.308174] Internal error: Oops: 96000006 [#1] SMP
+> >   [    0.313097] Modules linked in:
+> >   <..snip..>
+> >   [    0.331384] pstate: 00400009 (nzcv daif +PAN -UAO BTYPE=--)
+> >   [    0.337014] pc : mem_cgroup_get_nr_swap_pages+0x9c/0xf4
+> >   [    0.342289] lr : mem_cgroup_get_nr_swap_pages+0x68/0xf4
+> >   [    0.347564] sp : fffffe0012b6f800
+> >   [    0.350905] x29: fffffe0012b6f800 x28: fffffe00116b3000
+> >   [    0.356268] x27: fffffe0012b6fb00 x26: 0000000000000020
+> >   [    0.361631] x25: 0000000000000000 x24: fffffc00723ffe28
+> >   [    0.366994] x23: fffffe0010d5b468 x22: fffffe00116bfa00
+> >   [    0.372357] x21: fffffe0010aabda8 x20: 0000000000000000
+> >   [    0.377720] x19: 0000000000000000 x18: 0000000000000010
+> >   [    0.383082] x17: 0000000043e612f2 x16: 00000000a9863ed7
+> >   [    0.388445] x15: ffffffffffffffff x14: 202c303d70617773
+> >   [    0.393808] x13: 6f6e5f79726f6d65 x12: 6d5f70756f726763
+> >   [    0.399170] x11: 2073656761705f70 x10: 6177735f726e5f74
+> >   [    0.404533] x9 : fffffe00100e9580 x8 : fffffe0010628160
+> >   [    0.409895] x7 : 00000000000000a8 x6 : fffffe00118f5e5e
+> >   [    0.415258] x5 : 0000000000000001 x4 : 0000000000000000
+> >   [    0.420621] x3 : 0000000000000000 x2 : 0000000000000000
+> >   [    0.425983] x1 : 0000000000000000 x0 : fffffc0060079000
+> >   [    0.431346] Call trace:
+> >   [    0.433809]  mem_cgroup_get_nr_swap_pages+0x9c/0xf4
+> >   [    0.438735]  shrink_lruvec+0x404/0x4f8
+> >   [    0.442516]  shrink_node+0x1a8/0x688
+> >   [    0.446121]  do_try_to_free_pages+0xe8/0x448
+> >   [    0.450429]  try_to_free_pages+0x110/0x230
+> >   [    0.454563]  __alloc_pages_slowpath.constprop.106+0x2b8/0xb48
+> >   [    0.460366]  __alloc_pages_nodemask+0x2ac/0x2f8
+> >   [    0.464938]  alloc_page_interleave+0x20/0x90
+> >   [    0.469246]  alloc_pages_current+0xdc/0xf8
+> >   [    0.473379]  atomic_pool_expand+0x60/0x210
+> >   [    0.477514]  __dma_atomic_pool_init+0x50/0xa4
+> >   [    0.481910]  dma_atomic_pool_init+0xac/0x158
+> >   [    0.486220]  do_one_initcall+0x50/0x218
+> >   [    0.490091]  kernel_init_freeable+0x22c/0x2d0
+> >   [    0.494489]  kernel_init+0x18/0x110
+> >   [    0.498007]  ret_from_fork+0x10/0x18
+> >   [    0.501614] Code: aa1403e3 91106000 97f82a27 14000011 (f940c663)
+> >   [    0.507770] ---[ end trace 9795948475817de4 ]---
+> >   [    0.512429] Kernel panic - not syncing: Fatal exception
+> >   [    0.517705] Rebooting in 10 seconds..
+> >
+> > Cc: Johannes Weiner <hannes@cmpxchg.org>
+> > Cc: Michal Hocko <mhocko@kernel.org>
+> > Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+> > Cc: James Morse <james.morse@arm.com>
+> > Cc: Mark Rutland <mark.rutland@arm.com>
+> > Cc: Will Deacon <will@kernel.org>
+> > Cc: Catalin Marinas <catalin.marinas@arm.com>
+> > Cc: cgroups@vger.kernel.org
+> > Cc: linux-mm@kvack.org
+> > Cc: linux-arm-kernel@lists.infradead.org
+> > Cc: linux-kernel@vger.kernel.org
+> > Cc: kexec@lists.infradead.org
+>
+> Fixes: eccb52e78809 ("mm: memcontrol: prepare swap controller setup for integration")
+>
+> > Reported-by: Prabhakar Kushwaha <pkushwaha@marvell.com>
+> > Signed-off-by: Bhupesh Sharma <bhsharma@redhat.com>
+>
+> This is subtle as hell, I have to say. I find the ordering in the init
+> calls very unintuitive and extremely hard to follow. The above commit
+> has introduced the problem but the code previously has worked mostly by
+> a luck because our default was flipped.
+>
+> Acked-by: Michal Hocko <mhocko@suse.com>
 
-1) Per-memcg uswapd:
+Thanks for reviewing the patch. Indeed its quite a corner case seen
+only selected arm64 machines.
 
-Usually applications consists of combination of latency sensitive and
-latency tolerant tasks. For example, tasks serving user requests vs
-tasks doing data backup for a database application. At the moment the
-kernel does not differentiate between such tasks when the application
-hits the memcg limits. So, potentially a latency sensitive user facing
-task can get stuck in memory reclaim and be throttled by the kernel.
+Regards,
+Bhupesh
 
-This problem has been discussed before [1, 2].
-
-One way to resolve this issue is to preemptively trigger the memory
-reclaim from a latency tolerant task (uswapd) when the application is
-near the limits. (Please note that finding 'near the limits' situation
-is an orthogonal problem and we are exploring if per-memcg MemAvailable
-notifications can be useful [3]).
-
-2) Proactive reclaim:
-
-This is a similar to the previous use-case, the difference is instead of
-waiting for the application to be near its limit to trigger memory
-reclaim, continuously pressuring the memcg to reclaim a small amount of
-memory. This gives more accurate and uptodate workingset estimation as
-the LRUs are continuously sorted and can potentially provide more
-deterministic memory overcommit behavior. The memory overcommit
-controller can provide more proactive response to the changing workload
-of the running applications instead of being reactive.
-
-Benefit of user space solution:
--------------------------------
-
-1) More flexible on who should be charged for the cpu of the memory
-reclaim. For proactive reclaim, it makes more sense to centralized the
-overhead while for uswapd, it makes more sense for the application to
-pay for the cpu of the memory reclaim.
-
-2) More flexible on dedicating the resources (like cpu). The memory
-overcommit controller can balance the cost between the cpu usage and
-the memory reclaimed.
-
-3) Provides a way to the applications to keep their LRUs sorted, so,
-under memory pressure better reclaim candidates are selected.
-
-Interface options:
-------------------
-
-1) memcg interface e.g. 'echo 10M > memory.reclaim'
-
-+ simple
-+ can be extended to target specific type of memory (anon, file, kmem).
-- most probably restricted to cgroup v2.
-
-2) fadvise(PAGEOUT) on cgroup_dir_fd
-
-+ more general and applicable to other FSes (actually we are using
-something similar for tmpfs).
-+ can be extended in future to just age the LRUs instead of reclaim or
-some new use cases.
-
-[Or maybe a new fadvise2() syscall which can take FS specific options.]
-
-[1] https://lwn.net/Articles/753162/
-[2] http://lkml.kernel.org/r/20200219181219.54356-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-[3] http://lkml.kernel.org/r/alpine.DEB.2.22.394.2006281445210.855265-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org
-
-The following patch is my attempt to implement the option 2. Please ignore
-the fine details as I am more interested in getting the feedback on the
-proposal the interface options.
-
-Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- fs/kernfs/dir.c                 | 20 +++++++++++++++
- include/linux/cgroup-defs.h     |  2 ++
- include/linux/kernfs.h          |  2 ++
- include/uapi/linux/fadvise.h    |  1 +
- kernel/cgroup/cgroup-internal.h |  2 ++
- kernel/cgroup/cgroup-v1.c       |  1 +
- kernel/cgroup/cgroup.c          | 43 +++++++++++++++++++++++++++++++++
- mm/memcontrol.c                 | 20 +++++++++++++++
- 8 files changed, 91 insertions(+)
-
-diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
-index 9aec80b9d7c6..96b3b67f3a85 100644
---- a/fs/kernfs/dir.c
-+++ b/fs/kernfs/dir.c
-@@ -1698,9 +1698,29 @@ static int kernfs_fop_readdir(struct file *file, struct dir_context *ctx)
- 	return 0;
- }
- 
-+static int kernfs_dir_fadvise(struct file *file, loff_t offset, loff_t len,
-+			      int advise)
-+{
-+	struct kernfs_node *kn  = kernfs_dentry_node(file->f_path.dentry);
-+	struct kernfs_syscall_ops *scops = kernfs_root(kn)->syscall_ops;
-+	int ret;
-+
-+	if (!scops || !scops->fadvise)
-+		return -EPERM;
-+
-+	if (!kernfs_get_active(kn))
-+		return -ENODEV;
-+
-+	ret = scops->fadvise(kn, offset, len, advise);
-+
-+	kernfs_put_active(kn);
-+	return ret;
-+}
-+
- const struct file_operations kernfs_dir_fops = {
- 	.read		= generic_read_dir,
- 	.iterate_shared	= kernfs_fop_readdir,
- 	.release	= kernfs_dir_fop_release,
- 	.llseek		= generic_file_llseek,
-+	.fadvise	= kernfs_dir_fadvise,
- };
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 52661155f85f..cbe46634875e 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -628,6 +628,8 @@ struct cgroup_subsys {
- 	void (*css_rstat_flush)(struct cgroup_subsys_state *css, int cpu);
- 	int (*css_extra_stat_show)(struct seq_file *seq,
- 				   struct cgroup_subsys_state *css);
-+	int (*css_fadvise)(struct cgroup_subsys_state *css, loff_t offset,
-+			   loff_t len, int advise);
- 
- 	int (*can_attach)(struct cgroup_taskset *tset);
- 	void (*cancel_attach)(struct cgroup_taskset *tset);
-diff --git a/include/linux/kernfs.h b/include/linux/kernfs.h
-index 89f6a4214a70..3e188b6c3402 100644
---- a/include/linux/kernfs.h
-+++ b/include/linux/kernfs.h
-@@ -175,6 +175,8 @@ struct kernfs_syscall_ops {
- 		      const char *new_name);
- 	int (*show_path)(struct seq_file *sf, struct kernfs_node *kn,
- 			 struct kernfs_root *root);
-+	int (*fadvise)(struct kernfs_node *kn, loff_t offset, loff_t len,
-+		       int advise);
- };
- 
- struct kernfs_root {
-diff --git a/include/uapi/linux/fadvise.h b/include/uapi/linux/fadvise.h
-index 0862b87434c2..302eacc4df44 100644
---- a/include/uapi/linux/fadvise.h
-+++ b/include/uapi/linux/fadvise.h
-@@ -19,4 +19,5 @@
- #define POSIX_FADV_NOREUSE	5 /* Data will be accessed once.  */
- #endif
- 
-+#define FADV_PAGEOUT		100 /* Pageout/reclaim pages. */
- #endif	/* FADVISE_H_INCLUDED */
-diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-index bfbeabc17a9d..f6077d170112 100644
---- a/kernel/cgroup/cgroup-internal.h
-+++ b/kernel/cgroup/cgroup-internal.h
-@@ -243,6 +243,8 @@ int cgroup_mkdir(struct kernfs_node *parent_kn, const char *name, umode_t mode);
- int cgroup_rmdir(struct kernfs_node *kn);
- int cgroup_show_path(struct seq_file *sf, struct kernfs_node *kf_node,
- 		     struct kernfs_root *kf_root);
-+int cgroup_fadvise(struct kernfs_node *kn, loff_t offset, loff_t len,
-+		   int advise);
- 
- int __cgroup_task_count(const struct cgroup *cgrp);
- int cgroup_task_count(const struct cgroup *cgrp);
-diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-index 191c329e482a..d5becb618a50 100644
---- a/kernel/cgroup/cgroup-v1.c
-+++ b/kernel/cgroup/cgroup-v1.c
-@@ -1094,6 +1094,7 @@ struct kernfs_syscall_ops cgroup1_kf_syscall_ops = {
- 	.mkdir			= cgroup_mkdir,
- 	.rmdir			= cgroup_rmdir,
- 	.show_path		= cgroup_show_path,
-+	.fadvise		= cgroup_fadvise,
- };
- 
- /*
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 1ea181a58465..c5c022bde398 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -5564,11 +5564,54 @@ int cgroup_rmdir(struct kernfs_node *kn)
- 	return ret;
- }
- 
-+static int cgroup_ss_fadvise(struct cgroup *cgrp, struct cgroup_subsys *ss,
-+			     loff_t offset, loff_t len, int advise)
-+{
-+	struct cgroup_subsys_state *css;
-+	int ret;
-+
-+	if (!ss->css_fadvise)
-+		return 0;
-+
-+	css = cgroup_tryget_css(cgrp, ss);
-+	if (!css)
-+		return 0;
-+
-+	ret = ss->css_fadvise(css, offset, len, advise);
-+	css_put(css);
-+	return ret;
-+}
-+
-+int cgroup_fadvise(struct kernfs_node *kn, loff_t offset, loff_t len,
-+		   int advise)
-+{
-+	struct cgroup *cgrp;
-+	struct cgroup_subsys *ss;
-+	int ret = 0, ssid;
-+
-+	if (kernfs_type(kn) != KERNFS_DIR)
-+		return 0;
-+
-+	cgrp = kn->priv;
-+	if (!cgroup_tryget(cgrp))
-+		return 0;
-+
-+	for_each_subsys(ss, ssid) {
-+		ret = cgroup_ss_fadvise(cgrp, ss, offset, len, advise);
-+		if (ret)
-+			break;
-+	}
-+
-+	cgroup_put(cgrp);
-+	return ret;
-+}
-+
- static struct kernfs_syscall_ops cgroup_kf_syscall_ops = {
- 	.show_options		= cgroup_show_options,
- 	.mkdir			= cgroup_mkdir,
- 	.rmdir			= cgroup_rmdir,
- 	.show_path		= cgroup_show_path,
-+	.fadvise		= cgroup_fadvise,
- };
- 
- static void __init cgroup_init_subsys(struct cgroup_subsys *ss, bool early)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b1a644224383..a38812aa6cde 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -59,6 +59,7 @@
- #include <linux/tracehook.h>
- #include <linux/psi.h>
- #include <linux/seq_buf.h>
-+#include <linux/fadvise.h>
- #include "internal.h"
- #include <net/sock.h>
- #include <net/ip.h>
-@@ -5369,6 +5370,24 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
- 	memcg_wb_domain_size_changed(memcg);
- }
- 
-+static int mem_cgroup_css_fadvise(struct cgroup_subsys_state *css,
-+				  loff_t offset, loff_t len, int advise)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
-+	unsigned long nr_pages = page_counter_read(&memcg->memory);
-+	unsigned long nr_to_reclaim;
-+
-+	if (advise != FADV_PAGEOUT || offset <= 0 || len <= 0)
-+		return 0;
-+
-+	nr_to_reclaim = len >> PAGE_SHIFT;
-+
-+	if (nr_pages >= nr_to_reclaim)
-+		try_to_free_mem_cgroup_pages(memcg, nr_to_reclaim, GFP_KERNEL,
-+					     true);
-+	return 0;
-+}
-+
- #ifdef CONFIG_MMU
- /* Handlers for move charge at task migration. */
- static int mem_cgroup_do_precharge(unsigned long count)
-@@ -6418,6 +6437,7 @@ struct cgroup_subsys memory_cgrp_subsys = {
- 	.css_released = mem_cgroup_css_released,
- 	.css_free = mem_cgroup_css_free,
- 	.css_reset = mem_cgroup_css_reset,
-+	.css_fadvise = mem_cgroup_css_fadvise,
- 	.can_attach = mem_cgroup_can_attach,
- 	.cancel_attach = mem_cgroup_cancel_attach,
- 	.post_attach = mem_cgroup_move_task,
--- 
-2.27.0.212.ge8ba1cc988-goog
+> > ---
+> >  mm/memcontrol.c | 9 ++++++++-
+> >  1 file changed, 8 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 19622328e4b5..8323e4b7b390 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -7186,6 +7186,13 @@ static struct cftype memsw_files[] = {
+> >       { },    /* terminate */
+> >  };
+> >
+> > +/*
+> > + * If mem_cgroup_swap_init() is implemented as a subsys_initcall()
+> > + * instead of a core_initcall(), this could mean cgroup_memory_noswap still
+> > + * remains set to false even when memcg is disabled via "cgroup_disable=memory"
+> > + * boot parameter. This may result in premature OOPS inside
+> > + * mem_cgroup_get_nr_swap_pages() function in corner cases.
+> > + */
+> >  static int __init mem_cgroup_swap_init(void)
+> >  {
+> >       /* No memory control -> no swap control */
+> > @@ -7200,6 +7207,6 @@ static int __init mem_cgroup_swap_init(void)
+> >
+> >       return 0;
+> >  }
+> > -subsys_initcall(mem_cgroup_swap_init);
+> > +core_initcall(mem_cgroup_swap_init);
+> >
+> >  #endif /* CONFIG_MEMCG_SWAP */
+> > --
+> > 2.7.4
+>
+> --
+> Michal Hocko
+> SUSE Labs
+>
 
