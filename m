@@ -1,194 +1,93 @@
-From: Konstantin Khlebnikov <koct9i@gmail.com>
-Subject: Re: [PATCH v14 15/20] mm/swap: serialize memcg changes during pagevec_lru_move_fn
-Date: Fri, 3 Jul 2020 12:13:14 +0300
-Message-ID: <CALYGNiOkA_ZsycF_hqm3XLk55Ek1Mo9w1gO=6EeE35fUtA0i_w@mail.gmail.com>
-References: <1593752873-4493-1-git-send-email-alex.shi@linux.alibaba.com> <1593752873-4493-16-git-send-email-alex.shi@linux.alibaba.com>
+From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Virtual Linux Plumbers 2020, 24-28 August: Containers and
+ Checkpoint/Restore microconference CFP Open until 20 July
+Date: Fri, 3 Jul 2020 16:06:03 +0200
+Message-ID: <20200703140603.ch73e342wxhll5on@wittgenstein>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Iaw9LIET2b5Zr3PfzFEZD0ZO7MflodPo5riog/VYOpY=;
-        b=YpIy1IBvV/vLDmas280jG6wn7S0jnFsNNvzfC29z8poUfzNVniy27kGXdSPXMeuxQo
-         9JSXKH42L1HWQIH+kXrA0YiI/7Zy401o50eq+uimBMyWhCYYRt+uQa9lR/eGlV42uabK
-         mpvPUqYHyqrHmk7zLwDAln4Pr0T49Uc/f6p4N5Q+iN6sJwX1P4kCRJfrNMG2nUhf/nHL
-         l+FEcYMwI/gtkC5uhtXAgzG4qm6YpjwREqczaUT2sqkIBVhrKlVRVqnIsFEpspNOeCLI
-         ueS1v9GV7K3eTKXn1row8vxgATK6cOERngz1i7o3+hf+X25EKaGK0p1cFb/UagT0Ra2p
-         jVUw==
-In-Reply-To: <1593752873-4493-16-git-send-email-alex.shi@linux.alibaba.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, =?UTF-8?B?0JrQvtC90YHRgtCw0L3RgtC40L0g0KXQu9C10LHQvdC40LrQvtCy?= <khlebnikov@yandex-team.ru>, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, Matthew Wilcox <willy@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, lkp@intel.com, linux-mm@kvack.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, shakeelb@google.com, Joonsoo Kim <iamjoonsoo.kim@lge.com>, richard.weiyang@gmail.com
+Content-Type: text/plain; charset="utf-8"
+To: Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, criu-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: =?utf-8?B?U3TDqXBoYW5l?= Graber <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>, Mike Rapoport <rppt-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
 
-On Fri, Jul 3, 2020 at 8:09 AM Alex Shi <alex.shi@linux.alibaba.com> wrote:
->
-> Hugh Dickins' found a memcg change bug on original version:
-> If we want to change the pgdat->lru_lock to memcg's lruvec lock, we have
-> to serialize mem_cgroup_move_account during pagevec_lru_move_fn. The
-> possible bad scenario would like:
->
->         cpu 0                                   cpu 1
-> lruvec = mem_cgroup_page_lruvec()
->                                         if (!isolate_lru_page())
->                                                 mem_cgroup_move_account
->
-> spin_lock_irqsave(&lruvec->lru_lock <== wrong lock.
->
-> So we need the ClearPageLRU to block isolate_lru_page(), then serialize
-> the memcg change here.
->
-> Reported-by: Hugh Dickins <hughd@google.com>
-> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: linux-mm@kvack.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  mm/swap.c | 31 +++++++++++++++++++------------
->  1 file changed, 19 insertions(+), 12 deletions(-)
->
-> diff --git a/mm/swap.c b/mm/swap.c
-> index b24d5f69b93a..55eb2c2eed03 100644
-> --- a/mm/swap.c
-> +++ b/mm/swap.c
-> @@ -203,7 +203,7 @@ int get_kernel_page(unsigned long start, int write, struct page **pages)
->  EXPORT_SYMBOL_GPL(get_kernel_page);
->
->  static void pagevec_lru_move_fn(struct pagevec *pvec,
-> -       void (*move_fn)(struct page *page, struct lruvec *lruvec))
-> +       void (*move_fn)(struct page *page, struct lruvec *lruvec), bool add)
->  {
->         int i;
->         struct pglist_data *pgdat = NULL;
-> @@ -221,8 +221,15 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
->                         spin_lock_irqsave(&pgdat->lru_lock, flags);
->                 }
->
-> +               /* new page add to lru or page moving between lru */
-> +               if (!add && !TestClearPageLRU(page))
-> +                       continue;
-> +
->                 lruvec = mem_cgroup_page_lruvec(page, pgdat);
->                 (*move_fn)(page, lruvec);
-> +
-> +               if (!add)
-> +                       SetPageLRU(page);
->         }
->         if (pgdat)
->                 spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-> @@ -259,7 +266,7 @@ void rotate_reclaimable_page(struct page *page)
->                 local_lock_irqsave(&lru_rotate.lock, flags);
->                 pvec = this_cpu_ptr(&lru_rotate.pvec);
->                 if (!pagevec_add(pvec, page) || PageCompound(page))
-> -                       pagevec_lru_move_fn(pvec, pagevec_move_tail_fn);
-> +                       pagevec_lru_move_fn(pvec, pagevec_move_tail_fn, false);
->                 local_unlock_irqrestore(&lru_rotate.lock, flags);
->         }
->  }
-> @@ -328,7 +335,7 @@ static void activate_page_drain(int cpu)
->         struct pagevec *pvec = &per_cpu(lru_pvecs.activate_page, cpu);
->
->         if (pagevec_count(pvec))
-> -               pagevec_lru_move_fn(pvec, __activate_page);
-> +               pagevec_lru_move_fn(pvec, __activate_page, false);
->  }
->
->  static bool need_activate_page_drain(int cpu)
-> @@ -346,7 +353,7 @@ void activate_page(struct page *page)
->                 pvec = this_cpu_ptr(&lru_pvecs.activate_page);
->                 get_page(page);
->                 if (!pagevec_add(pvec, page) || PageCompound(page))
-> -                       pagevec_lru_move_fn(pvec, __activate_page);
-> +                       pagevec_lru_move_fn(pvec, __activate_page, false);
->                 local_unlock(&lru_pvecs.lock);
->         }
->  }
-> @@ -621,21 +628,21 @@ void lru_add_drain_cpu(int cpu)
->
->                 /* No harm done if a racing interrupt already did this */
->                 local_lock_irqsave(&lru_rotate.lock, flags);
-> -               pagevec_lru_move_fn(pvec, pagevec_move_tail_fn);
-> +               pagevec_lru_move_fn(pvec, pagevec_move_tail_fn, false);
->                 local_unlock_irqrestore(&lru_rotate.lock, flags);
->         }
->
->         pvec = &per_cpu(lru_pvecs.lru_deactivate_file, cpu);
->         if (pagevec_count(pvec))
-> -               pagevec_lru_move_fn(pvec, lru_deactivate_file_fn);
-> +               pagevec_lru_move_fn(pvec, lru_deactivate_file_fn, false);
->
->         pvec = &per_cpu(lru_pvecs.lru_deactivate, cpu);
->         if (pagevec_count(pvec))
-> -               pagevec_lru_move_fn(pvec, lru_deactivate_fn);
-> +               pagevec_lru_move_fn(pvec, lru_deactivate_fn, false);
->
->         pvec = &per_cpu(lru_pvecs.lru_lazyfree, cpu);
->         if (pagevec_count(pvec))
-> -               pagevec_lru_move_fn(pvec, lru_lazyfree_fn);
-> +               pagevec_lru_move_fn(pvec, lru_lazyfree_fn, false);
->
->         activate_page_drain(cpu);
->  }
-> @@ -664,7 +671,7 @@ void deactivate_file_page(struct page *page)
->                 pvec = this_cpu_ptr(&lru_pvecs.lru_deactivate_file);
->
->                 if (!pagevec_add(pvec, page) || PageCompound(page))
-> -                       pagevec_lru_move_fn(pvec, lru_deactivate_file_fn);
-> +                       pagevec_lru_move_fn(pvec, lru_deactivate_file_fn, false);
->                 local_unlock(&lru_pvecs.lock);
->         }
->  }
-> @@ -686,7 +693,7 @@ void deactivate_page(struct page *page)
->                 pvec = this_cpu_ptr(&lru_pvecs.lru_deactivate);
->                 get_page(page);
->                 if (!pagevec_add(pvec, page) || PageCompound(page))
-> -                       pagevec_lru_move_fn(pvec, lru_deactivate_fn);
-> +                       pagevec_lru_move_fn(pvec, lru_deactivate_fn, false);
->                 local_unlock(&lru_pvecs.lock);
->         }
->  }
-> @@ -708,7 +715,7 @@ void mark_page_lazyfree(struct page *page)
->                 pvec = this_cpu_ptr(&lru_pvecs.lru_lazyfree);
->                 get_page(page);
->                 if (!pagevec_add(pvec, page) || PageCompound(page))
-> -                       pagevec_lru_move_fn(pvec, lru_lazyfree_fn);
-> +                       pagevec_lru_move_fn(pvec, lru_lazyfree_fn, false);
->                 local_unlock(&lru_pvecs.lock);
->         }
->  }
-> @@ -976,7 +983,7 @@ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec)
->   */
->  void __pagevec_lru_add(struct pagevec *pvec)
->  {
-> -       pagevec_lru_move_fn(pvec, __pagevec_lru_add_fn);
-> +       pagevec_lru_move_fn(pvec, __pagevec_lru_add_fn, true);
->  }
+Hey everyone,
 
-It seems better to open code version in lru_add than adding a bool
-argument which is true just for one user.
+I promised to resend this one more time once we have confirmed the dates
+for Virtual Linux Plumbers 2020: Linux Plumbers 2020 will take place
+from Monday, 24 August to Friday, 28 August. As usual it also
+encompasses Kernel Summit.
 
-Also with this new lru protection logic lru_add could be optimized:
-It could prepare a list of pages and under lru_lock do only list
-splice and bumping counter.
-Since PageLRU isn't set yet nobody could touch these pages in lru.
-After that lru_add could iterate pages from first to last without
-lru_lock to set PageLRU and drop reference.
+We're happy to announce that the Container and Checkpoint/Restore
+microconference (MC) has been accepted as part of Linux Plumber's again!
+The Containers and Checkpoint/Restore MC at Linux Plumbers is the opportunity
+for kernel developers, runtime maintainers, and generally everyone working on
+containers and related technologies to talk about what they are up to and agree
+on the next major changes to kernel and userspace.
 
-So, lru_add will do O(1) operations under lru_lock regardless of the
-count of pages it added.
+As we have already done the last years, the micro-conference also covers topic
+of the Checkpoint-Restore micro-conference.
 
-Actually per-cpu vector for adding could be replaced with per-cpu
-lists and\or per-lruvec atomic slist.
-Thus incommig pages will be already in list structure rather than page vector.
-This allows to accumulate more pages and offload adding to kswapd or
-direct reclaim.
+Please note that LPC 2020 was originally set to be held in Halifax, Nova
+Scotia, Canada but has been moved to a virtual event in light of recent events.
+Please see our organizing comittee's blog on the Plumber's website [1]
+for more information.
 
->
->  /**
-> --
-> 1.8.3.1
->
->
+We expect to time limit presentations/demos to 15 minutes including questions.
+More open ended discussion topics will get up to 30 minutes allocated.
+
+In the spirit of a Plumber's microconference we especially appreciate topics
+pitching new ideas and features people have been thinking about. This is also
+the time to talk about your favorite kernel- or userspace problems. If you have
+a proposal how to solve them or if you just want to gather input and ideas from
+other developers this is the right place.
+
+Here are some ideas for topics:
+
+System call filtering and interception
+Hardware enforced container isolation
+New seccomp features
+New cgroup features
+Handling cgroup v1 on cgroup v2 only hosts and vica versa
+Performance improvement for containers (following Spectre/Meltdown mitigation)
+Time namespacing
+CGroupV2 developments
+LSM, IMA, EVM, keyrings inside containers
+UID shifting filesystem (shiftfs)
+New mount API
+New pidfd API
+New clone3 syscall
+CRIU integration with container engines and orchestration frameworks
+(In)stability of less commonly used kernel ABIs
+Checkpoint/Restore performance improvements
+Improving the state of userfaultfd and its adoption in container runtimes
+Speeding up container live migration
+Extending and virtualizing procfs
+Restricting path resolution
+Android containers and containers on Android
+Container Auditing and Monitoring
+Cgroups and Containers with Real-Time Scheduling
+
+Some of those are ideas in search of an acceptable solution, some are problems
+likely to affect all container runtimes some are coverage of very recent
+kernel work and how that can be used by userspace, and some are proposed kernel
+patches that need in-person discussion. This list is not meant to be
+exhaustive. If you have other ideas or work to discuss, please apply! Keep in
+mind both kernel- and userspace topics are acceptable!
+
+Please make your proposals on the Linux Plumber's website selecting the
+Containers and Checkpoint/Restore MC as the Track you're submitting at:
+
+https://linuxplumbersconf.org/event/7/abstracts/
+
+We’ll accept proposals for this micro-conference until the 20 of July 2020.
+
+This year’s edition of the micro-conference is organized and run by:
+
+Christian Brauner (Canonical Ltd.)
+Stéphane Graber (Canonical Ltd.)
+Mike Rapoport (IBM)
+
+[1]: https://www.linuxplumbersconf.org/blog/2020/linux-plumbers-conference-2020-goes-virtual/
