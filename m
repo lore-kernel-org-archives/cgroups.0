@@ -1,109 +1,148 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v14 04/20] mm/compaction: rename compact_deferred as compact_should_defer
-Date: Fri,  3 Jul 2020 13:07:37 +0800
-Message-ID: <1593752873-4493-5-git-send-email-alex.shi@linux.alibaba.com>
-References: <1593752873-4493-1-git-send-email-alex.shi@linux.alibaba.com>
+From: chenzhou <chenzhou10-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 2/2] arm64: Allocate crashkernel always in ZONE_DMA
+Date: Fri, 3 Jul 2020 13:24:15 +0800
+Message-ID: <eeea529a-14cd-3e2f-7a1c-c4c940967749@huawei.com>
+References: <1593641660-13254-1-git-send-email-bhsharma@redhat.com>
+ <1593641660-13254-3-git-send-email-bhsharma@redhat.com>
+ <20200702075001.GA16113@willie-the-truck>
+ <CACi5LpPn4QUjC692G=5UxLchpi+ZL+xFCcxqLbFvgvvcso28ww@mail.gmail.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1593752873-4493-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+In-Reply-To: <CACi5LpPn4QUjC692G=5UxLchpi+ZL+xFCcxqLbFvgvvcso28ww-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: Bhupesh Sharma <bhsharma-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-arm-kernel <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Bhupesh SHARMA <bhupesh.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, kexec mailing list <kexec-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 
-The compact_deferred is a defer suggestion check, deferring action does in
-defer_compaction not here. so, better rename it to avoid confusing.
+Hi Bhupesh,
 
-Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
-Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Cc: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
----
- include/linux/compaction.h        | 4 ++--
- include/trace/events/compaction.h | 2 +-
- mm/compaction.c                   | 8 ++++----
- 3 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/compaction.h b/include/linux/compaction.h
-index 6fa0eea3f530..be9ed7437a38 100644
---- a/include/linux/compaction.h
-+++ b/include/linux/compaction.h
-@@ -100,7 +100,7 @@ extern enum compact_result compaction_suitable(struct zone *zone, int order,
- 		unsigned int alloc_flags, int highest_zoneidx);
- 
- extern void defer_compaction(struct zone *zone, int order);
--extern bool compaction_deferred(struct zone *zone, int order);
-+extern bool compaction_should_defer(struct zone *zone, int order);
- extern void compaction_defer_reset(struct zone *zone, int order,
- 				bool alloc_success);
- extern bool compaction_restarting(struct zone *zone, int order);
-@@ -199,7 +199,7 @@ static inline void defer_compaction(struct zone *zone, int order)
- {
- }
- 
--static inline bool compaction_deferred(struct zone *zone, int order)
-+static inline bool compaction_should_defer(struct zone *zone, int order)
- {
- 	return true;
- }
-diff --git a/include/trace/events/compaction.h b/include/trace/events/compaction.h
-index 54e5bf081171..33633c71df04 100644
---- a/include/trace/events/compaction.h
-+++ b/include/trace/events/compaction.h
-@@ -274,7 +274,7 @@
- 		1UL << __entry->defer_shift)
- );
- 
--DEFINE_EVENT(mm_compaction_defer_template, mm_compaction_deferred,
-+DEFINE_EVENT(mm_compaction_defer_template, mm_compaction_should_defer,
- 
- 	TP_PROTO(struct zone *zone, int order),
- 
-diff --git a/mm/compaction.c b/mm/compaction.c
-index cd1ef9e5e638..f14780fc296a 100644
---- a/mm/compaction.c
-+++ b/mm/compaction.c
-@@ -154,7 +154,7 @@ void defer_compaction(struct zone *zone, int order)
- }
- 
- /* Returns true if compaction should be skipped this time */
--bool compaction_deferred(struct zone *zone, int order)
-+bool compaction_should_defer(struct zone *zone, int order)
- {
- 	unsigned long defer_limit = 1UL << zone->compact_defer_shift;
- 
-@@ -168,7 +168,7 @@ bool compaction_deferred(struct zone *zone, int order)
- 	if (zone->compact_considered >= defer_limit)
- 		return false;
- 
--	trace_mm_compaction_deferred(zone, order);
-+	trace_mm_compaction_should_defer(zone, order);
- 
- 	return true;
- }
-@@ -2377,7 +2377,7 @@ enum compact_result try_to_compact_pages(gfp_t gfp_mask, unsigned int order,
- 		enum compact_result status;
- 
- 		if (prio > MIN_COMPACT_PRIORITY
--					&& compaction_deferred(zone, order)) {
-+				&& compaction_should_defer(zone, order)) {
- 			rc = max_t(enum compact_result, COMPACT_DEFERRED, rc);
- 			continue;
- 		}
-@@ -2561,7 +2561,7 @@ static void kcompactd_do_work(pg_data_t *pgdat)
- 		if (!populated_zone(zone))
- 			continue;
- 
--		if (compaction_deferred(zone, cc.order))
-+		if (compaction_should_defer(zone, cc.order))
- 			continue;
- 
- 		if (compaction_suitable(zone, cc.order, 0, zoneid) !=
--- 
-1.8.3.1
+On 2020/7/3 3:22, Bhupesh Sharma wrote:
+> Hi Will,
+>
+> On Thu, Jul 2, 2020 at 1:20 PM Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>> On Thu, Jul 02, 2020 at 03:44:20AM +0530, Bhupesh Sharma wrote:
+>>> commit bff3b04460a8 ("arm64: mm: reserve CMA and crashkernel in
+>>> ZONE_DMA32") allocates crashkernel for arm64 in the ZONE_DMA32.
+>>>
+>>> However as reported by Prabhakar, this breaks kdump kernel booting in
+>>> ThunderX2 like arm64 systems. I have noticed this on another ampere
+>>> arm64 machine. The OOM log in the kdump kernel looks like this:
+>>>
+>>>   [    0.240552] DMA: preallocated 128 KiB GFP_KERNEL pool for atomic allocations
+>>>   [    0.247713] swapper/0: page allocation failure: order:1, mode:0xcc1(GFP_KERNEL|GFP_DMA), nodemask=(null),cpuset=/,mems_allowed=0
+>>>   <..snip..>
+>>>   [    0.274706] Call trace:
+>>>   [    0.277170]  dump_backtrace+0x0/0x208
+>>>   [    0.280863]  show_stack+0x1c/0x28
+>>>   [    0.284207]  dump_stack+0xc4/0x10c
+>>>   [    0.287638]  warn_alloc+0x104/0x170
+>>>   [    0.291156]  __alloc_pages_slowpath.constprop.106+0xb08/0xb48
+>>>   [    0.296958]  __alloc_pages_nodemask+0x2ac/0x2f8
+>>>   [    0.301530]  alloc_page_interleave+0x20/0x90
+>>>   [    0.305839]  alloc_pages_current+0xdc/0xf8
+>>>   [    0.309972]  atomic_pool_expand+0x60/0x210
+>>>   [    0.314108]  __dma_atomic_pool_init+0x50/0xa4
+>>>   [    0.318504]  dma_atomic_pool_init+0xac/0x158
+>>>   [    0.322813]  do_one_initcall+0x50/0x218
+>>>   [    0.326684]  kernel_init_freeable+0x22c/0x2d0
+>>>   [    0.331083]  kernel_init+0x18/0x110
+>>>   [    0.334600]  ret_from_fork+0x10/0x18
+>>>
+>>> This patch limits the crashkernel allocation to the first 1GB of
+>>> the RAM accessible (ZONE_DMA), as otherwise we might run into OOM
+>>> issues when crashkernel is executed, as it might have been originally
+>>> allocated from either a ZONE_DMA32 memory or mixture of memory chunks
+>>> belonging to both ZONE_DMA and ZONE_DMA32.
+>> How does this interact with this ongoing series:
+>>
+>> https://lore.kernel.org/r/20200628083458.40066-1-chenzhou10-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+>>
+>> (patch 4, in particular)
+> Many thanks for having a look at this patchset. I was not aware that
+> Chen had sent out a new version.
+> I had noted in the v9 review of the high/low range allocation
+> <https://lists.gt.net/linux/kernel/3726052#3726052> that I was working
+> on a generic solution (irrespective of the crashkernel, low and high
+> range allocation) which resulted in this patchset.
+>
+> The issue is two-fold: OOPs in memcfg layer (PATCH 1/2, which has been
+> Acked-by memcfg maintainer) and OOM in the kdump kernel due to
+> crashkernel allocation in ZONE_DMA32 regions(s) which is addressed by
+> this PATCH.
+>
+> I will have a closer look at the v10 patchset Chen shared, but seems
+> it needs some rework as per Dave's review comments which he shared
+> today.
+> IMO, in the meanwhile this patchset  can be used to fix the existing
+> kdump issue with upstream kernel.
+Thanks for your work.
+There is no progress on the issue for long time, so i sent my solution in v8 comments
+and sent v9 recently.
+
+I think direct limiting the crashkernel in ZONE_DMA isn't a good idea:
+1. For parameter "crashkernel=Y", reserving crashkernel in first 1G memory will increase
+the probability of memory allocation failure.
+Previous discuss from https://lkml.org/lkml/2019/10/21/725:
+    "With ZONE_DMA=y, this config will fail to reserve 512M CMA on a server"
+
+2. For parameter "crashkernel=Y@X", limiting the crashkernel in ZONE_DMA is unreasonable
+for someone really want to reserve crashkernel from specified start address.
+
+I have sent v10: https://www.spinics.net/lists/arm-kernel/msg819408.html, any commets are welcome.
+
+Thanks,
+Chen Zhou
+>
+>>> Fixes: bff3b04460a8 ("arm64: mm: reserve CMA and crashkernel in ZONE_DMA32")
+>>> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>>> Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+>>> Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>>> Cc: James Morse <james.morse-5wv7dgnIgG8@public.gmane.org>
+>>> Cc: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>
+>>> Cc: Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+>>> Cc: Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>
+>>> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>>> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+>>> Cc: linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+>>> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>>> Cc: kexec-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+>>> Reported-by: Prabhakar Kushwaha <pkushwaha-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>
+>>> Signed-off-by: Bhupesh Sharma <bhsharma-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>>> ---
+>>>  arch/arm64/mm/init.c | 16 ++++++++++++++--
+>>>  1 file changed, 14 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/arch/arm64/mm/init.c b/arch/arm64/mm/init.c
+>>> index 1e93cfc7c47a..02ae4d623802 100644
+>>> --- a/arch/arm64/mm/init.c
+>>> +++ b/arch/arm64/mm/init.c
+>>> @@ -91,8 +91,15 @@ static void __init reserve_crashkernel(void)
+>>>       crash_size = PAGE_ALIGN(crash_size);
+>>>
+>>>       if (crash_base == 0) {
+>>> -             /* Current arm64 boot protocol requires 2MB alignment */
+>>> -             crash_base = memblock_find_in_range(0, arm64_dma32_phys_limit,
+>>> +             /* Current arm64 boot protocol requires 2MB alignment.
+>>> +              * Also limit the crashkernel allocation to the first
+>>> +              * 1GB of the RAM accessible (ZONE_DMA), as otherwise we
+>>> +              * might run into OOM issues when crashkernel is executed,
+>>> +              * as it might have been originally allocated from
+>>> +              * either a ZONE_DMA32 memory or mixture of memory
+>>> +              * chunks belonging to both ZONE_DMA and ZONE_DMA32.
+>>> +              */
+>> This comment needs help. Why does putting the crashkernel in ZONE_DMA
+>> prevent "OOM issues"?
+> Sure, I can work on adding more details in the comment so that it
+> explains the potential OOM issue(s) better.
+>
+> Thanks,
+> Bhupesh
+>
+>
+> .
+>
+
 
