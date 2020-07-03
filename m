@@ -1,93 +1,60 @@
-From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Virtual Linux Plumbers 2020, 24-28 August: Containers and
- Checkpoint/Restore microconference CFP Open until 20 July
-Date: Fri, 3 Jul 2020 16:06:03 +0200
-Message-ID: <20200703140603.ch73e342wxhll5on@wittgenstein>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [RFC PROPOSAL] memcg: per-memcg user space reclaim interface
+Date: Fri, 3 Jul 2020 07:23:14 -0700
+Message-ID: <CALvZod5gthVX5m6o50OiYsXa=0_NpXK-tVvjTF42Oj4udr4Nuw@mail.gmail.com>
+References: <20200702152222.2630760-1-shakeelb@google.com> <20200703063548.GM18446@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=xAsbhYpysmstHPq0Op9MjqJaZ7YDRLDrp7Rg8i0eT+Q=;
+        b=KacU4DChX8owr3WxGngcQJG0ITHWxa2x5YJZMRcO1Oq8g8suqMxqCIKz2KIVn+GX0G
+         NlL4sAx7SWLe7wOoKqalqC8WPtCsOVDiIJl2ugaBNTqIy8m+xXXNOoboIPQNY0hU4eh5
+         Cv+CRClsFvZBzHLaY4R8w4zl6/ZmyudVjt3Ym/CNTRtKSCKgM5mCowbGng/unHeM1X6G
+         rX9V5/vB5ZifMJFjN2LTDNr4RYI0VvFlBsKbHhDWHWGHEv13TdNi3C8BfxPrrTetX9vs
+         vMD4jQOdARdwlqk8ECDSA4gMLt9sQnF8RfswofOxXeklF/ny6lafGO5LMCzz1KNSzmw1
+         ZJUg==
+In-Reply-To: <20200703063548.GM18446@dhcp22.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Linux Containers <containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux FS Devel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, criu-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, lxc-devel-cunTk1MwBs9qMoObBWhMNEqPaTDuhLve2LY78lusg7I@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: =?utf-8?B?U3TDqXBoYW5l?= Graber <stgraber-/Ni+VN9Krahg9hUCZPvPmw@public.gmane.org>, Mike Rapoport <rppt-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Yang Shi <yang.shi@linux.alibaba.com>, David Rientjes <rientjes@google.com>, Greg Thelen <gthelen@google.com>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>
 
-Hey everyone,
+On Thu, Jul 2, 2020 at 11:35 PM Michal Hocko <mhocko@kernel.org> wrote:
+>
+> On Thu 02-07-20 08:22:22, Shakeel Butt wrote:
+> [...]
+> > Interface options:
+> > ------------------
+> >
+> > 1) memcg interface e.g. 'echo 10M > memory.reclaim'
+> >
+> > + simple
+> > + can be extended to target specific type of memory (anon, file, kmem).
+> > - most probably restricted to cgroup v2.
+> >
+> > 2) fadvise(PAGEOUT) on cgroup_dir_fd
+> >
+> > + more general and applicable to other FSes (actually we are using
+> > something similar for tmpfs).
+> > + can be extended in future to just age the LRUs instead of reclaim or
+> > some new use cases.
+>
+> Could you explain why memory.high as an interface to trigger pro-active
+> memory reclaim is not sufficient. Also memory.low limit to protect
+> latency sensitve workloads?
 
-I promised to resend this one more time once we have confirmed the dates
-for Virtual Linux Plumbers 2020: Linux Plumbers 2020 will take place
-from Monday, 24 August to Friday, 28 August. As usual it also
-encompasses Kernel Summit.
+Yes, we can use memory.high to trigger [proactive] reclaim in a memcg
+but note that it can also introduce stalls in the application running
+in that memcg. Let's suppose the memory.current of a memcg is 100MiB
+and we want to reclaim 20MiB from it, we can set the memory.high to
+80MiB but any allocation attempt from the application running in that
+memcg can get stalled/throttled. I want the functionality of the
+reclaim without potential stalls.
 
-We're happy to announce that the Container and Checkpoint/Restore
-microconference (MC) has been accepted as part of Linux Plumber's again!
-The Containers and Checkpoint/Restore MC at Linux Plumbers is the opportunity
-for kernel developers, runtime maintainers, and generally everyone working on
-containers and related technologies to talk about what they are up to and agree
-on the next major changes to kernel and userspace.
-
-As we have already done the last years, the micro-conference also covers topic
-of the Checkpoint-Restore micro-conference.
-
-Please note that LPC 2020 was originally set to be held in Halifax, Nova
-Scotia, Canada but has been moved to a virtual event in light of recent events.
-Please see our organizing comittee's blog on the Plumber's website [1]
-for more information.
-
-We expect to time limit presentations/demos to 15 minutes including questions.
-More open ended discussion topics will get up to 30 minutes allocated.
-
-In the spirit of a Plumber's microconference we especially appreciate topics
-pitching new ideas and features people have been thinking about. This is also
-the time to talk about your favorite kernel- or userspace problems. If you have
-a proposal how to solve them or if you just want to gather input and ideas from
-other developers this is the right place.
-
-Here are some ideas for topics:
-
-System call filtering and interception
-Hardware enforced container isolation
-New seccomp features
-New cgroup features
-Handling cgroup v1 on cgroup v2 only hosts and vica versa
-Performance improvement for containers (following Spectre/Meltdown mitigation)
-Time namespacing
-CGroupV2 developments
-LSM, IMA, EVM, keyrings inside containers
-UID shifting filesystem (shiftfs)
-New mount API
-New pidfd API
-New clone3 syscall
-CRIU integration with container engines and orchestration frameworks
-(In)stability of less commonly used kernel ABIs
-Checkpoint/Restore performance improvements
-Improving the state of userfaultfd and its adoption in container runtimes
-Speeding up container live migration
-Extending and virtualizing procfs
-Restricting path resolution
-Android containers and containers on Android
-Container Auditing and Monitoring
-Cgroups and Containers with Real-Time Scheduling
-
-Some of those are ideas in search of an acceptable solution, some are problems
-likely to affect all container runtimes some are coverage of very recent
-kernel work and how that can be used by userspace, and some are proposed kernel
-patches that need in-person discussion. This list is not meant to be
-exhaustive. If you have other ideas or work to discuss, please apply! Keep in
-mind both kernel- and userspace topics are acceptable!
-
-Please make your proposals on the Linux Plumber's website selecting the
-Containers and Checkpoint/Restore MC as the Track you're submitting at:
-
-https://linuxplumbersconf.org/event/7/abstracts/
-
-We’ll accept proposals for this micro-conference until the 20 of July 2020.
-
-This year’s edition of the micro-conference is organized and run by:
-
-Christian Brauner (Canonical Ltd.)
-Stéphane Graber (Canonical Ltd.)
-Mike Rapoport (IBM)
-
-[1]: https://www.linuxplumbersconf.org/blog/2020/linux-plumbers-conference-2020-goes-virtual/
+The memory.min is for protection against the global reclaim and is
+unrelated to this discussion.
