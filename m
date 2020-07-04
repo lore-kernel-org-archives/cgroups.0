@@ -1,47 +1,48 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH 05/13] Documentation/admin-guide: mm/ksm: drop doubled word
-Date: Fri,  3 Jul 2020 20:20:12 -0700
-Message-ID: <20200704032020.21923-6-rdunlap@infradead.org>
+From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: [PATCH 06/13] Documentation/admin-guide: pnfs-block-server: drop doubled word
+Date: Fri,  3 Jul 2020 20:20:13 -0700
+Message-ID: <20200704032020.21923-7-rdunlap@infradead.org>
 References: <20200704032020.21923-1-rdunlap@infradead.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=Xc5Y/7gMRvZrKEJDCwrF418TtFkFpBUwIh8SQqJf/ZU=; b=VrTfAv1RGQ4hkjvCiNUDlr43un
-        jMOXcMt42Nbx8oDU/ZCH3amqP9Ci4p6Jj0bs5YM+KpSNQ4IvQkmwfsmststlLaxkb/Bu8FDK9T1gf
-        U8W3n96qwP7as2mouie5Il16I0kLXpdDwMJN9RWnaVSNFbtxn/nLTVq2JT7omAyncYHfEYPGIPWxp
-        KsBbm72o1Rg+YHOANxA2hEIOkaxm1TcaR4HMozh5pGtMWNsYS+bQxx179Va8AUDruSOe1f9QDwVp0
-        p4mFxuXbBxcu69O91lkt+sC40Rn54VfvH4i4E1SEtOKR9fz53N8PoD7JO7oTtDS1SEOHDoFEe/Ixu
-        TIR9XeJA==;
-In-Reply-To: <20200704032020.21923-1-rdunlap@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=DZ5AR4lNMU/5KPyS2pBM92vJ3D1lWMXawLdaIpgxnII=; b=T9P+15PzEh3VlB3gzOuXmnUnCV
+        V4qPHljrbso2PJprvotn9IiQOSk3aAovV4xIIDSNZjspA23YErZraTFJR/cTUved8EXKhZAFLISg5
+        418qFrKMlAxt+kAazbl47//dnKjxAJyQFJ1im8untNP6cSyhOgrMep2PRHQV+NXUEkFHgCD24bc4t
+        wtWyA2IsTiMl/0al0BC8D5c7msS793b9ZmAs01+xKjpwB6Qrp1jgIns98O+WIV4uCaiGrPqFRO/bO
+        w36rPGg1vydz8vsnZ7tO21QN2a2SJ79+YiMy26Y/LsVqOaxEUrla7UPAPBywSC7g6AvFqBVj+TmNe
+        mIY/o2qA==;
+In-Reply-To: <20200704032020.21923-1-rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org
-Cc: Randy Dunlap <rdunlap@infradead.org>, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org, cgroups@vger.kernel.org, dm-devel@redhat.com, Mauro Carvalho Chehab <mchehab@kernel.org>, linux-media@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Trond Myklebust <trond.myklebust@hammerspace.com>, Anna Schumaker <anna.schumaker@netapp.com>, linux-nfs@vger.kernel.org, Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Len Brown <lenb@kernel.org>, linux-pm@vger.kernel.org, platform-driver-x86@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Mauro Carvalho Chehab <mchehab-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Trond Myklebust <trond.myklebust-F/q8l9xzQnoyLce1RVWEUA@public.gmane.org>, Anna Schumaker <anna.schumaker-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Srinivas Pandruvada <srinivas.pandruvada-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Len Brown <lenb-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, platform-driver-x86-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Darrick J . Wong" <darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Drop the doubled word "the".
+Drop the doubled word "with".
 
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: linux-doc@vger.kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm@kvack.org
+Signed-off-by: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>
+Cc: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Trond Myklebust <trond.myklebust-F/q8l9xzQnoyLce1RVWEUA@public.gmane.org>
+Cc: Anna Schumaker <anna.schumaker-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>
+Cc: linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
- Documentation/admin-guide/mm/ksm.rst |    2 +-
+ Documentation/admin-guide/nfs/pnfs-block-server.rst |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
---- linux-next-20200701.orig/Documentation/admin-guide/mm/ksm.rst
-+++ linux-next-20200701/Documentation/admin-guide/mm/ksm.rst
-@@ -52,7 +52,7 @@ with EAGAIN, but more probably arousing
- If KSM is not configured into the running kernel, madvise MADV_MERGEABLE
- and MADV_UNMERGEABLE simply fail with EINVAL.  If the running kernel was
- built with CONFIG_KSM=y, those calls will normally succeed: even if the
--the KSM daemon is not currently running, MADV_MERGEABLE still registers
-+KSM daemon is not currently running, MADV_MERGEABLE still registers
- the range for whenever the KSM daemon is started; even if the range
- cannot contain any pages which KSM could actually merge; even if
- MADV_UNMERGEABLE is applied to a range which was never MADV_MERGEABLE.
+--- linux-next-20200701.orig/Documentation/admin-guide/nfs/pnfs-block-server.rst
++++ linux-next-20200701/Documentation/admin-guide/nfs/pnfs-block-server.rst
+@@ -8,7 +8,7 @@ to handling all the metadata access to t
+ to the clients to directly access the underlying block devices that are
+ shared with the client.
+ 
+-To use pNFS block layouts with with the Linux NFS server the exported file
++To use pNFS block layouts with the Linux NFS server the exported file
+ system needs to support the pNFS block layouts (currently just XFS), and the
+ file system must sit on shared storage (typically iSCSI) that is accessible
+ to the clients in addition to the MDS.  As of now the file system needs to
