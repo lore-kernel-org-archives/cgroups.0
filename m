@@ -1,55 +1,66 @@
-From: "Darrick J. Wong" <darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 13/13] Documentation/admin-guide: xfs: drop doubled word
-Date: Fri, 3 Jul 2020 20:28:46 -0700
-Message-ID: <20200704032846.GU7625@magnolia>
-References: <20200704032020.21923-1-rdunlap@infradead.org>
- <20200704032020.21923-14-rdunlap@infradead.org>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH v14 15/20] mm/swap: serialize memcg changes during
+ pagevec_lru_move_fn
+Date: Sat, 4 Jul 2020 19:34:59 +0800
+Message-ID: <56e395c6-81e7-7163-0d4f-42b91573289f@linux.alibaba.com>
+References: <1593752873-4493-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1593752873-4493-16-git-send-email-alex.shi@linux.alibaba.com>
+ <CALYGNiOkA_ZsycF_hqm3XLk55Ek1Mo9w1gO=6EeE35fUtA0i_w@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=xICZg36pt8h/hSPa7Ni+oRU48F4QAE0rnESu93rms6E=;
- b=GaxIQ0mXCFQ9B6DI5XrlVJ4YDKWNcTEAYyAkaXWpBdBabGXejcQoYd4GKqlDXxFEsNo4
- Yo/c3Wfuq8Bw4rgxkS5QNGPANMnOo8YZnuQwi9uojng+/lIdi7QXgXeJdvJda5tvObfZ
- kj7/qfR9M8AcoqogpodLMo9sIgIlGjsaTGNcTUr/PCI8iQYD/cS/taCcIBAoH3eR/UWm
- j/VTxcPlSY7klKeppS+ktOLe3mEWoZ7UOLnwPkx3AlVQv+xpyFHkEQkOfqqwaZjIck5O
- 63KkNipcYjh3ezk1M7oowSTgacTeIE9KYlijS2rkUSj6tVfB376DqN7ZNmHeLAXtfD7A dw== 
-Content-Disposition: inline
-In-Reply-To: <20200704032020.21923-14-rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+In-Reply-To: <CALYGNiOkA_ZsycF_hqm3XLk55Ek1Mo9w1gO=6EeE35fUtA0i_w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Mauro Carvalho Chehab <mchehab-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Trond Myklebust <trond.myklebust-F/q8l9xzQnoyLce1RVWEUA@public.gmane.org>, Anna Schumaker <anna.schumaker-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Srinivas Pandruvada <srinivas.pandruvada-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Len Brown <lenb-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, platform-driver-x86-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Konstantin Khlebnikov <koct9i-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?UTF-8?B?0JrQvtC90YHRgtCw0L3RgtC40L0g0KXQu9C10LHQvdC40LrQvtCy?= <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Fri, Jul 03, 2020 at 08:20:20PM -0700, Randy Dunlap wrote:
-> Drop the doubled word "for".
+
+
+在 2020/7/3 下午5:13, Konstantin Khlebnikov 写道:
+>> @@ -976,7 +983,7 @@ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec)
+>>   */
+>>  void __pagevec_lru_add(struct pagevec *pvec)
+>>  {
+>> -       pagevec_lru_move_fn(pvec, __pagevec_lru_add_fn);
+>> +       pagevec_lru_move_fn(pvec, __pagevec_lru_add_fn, true);
+>>  }
+> It seems better to open code version in lru_add than adding a bool
+> argument which is true just for one user.
+
+Right, I will rewrite this part as your suggestion. Thanks!
+
 > 
-> Signed-off-by: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-> Cc: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>
-> Cc: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: Darrick J. Wong <darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-> Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-
-Looks good to me,
-Reviewed-by: Darrick J. Wong <darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-
---D
-
-> ---
->  Documentation/admin-guide/xfs.rst |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Also with this new lru protection logic lru_add could be optimized:
+> It could prepare a list of pages and under lru_lock do only list
+> splice and bumping counter.
+> Since PageLRU isn't set yet nobody could touch these pages in lru.
+> After that lru_add could iterate pages from first to last without
+> lru_lock to set PageLRU and drop reference.
 > 
-> --- linux-next-20200701.orig/Documentation/admin-guide/xfs.rst
-> +++ linux-next-20200701/Documentation/admin-guide/xfs.rst
-> @@ -133,7 +133,7 @@ When mounting an XFS filesystem, the fol
->  	logbsize must be an integer multiple of the log
->  	stripe unit configured at **mkfs(8)** time.
->  
-> -	The default value for for version 1 logs is 32768, while the
-> +	The default value for version 1 logs is 32768, while the
->  	default value for version 2 logs is MAX(32768, log_sunit).
->  
->    logdev=device and rtdev=device
+> So, lru_add will do O(1) operations under lru_lock regardless of the
+> count of pages it added.
+> 
+> Actually per-cpu vector for adding could be replaced with per-cpu
+> lists and\or per-lruvec atomic slist.
+> Thus incommig pages will be already in list structure rather than page vector.
+> This allows to accumulate more pages and offload adding to kswapd or
+> direct reclaim.
+> 
+
+That's a great idea! Guess what the new struct we need would be like this?
+I like to try this. :)
+
+
+diff --git a/include/linux/pagevec.h b/include/linux/pagevec.h
+index 081d934eda64..d62778c8c184 100644
+--- a/include/linux/pagevec.h
++++ b/include/linux/pagevec.h
+@@ -20,7 +20,7 @@
+ struct pagevec {
+        unsigned char nr;
+        bool percpu_pvec_drained;
+-       struct page *pages[PAGEVEC_SIZE];
++       struct list_head veclist;
+ };
