@@ -1,59 +1,43 @@
-From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: [PATCH 00/13] Documentation/admin-guide: eliminate duplicated words
-Date: Fri,  3 Jul 2020 20:20:07 -0700
-Message-ID: <20200704032020.21923-1-rdunlap@infradead.org>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH 02/13] Documentation/admin-guide: cgroup-v1/rdma: drop doubled word
+Date: Fri,  3 Jul 2020 20:20:09 -0700
+Message-ID: <20200704032020.21923-3-rdunlap@infradead.org>
+References: <20200704032020.21923-1-rdunlap@infradead.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-media-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=7hWx3juXEv+Gb67bYW4aLkckqsyqEnHQMB/wBgBJZwg=; b=IFPdIYUOIuDbKx41Bbn39sEemo
-        J2tgjtcrdNIW0uetV+bH1YOSgiLelcgR32aJbRM7GyTz6RIpIBsrZ+2idCAPRwnVWDYTAioDlEF6V
-        HyWqXI0qxDlXyL1OknzYjELYpUQ4uG+5EFzFIkVufn6qODHaY5Z8Hs49NDxcXbETCRmY/Lwk+crSk
-        1cW9UhhrFkHDRhb6mrjpZhDsdh+NRV/2Z/xOxl2Ix5drPXYKrLFEQzci9SIj10VjmtOIodLGFu4Pz
-        CT5wOmcj2M9689ySNJe+jXV1oRDJqgRCxzsCMjGtbpVoMaiaFW0GmVL2/I5CBkpnCa05I8bzfkFr3
-        wqrMki8Q==;
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=aRVEN4YU/BFDPd6cVTCzZUpu/CCVzRwNOQDbPEBZys4=; b=tJY95Xa0IAWCrSFHJ8hTCqVmCb
+        PXAAOu78uVM3UWrMJkge+fpEUOzsWN6i1uIxsyLnmkkuQkJJKI8Wx/TOSwiCRs3GoeUv+ef/Odg/4
+        DScwsH1ayFutkvn+JXl/8SAVMLiPQGYB0MUXTsWHuuWqq5ph52ziQX1HKD76p6hA9U7asFqXqBZeE
+        9rhtY/avec+Vt38MW41IjTZHQyftEBAk/dryc/xxN2emvHd+r8wIzhVGs4AVI9JlrkZ3Em9tgS+5V
+        Fz+a9iVry0UFDQ259p5zqFaxpP59X6EW0kDPHUScNKFFxI8sioWVwnTmsuLAIn7yc+3yPmOcbAc9k
+        lOiOUrzQ==;
+In-Reply-To: <20200704032020.21923-1-rdunlap@infradead.org>
+Sender: linux-media-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Mauro Carvalho Chehab <mchehab-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Trond Myklebust <trond.myklebust-F/q8l9xzQnoyLce1RVWEUA@public.gmane.org>, Anna Schumaker <anna.schumaker-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Srinivas Pandruvada <srinivas.pandruvada-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Len Brown <lenb-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, platform-driver-x86-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Darrick J . Wong" <darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-kernel@vger.kernel.org
+Cc: Randy Dunlap <rdunlap@infradead.org>, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org, cgroups@vger.kernel.org, dm-devel@redhat.com, Mauro Carvalho Chehab <mchehab@kernel.org>, linux-media@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, Trond Myklebust <trond.myklebust@hammerspace.com>, Anna Schumaker <anna.schumaker@netapp.com>, linux-nfs@vger.kernel.org, Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, Len Brown <lenb@kernel.org>, linux-pm@vger.kernel.org, platform-driver-x86@vger.kernel.org, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-Remove duplicated words from Documentation/admin-guide/ files.
+Drop the doubled word "echo".
 
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-doc@vger.kernel.org
+Cc: cgroups@vger.kernel.org
+---
+ Documentation/admin-guide/cgroup-v1/rdma.rst |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Cc: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>
-Cc: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: Mauro Carvalho Chehab <mchehab-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: Trond Myklebust <trond.myklebust-F/q8l9xzQnoyLce1RVWEUA@public.gmane.org>
-Cc: Anna Schumaker <anna.schumaker-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>
-Cc: linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Srinivas Pandruvada <srinivas.pandruvada-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Len Brown <lenb-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: platform-driver-x86-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Darrick J. Wong <darrick.wong-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: linux-xfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-
-
- Documentation/admin-guide/cgroup-v1/rdma.rst             |    2 +-
- Documentation/admin-guide/cgroup-v2.rst                  |    2 +-
- Documentation/admin-guide/device-mapper/dm-integrity.rst |    4 ++--
- Documentation/admin-guide/media/building.rst             |    4 ++--
- Documentation/admin-guide/mm/ksm.rst                     |    2 +-
- Documentation/admin-guide/nfs/pnfs-block-server.rst      |    2 +-
- Documentation/admin-guide/nfs/pnfs-scsi-server.rst       |    2 +-
- Documentation/admin-guide/perf/arm-ccn.rst               |    2 +-
- Documentation/admin-guide/pm/intel-speed-select.rst      |    4 ++--
- Documentation/admin-guide/pm/intel_pstate.rst            |    2 +-
- Documentation/admin-guide/sysctl/kernel.rst              |    2 +-
- Documentation/admin-guide/tainted-kernels.rst            |    2 +-
- Documentation/admin-guide/xfs.rst                        |    2 +-
- 13 files changed, 16 insertions(+), 16 deletions(-)
+--- linux-next-20200701.orig/Documentation/admin-guide/cgroup-v1/rdma.rst
++++ linux-next-20200701/Documentation/admin-guide/cgroup-v1/rdma.rst
+@@ -114,4 +114,4 @@ Following resources can be accounted by
+ 
+ (d) Delete resource limit::
+ 
+-	echo echo mlx4_0 hca_handle=max hca_object=max > /sys/fs/cgroup/rdma/1/rdma.max
++	echo mlx4_0 hca_handle=max hca_object=max > /sys/fs/cgroup/rdma/1/rdma.max
