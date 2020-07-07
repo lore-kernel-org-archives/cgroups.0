@@ -1,87 +1,87 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v15 11/21] mm/lru: move lock into lru_note_cost
-Date: Tue,  7 Jul 2020 19:46:43 +0800
-Message-ID: <1594122412-28057-12-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: [PATCH v15 18/21] mm/vmscan: use relock for move_pages_to_lru
+Date: Tue,  7 Jul 2020 19:46:50 +0800
+Message-ID: <1594122412-28057-19-git-send-email-alex.shi@linux.alibaba.com>
 References: <1594122412-28057-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1594122412-28057-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1594122412-28057-1-git-send-email-alex.shi@linux.alibaba.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Jann Horn <jannh@google.com>
 
-This patch move lru_lock into lru_note_cost. It's a bit ugly and may
-cost more locking, but it's necessary for later per pgdat lru_lock to
-per memcg lru_lock change.
+From: Hugh Dickins <hughd@google.com>
 
-Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Use the relock function to replace relocking action. And try to save few
+lock times.
+
+Signed-off-by: Hugh Dickins <hughd@google.com>
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>
+Cc: Jann Horn <jannh@google.com>
+Cc: Mel Gorman <mgorman@techsingularity.net>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: cgroups@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
 ---
- mm/swap.c   | 5 +++--
- mm/vmscan.c | 4 +---
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ mm/vmscan.c | 17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
 
-diff --git a/mm/swap.c b/mm/swap.c
-index b88ca630db70..f645965fde0e 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -269,7 +269,9 @@ void lru_note_cost(struct lruvec *lruvec, bool file, unsigned int nr_pages)
- {
- 	do {
- 		unsigned long lrusize;
-+		struct pglist_data *pgdat = lruvec_pgdat(lruvec);
- 
-+		spin_lock_irq(&pgdat->lru_lock);
- 		/* Record cost event */
- 		if (file)
- 			lruvec->file_cost += nr_pages;
-@@ -293,15 +295,14 @@ void lru_note_cost(struct lruvec *lruvec, bool file, unsigned int nr_pages)
- 			lruvec->file_cost /= 2;
- 			lruvec->anon_cost /= 2;
- 		}
-+		spin_unlock_irq(&pgdat->lru_lock);
- 	} while ((lruvec = parent_lruvec(lruvec)));
- }
- 
- void lru_note_cost_page(struct page *page)
- {
--	spin_lock_irq(&page_pgdat(page)->lru_lock);
- 	lru_note_cost(mem_cgroup_page_lruvec(page, page_pgdat(page)),
- 		      page_is_file_lru(page), hpage_nr_pages(page));
--	spin_unlock_irq(&page_pgdat(page)->lru_lock);
- }
- 
- static void __activate_page(struct page *page, struct lruvec *lruvec)
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index ddb29d813d77..c1c4259b4de5 100644
+index bdb53a678e7e..078a1640ec60 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -1976,19 +1976,17 @@ static int current_may_throttle(void)
- 				&stat, false);
+@@ -1854,15 +1854,15 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
+ 	enum lru_list lru;
  
- 	spin_lock_irq(&pgdat->lru_lock);
+ 	while (!list_empty(list)) {
+-		struct lruvec *new_lruvec = NULL;
 -
- 	move_pages_to_lru(lruvec, &page_list);
+ 		page = lru_to_page(list);
+ 		VM_BUG_ON_PAGE(PageLRU(page), page);
+ 		list_del(&page->lru);
+ 		if (unlikely(!page_evictable(page))) {
+-			spin_unlock_irq(&lruvec->lru_lock);
++			if (lruvec) {
++				spin_unlock_irq(&lruvec->lru_lock);
++				lruvec = NULL;
++			}
+ 			putback_lru_page(page);
+-			spin_lock_irq(&lruvec->lru_lock);
+ 			continue;
+ 		}
  
- 	__mod_node_page_state(pgdat, NR_ISOLATED_ANON + file, -nr_taken);
--	lru_note_cost(lruvec, file, stat.nr_pageout);
- 	item = current_is_kswapd() ? PGSTEAL_KSWAPD : PGSTEAL_DIRECT;
- 	if (!cgroup_reclaim(sc))
- 		__count_vm_events(item, nr_reclaimed);
- 	__count_memcg_events(lruvec_memcg(lruvec), item, nr_reclaimed);
- 	__count_vm_events(PGSTEAL_ANON + file, nr_reclaimed);
--
- 	spin_unlock_irq(&pgdat->lru_lock);
+@@ -1876,12 +1876,7 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
+ 		 *                                        list_add(&page->lru,)
+ 		 *     list_add(&page->lru,) //corrupt
+ 		 */
+-		new_lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+-		if (new_lruvec != lruvec) {
+-			if (lruvec)
+-				spin_unlock_irq(&lruvec->lru_lock);
+-			lruvec = lock_page_lruvec_irq(page);
+-		}
++		lruvec = relock_page_lruvec_irq(page, lruvec);
+ 		SetPageLRU(page);
  
-+	lru_note_cost(lruvec, file, stat.nr_pageout);
- 	mem_cgroup_uncharge_list(&page_list);
- 	free_unref_page_list(&page_list);
+ 		if (unlikely(put_page_testzero(page))) {
+@@ -1890,8 +1885,8 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
+ 
+ 			if (unlikely(PageCompound(page))) {
+ 				spin_unlock_irq(&lruvec->lru_lock);
++				lruvec = NULL;
+ 				destroy_compound_page(page);
+-				spin_lock_irq(&lruvec->lru_lock);
+ 			} else
+ 				list_add(&page->lru, &pages_to_free);
  
 -- 
 1.8.3.1
