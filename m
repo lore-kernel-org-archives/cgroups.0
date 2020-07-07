@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v15 03/21] mm/compaction: correct the comments of compact_defer_shift
-Date: Tue,  7 Jul 2020 19:46:35 +0800
-Message-ID: <1594122412-28057-4-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v15 07/21] mm/thp: narrow lru locking
+Date: Tue,  7 Jul 2020 19:46:39 +0800
+Message-ID: <1594122412-28057-8-git-send-email-alex.shi@linux.alibaba.com>
 References: <1594122412-28057-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1594122412-28057-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -11,45 +11,126 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com
-Cc: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, "Kirill A. Shutemov" <kirill@shutemov.name>, Andrea Arcangeli <aarcange@redhat.com>
 
-There is no compact_defer_limit. It should be compact_defer_shift in
-use. and add compact_order_failed explanation.
+lru_lock and page cache xa_lock have no reason with current sequence,
+put them together isn't necessary. let's narrow the lru locking, but
+left the local_irq_disable to block interrupt re-entry and statistic update.
+
+Hugh Dickins point: split_huge_page_to_list() was already silly,to be
+using the _irqsave variant: it's just been taking sleeping locks, so
+would already be broken if entered with interrupts enabled.
+so we can save passing flags argument down to __split_huge_page().
 
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Signed-off-by: Wei Yang <richard.weiyang@gmail.com>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Kirill A. Shutemov <kirill@shutemov.name>
+Cc: Andrea Arcangeli <aarcange@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Matthew Wilcox <willy@infradead.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: linux-mm@kvack.org
 Cc: linux-kernel@vger.kernel.org
 ---
- include/linux/mmzone.h | 1 +
- mm/compaction.c        | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ mm/huge_memory.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-index f6f884970511..14c668b7e793 100644
---- a/include/linux/mmzone.h
-+++ b/include/linux/mmzone.h
-@@ -512,6 +512,7 @@ struct zone {
- 	 * On compaction failure, 1<<compact_defer_shift compactions
- 	 * are skipped before trying again. The number attempted since
- 	 * last failure is tracked with compact_considered.
-+	 * compact_order_failed is the minimum compaction failed order.
- 	 */
- 	unsigned int		compact_considered;
- 	unsigned int		compact_defer_shift;
-diff --git a/mm/compaction.c b/mm/compaction.c
-index 86375605faa9..cd1ef9e5e638 100644
---- a/mm/compaction.c
-+++ b/mm/compaction.c
-@@ -136,7 +136,7 @@ void __ClearPageMovable(struct page *page)
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index b18f21da4dac..b74d0f8354e3 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2433,7 +2433,7 @@ static void __split_huge_page_tail(struct page *head, int tail,
+ }
  
- /*
-  * Compaction is deferred when compaction fails to result in a page
-- * allocation success. 1 << compact_defer_limit compactions are skipped up
-+ * allocation success. compact_defer_shift++, compactions are skipped up
-  * to a limit of 1 << COMPACT_MAX_DEFER_SHIFT
-  */
- void defer_compaction(struct zone *zone, int order)
+ static void __split_huge_page(struct page *page, struct list_head *list,
+-		pgoff_t end, unsigned long flags)
++			      pgoff_t end)
+ {
+ 	struct page *head = compound_head(page);
+ 	pg_data_t *pgdat = page_pgdat(head);
+@@ -2442,8 +2442,6 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 	unsigned long offset = 0;
+ 	int i;
+ 
+-	lruvec = mem_cgroup_page_lruvec(head, pgdat);
+-
+ 	/* complete memcg works before add pages to LRU */
+ 	mem_cgroup_split_huge_fixup(head);
+ 
+@@ -2455,6 +2453,11 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 		xa_lock(&swap_cache->i_pages);
+ 	}
+ 
++	/* prevent PageLRU to go away from under us, and freeze lru stats */
++	spin_lock(&pgdat->lru_lock);
++
++	lruvec = mem_cgroup_page_lruvec(head, pgdat);
++
+ 	for (i = HPAGE_PMD_NR - 1; i >= 1; i--) {
+ 		__split_huge_page_tail(head, i, lruvec, list);
+ 		/* Some pages can be beyond i_size: drop them from page cache */
+@@ -2474,6 +2477,8 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 	}
+ 
+ 	ClearPageCompound(head);
++	spin_unlock(&pgdat->lru_lock);
++	/* Caller disabled irqs, so they are still disabled here */
+ 
+ 	split_page_owner(head, HPAGE_PMD_ORDER);
+ 
+@@ -2491,8 +2496,7 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 		page_ref_add(head, 2);
+ 		xa_unlock(&head->mapping->i_pages);
+ 	}
+-
+-	spin_unlock_irqrestore(&pgdat->lru_lock, flags);
++	local_irq_enable();
+ 
+ 	remap_page(head);
+ 
+@@ -2631,12 +2635,10 @@ bool can_split_huge_page(struct page *page, int *pextra_pins)
+ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ {
+ 	struct page *head = compound_head(page);
+-	struct pglist_data *pgdata = NODE_DATA(page_to_nid(head));
+ 	struct deferred_split *ds_queue = get_deferred_split_queue(head);
+ 	struct anon_vma *anon_vma = NULL;
+ 	struct address_space *mapping = NULL;
+ 	int count, mapcount, extra_pins, ret;
+-	unsigned long flags;
+ 	pgoff_t end;
+ 
+ 	VM_BUG_ON_PAGE(is_huge_zero_page(head), head);
+@@ -2697,9 +2699,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 	unmap_page(head);
+ 	VM_BUG_ON_PAGE(compound_mapcount(head), head);
+ 
+-	/* prevent PageLRU to go away from under us, and freeze lru stats */
+-	spin_lock_irqsave(&pgdata->lru_lock, flags);
+-
++	local_irq_disable();
+ 	if (mapping) {
+ 		XA_STATE(xas, &mapping->i_pages, page_index(head));
+ 
+@@ -2729,7 +2729,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 				__dec_node_page_state(head, NR_FILE_THPS);
+ 		}
+ 
+-		__split_huge_page(page, list, end, flags);
++		__split_huge_page(page, list, end);
+ 		if (PageSwapCache(head)) {
+ 			swp_entry_t entry = { .val = page_private(head) };
+ 
+@@ -2748,7 +2748,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 		spin_unlock(&ds_queue->split_queue_lock);
+ fail:		if (mapping)
+ 			xa_unlock(&mapping->i_pages);
+-		spin_unlock_irqrestore(&pgdata->lru_lock, flags);
++		local_irq_enable();
+ 		remap_page(head);
+ 		ret = -EBUSY;
+ 	}
 -- 
 1.8.3.1
 
