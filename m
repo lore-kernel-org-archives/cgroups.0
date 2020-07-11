@@ -1,127 +1,172 @@
-From: Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: Memcg stat for available memory
-Date: Fri, 10 Jul 2020 14:04:57 -0700
-Message-ID: <CAHbLzkoCNt7GPrwN1uPEvd==-Lz9-j6-2RS0CCL0s2e-M_omiw@mail.gmail.com>
-References: <alpine.DEB.2.22.394.2006281445210.855265@chino.kir.corp.google.com>
- <CALvZod5Zv33oNLxS_8TyGV_QT4CsBjiEuocxpt2+U-XDMaFDPw@mail.gmail.com>
- <20200703081538.GO18446@dhcp22.suse.cz> <alpine.DEB.2.23.453.2007071210410.396729@chino.kir.corp.google.com>
- <alpine.DEB.2.23.453.2007101223470.1178541@chino.kir.corp.google.com>
-Mime-Version: 1.0
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH v16 13/22] mm/lru: introduce TestClearPageLRU
+Date: Sat, 11 Jul 2020 08:58:47 +0800
+Message-ID: <1594429136-20002-14-git-send-email-alex.shi@linux.alibaba.com>
+References: <1594429136-20002-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=knKCGO/TFZKmvezoCtPFxOWQQYS0S9SrfSJaD988IlQ=;
-        b=ZwAlQGHv/53vyRlAA/pgP4ejQrYZEO9WBuZ97orWg9JVqECbBB1qAb9fzz1MXWBJLq
-         xiYBseSkAnoLcPgAekoTjxZ+YTpFLZZqIgwAXEylYIDb+8OZRR/EKzVtx8oRlFH1aLiW
-         6mr119vYLxGfTQVhJuQb7L6H9QyC9kaeTBf+DByR6WV7dCexpTqdjTDQkjJlPQwpTry+
-         g28Ey5ba98fxDvcHP11mUbk2NCs4buS6+rP6MMV0EfczuazJATO04b0EHE3SmUcindIR
-         nW3eUGt5re+JD3ug4x4fEKJsWZuZdhQo3fZAwK2h9TMg6pBJV3ZXKk4CTeh51GhKRPG4
-         GxyA==
-In-Reply-To: <alpine.DEB.2.23.453.2007101223470.1178541-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
+In-Reply-To: <1594429136-20002-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Fri, Jul 10, 2020 at 12:49 PM David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-> On Tue, 7 Jul 2020, David Rientjes wrote:
->
-> > Another use case would be motivated by exactly the MemAvailable use case:
-> > when bound to a memcg hierarchy, how much memory is available without
-> > substantial swap or risk of oom for starting a new process or service?
-> > This would not trigger any memory.low or PSI notification but is a
-> > heuristic that can be used to determine what can and cannot be started
-> > without incurring substantial memory reclaim.
-> >
-> > I'm indifferent to whether this would be a "reclaimable" or "available"
-> > metric, with a slight preference toward making it as similar in
-> > calculation to MemAvailable as possible, so I think the question is
-> > whether this is something the user should be deriving themselves based on
-> > memcg stats that are exported or whether we should solidify this based on
-> > how the kernel handles reclaim as a metric that will carry over across
-> > kernel vesions?
-> >
->
-> To try to get more discussion on the subject, consider a malloc
-> implementation, like tcmalloc, that does MADV_DONTNEED to free memory back
-> to the system and how this freed memory is then described to userspace
-> depending on the kernel implementation.
->
->  [ For the sake of this discussion, consider we have precise memcg stats
->    available to us although the actual implementation allows for some
->    variance (MEMCG_CHARGE_BATCH). ]
->
-> With a 64MB heap backed by thp on x86, for example, the vma starts with an
-> rss of 64MB, all of which is anon and backed by hugepages.  Imagine some
-> aggressive MADV_DONTNEED freeing that ends up with only a single 4KB page
-> mapped in each 2MB aligned range.  The rss is now 32 * 4KB = 128KB.
->
-> Before freeing, anon, anon_thp, and active_anon in memory.stat would all
-> be the same for this vma (64MB).  64MB would also be charged to
-> memory.current.  That's all working as intended and to the expectation of
-> userspace.
->
-> After freeing, however, we have the kernel implementation specific detail
-> of how huge pmd splitting is handled (rss) in comparison to the underlying
-> split of the compound page (deferred split queue).  The huge pmd is always
-> split synchronously after MADV_DONTNEED so, as mentioned, the rss is 128KB
-> for this vma and none of it is backed by thp.
->
-> What is charged to the memcg (memory.current) and what is on active_anon
-> is unchanged, however, because the underlying compound pages are still
-> charged to the memcg.  The amount of anon and anon_thp are decreased
-> in compliance with the splitting of the page tables, however.
->
-> So after freeing, for this vma: anon = 128KB, anon_thp = 0,
-> active_anon = 64MB, memory.current = 64MB.
->
-> In this case, because of the deferred split queue, which is a kernel
-> implementation detail, userspace may be unclear on what is actually
-> reclaimable -- and this memory is reclaimable under memory pressure.  For
-> the motivation of MemAvailable (what amount of memory is available for
-> starting new work), userspace *could* determine this through the
-> aforementioned active_anon - anon (or some combination of
-> memory.current - anon - file - slab), but I think it's a fair point that
-> userspace's view of reclaimable memory as the kernel implementation
-> changes is something that can and should remain consistent between
-> versions.
->
-> Otherwise, an earlier implementation before deferred split queues could
-> have safely assumed that active_anon was unreclaimable unless swap were
-> enabled.  It doesn't have the foresight based on future kernel
-> implementation detail to reconcile what the amount of reclaimable memory
-> actually is.
->
-> Same discussion could happen for lazy free memory which is anon but now
-> appears on the file lru stats and not the anon lru stats: it's easily
-> reclaimable under memory pressure but you need to reconcile the difference
-> between the anon metric and what is revealed in the anon lru stats.
->
-> That gave way to my original thought of a si_mem_available()-like
-> calculation ("avail") by doing
->
->         free = memory.high - memory.current
+Combine PageLRU check and ClearPageLRU into a function by new
+introduced func TestClearPageLRU. This function will be used as page
+isolation precondition to prevent other isolations some where else.
+Then there are may non PageLRU page on lru list, need to remove BUG
+checking accordingly.
 
-I'm wondering what if high or max is set to max limit. Don't you end
-up seeing a super large memavail?
+Hugh Dickins pointed that __page_cache_release and release_pages
+has no need to do atomic clear bit since no user on the page at that
+moment. and no need get_page() before lru bit clear in isolate_lru_page,
+since it '(1) Must be called with an elevated refcount on the page'.
 
->         lazyfree = file - (active_file + inactive_file)
+As Andrew Morton mentioned this change would dirty cacheline for page
+isn't on LRU. But the lost would be acceptable with Rong Chen
+<rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> report:
+https://lkml.org/lkml/2020/3/4/173
 
-Isn't it (active_file + inactive_file) - file ? It looks MADV_FREE
-just updates inactive lru size.
+Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+---
+ include/linux/page-flags.h |  1 +
+ mm/mlock.c                 |  3 +--
+ mm/swap.c                  |  6 ++----
+ mm/vmscan.c                | 26 +++++++++++---------------
+ 4 files changed, 15 insertions(+), 21 deletions(-)
 
->         deferred = active_anon - anon
->
->         avail = free + lazyfree + deferred +
->                 (active_file + inactive_file + slab_reclaimable) / 2
->
-> And we have the ability to change this formula based on kernel
-> implementation details as they evolve.  Idea is to provide a consistent
-> field that userspace can use to determine the rough amount of reclaimable
-> memory in a MemAvailable-like way.
->
+diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
+index 6be1aa559b1e..9554ed1387dc 100644
+--- a/include/linux/page-flags.h
++++ b/include/linux/page-flags.h
+@@ -326,6 +326,7 @@ static inline void page_init_poison(struct page *page, size_t size)
+ PAGEFLAG(Dirty, dirty, PF_HEAD) TESTSCFLAG(Dirty, dirty, PF_HEAD)
+ 	__CLEARPAGEFLAG(Dirty, dirty, PF_HEAD)
+ PAGEFLAG(LRU, lru, PF_HEAD) __CLEARPAGEFLAG(LRU, lru, PF_HEAD)
++	TESTCLEARFLAG(LRU, lru, PF_HEAD)
+ PAGEFLAG(Active, active, PF_HEAD) __CLEARPAGEFLAG(Active, active, PF_HEAD)
+ 	TESTCLEARFLAG(Active, active, PF_HEAD)
+ PAGEFLAG(Workingset, workingset, PF_HEAD)
+diff --git a/mm/mlock.c b/mm/mlock.c
+index f8736136fad7..228ba5a8e0a5 100644
+--- a/mm/mlock.c
++++ b/mm/mlock.c
+@@ -108,13 +108,12 @@ void mlock_vma_page(struct page *page)
+  */
+ static bool __munlock_isolate_lru_page(struct page *page, bool getpage)
+ {
+-	if (PageLRU(page)) {
++	if (TestClearPageLRU(page)) {
+ 		struct lruvec *lruvec;
+ 
+ 		lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+ 		if (getpage)
+ 			get_page(page);
+-		ClearPageLRU(page);
+ 		del_page_from_lru_list(page, lruvec, page_lru(page));
+ 		return true;
+ 	}
+diff --git a/mm/swap.c b/mm/swap.c
+index f645965fde0e..5092fe9c8c47 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -83,10 +83,9 @@ static void __page_cache_release(struct page *page)
+ 		struct lruvec *lruvec;
+ 		unsigned long flags;
+ 
++		__ClearPageLRU(page);
+ 		spin_lock_irqsave(&pgdat->lru_lock, flags);
+ 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+-		VM_BUG_ON_PAGE(!PageLRU(page), page);
+-		__ClearPageLRU(page);
+ 		del_page_from_lru_list(page, lruvec, page_off_lru(page));
+ 		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
+ 	}
+@@ -878,9 +877,8 @@ void release_pages(struct page **pages, int nr)
+ 				spin_lock_irqsave(&locked_pgdat->lru_lock, flags);
+ 			}
+ 
+-			lruvec = mem_cgroup_page_lruvec(page, locked_pgdat);
+-			VM_BUG_ON_PAGE(!PageLRU(page), page);
+ 			__ClearPageLRU(page);
++			lruvec = mem_cgroup_page_lruvec(page, locked_pgdat);
+ 			del_page_from_lru_list(page, lruvec, page_off_lru(page));
+ 		}
+ 
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index c1c4259b4de5..18986fefd49b 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1548,16 +1548,16 @@ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
+ {
+ 	int ret = -EINVAL;
+ 
+-	/* Only take pages on the LRU. */
+-	if (!PageLRU(page))
+-		return ret;
+-
+ 	/* Compaction should not handle unevictable pages but CMA can do so */
+ 	if (PageUnevictable(page) && !(mode & ISOLATE_UNEVICTABLE))
+ 		return ret;
+ 
+ 	ret = -EBUSY;
+ 
++	/* Only take pages on the LRU. */
++	if (!PageLRU(page))
++		return ret;
++
+ 	/*
+ 	 * To minimise LRU disruption, the caller can indicate that it only
+ 	 * wants to isolate pages it will be able to operate on without
+@@ -1671,8 +1671,6 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
+ 		page = lru_to_page(src);
+ 		prefetchw_prev_lru_page(page, src, flags);
+ 
+-		VM_BUG_ON_PAGE(!PageLRU(page), page);
+-
+ 		nr_pages = compound_nr(page);
+ 		total_scan += nr_pages;
+ 
+@@ -1769,21 +1767,19 @@ int isolate_lru_page(struct page *page)
+ 	VM_BUG_ON_PAGE(!page_count(page), page);
+ 	WARN_RATELIMIT(PageTail(page), "trying to isolate tail page");
+ 
+-	if (PageLRU(page)) {
++	if (TestClearPageLRU(page)) {
+ 		pg_data_t *pgdat = page_pgdat(page);
+ 		struct lruvec *lruvec;
++		int lru = page_lru(page);
+ 
+-		spin_lock_irq(&pgdat->lru_lock);
++		get_page(page);
+ 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+-		if (PageLRU(page)) {
+-			int lru = page_lru(page);
+-			get_page(page);
+-			ClearPageLRU(page);
+-			del_page_from_lru_list(page, lruvec, lru);
+-			ret = 0;
+-		}
++		spin_lock_irq(&pgdat->lru_lock);
++		del_page_from_lru_list(page, lruvec, lru);
+ 		spin_unlock_irq(&pgdat->lru_lock);
++		ret = 0;
+ 	}
++
+ 	return ret;
+ }
+ 
+-- 
+1.8.3.1
+
