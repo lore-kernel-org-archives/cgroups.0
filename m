@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v16 16/22] mm/mlock: reorder isolation sequence during munlock
-Date: Sat, 11 Jul 2020 08:58:50 +0800
-Message-ID: <1594429136-20002-17-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v16 05/22] mm/thp: move lru_add_page_tail func to huge_memory.c
+Date: Sat, 11 Jul 2020 08:58:39 +0800
+Message-ID: <1594429136-20002-6-git-send-email-alex.shi@linux.alibaba.com>
 References: <1594429136-20002-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1594429136-20002-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -12,182 +12,122 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name
 
-This patch reorder the isolation steps during munlock, move the lru lock
-to guard each pages, unfold __munlock_isolate_lru_page func, to do the
-preparation for lru lock change.
+The func is only used in huge_memory.c, defining it in other file with a
+CONFIG_TRANSPARENT_HUGEPAGE macro restrict just looks weird.
 
-__split_huge_page_refcount doesn't exist, but we still have to guard
-PageMlocked and PageLRU for tail page in __split_huge_page_tail.
+Let's move it THP. And make it static as Hugh Dickin suggested.
 
-[lkp@intel.com: found a sleeping function bug ... at mm/rmap.c]
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Kirill A. Shutemov <kirill@shutemov.name>
 Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Matthew Wilcox <willy@infradead.org>
 Cc: Hugh Dickins <hughd@google.com>
-Cc: linux-mm@kvack.org
 Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
 ---
- mm/mlock.c | 93 ++++++++++++++++++++++++++++++++++----------------------------
- 1 file changed, 51 insertions(+), 42 deletions(-)
+ include/linux/swap.h |  2 --
+ mm/huge_memory.c     | 30 ++++++++++++++++++++++++++++++
+ mm/swap.c            | 33 ---------------------------------
+ 3 files changed, 30 insertions(+), 35 deletions(-)
 
-diff --git a/mm/mlock.c b/mm/mlock.c
-index 228ba5a8e0a5..0bdde88b4438 100644
---- a/mm/mlock.c
-+++ b/mm/mlock.c
-@@ -103,25 +103,6 @@ void mlock_vma_page(struct page *page)
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index 5b3216ba39a9..2c29399b29a0 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -339,8 +339,6 @@ extern void lru_note_cost(struct lruvec *lruvec, bool file,
+ 			  unsigned int nr_pages);
+ extern void lru_note_cost_page(struct page *);
+ extern void lru_cache_add(struct page *);
+-extern void lru_add_page_tail(struct page *page, struct page *page_tail,
+-			 struct lruvec *lruvec, struct list_head *head);
+ extern void activate_page(struct page *);
+ extern void mark_page_accessed(struct page *);
+ extern void lru_add_drain(void);
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 78c84bee7e29..9e050b13f597 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2340,6 +2340,36 @@ static void remap_page(struct page *page)
+ 	}
  }
  
- /*
-- * Isolate a page from LRU with optional get_page() pin.
-- * Assumes lru_lock already held and page already pinned.
-- */
--static bool __munlock_isolate_lru_page(struct page *page, bool getpage)
--{
--	if (TestClearPageLRU(page)) {
--		struct lruvec *lruvec;
--
--		lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
--		if (getpage)
--			get_page(page);
--		del_page_from_lru_list(page, lruvec, page_lru(page));
--		return true;
--	}
--
--	return false;
--}
--
--/*
-  * Finish munlock after successful page isolation
-  *
-  * Page must be locked. This is a wrapper for try_to_munlock()
-@@ -181,6 +162,7 @@ static void __munlock_isolation_failed(struct page *page)
- unsigned int munlock_vma_page(struct page *page)
- {
- 	int nr_pages;
-+	bool clearlru = false;
- 	pg_data_t *pgdat = page_pgdat(page);
- 
- 	/* For try_to_munlock() and to serialize with page migration */
-@@ -189,32 +171,42 @@ unsigned int munlock_vma_page(struct page *page)
- 	VM_BUG_ON_PAGE(PageTail(page), page);
- 
- 	/*
--	 * Serialize with any parallel __split_huge_page_refcount() which
-+	 * Serialize split tail pages in __split_huge_page_tail() which
- 	 * might otherwise copy PageMlocked to part of the tail pages before
- 	 * we clear it in the head page. It also stabilizes hpage_nr_pages().
- 	 */
-+	get_page(page);
-+	clearlru = TestClearPageLRU(page);
- 	spin_lock_irq(&pgdat->lru_lock);
- 
- 	if (!TestClearPageMlocked(page)) {
--		/* Potentially, PTE-mapped THP: do not skip the rest PTEs */
--		nr_pages = 1;
--		goto unlock_out;
-+		if (clearlru)
-+			SetPageLRU(page);
-+		/*
-+		 * Potentially, PTE-mapped THP: do not skip the rest PTEs
-+		 * Reuse lock as memory barrier for release_pages racing.
-+		 */
-+		spin_unlock_irq(&pgdat->lru_lock);
-+		put_page(page);
-+		return 0;
- 	}
- 
- 	nr_pages = hpage_nr_pages(page);
- 	__mod_zone_page_state(page_zone(page), NR_MLOCK, -nr_pages);
- 
--	if (__munlock_isolate_lru_page(page, true)) {
-+	if (clearlru) {
-+		struct lruvec *lruvec;
++static void lru_add_page_tail(struct page *page, struct page *page_tail,
++				struct lruvec *lruvec, struct list_head *list)
++{
++	VM_BUG_ON_PAGE(!PageHead(page), page);
++	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
++	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
++	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
 +
-+		lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
-+		del_page_from_lru_list(page, lruvec, page_lru(page));
- 		spin_unlock_irq(&pgdat->lru_lock);
- 		__munlock_isolated_page(page);
--		goto out;
++	if (!list)
++		SetPageLRU(page_tail);
++
++	if (likely(PageLRU(page)))
++		list_add_tail(&page_tail->lru, &page->lru);
++	else if (list) {
++		/* page reclaim is reclaiming a huge page */
++		get_page(page_tail);
++		list_add_tail(&page_tail->lru, list);
 +	} else {
-+		spin_unlock_irq(&pgdat->lru_lock);
-+		put_page(page);
-+		__munlock_isolation_failed(page);
- 	}
--	__munlock_isolation_failed(page);
--
--unlock_out:
--	spin_unlock_irq(&pgdat->lru_lock);
- 
--out:
- 	return nr_pages - 1;
- }
- 
-@@ -297,34 +289,51 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
- 	pagevec_init(&pvec_putback);
- 
- 	/* Phase 1: page isolation */
--	spin_lock_irq(&zone->zone_pgdat->lru_lock);
- 	for (i = 0; i < nr; i++) {
- 		struct page *page = pvec->pages[i];
-+		struct lruvec *lruvec;
-+		bool clearlru;
- 
--		if (TestClearPageMlocked(page)) {
--			/*
--			 * We already have pin from follow_page_mask()
--			 * so we can spare the get_page() here.
--			 */
--			if (__munlock_isolate_lru_page(page, false))
--				continue;
--			else
--				__munlock_isolation_failed(page);
--		} else {
-+		clearlru = TestClearPageLRU(page);
-+		spin_lock_irq(&zone->zone_pgdat->lru_lock);
-+
-+		if (!TestClearPageMlocked(page)) {
- 			delta_munlocked++;
-+			if (clearlru)
-+				SetPageLRU(page);
-+			goto putback;
-+		}
-+
-+		if (!clearlru) {
-+			__munlock_isolation_failed(page);
-+			goto putback;
- 		}
- 
- 		/*
-+		 * Isolate this page.
-+		 * We already have pin from follow_page_mask()
-+		 * so we can spare the get_page() here.
-+		 */
-+		lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
-+		del_page_from_lru_list(page, lruvec, page_lru(page));
-+		spin_unlock_irq(&zone->zone_pgdat->lru_lock);
-+		continue;
-+
 +		/*
- 		 * We won't be munlocking this page in the next phase
- 		 * but we still need to release the follow_page_mask()
- 		 * pin. We cannot do it under lru_lock however. If it's
- 		 * the last pin, __page_cache_release() would deadlock.
- 		 */
-+putback:
-+		spin_unlock_irq(&zone->zone_pgdat->lru_lock);
- 		pagevec_add(&pvec_putback, pvec->pages[i]);
- 		pvec->pages[i] = NULL;
- 	}
-+	/* tempary disable irq, will remove later */
-+	local_irq_disable();
- 	__mod_zone_page_state(zone, NR_MLOCK, delta_munlocked);
--	spin_unlock_irq(&zone->zone_pgdat->lru_lock);
-+	local_irq_enable();
++		 * Head page has not yet been counted, as an hpage,
++		 * so we must account for each subpage individually.
++		 *
++		 * Put page_tail on the list at the correct position
++		 * so they all end up in order.
++		 */
++		add_page_to_lru_list_tail(page_tail, lruvec,
++					  page_lru(page_tail));
++	}
++}
++
+ static void __split_huge_page_tail(struct page *head, int tail,
+ 		struct lruvec *lruvec, struct list_head *list)
+ {
+diff --git a/mm/swap.c b/mm/swap.c
+index a82efc33411f..7701d855873d 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -933,39 +933,6 @@ void __pagevec_release(struct pagevec *pvec)
+ }
+ EXPORT_SYMBOL(__pagevec_release);
  
- 	/* Now we can release pins of pages that we are not munlocking */
- 	pagevec_release(&pvec_putback);
+-#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-/* used by __split_huge_page_refcount() */
+-void lru_add_page_tail(struct page *page, struct page *page_tail,
+-		       struct lruvec *lruvec, struct list_head *list)
+-{
+-	VM_BUG_ON_PAGE(!PageHead(page), page);
+-	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
+-	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
+-	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
+-
+-	if (!list)
+-		SetPageLRU(page_tail);
+-
+-	if (likely(PageLRU(page)))
+-		list_add_tail(&page_tail->lru, &page->lru);
+-	else if (list) {
+-		/* page reclaim is reclaiming a huge page */
+-		get_page(page_tail);
+-		list_add_tail(&page_tail->lru, list);
+-	} else {
+-		/*
+-		 * Head page has not yet been counted, as an hpage,
+-		 * so we must account for each subpage individually.
+-		 *
+-		 * Put page_tail on the list at the correct position
+-		 * so they all end up in order.
+-		 */
+-		add_page_to_lru_list_tail(page_tail, lruvec,
+-					  page_lru(page_tail));
+-	}
+-}
+-#endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+-
+ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec,
+ 				 void *arg)
+ {
 -- 
 1.8.3.1
 
