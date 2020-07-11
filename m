@@ -1,148 +1,193 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v16 19/22] mm/lru: introduce the relock_page_lruvec function
-Date: Sat, 11 Jul 2020 08:58:53 +0800
-Message-ID: <1594429136-20002-20-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: [PATCH v16 16/22] mm/mlock: reorder isolation sequence during munlock
+Date: Sat, 11 Jul 2020 08:58:50 +0800
+Message-ID: <1594429136-20002-17-git-send-email-alex.shi@linux.alibaba.com>
 References: <1594429136-20002-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1594429136-20002-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1594429136-20002-1-git-send-email-alex.shi@linux.alibaba.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org
-Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name
 
-Use this new function to replace repeated same code, no func change.
+This patch reorder the isolation steps during munlock, move the lru lock
+to guard each pages, unfold __munlock_isolate_lru_page func, to do the
+preparation for lru lock change.
 
-Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>
-Cc: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+__split_huge_page_refcount doesn't exist, but we still have to guard
+PageMlocked and PageLRU for tail page in __split_huge_page_tail.
+
+[lkp@intel.com: found a sleeping function bug ... at mm/rmap.c]
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Kirill A. Shutemov <kirill@shutemov.name>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
 ---
- mm/mlock.c  |  9 +--------
- mm/swap.c   | 33 +++++++--------------------------
- mm/vmscan.c |  8 +-------
- 3 files changed, 9 insertions(+), 41 deletions(-)
+ mm/mlock.c | 93 ++++++++++++++++++++++++++++++++++----------------------------
+ 1 file changed, 51 insertions(+), 42 deletions(-)
 
 diff --git a/mm/mlock.c b/mm/mlock.c
-index cb23a0c2cfbf..4f40fc091cf9 100644
+index 228ba5a8e0a5..0bdde88b4438 100644
 --- a/mm/mlock.c
 +++ b/mm/mlock.c
-@@ -289,17 +289,10 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+@@ -103,25 +103,6 @@ void mlock_vma_page(struct page *page)
+ }
+ 
+ /*
+- * Isolate a page from LRU with optional get_page() pin.
+- * Assumes lru_lock already held and page already pinned.
+- */
+-static bool __munlock_isolate_lru_page(struct page *page, bool getpage)
+-{
+-	if (TestClearPageLRU(page)) {
+-		struct lruvec *lruvec;
+-
+-		lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+-		if (getpage)
+-			get_page(page);
+-		del_page_from_lru_list(page, lruvec, page_lru(page));
+-		return true;
+-	}
+-
+-	return false;
+-}
+-
+-/*
+  * Finish munlock after successful page isolation
+  *
+  * Page must be locked. This is a wrapper for try_to_munlock()
+@@ -181,6 +162,7 @@ static void __munlock_isolation_failed(struct page *page)
+ unsigned int munlock_vma_page(struct page *page)
+ {
+ 	int nr_pages;
++	bool clearlru = false;
+ 	pg_data_t *pgdat = page_pgdat(page);
+ 
+ 	/* For try_to_munlock() and to serialize with page migration */
+@@ -189,32 +171,42 @@ unsigned int munlock_vma_page(struct page *page)
+ 	VM_BUG_ON_PAGE(PageTail(page), page);
+ 
+ 	/*
+-	 * Serialize with any parallel __split_huge_page_refcount() which
++	 * Serialize split tail pages in __split_huge_page_tail() which
+ 	 * might otherwise copy PageMlocked to part of the tail pages before
+ 	 * we clear it in the head page. It also stabilizes hpage_nr_pages().
+ 	 */
++	get_page(page);
++	clearlru = TestClearPageLRU(page);
+ 	spin_lock_irq(&pgdat->lru_lock);
+ 
+ 	if (!TestClearPageMlocked(page)) {
+-		/* Potentially, PTE-mapped THP: do not skip the rest PTEs */
+-		nr_pages = 1;
+-		goto unlock_out;
++		if (clearlru)
++			SetPageLRU(page);
++		/*
++		 * Potentially, PTE-mapped THP: do not skip the rest PTEs
++		 * Reuse lock as memory barrier for release_pages racing.
++		 */
++		spin_unlock_irq(&pgdat->lru_lock);
++		put_page(page);
++		return 0;
+ 	}
+ 
+ 	nr_pages = hpage_nr_pages(page);
+ 	__mod_zone_page_state(page_zone(page), NR_MLOCK, -nr_pages);
+ 
+-	if (__munlock_isolate_lru_page(page, true)) {
++	if (clearlru) {
++		struct lruvec *lruvec;
++
++		lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
++		del_page_from_lru_list(page, lruvec, page_lru(page));
+ 		spin_unlock_irq(&pgdat->lru_lock);
+ 		__munlock_isolated_page(page);
+-		goto out;
++	} else {
++		spin_unlock_irq(&pgdat->lru_lock);
++		put_page(page);
++		__munlock_isolation_failed(page);
+ 	}
+-	__munlock_isolation_failed(page);
+-
+-unlock_out:
+-	spin_unlock_irq(&pgdat->lru_lock);
+ 
+-out:
+ 	return nr_pages - 1;
+ }
+ 
+@@ -297,34 +289,51 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ 	pagevec_init(&pvec_putback);
+ 
  	/* Phase 1: page isolation */
+-	spin_lock_irq(&zone->zone_pgdat->lru_lock);
  	for (i = 0; i < nr; i++) {
  		struct page *page = pvec->pages[i];
--		struct lruvec *new_lruvec;
- 		bool clearlru;
++		struct lruvec *lruvec;
++		bool clearlru;
  
- 		clearlru = TestClearPageLRU(page);
--
--		new_lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
--		if (new_lruvec != lruvec) {
--			if (lruvec)
--				unlock_page_lruvec_irq(lruvec);
--			lruvec = lock_page_lruvec_irq(page);
--		}
-+		lruvec = relock_page_lruvec_irq(page, lruvec);
- 
- 		if (!TestClearPageMlocked(page)) {
+-		if (TestClearPageMlocked(page)) {
+-			/*
+-			 * We already have pin from follow_page_mask()
+-			 * so we can spare the get_page() here.
+-			 */
+-			if (__munlock_isolate_lru_page(page, false))
+-				continue;
+-			else
+-				__munlock_isolation_failed(page);
+-		} else {
++		clearlru = TestClearPageLRU(page);
++		spin_lock_irq(&zone->zone_pgdat->lru_lock);
++
++		if (!TestClearPageMlocked(page)) {
  			delta_munlocked++;
-diff --git a/mm/swap.c b/mm/swap.c
-index 129c532357a4..9fb906fbaed5 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -209,19 +209,12 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
- 
- 	for (i = 0; i < pagevec_count(pvec); i++) {
- 		struct page *page = pvec->pages[i];
--		struct lruvec *new_lruvec;
--
--		new_lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
--		if (lruvec != new_lruvec) {
--			if (lruvec)
--				unlock_page_lruvec_irqrestore(lruvec, flags);
--			lruvec = lock_page_lruvec_irqsave(page, &flags);
--		}
- 
- 		/* block memcg migration during page moving between lru */
- 		if (!TestClearPageLRU(page))
- 			continue;
- 
-+		lruvec = relock_page_lruvec_irqsave(page, lruvec, &flags);
- 		(*move_fn)(page, lruvec);
- 
- 		SetPageLRU(page);
-@@ -866,17 +859,12 @@ void release_pages(struct page **pages, int nr)
++			if (clearlru)
++				SetPageLRU(page);
++			goto putback;
++		}
++
++		if (!clearlru) {
++			__munlock_isolation_failed(page);
++			goto putback;
  		}
  
- 		if (PageLRU(page)) {
--			struct lruvec *new_lruvec;
--
--			new_lruvec = mem_cgroup_page_lruvec(page,
--							page_pgdat(page));
--			if (new_lruvec != lruvec) {
--				if (lruvec)
--					unlock_page_lruvec_irqrestore(lruvec,
--									flags);
-+			struct lruvec *pre_lruvec = lruvec;
+ 		/*
++		 * Isolate this page.
++		 * We already have pin from follow_page_mask()
++		 * so we can spare the get_page() here.
++		 */
++		lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
++		del_page_from_lru_list(page, lruvec, page_lru(page));
++		spin_unlock_irq(&zone->zone_pgdat->lru_lock);
++		continue;
 +
-+			lruvec = relock_page_lruvec_irqsave(page, lruvec,
-+									&flags);
-+			if (pre_lruvec != lruvec)
- 				lock_batch = 0;
--				lruvec = lock_page_lruvec_irqsave(page, &flags);
--			}
- 
- 			__ClearPageLRU(page);
- 			del_page_from_lru_list(page, lruvec, page_off_lru(page));
-@@ -982,15 +970,8 @@ void __pagevec_lru_add(struct pagevec *pvec)
- 
- 	for (i = 0; i < pagevec_count(pvec); i++) {
- 		struct page *page = pvec->pages[i];
--		struct lruvec *new_lruvec;
--
--		new_lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
--		if (lruvec != new_lruvec) {
--			if (lruvec)
--				unlock_page_lruvec_irqrestore(lruvec, flags);
--			lruvec = lock_page_lruvec_irqsave(page, &flags);
--		}
- 
-+		lruvec = relock_page_lruvec_irqsave(page, lruvec, &flags);
- 		__pagevec_lru_add_fn(page, lruvec);
++		/*
+ 		 * We won't be munlocking this page in the next phase
+ 		 * but we still need to release the follow_page_mask()
+ 		 * pin. We cannot do it under lru_lock however. If it's
+ 		 * the last pin, __page_cache_release() would deadlock.
+ 		 */
++putback:
++		spin_unlock_irq(&zone->zone_pgdat->lru_lock);
+ 		pagevec_add(&pvec_putback, pvec->pages[i]);
+ 		pvec->pages[i] = NULL;
  	}
- 	if (lruvec)
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 168c1659e430..bdb53a678e7e 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -4292,15 +4292,9 @@ void check_move_unevictable_pages(struct pagevec *pvec)
++	/* tempary disable irq, will remove later */
++	local_irq_disable();
+ 	__mod_zone_page_state(zone, NR_MLOCK, delta_munlocked);
+-	spin_unlock_irq(&zone->zone_pgdat->lru_lock);
++	local_irq_enable();
  
- 	for (i = 0; i < pvec->nr; i++) {
- 		struct page *page = pvec->pages[i];
--		struct lruvec *new_lruvec;
- 
- 		pgscanned++;
--		new_lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
--		if (lruvec != new_lruvec) {
--			if (lruvec)
--				unlock_page_lruvec_irq(lruvec);
--			lruvec = lock_page_lruvec_irq(page);
--		}
-+		lruvec = relock_page_lruvec_irq(page, lruvec);
- 
- 		if (!PageLRU(page) || !PageUnevictable(page))
- 			continue;
+ 	/* Now we can release pins of pages that we are not munlocking */
+ 	pagevec_release(&pvec_putback);
 -- 
 1.8.3.1
 
