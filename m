@@ -1,91 +1,89 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v16 17/22] mm/swap: serialize memcg changes during pagevec_lru_move_fn
-Date: Sat, 11 Jul 2020 08:58:51 +0800
-Message-ID: <1594429136-20002-18-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH v16 11/22] mm/lru: move lru_lock holding in func lru_note_cost_page
+Date: Sat, 11 Jul 2020 08:58:45 +0800
+Message-ID: <1594429136-20002-12-git-send-email-alex.shi@linux.alibaba.com>
 References: <1594429136-20002-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1594429136-20002-1-git-send-email-alex.shi@linux.alibaba.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1594429136-20002-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org
 
-Hugh Dickins' found a memcg change bug on original version:
-If we want to change the pgdat->lru_lock to memcg's lruvec lock, we have
-to serialize mem_cgroup_move_account during pagevec_lru_move_fn. The
-possible bad scenario would like:
+It's a clean up patch w/o function changes.
 
-	cpu 0					cpu 1
-lruvec = mem_cgroup_page_lruvec()
-					if (!isolate_lru_page())
-						mem_cgroup_move_account
-
-spin_lock_irqsave(&lruvec->lru_lock <== wrong lock.
-
-So we need the ClearPageLRU to block isolate_lru_page(), then serialize
-the memcg change here.
-
-Reported-by: Hugh Dickins <hughd@google.com>
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
- mm/swap.c | 30 +++++++++++++++++++++++++++++-
- 1 file changed, 29 insertions(+), 1 deletion(-)
+ mm/memory.c     | 3 ---
+ mm/swap.c       | 2 ++
+ mm/swap_state.c | 2 --
+ mm/workingset.c | 2 --
+ 4 files changed, 2 insertions(+), 7 deletions(-)
 
+diff --git a/mm/memory.c b/mm/memory.c
+index 87ec87cdc1ff..dafc5585517e 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -3150,10 +3150,7 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
+ 				 * XXX: Move to lru_cache_add() when it
+ 				 * supports new vs putback
+ 				 */
+-				spin_lock_irq(&page_pgdat(page)->lru_lock);
+ 				lru_note_cost_page(page);
+-				spin_unlock_irq(&page_pgdat(page)->lru_lock);
+-
+ 				lru_cache_add(page);
+ 				swap_readpage(page, true);
+ 			}
 diff --git a/mm/swap.c b/mm/swap.c
-index 5092fe9c8c47..8488b9b25730 100644
+index dc8b02cdddcb..b88ca630db70 100644
 --- a/mm/swap.c
 +++ b/mm/swap.c
-@@ -221,8 +221,14 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
- 			spin_lock_irqsave(&pgdat->lru_lock, flags);
- 		}
+@@ -298,8 +298,10 @@ void lru_note_cost(struct lruvec *lruvec, bool file, unsigned int nr_pages)
  
-+		/* block memcg migration during page moving between lru */
-+		if (!TestClearPageLRU(page))
-+			continue;
-+
- 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
- 		(*move_fn)(page, lruvec);
-+
-+		SetPageLRU(page);
- 	}
- 	if (pgdat)
- 		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-@@ -976,7 +982,29 @@ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec)
-  */
- void __pagevec_lru_add(struct pagevec *pvec)
+ void lru_note_cost_page(struct page *page)
  {
--	pagevec_lru_move_fn(pvec, __pagevec_lru_add_fn);
-+	int i;
-+	struct pglist_data *pgdat = NULL;
-+	struct lruvec *lruvec;
-+	unsigned long flags = 0;
-+
-+	for (i = 0; i < pagevec_count(pvec); i++) {
-+		struct page *page = pvec->pages[i];
-+		struct pglist_data *pagepgdat = page_pgdat(page);
-+
-+		if (pagepgdat != pgdat) {
-+			if (pgdat)
-+				spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-+			pgdat = pagepgdat;
-+			spin_lock_irqsave(&pgdat->lru_lock, flags);
-+		}
-+
-+		lruvec = mem_cgroup_page_lruvec(page, pgdat);
-+		__pagevec_lru_add_fn(page, lruvec);
-+	}
-+	if (pgdat)
-+		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-+	release_pages(pvec->pages, pvec->nr);
-+	pagevec_reinit(pvec);
++	spin_lock_irq(&page_pgdat(page)->lru_lock);
+ 	lru_note_cost(mem_cgroup_page_lruvec(page, page_pgdat(page)),
+ 		      page_is_file_lru(page), hpage_nr_pages(page));
++	spin_unlock_irq(&page_pgdat(page)->lru_lock);
  }
  
- /**
+ static void __activate_page(struct page *page, struct lruvec *lruvec)
+diff --git a/mm/swap_state.c b/mm/swap_state.c
+index 05889e8e3c97..080be52db6a8 100644
+--- a/mm/swap_state.c
++++ b/mm/swap_state.c
+@@ -440,9 +440,7 @@ struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
+ 	}
+ 
+ 	/* XXX: Move to lru_cache_add() when it supports new vs putback */
+-	spin_lock_irq(&page_pgdat(page)->lru_lock);
+ 	lru_note_cost_page(page);
+-	spin_unlock_irq(&page_pgdat(page)->lru_lock);
+ 
+ 	/* Caller will initiate read into locked page */
+ 	SetPageWorkingset(page);
+diff --git a/mm/workingset.c b/mm/workingset.c
+index 50b7937bab32..337d5b9ad132 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -372,9 +372,7 @@ void workingset_refault(struct page *page, void *shadow)
+ 	if (workingset) {
+ 		SetPageWorkingset(page);
+ 		/* XXX: Move to lru_cache_add() when it supports new vs putback */
+-		spin_lock_irq(&page_pgdat(page)->lru_lock);
+ 		lru_note_cost_page(page);
+-		spin_unlock_irq(&page_pgdat(page)->lru_lock);
+ 		inc_lruvec_state(lruvec, WORKINGSET_RESTORE);
+ 	}
+ out:
 -- 
 1.8.3.1
 
