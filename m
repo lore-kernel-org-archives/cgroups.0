@@ -1,51 +1,46 @@
 From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v16 09/22] mm/memcg: add debug checking in lock_page_memcg
-Date: Sat, 11 Jul 2020 08:58:43 +0800
-Message-ID: <1594429136-20002-10-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v16 14/22] mm/thp: add tail pages into lru anyway in split_huge_page()
+Date: Sat, 11 Jul 2020 08:58:48 +0800
+Message-ID: <1594429136-20002-15-git-send-email-alex.shi@linux.alibaba.com>
 References: <1594429136-20002-1-git-send-email-alex.shi@linux.alibaba.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1594429136-20002-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="macroman"
 To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: =?UTF-8?q?Mika=20Penttil=C3=A4?= <mika.penttila-MRsr7dthA9VWk0Htik3J/w@public.gmane.org>
 
-Add a debug checking in lock_page_memcg, then we could get alarm
-if anything wrong here.
-
-Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
----
- mm/memcontrol.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 19622328e4b5..fde47272b13c 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1983,6 +1983,12 @@ struct mem_cgroup *lock_page_memcg(struct page *page)
- 	if (unlikely(!memcg))
- 		return NULL;
- 
-+#ifdef CONFIG_PROVE_LOCKING
-+	local_irq_save(flags);
-+	might_lock(&memcg->move_lock);
-+	local_irq_restore(flags);
-+#endif
-+
- 	if (atomic_read(&memcg->moving_account) <= 0)
- 		return memcg;
- 
--- 
-1.8.3.1
-
+c3BsaXRfaHVnZV9wYWdlKCkgbXVzdCBzdGFydCB3aXRoIFBhZ2VMUlUoaGVhZCksIGJ1dCBscnUg
+Yml0ICptYXliZSoKY2xlYXJlZCBieSBpc29sYXRlX2xydV9wYWdlLCBhbnl3YXkgdGhlIGhlYWQg
+c3RpbGwgaW4gbHJ1IGxpc3QsIHNpbmNlIHdlCnN0aWxsIGhlbGQgdGhlIGxydV9sb2NrLgoKU2ln
+bmVkLW9mZi1ieTogQWxleCBTaGkgPGFsZXguc2hpLUtQc29GYk5zN0dpenJHRTViUnFZQWdDL0cy
+SzR6REhmQHB1YmxpYy5nbWFuZS5vcmc+CkNjOiBLaXJpbGwgQS4gU2h1dGVtb3YgPGtpcmlsbC1v
+S3c3Y0lkSEg4ZUx3dXRHNTBMdEdBQHB1YmxpYy5nbWFuZS5vcmc+CkNjOiBBbmRyZXcgTW9ydG9u
+IDxha3BtLWRlL3RuWFRmK0pMc2ZIRFh2Ykt2M1dEMkZRSmsrOCtiQHB1YmxpYy5nbWFuZS5vcmc+
+CkNjOiBKb2hhbm5lcyBXZWluZXIgPGhhbm5lcy1kcnVVZ3ZsMExDTkFmdWdScEM2dTZ3QHB1Ymxp
+Yy5nbWFuZS5vcmc+CkNjOiBNYXR0aGV3IFdpbGNveCA8d2lsbHktd0VHQ2lLSGUyTHFXVmZlQXdB
+N3hIUUBwdWJsaWMuZ21hbmUub3JnPgpDYzogSHVnaCBEaWNraW5zIDxodWdoZC1ocElxc0Q0QUts
+ZlFUMGRaUitBbGZBQHB1YmxpYy5nbWFuZS5vcmc+CkNjOiBNaWthIFBlbnR0aWzDpCA8bWlrYS5w
+ZW50dGlsYS1NUnNyN2R0aEE5VldrMEh0aWszSi93QHB1YmxpYy5nbWFuZS5vcmc+CkNjOiBsaW51
+eC1tbS1CdzMxTWFaS0tzM1l0anZ5VzZ5RHNnQHB1YmxpYy5nbWFuZS5vcmcKQ2M6IGxpbnV4LWtl
+cm5lbC11Nzl1d1hMMjlUWTc2WjJyTTVtSFhBQHB1YmxpYy5nbWFuZS5vcmcKLS0tCiBtbS9odWdl
+X21lbW9yeS5jIHwgMTUgKysrKysrKysrLS0tLS0tCiAxIGZpbGUgY2hhbmdlZCwgOSBpbnNlcnRp
+b25zKCspLCA2IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL21tL2h1Z2VfbWVtb3J5LmMgYi9t
+bS9odWdlX21lbW9yeS5jCmluZGV4IGQ4NjZiNmU0MzQzNC4uNGZlN2I5MmM5MzMwIDEwMDY0NAot
+LS0gYS9tbS9odWdlX21lbW9yeS5jCisrKyBiL21tL2h1Z2VfbWVtb3J5LmMKQEAgLTIzNDgsMTUg
+KzIzNDgsMTggQEAgc3RhdGljIHZvaWQgbHJ1X2FkZF9wYWdlX3RhaWwoc3RydWN0IHBhZ2UgKmhl
+YWQsIHN0cnVjdCBwYWdlICpwYWdlX3RhaWwsCiAJVk1fQlVHX09OX1BBR0UoUGFnZUxSVShwYWdl
+X3RhaWwpLCBoZWFkKTsKIAlsb2NrZGVwX2Fzc2VydF9oZWxkKCZscnV2ZWNfcGdkYXQobHJ1dmVj
+KS0+bHJ1X2xvY2spOwogCi0JaWYgKCFsaXN0KQotCQlTZXRQYWdlTFJVKHBhZ2VfdGFpbCk7Ci0K
+LQlpZiAobGlrZWx5KFBhZ2VMUlUoaGVhZCkpKQotCQlsaXN0X2FkZF90YWlsKCZwYWdlX3RhaWwt
+PmxydSwgJmhlYWQtPmxydSk7Ci0JZWxzZSBpZiAobGlzdCkgeworCWlmIChsaXN0KSB7CiAJCS8q
+IHBhZ2UgcmVjbGFpbSBpcyByZWNsYWltaW5nIGEgaHVnZSBwYWdlICovCiAJCWdldF9wYWdlKHBh
+Z2VfdGFpbCk7CiAJCWxpc3RfYWRkX3RhaWwoJnBhZ2VfdGFpbC0+bHJ1LCBsaXN0KTsKKwl9IGVs
+c2UgeworCQkvKgorCQkgKiBTcGxpdCBzdGFydCBmcm9tIFBhZ2VMUlUoaGVhZCksIGJ1dCBscnUg
+Yml0IG1heWJlIGNsZWFyZWQKKwkJICogYnkgaXNvbGF0ZV9scnVfcGFnZSwgYnV0IGhlYWQgc3Rp
+bGwgaW4gbHJ1IGxpc3QsIHNpbmNlIHdlCisJCSAqIGhlbGQgdGhlIGxydV9sb2NrLgorCQkgKi8K
+KwkJU2V0UGFnZUxSVShwYWdlX3RhaWwpOworCQlsaXN0X2FkZF90YWlsKCZwYWdlX3RhaWwtPmxy
+dSwgJmhlYWQtPmxydSk7CiAJfQogfQogCi0tIAoxLjguMy4xCgo=
