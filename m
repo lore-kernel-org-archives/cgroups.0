@@ -1,89 +1,128 @@
-From: Alexander Duyck <alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v16 00/22] per memcg lru_lock
-Date: Thu, 16 Jul 2020 07:11:12 -0700
-Message-ID: <CAKgT0UcKVyTXQ=tGv_uMV+fSvoH_-cuG9zA_zhE+S8Ou11gt=w@mail.gmail.com>
-References: <1594429136-20002-1-git-send-email-alex.shi@linux.alibaba.com>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [patch] mm, memcg: provide an anon_reclaimable stat
+Date: Thu, 16 Jul 2020 13:58:19 -0700 (PDT)
+Message-ID: <alpine.DEB.2.23.453.2007161357490.3209847@chino.kir.corp.google.com>
+References: <20200715071522.19663-1-sjpark@amazon.com> <alpine.DEB.2.23.453.2007151031020.2788464@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ZwX/mhlAD3zr833qIWvUPD76zWFR7r5RHDAo4CaqDJs=;
-        b=mSUV7Ne41+i4WmO2Vm8ptf3P9RJODM2Y9Mg+O0LU/7IyBGkaVo1SQrKWvgj1Aqnoy8
-         g08NJT8igdEaGYT6EwoRxBGeK4NsqhiRzrMZ+xgito13FEBBjxlN5v15bCpgv6DKnkkG
-         I10aEZB/G9JJ5HXxoPIO1KVUCT5+ZC5u7WRj6wXuOBwVXYuO3XCXM0XI3GnwJ6bhUPqc
-         TvUNrXNCEPqbBByGmnniW7ylJGm2aUQEArKr9pbDkCj/RCbqTXdx5deU0iC+/OFcvqIx
-         MD+8n1h3b7ddIhzb3mMpul58aqCsG4fODqusChCjuq8/vBxZnkDCtxt4sbpsciw72B66
-         EH+w==
-In-Reply-To: <1594429136-20002-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=kxhHxWSY/EeOqL085lgvyjHtFXlx52qCOAF6Jf9tnk4=;
+        b=oxEJuMEpdGw4BUMJcxYEgG52h/uvb7q2mmajsxp33ECVDv3GOgvi1AVFXEpAj//Fpq
+         mxgK5gWcuNSMrrqkY/4H1htStrel93Se8s+vHvOoLlIE0H6Ucwg4BTirbn/T4O5STI2s
+         ksi8EDO3LCOpksdq8VmSI5mVG+c/1LUnz+ugQ9TdaVIyOm0meIlIE0gUQr0r3Phdq9b6
+         aFRT+JongrkxKz591trMPY4tWkF/gA+xYJES3hjV4kjKzO26BY3QMeBzYCCj1grcmjt7
+         ByObvgdoTAFoYdA6ySKBMFjGatz2BfUaHv126vgfldA6X8t1xtvKAJudJG/CwtoPxXv/
+         RcWw==
+In-Reply-To: <alpine.DEB.2.23.453.2007151031020.2788464-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+To: SeongJae Park <sjpark-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-On Fri, Jul 10, 2020 at 5:59 PM Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org> wrote:
->
-> The new version which bases on v5.8-rc4. Add 2 more patchs:
-> 'mm/thp: remove code path which never got into'
-> 'mm/thp: add tail pages into lru anyway in split_huge_page()'
-> and modified 'mm/mlock: reorder isolation sequence during munlock'
->
-> Current lru_lock is one for each of node, pgdat->lru_lock, that guard for
-> lru lists, but now we had moved the lru lists into memcg for long time. Still
-> using per node lru_lock is clearly unscalable, pages on each of memcgs have
-> to compete each others for a whole lru_lock. This patchset try to use per
-> lruvec/memcg lru_lock to repleace per node lru lock to guard lru lists, make
-> it scalable for memcgs and get performance gain.
->
-> Currently lru_lock still guards both lru list and page's lru bit, that's ok.
-> but if we want to use specific lruvec lock on the page, we need to pin down
-> the page's lruvec/memcg during locking. Just taking lruvec lock first may be
-> undermined by the page's memcg charge/migration. To fix this problem, we could
-> take out the page's lru bit clear and use it as pin down action to block the
-> memcg changes. That's the reason for new atomic func TestClearPageLRU.
-> So now isolating a page need both actions: TestClearPageLRU and hold the
-> lru_lock.
->
-> The typical usage of this is isolate_migratepages_block() in compaction.c
-> we have to take lru bit before lru lock, that serialized the page isolation
-> in memcg page charge/migration which will change page's lruvec and new
-> lru_lock in it.
->
-> The above solution suggested by Johannes Weiner, and based on his new memcg
-> charge path, then have this patchset. (Hugh Dickins tested and contributed much
-> code from compaction fix to general code polish, thanks a lot!).
->
-> The patchset includes 3 parts:
-> 1, some code cleanup and minimum optimization as a preparation.
-> 2, use TestCleanPageLRU as page isolation's precondition
-> 3, replace per node lru_lock with per memcg per node lru_lock
->
-> Following Daniel Jordan's suggestion, I have run 208 'dd' with on 104
-> containers on a 2s * 26cores * HT box with a modefied case:
-> https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/tree/case-lru-file-readtwice
-> With this patchset, the readtwice performance increased about 80%
-> in concurrent containers.
->
-> Thanks Hugh Dickins and Konstantin Khlebnikov, they both brought this
-> idea 8 years ago, and others who give comments as well: Daniel Jordan,
-> Mel Gorman, Shakeel Butt, Matthew Wilcox etc.
->
-> Thanks for Testing support from Intel 0day and Rong Chen, Fengguang Wu,
-> and Yun Wang. Hugh Dickins also shared his kbuild-swap case. Thanks!
+Userspace can lack insight into the amount of memory that can be reclaimed
+from a memcg based on values from memory.stat.  Two specific examples:
 
-Hi Alex,
+ - Lazy freeable memory (MADV_FREE) that are clean anonymous pages on the
+   inactive file LRU that can be quickly reclaimed under memory pressure
+   but otherwise shows up as mapped anon in memory.stat, and
 
-I think I am seeing a regression with this patch set when I run the
-will-it-scale/page_fault3 test. Specifically the processes result is
-dropping from 56371083 to 43127382 when I apply these patches.
+ - Memory on deferred split queues (thp) that are compound pages that can
+   be split and uncharged from the memcg under memory pressure, but
+   otherwise shows up as charged anon LRU memory in memory.stat.
 
-I haven't had a chance to bisect and figure out what is causing it,
-and wanted to let you know in case you are aware of anything specific
-that may be causing this.
+Both of this anonymous usage is also charged to memory.current.
 
-Thanks.
+Userspace can currently derive this information but it depends on kernel
+implementation details for how this memory is handled for the purposes of
+reclaim (anon on inactive file LRU or unmapped anon on the LRU).
 
-- Alex
+For the purposes of writing portable userspace code that does not need to
+have insight into the kernel implementation for reclaimable memory, this
+exports a stat that reveals the amount of anonymous memory that can be
+reclaimed and uncharged from the memcg to start new applications.
+
+As the kernel implementation evolves for memory that can be reclaimed
+under memory pressure, this stat can be kept consistent.
+
+Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ Documentation/admin-guide/cgroup-v2.rst |  6 +++++
+ mm/memcontrol.c                         | 31 +++++++++++++++++++++++++
+ 2 files changed, 37 insertions(+)
+
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1296,6 +1296,12 @@ PAGE_SIZE multiple when read back.
+ 		Amount of memory used in anonymous mappings backed by
+ 		transparent hugepages
+ 
++	  anon_reclaimable
++		The amount of charged anonymous memory that can be reclaimed
++		under memory pressure without swap.  This currently includes
++		lazy freeable memory (MADV_FREE) and compound pages that can be
++		split and uncharged.
++
+ 	  inactive_anon, active_anon, inactive_file, active_file, unevictable
+ 		Amount of memory, swap-backed and filesystem-backed,
+ 		on the internal memory management lists used by the
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1350,6 +1350,32 @@ static bool mem_cgroup_wait_acct_move(struct mem_cgroup *memcg)
+ 	return false;
+ }
+ 
++/*
++ * Returns the amount of anon memory that is charged to the memcg that is
++ * reclaimable under memory pressure without swap, in pages.
++ */
++static unsigned long memcg_anon_reclaimable(struct mem_cgroup *memcg)
++{
++	long deferred, lazyfree;
++
++	/*
++	 * Deferred pages are charged anonymous pages that are on the LRU but
++	 * are unmapped.  These compound pages are split under memory pressure.
++	 */
++	deferred = max_t(long, memcg_page_state(memcg, NR_ACTIVE_ANON) +
++			       memcg_page_state(memcg, NR_INACTIVE_ANON) -
++			       memcg_page_state(memcg, NR_ANON_MAPPED), 0);
++	/*
++	 * Lazyfree pages are charged clean anonymous pages that are on the file
++	 * LRU and can be reclaimed under memory pressure.
++	 */
++	lazyfree = max_t(long, memcg_page_state(memcg, NR_ACTIVE_FILE) +
++			       memcg_page_state(memcg, NR_INACTIVE_FILE) -
++			       memcg_page_state(memcg, NR_FILE_PAGES), 0);
++
++	return deferred + lazyfree;
++}
++
+ static char *memory_stat_format(struct mem_cgroup *memcg)
+ {
+ 	struct seq_buf s;
+@@ -1363,6 +1389,9 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
+ 	 * Provide statistics on the state of the memory subsystem as
+ 	 * well as cumulative event counters that show past behavior.
+ 	 *
++	 * All values in this buffer are read individually, so no implied
++	 * consistency amongst them.
++	 *
+ 	 * This list is ordered following a combination of these gradients:
+ 	 * 1) generic big picture -> specifics and details
+ 	 * 2) reflecting userspace activity -> reflecting kernel heuristics
+@@ -1405,6 +1434,8 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
+ 		       (u64)memcg_page_state(memcg, NR_ANON_THPS) *
+ 		       HPAGE_PMD_SIZE);
+ #endif
++	seq_buf_printf(&s, "anon_reclaimable %llu\n",
++		       (u64)memcg_anon_reclaimable(memcg) * PAGE_SIZE);
+ 
+ 	for (i = 0; i < NR_LRU_LISTS; i++)
+ 		seq_buf_printf(&s, "%s %llu\n", lru_list_name(i),
