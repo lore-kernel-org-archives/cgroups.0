@@ -1,274 +1,130 @@
-From: Alexander Duyck <alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v16 15/22] mm/compaction: do page isolation first in compaction
-Date: Thu, 16 Jul 2020 14:32:39 -0700
-Message-ID: <CAKgT0Ue72SfAmxCS+tay1NjioW9WBOvVgrhwUtVPz2aDCrcHPQ@mail.gmail.com>
-References: <1594429136-20002-1-git-send-email-alex.shi@linux.alibaba.com> <1594429136-20002-16-git-send-email-alex.shi@linux.alibaba.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [patch] mm, memcg: provide an anon_reclaimable stat
+Date: Thu, 16 Jul 2020 18:37:12 -0700
+Message-ID: <CALvZod65Ja8xc2QBPSOZpwzqL_JudO9e4A1qvXCMCxRoD1_52A@mail.gmail.com>
+References: <20200715071522.19663-1-sjpark@amazon.com> <alpine.DEB.2.23.453.2007151031020.2788464@chino.kir.corp.google.com>
+ <alpine.DEB.2.23.453.2007161357490.3209847@chino.kir.corp.google.com>
+ <CALvZod6DbAUA-M9VXJW4RumeUD8qGf+BHM+9TUNeAr92JVkxsA@mail.gmail.com> <alpine.DEB.2.23.453.2007161427360.3213701@chino.kir.corp.google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
+        d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=WCPVcqFuiCdUoJYXeYbmBF6DGMw5rsz8t1arNpaHm/Q=;
-        b=KrtuqfKLe1HresqYP0nYMAMlhSHrS4z3wZlak6tIf9Sc+8bZ+DnymZHD1TlFkkHIkt
-         +eeUM9kjrXHgYezAodfxHYeNe/WyjTcrY7uEE8opCtb0olqS2Gdkvl781a2c0ddmyDuF
-         EAh5aHgfGMI3ZoFLtdav2bTekuWibtY40jWTG7FKCgsxsTYnJmzcwtKPdveljQGwcBdh
-         IW9qf1f/xdpBBhTRlSpnRW6SrhS+g53ccA+Vh5lgWBRk3Kki6o2gOq47FWGFoNBMuwoh
-         qR8zfKq45Dea0rRqxfkQ/BGwu7pQ2fmDcOs5RGv5yKFMK/7cabijhHnGeOAhapjTJ4mt
-         lAbQ==
-In-Reply-To: <1594429136-20002-16-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+        bh=4fwyecrqDo3xAzbltI8V1YX+FnW4zOMOFhcPK3N30M4=;
+        b=PqXDgyEfEfNOXnWkDOIuH1UvNlOdmlNHdOcwFeIs0TRFLODS2F4x31VrzG+XnVzJa2
+         0gcmglp41ZGXXORmw9HPVM8Inf3MWsJb1zyrilKA7A6984hcjxm9VoDbsn7uF5UuAnf6
+         g6Tz7lI6M6DhWhNiOz0MaBdM32nQiFUzNtmXmXIKHZWgJt8OZNG6CTlGLwdeg+2CCHkG
+         DLyUZeml9wlTTx7pSCfWrc9Kv/vfUlB13w1bwnzVDxJpBfLKdl27pwUOJaLpCHkwPFFq
+         V8M17JsKOKGeRitE0UGsQRhMSoP5uVk752fbTY4a/4hHVCDP48BOUUywFB6fUgzl5inl
+         lDwg==
+In-Reply-To: <alpine.DEB.2.23.453.2007161427360.3213701-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: SeongJae Park <sjpark-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-On Fri, Jul 10, 2020 at 5:59 PM Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org> wrote:
+On Thu, Jul 16, 2020 at 2:28 PM David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
 >
-> Johannes Weiner has suggested:
-> "So here is a crazy idea that may be worth exploring:
+> On Thu, 16 Jul 2020, Shakeel Butt wrote:
 >
-> Right now, pgdat->lru_lock protects both PageLRU *and* the lruvec's
-> linked list.
+> > > Userspace can lack insight into the amount of memory that can be reclaimed
+> > > from a memcg based on values from memory.stat.  Two specific examples:
+> > >
+> > >  - Lazy freeable memory (MADV_FREE) that are clean anonymous pages on the
+> > >    inactive file LRU that can be quickly reclaimed under memory pressure
+> > >    but otherwise shows up as mapped anon in memory.stat, and
+> > >
+> > >  - Memory on deferred split queues (thp) that are compound pages that can
+> > >    be split and uncharged from the memcg under memory pressure, but
+> > >    otherwise shows up as charged anon LRU memory in memory.stat.
+> > >
+> > > Both of this anonymous usage is also charged to memory.current.
+> > >
+> > > Userspace can currently derive this information but it depends on kernel
+> > > implementation details for how this memory is handled for the purposes of
+> > > reclaim (anon on inactive file LRU or unmapped anon on the LRU).
+> > >
+> > > For the purposes of writing portable userspace code that does not need to
+> > > have insight into the kernel implementation for reclaimable memory, this
+> > > exports a stat that reveals the amount of anonymous memory that can be
+> > > reclaimed and uncharged from the memcg to start new applications.
+> > >
+> > > As the kernel implementation evolves for memory that can be reclaimed
+> > > under memory pressure, this stat can be kept consistent.
+> > >
+> > > Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > > ---
+> > >  Documentation/admin-guide/cgroup-v2.rst |  6 +++++
+> > >  mm/memcontrol.c                         | 31 +++++++++++++++++++++++++
+> > >  2 files changed, 37 insertions(+)
+> > >
+> > > diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> > > --- a/Documentation/admin-guide/cgroup-v2.rst
+> > > +++ b/Documentation/admin-guide/cgroup-v2.rst
+> > > @@ -1296,6 +1296,12 @@ PAGE_SIZE multiple when read back.
+> > >                 Amount of memory used in anonymous mappings backed by
+> > >                 transparent hugepages
+> > >
+> > > +         anon_reclaimable
+> > > +               The amount of charged anonymous memory that can be reclaimed
+> > > +               under memory pressure without swap.  This currently includes
+> > > +               lazy freeable memory (MADV_FREE) and compound pages that can be
+> > > +               split and uncharged.
+> > > +
+> > >           inactive_anon, active_anon, inactive_file, active_file, unevictable
+> > >                 Amount of memory, swap-backed and filesystem-backed,
+> > >                 on the internal memory management lists used by the
+> > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > > --- a/mm/memcontrol.c
+> > > +++ b/mm/memcontrol.c
+> > > @@ -1350,6 +1350,32 @@ static bool mem_cgroup_wait_acct_move(struct mem_cgroup *memcg)
+> > >         return false;
+> > >  }
+> > >
+> > > +/*
+> > > + * Returns the amount of anon memory that is charged to the memcg that is
+> > > + * reclaimable under memory pressure without swap, in pages.
+> > > + */
+> > > +static unsigned long memcg_anon_reclaimable(struct mem_cgroup *memcg)
+> > > +{
+> > > +       long deferred, lazyfree;
+> > > +
+> > > +       /*
+> > > +        * Deferred pages are charged anonymous pages that are on the LRU but
+> > > +        * are unmapped.  These compound pages are split under memory pressure.
+> > > +        */
+> > > +       deferred = max_t(long, memcg_page_state(memcg, NR_ACTIVE_ANON) +
+> > > +                              memcg_page_state(memcg, NR_INACTIVE_ANON) -
+> > > +                              memcg_page_state(memcg, NR_ANON_MAPPED), 0);
+> >
+> > Please note that the NR_ANON_MAPPED does not include tmpfs memory but
+> > NR_[IN]ACTIVE_ANON does include the tmpfs.
+> >
+> > > +       /*
+> > > +        * Lazyfree pages are charged clean anonymous pages that are on the file
+> > > +        * LRU and can be reclaimed under memory pressure.
+> > > +        */
+> > > +       lazyfree = max_t(long, memcg_page_state(memcg, NR_ACTIVE_FILE) +
+> > > +                              memcg_page_state(memcg, NR_INACTIVE_FILE) -
+> > > +                              memcg_page_state(memcg, NR_FILE_PAGES), 0);
+> >
+> > Similarly NR_FILE_PAGES includes tmpfs memory but NR_[IN]ACTIVE_FILE does not.
+> >
 >
-> Can we make PageLRU atomic and use it to stabilize the lru_lock
-> instead, and then use the lru_lock only serialize list operations?
-> ..."
->
-> Yes, this patch is doing so on  __isolate_lru_page which is the core
-> page isolation func in compaction and shrinking path.
-> With this patch, the compaction will only deal the PageLRU set and now
-> isolated pages to skip the just alloced page which no LRU bit. And the
-> isolation could exclusive the other isolations in memcg move_account,
-> page migrations and thp split_huge_page.
->
-> As a side effect, PageLRU may be cleared during shrink_inactive_list
-> path for isolation reason. If so, we can skip that page.
->
-> Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> fixed following bugs in this patch's
-> early version:
->
-> Fix lots of crashes under compaction load: isolate_migratepages_block()
-> must clean up appropriately when rejecting a page, setting PageLRU again
-> if it had been cleared; and a put_page() after get_page_unless_zero()
-> cannot safely be done while holding locked_lruvec - it may turn out to
-> be the final put_page(), which will take an lruvec lock when PageLRU.
-> And move __isolate_lru_page_prepare back after get_page_unless_zero to
-> make trylock_page() safe:
-> trylock_page() is not safe to use at this time: its setting PG_locked
-> can race with the page being freed or allocated ("Bad page"), and can
-> also erase flags being set by one of those "sole owners" of a freshly
-> allocated page who use non-atomic __SetPageFlag().
->
-> Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-> Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-> ---
->  include/linux/swap.h |  2 +-
->  mm/compaction.c      | 42 +++++++++++++++++++++++++++++++++---------
->  mm/vmscan.c          | 38 ++++++++++++++++++++++----------------
->  3 files changed, 56 insertions(+), 26 deletions(-)
->
-> diff --git a/include/linux/swap.h b/include/linux/swap.h
-> index 2c29399b29a0..6d23d3beeff7 100644
-> --- a/include/linux/swap.h
-> +++ b/include/linux/swap.h
-> @@ -358,7 +358,7 @@ extern void lru_cache_add_active_or_unevictable(struct page *page,
->  extern unsigned long zone_reclaimable_pages(struct zone *zone);
->  extern unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
->                                         gfp_t gfp_mask, nodemask_t *mask);
-> -extern int __isolate_lru_page(struct page *page, isolate_mode_t mode);
-> +extern int __isolate_lru_page_prepare(struct page *page, isolate_mode_t mode);
->  extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
->                                                   unsigned long nr_pages,
->                                                   gfp_t gfp_mask,
-> diff --git a/mm/compaction.c b/mm/compaction.c
-> index f14780fc296a..2da2933fe56b 100644
-> --- a/mm/compaction.c
-> +++ b/mm/compaction.c
-> @@ -869,6 +869,7 @@ static bool too_many_isolated(pg_data_t *pgdat)
->                 if (!valid_page && IS_ALIGNED(low_pfn, pageblock_nr_pages)) {
->                         if (!cc->ignore_skip_hint && get_pageblock_skip(page)) {
->                                 low_pfn = end_pfn;
-> +                               page = NULL;
->                                 goto isolate_abort;
->                         }
->                         valid_page = page;
-> @@ -950,6 +951,21 @@ static bool too_many_isolated(pg_data_t *pgdat)
->                 if (!(cc->gfp_mask & __GFP_FS) && page_mapping(page))
->                         goto isolate_fail;
->
-> +               /*
-> +                * Be careful not to clear PageLRU until after we're
-> +                * sure the page is not being freed elsewhere -- the
-> +                * page release code relies on it.
-> +                */
-> +               if (unlikely(!get_page_unless_zero(page)))
-> +                       goto isolate_fail;
-> +
-> +               if (__isolate_lru_page_prepare(page, isolate_mode) != 0)
-> +                       goto isolate_fail_put;
-> +
-> +               /* Try isolate the page */
-> +               if (!TestClearPageLRU(page))
-> +                       goto isolate_fail_put;
-> +
->                 /* If we already hold the lock, we can skip some rechecking */
->                 if (!locked) {
->                         locked = compact_lock_irqsave(&pgdat->lru_lock,
+> Ah, so this adds to the motivation of providing the anon_reclaimable stat
+> because the calculation becomes even more convoluted and completely based
+> on the kernel implementation details for both lazyfree memory and deferred
+> split queues.
 
-Why not do the __isolate_lru_page_prepare before getting the page?
-That way you can avoid performing an extra atomic operation on non-LRU
-pages.
+Yes, I agree.
 
-> @@ -962,10 +978,6 @@ static bool too_many_isolated(pg_data_t *pgdat)
->                                         goto isolate_abort;
->                         }
->
-> -                       /* Recheck PageLRU and PageCompound under lock */
-> -                       if (!PageLRU(page))
-> -                               goto isolate_fail;
-> -
->                         /*
->                          * Page become compound since the non-locked check,
->                          * and it's on LRU. It can only be a THP so the order
-> @@ -973,16 +985,13 @@ static bool too_many_isolated(pg_data_t *pgdat)
->                          */
->                         if (unlikely(PageCompound(page) && !cc->alloc_contig)) {
->                                 low_pfn += compound_nr(page) - 1;
-> -                               goto isolate_fail;
-> +                               SetPageLRU(page);
-> +                               goto isolate_fail_put;
->                         }
->                 }
->
->                 lruvec = mem_cgroup_page_lruvec(page, pgdat);
->
-> -               /* Try isolate the page */
-> -               if (__isolate_lru_page(page, isolate_mode) != 0)
-> -                       goto isolate_fail;
-> -
->                 /* The whole page is taken off the LRU; skip the tail pages. */
->                 if (PageCompound(page))
->                         low_pfn += compound_nr(page) - 1;
-> @@ -1011,6 +1020,15 @@ static bool too_many_isolated(pg_data_t *pgdat)
->                 }
->
->                 continue;
-> +
-> +isolate_fail_put:
-> +               /* Avoid potential deadlock in freeing page under lru_lock */
-> +               if (locked) {
-> +                       spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-> +                       locked = false;
-> +               }
-> +               put_page(page);
-> +
->  isolate_fail:
->                 if (!skip_on_failure)
->                         continue;
-> @@ -1047,9 +1065,15 @@ static bool too_many_isolated(pg_data_t *pgdat)
->         if (unlikely(low_pfn > end_pfn))
->                 low_pfn = end_pfn;
->
-> +       page = NULL;
-> +
->  isolate_abort:
->         if (locked)
->                 spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-> +       if (page) {
-> +               SetPageLRU(page);
-> +               put_page(page);
-> +       }
->
->         /*
->          * Updated the cached scanner pfn once the pageblock has been scanned
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 18986fefd49b..f77748adc340 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -1544,7 +1544,7 @@ unsigned int reclaim_clean_pages_from_list(struct zone *zone,
->   *
->   * returns 0 on success, -ve errno on failure.
->   */
-> -int __isolate_lru_page(struct page *page, isolate_mode_t mode)
-> +int __isolate_lru_page_prepare(struct page *page, isolate_mode_t mode)
->  {
->         int ret = -EINVAL;
->
-> @@ -1598,20 +1598,9 @@ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
->         if ((mode & ISOLATE_UNMAPPED) && page_mapped(page))
->                 return ret;
->
-> -       if (likely(get_page_unless_zero(page))) {
-> -               /*
-> -                * Be careful not to clear PageLRU until after we're
-> -                * sure the page is not being freed elsewhere -- the
-> -                * page release code relies on it.
-> -                */
-> -               ClearPageLRU(page);
-> -               ret = 0;
-> -       }
-> -
-> -       return ret;
-> +       return 0;
->  }
->
-> -
->  /*
->   * Update LRU sizes after isolating pages. The LRU size updates must
->   * be complete before mem_cgroup_update_lru_size due to a sanity check.
-> @@ -1691,17 +1680,34 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
->                  * only when the page is being freed somewhere else.
->                  */
->                 scan += nr_pages;
-> -               switch (__isolate_lru_page(page, mode)) {
-> +               switch (__isolate_lru_page_prepare(page, mode)) {
->                 case 0:
-> +                       /*
-> +                        * Be careful not to clear PageLRU until after we're
-> +                        * sure the page is not being freed elsewhere -- the
-> +                        * page release code relies on it.
-> +                        */
-> +                       if (unlikely(!get_page_unless_zero(page)))
-> +                               goto busy;
-> +
-> +                       if (!TestClearPageLRU(page)) {
-> +                               /*
-> +                                * This page may in other isolation path,
-> +                                * but we still hold lru_lock.
-> +                                */
-> +                               put_page(page);
-> +                               goto busy;
-> +                       }
-> +
+> Did you have a calculation in mind for
+> memcg_anon_reclaimable()?
 
-I wonder if it wouldn't make sense to combine these two atomic ops
-with tests and the put_page into a single inline function? Then it
-could be possible to just do one check and if succeeds you do the
-block of code below, otherwise you just fall-through into the -EBUSY
-case.
+ For deferred, "memcg->deferred_split_queue.split_queue_len" should be usable.
 
->                         nr_taken += nr_pages;
->                         nr_zone_taken[page_zonenum(page)] += nr_pages;
->                         list_move(&page->lru, dst);
->                         break;
-> -
-> +busy:
->                 case -EBUSY:
->                         /* else it is being freed elsewhere */
->                         list_move(&page->lru, src);
-> -                       continue;
-> +                       break;
->
->                 default:
->                         BUG();
-> --
-> 1.8.3.1
->
->
+For lazyfree, NR_ACTIVE_FILE + NR_INACTIVE_FILE + NR_SHMEM -
+NR_FILE_PAGES seems like the right formula.
