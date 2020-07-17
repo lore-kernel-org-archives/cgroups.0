@@ -1,56 +1,66 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH v16 14/22] mm/thp: add tail pages into lru anyway in
- split_huge_page()
-Date: Fri, 17 Jul 2020 17:30:27 +0800
-Message-ID: <d478a44b-c598-e99b-d438-9387f208ad37@linux.alibaba.com>
-References: <1594429136-20002-1-git-send-email-alex.shi@linux.alibaba.com>
- <1594429136-20002-15-git-send-email-alex.shi@linux.alibaba.com>
+From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Subject: Re: [patch] mm, memcg: provide a stat to describe reclaimable memory
+Date: Fri, 17 Jul 2020 13:17:50 +0100
+Message-ID: <20200717121750.GA367633@chrisdown.name>
+References: <alpine.DEB.2.23.453.2007142018150.2667860@chino.kir.corp.google.com>
+ <20200715131048.GA176092@chrisdown.name>
+ <alpine.DEB.2.23.453.2007151046320.2788464@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1594429136-20002-15-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=n/pa5dW3hIKbP2t0G0f2EcEX6PNbXUQ5fuTdYCae6vA=;
+        b=IV2BvGMeNhyhjNOB2Es2XKswxXP3OHp2eQYgh22DqMsl6TerVaUZO23vPyszdLx9Vq
+         cFTst0pdov917g0M4eFrsOopy4Cz34VvQ0sBXmpZlszX7IvigmOqk0zp5ZJeXNZMYjF/
+         q10TaZMjTNhDQu2wLqIjdFpM8JxdSQ8TzCI80=
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.23.453.2007151046320.2788464-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org
-Cc: =?UTF-8?Q?Mika_Penttil=c3=a4?= <mika.penttila-MRsr7dthA9VWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-CkFkZCBhIFZNX1dBUk5fT04gZm9yIHRyYWNraW5nLiBhbmQgdXBkYXRlZCBjb21tZW50cyBmb3Ig
-dGhlIGNvZGUuCgpUaGFua3MKCi0tLQpGcm9tIGYxMzgxYTE1NDc2MjVhNjUyMTc3N2JmOTIzNTgy
-M2Q4ZmJkMDBkYWMgTW9uIFNlcCAxNyAwMDowMDowMCAyMDAxCkZyb206IEFsZXggU2hpIDxhbGV4
-LnNoaS1LUHNvRmJOczdHaXpyR0U1YlJxWUFnQy9HMks0ekRIZkBwdWJsaWMuZ21hbmUub3JnPgpE
-YXRlOiBGcmksIDEwIEp1bCAyMDIwIDE2OjU0OjM3ICswODAwClN1YmplY3Q6IFtQQVRDSCB2MTYg
-MTQvMjJdIG1tL3RocDogYWRkIHRhaWwgcGFnZXMgaW50byBscnUgYW55d2F5IGluCiBzcGxpdF9o
-dWdlX3BhZ2UoKQpNSU1FLVZlcnNpb246IDEuMApDb250ZW50LVR5cGU6IHRleHQvcGxhaW47IGNo
-YXJzZXQ9VVRGLTgKQ29udGVudC1UcmFuc2Zlci1FbmNvZGluZzogOGJpdAoKU3BsaXRfaHVnZV9w
-YWdlKCkgbXVzdCBzdGFydCB3aXRoIFBhZ2VMUlUoaGVhZCksIGFuZCB3ZSBhcmUgaG9sZGluZyB0
-aGUKbHJ1X2xvY2sgaGVyZS4gSWYgdGhlIGhlYWQgd2FzIGNsZWFyZWQgbHJ1IGJpdCB1bmV4cGVj
-dGVkLCB0cmFja2luZyBpdC4KClNpZ25lZC1vZmYtYnk6IEFsZXggU2hpIDxhbGV4LnNoaS1LUHNv
-RmJOczdHaXpyR0U1YlJxWUFnQy9HMks0ekRIZkBwdWJsaWMuZ21hbmUub3JnPgpDYzogS2lyaWxs
-IEEuIFNodXRlbW92IDxraXJpbGwtb0t3N2NJZEhIOGVMd3V0RzUwTHRHQUBwdWJsaWMuZ21hbmUu
-b3JnPgpDYzogQW5kcmV3IE1vcnRvbiA8YWtwbS1kZS90blhUZitKTHNmSERYdmJLdjNXRDJGUUpr
-KzgrYkBwdWJsaWMuZ21hbmUub3JnPgpDYzogSm9oYW5uZXMgV2VpbmVyIDxoYW5uZXMtZHJ1VWd2
-bDBMQ05BZnVnUnBDNnU2d0BwdWJsaWMuZ21hbmUub3JnPgpDYzogTWF0dGhldyBXaWxjb3ggPHdp
-bGx5LXdFR0NpS0hlMkxxV1ZmZUF3QTd4SFFAcHVibGljLmdtYW5lLm9yZz4KQ2M6IEh1Z2ggRGlj
-a2lucyA8aHVnaGQtaHBJcXNENEFLbGZRVDBkWlIrQWxmQUBwdWJsaWMuZ21hbmUub3JnPgpDYzog
-TWlrYSBQZW50dGlsw6QgPG1pa2EucGVudHRpbGEtTVJzcjdkdGhBOVZXazBIdGlrM0ovd0BwdWJs
-aWMuZ21hbmUub3JnPgpDYzogbGludXgtbW0tQnczMU1hWktLczNZdGp2eVc2eURzZ0BwdWJsaWMu
-Z21hbmUub3JnCkNjOiBsaW51eC1rZXJuZWwtdTc5dXdYTDI5VFk3Nloyck01bUhYQUBwdWJsaWMu
-Z21hbmUub3JnCi0tLQogbW0vaHVnZV9tZW1vcnkuYyB8IDE2ICsrKysrKysrKystLS0tLS0KIDEg
-ZmlsZSBjaGFuZ2VkLCAxMCBpbnNlcnRpb25zKCspLCA2IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdp
-dCBhL21tL2h1Z2VfbWVtb3J5LmMgYi9tbS9odWdlX21lbW9yeS5jCmluZGV4IGQ4NjZiNmU0MzQz
-NC4uMjg1Mzg0NDQxOTdiIDEwMDY0NAotLS0gYS9tbS9odWdlX21lbW9yeS5jCisrKyBiL21tL2h1
-Z2VfbWVtb3J5LmMKQEAgLTIzNDgsMTUgKzIzNDgsMTkgQEAgc3RhdGljIHZvaWQgbHJ1X2FkZF9w
-YWdlX3RhaWwoc3RydWN0IHBhZ2UgKmhlYWQsIHN0cnVjdCBwYWdlICpwYWdlX3RhaWwsCiAJVk1f
-QlVHX09OX1BBR0UoUGFnZUxSVShwYWdlX3RhaWwpLCBoZWFkKTsKIAlsb2NrZGVwX2Fzc2VydF9o
-ZWxkKCZscnV2ZWNfcGdkYXQobHJ1dmVjKS0+bHJ1X2xvY2spOwogCi0JaWYgKCFsaXN0KQotCQlT
-ZXRQYWdlTFJVKHBhZ2VfdGFpbCk7Ci0KLQlpZiAobGlrZWx5KFBhZ2VMUlUoaGVhZCkpKQotCQls
-aXN0X2FkZF90YWlsKCZwYWdlX3RhaWwtPmxydSwgJmhlYWQtPmxydSk7Ci0JZWxzZSBpZiAobGlz
-dCkgeworCWlmIChsaXN0KSB7CiAJCS8qIHBhZ2UgcmVjbGFpbSBpcyByZWNsYWltaW5nIGEgaHVn
-ZSBwYWdlICovCiAJCWdldF9wYWdlKHBhZ2VfdGFpbCk7CiAJCWxpc3RfYWRkX3RhaWwoJnBhZ2Vf
-dGFpbC0+bHJ1LCBsaXN0KTsKKwl9IGVsc2UgeworCQkvKgorCQkgKiBTcGxpdCBzdGFydCBmcm9t
-IFBhZ2VMUlUoaGVhZCksIGFuZCB3ZSBhcmUgaG9sZGluZyB0aGUKKwkJICogbHJ1X2xvY2suCisJ
-CSAqIERvIGEgd2FybmluZyBpZiB0aGUgaGVhZCdzIGxydSBiaXQgd2FzIGNsZWFyZWQgdW5leHBl
-Y3RlZC4KKwkJICovCisJCVZNX1dBUk5fT04oIVBhZ2VMUlUoaGVhZCkpOworCQlTZXRQYWdlTFJV
-KHBhZ2VfdGFpbCk7CisJCWxpc3RfYWRkX3RhaWwoJnBhZ2VfdGFpbC0+bHJ1LCAmaGVhZC0+bHJ1
-KTsKIAl9CiB9CiAKLS0gCjEuOC4zLjEKCg==
+Hi David,
+
+David Rientjes writes:
+>With the proposed anon_reclaimable, do you have any reliability concerns?
+>This would be the amount of lazy freeable memory and memory that can be
+>uncharged if compound pages from the deferred split queue are split under
+>memory pressure.  It seems to be a very precise value (as slab_reclaimable
+>already in memory.stat is), so I'm not sure why there is a reliability
+>concern.  Maybe you can elaborate?
+
+Ability to reclaim a page is largely about context at the time of reclaim. For 
+example, if you are running at the edge of swap, at a metric that truly 
+describes "reclaimable memory" will contain vastly different numbers from one 
+second to the next as cluster and page availability increases and decreases. We 
+may also have to do things like look for youngness at reclaim time, so I'm not 
+convinced metrics like this makes sense in the general case.
+
+>Today, this information is indeed possible to calculate from userspace.
+>The idea is to present this information that will be backwards compatible,
+>however, as the kernel implementation changes.  When lazy freeable memory
+>was added, for instance, userspace likely would not have preemptively been
+>doing an "active_file + inactive_file - file" calculation to factor that
+>in as reclaimable anon :)
+
+I agree it's hard to calculate from userspace without assistance, but I also 
+generally think generally exposing a highly nuanced and situational value to 
+userspace is a recipe for confusion. The user either knows mm internals and can 
+understand it, or don't and probably only misunderstand it. There is a non-zero 
+cognitive cost to adding more metrics like this, which is why I'm interested in 
+knowing more about the userspace usage semantics intended :-)
+
+>The example I gave earlier in the thread showed how dramatically different
+>memory.current is before and after the introduction of deferred split
+>queues.  Userspace sees ballooning memcg usage and alerts on it (suspects
+>a memory leak, for example) when in reality this is purely reclaimable
+>memory under pressure and is the result of a kernel implementation detail.
+
+Again, I'm curious why this can't be solved by artificial workingset 
+pressurisation and monitoring. Generally, the most reliable reclaim metrics 
+come from operating reclaim itself.
