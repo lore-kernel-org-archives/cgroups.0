@@ -1,155 +1,133 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH v16 13/22] mm/lru: introduce TestClearPageLRU
-Date: Fri, 17 Jul 2020 15:45:28 +0800
-Message-ID: <072b39ac-b95a-94f1-67a2-3293d4550ff8@linux.alibaba.com>
-References: <1594429136-20002-1-git-send-email-alex.shi@linux.alibaba.com>
- <1594429136-20002-14-git-send-email-alex.shi@linux.alibaba.com>
- <CAKgT0UfLbVRQ4+TOw-XnjuyZqoVmRmWb5_rbEZZ0povYv-n_Lg@mail.gmail.com>
+From: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [patch] mm, memcg: provide an anon_reclaimable stat
+Date: Fri, 17 Jul 2020 10:34:19 +0200
+Message-ID: <20200717083419.GD10655@dhcp22.suse.cz>
+References: <20200715071522.19663-1-sjpark@amazon.com>
+ <alpine.DEB.2.23.453.2007151031020.2788464@chino.kir.corp.google.com>
+ <alpine.DEB.2.23.453.2007161357490.3209847@chino.kir.corp.google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAKgT0UfLbVRQ4+TOw-XnjuyZqoVmRmWb5_rbEZZ0povYv-n_Lg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.23.453.2007161357490.3209847-X6Q0R45D7oAcqpCFd4KODRPsWskHk0ljAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Alexander Duyck <alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: SeongJae Park <sjpark-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-
-
-在 2020/7/17 上午5:12, Alexander Duyck 写道:
-> On Fri, Jul 10, 2020 at 5:59 PM Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org> wrote:
->>
->> Combine PageLRU check and ClearPageLRU into a function by new
->> introduced func TestClearPageLRU. This function will be used as page
->> isolation precondition to prevent other isolations some where else.
->> Then there are may non PageLRU page on lru list, need to remove BUG
->> checking accordingly.
->>
->> Hugh Dickins pointed that __page_cache_release and release_pages
->> has no need to do atomic clear bit since no user on the page at that
->> moment. and no need get_page() before lru bit clear in isolate_lru_page,
->> since it '(1) Must be called with an elevated refcount on the page'.
->>
->> As Andrew Morton mentioned this change would dirty cacheline for page
->> isn't on LRU. But the lost would be acceptable with Rong Chen
->> <rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> report:
->> https://lkml.org/lkml/2020/3/4/173
->>
-
-...
-
->> diff --git a/mm/swap.c b/mm/swap.c
->> index f645965fde0e..5092fe9c8c47 100644
->> --- a/mm/swap.c
->> +++ b/mm/swap.c
->> @@ -83,10 +83,9 @@ static void __page_cache_release(struct page *page)
->>                 struct lruvec *lruvec;
->>                 unsigned long flags;
->>
->> +               __ClearPageLRU(page);
->>                 spin_lock_irqsave(&pgdat->lru_lock, flags);
->>                 lruvec = mem_cgroup_page_lruvec(page, pgdat);
->> -               VM_BUG_ON_PAGE(!PageLRU(page), page);
->> -               __ClearPageLRU(page);
->>                 del_page_from_lru_list(page, lruvec, page_off_lru(page));
->>                 spin_unlock_irqrestore(&pgdat->lru_lock, flags);
->>         }
+On Thu 16-07-20 13:58:19, David Rientjes wrote:
+> Userspace can lack insight into the amount of memory that can be reclaimed
+> from a memcg based on values from memory.stat.  Two specific examples:
 > 
-> So this piece doesn't make much sense to me. Why not use
-> TestClearPageLRU(page) here? Just a few lines above you are testing
-> for PageLRU(page) and it seems like if you are going to go for an
-> atomic test/clear and then remove the page from the LRU list you
-> should be using it here as well otherwise it seems like you could run
-> into a potential collision since you are testing here without clearing
-> the bit.
+>  - Lazy freeable memory (MADV_FREE) that are clean anonymous pages on the
+>    inactive file LRU that can be quickly reclaimed under memory pressure
+>    but otherwise shows up as mapped anon in memory.stat, and
 > 
-
-Hi Alex,
-
-Thanks a lot for comments! 
-
-In this func's call path __page_cache_release, the page is unlikely be
-ClearPageLRU, since this page isn't used by anyone, and going to be freed.
-just __ClearPageLRU would be safe, and could save a non lru page flags disturb.
-
-
->> @@ -878,9 +877,8 @@ void release_pages(struct page **pages, int nr)
->>                                 spin_lock_irqsave(&locked_pgdat->lru_lock, flags);
->>                         }
->>
->> -                       lruvec = mem_cgroup_page_lruvec(page, locked_pgdat);
->> -                       VM_BUG_ON_PAGE(!PageLRU(page), page);
->>                         __ClearPageLRU(page);
->> +                       lruvec = mem_cgroup_page_lruvec(page, locked_pgdat);
->>                         del_page_from_lru_list(page, lruvec, page_off_lru(page));
->>                 }
->>
+>  - Memory on deferred split queues (thp) that are compound pages that can
+>    be split and uncharged from the memcg under memory pressure, but
+>    otherwise shows up as charged anon LRU memory in memory.stat.
 > 
-> Same here. You are just moving the flag clearing, but you didn't
-> combine it with the test. It seems like if you are expecting this to
-> be treated as an atomic operation. It should be a relatively low cost
-> to do since you already should own the cacheline as a result of
-> calling put_page_testzero so I am not sure why you are not combining
-> the two.
-
-before the ClearPageLRU, there is a put_page_testzero(), that means no one using
-this page, and isolate_lru_page can not run on this page the in func checking. 
-	VM_BUG_ON_PAGE(!page_count(page), page);
-So it would be safe here.
-
-
+> Both of this anonymous usage is also charged to memory.current.
 > 
->> diff --git a/mm/vmscan.c b/mm/vmscan.c
->> index c1c4259b4de5..18986fefd49b 100644
->> --- a/mm/vmscan.c
->> +++ b/mm/vmscan.c
->> @@ -1548,16 +1548,16 @@ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
->>  {
->>         int ret = -EINVAL;
->>
->> -       /* Only take pages on the LRU. */
->> -       if (!PageLRU(page))
->> -               return ret;
->> -
->>         /* Compaction should not handle unevictable pages but CMA can do so */
->>         if (PageUnevictable(page) && !(mode & ISOLATE_UNEVICTABLE))
->>                 return ret;
->>
->>         ret = -EBUSY;
->>
->> +       /* Only take pages on the LRU. */
->> +       if (!PageLRU(page))
->> +               return ret;
->> +
->>         /*
->>          * To minimise LRU disruption, the caller can indicate that it only
->>          * wants to isolate pages it will be able to operate on without
->> @@ -1671,8 +1671,6 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
->>                 page = lru_to_page(src);
->>                 prefetchw_prev_lru_page(page, src, flags);
->>
->> -               VM_BUG_ON_PAGE(!PageLRU(page), page);
->> -
->>                 nr_pages = compound_nr(page);
->>                 total_scan += nr_pages;
->>
+> Userspace can currently derive this information but it depends on kernel
+> implementation details for how this memory is handled for the purposes of
+> reclaim (anon on inactive file LRU or unmapped anon on the LRU).
 > 
-> So effectively the changes here are making it so that a !PageLRU page
-> will cycle to the start of the LRU list. Now if I understand correctly
-> we are guaranteed that if the flag is not set it cannot be set while
-> we are holding the lru_lock, however it can be cleared while we are
-> holding the lock, correct? Thus that is why isolate_lru_pages has to
-> call TestClearPageLRU after the earlier check in __isolate_lru_page.
-
-Right. 
-
+> For the purposes of writing portable userspace code that does not need to
+> have insight into the kernel implementation for reclaimable memory, this
+> exports a stat that reveals the amount of anonymous memory that can be
+> reclaimed and uncharged from the memcg to start new applications.
 > 
-> It might make it more readable to pull in the later patch that
-> modifies isolate_lru_pages that has it using TestClearPageLRU.
-As to this change, It has to do in this patch, since any TestClearPageLRU may
-cause lru bit miss in the lru list, so the precondication check has to
-removed here.
+> As the kernel implementation evolves for memory that can be reclaimed
+> under memory pressure, this stat can be kept consistent.
 
-Thank
-Alex
+Please be much more specific about the expected usage. You have
+mentioned something in the email thread but this really belongs to the
+changelog.
+
+Why is reclaimable anonymous memory without any swap any special, say
+from any other clean and easily reclaimable caches? What if there is a
+swap available?
+
+> Signed-off-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst |  6 +++++
+>  mm/memcontrol.c                         | 31 +++++++++++++++++++++++++
+>  2 files changed, 37 insertions(+)
+> 
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -1296,6 +1296,12 @@ PAGE_SIZE multiple when read back.
+>  		Amount of memory used in anonymous mappings backed by
+>  		transparent hugepages
+>  
+> +	  anon_reclaimable
+> +		The amount of charged anonymous memory that can be reclaimed
+> +		under memory pressure without swap.  This currently includes
+> +		lazy freeable memory (MADV_FREE) and compound pages that can be
+> +		split and uncharged.
+> +
+>  	  inactive_anon, active_anon, inactive_file, active_file, unevictable
+>  		Amount of memory, swap-backed and filesystem-backed,
+>  		on the internal memory management lists used by the
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1350,6 +1350,32 @@ static bool mem_cgroup_wait_acct_move(struct mem_cgroup *memcg)
+>  	return false;
+>  }
+>  
+> +/*
+> + * Returns the amount of anon memory that is charged to the memcg that is
+> + * reclaimable under memory pressure without swap, in pages.
+> + */
+> +static unsigned long memcg_anon_reclaimable(struct mem_cgroup *memcg)
+> +{
+> +	long deferred, lazyfree;
+> +
+> +	/*
+> +	 * Deferred pages are charged anonymous pages that are on the LRU but
+> +	 * are unmapped.  These compound pages are split under memory pressure.
+> +	 */
+> +	deferred = max_t(long, memcg_page_state(memcg, NR_ACTIVE_ANON) +
+> +			       memcg_page_state(memcg, NR_INACTIVE_ANON) -
+> +			       memcg_page_state(memcg, NR_ANON_MAPPED), 0);
+> +	/*
+> +	 * Lazyfree pages are charged clean anonymous pages that are on the file
+> +	 * LRU and can be reclaimed under memory pressure.
+> +	 */
+> +	lazyfree = max_t(long, memcg_page_state(memcg, NR_ACTIVE_FILE) +
+> +			       memcg_page_state(memcg, NR_INACTIVE_FILE) -
+> +			       memcg_page_state(memcg, NR_FILE_PAGES), 0);
+> +
+> +	return deferred + lazyfree;
+> +}
+> +
+>  static char *memory_stat_format(struct mem_cgroup *memcg)
+>  {
+>  	struct seq_buf s;
+> @@ -1363,6 +1389,9 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
+>  	 * Provide statistics on the state of the memory subsystem as
+>  	 * well as cumulative event counters that show past behavior.
+>  	 *
+> +	 * All values in this buffer are read individually, so no implied
+> +	 * consistency amongst them.
+> +	 *
+>  	 * This list is ordered following a combination of these gradients:
+>  	 * 1) generic big picture -> specifics and details
+>  	 * 2) reflecting userspace activity -> reflecting kernel heuristics
+> @@ -1405,6 +1434,8 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
+>  		       (u64)memcg_page_state(memcg, NR_ANON_THPS) *
+>  		       HPAGE_PMD_SIZE);
+>  #endif
+> +	seq_buf_printf(&s, "anon_reclaimable %llu\n",
+> +		       (u64)memcg_anon_reclaimable(memcg) * PAGE_SIZE);
+>  
+>  	for (i = 0; i < NR_LRU_LISTS; i++)
+>  		seq_buf_printf(&s, "%s %llu\n", lru_list_name(i),
+
+-- 
+Michal Hocko
+SUSE Labs
