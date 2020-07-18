@@ -1,40 +1,80 @@
-From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
-Subject: Re: [PATCH] memcontrol: drop duplicate word and fix spello in
- <linux/memcontrol.h>
-Date: Sat, 18 Jul 2020 09:16:51 +0200
-Message-ID: <20200718071651.GA467892@chrisdown.name>
-References: <b04aa2e4-7c95-12f0-599d-43d07fb28134@infradead.org>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: Re: [PATCH v16 19/22] mm/lru: introduce the relock_page_lruvec
+ function
+Date: Sat, 18 Jul 2020 22:01:40 +0800
+Message-ID: <640e4081-3db3-c941-4b02-8a9aef26e7ba@linux.alibaba.com>
+References: <1594429136-20002-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1594429136-20002-20-git-send-email-alex.shi@linux.alibaba.com>
+ <CAKgT0UdL7ppCdszBNyY3O9d2stE0tCZ8vCzH7tBEnHG2ZwkZHg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=xHVnQvxmbGU9Ko0uL8p4tnJQ0J1CLCT6xz7M4Ccg8MQ=;
-        b=oKdcHxt3cYiLH9F6JeaENxb3L0suuIESYrWnz4LMdoxe18XhXLj8d43wOtim0uIAme
-         zPJVkdIlbZiiY72xPKODgFXZOO4UxfjZJ2SUbMkjOAAS6ptdt4+ntKvReVn4Z2SDdm2B
-         3yVGvFT9fXvAbYkt5QRFUB2AstxiC87gcclw4=
-Content-Disposition: inline
-In-Reply-To: <b04aa2e4-7c95-12f0-599d-43d07fb28134-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAKgT0UdL7ppCdszBNyY3O9d2stE0tCZ8vCzH7tBEnHG2ZwkZHg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-Content-Transfer-Encoding: 7bit
-To: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Daniel Jordan <daniel.m.jordan@oracle.com>, Yang Shi <yang.shi@linux.alibaba.com>, Matthew Wilcox <willy@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, kbuild test robot <lkp@intel.com>, linux-mm <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Shakeel Butt <shakeelb@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Wei Yang <richard.weiyang@gmail.com>, "Kirill A. Shutemov" <kirill@shutemov.name>, Thomas Gleixner <tglx@linutronix.de>, Andrey Ryabinin <aryabinin@virtuozzo.com>
 
-Randy Dunlap writes:
->From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
->
->Drop the doubled word "for" in a comment.
->Fix spello of "incremented".
->
->Signed-off-by: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
->Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
->Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
->Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 
-Acked-by: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+
+在 2020/7/18 上午6:03, Alexander Duyck 写道:
+>> index 129c532357a4..9fb906fbaed5 100644
+>> --- a/mm/swap.c
+>> +++ b/mm/swap.c
+>> @@ -209,19 +209,12 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
+>>
+>>         for (i = 0; i < pagevec_count(pvec); i++) {
+>>                 struct page *page = pvec->pages[i];
+>> -               struct lruvec *new_lruvec;
+>> -
+>> -               new_lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+>> -               if (lruvec != new_lruvec) {
+>> -                       if (lruvec)
+>> -                               unlock_page_lruvec_irqrestore(lruvec, flags);
+>> -                       lruvec = lock_page_lruvec_irqsave(page, &flags);
+>> -               }
+>>
+>>                 /* block memcg migration during page moving between lru */
+>>                 if (!TestClearPageLRU(page))
+>>                         continue;
+>>
+>> +               lruvec = relock_page_lruvec_irqsave(page, lruvec, &flags);
+>>                 (*move_fn)(page, lruvec);
+>>
+>>                 SetPageLRU(page);
+> So looking at this I realize that patch 18 probably should have
+> ordered this the same way with the TestClearPageLRU happening before
+> you fetched the new_lruvec. Otherwise I think you are potentially
+> exposed to the original issue you were fixing the the previous patch
+> that added the call to TestClearPageLRU.
+
+Good catch. It's better to be aligned in next version.
+Thanks!
+
+> 
+>> @@ -866,17 +859,12 @@ void release_pages(struct page **pages, int nr)
+>>                 }
+>>
+>>                 if (PageLRU(page)) {
+>> -                       struct lruvec *new_lruvec;
+>> -
+>> -                       new_lruvec = mem_cgroup_page_lruvec(page,
+>> -                                                       page_pgdat(page));
+>> -                       if (new_lruvec != lruvec) {
+>> -                               if (lruvec)
+>> -                                       unlock_page_lruvec_irqrestore(lruvec,
+>> -                                                                       flags);
+>> +                       struct lruvec *pre_lruvec = lruvec;
+>> +
+>> +                       lruvec = relock_page_lruvec_irqsave(page, lruvec,
+>> +                                                                       &flags);
+>> +                       if (pre_lruvec != lruvec)
+> So this doesn't really read right. I suppose "pre_lruvec" should
+> probably be "prev_lruvec" since I assume you mean "previous" not
+> "before".
+
+yes, it's previous, I will rename it.
+Thanks
+Alex
+> 
