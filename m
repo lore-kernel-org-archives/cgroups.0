@@ -1,39 +1,37 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v16 20/22] mm/vmscan: use relock for move_pages_to_lru
-Date: Sat, 18 Jul 2020 22:15:25 +0800
-Message-ID: <7176001a-fa58-3281-7c6b-b25eea54bd15@linux.alibaba.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH v16 21/22] mm/pgdat: remove pgdat lru_lock
+Date: Sat, 18 Jul 2020 22:17:48 +0800
+Message-ID: <5f162d78-2318-3d12-bbbb-1a47ed978bf7@linux.alibaba.com>
 References: <1594429136-20002-1-git-send-email-alex.shi@linux.alibaba.com>
- <1594429136-20002-21-git-send-email-alex.shi@linux.alibaba.com>
- <CAKgT0Ufp2FsJd+Lz9U2c_w5Eeb121xRg4SJ5Xoj2=9qZnVKkrA@mail.gmail.com>
+ <1594429136-20002-22-git-send-email-alex.shi@linux.alibaba.com>
+ <CAKgT0UeK3c4NjoJ7MQMxU20Bu0AZKZh73Cj4P_g5OSL6KaONhQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAKgT0Ufp2FsJd+Lz9U2c_w5Eeb121xRg4SJ5Xoj2=9qZnVKkrA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAKgT0UeK3c4NjoJ7MQMxU20Bu0AZKZh73Cj4P_g5OSL6KaONhQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Daniel Jordan <daniel.m.jordan@oracle.com>, Yang Shi <yang.shi@linux.alibaba.com>, Matthew Wilcox <willy@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, kbuild test robot <lkp@intel.com>, linux-mm <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Shakeel Butt <shakeelb@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Wei Yang <richard.weiyang@gmail.com>, "Kirill A. Shutemov" <kirill@shutemov.name>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Jann Horn <jannh@google.com>
+To: Alexander Duyck <alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
 
 
 
-在 2020/7/18 上午5:44, Alexander Duyck 写道:
->>                         if (unlikely(PageCompound(page))) {
->>                                 spin_unlock_irq(&lruvec->lru_lock);
->> +                               lruvec = NULL;
->>                                 destroy_compound_page(page);
->> -                               spin_lock_irq(&lruvec->lru_lock);
->>                         } else
->>                                 list_add(&page->lru, &pages_to_free);
+在 2020/7/18 上午5:09, Alexander Duyck 写道:
+>> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+>> index e028b87ce294..4d7df42b32d6 100644
+>> --- a/mm/page_alloc.c
+>> +++ b/mm/page_alloc.c
+>> @@ -6721,7 +6721,6 @@ static void __meminit pgdat_init_internals(struct pglist_data *pgdat)
+>>         init_waitqueue_head(&pgdat->pfmemalloc_wait);
 >>
-> It seems like this should just be rolled into patch 19. Otherwise if
-> you are wanting to consider it as a "further optimization" type patch
-> you might pull some of the optimizations you were pushing in patch 18
-> into this patch as well and just call it out as adding relocks where
-> there previously were none.
+>>         pgdat_page_ext_init(pgdat);
+>> -       spin_lock_init(&pgdat->lru_lock);
+>>         lruvec_init(&pgdat->__lruvec);
+>>  }
+>>
+> This patch would probably make more sense as part of patch 18 since
+> you removed all of the users of this field there.
 
-This patch is picked from Hugh Dickin's version in my review. It could be
-fine to have a extra patch which no harm for anyone. :)
 
-Thanks
-Alex
+yes, I just want to a bit of sense of ceremony to remove this huge big lock. :)
