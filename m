@@ -1,52 +1,200 @@
 From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH v16 15/22] mm/compaction: do page isolation first in
- compaction
-Date: Sun, 19 Jul 2020 11:59:36 +0800
-Message-ID: <dd0a75b5-c8b2-8b66-79b9-0f6ce259e227@linux.alibaba.com>
+Subject: Re: [PATCH v16 13/22] mm/lru: introduce TestClearPageLRU
+Date: Sun, 19 Jul 2020 12:45:54 +0800
+Message-ID: <530c222e-dfd4-f78e-e9d4-315fad6f816a@linux.alibaba.com>
 References: <1594429136-20002-1-git-send-email-alex.shi@linux.alibaba.com>
- <1594429136-20002-16-git-send-email-alex.shi@linux.alibaba.com>
- <CAKgT0Ue72SfAmxCS+tay1NjioW9WBOvVgrhwUtVPz2aDCrcHPQ@mail.gmail.com>
- <e724c44b-4135-3302-16fa-1df624fa81fa@linux.alibaba.com>
- <CAKgT0UcbvTid8RqDgsZjewdEo1wTD8BDjPHo59UX9gKQEkZUtA@mail.gmail.com>
+ <1594429136-20002-14-git-send-email-alex.shi@linux.alibaba.com>
+ <CAKgT0UfLbVRQ4+TOw-XnjuyZqoVmRmWb5_rbEZZ0povYv-n_Lg@mail.gmail.com>
+ <072b39ac-b95a-94f1-67a2-3293d4550ff8@linux.alibaba.com>
+ <CAKgT0UdDQp_bptKAjG4A4fJQgS5gJuvu6D7LJfKw_wETLtLG_w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAKgT0UcbvTid8RqDgsZjewdEo1wTD8BDjPHo59UX9gKQEkZUtA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <CAKgT0UdDQp_bptKAjG4A4fJQgS5gJuvu6D7LJfKw_wETLtLG_w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
 To: Alexander Duyck <alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
 
 
-在 2020/7/18 上午12:09, Alexander Duyck 写道:
->>> I wonder if it wouldn't make sense to combine these two atomic ops
->>> with tests and the put_page into a single inline function? Then it
->>> could be possible to just do one check and if succeeds you do the
->>> block of code below, otherwise you just fall-through into the -EBUSY
->>> case.
+在 2020/7/18 上午2:26, Alexander Duyck 写道:
+> On Fri, Jul 17, 2020 at 12:46 AM Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org> wrote:
+>>
+>>
+>>
+>> 在 2020/7/17 上午5:12, Alexander Duyck 写道:
+>>> On Fri, Jul 10, 2020 at 5:59 PM Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org> wrote:
+>>>>
+>>>> Combine PageLRU check and ClearPageLRU into a function by new
+>>>> introduced func TestClearPageLRU. This function will be used as page
+>>>> isolation precondition to prevent other isolations some where else.
+>>>> Then there are may non PageLRU page on lru list, need to remove BUG
+>>>> checking accordingly.
+>>>>
+>>>> Hugh Dickins pointed that __page_cache_release and release_pages
+>>>> has no need to do atomic clear bit since no user on the page at that
+>>>> moment. and no need get_page() before lru bit clear in isolate_lru_page,
+>>>> since it '(1) Must be called with an elevated refcount on the page'.
+>>>>
+>>>> As Andrew Morton mentioned this change would dirty cacheline for page
+>>>> isn't on LRU. But the lost would be acceptable with Rong Chen
+>>>> <rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> report:
+>>>> https://lkml.org/lkml/2020/3/4/173
+>>>>
+>>
+>> ...
+>>
+>>>> diff --git a/mm/swap.c b/mm/swap.c
+>>>> index f645965fde0e..5092fe9c8c47 100644
+>>>> --- a/mm/swap.c
+>>>> +++ b/mm/swap.c
+>>>> @@ -83,10 +83,9 @@ static void __page_cache_release(struct page *page)
+>>>>                 struct lruvec *lruvec;
+>>>>                 unsigned long flags;
+>>>>
+>>>> +               __ClearPageLRU(page);
+>>>>                 spin_lock_irqsave(&pgdat->lru_lock, flags);
+>>>>                 lruvec = mem_cgroup_page_lruvec(page, pgdat);
+>>>> -               VM_BUG_ON_PAGE(!PageLRU(page), page);
+>>>> -               __ClearPageLRU(page);
+>>>>                 del_page_from_lru_list(page, lruvec, page_off_lru(page));
+>>>>                 spin_unlock_irqrestore(&pgdat->lru_lock, flags);
+>>>>         }
 >>>
->> Uh, since get_page changes page->_refcount, TestClearPageLRU changes page->flags,
->> So I don't know how to combine them, could you make it more clear with code?
-> Actually it is pretty straight forward. Something like this:
-> static inline bool get_page_unless_zero_or_nonlru(struct page *page)
-> {
->     if (get_page_unless_zero(page)) {
->         if (TestClearPageLRU(page))
->             return true;
->         put_page(page);
->     }
->     return false;
-> }
+>>> So this piece doesn't make much sense to me. Why not use
+>>> TestClearPageLRU(page) here? Just a few lines above you are testing
+>>> for PageLRU(page) and it seems like if you are going to go for an
+>>> atomic test/clear and then remove the page from the LRU list you
+>>> should be using it here as well otherwise it seems like you could run
+>>> into a potential collision since you are testing here without clearing
+>>> the bit.
+>>>
+>>
+>> Hi Alex,
+>>
+>> Thanks a lot for comments!
+>>
+>> In this func's call path __page_cache_release, the page is unlikely be
+>> ClearPageLRU, since this page isn't used by anyone, and going to be freed.
+>> just __ClearPageLRU would be safe, and could save a non lru page flags disturb.
 > 
-> You can then add comments as necessary. The general idea is you are
-> having to do this in two different spots anyway so why not combine the
-> logic? Although it does assume you can change the ordering of the
-> other test above.
+> So if I understand what you are saying correctly you are indicating
+> that this page should likely not have the LRU flag set and that we
+> just transitioned it from 1 -> 0 so there should be nobody else
+> accessing it correct?
+> 
+> It might be useful to document this somewhere. Essentially what we are
+> doing then is breaking this up into the following cases.
+> 
+> 1. Setting the LRU bit requires holding the LRU lock
+> 2. Clearing the LRU bit requires either:
+>         a. Use of atomic operations if page count is 1 or more
+>         b. Non-atomic operations can be used if we cleared last reference count
+> 
+> Is my understanding on this correct? So we have essentially two
+> scenarios, one for the get_page_unless_zero case, and another with the
+> put_page_testzero.
 
+the summary isn't incorrect. 
+The the points for me are:
+1, Generally, the lru bit indicated if the page on lru list, just in some temporary
+moment(isolating), the page may have no bit set when it's on lru list.  that imply
+the page must be on lru list when the lru bit is set.
+2, have to remove lru bit before delete it from lru list.
 
-It doesn't look different with original code, does it?
+> 
+>>>> @@ -878,9 +877,8 @@ void release_pages(struct page **pages, int nr)
+>>>>                                 spin_lock_irqsave(&locked_pgdat->lru_lock, flags);
+>>>>                         }
+>>>>
+>>>> -                       lruvec = mem_cgroup_page_lruvec(page, locked_pgdat);
+>>>> -                       VM_BUG_ON_PAGE(!PageLRU(page), page);
+>>>>                         __ClearPageLRU(page);
+>>>> +                       lruvec = mem_cgroup_page_lruvec(page, locked_pgdat);
+>>>>                         del_page_from_lru_list(page, lruvec, page_off_lru(page));
+>>>>                 }
+>>>>
+>>>
+>>> Same here. You are just moving the flag clearing, but you didn't
+>>> combine it with the test. It seems like if you are expecting this to
+>>> be treated as an atomic operation. It should be a relatively low cost
+>>> to do since you already should own the cacheline as a result of
+>>> calling put_page_testzero so I am not sure why you are not combining
+>>> the two.
+>>
+>> before the ClearPageLRU, there is a put_page_testzero(), that means no one using
+>> this page, and isolate_lru_page can not run on this page the in func checking.
+>>         VM_BUG_ON_PAGE(!page_count(page), page);
+>> So it would be safe here.
+> 
+> Okay, so this is another 2b case as defined above then.
+> 
+>>>
+>>>> diff --git a/mm/vmscan.c b/mm/vmscan.c
+>>>> index c1c4259b4de5..18986fefd49b 100644
+>>>> --- a/mm/vmscan.c
+>>>> +++ b/mm/vmscan.c
+>>>> @@ -1548,16 +1548,16 @@ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
+>>>>  {
+>>>>         int ret = -EINVAL;
+>>>>
+>>>> -       /* Only take pages on the LRU. */
+>>>> -       if (!PageLRU(page))
+>>>> -               return ret;
+>>>> -
+>>>>         /* Compaction should not handle unevictable pages but CMA can do so */
+>>>>         if (PageUnevictable(page) && !(mode & ISOLATE_UNEVICTABLE))
+>>>>                 return ret;
+>>>>
+>>>>         ret = -EBUSY;
+>>>>
+>>>> +       /* Only take pages on the LRU. */
+>>>> +       if (!PageLRU(page))
+>>>> +               return ret;
+>>>> +
+>>>>         /*
+>>>>          * To minimise LRU disruption, the caller can indicate that it only
+>>>>          * wants to isolate pages it will be able to operate on without
+>>>> @@ -1671,8 +1671,6 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
+>>>>                 page = lru_to_page(src);
+>>>>                 prefetchw_prev_lru_page(page, src, flags);
+>>>>
+>>>> -               VM_BUG_ON_PAGE(!PageLRU(page), page);
+>>>> -
+>>>>                 nr_pages = compound_nr(page);
+>>>>                 total_scan += nr_pages;
+>>>>
+>>>
+>>> So effectively the changes here are making it so that a !PageLRU page
+>>> will cycle to the start of the LRU list. Now if I understand correctly
+>>> we are guaranteed that if the flag is not set it cannot be set while
+>>> we are holding the lru_lock, however it can be cleared while we are
+>>> holding the lock, correct? Thus that is why isolate_lru_pages has to
+>>> call TestClearPageLRU after the earlier check in __isolate_lru_page.
+>>
+>> Right.
+>>
+>>>
+>>> It might make it more readable to pull in the later patch that
+>>> modifies isolate_lru_pages that has it using TestClearPageLRU.
+>> As to this change, It has to do in this patch, since any TestClearPageLRU may
+>> cause lru bit miss in the lru list, so the precondication check has to
+>> removed here.
+> 
+> So I think some of my cognitive dissonance is from the fact that you
+> really are doing two different things here. You aren't really
+> implementing the full TestClearPageLRU until patch 15. So this patch
+> is doing part of 2a and 2b, and then patch 15 is following up and
+> completing the 2a cases. I still think it might make more sense to
+> pull out the pieces related to 2b and move them into a patch before
+> this with documentation explaining that there should be no competition
+> for the LRU flag because the page has transitioned to a reference
+> count of zero. Then take the remaining bits and combine them with
+> patch 15 since the description for the two is pretty similar.
+> 
+
+Good suggestion, I consider this.
 
 Thanks
-Alex
