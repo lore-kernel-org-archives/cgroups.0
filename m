@@ -1,29 +1,24 @@
-From: Christoph Hellwig <hch@lst.de>
+From: Artem Bityutskiy <dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH 04/14] bdi: initialize ->ra_pages in bdi_init
-Date: Mon, 20 Jul 2020 14:07:34 +0200
-Message-ID: <20200720120734.GA29061@lst.de>
-References: <20200720075148.172156-1-hch@lst.de> <20200720075148.172156-5-hch@lst.de> <CAFLxGvxNHGEOrj6nKTtDeiU+Rx4xv_6asjSQYcFWXhk5m=1cBA@mail.gmail.com>
+Date: Mon, 20 Jul 2020 15:37:10 +0300
+Message-ID: <2827a5dbd94bc5c2c1706a6074d9a9a32a590feb.camel@gmail.com>
+References: <20200720075148.172156-1-hch@lst.de>
+         <20200720075148.172156-5-hch@lst.de>
+         <CAFLxGvxNHGEOrj6nKTtDeiU+Rx4xv_6asjSQYcFWXhk5m=1cBA@mail.gmail.com>
+         <20200720120734.GA29061@lst.de>
+Reply-To: dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAFLxGvxNHGEOrj6nKTtDeiU+Rx4xv_6asjSQYcFWXhk5m=1cBA@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200720120734.GA29061-jcswGhMUV9g@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Richard Weinberger <richard.weinberger@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, linux-mtd@lists.infradead.org, device-mapper development <dm-devel@redhat.com>, linux-block@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm@kvack.org, cgroups mailinglist <cgroups@vger.kernel.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Richard Weinberger <richard.weinberger-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, device-mapper development <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups mailinglist <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 
-On Mon, Jul 20, 2020 at 01:58:22PM +0200, Richard Weinberger wrote:
-> Hello Chrstoph,
-> 
-> On Mon, Jul 20, 2020 at 9:53 AM Christoph Hellwig <hch@lst.de> wrote:
-> >
-> > Set up a readahead size by default.  This changes behavior for mtd,
-> > ubifs, and vboxsf to actually enabled readahead, the lack of which
-> > very much looks like an oversight.
-> 
-> UBIFS doesn't enable readahead on purpose, please see:
-> http://www.linux-mtd.infradead.org/doc/ubifs.html#L_readahead
+On Mon, 2020-07-20 at 14:07 +0200, Christoph Hellwig wrote:
+> What about jffs2 and blk2mtd raw block devices?
 
-What about jffs2 and blk2mtd raw block devices?
+If my memory serves me correctly JFFS2 did not mind readahead.
+
