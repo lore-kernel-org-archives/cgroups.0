@@ -1,75 +1,183 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 03/14] drbd: remove RB_CONGESTED_REMOTE
-Date: Wed, 22 Jul 2020 08:25:41 +0200
-Message-ID: <20200722062552.212200-4-hch@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 04/14] bdi: initialize ->ra_pages in bdi_init
+Date: Wed, 22 Jul 2020 08:25:42 +0200
+Message-ID: <20200722062552.212200-5-hch@lst.de>
 References: <20200722062552.212200-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-raid-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=casper.20170209;
-	h=Content-Transfer-Encoding:MIME-Version:
-	References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-	Content-Type:Content-ID:Content-Description;
-	bh=toLJ0vqGJpB+m2DWzx8OUV3mzNvbIyso0hs1e0NzMQw=;
-	b=Tn4xalF1YN7Wqp1NXQJpA/hlZ3
-	Zzeym0fSToI0ZjtblIQF0KaR8LI/0QKwnX317OWhJ4RanjyvysIbdqI0KEXF4q9cdGzPwj8fs+ft9
-	C6M4D+H0TBRp0o6dYj8TwKrHaf5XOhXj+8e9RcuISGAUSLHAkBYcWdvL4Vy14GO3fI/Bq3XgHW1xo
-	3YDKwttuYSv4GlmUbJUyoOWATp5d4Hb8TuN1sOYwHIl2jcXF11h/9Vl8LfXE3faJ8dJY0Bu5m6We5
-	Bsojk10wIqdaLJmYRWg3Fa/bZBTq9m0Z+VZ6ls1UGmgfGGrNwdefM52lMe0Xd5NkLZOPrEXfOdYHE
-	3WaQDsUw==;
-In-Reply-To: <20200722062552.212200-1-hch-jcswGhMUV9g@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linbit.com/mailman/options/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
-List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
-List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linbit.com/mailman/listinfo/drbd-dev>,
-	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
-Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=23lPPnUQ/wtgDdZgYVTv/WJAfGlLRFk69cLmomK1pnE=; b=qcA0OhQS+tvPJpXNLSmTGDPyc5
+        keU4ouYq4cSDEogGD8k4bUBKfBabDc6ohHUdaiZ9l05VOph7dpcwQ+awDYWN9Vi/VYLPfYxRwy37Y
+        bSj9zsc72LYO58T3vbwX9cZ+fZVr6Z8YbU35YOqOtpWbLWYMh41yBRu5MOFCUWH1N6dKKBZWoC/Mh
+        kQKisQ2fhXZReZ9HZpoLQ8LfzBSGhVT5FIYBsk51xdkI4WHXfTJgrusohPbWknqb2l4c9+pt2mdXM
+        qlmorndIPcM9UgyeGf45vU9ZbwucMrFP6dnzXlqDkUKqL9TGUiISg2JVHpfmda3Kga9JikUFtspcB
+        AOF6Zn2w==;
+In-Reply-To: <20200722062552.212200-1-hch@lst.de>
+Sender: linux-raid-owner@vger.kernel.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-This case isn't ever used.
+Set up a readahead size by default, as very few users have a good
+reason to change it.
 
-Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/drbd/drbd_req.c | 4 ----
- include/linux/drbd.h          | 1 -
- 2 files changed, 5 deletions(-)
+ block/blk-core.c      | 1 -
+ drivers/mtd/mtdcore.c | 1 +
+ fs/9p/vfs_super.c     | 4 ++--
+ fs/afs/super.c        | 1 -
+ fs/btrfs/disk-io.c    | 1 -
+ fs/fuse/inode.c       | 1 -
+ fs/nfs/super.c        | 9 +--------
+ fs/ubifs/super.c      | 1 +
+ fs/vboxsf/super.c     | 1 +
+ mm/backing-dev.c      | 1 +
+ 10 files changed, 7 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/block/drbd/drbd_req.c b/drivers/block/drbd/drbd_req.c
-index 674be09b2da94a..4d944f2eb56efa 100644
---- a/drivers/block/drbd/drbd_req.c
-+++ b/drivers/block/drbd/drbd_req.c
-@@ -901,13 +901,9 @@ static bool drbd_may_do_local_read(struct drbd_device *device, sector_t sector,
- static bool remote_due_to_read_balancing(struct drbd_device *device, sector_t sector,
- 		enum drbd_read_balancing rbm)
- {
--	struct backing_dev_info *bdi;
- 	int stripe_shift;
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 93104c7470e8ac..ea1665de7a2079 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -538,7 +538,6 @@ struct request_queue *blk_alloc_queue(int node_id)
+ 	if (!q->stats)
+ 		goto fail_stats;
  
- 	switch (rbm) {
--	case RB_CONGESTED_REMOTE:
--		bdi = device->ldev->backing_bdev->bd_disk->queue->backing_dev_info;
--		return bdi_read_congested(bdi);
- 	case RB_LEAST_PENDING:
- 		return atomic_read(&device->local_cnt) >
- 			atomic_read(&device->ap_pending_cnt) + atomic_read(&device->rs_pending_cnt);
-diff --git a/include/linux/drbd.h b/include/linux/drbd.h
-index 5755537b51b114..6a8286132751df 100644
---- a/include/linux/drbd.h
-+++ b/include/linux/drbd.h
-@@ -94,7 +94,6 @@ enum drbd_read_balancing {
- 	RB_PREFER_REMOTE,
- 	RB_ROUND_ROBIN,
- 	RB_LEAST_PENDING,
--	RB_CONGESTED_REMOTE,
- 	RB_32K_STRIPING,
- 	RB_64K_STRIPING,
- 	RB_128K_STRIPING,
+-	q->backing_dev_info->ra_pages = VM_READAHEAD_PAGES;
+ 	q->backing_dev_info->capabilities = BDI_CAP_CGROUP_WRITEBACK;
+ 	q->node = node_id;
+ 
+diff --git a/drivers/mtd/mtdcore.c b/drivers/mtd/mtdcore.c
+index 7d930569a7dfb7..01b3fe888d885b 100644
+--- a/drivers/mtd/mtdcore.c
++++ b/drivers/mtd/mtdcore.c
+@@ -2196,6 +2196,7 @@ static struct backing_dev_info * __init mtd_bdi_init(char *name)
+ 	bdi = bdi_alloc(NUMA_NO_NODE);
+ 	if (!bdi)
+ 		return ERR_PTR(-ENOMEM);
++	bdi->ra_pages = 0;
+ 
+ 	/*
+ 	 * We put '-0' suffix to the name to get the same name format as we
+diff --git a/fs/9p/vfs_super.c b/fs/9p/vfs_super.c
+index 74df32be4c6a52..a338eb979cadf9 100644
+--- a/fs/9p/vfs_super.c
++++ b/fs/9p/vfs_super.c
+@@ -80,8 +80,8 @@ v9fs_fill_super(struct super_block *sb, struct v9fs_session_info *v9ses,
+ 	if (ret)
+ 		return ret;
+ 
+-	if (v9ses->cache)
+-		sb->s_bdi->ra_pages = VM_READAHEAD_PAGES;
++	if (!v9ses->cache)
++		sb->s_bdi->ra_pages = 0;
+ 
+ 	sb->s_flags |= SB_ACTIVE | SB_DIRSYNC;
+ 	if (!v9ses->cache)
+diff --git a/fs/afs/super.c b/fs/afs/super.c
+index b552357b1d1379..3a40ee752c1e3f 100644
+--- a/fs/afs/super.c
++++ b/fs/afs/super.c
+@@ -456,7 +456,6 @@ static int afs_fill_super(struct super_block *sb, struct afs_fs_context *ctx)
+ 	ret = super_setup_bdi(sb);
+ 	if (ret)
+ 		return ret;
+-	sb->s_bdi->ra_pages	= VM_READAHEAD_PAGES;
+ 
+ 	/* allocate the root inode and dentry */
+ 	if (as->dyn_root) {
+diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
+index ad157b55d7f5f0..f92c45fe019c48 100644
+--- a/fs/btrfs/disk-io.c
++++ b/fs/btrfs/disk-io.c
+@@ -3033,7 +3033,6 @@ int __cold open_ctree(struct super_block *sb, struct btrfs_fs_devices *fs_device
+ 	}
+ 
+ 	sb->s_bdi->capabilities |= BDI_CAP_CGROUP_WRITEBACK;
+-	sb->s_bdi->ra_pages = VM_READAHEAD_PAGES;
+ 	sb->s_bdi->ra_pages *= btrfs_super_num_devices(disk_super);
+ 	sb->s_bdi->ra_pages = max(sb->s_bdi->ra_pages, SZ_4M / PAGE_SIZE);
+ 
+diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
+index bba747520e9b08..17b00670fb539e 100644
+--- a/fs/fuse/inode.c
++++ b/fs/fuse/inode.c
+@@ -1049,7 +1049,6 @@ static int fuse_bdi_init(struct fuse_conn *fc, struct super_block *sb)
+ 	if (err)
+ 		return err;
+ 
+-	sb->s_bdi->ra_pages = VM_READAHEAD_PAGES;
+ 	/* fuse does it's own writeback accounting */
+ 	sb->s_bdi->capabilities = BDI_CAP_NO_ACCT_WB | BDI_CAP_STRICTLIMIT;
+ 
+diff --git a/fs/nfs/super.c b/fs/nfs/super.c
+index 7a70287f21a2c1..f943e37853fa25 100644
+--- a/fs/nfs/super.c
++++ b/fs/nfs/super.c
+@@ -1200,13 +1200,6 @@ static void nfs_get_cache_cookie(struct super_block *sb,
+ }
+ #endif
+ 
+-static void nfs_set_readahead(struct backing_dev_info *bdi,
+-			      unsigned long iomax_pages)
+-{
+-	bdi->ra_pages = VM_READAHEAD_PAGES;
+-	bdi->io_pages = iomax_pages;
+-}
+-
+ int nfs_get_tree_common(struct fs_context *fc)
+ {
+ 	struct nfs_fs_context *ctx = nfs_fc2context(fc);
+@@ -1251,7 +1244,7 @@ int nfs_get_tree_common(struct fs_context *fc)
+ 					     MINOR(server->s_dev));
+ 		if (error)
+ 			goto error_splat_super;
+-		nfs_set_readahead(s->s_bdi, server->rpages);
++		s->s_bdi->io_pages = server->rpages;
+ 		server->super = s;
+ 	}
+ 
+diff --git a/fs/ubifs/super.c b/fs/ubifs/super.c
+index 7fc2f3f07c16ed..ee7692e7a35371 100644
+--- a/fs/ubifs/super.c
++++ b/fs/ubifs/super.c
+@@ -2159,6 +2159,7 @@ static int ubifs_fill_super(struct super_block *sb, void *data, int silent)
+ 				   c->vi.vol_id);
+ 	if (err)
+ 		goto out_close;
++	sb->s_bdi->ra_pages = 0; /* ubifs does its own readahead */
+ 
+ 	sb->s_fs_info = c;
+ 	sb->s_magic = UBIFS_SUPER_MAGIC;
+diff --git a/fs/vboxsf/super.c b/fs/vboxsf/super.c
+index 8fe03b4a0d2b03..6574ae5a97c2c8 100644
+--- a/fs/vboxsf/super.c
++++ b/fs/vboxsf/super.c
+@@ -167,6 +167,7 @@ static int vboxsf_fill_super(struct super_block *sb, struct fs_context *fc)
+ 	err = super_setup_bdi_name(sb, "vboxsf-%d", sbi->bdi_id);
+ 	if (err)
+ 		goto fail_free;
++	sb->s_bdi->ra_pages = 0;
+ 
+ 	/* Turn source into a shfl_string and map the folder */
+ 	size = strlen(fc->source) + 1;
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index 8e8b00627bb2d8..3e441e0ff1bc88 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -746,6 +746,7 @@ struct backing_dev_info *bdi_alloc(int node_id)
+ 		kfree(bdi);
+ 		return NULL;
+ 	}
++	bdi->ra_pages = VM_READAHEAD_PAGES;
+ 	return bdi;
+ }
+ EXPORT_SYMBOL(bdi_alloc);
 -- 
 2.27.0
+
