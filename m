@@ -1,41 +1,37 @@
-From: Johannes Thumshirn <Johannes.Thumshirn-Sjgp3cTcYWE@public.gmane.org>
-Subject: Re: [PATCH 02/14] drbd: remove dead code in device_to_statistics
-Date: Wed, 22 Jul 2020 07:14:55 +0000
-Message-ID: <SN4PR0401MB3598CBAC629556AA70E000CF9B790@SN4PR0401MB3598.namprd04.prod.outlook.com>
+From: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Subject: Re: [PATCH 07/14] block: make QUEUE_SYSFS_BIT_FNS a little more
+ useful
+Date: Wed, 22 Jul 2020 07:17:44 +0000
+Message-ID: <SN4PR0401MB35982D3B04730EA1CA45A25B9B790@SN4PR0401MB3598.namprd04.prod.outlook.com>
 References: <20200722062552.212200-1-hch@lst.de>
- <20200722062552.212200-3-hch@lst.de>
- <SN4PR0401MB3598495DA5AF46CAF019BDC69B790@SN4PR0401MB3598.namprd04.prod.outlook.com>
- <20200722070703.GA25590@lst.de>
+ <20200722062552.212200-8-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1595402099; x=1626938099;
+  t=1595402267; x=1626938267;
   h=from:to:cc:subject:date:message-id:references:
    content-transfer-encoding:mime-version;
-  bh=0sTY9vMtHUqxctAYaAW2HR5t5lGYIpvoNy/R9HnUrqI=;
-  b=B1slpBwKZ4iFuNw1ZS/JufeRaYwUZhxERxL1vBS2ykB0LuRt2YenGDJi
-   F7BJaE5eAJPPVQ9ibwObt/7yufKwox3OEYEaOmcFt0Nv3XXdLYtmCR9AH
-   7MQqV6PKU1YQw+sD8DAA+WNbbOH5ySiKrU0XlhExhTrfiudQGu5QibqH9
-   aETtkjvgQL4vP3bKQbEWkW4YaReqW2eitDloDdSCWDlDk27yuo/g0GJcj
-   TZ7k4kExAdYqmJOIfF+9HpEw4YFkDUlgWxy1qG8t2tlbAYC+ckaUIiozE
-   pu460ZmiRT4Ufoi94HYv1HAViVbZAjis8XU+qqi4/YUS6/7UKQhKNRDbZ
-   g==;
+  bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+  b=CU4Mh6G0qUMYXHrfuwNltXjKo7cJNsxwkf+iqpzg+5PPeO6A8PySc4xX
+   WizRF2JFyk864Xe+AEpuTntvHluJB1Tpx/1m3MLyFlXQ5eia5ePzHuNN2
+   Gwb1rrVZ5p0xxZifvyL6slJC5h/t32kGvbvUXPhiwkYpXAmx4lrhi1JtF
+   3t1jg/yGvwXMgjwg+oD+L8eNVPVOPpdYXXg9FPE5PihPUUTfvhHfAH+2m
+   XnTqpx9/XcjjiHV7QytNYJB4HgMkAOG+HhpX049E9m9CHduKnyINKgt0a
+   K7biFOejHZs7Piia9VGHSl/Mw3KIF90DrUrkf0W9OKkv5uLd9NHVNmj7/
+   Q==;
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=0sTY9vMtHUqxctAYaAW2HR5t5lGYIpvoNy/R9HnUrqI=;
- b=q+Kitj/nvxZOwuDcHmNLboHS3yizg/9iwswsbyTYsOqNMv+neZhr8nQhFYtJfHDQ1fGSUtCULvINoox382lnBbr+f4xNb84n3olK1iO2FspP5aS7IbyxkJOQqKt/WBcKXCn2eradsdqvfxGdQnPdrlGvNbYveuBS5U+YdkrG/Bo=
+ bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+ b=K5/9gm/AkZ9wwFW9t5Ed7sD7PdXzwP1H7ZzL2I4V/HOo3cgqQ/SxzN/U/n4FfHAh6LmzQudUR2e84h0IKd4GV8roPape/8a1Zj2HABfmXQYaw5uC2GRuTrLSNXKWnAtyIpYPl4BiB69Pc12rqbC/Hb3aGUeSf+BXjyFBqH+fa6Y=
 Content-Language: en-US
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org" <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
 
-On 22/07/2020 09:07, Christoph Hellwig wrote:=0A=
-> As far as I can tell this is a netlink user ABI.=0A=
-> =0A=
-=0A=
-I guess it has to stay then=0A=
+Looks good,=0A=
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
