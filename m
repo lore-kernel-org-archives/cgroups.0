@@ -1,95 +1,87 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: PROBLEM: cgroup cost too much memory when transfer small files
- to tmpfs
-Date: Tue, 21 Jul 2020 12:27:49 -0700
-Message-ID: <20200721192749.GB8266@carbon.DHCP.thefacebook.com>
-References: <2E04DD7753BE0E4ABABF0B664610AD6F2620CAF7@dggeml528-mbx.china.huawei.com>
- <20200721174126.GA271870@cmpxchg.org>
- <20200721184959.GA8266@carbon.DHCP.thefacebook.com>
- <CALvZod6-sTBMzvo0ER+RkQ_OM7B4=PKUC-T9gXmQiB8mznunBg@mail.gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: bdi cleanups v2
+Date: Wed, 22 Jul 2020 08:25:38 +0200
+Message-ID: <20200722062552.212200-1-hch@lst.de>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=wP1rcjYzY+zqZYZFuAG3LTgRFambuN6uLhhtU+vtj4I=;
- b=VM+WdZ4/ST0cS//LaJSBiPRq+tuMT7nC4iSJMudUo9gbglQPtUYGrdbuA9L3oLwPK1CU
- d1biamqBYRrMbMT93/7IkQ7RyW5mUUFnWUdJj8CK45wrqwQEIawa9OLnp8fPeKT8iynr
- EBMsiVvy/VK5xltiznlKfRuK+QkSrkiNgCc= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=wP1rcjYzY+zqZYZFuAG3LTgRFambuN6uLhhtU+vtj4I=;
- b=MzzVj7DR93dYn4CLbscftImopNAZ1T5aJlJbOZ9NL2mvxFbAEADD8B9XYEamgFR5oRtMf190rFsaNo03H51oU72E9gwO2AFqsgGp0mVAnyD/fB9gB01s/D6QKd9OFwXVVgRKOl+LxlDMtPjQd+DnaJZVrk09eWHs9Uv7EyLMSR8=
-Content-Disposition: inline
-In-Reply-To: <CALvZod6-sTBMzvo0ER+RkQ_OM7B4=PKUC-T9gXmQiB8mznunBg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=nJ6vd+grvDchfhgOoRJXeEWmE80itmaD6P+ShAEnf0o=; b=ZDViaijTqSHtlhyjsyI79T8eug
+        rxF8+QhhDPG0QLqhRG1no30mE4feK+8BcfyyD6PnWIbom+vDei6S9xfWZUD5/I1NXkleOZ3H5cIdE
+        ZmOtMmGyEs8KSDFFQrG0Pk8McNbUzMlRlCX+EdmtT5la945aY4KCpD4w0MVYqoGExCfq10QbPygUR
+        1IMbJ/NMhkmbwRN9mR0zGpsExYMGkwzksinkhMHiK5U3ps2AcR37Ab5DhNDYGg5MF1+E9ZrwClO9o
+        1vqqsQG7C3ZMM3NdjvQbFcJmZo10g7gSG6ySvzL27dHsK1y7bY6aRW817DytS9LdwV8GmCZhQ4clx
+        dVSoPCqg==;
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, jingrui <jingrui@huawei.com>, "tj@kernel.org" <tj@kernel.org>, Lizefan <lizefan@huawei.com>, "mhocko@kernel.org" <mhocko@kernel.org>, "vdavydov.dev@gmail.com" <vdavydov.dev@gmail.com>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, caihaomin <caihaomin@huawei.com>, "Weiwei (N)" <wick.wei@huawei.com>, guro@cmpxchg.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On Tue, Jul 21, 2020 at 12:12:58PM -0700, Shakeel Butt wrote:
-> On Tue, Jul 21, 2020 at 11:51 AM Roman Gushchin <guro@fb.com> wrote:
-> >
-> > On Tue, Jul 21, 2020 at 01:41:26PM -0400, Johannes Weiner wrote:
-> > > On Tue, Jul 21, 2020 at 11:19:52AM +0000, jingrui wrote:
-> > > > Cc: Johannes Weiner <hannes@cmpxchg.org> ; Michal Hocko <mhocko@kernel.org>; Vladimir Davydov <vdavydov.dev@gmail.com>
-> > > >
-> > > > Thanks.
-> > > >
-> > > > ---
-> > > > PROBLEM: cgroup cost too much memory when transfer small files to tmpfs.
-> > > >
-> > > > keywords: cgroup PERCPU/memory cost too much.
-> > > >
-> > > > description:
-> > > >
-> > > > We send small files from node-A to node-B tmpfs /tmp directory using sftp. On
-> > > > node-B the systemd configured with pam on like below.
-> > > >
-> > > > cat /etc/pam.d/password-auth | grep systemd
-> > > > -session     optional      pam_systemd.so
-> > > >
-> > > > So when transfer a file, a systemd session is created, that means a cgroup is
-> > > > created, then file saved at /tmp will associated with a cgroup object. After
-> > > > file transferred, session and cgroup-dir will be removed, but the file in /tmp
-> > > > still associated with the cgroup object. The PERCPU memory in cgroup/css object
-> > > > cost a lot(about 0.5MB/per-cgroup-object) on 200/cpus machine.
-> > >
-> > > CC Roman who had a patch series to free all this extended (percpu)
-> > > memory upon cgroup deletion:
-> > >
-> > > https://lore.kernel.org/patchwork/cover/1050508/
-> > >
-> > > It looks like it never got merged for some reason.
-> >
-> > The mentioned patchset can make the problem less noticeable, but can't solve it completely.
-> > It has never been merged, because the dying cgroup problem was mostly solved by other methods:
-> > slab memory reparenting and various reclaim fixes. So there was no more reason to complicate
-> > the code to release the memcg memory early.
-> >
-> > The overhead of creating and destroying a new memory cgroup for a transfer of a small
-> > file will be noticeable anyway. So IMO the solution is to use a single cgroup for all
-> > transfers. I don't know if systemd supports such mode out of the box, but it shouldn't
-> > be hard to add it.
-> >
-> > But also I wonder if we need a special tmpfs mount option, something like "noaccount".
-> > Not only for this specific case, but also for the case when tmpfs is extensively
-> > shared between multiple cgroups or if it's used to pass some data from one cgroup
-> > to another, or if we care about the performance more than about the accounting;
-> > in other words for cases where the accounting makes more harm than good.
-> >
-> 
-> Internally we actually have an tmpfs mount option "memcg=" which
-> charges all the memory of the tmpfs files on that mount to the given
-> memcg and the motivation is the shared tmpfs files between multiple
-> cgroups. One concrete use-case is the shared memory used for
-> communication between the application and the user space network
-> driver [1]. The "memcg=root" can be used as a "noaccount" option.
+Hi Jens,
 
-It sounds like a good idea to me. I'm slightly worried about possible
-security implications of allowing to pass a custom cgroup, but I guess
-we can start with supporting the root cgroup only.
+this series contains a bunch of different BDI cleanups.  The biggest item
+is to isolate block drivers from the BDI in preparation of changing the
+lifetime of the block device BDI in a follow up series.
 
-Thanks!
+
+Changes since v1:
+ - rebased to the for-5.9/block-merge branch
+ - explicitly set the readahead to 0 for ubifs, vboxsf and mtd
+ - split the zram block_device operations
+ - let rw_page users fall back to bios in swap_readpage
+
+
+Diffstat:
+ block/blk-core.c              |    2 
+ block/blk-integrity.c         |    4 
+ block/blk-mq-debugfs.c        |    1 
+ block/blk-settings.c          |    5 
+ block/blk-sysfs.c             |  282 ++++++++++--------------------------------
+ block/genhd.c                 |   13 +
+ drivers/block/aoe/aoeblk.c    |    2 
+ drivers/block/brd.c           |    1 
+ drivers/block/drbd/drbd_nl.c  |   18 --
+ drivers/block/drbd/drbd_req.c |    4 
+ drivers/block/rbd.c           |    2 
+ drivers/block/zram/zram_drv.c |   19 +-
+ drivers/md/bcache/super.c     |    4 
+ drivers/md/dm-table.c         |    9 -
+ drivers/md/raid0.c            |   16 --
+ drivers/md/raid10.c           |   46 ++----
+ drivers/md/raid5.c            |   31 +---
+ drivers/mmc/core/queue.c      |    3 
+ drivers/mtd/mtdcore.c         |    1 
+ drivers/nvdimm/btt.c          |    2 
+ drivers/nvdimm/pmem.c         |    1 
+ drivers/nvme/host/core.c      |    3 
+ drivers/nvme/host/multipath.c |   10 -
+ drivers/scsi/iscsi_tcp.c      |    4 
+ fs/9p/vfs_file.c              |    2 
+ fs/9p/vfs_super.c             |    4 
+ fs/afs/super.c                |    1 
+ fs/btrfs/disk-io.c            |    2 
+ fs/fs-writeback.c             |    7 -
+ fs/fuse/inode.c               |    4 
+ fs/namei.c                    |    4 
+ fs/nfs/super.c                |    9 -
+ fs/super.c                    |    2 
+ fs/ubifs/super.c              |    1 
+ fs/vboxsf/super.c             |    1 
+ include/linux/backing-dev.h   |   78 +----------
+ include/linux/blkdev.h        |    3 
+ include/linux/drbd.h          |    1 
+ include/linux/fs.h            |    2 
+ mm/backing-dev.c              |   12 -
+ mm/filemap.c                  |    4 
+ mm/memcontrol.c               |    2 
+ mm/memory-failure.c           |    2 
+ mm/migrate.c                  |    2 
+ mm/mmap.c                     |    2 
+ mm/page-writeback.c           |   18 +-
+ mm/page_io.c                  |   18 +-
+ mm/swapfile.c                 |    4 
+ 48 files changed, 204 insertions(+), 464 deletions(-)
