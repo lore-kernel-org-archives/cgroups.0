@@ -1,47 +1,72 @@
 From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: BUG at mm/vmalloc.c:3089! - invalid opcode: 0000 [#1] SMP KASAN PTI
-Date: Wed, 22 Jul 2020 09:16:57 -0700
-Message-ID: <CALvZod5cBTsytQz5=EbqT_s1_ZJ8YpkBe+CLEAU+25FP4kHSAg@mail.gmail.com>
-References: <CA+G9fYuj3bHUMz8XQztbmTgF0c5+rZ5-FkUjFyvEftej2jLT+Q@mail.gmail.com>
- <CAK8P3a3br1bDc8C6UjRWzdmwzVV26YYe3ixHV7LH5Z0-OiqPQQ@mail.gmail.com>
+Subject: Re: [PATCH 11/14] mm: use SWP_SYNCHRONOUS_IO more intelligently
+Date: Wed, 22 Jul 2020 09:26:45 -0700
+Message-ID: <CALvZod6zF7Ak8KWf4dq0pEF2ty7JN_SyNE7PxLjrfF+EuDbZ2w@mail.gmail.com>
+References: <20200722062552.212200-1-hch@lst.de> <20200722062552.212200-12-hch@lst.de>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=tcL+fVRHFbwjcT2YoeEyW0ovDsmOpco9f4REaf4pOLw=;
-        b=Yubxcjwtpc7YJGf0Tziz+sT7J49N0W4XOpcuP6qz+/oiMJmZWQU/Kd8bRbKoKhkvRZ
-         RnULiCwqMICOqU1HdOr0DGkfNUWsljA27n+XJ+U5D4l98CuiRYbkSXMPr4+W0DyFNtb+
-         AY+GHqK5P2TwUgTqNVgFJTxJoi0sTaFqqe+6N0p/LenOodA1YiaVIgE+e2BMkKkM402X
-         R4n2L8/Xi3rrf4jYh3bII4QM3zJZ2tIZWJ5l8SbQpLT5zkqRCfn06WbbJYUNLuUFZK79
-         2WjQU9hbziDqo4arXlFdwyZ0UC8MY80G8CFPHzWB/TsG+e4NxODiBVUvc4xDIlT2n9fa
-         B76A==
-In-Reply-To: <CAK8P3a3br1bDc8C6UjRWzdmwzVV26YYe3ixHV7LH5Z0-OiqPQQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+        bh=2kHXQvVGBuGkaVHirVH2ldXpqiigd2kMJlKCki7PqMg=;
+        b=ra98AzIYvVtLIKFmQ0582LpmVzZLDFtXPiDLxSIB7SoDAYKfzHUmecVZxZuP/M6Pvb
+         fDufO1C+Q4FiAbYniw6ePsXq6IniiF94IvlcqmWtmSWtqcN5EqOCbg+nsxHw7v2/BzpD
+         yqdQ4eKGDs88B1pTQ+/lVZ3atNYajhFCrKFlxc6iGCv2w9U5QibkcB5fjdiaYFspwg/7
+         DUAeDu27aJnyG2kaxKFRHFuV9pRJvCocGy9/pSs9I4O2w31H+artkiu+wABWqj20BtFU
+         4mfkDrAHear+tV6pm6mm5Q1TEtNXZAq/Blh918qa8SfTMXEI9nUlQIkjpdOHfrsto+Ju
+         hfqQ==
+In-Reply-To: <20200722062552.212200-12-hch@lst.de>
+Sender: linux-raid-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Naresh Kamboju <naresh.kamboju@linaro.org>, open list <linux-kernel@vger.kernel.org>, Linux-Next Mailing List <linux-next@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, lkft-triage@lists.linaro.org, LTP List <ltp@lists.linux.it>, Cgroups <cgroups@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Yafang Shao <laoar.shao@gmail.com>, Joel Fernandes <joel@joelfernandes.org>, "Uladzislau Rezki (Sony)" <urezki@gmail.com>, Matthew Wilcox <willy@infradead.org>, Oleksiy Avramchenko <oleksiy.avramchenko@sonymobile.com>, Steven Rostedt <rostedt@goodmis.org>, Stephen Rothwell <sfr@canb.auug.org.au>, Mike Rapoport <rppt@linux.ibm.com>, David Hildenbrand <david@redhat.com>, Joerg Roedel <jroedel@suse.de>, Roman
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>
 
-On Wed, Jul 22, 2020 at 1:55 AM Arnd Bergmann <arnd@arndb.de> wrote:
+On Tue, Jul 21, 2020 at 11:27 PM Christoph Hellwig <hch@lst.de> wrote:
 >
-> Adding Roman Gushchin to Cc, he touched that code recently.
+> There is no point in trying to call bdev_read_page if SWP_SYNCHRONOUS_IO
+> is not set, as the device won't support it.
 >
-> Naresh, if nobody has any immediate ideas, you could double-check by
-> reverting these commits:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  mm/page_io.c | 18 ++++++++++--------
+>  1 file changed, 10 insertions(+), 8 deletions(-)
 >
-> e0b8d00b7561 mm: memcg/percpu: per-memcg percpu memory statistics
-> 99411af13595 mm/percpu: fix 'defined but not used' warning
-> 9398ce6306b6 mm-memcg-percpu-account-percpu-memory-to-memory-cgroups-fix-fix
-> 54116d471779 mm-memcg-percpu-account-percpu-memory-to-memory-cgroups-fix
-> ec518e090843 mm: memcg/percpu: account percpu memory to memory cgroups
-> 9bc897d18dc3 percpu: return number of released bytes from pcpu_free_area()
+> diff --git a/mm/page_io.c b/mm/page_io.c
+> index ccda7679008851..442061348dfb26 100644
+> --- a/mm/page_io.c
+> +++ b/mm/page_io.c
+> @@ -403,15 +403,17 @@ int swap_readpage(struct page *page, bool synchronous)
+>                 goto out;
+>         }
 >
->        Arnd
->
+> -       ret = bdev_read_page(sis->bdev, swap_page_sector(page), page);
+> -       if (!ret) {
+> -               if (trylock_page(page)) {
+> -                       swap_slot_free_notify(page);
+> -                       unlock_page(page);
+> -               }
+> +       if (sis->flags & SWP_SYNCHRONOUS_IO) {
+> +               ret = bdev_read_page(sis->bdev, swap_page_sector(page), page);
+> +               if (ret) {
 
-I think syzbot has bisected this issue to the suspect patch.
+!ret
 
-https://lore.kernel.org/lkml/00000000000043f09405ab01b0b8@google.com/
+> +                       if (trylock_page(page)) {
+> +                               swap_slot_free_notify(page);
+> +                               unlock_page(page);
+> +                       }
+>
+> -               count_vm_event(PSWPIN);
+> -               goto out;
+> +                       count_vm_event(PSWPIN);
+> +                       goto out;
+> +               }
+>         }
+>
+>         ret = 0;
+> --
+> 2.27.0
+>
