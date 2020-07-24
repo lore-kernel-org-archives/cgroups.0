@@ -1,72 +1,65 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH 11/14] mm: use SWP_SYNCHRONOUS_IO more intelligently
-Date: Wed, 22 Jul 2020 09:26:45 -0700
-Message-ID: <CALvZod6zF7Ak8KWf4dq0pEF2ty7JN_SyNE7PxLjrfF+EuDbZ2w@mail.gmail.com>
-References: <20200722062552.212200-1-hch@lst.de> <20200722062552.212200-12-hch@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/14] fs: remove the unused SB_I_MULTIROOT flag
+Date: Fri, 24 Jul 2020 09:33:00 +0200
+Message-ID: <20200724073313.138789-2-hch@lst.de>
+References: <20200724073313.138789-1-hch@lst.de>
 Mime-Version: 1.0
-Return-path: <linux-raid-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=2kHXQvVGBuGkaVHirVH2ldXpqiigd2kMJlKCki7PqMg=;
-        b=ra98AzIYvVtLIKFmQ0582LpmVzZLDFtXPiDLxSIB7SoDAYKfzHUmecVZxZuP/M6Pvb
-         fDufO1C+Q4FiAbYniw6ePsXq6IniiF94IvlcqmWtmSWtqcN5EqOCbg+nsxHw7v2/BzpD
-         yqdQ4eKGDs88B1pTQ+/lVZ3atNYajhFCrKFlxc6iGCv2w9U5QibkcB5fjdiaYFspwg/7
-         DUAeDu27aJnyG2kaxKFRHFuV9pRJvCocGy9/pSs9I4O2w31H+artkiu+wABWqj20BtFU
-         4mfkDrAHear+tV6pm6mm5Q1TEtNXZAq/Blh918qa8SfTMXEI9nUlQIkjpdOHfrsto+Ju
-         hfqQ==
-In-Reply-To: <20200722062552.212200-12-hch@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=SQdEEUbS15XfNOnvBJj0vCvV6+m0XV9g2xcYAZ+hMD4=; b=ErKFkM8+xAnLv8ghTc+z7TppRW
+        abrdhTbmPqT088dPE9QHEv+tkzQgkzlQ5OviRYvKUAPCbc6omEDkMVWYL4eZliCWI3xctXhpxqeRl
+        kx8mj55GmotbGGH7Rqs//hrAzITvZutCtAAipQWLdaqsP3pldNSNY00YlwxtRbslD6FLsk8sOIdAz
+        vQIfAA0rgJFNY1gRlJyFvA2t4ut/pUAy0MZG+nfpd3VP5UsyMcp+wqCLC69GIGD6idOoV9KKs5SGu
+        GDdHld2l4iDEB/5utcirB/gBep8NUa6iAKiWdsJPp2xS0HeDRjgcakvGHaXExKc1yC0W/yFvXZKIS
+        ADJovoVA==;
+In-Reply-To: <20200724073313.138789-1-hch@lst.de>
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
-On Tue, Jul 21, 2020 at 11:27 PM Christoph Hellwig <hch@lst.de> wrote:
->
-> There is no point in trying to call bdev_read_page if SWP_SYNCHRONOUS_IO
-> is not set, as the device won't support it.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  mm/page_io.c | 18 ++++++++++--------
->  1 file changed, 10 insertions(+), 8 deletions(-)
->
-> diff --git a/mm/page_io.c b/mm/page_io.c
-> index ccda7679008851..442061348dfb26 100644
-> --- a/mm/page_io.c
-> +++ b/mm/page_io.c
-> @@ -403,15 +403,17 @@ int swap_readpage(struct page *page, bool synchronous)
->                 goto out;
->         }
->
-> -       ret = bdev_read_page(sis->bdev, swap_page_sector(page), page);
-> -       if (!ret) {
-> -               if (trylock_page(page)) {
-> -                       swap_slot_free_notify(page);
-> -                       unlock_page(page);
-> -               }
-> +       if (sis->flags & SWP_SYNCHRONOUS_IO) {
-> +               ret = bdev_read_page(sis->bdev, swap_page_sector(page), page);
-> +               if (ret) {
+The last user of SB_I_MULTIROOT is disappeared with commit f2aedb713c28
+("NFS: Add fs_context support.")
 
-!ret
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+---
+ fs/namei.c         | 4 ++--
+ include/linux/fs.h | 1 -
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-> +                       if (trylock_page(page)) {
-> +                               swap_slot_free_notify(page);
-> +                               unlock_page(page);
-> +                       }
->
-> -               count_vm_event(PSWPIN);
-> -               goto out;
-> +                       count_vm_event(PSWPIN);
-> +                       goto out;
-> +               }
->         }
->
->         ret = 0;
-> --
-> 2.27.0
->
+diff --git a/fs/namei.c b/fs/namei.c
+index 72d4219c93acb7..e9ff0d54a110a7 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -568,8 +568,8 @@ static bool path_connected(struct vfsmount *mnt, struct dentry *dentry)
+ {
+ 	struct super_block *sb = mnt->mnt_sb;
+ 
+-	/* Bind mounts and multi-root filesystems can have disconnected paths */
+-	if (!(sb->s_iflags & SB_I_MULTIROOT) && (mnt->mnt_root == sb->s_root))
++	/* Bind mounts can have disconnected paths */
++	if (mnt->mnt_root == sb->s_root)
+ 		return true;
+ 
+ 	return is_subdir(dentry, mnt->mnt_root);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 41cd993ec0f686..236543605dd118 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1366,7 +1366,6 @@ extern int send_sigurg(struct fown_struct *fown);
+ #define SB_I_CGROUPWB	0x00000001	/* cgroup-aware writeback enabled */
+ #define SB_I_NOEXEC	0x00000002	/* Ignore executables on this fs */
+ #define SB_I_NODEV	0x00000004	/* Ignore devices on this fs */
+-#define SB_I_MULTIROOT	0x00000008	/* Multiple roots to the dentry tree */
+ 
+ /* sb->s_iflags to limit user namespace mounts */
+ #define SB_I_USERNS_VISIBLE		0x00000010 /* fstype already mounted */
+-- 
+2.27.0
+
