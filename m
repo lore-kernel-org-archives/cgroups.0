@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 09/14] bdi: remove BDI_CAP_CGROUP_WRITEBACK
-Date: Fri, 24 Jul 2020 09:33:08 +0200
-Message-ID: <20200724073313.138789-10-hch@lst.de>
+Subject: [PATCH 06/14] block: lift setting the readahead size into the block layer
+Date: Fri, 24 Jul 2020 09:33:05 +0200
+Message-ID: <20200724073313.138789-7-hch@lst.de>
 References: <20200724073313.138789-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,87 +10,288 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=1H+lWVRYCWt4MODEgPxnHmFqCfz3JoG7JBlKzqx59xM=; b=T4Bph6IRUwEVNRXHBG6j0LnbUc
-        DO87FJZlLoGKeWdBGg6ovyV6C0H0aO6V19fLdtuE19CNkYKu2qNPndr7d+rpBwgqnDj4auyUam6ma
-        pWUNww9SijV5BDBEebU7VCM9mA97/l+vKGsCA+kOJbNB2pwsqWckTTVpfi62+so2mBDyHiUCpGM2q
-        VeGk6KkvyCv6bxHGdAcE4wX31YK85yTBCCC3UXIJrjtQIcqVf6vfGO6eQEsCPgwA7SRsk/r5xPYRl
-        /SGbxrSMZZJmxeZdXQ3o8XSDbs4M12PfNufk+fEOQvxnviYjA1iuxlF1QhEeci8ItA1graG/znYS2
-        QZNRbszw==;
+        bh=FzZ6/zgVBqPtRjoXgIlMHr6borSDoijxnK9rowFZCss=; b=CfD2KeaRJ2qBZP1kGC4kr75Plv
+        RUd9ep4PNe4vlSlJj9CkVcud4LGi1HiZsC1Gm26T7GCAzkMmWrgDMCo9enSiZ3R3KFjnANsLche7J
+        pGpbI3JkAQZKSWh3c/YykNOuyTtW/2oP/VUz8szZ0Qj7JLhD6aBkkFwWPeuxBKUCM8aRLakaop48L
+        lJfYG3VKEJ9U4reUzRBpsZqrJUot2zofzJHGsLG1UUNg4hnAbFhK1rW0BP1yhsESEI3KNHSrTpyhc
+        1DGrBJAoSyQjjGZTPk340CKjIKrbfgmclbSslue9JMa23y9f78VPKszpgrbxsgx1Z5XTppjom91TI
+        FTAfadJw==;
 In-Reply-To: <20200724073313.138789-1-hch-jcswGhMUV9g@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Thumshirn <johannes.thumshirn-Sjgp3cTcYWE@public.gmane.org>
+Cc: Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Just checking SB_I_CGROUPWB for cgroup writeback support is enough.
-Either the file system allocates its own bdi (e.g. btrfs), in which case
-it is known to support cgroup writeback, or the bdi comes from the block
-layer, which always supports cgroup writeback.
+Drivers shouldn't really mess with the readahead size, as that is a VM
+concept.  Instead set it based on the optimal I/O size by lifting the
+algorithm from the md driver when registering the disk.  Also set
+bdi->io_pages there as well by applying the same scheme based on
+max_sectors.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn-Sjgp3cTcYWE@public.gmane.org>
 ---
- block/blk-core.c            | 1 -
- fs/btrfs/disk-io.c          | 1 -
- include/linux/backing-dev.h | 8 +++-----
- 3 files changed, 3 insertions(+), 7 deletions(-)
+ block/blk-settings.c         |  5 ++---
+ block/blk-sysfs.c            |  1 -
+ block/genhd.c                | 13 +++++++++++--
+ drivers/block/aoe/aoeblk.c   |  2 --
+ drivers/block/drbd/drbd_nl.c | 12 +-----------
+ drivers/md/bcache/super.c    |  4 ----
+ drivers/md/dm-table.c        |  3 ---
+ drivers/md/raid0.c           | 16 ----------------
+ drivers/md/raid10.c          | 24 +-----------------------
+ drivers/md/raid5.c           | 13 +------------
+ 10 files changed, 16 insertions(+), 77 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index ea1665de7a2079..68db7e745b49dd 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -538,7 +538,6 @@ struct request_queue *blk_alloc_queue(int node_id)
- 	if (!q->stats)
- 		goto fail_stats;
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index 76a7e03bcd6cac..01049e9b998f1d 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -452,6 +452,8 @@ EXPORT_SYMBOL(blk_limits_io_opt);
+ void blk_queue_io_opt(struct request_queue *q, unsigned int opt)
+ {
+ 	blk_limits_io_opt(&q->limits, opt);
++	q->backing_dev_info->ra_pages =
++		max(queue_io_opt(q) * 2 / PAGE_SIZE, VM_READAHEAD_PAGES);
+ }
+ EXPORT_SYMBOL(blk_queue_io_opt);
  
--	q->backing_dev_info->capabilities = BDI_CAP_CGROUP_WRITEBACK;
- 	q->node = node_id;
- 
- 	timer_setup(&q->backing_dev_info->laptop_mode_wb_timer,
-diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
-index f92c45fe019c48..4b5a8640329e4c 100644
---- a/fs/btrfs/disk-io.c
-+++ b/fs/btrfs/disk-io.c
-@@ -3032,7 +3032,6 @@ int __cold open_ctree(struct super_block *sb, struct btrfs_fs_devices *fs_device
- 		goto fail_sb_buffer;
+@@ -628,9 +630,6 @@ void disk_stack_limits(struct gendisk *disk, struct block_device *bdev,
+ 		printk(KERN_NOTICE "%s: Warning: Device %s is misaligned\n",
+ 		       top, bottom);
  	}
+-
+-	t->backing_dev_info->io_pages =
+-		t->limits.max_sectors >> (PAGE_SHIFT - 9);
+ }
+ EXPORT_SYMBOL(disk_stack_limits);
  
--	sb->s_bdi->capabilities |= BDI_CAP_CGROUP_WRITEBACK;
- 	sb->s_bdi->ra_pages *= btrfs_super_num_devices(disk_super);
- 	sb->s_bdi->ra_pages = max(sb->s_bdi->ra_pages, SZ_4M / PAGE_SIZE);
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 7dda709f3ccb6f..ce418d9128a0b2 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -245,7 +245,6 @@ queue_max_sectors_store(struct request_queue *q, const char *page, size_t count)
  
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 0b06b2d26c9aa3..52583b6f2ea05d 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -123,7 +123,6 @@ int bdi_set_max_ratio(struct backing_dev_info *bdi, unsigned int max_ratio);
-  * BDI_CAP_NO_ACCT_WB:     Don't automatically account writeback pages
-  * BDI_CAP_STRICTLIMIT:    Keep number of dirty pages below bdi threshold.
-  *
-- * BDI_CAP_CGROUP_WRITEBACK: Supports cgroup-aware writeback.
-  * BDI_CAP_SYNCHRONOUS_IO: Device is so fast that asynchronous IO would be
-  *			   inefficient.
-  */
-@@ -233,9 +232,9 @@ int inode_congested(struct inode *inode, int cong_bits);
-  * inode_cgwb_enabled - test whether cgroup writeback is enabled on an inode
-  * @inode: inode of interest
-  *
-- * cgroup writeback requires support from both the bdi and filesystem.
-- * Also, both memcg and iocg have to be on the default hierarchy.  Test
-- * whether all conditions are met.
-+ * Cgroup writeback requires support from the filesystem.  Also, both memcg and
-+ * iocg have to be on the default hierarchy.  Test whether all conditions are
-+ * met.
-  *
-  * Note that the test result may change dynamically on the same inode
-  * depending on how memcg and iocg are configured.
-@@ -247,7 +246,6 @@ static inline bool inode_cgwb_enabled(struct inode *inode)
- 	return cgroup_subsys_on_dfl(memory_cgrp_subsys) &&
- 		cgroup_subsys_on_dfl(io_cgrp_subsys) &&
- 		bdi_cap_account_dirty(bdi) &&
--		(bdi->capabilities & BDI_CAP_CGROUP_WRITEBACK) &&
- 		(inode->i_sb->s_iflags & SB_I_CGROUPWB);
+ 	spin_lock_irq(&q->queue_lock);
+ 	q->limits.max_sectors = max_sectors_kb << 1;
+-	q->backing_dev_info->io_pages = max_sectors_kb >> (PAGE_SHIFT - 10);
+ 	spin_unlock_irq(&q->queue_lock);
+ 
+ 	return ret;
+diff --git a/block/genhd.c b/block/genhd.c
+index 8b1e9f48957cb5..097d4e4bc0b8a2 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -775,6 +775,7 @@ static void __device_add_disk(struct device *parent, struct gendisk *disk,
+ 			      const struct attribute_group **groups,
+ 			      bool register_queue)
+ {
++	struct request_queue *q = disk->queue;
+ 	dev_t devt;
+ 	int retval;
+ 
+@@ -785,7 +786,7 @@ static void __device_add_disk(struct device *parent, struct gendisk *disk,
+ 	 * registration.
+ 	 */
+ 	if (register_queue)
+-		elevator_init_mq(disk->queue);
++		elevator_init_mq(q);
+ 
+ 	/* minors == 0 indicates to use ext devt from part0 and should
+ 	 * be accompanied with EXT_DEVT flag.  Make sure all
+@@ -815,10 +816,18 @@ static void __device_add_disk(struct device *parent, struct gendisk *disk,
+ 		disk->flags |= GENHD_FL_SUPPRESS_PARTITION_INFO;
+ 		disk->flags |= GENHD_FL_NO_PART_SCAN;
+ 	} else {
+-		struct backing_dev_info *bdi = disk->queue->backing_dev_info;
++		struct backing_dev_info *bdi = q->backing_dev_info;
+ 		struct device *dev = disk_to_dev(disk);
+ 		int ret;
+ 
++		/*
++		 * For read-ahead of large files to be effective, we need to
++		 * readahead at least twice the optimal I/O size.
++		 */
++		bdi->ra_pages = max(queue_io_opt(q) * 2 / PAGE_SIZE,
++				    VM_READAHEAD_PAGES);
++		bdi->io_pages = queue_max_sectors(q) >> (PAGE_SHIFT - 9);
++
+ 		/* Register BDI before referencing it from bdev */
+ 		dev->devt = devt;
+ 		ret = bdi_register(bdi, "%u:%u", MAJOR(devt), MINOR(devt));
+diff --git a/drivers/block/aoe/aoeblk.c b/drivers/block/aoe/aoeblk.c
+index 5ca7216e9e01f3..89b33b402b4e52 100644
+--- a/drivers/block/aoe/aoeblk.c
++++ b/drivers/block/aoe/aoeblk.c
+@@ -347,7 +347,6 @@ aoeblk_gdalloc(void *vp)
+ 	mempool_t *mp;
+ 	struct request_queue *q;
+ 	struct blk_mq_tag_set *set;
+-	enum { KB = 1024, MB = KB * KB, READ_AHEAD = 2 * MB, };
+ 	ulong flags;
+ 	int late = 0;
+ 	int err;
+@@ -407,7 +406,6 @@ aoeblk_gdalloc(void *vp)
+ 	WARN_ON(d->gd);
+ 	WARN_ON(d->flags & DEVFL_UP);
+ 	blk_queue_max_hw_sectors(q, BLK_DEF_MAX_SECTORS);
+-	q->backing_dev_info->ra_pages = READ_AHEAD / PAGE_SIZE;
+ 	d->bufpool = mp;
+ 	d->blkq = gd->queue = q;
+ 	q->queuedata = d;
+diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd_nl.c
+index 650372ee2c7822..212bf711fb6b41 100644
+--- a/drivers/block/drbd/drbd_nl.c
++++ b/drivers/block/drbd/drbd_nl.c
+@@ -1360,18 +1360,8 @@ static void drbd_setup_queue_param(struct drbd_device *device, struct drbd_backi
+ 	decide_on_discard_support(device, q, b, discard_zeroes_if_aligned);
+ 	decide_on_write_same_support(device, q, b, o, disable_write_same);
+ 
+-	if (b) {
++	if (b)
+ 		blk_stack_limits(&q->limits, &b->limits, 0);
+-
+-		if (q->backing_dev_info->ra_pages !=
+-		    b->backing_dev_info->ra_pages) {
+-			drbd_info(device, "Adjusting my ra_pages to backing device's (%lu -> %lu)\n",
+-				 q->backing_dev_info->ra_pages,
+-				 b->backing_dev_info->ra_pages);
+-			q->backing_dev_info->ra_pages =
+-						b->backing_dev_info->ra_pages;
+-		}
+-	}
+ 	fixup_discard_if_not_supported(q);
+ 	fixup_write_zeroes(device, q);
+ }
+diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+index 9e45faa054b6f4..9d3f0711be030f 100644
+--- a/drivers/md/bcache/super.c
++++ b/drivers/md/bcache/super.c
+@@ -1367,10 +1367,6 @@ static int cached_dev_init(struct cached_dev *dc, unsigned int block_size)
+ 	if (ret)
+ 		return ret;
+ 
+-	dc->disk.disk->queue->backing_dev_info->ra_pages =
+-		max(dc->disk.disk->queue->backing_dev_info->ra_pages,
+-		    q->backing_dev_info->ra_pages);
+-
+ 	atomic_set(&dc->io_errors, 0);
+ 	dc->io_disable = false;
+ 	dc->error_limit = DEFAULT_CACHED_DEV_ERROR_LIMIT;
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index aac4c31cfc8498..324a42ed2f8894 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -1924,9 +1924,6 @@ void dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
+ 		q->nr_zones = blkdev_nr_zones(t->md->disk);
+ 	}
+ #endif
+-
+-	/* Allow reads to exceed readahead limits */
+-	q->backing_dev_info->io_pages = limits->max_sectors >> (PAGE_SHIFT - 9);
+ }
+ 
+ unsigned int dm_table_get_num_targets(struct dm_table *t)
+diff --git a/drivers/md/raid0.c b/drivers/md/raid0.c
+index f54a449f97aa79..aa2d7279176880 100644
+--- a/drivers/md/raid0.c
++++ b/drivers/md/raid0.c
+@@ -410,22 +410,6 @@ static int raid0_run(struct mddev *mddev)
+ 		 mdname(mddev),
+ 		 (unsigned long long)mddev->array_sectors);
+ 
+-	if (mddev->queue) {
+-		/* calculate the max read-ahead size.
+-		 * For read-ahead of large files to be effective, we need to
+-		 * readahead at least twice a whole stripe. i.e. number of devices
+-		 * multiplied by chunk size times 2.
+-		 * If an individual device has an ra_pages greater than the
+-		 * chunk size, then we will not drive that device as hard as it
+-		 * wants.  We consider this a configuration error: a larger
+-		 * chunksize should be used in that case.
+-		 */
+-		int stripe = mddev->raid_disks *
+-			(mddev->chunk_sectors << 9) / PAGE_SIZE;
+-		if (mddev->queue->backing_dev_info->ra_pages < 2* stripe)
+-			mddev->queue->backing_dev_info->ra_pages = 2* stripe;
+-	}
+-
+ 	dump_zones(mddev);
+ 
+ 	ret = md_integrity_register(mddev);
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index 9f88ff9bdee437..23d15acbf457d4 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -3865,19 +3865,6 @@ static int raid10_run(struct mddev *mddev)
+ 	mddev->resync_max_sectors = size;
+ 	set_bit(MD_FAILFAST_SUPPORTED, &mddev->flags);
+ 
+-	if (mddev->queue) {
+-		int stripe = conf->geo.raid_disks *
+-			((mddev->chunk_sectors << 9) / PAGE_SIZE);
+-
+-		/* Calculate max read-ahead size.
+-		 * We need to readahead at least twice a whole stripe....
+-		 * maybe...
+-		 */
+-		stripe /= conf->geo.near_copies;
+-		if (mddev->queue->backing_dev_info->ra_pages < 2 * stripe)
+-			mddev->queue->backing_dev_info->ra_pages = 2 * stripe;
+-	}
+-
+ 	if (md_integrity_register(mddev))
+ 		goto out_free_conf;
+ 
+@@ -4715,17 +4702,8 @@ static void end_reshape(struct r10conf *conf)
+ 	conf->reshape_safe = MaxSector;
+ 	spin_unlock_irq(&conf->device_lock);
+ 
+-	/* read-ahead size must cover two whole stripes, which is
+-	 * 2 * (datadisks) * chunksize where 'n' is the number of raid devices
+-	 */
+-	if (conf->mddev->queue) {
+-		int stripe = conf->geo.raid_disks *
+-			((conf->mddev->chunk_sectors << 9) / PAGE_SIZE);
+-		stripe /= conf->geo.near_copies;
+-		if (conf->mddev->queue->backing_dev_info->ra_pages < 2 * stripe)
+-			conf->mddev->queue->backing_dev_info->ra_pages = 2 * stripe;
++	if (conf->mddev->queue)
+ 		raid10_set_io_opt(conf);
+-	}
+ 	conf->fullsync = 0;
+ }
+ 
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 68e41ce3ca75cc..415ce3cc155698 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7413,8 +7413,6 @@ static int raid5_run(struct mddev *mddev)
+ 		int data_disks = conf->previous_raid_disks - conf->max_degraded;
+ 		int stripe = data_disks *
+ 			((mddev->chunk_sectors << 9) / PAGE_SIZE);
+-		if (mddev->queue->backing_dev_info->ra_pages < 2 * stripe)
+-			mddev->queue->backing_dev_info->ra_pages = 2 * stripe;
+ 
+ 		chunk_size = mddev->chunk_sectors << 9;
+ 		blk_queue_io_min(mddev->queue, chunk_size);
+@@ -8002,17 +8000,8 @@ static void end_reshape(struct r5conf *conf)
+ 		spin_unlock_irq(&conf->device_lock);
+ 		wake_up(&conf->wait_for_overlap);
+ 
+-		/* read-ahead size must cover two whole stripes, which is
+-		 * 2 * (datadisks) * chunksize where 'n' is the number of raid devices
+-		 */
+-		if (conf->mddev->queue) {
+-			int data_disks = conf->raid_disks - conf->max_degraded;
+-			int stripe = data_disks * ((conf->chunk_sectors << 9)
+-						   / PAGE_SIZE);
+-			if (conf->mddev->queue->backing_dev_info->ra_pages < 2 * stripe)
+-				conf->mddev->queue->backing_dev_info->ra_pages = 2 * stripe;
++		if (conf->mddev->queue)
+ 			raid5_set_io_opt(conf);
+-		}
+ 	}
  }
  
 -- 
