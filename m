@@ -1,120 +1,62 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v17 00/21] per memcg lru lock
-Date: Sat, 25 Jul 2020 20:59:37 +0800
-Message-ID: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: [PATCH v17 06/21] mm/thp: clean up lru_add_page_tail
+Date: Sat, 25 Jul 2020 20:59:43 +0800
+Message-ID: <1595681998-19193-7-git-send-email-alex.shi@linux.alibaba.com>
+References: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com
 
-The new version which bases on v5.8-rc6. It includes Hugh Dickins fix in 
-mm/swap.c and mm/mlock.c fix which Alexander Duyck pointed out, then
-removes 'mm/mlock: reorder isolation sequence during munlock' 
+Since the first parameter is only used by head page, it's better to make
+it explicit.
 
-Hi Johanness & Hugh & Alexander & Willy,
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Reviewed-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
+---
+ mm/huge_memory.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Could you like to give a reviewed by since you address much of issue and
-give lots of suggestions! Many thanks!
-
-Current lru_lock is one for each of node, pgdat->lru_lock, that guard for
-lru lists, but now we had moved the lru lists into memcg for long time. Still
-using per node lru_lock is clearly unscalable, pages on each of memcgs have
-to compete each others for a whole lru_lock. This patchset try to use per
-lruvec/memcg lru_lock to repleace per node lru lock to guard lru lists, make
-it scalable for memcgs and get performance gain.
-
-Currently lru_lock still guards both lru list and page's lru bit, that's ok.
-but if we want to use specific lruvec lock on the page, we need to pin down
-the page's lruvec/memcg during locking. Just taking lruvec lock first may be
-undermined by the page's memcg charge/migration. To fix this problem, we could
-take out the page's lru bit clear and use it as pin down action to block the
-memcg changes. That's the reason for new atomic func TestClearPageLRU.
-So now isolating a page need both actions: TestClearPageLRU and hold the
-lru_lock.
-
-The typical usage of this is isolate_migratepages_block() in compaction.c
-we have to take lru bit before lru lock, that serialized the page isolation
-in memcg page charge/migration which will change page's lruvec and new 
-lru_lock in it.
-
-The above solution suggested by Johannes Weiner, and based on his new memcg 
-charge path, then have this patchset. (Hugh Dickins tested and contributed much
-code from compaction fix to general code polish, thanks a lot!).
-
-The patchset includes 3 parts:
-1, some code cleanup and minimum optimization as a preparation.
-2, use TestCleanPageLRU as page isolation's precondition
-3, replace per node lru_lock with per memcg per node lru_lock
-
-Following Daniel Jordan's suggestion, I have run 208 'dd' with on 104
-containers on a 2s * 26cores * HT box with a modefied case:
-https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/tree/case-lru-file-readtwice
-With this patchset, the readtwice performance increased about 80%
-in concurrent containers.
-
-Thanks Hugh Dickins and Konstantin Khlebnikov, they both brought this
-idea 8 years ago, and others who give comments as well: Daniel Jordan, 
-Mel Gorman, Shakeel Butt, Matthew Wilcox etc.
-
-Thanks for Testing support from Intel 0day and Rong Chen, Fengguang Wu,
-and Yun Wang. Hugh Dickins also shared his kbuild-swap case. Thanks!
-
-
-Alex Shi (19):
-  mm/vmscan: remove unnecessary lruvec adding
-  mm/page_idle: no unlikely double check for idle page counting
-  mm/compaction: correct the comments of compact_defer_shift
-  mm/compaction: rename compact_deferred as compact_should_defer
-  mm/thp: move lru_add_page_tail func to huge_memory.c
-  mm/thp: clean up lru_add_page_tail
-  mm/thp: remove code path which never got into
-  mm/thp: narrow lru locking
-  mm/memcg: add debug checking in lock_page_memcg
-  mm/swap: fold vm event PGROTATED into pagevec_move_tail_fn
-  mm/lru: move lru_lock holding in func lru_note_cost_page
-  mm/lru: move lock into lru_note_cost
-  mm/lru: introduce TestClearPageLRU
-  mm/compaction: do page isolation first in compaction
-  mm/thp: add tail pages into lru anyway in split_huge_page()
-  mm/swap: serialize memcg changes in pagevec_lru_move_fn
-  mm/lru: replace pgdat lru_lock with lruvec lock
-  mm/lru: introduce the relock_page_lruvec function
-  mm/pgdat: remove pgdat lru_lock
-
-Hugh Dickins (2):
-  mm/vmscan: use relock for move_pages_to_lru
-  mm/lru: revise the comments of lru_lock
-
- Documentation/admin-guide/cgroup-v1/memcg_test.rst |  15 +-
- Documentation/admin-guide/cgroup-v1/memory.rst     |  21 +--
- Documentation/trace/events-kmem.rst                |   2 +-
- Documentation/vm/unevictable-lru.rst               |  22 +--
- include/linux/compaction.h                         |   4 +-
- include/linux/memcontrol.h                         |  98 ++++++++++
- include/linux/mm_types.h                           |   2 +-
- include/linux/mmzone.h                             |   6 +-
- include/linux/page-flags.h                         |   1 +
- include/linux/swap.h                               |   4 +-
- include/trace/events/compaction.h                  |   2 +-
- mm/compaction.c                                    | 113 ++++++++----
- mm/filemap.c                                       |   4 +-
- mm/huge_memory.c                                   |  48 +++--
- mm/memcontrol.c                                    |  71 ++++++-
- mm/memory.c                                        |   3 -
- mm/mlock.c                                         |  43 +++--
- mm/mmzone.c                                        |   1 +
- mm/page_alloc.c                                    |   1 -
- mm/page_idle.c                                     |   8 -
- mm/rmap.c                                          |   4 +-
- mm/swap.c                                          | 203 ++++++++-------------
- mm/swap_state.c                                    |   2 -
- mm/vmscan.c                                        | 174 ++++++++++--------
- mm/workingset.c                                    |   2 -
- 25 files changed, 510 insertions(+), 344 deletions(-)
-
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 9e050b13f597..b18f21da4dac 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2340,19 +2340,19 @@ static void remap_page(struct page *page)
+ 	}
+ }
+ 
+-static void lru_add_page_tail(struct page *page, struct page *page_tail,
++static void lru_add_page_tail(struct page *head, struct page *page_tail,
+ 				struct lruvec *lruvec, struct list_head *list)
+ {
+-	VM_BUG_ON_PAGE(!PageHead(page), page);
+-	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
+-	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
++	VM_BUG_ON_PAGE(!PageHead(head), head);
++	VM_BUG_ON_PAGE(PageCompound(page_tail), head);
++	VM_BUG_ON_PAGE(PageLRU(page_tail), head);
+ 	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
+ 
+ 	if (!list)
+ 		SetPageLRU(page_tail);
+ 
+-	if (likely(PageLRU(page)))
+-		list_add_tail(&page_tail->lru, &page->lru);
++	if (likely(PageLRU(head)))
++		list_add_tail(&page_tail->lru, &head->lru);
+ 	else if (list) {
+ 		/* page reclaim is reclaiming a huge page */
+ 		get_page(page_tail);
 -- 
 1.8.3.1
 
