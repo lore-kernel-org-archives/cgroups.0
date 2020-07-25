@@ -1,58 +1,134 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v17 02/21] mm/page_idle: no unlikely double check for idle page counting
-Date: Sat, 25 Jul 2020 20:59:39 +0800
-Message-ID: <1595681998-19193-3-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH v17 05/21] mm/thp: move lru_add_page_tail func to huge_memory.c
+Date: Sat, 25 Jul 2020 20:59:42 +0800
+Message-ID: <1595681998-19193-6-git-send-email-alex.shi@linux.alibaba.com>
 References: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1595681998-19193-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
 
-As func comments mentioned, few isolated page missing be tolerated.
-So why not do further to drop the unlikely double check. That won't
-cause more idle pages, but reduce a lock contention.
+The func is only used in huge_memory.c, defining it in other file with a
+CONFIG_TRANSPARENT_HUGEPAGE macro restrict just looks weird.
 
-This is also a preparation for later new page isolation feature.
+Let's move it THP. And make it static as Hugh Dickin suggested.
 
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Reviewed-by: Kirill A. Shutemov <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 ---
- mm/page_idle.c | 8 --------
- 1 file changed, 8 deletions(-)
+ include/linux/swap.h |  2 --
+ mm/huge_memory.c     | 30 ++++++++++++++++++++++++++++++
+ mm/swap.c            | 33 ---------------------------------
+ 3 files changed, 30 insertions(+), 35 deletions(-)
 
-diff --git a/mm/page_idle.c b/mm/page_idle.c
-index 057c61df12db..5fdd753e151a 100644
---- a/mm/page_idle.c
-+++ b/mm/page_idle.c
-@@ -32,19 +32,11 @@
- static struct page *page_idle_get_page(unsigned long pfn)
- {
- 	struct page *page = pfn_to_online_page(pfn);
--	pg_data_t *pgdat;
- 
- 	if (!page || !PageLRU(page) ||
- 	    !get_page_unless_zero(page))
- 		return NULL;
- 
--	pgdat = page_pgdat(page);
--	spin_lock_irq(&pgdat->lru_lock);
--	if (unlikely(!PageLRU(page))) {
--		put_page(page);
--		page = NULL;
--	}
--	spin_unlock_irq(&pgdat->lru_lock);
- 	return page;
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index 5b3216ba39a9..2c29399b29a0 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -339,8 +339,6 @@ extern void lru_note_cost(struct lruvec *lruvec, bool file,
+ 			  unsigned int nr_pages);
+ extern void lru_note_cost_page(struct page *);
+ extern void lru_cache_add(struct page *);
+-extern void lru_add_page_tail(struct page *page, struct page *page_tail,
+-			 struct lruvec *lruvec, struct list_head *head);
+ extern void activate_page(struct page *);
+ extern void mark_page_accessed(struct page *);
+ extern void lru_add_drain(void);
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 78c84bee7e29..9e050b13f597 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2340,6 +2340,36 @@ static void remap_page(struct page *page)
+ 	}
  }
  
++static void lru_add_page_tail(struct page *page, struct page *page_tail,
++				struct lruvec *lruvec, struct list_head *list)
++{
++	VM_BUG_ON_PAGE(!PageHead(page), page);
++	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
++	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
++	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
++
++	if (!list)
++		SetPageLRU(page_tail);
++
++	if (likely(PageLRU(page)))
++		list_add_tail(&page_tail->lru, &page->lru);
++	else if (list) {
++		/* page reclaim is reclaiming a huge page */
++		get_page(page_tail);
++		list_add_tail(&page_tail->lru, list);
++	} else {
++		/*
++		 * Head page has not yet been counted, as an hpage,
++		 * so we must account for each subpage individually.
++		 *
++		 * Put page_tail on the list at the correct position
++		 * so they all end up in order.
++		 */
++		add_page_to_lru_list_tail(page_tail, lruvec,
++					  page_lru(page_tail));
++	}
++}
++
+ static void __split_huge_page_tail(struct page *head, int tail,
+ 		struct lruvec *lruvec, struct list_head *list)
+ {
+diff --git a/mm/swap.c b/mm/swap.c
+index a82efc33411f..7701d855873d 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -933,39 +933,6 @@ void __pagevec_release(struct pagevec *pvec)
+ }
+ EXPORT_SYMBOL(__pagevec_release);
+ 
+-#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-/* used by __split_huge_page_refcount() */
+-void lru_add_page_tail(struct page *page, struct page *page_tail,
+-		       struct lruvec *lruvec, struct list_head *list)
+-{
+-	VM_BUG_ON_PAGE(!PageHead(page), page);
+-	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
+-	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
+-	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
+-
+-	if (!list)
+-		SetPageLRU(page_tail);
+-
+-	if (likely(PageLRU(page)))
+-		list_add_tail(&page_tail->lru, &page->lru);
+-	else if (list) {
+-		/* page reclaim is reclaiming a huge page */
+-		get_page(page_tail);
+-		list_add_tail(&page_tail->lru, list);
+-	} else {
+-		/*
+-		 * Head page has not yet been counted, as an hpage,
+-		 * so we must account for each subpage individually.
+-		 *
+-		 * Put page_tail on the list at the correct position
+-		 * so they all end up in order.
+-		 */
+-		add_page_to_lru_list_tail(page_tail, lruvec,
+-					  page_lru(page_tail));
+-	}
+-}
+-#endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+-
+ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec,
+ 				 void *arg)
+ {
 -- 
 1.8.3.1
 
