@@ -1,62 +1,48 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v17 06/21] mm/thp: clean up lru_add_page_tail
-Date: Sat, 25 Jul 2020 20:59:43 +0800
-Message-ID: <1595681998-19193-7-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH v17 15/21] mm/thp: add tail pages into lru anyway in split_huge_page()
+Date: Sat, 25 Jul 2020 20:59:52 +0800
+Message-ID: <1595681998-19193-16-git-send-email-alex.shi@linux.alibaba.com>
 References: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Mime-Version: 1.0
+Content-Transfer-Encoding: base64
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1595681998-19193-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com
+Content-Type: text/plain; charset="macroman"
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+Cc: =?UTF-8?q?Mika=20Penttil=C3=A4?= <mika.penttila-MRsr7dthA9VWk0Htik3J/w@public.gmane.org>
 
-Since the first parameter is only used by head page, it's better to make
-it explicit.
-
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Reviewed-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org
----
- mm/huge_memory.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 9e050b13f597..b18f21da4dac 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -2340,19 +2340,19 @@ static void remap_page(struct page *page)
- 	}
- }
- 
--static void lru_add_page_tail(struct page *page, struct page *page_tail,
-+static void lru_add_page_tail(struct page *head, struct page *page_tail,
- 				struct lruvec *lruvec, struct list_head *list)
- {
--	VM_BUG_ON_PAGE(!PageHead(page), page);
--	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
--	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
-+	VM_BUG_ON_PAGE(!PageHead(head), head);
-+	VM_BUG_ON_PAGE(PageCompound(page_tail), head);
-+	VM_BUG_ON_PAGE(PageLRU(page_tail), head);
- 	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
- 
- 	if (!list)
- 		SetPageLRU(page_tail);
- 
--	if (likely(PageLRU(page)))
--		list_add_tail(&page_tail->lru, &page->lru);
-+	if (likely(PageLRU(head)))
-+		list_add_tail(&page_tail->lru, &head->lru);
- 	else if (list) {
- 		/* page reclaim is reclaiming a huge page */
- 		get_page(page_tail);
--- 
-1.8.3.1
-
+U3BsaXRfaHVnZV9wYWdlKCkgbXVzdCBzdGFydCB3aXRoIFBhZ2VMUlUoaGVhZCksIGFuZCB3ZSBh
+cmUgaG9sZGluZyB0aGUKbHJ1X2xvY2sgaGVyZS4gSWYgdGhlIGhlYWQgd2FzIGNsZWFyZWQgbHJ1
+IGJpdCB1bmV4cGVjdGVkLCB0cmFja2luZyBpdC4KClNpZ25lZC1vZmYtYnk6IEFsZXggU2hpIDxh
+bGV4LnNoaS1LUHNvRmJOczdHaXpyR0U1YlJxWUFnQy9HMks0ekRIZkBwdWJsaWMuZ21hbmUub3Jn
+PgpSZXZpZXdlZC1ieTogS2lyaWxsIEEuIFNodXRlbW92IDxraXJpbGwuc2h1dGVtb3YtVnVRQVlz
+djE1NjNZZDU0RlFoOS9DQUBwdWJsaWMuZ21hbmUub3JnPgpDYzogS2lyaWxsIEEuIFNodXRlbW92
+IDxraXJpbGwtb0t3N2NJZEhIOGVMd3V0RzUwTHRHQUBwdWJsaWMuZ21hbmUub3JnPgpDYzogQW5k
+cmV3IE1vcnRvbiA8YWtwbS1kZS90blhUZitKTHNmSERYdmJLdjNXRDJGUUprKzgrYkBwdWJsaWMu
+Z21hbmUub3JnPgpDYzogSm9oYW5uZXMgV2VpbmVyIDxoYW5uZXMtZHJ1VWd2bDBMQ05BZnVnUnBD
+NnU2d0BwdWJsaWMuZ21hbmUub3JnPgpDYzogTWF0dGhldyBXaWxjb3ggPHdpbGx5LXdFR0NpS0hl
+MkxxV1ZmZUF3QTd4SFFAcHVibGljLmdtYW5lLm9yZz4KQ2M6IEh1Z2ggRGlja2lucyA8aHVnaGQt
+aHBJcXNENEFLbGZRVDBkWlIrQWxmQUBwdWJsaWMuZ21hbmUub3JnPgpDYzogTWlrYSBQZW50dGls
+w6QgPG1pa2EucGVudHRpbGEtTVJzcjdkdGhBOVZXazBIdGlrM0ovd0BwdWJsaWMuZ21hbmUub3Jn
+PgpDYzogbGludXgtbW0tQnczMU1hWktLczNZdGp2eVc2eURzZ0BwdWJsaWMuZ21hbmUub3JnCkNj
+OiBsaW51eC1rZXJuZWwtdTc5dXdYTDI5VFk3Nloyck01bUhYQUBwdWJsaWMuZ21hbmUub3JnCi0t
+LQogbW0vaHVnZV9tZW1vcnkuYyB8IDE2ICsrKysrKysrKystLS0tLS0KIDEgZmlsZSBjaGFuZ2Vk
+LCAxMCBpbnNlcnRpb25zKCspLCA2IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL21tL2h1Z2Vf
+bWVtb3J5LmMgYi9tbS9odWdlX21lbW9yeS5jCmluZGV4IGQ4NjZiNmU0MzQzNC4uMjg1Mzg0NDQx
+OTdiIDEwMDY0NAotLS0gYS9tbS9odWdlX21lbW9yeS5jCisrKyBiL21tL2h1Z2VfbWVtb3J5LmMK
+QEAgLTIzNDgsMTUgKzIzNDgsMTkgQEAgc3RhdGljIHZvaWQgbHJ1X2FkZF9wYWdlX3RhaWwoc3Ry
+dWN0IHBhZ2UgKmhlYWQsIHN0cnVjdCBwYWdlICpwYWdlX3RhaWwsCiAJVk1fQlVHX09OX1BBR0Uo
+UGFnZUxSVShwYWdlX3RhaWwpLCBoZWFkKTsKIAlsb2NrZGVwX2Fzc2VydF9oZWxkKCZscnV2ZWNf
+cGdkYXQobHJ1dmVjKS0+bHJ1X2xvY2spOwogCi0JaWYgKCFsaXN0KQotCQlTZXRQYWdlTFJVKHBh
+Z2VfdGFpbCk7Ci0KLQlpZiAobGlrZWx5KFBhZ2VMUlUoaGVhZCkpKQotCQlsaXN0X2FkZF90YWls
+KCZwYWdlX3RhaWwtPmxydSwgJmhlYWQtPmxydSk7Ci0JZWxzZSBpZiAobGlzdCkgeworCWlmIChs
+aXN0KSB7CiAJCS8qIHBhZ2UgcmVjbGFpbSBpcyByZWNsYWltaW5nIGEgaHVnZSBwYWdlICovCiAJ
+CWdldF9wYWdlKHBhZ2VfdGFpbCk7CiAJCWxpc3RfYWRkX3RhaWwoJnBhZ2VfdGFpbC0+bHJ1LCBs
+aXN0KTsKKwl9IGVsc2UgeworCQkvKgorCQkgKiBTcGxpdCBzdGFydCBmcm9tIFBhZ2VMUlUoaGVh
+ZCksIGFuZCB3ZSBhcmUgaG9sZGluZyB0aGUKKwkJICogbHJ1X2xvY2suCisJCSAqIERvIGEgd2Fy
+bmluZyBpZiB0aGUgaGVhZCdzIGxydSBiaXQgd2FzIGNsZWFyZWQgdW5leHBlY3RlZC4KKwkJICov
+CisJCVZNX1dBUk5fT04oIVBhZ2VMUlUoaGVhZCkpOworCQlTZXRQYWdlTFJVKHBhZ2VfdGFpbCk7
+CisJCWxpc3RfYWRkX3RhaWwoJnBhZ2VfdGFpbC0+bHJ1LCAmaGVhZC0+bHJ1KTsKIAl9CiB9CiAK
+LS0gCjEuOC4zLjEKCg==
