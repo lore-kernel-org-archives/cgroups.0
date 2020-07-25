@@ -1,61 +1,50 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v17 07/21] mm/thp: remove code path which never got into
-Date: Sat, 25 Jul 2020 20:59:44 +0800
-Message-ID: <1595681998-19193-8-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH v17 09/21] mm/memcg: add debug checking in lock_page_memcg
+Date: Sat, 25 Jul 2020 20:59:46 +0800
+Message-ID: <1595681998-19193-10-git-send-email-alex.shi@linux.alibaba.com>
 References: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1595681998-19193-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-split_huge_page() will never call on a page which isn't on lru list, so
-this code never got a chance to run, and should not be run, to add tail
-pages on a lru list which head page isn't there.
+Add a debug checking in lock_page_memcg, then we could get alarm
+if anything wrong here.
 
-Although the bug was never triggered, it'better be removed for code
-correctness.
-
-BTW, it looks better to have a WARN() set in the wrong path, but the
-path will be changed in incoming new page isolation func. So just save
-it now.
-
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Reviewed-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Cc: Kirill A. Shutemov <kirill@shutemov.name>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org
+Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
- mm/huge_memory.c | 10 ----------
- 1 file changed, 10 deletions(-)
+ mm/memcontrol.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index b18f21da4dac..1fb4147ff854 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -2357,16 +2357,6 @@ static void lru_add_page_tail(struct page *head, struct page *page_tail,
- 		/* page reclaim is reclaiming a huge page */
- 		get_page(page_tail);
- 		list_add_tail(&page_tail->lru, list);
--	} else {
--		/*
--		 * Head page has not yet been counted, as an hpage,
--		 * so we must account for each subpage individually.
--		 *
--		 * Put page_tail on the list at the correct position
--		 * so they all end up in order.
--		 */
--		add_page_to_lru_list_tail(page_tail, lruvec,
--					  page_lru(page_tail));
- 	}
- }
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 5d45a9159af9..20c8ed69a930 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1983,6 +1983,12 @@ struct mem_cgroup *lock_page_memcg(struct page *page)
+ 	if (unlikely(!memcg))
+ 		return NULL;
+ 
++#ifdef CONFIG_PROVE_LOCKING
++	local_irq_save(flags);
++	might_lock(&memcg->move_lock);
++	local_irq_restore(flags);
++#endif
++
+ 	if (atomic_read(&memcg->moving_account) <= 0)
+ 		return memcg;
  
 -- 
 1.8.3.1
