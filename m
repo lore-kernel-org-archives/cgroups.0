@@ -1,65 +1,118 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/14] fs: remove the unused SB_I_MULTIROOT flag
-Date: Sun, 26 Jul 2020 17:03:20 +0200
-Message-ID: <20200726150333.305527-2-hch@lst.de>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: [PATCH 07/14] block: make QUEUE_SYSFS_BIT_FNS a little
+	more useful
+Date: Sun, 26 Jul 2020 17:03:26 +0200
+Message-ID: <20200726150333.305527-8-hch@lst.de>
 References: <20200726150333.305527-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=SQdEEUbS15XfNOnvBJj0vCvV6+m0XV9g2xcYAZ+hMD4=; b=YxnU7xECKgDZ4LqJfdWMsIcxEA
-        yCfUcE3gTRygR1OvjtYJrDU3Bz1paMjy6nh9aMctdrc9x02/AF0mTDzlfwRI/UIdNsA0DGuyhGxG+
-        awRyoFbpxtSm3feI5LlsKLA8kZcUNh15jh+lTmOEMsJcmDjBTMdOr7ZbCZMeoWcRgcrxsl4VbVdnw
-        yyrL6nGsYfdC8zf3Xt7LFsoZCMj5AvtvctzOQxWqy3xwMuxs8ssFmU8lyS8xkNG0dKqBf08p7UVI1
-        Cwf8EsgAfBAuY5/yvO+nJBZFfQrdydTuhw8kfer1VpDvEBbb2fuSox1nVc5xOWmW8Tk2knXuA9jg3
-        GH9QgDZQ==;
-In-Reply-To: <20200726150333.305527-1-hch@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=casper.20170209;
+	h=Content-Transfer-Encoding:MIME-Version:
+	References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+	Content-Type:Content-ID:Content-Description;
+	bh=kdnG/8uKQIMddLsDA/8BZYPUgnH5s1kSDlqsFlCYesw=;
+	b=ZlUbIgvz5W+wNZyXR6smJAUXas
+	evPOz6Ja3vFXE9UY2uAmviOobnai2PzHbDI+ijvPBexgfsz1flsWVkMK3mMsjPeRfpzTtILWc4olD
+	Hj+/WaWcA6UhlhC80A+lhxePrJn4C44YMiZhGd8QAKQ/i8EthVTqcPNN7UqDnUR30qrdZ4fG1iudN
+	XBDssURerbKMOfZhaB0z0cjf41fJx8gqw/53CntsqtJiJrZfYmDDcMm+ieudAv5pwN/pd9KDuNkal
+	CXpWl6zKdMFN2J37a8Slp+8TFWLMHjB6LAwa0cpEDl/bTu+fjIb9lz5Fe0cBbaueULO6dV+eNfOr8
+	cPAkBGvw==;
+In-Reply-To: <20200726150333.305527-1-hch-jcswGhMUV9g@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linbit.com/mailman/options/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linbit.com/pipermail/drbd-dev>
+List-Post: <mailto:drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>
+List-Help: <mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linbit.com/mailman/listinfo/drbd-dev>,
+	<mailto:drbd-dev-request-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org?subject=subscribe>
+Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Johannes Thumshirn <johannes.thumshirn-Sjgp3cTcYWE@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 
-The last user of SB_I_MULTIROOT is disappeared with commit f2aedb713c28
-("NFS: Add fs_context support.")
+Generate the queue_sysfs_entry given that we have all the required
+information for it, and rename the generated show and store methods
+to match the other ones in the file.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn-Sjgp3cTcYWE@public.gmane.org>
 ---
- fs/namei.c         | 4 ++--
- include/linux/fs.h | 1 -
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ block/blk-sysfs.c | 31 +++++++++----------------------
+ 1 file changed, 9 insertions(+), 22 deletions(-)
 
-diff --git a/fs/namei.c b/fs/namei.c
-index 72d4219c93acb7..e9ff0d54a110a7 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -568,8 +568,8 @@ static bool path_connected(struct vfsmount *mnt, struct dentry *dentry)
- {
- 	struct super_block *sb = mnt->mnt_sb;
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index ce418d9128a0b2..cfbb039da8751f 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -257,16 +257,16 @@ static ssize_t queue_max_hw_sectors_show(struct request_queue *q, char *page)
+ 	return queue_var_show(max_hw_sectors_kb, (page));
+ }
  
--	/* Bind mounts and multi-root filesystems can have disconnected paths */
--	if (!(sb->s_iflags & SB_I_MULTIROOT) && (mnt->mnt_root == sb->s_root))
-+	/* Bind mounts can have disconnected paths */
-+	if (mnt->mnt_root == sb->s_root)
- 		return true;
+-#define QUEUE_SYSFS_BIT_FNS(name, flag, neg)				\
++#define QUEUE_SYSFS_BIT_FNS(_name, flag, neg)				\
+ static ssize_t								\
+-queue_show_##name(struct request_queue *q, char *page)			\
++queue_##_name##_show(struct request_queue *q, char *page)		\
+ {									\
+ 	int bit;							\
+ 	bit = test_bit(QUEUE_FLAG_##flag, &q->queue_flags);		\
+ 	return queue_var_show(neg ? !bit : bit, page);			\
+ }									\
+ static ssize_t								\
+-queue_store_##name(struct request_queue *q, const char *page, size_t count) \
++queue_##_name##_store(struct request_queue *q, const char *page, size_t count) \
+ {									\
+ 	unsigned long val;						\
+ 	ssize_t ret;							\
+@@ -281,7 +281,12 @@ queue_store_##name(struct request_queue *q, const char *page, size_t count) \
+ 	else								\
+ 		blk_queue_flag_clear(QUEUE_FLAG_##flag, q);		\
+ 	return ret;							\
+-}
++}									\
++static struct queue_sysfs_entry queue_##_name##_entry = {		\
++	.attr	= { .name = __stringify(_name), .mode = 0644 },		\
++	.show	= queue_##_name##_show,					\
++	.store	= queue_##_name##_store,				\
++};
  
- 	return is_subdir(dentry, mnt->mnt_root);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 41cd993ec0f686..236543605dd118 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1366,7 +1366,6 @@ extern int send_sigurg(struct fown_struct *fown);
- #define SB_I_CGROUPWB	0x00000001	/* cgroup-aware writeback enabled */
- #define SB_I_NOEXEC	0x00000002	/* Ignore executables on this fs */
- #define SB_I_NODEV	0x00000004	/* Ignore devices on this fs */
--#define SB_I_MULTIROOT	0x00000008	/* Multiple roots to the dentry tree */
+ QUEUE_SYSFS_BIT_FNS(nonrot, NONROT, 1);
+ QUEUE_SYSFS_BIT_FNS(random, ADD_RANDOM, 0);
+@@ -661,12 +666,6 @@ static struct queue_sysfs_entry queue_zone_append_max_entry = {
+ 	.show = queue_zone_append_max_show,
+ };
  
- /* sb->s_iflags to limit user namespace mounts */
- #define SB_I_USERNS_VISIBLE		0x00000010 /* fstype already mounted */
+-static struct queue_sysfs_entry queue_nonrot_entry = {
+-	.attr = {.name = "rotational", .mode = 0644 },
+-	.show = queue_show_nonrot,
+-	.store = queue_store_nonrot,
+-};
+-
+ static struct queue_sysfs_entry queue_zoned_entry = {
+ 	.attr = {.name = "zoned", .mode = 0444 },
+ 	.show = queue_zoned_show,
+@@ -699,18 +698,6 @@ static struct queue_sysfs_entry queue_rq_affinity_entry = {
+ 	.store = queue_rq_affinity_store,
+ };
+ 
+-static struct queue_sysfs_entry queue_iostats_entry = {
+-	.attr = {.name = "iostats", .mode = 0644 },
+-	.show = queue_show_iostats,
+-	.store = queue_store_iostats,
+-};
+-
+-static struct queue_sysfs_entry queue_random_entry = {
+-	.attr = {.name = "add_random", .mode = 0644 },
+-	.show = queue_show_random,
+-	.store = queue_store_random,
+-};
+-
+ static struct queue_sysfs_entry queue_poll_entry = {
+ 	.attr = {.name = "io_poll", .mode = 0644 },
+ 	.show = queue_poll_show,
 -- 
 2.27.0
-
