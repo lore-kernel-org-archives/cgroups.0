@@ -1,37 +1,135 @@
-From: jingrui <jingrui-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: =?gb2312?B?UkU6ILTwuLQ6IFBST0JMRU06IGNncm91cCBjb3N0IHRvbyBtdWNoIG1lbW9y?=
- =?gb2312?Q?y_when_transfer_small_files_to_tmpfs?=
-Date: Mon, 27 Jul 2020 03:14:28 +0000
-Message-ID: <2E04DD7753BE0E4ABABF0B664610AD6F2621907D@dggeml508-mbx.china.huawei.com>
-References: <2E04DD7753BE0E4ABABF0B664610AD6F2620CAF7@dggeml528-mbx.china.huawei.com>
- <20200724075508.GF4061@dhcp22.suse.cz>
- <2E04DD7753BE0E4ABABF0B664610AD6F2620D4F6@dggeml528-mbx.china.huawei.com>
- <20200724113530.GH4061@dhcp22.suse.cz>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH v17 00/21] per memcg lru lock
+Date: Mon, 27 Jul 2020 13:40:31 +0800
+Message-ID: <49d4f3bf-ccce-3c97-3a4c-f5cefe2d623a@linux.alibaba.com>
+References: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200724113530.GH4061-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Content-Language: zh-CN
+In-Reply-To: <1595681998-19193-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Lizefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, caihaomin <caihaomin-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "Weiwei (N)" <wick.wei-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "Fangxiuning (Jack, EulerOS)" <fangxiuning-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
 
-Q2MgRmFuZ3hpdW5pbmcNCg0KT24gRnJpIDI0LTA3LTIwIDA5OjM1OjI2LCBqaW5ncnVpIHdyb3Rl
-Og0KPiANCj4gT24gRnJpZGF5LCBKdWx5IDI0LCAyMDIwIDM6NTUgUE0sIE1pY2hhbCBIb2NrbyB3
-cm90ZToNCj4gDQo+ID4gV2hhdCBpcyB0aGUgcmVhc29uIHRvIHJ1biB1bmRlciAhcm9vdCBjZ3Jv
-dXAgaW4gdGhvc2Ugc2Vzc2lvbnMgaWYgeW91IGRvIG5vdCBjYXJlIGFib3V0IGFjY291bnRpbmcg
-YW55d2F5PyANCj4gDQo+IFRoZSBzeXN0ZW1kIG5vdCBzdXBwb3J0IHJ1biB0aG9zZSBzZXNzaW9u
-cyB1bmRlciByb290IGNncm91cCwgZGlzYWJsZSANCj4gcGFtLXN5c3RlbWQgd2lsbCBub3QgY3Jl
-YXRlIHNlc3Npb24vY2dyb3VwLCBidXQgdGhpcyBpcyBub3Qgc2FmZSBhbmQgDQo+IG1ha2Ugc3lz
-dGVtZC1sb2dpbmQgbm90IHdvcmsuDQoNCkNvdWxkIHlvdSBiZSBtb3JlIHNwZWNpZmljIHBsZWFz
-ZT8NCg0KQXMgSSBrbm93LCB3aGVuIHVzZXIgY2FsbCBzZnRwIGNsaWVudCB0byBzZW5kIGZpbGVz
-LCB0aGUgc2VydmVyIHdpbGwgY2FsbCBwYW0tc3lzdGVtZC5zbyBsaWIgdG8gY3JlYXRlIHNlc3Np
-b24gYW5kIGNncm91cC4NCldlIGNhbiBza2lwIGNhbGwgcGFtLXN5c3RlbWQuc28gYnkgY29uZmln
-IC9ldGMvcGFtLmQvcGFzc3dvcmQtYXV0aCBkcm9wIHRoZSBsaW5lICIgLXNlc3Npb24gICAgIG9w
-dGlvbmFsICAgICAgcGFtX3N5c3RlbWQuc28iLg0KQnV0IHRoaXMgY29uZmlnIGlzIGdsb2JhbCwg
-IGFuZCB3aWxsIGFmZmVjdCBvdGhlciBzZXJ2aWNlcywgc3VjaCBhcyBzc2ggbG9naW4uIFdlIGRv
-bqGvdCBmaW5kIGEgd2F5IGp1c3QgZG9uoa90ICBjcmVhdGUgY2dyb3VwIGRpciBmb3Igc2Z0cC4N
-Cg0KQFhpdW5pbmcgV291bGQgeW91IHBsZWFzZSB0YWtlIGEgbG9vayBhbmQgZ2l2ZSBzb21lIHN1
-Z2dlc3Rpb24/DQoNCi0tDQpNaWNoYWwgSG9ja28NClNVU0UgTGFicw0K
+
+
+
+
+
+
+A standard for new page isolation steps like the following:
+1, get_page(); #pin the page avoid be free
+2, TestClearPageLRU(); #serialize other isolation, also memcg change
+3, spin_lock on lru_lock; #serialize lru list access
+The step 2 could be optimzed/replaced in scenarios which page is unlikely
+be accessed by others.
+
+
+
+在 2020/7/25 下午8:59, Alex Shi 写道:
+> The new version which bases on v5.8-rc6. It includes Hugh Dickins fix in 
+> mm/swap.c and mm/mlock.c fix which Alexander Duyck pointed out, then
+> removes 'mm/mlock: reorder isolation sequence during munlock' 
+> 
+> Hi Johanness & Hugh & Alexander & Willy,
+> 
+> Could you like to give a reviewed by since you address much of issue and
+> give lots of suggestions! Many thanks!
+> 
+> Current lru_lock is one for each of node, pgdat->lru_lock, that guard for
+> lru lists, but now we had moved the lru lists into memcg for long time. Still
+> using per node lru_lock is clearly unscalable, pages on each of memcgs have
+> to compete each others for a whole lru_lock. This patchset try to use per
+> lruvec/memcg lru_lock to repleace per node lru lock to guard lru lists, make
+> it scalable for memcgs and get performance gain.
+> 
+> Currently lru_lock still guards both lru list and page's lru bit, that's ok.
+> but if we want to use specific lruvec lock on the page, we need to pin down
+> the page's lruvec/memcg during locking. Just taking lruvec lock first may be
+> undermined by the page's memcg charge/migration. To fix this problem, we could
+> take out the page's lru bit clear and use it as pin down action to block the
+> memcg changes. That's the reason for new atomic func TestClearPageLRU.
+> So now isolating a page need both actions: TestClearPageLRU and hold the
+> lru_lock.
+> 
+> The typical usage of this is isolate_migratepages_block() in compaction.c
+> we have to take lru bit before lru lock, that serialized the page isolation
+> in memcg page charge/migration which will change page's lruvec and new 
+> lru_lock in it.
+> 
+> The above solution suggested by Johannes Weiner, and based on his new memcg 
+> charge path, then have this patchset. (Hugh Dickins tested and contributed much
+> code from compaction fix to general code polish, thanks a lot!).
+> 
+> The patchset includes 3 parts:
+> 1, some code cleanup and minimum optimization as a preparation.
+> 2, use TestCleanPageLRU as page isolation's precondition
+> 3, replace per node lru_lock with per memcg per node lru_lock
+> 
+> Following Daniel Jordan's suggestion, I have run 208 'dd' with on 104
+> containers on a 2s * 26cores * HT box with a modefied case:
+> https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/tree/case-lru-file-readtwice
+> With this patchset, the readtwice performance increased about 80%
+> in concurrent containers.
+> 
+> Thanks Hugh Dickins and Konstantin Khlebnikov, they both brought this
+> idea 8 years ago, and others who give comments as well: Daniel Jordan, 
+> Mel Gorman, Shakeel Butt, Matthew Wilcox etc.
+> 
+> Thanks for Testing support from Intel 0day and Rong Chen, Fengguang Wu,
+> and Yun Wang. Hugh Dickins also shared his kbuild-swap case. Thanks!
+> 
+> 
+> Alex Shi (19):
+>   mm/vmscan: remove unnecessary lruvec adding
+>   mm/page_idle: no unlikely double check for idle page counting
+>   mm/compaction: correct the comments of compact_defer_shift
+>   mm/compaction: rename compact_deferred as compact_should_defer
+>   mm/thp: move lru_add_page_tail func to huge_memory.c
+>   mm/thp: clean up lru_add_page_tail
+>   mm/thp: remove code path which never got into
+>   mm/thp: narrow lru locking
+>   mm/memcg: add debug checking in lock_page_memcg
+>   mm/swap: fold vm event PGROTATED into pagevec_move_tail_fn
+>   mm/lru: move lru_lock holding in func lru_note_cost_page
+>   mm/lru: move lock into lru_note_cost
+>   mm/lru: introduce TestClearPageLRU
+>   mm/compaction: do page isolation first in compaction
+>   mm/thp: add tail pages into lru anyway in split_huge_page()
+>   mm/swap: serialize memcg changes in pagevec_lru_move_fn
+>   mm/lru: replace pgdat lru_lock with lruvec lock
+>   mm/lru: introduce the relock_page_lruvec function
+>   mm/pgdat: remove pgdat lru_lock
+> 
+> Hugh Dickins (2):
+>   mm/vmscan: use relock for move_pages_to_lru
+>   mm/lru: revise the comments of lru_lock
+> 
+>  Documentation/admin-guide/cgroup-v1/memcg_test.rst |  15 +-
+>  Documentation/admin-guide/cgroup-v1/memory.rst     |  21 +--
+>  Documentation/trace/events-kmem.rst                |   2 +-
+>  Documentation/vm/unevictable-lru.rst               |  22 +--
+>  include/linux/compaction.h                         |   4 +-
+>  include/linux/memcontrol.h                         |  98 ++++++++++
+>  include/linux/mm_types.h                           |   2 +-
+>  include/linux/mmzone.h                             |   6 +-
+>  include/linux/page-flags.h                         |   1 +
+>  include/linux/swap.h                               |   4 +-
+>  include/trace/events/compaction.h                  |   2 +-
+>  mm/compaction.c                                    | 113 ++++++++----
+>  mm/filemap.c                                       |   4 +-
+>  mm/huge_memory.c                                   |  48 +++--
+>  mm/memcontrol.c                                    |  71 ++++++-
+>  mm/memory.c                                        |   3 -
+>  mm/mlock.c                                         |  43 +++--
+>  mm/mmzone.c                                        |   1 +
+>  mm/page_alloc.c                                    |   1 -
+>  mm/page_idle.c                                     |   8 -
+>  mm/rmap.c                                          |   4 +-
+>  mm/swap.c                                          | 203 ++++++++-------------
+>  mm/swap_state.c                                    |   2 -
+>  mm/vmscan.c                                        | 174 ++++++++++--------
+>  mm/workingset.c                                    |   2 -
+>  25 files changed, 510 insertions(+), 344 deletions(-)
+> 
