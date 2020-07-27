@@ -1,39 +1,29 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH 10/14] bdi: remove BDI_CAP_SYNCHRONOUS_IO
-Date: Mon, 27 Jul 2020 09:58:22 +0200
-Message-ID: <20200727075822.GA5355@lst.de>
-References: <20200726150333.305527-1-hch@lst.de> <20200726150333.305527-11-hch@lst.de> <20200726190639.GA560221@google.com>
+From: "Fangxiuning (Jack, EulerOS)" <fangxiuning-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: =?gb2312?B?tPC4tDogtPC4tDogUFJPQkxFTTogY2dyb3VwIGNvc3QgdG9vIG11Y2ggbWVt?=
+ =?gb2312?Q?ory_when_transfer_small_files_to_tmpfs?=
+Date: Mon, 27 Jul 2020 13:40:02 +0000
+Message-ID: <E76E3B653DA8834F9E97D3B9694D2E5B816B7C@DGGEMI526-MBX.china.huawei.com>
+References: <2E04DD7753BE0E4ABABF0B664610AD6F2620CAF7@dggeml528-mbx.china.huawei.com>
+ <20200724075508.GF4061@dhcp22.suse.cz>
+ <2E04DD7753BE0E4ABABF0B664610AD6F2620D4F6@dggeml528-mbx.china.huawei.com>
+ <20200724113530.GH4061@dhcp22.suse.cz>
+ <2E04DD7753BE0E4ABABF0B664610AD6F2621907D@dggeml508-mbx.china.huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20200726190639.GA560221-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <2E04DD7753BE0E4ABABF0B664610AD6F2621907D-9ODS/PwYtqc1LvNSbZiozgK1hpo4iccwjNknBlVQO8k@public.gmane.org>
+Content-Language: zh-CN
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: jingrui <jingrui-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Lizefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, caihaomin <caihaomin-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "Weiwei (N)" <wick.wei-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Sun, Jul 26, 2020 at 12:06:39PM -0700, Minchan Kim wrote:
-> > @@ -528,8 +530,7 @@ static ssize_t backing_dev_store(struct device *dev,
-> >  	 * freely but in fact, IO is going on so finally could cause
-> >  	 * use-after-free when the IO is really done.
-> >  	 */
-> > -	zram->disk->queue->backing_dev_info->capabilities &=
-> > -			~BDI_CAP_SYNCHRONOUS_IO;
-> > +	zram->disk->fops = &zram_wb_devops;
-> >  	up_write(&zram->init_lock);
-> 
-> For zram, regardless of BDI_CAP_SYNCHRONOUS_IO, it have used rw_page
-> every time on read/write path. This one with next patch will make zram
-> use bio instead of rw_page when it's declared !BDI_CAP_SYNCHRONOUS_IO,
-> which introduce regression for performance.
-
-It really should not matter, as the overhead of setting up a bio
-is minimal.  It also is only used in the legacy mpage buffered I/O
-code outside of the swap code, which has so many performance issues on
-its own that even if this made a difference it wouldn't matter.
-
-If you want magic treatment for your zram swap code you really need
-to integrate it with the swap code instead of burding the block layer
-with all this mess.
+QFhpdW5pbmcgV291bGQgeW91IHBsZWFzZSB0YWtlIGEgbG9vayBhbmQgZ2l2ZSBzb21lIHN1Z2dl
+c3Rpb24/DQpJIGRvbid0IHN1Z2dlc3QgdGhpcyBzb2x1dGlvbiBmb3IgdXNpbmcgaW4gbG9uZyB0
+ZXJtIHdoaWNoIHNraXAgY2FsbCBwYW0tc3lzdGVtZC5zbyB0byBmaXggdGhpcyBpc3N1ZSwgU2Z0
+cCBzZW5kcyBmaWxlcyBhbmQgY2FsbCBwYW0tc3lzdGVtZC5zbyB0byBjcmVhdGUgc2Vzc2lvbiB3
+aGljaCBtYW5hZ2UgcmVzb3VyY2VzIG1vcmUgcmVhc29uYWJsZSwgdGhpcyBpcyBldm9sdXRpb24g
+ZGlyZWN0aW9uIG9mIHN5c3RlbWQgdXBzdHJlYW0uIFN5c3RlbWQgZG9uJ3QgaGF2ZSBiZXR0ZXIg
+c29sdXRpb24gYW5kIEtlcm5lbCBjZ3JvdXAgbWF5YmUgZ2l2ZSBhIGJldHRlciBvbmUgZm9yIHRo
+aXMgaXNzdWUuDQoNCg==
