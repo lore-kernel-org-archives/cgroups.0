@@ -1,36 +1,37 @@
-From: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Subject: Re: [PATCH 05/14] md: update the optimal I/O size on reshape
-Date: Tue, 28 Jul 2020 12:18:18 +0000
-Message-ID: <DM5PR0401MB3591D718B1F2A18968A0CF629B730@DM5PR0401MB3591.namprd04.prod.outlook.com>
+From: Johannes Thumshirn <Johannes.Thumshirn-Sjgp3cTcYWE@public.gmane.org>
+Subject: Re: [PATCH 06/14] block: lift setting the readahead size into the
+ block layer
+Date: Tue, 28 Jul 2020 12:23:18 +0000
+Message-ID: <DM5PR0401MB359169BADDBE6B9F611B9BF19B730@DM5PR0401MB3591.namprd04.prod.outlook.com>
 References: <20200724073313.138789-1-hch@lst.de>
- <20200724073313.138789-6-hch@lst.de>
+ <20200724073313.138789-7-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1595938701; x=1627474701;
+  t=1595939002; x=1627475002;
   h=from:to:cc:subject:date:message-id:references:
    content-transfer-encoding:mime-version;
   bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
-  b=l0kRjycEZhiyXiP4rEfFmnR8DdQ1o9bEmEM3lVywktpciPkaUSpQsIm8
-   lariAnS+ytpEQ4/eE3aA7zADJLOIxVuFC1585XOCTqm4kNxRTCt9eyuix
-   eO2Fp8lMn5UHh47H7oToY6M/LqIfyCexQZNt/sDQQMzMwc4Ba/UvqN8xp
-   CxRTGrF1HNeMLzr5FRZLZ4z8p/6sJKnBc+5sFvOdWGV8eLCc83AOSMhpX
-   198Dl/9NTxCRQZqAiyvh1JzSVw6SWQk53rpHNcFRYhXK2FLx9iaf0XSXv
-   6+7lAfplJLFub0GHb/rYXmnxywNZ8Bc5MU+S5elL6lvL3aPmkDlbdhqOC
-   g==;
+  b=PwD/AoUoCODzcuWQDM/WxDTZ3VqrJdl8wM50xgrppVvVcMDKwnB0oLvj
+   qQAnYRP8NzJJ3obaH56MlQUPqwPPtaEMXgSepmhH1H85nuRRWAHci8J/u
+   XJ4DWm6Qp4PIv+Z/4Del5Ikl4JbGXsfVg9AHxz7Vmkfk7UYqCxo/CKkBe
+   gVXSZxpfb5XRXWr3GqHVvpBPIqf+tvHYYhqIleQ+OtCg+pBvCpLHA4zYa
+   Mj++FbnxTL+41R8WzbChuHJDLyCUNN+QXFlTXsMLf6e5AypU7xCLcCFSs
+   +mhN+U5swU/4fQ69qXwa9PBdXldIdSGnaCyMRM+5vw+Kda/xbq7ApV3B5
+   Q==;
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
  bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=if2E/t3flnnBCzC6GbKinqQ8jpDLhuEzTasUy9HbV0RPH0C91NsTj105cvESjCKRTTz/lYQrLC2iKUAjmK29ZpiOWd/75GnFuSAf1HEM2Ig+vy8C305iRhF1EtqTwKlS0zWvLTvfOi7QUefJYuCAyfSrWhjJ4LP7u7Mt65ibI5k=
+ b=QxItiRavHzYveDOEBW0UFViPWLwou38pbhYILYA52HxEGG6xoH1TcyNk5d4ns+x4D29on9arDMVefwoulp+6ZW4Xz21E5Y0RbdPrrH+Z9xiDAw3FbBAgR2Oo+pHcMCf1U3yTO1onnBdWoZmPCw0D8As+T1yeKLZXQiVl3fqsoUM=
 Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org" <drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org>, "linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
 Looks good,=0A=
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn-Sjgp3cTcYWE@public.gmane.org>=0A=
