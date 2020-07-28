@@ -1,32 +1,31 @@
 From: Johannes Thumshirn <Johannes.Thumshirn-Sjgp3cTcYWE@public.gmane.org>
-Subject: Re: [PATCH 06/14] block: lift setting the readahead size into the
- block layer
-Date: Tue, 28 Jul 2020 12:23:18 +0000
-Message-ID: <DM5PR0401MB359169BADDBE6B9F611B9BF19B730@DM5PR0401MB3591.namprd04.prod.outlook.com>
+Subject: Re: [PATCH 10/14] bdi: remove BDI_CAP_SYNCHRONOUS_IO
+Date: Tue, 28 Jul 2020 12:26:28 +0000
+Message-ID: <DM5PR0401MB359158A8461462BA1965C0309B730@DM5PR0401MB3591.namprd04.prod.outlook.com>
 References: <20200724073313.138789-1-hch@lst.de>
- <20200724073313.138789-7-hch@lst.de>
+ <20200724073313.138789-11-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1595939002; x=1627475002;
+  t=1595939192; x=1627475192;
   h=from:to:cc:subject:date:message-id:references:
    content-transfer-encoding:mime-version;
   bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
-  b=PwD/AoUoCODzcuWQDM/WxDTZ3VqrJdl8wM50xgrppVvVcMDKwnB0oLvj
-   qQAnYRP8NzJJ3obaH56MlQUPqwPPtaEMXgSepmhH1H85nuRRWAHci8J/u
-   XJ4DWm6Qp4PIv+Z/4Del5Ikl4JbGXsfVg9AHxz7Vmkfk7UYqCxo/CKkBe
-   gVXSZxpfb5XRXWr3GqHVvpBPIqf+tvHYYhqIleQ+OtCg+pBvCpLHA4zYa
-   Mj++FbnxTL+41R8WzbChuHJDLyCUNN+QXFlTXsMLf6e5AypU7xCLcCFSs
-   +mhN+U5swU/4fQ69qXwa9PBdXldIdSGnaCyMRM+5vw+Kda/xbq7ApV3B5
-   Q==;
+  b=eAYrw0dHY4vUGt5auOiPXeRYo7jZ0TIrvgqn0IgVs2HdXyxKOMk9Url6
+   2GcTwGRx0VR9Y0wwmmBHh+GgsrFbksKZZPEifye06t0b6o93M6cEiFfwJ
+   UXPe2Rl2tBqbRCWxl/2FDedBXOM7u5o2aWniVh3a2Tt4pEjpojz6Ekzr5
+   nSubSgUUVPzaI2ObjTCi6uGAc1p+RfXiJ2mL4DLFpPzx2zw+89hnmuTfP
+   W7JU17Lf47gtovwIroMrNYmuJflPyc/IeD7m9bcrgNVrjnA7REZFcFUHf
+   3SNROUpiJgWOAe0T/pdmYpzuey2f8UNM1g1xxerYo9W4VXQu0AWGW6pnZ
+   w==;
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
  bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
- b=QxItiRavHzYveDOEBW0UFViPWLwou38pbhYILYA52HxEGG6xoH1TcyNk5d4ns+x4D29on9arDMVefwoulp+6ZW4Xz21E5Y0RbdPrrH+Z9xiDAw3FbBAgR2Oo+pHcMCf1U3yTO1onnBdWoZmPCw0D8As+T1yeKLZXQiVl3fqsoUM=
+ b=LSrH1yfAUbvTUzmi4ptW70n2TaD7K58y4oo2WAYRm8Uyytc8DgzIn+5XBqXBT7gF4E5+RbS4wT+E5b94d7tYxjnXugHGoFUV4KIcGrJG7ld/MVX2iEcaDKvReex8KcAwPwSNdqnMwOgUoHksTVcOWQ6gGwz79rUwBbLVXkGbJjY=
 Content-Language: en-US
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
