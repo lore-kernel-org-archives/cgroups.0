@@ -1,73 +1,52 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: bdi cleanups v3
-Date: Tue, 28 Jul 2020 13:20:09 -0600
-Message-ID: <08ded32a-cf3a-55b0-6a88-19d201edac93@kernel.dk>
-References: <20200724073313.138789-1-hch@lst.de>
- <0b2b59d4-da4c-33df-82b4-0d4935b91e6e@kernel.dk>
+From: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: don't count limit-setting reclaim as
+ memory pressure
+Date: Tue, 28 Jul 2020 20:44:47 +0100
+Message-ID: <20200728194447.GB196042@chrisdown.name>
+References: <20200728135210.379885-2-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:from:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=6vfxP0xAICcExvQMz/4lQvBsGt+MbkdQCG7TPtmY2IU=;
-        b=Y9eOezwVV/XNy3ss0E8zEQZN46Jwp7Vwk2F4dYKq4GF+o38CPH9bXtrUXOyKXIv0qi
-         IxCEGapawUVePV3q40k2ellTesiBEzVplHJE1NvfhyL5RCl83HKGBpQJX0QM6eO0a6fq
-         K4eY6mGRbq51nbLdHdV0aIyuHM8uJTGXUryQRTt7Lj0uw/Rn/vzZ7q/sGIcO2+P5vKXM
-         D+ek+rXJ/oXKvUiOA/SsGJJtECe80pX2lqhwV2Mek5vNpO9+e9YTmFR2Dc+dekaVJzW8
-         tm1bitx5pVI4Q4Wm0OEfzMIXB/vw2Lt3V5PNJbWz7GH/REb/D7Ra0sQgFciGhg/c8Ve4
-         LbsQ==
-In-Reply-To: <0b2b59d4-da4c-33df-82b4-0d4935b91e6e@kernel.dk>
-Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
+        d=chrisdown.name; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=RkoR8SRsEyrF2DTHYAGqExugDiMhFbQnq4qppceRyxQ=;
+        b=T9uJ9mFokE3Rom3E92aAP07PvouUaqSFqQVv02w73ZLda3GVnG9dqeQ8A6++cuDNaG
+         JhR9XROOwvBKmnM22qrgiEQ4q/UEWLMu9MpmZl+5FAbsRjf9z2a4fw5GWPmPvAaQetrb
+         lpIr7cCLzsyFxEF9sP3U7dtZf6wz53vufxdjA=
+Content-Disposition: inline
+In-Reply-To: <20200728135210.379885-2-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Christoph Hellwig <hch@lst.de>
-Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On 7/28/20 9:41 AM, Jens Axboe wrote:
-> On 7/24/20 1:32 AM, Christoph Hellwig wrote:
->> Hi Jens,
->>
->> this series contains a bunch of different BDI cleanups.  The biggest item
->> is to isolate block drivers from the BDI in preparation of changing the
->> lifetime of the block device BDI in a follow up series.
-> 
-> Applied, thanks.
+Johannes Weiner writes:
+>When an outside process lowers one of the memory limits of a cgroup
+>(or uses the force_empty knob in cgroup1), direct reclaim is performed
+>in the context of the write(), in order to directly enforce the new
+>limit and have it being met by the time the write() returns.
+>
+>Currently, this reclaim activity is accounted as memory pressure in
+>the cgroup that the writer(!) belongs to. This is unexpected. It
+>specifically causes problems for senpai
+>(https://github.com/facebookincubator/senpai), which is an agent that
+>routinely adjusts the memory limits and performs associated reclaim
+>work in tens or even hundreds of cgroups running on the host. The
+>cgroup that senpai is running in itself will report elevated levels of
+>memory pressure, even though it itself is under no memory shortage or
+>any sort of distress.
+>
+>Move the psi annotation from the central cgroup reclaim function to
+>callsites in the allocation context, and thereby no longer count any
+>limit-setting reclaim as memory pressure. If the newly set limit
+>causes the workload inside the cgroup into direct reclaim, that of
+>course will continue to count as memory pressure.
 
-Dropped:
+Seems totally reasonable, and the patch looks fine too.
 
-  CC      block/blk-sysfs.o
-block/blk-sysfs.c:608:16: error: ‘blk_throtl_sample_show’ undeclared here (not in a function); did you mean ‘blk_throtl_sample_entry’?
-  608 | QUEUE_RW_ENTRY(blk_throtl_sample, "throttle_sample_time");
-      |                ^~~~~~~~~~~~~~~~~
-block/blk-sysfs.c:563:10: note: in definition of macro ‘QUEUE_RW_ENTRY’
-  563 |  .show = _prefix##_show,   \
-      |          ^~~~~~~
-block/blk-sysfs.c:608:16: error: ‘blk_throtl_sample_store’ undeclared here (not in a function); did you mean ‘blk_throtl_sample_entry’?
-  608 | QUEUE_RW_ENTRY(blk_throtl_sample, "throttle_sample_time");
-      |                ^~~~~~~~~~~~~~~~~
-block/blk-sysfs.c:564:11: note: in definition of macro ‘QUEUE_RW_ENTRY’
-  564 |  .store = _prefix##_store,   \
-      |           ^~~~~~~
-block/blk-sysfs.c:657:3: error: ‘blk_throtl_sample_time_entry’ undeclared here (not in a function); did you mean ‘blk_throtl_sample_time_store’?
-  657 |  &blk_throtl_sample_time_entry.attr,
-      |   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      |   blk_throtl_sample_time_store
-block/blk-sysfs.c:608:16: warning: ‘blk_throtl_sample_entry’ defined but not used [-Wunused-variable]
-  608 | QUEUE_RW_ENTRY(blk_throtl_sample, "throttle_sample_time");
-      |                ^~~~~~~~~~~~~~~~~
-block/blk-sysfs.c:561:33: note: in definition of macro ‘QUEUE_RW_ENTRY’
-  561 | static struct queue_sysfs_entry _prefix##_entry = { \
-      |                                 ^~~~~~~
-make[1]: *** [scripts/Makefile.build:281: block/blk-sysfs.o] Error 1
-make: *** [Makefile:1756: block] Error 2
+>Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-from "block: add helper macros for queue sysfs entries"
-
-This has not seen a full compile test even...
-
--- 
-Jens Axboe
-
+Acked-by: Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>
