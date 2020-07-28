@@ -1,288 +1,141 @@
-From: Alexander Duyck <alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v17 17/21] mm/lru: replace pgdat lru_lock with lruvec lock
-Date: Tue, 28 Jul 2020 08:55:55 -0700
-Message-ID: <CAKgT0UfWckn0npij5UhEEmMKuG0bRytN3kPDtvvE3AdJuEZjJg@mail.gmail.com>
-References: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com>
- <1595681998-19193-18-git-send-email-alex.shi@linux.alibaba.com>
- <CAKgT0UdaW4Rf43yULhQBuP07vQgmoPbaWHGKv1Z7fEPP6jH83w@mail.gmail.com> <1fd45e69-3a50-aae8-bcc4-47d891a5e263@linux.alibaba.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: don't count limit-setting reclaim as
+ memory pressure
+Date: Tue, 28 Jul 2020 11:53:41 -0700
+Message-ID: <20200728185341.GA410810@carbon.DHCP.thefacebook.com>
+References: <20200728135210.379885-2-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=OTfwjc1FRQLZQNZD1/9bduGC1jve2EFF+bZqMItMbMI=;
-        b=bZo5BpOKVA3FUbeHqes88E2XiqI+1pUiJvaI8Vg2qsZrJ8/WVytv13JK85YM7vRiW7
-         7SBoL0m2NQdE0iD7/0In30u7Kh9hnvXHifRNYJq8UfCDDi3139iNiU07/3wrfcA3mtBp
-         LrqHVWdXB+qrAzaOUxZgpmJ+rKwBKZOpWvoVw8u/OvICCYBTr2x85Bf0m2v7BAHTwnNx
-         vZAnymn3iMjjrDEt58wRcAuKEXhred52FDKC0JS/J/j8lN0FUHVJUAPZzJ/F1kAQVGQ1
-         WGlXXVxcOuVZXfPJjRLD6NcKUA0RzFELEfhnHwDlD5lO30mf8DtYbjTzcxfMliqaqxSx
-         TuTg==
-In-Reply-To: <1fd45e69-3a50-aae8-bcc4-47d891a5e263-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=FVNIR2xjk/9l9AEZJ00iTvtiTR8dEBO3vE9XfzlitWc=;
+ b=gP9o441jVCsBKj6ajeSRfOwOOWmH82HF1aaFcpXtSMIDimrC66Zd2rksWc/ciyNEc+jL
+ A/WZDNi3vcFAwErOMqBeucLkSFF79CumYbXVVmLFYX92GKoq0WN/KMN8PBj9+aHJhAIp
+ B3A0z9XlZbRPQxs0IomC41Izior5Mi/n/Lo= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=FVNIR2xjk/9l9AEZJ00iTvtiTR8dEBO3vE9XfzlitWc=;
+ b=Z7ZiC9i2fll3ivLLcSLh6WTjpARzYpgi3evXwxLTELo25+zUwYoJFbIwr0EcTG8NL/3BA+qBO2Jo0K2WNTHQcg6OuM9TcFq9KXWYJUXi02lbGqE6RJMa9iAVny03r7+fLnT7eJmIF05y0bL9nK5HrGr/drU43MG2fVwBCke46vM=
+Content-Disposition: inline
+In-Reply-To: <20200728135210.379885-2-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Rong Chen <rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Tue, Jul 28, 2020 at 8:40 AM Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org> wrote=
-:
->
->
->
-> =E5=9C=A8 2020/7/28 =E4=B8=8A=E5=8D=887:34, Alexander Duyck =E5=86=99=E9=
-=81=93:
-> > It might make more sense to look at modifying
-> > compact_unlock_should_abort and compact_lock_irqsave (which always
-> > returns true so should probably be a void) to address the deficiencies
-> > they have that make them unusable for you.
->
-> One of possible reuse for the func compact_unlock_should_abort, could be
-> like the following, the locked parameter reused different in 2 places.
-> but, it's seems no this style usage in kernel, isn't it?
->
-> Thanks
-> Alex
->
-> From 41d5ce6562f20f74bc6ac2db83e226ac28d56e90 Mon Sep 17 00:00:00 2001
-> From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-> Date: Tue, 28 Jul 2020 21:19:32 +0800
-> Subject: [PATCH] compaction polishing
->
-> Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+On Tue, Jul 28, 2020 at 09:52:10AM -0400, Johannes Weiner wrote:
+> When an outside process lowers one of the memory limits of a cgroup
+> (or uses the force_empty knob in cgroup1), direct reclaim is performed
+> in the context of the write(), in order to directly enforce the new
+> limit and have it being met by the time the write() returns.
+> 
+> Currently, this reclaim activity is accounted as memory pressure in
+> the cgroup that the writer(!) belongs to. This is unexpected. It
+> specifically causes problems for senpai
+> (https://github.com/facebookincubator/senpai), which is an agent that
+> routinely adjusts the memory limits and performs associated reclaim
+> work in tens or even hundreds of cgroups running on the host. The
+> cgroup that senpai is running in itself will report elevated levels of
+> memory pressure, even though it itself is under no memory shortage or
+> any sort of distress.
+> 
+> Move the psi annotation from the central cgroup reclaim function to
+> callsites in the allocation context, and thereby no longer count any
+> limit-setting reclaim as memory pressure. If the newly set limit
+> causes the workload inside the cgroup into direct reclaim, that of
+> course will continue to count as memory pressure.
+> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+
+Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+
+Thanks!
+
 > ---
->  mm/compaction.c | 71 ++++++++++++++++++++++++---------------------------=
-------
->  1 file changed, 30 insertions(+), 41 deletions(-)
->
-> diff --git a/mm/compaction.c b/mm/compaction.c
-> index c28a43481f01..36fce988de3e 100644
-> --- a/mm/compaction.c
-> +++ b/mm/compaction.c
-> @@ -479,20 +479,20 @@ static bool test_and_set_skip(struct compact_contro=
-l *cc, struct page *page,
->   *
->   * Always returns true which makes it easier to track lock state in call=
-ers.
->   */
-> -static bool compact_lock_irqsave(spinlock_t *lock, unsigned long *flags,
-> +static void compact_lock_irqsave(spinlock_t *lock, unsigned long *flags,
->                                                 struct compact_control *c=
-c)
->         __acquires(lock)
+>  mm/memcontrol.c | 12 +++++++++++-
+>  mm/vmscan.c     |  6 ------
+>  2 files changed, 11 insertions(+), 7 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 805a44bf948c..8377640ad494 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2233,11 +2233,18 @@ static void reclaim_high(struct mem_cgroup *memcg,
+>  			 gfp_t gfp_mask)
 >  {
->         /* Track if the lock is contended in async mode */
->         if (cc->mode =3D=3D MIGRATE_ASYNC && !cc->contended) {
->                 if (spin_trylock_irqsave(lock, *flags))
-> -                       return true;
-> +                       return;
->
->                 cc->contended =3D true;
->         }
->
->         spin_lock_irqsave(lock, *flags);
-> -       return true;
-> +       return;
+>  	do {
+> +		unsigned long pflags;
+> +
+>  		if (page_counter_read(&memcg->memory) <=
+>  		    READ_ONCE(memcg->memory.high))
+>  			continue;
+> +
+>  		memcg_memory_event(memcg, MEMCG_HIGH);
+> +
+> +		psi_memstall_enter(&pflags);
+>  		try_to_free_mem_cgroup_pages(memcg, nr_pages, gfp_mask, true);
+> +		psi_memstall_leave(&pflags);
+> +
+>  	} while ((memcg = parent_mem_cgroup(memcg)) &&
+>  		 !mem_cgroup_is_root(memcg));
 >  }
->
->  /*
-> @@ -511,11 +511,11 @@ static bool compact_lock_irqsave(spinlock_t *lock, =
-unsigned long *flags,
->   *             scheduled)
->   */
->  static bool compact_unlock_should_abort(spinlock_t *lock,
-> -               unsigned long flags, bool *locked, struct compact_control=
- *cc)
-> +               unsigned long flags, void **locked, struct compact_contro=
-l *cc)
-
-Instead of passing both a void pointer and the lock why not just pass
-the pointer to the lock pointer? You could combine lock and locked
-into a single argument and save yourself some extra effort.
-
+> @@ -2451,10 +2458,11 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	int nr_retries = MEM_CGROUP_RECLAIM_RETRIES;
+>  	struct mem_cgroup *mem_over_limit;
+>  	struct page_counter *counter;
+> +	enum oom_status oom_status;
+>  	unsigned long nr_reclaimed;
+>  	bool may_swap = true;
+>  	bool drained = false;
+> -	enum oom_status oom_status;
+> +	unsigned long pflags;
+>  
+>  	if (mem_cgroup_is_root(memcg))
+>  		return 0;
+> @@ -2514,8 +2522,10 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  
+>  	memcg_memory_event(mem_over_limit, MEMCG_MAX);
+>  
+> +	psi_memstall_enter(&pflags);
+>  	nr_reclaimed = try_to_free_mem_cgroup_pages(mem_over_limit, nr_pages,
+>  						    gfp_mask, may_swap);
+> +	psi_memstall_leave(&pflags);
+>  
+>  	if (mem_cgroup_margin(mem_over_limit) >= nr_pages)
+>  		goto retry;
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 749d239c62b2..742538543c79 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -3318,7 +3318,6 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+>  					   bool may_swap)
 >  {
->         if (*locked) {
->                 spin_unlock_irqrestore(lock, flags);
-> -               *locked =3D false;
-> +               *locked =3D NULL;
->         }
->
->         if (fatal_signal_pending(current)) {
-> @@ -543,7 +543,7 @@ static unsigned long isolate_freepages_block(struct c=
-ompact_control *cc,
->         int nr_scanned =3D 0, total_isolated =3D 0;
->         struct page *cursor;
->         unsigned long flags =3D 0;
-> -       bool locked =3D false;
-> +       struct compact_control *locked =3D NULL;
->         unsigned long blockpfn =3D *start_pfn;
->         unsigned int order;
->
-> @@ -565,7 +565,7 @@ static unsigned long isolate_freepages_block(struct c=
-ompact_control *cc,
->                  */
->                 if (!(blockpfn % SWAP_CLUSTER_MAX)
->                     && compact_unlock_should_abort(&cc->zone->lock, flags=
-,
-> -                                                               &locked, =
-cc))
-> +                                                       (void**)&locked, =
-cc))
->                         break;
->
->                 nr_scanned++;
-> @@ -599,8 +599,8 @@ static unsigned long isolate_freepages_block(struct c=
-ompact_control *cc,
->                  * recheck as well.
->                  */
->                 if (!locked) {
-> -                       locked =3D compact_lock_irqsave(&cc->zone->lock,
-> -                                                               &flags, c=
-c);
-> +                       compact_lock_irqsave(&cc->zone->lock, &flags, cc)=
-;
-> +                       locked =3D cc;
->
->                         /* Recheck this is a buddy page under lock */
->                         if (!PageBuddy(page))
-
-If you have to provide a pointer you might as well just provide a
-pointer to the zone lock since that is the thing that is actually
-holding the lock at this point and would be consistent with your other
-uses of the locked value. One possibility would be to change the
-return type so that you return a pointer to the lock you are using.
-Then the code would look closer to the lruvec code you are already
-using.
-
-> @@ -787,7 +787,7 @@ static bool too_many_isolated(pg_data_t *pgdat)
->         unsigned long nr_scanned =3D 0, nr_isolated =3D 0;
->         struct lruvec *lruvec;
->         unsigned long flags =3D 0;
-> -       struct lruvec *locked_lruvec =3D NULL;
-> +       struct lruvec *locked =3D NULL;
->         struct page *page =3D NULL, *valid_page =3D NULL;
->         unsigned long start_pfn =3D low_pfn;
->         bool skip_on_failure =3D false;
-> @@ -847,21 +847,11 @@ static bool too_many_isolated(pg_data_t *pgdat)
->                  * contention, to give chance to IRQs. Abort completely i=
-f
->                  * a fatal signal is pending.
->                  */
-> -               if (!(low_pfn % SWAP_CLUSTER_MAX)) {
-> -                       if (locked_lruvec) {
-> -                               unlock_page_lruvec_irqrestore(locked_lruv=
-ec,
-> -                                                                       f=
-lags);
-> -                               locked_lruvec =3D NULL;
-> -                       }
+>  	unsigned long nr_reclaimed;
+> -	unsigned long pflags;
+>  	unsigned int noreclaim_flag;
+>  	struct scan_control sc = {
+>  		.nr_to_reclaim = max(nr_pages, SWAP_CLUSTER_MAX),
+> @@ -3339,17 +3338,12 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+>  	struct zonelist *zonelist = node_zonelist(numa_node_id(), sc.gfp_mask);
+>  
+>  	set_task_reclaim_state(current, &sc.reclaim_state);
 > -
-> -                       if (fatal_signal_pending(current)) {
-> -                               cc->contended =3D true;
+>  	trace_mm_vmscan_memcg_reclaim_begin(0, sc.gfp_mask);
 > -
-> -                               low_pfn =3D 0;
-> -                               goto fatal_pending;
-> -                       }
+> -	psi_memstall_enter(&pflags);
+>  	noreclaim_flag = memalloc_noreclaim_save();
+>  
+>  	nr_reclaimed = do_try_to_free_pages(zonelist, &sc);
+>  
+>  	memalloc_noreclaim_restore(noreclaim_flag);
+> -	psi_memstall_leave(&pflags);
 > -
-> -                       cond_resched();
-> +               if (!(low_pfn % SWAP_CLUSTER_MAX)
-> +                   && compact_unlock_should_abort(&locked->lru_lock, fla=
-gs,
-> +                                               (void**)&locked, cc)) {
-
-An added advantage to making locked a pointer to a spinlock is that
-you could reduce the number of pointers you have to pass. Instead of
-messing with &locked->lru_lock you would just pass the pointer to
-locked resulting in fewer arguments being passed and if it is NULL you
-skip the whole unlock pass.
-
-> +                       low_pfn =3D 0;
-> +                       goto fatal_pending;
->                 }
->
->                 if (!pfn_valid_within(low_pfn))
-> @@ -932,9 +922,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
->                          */
->                         if (unlikely(__PageMovable(page)) &&
->                                         !PageIsolated(page)) {
-> -                               if (locked_lruvec) {
-> -                                       unlock_page_lruvec_irqrestore(loc=
-ked_lruvec, flags);
-> -                                       locked_lruvec =3D NULL;
-> +                               if (locked) {
-> +                                       unlock_page_lruvec_irqrestore(loc=
-ked, flags);
-> +                                       locked =3D NULL;
->                                 }
->
->                                 if (!isolate_movable_page(page, isolate_m=
-ode))
-> @@ -979,13 +969,13 @@ static bool too_many_isolated(pg_data_t *pgdat)
->                 lruvec =3D mem_cgroup_page_lruvec(page, pgdat);
->
->                 /* If we already hold the lock, we can skip some rechecki=
-ng */
-> -               if (lruvec !=3D locked_lruvec) {
-> -                       if (locked_lruvec)
-> -                               unlock_page_lruvec_irqrestore(locked_lruv=
-ec,
-> +               if (lruvec !=3D locked) {
-> +                       if (locked)
-> +                               unlock_page_lruvec_irqrestore(locked,
->                                                                         f=
-lags);
->
->                         compact_lock_irqsave(&lruvec->lru_lock, &flags, c=
-c);
-> -                       locked_lruvec =3D lruvec;
-> +                       locked =3D lruvec;
->                         rcu_read_unlock();
->
->                         lruvec_memcg_debug(lruvec, page);
-> @@ -1041,9 +1031,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
->
->  isolate_fail_put:
->                 /* Avoid potential deadlock in freeing page under lru_loc=
-k */
-> -               if (locked_lruvec) {
-> -                       unlock_page_lruvec_irqrestore(locked_lruvec, flag=
-s);
-> -                       locked_lruvec =3D NULL;
-> +               if (locked) {
-> +                       unlock_page_lruvec_irqrestore(locked, flags);
-> +                       locked =3D NULL;
->                 }
->                 put_page(page);
->
-> @@ -1057,10 +1047,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
->                  * page anyway.
->                  */
->                 if (nr_isolated) {
-> -                       if (locked_lruvec) {
-> -                               unlock_page_lruvec_irqrestore(locked_lruv=
-ec,
-> -                                                                       f=
-lags);
-> -                               locked_lruvec =3D NULL;
-> +                       if (locked) {
-> +                               unlock_page_lruvec_irqrestore(locked, fla=
-gs);
-> +                               locked =3D NULL;
->                         }
->                         putback_movable_pages(&cc->migratepages);
->                         cc->nr_migratepages =3D 0;
-> @@ -1087,8 +1076,8 @@ static bool too_many_isolated(pg_data_t *pgdat)
->         page =3D NULL;
->
->  isolate_abort:
-> -       if (locked_lruvec)
-> -               unlock_page_lruvec_irqrestore(locked_lruvec, flags);
-> +       if (locked)
-> +               unlock_page_lruvec_irqrestore(locked, flags);
->         if (page) {
->                 SetPageLRU(page);
->                 put_page(page);
-> --
-> 1.8.3.1
->
+>  	trace_mm_vmscan_memcg_reclaim_end(nr_reclaimed);
+>  	set_task_reclaim_state(current, NULL);
+>  
+> -- 
+> 2.27.0
+> 
