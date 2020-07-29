@@ -1,31 +1,25 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: [PATCH 2/3] docs: cgroup: Note about sibling relative reclaim protection
-Date: Wed, 29 Jul 2020 16:05:36 +0200
-Message-ID: <20200729140537.13345-3-mkoutny@suse.com>
-References: <20200729140537.13345-1-mkoutny@suse.com>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
+Subject: [PATCH 0/3] Memory reclaim documentation fixes
+Date: Wed, 29 Jul 2020 16:05:34 +0200
+Message-ID: <20200729140537.13345-1-mkoutny@suse.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200729140537.13345-1-mkoutny-IBi9RG/b67k@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="macroman"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>
+To: cgroups@vger.kernel.org, linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>
 
-U2lnbmVkLW9mZi1ieTogTWljaGFsIEtvdXRuw70gPG1rb3V0bnktSUJpOVJHL2I2N2tAcHVibGlj
-LmdtYW5lLm9yZz4KLS0tCiBEb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nncm91cC12Mi5yc3Qg
-fCA0ICsrKysKIDEgZmlsZSBjaGFuZ2VkLCA0IGluc2VydGlvbnMoKykKCmRpZmYgLS1naXQgYS9E
-b2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nncm91cC12Mi5yc3QgYi9Eb2N1bWVudGF0aW9uL2Fk
-bWluLWd1aWRlL2Nncm91cC12Mi5yc3QKaW5kZXggOTRiZGZmNGY5ZTA5Li40N2Y5ZjA1NmU2NmYg
-MTAwNjQ0Ci0tLSBhL0RvY3VtZW50YXRpb24vYWRtaW4tZ3VpZGUvY2dyb3VwLXYyLnJzdAorKysg
-Yi9Eb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nncm91cC12Mi5yc3QKQEAgLTE0NjcsNiArMTQ2
-NywxMCBAQCB0YXJnZXRzIGFuY2VzdG9ycyBvZiBBLCB0aGUgZWZmZWN0aXZlIHByb3RlY3Rpb24g
-b2YgQiBpcyBjYXBwZWQgYnkgdGhlCiBwcm90ZWN0aW9uIHZhbHVlIGNvbmZpZ3VyZWQgZm9yIEEg
-KGFuZCBhbnkgb3RoZXIgaW50ZXJtZWRpYXRlIGFuY2VzdG9ycyBiZXR3ZWVuCiBBIGFuZCB0aGUg
-dGFyZ2V0KS4KIAorVG8gZXhwcmVzcyBpbmRpZmZlcmVuY2UgYWJvdXQgcmVsYXRpdmUgc2libGlu
-ZyBwcm90ZWN0aW9uLCBpdCBpcyBzdWdnZXN0ZWQgdG8KK3VzZSBtZW1vcnlfcmVjdXJzaXZlcHJv
-dC4gQ29uZmlndXJpbmcgYWxsIGRlc2NlbmRhbnRzIG9mIGEgcGFyZW50IHdpdGggZmluaXRlCitw
-cm90ZWN0aW9uIHRvICJtYXgiIHdvcmtzIGJ1dCBpdCBtYXkgdW5uZWNlc3NhcmlseSBza2V3IG1l
-bW9yeS5ldmVudHM6bG93CitmaWVsZC4KIAogTWVtb3J5IE93bmVyc2hpcAogfn5+fn5+fn5+fn5+
-fn5+fgotLSAKMi4yNy4wCgo=
+SGksCkkgdGhpbmsgdGhlIHJlY2xhaW0gdGFyZ2V0IGlzIGEgY29uY2VwdCB0aGF0IGlzIG5vdCBq
+dXN0IGFuCmltcGxlbWVudGF0aW9uIGRldGFpbCBhbmQgaGVuY2UgaXQgc2hvdWxkIGJlIGRvY3Vt
+ZW50ZWQgaG93IGl0IGFwcGxpZXMKdG8gcHJvdGVjdGlvbiBjb25maWd1cmF0aW9uICh0aGUgZmly
+c3QgcGF0Y2gpLiBTZWNvbmQgcGF0Y2ggaXMgYSAiYmVzdApwcmFjdGljZSIgYml0IG9mIGluZm9y
+bWF0aW9uLCBpdCBtYXkgYmUgc3F1YXNoZWQgd2l0aCB0aGUgZmlyc3Qgb25lLiBUaGUKbGFzdCBw
+YXRjaCBqdXN0IG1ha2VzIGRvY3MgaW5kZWZpbml0ZSB1bnRpbCB0aGUgaWRlYSBpcyBpbXBsZW1l
+bnRlZC4KCgpNaWNoYWwgS291dG7DvSAoMyk6CiAgZG9jczogY2dyb3VwOiBFeHBsYWluIHJlY2xh
+aW0gcHJvdGVjdGlvbiB0YXJnZXQKICBkb2NzOiBjZ3JvdXA6IE5vdGUgYWJvdXQgc2libGluZyBy
+ZWxhdGl2ZSByZWNsYWltIHByb3RlY3Rpb24KICBkb2NzOiBjZ3JvdXA6IE5vIHNwZWNpYWwgaGFu
+ZGxpbmcgb2YgdW5wb3B1bGF0ZWQgbWVtY2dzCgogRG9jdW1lbnRhdGlvbi9hZG1pbi1ndWlkZS9j
+Z3JvdXAtdjIucnN0IHwgMzEgKysrKysrKysrKysrKysrKysrKystLS0tLQogMSBmaWxlIGNoYW5n
+ZWQsIDI1IGluc2VydGlvbnMoKyksIDYgZGVsZXRpb25zKC0pCgotLSAKMi4yNy4wCgo=
