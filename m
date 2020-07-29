@@ -1,34 +1,31 @@
-From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-Subject: [PATCH 3/3] docs: cgroup: No special handling of unpopulated memcgs
-Date: Wed, 29 Jul 2020 16:05:37 +0200
-Message-ID: <20200729140537.13345-4-mkoutny@suse.com>
+From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: [PATCH 2/3] docs: cgroup: Note about sibling relative reclaim protection
+Date: Wed, 29 Jul 2020 16:05:36 +0200
+Message-ID: <20200729140537.13345-3-mkoutny@suse.com>
 References: <20200729140537.13345-1-mkoutny@suse.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200729140537.13345-1-mkoutny@suse.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20200729140537.13345-1-mkoutny-IBi9RG/b67k@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="macroman"
-To: cgroups@vger.kernel.org, linux-doc@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>
 
-VGhlIGN1cnJlbnQga2VybmVsIGRvZXNuJ3QgaGFuZGxlIHVucG9wdWxhdGVkIGNncm91cHMgYW55
-IHNwZWNpYWwKcmVnYXJkaW5nIHJlY2xhaW0gcHJvdGVjdGlvbi4gRnVydGhlcm1vcmUsIHRoaXMg
-d2Fzbid0IGEgY2FzZSBldmVuIHdoZW4KdGhpcyB3YXMgaW50cm9kdWNlZCBpbgogICAgYmY4ZDVk
-NTJmZmU4OSAoIm1lbWNnOiBpbnRyb2R1Y2UgbWVtb3J5Lm1pbiIpCkRyb3AgdGhlIGluY29ycmVj
-dCBkb2N1bWVudGF0aW9uLiAoSW1wbGVtZW50YXRpb24gdGFraW5nIGludG8gYWNjb3VudAp0aGUg
-aW5uZXItbm9kZSBjb25zdHJhaW50IG1heSBiZSBhZGRlZCBsYXRlci4pCgpTaWduZWQtb2ZmLWJ5
-OiBNaWNoYWwgS291dG7DvSA8bWtvdXRueUBzdXNlLmNvbT4KLS0tCiBEb2N1bWVudGF0aW9uL2Fk
-bWluLWd1aWRlL2Nncm91cC12Mi5yc3QgfCAzIC0tLQogMSBmaWxlIGNoYW5nZWQsIDMgZGVsZXRp
-b25zKC0pCgpkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9hZG1pbi1ndWlkZS9jZ3JvdXAtdjIu
-cnN0IGIvRG9jdW1lbnRhdGlvbi9hZG1pbi1ndWlkZS9jZ3JvdXAtdjIucnN0CmluZGV4IDQ3Zjlm
-MDU2ZTY2Zi4uM2Q2MjkyMmM0NDk5IDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0aW9uL2FkbWluLWd1
-aWRlL2Nncm91cC12Mi5yc3QKKysrIGIvRG9jdW1lbnRhdGlvbi9hZG1pbi1ndWlkZS9jZ3JvdXAt
-djIucnN0CkBAIC0xMTIzLDkgKzExMjMsNiBAQCBQQUdFX1NJWkUgbXVsdGlwbGUgd2hlbiByZWFk
-IGJhY2suCiAJUHV0dGluZyBtb3JlIG1lbW9yeSB0aGFuIGdlbmVyYWxseSBhdmFpbGFibGUgdW5k
-ZXIgdGhpcwogCXByb3RlY3Rpb24gaXMgZGlzY291cmFnZWQgYW5kIG1heSBsZWFkIHRvIGNvbnN0
-YW50IE9PTXMuCiAKLQlJZiBhIG1lbW9yeSBjZ3JvdXAgaXMgbm90IHBvcHVsYXRlZCB3aXRoIHBy
-b2Nlc3NlcywKLQlpdHMgbWVtb3J5Lm1pbiBpcyBpZ25vcmVkLgotCiAgIG1lbW9yeS5sb3cKIAlB
-IHJlYWQtd3JpdGUgc2luZ2xlIHZhbHVlIGZpbGUgd2hpY2ggZXhpc3RzIG9uIG5vbi1yb290CiAJ
-Y2dyb3Vwcy4gIFRoZSBkZWZhdWx0IGlzICIwIi4KLS0gCjIuMjcuMAoK
+U2lnbmVkLW9mZi1ieTogTWljaGFsIEtvdXRuw70gPG1rb3V0bnktSUJpOVJHL2I2N2tAcHVibGlj
+LmdtYW5lLm9yZz4KLS0tCiBEb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nncm91cC12Mi5yc3Qg
+fCA0ICsrKysKIDEgZmlsZSBjaGFuZ2VkLCA0IGluc2VydGlvbnMoKykKCmRpZmYgLS1naXQgYS9E
+b2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nncm91cC12Mi5yc3QgYi9Eb2N1bWVudGF0aW9uL2Fk
+bWluLWd1aWRlL2Nncm91cC12Mi5yc3QKaW5kZXggOTRiZGZmNGY5ZTA5Li40N2Y5ZjA1NmU2NmYg
+MTAwNjQ0Ci0tLSBhL0RvY3VtZW50YXRpb24vYWRtaW4tZ3VpZGUvY2dyb3VwLXYyLnJzdAorKysg
+Yi9Eb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nncm91cC12Mi5yc3QKQEAgLTE0NjcsNiArMTQ2
+NywxMCBAQCB0YXJnZXRzIGFuY2VzdG9ycyBvZiBBLCB0aGUgZWZmZWN0aXZlIHByb3RlY3Rpb24g
+b2YgQiBpcyBjYXBwZWQgYnkgdGhlCiBwcm90ZWN0aW9uIHZhbHVlIGNvbmZpZ3VyZWQgZm9yIEEg
+KGFuZCBhbnkgb3RoZXIgaW50ZXJtZWRpYXRlIGFuY2VzdG9ycyBiZXR3ZWVuCiBBIGFuZCB0aGUg
+dGFyZ2V0KS4KIAorVG8gZXhwcmVzcyBpbmRpZmZlcmVuY2UgYWJvdXQgcmVsYXRpdmUgc2libGlu
+ZyBwcm90ZWN0aW9uLCBpdCBpcyBzdWdnZXN0ZWQgdG8KK3VzZSBtZW1vcnlfcmVjdXJzaXZlcHJv
+dC4gQ29uZmlndXJpbmcgYWxsIGRlc2NlbmRhbnRzIG9mIGEgcGFyZW50IHdpdGggZmluaXRlCitw
+cm90ZWN0aW9uIHRvICJtYXgiIHdvcmtzIGJ1dCBpdCBtYXkgdW5uZWNlc3NhcmlseSBza2V3IG1l
+bW9yeS5ldmVudHM6bG93CitmaWVsZC4KIAogTWVtb3J5IE93bmVyc2hpcAogfn5+fn5+fn5+fn5+
+fn5+fgotLSAKMi4yNy4wCgo=
