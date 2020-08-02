@@ -1,139 +1,174 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH] mm/memcg: remove useless check on page->mem_cgroup
-Date: Sat, 1 Aug 2020 11:58:41 +0800
-Message-ID: <9338716f-ca0e-057f-8d94-03e2b3f70281@linux.alibaba.com>
-References: <1596166480-22814-1-git-send-email-alex.shi@linux.alibaba.com>
- <20200731151655.GB491801@cmpxchg.org>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Subject: Re: [PATCH RFC] mm: Add function for testing if the current lruvec
+ lock is valid
+Date: Sun, 2 Aug 2020 11:20:53 -0700
+Message-ID: <CAKgT0UcDbzb_MXynzZANvJ_bV4VEguhxgOt2-hp4cNtvwE-r_Q@mail.gmail.com>
+References: <1595681998-19193-19-git-send-email-alex.shi@linux.alibaba.com>
+ <159622999150.2576729.14455020813024958573.stgit@ahduyck-desk1.jf.intel.com> <0c0a415a-52a0-5c06-b4be-80cbd3cb49c2@linux.alibaba.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200731151655.GB491801-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=eymiZWouRu2pskPk6lLMhIYaDCAUHR+AKe1qVabtwRI=;
+        b=e/2c4X4cZyBwPWEhEMz8pWttU6ykLW2oan+3KUk0tfrPc+kfHc6HmskkZsNHKng6iA
+         +t04TL3yFnkRGH7cOqnTguGl3MWnY+JBhEXXZjP0SVZtMgl6kLvXH0v8JazbBmQKjyF/
+         WDcP7LE91BWEh197Z7ONxFL16Fb2J9qpjPjW47RxlrRSg9gLcZ5M7MDXsiU4T7YWPQG1
+         CvxrtHVCgjPDa1zINW8d+VPpc9j2dFxLHRelqS5ZKOfeb8kPmwSKTAWEve+wp83W2/Ur
+         HoftnL5dA2b0O+r0FsFFMLZAWBJrsPuYvykQouLc/N6yWH4CUMNpukTsN1J5ZTf59FK7
+         Etyw==
+In-Reply-To: <0c0a415a-52a0-5c06-b4be-80cbd3cb49c2@linux.alibaba.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: "Duyck, Alexander H" <alexander.h.duyck@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>, cgroups@vger.kernel.org, Daniel Jordan <daniel.m.jordan@oracle.com>, Johannes Weiner <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, "Kirill A. Shutemov" <kirill@shutemov.name>, LKML <linux-kernel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, kbuild test robot <lkp@intel.com>, Mel Gorman <mgorman@techsingularity.net>, Wei Yang <richard.weiyang@gmail.com>, Rong Chen <rong.a.chen@intel.com>, Shakeel Butt <shakeelb@google.com>, Thomas Gleixner <tglx@linutronix.de>, Tejun Heo <tj@kernel.org>, Matthew Wilcox <willy>
 
+Feel free to fold it into your patches if you want.
 
+I think Hugh was the one that had submitted a patch that addressed it,
+and it looks like you folded that into your v17 set. It was probably
+what he had identified which was the additional LRU checks needing to
+be removed from the code.
 
-=D4=DA 2020/7/31 =CF=C2=CE=E711:16, Johannes Weiner =D0=B4=B5=C0:
->>  	if (!entry.val) {
->>  		memcg_memory_event(memcg, MEMCG_SWAP_FAIL);
-> Uncharged readahead pages are gone, but I'm not 100% sure uncharged
-> pages in general are gone. ISTR that the !page->mem_cgroup check in
-> mem_cgroup_uncharge() prevented a crash - although that is of course a
-> much broader interface, whereas the ones you change should only apply
-> to LRU pages (which are hopefully all charged).
->=20
-> Nevertheless, to avoid unnecessary crashes if we discover that we've
-> been wrong, how about leaving the branches for now, but adding a (new)
-> VM_WARN_ON_ONCE_PAGE() to them?
+Thanks.
 
+- Alex
 
-Right, let's see if other unexcepted things happens, and then do actions.
-So it's the patch:
-
-From 28893cf8e55b98665cce58c0ba6d54aeafb63a62 Mon Sep 17 00:00:00 2001
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Date: Sat, 1 Aug 2020 10:43:55 +0800
-Subject: [PATCH] mm/memcg: warning on !memcg after readahead page charged
-
-Since readahead page is charged on memcg too, in theory we don't have to
-check this exception now. Before safely remove them all, add a warning
-for the unexpected !memcg.
-
-Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.g=
-mane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
----
- include/linux/mmdebug.h |  8 ++++++++
- mm/memcontrol.c         | 15 ++++++++-------
- 2 files changed, 16 insertions(+), 7 deletions(-)
-
-diff --git a/include/linux/mmdebug.h b/include/linux/mmdebug.h
-index 2ad72d2c8cc5..639e98a3384e 100644
---- a/include/linux/mmdebug.h
-+++ b/include/linux/mmdebug.h
-@@ -37,6 +37,13 @@
- 			BUG();						\
- 		}							\
- 	} while (0)
-+#define VM_WARN_ON_ONCE_PAGE(cond, page)				\
-+	do {								\
-+		if (unlikely(cond)) {					\
-+			dump_page(page, "VM_WARN_ON_ONCE_PAGE(" __stringify(cond)")");\
-+			WARN_ON_ONCE(cond);				\
-+		}							\
-+	} while (0)
- #define VM_WARN_ON(cond) (void)WARN_ON(cond)
- #define VM_WARN_ON_ONCE(cond) (void)WARN_ON_ONCE(cond)
- #define VM_WARN_ONCE(cond, format...) (void)WARN_ONCE(cond, format)
-@@ -48,6 +55,7 @@
- #define VM_BUG_ON_MM(cond, mm) VM_BUG_ON(cond)
- #define VM_WARN_ON(cond) BUILD_BUG_ON_INVALID(cond)
- #define VM_WARN_ON_ONCE(cond) BUILD_BUG_ON_INVALID(cond)
-+#define VM_WARN_ON_ONCE_PAGE(cond, page)  BUILD_BUG_ON_INVALID(cond)
- #define VM_WARN_ONCE(cond, format...) BUILD_BUG_ON_INVALID(cond)
- #define VM_WARN(cond, format...) BUILD_BUG_ON_INVALID(cond)
- #endif
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e84c2b5596f2..0174c31f6491 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1322,10 +1322,8 @@ struct lruvec *mem_cgroup_page_lruvec(struct page *p=
-age, struct pglist_data *pgd
- 	}
-=20
- 	memcg =3D page->mem_cgroup;
--	/*
--	 * Swapcache readahead pages are added to the LRU - and
--	 * possibly migrated - before they are charged.
--	 */
-+	/* Readahead page is charged too, to see if other page uncharged */
-+	VM_WARN_ON_ONCE_PAGE(!memcg, page);
- 	if (!memcg)
- 		memcg =3D root_mem_cgroup;
-=20
-@@ -6897,8 +6895,9 @@ void mem_cgroup_migrate(struct page *oldpage, struct =
-page *newpage)
- 	if (newpage->mem_cgroup)
- 		return;
-=20
--	/* Swapcache readahead pages can get replaced before being charged */
- 	memcg =3D oldpage->mem_cgroup;
-+	/* Readahead page is charged too, to see if other page uncharged */
-+	VM_WARN_ON_ONCE_PAGE(!memcg, oldpage);
- 	if (!memcg)
- 		return;
-=20
-@@ -7095,7 +7094,8 @@ void mem_cgroup_swapout(struct page *page, swp_entry_=
-t entry)
-=20
- 	memcg =3D page->mem_cgroup;
-=20
--	/* Readahead page, never charged */
-+	/* Readahead page is charged too, to see if other page uncharged */
-+	VM_WARN_ON_ONCE_PAGE(!memcg, page);
- 	if (!memcg)
- 		return;
-=20
-@@ -7159,7 +7159,8 @@ int mem_cgroup_try_charge_swap(struct page *page, swp=
-_entry_t entry)
-=20
- 	memcg =3D page->mem_cgroup;
-=20
--	/* Readahead page, never charged */
-+	/* Readahead page is charged too, to see if other page uncharged */
-+	VM_WARN_ON_ONCE_PAGE(!memcg, page);
- 	if (!memcg)
- 		return 0;
-=20
---=20
-1.8.3.1
-
+On Fri, Jul 31, 2020 at 4:55 PM Alex Shi <alex.shi@linux.alibaba.com> wrote=
+:
+>
+> It looks much better than mine. and could replace 'mm/lru: introduce the =
+relock_page_lruvec function'
+> with your author signed. :)
+>
+> BTW,
+> it's the rcu_read_lock cause the will-it-scale/page_fault3 regression whi=
+ch you mentained in another
+> letter?
+>
+> Thanks
+> Alex
+>
+> =E5=9C=A8 2020/8/1 =E4=B8=8A=E5=8D=885:14, alexander.h.duyck@intel.com =
+=E5=86=99=E9=81=93:
+> > From: Alexander Duyck <alexander.h.duyck@linux.intel.com>
+> >
+> > When testing for relock we can avoid the need for RCU locking if we sim=
+ply
+> > compare the page pgdat and memcg pointers versus those that the lruvec =
+is
+> > holding. By doing this we can avoid the extra pointer walks and accesse=
+s of
+> > the memory cgroup.
+> >
+> > In addition we can avoid the checks entirely if lruvec is currently NUL=
+L.
+> >
+> > Signed-off-by: Alexander Duyck <alexander.h.duyck@linux.intel.com>
+> > ---
+> >  include/linux/memcontrol.h |   52 +++++++++++++++++++++++++++---------=
+--------
+> >  1 file changed, 32 insertions(+), 20 deletions(-)
+> >
+> > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> > index 6e670f991b42..7a02f00bf3de 100644
+> > --- a/include/linux/memcontrol.h
+> > +++ b/include/linux/memcontrol.h
+> > @@ -405,6 +405,22 @@ static inline struct lruvec *mem_cgroup_lruvec(str=
+uct mem_cgroup *memcg,
+> >
+> >  struct lruvec *mem_cgroup_page_lruvec(struct page *, struct pglist_dat=
+a *);
+> >
+> > +static inline bool lruvec_holds_page_lru_lock(struct page *page,
+> > +                                           struct lruvec *lruvec)
+> > +{
+> > +     pg_data_t *pgdat =3D page_pgdat(page);
+> > +     const struct mem_cgroup *memcg;
+> > +     struct mem_cgroup_per_node *mz;
+> > +
+> > +     if (mem_cgroup_disabled())
+> > +             return lruvec =3D=3D &pgdat->__lruvec;
+> > +
+> > +     mz =3D container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+> > +     memcg =3D page->mem_cgroup ? : root_mem_cgroup;
+> > +
+> > +     return lruvec->pgdat =3D=3D pgdat && mz->memcg =3D=3D memcg;
+> > +}
+> > +
+> >  struct mem_cgroup *mem_cgroup_from_task(struct task_struct *p);
+> >
+> >  struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm);
+> > @@ -880,6 +896,14 @@ static inline struct lruvec *mem_cgroup_page_lruve=
+c(struct page *page,
+> >       return &pgdat->__lruvec;
+> >  }
+> >
+> > +static inline bool lruvec_holds_page_lru_lock(struct page *page,
+> > +                                           struct lruvec *lruvec)
+> > +{
+> > +             pg_data_t *pgdat =3D page_pgdat(page);
+> > +
+> > +             return lruvec =3D=3D &pgdat->__lruvec;
+> > +}
+> > +
+> >  static inline struct mem_cgroup *parent_mem_cgroup(struct mem_cgroup *=
+memcg)
+> >  {
+> >       return NULL;
+> > @@ -1317,18 +1341,12 @@ static inline void unlock_page_lruvec_irqrestor=
+e(struct lruvec *lruvec,
+> >  static inline struct lruvec *relock_page_lruvec_irq(struct page *page,
+> >               struct lruvec *locked_lruvec)
+> >  {
+> > -     struct pglist_data *pgdat =3D page_pgdat(page);
+> > -     bool locked;
+> > +     if (locked_lruvec) {
+> > +             if (lruvec_holds_page_lru_lock(page, locked_lruvec))
+> > +                     return locked_lruvec;
+> >
+> > -     rcu_read_lock();
+> > -     locked =3D mem_cgroup_page_lruvec(page, pgdat) =3D=3D locked_lruv=
+ec;
+> > -     rcu_read_unlock();
+> > -
+> > -     if (locked)
+> > -             return locked_lruvec;
+> > -
+> > -     if (locked_lruvec)
+> >               unlock_page_lruvec_irq(locked_lruvec);
+> > +     }
+> >
+> >       return lock_page_lruvec_irq(page);
+> >  }
+> > @@ -1337,18 +1355,12 @@ static inline struct lruvec *relock_page_lruvec=
+_irq(struct page *page,
+> >  static inline struct lruvec *relock_page_lruvec_irqsave(struct page *p=
+age,
+> >               struct lruvec *locked_lruvec, unsigned long *flags)
+> >  {
+> > -     struct pglist_data *pgdat =3D page_pgdat(page);
+> > -     bool locked;
+> > -
+> > -     rcu_read_lock();
+> > -     locked =3D mem_cgroup_page_lruvec(page, pgdat) =3D=3D locked_lruv=
+ec;
+> > -     rcu_read_unlock();
+> > -
+> > -     if (locked)
+> > -             return locked_lruvec;
+> > +     if (locked_lruvec) {
+> > +             if (lruvec_holds_page_lru_lock(page, locked_lruvec))
+> > +                     return locked_lruvec;
+> >
+> > -     if (locked_lruvec)
+> >               unlock_page_lruvec_irqrestore(locked_lruvec, *flags);
+> > +     }
+> >
+> >       return lock_page_lruvec_irqsave(page, flags);
+> >  }
+> >
+>
