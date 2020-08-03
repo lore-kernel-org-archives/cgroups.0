@@ -1,86 +1,48 @@
 From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm/memcg: remove useless check on page->mem_cgroup
-Date: Mon, 3 Aug 2020 10:18:15 +0200
-Message-ID: <20200803081815.GD5174@dhcp22.suse.cz>
-References: <1596166480-22814-1-git-send-email-alex.shi@linux.alibaba.com>
- <20200731151655.GB491801@cmpxchg.org>
- <9338716f-ca0e-057f-8d94-03e2b3f70281@linux.alibaba.com>
+Subject: Re: [PATCH v17 00/21] per memcg lru lock
+Date: Mon, 3 Aug 2020 17:07:04 +0200
+Message-ID: <20200803150704.GV5174@dhcp22.suse.cz>
+References: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com>
+ <49d4f3bf-ccce-3c97-3a4c-f5cefe2d623a@linux.alibaba.com>
+ <c00ac587-7f69-768a-84ea-53cbf7469ae9@linux.alibaba.com>
+ <alpine.LSU.2.11.2007291105570.4649@eggly.anvils>
+ <08c8797d-1935-7b41-b8db-d22f054912ac@linux.alibaba.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <9338716f-ca0e-057f-8d94-03e2b3f70281-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+In-Reply-To: <08c8797d-1935-7b41-b8db-d22f054912ac-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
 To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
 
-On Sat 01-08-20 11:58:41, Alex Shi wrote:
+On Thu 30-07-20 10:16:13, Alex Shi wrote:
 > 
 > 
-> 在 2020/7/31 下午11:16, Johannes Weiner 写道:
-> >>  	if (!entry.val) {
-> >>  		memcg_memory_event(memcg, MEMCG_SWAP_FAIL);
-> > Uncharged readahead pages are gone, but I'm not 100% sure uncharged
-> > pages in general are gone. ISTR that the !page->mem_cgroup check in
-> > mem_cgroup_uncharge() prevented a crash - although that is of course a
-> > much broader interface, whereas the ones you change should only apply
-> > to LRU pages (which are hopefully all charged).
+> 在 2020/7/30 上午2:06, Hugh Dickins 写道:
+> > On Wed, 29 Jul 2020, Alex Shi wrote:
+> >>
+> >> Is there any comments or suggestion for this patchset?
+> >> Any hints will be very appreciated.
 > > 
-> > Nevertheless, to avoid unnecessary crashes if we discover that we've
-> > been wrong, how about leaving the branches for now, but adding a (new)
-> > VM_WARN_ON_ONCE_PAGE() to them?
-
-Agreed!
-
-> Right, let's see if other unexcepted things happens, and then do actions.
-> So it's the patch:
+> > Alex: it is now v5.8-rc7, obviously too late for this patchset to make
+> > v5.9, so I'm currently concentrated on checking some patches headed for
+> > v5.9 (and some bugfix patches of my own that I don't get time to send):
+> > I'll get back to responding on lru_lock in a week or two's time.
 > 
-> >From 28893cf8e55b98665cce58c0ba6d54aeafb63a62 Mon Sep 17 00:00:00 2001
-> From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-> Date: Sat, 1 Aug 2020 10:43:55 +0800
-> Subject: [PATCH] mm/memcg: warning on !memcg after readahead page charged
+> Hi Hugh,
 > 
-> Since readahead page is charged on memcg too, in theory we don't have to
-> check this exception now. Before safely remove them all, add a warning
-> for the unexpected !memcg.
+> Thanks a lot for response! It's fine to wait longer.
+> But thing would be more efficient if review get concentrated...
+> I am still too new in mm area.
 
-I would find it useful to mention since when this assumption holds.
-
-> Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> ---
->  include/linux/mmdebug.h |  8 ++++++++
->  mm/memcontrol.c         | 15 ++++++++-------
->  2 files changed, 16 insertions(+), 7 deletions(-)
-> 
-> diff --git a/include/linux/mmdebug.h b/include/linux/mmdebug.h
-> index 2ad72d2c8cc5..639e98a3384e 100644
-> --- a/include/linux/mmdebug.h
-> +++ b/include/linux/mmdebug.h
-> @@ -37,6 +37,13 @@
->  			BUG();						\
->  		}							\
->  	} while (0)
-> +#define VM_WARN_ON_ONCE_PAGE(cond, page)				\
-> +	do {								\
-> +		if (unlikely(cond)) {					\
-> +			dump_page(page, "VM_WARN_ON_ONCE_PAGE(" __stringify(cond)")");\
-> +			WARN_ON_ONCE(cond);				\
-> +		}							\
-
-This is a bit strange behavior. You dump page for each occasion but warn
-only once. I would expect either "once" semantic for any output or just
-dump on each occasion because if the whole point is to reduce to amount
-of output then the above doesn't serve the purpose.
-
+I am sorry and owe you a review but it is hard to find time for that.
+This is a large change and the review will be really far from trivial.
+If this version is mostly stable then I would recommend not posting new
+versions and simply remind people you expect the review from by a
+targeted ping.
 -- 
 Michal Hocko
 SUSE Labs
