@@ -1,52 +1,157 @@
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Subject: Re: [PATCH v17 19/21] mm/vmscan: use relock for move_pages_to_lru
-Date: Mon, 3 Aug 2020 15:49:59 -0700
-Message-ID: <CAKgT0UebLfdju0Ny9ad5bigzAazqpzfwk2_JNQQ9yEHYyVm5-Q@mail.gmail.com>
-References: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com> <1595681998-19193-20-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: Re: [PATCH RFC] mm: Add function for testing if the current lruvec
+ lock is valid
+Date: Tue, 4 Aug 2020 14:13:43 +0800
+Message-ID: <c5130b1b-cc60-d518-75d6-7a182fe9d343@linux.alibaba.com>
+References: <1595681998-19193-19-git-send-email-alex.shi@linux.alibaba.com>
+ <159622999150.2576729.14455020813024958573.stgit@ahduyck-desk1.jf.intel.com>
+ <0c0a415a-52a0-5c06-b4be-80cbd3cb49c2@linux.alibaba.com>
+ <CAKgT0UcDbzb_MXynzZANvJ_bV4VEguhxgOt2-hp4cNtvwE-r_Q@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=MAO+PpuYLBX0uefa2B1NpsdRhW1fJ0Gox2/GooMZOIM=;
-        b=KoPTr2noAD6XVqblQ0ZDm8p+m1GxTbJgLxmKlP6peN1JC+e0602LcrNh6gu9ebaXQ2
-         JeatTeBzUATzp79AE5HlxpKkODqdTWABRJnBgKaTw1JEK6M35cNoSvDmynZZU17JNPCd
-         qDj173WmJzHySDfVECR+KGtPR7MNNMY4YEGUCLvWzdtUO4Di7z/F4K+gMHaacHSdb/7i
-         6fRIEyaptXGL9Dai6I1u/EbsyMk/NV+sQpP6f8ifB7QfaCeZDWs8z9Ki0VaWK9WOv0l9
-         Y7hn756uAd0RcZkpy+MFgf71qbBeZGVeI33T25YFXcnpiZe9iwydIXXFJ/R7aDm0wOdh
-         XohA==
-In-Reply-To: <1595681998-19193-20-git-send-email-alex.shi@linux.alibaba.com>
+In-Reply-To: <CAKgT0UcDbzb_MXynzZANvJ_bV4VEguhxgOt2-hp4cNtvwE-r_Q@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Hugh Dickins <hughd@google.com>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Daniel Jordan <daniel.m.jordan@oracle.com>, Yang Shi <yang.shi@linux.alibaba.com>, Matthew Wilcox <willy@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, kbuild test robot <lkp@intel.com>, linux-mm <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Shakeel Butt <shakeelb@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Wei Yang <richard.weiyang@gmail.com>, "Kirill A. Shutemov" <kirill@shutemov.name>, Rong Chen <rong.a.chen@intel.com>, Andrey Ryabinin <aryabinin@virtuozzo.com>, Jann Horn <jannh@google.com>
+Content-Type: text/plain; charset="utf-8"
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: "Duyck, Alexander H" <alexander.h.duyck@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Andrey Ryabinin <aryabinin@virtuozzo.com>, cgroups@vger.kernel.org, Daniel Jordan <daniel.m.jordan@oracle.com>, Johannes Weiner <hannes@cmpxchg.org>, Hugh Dickins <hughd@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, "Kirill A. Shutemov" <kirill@shutemov.name>, LKML <linux-kernel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, kbuild test robot <lkp@intel.com>, Mel Gorman <mgorman@techsingularity.net>, Wei Yang <richard.weiyang@gmail.com>, Rong Chen <rong.a.chen@intel.com>, Shakeel Butt <shakeelb@google.com>, Thomas Gleixner <tglx@linutronix.de>, Tejun Heo <tj@kernel.org>, Matthew Wilcox <willy>
 
-On Sat, Jul 25, 2020 at 6:00 AM Alex Shi <alex.shi@linux.alibaba.com> wrote:
->
-> From: Hugh Dickins <hughd@google.com>
->
-> Use the relock function to replace relocking action. And try to save few
-> lock times.
->
-> Signed-off-by: Hugh Dickins <hughd@google.com>
-> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>
-> Cc: Jann Horn <jannh@google.com>
-> Cc: Mel Gorman <mgorman@techsingularity.net>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Matthew Wilcox <willy@infradead.org>
-> Cc: Hugh Dickins <hughd@google.com>
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-mm@kvack.org
 
-I am assuming this is only separate from patch 18 because of the fact
-that it is from Hugh and not yourself. Otherwise I would recommend
-folding this into patch 18.
 
-Reviewed-by: Alexander Duyck <alexander.h.duyck@linux.intel.com>
+在 2020/8/3 上午2:20, Alexander Duyck 写道:
+> Feel free to fold it into your patches if you want.
+> 
+> I think Hugh was the one that had submitted a patch that addressed it,
+> and it looks like you folded that into your v17 set. It was probably
+> what he had identified which was the additional LRU checks needing to
+> be removed from the code.
+
+Yes, Hugh's patch was folded into patch [PATCH v17 16/21] mm/swap: serialize memcg changes in pagevec_lru_move_fn
+and your change is on patch 18. seems there are no interfere with each other.
+Both of patches are fine.
+
+Thanks
+
+> 
+> Thanks.
+> 
+> - Alex
+> 
+> On Fri, Jul 31, 2020 at 4:55 PM Alex Shi <alex.shi@linux.alibaba.com> wrote:
+>>
+>> It looks much better than mine. and could replace 'mm/lru: introduce the relock_page_lruvec function'
+>> with your author signed. :)
+>>
+>> BTW,
+>> it's the rcu_read_lock cause the will-it-scale/page_fault3 regression which you mentained in another
+>> letter?
+>>
+>> Thanks
+>> Alex
+>>
+>> 在 2020/8/1 上午5:14, alexander.h.duyck@intel.com 写道:
+>>> From: Alexander Duyck <alexander.h.duyck@linux.intel.com>
+>>>
+>>> When testing for relock we can avoid the need for RCU locking if we simply
+>>> compare the page pgdat and memcg pointers versus those that the lruvec is
+>>> holding. By doing this we can avoid the extra pointer walks and accesses of
+>>> the memory cgroup.
+>>>
+>>> In addition we can avoid the checks entirely if lruvec is currently NULL.
+>>>
+>>> Signed-off-by: Alexander Duyck <alexander.h.duyck@linux.intel.com>
+>>> ---
+>>>  include/linux/memcontrol.h |   52 +++++++++++++++++++++++++++-----------------
+>>>  1 file changed, 32 insertions(+), 20 deletions(-)
+>>>
+>>> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+>>> index 6e670f991b42..7a02f00bf3de 100644
+>>> --- a/include/linux/memcontrol.h
+>>> +++ b/include/linux/memcontrol.h
+>>> @@ -405,6 +405,22 @@ static inline struct lruvec *mem_cgroup_lruvec(struct mem_cgroup *memcg,
+>>>
+>>>  struct lruvec *mem_cgroup_page_lruvec(struct page *, struct pglist_data *);
+>>>
+>>> +static inline bool lruvec_holds_page_lru_lock(struct page *page,
+>>> +                                           struct lruvec *lruvec)
+>>> +{
+>>> +     pg_data_t *pgdat = page_pgdat(page);
+>>> +     const struct mem_cgroup *memcg;
+>>> +     struct mem_cgroup_per_node *mz;
+>>> +
+>>> +     if (mem_cgroup_disabled())
+>>> +             return lruvec == &pgdat->__lruvec;
+>>> +
+>>> +     mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
+>>> +     memcg = page->mem_cgroup ? : root_mem_cgroup;
+>>> +
+>>> +     return lruvec->pgdat == pgdat && mz->memcg == memcg;
+>>> +}
+>>> +
+>>>  struct mem_cgroup *mem_cgroup_from_task(struct task_struct *p);
+>>>
+>>>  struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm);
+>>> @@ -880,6 +896,14 @@ static inline struct lruvec *mem_cgroup_page_lruvec(struct page *page,
+>>>       return &pgdat->__lruvec;
+>>>  }
+>>>
+>>> +static inline bool lruvec_holds_page_lru_lock(struct page *page,
+>>> +                                           struct lruvec *lruvec)
+>>> +{
+>>> +             pg_data_t *pgdat = page_pgdat(page);
+>>> +
+>>> +             return lruvec == &pgdat->__lruvec;
+>>> +}
+>>> +
+>>>  static inline struct mem_cgroup *parent_mem_cgroup(struct mem_cgroup *memcg)
+>>>  {
+>>>       return NULL;
+>>> @@ -1317,18 +1341,12 @@ static inline void unlock_page_lruvec_irqrestore(struct lruvec *lruvec,
+>>>  static inline struct lruvec *relock_page_lruvec_irq(struct page *page,
+>>>               struct lruvec *locked_lruvec)
+>>>  {
+>>> -     struct pglist_data *pgdat = page_pgdat(page);
+>>> -     bool locked;
+>>> +     if (locked_lruvec) {
+>>> +             if (lruvec_holds_page_lru_lock(page, locked_lruvec))
+>>> +                     return locked_lruvec;
+>>>
+>>> -     rcu_read_lock();
+>>> -     locked = mem_cgroup_page_lruvec(page, pgdat) == locked_lruvec;
+>>> -     rcu_read_unlock();
+>>> -
+>>> -     if (locked)
+>>> -             return locked_lruvec;
+>>> -
+>>> -     if (locked_lruvec)
+>>>               unlock_page_lruvec_irq(locked_lruvec);
+>>> +     }
+>>>
+>>>       return lock_page_lruvec_irq(page);
+>>>  }
+>>> @@ -1337,18 +1355,12 @@ static inline struct lruvec *relock_page_lruvec_irq(struct page *page,
+>>>  static inline struct lruvec *relock_page_lruvec_irqsave(struct page *page,
+>>>               struct lruvec *locked_lruvec, unsigned long *flags)
+>>>  {
+>>> -     struct pglist_data *pgdat = page_pgdat(page);
+>>> -     bool locked;
+>>> -
+>>> -     rcu_read_lock();
+>>> -     locked = mem_cgroup_page_lruvec(page, pgdat) == locked_lruvec;
+>>> -     rcu_read_unlock();
+>>> -
+>>> -     if (locked)
+>>> -             return locked_lruvec;
+>>> +     if (locked_lruvec) {
+>>> +             if (lruvec_holds_page_lru_lock(page, locked_lruvec))
+>>> +                     return locked_lruvec;
+>>>
+>>> -     if (locked_lruvec)
+>>>               unlock_page_lruvec_irqrestore(locked_lruvec, *flags);
+>>> +     }
+>>>
+>>>       return lock_page_lruvec_irqsave(page, flags);
+>>>  }
+>>>
+>>
