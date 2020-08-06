@@ -1,45 +1,146 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH v17 13/21] mm/lru: introduce TestClearPageLRU
-Date: Thu, 6 Aug 2020 09:54:08 +0800
-Message-ID: <f9fa46a4-b341-2470-ce18-03379b9ea5c2@linux.alibaba.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: Re: [PATCH v17 01/21] mm/vmscan: remove unnecessary lruvec adding
+Date: Thu, 6 Aug 2020 11:47:53 +0800
+Message-ID: <d4eb6520-e1ee-9202-49d0-a9216a96a488@linux.alibaba.com>
 References: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com>
- <1595681998-19193-14-git-send-email-alex.shi@linux.alibaba.com>
- <9b906469-38fb-8a4e-9a47-d617c7669579@linux.alibaba.com>
- <CAKgT0Ud1+FkJcTXR0MxZYFxd7mr=opdXfXKTqkmiu4NNMyT4bg@mail.gmail.com>
+ <1595681998-19193-2-git-send-email-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAKgT0Ud1+FkJcTXR0MxZYFxd7mr=opdXfXKTqkmiu4NNMyT4bg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1595681998-19193-2-git-send-email-alex.shi@linux.alibaba.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Alexander Duyck <alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Rong Chen <rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, yang.shi@linux.alibaba.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com
 
 
 
-在 2020/8/6 上午6:43, Alexander Duyck 写道:
->> @@ -878,9 +877,8 @@ void release_pages(struct page **pages, int nr)
->>                                 spin_lock_irqsave(&locked_pgdat->lru_lock, flags);
->>                         }
->>
->> -                       lruvec = mem_cgroup_page_lruvec(page, locked_pgdat);
->> -                       VM_BUG_ON_PAGE(!PageLRU(page), page);
->>                         __ClearPageLRU(page);
->> +                       lruvec = mem_cgroup_page_lruvec(page, locked_pgdat);
->>                         del_page_from_lru_list(page, lruvec, page_off_lru(page));
->>                 }
->>
-> The more I look at this piece it seems like this change wasn't really
-> necessary. If anything it seems like it could catch potential bugs as
-> it was testing for the PageLRU flag before and then clearing it
-> manually anyway. In addition it doesn't reduce the critical path by
-> any significant amount so I am not sure these changes are providing
-> any benefit.
+=D4=DA 2020/7/25 =CF=C2=CE=E78:59, Alex Shi =D0=B4=B5=C0:
+> We don't have to add a freeable page into lru and then remove from it.
+> This change saves a couple of actions and makes the moving more clear.
+>=20
+> The SetPageLRU needs to be kept here for list intergrity.
+> Otherwise:
+>  #0 mave_pages_to_lru              #1 release_pages
+>                                    if (put_page_testzero())
+>  if !put_page_testzero
+>                                      !PageLRU //skip lru_lock
+>                                        list_add(&page->lru,)
+>    list_add(&page->lru,) //corrupt
 
-Don't know hat kind of bug do you mean here, since the page is no one using, means
-no one could ClearPageLRU in other place,  so if you like to keep the VM_BUG_ON_PAGE,
-that should be ok.
+The race comments should be corrected to this:
+                /*
+                 * The SetPageLRU needs to be kept here for list intergrity.
+                 * Otherwise:
+                 *   #0 mave_pages_to_lru             #1 release_pages
+                 *   if !put_page_testzero
+                 *                                    if (put_page_testzero=
+())
+                 *                                      !PageLRU //skip lru=
+_lock
+                 *     SetPageLRU()
+                 *     list_add(&page->lru,)
+                 *                                        list_add(&page->l=
+ru,)
+                 */
 
-Thanks!
-Alex
+>=20
+> [akpm@linux-foundation.org: coding style fixes]
+> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Johannes Weiner <hannes@cmpxchg.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Matthew Wilcox <willy@infradead.org>
+> Cc: Hugh Dickins <hughd@google.com>
+> Cc: linux-mm@kvack.org
+> Cc: linux-kernel@vger.kernel.org
+> ---
+>  mm/vmscan.c | 37 ++++++++++++++++++++++++-------------
+>  1 file changed, 24 insertions(+), 13 deletions(-)
+>=20
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 749d239c62b2..ddb29d813d77 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -1856,26 +1856,29 @@ static unsigned noinline_for_stack move_pages_to_=
+lru(struct lruvec *lruvec,
+>  	while (!list_empty(list)) {
+>  		page =3D lru_to_page(list);
+>  		VM_BUG_ON_PAGE(PageLRU(page), page);
+> +		list_del(&page->lru);
+>  		if (unlikely(!page_evictable(page))) {
+> -			list_del(&page->lru);
+>  			spin_unlock_irq(&pgdat->lru_lock);
+>  			putback_lru_page(page);
+>  			spin_lock_irq(&pgdat->lru_lock);
+>  			continue;
+>  		}
+> -		lruvec =3D mem_cgroup_page_lruvec(page, pgdat);
+> =20
+> +		/*
+> +		 * The SetPageLRU needs to be kept here for list intergrity.
+> +		 * Otherwise:
+> +		 *   #0 mave_pages_to_lru             #1 release_pages
+> +		 *				      if (put_page_testzero())
+> +		 *   if !put_page_testzero
+> +		 *				        !PageLRU //skip lru_lock
+> +		 *                                        list_add(&page->lru,)
+> +		 *     list_add(&page->lru,) //corrupt
+> +		 */
+
+                /*
+                 * The SetPageLRU needs to be kept here for list intergrity.
+                 * Otherwise:
+                 *   #0 mave_pages_to_lru             #1 release_pages
+                 *   if !put_page_testzero
+                 *                                    if (put_page_testzero=
+())
+                 *                                      !PageLRU //skip lru=
+_lock
+                 *     SetPageLRU()
+                 *     list_add(&page->lru,)
+                 *                                        list_add(&page->l=
+ru,)
+                 */
+
+>  		SetPageLRU(page);
+> -		lru =3D page_lru(page);
+> =20
+> -		nr_pages =3D hpage_nr_pages(page);
+> -		update_lru_size(lruvec, lru, page_zonenum(page), nr_pages);
+> -		list_move(&page->lru, &lruvec->lists[lru]);
+> -
+> -		if (put_page_testzero(page)) {
+> +		if (unlikely(put_page_testzero(page))) {
+>  			__ClearPageLRU(page);
+>  			__ClearPageActive(page);
+> -			del_page_from_lru_list(page, lruvec, lru);
+> =20
+>  			if (unlikely(PageCompound(page))) {
+>  				spin_unlock_irq(&pgdat->lru_lock);
+> @@ -1883,11 +1886,19 @@ static unsigned noinline_for_stack move_pages_to_=
+lru(struct lruvec *lruvec,
+>  				spin_lock_irq(&pgdat->lru_lock);
+>  			} else
+>  				list_add(&page->lru, &pages_to_free);
+> -		} else {
+> -			nr_moved +=3D nr_pages;
+> -			if (PageActive(page))
+> -				workingset_age_nonresident(lruvec, nr_pages);
+> +
+> +			continue;
+>  		}
+> +
+> +		lruvec =3D mem_cgroup_page_lruvec(page, pgdat);
+> +		lru =3D page_lru(page);
+> +		nr_pages =3D hpage_nr_pages(page);
+> +
+> +		update_lru_size(lruvec, lru, page_zonenum(page), nr_pages);
+> +		list_add(&page->lru, &lruvec->lists[lru]);
+> +		nr_moved +=3D nr_pages;
+> +		if (PageActive(page))
+> +			workingset_age_nonresident(lruvec, nr_pages);
+>  	}
+> =20
+>  	/*
+>=20
