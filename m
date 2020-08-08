@@ -1,72 +1,94 @@
-From: Alexander Duyck <alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v17 14/21] mm/compaction: do page isolation first in compaction
-Date: Fri, 7 Aug 2020 07:51:11 -0700
-Message-ID: <CAKgT0UdSrarC8j+G=LYRSadcaG6yNCoCfeVpFjEiHRJb4A77-g@mail.gmail.com>
-References: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com>
- <1595681998-19193-15-git-send-email-alex.shi@linux.alibaba.com>
- <CAKgT0UcbBv=QBK9ErqLKXoNLYxFz52L4fiiHy4h6zKdBs=YPOg@mail.gmail.com> <241ca157-104f-4f0d-7d5b-de394443788d@linux.alibaba.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH] mm/memcg: remove useless check on page->mem_cgroup
+Date: Sat, 8 Aug 2020 21:22:29 +0800
+Message-ID: <4740bac1-72f6-a640-ab6a-a8801e68c27a@linux.alibaba.com>
+References: <1596166480-22814-1-git-send-email-alex.shi@linux.alibaba.com>
+ <20200731151655.GB491801@cmpxchg.org>
+ <9338716f-ca0e-057f-8d94-03e2b3f70281@linux.alibaba.com>
+ <20200803081815.GD5174@dhcp22.suse.cz>
+ <bd61e672-b997-c4cd-2047-fca9dc11cc4c@linux.alibaba.com>
+ <92dd8e68-8095-72c5-0144-2a084e4d5993@linux.alibaba.com>
+ <5622ef68-5e70-d1a9-d1be-b45411b6be5c@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=j7YOCwyn015CH01DvuqygeICt/lkosNS0VPJxx8lTNk=;
-        b=DZl9SjSAU9r2ocCJ25zl96LApqZMSw7v9QRevy/vcPN769EjunTsd/mxoDROifcfLh
-         x1cV0CIGT6g0Xi8y8o6WulDNVEU3MgOjy374LzN50bwKA8qj5tfqhfRG9Q0nekJQju22
-         GCXzILsDGgSQKEM3LcX5k/g1Xw3f41snt8i8oCINtSQ6N5YA/eiSfFTAreko0JF3PNtH
-         J9p4yKgszZfUSwY6ChDo83EAwG/Mcts7/mmesRa55fDcCkl3YPCe0tulykRKtrpaxq9l
-         jtyCfQeWNNNxCOjCAqiccXa6SPaZBiUkyk+VyHgZacF4AyPUX6DZFp/FbQH052q+PY5Y
-         i1DA==
-In-Reply-To: <241ca157-104f-4f0d-7d5b-de394443788d-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+In-Reply-To: <5622ef68-5e70-d1a9-d1be-b45411b6be5c-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Rong Chen <rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Aug 6, 2020 at 8:25 PM Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org> wrote:
->
->
->
-> =E5=9C=A8 2020/8/7 =E4=B8=8A=E5=8D=882:38, Alexander Duyck =E5=86=99=E9=
-=81=93:
-> >> +
-> >>  isolate_abort:
-> >>         if (locked)
-> >>                 spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-> >> +       if (page) {
-> >> +               SetPageLRU(page);
-> >> +               put_page(page);
-> >> +       }
-> >>
-> >>         /*
-> >>          * Updated the cached scanner pfn once the pageblock has been =
-scanned
-> > We should probably be calling SetPageLRU before we release the lru
-> > lock instead of before. It might make sense to just call it before we
-> > get here, similar to how you did in the isolate_fail_put case a few
-> > lines later. Otherwise this seems to violate the rules you had set up
-> > earlier where we were only going to be setting the LRU bit while
-> > holding the LRU lock.
->
-> Hi Alex,
->
-> Set out of lock here should be fine. I never said we must set the bit in =
-locking.
-> And this page is get by get_page_unless_zero(), no warry on release.
->
-> Thanks
-> Alex
 
-I wonder if this entire section shouldn't be restructured. This is the
-only spot I can see where we are resetting the LRU flag instead of
-pulling the page from the LRU list with the lock held. Looking over
-the code it seems like something like that should be possible. I am
-not sure the LRU lock is really protecting us in either the
-PageCompound check nor the skip bits. It seems like holding a
-reference on the page should prevent it from switching between
-compound or not, and the skip bits are per pageblock with the LRU bits
-being per node/memcg which I would think implies that we could have
-multiple LRU locks that could apply to a single skip bit.
+
+在 2020/8/5 下午9:02, Alex Shi 写道:
+> 
+> 
+> 在 2020/8/5 下午8:28, Alex Shi 写道:
+>> The last patch has a problem on define. this version could fix it.
+>>
+>> BTW, I see some !memcg happens when MEMCG compilered but disabled by cgroup_disable
+>>
+>>
+>> [   94.657666] ---[ end trace f1f34bfc3b32ed2f ]---
+>> [   95.138995] anon flags: 0x5005b48008000d(locked|uptodate|dirty|swapbacked)
+>> [   95.146220] raw: 005005b48008000d dead000000000100 dead000000000122 ffff8897c7c76ad1
+>> [   95.154549] raw: 0000000000000022 0000000000000000 0000000200000000 0000000000000000
+>> [   95.162876] page dumped because: VM_WARN_ON_ONCE_PAGE(!memcg)
+>>
+>>
+> 
+> The following patch may helpful.
+
+Any comments for the 2 patches?
+
+Thanks
+Alex
+
+> 
+> From 8bfb26a2e37e08dc61d20212bcfa5812a367ba94 Mon Sep 17 00:00:00 2001
+> From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+> Date: Wed, 5 Aug 2020 20:32:12 +0800
+> Subject: [PATCH] mm/memcg: don't try charge swap if memcg disabled
+> 
+> If we disabled memcg by cgroup_disable=memory, the swap charges are
+> still called. Let's return from the funcs earlier and keep WARN_ON
+> monitor.
+> 
+> Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> ---
+>  mm/memcontrol.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index cb07a48d53aa..65f2b42d25af 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -7163,6 +7163,9 @@ void mem_cgroup_swapout(struct page *page, swp_entry_t entry)
+>  	VM_BUG_ON_PAGE(PageLRU(page), page);
+>  	VM_BUG_ON_PAGE(page_count(page), page);
+>  
+> +	if (mem_cgroup_disabled())
+> +		return;
+> +
+>  	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
+>  		return;
+>  
+> @@ -7228,6 +7231,9 @@ int mem_cgroup_try_charge_swap(struct page *page, swp_entry_t entry)
+>  	struct mem_cgroup *memcg;
+>  	unsigned short oldid;
+>  
+> +	if (mem_cgroup_disabled())
+> +		return 0;
+> +
+>  	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
+>  		return 0;
+>  
+> 
