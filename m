@@ -1,7 +1,8 @@
 From: Alexander Duyck <alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [RFC PATCH 1/3] mm: Drop locked from isolate_migratepages_block
-Date: Wed, 12 Aug 2020 21:02:24 -0700
-Message-ID: <20200813040224.13054.96724.stgit@localhost.localdomain>
+Subject: [RFC PATCH 2/3] mm: Drop use of test_and_set_skip in favor of just
+ setting skip
+Date: Wed, 12 Aug 2020 21:02:32 -0700
+Message-ID: <20200813040232.13054.82417.stgit@localhost.localdomain>
 References: <20200813035100.13054.25671.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -10,13 +11,13 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:from:to:cc:date:message-id:in-reply-to:references
          :user-agent:mime-version:content-transfer-encoding;
-        bh=XtxT1MTxM5ARJ+08eWr2bJ37iwug5sulaz41RNmMU7k=;
-        b=p7aKYuuOYtZex8EmSHqns2ZVG6wtpk4+BJY6vTjOWkw9WYj2eijkenTtU70ZLdXWyE
-         GQrZFDJrpyqGeq6kIv3KfpWbtPJ0thdDxLNyrRk32/WBCYNISKcCW1gOEnlUnynVrMY2
-         unbACAKixzD21x1yKI8PZY26drlVM4slXcE4ZnTDk6FPDyy+BNskGWk2LNwClTmLWpAu
-         UjT5Bc1jXlMXNnfJWxGeJA8NmE7vREmRF9Qo3Ym76m44t8HmrT4uKcB10SnYiSsdX/cE
-         iy1vSkyE7G/EC5PmTx5uC0TRNuQGC48FnnYA5zPE0xjrCLLM1NZltN3VJwV6S0aaW5+/
-         OkVA==
+        bh=g1Efyw0jo1iBHDaFGnCxXDBpkzz2KS4HPptzP2dpWOE=;
+        b=SASn4JQnilStqGrDLOtz2BFduofMDuiSagfrx9tnHZ71TnmRd67ZdWrSRGdfw9IAGq
+         m9yIwMMEh0ZnxBlWWdbePMh6dEcgXTiWIPxC6fGrDTGYo7BGwbIWQwzY9Jhaq1h4RGIO
+         0Arw+y0bGAEeM1aYyHrS3Z9BHtyk9Pr+2pPT2rEJCnIlPqpxaCX+EcEyt7FFs1Zxo3Xo
+         fy/zMPyLB9PA4P+zHE4VNKdiRgum8g6zhIjBRU+lJwJ8BAiAlg75lMljBWqa4qUbT9l4
+         1TyLlqB6Kq8Gfn4JyGDzb0CJ/iU7Cu1i1QISLdmN/pZIL9Mz33xB9MB15pN+tZnGiLAO
+         RQNQ==
 In-Reply-To: <20200813035100.13054.25671.stgit-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
@@ -26,124 +27,126 @@ Cc: yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, lkp-ral2JQCrhuEA
 
 From: Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-We can drop the need for the locked variable by making use of the
-lruvec_holds_page_lru_lock function. By doing this we can avoid some rcu
-locking ugliness for the case where the lruvec is still holding the LRU
-lock associated with the page. Instead we can just use the lruvec and if it
-is NULL we assume the lock was released.
+The only user of test_and_set_skip was isolate_migratepages_block and it
+was using it after a call that was testing and clearing the LRU flag. As
+such it really didn't need to be behind the LRU lock anymore as it wasn't
+really fulfilling its purpose.
+
+With that being the case we can simply drop the bit and instead directly
+just call the set_pageblock_skip function if the page we are working on is
+the valid_page at the start of the pageblock. It shouldn't be possible for
+us to encounter the bit being set since we obtained the LRU flag for the
+first page in the pageblock which means we would have exclusive access to
+setting the skip bit. As such we don't need to worry about the abort case
+since no other thread will be able to call what used to be
+test_and_set_skip.
+
+Since we have dropped the late abort case we can drop the code that was
+clearing the LRU flag and calling page_put since the abort case will now
+not be holding a reference to a page.
 
 Signed-off-by: Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- mm/compaction.c |   45 ++++++++++++++++++++-------------------------
- 1 file changed, 20 insertions(+), 25 deletions(-)
+ mm/compaction.c |   50 +++++++-------------------------------------------
+ 1 file changed, 7 insertions(+), 43 deletions(-)
 
 diff --git a/mm/compaction.c b/mm/compaction.c
-index b99c96c4862d..5021a18ef722 100644
+index 5021a18ef722..c1e9918f9dd4 100644
 --- a/mm/compaction.c
 +++ b/mm/compaction.c
-@@ -803,9 +803,8 @@ static bool too_many_isolated(pg_data_t *pgdat)
+@@ -399,29 +399,6 @@ void reset_isolation_suitable(pg_data_t *pgdat)
+ 	}
+ }
+ 
+-/*
+- * Sets the pageblock skip bit if it was clear. Note that this is a hint as
+- * locks are not required for read/writers. Returns true if it was already set.
+- */
+-static bool test_and_set_skip(struct compact_control *cc, struct page *page,
+-							unsigned long pfn)
+-{
+-	bool skip;
+-
+-	/* Do no update if skip hint is being ignored */
+-	if (cc->ignore_skip_hint)
+-		return false;
+-
+-	if (!IS_ALIGNED(pfn, pageblock_nr_pages))
+-		return false;
+-
+-	skip = get_pageblock_skip(page);
+-	if (!skip && !cc->no_set_skip_hint)
+-		skip = !set_pageblock_skip(page);
+-
+-	return skip;
+-}
+-
+ static void update_cached_migrate(struct compact_control *cc, unsigned long pfn)
  {
- 	pg_data_t *pgdat = cc->zone->zone_pgdat;
- 	unsigned long nr_scanned = 0, nr_isolated = 0;
--	struct lruvec *lruvec;
-+	struct lruvec *lruvec = NULL;
- 	unsigned long flags = 0;
--	struct lruvec *locked = NULL;
- 	struct page *page = NULL, *valid_page = NULL;
- 	unsigned long start_pfn = low_pfn;
- 	bool skip_on_failure = false;
-@@ -866,9 +865,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 		 * a fatal signal is pending.
- 		 */
- 		if (!(low_pfn % SWAP_CLUSTER_MAX)) {
--			if (locked) {
--				unlock_page_lruvec_irqrestore(locked, flags);
--				locked = NULL;
-+			if (lruvec) {
-+				unlock_page_lruvec_irqrestore(lruvec, flags);
-+				lruvec = NULL;
+ 	struct zone *zone = cc->zone;
+@@ -480,12 +457,6 @@ static inline void update_pageblock_skip(struct compact_control *cc,
+ static void update_cached_migrate(struct compact_control *cc, unsigned long pfn)
+ {
+ }
+-
+-static bool test_and_set_skip(struct compact_control *cc, struct page *page,
+-							unsigned long pfn)
+-{
+-	return false;
+-}
+ #endif /* CONFIG_COMPACTION */
+ 
+ /*
+@@ -895,7 +866,6 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 		if (!valid_page && IS_ALIGNED(low_pfn, pageblock_nr_pages)) {
+ 			if (!cc->ignore_skip_hint && get_pageblock_skip(page)) {
+ 				low_pfn = end_pfn;
+-				page = NULL;
+ 				goto isolate_abort;
  			}
- 
- 			if (fatal_signal_pending(current)) {
-@@ -949,9 +948,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 			 */
- 			if (unlikely(__PageMovable(page)) &&
- 					!PageIsolated(page)) {
--				if (locked) {
--					unlock_page_lruvec_irqrestore(locked, flags);
--					locked = NULL;
-+				if (lruvec) {
-+					unlock_page_lruvec_irqrestore(lruvec, flags);
-+					lruvec = NULL;
- 				}
- 
- 				if (!isolate_movable_page(page, isolate_mode))
-@@ -992,16 +991,13 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 			valid_page = page;
+@@ -991,6 +961,13 @@ static bool too_many_isolated(pg_data_t *pgdat)
  		if (!TestClearPageLRU(page))
  			goto isolate_fail_put;
  
--		rcu_read_lock();
--		lruvec = mem_cgroup_page_lruvec(page, pgdat);
--
++		/* Indicate that we want exclusive access to this pageblock */
++		if (page == valid_page) {
++			skip_updated = true;
++			if (!cc->ignore_skip_hint)
++				set_pageblock_skip(page);
++		}
++
  		/* If we already hold the lock, we can skip some rechecking */
--		if (lruvec != locked) {
--			if (locked)
--				unlock_page_lruvec_irqrestore(locked, flags);
-+		if (!lruvec || !lruvec_holds_page_lru_lock(page, lruvec)) {
-+			if (lruvec)
-+				unlock_page_lruvec_irqrestore(lruvec, flags);
- 
-+			lruvec = mem_cgroup_page_lruvec(page, pgdat);
- 			compact_lock_irqsave(&lruvec->lru_lock, &flags, cc);
--			locked = lruvec;
- 			rcu_read_unlock();
+ 		if (!lruvec || !lruvec_holds_page_lru_lock(page, lruvec)) {
+ 			if (lruvec)
+@@ -1002,13 +979,6 @@ static bool too_many_isolated(pg_data_t *pgdat)
  
  			lruvec_memcg_debug(lruvec, page);
-@@ -1023,8 +1019,7 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 				SetPageLRU(page);
- 				goto isolate_fail_put;
- 			}
--		} else
--			rcu_read_unlock();
-+		}
  
- 		/* The whole page is taken off the LRU; skip the tail pages. */
- 		if (PageCompound(page))
-@@ -1057,9 +1052,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
+-			/* Try get exclusive access under lock */
+-			if (!skip_updated) {
+-				skip_updated = true;
+-				if (test_and_set_skip(cc, page, low_pfn))
+-					goto isolate_abort;
+-			}
+-
+ 			/*
+ 			 * Page become compound since the non-locked check,
+ 			 * and it's on LRU. It can only be a THP so the order
+@@ -1094,15 +1064,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 	if (unlikely(low_pfn > end_pfn))
+ 		low_pfn = end_pfn;
  
- isolate_fail_put:
- 		/* Avoid potential deadlock in freeing page under lru_lock */
--		if (locked) {
--			unlock_page_lruvec_irqrestore(locked, flags);
--			locked = NULL;
-+		if (lruvec) {
-+			unlock_page_lruvec_irqrestore(lruvec, flags);
-+			lruvec = NULL;
- 		}
- 		put_page(page);
- 
-@@ -1073,9 +1068,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 		 * page anyway.
- 		 */
- 		if (nr_isolated) {
--			if (locked) {
--				unlock_page_lruvec_irqrestore(locked, flags);
--				locked = NULL;
-+			if (lruvec) {
-+				unlock_page_lruvec_irqrestore(lruvec, flags);
-+				lruvec = NULL;
- 			}
- 			putback_movable_pages(&cc->migratepages);
- 			cc->nr_migratepages = 0;
-@@ -1102,8 +1097,8 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 	page = NULL;
- 
+-	page = NULL;
+-
  isolate_abort:
--	if (locked)
--		unlock_page_lruvec_irqrestore(locked, flags);
-+	if (lruvec)
-+		unlock_page_lruvec_irqrestore(lruvec, flags);
- 	if (page) {
- 		SetPageLRU(page);
- 		put_page(page);
+ 	if (lruvec)
+ 		unlock_page_lruvec_irqrestore(lruvec, flags);
+-	if (page) {
+-		SetPageLRU(page);
+-		put_page(page);
+-	}
+ 
+ 	/*
+ 	 * Updated the cached scanner pfn once the pageblock has been scanned
 
