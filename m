@@ -1,31 +1,31 @@
-From: syzbot <syzbot+35d35ef677516d65bdda@syzkaller.appspotmail.com>
-Subject: upstream boot error: WARNING in mem_cgroup_css_alloc
+From: syzbot <syzbot+f96cbc69d9803e663664-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
+Subject: linux-next boot error: WARNING in mem_cgroup_css_alloc
 Date: Thu, 13 Aug 2020 02:47:26 -0700
-Message-ID: <00000000000019317f05acbf31bd@google.com>
+Message-ID: <0000000000001c467c05acbf3196@google.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, cgroups@vger.kernel.org, hannes@cmpxchg.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, mhocko@kernel.org, syzkaller-bugs@googlegroups.com, vdavydov.dev@gmail.com
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
 Hello,
 
 syzbot found the following issue on:
 
-HEAD commit:    dc06fe51 Merge tag 'rtc-5.9' of git://git.kernel.org/pub/s..
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=12d34bd6900000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=9c89856ae5fc8b6
-dashboard link: https://syzkaller.appspot.com/bug?extid=35d35ef677516d65bdda
+HEAD commit:    e6d113ac Add linux-next specific files for 20200813
+git tree:       linux-next
+console output: https://syzkaller.appspot.com/x/log.txt?x=11db9fd6900000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=2055bd0d83d5ee16
+dashboard link: https://syzkaller.appspot.com/bug?extid=f96cbc69d9803e663664
 compiler:       gcc (GCC) 10.1.0-syz 20200507
 
 IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+35d35ef677516d65bdda@syzkaller.appspotmail.com
+Reported-by: syzbot+f96cbc69d9803e663664-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
 
 mem auto-init: stack:off, heap alloc:on, heap free:off
-Memory: 6461180K/7863916K available (116743K kernel code, 17665K rwdata, 21624K rodata, 2792K init, 23940K bss, 1402480K reserved, 0K cma-reserved)
+Memory: 6458876K/7863916K available (116743K kernel code, 18258K rwdata, 21644K rodata, 2812K init, 25364K bss, 1404784K reserved, 0K cma-reserved)
 Running RCU self tests
 rcu: Preemptible hierarchical RCU implementation.
 rcu: 	RCU lockdep checking is enabled.
@@ -78,7 +78,7 @@ Mountpoint-cache hash table entries: 16384 (order: 5, 131072 bytes, vmalloc)
 WARNING: CPU: 0 PID: 0 at mm/memcontrol.c:5226 memalloc_unuse_memcg include/linux/sched/mm.h:331 [inline]
 WARNING: CPU: 0 PID: 0 at mm/memcontrol.c:5226 mem_cgroup_css_alloc+0x535/0x1c30 mm/memcontrol.c:5285
 Kernel panic - not syncing: panic_on_warn set ...
-CPU: 0 PID: 0 Comm: swapper/0 Not tainted 5.8.0-syzkaller #0
+CPU: 0 PID: 0 Comm: swapper/0 Not tainted 5.8.0-next-20200813-syzkaller #0
 Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
 Call Trace:
  __dump_stack lib/dump_stack.c:77 [inline]
@@ -91,13 +91,13 @@ Call Trace:
  asm_exc_invalid_op+0x12/0x20 arch/x86/include/asm/idtentry.h:536
 RIP: 0010:mem_cgroup_alloc mm/memcontrol.c:5226 [inline]
 RIP: 0010:mem_cgroup_css_alloc+0x535/0x1c30 mm/memcontrol.c:5284
-Code: 01 00 48 8d bb 28 14 00 00 48 b8 00 00 00 00 00 fc ff df 48 89 fa 48 c1 ea 03 80 3c 02 00 74 81 e8 e0 00 c2 f9 e9 77 ff ff ff <0f> 0b e9 21 fc ff ff 48 89 ef e8 bc 28 c7 f9 48 b8 00 00 00 00 00
+Code: 01 00 48 8d bb 48 14 00 00 48 b8 00 00 00 00 00 fc ff df 48 89 fa 48 c1 ea 03 80 3c 02 00 74 81 e8 a0 79 c0 f9 e9 77 ff ff ff <0f> 0b e9 21 fc ff ff 48 89 ef e8 3c af c5 f9 48 b8 00 00 00 00 00
 RSP: 0000:ffffffff89a07e20 EFLAGS: 00010246
-RAX: dffffc0000000000 RBX: ffffffff89a99dc0 RCX: 1ffff110152b2028
-RDX: 1ffffffff135363d RSI: ffffffff83b0f2c2 RDI: ffffffff89a9b1e8
-RBP: ffff8880a9590000 R08: 0000000000000001 R09: ffff88821b801aef
-R10: 0000000000000000 R11: ffffffff810000d4 R12: ffffffff8ab224b4
-R13: 0000000000000000 R14: 0000000000000000 R15: ffffffff8ab224d0
+RAX: dffffc0000000000 RBX: ffffffff89a99dc0 RCX: 1ffff110436f4c28
+RDX: 1ffffffff1353641 RSI: ffffffff83b2f532 RDI: ffffffff89a9b208
+RBP: ffff88821b7a6000 R08: 0000000000000001 R09: ffff8880a9c06b6f
+R10: 0000000000000000 R11: ffffffff810000d4 R12: ffffffff8abb6bb4
+R13: 0000000000000000 R14: 0000000000000000 R15: ffffffff8abb6bd0
  cgroup_init_subsys+0x215/0x4d7 kernel/cgroup/cgroup.c:5587
  cgroup_init+0x359/0xa63 kernel/cgroup/cgroup.c:5713
  start_kernel+0x426/0x46a init/main.c:1035
@@ -108,7 +108,7 @@ Rebooting in 86400 seconds..
 ---
 This report is generated by a bot. It may contain errors.
 See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
+syzbot engineers can be reached at syzkaller-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
 
 syzbot will keep track of this issue. See:
 https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
