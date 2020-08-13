@@ -1,72 +1,77 @@
-From: Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>
-Subject: Re: linux-next boot error: WARNING in mem_cgroup_css_alloc
-Date: Fri, 14 Aug 2020 09:25:02 +1000
-Message-ID: <20200814092502.34c48995@canb.auug.org.au>
-References: <0000000000001c467c05acbf3196@google.com>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH v3 4/5] mm: memcg: charge memcg percpu memory to the
+ parent cgroup
+Date: Fri, 14 Aug 2020 09:27:02 +1000
+Message-ID: <20200814092702.137f588e@canb.auug.org.au>
+References: <20200623184515.4132564-1-guro@fb.com>
+        <20200623184515.4132564-5-guro@fb.com>
+        <20200811152737.GB650506@cmpxchg.org>
+        <20200811170611.GB1507044@carbon.DHCP.thefacebook.com>
+        <CA+G9fYuTsjEpDpODGcYf5hnGwzxj__tVdCMpWeC+ojg5pkYCzw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/krubGEnJdNa0L.7SdKkKDu_";
+Content-Type: multipart/signed; boundary="Sig_/DSdzwDUNizsWTg7P5FTg3NX";
  protocol="application/pgp-signature"; micalg=pgp-sha256
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
-        s=201702; t=1597361105;
-        bh=aXgzpd9CFe3IkARlfe+AQV0Aqs2X036V+1GWrROBFIw=;
+        s=201702; t=1597361224;
+        bh=b0sp0GqxeJRJwCzNQOrqlW7VXOG8F0YZwALL4eEoD5M=;
         h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=eWcVOK9z+WZHI2OSKf4O5f3bZCO0P9ZWucX8p2GDqQ2Vac9SxRm9Dz80wNoFDpW4W
-         FvaExKdF+vWiy+dZQg24ztR/kYUmE1/QNvApo5z/2DYSLO7MQ8qVAaMZfFxV8QdBhW
-         g+hZ2cAIY465Ab2gFdJDbWWwHTxDBK1XZTlvGiptdMOP9QQXauk+wLB/ADwPEFkbV2
-         d6290J0NUD7bDtta9hK2/A0E8MZa9yZA8/Yh03fgfQ42Co/zWRU4FEEF6DUq29UUn7
-         Etx8KfnLycpcsUULQiVzhwEJ9dpUBMz+MgpjZaONzc0h3xqX9MVSbzi30cnIUd0CTO
-         6+Jg0zNuuPZkg==
-In-Reply-To: <0000000000001c467c05acbf3196-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        b=UnU1wME2TLmgYlebvh6Kha7r7BnHE0z+WwPnEBZM+GehgUImQrlr+goSrJVOrqH+w
+         59MZzU1BVgn87fdCzbPZnnukEOad5yyX7sF5PCB+E4dZbetS76Z6JnizvqjYLvrUUS
+         5FdWQnO4wFF4XlSscVKa+uv8WWfwc8JC2vk4AUD8TJjTPXmy5Kx6WUjl77cNsZfO62
+         zVL+qWdKCAkYuQCLrzgu7D80cSr6Q5TElNNXEioruHtMSCU38ulmsKmRY7AUnyPs9r
+         X2/uxCeuPia/YdUbRxOtptGi4/GYSYzW0QQSX/yXnDTAXwHnvheHY9iEYJadirtsLo
+         ocQZ/5dJ2LKZQ==
+In-Reply-To: <CA+G9fYuTsjEpDpODGcYf5hnGwzxj__tVdCMpWeC+ojg5pkYCzw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-To: syzbot <syzbot+f96cbc69d9803e663664-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, syzkaller-bugs-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: Naresh Kamboju <naresh.kamboju@linaro.org>
+Cc: Roman Gushchin <guro@fb.com>, Linux-Next Mailing List <linux-next@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Dennis Zhou <dennis@kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux.com>, Michal Hocko <mhocko@kernel.org>, Shakeel Butt <shakeelb@google.com>, Kernel Team <kernel-team@fb.com>, lkft-triage@lists.linaro.org
 
---Sig_/krubGEnJdNa0L.7SdKkKDu_
+--Sig_/DSdzwDUNizsWTg7P5FTg3NX
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
+Hi Naresh,
 
-On Thu, 13 Aug 2020 02:47:26 -0700 syzbot <syzbot+f96cbc69d9803e663664@syzk=
-aller.appspotmail.com> wrote:
+On Thu, 13 Aug 2020 14:46:51 +0530 Naresh Kamboju <naresh.kamboju@linaro.or=
+g> wrote:
 >
-> syzbot found the following issue on:
+> The kernel warnings  were noticed on linux next 20200813 while booting
+> on arm64, arm, x86_64 and i386.
 >=20
-> HEAD commit:    e6d113ac Add linux-next specific files for 20200813
-> git tree:       linux-next
-> console output: https://syzkaller.appspot.com/x/log.txt?x=3D11db9fd6900000
-> kernel config:  https://syzkaller.appspot.com/x/.config?x=3D2055bd0d83d5e=
-e16
-> dashboard link: https://syzkaller.appspot.com/bug?extid=3Df96cbc69d9803e6=
-63664
-> compiler:       gcc (GCC) 10.1.0-syz 20200507
->=20
-> IMPORTANT: if you fix the issue, please add the following tag to the comm=
-it:
-> Reported-by: syzbot+f96cbc69d9803e663664-Pl5Pbv+GP7P466ipTTIvnc23WoclnBCfAL8bYrjMMd8@public.gmane.org
+> metadata:
+>   git branch: master
+>   git repo: https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-ne=
+xt.git
+>   git commit: e6d113aca646fb6a92b237340109237fd7a9c770
+>   git describe: next-20200813
+>   make_kernelversion: 5.8.0
+>   kernel-config:
+> https://builds.tuxbuild.com/YQHc_PpEV-DF8rU7N9tlIQ/kernel.config
 
-#syz fix: mm: memcontrol: fix warning when allocating the root cgroup
+Actually in Linus' tree.
+
+It has been fixed today.  Thanks for reporting.
 
 --=20
 Cheers,
 Stephen Rothwell
 
---Sig_/krubGEnJdNa0L.7SdKkKDu_
+--Sig_/DSdzwDUNizsWTg7P5FTg3NX
 Content-Type: application/pgp-signature
 Content-Description: OpenPGP digital signature
 
 -----BEGIN PGP SIGNATURE-----
 
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl81y84ACgkQAVBC80lX
-0Gx3uQf/cE5sU5zeLP79spf/R6yO7PvwNO1YLwQmnE4CA4b4g0MysfpTq8s1a0A1
-o21sS9jpRfKECBmfzY6C15EubWYulmjB8IUpBUXIKT1Gy71gucsA9VlNQyeVQ/Wf
-DWIQTx5BrVOH1pzTz1BH/cIpg/XHJ2FV9+uKeICmMEAJE/ZbKgH1jF5d8dkKgKjD
-e1hZW+PQ9zxqReE5KVYZezq7WDCfz5jtis8mQQg5U2km4T31asNzA1KhV2abTluL
-lKinlQ2TiPpsaBJu0DRoiqqO/h/gItgXe9Y5LrzX7JW52AN7SeNo6SeHXyK7UwdB
-wAhg3+q30hcai1t3HnYdxru+9aLIcA==
-=uE3e
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl81zEYACgkQAVBC80lX
+0Gw2LggAoyJQ8D8AoMUEbVoc+URfocM9YXpIdJ3mVvqsndDMp87mLPzO5YrOO+X8
+ZTgKq1ws0W0X7eRoCL/GOFSiF890ifP4kxrz2bmT2/azN44dUUtDmon6jfiu907u
+nGpoMMBgKnubh2e+xQ7LUJKsVrHKvHm/fWAfhEFw7LyGEhbdlbOaTPxWg34j6qdY
+ROzwCtJ52x9m/jkHYqcqJophYIB41HDXmxHGW2UrITHCl6dQBJ29xrQsLAfNDmZA
+oGVIiM453gmdPekBMkJTMM8FMT01uLwfM4WWZ+y0/1aoq/4J31LqNX6iFVxzVpub
+OXIOLoyxuhFJJW4yuDPJ53tKVqonpQ==
+=Bk2z
 -----END PGP SIGNATURE-----
 
---Sig_/krubGEnJdNa0L.7SdKkKDu_--
+--Sig_/DSdzwDUNizsWTg7P5FTg3NX--
