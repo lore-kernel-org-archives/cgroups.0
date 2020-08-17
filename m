@@ -1,17 +1,17 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [RFC PATCH 1/8] memcg: Enable fine-grained control of over memory.high action
-Date: Mon, 17 Aug 2020 10:08:24 -0400
-Message-ID: <20200817140831.30260-2-longman@redhat.com>
+Subject: [RFC PATCH 4/8] fs/proc: Support a new procfs memctl file
+Date: Mon, 17 Aug 2020 10:08:27 -0400
+Message-ID: <20200817140831.30260-5-longman@redhat.com>
 References: <20200817140831.30260-1-longman@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1597673396;
+        s=mimecast20190719; t=1597673399;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=q6IDd4y0Wmc1pB+WUrbCZSOFrVKno+kl6q8vuBHV27s=;
-        b=Ikci7khckMmv5iSqK0+hp/9pJd9cFpSAI+iIHDOWDvK39fEju6sTrSL3q/tTN/31Fz7fh2
-        DNmf9SOfV8KVZMW73AUjoldux/hPSubDCBdPlrFYfPO9s2iHcqyG/Mo9HGjLpXK7/iBWHH
-        ub5DiaC9ujEF9zpEpF67KbnUHBQXXm4=
+        bh=7rpL6/EB1+EwHbaZQMk8wUHt9s1YSLWhla0Ecu2Wfro=;
+        b=iPSrUHrfCMJwLSA4wHU5w1GlxNkpBt/F7SmDlE3YpZU78Os7KDQ3r3BP2VgqHDPSRcKGJc
+        +FVc7kb0WutGCSsf6ZT9v6pfhcJbCZh3G66Ct3UXndHozmN94GJtSZr6kvUpqNZou/sXK2
+        YDsirTB7ZLFsq5jkbbNMsE/ObkBS+4g=
 In-Reply-To: <20200817140831.30260-1-longman@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
@@ -21,330 +21,157 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Alexey Dobriyan <adobriyan@gmail.com>, Ingo Molnar <mingo@kernel.org>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>
 Cc: linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Waiman Long <longman@redhat.com>
 
-Memory controller can be used to control and limit the amount of
-physical memory used by a task. When a limit is set in "memory.high"
-in a non-root memory cgroup, the memory controller will try to reclaim
-memory if the limit has been exceeded. Normally, that will be enough
-to keep the physical memory consumption of tasks in the memory cgroup
-to be around or below the "memory.high" limit.
-
-Sometimes, memory reclaim may not be able to recover memory in a rate
-that can catch up to the physical memory allocation rate especially
-when rotating disks are used for swapping or writing dirty pages. In
-this case, the physical memory consumption will keep on increasing.
-When it reaches "memory.max" or the system is really running out of
-memory, the OOM killer will be invoked to kill some tasks to free up
-additional memory. However, one has little control of which tasks are
-going to be killed by an OOM killer.
-
-Users who do not want the OOM killer to be invoked to kill random tasks
-in an out-of-memory situation will require a better way to manage memory
-and deal with applications that are out of control in term of physical
-memory consumption rate.
-
-A new set of prctl(2) commands are added to provide a facility to
-allow users to manage the physical memory consumption of each of their
-applications and control the mitigation actions that should be taken
-when those applications consume more physical memory than what they
-are supposed to use.
-
-The new prctl(2) commands are PR_SET_MEMCONTROL and PR_GET_MEMCONTROL
-to set the memory control parameters and retrieve those parameters
-respectively.  The four possible mitigation actions for a task that
-exceeds their designated memory limit are:
-
- 1) Return ENOMEM for some syscalls that allocate or handle memory
- 2) Slow down the process for memory reclaim to catch up
- 3) Send a specific signal to the task
- 4) Kill the task
-
-The parameters that can be specified in the new PR_SET_MEMCONTROL
-commands are:
-
- arg2 - the mitigation action (bits 0-7), signal number (bits 8-15)
-	and flags (bits 16-31).
- arg3 - the additional memory limit (in bytes) that will be added to
-	memory.high as the real limit that will trigger the mitigation
-	action.
-
-The PR_MEMFLAG_SIGCONT flag is used to specify continuous signal delivery
-instead of a one-shot signal.
+To allow system administrators to view and modify the over-high action
+settings of a running application, a new /proc/<pid>/memctl file is
+now added to show the over-high action parameters as well as allowing
+their modification.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- include/linux/memcontrol.h |   4 ++
- include/linux/sched.h      |   7 +++
- include/uapi/linux/prctl.h |  37 ++++++++++++
- kernel/sys.c               |  16 ++++++
- mm/memcontrol.c            | 114 +++++++++++++++++++++++++++++++++++++
- 5 files changed, 178 insertions(+)
+ fs/proc/base.c | 109 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 109 insertions(+)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index d0b036123c6a..40e6ceb8209b 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -445,6 +445,10 @@ void mem_cgroup_uncharge_list(struct list_head *page_list);
- 
- void mem_cgroup_migrate(struct page *oldpage, struct page *newpage);
- 
-+long mem_cgroup_over_high_get(struct task_struct *task, unsigned long item);
-+long mem_cgroup_over_high_set(struct task_struct *task, unsigned long action,
-+			      unsigned long limit);
-+
- static struct mem_cgroup_per_node *
- mem_cgroup_nodeinfo(struct mem_cgroup *memcg, int nid)
- {
-diff --git a/include/linux/sched.h b/include/linux/sched.h
-index 93ecd930efd3..c79d606d27ab 100644
---- a/include/linux/sched.h
-+++ b/include/linux/sched.h
-@@ -1265,6 +1265,13 @@ struct task_struct {
- 	/* Number of pages to reclaim on returning to userland: */
- 	unsigned int			memcg_nr_pages_over_high;
- 
-+	/* Memory over-high action, flags, signal and limit */
-+	unsigned char			memcg_over_high_action;
-+	unsigned char			memcg_over_high_signal;
-+	unsigned short			memcg_over_high_flags;
-+	unsigned int			memcg_over_high_climit;
-+	unsigned int			memcg_over_limit;
-+
- 	/* Used by memcontrol for targeted memcg charge: */
- 	struct mem_cgroup		*active_memcg;
- #endif
-diff --git a/include/uapi/linux/prctl.h b/include/uapi/linux/prctl.h
-index 07b4f8131e36..87970ae7b32c 100644
---- a/include/uapi/linux/prctl.h
-+++ b/include/uapi/linux/prctl.h
-@@ -238,4 +238,41 @@ struct prctl_mm_map {
- #define PR_SET_IO_FLUSHER		57
- #define PR_GET_IO_FLUSHER		58
- 
-+/* Per task fine-grained memory cgroup control */
-+#define PR_GET_MEMCONTROL		59
-+#define PR_SET_MEMCONTROL		60
-+
-+/*
-+ * PR_SET_MEMCONTROL:
-+ * 2 parameters are passed:
-+ *  - Action word
-+ *  - Memory cgroup additional memory limit
-+ *
-+ * The action word consists of 3 bit fields:
-+ *  - Bits  0-7 : over-memory-limit action code
-+ *  - Bits  8-15: signal number
-+ *  - Bits 16-32: action flags
-+ */
-+
-+/* Control values for PR_SET_MEMCONTROL over limit action */
-+# define PR_MEMACT_NONE			0
-+# define PR_MEMACT_ENOMEM		1	/* Deny memory request */
-+# define PR_MEMACT_SLOWDOWN		2	/* Slow down the process */
-+# define PR_MEMACT_SIGNAL		3	/* Send signal */
-+# define PR_MEMACT_KILL			4	/* Kill the process */
-+# define PR_MEMACT_MAX			PR_MEMACT_KILL
-+
-+/* Flags for PR_SET_MEMCONTROL */
-+# define PR_MEMFLAG_SIGCONT		(1UL << 0) /* Continuous signal delivery */
-+# define PR_MEMFLAG_MASK		PR_MEMFLAG_SIGCONT
-+
-+/* Action word masks */
-+# define PR_MEMACT_MASK			0xff
-+# define PR_MEMACT_SIG_SHIFT		8
-+# define PR_MEMACT_FLG_SHIFT		16
-+
-+/* Return specified value for PR_GET_MEMCONTROL */
-+# define PR_MEMGET_ACTION		0
-+# define PR_MEMGET_CLIMIT		1
-+
- #endif /* _LINUX_PRCTL_H */
-diff --git a/kernel/sys.c b/kernel/sys.c
-index ca11af9d815d..644b86235d7f 100644
---- a/kernel/sys.c
-+++ b/kernel/sys.c
-@@ -64,6 +64,10 @@
- 
- #include <linux/nospec.h>
- 
-+#ifdef CONFIG_MEMCG
-+#include <linux/memcontrol.h>
-+#endif
-+
- #include <linux/kmsg_dump.h>
- /* Move somewhere else to avoid recompiling? */
- #include <generated/utsrelease.h>
-@@ -2530,6 +2534,18 @@ SYSCALL_DEFINE5(prctl, int, option, unsigned long, arg2, unsigned long, arg3,
- 
- 		error = (current->flags & PR_IO_FLUSHER) == PR_IO_FLUSHER;
- 		break;
-+#ifdef CONFIG_MEMCG
-+	case PR_GET_MEMCONTROL:
-+		if (arg3 || arg4 || arg5)
-+			return -EINVAL;
-+		error = mem_cgroup_over_high_get(me, arg2);
-+		break;
-+	case PR_SET_MEMCONTROL:
-+		if (arg4 || arg5)
-+			return -EINVAL;
-+		error = mem_cgroup_over_high_set(me, arg2, arg3);
-+		break;
-+#endif
- 	default:
- 		error = -EINVAL;
- 		break;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b807952b4d43..1106dac024ac 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -59,6 +59,7 @@
- #include <linux/tracehook.h>
- #include <linux/psi.h>
- #include <linux/seq_buf.h>
+diff --git a/fs/proc/base.c b/fs/proc/base.c
+index 617db4e0faa0..3c9349ad1e37 100644
+--- a/fs/proc/base.c
++++ b/fs/proc/base.c
+@@ -88,6 +88,8 @@
+ #include <linux/user_namespace.h>
+ #include <linux/fs_struct.h>
+ #include <linux/slab.h>
 +#include <linux/prctl.h>
- #include "internal.h"
- #include <net/sock.h>
- #include <net/ip.h>
-@@ -2628,6 +2629,71 @@ void mem_cgroup_handle_over_high(void)
- 	css_put(&memcg->css);
++#include <linux/ctype.h>
+ #include <linux/sched/autogroup.h>
+ #include <linux/sched/mm.h>
+ #include <linux/sched/coredump.h>
+@@ -3145,6 +3147,107 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
  }
+ #endif /* CONFIG_STACKLEAK_METRICS */
  
++#ifdef CONFIG_MEMCG
 +/*
-+ * Task specific action when over the high limit.
-+ * Return true if an action has been taken or further check is not needed,
-+ * false otherwise.
++ * Memory cgroup control parameters
++ * <over_high_action> <limit1> <limit2>
 + */
-+static bool __mem_cgroup_over_high_action(struct mem_cgroup *memcg, u8 action)
++static ssize_t proc_memctl_read(struct file *file, char __user *buf,
++				 size_t count, loff_t *ppos)
 +{
-+	unsigned long mem;
-+	bool ret = false;
-+	struct mm_struct *mm = get_task_mm(current);
-+	u8  signal = READ_ONCE(current->memcg_over_high_signal);
-+	u16 flags  = READ_ONCE(current->memcg_over_high_flags);
-+	u32 limit  = READ_ONCE(current->memcg_over_high_climit);
++	struct task_struct *task = get_proc_task(file_inode(file));
++	unsigned long action, limit1, limit2;
++	char buffer[80];
++	ssize_t len;
 +
-+	if (!mm)
-+		return true;	/* No more check is needed */
++	if (!task)
++		return -ESRCH;
 +
-+	current->memcg_over_limit = false;
-+	if ((action == PR_MEMACT_SIGNAL) && !signal)
++	action = task->memcg_over_high_action |
++		(task->memcg_over_high_signal << PR_MEMACT_SIG_SHIFT) |
++		(task->memcg_over_high_flags  << PR_MEMACT_FLG_SHIFT);
++	limit1 = (unsigned long)task->memcg_over_high_climit  * PAGE_SIZE;
++	limit2 = (unsigned long)task->memcg_over_high_plimit * PAGE_SIZE;
++
++	put_task_struct(task);
++	len = snprintf(buffer, sizeof(buffer), "%ld %ld %ld\n",
++		       action, limit1, limit2);
++	return simple_read_from_buffer(buf, count, ppos, buffer, len);
++}
++
++static ssize_t proc_memctl_write(struct file *file, const char __user *buf,
++				  size_t count, loff_t *offs)
++{
++	struct task_struct *task = get_proc_task(file_inode(file));
++	unsigned long vals[3];
++	char buffer[80];
++	char *ptr, *next;
++	int i, err;
++	unsigned int action, signal, flags;
++
++	if (!task)
++		return -ESRCH;
++	if (count  > sizeof(buffer) - 1)
++		count = sizeof(buffer) - 1;
++	if (copy_from_user(buffer, buf, count)) {
++		err = -EFAULT;
 +		goto out;
++	}
++	buffer[count] = '\0';
++	next = buffer;
 +
-+	mem = page_counter_read(&memcg->memory);
-+	if (mem <= memcg->memory.high + limit)
++	/*
++	 * Expect to find 3 numbers
++	 */
++	for (i = 0, ptr = buffer; i < 3; i++) {
++		ptr = skip_spaces(next);
++		if (!*ptr) {
++			err = -EINVAL;
++			goto out;
++		}
++
++		/* Skip non-space characters for next */
++		for (next = ptr; *next && !isspace(*next); next++)
++			;
++		if (isspace(*next))
++			*next++ = '\0';
++
++		err = kstrtoul(ptr, 0, &vals[i]);
++		if (err)
++			break;
++	}
++	action = vals[0] & PR_MEMACT_MASK;
++	signal = (vals[0] >> PR_MEMACT_SIG_SHIFT) & PR_MEMACT_MASK;
++	flags  = vals[0] >> PR_MEMACT_FLG_SHIFT;
++
++	/* Round up limits to number of pages */
++	vals[1] = DIV_ROUND_UP(vals[1], PAGE_SIZE);
++	vals[2] = DIV_ROUND_UP(vals[2], PAGE_SIZE);
++
++	/* Check input values */
++	if ((action > PR_MEMACT_MAX) || (signal >= _NSIG) ||
++	    (flags & ~PR_MEMFLAG_MASK)) {
++		err = -EINVAL;
 +		goto out;
-+
-+	ret = true;
-+	switch (action) {
-+	case PR_MEMACT_ENOMEM:
-+		WRITE_ONCE(current->memcg_over_limit, true);
-+		break;
-+	case PR_MEMACT_SLOWDOWN:
-+		/* Slow down by yielding the cpu */
-+		set_tsk_need_resched(current);
-+		set_preempt_need_resched();
-+		break;
-+	case PR_MEMACT_KILL:
-+		signal = SIGKILL;
-+		fallthrough;
-+	case PR_MEMACT_SIGNAL:
-+		force_sig(signal);
-+
-+		/* Deliver signal only once if !PR_MEMFLAG_SIGCONT */
-+		if (!(flags & PR_MEMFLAG_SIGCONT))
-+			WRITE_ONCE(current->memcg_over_high_signal, 0);
-+		break;
 +	}
 +
++	WRITE_ONCE(task->memcg_over_high_action, action);
++	WRITE_ONCE(task->memcg_over_high_signal, signal);
++	WRITE_ONCE(task->memcg_over_high_flags,  flags);
++	WRITE_ONCE(task->memcg_over_high_climit, vals[1]);
++	WRITE_ONCE(task->memcg_over_high_plimit, vals[2]);
 +out:
-+	mmput(mm);
-+	return ret;
++	put_task_struct(task);
++	return err < 0 ? err : count;
 +}
 +
-+/*
-+ * Return true if an action has been taken or further check is not needed,
-+ * false otherwise.
-+ */
-+static inline bool mem_cgroup_over_high_action(struct mem_cgroup *memcg)
-+{
-+	u8 action = READ_ONCE(current->memcg_over_high_action);
++const struct file_operations proc_memctl_operations = {
++	.read   = proc_memctl_read,
++	.write  = proc_memctl_write,
++	.llseek	= generic_file_llseek,
++};
++#endif /* CONFIG_MEMCG */
 +
-+	if (!action)
-+		return true;	/* No more check is needed */
-+	return __mem_cgroup_over_high_action(memcg, action);
-+}
-+
- static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 		      unsigned int nr_pages)
- {
-@@ -2639,6 +2705,7 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 	unsigned long nr_reclaimed;
- 	bool may_swap = true;
- 	bool drained = false;
-+	bool taken = false;
- 	unsigned long pflags;
+ /*
+  * Thread groups
+  */
+@@ -3258,6 +3361,9 @@ static const struct pid_entry tgid_base_stuff[] = {
+ #ifdef CONFIG_PROC_PID_ARCH_STATUS
+ 	ONE("arch_status", S_IRUGO, proc_pid_arch_status),
+ #endif
++#ifdef CONFIG_MEMCG
++	REG("memctl", 0644, proc_memctl_operations),
++#endif
+ };
  
- 	if (mem_cgroup_is_root(memcg))
-@@ -2797,6 +2864,9 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
- 		swap_high = page_counter_read(&memcg->swap) >
- 			READ_ONCE(memcg->swap.high);
+ static int proc_tgid_base_readdir(struct file *file, struct dir_context *ctx)
+@@ -3587,6 +3693,9 @@ static const struct pid_entry tid_base_stuff[] = {
+ #ifdef CONFIG_PROC_PID_ARCH_STATUS
+ 	ONE("arch_status", S_IRUGO, proc_pid_arch_status),
+ #endif
++#ifdef CONFIG_MEMCG
++	REG("memctl", 0644, proc_memctl_operations),
++#endif
+ };
  
-+		if (mem_high && !taken)
-+			taken = mem_cgroup_over_high_action(memcg);
-+
- 		/* Don't bother a random interrupted task */
- 		if (in_interrupt()) {
- 			if (mem_high) {
-@@ -6959,6 +7029,50 @@ void mem_cgroup_sk_free(struct sock *sk)
- 		css_put(&sk->sk_memcg->css);
- }
- 
-+/*
-+ * Get and set cgroup memory-over-high attributes.
-+ */
-+long mem_cgroup_over_high_get(struct task_struct *task, unsigned long item)
-+{
-+	switch (item) {
-+	case PR_MEMGET_ACTION:
-+		return task->memcg_over_high_action |
-+		      (task->memcg_over_high_signal << PR_MEMACT_SIG_SHIFT) |
-+		      (task->memcg_over_high_flags  << PR_MEMACT_FLG_SHIFT);
-+
-+	case PR_MEMGET_CLIMIT:
-+		return (long)task->memcg_over_high_climit * PAGE_SIZE;
-+	}
-+	return -EINVAL;
-+}
-+
-+long mem_cgroup_over_high_set(struct task_struct *task, unsigned long action,
-+			      unsigned long limit)
-+{
-+	unsigned char  cmd   = action & PR_MEMACT_MASK;
-+	unsigned char  sig   = (action >> PR_MEMACT_SIG_SHIFT) & PR_MEMACT_MASK;
-+	unsigned short flags = action >> PR_MEMACT_FLG_SHIFT;
-+
-+	if ((cmd > PR_MEMACT_MAX) || (flags & ~PR_MEMFLAG_MASK) ||
-+	    (sig >= _NSIG))
-+		return -EINVAL;
-+
-+	WRITE_ONCE(task->memcg_over_high_action, cmd);
-+	WRITE_ONCE(task->memcg_over_high_signal, sig);
-+	WRITE_ONCE(task->memcg_over_high_flags, flags);
-+
-+	if (cmd == PR_MEMACT_NONE) {
-+		WRITE_ONCE(task->memcg_over_high_climit, 0);
-+	} else {
-+		/*
-+		 * Convert limits to # of pages
-+		 */
-+		limit = DIV_ROUND_UP(limit, PAGE_SIZE);
-+		WRITE_ONCE(task->memcg_over_high_climit, limit);
-+	}
-+	return 0;
-+}
-+
- /**
-  * mem_cgroup_charge_skmem - charge socket memory
-  * @memcg: memcg to charge
+ static int proc_tid_base_readdir(struct file *file, struct dir_context *ctx)
 -- 
 2.18.1
 
