@@ -1,67 +1,75 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [RFC PATCH 0/8] memcg: Enable fine-grained per process memory
- control
-Date: Mon, 17 Aug 2020 17:26:55 +0200
-Message-ID: <20200817152655.GE28270@dhcp22.suse.cz>
-References: <20200817140831.30260-1-longman@redhat.com>
+From: Alexander Duyck <alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v17 14/21] mm/compaction: do page isolation first in compaction
+Date: Mon, 17 Aug 2020 15:58:15 -0700
+Message-ID: <CAKgT0Uf-38mNQMN4PptyvL=Jzyooz-K-FsosaVv+P0ok-7R4Sw@mail.gmail.com>
+References: <1595681998-19193-1-git-send-email-alex.shi@linux.alibaba.com> <1595681998-19193-15-git-send-email-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20200817140831.30260-1-longman@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=CUinOKHyVodz4jvTS1Tm95hUcIyZXDORsxNhMipeHNI=;
+        b=byIpvA6PXapCvY4kbX9hsHPmMFKCY69IW6PMIvbws4/x8AN3hC6qzvqvx9OoH0NDvs
+         K0+ur+V+gik/czeG85229oQgaJMslt/bpivK5ELrz0IRun/ymrxVU3pKlTz/rce9mJT5
+         oQ+qmEmqZJ48NuA2NMUtEhzYNqRqAcKYfhLcV6LSxNzWtoCVDiosbiVVcrX7w+BkVx1w
+         884NUizKW61AP8E0defZhjbkHF3jdtVA3osKGJbKcWwqHVB4nLH36OeiyJh5y2sxkp1Z
+         XPcZiDkxup87SeHU138rtD0cipsLApPga25ffrPjsj7opfL3vKkN2yGeFCUprlbS0XDQ
+         pbpA==
+In-Reply-To: <1595681998-19193-15-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Alexey Dobriyan <adobriyan@gmail.com>, Ingo Molnar <mingo@kernel.org>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Rong Chen <rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Mon 17-08-20 10:08:23, Waiman Long wrote:
-> Memory controller can be used to control and limit the amount of
-> physical memory used by a task. When a limit is set in "memory.high" in
-> a v2 non-root memory cgroup, the memory controller will try to reclaim
-> memory if the limit has been exceeded. Normally, that will be enough
-> to keep the physical memory consumption of tasks in the memory cgroup
-> to be around or below the "memory.high" limit.
-> 
-> Sometimes, memory reclaim may not be able to recover memory in a rate
-> that can catch up to the physical memory allocation rate. In this case,
-> the physical memory consumption will keep on increasing.  When it reaches
-> "memory.max" for memory cgroup v2 or when the system is running out of
-> free memory, the OOM killer will be invoked to kill some tasks to free
-> up additional memory. However, one has little control of which tasks
-> are going to be killed by an OOM killer. Killing tasks that hold some
-> important resources without freeing them first can create other system
-> problems down the road.
-> 
-> Users who do not want the OOM killer to be invoked to kill random
-> tasks in an out-of-memory situation can use the memory control
-> facility provided by this new patchset via prctl(2) to better manage
-> the mitigation action that needs to be performed to various tasks when
-> the specified memory limit is exceeded with memory cgroup v2 being used.
-> 
-> The currently supported mitigation actions include the followings:
-> 
->  1) Return ENOMEM for some syscalls that allocate or handle memory
->  2) Slow down the process for memory reclaim to catch up
->  3) Send a specific signal to the task
->  4) Kill the task
-> 
-> The users that want better memory control for their applicatons can
-> either modify their applications to call the prctl(2) syscall directly
-> with the new memory control command code or write the desired action to
-> the newly provided memctl procfs files of their applications provided
-> that those applications run in a non-root v2 memory cgroup.
+> @@ -1691,17 +1680,34 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
+>                  * only when the page is being freed somewhere else.
+>                  */
+>                 scan += nr_pages;
+> -               switch (__isolate_lru_page(page, mode)) {
+> +               switch (__isolate_lru_page_prepare(page, mode)) {
+>                 case 0:
+> +                       /*
+> +                        * Be careful not to clear PageLRU until after we're
+> +                        * sure the page is not being freed elsewhere -- the
+> +                        * page release code relies on it.
+> +                        */
+> +                       if (unlikely(!get_page_unless_zero(page)))
+> +                               goto busy;
+> +
+> +                       if (!TestClearPageLRU(page)) {
+> +                               /*
+> +                                * This page may in other isolation path,
+> +                                * but we still hold lru_lock.
+> +                                */
+> +                               put_page(page);
+> +                               goto busy;
+> +                       }
+> +
 
-prctl is fundamentally about per-process control while cgroup (not only
-memcg) is about group of processes interface. How do those two interact
-together? In other words what is the semantic when different processes
-have a different views on the same underlying memcg event?
+So I was reviewing the code and came across this piece. It has me a
+bit concerned since we are calling put_page while holding the LRU lock
+which was taken before calling the function. We should be fine in
+terms of not encountering a deadlock since the LRU bit is cleared the
+page shouldn't grab the LRU lock again, however we could end up
+grabbing the zone lock while holding the LRU lock which would be an
+issue.
 
-Also the above description doesn't really describe any usecase which
-struggles with the existing interface. We already do allow slow down and
-along with PSI also provide user space control over close to OOM
-situation.
+One other thought I had is that this might be safe because the
+assumption would be that another thread is holding a reference on the
+page, has already called TestClearPageLRU on the page and retrieved
+the LRU bit, and is waiting on us to release the LRU lock before it
+can pull the page off of the list. In that case put_page will never
+decrement the reference count to 0. I believe that is the current case
+but I cannot be certain.
 
--- 
-Michal Hocko
-SUSE Labs
+I'm just wondering if we should just replace the put_page(page) with a
+WARN_ON(put_page_testzero(page)) and a bit more documentation. If I am
+not mistaken it should never be possible for the reference count to
+actually hit zero here.
+
+Thanks.
+
+- Alex
