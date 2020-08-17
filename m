@@ -1,80 +1,90 @@
-From: Chris Down <chris@chrisdown.name>
-Subject: Re: [RFC PATCH 1/8] memcg: Enable fine-grained control of over
- memory.high action
-Date: Mon, 17 Aug 2020 17:11:32 +0100
-Message-ID: <20200817161132.GA5171@chrisdown.name>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH 0/8] memcg: Enable fine-grained per process memory
+ control
+Date: Mon, 17 Aug 2020 11:55:37 -0400
+Message-ID: <e66d6b5f-6f02-8c8f-681e-1d6da7a72224@redhat.com>
 References: <20200817140831.30260-1-longman@redhat.com>
- <20200817140831.30260-2-longman@redhat.com>
- <20200817143044.GA1987@chrisdown.name>
- <934e4bc3-bab6-b19a-49f9-6a6ae8638570@redhat.com>
+ <20200817152655.GE28270@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chrisdown.name; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to
-         :user-agent;
-        bh=EPZNWjTuoNbn3/0iITSmRZt5ivNwv7BWW6z1AtL/Hmc=;
-        b=Z23cJzvoZmVLpOK2aT+f4XT4iV2NnQq1w6sWZWEGLYa39+S+I66Qx1sJuEz0lgvGq1
-         9MafbfOp+fkSCLAdwkxY3sqWfa/7Ya+r03VJzdWTWGLlMGY81AwTZ2a03DaIZWFHcudU
-         YK2AWWX4x4DALRmK9f7+jCQ+8hCmXiM0ppCuA=
-Content-Disposition: inline
-In-Reply-To: <934e4bc3-bab6-b19a-49f9-6a6ae8638570@redhat.com>
-Sender: linux-doc-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1597679748;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=k6oJC/PPG0hRAekHdOQPH1JgLE6OMEX6unSGcCgCQZY=;
+        b=cP3fbn8UKrSZ/UniHonrBJXwjPSE+gMD7YHG8rH3gFV6/F8GVHlYW2wVXRLp5+zIWYFyo/
+        TyxgQzRRV9XMZj47lechGqMB4zLHPoXD6G3SrylRceu0oOAss9TUtAwvYz+Pqsf1aoa6mz
+        nP8oiS+kjQNQSCEp0bKqh81omuckE08=
+In-Reply-To: <20200817152655.GE28270-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Waiman Long <longman@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Alexey Dobriyan <adobriyan@gmail.com>, Ingo Molnar <mingo@kernel.org>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Waiman Long writes:
->On 8/17/20 10:30 AM, Chris Down wrote:
->>Astractly, I think this really overcomplicates the API a lot. If=20
->>these are truly generally useful (and I think that remains to be=20
->>demonstrated), they should be additions to the existing API, rather=20
->>than a sidestep with prctl.
->This patchset is derived from customer requests. With existing API, I=20
->suppose you mean the memory cgroup API. Right? The reason to use=20
->prctl() is that there are users out there who want some kind of=20
->per-process control instead of for a whole group of processes unless=20
->the users try to create one cgroup per process which is not very=20
->efficient.
-
-If using one cgroup per process is inefficient, then that's what needs to b=
-e=20
-fixed. Making the API extremely complex to reason about for every user isn'=
-t a=20
-good compromise when we're talking about an already niche use case.
-
->>I also worry about some other more concrete things:
+On 8/17/20 11:26 AM, Michal Hocko wrote:
+> On Mon 17-08-20 10:08:23, Waiman Long wrote:
+>> Memory controller can be used to control and limit the amount of
+>> physical memory used by a task. When a limit is set in "memory.high" in
+>> a v2 non-root memory cgroup, the memory controller will try to reclaim
+>> memory if the limit has been exceeded. Normally, that will be enough
+>> to keep the physical memory consumption of tasks in the memory cgroup
+>> to be around or below the "memory.high" limit.
 >>
->>1. Doesn't this allow unprivileged applications to potentially=20
->>bypass =A0=A0 memory.high constraints set by a system administrator?
->The memory.high constraint is for triggering memory reclaim. The new=20
->mitigation actions introduced by this patchset will only be applied if=20
->memory reclaim alone fails to limit the physical memory consumption.=20
->The current memory cgroup memory reclaim code will not be affected by=20
->this patchset.
+>> Sometimes, memory reclaim may not be able to recover memory in a rate
+>> that can catch up to the physical memory allocation rate. In this case,
+>> the physical memory consumption will keep on increasing.  When it reaches
+>> "memory.max" for memory cgroup v2 or when the system is running out of
+>> free memory, the OOM killer will be invoked to kill some tasks to free
+>> up additional memory. However, one has little control of which tasks
+>> are going to be killed by an OOM killer. Killing tasks that hold some
+>> important resources without freeing them first can create other system
+>> problems down the road.
+>>
+>> Users who do not want the OOM killer to be invoked to kill random
+>> tasks in an out-of-memory situation can use the memory control
+>> facility provided by this new patchset via prctl(2) to better manage
+>> the mitigation action that needs to be performed to various tasks when
+>> the specified memory limit is exceeded with memory cgroup v2 being used.
+>>
+>> The currently supported mitigation actions include the followings:
+>>
+>>   1) Return ENOMEM for some syscalls that allocate or handle memory
+>>   2) Slow down the process for memory reclaim to catch up
+>>   3) Send a specific signal to the task
+>>   4) Kill the task
+>>
+>> The users that want better memory control for their applicatons can
+>> either modify their applications to call the prctl(2) syscall directly
+>> with the new memory control command code or write the desired action to
+>> the newly provided memctl procfs files of their applications provided
+>> that those applications run in a non-root v2 memory cgroup.
+> prctl is fundamentally about per-process control while cgroup (not only
+> memcg) is about group of processes interface. How do those two interact
+> together? In other words what is the semantic when different processes
+> have a different views on the same underlying memcg event?
+As said in a previous mail, this patchset is derived from a customer 
+request and per-process control is exactly what the customer wants. That 
+is why prctl() is used. This patchset is intended to supplement the 
+existing memory cgroup features. Processes in a memory cgroup that don't 
+use this new API will behave exactly like before. Only processes that 
+opt to use this new API will have additional mitigation actions applied 
+on them in case the additional limits are reached.
+>
+> Also the above description doesn't really describe any usecase which
+> struggles with the existing interface. We already do allow slow down and
+> along with PSI also provide user space control over close to OOM
+> situation.
+>
+The customer that request it was using Solaris. Solaris does allow 
+per-process memory control and they have tools that rely on this 
+capability. This patchset will help them migrate off Solaris easier. I 
+will look closer into how PSI can help here.
 
-memory.high isn't only for triggering memory reclaim, it's also about activ=
-e=20
-throttling when the application fails to come under. Fundamentally it's=20
-supposed to indicate the point at which we expect the application to either=
-=20
-cooperate or get forcibly descheduled -- take a look at where we call=20
-schedule_timeout_killable.
+Thanks,
+Longman
 
-I really struggle to think about how all of those things should interact in=
-=20
-this patchset.
-
->>2. What's the purpose of PR_MEMACT_KILL, compared to memory.max?
->A user can use this to specify which processes are less important and=20
->can be sacrificed first instead of the other more important ones in=20
->case they are really in a OOM situation. IOW, users can specify the=20
->order where OOM kills can happen.
-
-You can already do that with something like oomd, which has way more=20
-flexibility than this. Why codify this in the kernel instead of in a usersp=
-ace=20
-agent?
