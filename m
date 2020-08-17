@@ -1,19 +1,19 @@
 From: Waiman Long <longman@redhat.com>
-Subject: [RFC PATCH 4/8] fs/proc: Support a new procfs memctl file
-Date: Mon, 17 Aug 2020 10:08:27 -0400
-Message-ID: <20200817140831.30260-5-longman@redhat.com>
+Subject: [RFC PATCH 8/8] memcg: Add over-high action prctl() documentation
+Date: Mon, 17 Aug 2020 10:08:31 -0400
+Message-ID: <20200817140831.30260-9-longman@redhat.com>
 References: <20200817140831.30260-1-longman@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1597673399;
+        s=mimecast20190719; t=1597673418;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=7rpL6/EB1+EwHbaZQMk8wUHt9s1YSLWhla0Ecu2Wfro=;
-        b=iPSrUHrfCMJwLSA4wHU5w1GlxNkpBt/F7SmDlE3YpZU78Os7KDQ3r3BP2VgqHDPSRcKGJc
-        +FVc7kb0WutGCSsf6ZT9v6pfhcJbCZh3G66Ct3UXndHozmN94GJtSZr6kvUpqNZou/sXK2
-        YDsirTB7ZLFsq5jkbbNMsE/ObkBS+4g=
+        bh=7a3mQcEQYLMtjY6U/koWkESRRECCeXLzk+bt2NSvZuo=;
+        b=STcCTApvARX7/qTWzXc7LUk8F/H/7/7npIbCape2gNEChRDH0Kr1XpuqLF71VWm1QtySji
+        AY7dDt/+rDguzW9tYUlWlNURZYQeUoCV3e8hgX5E761IxQspgVhsb7C2miznV0pOWSi0zG
+        0oAg84X9mtDqS3qcqjuYIKJzY592XZg=
 In-Reply-To: <20200817140831.30260-1-longman@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-fsdevel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,157 +21,209 @@ Content-Transfer-Encoding: 7bit
 To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Alexey Dobriyan <adobriyan@gmail.com>, Ingo Molnar <mingo@kernel.org>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>
 Cc: linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Waiman Long <longman@redhat.com>
 
-To allow system administrators to view and modify the over-high action
-settings of a running application, a new /proc/<pid>/memctl file is
-now added to show the over-high action parameters as well as allowing
-their modification.
+A new memcontrol.rst documentation file is added to document the new
+prctl(2) interface for setting the over-high mitigation action parameters
+and retrieving them.
 
 Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- fs/proc/base.c | 109 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 109 insertions(+)
+ Documentation/userspace-api/index.rst      |   1 +
+ Documentation/userspace-api/memcontrol.rst | 174 +++++++++++++++++++++
+ 2 files changed, 175 insertions(+)
+ create mode 100644 Documentation/userspace-api/memcontrol.rst
 
-diff --git a/fs/proc/base.c b/fs/proc/base.c
-index 617db4e0faa0..3c9349ad1e37 100644
---- a/fs/proc/base.c
-+++ b/fs/proc/base.c
-@@ -88,6 +88,8 @@
- #include <linux/user_namespace.h>
- #include <linux/fs_struct.h>
- #include <linux/slab.h>
-+#include <linux/prctl.h>
-+#include <linux/ctype.h>
- #include <linux/sched/autogroup.h>
- #include <linux/sched/mm.h>
- #include <linux/sched/coredump.h>
-@@ -3145,6 +3147,107 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
- }
- #endif /* CONFIG_STACKLEAK_METRICS */
+diff --git a/Documentation/userspace-api/index.rst b/Documentation/userspace-api/index.rst
+index 69fc5167e648..1c0fc7a7f4ec 100644
+--- a/Documentation/userspace-api/index.rst
++++ b/Documentation/userspace-api/index.rst
+@@ -23,6 +23,7 @@ place where this information is gathered.
+    accelerators/ocxl
+    ioctl/index
+    media/index
++   memcontrol
  
-+#ifdef CONFIG_MEMCG
-+/*
-+ * Memory cgroup control parameters
-+ * <over_high_action> <limit1> <limit2>
-+ */
-+static ssize_t proc_memctl_read(struct file *file, char __user *buf,
-+				 size_t count, loff_t *ppos)
-+{
-+	struct task_struct *task = get_proc_task(file_inode(file));
-+	unsigned long action, limit1, limit2;
-+	char buffer[80];
-+	ssize_t len;
-+
-+	if (!task)
-+		return -ESRCH;
-+
-+	action = task->memcg_over_high_action |
-+		(task->memcg_over_high_signal << PR_MEMACT_SIG_SHIFT) |
-+		(task->memcg_over_high_flags  << PR_MEMACT_FLG_SHIFT);
-+	limit1 = (unsigned long)task->memcg_over_high_climit  * PAGE_SIZE;
-+	limit2 = (unsigned long)task->memcg_over_high_plimit * PAGE_SIZE;
-+
-+	put_task_struct(task);
-+	len = snprintf(buffer, sizeof(buffer), "%ld %ld %ld\n",
-+		       action, limit1, limit2);
-+	return simple_read_from_buffer(buf, count, ppos, buffer, len);
-+}
-+
-+static ssize_t proc_memctl_write(struct file *file, const char __user *buf,
-+				  size_t count, loff_t *offs)
-+{
-+	struct task_struct *task = get_proc_task(file_inode(file));
-+	unsigned long vals[3];
-+	char buffer[80];
-+	char *ptr, *next;
-+	int i, err;
-+	unsigned int action, signal, flags;
-+
-+	if (!task)
-+		return -ESRCH;
-+	if (count  > sizeof(buffer) - 1)
-+		count = sizeof(buffer) - 1;
-+	if (copy_from_user(buffer, buf, count)) {
-+		err = -EFAULT;
-+		goto out;
-+	}
-+	buffer[count] = '\0';
-+	next = buffer;
-+
-+	/*
-+	 * Expect to find 3 numbers
-+	 */
-+	for (i = 0, ptr = buffer; i < 3; i++) {
-+		ptr = skip_spaces(next);
-+		if (!*ptr) {
-+			err = -EINVAL;
-+			goto out;
-+		}
-+
-+		/* Skip non-space characters for next */
-+		for (next = ptr; *next && !isspace(*next); next++)
-+			;
-+		if (isspace(*next))
-+			*next++ = '\0';
-+
-+		err = kstrtoul(ptr, 0, &vals[i]);
-+		if (err)
-+			break;
-+	}
-+	action = vals[0] & PR_MEMACT_MASK;
-+	signal = (vals[0] >> PR_MEMACT_SIG_SHIFT) & PR_MEMACT_MASK;
-+	flags  = vals[0] >> PR_MEMACT_FLG_SHIFT;
-+
-+	/* Round up limits to number of pages */
-+	vals[1] = DIV_ROUND_UP(vals[1], PAGE_SIZE);
-+	vals[2] = DIV_ROUND_UP(vals[2], PAGE_SIZE);
-+
-+	/* Check input values */
-+	if ((action > PR_MEMACT_MAX) || (signal >= _NSIG) ||
-+	    (flags & ~PR_MEMFLAG_MASK)) {
-+		err = -EINVAL;
-+		goto out;
-+	}
-+
-+	WRITE_ONCE(task->memcg_over_high_action, action);
-+	WRITE_ONCE(task->memcg_over_high_signal, signal);
-+	WRITE_ONCE(task->memcg_over_high_flags,  flags);
-+	WRITE_ONCE(task->memcg_over_high_climit, vals[1]);
-+	WRITE_ONCE(task->memcg_over_high_plimit, vals[2]);
-+out:
-+	put_task_struct(task);
-+	return err < 0 ? err : count;
-+}
-+
-+const struct file_operations proc_memctl_operations = {
-+	.read   = proc_memctl_read,
-+	.write  = proc_memctl_write,
-+	.llseek	= generic_file_llseek,
-+};
-+#endif /* CONFIG_MEMCG */
-+
- /*
-  * Thread groups
-  */
-@@ -3258,6 +3361,9 @@ static const struct pid_entry tgid_base_stuff[] = {
- #ifdef CONFIG_PROC_PID_ARCH_STATUS
- 	ONE("arch_status", S_IRUGO, proc_pid_arch_status),
- #endif
-+#ifdef CONFIG_MEMCG
-+	REG("memctl", 0644, proc_memctl_operations),
-+#endif
- };
+ .. only::  subproject and html
  
- static int proc_tgid_base_readdir(struct file *file, struct dir_context *ctx)
-@@ -3587,6 +3693,9 @@ static const struct pid_entry tid_base_stuff[] = {
- #ifdef CONFIG_PROC_PID_ARCH_STATUS
- 	ONE("arch_status", S_IRUGO, proc_pid_arch_status),
- #endif
-+#ifdef CONFIG_MEMCG
-+	REG("memctl", 0644, proc_memctl_operations),
-+#endif
- };
- 
- static int proc_tid_base_readdir(struct file *file, struct dir_context *ctx)
+diff --git a/Documentation/userspace-api/memcontrol.rst b/Documentation/userspace-api/memcontrol.rst
+new file mode 100644
+index 000000000000..0cfcc72ad5f0
+--- /dev/null
++++ b/Documentation/userspace-api/memcontrol.rst
+@@ -0,0 +1,174 @@
++==============
++Memory Control
++==============
++
++Memory controller can be used to control and limit the amount of
++physical memory used by a task. When a limit is set in "memory.high" in
++a v2 non-root memory cgroup, the memory controller will try to reclaim
++memory if the limit has been exceeded. Normally, that will be enough
++to keep the physical memory consumption of tasks in the memory cgroup
++to be around or below the "memory.high" limit.
++
++Sometimes, memory reclaim may not be able to recover memory in a rate
++that can catch up to the physical memory allocation rate. In this case,
++the physical memory consumption will keep on increasing.  For memory
++cgroup v2, when it is reaching "memory.max" or the system is running
++out of free memory, the OOM killer will be invoked to kill some tasks
++to free up additional memory. However, one has little control of which
++tasks are going to be killed by an OOM killer. Killing tasks that hold
++some important resources without freeing them first can create other
++system problems.
++
++Users who do not want the OOM killer to be invoked to kill random
++tasks in an out-of-memory situation can use the memory control facility
++provided by :manpage:`prctl(2)` to better manage the mitigation action
++that needs to be performed to an individual task when the specified
++memory limit is exceeded with memory cgroup v2 being used.
++
++The task to be controlled must be running in a non-root memory cgroup
++as no limit will be imposed on tasks running in the root memory cgroup.
++
++There are two prctl commands related to this:
++
++ * PR_SET_MEMCONTROL
++
++ * PR_GET_MEMCONTROL
++
++
++PR_SET_MEMCONTROL
++-----------------
++
++PR_SET_MEMCTROL controls what action should be taken when the memory
++limit is exceeded.
++
++The arg2 of :manpage:`prctl(2)` sets the desired mitigation action. The
++action code consists of three different parts:
++
++ * Bits 0-7: action command
++
++ * Bits 8-15: signal number
++
++ * Bits 16-31: flags
++
++The currently supported action commands are:
++
++====== ================== ================================================
++Value  Define             Description
++====== ================== ================================================
++0      PR_MEMACT_NONE     Use the default memory cgroup behavior
++1      PR_MEMACT_ENOMEM   Return ENOMEM for selected syscalls that try to
++                          allocate more memory when the preset memory limit
++                          is exceeded
++2      PR_MEMACT_SLOWDOWN Slow down the process for memory reclaim to
++                          catch up when memory limit is exceeded
++3      PR_MEMACT_SIGNAL   Send a signal to the task that has exceeded
++                          preset memory limit
++4      PR_MEMACT_KILL     Kill the task that has exceeded preset memory
++                          limit
++====== ================== ================================================
++
++The currently supports flags are:
++
++====== ==================== ================================================
++Value  Define               Description
++====== ==================== ================================================
++0x01   PR_MEMFLAG_SIGCONT   Send a signal on every allocation request instead
++                            of a one-shot signal
++0x02   PR_MEMFLAG_DIRECT    Check per-task memory limit irrespective of cgroup
++                            setting
++0x04   PR_MEMFLAG_LOG       Log any actions taken to the kernel ring buffer
++0x10   PR_MEMFLAG_RSS_ANON  Check process anonymous memory
++0x20   PR_MEMFLAG_RSS_FILE  Check process page caches
++0x40   PR_MEMFLAG_RSS_SHMEM Check process shared memory
++0x70   PR_MEMFLAG_RSS       Equivalent to (PR_MEMFLAG_RSS_ANON |
++                            PR_MEMFLAG_RSS_FILE | PR_MEMFLAG_RSS_SHMEM)
++====== ==================== ================================================
++
++If the action command is PR_MEMACT_SIGNAL, bits 16-23 of the action
++code contains the signal number to be used when the memory limit is
++exceeded. By default, the signal number is reset after delivery so
++that the signal will be delivered only once. Another PR_SET_MEMCONTROL
++command will have to be issued to set the signal again.  If the user
++want a non-fatal signal to be delivered every time when the memory
++limit is breached without doing another PR_SET_MEMCONTROL call, the
++PR_MEMFLAG_SIGCONT flag can be set.
++
++The arg3 of :manpage:`prctl(2)` sets the additional memory cgroup
++limit that will be added to the value specified in the "memory.high"
++control file to get the real limit over which action specified in the
++action command will be triggered. This is to make sure that mitigation
++action will only be taken when the kernel memory reclaim facility fails
++to limit the growth of physical memory usage.
++
++If any of the PR_MEMFLAG_RSS* flag is specified, arg4 contains the
++per-process memory limit that will be used to compare against the sum
++of the specified RSS memory consumption of the process to determine
++if action will be taken provided that overall memory consumption has
++exceeded the "memory.high" + arg3 limit when the PR_MEMFLAG_DIRECT flag
++isn't set.
++
++If the PR_MEMFLAG_DIRECT flag is set, however, the cgroup memory limit
++is ignored and a memory-over-limit check will be performed on each
++memory allocation request, if applicable. This is reserved for special
++use case and is not recommended for general use.
++
++
++PR_GET_MEMCONTROL
++-----------------
++
++PR_GET_MEMCONTROL returns the parameters set by a previous
++PR_SET_MEMCONTROL command.
++
++The arg2 of :manpage:`prctl(2)` sets type of parameter that is to be
++returned. The possible values are:
++
++====== =================== ================================================
++Value  Define              Description
++====== =================== ================================================
++0      PR_MEMGET_ACTION    Return the action code - command, flags & signal
++1      PR_MEMGET_CLIMIT    Return the additional cgroup memory limit (in bytes)
++2      PR_MEMGET_PLIMIT    Return the process memory limit for PR_MEMFLAG_RSS*
++====== =================== ================================================
++
++
++/proc/<pid>/memctl
++------------------
++
++PR_GET_MEMCONTROL only returns memory control setting about the
++task itself. To find those information about other tasks, the
++/proc/<pid>/memctl file can be read. This file reports three integer
++parameters:
++
++ * action code
++
++ * cgroup additional memory limit
++
++ * process memory limit for PR_MEMFLAG_RSS* flags
++
++These are the same values that will be returned if the task is
++calling :manpage:`prctl(2)` with PR_GET_MEMCONTROL command and the
++PR_MEMGET_ACTION, PR_MEMGET_CLIMIT and PR_MEMGET_PLIMIT arguments
++respectively.
++
++Privileged users can also write to the memctl file directly to modify
++those parameters for a given task.
++
++This procfs file is present for each of the running threads of a process.
++So multiple writes to each of them are needed to update the parameters
++for all the threads within a running process.
++
++Affected Syscalls
++-----------------
++
++The following system calls have additional check for the over-high
++memory usage flag that is set by the above memory control facility.
++
++ * :manpage:`brk(2)`
++
++ * :manpage:`mlock(2)`
++
++ * :manpage:`mlock2(2)`
++
++ * :manpage:`mlockall(2)`
++
++ * :manpage:`mmap(2)`
 -- 
 2.18.1
 
