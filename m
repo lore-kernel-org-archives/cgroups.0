@@ -1,65 +1,47 @@
-From: Waiman Long <longman@redhat.com>
+From: Shakeel Butt <shakeelb@google.com>
 Subject: Re: [RFC PATCH 1/8] memcg: Enable fine-grained control of over
  memory.high action
-Date: Mon, 17 Aug 2020 11:38:45 -0400
-Message-ID: <934e4bc3-bab6-b19a-49f9-6a6ae8638570@redhat.com>
-References: <20200817140831.30260-1-longman@redhat.com>
- <20200817140831.30260-2-longman@redhat.com>
- <20200817143044.GA1987@chrisdown.name>
+Date: Mon, 17 Aug 2020 09:44:42 -0700
+Message-ID: <CALvZod5V3N3K9-tDoaq=JgkeuAK=0TkRf97Vua0khXL+Lxw+Pg@mail.gmail.com>
+References: <20200817140831.30260-1-longman@redhat.com> <20200817140831.30260-2-longman@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1597678734;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZkWVLRXZ5vVFgxHkOqqYvCoNjff7Y5hvG4el3ZRbhHA=;
-        b=PCDaGtJ/hYwQosgCRiZvDPtF2KD4EwEYW+2PzBs1Q8bPSbI+xoqq5wfL5tD5FMIwUO600G
-        2Hi3U4T6N9RXRMp6DUhLqy+GeAZZ1H77qpDkqQj72hdTlOdOZjnx766ggofFtJdNmWSakE
-        a3y70DhJCknHgmLV+i4P5Nde5wE78uA=
-In-Reply-To: <20200817143044.GA1987@chrisdown.name>
-Content-Language: en-US
-Sender: linux-fsdevel-owner@vger.kernel.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Ustc/Co8E0AQhbcerO/qjyS5RAvKGH1AciZ7eOvqsmA=;
+        b=c+qkjdRRVAF0xvWA9+DkkVLwK7sGF1z8hQM3CtGa1YD+bJI6w1nj5+9S70Q8FvCQqi
+         2Ei0s13pec+cTVm+0OSOFIdw7vP7XLcSIvUcZ6EGrALSHKiZ7PPGzM4XEb029aajiYyC
+         aEhBUOpbzPBTQSG4Cdn7X1BjMfLQqn745I4HqH3Abk31kJgYxjgeUpKk7qwB2tzxmqpe
+         AtkUyANm5zAbjaLbrp8RlEB5I2UccCxi0HQae47ThK7uHUPNGSHd8fX+Y3ltxcsiL9Kl
+         3ENiFhFOnYGf8LXV3bRXJi1SUgcycpC5v7MIYDrXtB34VmBj+Nk2YpIHRR25BtbB6i8Q
+         lRBw==
+In-Reply-To: <20200817140831.30260-2-longman@redhat.com>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"; format="flowed"
-To: Chris Down <chris@chrisdown.name>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Alexey Dobriyan <adobriyan@gmail.com>, Ingo Molnar <mingo@kernel.org>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Alexey Dobriyan <adobriyan@gmail.com>, Ingo Molnar <mingo@kernel.org>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, LKML <linux-kernel@vger.kernel.org>, linux-doc@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
 
-On 8/17/20 10:30 AM, Chris Down wrote:
-> Astractly, I think this really overcomplicates the API a lot. If these 
-> are truly generally useful (and I think that remains to be 
-> demonstrated), they should be additions to the existing API, rather 
-> than a sidestep with prctl.
-This patchset is derived from customer requests. With existing API, I 
-suppose you mean the memory cgroup API. Right? The reason to use prctl() 
-is that there are users out there who want some kind of per-process 
-control instead of for a whole group of processes unless the users try 
-to create one cgroup per process which is not very efficient.
+On Mon, Aug 17, 2020 at 7:11 AM Waiman Long <longman@redhat.com> wrote:
 >
-> I also worry about some other more concrete things:
+> Memory controller can be used to control and limit the amount of
+> physical memory used by a task. When a limit is set in "memory.high"
+> in a non-root memory cgroup, the memory controller will try to reclaim
+> memory if the limit has been exceeded. Normally, that will be enough
+> to keep the physical memory consumption of tasks in the memory cgroup
+> to be around or below the "memory.high" limit.
 >
-> 1. Doesn't this allow unprivileged applications to potentially bypass 
->    memory.high constraints set by a system administrator?
-The memory.high constraint is for triggering memory reclaim. The new 
-mitigation actions introduced by this patchset will only be applied if 
-memory reclaim alone fails to limit the physical memory consumption. The 
-current memory cgroup memory reclaim code will not be affected by this 
-patchset.
-> 2. What's the purpose of PR_MEMACT_KILL, compared to memory.max?
-A user can use this to specify which processes are less important and 
-can be sacrificed first instead of the other more important ones in case 
-they are really in a OOM situation. IOW, users can specify the order 
-where OOM kills can happen.
-> 3. Why add this entirely separate signal delivery path when we already 
-> have eventfd/poll/inotify support, which makes a lot more sense for 
-> modern    applications?
+> Sometimes, memory reclaim may not be able to recover memory in a rate
+> that can catch up to the physical memory allocation rate especially
+> when rotating disks are used for swapping or writing dirty pages. In
+> this case, the physical memory consumption will keep on increasing.
 
-Good question, I will look further into this to see if it can be 
-applicable in this case.
+Isn't this the real underlying issue? Why not make the guarantees of
+memory.high more strict instead of adding more interfaces and
+complexity?
 
-Cheers,
-Longman
-
-
+By the way, have you observed this issue on real workloads or some
+test cases? It would be good to get a repro with simple test cases.
