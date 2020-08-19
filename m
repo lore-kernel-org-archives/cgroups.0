@@ -1,7 +1,8 @@
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Subject: [PATCH 2/8] mm: Use find_get_swap_page in memcontrol
-Date: Wed, 19 Aug 2020 19:48:44 +0100
-Message-ID: <20200819184850.24779-3-willy@infradead.org>
+Subject: [PATCH 6/8] mm: Convert find_get_entry to return the
+ head page
+Date: Wed, 19 Aug 2020 19:48:48 +0100
+Message-ID: <20200819184850.24779-7-willy@infradead.org>
 References: <20200819184850.24779-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -11,12 +12,12 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
  References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
  Content-Type:Content-ID:Content-Description;
- bh=66DP4Pf9efccaQIqwctMuv9XwKLU5wWgwMF4qWqr0Vk=; b=b4pHEvLPG1hkKsnmbfQrrqTHYi
- VWkIBNDtjyN9c8Z4LmNDcpjHj7yq6xtVSvSuiJUBrLhJ6I96lrnl+ChJ/s76uL2F4feghrlNFAQ1N
- MsxinyVoKVilyk25tpijsshqsL4+yiO4m5XrhCgIu6pXy0OOAd7tzIkD89C5t7Qz1KUbuj5qz01fd
- MSmojCrJigJEHzAYVnM3DkoJTYfyYNJlXIZjcizjLjuA9IesPN3cy97gRx00+1QRiJdbmQw8GmnLe
- IJOGDVShbQY8CWQ6aDu09E/pboQS5RIZ4Q1K2ryIsClNEi9KQZN5QbfFYiHPrEQ9S1eZ6yfVivX38
- rEAPV0mw==;
+ bh=SFuii2T6WPhgcSR/n6o4MUthReftxuKz6bFegDk7V6Y=; b=fHiweH4xvcHxBZBo/Hs4Zh/x8q
+ IOR/lnZgsQ40NMoRAkmTBSFUeWvZ+BhxiVYwvmJ6/Pq6aCH0ZcHkN4WQpVwHrbcFgnTPrMOR5ZG+2
+ sb+yfADxrEVowOqFCkiUp4DXUwwrI2Aoz5w+0Ps1J3NhxsPfFcad6NmL7IL38er0SZfwH6JR7ji29
+ hGF/hfcvukAn8t3r6FgFgVC4LRBRJHcWoDjO9oczio+FTlp8gZq5Lyn6eyhG8b1Bik8v4IiSoW96m
+ g4sKNy+aJq94mEab3qR1Xgw19wyvZ83QaPb2dmDmI8OXMdf9Fl7fauESRq9u9FzhI8WObi5xkFtEh
+ ACKe314Q==;
 In-Reply-To: <20200819184850.24779-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
@@ -31,56 +32,84 @@ Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
 To: linux-mm@kvack.org
 Cc: intel-gfx@lists.freedesktop.org, Huang Ying <ying.huang@intel.com>, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, Chris Wilson <chris@chris-wilson.co.uk>, William Kucharski <william.kucharski@oracle.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>, Matthew Auld <matthew.auld@intel.com>
 
-The current code does not protect against swapoff of the underlying
-swap device, so this is a bug fix as well as a worthwhile reduction in
-code complexity.
+There are only three callers remaining of find_get_entry().
+find_get_swap_page() is happy to get the head page instead of the subpage.
+Add find_subpage() calls to find_lock_entry() and pagecache_get_page()
+to avoid auditing all their callers.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- mm/memcontrol.c | 25 ++-----------------------
- 1 file changed, 2 insertions(+), 23 deletions(-)
+ include/linux/pagemap.h |  4 ++--
+ mm/filemap.c            | 13 +++++++------
+ 2 files changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b807952b4d43..4075f214a841 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5539,35 +5539,14 @@ static struct page *mc_handle_swap_pte(struct vm_area_struct *vma,
- static struct page *mc_handle_file_pte(struct vm_area_struct *vma,
- 			unsigned long addr, pte_t ptent, swp_entry_t *entry)
- {
--	struct page *page = NULL;
--	struct address_space *mapping;
--	pgoff_t pgoff;
--
- 	if (!vma->vm_file) /* anonymous vma */
- 		return NULL;
- 	if (!(mc.flags & MOVE_FILE))
- 		return NULL;
- 
--	mapping = vma->vm_file->f_mapping;
--	pgoff = linear_page_index(vma, addr);
--
- 	/* page is moved even if it's not RSS of this task(page-faulted). */
--#ifdef CONFIG_SWAP
--	/* shmem/tmpfs may report page out on swap: account for that too. */
--	if (shmem_mapping(mapping)) {
--		page = find_get_entry(mapping, pgoff);
--		if (xa_is_value(page)) {
--			swp_entry_t swp = radix_to_swp_entry(page);
--			*entry = swp;
--			page = find_get_page(swap_address_space(swp),
--					     swp_offset(swp));
--		}
--	} else
--		page = find_get_page(mapping, pgoff);
--#else
--	page = find_get_page(mapping, pgoff);
--#endif
--	return page;
-+	return find_get_swap_page(vma->vm_file->f_mapping,
-+			linear_page_index(vma, addr));
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 7de11dcd534d..8261c64f592d 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -384,8 +384,8 @@ static inline struct page *find_subpage(struct page *head, pgoff_t index)
+ 	return head + (index & (thp_nr_pages(head) - 1));
  }
  
+-struct page *find_get_entry(struct address_space *mapping, pgoff_t offset);
+-struct page *find_lock_entry(struct address_space *mapping, pgoff_t offset);
++struct page *find_get_entry(struct address_space *mapping, pgoff_t index);
++struct page *find_lock_entry(struct address_space *mapping, pgoff_t index);
+ unsigned find_get_entries(struct address_space *mapping, pgoff_t start,
+ 			  unsigned int nr_entries, struct page **entries,
+ 			  pgoff_t *indices);
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 36067cf7f8c5..5a87e1bdddd6 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -1547,19 +1547,19 @@ EXPORT_SYMBOL(page_cache_prev_miss);
  /**
+  * find_get_entry - find and get a page cache entry
+  * @mapping: the address_space to search
+- * @offset: the page cache index
++ * @index: The page cache index.
+  *
+  * Looks up the page cache slot at @mapping & @offset.  If there is a
+- * page cache page, it is returned with an increased refcount.
++ * page cache page, the head page is returned with an increased refcount.
+  *
+  * If the slot holds a shadow entry of a previously evicted page, or a
+  * swap entry from shmem/tmpfs, it is returned.
+  *
+- * Return: the found page or shadow entry, %NULL if nothing is found.
++ * Return: The head page or shadow entry, %NULL if nothing is found.
+  */
+-struct page *find_get_entry(struct address_space *mapping, pgoff_t offset)
++struct page *find_get_entry(struct address_space *mapping, pgoff_t index)
+ {
+-	XA_STATE(xas, &mapping->i_pages, offset);
++	XA_STATE(xas, &mapping->i_pages, index);
+ 	struct page *page;
+ 
+ 	rcu_read_lock();
+@@ -1587,7 +1587,6 @@ struct page *find_get_entry(struct address_space *mapping, pgoff_t offset)
+ 		put_page(page);
+ 		goto repeat;
+ 	}
+-	page = find_subpage(page, offset);
+ out:
+ 	rcu_read_unlock();
+ 
+@@ -1624,6 +1623,7 @@ struct page *find_lock_entry(struct address_space *mapping, pgoff_t offset)
+ 			put_page(page);
+ 			goto repeat;
+ 		}
++		page = find_subpage(page, offset);
+ 		VM_BUG_ON_PAGE(page_to_pgoff(page) != offset, page);
+ 	}
+ 	return page;
+@@ -1670,6 +1670,7 @@ struct page *pagecache_get_page(struct address_space *mapping, pgoff_t index,
+ 		page = NULL;
+ 	if (!page)
+ 		goto no_page;
++	page = find_subpage(page, index);
+ 
+ 	if (fgp_flags & FGP_LOCK) {
+ 		if (fgp_flags & FGP_NOWAIT) {
 -- 
 2.28.0
