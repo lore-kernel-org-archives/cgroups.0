@@ -1,131 +1,159 @@
-From: Alexander Duyck <alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC PATCH v2 4/5] mm: Split release_pages work into 3 passes
-Date: Wed, 19 Aug 2020 07:57:16 -0700
-Message-ID: <CAKgT0UepdfjXn=j8e4xEBFmsNJdzJyN57em8dscr-Er4OBZCOg@mail.gmail.com>
-References: <20200819041852.23414.95939.stgit@localhost.localdomain>
- <20200819042730.23414.41309.stgit@localhost.localdomain> <15edf807-ce03-83f7-407d-5929341b2b4e@linux.alibaba.com>
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Subject: [PATCH 1/8] mm: Factor find_get_swap_page out of
+ mincore_page
+Date: Wed, 19 Aug 2020 19:48:43 +0100
+Message-ID: <20200819184850.24779-2-willy@infradead.org>
+References: <20200819184850.24779-1-willy@infradead.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=VDgt+NfpwH6U6r2hvHr0dBMMv6qNBbALooemz8NFh5U=;
-        b=f+ZY76s5TRKLUXDOUW1UKWMOshJmecMeQftVcBsCsWkWr4125JZu9WJtY2mpOhQoPG
-         qsJ/dGsIR4iuWMWEBeaCXI22z2X+muEGh5TnoFmIDerzN/VXAPAsbPN/7xR8Dk2eGWx4
-         w4VaCqCZAoGVIR1bl2Smo3+3TxHihbXBwp9Ciz1699llS6GM6yAvU/XbPjS9Q72K3Pge
-         qtxmOF26p1U8NUaDlBngBuqZz1LHwJQqQGV9gjb/PYz4tx7Z16p/BVOLCP4Bur07EFLS
-         R2gYxBW87NUAFuNuUQubaJdFH84qd2+y7N8LItneA+hKUh1pddYAeHTHUiPrPqKxB4ke
-         G4dA==
-In-Reply-To: <15edf807-ce03-83f7-407d-5929341b2b4e-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Rong Chen <rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+ References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+ Content-Type:Content-ID:Content-Description;
+ bh=ND98uMZYrcjfbVhxga4enxbqENG9QME9SJj8HZvY1Rw=; b=JPo0GgqofTk7M5A0cGUAOy99T2
+ 5nHqBXZ+m83jatnjFvA0RKJJ/SDhAoR8rXyzbhaBPVI1ig31d/FaB9LjNYGIPTUJOsk5E3HSrLbS4
+ NXj00j+SXuSiu6Xl3KXQhcIGyvr/vPp7cvZIRk0alqg2evX3lW37FqP56ZOrlvjeCYAc5TJyTF7kG
+ tKvYFXrnqSLamGVH1LjMrnspOcwR97NVZkxKZ/b+gcDGQe/WPt0hHvruO4I8QTyReFX1IezLYtTLS
+ wuHER1m2boO71ITzeQmzJBMJmi9jH9hs3Rw1QFCTk6q7j9BDEQ9Lj+120aiy7ZnDSlOwyMloN7scs
+ JYe52Trw==;
+In-Reply-To: <20200819184850.24779-1-willy@infradead.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+To: linux-mm@kvack.org
+Cc: intel-gfx@lists.freedesktop.org, Huang Ying <ying.huang@intel.com>, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, Chris Wilson <chris@chris-wilson.co.uk>, William Kucharski <william.kucharski@oracle.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>, Matthew Auld <matthew.auld@intel.com>
 
-On Wed, Aug 19, 2020 at 12:54 AM Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org> wrot=
-e:
->
->
->
-> =E5=9C=A8 2020/8/19 =E4=B8=8B=E5=8D=8812:27, Alexander Duyck =E5=86=99=E9=
-=81=93:
-> > From: Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-> >
-> > The release_pages function has a number of paths that end up with the
-> > LRU lock having to be released and reacquired. Such an example would be=
- the
-> > freeing of THP pages as it requires releasing the LRU lock so that it c=
-an
-> > be potentially reacquired by __put_compound_page.
-> >
-> > In order to avoid that we can split the work into 3 passes, the first
-> > without the LRU lock to go through and sort out those pages that are no=
-t in
-> > the LRU so they can be freed immediately from those that can't. The sec=
-ond
-> > pass will then go through removing those pages from the LRU in batches =
-as
-> > large as a pagevec can hold before freeing the LRU lock. Once the pages=
- have
-> > been removed from the LRU we can then proceed to free the remaining pag=
-es
-> > without needing to worry about if they are in the LRU any further.
-> >
-> > The general idea is to avoid bouncing the LRU lock between pages and to
-> > hopefully aggregate the lock for up to the full page vector worth of pa=
-ges.
-> >
-> > Signed-off-by: Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-> > ---
-> >  mm/swap.c |  109 +++++++++++++++++++++++++++++++++++++----------------=
---------
-> >  1 file changed, 67 insertions(+), 42 deletions(-)
-> >
-> > diff --git a/mm/swap.c b/mm/swap.c
-> > index fe53449fa1b8..b405f81b2c60 100644
-> > --- a/mm/swap.c
-> > +++ b/mm/swap.c
-> > @@ -795,6 +795,54 @@ void lru_add_drain_all(void)
-> >  }
-> >  #endif
-> >
-> > +static void __release_page(struct page *page, struct list_head *pages_=
-to_free)
-> > +{
-> > +     if (PageCompound(page)) {
-> > +             __put_compound_page(page);
-> > +     } else {
-> > +             /* Clear Active bit in case of parallel mark_page_accesse=
-d */
-> > +             __ClearPageActive(page);
-> > +             __ClearPageWaiters(page);
-> > +
-> > +             list_add(&page->lru, pages_to_free);
-> > +     }
-> > +}
-> > +
-> > +static void __release_lru_pages(struct pagevec *pvec,
-> > +                             struct list_head *pages_to_free)
-> > +{
-> > +     struct lruvec *lruvec =3D NULL;
-> > +     unsigned long flags =3D 0;
-> > +     int i;
-> > +
-> > +     /*
-> > +      * The pagevec at this point should contain a set of pages with
-> > +      * their reference count at 0 and the LRU flag set. We will now
-> > +      * need to pull the pages from their LRU lists.
-> > +      *
-> > +      * We walk the list backwards here since that way we are starting=
- at
-> > +      * the pages that should be warmest in the cache.
-> > +      */
-> > +     for (i =3D pagevec_count(pvec); i--;) {
-> > +             struct page *page =3D pvec->pages[i];
-> > +
-> > +             lruvec =3D relock_page_lruvec_irqsave(page, lruvec, &flag=
-s);
->
-> the lock bounce is better with the patch, would you like to do further
-> like using add_lruvecs to reduce bounce more?
->
-> Thanks
-> Alex
+Provide this functionality from the swap cache.  It's useful for
+more than just mincore().
 
-I'm not sure how much doing something like that would add. In my case
-I had a very specific issue that this is addressing which is the fact
-that every compound page was taking the LRU lock and zone lock
-separately. With this patch that is reduced to one LRU lock per 15
-pages and then the zone lock per page. By adding or sorting pages by
-lruvec I am not sure there will be much benefit as I am not certain
-how often we will end up with pages being interleaved between multiple
-lruvecs. In addition as I am limiting the quantity to a pagevec which
-limits the pages to 15 I am not sure there will be much benefit to be
-seen for sorting the pages beforehand.
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+---
+ include/linux/swap.h |  7 +++++++
+ mm/mincore.c         | 28 ++--------------------------
+ mm/swap_state.c      | 31 +++++++++++++++++++++++++++++++
+ 3 files changed, 40 insertions(+), 26 deletions(-)
 
-Thanks.
-
-- Alex
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index 661046994db4..247527ea3e66 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -427,6 +427,7 @@ extern void free_pages_and_swap_cache(struct page **, int);
+ extern struct page *lookup_swap_cache(swp_entry_t entry,
+ 				      struct vm_area_struct *vma,
+ 				      unsigned long addr);
++struct page *find_get_swap_page(struct address_space *mapping, pgoff_t index);
+ extern struct page *read_swap_cache_async(swp_entry_t, gfp_t,
+ 			struct vm_area_struct *vma, unsigned long addr,
+ 			bool do_poll);
+@@ -569,6 +570,12 @@ static inline struct page *lookup_swap_cache(swp_entry_t swp,
+ 	return NULL;
+ }
+ 
++static inline
++struct page *find_get_swap_page(struct address_space *mapping, pgoff_t index)
++{
++	return find_get_page(mapping, index);
++}
++
+ static inline int add_to_swap(struct page *page)
+ {
+ 	return 0;
+diff --git a/mm/mincore.c b/mm/mincore.c
+index 453ff112470f..2806258f99c6 100644
+--- a/mm/mincore.c
++++ b/mm/mincore.c
+@@ -48,7 +48,7 @@ static int mincore_hugetlb(pte_t *pte, unsigned long hmask, unsigned long addr,
+  * and is up to date; i.e. that no page-in operation would be required
+  * at this time if an application were to map and access this page.
+  */
+-static unsigned char mincore_page(struct address_space *mapping, pgoff_t pgoff)
++static unsigned char mincore_page(struct address_space *mapping, pgoff_t index)
+ {
+ 	unsigned char present = 0;
+ 	struct page *page;
+@@ -59,31 +59,7 @@ static unsigned char mincore_page(struct address_space *mapping, pgoff_t pgoff)
+ 	 * any other file mapping (ie. marked !present and faulted in with
+ 	 * tmpfs's .fault). So swapped out tmpfs mappings are tested here.
+ 	 */
+-#ifdef CONFIG_SWAP
+-	if (shmem_mapping(mapping)) {
+-		page = find_get_entry(mapping, pgoff);
+-		/*
+-		 * shmem/tmpfs may return swap: account for swapcache
+-		 * page too.
+-		 */
+-		if (xa_is_value(page)) {
+-			swp_entry_t swp = radix_to_swp_entry(page);
+-			struct swap_info_struct *si;
+-
+-			/* Prevent swap device to being swapoff under us */
+-			si = get_swap_device(swp);
+-			if (si) {
+-				page = find_get_page(swap_address_space(swp),
+-						     swp_offset(swp));
+-				put_swap_device(si);
+-			} else
+-				page = NULL;
+-		}
+-	} else
+-		page = find_get_page(mapping, pgoff);
+-#else
+-	page = find_get_page(mapping, pgoff);
+-#endif
++	page = find_get_swap_page(mapping, index);
+ 	if (page) {
+ 		present = PageUptodate(page);
+ 		put_page(page);
+diff --git a/mm/swap_state.c b/mm/swap_state.c
+index c16eebb81d8b..986b4e3d3bad 100644
+--- a/mm/swap_state.c
++++ b/mm/swap_state.c
+@@ -414,6 +414,37 @@ struct page *lookup_swap_cache(swp_entry_t entry, struct vm_area_struct *vma,
+ 	return page;
+ }
+ 
++/**
++ * find_get_swap_page - Find and get a page from the page or swap caches.
++ * @mapping: The address_space to search.
++ * @index: The page cache index.
++ *
++ * This is like find_get_page(), but if we find a swap entry for
++ * shmem/tmpfs, we also look in the swap cache for the page.
++ *
++ * Return: The found page or %NULL.
++ */
++struct page *find_get_swap_page(struct address_space *mapping, pgoff_t index)
++{
++	swp_entry_t swp;
++	struct swap_info_struct *si;
++	struct page *page = find_get_entry(mapping, index);
++
++	if (!xa_is_value(page))
++		return page;
++	if (!shmem_mapping(mapping))
++		return NULL;
++
++	swp = radix_to_swp_entry(page);
++	/* Prevent swapoff from happening to us */
++	si = get_swap_device(swp);
++	if (!si)
++		return NULL;
++	page = find_get_page(swap_address_space(swp), swp_offset(swp));
++	put_swap_device(si);
++	return page;
++}
++
+ struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
+ 			struct vm_area_struct *vma, unsigned long addr,
+ 			bool *new_page_allocated)
+-- 
+2.28.0
