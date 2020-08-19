@@ -1,7 +1,7 @@
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Subject: [PATCH 7/8] mm: Return head page from find_lock_entry
-Date: Wed, 19 Aug 2020 19:48:49 +0100
-Message-ID: <20200819184850.24779-8-willy@infradead.org>
+Subject: [PATCH 4/8] proc: Optimise smaps for shmem entries
+Date: Wed, 19 Aug 2020 19:48:46 +0100
+Message-ID: <20200819184850.24779-5-willy@infradead.org>
 References: <20200819184850.24779-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -11,12 +11,12 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
  References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
  Content-Type:Content-ID:Content-Description;
- bh=p9w3DQmYzQVsLNeG7R7MdPybBJO6jXoNftILGTf+IE0=; b=s/Fj5e9N4i8MPBUyLdHzmYltJH
- W95qh4IqdO+bgeV/dKBXO34yVAYFsjEf92o4CweV2SCp098vES4xu2VCaPtffdljiQgVFusO0lPtR
- mVxJiPVCa8G/0SULJ8xl53dhiTptsPOCo1sLkBvQH4SedICuiVc6SD74X35sX59AOfjyMClCYGUzr
- 978Ku/CwTM5ej8GuG7J5Hwsz0uakDJFFzqaSPsaVyedNaFZ8G9IsmSt4Xk4MOwfTnNBgqvB1gV7u9
- lDbXNqBWefAsnr4EO2lUpq8B6IotkPmE/O6f+kHf5745L3YB4RJNSt3UO0+ggGjOLpewsg3FA6VVz
- e6DXDilg==;
+ bh=6FEH2RzEKpeGkw1ry8PIMFPV7YWAJWwmC36GZdEh8I8=; b=mpxwSwSBY6UqYCwG+sE65V35BB
+ J8yzFZhDe0QRMl1ZP/nlpb2+WKDQLYNkDnz76pIkiUTqTr189msFIwBJ8Mr8+Fb5eKxFjMBlC264q
+ MFMM2mcRXQAZBJw4EqOpTiDhiJTFSkQjlg6ucjHSbR1dPWYPrVqiLTTEa+IgaEziprwqMjqE/2vJN
+ 8HJKcVy+CFy9D2tDrJzoPrvYKkIeAngzZupTTfRif0cbwdr6/FFFFOSjbC7q0zK/5WOG5hKulHIBH
+ VFCsPpPgHZOLoqSynTDkWtpsghEfDw6rADRHNjdQRwN5rhOkDtE0OXzWVqUtA/fsw+CJSKW2WX9+8
+ OaTNPKkg==;
 In-Reply-To: <20200819184850.24779-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
@@ -31,134 +31,35 @@ Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
 To: linux-mm@kvack.org
 Cc: intel-gfx@lists.freedesktop.org, Huang Ying <ying.huang@intel.com>, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, Chris Wilson <chris@chris-wilson.co.uk>, William Kucharski <william.kucharski@oracle.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>, Matthew Auld <matthew.auld@intel.com>
 
-Convert the one caller of find_lock_entry() to cope with a head page
-being returned instead of the subpage for the index.
+Avoid bumping the refcount on pages when we're only interested in the
+swap entries.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- include/linux/pagemap.h | 12 ++++++++++++
- mm/filemap.c            | 25 +++++++++++--------------
- mm/shmem.c              | 15 ++++++++-------
- 3 files changed, 31 insertions(+), 21 deletions(-)
+ fs/proc/task_mmu.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 8261c64f592d..de8f3758ceaa 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -371,6 +371,18 @@ static inline struct page *grab_cache_page_nowait(struct address_space *mapping,
- 			mapping_gfp_mask(mapping));
- }
- 
-+/*
-+ * Is this index for one of the subpages of this page?
-+ * This should always be called for a locked, non-hugetlbfs page.
-+ */
-+static inline bool thp_valid_index(struct page *head, pgoff_t index)
-+{
-+	VM_BUG_ON_PAGE(PageHuge(head), head);
-+	VM_BUG_ON_PAGE(!PageLocked(head), head);
-+
-+	return head->index == (index & ~(thp_nr_pages(head) - 1));
-+}
-+
- /*
-  * Given the page we found in the page cache, return the page corresponding
-  * to this index in the file
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 5a87e1bdddd6..6594baae7cd2 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -1594,37 +1594,34 @@ struct page *find_get_entry(struct address_space *mapping, pgoff_t index)
- }
- 
- /**
-- * find_lock_entry - locate, pin and lock a page cache entry
-- * @mapping: the address_space to search
-- * @offset: the page cache index
-+ * find_lock_entry - Locate and lock a page cache entry.
-+ * @mapping: The address_space to search.
-+ * @index: The page cache index.
-  *
-- * Looks up the page cache slot at @mapping & @offset.  If there is a
-- * page cache page, it is returned locked and with an increased
-- * refcount.
-+ * Looks up the page at @mapping & @index.  If there is a page in the
-+ * cache, the head page is returned locked and with an increased refcount.
-  *
-  * If the slot holds a shadow entry of a previously evicted page, or a
-  * swap entry from shmem/tmpfs, it is returned.
-  *
-- * find_lock_entry() may sleep.
-- *
-- * Return: the found page or shadow entry, %NULL if nothing is found.
-+ * Context: May sleep.
-+ * Return: The head page or shadow entry, %NULL if nothing is found.
-  */
--struct page *find_lock_entry(struct address_space *mapping, pgoff_t offset)
-+struct page *find_lock_entry(struct address_space *mapping, pgoff_t index)
- {
- 	struct page *page;
- 
- repeat:
--	page = find_get_entry(mapping, offset);
-+	page = find_get_entry(mapping, index);
- 	if (page && !xa_is_value(page)) {
- 		lock_page(page);
- 		/* Has the page been truncated? */
--		if (unlikely(page_mapping(page) != mapping)) {
-+		if (unlikely(page->mapping != mapping)) {
- 			unlock_page(page);
- 			put_page(page);
- 			goto repeat;
- 		}
--		page = find_subpage(page, offset);
--		VM_BUG_ON_PAGE(page_to_pgoff(page) != offset, page);
-+		VM_BUG_ON_PAGE(!thp_valid_index(page, index), page);
+diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
+index 5066b0251ed8..e42d9e5e9a3c 100644
+--- a/fs/proc/task_mmu.c
++++ b/fs/proc/task_mmu.c
+@@ -520,16 +520,10 @@ static void smaps_pte_entry(pte_t *pte, unsigned long addr,
+ 			page = device_private_entry_to_page(swpent);
+ 	} else if (unlikely(IS_ENABLED(CONFIG_SHMEM) && mss->check_shmem_swap
+ 							&& pte_none(*pte))) {
+-		page = find_get_entry(vma->vm_file->f_mapping,
++		page = xa_load(&vma->vm_file->f_mapping->i_pages,
+ 						linear_page_index(vma, addr));
+-		if (!page)
+-			return;
+-
+ 		if (xa_is_value(page))
+ 			mss->swap += PAGE_SIZE;
+-		else
+-			put_page(page);
+-
+ 		return;
  	}
- 	return page;
- }
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 271548ca20f3..bbb43e9d35df 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -1834,8 +1834,9 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
- 		page = NULL;
- 	}
- 	if (page || sgp == SGP_READ) {
--		*pagep = page;
--		return 0;
-+		if (page && PageTransHuge(page))
-+			hindex = round_down(index, HPAGE_PMD_NR);
-+		goto out;
- 	}
- 
- 	/*
-@@ -1961,14 +1962,13 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
- 	 * it now, lest undo on failure cancel our earlier guarantee.
- 	 */
- 	if (sgp != SGP_WRITE && !PageUptodate(page)) {
--		struct page *head = compound_head(page);
- 		int i;
- 
--		for (i = 0; i < compound_nr(head); i++) {
--			clear_highpage(head + i);
--			flush_dcache_page(head + i);
-+		for (i = 0; i < compound_nr(page); i++) {
-+			clear_highpage(page + i);
-+			flush_dcache_page(page + i);
- 		}
--		SetPageUptodate(head);
-+		SetPageUptodate(page);
- 	}
- 
- 	/* Perhaps the file has been truncated since we checked */
-@@ -1984,6 +1984,7 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
- 		error = -EINVAL;
- 		goto unlock;
- 	}
-+out:
- 	*pagep = page + index - hindex;
- 	return 0;
  
 -- 
 2.28.0
