@@ -1,16 +1,15 @@
 From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [RFC PATCH v2 5/5] mm: Split move_pages_to_lru into 3 separate
- passes
-Date: Thu, 20 Aug 2020 17:56:36 +0800
-Message-ID: <87ded438-e908-117d-ecfb-1af7224d46da@linux.alibaba.com>
+Subject: Re: [RFC PATCH v2 4/5] mm: Split release_pages work into 3 passes
+Date: Thu, 20 Aug 2020 17:49:49 +0800
+Message-ID: <a88eef1b-242d-78c6-fecb-35ea00cd739b@linux.alibaba.com>
 References: <20200819041852.23414.95939.stgit@localhost.localdomain>
- <20200819042738.23414.60815.stgit@localhost.localdomain>
- <084c58a7-7aac-820c-9606-19391c35b9b5@linux.alibaba.com>
- <CAKgT0Ud3CZ8KHLXCrWNGJAX85x23-EWLnAV63-NMmJ+5vD1JAA@mail.gmail.com>
+ <20200819042730.23414.41309.stgit@localhost.localdomain>
+ <15edf807-ce03-83f7-407d-5929341b2b4e@linux.alibaba.com>
+ <CAKgT0UepdfjXn=j8e4xEBFmsNJdzJyN57em8dscr-Er4OBZCOg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAKgT0Ud3CZ8KHLXCrWNGJAX85x23-EWLnAV63-NMmJ+5vD1JAA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <CAKgT0UepdfjXn=j8e4xEBFmsNJdzJyN57em8dscr-Er4OBZCOg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
@@ -19,28 +18,29 @@ Cc: Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, kbuil
 
 
 
-在 2020/8/19 下午10:42, Alexander Duyck 写道:
->> It's actually changed the meaning from current func. which I had seen a bug if no relock.
->> but after move to 5.9 kernel, I can not reprodce the bug any more. I am not sure if 5.9 fixed
->> the problem, and we don't need relock here.
-> So I am not sure what you mean here about "changed the meaning from
-> the current func". Which function are you referring to and what
-> changed?
-> 
-> From what I can tell the pages cannot change memcg because they were
-> isolated and had the LRU flag stripped. They shouldn't be able to
-> change destination LRU vector as a result. Assuming that, then they
-> can all be processed under same LRU lock and we can avoid having to
-> release it until we are forced to do so to call putback_lru_page or
-> destroy the compound pages that were freed while we were shrinking the
-> LRU lists.
+在 2020/8/19 下午10:57, Alexander Duyck 写道:
+>>>       lruvec = relock_page_lruvec_irqsave(page, lruvec, &flags);
+>> the lock bounce is better with the patch, would you like to do further
+>> like using add_lruvecs to reduce bounce more?
+>>
+>> Thanks
+>> Alex
+> I'm not sure how much doing something like that would add. In my case
+> I had a very specific issue that this is addressing which is the fact
+> that every compound page was taking the LRU lock and zone lock
+> separately. With this patch that is reduced to one LRU lock per 15
+> pages and then the zone lock per page. By adding or sorting pages by
+> lruvec I am not sure there will be much benefit as I am not certain
+> how often we will end up with pages being interleaved between multiple
+> lruvecs. In addition as I am limiting the quantity to a pagevec which
+> limits the pages to 15 I am not sure there will be much benefit to be
+> seen for sorting the pages beforehand.
 > 
 
-I had sent a bug which base on 5.8 kernel.
-https://lkml.org/lkml/2020/7/28/465
-
-I am not sure it was fixed in new kernel. The original line was introduced by Hugh Dickins
-I believe it would be great if you can get comments from him.
+the relock will unlock and get another lock again, the cost in that, the 2nd
+lock need to wait for fairness for concurrency lruvec locking.
+If we can do sort before, we should remove the fairness waiting here. Of course, 
+perf result depends on scenarios.
 
 Thanks
 Alex
