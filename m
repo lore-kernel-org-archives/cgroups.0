@@ -1,94 +1,64 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [PATCH 3/3] mm/memcg: Unify swap and memsw page counters
-Date: Thu, 20 Aug 2020 09:03:50 -0400
-Message-ID: <20200820130350.3211-4-longman@redhat.com>
-References: <20200820130350.3211-1-longman@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1597928658;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=CJnfEEPsHTayufcqPRv869AJ8y4aZylFQ/z6R8psu84=;
-        b=UPxACiMBxNxZKKUPQFu+PLJNdf7byO6EDqF1XmvvgISBNLd4RcyIIY3j1O05xec/rlwGOg
-        Lo5AscxcF7r31vtNX+sv3ib4NmEcgDCHJ/daVBpFbn2Jfuf3+/11mVQMu6FbJfJ9EsuTyF
-        gqIjrQX6qCANDD9GEET7IWzHHgzU2Lg=
-In-Reply-To: <20200820130350.3211-1-longman@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+From: Alexander Duyck <alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC PATCH v2 4/5] mm: Split release_pages work into 3 passes
+Date: Thu, 20 Aug 2020 07:13:30 -0700
+Message-ID: <CAKgT0UdmKpn3x_=F4E-u+mCf75hu4Bu0O0dyds4mHq93G6wJVA@mail.gmail.com>
+References: <20200819041852.23414.95939.stgit@localhost.localdomain>
+ <20200819042730.23414.41309.stgit@localhost.localdomain> <15edf807-ce03-83f7-407d-5929341b2b4e@linux.alibaba.com>
+ <CAKgT0UepdfjXn=j8e4xEBFmsNJdzJyN57em8dscr-Er4OBZCOg@mail.gmail.com> <a88eef1b-242d-78c6-fecb-35ea00cd739b@linux.alibaba.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=7KUqD0NVyRg3Zo03GZrFVQegwrcexF2aJREuag4UjIs=;
+        b=TCJZNgYlFkolAtKYDIaSQN1FZqYOp0XkIPkHM5WH42LWR6/yUHnPUjst8eHDeJmbVI
+         j5LsQXv6294iLVbd3J87FiCydVMOuBJ0fa9oex0OUM92w/tFyJmNbRU8b1a1MM1c5uyN
+         785YJ3lAM9LVM2OjK3bnrI51rakDkVrQRnhg68McF4HsFIfOb7naUtnS8WgGlVCen2uL
+         DQ6HuaO1AY/+oE+9Y09w9SJnDdZjAfNT0twocg+yXtnzrQxMVmNyS9CdKBKqTpezXNHM
+         gAvy5RnVll4PadjCJ/Vi3pdvgimSd0fUCj+odJhmONiUJCgifJsi+1UkihKXhBJ/4T/1
+         IKaA==
+In-Reply-To: <a88eef1b-242d-78c6-fecb-35ea00cd739b-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Roman Gushchin <guro@fb.com>, Yafang Shao <laoar.shao@gmail.com>, Waiman Long <longman@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Rong Chen <rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>
 
-The swap page counter is v2 only while memsw is v1 only. As v1 and v2
-controllers cannot be active at the same time, there is no point to keep
-both swap and memsw page counters in mem_cgroup. The previous patch has
-made sure that memsw page counter is updated and accessed only when in
-v1 code paths. So it is now safe to alias the v1 memsw page counter to v2
-swap page counter. This saves 14 long's in the size of mem_cgroup. This
-is a saving of 112 bytes for 64-bit archs.
+On Thu, Aug 20, 2020 at 2:51 AM Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org> wrote=
+:
+>
+>
+>
+> =E5=9C=A8 2020/8/19 =E4=B8=8B=E5=8D=8810:57, Alexander Duyck =E5=86=99=E9=
+=81=93:
+> >>>       lruvec =3D relock_page_lruvec_irqsave(page, lruvec, &flags);
+> >> the lock bounce is better with the patch, would you like to do further
+> >> like using add_lruvecs to reduce bounce more?
+> >>
+> >> Thanks
+> >> Alex
+> > I'm not sure how much doing something like that would add. In my case
+> > I had a very specific issue that this is addressing which is the fact
+> > that every compound page was taking the LRU lock and zone lock
+> > separately. With this patch that is reduced to one LRU lock per 15
+> > pages and then the zone lock per page. By adding or sorting pages by
+> > lruvec I am not sure there will be much benefit as I am not certain
+> > how often we will end up with pages being interleaved between multiple
+> > lruvecs. In addition as I am limiting the quantity to a pagevec which
+> > limits the pages to 15 I am not sure there will be much benefit to be
+> > seen for sorting the pages beforehand.
+> >
+>
+> the relock will unlock and get another lock again, the cost in that, the =
+2nd
+> lock need to wait for fairness for concurrency lruvec locking.
+> If we can do sort before, we should remove the fairness waiting here. Of =
+course,
+> perf result depends on scenarios.
 
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- include/linux/memcontrol.h | 3 +--
- mm/memcontrol.c            | 8 +++++---
- 2 files changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index d0b036123c6a..d2a819d7db70 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -216,10 +216,9 @@ struct mem_cgroup {
- 
- 	/* Accounted resources */
- 	struct page_counter memory;
--	struct page_counter swap;
-+	struct page_counter swap;	/* memsw (memory+swap) for v1 */
- 
- 	/* Legacy consumer-oriented counters */
--	struct page_counter memsw;
- 	struct page_counter kmem;
- 	struct page_counter tcpmem;
- 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d219dca5239f..04c3794cdc98 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -68,6 +68,11 @@
- 
- #include <trace/events/vmscan.h>
- 
-+/*
-+ * The v1 memsw page counter is aliased to the v2 swap page counter.
-+ */
-+#define memsw	swap
-+
- struct cgroup_subsys memory_cgrp_subsys __read_mostly;
- EXPORT_SYMBOL(memory_cgrp_subsys);
- 
-@@ -5279,13 +5284,11 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
- 		memcg->use_hierarchy = true;
- 		page_counter_init(&memcg->memory, &parent->memory);
- 		page_counter_init(&memcg->swap, &parent->swap);
--		page_counter_init(&memcg->memsw, &parent->memsw);
- 		page_counter_init(&memcg->kmem, &parent->kmem);
- 		page_counter_init(&memcg->tcpmem, &parent->tcpmem);
- 	} else {
- 		page_counter_init(&memcg->memory, NULL);
- 		page_counter_init(&memcg->swap, NULL);
--		page_counter_init(&memcg->memsw, NULL);
- 		page_counter_init(&memcg->kmem, NULL);
- 		page_counter_init(&memcg->tcpmem, NULL);
- 		/*
-@@ -5414,7 +5417,6 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
- 
- 	page_counter_set_max(&memcg->memory, PAGE_COUNTER_MAX);
- 	page_counter_set_max(&memcg->swap, PAGE_COUNTER_MAX);
--	page_counter_set_max(&memcg->memsw, PAGE_COUNTER_MAX);
- 	page_counter_set_max(&memcg->kmem, PAGE_COUNTER_MAX);
- 	page_counter_set_max(&memcg->tcpmem, PAGE_COUNTER_MAX);
- 	page_counter_set_min(&memcg->memory, 0);
--- 
-2.18.1
-
+Agreed. The question is in how many scenarios are you going to have
+pages interleaved between more than one lruvec? I suspect in most
+cases you should only have one lruvec for all the pages being
+processed in a single pagevec.
