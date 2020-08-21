@@ -1,67 +1,44 @@
-From: Qian Cai <cai-J5quhbR+WMc@public.gmane.org>
-Subject: Re: [Resend PATCH 1/6] mm/memcg: warning on !memcg after readahead
- page charged
-Date: Fri, 21 Aug 2020 10:01:43 -0400
-Message-ID: <20200821140134.GA8147@lca.pw>
-References: <1597144232-11370-1-git-send-email-alex.shi@linux.alibaba.com>
- <20200820145850.GA4622@lca.pw>
- <20200821080127.GD32537@dhcp22.suse.cz>
- <20200821123934.GA4314@lca.pw>
- <20200821134842.GF32537@dhcp22.suse.cz>
+From: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v6 0/4] Charge loop device i/o to issuing cgroup
+Date: Fri, 21 Aug 2020 11:04:05 -0400
+Message-ID: <20200821150405.GA4137@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
+References: <20200528135444.11508-1-schatzberg.dan@gmail.com>
+ <CALvZod655MqFxmzwCf4ZLSh9QU+oLb0HL-Q_yKomh3fb-_W0Vg@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lca.pw; s=google;
+        d=gmail.com; s=20161025;
         h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=cA1F72P9Gm2cautm1YaokGwNbN8rzVJerys9S7kz+dY=;
-        b=nkPVH+Ovq+PbJXglpdeME9hid7vf1PM4g5XbkjiJo5EratmsU7t9cUuws/8svKmlrP
-         EeJLdQjFqqNF2PsTU39YI7W6UsK8DFi1Nsy2Fsed4IO48Km3gUAjJBL70SSYLIFiXjHT
-         apFxLWdt25F9C+P6lXRwJOvayqJmLTXwaQtRh7tn1NVJ1G7xJKl4g02yk1IOhlgJXpgE
-         uhu72bWnmxOnt+jHNENMYLGGBUgmEqijytDjIXanSn7EPu572k+I6lEd46ZQ5uvzCaUz
-         QOGQUAuwpZeIzffQ1NmA823BQb4J5ZlOOb2aQbwOMLeV5GUlsqBpF4j6iEl1YEtNCXX0
-         Dl+A==
+         :content-disposition:in-reply-to;
+        bh=1FzqZJ6ck6KUzOqSuKnj7ejxM9ufdWSJqP1xoW29qVs=;
+        b=YMyC8odRxwt4e+ebHOdmQFNxzIqRf1A3/okUdcouS+5ljxpc1mDGkbrRKCaOWLMRFr
+         tbYI+SM/yvrHIvogo40z5OqLqYJkChEfGfUzeEtpFZaCRIPZPxYLYEHSc17+Zo/0VE9d
+         TzKI7FDaqtwoQKWX9hUMNi6bHRg3MniqKbnRaJ20ycXK2km/LwmfJw14EqQ2fXHsyxJH
+         0cd8PXp02Ei2m+BYXl573s3GRyAK3iD/xnGq61OQAg6T9ndogxeZFI095Wf2QmPScfjg
+         nermWatu5yNdkT9mlCcjxRIfZTCkdBGzvDieCK0LVBtz3oicHcxtogJkOwk+IkcJnSXu
+         Ya/w==
 Content-Disposition: inline
-In-Reply-To: <20200821134842.GF32537-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <CALvZod655MqFxmzwCf4ZLSh9QU+oLb0HL-Q_yKomh3fb-_W0Vg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nao.horiguchi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, osalvador-l3A5Bk7waGM@public.gmane.org, mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Amir Goldstein <amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, "Peter Zijlstra (Intel)" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mathieu Desnoyers <mathieu.desnoyers-vg+e7yoeK/dWk0Htik3J/w@public.gmane.org>, Andrea Arcangeli <aarcange-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "open list:BLOCK LAYER" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open
 
-On Fri, Aug 21, 2020 at 03:48:42PM +0200, Michal Hocko wrote:
-> On Fri 21-08-20 08:39:37, Qian Cai wrote:
-> > On Fri, Aug 21, 2020 at 10:01:27AM +0200, Michal Hocko wrote:
-> > > On Thu 20-08-20 10:58:51, Qian Cai wrote:
-> > > > On Tue, Aug 11, 2020 at 07:10:27PM +0800, Alex Shi wrote:
-> > > > > Since readahead page is charged on memcg too, in theory we don't have to
-> > > > > check this exception now. Before safely remove them all, add a warning
-> > > > > for the unexpected !memcg.
-> > > > > 
-> > > > > Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-> > > > > Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-> > > > 
-> > > > This will trigger,
-> > > 
-> > > Thanks for the report!
-> > >  
-> > > > [ 1863.916499] LTP: starting move_pages12
-> > > > [ 1863.946520] page:000000008ccc1062 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x1fd3c0
-> > > > [ 1863.946553] head:000000008ccc1062 order:5 compound_mapcount:0 compound_pincount:0
-> > > 
-> > > Hmm, this is really unexpected. How did we get order-5 page here? Is
-> > > this some special mappaing that sys_move_pages should just ignore?
-> > 
-> > Well, I thought everybody should be able to figure out where to find the LTP
-> > tests source code at this stage to see what it does. Anyway, the test simply
-> > migrate hugepages while soft offlining, so order 5 is expected as that is 2M
-> > hugepage on powerpc (also reproduced on x86 below). It might be easier to
-> > reproduce using our linux-mm random bug collection on NUMA systems.
+On Thu, Aug 20, 2020 at 10:06:44AM -0700, Shakeel Butt wrote:
+> On Thu, May 28, 2020 at 6:55 AM Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> >
+> > Much of the discussion about this has died down. There's been a
+> > concern raised that we could generalize infrastructure across loop,
+> > md, etc. This may be possible, in the future, but it isn't clear to me
+> > how this would look like. I'm inclined to fix the existing issue with
+> > loop devices now (this is a problem we hit at FB) and address
+> > consolidation with other cases if and when those need to be addressed.
+> >
 > 
-> OK, I must have missed that this was on ppc. The order makes more sense
-> now. I will have a look at this next week.
+> What's the status of this series?
 
-Sorry about not mentioning powerpc in the first place. I don't know since when
-powerpc will no longer print out hardware information like x86 does in those
-warning reports. I'll dig.
+Thanks for reminding me about this. I haven't got any further
+feedback. I'll bug Jens to take a look and see if he has any concerns
+and if not send a rebased version.
