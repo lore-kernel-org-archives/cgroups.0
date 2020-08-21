@@ -1,61 +1,69 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH v6 0/4] Charge loop device i/o to issuing cgroup
-Date: Fri, 21 Aug 2020 09:27:56 -0700
-Message-ID: <CALvZod69w5UoCjfWcqVAejpKWzRAUxX7dEPzqDUknHhUFV_XEA@mail.gmail.com>
-References: <20200528135444.11508-1-schatzberg.dan@gmail.com>
- <CALvZod655MqFxmzwCf4ZLSh9QU+oLb0HL-Q_yKomh3fb-_W0Vg@mail.gmail.com>
- <20200821150405.GA4137@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com> <20200821160128.GA2233370@carbon.dhcp.thefacebook.com>
-Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ASBotJZ8EZpsI/eCx5HlBKysI3NgkGBSfRhPo944ZDA=;
-        b=mvQsNqxvDRfKY9x4pIZgEPhlpB930QAuNErYXzNPLu7IhTBgokTUR97DSKDApKmNfS
-         cibjePU5QCWO42UFsCRWQwMu/X9Q9pISUETSOyLv8GDQ7qwMEl4Ib/H3WWqJjSRry3xl
-         9TU6msunmhJlIGiYjWcVH7a2M3X4BhkWw0G2xvXyrrXNTBchQ9LtnRpmS8/pffU/upUX
-         /kFJp8461OeN+P7fP/3Y2HmjrCgDZQYrsQfpcRdb/+ho08gxWAK1CegzesM559po/s7S
-         QS3/ic98qpHNV6+NY5HcH0fd2uQX7y1u6cKBRJq2fY9JRNDQP1Z7JMuCbauUj7xPMwgM
-         dTgg==
-In-Reply-To: <20200821160128.GA2233370@carbon.dhcp.thefacebook.com>
-Sender: linux-block-owner@vger.kernel.org
+From: William Kucharski <william.kucharski-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 0/8] Return head pages from find_get_entry and
+ find_lock_entry
+Date: Fri, 21 Aug 2020 11:37:49 -0600
+Message-ID: <4AEE52BC-76F0-4DB4-BBB1-7E367C12338B@oracle.com>
+References: <20200819184850.24779-1-willy@infradead.org>
+Mime-Version: 1.0 (Mac OS X Mail 14.0 \(3654.0.3\))
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
+ mime-version : subject : from : in-reply-to : date : cc :
+ content-transfer-encoding : message-id : references : to;
+ s=corp-2020-01-29; bh=JUslshiDaN2dhP+XGrtZjY0EQXD83w9PlaWLQ1ae6vI=;
+ b=v1eeqSoFZHVgpxgBCn7rPBUUsxTUxa4ls50fuAPwe9ZXg1ke5BYPwqZntCNgqvG3F55k
+ OCUTr+/mXf3F6gdjCbHtO05iTUAAHid/DTL4UdDcVZcHw87g3AM0X/yrhKr2zSQnlGBL
+ YpCwFOMY23P9LcP84/hCOoSqG1Xcy0j5d7NoppYcsVerTPajz2PR1V0FedP8sT03ZOdG
+ oJYqKuRpeTP3TX/vRHcypi9Bo1ISI5tAbKK1hyBN7DgPjq9Pa15PrwJ1n/G1YMSz1Srx
+ oB91CuqryjpyaITXDlUnTEZlsFeI66zSGMi0UWa9SerzCdbwrMgnuppWdeTBTlPArg0f aw== 
+In-Reply-To: <20200819184850.24779-1-willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Dan Schatzberg <schatzberg.dan@gmail.com>, Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Chris Down <chris@chrisdown.name>, Yang Shi <yang.shi@linux.alibaba.com>, Thomas Gleixner <tglx@linutronix.de>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Andrea Arcangeli <aarcange@redhat.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.>
+To: "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jani Nikula <jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>, Matthew Auld <matthew.auld-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Aug 21, 2020 at 9:02 AM Roman Gushchin <guro@fb.com> wrote:
->
-> On Fri, Aug 21, 2020 at 11:04:05AM -0400, Dan Schatzberg wrote:
-> > On Thu, Aug 20, 2020 at 10:06:44AM -0700, Shakeel Butt wrote:
-> > > On Thu, May 28, 2020 at 6:55 AM Dan Schatzberg <schatzberg.dan@gmail.com> wrote:
-> > > >
-> > > > Much of the discussion about this has died down. There's been a
-> > > > concern raised that we could generalize infrastructure across loop,
-> > > > md, etc. This may be possible, in the future, but it isn't clear to me
-> > > > how this would look like. I'm inclined to fix the existing issue with
-> > > > loop devices now (this is a problem we hit at FB) and address
-> > > > consolidation with other cases if and when those need to be addressed.
-> > > >
-> > >
-> > > What's the status of this series?
-> >
-> > Thanks for reminding me about this. I haven't got any further
-> > feedback. I'll bug Jens to take a look and see if he has any concerns
-> > and if not send a rebased version.
->
-> Just as a note, I stole a patch from this series called
-> "mm: support nesting memalloc_use_memcg()" to use for the bpf memory accounting.
-> I rewrote the commit log and rebased to the tot with some trivial changes.
->
-> I just sent it upstream:
-> https://lore.kernel.org/bpf/20200821150134.2581465-1-guro@fb.com/T/#md7edb6b5b940cee1c4d15e3cef17aa8b07328c2e
->
-> It looks like we need it for two independent sub-systems, so I wonder
-> if we want to route it first through the mm tree as a standalone patch?
->
 
-Another way is to push that patch to 5.9-rc2 linus tree, so both block
-and mm branches for 5.10 will have it. (Not sure if that's ok.)
+
+> On Aug 19, 2020, at 12:48 PM, Matthew Wilcox (Oracle) =
+<willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+>=20
+> This patch seris started out as part of the THP patch set, but it has
+> some nice effects along the way and it seems worth splitting it out =
+and
+> submitting separately.
+>=20
+> Currently find_get_entry() and find_lock_entry() return the page
+> corresponding to the requested index, but the first thing most callers =
+do
+> is find the head page, which we just threw away.  As part of auditing
+> all the callers, I found some misuses of the APIs and some plain
+> inefficiencies that I've fixed.
+>=20
+> The diffstat is unflattering, but I added more kernel-doc.
+>=20
+> Matthew Wilcox (Oracle) (8):
+>  mm: Factor find_get_swap_page out of mincore_page
+>  mm: Use find_get_swap_page in memcontrol
+>  mm: Optimise madvise WILLNEED
+>  proc: Optimise smaps for shmem entries
+>  i915: Use find_lock_page instead of find_lock_entry
+>  mm: Convert find_get_entry to return the head page
+>  mm: Return head page from find_lock_entry
+>  mm: Hoist find_subpage call further up in pagecache_get_page
+>=20
+> drivers/gpu/drm/i915/gem/i915_gem_shmem.c |  4 +--
+> fs/proc/task_mmu.c                        |  8 +----
+> include/linux/pagemap.h                   | 16 +++++++--
+> include/linux/swap.h                      |  7 ++++
+> mm/filemap.c                              | 41 +++++++++++------------
+> mm/madvise.c                              | 21 +++++++-----
+> mm/memcontrol.c                           | 25 ++------------
+> mm/mincore.c                              | 28 ++--------------
+> mm/shmem.c                                | 15 +++++----
+> mm/swap_state.c                           | 31 +++++++++++++++++
+> 10 files changed, 98 insertions(+), 98 deletions(-)
+
+For the series:
+
+Reviewed-by: William Kucharski <william.kucharski-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>=
