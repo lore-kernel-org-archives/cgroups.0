@@ -1,69 +1,62 @@
-From: William Kucharski <william.kucharski-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 0/8] Return head pages from find_get_entry and
- find_lock_entry
-Date: Fri, 21 Aug 2020 11:37:49 -0600
-Message-ID: <4AEE52BC-76F0-4DB4-BBB1-7E367C12338B@oracle.com>
-References: <20200819184850.24779-1-willy@infradead.org>
-Mime-Version: 1.0 (Mac OS X Mail 14.0 \(3654.0.3\))
-Content-Transfer-Encoding: quoted-printable
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [RFC PATCH 0/8] memcg: Enable fine-grained per process memory
+ control
+Date: Fri, 21 Aug 2020 21:37:16 +0200
+Message-ID: <20200821193716.GU3982@worktop.programming.kicks-ass.net>
+References: <20200817140831.30260-1-longman@redhat.com>
+ <20200818091453.GL2674@hirez.programming.kicks-ass.net>
+ <20200818092617.GN28270@dhcp22.suse.cz>
+ <20200818095910.GM2674@hirez.programming.kicks-ass.net>
+ <20200818100516.GO28270@dhcp22.suse.cz>
+ <20200818101844.GO2674@hirez.programming.kicks-ass.net>
+ <20200818134900.GA829964@cmpxchg.org>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
- mime-version : subject : from : in-reply-to : date : cc :
- content-transfer-encoding : message-id : references : to;
- s=corp-2020-01-29; bh=JUslshiDaN2dhP+XGrtZjY0EQXD83w9PlaWLQ1ae6vI=;
- b=v1eeqSoFZHVgpxgBCn7rPBUUsxTUxa4ls50fuAPwe9ZXg1ke5BYPwqZntCNgqvG3F55k
- OCUTr+/mXf3F6gdjCbHtO05iTUAAHid/DTL4UdDcVZcHw87g3AM0X/yrhKr2zSQnlGBL
- YpCwFOMY23P9LcP84/hCOoSqG1Xcy0j5d7NoppYcsVerTPajz2PR1V0FedP8sT03ZOdG
- oJYqKuRpeTP3TX/vRHcypi9Bo1ISI5tAbKK1hyBN7DgPjq9Pa15PrwJ1n/G1YMSz1Srx
- oB91CuqryjpyaITXDlUnTEZlsFeI66zSGMi0UWa9SerzCdbwrMgnuppWdeTBTlPArg0f aw== 
-In-Reply-To: <20200819184850.24779-1-willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=N3ZGTcGJdfl/OTaIgJwrIkHSk+AkqKBFZGMv7k7JAjc=; b=ggzc/B/8OBjbLuwpgTkXf/pU42
+        +EOW+Btl5c58I6tA9Tz1DotvxKyQlEce8eaHFx5uPaj+FAJO5eNeSstr8eK32iVfkZX9BRWclAhwZ
+        OToYv7Axe6/UemxFJFZtndQZLIFCKFhxZ+MicIpQ8D2ApWwHovB9Qo8srTIBnFpw3chOTGT/K2CGp
+        QDl7EaMCU/DeA8Ba3GZGENthYYt7qc6MSlkzrz8gl43DMD/4tUAsV3LVKmPDXUozBTfBOHQo3pvCS
+        Lx7OuGNZE83kZvcZUsnl0RTEslw9K9K9Qom8MsixP0YIQpoLJF5WMetdTe20APCXCS1WvfV1v90Sq
+        /JStoxmg==;
+Content-Disposition: inline
+In-Reply-To: <20200818134900.GA829964-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: "Matthew Wilcox (Oracle)" <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jani Nikula <jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>, Matthew Auld <matthew.auld-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
+On Tue, Aug 18, 2020 at 09:49:00AM -0400, Johannes Weiner wrote:
+> On Tue, Aug 18, 2020 at 12:18:44PM +0200, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org wrote:
+> > What you need is a feeback loop against the rate of freeing pages, and
+> > when you near the saturation point, the allocation rate should exactly
+> > match the freeing rate.
+> 
+> IO throttling solves a slightly different problem.
+> 
+> IO occurs in parallel to the workload's execution stream, and you're
+> trying to take the workload from dirtying at CPU speed to rate match
+> to the independent IO stream.
+> 
+> With memory allocations, though, freeing happens from inside the
+> execution stream of the workload. If you throttle allocations, you're
 
+For a single task, but even then you're making the argument that we need
+to allocate memory to free memory, and we all know where that gets us.
 
-> On Aug 19, 2020, at 12:48 PM, Matthew Wilcox (Oracle) =
-<willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
->=20
-> This patch seris started out as part of the THP patch set, but it has
-> some nice effects along the way and it seems worth splitting it out =
-and
-> submitting separately.
->=20
-> Currently find_get_entry() and find_lock_entry() return the page
-> corresponding to the requested index, but the first thing most callers =
-do
-> is find the head page, which we just threw away.  As part of auditing
-> all the callers, I found some misuses of the APIs and some plain
-> inefficiencies that I've fixed.
->=20
-> The diffstat is unflattering, but I added more kernel-doc.
->=20
-> Matthew Wilcox (Oracle) (8):
->  mm: Factor find_get_swap_page out of mincore_page
->  mm: Use find_get_swap_page in memcontrol
->  mm: Optimise madvise WILLNEED
->  proc: Optimise smaps for shmem entries
->  i915: Use find_lock_page instead of find_lock_entry
->  mm: Convert find_get_entry to return the head page
->  mm: Return head page from find_lock_entry
->  mm: Hoist find_subpage call further up in pagecache_get_page
->=20
-> drivers/gpu/drm/i915/gem/i915_gem_shmem.c |  4 +--
-> fs/proc/task_mmu.c                        |  8 +----
-> include/linux/pagemap.h                   | 16 +++++++--
-> include/linux/swap.h                      |  7 ++++
-> mm/filemap.c                              | 41 +++++++++++------------
-> mm/madvise.c                              | 21 +++++++-----
-> mm/memcontrol.c                           | 25 ++------------
-> mm/mincore.c                              | 28 ++--------------
-> mm/shmem.c                                | 15 +++++----
-> mm/swap_state.c                           | 31 +++++++++++++++++
-> 10 files changed, 98 insertions(+), 98 deletions(-)
+But we're actually talking about a cgroup here, which is a collection of
+tasks all doing things in parallel.
 
-For the series:
+> most likely throttling the freeing rate as well. And you'll slow down
+> reclaim scanning by the same amount as the page references, so it's
+> not making reclaim more successful either. The alloc/use/free
+> (im)balance is an inherent property of the workload, regardless of the
+> speed you're executing it at.
 
-Reviewed-by: William Kucharski <william.kucharski-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>=
+Arguably seeing the rate drop to near 0 is a very good point to consider
+running cgroup-OOM.
