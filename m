@@ -1,62 +1,75 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [RFC PATCH 0/8] memcg: Enable fine-grained per process memory
- control
-Date: Fri, 21 Aug 2020 21:37:16 +0200
-Message-ID: <20200821193716.GU3982@worktop.programming.kicks-ass.net>
-References: <20200817140831.30260-1-longman@redhat.com>
- <20200818091453.GL2674@hirez.programming.kicks-ass.net>
- <20200818092617.GN28270@dhcp22.suse.cz>
- <20200818095910.GM2674@hirez.programming.kicks-ass.net>
- <20200818100516.GO28270@dhcp22.suse.cz>
- <20200818101844.GO2674@hirez.programming.kicks-ass.net>
- <20200818134900.GA829964@cmpxchg.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v6 0/4] Charge loop device i/o to issuing cgroup
+Date: Fri, 21 Aug 2020 13:05:30 -0700
+Message-ID: <20200821200530.GA2250889@carbon.dhcp.thefacebook.com>
+References: <20200528135444.11508-1-schatzberg.dan@gmail.com>
+ <CALvZod655MqFxmzwCf4ZLSh9QU+oLb0HL-Q_yKomh3fb-_W0Vg@mail.gmail.com>
+ <20200821150405.GA4137@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
+ <20200821160128.GA2233370@carbon.dhcp.thefacebook.com>
+ <CALvZod69w5UoCjfWcqVAejpKWzRAUxX7dEPzqDUknHhUFV_XEA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=N3ZGTcGJdfl/OTaIgJwrIkHSk+AkqKBFZGMv7k7JAjc=; b=ggzc/B/8OBjbLuwpgTkXf/pU42
-        +EOW+Btl5c58I6tA9Tz1DotvxKyQlEce8eaHFx5uPaj+FAJO5eNeSstr8eK32iVfkZX9BRWclAhwZ
-        OToYv7Axe6/UemxFJFZtndQZLIFCKFhxZ+MicIpQ8D2ApWwHovB9Qo8srTIBnFpw3chOTGT/K2CGp
-        QDl7EaMCU/DeA8Ba3GZGENthYYt7qc6MSlkzrz8gl43DMD/4tUAsV3LVKmPDXUozBTfBOHQo3pvCS
-        Lx7OuGNZE83kZvcZUsnl0RTEslw9K9K9Qom8MsixP0YIQpoLJF5WMetdTe20APCXCS1WvfV1v90Sq
-        /JStoxmg==;
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=wUAx8CXyWwn0REf5nzJmEo+bX91x9dOeaJe1nMET1Gg=;
+ b=Oslhq6o2PIblXvTVmHCjo4SijNPQVmGfKdYoqXQqBHO13WQT047ih0ITfb6U5BueC2mZ
+ h9PQnAIRQ4fwj7immsjbjDhvtIorA6GXB01yIWZFYgj80U/8HBMI2D+YCx0K1TfQ0DHW
+ Vu4ExOSLjMgiHUrbh4kIFRF0IrM11zFI3yI= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=wUAx8CXyWwn0REf5nzJmEo+bX91x9dOeaJe1nMET1Gg=;
+ b=jp+E+qei1X3icW308uDTJBMcElt7uyh9dQLaB+hbilKeoxNe+iTjXjHaq3IfCQsLeXMFdEvGxziRc8iQtdeoWf+Bk9KyTS1msqvEZewf7/rE9L9cphBdYYbCEQGU8UIRZQ1WZJEZXegOUfh1Lkh+p6TudUsQ4RzaWd1qMHzMtCU=
 Content-Disposition: inline
-In-Reply-To: <20200818134900.GA829964-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <CALvZod69w5UoCjfWcqVAejpKWzRAUxX7dEPzqDUknHhUFV_XEA@mail.gmail.com>
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Dan Schatzberg <schatzberg.dan@gmail.com>, Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Chris Down <chris@chrisdown.name>, Yang Shi <yang.shi@linux.alibaba.com>, Thomas Gleixner <tglx@linutronix.de>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Andrea Arcangeli <aarcange@redhat.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.>
 
-On Tue, Aug 18, 2020 at 09:49:00AM -0400, Johannes Weiner wrote:
-> On Tue, Aug 18, 2020 at 12:18:44PM +0200, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org wrote:
-> > What you need is a feeback loop against the rate of freeing pages, and
-> > when you near the saturation point, the allocation rate should exactly
-> > match the freeing rate.
+On Fri, Aug 21, 2020 at 09:27:56AM -0700, Shakeel Butt wrote:
+> On Fri, Aug 21, 2020 at 9:02 AM Roman Gushchin <guro@fb.com> wrote:
+> >
+> > On Fri, Aug 21, 2020 at 11:04:05AM -0400, Dan Schatzberg wrote:
+> > > On Thu, Aug 20, 2020 at 10:06:44AM -0700, Shakeel Butt wrote:
+> > > > On Thu, May 28, 2020 at 6:55 AM Dan Schatzberg <schatzberg.dan@gmail.com> wrote:
+> > > > >
+> > > > > Much of the discussion about this has died down. There's been a
+> > > > > concern raised that we could generalize infrastructure across loop,
+> > > > > md, etc. This may be possible, in the future, but it isn't clear to me
+> > > > > how this would look like. I'm inclined to fix the existing issue with
+> > > > > loop devices now (this is a problem we hit at FB) and address
+> > > > > consolidation with other cases if and when those need to be addressed.
+> > > > >
+> > > >
+> > > > What's the status of this series?
+> > >
+> > > Thanks for reminding me about this. I haven't got any further
+> > > feedback. I'll bug Jens to take a look and see if he has any concerns
+> > > and if not send a rebased version.
+> >
+> > Just as a note, I stole a patch from this series called
+> > "mm: support nesting memalloc_use_memcg()" to use for the bpf memory accounting.
+> > I rewrote the commit log and rebased to the tot with some trivial changes.
+> >
+> > I just sent it upstream:
+> > https://lore.kernel.org/bpf/20200821150134.2581465-1-guro@fb.com/T/#md7edb6b5b940cee1c4d15e3cef17aa8b07328c2e
+> >
+> > It looks like we need it for two independent sub-systems, so I wonder
+> > if we want to route it first through the mm tree as a standalone patch?
+> >
 > 
-> IO throttling solves a slightly different problem.
-> 
-> IO occurs in parallel to the workload's execution stream, and you're
-> trying to take the workload from dirtying at CPU speed to rate match
-> to the independent IO stream.
-> 
-> With memory allocations, though, freeing happens from inside the
-> execution stream of the workload. If you throttle allocations, you're
+> Another way is to push that patch to 5.9-rc2 linus tree, so both block
+> and mm branches for 5.10 will have it. (Not sure if that's ok.)
 
-For a single task, but even then you're making the argument that we need
-to allocate memory to free memory, and we all know where that gets us.
+Ok, it looks like the patch provides a generally useful API enhancement.
+And we do have at least two potential use cases for it.
+Let me send it as a standalone patch to linux-mm@.
 
-But we're actually talking about a cgroup here, which is a collection of
-tasks all doing things in parallel.
+Btw, Shakeel, what do you think of s/memalloc_use_memcg()/set_active_memcg() ?
 
-> most likely throttling the freeing rate as well. And you'll slow down
-> reclaim scanning by the same amount as the page references, so it's
-> not making reclaim more successful either. The alloc/use/free
-> (im)balance is an inherent property of the workload, regardless of the
-> speed you're executing it at.
+And thank you for reviews!
 
-Arguably seeing the rate drop to near 0 is a very good point to consider
-running cgroup-OOM.
+Roman
