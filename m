@@ -1,147 +1,120 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v18 30/32] mm: Drop use of test_and_set_skip in favor of just setting skip
-Date: Mon, 24 Aug 2020 20:55:03 +0800
-Message-ID: <1598273705-69124-31-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH v18 25/32] mm/mlock: remove lru_lock on TestClearPageMlocked in munlock_vma_page
+Date: Mon, 24 Aug 2020 20:54:58 +0800
+Message-ID: <1598273705-69124-26-git-send-email-alex.shi@linux.alibaba.com>
 References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1598273705-69124-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
-Cc: Alexander Duyck <alexander.h.duyck@linux.intel.com>, Stephen Rothwell <sfr@canb.auug.org.au>
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
 
-From: Alexander Duyck <alexander.h.duyck@linux.intel.com>
+In the func munlock_vma_page, the page must be PageLocked as well as
+pages in split_huge_page series funcs. Thus the PageLocked is enough
+to serialize both funcs.
 
-The only user of test_and_set_skip was isolate_migratepages_block and it
-was using it after a call that was testing and clearing the LRU flag. As
-such it really didn't need to be behind the LRU lock anymore as it wasn't
-really fulfilling its purpose.
+So we could relief the TestClearPageMlocked/hpage_nr_pages which are not
+necessary under lru lock.
 
-Since it is only possible to be able to test and set the skip flag if we
-were able to obtain the LRU bit for the first page in the pageblock the
-use of the test_and_set_skip becomes redundant as the LRU flag now becomes
-the item that limits us to only one thread being able to perform the
-operation and there being no need for a test_and_set operation.
+As to another munlock func __munlock_pagevec, which no PageLocked
+protection and should remain lru protecting.
 
-With that being the case we can simply drop the bit and instead directly
-just call the set_pageblock_skip function if the page we are working on is
-the valid_page at the start of the pageblock. Then any other threads that
-enter this pageblock should see the skip bit set on the first valid page in
-the pageblock.
-
-Since we have dropped the late abort case we can drop the code that was
-clearing the LRU flag and calling page_put since the abort case will now
-not be holding a reference to a page now.
-
-Signed-off-by: Alexander Duyck <alexander.h.duyck@linux.intel.com>
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Kirill A. Shutemov <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
- mm/compaction.c | 53 +++++++++++++----------------------------------------
- 1 file changed, 13 insertions(+), 40 deletions(-)
+ mm/mlock.c | 41 +++++++++++++++--------------------------
+ 1 file changed, 15 insertions(+), 26 deletions(-)
 
-diff --git a/mm/compaction.c b/mm/compaction.c
-index a0e48d079124..9443bc4d763d 100644
---- a/mm/compaction.c
-+++ b/mm/compaction.c
-@@ -399,29 +399,6 @@ void reset_isolation_suitable(pg_data_t *pgdat)
- 	}
- }
- 
--/*
-- * Sets the pageblock skip bit if it was clear. Note that this is a hint as
-- * locks are not required for read/writers. Returns true if it was already set.
-- */
--static bool test_and_set_skip(struct compact_control *cc, struct page *page,
--							unsigned long pfn)
--{
--	bool skip;
--
--	/* Do no update if skip hint is being ignored */
--	if (cc->ignore_skip_hint)
--		return false;
--
--	if (!IS_ALIGNED(pfn, pageblock_nr_pages))
--		return false;
--
--	skip = get_pageblock_skip(page);
--	if (!skip && !cc->no_set_skip_hint)
--		set_pageblock_skip(page);
--
--	return skip;
--}
--
- static void update_cached_migrate(struct compact_control *cc, unsigned long pfn)
+diff --git a/mm/mlock.c b/mm/mlock.c
+index 0448409184e3..46a05e6ec5ba 100644
+--- a/mm/mlock.c
++++ b/mm/mlock.c
+@@ -69,9 +69,9 @@ void clear_page_mlock(struct page *page)
+ 	 *
+ 	 * See __pagevec_lru_add_fn for more explanation.
+ 	 */
+-	if (!isolate_lru_page(page)) {
++	if (!isolate_lru_page(page))
+ 		putback_lru_page(page);
+-	} else {
++	else {
+ 		/*
+ 		 * We lost the race. the page already moved to evictable list.
+ 		 */
+@@ -178,7 +178,6 @@ static void __munlock_isolation_failed(struct page *page)
+ unsigned int munlock_vma_page(struct page *page)
  {
- 	struct zone *zone = cc->zone;
-@@ -480,12 +457,6 @@ static inline void update_pageblock_skip(struct compact_control *cc,
- static void update_cached_migrate(struct compact_control *cc, unsigned long pfn)
- {
- }
--
--static bool test_and_set_skip(struct compact_control *cc, struct page *page,
--							unsigned long pfn)
--{
--	return false;
--}
- #endif /* CONFIG_COMPACTION */
+ 	int nr_pages;
+-	struct lruvec *lruvec;
  
- /*
-@@ -895,7 +866,6 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 		if (!valid_page && IS_ALIGNED(low_pfn, pageblock_nr_pages)) {
- 			if (!cc->ignore_skip_hint && get_pageblock_skip(page)) {
- 				low_pfn = end_pfn;
--				page = NULL;
- 				goto isolate_abort;
- 			}
- 			valid_page = page;
-@@ -1021,11 +991,20 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 
- 			lruvec_memcg_debug(lruvec, page);
- 
--			/* Try get exclusive access under lock */
--			if (!skip_updated) {
-+			/*
-+			 * Indicate that we want exclusive access to the
-+			 * rest of the pageblock.
-+			 *
-+			 * The LRU flag prevents simultaneous access to the
-+			 * first PFN, and the LRU lock helps to prevent
-+			 * simultaneous update of multiple pageblocks shared
-+			 * in the same bitmap.
-+			 */
-+			if (page == valid_page) {
-+				if (!cc->ignore_skip_hint &&
-+				    !cc->no_set_skip_hint)
-+					set_pageblock_skip(page);
- 				skip_updated = true;
--				if (test_and_set_skip(cc, page, low_pfn))
--					goto isolate_abort;
- 			}
- 		}
- 
-@@ -1098,15 +1077,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 	if (unlikely(low_pfn > end_pfn))
- 		low_pfn = end_pfn;
- 
--	page = NULL;
--
- isolate_abort:
- 	if (lruvec)
- 		unlock_page_lruvec_irqrestore(lruvec, flags);
--	if (page) {
--		SetPageLRU(page);
--		put_page(page);
--	}
+ 	/* For try_to_munlock() and to serialize with page migration */
+ 	BUG_ON(!PageLocked(page));
+@@ -186,37 +185,22 @@ unsigned int munlock_vma_page(struct page *page)
+ 	VM_BUG_ON_PAGE(PageTail(page), page);
  
  	/*
- 	 * Updated the cached scanner pfn once the pageblock has been scanned
+-	 * Serialize split tail pages in __split_huge_page_tail() which
+-	 * might otherwise copy PageMlocked to part of the tail pages before
+-	 * we clear it in the head page. It also stabilizes thp_nr_pages().
+-	 * TestClearPageLRU can't be used here to block page isolation, since
+-	 * out of lock clear_page_mlock may interfer PageLRU/PageMlocked
+-	 * sequence, same as __pagevec_lru_add_fn, and lead the page place to
+-	 * wrong lru list here. So relay on PageLocked to stop lruvec change
+-	 * in mem_cgroup_move_account().
++	 * Serialize split tail pages in __split_huge_page_tail() by
++	 * lock_page(); Do TestClearPageMlocked/PageLRU sequence like
++	 * clear_page_mlock().
+ 	 */
+-	lruvec = lock_page_lruvec_irq(page);
+-
+-	if (!TestClearPageMlocked(page)) {
++	if (!TestClearPageMlocked(page))
+ 		/* Potentially, PTE-mapped THP: do not skip the rest PTEs */
+-		nr_pages = 1;
+-		goto unlock_out;
+-	}
++		return 0;
+ 
+ 	nr_pages = thp_nr_pages(page);
+ 	__mod_zone_page_state(page_zone(page), NR_MLOCK, -nr_pages);
+ 
+-	if (__munlock_isolate_lru_page(page, lruvec, true)) {
+-		unlock_page_lruvec_irq(lruvec);
++	if (!isolate_lru_page(page))
+ 		__munlock_isolated_page(page);
+-		goto out;
+-	}
+-	__munlock_isolation_failed(page);
+-
+-unlock_out:
+-	unlock_page_lruvec_irq(lruvec);
++	else
++		__munlock_isolation_failed(page);
+ 
+-out:
+ 	return nr_pages - 1;
+ }
+ 
+@@ -305,6 +289,11 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ 
+ 		/* block memcg change in mem_cgroup_move_account */
+ 		lock_page_memcg(page);
++		/*
++		 * Serialize split tail pages in __split_huge_page_tail() which
++		 * might otherwise copy PageMlocked to part of the tail pages
++		 * before we clear it in the head page.
++		 */
+ 		lruvec = relock_page_lruvec_irq(page, lruvec);
+ 		if (TestClearPageMlocked(page)) {
+ 			/*
 -- 
 1.8.3.1
 
