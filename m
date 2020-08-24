@@ -1,38 +1,156 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [Resend PATCH 1/6] mm/memcg: warning on !memcg after readahead
- page charged
-Date: Mon, 24 Aug 2020 17:10:45 +0200
-Message-ID: <20200824151045.GC3415@dhcp22.suse.cz>
-References: <1597144232-11370-1-git-send-email-alex.shi@linux.alibaba.com>
- <20200820145850.GA4622@lca.pw>
- <20200824145201.GB4337@lca.pw>
+From: Dan Schatzberg <schatzberg.dan@gmail.com>
+Subject: [PATCH v7 0/4] Charge loop device i/o to issuing cgroup
+Date: Mon, 24 Aug 2020 11:35:58 -0400
+Message-ID: <20200824153607.6595-1-schatzberg.dan@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20200824145201.GB4337-J5quhbR+WMc@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=R+WnIm5e3oaEHejxIohJMS0+jhs86DYl8gpbwJYmAik=;
+        b=SRNEANR+EJUu/Zk2lbQct/0WbyEkqf2pDiydLArXO1FjTP3+dyQbZb5cme0fCcadXc
+         OiFYofGExGKW448nn7uE+JN14cRscm1+HaD8u86lr15zUszZGT9Pcd+acpXYZV/p+vKL
+         E51D0SLFRHLJcLebrCRFqIuWZCjtfYAl6CMo9rhWPV4MnTmMM7r+aca3EyM64nyOwYT6
+         pDp2BEydP35vDC0pbt3gzjsa9AiW4VqaKmzVoaCLi03yhZe1aL430W3wWlkDKVLHMq8t
+         eIjW/ApOprDE/v2vKEJgj7tOW7L1ZV8eFFsHj6BmSxI13i4G+85BRhLUMHFRq00I05E5
+         Vbug==
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Qian Cai <cai-J5quhbR+WMc@public.gmane.org>
-Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: 
+Cc: Dan Schatzberg <schatzberg.dan@gmail.com>, Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Jakub Kicinski <kuba@kernel.org>, Yang Shi <yang.shi@linux.alibaba.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>
 
-On Mon 24-08-20 10:52:02, Qian Cai wrote:
-> On Thu, Aug 20, 2020 at 10:58:50AM -0400, Qian Cai wrote:
-> > On Tue, Aug 11, 2020 at 07:10:27PM +0800, Alex Shi wrote:
-> > > Since readahead page is charged on memcg too, in theory we don't have to
-> > > check this exception now. Before safely remove them all, add a warning
-> > > for the unexpected !memcg.
-> > > 
-> > > Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-> > > Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-> > 
-> > This will trigger,
-> 
-> Andrew, Stephen, can you drop this series for now? I did manage to trigger this
-> warning on all arches, powerpc, x86 and arm64 (below).
+Much of the discussion about this has died down. There's been a
+concern raised that we could generalize infrastructure across loop,
+md, etc. This may be possible, in the future, but it isn't clear to me
+how this would look like. I'm inclined to fix the existing issue with
+loop devices now (this is a problem we hit at FB) and address
+consolidation with other cases if and when those need to be addressed.
 
-Yes, I do agree. See http://lkml.kernel.org/r/20200824151013.GB3415-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org
+Note that patch 2 in this series (mm: support nesting
+memalloc_use_memcg()) has also been submitted by Roman Guschchin to
+the mm tree and can be seen here:
+http://lkml.iu.edu/hypermail/linux/kernel/2008.2/09214.html - I
+include it here for completeness, but this series works with either
+version of the patch.
+
+Changes since V7:
+
+* Rebased against linus's branch
+
+Changes since V6:
+
+* Added separate spinlock for worker synchronization
+* Minor style changes
+
+Changes since V5:
+
+* Fixed a missing css_put when failing to allocate a worker
+* Minor style changes
+
+Changes since V4:
+
+Only patches 1 and 2 have changed.
+
+* Fixed irq lock ordering bug
+* Simplified loop detach
+* Added support for nesting memalloc_use_memcg
+
+Changes since V3:
+
+* Fix race on loop device destruction and deferred worker cleanup
+* Ensure charge on shmem_swapin_page works just like getpage
+* Minor style changes
+
+Changes since V2:
+
+* Deferred destruction of workqueue items so in the common case there
+  is no allocation needed
+
+Changes since V1:
+
+* Split out and reordered patches so cgroup charging changes are
+  separate from kworker -> workqueue change
+
+* Add mem_css to struct loop_cmd to simplify logic
+
+The loop device runs all i/o to the backing file on a separate kworker
+thread which results in all i/o being charged to the root cgroup. This
+allows a loop device to be used to trivially bypass resource limits
+and other policy. This patch series fixes this gap in accounting.
+
+A simple script to demonstrate this behavior on cgroupv2 machine:
+
+'''
+#!/bin/bash
+set -e
+
+CGROUP=/sys/fs/cgroup/test.slice
+LOOP_DEV=/dev/loop0
+
+if [[ ! -d $CGROUP ]]
+then
+    sudo mkdir $CGROUP
+fi
+
+grep oom_kill $CGROUP/memory.events
+
+# Set a memory limit, write more than that limit to tmpfs -> OOM kill
+sudo unshare -m bash -c "
+echo \$\$ > $CGROUP/cgroup.procs;
+echo 0 > $CGROUP/memory.swap.max;
+echo 64M > $CGROUP/memory.max;
+mount -t tmpfs -o size=512m tmpfs /tmp;
+dd if=/dev/zero of=/tmp/file bs=1M count=256" || true
+
+grep oom_kill $CGROUP/memory.events
+
+# Set a memory limit, write more than that limit through loopback
+# device -> no OOM kill
+sudo unshare -m bash -c "
+echo \$\$ > $CGROUP/cgroup.procs;
+echo 0 > $CGROUP/memory.swap.max;
+echo 64M > $CGROUP/memory.max;
+mount -t tmpfs -o size=512m tmpfs /tmp;
+truncate -s 512m /tmp/backing_file
+losetup $LOOP_DEV /tmp/backing_file
+dd if=/dev/zero of=$LOOP_DEV bs=1M count=256;
+losetup -D $LOOP_DEV" || true
+
+grep oom_kill $CGROUP/memory.events
+'''
+
+Naively charging cgroups could result in priority inversions through
+the single kworker thread in the case where multiple cgroups are
+reading/writing to the same loop device. This patch series does some
+minor modification to the loop driver so that each cgroup can make
+forward progress independently to avoid this inversion.
+
+With this patch series applied, the above script triggers OOM kills
+when writing through the loop device as expected.
+
+Dan Schatzberg (3):
+  loop: Use worker per cgroup instead of kworker
+  mm: Charge active memcg when no mm is set
+  loop: Charge i/o to mem and blk cg
+
+Johannes Weiner (1):
+  mm: support nesting memalloc_use_memcg()
+
+ drivers/block/loop.c                 | 248 ++++++++++++++++++++++-----
+ drivers/block/loop.h                 |  15 +-
+ fs/buffer.c                          |   6 +-
+ fs/notify/fanotify/fanotify.c        |   5 +-
+ fs/notify/inotify/inotify_fsnotify.c |   5 +-
+ include/linux/memcontrol.h           |   6 +
+ include/linux/sched/mm.h             |  28 +--
+ kernel/cgroup/cgroup.c               |   1 +
+ mm/memcontrol.c                      |  17 +-
+ mm/shmem.c                           |   4 +-
+ 10 files changed, 253 insertions(+), 82 deletions(-)
+
 -- 
-Michal Hocko
-SUSE Labs
+2.24.1
+
