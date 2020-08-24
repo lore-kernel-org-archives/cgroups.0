@@ -1,112 +1,59 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v18 08/32] mm/vmscan: remove unnecessary lruvec adding
-Date: Mon, 24 Aug 2020 20:54:41 +0800
-Message-ID: <1598273705-69124-9-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: [PATCH v18 14/32] mm/lru: move lru_lock holding in func lru_note_cost_page
+Date: Mon, 24 Aug 2020 20:54:47 +0800
+Message-ID: <1598273705-69124-15-git-send-email-alex.shi@linux.alibaba.com>
 References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1598273705-69124-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
 
-We don't have to add a freeable page into lru and then remove from it.
-This change saves a couple of actions and makes the moving more clear.
+It's a clean up patch w/o function changes.
 
-The SetPageLRU needs to be kept before put_page_testzero for list
-intergrity, otherwise:
-
-  #0 mave_pages_to_lru             #1 release_pages
-  if !put_page_testzero
-     			           if (put_page_testzero())
-     			              !PageLRU //skip lru_lock
-     SetPageLRU()
-     list_add(&page->lru,)
-                                         list_add(&page->lru,)
-
-[akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org: coding style fixes]
-Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Reviewed-by: Alexander Duyck <alexander.h.duyck@linux.intel.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
 ---
- mm/vmscan.c | 38 +++++++++++++++++++++++++-------------
- 1 file changed, 25 insertions(+), 13 deletions(-)
+ mm/swap.c       | 2 ++
+ mm/workingset.c | 2 --
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 99e1796eb833..ffccb94defaf 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -1850,26 +1850,30 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
- 	while (!list_empty(list)) {
- 		page = lru_to_page(list);
- 		VM_BUG_ON_PAGE(PageLRU(page), page);
-+		list_del(&page->lru);
- 		if (unlikely(!page_evictable(page))) {
--			list_del(&page->lru);
- 			spin_unlock_irq(&pgdat->lru_lock);
- 			putback_lru_page(page);
- 			spin_lock_irq(&pgdat->lru_lock);
- 			continue;
- 		}
--		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+diff --git a/mm/swap.c b/mm/swap.c
+index 4eea95a4286f..906255db6006 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -298,8 +298,10 @@ void lru_note_cost(struct lruvec *lruvec, bool file, unsigned int nr_pages)
  
-+		/*
-+		 * The SetPageLRU needs to be kept here for list intergrity.
-+		 * Otherwise:
-+		 *   #0 mave_pages_to_lru             #1 release_pages
-+		 *   if !put_page_testzero
-+		 *				      if (put_page_testzero())
-+		 *				        !PageLRU //skip lru_lock
-+		 *     SetPageLRU()
-+		 *     list_add(&page->lru,)
-+		 *                                        list_add(&page->lru,)
-+		 */
- 		SetPageLRU(page);
--		lru = page_lru(page);
+ void lru_note_cost_page(struct page *page)
+ {
++	spin_lock_irq(&page_pgdat(page)->lru_lock);
+ 	lru_note_cost(mem_cgroup_page_lruvec(page, page_pgdat(page)),
+ 		      page_is_file_lru(page), thp_nr_pages(page));
++	spin_unlock_irq(&page_pgdat(page)->lru_lock);
+ }
  
--		nr_pages = thp_nr_pages(page);
--		update_lru_size(lruvec, lru, page_zonenum(page), nr_pages);
--		list_move(&page->lru, &lruvec->lists[lru]);
--
--		if (put_page_testzero(page)) {
-+		if (unlikely(put_page_testzero(page))) {
- 			__ClearPageLRU(page);
- 			__ClearPageActive(page);
--			del_page_from_lru_list(page, lruvec, lru);
- 
- 			if (unlikely(PageCompound(page))) {
- 				spin_unlock_irq(&pgdat->lru_lock);
-@@ -1877,11 +1881,19 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
- 				spin_lock_irq(&pgdat->lru_lock);
- 			} else
- 				list_add(&page->lru, &pages_to_free);
--		} else {
--			nr_moved += nr_pages;
--			if (PageActive(page))
--				workingset_age_nonresident(lruvec, nr_pages);
-+
-+			continue;
- 		}
-+
-+		lruvec = mem_cgroup_page_lruvec(page, pgdat);
-+		lru = page_lru(page);
-+		nr_pages = thp_nr_pages(page);
-+
-+		update_lru_size(lruvec, lru, page_zonenum(page), nr_pages);
-+		list_add(&page->lru, &lruvec->lists[lru]);
-+		nr_moved += nr_pages;
-+		if (PageActive(page))
-+			workingset_age_nonresident(lruvec, nr_pages);
+ static void __activate_page(struct page *page, struct lruvec *lruvec)
+diff --git a/mm/workingset.c b/mm/workingset.c
+index 92e66113a577..32e24cda1b4f 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -381,9 +381,7 @@ void workingset_refault(struct page *page, void *shadow)
+ 	if (workingset) {
+ 		SetPageWorkingset(page);
+ 		/* XXX: Move to lru_cache_add() when it supports new vs putback */
+-		spin_lock_irq(&page_pgdat(page)->lru_lock);
+ 		lru_note_cost_page(page);
+-		spin_unlock_irq(&page_pgdat(page)->lru_lock);
+ 		inc_lruvec_state(lruvec, WORKINGSET_RESTORE_BASE + file);
  	}
- 
- 	/*
+ out:
 -- 
 1.8.3.1
 
