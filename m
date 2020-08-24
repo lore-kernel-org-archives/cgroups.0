@@ -1,83 +1,137 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH 2/4] mm: support nesting memalloc_use_memcg()
-Date: Mon, 24 Aug 2020 09:19:01 -0700
-Message-ID: <20200824161901.GA2401952@carbon.lan>
-References: <20200824153607.6595-1-schatzberg.dan@gmail.com>
- <20200824153607.6595-3-schatzberg.dan@gmail.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [RFC PATCH 0/8] memcg: Enable fine-grained per process memory
+ control
+Date: Mon, 24 Aug 2020 12:58:50 -0400
+Message-ID: <20200824165850.GA932571@cmpxchg.org>
+References: <20200817140831.30260-1-longman@redhat.com>
+ <20200818091453.GL2674@hirez.programming.kicks-ass.net>
+ <20200818092617.GN28270@dhcp22.suse.cz>
+ <20200818095910.GM2674@hirez.programming.kicks-ass.net>
+ <20200818100516.GO28270@dhcp22.suse.cz>
+ <20200818101844.GO2674@hirez.programming.kicks-ass.net>
+ <20200818134900.GA829964@cmpxchg.org>
+ <20200821193716.GU3982@worktop.programming.kicks-ass.net>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=lfSEnEBzAhVRh0b+ljkilNtl2SEkfLzNaJXp0eeDhQY=;
- b=btW4dmxdf2hk3CnnQ7PggPA+MsAl+emZ1YA9zdupSYUxXS9lX7gOLaZdDktrIFoxpRLb
- OHz69uTdcOYDCVjlTnEldVXMVPC0/cHEJUiZ3DGN/wDFNbzpeRuQyyhE9UcntSGo+hgn
- mPpKd0ggeJK5LA7lGdsy/V8GKo5uJvtVoN8= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=lfSEnEBzAhVRh0b+ljkilNtl2SEkfLzNaJXp0eeDhQY=;
- b=DPZUx1ZbHEK1lC9/BCyy8evBKt38xXP2olFDdJ4TieDF5vrQAcSvweSugvQBGnQX3rHcTS4jGm35mxxZ4aczLr6DT6+s+B1VHGgQZmHln58tO9T7KEo1DBp5od4RMDbLmEvvvyf0wWJXGfZgUVXrhyTrK1r9Bm2tYTGvi3wYWRY=
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=m6Sp49WTu7yLkSdnzUDD1bncFEV1oNxAmLNYIupgQo4=;
+        b=moOtSvH96tM5PMHSz67NQyv6JWNeB/iCtHhzFUJJBVWO2Rvf9lrzi/KnKMCLDazr3+
+         bBNLLIsHpmaQXz6SCa95Mknom1fMFRCtQXjTP4dmabeFaADMauT59gMAdJ2B7Bo4NrwS
+         mS7zCYW7Md0qmh2hASakd/Bblbj20PBfK3vaCFAa+Qk4PVK3AccVfvxabLZQwu3hQt0c
+         R+nY181KlL8P/51nDZhaJ8F8R4zm24O7pAJOep5d4XdV3Yxf325++vzHSK/MacDp0etV
+         ZcI9X/al7xtWzmuuiznZv1Z8XguBTY/NbZNKJ5Wd3ZncP8pTuUTeFwMFufkznt5HSPAD
+         RV4A==
 Content-Disposition: inline
-In-Reply-To: <20200824153607.6595-3-schatzberg.dan@gmail.com>
-Sender: linux-block-owner@vger.kernel.org
+In-Reply-To: <20200821193716.GU3982@worktop.programming.kicks-ass.net>
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dan Schatzberg <schatzberg.dan@gmail.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Shakeel Butt <shakeelb@google.com>, Naresh Kamboju <naresh.kamboju@linaro.org>, Jens Axboe <axboe@kernel.dk>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Yang Shi <yang.shi@linux.alibaba.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Daniel Jordan <dan>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Michal Hocko <mhocko@suse.com>, Waiman Long <longman@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Jonathan Corbet <corbet@lwn.net>, Alexey Dobriyan <adobriyan@gmail.com>, Ingo Molnar <mingo@kernel.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-fsdevel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Mon, Aug 24, 2020 at 11:36:00AM -0400, Dan Schatzberg wrote:
-> From: Johannes Weiner <hannes@cmpxchg.org>
+On Fri, Aug 21, 2020 at 09:37:16PM +0200, Peter Zijlstra wrote:
+> On Tue, Aug 18, 2020 at 09:49:00AM -0400, Johannes Weiner wrote:
+> > On Tue, Aug 18, 2020 at 12:18:44PM +0200, peterz@infradead.org wrote:
+> > > What you need is a feeback loop against the rate of freeing pages, and
+> > > when you near the saturation point, the allocation rate should exactly
+> > > match the freeing rate.
+> > 
+> > IO throttling solves a slightly different problem.
+> > 
+> > IO occurs in parallel to the workload's execution stream, and you're
+> > trying to take the workload from dirtying at CPU speed to rate match
+> > to the independent IO stream.
+> > 
+> > With memory allocations, though, freeing happens from inside the
+> > execution stream of the workload. If you throttle allocations, you're
 > 
-> The memalloc_use_memcg() function to override the default memcg
-> accounting context currently doesn't nest. But the patches to make the
-> loop driver cgroup-aware will end up nesting:
+> For a single task, but even then you're making the argument that we need
+> to allocate memory to free memory, and we all know where that gets us.
+>
+> But we're actually talking about a cgroup here, which is a collection of
+> tasks all doing things in parallel.
+
+Right, but sharing a memory cgroup means sharing an LRU list, and that
+transfers memory pressure and allocation burden between otherwise
+independent tasks - if nothing else through cache misses on the
+executables and libraries. I doubt that one task can go through
+several comprehensive reclaim cycles on a shared LRU without
+completely annihilating the latency or throughput targets of everybody
+else in the group in most real world applications.
+
+> > most likely throttling the freeing rate as well. And you'll slow down
+> > reclaim scanning by the same amount as the page references, so it's
+> > not making reclaim more successful either. The alloc/use/free
+> > (im)balance is an inherent property of the workload, regardless of the
+> > speed you're executing it at.
 > 
-> [   98.137605]  alloc_page_buffers+0x210/0x288
-> [   98.141799]  __getblk_gfp+0x1d4/0x400
-> [   98.145475]  ext4_read_block_bitmap_nowait+0x148/0xbc8
-> [   98.150628]  ext4_mb_init_cache+0x25c/0x9b0
-> [   98.154821]  ext4_mb_init_group+0x270/0x390
-> [   98.159014]  ext4_mb_good_group+0x264/0x270
-> [   98.163208]  ext4_mb_regular_allocator+0x480/0x798
-> [   98.168011]  ext4_mb_new_blocks+0x958/0x10f8
-> [   98.172294]  ext4_ext_map_blocks+0xec8/0x1618
-> [   98.176660]  ext4_map_blocks+0x1b8/0x8a0
-> [   98.180592]  ext4_writepages+0x830/0xf10
-> [   98.184523]  do_writepages+0xb4/0x198
-> [   98.188195]  __filemap_fdatawrite_range+0x170/0x1c8
-> [   98.193086]  filemap_write_and_wait_range+0x40/0xb0
-> [   98.197974]  ext4_punch_hole+0x4a4/0x660
-> [   98.201907]  ext4_fallocate+0x294/0x1190
-> [   98.205839]  loop_process_work+0x690/0x1100
-> [   98.210032]  loop_workfn+0x2c/0x110
-> [   98.213529]  process_one_work+0x3e0/0x648
-> [   98.217546]  worker_thread+0x70/0x670
-> [   98.221217]  kthread+0x1b8/0x1c0
-> [   98.224452]  ret_from_fork+0x10/0x18
-> 
-> where loop_process_work() sets the memcg override to the memcg that
-> submitted the IO request, and alloc_page_buffers() sets the override
-> to the memcg that instantiated the cache page, which may differ.
-> 
-> Make memalloc_use_memcg() return the old memcg and convert existing
-> users to a stacking model. Delete the unused memalloc_unuse_memcg().
-> 
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> Reviewed-by: Shakeel Butt <shakeelb@google.com>
-> Acked-by: Roman Gushchin <guro@fb.com>
-> Reported-by: Naresh Kamboju <naresh.kamboju@linaro.org>
+> Arguably seeing the rate drop to near 0 is a very good point to consider
+> running cgroup-OOM.
 
-Hi Dan,
+Agreed. In the past, that's actually what we did: In cgroup1, you
+could disable the kernel OOM killer, and when reclaim failed at the
+limit, the allocating task would be put on a waitqueue until woken up
+by a freeing event. Conceptually this is clean & straight-forward.
 
-JFYI: I need a similar patch for the bpf memory accounting rework,
-so I ended up sending it separately (with some modifications including
-different naming): https://lkml.org/lkml/2020/8/21/1464 .
+However,
 
-Can you please, rebase your patchset using this patch?
+1. Putting allocation contexts with unknown locks to indefinite sleep
+   caused deadlocks, for obvious reasons. Userspace OOM killing tends
+   to take a lot of task-specific locks when scanning through /proc
+   files for kill candidates, and can easily get stuck.
 
-I hope Andrew can pull this standalone patch into 5.9-rc*,
-as Shakeel suggested. It will help us to avoid merge conflicts
-during the 5.10 merge window.
+   Using bounded over indefinite waits is simply acknowledging that
+   the deadlock potential when connecting arbitrary task stacks in the
+   system through free->alloc ordering is equally difficult to plan
+   out as alloc->free ordering.
 
-Thanks!
+   The non-cgroup OOM killer actually has the same deadlock potential,
+   where the allocating/killing task can hold resources that the OOM
+   victim requires to exit. The OOM reaper hides it, the static
+   emergency reserves hide it - but to truly solve this problem, you
+   would have to have full knowledge of memory & lock ordering
+   dependencies of those tasks. And then can still end up with
+   scenarios where the only answer is panic().
+
+2. I don't recall ever seeing situations in cgroup1 where the precise
+   matching of allocation rate to freeing rate has allowed cgroups to
+   run sustainably after reclaim has failed. The practical benefit of
+   a complicated feedback loop over something crude & robust once
+   we're in an OOM situation is not apparent to me.
+
+   [ That's different from the IO-throttling *while still doing
+     reclaim* that Dave brought up. *That* justifies the same effort
+     we put into dirty throttling. I'm only talking about the
+     situation where reclaim has already failed and we need to
+     facilitate userspace OOM handling. ]
+
+So that was the motivation for the bounded sleeps. They do not
+guarantee containment, but they provide a reasonable amount of time
+for the userspace OOM handler to intervene, without deadlocking.
+
+
+That all being said, the semantics of the new 'high' limit in cgroup2
+have allowed us to move reclaim/limit enforcement out of the
+allocation context and into the userspace return path.
+
+See the call to mem_cgroup_handle_over_high() from
+tracehook_notify_resume(), and the comments in try_charge() around
+set_notify_resume().
+
+This already solves the free->alloc ordering problem by allowing the
+allocation to exceed the limit temporarily until at least all locks
+are dropped, we know we can sleep etc., before performing enforcement.
+
+That means we may not need the timed sleeps anymore for that purpose,
+and could bring back directed waits for freeing-events again.
+
+What do you think? Any hazards around indefinite sleeps in that resume
+path? It's called before __rseq_handle_notify_resume and the
+arch-specific resume callback (which appears to be a no-op currently).
+
+Chris, Michal, what are your thoughts? It would certainly be simpler
+conceptually on the memcg side.
