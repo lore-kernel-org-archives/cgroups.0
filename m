@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v18 28/32] mm/compaction: Drop locked from isolate_migratepages_block
-Date: Mon, 24 Aug 2020 20:55:01 +0800
-Message-ID: <1598273705-69124-29-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v18 17/32] mm/compaction: do page isolation first in compaction
+Date: Mon, 24 Aug 2020 20:54:50 +0800
+Message-ID: <1598273705-69124-18-git-send-email-alex.shi@linux.alibaba.com>
 References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -11,136 +11,244 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
-Cc: Alexander Duyck <alexander.h.duyck@linux.intel.com>, Stephen Rothwell <sfr@canb.auug.org.au>
 
-From: Alexander Duyck <alexander.h.duyck@linux.intel.com>
+Currently, compaction would get the lru_lock and then do page isolation
+which works fine with pgdat->lru_lock, since any page isoltion would
+compete for the lru_lock. If we want to change to memcg lru_lock, we
+have to isolate the page before getting lru_lock, thus isoltion would
+block page's memcg change which relay on page isoltion too. Then we
+could safely use per memcg lru_lock later.
 
-We can drop the need for the locked variable by making use of the
-lruvec_holds_page_lru_lock function. By doing this we can avoid some rcu
-locking ugliness for the case where the lruvec is still holding the LRU
-lock associated with the page. Instead we can just use the lruvec and if it
-is NULL we assume the lock was released.
+The new page isolation use previous introduced TestClearPageLRU() +
+pgdat lru locking which will be changed to memcg lru lock later.
 
-Signed-off-by: Alexander Duyck <alexander.h.duyck@linux.intel.com>
+Hugh Dickins <hughd@google.com> fixed following bugs in this patch's
+early version:
+
+Fix lots of crashes under compaction load: isolate_migratepages_block()
+must clean up appropriately when rejecting a page, setting PageLRU again
+if it had been cleared; and a put_page() after get_page_unless_zero()
+cannot safely be done while holding locked_lruvec - it may turn out to
+be the final put_page(), which will take an lruvec lock when PageLRU.
+And move __isolate_lru_page_prepare back after get_page_unless_zero to
+make trylock_page() safe:
+trylock_page() is not safe to use at this time: its setting PG_locked
+can race with the page being freed or allocated ("Bad page"), and can
+also erase flags being set by one of those "sole owners" of a freshly
+allocated page who use non-atomic __SetPageFlag().
+
+Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Hugh Dickins <hughd@google.com>
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Matthew Wilcox <willy@infradead.org>
 Cc: linux-kernel@vger.kernel.org
 Cc: linux-mm@kvack.org
 ---
- mm/compaction.c | 46 +++++++++++++++++++++-------------------------
- 1 file changed, 21 insertions(+), 25 deletions(-)
+ include/linux/swap.h |  2 +-
+ mm/compaction.c      | 42 +++++++++++++++++++++++++++++++++---------
+ mm/vmscan.c          | 46 ++++++++++++++++++++++++++--------------------
+ 3 files changed, 60 insertions(+), 30 deletions(-)
 
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index 43e6b3458f58..550fdfdc3506 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -357,7 +357,7 @@ extern void lru_cache_add_inactive_or_unevictable(struct page *page,
+ extern unsigned long zone_reclaimable_pages(struct zone *zone);
+ extern unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
+ 					gfp_t gfp_mask, nodemask_t *mask);
+-extern int __isolate_lru_page(struct page *page, isolate_mode_t mode);
++extern int __isolate_lru_page_prepare(struct page *page, isolate_mode_t mode);
+ extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+ 						  unsigned long nr_pages,
+ 						  gfp_t gfp_mask,
 diff --git a/mm/compaction.c b/mm/compaction.c
-index b724eacf6421..6bf5ccd8fcf6 100644
+index 4e2c66869041..253382d99969 100644
 --- a/mm/compaction.c
 +++ b/mm/compaction.c
-@@ -803,9 +803,8 @@ static bool too_many_isolated(pg_data_t *pgdat)
- {
- 	pg_data_t *pgdat = cc->zone->zone_pgdat;
- 	unsigned long nr_scanned = 0, nr_isolated = 0;
--	struct lruvec *lruvec;
-+	struct lruvec *lruvec = NULL;
- 	unsigned long flags = 0;
--	struct lruvec *locked = NULL;
- 	struct page *page = NULL, *valid_page = NULL;
- 	unsigned long start_pfn = low_pfn;
- 	bool skip_on_failure = false;
-@@ -866,9 +865,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 		 * a fatal signal is pending.
- 		 */
- 		if (!(low_pfn % SWAP_CLUSTER_MAX)) {
--			if (locked) {
--				unlock_page_lruvec_irqrestore(locked, flags);
--				locked = NULL;
-+			if (lruvec) {
-+				unlock_page_lruvec_irqrestore(lruvec, flags);
-+				lruvec = NULL;
+@@ -887,6 +887,7 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 		if (!valid_page && IS_ALIGNED(low_pfn, pageblock_nr_pages)) {
+ 			if (!cc->ignore_skip_hint && get_pageblock_skip(page)) {
+ 				low_pfn = end_pfn;
++				page = NULL;
+ 				goto isolate_abort;
  			}
+ 			valid_page = page;
+@@ -968,6 +969,21 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 		if (!(cc->gfp_mask & __GFP_FS) && page_mapping(page))
+ 			goto isolate_fail;
  
- 			if (fatal_signal_pending(current)) {
-@@ -949,9 +948,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 			 */
- 			if (unlikely(__PageMovable(page)) &&
- 					!PageIsolated(page)) {
--				if (locked) {
--					unlock_page_lruvec_irqrestore(locked, flags);
--					locked = NULL;
-+				if (lruvec) {
-+					unlock_page_lruvec_irqrestore(lruvec, flags);
-+					lruvec = NULL;
- 				}
- 
- 				if (!isolate_movable_page(page, isolate_mode))
-@@ -992,16 +991,14 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 		if (!TestClearPageLRU(page))
- 			goto isolate_fail_put;
- 
--		rcu_read_lock();
--		lruvec = mem_cgroup_page_lruvec(page, pgdat);
--
++		/*
++		 * Be careful not to clear PageLRU until after we're
++		 * sure the page is not being freed elsewhere -- the
++		 * page release code relies on it.
++		 */
++		if (unlikely(!get_page_unless_zero(page)))
++			goto isolate_fail;
++
++		if (__isolate_lru_page_prepare(page, isolate_mode) != 0)
++			goto isolate_fail_put;
++
++		/* Try isolate the page */
++		if (!TestClearPageLRU(page))
++			goto isolate_fail_put;
++
  		/* If we already hold the lock, we can skip some rechecking */
--		if (lruvec != locked) {
--			if (locked)
--				unlock_page_lruvec_irqrestore(locked, flags);
-+		if (!lruvec || !lruvec_holds_page_lru_lock(page, lruvec)) {
-+			if (lruvec)
-+				unlock_page_lruvec_irqrestore(lruvec, flags);
- 
-+			rcu_read_lock();
-+			lruvec = mem_cgroup_page_lruvec(page, pgdat);
- 			compact_lock_irqsave(&lruvec->lru_lock, &flags, cc);
--			locked = lruvec;
- 			rcu_read_unlock();
- 
- 			lruvec_memcg_debug(lruvec, page);
-@@ -1023,8 +1020,7 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 				SetPageLRU(page);
- 				goto isolate_fail_put;
+ 		if (!locked) {
+ 			locked = compact_lock_irqsave(&pgdat->lru_lock,
+@@ -980,10 +996,6 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 					goto isolate_abort;
  			}
--		} else
--			rcu_read_unlock();
-+		}
  
+-			/* Recheck PageLRU and PageCompound under lock */
+-			if (!PageLRU(page))
+-				goto isolate_fail;
+-
+ 			/*
+ 			 * Page become compound since the non-locked check,
+ 			 * and it's on LRU. It can only be a THP so the order
+@@ -991,16 +1003,13 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 			 */
+ 			if (unlikely(PageCompound(page) && !cc->alloc_contig)) {
+ 				low_pfn += compound_nr(page) - 1;
+-				goto isolate_fail;
++				SetPageLRU(page);
++				goto isolate_fail_put;
+ 			}
+ 		}
+ 
+ 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+ 
+-		/* Try isolate the page */
+-		if (__isolate_lru_page(page, isolate_mode) != 0)
+-			goto isolate_fail;
+-
  		/* The whole page is taken off the LRU; skip the tail pages. */
  		if (PageCompound(page))
-@@ -1057,9 +1053,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 
- isolate_fail_put:
- 		/* Avoid potential deadlock in freeing page under lru_lock */
--		if (locked) {
--			unlock_page_lruvec_irqrestore(locked, flags);
--			locked = NULL;
-+		if (lruvec) {
-+			unlock_page_lruvec_irqrestore(lruvec, flags);
-+			lruvec = NULL;
+ 			low_pfn += compound_nr(page) - 1;
+@@ -1029,6 +1038,15 @@ static bool too_many_isolated(pg_data_t *pgdat)
  		}
- 		put_page(page);
  
-@@ -1073,9 +1069,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 		 * page anyway.
- 		 */
- 		if (nr_isolated) {
--			if (locked) {
--				unlock_page_lruvec_irqrestore(locked, flags);
--				locked = NULL;
-+			if (lruvec) {
-+				unlock_page_lruvec_irqrestore(lruvec, flags);
-+				lruvec = NULL;
- 			}
- 			putback_movable_pages(&cc->migratepages);
- 			cc->nr_migratepages = 0;
-@@ -1102,8 +1098,8 @@ static bool too_many_isolated(pg_data_t *pgdat)
- 	page = NULL;
+ 		continue;
++
++isolate_fail_put:
++		/* Avoid potential deadlock in freeing page under lru_lock */
++		if (locked) {
++			spin_unlock_irqrestore(&pgdat->lru_lock, flags);
++			locked = false;
++		}
++		put_page(page);
++
+ isolate_fail:
+ 		if (!skip_on_failure)
+ 			continue;
+@@ -1065,9 +1083,15 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 	if (unlikely(low_pfn > end_pfn))
+ 		low_pfn = end_pfn;
  
++	page = NULL;
++
  isolate_abort:
--	if (locked)
--		unlock_page_lruvec_irqrestore(locked, flags);
-+	if (lruvec)
-+		unlock_page_lruvec_irqrestore(lruvec, flags);
- 	if (page) {
- 		SetPageLRU(page);
- 		put_page(page);
+ 	if (locked)
+ 		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
++	if (page) {
++		SetPageLRU(page);
++		put_page(page);
++	}
+ 
+ 	/*
+ 	 * Updated the cached scanner pfn once the pageblock has been scanned
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 1b3e0eeaad64..48b50695f883 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1538,20 +1538,20 @@ unsigned int reclaim_clean_pages_from_list(struct zone *zone,
+  *
+  * returns 0 on success, -ve errno on failure.
+  */
+-int __isolate_lru_page(struct page *page, isolate_mode_t mode)
++int __isolate_lru_page_prepare(struct page *page, isolate_mode_t mode)
+ {
+ 	int ret = -EINVAL;
+ 
+-	/* Only take pages on the LRU. */
+-	if (!PageLRU(page))
+-		return ret;
+-
+ 	/* Compaction should not handle unevictable pages but CMA can do so */
+ 	if (PageUnevictable(page) && !(mode & ISOLATE_UNEVICTABLE))
+ 		return ret;
+ 
+ 	ret = -EBUSY;
+ 
++	/* Only take pages on the LRU. */
++	if (!PageLRU(page))
++		return ret;
++
+ 	/*
+ 	 * To minimise LRU disruption, the caller can indicate that it only
+ 	 * wants to isolate pages it will be able to operate on without
+@@ -1592,20 +1592,9 @@ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
+ 	if ((mode & ISOLATE_UNMAPPED) && page_mapped(page))
+ 		return ret;
+ 
+-	if (likely(get_page_unless_zero(page))) {
+-		/*
+-		 * Be careful not to clear PageLRU until after we're
+-		 * sure the page is not being freed elsewhere -- the
+-		 * page release code relies on it.
+-		 */
+-		ClearPageLRU(page);
+-		ret = 0;
+-	}
+-
+-	return ret;
++	return 0;
+ }
+ 
+-
+ /*
+  * Update LRU sizes after isolating pages. The LRU size updates must
+  * be complete before mem_cgroup_update_lru_size due to a sanity check.
+@@ -1685,17 +1674,34 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
+ 		 * only when the page is being freed somewhere else.
+ 		 */
+ 		scan += nr_pages;
+-		switch (__isolate_lru_page(page, mode)) {
++		switch (__isolate_lru_page_prepare(page, mode)) {
+ 		case 0:
++			/*
++			 * Be careful not to clear PageLRU until after we're
++			 * sure the page is not being freed elsewhere -- the
++			 * page release code relies on it.
++			 */
++			if (unlikely(!get_page_unless_zero(page)))
++				goto busy;
++
++			if (!TestClearPageLRU(page)) {
++				/*
++				 * This page may in other isolation path,
++				 * but we still hold lru_lock.
++				 */
++				put_page(page);
++				goto busy;
++			}
++
+ 			nr_taken += nr_pages;
+ 			nr_zone_taken[page_zonenum(page)] += nr_pages;
+ 			list_move(&page->lru, dst);
+ 			break;
+-
++busy:
+ 		case -EBUSY:
+ 			/* else it is being freed elsewhere */
+ 			list_move(&page->lru, src);
+-			continue;
++			break;
+ 
+ 		default:
+ 			BUG();
 -- 
 1.8.3.1
 
