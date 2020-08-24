@@ -1,89 +1,44 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v18 22/32] mm/vmscan: use relock for move_pages_to_lru
-Date: Mon, 24 Aug 2020 20:54:55 +0800
-Message-ID: <1598273705-69124-23-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v18 18/32] mm/thp: add tail pages into lru anyway in split_huge_page()
+Date: Mon, 24 Aug 2020 20:54:51 +0800
+Message-ID: <1598273705-69124-19-git-send-email-alex.shi@linux.alibaba.com>
 References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="macroman"
 To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>, Jann Horn <jannh@google.com>
+Cc: =?UTF-8?q?Mika=20Penttil=C3=A4?= <mika.penttila@nextfour.com>
 
-From: Hugh Dickins <hughd@google.com>
-
-Use the relock function to replace relocking action. And try to save few
-lock times.
-
-Signed-off-by: Hugh Dickins <hughd@google.com>
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Reviewed-by: Alexander Duyck <alexander.h.duyck@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: Jann Horn <jannh@google.com>
-Cc: Mel Gorman <mgorman@techsingularity.net>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: cgroups@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-mm@kvack.org
----
- mm/vmscan.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
-
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 2c94790d4cb1..04ef94190530 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -1848,15 +1848,15 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
- 	enum lru_list lru;
- 
- 	while (!list_empty(list)) {
--		struct lruvec *new_lruvec = NULL;
--
- 		page = lru_to_page(list);
- 		VM_BUG_ON_PAGE(PageLRU(page), page);
- 		list_del(&page->lru);
- 		if (unlikely(!page_evictable(page))) {
--			spin_unlock_irq(&lruvec->lru_lock);
-+			if (lruvec) {
-+				spin_unlock_irq(&lruvec->lru_lock);
-+				lruvec = NULL;
-+			}
- 			putback_lru_page(page);
--			spin_lock_irq(&lruvec->lru_lock);
- 			continue;
- 		}
- 
-@@ -1871,12 +1871,7 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
- 		 *     list_add(&page->lru,)
- 		 *                                        list_add(&page->lru,)
- 		 */
--		new_lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
--		if (new_lruvec != lruvec) {
--			if (lruvec)
--				spin_unlock_irq(&lruvec->lru_lock);
--			lruvec = lock_page_lruvec_irq(page);
--		}
-+		lruvec = relock_page_lruvec_irq(page, lruvec);
- 		SetPageLRU(page);
- 
- 		if (unlikely(put_page_testzero(page))) {
-@@ -1885,8 +1880,8 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
- 
- 			if (unlikely(PageCompound(page))) {
- 				spin_unlock_irq(&lruvec->lru_lock);
-+				lruvec = NULL;
- 				destroy_compound_page(page);
--				spin_lock_irq(&lruvec->lru_lock);
- 			} else
- 				list_add(&page->lru, &pages_to_free);
- 
--- 
-1.8.3.1
-
+U3BsaXRfaHVnZV9wYWdlKCkgbXVzdCBzdGFydCB3aXRoIFBhZ2VMUlUoaGVhZCksIGFuZCB3ZSBh
+cmUgaG9sZGluZyB0aGUKbHJ1X2xvY2sgaGVyZS4gSWYgdGhlIGhlYWQgd2FzIGNsZWFyZWQgbHJ1
+IGJpdCB1bmV4cGVjdGVkLCBrZWVwIHRyYWNraW5nIGl0LgoKU2lnbmVkLW9mZi1ieTogQWxleCBT
+aGkgPGFsZXguc2hpQGxpbnV4LmFsaWJhYmEuY29tPgpSZXZpZXdlZC1ieTogS2lyaWxsIEEuIFNo
+dXRlbW92IDxraXJpbGwuc2h1dGVtb3ZAbGludXguaW50ZWwuY29tPgpDYzogS2lyaWxsIEEuIFNo
+dXRlbW92IDxraXJpbGxAc2h1dGVtb3YubmFtZT4KQ2M6IEFuZHJldyBNb3J0b24gPGFrcG1AbGlu
+dXgtZm91bmRhdGlvbi5vcmc+CkNjOiBKb2hhbm5lcyBXZWluZXIgPGhhbm5lc0BjbXB4Y2hnLm9y
+Zz4KQ2M6IE1hdHRoZXcgV2lsY294IDx3aWxseUBpbmZyYWRlYWQub3JnPgpDYzogSHVnaCBEaWNr
+aW5zIDxodWdoZEBnb29nbGUuY29tPgpDYzogTWlrYSBQZW50dGlsw6QgPG1pa2EucGVudHRpbGFA
+bmV4dGZvdXIuY29tPgpDYzogbGludXgtbW1Aa3ZhY2sub3JnCkNjOiBsaW51eC1rZXJuZWxAdmdl
+ci5rZXJuZWwub3JnCi0tLQogbW0vaHVnZV9tZW1vcnkuYyB8IDE3ICsrKysrKysrKystLS0tLS0t
+CiAxIGZpbGUgY2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygrKSwgNyBkZWxldGlvbnMoLSkKCmRpZmYg
+LS1naXQgYS9tbS9odWdlX21lbW9yeS5jIGIvbW0vaHVnZV9tZW1vcnkuYwppbmRleCAwMTMyZDM2
+MzI1M2UuLjYzODBjOTI1ZTkwNCAxMDA2NDQKLS0tIGEvbW0vaHVnZV9tZW1vcnkuYworKysgYi9t
+bS9odWdlX21lbW9yeS5jCkBAIC0yMzIxLDE3ICsyMzIxLDIwIEBAIHN0YXRpYyB2b2lkIGxydV9h
+ZGRfcGFnZV90YWlsKHN0cnVjdCBwYWdlICpoZWFkLCBzdHJ1Y3QgcGFnZSAqcGFnZV90YWlsLAog
+CVZNX0JVR19PTl9QQUdFKFBhZ2VMUlUocGFnZV90YWlsKSwgaGVhZCk7CiAJbG9ja2RlcF9hc3Nl
+cnRfaGVsZCgmbHJ1dmVjX3BnZGF0KGxydXZlYyktPmxydV9sb2NrKTsKIAotCWlmICghbGlzdCkK
+LQkJU2V0UGFnZUxSVShwYWdlX3RhaWwpOwotCi0JaWYgKGxpa2VseShQYWdlTFJVKGhlYWQpKSkK
+LQkJbGlzdF9hZGRfdGFpbCgmcGFnZV90YWlsLT5scnUsICZoZWFkLT5scnUpOwotCWVsc2UgaWYg
+KGxpc3QpIHsKKwlpZiAobGlzdCkgewogCQkvKiBwYWdlIHJlY2xhaW0gaXMgcmVjbGFpbWluZyBh
+IGh1Z2UgcGFnZSAqLwogCQlnZXRfcGFnZShwYWdlX3RhaWwpOwogCQlsaXN0X2FkZF90YWlsKCZw
+YWdlX3RhaWwtPmxydSwgbGlzdCk7Ci0JfSBlbHNlCisJfSBlbHNlIHsKKwkJLyoKKwkJICogU3Bs
+aXQgc3RhcnQgZnJvbSBQYWdlTFJVKGhlYWQpLCBhbmQgd2UgYXJlIGhvbGRpbmcgdGhlCisJCSAq
+IGxydV9sb2NrLiBEbyBhIHdhcm5pbmcgaWYgdGhlIGhlYWQncyBscnUgYml0IHdhcyBjbGVhcmVk
+CisJCSAqIHVuZXhwZWN0ZWQuCisJCSAqLwogCQlWTV9XQVJOX09OKCFQYWdlTFJVKGhlYWQpKTsK
+KwkJU2V0UGFnZUxSVShwYWdlX3RhaWwpOworCQlsaXN0X2FkZF90YWlsKCZwYWdlX3RhaWwtPmxy
+dSwgJmhlYWQtPmxydSk7CisJfQogfQogCiBzdGF0aWMgdm9pZCBfX3NwbGl0X2h1Z2VfcGFnZV90
+YWlsKHN0cnVjdCBwYWdlICpoZWFkLCBpbnQgdGFpbCwKLS0gCjEuOC4zLjEKCg==
