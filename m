@@ -1,120 +1,146 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v18 25/32] mm/mlock: remove lru_lock on TestClearPageMlocked in munlock_vma_page
-Date: Mon, 24 Aug 2020 20:54:58 +0800
-Message-ID: <1598273705-69124-26-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: [PATCH v18 28/32] mm/compaction: Drop locked from isolate_migratepages_block
+Date: Mon, 24 Aug 2020 20:55:01 +0800
+Message-ID: <1598273705-69124-29-git-send-email-alex.shi@linux.alibaba.com>
 References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1598273705-69124-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
+Cc: Alexander Duyck <alexander.h.duyck@linux.intel.com>, Stephen Rothwell <sfr@canb.auug.org.au>
 
-In the func munlock_vma_page, the page must be PageLocked as well as
-pages in split_huge_page series funcs. Thus the PageLocked is enough
-to serialize both funcs.
+From: Alexander Duyck <alexander.h.duyck@linux.intel.com>
 
-So we could relief the TestClearPageMlocked/hpage_nr_pages which are not
-necessary under lru lock.
+We can drop the need for the locked variable by making use of the
+lruvec_holds_page_lru_lock function. By doing this we can avoid some rcu
+locking ugliness for the case where the lruvec is still holding the LRU
+lock associated with the page. Instead we can just use the lruvec and if it
+is NULL we assume the lock was released.
 
-As to another munlock func __munlock_pagevec, which no PageLocked
-protection and should remain lru protecting.
-
-Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Kirill A. Shutemov <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Signed-off-by: Alexander Duyck <alexander.h.duyck@linux.intel.com>
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
 ---
- mm/mlock.c | 41 +++++++++++++++--------------------------
- 1 file changed, 15 insertions(+), 26 deletions(-)
+ mm/compaction.c | 46 +++++++++++++++++++++-------------------------
+ 1 file changed, 21 insertions(+), 25 deletions(-)
 
-diff --git a/mm/mlock.c b/mm/mlock.c
-index 0448409184e3..46a05e6ec5ba 100644
---- a/mm/mlock.c
-+++ b/mm/mlock.c
-@@ -69,9 +69,9 @@ void clear_page_mlock(struct page *page)
- 	 *
- 	 * See __pagevec_lru_add_fn for more explanation.
- 	 */
--	if (!isolate_lru_page(page)) {
-+	if (!isolate_lru_page(page))
- 		putback_lru_page(page);
--	} else {
-+	else {
- 		/*
- 		 * We lost the race. the page already moved to evictable list.
- 		 */
-@@ -178,7 +178,6 @@ static void __munlock_isolation_failed(struct page *page)
- unsigned int munlock_vma_page(struct page *page)
+diff --git a/mm/compaction.c b/mm/compaction.c
+index b724eacf6421..6bf5ccd8fcf6 100644
+--- a/mm/compaction.c
++++ b/mm/compaction.c
+@@ -803,9 +803,8 @@ static bool too_many_isolated(pg_data_t *pgdat)
  {
- 	int nr_pages;
+ 	pg_data_t *pgdat = cc->zone->zone_pgdat;
+ 	unsigned long nr_scanned = 0, nr_isolated = 0;
 -	struct lruvec *lruvec;
++	struct lruvec *lruvec = NULL;
+ 	unsigned long flags = 0;
+-	struct lruvec *locked = NULL;
+ 	struct page *page = NULL, *valid_page = NULL;
+ 	unsigned long start_pfn = low_pfn;
+ 	bool skip_on_failure = false;
+@@ -866,9 +865,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 		 * a fatal signal is pending.
+ 		 */
+ 		if (!(low_pfn % SWAP_CLUSTER_MAX)) {
+-			if (locked) {
+-				unlock_page_lruvec_irqrestore(locked, flags);
+-				locked = NULL;
++			if (lruvec) {
++				unlock_page_lruvec_irqrestore(lruvec, flags);
++				lruvec = NULL;
+ 			}
  
- 	/* For try_to_munlock() and to serialize with page migration */
- 	BUG_ON(!PageLocked(page));
-@@ -186,37 +185,22 @@ unsigned int munlock_vma_page(struct page *page)
- 	VM_BUG_ON_PAGE(PageTail(page), page);
+ 			if (fatal_signal_pending(current)) {
+@@ -949,9 +948,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 			 */
+ 			if (unlikely(__PageMovable(page)) &&
+ 					!PageIsolated(page)) {
+-				if (locked) {
+-					unlock_page_lruvec_irqrestore(locked, flags);
+-					locked = NULL;
++				if (lruvec) {
++					unlock_page_lruvec_irqrestore(lruvec, flags);
++					lruvec = NULL;
+ 				}
  
- 	/*
--	 * Serialize split tail pages in __split_huge_page_tail() which
--	 * might otherwise copy PageMlocked to part of the tail pages before
--	 * we clear it in the head page. It also stabilizes thp_nr_pages().
--	 * TestClearPageLRU can't be used here to block page isolation, since
--	 * out of lock clear_page_mlock may interfer PageLRU/PageMlocked
--	 * sequence, same as __pagevec_lru_add_fn, and lead the page place to
--	 * wrong lru list here. So relay on PageLocked to stop lruvec change
--	 * in mem_cgroup_move_account().
-+	 * Serialize split tail pages in __split_huge_page_tail() by
-+	 * lock_page(); Do TestClearPageMlocked/PageLRU sequence like
-+	 * clear_page_mlock().
- 	 */
--	lruvec = lock_page_lruvec_irq(page);
+ 				if (!isolate_movable_page(page, isolate_mode))
+@@ -992,16 +991,14 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 		if (!TestClearPageLRU(page))
+ 			goto isolate_fail_put;
+ 
+-		rcu_read_lock();
+-		lruvec = mem_cgroup_page_lruvec(page, pgdat);
 -
--	if (!TestClearPageMlocked(page)) {
-+	if (!TestClearPageMlocked(page))
- 		/* Potentially, PTE-mapped THP: do not skip the rest PTEs */
--		nr_pages = 1;
--		goto unlock_out;
--	}
-+		return 0;
+ 		/* If we already hold the lock, we can skip some rechecking */
+-		if (lruvec != locked) {
+-			if (locked)
+-				unlock_page_lruvec_irqrestore(locked, flags);
++		if (!lruvec || !lruvec_holds_page_lru_lock(page, lruvec)) {
++			if (lruvec)
++				unlock_page_lruvec_irqrestore(lruvec, flags);
  
- 	nr_pages = thp_nr_pages(page);
- 	__mod_zone_page_state(page_zone(page), NR_MLOCK, -nr_pages);
++			rcu_read_lock();
++			lruvec = mem_cgroup_page_lruvec(page, pgdat);
+ 			compact_lock_irqsave(&lruvec->lru_lock, &flags, cc);
+-			locked = lruvec;
+ 			rcu_read_unlock();
  
--	if (__munlock_isolate_lru_page(page, lruvec, true)) {
--		unlock_page_lruvec_irq(lruvec);
-+	if (!isolate_lru_page(page))
- 		__munlock_isolated_page(page);
--		goto out;
--	}
--	__munlock_isolation_failed(page);
--
--unlock_out:
--	unlock_page_lruvec_irq(lruvec);
-+	else
-+		__munlock_isolation_failed(page);
+ 			lruvec_memcg_debug(lruvec, page);
+@@ -1023,8 +1020,7 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 				SetPageLRU(page);
+ 				goto isolate_fail_put;
+ 			}
+-		} else
+-			rcu_read_unlock();
++		}
  
--out:
- 	return nr_pages - 1;
- }
+ 		/* The whole page is taken off the LRU; skip the tail pages. */
+ 		if (PageCompound(page))
+@@ -1057,9 +1053,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
  
-@@ -305,6 +289,11 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ isolate_fail_put:
+ 		/* Avoid potential deadlock in freeing page under lru_lock */
+-		if (locked) {
+-			unlock_page_lruvec_irqrestore(locked, flags);
+-			locked = NULL;
++		if (lruvec) {
++			unlock_page_lruvec_irqrestore(lruvec, flags);
++			lruvec = NULL;
+ 		}
+ 		put_page(page);
  
- 		/* block memcg change in mem_cgroup_move_account */
- 		lock_page_memcg(page);
-+		/*
-+		 * Serialize split tail pages in __split_huge_page_tail() which
-+		 * might otherwise copy PageMlocked to part of the tail pages
-+		 * before we clear it in the head page.
-+		 */
- 		lruvec = relock_page_lruvec_irq(page, lruvec);
- 		if (TestClearPageMlocked(page)) {
- 			/*
+@@ -1073,9 +1069,9 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 		 * page anyway.
+ 		 */
+ 		if (nr_isolated) {
+-			if (locked) {
+-				unlock_page_lruvec_irqrestore(locked, flags);
+-				locked = NULL;
++			if (lruvec) {
++				unlock_page_lruvec_irqrestore(lruvec, flags);
++				lruvec = NULL;
+ 			}
+ 			putback_movable_pages(&cc->migratepages);
+ 			cc->nr_migratepages = 0;
+@@ -1102,8 +1098,8 @@ static bool too_many_isolated(pg_data_t *pgdat)
+ 	page = NULL;
+ 
+ isolate_abort:
+-	if (locked)
+-		unlock_page_lruvec_irqrestore(locked, flags);
++	if (lruvec)
++		unlock_page_lruvec_irqrestore(lruvec, flags);
+ 	if (page) {
+ 		SetPageLRU(page);
+ 		put_page(page);
 -- 
 1.8.3.1
 
