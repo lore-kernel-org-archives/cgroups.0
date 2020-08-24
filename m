@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v18 11/32] mm/memcg: add debug checking in lock_page_memcg
-Date: Mon, 24 Aug 2020 20:54:44 +0800
-Message-ID: <1598273705-69124-12-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v18 04/32] mm/thp: clean up lru_add_page_tail
+Date: Mon, 24 Aug 2020 20:54:37 +0800
+Message-ID: <1598273705-69124-5-git-send-email-alex.shi@linux.alibaba.com>
 References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -11,41 +11,52 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
-Cc: Michal Hocko <mhocko@kernel.org>
 
-Add a debug checking in lock_page_memcg, then we could get alarm
-if anything wrong here.
+Since the first parameter is only used by head page, it's better to make
+it explicit.
 
-Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Reviewed-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: cgroups@vger.kernel.org
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Hugh Dickins <hughd@google.com>
 Cc: linux-mm@kvack.org
 Cc: linux-kernel@vger.kernel.org
 ---
- mm/memcontrol.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ mm/huge_memory.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 5974b449d783..505f54087e82 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2098,6 +2098,12 @@ struct mem_cgroup *lock_page_memcg(struct page *page)
- 	if (unlikely(!memcg))
- 		return NULL;
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 84fb64e8faa1..739497770a3d 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2313,19 +2313,19 @@ static void remap_page(struct page *page)
+ 	}
+ }
  
-+#ifdef CONFIG_PROVE_LOCKING
-+	local_irq_save(flags);
-+	might_lock(&memcg->move_lock);
-+	local_irq_restore(flags);
-+#endif
-+
- 	if (atomic_read(&memcg->moving_account) <= 0)
- 		return memcg;
+-static void lru_add_page_tail(struct page *page, struct page *page_tail,
++static void lru_add_page_tail(struct page *head, struct page *page_tail,
+ 				struct lruvec *lruvec, struct list_head *list)
+ {
+-	VM_BUG_ON_PAGE(!PageHead(page), page);
+-	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
+-	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
++	VM_BUG_ON_PAGE(!PageHead(head), head);
++	VM_BUG_ON_PAGE(PageCompound(page_tail), head);
++	VM_BUG_ON_PAGE(PageLRU(page_tail), head);
+ 	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
  
+ 	if (!list)
+ 		SetPageLRU(page_tail);
+ 
+-	if (likely(PageLRU(page)))
+-		list_add_tail(&page_tail->lru, &page->lru);
++	if (likely(PageLRU(head)))
++		list_add_tail(&page_tail->lru, &head->lru);
+ 	else if (list) {
+ 		/* page reclaim is reclaiming a huge page */
+ 		get_page(page_tail);
 -- 
 1.8.3.1
 
