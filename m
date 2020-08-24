@@ -1,87 +1,60 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v18 15/32] mm/lru: move lock into lru_note_cost
-Date: Mon, 24 Aug 2020 20:54:48 +0800
-Message-ID: <1598273705-69124-16-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH v18 31/32] mm: Add explicit page decrement in exception path for isolate_lru_pages
+Date: Mon, 24 Aug 2020 20:55:04 +0800
+Message-ID: <1598273705-69124-32-git-send-email-alex.shi@linux.alibaba.com>
 References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1598273705-69124-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-We have to move lru_lock into lru_note_cost, since it cycle up on memcg
-tree, for future per lruvec lru_lock replace. It's a bit ugly and may
-cost a bit more locking, but benefit from multiple memcg locking could
-cover the lost.
+From: Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org
+In isolate_lru_pages we have an exception path where if we call
+get_page_unless_zero and that succeeds, but TestClearPageLRU fails we call
+put_page. Normally this would be problematic but due to the way that the
+calls are ordered and the fact that we are holding the LRU lock we know
+that the caller must be holding another reference for the page. Since we
+can assume that we can replace the put_page with a call to
+put_page_testzero contained within a WARN_ON. By doing this we should see
+if we ever leak a page as a result of the reference count somehow hitting
+zero when it shouldn't, and can avoid the overhead and confusion of using
+the full put_page call.
+
+Signed-off-by: Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 ---
- mm/swap.c   | 5 +++--
- mm/vmscan.c | 4 +---
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ mm/vmscan.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/mm/swap.c b/mm/swap.c
-index 906255db6006..f80ccd6f3cb4 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -269,7 +269,9 @@ void lru_note_cost(struct lruvec *lruvec, bool file, unsigned int nr_pages)
- {
- 	do {
- 		unsigned long lrusize;
-+		struct pglist_data *pgdat = lruvec_pgdat(lruvec);
- 
-+		spin_lock_irq(&pgdat->lru_lock);
- 		/* Record cost event */
- 		if (file)
- 			lruvec->file_cost += nr_pages;
-@@ -293,15 +295,14 @@ void lru_note_cost(struct lruvec *lruvec, bool file, unsigned int nr_pages)
- 			lruvec->file_cost /= 2;
- 			lruvec->anon_cost /= 2;
- 		}
-+		spin_unlock_irq(&pgdat->lru_lock);
- 	} while ((lruvec = parent_lruvec(lruvec)));
- }
- 
- void lru_note_cost_page(struct page *page)
- {
--	spin_lock_irq(&page_pgdat(page)->lru_lock);
- 	lru_note_cost(mem_cgroup_page_lruvec(page, page_pgdat(page)),
- 		      page_is_file_lru(page), thp_nr_pages(page));
--	spin_unlock_irq(&page_pgdat(page)->lru_lock);
- }
- 
- static void __activate_page(struct page *page, struct lruvec *lruvec)
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index ffccb94defaf..7b7b36bd1448 100644
+index 601fbcb994fb..604240303ea2 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -1971,19 +1971,17 @@ static int current_may_throttle(void)
- 				&stat, false);
+@@ -1688,10 +1688,13 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
  
- 	spin_lock_irq(&pgdat->lru_lock);
--
- 	move_pages_to_lru(lruvec, &page_list);
- 
- 	__mod_node_page_state(pgdat, NR_ISOLATED_ANON + file, -nr_taken);
--	lru_note_cost(lruvec, file, stat.nr_pageout);
- 	item = current_is_kswapd() ? PGSTEAL_KSWAPD : PGSTEAL_DIRECT;
- 	if (!cgroup_reclaim(sc))
- 		__count_vm_events(item, nr_reclaimed);
- 	__count_memcg_events(lruvec_memcg(lruvec), item, nr_reclaimed);
- 	__count_vm_events(PGSTEAL_ANON + file, nr_reclaimed);
--
- 	spin_unlock_irq(&pgdat->lru_lock);
- 
-+	lru_note_cost(lruvec, file, stat.nr_pageout);
- 	mem_cgroup_uncharge_list(&page_list);
- 	free_unref_page_list(&page_list);
+ 			if (!TestClearPageLRU(page)) {
+ 				/*
+-				 * This page may in other isolation path,
+-				 * but we still hold lru_lock.
++				 * This page is being isolated in another
++				 * thread, but we still hold lru_lock. The
++				 * other thread must be holding a reference
++				 * to the page so this should never hit a
++				 * reference count of 0.
+ 				 */
+-				put_page(page);
++				WARN_ON(put_page_testzero(page));
+ 				goto busy;
+ 			}
  
 -- 
 1.8.3.1
