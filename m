@@ -1,38 +1,42 @@
-From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Subject: Re: [PATCH v18 00/32] per memcg lru_lock
-Date: Tue, 25 Aug 2020 12:39:10 +0100
-Message-ID: <20200825113910.GM17456@casper.infradead.org>
+Date: Tue, 25 Aug 2020 21:00:13 +0800
+Message-ID: <d6127d13-0997-3f9d-3c35-1fe453fc6a12@linux.alibaba.com>
 References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
  <20200824114204.cc796ca182db95809dd70a47@linux-foundation.org>
  <alpine.LSU.2.11.2008241231460.1065@eggly.anvils>
  <20200825015627.3c3pnwauqznnp3gc@ca-dmjordan1.us.oracle.com>
- <ec62a835-f79d-2b8c-99c7-120834703b42@linux.alibaba.com>
+ <4cc9f54a-9eda-9966-df9a-a00bc9e88f4c@linux.alibaba.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=8tGP1JPc7jordcLr9GYgEH1sQIAUBACeH7562OxDjxY=; b=jh69tqh9e33dVk1UNLhHRmhHiL
-        7OpafBoQ9WlgiW0XNhW64zL1/ETCzp6H4vvEfMB0rWyBOhhR6m6y1f2K8Rm1ANxQ7MfYlSy9BRKBJ
-        0w+5LDlcoKVpEjuSnMGW4tmb3C2UlWZQBKcZs8cryVhqimrR+Bo1XNrvqh8dWMIinKhxaW3hvf/9Y
-        CwqVStNBSBzAiL1dc7uTBWj97LHP8X1bdfHGsABFRj2uE+jdoEwWe8k2GC7wQXV5LKDDEEPlA1adh
-        /aBCHjF34Wg1fJhQNag+xJ6RKYboemMzFYE4Rot8gJswaDDR7LSF6lLLlUCrLc7JS3IZYlIeULqSn
-        LhCnHHdw==;
-Content-Disposition: inline
-In-Reply-To: <ec62a835-f79d-2b8c-99c7-120834703b42-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+In-Reply-To: <4cc9f54a-9eda-9966-df9a-a00bc9e88f4c-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Type: text/plain; charset="gb2312"
+To: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Tue, Aug 25, 2020 at 11:26:58AM +0800, Alex Shi wrote:
-> I tried reusing page->prviate to store lruvec pointer, that could remove some 
-> regression on this, since private is generally unused on a lru page. But the patch
-> is too buggy now. 
-
-page->private is for the use of the filesystem.  You can grep for
-attach_page_private() to see how most filesystems use it.
-Some still use set_page_private() for various reasons.
+CgrU2iAyMDIwLzgvMjUgz8LO5zQ6NTIsIEFsZXggU2hpINC0tcA6Cj4gCj4g1NogMjAyMC84LzI1
+IMnPzuc5OjU2LCBEYW5pZWwgSm9yZGFuINC0tcA6Cj4+IE9uIE1vbiwgQXVnIDI0LCAyMDIwIGF0
+IDAxOjI0OjIwUE0gLTA3MDAsIEh1Z2ggRGlja2lucyB3cm90ZToKPj4+IE9uIE1vbiwgMjQgQXVn
+IDIwMjAsIEFuZHJldyBNb3J0b24gd3JvdGU6Cj4+Pj4gT24gTW9uLCAyNCBBdWcgMjAyMCAyMDo1
+NDozMyArMDgwMCBBbGV4IFNoaSA8YWxleC5zaGktS1Bzb0ZiTnM3R2l6ckdFNWJScVlBZ0MvRzJL
+NHpESGZAcHVibGljLmdtYW5lLm9yZz4gd3JvdGU6Cj4+PiBBbmRyZXcgZGVtdXJyZWQgb24gdmVy
+c2lvbiAxNyBmb3IgbGFjayBvZiByZXZpZXcuICBBbGV4YW5kZXIgRHV5Y2sgaGFzCj4+PiBiZWVu
+IGRvaW5nIGEgbG90IG9uIHRoYXQgZnJvbnQgc2luY2UgdGhlbi4gIEkgaGF2ZSBpbnRlbmRlZCB0
+byBkbyBzbywKPj4+IGJ1dCBpdCdzIGEgbWlyYWdlIHRoYXQgbW92ZXMgYXdheSBmcm9tIG1lIGFz
+IEkgbW92ZSB0b3dhcmRzIGl0OiBJIGhhdmUKPj4gU2FtZSwgSSBoYXZlbid0IGJlZW4gYWJsZSB0
+byBrZWVwIHVwIHdpdGggdGhlIHZlcnNpb25zIG9yIHRoZSByZWNlbnQgcmV2aWV3Cj4+IGZlZWRi
+YWNrLiAgSSBnb3QgdGhyb3VnaCBhYm91dCBoYWxmIG9mIHYxNyBsYXN0IHdlZWsgYW5kIGhvcGUg
+dG8gaGF2ZSBtb3JlIHRpbWUKPj4gZm9yIHRoZSByZXN0IHRoaXMgd2VlayBhbmQgYmV5b25kLgo+
+Pgo+Pj4+PiBGb2xsb3dpbmcgRGFuaWVsIEpvcmRhbidzIHN1Z2dlc3Rpb24sIEkgaGF2ZSBydW4g
+MjA4ICdkZCcgd2l0aCBvbiAxMDQKPj4+Pj4gY29udGFpbmVycyBvbiBhIDJzICogMjZjb3JlcyAq
+IEhUIGJveCB3aXRoIGEgbW9kZWZpZWQgY2FzZToKPj4gQWxleCwgZG8geW91IGhhdmUgYSBwb2lu
+dGVyIHRvIHRoZSBtb2RpZmllZCByZWFkdHdpY2UgY2FzZT8KPj4KPiBIaSBEYW5pZWwsCj4gCj4g
+bXkgcmVhZHR3aWNlIG1vZGlmaWNhdGlvbiBsaWtlIGJlbG93Lgo+IAo+IGRpZmYgLS1naXQgYS9j
+YXNlLWxydS1maWxlLXJlYWR0d2ljZSBiL2Nhc2UtbHJ1LWZpbGUtcmVhZHR3aWNlCgpIaSBEaW5p
+ZWwsCgpJIGZpbmFsbHkgc2V0dGxlIGRvd24gbXkgY29udGFpbmVyLCBhbmQgZm91bmQgSSBnaXZl
+IGEgZGlmZmVyZW50IHZlcnNpb24gb2YgbXkgc2NyaXB0cwp3aGljaCBjYW4ndCB3b3JrIG91dCB0
+b2dldGhlci4gSSBhbSBzb3JyeSEKCkkgd2lsbCB0cnkgdG8gYnJpbmcgdGhlbSB1cCB0b2dldGhl
+ci4gYW5kIHRyeSB0byBnaXZlIGEgbmV3IHZlcnNpb24uCgpUaGFua3MgYSBsb3QhCkFsZXgK
