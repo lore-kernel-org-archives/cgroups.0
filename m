@@ -1,150 +1,54 @@
-From: syzbot <syzbot+9b1ff7be974a403aa4cd@syzkaller.appspotmail.com>
-Subject: KASAN: use-after-free Read in cgroup_path_ns
-Date: Mon, 24 Aug 2020 23:03:19 -0700
-Message-ID: <000000000000bdc03705adad758d@google.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v18 00/32] per memcg lru_lock
+Date: Tue, 25 Aug 2020 09:21:34 +0200
+Message-ID: <20200825072134.GA22869@dhcp22.suse.cz>
+References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
+ <20200824114204.cc796ca182db95809dd70a47@linux-foundation.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20200824114204.cc796ca182db95809dd70a47-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: andriin@fb.com, ast@kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, christian@brauner.io, daniel@iogearbox.net, hannes@cmpxchg.org, john.fastabend@gmail.com, kafai@fb.com, kpsingh@chromium.org, linux-kernel@vger.kernel.org, lizefan@huawei.com, netdev@vger.kernel.org, songliubraving@fb.com, syzkaller-bugs@googlegroups.com, tj@kernel.org, yhs@fb.com
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-Hello,
+On Mon 24-08-20 11:42:04, Andrew Morton wrote:
+> On Mon, 24 Aug 2020 20:54:33 +0800 Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org> wrote:
+> 
+> > The new version which bases on v5.9-rc2. The first 6 patches was picked into
+> > linux-mm, and add patch 25-32 that do some further post optimization.
+> 
+> 32 patches, version 18.  That's quite heroic.  I'm unsure whether I
+> should merge it up at this point - what do people think?
 
-syzbot found the following issue on:
+This really needs a proper review. Unfortunately
+: 24 files changed, 646 insertions(+), 443 deletions(-)
+is quite an undertaking to review as well. Especially in a tricky code
+which is full of surprises.
 
-HEAD commit:    da2968ff Merge tag 'pci-v5.9-fixes-1' of git://git.kernel...
-git tree:       upstream
-console output: https://syzkaller.appspot.com/x/log.txt?x=159763ce900000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=bb68b9e8a8cc842f
-dashboard link: https://syzkaller.appspot.com/bug?extid=9b1ff7be974a403aa4cd
-compiler:       clang version 10.0.0 (https://github.com/llvm/llvm-project/ c2443155a0fb245c8f17f2c1c72b6ea391e86e81)
+I do agree that per memcg locking looks like a nice feature but I do not
+see any pressing reason to merge it ASAP. The cover letter doesn't
+really describe any pressing usecase that cannot really live without
+this being merged.
 
-Unfortunately, I don't have any reproducer for this issue yet.
+I am fully aware of my dept to review but I simply cannot find enough
+time to sit on it and think it through to have a meaningful feedback at
+this moment.
 
-IMPORTANT: if you fix the issue, please add the following tag to the commit:
-Reported-by: syzbot+9b1ff7be974a403aa4cd@syzkaller.appspotmail.com
+> > Following Daniel Jordan's suggestion, I have run 208 'dd' with on 104
+> > containers on a 2s * 26cores * HT box with a modefied case:
+> > https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/tree/case-lru-file-readtwice
+> > With this patchset, the readtwice performance increased about 80%
+> > in concurrent containers.
+> 
+> That's rather a slight amount of performance testing for a huge
+> performance patchset!  Is more detailed testing planned?
 
-==================================================================
-BUG: KASAN: use-after-free in cgroup_path_ns_locked kernel/cgroup/cgroup.c:2220 [inline]
-BUG: KASAN: use-after-free in cgroup_path_ns+0x76/0x100 kernel/cgroup/cgroup.c:2233
-Read of size 8 at addr ffff8880978fc2b8 by task syz-executor.1/9658
+Agreed! This needs much better testing coverage.
 
-CPU: 1 PID: 9658 Comm: syz-executor.1 Not tainted 5.9.0-rc1-syzkaller #0
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 01/01/2011
-Call Trace:
- __dump_stack lib/dump_stack.c:77 [inline]
- dump_stack+0x1f0/0x31e lib/dump_stack.c:118
- print_address_description+0x66/0x620 mm/kasan/report.c:383
- __kasan_report mm/kasan/report.c:513 [inline]
- kasan_report+0x132/0x1d0 mm/kasan/report.c:530
- cgroup_path_ns_locked kernel/cgroup/cgroup.c:2220 [inline]
- cgroup_path_ns+0x76/0x100 kernel/cgroup/cgroup.c:2233
- proc_cpuset_show+0x5d4/0x660 kernel/cgroup/cpuset.c:3599
- proc_single_show+0xf6/0x180 fs/proc/base.c:775
- seq_read+0x41a/0xce0 fs/seq_file.c:208
- do_loop_readv_writev fs/read_write.c:734 [inline]
- do_iter_read+0x438/0x620 fs/read_write.c:955
- vfs_readv fs/read_write.c:1073 [inline]
- do_preadv+0x17b/0x290 fs/read_write.c:1165
- do_syscall_64+0x31/0x70 arch/x86/entry/common.c:46
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
-RIP: 0033:0x45d4d9
-Code: 5d b4 fb ff c3 66 2e 0f 1f 84 00 00 00 00 00 66 90 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 0f 83 2b b4 fb ff c3 66 2e 0f 1f 84 00 00 00 00
-RSP: 002b:00007f8a3ac8fc78 EFLAGS: 00000246 ORIG_RAX: 0000000000000127
-RAX: ffffffffffffffda RBX: 0000000000025780 RCX: 000000000045d4d9
-RDX: 00000000000003da RSI: 00000000200017c0 RDI: 0000000000000004
-RBP: 000000000118cf90 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000246 R12: 000000000118cf4c
-R13: 00007fffc35f745f R14: 00007f8a3ac909c0 R15: 000000000118cf4c
-
-Allocated by task 1:
- kasan_save_stack mm/kasan/common.c:48 [inline]
- kasan_set_track mm/kasan/common.c:56 [inline]
- __kasan_kmalloc+0x100/0x130 mm/kasan/common.c:461
- kmem_cache_alloc_trace+0x1f6/0x2f0 mm/slab.c:3550
- kmalloc include/linux/slab.h:554 [inline]
- kzalloc include/linux/slab.h:666 [inline]
- cgroup1_root_to_use kernel/cgroup/cgroup-v1.c:1183 [inline]
- cgroup1_get_tree+0x747/0xae0 kernel/cgroup/cgroup-v1.c:1207
- vfs_get_tree+0x88/0x270 fs/super.c:1547
- do_new_mount fs/namespace.c:2875 [inline]
- path_mount+0x179d/0x29e0 fs/namespace.c:3192
- do_mount fs/namespace.c:3205 [inline]
- __do_sys_mount fs/namespace.c:3413 [inline]
- __se_sys_mount+0x126/0x180 fs/namespace.c:3390
- do_syscall_64+0x31/0x70 arch/x86/entry/common.c:46
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
-
-Freed by task 8157:
- kasan_save_stack mm/kasan/common.c:48 [inline]
- kasan_set_track+0x3d/0x70 mm/kasan/common.c:56
- kasan_set_free_info+0x17/0x30 mm/kasan/generic.c:355
- __kasan_slab_free+0xdd/0x110 mm/kasan/common.c:422
- __cache_free mm/slab.c:3418 [inline]
- kfree+0x10a/0x220 mm/slab.c:3756
- process_one_work+0x789/0xfc0 kernel/workqueue.c:2269
- worker_thread+0xaa4/0x1460 kernel/workqueue.c:2415
- kthread+0x37e/0x3a0 drivers/block/aoe/aoecmd.c:1234
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
-
-Last call_rcu():
- kasan_save_stack+0x27/0x50 mm/kasan/common.c:48
- kasan_record_aux_stack+0x7b/0xb0 mm/kasan/generic.c:346
- __call_rcu kernel/rcu/tree.c:2894 [inline]
- call_rcu+0x139/0x840 kernel/rcu/tree.c:2968
- queue_rcu_work+0x74/0x90 kernel/workqueue.c:1747
- process_one_work+0x789/0xfc0 kernel/workqueue.c:2269
- worker_thread+0xaa4/0x1460 kernel/workqueue.c:2415
- kthread+0x37e/0x3a0 drivers/block/aoe/aoecmd.c:1234
- ret_from_fork+0x1f/0x30 arch/x86/entry/entry_64.S:294
-
-Second to last call_rcu():
- kasan_save_stack+0x27/0x50 mm/kasan/common.c:48
- kasan_record_aux_stack+0x7b/0xb0 mm/kasan/generic.c:346
- __call_rcu kernel/rcu/tree.c:2894 [inline]
- call_rcu+0x139/0x840 kernel/rcu/tree.c:2968
- __percpu_ref_switch_to_atomic lib/percpu-refcount.c:192 [inline]
- __percpu_ref_switch_mode+0x2c1/0x4f0 lib/percpu-refcount.c:237
- percpu_ref_kill_and_confirm+0x8f/0x130 lib/percpu-refcount.c:350
- percpu_ref_kill include/linux/percpu-refcount.h:136 [inline]
- cgroup_kill_sb+0xea/0x160 kernel/cgroup/cgroup.c:2152
- deactivate_locked_super+0xa7/0xf0 fs/super.c:335
- cleanup_mnt+0x432/0x4e0 fs/namespace.c:1118
- task_work_run+0x137/0x1c0 kernel/task_work.c:141
- tracehook_notify_resume include/linux/tracehook.h:188 [inline]
- exit_to_user_mode_loop kernel/entry/common.c:139 [inline]
- exit_to_user_mode_prepare+0xfa/0x1b0 kernel/entry/common.c:166
- syscall_exit_to_user_mode+0x5e/0x1a0 kernel/entry/common.c:241
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
-
-The buggy address belongs to the object at ffff8880978fc000
- which belongs to the cache kmalloc-8k of size 8192
-The buggy address is located 696 bytes inside of
- 8192-byte region [ffff8880978fc000, ffff8880978fe000)
-The buggy address belongs to the page:
-page:00000000ab04f694 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x978fc
-head:00000000ab04f694 order:2 compound_mapcount:0 compound_pincount:0
-flags: 0xfffe0000010200(slab|head)
-raw: 00fffe0000010200 ffffea00025e3108 ffffea00025e4808 ffff8880aa440a00
-raw: 0000000000000000 ffff8880978fc000 0000000100000001 0000000000000000
-page dumped because: kasan: bad access detected
-
-Memory state around the buggy address:
- ffff8880978fc180: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
- ffff8880978fc200: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
->ffff8880978fc280: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-                                        ^
- ffff8880978fc300: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
- ffff8880978fc380: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-==================================================================
-
-
----
-This report is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this issue. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+-- 
+Michal Hocko
+SUSE Labs
