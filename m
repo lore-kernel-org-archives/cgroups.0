@@ -1,54 +1,60 @@
 From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v18 00/32] per memcg lru_lock
-Date: Tue, 25 Aug 2020 09:21:34 +0200
-Message-ID: <20200825072134.GA22869@dhcp22.suse.cz>
-References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
- <20200824114204.cc796ca182db95809dd70a47@linux-foundation.org>
+Subject: Re: [Resend PATCH 1/6] mm/memcg: warning on !memcg after readahead
+ page charged
+Date: Tue, 25 Aug 2020 09:25:38 +0200
+Message-ID: <20200825072538.GB22869@dhcp22.suse.cz>
+References: <1597144232-11370-1-git-send-email-alex.shi@linux.alibaba.com>
+ <20200820145850.GA4622@lca.pw>
+ <20200821080127.GD32537@dhcp22.suse.cz>
+ <20200821123934.GA4314@lca.pw>
+ <20200821134842.GF32537@dhcp22.suse.cz>
+ <20200824151013.GB3415@dhcp22.suse.cz>
+ <12425e06-38ce-7ff4-28ce-b0418353fc67@linux.alibaba.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20200824114204.cc796ca182db95809dd70a47-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+In-Reply-To: <12425e06-38ce-7ff4-28ce-b0418353fc67-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Qian Cai <cai-J5quhbR+WMc@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nao.horiguchi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, osalvador-l3A5Bk7waGM@public.gmane.org, mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
 
-On Mon 24-08-20 11:42:04, Andrew Morton wrote:
-> On Mon, 24 Aug 2020 20:54:33 +0800 Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org> wrote:
+On Tue 25-08-20 09:25:01, Alex Shi wrote:
+> reproduce using our linux-mm random bug collection on NUMA systems.
+> >>
+> >> OK, I must have missed that this was on ppc. The order makes more sense
+> >> now. I will have a look at this next week.
+> > 
+> > OK, so I've had a look and I know what's going on there. The
+> > move_pages12 is migrating hugetlb pages. Those are not charged to any
+> > memcg. We have completely missed this case. There are two ways going
+> > around that. Drop the warning and update the comment so that we do not
+> > forget about that or special case hugetlb pages.
+> > 
+> > I think the first option is better.
+> > 
 > 
-> > The new version which bases on v5.9-rc2. The first 6 patches was picked into
-> > linux-mm, and add patch 25-32 that do some further post optimization.
 > 
-> 32 patches, version 18.  That's quite heroic.  I'm unsure whether I
-> should merge it up at this point - what do people think?
-
-This really needs a proper review. Unfortunately
-: 24 files changed, 646 insertions(+), 443 deletions(-)
-is quite an undertaking to review as well. Especially in a tricky code
-which is full of surprises.
-
-I do agree that per memcg locking looks like a nice feature but I do not
-see any pressing reason to merge it ASAP. The cover letter doesn't
-really describe any pressing usecase that cannot really live without
-this being merged.
-
-I am fully aware of my dept to review but I simply cannot find enough
-time to sit on it and think it through to have a meaningful feedback at
-this moment.
-
-> > Following Daniel Jordan's suggestion, I have run 208 'dd' with on 104
-> > containers on a 2s * 26cores * HT box with a modefied case:
-> > https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/tree/case-lru-file-readtwice
-> > With this patchset, the readtwice performance increased about 80%
-> > in concurrent containers.
+> Hi Michal,
 > 
-> That's rather a slight amount of performance testing for a huge
-> performance patchset!  Is more detailed testing planned?
+> Compare to ignore the warning which is designed to give, seems addressing
+> the hugetlb out of charge issue is a better solution, otherwise the memcg
+> memory usage is out of control on hugetlb, is that right?
 
-Agreed! This needs much better testing coverage.
+Hugetlb memory is out of memcg scope deliberately. This is not a
+reclaimable memory and something that can easily get out of control. The
+memory is preallocated and overcommit is strictly controlled as well. We
+have a dedicated hugetlb cgroup controller to offer a better control of
+the preallocated pool distribution.
 
+Anyway this just shows that there are more subtle cases where a page
+with no memcg can hit some common paths so the patch is clearly not
+ready.
+
+I should have realized that when giving my ack but same as you I got
+misled by the existing comment.
 -- 
 Michal Hocko
 SUSE Labs
