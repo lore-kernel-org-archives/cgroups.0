@@ -1,119 +1,38 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
+From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 Subject: Re: [PATCH v18 00/32] per memcg lru_lock
-Date: Tue, 25 Aug 2020 16:52:54 +0800
-Message-ID: <4cc9f54a-9eda-9966-df9a-a00bc9e88f4c@linux.alibaba.com>
+Date: Tue, 25 Aug 2020 12:39:10 +0100
+Message-ID: <20200825113910.GM17456@casper.infradead.org>
 References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
  <20200824114204.cc796ca182db95809dd70a47@linux-foundation.org>
  <alpine.LSU.2.11.2008241231460.1065@eggly.anvils>
  <20200825015627.3c3pnwauqznnp3gc@ca-dmjordan1.us.oracle.com>
+ <ec62a835-f79d-2b8c-99c7-120834703b42@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200825015627.3c3pnwauqznnp3gc@ca-dmjordan1.us.oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=8tGP1JPc7jordcLr9GYgEH1sQIAUBACeH7562OxDjxY=; b=jh69tqh9e33dVk1UNLhHRmhHiL
+        7OpafBoQ9WlgiW0XNhW64zL1/ETCzp6H4vvEfMB0rWyBOhhR6m6y1f2K8Rm1ANxQ7MfYlSy9BRKBJ
+        0w+5LDlcoKVpEjuSnMGW4tmb3C2UlWZQBKcZs8cryVhqimrR+Bo1XNrvqh8dWMIinKhxaW3hvf/9Y
+        CwqVStNBSBzAiL1dc7uTBWj97LHP8X1bdfHGsABFRj2uE+jdoEwWe8k2GC7wQXV5LKDDEEPlA1adh
+        /aBCHjF34Wg1fJhQNag+xJ6RKYboemMzFYE4Rot8gJswaDDR7LSF6lLLlUCrLc7JS3IZYlIeULqSn
+        LhCnHHdw==;
+Content-Disposition: inline
+In-Reply-To: <ec62a835-f79d-2b8c-99c7-120834703b42-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Daniel Jordan <daniel.m.jordan@oracle.com>, Hugh Dickins <hughd@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, mgorman@techsingularity.net, tj@kernel.org, khlebnikov@yandex-team.ru, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
+On Tue, Aug 25, 2020 at 11:26:58AM +0800, Alex Shi wrote:
+> I tried reusing page->prviate to store lruvec pointer, that could remove some 
+> regression on this, since private is generally unused on a lru page. But the patch
+> is too buggy now. 
 
-
-=D4=DA 2020/8/25 =C9=CF=CE=E79:56, Daniel Jordan =D0=B4=B5=C0:
-> On Mon, Aug 24, 2020 at 01:24:20PM -0700, Hugh Dickins wrote:
->> On Mon, 24 Aug 2020, Andrew Morton wrote:
->>> On Mon, 24 Aug 2020 20:54:33 +0800 Alex Shi <alex.shi@linux.alibaba.com=
-> wrote:
->> Andrew demurred on version 17 for lack of review.  Alexander Duyck has
->> been doing a lot on that front since then.  I have intended to do so,
->> but it's a mirage that moves away from me as I move towards it: I have
->=20
-> Same, I haven't been able to keep up with the versions or the recent revi=
-ew
-> feedback.  I got through about half of v17 last week and hope to have mor=
-e time
-> for the rest this week and beyond.
->=20
->>>> Following Daniel Jordan's suggestion, I have run 208 'dd' with on 104
->>>> containers on a 2s * 26cores * HT box with a modefied case:
->=20
-> Alex, do you have a pointer to the modified readtwice case?
->=20
-
-Hi Daniel,
-
-my readtwice modification like below.
-
-diff --git a/case-lru-file-readtwice b/case-lru-file-readtwice
-index 85533b248634..57cb97d121ae 100755
---- a/case-lru-file-readtwice
-+++ b/case-lru-file-readtwice
-@@ -15,23 +15,30 @@
-
- . ./hw_vars
-
--for i in `seq 1 $nr_task`
--do
--       create_sparse_file $SPARSE_FILE-$i $((ROTATE_BYTES / nr_task))
--       timeout --foreground -s INT ${runtime:-600} dd bs=3D4k if=3D$SPARSE=
-_FILE-$i of=3D/dev/null > $TMPFS_MNT/dd-output-1-$i 2>&1 &
--       timeout --foreground -s INT ${runtime:-600} dd bs=3D4k if=3D$SPARSE=
-_FILE-$i of=3D/dev/null > $TMPFS_MNT/dd-output-2-$i 2>&1 &
--done
-+OUT_DIR=3D$(hostname)-${nr_task}c-$(((mem + (1<<29))>>30))g
-+TEST_CASES=3D${@:-$(echo case-*)}
-+
-+echo $((1<<30)) > /proc/sys/vm/max_map_count
-+echo $((1<<20)) > /proc/sys/kernel/threads-max
-+echo 1 > /proc/sys/vm/overcommit_memory
-+#echo 3 > /proc/sys/vm/drop_caches
-+
-+
-+i=3D1
-+
-+if [ "$1" =3D=3D "m" ];then
-+       mount_tmpfs
-+       create_sparse_root
-+       create_sparse_file $SPARSE_FILE-$i $((ROTATE_BYTES))
-+       exit
-+fi
-+
-+
-+if [ "$1" =3D=3D "r" ];then
-+       (timeout --foreground -s INT ${runtime:-300} dd bs=3D4k if=3D$SPARS=
-E_FILE-$i of=3D/dev/null > $TMPFS_MNT/dd-output-1-$i 2>&1)&
-+       (timeout --foreground -s INT ${runtime:-300} dd bs=3D4k if=3D$SPARS=
-E_FILE-$i of=3D/dev/null > $TMPFS_MNT/dd-output-2-$i 2>&1)&
-+fi
-
- wait
- sleep 1
-
--for file in $TMPFS_MNT/dd-output-*
--do
--       [ -s "$file" ] || {
--               echo "dd output file empty: $file" >&2
--       }
--       cat $file
--       rm  $file
--done
--
--rm `seq -f $SPARSE_FILE-%g 1 $nr_task`
-diff --git a/hw_vars b/hw_vars
-index 8731cefb9f57..ceeaa9f17c0b 100755
---- a/hw_vars
-+++ b/hw_vars
-@@ -1,4 +1,4 @@
--#!/bin/sh
-+#!/bin/sh -ex
-
- if [ -n "$runtime" ]; then
-        USEMEM=3D"$CMD ./usemem --runtime $runtime"
-@@ -43,7 +43,7 @@ create_loop_devices()
-        modprobe loop 2>/dev/null
-        [ -e "/dev/loop0" ] || modprobe loop 2>/dev/null
-
--       for i in $(seq 0 8)
-+       for i in $(seq 0 104)
-        do
-                [ -e "/dev/loop$i" ] && continue
-                mknod /dev/loop$i b 7 $i
+page->private is for the use of the filesystem.  You can grep for
+attach_page_private() to see how most filesystems use it.
+Some still use set_page_private() for various reasons.
