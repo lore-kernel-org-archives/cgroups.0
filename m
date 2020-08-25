@@ -1,60 +1,119 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [Resend PATCH 1/6] mm/memcg: warning on !memcg after readahead
- page charged
-Date: Tue, 25 Aug 2020 09:25:38 +0200
-Message-ID: <20200825072538.GB22869@dhcp22.suse.cz>
-References: <1597144232-11370-1-git-send-email-alex.shi@linux.alibaba.com>
- <20200820145850.GA4622@lca.pw>
- <20200821080127.GD32537@dhcp22.suse.cz>
- <20200821123934.GA4314@lca.pw>
- <20200821134842.GF32537@dhcp22.suse.cz>
- <20200824151013.GB3415@dhcp22.suse.cz>
- <12425e06-38ce-7ff4-28ce-b0418353fc67@linux.alibaba.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: Re: [PATCH v18 00/32] per memcg lru_lock
+Date: Tue, 25 Aug 2020 16:52:54 +0800
+Message-ID: <4cc9f54a-9eda-9966-df9a-a00bc9e88f4c@linux.alibaba.com>
+References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
+ <20200824114204.cc796ca182db95809dd70a47@linux-foundation.org>
+ <alpine.LSU.2.11.2008241231460.1065@eggly.anvils>
+ <20200825015627.3c3pnwauqznnp3gc@ca-dmjordan1.us.oracle.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <12425e06-38ce-7ff4-28ce-b0418353fc67-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20200825015627.3c3pnwauqznnp3gc@ca-dmjordan1.us.oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Qian Cai <cai-J5quhbR+WMc@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nao.horiguchi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, osalvador-l3A5Bk7waGM@public.gmane.org, mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Daniel Jordan <daniel.m.jordan@oracle.com>, Hugh Dickins <hughd@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, mgorman@techsingularity.net, tj@kernel.org, khlebnikov@yandex-team.ru, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
 
-On Tue 25-08-20 09:25:01, Alex Shi wrote:
-> reproduce using our linux-mm random bug collection on NUMA systems.
-> >>
-> >> OK, I must have missed that this was on ppc. The order makes more sense
-> >> now. I will have a look at this next week.
-> > 
-> > OK, so I've had a look and I know what's going on there. The
-> > move_pages12 is migrating hugetlb pages. Those are not charged to any
-> > memcg. We have completely missed this case. There are two ways going
-> > around that. Drop the warning and update the comment so that we do not
-> > forget about that or special case hugetlb pages.
-> > 
-> > I think the first option is better.
-> > 
-> 
-> 
-> Hi Michal,
-> 
-> Compare to ignore the warning which is designed to give, seems addressing
-> the hugetlb out of charge issue is a better solution, otherwise the memcg
-> memory usage is out of control on hugetlb, is that right?
 
-Hugetlb memory is out of memcg scope deliberately. This is not a
-reclaimable memory and something that can easily get out of control. The
-memory is preallocated and overcommit is strictly controlled as well. We
-have a dedicated hugetlb cgroup controller to offer a better control of
-the preallocated pool distribution.
 
-Anyway this just shows that there are more subtle cases where a page
-with no memcg can hit some common paths so the patch is clearly not
-ready.
+=D4=DA 2020/8/25 =C9=CF=CE=E79:56, Daniel Jordan =D0=B4=B5=C0:
+> On Mon, Aug 24, 2020 at 01:24:20PM -0700, Hugh Dickins wrote:
+>> On Mon, 24 Aug 2020, Andrew Morton wrote:
+>>> On Mon, 24 Aug 2020 20:54:33 +0800 Alex Shi <alex.shi@linux.alibaba.com=
+> wrote:
+>> Andrew demurred on version 17 for lack of review.  Alexander Duyck has
+>> been doing a lot on that front since then.  I have intended to do so,
+>> but it's a mirage that moves away from me as I move towards it: I have
+>=20
+> Same, I haven't been able to keep up with the versions or the recent revi=
+ew
+> feedback.  I got through about half of v17 last week and hope to have mor=
+e time
+> for the rest this week and beyond.
+>=20
+>>>> Following Daniel Jordan's suggestion, I have run 208 'dd' with on 104
+>>>> containers on a 2s * 26cores * HT box with a modefied case:
+>=20
+> Alex, do you have a pointer to the modified readtwice case?
+>=20
 
-I should have realized that when giving my ack but same as you I got
-misled by the existing comment.
--- 
-Michal Hocko
-SUSE Labs
+Hi Daniel,
+
+my readtwice modification like below.
+
+diff --git a/case-lru-file-readtwice b/case-lru-file-readtwice
+index 85533b248634..57cb97d121ae 100755
+--- a/case-lru-file-readtwice
++++ b/case-lru-file-readtwice
+@@ -15,23 +15,30 @@
+
+ . ./hw_vars
+
+-for i in `seq 1 $nr_task`
+-do
+-       create_sparse_file $SPARSE_FILE-$i $((ROTATE_BYTES / nr_task))
+-       timeout --foreground -s INT ${runtime:-600} dd bs=3D4k if=3D$SPARSE=
+_FILE-$i of=3D/dev/null > $TMPFS_MNT/dd-output-1-$i 2>&1 &
+-       timeout --foreground -s INT ${runtime:-600} dd bs=3D4k if=3D$SPARSE=
+_FILE-$i of=3D/dev/null > $TMPFS_MNT/dd-output-2-$i 2>&1 &
+-done
++OUT_DIR=3D$(hostname)-${nr_task}c-$(((mem + (1<<29))>>30))g
++TEST_CASES=3D${@:-$(echo case-*)}
++
++echo $((1<<30)) > /proc/sys/vm/max_map_count
++echo $((1<<20)) > /proc/sys/kernel/threads-max
++echo 1 > /proc/sys/vm/overcommit_memory
++#echo 3 > /proc/sys/vm/drop_caches
++
++
++i=3D1
++
++if [ "$1" =3D=3D "m" ];then
++       mount_tmpfs
++       create_sparse_root
++       create_sparse_file $SPARSE_FILE-$i $((ROTATE_BYTES))
++       exit
++fi
++
++
++if [ "$1" =3D=3D "r" ];then
++       (timeout --foreground -s INT ${runtime:-300} dd bs=3D4k if=3D$SPARS=
+E_FILE-$i of=3D/dev/null > $TMPFS_MNT/dd-output-1-$i 2>&1)&
++       (timeout --foreground -s INT ${runtime:-300} dd bs=3D4k if=3D$SPARS=
+E_FILE-$i of=3D/dev/null > $TMPFS_MNT/dd-output-2-$i 2>&1)&
++fi
+
+ wait
+ sleep 1
+
+-for file in $TMPFS_MNT/dd-output-*
+-do
+-       [ -s "$file" ] || {
+-               echo "dd output file empty: $file" >&2
+-       }
+-       cat $file
+-       rm  $file
+-done
+-
+-rm `seq -f $SPARSE_FILE-%g 1 $nr_task`
+diff --git a/hw_vars b/hw_vars
+index 8731cefb9f57..ceeaa9f17c0b 100755
+--- a/hw_vars
++++ b/hw_vars
+@@ -1,4 +1,4 @@
+-#!/bin/sh
++#!/bin/sh -ex
+
+ if [ -n "$runtime" ]; then
+        USEMEM=3D"$CMD ./usemem --runtime $runtime"
+@@ -43,7 +43,7 @@ create_loop_devices()
+        modprobe loop 2>/dev/null
+        [ -e "/dev/loop0" ] || modprobe loop 2>/dev/null
+
+-       for i in $(seq 0 8)
++       for i in $(seq 0 104)
+        do
+                [ -e "/dev/loop$i" ] && continue
+                mknod /dev/loop$i b 7 $i
