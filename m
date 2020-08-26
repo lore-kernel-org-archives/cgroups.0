@@ -1,27 +1,28 @@
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH 6/8] mm: Convert find_get_entry to return
- the head page
-Date: Wed, 26 Aug 2020 16:48:59 +0100
-Message-ID: <20200826154859.GT17456@casper.infradead.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH 2/8] mm: Use find_get_swap_page in memcontrol
+Date: Wed, 26 Aug 2020 12:26:47 -0400
+Message-ID: <20200826162647.GA995045@cmpxchg.org>
 References: <20200819184850.24779-1-willy@infradead.org>
- <20200819184850.24779-7-willy@infradead.org>
- <20200826150925.GE988805@cmpxchg.org>
+ <20200819184850.24779-3-willy@infradead.org>
+ <20200826142002.GA988805@cmpxchg.org>
+ <20200826145414.GS17456@casper.infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
- References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
- Content-Transfer-Encoding:Content-ID:Content-Description;
- bh=I18u0dNCe4slxMxufMguyF6f9uk6YgWYDMxiYXb8r/M=; b=UkAgccpf8C57KDxqkodEH9olO/
- 1uRw550MvDayPZHtymBnFfxwmNtcgF2M6M96967ti7Q0kRqhAJD7EntbGZL40Lyy/dSXmziTiz7Hk
- lbnctZsn662cXzfd6hEb2utiYDSGSBQ9MMuBEMkU4epwpDT9aRW6rBD0kAE2/WhSDIlgYgN0uvYHv
- c5TtMuUjgUaaySu/tXn9XT3Fdu34TLsipV80GR1LCDvPxHlwYwEnRuupZUec5g7a9rqmgnBVv2OwM
- AfLYitWZTrvbKthc6NKOJtYTa0Bz0jsofeKe/qhWz/aTsyo6BYZPDxDJfSEiDV625F6g9O9aiVfKH
- 0a4QY2Ng==;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+ h=date:from:to:cc:subject:message-id:references:mime-version
+ :content-disposition:in-reply-to;
+ bh=+AffAjKsRXV4iuuUyWXhmFhrbRKp4ijCwhOH6K1QUoM=;
+ b=zTWK1kAaol1sXKzKa6Zh0erJPvRLYszBA6l3yTnCoVH1T8/16/AW1V2nsDX9y2EX9B
+ vDiOxAlRGWwrxcKHjAxU7j78zHdQwgGe/v70HlXNkP5X2hCozTh8lik5JFO2+R01Ei67
+ h9aE6og5sbeZ7AFl8Lu8+u4Ek1C+h9N66vnSS2jqAX7DwFlLUw8wTnH7RS4/hMhxJygL
+ N2Y5K4YgzBaAhiNjLgLPYJO5vbwE102QQsoK+Ha2mp3sz4VVikKedZRfUVAz/iWuX19Y
+ DmmVCSiYFWZc6j+9h4hnBnvooK7Kb0Jc2IWSn+vIp4ddlDhyvd2dEAXNN8LGa3SwG/Mw
+ 02QQ==
 Content-Disposition: inline
-In-Reply-To: <20200826150925.GE988805@cmpxchg.org>
+In-Reply-To: <20200826145414.GS17456@casper.infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
  <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
@@ -32,57 +33,59 @@ List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
  <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
 Errors-To: intel-gfx-bounces@lists.freedesktop.org
 Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Johannes Weiner <hannes@cmpxchg.org>
+To: Matthew Wilcox <willy@infradead.org>
 Cc: William Kucharski <william.kucharski@oracle.com>, intel-gfx@lists.freedesktop.org, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, Chris Wilson <chris@chris-wilson.co.uk>, linux-mm@kvack.org, Matthew Auld <matthew.auld@intel.com>, Huang Ying <ying.huang@intel.com>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>
 
-On Wed, Aug 26, 2020 at 11:09:25AM -0400, Johannes Weiner wrote:
-> On Wed, Aug 19, 2020 at 07:48:48PM +0100, Matthew Wilcox (Oracle) wrote:
-> > There are only three callers remaining of find_get_entry().
-> > find_get_swap_page() is happy to get the head page instead of the subpage.
-> > Add find_subpage() calls to find_lock_entry() and pagecache_get_page()
-> > to avoid auditing all their callers.
+On Wed, Aug 26, 2020 at 03:54:14PM +0100, Matthew Wilcox wrote:
+> On Wed, Aug 26, 2020 at 10:20:02AM -0400, Johannes Weiner wrote:
+> > On Wed, Aug 19, 2020 at 07:48:44PM +0100, Matthew Wilcox (Oracle) wrote:
+> > > +	return find_get_swap_page(vma->vm_file->f_mapping,
+> > > +			linear_page_index(vma, addr));
+> > 
+> > The refactor makes sense to me, but the name is confusing. We're not
+> > looking for a swap page, we're primarily looking for a file page in
+> > the page cache mapping that's handed in. Only in the special case
+> > where it's a shmem mapping and there is a swap entry do we consult the
+> > auxiliary swap cache.
+> > 
+> > How about find_get_page_or_swapcache()? find_get_page_shmemswap()?
+> > Maybe you have a better idea. It's a fairly specialized operation that
+> > isn't widely used, so a longer name isn't a bad thing IMO.
 > 
-> I believe this would cause a subtle bug in memcg charge moving for pte
-> mapped huge pages. We currently skip over tail pages in the range
-> (they don't have page->mem_cgroup set) and account for the huge page
-> once from the headpage. After this change, we would see the headpage
-> and account for it 512 times (or whatever the number is on non-x86).
-
-Hmm ... so if you have the last 511 pages of a huge page mapped, you
-actually don't charge for it at all today?
-
-I think you're right that I'd introduce this bug, and so that needs to
-be fixed.
-
-> But that aside, I don't quite understand the intent.
+> Yeah, I had trouble with the naming here too.
 > 
-> Before, all these functions simply return the base page at @index,
-> whether it's a regular page or a tail page.
+> get_page_even_from_swap()
+> find_get_shmem_page()
 > 
-> Afterwards, find_lock_entry(), find_get_page() et al still do, but
-> find_get_entry() returns headpage at @index & HPAGE_CACHE_INDEX_MASK.
+> or maybe refactor the whole thing:
 > 
-> Shouldn't we be consistent about how we handle huge pages when
-> somebody queries the tree for a given base page index?
+> 	struct page *page = find_get_entry(mapping, index);
+> 	page = find_swap_page(mapping, page);
 > 
-> [ Wouldn't that mean that e.g. find_get_swap_page() would return tail
->   pages for regular files and head pages for shmem files? ]
+> struct page *find_swap_page(struct address_space *mapping, struct page *page)
+> {
+> 	swp_entry_t swp;
+> 	struct swap_info_struct *si;
+> 
+> 	if (!xa_is_value(page))
+> 		return page;
+> 	if (!shmem_mapping(mapping))
+> 		return NULL;
+> 
+> 	...
+> }
 
-What I'd _like_ to do is convert all the callers to cope with tail
-pages never being returned from all the find_* functions.  That seems
-like a lot of disruption.
+Yeah, I like the idea of two lookups if we can't find a good name for
+the operation that combines them. I'd just bubble the control flow
+that links them up to the callsite - that still seems plenty compact
+for two callsites, and keeps all the shmem magic in shmem code:
 
-My intent in this series is to get all the find_*_entr{y,ies}
-functions to the point where they don't return tail pages.
-Also find_get_pages_tag() because tags are only set on head pages.
+	page = find_get_entry(mapping, index);
+	if (xa_is_value(page))
+		if (shmem_mapping(mapping))
+			page = lookup_shmem_swap_cache(page);
+		else
+			page = NULL;
 
-This is generally what the callers want anyway.  There's even a hack
-in find_get_entries() in current to terminate early on finding a THP
-(see commit 71725ed10c40696dc6bdccf8e225815dcef24dba).  If I want
-to remove that, I need to do _something_ to not put all the subpages
-of a THP into the pagevec.
-
-So the new rule will be that find_*_entry() don't return tail pages but
-find_*_page() do.  With the full THP patchset in place, THPs become quite
-common, so bugs in this area will surface quickly instead of lingering
-for years and only popping out in rare circumstances.
+So close to making radix_to_swp_entry() & co. private to shmem.c, too
+- if it weren't for force_shm_swapin_readahead(). Ah well.
