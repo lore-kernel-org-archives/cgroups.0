@@ -1,65 +1,137 @@
-From: Daniel Jordan <daniel.m.jordan@oracle.com>
-Subject: Re: [PATCH v18 00/32] per memcg lru_lock
-Date: Tue, 25 Aug 2020 21:19:46 -0400
-Message-ID: <20200826011946.spknwjt44d2szrdo@ca-dmjordan1.us.oracle.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH v18 25/32] mm/mlock: remove lru_lock on
+ TestClearPageMlocked in munlock_vma_page
+Date: Wed, 26 Aug 2020 13:52:18 +0800
+Message-ID: <b184e732-35b9-e6bb-e665-e7bea51b9a42@linux.alibaba.com>
 References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
- <20200824114204.cc796ca182db95809dd70a47@linux-foundation.org>
- <alpine.LSU.2.11.2008241231460.1065@eggly.anvils>
- <20200825015627.3c3pnwauqznnp3gc@ca-dmjordan1.us.oracle.com>
- <ec62a835-f79d-2b8c-99c7-120834703b42@linux.alibaba.com>
+ <1598273705-69124-26-git-send-email-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
- bh=VWKaRWmTmrlTrbnIky0PuQ3aZ0bL/HrXLsBsMQQqZo4=;
- b=jQNvNVHYVl0Oq89XEgsmuaLNiJpGZJT9brk12EKPFxStCdsik5I4IBEl6Bg/H3NtYf2Z
- cmzX1sVKVAwMR/9dtkl5+JbbWT934jfcpvNxDywlgqCg51YQs0e0n9qAHlHsLQ5ihWaP
- jfDlzlh4U6ZT4v89eaYGfzPPP/w9t5HO2yAgiNyJ1PgteJXcHlLGZW6e7NrjGNIVpSeB
- lU7mwgsqKocBkjf4K5fjzhl9uxqclIjlOPIoYhiqdyWwa04NYvZW7c+F0nPNNYYZ4/rV
- FMmXYE4rJEyLxS6Vur9iT/YFuDO8s0NbT0Q+rWL/Ni1XlHheonNF35vprX/YllYb3zk6 rA== 
-Content-Disposition: inline
-In-Reply-To: <ec62a835-f79d-2b8c-99c7-120834703b42@linux.alibaba.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1598273705-69124-26-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Daniel Jordan <daniel.m.jordan@oracle.com>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, mgorman@techsingularity.net, tj@kernel.org, khlebnikov@yandex-team.ru, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
+Content-Type: text/plain; charset="us-ascii"
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
 
-On Tue, Aug 25, 2020 at 11:26:58AM +0800, Alex Shi wrote:
-> 在 2020/8/25 上午9:56, Daniel Jordan 写道:
-> > Alex, do you have a pointer to the modified readtwice case?
-> 
-> Sorry, no. my developer machine crashed, so I lost case my container and modified
-> case. I am struggling to get my container back from a account problematic repository. 
-> 
-> But some testing scripts is here, generally, the original readtwice case will
-> run each of threads on each of cpus. The new case will run one container on each cpus,
-> and just run one readtwice thead in each of containers.
+LKP reported a preemptiable issue on this patch. update and refresh
+the commit log.
 
-Ok, what you've sent so far gives me an idea of what you did.  My readtwice
-changes were similar, except I used the cgroup interface directly instead of
-docker and shared a filesystem between all the cgroups whereas it looks like
-you had one per memcg.  30 second runs on 5.9-rc2 and v18 gave 11% more data
-read with v18.  This was using 16 cgroups (32 dd tasks) on a 40 CPU, 2 socket
-machine.
+From f18e8c87a045bbb8040006b6816ded1f55fa6f9c Mon Sep 17 00:00:00 2001
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Date: Sat, 25 Jul 2020 22:31:03 +0800
+Subject: [PATCH] mm/mlock: remove lru_lock on TestClearPageMlocked in
+ munlock_vma_page
 
-> > Even better would be a description of the problem you're having in production
-> > with lru_lock.  We might be able to create at least a simulation of it to show
-> > what the expected improvement of your real workload is.
-> 
-> we are using thousands memcgs in a machine, but as a simulation, I guess above case
-> could be helpful to show the problem.
+In the func munlock_vma_page, comments mentained lru_lock needed for
+serialization with split_huge_pages. But the page must be PageLocked
+as well as pages in split_huge_page series funcs. Thus the PageLocked
+is enough to serialize both funcs.
 
-Using thousands of memcgs to do what?  Any particulars about the type of
-workload?  Surely it's more complicated than page cache reads :)
+So we could relief the TestClearPageMlocked/hpage_nr_pages which are not
+necessary under lru lock.
 
-> > I ran a few benchmarks on v17 last week (sysbench oltp readonly, kerndevel from
-> > mmtests, a memcg-ized version of the readtwice case I cooked up) and then today
-> > discovered there's a chance I wasn't running the right kernels, so I'm redoing
-> > them on v18.
+As to another munlock func __munlock_pagevec, which no PageLocked
+protection and should remain lru protecting.
 
-Neither kernel compile nor git checkout in the root cgroup changed much, just
-0.31% slower on elapsed time for the compile, so no significant regressions
-there.  Now for sysbench again.
+LKP found a preempt issue on __mod_zone_page_state which need change
+to mod_zone_page_state. Thanks!
+
+Reported-by: kernel test robot <rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Kirill A. Shutemov <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+---
+ mm/mlock.c | 43 ++++++++++++++++---------------------------
+ 1 file changed, 16 insertions(+), 27 deletions(-)
+
+diff --git a/mm/mlock.c b/mm/mlock.c
+index 0448409184e3..cd88b93b0f0d 100644
+--- a/mm/mlock.c
++++ b/mm/mlock.c
+@@ -69,9 +69,9 @@ void clear_page_mlock(struct page *page)
+ 	 *
+ 	 * See __pagevec_lru_add_fn for more explanation.
+ 	 */
+-	if (!isolate_lru_page(page)) {
++	if (!isolate_lru_page(page))
+ 		putback_lru_page(page);
+-	} else {
++	else {
+ 		/*
+ 		 * We lost the race. the page already moved to evictable list.
+ 		 */
+@@ -178,7 +178,6 @@ static void __munlock_isolation_failed(struct page *page)
+ unsigned int munlock_vma_page(struct page *page)
+ {
+ 	int nr_pages;
+-	struct lruvec *lruvec;
+ 
+ 	/* For try_to_munlock() and to serialize with page migration */
+ 	BUG_ON(!PageLocked(page));
+@@ -186,37 +185,22 @@ unsigned int munlock_vma_page(struct page *page)
+ 	VM_BUG_ON_PAGE(PageTail(page), page);
+ 
+ 	/*
+-	 * Serialize split tail pages in __split_huge_page_tail() which
+-	 * might otherwise copy PageMlocked to part of the tail pages before
+-	 * we clear it in the head page. It also stabilizes thp_nr_pages().
+-	 * TestClearPageLRU can't be used here to block page isolation, since
+-	 * out of lock clear_page_mlock may interfer PageLRU/PageMlocked
+-	 * sequence, same as __pagevec_lru_add_fn, and lead the page place to
+-	 * wrong lru list here. So relay on PageLocked to stop lruvec change
+-	 * in mem_cgroup_move_account().
++	 * Serialize split tail pages in __split_huge_page_tail() by
++	 * lock_page(); Do TestClearPageMlocked/PageLRU sequence like
++	 * clear_page_mlock().
+ 	 */
+-	lruvec = lock_page_lruvec_irq(page);
+-
+-	if (!TestClearPageMlocked(page)) {
++	if (!TestClearPageMlocked(page))
+ 		/* Potentially, PTE-mapped THP: do not skip the rest PTEs */
+-		nr_pages = 1;
+-		goto unlock_out;
+-	}
++		return 0;
+ 
+ 	nr_pages = thp_nr_pages(page);
+-	__mod_zone_page_state(page_zone(page), NR_MLOCK, -nr_pages);
++	mod_zone_page_state(page_zone(page), NR_MLOCK, -nr_pages);
+ 
+-	if (__munlock_isolate_lru_page(page, lruvec, true)) {
+-		unlock_page_lruvec_irq(lruvec);
++	if (!isolate_lru_page(page))
+ 		__munlock_isolated_page(page);
+-		goto out;
+-	}
+-	__munlock_isolation_failed(page);
+-
+-unlock_out:
+-	unlock_page_lruvec_irq(lruvec);
++	else
++		__munlock_isolation_failed(page);
+ 
+-out:
+ 	return nr_pages - 1;
+ }
+ 
+@@ -305,6 +289,11 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ 
+ 		/* block memcg change in mem_cgroup_move_account */
+ 		lock_page_memcg(page);
++		/*
++		 * Serialize split tail pages in __split_huge_page_tail() which
++		 * might otherwise copy PageMlocked to part of the tail pages
++		 * before we clear it in the head page.
++		 */
+ 		lruvec = relock_page_lruvec_irq(page, lruvec);
+ 		if (TestClearPageMlocked(page)) {
+ 			/*
+-- 
+2.17.1
+
