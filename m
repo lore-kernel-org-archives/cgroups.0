@@ -1,42 +1,65 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+From: Daniel Jordan <daniel.m.jordan@oracle.com>
 Subject: Re: [PATCH v18 00/32] per memcg lru_lock
-Date: Tue, 25 Aug 2020 21:00:13 +0800
-Message-ID: <d6127d13-0997-3f9d-3c35-1fe453fc6a12@linux.alibaba.com>
+Date: Tue, 25 Aug 2020 21:19:46 -0400
+Message-ID: <20200826011946.spknwjt44d2szrdo@ca-dmjordan1.us.oracle.com>
 References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
  <20200824114204.cc796ca182db95809dd70a47@linux-foundation.org>
  <alpine.LSU.2.11.2008241231460.1065@eggly.anvils>
  <20200825015627.3c3pnwauqznnp3gc@ca-dmjordan1.us.oracle.com>
- <4cc9f54a-9eda-9966-df9a-a00bc9e88f4c@linux.alibaba.com>
+ <ec62a835-f79d-2b8c-99c7-120834703b42@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4cc9f54a-9eda-9966-df9a-a00bc9e88f4c-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
+ bh=VWKaRWmTmrlTrbnIky0PuQ3aZ0bL/HrXLsBsMQQqZo4=;
+ b=jQNvNVHYVl0Oq89XEgsmuaLNiJpGZJT9brk12EKPFxStCdsik5I4IBEl6Bg/H3NtYf2Z
+ cmzX1sVKVAwMR/9dtkl5+JbbWT934jfcpvNxDywlgqCg51YQs0e0n9qAHlHsLQ5ihWaP
+ jfDlzlh4U6ZT4v89eaYGfzPPP/w9t5HO2yAgiNyJ1PgteJXcHlLGZW6e7NrjGNIVpSeB
+ lU7mwgsqKocBkjf4K5fjzhl9uxqclIjlOPIoYhiqdyWwa04NYvZW7c+F0nPNNYYZ4/rV
+ FMmXYE4rJEyLxS6Vur9iT/YFuDO8s0NbT0Q+rWL/Ni1XlHheonNF35vprX/YllYb3zk6 rA== 
+Content-Disposition: inline
+In-Reply-To: <ec62a835-f79d-2b8c-99c7-120834703b42@linux.alibaba.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="gb2312"
-To: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Daniel Jordan <daniel.m.jordan@oracle.com>, Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, mgorman@techsingularity.net, tj@kernel.org, khlebnikov@yandex-team.ru, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
 
-CgrU2iAyMDIwLzgvMjUgz8LO5zQ6NTIsIEFsZXggU2hpINC0tcA6Cj4gCj4g1NogMjAyMC84LzI1
-IMnPzuc5OjU2LCBEYW5pZWwgSm9yZGFuINC0tcA6Cj4+IE9uIE1vbiwgQXVnIDI0LCAyMDIwIGF0
-IDAxOjI0OjIwUE0gLTA3MDAsIEh1Z2ggRGlja2lucyB3cm90ZToKPj4+IE9uIE1vbiwgMjQgQXVn
-IDIwMjAsIEFuZHJldyBNb3J0b24gd3JvdGU6Cj4+Pj4gT24gTW9uLCAyNCBBdWcgMjAyMCAyMDo1
-NDozMyArMDgwMCBBbGV4IFNoaSA8YWxleC5zaGktS1Bzb0ZiTnM3R2l6ckdFNWJScVlBZ0MvRzJL
-NHpESGZAcHVibGljLmdtYW5lLm9yZz4gd3JvdGU6Cj4+PiBBbmRyZXcgZGVtdXJyZWQgb24gdmVy
-c2lvbiAxNyBmb3IgbGFjayBvZiByZXZpZXcuICBBbGV4YW5kZXIgRHV5Y2sgaGFzCj4+PiBiZWVu
-IGRvaW5nIGEgbG90IG9uIHRoYXQgZnJvbnQgc2luY2UgdGhlbi4gIEkgaGF2ZSBpbnRlbmRlZCB0
-byBkbyBzbywKPj4+IGJ1dCBpdCdzIGEgbWlyYWdlIHRoYXQgbW92ZXMgYXdheSBmcm9tIG1lIGFz
-IEkgbW92ZSB0b3dhcmRzIGl0OiBJIGhhdmUKPj4gU2FtZSwgSSBoYXZlbid0IGJlZW4gYWJsZSB0
-byBrZWVwIHVwIHdpdGggdGhlIHZlcnNpb25zIG9yIHRoZSByZWNlbnQgcmV2aWV3Cj4+IGZlZWRi
-YWNrLiAgSSBnb3QgdGhyb3VnaCBhYm91dCBoYWxmIG9mIHYxNyBsYXN0IHdlZWsgYW5kIGhvcGUg
-dG8gaGF2ZSBtb3JlIHRpbWUKPj4gZm9yIHRoZSByZXN0IHRoaXMgd2VlayBhbmQgYmV5b25kLgo+
-Pgo+Pj4+PiBGb2xsb3dpbmcgRGFuaWVsIEpvcmRhbidzIHN1Z2dlc3Rpb24sIEkgaGF2ZSBydW4g
-MjA4ICdkZCcgd2l0aCBvbiAxMDQKPj4+Pj4gY29udGFpbmVycyBvbiBhIDJzICogMjZjb3JlcyAq
-IEhUIGJveCB3aXRoIGEgbW9kZWZpZWQgY2FzZToKPj4gQWxleCwgZG8geW91IGhhdmUgYSBwb2lu
-dGVyIHRvIHRoZSBtb2RpZmllZCByZWFkdHdpY2UgY2FzZT8KPj4KPiBIaSBEYW5pZWwsCj4gCj4g
-bXkgcmVhZHR3aWNlIG1vZGlmaWNhdGlvbiBsaWtlIGJlbG93Lgo+IAo+IGRpZmYgLS1naXQgYS9j
-YXNlLWxydS1maWxlLXJlYWR0d2ljZSBiL2Nhc2UtbHJ1LWZpbGUtcmVhZHR3aWNlCgpIaSBEaW5p
-ZWwsCgpJIGZpbmFsbHkgc2V0dGxlIGRvd24gbXkgY29udGFpbmVyLCBhbmQgZm91bmQgSSBnaXZl
-IGEgZGlmZmVyZW50IHZlcnNpb24gb2YgbXkgc2NyaXB0cwp3aGljaCBjYW4ndCB3b3JrIG91dCB0
-b2dldGhlci4gSSBhbSBzb3JyeSEKCkkgd2lsbCB0cnkgdG8gYnJpbmcgdGhlbSB1cCB0b2dldGhl
-ci4gYW5kIHRyeSB0byBnaXZlIGEgbmV3IHZlcnNpb24uCgpUaGFua3MgYSBsb3QhCkFsZXgK
+On Tue, Aug 25, 2020 at 11:26:58AM +0800, Alex Shi wrote:
+> 在 2020/8/25 上午9:56, Daniel Jordan 写道:
+> > Alex, do you have a pointer to the modified readtwice case?
+> 
+> Sorry, no. my developer machine crashed, so I lost case my container and modified
+> case. I am struggling to get my container back from a account problematic repository. 
+> 
+> But some testing scripts is here, generally, the original readtwice case will
+> run each of threads on each of cpus. The new case will run one container on each cpus,
+> and just run one readtwice thead in each of containers.
+
+Ok, what you've sent so far gives me an idea of what you did.  My readtwice
+changes were similar, except I used the cgroup interface directly instead of
+docker and shared a filesystem between all the cgroups whereas it looks like
+you had one per memcg.  30 second runs on 5.9-rc2 and v18 gave 11% more data
+read with v18.  This was using 16 cgroups (32 dd tasks) on a 40 CPU, 2 socket
+machine.
+
+> > Even better would be a description of the problem you're having in production
+> > with lru_lock.  We might be able to create at least a simulation of it to show
+> > what the expected improvement of your real workload is.
+> 
+> we are using thousands memcgs in a machine, but as a simulation, I guess above case
+> could be helpful to show the problem.
+
+Using thousands of memcgs to do what?  Any particulars about the type of
+workload?  Surely it's more complicated than page cache reads :)
+
+> > I ran a few benchmarks on v17 last week (sysbench oltp readonly, kerndevel from
+> > mmtests, a memcg-ized version of the readtwice case I cooked up) and then today
+> > discovered there's a chance I wasn't running the right kernels, so I'm redoing
+> > them on v18.
+
+Neither kernel compile nor git checkout in the root cgroup changed much, just
+0.31% slower on elapsed time for the compile, so no significant regressions
+there.  Now for sysbench again.
