@@ -1,69 +1,65 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 2/8] mm: Use find_get_swap_page in memcontrol
-Date: Thu, 27 Aug 2020 10:22:29 -0400
-Message-ID: <20200827142229.GB1002856@cmpxchg.org>
-References: <20200819184850.24779-1-willy@infradead.org>
- <20200819184850.24779-3-willy@infradead.org>
- <20200826142002.GA988805@cmpxchg.org>
- <20200827125941.GG14765@casper.infradead.org>
+From: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v18 00/32] per memcg lru_lock
+Date: Thu, 27 Aug 2020 21:40:22 -0400
+Message-ID: <20200828014022.y5xju6weysqpzxd2@ca-dmjordan1.us.oracle.com>
+References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
+ <20200824114204.cc796ca182db95809dd70a47@linux-foundation.org>
+ <alpine.LSU.2.11.2008241231460.1065@eggly.anvils>
+ <20200825015627.3c3pnwauqznnp3gc@ca-dmjordan1.us.oracle.com>
+ <ec62a835-f79d-2b8c-99c7-120834703b42@linux.alibaba.com>
+ <20200826011946.spknwjt44d2szrdo@ca-dmjordan1.us.oracle.com>
+ <01ed6e45-3853-dcba-61cb-b429a49a7572@linux.alibaba.com>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=EE+MmSN3lbKnbvXBOhbYoQLeslJjSSgBP3XNEkQXgRQ=;
+ b=KaSLqjJzENC36uaJMTkyhzgDkJ2KfQYLgzCz13xV15ZAZNT3+Y0xu9qgW9r6Uaf/gAhP
+ p/lDkVi37vjz1X3j21WaOz3VEhVh+uLP7I5oV7vvRDXfw/0shmbpmn74a0y+4tP4xjqU
+ x3aRGOIZW84msVY3kmzWTdP6c+eog5WiX3mRnth7Bd2ounWU/NfOFYXYmevJ5GQm0nWt
+ ddMGf7ZSwZU52zu6MbpKxP5wvtfEqQl+OK/U3aaOvsGYwAPWZyczKh+77vwYt67QWAO1
+ TObjUYzMQoddfUC8VNxwIAWvWeZzTcpoza+wl4TrPOCUu9X/cC/mcl+RtAUKi2r372IV eA== 
+Content-Disposition: inline
+In-Reply-To: <01ed6e45-3853-dcba-61cb-b429a49a7572-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
- h=date:from:to:cc:subject:message-id:references:mime-version
- :content-disposition:in-reply-to;
- bh=BmSkU8kL1DJIMf//B6UvwY8ukjXeH0WHbYlFQli5/Kw=;
- b=KPqGwrmsmOIuf+JiWEW/k7gGWQ1y3K+MpxQ+GlJBR4JHV9vGFTTbjyFMl+FZ4Y0eR1
- K2BXbisksDsJdOWmVO1uqUYQ2h1rz6x4zhmDciS7F7QXhAv9oK2efTTjrKFY2lV0MX2h
- m+NX4PEHBJLAtiNCQ+E62vD9YoMqRVe4nQ2rLdY2M6j+IN9GUIPk+F93i5PMufggiU+5
- 7qfQtxk5IGmbE2ZD7qvuDqJQO8zKxEiYo6gkbc90Yi69wGk+9eBBpz/JoSeL/G/aFyFt
- vrKHByeeVrxLF5cwGuOVUkygA2VuBjAX42oiZQSqxkRduIvG36gg5Hfhjg+H7Ukg95zP
- RpMg==
-Content-Disposition: inline
-In-Reply-To: <20200827125941.GG14765@casper.infradead.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Matthew Wilcox <willy@infradead.org>
-Cc: William Kucharski <william.kucharski@oracle.com>, intel-gfx@lists.freedesktop.org, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, Chris Wilson <chris@chris-wilson.co.uk>, linux-mm@kvack.org, Matthew Auld <matthew.auld@intel.com>, Huang Ying <ying.huang@intel.com>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>
+To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Thu, Aug 27, 2020 at 01:59:41PM +0100, Matthew Wilcox wrote:
-> On Wed, Aug 26, 2020 at 10:20:02AM -0400, Johannes Weiner wrote:
-> > The refactor makes sense to me, but the name is confusing. We're not
-> > looking for a swap page, we're primarily looking for a file page in
-> > the page cache mapping that's handed in. Only in the special case
-> > where it's a shmem mapping and there is a swap entry do we consult the
-> > auxiliary swap cache.
+On Wed, Aug 26, 2020 at 04:59:28PM +0800, Alex Shi wrote:
+> I clean up my testing and make it reproducable by a Dockerfile and a case patch which
+> attached. 
+
+Ok, I'll give that a shot once I've taken care of sysbench.
+
+> >>> Even better would be a description of the problem you're having in production
+> >>> with lru_lock.  We might be able to create at least a simulation of it to show
+> >>> what the expected improvement of your real workload is.
+> >>
+> >> we are using thousands memcgs in a machine, but as a simulation, I guess above case
+> >> could be helpful to show the problem.
 > > 
-> > How about find_get_page_or_swapcache()? find_get_page_shmemswap()?
-> > Maybe you have a better idea. It's a fairly specialized operation that
-> > isn't widely used, so a longer name isn't a bad thing IMO.
+> > Using thousands of memcgs to do what?  Any particulars about the type of
+> > workload?  Surely it's more complicated than page cache reads :)
 > 
-> Got it.  find_get_incore_page().  I was going to go with inmem, but that
-> it matches mincore sold me on it.
->
-> /**
->  * find_get_incore_page - Find and get a page from the page or swap caches.
->  * @mapping: The address_space to search.
->  * @index: The page cache index.
->  *
->  * This differs from find_get_page() in that it will also look for the
->  * page in the swap cache.
->  *
->  * Return: The found page or %NULL.
->  */
+> Yes, the workload are quit different on different business, some use cpu a
+> lot, some use memory a lot, and some are may mixed.
 
-Nice work, that's perfect.
+That's pretty vague, but I don't suppose I could do much better describing what
+all runs on our systems  :-/
 
-> I was focusing too much on what the function did, not why it was doing it.
+I went back to your v1 post to see what motivated you originally, and you had
+some results from aim9 but nothing about where this reared its head in the
+first place.  How did you discover the bottleneck?  I'm just curious about how
+lru_lock hurts in practice.
 
-Me too.
+> > Neither kernel compile nor git checkout in the root cgroup changed much, just
+> > 0.31% slower on elapsed time for the compile, so no significant regressions
+> > there.  Now for sysbench again.
+
+Still working on getting repeatable sysbench runs, no luck so far.  The numbers
+have stayed fairly consistent with your series but vary a lot on the base
+kernel, not sure why yet.
