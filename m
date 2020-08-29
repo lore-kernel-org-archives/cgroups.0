@@ -1,39 +1,56 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v18 00/32] per memcg lru_lock
-Date: Fri, 28 Aug 2020 13:22:28 +0800
-Message-ID: <327a1bb4-b64d-65b8-e18f-db33e03ca9ed@linux.alibaba.com>
-References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
- <20200824114204.cc796ca182db95809dd70a47@linux-foundation.org>
- <alpine.LSU.2.11.2008241231460.1065@eggly.anvils>
- <20200825015627.3c3pnwauqznnp3gc@ca-dmjordan1.us.oracle.com>
- <ec62a835-f79d-2b8c-99c7-120834703b42@linux.alibaba.com>
- <20200826011946.spknwjt44d2szrdo@ca-dmjordan1.us.oracle.com>
- <01ed6e45-3853-dcba-61cb-b429a49a7572@linux.alibaba.com>
- <20200828014022.y5xju6weysqpzxd2@ca-dmjordan1.us.oracle.com>
+From: Hao Lee <haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] cgroup: Delete unnecessary if statement in css_visible()
+Date: Sat, 29 Aug 2020 10:03:16 +0000
+Message-ID: <20200829100202.GA855@haolee.github.io>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20200828014022.y5xju6weysqpzxd2@ca-dmjordan1.us.oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=ve5Y7UpqDFbuWlDWcOR+wgYs8OkOidRTnnjW9IZXZ6U=;
+        b=bs9p3/w0ksSNIWFN2OvCev28CeZY6aVLLibarFLpX9igmm3UCZ0WpSDC0RjHJVE75F
+         H6W7uKT9MCe1b8AIjN2AvBuJ6gh37kMBK2eVt+hisLVudA4m5Af39dZmwu3E09DGHCKV
+         cNpW5Cwsaa2UfbToWG2axFJcuWHifEaCZY3XWYMpCK7YRgK/u20e1drvosjW9UxV5DYU
+         7DOmTGZmqGPYe18nCsshEyruy4jEVu4ZWmQyViWOxpBNwccL1/UnxisZ01sjNv1bPZ7K
+         yrOuGOvYzmGSonLRH3hz0LQUVq28P3ZeYf8QIdh/tH5OkTIO2/6LXeg18S+ceeUI/u2T
+         XRoQ==
+Content-Disposition: inline
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Daniel Jordan <daniel.m.jordan@oracle.com>
-Cc: Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, mgorman@techsingularity.net, tj@kernel.org, khlebnikov@yandex-team.ru, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
+css_visible() is called in either cgroup_apply_control_enable()
+or cgroup_apply_control_disable().
+In cgroup_apply_control_enable(), we have checked ss_mask before calling
+css_visible(), so there is no need to do the same thing again.
+In cgroup_apply_control_disable():
+ - If css->parent is not NULL, we have checked ss_mask in the
+   second condition, so there is no need to do the same thing again.
+ - If css->parent is NULL, dsct is root cgroup so the deleted if
+   statement is always false and there is no need to keep it.
 
-=D4=DA 2020/8/28 =C9=CF=CE=E79:40, Daniel Jordan =D0=B4=B5=C0:
-> I went back to your v1 post to see what motivated you originally, and you=
- had
-> some results from aim9 but nothing about where this reared its head in the
-> first place.  How did you discover the bottleneck?  I'm just curious abou=
-t how
-> lru_lock hurts in practice.
+Signed-off-by: Hao Lee <haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ kernel/cgroup/cgroup.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-We have gotten very high 'sys' in some buiness/machines. And found much of =
-time spent
-on the lru_lock and/or zone lock. Seems per memcg lru_lock could help this,=
- but still
-no idea on zone lock.
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index dd247747ec14..b6714166106d 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -3023,8 +3023,6 @@ static bool css_visible(struct cgroup_subsys_state *css)
+ 
+ 	if (cgroup_control(cgrp) & (1 << ss->id))
+ 		return true;
+-	if (!(cgroup_ss_mask(cgrp) & (1 << ss->id)))
+-		return false;
+ 	return cgroup_on_dfl(cgrp) && ss->implicit_on_dfl;
+ }
+ 
+-- 
+2.24.1
 
-Thanks
-Alex
