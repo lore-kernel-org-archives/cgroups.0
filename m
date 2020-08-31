@@ -1,7 +1,7 @@
 From: Dan Schatzberg <schatzberg.dan@gmail.com>
-Subject: [PATCH 2/3] mm: Charge active memcg when no mm is set
-Date: Mon, 31 Aug 2020 11:36:59 -0400
-Message-ID: <20200831153704.16848-3-schatzberg.dan@gmail.com>
+Subject: [PATCH 3/3] loop: Charge i/o to mem and blk cg
+Date: Mon, 31 Aug 2020 11:37:00 -0400
+Message-ID: <20200831153704.16848-4-schatzberg.dan@gmail.com>
 References: <20200831153704.16848-1-schatzberg.dan@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,101 +10,243 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=hFNO1srh3AW4C+hy+7CfuD56Hs7de0B4v+mt5P6Q+8c=;
-        b=SjePWpDm/dcOfaWyG090sIQ82qRogNC8U9o/SXOsilJibfKn37U7NrP6cYs9z13ajn
-         3ahnbXMI1dfgdzV1jsX4P8YPuyM1wY2QGXQiesxpHGGEg3Z23HYwzkk62guOns9HMJyO
-         mv5bVZQTbHPtdEJ+eNlOenVGaVNmy48r50T0qx1KJrkByftLK+OzvzENGehdjQZ0EdVJ
-         SbKPXAl9lN5Bz1sTMxYIYgFWi6dPAG2dwLhw1nXA9usckN3AXJXudsT9uUJdRuIs/Ntq
-         5nv1yGY0UIXNQDK7x6fl3OY/BjqkvDLJzoM8kbzBSnvSW8Q8tEl7Yp4cPcUq9xxnCReP
-         1UgQ==
+        bh=QsMkC5oXq5WobzdILIB2ScjD9TgMB1liEL21vqR/JC4=;
+        b=Wm313dtOmsFOK8Cnr4/6OmwNiezmSvcB1alZmu82FUIhUMw4n9ArHBcrs42yI+jFhO
+         ojGwxKqq228m4vtsBIC8i1hjYkolf3eU7QyISKNRjRse1u8l0/P92mFL2dUImjKABzMx
+         vOK5UKOfKflYGSjazdqNTY71NxFTd/QwNYkhkuddif0x3yQGh7060uAb2rrZ2VcSQWhL
+         4n8Al5ewZkeUA/Md2dds+tqkZrVfY3S/OLA8ynJFo21LW2dgIVOkGfjcigTeAeJ/yLW1
+         zYqvPcw+UFtdWk4c2DR/OP4bZi2Ct02HTaUZV0WZxWGi7RV4B9COQOTYTW3cMs8p6JHS
+         iEmg==
 In-Reply-To: <20200831153704.16848-1-schatzberg.dan@gmail.com>
 Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: 
-Cc: Dan Schatzberg <schatzberg.dan@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, Chris Down <chris@chrisdown.name>, Shakeel Butt <shakeelb@google.com>, Jens Axboe <axboe@kernel.dk>, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Roman Gushchin <guro@fb.com>, Yang Shi <yang.shi@linux.alibaba.com>, Jakub Kicinski <kuba@kernel.org>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP CGROUP" <cgroups@vger.kernel.org>, "open list:CONTROL GROUP - MEMORY RESOURCE
-        CONTROLLER MEMCG" <linux-mm@kvack.org>
+Cc: Dan Schatzberg <schatzberg.dan@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Yang Shi <yang.shi@linux.alibaba.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP CGROUP" <cgroups@vger.kernel.org>, "open list:CONTROL GROUP - MEMORY RESOURCE" <linux-mm@kvack.org>
 
-memalloc_use_memcg() worked for kernel allocations but was silently
-ignored for user pages.
+The current code only associates with the existing blkcg when aio is
+used to access the backing file. This patch covers all types of i/o to
+the backing file and also associates the memcg so if the backing file is
+on tmpfs, memory is charged appropriately.
 
-This patch establishes a precedence order for who gets charged:
-
-1. If there is a memcg associated with the page already, that memcg is
-   charged. This happens during swapin.
-
-2. If an explicit mm is passed, mm->memcg is charged. This happens
-   during page faults, which can be triggered in remote VMs (eg gup).
-
-3. Otherwise consult the current process context. If it has configured
-   a current->active_memcg, use that. Otherwise, current->mm->memcg.
-
-Previously, if a NULL mm was passed to mem_cgroup_try_charge (case 3) it
-would always charge the root cgroup. Now it looks up the current
-active_memcg first (falling back to charging the root cgroup if not
-set).
+This patch also exports cgroup_get_e_css so it can be used by the loop
+module.
 
 Signed-off-by: Dan Schatzberg <schatzberg.dan@gmail.com>
 Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-Acked-by: Tejun Heo <tj@kernel.org>
-Acked-by: Chris Down <chris@chrisdown.name>
-Reviewed-by: Shakeel Butt <shakeelb@google.com>
 ---
- mm/memcontrol.c | 11 ++++++++---
- mm/shmem.c      |  4 ++--
- 2 files changed, 10 insertions(+), 5 deletions(-)
+ drivers/block/loop.c       | 61 +++++++++++++++++++++++++-------------
+ drivers/block/loop.h       |  3 +-
+ include/linux/memcontrol.h |  6 ++++
+ kernel/cgroup/cgroup.c     |  1 +
+ 4 files changed, 50 insertions(+), 21 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e27ac6d79a32..877778b792da 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6676,7 +6676,8 @@ void mem_cgroup_calculate_protection(struct mem_cgroup *root,
-  * @gfp_mask: reclaim mode
-  *
-  * Try to charge @page to the memcg that @mm belongs to, reclaiming
-- * pages according to @gfp_mask if necessary.
-+ * pages according to @gfp_mask if necessary. if @mm is NULL, try to
-+ * charge to the active memcg.
-  *
-  * Returns 0 on success. Otherwise, an error code is returned.
-  */
-@@ -6712,8 +6713,12 @@ int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask)
- 		rcu_read_unlock();
- 	}
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index 771685a6c259..3da34d454287 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -77,6 +77,7 @@
+ #include <linux/uio.h>
+ #include <linux/ioprio.h>
+ #include <linux/blk-cgroup.h>
++#include <linux/sched/mm.h>
  
--	if (!memcg)
--		memcg = get_mem_cgroup_from_mm(mm);
-+	if (!memcg) {
-+		if (!mm)
-+			memcg = get_mem_cgroup_from_current();
-+		else
-+			memcg = get_mem_cgroup_from_mm(mm);
+ #include "loop.h"
+ 
+@@ -518,8 +519,6 @@ static void lo_rw_aio_complete(struct kiocb *iocb, long ret, long ret2)
+ {
+ 	struct loop_cmd *cmd = container_of(iocb, struct loop_cmd, iocb);
+ 
+-	if (cmd->css)
+-		css_put(cmd->css);
+ 	cmd->ret = ret;
+ 	lo_rw_aio_do_completion(cmd);
+ }
+@@ -580,8 +579,6 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 	cmd->iocb.ki_complete = lo_rw_aio_complete;
+ 	cmd->iocb.ki_flags = IOCB_DIRECT;
+ 	cmd->iocb.ki_ioprio = IOPRIO_PRIO_VALUE(IOPRIO_CLASS_NONE, 0);
+-	if (cmd->css)
+-		kthread_associate_blkcg(cmd->css);
+ 
+ 	if (rw == WRITE)
+ 		ret = call_write_iter(file, &cmd->iocb, &iter);
+@@ -589,7 +586,6 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 		ret = call_read_iter(file, &cmd->iocb, &iter);
+ 
+ 	lo_rw_aio_do_completion(cmd);
+-	kthread_associate_blkcg(NULL);
+ 
+ 	if (ret != -EIOCBQUEUED)
+ 		cmd->iocb.ki_complete(&cmd->iocb, ret, 0);
+@@ -932,7 +928,7 @@ struct loop_worker {
+ 	struct list_head cmd_list;
+ 	struct list_head idle_list;
+ 	struct loop_device *lo;
+-	struct cgroup_subsys_state *css;
++	struct cgroup_subsys_state *blkcg_css;
+ 	unsigned long last_ran_at;
+ };
+ 
+@@ -949,7 +945,7 @@ static void loop_queue_work(struct loop_device *lo, struct loop_cmd *cmd)
+ 
+ 	spin_lock_irq(&lo->lo_work_lock);
+ 
+-	if (!cmd->css)
++	if (!cmd->blkcg_css)
+ 		goto queue_work;
+ 
+ 	node = &lo->worker_tree.rb_node;
+@@ -957,10 +953,10 @@ static void loop_queue_work(struct loop_device *lo, struct loop_cmd *cmd)
+ 	while (*node) {
+ 		parent = *node;
+ 		cur_worker = container_of(*node, struct loop_worker, rb_node);
+-		if (cur_worker->css == cmd->css) {
++		if (cur_worker->blkcg_css == cmd->blkcg_css) {
+ 			worker = cur_worker;
+ 			break;
+-		} else if ((long)cur_worker->css < (long)cmd->css) {
++		} else if ((long)cur_worker->blkcg_css < (long)cmd->blkcg_css) {
+ 			node = &(*node)->rb_left;
+ 		} else {
+ 			node = &(*node)->rb_right;
+@@ -972,13 +968,18 @@ static void loop_queue_work(struct loop_device *lo, struct loop_cmd *cmd)
+ 	worker = kzalloc(sizeof(struct loop_worker), GFP_NOWAIT | __GFP_NOWARN);
+ 	/*
+ 	 * In the event we cannot allocate a worker, just queue on the
+-	 * rootcg worker
++	 * rootcg worker and issue the I/O as the rootcg
+ 	 */
+-	if (!worker)
++	if (!worker) {
++		cmd->blkcg_css = NULL;
++		if (cmd->memcg_css)
++			css_put(cmd->memcg_css);
++		cmd->memcg_css = NULL;
+ 		goto queue_work;
 +	}
  
- 	ret = try_charge(memcg, gfp_mask, nr_pages);
- 	if (ret)
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 271548ca20f3..1139f52ac4ee 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -1695,7 +1695,7 @@ static int shmem_swapin_page(struct inode *inode, pgoff_t index,
- {
- 	struct address_space *mapping = inode->i_mapping;
- 	struct shmem_inode_info *info = SHMEM_I(inode);
--	struct mm_struct *charge_mm = vma ? vma->vm_mm : current->mm;
-+	struct mm_struct *charge_mm = vma ? vma->vm_mm : NULL;
- 	struct page *page;
- 	swp_entry_t swap;
- 	int error;
-@@ -1809,7 +1809,7 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
+-	worker->css = cmd->css;
+-	css_get(worker->css);
++	worker->blkcg_css = cmd->blkcg_css;
++	css_get(worker->blkcg_css);
+ 	INIT_WORK(&worker->work, loop_workfn);
+ 	INIT_LIST_HEAD(&worker->cmd_list);
+ 	INIT_LIST_HEAD(&worker->idle_list);
+@@ -1304,7 +1305,7 @@ static int __loop_clr_fd(struct loop_device *lo, bool release)
+ 				idle_list) {
+ 		list_del(&worker->idle_list);
+ 		rb_erase(&worker->rb_node, &lo->worker_tree);
+-		css_put(worker->css);
++		css_put(worker->blkcg_css);
+ 		kfree(worker);
+ 	}
+ 	spin_unlock_irq(&lo->lo_work_lock);
+@@ -2105,13 +2106,18 @@ static blk_status_t loop_queue_rq(struct blk_mq_hw_ctx *hctx,
  	}
  
- 	sbinfo = SHMEM_SB(inode->i_sb);
--	charge_mm = vma ? vma->vm_mm : current->mm;
-+	charge_mm = vma ? vma->vm_mm : NULL;
+ 	/* always use the first bio's css */
++	cmd->blkcg_css = NULL;
++	cmd->memcg_css = NULL;
+ #ifdef CONFIG_BLK_CGROUP
+-	if (cmd->use_aio && rq->bio && rq->bio->bi_blkg) {
+-		cmd->css = &bio_blkcg(rq->bio)->css;
+-		css_get(cmd->css);
+-	} else
++	if (rq->bio && rq->bio->bi_blkg) {
++		cmd->blkcg_css = &bio_blkcg(rq->bio)->css;
++#ifdef CONFIG_MEMCG
++		cmd->memcg_css =
++			cgroup_get_e_css(cmd->blkcg_css->cgroup,
++					&memory_cgrp_subsys);
++#endif
++	}
+ #endif
+-		cmd->css = NULL;
+ 	loop_queue_work(lo, cmd);
  
- 	page = find_lock_entry(mapping, index);
- 	if (xa_is_value(page)) {
+ 	return BLK_STS_OK;
+@@ -2123,13 +2129,28 @@ static void loop_handle_cmd(struct loop_cmd *cmd)
+ 	const bool write = op_is_write(req_op(rq));
+ 	struct loop_device *lo = rq->q->queuedata;
+ 	int ret = 0;
++	struct mem_cgroup *old_memcg = NULL;
+ 
+ 	if (write && (lo->lo_flags & LO_FLAGS_READ_ONLY)) {
+ 		ret = -EIO;
+ 		goto failed;
+ 	}
+ 
++	if (cmd->blkcg_css)
++		kthread_associate_blkcg(cmd->blkcg_css);
++	if (cmd->memcg_css)
++		old_memcg = set_active_memcg(
++			mem_cgroup_from_css(cmd->memcg_css));
++
+ 	ret = do_req_filebacked(lo, rq);
++
++	if (cmd->blkcg_css)
++		kthread_associate_blkcg(NULL);
++
++	if (cmd->memcg_css) {
++		set_active_memcg(old_memcg);
++		css_put(cmd->memcg_css);
++	}
+  failed:
+ 	/* complete non-aio request */
+ 	if (!cmd->use_aio || ret) {
+@@ -2208,7 +2229,7 @@ static void loop_free_idle_workers(struct timer_list *timer)
+ 			break;
+ 		list_del(&worker->idle_list);
+ 		rb_erase(&worker->rb_node, &lo->worker_tree);
+-		css_put(worker->css);
++		css_put(worker->blkcg_css);
+ 		kfree(worker);
+ 	}
+ 	if (!list_empty(&lo->idle_worker_list))
+diff --git a/drivers/block/loop.h b/drivers/block/loop.h
+index 0162b55a68e1..4d6886d9855a 100644
+--- a/drivers/block/loop.h
++++ b/drivers/block/loop.h
+@@ -75,7 +75,8 @@ struct loop_cmd {
+ 	long ret;
+ 	struct kiocb iocb;
+ 	struct bio_vec *bvec;
+-	struct cgroup_subsys_state *css;
++	struct cgroup_subsys_state *blkcg_css;
++	struct cgroup_subsys_state *memcg_css;
+ };
+ 
+ /* Support for loadable transfer modules */
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index d0b036123c6a..fceac9f66d96 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1031,6 +1031,12 @@ static inline struct mem_cgroup *get_mem_cgroup_from_page(struct page *page)
+ 	return NULL;
+ }
+ 
++static inline
++struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *css)
++{
++	return NULL;
++}
++
+ static inline void mem_cgroup_put(struct mem_cgroup *memcg)
+ {
+ }
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index dd247747ec14..16d059a89a68 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -580,6 +580,7 @@ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgrp,
+ 	rcu_read_unlock();
+ 	return css;
+ }
++EXPORT_SYMBOL_GPL(cgroup_get_e_css);
+ 
+ static void cgroup_get_live(struct cgroup *cgrp)
+ {
 -- 
 2.24.1
 
