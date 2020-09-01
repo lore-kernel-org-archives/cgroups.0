@@ -1,301 +1,319 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 22/27] blk-iocost: implement delay adjustment hysteresis
-Date: Tue,  1 Sep 2020 14:52:52 -0400
-Message-ID: <20200901185257.645114-23-tj@kernel.org>
+Subject: [PATCH 19/27] blk-iocost: revamp donation amount determination
+Date: Tue,  1 Sep 2020 14:52:49 -0400
+Message-ID: <20200901185257.645114-20-tj@kernel.org>
 References: <20200901185257.645114-1-tj@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=/gDenaieQk48kIz1Dxz8dwvYLvZzUa/DeKiS9toAb8Q=;
-        b=I4fY2NLjgj8385ru65Sz82/4IM7JXkJS+IiDLhMZnRa1Tm8osQSWfk67eSJlTm0WCY
-         RsfNgkUCYEO9BIV5hOX7ClROxm8cXDqwo4JYghrGukEbGm5zv8EZYPJxaR5UtjOLjoJg
-         xqtq9gC8dlItEeFrQU1a2LRw96Nu5Uc56fCWikDtVpDQUeZZbo9dqnCNao0Eim+yNIcF
-         2/slpMVry900hho5fv/duDhqzbmF1mqk62JCtK2uFZc9Nl7iUmbU3ovM+aWZBSM9yL3W
-         MMJfzTCvrZDbnLQlc2axXonMngqhlvUpEy4UT+5pD3vP9xzfTSAKRt9ZEiyGnFEyEZOM
-         o7xw==
+        bh=j8/MHtQnIWUZGz4ny60HkFTlkU4fit1K0ZbZqOii9ss=;
+        b=i79+RILXC83YIcNxFkRKDBXVMxYXYhWO3kwo/JYJSe6wJY/kXeb/hvcaszKCRwozRc
+         V/WOpFOZ25hnm6tx5GkOi7Q7r6F4e+CWuo8VV+pk7wF44mwqiXl3x7Pw/xs/BVZb83c1
+         f67j13nEkyz064HpuEyqDhCg7Qj/4VZlFA9v5aCn9A5F8ziCmh336Dq5M5Br1bYAfuhj
+         IisMtpx3WCJrnP0LQKH8X7Mw/b+dWa3E2lri3h5Yk62+AGPTFIKPVZFIR5ZKmORPuGRq
+         xMETKtBfvbhX3CZBV7wzfSN4YkrAHQ78GORtw74nH+kSc9wJ5o6oPiQgrO3JyH9gSloU
+         QFng==
 In-Reply-To: <20200901185257.645114-1-tj@kernel.org>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: axboe@kernel.dk
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, newella@fb.com, Tejun Heo <tj@kernel.org>, Josef Bacik <josef@toxicpanda.com>
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, newella@fb.com, Tejun Heo <tj@kernel.org>
 
-Curently, iocost syncs the delay duration to the outstanding debt amount,
-which seemed enough to protect the system from anon memory hogs. However,
-that was mostly because the delay calcuation was using hweight_inuse which
-quickly converges towards zero under debt for delay duration calculation,
-often pusnishing debtors overly harshly for longer than deserved.
+iocost has various safety nets to combat inuse adjustment calculation
+inaccuracies. With Andy's method implemented in transfer_surpluses(), inuse
+adjustment calculations are now accurate and we can make donation amount
+determinations accurate too.
 
-The previous patch fixed the delay calcuation and now the protection against
-anonymous memory hogs isn't enough because the effect of delay is indirect
-and non-linear and a huge amount of future debt can accumulate abruptly
-while unthrottled.
+* Stop keeping track of past usage history and using the maximum. Act on the
+  immediate usage information.
 
-This patch implements delay hysteresis so that delay is decayed
-exponentially over time instead of getting cleared immediately as debt is
-paid off. While the overall behavior is similar to the blk-cgroup
-implementation used by blk-iolatency, a lot of the details are different and
-due to the empirical nature of the mechanism, it's challenging to adapt the
-mechanism for one controller without negatively impacting the other.
+* Remove donation constraints defined by SURPLUS_* constants. Donate
+  whatever isn't used.
 
-As the delay is gradually decayed now, there's no point in running it from
-its own hrtimer. Periodic updates are now performed from ioc_timer_fn() and
-the dedicated hrtimer is removed.
+* Determine the donation amount so that the iocg will end up with
+  MARGIN_TARGET_PCT budget at the end of the coming period assuming the same
+  usage as the previous period. TARGET is set at 50% of period, which is the
+  previous maximum. This provides smooth convergence for most repetitive IO
+  patterns.
+
+* Apply donation logic early at 20% budget. There's no risk in doing so as
+  the calculation is based on the delta between the current budget and the
+  target budget at the end of the coming period.
+
+* Remove preemptive iocg activation for zero cost IOs. As donation can reach
+  near zero now, the mere activation doesn't provide any protection anymore.
+  In the unlikely case that this becomes a problem, the right solution is
+  assigning appropriate costs for such IOs.
+
+This significantly improves the donation determination logic while also
+simplifying it. Now all donations are immediate, exact and smooth.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Josef Bacik <josef@toxicpanda.com>
+Cc: Andy Newell <newella@fb.com>
 ---
- block/blk-cgroup.c |  23 ++++++---
- block/blk-iocost.c | 119 ++++++++++++++++++++++++++-------------------
- 2 files changed, 86 insertions(+), 56 deletions(-)
+ block/blk-iocost.c | 133 +++++++++++++++++----------------------------
+ 1 file changed, 51 insertions(+), 82 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index c195365c9817..d33dd6be1d9c 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -1613,16 +1613,24 @@ static void blkcg_scale_delay(struct blkcg_gq *blkg, u64 now)
- static void blkcg_maybe_throttle_blkg(struct blkcg_gq *blkg, bool use_memdelay)
- {
- 	unsigned long pflags;
-+	bool clamp;
- 	u64 now = ktime_to_ns(ktime_get());
- 	u64 exp;
- 	u64 delay_nsec = 0;
- 	int tok;
- 
- 	while (blkg->parent) {
--		if (atomic_read(&blkg->use_delay)) {
-+		int use_delay = atomic_read(&blkg->use_delay);
-+
-+		if (use_delay) {
-+			u64 this_delay;
-+
- 			blkcg_scale_delay(blkg, now);
--			delay_nsec = max_t(u64, delay_nsec,
--					   atomic64_read(&blkg->delay_nsec));
-+			this_delay = atomic64_read(&blkg->delay_nsec);
-+			if (this_delay > delay_nsec) {
-+				delay_nsec = this_delay;
-+				clamp = use_delay > 0;
-+			}
- 		}
- 		blkg = blkg->parent;
- 	}
-@@ -1634,10 +1642,13 @@ static void blkcg_maybe_throttle_blkg(struct blkcg_gq *blkg, bool use_memdelay)
- 	 * Let's not sleep for all eternity if we've amassed a huge delay.
- 	 * Swapping or metadata IO can accumulate 10's of seconds worth of
- 	 * delay, and we want userspace to be able to do _something_ so cap the
--	 * delays at 1 second.  If there's 10's of seconds worth of delay then
--	 * the tasks will be delayed for 1 second for every syscall.
-+	 * delays at 0.25s. If there's 10's of seconds worth of delay then the
-+	 * tasks will be delayed for 0.25 second for every syscall. If
-+	 * blkcg_set_delay() was used as indicated by negative use_delay, the
-+	 * caller is responsible for regulating the range.
- 	 */
--	delay_nsec = min_t(u64, delay_nsec, 250 * NSEC_PER_MSEC);
-+	if (clamp)
-+		delay_nsec = min_t(u64, delay_nsec, 250 * NSEC_PER_MSEC);
- 
- 	if (use_memdelay)
- 		psi_memstall_enter(&pflags);
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index d2b69d87f3e7..9cb8f29f01f5 100644
+index ecc23b827e5d..694f1487208a 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -270,6 +270,31 @@ enum {
- 	/* unbusy hysterisis */
- 	UNBUSY_THR_PCT		= 75,
+@@ -217,12 +217,14 @@ enum {
+ 	MAX_PERIOD		= USEC_PER_SEC,
  
-+	/*
-+	 * The effect of delay is indirect and non-linear and a huge amount of
-+	 * future debt can accumulate abruptly while unthrottled. Linearly scale
-+	 * up delay as debt is going up and then let it decay exponentially.
-+	 * This gives us quick ramp ups while delay is accumulating and long
-+	 * tails which can help reducing the frequency of debt explosions on
-+	 * unthrottle. The parameters are experimentally determined.
-+	 *
-+	 * The delay mechanism provides adequate protection and behavior in many
-+	 * cases. However, this is far from ideal and falls shorts on both
-+	 * fronts. The debtors are often throttled too harshly costing a
-+	 * significant level of fairness and possibly total work while the
-+	 * protection against their impacts on the system can be choppy and
-+	 * unreliable.
-+	 *
-+	 * The shortcoming primarily stems from the fact that, unlike for page
-+	 * cache, the kernel doesn't have well-defined back-pressure propagation
-+	 * mechanism and policies for anonymous memory. Fully addressing this
-+	 * issue will likely require substantial improvements in the area.
-+	 */
-+	MIN_DELAY_THR_PCT	= 500,
-+	MAX_DELAY_THR_PCT	= 25000,
-+	MIN_DELAY		= 250,
-+	MAX_DELAY		= 250 * USEC_PER_MSEC,
-+
+ 	/*
+-	 * A cgroup's vtime can run 50% behind the device vtime, which
++	 * iocg->vtime is targeted at 50% behind the device vtime, which
+ 	 * serves as its IO credit buffer.  Surplus weight adjustment is
+ 	 * immediately canceled if the vtime margin runs below 10%.
+ 	 */
+ 	MARGIN_MIN_PCT		= 10,
+-	MARGIN_MAX_PCT		= 50,
++	MARGIN_LOW_PCT		= 20,
++	MARGIN_TARGET_PCT	= 50,
++	MARGIN_MAX_PCT		= 100,
+ 
+ 	/* Have some play in timer operations */
+ 	TIMER_SLACK_PCT		= 1,
+@@ -234,17 +236,6 @@ enum {
+ 	 */
+ 	VTIME_VALID_DUR		= 300 * USEC_PER_SEC,
+ 
+-	/*
+-	 * Remember the past three non-zero usages and use the max for
+-	 * surplus calculation.  Three slots guarantee that we remember one
+-	 * full period usage from the last active stretch even after
+-	 * partial deactivation and re-activation periods.  Don't start
+-	 * giving away weight before collecting two data points to prevent
+-	 * hweight adjustments based on one partial activation period.
+-	 */
+-	NR_USAGE_SLOTS		= 3,
+-	MIN_VALID_USAGES	= 2,
+-
+ 	/* 1/64k is granular enough and can easily be handled w/ u32 */
+ 	WEIGHT_ONE		= 1 << 16,
+ 
+@@ -280,14 +271,6 @@ enum {
  	/* don't let cmds which take a very long time pin lagging for too long */
  	MAX_LAGGING_PERIODS	= 10,
  
-@@ -473,6 +498,10 @@ struct ioc_gq {
- 	atomic64_t			done_vtime;
- 	u64				abs_vdebt;
- 
-+	/* current delay in effect and when it started */
-+	u64				delay;
-+	u64				delay_at;
-+
- 	/*
- 	 * The period this iocg was last active in.  Used for deactivation
- 	 * and invalidating `vtime`.
-@@ -495,7 +524,6 @@ struct ioc_gq {
- 
- 	struct wait_queue_head		waitq;
- 	struct hrtimer			waitq_timer;
--	struct hrtimer			delay_timer;
- 
- 	/* timestamp at the latest activation */
- 	u64				activated_at;
-@@ -1204,58 +1232,50 @@ static bool iocg_kick_delay(struct ioc_gq *iocg, struct ioc_now *now)
- {
- 	struct ioc *ioc = iocg->ioc;
- 	struct blkcg_gq *blkg = iocg_to_blkg(iocg);
--	u64 vtime = atomic64_read(&iocg->vtime);
--	u64 delta_ns, expires, oexpires;
-+	u64 tdelta, delay, new_delay;
-+	s64 vover, vover_pct;
- 	u32 hwa;
- 
- 	lockdep_assert_held(&iocg->waitq.lock);
- 
--	/* debt-adjust vtime */
-+	/* calculate the current delay in effect - 1/2 every second */
-+	tdelta = now->now - iocg->delay_at;
-+	if (iocg->delay)
-+		delay = iocg->delay >> div64_u64(tdelta, USEC_PER_SEC);
-+	else
-+		delay = 0;
-+
-+	/* calculate the new delay from the debt amount */
- 	current_hweight(iocg, &hwa, NULL);
--	vtime += abs_cost_to_cost(iocg->abs_vdebt, hwa);
-+	vover = atomic64_read(&iocg->vtime) +
-+		abs_cost_to_cost(iocg->abs_vdebt, hwa) - now->vnow;
-+	vover_pct = div64_s64(100 * vover, ioc->period_us * now->vrate);
-+
-+	if (vover_pct <= MIN_DELAY_THR_PCT)
-+		new_delay = 0;
-+	else if (vover_pct >= MAX_DELAY_THR_PCT)
-+		new_delay = MAX_DELAY;
-+	else
-+		new_delay = MIN_DELAY +
-+			div_u64((MAX_DELAY - MIN_DELAY) *
-+				(vover_pct - MIN_DELAY_THR_PCT),
-+				MAX_DELAY_THR_PCT - MIN_DELAY_THR_PCT);
- 
 -	/*
--	 * Clear or maintain depending on the overage. Non-zero vdebt is what
--	 * guarantees that @iocg is online and future iocg_kick_delay() will
--	 * clear use_delay. Don't leave it on when there's no vdebt.
+-	 * If usage% * 1.25 + 2% is lower than hweight% by more than 3%,
+-	 * donate the surplus.
 -	 */
--	if (!iocg->abs_vdebt || time_before_eq64(vtime, now->vnow)) {
--		blkcg_clear_delay(blkg);
--		return false;
-+	/* pick the higher one and apply */
-+	if (new_delay > delay) {
-+		iocg->delay = new_delay;
-+		iocg->delay_at = now->now;
-+		delay = new_delay;
- 	}
--	if (!atomic_read(&blkg->use_delay) &&
--	    time_before_eq64(vtime, now->vnow + ioc->margins.target))
--		return false;
+-	SURPLUS_SCALE_PCT	= 125,			/* * 125% */
+-	SURPLUS_SCALE_ABS	= WEIGHT_ONE / 50,	/* + 2% */
+-	SURPLUS_MIN_ADJ_DELTA	= WEIGHT_ONE / 33,	/* 3% */
 -
--	/* use delay */
--	delta_ns = DIV64_U64_ROUND_UP(vtime - now->vnow,
--				      now->vrate) * NSEC_PER_USEC;
--	blkcg_set_delay(blkg, delta_ns);
--	expires = now->now_ns + delta_ns;
+ 	/* switch iff the conditions are met for longer than this */
+ 	AUTOP_CYCLE_NSEC	= 10LLU * NSEC_PER_SEC,
  
--	/* if already active and close enough, don't bother */
--	oexpires = ktime_to_ns(hrtimer_get_softexpires(&iocg->delay_timer));
--	if (hrtimer_is_queued(&iocg->delay_timer) &&
--	    abs(oexpires - expires) <= ioc->timer_slack_ns)
-+	if (delay >= MIN_DELAY) {
-+		blkcg_set_delay(blkg, delay * NSEC_PER_USEC);
- 		return true;
+@@ -376,6 +359,8 @@ struct ioc_params {
+ 
+ struct ioc_margins {
+ 	s64				min;
++	s64				low;
++	s64				target;
+ 	s64				max;
+ };
+ 
+@@ -514,11 +499,7 @@ struct ioc_gq {
+ 	struct iocg_stat		desc_stat;
+ 	struct iocg_stat		last_stat;
+ 	u64				last_stat_abs_vusage;
 -
--	hrtimer_start_range_ns(&iocg->delay_timer, ns_to_ktime(expires),
--			       ioc->timer_slack_ns, HRTIMER_MODE_ABS);
--	return true;
--}
--
--static enum hrtimer_restart iocg_delay_timer_fn(struct hrtimer *timer)
--{
--	struct ioc_gq *iocg = container_of(timer, struct ioc_gq, delay_timer);
--	struct ioc_now now;
--	unsigned long flags;
--
--	spin_lock_irqsave(&iocg->waitq.lock, flags);
--	ioc_now(iocg->ioc, &now);
--	iocg_kick_delay(iocg, &now);
--	spin_unlock_irqrestore(&iocg->waitq.lock, flags);
--
--	return HRTIMER_NORESTART;
-+	} else {
-+		iocg->delay = 0;
-+		blkcg_clear_delay(blkg);
-+		return false;
-+	}
+-	/* usage is recorded as fractions of WEIGHT_ONE */
+-	u32				usage_delta_us;
+-	int				usage_idx;
+-	u32				usages[NR_USAGE_SLOTS];
++	u64				usage_delta_us;
+ 
+ 	/* this iocg's depth in the hierarchy and ancestors including self */
+ 	int				level;
+@@ -737,6 +718,8 @@ static void ioc_refresh_margins(struct ioc *ioc)
+ 	u64 vrate = atomic64_read(&ioc->vtime_rate);
+ 
+ 	margins->min = (period_us * MARGIN_MIN_PCT / 100) * vrate;
++	margins->low = (period_us * MARGIN_LOW_PCT / 100) * vrate;
++	margins->target = (period_us * MARGIN_TARGET_PCT / 100) * vrate;
+ 	margins->max = (period_us * MARGIN_MAX_PCT / 100) * vrate;
  }
  
- static void iocg_incur_debt(struct ioc_gq *iocg, u64 abs_cost,
-@@ -1356,9 +1376,10 @@ static void iocg_kick_waitq(struct ioc_gq *iocg, bool pay_debt,
- 		atomic64_add(vpay, &iocg->done_vtime);
- 		iocg_pay_debt(iocg, abs_vpay, now);
- 		vbudget -= vpay;
-+	}
- 
-+	if (iocg->abs_vdebt || iocg->delay)
- 		iocg_kick_delay(iocg, now);
--	}
- 
- 	/*
- 	 * Debt can still be outstanding if we haven't paid all yet or the
-@@ -1906,12 +1927,13 @@ static void ioc_timer_fn(struct timer_list *timer)
- 	 */
- 	list_for_each_entry_safe(iocg, tiocg, &ioc->active_iocgs, active_list) {
- 		if (!waitqueue_active(&iocg->waitq) && !iocg->abs_vdebt &&
--		    !iocg_is_idle(iocg))
-+		    !iocg->delay && !iocg_is_idle(iocg))
- 			continue;
- 
- 		spin_lock(&iocg->waitq.lock);
- 
--		if (waitqueue_active(&iocg->waitq) || iocg->abs_vdebt) {
-+		if (waitqueue_active(&iocg->waitq) || iocg->abs_vdebt ||
-+		    iocg->delay) {
- 			/* might be oversleeping vtime / hweight changes, kick */
- 			iocg_kick_waitq(iocg, true, &now);
- 		} else if (iocg_is_idle(iocg)) {
-@@ -2641,8 +2663,6 @@ static void ioc_pd_init(struct blkg_policy_data *pd)
- 	init_waitqueue_head(&iocg->waitq);
- 	hrtimer_init(&iocg->waitq_timer, CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
- 	iocg->waitq_timer.function = iocg_waitq_timer_fn;
--	hrtimer_init(&iocg->delay_timer, CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
--	iocg->delay_timer.function = iocg_delay_timer_fn;
- 
- 	iocg->level = blkg->blkcg->css.cgroup->level;
- 
-@@ -2679,7 +2699,6 @@ static void ioc_pd_free(struct blkg_policy_data *pd)
- 		spin_unlock_irqrestore(&ioc->lock, flags);
- 
- 		hrtimer_cancel(&iocg->waitq_timer);
--		hrtimer_cancel(&iocg->delay_timer);
+@@ -1228,7 +1211,7 @@ static bool iocg_kick_delay(struct ioc_gq *iocg, struct ioc_now *now)
+ 		return false;
  	}
- 	free_percpu(iocg->pcpu_stat);
- 	kfree(iocg);
+ 	if (!atomic_read(&blkg->use_delay) &&
+-	    time_before_eq64(vtime, now->vnow + ioc->margins.max))
++	    time_before_eq64(vtime, now->vnow + ioc->margins.target))
+ 		return false;
+ 
+ 	/* use delay */
+@@ -1527,7 +1510,7 @@ static u32 hweight_after_donation(struct ioc_gq *iocg, u32 hwm, u32 usage,
+ {
+ 	struct ioc *ioc = iocg->ioc;
+ 	u64 vtime = atomic64_read(&iocg->vtime);
+-	s64 excess;
++	s64 excess, delta, target, new_hwi;
+ 
+ 	/* see whether minimum margin requirement is met */
+ 	if (waitqueue_active(&iocg->waitq) ||
+@@ -1542,15 +1525,28 @@ static u32 hweight_after_donation(struct ioc_gq *iocg, u32 hwm, u32 usage,
+ 		vtime += excess;
+ 	}
+ 
+-	/* add margin */
+-	usage = DIV_ROUND_UP(usage * SURPLUS_SCALE_PCT, 100);
+-	usage += SURPLUS_SCALE_ABS;
+-
+-	/* don't bother if the surplus is too small */
+-	if (usage + SURPLUS_MIN_ADJ_DELTA > hwm)
+-		return hwm;
++	/*
++	 * Let's say the distance between iocg's and device's vtimes as a
++	 * fraction of period duration is delta. Assuming that the iocg will
++	 * consume the usage determined above, we want to determine new_hwi so
++	 * that delta equals MARGIN_TARGET at the end of the next period.
++	 *
++	 * We need to execute usage worth of IOs while spending the sum of the
++	 * new budget (1 - MARGIN_TARGET) and the leftover from the last period
++	 * (delta):
++	 *
++	 *   usage = (1 - MARGIN_TARGET + delta) * new_hwi
++	 *
++	 * Therefore, the new_hwi is:
++	 *
++	 *   new_hwi = usage / (1 - MARGIN_TARGET + delta)
++	 */
++	delta = div64_s64(WEIGHT_ONE * (now->vnow - vtime),
++			  now->vnow - ioc->period_at_vtime);
++	target = WEIGHT_ONE * MARGIN_TARGET_PCT / 100;
++	new_hwi = div64_s64(WEIGHT_ONE * usage, WEIGHT_ONE - target + delta);
+ 
+-	return usage;
++	return clamp_t(s64, new_hwi, 1, hwm);
+ }
+ 
+ /*
+@@ -1812,7 +1808,7 @@ static void ioc_timer_fn(struct timer_list *timer)
+ 	u32 ppm_wthr = MILLION - ioc->params.qos[QOS_WPPM];
+ 	u32 missed_ppm[2], rq_wait_pct;
+ 	u64 period_vtime;
+-	int prev_busy_level, i;
++	int prev_busy_level;
+ 
+ 	/* how were the latencies during the period? */
+ 	ioc_lat_stat(ioc, missed_ppm, &rq_wait_pct);
+@@ -1857,11 +1853,10 @@ static void ioc_timer_fn(struct timer_list *timer)
+ 	}
+ 	commit_weights(ioc);
+ 
+-	/* calc usages and see whether some weights need to be moved around */
++	/* calc usage and see whether some weights need to be moved around */
+ 	list_for_each_entry(iocg, &ioc->active_iocgs, active_list) {
+-		u64 vdone, vtime, usage_us;
+-		u32 hw_active, hw_inuse, usage;
+-		int uidx, nr_valid;
++		u64 vdone, vtime, usage_us, usage_dur;
++		u32 usage, hw_active, hw_inuse;
+ 
+ 		/*
+ 		 * Collect unused and wind vtime closer to vnow to prevent
+@@ -1886,15 +1881,11 @@ static void ioc_timer_fn(struct timer_list *timer)
+ 			nr_lagging++;
+ 
+ 		/*
+-		 * Determine absolute usage factoring in pending and in-flight
+-		 * IOs to avoid stalls and high-latency completions appearing as
+-		 * idle.
++		 * Determine absolute usage factoring in in-flight IOs to avoid
++		 * high-latency completions appearing as idle.
+ 		 */
+ 		usage_us = iocg->usage_delta_us;
+-		if (waitqueue_active(&iocg->waitq) && time_before64(vtime, now.vnow))
+-			usage_us += DIV64_U64_ROUND_UP(
+-				cost_to_abs_cost(now.vnow - vtime, hw_inuse),
+-				now.vrate);
++
+ 		if (vdone != vtime) {
+ 			u64 inflight_us = DIV64_U64_ROUND_UP(
+ 				cost_to_abs_cost(vtime - vdone, hw_inuse),
+@@ -1902,43 +1893,22 @@ static void ioc_timer_fn(struct timer_list *timer)
+ 			usage_us = max(usage_us, inflight_us);
+ 		}
+ 
+-		/* convert to hweight based usage ratio and record */
+-		uidx = (iocg->usage_idx + 1) % NR_USAGE_SLOTS;
+-
+-		if (time_after64(vtime, now.vnow - ioc->margins.min)) {
+-			iocg->usage_idx = uidx;
+-			iocg->usages[uidx] = WEIGHT_ONE;
+-		} else if (usage_us) {
+-			u64 started_at, dur;
+-
+-			if (time_after64(iocg->activated_at, ioc->period_at))
+-				started_at = iocg->activated_at;
+-			else
+-				started_at = ioc->period_at;
+-
+-			dur = max_t(u64, now.now - started_at, 1);
++		/* convert to hweight based usage ratio */
++		if (time_after64(iocg->activated_at, ioc->period_at))
++			usage_dur = max_t(u64, now.now - iocg->activated_at, 1);
++		else
++			usage_dur = max_t(u64, now.now - ioc->period_at, 1);
+ 
+-			iocg->usage_idx = uidx;
+-			iocg->usages[uidx] = clamp_t(u32,
+-				DIV64_U64_ROUND_UP(usage_us * WEIGHT_ONE, dur),
++		usage = clamp_t(u32,
++				DIV64_U64_ROUND_UP(usage_us * WEIGHT_ONE,
++						   usage_dur),
+ 				1, WEIGHT_ONE);
+-		}
+-
+-		/* base the decision on max historical usage */
+-		for (i = 0, usage = 0, nr_valid = 0; i < NR_USAGE_SLOTS; i++) {
+-			if (iocg->usages[i]) {
+-				usage = max(usage, iocg->usages[i]);
+-				nr_valid++;
+-			}
+-		}
+-		if (nr_valid < MIN_VALID_USAGES)
+-			usage = WEIGHT_ONE;
+ 
+ 		/* see whether there's surplus vtime */
+ 		WARN_ON_ONCE(!list_empty(&iocg->surplus_list));
+ 		if (hw_inuse < hw_active ||
+ 		    (!waitqueue_active(&iocg->waitq) &&
+-		     time_before64(vtime, now.vnow - ioc->margins.max))) {
++		     time_before64(vtime, now.vnow - ioc->margins.low))) {
+ 			u32 hwa, hwm, new_hwi;
+ 
+ 			/*
+@@ -2175,15 +2145,14 @@ static void ioc_rqos_throttle(struct rq_qos *rqos, struct bio *bio)
+ 	if (!ioc->enabled || !iocg->level)
+ 		return;
+ 
+-	/* always activate so that even 0 cost IOs get protected to some level */
+-	if (!iocg_activate(iocg, &now))
+-		return;
+-
+ 	/* calculate the absolute vtime cost */
+ 	abs_cost = calc_vtime_cost(bio, iocg, false);
+ 	if (!abs_cost)
+ 		return;
+ 
++	if (!iocg_activate(iocg, &now))
++		return;
++
+ 	iocg->cursor = bio_end_sector(bio);
+ 
+ 	vtime = atomic64_read(&iocg->vtime);
 -- 
 2.26.2
 
