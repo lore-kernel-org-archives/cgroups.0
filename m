@@ -1,167 +1,146 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET for-5.10/block] blk-iocost: iocost: improve donation, debt and excess handling
-Date: Tue,  1 Sep 2020 14:52:30 -0400
-Message-ID: <20200901185257.645114-1-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 03/27] blk-iocost: use local[64]_t for percpu stat
+Date: Tue,  1 Sep 2020 14:52:33 -0400
+Message-ID: <20200901185257.645114-4-tj@kernel.org>
+References: <20200901185257.645114-1-tj@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=aT4PofSSAV/4Uz0nRqbPA+6cW6GzyIGarpofm1HYm5U=;
-        b=KHevFLIoVNyzIYnY/WEmliVjng0ASRrMatTBReOEcDHUqvZHsJHzD5Ck3aWSucz8lx
-         RM7rcSa32POkT5nQ0He0gcJ1/N/Q3F6FSwIFq6QXe1s8nSjpSQKF0QfNKqI5v7DVE3jw
-         dSO3EnndfgS26GQpGbmZOcW5dBRNFNT+/Ye6H+so8vfcxMkRcM2JdAdF2sNZ+oS7L05a
-         utqwa8PmFFQBEFFktZO8vIqnLTXZyhRCYQPZM+5hm5ZohhM6qh+IAzwNa5qnTuW9JEh0
-         tW6ajDIUwUn+spaRZKWHi/za/WAVrousISxNYdlTeZ/etnQz4fbuHGeWSpw5F8h/hJyI
-         TtRw==
-Sender: linux-block-owner@vger.kernel.org
+        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=6GL4H8pij+pmYHNiyj1arTTHlbzqgLGjt59578Jx0II=;
+        b=Xf4/aamsMdEx/yZ2bHoNq1RdPJ9KMsJVCeiC8A/RGlXxqVkMePHHHhDwHH+qzmu/Y3
+         n9Syo9hvtP0Dk/O9OAH0ITX0S0NuKlDdBOMzhcDkbF+DbIoilxy3C+CFtyTCegiXXNMt
+         WYesuWY0HT6/xGbQDx0XwSiLZg9P61eYq+gHpIR0y80Ni8HrJBFwmgIgSMrw/5FWflN7
+         vOrHHnlsVjfz3cMRKdHZiiHy8AISdk3BmWqUmJ0KHnTJAnqNtlkwD3eDoGE5is9G1SGL
+         najP9zacapJk6+8W7bt8Eyk2nPn2jK5rQwhzr4vGDSCt7HI4iRt3uQFAngQACqLdfgV1
+         Up3Q==
+In-Reply-To: <20200901185257.645114-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: axboe@kernel.dk
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, newella@fb.com
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, newella-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Hello,
+blk-iocost has been reading percpu stat counters from remote cpus which on
+some archs can lead to torn reads in really rare occassions. Use local[64]_t
+for those counters.
 
-This patchset improves iocost in three areas to make iocost internal
-operations more accurate and immediate with the goal of improving work
-conservation and distribution fairness, and removing dependence on vrate
-adjustments for masking work conservation issues. This improves overall
-control quality and allows regulating vrate more tightly for more consistent
-behavior as vrate now only needs to respond to device behavior changes.
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+---
+ block/blk-iocost.c | 37 +++++++++++++++++++++++++++----------
+ 1 file changed, 27 insertions(+), 10 deletions(-)
 
-1. Donation
-
-iocost implements work-conservation by making under-utliized cgroups to
-donate unused budgets to saturated cgroups. This approach has the
-significant advantage that calculation or synchronization inaccuracies never
-lead to over utilization of the device while allowing all hot path
-operations to be local to each cgroup - it's inherently safe w/o needing
-system-wide synchronization in hot paths.
-
-However, this approach requires dynamically adjusting weights according to
-the current usage of each cgroup. Given that a cgroup with weight X is using
-only a portion of its hierarchical absoulte share, it needs to scale down X
-so that the share matches the observed usage. With nesting and multiple
-nodes needing adjustments at once, the math is non-trivial. The current
-implementation works around the issue by trying to converge by repeatedly
-under-adjusting the weight of each cgroup.
-
-The innate inaccuracies can lead to significant errors impacting work
-conservation and fairness, and the workarounds around them weigh down the
-rest of the control logic.
-
-Andy Newell devised a method to calculate the exact weight updates given the
-target hierarchical shares which is described in the following pdfs.
-
-  https://drive.google.com/file/d/1PsJwxPFtjUnwOY1QJ5AeICCcsL7BM3bo
-  https://drive.google.com/file/d/1vONz1-fzVO7oY5DXXsLjSxEtYYQbOvsE
-  https://drive.google.com/file/d/1WcrltBOSPN0qXVdBgnKm4mdp9FhuEFQN
-
-This patchset implements Andy's method for precise donation weight
-adjustments on each period timer.
-
-Donation amount is also adjusted during a period if the donor is running out
-of budget. This mechanism used to be very coarse as donation calculations
-weren't accurate to begin with. Now that donation calculations are exact,
-this patchset improves in-period adjustments too.
-
-2. Debt
-
-Some IOs which are attributed to a low priority cgroup can cause severe
-priority inversions when blocked - e.g. swap outs and filesystem metadata
-IOs. These IOs are issued right away even when the cgroup doesn't have
-enough budget. When this happens, the cgroup incurs debt, which the cgroup
-has to pay off before issuing more IOs.
-
-There were several issues around debt handling around how weight is adjusted
-while under debt, how payment is calculated, and how anonymous memory delay
-duration is determined. This patchset fixes and improves debt handling and
-adds debt forgiveness mechanism which avoids extended pathological stalling
-on very slow devices.
-
-3. Excess handling
-
-During a period, each cgroup mostly runs on its own without constantly
-synchronizing with other cgroups. This often leads to excess budget which
-needs to be thrown away at the end of the period, which can have negative
-impact on work conservation. This is somewhat offset by vrate adjustments
-but vrate compensation is delayed and can sometimes be erratic and it
-prevents us from confining vrate for more consistent behavior.
-
-This patchset implements excess vrate compensation where the effective vrate
-is transparently boosted to compensate for excesses without affecting the
-regular latency based vrate adjustment mechanism. This compensates for
-excesses immediately and accurately and allows the regular vrate adjustment
-mechanism to worry only about device behavior changes.
-
-
-This patchset is on top of for-5.10/block (2b64038972e4) and availalbe in
-the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git iocost-andys
-
-It contains the following 27 patches.
-
- 0001-blk-iocost-ioc_pd_free-shouldn-t-assume-irq-disabled.patch
- 0002-blk-stat-make-q-stats-lock-irqsafe.patch
- 0003-blk-iocost-use-local-64-_t-for-percpu-stat.patch
- 0004-blk-iocost-rename-propagate_active_weights-to-propag.patch
- 0005-blk-iocost-clamp-inuse-and-skip-noops-in-__propagate.patch
- 0006-blk-iocost-move-iocg_kick_delay-above-iocg_kick_wait.patch
- 0007-blk-iocost-make-iocg_kick_waitq-call-iocg_kick_delay.patch
- 0008-blk-iocost-s-HWEIGHT_WHOLE-WEIGHT_ONE-g.patch
- 0009-blk-iocost-use-WEIGHT_ONE-based-fixed-point-number-f.patch
- 0010-blk-iocost-make-ioc_now-now-and-ioc-period_at-64bit.patch
- 0011-blk-iocost-streamline-vtime-margin-and-timer-slack-h.patch
- 0012-blk-iocost-grab-ioc-lock-for-debt-handling.patch
- 0013-blk-iocost-add-absolute-usage-stat.patch
- 0014-blk-iocost-calculate-iocg-usages-from-iocg-local_sta.patch
- 0015-blk-iocost-replace-iocg-has_surplus-with-surplus_lis.patch
- 0016-blk-iocost-decouple-vrate-adjustment-from-surplus-tr.patch
- 0017-blk-iocost-restructure-surplus-donation-logic.patch
- 0018-blk-iocost-implement-Andy-s-method-for-donation-weig.patch
- 0019-blk-iocost-revamp-donation-amount-determination.patch
- 0020-blk-iocost-revamp-in-period-donation-snapbacks.patch
- 0021-blk-iocost-revamp-debt-handling.patch
- 0022-blk-iocost-implement-delay-adjustment-hysteresis.patch
- 0023-blk-iocost-halve-debts-if-device-stays-idle.patch
- 0024-blk-iocost-implement-vtime-loss-compensation.patch
- 0025-blk-iocost-restore-inuse-update-tracepoints.patch
- 0026-blk-iocost-add-three-debug-stat-cost.wait-indebt-and.patch
- 0027-blk-iocost-update-iocost_monitor.py.patch
-
-0001-0002 are fixes w/ stable cc'd.
-
-0003-0012 are prep patches - increasing calculation precision for weights,
-switching some fields to 64bit, code reorganization, locking changes and so
-on.
-
-0013-0014 implement per-cgroup absolute usage tracking so that control
-decisions aren't affected by weight distribution changes.
-
-0015-0017 restructure donation logic to prepare for Andy's weight adjustment
-method.
-
-0018-0020 implement Andy's weight adjustment method, improve donation logic
-both on period and in period.
-
-0021-0023 improve debt and delay handling.
-
-0024 implements budget excess compensation.
-
-0025-0027 update tracepoints, monitoring script, debug stat.
-
-diffstat follows. Thanks.
-
- block/blk-cgroup.c             |   23 
- block/blk-iocost.c             | 1540 +++++++++++++++++++++++++++++++----------
- block/blk-stat.c               |   17 
- include/trace/events/iocost.h  |   26 
- tools/cgroup/iocost_monitor.py |   54 -
- 5 files changed, 1227 insertions(+), 433 deletions(-)
-
---
-tejun
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index d37b55db2409..e2266e7692b4 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -179,6 +179,8 @@
+ #include <linux/parser.h>
+ #include <linux/sched/signal.h>
+ #include <linux/blk-cgroup.h>
++#include <asm/local.h>
++#include <asm/local64.h>
+ #include "blk-rq-qos.h"
+ #include "blk-stat.h"
+ #include "blk-wbt.h"
+@@ -373,8 +375,8 @@ struct ioc_params {
+ };
+ 
+ struct ioc_missed {
+-	u32				nr_met;
+-	u32				nr_missed;
++	local_t				nr_met;
++	local_t				nr_missed;
+ 	u32				last_met;
+ 	u32				last_missed;
+ };
+@@ -382,7 +384,7 @@ struct ioc_missed {
+ struct ioc_pcpu_stat {
+ 	struct ioc_missed		missed[2];
+ 
+-	u64				rq_wait_ns;
++	local64_t			rq_wait_ns;
+ 	u64				last_rq_wait_ns;
+ };
+ 
+@@ -1278,8 +1280,8 @@ static void ioc_lat_stat(struct ioc *ioc, u32 *missed_ppm_ar, u32 *rq_wait_pct_p
+ 		u64 this_rq_wait_ns;
+ 
+ 		for (rw = READ; rw <= WRITE; rw++) {
+-			u32 this_met = READ_ONCE(stat->missed[rw].nr_met);
+-			u32 this_missed = READ_ONCE(stat->missed[rw].nr_missed);
++			u32 this_met = local_read(&stat->missed[rw].nr_met);
++			u32 this_missed = local_read(&stat->missed[rw].nr_missed);
+ 
+ 			nr_met[rw] += this_met - stat->missed[rw].last_met;
+ 			nr_missed[rw] += this_missed - stat->missed[rw].last_missed;
+@@ -1287,7 +1289,7 @@ static void ioc_lat_stat(struct ioc *ioc, u32 *missed_ppm_ar, u32 *rq_wait_pct_p
+ 			stat->missed[rw].last_missed = this_missed;
+ 		}
+ 
+-		this_rq_wait_ns = READ_ONCE(stat->rq_wait_ns);
++		this_rq_wait_ns = local64_read(&stat->rq_wait_ns);
+ 		rq_wait_ns += this_rq_wait_ns - stat->last_rq_wait_ns;
+ 		stat->last_rq_wait_ns = this_rq_wait_ns;
+ 	}
+@@ -1908,6 +1910,7 @@ static void ioc_rqos_done_bio(struct rq_qos *rqos, struct bio *bio)
+ static void ioc_rqos_done(struct rq_qos *rqos, struct request *rq)
+ {
+ 	struct ioc *ioc = rqos_to_ioc(rqos);
++	struct ioc_pcpu_stat *ccs;
+ 	u64 on_q_ns, rq_wait_ns, size_nsec;
+ 	int pidx, rw;
+ 
+@@ -1931,13 +1934,17 @@ static void ioc_rqos_done(struct rq_qos *rqos, struct request *rq)
+ 	rq_wait_ns = rq->start_time_ns - rq->alloc_time_ns;
+ 	size_nsec = div64_u64(calc_size_vtime_cost(rq, ioc), VTIME_PER_NSEC);
+ 
++	ccs = get_cpu_ptr(ioc->pcpu_stat);
++
+ 	if (on_q_ns <= size_nsec ||
+ 	    on_q_ns - size_nsec <= ioc->params.qos[pidx] * NSEC_PER_USEC)
+-		this_cpu_inc(ioc->pcpu_stat->missed[rw].nr_met);
++		local_inc(&ccs->missed[rw].nr_met);
+ 	else
+-		this_cpu_inc(ioc->pcpu_stat->missed[rw].nr_missed);
++		local_inc(&ccs->missed[rw].nr_missed);
++
++	local64_add(rq_wait_ns, &ccs->rq_wait_ns);
+ 
+-	this_cpu_add(ioc->pcpu_stat->rq_wait_ns, rq_wait_ns);
++	put_cpu_ptr(ccs);
+ }
+ 
+ static void ioc_rqos_queue_depth_changed(struct rq_qos *rqos)
+@@ -1977,7 +1984,7 @@ static int blk_iocost_init(struct request_queue *q)
+ {
+ 	struct ioc *ioc;
+ 	struct rq_qos *rqos;
+-	int ret;
++	int i, cpu, ret;
+ 
+ 	ioc = kzalloc(sizeof(*ioc), GFP_KERNEL);
+ 	if (!ioc)
+@@ -1989,6 +1996,16 @@ static int blk_iocost_init(struct request_queue *q)
+ 		return -ENOMEM;
+ 	}
+ 
++	for_each_possible_cpu(cpu) {
++		struct ioc_pcpu_stat *ccs = per_cpu_ptr(ioc->pcpu_stat, cpu);
++
++		for (i = 0; i < ARRAY_SIZE(ccs->missed); i++) {
++			local_set(&ccs->missed[i].nr_met, 0);
++			local_set(&ccs->missed[i].nr_missed, 0);
++		}
++		local64_set(&ccs->rq_wait_ns, 0);
++	}
++
+ 	rqos = &ioc->rqos;
+ 	rqos->id = RQ_QOS_COST;
+ 	rqos->ops = &ioc_rqos_ops;
+-- 
+2.26.2
 
