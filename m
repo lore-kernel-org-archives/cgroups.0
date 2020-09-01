@@ -1,126 +1,119 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 09/27] blk-iocost: use WEIGHT_ONE based fixed point number for weights
-Date: Tue,  1 Sep 2020 14:52:39 -0400
-Message-ID: <20200901185257.645114-10-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 08/27] blk-iocost: s/HWEIGHT_WHOLE/WEIGHT_ONE/g
+Date: Tue,  1 Sep 2020 14:52:38 -0400
+Message-ID: <20200901185257.645114-9-tj@kernel.org>
 References: <20200901185257.645114-1-tj@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=b9CT/Pfaa29kbHcQyFjwoJj23rZzAWWYwFA5TYGSz5M=;
-        b=i/BXrQkgkv7QT7qjcqY0KSGlDoxBJwW4KpDXH82QhKpbGtbdebLOUTjaCUe5b5/nZw
-         rCODKcxJIXdNwj42TeSpSGUushKooNwe0n3mlchxpiyPl8W3/5+zspLkQF/OyPcgR5RS
-         FJV+btITXYPBoXMt3anyJhpBxeVwd5xHqtJEcBZFZK4HWZkN4xQDvh9WMz59KryVmlt5
-         +sAX8KZrcybC1/u2MZn457a/XmuZ2TgsX5GmhJtNKYvATshK2VL+GZPE3iQg/N23x0Fx
-         MLfIT9ZwD1/JbrvEZZaHDcKyfCDIuOLNTUPy0ERi4n1tVf3flcadR1IiAx/rpA1ZZ9rj
-         XjUA==
-In-Reply-To: <20200901185257.645114-1-tj@kernel.org>
-Sender: linux-block-owner@vger.kernel.org
+        bh=/e5PktXRLfAON/oeMdCF9GHjT7JkUKFYrJ6ekTNbMj4=;
+        b=fVMNPf9V07T3Oj0WLXkxJyr2vUryz+0eFnqMy0IfL0m9+flFyBQJkyxPkvXdbI+V5y
+         fp50Dp+/Sw0qfga/3hn/lHcdMLzu9HKS6cbiP8vssRSknZyEF9y2ct3EfuzNb8Kd9fYT
+         YpqpPe51lFRcaFG6N+Lz94nju/FMYSyauWu9TZ70urnuYUS5ZXwJGG7VsmVEajHW9LJ0
+         TQgAB3lwHPjX+rpEDclBOJ3LGs0imUwHCUXFyX3E291U0rRRwKad7A8bW4gty3YipSl7
+         n+loyCrxZg6UQnSEQEsBXo4D3F87fRblhrgP2P3+jfsgHN3ssjLyxgRXh3RHtlsLmwWg
+         At+w==
+In-Reply-To: <20200901185257.645114-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: axboe@kernel.dk
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, newella@fb.com, Tejun Heo <tj@kernel.org>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, newella-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-To improve weight donations, we want to able to scale inuse with a greater
-accuracy and down below 1. Let's make non-hierarchical weights to use
-WEIGHT_ONE based fixed point numbers too like hierarchical ones.
+We're gonna use HWEIGHT_WHOLE for regular weights too. Let's rename it to
+WEIGHT_ONE.
 
-This doesn't cause any behavior changes yet.
+Pure rename.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-iocost.c | 25 +++++++++++++------------
- 1 file changed, 13 insertions(+), 12 deletions(-)
+ block/blk-iocost.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index 5e6d56eec1c9..00c5a3ad2b5b 100644
+index b2b8dfbeee5a..5e6d56eec1c9 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -984,8 +984,8 @@ static void current_hweight(struct ioc_gq *iocg, u32 *hw_activep, u32 *hw_inusep
+@@ -68,7 +68,7 @@
+  * gets 300/(100+300) or 75% share, and A0 and A1 equally splits the rest,
+  * 12.5% each.  The distribution mechanism only cares about these flattened
+  * shares.  They're called hweights (hierarchical weights) and always add
+- * upto 1 (HWEIGHT_WHOLE).
++ * upto 1 (WEIGHT_ONE).
+  *
+  * A given cgroup's vtime runs slower in inverse proportion to its hweight.
+  * For example, with 12.5% weight, A0's time runs 8 times slower (100/12.5)
+@@ -246,7 +246,7 @@ enum {
+ 	MIN_VALID_USAGES	= 2,
+ 
+ 	/* 1/64k is granular enough and can easily be handled w/ u32 */
+-	HWEIGHT_WHOLE		= 1 << 16,
++	WEIGHT_ONE		= 1 << 16,
+ 
+ 	/*
+ 	 * As vtime is used to calculate the cost of each IO, it needs to
+@@ -285,8 +285,8 @@ enum {
+ 	 * donate the surplus.
+ 	 */
+ 	SURPLUS_SCALE_PCT	= 125,			/* * 125% */
+-	SURPLUS_SCALE_ABS	= HWEIGHT_WHOLE / 50,	/* + 2% */
+-	SURPLUS_MIN_ADJ_DELTA	= HWEIGHT_WHOLE / 33,	/* 3% */
++	SURPLUS_SCALE_ABS	= WEIGHT_ONE / 50,	/* + 2% */
++	SURPLUS_MIN_ADJ_DELTA	= WEIGHT_ONE / 33,	/* 3% */
+ 
+ 	/* switch iff the conditions are met for longer than this */
+ 	AUTOP_CYCLE_NSEC	= 10LLU * NSEC_PER_SEC,
+@@ -491,7 +491,7 @@ struct ioc_gq {
+ 	struct hrtimer			waitq_timer;
+ 	struct hrtimer			delay_timer;
+ 
+-	/* usage is recorded as fractions of HWEIGHT_WHOLE */
++	/* usage is recorded as fractions of WEIGHT_ONE */
+ 	int				usage_idx;
+ 	u32				usages[NR_USAGE_SLOTS];
+ 
+@@ -658,7 +658,7 @@ static struct ioc_cgrp *blkcg_to_iocc(struct blkcg *blkcg)
+  */
+ static u64 abs_cost_to_cost(u64 abs_cost, u32 hw_inuse)
+ {
+-	return DIV64_U64_ROUND_UP(abs_cost * HWEIGHT_WHOLE, hw_inuse);
++	return DIV64_U64_ROUND_UP(abs_cost * WEIGHT_ONE, hw_inuse);
+ }
+ 
+ /*
+@@ -666,7 +666,7 @@ static u64 abs_cost_to_cost(u64 abs_cost, u32 hw_inuse)
+  */
+ static u64 cost_to_abs_cost(u64 cost, u32 hw_inuse)
+ {
+-	return DIV64_U64_ROUND_UP(cost * hw_inuse, HWEIGHT_WHOLE);
++	return DIV64_U64_ROUND_UP(cost * hw_inuse, WEIGHT_ONE);
+ }
+ 
+ static void iocg_commit_bio(struct ioc_gq *iocg, struct bio *bio, u64 cost)
+@@ -980,7 +980,7 @@ static void current_hweight(struct ioc_gq *iocg, u32 *hw_activep, u32 *hw_inusep
+ 	 */
+ 	smp_rmb();
+ 
+-	hwa = hwi = HWEIGHT_WHOLE;
++	hwa = hwi = WEIGHT_ONE;
  	for (lvl = 0; lvl <= iocg->level - 1; lvl++) {
  		struct ioc_gq *parent = iocg->ancestors[lvl];
  		struct ioc_gq *child = iocg->ancestors[lvl + 1];
--		u32 active_sum = READ_ONCE(parent->child_active_sum);
--		u32 inuse_sum = READ_ONCE(parent->child_inuse_sum);
-+		u64 active_sum = READ_ONCE(parent->child_active_sum);
-+		u64 inuse_sum = READ_ONCE(parent->child_inuse_sum);
- 		u32 active = READ_ONCE(child->active);
- 		u32 inuse = READ_ONCE(child->inuse);
+@@ -2088,8 +2088,8 @@ static void ioc_pd_init(struct blkg_policy_data *pd)
+ 	atomic64_set(&iocg->done_vtime, now.vnow);
+ 	atomic64_set(&iocg->active_period, atomic64_read(&ioc->cur_period));
+ 	INIT_LIST_HEAD(&iocg->active_list);
+-	iocg->hweight_active = HWEIGHT_WHOLE;
+-	iocg->hweight_inuse = HWEIGHT_WHOLE;
++	iocg->hweight_active = WEIGHT_ONE;
++	iocg->hweight_inuse = WEIGHT_ONE;
  
-@@ -993,11 +993,11 @@ static void current_hweight(struct ioc_gq *iocg, u32 *hw_activep, u32 *hw_inusep
- 		if (!active_sum || !inuse_sum)
- 			continue;
- 
--		active_sum = max(active, active_sum);
--		hwa = hwa * active / active_sum;	/* max 16bits * 10000 */
-+		active_sum = max_t(u64, active, active_sum);
-+		hwa = div64_u64((u64)hwa * active, active_sum);
- 
--		inuse_sum = max(inuse, inuse_sum);
--		hwi = hwi * inuse / inuse_sum;		/* max 16bits * 10000 */
-+		inuse_sum = max_t(u64, inuse, inuse_sum);
-+		hwi = div64_u64((u64)hwi * inuse, inuse_sum);
- 	}
- 
- 	iocg->hweight_active = max_t(u32, hwa, 1);
-@@ -1022,7 +1022,8 @@ static void weight_updated(struct ioc_gq *iocg)
- 	weight = iocg->cfg_weight ?: iocc->dfl_weight;
- 	if (weight != iocg->weight && iocg->active)
- 		propagate_weights(iocg, weight,
--			DIV64_U64_ROUND_UP(iocg->inuse * weight, iocg->weight));
-+				  DIV64_U64_ROUND_UP((u64)iocg->inuse * weight,
-+						     iocg->weight));
- 	iocg->weight = weight;
- }
- 
-@@ -2050,7 +2051,7 @@ static struct blkcg_policy_data *ioc_cpd_alloc(gfp_t gfp)
- 	if (!iocc)
- 		return NULL;
- 
--	iocc->dfl_weight = CGROUP_WEIGHT_DFL;
-+	iocc->dfl_weight = CGROUP_WEIGHT_DFL * WEIGHT_ONE;
- 	return &iocc->cpd;
- }
- 
-@@ -2136,7 +2137,7 @@ static u64 ioc_weight_prfill(struct seq_file *sf, struct blkg_policy_data *pd,
- 	struct ioc_gq *iocg = pd_to_iocg(pd);
- 
- 	if (dname && iocg->cfg_weight)
--		seq_printf(sf, "%s %u\n", dname, iocg->cfg_weight);
-+		seq_printf(sf, "%s %u\n", dname, iocg->cfg_weight / WEIGHT_ONE);
- 	return 0;
- }
- 
-@@ -2146,7 +2147,7 @@ static int ioc_weight_show(struct seq_file *sf, void *v)
- 	struct blkcg *blkcg = css_to_blkcg(seq_css(sf));
- 	struct ioc_cgrp *iocc = blkcg_to_iocc(blkcg);
- 
--	seq_printf(sf, "default %u\n", iocc->dfl_weight);
-+	seq_printf(sf, "default %u\n", iocc->dfl_weight / WEIGHT_ONE);
- 	blkcg_print_blkgs(sf, blkcg, ioc_weight_prfill,
- 			  &blkcg_policy_iocost, seq_cft(sf)->private, false);
- 	return 0;
-@@ -2172,7 +2173,7 @@ static ssize_t ioc_weight_write(struct kernfs_open_file *of, char *buf,
- 			return -EINVAL;
- 
- 		spin_lock(&blkcg->lock);
--		iocc->dfl_weight = v;
-+		iocc->dfl_weight = v * WEIGHT_ONE;
- 		hlist_for_each_entry(blkg, &blkcg->blkg_list, blkcg_node) {
- 			struct ioc_gq *iocg = blkg_to_iocg(blkg);
- 
-@@ -2203,7 +2204,7 @@ static ssize_t ioc_weight_write(struct kernfs_open_file *of, char *buf,
- 	}
- 
- 	spin_lock(&iocg->ioc->lock);
--	iocg->cfg_weight = v;
-+	iocg->cfg_weight = v * WEIGHT_ONE;
- 	weight_updated(iocg);
- 	spin_unlock(&iocg->ioc->lock);
- 
+ 	init_waitqueue_head(&iocg->waitq);
+ 	hrtimer_init(&iocg->waitq_timer, CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
 -- 
 2.26.2
 
