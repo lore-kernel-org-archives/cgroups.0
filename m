@@ -1,303 +1,324 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 17/27] blk-iocost: restructure surplus donation logic
-Date: Tue,  1 Sep 2020 14:52:47 -0400
-Message-ID: <20200901185257.645114-18-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 13/27] blk-iocost: add absolute usage stat
+Date: Tue,  1 Sep 2020 14:52:43 -0400
+Message-ID: <20200901185257.645114-14-tj@kernel.org>
 References: <20200901185257.645114-1-tj@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=K3TiqQ6XoBnoO+Au4OZsHz6VfSjY8XgXmAHVlPD4pKE=;
-        b=hCgv4Sg/jsBTk4NVkOay3mp7QlI5e4hqnj91u6kgsrQHPvFpsZztMVghTYelPwRF5M
-         SKPoSe57Z9aebw01UCHrdiRaLrTYYQHYly0y2IkaXrA2e+o74oNIMPvRZ14IEIVYfhKN
-         AJXwWvl6vSCWmSjGoExdW2jgNOFNZLtkIwwDi0MP9INvgODvAn++h7ugv0imeVcqhFBF
-         QB85GcjedsubivHx9fOTBPEZOSt7RPcqJlMaXn/Mmyoekcf1JavMOtkUUvNXVq/U2N6s
-         qpXizaPDXWHF7d1zvmD4yEV47vKzDEjJDVRQ1TsXF90DMIek87maIsL7issKbeiMJjbS
-         b0yA==
-In-Reply-To: <20200901185257.645114-1-tj@kernel.org>
-Sender: linux-block-owner@vger.kernel.org
+        bh=cXJRMse9QXXNenk8cfC4gak0dCsZiFe6e3X+8Ji4w3Q=;
+        b=BXXoYe01DDRCKvgaScU83wvwf7XD6KQVVomVyvl/vLID4xi+n/8BW2jZ5Cs+A7gx8u
+         got81U9z9RBnWefFOopQpK6tm83wPUkY2xAILDa9falioSlOflC/7VQalLdG1wo+1HX7
+         t16rxbYltdCLJI5j0zNQ3994PoCumMxjBpfo1So1B/pGpDOmiuSLOgDMcRw7zUPaMAnZ
+         L0TusRziIeUhjWEpsQ7vNdAGAvQguj9Ff+27M2zjTj6Rx64EzT9ik8NkXA1RnzSXYJ3f
+         8f8gf55MH2UepPZ5V6VSWLqGZ92ltx0/obz7AHiJ/EyY1AG+HIkq59tQdwQBIdwSL6LA
+         4b4Q==
+In-Reply-To: <20200901185257.645114-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: axboe@kernel.dk
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, newella@fb.com, Tejun Heo <tj@kernel.org>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, newella-b10kYP2dOMg@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-The way the surplus donation logic is structured isn't great. There are two
-separate paths for starting/increasing donations and decreasing them making
-the logic harder to follow and is prone to unnecessary behavior differences.
+Currently, iocost doesn't collect or expose any statistics punting off all
+monitoring duties to drgn based iocost_monitor.py. While it works for some
+scenarios, there are some usability and data availability challenges. For
+example, accurate per-cgroup usage information can't be tracked by vtime
+progression at all and the number available in iocg->usages[] are really
+short-term snapshots used for control heuristics with possibly significant
+errors.
 
-In preparation for improved donation handling, this patch restructures the
-code so that
+This patch implements per-cgroup absolute usage stat counter and exposes it
+through io.stat along with the current vrate. Usage stat collection and
+flushing employ the same method as cgroup rstat on the active iocg's and the
+only hot path overhead is preemption toggling and adding to a percpu
+counter.
 
-* All donors - new, increasing and decreasing - are funneled through the
-  same code path.
-
-* The target donation calculation is factored into hweight_after_donation()
-  which is called once from the same spot for all possible donors.
-
-* Actual inuse adjustment is factored into trasnfer_surpluses().
-
-This change introduces a few behavior differences - e.g. donation amount
-reduction now uses the max usage of the recent three periods just like new
-and increasing donations, and inuse now gets adjusted upwards the same way
-it gets downwards. These differences are unlikely to have severely negative
-implications and the whole logic will be revamped soon.
-
-This patch also removes two tracepoints. The existing TPs don't quite fit
-the new implementation. A later patch will update and reinstate them.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-iocost.c | 179 ++++++++++++++++++++++++++-------------------
- 1 file changed, 103 insertions(+), 76 deletions(-)
+ block/blk-iocost.c | 155 +++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 149 insertions(+), 6 deletions(-)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index a3889a8b0a33..61b008d0801f 100644
+index 23b173e34591..f30f9b37fcf0 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -494,6 +494,7 @@ struct ioc_gq {
- 	int				hweight_gen;
- 	u32				hweight_active;
- 	u32				hweight_inuse;
-+	u32				hweight_after_donation;
+@@ -431,6 +431,14 @@ struct ioc {
+ 	bool				user_cost_model:1;
+ };
  
- 	struct list_head		walk_list;
- 	struct list_head		surplus_list;
-@@ -1070,6 +1071,32 @@ static void current_hweight(struct ioc_gq *iocg, u32 *hw_activep, u32 *hw_inusep
- 		*hw_inusep = iocg->hweight_inuse;
++struct iocg_pcpu_stat {
++	local64_t			abs_vusage;
++};
++
++struct iocg_stat {
++	u64				usage_us;
++};
++
+ /* per device-cgroup pair */
+ struct ioc_gq {
+ 	struct blkg_policy_data		pd;
+@@ -492,10 +500,19 @@ struct ioc_gq {
+ 	u32				hweight_inuse;
+ 	bool				has_surplus;
+ 
++	struct list_head		walk_list;
++
+ 	struct wait_queue_head		waitq;
+ 	struct hrtimer			waitq_timer;
+ 	struct hrtimer			delay_timer;
+ 
++	/* statistics */
++	struct iocg_pcpu_stat __percpu	*pcpu_stat;
++	struct iocg_stat		local_stat;
++	struct iocg_stat		desc_stat;
++	struct iocg_stat		last_stat;
++	u64				last_stat_abs_vusage;
++
+ 	/* usage is recorded as fractions of WEIGHT_ONE */
+ 	int				usage_idx;
+ 	u32				usages[NR_USAGE_SLOTS];
+@@ -674,10 +691,17 @@ static u64 cost_to_abs_cost(u64 cost, u32 hw_inuse)
+ 	return DIV64_U64_ROUND_UP(cost * hw_inuse, WEIGHT_ONE);
+ }
+ 
+-static void iocg_commit_bio(struct ioc_gq *iocg, struct bio *bio, u64 cost)
++static void iocg_commit_bio(struct ioc_gq *iocg, struct bio *bio,
++			    u64 abs_cost, u64 cost)
+ {
++	struct iocg_pcpu_stat *gcs;
++
+ 	bio->bi_iocost_cost = cost;
+ 	atomic64_add(cost, &iocg->vtime);
++
++	gcs = get_cpu_ptr(iocg->pcpu_stat);
++	local64_add(abs_cost, &gcs->abs_vusage);
++	put_cpu_ptr(gcs);
+ }
+ 
+ static void iocg_lock(struct ioc_gq *iocg, bool lock_ioc, unsigned long *flags)
+@@ -1221,7 +1245,7 @@ static int iocg_wake_fn(struct wait_queue_entry *wq_entry, unsigned mode,
+ 	if (ctx->vbudget < 0)
+ 		return -1;
+ 
+-	iocg_commit_bio(ctx->iocg, wait->bio, cost);
++	iocg_commit_bio(ctx->iocg, wait->bio, wait->abs_cost, cost);
+ 
+ 	/*
+ 	 * autoremove_wake_function() removes the wait entry only when it
+@@ -1382,6 +1406,87 @@ static bool iocg_is_idle(struct ioc_gq *iocg)
+ 	return true;
  }
  
 +/*
-+ * Calculate the hweight_inuse @iocg would get with max @inuse assuming all the
-+ * other weights stay unchanged.
++ * Call this function on the target leaf @iocg's to build pre-order traversal
++ * list of all the ancestors in @inner_walk. The inner nodes are linked through
++ * ->walk_list and the caller is responsible for dissolving the list after use.
 + */
-+static u32 current_hweight_max(struct ioc_gq *iocg)
++static void iocg_build_inner_walk(struct ioc_gq *iocg,
++				  struct list_head *inner_walk)
 +{
-+	u32 hwm = WEIGHT_ONE;
-+	u32 inuse = iocg->active;
-+	u64 child_inuse_sum;
 +	int lvl;
++
++	WARN_ON_ONCE(!list_empty(&iocg->walk_list));
++
++	/* find the first ancestor which hasn't been visited yet */
++	for (lvl = iocg->level - 1; lvl >= 0; lvl--) {
++		if (!list_empty(&iocg->ancestors[lvl]->walk_list))
++			break;
++	}
++
++	/* walk down and visit the inner nodes to get pre-order traversal */
++	while (++lvl <= iocg->level - 1) {
++		struct ioc_gq *inner = iocg->ancestors[lvl];
++
++		/* record traversal order */
++		list_add_tail(&inner->walk_list, inner_walk);
++	}
++}
++
++/* collect per-cpu counters and propagate the deltas to the parent */
++static void iocg_flush_stat_one(struct ioc_gq *iocg, struct ioc_now *now)
++{
++	struct iocg_stat new_stat;
++	u64 abs_vusage = 0;
++	u64 vusage_delta;
++	int cpu;
 +
 +	lockdep_assert_held(&iocg->ioc->lock);
 +
-+	for (lvl = iocg->level - 1; lvl >= 0; lvl--) {
-+		struct ioc_gq *parent = iocg->ancestors[lvl];
-+		struct ioc_gq *child = iocg->ancestors[lvl + 1];
++	/* collect per-cpu counters */
++	for_each_possible_cpu(cpu) {
++		abs_vusage += local64_read(
++				per_cpu_ptr(&iocg->pcpu_stat->abs_vusage, cpu));
++	}
++	vusage_delta = abs_vusage - iocg->last_stat_abs_vusage;
++	iocg->last_stat_abs_vusage = abs_vusage;
 +
-+		child_inuse_sum = parent->child_inuse_sum + inuse - child->inuse;
-+		hwm = div64_u64((u64)hwm * inuse, child_inuse_sum);
-+		inuse = DIV64_U64_ROUND_UP(parent->active * child_inuse_sum,
-+					   parent->child_active_sum);
++	iocg->local_stat.usage_us += div64_u64(vusage_delta, now->vrate);
++
++	new_stat.usage_us =
++		iocg->local_stat.usage_us + iocg->desc_stat.usage_us;
++
++	/* propagate the deltas to the parent */
++	if (iocg->level > 0) {
++		struct iocg_stat *parent_stat =
++			&iocg->ancestors[iocg->level - 1]->desc_stat;
++
++		parent_stat->usage_us +=
++			new_stat.usage_us - iocg->last_stat.usage_us;
 +	}
 +
-+	return max_t(u32, hwm, 1);
++	iocg->last_stat = new_stat;
 +}
 +
- static void weight_updated(struct ioc_gq *iocg)
- {
- 	struct ioc *ioc = iocg->ioc;
-@@ -1488,20 +1515,58 @@ static void iocg_flush_stat(struct list_head *target_iocgs, struct ioc_now *now)
- 	}
- }
- 
--/* returns usage with margin added if surplus is large enough */
--static u32 surplus_adjusted_hweight_inuse(u32 usage, u32 hw_inuse)
-+/*
-+ * Determine what @iocg's hweight_inuse should be after donating unused
-+ * capacity. @hwm is the upper bound and used to signal no donation. This
-+ * function also throws away @iocg's excess budget.
-+ */
-+static u32 hweight_after_donation(struct ioc_gq *iocg, u32 hwm, u32 usage,
-+				  struct ioc_now *now)
- {
-+	struct ioc *ioc = iocg->ioc;
-+	u64 vtime = atomic64_read(&iocg->vtime);
-+	s64 excess;
-+
-+	/* see whether minimum margin requirement is met */
-+	if (waitqueue_active(&iocg->waitq) ||
-+	    time_after64(vtime, now->vnow - ioc->margins.min))
-+		return hwm;
-+
-+	/* throw away excess above max */
-+	excess = now->vnow - vtime - ioc->margins.max;
-+	if (excess > 0) {
-+		atomic64_add(excess, &iocg->vtime);
-+		atomic64_add(excess, &iocg->done_vtime);
-+		vtime += excess;
-+	}
-+
- 	/* add margin */
- 	usage = DIV_ROUND_UP(usage * SURPLUS_SCALE_PCT, 100);
- 	usage += SURPLUS_SCALE_ABS;
- 
- 	/* don't bother if the surplus is too small */
--	if (usage + SURPLUS_MIN_ADJ_DELTA > hw_inuse)
--		return 0;
-+	if (usage + SURPLUS_MIN_ADJ_DELTA > hwm)
-+		return hwm;
- 
- 	return usage;
- }
- 
-+static void transfer_surpluses(struct list_head *surpluses, struct ioc_now *now)
++/* get stat counters ready for reading on all active iocgs */
++static void iocg_flush_stat(struct list_head *target_iocgs, struct ioc_now *now)
 +{
-+	struct ioc_gq *iocg;
++	LIST_HEAD(inner_walk);
++	struct ioc_gq *iocg, *tiocg;
 +
-+	list_for_each_entry(iocg, surpluses, surplus_list) {
-+		u32 old_hwi, new_hwi, new_inuse;
++	/* flush leaves and build inner node walk list */
++	list_for_each_entry(iocg, target_iocgs, active_list) {
++		iocg_flush_stat_one(iocg, now);
++		iocg_build_inner_walk(iocg, &inner_walk);
++	}
 +
-+		current_hweight(iocg, NULL, &old_hwi);
-+		new_hwi = iocg->hweight_after_donation;
-+
-+		new_inuse = DIV64_U64_ROUND_UP((u64)iocg->inuse * new_hwi,
-+					       old_hwi);
-+		__propagate_weights(iocg, iocg->weight, new_inuse);
++	/* keep flushing upwards by walking the inner list backwards */
++	list_for_each_entry_safe_reverse(iocg, tiocg, &inner_walk, walk_list) {
++		iocg_flush_stat_one(iocg, now);
++		list_del_init(&iocg->walk_list);
 +	}
 +}
 +
- static void ioc_timer_fn(struct timer_list *timer)
+ /* returns usage with margin added if surplus is large enough */
+ static u32 surplus_adjusted_hweight_inuse(u32 usage, u32 hw_inuse)
  {
- 	struct ioc *ioc = container_of(timer, struct ioc, timer);
-@@ -1560,9 +1625,9 @@ static void ioc_timer_fn(struct timer_list *timer)
- 
- 	/* calc usages and see whether some weights need to be moved around */
- 	list_for_each_entry(iocg, &ioc->active_iocgs, active_list) {
--		u64 vdone, vtime, usage_us, vmin;
-+		u64 vdone, vtime, usage_us;
- 		u32 hw_active, hw_inuse, usage;
--		int uidx;
-+		int uidx, nr_valid;
- 
- 		/*
- 		 * Collect unused and wind vtime closer to vnow to prevent
-@@ -1618,92 +1683,54 @@ static void ioc_timer_fn(struct timer_list *timer)
- 				started_at = ioc->period_at;
- 
- 			dur = max_t(u64, now.now - started_at, 1);
--			usage = clamp_t(u32,
-+
-+			iocg->usage_idx = uidx;
-+			iocg->usages[uidx] = clamp_t(u32,
- 				DIV64_U64_ROUND_UP(usage_us * WEIGHT_ONE, dur),
- 				1, WEIGHT_ONE);
-+		}
- 
--			iocg->usage_idx = uidx;
--			iocg->usages[uidx] = usage;
--		} else {
--			usage = 0;
-+		/* base the decision on max historical usage */
-+		for (i = 0, usage = 0, nr_valid = 0; i < NR_USAGE_SLOTS; i++) {
-+			if (iocg->usages[i]) {
-+				usage = max(usage, iocg->usages[i]);
-+				nr_valid++;
-+			}
- 		}
-+		if (nr_valid < MIN_VALID_USAGES)
-+			usage = WEIGHT_ONE;
- 
- 		/* see whether there's surplus vtime */
--		vmin = now.vnow - ioc->margins.max;
--
- 		WARN_ON_ONCE(!list_empty(&iocg->surplus_list));
--		if (!waitqueue_active(&iocg->waitq) &&
--		    time_before64(vtime, vmin)) {
--			u64 delta = vmin - vtime;
--
--			/* throw away surplus vtime */
--			atomic64_add(delta, &iocg->vtime);
--			atomic64_add(delta, &iocg->done_vtime);
--			/* if usage is sufficiently low, maybe it can donate */
--			if (surplus_adjusted_hweight_inuse(usage, hw_inuse))
--				list_add(&iocg->surplus_list, &surpluses);
--		} else if (hw_inuse < hw_active) {
--			u32 new_hwi, new_inuse;
-+		if (hw_inuse < hw_active ||
-+		    (!waitqueue_active(&iocg->waitq) &&
-+		     time_before64(vtime, now.vnow - ioc->margins.max))) {
-+			u32 hwm, new_hwi;
- 
--			/* was donating but might need to take back some */
--			if (waitqueue_active(&iocg->waitq)) {
--				new_hwi = hw_active;
-+			/*
-+			 * Already donating or accumulated enough to start.
-+			 * Determine the donation amount.
-+			 */
-+			hwm = current_hweight_max(iocg);
-+			new_hwi = hweight_after_donation(iocg, hwm, usage,
-+							 &now);
-+			if (new_hwi < hwm) {
-+				iocg->hweight_after_donation = new_hwi;
-+				list_add(&iocg->surplus_list, &surpluses);
- 			} else {
--				new_hwi = max(hw_inuse,
--					      usage * SURPLUS_SCALE_PCT / 100 +
--					      SURPLUS_SCALE_ABS);
--			}
--
--			new_inuse = div64_u64((u64)iocg->inuse * new_hwi,
--					      hw_inuse);
--			new_inuse = clamp_t(u32, new_inuse, 1, iocg->active);
--
--			if (new_inuse > iocg->inuse) {
--				TRACE_IOCG_PATH(inuse_takeback, iocg, &now,
--						iocg->inuse, new_inuse,
--						hw_inuse, new_hwi);
--				__propagate_weights(iocg, iocg->weight,
--						    new_inuse);
-+				__propagate_weights(iocg, iocg->active,
-+						    iocg->active);
-+				nr_shortages++;
- 			}
- 		} else {
--			/* genuninely out of vtime */
-+			/* genuinely short on vtime */
- 			nr_shortages++;
- 		}
+@@ -1422,6 +1527,8 @@ static void ioc_timer_fn(struct timer_list *timer)
+ 		return;
  	}
  
--	if (!nr_shortages || list_empty(&surpluses))
--		goto skip_surplus_transfers;
-+	if (!list_empty(&surpluses) && nr_shortages)
-+		transfer_surpluses(&surpluses, &now);
++	iocg_flush_stat(&ioc->active_iocgs, &now);
++
+ 	/*
+ 	 * Waiters determine the sleep durations based on the vrate they
+ 	 * saw at the time of sleep.  If vrate has increased, some waiters
+@@ -1824,7 +1931,7 @@ static void ioc_rqos_throttle(struct rq_qos *rqos, struct bio *bio)
+ 	 */
+ 	if (!waitqueue_active(&iocg->waitq) && !iocg->abs_vdebt &&
+ 	    time_before_eq64(vtime + cost, now.vnow)) {
+-		iocg_commit_bio(iocg, bio, cost);
++		iocg_commit_bio(iocg, bio, abs_cost, cost);
+ 		return;
+ 	}
  
--	/* there are both shortages and surpluses, transfer surpluses */
--	list_for_each_entry(iocg, &surpluses, surplus_list) {
--		u32 usage, hw_active, hw_inuse, new_hwi, new_inuse;
--		int nr_valid = 0;
--
--		/* base the decision on max historical usage */
--		for (i = 0, usage = 0; i < NR_USAGE_SLOTS; i++) {
--			if (iocg->usages[i]) {
--				usage = max(usage, iocg->usages[i]);
--				nr_valid++;
--			}
--		}
--		if (nr_valid < MIN_VALID_USAGES)
--			continue;
--
--		current_hweight(iocg, &hw_active, &hw_inuse);
--		new_hwi = surplus_adjusted_hweight_inuse(usage, hw_inuse);
--		if (!new_hwi)
--			continue;
--
--		new_inuse = DIV64_U64_ROUND_UP((u64)iocg->inuse * new_hwi,
--					       hw_inuse);
--		if (new_inuse < iocg->inuse) {
--			TRACE_IOCG_PATH(inuse_giveaway, iocg, &now,
--					iocg->inuse, new_inuse,
--					hw_inuse, new_hwi);
--			__propagate_weights(iocg, iocg->weight, new_inuse);
--		}
--	}
--skip_surplus_transfers:
- 	commit_weights(ioc);
+@@ -1849,7 +1956,7 @@ static void ioc_rqos_throttle(struct rq_qos *rqos, struct bio *bio)
+ 	 */
+ 	if (unlikely(list_empty(&iocg->active_list))) {
+ 		iocg_unlock(iocg, ioc_locked, &flags);
+-		iocg_commit_bio(iocg, bio, cost);
++		iocg_commit_bio(iocg, bio, abs_cost, cost);
+ 		return;
+ 	}
  
- 	/* surplus list should be dissolved after use */
+@@ -1948,7 +2055,7 @@ static void ioc_rqos_merge(struct rq_qos *rqos, struct request *rq,
+ 	 */
+ 	if (rq->bio && rq->bio->bi_iocost_cost &&
+ 	    time_before_eq64(atomic64_read(&iocg->vtime) + cost, now.vnow)) {
+-		iocg_commit_bio(iocg, bio, cost);
++		iocg_commit_bio(iocg, bio, abs_cost, cost);
+ 		return;
+ 	}
+ 
+@@ -1962,7 +2069,7 @@ static void ioc_rqos_merge(struct rq_qos *rqos, struct request *rq,
+ 		iocg->abs_vdebt += abs_cost;
+ 		iocg_kick_delay(iocg, &now);
+ 	} else {
+-		iocg_commit_bio(iocg, bio, cost);
++		iocg_commit_bio(iocg, bio, abs_cost, cost);
+ 	}
+ 	spin_unlock_irqrestore(&iocg->waitq.lock, flags);
+ }
+@@ -2133,6 +2240,12 @@ static struct blkg_policy_data *ioc_pd_alloc(gfp_t gfp, struct request_queue *q,
+ 	if (!iocg)
+ 		return NULL;
+ 
++	iocg->pcpu_stat = alloc_percpu_gfp(struct iocg_pcpu_stat, gfp);
++	if (!iocg->pcpu_stat) {
++		kfree(iocg);
++		return NULL;
++	}
++
+ 	return &iocg->pd;
+ }
+ 
+@@ -2152,6 +2265,7 @@ static void ioc_pd_init(struct blkg_policy_data *pd)
+ 	atomic64_set(&iocg->done_vtime, now.vnow);
+ 	atomic64_set(&iocg->active_period, atomic64_read(&ioc->cur_period));
+ 	INIT_LIST_HEAD(&iocg->active_list);
++	INIT_LIST_HEAD(&iocg->walk_list);
+ 	iocg->hweight_active = WEIGHT_ONE;
+ 	iocg->hweight_inuse = WEIGHT_ONE;
+ 
+@@ -2181,18 +2295,46 @@ static void ioc_pd_free(struct blkg_policy_data *pd)
+ 
+ 	if (ioc) {
+ 		spin_lock_irqsave(&ioc->lock, flags);
++
+ 		if (!list_empty(&iocg->active_list)) {
+ 			propagate_weights(iocg, 0, 0);
+ 			list_del_init(&iocg->active_list);
+ 		}
++
++		WARN_ON_ONCE(!list_empty(&iocg->walk_list));
++
+ 		spin_unlock_irqrestore(&ioc->lock, flags);
+ 
+ 		hrtimer_cancel(&iocg->waitq_timer);
+ 		hrtimer_cancel(&iocg->delay_timer);
+ 	}
++	free_percpu(iocg->pcpu_stat);
+ 	kfree(iocg);
+ }
+ 
++static size_t ioc_pd_stat(struct blkg_policy_data *pd, char *buf, size_t size)
++{
++	struct ioc_gq *iocg = pd_to_iocg(pd);
++	struct ioc *ioc = iocg->ioc;
++	size_t pos = 0;
++
++	if (!ioc->enabled)
++		return 0;
++
++	if (iocg->level == 0) {
++		unsigned vp10k = DIV64_U64_ROUND_CLOSEST(
++			atomic64_read(&ioc->vtime_rate) * 10000,
++			VTIME_PER_USEC);
++		pos += scnprintf(buf + pos, size - pos, " cost.vrate=%u.%02u",
++				  vp10k / 100, vp10k % 100);
++	}
++
++	pos += scnprintf(buf + pos, size - pos, " cost.usage=%llu",
++			 iocg->last_stat.usage_us);
++
++	return pos;
++}
++
+ static u64 ioc_weight_prfill(struct seq_file *sf, struct blkg_policy_data *pd,
+ 			     int off)
+ {
+@@ -2606,6 +2748,7 @@ static struct blkcg_policy blkcg_policy_iocost = {
+ 	.pd_alloc_fn	= ioc_pd_alloc,
+ 	.pd_init_fn	= ioc_pd_init,
+ 	.pd_free_fn	= ioc_pd_free,
++	.pd_stat_fn	= ioc_pd_stat,
+ };
+ 
+ static int __init ioc_init(void)
 -- 
 2.26.2
 
