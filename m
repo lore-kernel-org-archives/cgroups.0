@@ -1,12 +1,8 @@
 From: Baolin Wang <baolin.wang@linux.alibaba.com>
-Subject: [PATCH 5/5] blk-throttle: Avoid checking bps/iops limitation if bps or iops is unlimited
-Date: Mon,  7 Sep 2020 16:10:17 +0800
-Message-ID: <a4fab3f329b3334850c508e824e137dfc9b29025.1599458244.git.baolin.wang@linux.alibaba.com>
-References: <cover.1599458244.git.baolin.wang@linux.alibaba.com>
+Subject: [PATCH 0/5] Some improvements for blk-throttle
+Date: Mon,  7 Sep 2020 16:10:12 +0800
+Message-ID: <cover.1599458244.git.baolin.wang@linux.alibaba.com>
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <cover.1599458244.git.baolin.wang@linux.alibaba.com>
-In-Reply-To: <cover.1599458244.git.baolin.wang@linux.alibaba.com>
-References: <cover.1599458244.git.baolin.wang@linux.alibaba.com>
 Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -15,43 +11,23 @@ Content-Transfer-Encoding: 7bit
 To: tj@kernel.org, axboe@kernel.dk
 Cc: baolin.wang@linux.alibaba.com, baolin.wang7@gmail.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Do not need check the bps or iops limitation if bps or iops is unlimited.
+Hi All,
 
-Signed-off-by: Baolin Wang <baolin.wang@linux.alibaba.com>
----
- block/blk-throttle.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+This patch set did some clean-ups, as well as removing some unnecessary
+bps/iops limitation calculation when checking if can dispatch a bio or
+not for a tg. Please help to review. Thanks.
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 8719e37..36ba61c 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -901,6 +901,12 @@ static bool tg_with_in_iops_limit(struct throtl_grp *tg, struct bio *bio,
- 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
- 	u64 tmp;
- 
-+	if (iops_limit == UINT_MAX) {
-+		if (wait)
-+			*wait = 0;
-+		return true;
-+	}
-+
- 	jiffy_elapsed = jiffies - tg->slice_start[rw];
- 
- 	/* Round up to the next throttle slice, wait time must be nonzero */
-@@ -943,6 +949,12 @@ static bool tg_with_in_bps_limit(struct throtl_grp *tg, struct bio *bio,
- 	unsigned long jiffy_elapsed, jiffy_wait, jiffy_elapsed_rnd;
- 	unsigned int bio_size = throtl_bio_data_size(bio);
- 
-+	if (bps_limit == U64_MAX) {
-+		if (wait)
-+			*wait = 0;
-+		return true;
-+	}
-+
- 	jiffy_elapsed = jiffy_elapsed_rnd = jiffies - tg->slice_start[rw];
- 
- 	/* Slice has just started. Consider one slice interval */
+Baolin Wang (5):
+  blk-throttle: Fix some comments' typos
+  blk-throttle: Use readable READ/WRITE macros
+  blk-throttle: Define readable macros instead of static variables
+  blk-throttle: Avoid calculating bps/iops limitation repeatedly
+  blk-throttle: Avoid checking bps/iops limitation if bps or iops is    
+    unlimited
+
+ block/blk-throttle.c | 59 ++++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 36 insertions(+), 23 deletions(-)
+
 -- 
 1.8.3.1
 
