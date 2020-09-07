@@ -1,87 +1,66 @@
-From: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH 1/5] blk-throttle: Fix some comments' typos
-Date: Mon,  7 Sep 2020 16:10:13 +0800
-Message-ID: <e9451429c646d2f34b4225e2f0d716bc1e8dad5f.1599458244.git.baolin.wang@linux.alibaba.com>
+From: Baolin Wang <baolin.wang@linux.alibaba.com>
+Subject: [PATCH 3/5] blk-throttle: Define readable macros instead of static variables
+Date: Mon,  7 Sep 2020 16:10:15 +0800
+Message-ID: <0a1c4f411da22feeafe08d06472a807e2c68fff9.1599458244.git.baolin.wang@linux.alibaba.com>
 References: <cover.1599458244.git.baolin.wang@linux.alibaba.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <cover.1599458244.git.baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-In-Reply-To: <cover.1599458244.git.baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-References: <cover.1599458244.git.baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <cover.1599458244.git.baolin.wang@linux.alibaba.com>
+In-Reply-To: <cover.1599458244.git.baolin.wang@linux.alibaba.com>
+References: <cover.1599458244.git.baolin.wang@linux.alibaba.com>
+Sender: linux-block-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org, baolin.wang7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj@kernel.org, axboe@kernel.dk
+Cc: baolin.wang@linux.alibaba.com, baolin.wang7@gmail.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Fix some comments' typos.
+The 'throtl_grp_quantum' and 'throtl_quantum' are both read-only
+variables, thus better to use readable macros instead of static
+variables, which can also save some spaces for .bss area.
 
-Signed-off-by: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Signed-off-by: Baolin Wang <baolin.wang@linux.alibaba.com>
 ---
- block/blk-throttle.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ block/blk-throttle.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index fee3325..2fc6c3e 100644
+index 06e73ed..ca9002d 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -150,7 +150,7 @@ struct throtl_grp {
- 	/* user configured IOPS limits */
- 	unsigned int iops_conf[2][LIMIT_CNT];
+@@ -15,10 +15,10 @@
+ #include "blk-cgroup-rwstat.h"
  
--	/* Number of bytes disptached in current slice */
-+	/* Number of bytes dispatched in current slice */
- 	uint64_t bytes_disp[2];
- 	/* Number of bio's dispatched in current slice */
- 	unsigned int io_disp[2];
-@@ -852,7 +852,7 @@ static inline void throtl_trim_slice(struct throtl_grp *tg, bool rw)
- 	/*
- 	 * A bio has been dispatched. Also adjust slice_end. It might happen
- 	 * that initially cgroup limit was very low resulting in high
--	 * slice_end, but later limit was bumped up and bio was dispached
-+	 * slice_end, but later limit was bumped up and bio was dispatched
- 	 * sooner, then we need to reduce slice_end. A high bogus slice_end
- 	 * is bad because it does not allow new slice to start.
- 	 */
-@@ -1082,7 +1082,7 @@ static void throtl_add_bio_tg(struct bio *bio, struct throtl_qnode *qn,
- 	 * If @tg doesn't currently have any bios queued in the same
- 	 * direction, queueing @bio can change when @tg should be
- 	 * dispatched.  Mark that @tg was empty.  This is automatically
--	 * cleaered on the next tg_update_disptime().
-+	 * cleared on the next tg_update_disptime().
- 	 */
- 	if (!sq->nr_queued[rw])
- 		tg->flags |= THROTL_TG_WAS_EMPTY;
-@@ -1303,7 +1303,7 @@ static void throtl_pending_timer_fn(struct timer_list *t)
- 			}
- 		}
- 	} else {
--		/* reached the top-level, queue issueing */
-+		/* reached the top-level, queue issuing */
- 		queue_work(kthrotld_workqueue, &td->dispatch_work);
+ /* Max dispatch from a group in 1 round */
+-static int throtl_grp_quantum = 8;
++#define THROTL_GRP_QUANTUM 8
+ 
+ /* Total max dispatch from all groups in one round */
+-static int throtl_quantum = 32;
++#define THROTL_QUANTUM 32
+ 
+ /* Throttling is performed over a slice and after that slice is renewed */
+ #define DFL_THROTL_SLICE_HD (HZ / 10)
+@@ -1175,8 +1175,8 @@ static int throtl_dispatch_tg(struct throtl_grp *tg)
+ {
+ 	struct throtl_service_queue *sq = &tg->service_queue;
+ 	unsigned int nr_reads = 0, nr_writes = 0;
+-	unsigned int max_nr_reads = throtl_grp_quantum*3/4;
+-	unsigned int max_nr_writes = throtl_grp_quantum - max_nr_reads;
++	unsigned int max_nr_reads = THROTL_GRP_QUANTUM * 3 / 4;
++	unsigned int max_nr_writes = THROTL_GRP_QUANTUM - max_nr_reads;
+ 	struct bio *bio;
+ 
+ 	/* Try to dispatch 75% READS and 25% WRITES */
+@@ -1226,7 +1226,7 @@ static int throtl_select_dispatch(struct throtl_service_queue *parent_sq)
+ 		if (sq->nr_queued[0] || sq->nr_queued[1])
+ 			tg_update_disptime(tg);
+ 
+-		if (nr_disp >= throtl_quantum)
++		if (nr_disp >= THROTL_QUANTUM)
+ 			break;
  	}
- out_unlock:
-@@ -1314,8 +1314,8 @@ static void throtl_pending_timer_fn(struct timer_list *t)
-  * blk_throtl_dispatch_work_fn - work function for throtl_data->dispatch_work
-  * @work: work item being executed
-  *
-- * This function is queued for execution when bio's reach the bio_lists[]
-- * of throtl_data->service_queue.  Those bio's are ready and issued by this
-+ * This function is queued for execution when bios reach the bio_lists[]
-+ * of throtl_data->service_queue.  Those bios are ready and issued by this
-  * function.
-  */
- static void blk_throtl_dispatch_work_fn(struct work_struct *work)
-@@ -2230,7 +2230,7 @@ bool blk_throtl_bio(struct bio *bio)
  
- 		/*
- 		 * @bio passed through this layer without being throttled.
--		 * Climb up the ladder.  If we''re already at the top, it
-+		 * Climb up the ladder.  If we're already at the top, it
- 		 * can be executed directly.
- 		 */
- 		qn = &tg->qnode_on_parent[rw];
 -- 
 1.8.3.1
 
