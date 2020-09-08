@@ -1,86 +1,79 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+From: "Julius Hemanth Pitti (jpitti)" <jpitti-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH v2] mm: memcg: yield cpu when we fail to charge pages
-Date: Tue, 8 Sep 2020 22:53:10 +0200
-Message-ID: <20200908205310.GF26850@dhcp22.suse.cz>
+Date: Tue, 8 Sep 2020 20:57:50 +0000
+Message-ID: <fb708efd83bb77fd80bc34bb29b6a886f1ed63a5.camel@cisco.com>
 References: <20200908201426.14837-1-jpitti@cisco.com>
- <CAHbLzkqYrkA6=RSBpwEQJ5WaLUWwdP=05BPE2F4pRgk98NuVTg@mail.gmail.com>
+         <CAHbLzkqYrkA6=RSBpwEQJ5WaLUWwdP=05BPE2F4pRgk98NuVTg@mail.gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=cisco.com; i=@cisco.com; l=3438; q=dns/txt; s=iport;
+  t=1599598674; x=1600808274;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-id:content-transfer-encoding:
+   mime-version;
+  bh=hyYeOhUcYtCiC0YLjSnXva8LgNxVVh+qih8vdIF8Na8=;
+  b=BQ3VTfH1o98uOlHsusNmfU7njkW1tdu3mTLit+FyU02yA+ByxU8Xw58F
+   t5dKPRZlarNDx8rj0brISoQGXe5Zwk8fojjOQlGWngc56HQTEUysYUePJ
+   YJGXsXrnmer/j5sDrSnM+iEqK0Qz/OJ/6PTvJbYf4VXh+QYR29V2ruk3M
+   E=;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cisco.onmicrosoft.com;
+ s=selector2-cisco-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hyYeOhUcYtCiC0YLjSnXva8LgNxVVh+qih8vdIF8Na8=;
+ b=s0b2I4dvYk227heMeEt4h7Zo/uL1uo3qSHJSeM1dExOB/Y8f8d0auSBlw5vhIIssbQE3QaeTMllez6ziPw1iUu3HHZugo0zswqT2Ryw3+McG+q9QtEXAJHu2ZZQryOSZnfVFBnAQDAosx6Ffc/uZQ8eQXU6H/7euXojEQjdpQ6k=
 In-Reply-To: <CAHbLzkqYrkA6=RSBpwEQJ5WaLUWwdP=05BPE2F4pRgk98NuVTg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
+Content-ID: <750A9BAED03FFF41B0A5F03DD198FCD6-Hry67jCOGbCcE4WynfumptQqCkab/8FMAL8bYrjMMd8@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Julius Hemanth Pitti <jpitti-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, xe-linux-external-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org
+To: "shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: "vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "xe-linux-external(mailer list)" <xe-linux-external-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, "mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "guro-b10kYP2dOMg@public.gmane.org" <guro-b10kYP2dOMg@public.gmane.org>
 
-On Tue 08-09-20 13:31:51, Yang Shi wrote:
-> On Tue, Sep 8, 2020 at 1:14 PM Julius Hemanth Pitti <jpitti-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org> wrote:
-> >
-> > For non root CG, in try_charge(), we keep trying
-> > to charge until we succeed. On non-preemptive
-> > kernel, when we are OOM, this results in holding
-> > CPU forever.
-> >
-> > On SMP systems, this doesn't create a big problem
-> > because oom_reaper get a change to kill victim
-> > and make some free pages. However on a single-core
-> > CPU (or cases where oom_reaper pinned to same CPU
-> > where try_charge is executing), oom_reaper shall
-> > never get scheduled and we stay in try_charge forever.
-> >
-> > Steps to repo this on non-smp:
-> > 1. mount -t tmpfs none /sys/fs/cgroup
-> > 2. mkdir /sys/fs/cgroup/memory
-> > 3. mount -t cgroup none /sys/fs/cgroup/memory -o memory
-> > 4. mkdir /sys/fs/cgroup/memory/0
-> > 5. echo 40M > /sys/fs/cgroup/memory/0/memory.limit_in_bytes
-> > 6. echo $$ > /sys/fs/cgroup/memory/0/tasks
-> > 7. stress -m 5 --vm-bytes 10M --vm-hang 0
-> 
-> Isn't it the same problem solved by e3336cab2579 ("mm: memcg: fix
-> memcg reclaim soft lockup")? It has been in Linus's tree.
-
-Yes it should because it adds a scheduling point regardless
-of reclaimability.
- 
-> > Signed-off-by: Julius Hemanth Pitti <jpitti-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
-> > Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-> > ---
-> >
-> > Changes in v2:
-> >  - Added comments.
-> >  - Added "Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>".
-> > ---
-> >  mm/memcontrol.c | 9 +++++++++
-> >  1 file changed, 9 insertions(+)
-> >
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index cfa6cbad21d5..4f293bf8c7ed 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -2745,6 +2745,15 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
-> >         if (fatal_signal_pending(current))
-> >                 goto force;
-> >
-> > +       /*
-> > +        * We failed to charge even after retries, give oom_reaper or
-> > +        * other process a change to make some free pages.
-> > +        *
-> > +        * On non-preemptive, Non-SMP system, this is critical, else
-> > +        * we keep retrying with no success, forever.
-> > +        */
-> > +       cond_resched();
-> > +
-> >         /*
-> >          * keep retrying as long as the memcg oom killer is able to make
-> >          * a forward progress or bypass the charge if the oom killer
-> > --
-> > 2.17.1
-> >
-> >
-
--- 
-Michal Hocko
-SUSE Labs
+T24gVHVlLCAyMDIwLTA5LTA4IGF0IDEzOjMxIC0wNzAwLCBZYW5nIFNoaSB3cm90ZToNCj4gT24g
+VHVlLCBTZXAgOCwgMjAyMCBhdCAxOjE0IFBNIEp1bGl1cyBIZW1hbnRoIFBpdHRpIDxqcGl0dGlA
+Y2lzY28uY29tDQo+ID4gd3JvdGU6DQo+ID4gDQo+ID4gRm9yIG5vbiByb290IENHLCBpbiB0cnlf
+Y2hhcmdlKCksIHdlIGtlZXAgdHJ5aW5nDQo+ID4gdG8gY2hhcmdlIHVudGlsIHdlIHN1Y2NlZWQu
+IE9uIG5vbi1wcmVlbXB0aXZlDQo+ID4ga2VybmVsLCB3aGVuIHdlIGFyZSBPT00sIHRoaXMgcmVz
+dWx0cyBpbiBob2xkaW5nDQo+ID4gQ1BVIGZvcmV2ZXIuDQo+ID4gDQo+ID4gT24gU01QIHN5c3Rl
+bXMsIHRoaXMgZG9lc24ndCBjcmVhdGUgYSBiaWcgcHJvYmxlbQ0KPiA+IGJlY2F1c2Ugb29tX3Jl
+YXBlciBnZXQgYSBjaGFuZ2UgdG8ga2lsbCB2aWN0aW0NCj4gPiBhbmQgbWFrZSBzb21lIGZyZWUg
+cGFnZXMuIEhvd2V2ZXIgb24gYSBzaW5nbGUtY29yZQ0KPiA+IENQVSAob3IgY2FzZXMgd2hlcmUg
+b29tX3JlYXBlciBwaW5uZWQgdG8gc2FtZSBDUFUNCj4gPiB3aGVyZSB0cnlfY2hhcmdlIGlzIGV4
+ZWN1dGluZyksIG9vbV9yZWFwZXIgc2hhbGwNCj4gPiBuZXZlciBnZXQgc2NoZWR1bGVkIGFuZCB3
+ZSBzdGF5IGluIHRyeV9jaGFyZ2UgZm9yZXZlci4NCj4gPiANCj4gPiBTdGVwcyB0byByZXBvIHRo
+aXMgb24gbm9uLXNtcDoNCj4gPiAxLiBtb3VudCAtdCB0bXBmcyBub25lIC9zeXMvZnMvY2dyb3Vw
+DQo+ID4gMi4gbWtkaXIgL3N5cy9mcy9jZ3JvdXAvbWVtb3J5DQo+ID4gMy4gbW91bnQgLXQgY2dy
+b3VwIG5vbmUgL3N5cy9mcy9jZ3JvdXAvbWVtb3J5IC1vIG1lbW9yeQ0KPiA+IDQuIG1rZGlyIC9z
+eXMvZnMvY2dyb3VwL21lbW9yeS8wDQo+ID4gNS4gZWNobyA0ME0gPiAvc3lzL2ZzL2Nncm91cC9t
+ZW1vcnkvMC9tZW1vcnkubGltaXRfaW5fYnl0ZXMNCj4gPiA2LiBlY2hvICQkID4gL3N5cy9mcy9j
+Z3JvdXAvbWVtb3J5LzAvdGFza3MNCj4gPiA3LiBzdHJlc3MgLW0gNSAtLXZtLWJ5dGVzIDEwTSAt
+LXZtLWhhbmcgMA0KPiANCj4gSXNuJ3QgaXQgdGhlIHNhbWUgcHJvYmxlbSBzb2x2ZWQgYnkgZTMz
+MzZjYWIyNTc5ICgibW06IG1lbWNnOiBmaXgNCj4gbWVtY2cgcmVjbGFpbSBzb2Z0IGxvY2t1cCIp
+PyBJdCBoYXMgYmVlbiBpbiBMaW51cydzIHRyZWUuDQoNClllcywgaW5kZWVkLg0KSSBqdXN0IHRl
+c3RlZCB3aXRoIGUzMzM2Y2FiMjU3OSwgYW5kIGl0IHNvbHZlZCB0aGlzIHByb2JsZW0uDQpUaGFu
+a3MgZm9yIHBvaW50aW5nIGl0IG91dC4NCg0KPiANCj4gPiANCj4gPiBTaWduZWQtb2ZmLWJ5OiBK
+dWxpdXMgSGVtYW50aCBQaXR0aSA8anBpdHRpQGNpc2NvLmNvbT4NCj4gPiBBY2tlZC1ieTogUm9t
+YW4gR3VzaGNoaW4gPGd1cm9AZmIuY29tPg0KPiA+IC0tLQ0KPiA+IA0KPiA+IENoYW5nZXMgaW4g
+djI6DQo+ID4gIC0gQWRkZWQgY29tbWVudHMuDQo+ID4gIC0gQWRkZWQgIkFja2VkLWJ5OiBSb21h
+biBHdXNoY2hpbiA8Z3Vyb0BmYi5jb20+Ii4NCj4gPiAtLS0NCj4gPiAgbW0vbWVtY29udHJvbC5j
+IHwgOSArKysrKysrKysNCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDkgaW5zZXJ0aW9ucygrKQ0KPiA+
+IA0KPiA+IGRpZmYgLS1naXQgYS9tbS9tZW1jb250cm9sLmMgYi9tbS9tZW1jb250cm9sLmMNCj4g
+PiBpbmRleCBjZmE2Y2JhZDIxZDUuLjRmMjkzYmY4YzdlZCAxMDA2NDQNCj4gPiAtLS0gYS9tbS9t
+ZW1jb250cm9sLmMNCj4gPiArKysgYi9tbS9tZW1jb250cm9sLmMNCj4gPiBAQCAtMjc0NSw2ICsy
+NzQ1LDE1IEBAIHN0YXRpYyBpbnQgdHJ5X2NoYXJnZShzdHJ1Y3QgbWVtX2Nncm91cA0KPiA+ICpt
+ZW1jZywgZ2ZwX3QgZ2ZwX21hc2ssDQo+ID4gICAgICAgICBpZiAoZmF0YWxfc2lnbmFsX3BlbmRp
+bmcoY3VycmVudCkpDQo+ID4gICAgICAgICAgICAgICAgIGdvdG8gZm9yY2U7DQo+ID4gDQo+ID4g
+KyAgICAgICAvKg0KPiA+ICsgICAgICAgICogV2UgZmFpbGVkIHRvIGNoYXJnZSBldmVuIGFmdGVy
+IHJldHJpZXMsIGdpdmUgb29tX3JlYXBlcg0KPiA+IG9yDQo+ID4gKyAgICAgICAgKiBvdGhlciBw
+cm9jZXNzIGEgY2hhbmdlIHRvIG1ha2Ugc29tZSBmcmVlIHBhZ2VzLg0KPiA+ICsgICAgICAgICoN
+Cj4gPiArICAgICAgICAqIE9uIG5vbi1wcmVlbXB0aXZlLCBOb24tU01QIHN5c3RlbSwgdGhpcyBp
+cyBjcml0aWNhbCwNCj4gPiBlbHNlDQo+ID4gKyAgICAgICAgKiB3ZSBrZWVwIHJldHJ5aW5nIHdp
+dGggbm8gc3VjY2VzcywgZm9yZXZlci4NCj4gPiArICAgICAgICAqLw0KPiA+ICsgICAgICAgY29u
+ZF9yZXNjaGVkKCk7DQo+ID4gKw0KPiA+ICAgICAgICAgLyoNCj4gPiAgICAgICAgICAqIGtlZXAg
+cmV0cnlpbmcgYXMgbG9uZyBhcyB0aGUgbWVtY2cgb29tIGtpbGxlciBpcyBhYmxlIHRvDQo+ID4g
+bWFrZQ0KPiA+ICAgICAgICAgICogYSBmb3J3YXJkIHByb2dyZXNzIG9yIGJ5cGFzcyB0aGUgY2hh
+cmdlIGlmIHRoZSBvb20NCj4gPiBraWxsZXINCj4gPiAtLQ0KPiA+IDIuMTcuMQ0KPiA+IA0KPiA+
+IA0K
