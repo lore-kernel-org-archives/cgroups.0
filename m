@@ -1,24 +1,21 @@
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Subject: [PATCH v2 6/8] mm: Convert find_get_entry to return the
- head page
-Date: Thu, 10 Sep 2020 19:33:16 +0100
-Message-ID: <20200910183318.20139-7-willy@infradead.org>
-References: <20200910183318.20139-1-willy@infradead.org>
+Subject: [PATCH v2 0/8] Return head pages from find_*_entry
+Date: Thu, 10 Sep 2020 19:33:10 +0100
+Message-ID: <20200910183318.20139-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
- References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
- Content-Type:Content-ID:Content-Description;
- bh=wbdpAXqj/iEx6EyIMoxgt0sVerHjAkyShMVwI+uny1Q=; b=pJRs1fv6/U1cDPcHJO/d6uGe68
- zx+LxtAYUzYOOMLNaWcwUA/TDBT9LWGZGazRv/4K91Y7ZzYrFNMQLcC51R6CReznUaXHfu4qcDuVB
- rWQAtWLeNfvDT3ylTYEmaiMC9hRiBEa/cU3QfmlGhRV1uY9l0cAGOsYJVsE8bojVTGu4BW0uwRCIk
- tIuSB227gJFvCj97WZ9JvFGphzpl857t6IhN/UdDNCduoat3cq+DyiiBvsFoaRX1asx2bFbZmBi5s
- 3uF74gDU/S3WNrL4Pe4C/6j5y+/7h5eBqxuBEauyS42arTqIsrdzU2N3wtaIlLlTnX4oz7Cp9GgSm
- 9QoNUXyg==;
-In-Reply-To: <20200910183318.20139-1-willy@infradead.org>
+ Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+ Content-Description:In-Reply-To:References;
+ bh=O3f4pJZULtJ0Hg2fNHWuRs5XcF+sc7d6/Hzv1fj3FPw=; b=K31IH21Tut9dcJNTkS09h6hBMc
+ zzqUmjTdSEGz7kbkojcnDkmNauqqxB7FbXhHGDpsxcJhPWRcqSYX0le9QfA9DkUTleaOsDu76FXdT
+ 3AdUKzs5yHbqQq3g1sP4PZsgZQkYfiNcQgmItXFGklo37jxy/0YO6B1YYw9zFBHlrFKptdYs3itjz
+ LbBbGz1kjShY7XpdkW2tr/ARbYgUzKLJbGFBcZRovkONmt0heqXfLfc1Q/7MqGrFAeh1pfKxrHrJv
+ VNm5Xs5VZPTA+FKeangibdYPtMCLGkGhe1oY8JSdJ8LyauGiq0l3DmjoxI8ToSbCB1zDsYU632iZa
+ dvs7zhXw==;
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
  <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
@@ -32,82 +29,51 @@ Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
 To: linux-mm@kvack.org
 Cc: intel-gfx@lists.freedesktop.org, Huang Ying <ying.huang@intel.com>, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, Chris Wilson <chris@chris-wilson.co.uk>, William Kucharski <william.kucharski@oracle.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>, Matthew Auld <matthew.auld@intel.com>
 
-There are only four callers remaining of find_get_entry().
-get_shadow_from_swap_cache() only wants to see shadow entries and doesn't
-care about which page is returned.  Push the find_subpage() call into
-find_lock_entry(), find_get_incore_page() and pagecache_get_page().
+This patch series started out as part of the THP patch set, but it has
+some nice effects along the way and it seems worth splitting it out and
+submitting separately.
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- mm/filemap.c    | 13 +++++++------
- mm/swap_state.c |  2 +-
- 2 files changed, 8 insertions(+), 7 deletions(-)
+Currently find_get_entry() and find_lock_entry() return the page
+corresponding to the requested index, but the first thing most callers do
+is find the head page, which we just threw away.  As part of auditing
+all the callers, I found some misuses of the APIs and some plain
+inefficiencies that I've fixed.
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index d64f6f76bc0b..2f134383b0ae 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -1567,19 +1567,19 @@ EXPORT_SYMBOL(page_cache_prev_miss);
- /**
-  * find_get_entry - find and get a page cache entry
-  * @mapping: the address_space to search
-- * @offset: the page cache index
-+ * @index: The page cache index.
-  *
-  * Looks up the page cache slot at @mapping & @offset.  If there is a
-- * page cache page, it is returned with an increased refcount.
-+ * page cache page, the head page is returned with an increased refcount.
-  *
-  * If the slot holds a shadow entry of a previously evicted page, or a
-  * swap entry from shmem/tmpfs, it is returned.
-  *
-- * Return: the found page or shadow entry, %NULL if nothing is found.
-+ * Return: The head page or shadow entry, %NULL if nothing is found.
-  */
--struct page *find_get_entry(struct address_space *mapping, pgoff_t offset)
-+struct page *find_get_entry(struct address_space *mapping, pgoff_t index)
- {
--	XA_STATE(xas, &mapping->i_pages, offset);
-+	XA_STATE(xas, &mapping->i_pages, index);
- 	struct page *page;
- 
- 	rcu_read_lock();
-@@ -1607,7 +1607,6 @@ struct page *find_get_entry(struct address_space *mapping, pgoff_t offset)
- 		put_page(page);
- 		goto repeat;
- 	}
--	page = find_subpage(page, offset);
- out:
- 	rcu_read_unlock();
- 
-@@ -1644,6 +1643,7 @@ struct page *find_lock_entry(struct address_space *mapping, pgoff_t offset)
- 			put_page(page);
- 			goto repeat;
- 		}
-+		page = find_subpage(page, offset);
- 		VM_BUG_ON_PAGE(page_to_pgoff(page) != offset, page);
- 	}
- 	return page;
-@@ -1690,6 +1690,7 @@ struct page *pagecache_get_page(struct address_space *mapping, pgoff_t index,
- 		page = NULL;
- 	if (!page)
- 		goto no_page;
-+	page = find_subpage(page, index);
- 
- 	if (fgp_flags & FGP_LOCK) {
- 		if (fgp_flags & FGP_NOWAIT) {
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index c79e2242dd04..c8cf1757ca06 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -432,7 +432,7 @@ struct page *find_get_incore_page(struct address_space *mapping, pgoff_t index)
- 	struct page *page = find_get_entry(mapping, index);
- 
- 	if (!xa_is_value(page))
--		return page;
-+		return find_subpage(page, index);
- 	if (!shmem_mapping(mapping))
- 		return NULL;
- 
+The diffstat is unflattering, but I added more kernel-doc and a new wrapper.
+
+v2:
+ - Rework how shmem_getpage_gfp() handles getting a head page back from
+   find_lock_entry()
+ - Renamed find_get_swap_page() to find_get_incore_page()
+ - Make sure find_get_incore_page() doesn't return a head page
+ - Fix the missing include of linux/shmem_fs.h
+ - Move find_get_entry and find_lock_entry prototypes to mm/internal.h
+ - Rename thp_valid_index() to thp_contains()
+ - Fix thp_contains() for hugetlbfs and swapcache
+ - Add find_lock_head() wrapper around pagecache_get_page()
+
+Matthew Wilcox (Oracle) (8):
+  mm: Factor find_get_incore_page out of mincore_page
+  mm: Use find_get_incore_page in memcontrol
+  mm: Optimise madvise WILLNEED
+  proc: Optimise smaps for shmem entries
+  i915: Use find_lock_page instead of find_lock_entry
+  mm: Convert find_get_entry to return the head page
+  mm/shmem: Return head page from find_lock_entry
+  mm: Add find_lock_head
+
+ drivers/gpu/drm/i915/gem/i915_gem_shmem.c |  4 +--
+ fs/proc/task_mmu.c                        |  8 +----
+ include/linux/pagemap.h                   | 43 +++++++++++++++++-----
+ include/linux/swap.h                      |  7 ++++
+ mm/filemap.c                              | 44 +++++++++++------------
+ mm/internal.h                             |  3 ++
+ mm/madvise.c                              | 21 ++++++-----
+ mm/memcontrol.c                           | 24 ++-----------
+ mm/mincore.c                              | 28 ++-------------
+ mm/shmem.c                                | 20 +++++------
+ mm/swap_state.c                           | 32 +++++++++++++++++
+ 11 files changed, 127 insertions(+), 107 deletions(-)
+
 -- 
 2.28.0
