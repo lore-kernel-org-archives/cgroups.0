@@ -1,8 +1,7 @@
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Subject: [PATCH v2 1/8] mm: Factor find_get_incore_page out of
- mincore_page
-Date: Thu, 10 Sep 2020 19:33:11 +0100
-Message-ID: <20200910183318.20139-2-willy@infradead.org>
+Subject: [PATCH v2 3/8] mm: Optimise madvise WILLNEED
+Date: Thu, 10 Sep 2020 19:33:13 +0100
+Message-ID: <20200910183318.20139-4-willy@infradead.org>
 References: <20200910183318.20139-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -12,12 +11,12 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
  References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
  Content-Type:Content-ID:Content-Description;
- bh=oE5diPOqflUz5ouPiNiWbjF6mvAtjkW77tqVGwhB8+M=; b=G7NY3Y2Dwt/Soz3DFgXgOe/2lD
- /6JIyqQm+QuQpNgiZbHV0nmd7Apukp/LVm5KCRPO/E9Bp9i8GKp0AnL8GPb2jhga2FN/uFTihKzwn
- DJQkvgEaG3yYx4IXydeJIMcmpoxKVgl5alGE6FWJs/eIEhPpJl6sKOiIzetku3o+j4MiISiUMewvz
- CCHhWLIhINMZphtPGkNrwQTMtSHGY7OTdsoOYERsOwZCJFqf7j+/T57gubnXbT7dHOIA3t42rATww
- z7Tnalh6R6RxhB5rNzIxfVi279Is1hANBZZyYfD/Air6DVpqU1RS1DUx63xhiavuC/7c30ake9q6H
- pnrG1Bng==;
+ bh=5pz6pk0hQVCAmUCzXhhMl6SI7ek8eXmhvDqxhMsMWZA=; b=Z0ig8BZOOs874Iqk+s8Hjq2poV
+ GfUU0UHAUN9Q10UU2Qc227BQGYSAuBuImaK2JLeoDFbGlpRzkAAOn6+/YaptLDl2FRANNaxYmEE3w
+ mM4+ZjVmKwqOk3NY3DlezWO3uDRW1yESEcjvvUwqea0D+xOlNL846Qr76zhGuKKjx9HOj3KgtZscS
+ jit7EaGeKPNdD6jg3LNu0n3gynAd6wlhzi9Hsj3R5Mi0n4mt1NX4STEfYrPFDWo1mhNjNsHg18nlj
+ vZc8Lz/HCP7Iav4W1Li83NNG/RE38e7EQqq6JJ3V+y6qbzdR40ePerF8p7gTuN16/gueZ/fX6Ngp1
+ qzZoxrDw==;
 In-Reply-To: <20200910183318.20139-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
@@ -32,136 +31,57 @@ Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
 To: linux-mm@kvack.org
 Cc: intel-gfx@lists.freedesktop.org, Huang Ying <ying.huang@intel.com>, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, Chris Wilson <chris@chris-wilson.co.uk>, William Kucharski <william.kucharski@oracle.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>, Matthew Auld <matthew.auld@intel.com>
 
-Provide this functionality from the swap cache.  It's useful for
-more than just mincore().
+Instead of calling find_get_entry() for every page index, use an XArray
+iterator to skip over NULL entries, and avoid calling get_page(),
+because we only want the swap entries.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
- include/linux/swap.h |  7 +++++++
- mm/mincore.c         | 28 ++--------------------------
- mm/swap_state.c      | 32 ++++++++++++++++++++++++++++++++
- 3 files changed, 41 insertions(+), 26 deletions(-)
+ mm/madvise.c | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 661046994db4..df87de38dca5 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -427,6 +427,7 @@ extern void free_pages_and_swap_cache(struct page **, int);
- extern struct page *lookup_swap_cache(swp_entry_t entry,
- 				      struct vm_area_struct *vma,
- 				      unsigned long addr);
-+struct page *find_get_incore_page(struct address_space *mapping, pgoff_t index);
- extern struct page *read_swap_cache_async(swp_entry_t, gfp_t,
- 			struct vm_area_struct *vma, unsigned long addr,
- 			bool do_poll);
-@@ -569,6 +570,12 @@ static inline struct page *lookup_swap_cache(swp_entry_t swp,
- 	return NULL;
- }
- 
-+static inline
-+struct page *find_get_incore_page(struct address_space *mapping, pgoff_t index)
-+{
-+	return find_get_page(mapping, index);
-+}
-+
- static inline int add_to_swap(struct page *page)
+diff --git a/mm/madvise.c b/mm/madvise.c
+index dd1d43cf026d..96189acd6969 100644
+--- a/mm/madvise.c
++++ b/mm/madvise.c
+@@ -224,25 +224,28 @@ static void force_shm_swapin_readahead(struct vm_area_struct *vma,
+ 		unsigned long start, unsigned long end,
+ 		struct address_space *mapping)
  {
- 	return 0;
-diff --git a/mm/mincore.c b/mm/mincore.c
-index 453ff112470f..02db1a834021 100644
---- a/mm/mincore.c
-+++ b/mm/mincore.c
-@@ -48,7 +48,7 @@ static int mincore_hugetlb(pte_t *pte, unsigned long hmask, unsigned long addr,
-  * and is up to date; i.e. that no page-in operation would be required
-  * at this time if an application were to map and access this page.
-  */
--static unsigned char mincore_page(struct address_space *mapping, pgoff_t pgoff)
-+static unsigned char mincore_page(struct address_space *mapping, pgoff_t index)
- {
- 	unsigned char present = 0;
+-	pgoff_t index;
++	XA_STATE(xas, &mapping->i_pages, linear_page_index(vma, start));
++	pgoff_t end_index = end / PAGE_SIZE;
  	struct page *page;
-@@ -59,31 +59,7 @@ static unsigned char mincore_page(struct address_space *mapping, pgoff_t pgoff)
- 	 * any other file mapping (ie. marked !present and faulted in with
- 	 * tmpfs's .fault). So swapped out tmpfs mappings are tested here.
- 	 */
--#ifdef CONFIG_SWAP
--	if (shmem_mapping(mapping)) {
--		page = find_get_entry(mapping, pgoff);
--		/*
--		 * shmem/tmpfs may return swap: account for swapcache
--		 * page too.
--		 */
--		if (xa_is_value(page)) {
--			swp_entry_t swp = radix_to_swp_entry(page);
--			struct swap_info_struct *si;
--
--			/* Prevent swap device to being swapoff under us */
--			si = get_swap_device(swp);
--			if (si) {
--				page = find_get_page(swap_address_space(swp),
--						     swp_offset(swp));
--				put_swap_device(si);
--			} else
--				page = NULL;
+-	swp_entry_t swap;
+ 
+-	for (; start < end; start += PAGE_SIZE) {
+-		index = ((start - vma->vm_start) >> PAGE_SHIFT) + vma->vm_pgoff;
++	rcu_read_lock();
++	xas_for_each(&xas, page, end_index) {
++		swp_entry_t swap;
+ 
+-		page = find_get_entry(mapping, index);
+-		if (!xa_is_value(page)) {
+-			if (page)
+-				put_page(page);
++		if (!xa_is_value(page))
+ 			continue;
 -		}
--	} else
--		page = find_get_page(mapping, pgoff);
--#else
--	page = find_get_page(mapping, pgoff);
--#endif
-+	page = find_get_incore_page(mapping, index);
- 	if (page) {
- 		present = PageUptodate(page);
- 		put_page(page);
-diff --git a/mm/swap_state.c b/mm/swap_state.c
-index c16eebb81d8b..c79e2242dd04 100644
---- a/mm/swap_state.c
-+++ b/mm/swap_state.c
-@@ -21,6 +21,7 @@
- #include <linux/vmalloc.h>
- #include <linux/swap_slots.h>
- #include <linux/huge_mm.h>
-+#include <linux/shmem_fs.h>
- #include "internal.h"
++		rcu_read_unlock();
++
+ 		swap = radix_to_swp_entry(page);
+ 		page = read_swap_cache_async(swap, GFP_HIGHUSER_MOVABLE,
+ 							NULL, 0, false);
+ 		if (page)
+ 			put_page(page);
++
++		rcu_read_lock();
++		xas_reset(&xas);
+ 	}
++	rcu_read_unlock();
  
- /*
-@@ -414,6 +415,37 @@ struct page *lookup_swap_cache(swp_entry_t entry, struct vm_area_struct *vma,
- 	return page;
+ 	lru_add_drain();	/* Push any new pages onto the LRU now */
  }
- 
-+/**
-+ * find_get_incore_page - Find and get a page from the page or swap caches.
-+ * @mapping: The address_space to search.
-+ * @index: The page cache index.
-+ *
-+ * This differs from find_get_page() in that it will also look for the
-+ * page in the swap cache.
-+ *
-+ * Return: The found page or %NULL.
-+ */
-+struct page *find_get_incore_page(struct address_space *mapping, pgoff_t index)
-+{
-+	swp_entry_t swp;
-+	struct swap_info_struct *si;
-+	struct page *page = find_get_entry(mapping, index);
-+
-+	if (!xa_is_value(page))
-+		return page;
-+	if (!shmem_mapping(mapping))
-+		return NULL;
-+
-+	swp = radix_to_swp_entry(page);
-+	/* Prevent swapoff from happening to us */
-+	si = get_swap_device(swp);
-+	if (!si)
-+		return NULL;
-+	page = find_get_page(swap_address_space(swp), swp_offset(swp));
-+	put_swap_device(si);
-+	return page;
-+}
-+
- struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
- 			struct vm_area_struct *vma, unsigned long addr,
- 			bool *new_page_allocated)
 -- 
 2.28.0
