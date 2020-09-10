@@ -1,7 +1,8 @@
 From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 01/12] fs: remove the unused SB_I_MULTIROOT flag
-Date: Thu, 10 Sep 2020 16:48:21 +0200
-Message-ID: <20200910144833.742260-2-hch@lst.de>
+Subject: [PATCH 04/12] bdi: initialize ->ra_pages and ->io_pages
+	in bdi_init
+Date: Thu, 10 Sep 2020 16:48:24 +0200
+Message-ID: <20200910144833.742260-5-hch@lst.de>
 References: <20200910144833.742260-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -12,13 +13,13 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	h=Content-Transfer-Encoding:MIME-Version:
 	References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
 	Content-Type:Content-ID:Content-Description;
-	bh=bCMdefcbVNK1n/7kExQP4kHzaTJA1/jyiOiumdm05Vg=;
-	b=pqbq3hLUr/RK0sVYON+22CBoDU
-	7iSshg/1l8TWLuQVYMixMDbnZc1Hg5HnvmYUIcilUUJPk0Is/ohirNDQMPb3QGq2IhpRqrYumSJgM
-	qZNRFRy7RKH0RISBXjgXQ/6kSMbPIbfvInVxWG5KMegLf+D07GbBvZSsvoHYoWCJBCkj5tS529ttl
-	H4dhhGbPsRx08exHjwjKb+Y9W4tkJo0BuuEYRed+LbTrVG1rtVUhVxXBLXfOXI4qJO3c8HFdVJFWC
-	TBzwWpycopMcJg+pMD1kfumXoKQ4oHaqbvTG0Ty3nCsN68OEsQx0cQrn9lfxrLzcI+1g0+pPzFHCl
-	BsAO6FNA==;
+	bh=7ulqiSDL0ogF88UJRGSXYrWIBhfsEtKnjgdPpH8j7+E=;
+	b=p/a/cIBTVNCnq9FDSFOgQ+do5P
+	XPs27m0/+6NZHzFP53ZY3wJJbA3lM5k+4VejJQFaewDhWokK3wBtFr3zoGPoQVydI+8s/v7cthkEC
+	2Zbhs8WXwY5yZ9n+cC23LGTQarTHwbnsiawp72UUt4MDzxhYGycrPYUGUFM22EiSm8SGWxmMCzVsv
+	HMlK5E7sf+3SIFm+y7VAkdhpCxCzZUJjdIW/7fyYnmaevN33DugSw41ov/gVrznyzWrp++HMlJVNT
+	E7XBGlzTNesfBKvxZZxJOz3C4N9eBaexaIT7CGzd35CncAEK6zUozHSaRnTEjHUWWlH0K0zgnQsSv
+	P3VZCdNA==;
 In-Reply-To: <20200910144833.742260-1-hch-jcswGhMUV9g@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linbit.com/mailman/options/drbd-dev>,
@@ -31,44 +32,171 @@ List-Subscribe: <https://lists.linbit.com/mailman/listinfo/drbd-dev>,
 Sender: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 Errors-To: drbd-dev-bounces-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Johannes Thumshirn <johannes.thumshirn-Sjgp3cTcYWE@public.gmane.org>, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
+Cc: David Sterba <dsterba-IBi9RG/b67k@public.gmane.org>, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org
 
-The last user of SB_I_MULTIROOT is disappeared with commit f2aedb713c28
-("NFS: Add fs_context support.")
+Set up a readahead size by default, as very few users have a good
+reason to change it.
 
 Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn-Sjgp3cTcYWE@public.gmane.org>
+Acked-by: David Sterba <dsterba-IBi9RG/b67k@public.gmane.org> [btrfs]
+Acked-by: Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org> [ubifs, mtd]
 ---
- fs/namei.c         | 4 ++--
- include/linux/fs.h | 1 -
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ block/blk-core.c      | 2 --
+ drivers/mtd/mtdcore.c | 2 ++
+ fs/9p/vfs_super.c     | 6 ++++--
+ fs/afs/super.c        | 1 -
+ fs/btrfs/disk-io.c    | 1 -
+ fs/fuse/inode.c       | 1 -
+ fs/nfs/super.c        | 9 +--------
+ fs/ubifs/super.c      | 2 ++
+ fs/vboxsf/super.c     | 2 ++
+ mm/backing-dev.c      | 2 ++
+ 10 files changed, 13 insertions(+), 15 deletions(-)
 
-diff --git a/fs/namei.c b/fs/namei.c
-index e99e2a9da0f7de..f1eb8ccd2be958 100644
---- a/fs/namei.c
-+++ b/fs/namei.c
-@@ -568,8 +568,8 @@ static bool path_connected(struct vfsmount *mnt, struct dentry *dentry)
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 093649bd252e71..18c092f8d69175 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -538,8 +538,6 @@ struct request_queue *blk_alloc_queue(int node_id)
+ 	if (!q->stats)
+ 		goto fail_stats;
+ 
+-	q->backing_dev_info->ra_pages = VM_READAHEAD_PAGES;
+-	q->backing_dev_info->io_pages = VM_READAHEAD_PAGES;
+ 	q->backing_dev_info->capabilities = BDI_CAP_CGROUP_WRITEBACK;
+ 	q->node = node_id;
+ 
+diff --git a/drivers/mtd/mtdcore.c b/drivers/mtd/mtdcore.c
+index 7d930569a7dfb7..b5e5d3140f578e 100644
+--- a/drivers/mtd/mtdcore.c
++++ b/drivers/mtd/mtdcore.c
+@@ -2196,6 +2196,8 @@ static struct backing_dev_info * __init mtd_bdi_init(char *name)
+ 	bdi = bdi_alloc(NUMA_NO_NODE);
+ 	if (!bdi)
+ 		return ERR_PTR(-ENOMEM);
++	bdi->ra_pages = 0;
++	bdi->io_pages = 0;
+ 
+ 	/*
+ 	 * We put '-0' suffix to the name to get the same name format as we
+diff --git a/fs/9p/vfs_super.c b/fs/9p/vfs_super.c
+index 74df32be4c6a52..e34fa20acf612e 100644
+--- a/fs/9p/vfs_super.c
++++ b/fs/9p/vfs_super.c
+@@ -80,8 +80,10 @@ v9fs_fill_super(struct super_block *sb, struct v9fs_session_info *v9ses,
+ 	if (ret)
+ 		return ret;
+ 
+-	if (v9ses->cache)
+-		sb->s_bdi->ra_pages = VM_READAHEAD_PAGES;
++	if (!v9ses->cache) {
++		sb->s_bdi->ra_pages = 0;
++		sb->s_bdi->io_pages = 0;
++	}
+ 
+ 	sb->s_flags |= SB_ACTIVE | SB_DIRSYNC;
+ 	if (!v9ses->cache)
+diff --git a/fs/afs/super.c b/fs/afs/super.c
+index b552357b1d1379..3a40ee752c1e3f 100644
+--- a/fs/afs/super.c
++++ b/fs/afs/super.c
+@@ -456,7 +456,6 @@ static int afs_fill_super(struct super_block *sb, struct afs_fs_context *ctx)
+ 	ret = super_setup_bdi(sb);
+ 	if (ret)
+ 		return ret;
+-	sb->s_bdi->ra_pages	= VM_READAHEAD_PAGES;
+ 
+ 	/* allocate the root inode and dentry */
+ 	if (as->dyn_root) {
+diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
+index f6bba7eb1fa171..047934cea25efa 100644
+--- a/fs/btrfs/disk-io.c
++++ b/fs/btrfs/disk-io.c
+@@ -3092,7 +3092,6 @@ int __cold open_ctree(struct super_block *sb, struct btrfs_fs_devices *fs_device
+ 	}
+ 
+ 	sb->s_bdi->capabilities |= BDI_CAP_CGROUP_WRITEBACK;
+-	sb->s_bdi->ra_pages = VM_READAHEAD_PAGES;
+ 	sb->s_bdi->ra_pages *= btrfs_super_num_devices(disk_super);
+ 	sb->s_bdi->ra_pages = max(sb->s_bdi->ra_pages, SZ_4M / PAGE_SIZE);
+ 
+diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
+index bba747520e9b08..17b00670fb539e 100644
+--- a/fs/fuse/inode.c
++++ b/fs/fuse/inode.c
+@@ -1049,7 +1049,6 @@ static int fuse_bdi_init(struct fuse_conn *fc, struct super_block *sb)
+ 	if (err)
+ 		return err;
+ 
+-	sb->s_bdi->ra_pages = VM_READAHEAD_PAGES;
+ 	/* fuse does it's own writeback accounting */
+ 	sb->s_bdi->capabilities = BDI_CAP_NO_ACCT_WB | BDI_CAP_STRICTLIMIT;
+ 
+diff --git a/fs/nfs/super.c b/fs/nfs/super.c
+index 7a70287f21a2c1..f943e37853fa25 100644
+--- a/fs/nfs/super.c
++++ b/fs/nfs/super.c
+@@ -1200,13 +1200,6 @@ static void nfs_get_cache_cookie(struct super_block *sb,
+ }
+ #endif
+ 
+-static void nfs_set_readahead(struct backing_dev_info *bdi,
+-			      unsigned long iomax_pages)
+-{
+-	bdi->ra_pages = VM_READAHEAD_PAGES;
+-	bdi->io_pages = iomax_pages;
+-}
+-
+ int nfs_get_tree_common(struct fs_context *fc)
  {
- 	struct super_block *sb = mnt->mnt_sb;
+ 	struct nfs_fs_context *ctx = nfs_fc2context(fc);
+@@ -1251,7 +1244,7 @@ int nfs_get_tree_common(struct fs_context *fc)
+ 					     MINOR(server->s_dev));
+ 		if (error)
+ 			goto error_splat_super;
+-		nfs_set_readahead(s->s_bdi, server->rpages);
++		s->s_bdi->io_pages = server->rpages;
+ 		server->super = s;
+ 	}
  
--	/* Bind mounts and multi-root filesystems can have disconnected paths */
--	if (!(sb->s_iflags & SB_I_MULTIROOT) && (mnt->mnt_root == sb->s_root))
-+	/* Bind mounts can have disconnected paths */
-+	if (mnt->mnt_root == sb->s_root)
- 		return true;
+diff --git a/fs/ubifs/super.c b/fs/ubifs/super.c
+index a2420c900275a8..fbddb2a1c03f5e 100644
+--- a/fs/ubifs/super.c
++++ b/fs/ubifs/super.c
+@@ -2177,6 +2177,8 @@ static int ubifs_fill_super(struct super_block *sb, void *data, int silent)
+ 				   c->vi.vol_id);
+ 	if (err)
+ 		goto out_close;
++	sb->s_bdi->ra_pages = 0;
++	sb->s_bdi->io_pages = 0;
  
- 	return is_subdir(dentry, mnt->mnt_root);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 7519ae003a082c..fbd74df5ce5f34 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1385,7 +1385,6 @@ extern int send_sigurg(struct fown_struct *fown);
- #define SB_I_CGROUPWB	0x00000001	/* cgroup-aware writeback enabled */
- #define SB_I_NOEXEC	0x00000002	/* Ignore executables on this fs */
- #define SB_I_NODEV	0x00000004	/* Ignore devices on this fs */
--#define SB_I_MULTIROOT	0x00000008	/* Multiple roots to the dentry tree */
+ 	sb->s_fs_info = c;
+ 	sb->s_magic = UBIFS_SUPER_MAGIC;
+diff --git a/fs/vboxsf/super.c b/fs/vboxsf/super.c
+index 8fe03b4a0d2b03..8e3792177a8523 100644
+--- a/fs/vboxsf/super.c
++++ b/fs/vboxsf/super.c
+@@ -167,6 +167,8 @@ static int vboxsf_fill_super(struct super_block *sb, struct fs_context *fc)
+ 	err = super_setup_bdi_name(sb, "vboxsf-%d", sbi->bdi_id);
+ 	if (err)
+ 		goto fail_free;
++	sb->s_bdi->ra_pages = 0;
++	sb->s_bdi->io_pages = 0;
  
- /* sb->s_iflags to limit user namespace mounts */
- #define SB_I_USERNS_VISIBLE		0x00000010 /* fstype already mounted */
+ 	/* Turn source into a shfl_string and map the folder */
+ 	size = strlen(fc->source) + 1;
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index 8e8b00627bb2d8..2dac3be6127127 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -746,6 +746,8 @@ struct backing_dev_info *bdi_alloc(int node_id)
+ 		kfree(bdi);
+ 		return NULL;
+ 	}
++	bdi->ra_pages = VM_READAHEAD_PAGES;
++	bdi->io_pages = VM_READAHEAD_PAGES;
+ 	return bdi;
+ }
+ EXPORT_SYMBOL(bdi_alloc);
 -- 
 2.28.0
