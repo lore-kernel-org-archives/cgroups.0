@@ -1,189 +1,111 @@
-From: SeongJae Park <sjpark-vV1OtcyAfmbQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] memcg: introduce per-memcg reclaim interface
-Date: Thu, 10 Sep 2020 08:36:56 +0200
-Message-ID: <20200910063656.25038-1-sjpark@amazon.com>
-References: <20200909215752.1725525-1-shakeelb@google.com>
+From: Muchun Song <songmuchun@bytedance.com>
+Subject: [PATCH] mm: memcontrol: Add the missing numa stat of anon and file for cgroup v2
+Date: Thu, 10 Sep 2020 16:42:58 +0800
+Message-ID: <20200910084258.22293-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazon201209;
-  t=1599719842; x=1631255842;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   mime-version;
-  bh=GzpkhECVivbbxVgp+QkERBRuQKYx97kDrCEsWiAnM9s=;
-  b=eqrGHGTWOcYQDTFvK4V7hC4d347sRYuVslGSprlpm+0ajmKKcWKycfcu
-   XuHg8w78O7p4ICDgRsG1520AnQPnLMtgdVxPeqOqf229yQNk3xdjHNxpJ
-   B+SwIYjOjA90p9FogFYZLu5PfsTDp2qUmNqaMwlX+DHuySwo0NcYR7yIa
-   o=;
-In-Reply-To: <20200909215752.1725525-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=DydHZR1p/a4YgWod1jge5YOze1r87n8O9ViW1sroOHE=;
+        b=fW03118K7OqoKHn0n/T5KvrtUYFGItUGF5N6guUzhftq5pe6S/cCuNZOc7HvKn8Eey
+         IDNdM9hwsCF4NZkTkAwKmCSYy5a2dFlOA9lp46ncqkgd1q3DoUJBFxmUZUZt6kufBXDw
+         pYTgoq8v1ApLaGpSc4X6a84Kaosdt95njNvvWGVCbOHsa7bfTKEnm+5pbShj746vZxEM
+         b+3wSM92YFInqZYqb9WhPEDbL8IxDn5xD9kvQ3mFFAd9hJY0Ini76LCw7FtbXR+ymhl4
+         VUof+fRcGtKEQQO3SOy6ZDwd0/xU/N2QLdSZhnFwnfuFkKPNnJZKNuYqkAsm/aEf/aXB
+         rmLg==
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yang Shi <yang.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>
 
-On 2020-09-09T14:57:52-07:00 Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+In the cgroup v1, we have a numa_stat interface. This is useful for
+providing visibility into the numa locality information within an
+memcg since the pages are allowed to be allocated from any physical
+node. One of the use cases is evaluating application performance by
+combining this information with the application's CPU allocation.
+But the cgroup v2 does not. So this patch adds the missing information.
 
-> Introduce an memcg interface to trigger memory reclaim on a memory cgroup.
-> 
-> Use cases:
-> ----------
-> 
-> 1) Per-memcg uswapd:
-> 
-> Usually applications consists of combination of latency sensitive and
-> latency tolerant tasks. For example, tasks serving user requests vs
-> tasks doing data backup for a database application. At the moment the
-> kernel does not differentiate between such tasks when the application
-> hits the memcg limits. So, potentially a latency sensitive user facing
-> task can get stuck in high reclaim and be throttled by the kernel.
-> 
-> Similarly there are cases of single process applications having two set
-> of thread pools where threads from one pool have high scheduling
-> priority and low latency requirement. One concrete example from our
-> production is the VMM which have high priority low latency thread pool
-> for the VCPUs while separate thread pool for stats reporting, I/O
-> emulation, health checks and other managerial operations. The kernel
-> memory reclaim does not differentiate between VCPU thread or a
-> non-latency sensitive thread and a VCPU thread can get stuck in high
-> reclaim.
-> 
-> One way to resolve this issue is to preemptively trigger the memory
-> reclaim from a latency tolerant task (uswapd) when the application is
-> near the limits. Finding 'near the limits' situation is an orthogonal
-> problem.
-> 
-> 2) Proactive reclaim:
-> 
-> This is a similar to the previous use-case, the difference is instead of
-> waiting for the application to be near its limit to trigger memory
-> reclaim, continuously pressuring the memcg to reclaim a small amount of
-> memory. This gives more accurate and uptodate workingset estimation as
-> the LRUs are continuously sorted and can potentially provide more
-> deterministic memory overcommit behavior. The memory overcommit
-> controller can provide more proactive response to the changing behavior
-> of the running applications instead of being reactive.
-> 
-> Benefit of user space solution:
-> -------------------------------
-> 
-> 1) More flexible on who should be charged for the cpu of the memory
-> reclaim. For proactive reclaim, it makes more sense to centralized the
-> overhead while for uswapd, it makes more sense for the application to
-> pay for the cpu of the memory reclaim.
-> 
-> 2) More flexible on dedicating the resources (like cpu). The memory
-> overcommit controller can balance the cost between the cpu usage and
-> the memory reclaimed.
-> 
-> 3) Provides a way to the applications to keep their LRUs sorted, so,
-> under memory pressure better reclaim candidates are selected. This also
-> gives more accurate and uptodate notion of working set for an
-> application.
-> 
-> Questions:
-> ----------
-> 
-> 1) Why memory.high is not enough?
-> 
-> memory.high can be used to trigger reclaim in a memcg and can
-> potentially be used for proactive reclaim as well as uswapd use cases.
-> However there is a big negative in using memory.high. It can potentially
-> introduce high reclaim stalls in the target application as the
-> allocations from the processes or the threads of the application can hit
-> the temporary memory.high limit.
-> 
-> Another issue with memory.high is that it is not delegatable. To
-> actually use this interface for uswapd, the application has to introduce
-> another layer of cgroup on whose memory.high it has write access.
-> 
-> 2) Why uswapd safe from self induced reclaim?
-> 
-> This is very similar to the scenario of oomd under global memory
-> pressure. We can use the similar mechanisms to protect uswapd from self
-> induced reclaim i.e. memory.min and mlock.
-> 
-> Interface options:
-> ------------------
-> 
-> Introducing a very simple memcg interface 'echo 10M > memory.reclaim' to
-> trigger reclaim in the target memory cgroup.
-> 
-> In future we might want to reclaim specific type of memory from a memcg,
-> so, this interface can be extended to allow that. e.g.
-> 
-> $ echo 10M [all|anon|file|kmem] > memory.reclaim
-> 
-> However that should be when we have concrete use-cases for such
-> functionality. Keep things simple for now.
-> 
-> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> ---
->  Documentation/admin-guide/cgroup-v2.rst |  9 ++++++
->  mm/memcontrol.c                         | 37 +++++++++++++++++++++++++
->  2 files changed, 46 insertions(+)
-> 
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> index 6be43781ec7f..58d70b5989d7 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -1181,6 +1181,15 @@ PAGE_SIZE multiple when read back.
->  	high limit is used and monitored properly, this limit's
->  	utility is limited to providing the final safety net.
->  
-> +  memory.reclaim
-> +	A write-only file which exists on non-root cgroups.
-> +
-> +	This is a simple interface to trigger memory reclaim in the
-> +	target cgroup. Write the number of bytes to reclaim to this
-> +	file and the kernel will try to reclaim that much memory.
-> +	Please note that the kernel can over or under reclaim from
-> +	the target cgroup.
-> +
->    memory.oom.group
->  	A read-write single value file which exists on non-root
->  	cgroups.  The default value is "0".
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 75cd1a1e66c8..2d006c36d7f3 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -6456,6 +6456,38 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
->  	return nbytes;
->  }
->  
-> +static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
-> +			      size_t nbytes, loff_t off)
-> +{
-> +	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-> +	unsigned int nr_retries = MAX_RECLAIM_RETRIES;
-> +	unsigned long nr_to_reclaim, nr_reclaimed = 0;
-> +	int err;
-> +
-> +	buf = strstrip(buf);
-> +	err = page_counter_memparse(buf, "", &nr_to_reclaim);
-> +	if (err)
-> +		return err;
-> +
-> +	while (nr_reclaimed < nr_to_reclaim) {
-> +		unsigned long reclaimed;
-> +
-> +		if (signal_pending(current))
-> +			break;
-> +
-> +		reclaimed = try_to_free_mem_cgroup_pages(memcg,
-> +						nr_to_reclaim - nr_reclaimed,
-> +						GFP_KERNEL, true);
-> +
-> +		if (!reclaimed && !nr_retries--)
-> +			break;
+Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+---
+ mm/memcontrol.c | 46 ++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 44 insertions(+), 2 deletions(-)
 
-Shouldn't the if condition use '||' instead of '&&'?  I think it could be
-easier to read if we put the 'nr_retires' condition in the while condition as
-below (just my personal preference, though).
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 75cd1a1e66c8..c779673f29b2 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1492,10 +1492,34 @@ static bool mem_cgroup_wait_acct_move(struct mem_cgroup *memcg)
+ 	return false;
+ }
+ 
++#ifdef CONFIG_NUMA
++static unsigned long memcg_node_page_state(struct mem_cgroup *memcg,
++					   unsigned int nid,
++					   enum node_stat_item idx)
++{
++	long x;
++	struct mem_cgroup_per_node *pn;
++	struct lruvec *lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
++
++	VM_BUG_ON(nid >= nr_node_ids);
++
++	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
++	x = atomic_long_read(&pn->lruvec_stat[idx]);
++#ifdef CONFIG_SMP
++	if (x < 0)
++		x = 0;
++#endif
++	return x;
++}
++#endif
++
+ static char *memory_stat_format(struct mem_cgroup *memcg)
+ {
+ 	struct seq_buf s;
+ 	int i;
++#ifdef CONFIG_NUMA
++	int nid;
++#endif
+ 
+ 	seq_buf_init(&s, kmalloc(PAGE_SIZE, GFP_KERNEL), PAGE_SIZE);
+ 	if (!s.buffer)
+@@ -1512,12 +1536,30 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
+ 	 * Current memory state:
+ 	 */
+ 
+-	seq_buf_printf(&s, "anon %llu\n",
++	seq_buf_printf(&s, "anon %llu",
+ 		       (u64)memcg_page_state(memcg, NR_ANON_MAPPED) *
+ 		       PAGE_SIZE);
+-	seq_buf_printf(&s, "file %llu\n",
++#ifdef CONFIG_NUMA
++	for_each_node_state(nid, N_MEMORY)
++		seq_buf_printf(&s, " N%d=%llu", nid,
++			       (u64)memcg_node_page_state(memcg, nid,
++							  NR_ANON_MAPPED) *
++			       PAGE_SIZE);
++#endif
++	seq_buf_putc(&s, '\n');
++
++	seq_buf_printf(&s, "file %llu",
+ 		       (u64)memcg_page_state(memcg, NR_FILE_PAGES) *
+ 		       PAGE_SIZE);
++#ifdef CONFIG_NUMA
++	for_each_node_state(nid, N_MEMORY)
++		seq_buf_printf(&s, " N%d=%llu", nid,
++			       (u64)memcg_node_page_state(memcg, nid,
++							  NR_FILE_PAGES) *
++			       PAGE_SIZE);
++#endif
++	seq_buf_putc(&s, '\n');
++
+ 	seq_buf_printf(&s, "kernel_stack %llu\n",
+ 		       (u64)memcg_page_state(memcg, NR_KERNEL_STACK_KB) *
+ 		       1024);
+-- 
+2.20.1
 
-    while (nr_reclaimed < nr_to_reclaim && nr_retires--)
-
-
-Thanks,
-SeongJae Park
