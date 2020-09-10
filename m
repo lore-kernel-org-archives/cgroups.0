@@ -1,7 +1,8 @@
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Subject: [PATCH v2 8/8] mm: Add find_lock_head
-Date: Thu, 10 Sep 2020 19:33:18 +0100
-Message-ID: <20200910183318.20139-9-willy@infradead.org>
+Subject: [PATCH v2 5/8] i915: Use find_lock_page instead of
+ find_lock_entry
+Date: Thu, 10 Sep 2020 19:33:15 +0100
+Message-ID: <20200910183318.20139-6-willy@infradead.org>
 References: <20200910183318.20139-1-willy@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -11,12 +12,12 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
  d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
  References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
  Content-Type:Content-ID:Content-Description;
- bh=iUQLI4IkKhxmuIt5IQ92wfzZNFFmlqJHR5Mjgm7VnoA=; b=BA9fXgzR2ABZNFehO2jFdouN4b
- iatHnAm3X02YEDHBkg5V7kpzguGHl7vVWOOyszawHEkfApPAg1CVxxTQddRDUlB2DXtjsIPebRC0H
- +RSun9FiyBLil2BxMQTak8vbiwPaq02YTFwtoCHfj3fHL9EVOeHaJFkRRGNvBNMkGf76k2ekSGR8w
- q+6P8md5vudIkfhhBaRydUlngTJBq7gdHAIuO2S8Wb8c5A7bhSSLnSPs5HtyvAHjness9QKziYg+o
- 4Su2kksd56Fv0Rz0NaXC5CIngX3owPQbylFWO6K+Gq+ygUkjYDxRzGzapwO8XsA13+zclT89KPb0o
- e7QRA3hQ==;
+ bh=ewcIYV3TQS8WP/lMrXPvrY92L5jpE36QYNCFA1ncbsc=; b=F5AUBEYvYzQN95hW85bBYGSNGm
+ dqr/FIDMdYM5Al3Z2/G44MeSLdg3FvtOGcL0es06Bnbznufe5c2x8Lz7RURVTk5n1zGZVcxrtzErO
+ PZ53gJcR2CXaf7QigmY9EKywMn+n16Qge5W7dl8WazyVronln+U5qPN3PfzSg5tX+bQ9YjA+Pfu9M
+ c3fW+KnwVq/E0Pe1/bLa7ghA4WL8vnyOSLsz70Fb8hIGYcN9V2XzkttUG0ylT6s6TAtKtqFAl7Zby
+ QT5oT1X4Vq1OFEaAcU7o+Vf1OKFDtdZ4g2MaHkbITxeystP2bEPVRt06WbX6e2y0WsrLILor5Rj0F
+ 0CyJHhKw==;
 In-Reply-To: <20200910183318.20139-1-willy@infradead.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
@@ -31,115 +32,73 @@ Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
 To: linux-mm@kvack.org
 Cc: intel-gfx@lists.freedesktop.org, Huang Ying <ying.huang@intel.com>, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, Chris Wilson <chris@chris-wilson.co.uk>, William Kucharski <william.kucharski@oracle.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>, Matthew Auld <matthew.auld@intel.com>
 
-Add a new FGP_HEAD flag which avoids calling find_subpage() and add a
-convenience wrapper for it.
+i915 does not want to see value entries.  Switch it to use
+find_lock_page() instead, and remove the export of find_lock_entry().
+Move find_lock_entry() and find_get_entry() to mm/internal.h to discourage
+any future use.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
 ---
- include/linux/pagemap.h | 32 ++++++++++++++++++++++++++------
- mm/filemap.c            |  9 ++++++---
- 2 files changed, 32 insertions(+), 9 deletions(-)
+ drivers/gpu/drm/i915/gem/i915_gem_shmem.c | 4 ++--
+ include/linux/pagemap.h                   | 2 --
+ mm/filemap.c                              | 1 -
+ mm/internal.h                             | 3 +++
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/gpu/drm/i915/gem/i915_gem_shmem.c b/drivers/gpu/drm/i915/gem/i915_gem_shmem.c
+index 38113d3c0138..75e8b71c18b9 100644
+--- a/drivers/gpu/drm/i915/gem/i915_gem_shmem.c
++++ b/drivers/gpu/drm/i915/gem/i915_gem_shmem.c
+@@ -258,8 +258,8 @@ shmem_writeback(struct drm_i915_gem_object *obj)
+ 	for (i = 0; i < obj->base.size >> PAGE_SHIFT; i++) {
+ 		struct page *page;
+ 
+-		page = find_lock_entry(mapping, i);
+-		if (!page || xa_is_value(page))
++		page = find_lock_page(mapping, i);
++		if (!page)
+ 			continue;
+ 
+ 		if (!page_mapped(page) && clear_page_dirty_for_io(page)) {
 diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index f374618b2c93..4e52a3ff92fb 100644
+index 12ab56c3a86f..905a64030647 100644
 --- a/include/linux/pagemap.h
 +++ b/include/linux/pagemap.h
-@@ -278,6 +278,7 @@ pgoff_t page_cache_prev_miss(struct address_space *mapping,
- #define FGP_NOFS		0x00000010
- #define FGP_NOWAIT		0x00000020
- #define FGP_FOR_MMAP		0x00000040
-+#define FGP_HEAD		0x00000080
- 
- struct page *pagecache_get_page(struct address_space *mapping, pgoff_t offset,
- 		int fgp_flags, gfp_t cache_gfp_mask);
-@@ -309,18 +310,37 @@ static inline struct page *find_get_page_flags(struct address_space *mapping,
-  * @mapping: the address_space to search
-  * @offset: the page index
-  *
-- * Looks up the page cache slot at @mapping & @offset.  If there is a
-+ * Looks up the page cache entry at @mapping & @offset.  If there is a
-  * page cache page, it is returned locked and with an increased
-  * refcount.
-  *
-- * Otherwise, %NULL is returned.
-- *
-- * find_lock_page() may sleep.
-+ * Context: May sleep.
-+ * Return: A struct page or %NULL if there is no page in the cache for this
-+ * index.
-  */
- static inline struct page *find_lock_page(struct address_space *mapping,
--					pgoff_t offset)
-+					pgoff_t index)
-+{
-+	return pagecache_get_page(mapping, index, FGP_LOCK, 0);
-+}
-+
-+/**
-+ * find_lock_head - Locate, pin and lock a pagecache page.
-+ * @mapping: The address_space to search.
-+ * @offset: The page index.
-+ *
-+ * Looks up the page cache entry at @mapping & @offset.  If there is a
-+ * page cache page, its head page is returned locked and with an increased
-+ * refcount.
-+ *
-+ * Context: May sleep.
-+ * Return: A struct page which is !PageTail, or %NULL if there is no page
-+ * in the cache for this index.
-+ */
-+static inline struct page *find_lock_head(struct address_space *mapping,
-+					pgoff_t index)
- {
--	return pagecache_get_page(mapping, offset, FGP_LOCK, 0);
-+	return pagecache_get_page(mapping, index, FGP_LOCK | FGP_HEAD, 0);
+@@ -384,8 +384,6 @@ static inline struct page *find_subpage(struct page *head, pgoff_t index)
+ 	return head + (index & (thp_nr_pages(head) - 1));
  }
  
- /**
+-struct page *find_get_entry(struct address_space *mapping, pgoff_t offset);
+-struct page *find_lock_entry(struct address_space *mapping, pgoff_t offset);
+ unsigned find_get_entries(struct address_space *mapping, pgoff_t start,
+ 			  unsigned int nr_entries, struct page **entries,
+ 			  pgoff_t *indices);
 diff --git a/mm/filemap.c b/mm/filemap.c
-index 453535170b8d..e429e02317ef 100644
+index 78d07a712112..d64f6f76bc0b 100644
 --- a/mm/filemap.c
 +++ b/mm/filemap.c
-@@ -1659,6 +1659,8 @@ struct page *find_lock_entry(struct address_space *mapping, pgoff_t index)
-  *
-  * * %FGP_ACCESSED - The page will be marked accessed.
-  * * %FGP_LOCK - The page is returned locked.
-+ * * %FGP_HEAD - If the page is present and a THP, return the head page
-+ *   rather than the exact page specified by the index.
-  * * %FGP_CREAT - If no page is present then a new page is allocated using
-  *   @gfp_mask and added to the page cache and the VM's LRU list.
-  *   The page is returned locked and with an increased refcount.
-@@ -1687,7 +1689,6 @@ struct page *pagecache_get_page(struct address_space *mapping, pgoff_t index,
- 		page = NULL;
- 	if (!page)
- 		goto no_page;
--	page = find_subpage(page, index);
- 
- 	if (fgp_flags & FGP_LOCK) {
- 		if (fgp_flags & FGP_NOWAIT) {
-@@ -1700,12 +1701,12 @@ struct page *pagecache_get_page(struct address_space *mapping, pgoff_t index,
- 		}
- 
- 		/* Has the page been truncated? */
--		if (unlikely(compound_head(page)->mapping != mapping)) {
-+		if (unlikely(page->mapping != mapping)) {
- 			unlock_page(page);
- 			put_page(page);
- 			goto repeat;
- 		}
--		VM_BUG_ON_PAGE(page->index != index, page);
-+		VM_BUG_ON_PAGE(!thp_contains(page, index), page);
+@@ -1648,7 +1648,6 @@ struct page *find_lock_entry(struct address_space *mapping, pgoff_t offset)
  	}
+ 	return page;
+ }
+-EXPORT_SYMBOL(find_lock_entry);
  
- 	if (fgp_flags & FGP_ACCESSED)
-@@ -1715,6 +1716,8 @@ struct page *pagecache_get_page(struct address_space *mapping, pgoff_t index,
- 		if (page_is_idle(page))
- 			clear_page_idle(page);
- 	}
-+	if (!(fgp_flags & FGP_HEAD))
-+		page = find_subpage(page, index);
+ /**
+  * pagecache_get_page - Find and get a reference to a page.
+diff --git a/mm/internal.h b/mm/internal.h
+index ab4beb7c5cd2..6345b08ce86c 100644
+--- a/mm/internal.h
++++ b/mm/internal.h
+@@ -60,6 +60,9 @@ static inline void force_page_cache_readahead(struct address_space *mapping,
+ 	force_page_cache_ra(&ractl, &file->f_ra, nr_to_read);
+ }
  
- no_page:
- 	if (!page && (fgp_flags & FGP_CREAT)) {
++struct page *find_get_entry(struct address_space *mapping, pgoff_t index);
++struct page *find_lock_entry(struct address_space *mapping, pgoff_t index);
++
+ /**
+  * page_evictable - test whether a page is evictable
+  * @page: the page to test
 -- 
 2.28.0
