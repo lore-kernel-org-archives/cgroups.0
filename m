@@ -1,200 +1,89 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: [PATCH] memcg: introduce per-memcg reclaim interface
-Date: Wed,  9 Sep 2020 14:57:52 -0700
-Message-ID: <20200909215752.1725525-1-shakeelb@google.com>
+From: Hugh Dickins <hughd@google.com>
+Subject: Re: [PATCH v18 00/32] per memcg lru_lock: reviews
+Date: Wed, 9 Sep 2020 17:32:37 -0700 (PDT)
+Message-ID: <alpine.LSU.2.11.2009091640490.10087@eggly.anvils>
+References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com> <20200824114204.cc796ca182db95809dd70a47@linux-foundation.org> <alpine.LSU.2.11.2008241231460.1065@eggly.anvils> <alpine.LSU.2.11.2008262301240.4405@eggly.anvils>
+ <alpine.LSU.2.11.2009081640070.7256@eggly.anvils> <CAKgT0Uc_L-Tz_rVJiHc5GUK_ZWOs2wRvez4QGf2wwEjx38qnbg@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=sender:date:message-id:mime-version:subject:from:to:cc;
-        bh=YzcEKzsIWMuMUeF2ey3rtqIWIvrrBYx2vMKWker9WzU=;
-        b=C5Fv53HkIMHHoez5IYzzn36hW0UQqwW9KLZC4s9j5QoptDldkoHfHK/dGAox6TwObe
-         binlTX7MkxrWT+dDuwi1/uPuq27BZAjL1xZXwx6z8eR6sakcGs866qkvuOHdXpZMHE3v
-         MIZFYe87z96xRKMxatoLjAZFYuXpFWjOZgXYXRkxZpK1pAIrdGNs3glWWx2Krl+XVYoR
-         YirWIwRKkYQMruUWz41tJVHXBYH6vZVckNxtYWqfWNgypkQ+aR33DELU/kyDB2nB5Quz
-         MFdn1w4xVNM8sZUXG/wH/M2G13dOLlVbQ/zZEbq0CRO8B3ONI0pHD1nRDsFjRCx2OrJK
-         AEJg==
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=a2Gw2QTQELKkuv4WuRMTiaWGDMDx+OUJI/W2YlhQu1g=;
+        b=hXt2sJaDB69f3HSWBntMKHKu2u6GbGPI56g1GWVWgEWffWRmRF/46fjhjzr4y+kjSS
+         olae3KV2INU6xY+5nmScaQwuyflGf/29D3hqz+AwidEpBRlgxwyecVGF+cVfQPTtLVoI
+         FqlW4hqo2j4lAXBkqf4P7uucl5pqZpkaibL/ASfdbjENd1k5Lj2lQAZYgMjhdfrXfQ/G
+         yabuHDKWP5Zd+KUB09u+iw39GatHXuF+7hFxQmBrzlDN1pJSILYoaj+goqHr9cPUO2WX
+         oeenuvj38miM7TkbMjGFMmJyXDGvcmQoD8deSnstcoxJQk/SZIv/p9q8mFYHuaIS0uc8
+         Sg6g==
+In-Reply-To: <CAKgT0Uc_L-Tz_rVJiHc5GUK_ZWOs2wRvez4QGf2wwEjx38qnbg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Yang Shi <yang.shi@linux.alibaba.com>, Greg Thelen <gthelen@google.com>, David Rientjes <rientjes@google.com>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Hugh Dickins <hughd@google.com>, Alex Shi <alex.shi@linux.alibaba.com>, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>, Tejun Heo <tj@kernel.org>, Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, Daniel Jordan <daniel.m.jordan@oracle.com>, Matthew Wilcox <willy@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, kbuild test robot <lkp@intel.com>, linux-mm <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, cgroups@vger.kernel.org, Shakeel Butt <shakeelb@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Wei Yang <richard.weiyang@gmail.com>, "Kirill A. Shutemov" <kirill@shutemov.name>, Rong Chen <rong.a.chen@intel.com>, Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, sh
 
-Introduce an memcg interface to trigger memory reclaim on a memory cgroup.
+On Wed, 9 Sep 2020, Alexander Duyck wrote:
+> On Tue, Sep 8, 2020 at 4:41 PM Hugh Dickins <hughd@google.com> wrote:
+> > [PATCH v18 28/32] mm/compaction: Drop locked from isolate_migratepages_block
+> > Most of this consists of replacing "locked" by "lruvec", which is good:
+> > but please fold those changes back into 20/32 (or would it be 17/32?
+> > I've not yet looked into the relationship between those two), so we
+> > can then see more clearly what change this 28/32 (will need renaming!)
+> > actually makes, to use lruvec_holds_page_lru_lock(). That may be a
+> > good change, but it's mixed up with the "locked"->"lruvec" at present,
+> > and I think you could have just used lruvec for locked all along
+> > (but of course there's a place where you'll need new_lruvec too).
+> 
+> I am good with my patch being folded in. No need to keep it separate.
 
-Use cases:
-----------
+Thanks.  Though it was only the "locked"->"lruvec" changes I was
+suggesting to fold back, to minimize the diff, so that we could
+see your use of lruvec_holds_page_lru_lock() more clearly - you
+had not introduced that function at the stage of the earlier patches.
 
-1) Per-memcg uswapd:
+But now that I stare at it again, using lruvec_holds_page_lru_lock()
+there doesn't look like an advantage to me: when it decides no, the
+same calculation is made all over again in mem_cgroup_page_lruvec(),
+whereas the code before only had to calculate it once.
 
-Usually applications consists of combination of latency sensitive and
-latency tolerant tasks. For example, tasks serving user requests vs
-tasks doing data backup for a database application. At the moment the
-kernel does not differentiate between such tasks when the application
-hits the memcg limits. So, potentially a latency sensitive user facing
-task can get stuck in high reclaim and be throttled by the kernel.
+So, the code before looks better to me: I wonder, do you think that
+rcu_read_lock() is more expensive than I think it?  There can be
+debug instrumentation that makes it heavier, but by itself it is
+very cheap (by design) - not worth branching around.
 
-Similarly there are cases of single process applications having two set
-of thread pools where threads from one pool have high scheduling
-priority and low latency requirement. One concrete example from our
-production is the VMM which have high priority low latency thread pool
-for the VCPUs while separate thread pool for stats reporting, I/O
-emulation, health checks and other managerial operations. The kernel
-memory reclaim does not differentiate between VCPU thread or a
-non-latency sensitive thread and a VCPU thread can get stuck in high
-reclaim.
+> 
+> > [PATCH v18 29/32] mm: Identify compound pages sooner in isolate_migratepages_block
+> > NAK. I agree that isolate_migratepages_block() looks nicer this way, but
+> > take a look at prep_new_page() in mm/page_alloc.c: post_alloc_hook() is
+> > where set_page_refcounted() changes page->_refcount from 0 to 1, allowing
+> > a racing get_page_unless_zero() to succeed; then later prep_compound_page()
+> > is where PageHead and PageTails get set. So there's a small race window in
+> > which this patch could deliver a compound page when it should not.
+> 
+> So the main motivation for the patch was to avoid the case where we
+> are having to reset the LRU flag.
 
-One way to resolve this issue is to preemptively trigger the memory
-reclaim from a latency tolerant task (uswapd) when the application is
-near the limits. Finding 'near the limits' situation is an orthogonal
-problem.
+That would be satisfying.  Not necessary, but I agree satisfying.
+Maybe depends also on your "skip" change, which I've not looked at yet?
 
-2) Proactive reclaim:
+> One question I would have is what if
+> we swapped the code block with the __isolate_lru_page_prepare section?
+> WIth that we would be taking a reference on the page, then verifying
+> the LRU flag is set, and then testing for compound page flag bit.
+> Would doing that close the race window since the LRU flag being set
+> should indicate that the allocation has already been completed has it
+> not?
 
-This is a similar to the previous use-case, the difference is instead of
-waiting for the application to be near its limit to trigger memory
-reclaim, continuously pressuring the memcg to reclaim a small amount of
-memory. This gives more accurate and uptodate workingset estimation as
-the LRUs are continuously sorted and can potentially provide more
-deterministic memory overcommit behavior. The memory overcommit
-controller can provide more proactive response to the changing behavior
-of the running applications instead of being reactive.
+Yes, I think that would be safe, and would look better.  But I am
+very hesitant to give snap assurances here (I've twice missed out
+a vital PageLRU check from this sequence myself): it is very easy
+to deceive myself and only see it later.
 
-Benefit of user space solution:
--------------------------------
+If you can see a bug in what's there before these patches, certainly
+we need to fix it.  But adding non-essential patches to the already
+overlong series risks delaying it.
 
-1) More flexible on who should be charged for the cpu of the memory
-reclaim. For proactive reclaim, it makes more sense to centralized the
-overhead while for uswapd, it makes more sense for the application to
-pay for the cpu of the memory reclaim.
-
-2) More flexible on dedicating the resources (like cpu). The memory
-overcommit controller can balance the cost between the cpu usage and
-the memory reclaimed.
-
-3) Provides a way to the applications to keep their LRUs sorted, so,
-under memory pressure better reclaim candidates are selected. This also
-gives more accurate and uptodate notion of working set for an
-application.
-
-Questions:
-----------
-
-1) Why memory.high is not enough?
-
-memory.high can be used to trigger reclaim in a memcg and can
-potentially be used for proactive reclaim as well as uswapd use cases.
-However there is a big negative in using memory.high. It can potentially
-introduce high reclaim stalls in the target application as the
-allocations from the processes or the threads of the application can hit
-the temporary memory.high limit.
-
-Another issue with memory.high is that it is not delegatable. To
-actually use this interface for uswapd, the application has to introduce
-another layer of cgroup on whose memory.high it has write access.
-
-2) Why uswapd safe from self induced reclaim?
-
-This is very similar to the scenario of oomd under global memory
-pressure. We can use the similar mechanisms to protect uswapd from self
-induced reclaim i.e. memory.min and mlock.
-
-Interface options:
-------------------
-
-Introducing a very simple memcg interface 'echo 10M > memory.reclaim' to
-trigger reclaim in the target memory cgroup.
-
-In future we might want to reclaim specific type of memory from a memcg,
-so, this interface can be extended to allow that. e.g.
-
-$ echo 10M [all|anon|file|kmem] > memory.reclaim
-
-However that should be when we have concrete use-cases for such
-functionality. Keep things simple for now.
-
-Signed-off-by: Shakeel Butt <shakeelb@google.com>
----
- Documentation/admin-guide/cgroup-v2.rst |  9 ++++++
- mm/memcontrol.c                         | 37 +++++++++++++++++++++++++
- 2 files changed, 46 insertions(+)
-
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 6be43781ec7f..58d70b5989d7 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1181,6 +1181,15 @@ PAGE_SIZE multiple when read back.
- 	high limit is used and monitored properly, this limit's
- 	utility is limited to providing the final safety net.
- 
-+  memory.reclaim
-+	A write-only file which exists on non-root cgroups.
-+
-+	This is a simple interface to trigger memory reclaim in the
-+	target cgroup. Write the number of bytes to reclaim to this
-+	file and the kernel will try to reclaim that much memory.
-+	Please note that the kernel can over or under reclaim from
-+	the target cgroup.
-+
-   memory.oom.group
- 	A read-write single value file which exists on non-root
- 	cgroups.  The default value is "0".
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 75cd1a1e66c8..2d006c36d7f3 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6456,6 +6456,38 @@ static ssize_t memory_oom_group_write(struct kernfs_open_file *of,
- 	return nbytes;
- }
- 
-+static ssize_t memory_reclaim(struct kernfs_open_file *of, char *buf,
-+			      size_t nbytes, loff_t off)
-+{
-+	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
-+	unsigned int nr_retries = MAX_RECLAIM_RETRIES;
-+	unsigned long nr_to_reclaim, nr_reclaimed = 0;
-+	int err;
-+
-+	buf = strstrip(buf);
-+	err = page_counter_memparse(buf, "", &nr_to_reclaim);
-+	if (err)
-+		return err;
-+
-+	while (nr_reclaimed < nr_to_reclaim) {
-+		unsigned long reclaimed;
-+
-+		if (signal_pending(current))
-+			break;
-+
-+		reclaimed = try_to_free_mem_cgroup_pages(memcg,
-+						nr_to_reclaim - nr_reclaimed,
-+						GFP_KERNEL, true);
-+
-+		if (!reclaimed && !nr_retries--)
-+			break;
-+
-+		nr_reclaimed += reclaimed;
-+	}
-+
-+	return nbytes;
-+}
-+
- static struct cftype memory_files[] = {
- 	{
- 		.name = "current",
-@@ -6508,6 +6540,11 @@ static struct cftype memory_files[] = {
- 		.seq_show = memory_oom_group_show,
- 		.write = memory_oom_group_write,
- 	},
-+	{
-+		.name = "reclaim",
-+		.flags = CFTYPE_NOT_ON_ROOT | CFTYPE_NS_DELEGATABLE,
-+		.write = memory_reclaim,
-+	},
- 	{ }	/* terminate */
- };
- 
--- 
-2.28.0.526.ge36021eeef-goog
-
+Hugh
