@@ -1,110 +1,175 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 06/14] block: lift setting the readahead size into the
- block layer
-Date: Thu, 10 Sep 2020 13:15:41 -0400
-Message-ID: <20200910171541.GB21919@redhat.com>
-References: <20200726150333.305527-1-hch@lst.de>
- <20200726150333.305527-7-hch@lst.de>
- <20200826220737.GA25613@redhat.com>
- <20200902151144.GA1738@lst.de>
- <20200902162007.GB5513@redhat.com>
- <20200910092813.GA27229@lst.de>
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Subject: [PATCH v2 7/8] mm/shmem: Return head page from
+ find_lock_entry
+Date: Thu, 10 Sep 2020 19:33:17 +0100
+Message-ID: <20200910183318.20139-8-willy@infradead.org>
+References: <20200910183318.20139-1-willy@infradead.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599758150;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=V5RVkZoHNNgO8iRkts2uQucFzF0PqLciDsVyoi9bgfc=;
-        b=gH5ANVlh9jHChevAgLxQU6nEieXdAB93TigKP1WvfIKmZ6pVADdvi7rZTEsLqOpZnj2sDu
-        OhPCxAZQ9sgZBkTyw4ty6ImPZKHwi5E0d1bhyiuwaNgfiGjgh3P2QAv9N0VS4tX/gl3XVb
-        3zIVLYKa8LDenzQjpCd10+ZcVWFekqA=
-Content-Disposition: inline
-In-Reply-To: <20200910092813.GA27229@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, martin.petersen@oracle.com, Hans de Goede <hdegoede@redhat.com>, Song Liu <song@kernel.org>, Richard Weinberger <richard@nod.at>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, Minchan Kim <minchan@kernel.org>, dm-devel@redhat.com, linux-mtd@lists.infradead.org, linux-mm@kvack.org, drbd-dev@tron.linbit.com, cgroups@vger.kernel.org
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+ d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+ References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+ Content-Type:Content-ID:Content-Description;
+ bh=P/3SAHNWD8mhkZHvPgAo6Jx54scqyuCHFHGKIFnXUcU=; b=AV/5PbidjVNcl6W+WGl21uqU1v
+ c6aBaK5BNhpHWdSMbbsEOK/Kcq30uewW5QY88PJIsayRpM06wipcQmNJgzQfYbq9J22Bp6JdJNIPT
+ f0psGDyVXUUSrZZ+aUg+CoU40jSeJKDMAowqBt5LR1arZCA1JlI6zjy3Xoud0z5N19FyeSMHg/LAj
+ D6qDiYxzWJs9pf4ZnIfDbOjQRGN/HRlzjXY9j9rOlIUg3Y5hYVeL6SFiKwPBBUg0dT6ipVdFgodho
+ JnvZQSmYF4KwZc7soOiQzFBWfuxK8U4eIuIRXu3D1T0Sn4c/Pyfdv2U2sprgPCSQ/P2EzLtDi7KCt
+ yv0hngwA==;
+In-Reply-To: <20200910183318.20139-1-willy@infradead.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+To: linux-mm@kvack.org
+Cc: intel-gfx@lists.freedesktop.org, Huang Ying <ying.huang@intel.com>, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, Chris Wilson <chris@chris-wilson.co.uk>, William Kucharski <william.kucharski@oracle.com>, "Matthew Wilcox (Oracle)" <willy@infradead.org>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>, Matthew Auld <matthew.auld@intel.com>
 
-On Thu, Sep 10 2020 at  5:28am -0400,
-Christoph Hellwig <hch@lst.de> wrote:
+Convert shmem_getpage_gfp() (the only remaining caller of
+find_lock_entry()) to cope with a head page being returned instead of
+the subpage for the index.
 
-> On Wed, Sep 02, 2020 at 12:20:07PM -0400, Mike Snitzer wrote:
-> > On Wed, Sep 02 2020 at 11:11am -0400,
-> > Christoph Hellwig <hch@lst.de> wrote:
-> > 
-> > > On Wed, Aug 26, 2020 at 06:07:38PM -0400, Mike Snitzer wrote:
-> > > > On Sun, Jul 26 2020 at 11:03am -0400,
-> > > > Christoph Hellwig <hch@lst.de> wrote:
-> > > > 
-> > > > > Drivers shouldn't really mess with the readahead size, as that is a VM
-> > > > > concept.  Instead set it based on the optimal I/O size by lifting the
-> > > > > algorithm from the md driver when registering the disk.  Also set
-> > > > > bdi->io_pages there as well by applying the same scheme based on
-> > > > > max_sectors.
-> > > > > 
-> > > > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > > > ---
-> > > > >  block/blk-settings.c         |  5 ++---
-> > > > >  block/blk-sysfs.c            |  1 -
-> > > > >  block/genhd.c                | 13 +++++++++++--
-> > > > >  drivers/block/aoe/aoeblk.c   |  2 --
-> > > > >  drivers/block/drbd/drbd_nl.c | 12 +-----------
-> > > > >  drivers/md/bcache/super.c    |  4 ----
-> > > > >  drivers/md/dm-table.c        |  3 ---
-> > > > >  drivers/md/raid0.c           | 16 ----------------
-> > > > >  drivers/md/raid10.c          | 24 +-----------------------
-> > > > >  drivers/md/raid5.c           | 13 +------------
-> > > > >  10 files changed, 16 insertions(+), 77 deletions(-)
-> > > > 
-> > > > 
-> > > > In general these changes need a solid audit relative to stacking
-> > > > drivers.  That is, the limits stacking methods (blk_stack_limits)
-> > > > vs lower level allocation methods (__device_add_disk).
-> > > > 
-> > > > You optimized for lowlevel __device_add_disk establishing the bdi's
-> > > > ra_pages and io_pages.  That is at the beginning of disk allocation,
-> > > > well before any build up of stacking driver's queue_io_opt() -- which
-> > > > was previously done in disk_stack_limits or driver specific methods
-> > > > (e.g. dm_table_set_restrictions) that are called _after_ all the limits
-> > > > stacking occurs.
-> > > > 
-> > > > By inverting the setting of the bdi's ra_pages and io_pages to be done
-> > > > so early in __device_add_disk it'll break properly setting these values
-> > > > for at least DM afaict.
-> > > 
-> > > ra_pages never got inherited by stacking drivers, check it by modifying
-> > > it on an underlying device and then creating a trivial dm or md one.
-> > 
-> > Sure, not saying that it did.  But if the goal is to set ra_pages based
-> > on io_opt then to do that correctly on stacking drivers it must be done
-> > in terms of limits stacking right?  Or at least done at a location that
-> > is after the limits stacking has occurred?  So should DM just open-code
-> > setting ra_pages like it did for io_pages?
-> > 
-> > Because setting ra_pages in __device_add_disk() is way too early for DM
-> > -- given it uses device_add_disk_no_queue_reg via add_disk_no_queue_reg
-> > at DM device creation (before stacking all underlying devices' limits).
-> 
-> I'll move it to blk_register_queue, which should work just fine.
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+---
+ include/linux/pagemap.h |  9 +++++++++
+ mm/filemap.c            | 25 +++++++++++--------------
+ mm/shmem.c              | 20 +++++++++-----------
+ 3 files changed, 29 insertions(+), 25 deletions(-)
 
-That'll work for initial DM table load as part of DM device creation
-(dm_setup_md_queue).  But it won't account for DM table reloads that
-might change underlying devices on a live DM device (done using
-__bind).
-
-Both dm_setup_md_queue() and __bind() call dm_table_set_restrictions()
-to set/update queue_limits.  It feels like __bind() will need to call a
-new block helper to set/update parts of queue_limits (e.g. ra_pages and
-io_pages).
-
-Any chance you're open to factoring out that block function as an
-exported symbol for use by blk_register_queue() and code like DM's
-__bind()?
-
-Thanks,
-Mike
-
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 905a64030647..f374618b2c93 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -371,6 +371,15 @@ static inline struct page *grab_cache_page_nowait(struct address_space *mapping,
+ 			mapping_gfp_mask(mapping));
+ }
+ 
++/* Does this page contain this index? */
++static inline bool thp_contains(struct page *head, pgoff_t index)
++{
++	/* HugeTLBfs indexes the page cache in units of hpage_size */
++	if (PageHuge(head))
++		return head->index == index;
++	return page_index(head) == (index & ~(thp_nr_pages(head) - 1UL));
++}
++
+ /*
+  * Given the page we found in the page cache, return the page corresponding
+  * to this index in the file
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 2f134383b0ae..453535170b8d 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -1614,37 +1614,34 @@ struct page *find_get_entry(struct address_space *mapping, pgoff_t index)
+ }
+ 
+ /**
+- * find_lock_entry - locate, pin and lock a page cache entry
+- * @mapping: the address_space to search
+- * @offset: the page cache index
++ * find_lock_entry - Locate and lock a page cache entry.
++ * @mapping: The address_space to search.
++ * @index: The page cache index.
+  *
+- * Looks up the page cache slot at @mapping & @offset.  If there is a
+- * page cache page, it is returned locked and with an increased
+- * refcount.
++ * Looks up the page at @mapping & @index.  If there is a page in the
++ * cache, the head page is returned locked and with an increased refcount.
+  *
+  * If the slot holds a shadow entry of a previously evicted page, or a
+  * swap entry from shmem/tmpfs, it is returned.
+  *
+- * find_lock_entry() may sleep.
+- *
+- * Return: the found page or shadow entry, %NULL if nothing is found.
++ * Context: May sleep.
++ * Return: The head page or shadow entry, %NULL if nothing is found.
+  */
+-struct page *find_lock_entry(struct address_space *mapping, pgoff_t offset)
++struct page *find_lock_entry(struct address_space *mapping, pgoff_t index)
+ {
+ 	struct page *page;
+ 
+ repeat:
+-	page = find_get_entry(mapping, offset);
++	page = find_get_entry(mapping, index);
+ 	if (page && !xa_is_value(page)) {
+ 		lock_page(page);
+ 		/* Has the page been truncated? */
+-		if (unlikely(page_mapping(page) != mapping)) {
++		if (unlikely(page->mapping != mapping)) {
+ 			unlock_page(page);
+ 			put_page(page);
+ 			goto repeat;
+ 		}
+-		page = find_subpage(page, offset);
+-		VM_BUG_ON_PAGE(page_to_pgoff(page) != offset, page);
++		VM_BUG_ON_PAGE(!thp_contains(page, index), page);
+ 	}
+ 	return page;
+ }
+diff --git a/mm/shmem.c b/mm/shmem.c
+index 271548ca20f3..d2a46ef7df43 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -1793,7 +1793,7 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
+ 	struct mm_struct *charge_mm;
+ 	struct page *page;
+ 	enum sgp_type sgp_huge = sgp;
+-	pgoff_t hindex = index;
++	pgoff_t hindex;
+ 	int error;
+ 	int once = 0;
+ 	int alloced = 0;
+@@ -1833,10 +1833,8 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
+ 		put_page(page);
+ 		page = NULL;
+ 	}
+-	if (page || sgp == SGP_READ) {
+-		*pagep = page;
+-		return 0;
+-	}
++	if (page || sgp == SGP_READ)
++		goto out;
+ 
+ 	/*
+ 	 * Fast cache lookup did not find it:
+@@ -1961,14 +1959,13 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
+ 	 * it now, lest undo on failure cancel our earlier guarantee.
+ 	 */
+ 	if (sgp != SGP_WRITE && !PageUptodate(page)) {
+-		struct page *head = compound_head(page);
+ 		int i;
+ 
+-		for (i = 0; i < compound_nr(head); i++) {
+-			clear_highpage(head + i);
+-			flush_dcache_page(head + i);
++		for (i = 0; i < compound_nr(page); i++) {
++			clear_highpage(page + i);
++			flush_dcache_page(page + i);
+ 		}
+-		SetPageUptodate(head);
++		SetPageUptodate(page);
+ 	}
+ 
+ 	/* Perhaps the file has been truncated since we checked */
+@@ -1984,7 +1981,8 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
+ 		error = -EINVAL;
+ 		goto unlock;
+ 	}
+-	*pagep = page + index - hindex;
++out:
++	*pagep = page + index - page->index;
+ 	return 0;
+ 
+ 	/*
+-- 
+2.28.0
