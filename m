@@ -1,67 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH block/for-next] blk-iocost: fix divide-by-zero in
+From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Subject: Re: [PATCH block/for-next] blk-iocost: fix divide-by-zero in
  transfer_surpluses()
-Date: Fri, 11 Sep 2020 13:07:46 -0400
-Message-ID: <20200911170746.GG4295@mtj.thefacebook.com>
+Date: Fri, 11 Sep 2020 11:10:58 -0600
+Message-ID: <ff46ca79-433e-3279-a8eb-35156639be7b@kernel.dk>
+References: <20200911170746.GG4295@mtj.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=3AjEi6jGt52sCYG9BLpiLcsHH3zd+gAC/phsC2ntthU=;
-        b=JKlox8HeF84wzkIcQoSdZMzb6i1aJWdpyWSIxiL7LCaduzfZgAyPT1sZm6in5FXwM3
-         xltvN80oIihI4QVyN4BbUoIIm0zDriphHq19mOuPSJI2g9qrmVGZohyEsdMJtLtpHtOc
-         RSRwl3VLVhpG7HoevUhSI6BwOe7mhYw2INhERcVs0y6HDwmUpEit9JJTs0yhFDeBDmlF
-         AYScKSGInP3Nvlm+FOEy3T3KAoJxRLHBqxaW7bRPuFTAqdhRuEPPNoMA4lwalUsKsF3n
-         yjnY9S3VXYUfS7NFcbWHPkwLZwjrwOFPADAqJGiY/GC8LCvsxv3Jo55+ke2Yeya9RnFv
-         PDaQ==
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=PjaHcTfFjzbLCw68IPxqcyo+o8vTrqFIU4LrLdQ6i4E=;
+        b=dtr8rc1TFTdhuQX1JX6cpdjp7g5dPXot326EizN5cMg4FGGWCBF3SujtkOjH2g9AU8
+         VYooSex5NOHLaQmydJQvGP2ciPTbamrxy8e63sgmRcld3qe9CBysCiE7nkIJAWTrWWzD
+         5cPZyRl9Z1CgPdcCfFgCs0umR5vPyTmNsQ7ARuMaYYHRDmzXZ+nTUkdmdtXeWtLd5x6F
+         HZeOjxlKX3IAgX2SHg4n37ycDB7odU4BCn88ZKZVTPuVXZ6SEHZ4H2WFRV979A/Iqjwg
+         f8eUotxsYrCJSPi9GeB9lCE1tcTM+Wow6b+ZMYQyvCDgYzOgnphaaEjqYJOXrGsWBVEa
+         ZVMw==
+In-Reply-To: <20200911170746.GG4295-146+VewaZzwNjtGbbfXrCEEOCMrvLtNR@public.gmane.org>
+Content-Language: en-US
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, cgroups@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Conceptually, root_iocg->hweight_donating must be less than WEIGHT_ONE but
-all hweight calculations round up and thus it may end up >= WEIGHT_ONE
-triggering divide-by-zero and other issues. Bound the value to avoid
-surprises.
+On 9/11/20 11:07 AM, Tejun Heo wrote:
+> Conceptually, root_iocg->hweight_donating must be less than WEIGHT_ONE but
+> all hweight calculations round up and thus it may end up >= WEIGHT_ONE
+> triggering divide-by-zero and other issues. Bound the value to avoid
+> surprises.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Fixes: e08d02aa5fc9 ("blk-iocost: implement Andy's method for donation weight updates")
----
- block/blk-iocost.c |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+Applied, thanks.
 
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index fc897bb142bcd..978753335370a 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -1881,15 +1881,21 @@ static void transfer_surpluses(struct list_head *surpluses, struct ioc_now *now)
- 
- 	/*
- 	 * Calculate the global donation rate (gamma) - the rate to adjust
--	 * non-donating budgets by. No need to use 64bit multiplication here as
--	 * the first operand is guaranteed to be smaller than WEIGHT_ONE
--	 * (1<<16).
-+	 * non-donating budgets by.
-+	 *
-+	 * No need to use 64bit multiplication here as the first operand is
-+	 * guaranteed to be smaller than WEIGHT_ONE (1<<16).
-+	 *
-+	 * We know that there are beneficiary nodes and the sum of the donating
-+	 * hweights can't be whole; however, due to the round-ups during hweight
-+	 * calculations, root_iocg->hweight_donating might still end up equal to
-+	 * or greater than whole. Limit the range when calculating the divider.
- 	 *
- 	 * gamma = (1 - t_r') / (1 - t_r)
- 	 */
- 	gamma = DIV_ROUND_UP(
- 		(WEIGHT_ONE - root_iocg->hweight_after_donation) * WEIGHT_ONE,
--		WEIGHT_ONE - root_iocg->hweight_donating);
-+		WEIGHT_ONE - min_t(root_iocg->hweight_donating, WEIGHT_ONE - 1));
- 
- 	/*
- 	 * Calculate adjusted hwi, child_adjusted_sum and inuse for the inner
+-- 
+Jens Axboe
+
