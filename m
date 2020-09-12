@@ -1,184 +1,166 @@
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH v2 7/8] mm/shmem: Return head page from
- find_lock_entry
-Date: Sat, 12 Sep 2020 04:20:42 +0100
-Message-ID: <20200912032042.GA6583@casper.infradead.org>
-References: <20200910183318.20139-1-willy@infradead.org>
- <20200910183318.20139-8-willy@infradead.org>
+From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v18 00/32] per memcg lru_lock: reviews
+Date: Fri, 11 Sep 2020 22:12:27 -0700 (PDT)
+Message-ID: <alpine.LSU.2.11.2009112058040.23961@eggly.anvils>
+References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com> <20200824114204.cc796ca182db95809dd70a47@linux-foundation.org> <alpine.LSU.2.11.2008241231460.1065@eggly.anvils> <alpine.LSU.2.11.2008262301240.4405@eggly.anvils>
+ <alpine.LSU.2.11.2009081640070.7256@eggly.anvils> <CAKgT0Uc_L-Tz_rVJiHc5GUK_ZWOs2wRvez4QGf2wwEjx38qnbg@mail.gmail.com> <alpine.LSU.2.11.2009091640490.10087@eggly.anvils> <CAKgT0Ucive3RreD3TJt1Fjch_BH2ygFfUnpAJ_1BhsHy74w88g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=Njp+ra4byHicMXgvdPxLtePVBkgp4wb2zbg5cxZEkM4=;
+        b=iXyUt2LRzpeoLUgh0kDhMSlcxhCK6mIo5puDn10FfmsK1xQrBI3ZshP6YvNqkzPYlA
+         lgqr2Nvxw2lhmPNwMf0FUJFULtDHvZIsfFXZqyKGHMkDJcXtyFyxeVan8DrDJjM9ou1E
+         vmO3KHcuN77V/sNAwxUj+CRADysHR+nxOx6NPHAdhP1rptejdI8tF2+bCXSfofBTF5vy
+         bUVUKsya7MTGJRXGvVGrMzYc2tMGgSr5SXvyCiAc1765IiS5z5aZN0apDazRE2+Q06YW
+         g7WU4vtN8R378hqJjNVIuq33kXTqZ6TJQFOL2wRYyq+aiFPqq9ztoWnt3X1gP2AUaBwy
+         H8/w==
+In-Reply-To: <CAKgT0Ucive3RreD3TJt1Fjch_BH2ygFfUnpAJ_1BhsHy74w88g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
- References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
- Content-Transfer-Encoding:Content-ID:Content-Description;
- bh=3XyNqMnXE3dOK2LZAXqfj7lb32o+C6Csf8Brn5Bb450=; b=POSXWmPe4sISzgZQH+wc1kFuN3
- zmQW6gC6mLwro2U2FtHW7Sq93S+VHIBsct6sWrOaNPkyAQFzzqNf8xvDFwDMjm9G5OBLpip/L2MCw
- 2hgEDnwZb400PZWOBSnVpoQJXOd33tlbN5YkfZGu7uS9j2nvE7pEH4Zr6Eg0MhTouPNg+RPUrpqXd
- rPj6X2GCPbfbcGJ7tF3ijPy4hbLotRMAy/KayY7tFS0lna10TRTjm1hPkjAVjVF4clTnF+G0+t5Ua
- DN0oTTARMku5+xwm3lRWb1U1vQmFiBoUDSzwq1nbBeRykblqL6AYaT3brtZD134pn2pzNW7IjXeDe
- RAIxAAgQ==;
-Content-Disposition: inline
-In-Reply-To: <20200910183318.20139-8-willy@infradead.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: linux-mm@kvack.org
-Cc: intel-gfx@lists.freedesktop.org, Huang Ying <ying.huang@intel.com>, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, Chris Wilson <chris@chris-wilson.co.uk>, William Kucharski <william.kucharski@oracle.com>, Matthew Auld <matthew.auld@intel.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>
+To: Alexander Duyck <alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, kbuild test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Kirill A. Shutemov" <kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org>, Rong Chen <rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, sh
 
-On Thu, Sep 10, 2020 at 07:33:17PM +0100, Matthew Wilcox (Oracle) wrote:
-> Convert shmem_getpage_gfp() (the only remaining caller of
-> find_lock_entry()) to cope with a head page being returned instead of
-> the subpage for the index.
+On Thu, 10 Sep 2020, Alexander Duyck wrote:
+> On Wed, Sep 9, 2020 at 5:32 PM Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> > On Wed, 9 Sep 2020, Alexander Duyck wrote:
+> > > On Tue, Sep 8, 2020 at 4:41 PM Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> > > > [PATCH v18 28/32] mm/compaction: Drop locked from isolate_migratepages_block
+> > > > Most of this consists of replacing "locked" by "lruvec", which is good:
+> > > > but please fold those changes back into 20/32 (or would it be 17/32?
+> > > > I've not yet looked into the relationship between those two), so we
+> > > > can then see more clearly what change this 28/32 (will need renaming!)
+> > > > actually makes, to use lruvec_holds_page_lru_lock(). That may be a
+> > > > good change, but it's mixed up with the "locked"->"lruvec" at present,
+> > > > and I think you could have just used lruvec for locked all along
+> > > > (but of course there's a place where you'll need new_lruvec too).
+> > >
+> > > I am good with my patch being folded in. No need to keep it separate.
+> >
+> > Thanks.  Though it was only the "locked"->"lruvec" changes I was
+> > suggesting to fold back, to minimize the diff, so that we could
+> > see your use of lruvec_holds_page_lru_lock() more clearly - you
+> > had not introduced that function at the stage of the earlier patches.
+> >
+> > But now that I stare at it again, using lruvec_holds_page_lru_lock()
+> > there doesn't look like an advantage to me: when it decides no, the
+> > same calculation is made all over again in mem_cgroup_page_lruvec(),
+> > whereas the code before only had to calculate it once.
+> >
+> > So, the code before looks better to me: I wonder, do you think that
+> > rcu_read_lock() is more expensive than I think it?  There can be
+> > debug instrumentation that makes it heavier, but by itself it is
+> > very cheap (by design) - not worth branching around.
+> 
+> Actually what I was more concerned with was the pointer chase that
+> required the RCU lock. With this function we are able to compare a
+> pair of pointers from the page and the lruvec and avoid the need for
+> the RCU lock. The way the old code was working we had to crawl through
+> the memcg to get to the lruvec before we could compare it to the one
+> we currently hold. The general idea is to use the data we have instead
+> of having to pull in some additional cache lines to perform the test.
 
-This version was buggy.  Apparently I was too focused on running the test suite against XFS and neglected to run it against tmpfs, which crashed instantly.
+When you say "With this function...", I think you are referring to
+lruvec_holds_page_lru_lock().  Yes, I appreciate what you're doing
+there, making calculations from known-stable data, and taking it no
+further than the required comparison; and I think (I don't yet claim
+to have reviewed 21/32) what you do with it in relock_page_lruvec*()
+is an improvement over what we had there before.
 
-Here's the patch I should have sent.
+But here I'm talking about using it in isolate_migratepages_block()
+in 28/32: in this case, the code before evaluated the new lruvec,
+compared against the old, and immediately used the new lruvec if
+different; whereas using lruvec_holds_page_lru_lock() makes an
+almost (I agree not entirely, and I haven't counted cachelines)
+equivalent evaluation, but its results have to thrown away when
+it's false, then the new lruvec actually calculated and used.
 
-commit 7bfa655881da76f3386e6d4c07e38a165b4a6ca8
-Author: Matthew Wilcox (Oracle) <willy@infradead.org>
-Date:   Sun Aug 2 07:22:34 2020 -0400
+The same "results thrown away" criticism can be made of
+relock_page_lruvec*(), but what was done there before your rewrite
+in v18 was no better: they both resort to lock_page_lruvec*(page),
+working it all out again from page.  And I'm not suggesting that
+be changed, not at this point anyway; but 28/32 looks to me
+like a regression from what was done there before 28/32.
 
-    mm/shmem: Return head page from find_lock_entry
-    
-    Convert shmem_getpage_gfp() (the only remaining caller of
-    find_lock_entry()) to cope with a head page being returned instead of
-    the subpage for the index.
-    
-    Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> 
+> > >
+> > > > [PATCH v18 29/32] mm: Identify compound pages sooner in isolate_migratepages_block
+> > > > NAK. I agree that isolate_migratepages_block() looks nicer this way, but
+> > > > take a look at prep_new_page() in mm/page_alloc.c: post_alloc_hook() is
+> > > > where set_page_refcounted() changes page->_refcount from 0 to 1, allowing
+> > > > a racing get_page_unless_zero() to succeed; then later prep_compound_page()
+> > > > is where PageHead and PageTails get set. So there's a small race window in
+> > > > which this patch could deliver a compound page when it should not.
+> > >
+> > > So the main motivation for the patch was to avoid the case where we
+> > > are having to reset the LRU flag.
+> >
+> > That would be satisfying.  Not necessary, but I agree satisfying.
+> > Maybe depends also on your "skip" change, which I've not looked at yet?
+> 
+> My concern is that we have scenarios where isolate_migratepages_block
+> could possibly prevent another page from being able to isolate a page.
+> I'm mostly concerned with us potentially creating something like an
+> isolation leak if multiple threads are doing something like clearing
+> and then resetting the LRU flag. In my mind if we clear the LRU flag
+> we should be certain we are going to remove the page as otherwise
+> another thread would have done it if it would have been allowed
+> access.
 
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 905a64030647..f374618b2c93 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -371,6 +371,15 @@ static inline struct page *grab_cache_page_nowait(struct address_space *mapping,
- 			mapping_gfp_mask(mapping));
- }
- 
-+/* Does this page contain this index? */
-+static inline bool thp_contains(struct page *head, pgoff_t index)
-+{
-+	/* HugeTLBfs indexes the page cache in units of hpage_size */
-+	if (PageHuge(head))
-+		return head->index == index;
-+	return page_index(head) == (index & ~(thp_nr_pages(head) - 1UL));
-+}
-+
- /*
-  * Given the page we found in the page cache, return the page corresponding
-  * to this index in the file
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 2f134383b0ae..453535170b8d 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -1614,37 +1614,34 @@ struct page *find_get_entry(struct address_space *mapping, pgoff_t index)
- }
- 
- /**
-- * find_lock_entry - locate, pin and lock a page cache entry
-- * @mapping: the address_space to search
-- * @offset: the page cache index
-+ * find_lock_entry - Locate and lock a page cache entry.
-+ * @mapping: The address_space to search.
-+ * @index: The page cache index.
-  *
-- * Looks up the page cache slot at @mapping & @offset.  If there is a
-- * page cache page, it is returned locked and with an increased
-- * refcount.
-+ * Looks up the page at @mapping & @index.  If there is a page in the
-+ * cache, the head page is returned locked and with an increased refcount.
-  *
-  * If the slot holds a shadow entry of a previously evicted page, or a
-  * swap entry from shmem/tmpfs, it is returned.
-  *
-- * find_lock_entry() may sleep.
-- *
-- * Return: the found page or shadow entry, %NULL if nothing is found.
-+ * Context: May sleep.
-+ * Return: The head page or shadow entry, %NULL if nothing is found.
-  */
--struct page *find_lock_entry(struct address_space *mapping, pgoff_t offset)
-+struct page *find_lock_entry(struct address_space *mapping, pgoff_t index)
- {
- 	struct page *page;
- 
- repeat:
--	page = find_get_entry(mapping, offset);
-+	page = find_get_entry(mapping, index);
- 	if (page && !xa_is_value(page)) {
- 		lock_page(page);
- 		/* Has the page been truncated? */
--		if (unlikely(page_mapping(page) != mapping)) {
-+		if (unlikely(page->mapping != mapping)) {
- 			unlock_page(page);
- 			put_page(page);
- 			goto repeat;
- 		}
--		page = find_subpage(page, offset);
--		VM_BUG_ON_PAGE(page_to_pgoff(page) != offset, page);
-+		VM_BUG_ON_PAGE(!thp_contains(page, index), page);
- 	}
- 	return page;
- }
-diff --git a/mm/shmem.c b/mm/shmem.c
-index 271548ca20f3..58bc9e326d0d 100644
---- a/mm/shmem.c
-+++ b/mm/shmem.c
-@@ -1822,6 +1822,8 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
- 		return error;
- 	}
- 
-+	if (page)
-+		hindex = page->index;
- 	if (page && sgp == SGP_WRITE)
- 		mark_page_accessed(page);
- 
-@@ -1832,11 +1834,10 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
- 		unlock_page(page);
- 		put_page(page);
- 		page = NULL;
-+		hindex = index;
- 	}
--	if (page || sgp == SGP_READ) {
--		*pagep = page;
--		return 0;
--	}
-+	if (page || sgp == SGP_READ)
-+		goto out;
- 
- 	/*
- 	 * Fast cache lookup did not find it:
-@@ -1961,14 +1962,13 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
- 	 * it now, lest undo on failure cancel our earlier guarantee.
- 	 */
- 	if (sgp != SGP_WRITE && !PageUptodate(page)) {
--		struct page *head = compound_head(page);
- 		int i;
- 
--		for (i = 0; i < compound_nr(head); i++) {
--			clear_highpage(head + i);
--			flush_dcache_page(head + i);
-+		for (i = 0; i < compound_nr(page); i++) {
-+			clear_highpage(page + i);
-+			flush_dcache_page(page + i);
- 		}
--		SetPageUptodate(head);
-+		SetPageUptodate(page);
- 	}
- 
- 	/* Perhaps the file has been truncated since we checked */
-@@ -1984,6 +1984,7 @@ static int shmem_getpage_gfp(struct inode *inode, pgoff_t index,
- 		error = -EINVAL;
- 		goto unlock;
- 	}
-+out:
- 	*pagep = page + index - hindex;
- 	return 0;
+I agree it's nicer not to TestClearPageLRU unnecessarily; but if the
+occasional unnecessary TestClearPageLRU were really a concern, then
+there's a lot of more serious places to worry about - page reclaim
+is the great isolator that comes first to my mind.
+
+> 
+> > > One question I would have is what if
+> > > we swapped the code block with the __isolate_lru_page_prepare section?
+> > > WIth that we would be taking a reference on the page, then verifying
+> > > the LRU flag is set, and then testing for compound page flag bit.
+> > > Would doing that close the race window since the LRU flag being set
+> > > should indicate that the allocation has already been completed has it
+> > > not?
+> >
+> > Yes, I think that would be safe, and would look better.  But I am
+> > very hesitant to give snap assurances here (I've twice missed out
+> > a vital PageLRU check from this sequence myself): it is very easy
+> > to deceive myself and only see it later.
+> 
+> I'm not looking for assurances, just sanity checks to make sure I am
+> not missing something obvious.
+> 
+> > If you can see a bug in what's there before these patches, certainly
+> > we need to fix it.  But adding non-essential patches to the already
+> > overlong series risks delaying it.
+> 
+> My concern ends up being that if we are clearing the bit and restoring
+> it while holding the LRU lock we can effectively cause pages to become
+> pseudo-pinned on the LRU. In my mind I would want us to avoid clearing
+> the LRU flag until we know we are going to be pulling the page from
+> the list once we take the lruvec lock. I interpret clearing of the
+> flag to indicate the page has already been pulled, it just hasn't left
+> the list yet. With us resetting the bit we are violating that which I
+> worry will lead to issues.
+
+Your concern and my concern are different, but we are "on the same page".
+
+I've said repeatedly (to Alex) that I am not at ease with this
+TestClearPageLRU() technique: he has got it working, reliably, but
+I find it hard to reason about.  Perhaps I'm just too used to what
+was there before, but clearing PageLRU and removing from LRU while
+holding lru_lock seems natural to me; whereas disconnecting them
+leaves us on shaky ground, adding comments and warnings about the
+peculiar races involved.  And it adds a pair of atomic operations
+on each page in pagevec_lru_move_fn(), which were not needed before.
+
+I want us to go ahead with TestClearPageLRU, to get the series into
+mmotm and under wider testing.  But if we accept the lock reordering
+in 06/32, then it becomes possible to replace those TestClearPageLRUs
+by lock_page_memcg()s: which in principle should be cheaper, but that
+will have to be measured.
+
+Hugh
