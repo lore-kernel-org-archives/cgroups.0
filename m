@@ -1,7 +1,7 @@
 From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] mm: memcontrol: Correct the comment of mem_cgroup_iter()
-Date: Sun, 13 Sep 2020 05:41:29 -0400
-Message-ID: <20200913094129.44558-1-linmiaohe@huawei.com>
+Subject: [PATCH RESEND] mm: memcontrol: Correct the comment of mem_cgroup_iter()
+Date: Sun, 13 Sep 2020 05:44:46 -0400
+Message-ID: <20200913094446.47317-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,8 +11,8 @@ Content-Type: text/plain; charset="us-ascii"
 To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
 
-Since commit bbec2e15170a ("mm: rename page_counter's count/limit into
-usage/max"), the arg @reclaim has no priority field anymore.
+Since commit 9da83f3fc74b ("mm, memcg: clean up reclaim iter array"), the
+arg @reclaim has no priority field anymore.
 
 Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 ---
