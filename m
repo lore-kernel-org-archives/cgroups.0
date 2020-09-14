@@ -1,43 +1,57 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 0/3] mm/memcg: Miscellaneous cleanups and streamlining
-Date: Sun, 13 Sep 2020 22:44:49 -0400
-Message-ID: <20200914024452.19167-1-longman@redhat.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH v2 1/3] mm/memcg: Clean up obsolete enum charge_type
+Date: Sun, 13 Sep 2020 22:44:50 -0400
+Message-ID: <20200914024452.19167-2-longman@redhat.com>
+References: <20200914024452.19167-1-longman@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600051517;
+        s=mimecast20190719; t=1600051519;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=aBvg4ZsjHs40Kc9w9Qs5hEd580WSaR6Ix3MTYhAg0bQ=;
-        b=Dv23q6GRTnIlY8c56FNqDQiRRQ5ArizTIL8qAONQho3n7rBN+MjVZpTLBc3GRkCtZqd5ii
-        WEgIuXfvETfUsOAhTuz+MZsd31avubEJ1iOQ/Lg2LHhOlMcLmLvnGd3WFz88GLpG8JCoQG
-        HVK7SA78xhrumwse/JPBhbDOW1iRtj0=
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
+        bh=QuPobSrkXsfoFZlpw6ozB6y0JYzXqK7+VDcfQ45DNBY=;
+        b=SkAPkl2jRy3gRp9Byb9sTDY0caeeDEL9eyQ4v5PRpN+7ELZ/wdKLA5phLgOsrQKy2Edy51
+        GrwUSaEqHPSlNSxONywHL73nxxDxCopBUIgB8wi1vgWP0CdkVxxqVjg9gnGf2C18EntyX2
+        PZh+lC4/MlpLvpl5d6W84/1ki2P5RCk=
+In-Reply-To: <20200914024452.19167-1-longman@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Roman Gushchin <guro@fb.com>, Yafang Shao <laoar.shao@gmail.com>, Waiman Long <longman@redhat.com>
 
-v2:
- - For patch 2, separate v1 and v2 processing and add back the missing
-   total_swap_pages check.
- - For patch 3, use union to merge swap and memsw page counters.
+Since commit 0a31bc97c80c ("mm: memcontrol: rewrite uncharge API") and
+commit 00501b531c47 ("mm: memcontrol: rewrite charge API") in v3.17, the
+enum charge_type was no longer used anywhere. However, the enum itself
+was not removed at that time. Remove the obsolete enum charge_type now.
 
-Patch 1 removes an unused enum charge_type.
+Signed-off-by: Waiman Long <longman@redhat.com>
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Reviewed-by: Shakeel Butt <shakeelb@google.com>
+---
+ mm/memcontrol.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
-Patch 2 streamlines mem_cgroup_get_max().
-
-Patch 3 unifies swap and memsw page counters in mem_cgroup.
-
-Waiman Long (3):
-  mm/memcg: Clean up obsolete enum charge_type
-  mm/memcg: Simplify mem_cgroup_get_max()
-  mm/memcg: Unify swap and memsw page counters
-
- include/linux/memcontrol.h | 13 ++++++++-----
- mm/memcontrol.c            | 29 ++++++++---------------------
- 2 files changed, 16 insertions(+), 26 deletions(-)
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index cfa6cbad21d5..8c74f1200261 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -197,14 +197,6 @@ static struct move_charge_struct {
+ #define	MEM_CGROUP_MAX_RECLAIM_LOOPS		100
+ #define	MEM_CGROUP_MAX_SOFT_LIMIT_RECLAIM_LOOPS	2
+ 
+-enum charge_type {
+-	MEM_CGROUP_CHARGE_TYPE_CACHE = 0,
+-	MEM_CGROUP_CHARGE_TYPE_ANON,
+-	MEM_CGROUP_CHARGE_TYPE_SWAPOUT,	/* for accounting swapcache */
+-	MEM_CGROUP_CHARGE_TYPE_DROP,	/* a page was unused swap cache */
+-	NR_CHARGE_TYPE,
+-};
+-
+ /* for encoding cft->private value on file */
+ enum res_type {
+ 	_MEM,
 -- 
 2.18.1
 
