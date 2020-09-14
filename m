@@ -1,99 +1,142 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v2 2/3] mm/memcg: Simplify mem_cgroup_get_max()
-Date: Mon, 14 Sep 2020 17:32:00 -0400
-Message-ID: <20200914213200.GC175618@cmpxchg.org>
-References: <20200914024452.19167-1-longman@redhat.com>
- <20200914024452.19167-3-longman@redhat.com>
- <20200914114825.GM16999@dhcp22.suse.cz>
- <e8ddc443-b56a-1dd6-6d41-ad217e9aea80@redhat.com>
- <20200914212904.GB175618@cmpxchg.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [External] Re: [PATCH v3] mm: memcontrol: Add the missing
+ numa_stat interface for cgroup v2
+Date: Mon, 14 Sep 2020 15:57:20 -0700
+Message-ID: <CALvZod4niTJmA99GFifoi8rdnM8X-GoUUafGHZA3LQWJYXu_tg@mail.gmail.com>
+References: <20200913070010.44053-1-songmuchun@bytedance.com>
+ <CALvZod7VH3NDwBXrY9w95pUY7DV+R-b_chBHuygmwH_bhpULkQ@mail.gmail.com> <CAMZfGtXoBrFioh=FqRA82ZRSt=2oW=ie8BgZE0hAvtCOBRMXiw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=M6GRxBpT2cC25wV82DuNi9J3pqiD8OWCE31gUld/UhE=;
-        b=rwyLUxhptQJc4HOqwpHP2HBqm700/ViMyS+157/Rz8Xv6Kt/qW1SS8hfob3t+geEaN
-         jgum4YbUdr9Z/zipYDu1H+ZK7te0x5IIz2kR1YJOnnYec34roru9spTQuD3GhyqhJY7E
-         wn6kotmIL/HBuARMoYXTBU3L5Is9LfKgxWv9elRtM1XilCShSVzx3Ee6PqpwV6evdyUI
-         5R0Pbsb0l9+ce6wHYdnl+Rg3xvN1fh/T6OtQePz+hvQMJgIBut1tgGPjsxnwwtaxvPnl
-         5v3i2B/3e9WAQVVQIaAWihJ0Sv6vxWISBtn5UOkRsG58l7XOP20RC+5xHSPvcaET7Uoe
-         hfqg==
-Content-Disposition: inline
-In-Reply-To: <20200914212904.GB175618@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=WViTl0b8x+giGHFZh+rVEKrUPQoCKo+J/50WQCvSoeU=;
+        b=cRqX/VoiJlNpAl8z1euxYLDbFZouqQx0Mt33brymprI2vtjrByuRMCH42vuV/btT6h
+         OV05p0Cytn9A45Ob2T8JxSWLWKRCcbNClVcFRUdmCfOa5zrsHmKyYMsHNY/6dZ9gV+g0
+         Z8IZWuFtKTlqacd2ikYCTZeFd+UdvXSiw1lsPVPZAE9nGhBRYsYW47ufhafLdKP5LGOU
+         ++fzP4+9m0MsmjaQjTV9Ks/RJm7Nz6m0NC2meTZOjUOeMz4gwIKUxHViVTr8n5pMZ71D
+         mf4ZaigkjBXHPrm1KGiAyFnK+ZPMozHVtg89PLTj6Al/4lCyQjxTgfjPoc3+LROM/sk1
+         5Rvg==
+In-Reply-To: <CAMZfGtXoBrFioh=FqRA82ZRSt=2oW=ie8BgZE0hAvtCOBRMXiw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Waiman Long <longman@redhat.com>
-Cc: Michal Hocko <mhocko@suse.com>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Roman Gushchin <guro@fb.com>, Yafang Shao <laoar.shao@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Mon, Sep 14, 2020 at 05:29:06PM -0400, Johannes Weiner wrote:
-> On Mon, Sep 14, 2020 at 09:51:26AM -0400, Waiman Long wrote:
-> > On 9/14/20 7:48 AM, Michal Hocko wrote:
-> > > On Sun 13-09-20 22:44:51, Waiman Long wrote:
-> > > > The mem_cgroup_get_max() function used to get memory+swap max from
-> > > > both the v1 memsw and v2 memory+swap page counters & return the max=
-imum
-> > > > of these 2 values. This is redundant and it is more efficient to ju=
-st
-> > > > get either the v1 or the v2 values depending on which one is curren=
-tly
-> > > > in use.
-> > > >=20
-> > > > Signed-off-by: Waiman Long <longman@redhat.com>
-> > > > ---
-> > > >   mm/memcontrol.c | 20 +++++++++-----------
-> > > >   1 file changed, 9 insertions(+), 11 deletions(-)
-> > > >=20
-> > > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > > > index 8c74f1200261..ca36bed588d1 100644
-> > > > --- a/mm/memcontrol.c
-> > > > +++ b/mm/memcontrol.c
-> > > > @@ -1633,17 +1633,15 @@ void mem_cgroup_print_oom_meminfo(struct me=
-m_cgroup *memcg)
-> > > >    */
-> > > >   unsigned long mem_cgroup_get_max(struct mem_cgroup *memcg)
-> > > >   {
-> > > > -	unsigned long max;
-> > > > -
-> > > > -	max =3D READ_ONCE(memcg->memory.max);
-> > > > -	if (mem_cgroup_swappiness(memcg)) {
-> > > > -		unsigned long memsw_max;
-> > > > -		unsigned long swap_max;
-> > > > -
-> > > > -		memsw_max =3D memcg->memsw.max;
-> > > > -		swap_max =3D READ_ONCE(memcg->swap.max);
-> > > > -		swap_max =3D min(swap_max, (unsigned long)total_swap_pages);
-> > > > -		max =3D min(max + swap_max, memsw_max);
-> > > > +	unsigned long max =3D READ_ONCE(memcg->memory.max);
-> > > > +
-> > > > +	if (cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
-> > > > +		if (mem_cgroup_swappiness(memcg))
-> > > > +			max +=3D min(READ_ONCE(memcg->swap.max),
-> > > > +				   (unsigned long)total_swap_pages);
-> > > > +	} else { /* v1 */
-> > > > +		if (mem_cgroup_swappiness(memcg))
-> > > > +			max =3D memcg->memsw.max;
-> > > I agree that making v1 vs. v2 distinction here makes the code more
-> > > obvious. But I do not think your code is correct for v1. In a default
-> > > state it would lead to max =3D PAGE_COUNTER_MAX which is not something
-> > > we want, right?
-> > >=20
-> > > instead you want
-> > > 		max +=3D min(READ_ONCE(memcg->memsw.max), total_swap_pages);
-> > >=20
-> > You are right, it is a bit tricky for v1.
-> >=20
-> > I will change it to
-> >=20
-> > =A0=A0=A0 max +=3D min(READ_ONCE(memcg->memsw.max) - max, total_swap_pa=
-ges):
->=20
-> memsw.max can be smaller than max.
->=20
-> max =3D min3(max, READ_ONCE(memcg->memsw.max), total_swap_pages)?
+On Mon, Sep 14, 2020 at 9:55 AM Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
+>
+> On Tue, Sep 15, 2020 at 12:07 AM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> >
+> > On Sun, Sep 13, 2020 at 12:01 AM Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
+> > >
+> > > In the cgroup v1, we have a numa_stat interface. This is useful for
+> > > providing visibility into the numa locality information within an
+> > > memcg since the pages are allowed to be allocated from any physical
+> > > node. One of the use cases is evaluating application performance by
+> > > combining this information with the application's CPU allocation.
+> > > But the cgroup v2 does not. So this patch adds the missing information.
+> > >
+> > > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> > > Suggested-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > > Reported-by: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+> > > ---
+> > [snip]
+> > > +
+> > > +static struct numa_stat numa_stats[] = {
+> > > +       { "anon", PAGE_SIZE, NR_ANON_MAPPED },
+> > > +       { "file", PAGE_SIZE, NR_FILE_PAGES },
+> > > +       { "kernel_stack", 1024, NR_KERNEL_STACK_KB },
+> > > +       { "shmem", PAGE_SIZE, NR_SHMEM },
+> > > +       { "file_mapped", PAGE_SIZE, NR_FILE_MAPPED },
+> > > +       { "file_dirty", PAGE_SIZE, NR_FILE_DIRTY },
+> > > +       { "file_writeback", PAGE_SIZE, NR_WRITEBACK },
+> > > +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> > > +       /*
+> > > +        * The ratio will be initialized in numa_stats_init(). Because
+> > > +        * on some architectures, the macro of HPAGE_PMD_SIZE is not
+> > > +        * constant(e.g. powerpc).
+> > > +        */
+> > > +       { "anon_thp", 0, NR_ANON_THPS },
+> > > +#endif
+> > > +       { "inactive_anon", PAGE_SIZE, NR_INACTIVE_ANON },
+> > > +       { "active_anon", PAGE_SIZE, NR_ACTIVE_ANON },
+> > > +       { "inactive_file", PAGE_SIZE, NR_INACTIVE_FILE },
+> > > +       { "active_file", PAGE_SIZE, NR_ACTIVE_FILE },
+> > > +       { "unevictable", PAGE_SIZE, NR_UNEVICTABLE },
+> > > +       { "slab_reclaimable", 1, NR_SLAB_RECLAIMABLE_B },
+> > > +       { "slab_unreclaimable", 1, NR_SLAB_UNRECLAIMABLE_B },
+> > > +};
+> > > +
+> > > +static int __init numa_stats_init(void)
+> > > +{
+> > > +       int i;
+> > > +
+> > > +       for (i = 0; i < ARRAY_SIZE(numa_stats); i++) {
+> > > +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> > > +               if (numa_stats[i].idx == NR_ANON_THPS)
+> > > +                       numa_stats[i].ratio = HPAGE_PMD_SIZE;
+> > > +#endif
+> > > +       }
+> >
+> > The for loop seems excessive but I don't really have a good alternative.
+>
+> Yeah, I also have no good alternative. The numa_stats is only initialized
+> once. So there may be no problem :).
+>
+> >
+> > > +
+> > > +       return 0;
+> > > +}
+> > > +pure_initcall(numa_stats_init);
+> > > +
+> > > +static unsigned long memcg_node_page_state(struct mem_cgroup *memcg,
+> > > +                                          unsigned int nid,
+> > > +                                          enum node_stat_item idx)
+> > > +{
+> > > +       VM_BUG_ON(nid >= nr_node_ids);
+> > > +       return lruvec_page_state(mem_cgroup_lruvec(memcg, NODE_DATA(nid)), idx);
+> > > +}
+> > > +
+> > > +static const char *memory_numa_stat_format(struct mem_cgroup *memcg)
+> > > +{
+> > > +       int i;
+> > > +       struct seq_buf s;
+> > > +
+> > > +       /* Reserve a byte for the trailing null */
+> > > +       seq_buf_init(&s, kmalloc(PAGE_SIZE, GFP_KERNEL), PAGE_SIZE - 1);
+> > > +       if (!s.buffer)
+> > > +               return NULL;
+> > > +
+> > > +       for (i = 0; i < ARRAY_SIZE(numa_stats); i++) {
+> > > +               int nid;
+> > > +
+> > > +               seq_buf_printf(&s, "%s", numa_stats[i].name);
+> > > +               for_each_node_state(nid, N_MEMORY) {
+> > > +                       u64 size;
+> > > +
+> > > +                       size = memcg_node_page_state(memcg, nid,
+> > > +                                                    numa_stats[i].idx);
+> > > +                       size *= numa_stats[i].ratio;
+> > > +                       seq_buf_printf(&s, " N%d=%llu", nid, size);
+> > > +               }
+> > > +               seq_buf_putc(&s, '\n');
+> > > +       }
+> > > +
+> > > +       /* The above should easily fit into one page */
+> > > +       if (WARN_ON_ONCE(seq_buf_putc(&s, '\0')))
+> > > +               s.buffer[PAGE_SIZE - 1] = '\0';
+> >
+> > I think you should follow Michal's recommendation at
+> > http://lkml.kernel.org/r/20200914115724.GO16999-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org
+>
+> Here is different, because the seq_buf_putc(&s, '\n') will not add \0 unless
+> we use seq_buf_puts(&s, "\n").
+>
 
-Nevermind, I saw the follow-up below, and it's indeed not allowed to
-configure it like that.
+Why a separate memory_numa_stat_format()? For memory_stat_format(), it
+is called from two places. There is no need to have a separate
+memory_numa_stat_format(). Similarly why not just call seq_printf()
+instead of formatting into a seq_buf?
