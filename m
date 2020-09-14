@@ -1,78 +1,78 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v2 2/3] mm/memcg: Simplify mem_cgroup_get_max()
-Date: Mon, 14 Sep 2020 13:48:25 +0200
-Message-ID: <20200914114825.GM16999@dhcp22.suse.cz>
-References: <20200914024452.19167-1-longman@redhat.com>
- <20200914024452.19167-3-longman@redhat.com>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [External] Re: [PATCH] mm: memcontrol: Fix out-of-bounds on the
+ buf returned by memory_stat_format
+Date: Mon, 14 Sep 2020 19:46:36 +0800
+Message-ID: <CAMZfGtWBSCFWw7QN66-ZLTb8oT7UALkyaGONjcjB93DyeeXXTA@mail.gmail.com>
+References: <20200912155100.25578-1-songmuchun@bytedance.com>
+ <20200912174241.eeaa771755915f27babf9322@linux-foundation.org>
+ <CAMZfGtXNg31+8QLbUMj7f61Yg1Jgt0rPB7VTDE7qoopGCANGjA@mail.gmail.com>
+ <20200914091844.GE16999@dhcp22.suse.cz> <CAMZfGtXd3DNrW5BPjDosHsz-FUYACGZEOAfAYLwyHdRSpOsqhQ@mail.gmail.com>
+ <20200914103205.GI16999@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20200914024452.19167-3-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=PJJFfsXoL3LK4g3p5cL7uzGgHtTaKv/IoQGqOUptDbk=;
+        b=LMoGgSjo/62BmNodRWPJOdh8Q7bYP3tBTm1Td+5oc2sRIrUVS6tveSb3pEQ+9NoNMU
+         fvMnZkauo2lzC5L+bKV27PfBYAsIAldo0wtm8s4znd1aebcNyMyCWGiEVYMzS7i8bWC3
+         i5dCVawJOXVg0YuNR/pjmkLgZMz54RqOVNEjRHvNYTpRlpkeqQF5aqzg4ERgZBifoG7X
+         Y4qo/2/M1Ntc37rVLnQVCJuTKcUnr510/+mScEEvSJgMPMtykWDAIAmOge68yAeSbERN
+         Jd5kVxs3lzLjFhIpZv8gqRiaXIR76JQSY7fVL0Z5+xYW+LX8O5KnOC/FjhsrmMCyAqxz
+         IeVg==
+In-Reply-To: <20200914103205.GI16999-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Sun 13-09-20 22:44:51, Waiman Long wrote:
-> The mem_cgroup_get_max() function used to get memory+swap max from
-> both the v1 memsw and v2 memory+swap page counters & return the maximum
-> of these 2 values. This is redundant and it is more efficient to just
-> get either the v1 or the v2 values depending on which one is currently
-> in use.
-> 
-> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ---
->  mm/memcontrol.c | 20 +++++++++-----------
->  1 file changed, 9 insertions(+), 11 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 8c74f1200261..ca36bed588d1 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1633,17 +1633,15 @@ void mem_cgroup_print_oom_meminfo(struct mem_cgroup *memcg)
->   */
->  unsigned long mem_cgroup_get_max(struct mem_cgroup *memcg)
->  {
-> -	unsigned long max;
-> -
-> -	max = READ_ONCE(memcg->memory.max);
-> -	if (mem_cgroup_swappiness(memcg)) {
-> -		unsigned long memsw_max;
-> -		unsigned long swap_max;
-> -
-> -		memsw_max = memcg->memsw.max;
-> -		swap_max = READ_ONCE(memcg->swap.max);
-> -		swap_max = min(swap_max, (unsigned long)total_swap_pages);
-> -		max = min(max + swap_max, memsw_max);
-> +	unsigned long max = READ_ONCE(memcg->memory.max);
-> +
-> +	if (cgroup_subsys_on_dfl(memory_cgrp_subsys)) {
-> +		if (mem_cgroup_swappiness(memcg))
-> +			max += min(READ_ONCE(memcg->swap.max),
-> +				   (unsigned long)total_swap_pages);
-> +	} else { /* v1 */
-> +		if (mem_cgroup_swappiness(memcg))
-> +			max = memcg->memsw.max;
+On Mon, Sep 14, 2020 at 6:32 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+>
+> On Mon 14-09-20 17:43:42, Muchun Song wrote:
+> > On Mon, Sep 14, 2020 at 5:18 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> > >
+> > > On Mon 14-09-20 12:02:33, Muchun Song wrote:
+> > > > On Sun, Sep 13, 2020 at 8:42 AM Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
+> > > > >
+> > > > > On Sat, 12 Sep 2020 23:51:00 +0800 Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
+> > > > >
+> > > > > > The memory_stat_format() returns a format string, but the return buf
+> > > > > > may not including the trailing '\0'. So the users may read the buf
+> > > > > > out of bounds.
+> > > > >
+> > > > > That sounds serious.  Is a cc:stable appropriate?
+> > > > >
+> > > >
+> > > > Yeah, I think we should cc:stable.
+> > >
+> > > Is this a real problem? The buffer should contain 36 lines which makes
+> > > it more than 100B per line. I strongly suspect we are not able to use
+> > > that storage up.
+> >
+> > Before memory_stat_format() return, we should call seq_buf_putc(&s, '\0').
+> > Otherwise, the return buf string has no trailing null('\0'). But users treat buf
+> > as a string(and read the string oob). It is wrong. Thanks.
+>
+> I am not sure I follow you. vsnprintf which is used by seq_printf will
+> add \0 if there is a room for that. And I argue there is a lot of room
+> in the buffer so a corner case where the buffer gets full doesn't happen
+> with the current code.
 
-I agree that making v1 vs. v2 distinction here makes the code more
-obvious. But I do not think your code is correct for v1. In a default
-state it would lead to max = PAGE_COUNTER_MAX which is not something
-we want, right?
+Thanks for your explanation. Yeah, seq_printf will add \0 if there is a
+room for that. So I agree with you that the "Fixes" tag is wrong. There
+is nothing to fix. Sorry for the noise.
 
-instead you want
-		max += min(READ_ONCE(memcg->memsw.max), total_swap_pages);
+I think that if someone uses seq_buf_putc(maybe in the feature) at the
+end of memory_stat_format(). It will break the rule and there is no \0.
+So this patch can just make the code robust but need to change the
+commit log and remove the Fixes tag.
 
 
+> --
+> Michal Hocko
+> SUSE Labs
 
->  	}
->  	return max;
->  }
-> -- 
-> 2.18.1
-> 
 
--- 
-Michal Hocko
-SUSE Labs
