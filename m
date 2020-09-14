@@ -1,97 +1,52 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH v2 3/3] mm/memcg: Unify swap and memsw page counters
-Date: Mon, 14 Sep 2020 13:54:16 +0200
-Message-ID: <20200914115416.GN16999@dhcp22.suse.cz>
-References: <20200914024452.19167-1-longman@redhat.com>
- <20200914024452.19167-4-longman@redhat.com>
+From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [Phishing Risk] [External] Re: [PATCH] taskstats: fix
+ CGROUPSTATS_CMD_GET for cgroup v2
+Date: Mon, 14 Sep 2020 20:48:00 +0800
+Message-ID: <32fa7ae0-761f-9f2b-088b-4a3a0b5448cd@bytedance.com>
+References: <20200910055207.87702-1-zhouchengming@bytedance.com>
+ <20200910143244.GF4295@mtj.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20200914024452.19167-4-longman@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=Uz3YE9w1fx32lra6fotfj3/BpiuxJjONItcmFYjk970=;
+        b=ta92UEnM0Ua9PKVZdAdjsi6Jcm76RRN61MVtg6ALDRhldMa+ZsFdlqJ3vjV7W78eQU
+         L+mNnZT19WOv1iAntELNGU/RnT55IXLY4V1fZJk31ruqe/QWsLhn7vTI3wshmsuuW9WE
+         xcXv3AmVxLJH5ZH0CPAmEgfxJNjgsRm+aVqtR9u4fHcL5QsDo2ycGJ23JvH5MVGCdwaG
+         2gFRVq5A98aqjW2AC4oG5eiDcJm+cDjNRZA2i0KhknZ4KFMoPfj+Rs8soQCCFsQI90dG
+         gliLXbww33mVTnbTrDO6SJ3QRT7apUD5L7qeW15VijIPPsRbh5YkpIddinm0fzkgBTwJ
+         noNw==
+In-Reply-To: <20200910143244.GF4295-146+VewaZzwNjtGbbfXrCEEOCMrvLtNR@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Chris Down <chris@chrisdown.name>, Roman Gushchin <guro@fb.com>, Yafang Shao <laoar.shao@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, luodaowen.backend-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
 
-On Sun 13-09-20 22:44:52, Waiman Long wrote:
-> The swap page counter is v2 only while memsw is v1 only. As v1 and v2
-> controllers cannot be active at the same time, there is no point to keep
-> both swap and memsw page counters in mem_cgroup. The previous patch has
-> made sure that memsw page counter is updated and accessed only when in
-> v1 code paths. So it is now safe to alias the v1 memsw page counter to v2
-> swap page counter. This saves 14 long's in the size of mem_cgroup. This
-> is a saving of 112 bytes for 64-bit archs.
 
-I didn't realize that page_counter is so large.
+在 2020/9/10 下午10:32, Tejun Heo 写道:
+> On Thu, Sep 10, 2020 at 01:52:07PM +0800, Chengming Zhou wrote:
+>> We found cgroupstats_build would return -EINVAL when using netlink
+>> CGROUPSTATS_CMD_GET interface to get stats on cgroup v2. Fix it by
+>> supporting cgroup v2 kernfs directory in cgroupstats_build, and export
+>> cgroup2_fs_type like we did for cgroup_fs_type.
+>>
+>> Reported-by: Daowen Luo <luodaowen.backend-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+>> Tested-by: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+>> Signed-off-by: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> The exclusion of cgroupstats from v2 interface was intentional due to the
+> duplication and inconsistencies with other statistics. If you need these
+> numbers, please justify and add them to the appropriate cgroupfs stat file.
+>
+> Thanks.
+>
+Thanks for your advice. The container monitor tool "cadvisor" needs
+these numbers to work,
 
-> While at it, also document which page counters are used in v1 and/or v2.
-> 
-> Signed-off-by: Waiman Long <longman@redhat.com>
+I will put them in the existing cpu.stat interface.
 
-Acked-by: Michal Hocko <mhocko@suse.com>
+Thanks.
 
-> ---
->  include/linux/memcontrol.h | 13 ++++++++-----
->  mm/memcontrol.c            |  3 ---
->  2 files changed, 8 insertions(+), 8 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index d0b036123c6a..6ef4a552e09d 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -215,13 +215,16 @@ struct mem_cgroup {
->  	struct mem_cgroup_id id;
->  
->  	/* Accounted resources */
-> -	struct page_counter memory;
-> -	struct page_counter swap;
-> +	struct page_counter memory;		/* Both v1 & v2 */
-> +
-> +	union {
-> +		struct page_counter swap;	/* v2 only */
-> +		struct page_counter memsw;	/* v1 only */
-> +	};
->  
->  	/* Legacy consumer-oriented counters */
-> -	struct page_counter memsw;
-> -	struct page_counter kmem;
-> -	struct page_counter tcpmem;
-> +	struct page_counter kmem;		/* v1 only */
-> +	struct page_counter tcpmem;		/* v1 only */
->  
->  	/* Range enforcement for interrupt charges */
->  	struct work_struct high_work;
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index ca36bed588d1..188901f3a3db 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5281,13 +5281,11 @@ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
->  		memcg->use_hierarchy = true;
->  		page_counter_init(&memcg->memory, &parent->memory);
->  		page_counter_init(&memcg->swap, &parent->swap);
-> -		page_counter_init(&memcg->memsw, &parent->memsw);
->  		page_counter_init(&memcg->kmem, &parent->kmem);
->  		page_counter_init(&memcg->tcpmem, &parent->tcpmem);
->  	} else {
->  		page_counter_init(&memcg->memory, NULL);
->  		page_counter_init(&memcg->swap, NULL);
-> -		page_counter_init(&memcg->memsw, NULL);
->  		page_counter_init(&memcg->kmem, NULL);
->  		page_counter_init(&memcg->tcpmem, NULL);
->  		/*
-> @@ -5416,7 +5414,6 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
->  
->  	page_counter_set_max(&memcg->memory, PAGE_COUNTER_MAX);
->  	page_counter_set_max(&memcg->swap, PAGE_COUNTER_MAX);
-> -	page_counter_set_max(&memcg->memsw, PAGE_COUNTER_MAX);
->  	page_counter_set_max(&memcg->kmem, PAGE_COUNTER_MAX);
->  	page_counter_set_max(&memcg->tcpmem, PAGE_COUNTER_MAX);
->  	page_counter_set_min(&memcg->memory, 0);
-> -- 
-> 2.18.1
-
--- 
-Michal Hocko
-SUSE Labs
