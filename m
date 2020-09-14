@@ -1,43 +1,63 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: [PATCH] mm: memcontrol: Fix out-of-bounds on the
- buf returned by memory_stat_format
-Date: Mon, 14 Sep 2020 12:02:33 +0800
-Message-ID: <CAMZfGtXNg31+8QLbUMj7f61Yg1Jgt0rPB7VTDE7qoopGCANGjA@mail.gmail.com>
-References: <20200912155100.25578-1-songmuchun@bytedance.com> <20200912174241.eeaa771755915f27babf9322@linux-foundation.org>
+From: Xunlei Pang <xlpang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH] mm: memcg: yield cpu when we fail to charge pages
+Date: Mon, 14 Sep 2020 12:15:27 +0800
+Message-ID: <c21b1788-6bf0-b675-7066-396f21da2c76@linux.alibaba.com>
+References: <20200908185051.62420-1-jpitti@cisco.com>
+Reply-To: xlpang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=dWdl+yaQbYEtdR4On3P7CGGpC+OD3QLDLkmMq6+C9k0=;
-        b=CqIfTLtozQ3xvA/KXFvjkKb1zYdS2iyiXoVFEvA0vmD2FVJ2slyMgvSYQ00c8x7ytj
-         mx61VL523WNZigppR8w4h/OfvHx0V+eROTHrLyDK0xMG3Q16At3IMZVLEVrm6smf4LQj
-         Hm2mKdquGXG4js/HGAiwxp+2xYuFK3YPdudZHFzhQszumUV3IJSRZXKjZiuVessize+V
-         ceqaoE/OpxcPAb+ASWwOkBOjlZ2MFCpWp48AaphS6mTD39B20SZQ+OCgYZ6qytmaRPnu
-         A2P4M7baDBpOgQzsToSWLad01UMxaRUgCxc8NUQeTxn+66zGl7EL2Ao3fNh+GKSwaLUX
-         c4zw==
-In-Reply-To: <20200912174241.eeaa771755915f27babf9322-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+In-Reply-To: <20200908185051.62420-1-jpitti-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Julius Hemanth Pitti <jpitti-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, xe-linux-external-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org
 
-On Sun, Sep 13, 2020 at 8:42 AM Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
->
-> On Sat, 12 Sep 2020 23:51:00 +0800 Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
->
-> > The memory_stat_format() returns a format string, but the return buf
-> > may not including the trailing '\0'. So the users may read the buf
-> > out of bounds.
->
-> That sounds serious.  Is a cc:stable appropriate?
->
+On 2020/9/9 AM2:50, Julius Hemanth Pitti wrote:
+> For non root CG, in try_charge(), we keep trying
+> to charge until we succeed. On non-preemptive
+> kernel, when we are OOM, this results in holding
+> CPU forever.
+> 
+> On SMP systems, this doesn't create a big problem
+> because oom_reaper get a change to kill victim
+> and make some free pages. However on a single-core
+> CPU (or cases where oom_reaper pinned to same CPU
+> where try_charge is executing), oom_reaper shall
+> never get scheduled and we stay in try_charge forever.
+> 
+> Steps to repo this on non-smp:
+> 1. mount -t tmpfs none /sys/fs/cgroup
+> 2. mkdir /sys/fs/cgroup/memory
+> 3. mount -t cgroup none /sys/fs/cgroup/memory -o memory
+> 4. mkdir /sys/fs/cgroup/memory/0
+> 5. echo 40M > /sys/fs/cgroup/memory/0/memory.limit_in_bytes
+> 6. echo $$ > /sys/fs/cgroup/memory/0/tasks
+> 7. stress -m 5 --vm-bytes 10M --vm-hang 0
+> 
+> Signed-off-by: Julius Hemanth Pitti <jpitti-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+> ---
+>  mm/memcontrol.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 0d6f3ea86738..4620d70267cb 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2652,6 +2652,8 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+>  	if (fatal_signal_pending(current))
+>  		goto force;
+>  
+> +	cond_resched();
+> +
+>  	/*
+>  	 * keep retrying as long as the memcg oom killer is able to make
+>  	 * a forward progress or bypass the charge if the oom killer
+> 
 
-Yeah, I think we should cc:stable.
+This should be fixed by:
+https://lkml.org/lkml/2020/8/26/1440
 
--- 
-Yours,
-Muchun
+Thanks,
+Xunlei
