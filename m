@@ -1,157 +1,65 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v3] mm: memcontrol: Add the missing numa_stat interface
- for cgroup v2
-Date: Mon, 14 Sep 2020 12:06:51 -0700
-Message-ID: <8387344f-0e43-9b6e-068d-b2c45bbda1de@infradead.org>
-References: <20200913070010.44053-1-songmuchun@bytedance.com>
+From: Qian Cai <cai-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2 3/8] mm: Optimise madvise WILLNEED
+Date: Mon, 14 Sep 2020 15:44:39 -0400
+Message-ID: <05803c18b64db8a811c692bcbdc03172935ea483.camel@redhat.com>
+References: <20200910183318.20139-1-willy@infradead.org>
+         <20200910183318.20139-4-willy@infradead.org>
+         <c48c5eaa09d1ea5b78b12b545c034d1e937c49ba.camel@redhat.com>
+         <20200914165032.GS6583@casper.infradead.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
-        :Reply-To:Content-ID:Content-Description;
-        bh=N8T1tOQR2qSaR9SyfG7NteG59Ly5LuoTRUVFcE43ejU=; b=Ecx5Y31AlKnUhF8sXiscXGFIIB
-        JTAlDxNPr/zeVUsrVCiFy7EckaHazxjuuNYGH70OaQjzQgJmn6TWMmuMTO2kOmylfn25jg1MYb5GE
-        m9Fmx2lLCfgFlxSnjmCTQ0g5FtuJ7JC2vqGjBfkpA7dIoF6dvhCKWBrELvUJon4TAJ2+6gtzavTZs
-        J433nKXEHXHypR8mAtl0NACx3CQUsIsdBpm4yCBl0wBZAdHCSllkRYxOrONb1Lgkq4vAZYVtTtQUG
-        HFeEFVSahZQBHnZef0RHKlBKY71FHxMqq524y4b1L0/C+Q8Dt5V7F+eu9g+DMKkgis6HD4fCC8XmM
-        owHU1kEw==;
-In-Reply-To: <20200913070010.44053-1-songmuchun@bytedance.com>
-Content-Language: en-US
-Sender: linux-doc-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1600112690;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=A/DjrjveF5/2wA8RTl0T9a0Cox1J1OLY+rMuhaYpfao=;
+        b=iU4h2vv/M1zUWJJz3Pm72a/wlgb/ICjPAbhhKRyOKH64W14MyQnKrWpLxLP/bp+H4sXp63
+        QxHNa9MkaaBA/+HL5IM82Kll7c4Tj4Ta+th02dHDNj1ynlbZrV2izvmZYL0VHEt1F3LO4X
+        UHIH2ObFAXPo+z1V/z4LuGGARwz5QTI=
+In-Reply-To: <20200914165032.GS6583-FZi0V3Vbi30CUdFEqe4BF2D2FQJk+8+b@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Muchun Song <songmuchun@bytedance.com>, tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, corbet@lwn.net, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, shakeelb@google.com, guro@fb.com
-Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, kernel test robot <lkp@intel.com>
+To: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>, William Kucharski <william.kucharski-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Matthew Auld <matthew.auld-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On 9/13/20 12:00 AM, Muchun Song wrote:
-> In the cgroup v1, we have a numa_stat interface. This is useful for
-> providing visibility into the numa locality information within an
-> memcg since the pages are allowed to be allocated from any physical
-> node. One of the use cases is evaluating application performance by
-> combining this information with the application's CPU allocation.
-> But the cgroup v2 does not. So this patch adds the missing information.
+On Mon, 2020-09-14 at 17:50 +0100, Matthew Wilcox wrote:
+> On Mon, Sep 14, 2020 at 12:17:07PM -0400, Qian Cai wrote:
+> > Reverting the "Return head pages from find_*_entry" patchset [1] up to this
+> > patch fixed the issue that LTP madvise06 test [2] would trigger endless
+> > soft-
+> > lockups below. It does not help after applied patches fixed other separate
+> > issues in the patchset [3][4].
 > 
-> Signed-off-by: Muchun Song <songmuchun@bytedance.com>
-> Suggested-by: Shakeel Butt <shakeelb@google.com>
-> Reported-by: kernel test robot <lkp@intel.com>
-> ---
->  changelog in v3:
->  1. Fix compiler error on powerpc architecture reported by kernel test robot.
->  2. Fix a typo from "anno" to "anon".
+> Thanks for the report.  Could you try this?
+
+It works fine.
+
 > 
->  changelog in v2:
->  1. Add memory.numa_stat interface in cgroup v2.
-> 
->  Documentation/admin-guide/cgroup-v2.rst |  72 ++++++++++++++++
->  mm/memcontrol.c                         | 107 ++++++++++++++++++++++++
->  2 files changed, 179 insertions(+)
-> 
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> index 6be43781ec7f..92207f0012e4 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -1368,6 +1368,78 @@ PAGE_SIZE multiple when read back.
->  		collapsing an existing range of pages. This counter is not
->  		present when CONFIG_TRANSPARENT_HUGEPAGE is not set.
+> diff --git a/mm/madvise.c b/mm/madvise.c
+> index 96189acd6969..2d9ceccb338d 100644
+> --- a/mm/madvise.c
+> +++ b/mm/madvise.c
+> @@ -234,6 +234,7 @@ static void force_shm_swapin_readahead(struct
+> vm_area_struct *vma,
 >  
-> +  memory.numa_stat
-> +	A read-only flat-keyed file which exists on non-root cgroups.
-> +
-> +	This breaks down the cgroup's memory footprint into different
-> +	types of memory, type-specific details, and other information
-> +	per node on the state of the memory management system.
-> +
-> +	This is useful for providing visibility into the numa locality
-
-capitalize acronyms, please:                             NUMA
-
-
-> +	information within an memcg since the pages are allowed to be
-> +	allocated from any physical node. One of the use cases is evaluating
-> +	application performance by combining this information with the
-> +	application's CPU allocation.
-> +
-> +	All memory amounts are in bytes.
-> +
-> +	The output format of memory.numa_stat is::
-> +
-> +	  type N0=<node 0 pages> N1=<node 1 pages> ...
-
-Now I'm confused.  5 lines above here it says "All memory amounts are in bytes"
-but these appear to be in pages. Which is it?  and what size pages if that matters?
-
-Is it like this?
-	  type N0=<bytes in node 0 pages> N1=<bytes in node 1 pages> ...
-
-
-
-> +	The entries are ordered to be human readable, and new entries
-> +	can show up in the middle. Don't rely on items remaining in a
-> +	fixed position; use the keys to look up specific values!
-> +
-> +	  anon
-> +		Amount of memory per node used in anonymous mappings such
-> +		as brk(), sbrk(), and mmap(MAP_ANONYMOUS)
-> +
-> +	  file
-> +		Amount of memory per node used to cache filesystem data,
-> +		including tmpfs and shared memory.
-> +
-> +	  kernel_stack
-> +		Amount of memory per node allocated to kernel stacks.
-> +
-> +	  shmem
-> +		Amount of cached filesystem data per node that is swap-backed,
-> +		such as tmpfs, shm segments, shared anonymous mmap()s
-> +
-> +	  file_mapped
-> +		Amount of cached filesystem data per node mapped with mmap()
-> +
-> +	  file_dirty
-> +		Amount of cached filesystem data per node that was modified but
-> +		not yet written back to disk
-> +
-> +	  file_writeback
-> +		Amount of cached filesystem data per node that was modified and
-> +		is currently being written back to disk
-> +
-> +	  anon_thp
-> +		Amount of memory per node used in anonymous mappings backed by
-> +		transparent hugepages
-> +
-> +	  inactive_anon, active_anon, inactive_file, active_file, unevictable
-> +		Amount of memory, swap-backed and filesystem-backed,
-> +		per node on the internal memory management lists used
-> +		by the page reclaim algorithm.
-> +
-> +		As these represent internal list state (eg. shmem pages are on anon
-
-		                                         e.g.
-
-> +		memory management lists), inactive_foo + active_foo may not be equal to
-> +		the value for the foo counter, since the foo counter is type-based, not
-> +		list-based.
-> +
-> +	  slab_reclaimable
-> +		Amount of memory per node used for storing in-kernel data
-> +		structures which might be reclaimed, such as dentries and
-> +		inodes.
-> +
-> +	  slab_unreclaimable
-> +		Amount of memory per node used for storing in-kernel data
-> +		structures which cannot be reclaimed on memory pressure.
-
-Some of the descriptions above end with a '.' and some do not. Please be consistent.
-
-> +
->    memory.swap.current
->  	A read-only single value file which exists on non-root
->  	cgroups.
-
-
-thanks.
--- 
-~Randy
+>  		if (!xa_is_value(page))
+>  			continue;
+> +		xas_pause(&xas);
+>  		rcu_read_unlock();
+>  
+>  		swap = radix_to_swp_entry(page);
+> @@ -243,7 +244,6 @@ static void force_shm_swapin_readahead(struct
+> vm_area_struct *vma,
+>  			put_page(page);
+>  
+>  		rcu_read_lock();
+> -		xas_reset(&xas);
+>  	}
+>  	rcu_read_unlock();
+>  
+> 
 
