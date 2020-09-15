@@ -1,230 +1,390 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: [PATCH v4] mm: memcontrol: Add the missing
- numa_stat interface for cgroup v2
-Date: Wed, 16 Sep 2020 00:01:41 +0800
-Message-ID: <CAMZfGtVQtsFmU_5DVSZ1mFCnqZrPHrJFKT81Zg8TXDM7c74TDQ@mail.gmail.com>
-References: <20200915055825.5279-1-songmuchun@bytedance.com> <a3e2a7bf-ae5a-9ca8-74f9-57af795f0380@infradead.org>
+From: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v18 00/32] per memcg lru_lock: reviews
+Date: Tue, 15 Sep 2020 12:58:07 -0400
+Message-ID: <20200915165807.kpp7uhiw7l3loofu@ca-dmjordan1.us.oracle.com>
+References: <20200824114204.cc796ca182db95809dd70a47@linux-foundation.org>
+ <alpine.LSU.2.11.2008241231460.1065@eggly.anvils>
+ <alpine.LSU.2.11.2008262301240.4405@eggly.anvils>
+ <alpine.LSU.2.11.2009081640070.7256@eggly.anvils>
+ <61a42a87-eec9-e300-f710-992756f70de6@linux.alibaba.com>
+ <alpine.LSU.2.11.2009091524260.10087@eggly.anvils>
+ <855ad6ee-dba4-9729-78bd-23e392905cf6@linux.alibaba.com>
+ <alpine.LSU.2.11.2009111634020.22739@eggly.anvils>
+ <5cfc6142-752d-26e6-0108-38d13009268b@linux.alibaba.com>
+ <alpine.LSU.2.11.2009150112130.1550@eggly.anvils>
 Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="erochwecjadffrwv"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Rnn7brXuIav3vAJTNVyPdEtGBil0goNlmFybmIVcOOc=;
-        b=PTyR5b3m8PvFl4k4qRhRZIkSU9mFdibCwuJoEEZyE7EFbYgXGr4CcNzaev27AjjfNc
-         HoCamxH5F/HWhJfSDX+OxZ3APaUc1piqWZ5C+iIe+CPpXvToy3TDWysXE1tG4T9cGFdk
-         +qASkYp6nF/cB/pFMhLJF+WxCtaZk+IsKBKpOcXI59vQSqFNxEVWVlP384in/vbsvdMv
-         NF0Zer0ktFfIbKm+vjp/5IKg2aq4fkoIkaVyBrV4eH/EoF1oIq9hEI8ZZz6dxJ2DK/lM
-         LiFfSrW505/AmnrJ0giADbQGzmcL0R899C73AmhF4l+Gszx/MbcuPpM9CmtC75eOBOC5
-         PDxQ==
-In-Reply-To: <a3e2a7bf-ae5a-9ca8-74f9-57af795f0380-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=eBeJCMXkKKPUoXo+GGUtTOFktz8jnI+NP33/TyiPS/w=;
+ b=ulKHxk5gGvdXpMlFiC8CI800x3RJYnP5dOe29xnrVqi9GGlzXh3vB0Wzd99u4w0IP1nc
+ KvZLxOkebeOOtzmAK3YM/gRbkRFRz2UzxTfb6tR3rWqmLvEzO+Hn6oZpuCHQVjmNM5lj
+ k6H7YWO7BEWxSqLaYmyujDnFrIo4D0cNP3ofHIe+T+BK7k3RNEjU3/8H0J/rMIy6V9IB
+ LlGXT9aHStWTDLRu/NDaVMgjRfNAeZq201TRbYcaoDruFt98mXjfsg0AZm3p8Qa27PUC
+ u0UTPiyClLkubsVNPHWzSdu+ZpkX66eyGpGWcIbxhhhb1AKPd66+WdIY9aErvRU6XfOA BA== 
+Content-Disposition: inline
+In-Reply-To: <alpine.LSU.2.11.2009150112130.1550-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
-
-On Tue, Sep 15, 2020 at 11:45 PM Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
->
-> Hi,
->
-> On 9/14/20 10:58 PM, Muchun Song wrote:
-> > In the cgroup v1, we have a numa_stat interface. This is useful for
-> > providing visibility into the numa locality information within an
-> > memcg since the pages are allowed to be allocated from any physical
-> > node. One of the use cases is evaluating application performance by
-> > combining this information with the application's CPU allocation.
-> > But the cgroup v2 does not. So this patch adds the missing information.
-> >
-> > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> > Suggested-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > ---
-> >  changelog in v4:
-> >  1. Fix some document problems pointed out by Randy Dunlap.
-> >  2. Remove memory_numa_stat_format() suggested by Shakeel Butt.
-> >
-> >  changelog in v3:
-> >  1. Fix compiler error on powerpc architecture reported by kernel test robot.
-> >  2. Fix a typo from "anno" to "anon".
-> >
-> >  changelog in v2:
-> >  1. Add memory.numa_stat interface in cgroup v2.
-> >
-> >  Documentation/admin-guide/cgroup-v2.rst | 72 +++++++++++++++++++++
-> >  mm/memcontrol.c                         | 86 +++++++++++++++++++++++++
-> >  2 files changed, 158 insertions(+)
-> >
-> > diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> > index 6be43781ec7f..bcb7b202e88d 100644
-> > --- a/Documentation/admin-guide/cgroup-v2.rst
-> > +++ b/Documentation/admin-guide/cgroup-v2.rst
-> > @@ -1368,6 +1368,78 @@ PAGE_SIZE multiple when read back.
-> >               collapsing an existing range of pages. This counter is not
-> >               present when CONFIG_TRANSPARENT_HUGEPAGE is not set.
-> >
-> > +  memory.numa_stat
-> > +     A read-only flat-keyed file which exists on non-root cgroups.
-> > +
-> > +     This breaks down the cgroup's memory footprint into different
-> > +     types of memory, type-specific details, and other information
-> > +     per node on the state of the memory management system.
-> > +
-> > +     This is useful for providing visibility into the NUMA locality
-> > +     information within an memcg since the pages are allowed to be
-> > +     allocated from any physical node. One of the use cases is evaluating
-> > +     application performance by combining this information with the
-> > +     application's CPU allocation.
-> > +
-> > +     All memory amounts are in bytes.
-> > +
-> > +     The output format of memory.numa_stat is::
-> > +
-> > +       type N0=<bytes in node 0 pages> N1=<bytes in node 1 pages> ...
->
-> I'm OK with Shakeel's suggested change here.
->
-> > +     The entries are ordered to be human readable, and new entries
-> > +     can show up in the middle. Don't rely on items remaining in a
-> > +     fixed position; use the keys to look up specific values!
-> > +
-> > +       anon
-> > +             Amount of memory per node used in anonymous mappings such
-> > +             as brk(), sbrk(), and mmap(MAP_ANONYMOUS).
-> > +
-> > +       file
-> > +             Amount of memory per node used to cache filesystem data,
-> > +             including tmpfs and shared memory.
-> > +
-> > +       kernel_stack
-> > +             Amount of memory per node allocated to kernel stacks.
-> > +
-> > +       shmem
-> > +             Amount of cached filesystem data per node that is swap-backed,
-> > +             such as tmpfs, shm segments, shared anonymous mmap()s.
-> > +
-> > +       file_mapped
-> > +             Amount of cached filesystem data per node mapped with mmap().
-> > +
-> > +       file_dirty
-> > +             Amount of cached filesystem data per node that was modified but
-> > +             not yet written back to disk.
-> > +
-> > +       file_writeback
-> > +             Amount of cached filesystem data per node that was modified and
-> > +             is currently being written back to disk.
-> > +
-> > +       anon_thp
-> > +             Amount of memory per node used in anonymous mappings backed by
-> > +             transparent hugepages.
-> > +
-> > +       inactive_anon, active_anon, inactive_file, active_file, unevictable
-> > +             Amount of memory, swap-backed and filesystem-backed,
-> > +             per node on the internal memory management lists used
-> > +             by the page reclaim algorithm.
-> > +
-> > +             As these represent internal list state (e.g. shmem pages are on
-> > +             anon memory management lists), inactive_foo + active_foo may not
-> > +             be equal to the value for the foo counter, since the foo counter
-> > +             is type-based, not list-based.
-> > +
-> > +       slab_reclaimable
-> > +             Amount of memory per node used for storing in-kernel data
-> > +             structures which might be reclaimed, such as dentries and
-> > +             inodes.
-> > +
-> > +       slab_unreclaimable
-> > +             Amount of memory per node used for storing in-kernel data
-> > +             structures which cannot be reclaimed on memory pressure.
-> > +
-> >    memory.swap.current
-> >       A read-only single value file which exists on non-root
-> >       cgroups.
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 75cd1a1e66c8..ff919ef3b57b 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -6425,6 +6425,86 @@ static int memory_stat_show(struct seq_file *m, void *v)
-> >       return 0;
-> >  }
-> >
-> > +#ifdef CONFIG_NUMA
-> > +struct numa_stat {
-> > +     const char *name;
-> > +     unsigned int ratio;
-> > +     enum node_stat_item idx;
-> > +};
-> > +
-> > +static struct numa_stat numa_stats[] = {
-> > +     { "anon", PAGE_SIZE, NR_ANON_MAPPED },
-> > +     { "file", PAGE_SIZE, NR_FILE_PAGES },
-> > +     { "kernel_stack", 1024, NR_KERNEL_STACK_KB },
-> > +     { "shmem", PAGE_SIZE, NR_SHMEM },
-> > +     { "file_mapped", PAGE_SIZE, NR_FILE_MAPPED },
-> > +     { "file_dirty", PAGE_SIZE, NR_FILE_DIRTY },
-> > +     { "file_writeback", PAGE_SIZE, NR_WRITEBACK },
-> > +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> > +     /*
-> > +      * The ratio will be initialized in numa_stats_init(). Because
-> > +      * on some architectures, the macro of HPAGE_PMD_SIZE is not
-> > +      * constant(e.g. powerpc).
-> > +      */
-> > +     { "anon_thp", 0, NR_ANON_THPS },
-> > +#endif
-> > +     { "inactive_anon", PAGE_SIZE, NR_INACTIVE_ANON },
-> > +     { "active_anon", PAGE_SIZE, NR_ACTIVE_ANON },
-> > +     { "inactive_file", PAGE_SIZE, NR_INACTIVE_FILE },
-> > +     { "active_file", PAGE_SIZE, NR_ACTIVE_FILE },
-> > +     { "unevictable", PAGE_SIZE, NR_UNEVICTABLE },
-> > +     { "slab_reclaimable", 1, NR_SLAB_RECLAIMABLE_B },
-> > +     { "slab_unreclaimable", 1, NR_SLAB_UNRECLAIMABLE_B },
-> > +};
-> > +
-> > +static int __init numa_stats_init(void)
-> > +{
-> > +     int i;
-> > +
-> > +     for (i = 0; i < ARRAY_SIZE(numa_stats); i++) {
-> > +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> > +             if (numa_stats[i].idx == NR_ANON_THPS)
-> > +                     numa_stats[i].ratio = HPAGE_PMD_SIZE;
-> > +#endif
-> > +     }
->
-> Although the loop may be needed sometime in the future due to
-> other changes.. why couldn't it be like this for now?
-
-The compiler is so smart, so there is nothing difference between
-them. I disassemble the numa_stats_init when
-!CONFIG_TRANSPARENT_HUGEPAGE.
-
-Dump of assembler code for function numa_stats_init:
-   0xffffffff8273b061 <+0>: callq  0xffffffff81057490 <__fentry__>
-   0xffffffff8273b066 <+5>: xor    %eax,%eax
-   0xffffffff8273b068 <+7>: retq
-
->
->
-> > +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> > +     for (i = 0; i < ARRAY_SIZE(numa_stats); i++) {
-> > +             if (numa_stats[i].idx == NR_ANON_THPS)
-> > +                     numa_stats[i].ratio = HPAGE_PMD_SIZE;
-> > +     }
-> > +#endif
->
->
-> > +
-> > +     return 0;
-> > +}
-> > +pure_initcall(numa_stats_init);
->
->
-> thanks.
-> --
-> ~Randy
->
+To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cai-J5quhbR+WMc@public.gmane.org
 
 
--- 
-Yours,
-Muchun
+--erochwecjadffrwv
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Tue, Sep 15, 2020 at 01:21:56AM -0700, Hugh Dickins wrote:
+> On Sun, 13 Sep 2020, Alex Shi wrote:
+> > Uh, I updated the testing with some new results here:
+> > https://lkml.org/lkml/2020/8/26/212
+> 
+> Right, I missed that, that's better, thanks.  Any other test results?
+
+Alex, you were doing some will-it-scale runs earlier.  Are you planning to do
+more of those?  Otherwise I can add them in.
+
+This is what I have so far.
+
+
+sysbench oltp read-only
+-----------------------
+
+The goal was to run a real world benchmark, at least more so than something
+like vm-scalability, with the memory controller enabled but unused to check for
+regressions.
+
+I chose sysbench because it was relatively straightforward to run, but I'm open
+to ideas for other high level benchmarks that might be more sensitive to this
+series.
+
+CoeffVar shows the test was pretty noisy overall.  It's nice to see there's no
+significant difference between the kernels for low thread counts (1-12), but
+I'm not sure what to make of the 18 and 20 thread cases.  At 20 threads, the
+CPUs of the node that the test was confined to were saturated and the variance
+is especially high.  I'm tempted to write the 18 and 20 thread cases off as
+noise.
+
+- 2-socket * 10-core * 2-hyperthread broadwell server
+- test bound to node 1 to lower variance
+- 251G memory, divided evenly between the nodes (memory size of test shrunk to
+  accommodate confining to one node)
+- 12 iterations per thread count per kernel
+- THP enabled
+
+export OLTP_CACHESIZE=$(($MEMTOTAL_BYTES/4))
+export OLTP_SHAREDBUFFERS=$((MEMTOTAL_BYTES/8))
+export OLTP_PAGESIZES="default"
+export SYSBENCH_DRIVER=postgres
+export SYSBENCH_MAX_TRANSACTIONS=auto
+export SYSBENCH_READONLY=yes
+export SYSBENCH_MAX_THREADS=$((NUMCPUS / 2))
+export SYSBENCH_ITERATIONS=12
+export SYSBENCH_WORKLOAD_SIZE=$((MEMTOTAL_BYTES*3/8))
+export SYSBENCH_CACHE_COLD=no
+export DATABASE_INIT_ONCE=yes
+
+export MMTESTS_NUMA_POLICY=fullbind_single_instance_node
+numactl --cpunodebind=1 --membind=1 <mmtests_cmdline>
+
+sysbench Transactions per second
+                            5.9-rc2        5.9-rc2-lru-v18
+Min       1       593.23 (   0.00%)      583.37 (  -1.66%)
+Min       4      1897.34 (   0.00%)     1871.77 (  -1.35%)
+Min       7      2471.14 (   0.00%)     2449.77 (  -0.86%)
+Min       12     2680.00 (   0.00%)     2853.25 (   6.46%)
+Min       18     2183.82 (   0.00%)     1191.43 ( -45.44%)
+Min       20      924.96 (   0.00%)      526.66 ( -43.06%)
+Hmean     1       912.08 (   0.00%)      904.24 (  -0.86%)
+Hmean     4      2057.11 (   0.00%)     2044.69 (  -0.60%)
+Hmean     7      2817.59 (   0.00%)     2812.80 (  -0.17%)
+Hmean     12     3201.05 (   0.00%)     3171.09 (  -0.94%)
+Hmean     18     2529.10 (   0.00%)     2009.99 * -20.53%*
+Hmean     20     1742.29 (   0.00%)     1127.77 * -35.27%*
+Stddev    1       219.21 (   0.00%)      220.92 (  -0.78%)
+Stddev    4        94.94 (   0.00%)       84.34 (  11.17%)
+Stddev    7       189.42 (   0.00%)      167.58 (  11.53%)
+Stddev    12      372.13 (   0.00%)      199.40 (  46.42%)
+Stddev    18      248.42 (   0.00%)      574.66 (-131.32%)
+Stddev    20      757.69 (   0.00%)      666.87 (  11.99%)
+CoeffVar  1        22.54 (   0.00%)       22.86 (  -1.42%)
+CoeffVar  4         4.61 (   0.00%)        4.12 (  10.60%)
+CoeffVar  7         6.69 (   0.00%)        5.94 (  11.30%)
+CoeffVar  12       11.49 (   0.00%)        6.27 (  45.46%)
+CoeffVar  18        9.74 (   0.00%)       26.22 (-169.23%)
+CoeffVar  20       36.32 (   0.00%)       47.18 ( -29.89%)
+Max       1      1117.45 (   0.00%)     1107.33 (  -0.91%)
+Max       4      2184.92 (   0.00%)     2136.65 (  -2.21%)
+Max       7      3086.81 (   0.00%)     3049.52 (  -1.21%)
+Max       12     4020.07 (   0.00%)     3580.95 ( -10.92%)
+Max       18     3032.30 (   0.00%)     2810.85 (  -7.30%)
+Max       20     2891.27 (   0.00%)     2675.80 (  -7.45%)
+BHmean-50 1      1098.77 (   0.00%)     1093.58 (  -0.47%)
+BHmean-50 4      2139.76 (   0.00%)     2107.13 (  -1.52%)
+BHmean-50 7      2972.18 (   0.00%)     2953.94 (  -0.61%)
+BHmean-50 12     3494.73 (   0.00%)     3311.33 (  -5.25%)
+BHmean-50 18     2729.70 (   0.00%)     2606.32 (  -4.52%)
+BHmean-50 20     2668.72 (   0.00%)     1779.87 ( -33.31%)
+BHmean-95 1       958.94 (   0.00%)      951.84 (  -0.74%)
+BHmean-95 4      2072.98 (   0.00%)     2062.01 (  -0.53%)
+BHmean-95 7      2853.96 (   0.00%)     2851.21 (  -0.10%)
+BHmean-95 12     3258.65 (   0.00%)     3203.53 (  -1.69%)
+BHmean-95 18     2565.99 (   0.00%)     2143.90 ( -16.45%)
+BHmean-95 20     1894.47 (   0.00%)     1258.34 ( -33.58%)
+BHmean-99 1       958.94 (   0.00%)      951.84 (  -0.74%)
+BHmean-99 4      2072.98 (   0.00%)     2062.01 (  -0.53%)
+BHmean-99 7      2853.96 (   0.00%)     2851.21 (  -0.10%)
+BHmean-99 12     3258.65 (   0.00%)     3203.53 (  -1.69%)
+BHmean-99 18     2565.99 (   0.00%)     2143.90 ( -16.45%)
+BHmean-99 20     1894.47 (   0.00%)     1258.34 ( -33.58%)
+
+sysbench Time
+                            5.9-rc2            5.9-rc2-lru
+Min       1         8.96 (   0.00%)        9.04 (  -0.89%)
+Min       4         4.63 (   0.00%)        4.74 (  -2.38%)
+Min       7         3.34 (   0.00%)        3.38 (  -1.20%)
+Min       12        2.65 (   0.00%)        2.95 ( -11.32%)
+Min       18        3.54 (   0.00%)        3.80 (  -7.34%)
+Min       20        3.74 (   0.00%)        4.02 (  -7.49%)
+Amean     1        11.00 (   0.00%)       11.11 (  -0.98%)
+Amean     4         4.92 (   0.00%)        4.95 (  -0.59%)
+Amean     7         3.65 (   0.00%)        3.65 (  -0.16%)
+Amean     12        3.29 (   0.00%)        3.32 (  -0.89%)
+Amean     18        4.20 (   0.00%)        5.22 * -24.39%*
+Amean     20        6.02 (   0.00%)        9.14 * -51.98%*
+Stddev    1         3.33 (   0.00%)        3.45 (  -3.40%)
+Stddev    4         0.23 (   0.00%)        0.21 (   7.89%)
+Stddev    7         0.25 (   0.00%)        0.22 (   9.87%)
+Stddev    12        0.35 (   0.00%)        0.19 (  45.09%)
+Stddev    18        0.38 (   0.00%)        1.75 (-354.74%)
+Stddev    20        2.93 (   0.00%)        4.73 ( -61.72%)
+CoeffVar  1        30.30 (   0.00%)       31.02 (  -2.40%)
+CoeffVar  4         4.63 (   0.00%)        4.24 (   8.43%)
+CoeffVar  7         6.77 (   0.00%)        6.10 (  10.02%)
+CoeffVar  12       10.74 (   0.00%)        5.85 (  45.57%)
+CoeffVar  18        9.15 (   0.00%)       33.45 (-265.58%)
+CoeffVar  20       48.64 (   0.00%)       51.75 (  -6.41%)
+Max       1        17.01 (   0.00%)       17.36 (  -2.06%)
+Max       4         5.33 (   0.00%)        5.40 (  -1.31%)
+Max       7         4.14 (   0.00%)        4.18 (  -0.97%)
+Max       12        3.89 (   0.00%)        3.67 (   5.66%)
+Max       18        4.82 (   0.00%)        8.64 ( -79.25%)
+Max       20       11.09 (   0.00%)       19.26 ( -73.67%)
+BAmean-50 1         9.12 (   0.00%)        9.16 (  -0.49%)
+BAmean-50 4         4.73 (   0.00%)        4.80 (  -1.55%)
+BAmean-50 7         3.46 (   0.00%)        3.48 (  -0.58%)
+BAmean-50 12        3.02 (   0.00%)        3.18 (  -5.24%)
+BAmean-50 18        3.90 (   0.00%)        4.08 (  -4.52%)
+BAmean-50 20        4.02 (   0.00%)        5.90 ( -46.56%)
+BAmean-95 1        10.45 (   0.00%)       10.54 (  -0.82%)
+BAmean-95 4         4.88 (   0.00%)        4.91 (  -0.52%)
+BAmean-95 7         3.60 (   0.00%)        3.60 (  -0.08%)
+BAmean-95 12        3.23 (   0.00%)        3.28 (  -1.60%)
+BAmean-95 18        4.14 (   0.00%)        4.91 ( -18.58%)
+BAmean-95 20        5.56 (   0.00%)        8.22 ( -48.04%)
+BAmean-99 1        10.45 (   0.00%)       10.54 (  -0.82%)
+BAmean-99 4         4.88 (   0.00%)        4.91 (  -0.52%)
+BAmean-99 7         3.60 (   0.00%)        3.60 (  -0.08%)
+BAmean-99 12        3.23 (   0.00%)        3.28 (  -1.60%)
+BAmean-99 18        4.14 (   0.00%)        4.91 ( -18.58%)
+BAmean-99 20        5.56 (   0.00%)        8.22 ( -48.04%)
+
+
+docker-ized readtwice microbenchmark
+------------------------------------
+
+This is Alex's modified readtwice case.  Needed a few fixes, and I made it into
+a script.  Updated version attached.
+
+Same machine, three runs per kernel, 40 containers per test.  This is average
+MB/s over all containers.
+
+    5.9-rc2          5.9-rc2-lru
+-----------          -----------
+220.5 (3.3)          356.9 (0.5)
+
+That's a 62% improvement.
+
+--erochwecjadffrwv
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=Dockerfile
+
+FROM centos:8
+MAINTAINER Alexs 
+#WORKDIR /vm-scalability 
+#RUN yum update -y && yum groupinstall "Development Tools" -y && yum clean all && \
+#examples https://www.linuxtechi.com/build-docker-container-images-with-dockerfile/
+RUN yum install git xfsprogs patch make gcc -y && yum clean all && \
+git clone  https://git.kernel.org/pub/scm/linux/kernel/git/wfg/vm-scalability.git/ && \
+cd vm-scalability && make usemem
+
+COPY readtwice.patch /vm-scalability/
+
+RUN cd vm-scalability && patch -p1 < readtwice.patch
+
+--erochwecjadffrwv
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="run.sh"
+
+#!/usr/bin/env bash
+#
+# Originally by Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+# Changes from Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+TAG='lrulock'
+runtime=300
+
+nr_cont=$(nproc)
+
+cd "$SCRIPT_DIR"
+
+echo -e "starting $nr_cont containers\n"
+
+pids=()
+
+sudo docker build -t "$TAG" .
+
+nr_running_cont=$(sudo docker ps | sed '1 d' | wc -l)
+if (( nr_running_cont != 0 )); then
+	echo "error: $nr_running_cont containers already running"
+	exit 1
+fi
+
+# start some testing containers
+for ((i=0; i < nr_cont; i++)); do
+	sudo docker run --privileged=true --rm "$TAG" bash -c "sleep infinity" &
+done
+
+nr_running_cont=$(sudo docker ps | sed '1 d' | wc -l)
+until (( nr_running_cont == nr_cont )); do
+	sleep .5
+	nr_running_cont=$(sudo docker ps | sed '1 d' | wc -l)
+done
+
+# do testing evn setup 
+for i in `sudo docker ps | sed '1 d' | awk '{print $1}'`; do
+	sudo docker exec --privileged=true -t $i \
+		bash -c "cd /vm-scalability/; bash ./case-lru-file-readtwice m" &
+	pids+=($!)
+done
+
+wait "${pids[@]}"
+pids=()
+
+# kick testing
+for i in `sudo docker ps | sed '1 d' | awk '{print $1}'`; do
+	sudo docker exec --privileged=true -t -e runtime=$runtime $i \
+		bash -c "cd /vm-scalability/; bash ./case-lru-file-readtwice r" &
+	pids+=($!)
+done
+
+wait "${pids[@]}"
+pids=()
+
+# save results
+ts=$(date +%y-%m-%d_%H:%M:%S)
+f="$ts/summary.txt"
+
+mkdir "$ts"
+echo "$ts" >> "$f"
+uname -r >> "$f"
+
+for i in `sudo docker ps | sed '1 d' | awk '{print $1}'`; do
+	sudo docker exec $i bash -c 'cat /tmp/vm-scalability-tmp/dd-output-*' &> "$ts/$i.out" &
+	pids+=($!)
+done
+
+wait "${pids[@]}"
+pids=()
+
+grep 'copied' "$ts"/*.out | \
+	awk 'BEGIN {a=0;} { a+=$10 } END {print NR, a/(NR)}' | \
+	tee -a "$f"
+
+for i in `sudo docker ps | sed '1 d' | awk '{print $1}'`; do
+	sudo docker stop $i &>/dev/null &
+done
+wait
+
+echo 'test finished'
+echo
+
+--erochwecjadffrwv
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="readtwice.patch"
+
+diff --git a/case-lru-file-readtwice b/case-lru-file-readtwice
+index 85533b248634..57cb97d121ae 100755
+--- a/case-lru-file-readtwice
++++ b/case-lru-file-readtwice
+@@ -15,23 +15,30 @@
+ 
+ . ./hw_vars
+ 
+-for i in `seq 1 $nr_task`
+-do
+-	create_sparse_file $SPARSE_FILE-$i $((ROTATE_BYTES / nr_task))
+-	timeout --foreground -s INT ${runtime:-600} dd bs=4k if=$SPARSE_FILE-$i of=/dev/null > $TMPFS_MNT/dd-output-1-$i 2>&1 &
+-	timeout --foreground -s INT ${runtime:-600} dd bs=4k if=$SPARSE_FILE-$i of=/dev/null > $TMPFS_MNT/dd-output-2-$i 2>&1 &
+-done
++OUT_DIR=$(hostname)-${nr_task}c-$(((mem + (1<<29))>>30))g
++TEST_CASES=${@:-$(echo case-*)}
++
++echo $((1<<30)) > /proc/sys/vm/max_map_count
++echo $((1<<20)) > /proc/sys/kernel/threads-max
++echo 1 > /proc/sys/vm/overcommit_memory
++#echo 3 > /proc/sys/vm/drop_caches
++
++
++i=1
++
++if [ "$1" == "m" ];then
++	mount_tmpfs
++	create_sparse_root
++	create_sparse_file $SPARSE_FILE-$i $((ROTATE_BYTES))
++	exit
++fi
++
++
++if [ "$1" == "r" ];then
++	(timeout --foreground -s INT ${runtime:-300} dd bs=4k if=$SPARSE_FILE-$i of=/dev/null > $TMPFS_MNT/dd-output-1-$i 2>&1)&
++	(timeout --foreground -s INT ${runtime:-300} dd bs=4k if=$SPARSE_FILE-$i of=/dev/null > $TMPFS_MNT/dd-output-2-$i 2>&1)&
++fi
+ 
+ wait
+ sleep 1
+ 
+-for file in $TMPFS_MNT/dd-output-*
+-do
+-	[ -s "$file" ] || {
+-		echo "dd output file empty: $file" >&2
+-	}
+-	cat $file
+-	rm  $file
+-done
+-
+-rm `seq -f $SPARSE_FILE-%g 1 $nr_task`
+diff --git a/hw_vars b/hw_vars
+index 8731cefb9f57..ceeaa9f17c0b 100755
+--- a/hw_vars
++++ b/hw_vars
+@@ -1,4 +1,4 @@
+-#!/bin/sh
++#!/bin/sh -e
+ 
+ if [ -n "$runtime" ]; then
+ 	USEMEM="$CMD ./usemem --runtime $runtime"
+@@ -43,7 +43,7 @@ create_loop_devices()
+ 	modprobe loop 2>/dev/null
+ 	[ -e "/dev/loop0" ] || modprobe loop 2>/dev/null
+ 
+-	for i in $(seq 0 8)
++	for i in $(seq 0 104)
+ 	do
+ 		[ -e "/dev/loop$i" ] && continue
+ 		mknod /dev/loop$i b 7 $i
+
+--erochwecjadffrwv--
