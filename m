@@ -1,92 +1,48 @@
-From: Hugh Dickins <hughd@google.com>
-Subject: Re: [PATCH v2 0/8] Return head pages from find_*_entry
-Date: Tue, 15 Sep 2020 01:10:05 -0700 (PDT)
-Message-ID: <alpine.LSU.2.11.2009150059310.1550@eggly.anvils>
-References: <20200910183318.20139-1-willy@infradead.org>
+From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v18 00/32] per memcg lru_lock: reviews
+Date: Tue, 15 Sep 2020 01:21:56 -0700 (PDT)
+Message-ID: <alpine.LSU.2.11.2009150112130.1550@eggly.anvils>
+References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com> <20200824114204.cc796ca182db95809dd70a47@linux-foundation.org> <alpine.LSU.2.11.2008241231460.1065@eggly.anvils> <alpine.LSU.2.11.2008262301240.4405@eggly.anvils>
+ <alpine.LSU.2.11.2009081640070.7256@eggly.anvils> <61a42a87-eec9-e300-f710-992756f70de6@linux.alibaba.com> <alpine.LSU.2.11.2009091524260.10087@eggly.anvils> <855ad6ee-dba4-9729-78bd-23e392905cf6@linux.alibaba.com> <alpine.LSU.2.11.2009111634020.22739@eggly.anvils>
+ <5cfc6142-752d-26e6-0108-38d13009268b@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=qwBcvIBU5LOYe6OskRbMqT6V676HBWZDqSyC3uftkyQ=;
+        b=HslBmbeWTZm7v2sAgaH6pYCFXZ7p24g+9zKdqnDAv0NOj2E9u3HBm4SN0fyl+ARwBj
+         Br5Fx3dCbNIxlooxtHo2kNsfpAA33mhnz/XMM3D1dxVbbccet/Cdnq0YPagKQVeT5G5Z
+         5SH4ZPg/M3NnYHJMnQwe1o7DHXDijfry/Hkk8TniFYcpFEVfJKPAsZffKXxLz4fx/GNH
+         2OVlsrZpPKckQsTMFVXe21TmD0mXmiuVW6p7flm6WGT8oZNNGxB2AKQhZvouWtHvIIpY
+         /kn4MMUMqvaAB/HZgmb8IUarJy4R+n76AjBbuU7Twv7P+yN6t7ZUO6irhAOPgT+OiJ1g
+         DCfA==
+In-Reply-To: <5cfc6142-752d-26e6-0108-38d13009268b-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=20161025;
- h=date:from:to:cc:subject:in-reply-to:message-id:references
- :user-agent:mime-version;
- bh=+JVatOz5/Dh/xyAg85UUTlc2Kova9GVo8Ydw6vbee8g=;
- b=nIyTzeIBrWUervNx+ZYSIQs3H/l6i7vwus2Ha3I8FVsJWME+6Q6zBuLHukcO1Xcij/
- j5R4e/ZCmOxtNw9oAWHeZq7ZmEeuOE1wVGnjbF/JEFb/h3Gpyr0zY82TI5IU8HJa3iwt
- wI+5RRixk+oQKYUF3g9xUmcY8v+Lbh/cTzjxMNENwyG+h/fSBMLQK4/VS47P+Igi7oZ1
- 9UckvC1TShzWV6/MknJfpHzSm2rh16Zq6E3B4Oi9mvYBkd/oM5Ats+6fyFmiLQab2Du2
- 7pn/Dd1cLCSugZFKNESH19JPHq/CXBJqNAhX10PcHYs8QaZCnL/QDibmKOhKsKMRnISA
- U9IA==
-In-Reply-To: <20200910183318.20139-1-willy@infradead.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc: William Kucharski <william.kucharski@oracle.com>, intel-gfx@lists.freedesktop.org, Huang Ying <ying.huang@intel.com>, Hugh Dickins <hughd@google.com>, linux-kernel@vger.kernel.org, Chris Wilson <chris@chris-wilson.co.uk>, linux-mm@kvack.org, Matthew Auld <matthew.auld@intel.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>
+To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cai-J5quhbR+WMc@public.gmane.org
 
-On Thu, 10 Sep 2020, Matthew Wilcox (Oracle) wrote:
+On Sun, 13 Sep 2020, Alex Shi wrote:
+> 
+> IIRC, all of comments are accepted and push to 
+> https://github.com/alexshi/linux.git lruv19
 
-> This patch series started out as part of the THP patch set, but it has
-> some nice effects along the way and it seems worth splitting it out and
-> submitting separately.
-> 
-> Currently find_get_entry() and find_lock_entry() return the page
-> corresponding to the requested index, but the first thing most callers do
-> is find the head page, which we just threw away.  As part of auditing
-> all the callers, I found some misuses of the APIs and some plain
-> inefficiencies that I've fixed.
-> 
-> The diffstat is unflattering, but I added more kernel-doc and a new wrapper.
-> 
-> v2:
->  - Rework how shmem_getpage_gfp() handles getting a head page back from
->    find_lock_entry()
->  - Renamed find_get_swap_page() to find_get_incore_page()
->  - Make sure find_get_incore_page() doesn't return a head page
->  - Fix the missing include of linux/shmem_fs.h
->  - Move find_get_entry and find_lock_entry prototypes to mm/internal.h
->  - Rename thp_valid_index() to thp_contains()
->  - Fix thp_contains() for hugetlbfs and swapcache
->  - Add find_lock_head() wrapper around pagecache_get_page()
-> 
-> Matthew Wilcox (Oracle) (8):
->   mm: Factor find_get_incore_page out of mincore_page
->   mm: Use find_get_incore_page in memcontrol
->   mm: Optimise madvise WILLNEED
->   proc: Optimise smaps for shmem entries
->   i915: Use find_lock_page instead of find_lock_entry
->   mm: Convert find_get_entry to return the head page
->   mm/shmem: Return head page from find_lock_entry
->   mm: Add find_lock_head
-> 
->  drivers/gpu/drm/i915/gem/i915_gem_shmem.c |  4 +--
->  fs/proc/task_mmu.c                        |  8 +----
->  include/linux/pagemap.h                   | 43 +++++++++++++++++-----
->  include/linux/swap.h                      |  7 ++++
->  mm/filemap.c                              | 44 +++++++++++------------
->  mm/internal.h                             |  3 ++
->  mm/madvise.c                              | 21 ++++++-----
->  mm/memcontrol.c                           | 24 ++-----------
->  mm/mincore.c                              | 28 ++-------------
->  mm/shmem.c                                | 20 +++++------
->  mm/swap_state.c                           | 32 +++++++++++++++++
->  11 files changed, 127 insertions(+), 107 deletions(-)
-> 
-> -- 
-> 2.28.0
+I just had to relax for the weekend, so no progress from me.
+I'll take a look at your tree tomorrow, er, later today.
 
-I was testing mmotm today (plus the shmem.c and swap_state.c
-fixes that you posted, but I did not try the madvise.c one) -
-my usual tmpfs swapping loads (plus hyperactive khugepaged to
-maximize the THPs).  It behaved well, no problems found.
+> If you don't minder, could you change everything and send out a new version
+> for further review?
 
-But I probably won't get to try your series of 12 for a few days.
+Sorry, no.  Tiresome though it is for both of us, I'll continue
+to send you comments, and leave all the posting to you.
+
+> Uh, I updated the testing with some new results here:
+> https://lkml.org/lkml/2020/8/26/212
+
+Right, I missed that, that's better, thanks.  Any other test results?
 
 Hugh
