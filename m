@@ -1,53 +1,48 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 0/5] Some improvements for blk-throttle
-Date: Mon, 14 Sep 2020 19:37:53 -0600
-Message-ID: <822998a7-4cc7-88ee-8b3f-e8e7660a5b0a@kernel.dk>
-References: <cover.1599458244.git.baolin.wang@linux.alibaba.com>
+From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Subject: Re: [PATCH block/for-next] iocost: fix infinite loop bug in
+ adjust_inuse_and_calc_cost()
+Date: Mon, 14 Sep 2020 19:47:19 -0600
+Message-ID: <e9e616d2-4bba-43b4-e41f-3c73f65371aa@kernel.dk>
+References: <20200914150513.GC865564@mtj.thefacebook.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20150623.gappssmtp.com; s=20150623;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=veTRf67heiIFBb4KPb8qCnP0OdQI7n5gixhte0BRym0=;
-        b=nuIk1sCKUYraP3k57rU4ShNSYsyPO6TSIfbhfJGQr6XoUbfSbodkxRYwXNVW/EEBnx
-         S4g4Plpz8OrOv+wOakdj/YTlGdE7xpbSoZTCgFA6cKkcQ999EbkYaI90Y/2dWERkkNZ/
-         z3uPvic5mPlvmNiDl4C1QEcmUXvaJdlRCS9gFz+05Q3KennGshV4VpIpviIZsmb/AVOc
-         zVzlJ+dFJ+ZST8txLF+bWxw/p4eKBSvfLb5JsmcPncRwA1w43w2seg2dbik9+EhH5cCR
-         TQA/WLjUvkqQRATpdsgf4rCmTr8tRoXZEu/XvpfvhuSclBmVwXpwe2nDqKzztpaj2/1u
-         Blxg==
-In-Reply-To: <cover.1599458244.git.baolin.wang@linux.alibaba.com>
+        bh=/9oiy6NhFDTGuIxMwjEr15PaiJFbKdR5/rgyk3WXdXc=;
+        b=DtQVwdE2S9R/KfRwpS6ild8EgzksvCRGPDk9J+V8CdffdQfgowKv8CpUq48KX75Y1P
+         669X8UNtYFor3iEDN0x0oGQoMt/dcse4uetjme/WNloj199sgOCSPdMGd69BZyG/98KT
+         34HvirvPnAlPClPnxlAn/sH/HTAEL1OEJTUhT99X6xUsnAdARcdFKTgwpDARJ3p6GRaJ
+         uFLHKBRC6E2GMc2MGJEDZJ4ckCz0Ba8Lan+3ifA+aA80V6O/IDFgL9cjpmYUcFChqw9a
+         mavI984e7SNomsxxXorHzZN2hHE0qmiQCabw1lyz4nGWxbkz0kKDloKpkLZWcPlnHUnW
+         UBow==
+In-Reply-To: <20200914150513.GC865564-146+VewaZzwNjtGbbfXrCEEOCMrvLtNR@public.gmane.org>
 Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Baolin Wang <baolin.wang@linux.alibaba.com>, tj@kernel.org
-Cc: baolin.wang7@gmail.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On 9/7/20 2:10 AM, Baolin Wang wrote:
-> Hi All,
+On 9/14/20 9:05 AM, Tejun Heo wrote:
+> adjust_inuse_and_calc_cost() is responsible for reducing the amount of
+> donated weights dynamically in period as the budget runs low. Because we
+> don't want to do full donation calculation in period, we keep latching up
+> inuse by INUSE_ADJ_STEP_PCT of the active weight of the cgroup until the
+> resulting hweight_inuse is satisfactory.
 > 
-> This patch set did some clean-ups, as well as removing some unnecessary
-> bps/iops limitation calculation when checking if can dispatch a bio or
-> not for a tg. Please help to review. Thanks.
+> Unfortunately, the adj_step calculation was reading the active weight before
+> acquiring ioc->lock. Because the current thread could have lost race to
+> activate the iocg to another thread before entering this function, it may
+> read the active weight as zero before acquiring ioc->lock. When this
+> happens, the adj_step is calculated as zero and the incremental adjustment
+> loop becomes an infinite one.
 > 
-> Baolin Wang (5):
->   blk-throttle: Fix some comments' typos
->   blk-throttle: Use readable READ/WRITE macros
->   blk-throttle: Define readable macros instead of static variables
->   blk-throttle: Avoid calculating bps/iops limitation repeatedly
->   blk-throttle: Avoid checking bps/iops limitation if bps or iops is    
->     unlimited
-> 
->  block/blk-throttle.c | 59 ++++++++++++++++++++++++++++++++--------------------
->  1 file changed, 36 insertions(+), 23 deletions(-)
+> Fix it by fetching the active weight after acquiring ioc->lock.
 
-Looks reasonable to me, I've applied it.
-
-Out of curiosity, are you using blk-throttle in production, or are these
-just fixes/cleanups that you came across?
-
+Applied, thanks.
 
 -- 
 Jens Axboe
