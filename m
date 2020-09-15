@@ -1,128 +1,78 @@
-From: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH] cgroup: Add cgroupstats numbers to cgroup.stat file
-Date: Tue, 15 Sep 2020 23:53:49 +0800
-Message-ID: <20200915155349.15181-1-zhouchengming@bytedance.com>
+From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [External] Re: [PATCH v4] mm: memcontrol: Add the missing
+ numa_stat interface for cgroup v2
+Date: Tue, 15 Sep 2020 09:19:49 -0700
+Message-ID: <f2ec1c19-b86b-887e-186a-3a8c3014857d@infradead.org>
+References: <20200915055825.5279-1-songmuchun@bytedance.com>
+ <a3e2a7bf-ae5a-9ca8-74f9-57af795f0380@infradead.org>
+ <CAMZfGtVQtsFmU_5DVSZ1mFCnqZrPHrJFKT81Zg8TXDM7c74TDQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=kU2nEMhjCVWVrMXPlsQXavcJV9QfPkKaCh123WirJUY=;
-        b=fZ2zBCziQ3BDs46gAsEfUI7yxJtBST2rD1IAijko7XSzcOwptW4Ut8cyp/pKulyFN5
-         Ya4+QRLBdUkedXev1V3EdJCBcWw7K2d1vm39dZMITMuBww53C+M6rM4NEoxRfDq+96Yq
-         2hILdPF14cQEnz3v9ybLMFkS5pimkLRnuRTMrfCq5Hqy0KBcOcUjxpRFWbPMDZMUJqMZ
-         JPJbtE/cVWhEHuZd7qbloKU9e+hR+nATFMV8pU+Rx6w1VBa40PqCN6W+dSAz4PQVeQeJ
-         kt8jlvKwp4uuM6KWcCHU8nbzruP+ox0zWXUzIfgBxlatJaEpX6d7VdrCYvQraoKKotZH
-         aM1g==
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description;
+        bh=gtbrt8dJvKGHqvO+xWVhJDadXOXm7TXL2RE8ocfRdrU=; b=YqV8EnuDoph6ku6oHt9bx4qUwH
+        KCZuDIAfFZknOwjfV+X/HK/ns4hKfz+uJoTC0Dg/MiUtHBr/U3QjAmuqYuF0IriwVx9ktkYnJtyWe
+        q0U+yndgpPFNawlhOeefRJi7NmEX3tz1to/MpP8mBy6agxzAxzN5gpuwMEolreI1xu3kZICFJZ03M
+        Rsz9WpOpYypQrogf3aEzzzzp4SvhUCMYp4g2YkdJn5w6Cj8mj6HjVdDZTzoVuC0AeyBFktr5xDn6v
+        t/0m1BM8miYt+1+xl5yDYv5nAsskVRWIpiWdx00+BuANy7G7O6bQtgsIfTg+sXt9mpH/B/f1PEKHc
+        EaY3jqbA==;
+In-Reply-To: <CAMZfGtVQtsFmU_5DVSZ1mFCnqZrPHrJFKT81Zg8TXDM7c74TDQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
 Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, luodaowen.backend-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-In the cgroup v1, we can use netlink interface to get cgroupstats for
-a cgroup. But it has been excluded from cgroup v2 interface intentionally
-due to the duplication and inconsistencies with other statistics.
-To make container monitor tool like "cadvisor" continue to work, we add
-these cgroupstats numbers to the cgroup.stat file, and change the
-admin-guide doc accordingly.
+On 9/15/20 9:01 AM, Muchun Song wrote:
+> On Tue, Sep 15, 2020 at 11:45 PM Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> wrote:
+>>
 
-Reported-by: Daowen Luo <luodaowen.backend-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Tested-by: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Signed-off-by: Chengming Zhou <zhouchengming-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
----
- Documentation/admin-guide/cgroup-v2.rst | 15 ++++++++++++++
- kernel/cgroup/cgroup.c                  | 36 +++++++++++++++++++++++++++++++++
- 2 files changed, 51 insertions(+)
+>>> +static int __init numa_stats_init(void)
+>>> +{
+>>> +     int i;
+>>> +
+>>> +     for (i = 0; i < ARRAY_SIZE(numa_stats); i++) {
+>>> +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+>>> +             if (numa_stats[i].idx == NR_ANON_THPS)
+>>> +                     numa_stats[i].ratio = HPAGE_PMD_SIZE;
+>>> +#endif
+>>> +     }
+>>
+>> Although the loop may be needed sometime in the future due to
+>> other changes.. why couldn't it be like this for now?
+> 
+> The compiler is so smart, so there is nothing difference between
+> them. I disassemble the numa_stats_init when
+> !CONFIG_TRANSPARENT_HUGEPAGE.
+> 
+> Dump of assembler code for function numa_stats_init:
+>    0xffffffff8273b061 <+0>: callq  0xffffffff81057490 <__fentry__>
+>    0xffffffff8273b066 <+5>: xor    %eax,%eax
+>    0xffffffff8273b068 <+7>: retq
+> 
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 6be43781ec7f..9f781edca95a 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -925,6 +925,21 @@ All cgroup core files are prefixed with "cgroup."
- 		A dying cgroup can consume system resources not exceeding
- 		limits, which were active at the moment of cgroup deletion.
- 
-+          nr_running
-+                Number of tasks running.
-+
-+          nr_sleeping
-+                Number of tasks sleeping.
-+
-+          nr_uninterruptible
-+                Number of tasks in uninterruptible state.
-+
-+          nr_stopped
-+                Number of tasks in stopped state.
-+
-+          nr_io_wait
-+                Number of tasks waiting on IO.
-+
-   cgroup.freeze
- 	A read-write single value file which exists on non-root cgroups.
- 	Allowed values are "0" and "1". The default is "0".
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 0e23ae3b1e56..c6ccacaf812d 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -42,6 +42,7 @@
- #include <linux/rcupdate.h>
- #include <linux/sched.h>
- #include <linux/sched/task.h>
-+#include <linux/delayacct.h>
- #include <linux/slab.h>
- #include <linux/spinlock.h>
- #include <linux/percpu-rwsem.h>
-@@ -3499,11 +3500,46 @@ static int cgroup_events_show(struct seq_file *seq, void *v)
- static int cgroup_stat_show(struct seq_file *seq, void *v)
- {
- 	struct cgroup *cgroup = seq_css(seq)->cgroup;
-+	struct css_task_iter it;
-+	struct task_struct *tsk;
-+	u64 nr_running = 0;
-+	u64 nr_sleeping = 0;
-+	u64 nr_uninterruptible = 0;
-+	u64 nr_stopped = 0;
-+	u64 nr_io_wait = 0;
-+
-+	css_task_iter_start(&cgroup->self, 0, &it);
-+	while ((tsk = css_task_iter_next(&it))) {
-+		switch (tsk->state) {
-+		case TASK_RUNNING:
-+			nr_running++;
-+			break;
-+		case TASK_INTERRUPTIBLE:
-+			nr_sleeping++;
-+			break;
-+		case TASK_UNINTERRUPTIBLE:
-+			nr_uninterruptible++;
-+			break;
-+		case TASK_STOPPED:
-+			nr_stopped++;
-+			break;
-+		default:
-+			if (delayacct_is_task_waiting_on_io(tsk))
-+				nr_io_wait++;
-+			break;
-+		}
-+	}
-+	css_task_iter_end(&it);
- 
- 	seq_printf(seq, "nr_descendants %d\n",
- 		   cgroup->nr_descendants);
- 	seq_printf(seq, "nr_dying_descendants %d\n",
- 		   cgroup->nr_dying_descendants);
-+	seq_printf(seq, "nr_running %llu\n", nr_running);
-+	seq_printf(seq, "nr_sleeping %llu\n", nr_sleeping);
-+	seq_printf(seq, "nr_uninterruptible %llu\n", nr_uninterruptible);
-+	seq_printf(seq, "nr_stopped %llu\n", nr_stopped);
-+	seq_printf(seq, "nr_io_wait %llu\n", nr_io_wait);
- 
- 	return 0;
- }
+Of course!  Thanks.
+
+>>
+>>
+>>> +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+>>> +     for (i = 0; i < ARRAY_SIZE(numa_stats); i++) {
+>>> +             if (numa_stats[i].idx == NR_ANON_THPS)
+>>> +                     numa_stats[i].ratio = HPAGE_PMD_SIZE;
+>>> +     }
+>>> +#endif
+>>
+>>
+>>> +
+>>> +     return 0;
+>>> +}
+>>> +pure_initcall(numa_stats_init);
+
+
 -- 
-2.11.0
+~Randy
 
