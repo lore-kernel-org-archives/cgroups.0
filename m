@@ -1,28 +1,94 @@
-From: David Sterba <dsterba-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 07/12] bdi: remove BDI_CAP_CGROUP_WRITEBACK
-Date: Wed, 16 Sep 2020 11:28:09 +0200
-Message-ID: <20200916092809.GJ1791@twin.jikos.cz>
-References: <20200910144833.742260-1-hch@lst.de>
- <20200910144833.742260-8-hch@lst.de>
-Reply-To: dsterba-AlSwsSmVLrQ@public.gmane.org
+From: Muchun Song <songmuchun@bytedance.com>
+Subject: [PATCH v6 1/2] mm: memcontrol: Fix missing suffix of workingset_restore
+Date: Wed, 16 Sep 2020 18:00:29 +0800
+Message-ID: <20200916100030.71698-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20200910144833.742260-8-hch-jcswGhMUV9g@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=TTKM9QuKkaPGqtUV+sgdxsS+sauamtAwYDBe99O9veY=;
+        b=W/CybB0aDEi03zEZMzNc5Gk8+FAroM0TOHUoMJTbHAXDeTLVq/CI+pzbtFPz8oiyIb
+         +uKwz1uh8sYbDTiD17dINRgdWBvTEbFWLEksIXBysH3TCI5gGklRYR8FiG1kyfjMUEk7
+         t/PHvkBeBLulci1WpfRg/+By3Cuqwaxsd6dfPXu5XtbgfeJF68mqeisCPybocTZqioFX
+         oRryMf3CdmJh8mKB3HiyjsFwzicPfmYQSwXPq7AEmeEtpQNs8VLDPoWVfNRsfdwwt0X2
+         mhCsaHCJoDQloVCPYW7Cv+nzSq9lejGiPtLV/qw1pNMxiOVRMAdLJxdoqNHNwuUBuJxz
+         tAYA==
+Sender: linux-doc-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-/sHSiTBGKwq//tTphpj/8g@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Thumshirn <johannes.thumshirn-Sjgp3cTcYWE@public.gmane.org>
+To: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, corbet@lwn.net, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, shakeelb@google.com, guro@fb.com, rdunlap@infradead.org
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, Muchun Song <songmuchun@bytedance.com>
 
-On Thu, Sep 10, 2020 at 04:48:27PM +0200, Christoph Hellwig wrote:
-> Just checking SB_I_CGROUPWB for cgroup writeback support is enough.
-> Either the file system allocates its own bdi (e.g. btrfs), in which case
-> it is known to support cgroup writeback, or the bdi comes from the block
-> layer, which always supports cgroup writeback.
-> 
-> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-> Reviewed-by: Johannes Thumshirn <johannes.thumshirn-Sjgp3cTcYWE@public.gmane.org>
+We forget to add the suffix to the workingset_restore string, so
+fix it. And also update the documentation of cgroup-v2.rst.
 
-Acked-by: David Sterba <dsterba-IBi9RG/b67k@public.gmane.org>
+Fixes: 170b04b7ae49 ("mm/workingset: prepare the workingset detection infrastructure for anon LRU")
+Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+---
+ changelog in v6:
+ 1. There is no version of v1-v5.
+
+ Documentation/admin-guide/cgroup-v2.rst | 25 ++++++++++++++++++-------
+ mm/memcontrol.c                         |  4 ++--
+ 2 files changed, 20 insertions(+), 9 deletions(-)
+
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 6be43781ec7f..baa07b30845e 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1324,15 +1324,26 @@ PAGE_SIZE multiple when read back.
+ 	  pgmajfault
+ 		Number of major page faults incurred
+ 
+-	  workingset_refault
+-		Number of refaults of previously evicted pages
++	  workingset_refault_anon
++		Number of refaults of previously evicted anonymous pages.
+ 
+-	  workingset_activate
+-		Number of refaulted pages that were immediately activated
++	  workingset_refault_file
++		Number of refaults of previously evicted file pages.
+ 
+-	  workingset_restore
+-		Number of restored pages which have been detected as an active
+-		workingset before they got reclaimed.
++	  workingset_activate_anon
++		Number of refaulted anonymous pages that were immediately
++		activated.
++
++	  workingset_activate_file
++		Number of refaulted file pages that were immediately activated.
++
++	  workingset_restore_anon
++		Number of restored anonymous pages which have been detected as
++		an active workingset before they got reclaimed.
++
++	  workingset_restore_file
++		Number of restored file pages which have been detected as an
++		active workingset before they got reclaimed.
+ 
+ 	  workingset_nodereclaim
+ 		Number of times a shadow node has been reclaimed
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 75cd1a1e66c8..0e85a054017f 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1574,9 +1574,9 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
+ 		       memcg_page_state(memcg, WORKINGSET_ACTIVATE_ANON));
+ 	seq_buf_printf(&s, "workingset_activate_file %lu\n",
+ 		       memcg_page_state(memcg, WORKINGSET_ACTIVATE_FILE));
+-	seq_buf_printf(&s, "workingset_restore %lu\n",
++	seq_buf_printf(&s, "workingset_restore_anon %lu\n",
+ 		       memcg_page_state(memcg, WORKINGSET_RESTORE_ANON));
+-	seq_buf_printf(&s, "workingset_restore %lu\n",
++	seq_buf_printf(&s, "workingset_restore_file %lu\n",
+ 		       memcg_page_state(memcg, WORKINGSET_RESTORE_FILE));
+ 	seq_buf_printf(&s, "workingset_nodereclaim %lu\n",
+ 		       memcg_page_state(memcg, WORKINGSET_NODERECLAIM));
+-- 
+2.20.1
+
