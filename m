@@ -1,41 +1,35 @@
-From: <yanfei.xu-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
-Subject: [PATCH] cpuset: Move node_isset() outside of the rcu_read region
-Date: Wed, 16 Sep 2020 19:23:42 +0800
-Message-ID: <20200916112342.25790-1-yanfei.xu@windriver.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v6 1/2] mm: memcontrol: Fix missing suffix of workingset_restore
+Date: Wed, 16 Sep 2020 07:01:11 -0700
+Message-ID: <CALvZod63j475FM1p_DLOEtKmjFZ=-RbGG0eL1zTH+j4VqCrAeg@mail.gmail.com>
+References: <20200916100030.71698-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=FRVhtc4HDJxT3tTI+nfU2Ow8g0YNTmg1aLTrLZ5GLkM=;
+        b=IW54L6C4ApDTRtMrNEJ761WHUDzNh6f0cykv+LQNw3a0CjeHsQ5WSlC5Rdd1ExMO1N
+         9cCPBei85IFqoJiNivM/NsFjjRh0jMmXkZvXl8+m0RgCRmfbb0TDaCnnF+l+ISliosij
+         42xhIIF5dTIWSliQDXT+pkI5fyEf/ayHu3Oe+m5BM/34X2OuEb+ump86QIYqpwjOVL0Q
+         utbl8fBVgonNijf4+Ewdp5i0r8yGAwtjnqQrqxGFjRKnjSlI1VxDbO2bQgpDvt96hDmy
+         9e+2V7Ns6VSmkb05MGw2jc+JMVAoe/cs/p230z+fFQn8RLdvy+31kVUd7E1C0vbywnX1
+         A1vw==
+In-Reply-To: <20200916100030.71698-1-songmuchun@bytedance.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Muchun Song <songmuchun@bytedance.com>
+Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Randy Dunlap <rdunlap@infradead.org>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
 
-From: Yanfei Xu <yanfei.xu-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
+On Wed, Sep 16, 2020 at 3:00 AM Muchun Song <songmuchun@bytedance.com> wrote:
+>
+> We forget to add the suffix to the workingset_restore string, so
+> fix it. And also update the documentation of cgroup-v2.rst.
+>
+> Fixes: 170b04b7ae49 ("mm/workingset: prepare the workingset detection infrastructure for anon LRU")
+> Signed-off-by: Muchun Song <songmuchun@bytedance.com>
 
-It's no need to keep node_isset still in rcu_read region, just move
-it outside of the rcu_read region.
-
-Signed-off-by: Yanfei Xu <yanfei.xu-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
----
- kernel/cgroup/cpuset.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 642415b8c3c9..51d51ed97deb 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -3443,9 +3443,9 @@ bool __cpuset_node_allowed(int node, gfp_t gfp_mask)
- 
- 	rcu_read_lock();
- 	cs = nearest_hardwall_ancestor(task_cs(current));
--	allowed = node_isset(node, cs->mems_allowed);
- 	rcu_read_unlock();
- 
-+	allowed = node_isset(node, cs->mems_allowed);
- 	spin_unlock_irqrestore(&callback_lock, flags);
- 	return allowed;
- }
--- 
-2.18.2
-
+Reviewed-by: Shakeel Butt <shakeelb@google.com>
