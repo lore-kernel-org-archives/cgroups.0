@@ -1,89 +1,61 @@
-From: Muchun Song <songmuchun@bytedance.com>
-Subject: Re: [External] Re: [PATCH v5] mm: memcontrol: Add the missing
- numa_stat interface for cgroup v2
-Date: Wed, 16 Sep 2020 22:47:12 +0800
-Message-ID: <CAMZfGtX-q6vB853YCKqW3Yo=N=AFWcQSxYF=mYK6PKC2XAHMAg@mail.gmail.com>
-References: <20200915171801.39761-1-songmuchun@bytedance.com>
- <20200915214845.GB189808@cmpxchg.org> <CAMZfGtXOR1Ed2PyB4TB5mq=1mh7p7La-4BsoZ8oYhtgc8ZcqLQ@mail.gmail.com>
- <20200916144057.GA194430@cmpxchg.org>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: correct the comment of
+ mem_cgroup_unmark_under_oom()
+Date: Wed, 16 Sep 2020 16:53:36 +0200
+Message-ID: <20200916145336.GI18998@dhcp22.suse.cz>
+References: <20200916131927.11340-1-linmiaohe@huawei.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=FQGO6d/0mEB1ogv6r8XPPwwDAuJ9mmObgleVeh1W30Q=;
-        b=diAhpmQrYS7M270CGrN/O5Df6Kk/JIw2jK0wB8bstS53QPuZIMXExqEKVk18DEyzjV
-         lrxvcXifZ+5YUVBfWIwCtt7OL+27JGQ4L6/7JfqaU/QubBtMkdF5BiHfRNUNu5xc6s9K
-         AJ7katPYRezI+CcMmjtpqq8ya/8MlrOYuWNc237it6xBe7QJU8lEHsJEiHYWLLq9ERdW
-         BheACdvioFzNHXrAxzi2skE1jYQhc6reOgiq78JPVS+vGTCNAlfbk53fkYaROBTG13j7
-         X1GrYdQmyNtu+fn7IOnI+Dff9pLuqE3a44IT0Q+A7uB1oip+EXX3cRjS1IJ0R+YRsUNg
-         NgpQ==
-In-Reply-To: <20200916144057.GA194430@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=cantorsusede;
+        t=1600268017;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=XWkcsvUYLuBv2uzcZZ0bcAz6BNNnURdggjQevDJBQMk=;
+        b=B4ZfZkQTyh6ucc0CDOCoHrBoEoqEKXhzrWyFLZovTbslQ3qlxl9dwKILWewGtRRgbZ7jGN
+        oCspOgcD2NxVF2Uoem6CrWV3rZeIQ/jL0GIJHPid+1dBMZDai76UsFfEyMFdmZh6hP3hek
+        u5SxSi1yYLMTJa8Ok4sHOjNvjrDALiyEom14min4kLbKOpiXjiz0q6wWZP3Sl7L2LAQOJK
+        TooeaSbvdjdOiHfDIHSO4Y9pzziFgRwbKx3Oce7RH+V+V18TxBd5v16Yhn6CMBrJZFZBM/
+        wW8YMf2r4GqiIzDVqE7f+EN/iorB0kzWQEY67MdhIffOxYm1PWAsFZvjS8rLYg==
+Content-Disposition: inline
+In-Reply-To: <20200916131927.11340-1-linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Sender: cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, Randy Dunlap <rdunlap@infradead.org>, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Linux Memory Management List <linux-mm@kvack.org>
+To: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Sep 16, 2020 at 10:42 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
->
-> On Wed, Sep 16, 2020 at 12:14:49PM +0800, Muchun Song wrote:
-> > On Wed, Sep 16, 2020 at 5:50 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
-> > >
-> > > On Wed, Sep 16, 2020 at 01:18:01AM +0800, Muchun Song wrote:
-> > > > In the cgroup v1, we have a numa_stat interface. This is useful for
-> > > > providing visibility into the numa locality information within an
-> > > > memcg since the pages are allowed to be allocated from any physical
-> > > > node. One of the use cases is evaluating application performance by
-> > > > combining this information with the application's CPU allocation.
-> > > > But the cgroup v2 does not. So this patch adds the missing information.
-> > > >
-> > > > Signed-off-by: Muchun Song <songmuchun@bytedance.com>
-> > > > Suggested-by: Shakeel Butt <shakeelb@google.com>
-> > > > Reviewed-by: Shakeel Butt <shakeelb@google.com>
-> > >
-> > > Yup, that would be useful information to have. Just a few comments on
-> > > the patch below:
-> > >
-> > > > @@ -1368,6 +1368,78 @@ PAGE_SIZE multiple when read back.
-> > > >               collapsing an existing range of pages. This counter is not
-> > > >               present when CONFIG_TRANSPARENT_HUGEPAGE is not set.
-> > > >
-> > > > +  memory.numa_stat
-> > > > +     A read-only flat-keyed file which exists on non-root cgroups.
-> > >
-> > > It's a nested key file, not flat.
-> >
-> > This is just copied from memory.stat documentation.Is the memory.stat
-> > also a nested key file?
->
-> No, memory.stat is a different format. From higher up in the document:
->
->   Flat keyed
->
->         KEY0 VAL0\n
->         KEY1 VAL1\n
->         ...
->
->   Nested keyed
->
->         KEY0 SUB_KEY0=VAL00 SUB_KEY1=VAL01...
->         KEY1 SUB_KEY0=VAL10 SUB_KEY1=VAL11...
->         ...
+On Wed 16-09-20 09:19:27, Miaohe Lin wrote:
+> Since commit fb2a6fc56be6 ("mm: memcg: rework and document OOM waiting and
+> wakeup"), we have renamed mem_cgroup_oom_lock to mem_cgroup_oom_trylock. So
+> replace mem_cgroup_oom_lock with mem_cgroup_oom_trylock in comment.
 
-Got it. Thanks for your explanation.
-
->
-> > > Otherwise, this looks reasonable to me.
-> >
-> > OK. Will do that.
->
-> Thanks!
-
-
+While you are right I find the comment more confusing then helpful.
+What does it try to tell us actually? Is it still valid? Shouldn't we
+rather remove it or make it more clear?
+> 
+> Signed-off-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> ---
+>  mm/memcontrol.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 3d26b4b954e2..702aa4d7ebbc 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1846,7 +1846,7 @@ static void mem_cgroup_unmark_under_oom(struct mem_cgroup *memcg)
+>  
+>  	/*
+>  	 * When a new child is created while the hierarchy is under oom,
+> -	 * mem_cgroup_oom_lock() may not be called. Watch for underflow.
+> +	 * mem_cgroup_oom_trylock() may not be called. Watch for underflow.
+>  	 */
+>  	spin_lock(&memcg_oom_lock);
+>  	for_each_mem_cgroup_tree(iter, memcg)
+> -- 
+> 2.19.1
 
 -- 
-Yours,
-Muchun
+Michal Hocko
+SUSE Labs
