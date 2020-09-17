@@ -1,41 +1,68 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH v18 00/32] per memcg lru_lock: reviews
-Date: Thu, 17 Sep 2020 10:37:45 +0800
-Message-ID: <c3362c0a-3707-3a3d-9955-960d95f3ad8c@linux.alibaba.com>
-References: <20200824114204.cc796ca182db95809dd70a47@linux-foundation.org>
- <alpine.LSU.2.11.2008241231460.1065@eggly.anvils>
- <alpine.LSU.2.11.2008262301240.4405@eggly.anvils>
- <alpine.LSU.2.11.2009081640070.7256@eggly.anvils>
- <61a42a87-eec9-e300-f710-992756f70de6@linux.alibaba.com>
- <alpine.LSU.2.11.2009091524260.10087@eggly.anvils>
- <855ad6ee-dba4-9729-78bd-23e392905cf6@linux.alibaba.com>
- <alpine.LSU.2.11.2009111634020.22739@eggly.anvils>
- <5cfc6142-752d-26e6-0108-38d13009268b@linux.alibaba.com>
- <alpine.LSU.2.11.2009150112130.1550@eggly.anvils>
- <20200915165807.kpp7uhiw7l3loofu@ca-dmjordan1.us.oracle.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 09/12] mm: use SWP_SYNCHRONOUS_IO more intelligently
+Date: Thu, 17 Sep 2020 11:06:52 +0200
+Message-ID: <20200917090652.GB7347@quack2.suse.cz>
+References: <20200910144833.742260-1-hch@lst.de>
+ <20200910144833.742260-10-hch@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200915165807.kpp7uhiw7l3loofu-S51bK0XF4qpuJJETbFA3a0B3C2bhBk7L0E9HWUfgJXw@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20200910144833.742260-10-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cai-J5quhbR+WMc@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
+On Thu 10-09-20 16:48:29, Christoph Hellwig wrote:
+> There is no point in trying to call bdev_read_page if SWP_SYNCHRONOUS_IO
+> is not set, as the device won't support it.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+Looks good to me. You can add:
 
-在 2020/9/16 上午12:58, Daniel Jordan 写道:
-> On Tue, Sep 15, 2020 at 01:21:56AM -0700, Hugh Dickins wrote:
->> On Sun, 13 Sep 2020, Alex Shi wrote:
->>> Uh, I updated the testing with some new results here:
->>> https://lkml.org/lkml/2020/8/26/212
->> Right, I missed that, that's better, thanks.  Any other test results?
-> Alex, you were doing some will-it-scale runs earlier.  Are you planning to do
-> more of those?  Otherwise I can add them in.
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-Hi Daniel,
+								Honza
 
-Does compaction perf scalable, like thpscale, I except they could get some benefit.
-
-Thanks
-Alex
+> ---
+>  mm/page_io.c | 18 ++++++++++--------
+>  1 file changed, 10 insertions(+), 8 deletions(-)
+> 
+> diff --git a/mm/page_io.c b/mm/page_io.c
+> index e485a6e8a6cddb..b199b87e0aa92b 100644
+> --- a/mm/page_io.c
+> +++ b/mm/page_io.c
+> @@ -403,15 +403,17 @@ int swap_readpage(struct page *page, bool synchronous)
+>  		goto out;
+>  	}
+>  
+> -	ret = bdev_read_page(sis->bdev, swap_page_sector(page), page);
+> -	if (!ret) {
+> -		if (trylock_page(page)) {
+> -			swap_slot_free_notify(page);
+> -			unlock_page(page);
+> -		}
+> +	if (sis->flags & SWP_SYNCHRONOUS_IO) {
+> +		ret = bdev_read_page(sis->bdev, swap_page_sector(page), page);
+> +		if (!ret) {
+> +			if (trylock_page(page)) {
+> +				swap_slot_free_notify(page);
+> +				unlock_page(page);
+> +			}
+>  
+> -		count_vm_event(PSWPIN);
+> -		goto out;
+> +			count_vm_event(PSWPIN);
+> +			goto out;
+> +		}
+>  	}
+>  
+>  	ret = 0;
+> -- 
+> 2.28.0
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
