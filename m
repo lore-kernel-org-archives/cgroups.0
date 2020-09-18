@@ -1,83 +1,91 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 6/5] iocost: consider iocgs with active delays for debt
- forgiveness
-Date: Fri, 18 Sep 2020 14:41:27 -0400
-Message-ID: <20200918184127.GB4247@mtj.thefacebook.com>
-References: <20200918004456.593983-1-tj@kernel.org>
+From: Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 02/13] mm: use page_off_lru()
+Date: Fri, 18 Sep 2020 12:53:58 -0600
+Message-ID: <20200918185358.GA1095986@google.com>
+References: <20200918030051.650890-1-yuzhao@google.com>
+ <20200918030051.650890-3-yuzhao@google.com>
+ <20200918073700.GE28827@dhcp22.suse.cz>
+ <20200918102713.GB1004594@google.com>
+ <20200918110914.GK28827@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=RyuK5UieZne+pKhpGinbT1xLnPtjZ4n2yvvqOQQR/RM=;
-        b=bijR7TvXbgX48PfH9waDRVC/Tbn3PSFLH/s/gHvqLfGFatnCdUy9xUMEhd8hR+12c6
-         bM4G7PDeskHdUznZLA0Y1RXttv8Zf5Kc4gWb0xfOf7BiW2JvYcY8zQoWk/EWjxWDr9Co
-         F6lzPp0d/WanDs+PEy5McGVjmqp9J4aOu1Mj6fu/oo7Zb28uMf6HGPvK3eQekiroIocI
-         qgnEXOWua96Vs6spW1iBrlpEY1kxchcSzIEAAer60R4lQGVJsXv55z2V/a4PjsGPbf7R
-         0pHxW2in/M7Xd1ZBpmWUarETt52ESRjqTDHazLcEMmOk0JD1lIYUj0mqE7Idd144OnLF
-         94sQ==
+        bh=UsPKgMSyFpC4dZoU1fh+j1TUaGHxHd0bh9PqbiT/L5U=;
+        b=LkvJaXH+U8mrEYeCNWO2O6kMOoDz/lVdIJf5f58C1MK2fZ4GkvaaL8QNgZTcVMfBfF
+         73gJtRq4j076mbGAa63E1ULzd92YYRBtcOAxN7f00c1xs1UgIPCxpy49sT6ZV7mqADlM
+         2XwZY6l5+A9FAnwiCFApQ/A1gMNRycje9HMh/3CCm5NOa7FIcIopFGD/HzxxvRiLhIN9
+         lIq/f+90PG+yY3bZl5QmkQ+/E1hnXwglFT9YTb79ttaWEiWOFu3pFvAJU/1sObGcXXkt
+         wWzZtd9zOOkddEypESurmueNd9Y5YzVrdSMdZr+n3fzVa8Gvdgb8EotBmgPde/pixweg
+         f9lw==
 Content-Disposition: inline
-In-Reply-To: <20200918004456.593983-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <20200918110914.GK28827-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Pankaj Gupta <pankaj.gupta.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Konstantin Khlebnikov <koct9i-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jaewon Kim <jaewon31.kim-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-An iocg may have 0 debt but non-zero delay. The current debt forgiveness
-logic doesn't act on such iocgs. This can lead to unexpected behaviors - an
-iocg with a little bit of debt will have its delay canceled through debt
-forgiveness but one w/o any debt but active delay will have to wait out
-until its delay decays out.
+On Fri, Sep 18, 2020 at 01:09:14PM +0200, Michal Hocko wrote:
+> On Fri 18-09-20 04:27:13, Yu Zhao wrote:
+> > On Fri, Sep 18, 2020 at 09:37:00AM +0200, Michal Hocko wrote:
+> > > On Thu 17-09-20 21:00:40, Yu Zhao wrote:
+> > > > This patch replaces the only open-coded __ClearPageActive() with
+> > > > page_off_lru(). There is no open-coded __ClearPageUnevictable()s.
+> > > > 
+> > > > Before this patch, we have:
+> > > > 	__ClearPageActive()
+> > > > 	add_page_to_lru_list()
+> > > > 
+> > > > After this patch, we have:
+> > > > 	page_off_lru()
+> > > > 		if PageUnevictable()
+> > > > 			__ClearPageUnevictable()
+> > > > 		else if PageActive()
+> > > > 			__ClearPageActive()
+> > > > 	add_page_to_lru_list()
+> > > > 
+> > > > Checking PageUnevictable() shouldn't be a problem because these two
+> > > > flags are mutually exclusive. Leaking either will trigger bad_page().
+> > > 
+> > > I am sorry but the changelog is really hard to grasp. What are you
+> > > trying to achieve, why and why it is safe. This should be a general
+> > > outline for any patch. I have already commented on the previous patch
+> > > and asked you for the explanation why removing __ClearPageActive from
+> > > this path is desirable and safe. I have specifically asked to clarify
+> > > the compound page situation as that is using its oen destructor in the
+> > > freeing path and that might result in page_off_lru to be not called.
+> > 
+> > Haven't I explained we are NOT removing __ClearPageActive()? Is my
+> > notion of the code structure above confusing you? Or 'open-coded'
+> > could mean different things?
+> 
+> Please read through my reply carefuly. I am not saying what you are
+> doing is wrong. I am expressing a lack of justification which is the
+> case throughout this patch series. You do not explain why we need it and
+> why reviewers should spend time on this. Because the review is not as
+> trivial as looking at the diff.
 
-This patch updates the debt handling logic so that it treats delays the same
-as debts. If either debt or delay is active, debt forgiveness logic kicks in
-and acts on both the same way.
+I appreciate your time. But if you are looking for some grand
+justification, I'm afraid I won't be able to give one, because, as it's
+titled, this is just a series of cleanup patches.
 
-Also, avoid turning the debt and delay directly to zero as that can confuse
-state transitions.
+My questions above are meant to determine which parts are not clear.
+Well, I still don't know. So let's try this. What's your impression upon
+reading the first sentence of this patch?
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
----
-Jens, a follow up patch to the series. The git tree is also updated.
+> > > > This patch replaces the only open-coded __ClearPageActive() with
+> > > > page_off_lru().
 
-Thanks.
+Here is how I would think when I read it (which is purely subjective
+since I wrote it):
 
- block/blk-iocost.c |   11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+  'replaces the only (an outlier) open-coded (bad) with
+   page_off_lru() (the norm)'
 
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -2048,7 +2048,7 @@ static void ioc_forgive_debts(struct ioc
- 	list_for_each_entry(iocg, &ioc->active_iocgs, active_list) {
- 		u64 __maybe_unused old_debt, __maybe_unused old_delay;
- 
--		if (!iocg->abs_vdebt)
-+		if (!iocg->abs_vdebt && !iocg->delay)
- 			continue;
- 
- 		spin_lock(&iocg->waitq.lock);
-@@ -2056,8 +2056,11 @@ static void ioc_forgive_debts(struct ioc
- 		old_debt = iocg->abs_vdebt;
- 		old_delay = iocg->delay;
- 
--		iocg->abs_vdebt >>= nr_cycles;
--		iocg->delay = 0; /* kick_waitq will recalc */
-+		if (iocg->abs_vdebt)
-+			iocg->abs_vdebt = iocg->abs_vdebt >> nr_cycles ?: 1;
-+		if (iocg->delay)
-+			iocg->delay = iocg->delay >> nr_cycles ?: 1;
-+
- 		iocg_kick_waitq(iocg, true, now);
- 
- 		TRACE_IOCG_PATH(iocg_forgive_debt, iocg, now, usage_pct,
-@@ -2129,7 +2132,7 @@ static void ioc_timer_fn(struct timer_li
- 		    iocg->delay) {
- 			/* might be oversleeping vtime / hweight changes, kick */
- 			iocg_kick_waitq(iocg, true, &now);
--			if (iocg->abs_vdebt)
-+			if (iocg->abs_vdebt || iocg->delay)
- 				nr_debtors++;
- 		} else if (iocg_is_idle(iocg)) {
- 			/* no waiter and idle, deactivate */
+It seems to me it has everything I need to know (or say). Of course I
+could spell them all out for you if that's how you'd prefer. And if
+it's not enough, then please show me some examples and I'll study
+them carefully and try my best to follow them.
