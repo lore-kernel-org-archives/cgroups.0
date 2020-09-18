@@ -1,7 +1,7 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 1/5] iocost: factor out ioc_forgive_debts()
-Date: Thu, 17 Sep 2020 20:44:52 -0400
-Message-ID: <20200918004456.593983-2-tj@kernel.org>
+Subject: [PATCH 2/5] iocost: replace nr_shortages cond in ioc_forgive_debts() with busy_level one
+Date: Thu, 17 Sep 2020 20:44:53 -0400
+Message-ID: <20200918004456.593983-3-tj@kernel.org>
 References: <20200918004456.593983-1-tj@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,112 +10,85 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=fpm0/fWCrM1vVyvEQSMysbCeUT3o5wyc4wLO+mMphzI=;
-        b=EAkqxPk9U1A/FBgCCtf77AqQVFTNOOZPp+CyRxx9IQl/l8Lmbav99naCkjEybqG8Ra
-         4KcUi/0Zpq+8+NM6rqcx1BqCqJjbUF80x8X6Vk5Z7NghUcAPxutVuKp1TL7E4xFsOWwy
-         8jIMGhFSKalQU8ky4mSciIceYca1kGVrxHAdhAN2kNYdlxTGVrBMkIVBstZcbLRZ4ddk
-         pFBnqqMN3JyR3VDod6GBpM3ELjWtb0mUs/KPcPE4i5TqQzxOdebikE0/SWX4q/4XhOSf
-         VHD3Yb5sg4upVKv0QPQs+2Fr7iMSwd6Z4XfMqjGwb/3GwCCgs4XK3oKLivk+x6mGyV8V
-         7Rcg==
+        bh=j/zKXBEr6TfdKAVuGNBQ0JBMHe4IOIVvKgYa0IBCbeM=;
+        b=V+eukaeBQ9EymY1UpurIpKChUF9k/7A5HpI5/TyACkajuXTHx7jxGZYyFFS4HHakSz
+         nZTlahmQZU2BrlkbxdryiyrNSNTZYN4Q3cS8mMllkeSjCt7+ygWZm+WBsRa96E22GKe5
+         xwSeNq6ftFaRDQL7gHjJLdFHKBTbIBQVfGKbckFdEYSDxBglwYcWuQKTeYHWD088XX0S
+         gMX2DCEaHHGym14WixlbHcyFItlTD+EccCdxeRR0xJrR0LL6iCVD/CPf6FbLcnIIm7sN
+         FGQH5TccRjAysF7Tn9HalVYbLkFf/Mp6HIuH1N2SbQevxwTI9QZPdSBR/24ktpX2WpAk
+         SkPg==
 In-Reply-To: <20200918004456.593983-1-tj@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: axboe@kernel.dk
 Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Debt reduction logic is going to be improved and expanded. Factor it out
-into ioc_forgive_debts() and generalize the comment a bit. No functional
-change.
+Debt reduction was blocked if any iocg was short on budget in the past
+period to avoid reducing debts while some iocgs are saturated. However, this
+ends up unnecessarily blocking debt reduction due to temporary local
+imbalances when the device is generally being underutilized, while also
+failing to block when the underlying device is overwhelmed and the usage
+becomes low from high latency.
+
+Given that debt accumulation mostly happens with swapout bursts which can
+significantly deteriorate the underlying device's latency response, the
+current logic is not great.
+
+Let's replace it with ioc->busy_level based condition so that we block debt
+reduction when the underlying device is being saturated. ioc_forgive_debts()
+call is moved after busy_level determination.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-iocost.c | 66 ++++++++++++++++++++++++----------------------
- 1 file changed, 35 insertions(+), 31 deletions(-)
+ block/blk-iocost.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index ef9476fca1d8..bbf30bb06c07 100644
+index bbf30bb06c07..c0499c294da9 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -1979,6 +1979,40 @@ static void transfer_surpluses(struct list_head *surpluses, struct ioc_now *now)
- 		list_del_init(&iocg->walk_list);
- }
+@@ -287,10 +287,7 @@ enum {
+ 	MIN_DELAY		= 250,
+ 	MAX_DELAY		= 250 * USEC_PER_MSEC,
  
-+/*
-+ * A low weight iocg can amass a large amount of debt, for example, when
-+ * anonymous memory gets reclaimed aggressively. If the system has a lot of
-+ * memory paired with a slow IO device, the debt can span multiple seconds or
-+ * more. If there are no other subsequent IO issuers, the in-debt iocg may end
-+ * up blocked paying its debt while the IO device is idle.
-+ *
-+ * The following protects against such cases. If the device has been
-+ * sufficiently idle for a while, the debts are halved.
-+ */
-+static void ioc_forgive_debts(struct ioc *ioc, u64 usage_us_sum, int nr_debtors,
-+			      int nr_shortages, struct ioc_now *now)
-+{
-+	if (nr_shortages ||
-+	    div64_u64(100 * usage_us_sum, now->now - ioc->period_at) >=
-+	    DEBT_BUSY_USAGE_PCT)
-+		ioc->debt_busy_at = now->now;
-+
-+	if (nr_debtors &&
-+	    now->now - ioc->debt_busy_at >= DEBT_REDUCTION_IDLE_DUR) {
-+		struct ioc_gq *iocg;
-+
-+		list_for_each_entry(iocg, &ioc->active_iocgs, active_list) {
-+			if (iocg->abs_vdebt) {
-+				spin_lock(&iocg->waitq.lock);
-+				iocg->abs_vdebt /= 2;
-+				iocg_kick_waitq(iocg, true, now);
-+				spin_unlock(&iocg->waitq.lock);
-+			}
-+		}
-+		ioc->debt_busy_at = now->now;
-+	}
-+}
-+
- static void ioc_timer_fn(struct timer_list *timer)
+-	/*
+-	 * Halve debts if total usage keeps staying under 25% w/o any shortages
+-	 * for over 100ms.
+-	 */
++	/* halve debts if total usage keeps staying under 25% for over 100ms */
+ 	DEBT_BUSY_USAGE_PCT	= 25,
+ 	DEBT_REDUCTION_IDLE_DUR	= 100 * USEC_PER_MSEC,
+ 
+@@ -1990,9 +1987,9 @@ static void transfer_surpluses(struct list_head *surpluses, struct ioc_now *now)
+  * sufficiently idle for a while, the debts are halved.
+  */
+ static void ioc_forgive_debts(struct ioc *ioc, u64 usage_us_sum, int nr_debtors,
+-			      int nr_shortages, struct ioc_now *now)
++			      struct ioc_now *now)
  {
- 	struct ioc *ioc = container_of(timer, struct ioc, timer);
-@@ -2171,37 +2205,7 @@ static void ioc_timer_fn(struct timer_list *timer)
+-	if (nr_shortages ||
++	if (ioc->busy_level < 0 ||
+ 	    div64_u64(100 * usage_us_sum, now->now - ioc->period_at) >=
+ 	    DEBT_BUSY_USAGE_PCT)
+ 		ioc->debt_busy_at = now->now;
+@@ -2205,8 +2202,6 @@ static void ioc_timer_fn(struct timer_list *timer)
  	list_for_each_entry_safe(iocg, tiocg, &surpluses, surplus_list)
  		list_del_init(&iocg->surplus_list);
  
--	/*
--	 * A low weight iocg can amass a large amount of debt, for example, when
--	 * anonymous memory gets reclaimed aggressively. If the system has a lot
--	 * of memory paired with a slow IO device, the debt can span multiple
--	 * seconds or more. If there are no other subsequent IO issuers, the
--	 * in-debt iocg may end up blocked paying its debt while the IO device
--	 * is idle.
--	 *
--	 * The following protects against such pathological cases. If the device
--	 * has been sufficiently idle for a substantial amount of time, the
--	 * debts are halved. The criteria are on the conservative side as we
--	 * want to resolve the rare extreme cases without impacting regular
--	 * operation by forgiving debts too readily.
--	 */
--	if (nr_shortages ||
--	    div64_u64(100 * usage_us_sum, now.now - ioc->period_at) >=
--	    DEBT_BUSY_USAGE_PCT)
--		ioc->debt_busy_at = now.now;
+-	ioc_forgive_debts(ioc, usage_us_sum, nr_debtors, nr_shortages, &now);
 -
--	if (nr_debtors &&
--	    now.now - ioc->debt_busy_at >= DEBT_REDUCTION_IDLE_DUR) {
--		list_for_each_entry(iocg, &ioc->active_iocgs, active_list) {
--			if (iocg->abs_vdebt) {
--				spin_lock(&iocg->waitq.lock);
--				iocg->abs_vdebt /= 2;
--				iocg_kick_waitq(iocg, true, &now);
--				spin_unlock(&iocg->waitq.lock);
--			}
--		}
--		ioc->debt_busy_at = now.now;
--	}
-+	ioc_forgive_debts(ioc, usage_us_sum, nr_debtors, nr_shortages, &now);
- 
  	/*
  	 * If q is getting clogged or we're missing too much, we're issuing
+ 	 * too much IO and should lower vtime rate.  If we're not missing
+@@ -2301,6 +2296,8 @@ static void ioc_timer_fn(struct timer_list *timer)
+ 
+ 	ioc_refresh_params(ioc, false);
+ 
++	ioc_forgive_debts(ioc, usage_us_sum, nr_debtors, &now);
++
+ 	/*
+ 	 * This period is done.  Move onto the next one.  If nothing's
+ 	 * going on with the device, stop the timer.
 -- 
 2.26.2
 
