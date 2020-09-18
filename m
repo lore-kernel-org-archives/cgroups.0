@@ -1,68 +1,175 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 02/13] mm: use page_off_lru()
-Date: Fri, 18 Sep 2020 13:24:21 +0200
-Message-ID: <20200918112421.GL28827@dhcp22.suse.cz>
-References: <20200918030051.650890-1-yuzhao@google.com>
- <20200918030051.650890-3-yuzhao@google.com>
- <20200918073700.GE28827@dhcp22.suse.cz>
- <20200918102713.GB1004594@google.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:iocost-debt-forgiveness] BUILD SUCCESS
+ 83e8ea543f9e76ccc87b20e1001645e197f3f1b1
+Date: Fri, 18 Sep 2020 20:37:15 +0800
+Message-ID: <5f64a9fb.9JI4w9dLcEa2/TyJ%lkp@intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1600428262;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=d9PDsqIPyVPgLukahRA3ETtD+nKIvQ1Ol6YmX3nuefQ=;
-        b=FN30aRJ+ozUNW8fiN2FsyLCLrqgxgpM8NlMau1poGqllAwZcl0sFk4WIV0FXGuQOCDsHaB
-        xt5dtdhGhw0LG9dsXVvBh0Eww6TzCSGW9Zmd4Zj+jJlGBwh4qNgpD+nmqrKsHRxQpwpjT5
-        fs8B3XBQGbuNi3wHzkHLM0Y0N7GQDXc=
-Content-Disposition: inline
-In-Reply-To: <20200918102713.GB1004594-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Yu Zhao <yuzhao-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Pankaj Gupta <pankaj.gupta.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Konstantin Khlebnikov <koct9i-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jaewon Kim <jaewon31.kim-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 18-09-20 04:27:13, Yu Zhao wrote:
-> On Fri, Sep 18, 2020 at 09:37:00AM +0200, Michal Hocko wrote:
-[...]
-> And I have asked this before: why does 'the compound page situation'
-> even matter here? Perhaps if you could give a concrete example related
-> to the code change and help me understand your concern?
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git  iocost-debt-forgiveness
+branch HEAD: 83e8ea543f9e76ccc87b20e1001645e197f3f1b1  iocost: add iocg_forgive_debt tracepoint
 
-Forgot to answer this part. The compound page concern is a misreading of
-the patch on my end. I have missed you are using page_off_lru in this
-(move_pages_to_lru) path and that you rely on release_pages to do the
-clean up on you. I still find it rather awkward that page_off_lru has
-such side effects but I am not deeply familiar with the reasoning
-behind so I will rather shut up now.
+elapsed time: 722m
 
-[...]
-> > > @@ -1860,14 +1859,11 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
-> > >  		lruvec = mem_cgroup_page_lruvec(page, pgdat);
-> > >  
-> > >  		SetPageLRU(page);
-> > > -		lru = page_lru(page);
-> > > -
-> > >  		add_page_to_lru_list(page, lruvec, lru);
-> > >  
-> > >  		if (put_page_testzero(page)) {
-> > >  			__ClearPageLRU(page);
-> > > -			__ClearPageActive(page);
-> > > -			del_page_from_lru_list(page, lruvec, lru);
-> > > +			del_page_from_lru_list(page, lruvec, page_off_lru(page));
-> > >  
-> > >  			if (unlikely(PageCompound(page))) {
-> > >  				spin_unlock_irq(&pgdat->lru_lock);
-> > > -- 
-> > > 2.28.0.681.g6f77f65b4e-goog
-> > 
-> > -- 
-> > Michal Hocko
-> > SUSE Labs
+configs tested: 144
+configs skipped: 2
 
--- 
-Michal Hocko
-SUSE Labs
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+arc                      axs103_smp_defconfig
+powerpc               mpc834x_itxgp_defconfig
+powerpc                        fsp2_defconfig
+xtensa                              defconfig
+powerpc                        cell_defconfig
+mips                           ip22_defconfig
+powerpc                     akebono_defconfig
+powerpc                     rainier_defconfig
+mips                       capcella_defconfig
+powerpc                     kilauea_defconfig
+arc                 nsimosci_hs_smp_defconfig
+nds32                            alldefconfig
+powerpc                 linkstation_defconfig
+parisc                generic-64bit_defconfig
+arm                      pxa255-idp_defconfig
+ia64                         bigsur_defconfig
+powerpc                      makalu_defconfig
+arc                        vdk_hs38_defconfig
+arm                        mvebu_v5_defconfig
+m68k                            mac_defconfig
+mips                 decstation_r4k_defconfig
+nios2                         3c120_defconfig
+powerpc                 xes_mpc85xx_defconfig
+sh                               alldefconfig
+sh                               j2_defconfig
+powerpc                      acadia_defconfig
+sh                             shx3_defconfig
+powerpc                    gamecube_defconfig
+xtensa                          iss_defconfig
+mips                      loongson3_defconfig
+mips                         cobalt_defconfig
+powerpc                      ep88xc_defconfig
+sparc                            alldefconfig
+ia64                          tiger_defconfig
+arc                           tb10x_defconfig
+mips                  cavium_octeon_defconfig
+nios2                         10m50_defconfig
+mips                       lemote2f_defconfig
+x86_64                           allyesconfig
+powerpc                       maple_defconfig
+sh                          rsk7269_defconfig
+sh                          sdk7780_defconfig
+powerpc                     sbc8548_defconfig
+powerpc                 mpc837x_rdb_defconfig
+sh                      rts7751r2d1_defconfig
+powerpc                     pq2fads_defconfig
+um                           x86_64_defconfig
+sh                              ul2_defconfig
+ia64                      gensparse_defconfig
+ia64                             allmodconfig
+sh                          r7780mp_defconfig
+mips                      malta_kvm_defconfig
+mips                         tb0226_defconfig
+h8300                               defconfig
+mips                           ci20_defconfig
+openrisc                         alldefconfig
+sh                   sh7724_generic_defconfig
+powerpc                       ppc64_defconfig
+arm                          iop32x_defconfig
+m68k                        m5272c3_defconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+c6x                              allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a004-20200917
+i386                 randconfig-a006-20200917
+i386                 randconfig-a003-20200917
+i386                 randconfig-a001-20200917
+i386                 randconfig-a002-20200917
+i386                 randconfig-a005-20200917
+x86_64               randconfig-a014-20200917
+x86_64               randconfig-a011-20200917
+x86_64               randconfig-a016-20200917
+x86_64               randconfig-a012-20200917
+x86_64               randconfig-a015-20200917
+x86_64               randconfig-a013-20200917
+i386                 randconfig-a015-20200917
+i386                 randconfig-a014-20200917
+i386                 randconfig-a011-20200917
+i386                 randconfig-a013-20200917
+i386                 randconfig-a016-20200917
+i386                 randconfig-a012-20200917
+i386                 randconfig-a015-20200918
+i386                 randconfig-a011-20200918
+i386                 randconfig-a014-20200918
+i386                 randconfig-a013-20200918
+i386                 randconfig-a012-20200918
+i386                 randconfig-a016-20200918
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                    rhel-7.6-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                                  kexec
+
+clang tested configs:
+x86_64               randconfig-a006-20200917
+x86_64               randconfig-a004-20200917
+x86_64               randconfig-a003-20200917
+x86_64               randconfig-a002-20200917
+x86_64               randconfig-a001-20200917
+x86_64               randconfig-a005-20200917
+x86_64               randconfig-a014-20200918
+x86_64               randconfig-a011-20200918
+x86_64               randconfig-a012-20200918
+x86_64               randconfig-a016-20200918
+x86_64               randconfig-a015-20200918
+x86_64               randconfig-a013-20200918
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
