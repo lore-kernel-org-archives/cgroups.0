@@ -1,177 +1,64 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 4/5] iocost: reimplement debt forgiveness using average usage
-Date: Thu, 17 Sep 2020 20:44:55 -0400
-Message-ID: <20200918004456.593983-5-tj@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 3/5] iocost: recalculate delay after debt reduction
+Date: Thu, 17 Sep 2020 20:44:54 -0400
+Message-ID: <20200918004456.593983-4-tj@kernel.org>
 References: <20200918004456.593983-1-tj@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=3VfMGSmp+708OVCB0V/rCITNRvHxvu/O226lr9+Sv6M=;
-        b=G0EYqkC81T77PGGEYaNCMWDYz+gv2r9Qb5LDYOJ+IPNstZZa5g3bo2ZlOyOiuPCBCh
-         X8nom7pA3onATBwoxojLEJzQV9qlb/bd5JjcYstQmQWHw2cw0K2CiEqfy6b3VLxBjwHS
-         ZZSSeGSqJM0xHKi18lUTGZTgpG769TYc53BpjUVKOS5tQzTiDO93mXXmnE1BFaEzGFWB
-         J3FNSSjj5LfRhCjQ+gVsADYyK2JDVWK3tBNNxqHdxvY86fYLDXKpSxnDnD7giQ4XA4Oq
-         cTGqnrYHqu4cOtzO/J4gx/Sma/mBI97O4C4UhwEsQxVJD4HWtyZFuia4HQyneZ1SQZ4E
-         3nJw==
-In-Reply-To: <20200918004456.593983-1-tj@kernel.org>
+        bh=ESbogjuwusL6bG2HVAbKfWJT6Gw8rmatSqGwZlkX8AM=;
+        b=KqiKjo8ece3zoqRHEClfRRBiJtjRdILsq3RELTwgDJTBWNqze7+GKFNAm9neqmm+OQ
+         52HxffH349WPSwZiaNBwfEyEsEamhZjpUqxpN3ieLKeofn5LOBX6kxj0OKSY3m1LIbpd
+         qFra6bKLan2OQC7JKa8wFCMbLb6T7x+36jvPnVfrzB6lP6q8/v9iqUYTrVZN9CQQY2Z+
+         VEYXy9ugIPOGpmri/WTCKNgpvxYnK13V3F3GNtS86ZIS32JadBE4xJ1xqgMvvDpzqKbj
+         b6EV/XPGPg8QCjW6+EX6jQRjJzQTTGGnngfemHP5O59D/yLoYAVvpv6g5C0C7juRoq87
+         Sxhw==
+In-Reply-To: <20200918004456.593983-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: axboe@kernel.dk
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Debt forgiveness logic was counting the number of consecutive !busy periods
-as the trigger condition. While this usually works, it can easily be thrown
-off by temporary fluctuations especially on configurations w/ short periods.
+Debt sets the initial delay duration which is decayed over time. The current
+debt reduction halved the debt but didn't change the delay. It prevented
+future debts from increasing delay but didn't do anything to lower the
+existing delay, limiting the mechanism's ability to reduce unnecessary
+idling.
 
-This patch reimplements debt forgiveness so that:
+Reset iocg->delay to 0 after debt reduction so that iocg_kick_waitq()
+recalculates new delay value based on the reduced debt amount.
 
-* Use the average usage over the forgiveness period instead of counting
-  consecutive periods.
-
-* Debt is reduced at around the target rate (1/2 every 100ms) regardless of
-  ioc period duration.
-
-* Usage threshold is raised to 50%. Combined with the preceding changes and
-  the switch to average usage, this makes debt forgivness a lot more
-  effective at reducing the amount of unnecessary idleness.
-
-* Constants are renamed with DFGV_ prefix.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- block/blk-iocost.c | 94 ++++++++++++++++++++++++++++++++++------------
- 1 file changed, 69 insertions(+), 25 deletions(-)
+ block/blk-iocost.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index ffcb78126ab7..9b1f94499432 100644
+index c0499c294da9..ffcb78126ab7 100644
 --- a/block/blk-iocost.c
 +++ b/block/blk-iocost.c
-@@ -287,9 +287,9 @@ enum {
- 	MIN_DELAY		= 250,
- 	MAX_DELAY		= 250 * USEC_PER_MSEC,
- 
--	/* halve debts if total usage keeps staying under 25% for over 100ms */
--	DEBT_BUSY_USAGE_PCT	= 25,
--	DEBT_REDUCTION_IDLE_DUR	= 100 * USEC_PER_MSEC,
-+	/* halve debts if avg usage over 100ms is under 50% */
-+	DFGV_USAGE_PCT		= 50,
-+	DFGV_PERIOD		= 100 * USEC_PER_MSEC,
- 
- 	/* don't let cmds which take a very long time pin lagging for too long */
- 	MAX_LAGGING_PERIODS	= 10,
-@@ -433,8 +433,10 @@ struct ioc {
- 	bool				weights_updated;
- 	atomic_t			hweight_gen;	/* for lazy hweights */
- 
--	/* the last time debt cancel condition wasn't met */
--	u64				debt_busy_at;
-+	/* debt forgivness */
-+	u64				dfgv_period_at;
-+	u64				dfgv_period_rem;
-+	u64				dfgv_usage_us_sum;
- 
- 	u64				autop_too_fast_at;
- 	u64				autop_too_slow_at;
-@@ -1251,7 +1253,8 @@ static bool iocg_activate(struct ioc_gq *iocg, struct ioc_now *now)
- 
- 	if (ioc->running == IOC_IDLE) {
- 		ioc->running = IOC_RUNNING;
--		ioc->debt_busy_at = now->now;
-+		ioc->dfgv_period_at = now->now;
-+		ioc->dfgv_period_rem = 0;
- 		ioc_start_period(ioc, now);
- 	}
- 
-@@ -1990,25 +1993,66 @@ static void transfer_surpluses(struct list_head *surpluses, struct ioc_now *now)
+@@ -1984,7 +1984,8 @@ static void transfer_surpluses(struct list_head *surpluses, struct ioc_now *now)
+  * up blocked paying its debt while the IO device is idle.
+  *
+  * The following protects against such cases. If the device has been
+- * sufficiently idle for a while, the debts are halved.
++ * sufficiently idle for a while, the debts are halved and delays are
++ * recalculated.
+  */
  static void ioc_forgive_debts(struct ioc *ioc, u64 usage_us_sum, int nr_debtors,
  			      struct ioc_now *now)
- {
--	if (ioc->busy_level < 0 ||
--	    div64_u64(100 * usage_us_sum, now->now - ioc->period_at) >=
--	    DEBT_BUSY_USAGE_PCT)
--		ioc->debt_busy_at = now->now;
--
--	if (nr_debtors &&
--	    now->now - ioc->debt_busy_at >= DEBT_REDUCTION_IDLE_DUR) {
--		struct ioc_gq *iocg;
--
--		list_for_each_entry(iocg, &ioc->active_iocgs, active_list) {
--			if (iocg->abs_vdebt) {
--				spin_lock(&iocg->waitq.lock);
--				iocg->abs_vdebt /= 2;
--				iocg->delay = 0; /* kick_waitq will recalc */
--				iocg_kick_waitq(iocg, true, now);
--				spin_unlock(&iocg->waitq.lock);
--			}
--		}
--		ioc->debt_busy_at = now->now;
-+	struct ioc_gq *iocg;
-+	u64 dur, usage_pct, nr_cycles;
-+
-+	/* if no debtor, reset the cycle */
-+	if (!nr_debtors) {
-+		ioc->dfgv_period_at = now->now;
-+		ioc->dfgv_period_rem = 0;
-+		ioc->dfgv_usage_us_sum = 0;
-+		return;
-+	}
-+
-+	/*
-+	 * Debtors can pass through a lot of writes choking the device and we
-+	 * don't want to be forgiving debts while the device is struggling from
-+	 * write bursts. If we're missing latency targets, consider the device
-+	 * fully utilized.
-+	 */
-+	if (ioc->busy_level > 0)
-+		usage_us_sum = max_t(u64, usage_us_sum, ioc->period_us);
-+
-+	ioc->dfgv_usage_us_sum += usage_us_sum;
-+	if (time_before64(now->now, ioc->dfgv_period_at + DFGV_PERIOD))
-+		return;
-+
-+	/*
-+	 * At least DFGV_PERIOD has passed since the last period. Calculate the
-+	 * average usage and reset the period counters.
-+	 */
-+	dur = now->now - ioc->dfgv_period_at;
-+	usage_pct = div64_u64(100 * ioc->dfgv_usage_us_sum, dur);
-+
-+	ioc->dfgv_period_at = now->now;
-+	ioc->dfgv_usage_us_sum = 0;
-+
-+	/* if was too busy, reset everything */
-+	if (usage_pct > DFGV_USAGE_PCT) {
-+		ioc->dfgv_period_rem = 0;
-+		return;
-+	}
-+
-+	/*
-+	 * Usage is lower than threshold. Let's forgive some debts. Debt
-+	 * forgiveness runs off of the usual ioc timer but its period usually
-+	 * doesn't match ioc's. Compensate the difference by performing the
-+	 * reduction as many times as would fit in the duration since the last
-+	 * run and carrying over the left-over duration in @ioc->dfgv_period_rem
-+	 * - if ioc period is 75% of DFGV_PERIOD, one out of three consecutive
-+	 * reductions is doubled.
-+	 */
-+	nr_cycles = dur + ioc->dfgv_period_rem;
-+	ioc->dfgv_period_rem = do_div(nr_cycles, DFGV_PERIOD);
-+
-+	list_for_each_entry(iocg, &ioc->active_iocgs, active_list) {
-+		if (!iocg->abs_vdebt)
-+			continue;
-+		spin_lock(&iocg->waitq.lock);
-+		iocg->abs_vdebt >>= nr_cycles;
-+		iocg->delay = 0; /* kick_waitq will recalc */
-+		iocg_kick_waitq(iocg, true, now);
-+		spin_unlock(&iocg->waitq.lock);
- 	}
- }
- 
+@@ -2002,6 +2003,7 @@ static void ioc_forgive_debts(struct ioc *ioc, u64 usage_us_sum, int nr_debtors,
+ 			if (iocg->abs_vdebt) {
+ 				spin_lock(&iocg->waitq.lock);
+ 				iocg->abs_vdebt /= 2;
++				iocg->delay = 0; /* kick_waitq will recalc */
+ 				iocg_kick_waitq(iocg, true, now);
+ 				spin_unlock(&iocg->waitq.lock);
+ 			}
 -- 
 2.26.2
 
