@@ -1,64 +1,121 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 3/5] iocost: recalculate delay after debt reduction
-Date: Thu, 17 Sep 2020 20:44:54 -0400
-Message-ID: <20200918004456.593983-4-tj@kernel.org>
-References: <20200918004456.593983-1-tj@kernel.org>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 307/330] mm: memcontrol: fix stat-corrupting race in charge moving
+Date: Thu, 17 Sep 2020 22:00:47 -0400
+Message-ID: <20200918020110.2063155-307-sashal@kernel.org>
+References: <20200918020110.2063155-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=ESbogjuwusL6bG2HVAbKfWJT6Gw8rmatSqGwZlkX8AM=;
-        b=KqiKjo8ece3zoqRHEClfRRBiJtjRdILsq3RELTwgDJTBWNqze7+GKFNAm9neqmm+OQ
-         52HxffH349WPSwZiaNBwfEyEsEamhZjpUqxpN3ieLKeofn5LOBX6kxj0OKSY3m1LIbpd
-         qFra6bKLan2OQC7JKa8wFCMbLb6T7x+36jvPnVfrzB6lP6q8/v9iqUYTrVZN9CQQY2Z+
-         VEYXy9ugIPOGpmri/WTCKNgpvxYnK13V3F3GNtS86ZIS32JadBE4xJ1xqgMvvDpzqKbj
-         b6EV/XPGPg8QCjW6+EX6jQRjJzQTTGGnngfemHP5O59D/yLoYAVvpv6g5C0C7juRoq87
-         Sxhw==
-In-Reply-To: <20200918004456.593983-1-tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600394851;
+        bh=fR/UbDId/TZwo11/kGB43MSUf1Nix4TokHJyS1Bx8Rs=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=qnjEOA0ewTwgH0jpeoKeykIQcyHCRtLwQih1PvTXg2rCDqVwTyUn4J1zSNPptg8Kw
+         nLshbpbZ+eMBeSJjc+4sZ2xWo10ZdDV1dQMyJgkOgJ8ZF6QX1nBvWZP71y4XGxq4B8
+         E6SrEyWRCepAiGsCHtk4WarmDYqf0xGN1h5kn2nM=
+In-Reply-To: <20200918020110.2063155-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Shakeel Butt <shakeelb@google.com>, Alex Shi <alex.shi@linux.alibaba.com>, Hugh Dickins <hughd@google.com>, "Kirill A. Shutemov" <kirill@shutemov.name>, Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>, Balbir Singh <bsingharora@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-Debt sets the initial delay duration which is decayed over time. The current
-debt reduction halved the debt but didn't change the delay. It prevented
-future debts from increasing delay but didn't do anything to lower the
-existing delay, limiting the mechanism's ability to reduce unnecessary
-idling.
+From: Johannes Weiner <hannes@cmpxchg.org>
 
-Reset iocg->delay to 0 after debt reduction so that iocg_kick_waitq()
-recalculates new delay value based on the reduced debt amount.
+[ Upstream commit abb242f57196dbaa108271575353a0453f6834ef ]
 
-Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+The move_lock is a per-memcg lock, but the VM accounting code that needs
+to acquire it comes from the page and follows page->mem_cgroup under RCU
+protection.  That means that the page becomes unlocked not when we drop
+the move_lock, but when we update page->mem_cgroup.  And that assignment
+doesn't imply any memory ordering.  If that pointer write gets reordered
+against the reads of the page state - page_mapped, PageDirty etc.  the
+state may change while we rely on it being stable and we can end up
+corrupting the counters.
+
+Place an SMP memory barrier to make sure we're done with all page state by
+the time the new page->mem_cgroup becomes visible.
+
+Also replace the open-coded move_lock with a lock_page_memcg() to make it
+more obvious what we're serializing against.
+
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Reviewed-by: Joonsoo Kim <iamjoonsoo.kim@lge.com>
+Reviewed-by: Shakeel Butt <shakeelb@google.com>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: "Kirill A. Shutemov" <kirill@shutemov.name>
+Cc: Michal Hocko <mhocko@suse.com>
+Cc: Roman Gushchin <guro@fb.com>
+Cc: Balbir Singh <bsingharora@gmail.com>
+Link: http://lkml.kernel.org/r/20200508183105.225460-3-hannes@cmpxchg.org
+Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- block/blk-iocost.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ mm/memcontrol.c | 26 ++++++++++++++------------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-index c0499c294da9..ffcb78126ab7 100644
---- a/block/blk-iocost.c
-+++ b/block/blk-iocost.c
-@@ -1984,7 +1984,8 @@ static void transfer_surpluses(struct list_head *surpluses, struct ioc_now *now)
-  * up blocked paying its debt while the IO device is idle.
-  *
-  * The following protects against such cases. If the device has been
-- * sufficiently idle for a while, the debts are halved.
-+ * sufficiently idle for a while, the debts are halved and delays are
-+ * recalculated.
-  */
- static void ioc_forgive_debts(struct ioc *ioc, u64 usage_us_sum, int nr_debtors,
- 			      struct ioc_now *now)
-@@ -2002,6 +2003,7 @@ static void ioc_forgive_debts(struct ioc *ioc, u64 usage_us_sum, int nr_debtors,
- 			if (iocg->abs_vdebt) {
- 				spin_lock(&iocg->waitq.lock);
- 				iocg->abs_vdebt /= 2;
-+				iocg->delay = 0; /* kick_waitq will recalc */
- 				iocg_kick_waitq(iocg, true, now);
- 				spin_unlock(&iocg->waitq.lock);
- 			}
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 402c8bc65e08d..ca1632850fb76 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5489,7 +5489,6 @@ static int mem_cgroup_move_account(struct page *page,
+ {
+ 	struct lruvec *from_vec, *to_vec;
+ 	struct pglist_data *pgdat;
+-	unsigned long flags;
+ 	unsigned int nr_pages = compound ? hpage_nr_pages(page) : 1;
+ 	int ret;
+ 	bool anon;
+@@ -5516,18 +5515,13 @@ static int mem_cgroup_move_account(struct page *page,
+ 	from_vec = mem_cgroup_lruvec(pgdat, from);
+ 	to_vec = mem_cgroup_lruvec(pgdat, to);
+ 
+-	spin_lock_irqsave(&from->move_lock, flags);
++	lock_page_memcg(page);
+ 
+ 	if (!anon && page_mapped(page)) {
+ 		__mod_lruvec_state(from_vec, NR_FILE_MAPPED, -nr_pages);
+ 		__mod_lruvec_state(to_vec, NR_FILE_MAPPED, nr_pages);
+ 	}
+ 
+-	/*
+-	 * move_lock grabbed above and caller set from->moving_account, so
+-	 * mod_memcg_page_state will serialize updates to PageDirty.
+-	 * So mapping should be stable for dirty pages.
+-	 */
+ 	if (!anon && PageDirty(page)) {
+ 		struct address_space *mapping = page_mapping(page);
+ 
+@@ -5543,15 +5537,23 @@ static int mem_cgroup_move_account(struct page *page,
+ 	}
+ 
+ 	/*
++	 * All state has been migrated, let's switch to the new memcg.
++	 *
+ 	 * It is safe to change page->mem_cgroup here because the page
+-	 * is referenced, charged, and isolated - we can't race with
+-	 * uncharging, charging, migration, or LRU putback.
++	 * is referenced, charged, isolated, and locked: we can't race
++	 * with (un)charging, migration, LRU putback, or anything else
++	 * that would rely on a stable page->mem_cgroup.
++	 *
++	 * Note that lock_page_memcg is a memcg lock, not a page lock,
++	 * to save space. As soon as we switch page->mem_cgroup to a
++	 * new memcg that isn't locked, the above state can change
++	 * concurrently again. Make sure we're truly done with it.
+ 	 */
++	smp_mb();
+ 
+-	/* caller should have done css_get */
+-	page->mem_cgroup = to;
++	page->mem_cgroup = to; 	/* caller should have done css_get */
+ 
+-	spin_unlock_irqrestore(&from->move_lock, flags);
++	__unlock_page_memcg(from);
+ 
+ 	ret = 0;
+ 
 -- 
-2.26.2
+2.25.1
 
