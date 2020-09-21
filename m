@@ -1,50 +1,80 @@
-From: Baolin Wang <baolin.wang@linux.alibaba.com>
-Subject: [PATCH 4/4] blk-throttle: Fix IO hang for a corner case
-Date: Sun, 20 Sep 2020 17:14:27 +0800
-Message-ID: <605f98f527761d79dea4345976e57566c03afcd4.1600592693.git.baolin.wang@linux.alibaba.com>
-References: <a244c9973c6fc0081dba4142625840696b386a0f.1600592693.git.baolin.wang@linux.alibaba.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <a244c9973c6fc0081dba4142625840696b386a0f.1600592693.git.baolin.wang@linux.alibaba.com>
-In-Reply-To: <cover.1600592693.git.baolin.wang@linux.alibaba.com>
-References: <cover.1600592693.git.baolin.wang@linux.alibaba.com>
+From: zangchunxin@bytedance.com
+Subject: [PATCH] mm/memcontrol: Add the drop_cache interface for cgroup v2
+Date: Mon, 21 Sep 2020 16:02:55 +0800
+Message-ID: <20200921080255.15505-1-zangchunxin@bytedance.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=MQ9zzgzZmaH7SVE72fu66K8V5NhJkHfIKNhfWRZkT70=;
+        b=v4QQxqar9/gUAXuiOZ1QrCEiXJN++eMu4eslr0jnEjDgUQudhSX7PzLs1mguRYwEpD
+         6nkSdkiD7br/G4EQ6WhJUlm1untmUXqZKp7Z+IW4wA4DcjThUG6nDSGQW5GCYsOKpdM6
+         nyMrYP/Bmmcbm8dKzQ5Tdhf0HBdA+ZAG3QzTyMwSAttZZPkei/hd+/dqxACc4zUrAhUt
+         1m1tdlhySvfBll7Cm8W0n1sayUPNVPERUYYlH+phSYii1EBT3u+mmQPonDxSC23sML3t
+         DpuBxNMDBx0DT4Bdheea6pVTfRYo0Y9XBuid0omy8AHz2W/Pi9KrumKsLcVedd9Kl484
+         m0Hg==
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, axboe@kernel.dk
-Cc: baolin.wang@linux.alibaba.com, baolin.wang7@gmail.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, tj@kernel.org, lizefan@huawei.com, corbet@lwn.net
+Cc: ast@kernel.org, daniel@iogearbox.net, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, andriin@fb.com, john.fastabend@gmail.com, kpsingh@chromium.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, Chunxin Zang <zangchunxin@bytedance.com>
 
-It can not scale up in throtl_adjusted_limit() if we set bps or iops is
-1, which will cause IO hang when enable low limit. Thus we should treat
-1 as a illegal value to avoid this issue.
+From: Chunxin Zang <zangchunxin@bytedance.com>
 
-Signed-off-by: Baolin Wang <baolin.wang@linux.alibaba.com>
+In the cgroup v1, we have 'force_mepty' interface. This is very
+useful for userspace to actively release memory. But the cgroup
+v2 does not.
+
+This patch reuse cgroup v1's function, but have a new name for
+the interface. Because I think 'drop_cache' may be is easier to
+understand :)
+
+Signed-off-by: Chunxin Zang <zangchunxin@bytedance.com>
 ---
- block/blk-throttle.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst | 11 +++++++++++
+ mm/memcontrol.c                         |  5 +++++
+ 2 files changed, 16 insertions(+)
 
-diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index b0d8f7c..0649bce 100644
---- a/block/blk-throttle.c
-+++ b/block/blk-throttle.c
-@@ -1687,13 +1687,13 @@ static ssize_t tg_set_limit(struct kernfs_open_file *of,
- 			goto out_finish;
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index ce3e05e41724..fbff959c8116 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1181,6 +1181,17 @@ PAGE_SIZE multiple when read back.
+ 	high limit is used and monitored properly, this limit's
+ 	utility is limited to providing the final safety net.
  
- 		ret = -EINVAL;
--		if (!strcmp(tok, "rbps"))
-+		if (!strcmp(tok, "rbps") && val > 1)
- 			v[0] = val;
--		else if (!strcmp(tok, "wbps"))
-+		else if (!strcmp(tok, "wbps") && val > 1)
- 			v[1] = val;
--		else if (!strcmp(tok, "riops"))
-+		else if (!strcmp(tok, "riops") && val > 1)
- 			v[2] = min_t(u64, val, UINT_MAX);
--		else if (!strcmp(tok, "wiops"))
-+		else if (!strcmp(tok, "wiops") && val > 1)
- 			v[3] = min_t(u64, val, UINT_MAX);
- 		else if (off == LIMIT_LOW && !strcmp(tok, "idle"))
- 			idle_time = val;
++  memory.drop_cache
++    A write-only single value file which exists on non-root
++    cgroups.
++
++    Provide a mechanism for users to actively trigger memory
++    reclaim. The cgroup will be reclaimed and as many pages
++    reclaimed as possible.
++
++    It will broke low boundary. Because it tries to reclaim the
++    memory many times, until the memory drops to a certain level.
++
+   memory.oom.group
+ 	A read-write single value file which exists on non-root
+ 	cgroups.  The default value is "0".
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 0b38b6ad547d..98646484efff 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6226,6 +6226,11 @@ static struct cftype memory_files[] = {
+ 		.write = memory_max_write,
+ 	},
+ 	{
++		.name = "drop_cache",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.write = mem_cgroup_force_empty_write,
++	},
++	{
+ 		.name = "events",
+ 		.flags = CFTYPE_NOT_ON_ROOT,
+ 		.file_offset = offsetof(struct mem_cgroup, events_file),
 -- 
-1.8.3.1
+2.11.0
 
