@@ -1,54 +1,68 @@
-From: Coly Li <colyli@suse.de>
-Subject: Re: [PATCH 03/13] bcache: inherit the optimal I/O size
-Date: Mon, 21 Sep 2020 23:09:48 +0800
-Message-ID: <5bcc52dc-ca8f-bbdd-69ef-4b6312e7994a@suse.de>
-References: <20200921080734.452759-1-hch@lst.de>
- <20200921080734.452759-4-hch@lst.de>
- <b547a1b6-ab03-0520-012d-86d112c83d92@suse.de>
- <20200921140010.GA14672@lst.de>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH] mm/memcontrol: Add the drop_cache interface for cgroup v2
+Date: Mon, 21 Sep 2020 08:55:15 -0700
+Message-ID: <CALvZod5JpEsmNvbaCMEfRMt83GbeLJk2oM0=siCj+aXEnxYh4Q@mail.gmail.com>
+References: <20200921080255.15505-1-zangchunxin@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <20200921140010.GA14672@lst.de>
-Content-Language: en-US
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=KlAO2f2MCbdMFYmuMR/JVAe3ADfPLwZDOazJ0JPDtY8=;
+        b=X6obxRKeN8mR9RXp9MXChkD/M+vckq63Aq7SzA4AbmwqS/IV5RDlSeQScIvKUx90Yq
+         egE3yRvoKY3/syMLF2edGesVcPB6irZi2K8o1J7gzKQQYLf/KoNbSLvEDwPRQ8Zm/SCT
+         gq5vqLKF0gc7kMWfQqZL8aa0UB2Bz+NsoL8x+711eRc2LRrgrsg/Qn9SIOSuQ9Ca3Re+
+         Gztcy1jkdpujzRW0mt7Jdz3Iu8Kp1XCbeD5DMLzyrhsRRCN2VL1v0le3b5DU/mAV5WTR
+         X02fZxY1HAoBQI19wrg4qUPbFwT29TH7MY4J5mkMhi6z/F/8vW26DM+UxD+2RtSmOaVe
+         uYPg==
+In-Reply-To: <20200921080255.15505-1-zangchunxin@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, Justin Sanders <justin@coraid.com>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: zangchunxin@bytedance.com
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, kafai@fb.com, Song Liu <songliubraving@fb.com>, yhs@fb.com, andriin@fb.com, john.fastabend@gmail.com, kpsingh@chromium.org, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, netdev <netdev@vger.kernel.org>, bpf@vger.kernel.org
 
-On 2020/9/21 22:00, Christoph Hellwig wrote:
-> On Mon, Sep 21, 2020 at 05:54:59PM +0800, Coly Li wrote:
->> I am not sure whether virtual bcache device's optimal request size can
->> be simply set like this.
->>
->> Most of time inherit backing device's optimal request size is fine, but
->> there are two exceptions,
->> - Read request hits on cache device
->> - User sets sequential_cuttoff as 0, all writing may go into cache
->> device firstly.
->> For the above two conditions, all I/Os goes into cache device, using
->> optimal request size of backing device might be improper.
->>
->> Just a guess, is it OK to set the optimal request size of the virtual
->> bcache device as the least common multiple of cache device's and backing
->> device's optimal request sizes ?
-> 
-> Well, if the optimal I/O size is wrong, the read ahead size also is
-> wrong.  Can we just drop the setting?
-> 
+On Mon, Sep 21, 2020 at 1:05 AM <zangchunxin@bytedance.com> wrote:
+>
+> From: Chunxin Zang <zangchunxin@bytedance.com>
+>
+> In the cgroup v1, we have 'force_mepty' interface. This is very
+> useful for userspace to actively release memory. But the cgroup
+> v2 does not.
+>
+> This patch reuse cgroup v1's function, but have a new name for
+> the interface. Because I think 'drop_cache' may be is easier to
+> understand :)
+>
+> Signed-off-by: Chunxin Zang <zangchunxin@bytedance.com>
+> ---
+>  Documentation/admin-guide/cgroup-v2.rst | 11 +++++++++++
+>  mm/memcontrol.c                         |  5 +++++
+>  2 files changed, 16 insertions(+)
+>
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index ce3e05e41724..fbff959c8116 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -1181,6 +1181,17 @@ PAGE_SIZE multiple when read back.
+>         high limit is used and monitored properly, this limit's
+>         utility is limited to providing the final safety net.
+>
+> +  memory.drop_cache
+> +    A write-only single value file which exists on non-root
+> +    cgroups.
+> +
+> +    Provide a mechanism for users to actively trigger memory
+> +    reclaim. The cgroup will be reclaimed and as many pages
+> +    reclaimed as possible.
+> +
+> +    It will broke low boundary. Because it tries to reclaim the
+> +    memory many times, until the memory drops to a certain level.
+> +
 
-I feel this is something should be fixed. Indeed I overlooked it until
-you point out the issue now.
+drop_cache is not really force_empty(). What is your use-case? Maybe
+you can use memory.reclaim [1] for your use-case. It is already in
+Andrew's tree.
 
-The optimal request size and read ahead pages hint are necessary, but
-current initialization is simple. A better way might be dynamically
-setting them depends on the cache mode and some special configuration.
-
-By your inspiration, I want to ACK your original patch although it
-doesn't work fine for all condition. Then we may know these two settings
-(ra_pages and queue_io_opt) should be improved for more situations. At
-lease for most part of the situations they provide proper hints.
-
-How do you think of the above idea ?
-
-Coly Li
+[1] https://lkml.kernel.org/r/20200909215752.1725525-1-shakeelb@google.com
