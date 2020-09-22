@@ -1,144 +1,124 @@
-From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v18 25/32] mm/mlock: remove lru_lock on TestClearPageMlocked
- in munlock_vma_page
-Date: Mon, 21 Sep 2020 23:13:17 -0700 (PDT)
-Message-ID: <alpine.LSU.2.11.2009212253320.6434@eggly.anvils>
-References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com> <1598273705-69124-26-git-send-email-alex.shi@linux.alibaba.com>
+From: Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH] mm/memcontrol: Add the drop_cache interface for cgroup v2
+Date: Tue, 22 Sep 2020 09:27:33 +0200
+Message-ID: <20200922072733.GT12990@dhcp22.suse.cz>
+References: <20200921080255.15505-1-zangchunxin@bytedance.com>
+ <20200921081200.GE12990@dhcp22.suse.cz>
+ <CALOAHbDKvT58UFjxy770VDxO0VWABRYb7GVwgw+NiJp62mB06w@mail.gmail.com>
+ <20200921110505.GH12990@dhcp22.suse.cz>
+ <CALOAHbCDXwjN+WDSGVv+G3ho-YRRPjAAqMJBtyxeGHH6utb5ew@mail.gmail.com>
+ <20200921113646.GJ12990@dhcp22.suse.cz>
+ <CALOAHbCker64WEW9w4oq8=avA6oKf3-Jrn-vOOgkpqkV3g+CYA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=WBUjk5sa2qSjZc05mc4Eihluz20Uyb3yXZp0vXYSAao=;
-        b=WB/3I6zQHZvM8TfVLEJMlPFQrTIpfsU1zdOf1VurZPu72ZMZEaoo7SH356HOoSJJOw
-         EKwBCy7d/TyKnNeXXKOUW5zk+bqIOjLHCJ6ZiSFyYEnC+Euj4h8fo14+jrnzeu2jgIBF
-         53xrD3/b4xTaGC/iTpL/ulzQHeY26XpyZ/b+299hSLzBpDXltk+x+4eBjq7eYELQzz1x
-         gKXJ+0lEUiZNnjiD6gENrAppDXE/pvR++XVaVbjUnX2tjQsXzoGS6TdcYZ0EtsVe4Bw3
-         JcV/h1yIyD756SHiiB2UFeko7C0okLxWUaCBg6mcoEecwVx0KqJHQp0ZLszZ9HV/C8F7
-         8bpw==
-In-Reply-To: <1598273705-69124-26-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Return-path: <bpf-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1600759663;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Erw2OosUhNlUjJ/92tw/QfOb1ODXL2vdqOviv1OTGQE=;
+        b=SJu6HGOM7mmekNJl2WAqQ2Z0OqgE18sdv4bZEjSiRqgybbfl14iLBvSa882Sg+JSj+TZhl
+        UMLU1ibKgV/UqhrqCSyTiFlZ8zGyr3CeNw9z6X6gESLPqu69C9fKTiSuSmG4ObY2kuJbYo
+        T6QzgAjoDLcehxHPNXIOeQcatmJPSdI=
+Content-Disposition: inline
+In-Reply-To: <CALOAHbCker64WEW9w4oq8=avA6oKf3-Jrn-vOOgkpqkV3g+CYA@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+To: Yafang Shao <laoar.shao@gmail.com>
+Cc: zangchunxin@bytedance.com, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, lizefan@huawei.com, Jonathan Corbet <corbet@lwn.net>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, kafai@fb.com, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, andriin@fb.com, john.fastabend@gmail.com, kpsingh@chromium.org, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, netdev <netdev@vger.kernel.org>, bpf@vger.kernel.org
 
-On Mon, 24 Aug 2020, Alex Shi wrote:
+On Tue 22-09-20 12:20:52, Yafang Shao wrote:
+> On Mon, Sep 21, 2020 at 7:36 PM Michal Hocko <mhocko@suse.com> wrote:
+> >
+> > On Mon 21-09-20 19:23:01, Yafang Shao wrote:
+> > > On Mon, Sep 21, 2020 at 7:05 PM Michal Hocko <mhocko@suse.com> wrote:
+> > > >
+> > > > On Mon 21-09-20 18:55:40, Yafang Shao wrote:
+> > > > > On Mon, Sep 21, 2020 at 4:12 PM Michal Hocko <mhocko@suse.com> wrote:
+> > > > > >
+> > > > > > On Mon 21-09-20 16:02:55, zangchunxin@bytedance.com wrote:
+> > > > > > > From: Chunxin Zang <zangchunxin@bytedance.com>
+> > > > > > >
+> > > > > > > In the cgroup v1, we have 'force_mepty' interface. This is very
+> > > > > > > useful for userspace to actively release memory. But the cgroup
+> > > > > > > v2 does not.
+> > > > > > >
+> > > > > > > This patch reuse cgroup v1's function, but have a new name for
+> > > > > > > the interface. Because I think 'drop_cache' may be is easier to
+> > > > > > > understand :)
+> > > > > >
+> > > > > > This should really explain a usecase. Global drop_caches is a terrible
+> > > > > > interface and it has caused many problems in the past. People have
+> > > > > > learned to use it as a remedy to any problem they might see and cause
+> > > > > > other problems without realizing that. This is the reason why we even
+> > > > > > log each attempt to drop caches.
+> > > > > >
+> > > > > > I would rather not repeat the same mistake on the memcg level unless
+> > > > > > there is a very strong reason for it.
+> > > > > >
+> > > > >
+> > > > > I think we'd better add these comments above the function
+> > > > > mem_cgroup_force_empty() to explain why we don't want to expose this
+> > > > > interface in cgroup2, otherwise people will continue to send this
+> > > > > proposal without any strong reason.
+> > > >
+> > > > I do not mind people sending this proposal.  "V1 used to have an
+> > > > interface, we need it in v2 as well" is not really viable without
+> > > > providing more reasoning on the specific usecase.
+> > > >
+> > > > _Any_ patch should have a proper justification. This is nothing really
+> > > > new to the process and I am wondering why this is coming as a surprise.
+> > > >
+> > >
+> > > Container users always want to drop cache in a specific container,
+> > > because they used to use drop_caches to fix memory pressure issues.
+> >
+> > This is exactly the kind of problems we have seen in the past. There
+> > should be zero reason to addre potential reclaim problems by dropping
+> > page cache on the floor. There is a huge cargo cult about this
+> > procedure and I have seen numerous reports when people complained about
+> > performance afterwards just to learn that the dropped page cache was one
+> > of the resons for that.
+> >
+> > > Although drop_caches can cause some unexpected issues, it could also
+> > > fix some issues.
+> >
+> > "Some issues" is way too general. We really want to learn about those
+> > issues and address them properly.
+> >
+> 
+> One use case in our production environment is that some of our tasks
+> become very latency sensitive from 7am to 10am, so before these tasks
+> become active we will use drop_caches to drop page caches generated by
+> other tasks at night to avoid these tasks triggering direct reclaim.
+>
+> The best way to do it is to fix the latency in direct reclaim, but it
+> will take great effort.
 
-> In the func munlock_vma_page, the page must be PageLocked as well as
-> pages in split_huge_page series funcs. Thus the PageLocked is enough
-> to serialize both funcs.
-> 
-> So we could relief the TestClearPageMlocked/hpage_nr_pages which are not
-> necessary under lru lock.
-> 
-> As to another munlock func __munlock_pagevec, which no PageLocked
-> protection and should remain lru protecting.
-> 
-> Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+What is the latency triggered by the memory reclaim? It should be mostly
+a clean page cache right as drop_caches only drops clean pages. Or is
+this more about [id]cache? Do you have any profiles where is the time
+spent?
 
-I made some comments on the mlock+munlock situation last week:
-I won't review this 24/32 and 25/32 now, but will take a look
-at your github tree tomorrow instead.  Perhaps I'll find you have
-already done the fixes, perhaps I'll find you have merged these back
-into earlier patches.  And I won't be reviewing beyond this point:
-this is enough for now, I think.
+> while drop_caches give us an easier way to achieve the same goal.
 
-Hugh
+It papers over real problems and that is my earlier comment about.
 
-> Cc: Kirill A. Shutemov <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-> Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> ---
->  mm/mlock.c | 41 +++++++++++++++--------------------------
->  1 file changed, 15 insertions(+), 26 deletions(-)
-> 
-> diff --git a/mm/mlock.c b/mm/mlock.c
-> index 0448409184e3..46a05e6ec5ba 100644
-> --- a/mm/mlock.c
-> +++ b/mm/mlock.c
-> @@ -69,9 +69,9 @@ void clear_page_mlock(struct page *page)
->  	 *
->  	 * See __pagevec_lru_add_fn for more explanation.
->  	 */
-> -	if (!isolate_lru_page(page)) {
-> +	if (!isolate_lru_page(page))
->  		putback_lru_page(page);
-> -	} else {
-> +	else {
->  		/*
->  		 * We lost the race. the page already moved to evictable list.
->  		 */
-> @@ -178,7 +178,6 @@ static void __munlock_isolation_failed(struct page *page)
->  unsigned int munlock_vma_page(struct page *page)
->  {
->  	int nr_pages;
-> -	struct lruvec *lruvec;
->  
->  	/* For try_to_munlock() and to serialize with page migration */
->  	BUG_ON(!PageLocked(page));
-> @@ -186,37 +185,22 @@ unsigned int munlock_vma_page(struct page *page)
->  	VM_BUG_ON_PAGE(PageTail(page), page);
->  
->  	/*
-> -	 * Serialize split tail pages in __split_huge_page_tail() which
-> -	 * might otherwise copy PageMlocked to part of the tail pages before
-> -	 * we clear it in the head page. It also stabilizes thp_nr_pages().
-> -	 * TestClearPageLRU can't be used here to block page isolation, since
-> -	 * out of lock clear_page_mlock may interfer PageLRU/PageMlocked
-> -	 * sequence, same as __pagevec_lru_add_fn, and lead the page place to
-> -	 * wrong lru list here. So relay on PageLocked to stop lruvec change
-> -	 * in mem_cgroup_move_account().
-> +	 * Serialize split tail pages in __split_huge_page_tail() by
-> +	 * lock_page(); Do TestClearPageMlocked/PageLRU sequence like
-> +	 * clear_page_mlock().
->  	 */
-> -	lruvec = lock_page_lruvec_irq(page);
-> -
-> -	if (!TestClearPageMlocked(page)) {
-> +	if (!TestClearPageMlocked(page))
->  		/* Potentially, PTE-mapped THP: do not skip the rest PTEs */
-> -		nr_pages = 1;
-> -		goto unlock_out;
-> -	}
-> +		return 0;
->  
->  	nr_pages = thp_nr_pages(page);
->  	__mod_zone_page_state(page_zone(page), NR_MLOCK, -nr_pages);
->  
-> -	if (__munlock_isolate_lru_page(page, lruvec, true)) {
-> -		unlock_page_lruvec_irq(lruvec);
-> +	if (!isolate_lru_page(page))
->  		__munlock_isolated_page(page);
-> -		goto out;
-> -	}
-> -	__munlock_isolation_failed(page);
-> -
-> -unlock_out:
-> -	unlock_page_lruvec_irq(lruvec);
-> +	else
-> +		__munlock_isolation_failed(page);
->  
-> -out:
->  	return nr_pages - 1;
->  }
->  
-> @@ -305,6 +289,11 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
->  
->  		/* block memcg change in mem_cgroup_move_account */
->  		lock_page_memcg(page);
-> +		/*
-> +		 * Serialize split tail pages in __split_huge_page_tail() which
-> +		 * might otherwise copy PageMlocked to part of the tail pages
-> +		 * before we clear it in the head page.
-> +		 */
->  		lruvec = relock_page_lruvec_irq(page, lruvec);
->  		if (TestClearPageMlocked(page)) {
->  			/*
-> -- 
-> 1.8.3.1
-> 
-> 
+> IOW, drop_caches give the users an option to achieve their goal before
+> they find a better solution.
+
+You can achieve the same by a different configuration already. You can
+isolate your page cache hungry overnight (likely a backup) workload into
+its own memcg. You can either use an aggressive high limit during the
+run or simply reduce the high/max limit after the work is done.
+
+If you cannot isolate that easily then you can lower high limit
+temporarily before your peak workload.
+
+Really throwing all the page cache away just to prepare for a peak
+workload sounds like a bad idea to me. You are potentially throwing
+data that you have to spend time to refault again.
+-- 
+Michal Hocko
+SUSE Labs
