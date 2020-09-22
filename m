@@ -1,301 +1,64 @@
-From: Hugh Dickins <hughd@google.com>
-Subject: Re: [PATCH v18 17/32] mm/compaction: do page isolation first in
- compaction
-Date: Mon, 21 Sep 2020 16:49:38 -0700 (PDT)
-Message-ID: <alpine.LSU.2.11.2009211617080.5214@eggly.anvils>
-References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com> <1598273705-69124-18-git-send-email-alex.shi@linux.alibaba.com>
+From: Vipin Sharma <vipinsh@google.com>
+Subject: [RFC Patch 0/2] KVM: SVM: Cgroup support for SVM SEV ASIDs
+Date: Mon, 21 Sep 2020 17:40:22 -0700
+Message-ID: <20200922004024.3699923-1-vipinsh@google.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <kvm-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=8oQpSQI8wvIpIER3mA+5Lt4f5fuUByXFTuElAIMrxcI=;
-        b=ma0zWoCL6rzOYyWSY+cIZNt+OG/Pkpzhkrxk7+XUsZBArWxN+4ODulV6lkF/ejZ3wq
-         sdqMdqNrnbCwZy7TGOOQjmktEWXJkmDwiTOfcEAy4S3ZPt6+ZAPZWl3cKaThR4AQqWEK
-         luvgNfEnjUh8Ni1M0fXfbsp46OwRSYRo3AvZcPTkJ+bR30q9gbfeZvMwsQPjMp2MRtRk
-         MPbnqEtZ1RgUKDL8zFjvTYHR/069rPbOGsCZs3WM7k1I0WJ4qFwTN+2XHEU+Qh+qTmgC
-         dA+ZuhFoLY9PdE7Xkfs6KYGmYj1jhIhQeo1oezoGYkb0nQR5IOFTvIVNdcr6yzGwvlOW
-         Moig==
-In-Reply-To: <1598273705-69124-18-git-send-email-alex.shi@linux.alibaba.com>
+        h=sender:date:message-id:mime-version:subject:from:to:cc;
+        bh=V3Xr2zBCrWRdkK+k7x0nVhZayUYo5UZWzWiSfnS90fI=;
+        b=kdyVgyusZNzoXrTJhguQAb+Mx6TJNWHRXlrjar7ZHpeVOaXSPFcnqpBVcrKSj7jdY/
+         Z9S2h73yYxQ9ye0LpN+CnHJtEkvDKrW9dX9pf4gz/5JYMJcccJoedfYoOR8AT6arrG/0
+         ux966VV/bda9j4D3905gY+7QxO5ycI5EIzvDsYywy96gVK8JhFGFJMy2GicwDum9X/7W
+         5AEWANjjafFjdR3tEOf/Btn3rFXzJXaLz1TU4p2opSJylwS9O8Y07YUPXzdI/9WSkVZ9
+         xceQndQbqE8aM4VfKijgA1/KGV6BKYHLXzO7PTdnAOW4uHnL0OrmfA8n9UcoRW9J8H5E
+         Wt1A==
+Sender: "vipinsh via sendgmr" <vipinsh@vipinsh.kir.corp.google.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
+To: thomas.lendacky@amd.com, pbonzini@redhat.com, sean.j.christopherson@intel.com, tj@kernel.org, lizefan@huawei.com
+Cc: joro@8bytes.org, corbet@lwn.net, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, gingell@google.com, rientjes@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Vipin Sharma <vipinsh@google.com>
 
-On Mon, 24 Aug 2020, Alex Shi wrote:
+Hello,
 
-> Currently, compaction would get the lru_lock and then do page isolation
-> which works fine with pgdat->lru_lock, since any page isoltion would
-> compete for the lru_lock. If we want to change to memcg lru_lock, we
-> have to isolate the page before getting lru_lock, thus isoltion would
-> block page's memcg change which relay on page isoltion too. Then we
-> could safely use per memcg lru_lock later.
-> 
-> The new page isolation use previous introduced TestClearPageLRU() +
-> pgdat lru locking which will be changed to memcg lru lock later.
-> 
-> Hugh Dickins <hughd@google.com> fixed following bugs in this patch's
-> early version:
-> 
-> Fix lots of crashes under compaction load: isolate_migratepages_block()
-> must clean up appropriately when rejecting a page, setting PageLRU again
-> if it had been cleared; and a put_page() after get_page_unless_zero()
-> cannot safely be done while holding locked_lruvec - it may turn out to
-> be the final put_page(), which will take an lruvec lock when PageLRU.
-> And move __isolate_lru_page_prepare back after get_page_unless_zero to
-> make trylock_page() safe:
-> trylock_page() is not safe to use at this time: its setting PG_locked
-> can race with the page being freed or allocated ("Bad page"), and can
-> also erase flags being set by one of those "sole owners" of a freshly
-> allocated page who use non-atomic __SetPageFlag().
-> 
-> Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
-> Signed-off-by: Hugh Dickins <hughd@google.com>
-> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+This patch series adds a new SEV controller for tracking and limiting
+the usage of SEV ASIDs on the AMD SVM platform.
 
-Okay, whatever. I was about to say
-Acked-by: Hugh Dickins <hughd@google.com>
-With my signed-off-by there, someone will ask if it should say
-"From: Hugh ..." at the top: no, it should not, this is Alex's patch,
-but I proposed some fixes to it, as you already acknowledged.
+SEV ASIDs are used in creating encrypted VM and lightweight sandboxes
+but this resource is in very limited quantity on a host.
 
-A couple of comments below on the mm/vmscan.c part of it.
+This limited quantity creates issues like SEV ASID starvation and
+unoptimized scheduling in the cloud infrastructure.
 
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: Matthew Wilcox <willy@infradead.org>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-mm@kvack.org
-> ---
->  include/linux/swap.h |  2 +-
->  mm/compaction.c      | 42 +++++++++++++++++++++++++++++++++---------
->  mm/vmscan.c          | 46 ++++++++++++++++++++++++++--------------------
->  3 files changed, 60 insertions(+), 30 deletions(-)
-> 
-> diff --git a/include/linux/swap.h b/include/linux/swap.h
-> index 43e6b3458f58..550fdfdc3506 100644
-> --- a/include/linux/swap.h
-> +++ b/include/linux/swap.h
-> @@ -357,7 +357,7 @@ extern void lru_cache_add_inactive_or_unevictable(struct page *page,
->  extern unsigned long zone_reclaimable_pages(struct zone *zone);
->  extern unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
->  					gfp_t gfp_mask, nodemask_t *mask);
-> -extern int __isolate_lru_page(struct page *page, isolate_mode_t mode);
-> +extern int __isolate_lru_page_prepare(struct page *page, isolate_mode_t mode);
->  extern unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
->  						  unsigned long nr_pages,
->  						  gfp_t gfp_mask,
-> diff --git a/mm/compaction.c b/mm/compaction.c
-> index 4e2c66869041..253382d99969 100644
-> --- a/mm/compaction.c
-> +++ b/mm/compaction.c
-> @@ -887,6 +887,7 @@ static bool too_many_isolated(pg_data_t *pgdat)
->  		if (!valid_page && IS_ALIGNED(low_pfn, pageblock_nr_pages)) {
->  			if (!cc->ignore_skip_hint && get_pageblock_skip(page)) {
->  				low_pfn = end_pfn;
-> +				page = NULL;
->  				goto isolate_abort;
->  			}
->  			valid_page = page;
-> @@ -968,6 +969,21 @@ static bool too_many_isolated(pg_data_t *pgdat)
->  		if (!(cc->gfp_mask & __GFP_FS) && page_mapping(page))
->  			goto isolate_fail;
->  
-> +		/*
-> +		 * Be careful not to clear PageLRU until after we're
-> +		 * sure the page is not being freed elsewhere -- the
-> +		 * page release code relies on it.
-> +		 */
-> +		if (unlikely(!get_page_unless_zero(page)))
-> +			goto isolate_fail;
-> +
-> +		if (__isolate_lru_page_prepare(page, isolate_mode) != 0)
-> +			goto isolate_fail_put;
-> +
-> +		/* Try isolate the page */
-> +		if (!TestClearPageLRU(page))
-> +			goto isolate_fail_put;
-> +
->  		/* If we already hold the lock, we can skip some rechecking */
->  		if (!locked) {
->  			locked = compact_lock_irqsave(&pgdat->lru_lock,
-> @@ -980,10 +996,6 @@ static bool too_many_isolated(pg_data_t *pgdat)
->  					goto isolate_abort;
->  			}
->  
-> -			/* Recheck PageLRU and PageCompound under lock */
-> -			if (!PageLRU(page))
-> -				goto isolate_fail;
-> -
->  			/*
->  			 * Page become compound since the non-locked check,
->  			 * and it's on LRU. It can only be a THP so the order
-> @@ -991,16 +1003,13 @@ static bool too_many_isolated(pg_data_t *pgdat)
->  			 */
->  			if (unlikely(PageCompound(page) && !cc->alloc_contig)) {
->  				low_pfn += compound_nr(page) - 1;
-> -				goto isolate_fail;
-> +				SetPageLRU(page);
-> +				goto isolate_fail_put;
->  			}
->  		}
->  
->  		lruvec = mem_cgroup_page_lruvec(page, pgdat);
->  
-> -		/* Try isolate the page */
-> -		if (__isolate_lru_page(page, isolate_mode) != 0)
-> -			goto isolate_fail;
-> -
->  		/* The whole page is taken off the LRU; skip the tail pages. */
->  		if (PageCompound(page))
->  			low_pfn += compound_nr(page) - 1;
-> @@ -1029,6 +1038,15 @@ static bool too_many_isolated(pg_data_t *pgdat)
->  		}
->  
->  		continue;
-> +
-> +isolate_fail_put:
-> +		/* Avoid potential deadlock in freeing page under lru_lock */
-> +		if (locked) {
-> +			spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-> +			locked = false;
-> +		}
-> +		put_page(page);
-> +
->  isolate_fail:
->  		if (!skip_on_failure)
->  			continue;
-> @@ -1065,9 +1083,15 @@ static bool too_many_isolated(pg_data_t *pgdat)
->  	if (unlikely(low_pfn > end_pfn))
->  		low_pfn = end_pfn;
->  
-> +	page = NULL;
-> +
->  isolate_abort:
->  	if (locked)
->  		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-> +	if (page) {
-> +		SetPageLRU(page);
-> +		put_page(page);
-> +	}
->  
->  	/*
->  	 * Updated the cached scanner pfn once the pageblock has been scanned
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 1b3e0eeaad64..48b50695f883 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -1538,20 +1538,20 @@ unsigned int reclaim_clean_pages_from_list(struct zone *zone,
->   *
->   * returns 0 on success, -ve errno on failure.
->   */
-> -int __isolate_lru_page(struct page *page, isolate_mode_t mode)
-> +int __isolate_lru_page_prepare(struct page *page, isolate_mode_t mode)
->  {
->  	int ret = -EINVAL;
->  
-> -	/* Only take pages on the LRU. */
-> -	if (!PageLRU(page))
-> -		return ret;
-> -
->  	/* Compaction should not handle unevictable pages but CMA can do so */
->  	if (PageUnevictable(page) && !(mode & ISOLATE_UNEVICTABLE))
->  		return ret;
->  
->  	ret = -EBUSY;
->  
-> +	/* Only take pages on the LRU. */
-> +	if (!PageLRU(page))
-> +		return ret;
-> +
+SEV controller provides SEV ASID tracking and resource control
+mechanisms.
 
-So here you do deal with that BUG() issue.  But I'd prefer you to leave
-it as I suggested in 16/32, just start with "int ret = -EBUSY;" and
-don't rearrange the checks here at all.  I say that partly because
-the !PageLRU check is very important (when called for compaction), and
-the easier it is to find (at the very start), the less anxious I get!
+Patch 1 - Overview, motivation, and implementation details of the SEV
+          controller.
+Patch 2 - Kernel documentation of the SEV controller for both
+	  cgroup v1 and v2.
 
->  	/*
->  	 * To minimise LRU disruption, the caller can indicate that it only
->  	 * wants to isolate pages it will be able to operate on without
-> @@ -1592,20 +1592,9 @@ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
->  	if ((mode & ISOLATE_UNMAPPED) && page_mapped(page))
->  		return ret;
->  
-> -	if (likely(get_page_unless_zero(page))) {
-> -		/*
-> -		 * Be careful not to clear PageLRU until after we're
-> -		 * sure the page is not being freed elsewhere -- the
-> -		 * page release code relies on it.
-> -		 */
-> -		ClearPageLRU(page);
-> -		ret = 0;
-> -	}
-> -
-> -	return ret;
-> +	return 0;
->  }
->  
-> -
->  /*
->   * Update LRU sizes after isolating pages. The LRU size updates must
->   * be complete before mem_cgroup_update_lru_size due to a sanity check.
-> @@ -1685,17 +1674,34 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
->  		 * only when the page is being freed somewhere else.
->  		 */
->  		scan += nr_pages;
-> -		switch (__isolate_lru_page(page, mode)) {
-> +		switch (__isolate_lru_page_prepare(page, mode)) {
->  		case 0:
-> +			/*
-> +			 * Be careful not to clear PageLRU until after we're
-> +			 * sure the page is not being freed elsewhere -- the
-> +			 * page release code relies on it.
-> +			 */
-> +			if (unlikely(!get_page_unless_zero(page)))
-> +				goto busy;
-> +
-> +			if (!TestClearPageLRU(page)) {
-> +				/*
-> +				 * This page may in other isolation path,
-> +				 * but we still hold lru_lock.
-> +				 */
-> +				put_page(page);
-> +				goto busy;
-> +			}
-> +
->  			nr_taken += nr_pages;
->  			nr_zone_taken[page_zonenum(page)] += nr_pages;
->  			list_move(&page->lru, dst);
->  			break;
-> -
-> +busy:
->  		case -EBUSY:
+Thanks
 
-It's a long time since I read a C manual. I had to try that out in a
-little test program: and it does seem to do the right thing.  Maybe
-I'm just very ignorant, and everybody else finds that natural: but I'd
-feel more comfortable with the busy label on the line after the
-"case -EBUSY:" - wouldn't you?
+Vipin Sharma (2):
+  KVM: SVM: Create SEV cgroup controller.
+  KVM: SVM: SEV cgroup controller documentation
 
-You could, of course, change that "case -EBUSY" to "default",
-and delete the "default: BUG();" that follows: whatever you prefer.
+ Documentation/admin-guide/cgroup-v1/sev.rst |  94 +++++
+ Documentation/admin-guide/cgroup-v2.rst     |  56 ++-
+ arch/x86/kvm/Makefile                       |   1 +
+ arch/x86/kvm/svm/sev.c                      |  16 +-
+ arch/x86/kvm/svm/sev_cgroup.c               | 414 ++++++++++++++++++++
+ arch/x86/kvm/svm/sev_cgroup.h               |  40 ++
+ include/linux/cgroup_subsys.h               |   3 +
+ init/Kconfig                                |  14 +
+ 8 files changed, 634 insertions(+), 4 deletions(-)
+ create mode 100644 Documentation/admin-guide/cgroup-v1/sev.rst
+ create mode 100644 arch/x86/kvm/svm/sev_cgroup.c
+ create mode 100644 arch/x86/kvm/svm/sev_cgroup.h
 
->  			/* else it is being freed elsewhere */
->  			list_move(&page->lru, src);
-> -			continue;
-> +			break;
+-- 
+2.28.0.681.g6f77f65b4e-goog
 
-Aha. Yes, I like that change, I'm not going to throw a tantrum,
-accusing you of sneaking in unrelated changes etc. You made me look
-back at the history: it was "continue" from back in the days of
-lumpy reclaim, when there was stuff after the switch statement
-which needed to be skipped in the -EBUSY case.  "break" looks
-more natural to me now.
-
->  
->  		default:
->  			BUG();
-> -- 
-> 1.8.3.1
