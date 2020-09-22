@@ -1,70 +1,71 @@
-From: Shakeel Butt <shakeelb@google.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 Subject: Re: [PATCH] memcg: introduce per-memcg reclaim interface
-Date: Tue, 22 Sep 2020 11:56:13 -0700
-Message-ID: <CALvZod6kfF_r5u2ydZ34Q+6QWvg11ZFwfRMHdiNUvi3NJnms=A@mail.gmail.com>
-References: <20200909215752.1725525-1-shakeelb@google.com> <20200921163055.GQ12990@dhcp22.suse.cz>
+Date: Tue, 22 Sep 2020 21:08:59 +0200
+Message-ID: <20200922190859.GH12990@dhcp22.suse.cz>
+References: <20200909215752.1725525-1-shakeelb@google.com>
+ <20200921163055.GQ12990@dhcp22.suse.cz>
  <CALvZod43VXKZ3StaGXK_EZG_fKcW3v3=cEYOWFwp4HNJpOOf8g@mail.gmail.com>
- <20200922114908.GZ12990@dhcp22.suse.cz> <CALvZod4FvE12o53BpeH5WB_McTdCkFTFXgc9gcT1CEHXzQLy_A@mail.gmail.com>
- <20200922165527.GD12990@dhcp22.suse.cz> <CALvZod7K9g9mi599c5+ayLeC4__kckv155QQGVMVy2rXXOY1Rw@mail.gmail.com>
- <20200922183125.GG12990@dhcp22.suse.cz>
+ <20200922114908.GZ12990@dhcp22.suse.cz>
+ <CALvZod4FvE12o53BpeH5WB_McTdCkFTFXgc9gcT1CEHXzQLy_A@mail.gmail.com>
+ <20200922165527.GD12990@dhcp22.suse.cz>
+ <CALvZod7K9g9mi599c5+ayLeC4__kckv155QQGVMVy2rXXOY1Rw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ymw2XfYcqbrKxbh+VHjYTBZabPIEIeS/kxNNZK3Q7GE=;
-        b=DV4EUlN276uVi19xQ/E+YB845hHum+zfsKpyj63GqwBiuV/FeabyS0GRc7fKnRLj2n
-         El2H+Lui81CyaiWNLzdMPKDWLYLYwcx1t3Bl0cf+3L3WPo3DEuDxNQ32HUZUDZriBXaM
-         MpWGnrUlGQSZRctkk3h9v7LtyueARTH7Zw6ACifO2t2eH/xXoieLo19WCHGh6emFW2HL
-         GmTE8yAVvlKEsLZkzm01E/hInUAIwYjUtnkYA0EwlKOTTk4FrV1nf3ocHelxTfr1uAC7
-         KyOW0HGEZ68aIlHfds/PzuFOpCRUeXZ9/wITZ9lIbqEi8gGIzTntzaPkj4b6fpNPQFBp
-         MF5g==
-In-Reply-To: <20200922183125.GG12990@dhcp22.suse.cz>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1600801740;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=CW9QWqJ7q2Kodf4xbjqeZQdYjMsmJi312d4fCh2gG6g=;
+        b=am3UrXxd1MkIUqFBP8aN0slqcWO/Bw63BGSak3pgn1ZPDR8+wNqHKX9srRcZzat4AJ+akz
+        SCCnb2Z4J5dh68Go3WrUZxK/OxrQkwsnTsPrRVAYgMYIFcV2MEkhUwEVgvF23+89DXxAHS
+        Q9tXE/PSUecByYAItejjA5fw1Q82EHg=
+Content-Disposition: inline
+In-Reply-To: <CALvZod7K9g9mi599c5+ayLeC4__kckv155QQGVMVy2rXXOY1Rw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.com>
-Cc: Minchan Kim <minchan@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Greg Thelen <gthelen@google.com>, David Rientjes <rientjes@google.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Yang Shi <shy828301@gmail.com>
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Tue, Sep 22, 2020 at 11:31 AM Michal Hocko <mhocko@suse.com> wrote:
->
-> On Tue 22-09-20 11:10:17, Shakeel Butt wrote:
-> > On Tue, Sep 22, 2020 at 9:55 AM Michal Hocko <mhocko@suse.com> wrote:
-> [...]
-> > > So far I have learned that you are primarily working around an
-> > > implementation detail in the zswap which is doing the swapout path
-> > > directly in the pageout path.
-> >
-> > Wait how did you reach this conclusion? I have explicitly said that we
-> > are not using uswapd like functionality in production. We are using
-> > this interface for proactive reclaim and proactive reclaim is not a
-> > workaround for implementation detail in the zswap.
->
-> Hmm, I must have missed the distinction between the two you have
-> mentioned. Correct me if I am wrong but "latency sensitive" workload is
-> the one that cannot use the high limit, right.
+On Tue 22-09-20 11:10:17, Shakeel Butt wrote:
+> On Tue, Sep 22, 2020 at 9:55 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+[...]
+> > Last but not least the memcg
+> > background reclaim is something that should be possible without a new
+> > interface.
+> 
+> So, it comes down to adding more functionality/semantics to
+> memory.high or introducing a new simple interface. I am fine with
+> either of one but IMO convoluted memory.high might have a higher
+> maintenance cost.
 
-Yes.
+One idea would be to schedule a background worker (which work on behalf
+on the memcg) to do the high limit reclaim with high limit target as
+soon as the high limit is reached. There would be one work item for each
+memcg. Userspace would recheck the high limit on return to the userspace
+and do the reclaim if the excess is larger than a threshold, and sleep
+as the fallback.
 
-> For some reason I thought
-> that your pro-active reclaim usecase is also not compatible with the
-> throttling imposed by the high limit. Hence my conclusion above.
->
+Excessive consumers would get throttled if the background work cannot
+keep up with the charge pace and most of them would return without doing
+any reclaim because there is somebody working on their behalf - and is
+accounted for that.
 
-For proactive reclaim use-case, it is more about the weirdness of
-using memory.high interface for proactive reclaim.
+The semantic of high limit would be preserved IMHO because high limit is
+actively throttled. Where that work is done shouldn't matter as long as
+it is accounted properly and memcg cannot outsource all the work to the
+rest of the system.
 
-Let's suppose I want to reclaim 20 MiB from a job. To use memory.high,
-I have to read memory.current and subtract 20MiB from it and then
-write that to memory.high and once that is done, I have to set
-memory.high to the previous value (job's original high limit).
+Would something like that (with many details to be sorted out of course)
+be feasible?
 
-There is a time window where the allocation of the target job can hit
-the temporary memory.high which will cause uninteresting MEMCG_HIGH
-event, PSI pressure and can potentially over reclaim. Also there is a
-race between reading memory.current and setting the temporary
-memory.high. There are many non-deterministic  variables added to the
-request of reclaiming 20MiB from a job.
-
-Shakeel
+If we do not want to change the existing semantic of high and want a new
+api then I think having another limit for the background reclaim then
+that would make more sense to me. It would resemble the global reclaim
+and kswapd model and something that would be easier to reason about.
+Comparing to echo $N > reclaim which might mean to reclaim any number
+pages around N.
+-- 
+Michal Hocko
+SUSE Labs
