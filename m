@@ -1,77 +1,40 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] memcg: introduce per-memcg reclaim interface
-Date: Tue, 22 Sep 2020 15:38:01 -0700
-Message-ID: <CALvZod5fi51AHhhTCftDfzK-3duCuiJxH0MkGazVLxXkem=XpA@mail.gmail.com>
-References: <20200909215752.1725525-1-shakeelb@google.com> <20200921163055.GQ12990@dhcp22.suse.cz>
- <CALvZod43VXKZ3StaGXK_EZG_fKcW3v3=cEYOWFwp4HNJpOOf8g@mail.gmail.com>
- <20200922114908.GZ12990@dhcp22.suse.cz> <CALvZod4FvE12o53BpeH5WB_McTdCkFTFXgc9gcT1CEHXzQLy_A@mail.gmail.com>
- <20200922165527.GD12990@dhcp22.suse.cz> <CALvZod7K9g9mi599c5+ayLeC4__kckv155QQGVMVy2rXXOY1Rw@mail.gmail.com>
- <20200922190859.GH12990@dhcp22.suse.cz>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH v18 22/32] mm/vmscan: use relock for move_pages_to_lru
+Date: Wed, 23 Sep 2020 09:55:13 +0800
+Message-ID: <45164ea9-d4bb-4c31-6d8d-9c6342e5ea50@linux.alibaba.com>
+References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1598273705-69124-23-git-send-email-alex.shi@linux.alibaba.com>
+ <alpine.LSU.2.11.2009212240370.6434@eggly.anvils>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=kz1r3HryQXkqiHLbeEAR38DUzaGNclbO2eXYvZIA+ds=;
-        b=PEveOPJ4f+0wPNEXIsHG8QLe8dbfpf8OdIEE6qNAO3XlrxzsUHAu74xNxac3EcBv9t
-         dwEq57/jrqdVV/9aTw+Th/XfWtRdyXU6PKI3/dnPQxVV2LGqgvaOgOJv5OqTMymOVSsy
-         WdVlHiF28s/uN7WlQsIHt0hHAcWAF+djM4/XWns9QU/+dfQwFJMwSDmyLmZV7LHrGHfL
-         BkPhiggvEhn1Flrys0yzy4GOf3iZkydCMQmK9XKRAzArQmezqLJgaZaHSd34Ti50coa2
-         Nv4uQ3TAP3SKcOC5xbevm8k2P32aTTvTD2nCMQbFnwfCjdFPsCm9OOKvfE/fxbqDL7s7
-         2/aw==
-In-Reply-To: <20200922190859.GH12990-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <alpine.LSU.2.11.2009212240370.6434-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Jann Horn <jannh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Tue, Sep 22, 2020 at 12:09 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
->
-> On Tue 22-09-20 11:10:17, Shakeel Butt wrote:
-> > On Tue, Sep 22, 2020 at 9:55 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> [...]
-> > > Last but not least the memcg
-> > > background reclaim is something that should be possible without a new
-> > > interface.
-> >
-> > So, it comes down to adding more functionality/semantics to
-> > memory.high or introducing a new simple interface. I am fine with
-> > either of one but IMO convoluted memory.high might have a higher
-> > maintenance cost.
->
-> One idea would be to schedule a background worker (which work on behalf
-> on the memcg) to do the high limit reclaim with high limit target as
-> soon as the high limit is reached. There would be one work item for each
-> memcg. Userspace would recheck the high limit on return to the userspace
-> and do the reclaim if the excess is larger than a threshold, and sleep
-> as the fallback.
->
-> Excessive consumers would get throttled if the background work cannot
-> keep up with the charge pace and most of them would return without doing
-> any reclaim because there is somebody working on their behalf - and is
-> accounted for that.
->
-> The semantic of high limit would be preserved IMHO because high limit is
-> actively throttled. Where that work is done shouldn't matter as long as
-> it is accounted properly and memcg cannot outsource all the work to the
-> rest of the system.
->
-> Would something like that (with many details to be sorted out of course)
-> be feasible?
->
 
-Well what about the proactive reclaim use-case? You are targeting only
-uswapd/background-reclaim use-case.
 
-> If we do not want to change the existing semantic of high and want a new
-> api then I think having another limit for the background reclaim then
-> that would make more sense to me. It would resemble the global reclaim
-> and kswapd model and something that would be easier to reason about.
-> Comparing to echo $N > reclaim which might mean to reclaim any number
-> pages around N.
-> --
+=D4=DA 2020/9/22 =CF=C2=CE=E71:44, Hugh Dickins =D0=B4=B5=C0:
+> On Mon, 24 Aug 2020, Alex Shi wrote:
+>=20
+>> From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>>
+>> Use the relock function to replace relocking action. And try to save few
+>> lock times.
+>>
+>> Signed-off-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.o=
+rg>
+>> Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@publi=
+c.gmane.org>
+>> Reviewed-by: Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@p=
+ublic.gmane.org>
+> NAK. Who wrote this rubbish? Oh, did I? Maybe something you extracted
+> from my tarball. No, we don't need any of this now, as explained when
+> going through 20/32.
+>=20
 
-I am not really against the approach you are proposing but "echo $N >
-reclaim" allows more flexibility and enables more use-cases.
+removed in lruv19.5
+
+Thanks!
