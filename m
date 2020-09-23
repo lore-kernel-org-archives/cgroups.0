@@ -1,48 +1,131 @@
 From: Chunxin Zang <zangchunxin@bytedance.com>
 Subject: Re: [External] Re: [PATCH] mm/memcontrol: Add the drop_cache
  interface for cgroup v2
-Date: Wed, 23 Sep 2020 10:35:29 +0800
-Message-ID: <CAKRVAeNCAVN4qOc57AU_-2dJ8sOT7p6JSO578aD0Seveuv0Rog@mail.gmail.com>
+Date: Wed, 23 Sep 2020 10:40:59 +0800
+Message-ID: <CAKRVAeOKWfdeupv9CAj09xxP5RjKq5ji7n+xVnxo+Q4wR0KzTg@mail.gmail.com>
 References: <20200921080255.15505-1-zangchunxin@bytedance.com>
  <20200921081200.GE12990@dhcp22.suse.cz> <CALOAHbDKvT58UFjxy770VDxO0VWABRYb7GVwgw+NiJp62mB06w@mail.gmail.com>
  <20200921110505.GH12990@dhcp22.suse.cz> <CAKRVAeN5U6S78jF1n8nCs5ioAdqvVn5f6GGTAnA93g_J0daOLw@mail.gmail.com>
  <20200922095136.GA9682@chrisdown.name> <CAKRVAePisoOg8QBz11gPqzEoUdwPiJ-9Z9MyFE2LHzR-r+PseQ@mail.gmail.com>
  <20200922104252.GB9682@chrisdown.name> <CAKRVAeOjST1vJsSXMgj91=tMf1MQTeNp_dz34z=DwL7Weh0bmg@mail.gmail.com>
- <20200922124344.GA34296@chrisdown.name>
+ <CALvZod64Qwzjv3N2PO-EUtMkA4bs_PM=Tq4=cmuM0VO9P3BAjw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <netdev-owner@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <bpf-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=HNLILPO9KGBr2EiE7fPnteeqqVFqeTm0/utbd5V0UfM=;
-        b=gpENJad7aIY/S5kBL5o8YVttNP6P373hhEXKz6ErBwsU/D+zf22imm1nkW4ERBaSHD
-         zpAbAVk6UoSZYDLYJDZkFGLPhDVWGMO30j0pUcW7h49Tryqf3NzJu4RZcL1iD02GoqA6
-         MG4REMrV1LplGXzEGHcMfLHjAQZ1DpNK4aAMFIQctSZ6kzBGbm0dg2ZTVSIvvckdxqRX
-         A8p1DU39WBmIgc/L4nnjM4X9tMLRq8LvlGdaeOQbqxSz6Ff+SemO4COh6UTnhUpLf6VS
-         txktKu+z0qVosUhE2kp0VE8x0/fTRFl8/cXeYa/Z0ziyNv7xI9D9QFTcZQvRCBscssRC
-         /Uug==
-In-Reply-To: <20200922124344.GA34296@chrisdown.name>
+         :cc:content-transfer-encoding;
+        bh=jc8uPyWeA8lh2ZEVJXFhzEZM6SYIOAImDuM4KwfSrTg=;
+        b=D48LKiLW724RXEbvVDcCcvfb/bjfn6Fz7yz848goAqBzaGa96OEdXkzKjJWrEmtr2B
+         u1Ww6BlgX5m69XKUjtHN8FSlwIlBBUpYuv+Iprcmx2j45NU7WOcpX7v16h5UuMpNF38e
+         rsVxKDi8d64KgOP8GtIFzSYqLc0BiBaOMx2UDviVVwCnG96aL140S/UQe+emedYdhZEg
+         hLu/zoRv1FrpWJxCY41I5V0IOBitx8WcSRot3JvqOKnLgKIvj1M9XJRrffwtrDXr8TdH
+         22yXODro1beLbWdfHb8BQK9j1iuDsUBHVXXEoj11HOHfDNHMT70/R3FvWVOmVx7rcYUS
+         MoMw==
+In-Reply-To: <CALvZod64Qwzjv3N2PO-EUtMkA4bs_PM=Tq4=cmuM0VO9P3BAjw@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Chris Down <chris@chrisdown.name>
-Cc: Michal Hocko <mhocko@suse.com>, Yafang Shao <laoar.shao@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, lizefan@huawei.com, Jonathan Corbet <corbet@lwn.net>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, kafai@fb.com, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, andriin@fb.com, john.fastabend@gmail.com, kpsingh@chromium.org, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, netdev <netdev@vger.kernel.org>, bpf@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Chris Down <chris@chrisdown.name>, Michal Hocko <mhocko@suse.com>, Yafang Shao <laoar.shao@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, kafai@fb.com, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, andriin@fb.com, john.fastabend@gmail.com, kpsingh@chromium.org, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, netdev <netdev@vger.kernel.org>, bpf@vger.kernel.org
 
-On Tue, Sep 22, 2020 at 8:43 PM Chris Down <chris@chrisdown.name> wrote:
+On Wed, Sep 23, 2020 at 3:57 AM Shakeel Butt <shakeelb@google.com> wrote:
 >
-> Chunxin Zang writes:
-> >Please forgive me for not being able to understand why setting
-> >memory.low for Type_A can solve the problem.
-> >In my scene, Type_A is the most important, so I will set 100G to memory.low.
-> >But 'memory.low' only takes effect passively when the kernel is
-> >reclaiming memory. It means that reclaim Type_B's memory only when
-> >Type_A  in alloc memory slow path. This will affect Type_A's
-> >performance.
-> >We want to reclaim Type_B's memory in advance when A is expected to be busy.
+> On Tue, Sep 22, 2020 at 5:37 AM Chunxin Zang <zangchunxin@bytedance.com> =
+wrote:
+> >
+> > On Tue, Sep 22, 2020 at 6:42 PM Chris Down <chris@chrisdown.name> wrote=
+:
+> > >
+> > > Chunxin Zang writes:
+> > > >On Tue, Sep 22, 2020 at 5:51 PM Chris Down <chris@chrisdown.name> wr=
+ote:
+> > > >>
+> > > >> Chunxin Zang writes:
+> > > >> >My usecase is that there are two types of services in one server.=
+ They
+> > > >> >have difference
+> > > >> >priorities. Type_A has the highest priority, we need to ensure it=
+'s
+> > > >> >schedule latency=E3=80=81I/O
+> > > >> >latency=E3=80=81memory enough. Type_B has the lowest priority, we=
+ expect it
+> > > >> >will not affect
+> > > >> >Type_A when executed.
+> > > >> >So Type_A could use memory without any limit. Type_B could use me=
+mory
+> > > >> >only when the
+> > > >> >memory is absolutely sufficient. But we cannot estimate how much
+> > > >> >memory Type_B should
+> > > >> >use. Because everything is dynamic. So we can't set Type_B's memo=
+ry.high.
+> > > >> >
+> > > >> >So we want to release the memory of Type_B when global memory is
+> > > >> >insufficient in order
+> > > >> >to ensure the quality of service of Type_A . In the past, we used=
+ the
+> > > >> >'force_empty' interface
+> > > >> >of cgroup v1.
+> > > >>
+> > > >> This sounds like a perfect use case for memory.low on Type_A, and =
+it's pretty
+> > > >> much exactly what we invented it for. What's the problem with that=
+?
+> > > >
+> > > >But we cannot estimate how much memory Type_A uses at least.
+> > >
+> > > memory.low allows ballparking, you don't have to know exactly how muc=
+h it uses.
+> > > Any amount of protection biases reclaim away from that cgroup.
+> > >
+> > > >For example:
+> > > >total memory: 100G
+> > > >At the beginning, Type_A was in an idle state, and it only used 10G =
+of memory.
+> > > >The load is very low. We want to run Type_B to avoid wasting machine=
+ resources.
+> > > >When Type_B runs for a while, it used 80G of memory.
+> > > >At this time Type_A is busy, it needs more memory.
+> > >
+> > > Ok, so set memory.low for Type_A close to your maximum expected value=
+.
+> >
+> > Please forgive me for not being able to understand why setting
+> > memory.low for Type_A can solve the problem.
+> > In my scene, Type_A is the most important, so I will set 100G to memory=
+.low.
+> > But 'memory.low' only takes effect passively when the kernel is
+> > reclaiming memory. It means that reclaim Type_B's memory only when
+> > Type_A  in alloc memory slow path. This will affect Type_A's
+> > performance.
+> > We want to reclaim Type_B's memory in advance when A is expected to be =
+busy.
+> >
 >
-> That's what kswapd reclaim is for, so this distinction is meaningless without
-> measurements :-)
+> How will you know when to reclaim from B? Are you polling /proc/meminfo?
+>
+
+Monitor global memory usage through the daemon. If the memory is used
+80% or 90%, it will reclaim B's memory.
+
+> From what I understand, you want to proactively reclaim from B, so
+> that A does not go into global reclaim and in the worst case kill B,
+> right?
+
+Yes, it is.
+
+>
+> BTW you can use memory.high to reclaim from B by setting it lower than
+> memory.current of B and reset it to 'max' once the reclaim is done.
+> Since 'B' is not high priority (I am assuming not a latency sensitive
+> workload), B hitting temporary memory.high should not be an issue.
+> Also I am assuming you don't much care about the amount of memory to
+> be reclaimed from B, so I think memory.high can fulfil your use-case.
+> However if in future you decide to proactively reclaim from all the
+> jobs based on their priority i.e. more aggressive reclaim from B and a
+> little bit reclaim from A then memory.high is not a good interface.
+>
+> Shakeel
 
 Thanks for these suggestions, I will give it a try.
 
