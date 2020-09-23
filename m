@@ -1,50 +1,50 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH v18 25/32] mm/mlock: remove lru_lock on
- TestClearPageMlocked in munlock_vma_page
-Date: Wed, 23 Sep 2020 09:58:52 +0800
-Message-ID: <289ad388-d91a-92f5-b29c-030b666a74ee@linux.alibaba.com>
-References: <1598273705-69124-1-git-send-email-alex.shi@linux.alibaba.com>
- <1598273705-69124-26-git-send-email-alex.shi@linux.alibaba.com>
- <alpine.LSU.2.11.2009212253320.6434@eggly.anvils>
+From: Chunxin Zang <zangchunxin@bytedance.com>
+Subject: Re: [External] Re: [PATCH] mm/memcontrol: Add the drop_cache
+ interface for cgroup v2
+Date: Wed, 23 Sep 2020 10:35:29 +0800
+Message-ID: <CAKRVAeNCAVN4qOc57AU_-2dJ8sOT7p6JSO578aD0Seveuv0Rog@mail.gmail.com>
+References: <20200921080255.15505-1-zangchunxin@bytedance.com>
+ <20200921081200.GE12990@dhcp22.suse.cz> <CALOAHbDKvT58UFjxy770VDxO0VWABRYb7GVwgw+NiJp62mB06w@mail.gmail.com>
+ <20200921110505.GH12990@dhcp22.suse.cz> <CAKRVAeN5U6S78jF1n8nCs5ioAdqvVn5f6GGTAnA93g_J0daOLw@mail.gmail.com>
+ <20200922095136.GA9682@chrisdown.name> <CAKRVAePisoOg8QBz11gPqzEoUdwPiJ-9Z9MyFE2LHzR-r+PseQ@mail.gmail.com>
+ <20200922104252.GB9682@chrisdown.name> <CAKRVAeOjST1vJsSXMgj91=tMf1MQTeNp_dz34z=DwL7Weh0bmg@mail.gmail.com>
+ <20200922124344.GA34296@chrisdown.name>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.LSU.2.11.2009212253320.6434-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
+Return-path: <netdev-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=HNLILPO9KGBr2EiE7fPnteeqqVFqeTm0/utbd5V0UfM=;
+        b=gpENJad7aIY/S5kBL5o8YVttNP6P373hhEXKz6ErBwsU/D+zf22imm1nkW4ERBaSHD
+         zpAbAVk6UoSZYDLYJDZkFGLPhDVWGMO30j0pUcW7h49Tryqf3NzJu4RZcL1iD02GoqA6
+         MG4REMrV1LplGXzEGHcMfLHjAQZ1DpNK4aAMFIQctSZ6kzBGbm0dg2ZTVSIvvckdxqRX
+         A8p1DU39WBmIgc/L4nnjM4X9tMLRq8LvlGdaeOQbqxSz6Ff+SemO4COh6UTnhUpLf6VS
+         txktKu+z0qVosUhE2kp0VE8x0/fTRFl8/cXeYa/Z0ziyNv7xI9D9QFTcZQvRCBscssRC
+         /Uug==
+In-Reply-To: <20200922124344.GA34296@chrisdown.name>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, "Kirill A. Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Chris Down <chris@chrisdown.name>
+Cc: Michal Hocko <mhocko@suse.com>, Yafang Shao <laoar.shao@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, lizefan@huawei.com, Jonathan Corbet <corbet@lwn.net>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, kafai@fb.com, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, andriin@fb.com, john.fastabend@gmail.com, kpsingh@chromium.org, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, netdev <netdev@vger.kernel.org>, bpf@vger.kernel.org
 
+On Tue, Sep 22, 2020 at 8:43 PM Chris Down <chris@chrisdown.name> wrote:
+>
+> Chunxin Zang writes:
+> >Please forgive me for not being able to understand why setting
+> >memory.low for Type_A can solve the problem.
+> >In my scene, Type_A is the most important, so I will set 100G to memory.low.
+> >But 'memory.low' only takes effect passively when the kernel is
+> >reclaiming memory. It means that reclaim Type_B's memory only when
+> >Type_A  in alloc memory slow path. This will affect Type_A's
+> >performance.
+> >We want to reclaim Type_B's memory in advance when A is expected to be busy.
+>
+> That's what kswapd reclaim is for, so this distinction is meaningless without
+> measurements :-)
 
+Thanks for these suggestions, I will give it a try.
 
-=D4=DA 2020/9/22 =CF=C2=CE=E72:13, Hugh Dickins =D0=B4=B5=C0:
-> On Mon, 24 Aug 2020, Alex Shi wrote:
->=20
->> In the func munlock_vma_page, the page must be PageLocked as well as
->> pages in split_huge_page series funcs. Thus the PageLocked is enough
->> to serialize both funcs.
->>
->> So we could relief the TestClearPageMlocked/hpage_nr_pages which are not
->> necessary under lru lock.
->>
->> As to another munlock func __munlock_pagevec, which no PageLocked
->> protection and should remain lru protecting.
->>
->> Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@publi=
-c.gmane.org>
-> I made some comments on the mlock+munlock situation last week:
-> I won't review this 24/32 and 25/32 now, but will take a look
-> at your github tree tomorrow instead.  Perhaps I'll find you have
-> already done the fixes, perhaps I'll find you have merged these back
-> into earlier patches.  And I won't be reviewing beyond this point:
-> this is enough for now, I think.
->=20
-
-Yes, these 2 patches was fixed as your suggested on=20
-https://github.com/alexshi/linux.git lruv19.5=20
-
-83f8582dcd5a mm/mlock: remove lru_lock on TestClearPageMlocked
-20836d10f0ed mm/mlock: remove __munlock_isolate_lru_page
-
-Thanks!
-Alex
+Best wishes
+Chunxin
