@@ -1,133 +1,65 @@
-From: Chunxin Zang <zangchunxin@bytedance.com>
-Subject: Re: [External] Re: [PATCH] mm/memcontrol: Add the drop_cache
- interface for cgroup v2
-Date: Wed, 23 Sep 2020 10:40:59 +0800
-Message-ID: <CAKRVAeOKWfdeupv9CAj09xxP5RjKq5ji7n+xVnxo+Q4wR0KzTg@mail.gmail.com>
-References: <20200921080255.15505-1-zangchunxin@bytedance.com>
- <20200921081200.GE12990@dhcp22.suse.cz> <CALOAHbDKvT58UFjxy770VDxO0VWABRYb7GVwgw+NiJp62mB06w@mail.gmail.com>
- <20200921110505.GH12990@dhcp22.suse.cz> <CAKRVAeN5U6S78jF1n8nCs5ioAdqvVn5f6GGTAnA93g_J0daOLw@mail.gmail.com>
- <20200922095136.GA9682@chrisdown.name> <CAKRVAePisoOg8QBz11gPqzEoUdwPiJ-9Z9MyFE2LHzR-r+PseQ@mail.gmail.com>
- <20200922104252.GB9682@chrisdown.name> <CAKRVAeOjST1vJsSXMgj91=tMf1MQTeNp_dz34z=DwL7Weh0bmg@mail.gmail.com>
- <CALvZod64Qwzjv3N2PO-EUtMkA4bs_PM=Tq4=cmuM0VO9P3BAjw@mail.gmail.com>
+From: Chengming Zhou <zhouchengming@bytedance.com>
+Subject: Re: [Phishing Risk] [External] Re: [PATCH] cgroup: Add cgroupstats
+ numbers to cgroup.stat file
+Date: Wed, 23 Sep 2020 17:57:16 +0800
+Message-ID: <b2fda7f4-e7d1-9e2c-6de6-c1a8ead23568@bytedance.com>
+References: <20200915155349.15181-1-zhouchengming@bytedance.com>
+ <20200921145009.GD4268@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <bpf-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=jc8uPyWeA8lh2ZEVJXFhzEZM6SYIOAImDuM4KwfSrTg=;
-        b=D48LKiLW724RXEbvVDcCcvfb/bjfn6Fz7yz848goAqBzaGa96OEdXkzKjJWrEmtr2B
-         u1Ww6BlgX5m69XKUjtHN8FSlwIlBBUpYuv+Iprcmx2j45NU7WOcpX7v16h5UuMpNF38e
-         rsVxKDi8d64KgOP8GtIFzSYqLc0BiBaOMx2UDviVVwCnG96aL140S/UQe+emedYdhZEg
-         hLu/zoRv1FrpWJxCY41I5V0IOBitx8WcSRot3JvqOKnLgKIvj1M9XJRrffwtrDXr8TdH
-         22yXODro1beLbWdfHb8BQK9j1iuDsUBHVXXEoj11HOHfDNHMT70/R3FvWVOmVx7rcYUS
-         MoMw==
-In-Reply-To: <CALvZod64Qwzjv3N2PO-EUtMkA4bs_PM=Tq4=cmuM0VO9P3BAjw@mail.gmail.com>
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=ewCx0XKQ1ju6wfyj3Pz3K+HET98S+3k20JpX1ePN7aQ=;
+        b=MD1ytn3xzFQiWdnsMkQCBk2hz87iEDkmmNejgl1t5v6oTcnCs3th4hp/TnrsiKBqmR
+         9NDXScVlMBTL6o7guiemcfft7wumzcfUV1pppS+K/eAQnVb7mn7ffvhkJvU9TLdFlCEU
+         ZpUYlgHJPiw4VLODvjkMA6m9IFhAD2KHrgxTlPqVTxSC6ud2gm6c4K+VjdnPgfZSARPx
+         h4XY+rRc7UB05Jiixoj0yiTh6z51VIEtzxfCkFGQm6mp8tgdd3o9hOCoOGhwanyYXnSi
+         DL3ACAV+TXF3FKUzSlkoXu/vJ5SKuoPlg911HSRmnKPQALxl/uAJbocVIP8lmu1Fo9EQ
+         xJmw==
+In-Reply-To: <20200921145009.GD4268@mtj.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Chris Down <chris@chrisdown.name>, Michal Hocko <mhocko@suse.com>, Yafang Shao <laoar.shao@gmail.com>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Jonathan Corbet <corbet@lwn.net>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, kafai@fb.com, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, andriin@fb.com, john.fastabend@gmail.com, kpsingh@chromium.org, Cgroups <cgroups@vger.kernel.org>, linux-doc@vger.kernel.org, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, netdev <netdev@vger.kernel.org>, bpf@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: lizefan@huawei.com, hannes@cmpxchg.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, luodaowen.backend@bytedance.com, songmuchun@bytedance.com
 
-On Wed, Sep 23, 2020 at 3:57 AM Shakeel Butt <shakeelb@google.com> wrote:
+
+在 2020/9/21 下午10:50, Tejun Heo 写道:
+> Hello,
 >
-> On Tue, Sep 22, 2020 at 5:37 AM Chunxin Zang <zangchunxin@bytedance.com> =
-wrote:
-> >
-> > On Tue, Sep 22, 2020 at 6:42 PM Chris Down <chris@chrisdown.name> wrote=
-:
-> > >
-> > > Chunxin Zang writes:
-> > > >On Tue, Sep 22, 2020 at 5:51 PM Chris Down <chris@chrisdown.name> wr=
-ote:
-> > > >>
-> > > >> Chunxin Zang writes:
-> > > >> >My usecase is that there are two types of services in one server.=
- They
-> > > >> >have difference
-> > > >> >priorities. Type_A has the highest priority, we need to ensure it=
-'s
-> > > >> >schedule latency=E3=80=81I/O
-> > > >> >latency=E3=80=81memory enough. Type_B has the lowest priority, we=
- expect it
-> > > >> >will not affect
-> > > >> >Type_A when executed.
-> > > >> >So Type_A could use memory without any limit. Type_B could use me=
-mory
-> > > >> >only when the
-> > > >> >memory is absolutely sufficient. But we cannot estimate how much
-> > > >> >memory Type_B should
-> > > >> >use. Because everything is dynamic. So we can't set Type_B's memo=
-ry.high.
-> > > >> >
-> > > >> >So we want to release the memory of Type_B when global memory is
-> > > >> >insufficient in order
-> > > >> >to ensure the quality of service of Type_A . In the past, we used=
- the
-> > > >> >'force_empty' interface
-> > > >> >of cgroup v1.
-> > > >>
-> > > >> This sounds like a perfect use case for memory.low on Type_A, and =
-it's pretty
-> > > >> much exactly what we invented it for. What's the problem with that=
-?
-> > > >
-> > > >But we cannot estimate how much memory Type_A uses at least.
-> > >
-> > > memory.low allows ballparking, you don't have to know exactly how muc=
-h it uses.
-> > > Any amount of protection biases reclaim away from that cgroup.
-> > >
-> > > >For example:
-> > > >total memory: 100G
-> > > >At the beginning, Type_A was in an idle state, and it only used 10G =
-of memory.
-> > > >The load is very low. We want to run Type_B to avoid wasting machine=
- resources.
-> > > >When Type_B runs for a while, it used 80G of memory.
-> > > >At this time Type_A is busy, it needs more memory.
-> > >
-> > > Ok, so set memory.low for Type_A close to your maximum expected value=
-.
-> >
-> > Please forgive me for not being able to understand why setting
-> > memory.low for Type_A can solve the problem.
-> > In my scene, Type_A is the most important, so I will set 100G to memory=
-.low.
-> > But 'memory.low' only takes effect passively when the kernel is
-> > reclaiming memory. It means that reclaim Type_B's memory only when
-> > Type_A  in alloc memory slow path. This will affect Type_A's
-> > performance.
-> > We want to reclaim Type_B's memory in advance when A is expected to be =
-busy.
-> >
+> On Tue, Sep 15, 2020 at 11:53:49PM +0800, Chengming Zhou wrote:
+>> In the cgroup v1, we can use netlink interface to get cgroupstats for
+>> a cgroup. But it has been excluded from cgroup v2 interface intentionally
+>> due to the duplication and inconsistencies with other statistics.
+>> To make container monitor tool like "cadvisor" continue to work, we add
+>> these cgroupstats numbers to the cgroup.stat file, and change the
+>> admin-guide doc accordingly.
+> So, we can't add O(nr_threads) operations to cgroup.stat reads. There are
+> two ways forward that I can see.
 >
-> How will you know when to reclaim from B? Are you polling /proc/meminfo?
+> * Investigate how these counters are being used. If it's used for congestion
+>   detection, pressure metrics are likely better indicators to use anyway. If
+>   the usage frequency is low enough, maybe querying from userspace should
+>   work?
 >
-
-Monitor global memory usage through the daemon. If the memory is used
-80% or 90%, it will reclaim B's memory.
-
-> From what I understand, you want to proactively reclaim from B, so
-> that A does not go into global reclaim and in the worst case kill B,
-> right?
-
-Yes, it is.
-
+> * If the need for these per-cgroup task state counters is really
+>   justifiable, the counters should be maintained from scheduling event
+>   directly and summed up using rstat like other statistics.
 >
-> BTW you can use memory.high to reclaim from B by setting it lower than
-> memory.current of B and reset it to 'max' once the reclaim is done.
-> Since 'B' is not high priority (I am assuming not a latency sensitive
-> workload), B hitting temporary memory.high should not be an issue.
-> Also I am assuming you don't much care about the amount of memory to
-> be reclaimed from B, so I think memory.high can fulfil your use-case.
-> However if in future you decide to proactively reclaim from all the
-> jobs based on their priority i.e. more aggressive reclaim from B and a
-> little bit reclaim from A then memory.high is not a good interface.
+> Thanks.
 >
-> Shakeel
+Well, I see. These counters are being used for load monitor and debug,
+pressure metrics
 
-Thanks for these suggestions, I will give it a try.
+is good for congestion detection, but more details needed for debug when
+problem happened.
 
-Best wishes
-Chunxin
+And I noticed PSI has maintained these taskstats from scheduler event
+already. I think we can
+
+just export these counters gracefully.
+
+Thanks.
+
