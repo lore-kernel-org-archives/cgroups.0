@@ -1,82 +1,65 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v19 14/20] mm/mlock: remove __munlock_isolate_lru_page
-Date: Thu, 24 Sep 2020 11:28:29 +0800
-Message-ID: <1600918115-22007-15-git-send-email-alex.shi@linux.alibaba.com>
-References: <1600918115-22007-1-git-send-email-alex.shi@linux.alibaba.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/13] fs: remove the unused SB_I_MULTIROOT flag
+Date: Thu, 24 Sep 2020 08:51:28 +0200
+Message-ID: <20200924065140.726436-2-hch@lst.de>
+References: <20200924065140.726436-1-hch@lst.de>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1600918115-22007-1-git-send-email-alex.shi@linux.alibaba.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=ZzPx71qgJF0jC0ikEBgBKShPtgyqvHrdfndjbCu7C3c=; b=XUFcuzWy60D3s8pxvmU8mmt6xP
+        a5KtiaRQVXJifB651UMtAjWRxMib0YObi/FPgk2O8+1Br4UYxRrvOMiR/Y/1SB5fPjZ2pxQBNfgzb
+        4OXHKYc+ovmJJwNys7gjgm9A9vk0V+0ta6/+ECBHyxrlilHmxjzSkmnm+EQ4n/X7f1ir//eTIwmZD
+        AVApt4a76FZYddf361u9kKYhGkmUfg26eH1hS0Z8/FZt6MNh8B4s4kiZo3TsVgN0rYbCpo/4cbVMn
+        dY+2XXF2/Gfct2itXYVT6aKOVcRef77ztCUnX9W9i8Bwm1fLgEAeOgO74vo7lOEK99PoqR/6gA1z9
+        gU9HJDCQ==;
+In-Reply-To: <20200924065140.726436-1-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com, aaron.lwe@gmail.com
-Cc: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Vlastimil Babka <vbabka@suse.cz>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Coly Li <colyli@suse.de>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, Justin Sanders <justin@coraid.com>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Jan Kara <jack@suse.cz>, Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
-The func only has one caller, remove it to clean up code and simplify
-code.
+The last user of SB_I_MULTIROOT is disappeared with commit f2aedb713c28
+("NFS: Add fs_context support.")
 
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Acked-by: Hugh Dickins <hughd@google.com>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- mm/mlock.c | 31 +++++++++----------------------
- 1 file changed, 9 insertions(+), 22 deletions(-)
+ fs/namei.c         | 4 ++--
+ include/linux/fs.h | 1 -
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/mm/mlock.c b/mm/mlock.c
-index 796c726a0407..d487aa864e86 100644
---- a/mm/mlock.c
-+++ b/mm/mlock.c
-@@ -106,26 +106,6 @@ void mlock_vma_page(struct page *page)
- }
+diff --git a/fs/namei.c b/fs/namei.c
+index e99e2a9da0f7de..f1eb8ccd2be958 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -568,8 +568,8 @@ static bool path_connected(struct vfsmount *mnt, struct dentry *dentry)
+ {
+ 	struct super_block *sb = mnt->mnt_sb;
  
- /*
-- * Isolate a page from LRU with optional get_page() pin.
-- * Assumes lru_lock already held and page already pinned.
-- */
--static bool __munlock_isolate_lru_page(struct page *page, bool getpage)
--{
--	if (PageLRU(page)) {
--		struct lruvec *lruvec;
--
--		lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
--		if (getpage)
--			get_page(page);
--		ClearPageLRU(page);
--		del_page_from_lru_list(page, lruvec, page_lru(page));
--		return true;
--	}
--
--	return false;
--}
--
--/*
-  * Finish munlock after successful page isolation
-  *
-  * Page must be locked. This is a wrapper for try_to_munlock()
-@@ -296,9 +276,16 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
- 			 * We already have pin from follow_page_mask()
- 			 * so we can spare the get_page() here.
- 			 */
--			if (__munlock_isolate_lru_page(page, false))
-+			if (PageLRU(page)) {
-+				struct lruvec *lruvec;
-+
-+				ClearPageLRU(page);
-+				lruvec = mem_cgroup_page_lruvec(page,
-+							page_pgdat(page));
-+				del_page_from_lru_list(page, lruvec,
-+							page_lru(page));
- 				continue;
--			else
-+			} else
- 				__munlock_isolation_failed(page);
- 		} else {
- 			delta_munlocked++;
+-	/* Bind mounts and multi-root filesystems can have disconnected paths */
+-	if (!(sb->s_iflags & SB_I_MULTIROOT) && (mnt->mnt_root == sb->s_root))
++	/* Bind mounts can have disconnected paths */
++	if (mnt->mnt_root == sb->s_root)
+ 		return true;
+ 
+ 	return is_subdir(dentry, mnt->mnt_root);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 7519ae003a082c..fbd74df5ce5f34 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1385,7 +1385,6 @@ extern int send_sigurg(struct fown_struct *fown);
+ #define SB_I_CGROUPWB	0x00000001	/* cgroup-aware writeback enabled */
+ #define SB_I_NOEXEC	0x00000002	/* Ignore executables on this fs */
+ #define SB_I_NODEV	0x00000004	/* Ignore devices on this fs */
+-#define SB_I_MULTIROOT	0x00000008	/* Multiple roots to the dentry tree */
+ 
+ /* sb->s_iflags to limit user namespace mounts */
+ #define SB_I_USERNS_VISIBLE		0x00000010 /* fstype already mounted */
 -- 
-1.8.3.1
+2.28.0
 
