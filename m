@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 13/13] bdi: replace BDI_CAP_NO_{WRITEBACK,ACCT_DIRTY} with a single flag
-Date: Thu, 24 Sep 2020 08:51:40 +0200
-Message-ID: <20200924065140.726436-14-hch@lst.de>
+Subject: [PATCH 05/13] bdi: initialize ->ra_pages and ->io_pages in bdi_init
+Date: Thu, 24 Sep 2020 08:51:32 +0200
+Message-ID: <20200924065140.726436-6-hch@lst.de>
 References: <20200924065140.726436-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,315 +10,185 @@ DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=MY4XScv0SUe+8z8haC+/G063lSniL07sW1RR2khIdts=; b=bFWX5KW1+dmQG/JunZeGU8Et2A
-        pzex90SSQYMWEuC3tqMSjNa31gCsympmamtumAZ18hUZC9v7YTDYDh6KBYa85B0Abx+5KjwuXh9SP
-        n1omaYjMYLVna7FpV6ybuPLXe7EhKb5mB+k9NCgLob/hVTjnclgCnXmNAM4VoIqCdVZFLvOQ/GzuP
-        UQTRjz5tvyhIJj1JmVvnnFHxZKCJlp28/6/xnnjX37A48+cAbw/anB+B3mK/WRnO0Qt6L9uGX/KVv
-        6o15Y8Xw7m7SCCM3nGv2gAnRzkqio1zuXWxDoaVRdEWn2dxwLfGrRdmxoOSHLLlEViNv11v+/15Xf
-        gXeQiZfw==;
+        bh=m8GhkUhVC45RKNOvk9LAr0995X5gQH+nYESehLOLs8I=; b=Gt28Ha/7vWx1VDuu/1t+IWSVjj
+        Mo61AV+Ao2fzcmr8WZ2o2Dmz4Fbja2w1R0k6K1Si4TNa/PDOaNaHDaW4tT25gH64xlPzsFS8MRkxL
+        q3HxKfPGOOaBb/vGR/yCOgGiZ45ldJep35zVt+vB89WrbIPvpV+pVOSEgEMu7Su9QwCiExylWwmX9
+        Xb11PLrhMF6HLnsvWMIoOWBPmEMyq/CztekbecczSEjZ7gHklkIHKfXIVzKvbZAVr0iQb+SfqJW+r
+        r5SCvFQ9o1z7evdPG7RJvZ/mqOh9sLeBaqSy0TzKSu6q7vfvF4BzN/IjHfOrLVvJDvyiROz4ur0NR
+        b8vewvcw==;
 In-Reply-To: <20200924065140.726436-1-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Jens Axboe <axboe@kernel.dk>
-Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Coly Li <colyli@suse.de>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, Justin Sanders <justin@coraid.com>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Jan Kara <jack@suse.cz>, Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Coly Li <colyli@suse.de>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, Justin Sanders <justin@coraid.com>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Jan Kara <jack@suse.cz>, David Sterba <dsterba@suse.com>
 
-Replace the two negative flags that are always used together with a
-single positive flag that indicates the writeback capability instead
-of two related non-capabilities.  Also remove the pointless wrappers
-to just check the flag.
+Set up a readahead size by default, as very few users have a good
+reason to change it.  This means code, ecryptfs, and orangefs now
+set up the values while they were previously missing it, while ubifs,
+mtd and vboxsf manually set it to 0 to avoid readahead.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Acked-by: David Sterba <dsterba@suse.com> [btrfs]
+Acked-by: Richard Weinberger <richard@nod.at> [ubifs, mtd]
 ---
- fs/9p/vfs_file.c            |  2 +-
- fs/fs-writeback.c           |  7 +++---
- include/linux/backing-dev.h | 48 ++++++++-----------------------------
- mm/backing-dev.c            |  6 ++---
- mm/filemap.c                |  4 ++--
- mm/memcontrol.c             |  2 +-
- mm/memory-failure.c         |  2 +-
- mm/migrate.c                |  2 +-
- mm/mmap.c                   |  2 +-
- mm/page-writeback.c         | 12 +++++-----
- 10 files changed, 29 insertions(+), 58 deletions(-)
+ block/blk-core.c      | 2 --
+ drivers/mtd/mtdcore.c | 2 ++
+ fs/9p/vfs_super.c     | 6 ++++--
+ fs/afs/super.c        | 1 -
+ fs/btrfs/disk-io.c    | 1 -
+ fs/fuse/inode.c       | 1 -
+ fs/nfs/super.c        | 9 +--------
+ fs/ubifs/super.c      | 2 ++
+ fs/vboxsf/super.c     | 2 ++
+ mm/backing-dev.c      | 2 ++
+ 10 files changed, 13 insertions(+), 15 deletions(-)
 
-diff --git a/fs/9p/vfs_file.c b/fs/9p/vfs_file.c
-index 3576123d82990e..6ecf863bfa2f4b 100644
---- a/fs/9p/vfs_file.c
-+++ b/fs/9p/vfs_file.c
-@@ -625,7 +625,7 @@ static void v9fs_mmap_vm_close(struct vm_area_struct *vma)
+diff --git a/block/blk-core.c b/block/blk-core.c
+index ca3f0f00c9435f..865d39e5be2b28 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -538,8 +538,6 @@ struct request_queue *blk_alloc_queue(int node_id)
+ 	if (!q->stats)
+ 		goto fail_stats;
  
- 	inode = file_inode(vma->vm_file);
+-	q->backing_dev_info->ra_pages = VM_READAHEAD_PAGES;
+-	q->backing_dev_info->io_pages = VM_READAHEAD_PAGES;
+ 	q->backing_dev_info->capabilities = BDI_CAP_CGROUP_WRITEBACK;
+ 	q->node = node_id;
  
--	if (!mapping_cap_writeback_dirty(inode->i_mapping))
-+	if (!mapping_can_writeback(inode->i_mapping))
- 		wbc.nr_to_write = 0;
+diff --git a/drivers/mtd/mtdcore.c b/drivers/mtd/mtdcore.c
+index 7d930569a7dfb7..b5e5d3140f578e 100644
+--- a/drivers/mtd/mtdcore.c
++++ b/drivers/mtd/mtdcore.c
+@@ -2196,6 +2196,8 @@ static struct backing_dev_info * __init mtd_bdi_init(char *name)
+ 	bdi = bdi_alloc(NUMA_NO_NODE);
+ 	if (!bdi)
+ 		return ERR_PTR(-ENOMEM);
++	bdi->ra_pages = 0;
++	bdi->io_pages = 0;
  
- 	might_sleep();
-diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-index 149227160ff0b0..d4f84a2fe0878e 100644
---- a/fs/fs-writeback.c
-+++ b/fs/fs-writeback.c
-@@ -2321,7 +2321,7 @@ void __mark_inode_dirty(struct inode *inode, int flags)
+ 	/*
+ 	 * We put '-0' suffix to the name to get the same name format as we
+diff --git a/fs/9p/vfs_super.c b/fs/9p/vfs_super.c
+index 74df32be4c6a52..e34fa20acf612e 100644
+--- a/fs/9p/vfs_super.c
++++ b/fs/9p/vfs_super.c
+@@ -80,8 +80,10 @@ v9fs_fill_super(struct super_block *sb, struct v9fs_session_info *v9ses,
+ 	if (ret)
+ 		return ret;
  
- 			wb = locked_inode_to_wb_and_lock_list(inode);
+-	if (v9ses->cache)
+-		sb->s_bdi->ra_pages = VM_READAHEAD_PAGES;
++	if (!v9ses->cache) {
++		sb->s_bdi->ra_pages = 0;
++		sb->s_bdi->io_pages = 0;
++	}
  
--			WARN(bdi_cap_writeback_dirty(wb->bdi) &&
-+			WARN((wb->bdi->capabilities & BDI_CAP_WRITEBACK) &&
- 			     !test_bit(WB_registered, &wb->state),
- 			     "bdi-%s not registered\n", bdi_dev_name(wb->bdi));
+ 	sb->s_flags |= SB_ACTIVE | SB_DIRSYNC;
+ 	if (!v9ses->cache)
+diff --git a/fs/afs/super.c b/fs/afs/super.c
+index b552357b1d1379..3a40ee752c1e3f 100644
+--- a/fs/afs/super.c
++++ b/fs/afs/super.c
+@@ -456,7 +456,6 @@ static int afs_fill_super(struct super_block *sb, struct afs_fs_context *ctx)
+ 	ret = super_setup_bdi(sb);
+ 	if (ret)
+ 		return ret;
+-	sb->s_bdi->ra_pages	= VM_READAHEAD_PAGES;
  
-@@ -2346,7 +2346,8 @@ void __mark_inode_dirty(struct inode *inode, int flags)
- 			 * to make sure background write-back happens
- 			 * later.
- 			 */
--			if (bdi_cap_writeback_dirty(wb->bdi) && wakeup_bdi)
-+			if (wakeup_bdi &&
-+			    (wb->bdi->capabilities & BDI_CAP_WRITEBACK))
- 				wb_wakeup_delayed(wb);
- 			return;
- 		}
-@@ -2581,7 +2582,7 @@ int write_inode_now(struct inode *inode, int sync)
- 		.range_end = LLONG_MAX,
- 	};
+ 	/* allocate the root inode and dentry */
+ 	if (as->dyn_root) {
+diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
+index f6bba7eb1fa171..047934cea25efa 100644
+--- a/fs/btrfs/disk-io.c
++++ b/fs/btrfs/disk-io.c
+@@ -3092,7 +3092,6 @@ int __cold open_ctree(struct super_block *sb, struct btrfs_fs_devices *fs_device
+ 	}
  
--	if (!mapping_cap_writeback_dirty(inode->i_mapping))
-+	if (!mapping_can_writeback(inode->i_mapping))
- 		wbc.nr_to_write = 0;
+ 	sb->s_bdi->capabilities |= BDI_CAP_CGROUP_WRITEBACK;
+-	sb->s_bdi->ra_pages = VM_READAHEAD_PAGES;
+ 	sb->s_bdi->ra_pages *= btrfs_super_num_devices(disk_super);
+ 	sb->s_bdi->ra_pages = max(sb->s_bdi->ra_pages, SZ_4M / PAGE_SIZE);
  
- 	might_sleep();
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index b217344a2c63be..44df4fcef65c1e 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -110,27 +110,14 @@ int bdi_set_max_ratio(struct backing_dev_info *bdi, unsigned int max_ratio);
- /*
-  * Flags in backing_dev_info::capability
-  *
-- * The first three flags control whether dirty pages will contribute to the
-- * VM's accounting and whether writepages() should be called for dirty pages
-- * (something that would not, for example, be appropriate for ramfs)
-- *
-- * WARNING: these flags are closely related and should not normally be
-- * used separately.  The BDI_CAP_NO_ACCT_AND_WRITEBACK combines these
-- * three flags into a single convenience macro.
-- *
-- * BDI_CAP_NO_ACCT_DIRTY:  Dirty pages shouldn't contribute to accounting
-- * BDI_CAP_NO_WRITEBACK:   Don't write pages back
-- * BDI_CAP_WRITEBACK_ACCT: Automatically account writeback pages
-- * BDI_CAP_STRICTLIMIT:    Keep number of dirty pages below bdi threshold.
-+ * BDI_CAP_WRITEBACK:		Supports dirty page writeback, and dirty pages
-+ *				should contribute to accounting
-+ * BDI_CAP_WRITEBACK_ACCT:	Automatically account writeback pages
-+ * BDI_CAP_STRICTLIMIT:		Keep number of dirty pages below bdi threshold
-  */
--#define BDI_CAP_NO_ACCT_DIRTY	0x00000001
--#define BDI_CAP_NO_WRITEBACK	0x00000002
--#define BDI_CAP_WRITEBACK_ACCT	0x00000004
--#define BDI_CAP_STRICTLIMIT	0x00000010
--#define BDI_CAP_CGROUP_WRITEBACK 0x00000020
--
--#define BDI_CAP_NO_ACCT_AND_WRITEBACK \
--	(BDI_CAP_NO_WRITEBACK | BDI_CAP_NO_ACCT_DIRTY)
-+#define BDI_CAP_WRITEBACK		(1 << 0)
-+#define BDI_CAP_WRITEBACK_ACCT		(1 << 1)
-+#define BDI_CAP_STRICTLIMIT		(1 << 2)
+diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
+index bba747520e9b08..17b00670fb539e 100644
+--- a/fs/fuse/inode.c
++++ b/fs/fuse/inode.c
+@@ -1049,7 +1049,6 @@ static int fuse_bdi_init(struct fuse_conn *fc, struct super_block *sb)
+ 	if (err)
+ 		return err;
  
- extern struct backing_dev_info noop_backing_dev_info;
+-	sb->s_bdi->ra_pages = VM_READAHEAD_PAGES;
+ 	/* fuse does it's own writeback accounting */
+ 	sb->s_bdi->capabilities = BDI_CAP_NO_ACCT_WB | BDI_CAP_STRICTLIMIT;
  
-@@ -169,24 +156,9 @@ static inline int wb_congested(struct bdi_writeback *wb, int cong_bits)
- long congestion_wait(int sync, long timeout);
- long wait_iff_congested(int sync, long timeout);
+diff --git a/fs/nfs/super.c b/fs/nfs/super.c
+index 7a70287f21a2c1..f943e37853fa25 100644
+--- a/fs/nfs/super.c
++++ b/fs/nfs/super.c
+@@ -1200,13 +1200,6 @@ static void nfs_get_cache_cookie(struct super_block *sb,
+ }
+ #endif
  
--static inline bool bdi_cap_writeback_dirty(struct backing_dev_info *bdi)
+-static void nfs_set_readahead(struct backing_dev_info *bdi,
+-			      unsigned long iomax_pages)
 -{
--	return !(bdi->capabilities & BDI_CAP_NO_WRITEBACK);
+-	bdi->ra_pages = VM_READAHEAD_PAGES;
+-	bdi->io_pages = iomax_pages;
 -}
 -
--static inline bool bdi_cap_account_dirty(struct backing_dev_info *bdi)
--{
--	return !(bdi->capabilities & BDI_CAP_NO_ACCT_DIRTY);
--}
--
--static inline bool mapping_cap_writeback_dirty(struct address_space *mapping)
--{
--	return bdi_cap_writeback_dirty(inode_to_bdi(mapping->host));
--}
--
--static inline bool mapping_cap_account_dirty(struct address_space *mapping)
-+static inline bool mapping_can_writeback(struct address_space *mapping)
+ int nfs_get_tree_common(struct fs_context *fc)
  {
--	return bdi_cap_account_dirty(inode_to_bdi(mapping->host));
-+	return inode_to_bdi(mapping->host)->capabilities & BDI_CAP_WRITEBACK;
- }
+ 	struct nfs_fs_context *ctx = nfs_fc2context(fc);
+@@ -1251,7 +1244,7 @@ int nfs_get_tree_common(struct fs_context *fc)
+ 					     MINOR(server->s_dev));
+ 		if (error)
+ 			goto error_splat_super;
+-		nfs_set_readahead(s->s_bdi, server->rpages);
++		s->s_bdi->io_pages = server->rpages;
+ 		server->super = s;
+ 	}
  
- static inline int bdi_sched_wait(void *word)
-@@ -223,7 +195,7 @@ static inline bool inode_cgwb_enabled(struct inode *inode)
+diff --git a/fs/ubifs/super.c b/fs/ubifs/super.c
+index a2420c900275a8..fbddb2a1c03f5e 100644
+--- a/fs/ubifs/super.c
++++ b/fs/ubifs/super.c
+@@ -2177,6 +2177,8 @@ static int ubifs_fill_super(struct super_block *sb, void *data, int silent)
+ 				   c->vi.vol_id);
+ 	if (err)
+ 		goto out_close;
++	sb->s_bdi->ra_pages = 0;
++	sb->s_bdi->io_pages = 0;
  
- 	return cgroup_subsys_on_dfl(memory_cgrp_subsys) &&
- 		cgroup_subsys_on_dfl(io_cgrp_subsys) &&
--		bdi_cap_account_dirty(bdi) &&
-+		(bdi->capabilities & BDI_CAP_WRITEBACK) &&
- 		(inode->i_sb->s_iflags & SB_I_CGROUPWB);
- }
+ 	sb->s_fs_info = c;
+ 	sb->s_magic = UBIFS_SUPER_MAGIC;
+diff --git a/fs/vboxsf/super.c b/fs/vboxsf/super.c
+index 8fe03b4a0d2b03..8e3792177a8523 100644
+--- a/fs/vboxsf/super.c
++++ b/fs/vboxsf/super.c
+@@ -167,6 +167,8 @@ static int vboxsf_fill_super(struct super_block *sb, struct fs_context *fc)
+ 	err = super_setup_bdi_name(sb, "vboxsf-%d", sbi->bdi_id);
+ 	if (err)
+ 		goto fail_free;
++	sb->s_bdi->ra_pages = 0;
++	sb->s_bdi->io_pages = 0;
  
+ 	/* Turn source into a shfl_string and map the folder */
+ 	size = strlen(fc->source) + 1;
 diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index df18f0088dd3f5..408d5051d05b3d 100644
+index 8e8b00627bb2d8..2dac3be6127127 100644
 --- a/mm/backing-dev.c
 +++ b/mm/backing-dev.c
-@@ -14,9 +14,7 @@
- #include <linux/device.h>
- #include <trace/events/writeback.h>
- 
--struct backing_dev_info noop_backing_dev_info = {
--	.capabilities	= BDI_CAP_NO_ACCT_AND_WRITEBACK,
--};
-+struct backing_dev_info noop_backing_dev_info;
- EXPORT_SYMBOL_GPL(noop_backing_dev_info);
- 
- static struct class *bdi_class;
-@@ -745,7 +743,7 @@ struct backing_dev_info *bdi_alloc(int node_id)
+@@ -746,6 +746,8 @@ struct backing_dev_info *bdi_alloc(int node_id)
  		kfree(bdi);
  		return NULL;
  	}
--	bdi->capabilities = BDI_CAP_WRITEBACK_ACCT;
-+	bdi->capabilities = BDI_CAP_WRITEBACK | BDI_CAP_WRITEBACK_ACCT;
- 	bdi->ra_pages = VM_READAHEAD_PAGES;
- 	bdi->io_pages = VM_READAHEAD_PAGES;
++	bdi->ra_pages = VM_READAHEAD_PAGES;
++	bdi->io_pages = VM_READAHEAD_PAGES;
  	return bdi;
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 1aaea26556cc7e..6c2a0139e22fa3 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -414,7 +414,7 @@ int __filemap_fdatawrite_range(struct address_space *mapping, loff_t start,
- 		.range_end = end,
- 	};
- 
--	if (!mapping_cap_writeback_dirty(mapping) ||
-+	if (!mapping_can_writeback(mapping) ||
- 	    !mapping_tagged(mapping, PAGECACHE_TAG_DIRTY))
- 		return 0;
- 
-@@ -1702,7 +1702,7 @@ struct page *pagecache_get_page(struct address_space *mapping, pgoff_t index,
- no_page:
- 	if (!page && (fgp_flags & FGP_CREAT)) {
- 		int err;
--		if ((fgp_flags & FGP_WRITE) && mapping_cap_account_dirty(mapping))
-+		if ((fgp_flags & FGP_WRITE) && mapping_can_writeback(mapping))
- 			gfp_mask |= __GFP_WRITE;
- 		if (fgp_flags & FGP_NOFS)
- 			gfp_mask &= ~__GFP_FS;
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b807952b4d431b..d2352f76d6519f 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -5643,7 +5643,7 @@ static int mem_cgroup_move_account(struct page *page,
- 		if (PageDirty(page)) {
- 			struct address_space *mapping = page_mapping(page);
- 
--			if (mapping_cap_account_dirty(mapping)) {
-+			if (mapping_can_writeback(mapping)) {
- 				__mod_lruvec_state(from_vec, NR_FILE_DIRTY,
- 						   -nr_pages);
- 				__mod_lruvec_state(to_vec, NR_FILE_DIRTY,
-diff --git a/mm/memory-failure.c b/mm/memory-failure.c
-index f1aa6433f40416..a1e73943445e77 100644
---- a/mm/memory-failure.c
-+++ b/mm/memory-failure.c
-@@ -1006,7 +1006,7 @@ static bool hwpoison_user_mappings(struct page *p, unsigned long pfn,
- 	 */
- 	mapping = page_mapping(hpage);
- 	if (!(flags & MF_MUST_KILL) && !PageDirty(hpage) && mapping &&
--	    mapping_cap_writeback_dirty(mapping)) {
-+	    mapping_can_writeback(mapping)) {
- 		if (page_mkclean(hpage)) {
- 			SetPageDirty(hpage);
- 		} else {
-diff --git a/mm/migrate.c b/mm/migrate.c
-index 34a842a8eb6a7b..9d2f42a3a16294 100644
---- a/mm/migrate.c
-+++ b/mm/migrate.c
-@@ -503,7 +503,7 @@ int migrate_page_move_mapping(struct address_space *mapping,
- 			__dec_lruvec_state(old_lruvec, NR_SHMEM);
- 			__inc_lruvec_state(new_lruvec, NR_SHMEM);
- 		}
--		if (dirty && mapping_cap_account_dirty(mapping)) {
-+		if (dirty && mapping_can_writeback(mapping)) {
- 			__dec_node_state(oldzone->zone_pgdat, NR_FILE_DIRTY);
- 			__dec_zone_state(oldzone, NR_ZONE_WRITE_PENDING);
- 			__inc_node_state(newzone->zone_pgdat, NR_FILE_DIRTY);
-diff --git a/mm/mmap.c b/mm/mmap.c
-index 40248d84ad5fbd..1fc0e92be4ba9b 100644
---- a/mm/mmap.c
-+++ b/mm/mmap.c
-@@ -1666,7 +1666,7 @@ int vma_wants_writenotify(struct vm_area_struct *vma, pgprot_t vm_page_prot)
- 
- 	/* Can the mapping track the dirty pages? */
- 	return vma->vm_file && vma->vm_file->f_mapping &&
--		mapping_cap_account_dirty(vma->vm_file->f_mapping);
-+		mapping_can_writeback(vma->vm_file->f_mapping);
  }
- 
- /*
-diff --git a/mm/page-writeback.c b/mm/page-writeback.c
-index 0139f9622a92da..358d6f28c627b7 100644
---- a/mm/page-writeback.c
-+++ b/mm/page-writeback.c
-@@ -1882,7 +1882,7 @@ void balance_dirty_pages_ratelimited(struct address_space *mapping)
- 	int ratelimit;
- 	int *p;
- 
--	if (!bdi_cap_account_dirty(bdi))
-+	if (!(bdi->capabilities & BDI_CAP_WRITEBACK))
- 		return;
- 
- 	if (inode_cgwb_enabled(inode))
-@@ -2423,7 +2423,7 @@ void account_page_dirtied(struct page *page, struct address_space *mapping)
- 
- 	trace_writeback_dirty_page(page, mapping);
- 
--	if (mapping_cap_account_dirty(mapping)) {
-+	if (mapping_can_writeback(mapping)) {
- 		struct bdi_writeback *wb;
- 
- 		inode_attach_wb(inode, page);
-@@ -2450,7 +2450,7 @@ void account_page_dirtied(struct page *page, struct address_space *mapping)
- void account_page_cleaned(struct page *page, struct address_space *mapping,
- 			  struct bdi_writeback *wb)
- {
--	if (mapping_cap_account_dirty(mapping)) {
-+	if (mapping_can_writeback(mapping)) {
- 		dec_lruvec_page_state(page, NR_FILE_DIRTY);
- 		dec_zone_page_state(page, NR_ZONE_WRITE_PENDING);
- 		dec_wb_stat(wb, WB_RECLAIMABLE);
-@@ -2513,7 +2513,7 @@ void account_page_redirty(struct page *page)
- {
- 	struct address_space *mapping = page->mapping;
- 
--	if (mapping && mapping_cap_account_dirty(mapping)) {
-+	if (mapping && mapping_can_writeback(mapping)) {
- 		struct inode *inode = mapping->host;
- 		struct bdi_writeback *wb;
- 		struct wb_lock_cookie cookie = {};
-@@ -2625,7 +2625,7 @@ void __cancel_dirty_page(struct page *page)
- {
- 	struct address_space *mapping = page_mapping(page);
- 
--	if (mapping_cap_account_dirty(mapping)) {
-+	if (mapping_can_writeback(mapping)) {
- 		struct inode *inode = mapping->host;
- 		struct bdi_writeback *wb;
- 		struct wb_lock_cookie cookie = {};
-@@ -2665,7 +2665,7 @@ int clear_page_dirty_for_io(struct page *page)
- 
- 	VM_BUG_ON_PAGE(!PageLocked(page), page);
- 
--	if (mapping && mapping_cap_account_dirty(mapping)) {
-+	if (mapping && mapping_can_writeback(mapping)) {
- 		struct inode *inode = mapping->host;
- 		struct bdi_writeback *wb;
- 		struct wb_lock_cookie cookie = {};
+ EXPORT_SYMBOL(bdi_alloc);
 -- 
 2.28.0
 
