@@ -1,62 +1,50 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: [PATCH 02/13] drbd: remove dead code in device_to_statistics
-Date: Thu, 24 Sep 2020 08:51:29 +0200
-Message-ID: <20200924065140.726436-3-hch@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 03/13] bcache: inherit the optimal I/O size
+Date: Thu, 24 Sep 2020 08:51:30 +0200
+Message-ID: <20200924065140.726436-4-hch@lst.de>
 References: <20200924065140.726436-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=eYXlp772S5NwgfYwqpisbRltSHIHkEperICR+k7yOF8=; b=GMHYT9gdfrgR/pQWvcEoG50qn/
-        y04oH1GsNnXYIhYiNDKJQGmuANIpP4DJaWbT9z92cy2LJcXKZ2s4m8jlrBxOrA26fhRSX6DpxM8pc
-        XWRgWqKhBnIokzG5erM05eghm4m2csytYIpCdMzHqasV/uLEZCIWAIWPpBWdKv2vUyxl2L9VdA2FN
-        JD0/5FjtZ2evzlAlhFAHzYBoSnhfhGR51IgKiFSDt29taDeZoy+hT9KNsDHdFj195OoNg5Sl3kCb1
-        K6UPuI579xxk80Jmisg/RsigHbDYYYLh/O5+C5sHX/oNUAJD8VJNheOzh0Hnz3cz1Hy0H8zfxfvRs
-        ojhFFQNg==;
-In-Reply-To: <20200924065140.726436-1-hch-jcswGhMUV9g@public.gmane.org>
+        bh=+Llj/AmvV7mHR7T7gL/si/p73lK9Sq9nBxztkJ6FS3s=; b=tKir5D9mG/xQIv7GXHsh7cGgvx
+        3y0D7EY/xxMVq0o00qzUZIykqJjNgrs/YlOajox62YL/Iqe1EYGLVGzG+9JBHp7et96FOLh238Hhx
+        YlzCTDKvfJ8izWf1tp3jcCDTQrNbzpfQEdmv1OoIS7ecJ3BdKSSx7cr8eRSMRiNDo76JU+baIa100
+        VFyFZ5UD7PdSLuwNzmfEXvOo1vGPKe0kwug7pVm0C48ljG+J0OOJy8PeZb/9gNVjhHzmwWcIBwwFF
+        KlXPK6ixxl+tjcQ8r9oQC9V0kW8YWIzdUUgP4ynwziLtlB6+XId42Md/7Eg6wR86R1BKV04tFB9rK
+        MW5QkZkQ==;
+In-Reply-To: <20200924065140.726436-1-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Cc: Song Liu <song-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Coly Li <colyli-l3A5Bk7waGM@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Thumshirn <Johannes.Thumshirn-Sjgp3cTcYWE@public.gmane.org>, Justin Sanders <justin-kFqnmIA2sJXQT0dZR+AlfA@public.gmane.org>, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-bcache-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, drbd-dev-cunTk1MwBs8qoQakbn7OcQ@public.gmane.org, linux-raid-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Johannes Thumshirn <johannes.thumshirn-Sjgp3cTcYWE@public.gmane.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Coly Li <colyli@suse.de>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, Justin Sanders <justin@coraid.com>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Jan Kara <jack@suse.cz>
 
-Ever since the switch to blk-mq, a lower device not used for VM
-writeback will not be marked congested, so the check will never
-trigger.
+Inherit the optimal I/O size setting just like the readahead window,
+as any reason to do larger I/O does not apply to just readahead.
 
-Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Reviewed-by: Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn-Sjgp3cTcYWE@public.gmane.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Acked-by: Coly Li <colyli@suse.de>
 ---
- drivers/block/drbd/drbd_nl.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/md/bcache/super.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/block/drbd/drbd_nl.c b/drivers/block/drbd/drbd_nl.c
-index 43c8ae4d9fca81..aaff5bde391506 100644
---- a/drivers/block/drbd/drbd_nl.c
-+++ b/drivers/block/drbd/drbd_nl.c
-@@ -3370,7 +3370,6 @@ static void device_to_statistics(struct device_statistics *s,
- 	if (get_ldev(device)) {
- 		struct drbd_md *md = &device->ldev->md;
- 		u64 *history_uuids = (u64 *)s->history_uuids;
--		struct request_queue *q;
- 		int n;
+diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+index 1bbdc410ee3c51..48113005ed86ad 100644
+--- a/drivers/md/bcache/super.c
++++ b/drivers/md/bcache/super.c
+@@ -1430,6 +1430,8 @@ static int cached_dev_init(struct cached_dev *dc, unsigned int block_size)
+ 	dc->disk.disk->queue->backing_dev_info->ra_pages =
+ 		max(dc->disk.disk->queue->backing_dev_info->ra_pages,
+ 		    q->backing_dev_info->ra_pages);
++	blk_queue_io_opt(dc->disk.disk->queue,
++		max(queue_io_opt(dc->disk.disk->queue), queue_io_opt(q)));
  
- 		spin_lock_irq(&md->uuid_lock);
-@@ -3384,11 +3383,6 @@ static void device_to_statistics(struct device_statistics *s,
- 		spin_unlock_irq(&md->uuid_lock);
- 
- 		s->dev_disk_flags = md->flags;
--		q = bdev_get_queue(device->ldev->backing_bdev);
--		s->dev_lower_blocked =
--			bdi_congested(q->backing_dev_info,
--				      (1 << WB_async_congested) |
--				      (1 << WB_sync_congested));
- 		put_ldev(device);
- 	}
- 	s->dev_size = drbd_get_capacity(device->this_bdev);
+ 	atomic_set(&dc->io_errors, 0);
+ 	dc->io_disable = false;
 -- 
 2.28.0
 
