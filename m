@@ -1,58 +1,134 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v19 05/20] mm/thp: Simplify lru_add_page_tail()
-Date: Thu, 24 Sep 2020 11:28:20 +0800
-Message-ID: <1600918115-22007-6-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: [PATCH v19 03/20] mm/thp: move lru_add_page_tail func to huge_memory.c
+Date: Thu, 24 Sep 2020 11:28:18 +0800
+Message-ID: <1600918115-22007-4-git-send-email-alex.shi@linux.alibaba.com>
 References: <1600918115-22007-1-git-send-email-alex.shi@linux.alibaba.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1600918115-22007-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1600918115-22007-1-git-send-email-alex.shi@linux.alibaba.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aaron.lwe-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: =?UTF-8?q?Mika=20Penttil=C3=A4?= <mika.penttila-MRsr7dthA9VWk0Htik3J/w@public.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com, aaron.lwe@gmail.com
 
-U2ltcGxpZnkgbHJ1X2FkZF9wYWdlX3RhaWwoKSwgdGhlcmUgYXJlIGFjdHVhbGx5IG9ubHkgdHdv
-IGNhc2VzIHBvc3NpYmxlOgpzcGxpdF9odWdlX3BhZ2VfdG9fbGlzdCgpLCB3aXRoIGxpc3Qgc3Vw
-cGxpZWQgYW5kIGhlYWQgaXNvbGF0ZWQgZnJvbSBscnUKYnkgaXRzIGNhbGxlcjsgb3Igc3BsaXRf
-aHVnZV9wYWdlKCksIHdpdGggTlVMTCBsaXN0IGFuZCBoZWFkIG9uIGxydSAtCmJlY2F1c2Ugd2hl
-biBoZWFkIGlzIHJhY2lseSBpc29sYXRlZCBmcm9tIGxydSwgdGhlIGlzb2xhdG9yJ3MgcmVmZXJl
-bmNlCndpbGwgc3RvcCB0aGUgc3BsaXQgZnJvbSBnZXR0aW5nIGFueSBmdXJ0aGVyIHRoYW4gaXRz
-IHBhZ2VfcmVmX2ZyZWV6ZSgpLgoKU28gZGVjaWRlIGJldHdlZW4gdGhlIHR3byBjYXNlcyBieSAi
-bGlzdCIsIGJ1dCBhZGQgVk1fV0FSTl9PTigpcyB0bwp2ZXJpZnkgdGhhdCB0aGV5IG1hdGNoIG91
-ciBscnUgZXhwZWN0YXRpb25zLgoKW0h1Z2ggRGlja2luczogcmV3cml0ZSBjb21taXQgbG9nXQpT
-aWduZWQtb2ZmLWJ5OiBBbGV4IFNoaSA8YWxleC5zaGktS1Bzb0ZiTnM3R2l6ckdFNWJScVlBZ0Mv
-RzJLNHpESGZAcHVibGljLmdtYW5lLm9yZz4KUmV2aWV3ZWQtYnk6IEtpcmlsbCBBLiBTaHV0ZW1v
-diA8a2lyaWxsLnNodXRlbW92LVZ1UUFZc3YxNTYzWWQ1NEZRaDkvQ0FAcHVibGljLmdtYW5lLm9y
-Zz4KQWNrZWQtYnk6IEh1Z2ggRGlja2lucyA8aHVnaGQtaHBJcXNENEFLbGZRVDBkWlIrQWxmQUBw
-dWJsaWMuZ21hbmUub3JnPgpDYzogS2lyaWxsIEEuIFNodXRlbW92IDxraXJpbGwtb0t3N2NJZEhI
-OGVMd3V0RzUwTHRHQUBwdWJsaWMuZ21hbmUub3JnPgpDYzogQW5kcmV3IE1vcnRvbiA8YWtwbS1k
-ZS90blhUZitKTHNmSERYdmJLdjNXRDJGUUprKzgrYkBwdWJsaWMuZ21hbmUub3JnPgpDYzogSm9o
-YW5uZXMgV2VpbmVyIDxoYW5uZXMtZHJ1VWd2bDBMQ05BZnVnUnBDNnU2d0BwdWJsaWMuZ21hbmUu
-b3JnPgpDYzogTWF0dGhldyBXaWxjb3ggPHdpbGx5LXdFR0NpS0hlMkxxV1ZmZUF3QTd4SFFAcHVi
-bGljLmdtYW5lLm9yZz4KQ2M6IEh1Z2ggRGlja2lucyA8aHVnaGQtaHBJcXNENEFLbGZRVDBkWlIr
-QWxmQUBwdWJsaWMuZ21hbmUub3JnPgpDYzogTWlrYSBQZW50dGlsw6QgPG1pa2EucGVudHRpbGEt
-TVJzcjdkdGhBOVZXazBIdGlrM0ovd0BwdWJsaWMuZ21hbmUub3JnPgpDYzogbGludXgtbW0tQncz
-MU1hWktLczNZdGp2eVc2eURzZ0BwdWJsaWMuZ21hbmUub3JnCkNjOiBsaW51eC1rZXJuZWwtdTc5
-dXdYTDI5VFk3Nloyck01bUhYQUBwdWJsaWMuZ21hbmUub3JnCi0tLQogbW0vaHVnZV9tZW1vcnku
-YyB8IDIxICsrKysrKy0tLS0tLS0tLS0tLS0tLQogMSBmaWxlIGNoYW5nZWQsIDYgaW5zZXJ0aW9u
-cygrKSwgMTUgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvbW0vaHVnZV9tZW1vcnkuYyBiL21t
-L2h1Z2VfbWVtb3J5LmMKaW5kZXggZmEwNzUzMjI5YjUyLi44YjkyY2QxOTcyMTggMTAwNjQ0Ci0t
-LSBhL21tL2h1Z2VfbWVtb3J5LmMKKysrIGIvbW0vaHVnZV9tZW1vcnkuYwpAQCAtMjMyNiwyNSAr
-MjMyNiwxNiBAQCBzdGF0aWMgdm9pZCBscnVfYWRkX3BhZ2VfdGFpbChzdHJ1Y3QgcGFnZSAqaGVh
-ZCwgc3RydWN0IHBhZ2UgKnBhZ2VfdGFpbCwKIAlWTV9CVUdfT05fUEFHRShQYWdlTFJVKHBhZ2Vf
-dGFpbCksIGhlYWQpOwogCWxvY2tkZXBfYXNzZXJ0X2hlbGQoJmxydXZlY19wZ2RhdChscnV2ZWMp
-LT5scnVfbG9jayk7CiAKLQlpZiAoIWxpc3QpCi0JCVNldFBhZ2VMUlUocGFnZV90YWlsKTsKLQot
-CWlmIChsaWtlbHkoUGFnZUxSVShoZWFkKSkpCi0JCWxpc3RfYWRkX3RhaWwoJnBhZ2VfdGFpbC0+
-bHJ1LCAmaGVhZC0+bHJ1KTsKLQllbHNlIGlmIChsaXN0KSB7CisJaWYgKGxpc3QpIHsKIAkJLyog
-cGFnZSByZWNsYWltIGlzIHJlY2xhaW1pbmcgYSBodWdlIHBhZ2UgKi8KKwkJVk1fV0FSTl9PTihQ
-YWdlTFJVKGhlYWQpKTsKIAkJZ2V0X3BhZ2UocGFnZV90YWlsKTsKIAkJbGlzdF9hZGRfdGFpbCgm
-cGFnZV90YWlsLT5scnUsIGxpc3QpOwogCX0gZWxzZSB7Ci0JCS8qCi0JCSAqIEhlYWQgcGFnZSBo
-YXMgbm90IHlldCBiZWVuIGNvdW50ZWQsIGFzIGFuIGhwYWdlLAotCQkgKiBzbyB3ZSBtdXN0IGFj
-Y291bnQgZm9yIGVhY2ggc3VicGFnZSBpbmRpdmlkdWFsbHkuCi0JCSAqCi0JCSAqIFB1dCBwYWdl
-X3RhaWwgb24gdGhlIGxpc3QgYXQgdGhlIGNvcnJlY3QgcG9zaXRpb24KLQkJICogc28gdGhleSBh
-bGwgZW5kIHVwIGluIG9yZGVyLgotCQkgKi8KLQkJYWRkX3BhZ2VfdG9fbHJ1X2xpc3RfdGFpbChw
-YWdlX3RhaWwsIGxydXZlYywKLQkJCQkJICBwYWdlX2xydShwYWdlX3RhaWwpKTsKKwkJLyogaGVh
-ZCBpcyBzdGlsbCBvbiBscnUgKGFuZCB3ZSBoYXZlIGl0IGZyb3plbikgKi8KKwkJVk1fV0FSTl9P
-TighUGFnZUxSVShoZWFkKSk7CisJCVNldFBhZ2VMUlUocGFnZV90YWlsKTsKKwkJbGlzdF9hZGRf
-dGFpbCgmcGFnZV90YWlsLT5scnUsICZoZWFkLT5scnUpOwogCX0KIH0KIAotLSAKMS44LjMuMQoK
+The func is only used in huge_memory.c, defining it in other file with a
+CONFIG_TRANSPARENT_HUGEPAGE macro restrict just looks weird.
+
+Let's move it THP. And make it static as Hugh Dickin suggested.
+
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Reviewed-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Acked-by: Hugh Dickins <hughd@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
+---
+ include/linux/swap.h |  2 --
+ mm/huge_memory.c     | 30 ++++++++++++++++++++++++++++++
+ mm/swap.c            | 33 ---------------------------------
+ 3 files changed, 30 insertions(+), 35 deletions(-)
+
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index 661046994db4..43e6b3458f58 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -338,8 +338,6 @@ extern void lru_note_cost(struct lruvec *lruvec, bool file,
+ 			  unsigned int nr_pages);
+ extern void lru_note_cost_page(struct page *);
+ extern void lru_cache_add(struct page *);
+-extern void lru_add_page_tail(struct page *page, struct page *page_tail,
+-			 struct lruvec *lruvec, struct list_head *head);
+ extern void activate_page(struct page *);
+ extern void mark_page_accessed(struct page *);
+ extern void lru_add_drain(void);
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index faadc449cca5..211d50f09785 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2318,6 +2318,36 @@ static void remap_page(struct page *page)
+ 	}
+ }
+ 
++static void lru_add_page_tail(struct page *page, struct page *page_tail,
++		struct lruvec *lruvec, struct list_head *list)
++{
++	VM_BUG_ON_PAGE(!PageHead(page), page);
++	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
++	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
++	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
++
++	if (!list)
++		SetPageLRU(page_tail);
++
++	if (likely(PageLRU(page)))
++		list_add_tail(&page_tail->lru, &page->lru);
++	else if (list) {
++		/* page reclaim is reclaiming a huge page */
++		get_page(page_tail);
++		list_add_tail(&page_tail->lru, list);
++	} else {
++		/*
++		 * Head page has not yet been counted, as an hpage,
++		 * so we must account for each subpage individually.
++		 *
++		 * Put page_tail on the list at the correct position
++		 * so they all end up in order.
++		 */
++		add_page_to_lru_list_tail(page_tail, lruvec,
++					  page_lru(page_tail));
++	}
++}
++
+ static void __split_huge_page_tail(struct page *head, int tail,
+ 		struct lruvec *lruvec, struct list_head *list)
+ {
+diff --git a/mm/swap.c b/mm/swap.c
+index e7bdf094f76a..1bc2fc5d8b7c 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -935,39 +935,6 @@ void __pagevec_release(struct pagevec *pvec)
+ }
+ EXPORT_SYMBOL(__pagevec_release);
+ 
+-#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-/* used by __split_huge_page_refcount() */
+-void lru_add_page_tail(struct page *page, struct page *page_tail,
+-		       struct lruvec *lruvec, struct list_head *list)
+-{
+-	VM_BUG_ON_PAGE(!PageHead(page), page);
+-	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
+-	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
+-	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
+-
+-	if (!list)
+-		SetPageLRU(page_tail);
+-
+-	if (likely(PageLRU(page)))
+-		list_add_tail(&page_tail->lru, &page->lru);
+-	else if (list) {
+-		/* page reclaim is reclaiming a huge page */
+-		get_page(page_tail);
+-		list_add_tail(&page_tail->lru, list);
+-	} else {
+-		/*
+-		 * Head page has not yet been counted, as an hpage,
+-		 * so we must account for each subpage individually.
+-		 *
+-		 * Put page_tail on the list at the correct position
+-		 * so they all end up in order.
+-		 */
+-		add_page_to_lru_list_tail(page_tail, lruvec,
+-					  page_lru(page_tail));
+-	}
+-}
+-#endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+-
+ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec,
+ 				 void *arg)
+ {
+-- 
+1.8.3.1
+
