@@ -1,187 +1,130 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/13] bdi: remove BDI_CAP_SYNCHRONOUS_IO
-Date: Thu, 24 Sep 2020 08:51:36 +0200
-Message-ID: <20200924065140.726436-10-hch@lst.de>
+Subject: [PATCH 06/13] md: update the optimal I/O size on reshape
+Date: Thu, 24 Sep 2020 08:51:33 +0200
+Message-ID: <20200924065140.726436-7-hch@lst.de>
 References: <20200924065140.726436-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-raid-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=A8noZCsgs6zsTp2X13HIpzUHz8F1k2sgRVgeJsSkuGc=; b=wXgkIKJ4Xu/Tje2ewqRBexS3jx
-        knzohwbuOKheQ5zsM/4Uq707acWkdfSpr30D7NpIPWsmKiVgAftfdHCv2/2Rr2ybiHZjFJcjgOQIa
-        EuYApCxtAnmo3lQNth1BYyKgU2xheRSu/fupNId3ljT4XX6XlEfc4fJtVjWThxiR+HsGGq4L12k59
-        nn/Zl+LmT3T0RFd8vjL43NlJ8KhP4bxS46kihPm2LlJjZ/OxC7qfwOV0xR3sNC381nOy5R9FH7F1Q
-        rAy9qULVGFaBcvSQZuqjeFCPU8SRG5cyCpOb/qEkrAsBMAt0CwRtEPLOpZMRQyPZV18Q36qImOy8Z
-        gzaKzCxg==;
+        bh=H8hk1GyqLuto/InuvfMfeFX2w3KpymgO3wY2UL3PIN8=; b=L6xmSY3vp6Lcglln6PGBprLB3R
+        RjAxhsIpEdTFOG/XBsDo8f6bcBuKSZvVFyCxJ3c01dTixt5ELTxLP0k/iDi9vEZipLUcvf1kT/n86
+        5GpCKlSkjDhfT9gH2vjsiqaTOdX4c0R2Upj77gvJIPPi9RB2QUgaAMhss9sZkkOthWvdY+seYHhLB
+        OR/VLpxTSS0TPEN5pDTQ7yIB4oDagi/Hz48Y/WsrPtYDCtu0IClRhNEDtxZae90fKWS9yrInJoPk6
+        TYq76s7Ix5T4TWbCNDOdntJtWhlgHHRhI9CCCdV74iYU012+0MpfGD+99BcL5LMaj2HLmHQwa3Zgt
+        xfVjo8lg==;
 In-Reply-To: <20200924065140.726436-1-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Jens Axboe <axboe@kernel.dk>
-Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Coly Li <colyli@suse.de>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, Justin Sanders <justin@coraid.com>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Jan Kara <jack@suse.cz>, Johannes Thumshirn <johannes.thumshirn@wdc.com>
+Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Coly Li <colyli@suse.de>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, Justin Sanders <justin@coraid.com>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
-BDI_CAP_SYNCHRONOUS_IO is only checked in the swap code, and used to
-decided if ->rw_page can be used on a block device.  Just check up for
-the method instead.  The only complication is that zram needs a second
-set of block_device_operations as it can switch between modes that
-actually support ->rw_page and those who don't.
+The raid5 and raid10 drivers currently update the read-ahead size,
+but not the optimal I/O size on reshape.  To prepare for deriving the
+read-ahead size from the optimal I/O size make sure it is updated
+as well.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
+Acked-by: Song Liu <song@kernel.org>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/block/brd.c           |  1 -
- drivers/block/zram/zram_drv.c | 19 +++++++++++++------
- drivers/nvdimm/btt.c          |  2 --
- drivers/nvdimm/pmem.c         |  1 -
- include/linux/backing-dev.h   |  9 ---------
- mm/swapfile.c                 |  2 +-
- 6 files changed, 14 insertions(+), 20 deletions(-)
+ drivers/md/raid10.c | 22 ++++++++++++++--------
+ drivers/md/raid5.c  | 10 ++++++++--
+ 2 files changed, 22 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/block/brd.c b/drivers/block/brd.c
-index 2723a70eb85593..cc49a921339f77 100644
---- a/drivers/block/brd.c
-+++ b/drivers/block/brd.c
-@@ -403,7 +403,6 @@ static struct brd_device *brd_alloc(int i)
- 	disk->flags		= GENHD_FL_EXT_DEVT;
- 	sprintf(disk->disk_name, "ram%d", i);
- 	set_capacity(disk, rd_size * 2);
--	brd->brd_queue->backing_dev_info->capabilities |= BDI_CAP_SYNCHRONOUS_IO;
- 
- 	/* Tell the block layer that this is not a rotational device */
- 	blk_queue_flag_set(QUEUE_FLAG_NONROT, brd->brd_queue);
-diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
-index 91ccfe444525b4..e21ca844d7c291 100644
---- a/drivers/block/zram/zram_drv.c
-+++ b/drivers/block/zram/zram_drv.c
-@@ -52,6 +52,9 @@ static unsigned int num_devices = 1;
-  */
- static size_t huge_class_size;
- 
-+static const struct block_device_operations zram_devops;
-+static const struct block_device_operations zram_wb_devops;
-+
- static void zram_free_page(struct zram *zram, size_t index);
- static int zram_bvec_read(struct zram *zram, struct bio_vec *bvec,
- 				u32 index, int offset, struct bio *bio);
-@@ -408,8 +411,7 @@ static void reset_bdev(struct zram *zram)
- 	zram->backing_dev = NULL;
- 	zram->old_block_size = 0;
- 	zram->bdev = NULL;
--	zram->disk->queue->backing_dev_info->capabilities |=
--				BDI_CAP_SYNCHRONOUS_IO;
-+	zram->disk->fops = &zram_devops;
- 	kvfree(zram->bitmap);
- 	zram->bitmap = NULL;
+diff --git a/drivers/md/raid10.c b/drivers/md/raid10.c
+index e8fa327339171c..9956a04ac13bd6 100644
+--- a/drivers/md/raid10.c
++++ b/drivers/md/raid10.c
+@@ -3703,10 +3703,20 @@ static struct r10conf *setup_conf(struct mddev *mddev)
+ 	return ERR_PTR(err);
  }
-@@ -529,8 +531,7 @@ static ssize_t backing_dev_store(struct device *dev,
- 	 * freely but in fact, IO is going on so finally could cause
- 	 * use-after-free when the IO is really done.
- 	 */
--	zram->disk->queue->backing_dev_info->capabilities &=
--			~BDI_CAP_SYNCHRONOUS_IO;
-+	zram->disk->fops = &zram_wb_devops;
- 	up_write(&zram->init_lock);
  
- 	pr_info("setup backing device %s\n", file_name);
-@@ -1820,6 +1821,13 @@ static const struct block_device_operations zram_devops = {
- 	.owner = THIS_MODULE
- };
- 
-+static const struct block_device_operations zram_wb_devops = {
-+	.open = zram_open,
-+	.submit_bio = zram_submit_bio,
-+	.swap_slot_free_notify = zram_slot_free_notify,
-+	.owner = THIS_MODULE
-+};
++static void raid10_set_io_opt(struct r10conf *conf)
++{
++	int raid_disks = conf->geo.raid_disks;
 +
- static DEVICE_ATTR_WO(compact);
- static DEVICE_ATTR_RW(disksize);
- static DEVICE_ATTR_RO(initstate);
-@@ -1947,8 +1955,7 @@ static int zram_add(void)
- 	if (ZRAM_LOGICAL_BLOCK_SIZE == PAGE_SIZE)
- 		blk_queue_max_write_zeroes_sectors(zram->disk->queue, UINT_MAX);
- 
--	zram->disk->queue->backing_dev_info->capabilities |=
--			(BDI_CAP_STABLE_WRITES | BDI_CAP_SYNCHRONOUS_IO);
-+	zram->disk->queue->backing_dev_info->capabilities |= BDI_CAP_STABLE_WRITES;
- 	device_add_disk(NULL, zram->disk, zram_disk_attr_groups);
- 
- 	strlcpy(zram->compressor, default_compressor, sizeof(zram->compressor));
-diff --git a/drivers/nvdimm/btt.c b/drivers/nvdimm/btt.c
-index 0d710140bf93be..12ff6f8784ac11 100644
---- a/drivers/nvdimm/btt.c
-+++ b/drivers/nvdimm/btt.c
-@@ -1537,8 +1537,6 @@ static int btt_blk_init(struct btt *btt)
- 	btt->btt_disk->private_data = btt;
- 	btt->btt_disk->queue = btt->btt_queue;
- 	btt->btt_disk->flags = GENHD_FL_EXT_DEVT;
--	btt->btt_disk->queue->backing_dev_info->capabilities |=
--			BDI_CAP_SYNCHRONOUS_IO;
- 
- 	blk_queue_logical_block_size(btt->btt_queue, btt->sector_size);
- 	blk_queue_max_hw_sectors(btt->btt_queue, UINT_MAX);
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index 140cf3b9000c60..1711fdfd8d2816 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -475,7 +475,6 @@ static int pmem_attach_disk(struct device *dev,
- 	disk->queue		= q;
- 	disk->flags		= GENHD_FL_EXT_DEVT;
- 	disk->private_data	= pmem;
--	disk->queue->backing_dev_info->capabilities |= BDI_CAP_SYNCHRONOUS_IO;
- 	nvdimm_namespace_disk_name(ndns, disk->disk_name);
- 	set_capacity(disk, (pmem->size - pmem->pfn_pad - pmem->data_offset)
- 			/ 512);
-diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
-index 52583b6f2ea05d..860ea33571bce5 100644
---- a/include/linux/backing-dev.h
-+++ b/include/linux/backing-dev.h
-@@ -122,9 +122,6 @@ int bdi_set_max_ratio(struct backing_dev_info *bdi, unsigned int max_ratio);
-  * BDI_CAP_NO_WRITEBACK:   Don't write pages back
-  * BDI_CAP_NO_ACCT_WB:     Don't automatically account writeback pages
-  * BDI_CAP_STRICTLIMIT:    Keep number of dirty pages below bdi threshold.
-- *
-- * BDI_CAP_SYNCHRONOUS_IO: Device is so fast that asynchronous IO would be
-- *			   inefficient.
-  */
- #define BDI_CAP_NO_ACCT_DIRTY	0x00000001
- #define BDI_CAP_NO_WRITEBACK	0x00000002
-@@ -132,7 +129,6 @@ int bdi_set_max_ratio(struct backing_dev_info *bdi, unsigned int max_ratio);
- #define BDI_CAP_STABLE_WRITES	0x00000008
- #define BDI_CAP_STRICTLIMIT	0x00000010
- #define BDI_CAP_CGROUP_WRITEBACK 0x00000020
--#define BDI_CAP_SYNCHRONOUS_IO	0x00000040
- 
- #define BDI_CAP_NO_ACCT_AND_WRITEBACK \
- 	(BDI_CAP_NO_WRITEBACK | BDI_CAP_NO_ACCT_DIRTY | BDI_CAP_NO_ACCT_WB)
-@@ -174,11 +170,6 @@ static inline int wb_congested(struct bdi_writeback *wb, int cong_bits)
- long congestion_wait(int sync, long timeout);
- long wait_iff_congested(int sync, long timeout);
- 
--static inline bool bdi_cap_synchronous_io(struct backing_dev_info *bdi)
--{
--	return bdi->capabilities & BDI_CAP_SYNCHRONOUS_IO;
--}
--
- static inline bool bdi_cap_stable_pages_required(struct backing_dev_info *bdi)
++	if (!(conf->geo.raid_disks % conf->geo.near_copies))
++		raid_disks /= conf->geo.near_copies;
++	blk_queue_io_opt(conf->mddev->queue, (conf->mddev->chunk_sectors << 9) *
++			 raid_disks);
++}
++
+ static int raid10_run(struct mddev *mddev)
  {
- 	return bdi->capabilities & BDI_CAP_STABLE_WRITES;
-diff --git a/mm/swapfile.c b/mm/swapfile.c
-index b90f8692074397..96a7c47dd533e4 100644
---- a/mm/swapfile.c
-+++ b/mm/swapfile.c
-@@ -3240,7 +3240,7 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
- 	if (bdi_cap_stable_pages_required(inode_to_bdi(inode)))
- 		p->flags |= SWP_STABLE_WRITES;
+ 	struct r10conf *conf;
+-	int i, disk_idx, chunk_size;
++	int i, disk_idx;
+ 	struct raid10_info *disk;
+ 	struct md_rdev *rdev;
+ 	sector_t size;
+@@ -3742,18 +3752,13 @@ static int raid10_run(struct mddev *mddev)
+ 	mddev->thread = conf->thread;
+ 	conf->thread = NULL;
  
--	if (bdi_cap_synchronous_io(inode_to_bdi(inode)))
-+	if (p->bdev && p->bdev->bd_disk->fops->rw_page)
- 		p->flags |= SWP_SYNCHRONOUS_IO;
+-	chunk_size = mddev->chunk_sectors << 9;
+ 	if (mddev->queue) {
+ 		blk_queue_max_discard_sectors(mddev->queue,
+ 					      mddev->chunk_sectors);
+ 		blk_queue_max_write_same_sectors(mddev->queue, 0);
+ 		blk_queue_max_write_zeroes_sectors(mddev->queue, 0);
+-		blk_queue_io_min(mddev->queue, chunk_size);
+-		if (conf->geo.raid_disks % conf->geo.near_copies)
+-			blk_queue_io_opt(mddev->queue, chunk_size * conf->geo.raid_disks);
+-		else
+-			blk_queue_io_opt(mddev->queue, chunk_size *
+-					 (conf->geo.raid_disks / conf->geo.near_copies));
++		blk_queue_io_min(mddev->queue, mddev->chunk_sectors << 9);
++		raid10_set_io_opt(conf);
+ 	}
  
- 	if (p->bdev && blk_queue_nonrot(bdev_get_queue(p->bdev))) {
+ 	rdev_for_each(rdev, mddev) {
+@@ -4727,6 +4732,7 @@ static void end_reshape(struct r10conf *conf)
+ 		stripe /= conf->geo.near_copies;
+ 		if (conf->mddev->queue->backing_dev_info->ra_pages < 2 * stripe)
+ 			conf->mddev->queue->backing_dev_info->ra_pages = 2 * stripe;
++		raid10_set_io_opt(conf);
+ 	}
+ 	conf->fullsync = 0;
+ }
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 225380efd1e24f..9a7d1250894ef1 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -7232,6 +7232,12 @@ static int only_parity(int raid_disk, int algo, int raid_disks, int max_degraded
+ 	return 0;
+ }
+ 
++static void raid5_set_io_opt(struct r5conf *conf)
++{
++	blk_queue_io_opt(conf->mddev->queue, (conf->chunk_sectors << 9) *
++			 (conf->raid_disks - conf->max_degraded));
++}
++
+ static int raid5_run(struct mddev *mddev)
+ {
+ 	struct r5conf *conf;
+@@ -7521,8 +7527,7 @@ static int raid5_run(struct mddev *mddev)
+ 
+ 		chunk_size = mddev->chunk_sectors << 9;
+ 		blk_queue_io_min(mddev->queue, chunk_size);
+-		blk_queue_io_opt(mddev->queue, chunk_size *
+-				 (conf->raid_disks - conf->max_degraded));
++		raid5_set_io_opt(conf);
+ 		mddev->queue->limits.raid_partial_stripes_expensive = 1;
+ 		/*
+ 		 * We can only discard a whole stripe. It doesn't make sense to
+@@ -8115,6 +8120,7 @@ static void end_reshape(struct r5conf *conf)
+ 						   / PAGE_SIZE);
+ 			if (conf->mddev->queue->backing_dev_info->ra_pages < 2 * stripe)
+ 				conf->mddev->queue->backing_dev_info->ra_pages = 2 * stripe;
++			raid5_set_io_opt(conf);
+ 		}
+ 	}
+ }
 -- 
 2.28.0
 
