@@ -1,22 +1,22 @@
 From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 03/13] bcache: inherit the optimal I/O size
-Date: Thu, 24 Sep 2020 11:49:48 -0400
-Message-ID: <yq1ft77maz5.fsf@ca-mkp.ca.oracle.com>
+Subject: Re: [PATCH 04/13] aoe: set an optimal I/O size
+Date: Thu, 24 Sep 2020 11:51:24 -0400
+Message-ID: <yq1a6xfmawt.fsf@ca-mkp.ca.oracle.com>
 References: <20200924065140.726436-1-hch@lst.de>
-        <20200924065140.726436-4-hch@lst.de>
+        <20200924065140.726436-5-hch@lst.de>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : message-id : references : date : in-reply-to : mime-version :
  content-type; s=corp-2020-01-29;
- bh=vn1696U5CRhKmLmc6mdwCozBnLCLObO7LgftVl1wh2o=;
- b=jGpN8isNZtCM5z7nsb1wBtRcRov8B0bLS4Y8Jgq8H3hJMgkHBgpw+B0j+n0iQtU6oW4a
- QX84oMRfxrda29DxxN+D1WO6Juo95LBcan1pWECxN045bzOeYSFit8QXthhoJDaQRbnU
- seFTga76zsuEvub1vBYax7ppb/U+L6mAumw2Mhgx2mEcIYPYMg5hWrJvCiudE1KCKong
- 6dgAASGoNxvU+gi3A53HQylRFymVIzYtV5b4NqtIoeyAAlCFpl+JO5CMpcTFKUHNrPPx
- wq25IEd46NnTfcYJ10+Cju65COp21F54g/3/Y9TEogN0+CpBlb7kUPWjmg4Oti/cRVCh Lw== 
-In-Reply-To: <20200924065140.726436-4-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
-        of "Thu, 24 Sep 2020 08:51:30 +0200")
+ bh=vPj5HUHK1sveLhinkO2rrNMbTgOHpcSG/Qgh39xMlGk=;
+ b=iehH+OvnhOP4xunxBiWDwJl2tVgSMeneguI6LEzqTnboYBhn8AWWBseqRFc2zq4/m/54
+ UM+ayvNJBXUE5JNyPGLXukWuHVDQ3qORJtdLN6KbwjrxzyKY/4SZ38VTgsp7dAIkY5C6
+ /LZP39sv5Pjdf0lTAVJshlT4T1LAnFsUBQZJQjzjVHRjToI6kufzXjzanL70Oz/adSHN
+ cDwdxQRR9mh0SKHTJJYf9LtsYKFLHJfwIanK0JUt72ao9w6ZBvcldPmXJdRp2HyjX1/J
+ ZEp31Gk93HSQgvp17OAVeX358nlEJN4npJyl3CkR8O3iIQj08lUWyf0+zMdcBbAQV4bx Lw== 
+In-Reply-To: <20200924065140.726436-5-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
+        of "Thu, 24 Sep 2020 08:51:31 +0200")
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -26,10 +26,9 @@ Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Song Liu <song-D
 
 Christoph,
 
-> Inherit the optimal I/O size setting just like the readahead window,
-> as any reason to do larger I/O does not apply to just readahead.
-
-Looks fine.
+> aoe forces a larger readahead size, but any reason to do larger I/O is
+> not limited to readahead.  Also set the optimal I/O size, and remove
+> the local constants in favor of just using SZ_2G.
 
 Reviewed-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
