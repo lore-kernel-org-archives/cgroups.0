@@ -1,194 +1,376 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/13] bdi: initialize ->ra_pages and ->io_pages in bdi_init
-Date: Thu, 24 Sep 2020 08:51:32 +0200
-Message-ID: <20200924065140.726436-6-hch@lst.de>
+Subject: [PATCH 11/13] bdi: replace BDI_CAP_STABLE_WRITES with a queue and a sb flag
+Date: Thu, 24 Sep 2020 08:51:38 +0200
+Message-ID: <20200924065140.726436-12-hch@lst.de>
 References: <20200924065140.726436-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=m8GhkUhVC45RKNOvk9LAr0995X5gQH+nYESehLOLs8I=; b=Gt28Ha/7vWx1VDuu/1t+IWSVjj
-        Mo61AV+Ao2fzcmr8WZ2o2Dmz4Fbja2w1R0k6K1Si4TNa/PDOaNaHDaW4tT25gH64xlPzsFS8MRkxL
-        q3HxKfPGOOaBb/vGR/yCOgGiZ45ldJep35zVt+vB89WrbIPvpV+pVOSEgEMu7Su9QwCiExylWwmX9
-        Xb11PLrhMF6HLnsvWMIoOWBPmEMyq/CztekbecczSEjZ7gHklkIHKfXIVzKvbZAVr0iQb+SfqJW+r
-        r5SCvFQ9o1z7evdPG7RJvZ/mqOh9sLeBaqSy0TzKSu6q7vfvF4BzN/IjHfOrLVvJDvyiROz4ur0NR
-        b8vewvcw==;
+        bh=Nphz0a3SHLtD8/dvKP7SnQax1gjvXjPsrNfz4vz1vkI=; b=CK7PK70L/02fNtXq2sjO6ly0hc
+        niWijAA/gCKLDX2c1DCx+B7sVT4QolYuJhnfBza9hGSAwK0IgXfKcCGaMkmTdLds2tMIbQQ/G2AoT
+        7qmZ0nfrJMrAkJdaro/3eYj4P4FHobtOr+FAioNkztDkeiiMmX9wRysX2IAZpIn89maXwjavkM5y7
+        g1Omlu7nK6aItjvZmGoqtL7CcjWp9AODGyeiySjN2pw5Y4mX2MQnJysumXeGAevLUaIq23doEAvQR
+        z0K2vmyp5KjU0eslzxUIxPvqda77uC7I9K+Df0nDAVKDAfc9mtmd4o6YPQh6TMmp4tpQpt6hnwLqs
+        xMeiOpTw==;
 In-Reply-To: <20200924065140.726436-1-hch@lst.de>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Jens Axboe <axboe@kernel.dk>
-Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Coly Li <colyli@suse.de>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, Justin Sanders <justin@coraid.com>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Jan Kara <jack@suse.cz>, David Sterba <dsterba@suse.com>
+Cc: Song Liu <song@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Coly Li <colyli@suse.de>, Richard Weinberger <richard@nod.at>, Minchan Kim <minchan@kernel.org>, Johannes Thumshirn <Johannes.Thumshirn@wdc.com>, Justin Sanders <justin@coraid.com>, linux-mtd@lists.infradead.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, linux-kernel@vger.kernel.org, drbd-dev@lists.linbit.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Jan Kara <jack@suse.cz>, Johannes Thumshirn <johannes.thumshirn@wdc.com>
 
-Set up a readahead size by default, as very few users have a good
-reason to change it.  This means code, ecryptfs, and orangefs now
-set up the values while they were previously missing it, while ubifs,
-mtd and vboxsf manually set it to 0 to avoid readahead.
+The BDI_CAP_STABLE_WRITES is one of the few bits of information in the
+backing_dev_info shared between the block drivers and the writeback code.
+To help untangling the dependency replace it with a queue flag and a
+superblock flag derived from it.  This also helps with the case of e.g.
+a file system requiring stable writes due to its own checksumming, but
+not forcing it on other users of the block device like the swap code.
+
+One downside is that we an't support the stable_pages_required bdi
+attribute in sysfs anymore.  It is replaced with a queue attribute which
+also is writable for easier testing.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Jan Kara <jack@suse.cz>
-Acked-by: David Sterba <dsterba@suse.com> [btrfs]
-Acked-by: Richard Weinberger <richard@nod.at> [ubifs, mtd]
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- block/blk-core.c      | 2 --
- drivers/mtd/mtdcore.c | 2 ++
- fs/9p/vfs_super.c     | 6 ++++--
- fs/afs/super.c        | 1 -
- fs/btrfs/disk-io.c    | 1 -
- fs/fuse/inode.c       | 1 -
- fs/nfs/super.c        | 9 +--------
- fs/ubifs/super.c      | 2 ++
- fs/vboxsf/super.c     | 2 ++
- mm/backing-dev.c      | 2 ++
- 10 files changed, 13 insertions(+), 15 deletions(-)
+ block/blk-integrity.c         |  4 ++--
+ block/blk-mq-debugfs.c        |  1 +
+ block/blk-sysfs.c             |  3 +++
+ drivers/block/rbd.c           |  2 +-
+ drivers/block/zram/zram_drv.c |  2 +-
+ drivers/md/dm-table.c         |  6 +++---
+ drivers/md/raid5.c            |  8 ++++----
+ drivers/mmc/core/queue.c      |  3 +--
+ drivers/nvme/host/core.c      |  3 +--
+ drivers/nvme/host/multipath.c | 10 +++-------
+ drivers/scsi/iscsi_tcp.c      |  4 ++--
+ fs/super.c                    |  2 ++
+ include/linux/backing-dev.h   |  6 ------
+ include/linux/blkdev.h        |  3 +++
+ include/linux/fs.h            |  1 +
+ mm/backing-dev.c              |  7 +++----
+ mm/page-writeback.c           |  2 +-
+ mm/swapfile.c                 |  2 +-
+ 18 files changed, 33 insertions(+), 36 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index ca3f0f00c9435f..865d39e5be2b28 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -538,8 +538,6 @@ struct request_queue *blk_alloc_queue(int node_id)
- 	if (!q->stats)
- 		goto fail_stats;
+diff --git a/block/blk-integrity.c b/block/blk-integrity.c
+index c03705cbb9c9f2..2b36a8f9b81390 100644
+--- a/block/blk-integrity.c
++++ b/block/blk-integrity.c
+@@ -408,7 +408,7 @@ void blk_integrity_register(struct gendisk *disk, struct blk_integrity *template
+ 	bi->tuple_size = template->tuple_size;
+ 	bi->tag_size = template->tag_size;
  
--	q->backing_dev_info->ra_pages = VM_READAHEAD_PAGES;
--	q->backing_dev_info->io_pages = VM_READAHEAD_PAGES;
- 	q->backing_dev_info->capabilities = BDI_CAP_CGROUP_WRITEBACK;
- 	q->node = node_id;
+-	disk->queue->backing_dev_info->capabilities |= BDI_CAP_STABLE_WRITES;
++	blk_queue_flag_set(QUEUE_FLAG_STABLE_WRITES, disk->queue);
  
-diff --git a/drivers/mtd/mtdcore.c b/drivers/mtd/mtdcore.c
-index 7d930569a7dfb7..b5e5d3140f578e 100644
---- a/drivers/mtd/mtdcore.c
-+++ b/drivers/mtd/mtdcore.c
-@@ -2196,6 +2196,8 @@ static struct backing_dev_info * __init mtd_bdi_init(char *name)
- 	bdi = bdi_alloc(NUMA_NO_NODE);
- 	if (!bdi)
- 		return ERR_PTR(-ENOMEM);
-+	bdi->ra_pages = 0;
-+	bdi->io_pages = 0;
+ #ifdef CONFIG_BLK_INLINE_ENCRYPTION
+ 	if (disk->queue->ksm) {
+@@ -428,7 +428,7 @@ EXPORT_SYMBOL(blk_integrity_register);
+  */
+ void blk_integrity_unregister(struct gendisk *disk)
+ {
+-	disk->queue->backing_dev_info->capabilities &= ~BDI_CAP_STABLE_WRITES;
++	blk_queue_flag_clear(QUEUE_FLAG_STABLE_WRITES, disk->queue);
+ 	memset(&disk->queue->integrity, 0, sizeof(struct blk_integrity));
+ }
+ EXPORT_SYMBOL(blk_integrity_unregister);
+diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
+index 645b7f800cb827..3094542e12ae0f 100644
+--- a/block/blk-mq-debugfs.c
++++ b/block/blk-mq-debugfs.c
+@@ -116,6 +116,7 @@ static const char *const blk_queue_flag_name[] = {
+ 	QUEUE_FLAG_NAME(SAME_FORCE),
+ 	QUEUE_FLAG_NAME(DEAD),
+ 	QUEUE_FLAG_NAME(INIT_DONE),
++	QUEUE_FLAG_NAME(STABLE_WRITES),
+ 	QUEUE_FLAG_NAME(POLL),
+ 	QUEUE_FLAG_NAME(WC),
+ 	QUEUE_FLAG_NAME(FUA),
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 869ed21a9edcab..76b54c7750b07e 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -287,6 +287,7 @@ queue_##name##_store(struct request_queue *q, const char *page, size_t count) \
+ QUEUE_SYSFS_BIT_FNS(nonrot, NONROT, 1);
+ QUEUE_SYSFS_BIT_FNS(random, ADD_RANDOM, 0);
+ QUEUE_SYSFS_BIT_FNS(iostats, IO_STAT, 0);
++QUEUE_SYSFS_BIT_FNS(stable_writes, STABLE_WRITES, 0);
+ #undef QUEUE_SYSFS_BIT_FNS
+ 
+ static ssize_t queue_zoned_show(struct request_queue *q, char *page)
+@@ -613,6 +614,7 @@ static struct queue_sysfs_entry queue_hw_sector_size_entry = {
+ QUEUE_RW_ENTRY(queue_nonrot, "rotational");
+ QUEUE_RW_ENTRY(queue_iostats, "iostats");
+ QUEUE_RW_ENTRY(queue_random, "add_random");
++QUEUE_RW_ENTRY(queue_stable_writes, "stable_writes");
+ 
+ static struct attribute *queue_attrs[] = {
+ 	&queue_requests_entry.attr,
+@@ -645,6 +647,7 @@ static struct attribute *queue_attrs[] = {
+ 	&queue_nomerges_entry.attr,
+ 	&queue_rq_affinity_entry.attr,
+ 	&queue_iostats_entry.attr,
++	&queue_stable_writes_entry.attr,
+ 	&queue_random_entry.attr,
+ 	&queue_poll_entry.attr,
+ 	&queue_wc_entry.attr,
+diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
+index 5d3923c0997ce0..cf5b016358cdab 100644
+--- a/drivers/block/rbd.c
++++ b/drivers/block/rbd.c
+@@ -5022,7 +5022,7 @@ static int rbd_init_disk(struct rbd_device *rbd_dev)
+ 	}
+ 
+ 	if (!ceph_test_opt(rbd_dev->rbd_client->client, NOCRC))
+-		q->backing_dev_info->capabilities |= BDI_CAP_STABLE_WRITES;
++		blk_queue_flag_set(QUEUE_FLAG_STABLE_WRITES, q);
  
  	/*
- 	 * We put '-0' suffix to the name to get the same name format as we
-diff --git a/fs/9p/vfs_super.c b/fs/9p/vfs_super.c
-index 74df32be4c6a52..e34fa20acf612e 100644
---- a/fs/9p/vfs_super.c
-+++ b/fs/9p/vfs_super.c
-@@ -80,8 +80,10 @@ v9fs_fill_super(struct super_block *sb, struct v9fs_session_info *v9ses,
- 	if (ret)
- 		return ret;
+ 	 * disk_release() expects a queue ref from add_disk() and will
+diff --git a/drivers/block/zram/zram_drv.c b/drivers/block/zram/zram_drv.c
+index e21ca844d7c291..bff3d4021c18e1 100644
+--- a/drivers/block/zram/zram_drv.c
++++ b/drivers/block/zram/zram_drv.c
+@@ -1955,7 +1955,7 @@ static int zram_add(void)
+ 	if (ZRAM_LOGICAL_BLOCK_SIZE == PAGE_SIZE)
+ 		blk_queue_max_write_zeroes_sectors(zram->disk->queue, UINT_MAX);
  
--	if (v9ses->cache)
--		sb->s_bdi->ra_pages = VM_READAHEAD_PAGES;
-+	if (!v9ses->cache) {
-+		sb->s_bdi->ra_pages = 0;
-+		sb->s_bdi->io_pages = 0;
-+	}
+-	zram->disk->queue->backing_dev_info->capabilities |= BDI_CAP_STABLE_WRITES;
++	blk_queue_flag_set(QUEUE_FLAG_STABLE_WRITES, zram->disk->queue);
+ 	device_add_disk(NULL, zram->disk, zram_disk_attr_groups);
  
- 	sb->s_flags |= SB_ACTIVE | SB_DIRSYNC;
- 	if (!v9ses->cache)
-diff --git a/fs/afs/super.c b/fs/afs/super.c
-index b552357b1d1379..3a40ee752c1e3f 100644
---- a/fs/afs/super.c
-+++ b/fs/afs/super.c
-@@ -456,7 +456,6 @@ static int afs_fill_super(struct super_block *sb, struct afs_fs_context *ctx)
- 	ret = super_setup_bdi(sb);
- 	if (ret)
- 		return ret;
--	sb->s_bdi->ra_pages	= VM_READAHEAD_PAGES;
+ 	strlcpy(zram->compressor, default_compressor, sizeof(zram->compressor));
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index ef2757012f59d5..405d7cf10eb973 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -1815,7 +1815,7 @@ static int device_requires_stable_pages(struct dm_target *ti,
+ {
+ 	struct request_queue *q = bdev_get_queue(dev->bdev);
  
- 	/* allocate the root inode and dentry */
- 	if (as->dyn_root) {
-diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
-index f6bba7eb1fa171..047934cea25efa 100644
---- a/fs/btrfs/disk-io.c
-+++ b/fs/btrfs/disk-io.c
-@@ -3092,7 +3092,6 @@ int __cold open_ctree(struct super_block *sb, struct btrfs_fs_devices *fs_device
+-	return q && bdi_cap_stable_pages_required(q->backing_dev_info);
++	return q && blk_queue_stable_writes(q);
+ }
+ 
+ /*
+@@ -1900,9 +1900,9 @@ void dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
+ 	 * because they do their own checksumming.
+ 	 */
+ 	if (dm_table_requires_stable_pages(t))
+-		q->backing_dev_info->capabilities |= BDI_CAP_STABLE_WRITES;
++		blk_queue_flag_set(QUEUE_FLAG_STABLE_WRITES, q);
+ 	else
+-		q->backing_dev_info->capabilities &= ~BDI_CAP_STABLE_WRITES;
++		blk_queue_flag_clear(QUEUE_FLAG_STABLE_WRITES, q);
+ 
+ 	/*
+ 	 * Determine whether or not this queue's I/O timings contribute
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 7ace1f76b14736..d589d26c86ea3f 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -6638,14 +6638,14 @@ raid5_store_skip_copy(struct mddev *mddev, const char *page, size_t len)
+ 	if (!conf)
+ 		err = -ENODEV;
+ 	else if (new != conf->skip_copy) {
++		struct request_queue *q = mddev->queue;
++
+ 		mddev_suspend(mddev);
+ 		conf->skip_copy = new;
+ 		if (new)
+-			mddev->queue->backing_dev_info->capabilities |=
+-				BDI_CAP_STABLE_WRITES;
++			blk_queue_flag_set(QUEUE_FLAG_STABLE_WRITES, q);
+ 		else
+-			mddev->queue->backing_dev_info->capabilities &=
+-				~BDI_CAP_STABLE_WRITES;
++			blk_queue_flag_clear(QUEUE_FLAG_STABLE_WRITES, q);
+ 		mddev_resume(mddev);
+ 	}
+ 	mddev_unlock(mddev);
+diff --git a/drivers/mmc/core/queue.c b/drivers/mmc/core/queue.c
+index 6c022ef0f84d72..80fe3852ce0f75 100644
+--- a/drivers/mmc/core/queue.c
++++ b/drivers/mmc/core/queue.c
+@@ -472,8 +472,7 @@ int mmc_init_queue(struct mmc_queue *mq, struct mmc_card *card)
  	}
  
- 	sb->s_bdi->capabilities |= BDI_CAP_CGROUP_WRITEBACK;
--	sb->s_bdi->ra_pages = VM_READAHEAD_PAGES;
- 	sb->s_bdi->ra_pages *= btrfs_super_num_devices(disk_super);
- 	sb->s_bdi->ra_pages = max(sb->s_bdi->ra_pages, SZ_4M / PAGE_SIZE);
+ 	if (mmc_host_is_spi(host) && host->use_spi_crc)
+-		mq->queue->backing_dev_info->capabilities |=
+-			BDI_CAP_STABLE_WRITES;
++		blk_queue_flag_set(QUEUE_FLAG_STABLE_WRITES, mq->queue);
  
-diff --git a/fs/fuse/inode.c b/fs/fuse/inode.c
-index bba747520e9b08..17b00670fb539e 100644
---- a/fs/fuse/inode.c
-+++ b/fs/fuse/inode.c
-@@ -1049,7 +1049,6 @@ static int fuse_bdi_init(struct fuse_conn *fc, struct super_block *sb)
- 	if (err)
- 		return err;
+ 	mq->queue->queuedata = mq;
+ 	blk_queue_rq_timeout(mq->queue, 60 * HZ);
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 741c9bfa8e14c7..c190c56bf7020d 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -3926,8 +3926,7 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid)
+ 		goto out_free_ns;
  
--	sb->s_bdi->ra_pages = VM_READAHEAD_PAGES;
- 	/* fuse does it's own writeback accounting */
- 	sb->s_bdi->capabilities = BDI_CAP_NO_ACCT_WB | BDI_CAP_STRICTLIMIT;
+ 	if (ctrl->opts && ctrl->opts->data_digest)
+-		ns->queue->backing_dev_info->capabilities
+-			|= BDI_CAP_STABLE_WRITES;
++		blk_queue_flag_set(QUEUE_FLAG_STABLE_WRITES, ns->queue);
  
-diff --git a/fs/nfs/super.c b/fs/nfs/super.c
-index 7a70287f21a2c1..f943e37853fa25 100644
---- a/fs/nfs/super.c
-+++ b/fs/nfs/super.c
-@@ -1200,13 +1200,6 @@ static void nfs_get_cache_cookie(struct super_block *sb,
+ 	blk_queue_flag_set(QUEUE_FLAG_NONROT, ns->queue);
+ 	if (ctrl->ops->flags & NVME_F_PCI_P2PDMA)
+diff --git a/drivers/nvme/host/multipath.c b/drivers/nvme/host/multipath.c
+index d4ba736c6c8905..74896be40c1769 100644
+--- a/drivers/nvme/host/multipath.c
++++ b/drivers/nvme/host/multipath.c
+@@ -673,13 +673,9 @@ void nvme_mpath_add_disk(struct nvme_ns *ns, struct nvme_id_ns *id)
+ 		nvme_mpath_set_live(ns);
+ 	}
+ 
+-	if (bdi_cap_stable_pages_required(ns->queue->backing_dev_info)) {
+-		struct gendisk *disk = ns->head->disk;
+-
+-		if (disk)
+-			disk->queue->backing_dev_info->capabilities |=
+-					BDI_CAP_STABLE_WRITES;
+-	}
++	if (blk_queue_stable_writes(ns->queue) && ns->head->disk)
++		blk_queue_flag_set(QUEUE_FLAG_STABLE_WRITES,
++				   ns->head->disk->queue);
  }
- #endif
  
--static void nfs_set_readahead(struct backing_dev_info *bdi,
--			      unsigned long iomax_pages)
+ void nvme_mpath_remove_disk(struct nvme_ns_head *head)
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index b5dd1caae5e92d..a622f334c933f5 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -962,8 +962,8 @@ static int iscsi_sw_tcp_slave_configure(struct scsi_device *sdev)
+ 	struct iscsi_conn *conn = session->leadconn;
+ 
+ 	if (conn->datadgst_en)
+-		sdev->request_queue->backing_dev_info->capabilities
+-			|= BDI_CAP_STABLE_WRITES;
++		blk_queue_flag_set(QUEUE_FLAG_STABLE_WRITES,
++				   sdev->request_queue);
+ 	blk_queue_dma_alignment(sdev->request_queue, 0);
+ 	return 0;
+ }
+diff --git a/fs/super.c b/fs/super.c
+index 904459b3511995..a51c2083cd6b18 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -1256,6 +1256,8 @@ static int set_bdev_super(struct super_block *s, void *data)
+ 	s->s_dev = s->s_bdev->bd_dev;
+ 	s->s_bdi = bdi_get(s->s_bdev->bd_bdi);
+ 
++	if (blk_queue_stable_writes(s->s_bdev->bd_disk->queue))
++		s->s_iflags |= SB_I_STABLE_WRITES;
+ 	return 0;
+ }
+ 
+diff --git a/include/linux/backing-dev.h b/include/linux/backing-dev.h
+index 860ea33571bce5..5da4ea3dd0cc5c 100644
+--- a/include/linux/backing-dev.h
++++ b/include/linux/backing-dev.h
+@@ -126,7 +126,6 @@ int bdi_set_max_ratio(struct backing_dev_info *bdi, unsigned int max_ratio);
+ #define BDI_CAP_NO_ACCT_DIRTY	0x00000001
+ #define BDI_CAP_NO_WRITEBACK	0x00000002
+ #define BDI_CAP_NO_ACCT_WB	0x00000004
+-#define BDI_CAP_STABLE_WRITES	0x00000008
+ #define BDI_CAP_STRICTLIMIT	0x00000010
+ #define BDI_CAP_CGROUP_WRITEBACK 0x00000020
+ 
+@@ -170,11 +169,6 @@ static inline int wb_congested(struct bdi_writeback *wb, int cong_bits)
+ long congestion_wait(int sync, long timeout);
+ long wait_iff_congested(int sync, long timeout);
+ 
+-static inline bool bdi_cap_stable_pages_required(struct backing_dev_info *bdi)
 -{
--	bdi->ra_pages = VM_READAHEAD_PAGES;
--	bdi->io_pages = iomax_pages;
+-	return bdi->capabilities & BDI_CAP_STABLE_WRITES;
 -}
 -
- int nfs_get_tree_common(struct fs_context *fc)
+ static inline bool bdi_cap_writeback_dirty(struct backing_dev_info *bdi)
  {
- 	struct nfs_fs_context *ctx = nfs_fc2context(fc);
-@@ -1251,7 +1244,7 @@ int nfs_get_tree_common(struct fs_context *fc)
- 					     MINOR(server->s_dev));
- 		if (error)
- 			goto error_splat_super;
--		nfs_set_readahead(s->s_bdi, server->rpages);
-+		s->s_bdi->io_pages = server->rpages;
- 		server->super = s;
- 	}
+ 	return !(bdi->capabilities & BDI_CAP_NO_WRITEBACK);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 282f5ca424f14a..8e77f12de52214 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -606,6 +606,7 @@ struct request_queue {
+ #define QUEUE_FLAG_SAME_FORCE	12	/* force complete on same CPU */
+ #define QUEUE_FLAG_DEAD		13	/* queue tear-down finished */
+ #define QUEUE_FLAG_INIT_DONE	14	/* queue is initialized */
++#define QUEUE_FLAG_STABLE_WRITES 15	/* don't modify blks until WB is done */
+ #define QUEUE_FLAG_POLL		16	/* IO polling enabled if set */
+ #define QUEUE_FLAG_WC		17	/* Write back caching */
+ #define QUEUE_FLAG_FUA		18	/* device supports FUA writes */
+@@ -635,6 +636,8 @@ bool blk_queue_flag_test_and_set(unsigned int flag, struct request_queue *q);
+ #define blk_queue_noxmerges(q)	\
+ 	test_bit(QUEUE_FLAG_NOXMERGES, &(q)->queue_flags)
+ #define blk_queue_nonrot(q)	test_bit(QUEUE_FLAG_NONROT, &(q)->queue_flags)
++#define blk_queue_stable_writes(q) \
++	test_bit(QUEUE_FLAG_STABLE_WRITES, &(q)->queue_flags)
+ #define blk_queue_io_stat(q)	test_bit(QUEUE_FLAG_IO_STAT, &(q)->queue_flags)
+ #define blk_queue_add_random(q)	test_bit(QUEUE_FLAG_ADD_RANDOM, &(q)->queue_flags)
+ #define blk_queue_discard(q)	test_bit(QUEUE_FLAG_DISCARD, &(q)->queue_flags)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index fbd74df5ce5f34..222465b7cf4178 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1385,6 +1385,7 @@ extern int send_sigurg(struct fown_struct *fown);
+ #define SB_I_CGROUPWB	0x00000001	/* cgroup-aware writeback enabled */
+ #define SB_I_NOEXEC	0x00000002	/* Ignore executables on this fs */
+ #define SB_I_NODEV	0x00000004	/* Ignore devices on this fs */
++#define SB_I_STABLE_WRITES 0x00000008	/* don't modify blks until WB is done */
  
-diff --git a/fs/ubifs/super.c b/fs/ubifs/super.c
-index a2420c900275a8..fbddb2a1c03f5e 100644
---- a/fs/ubifs/super.c
-+++ b/fs/ubifs/super.c
-@@ -2177,6 +2177,8 @@ static int ubifs_fill_super(struct super_block *sb, void *data, int silent)
- 				   c->vi.vol_id);
- 	if (err)
- 		goto out_close;
-+	sb->s_bdi->ra_pages = 0;
-+	sb->s_bdi->io_pages = 0;
- 
- 	sb->s_fs_info = c;
- 	sb->s_magic = UBIFS_SUPER_MAGIC;
-diff --git a/fs/vboxsf/super.c b/fs/vboxsf/super.c
-index 8fe03b4a0d2b03..8e3792177a8523 100644
---- a/fs/vboxsf/super.c
-+++ b/fs/vboxsf/super.c
-@@ -167,6 +167,8 @@ static int vboxsf_fill_super(struct super_block *sb, struct fs_context *fc)
- 	err = super_setup_bdi_name(sb, "vboxsf-%d", sbi->bdi_id);
- 	if (err)
- 		goto fail_free;
-+	sb->s_bdi->ra_pages = 0;
-+	sb->s_bdi->io_pages = 0;
- 
- 	/* Turn source into a shfl_string and map the folder */
- 	size = strlen(fc->source) + 1;
+ /* sb->s_iflags to limit user namespace mounts */
+ #define SB_I_USERNS_VISIBLE		0x00000010 /* fstype already mounted */
 diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index 8e8b00627bb2d8..2dac3be6127127 100644
+index 2dac3be6127127..8e3802bf03a968 100644
 --- a/mm/backing-dev.c
 +++ b/mm/backing-dev.c
-@@ -746,6 +746,8 @@ struct backing_dev_info *bdi_alloc(int node_id)
- 		kfree(bdi);
- 		return NULL;
- 	}
-+	bdi->ra_pages = VM_READAHEAD_PAGES;
-+	bdi->io_pages = VM_READAHEAD_PAGES;
- 	return bdi;
+@@ -204,10 +204,9 @@ static ssize_t stable_pages_required_show(struct device *dev,
+ 					  struct device_attribute *attr,
+ 					  char *page)
+ {
+-	struct backing_dev_info *bdi = dev_get_drvdata(dev);
+-
+-	return snprintf(page, PAGE_SIZE-1, "%d\n",
+-			bdi_cap_stable_pages_required(bdi) ? 1 : 0);
++	dev_warn_once(dev,
++		"the stable_pages_required attribute has been removed. Use the stable_writes queue attribute instead.\n");
++	return snprintf(page, PAGE_SIZE-1, "%d\n", 0);
  }
- EXPORT_SYMBOL(bdi_alloc);
+ static DEVICE_ATTR_RO(stable_pages_required);
+ 
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index 4e4ddd67b71e58..e9c36521461aaa 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -2849,7 +2849,7 @@ EXPORT_SYMBOL_GPL(wait_on_page_writeback);
+  */
+ void wait_for_stable_page(struct page *page)
+ {
+-	if (bdi_cap_stable_pages_required(inode_to_bdi(page->mapping->host)))
++	if (page->mapping->host->i_sb->s_iflags & SB_I_STABLE_WRITES)
+ 		wait_on_page_writeback(page);
+ }
+ EXPORT_SYMBOL_GPL(wait_for_stable_page);
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index 96a7c47dd533e4..65ef407512b5b0 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -3237,7 +3237,7 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
+ 		goto bad_swap_unlock_inode;
+ 	}
+ 
+-	if (bdi_cap_stable_pages_required(inode_to_bdi(inode)))
++	if (p->bdev && blk_queue_stable_writes(p->bdev->bd_disk->queue))
+ 		p->flags |= SWP_STABLE_WRITES;
+ 
+ 	if (p->bdev && p->bdev->bd_disk->fops->rw_page)
 -- 
 2.28.0
 
