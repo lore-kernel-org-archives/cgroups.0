@@ -1,22 +1,23 @@
 From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 06/13] md: update the optimal I/O size on reshape
-Date: Thu, 24 Sep 2020 11:53:29 -0400
-Message-ID: <yq14knnmary.fsf@ca-mkp.ca.oracle.com>
+Subject: Re: [PATCH 07/13] block: lift setting the readahead size into the
+ block layer
+Date: Thu, 24 Sep 2020 11:57:14 -0400
+Message-ID: <yq1y2kzkw1h.fsf@ca-mkp.ca.oracle.com>
 References: <20200924065140.726436-1-hch@lst.de>
-        <20200924065140.726436-7-hch@lst.de>
+        <20200924065140.726436-8-hch@lst.de>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
  from : message-id : references : date : in-reply-to : mime-version :
  content-type; s=corp-2020-01-29;
- bh=UMrMiRKAEPKCu9R5h0OHmuj7H7bYXllgz/FgByZzp54=;
- b=T23KGyNF55FmeyEYsQIu8ZzQNzqjPTGYsLmWI3bkv0r1GL5atH3ncE7JDgQd4HihRJzp
- QcXkEtynE/j4e7hdpiRmuuN9Wfa4O5VtR4laQ3ogMVmsknED5KP7+keU7mxoZufVXf1p
- vupa7e47pocKxfg5d/WdxS4i4zOD96hQpjigPNoOtDtZoVSc1E2jaQgTWxLPyvyuljab
- 8viY6PkrX30EnaiWLFiWM6plVeDJdSxcphzm3dSP+sICJGE6YZNKiRoGninjfOdUhCHl
- ZiUOJy3a3UUEoX+OaO4U+4UF5Mrbzz4A351PGKMWyUj25dUz/2aKHnUle95g3uMZhOJv eQ== 
-In-Reply-To: <20200924065140.726436-7-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
-        of "Thu, 24 Sep 2020 08:51:33 +0200")
+ bh=coGfpNEvHw1Ww6VMM3AUAr95WYwBGdMfGxQAq7Ut3Eo=;
+ b=td1+RxKdoLOO2t63uF4zlGVrGlzNX/kncvf9CRu1+Q/Z185II6vOPY7OYVmR00lwbBvB
+ oI39qsaxEsXuhrFRnhPNYadRAzid4vpFVH1DnNrCOUVZGKGLshblg06fbzYwGPztgdZo
+ Z/fUTCgCP16jQ550PJt+VWDuquf6GdVURF+vw2dk3HUNxhFcamf3ZH2BVw0ZfMpJ+5yZ
+ mxpIgUdAVm3QXDHsXihsvYimVL4XmoOEGm2cGgSqGvu3D9jELBR6iVkzSAWn9+LAYCfl
+ ZfTFRr7HESquQPnKqBx6g1RyXHnWraO8Kxaud9pk648QpJJgQ9L9MM7dy9P+I69dS8p3 Iw== 
+In-Reply-To: <20200924065140.726436-8-hch-jcswGhMUV9g@public.gmane.org> (Christoph Hellwig's message
+        of "Thu, 24 Sep 2020 08:51:34 +0200")
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -26,10 +27,15 @@ Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Song Liu <song-D
 
 Christoph,
 
-> The raid5 and raid10 drivers currently update the read-ahead size, but
-> not the optimal I/O size on reshape.  To prepare for deriving the
-> read-ahead size from the optimal I/O size make sure it is updated as
-> well.
+> Drivers shouldn't really mess with the readahead size, as that is a VM
+> concept.  Instead set it based on the optimal I/O size by lifting the
+> algorithm from the md driver when registering the disk.  Also set
+> bdi->io_pages there as well by applying the same scheme based on
+> max_sectors.  To ensure the limits work well for stacking drivers a
+> new helper is added to update the readahead limits from the block
+> limits, which is also called from disk_stack_limits.
+
+Looks good!
 
 Reviewed-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
