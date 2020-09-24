@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v19 17/20] mm/swap.c: serialize memcg changes in pagevec_lru_move_fn
-Date: Thu, 24 Sep 2020 11:28:32 +0800
-Message-ID: <1600918115-22007-18-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v19 15/20] mm/lru: introduce TestClearPageLRU
+Date: Thu, 24 Sep 2020 11:28:30 +0800
+Message-ID: <1600918115-22007-16-git-send-email-alex.shi@linux.alibaba.com>
 References: <1600918115-22007-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1600918115-22007-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -10,144 +10,197 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com, aaron.lwe@gmail.com
+Cc: Michal Hocko <mhocko@kernel.org>
 
-Hugh Dickins' found a memcg change bug on original version:
-If we want to change the pgdat->lru_lock to memcg's lruvec lock, we have
-to serialize mem_cgroup_move_account during pagevec_lru_move_fn. The
-possible bad scenario would like:
+Currently lru_lock still guards both lru list and page's lru bit, that's
+ok. but if we want to use specific lruvec lock on the page, we need to
+pin down the page's lruvec/memcg during locking. Just taking lruvec
+lock first may be undermined by the page's memcg charge/migration. To
+fix this problem, we could clear the lru bit out of locking and use
+it as pin down action to block the page isolation in memcg changing.
 
-	cpu 0					cpu 1
-lruvec = mem_cgroup_page_lruvec()
-					if (!isolate_lru_page())
-						mem_cgroup_move_account
+So now a standard steps of page isolation is following:
+	1, get_page(); 	       #pin the page avoid to be free
+	2, TestClearPageLRU(); #block other isolation like memcg change
+	3, spin_lock on lru_lock; #serialize lru list access
+	4, delete page from lru list;
+The step 2 could be optimzed/replaced in scenarios which page is
+unlikely be accessed or be moved between memcgs.
 
-spin_lock_irqsave(&lruvec->lru_lock <== wrong lock.
+This patch start with the first part: TestClearPageLRU, which combines
+PageLRU check and ClearPageLRU into a macro func TestClearPageLRU. This
+function will be used as page isolation precondition to prevent other
+isolations some where else. Then there are may !PageLRU page on lru
+list, need to remove BUG() checking accordingly.
 
-So we need TestClearPageLRU to block isolate_lru_page(), that serializes
-the memcg change. and then removing the PageLRU check in move_fn callee
-as the consequence.
+There 2 rules for lru bit now:
+1, the lru bit still indicate if a page on lru list, just in some
+   temporary moment(isolating), the page may have no lru bit when
+   it's on lru list.  but the page still must be on lru list when the
+   lru bit set.
+2, have to remove lru bit before delete it from lru list.
 
-__pagevec_lru_add_fn() is different from the others, because the pages
-it deals with are, by definition, not yet on the lru.  TestClearPageLRU
-is not needed and would not work, so __pagevec_lru_add() goes its own
-way.
+As Andrew Morton mentioned this change would dirty cacheline for page
+isn't on LRU. But the lost would be acceptable in Rong Chen
+<rong.a.chen@intel.com> report:
+https://lore.kernel.org/lkml/20200304090301.GB5972@shao2-debian/
 
-Reported-by: Hugh Dickins <hughd@google.com>
+Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
 Acked-by: Hugh Dickins <hughd@google.com>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Michal Hocko <mhocko@kernel.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm@kvack.org
 Cc: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org
+Cc: linux-mm@kvack.org
 ---
- mm/swap.c | 44 +++++++++++++++++++++++++++++++++++---------
- 1 file changed, 35 insertions(+), 9 deletions(-)
+ include/linux/page-flags.h |  1 +
+ mm/mlock.c                 |  3 +--
+ mm/vmscan.c                | 39 +++++++++++++++++++--------------------
+ 3 files changed, 21 insertions(+), 22 deletions(-)
 
-diff --git a/mm/swap.c b/mm/swap.c
-index 6a4b00267384..50418dcc5e24 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -222,8 +222,14 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
- 			spin_lock_irqsave(&pgdat->lru_lock, flags);
- 		}
+diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
+index 6be1aa559b1e..9554ed1387dc 100644
+--- a/include/linux/page-flags.h
++++ b/include/linux/page-flags.h
+@@ -326,6 +326,7 @@ static inline void page_init_poison(struct page *page, size_t size)
+ PAGEFLAG(Dirty, dirty, PF_HEAD) TESTSCFLAG(Dirty, dirty, PF_HEAD)
+ 	__CLEARPAGEFLAG(Dirty, dirty, PF_HEAD)
+ PAGEFLAG(LRU, lru, PF_HEAD) __CLEARPAGEFLAG(LRU, lru, PF_HEAD)
++	TESTCLEARFLAG(LRU, lru, PF_HEAD)
+ PAGEFLAG(Active, active, PF_HEAD) __CLEARPAGEFLAG(Active, active, PF_HEAD)
+ 	TESTCLEARFLAG(Active, active, PF_HEAD)
+ PAGEFLAG(Workingset, workingset, PF_HEAD)
+diff --git a/mm/mlock.c b/mm/mlock.c
+index d487aa864e86..7b0e6334be6f 100644
+--- a/mm/mlock.c
++++ b/mm/mlock.c
+@@ -276,10 +276,9 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ 			 * We already have pin from follow_page_mask()
+ 			 * so we can spare the get_page() here.
+ 			 */
+-			if (PageLRU(page)) {
++			if (TestClearPageLRU(page)) {
+ 				struct lruvec *lruvec;
+ 
+-				ClearPageLRU(page);
+ 				lruvec = mem_cgroup_page_lruvec(page,
+ 							page_pgdat(page));
+ 				del_page_from_lru_list(page, lruvec,
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 953a068b3fc7..9d06c609c60e 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1540,7 +1540,7 @@ unsigned int reclaim_clean_pages_from_list(struct zone *zone,
+  */
+ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
+ {
+-	int ret = -EINVAL;
++	int ret = -EBUSY;
+ 
+ 	/* Only take pages on the LRU. */
+ 	if (!PageLRU(page))
+@@ -1550,8 +1550,6 @@ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
+ 	if (PageUnevictable(page) && !(mode & ISOLATE_UNEVICTABLE))
+ 		return ret;
+ 
+-	ret = -EBUSY;
+-
+ 	/*
+ 	 * To minimise LRU disruption, the caller can indicate that it only
+ 	 * wants to isolate pages it will be able to operate on without
+@@ -1598,8 +1596,10 @@ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
+ 		 * sure the page is not being freed elsewhere -- the
+ 		 * page release code relies on it.
+ 		 */
+-		ClearPageLRU(page);
+-		ret = 0;
++		if (TestClearPageLRU(page))
++			ret = 0;
++		else
++			put_page(page);
+ 	}
+ 
+ 	return ret;
+@@ -1665,8 +1665,6 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
+ 		page = lru_to_page(src);
+ 		prefetchw_prev_lru_page(page, src, flags);
+ 
+-		VM_BUG_ON_PAGE(!PageLRU(page), page);
+-
+ 		nr_pages = compound_nr(page);
+ 		total_scan += nr_pages;
+ 
+@@ -1763,21 +1761,18 @@ int isolate_lru_page(struct page *page)
+ 	VM_BUG_ON_PAGE(!page_count(page), page);
+ 	WARN_RATELIMIT(PageTail(page), "trying to isolate tail page");
+ 
+-	if (PageLRU(page)) {
++	if (TestClearPageLRU(page)) {
+ 		pg_data_t *pgdat = page_pgdat(page);
+ 		struct lruvec *lruvec;
+ 
+-		spin_lock_irq(&pgdat->lru_lock);
++		get_page(page);
+ 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+-		if (PageLRU(page)) {
+-			int lru = page_lru(page);
+-			get_page(page);
+-			ClearPageLRU(page);
+-			del_page_from_lru_list(page, lruvec, lru);
+-			ret = 0;
+-		}
++		spin_lock_irq(&pgdat->lru_lock);
++		del_page_from_lru_list(page, lruvec, page_lru(page));
+ 		spin_unlock_irq(&pgdat->lru_lock);
++		ret = 0;
+ 	}
++
+ 	return ret;
+ }
+ 
+@@ -4287,6 +4282,10 @@ void check_move_unevictable_pages(struct pagevec *pvec)
+ 		nr_pages = thp_nr_pages(page);
+ 		pgscanned += nr_pages;
  
 +		/* block memcg migration during page moving between lru */
 +		if (!TestClearPageLRU(page))
 +			continue;
 +
+ 		if (pagepgdat != pgdat) {
+ 			if (pgdat)
+ 				spin_unlock_irq(&pgdat->lru_lock);
+@@ -4295,10 +4294,7 @@ void check_move_unevictable_pages(struct pagevec *pvec)
+ 		}
  		lruvec = mem_cgroup_page_lruvec(page, pgdat);
- 		(*move_fn)(page, lruvec);
-+
+ 
+-		if (!PageLRU(page) || !PageUnevictable(page))
+-			continue;
+-
+-		if (page_evictable(page)) {
++		if (page_evictable(page) && PageUnevictable(page)) {
+ 			enum lru_list lru = page_lru_base_type(page);
+ 
+ 			VM_BUG_ON_PAGE(PageActive(page), page);
+@@ -4307,12 +4303,15 @@ void check_move_unevictable_pages(struct pagevec *pvec)
+ 			add_page_to_lru_list(page, lruvec, lru);
+ 			pgrescued += nr_pages;
+ 		}
 +		SetPageLRU(page);
  	}
- 	if (pgdat)
- 		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-@@ -233,7 +239,7 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
  
- static void pagevec_move_tail_fn(struct page *page, struct lruvec *lruvec)
- {
--	if (PageLRU(page) && !PageUnevictable(page)) {
-+	if (!PageUnevictable(page)) {
- 		del_page_from_lru_list(page, lruvec, page_lru(page));
- 		ClearPageActive(page);
- 		add_page_to_lru_list_tail(page, lruvec, page_lru(page));
-@@ -306,7 +312,7 @@ void lru_note_cost_page(struct page *page)
- 
- static void __activate_page(struct page *page, struct lruvec *lruvec)
- {
--	if (PageLRU(page) && !PageActive(page) && !PageUnevictable(page)) {
-+	if (!PageActive(page) && !PageUnevictable(page)) {
- 		int lru = page_lru_base_type(page);
- 		int nr_pages = thp_nr_pages(page);
- 
-@@ -362,7 +368,8 @@ void activate_page(struct page *page)
- 
- 	page = compound_head(page);
- 	spin_lock_irq(&pgdat->lru_lock);
--	__activate_page(page, mem_cgroup_page_lruvec(page, pgdat));
-+	if (PageLRU(page))
-+		__activate_page(page, mem_cgroup_page_lruvec(page, pgdat));
- 	spin_unlock_irq(&pgdat->lru_lock);
+ 	if (pgdat) {
+ 		__count_vm_events(UNEVICTABLE_PGRESCUED, pgrescued);
+ 		__count_vm_events(UNEVICTABLE_PGSCANNED, pgscanned);
+ 		spin_unlock_irq(&pgdat->lru_lock);
++	} else if (pgscanned) {
++		count_vm_events(UNEVICTABLE_PGSCANNED, pgscanned);
+ 	}
  }
- #endif
-@@ -521,9 +528,6 @@ static void lru_deactivate_file_fn(struct page *page, struct lruvec *lruvec)
- 	bool active;
- 	int nr_pages = thp_nr_pages(page);
- 
--	if (!PageLRU(page))
--		return;
--
- 	if (PageUnevictable(page))
- 		return;
- 
-@@ -564,7 +568,7 @@ static void lru_deactivate_file_fn(struct page *page, struct lruvec *lruvec)
- 
- static void lru_deactivate_fn(struct page *page, struct lruvec *lruvec)
- {
--	if (PageLRU(page) && PageActive(page) && !PageUnevictable(page)) {
-+	if (PageActive(page) && !PageUnevictable(page)) {
- 		int lru = page_lru_base_type(page);
- 		int nr_pages = thp_nr_pages(page);
- 
-@@ -581,7 +585,7 @@ static void lru_deactivate_fn(struct page *page, struct lruvec *lruvec)
- 
- static void lru_lazyfree_fn(struct page *page, struct lruvec *lruvec)
- {
--	if (PageLRU(page) && PageAnon(page) && PageSwapBacked(page) &&
-+	if (PageAnon(page) && PageSwapBacked(page) &&
- 	    !PageSwapCache(page) && !PageUnevictable(page)) {
- 		bool active = PageActive(page);
- 		int nr_pages = thp_nr_pages(page);
-@@ -979,7 +983,29 @@ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec)
-  */
- void __pagevec_lru_add(struct pagevec *pvec)
- {
--	pagevec_lru_move_fn(pvec, __pagevec_lru_add_fn);
-+	int i;
-+	struct pglist_data *pgdat = NULL;
-+	struct lruvec *lruvec;
-+	unsigned long flags = 0;
-+
-+	for (i = 0; i < pagevec_count(pvec); i++) {
-+		struct page *page = pvec->pages[i];
-+		struct pglist_data *pagepgdat = page_pgdat(page);
-+
-+		if (pagepgdat != pgdat) {
-+			if (pgdat)
-+				spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-+			pgdat = pagepgdat;
-+			spin_lock_irqsave(&pgdat->lru_lock, flags);
-+		}
-+
-+		lruvec = mem_cgroup_page_lruvec(page, pgdat);
-+		__pagevec_lru_add_fn(page, lruvec);
-+	}
-+	if (pgdat)
-+		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-+	release_pages(pvec->pages, pvec->nr);
-+	pagevec_reinit(pvec);
- }
- 
- /**
+ EXPORT_SYMBOL_GPL(check_move_unevictable_pages);
 -- 
 1.8.3.1
 
