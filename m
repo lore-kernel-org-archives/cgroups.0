@@ -1,81 +1,77 @@
-From: Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org>
-Subject: [PATCH] mm: fix some comments in page_alloc.c and mempolicy.c
-Date: Sat, 26 Sep 2020 00:06:50 +0800
-Message-ID: <20200925160650.GA42847@rlk>
+From: Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org>
+Subject: Re: [PATCH 2/2] PM/hibernate: remove the bogus call to get_gendisk
+ in software_resume
+Date: Fri, 25 Sep 2020 20:38:28 +0200
+Message-ID: <20200925183828.GC7253@duo.ucw.cz>
+References: <20200925161447.1486883-1-hch@lst.de>
+ <20200925161447.1486883-3-hch@lst.de>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="eRtJSFbw+EEWtPj3"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=Date:From:Subject:Message-ID:MIME-Version; bh=TPYFb
-        PSp4V8vYQ4z0mS+XWUEYAjUGpB+g/xY+pc+6GE=; b=PVQYhqPDCUwiAEdCTv3nZ
-        UM+WBwcstQfT/KMzCBTVXr5/Obw6/vTsN3e/TxWPG8kZ6Rs2ZRplwls5wzjfy5Lw
-        +668EgpaU6EqLwJvcPjwdcOjjC5Cy1YB7H7L4iPdmgcPN7OO3OLqteOKxjsZ9xbN
-        6FwYolGypdX4NBacz+rx58=
 Content-Disposition: inline
+In-Reply-To: <20200925161447.1486883-3-hch-jcswGhMUV9g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-
-1. the cpuset.c has been moved from kernel/cpuset.c to
-kernel/cgroup/cpuset.c long time ago, but the comment is stale,
-so we update it.
-2. get_page_from_freelist() may alloc many pages according to
-order, we may use pages for better.
-
-Signed-off-by: Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org>
----
- kernel/cgroup/cpuset.c | 2 +-
- mm/mempolicy.c         | 2 +-
- mm/page_alloc.c        | 4 ++--
- 3 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 642415b8c3c9..1d3011c1aab6 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -1,5 +1,5 @@
- /*
-- *  kernel/cpuset.c
-+ *  kernel/cgroup/cpuset.c
-  *
-  *  Processor and Memory placement constraints for sets of tasks.
-  *
-diff --git a/mm/mempolicy.c b/mm/mempolicy.c
-index eddbe4e56c73..ac59b049b16c 100644
---- a/mm/mempolicy.c
-+++ b/mm/mempolicy.c
-@@ -2295,7 +2295,7 @@ int vma_dup_policy(struct vm_area_struct *src, struct vm_area_struct *dst)
-  * rebinds the mempolicy its copying by calling mpol_rebind_policy()
-  * with the mems_allowed returned by cpuset_mems_allowed().  This
-  * keeps mempolicies cpuset relative after its cpuset moves.  See
-- * further kernel/cpuset.c update_nodemask().
-+ * further kernel/cgroup/cpuset.c update_nodemask().
-  *
-  * current's mempolicy may be rebinded by the other task(the task that changes
-  * cpuset's mems), so we needn't do rebind work for current task.
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index fab5e97dc9ca..1e3c7493e1cb 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -3709,7 +3709,7 @@ static inline unsigned int current_alloc_flags(gfp_t gfp_mask,
- 
- /*
-  * get_page_from_freelist goes through the zonelist trying to allocate
-- * a page.
-+ * pages.
-  */
- static struct page *
- get_page_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
-@@ -3723,7 +3723,7 @@ get_page_from_freelist(gfp_t gfp_mask, unsigned int order, int alloc_flags,
- retry:
- 	/*
- 	 * Scan zonelist, looking for a zone with enough free.
--	 * See also __cpuset_node_allowed() comment in kernel/cpuset.c.
-+	 * See also __cpuset_node_allowed() comment in kernel/cgroup/cpuset.c.
- 	 */
- 	no_fallback = alloc_flags & ALLOC_NOFRAGMENT;
- 	z = ac->preferred_zoneref;
--- 
-2.25.1
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "Rafael J. Wysocki" <rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org>, Len Brown <len.brown-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Minho Ban <mhban-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 
+--eRtJSFbw+EEWtPj3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi!
+
+> get_gendisk grabs a reference on the disk and file operation, so this
+> code will leak both of them while having absolutely no use for the
+> gendisk itself.
+>=20
+> This effectively reverts commit 2df83fa4bce421f
+> ("PM / Hibernate: Use get_gendisk to verify partition if resume_file is i=
+nteger format")
+>=20
+> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> ---
+>  kernel/power/hibernate.c | 11 -----------
+>  1 file changed, 11 deletions(-)
+>=20
+> diff --git a/kernel/power/hibernate.c b/kernel/power/hibernate.c
+> index e7aa57fb2fdc33..7d0b99d2e69631 100644
+> --- a/kernel/power/hibernate.c
+> +++ b/kernel/power/hibernate.c
+> @@ -948,17 +948,6 @@ static int software_resume(void)
+> =20
+>  	/* Check if the device is there */
+>  	swsusp_resume_device =3D name_to_dev_t(resume_file);
+> -
+> -	/*
+> -	 * name_to_dev_t is ineffective to verify parition if resume_file is in
+> -	 * integer format. (e.g. major:minor)
+> -	 */
+> -	if (isdigit(resume_file[0]) && resume_wait) {
+> -		int partno;
+> -		while (!get_gendisk(swsusp_resume_device, &partno))
+> -			msleep(10);
+> -	}
+
+I believe point of this code was to wait for resume device to appear
+-- see the resume_wait condition. It should not be simply removed.
+
+Best regards,
+								Pavel
+--=20
+DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+
+--eRtJSFbw+EEWtPj3
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EABECAB0WIQRPfPO7r0eAhk010v0w5/Bqldv68gUCX245JAAKCRAw5/Bqldv6
+8nqrAJ9qEdwnZpnNgalnaGH1r71lg+ujCQCfdWZzlCzS9I0pHUwKmZCAgAYm75o=
+=9GW2
+-----END PGP SIGNATURE-----
+
+--eRtJSFbw+EEWtPj3--
