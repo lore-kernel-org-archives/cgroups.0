@@ -1,181 +1,150 @@
-From: Vipin Sharma <vipinsh@google.com>
-Subject: Re: [RFC Patch 0/2] KVM: SVM: Cgroup support for SVM SEV ASIDs
-Date: Fri, 25 Sep 2020 15:22:20 -0700
-Message-ID: <20200925222220.GA977797@google.com>
-References: <20200922004024.3699923-1-vipinsh@google.com>
- <20200922014836.GA26507@linux.intel.com>
- <20200922211404.GA4141897@google.com>
- <20200924192116.GC9649@linux.intel.com>
- <cb592c59-a50e-5901-71fe-19e43bc9e37e@amd.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH v19 03/20] mm/thp: move lru_add_page_tail func to
+ huge_memory.c
+Date: Sat, 26 Sep 2020 14:06:05 +0800
+Message-ID: <539cb371-faac-12b2-06d2-a050a541382d@linux.alibaba.com>
+References: <1600918115-22007-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1600918115-22007-4-git-send-email-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=cmfhoET6i60TK8Rk0MElGhJyFQqHEcMLMlgOK4MAlE4=;
-        b=NGclKlxcg0K/w1F2bk1+6OZtx7oAUmpgRUU9kjxAcPLJrrKMsTW9nll+U8e7WWnNFR
-         eEygtfDCyj/bHjZ31x6uGkXUhM+2bCxcUTQNRU+8COFeSGIJTEUFIr9EKd5m5shlLlMW
-         4lM6CGRLbwtNuQew1bp8NuXz5frpeZzIK0y31IaEM1SS8aUaSEBUw5GpkYfcnHB5ztQl
-         b8C3BYsGapLhA/sTWNvZTfM9kV07AOkbixhOLotEU3Vc0e4Up5j+YnYGXvoskion5ew7
-         HmTfHKwUx1NI+C9wv1JvYJxXYW70LuIesnV4wV21KffEju9CS/gwR/hnTVrudnsYIgg3
-         tzkA==
-Content-Disposition: inline
-In-Reply-To: <cb592c59-a50e-5901-71fe-19e43bc9e37e@amd.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1600918115-22007-4-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tom Lendacky <thomas.lendacky@amd.com>, Sean Christopherson <sean.j.christopherson@intel.com>, pbonzini@redhat.com
-Cc: tj@kernel.org, lizefan@huawei.com, joro@8bytes.org, corbet@lwn.net, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, gingell@google.com, rientjes@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aaron.lwe-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Thu, Sep 24, 2020 at 02:55:18PM -0500, Tom Lendacky wrote:
-> On 9/24/20 2:21 PM, Sean Christopherson wrote:
-> > On Tue, Sep 22, 2020 at 02:14:04PM -0700, Vipin Sharma wrote:
-> > > On Mon, Sep 21, 2020 at 06:48:38PM -0700, Sean Christopherson wrote:
-> > > > On Mon, Sep 21, 2020 at 05:40:22PM -0700, Vipin Sharma wrote:
-> > > > > Hello,
-> > > > > 
-> > > > > This patch series adds a new SEV controller for tracking and limiting
-> > > > > the usage of SEV ASIDs on the AMD SVM platform.
-> > > > > 
-> > > > > SEV ASIDs are used in creating encrypted VM and lightweight sandboxes
-> > > > > but this resource is in very limited quantity on a host.
-> > > > > 
-> > > > > This limited quantity creates issues like SEV ASID starvation and
-> > > > > unoptimized scheduling in the cloud infrastructure.
-> > > > > 
-> > > > > SEV controller provides SEV ASID tracking and resource control
-> > > > > mechanisms.
-> > > > 
-> > > > This should be genericized to not be SEV specific.  TDX has a similar
-> > > > scarcity issue in the form of key IDs, which IIUC are analogous to SEV ASIDs
-> > > > (gave myself a quick crash course on SEV ASIDs).  Functionally, I doubt it
-> > > > would change anything, I think it'd just be a bunch of renaming.  The hardest
-> > > > part would probably be figuring out a name :-).
-> > > > 
-> > > > Another idea would be to go even more generic and implement a KVM cgroup
-> > > > that accounts the number of VMs of a particular type, e.g. legacy, SEV,
-> > > > SEV-ES?, and TDX.  That has potential future problems though as it falls
-> > > > apart if hardware every supports 1:MANY VMs:KEYS, or if there is a need to
-> > > > account keys outside of KVM, e.g. if MKTME for non-KVM cases ever sees the
-> > > > light of day.
-> > > 
-> > > I read about the TDX and its use of the KeyID for encrypting VMs. TDX
-> > > has two kinds of KeyIDs private and shared.
-> > 
-> > To clarify, "shared" KeyIDs are simply legacy MKTME KeyIDs.  This is relevant
-> > because those KeyIDs can be used without TDX or KVM in the picture.
-> > 
-> > > On AMD platform there are two types of ASIDs for encryption.
-> > > 1. SEV ASID - Normal runtime guest memory encryption.
-> > > 2. SEV-ES ASID - Extends SEV ASID by adding register state encryption with
-> > > 		 integrity.
-> > > 
-> > > Both types of ASIDs have their own maximum value which is provisioned in
-> > > the firmware
-> > 
-> > Ugh, I missed that detail in the SEV-ES RFC.  Does SNP add another ASID type,
-> > or does it reuse SEV-ES ASIDs?  If it does add another type, is that trend
-> > expected to continue, i.e. will SEV end up with SEV, SEV-ES, SEV-ES-SNP,
-> > SEV-ES-SNP-X, SEV-ES-SNP-X-Y, etc...?
-> 
-> SEV-SNP and SEV-ES share the same ASID range.
-> 
-> Thanks,
-> Tom
-> 
-> > 
-> > > So, we are talking about 4 different types of resources:
-> > > 1. AMD SEV ASID (implemented in this patch as sev.* files in SEV cgroup)
-> > > 2. AMD SEV-ES ASID (in future, adding files like sev_es.*)
-> > > 3. Intel TDX private KeyID
-> > > 4. Intel TDX shared KeyID
-> > > 
-> > > TDX private KeyID is similar to SEV and SEV-ES ASID. I think coming up
-> > > with the same name which can be used by both platforms will not be easy,
-> > > and extensible with the future enhancements. This will get even more
-> > > difficult if Arm also comes up with something similar but with different
-> > > nuances.
-> > 
-> > Honest question, what's easier for userspace/orchestration layers?  Having an
-> > abstract but common name, or conrete but different names?  My gut reaction is
-> > to provide a common interface, but I can see how that could do more harm than
-> > good, e.g. some amount of hardware capabilitiy discovery is possible with
-> > concrete names.  And I'm guessing there's already a fair amount of vendor
-> > specific knowledge bleeding into userspace for these features...
+There is a bit conflict when I try to rebase it to today's akpm branch
+So update a rebasable one.
 
-I agree with you that the abstract name is better than the concrete
-name, I also feel that we must provide HW extensions. Here is one
-approach:
+Thanks
+Alex
 
-Cgroup name: cpu_encryption, encryption_slots, or memcrypt (open to
-suggestions)
+From 3aa78f872deac10861aba86ddf362082afef947d Mon Sep 17 00:00:00 2001
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Date: Tue, 26 May 2020 16:45:09 +0800
+Subject: [PATCH v19 03/20] mm/thp: move lru_add_page_tail func to
+ huge_memory.c
 
-Control files: slots.{max, current, events}
+The func is only used in huge_memory.c, defining it in other file with a
+CONFIG_TRANSPARENT_HUGEPAGE macro restrict just looks weird.
 
-Contents of the slot.max:
-default max
-	default: Corresponds to all kinds of encryption capabilities on
-		 a platform. For AMD, it will be SEV and SEV-ES.  For
-		 Intel, it will be TDX and MKTME. This can also be used
-		 by other devices not just CPU.
+Let's move it THP. And make it static as Hugh Dickin suggested.
 
-	max: max or any number to denote limit on the cgroup.
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Reviewed-by: Kirill A. Shutemov <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+---
+ include/linux/swap.h |  2 --
+ mm/huge_memory.c     | 30 ++++++++++++++++++++++++++++++
+ mm/swap.c            | 33 ---------------------------------
+ 3 files changed, 30 insertions(+), 35 deletions(-)
 
-A user who wants the finer control, then they need to know about the
-capabilities a platform provides and use them, e.g. on AMD:
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index 667935c0dbd4..5e1e967c225f 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -338,8 +338,6 @@ extern void lru_note_cost(struct lruvec *lruvec, bool file,
+ 			  unsigned int nr_pages);
+ extern void lru_note_cost_page(struct page *);
+ extern void lru_cache_add(struct page *);
+-extern void lru_add_page_tail(struct page *page, struct page *page_tail,
+-			 struct lruvec *lruvec, struct list_head *head);
+ extern void mark_page_accessed(struct page *);
+ extern void lru_add_drain(void);
+ extern void lru_add_drain_cpu(int cpu);
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 6bb4a7657129..a6d25ceb95ea 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2320,6 +2320,36 @@ static void remap_page(struct page *page, unsigned int nr)
+ 	}
+ }
+ 
++static void lru_add_page_tail(struct page *page, struct page *page_tail,
++		struct lruvec *lruvec, struct list_head *list)
++{
++	VM_BUG_ON_PAGE(!PageHead(page), page);
++	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
++	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
++	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
++
++	if (!list)
++		SetPageLRU(page_tail);
++
++	if (likely(PageLRU(page)))
++		list_add_tail(&page_tail->lru, &page->lru);
++	else if (list) {
++		/* page reclaim is reclaiming a huge page */
++		get_page(page_tail);
++		list_add_tail(&page_tail->lru, list);
++	} else {
++		/*
++		 * Head page has not yet been counted, as an hpage,
++		 * so we must account for each subpage individually.
++		 *
++		 * Put page_tail on the list at the correct position
++		 * so they all end up in order.
++		 */
++		add_page_to_lru_list_tail(page_tail, lruvec,
++					  page_lru(page_tail));
++	}
++}
++
+ static void __split_huge_page_tail(struct page *head, int tail,
+ 		struct lruvec *lruvec, struct list_head *list)
+ {
+diff --git a/mm/swap.c b/mm/swap.c
+index d8313a389c84..8fd850d97df0 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -976,39 +976,6 @@ void __pagevec_release(struct pagevec *pvec)
+ }
+ EXPORT_SYMBOL(__pagevec_release);
+ 
+-#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-/* used by __split_huge_page_refcount() */
+-void lru_add_page_tail(struct page *page, struct page *page_tail,
+-		       struct lruvec *lruvec, struct list_head *list)
+-{
+-	VM_BUG_ON_PAGE(!PageHead(page), page);
+-	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
+-	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
+-	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
+-
+-	if (!list)
+-		SetPageLRU(page_tail);
+-
+-	if (likely(PageLRU(page)))
+-		list_add_tail(&page_tail->lru, &page->lru);
+-	else if (list) {
+-		/* page reclaim is reclaiming a huge page */
+-		get_page(page_tail);
+-		list_add_tail(&page_tail->lru, list);
+-	} else {
+-		/*
+-		 * Head page has not yet been counted, as an hpage,
+-		 * so we must account for each subpage individually.
+-		 *
+-		 * Put page_tail on the list at the correct position
+-		 * so they all end up in order.
+-		 */
+-		add_page_to_lru_list_tail(page_tail, lruvec,
+-					  page_lru(page_tail));
+-	}
+-}
+-#endif /* CONFIG_TRANSPARENT_HUGEPAGE */
+-
+ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec,
+ 				 void *arg)
+ {
+-- 
+1.8.3.1
 
-$ echo "sev-es 1000" > slot.max
-$ cat slots.max
-default max sev-es 1000
 
-This means that in the cgroup maximum SEV-ES ASIDs which can be used is
-1000 and SEV ASIDs is max (default, no limit).  Each platform can
-provide their own extensions which can be overwritten by a user,
-otherwise extensions will have the default limit.
 
-This is kind of similar to the IO and the rdma controller.
-
-I think it is keeping abstraction for userspace and also providing finer
-control for HW specific features.
-
-What do you think about the above approach?  
-
-> > 
-> > And if SNP is adding another ASID namespace, trying to abstract the types is
-> > probably a lost cause.
-> > 
-> >  From a code perspective, I doubt it will matter all that much, e.g. it should
-> > be easy enough to provide helpers for exposing a new asid/key type.
-> > 
-> > > I like the idea of the KVM cgroup and when it is mounted it will have
-> > > different files based on the hardware platform.
-> > 
-> > I don't think a KVM cgroup is the correct approach, e.g. there are potential
-> > use cases for "legacy" MKTME without KVM.  Maybe something like Encryption
-> > Keys cgroup?
-
-Added some suggestion in the above approach. I think we should not add
-key in the name because here limitation is on the number of keys that
-can be used simultaneously. 
-
-> > 
-> > > 1. KVM cgroup on AMD will have:
-> > > sev.max & sev.current.
-> > > sev_es.max & sev_es.current.
-> > > 
-> > > 2. KVM cgroup mounted on Intel:
-> > > tdx_private_keys.max
-> > > tdx_shared_keys.max
-> > > 
-> > > The KVM cgroup can be used to have control files which are generic (no
-> > > use case in my mind right now) and hardware platform specific files
-> > > also.
-> > 
-> > My "generic KVM cgroup" suggestion was probably a pretty bad suggestion.
-> > Except for ASIDs/KeyIDs, KVM itself doesn't manage any constrained resources,
-> > e.g. memory, logical CPUs, time slices, etc... are all generic resources that
-> > are consumed by KVM but managed elsewhere.  We definitely don't want to change
-> > that, nor do I think we want to do anything, such as creating a KVM cgroup,
-> > that would imply that having KVM manage resources is a good idea.
-> > 
