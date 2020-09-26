@@ -1,163 +1,123 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v19 06/20] mm/thp: narrow lru locking
-Date: Sat, 26 Sep 2020 14:08:28 +0800
-Message-ID: <eaaa0fe7-00c8-f68e-2435-d6052212093d@linux.alibaba.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH v19 07/20] mm/vmscan: remove unnecessary lruvec adding
+Date: Sat, 26 Sep 2020 14:14:56 +0800
+Message-ID: <30c65309-df19-b83b-5879-cce860ce55ef@linux.alibaba.com>
 References: <1600918115-22007-1-git-send-email-alex.shi@linux.alibaba.com>
- <1600918115-22007-7-git-send-email-alex.shi@linux.alibaba.com>
+ <1600918115-22007-8-git-send-email-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1600918115-22007-7-git-send-email-alex.shi@linux.alibaba.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1600918115-22007-8-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com, aaron.lwe@gmail.com
-Cc: Andrea Arcangeli <aarcange@redhat.com>
+Content-Type: text/plain; charset="iso-8859-1"
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, aaron.lwe-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-Rebased to today's akpm branch.
+This patch has some conflict on akpm. But since Yu Zhao ask for
+revert his patch 'mm: use add_page_to_lru_list()/page_lru()/page_off_lru()'
+we should not needs for rebase on it.
 
 Thanks
 Alex
 
-From f9af3691a7163d8461a140066ddd0eff5d3e44cb Mon Sep 17 00:00:00 2001
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Date: Mon, 6 Apr 2020 23:43:31 +0800
-Subject: [PATCH v19 06/20] mm/thp: narrow lru locking
-
-lru_lock and page cache xa_lock have no obvious reason to be taken
-one way round or the other: until now, lru_lock has been taken before
-page cache xa_lock, when splitting a THP; but nothing else takes them
-together.  Reverse that ordering: let's narrow the lru locking - but
-leave local_irq_disable to block interrupts throughout, like before.
-
-Hugh Dickins point: split_huge_page_to_list() was already silly, to be
-using the _irqsave variant: it's just been taking sleeping locks, so
-would already be broken if entered with interrupts enabled.  So we
-can save passing flags argument down to __split_huge_page().
-
-Why change the lock ordering here? That was hard to decide. One reason:
-when this series reaches per-memcg lru locking, it relies on the THP's
-memcg to be stable when taking the lru_lock: that is now done after the
-THP's refcount has been frozen, which ensures page memcg cannot change.
-
-Another reason: previously, lock_page_memcg()'s move_lock was presumed
-to nest inside lru_lock; but now lru_lock must nest inside (page cache
-lock inside) move_lock, so it becomes possible to use lock_page_memcg()
-to stabilize page memcg before taking its lru_lock.  That is not the
-mechanism used in this series, but it is an option we want to keep open.
-
-[Hugh Dickins: rewrite commit log]
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Reviewed-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Acked-by: Hugh Dickins <hughd@google.com>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: Kirill A. Shutemov <kirill@shutemov.name>
-Cc: Andrea Arcangeli <aarcange@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org
----
- mm/huge_memory.c | 25 +++++++++++++------------
- 1 file changed, 13 insertions(+), 12 deletions(-)
-
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index ba849d0629b7..9a8fcec3239e 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -2407,7 +2407,7 @@ static void __split_huge_page_tail(struct page *head, int tail,
- }
- 
- static void __split_huge_page(struct page *page, struct list_head *list,
--		pgoff_t end, unsigned long flags)
-+		pgoff_t end)
- {
- 	struct page *head = compound_head(page);
- 	pg_data_t *pgdat = page_pgdat(head);
-@@ -2417,8 +2417,6 @@ static void __split_huge_page(struct page *page, struct list_head *list,
- 	unsigned int nr = thp_nr_pages(head);
- 	int i;
- 
--	lruvec = mem_cgroup_page_lruvec(head, pgdat);
--
- 	/* complete memcg works before add pages to LRU */
- 	mem_cgroup_split_huge_fixup(head);
- 
-@@ -2430,6 +2428,11 @@ static void __split_huge_page(struct page *page, struct list_head *list,
- 		xa_lock(&swap_cache->i_pages);
- 	}
- 
-+	/* prevent PageLRU to go away from under us, and freeze lru stats */
-+	spin_lock(&pgdat->lru_lock);
-+
-+	lruvec = mem_cgroup_page_lruvec(head, pgdat);
-+
- 	for (i = nr - 1; i >= 1; i--) {
- 		__split_huge_page_tail(head, i, lruvec, list);
- 		/* Some pages can be beyond i_size: drop them from page cache */
-@@ -2449,6 +2452,8 @@ static void __split_huge_page(struct page *page, struct list_head *list,
- 	}
- 
- 	ClearPageCompound(head);
-+	spin_unlock(&pgdat->lru_lock);
-+	/* Caller disabled irqs, so they are still disabled here */
- 
- 	split_page_owner(head, nr);
- 
-@@ -2466,8 +2471,7 @@ static void __split_huge_page(struct page *page, struct list_head *list,
- 		page_ref_add(head, 2);
- 		xa_unlock(&head->mapping->i_pages);
- 	}
--
--	spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-+	local_irq_enable();
- 
- 	remap_page(head, nr);
- 
-@@ -2607,12 +2611,10 @@ bool can_split_huge_page(struct page *page, int *pextra_pins)
- int split_huge_page_to_list(struct page *page, struct list_head *list)
- {
- 	struct page *head = compound_head(page);
--	struct pglist_data *pgdata = NODE_DATA(page_to_nid(head));
- 	struct deferred_split *ds_queue = get_deferred_split_queue(head);
- 	struct anon_vma *anon_vma = NULL;
- 	struct address_space *mapping = NULL;
- 	int count, mapcount, extra_pins, ret;
--	unsigned long flags;
- 	pgoff_t end;
- 
- 	VM_BUG_ON_PAGE(is_huge_zero_page(head), head);
-@@ -2673,9 +2675,8 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
- 	unmap_page(head);
- 	VM_BUG_ON_PAGE(compound_mapcount(head), head);
- 
--	/* prevent PageLRU to go away from under us, and freeze lru stats */
--	spin_lock_irqsave(&pgdata->lru_lock, flags);
--
-+	/* block interrupt reentry in xa_lock and spinlock */
-+	local_irq_disable();
- 	if (mapping) {
- 		XA_STATE(xas, &mapping->i_pages, page_index(head));
- 
-@@ -2705,7 +2706,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
- 				__dec_node_page_state(head, NR_FILE_THPS);
- 		}
- 
--		__split_huge_page(page, list, end, flags);
-+		__split_huge_page(page, list, end);
- 		if (PageSwapCache(head)) {
- 			swp_entry_t entry = { .val = page_private(head) };
- 
-@@ -2724,7 +2725,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
- 		spin_unlock(&ds_queue->split_queue_lock);
- fail:		if (mapping)
- 			xa_unlock(&mapping->i_pages);
--		spin_unlock_irqrestore(&pgdata->lru_lock, flags);
-+		local_irq_enable();
- 		remap_page(head, thp_nr_pages(head));
- 		ret = -EBUSY;
- 	}
--- 
-1.8.3.1
-
-
+=D4=DA 2020/9/24 =C9=CF=CE=E711:28, Alex Shi =D0=B4=B5=C0:
+> We don't have to add a freeable page into lru and then remove from it.
+> This change saves a couple of actions and makes the moving more clear.
+>=20
+> The SetPageLRU needs to be kept before put_page_testzero for list
+> integrity, otherwise:
+>=20
+>   #0 move_pages_to_lru             #1 release_pages
+>   if !put_page_testzero
+>      			           if (put_page_testzero())
+>      			              !PageLRU //skip lru_lock
+>      SetPageLRU()
+>      list_add(&page->lru,)
+>                                          list_add(&page->lru,)
+>=20
+> [akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org: coding style fix=
+es]
+> Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public=
+.gmane.org>
+> Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+> Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> ---
+>  mm/vmscan.c | 38 +++++++++++++++++++++++++-------------
+>  1 file changed, 25 insertions(+), 13 deletions(-)
+>=20
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 466fc3144fff..32102e5d354d 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -1850,26 +1850,30 @@ static unsigned noinline_for_stack move_pages_to_=
+lru(struct lruvec *lruvec,
+>  	while (!list_empty(list)) {
+>  		page =3D lru_to_page(list);
+>  		VM_BUG_ON_PAGE(PageLRU(page), page);
+> +		list_del(&page->lru);
+>  		if (unlikely(!page_evictable(page))) {
+> -			list_del(&page->lru);
+>  			spin_unlock_irq(&pgdat->lru_lock);
+>  			putback_lru_page(page);
+>  			spin_lock_irq(&pgdat->lru_lock);
+>  			continue;
+>  		}
+> -		lruvec =3D mem_cgroup_page_lruvec(page, pgdat);
+> =20
+> +		/*
+> +		 * The SetPageLRU needs to be kept here for list integrity.
+> +		 * Otherwise:
+> +		 *   #0 move_pages_to_lru             #1 release_pages
+> +		 *   if !put_page_testzero
+> +		 *				      if (put_page_testzero())
+> +		 *				        !PageLRU //skip lru_lock
+> +		 *     SetPageLRU()
+> +		 *     list_add(&page->lru,)
+> +		 *                                        list_add(&page->lru,)
+> +		 */
+>  		SetPageLRU(page);
+> -		lru =3D page_lru(page);
+> =20
+> -		nr_pages =3D thp_nr_pages(page);
+> -		update_lru_size(lruvec, lru, page_zonenum(page), nr_pages);
+> -		list_move(&page->lru, &lruvec->lists[lru]);
+> -
+> -		if (put_page_testzero(page)) {
+> +		if (unlikely(put_page_testzero(page))) {
+>  			__ClearPageLRU(page);
+>  			__ClearPageActive(page);
+> -			del_page_from_lru_list(page, lruvec, lru);
+> =20
+>  			if (unlikely(PageCompound(page))) {
+>  				spin_unlock_irq(&pgdat->lru_lock);
+> @@ -1877,11 +1881,19 @@ static unsigned noinline_for_stack move_pages_to_=
+lru(struct lruvec *lruvec,
+>  				spin_lock_irq(&pgdat->lru_lock);
+>  			} else
+>  				list_add(&page->lru, &pages_to_free);
+> -		} else {
+> -			nr_moved +=3D nr_pages;
+> -			if (PageActive(page))
+> -				workingset_age_nonresident(lruvec, nr_pages);
+> +
+> +			continue;
+>  		}
+> +
+> +		lruvec =3D mem_cgroup_page_lruvec(page, pgdat);
+> +		lru =3D page_lru(page);
+> +		nr_pages =3D thp_nr_pages(page);
+> +
+> +		update_lru_size(lruvec, lru, page_zonenum(page), nr_pages);
+> +		list_add(&page->lru, &lruvec->lists[lru]);
+> +		nr_moved +=3D nr_pages;
+> +		if (PageActive(page))
+> +			workingset_age_nonresident(lruvec, nr_pages);
+>  	}
+> =20
+>  	/*
+>=20
