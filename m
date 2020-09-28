@@ -1,80 +1,124 @@
-From: Christian Borntraeger <borntraeger@de.ibm.com>
-Subject: Re: [RFC Patch 0/2] KVM: SVM: Cgroup support for SVM SEV ASIDs
-Date: Mon, 28 Sep 2020 11:21:00 +0200
-Message-ID: <b9a7ae9f-0ec0-cd44-b466-29f6552804ed@de.ibm.com>
-References: <20200922004024.3699923-1-vipinsh@google.com>
- <20200922014836.GA26507@linux.intel.com>
- <45117fcc-d6b8-fab9-11dc-79181058ed62@redhat.com>
- <b896ea83-7b98-7c86-f147-446faf2dbc44@linux.ibm.com>
+From: Jouni Roivas <jouni.roivas-yrGDUoBaLx3QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroup: Zero sized write should be no-op
+Date: Mon, 28 Sep 2020 16:10:13 +0300
+Message-ID: <20200928131013.3816044-1-jouni.roivas@tuxera.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <kvm-ppc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=YbZbtdbVyfrk9wBmhGOdAdrGCRJdYKQaM2JizYtLuHA=;
- b=ATcYo3Q4D7Z6ciyiK00eU38OnKwDdPa3yKefSsdqfdiIUyHhJM6SpRovhh9dtDn3LuyA
- i4kn4Bc1V0HaSvMx8IQsXwFjnBfpvrajze5zZhgvB5pEjyHOxfGL67xbZ524YrVYcgA7
- 8Yj/TwRQJUz9NtRAzyrJCiBAAAn4vKlEbK5q1tQtupmAT9oG6y274gC0lNCCaoyr7+8C
- F4sG2vIaNK8HQGQHdyq2ququWdFWtwNpnWnAS0gyS/v2GrUONIFFElU8Sy/cAKkkiQjR
- fmHLDjms9BMymNNsitLnj67+us/ARyup1ogaxo3cmD0RhczlJ2rb2mIz9aqOgFNlJBDG 2w== 
-In-Reply-To: <b896ea83-7b98-7c86-f147-446faf2dbc44@linux.ibm.com>
-Content-Language: en-US
+Content-Transfer-Encoding: 7BIT
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Janosch Frank <frankja@linux.ibm.com>, Paolo Bonzini <pbonzini@redhat.com>, Sean Christopherson <sean.j.christopherson@intel.com>, Vipin Sharma <vipinsh@google.com>
-Cc: thomas.lendacky@amd.com, tj@kernel.org, lizefan@huawei.com, joro@8bytes.org, corbet@lwn.net, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, gingell@google.com, rientjes@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, "kvm-ppc@vger.kernel.org" <kvm-ppc@vger.kernel.org>, linux-s390 <linux-s390@vger.kernel.org>, Paul Mackerras <paulus@ozlabs.org>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 28.09.20 11:12, Janosch Frank wrote:
-> On 9/23/20 2:47 PM, Paolo Bonzini wrote:
->> On 22/09/20 03:48, Sean Christopherson wrote:
->>> This should be genericized to not be SEV specific.  TDX has a similar
->>> scarcity issue in the form of key IDs, which IIUC are analogous to SEV ASIDs
->>> (gave myself a quick crash course on SEV ASIDs).  Functionally, I doubt it
->>> would change anything, I think it'd just be a bunch of renaming.  The hardest
->>> part would probably be figuring out a name :-).
->>>
->>> Another idea would be to go even more generic and implement a KVM cgroup
->>> that accounts the number of VMs of a particular type, e.g. legacy, SEV,
->>> SEV-ES?, and TDX.  That has potential future problems though as it falls
->>> apart if hardware every supports 1:MANY VMs:KEYS, or if there is a need to
->>> account keys outside of KVM, e.g. if MKTME for non-KVM cases ever sees the
->>> light of day.
->>
->> Or also MANY:1 (we are thinking of having multiple VMs share the same
->> SEV ASID).
->>
->> It might even be the same on s390 and PPC, in which case we probably
->> want to implement this in virt/kvm.  Paul, Janosch, do you think this
->> would make sense for you?  The original commit message is below.
->>
->> Paolo
->>
->>> On Mon, Sep 21, 2020 at 05:40:22PM -0700, Vipin Sharma wrote:
->>>> Hello,
->>>>
->>>> This patch series adds a new SEV controller for tracking and limiting
->>>> the usage of SEV ASIDs on the AMD SVM platform.
->>>>
->>>> SEV ASIDs are used in creating encrypted VM and lightweight sandboxes
->>>> but this resource is in very limited quantity on a host.
->>>>
->>>> This limited quantity creates issues like SEV ASID starvation and
->>>> unoptimized scheduling in the cloud infrastructure.
->>>>
->>>> SEV controller provides SEV ASID tracking and resource control
->>>> mechanisms.
->>
-> 
-> On s390 we currently support a few million protected guests per LPAR so
-> guest IDs are not exactly scarce. However having accounting for them
-> might add some value nevertheless, especially when having large amount
-> of protected containers.
-> 
-> @Christian: Any thoughts on this?
+Do not report failure on zero sized writes, and handle them as no-op.
 
-Yes, maybe it is a good idea to limit containers to only have a sane number
-of secure guests, so that a malicious pod cannot consume all IDs by calling
-CREATE_VM and KVM_PV_ENABLE million times or so.
+There's issues for example in case of writev() when there's iovec
+containing zero buffer as a first one. It's expected writev() on below
+example to successfully perform the write to specified writable cgroup
+file expecting integer value, and to return 2. For now it's returning
+value -1, and skipping the write:
 
+	int writetest(int fd) {
+	  const char *buf1 = "";
+	  const char *buf2 = "1\n";
+          struct iovec iov[2] = {
+                { .iov_base = (void*)buf1, .iov_len = 0 },
+                { .iov_base = (void*)buf2, .iov_len = 2 }
+          };
+	  return writev(fd, iov, 2);
+	}
+
+This patch fixes the issue by checking if there's nothing to write,
+and handling the write as no-op by just returning 0.
+
+Signed-off-by: Jouni Roivas <jouni.roivas-yrGDUoBaLx3QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/cgroup.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index dd247747ec14..331b050fd5f1 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -3222,6 +3222,9 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
+ 	char *tok;
+ 	int ssid, ret;
+ 
++	if (!nbytes)
++		return 0;
++
+ 	/*
+ 	 * Parse input - space separated list of subsystem names prefixed
+ 	 * with either + or -.
+@@ -3385,6 +3388,9 @@ static ssize_t cgroup_type_write(struct kernfs_open_file *of, char *buf,
+ 	struct cgroup *cgrp;
+ 	int ret;
+ 
++	if (!nbytes)
++		return 0;
++
+ 	/* only switching to threaded mode is supported */
+ 	if (strcmp(strstrip(buf), "threaded"))
+ 		return -EINVAL;
+@@ -3421,6 +3427,9 @@ static ssize_t cgroup_max_descendants_write(struct kernfs_open_file *of,
+ 	int descendants;
+ 	ssize_t ret;
+ 
++	if (!nbytes)
++		return 0;
++
+ 	buf = strstrip(buf);
+ 	if (!strcmp(buf, "max")) {
+ 		descendants = INT_MAX;
+@@ -3464,6 +3473,9 @@ static ssize_t cgroup_max_depth_write(struct kernfs_open_file *of,
+ 	ssize_t ret;
+ 	int depth;
+ 
++	if (!nbytes)
++		return 0;
++
+ 	buf = strstrip(buf);
+ 	if (!strcmp(buf, "max")) {
+ 		depth = INT_MAX;
+@@ -3569,6 +3581,9 @@ static ssize_t cgroup_pressure_write(struct kernfs_open_file *of, char *buf,
+ 	struct psi_trigger *new;
+ 	struct cgroup *cgrp;
+ 
++	if (!nbytes)
++		return 0;
++
+ 	cgrp = cgroup_kn_lock_live(of->kn, false);
+ 	if (!cgrp)
+ 		return -ENODEV;
+@@ -3638,6 +3653,9 @@ static ssize_t cgroup_freeze_write(struct kernfs_open_file *of,
+ 	ssize_t ret;
+ 	int freeze;
+ 
++	if (!nbytes)
++		return 0;
++
+ 	ret = kstrtoint(strstrip(buf), 0, &freeze);
+ 	if (ret)
+ 		return ret;
+@@ -3682,6 +3700,9 @@ static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
+ 	struct cgroup_subsys_state *css;
+ 	int ret;
+ 
++	if (!nbytes)
++		return 0;
++
+ 	/*
+ 	 * If namespaces are delegation boundaries, disallow writes to
+ 	 * files in an non-init namespace root from inside the namespace
+@@ -4777,6 +4798,9 @@ static ssize_t cgroup_threads_write(struct kernfs_open_file *of,
+ 	ssize_t ret;
+ 	bool locked;
+ 
++	if (!nbytes)
++		return 0;
++
+ 	buf = strstrip(buf);
+ 
+ 	dst_cgrp = cgroup_kn_lock_live(of->kn, false);
+-- 
+2.25.1
 
