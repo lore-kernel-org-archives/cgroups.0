@@ -1,124 +1,223 @@
-From: Jouni Roivas <jouni.roivas-yrGDUoBaLx3QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cgroup: Zero sized write should be no-op
-Date: Mon, 28 Sep 2020 16:10:13 +0300
-Message-ID: <20200928131013.3816044-1-jouni.roivas@tuxera.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] memcg: introduce per-memcg reclaim interface
+Date: Mon, 28 Sep 2020 17:02:16 -0400
+Message-ID: <20200928210216.GA378894@cmpxchg.org>
+References: <20200909215752.1725525-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=SGBe8MpSknH0qUb+TQ90a6ftrB2Ede16bHQ7TXX42Tw=;
+        b=Vtkaz3mp9a/NY/motnU4x+MiinMLrHa+BomCSZqvd/94lUeghj9zTyK0isXJQDPNcZ
+         tIYJgFj8bxYSYVfrutfK7NslWH0FKdNxyQM2TUh7RbX/+k5Aq68v2co3gbvLBbnA+Y9b
+         Q0tM24OtlAKlE2lkaxPXRaXVYKLiz/2HCaYmRDwKYzf1jL7irKZtZV9hEkmR8C6OyFBt
+         tED7c83d22hWrtTlz3MY07Co8qUTaNZB9zUYrG+EE1nW8I1KqoxJQ15erhYZbNPmCJuO
+         0nVk/EQMhSqQksp50gMeUB2JNwP5iWRpAmi+E5fNP3Fn70jG1HKW6OdaSlS4CwxiJu6W
+         Kmzg==
+Content-Disposition: inline
+In-Reply-To: <20200909215752.1725525-1-shakeelb@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Yang Shi <yang.shi@linux.alibaba.com>, Greg Thelen <gthelen@google.com>, David Rientjes <rientjes@google.com>, Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Do not report failure on zero sized writes, and handle them as no-op.
+Hello,
 
-There's issues for example in case of writev() when there's iovec
-containing zero buffer as a first one. It's expected writev() on below
-example to successfully perform the write to specified writable cgroup
-file expecting integer value, and to return 2. For now it's returning
-value -1, and skipping the write:
+I apologize for the late reply. The proposed interface has been an
+ongoing topic and area of experimentation within Facebook as well,
+which makes it a bit difficult to respond with certainty here.
 
-	int writetest(int fd) {
-	  const char *buf1 = "";
-	  const char *buf2 = "1\n";
-          struct iovec iov[2] = {
-                { .iov_base = (void*)buf1, .iov_len = 0 },
-                { .iov_base = (void*)buf2, .iov_len = 2 }
-          };
-	  return writev(fd, iov, 2);
-	}
+I agree with both your usecases. They apply to us as well. We
+currently make two small changes to our kernel to solve them. They
+work okay-ish in our production environment, but they aren't quite
+there yet, and not ready for upstream.
 
-This patch fixes the issue by checking if there's nothing to write,
-and handling the write as no-op by just returning 0.
+Some thoughts and comments below.
 
-Signed-off-by: Jouni Roivas <jouni.roivas-yrGDUoBaLx3QT0dZR+AlfA@public.gmane.org>
----
- kernel/cgroup/cgroup.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+On Wed, Sep 09, 2020 at 02:57:52PM -0700, Shakeel Butt wrote:
+> Introduce an memcg interface to trigger memory reclaim on a memory cgroup.
+> 
+> Use cases:
+> ----------
+> 
+> 1) Per-memcg uswapd:
+> 
+> Usually applications consists of combination of latency sensitive and
+> latency tolerant tasks. For example, tasks serving user requests vs
+> tasks doing data backup for a database application. At the moment the
+> kernel does not differentiate between such tasks when the application
+> hits the memcg limits. So, potentially a latency sensitive user facing
+> task can get stuck in high reclaim and be throttled by the kernel.
+> 
+> Similarly there are cases of single process applications having two set
+> of thread pools where threads from one pool have high scheduling
+> priority and low latency requirement. One concrete example from our
+> production is the VMM which have high priority low latency thread pool
+> for the VCPUs while separate thread pool for stats reporting, I/O
+> emulation, health checks and other managerial operations. The kernel
+> memory reclaim does not differentiate between VCPU thread or a
+> non-latency sensitive thread and a VCPU thread can get stuck in high
+> reclaim.
+> 
+> One way to resolve this issue is to preemptively trigger the memory
+> reclaim from a latency tolerant task (uswapd) when the application is
+> near the limits. Finding 'near the limits' situation is an orthogonal
+> problem.
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index dd247747ec14..331b050fd5f1 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -3222,6 +3222,9 @@ static ssize_t cgroup_subtree_control_write(struct kernfs_open_file *of,
- 	char *tok;
- 	int ssid, ret;
- 
-+	if (!nbytes)
-+		return 0;
-+
- 	/*
- 	 * Parse input - space separated list of subsystem names prefixed
- 	 * with either + or -.
-@@ -3385,6 +3388,9 @@ static ssize_t cgroup_type_write(struct kernfs_open_file *of, char *buf,
- 	struct cgroup *cgrp;
- 	int ret;
- 
-+	if (!nbytes)
-+		return 0;
-+
- 	/* only switching to threaded mode is supported */
- 	if (strcmp(strstrip(buf), "threaded"))
- 		return -EINVAL;
-@@ -3421,6 +3427,9 @@ static ssize_t cgroup_max_descendants_write(struct kernfs_open_file *of,
- 	int descendants;
- 	ssize_t ret;
- 
-+	if (!nbytes)
-+		return 0;
-+
- 	buf = strstrip(buf);
- 	if (!strcmp(buf, "max")) {
- 		descendants = INT_MAX;
-@@ -3464,6 +3473,9 @@ static ssize_t cgroup_max_depth_write(struct kernfs_open_file *of,
- 	ssize_t ret;
- 	int depth;
- 
-+	if (!nbytes)
-+		return 0;
-+
- 	buf = strstrip(buf);
- 	if (!strcmp(buf, "max")) {
- 		depth = INT_MAX;
-@@ -3569,6 +3581,9 @@ static ssize_t cgroup_pressure_write(struct kernfs_open_file *of, char *buf,
- 	struct psi_trigger *new;
- 	struct cgroup *cgrp;
- 
-+	if (!nbytes)
-+		return 0;
-+
- 	cgrp = cgroup_kn_lock_live(of->kn, false);
- 	if (!cgrp)
- 		return -ENODEV;
-@@ -3638,6 +3653,9 @@ static ssize_t cgroup_freeze_write(struct kernfs_open_file *of,
- 	ssize_t ret;
- 	int freeze;
- 
-+	if (!nbytes)
-+		return 0;
-+
- 	ret = kstrtoint(strstrip(buf), 0, &freeze);
- 	if (ret)
- 		return ret;
-@@ -3682,6 +3700,9 @@ static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
- 	struct cgroup_subsys_state *css;
- 	int ret;
- 
-+	if (!nbytes)
-+		return 0;
-+
- 	/*
- 	 * If namespaces are delegation boundaries, disallow writes to
- 	 * files in an non-init namespace root from inside the namespace
-@@ -4777,6 +4798,9 @@ static ssize_t cgroup_threads_write(struct kernfs_open_file *of,
- 	ssize_t ret;
- 	bool locked;
- 
-+	if (!nbytes)
-+		return 0;
-+
- 	buf = strstrip(buf);
- 
- 	dst_cgrp = cgroup_kn_lock_live(of->kn, false);
--- 
-2.25.1
+I don't think a userspace implementation is suitable for this purpose.
 
+Kswapd-style background reclaim is beneficial to probably 99% of all
+workloads. Because doing reclaim inside the execution stream of the
+workload itself is so unnecessary in a multi-CPU environment, whether
+the workload is particularly latency sensitive or only cares about
+overall throughput. In most cases, spare cores are available to do
+this work concurrently, and the buffer memory required between the
+workload and the async reclaimer tends to be negligible.
+
+Requiring non-trivial userspace participation for such a basic
+optimization does not seem like a good idea to me. We'd probably end
+up with four or five hyperscalers having four or five different
+implementations, and not much user coverage beyond that.
+
+I floated this patch before:
+https://lore.kernel.org/linux-mm/20200219181219.54356-1-hannes@cmpxchg.org/
+
+It's blocked on infrastructure work in the CPU controller that allows
+accounting CPU cycles spent on behalf of other cgroups. But we need
+this functionality in other places as well - network, async filesystem
+encryption, various other stuff bounced to workers.
+
+> 2) Proactive reclaim:
+> 
+> This is a similar to the previous use-case, the difference is instead of
+> waiting for the application to be near its limit to trigger memory
+> reclaim, continuously pressuring the memcg to reclaim a small amount of
+> memory. This gives more accurate and uptodate workingset estimation as
+> the LRUs are continuously sorted and can potentially provide more
+> deterministic memory overcommit behavior. The memory overcommit
+> controller can provide more proactive response to the changing behavior
+> of the running applications instead of being reactive.
+
+This is an important usecase for us as well. And we use it not just to
+keep the LRUs warm, but to actively sample the workingset size - the
+true amount of memory required, trimmed of all its unused cache and
+cold pages that can be read back from disk on demand.
+
+For this purpose, we're essentially using memory.high right now.
+
+The only modification we make here is adding a memory.high.tmp variant
+that takes a timeout argument in addition to the limit. This ensures
+we don't leave an unsafe limit behind if the userspace daemon crashes.
+
+We have experienced some of the problems you describe below with it.
+
+> Benefit of user space solution:
+> -------------------------------
+> 
+> 1) More flexible on who should be charged for the cpu of the memory
+> reclaim. For proactive reclaim, it makes more sense to centralized the
+> overhead while for uswapd, it makes more sense for the application to
+> pay for the cpu of the memory reclaim.
+
+Agreed on both counts.
+
+> 2) More flexible on dedicating the resources (like cpu). The memory
+> overcommit controller can balance the cost between the cpu usage and
+> the memory reclaimed.
+
+This could use some elaboration, I think.
+
+> 3) Provides a way to the applications to keep their LRUs sorted, so,
+> under memory pressure better reclaim candidates are selected. This also
+> gives more accurate and uptodate notion of working set for an
+> application.
+
+That's a valid argument for proactive reclaim, and I agree with
+it. But not necessarily an argument for which part of the proactive
+reclaim logic should be in-kernel and which should be in userspace.
+
+> Questions:
+> ----------
+> 
+> 1) Why memory.high is not enough?
+> 
+> memory.high can be used to trigger reclaim in a memcg and can
+> potentially be used for proactive reclaim as well as uswapd use cases.
+> However there is a big negative in using memory.high. It can potentially
+> introduce high reclaim stalls in the target application as the
+> allocations from the processes or the threads of the application can hit
+> the temporary memory.high limit.
+
+That's something we have run into as well. Async memory.high reclaim
+helps, but when proactive reclaim does bigger steps and lowers the
+limit below the async reclaim buffer, the workload can still enter
+direct reclaim. This is undesirable.
+
+> Another issue with memory.high is that it is not delegatable. To
+> actually use this interface for uswapd, the application has to introduce
+> another layer of cgroup on whose memory.high it has write access.
+
+Fair enough.
+
+I would generalize that and say that limiting the maximum container
+size and driving proactive reclaim are separate jobs, with separate
+goals, happening at different layers of the system. Sharing a single
+control knob for that can be a coordination nightmare.
+
+> 2) Why uswapd safe from self induced reclaim?
+> 
+> This is very similar to the scenario of oomd under global memory
+> pressure. We can use the similar mechanisms to protect uswapd from self
+> induced reclaim i.e. memory.min and mlock.
+
+Agreed.
+
+> Interface options:
+> ------------------
+> 
+> Introducing a very simple memcg interface 'echo 10M > memory.reclaim' to
+> trigger reclaim in the target memory cgroup.
+
+This gets the assigning and attribution of targeted reclaim work right
+(although it doesn't solve kswapd cycle attribution yet).
+
+However, it also ditches the limit semantics, which themselves aren't
+actually a problem. And indeed I would argue have some upsides.
+
+As per above, the kernel knows best when and how much to reclaim to
+match the allocation rate, since it's in control of the allocation
+path. To do proactive reclaim with the memory.reclaim interface, you
+would need to monitor memory consumption closely. Workloads may not
+allocate anything for hours, and then suddenly allocate gigabytes
+within seconds. A sudden onset of streaming reads through the
+filesystem could destroy the workingset measurements, whereas a limit
+would catch it and do drop-behind (and thus workingset sampling) at
+the exact rate of allocations.
+
+Again I believe something that may be doable as a hyperscale operator,
+but likely too fragile to get wider applications beyond that.
+
+My take is that a proactive reclaim feature, whose goal is never to
+thrash or punish but to keep the LRUs warm and the workingset trimmed,
+would ideally have:
+
+- a pressure or size target specified by userspace but with
+  enforcement driven inside the kernel from the allocation path
+
+- the enforcement work NOT be done synchronously by the workload
+  (something I'd argue we want for *all* memory limits)
+
+- the enforcement work ACCOUNTED to the cgroup, though, since it's the
+  cgroup's memory allocations causing the work (again something I'd
+  argue we want in general)
+
+- a delegatable knob that is independent of setting the maximum size
+  of a container, as that expresses a different type of policy
+
+- if size target, self-limiting (ha) enforcement on a pressure
+  threshold or stop enforcement when the userspace component dies
+
+Thoughts?
