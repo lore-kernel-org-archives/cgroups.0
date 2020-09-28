@@ -1,31 +1,49 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/2] PM/hibernate: remove the bogus call to get_gendisk
- in software_resume
-Date: Sat, 26 Sep 2020 16:05:26 +0200
-Message-ID: <20200926140526.GA10379@lst.de>
-References: <20200925161447.1486883-1-hch@lst.de> <20200925161447.1486883-3-hch@lst.de> <20200925183828.GC7253@duo.ucw.cz>
-Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20200925183828.GC7253@duo.ucw.cz>
+From: Baolin Wang <baolin.wang@linux.alibaba.com>
+Subject: [PATCH] block: Remove redundant 'return' statement
+Date: Mon, 28 Sep 2020 08:42:26 +0800
+Message-ID: <633f73addfc154700b2f983bee6230f82de4c984.1601253090.git.baolin.wang@linux.alibaba.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Len Brown <len.brown@intel.com>, Minho Ban <mhban@samsung.com>, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org
+To: tj@kernel.org, axboe@kernel.dk
+Cc: baolin.wang@linux.alibaba.com, baolin.wang7@gmail.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Sep 25, 2020 at 08:38:28PM +0200, Pavel Machek wrote:
-> > -	 * name_to_dev_t is ineffective to verify parition if resume_file is in
-> > -	 * integer format. (e.g. major:minor)
-> > -	 */
-> > -	if (isdigit(resume_file[0]) && resume_wait) {
-> > -		int partno;
-> > -		while (!get_gendisk(swsusp_resume_device, &partno))
-> > -			msleep(10);
-> > -	}
-> 
-> I believe point of this code was to wait for resume device to appear
-> -- see the resume_wait condition. It should not be simply removed.
+Remove redundant 'return' statement for 'void' functions.
 
-But get_gendisk has absolutely no relation to a device appearing.  So
-whatever this code tried to do doesn't make any sense.
+Signed-off-by: Baolin Wang <baolin.wang@linux.alibaba.com>
+---
+ block/blk-iocost.c    | 2 +-
+ block/blk-iolatency.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index ef9476f..e38c406 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -3343,7 +3343,7 @@ static int __init ioc_init(void)
+ 
+ static void __exit ioc_exit(void)
+ {
+-	return blkcg_policy_unregister(&blkcg_policy_iocost);
++	blkcg_policy_unregister(&blkcg_policy_iocost);
+ }
+ 
+ module_init(ioc_init);
+diff --git a/block/blk-iolatency.c b/block/blk-iolatency.c
+index f90429c..81be009 100644
+--- a/block/blk-iolatency.c
++++ b/block/blk-iolatency.c
+@@ -1046,7 +1046,7 @@ static int __init iolatency_init(void)
+ 
+ static void __exit iolatency_exit(void)
+ {
+-	return blkcg_policy_unregister(&blkcg_policy_iolatency);
++	blkcg_policy_unregister(&blkcg_policy_iolatency);
+ }
+ 
+ module_init(iolatency_init);
+-- 
+1.8.3.1
+
