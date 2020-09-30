@@ -1,41 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cgroup: remove redundant kernfs_activate in
- cgroup_setup_root()
-Date: Wed, 30 Sep 2020 12:03:24 -0400
-Message-ID: <20200930160324.GD4441@mtj.duckdns.org>
-References: <20200925091110.17189-1-richard.weiyang@linux.alibaba.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] cgroup: Zero sized write should be no-op
+Date: Wed, 30 Sep 2020 18:03:57 +0200
+Message-ID: <20200930160357.GA25838@blackbody.suse.cz>
+References: <20200928131013.3816044-1-jouni.roivas@tuxera.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=qq54/nTErxi0RFH786s9sI+Dgv5bltXrwyKiIEnYNfw=;
-        b=arKX5oW7pd33EJ5Cl2u/Ne1vMb9nMCv5Ys1X66cp96FJiTOEdRzKGfWfUm2SZd9FKf
-         jkGdGXaSX4KL7lVTu71skCNWvTsgeE0zxCj3DUeJW5DYYHtqyMoMDjg0wBth0CEYpQTq
-         JUNMjupuAzHYSyImMMMtX87Id4XFz+qQbLBmNUD8izu+6iTQa41ZFUQtT2aTq7BFn7+w
-         i24gfA3zfz8boF/AlUL8cSc+szkaciIS63foOp+RqmJ0lNHrswpxhi1tQKNH/Cr9PApR
-         4VI36IjJxLT/WMSBZQnXKiYMzULHayFZBz1sM0qc6lKsr8Feo2Y98B2+QuZezXIPqAEu
-         fCIQ==
-Sender: Tejun Heo <htejun@gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1601481842;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=nTUDG960FYM7UmGMMfoADRNhufXM+zoM+0CfxkIAuN4=;
+        b=jMw29Cny/jePBucqingAkX8GAPZHCpRNT8+h3vG0c5eM5M5YwQ9spOvuZn0PXZVWjAUztu
+        ymXJawkp479YHaR/HuXBOkSttyMsWvQd8EDmzKEvDsjwcd8pYyG+VEB+n/o8ybdwogXWs4
+        y6s11IvL47u1aDJcZCCJgEwMgmpp794=
 Content-Disposition: inline
-In-Reply-To: <20200925091110.17189-1-richard.weiyang@linux.alibaba.com>
+In-Reply-To: <20200928131013.3816044-1-jouni.roivas-yrGDUoBaLx3QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Wei Yang <richard.weiyang@linux.alibaba.com>
-Cc: lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jouni Roivas <jouni.roivas-yrGDUoBaLx3QT0dZR+AlfA@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Sep 25, 2020 at 05:11:10PM +0800, Wei Yang wrote:
-> This step is already done in rebind_subsystems().
-> 
-> Not necessary to do it again.
-> 
-> Signed-off-by: Wei Yang <richard.weiyang@linux.alibaba.com>
+Hi Jouni.
 
-Applied to cgroup/for-5.10.
+On Mon, Sep 28, 2020 at 04:10:13PM +0300, Jouni Roivas <jouni.roivas-yrGDUoBaLx3QT0dZR+AlfA@public.gmane.org> wrote:
+> Do not report failure on zero sized writes, and handle them as no-op.
+This is a user visible change (in the case of a single write(2)), OTOH,
+`man write` says:
+> If count is zero and fd refers to a file other than a regular file,
+> the results are not specified.
 
-Thanks.
 
--- 
-tejun
+> @@ -3682,6 +3700,9 @@ static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
+>  	struct cgroup_subsys_state *css;
+>  	int ret;
+>  
+> +	if (!nbytes)
+> +		return 0;
+> +
+>  	/*
+>  	 * If namespaces are delegation boundaries, disallow writes to
+>  	 * files in an non-init namespace root from inside the namespace
+Shouldn't just this guard be sufficient? 
+
+Michal
