@@ -1,56 +1,41 @@
-From: "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/2] PM/hibernate: remove the bogus call to get_gendisk in software_resume
-Date: Wed, 30 Sep 2020 17:45:27 +0200
-Message-ID: <CAJZ5v0h8TbOZ=seE8+OqFKTRxOYK25aTXDam7Lez0VR5qnkM3Q@mail.gmail.com>
-References: <20200925161447.1486883-1-hch@lst.de> <20200925161447.1486883-3-hch@lst.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] cgroup: remove redundant kernfs_activate in
+ cgroup_setup_root()
+Date: Wed, 30 Sep 2020 12:03:24 -0400
+Message-ID: <20200930160324.GD4441@mtj.duckdns.org>
+References: <20200925091110.17189-1-richard.weiyang@linux.alibaba.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20200925161447.1486883-3-hch-jcswGhMUV9g@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=qq54/nTErxi0RFH786s9sI+Dgv5bltXrwyKiIEnYNfw=;
+        b=arKX5oW7pd33EJ5Cl2u/Ne1vMb9nMCv5Ys1X66cp96FJiTOEdRzKGfWfUm2SZd9FKf
+         jkGdGXaSX4KL7lVTu71skCNWvTsgeE0zxCj3DUeJW5DYYHtqyMoMDjg0wBth0CEYpQTq
+         JUNMjupuAzHYSyImMMMtX87Id4XFz+qQbLBmNUD8izu+6iTQa41ZFUQtT2aTq7BFn7+w
+         i24gfA3zfz8boF/AlUL8cSc+szkaciIS63foOp+RqmJ0lNHrswpxhi1tQKNH/Cr9PApR
+         4VI36IjJxLT/WMSBZQnXKiYMzULHayFZBz1sM0qc6lKsr8Feo2Y98B2+QuZezXIPqAEu
+         fCIQ==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20200925091110.17189-1-richard.weiyang@linux.alibaba.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, "Rafael J. Wysocki" <rjw-LthD3rsA81gm4RdzfppkhA@public.gmane.org>, Pavel Machek <pavel-+ZI9xUNit7I@public.gmane.org>, Len Brown <len.brown-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Minho Ban <mhban-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM <linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Wei Yang <richard.weiyang@linux.alibaba.com>
+Cc: lizefan@huawei.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Sep 25, 2020 at 6:15 PM Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org> wrote:
->
-> get_gendisk grabs a reference on the disk and file operation, so this
-> code will leak both of them while having absolutely no use for the
-> gendisk itself.
->
-> This effectively reverts commit 2df83fa4bce421f
-> ("PM / Hibernate: Use get_gendisk to verify partition if resume_file is integer format")
->
-> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+On Fri, Sep 25, 2020 at 05:11:10PM +0800, Wei Yang wrote:
+> This step is already done in rebind_subsystems().
+> 
+> Not necessary to do it again.
+> 
+> Signed-off-by: Wei Yang <richard.weiyang@linux.alibaba.com>
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Applied to cgroup/for-5.10.
 
-> ---
->  kernel/power/hibernate.c | 11 -----------
->  1 file changed, 11 deletions(-)
->
-> diff --git a/kernel/power/hibernate.c b/kernel/power/hibernate.c
-> index e7aa57fb2fdc33..7d0b99d2e69631 100644
-> --- a/kernel/power/hibernate.c
-> +++ b/kernel/power/hibernate.c
-> @@ -948,17 +948,6 @@ static int software_resume(void)
->
->         /* Check if the device is there */
->         swsusp_resume_device = name_to_dev_t(resume_file);
-> -
-> -       /*
-> -        * name_to_dev_t is ineffective to verify parition if resume_file is in
-> -        * integer format. (e.g. major:minor)
-> -        */
-> -       if (isdigit(resume_file[0]) && resume_wait) {
-> -               int partno;
-> -               while (!get_gendisk(swsusp_resume_device, &partno))
-> -                       msleep(10);
-> -       }
-> -
->         if (!swsusp_resume_device) {
->                 /*
->                  * Some device discovery might still be in progress; we need
-> --
-> 2.28.0
->
+Thanks.
+
+-- 
+tejun
