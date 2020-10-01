@@ -1,56 +1,178 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2] cgroup: Zero sized write should be no-op
-Date: Wed, 30 Sep 2020 13:52:37 -0400
-Message-ID: <20200930175237.GH4441@mtj.duckdns.org>
-References: <20200930163435.GB304403@tuxera.com>
- <20200930164242.332249-1-jouni.roivas@tuxera.com>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:for-next] BUILD SUCCESS
+ 65026da59cda16baf6c3e98b74ec439f366e468f
+Date: Thu, 01 Oct 2020 14:22:31 +0800
+Message-ID: <5f7575a7.M5SnIVXf0lDqHY67%lkp@intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=GCAh8TaPpWaB6i2tYN+N4CwVQbHEcbrNvzTWfAuRh9w=;
-        b=SmnTN5JLJdnYnVJlUAHKELGi4p1DcSzStBRPB8fdE8xH8WGwAGAhuUoZihOOE9+pL9
-         3vNIfAS5q1AP7H/8g79G3wKBlIV89ZKJGX/eEeB1Q3P9673YFvfutRbzF1C9ybLlnfLt
-         HjifyZx8YP1h3stPia1BTVeCzuljidNXSw1kfKrGjhTsHtjaoPy1gl+N2gf3KlpQ7H8D
-         Rlsy8p7DJnDBjsH3z1qQg0IdgE2+4SSCnERuPjgQa1T6M/ik/23/3GBFS7wQ4r9qdkmQ
-         7Df0RgkQghrC85auaOsiVSFxTt6Eu8SQ4eCC+NRC07Ker0YoC+CdfOwwtVoavhwXeNz0
-         oxrg==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20200930164242.332249-1-jouni.roivas-yrGDUoBaLx3QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jouni Roivas <jouni.roivas-yrGDUoBaLx3QT0dZR+AlfA@public.gmane.org>
-Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Sep 30, 2020 at 07:42:42PM +0300, Jouni Roivas wrote:
-> Do not report failure on zero sized writes, and handle them as no-op.
-> 
-> There's issues for example in case of writev() when there's iovec
-> containing zero buffer as a first one. It's expected writev() on below
-> example to successfully perform the write to specified writable cgroup
-> file expecting integer value, and to return 2. For now it's returning
-> value -1, and skipping the write:
-> 
-> 	int writetest(int fd) {
-> 	  const char *buf1 = "";
-> 	  const char *buf2 = "1\n";
->           struct iovec iov[2] = {
->                 { .iov_base = (void*)buf1, .iov_len = 0 },
->                 { .iov_base = (void*)buf2, .iov_len = 2 }
->           };
-> 	  return writev(fd, iov, 2);
-> 	}
-> 
-> This patch fixes the issue by checking if there's nothing to write,
-> and handling the write as no-op by just returning 0.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git  for-next
+branch HEAD: 65026da59cda16baf6c3e98b74ec439f366e468f  cgroup: Zero sized write should be no-op
 
-Applied to cgroup/for-5.10.
+elapsed time: 725m
 
-Thanks.
+configs tested: 147
+configs skipped: 3
 
--- 
-tejun
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+h8300                            allyesconfig
+arm                         shannon_defconfig
+arm                  colibri_pxa300_defconfig
+mips                          ath25_defconfig
+sh                        edosk7705_defconfig
+powerpc                 mpc8540_ads_defconfig
+powerpc                 linkstation_defconfig
+c6x                         dsk6455_defconfig
+powerpc64                        alldefconfig
+mips                         tb0287_defconfig
+arm                       cns3420vb_defconfig
+arm                        realview_defconfig
+arm                         assabet_defconfig
+mips                       rbtx49xx_defconfig
+nds32                            alldefconfig
+nios2                         10m50_defconfig
+powerpc                     rainier_defconfig
+xtensa                       common_defconfig
+sh                           sh2007_defconfig
+powerpc                  iss476-smp_defconfig
+powerpc                 mpc832x_rdb_defconfig
+arm                          simpad_defconfig
+microblaze                    nommu_defconfig
+sparc                            allyesconfig
+arm                          pcm027_defconfig
+sh                              ul2_defconfig
+arm                        oxnas_v6_defconfig
+mips                         rt305x_defconfig
+mips                           ip28_defconfig
+arm                          pxa3xx_defconfig
+sh                ecovec24-romimage_defconfig
+sh                   secureedge5410_defconfig
+powerpc                 mpc8315_rdb_defconfig
+powerpc                   motionpro_defconfig
+arm                          gemini_defconfig
+powerpc                 mpc837x_mds_defconfig
+xtensa                           alldefconfig
+arm                         nhk8815_defconfig
+arm                         bcm2835_defconfig
+powerpc                      mgcoge_defconfig
+powerpc                  storcenter_defconfig
+microblaze                      mmu_defconfig
+powerpc                    mvme5100_defconfig
+arc                            hsdk_defconfig
+m68k                           sun3_defconfig
+arm                          pxa910_defconfig
+sh                     magicpanelr2_defconfig
+powerpc                    sam440ep_defconfig
+sh                          sdk7786_defconfig
+xtensa                          iss_defconfig
+powerpc                      ppc44x_defconfig
+powerpc                      chrp32_defconfig
+arm                           stm32_defconfig
+x86_64                              defconfig
+mips                      loongson3_defconfig
+powerpc                      makalu_defconfig
+arm                             pxa_defconfig
+arm                         hackkit_defconfig
+sh                          rsk7269_defconfig
+m68k                         apollo_defconfig
+arm                              zx_defconfig
+sh                           se7343_defconfig
+arm                            dove_defconfig
+mips                        nlm_xlr_defconfig
+mips                        jmr3927_defconfig
+powerpc                      katmai_defconfig
+sh                          rsk7203_defconfig
+sh                   sh7724_generic_defconfig
+sh                             espt_defconfig
+csky                                defconfig
+arm                          iop32x_defconfig
+powerpc                 mpc837x_rdb_defconfig
+sh                      rts7751r2d1_defconfig
+sh                           se7724_defconfig
+arc                        nsim_700_defconfig
+arm                         palmz72_defconfig
+c6x                        evmc6474_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+c6x                              allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a003-20200930
+i386                 randconfig-a002-20200930
+i386                 randconfig-a006-20200930
+i386                 randconfig-a005-20200930
+i386                 randconfig-a004-20200930
+i386                 randconfig-a001-20200930
+x86_64               randconfig-a015-20200930
+x86_64               randconfig-a013-20200930
+x86_64               randconfig-a012-20200930
+x86_64               randconfig-a016-20200930
+x86_64               randconfig-a014-20200930
+x86_64               randconfig-a011-20200930
+i386                 randconfig-a011-20200930
+i386                 randconfig-a015-20200930
+i386                 randconfig-a012-20200930
+i386                 randconfig-a014-20200930
+i386                 randconfig-a016-20200930
+i386                 randconfig-a013-20200930
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                           allyesconfig
+x86_64                    rhel-7.6-kselftests
+x86_64                               rhel-8.3
+x86_64                                  kexec
+
+clang tested configs:
+x86_64               randconfig-a001-20200930
+x86_64               randconfig-a005-20200930
+x86_64               randconfig-a003-20200930
+x86_64               randconfig-a004-20200930
+x86_64               randconfig-a002-20200930
+x86_64               randconfig-a006-20200930
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
