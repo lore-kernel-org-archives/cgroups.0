@@ -1,178 +1,82 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-next] BUILD SUCCESS
- 65026da59cda16baf6c3e98b74ec439f366e468f
-Date: Thu, 01 Oct 2020 14:22:31 +0800
-Message-ID: <5f7575a7.M5SnIVXf0lDqHY67%lkp@intel.com>
+From: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm: fix some comments in page_alloc.c and mempolicy.c
+Date: Thu, 1 Oct 2020 14:27:20 +0200
+Message-ID: <10c1b339-b352-7643-7adf-d82c941c7d2c@redhat.com>
+References: <20200925160650.GA42847@rlk>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1601555250;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
+        bh=LySvwW8/i/KgoIAR8gg2Hb4AfYLJvSh7SZI2POcIioQ=;
+        b=AG95pOADdYHl3jF0YpGOBv9dfNuDapSYFkthXWF0xtvr/KLfGiWck/5bvIqoacbhOoiGyg
+        YxwaKL7P0piRrpggLN/HPu1W76No+TJoO1m51XCMKLl8VQXtAq7VkOl2WIreSgIl7l7M+3
+        dHALKy2quB4Zl6dy1hQpMWXk35X+2JI=
+In-Reply-To: <20200925160650.GA42847@rlk>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org>, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git  for-next
-branch HEAD: 65026da59cda16baf6c3e98b74ec439f366e468f  cgroup: Zero sized write should be no-op
+On 25.09.20 18:06, Hui Su wrote:
+> 1. the cpuset.c has been moved from kernel/cpuset.c to
+> kernel/cgroup/cpuset.c long time ago, but the comment is stale,
+> so we update it.
+> 2. get_page_from_freelist() may alloc many pages according to
+> order, we may use pages for better.
+> 
+> Signed-off-by: Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org>
+> ---
+>  kernel/cgroup/cpuset.c | 2 +-
+>  mm/mempolicy.c         | 2 +-
+>  mm/page_alloc.c        | 4 ++--
+>  3 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 642415b8c3c9..1d3011c1aab6 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -1,5 +1,5 @@
+>  /*
+> - *  kernel/cpuset.c
+> + *  kernel/cgroup/cpuset.c
+>   *
+>   *  Processor and Memory placement constraints for sets of tasks.
+>   *
+> diff --git a/mm/mempolicy.c b/mm/mempolicy.c
+> index eddbe4e56c73..ac59b049b16c 100644
+> --- a/mm/mempolicy.c
+> +++ b/mm/mempolicy.c
+> @@ -2295,7 +2295,7 @@ int vma_dup_policy(struct vm_area_struct *src, struct vm_area_struct *dst)
+>   * rebinds the mempolicy its copying by calling mpol_rebind_policy()
+>   * with the mems_allowed returned by cpuset_mems_allowed().  This
+>   * keeps mempolicies cpuset relative after its cpuset moves.  See
+> - * further kernel/cpuset.c update_nodemask().
+> + * further kernel/cgroup/cpuset.c update_nodemask().
+>   *
+>   * current's mempolicy may be rebinded by the other task(the task that changes
+>   * cpuset's mems), so we needn't do rebind work for current task.
+> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+> index fab5e97dc9ca..1e3c7493e1cb 100644
+> --- a/mm/page_alloc.c
+> +++ b/mm/page_alloc.c
+> @@ -3709,7 +3709,7 @@ static inline unsigned int current_alloc_flags(gfp_t gfp_mask,
+>  
+>  /*
+>   * get_page_from_freelist goes through the zonelist trying to allocate
+> - * a page.
+> + * pages.
 
-elapsed time: 725m
+"a page" is correct here - it's a single page of the given order (which
+might be composed out of various order-0 pages, but that's not the point).
 
-configs tested: 147
-configs skipped: 3
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+-- 
+Thanks,
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-h8300                            allyesconfig
-arm                         shannon_defconfig
-arm                  colibri_pxa300_defconfig
-mips                          ath25_defconfig
-sh                        edosk7705_defconfig
-powerpc                 mpc8540_ads_defconfig
-powerpc                 linkstation_defconfig
-c6x                         dsk6455_defconfig
-powerpc64                        alldefconfig
-mips                         tb0287_defconfig
-arm                       cns3420vb_defconfig
-arm                        realview_defconfig
-arm                         assabet_defconfig
-mips                       rbtx49xx_defconfig
-nds32                            alldefconfig
-nios2                         10m50_defconfig
-powerpc                     rainier_defconfig
-xtensa                       common_defconfig
-sh                           sh2007_defconfig
-powerpc                  iss476-smp_defconfig
-powerpc                 mpc832x_rdb_defconfig
-arm                          simpad_defconfig
-microblaze                    nommu_defconfig
-sparc                            allyesconfig
-arm                          pcm027_defconfig
-sh                              ul2_defconfig
-arm                        oxnas_v6_defconfig
-mips                         rt305x_defconfig
-mips                           ip28_defconfig
-arm                          pxa3xx_defconfig
-sh                ecovec24-romimage_defconfig
-sh                   secureedge5410_defconfig
-powerpc                 mpc8315_rdb_defconfig
-powerpc                   motionpro_defconfig
-arm                          gemini_defconfig
-powerpc                 mpc837x_mds_defconfig
-xtensa                           alldefconfig
-arm                         nhk8815_defconfig
-arm                         bcm2835_defconfig
-powerpc                      mgcoge_defconfig
-powerpc                  storcenter_defconfig
-microblaze                      mmu_defconfig
-powerpc                    mvme5100_defconfig
-arc                            hsdk_defconfig
-m68k                           sun3_defconfig
-arm                          pxa910_defconfig
-sh                     magicpanelr2_defconfig
-powerpc                    sam440ep_defconfig
-sh                          sdk7786_defconfig
-xtensa                          iss_defconfig
-powerpc                      ppc44x_defconfig
-powerpc                      chrp32_defconfig
-arm                           stm32_defconfig
-x86_64                              defconfig
-mips                      loongson3_defconfig
-powerpc                      makalu_defconfig
-arm                             pxa_defconfig
-arm                         hackkit_defconfig
-sh                          rsk7269_defconfig
-m68k                         apollo_defconfig
-arm                              zx_defconfig
-sh                           se7343_defconfig
-arm                            dove_defconfig
-mips                        nlm_xlr_defconfig
-mips                        jmr3927_defconfig
-powerpc                      katmai_defconfig
-sh                          rsk7203_defconfig
-sh                   sh7724_generic_defconfig
-sh                             espt_defconfig
-csky                                defconfig
-arm                          iop32x_defconfig
-powerpc                 mpc837x_rdb_defconfig
-sh                      rts7751r2d1_defconfig
-sh                           se7724_defconfig
-arc                        nsim_700_defconfig
-arm                         palmz72_defconfig
-c6x                        evmc6474_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-c6x                              allyesconfig
-nds32                               defconfig
-nios2                            allyesconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-parisc                           allyesconfig
-s390                                defconfig
-i386                             allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-i386                 randconfig-a003-20200930
-i386                 randconfig-a002-20200930
-i386                 randconfig-a006-20200930
-i386                 randconfig-a005-20200930
-i386                 randconfig-a004-20200930
-i386                 randconfig-a001-20200930
-x86_64               randconfig-a015-20200930
-x86_64               randconfig-a013-20200930
-x86_64               randconfig-a012-20200930
-x86_64               randconfig-a016-20200930
-x86_64               randconfig-a014-20200930
-x86_64               randconfig-a011-20200930
-i386                 randconfig-a011-20200930
-i386                 randconfig-a015-20200930
-i386                 randconfig-a012-20200930
-i386                 randconfig-a014-20200930
-i386                 randconfig-a016-20200930
-i386                 randconfig-a013-20200930
-riscv                    nommu_k210_defconfig
-riscv                            allyesconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-riscv                            allmodconfig
-x86_64                                   rhel
-x86_64                           allyesconfig
-x86_64                    rhel-7.6-kselftests
-x86_64                               rhel-8.3
-x86_64                                  kexec
+David / dhildenb
 
-clang tested configs:
-x86_64               randconfig-a001-20200930
-x86_64               randconfig-a005-20200930
-x86_64               randconfig-a003-20200930
-x86_64               randconfig-a004-20200930
-x86_64               randconfig-a002-20200930
-x86_64               randconfig-a006-20200930
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
