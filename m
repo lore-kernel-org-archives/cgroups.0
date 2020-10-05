@@ -1,150 +1,161 @@
-From: Vipin Sharma <vipinsh@google.com>
-Subject: Re: [RFC Patch 0/2] KVM: SVM: Cgroup support for SVM SEV ASIDs
-Date: Fri, 2 Oct 2020 13:48:10 -0700
-Message-ID: <20201002204810.GA3179405@google.com>
-References: <20200922004024.3699923-1-vipinsh@google.com>
- <20200922014836.GA26507@linux.intel.com>
- <20200922211404.GA4141897@google.com>
- <20200924192116.GC9649@linux.intel.com>
- <cb592c59-a50e-5901-71fe-19e43bc9e37e@amd.com>
- <20200925222220.GA977797@google.com>
+From: Andrea Righi <andrea.righi@canonical.com>
+Subject: [PATCH RFC v2] Opportunistic memory reclaim
+Date: Mon,  5 Oct 2020 10:13:11 +0200
+Message-ID: <20201005081313.732745-1-andrea.righi@canonical.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=cLATYwuDqnhajc5QXKEUsa/OcJ1TmbemJ0CgVdLo4Ek=;
-        b=jpNf1D4Wi5BJQOSFaL6zihdxze85N1qgFBus9S+8h5/Gbq4JX0IBUfUdmxgRJRqj+9
-         B9enPn1Dj0RqI12GOSTJ7/ZUqmD5+HRZ0XKm2oEUgDPMl5/c5ZgtjkacrUBlCudalMil
-         DT1Mo+CRme+xk894/UHRuj0UUf5XJ356AoYcVldnSbVinqtZlsd7Wl3zMbc0TUPkIR+A
-         B44n8cH7lzw9MSbwCaVx2wILWeF+ZHpS183wHCPCP0PjRNQ8m34+1dcSheoQJ7RE0sgH
-         lwjpwsK44adXVgfd6/V51TZaCfgs4ISlGvXCVOG/c2RZJ5/IpvnUQdQAe0Qfklvp2WVz
-         YIzA==
-Content-Disposition: inline
-In-Reply-To: <20200925222220.GA977797@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Sean Christopherson <sean.j.christopherson@intel.com>
-Cc: thomas.lendacky@amd.com, pbonzini@redhat.com, tj@kernel.org, lizefan@huawei.com, joro@8bytes.org, corbet@lwn.net, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, gingell@google.com, rientjes@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Luigi Semenzato <semenzato@google.com>, "Rafael J . Wysocki" <rafael@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
 
-On Fri, Sep 25, 2020 at 03:22:20PM -0700, Vipin Sharma wrote:
-> On Thu, Sep 24, 2020 at 02:55:18PM -0500, Tom Lendacky wrote:
-> > On 9/24/20 2:21 PM, Sean Christopherson wrote:
-> > > On Tue, Sep 22, 2020 at 02:14:04PM -0700, Vipin Sharma wrote:
-> > > > On Mon, Sep 21, 2020 at 06:48:38PM -0700, Sean Christopherson wrote:
-> > > > > On Mon, Sep 21, 2020 at 05:40:22PM -0700, Vipin Sharma wrote:
-> > > > > > Hello,
-> > > > > > 
-> > > > > > This patch series adds a new SEV controller for tracking and limiting
-> > > > > > the usage of SEV ASIDs on the AMD SVM platform.
-> > > > > > 
-> > > > > > SEV ASIDs are used in creating encrypted VM and lightweight sandboxes
-> > > > > > but this resource is in very limited quantity on a host.
-> > > > > > 
-> > > > > > This limited quantity creates issues like SEV ASID starvation and
-> > > > > > unoptimized scheduling in the cloud infrastructure.
-> > > > > > 
-> > > > > > SEV controller provides SEV ASID tracking and resource control
-> > > > > > mechanisms.
-> > > > > 
-> > > > > This should be genericized to not be SEV specific.  TDX has a similar
-> > > > > scarcity issue in the form of key IDs, which IIUC are analogous to SEV ASIDs
-> > > > > (gave myself a quick crash course on SEV ASIDs).  Functionally, I doubt it
-> > > > > would change anything, I think it'd just be a bunch of renaming.  The hardest
-> > > > > part would probably be figuring out a name :-).
-> > > > > 
-> > > > > Another idea would be to go even more generic and implement a KVM cgroup
-> > > > > that accounts the number of VMs of a particular type, e.g. legacy, SEV,
-> > > > > SEV-ES?, and TDX.  That has potential future problems though as it falls
-> > > > > apart if hardware every supports 1:MANY VMs:KEYS, or if there is a need to
-> > > > > account keys outside of KVM, e.g. if MKTME for non-KVM cases ever sees the
-> > > > > light of day.
-> > > > 
-> > > > I read about the TDX and its use of the KeyID for encrypting VMs. TDX
-> > > > has two kinds of KeyIDs private and shared.
-> > > 
-> > > To clarify, "shared" KeyIDs are simply legacy MKTME KeyIDs.  This is relevant
-> > > because those KeyIDs can be used without TDX or KVM in the picture.
-> > > 
-> > > > On AMD platform there are two types of ASIDs for encryption.
-> > > > 1. SEV ASID - Normal runtime guest memory encryption.
-> > > > 2. SEV-ES ASID - Extends SEV ASID by adding register state encryption with
-> > > > 		 integrity.
-> > > > 
-> > > > Both types of ASIDs have their own maximum value which is provisioned in
-> > > > the firmware
-> > > 
-> > > Ugh, I missed that detail in the SEV-ES RFC.  Does SNP add another ASID type,
-> > > or does it reuse SEV-ES ASIDs?  If it does add another type, is that trend
-> > > expected to continue, i.e. will SEV end up with SEV, SEV-ES, SEV-ES-SNP,
-> > > SEV-ES-SNP-X, SEV-ES-SNP-X-Y, etc...?
-> > 
-> > SEV-SNP and SEV-ES share the same ASID range.
-> > 
-> > Thanks,
-> > Tom
-> > 
-> > > 
-> > > > So, we are talking about 4 different types of resources:
-> > > > 1. AMD SEV ASID (implemented in this patch as sev.* files in SEV cgroup)
-> > > > 2. AMD SEV-ES ASID (in future, adding files like sev_es.*)
-> > > > 3. Intel TDX private KeyID
-> > > > 4. Intel TDX shared KeyID
-> > > > 
-> > > > TDX private KeyID is similar to SEV and SEV-ES ASID. I think coming up
-> > > > with the same name which can be used by both platforms will not be easy,
-> > > > and extensible with the future enhancements. This will get even more
-> > > > difficult if Arm also comes up with something similar but with different
-> > > > nuances.
-> > > 
-> > > Honest question, what's easier for userspace/orchestration layers?  Having an
-> > > abstract but common name, or conrete but different names?  My gut reaction is
-> > > to provide a common interface, but I can see how that could do more harm than
-> > > good, e.g. some amount of hardware capabilitiy discovery is possible with
-> > > concrete names.  And I'm guessing there's already a fair amount of vendor
-> > > specific knowledge bleeding into userspace for these features...
-> 
-> I agree with you that the abstract name is better than the concrete
-> name, I also feel that we must provide HW extensions. Here is one
-> approach:
-> 
-> Cgroup name: cpu_encryption, encryption_slots, or memcrypt (open to
-> suggestions)
-> 
-> Control files: slots.{max, current, events}
-> 
-> Contents of the slot.max:
-> default max
-> 	default: Corresponds to all kinds of encryption capabilities on
-> 		 a platform. For AMD, it will be SEV and SEV-ES.  For
-> 		 Intel, it will be TDX and MKTME. This can also be used
-> 		 by other devices not just CPU.
-> 
-> 	max: max or any number to denote limit on the cgroup.
-> 
-> A user who wants the finer control, then they need to know about the
-> capabilities a platform provides and use them, e.g. on AMD:
-> 
-> $ echo "sev-es 1000" > slot.max
-> $ cat slots.max
-> default max sev-es 1000
-> 
-> This means that in the cgroup maximum SEV-ES ASIDs which can be used is
-> 1000 and SEV ASIDs is max (default, no limit).  Each platform can
-> provide their own extensions which can be overwritten by a user,
-> otherwise extensions will have the default limit.
-> 
-> This is kind of similar to the IO and the rdma controller.
-> 
-> I think it is keeping abstraction for userspace and also providing finer
-> control for HW specific features.
-> 
-> What do you think about the above approach?  
-> 
-Hi Sean,
+## Overview
 
-Any feedback/concern for the above abstraction approach?
+Opportunistic memory reclaim aims to introduce a new interface that
+allows user-space to trigger an artificial memory pressure condition and
+force the kernel to reclaim memory (dropping page cache pages, swapping
+out anonymous memory, etc.).
 
-Thanks
+### Motivation
+
+Reclaiming memory in advance to prepare the system to be more responsive
+when needed.
+
+### Use cases
+
+ - Reduce system memory footprint
+ - Speed up hibernation time
+ - Speed up VM migration time
+ - Prioritize responsiveness of foreground applications vs background
+   applications
+ - Prepare the system to be more responsiveness during large allocation
+   bursts
+
+## Interface
+
+This feature is provided by adding a new file to each memcg:
+memory.swap.reclaim.
+
+Writing a number to this file forces a memcg to reclaim memory up to
+that number of bytes ("max" means as much memory as possible). Reading
+from the this file returns the amount of bytes reclaimed in the last
+opportunistic memory reclaim attempt.
+
+Memory reclaim can be interrupted sending a signal to the process that
+is writing to memory.swap.reclaim (i.e., to set a timeout for the whole
+memory reclaim run).
+
+## Example usage
+
+This feature has been successfully used to improve hibernation time of
+cloud computing instances.
+
+Certain cloud providers allow to run "spot instances": low-priority
+instances that run when there are spare resources available and can be
+stopped at any time to prioritize other more privileged instances [2].
+
+Hibernation can be used to stop these low-priority instances nicely,
+rather than losing state when the instance is shut down. Being able to
+quickly stop low-priority instances can be critical to provide a better
+quality of service in the overall cloud infrastructure [1].
+
+The main bottleneck of hibernation is represented by the I/O generated
+to write all the main memory (hibernation image) to a persistent
+storage.
+
+Opportunistic memory reclaimed can be used to reduce the size of the
+hibernation image in advance, for example if the system is idle for a
+certain amount of time, so if an hibernation request happens, the kernel
+has already saved most of the memory to the swap device (caches have
+been dropped, etc.) and hibernation can complete quickly.
+
+## Testing and results
+
+Here is a simple test case to show the effectiveness of this feature.
+
+Environment:
+```
+   - VM (kvm):
+     8GB of RAM
+     disk speed: 100 MB/s
+     8GB swap file on ext4 (/swapfile)
+```
+
+Test case:
+```
+  - allocate 85% of memory
+  - wait for 60s almost in idle
+  - hibernate and resume the system (measuring the time)
+```
+
+Result:
+  - average of 10 runs tested with `/sys/power/image_size=default` and
+    `/sys/power/image_size=0`:
+```
+                                 5.9-vanilla   5.9-mm_reclaim
+                                 -----------   --------------
+  [hibernate] image_size=default      49.07s            3.40s
+     [resume] image_size=default      18.35s            7.13s
+
+  [hibernate] image_size=0            71.55s            4.72s
+     [resume] image_size=0             7.49s            7.41s
+```
+
+NOTE #1: in the `5.9-mm_reclaim` case a simple user-space daemon detects
+when the system is idle for a certain amount of time and triggers the
+opportunistic memory reclaim.
+
+NOTE #2: `/sys/power/image_size=0` can be used with `5.9-vanilla` to
+speed up resume time (because it shrinks even more the hibernation
+image) at the cost of increasing hibernation time; with `5.9-mm_reclaim`
+performance are pretty much identical in both cases, because the
+hibernation image is already reduced to the minimum when the hibernation
+request happens.
+
+## Conclusion
+
+Being able to trigger memory reclaim from user-space allows to prepare
+the system in advance to be more responsive when needed.
+
+This feature has been used with positive test results to speed up
+hibernation time of cloud computing instances, but it can also provide
+benefits to other use cases, for example:
+
+ - prioritize responsiveness of foreground applications vs background
+   applications
+
+ - improve system responsiveness during large allocation bursts
+   (preparing system by reclaiming memory in advance, e.g. using some
+   idle cycles)
+
+ - reduce overall system memory footprint (especially in VM / cloud
+   computing environments)
+
+## See also
+
+ - [1] https://lwn.net/Articles/821158/
+ - [2] https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html
+ - [3] user-space tools/scripts: https://github.com/arighi/opportunistic-memory-reclaim
+ - [4] previous version: https://lore.kernel.org/lkml/20200601160636.148346-1-andrea.righi@canonical.com/
+
+## Changes in v2:
+ - move ABI from hibernation to memcg (since this feature can be used
+   also in other contexts and it's not hibernation-specific)
+ - drop memory release functionality (to re-load swapped out pages,
+   since it ended being not very useful)
+ - added the possibility to show the number of memory reclaimed in the
+   last attempt (per-memcg)
+
+----------------------------------------------------------------
+Andrea Righi (2):
+      mm: memcontrol: make shrink_all_memory() memcg aware
+      mm: memcontrol: introduce opportunistic memory reclaim
+
+ Documentation/admin-guide/cgroup-v2.rst | 18 ++++++++++
+ include/linux/memcontrol.h              |  4 +++
+ include/linux/swap.h                    |  9 ++++-
+ mm/memcontrol.c                         | 59 +++++++++++++++++++++++++++++++++
+ mm/vmscan.c                             |  6 ++--
+ 5 files changed, 92 insertions(+), 4 deletions(-)
+
