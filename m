@@ -1,89 +1,30 @@
-From: Andrea Righi <andrea.righi@canonical.com>
-Subject: [PATCH RFC v2 1/2] mm: memcontrol: make shrink_all_memory() memcg aware
-Date: Mon,  5 Oct 2020 10:13:12 +0200
-Message-ID: <20201005081313.732745-2-andrea.righi@canonical.com>
+From: Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH RFC v2] Opportunistic memory reclaim
+Date: Mon, 5 Oct 2020 10:35:16 +0200
+Message-ID: <20201005083516.GR4555@dhcp22.suse.cz>
 References: <20201005081313.732745-1-andrea.righi@canonical.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1601886918;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=M/qp0fLfgx7dAgjinAVpQgpni2765Ce4IvEm/FFiEZc=;
+        b=S4gB3z/m1iDjvIhYuT/Oo9vTHKPrQfJbETOKd/f0q+M1Gq8paxKVZyhiEMZ+d3AvilmJuh
+        EjOy5bC2Yw8QLsGNk6ALURk/VXqScBH3RkkZNVfmsh8DAkfUFn+IjMfS8nbx4hKnHXI+8Z
+        OFuU3MK8JEqA8XRoDkvwdjcDxq9ZDxM=
+Content-Disposition: inline
 In-Reply-To: <20201005081313.732745-1-andrea.righi@canonical.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Luigi Semenzato <semenzato@google.com>, "Rafael J . Wysocki" <rafael@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: Andrea Righi <andrea.righi@canonical.com>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Luigi Semenzato <semenzato@google.com>, "Rafael J . Wysocki" <rafael@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
 
-Allow to specify a memcg when calling shrink_all_memory() to reclaim
-some memory from a specific cgroup.
-
-Moreover, make shrink_all_memory() always available and do not depend on
-having CONFIG_HIBERNATION enabled.
-
-This is required by the opportunistic memory reclaim feature.
-
-Signed-off-by: Andrea Righi <andrea.righi@canonical.com>
----
- include/linux/swap.h | 9 ++++++++-
- mm/vmscan.c          | 6 +++---
- 2 files changed, 11 insertions(+), 4 deletions(-)
-
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 661046994db4..1490b09a6e6c 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -368,7 +368,14 @@ extern unsigned long mem_cgroup_shrink_node(struct mem_cgroup *mem,
- 						gfp_t gfp_mask, bool noswap,
- 						pg_data_t *pgdat,
- 						unsigned long *nr_scanned);
--extern unsigned long shrink_all_memory(unsigned long nr_pages);
-+extern unsigned long
-+__shrink_all_memory(unsigned long nr_pages, struct mem_cgroup *memcg);
-+
-+static inline unsigned long shrink_all_memory(unsigned long nr_pages)
-+{
-+	return __shrink_all_memory(nr_pages, NULL);
-+}
-+
- extern int vm_swappiness;
- extern int remove_mapping(struct address_space *mapping, struct page *page);
- 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 466fc3144fff..ac04d5e16c42 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -3986,7 +3986,6 @@ void wakeup_kswapd(struct zone *zone, gfp_t gfp_flags, int order,
- 	wake_up_interruptible(&pgdat->kswapd_wait);
- }
- 
--#ifdef CONFIG_HIBERNATION
- /*
-  * Try to free `nr_to_reclaim' of memory, system-wide, and return the number of
-  * freed pages.
-@@ -3995,7 +3994,8 @@ void wakeup_kswapd(struct zone *zone, gfp_t gfp_flags, int order,
-  * LRU order by reclaiming preferentially
-  * inactive > active > active referenced > active mapped
-  */
--unsigned long shrink_all_memory(unsigned long nr_to_reclaim)
-+unsigned long
-+__shrink_all_memory(unsigned long nr_to_reclaim, struct mem_cgroup *memcg)
- {
- 	struct scan_control sc = {
- 		.nr_to_reclaim = nr_to_reclaim,
-@@ -4006,6 +4006,7 @@ unsigned long shrink_all_memory(unsigned long nr_to_reclaim)
- 		.may_unmap = 1,
- 		.may_swap = 1,
- 		.hibernation_mode = 1,
-+		.target_mem_cgroup = memcg,
- 	};
- 	struct zonelist *zonelist = node_zonelist(numa_node_id(), sc.gfp_mask);
- 	unsigned long nr_reclaimed;
-@@ -4023,7 +4024,6 @@ unsigned long shrink_all_memory(unsigned long nr_to_reclaim)
- 
- 	return nr_reclaimed;
- }
--#endif /* CONFIG_HIBERNATION */
- 
- /*
-  * This kswapd start function will be called by init and node-hot-add.
+A similar thing has been proposed recently by Shakeel
+http://lkml.kernel.org/r/20200909215752.1725525-1-shakeelb@google.com
+Please have a look at the follow up discussion.
 -- 
-2.27.0
-
+Michal Hocko
+SUSE Labs
