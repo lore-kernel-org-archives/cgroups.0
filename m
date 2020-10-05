@@ -1,38 +1,20 @@
 From: Andrea Righi <andrea.righi@canonical.com>
-Subject: [PATCH RFC v2] Opportunistic memory reclaim
-Date: Mon,  5 Oct 2020 10:13:11 +0200
-Message-ID: <20201005081313.732745-1-andrea.righi@canonical.com>
+Subject: [PATCH RFC v2 2/2] mm: memcontrol: introduce opportunistic memory reclaim
+Date: Mon,  5 Oct 2020 10:13:13 +0200
+Message-ID: <20201005081313.732745-3-andrea.righi@canonical.com>
+References: <20201005081313.732745-1-andrea.righi@canonical.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <20201005081313.732745-1-andrea.righi@canonical.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>
 Cc: Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Luigi Semenzato <semenzato@google.com>, "Rafael J . Wysocki" <rafael@kernel.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
 
-## Overview
-
-Opportunistic memory reclaim aims to introduce a new interface that
-allows user-space to trigger an artificial memory pressure condition and
-force the kernel to reclaim memory (dropping page cache pages, swapping
-out anonymous memory, etc.).
-
-### Motivation
-
-Reclaiming memory in advance to prepare the system to be more responsive
-when needed.
-
-### Use cases
-
- - Reduce system memory footprint
- - Speed up hibernation time
- - Speed up VM migration time
- - Prioritize responsiveness of foreground applications vs background
-   applications
- - Prepare the system to be more responsiveness during large allocation
-   bursts
-
-## Interface
+Opportunistic memory reclaim allows user-space to trigger an artificial
+memory pressure condition and force the system to reclaim memory (drop
+caches, swap out anonymous memory, etc.).
 
 This feature is provided by adding a new file to each memcg:
 memory.swap.reclaim.
@@ -46,116 +28,134 @@ Memory reclaim can be interrupted sending a signal to the process that
 is writing to memory.swap.reclaim (i.e., to set a timeout for the whole
 memory reclaim run).
 
-## Example usage
+Signed-off-by: Andrea Righi <andrea.righi@canonical.com>
+---
+ Documentation/admin-guide/cgroup-v2.rst | 18 ++++++++
+ include/linux/memcontrol.h              |  4 ++
+ mm/memcontrol.c                         | 59 +++++++++++++++++++++++++
+ 3 files changed, 81 insertions(+)
 
-This feature has been successfully used to improve hibernation time of
-cloud computing instances.
-
-Certain cloud providers allow to run "spot instances": low-priority
-instances that run when there are spare resources available and can be
-stopped at any time to prioritize other more privileged instances [2].
-
-Hibernation can be used to stop these low-priority instances nicely,
-rather than losing state when the instance is shut down. Being able to
-quickly stop low-priority instances can be critical to provide a better
-quality of service in the overall cloud infrastructure [1].
-
-The main bottleneck of hibernation is represented by the I/O generated
-to write all the main memory (hibernation image) to a persistent
-storage.
-
-Opportunistic memory reclaimed can be used to reduce the size of the
-hibernation image in advance, for example if the system is idle for a
-certain amount of time, so if an hibernation request happens, the kernel
-has already saved most of the memory to the swap device (caches have
-been dropped, etc.) and hibernation can complete quickly.
-
-## Testing and results
-
-Here is a simple test case to show the effectiveness of this feature.
-
-Environment:
-```
-   - VM (kvm):
-     8GB of RAM
-     disk speed: 100 MB/s
-     8GB swap file on ext4 (/swapfile)
-```
-
-Test case:
-```
-  - allocate 85% of memory
-  - wait for 60s almost in idle
-  - hibernate and resume the system (measuring the time)
-```
-
-Result:
-  - average of 10 runs tested with `/sys/power/image_size=default` and
-    `/sys/power/image_size=0`:
-```
-                                 5.9-vanilla   5.9-mm_reclaim
-                                 -----------   --------------
-  [hibernate] image_size=default      49.07s            3.40s
-     [resume] image_size=default      18.35s            7.13s
-
-  [hibernate] image_size=0            71.55s            4.72s
-     [resume] image_size=0             7.49s            7.41s
-```
-
-NOTE #1: in the `5.9-mm_reclaim` case a simple user-space daemon detects
-when the system is idle for a certain amount of time and triggers the
-opportunistic memory reclaim.
-
-NOTE #2: `/sys/power/image_size=0` can be used with `5.9-vanilla` to
-speed up resume time (because it shrinks even more the hibernation
-image) at the cost of increasing hibernation time; with `5.9-mm_reclaim`
-performance are pretty much identical in both cases, because the
-hibernation image is already reduced to the minimum when the hibernation
-request happens.
-
-## Conclusion
-
-Being able to trigger memory reclaim from user-space allows to prepare
-the system in advance to be more responsive when needed.
-
-This feature has been used with positive test results to speed up
-hibernation time of cloud computing instances, but it can also provide
-benefits to other use cases, for example:
-
- - prioritize responsiveness of foreground applications vs background
-   applications
-
- - improve system responsiveness during large allocation bursts
-   (preparing system by reclaiming memory in advance, e.g. using some
-   idle cycles)
-
- - reduce overall system memory footprint (especially in VM / cloud
-   computing environments)
-
-## See also
-
- - [1] https://lwn.net/Articles/821158/
- - [2] https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html
- - [3] user-space tools/scripts: https://github.com/arighi/opportunistic-memory-reclaim
- - [4] previous version: https://lore.kernel.org/lkml/20200601160636.148346-1-andrea.righi@canonical.com/
-
-## Changes in v2:
- - move ABI from hibernation to memcg (since this feature can be used
-   also in other contexts and it's not hibernation-specific)
- - drop memory release functionality (to re-load swapped out pages,
-   since it ended being not very useful)
- - added the possibility to show the number of memory reclaimed in the
-   last attempt (per-memcg)
-
-----------------------------------------------------------------
-Andrea Righi (2):
-      mm: memcontrol: make shrink_all_memory() memcg aware
-      mm: memcontrol: introduce opportunistic memory reclaim
-
- Documentation/admin-guide/cgroup-v2.rst | 18 ++++++++++
- include/linux/memcontrol.h              |  4 +++
- include/linux/swap.h                    |  9 ++++-
- mm/memcontrol.c                         | 59 +++++++++++++++++++++++++++++++++
- mm/vmscan.c                             |  6 ++--
- 5 files changed, 92 insertions(+), 4 deletions(-)
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index baa07b30845e..2850a5cb4b1e 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1409,6 +1409,24 @@ PAGE_SIZE multiple when read back.
+ 	Swap usage hard limit.  If a cgroup's swap usage reaches this
+ 	limit, anonymous memory of the cgroup will not be swapped out.
+ 
++  memory.swap.reclaim
++        A read-write single value file that can be used to trigger
++        opportunistic memory reclaim.
++
++        The string written to this file represents the amount of memory to be
++        reclaimed (special value "max" means "as much memory as possible").
++
++        When opportunistic memory reclaim is started the system will be put
++        into an artificial memory pressure condition and memory will be
++        reclaimed by dropping clean page cache pages, swapping out anonymous
++        pages, etc.
++
++        NOTE: it is possible to interrupt the memory reclaim sending a signal
++        to the writer of this file.
++
++        Reading from memory.swap.reclaim returns the amount of bytes reclaimed
++        in the last attempt.
++
+   memory.swap.events
+ 	A read-only flat-keyed file which exists on non-root cgroups.
+ 	The following entries are defined.  Unless specified
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index d0b036123c6a..0c90d989bdc1 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -306,6 +306,10 @@ struct mem_cgroup {
+ 	bool			tcpmem_active;
+ 	int			tcpmem_pressure;
+ 
++#ifdef CONFIG_MEMCG_SWAP
++	unsigned long		nr_swap_reclaimed;
++#endif
++
+ #ifdef CONFIG_MEMCG_KMEM
+         /* Index in the kmem_cache->memcg_params.memcg_caches array */
+ 	int kmemcg_id;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 6877c765b8d0..b98e9bbd61b0 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -7346,6 +7346,60 @@ static int swap_events_show(struct seq_file *m, void *v)
+ 	return 0;
+ }
+ 
++/*
++ * Try to reclaim some memory in the system, stop when one of the following
++ * conditions occurs:
++ *  - at least "nr_pages" have been reclaimed
++ *  - no more pages can be reclaimed
++ *  - current task explicitly interrupted by a signal (e.g., user space
++ *    timeout)
++ *
++ *  @nr_pages - amount of pages to be reclaimed (0 means "as many pages as
++ *  possible").
++ */
++static unsigned long
++do_mm_reclaim(struct mem_cgroup *memcg, unsigned long nr_pages)
++{
++	unsigned long nr_reclaimed = 0;
++
++	while (nr_pages > 0) {
++		unsigned long reclaimed;
++
++		if (signal_pending(current))
++			break;
++		reclaimed = __shrink_all_memory(nr_pages, memcg);
++		if (!reclaimed)
++			break;
++		nr_reclaimed += reclaimed;
++		nr_pages -= min_t(unsigned long, reclaimed, nr_pages);
++	}
++	return nr_reclaimed;
++}
++
++static ssize_t swap_reclaim_write(struct kernfs_open_file *of,
++				  char *buf, size_t nbytes, loff_t off)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_css(of_css(of));
++	unsigned long nr_to_reclaim;
++	int err;
++
++	buf = strstrip(buf);
++	err = page_counter_memparse(buf, "max", &nr_to_reclaim);
++	if (err)
++		return err;
++	memcg->nr_swap_reclaimed = do_mm_reclaim(memcg, nr_to_reclaim);
++
++	return nbytes;
++}
++
++static u64 swap_reclaim_read(struct cgroup_subsys_state *css,
++			     struct cftype *cft)
++{
++	struct mem_cgroup *memcg = mem_cgroup_from_css(css);
++
++	return memcg->nr_swap_reclaimed << PAGE_SHIFT;
++}
++
+ static struct cftype swap_files[] = {
+ 	{
+ 		.name = "swap.current",
+@@ -7370,6 +7424,11 @@ static struct cftype swap_files[] = {
+ 		.file_offset = offsetof(struct mem_cgroup, swap_events_file),
+ 		.seq_show = swap_events_show,
+ 	},
++	{
++		.name = "swap.reclaim",
++		.write = swap_reclaim_write,
++		.read_u64 = swap_reclaim_read,
++	},
+ 	{ }	/* terminate */
+ };
+ 
+-- 
+2.27.0
 
