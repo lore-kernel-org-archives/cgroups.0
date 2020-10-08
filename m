@@ -1,9 +1,9 @@
 From: Baolin Wang <baolin.wang@linux.alibaba.com>
-Subject: [PATCH v2 4/8] blk-throttle: Fix IO hang for a corner case
-Date: Thu,  8 Oct 2020 11:52:25 +0800
-Message-ID: <ad720c13c15d7f6c1faa7ca1391c9f4420905f23.1602128837.git.baolin.wang@linux.alibaba.com>
+Subject: [PATCH v2 7/8] blk-throttle: Open code __throtl_de/enqueue_tg()
+Date: Thu,  8 Oct 2020 11:52:28 +0800
+Message-ID: <6a43ae990da3163204bae3ddedb6025d73b91545.1602128837.git.baolin.wang@linux.alibaba.com>
 References: <cover.1602128837.git.baolin.wang@linux.alibaba.com>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1602128837.git.baolin.wang@linux.alibaba.com>
 In-Reply-To: <cover.1602128837.git.baolin.wang@linux.alibaba.com>
 References: <cover.1602128837.git.baolin.wang@linux.alibaba.com>
@@ -14,37 +14,58 @@ Content-Transfer-Encoding: 7bit
 To: tj@kernel.org, axboe@kernel.dk
 Cc: baolin.wang@linux.alibaba.com, baolin.wang7@gmail.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-It can not scale up in throtl_adjusted_limit() if we set bps or iops is
-1, which will cause IO hang when enable low limit. Thus we should treat
-1 as a illegal value to avoid this issue.
+The __throtl_de/enqueue_tg() functions are only be called by
+throtl_de/enqueue_tg(), thus we can just open code them to
+make code more readable.
 
 Signed-off-by: Baolin Wang <baolin.wang@linux.alibaba.com>
 ---
- block/blk-throttle.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ block/blk-throttle.c | 26 +++++++++-----------------
+ 1 file changed, 9 insertions(+), 17 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index b0d8f7c..0649bce 100644
+index 38aed8b..fc5c14f 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -1687,13 +1687,13 @@ static ssize_t tg_set_limit(struct kernfs_open_file *of,
- 			goto out_finish;
+@@ -691,29 +691,21 @@ static void tg_service_queue_add(struct throtl_grp *tg)
+ 			       leftmost);
+ }
  
- 		ret = -EINVAL;
--		if (!strcmp(tok, "rbps"))
-+		if (!strcmp(tok, "rbps") && val > 1)
- 			v[0] = val;
--		else if (!strcmp(tok, "wbps"))
-+		else if (!strcmp(tok, "wbps") && val > 1)
- 			v[1] = val;
--		else if (!strcmp(tok, "riops"))
-+		else if (!strcmp(tok, "riops") && val > 1)
- 			v[2] = min_t(u64, val, UINT_MAX);
--		else if (!strcmp(tok, "wiops"))
-+		else if (!strcmp(tok, "wiops") && val > 1)
- 			v[3] = min_t(u64, val, UINT_MAX);
- 		else if (off == LIMIT_LOW && !strcmp(tok, "idle"))
- 			idle_time = val;
+-static void __throtl_enqueue_tg(struct throtl_grp *tg)
+-{
+-	tg_service_queue_add(tg);
+-	tg->flags |= THROTL_TG_PENDING;
+-	tg->service_queue.parent_sq->nr_pending++;
+-}
+-
+ static void throtl_enqueue_tg(struct throtl_grp *tg)
+ {
+-	if (!(tg->flags & THROTL_TG_PENDING))
+-		__throtl_enqueue_tg(tg);
+-}
+-
+-static void __throtl_dequeue_tg(struct throtl_grp *tg)
+-{
+-	throtl_rb_erase(&tg->rb_node, tg->service_queue.parent_sq);
+-	tg->flags &= ~THROTL_TG_PENDING;
++	if (!(tg->flags & THROTL_TG_PENDING)) {
++		tg_service_queue_add(tg);
++		tg->flags |= THROTL_TG_PENDING;
++		tg->service_queue.parent_sq->nr_pending++;
++	}
+ }
+ 
+ static void throtl_dequeue_tg(struct throtl_grp *tg)
+ {
+-	if (tg->flags & THROTL_TG_PENDING)
+-		__throtl_dequeue_tg(tg);
++	if (tg->flags & THROTL_TG_PENDING) {
++		throtl_rb_erase(&tg->rb_node, tg->service_queue.parent_sq);
++		tg->flags &= ~THROTL_TG_PENDING;
++	}
+ }
+ 
+ /* Call with queue lock held */
 -- 
 1.8.3.1
 
