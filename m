@@ -1,33 +1,55 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH] block: Remove redundant 'return' statement
-Date: Thu, 8 Oct 2020 08:00:19 -0600
-Message-ID: <902fc772-4f41-d6a2-0c6b-162da8165f46@kernel.dk>
-References: <633f73addfc154700b2f983bee6230f82de4c984.1601253090.git.baolin.wang@linux.alibaba.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v2 0/8] Some improvements for blk throttle
+Date: Thu, 8 Oct 2020 08:02:06 -0600
+Message-ID: <b54c6741-10dc-2768-bc37-f1965672f039@kernel.dk>
+References: <cover.1602128837.git.baolin.wang@linux.alibaba.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20150623.gappssmtp.com; s=20150623;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=PQYn98Q50q5N/GLYfX3Z+7jVvi2JaNHakYRoBkO7GXY=;
-        b=EHBbaI6273UHbYRwW0lrb+qFFTEFHFvupZksJI9ZWuORueuFoTwZhEsf7VVtmqCpsZ
-         Cht1c6ZwHY9nTo/m1TMEZ+h1yTCXN7lRxFHAiuiLVHZ1Mt/P7fibkhs6f/xiAfrpFsOl
-         Bwp/PSx7VrCPK+CzQZ+JCzm66XSv3ueEWynzvV1I8plJv+Ap2mytPr9bRQNDrlhvDhP/
-         h2kequvNzD2Wxm2xY509SjVvJIhaApynr93c5UffSxxQdYeU58D9f3G1E3lYCLoAXAtA
-         6VgUDhKGXGPpAR2x8XGW/+KZ52yqzqZfYYILIIc9eO8tVY1rdWnaQb+gK0fAArhzBBFD
-         QE0w==
-In-Reply-To: <633f73addfc154700b2f983bee6230f82de4c984.1601253090.git.baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+        bh=+v0FBMBQHdikeISvOs9/H6RdJVjsvgJipGvlxdEATrw=;
+        b=OtjKLWoNFnJwBG+iIBsnfGAFJ4zdt7leYN6+IZMnSqbHnvoXh5fOLZV1t5S4zHKUK+
+         KlLNhwQDcsdOJ+V6LCgAsTRNBvCb+hz8mhghFlo0yiw4O2KRm4ZtDM9yfQnRV0uSBSer
+         C9/7OPQObbekrl9Gh4aVoZUyL5YHShCtmwpHSrZO3WnByHNC2KioGmRAmwwGQnvmB2VT
+         zZjChPKRCnH8sXBxdxwX+sVzpfg5961ZI6KZIqRSaKXhs2v0NxRWX9XSl4VdF3M1eOP6
+         09lAFvYNw26lHxgYb/xSqunH/NmCfM9e73cUCb7zv4dadb8bBohqNr3EeFusZoM46jjQ
+         DEPA==
+In-Reply-To: <cover.1602128837.git.baolin.wang@linux.alibaba.com>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Baolin Wang <baolin.wang-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: baolin.wang7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Baolin Wang <baolin.wang@linux.alibaba.com>, tj@kernel.org
+Cc: baolin.wang7@gmail.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 9/27/20 6:42 PM, Baolin Wang wrote:
-> Remove redundant 'return' statement for 'void' functions.
+On 10/7/20 9:52 PM, Baolin Wang wrote:
+> Hi,
+> 
+> This patch set did some improvements for blk throttle, please
+> help to review. Thanks.
+> 
+> Changes from v1:
+>  - Add another 4 new patches in this patch set.
+> 
+> Baolin Wang (8):
+>   blk-throttle: Remove a meaningless parameter for
+>     throtl_downgrade_state()
+>   blk-throttle: Avoid getting the current time if tg->last_finish_time
+>     is 0
+>   blk-throttle: Avoid tracking latency if low limit is invalid
+>   blk-throttle: Fix IO hang for a corner case
+>   blk-throttle: Move the list operation after list validation
+>   blk-throttle: Move service tree validation out of the
+>     throtl_rb_first()
+>   blk-throttle: Open code __throtl_de/enqueue_tg()
+>   blk-throttle: Re-use the throtl_set_slice_end()
+> 
+>  block/blk-throttle.c | 69 ++++++++++++++++++++++++++--------------------------
+>  1 file changed, 35 insertions(+), 34 deletions(-)
 
-Applied, thanks.
+LGTM, applied, thanks.
 
 -- 
 Jens Axboe
