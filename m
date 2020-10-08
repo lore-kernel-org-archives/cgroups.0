@@ -1,9 +1,9 @@
 From: Baolin Wang <baolin.wang@linux.alibaba.com>
-Subject: [PATCH v2 1/8] blk-throttle: Remove a meaningless parameter for throtl_downgrade_state()
-Date: Thu,  8 Oct 2020 11:52:22 +0800
-Message-ID: <ea3aa9bc31fe1760b9876f5f0fa632ce4d0c1d95.1602128837.git.baolin.wang@linux.alibaba.com>
+Subject: [PATCH v2 4/8] blk-throttle: Fix IO hang for a corner case
+Date: Thu,  8 Oct 2020 11:52:25 +0800
+Message-ID: <ad720c13c15d7f6c1faa7ca1391c9f4420905f23.1602128837.git.baolin.wang@linux.alibaba.com>
 References: <cover.1602128837.git.baolin.wang@linux.alibaba.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <cover.1602128837.git.baolin.wang@linux.alibaba.com>
 In-Reply-To: <cover.1602128837.git.baolin.wang@linux.alibaba.com>
 References: <cover.1602128837.git.baolin.wang@linux.alibaba.com>
@@ -14,46 +14,37 @@ Content-Transfer-Encoding: 7bit
 To: tj@kernel.org, axboe@kernel.dk
 Cc: baolin.wang@linux.alibaba.com, baolin.wang7@gmail.com, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The throtl_downgrade_state() is always used to change to LIMIT_LOW
-limitation, thus remove the latter meaningless parameter which
-indicates the limitation index.
+It can not scale up in throtl_adjusted_limit() if we set bps or iops is
+1, which will cause IO hang when enable low limit. Thus we should treat
+1 as a illegal value to avoid this issue.
 
 Signed-off-by: Baolin Wang <baolin.wang@linux.alibaba.com>
 ---
- block/blk-throttle.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ block/blk-throttle.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/block/blk-throttle.c b/block/blk-throttle.c
-index 36ba61c..4007b26 100644
+index b0d8f7c..0649bce 100644
 --- a/block/blk-throttle.c
 +++ b/block/blk-throttle.c
-@@ -1970,7 +1970,7 @@ static void throtl_upgrade_state(struct throtl_data *td)
- 	queue_work(kthrotld_workqueue, &td->dispatch_work);
- }
+@@ -1687,13 +1687,13 @@ static ssize_t tg_set_limit(struct kernfs_open_file *of,
+ 			goto out_finish;
  
--static void throtl_downgrade_state(struct throtl_data *td, int new)
-+static void throtl_downgrade_state(struct throtl_data *td)
- {
- 	td->scale /= 2;
- 
-@@ -1980,7 +1980,7 @@ static void throtl_downgrade_state(struct throtl_data *td, int new)
- 		return;
- 	}
- 
--	td->limit_index = new;
-+	td->limit_index = LIMIT_LOW;
- 	td->low_downgrade_time = jiffies;
- }
- 
-@@ -2067,7 +2067,7 @@ static void throtl_downgrade_check(struct throtl_grp *tg)
- 	 * cgroups
- 	 */
- 	if (throtl_hierarchy_can_downgrade(tg))
--		throtl_downgrade_state(tg->td, LIMIT_LOW);
-+		throtl_downgrade_state(tg->td);
- 
- 	tg->last_bytes_disp[READ] = 0;
- 	tg->last_bytes_disp[WRITE] = 0;
+ 		ret = -EINVAL;
+-		if (!strcmp(tok, "rbps"))
++		if (!strcmp(tok, "rbps") && val > 1)
+ 			v[0] = val;
+-		else if (!strcmp(tok, "wbps"))
++		else if (!strcmp(tok, "wbps") && val > 1)
+ 			v[1] = val;
+-		else if (!strcmp(tok, "riops"))
++		else if (!strcmp(tok, "riops") && val > 1)
+ 			v[2] = min_t(u64, val, UINT_MAX);
+-		else if (!strcmp(tok, "wiops"))
++		else if (!strcmp(tok, "wiops") && val > 1)
+ 			v[3] = min_t(u64, val, UINT_MAX);
+ 		else if (off == LIMIT_LOW && !strcmp(tok, "idle"))
+ 			idle_time = val;
 -- 
 1.8.3.1
 
