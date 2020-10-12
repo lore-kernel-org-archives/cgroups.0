@@ -1,68 +1,55 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] mm/memcg: fix device private memcg accounting
-Date: Mon, 12 Oct 2020 09:28:59 -0400
-Message-ID: <20201012132859.GD163830@cmpxchg.org>
-References: <20201009215952.2726-1-rcampbell@nvidia.com>
- <20201009155055.f87de51ea04d4ea879e3981a@linux-foundation.org>
- <d1aab0b0-4327-38da-6587-98f1740228fd@nvidia.com>
+Subject: Re: [PATCH] mm: memcontrol: localize mem_cgroup_sockets_enabled()
+ check
+Date: Mon, 12 Oct 2020 09:58:23 -0400
+Message-ID: <20201012135823.GA188876@cmpxchg.org>
+References: <20201010104521.67262-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=pnPTIBXyXY3lw9klvumgMEMiErvTNBjNm3i9R50FiO8=;
-        b=vnTw9dJflaMIXNnNWw2vi/vOaGk2yCJ69WDQkdY4C16AMLkPTm9WzibqnJrH3CiqcT
-         mJCxscrz0aU5tFQt3oG+TShN2wD1khwShvSZmM7v3nm7O0dWqniUMmRiLZDDQYjBBccN
-         EQJUREQlsKPdgYnTyxfYxpHc0vHmAkbUNFICmbFU9qwruHcZYxq++kzYmfP+Jt3WKH/u
-         s9pLL3UOpMht2Ts8ZdKF5KM7CdNLZlGJtrvSuo0yDSxa4ZuiVm8uVJZWBNWu3bOhsbRd
-         aG5OPdQLY7OH+3bI0F0c0UQ5AwXOA6uNU9dy12iV8LG4GQPFUMJU45SjR9KBubkniWJy
-         zj0A==
+        bh=LiRTK1pn0r+YX72HhN94UTqVGuwvK727gErKq+9p5co=;
+        b=kdD+EQ/dal5vV717URB/8INdiZStUkziLF+UP1/oTSbkc1xgOTizbXO5c7UxoZEPEW
+         ciXRZScy5HT82Nv+OD2jUtLvQ9ZQUcBf5lQFSVG840aSBl/RscDr0IFlx4mq7nv7MQ35
+         qKKeS7bNKo7We6dmI+xlw49U9Yldi1thKV+okEC746kq4DMa7X461pF8ef+CffG9QZHZ
+         P4KVdg4bG0zObRLP2mgNLOg61igdJOJIBA0f9nLPUnjww4ZBDnQ2ZQq2sYhk6myWpyxs
+         kMjev9XtTo/GbPHtFljwhoUpLw1Rj5mPbkW6NIMYdXRlfoGwcEQJYFL0k3Ft/+QUy2a5
+         zMxQ==
 Content-Disposition: inline
-In-Reply-To: <d1aab0b0-4327-38da-6587-98f1740228fd@nvidia.com>
+In-Reply-To: <20201010104521.67262-1-songmuchun@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Ralph Campbell <rcampbell@nvidia.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, Balbir Singh <bsingharora@gmail.com>, Ira Weiny <ira.weiny@intel.com>, stable@vger.kernel.org
+To: Muchun Song <songmuchun@bytedance.com>
+Cc: davem@davemloft.net, kuba@kernel.org, edumazet@google.com, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org, shakeelb@google.com, guro@fb.com, iamjoonsoo.kim@lge.com, laoar.shao@gmail.com, chris@chrisdown.name, daniel@iogearbox.net, kafai@fb.com, ast@kernel.org, jakub@cloudflare.com, linmiaohe@huawei.com, keescook@chromium.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Fri, Oct 09, 2020 at 05:00:37PM -0700, Ralph Campbell wrote:
+On Sat, Oct 10, 2020 at 06:45:21PM +0800, Muchun Song wrote:
+> Move the mem_cgroup_sockets_enabled() checks into memcg socket charge
+> or uncharge functions, so the users don't have to explicitly check that
+> condition.
 > 
-> On 10/9/20 3:50 PM, Andrew Morton wrote:
-> > On Fri, 9 Oct 2020 14:59:52 -0700 Ralph Campbell <rcampbell@nvidia.com> wrote:
-> > 
-> > > The code in mc_handle_swap_pte() checks for non_swap_entry() and returns
-> > > NULL before checking is_device_private_entry() so device private pages
-> > > are never handled.
-> > > Fix this by checking for non_swap_entry() after handling device private
-> > > swap PTEs.
-
-The fix looks good to me.
-
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-
-> > But this makes me suspect the answer is "there aren't any that we know
-> > of".  Are you sure a cc:stable is warranted?
-> > 
+> This is purely code cleanup patch without any functional change. But
+> move the sk_memcg member of the sock structure to the CONFIG_MEMCG
+> scope.
 > 
-> I assume the memory cgroup accounting would be off somehow when moving
-> a process to another memory cgroup.
-> Currently, the device private page is charged like a normal anonymous page
-> when allocated and is uncharged when the page is freed so I think that path is OK.
-> Maybe someone who knows more about memory cgroup accounting can comment?
+> Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+> ---
+>  include/linux/memcontrol.h      | 78 ++++++++++++++++++++++++++-------
+>  include/net/sock.h              |  5 ++-
+>  include/net/tcp.h               |  3 +-
+>  mm/memcontrol.c                 | 43 +++++++++++++-----
+>  net/core/sock.c                 | 15 +++----
+>  net/ipv4/inet_connection_sock.c |  6 +--
+>  net/ipv4/tcp_output.c           |  3 +-
+>  7 files changed, 111 insertions(+), 42 deletions(-)
 
-As for whether to CC stable, I'm leaning toward no:
+Hm, this is almost 3 times as much code.
 
-- When moving tasks, we'd leave their device pages behind in the old
-  cgroup. This isn't great, but it doesn't cause counter imbalances or
-  corruption or anything - we also skip locked pages, we used to skip
-  pages mapped by more than one pte, the user can select whether to
-  move pages along tasks at all, and if so, whether only anon or file.
+The sk_memcg saving on !CONFIG_MEMCG is somewhat nice, but it's not
+clear how many users would benefit here. And it adds ifdefs in code.
 
-- Charge moving itself is a bit of a questionable feature, and users
-  have been moving away from it. Leaving tasks in a cgroup and
-  changing the configuration is a heck of a lot cheaper than moving
-  potentially gigabytes of pages to another configuration domain.
+Also memcg code now has to know about struct sock.
 
-- According to the Fixes tag, this isn't a regression, either. Since
-  their inception, we have never migrated device pages.
+I'm not quite sure that this is an overall improvement.
