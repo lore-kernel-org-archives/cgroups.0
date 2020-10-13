@@ -1,109 +1,41 @@
-From: Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH] mm: memcontrol: Remove unused mod_memcg_obj_state()
-Date: Tue, 13 Oct 2020 23:35:04 +0800
-Message-ID: <20201013153504.92602-1-songmuchun@bytedance.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: Remove unused mod_memcg_obj_state()
+Date: Tue, 13 Oct 2020 09:35:53 -0700
+Message-ID: <20201013163553.GA3754702@carbon.dhcp.thefacebook.com>
+References: <20201013153504.92602-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=5Ox95qvJhDnil9bz6yooXTHbNTLkLwItEwWWK2Vi73M=;
-        b=VkeuT8BUzhjPjsJacswMkrJ0NijklYP+nB3jOT+GvqiI3jx9FYGbjzyvaOrykMOTF2
-         nSwhF1EkJx4O34zdFgah/jIOv21/bjPnc+z3Khu3mqLcLmHy7NPih0fmH00mB3syuP9D
-         Kt9lm9OYx6UjIAyofJRA/M9Shp6L24sqIM1P9YbzIEW3opjnQZ3aIxUCL0Z3dTuphIjz
-         OsS5rI3XCbb+Dwx4D5qkxAfyNEO/8ZN5z+1fmfy2vB8UYG8+zCOsN7u9N65nDZfk4JBQ
-         MupQAZg3r9b28VEDDcm7XOnGPmt9tz8zLckQGUGSUVNoWyMcs1BL+0x5u2YJTOG0zo60
-         OLXQ==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : in-reply-to : mime-version :
+ content-type : content-transfer-encoding; s=facebook;
+ bh=IxPOCF1993S3QaPPdLtUzkCPBFxHymBIwLPrdYNgUZw=;
+ b=ez3E8wTMo+8YusLEdFHMzSVj5HiKb17A+bdEYInP5J2LBW6HiJRoASajcHfLRIxEa9/9
+ Gegw6eIh850DfRJYf3skFQGEdfybl9zq2UvbcqvxBlb9jBgxhZSe/6mJ1cIpmBmJK4e4
+ BvVkVPXI2u49+H5gjqyv+wmsLjvuT5+HEB4= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=IxPOCF1993S3QaPPdLtUzkCPBFxHymBIwLPrdYNgUZw=;
+ b=TA5BHPbhHKDuivIXAhI0lykStClJyPHWeQ6Iip0U/pS0rC7tKevp8VTWipBCGRacqY3wQ2edC+T7Ny5KK+Hrhwrj6pdME/7Ig4zCGBJEn8by9d+FMAcYilgMXICpYcD2YBMyjSV0GEPoXHi8+xZnel1dNVy3PkHDSdHmkHHmHFQ=
+In-Reply-To: <20201013153504.92602-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, cl@linux.com, penberg@kernel.org, rientjes@google.com, iamjoonsoo.kim@lge.com, shakeelb@google.com, guro@fb.com, vbabka@suse.cz, laoar.shao@gmail.com, songmuchun@bytedance.com, chris@chrisdown.name
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Since commit:
+On Tue, Oct 13, 2020 at 11:35:04PM +0800, Muchun Song wrote:
+> Since commit:
+> 
+>   991e7673859e ("mm: memcontrol: account kernel stack per node")
+> 
+> There is no user of the mod_memcg_obj_state(). This patch just remove
+> it. Also rework type of the idx parameter of the mod_objcg_state()
+> from int to enum node_stat_item.
+> 
+> Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-  991e7673859e ("mm: memcontrol: account kernel stack per node")
+Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-There is no user of the mod_memcg_obj_state(). This patch just remove
-it. Also rework type of the idx parameter of the mod_objcg_state()
-from int to enum node_stat_item.
-
-Signed-off-by: Muchun Song <songmuchun@bytedance.com>
----
- include/linux/memcontrol.h |  6 ------
- mm/memcontrol.c            | 11 -----------
- mm/slab.h                  |  4 ++--
- 3 files changed, 2 insertions(+), 19 deletions(-)
-
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index a1395b584947..d7e339bf72dc 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -795,8 +795,6 @@ void __mod_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
- 			int val);
- void __mod_lruvec_slab_state(void *p, enum node_stat_item idx, int val);
- 
--void mod_memcg_obj_state(void *p, int idx, int val);
--
- static inline void mod_lruvec_slab_state(void *p, enum node_stat_item idx,
- 					 int val)
- {
-@@ -1245,10 +1243,6 @@ static inline void mod_lruvec_slab_state(void *p, enum node_stat_item idx,
- 	mod_node_page_state(page_pgdat(page), idx, val);
- }
- 
--static inline void mod_memcg_obj_state(void *p, int idx, int val)
--{
--}
--
- static inline
- unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
- 					    gfp_t gfp_mask,
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 2124ded698b2..1337775b04f3 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -885,17 +885,6 @@ void __mod_lruvec_slab_state(void *p, enum node_stat_item idx, int val)
- 	rcu_read_unlock();
- }
- 
--void mod_memcg_obj_state(void *p, int idx, int val)
--{
--	struct mem_cgroup *memcg;
--
--	rcu_read_lock();
--	memcg = mem_cgroup_from_obj(p);
--	if (memcg)
--		mod_memcg_state(memcg, idx, val);
--	rcu_read_unlock();
--}
--
- /**
-  * __count_memcg_events - account VM events in a cgroup
-  * @memcg: the memory cgroup
-diff --git a/mm/slab.h b/mm/slab.h
-index 4a24e1702923..725a0bb8b317 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -204,7 +204,7 @@ ssize_t slabinfo_write(struct file *file, const char __user *buffer,
- void __kmem_cache_free_bulk(struct kmem_cache *, size_t, void **);
- int __kmem_cache_alloc_bulk(struct kmem_cache *, gfp_t, size_t, void **);
- 
--static inline int cache_vmstat_idx(struct kmem_cache *s)
-+static inline enum node_stat_item cache_vmstat_idx(struct kmem_cache *s)
- {
- 	return (s->flags & SLAB_RECLAIM_ACCOUNT) ?
- 		NR_SLAB_RECLAIMABLE_B : NR_SLAB_UNRECLAIMABLE_B;
-@@ -294,7 +294,7 @@ static inline struct obj_cgroup *memcg_slab_pre_alloc_hook(struct kmem_cache *s,
- 
- static inline void mod_objcg_state(struct obj_cgroup *objcg,
- 				   struct pglist_data *pgdat,
--				   int idx, int nr)
-+				   enum node_stat_item idx, int nr)
- {
- 	struct mem_cgroup *memcg;
- 	struct lruvec *lruvec;
--- 
-2.20.1
-
+Thanks!
