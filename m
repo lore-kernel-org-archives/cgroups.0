@@ -1,33 +1,49 @@
-From: pr-tracker-bot@kernel.org
-Subject: Re: [GIT PULL] cgroup changes for v5.10-rc1
-Date: Wed, 14 Oct 2020 23:02:12 +0000
-Message-ID: <160271653246.18101.14377599341492008109.pr-tracker-bot@kernel.org>
-References: <20201013140703.GA3845@mtj.thefacebook.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1602716532;
-        bh=2nxBPtYac7uucAdtkiu+QNJuECqVhe/RG3bQmOI5zEg=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=0KekNbbFqESC0u97wkiAXGPSSwpWY7pHPKYp4DuYS5HvBi1Qcd3a/9XwyDA563+lI
-         uwoT37CxY5GFG2TPYy963SD3NDvfwbxfygo82WXk6F6uwHBntgJUOiVJ81qwHHzlZ2
-         GaSNYZOruw61ozEfpFw+2MbGgWeGJLyTPoYtQIeI=
-In-Reply-To: <20201013140703.GA3845@mtj.thefacebook.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [ANNOUNCEMENT] resctl-demo (Resource Control Demo)
+Date: Thu, 15 Oct 2020 13:12:16 -0400
+Message-ID: <20201015171216.GG3845@mtj.thefacebook.com>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=cKc+bNP++EX8fyeI3aXeiHgsKpFOPQVrFxV0jhUJ6Fg=;
+        b=p0r50dhkcILtmkik8X5doT3aHa4RN3urlDvhCui/LT+YbnQ1OWZozAHZWskt8bEhIW
+         yb6JDEMgozrWHdCgXSyYnq8GD+EOW2TGevh3dhnysvwgt6xNa3Zr2iwgHOLfRKMa+/vU
+         5QYR9gwKkCKLuhze9yReIip3bePpABLN3vN9Q1eqosiyKI5XQlQlnfeGwW6N3eq6pBha
+         SHgCIvsMq4ZJ9XSz0d8BUSSxihLk9cu9V4hWvL2j5L4aL6HauyHuhU9XTGg8mFQmSise
+         AFmWX4NcezYAg/A89RzOfNljjxEqHkmFl/ZcYUDopFWTEekqM6RsyCpKnnTEaD1vQM2m
+         1GXw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: torvalds@linux-foundation.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The pull request you sent on Tue, 13 Oct 2020 10:07:03 -0400:
+Hello,
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.10
+resctl-demo which documents resource control features and strategies with
+live scenarios has just been released. This documents most stuff that we
+learned at FB working with and deploying cgroup2, PSI and oomd.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/2f6c6d0891b472bbda70dfcc51fbb3147b6f54a0
+Setting up the whole environment is still a bit difficult because it depends
+on pending kernel patches in devel branches and non-trivial system level
+configurations such as btrfs root filesystem, so we've built a system image
+which can either be launched in AWS or installed on local machine.
+Everything in the image is either already upstream or pending, it's just an
+easy way to set things up. Follow the link in the Getting Started section in
+README if you wanna check them out.
 
-Thank you!
+  https://github.com/facebookexperimental/resctl-demo
+
+Longer term, I'm planning to build benchmark / autotest framework on top so
+that we can actually verify and score various aspects of resource control in
+terms of both isolation and work conservation.
+
+Thanks.
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+tejun
