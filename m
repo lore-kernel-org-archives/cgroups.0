@@ -1,72 +1,41 @@
-From: Rik van Riel <riel@surriel.com>
+From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH] mm: memcontrol: add file_thp, shmem_thp to memory.stat
-Date: Thu, 22 Oct 2020 12:57:55 -0400
-Message-ID: <004fe66ee1d111ec006dd065b9bed5fdcfdaad01.camel@surriel.com>
+Date: Thu, 22 Oct 2020 11:00:32 -0700 (PDT)
+Message-ID: <alpine.DEB.2.23.453.2010221100150.1331349@chino.kir.corp.google.com>
 References: <20201022151844.489337-1-hannes@cmpxchg.org>
-         <db4f86f30726a1a33c868155b4c681ac25569179.camel@fb.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-q/yjJ9zoR2cgocIosU9b"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <db4f86f30726a1a33c868155b4c681ac25569179.camel@fb.com>
-Sender: riel@shelob.surriel.com
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=+Jm50fe41wfDpU30qvqkj0sqMT/OM8dCaofZzxuvBXc=;
+        b=Ked+h/0SpWqtiUKSQ+9P+ieLMEYOUTVO+Qm1xZegAoXCKTnpLFKnApIRgEQNuVl+xY
+         23Ki0jXwUy5jxqKjbS2p6j57kwY3nhDmCf37yAxUZIDdarrFWzYtYwszarW8AmN7W1tK
+         QaLA/Ut1Q91UzjmR8M+CJmabUDT+4GAGKWWZS3k2oqfzBELUTGLx66J0bAP5qIk5i6tN
+         Vs7wLG8jgWwCSeX8OCz+Zk0H6cEsdJR9buSyEVvsBbfH6HCvq04fuHMoF5qKL3KXNRtP
+         LOqXn+Ehbt1GJq1WgSjRK/9M7jcRx4qYct5wkhxVGQiCFzuQpUmPwAr76h/VN6Cd6ywY
+         QO2A==
+In-Reply-To: <20201022151844.489337-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
-
-
---=-q/yjJ9zoR2cgocIosU9b
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 2020-10-22 at 12:49 -0400, Rik van Riel wrote:
-> On Thu, 2020-10-22 at 11:18 -0400, Johannes Weiner wrote:
->=20
-> > index e80aa9d2db68..334ce608735c 100644
-> > --- a/mm/filemap.c
-> > +++ b/mm/filemap.c
-> > @@ -204,9 +204,9 @@ static void unaccount_page_cache_page(struct
-> > address_space *mapping,
-> >  	if (PageSwapBacked(page)) {
-> >  		__mod_lruvec_page_state(page, NR_SHMEM, -nr);
-> >  		if (PageTransHuge(page))
-> > -			__dec_node_page_state(page, NR_SHMEM_THPS);
-> > +			__dec_lruvec_page_state(page, NR_SHMEM_THPS);
-> >  	} else if (PageTransHuge(page)) {
-> > -		__dec_node_page_state(page, NR_FILE_THPS);
-> > +		__dec_lruvec_page_state(page, NR_FILE_THPS);
-> >  		filemap_nr_thps_dec(mapping);
-> >  	}
->=20
-> This may be a dumb question, but does that mean the
-> NR_FILE_THPS number will no longer be visible in
-> /proc/vmstat or is there some magic I overlooked in
-> a cursory look of the code?
-
-Never mind, I found it a few levels deep in
-__dec_lruvec_page_state.
-
-Reviewed-by: Rik van Riel <riel@surriel.com>
-
---=20
-All Rights Reversed.
-
---=-q/yjJ9zoR2cgocIosU9b
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
------BEGIN PGP SIGNATURE-----
+On Thu, 22 Oct 2020, Johannes Weiner wrote:
 
-iQEzBAABCAAdFiEEKR73pCCtJ5Xj3yADznnekoTE3oMFAl+RuhQACgkQznnekoTE
-3oNrzwf9GSWmH30yYW4VoJhqcAiuVzpHRu/K7HGUTezlWzZgMV+ef6NYaUk0NItK
-sIgNpwCkeBZXg99ZG6y7o/yBiMLB7LR9E5PdREv+7CQrgZ8dvTbu0OhsmhOvo8TL
-+ufRBaAt4aK1Melt27dbnooHH43PVqRODDI9nkp4NU/aSIGami/KCAIGf3JfMEyR
-mK7THczWyFCknk1LWfPIbhYb3cneiwM62w07Xn3Fs4ord5612IvbW3iULFEMQwAO
-FUQ8DZycLWEIJL9DDa/eYeNH9c0cq0tzdiRBsaESVnT4q/I0gapNN4eLora3VCzi
-xqEBWQ22PQDOuUdJ0Lc7fyrhnplMWA==
-=/3Jx
------END PGP SIGNATURE-----
+> As huge page usage in the page cache and for shmem files proliferates
+> in our production environment, the performance monitoring team has
+> asked for per-cgroup stats on those pages.
+> 
+> We already track and export anon_thp per cgroup. We already track file
+> THP and shmem THP per node, so making them per-cgroup is only a matter
+> of switching from node to lruvec counters. All callsites are in places
+> where the pages are charged and locked, so page->memcg is stable.
+> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
---=-q/yjJ9zoR2cgocIosU9b--
+Acked-by: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
+Nice!
