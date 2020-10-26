@@ -1,38 +1,86 @@
-From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Subject: Re: [PATCH v2 0/2] Fixes to blkg_conf_prep
-Date: Mon, 26 Oct 2020 07:58:09 -0600
-Message-ID: <73a3223b-2a92-49ae-e985-13399d8bf86e@kernel.dk>
-References: <20201022205842.1739739-1-krisman@collabora.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH] mm: memcontrol: add file_thp, shmem_thp to memory.stat
+Date: Mon, 26 Oct 2020 13:40:29 -0400
+Message-ID: <20201026174029.GC548555@cmpxchg.org>
+References: <20201022151844.489337-1-hannes@cmpxchg.org>
+ <20201025113725.b60f2b08d7331a31edf009a1@linux-foundation.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=jszuR3zqMSYhTcL3FUWEd0lFc+5Piy/LuuN/X4w12ZE=;
-        b=UlD2l9tJv9e7egQPf3vwasJKZ6rXr0MvOAppN+FYNHUSsOVJ4wViTv6XZYwfNWkmq5
-         fiIwU8h6ppZ6HogWNMv9RlABvPE9gRUaaoeTYGd+ztltCWL8kQFiAcN0+WdLvxQqJTuv
-         6lFC/it6ywbwaUXg3UEXACs2yxS1SJSYh0of0j8b9s09RFswgtjpY8yOXh1Dt7rSUhnG
-         38KnV2lMNE0MZT6Q9Qpz3HU3k5APscM6Fa9FgNhLj8kfUekzFlF8jAmUwM7ePaMQY8eZ
-         jKGQ7E+X77rdnKK2mGO2/OwLwpup1cnzqjNeDKaoUVfg7P/HOn2dchDnKrawUbgNcdNH
-         oYRg==
-In-Reply-To: <20201022205842.1739739-1-krisman-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
-Content-Language: en-US
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=djs/CW12V4A+rnL8mVXSs9xI/UkOfc/xmnw7+ByJ/eM=;
+        b=SZXO+BBXdNcrW74AgUZzt6jyzJoA0LDHbnm9Q60LBwKaRuIS5DDT8EMMIBQ+8v7ybm
+         4NMxPkr7hkQW92+yQF9eagujlyehAYXlus7xlj6hPQLSQMeQSussoqkFMviC/T+HpnMm
+         PQVFhtfBESS3t56Pa4XiIY40M5syaVbQxiTdqrx9SAtQ/I/sCUqe8ViQ+SkdoWu4qwLa
+         eYJSCZCWZ20Op3LGAmbWZJRfgCp8qlGS/L6t+v+KvllIPjm/p2Y6TgAzRSkbQnKw8b8d
+         Nm0NAwFXkKwMQDJRD0S5jyFk+bq/xrZlSbypj0dEbQ+PamTzXpqJBSrL9GtX5iXwqkXG
+         VXoQ==
+Content-Disposition: inline
+In-Reply-To: <20201025113725.b60f2b08d7331a31edf009a1-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Gabriel Krisman Bertazi <krisman-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, khazhy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kernel-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On 10/22/20 2:58 PM, Gabriel Krisman Bertazi wrote:
-> Hi Tejun,
+On Sun, Oct 25, 2020 at 11:37:25AM -0700, Andrew Morton wrote:
+> On Thu, 22 Oct 2020 11:18:44 -0400 Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
 > 
-> In addition to addressing your comments the previously submitted fix to
-> pre-allocate the radix node on blkg_conf_prep, this series fixes a small
-> memleak on the same function.
+> > As huge page usage in the page cache and for shmem files proliferates
+> > in our production environment, the performance monitoring team has
+> > asked for per-cgroup stats on those pages.
+> > 
+> > We already track and export anon_thp per cgroup. We already track file
+> > THP and shmem THP per node, so making them per-cgroup is only a matter
+> > of switching from node to lruvec counters. All callsites are in places
+> > where the pages are charged and locked, so page->memcg is stable.
+> > 
+> > ...
+> >
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -1507,6 +1507,8 @@ static struct memory_stat memory_stats[] = {
+> >  	 * constant(e.g. powerpc).
+> >  	 */
+> >  	{ "anon_thp", 0, NR_ANON_THPS },
+> > +	{ "file_thp", 0, NR_FILE_THPS },
+> > +	{ "shmem_thp", 0, NR_SHMEM_THPS },
+> 
+> Documentation/admin-guide/cgroup-v2.rst is owed an update?
 
-Applied, thanks.
+Ah yes. This?
 
+From 310c3e1714e1c093d4cd26dff38326fc348cdd31 Mon Sep 17 00:00:00 2001
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Date: Mon, 26 Oct 2020 13:39:19 -0400
+Subject: [PATCH] mm: memcontrol: add file_thp, shmem_thp to memory.stat fix
+
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+ Documentation/admin-guide/cgroup-v2.rst | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 608d7c279396..515bb13084a0 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1300,6 +1300,14 @@ PAGE_SIZE multiple when read back.
+ 		Amount of memory used in anonymous mappings backed by
+ 		transparent hugepages
+ 
++	  file_thp
++		Amount of cached filesystem data backed by transparent
++		hugepages
++
++	  shmem_thp
++		Amount of shm, tmpfs, shared anonymous mmap()s backed by
++		transparent hugepages
++
+ 	  inactive_anon, active_anon, inactive_file, active_file, unevictable
+ 		Amount of memory, swap-backed and filesystem-backed,
+ 		on the internal memory management lists used by the
 -- 
-Jens Axboe
+2.29.0
 
