@@ -1,87 +1,80 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [QUESTION] Cgroup namespace and cgroup v2
-Date: Tue, 27 Oct 2020 19:26:59 +0100
-Message-ID: <20201027182659.GA62134@blackbook>
-References: <d223c6ba-9fcf-8728-214b-1bce30f26441@oracle.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH 2/5] mm: memcg/slab: Fix use after free in
+ obj_cgroup_charge
+Date: Tue, 27 Oct 2020 11:31:32 -0700
+Message-ID: <20201027183132.GC725724@carbon.dhcp.thefacebook.com>
+References: <20201027080256.76497-1-songmuchun@bytedance.com>
+ <20201027080256.76497-3-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="+HP7ph2BbKc20aGI"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1603823224;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=0K6gtd/wfiEHecUysB7cNGAxPugKGRqj59JkdXTbE6A=;
-        b=NkYbqLOTOVixtT2SGaNj25O4NxNJlnc57h+jGI0tY46XG+J4Ie6qdjCioLpGXyueWsRnfo
-        1fW1dbDSbzSCT2ei79nAakTuiWMIC+i9ccbFPdOxS0IuUwuBo16kuUQSLzYNc6vVUs0bNM
-        6mA2HSoJL83d/TnkWGOyjjRHQAix3YQ=
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=CaNNTAePTb/2NKJ5qDb+sog4vtTEV6NufAX37X6coe8=;
+ b=OR8DIjj171ekol9EyXRSIQLLV2ow9RGUu6w37G66Ae0caNmw/2cJHRUF1Ry/VLtYFGua
+ gvUSFJNxw7b+gR8spWgwhzsnNl0T3R0VeL33FQ8Gd+lvc7WXqe6AGimlLPWS9VNdMIpd
+ /RSGP7atDlKEzgVeduzqbXoriQ9nbj8WMc8= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CaNNTAePTb/2NKJ5qDb+sog4vtTEV6NufAX37X6coe8=;
+ b=ERGoWPm9/13BoZepIBZgMlL0npkLSzOS6b8fZXVGlkdN4HVyMzMGhK3OOa297mv2u4ehl6VjDWqeyjDeIjofQa8/GnkXmOtZQtcWkTPKgHz4yz9zGEJbucsODr9al6xg/zsHie0Yu7BSwfwERPVPwUmT8rgTzfbcoRvfLHyQTPA=
 Content-Disposition: inline
-In-Reply-To: <d223c6ba-9fcf-8728-214b-1bce30f26441-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20201027080256.76497-3-songmuchun@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
-To: Tom Hromatka <tom.hromatka-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Muchun Song <songmuchun@bytedance.com>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, laoar.shao@gmail.com, chris@chrisdown.name, christian.brauner@ubuntu.com, peterz@infradead.org, mingo@kernel.org, keescook@chromium.org, tglx@linutronix.de, esyr@redhat.com, surenb@google.com, areber@redhat.com, elver@google.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
+On Tue, Oct 27, 2020 at 04:02:53PM +0800, Muchun Song wrote:
+> The rcu_read_lock/unlock only can guarantee that the memcg will
+> not be freed, but it cannot guarantee the success of css_get to
+> memcg. This can be happened when we reparent the memcg. So using
+> css_tryget instead of css_get.
 
---+HP7ph2BbKc20aGI
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hm, I really doubt that it can be reproduced in the real life, but
+I think you're formally correct.
 
-Hi Tom.
+If the whole process of a cgroup offlining is completed between reading
+a objcg->memcg pointer and bumping the css reference on another CPU,
+and there are exactly 0 external references to this memory cgroup
+(how we get to the obj_cgroup_charge() then?), css_get() can change
+the ref counter from 0 back to 1.
+Is this a good description of the problem?
 
-On Tue, Oct 20, 2020 at 03:12:28PM -0600, Tom Hromatka <tom.hromatka@oracle=
-=2Ecom> wrote:
-> But this fails on a cgroup v2 system in a
-> cgroup namespace because the root cgroup is a non-leaf cgroup.
-Yes, the no internal process constraint simplifies and enables many
-things for v2 controllers.
+If so, I think it's worth a more detailed description and mentioning that
+it's not a real-life bug. It also probably doesn't deserve a stable@ backport.
 
-> * As outlined above, the behavior of the "root" cgroup in a cgroup
-> =A0 namespace on a v2 system differs from the behavior of the
-> =A0 unnamespaced root cgroup.=A0 At best this is inconsistent; at worst,
-> =A0 this may leak information to an unethical program.
-What information does this leak? (That it's running in a cgroup namespace?)
-Note that this isn't the only discrepancy between host root cgroup and
-namespaced root cgroup. The host group is simply special.
+> 
+> Fixes: bf4f059954dc ("mm: memcg/slab: obj_cgroup API")
+> Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+> ---
+>  mm/memcontrol.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index fcbd79c5023e..c0c27bee23ad 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3223,8 +3223,10 @@ int obj_cgroup_charge(struct obj_cgroup *objcg, gfp_t gfp, size_t size)
+>  	 * independently later.
+>  	 */
+>  	rcu_read_lock();
+> +retry:
+>  	memcg = obj_cgroup_memcg(objcg);
+> -	css_get(&memcg->css);
+> +	if (!css_tryget(&memcg->css))
 
-> =A0 Any ideas how =A0 we can make the behavior more consistent for the
-> user and =A0 libcgroup?
-You can disable the controllers (via parent's cgroup.subtree_control) to
-allow migration into the parent. Of course that affects also siblings of
-the removed cgroup.
+  	if (unlikely(!css_tryget(&memcg->css)))
+            ^^^^^^^^
+	    maybe?
 
-> * I will likely add a flag to cgdelete to simply kill processes in
-> =A0 a cgroup rather than try and move them to the parent cgroup.
-> =A0 Moving processes to the parent cgroup is somewhat challenging
-> =A0 even in a cgroup v1 system due to permissions, etc.
-In general, migrations with controlled v2 cgroup are not supported, so
-moving processes up and (especially) down has less sense than in v1.
-Hence, refusing the delete operation on a populated cgroup (with
-controllers) is IMO justified.
+> +		goto retry;
 
+Otherwise the fix looks good to me.
 
-Michal
+Please, feel free to add
+Acked-by: Roman Gushchin <guro@fb.com>
+after extending the commit description.
 
---+HP7ph2BbKc20aGI
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAl+YZm4ACgkQia1+riC5
-qSj9Zw//dOoY85XUKFEtVEr9TxvQl6DVGWCWzN8KfiZSmFMqopEBpN7OHM9R2/qh
-NeofSl6DkJe9yjtB0W96v0mt3oNK3qKc1OiiBmF3GubsaSnCL5LS1Ug7XPJf/5Cd
-Kgp7Up5vbeb3vwDxaiqesVFRVsCdFWYSRolVEonqZxVg0k7WmOWStdaWCDrq91Ms
-HtpNn7IdWyCOjzLrDPqtF7blfq2wqlk10x0TtpgZDJs5gA8sZCdY3VPNYB319C4i
-Xz9E85XEbbeODqMwoGqtSaMjost5Cs2L5eZyVF1Tjp1GlgNEAvQt7wct95egmG3A
-TTAdEm7rvktQZXaMidUQbkzyBtthsI4DZMlUuwBaPCAo+MeUcFDSdUIRxTXvO2jS
-PtRSJQyjwAzw1nvdKon3dyAZzt0as9F5Titt90DLbLql66FUEN3UATfVIAuvGvgq
-XrqXhGkkN4gW3CTUfB6NU+4jIjMKTOUq5oeZ6zCy8kgzWPuwsybe4HdnYT/EDXns
-bF4J5GXT24cZKiefCpdDDCMqCXnz+v+lB7KjkInEnvTznfhVVxhnJiX6YYwZwt0o
-hrvn8KawoXriijdksxJx6OhO4ng4cZ+89hOhJP71FYoKjQMuBSqwO6/IMWk6qiDe
-UVAgZxW+Q5HFsiYwLZZAuT0l7X0FK/8485TJaMuhp3ZC2nuDmvA=
-=d7RA
------END PGP SIGNATURE-----
-
---+HP7ph2BbKc20aGI--
+Thanks!
