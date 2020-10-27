@@ -1,82 +1,87 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [External] Re: [PATCH 5/5] mm: memcontrol: Simplify the
- mem_cgroup_page_lruvec
-Date: Tue, 27 Oct 2020 15:31:41 +0100
-Message-ID: <20201027143141.GX20500@dhcp22.suse.cz>
-References: <20201027080256.76497-1-songmuchun@bytedance.com>
- <20201027080256.76497-6-songmuchun@bytedance.com>
- <20201027133639.GT20500@dhcp22.suse.cz>
- <CAMZfGtUDguQkO0nF8Vt5qUVmmu4rCQcXx4nOhqUBSLnMYs2_BA@mail.gmail.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [QUESTION] Cgroup namespace and cgroup v2
+Date: Tue, 27 Oct 2020 19:26:59 +0100
+Message-ID: <20201027182659.GA62134@blackbook>
+References: <d223c6ba-9fcf-8728-214b-1bce30f26441@oracle.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="+HP7ph2BbKc20aGI"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1603809106;
+        t=1603823224;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=uuw37CmdGgaUF2rTsLXZIxdwBi56keqYJAASysIsH4U=;
-        b=QScZCtVJ88Ft10nSiaAM31z9hd30tvg7sm0uLaSV0xvsBBwNiIAiXthx+uw5HdJDHCO2gL
-        /LScYs8N/+/Y/g1sEzi3bViteDVWpDr9u5cLVN927E+Y2dug78ERP+RSXwlnzu8X2JnfZ0
-        dPK7a+yMSWEJqpmUm9TGElUUj2fhHV4=
+        bh=0K6gtd/wfiEHecUysB7cNGAxPugKGRqj59JkdXTbE6A=;
+        b=NkYbqLOTOVixtT2SGaNj25O4NxNJlnc57h+jGI0tY46XG+J4Ie6qdjCioLpGXyueWsRnfo
+        1fW1dbDSbzSCT2ei79nAakTuiWMIC+i9ccbFPdOxS0IuUwuBo16kuUQSLzYNc6vVUs0bNM
+        6mA2HSoJL83d/TnkWGOyjjRHQAix3YQ=
 Content-Disposition: inline
-In-Reply-To: <CAMZfGtUDguQkO0nF8Vt5qUVmmu4rCQcXx4nOhqUBSLnMYs2_BA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <d223c6ba-9fcf-8728-214b-1bce30f26441-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, areber-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Tom Hromatka <tom.hromatka-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 27-10-20 22:15:16, Muchun Song wrote:
-> On Tue, Oct 27, 2020 at 9:36 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> >
-> > On Tue 27-10-20 16:02:56, Muchun Song wrote:
-> > > We can reuse the code of mem_cgroup_lruvec() to simplify the code
-> > > of the mem_cgroup_page_lruvec().
-> >
-> > yes, removing the code duplication is reasonable. But ...
-> >
-> > >
-> > > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> > > ---
-> > >  include/linux/memcontrol.h | 44 +++++++++++++++++++++++++++-----------
-> > >  mm/memcontrol.c            | 40 ----------------------------------
-> > >  2 files changed, 32 insertions(+), 52 deletions(-)
-> > >
-> > > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> > > index 95807bf6be64..5e8480e54cd8 100644
-> > > --- a/include/linux/memcontrol.h
-> > > +++ b/include/linux/memcontrol.h
-> > > @@ -451,16 +451,9 @@ mem_cgroup_nodeinfo(struct mem_cgroup *memcg, int nid)
-> > >       return memcg->nodeinfo[nid];
-> > >  }
-> > >
-> > > -/**
-> > > - * mem_cgroup_lruvec - get the lru list vector for a memcg & node
-> > > - * @memcg: memcg of the wanted lruvec
-> > > - *
-> > > - * Returns the lru list vector holding pages for a given @memcg &
-> > > - * @node combination. This can be the node lruvec, if the memory
-> > > - * controller is disabled.
-> > > - */
-> > > -static inline struct lruvec *mem_cgroup_lruvec(struct mem_cgroup *memcg,
-> > > -                                            struct pglist_data *pgdat)
-> > > +static inline struct lruvec *mem_cgroup_node_lruvec(struct mem_cgroup *memcg,
-> > > +                                                 struct pglist_data *pgdat,
-> > > +                                                 int nid)
-> >
-> > This is just wrong interface. Either take nid or pgdat. You do not want
-> > both because that just begs for wrong usage.
-> 
-> If we want to avoid abuse of mem_cgroup_node_lruvec. We can move
-> those functions to the memcontrol.c. And add the "static" attribute to the
-> mem_cgroup_node_lruvec. Just export mem_cgroup_lruvec and
-> mem_cgroup_page_lruvec. Is this OK?
 
-Sorry, I was probably not clear enough. I am not against the function
-per se. I just do not think we want to make it trickier to use than
-necessary. That means either use pgdat or nid argument. Not both because
-they should always be in sync and you can trivially get from one to the
-other and vice versa.
--- 
-Michal Hocko
-SUSE Labs
+--+HP7ph2BbKc20aGI
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi Tom.
+
+On Tue, Oct 20, 2020 at 03:12:28PM -0600, Tom Hromatka <tom.hromatka@oracle=
+=2Ecom> wrote:
+> But this fails on a cgroup v2 system in a
+> cgroup namespace because the root cgroup is a non-leaf cgroup.
+Yes, the no internal process constraint simplifies and enables many
+things for v2 controllers.
+
+> * As outlined above, the behavior of the "root" cgroup in a cgroup
+> =A0 namespace on a v2 system differs from the behavior of the
+> =A0 unnamespaced root cgroup.=A0 At best this is inconsistent; at worst,
+> =A0 this may leak information to an unethical program.
+What information does this leak? (That it's running in a cgroup namespace?)
+Note that this isn't the only discrepancy between host root cgroup and
+namespaced root cgroup. The host group is simply special.
+
+> =A0 Any ideas how =A0 we can make the behavior more consistent for the
+> user and =A0 libcgroup?
+You can disable the controllers (via parent's cgroup.subtree_control) to
+allow migration into the parent. Of course that affects also siblings of
+the removed cgroup.
+
+> * I will likely add a flag to cgdelete to simply kill processes in
+> =A0 a cgroup rather than try and move them to the parent cgroup.
+> =A0 Moving processes to the parent cgroup is somewhat challenging
+> =A0 even in a cgroup v1 system due to permissions, etc.
+In general, migrations with controlled v2 cgroup are not supported, so
+moving processes up and (especially) down has less sense than in v1.
+Hence, refusing the delete operation on a populated cgroup (with
+controllers) is IMO justified.
+
+
+Michal
+
+--+HP7ph2BbKc20aGI
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAl+YZm4ACgkQia1+riC5
+qSj9Zw//dOoY85XUKFEtVEr9TxvQl6DVGWCWzN8KfiZSmFMqopEBpN7OHM9R2/qh
+NeofSl6DkJe9yjtB0W96v0mt3oNK3qKc1OiiBmF3GubsaSnCL5LS1Ug7XPJf/5Cd
+Kgp7Up5vbeb3vwDxaiqesVFRVsCdFWYSRolVEonqZxVg0k7WmOWStdaWCDrq91Ms
+HtpNn7IdWyCOjzLrDPqtF7blfq2wqlk10x0TtpgZDJs5gA8sZCdY3VPNYB319C4i
+Xz9E85XEbbeODqMwoGqtSaMjost5Cs2L5eZyVF1Tjp1GlgNEAvQt7wct95egmG3A
+TTAdEm7rvktQZXaMidUQbkzyBtthsI4DZMlUuwBaPCAo+MeUcFDSdUIRxTXvO2jS
+PtRSJQyjwAzw1nvdKon3dyAZzt0as9F5Titt90DLbLql66FUEN3UATfVIAuvGvgq
+XrqXhGkkN4gW3CTUfB6NU+4jIjMKTOUq5oeZ6zCy8kgzWPuwsybe4HdnYT/EDXns
+bF4J5GXT24cZKiefCpdDDCMqCXnz+v+lB7KjkInEnvTznfhVVxhnJiX6YYwZwt0o
+hrvn8KawoXriijdksxJx6OhO4ng4cZ+89hOhJP71FYoKjQMuBSqwO6/IMWk6qiDe
+UVAgZxW+Q5HFsiYwLZZAuT0l7X0FK/8485TJaMuhp3ZC2nuDmvA=
+=d7RA
+-----END PGP SIGNATURE-----
+
+--+HP7ph2BbKc20aGI--
