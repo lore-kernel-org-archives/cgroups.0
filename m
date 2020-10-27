@@ -1,80 +1,102 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: [PATCH 5/5] mm: memcontrol: Simplify the mem_cgroup_page_lruvec
-Date: Tue, 27 Oct 2020 22:15:16 +0800
-Message-ID: <CAMZfGtUDguQkO0nF8Vt5qUVmmu4rCQcXx4nOhqUBSLnMYs2_BA@mail.gmail.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH 1/5] mm: memcg/slab: Fix return child memcg objcg for
+ root memcg
+Date: Tue, 27 Oct 2020 10:42:36 -0700
+Message-ID: <20201027174236.GB725724@carbon.dhcp.thefacebook.com>
 References: <20201027080256.76497-1-songmuchun@bytedance.com>
- <20201027080256.76497-6-songmuchun@bytedance.com> <20201027133639.GT20500@dhcp22.suse.cz>
+ <20201027080256.76497-2-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=QQKyukY3sNn8vMLwkS9RR/i1T1+mtDwNzg2ru7tNBSs=;
-        b=e7JqdiWEdyM8LSjR0QByZe6uB/TUuo5WmCWoJ2tghcFKu/g92h7L2egphj/wJCExaG
-         JXD9+u/ECQIOwwZVqiPs/MauJpBNOVCKAhboe5J/Z7LG9YRuLEleWNjcCn9WtqhJNO3o
-         49oK0+EVYHTA1BlEJ4ct3b0UDVWSsubPtihkoXv8mgHOzV0Xe4fPKn9p2M470AQzvz/7
-         qPnPXPoSKAUZlm2+h9DOw2DRGBNeBP9efzJDSVQEpUbq4lndcCYRdgEnWLPz0NKYK7zz
-         C8smlVbEJ0xzZ8HjFn38SKPvBWz+Q0eY8btSFAA/nplFKZegw1b7ieiWi+eNO+xsu6ae
-         jp0Q==
-In-Reply-To: <20201027133639.GT20500-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=HKF61jpSHkELrGyeUZ9KBZQCL+Wm+QFL2+V/mDIllu8=;
+ b=VxGGc7C9Lx9fEkCDg9Q/5lSOHDj5noPu0z4WI0KizQ0OOl9j03sm+4R6lyfqjxcKU+CO
+ wLVo0qqcmrEWhZv3eeCgWsWOmv17rMAza1kJOzf4LijX778fpmrdxSNBtF971j2UzIIi
+ pMsqDrkAOCHYyMi2bLEo4qCYAZHSOTirp80= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=HKF61jpSHkELrGyeUZ9KBZQCL+Wm+QFL2+V/mDIllu8=;
+ b=Ce5ijDAj/UD3WkJSCDSdZ60kGJJ7B7wpiqrTSIeUErSZpxhZd4kGut9YKCwhhqDSkDwmZGUDXA68+Mb8vAzs1O2mHdf2OvGjB5SnJl3aJyu2dyYvFVIVyYY7wVCcEyF6UfRG8BqU20F+jAmo3+WHTopvfRmDI6SlHCPMbZawsls=
+Content-Disposition: inline
+In-Reply-To: <20201027080256.76497-2-songmuchun@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, areber-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Muchun Song <songmuchun@bytedance.com>
+Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, laoar.shao@gmail.com, chris@chrisdown.name, christian.brauner@ubuntu.com, peterz@infradead.org, mingo@kernel.org, keescook@chromium.org, tglx@linutronix.de, esyr@redhat.com, surenb@google.com, areber@redhat.com, elver@google.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-On Tue, Oct 27, 2020 at 9:36 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
->
-> On Tue 27-10-20 16:02:56, Muchun Song wrote:
-> > We can reuse the code of mem_cgroup_lruvec() to simplify the code
-> > of the mem_cgroup_page_lruvec().
->
-> yes, removing the code duplication is reasonable. But ...
->
-> >
-> > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> > ---
-> >  include/linux/memcontrol.h | 44 +++++++++++++++++++++++++++-----------
-> >  mm/memcontrol.c            | 40 ----------------------------------
-> >  2 files changed, 32 insertions(+), 52 deletions(-)
-> >
-> > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> > index 95807bf6be64..5e8480e54cd8 100644
-> > --- a/include/linux/memcontrol.h
-> > +++ b/include/linux/memcontrol.h
-> > @@ -451,16 +451,9 @@ mem_cgroup_nodeinfo(struct mem_cgroup *memcg, int nid)
-> >       return memcg->nodeinfo[nid];
-> >  }
-> >
-> > -/**
-> > - * mem_cgroup_lruvec - get the lru list vector for a memcg & node
-> > - * @memcg: memcg of the wanted lruvec
-> > - *
-> > - * Returns the lru list vector holding pages for a given @memcg &
-> > - * @node combination. This can be the node lruvec, if the memory
-> > - * controller is disabled.
-> > - */
-> > -static inline struct lruvec *mem_cgroup_lruvec(struct mem_cgroup *memcg,
-> > -                                            struct pglist_data *pgdat)
-> > +static inline struct lruvec *mem_cgroup_node_lruvec(struct mem_cgroup *memcg,
-> > +                                                 struct pglist_data *pgdat,
-> > +                                                 int nid)
->
-> This is just wrong interface. Either take nid or pgdat. You do not want
-> both because that just begs for wrong usage.
+On Tue, Oct 27, 2020 at 04:02:52PM +0800, Muchun Song wrote:
+> Consider the following memcg hierarchy.
+> 
+>                     root
+>                    /    \
+>                   A      B
+> 
+> If we get the objcg of memcg A failed, the get_obj_cgroup_from_current
+> can return the wrong objcg for the root memcg.
+> 
+> Fixes: bf4f059954dc ("mm: memcg/slab: obj_cgroup API")
+> Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+> ---
+>  mm/memcontrol.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
 
-If we want to avoid abuse of mem_cgroup_node_lruvec. We can move
-those functions to the memcontrol.c. And add the "static" attribute to the
-mem_cgroup_node_lruvec. Just export mem_cgroup_lruvec and
-mem_cgroup_page_lruvec. Is this OK?
+Hi Muchun,
 
-Thanks.
+thank you for the patchset!
 
-> --
-> Michal Hocko
-> SUSE Labs
+A generic note: it's usually not a good idea to group fixes with non-fixes
+in one patchset if fixes are planned to be backported to stable.
 
--- 
-Yours,
-Muchun
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 1337775b04f3..fcbd79c5023e 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2945,7 +2945,7 @@ struct mem_cgroup *mem_cgroup_from_obj(void *p)
+>  
+>  __always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
+>  {
+> -	struct obj_cgroup *objcg = NULL;
+> +	struct obj_cgroup *objcg;
+>  	struct mem_cgroup *memcg;
+>  
+>  	if (memcg_kmem_bypass())
+> @@ -2964,6 +2964,9 @@ __always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
+>  	}
+>  	rcu_read_unlock();
+>  
+> +	if (memcg == root_mem_cgroup)
+> +		return NULL;
+> +
+>  	return objcg;
+>  }
+
+I agree, it's a bug. Good catch, thanks!
+
+I would prefer a slightly different fix though. Because we're going to change how
+the root memory cgroup is handled (an rfc version posted here:
+https://lkml.org/lkml/2020/10/21/612), it's better to not use a comparison
+with the root_mem_cgroup and handle the obj_cgroup_tryget() return code instead.
+Something like this:
+
+@@ -2973,6 +2973,7 @@ __always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
+ 		objcg = rcu_dereference(memcg->objcg);
+ 		if (objcg && obj_cgroup_tryget(objcg))
+ 			break;
++		objcg = NULL;
+ 	}
+ 	rcu_read_unlock();
+
+Or a more explicit:
+   if (obj_cgroup_tryget(objcg)) {
+     ...
+   } else {
+     ...
+   }
+
+Also, please, add:
+Cc: stable@vger.kernel.org
+
+Thanks!
