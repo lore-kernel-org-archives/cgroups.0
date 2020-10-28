@@ -1,86 +1,98 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+From: Muchun Song <songmuchun@bytedance.com>
 Subject: Re: [External] Re: [PATCH 4/5] mm: memcg/slab: Fix root memcg vmstats
-Date: Wed, 28 Oct 2020 10:56:20 +0800
-Message-ID: <CAMZfGtU1aViokYk1hkHbYEiqW5QNi49UTd-QTrkycLqj6Q+-8g@mail.gmail.com>
+Date: Wed, 28 Oct 2020 11:47:52 +0800
+Message-ID: <CAMZfGtWP9k8kCY0QxRdoLn1MQ8aiP_R_bRqLYiuGdznRdgFk6g@mail.gmail.com>
 References: <20201027080256.76497-1-songmuchun@bytedance.com>
  <20201027080256.76497-5-songmuchun@bytedance.com> <20201027184835.GB827280@carbon.dhcp.thefacebook.com>
+ <CAMZfGtU1aViokYk1hkHbYEiqW5QNi49UTd-QTrkycLqj6Q+-8g@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=haZrmfpmntdtUu2HCrdM+P5anuz4VVrL1riml318t4Y=;
-        b=Wzk2Avtec2wOG385ie+/41UyVjBLOdjL67AfpTMKR1mWo6L8Zr7gbQPfRXt0daWbLj
-         9eIB3qmpCLwzx260I5fxzOXhphezCgWwHOKXei6mqi7QJCLgPp1CjDceRVH/VQ+T04tP
-         Zp86Sl6fFQHrllc1YWvLf5gS7HNMYxqKEt2BklLyD5IESzi12hAxi4Mx5L6ZjoARRl5z
-         sPqXr9IRoISiz3eC5SCMsbpQn7okBqOVhaov6DVO+UGsl3Q+x8qCxRofoIlNWcwpekWD
-         /4ri1aA6jajwfQ1lbm6ANjSbkWqAQC6vPpi5cTlU0sW9mFfnbh9Fj6+s+Gm3xin24haD
-         uMYw==
-In-Reply-To: <20201027184835.GB827280-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+        bh=yam/p71AJ8As7tsiU5BDigXfn1EtsRyjjS0tu9YDXrE=;
+        b=zI0AZyeopougGJaeeJKxiy2HLVVsv26SHyuC9lZGn3mHVPG4adTo3D+aO+j0XR44ci
+         FfTwaVnJRPi9zVvA6hpf1ZaFfoCoURpS9XHlqQg+ZrxnBO+E8rPyP0tqmQnY3nnjeq9r
+         5VGafNNKYn89gOl63qP9XNkAmVpb19eKTiDG3hK4i8x4UAVa72s7TO+CBx0vfglLdF1+
+         APNMSS+vFOYw1EXZr6atQtq2nZsb9X0cMA/NSVed5Q/XK5jmkE6PRoRpodiGA9qxLOTT
+         qkdrX0ZygO5jnlaXcOL8hyXIPHhNTjGGK/dgRNviCW59mfPLSiuYuaCRwSiCT2KtnBYY
+         zj2w==
+In-Reply-To: <CAMZfGtU1aViokYk1hkHbYEiqW5QNi49UTd-QTrkycLqj6Q+-8g@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, areber-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Roman Gushchin <guro@fb.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Shakeel Butt <shakeelb@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, laoar.shao@gmail.com, Chris Down <chris@chrisdown.name>, Christian Brauner <christian.brauner@ubuntu.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Kees Cook <keescook@chromium.org>, Thomas Gleixner <tglx@linutronix.de>, esyr@redhat.com, Suren Baghdasaryan <surenb@google.com>, areber@redhat.com, Marco Elver <elver@google.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux Memory Management List <linux-mm@kvack.org>
 
-On Wed, Oct 28, 2020 at 2:48 AM Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
+On Wed, Oct 28, 2020 at 10:56 AM Muchun Song <songmuchun@bytedance.com> wrote:
 >
-> On Tue, Oct 27, 2020 at 04:02:55PM +0800, Muchun Song wrote:
-> > If we reparent the slab objects to the root memcg, when we free
-> > the slab object, we need to update the per-memcg vmstats to keep
-> > it correct for the root memcg. Now this at least affects the vmstat
-> > of NR_KERNEL_STACK_KB for !CONFIG_VMAP_STACK when the thread stack
-> > size is smaller than the PAGE_SIZE.
+> On Wed, Oct 28, 2020 at 2:48 AM Roman Gushchin <guro@fb.com> wrote:
 > >
-> > Fixes: ec9f02384f60 ("mm: workingset: fix vmstat counters for shadow nodes")
-> > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> > On Tue, Oct 27, 2020 at 04:02:55PM +0800, Muchun Song wrote:
+> > > If we reparent the slab objects to the root memcg, when we free
+> > > the slab object, we need to update the per-memcg vmstats to keep
+> > > it correct for the root memcg. Now this at least affects the vmstat
+> > > of NR_KERNEL_STACK_KB for !CONFIG_VMAP_STACK when the thread stack
+> > > size is smaller than the PAGE_SIZE.
+> > >
+> > > Fixes: ec9f02384f60 ("mm: workingset: fix vmstat counters for shadow nodes")
+> > > Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+> >
+> > Can you, please, drop this patch for now?
+> >
+> > I'm working on a bigger cleanup related to the handling of the root memory
+> > cgroup (I sent a link earlier in this thread), which already does a similar change.
+> > There are several issues like this one, so it will be nice to fix them all at once.
 >
-> Can you, please, drop this patch for now?
->
-> I'm working on a bigger cleanup related to the handling of the root memory
-> cgroup (I sent a link earlier in this thread), which already does a similar change.
-> There are several issues like this one, so it will be nice to fix them all at once.
+> I have read the patch of https://lkml.org/lkml/2020/10/14/869. You
+> mean this patch
+> fixes this issue? It chooses to uncharge the root memcg. But here we may need to
 
-I have read the patch of https://lkml.org/lkml/2020/10/14/869. You
-mean this patch
-fixes this issue? It chooses to uncharge the root memcg. But here we may need to
-uncharge the root memcg to keep root vmstats correct. If we do not do
-this, we can
-see the wrong vmstats via root memory.stat(e.g. NR_KERNEL_STACK_KB).
+Here I mean "It chooses to not uncharge the root memcg", sorry.
 
-Thanks.
-
+> uncharge the root memcg to keep root vmstats correct. If we do not do
+> this, we can
+> see the wrong vmstats via root memory.stat(e.g. NR_KERNEL_STACK_KB).
 >
-> Thank you!
+> Thanks.
 >
-> > ---
-> >  mm/memcontrol.c | 9 +++++++--
-> >  1 file changed, 7 insertions(+), 2 deletions(-)
 > >
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 22b4fb941b54..70345b15b150 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -875,8 +875,13 @@ void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val)
-> >       rcu_read_lock();
-> >       memcg = mem_cgroup_from_obj(p);
+> > Thank you!
 > >
-> > -     /* Untracked pages have no memcg, no lruvec. Update only the node */
-> > -     if (!memcg || memcg == root_mem_cgroup) {
-> > +     /*
-> > +      * Untracked pages have no memcg, no lruvec. Update only the
-> > +      * node. If we reparent the slab objects to the root memcg,
-> > +      * when we free the slab object, we need to update the per-memcg
-> > +      * vmstats to keep it correct for the root memcg.
-> > +      */
-> > +     if (!memcg) {
-> >               __mod_node_page_state(pgdat, idx, val);
-> >       } else {
-> >               lruvec = mem_cgroup_lruvec(memcg, pgdat);
-> > --
-> > 2.20.1
-> >
+> > > ---
+> > >  mm/memcontrol.c | 9 +++++++--
+> > >  1 file changed, 7 insertions(+), 2 deletions(-)
+> > >
+> > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > > index 22b4fb941b54..70345b15b150 100644
+> > > --- a/mm/memcontrol.c
+> > > +++ b/mm/memcontrol.c
+> > > @@ -875,8 +875,13 @@ void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val)
+> > >       rcu_read_lock();
+> > >       memcg = mem_cgroup_from_obj(p);
+> > >
+> > > -     /* Untracked pages have no memcg, no lruvec. Update only the node */
+> > > -     if (!memcg || memcg == root_mem_cgroup) {
+> > > +     /*
+> > > +      * Untracked pages have no memcg, no lruvec. Update only the
+> > > +      * node. If we reparent the slab objects to the root memcg,
+> > > +      * when we free the slab object, we need to update the per-memcg
+> > > +      * vmstats to keep it correct for the root memcg.
+> > > +      */
+> > > +     if (!memcg) {
+> > >               __mod_node_page_state(pgdat, idx, val);
+> > >       } else {
+> > >               lruvec = mem_cgroup_lruvec(memcg, pgdat);
+> > > --
+> > > 2.20.1
+> > >
+>
+>
+>
+> --
+> Yours,
+> Muchun
 
 
 
