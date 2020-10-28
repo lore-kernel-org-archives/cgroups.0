@@ -1,101 +1,168 @@
-From: Muchun Song <songmuchun@bytedance.com>
-Subject: Re: [External] Re: [PATCH 4/5] mm: memcg/slab: Fix root memcg vmstats
-Date: Wed, 28 Oct 2020 11:47:52 +0800
-Message-ID: <CAMZfGtWP9k8kCY0QxRdoLn1MQ8aiP_R_bRqLYiuGdznRdgFk6g@mail.gmail.com>
-References: <20201027080256.76497-1-songmuchun@bytedance.com>
- <20201027080256.76497-5-songmuchun@bytedance.com> <20201027184835.GB827280@carbon.dhcp.thefacebook.com>
- <CAMZfGtU1aViokYk1hkHbYEiqW5QNi49UTd-QTrkycLqj6Q+-8g@mail.gmail.com>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: [PATCH v2] mm: memcg/slab: Rename *_lruvec_slab_state to *_lruvec_kmem_state
+Date: Wed, 28 Oct 2020 11:50:12 +0800
+Message-ID: <20201028035013.99711-3-songmuchun@bytedance.com>
+References: <20201028035013.99711-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=yam/p71AJ8As7tsiU5BDigXfn1EtsRyjjS0tu9YDXrE=;
-        b=zI0AZyeopougGJaeeJKxiy2HLVVsv26SHyuC9lZGn3mHVPG4adTo3D+aO+j0XR44ci
-         FfTwaVnJRPi9zVvA6hpf1ZaFfoCoURpS9XHlqQg+ZrxnBO+E8rPyP0tqmQnY3nnjeq9r
-         5VGafNNKYn89gOl63qP9XNkAmVpb19eKTiDG3hK4i8x4UAVa72s7TO+CBx0vfglLdF1+
-         APNMSS+vFOYw1EXZr6atQtq2nZsb9X0cMA/NSVed5Q/XK5jmkE6PRoRpodiGA9qxLOTT
-         qkdrX0ZygO5jnlaXcOL8hyXIPHhNTjGGK/dgRNviCW59mfPLSiuYuaCRwSiCT2KtnBYY
-         zj2w==
-In-Reply-To: <CAMZfGtU1aViokYk1hkHbYEiqW5QNi49UTd-QTrkycLqj6Q+-8g@mail.gmail.com>
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=l11fDl4Fq8T2pP6ahb6hX5LVHhC/PeAhLkamA9ns5Ro=;
+        b=QqsjQXInft72OQYfP146sQ7qXQee2XfBGLyb+DEaD05o6VsMPBa58ZPQD8Q2dWXcfo
+         rKjTON9Q0FmZSazxEHhEgYu9omkImsZX6NFGJazpjDs/Jv6lpHThith2PtVqtBRGzJ0Q
+         xsPWq5tbDQGNg0rC9VwFjARLGirb6X4ZaT5IiaTnnNG5eUzhrj2yuAHMlRtEt72BciMB
+         uPD5KN3DC8PYpDNz7r6a5fFWpOPeFE13YBbt9aks/263bb5Fffl3tg7ZIuBrZyr4buNj
+         eIiwkAV9032BYShK3hc+ZSp7kUFFO0qES3VpGpF9tLReHGOoW8tUcXk5NHPF9IjXAKvV
+         +eDQ==
+In-Reply-To: <20201028035013.99711-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Shakeel Butt <shakeelb@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, laoar.shao@gmail.com, Chris Down <chris@chrisdown.name>, Christian Brauner <christian.brauner@ubuntu.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@kernel.org>, Kees Cook <keescook@chromium.org>, Thomas Gleixner <tglx@linutronix.de>, esyr@redhat.com, Suren Baghdasaryan <surenb@google.com>, areber@redhat.com, Marco Elver <elver@google.com>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux Memory Management List <linux-mm@kvack.org>
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, areber-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-On Wed, Oct 28, 2020 at 10:56 AM Muchun Song <songmuchun@bytedance.com> wrote:
->
-> On Wed, Oct 28, 2020 at 2:48 AM Roman Gushchin <guro@fb.com> wrote:
-> >
-> > On Tue, Oct 27, 2020 at 04:02:55PM +0800, Muchun Song wrote:
-> > > If we reparent the slab objects to the root memcg, when we free
-> > > the slab object, we need to update the per-memcg vmstats to keep
-> > > it correct for the root memcg. Now this at least affects the vmstat
-> > > of NR_KERNEL_STACK_KB for !CONFIG_VMAP_STACK when the thread stack
-> > > size is smaller than the PAGE_SIZE.
-> > >
-> > > Fixes: ec9f02384f60 ("mm: workingset: fix vmstat counters for shadow nodes")
-> > > Signed-off-by: Muchun Song <songmuchun@bytedance.com>
-> >
-> > Can you, please, drop this patch for now?
-> >
-> > I'm working on a bigger cleanup related to the handling of the root memory
-> > cgroup (I sent a link earlier in this thread), which already does a similar change.
-> > There are several issues like this one, so it will be nice to fix them all at once.
->
-> I have read the patch of https://lkml.org/lkml/2020/10/14/869. You
-> mean this patch
-> fixes this issue? It chooses to uncharge the root memcg. But here we may need to
+The *_lruvec_slab_state is also suitable for pages allocated from buddy,
+not just for the slab objects. But the function name seems to tell us that
+only slab object is applicable. So we can rename the keyword of slab to
+kmem.
 
-Here I mean "It chooses to not uncharge the root memcg", sorry.
+Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+---
+ changelog in v2:
+ 1. Remove VM_BUG_ON suggested by Roman.
 
-> uncharge the root memcg to keep root vmstats correct. If we do not do
-> this, we can
-> see the wrong vmstats via root memory.stat(e.g. NR_KERNEL_STACK_KB).
->
-> Thanks.
->
-> >
-> > Thank you!
-> >
-> > > ---
-> > >  mm/memcontrol.c | 9 +++++++--
-> > >  1 file changed, 7 insertions(+), 2 deletions(-)
-> > >
-> > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > > index 22b4fb941b54..70345b15b150 100644
-> > > --- a/mm/memcontrol.c
-> > > +++ b/mm/memcontrol.c
-> > > @@ -875,8 +875,13 @@ void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val)
-> > >       rcu_read_lock();
-> > >       memcg = mem_cgroup_from_obj(p);
-> > >
-> > > -     /* Untracked pages have no memcg, no lruvec. Update only the node */
-> > > -     if (!memcg || memcg == root_mem_cgroup) {
-> > > +     /*
-> > > +      * Untracked pages have no memcg, no lruvec. Update only the
-> > > +      * node. If we reparent the slab objects to the root memcg,
-> > > +      * when we free the slab object, we need to update the per-memcg
-> > > +      * vmstats to keep it correct for the root memcg.
-> > > +      */
-> > > +     if (!memcg) {
-> > >               __mod_node_page_state(pgdat, idx, val);
-> > >       } else {
-> > >               lruvec = mem_cgroup_lruvec(memcg, pgdat);
-> > > --
-> > > 2.20.1
-> > >
->
->
->
-> --
-> Yours,
-> Muchun
+ include/linux/memcontrol.h | 18 +++++++++---------
+ kernel/fork.c              |  2 +-
+ mm/memcontrol.c            |  2 +-
+ mm/workingset.c            |  8 ++++----
+ 4 files changed, 15 insertions(+), 15 deletions(-)
 
-
-
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index d7e339bf72dc..95807bf6be64 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -793,15 +793,15 @@ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+ 			      int val);
+ void __mod_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+ 			int val);
+-void __mod_lruvec_slab_state(void *p, enum node_stat_item idx, int val);
++void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val);
+ 
+-static inline void mod_lruvec_slab_state(void *p, enum node_stat_item idx,
++static inline void mod_lruvec_kmem_state(void *p, enum node_stat_item idx,
+ 					 int val)
+ {
+ 	unsigned long flags;
+ 
+ 	local_irq_save(flags);
+-	__mod_lruvec_slab_state(p, idx, val);
++	__mod_lruvec_kmem_state(p, idx, val);
+ 	local_irq_restore(flags);
+ }
+ 
+@@ -1227,7 +1227,7 @@ static inline void mod_lruvec_page_state(struct page *page,
+ 	mod_node_page_state(page_pgdat(page), idx, val);
+ }
+ 
+-static inline void __mod_lruvec_slab_state(void *p, enum node_stat_item idx,
++static inline void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx,
+ 					   int val)
+ {
+ 	struct page *page = virt_to_head_page(p);
+@@ -1235,7 +1235,7 @@ static inline void __mod_lruvec_slab_state(void *p, enum node_stat_item idx,
+ 	__mod_node_page_state(page_pgdat(page), idx, val);
+ }
+ 
+-static inline void mod_lruvec_slab_state(void *p, enum node_stat_item idx,
++static inline void mod_lruvec_kmem_state(void *p, enum node_stat_item idx,
+ 					 int val)
+ {
+ 	struct page *page = virt_to_head_page(p);
+@@ -1330,14 +1330,14 @@ static inline void __dec_lruvec_page_state(struct page *page,
+ 	__mod_lruvec_page_state(page, idx, -1);
+ }
+ 
+-static inline void __inc_lruvec_slab_state(void *p, enum node_stat_item idx)
++static inline void __inc_lruvec_kmem_state(void *p, enum node_stat_item idx)
+ {
+-	__mod_lruvec_slab_state(p, idx, 1);
++	__mod_lruvec_kmem_state(p, idx, 1);
+ }
+ 
+-static inline void __dec_lruvec_slab_state(void *p, enum node_stat_item idx)
++static inline void __dec_lruvec_kmem_state(void *p, enum node_stat_item idx)
+ {
+-	__mod_lruvec_slab_state(p, idx, -1);
++	__mod_lruvec_kmem_state(p, idx, -1);
+ }
+ 
+ /* idx can be of type enum memcg_stat_item or node_stat_item */
+diff --git a/kernel/fork.c b/kernel/fork.c
+index 4b328aecabb2..4fb0bbc3b041 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -384,7 +384,7 @@ static void account_kernel_stack(struct task_struct *tsk, int account)
+ 		mod_lruvec_page_state(vm->pages[0], NR_KERNEL_STACK_KB,
+ 				      account * (THREAD_SIZE / 1024));
+ 	else
+-		mod_lruvec_slab_state(stack, NR_KERNEL_STACK_KB,
++		mod_lruvec_kmem_state(stack, NR_KERNEL_STACK_KB,
+ 				      account * (THREAD_SIZE / 1024));
+ }
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d9cdf899c6fc..2dde734df7d1 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -866,7 +866,7 @@ void __mod_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+ 		__mod_memcg_lruvec_state(lruvec, idx, val);
+ }
+ 
+-void __mod_lruvec_slab_state(void *p, enum node_stat_item idx, int val)
++void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val)
+ {
+ 	pg_data_t *pgdat = page_pgdat(virt_to_page(p));
+ 	struct mem_cgroup *memcg;
+diff --git a/mm/workingset.c b/mm/workingset.c
+index 50d53f3699e4..2c707c92dd89 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -445,12 +445,12 @@ void workingset_update_node(struct xa_node *node)
+ 	if (node->count && node->count == node->nr_values) {
+ 		if (list_empty(&node->private_list)) {
+ 			list_lru_add(&shadow_nodes, &node->private_list);
+-			__inc_lruvec_slab_state(node, WORKINGSET_NODES);
++			__inc_lruvec_kmem_state(node, WORKINGSET_NODES);
+ 		}
+ 	} else {
+ 		if (!list_empty(&node->private_list)) {
+ 			list_lru_del(&shadow_nodes, &node->private_list);
+-			__dec_lruvec_slab_state(node, WORKINGSET_NODES);
++			__dec_lruvec_kmem_state(node, WORKINGSET_NODES);
+ 		}
+ 	}
+ }
+@@ -541,7 +541,7 @@ static enum lru_status shadow_lru_isolate(struct list_head *item,
+ 	}
+ 
+ 	list_lru_isolate(lru, item);
+-	__dec_lruvec_slab_state(node, WORKINGSET_NODES);
++	__dec_lruvec_kmem_state(node, WORKINGSET_NODES);
+ 
+ 	spin_unlock(lru_lock);
+ 
+@@ -564,7 +564,7 @@ static enum lru_status shadow_lru_isolate(struct list_head *item,
+ 	 * shadow entries we were tracking ...
+ 	 */
+ 	xas_store(&xas, NULL);
+-	__inc_lruvec_slab_state(node, WORKINGSET_NODERECLAIM);
++	__inc_lruvec_kmem_state(node, WORKINGSET_NODERECLAIM);
+ 
+ out_invalid:
+ 	xa_unlock_irq(&mapping->i_pages);
 -- 
-Yours,
-Muchun
+2.20.1
+
