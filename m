@@ -1,56 +1,89 @@
-From: Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH v2] mm: memcg/slab: Fix return child memcg objcg for root memcg
-Date: Wed, 28 Oct 2020 11:50:10 +0800
-Message-ID: <20201028035013.99711-1-songmuchun@bytedance.com>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [External] Re: [PATCH 4/5] mm: memcg/slab: Fix root memcg vmstats
+Date: Wed, 28 Oct 2020 10:56:20 +0800
+Message-ID: <CAMZfGtU1aViokYk1hkHbYEiqW5QNi49UTd-QTrkycLqj6Q+-8g@mail.gmail.com>
+References: <20201027080256.76497-1-songmuchun@bytedance.com>
+ <20201027080256.76497-5-songmuchun@bytedance.com> <20201027184835.GB827280@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=gP9leRSqd8Nt5uw/ZcHLxalg6StnlmANhYwqDz5BamY=;
-        b=GnFZV28/BNLRDucvzLESFv3OK7W6Iffx80nxt4gJX1KhQieE7APUfRH855/sp8RpMp
-         cgkPejLvI+G6njV9mAmeo8VpZR4SfRadMjAssX2yRNc0iM3vyKnAhArixSQD58RO3L72
-         Z0dOyUvEwxRX46FND2HUmFnhDDWdGNDCh5D+vNMyuk0wOXQ0ey1QMESV6UzxiDxR0yMU
-         I/NSyZH3V7OUkd/ZNH6L5ToixcPb8J95qJPY7X1JOPEGvzroGJRZk1n/vBLocJO8sU4I
-         fcnSEqdRLC/8x96lYmo1J1CBnTvGU14rV/VVdMwwMHdnccSu1XPj2SlK3p3yIP7wc1RY
-         4KLQ==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=haZrmfpmntdtUu2HCrdM+P5anuz4VVrL1riml318t4Y=;
+        b=Wzk2Avtec2wOG385ie+/41UyVjBLOdjL67AfpTMKR1mWo6L8Zr7gbQPfRXt0daWbLj
+         9eIB3qmpCLwzx260I5fxzOXhphezCgWwHOKXei6mqi7QJCLgPp1CjDceRVH/VQ+T04tP
+         Zp86Sl6fFQHrllc1YWvLf5gS7HNMYxqKEt2BklLyD5IESzi12hAxi4Mx5L6ZjoARRl5z
+         sPqXr9IRoISiz3eC5SCMsbpQn7okBqOVhaov6DVO+UGsl3Q+x8qCxRofoIlNWcwpekWD
+         /4ri1aA6jajwfQ1lbm6ANjSbkWqAQC6vPpi5cTlU0sW9mFfnbh9Fj6+s+Gm3xin24haD
+         uMYw==
+In-Reply-To: <20201027184835.GB827280-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, shakeelb@google.com, guro@fb.com, iamjoonsoo.kim@lge.com, laoar.shao@gmail.com, chris@chrisdown.name, christian.brauner@ubuntu.com, peterz@infradead.org, mingo@kernel.org, keescook@chromium.org, tglx@linutronix.de, esyr@redhat.com, surenb@google.com, areber@redhat.com, elver@google.com
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Muchun Song <songmuchun@bytedance.com>
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, areber-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-Consider the following memcg hierarchy.
+On Wed, Oct 28, 2020 at 2:48 AM Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
+>
+> On Tue, Oct 27, 2020 at 04:02:55PM +0800, Muchun Song wrote:
+> > If we reparent the slab objects to the root memcg, when we free
+> > the slab object, we need to update the per-memcg vmstats to keep
+> > it correct for the root memcg. Now this at least affects the vmstat
+> > of NR_KERNEL_STACK_KB for !CONFIG_VMAP_STACK when the thread stack
+> > size is smaller than the PAGE_SIZE.
+> >
+> > Fixes: ec9f02384f60 ("mm: workingset: fix vmstat counters for shadow nodes")
+> > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+>
+> Can you, please, drop this patch for now?
+>
+> I'm working on a bigger cleanup related to the handling of the root memory
+> cgroup (I sent a link earlier in this thread), which already does a similar change.
+> There are several issues like this one, so it will be nice to fix them all at once.
 
-                    root
-                   /    \
-                  A      B
+I have read the patch of https://lkml.org/lkml/2020/10/14/869. You
+mean this patch
+fixes this issue? It chooses to uncharge the root memcg. But here we may need to
+uncharge the root memcg to keep root vmstats correct. If we do not do
+this, we can
+see the wrong vmstats via root memory.stat(e.g. NR_KERNEL_STACK_KB).
 
-If we get the objcg of memcg A failed, the get_obj_cgroup_from_current
-can return the wrong objcg for the root memcg.
+Thanks.
 
-Fixes: bf4f059954dc ("mm: memcg/slab: obj_cgroup API")
-Signed-off-by: Muchun Song <songmuchun@bytedance.com>
----
- changelog in v2:
- 1. Do not use a comparison with the root_mem_cgroup
+>
+> Thank you!
+>
+> > ---
+> >  mm/memcontrol.c | 9 +++++++--
+> >  1 file changed, 7 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 22b4fb941b54..70345b15b150 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -875,8 +875,13 @@ void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val)
+> >       rcu_read_lock();
+> >       memcg = mem_cgroup_from_obj(p);
+> >
+> > -     /* Untracked pages have no memcg, no lruvec. Update only the node */
+> > -     if (!memcg || memcg == root_mem_cgroup) {
+> > +     /*
+> > +      * Untracked pages have no memcg, no lruvec. Update only the
+> > +      * node. If we reparent the slab objects to the root memcg,
+> > +      * when we free the slab object, we need to update the per-memcg
+> > +      * vmstats to keep it correct for the root memcg.
+> > +      */
+> > +     if (!memcg) {
+> >               __mod_node_page_state(pgdat, idx, val);
+> >       } else {
+> >               lruvec = mem_cgroup_lruvec(memcg, pgdat);
+> > --
+> > 2.20.1
+> >
 
- mm/memcontrol.c | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 1337775b04f3..8c8b4c3ed5a0 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2961,6 +2961,7 @@ __always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
- 		objcg = rcu_dereference(memcg->objcg);
- 		if (objcg && obj_cgroup_tryget(objcg))
- 			break;
-+		objcg = NULL;
- 	}
- 	rcu_read_unlock();
- 
+
 -- 
-2.20.1
-
+Yours,
+Muchun
