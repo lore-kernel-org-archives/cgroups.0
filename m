@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v20 11/20] mm/lru: move lock into lru_note_cost
-Date: Thu, 29 Oct 2020 18:44:56 +0800
-Message-ID: <1603968305-8026-12-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v20 08/20] mm: page_idle_get_page() does not need lru_lock
+Date: Thu, 29 Oct 2020 18:44:53 +0800
+Message-ID: <1603968305-8026-9-git-send-email-alex.shi@linux.alibaba.com>
 References: <1603968305-8026-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1603968305-8026-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -10,85 +10,59 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
+Cc: Vlastimil Babka <vbabka@suse.cz>, Minchan Kim <minchan@kernel.org>
 
-We have to move lru_lock into lru_note_cost, since it cycle up on memcg
-tree, for future per lruvec lru_lock replace. It's a bit ugly and may
-cost a bit more locking, but benefit from multiple memcg locking could
-cover the lost.
+From: Hugh Dickins <hughd@google.com>
 
+It is necessary for page_idle_get_page() to recheck PageLRU() after
+get_page_unless_zero(), but holding lru_lock around that serves no
+useful purpose, and adds to lru_lock contention: delete it.
+
+See https://lore.kernel.org/lkml/20150504031722.GA2768@blaptop for the
+discussion that led to lru_lock there; but __page_set_anon_rmap() now
+uses WRITE_ONCE(), and I see no other risk in page_idle_clear_pte_refs()
+using rmap_walk() (beyond the risk of racing PageAnon->PageKsm, mostly
+but not entirely prevented by page_count() check in ksm.c's
+write_protect_page(): that risk being shared with page_referenced() and
+not helped by lru_lock).
+
+Signed-off-by: Hugh Dickins <hughd@google.com>
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Acked-by: Hugh Dickins <hughd@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: Vlastimil Babka <vbabka@suse.cz>
+Cc: Minchan Kim <minchan@kernel.org>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>
 Cc: linux-mm@kvack.org
 Cc: linux-kernel@vger.kernel.org
 ---
- mm/swap.c       | 3 +++
- mm/vmscan.c     | 4 +---
- mm/workingset.c | 2 --
- 3 files changed, 4 insertions(+), 5 deletions(-)
+ mm/page_idle.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/mm/swap.c b/mm/swap.c
-index 31fc3ebc1079..8798bd899db0 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -268,7 +268,9 @@ void lru_note_cost(struct lruvec *lruvec, bool file, unsigned int nr_pages)
+diff --git a/mm/page_idle.c b/mm/page_idle.c
+index 057c61df12db..64e5344a992c 100644
+--- a/mm/page_idle.c
++++ b/mm/page_idle.c
+@@ -32,19 +32,15 @@
+ static struct page *page_idle_get_page(unsigned long pfn)
  {
- 	do {
- 		unsigned long lrusize;
-+		struct pglist_data *pgdat = lruvec_pgdat(lruvec);
+ 	struct page *page = pfn_to_online_page(pfn);
+-	pg_data_t *pgdat;
  
-+		spin_lock_irq(&pgdat->lru_lock);
- 		/* Record cost event */
- 		if (file)
- 			lruvec->file_cost += nr_pages;
-@@ -292,6 +294,7 @@ void lru_note_cost(struct lruvec *lruvec, bool file, unsigned int nr_pages)
- 			lruvec->file_cost /= 2;
- 			lruvec->anon_cost /= 2;
- 		}
-+		spin_unlock_irq(&pgdat->lru_lock);
- 	} while ((lruvec = parent_lruvec(lruvec)));
+ 	if (!page || !PageLRU(page) ||
+ 	    !get_page_unless_zero(page))
+ 		return NULL;
+ 
+-	pgdat = page_pgdat(page);
+-	spin_lock_irq(&pgdat->lru_lock);
+ 	if (unlikely(!PageLRU(page))) {
+ 		put_page(page);
+ 		page = NULL;
+ 	}
+-	spin_unlock_irq(&pgdat->lru_lock);
+ 	return page;
  }
  
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 6c6965cbbdef..42bac12aacb4 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -1973,19 +1973,17 @@ static int current_may_throttle(void)
- 				&stat, false);
- 
- 	spin_lock_irq(&pgdat->lru_lock);
--
- 	move_pages_to_lru(lruvec, &page_list);
- 
- 	__mod_node_page_state(pgdat, NR_ISOLATED_ANON + file, -nr_taken);
--	lru_note_cost(lruvec, file, stat.nr_pageout);
- 	item = current_is_kswapd() ? PGSTEAL_KSWAPD : PGSTEAL_DIRECT;
- 	if (!cgroup_reclaim(sc))
- 		__count_vm_events(item, nr_reclaimed);
- 	__count_memcg_events(lruvec_memcg(lruvec), item, nr_reclaimed);
- 	__count_vm_events(PGSTEAL_ANON + file, nr_reclaimed);
--
- 	spin_unlock_irq(&pgdat->lru_lock);
- 
-+	lru_note_cost(lruvec, file, stat.nr_pageout);
- 	mem_cgroup_uncharge_list(&page_list);
- 	free_unref_page_list(&page_list);
- 
-diff --git a/mm/workingset.c b/mm/workingset.c
-index 975a4d2dd02e..d8d2fdf70c24 100644
---- a/mm/workingset.c
-+++ b/mm/workingset.c
-@@ -381,9 +381,7 @@ void workingset_refault(struct page *page, void *shadow)
- 	if (workingset) {
- 		SetPageWorkingset(page);
- 		/* XXX: Move to lru_cache_add() when it supports new vs putback */
--		spin_lock_irq(&page_pgdat(page)->lru_lock);
- 		lru_note_cost_page(page);
--		spin_unlock_irq(&page_pgdat(page)->lru_lock);
- 		inc_lruvec_state(lruvec, WORKINGSET_RESTORE_BASE + file);
- 	}
- out:
 -- 
 1.8.3.1
 
