@@ -1,39 +1,91 @@
 From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v20 01/20] mm/memcg: warning on !memcg after readahead
- page charged
-Date: Thu, 29 Oct 2020 09:43:46 -0400
-Message-ID: <20201029134346.GB599825@cmpxchg.org>
+Subject: Re: [PATCH v20 02/20] mm/memcg: bail early from swap accounting if
+ memcg disabled
+Date: Thu, 29 Oct 2020 09:46:48 -0400
+Message-ID: <20201029134648.GC599825@cmpxchg.org>
 References: <1603968305-8026-1-git-send-email-alex.shi@linux.alibaba.com>
- <1603968305-8026-2-git-send-email-alex.shi@linux.alibaba.com>
+ <1603968305-8026-3-git-send-email-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=lMVsDoZ2rvYhRouYTnsQqKObuVh6EX/L2Iet4zmcg+0=;
-        b=BqZ2R2ieXOiIyfj4R06JqpmwkZDKmSom+oB6s4vJ3gT+gZ0OND8K/gSscTX2Ax4YSL
-         th+NpS/aAW9WU9gUbnUk6J2t8Tp6ot3gvUb+/Wqxbmh9oVvb4neSwLThNjXM4j2yFQUg
-         Zt/qaKVHiCUkE6S2dy0ZLkpZ7hAoJZTPQ9hb2rwV67DMknJ8A1iSh8jHBADKov09dNWG
-         wUL46gT3QRe9y0P/5t0OhMkwqxX8F/m+Py4topxcn5Ws8DywxAPZ/2FzlE6cx4EpvU/8
-         XPEiPhhjlKLee4syFyTA3ZhySwdIZlKRhkhJCAVIDBlBVvgErA68e84xR75aHFHvDqiv
-         lo/Q==
+        bh=WFNPqdB5jHGGBEHL+rnu060Po3aIZBWj8JJqtrtzCqw=;
+        b=DAcGYyY3yy6bEPMCse/zv8kYq0osDw9DEhzder1u5hu4vWU6KLbnIpt/PRWESkZo2b
+         J53ORNNFdkGX7/8iboWcYF+sWf+cx255cx/fSP05y2zVy63YnWv2hSA1/jHEoQCOBoNE
+         QPKu1NYlvinjvr52+/gNpsOwzw/VH1Txhk0S3o5aKBw3hPuciPXVbCgTO8J+22/VuE4P
+         45LTOf0gwaqBCEE5evevAj1luJrtrVTgcUQwNJet5JiLSgb4zzAn2ZLdzn1XThBT/hGe
+         jGKtSMh7Vkti3ff/+Is/kSnttkfyO6KKAjhf2Vg+TGWfCSbHPn3eEq/p1FkcJuqk2HIL
+         QGJw==
 Content-Disposition: inline
-In-Reply-To: <1603968305-8026-2-git-send-email-alex.shi@linux.alibaba.com>
+In-Reply-To: <1603968305-8026-3-git-send-email-alex.shi@linux.alibaba.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Alex Shi <alex.shi@linux.alibaba.com>
 Cc: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com, Michal Hocko <mhocko@kernel.org>
 
-On Thu, Oct 29, 2020 at 06:44:46PM +0800, Alex Shi wrote:
-> Add VM_WARN_ON_ONCE_PAGE() macro.
+On Thu, Oct 29, 2020 at 06:44:47PM +0800, Alex Shi wrote:
+> If we disabled memcg by cgroup_disable=memory, page->memcg will be NULL
+> and so the charge is skipped and that will trigger a warning like below.
+> Let's return from the funcs earlier.
 > 
-> Since readahead page is charged on memcg too, in theory we don't have to
-> check this exception now. Before safely remove them all, add a warning
-> for the unexpected !memcg.
+>  anon flags:0x5005b48008000d(locked|uptodate|dirty|swapbacked)
+>  raw: 005005b48008000d dead000000000100 dead000000000122 ffff8897c7c76ad1
+>  raw: 0000000000000022 0000000000000000 0000000200000000 0000000000000000
+>  page dumped because: VM_WARN_ON_ONCE_PAGE(!memcg)
+> ...
+>  RIP: 0010:vprintk_emit+0x1f7/0x260
+>  Code: 00 84 d2 74 72 0f b6 15 27 58 64 01 48 c7 c0 00 d4 72 82 84 d2 74 09 f3 90 0f b6 10 84 d2 75 f7 e8 de 0d 00 00 4c 89 e7 57 9d <0f> 1f 44 00 00 e9 62 ff ff ff 80 3d 88 c9 3a 01 00 0f 85 54 fe ff
+>  RSP: 0018:ffffc9000faab358 EFLAGS: 00000202
+>  RAX: ffffffff8272d400 RBX: 000000000000005e RCX: ffff88afd80d0040
+>  RDX: 0000000000000000 RSI: 0000000000000002 RDI: 0000000000000202
+>  RBP: ffffc9000faab3a8 R08: ffffffff8272d440 R09: 0000000000022480
+>  R10: 00120c77be68bfac R11: 0000000000cd7568 R12: 0000000000000202
+>  R13: 0057ffffc0080005 R14: ffffffff820a0130 R15: ffffc9000faab3e8
+>  ? vprintk_emit+0x140/0x260
+>  vprintk_default+0x1a/0x20
+>  vprintk_func+0x4f/0xc4
+>  ? vprintk_func+0x4f/0xc4
+>  printk+0x53/0x6a
+>  ? xas_load+0xc/0x80
+>  __dump_page.cold.6+0xff/0x4ee
+>  ? xas_init_marks+0x23/0x50
+>  ? xas_store+0x30/0x40
+>  ? free_swap_slot+0x43/0xd0
+>  ? put_swap_page+0x119/0x320
+>  ? update_load_avg+0x82/0x580
+>  dump_page+0x9/0xb
+>  mem_cgroup_try_charge_swap+0x16e/0x1d0
+>  get_swap_page+0x130/0x210
+>  add_to_swap+0x41/0xc0
+>  shrink_page_list+0x99e/0xdf0
+>  shrink_inactive_list+0x199/0x360
+>  shrink_lruvec+0x40d/0x650
+>  ? _cond_resched+0x14/0x30
+>  ? _cond_resched+0x14/0x30
+>  shrink_node+0x226/0x6e0
+>  do_try_to_free_pages+0xd0/0x400
+>  try_to_free_pages+0xef/0x130
+>  __alloc_pages_slowpath.constprop.127+0x38d/0xbd0
+>  ? ___slab_alloc+0x31d/0x6f0
+>  __alloc_pages_nodemask+0x27f/0x2c0
+>  alloc_pages_vma+0x75/0x220
+>  shmem_alloc_page+0x46/0x90
+>  ? release_pages+0x1ae/0x410
+>  shmem_alloc_and_acct_page+0x77/0x1c0
+>  shmem_getpage_gfp+0x162/0x910
+>  shmem_fault+0x74/0x210
+>  ? filemap_map_pages+0x29c/0x410
+>  __do_fault+0x37/0x190
+>  handle_mm_fault+0x120a/0x1770
+>  exc_page_fault+0x251/0x450
+>  ? asm_exc_page_fault+0x8/0x30
+>  asm_exc_page_fault+0x1e/0x30
 > 
 > Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+> Reviewed-by: Roman Gushchin <guro@fb.com>
 > Acked-by: Michal Hocko <mhocko@suse.com>
 > Acked-by: Hugh Dickins <hughd@google.com>
 > Cc: Johannes Weiner <hannes@cmpxchg.org>
@@ -45,3 +97,5 @@ On Thu, Oct 29, 2020 at 06:44:46PM +0800, Alex Shi wrote:
 > Cc: linux-kernel@vger.kernel.org
 
 Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+
+This should go in before the previous patch that adds the WARN for it.
