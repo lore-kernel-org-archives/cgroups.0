@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v20 08/20] mm: page_idle_get_page() does not need lru_lock
-Date: Thu, 29 Oct 2020 18:44:53 +0800
-Message-ID: <1603968305-8026-9-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v20 06/20] mm/thp: narrow lru locking
+Date: Thu, 29 Oct 2020 18:44:51 +0800
+Message-ID: <1603968305-8026-7-git-send-email-alex.shi@linux.alibaba.com>
 References: <1603968305-8026-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1603968305-8026-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -10,59 +10,142 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
-Cc: Vlastimil Babka <vbabka@suse.cz>, Minchan Kim <minchan@kernel.org>
+Cc: Andrea Arcangeli <aarcange@redhat.com>
 
-From: Hugh Dickins <hughd@google.com>
+lru_lock and page cache xa_lock have no obvious reason to be taken
+one way round or the other: until now, lru_lock has been taken before
+page cache xa_lock, when splitting a THP; but nothing else takes them
+together.  Reverse that ordering: let's narrow the lru locking - but
+leave local_irq_disable to block interrupts throughout, like before.
 
-It is necessary for page_idle_get_page() to recheck PageLRU() after
-get_page_unless_zero(), but holding lru_lock around that serves no
-useful purpose, and adds to lru_lock contention: delete it.
+Hugh Dickins point: split_huge_page_to_list() was already silly, to be
+using the _irqsave variant: it's just been taking sleeping locks, so
+would already be broken if entered with interrupts enabled.  So we
+can save passing flags argument down to __split_huge_page().
 
-See https://lore.kernel.org/lkml/20150504031722.GA2768@blaptop for the
-discussion that led to lru_lock there; but __page_set_anon_rmap() now
-uses WRITE_ONCE(), and I see no other risk in page_idle_clear_pte_refs()
-using rmap_walk() (beyond the risk of racing PageAnon->PageKsm, mostly
-but not entirely prevented by page_count() check in ksm.c's
-write_protect_page(): that risk being shared with page_referenced() and
-not helped by lru_lock).
+Why change the lock ordering here? That was hard to decide. One reason:
+when this series reaches per-memcg lru locking, it relies on the THP's
+memcg to be stable when taking the lru_lock: that is now done after the
+THP's refcount has been frozen, which ensures page memcg cannot change.
 
-Signed-off-by: Hugh Dickins <hughd@google.com>
+Another reason: previously, lock_page_memcg()'s move_lock was presumed
+to nest inside lru_lock; but now lru_lock must nest inside (page cache
+lock inside) move_lock, so it becomes possible to use lock_page_memcg()
+to stabilize page memcg before taking its lru_lock.  That is not the
+mechanism used in this series, but it is an option we want to keep open.
+
+[Hugh Dickins: rewrite commit log]
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Reviewed-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Acked-by: Hugh Dickins <hughd@google.com>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Kirill A. Shutemov <kirill@shutemov.name>
+Cc: Andrea Arcangeli <aarcange@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Matthew Wilcox <willy@infradead.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Cc: Minchan Kim <minchan@kernel.org>
-Cc: Alex Shi <alex.shi@linux.alibaba.com>
 Cc: linux-mm@kvack.org
 Cc: linux-kernel@vger.kernel.org
 ---
- mm/page_idle.c | 4 ----
- 1 file changed, 4 deletions(-)
+ mm/huge_memory.c | 25 +++++++++++++------------
+ 1 file changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/mm/page_idle.c b/mm/page_idle.c
-index 057c61df12db..64e5344a992c 100644
---- a/mm/page_idle.c
-+++ b/mm/page_idle.c
-@@ -32,19 +32,15 @@
- static struct page *page_idle_get_page(unsigned long pfn)
- {
- 	struct page *page = pfn_to_online_page(pfn);
--	pg_data_t *pgdat;
- 
- 	if (!page || !PageLRU(page) ||
- 	    !get_page_unless_zero(page))
- 		return NULL;
- 
--	pgdat = page_pgdat(page);
--	spin_lock_irq(&pgdat->lru_lock);
- 	if (unlikely(!PageLRU(page))) {
- 		put_page(page);
- 		page = NULL;
- 	}
--	spin_unlock_irq(&pgdat->lru_lock);
- 	return page;
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 4b72dd7b8b34..5fa890e26975 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2433,7 +2433,7 @@ static void __split_huge_page_tail(struct page *head, int tail,
  }
  
+ static void __split_huge_page(struct page *page, struct list_head *list,
+-		pgoff_t end, unsigned long flags)
++		pgoff_t end)
+ {
+ 	struct page *head = compound_head(page);
+ 	pg_data_t *pgdat = page_pgdat(head);
+@@ -2443,8 +2443,6 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 	unsigned int nr = thp_nr_pages(head);
+ 	int i;
+ 
+-	lruvec = mem_cgroup_page_lruvec(head, pgdat);
+-
+ 	/* complete memcg works before add pages to LRU */
+ 	mem_cgroup_split_huge_fixup(head);
+ 
+@@ -2456,6 +2454,11 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 		xa_lock(&swap_cache->i_pages);
+ 	}
+ 
++	/* prevent PageLRU to go away from under us, and freeze lru stats */
++	spin_lock(&pgdat->lru_lock);
++
++	lruvec = mem_cgroup_page_lruvec(head, pgdat);
++
+ 	for (i = nr - 1; i >= 1; i--) {
+ 		__split_huge_page_tail(head, i, lruvec, list);
+ 		/* Some pages can be beyond i_size: drop them from page cache */
+@@ -2475,6 +2478,8 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 	}
+ 
+ 	ClearPageCompound(head);
++	spin_unlock(&pgdat->lru_lock);
++	/* Caller disabled irqs, so they are still disabled here */
+ 
+ 	split_page_owner(head, nr);
+ 
+@@ -2492,8 +2497,7 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 		page_ref_add(head, 2);
+ 		xa_unlock(&head->mapping->i_pages);
+ 	}
+-
+-	spin_unlock_irqrestore(&pgdat->lru_lock, flags);
++	local_irq_enable();
+ 
+ 	remap_page(head, nr);
+ 
+@@ -2639,12 +2643,10 @@ bool can_split_huge_page(struct page *page, int *pextra_pins)
+ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ {
+ 	struct page *head = compound_head(page);
+-	struct pglist_data *pgdata = NODE_DATA(page_to_nid(head));
+ 	struct deferred_split *ds_queue = get_deferred_split_queue(head);
+ 	struct anon_vma *anon_vma = NULL;
+ 	struct address_space *mapping = NULL;
+ 	int count, mapcount, extra_pins, ret;
+-	unsigned long flags;
+ 	pgoff_t end;
+ 
+ 	VM_BUG_ON_PAGE(is_huge_zero_page(head), head);
+@@ -2705,9 +2707,8 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 	unmap_page(head);
+ 	VM_BUG_ON_PAGE(compound_mapcount(head), head);
+ 
+-	/* prevent PageLRU to go away from under us, and freeze lru stats */
+-	spin_lock_irqsave(&pgdata->lru_lock, flags);
+-
++	/* block interrupt reentry in xa_lock and spinlock */
++	local_irq_disable();
+ 	if (mapping) {
+ 		XA_STATE(xas, &mapping->i_pages, page_index(head));
+ 
+@@ -2737,7 +2738,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 				__dec_node_page_state(head, NR_FILE_THPS);
+ 		}
+ 
+-		__split_huge_page(page, list, end, flags);
++		__split_huge_page(page, list, end);
+ 		ret = 0;
+ 	} else {
+ 		if (IS_ENABLED(CONFIG_DEBUG_VM) && mapcount) {
+@@ -2751,7 +2752,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 		spin_unlock(&ds_queue->split_queue_lock);
+ fail:		if (mapping)
+ 			xa_unlock(&mapping->i_pages);
+-		spin_unlock_irqrestore(&pgdata->lru_lock, flags);
++		local_irq_enable();
+ 		remap_page(head, thp_nr_pages(head));
+ 		ret = -EBUSY;
+ 	}
 -- 
 1.8.3.1
 
