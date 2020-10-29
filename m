@@ -1,22 +1,22 @@
 From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] mm: memcg/slab: Fix use after free in obj_cgroup_charge
-Date: Thu, 29 Oct 2020 08:52:03 -0700
-Message-ID: <CALvZod6uh7hV+_0FTpJehQtvw-f_UmYXNbiiu_YM_Egq4w-TUw@mail.gmail.com>
-References: <20201028035013.99711-1-songmuchun@bytedance.com> <20201028035013.99711-2-songmuchun@bytedance.com>
+Subject: Re: [PATCH v2] mm: memcg/slab: Rename *_lruvec_slab_state to *_lruvec_kmem_state
+Date: Thu, 29 Oct 2020 08:52:54 -0700
+Message-ID: <CALvZod5PcvSOszj7L-qbh_mOmKRwsrH+4Er_vQAiRqRf9GhcnA@mail.gmail.com>
+References: <20201028035013.99711-1-songmuchun@bytedance.com> <20201028035013.99711-3-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=gKj2b5AWCjhkAnY/6wcR30bVFmlXN2BZgELxg/l/4Qc=;
-        b=ughZoPhz2Dl8WA8zbaZkOQUKXOfM6TdfudncnPkaH2w2VErcLZjrLnKsTYj9mJlE/U
-         QyScXP5T9cnoE2IK6W+7gVNn+ZvWHcM22Y9ZUEwMyjzAfcNCZFNjFf9oXkbajJ8nqXJu
-         bEyM3S50OwxEjqUUeuuznmQ1bCZuQpI1VW1kLSjYLsGB2o6JB1JVzY+BTtt2yaZMjXn3
-         YeZGcpo0qJzULk/nv1dnq5K8II6rmbN/8Xd0AJUP3d5A1Tf6EnQCpMo89CtdLZaPhvIx
-         4fESoUlvLp+JGBeT4hJZyH0SRxSf01ifp27P8Efe/SZDUwGaK+/Dos8pOuvl1MJ2KpFH
-         bVew==
-In-Reply-To: <20201028035013.99711-2-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+        bh=MUp5qMqJOVbZKYoMqJH3XNqp7xnfXB9wzQttcgJOSd8=;
+        b=cbK+yBgzyQXmtq+AD9wEnzaVNXe3mfmDrMTEqViTBtdbqHEURNS9luA0TyLL4nib30
+         3Boxh9kOZuUY6VQJFAygdY2G/XhItlHRWqpCzGXy0TGt+a6ZGpmx0H5vJyv1/oxNH5Lx
+         i/xJv2TVagtyrnp857y3WB+q1jPwQbfDjDVUHXiJlBCpCalLGRWzFFGhmXzUUxQ1HOz1
+         PT5Jy/Z6QCT1J2noMaD3WXT+b9QyC3cSxQCoFRfderFo1vjlHqQKFlQZkosRXhQiHzC2
+         qzuInwS3JX8FWL4UhHPNiE9oPFFNBjTTBGffzvpUFhyhtsXoDQ3oxDrAUgIf2njzqj5P
+         Gp8g==
+In-Reply-To: <20201028035013.99711-3-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -25,17 +25,11 @@ Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hoc
 
 On Tue, Oct 27, 2020 at 8:51 PM Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
 >
-> The rcu_read_lock/unlock only can guarantee that the memcg will
-> not be freed, but it cannot guarantee the success of css_get to
-> memcg.
+> The *_lruvec_slab_state is also suitable for pages allocated from buddy,
+> not just for the slab objects. But the function name seems to tell us that
+> only slab object is applicable. So we can rename the keyword of slab to
+> kmem.
 >
-> If the whole process of a cgroup offlining is completed between
-> reading a objcg->memcg pointer and bumping the css reference on
-> another CPU, and there are exactly 0 external references to this
-> memory cgroup (how we get to the obj_cgroup_charge() then?),
-> css_get() can change the ref counter from 0 back to 1.
->
-> Fixes: bf4f059954dc ("mm: memcg/slab: obj_cgroup API")
 > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 > Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
