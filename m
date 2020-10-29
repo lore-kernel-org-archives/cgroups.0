@@ -1,137 +1,69 @@
-From: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cpuset: fix race between hotplug work and later CPU offline
-Date: Thu, 29 Oct 2020 14:18:45 -0400
-Message-ID: <20201029181845.415517-1-daniel.m.jordan@oracle.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2] mm: memcg/slab: Fix return child memcg objcg for root memcg
+Date: Thu, 29 Oct 2020 13:34:57 -0700
+Message-ID: <CALvZod65MhzQiwGgLM89_gZzCFDaeSZofn08viPgcvra0JRvSg@mail.gmail.com>
+References: <20201028035013.99711-1-songmuchun@bytedance.com>
+ <CALvZod6p_y2fTEK5fzAL=JfPsguqYbttgWC4_GPc=rF1PsN6TQ@mail.gmail.com> <20201029170955.GI827280@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-transfer-encoding;
- s=corp-2020-01-29; bh=iNGPvF8/9u1VENKAf/0lRqv0Owyx1NTKc6e+z/kqLZA=;
- b=FtG7u9GqPU2aakXwrqs8SJex4rCTkubxZN4XBElCVj0iDfgxsIpuX28WNYosE5sBYI03
- F5te5oA65g5Y3+Fgm9x/JxjgxIvp+k5eE+vHF66RkQhSk6d5cMiBex+4ndrDng1rXz9y
- pwoUiQdHEFMk+QdAgBvoD0f8tvTTNcKWuE39TBcKsTkctglpMw3GBxebwtN+b307TsfC
- 9VWICPuoeZ4JVTk0ympcDbJ9WbCvyCPnMqReVVdHRCb2jlSonbog4aROtxZwiDLs8HWm
- +9VqwvDO7O6gaE7w9UZuAKk7pWtAHOXpDy8nK2ZpTLltn4ZEw5pXe+mFCM4EE7moGrwS Og== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=XV2GOJYljlEE+y8Fc2upH2so5LQLqqQFfNl/qA4qXms=;
+        b=ZDafbgdWjCYVWb2fYN22STVuj4OuN68Nk3oJX2aD4PBwf6emSzHP79/hypkJKAypWU
+         39EfEDu9Bc9wTVDFhx+C0to6aZ56jTsTIq3joLV1KilN3iGKc94/TwETmzHNovo7OqpV
+         v5V29xRb3fdut5xJdax8hQGV57s2384VMJeksTLBSUezvvBM+nnTkXacAma1QueQ5zJL
+         VKXkL0TEgTsihNQXg9cOyUB4E1xY2yQY4VdiFnvcMcC08TaWFxXjZEJ2tX/xlZdAT+2J
+         jxoi5Z6RM6TWwOJH3cRUf3YnNkuDLX8v5F+kDq8HSmRip2hmjbQX5s4eu0sywa/qjihw
+         5egw==
+In-Reply-To: <20201029170955.GI827280-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, "Peter Zijlstra (Intel)" <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, areber-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-One of our machines keeled over trying to rebuild the scheduler domains.
-Mainline produces the same splat:
+On Thu, Oct 29, 2020 at 10:10 AM Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
+>
+> On Thu, Oct 29, 2020 at 08:48:45AM -0700, Shakeel Butt wrote:
+> > On Tue, Oct 27, 2020 at 8:50 PM Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
+> > >
+> > > Consider the following memcg hierarchy.
+> > >
+> > >                     root
+> > >                    /    \
+> > >                   A      B
+> > >
+> > > If we get the objcg of memcg A failed,
+> >
+> > Please fix the above statement.
+> >
+> > > the get_obj_cgroup_from_current
+> > > can return the wrong objcg for the root memcg.
+> > >
+> > > Fixes: bf4f059954dc ("mm: memcg/slab: obj_cgroup API")
+> > > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> > > ---
+> > >  changelog in v2:
+> > >  1. Do not use a comparison with the root_mem_cgroup
+> > >
+> > >  mm/memcontrol.c | 1 +
+> > >  1 file changed, 1 insertion(+)
+> > >
+> > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > > index 1337775b04f3..8c8b4c3ed5a0 100644
+> > > --- a/mm/memcontrol.c
+> > > +++ b/mm/memcontrol.c
+> > > @@ -2961,6 +2961,7 @@ __always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
+> > >                 objcg = rcu_dereference(memcg->objcg);
+> > >                 if (objcg && obj_cgroup_tryget(objcg))
+> > >                         break;
+> > > +               objcg = NULL;
+> >
+> > Roman, in your cleanup, are you planning to have objcg for root memcg as well?
+>
+> Yes. I'll just change the for loop to include the root_mem_cgroup.
+>
 
-  BUG: unable to handle page fault for address: 0000607f820054db
-  CPU: 2 PID: 149 Comm: kworker/1:1 Not tainted 5.10.0-rc1-master+ #6
-  Workqueue: events cpuset_hotplug_workfn
-  RIP: build_sched_domains
-  Call Trace:
-   partition_sched_domains_locked
-   rebuild_sched_domains_locked
-   cpuset_hotplug_workfn
-
-It happens with cgroup2 and exclusive cpusets only.  This reproducer
-triggers it on an 8-cpu vm and works most effectively with no
-preexisting child cgroups:
-
-  cd $UNIFIED_ROOT
-  mkdir cg1
-  echo 4-7 > cg1/cpuset.cpus
-  echo root > cg1/cpuset.cpus.partition
-
-  # with smt/control reading 'on',
-  echo off > /sys/devices/system/cpu/smt/control
-
-RIP maps to
-
-  sd->shared = *per_cpu_ptr(sdd->sds, sd_id);
-
-from sd_init().  sd_id is calculated earlier in the same function:
-
-  cpumask_and(sched_domain_span(sd), cpu_map, tl->mask(cpu));
-  sd_id = cpumask_first(sched_domain_span(sd));
-
-tl->mask(cpu), which reads cpu_sibling_map on x86, returns an empty mask
-and so cpumask_first() returns >= nr_cpu_ids, which leads to the bogus
-value from per_cpu_ptr() above.
-
-The problem is a race between cpuset_hotplug_workfn() and a later
-offline of CPU N.  cpuset_hotplug_workfn() updates the effective masks
-when N is still online, the offline clears N from cpu_sibling_map, and
-then the worker uses the stale effective masks that still have N to
-generate the scheduling domains, leading the worker to read
-N's empty cpu_sibling_map in sd_init().
-
-rebuild_sched_domains_locked() prevented the race during the cgroup2
-cpuset series up until the Fixes commit changed its check.  Make the
-check more robust so that it can detect an offline CPU in any exclusive
-cpuset's effective mask, not just the top one.
-
-Fixes: 0ccea8feb980 ("cpuset: Make generate_sched_domains() work with partition")
-Signed-off-by: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
----
-
-I think the right thing to do long-term is make the hotplug work
-synchronous, fixing the lockdep splats of past attempts, and then take
-these checks out of rebuild_sched_domains_locked, but this fixes the
-immediate issue and is small enough for stable.  Open to suggestions.
-
-Prateek, are you planning on picking up your patches again?
-
- kernel/cgroup/cpuset.c | 20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
-
-diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
-index 57b5b5d0a5fd..ac3124010b2a 100644
---- a/kernel/cgroup/cpuset.c
-+++ b/kernel/cgroup/cpuset.c
-@@ -983,8 +983,10 @@ partition_and_rebuild_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
-  */
- static void rebuild_sched_domains_locked(void)
- {
-+	struct cgroup_subsys_state *pos_css;
- 	struct sched_domain_attr *attr;
- 	cpumask_var_t *doms;
-+	struct cpuset *cs;
- 	int ndoms;
- 
- 	lockdep_assert_cpus_held();
-@@ -999,9 +1001,21 @@ static void rebuild_sched_domains_locked(void)
- 	    !cpumask_equal(top_cpuset.effective_cpus, cpu_active_mask))
- 		return;
- 
--	if (top_cpuset.nr_subparts_cpus &&
--	   !cpumask_subset(top_cpuset.effective_cpus, cpu_active_mask))
--		return;
-+	if (top_cpuset.nr_subparts_cpus) {
-+		rcu_read_lock();
-+		cpuset_for_each_descendant_pre(cs, pos_css, &top_cpuset) {
-+			if (!is_partition_root(cs)) {
-+				pos_css = css_rightmost_descendant(pos_css);
-+				continue;
-+			}
-+			if (!cpumask_subset(cs->effective_cpus,
-+					    cpu_active_mask)) {
-+				rcu_read_unlock();
-+				return;
-+			}
-+		}
-+		rcu_read_unlock();
-+	}
- 
- 	/* Generate domain masks and attrs */
- 	ndoms = generate_sched_domains(&doms, &attr);
-
-base-commit: 23859ae44402f4d935b9ee548135dd1e65e2cbf4
--- 
-2.29.0
-
+Then do we really need this patch since it's not tagged for stable?
