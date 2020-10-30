@@ -1,87 +1,64 @@
-From: Tom Hromatka <tom.hromatka-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [QUESTION] Cgroup namespace and cgroup v2
-Date: Fri, 30 Oct 2020 07:11:20 -0600
-Message-ID: <001e7b1d-1b7c-e3d8-493f-2b78b3b093b1@oracle.com>
-References: <d223c6ba-9fcf-8728-214b-1bce30f26441@oracle.com>
- <20201027182659.GA62134@blackbook>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v20 04/20] mm/thp: use head for head page in
+ lru_add_page_tail
+Date: Fri, 30 Oct 2020 09:52:18 -0400
+Message-ID: <20201030135218.GA666074@cmpxchg.org>
+References: <1603968305-8026-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1603968305-8026-5-git-send-email-alex.shi@linux.alibaba.com>
+ <20201029135047.GE599825@cmpxchg.org>
+ <06a5b7d8-bbf2-51b7-1352-2b630186e15f@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=P4mtStT2D2qnh4vVbPD791lmQ3o57FSAUHJXBvfRArk=;
- b=tdQ33e24t9bxSOVk27NNg8uJUHv0y2qs10GHQLEWt8+YFsE/EDrJ+GqzOcYh/SC7EA5p
- UldB+zXykFrU/rrTe7RkWO6UCqtmA1LbyyRAEOLG93RKlhrJfm4fHZ4YM4NYM0IKDLZZ
- pTH/tM4mpRtCtWsoy+wS9w0hhihOHacfQGQTSnTrzH7iMtiFXq4jnPT/2/7ovBGsJuTu
- W2n39wO1ecOOwq92pOqWqmPlTbAbK1DNxrL8UAIt0h+61UG1Y6GGJQ2K5/rf9MYF9tpR
- 4ASde0iGGosNaYdfJSDdSSiV6ybWybe4l9J3iabvlSLRjO5Bea07tAdAuCv+QjSIjumx +w== 
-In-Reply-To: <20201027182659.GA62134@blackbook>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=p1nkWHsTTJ1phk0MECInN7pnDwPUF1bojBnmQs9PZoM=;
+        b=JsNIng18yHH5/LXDpPA+BwLTBHcs1T13ZwrR46DvSQd2iyr/I2H49p0AaTvTYPWxtu
+         hRlzMwdMBF7gPpGJExMS3hcyvwcq2OLXMcHJRUYaIINATS2DLqUpB59uW/MCb8eG1cmy
+         KIX7EF8KQzWW81n5ccWUkUQOY5wf00O99LDkOtjXk3o27fEMFo/HJDlPg7FqiHLAHTPP
+         S8DBv/CExSuAh1XX/bl1C3LjbAgG1WJWjXBibLWMbrn+cWxhUD3vFLKq8SWWvl8XFGzZ
+         1q1WFkMcp6/IugaIHT2dqvt7HYV96HeBabnklmKeSNKFtYP/mXrizgDpZLO2t9x51Da1
+         lZsA==
+Content-Disposition: inline
+In-Reply-To: <06a5b7d8-bbf2-51b7-1352-2b630186e15f-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On 10/27/20 12:26 PM, Michal Koutn=FD wrote:
-> Hi Tom.
->
-> On Tue, Oct 20, 2020 at 03:12:28PM -0600, Tom Hromatka <tom.hromatka-QHcL=
-ZuEGTsvQT0dZR+AlfA@public.gmane.org> wrote:
->> But this fails on a cgroup v2 system in a
->> cgroup namespace because the root cgroup is a non-leaf cgroup.
-> Yes, the no internal process constraint simplifies and enables many
-> things for v2 controllers.
->
->> * As outlined above, the behavior of the "root" cgroup in a cgroup
->>  =A0 namespace on a v2 system differs from the behavior of the
->>  =A0 unnamespaced root cgroup.=A0 At best this is inconsistent; at worst,
->>  =A0 this may leak information to an unethical program.
-> What information does this leak? (That it's running in a cgroup namespace=
-?)
-> Note that this isn't the only discrepancy between host root cgroup and
-> namespaced root cgroup. The host group is simply special.
+On Fri, Oct 30, 2020 at 10:46:54AM +0800, Alex Shi wrote:
+> 在 2020/10/29 下午9:50, Johannes Weiner 写道:
+> > It may be better to pick either
+> > 	head and tail
+> 
+> Hi Johannes,
+> 
+> Thanks for comments!
+> 
+> Right, Consider functions in this file are using head/tail more as parameters
+> I will change to use head/tail too. And then, the 04th, 05th, and 18th patch 
+> will be changed accordingly.
 
-Oops.=A0 My wording was overly dramatic.=A0 My in-house customers
-get nervous when things differ within a container vs. on a host.
+That's great, thank you!
 
-You're right, it differs, but that's an acceptable side effect
-of the improved design of cgroup v2.
+> From a9ee63a213f40eb4d5a69b52fbb348ff9cd7cf6c Mon Sep 17 00:00:00 2001
+> From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+> Date: Tue, 26 May 2020 16:49:22 +0800
+> Subject: [PATCH v21 04/20] mm/thp: use head for head page in lru_add_page_tail
+> 
+> Since the first parameter is only used by head page, it's better to make
+> it explicit.
+> 
+> Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+> Reviewed-by: Kirill A. Shutemov <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+> Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Would you mind sharing some of the other discrepancies?=A0 I
-would like to be prepared when we run into them as well.
-
-Thanks!
-
->
->>  =A0 Any ideas how =A0 we can make the behavior more consistent for the
->> user and =A0 libcgroup?
-> You can disable the controllers (via parent's cgroup.subtree_control) to
-> allow migration into the parent. Of course that affects also siblings of
-> the removed cgroup.
-
-Good call.=A0 I didn't think of that.
-
->
->> * I will likely add a flag to cgdelete to simply kill processes in
->>  =A0 a cgroup rather than try and move them to the parent cgroup.
->>  =A0 Moving processes to the parent cgroup is somewhat challenging
->>  =A0 even in a cgroup v1 system due to permissions, etc.
-> In general, migrations with controlled v2 cgroup are not supported, so
-> moving processes up and (especially) down has less sense than in v1.
-> Hence, refusing the delete operation on a populated cgroup (with
-> controllers) is IMO justified.
-
-That makes a lot of sense.=A0 I think I will need to spend
-time with the database team and others.=A0 Cgroup v2 is simply
-different enough that we'll need to rethink some of the
-decisions that were made for cgroup v1.
-
-Thanks so much for the help.
-
-Tom
-
->
->
-> Michal
-
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
