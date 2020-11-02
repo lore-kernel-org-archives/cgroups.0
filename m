@@ -1,69 +1,50 @@
-From: Hui Su <sh_def@163.com>
-Subject: [PATCH] Docs/cgroup: update the cgroup-v1 docs
-Date: Mon, 2 Nov 2020 23:21:16 +0800
-Message-ID: <20201102152116.GA186491@rlk>
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v20 04/20] mm/thp: use head for head page in
+ lru_add_page_tail
+Date: Mon, 2 Nov 2020 16:03:57 +0000
+Message-ID: <20201102160357.GP27442@casper.infradead.org>
+References: <1603968305-8026-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1603968305-8026-5-git-send-email-alex.shi@linux.alibaba.com>
+ <20201029135047.GE599825@cmpxchg.org>
+ <06a5b7d8-bbf2-51b7-1352-2b630186e15f@linux.alibaba.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=Date:From:Subject:Message-ID:MIME-Version; bh=bxxfv
-        9QsqkbmxwfyzAF36u41WO4BWk6RMHqGjFs9RGQ=; b=HpXpF1IuLg/Mi8dh/7JI7
-        7aGzPE2LKjcW4yJgWKsL99ALbK0+q0SC14WqttzUxN+SV1RpxbYbWfzrAEXKhcNT
-        tPylUlog14dyU8munfrzMxs3d9qYR6CuNVTbe7kEOTufkNDZohoDxvbscB/3m/QZ
-        lJIZNb5+sxE53BeirmBtn8=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=ById62lxNkbzmGe1y6sEW9CH+Xn28r08JtKiwHI4ZFE=; b=eXXZJcEJI37a+/rq1NcdCftKu9
+        1w1qhi7JK4Le0V6NXiB4NVW+gvn9ySrTjTmOENM8vLHMoaZsenii71Nci4qAeWZ0mamhK8a35JlQK
+        J6cojCg0ge0utPapk8k+jZjA6fWe4Fy6jHXiyGPgdfX9BY6C+qR/NI+aInfubiQUD76BE/6AuMWf6
+        2rZwOBSfaFCGmbL4e9iS4ymkQ4uuSmJgbUmrZEe7AuPpgfqxeEoNWiItbK37ZJp7oIKQTDRWtkIfD
+        RaNYRb+6U8KoxF7lQmMkTuC3Lqs1i1WIXcnj20sKrUrkN/yGwYgCfwn+13jRLArwa8HrkX306cFP0
+        r5FYl46Q==;
 Content-Disposition: inline
+In-Reply-To: <06a5b7d8-bbf2-51b7-1352-2b630186e15f@linux.alibaba.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, corbet@lwn.net, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: sh_def@163.com
+To: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
 
-Since 'commit 69d0206c793a ("cgroup: bring some sanity to
-naming around cg_cgroup_link")', 'cg_cgroup_link' has been
-changed to 'cgrp_cset_link'.
-so as its element 'cgrp_link_list' and 'cg_link_list'.
+On Fri, Oct 30, 2020 at 10:46:54AM +0800, Alex Shi wrote:
+> -static void lru_add_page_tail(struct page *page, struct page *page_tail,
+> +static void lru_add_page_tail(struct page *head, struct page *tail,
+>  		struct lruvec *lruvec, struct list_head *list)
+>  {
+> -	VM_BUG_ON_PAGE(!PageHead(page), page);
+> -	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
+> -	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
+> +	VM_BUG_ON_PAGE(!PageHead(head), head);
+> +	VM_BUG_ON_PAGE(PageCompound(tail), head);
+> +	VM_BUG_ON_PAGE(PageLRU(tail), head);
 
-Since commit 47cfcd092245 ("cgroup: kill cgroup_[un]lock()"),
-cgroup_lock/cgroup_unlock have been killed.
+These last two should surely have been
+	VM_BUG_ON_PAGE(PageCompound(tail), tail);
+	VM_BUG_ON_PAGE(PageLRU(tail), tail);
 
-So update the cgroup-v1 Docs.
+Also, what do people think about converting these to VM_BUG_ON_PGFLAGS?
 
-Signed-off-by: Hui Su <sh_def@163.com>
----
- Documentation/admin-guide/cgroup-v1/cgroups.rst | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+Either way:
 
-diff --git a/Documentation/admin-guide/cgroup-v1/cgroups.rst b/Documentation/admin-guide/cgroup-v1/cgroups.rst
-index b0688011ed06..c28316a7dd28 100644
---- a/Documentation/admin-guide/cgroup-v1/cgroups.rst
-+++ b/Documentation/admin-guide/cgroup-v1/cgroups.rst
-@@ -270,10 +270,10 @@ css_set is allocated. The appropriate existing css_set is located by
- looking into a hash table.
- 
- To allow access from a cgroup to the css_sets (and hence tasks)
--that comprise it, a set of cg_cgroup_link objects form a lattice;
--each cg_cgroup_link is linked into a list of cg_cgroup_links for
--a single cgroup on its cgrp_link_list field, and a list of
--cg_cgroup_links for a single css_set on its cg_link_list.
-+that comprise it, a set of cgrp_cset_link objects form a lattice;
-+each cgrp_cset_link is linked into a list of cgrp_cset_links for
-+a single cgroup on its cset_link field, and a list of
-+cgrp_cset_links for a single css_set on its cgrp_link.
- 
- Thus the set of tasks in a cgroup can be listed by iterating over
- each css_set that references the cgroup, and sub-iterating over
-@@ -523,10 +523,7 @@ cgroup. It may also be taken to prevent cgroups from being
- modified, but more specific locks may be more appropriate in that
- situation.
- 
--See kernel/cgroup.c for more details.
--
--Subsystems can take/release the cgroup_mutex via the functions
--cgroup_lock()/cgroup_unlock().
-+See kernel/cgroup/cgroup.c for more details.
- 
- Accessing a task's cgroup pointer may be done in the following ways:
- - while holding cgroup_mutex
--- 
-2.29.0
-
-
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
