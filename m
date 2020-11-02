@@ -1,84 +1,63 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v20 15/20] mm/lru: introduce TestClearPageLRU
-Date: Mon, 2 Nov 2020 10:10:08 -0500
-Message-ID: <20201102151008.GH724984@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v20 16/20] mm/compaction: do page isolation first in
+ compaction
+Date: Mon, 2 Nov 2020 10:18:07 -0500
+Message-ID: <20201102151807.GI724984@cmpxchg.org>
 References: <1603968305-8026-1-git-send-email-alex.shi@linux.alibaba.com>
- <1603968305-8026-16-git-send-email-alex.shi@linux.alibaba.com>
+ <1603968305-8026-17-git-send-email-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=UPtv4U9PJYklpaVPZSIF4wy6HpZ+y+9XSdus7akqhs8=;
-        b=fvxCbUcg/TaoIHaH+KHaeKyaSujnKcSUTkmfqyKh/QkKJK9U7Sv6hkYTJZuE9PsDOH
-         qf1Tnz2zslvTItDBBEGYItyQGojO3aAIR8eUaSJpcqXBn5EEyU5wQLTeRy6/NiByQvOL
-         tc249Rsimsi+EMBEKIonliNDNG5ojtn9hnKe3eyWzN95l7neNpaTO8/2yelL57HdyFM/
-         ttrYwXC6tcJvxMjYh9r4+Qoj8BFXE/p+GN5LA2/SoF5V7ZReJ2GkiN1jq3m35x2uvVDc
-         xTtw2g7qK6VknF3fnO5bwz2y19yw58hf79Y22XgqerPNif0SPlCz8eN78jXHIUeirN0M
-         2Ojw==
+        bh=A7azf0b6L3Ni0+kWxhbDe/aVVrrIHnecUUge6+Ge8lA=;
+        b=Nb21RwzjjoHwgcCRnJW1DYf7eJoR32b1MqtBGslTFLn/e8GgtInbyDQYC+nYumNmv4
+         d/xV0YK1F4tPpdIl/ZecTav+F2G6Q/LJvmV6X3FPJIY7tkqJ+BXt7NXTD7Q2yJcF8MUX
+         5jA+vbiysm50Woe6xvq9XafPtlKHvoGBZQq4qkyfBF1D77R1kl+BwdMFU9WGgyvA5qXc
+         9CmpAx6Rq79YWITccoqYewpoxxG162YRQ85qbJkhDMGz4qHpaVxwhGLwfAS8vxWGlomm
+         z/7x7YoUNtBYJk5ZAwVAUdWoC4JMEUUUSXvjufaAjA+DzyYKmw/rk0YExgOYrMhlcpvH
+         AjZg==
 Content-Disposition: inline
-In-Reply-To: <1603968305-8026-16-git-send-email-alex.shi@linux.alibaba.com>
+In-Reply-To: <1603968305-8026-17-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com, Michal Hocko <mhocko@kernel.org>
+To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Thu, Oct 29, 2020 at 06:45:00PM +0800, Alex Shi wrote:
-> Currently lru_lock still guards both lru list and page's lru bit, that's
-> ok. but if we want to use specific lruvec lock on the page, we need to
-> pin down the page's lruvec/memcg during locking. Just taking lruvec
-> lock first may be undermined by the page's memcg charge/migration. To
-> fix this problem, we could clear the lru bit out of locking and use
-> it as pin down action to block the page isolation in memcg changing.
-
-Small nit, but the use of "could" in this sentence sounds like you're
-describing one possible solution that isn't being taken, when in fact
-you are describing the chosen locking mechanism.
-
-Replacing "could" with "will" would make things a bit clearer IMO.
-
-> So now a standard steps of page isolation is following:
-> 	1, get_page(); 	       #pin the page avoid to be free
-> 	2, TestClearPageLRU(); #block other isolation like memcg change
-> 	3, spin_lock on lru_lock; #serialize lru list access
-> 	4, delete page from lru list;
-> The step 2 could be optimzed/replaced in scenarios which page is
-> unlikely be accessed or be moved between memcgs.
-
-This is a bit ominous. I'd either elaborate / provide an example /
-clarify why some sites can deal with races - or just remove that
-sentence altogether from this part of the changelog.
-
-> This patch start with the first part: TestClearPageLRU, which combines
-> PageLRU check and ClearPageLRU into a macro func TestClearPageLRU. This
-> function will be used as page isolation precondition to prevent other
-> isolations some where else. Then there are may !PageLRU page on lru
-> list, need to remove BUG() checking accordingly.
+On Thu, Oct 29, 2020 at 06:45:01PM +0800, Alex Shi wrote:
+> Currently, compaction would get the lru_lock and then do page isolation
+> which works fine with pgdat->lru_lock, since any page isoltion would
+> compete for the lru_lock. If we want to change to memcg lru_lock, we
+> have to isolate the page before getting lru_lock, thus isoltion would
+> block page's memcg change which relay on page isoltion too. Then we
+> could safely use per memcg lru_lock later.
 > 
-> There 2 rules for lru bit now:
-> 1, the lru bit still indicate if a page on lru list, just in some
->    temporary moment(isolating), the page may have no lru bit when
->    it's on lru list.  but the page still must be on lru list when the
->    lru bit set.
-> 2, have to remove lru bit before delete it from lru list.
+> The new page isolation use previous introduced TestClearPageLRU() +
+> pgdat lru locking which will be changed to memcg lru lock later.
 > 
-> As Andrew Morton mentioned this change would dirty cacheline for page
-> isn't on LRU. But the lost would be acceptable in Rong Chen
-> <rong.a.chen@intel.com> report:
-> https://lore.kernel.org/lkml/20200304090301.GB5972@shao2-debian/
+> Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> fixed following bugs in this patch's
+> early version:
 > 
-> Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
-> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-> Acked-by: Hugh Dickins <hughd@google.com>
-> Cc: Hugh Dickins <hughd@google.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-mm@kvack.org
+> Fix lots of crashes under compaction load: isolate_migratepages_block()
+> must clean up appropriately when rejecting a page, setting PageLRU again
+> if it had been cleared; and a put_page() after get_page_unless_zero()
+> cannot safely be done while holding locked_lruvec - it may turn out to
+> be the final put_page(), which will take an lruvec lock when PageLRU.
+> And move __isolate_lru_page_prepare back after get_page_unless_zero to
+> make trylock_page() safe:
+> trylock_page() is not safe to use at this time: its setting PG_locked
+> can race with the page being freed or allocated ("Bad page"), and can
+> also erase flags being set by one of those "sole owners" of a freshly
+> allocated page who use non-atomic __SetPageFlag().
+> 
+> Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+> Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
