@@ -1,54 +1,47 @@
-From: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH v20 08/20] mm: page_idle_get_page() does not need lru_lock
-Date: Mon, 2 Nov 2020 14:49:27 +0000
-Message-ID: <20201102144927.GN27442@casper.infradead.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v20 10/20] mm/swap.c: fold vm event PGROTATED into
+ pagevec_move_tail_fn
+Date: Mon, 2 Nov 2020 09:48:39 -0500
+Message-ID: <20201102144839.GD724984@cmpxchg.org>
 References: <1603968305-8026-1-git-send-email-alex.shi@linux.alibaba.com>
- <1603968305-8026-9-git-send-email-alex.shi@linux.alibaba.com>
- <20201102144110.GB724984@cmpxchg.org>
+ <1603968305-8026-11-git-send-email-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=9Y50BuvtY/Iv9iX09V09H3tcMOFeUq4GX0ITyW7hR88=; b=Fc5EzzbP5uGjYagLwVWe4N7rSc
-        dT4LPqKUJQefMq0cWg6QZxnZyzdW0BT/rLNPNmIIzGjo6rnnJx/uNQnCaukD43QfeUz4egAOUJTEN
-        EsUPSMhMJLUgnontgXLVFf1k9EJkUYkC4BpE+14S9u/W8QEbfXOis468N/nX2cczNVhkRsKScXYHY
-        tpj4XWjN+CWDGuX9qefNrodCFBeuiTggLV5g0NTk4c+wGg7MWemnx0Wt1qSxG5lpOvgIFJITFzZ80
-        DB3MVpy1gEYCxw9T6tPp5HHxTX30xlGavqhM697UTSooTwW0jmx5PcZIOUmXva0C6VNnW2SiHnAfe
-        ROmfwCBA==;
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=JYqsaLDo1+ctYQbIf4q0wk9qZ0QBJ7TUi9/Nha1uioc=;
+        b=H5HLQwnJYlowV4BaCrk9lh4Rqv7LFNr1+ef9UuGrfs5uzMNGGH4S3gy1OrnNoSg1n4
+         qjp/UBXHnGGn1vs0uilbdhjR/qhdlhJpKTd9NxFS1BE5ZhEW2XuxKOspnRlJ+4skQPuH
+         obC3duxwWHpG7NXn6/W1y7hs83JBQN9iCx+IVzi7b9VHiiqPZQpNL+zRrDOUuL88XfNn
+         gIb9BTXH9zbiDnNL993P6oZIKIVEApD/z1PUM8nxlTqGIJSpp4aDemPjumqzx4KDDxOX
+         oCkknATB88ysU2YL0ak/MykrNAe7SxDvIW8asaLYvRq6wxUgOscIZcZiesigfHfsq590
+         6UwQ==
 Content-Disposition: inline
-In-Reply-To: <20201102144110.GB724984-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <1603968305-8026-11-git-send-email-alex.shi@linux.alibaba.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
 
-On Mon, Nov 02, 2020 at 09:41:10AM -0500, Johannes Weiner wrote:
-> On Thu, Oct 29, 2020 at 06:44:53PM +0800, Alex Shi wrote:
-> > From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > 
-> > It is necessary for page_idle_get_page() to recheck PageLRU() after
-> > get_page_unless_zero(), but holding lru_lock around that serves no
-> > useful purpose, and adds to lru_lock contention: delete it.
-> > 
-> > See https://lore.kernel.org/lkml/20150504031722.GA2768@blaptop for the
-> > discussion that led to lru_lock there; but __page_set_anon_rmap() now
-> > uses WRITE_ONCE(),
+On Thu, Oct 29, 2020 at 06:44:55PM +0800, Alex Shi wrote:
+> Fold the PGROTATED event collection into pagevec_move_tail_fn call back
+> func like other funcs does in pagevec_lru_move_fn. Thus we could save
+> func call pagevec_move_tail().
+> Now all usage of pagevec_lru_move_fn are same and no needs of its 3rd
+> parameter.
 > 
-> That doesn't seem to be the case in Linus's or Andrew's tree. Am I
-> missing a dependent patch series?
+> It's just simply the calling. No functional change.
 > 
-> > and I see no other risk in page_idle_clear_pte_refs() using
-> > rmap_walk() (beyond the risk of racing PageAnon->PageKsm, mostly but
-> > not entirely prevented by page_count() check in ksm.c's
-> > write_protect_page(): that risk being shared with page_referenced()
-> > and not helped by lru_lock).
-> 
-> Isn't it possible, as per Minchan's description, for page->mapping to
-> point to a struct anon_vma without PAGE_MAPPING_ANON set, and rmap
-> thinking it's looking at a struct address_space?
+> [lkp@intel.com: found a build issue in the original patch, thanks]
+> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+> Acked-by: Hugh Dickins <hughd@google.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: linux-mm@kvack.org
+> Cc: linux-kernel@vger.kernel.org
 
-I don't think it can point to an anon_vma without the ANON bit set.
-Minchan's concern in that email was that it might still be NULL.
+Nice.
+
+Acked-by: Johannes Weiner <hannes@cmpxchg.org>
