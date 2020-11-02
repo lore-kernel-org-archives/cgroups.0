@@ -1,45 +1,26 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v20 04/20] mm/thp: use head for head page in
- lru_add_page_tail
-Date: Sat, 31 Oct 2020 09:14:05 +0800
-Message-ID: <8fcf24fc-30ed-1e95-2c50-4034404ab416@linux.alibaba.com>
-References: <1603968305-8026-1-git-send-email-alex.shi@linux.alibaba.com>
- <1603968305-8026-5-git-send-email-alex.shi@linux.alibaba.com>
- <20201029135047.GE599825@cmpxchg.org>
- <06a5b7d8-bbf2-51b7-1352-2b630186e15f@linux.alibaba.com>
- <20201030135218.GA666074@cmpxchg.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20201030135218.GA666074@cmpxchg.org>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH 0/2] bail out early for memcg disable
+Date: Mon,  2 Nov 2020 10:17:14 +0800
+Message-ID: <1604283436-18880-1-git-send-email-alex.shi@linux.alibaba.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+These 2 patches are indepenedent from per memcg lru lock, and may
+encounter unexpected warning, so let's move out them from per memcg
+lru locking patchset.
 
+Alex Shi (2):
+  mm/memcg: bail early from swap accounting if memcg disabled
+  mm/memcg: warning on !memcg after readahead page charged
 
-在 2020/10/30 下午9:52, Johannes Weiner 写道:
-> 
->> From a9ee63a213f40eb4d5a69b52fbb348ff9cd7cf6c Mon Sep 17 00:00:00 2001
->> From: Alex Shi <alex.shi@linux.alibaba.com>
->> Date: Tue, 26 May 2020 16:49:22 +0800
->> Subject: [PATCH v21 04/20] mm/thp: use head for head page in lru_add_page_tail
->>
->> Since the first parameter is only used by head page, it's better to make
->> it explicit.
->>
->> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
->> Reviewed-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
->> Acked-by: Hugh Dickins <hughd@google.com>
->> Cc: Andrew Morton <akpm@linux-foundation.org>
->> Cc: Johannes Weiner <hannes@cmpxchg.org>
->> Cc: Matthew Wilcox <willy@infradead.org>
->> Cc: Hugh Dickins <hughd@google.com>
->> Cc: linux-mm@kvack.org
->> Cc: linux-kernel@vger.kernel.org
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+ include/linux/mmdebug.h | 13 +++++++++++++
+ mm/memcontrol.c         | 17 ++++++++++-------
+ 2 files changed, 23 insertions(+), 7 deletions(-)
 
+-- 
+1.8.3.1
 
-Thanks a lot!
-Alex
