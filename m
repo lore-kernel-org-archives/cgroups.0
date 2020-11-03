@@ -1,25 +1,25 @@
-From: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH AUTOSEL 5.9 17/35] blk-cgroup: Pre-allocate tree node on blkg_conf_prep
-Date: Mon,  2 Nov 2020 20:18:22 -0500
-Message-ID: <20201103011840.182814-17-sashal@kernel.org>
-References: <20201103011840.182814-1-sashal@kernel.org>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.8 16/29] blk-cgroup: Pre-allocate tree node on blkg_conf_prep
+Date: Mon,  2 Nov 2020 20:19:15 -0500
+Message-ID: <20201103011928.183145-16-sashal@kernel.org>
+References: <20201103011928.183145-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604366343;
-        bh=4cisTJvNWJTo1O3lX02DqmI2tUmhW57SyXN78g9+A/Y=;
+        s=default; t=1604366389;
+        bh=npmEKXMDcEvhL/w2179RDZgxEZSrrkFp4RwsrdkNqPw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FiDX/tUHTOJLku2tiwJtr5tgFkmWss37DV58eq34nYRgHR9SknQr6viZjMJgswb4b
-         SLf1/jc4KkSd/TEjYx6ZUpHKiPVWARFU9vgiKBvpaMtiF+YsYvjIrWA5ECDYZISp8p
-         7/CV4X9tz6ZhCe/S/b+rio19fUhtmLJarw/nRIbs=
-In-Reply-To: <20201103011840.182814-1-sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        b=kWzxpVSJu86DWbJpJt4PwL2KLyEiiCH3pS2d+1U92WzIxbZs8jjg/FVUAvMAxFB0K
+         AzqrePRPlF6hqS1U5ub3c9Rm9JMCMkzNQWbk52SaaMBpHYfSAksZcDpumOo6V32WyJ
+         9IuKjNJJvOFRzMFyRcPRfFY2RqJToqoSwIN14x28=
+In-Reply-To: <20201103011928.183145-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Gabriel Krisman Bertazi <krisman-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Gabriel Krisman Bertazi <krisman@collabora.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org
 
-From: Gabriel Krisman Bertazi <krisman-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
+From: Gabriel Krisman Bertazi <krisman@collabora.com>
 
 [ Upstream commit f255c19b3ab46d3cad3b1b2e1036f4c926cb1d0c ]
 
@@ -36,19 +36,19 @@ the later non-blocking insertion won't fail.
 
 A similar solution exists in blkcg_init_queue for the same situation.
 
-Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Signed-off-by: Gabriel Krisman Bertazi <krisman-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org>
-Signed-off-by: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Signed-off-by: Sasha Levin <sashal-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Acked-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Gabriel Krisman Bertazi <krisman@collabora.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
  block/blk-cgroup.c | 14 ++++++++++++--
  1 file changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 7b2df042220d4..c85fbb666e40a 100644
+index 67619f4e24907..1cd0574b83bb2 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -648,6 +648,12 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+@@ -676,6 +676,12 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
  			goto fail;
  		}
  
@@ -61,7 +61,7 @@ index 7b2df042220d4..c85fbb666e40a 100644
  		rcu_read_lock();
  		spin_lock_irq(&q->queue_lock);
  
-@@ -655,7 +661,7 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+@@ -683,7 +689,7 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
  		if (IS_ERR(blkg)) {
  			ret = PTR_ERR(blkg);
  			blkg_free(new_blkg);
@@ -70,7 +70,7 @@ index 7b2df042220d4..c85fbb666e40a 100644
  		}
  
  		if (blkg) {
-@@ -664,10 +670,12 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+@@ -692,10 +698,12 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
  			blkg = blkg_create(pos, q, new_blkg);
  			if (IS_ERR(blkg)) {
  				ret = PTR_ERR(blkg);
@@ -84,7 +84,7 @@ index 7b2df042220d4..c85fbb666e40a 100644
  		if (pos == blkcg)
  			goto success;
  	}
-@@ -677,6 +685,8 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+@@ -705,6 +713,8 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
  	ctx->body = input;
  	return 0;
  
