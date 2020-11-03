@@ -1,19 +1,19 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.14 05/10] blk-cgroup: Pre-allocate tree node on blkg_conf_prep
-Date: Mon,  2 Nov 2020 20:20:49 -0500
-Message-ID: <20201103012054.183811-5-sashal@kernel.org>
-References: <20201103012054.183811-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 06/11] blk-cgroup: Pre-allocate tree node on blkg_conf_prep
+Date: Mon,  2 Nov 2020 20:20:34 -0500
+Message-ID: <20201103012039.183672-6-sashal@kernel.org>
+References: <20201103012039.183672-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604366461;
-        bh=pS/wfuvgECeMv7tP2JsM2x5VhNzsY45wQ2MPzjvmbb4=;
+        s=default; t=1604366447;
+        bh=fNHrt/GdcOtMrdpxZLIszplS2BMx/sgK37xpgdSdbCU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HShtYipL15ECiKG3KGMjsXkwBHLQ/RMDmkhOGcz7LcZDbzIKCGdDvPTgOwjLR8lD5
-         u6JMMYHdE+fbJ1uRsgqKpNKh2kQSv3+GzoFYzsHqG64uq0joboeRV551vD8ODZdkho
-         jZowZaE3HakjWPT11DM58eQHj408jEFSs2Pqs7RE=
-In-Reply-To: <20201103012054.183811-1-sashal@kernel.org>
+        b=dyO4UuiIP74n6/k3/L0QiwGw29/e/nNsinYK6kRi/0BJ9qamfU9lXlBy5Xa0duj+g
+         4NvpJMBK3fFsgjOCslhijWFKZ6sW5af+2gb3B2osH1d7ybh4L6jICABTmYs//acDCj
+         arCJBSVpewuD4oxpQAdqEDLBI/KqxtCY/Fwm128E=
+In-Reply-To: <20201103012039.183672-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
@@ -45,10 +45,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index a7217caea699d..34f8e69078cc1 100644
+index 51fc803c999d7..85bd46e0a745f 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -872,6 +872,12 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+@@ -876,6 +876,12 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
  			goto fail;
  		}
  
@@ -61,7 +61,7 @@ index a7217caea699d..34f8e69078cc1 100644
  		rcu_read_lock();
  		spin_lock_irq(q->queue_lock);
  
-@@ -879,7 +885,7 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+@@ -883,7 +889,7 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
  		if (IS_ERR(blkg)) {
  			ret = PTR_ERR(blkg);
  			blkg_free(new_blkg);
@@ -70,7 +70,7 @@ index a7217caea699d..34f8e69078cc1 100644
  		}
  
  		if (blkg) {
-@@ -888,10 +894,12 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+@@ -892,10 +898,12 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
  			blkg = blkg_create(pos, q, new_blkg);
  			if (unlikely(IS_ERR(blkg))) {
  				ret = PTR_ERR(blkg);
@@ -84,7 +84,7 @@ index a7217caea699d..34f8e69078cc1 100644
  		if (pos == blkcg)
  			goto success;
  	}
-@@ -901,6 +909,8 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
+@@ -905,6 +913,8 @@ int blkg_conf_prep(struct blkcg *blkcg, const struct blkcg_policy *pol,
  	ctx->body = body;
  	return 0;
  
