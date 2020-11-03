@@ -1,63 +1,76 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC Patch 1/2] KVM: SVM: Create SEV cgroup controller.
-Date: Tue, 03 Nov 2020 14:43:57 -0800
-Message-ID: <7ed06917207b4348cc6b680ccd093e0eb204d2ec.camel@HansenPartnership.com>
-References: <20200922004024.3699923-1-vipinsh@google.com>
-         <20200922004024.3699923-2-vipinsh@google.com>
-         <94c3407d-07ca-8eaf-4073-4a5e2a3fb7b8@infradead.org>
-         <20200922012227.GA26483@linux.intel.com>
-         <c0ee04a93a8d679f5e9ee7eea6467b32bb7063d6.camel@HansenPartnership.com>
-         <20201103181007.GB28367@linux.intel.com>
+From: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC] Add BPF_PROG_TYPE_CGROUP_IOCTL
+Date: Tue, 3 Nov 2020 17:57:47 -0500
+Message-ID: <CAOWid-djQ_NRfCbOTnZQ-A8Pr7jMP7KuZEJDSsvzWkdw7qc=yA@mail.gmail.com>
+References: <20201007152355.2446741-1-Kenny.Ho@amd.com> <CAOWid-d=a1Q3R92s7GrzxWhXx7_dc8NQvQg7i7RYTVv3+jHxkQ@mail.gmail.com>
+ <20201103053244.khibmr66p7lhv7ge@ast-mbp.dhcp.thefacebook.com>
+ <CAOWid-eQSPru0nm8+Xo3r6C0pJGq+5r8mzM8BL2dgNn2c9mt2Q@mail.gmail.com>
+ <CAADnVQKuoZDB-Xga5STHdGSxvSP=B6jQ40kLdpL1u+J98bv65A@mail.gmail.com>
+ <CAOWid-czZphRz6Y-H3OcObKCH=bLLC3=bOZaSB-6YBE56+Qzrg@mail.gmail.com> <20201103210418.q7hddyl7rvdplike@ast-mbp.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1604443439;
-        bh=jBpk6Z334081TAbA3EzUJdc4T6st/PnuXaUfjPTVc08=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=u7V3w979b4gsRp1iPjuXeauDjIyEBPeEP2YCp2eijHJkFw8ja3mDQShpKFonUphOI
-         XNSstro+N/f8i95ggyC5/1MbS5c4ZUNb9sb4YYjNo6EDwJgmCkj1PtdIcS8KmGzGBW
-         dEDwrJmhlJBDSt5c60+Fel3ym5PnYw0c6JX8RUDk=
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1604443439;
-        bh=jBpk6Z334081TAbA3EzUJdc4T6st/PnuXaUfjPTVc08=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=u7V3w979b4gsRp1iPjuXeauDjIyEBPeEP2YCp2eijHJkFw8ja3mDQShpKFonUphOI
-         XNSstro+N/f8i95ggyC5/1MbS5c4ZUNb9sb4YYjNo6EDwJgmCkj1PtdIcS8KmGzGBW
-         dEDwrJmhlJBDSt5c60+Fel3ym5PnYw0c6JX8RUDk=
-In-Reply-To: <20201103181007.GB28367@linux.intel.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=p1h/LKIjKhwCaZN5JW6lQr8X/bwNTpcCZCyLALzsZSg=;
+        b=tr5vPjWUjAouhWvPxTC7MBVgGO79ny7u55kLEr8RCRj6bxH1t3gSkiC71IMTkzC2Uq
+         tewnvHi/iikOF9VEI0TnR6StnqdbjbcTMYc6+bRCLaFZGXkz4lp/gubVHAELLmPwekr7
+         BapanDlC20YtC+zgNpcKEiddgqI3Ntl0Ls3ZK5Syh2j22luIaJbsj1n0Uqzu0HPkpUPt
+         O0Pb9O+WEsZTY/rpInmKULg+gW42UB3akBmakChPrjkaO2R6R4dUk4LKibSeEkN7M48u
+         9pptgIOUotK2/wmU0/izcuCDPjwnCTvHUgEX3lwdm/fQMdUMM4mb3ZNR+cZV0CP1Bxnr
+         wD6A==
+In-Reply-To: <20201103210418.q7hddyl7rvdplike-+o4/htvd0TCa6kscz5V53/3mLCh9rsb+VpNB7YpNyf8@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Sean Christopherson <sean.j.christopherson@intel.com>
-Cc: Randy Dunlap <rdunlap@infradead.org>, Vipin Sharma <vipinsh@google.com>, thomas.lendacky@amd.com, pbonzini@redhat.com, tj@kernel.org, lizefan@huawei.com, joro@8bytes.org, corbet@lwn.net, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, gingell@google.com, rientjes@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Dionna Glaze <dionnaglaze@google.com>, Erdem Aktas <erdemaktas@google.com>
+Content-Transfer-Encoding: 7bit
+To: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, Andrii Nakryiko <andriin-b10kYP2dOMg@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, KP Singh <kpsingh-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-Fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 
-On Tue, 2020-11-03 at 10:10 -0800, Sean Christopherson wrote:
-> On Tue, Nov 03, 2020 at 08:39:12AM -0800, James Bottomley wrote:
-> > On Mon, 2020-09-21 at 18:22 -0700, Sean Christopherson wrote:
-> > > ASIDs too.  I'd also love to see more info in the docs and/or
-> > > cover letter to explain why ASID management on SEV requires a
-> > > cgroup.  I know what an ASID is, and have a decent idea of how
-> > > KVM manages ASIDs for legacy VMs, but I know nothing about why
-> > > ASIDs are limited for SEV and not legacy VMs.
-> > 
-> > Well, also, why would we only have a cgroup for ASIDs but not
-> > MSIDs?
-> 
-> Assuming MSID==PCID in Intel terminology, which may be a bad
-> assumption, the answer is that rationing PCIDs is a fools errand, at
-> least on Intel CPUs.
+On Tue, Nov 3, 2020 at 4:04 PM Alexei Starovoitov
+<alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>
+> On Tue, Nov 03, 2020 at 02:19:22PM -0500, Kenny Ho wrote:
+> > On Tue, Nov 3, 2020 at 12:43 AM Alexei Starovoitov
+> > <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> > > On Mon, Nov 2, 2020 at 9:39 PM Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>
+> Sounds like either bpf_lsm needs to be made aware of cgv2 (which would
+> be a great thing to have regardless) or cgroup-bpf needs a drm/gpu specific hook.
+> I think generic ioctl hook is too broad for this use case.
+> I suspect drm/gpu internal state would be easier to access inside
+> bpf program if the hook is next to gpu/drm. At ioctl level there is 'file'.
+> It's probably too abstract for the things you want to do.
+> Like how VRAM/shader/etc can be accessed through file?
+> Probably possible through a bunch of lookups and dereferences, but
+> if the hook is custom to GPU that info is likely readily available.
+> Then such cgroup-bpf check would be suitable in execution paths where
+> ioctl-based hook would be too slow.
+Just to clarify, when you say drm specific hook, did you mean just a
+unique attach_type or a unique prog_type+attach_type combination?  (I
+am still a bit fuzzy on when a new prog type is needed vs a new attach
+type.  I think prog type is associated with a unique type of context
+that the bpf prog will get but I could be missing some nuances.)
 
-Yes, sorry, I should probably have confessed that I'm most used to
-parisc SIDs, which are additional 32 bit qualifiers the CPU explicitly
-adds to every virtual address.  The perform exactly the same function,
-though except they're a bit more explicit (and we have more bits).  On
-PA every virtual address is actually a GVA consisting of 32 bit of SID
-and 64 bits of VA and we use this 96 byte address for virtual indexing
-and things.  And parisc doesn't have virtualization acceleration so we
-only have one type of SID.
+When I was thinking of doing an ioctl wide hook, the file would be the
+device file and the thinking was to have a helper function provided by
+device drivers to further disambiguate.  For our (AMD's) driver, we
+have a bunch of ioctls for set/get/create/destroy
+(https://elixir.bootlin.com/linux/latest/source/drivers/gpu/drm/amd/amdkfd/kfd_chardev.c#L1763)
+so the bpf prog can make the decision after the disambiguation.  For
+example, we have an ioctl called "kfd_ioctl_set_cu_mask."  You can
+think of cu_mask like cpumask but for the cores/compute-unit inside a
+GPU.  The ioctl hook will get the file, the bpf prog will call a
+helper function from the amdgpu driver to return some data structure
+specific to the driver and then the bpf prog can make a decision on
+gating the ioctl or not.  From what you are saying, sounds like this
+kind of back and forth lookup and dereferencing should be avoided for
+performance considerations?
 
-Thanks for the rest of the elaboration.
+Having a DRM specific hook is certainly an alternative.  I just wasn't
+sure which level of trade off on abstraction/generic is acceptable.  I
+am guessing a new BPF_PROG_TYPE_CGROUP_AMDGPU is probably too
+specific?  But sounds like BPF_PROG_TYPE_CGROUP_DRM may be ok?
 
-James
-
-
+Regards,
+Kenny
