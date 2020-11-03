@@ -1,91 +1,200 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v20 15/20] mm/lru: introduce TestClearPageLRU
-Date: Tue, 3 Nov 2020 11:02:15 +0800
-Message-ID: <ae59cae4-48f4-a7e9-044a-86790e16e641@linux.alibaba.com>
+Subject: Re: [PATCH v20 18/20] mm/lru: replace pgdat lru_lock with lruvec lock
+Date: Tue, 3 Nov 2020 12:58:29 +0800
+Message-ID: <eb099842-ed15-2d86-2a65-67f1f41999fb@linux.alibaba.com>
 References: <1603968305-8026-1-git-send-email-alex.shi@linux.alibaba.com>
- <1603968305-8026-16-git-send-email-alex.shi@linux.alibaba.com>
- <20201102151008.GH724984@cmpxchg.org>
+ <1603968305-8026-19-git-send-email-alex.shi@linux.alibaba.com>
+ <ef279dfe-afa5-45cb-4013-6c34169ff55e@linux.alibaba.com>
+ <20201102204136.GB740958@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20201102151008.GH724984@cmpxchg.org>
+In-Reply-To: <20201102204136.GB740958@cmpxchg.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="iso-8859-1"
 To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com, Michal Hocko <mhocko@kernel.org>
+Cc: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com, Michal Hocko <mhocko@kernel.org>, Yang Shi <yang.shi@linux.alibaba.com>
 
 
 
-=D4=DA 2020/11/2 =CF=C2=CE=E711:10, Johannes Weiner =D0=B4=B5=C0:
-> On Thu, Oct 29, 2020 at 06:45:00PM +0800, Alex Shi wrote:
->> Currently lru_lock still guards both lru list and page's lru bit, that's
->> ok. but if we want to use specific lruvec lock on the page, we need to
->> pin down the page's lruvec/memcg during locking. Just taking lruvec
->> lock first may be undermined by the page's memcg charge/migration. To
->> fix this problem, we could clear the lru bit out of locking and use
->> it as pin down action to block the page isolation in memcg changing.
->=20
-> Small nit, but the use of "could" in this sentence sounds like you're
-> describing one possible solution that isn't being taken, when in fact
-> you are describing the chosen locking mechanism.
->=20
-> Replacing "could" with "will" would make things a bit clearer IMO.
->=20
-
-Yes, 'will' is better here. Thanks!
-
->> So now a standard steps of page isolation is following:
->> 	1, get_page(); 	       #pin the page avoid to be free
->> 	2, TestClearPageLRU(); #block other isolation like memcg change
->> 	3, spin_lock on lru_lock; #serialize lru list access
->> 	4, delete page from lru list;
->> The step 2 could be optimzed/replaced in scenarios which page is
->> unlikely be accessed or be moved between memcgs.
->=20
-> This is a bit ominous. I'd either elaborate / provide an example /
-> clarify why some sites can deal with races - or just remove that
-> sentence altogether from this part of the changelog.
->=20
-
-A few scenarios here, so examples looks verbose or cann't describe whole.
-Maybe removing above 2 lines "The step 2 could be optimzed/replaced in=20
-scenarios which page is unlikely be accessed or be moved between memcgs."
-is better.=20
-
-Thanks!
-
->> This patch start with the first part: TestClearPageLRU, which combines
->> PageLRU check and ClearPageLRU into a macro func TestClearPageLRU. This
->> function will be used as page isolation precondition to prevent other
->> isolations some where else. Then there are may !PageLRU page on lru
->> list, need to remove BUG() checking accordingly.
+=D4=DA 2020/11/3 =C9=CF=CE=E74:41, Johannes Weiner =D0=B4=B5=C0:
+> On Fri, Oct 30, 2020 at 10:49:41AM +0800, Alex Shi wrote:
 >>
->> There 2 rules for lru bit now:
->> 1, the lru bit still indicate if a page on lru list, just in some
->>    temporary moment(isolating), the page may have no lru bit when
->>    it's on lru list.  but the page still must be on lru list when the
->>    lru bit set.
->> 2, have to remove lru bit before delete it from lru list.
 >>
->> As Andrew Morton mentioned this change would dirty cacheline for page
->> isn't on LRU. But the lost would be acceptable in Rong Chen
->> <rong.a.chen@intel.com> report:
->> https://lore.kernel.org/lkml/20200304090301.GB5972@shao2-debian/
->>
->> Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
->> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
->> Acked-by: Hugh Dickins <hughd@google.com>
->> Cc: Hugh Dickins <hughd@google.com>
->> Cc: Johannes Weiner <hannes@cmpxchg.org>
->> Cc: Michal Hocko <mhocko@kernel.org>
->> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
->> Cc: Andrew Morton <akpm@linux-foundation.org>
->> Cc: linux-kernel@vger.kernel.org
->> Cc: cgroups@vger.kernel.org
->> Cc: linux-mm@kvack.org
+>> @@ -1367,6 +1380,51 @@ struct lruvec *mem_cgroup_page_lruvec(struct page=
+ *page, struct pglist_data *pgd
+>>  	return lruvec;
+>>  }
+>> =20
+>> +struct lruvec *lock_page_lruvec(struct page *page)
+>> +{
+>> +	struct lruvec *lruvec;
+>> +	struct pglist_data *pgdat =3D page_pgdat(page);
+>> +
+>> +	rcu_read_lock();
+>> +	lruvec =3D mem_cgroup_page_lruvec(page, pgdat);
+>> +	spin_lock(&lruvec->lru_lock);
+>> +	rcu_read_unlock();
+>> +
+>> +	lruvec_memcg_debug(lruvec, page);
+>> +
+>> +	return lruvec;
+>> +}
+>> +
+>> +struct lruvec *lock_page_lruvec_irq(struct page *page)
+>> +{
+>> +	struct lruvec *lruvec;
+>> +	struct pglist_data *pgdat =3D page_pgdat(page);
+>> +
+>> +	rcu_read_lock();
+>> +	lruvec =3D mem_cgroup_page_lruvec(page, pgdat);
+>> +	spin_lock_irq(&lruvec->lru_lock);
+>> +	rcu_read_unlock();
+>> +
+>> +	lruvec_memcg_debug(lruvec, page);
+>> +
+>> +	return lruvec;
+>> +}
+>> +
+>> +struct lruvec *lock_page_lruvec_irqsave(struct page *page, unsigned lon=
+g *flags)
+>> +{
+>> +	struct lruvec *lruvec;
+>> +	struct pglist_data *pgdat =3D page_pgdat(page);
+>> +
+>> +	rcu_read_lock();
+>> +	lruvec =3D mem_cgroup_page_lruvec(page, pgdat);
+>> +	spin_lock_irqsave(&lruvec->lru_lock, *flags);
+>> +	rcu_read_unlock();
+>> +
+>> +	lruvec_memcg_debug(lruvec, page);
+>> +
+>> +	return lruvec;
+>> +}
 >=20
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> As these are used quite widely throughout the VM code now, it would be
+> good to give them kerneldoc comments that explain the interface.
+>=20
+> In particular, I think it's necessary to explain the contexts from
+> which this is safe to use (in particular wrt pages moving between
+> memcgs - see the comment in commit_charge()).
+>=20
+> I'm going to go through the callsites that follow and try to identify
+> what makes them safe. It's mostly an exercise to double check our
+> thinking here.
+>=20
+> Most of them are straight-forward, and I don't think they warrant
+> individual comments. But some do, IMO. And it appears at least one
+> actually isn't safe yet:
+
+Thanks a lot reminder. is the following comments fine?
+
+/**
+ * lock_page_lruvec - return lruvec for the locked page.
+ * @page: the page
+ *
+ * This series functions should be used in either conditions:
+ * PageLRU is cleared or unset
+ * or, page->_refcount is zero
+ */
+struct lruvec *lock_page_lruvec(struct page *page)
+{
+
+....
+
+>> @@ -274,9 +270,8 @@ void lru_note_cost(struct lruvec *lruvec, bool file,=
+ unsigned int nr_pages)
+>>  {
+>>  	do {
+>>  		unsigned long lrusize;
+>> -		struct pglist_data *pgdat =3D lruvec_pgdat(lruvec);
+>> =20
+>> -		spin_lock_irq(&pgdat->lru_lock);
+>> +		spin_lock_irq(&lruvec->lru_lock);
+>>  		/* Record cost event */
+>>  		if (file)
+>>  			lruvec->file_cost +=3D nr_pages;
+>> @@ -300,7 +295,7 @@ void lru_note_cost(struct lruvec *lruvec, bool file,=
+ unsigned int nr_pages)
+>>  			lruvec->file_cost /=3D 2;
+>>  			lruvec->anon_cost /=3D 2;
+>>  		}
+>> -		spin_unlock_irq(&pgdat->lru_lock);
+>> +		spin_unlock_irq(&lruvec->lru_lock);
+>>  	} while ((lruvec =3D parent_lruvec(lruvec)));
+>>  }
+>=20
+> This is safe because it either comes from
+>=20
+> 	1) the pinned lruvec in reclaim, or
+>=20
+> 	2) from a pre-LRU page during refault (which also holds the
+> 	   rcu lock, so would be safe even if the page was on the LRU
+> 	   and could move simultaneously to a new lruvec).
+>=20
+> The second one seems a bit tricky. It could be good to add a comment
+> to lru_note_cost_page() that explains why its mem_cgroup_page_lruvec()
+> is safe.
+
+Thanks for pointed, is the following comments fine?
+diff --git a/mm/swap.c b/mm/swap.c
+index 9fe5ff9a8111..55ccc93ffb49 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -264,6 +264,13 @@ void lru_note_cost(struct lruvec *lruvec, bool file, u=
+nsigned int nr_pages)
+        do {
+                unsigned long lrusize;
+
++               /*
++                * Hold lruvec->lru_lock is safe here, since
++                * 1) The pinned lruvec in reclaim, or
++                * 2) From a pre-LRU page during refault (which also holds =
+the
++                *    rcu lock, so would be safe even if the page was on th=
+e LRU
++                *    and could move simultaneously to a new lruvec).
++                */
+                spin_lock_irq(&lruvec->lru_lock);
+                /* Record cost event */
+>=20
+>> @@ -364,13 +359,13 @@ static inline void activate_page_drain(int cpu)
+>> =20
+>>  static void activate_page(struct page *page)
+>>  {
+>> -	pg_data_t *pgdat =3D page_pgdat(page);
+>> +	struct lruvec *lruvec;
+>> =20
+>>  	page =3D compound_head(page);
+>> -	spin_lock_irq(&pgdat->lru_lock);
+>> +	lruvec =3D lock_page_lruvec_irq(page);
+>=20
+> I don't see what makes this safe. There is nothing that appears to
+> lock out a concurrent page move between memcgs/lruvecs, which means
+> the following could manipulate an unlocked lru list:
 >=20
 
-Thanks!
+This funtion is for !CONFIG_SMP, could the cpu be preempt with RT kernel?
+
+>>  	if (PageLRU(page))
+>> -		__activate_page(page, mem_cgroup_page_lruvec(page, pgdat));
+>> -	spin_unlock_irq(&pgdat->lru_lock);
+>> +		__activate_page(page, lruvec);
+>> +	unlock_page_lruvec_irq(lruvec);
+>>  }
+>>  #endif
+>=20
+> Shouldn't this be something like this?
+>=20
+> 	if (TestClearPageLRU()) {
+> 		lruvec =3D lock_page_lruvec_irq(page);
+> 		__activate_page(page, lruvec);
+> 		unlock_page_lruvec_irq(lruvec);
+> 		SetPageLRU(page);
+> 	}
+
+But anyway, your new changes are more beautiful and logcially. I will change
+to this.
+
+Thanks a lot!
 Alex
