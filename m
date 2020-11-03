@@ -1,121 +1,63 @@
-From: Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC] Add BPF_PROG_TYPE_CGROUP_IOCTL
-Date: Tue, 3 Nov 2020 13:04:18 -0800
-Message-ID: <20201103210418.q7hddyl7rvdplike@ast-mbp.dhcp.thefacebook.com>
-References: <20201007152355.2446741-1-Kenny.Ho@amd.com>
- <CAOWid-d=a1Q3R92s7GrzxWhXx7_dc8NQvQg7i7RYTVv3+jHxkQ@mail.gmail.com>
- <20201103053244.khibmr66p7lhv7ge@ast-mbp.dhcp.thefacebook.com>
- <CAOWid-eQSPru0nm8+Xo3r6C0pJGq+5r8mzM8BL2dgNn2c9mt2Q@mail.gmail.com>
- <CAADnVQKuoZDB-Xga5STHdGSxvSP=B6jQ40kLdpL1u+J98bv65A@mail.gmail.com>
- <CAOWid-czZphRz6Y-H3OcObKCH=bLLC3=bOZaSB-6YBE56+Qzrg@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFC Patch 1/2] KVM: SVM: Create SEV cgroup controller.
+Date: Tue, 03 Nov 2020 14:43:57 -0800
+Message-ID: <7ed06917207b4348cc6b680ccd093e0eb204d2ec.camel@HansenPartnership.com>
+References: <20200922004024.3699923-1-vipinsh@google.com>
+         <20200922004024.3699923-2-vipinsh@google.com>
+         <94c3407d-07ca-8eaf-4073-4a5e2a3fb7b8@infradead.org>
+         <20200922012227.GA26483@linux.intel.com>
+         <c0ee04a93a8d679f5e9ee7eea6467b32bb7063d6.camel@HansenPartnership.com>
+         <20201103181007.GB28367@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20161025;
- h=date:from:to:cc:subject:message-id:references:mime-version
- :content-disposition:in-reply-to;
- bh=wrUBzqixMNGges3Fm8LEqTkGr+7Sx/OVd1FP+l0kdS0=;
- b=tqKpwE9c1XvzM26lsALNljg7czgItn9B2SFh1tA3jWE/ITdxfbUKdt+lGHvc4AqZJG
- DZ38w2G0ZCOMhepTm9Eowqe4LBfWPO8ILx0Ol+dgIFIwxdAiNzD1wA/i8yt6fsVNOptw
- SaiYvqBnxP3BX8+Vb8wu9Rwugz6FWLSJfUcENjTtu4V78jIYi59xfrDLTeLYUuG5oxAl
- NTgLN9RaB/G1pfPbVdSsuGof6GiB/WaIyBDaEjrF7Ha1Z98pSiyS5oXgB6h/IXv9HV1w
- sOAJhdJr5OPTpCg0tsq/C68T5BgQKFWAUoPDQTzUaXS7gzIxvEKvR4YiROniyFWZyWC3
- 0Sag==
-Content-Disposition: inline
-In-Reply-To: <CAOWid-czZphRz6Y-H3OcObKCH=bLLC3=bOZaSB-6YBE56+Qzrg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Linux-Fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KP Singh <kpsingh-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andrii Nakryiko <andriin-b10kYP2dOMg@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1604443439;
+        bh=jBpk6Z334081TAbA3EzUJdc4T6st/PnuXaUfjPTVc08=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=u7V3w979b4gsRp1iPjuXeauDjIyEBPeEP2YCp2eijHJkFw8ja3mDQShpKFonUphOI
+         XNSstro+N/f8i95ggyC5/1MbS5c4ZUNb9sb4YYjNo6EDwJgmCkj1PtdIcS8KmGzGBW
+         dEDwrJmhlJBDSt5c60+Fel3ym5PnYw0c6JX8RUDk=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1604443439;
+        bh=jBpk6Z334081TAbA3EzUJdc4T6st/PnuXaUfjPTVc08=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=u7V3w979b4gsRp1iPjuXeauDjIyEBPeEP2YCp2eijHJkFw8ja3mDQShpKFonUphOI
+         XNSstro+N/f8i95ggyC5/1MbS5c4ZUNb9sb4YYjNo6EDwJgmCkj1PtdIcS8KmGzGBW
+         dEDwrJmhlJBDSt5c60+Fel3ym5PnYw0c6JX8RUDk=
+In-Reply-To: <20201103181007.GB28367@linux.intel.com>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Sean Christopherson <sean.j.christopherson@intel.com>
+Cc: Randy Dunlap <rdunlap@infradead.org>, Vipin Sharma <vipinsh@google.com>, thomas.lendacky@amd.com, pbonzini@redhat.com, tj@kernel.org, lizefan@huawei.com, joro@8bytes.org, corbet@lwn.net, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, gingell@google.com, rientjes@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Dionna Glaze <dionnaglaze@google.com>, Erdem Aktas <erdemaktas@google.com>
 
-On Tue, Nov 03, 2020 at 02:19:22PM -0500, Kenny Ho wrote:
-> On Tue, Nov 3, 2020 at 12:43 AM Alexei Starovoitov
-> <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> > On Mon, Nov 2, 2020 at 9:39 PM Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> > pls don't top post.
-> My apology.
+On Tue, 2020-11-03 at 10:10 -0800, Sean Christopherson wrote:
+> On Tue, Nov 03, 2020 at 08:39:12AM -0800, James Bottomley wrote:
+> > On Mon, 2020-09-21 at 18:22 -0700, Sean Christopherson wrote:
+> > > ASIDs too.  I'd also love to see more info in the docs and/or
+> > > cover letter to explain why ASID management on SEV requires a
+> > > cgroup.  I know what an ASID is, and have a decent idea of how
+> > > KVM manages ASIDs for legacy VMs, but I know nothing about why
+> > > ASIDs are limited for SEV and not legacy VMs.
+> > 
+> > Well, also, why would we only have a cgroup for ASIDs but not
+> > MSIDs?
 > 
-> > > Cgroup awareness is desired because the intent
-> > > is to use this for resource management as well (potentially along with
-> > > other cgroup controlled resources.)  I will dig into bpf_lsm and learn
-> > > more about it.
-> >
-> > Also consider that bpf_lsm hooks have a way to get cgroup-id without
-> > being explicitly scoped. So the bpf program can be made cgroup aware.
-> > It's just not as convenient as attaching a prog to cgroup+hook at once.
-> > For prototyping the existing bpf_lsm facility should be enough.
-> > So please try to follow this route and please share more details about
-> > the use case.
-> 
-> Ok.  I will take a look and see if that is sufficient.  My
-> understanding of bpf-cgroup is that it not only makes attaching prog
-> to cgroup easier but it also facilitates hierarchical calling of
-> attached progs which might be useful if users wants to manage gpu
-> resources with bpf cgroup along with other cgroup resources (like
-> cpu/mem/io, etc.)
+> Assuming MSID==PCID in Intel terminology, which may be a bad
+> assumption, the answer is that rationing PCIDs is a fools errand, at
+> least on Intel CPUs.
 
-Right. Hierarchical cgroup-bpf logic cannot be replicated inside
-the program. If you're relying on cgv2 hierarchy to containerize
-applications then what I suggested earlier won't work indeed.
+Yes, sorry, I should probably have confessed that I'm most used to
+parisc SIDs, which are additional 32 bit qualifiers the CPU explicitly
+adds to every virtual address.  The perform exactly the same function,
+though except they're a bit more explicit (and we have more bits).  On
+PA every virtual address is actually a GVA consisting of 32 bit of SID
+and 64 bits of VA and we use this 96 byte address for virtual indexing
+and things.  And parisc doesn't have virtualization acceleration so we
+only have one type of SID.
 
-> About the use case.  The high level motivation here is to provide the
-> ability to subdivide/share a GPU via cgroups/containers in a way that
-> is similar to other resources like CPU and memory.  Users have been
-> requesting this type of functionality because GPU compute can get
-> expensive and they want to maximize the utilization to get the most
-> bang for their bucks.  A traditional way to do this is via
-> SRIOV/virtualization but that often means time sharing the GPU as a
-> whole unit.  That is useful for some applications but not others due
-> to the flushing and added latency.  We also have a study that
-> identified various GPU compute application types.  These types can
-> benefit from more asymmetrical/granular sharing of the GPU (for
-> example some applications are compute bound while others can be memory
-> bound that can benefit from having more VRAM.)
-> 
-> I have been trying to add a cgroup subsystem for the drm subsystem for
-> this purpose but I ran into two challenges.  First, the composition of
-> a GPU and how some of the subcomponents (like VRAM or shader
-> engines/compute units) can be shared are very much vendor specific so
-> we are unable to arrive at a common interface across all vendors.
-> Because of this and the variety of places a GPU can go into
-> (smartphone, PC, server, HPC), there is also no agreement on how
-> exactly a GPU should be shared.  The best way forward appears to
-> simply provide hooks for users to define how and what they want to
-> share via a bpf program.
+Thanks for the rest of the elaboration.
 
-Thank you for sharing the details. It certainly helps.
+James
 
-> From what I can tell so far (I am still learning), there are multiple
-> pieces that need to fall in place for bpf-cgroup to work for this use
-> case.  First there is resource limit enforcement, which is the
-> motivation for this RFC (I will look into bpf_lsm as the path
-> forward.)  I have also been thinking about instrumenting the drm
-> subsystem with a new BPF program type and have various attach types
-> across the drm subsystem but I am not sure if this is allowed (this
-> one is more for resource usage monitoring.)  Another thing I have been
-> considering is to have the gpu driver provide bpf helper functions for
-> bpf programs to modify drm driver internals.  That was the reason I
-> asked about the potential of BTF support for kernel modules a couple
-> of months ago (and Andrii Nakryiko mentioned that it is being worked
-> on.)
 
-Sounds like either bpf_lsm needs to be made aware of cgv2 (which would
-be a great thing to have regardless) or cgroup-bpf needs a drm/gpu specific hook.
-I think generic ioctl hook is too broad for this use case.
-I suspect drm/gpu internal state would be easier to access inside
-bpf program if the hook is next to gpu/drm. At ioctl level there is 'file'.
-It's probably too abstract for the things you want to do.
-Like how VRAM/shader/etc can be accessed through file?
-Probably possible through a bunch of lookups and dereferences, but
-if the hook is custom to GPU that info is likely readily available.
-Then such cgroup-bpf check would be suitable in execution paths where
-ioctl-based hook would be too slow.
