@@ -1,85 +1,38 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH] mm/memcontrol:rewrite mem_cgroup_page_lruvec()
-Date: Wed, 4 Nov 2020 14:38:00 -0800
-Message-ID: <20201104223800.GD1938922@carbon.dhcp.thefacebook.com>
-References: <20201104142516.GA106571@rlk>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH] mm/memcontrol: replace '== root_mem_cgroup' with
+ mem_cgroup_is_root
+Date: Wed, 4 Nov 2020 14:46:22 -0800
+Message-ID: <20201104224622.GE1938922@carbon.dhcp.thefacebook.com>
+References: <20201104151457.GA108301@rlk>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=SaXYkKIlRUoE2k29DxM72HhU3WLstM7GE8lDlgF29S8=;
- b=jJOWNDX3uFjBKHQP197Ajf+iOzNFtbD7H/mju691sv6If979RmQpjJ10ahihL9UOjPFC
- E+AJtQQAAs0tPBH8EfhZJ2iNjYw1C8nrorQGy37aKa8bYeZ/QBaXrVpHaYd0fkE7s7dH
- rqSMC+wCFnVFXGeUhgctA9co+cINrLiW/9g= 
+ mime-version; s=facebook; bh=i6hIhBbaplErdssUdp2AQT9+surBNka9EcYDoCuFP4M=;
+ b=NgH/bpVxgY9Twb6BSxSYi4JIJUuXO2QKcFMhKuHVMtqkl/EZ1tVde1aD7aNO4/EfsScm
+ hb+hz5NTt0e8d/2nB1KsoePOlfRu94r7Yr5VPV9PiEN8bAvIKs8E/V4cuxR4e9zED64E
+ wxiGmrG3TGda31g+3rvUXJ1bEflK0ze/FB8= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector2-fb-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=SaXYkKIlRUoE2k29DxM72HhU3WLstM7GE8lDlgF29S8=;
- b=TDENzwI3mNN8drG9OZM+Lc3CC5ZefjbWaxNbV8DQ1leGm+t2RMiNLMqPBR5RpI14dR2X41ip54+nWHau1/92s5OH762Hi9WiADFRBI+8DX7QSehMgk8rp6d5xk6GuNi6NojCG32CVGwPuUwyS8X/tEsjOkHkQC2SFaLdMwztEIc=
+ bh=i6hIhBbaplErdssUdp2AQT9+surBNka9EcYDoCuFP4M=;
+ b=Dt4vTToEgdwxYUPsaA4N67Le5i+Yf9/SZIPgDH3Wbz50cAIEzIwq/nS3np/YSSIdoKhDhCf38ovuKHDR3fpzB+ZQXhSuvAp/fZq85zF0i9Vdhh+bNZ+JuMuY6yJUsFOd9uMC6Bf7qUdc548yHABzA3ZBXZBM+Uo4FucCvsOr/6Y=
 Content-Disposition: inline
-In-Reply-To: <20201104142516.GA106571@rlk>
+In-Reply-To: <20201104151457.GA108301@rlk>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Hui Su <sh_def@163.com>
-Cc: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, shakeelb@google.com, laoar.shao@gmail.com, chris@chrisdown.name, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Nov 04, 2020 at 10:25:16PM +0800, Hui Su wrote:
-> mem_cgroup_page_lruvec() in memcontrol.c and
-> mem_cgroup_lruvec() in memcontrol.h is very similar
-> except for the param(page and memcg) which also can be
-> convert to each other.
-> 
-> So rewrite mem_cgroup_page_lruvec() with mem_cgroup_lruvec().
-> 
-> Signed-off-by: Hui Su <sh_def@163.com>
-> ---
->  include/linux/memcontrol.h | 18 +++++++++++++++--
->  mm/memcontrol.c            | 40 --------------------------------------
->  2 files changed, 16 insertions(+), 42 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index e391e3c56de5..a586363fb766 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -457,9 +457,10 @@ mem_cgroup_nodeinfo(struct mem_cgroup *memcg, int nid)
->  /**
->   * mem_cgroup_lruvec - get the lru list vector for a memcg & node
->   * @memcg: memcg of the wanted lruvec
-> + * @pgdat: pglist_data
->   *
->   * Returns the lru list vector holding pages for a given @memcg &
-> - * @node combination. This can be the node lruvec, if the memory
-> + * @pgdat combination. This can be the node lruvec, if the memory
->   * controller is disabled.
->   */
->  static inline struct lruvec *mem_cgroup_lruvec(struct mem_cgroup *memcg,
-> @@ -489,7 +490,20 @@ static inline struct lruvec *mem_cgroup_lruvec(struct mem_cgroup *memcg,
->  	return lruvec;
->  }
+On Wed, Nov 04, 2020 at 11:14:57PM +0800, Hui Su wrote:
+> We have supplied the inline func: mem_cgroup_is_root().
+> So we may use mem_cgroup_is_root() instead of using
+> 'memcg == root_mem_cgroup' or 'memcg != root_mem_cgroup'
+> directly, which is more readable.
 
-Hi Hui,
-
->  
-> -struct lruvec *mem_cgroup_page_lruvec(struct page *, struct pglist_data *);
-> +/**
-> + * mem_cgroup_page_lruvec - return lruvec for isolating/putting an LRU page
-> + * @page: the page
-> + * @pgdat: pgdat of the page
-> + *
-> + * This function relies on page->mem_cgroup being stable.
-> + */
-> +static inline struct lruvec *mem_cgroup_page_lruvec(struct page *page,
-> +						struct pglist_data *pgdat)
-
-Hm, do we need to pass page and pgdat?
-
-> +{
-> +	struct mem_cgroup *memcg = page->mem_cgroup;
-
-It seems like you need to rebase the patch against the latest mm snapshot.
-
-> +
-> +	return mem_cgroup_lruvec(memcg, pgdat);
+Most of these comparisons will go away soon:
+https://lkml.org/lkml/2020/10/21/612 (this is
+an rfc version, I'll send an updated version soon).
 
 Thanks!
