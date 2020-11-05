@@ -1,57 +1,96 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v21 11/19] mm/vmscan: remove lruvec reget in move_pages_to_lru
-Date: Thu,  5 Nov 2020 16:55:41 +0800
-Message-ID: <1604566549-62481-12-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: [PATCH v21 06/19] mm/rmap: stop store reordering issue on page->mapping
+Date: Thu,  5 Nov 2020 16:55:36 +0800
+Message-ID: <1604566549-62481-7-git-send-email-alex.shi@linux.alibaba.com>
 References: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1604566549-62481-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
+Cc: Minchan Kim <minchan@kernel.org>
 
-Isolated page shouldn't be recharged by memcg since the memcg
-migration isn't possible at the time. All pages were isolated
-from the same lruvec (and isolation inhibits memcg migration).
-So remove unnecessary regetting.
+Hugh Dickins and Minchan Kim observed a long time issue which
+discussed here, but actully the mentioned fix missed.
+https://lore.kernel.org/lkml/20150504031722.GA2768@blaptop/
+The store reordering may cause problem in the scenario:
 
-Thanks to Alexander Duyck for pointing this out.
+	CPU 0						CPU1
+   do_anonymous_page
+	page_add_new_anon_rmap()
+	  page->mapping = anon_vma + PAGE_MAPPING_ANON
+	lru_cache_add_inactive_or_unevictable()
+	  spin_lock(lruvec->lock)
+	  SetPageLRU()
+	  spin_unlock(lruvec->lock)
+						/* idletacking judged it as LRU
+						 * page so pass the page in
+						 * page_idle_clear_pte_refs
+						 */
+						page_idle_clear_pte_refs
+						  rmap_walk
+						    if PageAnon(page)
 
-Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Johannes give detailed examples how the store reordering could cause
+a trouble:
+The concern is the SetPageLRU may get reorder before 'page->mapping'
+setting, That would make CPU 1 will observe at page->mapping after
+observing PageLRU set on the page.
+
+1. anon_vma + PAGE_MAPPING_ANON
+
+   That's the in-order scenario and is fine.
+
+2. NULL
+
+   That's possible if the page->mapping store gets reordered to occur
+   after SetPageLRU. That's fine too because we check for it.
+
+3. anon_vma without the PAGE_MAPPING_ANON bit
+
+   That would be a problem and could lead to all kinds of undesirable
+   behavior including crashes and data corruption.
+
+   Is it possible? AFAICT the compiler is allowed to tear the store to
+   page->mapping and I don't see anything that would prevent it.
+
+That said, I also don't see how the reader testing PageLRU under the
+lru_lock would prevent that in the first place. AFAICT we need that
+WRITE_ONCE() around the page->mapping assignment.
+
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Minchan Kim <minchan@kernel.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
 ---
- mm/vmscan.c | 7 ++++++-
+ mm/rmap.c | 7 ++++++-
  1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index d771f812e983..cb2f6256a7d6 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -1887,7 +1887,12 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
- 			continue;
- 		}
+diff --git a/mm/rmap.c b/mm/rmap.c
+index 1b84945d655c..078d54da59d4 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -1054,8 +1054,13 @@ static void __page_set_anon_rmap(struct page *page,
+ 	if (!exclusive)
+ 		anon_vma = anon_vma->root;
  
--		lruvec = mem_cgroup_page_lruvec(page, pgdat);
-+		/*
-+		 * All pages were isolated from the same lruvec (and isolation
-+		 * inhibits memcg migration).
-+		 */
-+		VM_BUG_ON_PAGE(mem_cgroup_page_lruvec(page, page_pgdat(page))
-+							!= lruvec, page);
- 		lru = page_lru(page);
- 		nr_pages = thp_nr_pages(page);
++	/*
++	 * Prevent page->mapping from pointing to an anon_vma without
++	 * the PAGE_MAPPING_ANON bit set.  This could happen if the
++	 * compiler stores anon_vma and then adds PAGE_MAPPING_ANON to it.
++	 */
+ 	anon_vma = (void *) anon_vma + PAGE_MAPPING_ANON;
+-	page->mapping = (struct address_space *) anon_vma;
++	WRITE_ONCE(page->mapping, (struct address_space *) anon_vma);
+ 	page->index = linear_page_index(vma, address);
+ }
  
 -- 
 1.8.3.1
