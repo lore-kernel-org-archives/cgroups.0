@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH v21 01/19] mm/thp: move lru_add_page_tail func to huge_memory.c
-Date: Thu,  5 Nov 2020 16:55:31 +0800
-Message-ID: <1604566549-62481-2-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v21 14/19] mm/lru: introduce TestClearPageLRU
+Date: Thu,  5 Nov 2020 16:55:44 +0800
+Message-ID: <1604566549-62481-15-git-send-email-alex.shi@linux.alibaba.com>
 References: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1604566549-62481-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
@@ -10,126 +10,196 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-The func is only used in huge_memory.c, defining it in other file with a
-CONFIG_TRANSPARENT_HUGEPAGE macro restrict just looks weird.
+Currently lru_lock still guards both lru list and page's lru bit, that's
+ok. but if we want to use specific lruvec lock on the page, we need to
+pin down the page's lruvec/memcg during locking. Just taking lruvec
+lock first may be undermined by the page's memcg charge/migration. To
+fix this problem, we will clear the lru bit out of locking and use
+it as pin down action to block the page isolation in memcg changing.
 
-Let's move it THP. And make it static as Hugh Dickin suggested.
+So now a standard steps of page isolation is following:
+	1, get_page(); 	       #pin the page avoid to be free
+	2, TestClearPageLRU(); #block other isolation like memcg change
+	3, spin_lock on lru_lock; #serialize lru list access
+	4, delete page from lru list;
 
+This patch start with the first part: TestClearPageLRU, which combines
+PageLRU check and ClearPageLRU into a macro func TestClearPageLRU. This
+function will be used as page isolation precondition to prevent other
+isolations some where else. Then there are may !PageLRU page on lru
+list, need to remove BUG() checking accordingly.
+
+There 2 rules for lru bit now:
+1, the lru bit still indicate if a page on lru list, just in some
+   temporary moment(isolating), the page may have no lru bit when
+   it's on lru list.  but the page still must be on lru list when the
+   lru bit set.
+2, have to remove lru bit before delete it from lru list.
+
+As Andrew Morton mentioned this change would dirty cacheline for page
+isn't on LRU. But the lost would be acceptable in Rong Chen
+<rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org> report:
+https://lore.kernel.org/lkml/20200304090301.GB5972@shao2-debian/
+
+Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Reviewed-by: Kirill A. Shutemov <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 ---
- include/linux/swap.h |  2 --
- mm/huge_memory.c     | 30 ++++++++++++++++++++++++++++++
- mm/swap.c            | 33 ---------------------------------
- 3 files changed, 30 insertions(+), 35 deletions(-)
+ include/linux/page-flags.h |  1 +
+ mm/mlock.c                 |  3 +--
+ mm/vmscan.c                | 39 +++++++++++++++++++--------------------
+ 3 files changed, 21 insertions(+), 22 deletions(-)
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 667935c0dbd4..5e1e967c225f 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -338,8 +338,6 @@ extern void lru_note_cost(struct lruvec *lruvec, bool file,
- 			  unsigned int nr_pages);
- extern void lru_note_cost_page(struct page *);
- extern void lru_cache_add(struct page *);
--extern void lru_add_page_tail(struct page *page, struct page *page_tail,
--			 struct lruvec *lruvec, struct list_head *head);
- extern void mark_page_accessed(struct page *);
- extern void lru_add_drain(void);
- extern void lru_add_drain_cpu(int cpu);
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 08a183f6c3ab..8f16e991f7cc 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -2348,6 +2348,36 @@ static void remap_page(struct page *page, unsigned int nr)
+diff --git a/include/linux/page-flags.h b/include/linux/page-flags.h
+index 291dc247dc79..6426f2f03611 100644
+--- a/include/linux/page-flags.h
++++ b/include/linux/page-flags.h
+@@ -335,6 +335,7 @@ static inline void page_init_poison(struct page *page, size_t size)
+ PAGEFLAG(Dirty, dirty, PF_HEAD) TESTSCFLAG(Dirty, dirty, PF_HEAD)
+ 	__CLEARPAGEFLAG(Dirty, dirty, PF_HEAD)
+ PAGEFLAG(LRU, lru, PF_HEAD) __CLEARPAGEFLAG(LRU, lru, PF_HEAD)
++	TESTCLEARFLAG(LRU, lru, PF_HEAD)
+ PAGEFLAG(Active, active, PF_HEAD) __CLEARPAGEFLAG(Active, active, PF_HEAD)
+ 	TESTCLEARFLAG(Active, active, PF_HEAD)
+ PAGEFLAG(Workingset, workingset, PF_HEAD)
+diff --git a/mm/mlock.c b/mm/mlock.c
+index d487aa864e86..7b0e6334be6f 100644
+--- a/mm/mlock.c
++++ b/mm/mlock.c
+@@ -276,10 +276,9 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ 			 * We already have pin from follow_page_mask()
+ 			 * so we can spare the get_page() here.
+ 			 */
+-			if (PageLRU(page)) {
++			if (TestClearPageLRU(page)) {
+ 				struct lruvec *lruvec;
+ 
+-				ClearPageLRU(page);
+ 				lruvec = mem_cgroup_page_lruvec(page,
+ 							page_pgdat(page));
+ 				del_page_from_lru_list(page, lruvec,
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index cb2f6256a7d6..ab7a0104d1e1 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1542,7 +1542,7 @@ unsigned int reclaim_clean_pages_from_list(struct zone *zone,
+  */
+ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
+ {
+-	int ret = -EINVAL;
++	int ret = -EBUSY;
+ 
+ 	/* Only take pages on the LRU. */
+ 	if (!PageLRU(page))
+@@ -1552,8 +1552,6 @@ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
+ 	if (PageUnevictable(page) && !(mode & ISOLATE_UNEVICTABLE))
+ 		return ret;
+ 
+-	ret = -EBUSY;
+-
+ 	/*
+ 	 * To minimise LRU disruption, the caller can indicate that it only
+ 	 * wants to isolate pages it will be able to operate on without
+@@ -1600,8 +1598,10 @@ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
+ 		 * sure the page is not being freed elsewhere -- the
+ 		 * page release code relies on it.
+ 		 */
+-		ClearPageLRU(page);
+-		ret = 0;
++		if (TestClearPageLRU(page))
++			ret = 0;
++		else
++			put_page(page);
+ 	}
+ 
+ 	return ret;
+@@ -1667,8 +1667,6 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
+ 		page = lru_to_page(src);
+ 		prefetchw_prev_lru_page(page, src, flags);
+ 
+-		VM_BUG_ON_PAGE(!PageLRU(page), page);
+-
+ 		nr_pages = compound_nr(page);
+ 		total_scan += nr_pages;
+ 
+@@ -1765,21 +1763,18 @@ int isolate_lru_page(struct page *page)
+ 	VM_BUG_ON_PAGE(!page_count(page), page);
+ 	WARN_RATELIMIT(PageTail(page), "trying to isolate tail page");
+ 
+-	if (PageLRU(page)) {
++	if (TestClearPageLRU(page)) {
+ 		pg_data_t *pgdat = page_pgdat(page);
+ 		struct lruvec *lruvec;
+ 
+-		spin_lock_irq(&pgdat->lru_lock);
++		get_page(page);
+ 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+-		if (PageLRU(page)) {
+-			int lru = page_lru(page);
+-			get_page(page);
+-			ClearPageLRU(page);
+-			del_page_from_lru_list(page, lruvec, lru);
+-			ret = 0;
+-		}
++		spin_lock_irq(&pgdat->lru_lock);
++		del_page_from_lru_list(page, lruvec, page_lru(page));
+ 		spin_unlock_irq(&pgdat->lru_lock);
++		ret = 0;
+ 	}
++
+ 	return ret;
+ }
+ 
+@@ -4293,6 +4288,10 @@ void check_move_unevictable_pages(struct pagevec *pvec)
+ 		nr_pages = thp_nr_pages(page);
+ 		pgscanned += nr_pages;
+ 
++		/* block memcg migration during page moving between lru */
++		if (!TestClearPageLRU(page))
++			continue;
++
+ 		if (pagepgdat != pgdat) {
+ 			if (pgdat)
+ 				spin_unlock_irq(&pgdat->lru_lock);
+@@ -4301,10 +4300,7 @@ void check_move_unevictable_pages(struct pagevec *pvec)
+ 		}
+ 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
+ 
+-		if (!PageLRU(page) || !PageUnevictable(page))
+-			continue;
+-
+-		if (page_evictable(page)) {
++		if (page_evictable(page) && PageUnevictable(page)) {
+ 			enum lru_list lru = page_lru_base_type(page);
+ 
+ 			VM_BUG_ON_PAGE(PageActive(page), page);
+@@ -4313,12 +4309,15 @@ void check_move_unevictable_pages(struct pagevec *pvec)
+ 			add_page_to_lru_list(page, lruvec, lru);
+ 			pgrescued += nr_pages;
+ 		}
++		SetPageLRU(page);
+ 	}
+ 
+ 	if (pgdat) {
+ 		__count_vm_events(UNEVICTABLE_PGRESCUED, pgrescued);
+ 		__count_vm_events(UNEVICTABLE_PGSCANNED, pgscanned);
+ 		spin_unlock_irq(&pgdat->lru_lock);
++	} else if (pgscanned) {
++		count_vm_events(UNEVICTABLE_PGSCANNED, pgscanned);
  	}
  }
- 
-+static void lru_add_page_tail(struct page *page, struct page *page_tail,
-+		struct lruvec *lruvec, struct list_head *list)
-+{
-+	VM_BUG_ON_PAGE(!PageHead(page), page);
-+	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
-+	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
-+	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
-+
-+	if (!list)
-+		SetPageLRU(page_tail);
-+
-+	if (likely(PageLRU(page)))
-+		list_add_tail(&page_tail->lru, &page->lru);
-+	else if (list) {
-+		/* page reclaim is reclaiming a huge page */
-+		get_page(page_tail);
-+		list_add_tail(&page_tail->lru, list);
-+	} else {
-+		/*
-+		 * Head page has not yet been counted, as an hpage,
-+		 * so we must account for each subpage individually.
-+		 *
-+		 * Put page_tail on the list at the correct position
-+		 * so they all end up in order.
-+		 */
-+		add_page_to_lru_list_tail(page_tail, lruvec,
-+					  page_lru(page_tail));
-+	}
-+}
-+
- static void __split_huge_page_tail(struct page *head, int tail,
- 		struct lruvec *lruvec, struct list_head *list)
- {
-diff --git a/mm/swap.c b/mm/swap.c
-index 29220174433b..8a578381c2fc 100644
---- a/mm/swap.c
-+++ b/mm/swap.c
-@@ -977,39 +977,6 @@ void __pagevec_release(struct pagevec *pvec)
- }
- EXPORT_SYMBOL(__pagevec_release);
- 
--#ifdef CONFIG_TRANSPARENT_HUGEPAGE
--/* used by __split_huge_page_refcount() */
--void lru_add_page_tail(struct page *page, struct page *page_tail,
--		       struct lruvec *lruvec, struct list_head *list)
--{
--	VM_BUG_ON_PAGE(!PageHead(page), page);
--	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
--	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
--	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
--
--	if (!list)
--		SetPageLRU(page_tail);
--
--	if (likely(PageLRU(page)))
--		list_add_tail(&page_tail->lru, &page->lru);
--	else if (list) {
--		/* page reclaim is reclaiming a huge page */
--		get_page(page_tail);
--		list_add_tail(&page_tail->lru, list);
--	} else {
--		/*
--		 * Head page has not yet been counted, as an hpage,
--		 * so we must account for each subpage individually.
--		 *
--		 * Put page_tail on the list at the correct position
--		 * so they all end up in order.
--		 */
--		add_page_to_lru_list_tail(page_tail, lruvec,
--					  page_lru(page_tail));
--	}
--}
--#endif /* CONFIG_TRANSPARENT_HUGEPAGE */
--
- static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec,
- 				 void *arg)
- {
+ EXPORT_SYMBOL_GPL(check_move_unevictable_pages);
 -- 
 1.8.3.1
 
