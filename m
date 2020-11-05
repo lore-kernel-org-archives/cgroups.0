@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v21 16/19] mm/swap.c: serialize memcg changes in pagevec_lru_move_fn
-Date: Thu,  5 Nov 2020 16:55:46 +0800
-Message-ID: <1604566549-62481-17-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v21 10/19] mm/lru: move lock into lru_note_cost
+Date: Thu,  5 Nov 2020 16:55:40 +0800
+Message-ID: <1604566549-62481-11-git-send-email-alex.shi@linux.alibaba.com>
 References: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -11,144 +11,85 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
 
-Hugh Dickins' found a memcg change bug on original version:
-If we want to change the pgdat->lru_lock to memcg's lruvec lock, we have
-to serialize mem_cgroup_move_account during pagevec_lru_move_fn. The
-possible bad scenario would like:
+We have to move lru_lock into lru_note_cost, since it cycle up on memcg
+tree, for future per lruvec lru_lock replace. It's a bit ugly and may
+cost a bit more locking, but benefit from multiple memcg locking could
+cover the lost.
 
-	cpu 0					cpu 1
-lruvec = mem_cgroup_page_lruvec()
-					if (!isolate_lru_page())
-						mem_cgroup_move_account
-
-spin_lock_irqsave(&lruvec->lru_lock <== wrong lock.
-
-So we need TestClearPageLRU to block isolate_lru_page(), that serializes
-the memcg change. and then removing the PageLRU check in move_fn callee
-as the consequence.
-
-__pagevec_lru_add_fn() is different from the others, because the pages
-it deals with are, by definition, not yet on the lru.  TestClearPageLRU
-is not needed and would not work, so __pagevec_lru_add() goes its own
-way.
-
-Reported-by: Hugh Dickins <hughd@google.com>
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
 Acked-by: Hugh Dickins <hughd@google.com>
 Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: linux-mm@kvack.org
 Cc: linux-kernel@vger.kernel.org
 ---
- mm/swap.c | 44 +++++++++++++++++++++++++++++++++++---------
- 1 file changed, 35 insertions(+), 9 deletions(-)
+ mm/swap.c       | 3 +++
+ mm/vmscan.c     | 4 +---
+ mm/workingset.c | 2 --
+ 3 files changed, 4 insertions(+), 5 deletions(-)
 
 diff --git a/mm/swap.c b/mm/swap.c
-index 2681d9023998..1838a9535703 100644
+index ce8c97146e0d..2681d9023998 100644
 --- a/mm/swap.c
 +++ b/mm/swap.c
-@@ -222,8 +222,14 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
- 			spin_lock_irqsave(&pgdat->lru_lock, flags);
+@@ -268,7 +268,9 @@ void lru_note_cost(struct lruvec *lruvec, bool file, unsigned int nr_pages)
+ {
+ 	do {
+ 		unsigned long lrusize;
++		struct pglist_data *pgdat = lruvec_pgdat(lruvec);
+ 
++		spin_lock_irq(&pgdat->lru_lock);
+ 		/* Record cost event */
+ 		if (file)
+ 			lruvec->file_cost += nr_pages;
+@@ -292,6 +294,7 @@ void lru_note_cost(struct lruvec *lruvec, bool file, unsigned int nr_pages)
+ 			lruvec->file_cost /= 2;
+ 			lruvec->anon_cost /= 2;
  		}
++		spin_unlock_irq(&pgdat->lru_lock);
+ 	} while ((lruvec = parent_lruvec(lruvec)));
+ }
  
-+		/* block memcg migration during page moving between lru */
-+		if (!TestClearPageLRU(page))
-+			continue;
-+
- 		lruvec = mem_cgroup_page_lruvec(page, pgdat);
- 		(*move_fn)(page, lruvec);
-+
-+		SetPageLRU(page);
- 	}
- 	if (pgdat)
- 		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-@@ -233,7 +239,7 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index b9935668d121..d771f812e983 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1973,19 +1973,17 @@ static int current_may_throttle(void)
+ 				&stat, false);
  
- static void pagevec_move_tail_fn(struct page *page, struct lruvec *lruvec)
- {
--	if (PageLRU(page) && !PageUnevictable(page)) {
-+	if (!PageUnevictable(page)) {
- 		del_page_from_lru_list(page, lruvec, page_lru(page));
- 		ClearPageActive(page);
- 		add_page_to_lru_list_tail(page, lruvec, page_lru(page));
-@@ -306,7 +312,7 @@ void lru_note_cost_page(struct page *page)
- 
- static void __activate_page(struct page *page, struct lruvec *lruvec)
- {
--	if (PageLRU(page) && !PageActive(page) && !PageUnevictable(page)) {
-+	if (!PageActive(page) && !PageUnevictable(page)) {
- 		int lru = page_lru_base_type(page);
- 		int nr_pages = thp_nr_pages(page);
- 
-@@ -362,7 +368,8 @@ static void activate_page(struct page *page)
- 
- 	page = compound_head(page);
  	spin_lock_irq(&pgdat->lru_lock);
--	__activate_page(page, mem_cgroup_page_lruvec(page, pgdat));
-+	if (PageLRU(page))
-+		__activate_page(page, mem_cgroup_page_lruvec(page, pgdat));
- 	spin_unlock_irq(&pgdat->lru_lock);
- }
- #endif
-@@ -519,9 +526,6 @@ static void lru_deactivate_file_fn(struct page *page, struct lruvec *lruvec)
- 	bool active;
- 	int nr_pages = thp_nr_pages(page);
- 
--	if (!PageLRU(page))
--		return;
 -
- 	if (PageUnevictable(page))
- 		return;
+ 	move_pages_to_lru(lruvec, &page_list);
  
-@@ -562,7 +566,7 @@ static void lru_deactivate_file_fn(struct page *page, struct lruvec *lruvec)
+ 	__mod_node_page_state(pgdat, NR_ISOLATED_ANON + file, -nr_taken);
+-	lru_note_cost(lruvec, file, stat.nr_pageout);
+ 	item = current_is_kswapd() ? PGSTEAL_KSWAPD : PGSTEAL_DIRECT;
+ 	if (!cgroup_reclaim(sc))
+ 		__count_vm_events(item, nr_reclaimed);
+ 	__count_memcg_events(lruvec_memcg(lruvec), item, nr_reclaimed);
+ 	__count_vm_events(PGSTEAL_ANON + file, nr_reclaimed);
+-
+ 	spin_unlock_irq(&pgdat->lru_lock);
  
- static void lru_deactivate_fn(struct page *page, struct lruvec *lruvec)
- {
--	if (PageLRU(page) && PageActive(page) && !PageUnevictable(page)) {
-+	if (PageActive(page) && !PageUnevictable(page)) {
- 		int lru = page_lru_base_type(page);
- 		int nr_pages = thp_nr_pages(page);
++	lru_note_cost(lruvec, file, stat.nr_pageout);
+ 	mem_cgroup_uncharge_list(&page_list);
+ 	free_unref_page_list(&page_list);
  
-@@ -579,7 +583,7 @@ static void lru_deactivate_fn(struct page *page, struct lruvec *lruvec)
- 
- static void lru_lazyfree_fn(struct page *page, struct lruvec *lruvec)
- {
--	if (PageLRU(page) && PageAnon(page) && PageSwapBacked(page) &&
-+	if (PageAnon(page) && PageSwapBacked(page) &&
- 	    !PageSwapCache(page) && !PageUnevictable(page)) {
- 		bool active = PageActive(page);
- 		int nr_pages = thp_nr_pages(page);
-@@ -1021,7 +1025,29 @@ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec)
-  */
- void __pagevec_lru_add(struct pagevec *pvec)
- {
--	pagevec_lru_move_fn(pvec, __pagevec_lru_add_fn);
-+	int i;
-+	struct pglist_data *pgdat = NULL;
-+	struct lruvec *lruvec;
-+	unsigned long flags = 0;
-+
-+	for (i = 0; i < pagevec_count(pvec); i++) {
-+		struct page *page = pvec->pages[i];
-+		struct pglist_data *pagepgdat = page_pgdat(page);
-+
-+		if (pagepgdat != pgdat) {
-+			if (pgdat)
-+				spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-+			pgdat = pagepgdat;
-+			spin_lock_irqsave(&pgdat->lru_lock, flags);
-+		}
-+
-+		lruvec = mem_cgroup_page_lruvec(page, pgdat);
-+		__pagevec_lru_add_fn(page, lruvec);
-+	}
-+	if (pgdat)
-+		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-+	release_pages(pvec->pages, pvec->nr);
-+	pagevec_reinit(pvec);
- }
- 
- /**
+diff --git a/mm/workingset.c b/mm/workingset.c
+index 130348cbf40a..a915a812c363 100644
+--- a/mm/workingset.c
++++ b/mm/workingset.c
+@@ -381,9 +381,7 @@ void workingset_refault(struct page *page, void *shadow)
+ 	if (workingset) {
+ 		SetPageWorkingset(page);
+ 		/* XXX: Move to lru_cache_add() when it supports new vs putback */
+-		spin_lock_irq(&page_pgdat(page)->lru_lock);
+ 		lru_note_cost_page(page);
+-		spin_unlock_irq(&page_pgdat(page)->lru_lock);
+ 		inc_lruvec_state(lruvec, WORKINGSET_RESTORE_BASE + file);
+ 	}
+ out:
 -- 
 1.8.3.1
 
