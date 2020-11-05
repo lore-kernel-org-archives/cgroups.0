@@ -1,7 +1,7 @@
 From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v21 06/19] mm/rmap: stop store reordering issue on page->mapping
-Date: Thu,  5 Nov 2020 16:55:36 +0800
-Message-ID: <1604566549-62481-7-git-send-email-alex.shi@linux.alibaba.com>
+Subject: [PATCH v21 04/19] mm/thp: narrow lru locking
+Date: Thu,  5 Nov 2020 16:55:34 +0800
+Message-ID: <1604566549-62481-5-git-send-email-alex.shi@linux.alibaba.com>
 References: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com>
@@ -10,88 +10,142 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
-Cc: Minchan Kim <minchan@kernel.org>
+Cc: Andrea Arcangeli <aarcange@redhat.com>
 
-Hugh Dickins and Minchan Kim observed a long time issue which
-discussed here, but actully the mentioned fix missed.
-https://lore.kernel.org/lkml/20150504031722.GA2768@blaptop/
-The store reordering may cause problem in the scenario:
+lru_lock and page cache xa_lock have no obvious reason to be taken
+one way round or the other: until now, lru_lock has been taken before
+page cache xa_lock, when splitting a THP; but nothing else takes them
+together.  Reverse that ordering: let's narrow the lru locking - but
+leave local_irq_disable to block interrupts throughout, like before.
 
-	CPU 0						CPU1
-   do_anonymous_page
-	page_add_new_anon_rmap()
-	  page->mapping = anon_vma + PAGE_MAPPING_ANON
-	lru_cache_add_inactive_or_unevictable()
-	  spin_lock(lruvec->lock)
-	  SetPageLRU()
-	  spin_unlock(lruvec->lock)
-						/* idletacking judged it as LRU
-						 * page so pass the page in
-						 * page_idle_clear_pte_refs
-						 */
-						page_idle_clear_pte_refs
-						  rmap_walk
-						    if PageAnon(page)
+Hugh Dickins point: split_huge_page_to_list() was already silly, to be
+using the _irqsave variant: it's just been taking sleeping locks, so
+would already be broken if entered with interrupts enabled.  So we
+can save passing flags argument down to __split_huge_page().
 
-Johannes give detailed examples how the store reordering could cause
-a trouble:
-The concern is the SetPageLRU may get reorder before 'page->mapping'
-setting, That would make CPU 1 will observe at page->mapping after
-observing PageLRU set on the page.
+Why change the lock ordering here? That was hard to decide. One reason:
+when this series reaches per-memcg lru locking, it relies on the THP's
+memcg to be stable when taking the lru_lock: that is now done after the
+THP's refcount has been frozen, which ensures page memcg cannot change.
 
-1. anon_vma + PAGE_MAPPING_ANON
+Another reason: previously, lock_page_memcg()'s move_lock was presumed
+to nest inside lru_lock; but now lru_lock must nest inside (page cache
+lock inside) move_lock, so it becomes possible to use lock_page_memcg()
+to stabilize page memcg before taking its lru_lock.  That is not the
+mechanism used in this series, but it is an option we want to keep open.
 
-   That's the in-order scenario and is fine.
-
-2. NULL
-
-   That's possible if the page->mapping store gets reordered to occur
-   after SetPageLRU. That's fine too because we check for it.
-
-3. anon_vma without the PAGE_MAPPING_ANON bit
-
-   That would be a problem and could lead to all kinds of undesirable
-   behavior including crashes and data corruption.
-
-   Is it possible? AFAICT the compiler is allowed to tear the store to
-   page->mapping and I don't see anything that would prevent it.
-
-That said, I also don't see how the reader testing PageLRU under the
-lru_lock would prevent that in the first place. AFAICT we need that
-WRITE_ONCE() around the page->mapping assignment.
-
+[Hugh Dickins: rewrite commit log]
 Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
+Reviewed-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Acked-by: Hugh Dickins <hughd@google.com>
 Cc: Hugh Dickins <hughd@google.com>
+Cc: Kirill A. Shutemov <kirill@shutemov.name>
+Cc: Andrea Arcangeli <aarcange@redhat.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
 Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Minchan Kim <minchan@kernel.org>
-Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-Cc: linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>
 Cc: linux-mm@kvack.org
+Cc: linux-kernel@vger.kernel.org
 ---
- mm/rmap.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ mm/huge_memory.c | 25 +++++++++++++------------
+ 1 file changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/mm/rmap.c b/mm/rmap.c
-index 1b84945d655c..078d54da59d4 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -1054,8 +1054,13 @@ static void __page_set_anon_rmap(struct page *page,
- 	if (!exclusive)
- 		anon_vma = anon_vma->root;
- 
-+	/*
-+	 * Prevent page->mapping from pointing to an anon_vma without
-+	 * the PAGE_MAPPING_ANON bit set.  This could happen if the
-+	 * compiler stores anon_vma and then adds PAGE_MAPPING_ANON to it.
-+	 */
- 	anon_vma = (void *) anon_vma + PAGE_MAPPING_ANON;
--	page->mapping = (struct address_space *) anon_vma;
-+	WRITE_ONCE(page->mapping, (struct address_space *) anon_vma);
- 	page->index = linear_page_index(vma, address);
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 79318d7f7d5d..b70ec0c6076b 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2435,7 +2435,7 @@ static void __split_huge_page_tail(struct page *head, int tail,
  }
  
+ static void __split_huge_page(struct page *page, struct list_head *list,
+-		pgoff_t end, unsigned long flags)
++		pgoff_t end)
+ {
+ 	struct page *head = compound_head(page);
+ 	pg_data_t *pgdat = page_pgdat(head);
+@@ -2445,8 +2445,6 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 	unsigned int nr = thp_nr_pages(head);
+ 	int i;
+ 
+-	lruvec = mem_cgroup_page_lruvec(head, pgdat);
+-
+ 	/* complete memcg works before add pages to LRU */
+ 	mem_cgroup_split_huge_fixup(head);
+ 
+@@ -2458,6 +2456,11 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 		xa_lock(&swap_cache->i_pages);
+ 	}
+ 
++	/* prevent PageLRU to go away from under us, and freeze lru stats */
++	spin_lock(&pgdat->lru_lock);
++
++	lruvec = mem_cgroup_page_lruvec(head, pgdat);
++
+ 	for (i = nr - 1; i >= 1; i--) {
+ 		__split_huge_page_tail(head, i, lruvec, list);
+ 		/* Some pages can be beyond i_size: drop them from page cache */
+@@ -2477,6 +2480,8 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 	}
+ 
+ 	ClearPageCompound(head);
++	spin_unlock(&pgdat->lru_lock);
++	/* Caller disabled irqs, so they are still disabled here */
+ 
+ 	split_page_owner(head, nr);
+ 
+@@ -2494,8 +2499,7 @@ static void __split_huge_page(struct page *page, struct list_head *list,
+ 		page_ref_add(head, 2);
+ 		xa_unlock(&head->mapping->i_pages);
+ 	}
+-
+-	spin_unlock_irqrestore(&pgdat->lru_lock, flags);
++	local_irq_enable();
+ 
+ 	remap_page(head, nr);
+ 
+@@ -2641,12 +2645,10 @@ bool can_split_huge_page(struct page *page, int *pextra_pins)
+ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ {
+ 	struct page *head = compound_head(page);
+-	struct pglist_data *pgdata = NODE_DATA(page_to_nid(head));
+ 	struct deferred_split *ds_queue = get_deferred_split_queue(head);
+ 	struct anon_vma *anon_vma = NULL;
+ 	struct address_space *mapping = NULL;
+ 	int count, mapcount, extra_pins, ret;
+-	unsigned long flags;
+ 	pgoff_t end;
+ 
+ 	VM_BUG_ON_PAGE(is_huge_zero_page(head), head);
+@@ -2707,9 +2709,8 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 	unmap_page(head);
+ 	VM_BUG_ON_PAGE(compound_mapcount(head), head);
+ 
+-	/* prevent PageLRU to go away from under us, and freeze lru stats */
+-	spin_lock_irqsave(&pgdata->lru_lock, flags);
+-
++	/* block interrupt reentry in xa_lock and spinlock */
++	local_irq_disable();
+ 	if (mapping) {
+ 		XA_STATE(xas, &mapping->i_pages, page_index(head));
+ 
+@@ -2739,7 +2740,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 				__dec_lruvec_page_state(head, NR_FILE_THPS);
+ 		}
+ 
+-		__split_huge_page(page, list, end, flags);
++		__split_huge_page(page, list, end);
+ 		ret = 0;
+ 	} else {
+ 		if (IS_ENABLED(CONFIG_DEBUG_VM) && mapcount) {
+@@ -2753,7 +2754,7 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 		spin_unlock(&ds_queue->split_queue_lock);
+ fail:		if (mapping)
+ 			xa_unlock(&mapping->i_pages);
+-		spin_unlock_irqrestore(&pgdata->lru_lock, flags);
++		local_irq_enable();
+ 		remap_page(head, thp_nr_pages(head));
+ 		ret = -EBUSY;
+ 	}
 -- 
 1.8.3.1
 
