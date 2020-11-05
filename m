@@ -1,81 +1,66 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v21 02/19] mm/thp: use head for head page in lru_add_page_tail
-Date: Thu,  5 Nov 2020 16:55:32 +0800
-Message-ID: <1604566549-62481-3-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH v21 07/19] mm: page_idle_get_page() does not need lru_lock
+Date: Thu,  5 Nov 2020 16:55:37 +0800
+Message-ID: <1604566549-62481-8-git-send-email-alex.shi@linux.alibaba.com>
 References: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1604566549-62481-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-Since the first parameter is only used by head page, it's better to make
-it explicit.
+From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-Reviewed-by: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
-Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Acked-by: Hugh Dickins <hughd@google.com>
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Hugh Dickins <hughd@google.com>
-Cc: linux-mm@kvack.org
-Cc: linux-kernel@vger.kernel.org
+It is necessary for page_idle_get_page() to recheck PageLRU() after
+get_page_unless_zero(), but holding lru_lock around that serves no
+useful purpose, and adds to lru_lock contention: delete it.
+
+See https://lore.kernel.org/lkml/20150504031722.GA2768@blaptop for the
+discussion that led to lru_lock there; but __page_set_anon_rmap() now
+uses WRITE_ONCE(), and I see no other risk in page_idle_clear_pte_refs()
+using rmap_walk() (beyond the risk of racing PageAnon->PageKsm, mostly
+but not entirely prevented by page_count() check in ksm.c's
+write_protect_page(): that risk being shared with page_referenced() and
+not helped by lru_lock).
+
+Signed-off-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Cc: Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
- mm/huge_memory.c | 23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+ mm/page_idle.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 8f16e991f7cc..60726eb26840 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -2348,33 +2348,32 @@ static void remap_page(struct page *page, unsigned int nr)
- 	}
- }
- 
--static void lru_add_page_tail(struct page *page, struct page *page_tail,
-+static void lru_add_page_tail(struct page *head, struct page *tail,
- 		struct lruvec *lruvec, struct list_head *list)
+diff --git a/mm/page_idle.c b/mm/page_idle.c
+index 057c61df12db..64e5344a992c 100644
+--- a/mm/page_idle.c
++++ b/mm/page_idle.c
+@@ -32,19 +32,15 @@
+ static struct page *page_idle_get_page(unsigned long pfn)
  {
--	VM_BUG_ON_PAGE(!PageHead(page), page);
--	VM_BUG_ON_PAGE(PageCompound(page_tail), page);
--	VM_BUG_ON_PAGE(PageLRU(page_tail), page);
-+	VM_BUG_ON_PAGE(!PageHead(head), head);
-+	VM_BUG_ON_PAGE(PageCompound(tail), head);
-+	VM_BUG_ON_PAGE(PageLRU(tail), head);
- 	lockdep_assert_held(&lruvec_pgdat(lruvec)->lru_lock);
+ 	struct page *page = pfn_to_online_page(pfn);
+-	pg_data_t *pgdat;
  
- 	if (!list)
--		SetPageLRU(page_tail);
-+		SetPageLRU(tail);
+ 	if (!page || !PageLRU(page) ||
+ 	    !get_page_unless_zero(page))
+ 		return NULL;
  
--	if (likely(PageLRU(page)))
--		list_add_tail(&page_tail->lru, &page->lru);
-+	if (likely(PageLRU(head)))
-+		list_add_tail(&tail->lru, &head->lru);
- 	else if (list) {
- 		/* page reclaim is reclaiming a huge page */
--		get_page(page_tail);
--		list_add_tail(&page_tail->lru, list);
-+		get_page(tail);
-+		list_add_tail(&tail->lru, list);
- 	} else {
- 		/*
- 		 * Head page has not yet been counted, as an hpage,
- 		 * so we must account for each subpage individually.
- 		 *
--		 * Put page_tail on the list at the correct position
-+		 * Put tail on the list at the correct position
- 		 * so they all end up in order.
- 		 */
--		add_page_to_lru_list_tail(page_tail, lruvec,
--					  page_lru(page_tail));
-+		add_page_to_lru_list_tail(tail, lruvec, page_lru(tail));
+-	pgdat = page_pgdat(page);
+-	spin_lock_irq(&pgdat->lru_lock);
+ 	if (unlikely(!PageLRU(page))) {
+ 		put_page(page);
+ 		page = NULL;
  	}
+-	spin_unlock_irq(&pgdat->lru_lock);
+ 	return page;
  }
  
 -- 
