@@ -1,32 +1,219 @@
-From: =?GBK?B?y9W71A==?= <sh_def-9Onoh4P/yGk@public.gmane.org>
-Subject: Re:Re: [PATCH] mm/memcontrol: replace '== root_mem_cgroup' with
- mem_cgroup_is_root
-Date: Thu, 5 Nov 2020 10:45:20 +0800 (CST)
-Message-ID: <4c956479.1572.175964b555a.Coremail.sh_def@163.com>
-References: <20201104151457.GA108301@rlk>
- <20201104224622.GE1938922@carbon.dhcp.thefacebook.com>
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Subject: Re: [PATCH v20 08/20] mm: page_idle_get_page() does not need lru_lock
+Date: Thu, 5 Nov 2020 12:52:05 +0800
+Message-ID: <6eea82d8-e406-06ee-2333-eb6e2f1944e5@linux.alibaba.com>
+References: <1603968305-8026-1-git-send-email-alex.shi@linux.alibaba.com>
+ <1603968305-8026-9-git-send-email-alex.shi@linux.alibaba.com>
+ <20201102144110.GB724984@cmpxchg.org>
+ <20201102144927.GN27442@casper.infradead.org>
+ <20201102202003.GA740958@cmpxchg.org>
+ <b4038b87-cf5a-fcb7-06f4-b98874029615@linux.alibaba.com>
+ <20201104174603.GB744831@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=Date:From:Subject:MIME-Version:Message-ID; bh=MbJ4j
-        SQ9NcxDw1MYdK9VeZXzTkW8dChBtbcdzOJbkoo=; b=B/lY2RsBObmpA0rifnVkS
-        F4At5Hxb74vF421+tb0guw7QBMQ25I/2lL8V6+3ZAN6cdfBui/jKlxcXrttlP//x
-        n+YgK1VUq9bNqMqu4giMY3wHaTXR1b+P4jVtXsXh1wDtHUvKBGPpZ8EDoz909Icn
-        3H5OX4GiVq70Vr80NDNkdE=
-In-Reply-To: <20201104224622.GE1938922-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20201104174603.GB744831@cmpxchg.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Matthew Wilcox <willy@infradead.org>, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com, Vlastimil Babka <vbabka@suse.cz>, Minchan Kim <minchan@kernel.org>
 
-CkF0IDIwMjAtMTEtMDUgMDY6NDY6MjIsICJSb21hbiBHdXNoY2hpbiIgPGd1cm9AZmIuY29tPiB3
-cm90ZToKPk9uIFdlZCwgTm92IDA0LCAyMDIwIGF0IDExOjE0OjU3UE0gKzA4MDAsIEh1aSBTdSB3
-cm90ZToKPj4gV2UgaGF2ZSBzdXBwbGllZCB0aGUgaW5saW5lIGZ1bmM6IG1lbV9jZ3JvdXBfaXNf
-cm9vdCgpLgo+PiBTbyB3ZSBtYXkgdXNlIG1lbV9jZ3JvdXBfaXNfcm9vdCgpIGluc3RlYWQgb2Yg
-dXNpbmcKPj4gJ21lbWNnID09IHJvb3RfbWVtX2Nncm91cCcgb3IgJ21lbWNnICE9IHJvb3RfbWVt
-X2Nncm91cCcKPj4gZGlyZWN0bHksIHdoaWNoIGlzIG1vcmUgcmVhZGFibGUuCj4KPk1vc3Qgb2Yg
-dGhlc2UgY29tcGFyaXNvbnMgd2lsbCBnbyBhd2F5IHNvb246Cj5odHRwczovL2xrbWwub3JnL2xr
-bWwvMjAyMC8xMC8yMS82MTIgKHRoaXMgaXMKPmFuIHJmYyB2ZXJzaW9uLCBJJ2xsIHNlbmQgYW4g
-dXBkYXRlZCB2ZXJzaW9uIHNvb24pLgo+Cj5UaGFua3MhCgpZZWFoLCB0aGFua3MuCgpQbGVhc2Ug
-aWdub3JlIHRoaXMgY2hhbmdlLgo=
+
+
+在 2020/11/5 上午1:46, Johannes Weiner 写道:
+> On Wed, Nov 04, 2020 at 07:27:21PM +0800, Alex Shi wrote:
+>> 在 2020/11/3 上午4:20, Johannes Weiner 写道:
+>>> On Mon, Nov 02, 2020 at 02:49:27PM +0000, Matthew Wilcox wrote:
+>>>> On Mon, Nov 02, 2020 at 09:41:10AM -0500, Johannes Weiner wrote:
+>>>>> On Thu, Oct 29, 2020 at 06:44:53PM +0800, Alex Shi wrote:
+>>>>>> From: Hugh Dickins <hughd@google.com>
+>>>>>>
+>>>>>> It is necessary for page_idle_get_page() to recheck PageLRU() after
+>>>>>> get_page_unless_zero(), but holding lru_lock around that serves no
+>>>>>> useful purpose, and adds to lru_lock contention: delete it.
+>>>>>>
+>>>>>> See https://lore.kernel.org/lkml/20150504031722.GA2768@blaptop for the
+>>>>>> discussion that led to lru_lock there; but __page_set_anon_rmap() now
+>>>>>> uses WRITE_ONCE(),
+>>>>>
+>>>>> That doesn't seem to be the case in Linus's or Andrew's tree. Am I
+>>>>> missing a dependent patch series?
+>>>>>
+>>>>>> and I see no other risk in page_idle_clear_pte_refs() using
+>>>>>> rmap_walk() (beyond the risk of racing PageAnon->PageKsm, mostly but
+>>>>>> not entirely prevented by page_count() check in ksm.c's
+>>>>>> write_protect_page(): that risk being shared with page_referenced()
+>>>>>> and not helped by lru_lock).
+>>>>>
+>>>>> Isn't it possible, as per Minchan's description, for page->mapping to
+>>>>> point to a struct anon_vma without PAGE_MAPPING_ANON set, and rmap
+>>>>> thinking it's looking at a struct address_space?
+>>>>
+>>>> I don't think it can point to an anon_vma without the ANON bit set.
+>>>> Minchan's concern in that email was that it might still be NULL.
+>>>
+>>> Hm, no, the thread is a lengthy discussion about whether the store
+>>> could be split such that page->mapping is actually pointing to
+>>> something invalid (anon_vma without the PageAnon bit).
+>>>
+>>> From his email:
+>>>
+>>>         CPU 0                                                                           CPU 1
+>>>
+>>> do_anonymous_page
+>>>   __page_set_anon_rmap
+>>>   /* out of order happened so SetPageLRU is done ahead */
+>>>   SetPageLRU(page)
+>>
+>> This SetPageLRU done in __pagevec_lru_add_fn() which under the lru_lock
+>> protection, so the original memory barrier or lock concern isn't
+>> correct. that means, the SetPageLRU isn't possible to be here.
+>> And then no warry on right side 'CPU 1' problem.
+> 
+> The SetPageLRU is done under lru_lock, but the store to page->mapping
+> is not, so what ensures ordering between them? And what prevents the
+> compiler from tearing the store to page->mapping?
+> 
+
+Right, I misunderstand the spin_lock in memory barrier. Thanks a lot
+for point out this.
+So, is this patch fine to fix the problem?
+
+From 8427121da195a6a386d1ce71abcb41b31211e21f Mon Sep 17 00:00:00 2001
+From: Alex Shi <alex.shi@linux.alibaba.com>
+Date: Thu, 5 Nov 2020 11:38:24 +0800
+Subject: [PATCH] mm/rmap: stop store reordering issue on page->mapping
+
+Hugh Dickins and Minchan Kim observed a long time issue which
+discussed here, but actully the mentioned fix missed.
+https://lore.kernel.org/lkml/20150504031722.GA2768@blaptop/
+The store reordering may cause problem in the scenario:
+
+	CPU 0						CPU1
+   do_anonymous_page
+	page_add_new_anon_rmap()
+	  page->mapping = anon_vma + PAGE_MAPPING_ANON
+	lru_cache_add_inactive_or_unevictable()
+	  spin_lock(lruvec->lock)
+	  SetPageLRU()
+	  spin_unlock(lruvec->lock)
+						/* idletacking judged it as LRU
+						 * page so pass the page in
+						 * page_idle_clear_pte_refs
+						 */
+						page_idle_clear_pte_refs
+						  rmap_walk
+						    if PageAnon(page)
+
+Johannes give detailed examples how the store reordering could cause
+a trouble:
+The concern is the SetPageLRU may get reorder before 'page->mapping'
+setting, That would make CPU 1 will observe at page->mapping after
+observing PageLRU set on the page.
+
+1. anon_vma + PAGE_MAPPING_ANON
+
+   That's the in-order scenario and is fine.
+
+2. NULL
+
+   That's possible if the page->mapping store gets reordered to occur
+   after SetPageLRU. That's fine too because we check for it.
+
+3. anon_vma without the PAGE_MAPPING_ANON bit
+
+   That would be a problem and could lead to all kinds of undesirable
+   behavior including crashes and data corruption.
+
+   Is it possible? AFAICT the compiler is allowed to tear the store to
+   page->mapping and I don't see anything that would prevent it.
+
+That said, I also don't see how the reader testing PageLRU under the
+lru_lock would prevent that in the first place. AFAICT we need that
+WRITE_ONCE() around the page->mapping assignment.
+
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Hugh Dickins <hughd@google.com>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Minchan Kim <minchan@kernel.org>
+Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-mm@kvack.org
+---
+ mm/rmap.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/mm/rmap.c b/mm/rmap.c
+index c050dab2ae65..56af18aa57de 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -1054,8 +1054,27 @@ static void __page_set_anon_rmap(struct page *page,
+ 	if (!exclusive)
+ 		anon_vma = anon_vma->root;
+ 
++	/*
++	 * w/o the WRITE_ONCE here the following scenario may happens due to
++	 * store reordering.
++	 *
++	 *      CPU 0                                          CPU 1
++	 *
++	 * do_anonymous_page				page_idle_clear_pte_refs
++	 *   __page_set_anon_rmap
++	 *     page->mapping = anon_vma + PAGE_MAPPING_ANON
++	 *   lru_cache_add_inactive_or_unevictable()
++	 *     SetPageLRU(page)
++	 *                                               rmap_walk
++	 *                                                if PageAnon(page)
++	 *
++	 *  The 'SetPageLRU' may reordered before page->mapping setting, and
++	 *  page->mapping may set with anon_vma, w/o anon bit, then rmap_walk
++	 *  may goes to rmap_walk_file() for a anon page.
++	 */
++
+ 	anon_vma = (void *) anon_vma + PAGE_MAPPING_ANON;
+-	page->mapping = (struct address_space *) anon_vma;
++	WRITE_ONCE(page->mapping, (struct address_space *) anon_vma);
+ 	page->index = linear_page_index(vma, address);
+ }
+ 
+-- 
+1.8.3.1
+
+
+> The writer does this:
+> 
+> 	CPU 0
+> 	page_add_new_anon_rmap()
+> 	  page->mapping = anon_vma + PAGE_MAPPING_ANON
+> 	lru_cache_add_inactive_or_unevictable()
+> 	  spin_lock(lruvec->lock)
+> 	  SetPageLRU()
+> 	  spin_unlock(lruvec->lock)
+> 
+> The concern is what CPU 1 will observe at page->mapping after
+> observing PageLRU set on the page.
+> 
+> 1. anon_vma + PAGE_MAPPING_ANON
+> 
+>    That's the in-order scenario and is fine.
+> 
+> 2. NULL
+> 
+>    That's possible if the page->mapping store gets reordered to occur
+>    after SetPageLRU. That's fine too because we check for it.
+> 
+> 3. anon_vma without the PAGE_MAPPING_ANON bit
+> 
+>    That would be a problem and could lead to all kinds of undesirable
+>    behavior including crashes and data corruption.
+> 
+>    Is it possible? AFAICT the compiler is allowed to tear the store to
+>    page->mapping and I don't see anything that would prevent it.
+> 
+> That said, I also don't see how the reader testing PageLRU under the
+> lru_lock would prevent that in the first place. AFAICT we need that
+> WRITE_ONCE() around the page->mapping assignment that's referenced in
+> the changelog of this patch but I cannot find in any tree or patch.
+> 
