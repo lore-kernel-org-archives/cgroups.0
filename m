@@ -1,52 +1,252 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: [PATCH v21 03/19] mm/thp: Simplify lru_add_page_tail()
-Date: Thu,  5 Nov 2020 16:55:33 +0800
-Message-ID: <1604566549-62481-4-git-send-email-alex.shi@linux.alibaba.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH v21 18/19] mm/lru: introduce the relock_page_lruvec function
+Date: Thu,  5 Nov 2020 16:55:48 +0800
+Message-ID: <1604566549-62481-19-git-send-email-alex.shi@linux.alibaba.com>
 References: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1604566549-62481-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
-Cc: =?UTF-8?q?Mika=20Penttil=C3=A4?= <mika.penttila@nextfour.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-U2ltcGxpZnkgbHJ1X2FkZF9wYWdlX3RhaWwoKSwgdGhlcmUgYXJlIGFjdHVhbGx5IG9ubHkgdHdv
-IGNhc2VzIHBvc3NpYmxlOgpzcGxpdF9odWdlX3BhZ2VfdG9fbGlzdCgpLCB3aXRoIGxpc3Qgc3Vw
-cGxpZWQgYW5kIGhlYWQgaXNvbGF0ZWQgZnJvbSBscnUKYnkgaXRzIGNhbGxlcjsgb3Igc3BsaXRf
-aHVnZV9wYWdlKCksIHdpdGggTlVMTCBsaXN0IGFuZCBoZWFkIG9uIGxydSAtCmJlY2F1c2Ugd2hl
-biBoZWFkIGlzIHJhY2lseSBpc29sYXRlZCBmcm9tIGxydSwgdGhlIGlzb2xhdG9yJ3MgcmVmZXJl
-bmNlCndpbGwgc3RvcCB0aGUgc3BsaXQgZnJvbSBnZXR0aW5nIGFueSBmdXJ0aGVyIHRoYW4gaXRz
-IHBhZ2VfcmVmX2ZyZWV6ZSgpLgoKU28gZGVjaWRlIGJldHdlZW4gdGhlIHR3byBjYXNlcyBieSAi
-bGlzdCIsIGJ1dCBhZGQgVk1fV0FSTl9PTigpcyB0bwp2ZXJpZnkgdGhhdCB0aGV5IG1hdGNoIG91
-ciBscnUgZXhwZWN0YXRpb25zLgoKW0h1Z2ggRGlja2luczogcmV3cml0ZSBjb21taXQgbG9nXQpT
-aWduZWQtb2ZmLWJ5OiBBbGV4IFNoaSA8YWxleC5zaGlAbGludXguYWxpYmFiYS5jb20+ClJldmll
-d2VkLWJ5OiBLaXJpbGwgQS4gU2h1dGVtb3YgPGtpcmlsbC5zaHV0ZW1vdkBsaW51eC5pbnRlbC5j
-b20+CkFja2VkLWJ5OiBIdWdoIERpY2tpbnMgPGh1Z2hkQGdvb2dsZS5jb20+CkNjOiBLaXJpbGwg
-QS4gU2h1dGVtb3YgPGtpcmlsbEBzaHV0ZW1vdi5uYW1lPgpDYzogQW5kcmV3IE1vcnRvbiA8YWtw
-bUBsaW51eC1mb3VuZGF0aW9uLm9yZz4KQ2M6IEpvaGFubmVzIFdlaW5lciA8aGFubmVzQGNtcHhj
-aGcub3JnPgpDYzogTWF0dGhldyBXaWxjb3ggPHdpbGx5QGluZnJhZGVhZC5vcmc+CkNjOiBIdWdo
-IERpY2tpbnMgPGh1Z2hkQGdvb2dsZS5jb20+CkNjOiBNaWthIFBlbnR0aWzDpCA8bWlrYS5wZW50
-dGlsYUBuZXh0Zm91ci5jb20+CkNjOiBsaW51eC1tbUBrdmFjay5vcmcKQ2M6IGxpbnV4LWtlcm5l
-bEB2Z2VyLmtlcm5lbC5vcmcKLS0tCiBtbS9odWdlX21lbW9yeS5jIHwgMjAgKysrKysrLS0tLS0t
-LS0tLS0tLS0KIDEgZmlsZSBjaGFuZ2VkLCA2IGluc2VydGlvbnMoKyksIDE0IGRlbGV0aW9ucygt
-KQoKZGlmZiAtLWdpdCBhL21tL2h1Z2VfbWVtb3J5LmMgYi9tbS9odWdlX21lbW9yeS5jCmluZGV4
-IDYwNzI2ZWIyNjg0MC4uNzkzMThkN2Y3ZDVkIDEwMDY0NAotLS0gYS9tbS9odWdlX21lbW9yeS5j
-CisrKyBiL21tL2h1Z2VfbWVtb3J5LmMKQEAgLTIzNTYsMjQgKzIzNTYsMTYgQEAgc3RhdGljIHZv
-aWQgbHJ1X2FkZF9wYWdlX3RhaWwoc3RydWN0IHBhZ2UgKmhlYWQsIHN0cnVjdCBwYWdlICp0YWls
-LAogCVZNX0JVR19PTl9QQUdFKFBhZ2VMUlUodGFpbCksIGhlYWQpOwogCWxvY2tkZXBfYXNzZXJ0
-X2hlbGQoJmxydXZlY19wZ2RhdChscnV2ZWMpLT5scnVfbG9jayk7CiAKLQlpZiAoIWxpc3QpCi0J
-CVNldFBhZ2VMUlUodGFpbCk7Ci0KLQlpZiAobGlrZWx5KFBhZ2VMUlUoaGVhZCkpKQotCQlsaXN0
-X2FkZF90YWlsKCZ0YWlsLT5scnUsICZoZWFkLT5scnUpOwotCWVsc2UgaWYgKGxpc3QpIHsKKwlp
-ZiAobGlzdCkgewogCQkvKiBwYWdlIHJlY2xhaW0gaXMgcmVjbGFpbWluZyBhIGh1Z2UgcGFnZSAq
-LworCQlWTV9XQVJOX09OKFBhZ2VMUlUoaGVhZCkpOwogCQlnZXRfcGFnZSh0YWlsKTsKIAkJbGlz
-dF9hZGRfdGFpbCgmdGFpbC0+bHJ1LCBsaXN0KTsKIAl9IGVsc2UgewotCQkvKgotCQkgKiBIZWFk
-IHBhZ2UgaGFzIG5vdCB5ZXQgYmVlbiBjb3VudGVkLCBhcyBhbiBocGFnZSwKLQkJICogc28gd2Ug
-bXVzdCBhY2NvdW50IGZvciBlYWNoIHN1YnBhZ2UgaW5kaXZpZHVhbGx5LgotCQkgKgotCQkgKiBQ
-dXQgdGFpbCBvbiB0aGUgbGlzdCBhdCB0aGUgY29ycmVjdCBwb3NpdGlvbgotCQkgKiBzbyB0aGV5
-IGFsbCBlbmQgdXAgaW4gb3JkZXIuCi0JCSAqLwotCQlhZGRfcGFnZV90b19scnVfbGlzdF90YWls
-KHRhaWwsIGxydXZlYywgcGFnZV9scnUodGFpbCkpOworCQkvKiBoZWFkIGlzIHN0aWxsIG9uIGxy
-dSAoYW5kIHdlIGhhdmUgaXQgZnJvemVuKSAqLworCQlWTV9XQVJOX09OKCFQYWdlTFJVKGhlYWQp
-KTsKKwkJU2V0UGFnZUxSVSh0YWlsKTsKKwkJbGlzdF9hZGRfdGFpbCgmdGFpbC0+bHJ1LCAmaGVh
-ZC0+bHJ1KTsKIAl9CiB9CiAKLS0gCjEuOC4zLjEKCg==
+From: Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+
+Use this new function to replace repeated same code, no func change.
+
+When testing for relock we can avoid the need for RCU locking if we simply
+compare the page pgdat and memcg pointers versus those that the lruvec is
+holding. By doing this we can avoid the extra pointer walks and accesses of
+the memory cgroup.
+
+In addition we can avoid the checks entirely if lruvec is currently NULL.
+
+Signed-off-by: Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Cc: Andrey Ryabinin <aryabinin-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Mel Gorman <mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org>
+Cc: Konstantin Khlebnikov <khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+---
+ include/linux/memcontrol.h | 52 ++++++++++++++++++++++++++++++++++++++++++++++
+ mm/mlock.c                 | 11 +---------
+ mm/swap.c                  | 33 +++++++----------------------
+ mm/vmscan.c                | 12 ++---------
+ 4 files changed, 62 insertions(+), 46 deletions(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 6ecb08ff4ad1..ba4050154fea 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -660,6 +660,22 @@ static inline struct lruvec *mem_cgroup_lruvec(struct mem_cgroup *memcg,
+ 
+ struct lruvec *mem_cgroup_page_lruvec(struct page *, struct pglist_data *);
+ 
++static inline bool lruvec_holds_page_lru_lock(struct page *page,
++					      struct lruvec *lruvec)
++{
++	pg_data_t *pgdat = page_pgdat(page);
++	const struct mem_cgroup *memcg;
++	struct mem_cgroup_per_node *mz;
++
++	if (mem_cgroup_disabled())
++		return lruvec == &pgdat->__lruvec;
++
++	mz = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
++	memcg = page->mem_cgroup ? : root_mem_cgroup;
++
++	return lruvec->pgdat == pgdat && mz->memcg == memcg;
++}
++
+ struct mem_cgroup *mem_cgroup_from_task(struct task_struct *p);
+ 
+ struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm);
+@@ -1221,6 +1237,14 @@ static inline struct lruvec *mem_cgroup_page_lruvec(struct page *page,
+ 	return &pgdat->__lruvec;
+ }
+ 
++static inline bool lruvec_holds_page_lru_lock(struct page *page,
++					      struct lruvec *lruvec)
++{
++	pg_data_t *pgdat = page_pgdat(page);
++
++	return lruvec == &pgdat->__lruvec;
++}
++
+ static inline struct mem_cgroup *parent_mem_cgroup(struct mem_cgroup *memcg)
+ {
+ 	return NULL;
+@@ -1663,6 +1687,34 @@ static inline void unlock_page_lruvec_irqrestore(struct lruvec *lruvec,
+ 	spin_unlock_irqrestore(&lruvec->lru_lock, flags);
+ }
+ 
++/* Don't lock again iff page's lruvec locked */
++static inline struct lruvec *relock_page_lruvec_irq(struct page *page,
++		struct lruvec *locked_lruvec)
++{
++	if (locked_lruvec) {
++		if (lruvec_holds_page_lru_lock(page, locked_lruvec))
++			return locked_lruvec;
++
++		unlock_page_lruvec_irq(locked_lruvec);
++	}
++
++	return lock_page_lruvec_irq(page);
++}
++
++/* Don't lock again iff page's lruvec locked */
++static inline struct lruvec *relock_page_lruvec_irqsave(struct page *page,
++		struct lruvec *locked_lruvec, unsigned long *flags)
++{
++	if (locked_lruvec) {
++		if (lruvec_holds_page_lru_lock(page, locked_lruvec))
++			return locked_lruvec;
++
++		unlock_page_lruvec_irqrestore(locked_lruvec, *flags);
++	}
++
++	return lock_page_lruvec_irqsave(page, flags);
++}
++
+ #ifdef CONFIG_CGROUP_WRITEBACK
+ 
+ struct wb_domain *mem_cgroup_wb_domain(struct bdi_writeback *wb);
+diff --git a/mm/mlock.c b/mm/mlock.c
+index ab164a675c25..55b3b3672977 100644
+--- a/mm/mlock.c
++++ b/mm/mlock.c
+@@ -277,16 +277,7 @@ static void __munlock_pagevec(struct pagevec *pvec, struct zone *zone)
+ 			 * so we can spare the get_page() here.
+ 			 */
+ 			if (TestClearPageLRU(page)) {
+-				struct lruvec *new_lruvec;
+-
+-				new_lruvec = mem_cgroup_page_lruvec(page,
+-						page_pgdat(page));
+-				if (new_lruvec != lruvec) {
+-					if (lruvec)
+-						unlock_page_lruvec_irq(lruvec);
+-					lruvec = lock_page_lruvec_irq(page);
+-				}
+-
++				lruvec = relock_page_lruvec_irq(page, lruvec);
+ 				del_page_from_lru_list(page, lruvec,
+ 							page_lru(page));
+ 				continue;
+diff --git a/mm/swap.c b/mm/swap.c
+index ed033f7c4f2d..c593ba596dea 100644
+--- a/mm/swap.c
++++ b/mm/swap.c
+@@ -210,19 +210,12 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
+ 
+ 	for (i = 0; i < pagevec_count(pvec); i++) {
+ 		struct page *page = pvec->pages[i];
+-		struct lruvec *new_lruvec;
+ 
+ 		/* block memcg migration during page moving between lru */
+ 		if (!TestClearPageLRU(page))
+ 			continue;
+ 
+-		new_lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+-		if (lruvec != new_lruvec) {
+-			if (lruvec)
+-				unlock_page_lruvec_irqrestore(lruvec, flags);
+-			lruvec = lock_page_lruvec_irqsave(page, &flags);
+-		}
+-
++		lruvec = relock_page_lruvec_irqsave(page, lruvec, &flags);
+ 		(*move_fn)(page, lruvec);
+ 
+ 		SetPageLRU(page);
+@@ -918,17 +911,12 @@ void release_pages(struct page **pages, int nr)
+ 		}
+ 
+ 		if (PageLRU(page)) {
+-			struct lruvec *new_lruvec;
+-
+-			new_lruvec = mem_cgroup_page_lruvec(page,
+-							page_pgdat(page));
+-			if (new_lruvec != lruvec) {
+-				if (lruvec)
+-					unlock_page_lruvec_irqrestore(lruvec,
+-									flags);
++			struct lruvec *prev_lruvec = lruvec;
++
++			lruvec = relock_page_lruvec_irqsave(page, lruvec,
++									&flags);
++			if (prev_lruvec != lruvec)
+ 				lock_batch = 0;
+-				lruvec = lock_page_lruvec_irqsave(page, &flags);
+-			}
+ 
+ 			VM_BUG_ON_PAGE(!PageLRU(page), page);
+ 			__ClearPageLRU(page);
+@@ -1033,15 +1021,8 @@ void __pagevec_lru_add(struct pagevec *pvec)
+ 
+ 	for (i = 0; i < pagevec_count(pvec); i++) {
+ 		struct page *page = pvec->pages[i];
+-		struct lruvec *new_lruvec;
+-
+-		new_lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+-		if (lruvec != new_lruvec) {
+-			if (lruvec)
+-				unlock_page_lruvec_irqrestore(lruvec, flags);
+-			lruvec = lock_page_lruvec_irqsave(page, &flags);
+-		}
+ 
++		lruvec = relock_page_lruvec_irqsave(page, lruvec, &flags);
+ 		__pagevec_lru_add_fn(page, lruvec);
+ 	}
+ 	if (lruvec)
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 2953ddec88a0..3b09a39de8cd 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -1884,8 +1884,7 @@ static unsigned noinline_for_stack move_pages_to_lru(struct lruvec *lruvec,
+ 		 * All pages were isolated from the same lruvec (and isolation
+ 		 * inhibits memcg migration).
+ 		 */
+-		VM_BUG_ON_PAGE(mem_cgroup_page_lruvec(page, page_pgdat(page))
+-							!= lruvec, page);
++		VM_BUG_ON_PAGE(!lruvec_holds_page_lru_lock(page, lruvec), page);
+ 		lru = page_lru(page);
+ 		nr_pages = thp_nr_pages(page);
+ 
+@@ -4277,7 +4276,6 @@ void check_move_unevictable_pages(struct pagevec *pvec)
+ 	for (i = 0; i < pvec->nr; i++) {
+ 		struct page *page = pvec->pages[i];
+ 		int nr_pages;
+-		struct lruvec *new_lruvec;
+ 
+ 		if (PageTransTail(page))
+ 			continue;
+@@ -4289,13 +4287,7 @@ void check_move_unevictable_pages(struct pagevec *pvec)
+ 		if (!TestClearPageLRU(page))
+ 			continue;
+ 
+-		new_lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+-		if (lruvec != new_lruvec) {
+-			if (lruvec)
+-				unlock_page_lruvec_irq(lruvec);
+-			lruvec = lock_page_lruvec_irq(page);
+-		}
+-
++		lruvec = relock_page_lruvec_irq(page, lruvec);
+ 		if (page_evictable(page) && PageUnevictable(page)) {
+ 			enum lru_list lru = page_lru_base_type(page);
+ 
+-- 
+1.8.3.1
+
