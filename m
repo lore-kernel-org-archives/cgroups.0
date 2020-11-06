@@ -1,69 +1,73 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH] mm/memcg: update page struct member in comments
-Date: Fri, 6 Nov 2020 12:51:40 -0800
-Message-ID: <20201106205140.GA2285866@carbon.dhcp.thefacebook.com>
-References: <1604662413-5734-1-git-send-email-alex.shi@linux.alibaba.com>
+From: Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org>
+Subject: [PATCH] cgroup/cgroup.c: replace 'of->kn->priv' with of_cft()
+Date: Fri, 6 Nov 2020 22:47:40 +0800
+Message-ID: <20201106144740.GA9692@rlk>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=g/IF6JDeuYmH1ljRDYU6MG+7bcLFRY47bRijoqWLlug=;
- b=G4m5UURfK2cLS7lmNUqhuY0NnUrFFAX0/GYVEinPITWo5KYgnwY6TIjgWKaexUklh8SP
- eIvhtcXmsIuvT2ZDJn0FjLV3RsSzzw+WeLB6iiIC2RIPj7g1U817IS8h/Xb2N9/VosKK
- XiavQmdPQ99BtdryV0lPbvA01ITzEM3xPPI= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=g/IF6JDeuYmH1ljRDYU6MG+7bcLFRY47bRijoqWLlug=;
- b=Mr+OC9T3Mw00pmrXTf77P7zajnLuaQV+JYhX3/k8Ip7DXM9KKHTzT9bqzvzEsjVy3BwsgDHbid+RVASBLJoLZR9nyarmO28x5wIFyWnuJkw8sUM8o0APTPMNEZd+20l8WWkvnuX0RKTFqnbwJ5io8r3G+F87/6luzTvihE5hhjs=
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=Date:From:Subject:Message-ID:MIME-Version; bh=lcBJi
+        p8ZNNvvSPADxy2tq0eOE8BhPbgY2uyruI3Bgms=; b=JWk5wGPQXlpX8nNKA/ARa
+        vBuaMqLarm1G1WPJdbB9RJAgWydHW5CR3Tm/QZo3G/Tv67ogyLSyNpKckp8M10WG
+        TQAViSZDY9fW0Xm4j2LXN1Bn+i/OZuAqP3ISd9QJ+Nyz3ZaNNwTzzz4b2tlTXZiF
+        lQbu3sT5RkIOVx68MtMyKc=
 Content-Disposition: inline
-In-Reply-To: <1604662413-5734-1-git-send-email-alex.shi@linux.alibaba.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alex Shi <alex.shi@linux.alibaba.com>
-Cc: hannes@cmpxchg.org, akpm@linux-foundation.org, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: sh_def-9Onoh4P/yGk@public.gmane.org
 
-On Fri, Nov 06, 2020 at 07:33:33PM +0800, Alex Shi wrote:
-> The page->mem_cgroup member is replaced by memcg_data, and add a helper
-> page_memcg() for it. Need to update comments to avoid confusing.
+we have supplied the inline function: of_cft() in cgroup.h.
 
-Hi Alex,
+So replace the direct use 'of->kn->priv' with inline func
+of_cft(), which is more readable.
 
-thank you for bringing it in!
-I definitely missed those.
+Signed-off-by: Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org>
+---
+ kernel/cgroup/cgroup.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-> 
-> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org> 
-> Cc: Michal Hocko <mhocko@kernel.org> 
-> Cc: Vladimir Davydov <vdavydov.dev@gmail.com> 
-> Cc: Andrew Morton <akpm@linux-foundation.org> 
-> Cc: cgroups@vger.kernel.org 
-> Cc: linux-mm@kvack.org 
-> Cc: linux-kernel@vger.kernel.org 
-> ---
->  mm/memcontrol.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index b2aa3b73ab82..8a8debea34fc 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1310,7 +1310,7 @@ int mem_cgroup_scan_tasks(struct mem_cgroup *memcg,
->   * @page: the page
->   * @pgdat: pgdat of the page
->   *
-> - * This function relies on page->mem_cgroup being stable - see the
-> + * This function relies on page_memcg(page) being stable - see the
->   * access rules in commit_charge().
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index e41c21819ba0..078d7f167890 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -3657,7 +3657,7 @@ static ssize_t cgroup_freeze_write(struct kernfs_open_file *of,
+ 
+ static int cgroup_file_open(struct kernfs_open_file *of)
+ {
+-	struct cftype *cft = of->kn->priv;
++	struct cftype *cft = of_cft(of);
+ 
+ 	if (cft->open)
+ 		return cft->open(of);
+@@ -3666,7 +3666,7 @@ static int cgroup_file_open(struct kernfs_open_file *of)
+ 
+ static void cgroup_file_release(struct kernfs_open_file *of)
+ {
+-	struct cftype *cft = of->kn->priv;
++	struct cftype *cft = of_cft(of);
+ 
+ 	if (cft->release)
+ 		cft->release(of);
+@@ -3677,7 +3677,7 @@ static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
+ {
+ 	struct cgroup_namespace *ns = current->nsproxy->cgroup_ns;
+ 	struct cgroup *cgrp = of->kn->parent->priv;
+-	struct cftype *cft = of->kn->priv;
++	struct cftype *cft = of_cft(of);
+ 	struct cgroup_subsys_state *css;
+ 	int ret;
+ 
+@@ -3727,7 +3727,7 @@ static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
+ 
+ static __poll_t cgroup_file_poll(struct kernfs_open_file *of, poll_table *pt)
+ {
+-	struct cftype *cft = of->kn->priv;
++	struct cftype *cft = of_cft(of);
+ 
+ 	if (cft->poll)
+ 		return cft->poll(of, pt);
+-- 
+2.29.0
 
-There are "page and memcg binding" and "page's memcg" used in similar cases,
-I think it's more obvious than "page_memcg(page) being stable".
 
-Maybe it helps to address Ira's comment.
-
-Anyway, please feel free to add:
-Acked-by: Roman Gushchin <guro@fb.com>
-
-Thanks!
