@@ -1,52 +1,37 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: [PATCH] mm/memcg: update page struct member in comments
-Date: Fri,  6 Nov 2020 19:33:33 +0800
-Message-ID: <1604662413-5734-1-git-send-email-alex.shi@linux.alibaba.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH] mm/memcontrol:rewrite mem_cgroup_page_lruvec()
+Date: Fri, 6 Nov 2020 08:44:26 -0800
+Message-ID: <CALvZod7-FnQNqH-REJtrSuo+xfVMyv0os83-MvXS=ciGKZGA4g@mail.gmail.com>
+References: <20201104142516.GA106571@rlk>
+Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=NFLzWInf7oW7bjGKiJqYb2/P1LPe/HLqYvjRIRLjv10=;
+        b=RQjhXcPHc5TehIv2m28NXMCfMB8WOK9adl90A+M0wwX8PK6WMj5fVagX1y4Z5YeMsM
+         /1FU5uFqyQmCBuHK0ikHPWvQrVgo1mHtafkOOO5k5CY7cpfLKoxGtKeLHpLb3lY/jJ9C
+         RVOaNkFwUQJ/bhi8vvvNok/I/RDEDELO9MiyB2iPiBqfmvEnqBk71I2SRpv+Ban9L2fR
+         bEjBtwl9BqqVM/kjUvFv7pNt0oKoD9siqOKBcd2O2cqn16cAH4ZoN6taKDYEzbOWoX10
+         VtwXLYKrJU5/wPL353TmCD01vVcEl8/usm8BwvYiDbimiB+SodnlttN7tGoOfFR0PgPv
+         XXdw==
+In-Reply-To: <20201104142516.GA106571@rlk>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hui Su <sh_def@163.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Roman Gushchin <guro@fb.com>, Yafang Shao <laoar.shao@gmail.com>, Chris Down <chris@chrisdown.name>, LKML <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
 
-The page->mem_cgroup member is replaced by memcg_data, and add a helper
-page_memcg() for it. Need to update comments to avoid confusing.
+On Wed, Nov 4, 2020 at 6:26 AM Hui Su <sh_def@163.com> wrote:
+>
+> mem_cgroup_page_lruvec() in memcontrol.c and
+> mem_cgroup_lruvec() in memcontrol.h is very similar
+> except for the param(page and memcg) which also can be
+> convert to each other.
+>
+> So rewrite mem_cgroup_page_lruvec() with mem_cgroup_lruvec().
+>
+> Signed-off-by: Hui Su <sh_def@163.com>
 
-Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> 
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> 
-Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> 
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> 
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org 
-Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org 
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org 
----
- mm/memcontrol.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b2aa3b73ab82..8a8debea34fc 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1310,7 +1310,7 @@ int mem_cgroup_scan_tasks(struct mem_cgroup *memcg,
-  * @page: the page
-  * @pgdat: pgdat of the page
-  *
-- * This function relies on page->mem_cgroup being stable - see the
-+ * This function relies on page_memcg(page) being stable - see the
-  * access rules in commit_charge().
-  */
- struct lruvec *mem_cgroup_page_lruvec(struct page *page, struct pglist_data *pgdat)
-@@ -2862,7 +2862,7 @@ static void commit_charge(struct page *page, struct mem_cgroup *memcg)
- {
- 	VM_BUG_ON_PAGE(page_memcg(page), page);
- 	/*
--	 * Any of the following ensures page->mem_cgroup stability:
-+	 * Any of the following ensures page_memcg(page) stability:
- 	 *
- 	 * - the page lock
- 	 * - LRU isolation
--- 
-1.8.3.1
-
+Reviewed-by: Shakeel Butt <shakeelb@google.com>
