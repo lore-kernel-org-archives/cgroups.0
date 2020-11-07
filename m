@@ -1,70 +1,54 @@
-From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Subject: Re: [PATCH] mm/memcontrol:rewrite mem_cgroup_page_lruvec()
-Date: Fri, 6 Nov 2020 17:30:14 -0800
-Message-ID: <20201106173014.e13b5fe5edec41d1f7fdf072@linux-foundation.org>
-References: <20201104142516.GA106571@rlk>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: xiakaixu1987-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Subject: [PATCH] mm: memcontrol: Assign boolean values to a bool variable
+Date: Sat,  7 Nov 2020 16:24:55 +0800
+Message-ID: <1604737495-6418-1-git-send-email-kaixuxia@tencent.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604712615;
-        bh=5ja+hHDhLaw834klWxEIsEobJjKzEYlU1fK3r77mU5g=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=jZrN5F7/+Zu3GmPA5iLrAhldT/HnmmgsyZF2eKJZ9aZUKndfgBlXBzDVBKRlKB20J
-         gnoQgoeBoM9JlKv5BRD526px7a20WshtiPv/94Md18VkK2B5uF32W2PcQAXlnjhxJP
-         wyfF6u9yfTq52lPBu14DkQlLqPNi719Z1w4wjAJ4=
-In-Reply-To: <20201104142516.GA106571@rlk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=JHHlZp1uRQshZtVOevTd8kVtiW2laSXxZhJcCQo5cWA=;
+        b=F6LWRqEvicBf2UN13VB/7aC+ImV1y7V/8eAIjVqjWAEwNwPrnYcDIfH2BaMMj9E2ip
+         IflIZc+QBAEB8h6loN1v83UhaNc84Af6eIT42giwMAUXHbeaUCGX3rvDIVgUelI71jU+
+         95Jh1Grak51pUzoFZ4LI4Vi2g93k8rgEUr6wh2iThMlZmZvmLUv0KCPtyI+4jtS+TTdp
+         m80cSSptzouL5UKP3d7FEzyvu7akyhNQ5VXuct/ShmWhKWc8X8jMpsMecOLELB9aK9Qh
+         bYlpdLiVGoJBXeZN1pEepSPZpxe39XZmEGZ5UqhbBadEAWx0ymNvUZc00wJs00Ln99R2
+         aYhA==
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kaixu Xia <kaixuxia-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-On Wed, 4 Nov 2020 22:25:16 +0800 Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org> wrote:
+From: Kaixu Xia <kaixuxia-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-> mem_cgroup_page_lruvec() in memcontrol.c and
-> mem_cgroup_lruvec() in memcontrol.h is very similar
-> except for the param(page and memcg) which also can be
-> convert to each other.
-> 
-> So rewrite mem_cgroup_page_lruvec() with mem_cgroup_lruvec().
+Fix the following coccinelle warnings:
 
-Alex Shi's "mm/memcg: warning on !memcg after readahead page charged"
-(https://lkml.kernel.org/r/1604283436-18880-3-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org)
-changes mem_cgroup_page_lruvec() thusly:
+./mm/memcontrol.c:7341:2-22: WARNING: Assignment of 0/1 to bool variable
+./mm/memcontrol.c:7343:2-22: WARNING: Assignment of 0/1 to bool variable
 
---- a/mm/memcontrol.c~mm-memcg-warning-on-memcg-after-readahead-page-charged
-+++ a/mm/memcontrol.c
-@@ -1325,10 +1325,7 @@ struct lruvec *mem_cgroup_page_lruvec(st
- 	}
- 
- 	memcg = page_memcg(page);
--	/*
--	 * Swapcache readahead pages are added to the LRU - and
--	 * possibly migrated - before they are charged.
--	 */
-+	VM_WARN_ON_ONCE_PAGE(!memcg, page);
- 	if (!memcg)
- 		memcg = root_mem_cgroup;
- 
-So the patch didn't apply.
+Reported-by: Tosk Robot <tencent_os_robot-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+Signed-off-by: Kaixu Xia <kaixuxia-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+---
+ mm/memcontrol.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-That's easily fixed, but it does make one wonder whether this:
-
-> -struct lruvec *mem_cgroup_page_lruvec(struct page *, struct pglist_data *);
-> +/**
-> + * mem_cgroup_page_lruvec - return lruvec for isolating/putting an LRU page
-> + * @page: the page
-> + * @pgdat: pgdat of the page
-> + *
-> + * This function relies on page->mem_cgroup being stable.
-> + */
-> +static inline struct lruvec *mem_cgroup_page_lruvec(struct page *page,
-> +						struct pglist_data *pgdat)
-> +{
-> +	struct mem_cgroup *memcg = page->mem_cgroup;
-> +
-> +	return mem_cgroup_lruvec(memcg, pgdat);
-> +}
-
-Should be using page_memcg()?
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 3dcbf24d2227..60147cf9f0c0 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -7349,9 +7349,9 @@ bool mem_cgroup_swap_full(struct page *page)
+ static int __init setup_swap_account(char *s)
+ {
+ 	if (!strcmp(s, "1"))
+-		cgroup_memory_noswap = 0;
++		cgroup_memory_noswap = false;
+ 	else if (!strcmp(s, "0"))
+-		cgroup_memory_noswap = 1;
++		cgroup_memory_noswap = true;
+ 	return 1;
+ }
+ __setup("swapaccount=", setup_swap_account);
+-- 
+2.20.0
 
