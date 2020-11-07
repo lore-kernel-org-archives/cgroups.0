@@ -1,73 +1,70 @@
-From: Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org>
-Subject: [PATCH] cgroup/cgroup.c: replace 'of->kn->priv' with of_cft()
-Date: Fri, 6 Nov 2020 22:47:40 +0800
-Message-ID: <20201106144740.GA9692@rlk>
+From: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Subject: Re: [PATCH] mm/memcontrol:rewrite mem_cgroup_page_lruvec()
+Date: Fri, 6 Nov 2020 17:30:14 -0800
+Message-ID: <20201106173014.e13b5fe5edec41d1f7fdf072@linux-foundation.org>
+References: <20201104142516.GA106571@rlk>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=Date:From:Subject:Message-ID:MIME-Version; bh=lcBJi
-        p8ZNNvvSPADxy2tq0eOE8BhPbgY2uyruI3Bgms=; b=JWk5wGPQXlpX8nNKA/ARa
-        vBuaMqLarm1G1WPJdbB9RJAgWydHW5CR3Tm/QZo3G/Tv67ogyLSyNpKckp8M10WG
-        TQAViSZDY9fW0Xm4j2LXN1Bn+i/OZuAqP3ISd9QJ+Nyz3ZaNNwTzzz4b2tlTXZiF
-        lQbu3sT5RkIOVx68MtMyKc=
-Content-Disposition: inline
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1604712615;
+        bh=5ja+hHDhLaw834klWxEIsEobJjKzEYlU1fK3r77mU5g=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=jZrN5F7/+Zu3GmPA5iLrAhldT/HnmmgsyZF2eKJZ9aZUKndfgBlXBzDVBKRlKB20J
+         gnoQgoeBoM9JlKv5BRD526px7a20WshtiPv/94Md18VkK2B5uF32W2PcQAXlnjhxJP
+         wyfF6u9yfTq52lPBu14DkQlLqPNi719Z1w4wjAJ4=
+In-Reply-To: <20201104142516.GA106571@rlk>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: sh_def-9Onoh4P/yGk@public.gmane.org
+To: Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-we have supplied the inline function: of_cft() in cgroup.h.
+On Wed, 4 Nov 2020 22:25:16 +0800 Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org> wrote:
 
-So replace the direct use 'of->kn->priv' with inline func
-of_cft(), which is more readable.
+> mem_cgroup_page_lruvec() in memcontrol.c and
+> mem_cgroup_lruvec() in memcontrol.h is very similar
+> except for the param(page and memcg) which also can be
+> convert to each other.
+> 
+> So rewrite mem_cgroup_page_lruvec() with mem_cgroup_lruvec().
 
-Signed-off-by: Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org>
----
- kernel/cgroup/cgroup.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Alex Shi's "mm/memcg: warning on !memcg after readahead page charged"
+(https://lkml.kernel.org/r/1604283436-18880-3-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org)
+changes mem_cgroup_page_lruvec() thusly:
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index e41c21819ba0..078d7f167890 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -3657,7 +3657,7 @@ static ssize_t cgroup_freeze_write(struct kernfs_open_file *of,
+--- a/mm/memcontrol.c~mm-memcg-warning-on-memcg-after-readahead-page-charged
++++ a/mm/memcontrol.c
+@@ -1325,10 +1325,7 @@ struct lruvec *mem_cgroup_page_lruvec(st
+ 	}
  
- static int cgroup_file_open(struct kernfs_open_file *of)
- {
--	struct cftype *cft = of->kn->priv;
-+	struct cftype *cft = of_cft(of);
+ 	memcg = page_memcg(page);
+-	/*
+-	 * Swapcache readahead pages are added to the LRU - and
+-	 * possibly migrated - before they are charged.
+-	 */
++	VM_WARN_ON_ONCE_PAGE(!memcg, page);
+ 	if (!memcg)
+ 		memcg = root_mem_cgroup;
  
- 	if (cft->open)
- 		return cft->open(of);
-@@ -3666,7 +3666,7 @@ static int cgroup_file_open(struct kernfs_open_file *of)
- 
- static void cgroup_file_release(struct kernfs_open_file *of)
- {
--	struct cftype *cft = of->kn->priv;
-+	struct cftype *cft = of_cft(of);
- 
- 	if (cft->release)
- 		cft->release(of);
-@@ -3677,7 +3677,7 @@ static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
- {
- 	struct cgroup_namespace *ns = current->nsproxy->cgroup_ns;
- 	struct cgroup *cgrp = of->kn->parent->priv;
--	struct cftype *cft = of->kn->priv;
-+	struct cftype *cft = of_cft(of);
- 	struct cgroup_subsys_state *css;
- 	int ret;
- 
-@@ -3727,7 +3727,7 @@ static ssize_t cgroup_file_write(struct kernfs_open_file *of, char *buf,
- 
- static __poll_t cgroup_file_poll(struct kernfs_open_file *of, poll_table *pt)
- {
--	struct cftype *cft = of->kn->priv;
-+	struct cftype *cft = of_cft(of);
- 
- 	if (cft->poll)
- 		return cft->poll(of, pt);
--- 
-2.29.0
+So the patch didn't apply.
 
+That's easily fixed, but it does make one wonder whether this:
+
+> -struct lruvec *mem_cgroup_page_lruvec(struct page *, struct pglist_data *);
+> +/**
+> + * mem_cgroup_page_lruvec - return lruvec for isolating/putting an LRU page
+> + * @page: the page
+> + * @pgdat: pgdat of the page
+> + *
+> + * This function relies on page->mem_cgroup being stable.
+> + */
+> +static inline struct lruvec *mem_cgroup_page_lruvec(struct page *page,
+> +						struct pglist_data *pgdat)
+> +{
+> +	struct mem_cgroup *memcg = page->mem_cgroup;
+> +
+> +	return mem_cgroup_lruvec(memcg, pgdat);
+> +}
+
+Should be using page_memcg()?
 
