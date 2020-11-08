@@ -1,108 +1,89 @@
-From: Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
-Subject: [PATCH 0/4] RFC: support for global CPU list abbreviations
-Date: Sun,  8 Nov 2020 11:08:12 -0500
-Message-ID: <20201108160816.896881-1-paul.gortmaker@windriver.com>
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+Subject: [PATCH 1/4] cpumask: un-inline cpulist_parse; prepare for ascii helpers
+Date: Sun,  8 Nov 2020 11:08:13 -0500
+Message-ID: <20201108160816.896881-2-paul.gortmaker@windriver.com>
+References: <20201108160816.896881-1-paul.gortmaker@windriver.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=windriversystems.onmicrosoft.com;
  s=selector2-windriversystems-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=T2cajyWv+8aq85qUtmXVdB+lKrja6lK1jL5SJc0rNHA=;
- b=bTJiNj213/Ub97Bcsopo4ijz6WSFIU8XVOwlsWL1UJMia2UWYD99RZquaHum9AhzvfxQtyvsBxmosQwiTxfVNEBouRqEG4r3HTaccn96HDcTm7CPJhbdhiRiC6zjVsw43ETuqq0uHQ8m/r8Ssi0rm8HJKgm8voZ2kjg3lCGXIxM=
+ bh=VbGv485UyrW7cjxqwewbTE6kA1TMdSQnkaCXAHlPqhA=;
+ b=qAZmdGYjO2tL9SZV3DH+j+iNg4Y7ww6/7yCwUlcduKpnKvHE0Am+IIHwsQmqZdxsOJCJkvMgIdT2jJ4CqdZxVx7gD3TOsAAAIFbiPIlDaWsTdMWY4Bz5o5MFhf1n9tDIxDnWcgjUGO6YqVthmaaNYph49V9vA55flMUj5iqzMfQ=
+In-Reply-To: <20201108160816.896881-1-paul.gortmaker@windriver.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Paul E. McKenney" <paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josh Triplett <josh-iaAMLnmF4UmaiuxdJuQwMA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+To: linux-kernel@vger.kernel.org
+Cc: cgroups@vger.kernel.org, Paul Gortmaker <paul.gortmaker@windriver.com>
 
-The basic objective here was to add support for "nohz_full=8-last" and/or
-"rcu_nocbs="4-last" -- essentially introduce "last" as a portable
-reference evaluated at boot/runtime for anything using a CPU list.
+In order to support convenience tokens like "all", and "none" and
+"last" in CPU lists, we'll have to use string operations and expand on
+what is currently a simple wrapper around the underlying bitmap
+function call.
 
-The thinking behind this, is that people carve off a few early CPUs to
-support housekeeping tasks, and perhaps dedicate one to a busy I/O
-peripheral, and then the remaining pool of CPUs out to the end are a
-part of a commonly configured pool used for the real work the user
-cares about.
+Rather than add header dependencies to cpumask.h and code more complex
+operations not really appropriate for a header file, we prepare by
+simply un-inlining it here and move it to the lib dir alongside the
+other more complex cpumask functions.
 
-Extend that logic out to a fleet of machines - some new, and some
-nearing EOL, and you've probably got a wide range of core counts to
-contend with - even though the early number of cores dedicated to the
-system overhead probably doesn't vary.
+Aside from an additional exported symbol, no functional changes are
+anticipated with this move.
 
-This change would enable sysadmins to have a common bootarg across all
-such systems, and would also avoid any off-by-one fencepost errors that
-happen for users who might briefly forget that core counts start at
-zero.
-
-Looking around before starting, I noticed RCU already had a short-form
-abbreviation "all" -- but if we want to treat CPU lists in a uniform
-matter, then tokens shouldn't be implemented at a subsystem level and
-hence be subsystem specific; each with their own variations.
-
-So I moved "all" to global use - for boot args, and for cgroups.  Then
-I added the inverse "none" and finally, the one I wanted -- "last".
-
-The use of "last" isn't a standalone word like "all" or "none".  It will
-be a part of a complete range specification, possibly with CSV separate
-ranges, and possibly specified multiple times.  So I had to be a bit
-more careful with string matching - and hence un-inlined the parse
-function as commit #1 in this series.
-
-But it really is a generic support for "replace token ABC with known at
-boot value XYZ" - for example, it would be trivial to extend support to
-add "half" as a dynamic token to be replaced with 1/2 the core count,
-even though I wouldn't suggest that has a use case like "last" does.
-
-I tested the string matching with a bunch of intentionally badly crafted
-strings in a user-space harness, and tested bootarg use with nohz_full
-and rcu_nocbs, and also the post-boot cgroup use case as per below:
-
-   root@hackbox:/sys/fs/cgroup/cpuset# mkdir foo
-   root@hackbox:/sys/fs/cgroup/cpuset# cd foo
-   root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
-   
-   root@hackbox:/sys/fs/cgroup/cpuset/foo# /bin/echo 10-last > cpuset.cpus
-   root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
-   10-15
-   root@hackbox:/sys/fs/cgroup/cpuset/foo# /bin/echo all > cpuset.cpus
-   root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
-   0-15
-   root@hackbox:/sys/fs/cgroup/cpuset/foo# /bin/echo none > cpuset.cpus
-   root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
-   
-   root@hackbox:/sys/fs/cgroup/cpuset/foo#
-
-This was on a 16 core machine with CONFIG_NR_CPUS=16 in .config file.
-
-Note that the two use cases (boot and runtime) are why you see "early"
-parameter in the code - I entertained just sticking the string copy on
-the stack vs. the early alloc dance, but this felt more correct/robust.
-The cgroup and modular code using cpulist_parse() are runtime cases.
-
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
 ---
+ include/linux/cpumask.h | 12 +-----------
+ lib/cpumask.c           | 13 +++++++++++++
+ 2 files changed, 14 insertions(+), 11 deletions(-)
 
-Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: "Paul E. McKenney" <paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Josh Triplett <josh-iaAMLnmF4UmaiuxdJuQwMA@public.gmane.org>
-Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-
-Paul Gortmaker (4):
-  cpumask: un-inline cpulist_parse; prepare for ascii helpers
-  cpumask: make "all" alias global and not just RCU
-  cpumask: add a "none" alias to complement "all"
-  cpumask: add "last" alias for cpu list specifications
-
- .../admin-guide/kernel-parameters.rst         |  20 +++
- .../admin-guide/kernel-parameters.txt         |   4 +-
- include/linux/cpumask.h                       |  12 +-
- kernel/rcu/tree_plugin.h                      |  13 +-
- lib/cpumask.c                                 | 132 ++++++++++++++++++
- 5 files changed, 158 insertions(+), 23 deletions(-)
-
+diff --git a/include/linux/cpumask.h b/include/linux/cpumask.h
+index f0d895d6ac39..6656019cce0f 100644
+--- a/include/linux/cpumask.h
++++ b/include/linux/cpumask.h
+@@ -673,17 +673,7 @@ static inline int cpumask_parse(const char *buf, struct cpumask *dstp)
+ 	return bitmap_parse(buf, UINT_MAX, cpumask_bits(dstp), nr_cpumask_bits);
+ }
+ 
+-/**
+- * cpulist_parse - extract a cpumask from a user string of ranges
+- * @buf: the buffer to extract from
+- * @dstp: the cpumask to set.
+- *
+- * Returns -errno, or 0 for success.
+- */
+-static inline int cpulist_parse(const char *buf, struct cpumask *dstp)
+-{
+-	return bitmap_parselist(buf, cpumask_bits(dstp), nr_cpumask_bits);
+-}
++int cpulist_parse(const char *buf, struct cpumask *dstp);
+ 
+ /**
+  * cpumask_size - size to allocate for a 'struct cpumask' in bytes
+diff --git a/lib/cpumask.c b/lib/cpumask.c
+index 85da6ab4fbb5..5eb002237404 100644
+--- a/lib/cpumask.c
++++ b/lib/cpumask.c
+@@ -95,6 +95,19 @@ int cpumask_next_wrap(int n, const struct cpumask *mask, int start, bool wrap)
+ }
+ EXPORT_SYMBOL(cpumask_next_wrap);
+ 
++/**
++ * cpulist_parse - extract a cpumask from a user string of ranges
++ * @buf: the buffer to extract from
++ * @dstp: the cpumask to set.
++ *
++ * Returns -errno, or 0 for success.
++ */
++int cpulist_parse(const char *buf, struct cpumask *dstp)
++{
++	return bitmap_parselist(buf, cpumask_bits(dstp), nr_cpumask_bits);
++}
++EXPORT_SYMBOL(cpulist_parse);
++
+ /* These are not inline because of header tangles. */
+ #ifdef CONFIG_CPUMASK_OFFSTACK
+ /**
 -- 
 2.25.1
 
