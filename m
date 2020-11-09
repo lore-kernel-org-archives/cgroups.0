@@ -1,136 +1,45 @@
-From: Bhaskar Chowdhury <unixbhaskar@gmail.com>
-Subject: [PATCH] kernel: cgroup: Mundane spelling fixes throughout the file
-Date: Mon,  9 Nov 2020 16:01:11 +0530
-Message-ID: <20201109103111.10078-1-unixbhaskar@gmail.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH v2] mm/memcontrol:rewrite mem_cgroup_page_lruvec()
+Date: Mon, 9 Nov 2020 10:00:21 -0800
+Message-ID: <20201109180021.GC2285866@carbon.dhcp.thefacebook.com>
+References: <20201108143731.GA74138@rlk>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=wkye27w2nAyIcjrhd3hfBHl4YeysiD/X9LyxFDbBQas=;
-        b=OqRlee4MqSA7fZDWCF6CqdUSTCXoYD0diRAhsu5/Y7W/g2KuA+bJCPazJTzzu+ZzmV
-         mIovg/IuUJTtyhh+Uue6ho2Oj21wr80ltk8yGxzGlQL/NbCB+CKd7CCetJSPbVSjvAD4
-         8j+5N7HB1rpyffj20+nK7sxJE9Bqz9QhTgB9tpDlFvfUsAYlk4TgrcnW9BACfKgE3Xhi
-         2QS+Ki2TRw0wu04D3aZw2eJGaESFUNt16tiQeFXYR/Kr9EC0eQLWtGXg7rviA0XTeHdH
-         6tjed0PESdEiJTzDtD5P5Bi4mTY1QYeXlX4XTdaHJeDcr3yqwwuxQbDbBOfI5fOe4t+7
-         g5qA==
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=X4D8oL7DS3umIxJWzscItQ/Iato6n+wr5sxRrOHo1to=;
+ b=ZxmuIdRG1zD4j1Sw0Doq7wtkaZGtlVLbjDOAtkKnYMPytUiODNhThzkNgAhJ+Hm0KvpQ
+ NXkTi2jgXQ5ZWCeLn9w7VNKSJ/6kNJdibNNDGQJot5Pf+dwE6LlPSRXoZ53UYcRosGdS
+ swTx/T1amuMHlc7qgnAjURAACapDM5NibUw= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=X4D8oL7DS3umIxJWzscItQ/Iato6n+wr5sxRrOHo1to=;
+ b=AVyvgduDKdLh6u5MJhXK3UAzO5zUsmC8Uk1TXY1rpHjZwxcq7UZR0Mi0maqxm4sKHoQPuRSxwTsmY8TxEnhjcyrk5BXM8lLxctNQz2WW4HHgpm0wHcq3c3sKGMu92+k/PFFFC27IivKDgK+rQSUBk5T0DNWZ7IXcUTtcHcMix18=
+Content-Disposition: inline
+In-Reply-To: <20201108143731.GA74138@rlk>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, lizefan@huawei.com, hannes@cmpxchg.org, christian@brauner.io, ast@kernel.org, daniel@iogearbox.net, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, andrii@kernel.org, john.fastabend@gmail.com, kpsingh@chromium.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org
-Cc: Bhaskar Chowdhury <unixbhaskar@gmail.com>
+Content-Transfer-Encoding: 7bit
+To: Hui Su <sh_def@163.com>
+Cc: akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, shakeelb@google.com, laoar.shao@gmail.com, chris@chrisdown.name, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
 
-Few spelling fixes throughout the file.
+On Sun, Nov 08, 2020 at 10:37:31PM +0800, Hui Su wrote:
+> mem_cgroup_page_lruvec() in memcontrol.c and
+> mem_cgroup_lruvec() in memcontrol.h is very similar
+> except for the param(page and memcg) which also can be
+> convert to each other.
+> 
+> So rewrite mem_cgroup_page_lruvec() with mem_cgroup_lruvec().
+> 
+> v1->v2:
+> use page_memcg() instead of 'page->mem_cgroup'.
+> 
+> Acked-by: Michal Hocko <mhocko@suse.com>
+> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> Reviewed-by: Shakeel Butt <shakeelb@google.com>
+> Signed-off-by: Hui Su <sh_def@163.com>
 
-Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
----
- kernel/cgroup/cgroup.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+Acked-by: Roman Gushchin <guro@fb.com>
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index f2eeff74d713..c4f1b7968981 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -244,7 +244,7 @@ bool cgroup_ssid_enabled(int ssid)
-  *
-  * The default hierarchy is the v2 interface of cgroup and this function
-  * can be used to test whether a cgroup is on the default hierarchy for
-- * cases where a subsystem should behave differnetly depending on the
-+ * cases where a subsystem should behave differently depending on the
-  * interface version.
-  *
-  * List of changed behaviors:
-@@ -262,7 +262,7 @@ bool cgroup_ssid_enabled(int ssid)
-  *   "cgroup.procs" instead.
-  *
-  * - "cgroup.procs" is not sorted.  pids will be unique unless they got
-- *   recycled inbetween reads.
-+ *   recycled in-between reads.
-  *
-  * - "release_agent" and "notify_on_release" are removed.  Replacement
-  *   notification mechanism will be implemented.
-@@ -345,7 +345,7 @@ static bool cgroup_is_mixable(struct cgroup *cgrp)
- 	return !cgroup_parent(cgrp);
- }
-
--/* can @cgrp become a thread root? should always be true for a thread root */
-+/* can @cgrp become a thread root? Should always be true for a thread root */
- static bool cgroup_can_be_thread_root(struct cgroup *cgrp)
- {
- 	/* mixables don't care */
-@@ -530,7 +530,7 @@ static struct cgroup_subsys_state *cgroup_e_css_by_mask(struct cgroup *cgrp,
-  * the root css is returned, so this function always returns a valid css.
-  *
-  * The returned css is not guaranteed to be online, and therefore it is the
-- * callers responsiblity to tryget a reference for it.
-+ * callers responsibility to try get a reference for it.
-  */
- struct cgroup_subsys_state *cgroup_e_css(struct cgroup *cgrp,
- 					 struct cgroup_subsys *ss)
-@@ -702,7 +702,7 @@ EXPORT_SYMBOL_GPL(of_css);
- 			;						\
- 		else
-
--/* walk live descendants in preorder */
-+/* walk live descendants in pre order */
- #define cgroup_for_each_live_descendant_pre(dsct, d_css, cgrp)		\
- 	css_for_each_descendant_pre((d_css), cgroup_css((cgrp), NULL))	\
- 		if (({ lockdep_assert_held(&cgroup_mutex);		\
-@@ -936,7 +936,7 @@ void put_css_set_locked(struct css_set *cset)
-
- 	WARN_ON_ONCE(!list_empty(&cset->threaded_csets));
-
--	/* This css_set is dead. unlink it and release cgroup and css refs */
-+	/* This css_set is dead. Unlink it and release cgroup and css refs */
- 	for_each_subsys(ss, ssid) {
- 		list_del(&cset->e_cset_node[ssid]);
- 		css_put(cset->subsys[ssid]);
-@@ -1061,7 +1061,7 @@ static struct css_set *find_existing_css_set(struct css_set *old_cset,
-
- 	/*
- 	 * Build the set of subsystem state objects that we want to see in the
--	 * new css_set. while subsystems can change globally, the entries here
-+	 * new css_set. While subsystems can change globally, the entries here
- 	 * won't change, so no need for locking.
- 	 */
- 	for_each_subsys(ss, i) {
-@@ -1151,7 +1151,7 @@ static void link_css_set(struct list_head *tmp_links, struct css_set *cset,
-
- 	/*
- 	 * Always add links to the tail of the lists so that the lists are
--	 * in choronological order.
-+	 * in chronological order.
- 	 */
- 	list_move_tail(&link->cset_link, &cgrp->cset_links);
- 	list_add_tail(&link->cgrp_link, &cset->cgrp_links);
-@@ -4137,7 +4137,7 @@ struct cgroup_subsys_state *css_next_child(struct cgroup_subsys_state *pos,
- 	 * implies that if we observe !CSS_RELEASED on @pos in this RCU
- 	 * critical section, the one pointed to by its next pointer is
- 	 * guaranteed to not have finished its RCU grace period even if we
--	 * have dropped rcu_read_lock() inbetween iterations.
-+	 * have dropped rcu_read_lock() in-between iterations.
- 	 *
- 	 * If @pos has CSS_RELEASED set, its next pointer can't be
- 	 * dereferenced; however, as each css is given a monotonically
-@@ -4385,7 +4385,7 @@ static struct css_set *css_task_iter_next_css_set(struct css_task_iter *it)
- }
-
- /**
-- * css_task_iter_advance_css_set - advance a task itererator to the next css_set
-+ * css_task_iter_advance_css_set - advance a task iterator to the next css_set
-  * @it: the iterator to advance
-  *
-  * Advance @it to the next css_set to walk.
-@@ -6320,7 +6320,7 @@ struct cgroup_subsys_state *css_from_id(int id, struct cgroup_subsys *ss)
-  *
-  * Find the cgroup at @path on the default hierarchy, increment its
-  * reference count and return it.  Returns pointer to the found cgroup on
-- * success, ERR_PTR(-ENOENT) if @path doens't exist and ERR_PTR(-ENOTDIR)
-+ * success, ERR_PTR(-ENOENT) if @path doesn't exist and ERR_PTR(-ENOTDIR)
-  * if @path points to a non-directory.
-  */
- struct cgroup *cgroup_get_from_path(const char *path)
---
-2.26.2
-
+Thanks!
