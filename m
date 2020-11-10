@@ -1,38 +1,133 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2] mm: memcg/slab: Fix root memcg vmstats
-Date: Tue, 10 Nov 2020 10:23:05 -0500
-Message-ID: <20201110152305.GB842337@cmpxchg.org>
-References: <20201110031015.15715-1-songmuchun@bytedance.com>
+From: "Paul E. McKenney" <paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v2 0/4] support for global CPU list abbreviations
+Date: Tue, 10 Nov 2020 07:32:11 -0800
+Message-ID: <20201110153211.GU3249@paulmck-ThinkPad-P72>
+References: <20201110040725.1478297-1-paul.gortmaker@windriver.com>
+Reply-To: paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=4K7M+yU2qQGJnBqVAjylDdUBTFCEnQjaCz6moXfYMEE=;
-        b=on8OoPlw3VSXy8JNQfuM/sHMVZ8emLX5MZJzG0sTRRpgjWF3aRCwxgJSI9FEVC44qS
-         4kQmG920BaTWRgy9W2+iS2syx5dG8Yg/RXtBHWoo/nKw12Ik/Ir0l7CSBjpeXHec2dph
-         lNTHcg4fv8MpCEcu4c1MPc5PltE4KD+y6Lh3c2Wbsrd3pxKmW1K3nSqPVTtn/9yghgNO
-         pM8A1l0COcK6/hiUfry60njJLbjv+PNmAhrx5oDAM/Um3Rwv00auj9hEJ+rr8/0YIKVG
-         vTQ4g4GT+ArZWI37EDyK9bWNccjv5MrIbne6986cr4gqOKWA46X7OiN7nEmlRpHxIGJJ
-         yFIQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1605022331;
+        bh=K8VDqFdwKyqA5Y+dk5hxgwCzE73NJ2L201GMD5MtvM4=;
+        h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
+        b=cUKAIFuHhEVNGDkyQhX0/0PFsVhuyVsW6jOBKvmQyyEsUcsqjIV+Isdq32WM4nFf6
+         YSYVcRUuHFKsuSYVJPoVOxOC4bBi2XGgMdAtwkdA4ZsAKEMiA8cs9qzjRDIOBh7jzh
+         ijck5y3HvRUwYrotWhZlntHnEbufKa9nzkc/7vo0=
 Content-Disposition: inline
-In-Reply-To: <20201110031015.15715-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+In-Reply-To: <20201110040725.1478297-1-paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org, penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, vbabka-AlSwsSmVLrQ@public.gmane.org, laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, colin.king-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Josh Triplett <josh-iaAMLnmF4UmaiuxdJuQwMA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Tue, Nov 10, 2020 at 11:10:15AM +0800, Muchun Song wrote:
-> If we reparent the slab objects to the root memcg, when we free
-> the slab object, we need to update the per-memcg vmstats to keep
-> it correct for the root memcg. Now this at least affects the vmstat
-> of NR_KERNEL_STACK_KB for !CONFIG_VMAP_STACK when the thread stack
-> size is smaller than the PAGE_SIZE.
+On Mon, Nov 09, 2020 at 11:07:21PM -0500, Paul Gortmaker wrote:
+> RFC/v1 ---> v2:
 > 
-> Fixes: ec9f02384f60 ("mm: workingset: fix vmstat counters for shadow nodes")
-> Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> commit #1:
+>    leave one line stub behind for !SMP solving build failures.
+>    Reported by Randy Dunlap and various build bots.
+> 
+> commit #4
+>    manage to remember '\0' char in strlen from one line to the next.
+>    Reported by Colin King.
+> 
+> Original description from v1/RFC below remains unchanged...
 
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Queued and this time kicking off testing that actually includes your
+patches!  ;-)
+
+							Thanx, Paul
+
+>  ---
+> 
+> The basic objective here was to add support for "nohz_full=8-last" and/or
+> "rcu_nocbs="4-last" -- essentially introduce "last" as a portable
+> reference evaluated at boot/runtime for anything using a CPU list.
+> 
+> The thinking behind this, is that people carve off a few early CPUs to
+> support housekeeping tasks, and perhaps dedicate one to a busy I/O
+> peripheral, and then the remaining pool of CPUs out to the end are a
+> part of a commonly configured pool used for the real work the user
+> cares about.
+> 
+> Extend that logic out to a fleet of machines - some new, and some
+> nearing EOL, and you've probably got a wide range of core counts to
+> contend with - even though the early number of cores dedicated to the
+> system overhead probably doesn't vary.
+> 
+> This change would enable sysadmins to have a common bootarg across all
+> such systems, and would also avoid any off-by-one fencepost errors that
+> happen for users who might briefly forget that core counts start at
+> zero.
+> 
+> Looking around before starting, I noticed RCU already had a short-form
+> abbreviation "all" -- but if we want to treat CPU lists in a uniform
+> matter, then tokens shouldn't be implemented at a subsystem level and
+> hence be subsystem specific; each with their own variations.
+> 
+> So I moved "all" to global use - for boot args, and for cgroups.  Then
+> I added the inverse "none" and finally, the one I wanted -- "last".
+> 
+> The use of "last" isn't a standalone word like "all" or "none".  It will
+> be a part of a complete range specification, possibly with CSV separate
+> ranges, and possibly specified multiple times.  So I had to be a bit
+> more careful with string matching - and hence un-inlined the parse
+> function as commit #1 in this series.
+> 
+> But it really is a generic support for "replace token ABC with known at
+> boot value XYZ" - for example, it would be trivial to extend support to
+> add "half" as a dynamic token to be replaced with 1/2 the core count,
+> even though I wouldn't suggest that has a use case like "last" does.
+> 
+> I tested the string matching with a bunch of intentionally badly crafted
+> strings in a user-space harness, and tested bootarg use with nohz_full
+> and rcu_nocbs, and also the post-boot cgroup use case as per below:
+> 
+>    root@hackbox:/sys/fs/cgroup/cpuset# mkdir foo
+>    root@hackbox:/sys/fs/cgroup/cpuset# cd foo
+>    root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
+>    
+>    root@hackbox:/sys/fs/cgroup/cpuset/foo# /bin/echo 10-last > cpuset.cpus
+>    root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
+>    10-15
+>    root@hackbox:/sys/fs/cgroup/cpuset/foo# /bin/echo all > cpuset.cpus
+>    root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
+>    0-15
+>    root@hackbox:/sys/fs/cgroup/cpuset/foo# /bin/echo none > cpuset.cpus
+>    root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
+>    
+>    root@hackbox:/sys/fs/cgroup/cpuset/foo#
+> 
+> This was on a 16 core machine with CONFIG_NR_CPUS=16 in .config file.
+> 
+> Note that the two use cases (boot and runtime) are why you see "early"
+> parameter in the code - I entertained just sticking the string copy on
+> the stack vs. the early alloc dance, but this felt more correct/robust.
+> The cgroup and modular code using cpulist_parse() are runtime cases.
+> 
+> ---
+> 
+> Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Cc: "Paul E. McKenney" <paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Josh Triplett <josh-iaAMLnmF4UmaiuxdJuQwMA@public.gmane.org>
+> Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+> Cc: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> 
+> Paul Gortmaker (4):
+>   cpumask: un-inline cpulist_parse for SMP; prepare for ascii helpers
+>   cpumask: make "all" alias global and not just RCU
+>   cpumask: add a "none" alias to complement "all"
+>   cpumask: add "last" alias for cpu list specifications
+> 
+>  .../admin-guide/kernel-parameters.rst         |  20 +++
+>  .../admin-guide/kernel-parameters.txt         |   4 +-
+>  include/linux/cpumask.h                       |   8 ++
+>  kernel/rcu/tree_plugin.h                      |  13 +-
+>  lib/cpumask.c                                 | 132 ++++++++++++++++++
+>  5 files changed, 165 insertions(+), 12 deletions(-)
+> 
+> -- 
+> 2.25.1
+> 
