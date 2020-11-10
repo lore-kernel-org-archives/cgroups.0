@@ -1,219 +1,123 @@
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-Subject: [PATCH 4/4] cpumask: add "last" alias for cpu list specifications
-Date: Mon,  9 Nov 2020 23:07:25 -0500
-Message-ID: <20201110040725.1478297-5-paul.gortmaker@windriver.com>
-References: <20201110040725.1478297-1-paul.gortmaker@windriver.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: Re: [PATCH v21 00/19] per memcg lru lock
+Date: Tue, 10 Nov 2020 20:14:24 +0800
+Message-ID: <d28dbde7-9daa-903f-2f7b-be856f6653d5@linux.alibaba.com>
+References: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=windriversystems.onmicrosoft.com;
- s=selector2-windriversystems-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=6zFtvUKYzBo1LRdjZVqEx1fqA9SOVULU4a8jZZziy74=;
- b=TmGkZ+YUoTyOjwcIStvIko0xUUqPnPhrSu7/rrIJAHEuewtiR4VQZNqH8LW7Fb1gLI8xlKLEdaeJbzTP9gfB1ijw+BMru71BRBmkyvkvX2RTOlHJqLrUg8oHEcpKnB6WvNxcZ+NoylRT0NXXHRhJyXPHtydNFBb2Hqnf6OP0DwI=
-In-Reply-To: <20201110040725.1478297-1-paul.gortmaker@windriver.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1604566549-62481-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org
-Cc: cgroups@vger.kernel.org, rdunlap@infradead.org, colin.king@canonical.com, Paul Gortmaker <paul.gortmaker@windriver.com>
+Content-Type: text/plain; charset="utf-8"
+To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-It seems that a common configuration is to use the 1st couple cores
-for housekeeping tasks, and or driving a busy peripheral that generates
-a lot of interrupts, or something similar.
+Hi All,
 
-This tends to leave the remaining ones to form a pool of similarly
-configured cores to take on the real workload of interest to the user.
+Is any more comments of this version?
 
-So on machine A - with 32 cores, it could be 0-3 for "system" and then
-4-31 being used in boot args like nohz_full=, or rcu_nocbs= as part of
-setting up the worker pool of CPUs.
+Thanks
+Alex
 
-But then newer machine B is added, and it has 48 cores, and so while
-the 0-3 part remains unchanged, the pool setup cpu list becomes 4-47.
-
-Deployment would be easier if we could just simply replace 31 and 47
-with "last" and let the system substitute in the actual number at boot;
-a number that it knows better than we do.
-
-No need to have custom boot args per node, no need to do a trial boot
-in order to snoop /proc/cpuinfo and/or /sys/devices/system/cpu - no
-more fencepost errors of using 32 and 48 instead of 31 and 47.
-
-A generic token replacement is used to substitute "last" with the
-number of CPUs present before handing off to bitmap processing.  But
-it could just as easily be used to replace any placeholder token with
-any other token or value only known at/after boot.
-
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- .../admin-guide/kernel-parameters.rst         |   7 ++
- lib/cpumask.c                                 | 112 +++++++++++++++++-
- 2 files changed, 117 insertions(+), 2 deletions(-)
-
-diff --git a/Documentation/admin-guide/kernel-parameters.rst b/Documentation/admin-guide/kernel-parameters.rst
-index 9e1c4522e1f0..362dea55034e 100644
---- a/Documentation/admin-guide/kernel-parameters.rst
-+++ b/Documentation/admin-guide/kernel-parameters.rst
-@@ -83,6 +83,13 @@ will provide an empty/cleared cpu mask for the associated boot argument.
- Note that "all" and "none" are not necessarily valid/sensible input values
- for each available parameter expecting a CPU list.
- 
-+        foo_cpus=1,3,5,16-last
-+
-+will at runtime, replace "last" with the number of the last (highest number)
-+present CPU on the system.  Thus a common deployment can be used on multiple
-+systems with different total number of cores present, without needing to
-+evaluate the total core count in advance on each system.
-+
- This document may not be entirely up to date and comprehensive. The command
- "modinfo -p ${modulename}" shows a current list of all parameters of a loadable
- module. Loadable modules, after being loaded into the running kernel, also
-diff --git a/lib/cpumask.c b/lib/cpumask.c
-index eb8b1c92501e..fa56d622c1d8 100644
---- a/lib/cpumask.c
-+++ b/lib/cpumask.c
-@@ -3,6 +3,7 @@
- #include <linux/kernel.h>
- #include <linux/bitops.h>
- #include <linux/string.h>
-+#include <linux/ctype.h>
- #include <linux/cpumask.h>
- #include <linux/export.h>
- #include <linux/memblock.h>
-@@ -96,15 +97,97 @@ int cpumask_next_wrap(int n, const struct cpumask *mask, int start, bool wrap)
- }
- EXPORT_SYMBOL(cpumask_next_wrap);
- 
-+/*
-+ * Basically strstr() but given "foo", ignore "foobar", "myfoo", "foofoo"
-+ * and "foo2bar" -- i.e. any case where the token is a word fragment.
-+ */
-+static char *cpumask_find_token(const char *str, const char *token)
-+{
-+	char *here = strstr(str, token);
-+	size_t tlen = strlen(token);
-+
-+	if (!here)
-+		return NULL;
-+
-+	while (here) {
-+		size_t offset = here - str;
-+		char prev, next = str[offset + tlen];
-+
-+		if (offset)
-+			prev = str[offset - 1];
-+		else
-+			prev = '\0';
-+
-+		if (!(isalnum(prev) || isalnum(next)))
-+			break;
-+
-+		here = strstr(here + tlen, token);
-+	}
-+
-+	return here;
-+}
-+
-+/*
-+ * replace old token with new token: Given a convenience or placeholder
-+ * token "last" and an associated value not known until boot, of say 1234,
-+ * replace instances of "last" with "1234".
-+ *
-+ * For example src = "1,3,last,7-last,9,lastly,last-2047\0"  results in a
-+ *            dest = "1,3,1234,7-1234,9,lastly,1234-2047\0"
-+ *
-+ * The destination string may be shorter than, equal to, or longer than
-+ * the source string -- based on whether the new token strlen is shorter
-+ * than, equal to, or longer than the old token strlen.
-+ * The caller must allocate dest space accordingly with that in mind.
-+ */
-+
-+static void cpulist_replace_token(char *dest, const char *src,
-+			   const char *old_token, const char *new_token)
-+{
-+	const char *src_start = src;
-+	char *dest_start = dest, *here;
-+	const size_t olen = strlen(old_token);
-+	const size_t nlen = strlen(new_token);
-+
-+	here = cpumask_find_token(src_start, old_token);
-+	if (!here) {
-+		strcpy(dest, src);
-+		return;
-+	}
-+
-+	while (here) {
-+		size_t offset = here - src_start;
-+
-+		strncpy(dest_start, src_start, offset);
-+		dest_start += offset;
-+		src_start += offset;
-+
-+		strcpy(dest_start, new_token);
-+		dest_start += nlen;
-+		src_start += olen;
-+
-+		strcpy(dest_start, src_start);	/* remainder of string */
-+		here = cpumask_find_token(src_start, old_token);
-+	}
-+}
-+
- /**
-  * cpulist_parse - extract a cpumask from a user string of ranges
-  * @buf: the buffer to extract from
-  * @dstp: the cpumask to set.
-  *
-  * Returns -errno, or 0 for success.
-+ *
-+ * Marked __ref because memblock_*() are __meminit and we use them for
-+ * any early calls before slab is available.
-  */
--int cpulist_parse(const char *buf, struct cpumask *dstp)
-+int __ref cpulist_parse(const char *buf, struct cpumask *dstp)
- {
-+	int r;
-+	char *cpulist, last_cpu[5];	/* NR_CPUS <= 9999 */
-+	size_t len = strlen(buf) + 1;	/* don't forget '\0' */
-+	bool early = !slab_is_available();
-+
- 	if (!strcmp(buf, "all")) {
- 		cpumask_setall(dstp);
- 		return 0;
-@@ -115,7 +198,32 @@ int cpulist_parse(const char *buf, struct cpumask *dstp)
- 		return 0;
- 	}
- 
--	return bitmap_parselist(buf, cpumask_bits(dstp), nr_cpumask_bits);
-+	/*
-+	 * strlen("last") means "len" is OK up to NR_CPUS <= 9999.
-+	 */
-+	if (early)
-+		cpulist = memblock_alloc(len, SMP_CACHE_BYTES);
-+	else
-+		cpulist = kzalloc(len, GFP_KERNEL);
-+
-+	if (cpulist == NULL)
-+		return -ENOMEM;
-+
-+	/*
-+	 * bitmap_parselist has no concept of "last" CPU, so we have to
-+	 * replace "last" with a real number in dest copy of the string.
-+	 */
-+	sprintf(last_cpu, "%d", cpumask_last(cpu_present_mask));
-+	cpulist_replace_token(cpulist, buf, "last", last_cpu);
-+
-+	r = bitmap_parselist(cpulist, cpumask_bits(dstp), nr_cpumask_bits);
-+
-+	if (early)
-+		memblock_free((phys_addr_t)cpulist, len);
-+	else
-+		kfree(cpulist);
-+
-+	return r;
- }
- EXPORT_SYMBOL(cpulist_parse);
- 
--- 
-2.25.1
-
+在 2020/11/5 下午4:55, Alex Shi 写道:
+> This version rebase on next/master 20201104, with much of Johannes's
+> Acks and some changes according to Johannes comments. And add a new patch
+> v21-0006-mm-rmap-stop-store-reordering-issue-on-page-mapp.patch to support
+> v21-0007.
+> 
+> This patchset followed 2 memcg VM_WARN_ON_ONCE_PAGE patches which were
+> added to -mm tree yesterday.
+>  
+> Many thanks for line by line review by Hugh Dickins, Alexander Duyck and
+> Johannes Weiner.
+> 
+> So now this patchset includes 3 parts:
+> 1, some code cleanup and minimum optimization as a preparation. 
+> 2, use TestCleanPageLRU as page isolation's precondition.
+> 3, replace per node lru_lock with per memcg per node lru_lock.
+> 
+> Current lru_lock is one for each of node, pgdat->lru_lock, that guard for
+> lru lists, but now we had moved the lru lists into memcg for long time. Still
+> using per node lru_lock is clearly unscalable, pages on each of memcgs have
+> to compete each others for a whole lru_lock. This patchset try to use per
+> lruvec/memcg lru_lock to repleace per node lru lock to guard lru lists, make
+> it scalable for memcgs and get performance gain.
+> 
+> Currently lru_lock still guards both lru list and page's lru bit, that's ok.
+> but if we want to use specific lruvec lock on the page, we need to pin down
+> the page's lruvec/memcg during locking. Just taking lruvec lock first may be
+> undermined by the page's memcg charge/migration. To fix this problem, we could
+> take out the page's lru bit clear and use it as pin down action to block the
+> memcg changes. That's the reason for new atomic func TestClearPageLRU.
+> So now isolating a page need both actions: TestClearPageLRU and hold the
+> lru_lock.
+> 
+> The typical usage of this is isolate_migratepages_block() in compaction.c
+> we have to take lru bit before lru lock, that serialized the page isolation
+> in memcg page charge/migration which will change page's lruvec and new 
+> lru_lock in it.
+> 
+> The above solution suggested by Johannes Weiner, and based on his new memcg 
+> charge path, then have this patchset. (Hugh Dickins tested and contributed much
+> code from compaction fix to general code polish, thanks a lot!).
+> 
+> Daniel Jordan's testing show 62% improvement on modified readtwice case
+> on his 2P * 10 core * 2 HT broadwell box on v18, which has no much different
+> with this v20.
+> https://lore.kernel.org/lkml/20200915165807.kpp7uhiw7l3loofu-S51bK0XF4qpuJJETbFA3a0B3C2bhBk7L0E9HWUfgJXw@public.gmane.org/
+> 
+> Thanks Hugh Dickins and Konstantin Khlebnikov, they both brought this
+> idea 8 years ago, and others who give comments as well: Daniel Jordan, 
+> Mel Gorman, Shakeel Butt, Matthew Wilcox, Alexander Duyck etc.
+> 
+> Thanks for Testing support from Intel 0day and Rong Chen, Fengguang Wu,
+> and Yun Wang. Hugh Dickins also shared his kbuild-swap case. Thanks!
+> 
+> 
+> Alex Shi (16):
+>   mm/thp: move lru_add_page_tail func to huge_memory.c
+>   mm/thp: use head for head page in lru_add_page_tail
+>   mm/thp: Simplify lru_add_page_tail()
+>   mm/thp: narrow lru locking
+>   mm/vmscan: remove unnecessary lruvec adding
+>   mm/rmap: stop store reordering issue on page->mapping
+>   mm/memcg: add debug checking in lock_page_memcg
+>   mm/swap.c: fold vm event PGROTATED into pagevec_move_tail_fn
+>   mm/lru: move lock into lru_note_cost
+>   mm/vmscan: remove lruvec reget in move_pages_to_lru
+>   mm/mlock: remove lru_lock on TestClearPageMlocked
+>   mm/mlock: remove __munlock_isolate_lru_page
+>   mm/lru: introduce TestClearPageLRU
+>   mm/compaction: do page isolation first in compaction
+>   mm/swap.c: serialize memcg changes in pagevec_lru_move_fn
+>   mm/lru: replace pgdat lru_lock with lruvec lock
+> 
+> Alexander Duyck (1):
+>   mm/lru: introduce the relock_page_lruvec function
+> 
+> Hugh Dickins (2):
+>   mm: page_idle_get_page() does not need lru_lock
+>   mm/lru: revise the comments of lru_lock
+> 
+>  Documentation/admin-guide/cgroup-v1/memcg_test.rst |  15 +-
+>  Documentation/admin-guide/cgroup-v1/memory.rst     |  21 +--
+>  Documentation/trace/events-kmem.rst                |   2 +-
+>  Documentation/vm/unevictable-lru.rst               |  22 +--
+>  include/linux/memcontrol.h                         | 110 +++++++++++
+>  include/linux/mm_types.h                           |   2 +-
+>  include/linux/mmzone.h                             |   6 +-
+>  include/linux/page-flags.h                         |   1 +
+>  include/linux/swap.h                               |   4 +-
+>  mm/compaction.c                                    |  94 +++++++---
+>  mm/filemap.c                                       |   4 +-
+>  mm/huge_memory.c                                   |  45 +++--
+>  mm/memcontrol.c                                    |  79 +++++++-
+>  mm/mlock.c                                         |  63 ++-----
+>  mm/mmzone.c                                        |   1 +
+>  mm/page_alloc.c                                    |   1 -
+>  mm/page_idle.c                                     |   4 -
+>  mm/rmap.c                                          |  11 +-
+>  mm/swap.c                                          | 208 ++++++++-------------
+>  mm/vmscan.c                                        | 207 ++++++++++----------
+>  mm/workingset.c                                    |   2 -
+>  21 files changed, 530 insertions(+), 372 deletions(-)
+> 
