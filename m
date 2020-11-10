@@ -1,7 +1,7 @@
 From: Paul Gortmaker <paul.gortmaker@windriver.com>
-Subject: [PATCH 3/4] cpumask: add a "none" alias to complement "all"
-Date: Mon,  9 Nov 2020 23:07:24 -0500
-Message-ID: <20201110040725.1478297-4-paul.gortmaker@windriver.com>
+Subject: [PATCH 4/4] cpumask: add "last" alias for cpu list specifications
+Date: Mon,  9 Nov 2020 23:07:25 -0500
+Message-ID: <20201110040725.1478297-5-paul.gortmaker@windriver.com>
 References: <20201110040725.1478297-1-paul.gortmaker@windriver.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,56 +10,210 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=windriversystems.onmicrosoft.com;
  s=selector2-windriversystems-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5JEJ9GSK90PQQnTECfuTh4QZmvo5Nm6q52rlJOv2lK8=;
- b=WaQqDdo5f7OoQOmW1ttaj+fEeGaEf04/pl9ar1jLh5BNSwPUBKXyuPdHb85XFMT0tUXbl8Q8tACbpjm3vFYL05YiC4itV5qU7UPQBEwtX9Ho6hTObx1CNLEE7K3hTfe04lVJgQWVR92zCnrE3672hYsrkvSV55lJivfL/hNcCeA=
+ bh=6zFtvUKYzBo1LRdjZVqEx1fqA9SOVULU4a8jZZziy74=;
+ b=TmGkZ+YUoTyOjwcIStvIko0xUUqPnPhrSu7/rrIJAHEuewtiR4VQZNqH8LW7Fb1gLI8xlKLEdaeJbzTP9gfB1ijw+BMru71BRBmkyvkvX2RTOlHJqLrUg8oHEcpKnB6WvNxcZ+NoylRT0NXXHRhJyXPHtydNFBb2Hqnf6OP0DwI=
 In-Reply-To: <20201110040725.1478297-1-paul.gortmaker@windriver.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: linux-kernel@vger.kernel.org
 Cc: cgroups@vger.kernel.org, rdunlap@infradead.org, colin.king@canonical.com, Paul Gortmaker <paul.gortmaker@windriver.com>
 
-With global support for a CPU list alias of "all", it seems to just make
-sense to also trivially extend support for an opposite "none" specifier.
+It seems that a common configuration is to use the 1st couple cores
+for housekeeping tasks, and or driving a busy peripheral that generates
+a lot of interrupts, or something similar.
+
+This tends to leave the remaining ones to form a pool of similarly
+configured cores to take on the real workload of interest to the user.
+
+So on machine A - with 32 cores, it could be 0-3 for "system" and then
+4-31 being used in boot args like nohz_full=, or rcu_nocbs= as part of
+setting up the worker pool of CPUs.
+
+But then newer machine B is added, and it has 48 cores, and so while
+the 0-3 part remains unchanged, the pool setup cpu list becomes 4-47.
+
+Deployment would be easier if we could just simply replace 31 and 47
+with "last" and let the system substitute in the actual number at boot;
+a number that it knows better than we do.
+
+No need to have custom boot args per node, no need to do a trial boot
+in order to snoop /proc/cpuinfo and/or /sys/devices/system/cpu - no
+more fencepost errors of using 32 and 48 instead of 31 and 47.
+
+A generic token replacement is used to substitute "last" with the
+number of CPUs present before handing off to bitmap processing.  But
+it could just as easily be used to replace any placeholder token with
+any other token or value only known at/after boot.
 
 Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
 ---
- Documentation/admin-guide/kernel-parameters.rst | 6 ++++++
- lib/cpumask.c                                   | 5 +++++
- 2 files changed, 11 insertions(+)
+ .../admin-guide/kernel-parameters.rst         |   7 ++
+ lib/cpumask.c                                 | 112 +++++++++++++++++-
+ 2 files changed, 117 insertions(+), 2 deletions(-)
 
 diff --git a/Documentation/admin-guide/kernel-parameters.rst b/Documentation/admin-guide/kernel-parameters.rst
-index ef98ca700946..9e1c4522e1f0 100644
+index 9e1c4522e1f0..362dea55034e 100644
 --- a/Documentation/admin-guide/kernel-parameters.rst
 +++ b/Documentation/admin-guide/kernel-parameters.rst
-@@ -76,6 +76,12 @@ is equivalent to "foo_cpus=0-N" -- where "N" is the numerically last CPU on
- the system, thus avoiding looking up the value in "/sys/devices/system/cpu"
- in advance on each deployed system.
+@@ -83,6 +83,13 @@ will provide an empty/cleared cpu mask for the associated boot argument.
+ Note that "all" and "none" are not necessarily valid/sensible input values
+ for each available parameter expecting a CPU list.
  
-+        foo_cpus=none
++        foo_cpus=1,3,5,16-last
 +
-+will provide an empty/cleared cpu mask for the associated boot argument.
++will at runtime, replace "last" with the number of the last (highest number)
++present CPU on the system.  Thus a common deployment can be used on multiple
++systems with different total number of cores present, without needing to
++evaluate the total core count in advance on each system.
 +
-+Note that "all" and "none" are not necessarily valid/sensible input values
-+for each available parameter expecting a CPU list.
- 
  This document may not be entirely up to date and comprehensive. The command
  "modinfo -p ${modulename}" shows a current list of all parameters of a loadable
+ module. Loadable modules, after being loaded into the running kernel, also
 diff --git a/lib/cpumask.c b/lib/cpumask.c
-index 15599cdf5db6..eb8b1c92501e 100644
+index eb8b1c92501e..fa56d622c1d8 100644
 --- a/lib/cpumask.c
 +++ b/lib/cpumask.c
-@@ -110,6 +110,11 @@ int cpulist_parse(const char *buf, struct cpumask *dstp)
+@@ -3,6 +3,7 @@
+ #include <linux/kernel.h>
+ #include <linux/bitops.h>
+ #include <linux/string.h>
++#include <linux/ctype.h>
+ #include <linux/cpumask.h>
+ #include <linux/export.h>
+ #include <linux/memblock.h>
+@@ -96,15 +97,97 @@ int cpumask_next_wrap(int n, const struct cpumask *mask, int start, bool wrap)
+ }
+ EXPORT_SYMBOL(cpumask_next_wrap);
+ 
++/*
++ * Basically strstr() but given "foo", ignore "foobar", "myfoo", "foofoo"
++ * and "foo2bar" -- i.e. any case where the token is a word fragment.
++ */
++static char *cpumask_find_token(const char *str, const char *token)
++{
++	char *here = strstr(str, token);
++	size_t tlen = strlen(token);
++
++	if (!here)
++		return NULL;
++
++	while (here) {
++		size_t offset = here - str;
++		char prev, next = str[offset + tlen];
++
++		if (offset)
++			prev = str[offset - 1];
++		else
++			prev = '\0';
++
++		if (!(isalnum(prev) || isalnum(next)))
++			break;
++
++		here = strstr(here + tlen, token);
++	}
++
++	return here;
++}
++
++/*
++ * replace old token with new token: Given a convenience or placeholder
++ * token "last" and an associated value not known until boot, of say 1234,
++ * replace instances of "last" with "1234".
++ *
++ * For example src = "1,3,last,7-last,9,lastly,last-2047\0"  results in a
++ *            dest = "1,3,1234,7-1234,9,lastly,1234-2047\0"
++ *
++ * The destination string may be shorter than, equal to, or longer than
++ * the source string -- based on whether the new token strlen is shorter
++ * than, equal to, or longer than the old token strlen.
++ * The caller must allocate dest space accordingly with that in mind.
++ */
++
++static void cpulist_replace_token(char *dest, const char *src,
++			   const char *old_token, const char *new_token)
++{
++	const char *src_start = src;
++	char *dest_start = dest, *here;
++	const size_t olen = strlen(old_token);
++	const size_t nlen = strlen(new_token);
++
++	here = cpumask_find_token(src_start, old_token);
++	if (!here) {
++		strcpy(dest, src);
++		return;
++	}
++
++	while (here) {
++		size_t offset = here - src_start;
++
++		strncpy(dest_start, src_start, offset);
++		dest_start += offset;
++		src_start += offset;
++
++		strcpy(dest_start, new_token);
++		dest_start += nlen;
++		src_start += olen;
++
++		strcpy(dest_start, src_start);	/* remainder of string */
++		here = cpumask_find_token(src_start, old_token);
++	}
++}
++
+ /**
+  * cpulist_parse - extract a cpumask from a user string of ranges
+  * @buf: the buffer to extract from
+  * @dstp: the cpumask to set.
+  *
+  * Returns -errno, or 0 for success.
++ *
++ * Marked __ref because memblock_*() are __meminit and we use them for
++ * any early calls before slab is available.
+  */
+-int cpulist_parse(const char *buf, struct cpumask *dstp)
++int __ref cpulist_parse(const char *buf, struct cpumask *dstp)
+ {
++	int r;
++	char *cpulist, last_cpu[5];	/* NR_CPUS <= 9999 */
++	size_t len = strlen(buf) + 1;	/* don't forget '\0' */
++	bool early = !slab_is_available();
++
+ 	if (!strcmp(buf, "all")) {
+ 		cpumask_setall(dstp);
+ 		return 0;
+@@ -115,7 +198,32 @@ int cpulist_parse(const char *buf, struct cpumask *dstp)
  		return 0;
  	}
  
-+	if (!strcmp(buf, "none")) {
-+		cpumask_clear(dstp);
-+		return 0;
-+	}
+-	return bitmap_parselist(buf, cpumask_bits(dstp), nr_cpumask_bits);
++	/*
++	 * strlen("last") means "len" is OK up to NR_CPUS <= 9999.
++	 */
++	if (early)
++		cpulist = memblock_alloc(len, SMP_CACHE_BYTES);
++	else
++		cpulist = kzalloc(len, GFP_KERNEL);
 +
- 	return bitmap_parselist(buf, cpumask_bits(dstp), nr_cpumask_bits);
++	if (cpulist == NULL)
++		return -ENOMEM;
++
++	/*
++	 * bitmap_parselist has no concept of "last" CPU, so we have to
++	 * replace "last" with a real number in dest copy of the string.
++	 */
++	sprintf(last_cpu, "%d", cpumask_last(cpu_present_mask));
++	cpulist_replace_token(cpulist, buf, "last", last_cpu);
++
++	r = bitmap_parselist(cpulist, cpumask_bits(dstp), nr_cpumask_bits);
++
++	if (early)
++		memblock_free((phys_addr_t)cpulist, len);
++	else
++		kfree(cpulist);
++
++	return r;
  }
  EXPORT_SYMBOL(cpulist_parse);
+ 
 -- 
 2.25.1
 
