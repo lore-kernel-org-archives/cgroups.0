@@ -1,123 +1,38 @@
-From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Subject: Re: [PATCH v21 00/19] per memcg lru lock
-Date: Tue, 10 Nov 2020 20:14:24 +0800
-Message-ID: <d28dbde7-9daa-903f-2f7b-be856f6653d5@linux.alibaba.com>
-References: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2] mm: memcg/slab: Fix root memcg vmstats
+Date: Tue, 10 Nov 2020 07:20:01 -0800
+Message-ID: <CALvZod77gWhLE-dc2CaBF_=Ae37P-puL_RZK83SYuXCiW2CZFQ@mail.gmail.com>
+References: <20201110031015.15715-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1604566549-62481-1-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=WmN5VaPF0VfKq6YJQkL5I5tdRY/0dNSzeDneZSSWFWo=;
+        b=RHV4dD/PH2eVHEGLppo5X2MUled5LUub72YBQga/LNnTZ22HhU43+vTAmrULNqaOte
+         xGl2ryvOIaOWdO9v7vdNUHIDp/iaAovzcdqdoelBQ6Qv5XevhcKuAriM8jvAQE+LFsyM
+         nwn+7aO2ha2d0t+pJl/GfR4HMXoO7WOi0YiH1UHnwv818ggwHmoz6IFNlUY9o0JdpBU1
+         WIoVB5NYs8bIkMh05qYJsgAm5Vw6ccUNIaDxBRV0wxG8MPrna1i0OJEK418mW3Z9wTiS
+         sFnnXhg7cH4FNPWIxMr1Qe8tctLlxoE/N+QTNM75OGhRH4Kd2GFWqxxKrg9/ykUHzw0o
+         8DOQ==
+In-Reply-To: <20201110031015.15715-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-Hi All,
+On Mon, Nov 9, 2020 at 7:10 PM Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
+>
+> If we reparent the slab objects to the root memcg, when we free
+> the slab object, we need to update the per-memcg vmstats to keep
+> it correct for the root memcg. Now this at least affects the vmstat
+> of NR_KERNEL_STACK_KB for !CONFIG_VMAP_STACK when the thread stack
+> size is smaller than the PAGE_SIZE.
+>
+> Fixes: ec9f02384f60 ("mm: workingset: fix vmstat counters for shadow nodes")
+> Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-Is any more comments of this version?
-
-Thanks
-Alex
-
-在 2020/11/5 下午4:55, Alex Shi 写道:
-> This version rebase on next/master 20201104, with much of Johannes's
-> Acks and some changes according to Johannes comments. And add a new patch
-> v21-0006-mm-rmap-stop-store-reordering-issue-on-page-mapp.patch to support
-> v21-0007.
-> 
-> This patchset followed 2 memcg VM_WARN_ON_ONCE_PAGE patches which were
-> added to -mm tree yesterday.
->  
-> Many thanks for line by line review by Hugh Dickins, Alexander Duyck and
-> Johannes Weiner.
-> 
-> So now this patchset includes 3 parts:
-> 1, some code cleanup and minimum optimization as a preparation. 
-> 2, use TestCleanPageLRU as page isolation's precondition.
-> 3, replace per node lru_lock with per memcg per node lru_lock.
-> 
-> Current lru_lock is one for each of node, pgdat->lru_lock, that guard for
-> lru lists, but now we had moved the lru lists into memcg for long time. Still
-> using per node lru_lock is clearly unscalable, pages on each of memcgs have
-> to compete each others for a whole lru_lock. This patchset try to use per
-> lruvec/memcg lru_lock to repleace per node lru lock to guard lru lists, make
-> it scalable for memcgs and get performance gain.
-> 
-> Currently lru_lock still guards both lru list and page's lru bit, that's ok.
-> but if we want to use specific lruvec lock on the page, we need to pin down
-> the page's lruvec/memcg during locking. Just taking lruvec lock first may be
-> undermined by the page's memcg charge/migration. To fix this problem, we could
-> take out the page's lru bit clear and use it as pin down action to block the
-> memcg changes. That's the reason for new atomic func TestClearPageLRU.
-> So now isolating a page need both actions: TestClearPageLRU and hold the
-> lru_lock.
-> 
-> The typical usage of this is isolate_migratepages_block() in compaction.c
-> we have to take lru bit before lru lock, that serialized the page isolation
-> in memcg page charge/migration which will change page's lruvec and new 
-> lru_lock in it.
-> 
-> The above solution suggested by Johannes Weiner, and based on his new memcg 
-> charge path, then have this patchset. (Hugh Dickins tested and contributed much
-> code from compaction fix to general code polish, thanks a lot!).
-> 
-> Daniel Jordan's testing show 62% improvement on modified readtwice case
-> on his 2P * 10 core * 2 HT broadwell box on v18, which has no much different
-> with this v20.
-> https://lore.kernel.org/lkml/20200915165807.kpp7uhiw7l3loofu-S51bK0XF4qpuJJETbFA3a0B3C2bhBk7L0E9HWUfgJXw@public.gmane.org/
-> 
-> Thanks Hugh Dickins and Konstantin Khlebnikov, they both brought this
-> idea 8 years ago, and others who give comments as well: Daniel Jordan, 
-> Mel Gorman, Shakeel Butt, Matthew Wilcox, Alexander Duyck etc.
-> 
-> Thanks for Testing support from Intel 0day and Rong Chen, Fengguang Wu,
-> and Yun Wang. Hugh Dickins also shared his kbuild-swap case. Thanks!
-> 
-> 
-> Alex Shi (16):
->   mm/thp: move lru_add_page_tail func to huge_memory.c
->   mm/thp: use head for head page in lru_add_page_tail
->   mm/thp: Simplify lru_add_page_tail()
->   mm/thp: narrow lru locking
->   mm/vmscan: remove unnecessary lruvec adding
->   mm/rmap: stop store reordering issue on page->mapping
->   mm/memcg: add debug checking in lock_page_memcg
->   mm/swap.c: fold vm event PGROTATED into pagevec_move_tail_fn
->   mm/lru: move lock into lru_note_cost
->   mm/vmscan: remove lruvec reget in move_pages_to_lru
->   mm/mlock: remove lru_lock on TestClearPageMlocked
->   mm/mlock: remove __munlock_isolate_lru_page
->   mm/lru: introduce TestClearPageLRU
->   mm/compaction: do page isolation first in compaction
->   mm/swap.c: serialize memcg changes in pagevec_lru_move_fn
->   mm/lru: replace pgdat lru_lock with lruvec lock
-> 
-> Alexander Duyck (1):
->   mm/lru: introduce the relock_page_lruvec function
-> 
-> Hugh Dickins (2):
->   mm: page_idle_get_page() does not need lru_lock
->   mm/lru: revise the comments of lru_lock
-> 
->  Documentation/admin-guide/cgroup-v1/memcg_test.rst |  15 +-
->  Documentation/admin-guide/cgroup-v1/memory.rst     |  21 +--
->  Documentation/trace/events-kmem.rst                |   2 +-
->  Documentation/vm/unevictable-lru.rst               |  22 +--
->  include/linux/memcontrol.h                         | 110 +++++++++++
->  include/linux/mm_types.h                           |   2 +-
->  include/linux/mmzone.h                             |   6 +-
->  include/linux/page-flags.h                         |   1 +
->  include/linux/swap.h                               |   4 +-
->  mm/compaction.c                                    |  94 +++++++---
->  mm/filemap.c                                       |   4 +-
->  mm/huge_memory.c                                   |  45 +++--
->  mm/memcontrol.c                                    |  79 +++++++-
->  mm/mlock.c                                         |  63 ++-----
->  mm/mmzone.c                                        |   1 +
->  mm/page_alloc.c                                    |   1 -
->  mm/page_idle.c                                     |   4 -
->  mm/rmap.c                                          |  11 +-
->  mm/swap.c                                          | 208 ++++++++-------------
->  mm/vmscan.c                                        | 207 ++++++++++----------
->  mm/workingset.c                                    |   2 -
->  21 files changed, 530 insertions(+), 372 deletions(-)
-> 
+Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
