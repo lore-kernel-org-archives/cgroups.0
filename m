@@ -1,123 +1,96 @@
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-Subject: [PATCH 2/4] cpumask: make "all" alias global and not just RCU
-Date: Mon,  9 Nov 2020 23:07:23 -0500
-Message-ID: <20201110040725.1478297-3-paul.gortmaker@windriver.com>
+From: Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
+Subject: [PATCH 1/4] cpumask: un-inline cpulist_parse for SMP; prepare for ascii helpers
+Date: Mon,  9 Nov 2020 23:07:22 -0500
+Message-ID: <20201110040725.1478297-2-paul.gortmaker@windriver.com>
 References: <20201110040725.1478297-1-paul.gortmaker@windriver.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=windriversystems.onmicrosoft.com;
  s=selector2-windriversystems-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=cFSsm2jr4JRhYEyFiwGRdWnuSdL6qjQnvQIKhWnnw4c=;
- b=hHvIPjV4GKQF1MeCl1ATplInOuT0gXVXH0jeGkIVtE2nTn2zjphq9XFH69wXw07vQ1OW59ok5PF0mk0YFooKMo1WBJwFAzJAmTWdr3MumJO9QTUX+hQqXOKkqYUr0aUulmHDkk7H5e/lyFO6dpHVQMAZy6ov/sZ5MNhk65R6ux4=
-In-Reply-To: <20201110040725.1478297-1-paul.gortmaker@windriver.com>
+ bh=7JSSphesTb40yiOoxATbxgdKTgj+bWwkRQo82fq+wEQ=;
+ b=WF80hWKRC/CAt1yhYaOS9SRcTZRFY8oFMY8GUUVZBPEXWp3PjqJtwP7OQr0ijjQ1SRtr49fKK0OOF7InWcpZcHYGgRzYYiYFf/Dzbcu2x1I9JiLSjSwBuo6uEtYnYkriFMC5WWQfyr8eHPBDD5CuVUnZ/M4kB/nmAXeVuVhwlNM=
+In-Reply-To: <20201110040725.1478297-1-paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org
-Cc: cgroups@vger.kernel.org, rdunlap@infradead.org, colin.king@canonical.com, Paul Gortmaker <paul.gortmaker@windriver.com>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, colin.king-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org, Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
 
-It is probably better that we don't have subsystem specific
-abbreviations or aliases for generic CPU list specifications.
+In order to support convenience tokens like "all", and "none" and
+"last" in CPU lists, we'll have to use string operations and expand
+on what is currently a simple wrapper around the underlying bitmap
+function call.
 
-Hence we move the "all" from RCU out to lib/ so that it can be
-used in any instance where CPU lists are being parsed.
+Rather than add header dependencies to cpumask.h and code more complex
+operations not really appropriate for a header file, we prepare by
+simply un-inlining it here and move it to the lib dir alongside the
+other more complex cpumask functions.
 
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+Since lib/cpumask.c is built conditionally on CONFIG_SMP, and there
+are non-SMP callers, we leave the one-line stub behind for that case.
+If they want to check "0-0" is a valid range, they can still do it.
+In the meantime, we can add the ascii helpers for CONFIG_SMP users.
+The use of NR_CPUS vs. CONFIG_SMP is consistent with the existing file.
+
+Aside from an additional exported symbol in the SMP case, no functional
+changes are anticipated with this move.
+
+Signed-off-by: Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
 ---
- Documentation/admin-guide/kernel-parameters.rst |  7 +++++++
- Documentation/admin-guide/kernel-parameters.txt |  4 +---
- kernel/rcu/tree_plugin.h                        | 13 ++++---------
- lib/cpumask.c                                   |  6 ++++++
- 4 files changed, 18 insertions(+), 12 deletions(-)
+ include/linux/cpumask.h |  8 ++++++++
+ lib/cpumask.c           | 13 +++++++++++++
+ 2 files changed, 21 insertions(+)
 
-diff --git a/Documentation/admin-guide/kernel-parameters.rst b/Documentation/admin-guide/kernel-parameters.rst
-index 6d421694d98e..ef98ca700946 100644
---- a/Documentation/admin-guide/kernel-parameters.rst
-+++ b/Documentation/admin-guide/kernel-parameters.rst
-@@ -68,6 +68,13 @@ For example one can add to the command line following parameter:
- 
- where the final item represents CPUs 100,101,125,126,150,151,...
- 
-+The following convenience aliases are also accepted and used:
-+
-+        foo_cpus=all
-+
-+is equivalent to "foo_cpus=0-N" -- where "N" is the numerically last CPU on
-+the system, thus avoiding looking up the value in "/sys/devices/system/cpu"
-+in advance on each deployed system.
- 
- 
- This document may not be entirely up to date and comprehensive. The command
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 526d65d8573a..96eed72f02a2 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -4023,9 +4023,7 @@
- 				see CONFIG_RAS_CEC help text.
- 
- 	rcu_nocbs=	[KNL]
--			The argument is a cpu list, as described above,
--			except that the string "all" can be used to
--			specify every CPU on the system.
-+			The argument is a cpu list, as described above.
- 
- 			In kernels built with CONFIG_RCU_NOCB_CPU=y, set
- 			the specified list of CPUs to be no-callback CPUs.
-diff --git a/kernel/rcu/tree_plugin.h b/kernel/rcu/tree_plugin.h
-index fd8a52e9a887..b18f89f94fd3 100644
---- a/kernel/rcu/tree_plugin.h
-+++ b/kernel/rcu/tree_plugin.h
-@@ -1463,20 +1463,15 @@ static void rcu_cleanup_after_idle(void)
- 
- /*
-  * Parse the boot-time rcu_nocb_mask CPU list from the kernel parameters.
-- * The string after the "rcu_nocbs=" is either "all" for all CPUs, or a
-- * comma-separated list of CPUs and/or CPU ranges.  If an invalid list is
-- * given, a warning is emitted and all CPUs are offloaded.
-+ * If the list is invalid, a warning is emitted and all CPUs are offloaded.
+diff --git a/include/linux/cpumask.h b/include/linux/cpumask.h
+index f0d895d6ac39..d2e370c5ce99 100644
+--- a/include/linux/cpumask.h
++++ b/include/linux/cpumask.h
+@@ -679,11 +679,19 @@ static inline int cpumask_parse(const char *buf, struct cpumask *dstp)
+  * @dstp: the cpumask to set.
+  *
+  * Returns -errno, or 0 for success.
++ *
++ * There are instances of non-SMP callers of this, and the easiest way
++ * to remain 100% runtime compatible is to let them continue to have the
++ * one-line stub, while the SMP version in lib/cpumask.c gets improved.
   */
- static int __init rcu_nocb_setup(char *str)
++#if NR_CPUS == 1
+ static inline int cpulist_parse(const char *buf, struct cpumask *dstp)
  {
- 	alloc_bootmem_cpumask_var(&rcu_nocb_mask);
--	if (!strcasecmp(str, "all"))
-+	if (cpulist_parse(str, rcu_nocb_mask)) {
-+		pr_warn("rcu_nocbs= bad CPU range, all CPUs set\n");
- 		cpumask_setall(rcu_nocb_mask);
--	else
--		if (cpulist_parse(str, rcu_nocb_mask)) {
--			pr_warn("rcu_nocbs= bad CPU range, all CPUs set\n");
--			cpumask_setall(rcu_nocb_mask);
--		}
-+	}
- 	return 1;
- }
- __setup("rcu_nocbs=", rcu_nocb_setup);
-diff --git a/lib/cpumask.c b/lib/cpumask.c
-index 5eb002237404..15599cdf5db6 100644
---- a/lib/cpumask.c
-+++ b/lib/cpumask.c
-@@ -2,6 +2,7 @@
- #include <linux/slab.h>
- #include <linux/kernel.h>
- #include <linux/bitops.h>
-+#include <linux/string.h>
- #include <linux/cpumask.h>
- #include <linux/export.h>
- #include <linux/memblock.h>
-@@ -104,6 +105,11 @@ EXPORT_SYMBOL(cpumask_next_wrap);
-  */
- int cpulist_parse(const char *buf, struct cpumask *dstp)
- {
-+	if (!strcmp(buf, "all")) {
-+		cpumask_setall(dstp);
-+		return 0;
-+	}
-+
  	return bitmap_parselist(buf, cpumask_bits(dstp), nr_cpumask_bits);
  }
- EXPORT_SYMBOL(cpulist_parse);
++#else
++int cpulist_parse(const char *buf, struct cpumask *dstp);
++#endif
+ 
+ /**
+  * cpumask_size - size to allocate for a 'struct cpumask' in bytes
+diff --git a/lib/cpumask.c b/lib/cpumask.c
+index 85da6ab4fbb5..5eb002237404 100644
+--- a/lib/cpumask.c
++++ b/lib/cpumask.c
+@@ -95,6 +95,19 @@ int cpumask_next_wrap(int n, const struct cpumask *mask, int start, bool wrap)
+ }
+ EXPORT_SYMBOL(cpumask_next_wrap);
+ 
++/**
++ * cpulist_parse - extract a cpumask from a user string of ranges
++ * @buf: the buffer to extract from
++ * @dstp: the cpumask to set.
++ *
++ * Returns -errno, or 0 for success.
++ */
++int cpulist_parse(const char *buf, struct cpumask *dstp)
++{
++	return bitmap_parselist(buf, cpumask_bits(dstp), nr_cpumask_bits);
++}
++EXPORT_SYMBOL(cpulist_parse);
++
+ /* These are not inline because of header tangles. */
+ #ifdef CONFIG_CPUMASK_OFFSTACK
+ /**
 -- 
 2.25.1
 
