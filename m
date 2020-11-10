@@ -1,74 +1,122 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [PATCH v2] mm: memcg/slab: Fix use after free in obj_cgroup_charge
-Date: Tue, 10 Nov 2020 11:19:46 +0800
-Message-ID: <CAMZfGtVgtJ0BdL_tXzgC3qh5Bn+0GpJJNHyE5RzEm=B3GO5q2w@mail.gmail.com>
-References: <20201028035013.99711-1-songmuchun@bytedance.com> <20201028035013.99711-2-songmuchun@bytedance.com>
+From: Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>
+Subject: [PATCH v2 0/4] support for global CPU list abbreviations
+Date: Mon,  9 Nov 2020 23:07:21 -0500
+Message-ID: <20201110040725.1478297-1-paul.gortmaker@windriver.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=RmZMs4GZmfJF8Fdhkv3dMimRPyWWITH+SYPWeKRj3iE=;
-        b=V/8PpzAY+tj3MaT3pbJokjVFCPodRWTiKBOOsxnc5JOelQuZm4fKIz3aMJU/9mRavo
-         6sqeUvW5CF7aOdRtY24WWtf2pnqJpF6d8QJqegvaLZWlSk/lE5qKa8f9bUj7N5h1IQH/
-         itrE++Uoz4EefemYNYYiOcGrNoUn2daqWgwXx9XFCXw7jGEwXXw/A/mnlNz10/GU4On0
-         UIRYmMjY3KcKBgYFoGlwvJGK9vaTuP87RBUE8AxVQ8BegKaXClTX48zscvECI+cAzrC8
-         /hw44C1Mv1tGKJ4OEgTd0Cs5LFv7Mdj6tIPvPQt2S9UL1uhUyTDGWkF49IJYJTIM7OCB
-         X3EQ==
-In-Reply-To: <20201028035013.99711-2-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+ d=windriversystems.onmicrosoft.com;
+ s=selector2-windriversystems-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=vgapYnIfV3plaWKhCs5Aau4vM3VRHr0rL1XiKWUc4Z4=;
+ b=CAR8j8uyGJF0qflE/IR+R/UfGXDEqiuqxqDbZH8ZEnLNpphWfWH51OhxMCa+DpEcMJlIdzx4qZZx/eVnVGFt1LfwoScUVBkYsfcjXX6l9In1gL+UogzhZVyBKLbSmrVlyMK4r1rr4qdS0CEUWs34N+PJY5yqd3Vlb6LyLtb4U5o=
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, areber-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, colin.king-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org, Paul Gortmaker <paul.gortmaker-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org>, Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Paul E. McKenney" <paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Josh Triplett <josh-iaAMLnmF4UmaiuxdJuQwMA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Wed, Oct 28, 2020 at 11:50 AM Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
->
-> The rcu_read_lock/unlock only can guarantee that the memcg will
-> not be freed, but it cannot guarantee the success of css_get to
-> memcg.
->
-> If the whole process of a cgroup offlining is completed between
-> reading a objcg->memcg pointer and bumping the css reference on
-> another CPU, and there are exactly 0 external references to this
-> memory cgroup (how we get to the obj_cgroup_charge() then?),
-> css_get() can change the ref counter from 0 back to 1.
->
-> Fixes: bf4f059954dc ("mm: memcg/slab: obj_cgroup API")
-> Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+RFC/v1 ---> v2:
 
-Hi Andrew,
+commit #1:
+   leave one line stub behind for !SMP solving build failures.
+   Reported by Randy Dunlap and various build bots.
 
-Maybe you forgot to add this to the queue for the merge window?
+commit #4
+   manage to remember '\0' char in strlen from one line to the next.
+   Reported by Colin King.
 
-Thanks.
+Original description from v1/RFC below remains unchanged...
 
-> ---
->  changelog in v2:
->  1. Add unlikely and update the commit log suggested by Roman.
->
->  mm/memcontrol.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 8c8b4c3ed5a0..d9cdf899c6fc 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3221,8 +3221,10 @@ int obj_cgroup_charge(struct obj_cgroup *objcg, gfp_t gfp, size_t size)
->          * independently later.
->          */
->         rcu_read_lock();
-> +retry:
->         memcg = obj_cgroup_memcg(objcg);
-> -       css_get(&memcg->css);
-> +       if (unlikely(!css_tryget(&memcg->css)))
-> +               goto retry;
->         rcu_read_unlock();
->
->         nr_pages = size >> PAGE_SHIFT;
-> --
-> 2.20.1
->
+ ---
+
+The basic objective here was to add support for "nohz_full=8-last" and/or
+"rcu_nocbs="4-last" -- essentially introduce "last" as a portable
+reference evaluated at boot/runtime for anything using a CPU list.
+
+The thinking behind this, is that people carve off a few early CPUs to
+support housekeeping tasks, and perhaps dedicate one to a busy I/O
+peripheral, and then the remaining pool of CPUs out to the end are a
+part of a commonly configured pool used for the real work the user
+cares about.
+
+Extend that logic out to a fleet of machines - some new, and some
+nearing EOL, and you've probably got a wide range of core counts to
+contend with - even though the early number of cores dedicated to the
+system overhead probably doesn't vary.
+
+This change would enable sysadmins to have a common bootarg across all
+such systems, and would also avoid any off-by-one fencepost errors that
+happen for users who might briefly forget that core counts start at
+zero.
+
+Looking around before starting, I noticed RCU already had a short-form
+abbreviation "all" -- but if we want to treat CPU lists in a uniform
+matter, then tokens shouldn't be implemented at a subsystem level and
+hence be subsystem specific; each with their own variations.
+
+So I moved "all" to global use - for boot args, and for cgroups.  Then
+I added the inverse "none" and finally, the one I wanted -- "last".
+
+The use of "last" isn't a standalone word like "all" or "none".  It will
+be a part of a complete range specification, possibly with CSV separate
+ranges, and possibly specified multiple times.  So I had to be a bit
+more careful with string matching - and hence un-inlined the parse
+function as commit #1 in this series.
+
+But it really is a generic support for "replace token ABC with known at
+boot value XYZ" - for example, it would be trivial to extend support to
+add "half" as a dynamic token to be replaced with 1/2 the core count,
+even though I wouldn't suggest that has a use case like "last" does.
+
+I tested the string matching with a bunch of intentionally badly crafted
+strings in a user-space harness, and tested bootarg use with nohz_full
+and rcu_nocbs, and also the post-boot cgroup use case as per below:
+
+   root@hackbox:/sys/fs/cgroup/cpuset# mkdir foo
+   root@hackbox:/sys/fs/cgroup/cpuset# cd foo
+   root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
+   
+   root@hackbox:/sys/fs/cgroup/cpuset/foo# /bin/echo 10-last > cpuset.cpus
+   root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
+   10-15
+   root@hackbox:/sys/fs/cgroup/cpuset/foo# /bin/echo all > cpuset.cpus
+   root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
+   0-15
+   root@hackbox:/sys/fs/cgroup/cpuset/foo# /bin/echo none > cpuset.cpus
+   root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
+   
+   root@hackbox:/sys/fs/cgroup/cpuset/foo#
+
+This was on a 16 core machine with CONFIG_NR_CPUS=16 in .config file.
+
+Note that the two use cases (boot and runtime) are why you see "early"
+parameter in the code - I entertained just sticking the string copy on
+the stack vs. the early alloc dance, but this felt more correct/robust.
+The cgroup and modular code using cpulist_parse() are runtime cases.
+
+---
+
+Cc: Frederic Weisbecker <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: "Paul E. McKenney" <paulmck-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Josh Triplett <josh-iaAMLnmF4UmaiuxdJuQwMA@public.gmane.org>
+Cc: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Cc: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+
+Paul Gortmaker (4):
+  cpumask: un-inline cpulist_parse for SMP; prepare for ascii helpers
+  cpumask: make "all" alias global and not just RCU
+  cpumask: add a "none" alias to complement "all"
+  cpumask: add "last" alias for cpu list specifications
+
+ .../admin-guide/kernel-parameters.rst         |  20 +++
+ .../admin-guide/kernel-parameters.txt         |   4 +-
+ include/linux/cpumask.h                       |   8 ++
+ kernel/rcu/tree_plugin.h                      |  13 +-
+ lib/cpumask.c                                 | 132 ++++++++++++++++++
+ 5 files changed, 165 insertions(+), 12 deletions(-)
+
+-- 
+2.25.1
 
