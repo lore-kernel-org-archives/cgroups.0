@@ -1,131 +1,147 @@
-From: Colin Ian King <colin.king@canonical.com>
-Subject: Re: [PATCH v2 0/4] support for global CPU list abbreviations
-Date: Tue, 10 Nov 2020 16:09:55 +0000
-Message-ID: <6d3f4fbf-3d40-20a4-5c14-145906bf6c0f@canonical.com>
-References: <20201110040725.1478297-1-paul.gortmaker@windriver.com>
- <20201110153211.GU3249@paulmck-ThinkPad-P72>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [PATCH] cpuset: fix race between hotplug work and later CPU
+ offline
+Date: Tue, 10 Nov 2020 17:45:04 +0100
+Message-ID: <20201110164504.GL2594@hirez.programming.kicks-ass.net>
+References: <20201029181845.415517-1-daniel.m.jordan@oracle.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20201110153211.GU3249@paulmck-ThinkPad-P72>
-Content-Language: en-US
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=wSUXj/HwHT6/+9AmnFi8RjjWjheGWux8iIWwad4+zjY=; b=XIKTLcyU4w3uQlTIYf4/WSgBVh
+        JYv3iqGelfPzoZWQAduXxX7aK0YtgqamRVhDVaMndbWBHG8CvU3YD3yzrae5L5ngvQj0HPkiYkeYN
+        /A5NTgIc3ijEr3zbMicfAUDCK3BUN6a7tsXxfBKPblycRX+MV6mxDuBln/uzaKsQkdBYsQsROfY3s
+        y2Sdet/Bvwzk8o8UYp0KnalZ61TcYNa9o1Jr7aeGwwyIkQLW04ceIiBNP2iWwJEhAlW/oKc7XUBE9
+        oibcGxF7XcVauPl2wtI2FfijmUqnQGcPUCAUFzlo+50xLTGZ+pUaaG/4Cr4EOuXiedKWUwB30Xfa+
+        F3TR6PIQ==;
+Content-Disposition: inline
+In-Reply-To: <20201029181845.415517-1-daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: paulmck@kernel.org, Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, rdunlap@infradead.org, Frederic Weisbecker <fweisbec@gmail.com>, Josh Triplett <josh@joshtriplett.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@kernel.org>, Li Zefan <lizefan@huawei.com>
+Content-Transfer-Encoding: 7bit
+To: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 10/11/2020 15:32, Paul E. McKenney wrote:
-> On Mon, Nov 09, 2020 at 11:07:21PM -0500, Paul Gortmaker wrote:
->> RFC/v1 ---> v2:
->>
->> commit #1:
->>    leave one line stub behind for !SMP solving build failures.
->>    Reported by Randy Dunlap and various build bots.
->>
->> commit #4
->>    manage to remember '\0' char in strlen from one line to the next.
->>    Reported by Colin King.
-
-shouldn't that be "Reported and fixed by Colin King"? ;-)
-
->>
->> Original description from v1/RFC below remains unchanged...
+On Thu, Oct 29, 2020 at 02:18:45PM -0400, Daniel Jordan wrote:
+> One of our machines keeled over trying to rebuild the scheduler domains.
+> Mainline produces the same splat:
 > 
-> Queued and this time kicking off testing that actually includes your
-> patches!  ;-)
+>   BUG: unable to handle page fault for address: 0000607f820054db
+>   CPU: 2 PID: 149 Comm: kworker/1:1 Not tainted 5.10.0-rc1-master+ #6
+>   Workqueue: events cpuset_hotplug_workfn
+>   RIP: build_sched_domains
+>   Call Trace:
+>    partition_sched_domains_locked
+>    rebuild_sched_domains_locked
+>    cpuset_hotplug_workfn
 > 
-> 							Thanx, Paul
+> It happens with cgroup2 and exclusive cpusets only.  This reproducer
+> triggers it on an 8-cpu vm and works most effectively with no
+> preexisting child cgroups:
 > 
->>  ---
->>
->> The basic objective here was to add support for "nohz_full=8-last" and/or
->> "rcu_nocbs="4-last" -- essentially introduce "last" as a portable
->> reference evaluated at boot/runtime for anything using a CPU list.
->>
->> The thinking behind this, is that people carve off a few early CPUs to
->> support housekeeping tasks, and perhaps dedicate one to a busy I/O
->> peripheral, and then the remaining pool of CPUs out to the end are a
->> part of a commonly configured pool used for the real work the user
->> cares about.
->>
->> Extend that logic out to a fleet of machines - some new, and some
->> nearing EOL, and you've probably got a wide range of core counts to
->> contend with - even though the early number of cores dedicated to the
->> system overhead probably doesn't vary.
->>
->> This change would enable sysadmins to have a common bootarg across all
->> such systems, and would also avoid any off-by-one fencepost errors that
->> happen for users who might briefly forget that core counts start at
->> zero.
->>
->> Looking around before starting, I noticed RCU already had a short-form
->> abbreviation "all" -- but if we want to treat CPU lists in a uniform
->> matter, then tokens shouldn't be implemented at a subsystem level and
->> hence be subsystem specific; each with their own variations.
->>
->> So I moved "all" to global use - for boot args, and for cgroups.  Then
->> I added the inverse "none" and finally, the one I wanted -- "last".
->>
->> The use of "last" isn't a standalone word like "all" or "none".  It will
->> be a part of a complete range specification, possibly with CSV separate
->> ranges, and possibly specified multiple times.  So I had to be a bit
->> more careful with string matching - and hence un-inlined the parse
->> function as commit #1 in this series.
->>
->> But it really is a generic support for "replace token ABC with known at
->> boot value XYZ" - for example, it would be trivial to extend support to
->> add "half" as a dynamic token to be replaced with 1/2 the core count,
->> even though I wouldn't suggest that has a use case like "last" does.
->>
->> I tested the string matching with a bunch of intentionally badly crafted
->> strings in a user-space harness, and tested bootarg use with nohz_full
->> and rcu_nocbs, and also the post-boot cgroup use case as per below:
->>
->>    root@hackbox:/sys/fs/cgroup/cpuset# mkdir foo
->>    root@hackbox:/sys/fs/cgroup/cpuset# cd foo
->>    root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
->>    
->>    root@hackbox:/sys/fs/cgroup/cpuset/foo# /bin/echo 10-last > cpuset.cpus
->>    root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
->>    10-15
->>    root@hackbox:/sys/fs/cgroup/cpuset/foo# /bin/echo all > cpuset.cpus
->>    root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
->>    0-15
->>    root@hackbox:/sys/fs/cgroup/cpuset/foo# /bin/echo none > cpuset.cpus
->>    root@hackbox:/sys/fs/cgroup/cpuset/foo# cat cpuset.cpus
->>    
->>    root@hackbox:/sys/fs/cgroup/cpuset/foo#
->>
->> This was on a 16 core machine with CONFIG_NR_CPUS=16 in .config file.
->>
->> Note that the two use cases (boot and runtime) are why you see "early"
->> parameter in the code - I entertained just sticking the string copy on
->> the stack vs. the early alloc dance, but this felt more correct/robust.
->> The cgroup and modular code using cpulist_parse() are runtime cases.
->>
->> ---
->>
->> Cc: Frederic Weisbecker <fweisbec@gmail.com>
->> Cc: "Paul E. McKenney" <paulmck@kernel.org>
->> Cc: Josh Triplett <josh@joshtriplett.org>
->> Cc: Thomas Gleixner <tglx@linutronix.de>
->> Cc: Ingo Molnar <mingo@kernel.org>
->> Cc: Li Zefan <lizefan@huawei.com>
->>
->> Paul Gortmaker (4):
->>   cpumask: un-inline cpulist_parse for SMP; prepare for ascii helpers
->>   cpumask: make "all" alias global and not just RCU
->>   cpumask: add a "none" alias to complement "all"
->>   cpumask: add "last" alias for cpu list specifications
->>
->>  .../admin-guide/kernel-parameters.rst         |  20 +++
->>  .../admin-guide/kernel-parameters.txt         |   4 +-
->>  include/linux/cpumask.h                       |   8 ++
->>  kernel/rcu/tree_plugin.h                      |  13 +-
->>  lib/cpumask.c                                 | 132 ++++++++++++++++++
->>  5 files changed, 165 insertions(+), 12 deletions(-)
->>
->> -- 
->> 2.25.1
->>
+>   cd $UNIFIED_ROOT
+>   mkdir cg1
+>   echo 4-7 > cg1/cpuset.cpus
+>   echo root > cg1/cpuset.cpus.partition
+> 
+>   # with smt/control reading 'on',
+>   echo off > /sys/devices/system/cpu/smt/control
+> 
+> RIP maps to
+> 
+>   sd->shared = *per_cpu_ptr(sdd->sds, sd_id);
+> 
+> from sd_init().  sd_id is calculated earlier in the same function:
+> 
+>   cpumask_and(sched_domain_span(sd), cpu_map, tl->mask(cpu));
+>   sd_id = cpumask_first(sched_domain_span(sd));
+> 
+> tl->mask(cpu), which reads cpu_sibling_map on x86, returns an empty mask
+> and so cpumask_first() returns >= nr_cpu_ids, which leads to the bogus
+> value from per_cpu_ptr() above.
+> 
+> The problem is a race between cpuset_hotplug_workfn() and a later
+> offline of CPU N.  cpuset_hotplug_workfn() updates the effective masks
+> when N is still online, the offline clears N from cpu_sibling_map, and
+> then the worker uses the stale effective masks that still have N to
+> generate the scheduling domains, leading the worker to read
+> N's empty cpu_sibling_map in sd_init().
+> 
+> rebuild_sched_domains_locked() prevented the race during the cgroup2
+> cpuset series up until the Fixes commit changed its check.  Make the
+> check more robust so that it can detect an offline CPU in any exclusive
+> cpuset's effective mask, not just the top one.
 
+*groan*, what a mess...
+
+> Fixes: 0ccea8feb980 ("cpuset: Make generate_sched_domains() work with partition")
+> Signed-off-by: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+> Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+> Cc: Prateek Sood <prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> ---
+> 
+> I think the right thing to do long-term is make the hotplug work
+> synchronous, fixing the lockdep splats of past attempts, and then take
+> these checks out of rebuild_sched_domains_locked, but this fixes the
+> immediate issue and is small enough for stable.  Open to suggestions.
+> 
+> Prateek, are you planning on picking up your patches again?
+
+Yeah, that might help, but those deadlocks were nasty iirc :/
+
+>  kernel/cgroup/cpuset.c | 20 +++++++++++++++++---
+>  1 file changed, 17 insertions(+), 3 deletions(-)
+> 
+> diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+> index 57b5b5d0a5fd..ac3124010b2a 100644
+> --- a/kernel/cgroup/cpuset.c
+> +++ b/kernel/cgroup/cpuset.c
+> @@ -983,8 +983,10 @@ partition_and_rebuild_sched_domains(int ndoms_new, cpumask_var_t doms_new[],
+>   */
+>  static void rebuild_sched_domains_locked(void)
+>  {
+> +	struct cgroup_subsys_state *pos_css;
+>  	struct sched_domain_attr *attr;
+>  	cpumask_var_t *doms;
+> +	struct cpuset *cs;
+>  	int ndoms;
+>  
+>  	lockdep_assert_cpus_held();
+> @@ -999,9 +1001,21 @@ static void rebuild_sched_domains_locked(void)
+>  	    !cpumask_equal(top_cpuset.effective_cpus, cpu_active_mask))
+>  		return;
+
+So you argued above that effective_cpus was stale, I suppose the above
+one works because its an equality test instead of a subset? Does that
+wants a comment?
+
+> -	if (top_cpuset.nr_subparts_cpus &&
+> -	   !cpumask_subset(top_cpuset.effective_cpus, cpu_active_mask))
+> -		return;
+> +	if (top_cpuset.nr_subparts_cpus) {
+> +		rcu_read_lock();
+> +		cpuset_for_each_descendant_pre(cs, pos_css, &top_cpuset) {
+> +			if (!is_partition_root(cs)) {
+> +				pos_css = css_rightmost_descendant(pos_css);
+> +				continue;
+> +			}
+> +			if (!cpumask_subset(cs->effective_cpus,
+> +					    cpu_active_mask)) {
+> +				rcu_read_unlock();
+> +				return;
+> +			}
+> +		}
+> +		rcu_read_unlock();
+> +	}
+>  
+>  	/* Generate domain masks and attrs */
+>  	ndoms = generate_sched_domains(&doms, &attr);
