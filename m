@@ -1,199 +1,78 @@
-From: Vlastimil Babka <vbabka@suse.cz>
-Subject: Re: [PATCH v21 14/19] mm/lru: introduce TestClearPageLRU
-Date: Wed, 11 Nov 2020 14:36:16 +0100
-Message-ID: <b4c08619-d365-bbaf-de08-9b2495a0a8d8@suse.cz>
+From: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH v21 15/19] mm/compaction: do page isolation first in
+ compaction
+Date: Wed, 11 Nov 2020 18:12:28 +0100
+Message-ID: <a0b8c198-6bd0-2ccb-fe55-970895c26a0b@suse.cz>
 References: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com>
- <1604566549-62481-15-git-send-email-alex.shi@linux.alibaba.com>
+ <1604566549-62481-16-git-send-email-alex.shi@linux.alibaba.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1604566549-62481-15-git-send-email-alex.shi@linux.alibaba.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1604566549-62481-16-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Alex Shi <alex.shi@linux.alibaba.com>, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com
-Cc: Michal Hocko <mhocko@kernel.org>
+To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
 On 11/5/20 9:55 AM, Alex Shi wrote:
-> Currently lru_lock still guards both lru list and page's lru bit, that's
-> ok. but if we want to use specific lruvec lock on the page, we need to
-> pin down the page's lruvec/memcg during locking. Just taking lruvec
-> lock first may be undermined by the page's memcg charge/migration. To
-> fix this problem, we will clear the lru bit out of locking and use
-> it as pin down action to block the page isolation in memcg changing.
+> Currently, compaction would get the lru_lock and then do page isolation
+> which works fine with pgdat->lru_lock, since any page isoltion would
+> compete for the lru_lock. If we want to change to memcg lru_lock, we
+> have to isolate the page before getting lru_lock, thus isoltion would
+> block page's memcg change which relay on page isoltion too. Then we
+> could safely use per memcg lru_lock later.
 > 
-> So now a standard steps of page isolation is following:
-> 	1, get_page(); 	       #pin the page avoid to be free
-> 	2, TestClearPageLRU(); #block other isolation like memcg change
-> 	3, spin_lock on lru_lock; #serialize lru list access
-> 	4, delete page from lru list;
+> The new page isolation use previous introduced TestClearPageLRU() +
+> pgdat lru locking which will be changed to memcg lru lock later.
 > 
-> This patch start with the first part: TestClearPageLRU, which combines
-> PageLRU check and ClearPageLRU into a macro func TestClearPageLRU. This
-> function will be used as page isolation precondition to prevent other
-> isolations some where else. Then there are may !PageLRU page on lru
- > list, need to remove BUG() checking accordingly.
-
-As there now may be !PageLRU pages on lru list, we need to ...
-
+> Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> fixed following bugs in this patch's
+> early version:
 > 
-> There 2 rules for lru bit now:
-> 1, the lru bit still indicate if a page on lru list, just in some
->     temporary moment(isolating), the page may have no lru bit when
->     it's on lru list.  but the page still must be on lru list when the
->     lru bit set.
-> 2, have to remove lru bit before delete it from lru list.
-
-2. we have to remove the lru bit before deleting page from lru list
-
+> Fix lots of crashes under compaction load: isolate_migratepages_block()
+> must clean up appropriately when rejecting a page, setting PageLRU again
+> if it had been cleared; and a put_page() after get_page_unless_zero()
+> cannot safely be done while holding locked_lruvec - it may turn out to
+> be the final put_page(), which will take an lruvec lock when PageLRU.
+> And move __isolate_lru_page_prepare back after get_page_unless_zero to
+> make trylock_page() safe:
+> trylock_page() is not safe to use at this time: its setting PG_locked
+> can race with the page being freed or allocated ("Bad page"), and can
+> also erase flags being set by one of those "sole owners" of a freshly
+> allocated page who use non-atomic __SetPageFlag().
 > 
-> As Andrew Morton mentioned this change would dirty cacheline for page
-> isn't on LRU. But the lost would be acceptable in Rong Chen
-> <rong.a.chen@intel.com> report:
-> https://lore.kernel.org/lkml/20200304090301.GB5972@shao2-debian/
+> Suggested-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+> Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+> Cc: Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
 
-AFAIK these places generally expect PageLRU to be true, and if it's false, it's 
-because of a race, so that effect should be negligible?
+Acked-by: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
 
-> Suggested-by: Johannes Weiner <hannes@cmpxchg.org>
-> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-> Acked-by: Hugh Dickins <hughd@google.com>
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Hugh Dickins <hughd@google.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: linux-kernel@vger.kernel.org
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-mm@kvack.org
-> ---
+A question below:
 
-...
-
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -1542,7 +1542,7 @@ unsigned int reclaim_clean_pages_from_list(struct zone *zone,
->    */
->   int __isolate_lru_page(struct page *page, isolate_mode_t mode)
->   {
-> -	int ret = -EINVAL;
-> +	int ret = -EBUSY;
+> @@ -979,10 +995,6 @@ static bool too_many_isolated(pg_data_t *pgdat)
+>   					goto isolate_abort;
+>   			}
 >   
->   	/* Only take pages on the LRU. */
->   	if (!PageLRU(page))
-> @@ -1552,8 +1552,6 @@ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
->   	if (PageUnevictable(page) && !(mode & ISOLATE_UNEVICTABLE))
->   		return ret;
->   
-> -	ret = -EBUSY;
-
-I'm not sure why this change is here, looks unrelated to the patch?
-
-Oh I see, you want to prevent the BUG() in isolate_lru_pages().
-
-But due to that, the PageUnevictable check was also affected unintentionally. 
-But I don't think it's that important to BUG() when we run into PageUnevictable 
-unexpectedly, so that's probably ok.
-
-But with that, we can just make __isolate_lru_page() a bool function and remove 
-the ugly switch in  isolate_lru_pages()?
-
+> -			/* Recheck PageLRU and PageCompound under lock */
+> -			if (!PageLRU(page))
+> -				goto isolate_fail;
 > -
->   	/*
->   	 * To minimise LRU disruption, the caller can indicate that it only
->   	 * wants to isolate pages it will be able to operate on without
-> @@ -1600,8 +1598,10 @@ int __isolate_lru_page(struct page *page, isolate_mode_t mode)
->   		 * sure the page is not being freed elsewhere -- the
->   		 * page release code relies on it.
->   		 */
-> -		ClearPageLRU(page);
-> -		ret = 0;
-> +		if (TestClearPageLRU(page))
-> +			ret = 0;
-> +		else
-> +			put_page(page);
->   	}
->   
->   	return ret;
-> @@ -1667,8 +1667,6 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
->   		page = lru_to_page(src);
->   		prefetchw_prev_lru_page(page, src, flags);
->   
-> -		VM_BUG_ON_PAGE(!PageLRU(page), page);
-> -
->   		nr_pages = compound_nr(page);
->   		total_scan += nr_pages;
->   
-> @@ -1765,21 +1763,18 @@ int isolate_lru_page(struct page *page)
->   	VM_BUG_ON_PAGE(!page_count(page), page);
->   	WARN_RATELIMIT(PageTail(page), "trying to isolate tail page");
->   
-> -	if (PageLRU(page)) {
-> +	if (TestClearPageLRU(page)) {
->   		pg_data_t *pgdat = page_pgdat(page);
->   		struct lruvec *lruvec;
->   
-> -		spin_lock_irq(&pgdat->lru_lock);
-> +		get_page(page);
->   		lruvec = mem_cgroup_page_lruvec(page, pgdat);
-> -		if (PageLRU(page)) {
-> -			int lru = page_lru(page);
-> -			get_page(page);
-> -			ClearPageLRU(page);
-> -			del_page_from_lru_list(page, lruvec, lru);
-> -			ret = 0;
-> -		}
-> +		spin_lock_irq(&pgdat->lru_lock);
-> +		del_page_from_lru_list(page, lruvec, page_lru(page));
->   		spin_unlock_irq(&pgdat->lru_lock);
-> +		ret = 0;
->   	}
-> +
->   	return ret;
->   }
->   
-> @@ -4293,6 +4288,10 @@ void check_move_unevictable_pages(struct pagevec *pvec)
->   		nr_pages = thp_nr_pages(page);
->   		pgscanned += nr_pages;
->   
-> +		/* block memcg migration during page moving between lru */
-> +		if (!TestClearPageLRU(page))
-> +			continue;
-> +
->   		if (pagepgdat != pgdat) {
->   			if (pgdat)
->   				spin_unlock_irq(&pgdat->lru_lock);
-> @@ -4301,10 +4300,7 @@ void check_move_unevictable_pages(struct pagevec *pvec)
->   		}
->   		lruvec = mem_cgroup_page_lruvec(page, pgdat);
->   
-> -		if (!PageLRU(page) || !PageUnevictable(page))
-> -			continue;
-> -
-> -		if (page_evictable(page)) {
-> +		if (page_evictable(page) && PageUnevictable(page)) {
+>   			/*
+>   			 * Page become compound since the non-locked check,
+>   			 * and it's on LRU. It can only be a THP so the order
+> @@ -990,16 +1002,13 @@ static bool too_many_isolated(pg_data_t *pgdat)
+>   			 */
+>   			if (unlikely(PageCompound(page) && !cc->alloc_contig)) {
+>   				low_pfn += compound_nr(page) - 1;
+> -				goto isolate_fail;
+> +				SetPageLRU(page);
+> +				goto isolate_fail_put;
+>   			}
 
-Doing PageUnevictable() test first should be cheaper?
-
->   			enum lru_list lru = page_lru_base_type(page);
->   
->   			VM_BUG_ON_PAGE(PageActive(page), page);
-> @@ -4313,12 +4309,15 @@ void check_move_unevictable_pages(struct pagevec *pvec)
->   			add_page_to_lru_list(page, lruvec, lru);
->   			pgrescued += nr_pages;
->   		}
-> +		SetPageLRU(page);
->   	}
->   
->   	if (pgdat) {
->   		__count_vm_events(UNEVICTABLE_PGRESCUED, pgrescued);
->   		__count_vm_events(UNEVICTABLE_PGSCANNED, pgscanned);
->   		spin_unlock_irq(&pgdat->lru_lock);
-> +	} else if (pgscanned) {
-> +		count_vm_events(UNEVICTABLE_PGSCANNED, pgscanned);
->   	}
->   }
->   EXPORT_SYMBOL_GPL(check_move_unevictable_pages);
-> 
-
+IIUC the danger here is khugepaged will collapse a THP. For that, 
+__collapse_huge_page_isolate() has to succeed isolate_lru_page(). Under the new 
+scheme, it shouldn't be possible, right? If that's correct, we can remove this part?
