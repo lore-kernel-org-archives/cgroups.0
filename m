@@ -1,160 +1,87 @@
-From: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH v21 16/19] mm/swap.c: serialize memcg changes in
- pagevec_lru_move_fn
-Date: Wed, 11 Nov 2020 19:00:10 +0100
-Message-ID: <0af28702-8f75-6974-5b66-c0633eb83d7c@suse.cz>
-References: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com>
- <1604566549-62481-17-git-send-email-alex.shi@linux.alibaba.com>
+From: Hugh Dickins <hughd@google.com>
+Subject: Re: [PATCH v21 14/19] mm/lru: introduce TestClearPageLRU
+Date: Wed, 11 Nov 2020 18:03:22 -0800 (PST)
+Message-ID: <alpine.LSU.2.11.2011111729350.2174@eggly.anvils>
+References: <1604566549-62481-1-git-send-email-alex.shi@linux.alibaba.com> <1604566549-62481-15-git-send-email-alex.shi@linux.alibaba.com> <b4c08619-d365-bbaf-de08-9b2495a0a8d8@suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1604566549-62481-17-git-send-email-alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Content-Language: en-US
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=KyT2mlBYlT2kAm/JHbWqMsOuBJM1d87BrqaaRaUfl50=;
+        b=iqee5mg0JMbddEDyf2/xuBU1NZWnAWQDmcxpGfelMd2nKAPy/CPLgkG4iApYTGebQh
+         yUBfhOvZXGiwgsEDXQxTtAr7ihzRkOkBe33dvPe2T9i4nrIsRa+nmWvkU6ri/CmLLHU+
+         0k7mh1HRa+kWhDkkT1SWLyhPJ9t5KGqxKeLrVvIWgRoXmaWgvAMRjhxLbn1VpzsA+OFG
+         EmxMxMa3aKoHuvgHtwDhMqy1TKQyoxAReTZAM95dC7u16k4wnNgEvA0A6tssToLXQzvq
+         uWgRdxzDYElGfeIiIVf3cDvAOaYb+231CM6UI0zHdEqLILTIpfXcYLfiMfX75UJ9zujd
+         kciw==
+In-Reply-To: <b4c08619-d365-bbaf-de08-9b2495a0a8d8@suse.cz>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, mgorman-3eNAlZScCAx27rWaFMvyedHuzzzSOjJt@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, khlebnikov-XoJtRXgx1JseBXzfvpsJ4g@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kirill-oKw7cIdHH8eLwutG50LtGA@public.gmane.org, alexander.duyck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, rong.a.chen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, mhocko-IBi9RG/b67k@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Vlastimil Babka <vbabka@suse.cz>
+Cc: Alex Shi <alex.shi@linux.alibaba.com>, akpm@linux-foundation.org, mgorman@techsingularity.net, tj@kernel.org, hughd@google.com, khlebnikov@yandex-team.ru, daniel.m.jordan@oracle.com, willy@infradead.org, hannes@cmpxchg.org, lkp@intel.com, linux-mm@kvack.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, shakeelb@google.com, iamjoonsoo.kim@lge.com, richard.weiyang@gmail.com, kirill@shutemov.name, alexander.duyck@gmail.com, rong.a.chen@intel.com, mhocko@suse.com, vdavydov.dev@gmail.com, shy828301@gmail.com, Michal Hocko <mhocko@kernel.org>
 
-On 11/5/20 9:55 AM, Alex Shi wrote:
-> Hugh Dickins' found a memcg change bug on original version:
-> If we want to change the pgdat->lru_lock to memcg's lruvec lock, we have
-> to serialize mem_cgroup_move_account during pagevec_lru_move_fn. The
-> possible bad scenario would like:
+On Wed, 11 Nov 2020, Vlastimil Babka wrote:
+> On 11/5/20 9:55 AM, Alex Shi wrote:
 > 
-> 	cpu 0					cpu 1
-> lruvec = mem_cgroup_page_lruvec()
-> 					if (!isolate_lru_page())
-> 						mem_cgroup_move_account
+> > --- a/mm/vmscan.c
+> > +++ b/mm/vmscan.c
+> > @@ -1542,7 +1542,7 @@ unsigned int reclaim_clean_pages_from_list(struct
+> > zone *zone,
+> >    */
+> >   int __isolate_lru_page(struct page *page, isolate_mode_t mode)
+> >   {
+> > -	int ret = -EINVAL;
+> > +	int ret = -EBUSY;
+> >     	/* Only take pages on the LRU. */
+> >   	if (!PageLRU(page))
+> > @@ -1552,8 +1552,6 @@ int __isolate_lru_page(struct page *page,
+> > isolate_mode_t mode)
+> >   	if (PageUnevictable(page) && !(mode & ISOLATE_UNEVICTABLE))
+> >   		return ret;
+> >   -	ret = -EBUSY;
 > 
-> spin_lock_irqsave(&lruvec->lru_lock <== wrong lock.
+> I'm not sure why this change is here, looks unrelated to the patch?
 > 
-> So we need TestClearPageLRU to block isolate_lru_page(), that serializes
-> the memcg change. and then removing the PageLRU check in move_fn callee
-> as the consequence.
-> 
-> __pagevec_lru_add_fn() is different from the others, because the pages
-> it deals with are, by definition, not yet on the lru.  TestClearPageLRU
-> is not needed and would not work, so __pagevec_lru_add() goes its own
-> way.
-> 
-> Reported-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-> Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-> Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-> Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> Oh I see, you want to prevent the BUG() in isolate_lru_pages().
 
-Acked-by: Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+Yes, I suggested this part of the patch to Alex, when I hit that BUG().
 
-> ---
->   mm/swap.c | 44 +++++++++++++++++++++++++++++++++++---------
->   1 file changed, 35 insertions(+), 9 deletions(-)
 > 
-> diff --git a/mm/swap.c b/mm/swap.c
-> index 2681d9023998..1838a9535703 100644
-> --- a/mm/swap.c
-> +++ b/mm/swap.c
-> @@ -222,8 +222,14 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
->   			spin_lock_irqsave(&pgdat->lru_lock, flags);
->   		}
->   
-> +		/* block memcg migration during page moving between lru */
-> +		if (!TestClearPageLRU(page))
-> +			continue;
-> +
->   		lruvec = mem_cgroup_page_lruvec(page, pgdat);
->   		(*move_fn)(page, lruvec);
-> +
-> +		SetPageLRU(page);
->   	}
->   	if (pgdat)
->   		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-> @@ -233,7 +239,7 @@ static void pagevec_lru_move_fn(struct pagevec *pvec,
->   
->   static void pagevec_move_tail_fn(struct page *page, struct lruvec *lruvec)
->   {
-> -	if (PageLRU(page) && !PageUnevictable(page)) {
-> +	if (!PageUnevictable(page)) {
->   		del_page_from_lru_list(page, lruvec, page_lru(page));
->   		ClearPageActive(page);
->   		add_page_to_lru_list_tail(page, lruvec, page_lru(page));
-> @@ -306,7 +312,7 @@ void lru_note_cost_page(struct page *page)
->   
->   static void __activate_page(struct page *page, struct lruvec *lruvec)
->   {
-> -	if (PageLRU(page) && !PageActive(page) && !PageUnevictable(page)) {
-> +	if (!PageActive(page) && !PageUnevictable(page)) {
->   		int lru = page_lru_base_type(page);
->   		int nr_pages = thp_nr_pages(page);
->   
-> @@ -362,7 +368,8 @@ static void activate_page(struct page *page)
->   
->   	page = compound_head(page);
->   	spin_lock_irq(&pgdat->lru_lock);
-> -	__activate_page(page, mem_cgroup_page_lruvec(page, pgdat));
-> +	if (PageLRU(page))
-> +		__activate_page(page, mem_cgroup_page_lruvec(page, pgdat));
->   	spin_unlock_irq(&pgdat->lru_lock);
->   }
->   #endif
-> @@ -519,9 +526,6 @@ static void lru_deactivate_file_fn(struct page *page, struct lruvec *lruvec)
->   	bool active;
->   	int nr_pages = thp_nr_pages(page);
->   
-> -	if (!PageLRU(page))
-> -		return;
-> -
->   	if (PageUnevictable(page))
->   		return;
->   
-> @@ -562,7 +566,7 @@ static void lru_deactivate_file_fn(struct page *page, struct lruvec *lruvec)
->   
->   static void lru_deactivate_fn(struct page *page, struct lruvec *lruvec)
->   {
-> -	if (PageLRU(page) && PageActive(page) && !PageUnevictable(page)) {
-> +	if (PageActive(page) && !PageUnevictable(page)) {
->   		int lru = page_lru_base_type(page);
->   		int nr_pages = thp_nr_pages(page);
->   
-> @@ -579,7 +583,7 @@ static void lru_deactivate_fn(struct page *page, struct lruvec *lruvec)
->   
->   static void lru_lazyfree_fn(struct page *page, struct lruvec *lruvec)
->   {
-> -	if (PageLRU(page) && PageAnon(page) && PageSwapBacked(page) &&
-> +	if (PageAnon(page) && PageSwapBacked(page) &&
->   	    !PageSwapCache(page) && !PageUnevictable(page)) {
->   		bool active = PageActive(page);
->   		int nr_pages = thp_nr_pages(page);
-> @@ -1021,7 +1025,29 @@ static void __pagevec_lru_add_fn(struct page *page, struct lruvec *lruvec)
->    */
->   void __pagevec_lru_add(struct pagevec *pvec)
->   {
-> -	pagevec_lru_move_fn(pvec, __pagevec_lru_add_fn);
-> +	int i;
-> +	struct pglist_data *pgdat = NULL;
-> +	struct lruvec *lruvec;
-> +	unsigned long flags = 0;
-> +
-> +	for (i = 0; i < pagevec_count(pvec); i++) {
-> +		struct page *page = pvec->pages[i];
-> +		struct pglist_data *pagepgdat = page_pgdat(page);
-> +
-> +		if (pagepgdat != pgdat) {
-> +			if (pgdat)
-> +				spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-> +			pgdat = pagepgdat;
-> +			spin_lock_irqsave(&pgdat->lru_lock, flags);
-> +		}
-> +
-> +		lruvec = mem_cgroup_page_lruvec(page, pgdat);
-> +		__pagevec_lru_add_fn(page, lruvec);
-> +	}
-> +	if (pgdat)
-> +		spin_unlock_irqrestore(&pgdat->lru_lock, flags);
-> +	release_pages(pvec->pages, pvec->nr);
-> +	pagevec_reinit(pvec);
->   }
->   
->   /**
-> 
+> But due to that, the PageUnevictable check was also affected unintentionally.
+> But I don't think it's that important to BUG() when we run into
+> PageUnevictable unexpectedly, so that's probably ok.
 
+Not unintentional.  __isolate_lru_page(), or __isolate_lru_page_prepare(),
+is a silly function, used by two callers whose requirements are almost
+entirely disjoint.  The ISOLATE_UNEVICTABLE case is only for compaction.c,
+which takes no interest in -EINVAL versus -EBUSY, and has no such BUG().
+
+I think it dates back to lumpy reclaim days, and it probably made more
+sense back then.
+
+> 
+> But with that, we can just make __isolate_lru_page() a bool function and
+> remove the ugly switch in  isolate_lru_pages()?
+
+I agree that the switch statement in isolate_lru_pages() seems pointless
+now, and can be turned into an if{}else{}.  But that cleanup is a
+diversion from this particular TestClearPageLRU patch, and I think from
+the whole series (checking final state of the patchset, yes, the switch
+is still there - though I think there have been variant series which
+removed it).
+
+Can we please leave that cleanup until after the series has gone in?
+
+I think several of us have cleanups or optimization that we want to
+follow (I had one that inlines what isolate_migratepages_block() wanted
+of __isolate_lru_page() into that function, so simplifying what vmscan.c
+needs; perhaps that can now eliminate it completely, I've not tried
+recently).  But there was a point at which the series was growing
+ten patches per release as we all added our bits and pieces on top,
+it got harder and harder to review the whole, and further from
+getting the basics in: I do push back against that tendency.
+
+Hugh
