@@ -1,45 +1,35 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] blk-cgroup: fix a hd_struct leak in blkcg_fill_root_iostats
-Date: Sat, 14 Nov 2020 19:12:46 +0100
-Message-ID: <20201114181246.107007-1-hch@lst.de>
+From: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Subject: Re: [PATCH] blk-cgroup: fix a hd_struct leak in
+ blkcg_fill_root_iostats
+Date: Sat, 14 Nov 2020 11:17:45 -0700
+Message-ID: <3dd068d9-8dd6-ea2f-e600-f8007516cd1d@kernel.dk>
+References: <20201114181246.107007-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=5Eexzr2a9Yf/fh6sHK18AOYOQ9Ow0gRnkkcLXSt5AXc=; b=Ve5OBmSQCIdrlcm6adCJMrZ0Ai
-        g7NFyADO8YzKGJ9B5Oa0P5U42VBRVaMucfXHxvfd+oP3qBaEvse0VcwbgA51YWqD2/GQc4EWsdzid
-        2pXmkk8/iIIgKERh9NY/T8zX+Rj+3Yp9LLD+rVMexwFUjtDY/8k2/xyDk8dUkMOUAISgbbmpbG++A
-        VbxRqY3yC2g44RIYaUaEYJIBVgMdrTd4JEbg/aDTHKEixnDHLd2wPv2MGqNUig9WEW79Ywu5hgAgd
-        yqChbkWdhSGErCCj4BAN9HzIuTTzjCqCLOsn6xGTMHeCZMCVdtIDjj1ODy6ZpIx/eVfIn4iKHeYig
-        opMya+wQ==;
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=i0e3E64zBwid1kl9TRb62r7Kg+IomqRl8tjiUk7Bh9c=;
+        b=ar5yYtE92kZ+9hKIQlmSdM6HKuoBgt3Lu8f0HxdrUrOiHZqm2UzBum26yliHtmn1+r
+         mxSVE6PlJr/itb28rrNlbHsB2BZInkJuTLUUzDMap0sizj7IZ88LVD7xHv3929rOBD/0
+         FRV1WZgZotmwOyHRXExpS4gz3qif6if5xK3amwypNu/hNKL98W4eW+y9hFqTcW/N345X
+         lsYxw9QiHSiMZWUepK03fL8kbrAor/JLE5zyGABb127CO8UI19U9Rs/QqII7w4fvc10N
+         gM4AA85DRqKlvHu06SMj9QPliMHjIS/LH13uqlsK4shI9951+5EKiIPpx2HSVWr1FxCv
+         65Ww==
+In-Reply-To: <20201114181246.107007-1-hch-jcswGhMUV9g@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: axboe@kernel.dk, tj@kernel.org
-Cc: boris@bur.io, cgroups@vger.kernel.org, linux-block@vger.kernel.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: boris-UrQYPotlwNs@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-disk_get_part needs to be paired with a disk_put_part.
+On 11/14/20 11:12 AM, Christoph Hellwig wrote:
+> disk_get_part needs to be paired with a disk_put_part.
 
-Fixes: ef45fe470e1 ("blk-cgroup: show global disk stats in root cgroup io.stat")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- block/blk-cgroup.c | 1 +
- 1 file changed, 1 insertion(+)
+Applied, thanks.
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index c68bdf58c9a6e1..54fbe1e80cc41a 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -849,6 +849,7 @@ static void blkcg_fill_root_iostats(void)
- 			blkg_iostat_set(&blkg->iostat.cur, &tmp);
- 			u64_stats_update_end(&blkg->iostat.sync);
- 		}
-+		disk_put_part(part);
- 	}
- }
- 
 -- 
-2.28.0
+Jens Axboe
 
