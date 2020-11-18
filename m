@@ -1,38 +1,80 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v2 RESEND] mm: memcg/slab: Rename *_lruvec_slab_state to
- *_lruvec_kmem_state
-Date: Tue, 17 Nov 2020 09:40:04 -0500
-Message-ID: <20201117144004.GA1013321@cmpxchg.org>
-References: <20201117085249.24319-1-songmuchun@bytedance.com>
+From: Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH] mm: memcg: remove obsolete memcg_has_children()
+Date: Wed, 18 Nov 2020 13:46:17 +0100
+Message-ID: <20201118124617.GR12284@dhcp22.suse.cz>
+References: <20201116055043.20886-1-lukas.bulwahn@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=7P9jVoxiN2XeeqlFhH6mghYTdw/Tp+4rlAyPEA3z/rg=;
-        b=I6S+QcRX2mFpbyQr0vcRNYaflVo4PdeIx1m4jWIMQX7wvqS+/dJDJQ94cx7ztvtC1G
-         fKg/FEdlvgdqlcmXo92gL8CneBlksCAkpzRkIyEglPqv3lUMKvx74QAANDNXTTLMxLrQ
-         ngmJ+EQStoy17JWl7wfqSIxqjTG0K2IW6bJYceBqPjTpD+bnatsEa9et+oA3GLte2zu0
-         V1l1H7HTarRJ4to+xPoHd4A3fgEkBuweP8y19mKgs7CsGfu9mZEdjmiZ/ox53xJDW3Jp
-         uXaru4vahuZqdoYUCLSwb3F+kiJAEloUAvvjtkwM81W9izeEf0DIticCoE+CL+HtKMHE
-         kFiw==
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1605703578; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=I+Qzkkhk4C6GtBU8xVUeEofjQe9CXbPuBs8NdbyYcoo=;
+        b=WCfWgtAO+igB5OcpcKj8XOlT7ogXI+httgsZpXzYSpk3Km0SZhrb6ps0ZOT5fbIm96o19n
+        vdUme6DBKNrcaRw6s/+riMxSYyKWQ6nn3SO4dsmP8RXVu+XeNwdfKVshKdhIM/P48G/xyx
+        H/ktOrSgKNdjYtJKma1fDR8T0nAoays=
 Content-Disposition: inline
-In-Reply-To: <20201117085249.24319-1-songmuchun@bytedance.com>
+In-Reply-To: <20201116055043.20886-1-lukas.bulwahn@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Muchun Song <songmuchun@bytedance.com>
-Cc: mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, shakeelb@google.com, guro@fb.com, laoar.shao@gmail.com, chris@chrisdown.name, christian.brauner@ubuntu.com, mingo@kernel.org, peterz@infradead.org, ebiederm@xmission.com, esyr@redhat.com, tglx@linutronix.de, surenb@google.com, areber@redhat.com, elver@google.com, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org
+To: Lukas Bulwahn <lukas.bulwahn@gmail.com>
+Cc: Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Arnd Bergmann <arnd@arndb.de>, Tom Rix <trix@redhat.com>, Nathan Chancellor <natechancellor@gmail.com>, Nick Desaulniers <ndesaulniers@google.com>, clang-built-linux@googlegroups.com, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Nov 17, 2020 at 04:52:49PM +0800, Muchun Song wrote:
-> The *_lruvec_slab_state is also suitable for pages allocated from buddy,
-> not just for the slab objects. But the function name seems to tell us that
-> only slab object is applicable. So we can rename the keyword of slab to
-> kmem.
+On Mon 16-11-20 06:50:43, Lukas Bulwahn wrote:
+> Commit 2ef1bf118c40 ("mm: memcg: deprecate the non-hierarchical mode")
+> removed the only use of memcg_has_children() in
+> mem_cgroup_hierarchy_write() as part of the feature deprecation.
 > 
-> Signed-off-by: Muchun Song <songmuchun@bytedance.com>
-> Acked-by: Roman Gushchin <guro@fb.com>
-> Reviewed-by: Shakeel Butt <shakeelb@google.com>
+> Hence, since then, make CC=clang W=1 warns:
+> 
+>   mm/memcontrol.c:3421:20:
+>     warning: unused function 'memcg_has_children' [-Wunused-function]
+> 
+> Simply remove this obsolete unused function.
+> 
+> Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
 
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+git grep agrees
+Acked-by: Michal Hocko <mhocko@suse.com>
+
+> ---
+> applies cleanly on next-20201113, not on current master
+> 
+> Roman, please ack.
+> 
+> Andrew, please pick this minor non-urgent patch into your -next tree.
+> 
+>  mm/memcontrol.c | 13 -------------
+>  1 file changed, 13 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index f95ddb3e9898..d49d7c507284 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -3415,19 +3415,6 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+>  	return nr_reclaimed;
+>  }
+>  
+> -/*
+> - * Test whether @memcg has children, dead or alive.
+> - */
+> -static inline bool memcg_has_children(struct mem_cgroup *memcg)
+> -{
+> -	bool ret;
+> -
+> -	rcu_read_lock();
+> -	ret = css_next_child(NULL, &memcg->css);
+> -	rcu_read_unlock();
+> -	return ret;
+> -}
+> -
+>  /*
+>   * Reclaims as many pages from the given memcg as possible.
+>   *
+> -- 
+> 2.17.1
+
+-- 
+Michal Hocko
+SUSE Labs
