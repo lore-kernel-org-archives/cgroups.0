@@ -1,80 +1,42 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH] mm: memcg: remove obsolete memcg_has_children()
-Date: Wed, 18 Nov 2020 13:46:17 +0100
-Message-ID: <20201118124617.GR12284@dhcp22.suse.cz>
-References: <20201116055043.20886-1-lukas.bulwahn@gmail.com>
-Mime-Version: 1.0
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1605703578; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=I+Qzkkhk4C6GtBU8xVUeEofjQe9CXbPuBs8NdbyYcoo=;
-        b=WCfWgtAO+igB5OcpcKj8XOlT7ogXI+httgsZpXzYSpk3Km0SZhrb6ps0ZOT5fbIm96o19n
-        vdUme6DBKNrcaRw6s/+riMxSYyKWQ6nn3SO4dsmP8RXVu+XeNwdfKVshKdhIM/P48G/xyx
-        H/ktOrSgKNdjYtJKma1fDR8T0nAoays=
-Content-Disposition: inline
-In-Reply-To: <20201116055043.20886-1-lukas.bulwahn@gmail.com>
+From: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Subject: [PATCH next-akpm] mm/memcg: remove incorrect comments
+Date: Fri, 20 Nov 2020 17:35:30 +0800
+Message-ID: <1605864930-49405-1-git-send-email-alex.shi@linux.alibaba.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Lukas Bulwahn <lukas.bulwahn@gmail.com>
-Cc: Roman Gushchin <guro@fb.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, Vladimir Davydov <vdavydov.dev@gmail.com>, Arnd Bergmann <arnd@arndb.de>, Tom Rix <trix@redhat.com>, Nathan Chancellor <natechancellor@gmail.com>, Nick Desaulniers <ndesaulniers@google.com>, clang-built-linux@googlegroups.com, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: 
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon 16-11-20 06:50:43, Lukas Bulwahn wrote:
-> Commit 2ef1bf118c40 ("mm: memcg: deprecate the non-hierarchical mode")
-> removed the only use of memcg_has_children() in
-> mem_cgroup_hierarchy_write() as part of the feature deprecation.
-> 
-> Hence, since then, make CC=clang W=1 warns:
-> 
->   mm/memcontrol.c:3421:20:
->     warning: unused function 'memcg_has_children' [-Wunused-function]
-> 
-> Simply remove this obsolete unused function.
-> 
-> Signed-off-by: Lukas Bulwahn <lukas.bulwahn@gmail.com>
+Swapcache readahead pages are charged before get used, so it unlikely be
+migrated before charged. remove the incorrect comments.
 
-git grep agrees
-Acked-by: Michal Hocko <mhocko@suse.com>
+Signed-off-by: Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> 
+Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> 
+Cc: Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> 
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> 
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org 
+Cc: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org 
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org 
+---
+ mm/memcontrol.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-> ---
-> applies cleanly on next-20201113, not on current master
-> 
-> Roman, please ack.
-> 
-> Andrew, please pick this minor non-urgent patch into your -next tree.
-> 
->  mm/memcontrol.c | 13 -------------
->  1 file changed, 13 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index f95ddb3e9898..d49d7c507284 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -3415,19 +3415,6 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
->  	return nr_reclaimed;
->  }
->  
-> -/*
-> - * Test whether @memcg has children, dead or alive.
-> - */
-> -static inline bool memcg_has_children(struct mem_cgroup *memcg)
-> -{
-> -	bool ret;
-> -
-> -	rcu_read_lock();
-> -	ret = css_next_child(NULL, &memcg->css);
-> -	rcu_read_unlock();
-> -	return ret;
-> -}
-> -
->  /*
->   * Reclaims as many pages from the given memcg as possible.
->   *
-> -- 
-> 2.17.1
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 45465c03a8d7..08c267305725 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6941,7 +6941,6 @@ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage)
+ 	if (page_memcg(newpage))
+ 		return;
+ 
+-	/* Swapcache readahead pages can get replaced before being charged */
+ 	memcg = page_memcg(oldpage);
+ 	VM_WARN_ON_ONCE_PAGE(!memcg, oldpage);
+ 	if (!memcg)
 -- 
-Michal Hocko
-SUSE Labs
+2.29.GIT
+
