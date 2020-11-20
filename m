@@ -1,164 +1,52 @@
-From: Stafford Horne <shorne@gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH 03/27] blk-iocost: use local[64]_t for percpu stat
-Date: Sat, 21 Nov 2020 06:51:47 +0900
-Message-ID: <20201120215147.GB961977@lianli.shorne-pla.net>
+Date: Fri, 20 Nov 2020 17:13:57 -0500
+Message-ID: <X7g/pTLLJEQXdbD7@mtj.duckdns.org>
 References: <20200901185257.645114-1-tj@kernel.org>
  <20200901185257.645114-4-tj@kernel.org>
+ <20201120215147.GB961977@lianli.shorne-pla.net>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=DMZDqk3EJTuLlBttmZxfIGencN4dIvpRMnJMaj5PBvU=;
-        b=sRT77v23nRDxyQSyZSuMgmdeaEAoyhj7Z59RWqMDuKoYEnw5wtqRSqfEpVjc9Hdx30
-         d4qXl/FXmc5VUCfMBuuLVUo9qFy2UzVgtq9799+9c5xAlIYHz05JFa1AAbLlmGnQyWIY
-         SAaQiZcNv9M7IhIXFK3ttWB/RUOJo4lFekX35PZhHQ12Hz/BPTj7YwvGyQPHgFpINSch
-         8nEHkLVUcKsJ5AWntGnKbwb8jz1wjrFE/18RxCcg7aKHI3adYFjJfL2NIYYdexnhq/6X
-         H+FtqU4coAoCuH1JrxNDtaJ+V64XjjINgYfp/nhmxYJ8QJBWVZ2lK0deeBQHHfVIwX7P
-         qEfw==
+        bh=Z1pyZKUt70+7Oah4brRuaKPswnwh6VHan/l11sMx/Yg=;
+        b=ljsWDBMqGzGOgdCS3yCLBdUS4tlf5XcKxFGdE2y5hnGDPlHFCJvgNgONmquepZKXm3
+         gA3I75WL0l/JV+dAYNQwIwXg/ito2mPyy3WMIeEno7t+bzQLXNa+y1vhfB2r9f7Osb2/
+         Rc/lpcKXHbQGiSD1QNy3tpmxLvtnTVo+4G7XFjVtBL8QCCQUoKfYoD4A7cLOXlw20f3M
+         qGyxp/h6erD4hnK6wMCjix/lF3sUsQozSnQX6aSYEMelVacfe22lymxKLrTNQSMNK25I
+         a4JDZtUmf4RU4wuufHvcAW46kKpj++bgP5VpvRvQ047kFD7cyGCF54+mVNun1zsbvTdu
+         QSsA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20200901185257.645114-4-tj@kernel.org>
+In-Reply-To: <20201120215147.GB961977-Uk7Bhu+bUQgm0WYXfsLZQReHL2rgt/dS@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, newella@fb.com
+To: Stafford Horne <shorne-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, newella-b10kYP2dOMg@public.gmane.org
 
-On Tue, Sep 01, 2020 at 02:52:33PM -0400, Tejun Heo wrote:
-> blk-iocost has been reading percpu stat counters from remote cpus which on
-> some archs can lead to torn reads in really rare occassions. Use local[64]_t
-> for those counters.
+Hello,
+
+On Sat, Nov 21, 2020 at 06:51:47AM +0900, Stafford Horne wrote:
+> FYI, I am just noticing this but this breaks my allyesconfig build
+> on OpenRISC; as 32-bit arch/openrisc doesn't define local64.h
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> ---
->  block/blk-iocost.c | 37 +++++++++++++++++++++++++++----------
->  1 file changed, 27 insertions(+), 10 deletions(-)
-> 
-> diff --git a/block/blk-iocost.c b/block/blk-iocost.c
-> index d37b55db2409..e2266e7692b4 100644
-> --- a/block/blk-iocost.c
-> +++ b/block/blk-iocost.c
-> @@ -179,6 +179,8 @@
->  #include <linux/parser.h>
->  #include <linux/sched/signal.h>
->  #include <linux/blk-cgroup.h>
-> +#include <asm/local.h>
-> +#include <asm/local64.h>
+> In general local64 is slow on 32-bit architectures, would that
+> be a problem with the usage here?  Are the calls to local64_*
+> below on critical paths?
 
-Hi Tejun,
+It gets hot when running on really high iops devices but that hopefully
+isn't a problem for 32bit openrisc.
 
-FYI, I am just noticing this but this breaks my allyesconfig build
-on OpenRISC; as 32-bit arch/openrisc doesn't define local64.h
+> Either way I will submit a patch in include generic local64.h
+> on OpenRISC, I confirmed it fixes the build.  I do not know of anyone
+> using cgroups on OpenRISC systems.
 
-In general local64 is slow on 32-bit architectures, would that
-be a problem with the usage here?  Are the calls to local64_*
-below on critical paths?
+Yeah, sounds like the right fix.
 
-Either way I will submit a patch in include generic local64.h
-on OpenRISC, I confirmed it fixes the build.  I do not know of anyone
-using cgroups on OpenRISC systems.
+Thanks.
 
--Stafford
-
->  #include "blk-rq-qos.h"
->  #include "blk-stat.h"
->  #include "blk-wbt.h"
-> @@ -373,8 +375,8 @@ struct ioc_params {
->  };
->  
->  struct ioc_missed {
-> -	u32				nr_met;
-> -	u32				nr_missed;
-> +	local_t				nr_met;
-> +	local_t				nr_missed;
->  	u32				last_met;
->  	u32				last_missed;
->  };
-> @@ -382,7 +384,7 @@ struct ioc_missed {
->  struct ioc_pcpu_stat {
->  	struct ioc_missed		missed[2];
->  
-> -	u64				rq_wait_ns;
-> +	local64_t			rq_wait_ns;
->  	u64				last_rq_wait_ns;
->  };
->  
-> @@ -1278,8 +1280,8 @@ static void ioc_lat_stat(struct ioc *ioc, u32 *missed_ppm_ar, u32 *rq_wait_pct_p
->  		u64 this_rq_wait_ns;
->  
->  		for (rw = READ; rw <= WRITE; rw++) {
-> -			u32 this_met = READ_ONCE(stat->missed[rw].nr_met);
-> -			u32 this_missed = READ_ONCE(stat->missed[rw].nr_missed);
-> +			u32 this_met = local_read(&stat->missed[rw].nr_met);
-> +			u32 this_missed = local_read(&stat->missed[rw].nr_missed);
->  
->  			nr_met[rw] += this_met - stat->missed[rw].last_met;
->  			nr_missed[rw] += this_missed - stat->missed[rw].last_missed;
-> @@ -1287,7 +1289,7 @@ static void ioc_lat_stat(struct ioc *ioc, u32 *missed_ppm_ar, u32 *rq_wait_pct_p
->  			stat->missed[rw].last_missed = this_missed;
->  		}
->  
-> -		this_rq_wait_ns = READ_ONCE(stat->rq_wait_ns);
-> +		this_rq_wait_ns = local64_read(&stat->rq_wait_ns);
->  		rq_wait_ns += this_rq_wait_ns - stat->last_rq_wait_ns;
->  		stat->last_rq_wait_ns = this_rq_wait_ns;
->  	}
-> @@ -1908,6 +1910,7 @@ static void ioc_rqos_done_bio(struct rq_qos *rqos, struct bio *bio)
->  static void ioc_rqos_done(struct rq_qos *rqos, struct request *rq)
->  {
->  	struct ioc *ioc = rqos_to_ioc(rqos);
-> +	struct ioc_pcpu_stat *ccs;
->  	u64 on_q_ns, rq_wait_ns, size_nsec;
->  	int pidx, rw;
->  
-> @@ -1931,13 +1934,17 @@ static void ioc_rqos_done(struct rq_qos *rqos, struct request *rq)
->  	rq_wait_ns = rq->start_time_ns - rq->alloc_time_ns;
->  	size_nsec = div64_u64(calc_size_vtime_cost(rq, ioc), VTIME_PER_NSEC);
->  
-> +	ccs = get_cpu_ptr(ioc->pcpu_stat);
-> +
->  	if (on_q_ns <= size_nsec ||
->  	    on_q_ns - size_nsec <= ioc->params.qos[pidx] * NSEC_PER_USEC)
-> -		this_cpu_inc(ioc->pcpu_stat->missed[rw].nr_met);
-> +		local_inc(&ccs->missed[rw].nr_met);
->  	else
-> -		this_cpu_inc(ioc->pcpu_stat->missed[rw].nr_missed);
-> +		local_inc(&ccs->missed[rw].nr_missed);
-> +
-> +	local64_add(rq_wait_ns, &ccs->rq_wait_ns);
->  
-> -	this_cpu_add(ioc->pcpu_stat->rq_wait_ns, rq_wait_ns);
-> +	put_cpu_ptr(ccs);
->  }
->  
->  static void ioc_rqos_queue_depth_changed(struct rq_qos *rqos)
-> @@ -1977,7 +1984,7 @@ static int blk_iocost_init(struct request_queue *q)
->  {
->  	struct ioc *ioc;
->  	struct rq_qos *rqos;
-> -	int ret;
-> +	int i, cpu, ret;
->  
->  	ioc = kzalloc(sizeof(*ioc), GFP_KERNEL);
->  	if (!ioc)
-> @@ -1989,6 +1996,16 @@ static int blk_iocost_init(struct request_queue *q)
->  		return -ENOMEM;
->  	}
->  
-> +	for_each_possible_cpu(cpu) {
-> +		struct ioc_pcpu_stat *ccs = per_cpu_ptr(ioc->pcpu_stat, cpu);
-> +
-> +		for (i = 0; i < ARRAY_SIZE(ccs->missed); i++) {
-> +			local_set(&ccs->missed[i].nr_met, 0);
-> +			local_set(&ccs->missed[i].nr_missed, 0);
-> +		}
-> +		local64_set(&ccs->rq_wait_ns, 0);
-> +	}
-> +
->  	rqos = &ioc->rqos;
->  	rqos->id = RQ_QOS_COST;
->  	rqos->ops = &ioc_rqos_ops;
-> -- 
-> 2.26.2
-> 
+-- 
+tejun
