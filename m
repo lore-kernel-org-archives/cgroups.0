@@ -1,52 +1,119 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 03/27] blk-iocost: use local[64]_t for percpu stat
-Date: Fri, 20 Nov 2020 17:13:57 -0500
-Message-ID: <X7g/pTLLJEQXdbD7@mtj.duckdns.org>
-References: <20200901185257.645114-1-tj@kernel.org>
- <20200901185257.645114-4-tj@kernel.org>
- <20201120215147.GB961977@lianli.shorne-pla.net>
+From: Yu Kuai <yukuai3@huawei.com>
+Subject: [RFC PATCH] blk-cgroup: prevent rcu_sched detected stalls warnings in blkg_destroy_all()
+Date: Sat, 21 Nov 2020 16:34:20 +0800
+Message-ID: <20201121083420.3857433-1-yukuai3@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=Z1pyZKUt70+7Oah4brRuaKPswnwh6VHan/l11sMx/Yg=;
-        b=ljsWDBMqGzGOgdCS3yCLBdUS4tlf5XcKxFGdE2y5hnGDPlHFCJvgNgONmquepZKXm3
-         gA3I75WL0l/JV+dAYNQwIwXg/ito2mPyy3WMIeEno7t+bzQLXNa+y1vhfB2r9f7Osb2/
-         Rc/lpcKXHbQGiSD1QNy3tpmxLvtnTVo+4G7XFjVtBL8QCCQUoKfYoD4A7cLOXlw20f3M
-         qGyxp/h6erD4hnK6wMCjix/lF3sUsQozSnQX6aSYEMelVacfe22lymxKLrTNQSMNK25I
-         a4JDZtUmf4RU4wuufHvcAW46kKpj++bgP5VpvRvQ047kFD7cyGCF54+mVNun1zsbvTdu
-         QSsA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20201120215147.GB961977-Uk7Bhu+bUQgm0WYXfsLZQReHL2rgt/dS@public.gmane.org>
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-block-owner@vger.kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Stafford Horne <shorne-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org, newella-b10kYP2dOMg@public.gmane.org
+To: tj@kernel.org, axboe@kernel.dk
+Cc: cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yukuai3@huawei.com, yi.zhang@huawei.com, zhangxiaoxu5@huawei.com, houtao1@huawei.com
 
-Hello,
+test procedures:
 
-On Sat, Nov 21, 2020 at 06:51:47AM +0900, Stafford Horne wrote:
-> FYI, I am just noticing this but this breaks my allyesconfig build
-> on OpenRISC; as 32-bit arch/openrisc doesn't define local64.h
-> 
-> In general local64 is slow on 32-bit architectures, would that
-> be a problem with the usage here?  Are the calls to local64_*
-> below on critical paths?
+a. create 20000 cgroups, and echo "8:0 10000" to
+   blkio.throttle.write_bps_device
+b. echo 1 > /sys/blocd/sda/device/delete
 
-It gets hot when running on really high iops devices but that hopefully
-isn't a problem for 32bit openrisc.
+test result:
 
-> Either way I will submit a patch in include generic local64.h
-> on OpenRISC, I confirmed it fixes the build.  I do not know of anyone
-> using cgroups on OpenRISC systems.
+CPU: 6 PID: 472 Comm: bash Not tainted 5.10.0-rc4-next-20201120-dirty #62
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-buildvm-p4
+RIP: 0010:css_next_descendant_post+0x5d/0x110
+Code: 00 48 8b b3 c0 00 00 00 48 89 df e8 1d e9 ff ff 49 89 c4 48 85 c0 74 68 49 8d 5c f
+RSP: 0018:ffff88810761faf8 EFLAGS: 00000046
+RAX: ffff888001f1a830 RBX: ffff888001f1a830 RCX: ffffffff812e0548
+RDX: dffffc0000000000 RSI: ffff888106f3f400 RDI: ffff888001f1a830
+RBP: ffff8880133b14c0 R08: ffffffff812dee71 R09: 0000000000000001
+R10: 0000000000000003 R11: ffffed1020ec3f6b R12: ffff888001f1a800
+R13: ffff888100ff58b4 R14: 0000000000000016 R15: ffffffff8c330180
+FS:  00007f36ed4df700(0000) GS:ffff88810b380000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 000055c8a5a45010 CR3: 000000000436c000 CR4: 00000000000006e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Call Trace:
+ blk_throtl_update_limit_valid.isra.0+0x193/0x2b0
+ throtl_pd_offline+0x95/0x100
+ blkg_destroy+0xb6/0x2b0
+ blkg_destroy_all+0x9f/0x140
+ blkcg_exit_queue+0x16/0x30
+ blk_release_queue+0x17e/0x320
+ kobject_put+0x1b2/0x440
+ blk_put_queue+0x16/0x20
+ scsi_device_dev_release_usercontext+0x38c/0x5f0
+ ? scsi_device_cls_release+0x30/0x30
+ execute_in_process_context+0x2d/0xb0
+ scsi_device_dev_release+0x20/0x30
+ device_release+0xbc/0x180
+ kobject_put+0x1b2/0x440
+ put_device+0x17/0x30
+ scsi_device_put+0x52/0x60
+ sdev_store_delete+0x93/0x100
+ ? dev_driver_string+0xa0/0xa0
+ dev_attr_store+0x40/0x70
+ sysfs_kf_write+0x89/0xc0
+ kernfs_fop_write+0x167/0x310
+ ? sysfs_kf_bin_read+0x130/0x130
+ vfs_write+0x104/0x4c0
+ ksys_write+0xcd/0x1e0
+ ? __x64_sys_read+0x60/0x60
+ ? up_read+0x25/0xf0
+ ? do_user_addr_fault+0x408/0x990
+ __x64_sys_write+0x46/0x60
+ do_syscall_64+0x45/0x70
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+RIP: 0033:0x7f36ecbcd130
+Code: 73 01 c3 48 8b 0d 58 ed 2c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 0f 1f 44 00 00 83 4
+RSP: 002b:00007ffe261fe678 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+RAX: ffffffffffffffda RBX: 0000000000000002 RCX: 00007f36ecbcd130
+RDX: 0000000000000002 RSI: 0000559fb4244080 RDI: 0000000000000001
+RBP: 0000559fb4244080 R08: 000000000000000a R09: 00007f36ed4df700
+R10: 0000559fb45d0180 R11: 0000000000000246 R12: 0000000000000002
+R13: 0000000000000001 R14: 00007f36ece9d5e0 R15: 00007f36ece988c0
 
-Yeah, sounds like the right fix.
+The usage of so many blkg is very rare, however, such problem do exist
+in theory. In order to avoid such warnings, release 'q->queue_lock' for
+a while when a batch of blkg were destroyed.
 
-Thanks.
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ block/blk-cgroup.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index c68bdf58c9a6..566195490f4a 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -420,14 +420,27 @@ static void blkg_destroy(struct blkcg_gq *blkg)
+  *
+  * Destroy all blkgs associated with @q.
+  */
++#define BLKG_DESTROY_BATH 4096
+ static void blkg_destroy_all(struct request_queue *q)
+ {
+ 	struct blkcg_gq *blkg, *n;
++	int count = BLKG_DESTROY_BATH;
+ 
+ 	spin_lock_irq(&q->queue_lock);
+ 	list_for_each_entry_safe(blkg, n, &q->blkg_list, q_node) {
+ 		struct blkcg *blkcg = blkg->blkcg;
+ 
++		/*
++		 * If the list is too long, the loop can took a long time,
++		 * thus relese the lock for a while when a batch of blkcg
++		 * were destroyed.
++		 */
++		if (!(--count)) {
++			count = BLKG_DESTROY_BATH;
++			spin_unlock_irq(&q->queue_lock);
++			cond_resched();
++			spin_lock_irq(&q->queue_lock);
++		}
+ 		spin_lock(&blkcg->lock);
+ 		blkg_destroy(blkg);
+ 		spin_unlock(&blkcg->lock);
 -- 
-tejun
+2.25.4
+
