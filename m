@@ -1,58 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH] blk-cgroup: prevent rcu_sched detected stalls
- warnings in blkg_destroy_all()
-Date: Wed, 25 Nov 2020 07:53:12 -0500
-Message-ID: <X75TuKMuO2Ru+rVt@mtj.duckdns.org>
-References: <20201121083420.3857433-1-yukuai3@huawei.com>
- <X75O8BNVSX3ZE86w@mtj.duckdns.org>
- <a24c48a3-6f17-98ac-47ad-770dd7e775ec@huawei.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] kernel: cgroup: Mundane spelling fixes throughout the
+ file
+Date: Wed, 25 Nov 2020 07:56:32 -0500
+Message-ID: <X75UgCWXJjplQ8Kw@mtj.duckdns.org>
+References: <20201109103111.10078-1-unixbhaskar@gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=2X0u1zymrYQOExBICa76gdQ48XGpkWMEvIhEcoogarU=;
-        b=h7OFb4cEn3IpHhhmZsFcA2eih4hE1UpgsipaoC3FI2JkDg6aKHoI1bASA8i3rOFMzB
-         RrPBAUJWAS+C7jH6bfxUekTUIfftfA/e2mf7MGBFHctQIlbpHuum4v/Oqwi80+CZszaP
-         /36qAXSlJkmebZWFvlGQgg6buFqwe0ePfG2VJqk58y8bOoqNsEfLyzR6+ckzM8sFCWK1
-         5C6rU+hO/4CCwKSLu/gQCovGnIz7UBzovijPSThu1Whb77PECc/SsguTi2Ep2+/+assZ
-         l35vCvidV9OAgmqAyO7q1fdcOJmw/JI4UC0M5Rs73SylB8xrhqAyTVZUaGSUgTLmWqZO
-         mIOA==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=nNpoxskH44KK9KKuJ0pwAXxPc7WlonO/AVDvFJYaTko=;
+        b=kyfFznwFpssDqWqK1A5JgwNdKa6yVAJ+mBMjofSKBvAU6ZKKWBZuSJ0jfcPOPmtq84
+         bbVFCNJFKwgSFr4M2mOFguiLUh8MU2O2p/9mzOXo/tV/eNITnU3Pi1IgDicVfurnklB5
+         rzY7zCceW9oaxIyptlaB0JUYsVjtokvbXWtVmXI655as7UOlm/JDxTDSGHLSuwyNZpsK
+         y999e+tUAx20Xyu0x87WO6lBSlCXyTJ9duWU+MIxytl5ieQNkEljo5fHxQoS3JGPKABG
+         Z0ddyatzmmp6zwty6MFjaGnIEoJT64QuOxadPHVr1nrH3bAgQAUJE4uqbViTlJxhqDG/
+         Ievg==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <a24c48a3-6f17-98ac-47ad-770dd7e775ec@huawei.com>
+In-Reply-To: <20201109103111.10078-1-unixbhaskar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: "yukuai (C)" <yukuai3@huawei.com>
-Cc: axboe@kernel.dk, cgroups@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, yi.zhang@huawei.com, zhangxiaoxu5@huawei.com, houtao1@huawei.com
+To: Bhaskar Chowdhury <unixbhaskar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org, ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org, kafai-b10kYP2dOMg@public.gmane.org, songliubraving-b10kYP2dOMg@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, andrii-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, kpsingh-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hello,
-
-On Wed, Nov 25, 2020 at 08:49:19PM +0800, yukuai (C) wrote:
-> > You can't continue iteration after dropping both locks. You'd have to jump
-> > out of loop and start list_for_each_entry_safe() again.
+On Mon, Nov 09, 2020 at 04:01:11PM +0530, Bhaskar Chowdhury wrote:
+> Few spelling fixes throughout the file.
 > 
-> Thanks for your review, it's right. On the other hand
-> blkcg_activate_policy() and blkcg_deactivate_policy() might have the
-> same issue. My idea is that inserting a bookmark to the list, and
-> restard from here.
+> Signed-off-by: Bhaskar Chowdhury <unixbhaskar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-For destruction, as we're destroying the list anyway, we don't need to
-insert bookmark and start over from the beginning. For [de]activate policy,
-we might need something fancier or change locking so that we can sleep while
-iterating. However, policy [de]activations are a lot less of a problem as
-they aren't operations which can happen commonly.
-
-> By the way, I found that blk_throtl_update_limit_valid() is called from
-> throtl_pd_offline(). If CONFIG_BLK_DEV_THROTTLING_LOW is off, lower
-> limit will always be zero, therefor a lot of time will be wasted to
-> iterate descendants to find a nonzero lower limit.
-> 
-> Do you think it's ok to do such modification:
-
-Yeah, sure. Looks fine to me.
+Applied to cgroup/for-5.10-fixes.
 
 Thanks.
 
