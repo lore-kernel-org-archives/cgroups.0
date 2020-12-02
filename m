@@ -1,41 +1,79 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: BUG: KASAN: null-ptr-deref in workingset_eviction+0xf2/0x1e0
-Date: Tue, 1 Dec 2020 16:53:45 +0800
-Message-ID: <CAMZfGtUQMmH566CTT2G0KugLsX_3ouOM_80Kqk1R6b1N_NGB-Q@mail.gmail.com>
-References: <CA+G9fYtk3fKy7ct-rT=T8iFDhE4CbjGgdfxsOBrKT9y8ntwXyg@mail.gmail.com>
- <CAA5enKbujU+PRwA3qeYqx-Ydcj7owJnYkeTYJFdBweQJjWU78w@mail.gmail.com>
+From: Muchun Song <songmuchun@bytedance.com>
+Subject: [PATCH] mm/memcontrol: make the slab calculation consistent
+Date: Wed,  2 Dec 2020 20:14:34 +0800
+Message-ID: <20201202121434.75099-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=niYaq/JRpKzB99MWM85q+70GJ2PSdrtB0S69IuuZNQw=;
-        b=l0RgZkr/ooILtuQNf9RcVw8IoO2KP6POtGiNC/rcv5cNIRvSz9UPSEkkRN0q+ZduaQ
-         pssQKPNZ79aC1+B83P54e2Du+lK6TMRWg2ZzIffub/R03C3mnsN5LA6VxjJi/J+PwSy8
-         WwZ9X65aTRsj2ulLLDCFKXrkRHOMW/0yeb73X6TKbhFdHdcGOrnGcRQlnGlbAbbFViS7
-         xEVIDudge5yRqV3e07lfxvmIVeoLZz9srEH1gVzQZV5yEiAweAq51wOv6eWi5nrDrs8h
-         w8syYqUaaQ7WUfaRxU23EvFdAb4k0gTz0F8YDslH7Qwv4VHnGzCL+z0jvKcZyjCOtUmh
-         4bjA==
-In-Reply-To: <CAA5enKbujU+PRwA3qeYqx-Ydcj7owJnYkeTYJFdBweQJjWU78w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=0D0YvfFeRVroyy8DOM8jNI9C4k7vyQ+vFDUfvEXQRIw=;
+        b=pZfhUnAfhJIC6/Dv5lxitZ9cKXI7bpi1N7AHDZuXk5iD1odIfF+g8ifMX49reRjF99
+         yLEwUP6xyJa0nYkrqHO91vMYQ0XAv/FNqFSpBKoRgkUEIaxAezWlS9w7l1dzjubGclHz
+         ThKFQZj7svmOUlI0TdwlQFxJqtLyJL8U5k8/hNqr/2y9OXXb/sFzwZi/Q8k5LSWxGNqG
+         qLYgioFTLRmCw5DxE2volAw4/zrCDm+38iAqBgx7OE56INmP/Ga0CGzxUAxMMxQl5750
+         sA7qPKmbiVH9tN0Hi/Oa6rm0yp0xRwGe3VrMmaVeLVrF2NOS+g5K8NvQLuwSa7TZc4TS
+         d/uA==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Lorenzo Stoakes <lstoakes-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Naresh Kamboju <naresh.kamboju-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, inux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-Next Mailing List <linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lkft-triage-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, richard.weiyang-Re5JQEeQqe8@public.gmane.org, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>
+To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>
 
-On Tue, Dec 1, 2020 at 4:02 AM Lorenzo Stoakes <lstoakes-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
-> On Mon, 30 Nov 2020 at 19:52, Naresh Kamboju <naresh.kamboju-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org> wrote:
-> > [  285.863025] BUG: kernel NULL pointer dereference, address: 00000000000000c8
->
-> This looks to be the same as
-> https://lore.kernel.org/linux-mm/20201130132345.GJ17338-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org/T/#t
+Although the ratio of the slab is one, we also should read the ratio
+from the related memory_stats instead of hard-coding. And the local
+variable of size is already the value of slab_unreclaimable. So we
+do not need to read again. Simplify the code here.
 
-I am sure it is the same issue.
+Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+---
+ mm/memcontrol.c | 22 +++++++++++++++++-----
+ 1 file changed, 17 insertions(+), 5 deletions(-)
 
-
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 9922f1510956..03a9c64560f6 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1545,12 +1545,22 @@ static int __init memory_stats_init(void)
+ 	int i;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
++		switch (memory_stats[i].idx) {
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-		if (memory_stats[i].idx == NR_ANON_THPS ||
+-		    memory_stats[i].idx == NR_FILE_THPS ||
+-		    memory_stats[i].idx == NR_SHMEM_THPS)
++		case NR_ANON_THPS:
++		case NR_FILE_THPS:
++		case NR_SHMEM_THPS:
+ 			memory_stats[i].ratio = HPAGE_PMD_SIZE;
++			break;
+ #endif
++		case NR_SLAB_UNRECLAIMABLE_B:
++			VM_BUG_ON(i < 1);
++			VM_BUG_ON(memory_stats[i - 1].idx != NR_SLAB_RECLAIMABLE_B);
++			break;
++		default:
++			break;
++		}
++
+ 		VM_BUG_ON(!memory_stats[i].ratio);
+ 		VM_BUG_ON(memory_stats[i].idx >= MEMCG_NR_STAT);
+ 	}
+@@ -1587,8 +1597,10 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
+ 		seq_buf_printf(&s, "%s %llu\n", memory_stats[i].name, size);
+ 
+ 		if (unlikely(memory_stats[i].idx == NR_SLAB_UNRECLAIMABLE_B)) {
+-			size = memcg_page_state(memcg, NR_SLAB_RECLAIMABLE_B) +
+-			       memcg_page_state(memcg, NR_SLAB_UNRECLAIMABLE_B);
++			int idx = i - 1;
++
++			size += memcg_page_state(memcg, memory_stats[idx].idx) *
++				memory_stats[idx].ratio;
+ 			seq_buf_printf(&s, "slab %llu\n", size);
+ 		}
+ 	}
 -- 
-Yours,
-Muchun
+2.11.0
+
