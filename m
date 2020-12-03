@@ -1,89 +1,140 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [External] Re: [PATCH] mm/memcontrol: make the slab calculation
- consistent
-Date: Wed, 2 Dec 2020 19:49:17 -0800
-Message-ID: <20201203034917.GA1571588@carbon.DHCP.thefacebook.com>
-References: <20201202121434.75099-1-songmuchun@bytedance.com>
- <20201202211646.GA1517142@carbon.lan>
- <CAMZfGtWUWAO8J6iBpQLV0T8xPAuQvFTfX9UQ7G2eM_O9C7w83w@mail.gmail.com>
- <20201203032052.GA1568874@carbon.DHCP.thefacebook.com>
- <CAMZfGtUY11=2tna7gOv+LH5-=ossA+BPrLrC09odTw=qd3RJQg@mail.gmail.com>
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons-ud5FBsm0p/xEiooADzr8i9i2O/JbrIOy@public.gmane.org>
+Subject: Re: Regression from 5.7.17 to 5.9.9 with memory.low cgroup
+ constraints
+Date: Thu, 3 Dec 2020 12:09:36 +0100
+Message-ID: <20201203120936.4cadef43@hemera.lan.sysophe.eu>
+References: <20201125123956.61d9e16a@hemera>
+ <20201125182103.GA840171@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=o9iCmBwL99PQGKnZm+cgxJgrNkHDFUoF4cv2ptcyvqA=;
- b=LZySaxuJmuu2rwPaVnFfvGG5df+AF3MESzKI0Q79O4dPhoWkf9WBpgyYTj3xQImydDpU
- zFSZhbY6+l6Sd3Vop1unhqKR0Iky/Ir6AkNok3FxzfZBTnw968wVi648QrPz0nntg+mf
- ifO3lytKvNt4I4BXkggGh8izh0rAG0LpqN8= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=o9iCmBwL99PQGKnZm+cgxJgrNkHDFUoF4cv2ptcyvqA=;
- b=fN9wk0ZxcUZhXSE2e1IlTLRPgS4uOQAkCR2EUaJhSAQyryTMV01G7daRhD+m8m/wou2QJJQIYQkhA9JleJC1+p0P1dhL7D/tXGaHpJfUC7c0MyCt7XjeRU9h57MZ+BrNJf3c3LNiYN0MddlbANW4MdeQVat+SlFL8G5pjPU4Wow=
-Content-Disposition: inline
-In-Reply-To: <CAMZfGtUY11=2tna7gOv+LH5-=ossA+BPrLrC09odTw=qd3RJQg@mail.gmail.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20201125182103.GA840171-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Muchun Song <songmuchun@bytedance.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, Linux Memory Management List <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Thu, Dec 03, 2020 at 11:36:54AM +0800, Muchun Song wrote:
-> On Thu, Dec 3, 2020 at 11:21 AM Roman Gushchin <guro@fb.com> wrote:
-> >
-> > On Thu, Dec 03, 2020 at 10:53:33AM +0800, Muchun Song wrote:
-> > > On Thu, Dec 3, 2020 at 5:16 AM Roman Gushchin <guro@fb.com> wrote:
-> > > >
-> > > > On Wed, Dec 02, 2020 at 08:14:34PM +0800, Muchun Song wrote:
-> > > > > Although the ratio of the slab is one, we also should read the ratio
-> > > > > from the related memory_stats instead of hard-coding. And the local
-> > > > > variable of size is already the value of slab_unreclaimable. So we
-> > > > > do not need to read again. Simplify the code here.
-> > > > >
-> > > > > Signed-off-by: Muchun Song <songmuchun@bytedance.com>
-> > > > > ---
-> > > > >  mm/memcontrol.c | 22 +++++++++++++++++-----
-> > > > >  1 file changed, 17 insertions(+), 5 deletions(-)
-> > > >
-> > > > Hi Muchun!
-> > > >
-> > > > >
-> > > > > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > > > > index 9922f1510956..03a9c64560f6 100644
-> > > > > --- a/mm/memcontrol.c
-> > > > > +++ b/mm/memcontrol.c
-> > > > > @@ -1545,12 +1545,22 @@ static int __init memory_stats_init(void)
-> > > > >       int i;
-> > > > >
-> > > > >       for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
-> > > > > +             switch (memory_stats[i].idx) {
-> > > > >  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> > > > > -             if (memory_stats[i].idx == NR_ANON_THPS ||
-> > > > > -                 memory_stats[i].idx == NR_FILE_THPS ||
-> > > > > -                 memory_stats[i].idx == NR_SHMEM_THPS)
-> > > > > +             case NR_ANON_THPS:
-> > > > > +             case NR_FILE_THPS:
-> > > > > +             case NR_SHMEM_THPS:
-> > > > >                       memory_stats[i].ratio = HPAGE_PMD_SIZE;
-> > > > > +                     break;
-> > > > >  #endif
-> > > > > +             case NR_SLAB_UNRECLAIMABLE_B:
-> > > > > +                     VM_BUG_ON(i < 1);
-> > > > > +                     VM_BUG_ON(memory_stats[i - 1].idx != NR_SLAB_RECLAIMABLE_B);
-> > > >
-> > > > Please, convert these to BUILD_BUG_ON(), they don't have to be runtime checks.
-> > >
-> > > Agree. But here we cannot use BUILD_BUG_ON(). The compiler will
-> > > complain about it.
-> >
-> > We can!
-> >
-> > We just need to change the condition. All we really need to check is that
-> > NR_SLAB_UNRECLAIMABLE_B immediately following NR_SLAB_RECLAIMABLE_B.
-> 
-> But I think that we need to check that memory_stats[i] immediately following
-> memory_stats[j] where i is the index of NR_SLAB_UNRECLAIMABLE_B and
-> j is the index of NR_SLAB_RECLAIMABLE_B.
+Hello Roman,
 
-Ok, I see. Thanks!
+Sorry for having taken so much time to reply, I've only had the
+opportunity to deploy the patch on Tuesday morning for testing and
+now two days later the trashing occurred again.
+
+> diff --git a/mm/slab.h b/mm/slab.h
+> index 6cc323f1313a..ef02b841bcd8 100644
+> --- a/mm/slab.h
+> +++ b/mm/slab.h
+> @@ -290,7 +290,7 @@ static inline struct obj_cgroup *memcg_slab_pre_alloc_hook(struct kmem_cache *s,
+>  
+>         if (obj_cgroup_charge(objcg, flags, objects * obj_full_size(s))) {
+>                 obj_cgroup_put(objcg);
+> -               return NULL;
+> +               return (struct obj_cgroup *)-1UL;
+>         }
+>  
+>         return objcg;
+> @@ -501,9 +501,13 @@ static inline struct kmem_cache *slab_pre_alloc_hook(struct kmem_cache *s,
+>                 return NULL;
+>  
+>         if (memcg_kmem_enabled() &&
+> -           ((flags & __GFP_ACCOUNT) || (s->flags & SLAB_ACCOUNT)))
+> +           ((flags & __GFP_ACCOUNT) || (s->flags & SLAB_ACCOUNT))) {
+>                 *objcgp = memcg_slab_pre_alloc_hook(s, size, flags);
+>  
+> +               if (unlikely(*objcgp == (struct obj_cgroup *)-1UL))
+> +                       return NULL;
+> +       }
+> +
+>         return s;
+>  }
+
+Seems your proposed patch didn't really help.
+
+
+
+Compared to initial occurrence I do now have some more details (all but
+/proc/slabinfo since boot) and according to /proc/slabinfo a good deal
+of reclaimable slabs seem to be dentries (and probably
+xfs_inode/xfs_ifork related to them) - not sure if those are assigned
+to cgroups or not-accounted and not seen as candidate for reclaim...
+
+xfs_buf           444908 445068    448   36    4 : tunables    0    0    0 : slabdata  12363  12363      0
+xfs_bui_item           0      0    232   35    2 : tunables    0    0    0 : slabdata      0      0      0
+xfs_bud_item           0      0    200   40    2 : tunables    0    0    0 : slabdata      0      0      0
+xfs_cui_item           0      0    456   35    4 : tunables    0    0    0 : slabdata      0      0      0
+xfs_cud_item           0      0    200   40    2 : tunables    0    0    0 : slabdata      0      0      0
+xfs_rui_item           0      0    712   46    8 : tunables    0    0    0 : slabdata      0      0      0
+xfs_rud_item           0      0    200   40    2 : tunables    0    0    0 : slabdata      0      0      0
+xfs_icr                0    156    208   39    2 : tunables    0    0    0 : slabdata      4      4      0
+xfs_ili           1223169 1535904    224   36    2 : tunables    0    0    0 : slabdata  42664  42664      0
+xfs_inode         12851565 22081140   1088   30    8 : tunables    0    0    0 : slabdata 736038 736038      0
+xfs_efi_item           0    280    456   35    4 : tunables    0    0    0 : slabdata      8      8      0
+xfs_efd_item           0    280    464   35    4 : tunables    0    0    0 : slabdata      8      8      0
+xfs_buf_item           7    216    296   27    2 : tunables    0    0    0 : slabdata      8      8      0
+xf_trans               0    224    288   28    2 : tunables    0    0    0 : slabdata      8      8      0
+xfs_ifork         12834992 46309928     72   56    1 : tunables    0    0    0 : slabdata 826963 826963      0
+xfs_da_state           0    224    512   32    4 : tunables    0    0    0 : slabdata      7      7      0
+xfs_btree_cur          0    224    256   32    2 : tunables    0    0    0 : slabdata      7      7      0
+xfs_bmap_free_item      0    230     88   46    1 : tunables    0    0    0 : slabdata      5      5      0
+xfs_log_ticket         4    296    216   37    2 : tunables    0    0    0 : slabdata      8      8      0
+fat_inode_cache        0      0    744   44    8 : tunables    0    0    0 : slabdata      0      0      0
+fat_cache              0      0     64   64    1 : tunables    0    0    0 : slabdata      0      0      0
+mnt_cache            114    180    448   36    4 : tunables    0    0    0 : slabdata      5      5      0
+filp                6228  15582    384   42    4 : tunables    0    0    0 : slabdata    371    371      0
+inode_cache         6669  16016    608   26    4 : tunables    0    0    0 : slabdata    616    616      0
+dentry            8092159 15642504    224   36    2 : tunables    0    0    0 : slabdata 434514 434514      0
+
+
+
+The full collected details are available at
+  https://faramir-fj.hosting-restena.lu/cgmon-20201203.txt
+(please take a copy as that file will not stay there forever)
+
+A visual graph of memory evolution is available at
+  https://faramir-fj.hosting-restena.lu/system-memory-20201203.png
+with reboot on Tuesday morning and steady increase of slabs starting
+Webnesday evening correlating with start of backup until trashing
+started at about 3:30 and the large drop in memory being me doing
+  echo 2 > /proc/sys/vm/drop_caches
+which stopped the trashing as well.
+
+
+Against what does memcg attempt reclaim when it tries to satisfy a CG's
+low limit? Only against siblings or also against root or not-accounted?
+How does it take into account slabs where evictable entries will cause
+unevictable entries to be freed as well?
+
+> > My setup, server has 64G of RAM:
+> >   root
+> >    + system        { min=0, low=128M, high=8G, max=8G }
+> >      + base        { no specific constraints }
+> >      + backup      { min=0, low=32M, high=2G, max=2G }
+> >      + shell       { no specific constraints }
+> >   + websrv         { min=0, low=4G, high=32G, max=32G }
+> >   + website        { min=0, low=16G, high=40T, max=40T }
+> >     + website1     { min=0, low=64M, high=2G, max=2G }
+> >     + website2     { min=0, low=64M, high=2G, max=2G }
+> >       ...
+> >   + remote         { min=0, low=1G, high=14G, max=14G }
+> >     + webuser1     { min=0, low=64M, high=2G, max=2G }
+> >     + webuser2     { min=0, low=64M, high=2G, max=2G }
+> >       ...
+
+Also interesting is that backup which is forced into 2G
+(system/backup CG) causes amount of slabs assigned to websrv CG to
+increase until that CG has almost only slab entries assigned to it to
+fill 16G, like file cache being reclaimed but not slab entries even if
+there is almost no file cache left and tons of slabs.
+What I'm also surprised is the so much memory remains completely unused
+(instead of being used for file caches).
+
+According to the documentation if I didn't get it wrong any limits of
+child CGs (e.g. webuser1...) are applied up to what their parent's
+limits allow. Thus, if looking at e.g. remote -> webuser1... even if I
+have 1000 webuserN they wont "reserve" 65G for themselves via
+memory.low limit when their parent sets memory.low to 1G?
+Or does this depend on on CG mount options (memory_recursiveprot)?
+
+
+Regards,
+Bruno
