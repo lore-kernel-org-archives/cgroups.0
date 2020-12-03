@@ -1,115 +1,88 @@
-From: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] hugetlb_cgroup: fix offline of hugetlb cgroup with reservations
-Date: Thu,  3 Dec 2020 14:02:42 -0800
-Message-ID: <20201203220242.158165-1-mike.kravetz@oracle.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] hugetlb_cgroup: fix offline of hugetlb cgroup with reservations
+Date: Thu, 3 Dec 2020 14:11:49 -0800
+Message-ID: <CALvZod44ZLA8U=ormvuKZhJ1vCJf8qOHMRSouih4E-oaLihV=Q@mail.gmail.com>
+References: <20201203220242.158165-1-mike.kravetz@oracle.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : mime-version : content-transfer-encoding;
- s=corp-2020-01-29; bh=23yexcHdOapSPAxxWiXrX5VndJabrs3xPZqc8iWgG4k=;
- b=YfiLPGk3+WXqYcec59yf4oBokHYF+nbt7VP+uvNG+YHBlXAyKM1uZrjTNaw5QtT14P2y
- DLC7bzajN3gR6QcyZjpmUq2/nCP5PNRN4c+V9It1nKQa5phYWGiMOBwziOP8pW5xa4ur
- u0B1sapFoqDVwTc817L+xJw3WGZhf45k6S/Uag1h6k9mgawVuTrOUrGt75kLFLaMcWKv
- 0p8lrxvynTxigZpm78mDw0rqw3gPHRhm+NsVC4S6ItoUOiO58MPOdRwxVbwmKcjQDbb7
- 5+9QosemEnKRZgRIn4Im8pdO9gRW20UUAL7TYhrFXD4osv6a7MBSMEEXhyADQ4MD/JkZ HQ== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=QF1ANqOQBqZLcWlpFbE2WrA4M94QqjKls+F32sntMMY=;
+        b=T1kC1Kg7NGIo6tMwYyuuSIkbUM2VuNQz7qLiEEJZtDFibEewJn1anNB9g2y80hPxkX
+         iuvhJivzZgd6XEn3oUb3bwhkxuLp8C0ke4zyslQ0f29RT2lbodQCYp6n1erOyIs4LoZy
+         EUqgqNTRaA9IbgSoFHG/SrrM2zc5q8yCV93/QpCAmfQCi2kdb6q8EmgwRQYRFCvDvS8t
+         Bg2+nLT7Gmk2KOP7TRTnEDvSGvD7h+4Nk1weYi2DWGEOEuqKcxzWnMnngV0S8DBlk/Kk
+         ToaYG83BoQojs0cXLtz/RJ3CPGKDOIbfzrgK58ch/RGfQUP/Kdm39CIG8jJOESnFVjs8
+         0gIg==
+In-Reply-To: <20201203220242.158165-1-mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sandipan Das <sandipan-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Adrian Moreno <amorenoz-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mina Almasry <almasrymina-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sandipan Das <sandipan-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Shuah Khan <shuah-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Adrian Moreno <amorenoz-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Adrian Moreno was ruuning a kubernetes 1.19 + containerd/docker workload
-using hugetlbfs.  In this environment the issue is reproduced by:
-1 - Start a simple pod that uses the recently added HugePages medium
-    feature (pod yaml attached)
-2 - Start a DPDK app. It doesn't need to run successfully (as in transfer
-    packets) nor interact with real hardware. It seems just initializing
-    the EAL layer (which handles hugepage reservation and locking) is
-    enough to trigger the issue
-3 - Delete the Pod (or let it "Complete").
+On Thu, Dec 3, 2020 at 2:04 PM Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> Adrian Moreno was ruuning a kubernetes 1.19 + containerd/docker workload
+> using hugetlbfs.  In this environment the issue is reproduced by:
+> 1 - Start a simple pod that uses the recently added HugePages medium
+>     feature (pod yaml attached)
+> 2 - Start a DPDK app. It doesn't need to run successfully (as in transfer
+>     packets) nor interact with real hardware. It seems just initializing
+>     the EAL layer (which handles hugepage reservation and locking) is
+>     enough to trigger the issue
+> 3 - Delete the Pod (or let it "Complete").
+>
+> This would result in a kworker thread going into a tight loop (top output):
+>  1425 root      20   0       0      0      0 R  99.7   0.0   5:22.45
+> kworker/28:7+cgroup_destroy
+>
+> 'perf top -g' reports:
+> -   63.28%     0.01%  [kernel]                    [k] worker_thread
+>    - 49.97% worker_thread
+>       - 52.64% process_one_work
+>          - 62.08% css_killed_work_fn
+>             - hugetlb_cgroup_css_offline
+>                  41.52% _raw_spin_lock
+>                - 2.82% _cond_resched
+>                     rcu_all_qs
+>                  2.66% PageHuge
+>       - 0.57% schedule
+>          - 0.57% __schedule
+>
+> We are spinning in the do-while loop in hugetlb_cgroup_css_offline.
+> Worse yet, we are holding the master cgroup lock (cgroup_mutex) while
+> infinitely spinning.  Little else can be done on the system as the
+> cgroup_mutex can not be acquired.
+>
+> Do note that the issue can be reproduced by simply offlining a hugetlb
+> cgroup containing pages with reservation counts.
+>
+> The loop in hugetlb_cgroup_css_offline is moving page counts from the
+> cgroup being offlined to the parent cgroup.  This is done for each hstate,
+> and is repeated until hugetlb_cgroup_have_usage returns false.  The routine
+> moving counts (hugetlb_cgroup_move_parent) is only moving 'usage' counts.
+> The routine hugetlb_cgroup_have_usage is checking for both 'usage' and
+> 'reservation' counts.  Discussion about what to do with reservation
+> counts when reparenting was discussed here:
+>
+> https://lore.kernel.org/linux-kselftest/CAHS8izMFAYTgxym-Hzb_JmkTK1N_S9tGN71uS6MFV+R7swYu5A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
+>
+> The decision was made to leave a zombie cgroup for with reservation
+> counts.  Unfortunately, the code checking reservation counts was
+> incorrectly added to hugetlb_cgroup_have_usage.
+>
+> To fix the issue, simply remove the check for reservation counts.  While
+> fixing this issue, a related bug in hugetlb_cgroup_css_offline was noticed.
+> The hstate index is not reinitialized each time through the do-while loop.
+> Fix this as well.
+>
+> Fixes: 1adc4d419aa2 ("hugetlb_cgroup: add interface for charge/uncharge hugetlb reservations")
+> Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+> Reported-by: Adrian Moreno <amorenoz-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Tested-by: Adrian Moreno <amorenoz-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 
-This would result in a kworker thread going into a tight loop (top output):
- 1425 root      20   0       0      0      0 R  99.7   0.0   5:22.45
-kworker/28:7+cgroup_destroy
-
-'perf top -g' reports:
--   63.28%     0.01%  [kernel]                    [k] worker_thread
-   - 49.97% worker_thread
-      - 52.64% process_one_work
-         - 62.08% css_killed_work_fn
-            - hugetlb_cgroup_css_offline
-                 41.52% _raw_spin_lock
-               - 2.82% _cond_resched
-                    rcu_all_qs
-                 2.66% PageHuge
-      - 0.57% schedule
-         - 0.57% __schedule
-
-We are spinning in the do-while loop in hugetlb_cgroup_css_offline.
-Worse yet, we are holding the master cgroup lock (cgroup_mutex) while
-infinitely spinning.  Little else can be done on the system as the
-cgroup_mutex can not be acquired.
-
-Do note that the issue can be reproduced by simply offlining a hugetlb
-cgroup containing pages with reservation counts.
-
-The loop in hugetlb_cgroup_css_offline is moving page counts from the
-cgroup being offlined to the parent cgroup.  This is done for each hstate,
-and is repeated until hugetlb_cgroup_have_usage returns false.  The routine
-moving counts (hugetlb_cgroup_move_parent) is only moving 'usage' counts.
-The routine hugetlb_cgroup_have_usage is checking for both 'usage' and
-'reservation' counts.  Discussion about what to do with reservation
-counts when reparenting was discussed here:
-
-https://lore.kernel.org/linux-kselftest/CAHS8izMFAYTgxym-Hzb_JmkTK1N_S9tGN71uS6MFV+R7swYu5A-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
-
-The decision was made to leave a zombie cgroup for with reservation
-counts.  Unfortunately, the code checking reservation counts was
-incorrectly added to hugetlb_cgroup_have_usage.
-
-To fix the issue, simply remove the check for reservation counts.  While
-fixing this issue, a related bug in hugetlb_cgroup_css_offline was noticed.
-The hstate index is not reinitialized each time through the do-while loop.
-Fix this as well.
-
-Fixes: 1adc4d419aa2 ("hugetlb_cgroup: add interface for charge/uncharge hugetlb reservations")
-Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Reported-by: Adrian Moreno <amorenoz-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Tested-by: Adrian Moreno <amorenoz-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Mike Kravetz <mike.kravetz-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
----
- mm/hugetlb_cgroup.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/mm/hugetlb_cgroup.c b/mm/hugetlb_cgroup.c
-index 1f87aec9ab5c..9182848dda3e 100644
---- a/mm/hugetlb_cgroup.c
-+++ b/mm/hugetlb_cgroup.c
-@@ -82,11 +82,8 @@ static inline bool hugetlb_cgroup_have_usage(struct hugetlb_cgroup *h_cg)
- 
- 	for (idx = 0; idx < hugetlb_max_hstate; idx++) {
- 		if (page_counter_read(
--			    hugetlb_cgroup_counter_from_cgroup(h_cg, idx)) ||
--		    page_counter_read(hugetlb_cgroup_counter_from_cgroup_rsvd(
--			    h_cg, idx))) {
-+				hugetlb_cgroup_counter_from_cgroup(h_cg, idx)))
- 			return true;
--		}
- 	}
- 	return false;
- }
-@@ -202,9 +199,10 @@ static void hugetlb_cgroup_css_offline(struct cgroup_subsys_state *css)
- 	struct hugetlb_cgroup *h_cg = hugetlb_cgroup_from_css(css);
- 	struct hstate *h;
- 	struct page *page;
--	int idx = 0;
-+	int idx;
- 
- 	do {
-+		idx = 0;
- 		for_each_hstate(h) {
- 			spin_lock(&hugetlb_lock);
- 			list_for_each_entry(page, &h->hugepage_activelist, lru)
--- 
-2.28.0
-
+Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
