@@ -1,67 +1,130 @@
 From: Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH 0/9] Convert all THP vmstat counters to pages
-Date: Sat,  5 Dec 2020 21:02:15 +0800
-Message-ID: <20201205130224.81607-1-songmuchun@bytedance.com>
+Subject: [PATCH 5/9] mm: memcontrol: convert NR_FILE_THPS account to pages
+Date: Sat,  5 Dec 2020 21:02:20 +0800
+Message-ID: <20201205130224.81607-6-songmuchun@bytedance.com>
+References: <20201205130224.81607-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=rn/xJo/gyofLtl+hMU5/+p5RPWpj2PYm655A9wivV4I=;
-        b=uba4FH2KhW8Vj9ZYwLUzGFQb0rHgkyFMDpdk3RQHbve17Sp28OLnmrjvqmSb7sYkVZ
-         GM2sEhv8//q4hMDDw9bSK+KF1xViMm8tK+G62u/ihXhQtDR6S3MrhvCimce8xo/v1yJc
-         bg3/PyxdoGBF2fi20Nbuv+ATPqryNxDZ9soMAkuMxesk34ZbmkQaPxkCzT1BRg3imlEF
-         kHEnEc6Y3U3Yo7Oz6xkqjTlFZivTKMRGE7SfVIN3QNGkJTujq9fRG70Z4Kun2RCad9XO
-         X4JErJiw7JPjNFWAM6zaHsdGTbDzc6tcn0DKBJmA+DptSICQMiH/IjugkoJWDToHLNgH
-         pnlA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=OePvIMZNKUN5Y3sDnnNomk9XQLTkzEVnsUhWUrUZogc=;
+        b=WoXWAA5JojNk8kyuAW6gJqdYWZlwQnOCLR7Q5khaKLVJcZPcegnRLzSkXjT9L44vo4
+         gMebG3LUcJpd2o/hfnDrx4QCainJdKIEHFCRezmXO/GNHXBG9b2zM/Yco6il+mw18Asw
+         tpK8F/iN8ncgW1Sxop6wxdpkNTxUPGdYyCudrLqVxLPR593KPuLvVBTG5O2waEp4DfcD
+         s3KeMl2fsXxi7SgNOuX/HFQh9P1829Cd5x34/Bgx20Ck01y1SManhV9Mt+5pthxcfMdS
+         GjItzyfUc2ZeOaiZrxZIVCKUoTsPsOpkHw/r/BPFjr0rpuXXqpMbDQgJQMkzu0tXt1jK
+         uJcA==
+In-Reply-To: <20201205130224.81607-1-songmuchun@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: gregkh@linuxfoundation.org, rafael@kernel.org, adobriyan@gmail.com, akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, hughd@google.com, will@kernel.org, guro@fb.com, rppt@kernel.org, tglx@linutronix.de, esyr@redhat.com, peterx@redhat.com, krisman@collabora.com, surenb@google.com, avagin@openvz.org, elver@google.com, rdunlap@infradead.org, iamjoonsoo.kim@lge.com
 Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>
 
-Hi,
+Converrt NR_FILE_THPS account to pages.
 
-This patch series is aimed to convert all THP vmstat counters to pages
-and the kernel stack vmstat counter to bytes.
+Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+---
+ drivers/base/node.c | 3 +--
+ fs/proc/meminfo.c   | 2 +-
+ mm/filemap.c        | 2 +-
+ mm/huge_memory.c    | 3 ++-
+ mm/khugepaged.c     | 2 +-
+ mm/memcontrol.c     | 5 ++---
+ 6 files changed, 8 insertions(+), 9 deletions(-)
 
-The unit of some vmstat counters are pages, the unit of some vmstat counters
-are bytes, the unit of some vmstat counters are HPAGE_PMD_NR, and the unit
-of some vmstat counters are KiB. When we want to expose these vmstat counters
-to the userspace, we have to know the unit of the vmstat counters is which
-one. It makes the code complex.
-
-This patch series can make the code simple. And the unit of the vmstat
-counters are either pages or bytes.
-
-This was inspired by Johannes and Roman. Thanks to them.
-
-Muchun Song (9):
-  mm: vmstat: fix stat_threshold for NR_KERNEL_STACK_KB
-  mm: memcontrol: fix NR_ANON_THPS account
-  mm: memcontrol: convert kernel stack account to byte-sized
-  mm: memcontrol: convert NR_ANON_THPS account to pages
-  mm: memcontrol: convert NR_FILE_THPS account to pages
-  mm: memcontrol: convert NR_SHMEM_THPS account to pages
-  mm: memcontrol: convert NR_SHMEM_PMDMAPPED account to pages
-  mm: memcontrol: convert NR_FILE_PMDMAPPED account to pages
-  mm: memcontrol: make the slab calculation consistent
-
- drivers/base/node.c    |  17 +++---
- fs/proc/meminfo.c      |  12 ++---
- include/linux/mmzone.h |   2 +-
- kernel/fork.c          |   8 +--
- mm/filemap.c           |   4 +-
- mm/huge_memory.c       |   9 ++--
- mm/khugepaged.c        |   4 +-
- mm/memcontrol.c        | 139 +++++++++++++++++++++++++------------------------
- mm/page_alloc.c        |   9 ++--
- mm/rmap.c              |  19 ++++---
- mm/shmem.c             |   3 +-
- mm/vmstat.c            |   4 ++
- 12 files changed, 120 insertions(+), 110 deletions(-)
-
+diff --git a/drivers/base/node.c b/drivers/base/node.c
+index 05c369e93e16..f6a9521bbcf8 100644
+--- a/drivers/base/node.c
++++ b/drivers/base/node.c
+@@ -466,8 +466,7 @@ static ssize_t node_read_meminfo(struct device *dev,
+ 				    HPAGE_PMD_NR),
+ 			     nid, K(node_page_state(pgdat, NR_SHMEM_PMDMAPPED) *
+ 				    HPAGE_PMD_NR),
+-			     nid, K(node_page_state(pgdat, NR_FILE_THPS) *
+-				    HPAGE_PMD_NR),
++			     nid, K(node_page_state(pgdat, NR_FILE_THPS)),
+ 			     nid, K(node_page_state(pgdat, NR_FILE_PMDMAPPED) *
+ 				    HPAGE_PMD_NR)
+ #endif
+diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
+index f447ac191d24..9b2cb770326e 100644
+--- a/fs/proc/meminfo.c
++++ b/fs/proc/meminfo.c
+@@ -135,7 +135,7 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
+ 	show_val_kb(m, "ShmemPmdMapped: ",
+ 		    global_node_page_state(NR_SHMEM_PMDMAPPED) * HPAGE_PMD_NR);
+ 	show_val_kb(m, "FileHugePages:  ",
+-		    global_node_page_state(NR_FILE_THPS) * HPAGE_PMD_NR);
++		    global_node_page_state(NR_FILE_THPS));
+ 	show_val_kb(m, "FilePmdMapped:  ",
+ 		    global_node_page_state(NR_FILE_PMDMAPPED) * HPAGE_PMD_NR);
+ #endif
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 28e7309c29c8..c4dcb1144883 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -206,7 +206,7 @@ static void unaccount_page_cache_page(struct address_space *mapping,
+ 		if (PageTransHuge(page))
+ 			__dec_lruvec_page_state(page, NR_SHMEM_THPS);
+ 	} else if (PageTransHuge(page)) {
+-		__dec_lruvec_page_state(page, NR_FILE_THPS);
++		__mod_lruvec_page_state(page, NR_FILE_THPS, -HPAGE_PMD_NR);
+ 		filemap_nr_thps_dec(mapping);
+ 	}
+ 
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 1a13e1dab3ec..37840bdeaad0 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2748,7 +2748,8 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 			if (PageSwapBacked(head))
+ 				__dec_lruvec_page_state(head, NR_SHMEM_THPS);
+ 			else
+-				__dec_lruvec_page_state(head, NR_FILE_THPS);
++				__mod_lruvec_page_state(head, NR_FILE_THPS,
++							-HPAGE_PMD_NR);
+ 		}
+ 
+ 		__split_huge_page(page, list, end);
+diff --git a/mm/khugepaged.c b/mm/khugepaged.c
+index ad316d2e1fee..1e1ced2208d0 100644
+--- a/mm/khugepaged.c
++++ b/mm/khugepaged.c
+@@ -1859,7 +1859,7 @@ static void collapse_file(struct mm_struct *mm,
+ 	if (is_shmem)
+ 		__inc_lruvec_page_state(new_page, NR_SHMEM_THPS);
+ 	else {
+-		__inc_lruvec_page_state(new_page, NR_FILE_THPS);
++		__mod_lruvec_page_state(new_page, NR_FILE_THPS, HPAGE_PMD_NR);
+ 		filemap_nr_thps_inc(mapping);
+ 	}
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 39cb7f1b00d3..dce76dddac61 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1514,7 +1514,7 @@ static struct memory_stat memory_stats[] = {
+ 	 * constant(e.g. powerpc).
+ 	 */
+ 	{ "anon_thp", PAGE_SIZE, NR_ANON_THPS },
+-	{ "file_thp", 0, NR_FILE_THPS },
++	{ "file_thp", PAGE_SIZE, NR_FILE_THPS },
+ 	{ "shmem_thp", 0, NR_SHMEM_THPS },
+ #endif
+ 	{ "inactive_anon", PAGE_SIZE, NR_INACTIVE_ANON },
+@@ -1546,8 +1546,7 @@ static int __init memory_stats_init(void)
+ 
+ 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-		if (memory_stats[i].idx == NR_FILE_THPS ||
+-		    memory_stats[i].idx == NR_SHMEM_THPS)
++		if (memory_stats[i].idx == NR_SHMEM_THPS)
+ 			memory_stats[i].ratio = HPAGE_PMD_SIZE;
+ #endif
+ 		VM_BUG_ON(!memory_stats[i].ratio);
 -- 
 2.11.0
 
