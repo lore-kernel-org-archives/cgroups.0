@@ -1,7 +1,7 @@
 From: Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH 9/9] mm: memcontrol: make the slab calculation consistent
-Date: Sat,  5 Dec 2020 21:02:24 +0800
-Message-ID: <20201205130224.81607-10-songmuchun@bytedance.com>
+Subject: [PATCH 6/9] mm: memcontrol: convert NR_SHMEM_THPS account to pages
+Date: Sat,  5 Dec 2020 21:02:21 +0800
+Message-ID: <20201205130224.81607-7-songmuchun@bytedance.com>
 References: <20201205130224.81607-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,186 +10,180 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=zRyHqu7TjhWPvcpqYaxOFrZwdcjevZ28RME9caXsylo=;
-        b=m/rCaxXSUDZQW5kZo+JO83uk75DwwkHyUjCYnCvBEjao+vuJqHqVIEezB6KH3XIyi5
-         Dgg7e7bhqIU+ulk7wSR5kaHrVKRhCTeq0ZeQ1SOdDvnW/krZOG84FMk1XjFSl3Gb5OA/
-         29lrO3IUcLbskByH+gbY2/Gt6L7lOsWGhVy/alHNFwX9S/XI4gcZ2E/GcP+rpwEZk7pn
-         9fjlHjhoMrcAJISDAy3zXTPYLjZDT2GBLcvH/iDzDBn2OVE1zuUonlDXFPhct9Cv9wad
-         UZfE9qtqO5ZyR2285m16+LNjcvQUliBK1kJd2IZDLJzbgOPiMd9PZK0hJlhGTNjo6nwu
-         OwZg==
+        bh=S7mNi5PKMwLVHFP7gDd3IF0GOynsG77QNA4M+vj3DJk=;
+        b=gCJzTjfCAu0GltWm/hyzcdft7AkWXt2V/lS0x+vLZl92dYwWf3S82oKszSt3ZzKOIh
+         WJVAhhbIWRORnK/Q43dPs6cgOgzg4pM3xTRgx3tWJK4eM22mlCVn5OmI+Zmu3mN2tYc+
+         vaNJLGxSuk6PCdg3PEtKUb3d4tMZnBo0ZXJ4hqFbSA/El0ixN3PLTNvU+QkLm6/93Rs2
+         O2v5DKU+SdeEUy3Yfk1YFKrshqnCBSJcCUDKoNT6yL6HkTahhKM4nfAMWpL0Fbc7xRq3
+         TChN0DPtaAZiu7p3qKGo80phGyYpuCMaIuqq93KisF6L6ItFlt8klNxm5rp8Aftk9Mt/
+         CCQw==
 In-Reply-To: <20201205130224.81607-1-songmuchun@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: gregkh@linuxfoundation.org, rafael@kernel.org, adobriyan@gmail.com, akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, hughd@google.com, will@kernel.org, guro@fb.com, rppt@kernel.org, tglx@linutronix.de, esyr@redhat.com, peterx@redhat.com, krisman@collabora.com, surenb@google.com, avagin@openvz.org, elver@google.com, rdunlap@infradead.org, iamjoonsoo.kim@lge.com
 Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>
 
-Although the ratio of the slab is one, we also should read the ratio
-from the related memory_stats instead of hard-coding. And the local
-variable of size is already the value of slab_unreclaimable. So we
-do not need to read again.
+Convert NR_SHMEM_THPS account to pages
 
 Signed-off-by: Muchun Song <songmuchun@bytedance.com>
 ---
- mm/memcontrol.c | 112 +++++++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 74 insertions(+), 38 deletions(-)
+ drivers/base/node.c |  3 +--
+ fs/proc/meminfo.c   |  2 +-
+ mm/filemap.c        |  2 +-
+ mm/huge_memory.c    |  3 ++-
+ mm/khugepaged.c     |  2 +-
+ mm/memcontrol.c     | 26 ++------------------------
+ mm/page_alloc.c     |  2 +-
+ mm/shmem.c          |  3 ++-
+ 8 files changed, 11 insertions(+), 32 deletions(-)
 
+diff --git a/drivers/base/node.c b/drivers/base/node.c
+index f6a9521bbcf8..a64f9c5484a0 100644
+--- a/drivers/base/node.c
++++ b/drivers/base/node.c
+@@ -462,8 +462,7 @@ static ssize_t node_read_meminfo(struct device *dev,
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+ 			     ,
+ 			     nid, K(node_page_state(pgdat, NR_ANON_THPS)),
+-			     nid, K(node_page_state(pgdat, NR_SHMEM_THPS) *
+-				    HPAGE_PMD_NR),
++			     nid, K(node_page_state(pgdat, NR_SHMEM_THPS)),
+ 			     nid, K(node_page_state(pgdat, NR_SHMEM_PMDMAPPED) *
+ 				    HPAGE_PMD_NR),
+ 			     nid, K(node_page_state(pgdat, NR_FILE_THPS)),
+diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
+index 9b2cb770326e..574779b6e48c 100644
+--- a/fs/proc/meminfo.c
++++ b/fs/proc/meminfo.c
+@@ -131,7 +131,7 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
+ 	show_val_kb(m, "AnonHugePages:  ",
+ 		    global_node_page_state(NR_ANON_THPS));
+ 	show_val_kb(m, "ShmemHugePages: ",
+-		    global_node_page_state(NR_SHMEM_THPS) * HPAGE_PMD_NR);
++		    global_node_page_state(NR_SHMEM_THPS));
+ 	show_val_kb(m, "ShmemPmdMapped: ",
+ 		    global_node_page_state(NR_SHMEM_PMDMAPPED) * HPAGE_PMD_NR);
+ 	show_val_kb(m, "FileHugePages:  ",
+diff --git a/mm/filemap.c b/mm/filemap.c
+index c4dcb1144883..5fdefbbc1bc2 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -204,7 +204,7 @@ static void unaccount_page_cache_page(struct address_space *mapping,
+ 	if (PageSwapBacked(page)) {
+ 		__mod_lruvec_page_state(page, NR_SHMEM, -nr);
+ 		if (PageTransHuge(page))
+-			__dec_lruvec_page_state(page, NR_SHMEM_THPS);
++			__mod_lruvec_page_state(page, NR_SHMEM_THPS, -HPAGE_PMD_NR);
+ 	} else if (PageTransHuge(page)) {
+ 		__mod_lruvec_page_state(page, NR_FILE_THPS, -HPAGE_PMD_NR);
+ 		filemap_nr_thps_dec(mapping);
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 37840bdeaad0..0e8541bd9f50 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -2746,7 +2746,8 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
+ 		spin_unlock(&ds_queue->split_queue_lock);
+ 		if (mapping) {
+ 			if (PageSwapBacked(head))
+-				__dec_lruvec_page_state(head, NR_SHMEM_THPS);
++				__mod_lruvec_page_state(head, NR_SHMEM_THPS,
++							-HPAGE_PMD_NR);
+ 			else
+ 				__mod_lruvec_page_state(head, NR_FILE_THPS,
+ 							-HPAGE_PMD_NR);
+diff --git a/mm/khugepaged.c b/mm/khugepaged.c
+index 1e1ced2208d0..4fe79ccfc312 100644
+--- a/mm/khugepaged.c
++++ b/mm/khugepaged.c
+@@ -1857,7 +1857,7 @@ static void collapse_file(struct mm_struct *mm,
+ 	}
+ 
+ 	if (is_shmem)
+-		__inc_lruvec_page_state(new_page, NR_SHMEM_THPS);
++		__mod_lruvec_page_state(new_page, NR_SHMEM_THPS, HPAGE_PMD_NR);
+ 	else {
+ 		__mod_lruvec_page_state(new_page, NR_FILE_THPS, HPAGE_PMD_NR);
+ 		filemap_nr_thps_inc(mapping);
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 48d70c1ad301..0e9e8ca7e770 100644
+index dce76dddac61..48d70c1ad301 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -1493,48 +1493,75 @@ static bool mem_cgroup_wait_acct_move(struct mem_cgroup *memcg)
- 
- struct memory_stat {
- 	const char *name;
--	unsigned int ratio;
+@@ -1497,7 +1497,7 @@ struct memory_stat {
  	unsigned int idx;
  };
  
- static const struct memory_stat memory_stats[] = {
--	{ "anon", PAGE_SIZE, NR_ANON_MAPPED },
--	{ "file", PAGE_SIZE, NR_FILE_PAGES },
--	{ "kernel_stack", 1, NR_KERNEL_STACK_B },
--	{ "percpu", 1, MEMCG_PERCPU_B },
--	{ "sock", PAGE_SIZE, MEMCG_SOCK },
--	{ "shmem", PAGE_SIZE, NR_SHMEM },
--	{ "file_mapped", PAGE_SIZE, NR_FILE_MAPPED },
--	{ "file_dirty", PAGE_SIZE, NR_FILE_DIRTY },
--	{ "file_writeback", PAGE_SIZE, NR_WRITEBACK },
-+	{ "anon",			NR_ANON_MAPPED			},
-+	{ "file",			NR_FILE_PAGES			},
-+	{ "kernel_stack",		NR_KERNEL_STACK_B		},
-+	{ "percpu",			MEMCG_PERCPU_B			},
-+	{ "sock",			MEMCG_SOCK			},
-+	{ "shmem",			NR_SHMEM			},
-+	{ "file_mapped",		NR_FILE_MAPPED			},
-+	{ "file_dirty",			NR_FILE_DIRTY			},
-+	{ "file_writeback",		NR_WRITEBACK			},
+-static struct memory_stat memory_stats[] = {
++static const struct memory_stat memory_stats[] = {
+ 	{ "anon", PAGE_SIZE, NR_ANON_MAPPED },
+ 	{ "file", PAGE_SIZE, NR_FILE_PAGES },
+ 	{ "kernel_stack", 1, NR_KERNEL_STACK_B },
+@@ -1508,14 +1508,9 @@ static struct memory_stat memory_stats[] = {
+ 	{ "file_dirty", PAGE_SIZE, NR_FILE_DIRTY },
+ 	{ "file_writeback", PAGE_SIZE, NR_WRITEBACK },
  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
--	{ "anon_thp", PAGE_SIZE, NR_ANON_THPS },
--	{ "file_thp", PAGE_SIZE, NR_FILE_THPS },
--	{ "shmem_thp", PAGE_SIZE, NR_SHMEM_THPS },
-+	{ "anon_thp",			NR_ANON_THPS			},
-+	{ "file_thp",			NR_FILE_THPS			},
-+	{ "shmem_thp",			NR_SHMEM_THPS			},
- #endif
--	{ "inactive_anon", PAGE_SIZE, NR_INACTIVE_ANON },
--	{ "active_anon", PAGE_SIZE, NR_ACTIVE_ANON },
--	{ "inactive_file", PAGE_SIZE, NR_INACTIVE_FILE },
--	{ "active_file", PAGE_SIZE, NR_ACTIVE_FILE },
--	{ "unevictable", PAGE_SIZE, NR_UNEVICTABLE },
--
 -	/*
--	 * Note: The slab_reclaimable and slab_unreclaimable must be
--	 * together and slab_reclaimable must be in front.
+-	 * The ratio will be initialized in memory_stats_init(). Because
+-	 * on some architectures, the macro of HPAGE_PMD_SIZE is not
+-	 * constant(e.g. powerpc).
 -	 */
--	{ "slab_reclaimable", 1, NR_SLAB_RECLAIMABLE_B },
--	{ "slab_unreclaimable", 1, NR_SLAB_UNRECLAIMABLE_B },
-+	{ "inactive_anon",		NR_INACTIVE_ANON		},
-+	{ "active_anon",		NR_ACTIVE_ANON			},
-+	{ "inactive_file",		NR_INACTIVE_FILE		},
-+	{ "active_file",		NR_ACTIVE_FILE			},
-+	{ "unevictable",		NR_UNEVICTABLE			},
-+	{ "slab_reclaimable",		NR_SLAB_RECLAIMABLE_B		},
-+	{ "slab_unreclaimable",		NR_SLAB_UNRECLAIMABLE_B		},
- 
- 	/* The memory events */
--	{ "workingset_refault_anon", 1, WORKINGSET_REFAULT_ANON },
--	{ "workingset_refault_file", 1, WORKINGSET_REFAULT_FILE },
--	{ "workingset_activate_anon", 1, WORKINGSET_ACTIVATE_ANON },
--	{ "workingset_activate_file", 1, WORKINGSET_ACTIVATE_FILE },
--	{ "workingset_restore_anon", 1, WORKINGSET_RESTORE_ANON },
--	{ "workingset_restore_file", 1, WORKINGSET_RESTORE_FILE },
--	{ "workingset_nodereclaim", 1, WORKINGSET_NODERECLAIM },
-+	{ "workingset_refault_anon",	WORKINGSET_REFAULT_ANON		},
-+	{ "workingset_refault_file",	WORKINGSET_REFAULT_FILE		},
-+	{ "workingset_activate_anon",	WORKINGSET_ACTIVATE_ANON	},
-+	{ "workingset_activate_file",	WORKINGSET_ACTIVATE_FILE	},
-+	{ "workingset_restore_anon",	WORKINGSET_RESTORE_ANON		},
-+	{ "workingset_restore_file",	WORKINGSET_RESTORE_FILE		},
-+	{ "workingset_nodereclaim",	WORKINGSET_NODERECLAIM		},
+ 	{ "anon_thp", PAGE_SIZE, NR_ANON_THPS },
+ 	{ "file_thp", PAGE_SIZE, NR_FILE_THPS },
+-	{ "shmem_thp", 0, NR_SHMEM_THPS },
++	{ "shmem_thp", PAGE_SIZE, NR_SHMEM_THPS },
+ #endif
+ 	{ "inactive_anon", PAGE_SIZE, NR_INACTIVE_ANON },
+ 	{ "active_anon", PAGE_SIZE, NR_ACTIVE_ANON },
+@@ -1540,23 +1535,6 @@ static struct memory_stat memory_stats[] = {
+ 	{ "workingset_nodereclaim", 1, WORKINGSET_NODERECLAIM },
  };
  
-+/* Translate stat items to the correct unit for memory.stat output */
-+static int memcg_page_state_unit(int item)
-+{
-+	int unit;
-+
-+	switch (item) {
-+	case NR_SLAB_RECLAIMABLE_B:
-+	case NR_SLAB_UNRECLAIMABLE_B:
-+	case WORKINGSET_REFAULT_ANON:
-+	case WORKINGSET_REFAULT_FILE:
-+	case WORKINGSET_ACTIVATE_ANON:
-+	case WORKINGSET_ACTIVATE_FILE:
-+	case WORKINGSET_RESTORE_ANON:
-+	case WORKINGSET_RESTORE_FILE:
-+	case WORKINGSET_NODERECLAIM:
-+	case MEMCG_PERCPU_B:
-+	case NR_KERNEL_STACK_B:
-+		unit = 1;
-+		break;
-+	default:
-+		unit = PAGE_SIZE;
-+		break;
-+	}
-+
-+	return unit;
-+}
-+
-+static inline unsigned long memcg_page_state_output(struct mem_cgroup *memcg,
-+						    int item)
-+{
-+	return memcg_page_state(memcg, item) * memcg_page_state_unit(item);
-+}
-+
+-static int __init memory_stats_init(void)
+-{
+-	int i;
+-
+-	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
+-#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-		if (memory_stats[i].idx == NR_SHMEM_THPS)
+-			memory_stats[i].ratio = HPAGE_PMD_SIZE;
+-#endif
+-		VM_BUG_ON(!memory_stats[i].ratio);
+-		VM_BUG_ON(memory_stats[i].idx >= MEMCG_NR_STAT);
+-	}
+-
+-	return 0;
+-}
+-pure_initcall(memory_stats_init);
+-
  static char *memory_stat_format(struct mem_cgroup *memcg)
  {
  	struct seq_buf s;
-@@ -1558,13 +1585,16 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
- 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
- 		u64 size;
- 
--		size = memcg_page_state(memcg, memory_stats[i].idx);
--		size *= memory_stats[i].ratio;
-+		size = memcg_page_state_output(memcg, memory_stats[i].idx);
- 		seq_buf_printf(&s, "%s %llu\n", memory_stats[i].name, size);
- 
-+		/*
-+		 * We are printing reclaimable, unreclaimable of the slab
-+		 * and the sum of both.
-+		 */
- 		if (unlikely(memory_stats[i].idx == NR_SLAB_UNRECLAIMABLE_B)) {
--			size = memcg_page_state(memcg, NR_SLAB_RECLAIMABLE_B) +
--			       memcg_page_state(memcg, NR_SLAB_UNRECLAIMABLE_B);
-+			size += memcg_page_state_output(memcg,
-+							NR_SLAB_RECLAIMABLE_B);
- 			seq_buf_printf(&s, "slab %llu\n", size);
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index fabdbb340806..8fb9f3d38b67 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -5567,7 +5567,7 @@ void show_free_areas(unsigned int filter, nodemask_t *nodemask)
+ 			K(node_page_state(pgdat, NR_WRITEBACK)),
+ 			K(node_page_state(pgdat, NR_SHMEM)),
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-			K(node_page_state(pgdat, NR_SHMEM_THPS) * HPAGE_PMD_NR),
++			K(node_page_state(pgdat, NR_SHMEM_THPS)),
+ 			K(node_page_state(pgdat, NR_SHMEM_PMDMAPPED)
+ 					* HPAGE_PMD_NR),
+ 			K(node_page_state(pgdat, NR_ANON_THPS)),
+diff --git a/mm/shmem.c b/mm/shmem.c
+index 5da4f1a3e663..ea5d8c9ccb5b 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -713,7 +713,8 @@ static int shmem_add_to_page_cache(struct page *page,
  		}
- 	}
-@@ -6358,6 +6388,12 @@ static int memory_stat_show(struct seq_file *m, void *v)
- }
- 
- #ifdef CONFIG_NUMA
-+static inline unsigned long lruvec_page_state_output(struct lruvec *lruvec,
-+						     int item)
-+{
-+	return lruvec_page_state(lruvec, item) * memcg_page_state_unit(item);
-+}
-+
- static int memory_numa_stat_show(struct seq_file *m, void *v)
- {
- 	int i;
-@@ -6375,8 +6411,8 @@ static int memory_numa_stat_show(struct seq_file *m, void *v)
- 			struct lruvec *lruvec;
- 
- 			lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
--			size = lruvec_page_state(lruvec, memory_stats[i].idx);
--			size *= memory_stats[i].ratio;
-+			size = lruvec_page_state_output(lruvec,
-+							memory_stats[i].idx);
- 			seq_printf(m, " N%d=%llu", nid, size);
+ 		if (PageTransHuge(page)) {
+ 			count_vm_event(THP_FILE_ALLOC);
+-			__inc_lruvec_page_state(page, NR_SHMEM_THPS);
++			__mod_lruvec_page_state(page, NR_SHMEM_THPS,
++						HPAGE_PMD_NR);
  		}
- 		seq_putc(m, '\n');
+ 		mapping->nrpages += nr;
+ 		__mod_lruvec_page_state(page, NR_FILE_PAGES, nr);
 -- 
 2.11.0
 
