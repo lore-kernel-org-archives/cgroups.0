@@ -1,149 +1,108 @@
 From: Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH 3/9] mm: memcontrol: convert kernel stack account to byte-sized
-Date: Sat,  5 Dec 2020 21:02:18 +0800
-Message-ID: <20201205130224.81607-4-songmuchun@bytedance.com>
+Subject: Re: [External] Re: [PATCH 5/9] mm: memcontrol: convert NR_FILE_THPS
+ account to pages
+Date: Sun, 6 Dec 2020 00:52:34 +0800
+Message-ID: <CAMZfGtUTotdRbGEE85SD_6B7_X=L1hU_8JAWbwPN7ztWCTD-Sg@mail.gmail.com>
 References: <20201205130224.81607-1-songmuchun@bytedance.com>
+ <20201205130224.81607-6-songmuchun@bytedance.com> <X8uU6ODzteuBY9pf@kroah.com>
+ <CAMZfGtWjumNV4hu-Qv8Z+WoS-EmyhvQd1qsaoS1quvQCyczT=g@mail.gmail.com>
+ <X8uoITGcfvZ/EA74@kroah.com> <CAMZfGtWmoPjuxfwYFUACRBCBgk3q77Sfv0kE2ysoX-9LJ8s2Zw@mail.gmail.com>
+ <X8u2TavrUAnnhq+M@kroah.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=ibu+HPexsNJ6GCHgTCs1EnvihRdwIFloguIfEoBcFm0=;
-        b=RIWJqFEUtUvKu8Fg1Zcim0D0ygw/emSaDfHLDuSMZVi1l6jU98f0+j1WCvxvvrXmbM
-         Zz7Sr/edGmZx8HWClxGoOS136rCnQ1gGAPZhN7ffez6dlZGHiW+lhfJkjQnXlF/DmcGV
-         j3hVd1mClJVrhdcn5tFzL/2qmSGBKn5QetJBoFw03uBntP75pIbJLNCJCW5g8A95YVar
-         h1pf9RM+JYZAqyk9myiNWcGDxI851yBOCBx8Uf5/huiuzSMioyS+Ke4ayojmQfH/XBos
-         gO+Ml53OUJiZ8lF7EYb8uvp4uvrtkfNLiPCa5d/7BXjnzxxV8VQ0Gw4FOZU7yaEC3a0S
-         4IZQ==
-In-Reply-To: <20201205130224.81607-1-songmuchun@bytedance.com>
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=4TjBWxHeiYLGN2gLQ9wB5wlqIelnuKaJ3NWlRad2iWo=;
+        b=lHercq+HFs9Uw4tBCUBPVfm4XBHEjObQ2+zuVWYecpGDyqFLGynsD/AS+5i0AyeHq/
+         K6ze34AxmCpza061G3nwgZIiUh0OmEOpNFMg+6zIIGochjQhJZMMclJbcnWaQjNFl4jH
+         FHmt9G4qXYxRcmaDVviFYXWC40swpwKncRblXHFOMLT/bPiCU6AjbLED5NF2oKlJJBoV
+         jkVuZmlzv7QfSJNzrIohVAVf6pxyKeWq6LyIcowmbgYTxrkUjlB7EThoh9ahUzcwn5um
+         OgPX+0xIn0N6nmIBXwGoSm3purEI2y21/BPelFRc0s9F5r0ZH9z63jHb+Tu4eBj/mOre
+         eBJA==
+In-Reply-To: <X8u2TavrUAnnhq+M@kroah.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: gregkh@linuxfoundation.org, rafael@kernel.org, adobriyan@gmail.com, akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, hughd@google.com, will@kernel.org, guro@fb.com, rppt@kernel.org, tglx@linutronix.de, esyr@redhat.com, peterx@redhat.com, krisman@collabora.com, surenb@google.com, avagin@openvz.org, elver@google.com, rdunlap@infradead.org, iamjoonsoo.kim@lge.com
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>
+Content-Transfer-Encoding: 7bit
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: rafael@kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Hugh Dickins <hughd@google.com>, Will Deacon <will@kernel.org>, Roman Gushchin <guro@fb.com>, Mike Rapoport <rppt@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, esyr@redhat.com, peterx@redhat.com, krisman@collabora.com, Suren Baghdasaryan <surenb@google.com>, avagin@openvz.org, Marco Elver <elver@google.com>, Randy Dunlap <rdunlap@infradead.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Memory Management List <linux-mm@kvack.org>, Cgroups <cgroups@vger.kern>
 
-The kernel stack account is the only one that counts in KiB.
-This patch convert it from KiB to byte.
+On Sun, Dec 6, 2020 at 12:32 AM Greg KH <gregkh@linuxfoundation.org> wrote:
+>
+> On Sat, Dec 05, 2020 at 11:39:24PM +0800, Muchun Song wrote:
+> > On Sat, Dec 5, 2020 at 11:32 PM Greg KH <gregkh@linuxfoundation.org> wrote:
+> > >
+> > > On Sat, Dec 05, 2020 at 11:29:26PM +0800, Muchun Song wrote:
+> > > > On Sat, Dec 5, 2020 at 10:09 PM Greg KH <gregkh@linuxfoundation.org> wrote:
+> > > > >
+> > > > > On Sat, Dec 05, 2020 at 09:02:20PM +0800, Muchun Song wrote:
+> > > > > > Converrt NR_FILE_THPS account to pages.
+> > > > > >
+> > > > > > Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+> > > > > > ---
+> > > > > >  drivers/base/node.c | 3 +--
+> > > > > >  fs/proc/meminfo.c   | 2 +-
+> > > > > >  mm/filemap.c        | 2 +-
+> > > > > >  mm/huge_memory.c    | 3 ++-
+> > > > > >  mm/khugepaged.c     | 2 +-
+> > > > > >  mm/memcontrol.c     | 5 ++---
+> > > > > >  6 files changed, 8 insertions(+), 9 deletions(-)
+> > > > > >
+> > > > > > diff --git a/drivers/base/node.c b/drivers/base/node.c
+> > > > > > index 05c369e93e16..f6a9521bbcf8 100644
+> > > > > > --- a/drivers/base/node.c
+> > > > > > +++ b/drivers/base/node.c
+> > > > > > @@ -466,8 +466,7 @@ static ssize_t node_read_meminfo(struct device *dev,
+> > > > > >                                   HPAGE_PMD_NR),
+> > > > > >                            nid, K(node_page_state(pgdat, NR_SHMEM_PMDMAPPED) *
+> > > > > >                                   HPAGE_PMD_NR),
+> > > > > > -                          nid, K(node_page_state(pgdat, NR_FILE_THPS) *
+> > > > > > -                                 HPAGE_PMD_NR),
+> > > > > > +                          nid, K(node_page_state(pgdat, NR_FILE_THPS)),
+> > > > >
+> > > > > Again, is this changing a user-visable value?
+> > > > >
+> > > >
+> > > > Of course not.
+> > > >
+> > > > In the previous, the NR_FILE_THPS account is like below:
+> > > >
+> > > >     __mod_lruvec_page_state(page, NR_FILE_THPS, 1);
+> > > >
+> > > > With this patch, it is:
+> > > >
+> > > >     __mod_lruvec_page_state(page, NR_FILE_THPS, HPAGE_PMD_NR);
+> > > >
+> > > > So the result is not changed from the view of user space.
+> > >
+> > > So you "broke" it on the previous patch and "fixed" it on this one?  Why
+> > > not just do it all in one patch?
+> >
+> > Sorry for the confusion. I mean that the "previous" is without all of this patch
+> > series. So this series is aimed to convert the unit of all different THP vmstat
+> > counters from HPAGE_PMD_NR to pages. Thanks.
+>
+> I'm sorry, I still do not understand.  It looks to me that you are
+> changing the number printed to userspace here.  Where is the
+> corrisponding change that changed the units for this function?  Is it in
+> this patch?  If so, sorry, I did not see that at all...
 
-Signed-off-by: Muchun Song <songmuchun@bytedance.com>
----
- drivers/base/node.c    | 2 +-
- fs/proc/meminfo.c      | 2 +-
- include/linux/mmzone.h | 2 +-
- kernel/fork.c          | 8 ++++----
- mm/memcontrol.c        | 2 +-
- mm/page_alloc.c        | 2 +-
- mm/vmstat.c            | 4 ++--
- 7 files changed, 11 insertions(+), 11 deletions(-)
+Sorry, actually, this patch does not change the number printed to
+userspace. It only changes the unit of the vmstat counter.
 
-diff --git a/drivers/base/node.c b/drivers/base/node.c
-index 6ffa470e2984..855886a6ba0e 100644
---- a/drivers/base/node.c
-+++ b/drivers/base/node.c
-@@ -446,7 +446,7 @@ static ssize_t node_read_meminfo(struct device *dev,
- 			     nid, K(node_page_state(pgdat, NR_FILE_MAPPED)),
- 			     nid, K(node_page_state(pgdat, NR_ANON_MAPPED)),
- 			     nid, K(i.sharedram),
--			     nid, node_page_state(pgdat, NR_KERNEL_STACK_KB),
-+			     nid, node_page_state(pgdat, NR_KERNEL_STACK_B) / 1024,
- #ifdef CONFIG_SHADOW_CALL_STACK
- 			     nid, node_page_state(pgdat, NR_KERNEL_SCS_KB),
- #endif
-diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
-index 887a5532e449..c396b6cfba82 100644
---- a/fs/proc/meminfo.c
-+++ b/fs/proc/meminfo.c
-@@ -101,7 +101,7 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
- 	show_val_kb(m, "SReclaimable:   ", sreclaimable);
- 	show_val_kb(m, "SUnreclaim:     ", sunreclaim);
- 	seq_printf(m, "KernelStack:    %8lu kB\n",
--		   global_node_page_state(NR_KERNEL_STACK_KB));
-+		   global_node_page_state(NR_KERNEL_STACK_B) / 1024);
- #ifdef CONFIG_SHADOW_CALL_STACK
- 	seq_printf(m, "ShadowCallStack:%8lu kB\n",
- 		   global_node_page_state(NR_KERNEL_SCS_KB));
-diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-index 15132adaa233..bd34416293ec 100644
---- a/include/linux/mmzone.h
-+++ b/include/linux/mmzone.h
-@@ -202,7 +202,7 @@ enum node_stat_item {
- 	NR_KERNEL_MISC_RECLAIMABLE,	/* reclaimable non-slab kernel pages */
- 	NR_FOLL_PIN_ACQUIRED,	/* via: pin_user_page(), gup flag: FOLL_PIN */
- 	NR_FOLL_PIN_RELEASED,	/* pages returned via unpin_user_page() */
--	NR_KERNEL_STACK_KB,	/* measured in KiB */
-+	NR_KERNEL_STACK_B,	/* measured in byte */
- #if IS_ENABLED(CONFIG_SHADOW_CALL_STACK)
- 	NR_KERNEL_SCS_KB,	/* measured in KiB */
- #endif
-diff --git a/kernel/fork.c b/kernel/fork.c
-index 345f378e104d..2913d7c43dcb 100644
---- a/kernel/fork.c
-+++ b/kernel/fork.c
-@@ -382,11 +382,11 @@ static void account_kernel_stack(struct task_struct *tsk, int account)
- 
- 	/* All stack pages are in the same node. */
- 	if (vm)
--		mod_lruvec_page_state(vm->pages[0], NR_KERNEL_STACK_KB,
--				      account * (THREAD_SIZE / 1024));
-+		mod_lruvec_page_state(vm->pages[0], NR_KERNEL_STACK_B,
-+				      account * THREAD_SIZE);
- 	else
--		mod_lruvec_kmem_state(stack, NR_KERNEL_STACK_KB,
--				      account * (THREAD_SIZE / 1024));
-+		mod_lruvec_kmem_state(stack, NR_KERNEL_STACK_B,
-+				      account * THREAD_SIZE);
- }
- 
- static int memcg_charge_kernel_stack(struct task_struct *tsk)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 695dedf8687a..a7ec79dcb7dc 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1500,7 +1500,7 @@ struct memory_stat {
- static struct memory_stat memory_stats[] = {
- 	{ "anon", PAGE_SIZE, NR_ANON_MAPPED },
- 	{ "file", PAGE_SIZE, NR_FILE_PAGES },
--	{ "kernel_stack", 1024, NR_KERNEL_STACK_KB },
-+	{ "kernel_stack", 1, NR_KERNEL_STACK_B },
- 	{ "percpu", 1, MEMCG_PERCPU_B },
- 	{ "sock", PAGE_SIZE, MEMCG_SOCK },
- 	{ "shmem", PAGE_SIZE, NR_SHMEM },
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 56e603eea1dd..c28f8e1f1ef6 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -5573,7 +5573,7 @@ void show_free_areas(unsigned int filter, nodemask_t *nodemask)
- 			K(node_page_state(pgdat, NR_ANON_THPS) * HPAGE_PMD_NR),
- #endif
- 			K(node_page_state(pgdat, NR_WRITEBACK_TEMP)),
--			node_page_state(pgdat, NR_KERNEL_STACK_KB),
-+			node_page_state(pgdat, NR_KERNEL_STACK_B) / 1024,
- #ifdef CONFIG_SHADOW_CALL_STACK
- 			node_page_state(pgdat, NR_KERNEL_SCS_KB),
- #endif
-diff --git a/mm/vmstat.c b/mm/vmstat.c
-index f7857a7052e4..3e3bcaf7ba7e 100644
---- a/mm/vmstat.c
-+++ b/mm/vmstat.c
-@@ -353,7 +353,7 @@ void __mod_node_page_state(struct pglist_data *pgdat, enum node_stat_item item,
- 	x = delta + __this_cpu_read(*p);
- 
- 	t = __this_cpu_read(pcp->stat_threshold);
--	if (unlikely(item == NR_KERNEL_STACK_KB))
-+	if (unlikely(item == NR_KERNEL_STACK_B))
- 		t <<= PAGE_SHIFT;
- 
- 	if (unlikely(abs(x) > t)) {
-@@ -575,7 +575,7 @@ static inline void mod_node_state(struct pglist_data *pgdat,
- 		 * for all cpus in a node.
- 		 */
- 		t = this_cpu_read(pcp->stat_threshold);
--		if (unlikely(item == NR_KERNEL_STACK_KB))
-+		if (unlikely(item == NR_KERNEL_STACK_B))
- 			t <<= PAGE_SHIFT;
- 
- 		o = this_cpu_read(*p);
+Without this patch, every counter of NR_FILE_THPS represents
+NR_FILE_THPS pages. However, with this patch, every counter
+represents only one page. And why do I want to do this? Can
+reference to the cover letter. Thanks very much.
+
+>
+> thanks,
+>
+> greg k-h
+
+
+
 -- 
-2.11.0
-
+Yours,
+Muchun
