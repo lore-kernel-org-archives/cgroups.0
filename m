@@ -1,108 +1,88 @@
-From: Muchun Song <songmuchun@bytedance.com>
-Subject: Re: [External] Re: [PATCH 5/9] mm: memcontrol: convert NR_FILE_THPS
- account to pages
-Date: Sun, 6 Dec 2020 00:52:34 +0800
-Message-ID: <CAMZfGtUTotdRbGEE85SD_6B7_X=L1hU_8JAWbwPN7ztWCTD-Sg@mail.gmail.com>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: [PATCH 8/9] mm: memcontrol: convert NR_FILE_PMDMAPPED account to pages
+Date: Sat,  5 Dec 2020 21:02:23 +0800
+Message-ID: <20201205130224.81607-9-songmuchun@bytedance.com>
 References: <20201205130224.81607-1-songmuchun@bytedance.com>
- <20201205130224.81607-6-songmuchun@bytedance.com> <X8uU6ODzteuBY9pf@kroah.com>
- <CAMZfGtWjumNV4hu-Qv8Z+WoS-EmyhvQd1qsaoS1quvQCyczT=g@mail.gmail.com>
- <X8uoITGcfvZ/EA74@kroah.com> <CAMZfGtWmoPjuxfwYFUACRBCBgk3q77Sfv0kE2ysoX-9LJ8s2Zw@mail.gmail.com>
- <X8u2TavrUAnnhq+M@kroah.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=4TjBWxHeiYLGN2gLQ9wB5wlqIelnuKaJ3NWlRad2iWo=;
-        b=lHercq+HFs9Uw4tBCUBPVfm4XBHEjObQ2+zuVWYecpGDyqFLGynsD/AS+5i0AyeHq/
-         K6ze34AxmCpza061G3nwgZIiUh0OmEOpNFMg+6zIIGochjQhJZMMclJbcnWaQjNFl4jH
-         FHmt9G4qXYxRcmaDVviFYXWC40swpwKncRblXHFOMLT/bPiCU6AjbLED5NF2oKlJJBoV
-         jkVuZmlzv7QfSJNzrIohVAVf6pxyKeWq6LyIcowmbgYTxrkUjlB7EThoh9ahUzcwn5um
-         OgPX+0xIn0N6nmIBXwGoSm3purEI2y21/BPelFRc0s9F5r0ZH9z63jHb+Tu4eBj/mOre
-         eBJA==
-In-Reply-To: <X8u2TavrUAnnhq+M@kroah.com>
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=FtP7qi7mK1L0PfFz3nd+UCw8YfODDif7rcyX5iGzCy0=;
+        b=YBqE9JIpZZHp59F2B1fcdbYxWsPsKLsDcStvI6zVPyor7Qvy6DPn+rQUINr+d2lrr4
+         xPUtcPPYHneb4wBbmPXr94aIzyBHQ7s06HpUtYiINlmoL0Z9oSXqzyz2b8usnRFtG8WX
+         8/xIK4F8m/q/JyZxdQ+wzyn3+xrk1F/Nb8P5zcWAz2qcvUvsoLk4pRTF4PzYe0q9+/Sj
+         OjpvPukcqXmtU7DA7WYe9o5kUelIpmxnRsnIt9T/Vk8LMUk2fsls8CUUTbcaClLy/AO7
+         iTdJmEw8xWDYF82QC/sshrA+U9zeszVwAh8YxD682t9P0lFeQmroJ+4MTEjqGahXpBRV
+         kqZg==
+In-Reply-To: <20201205130224.81607-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: rafael@kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Hugh Dickins <hughd@google.com>, Will Deacon <will@kernel.org>, Roman Gushchin <guro@fb.com>, Mike Rapoport <rppt@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, esyr@redhat.com, peterx@redhat.com, krisman@collabora.com, Suren Baghdasaryan <surenb@google.com>, avagin@openvz.org, Marco Elver <elver@google.com>, Randy Dunlap <rdunlap@infradead.org>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Memory Management List <linux-mm@kvack.org>, Cgroups <cgroups@vger.kern>
+To: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, krisman-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, avagin-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-On Sun, Dec 6, 2020 at 12:32 AM Greg KH <gregkh@linuxfoundation.org> wrote:
->
-> On Sat, Dec 05, 2020 at 11:39:24PM +0800, Muchun Song wrote:
-> > On Sat, Dec 5, 2020 at 11:32 PM Greg KH <gregkh@linuxfoundation.org> wrote:
-> > >
-> > > On Sat, Dec 05, 2020 at 11:29:26PM +0800, Muchun Song wrote:
-> > > > On Sat, Dec 5, 2020 at 10:09 PM Greg KH <gregkh@linuxfoundation.org> wrote:
-> > > > >
-> > > > > On Sat, Dec 05, 2020 at 09:02:20PM +0800, Muchun Song wrote:
-> > > > > > Converrt NR_FILE_THPS account to pages.
-> > > > > >
-> > > > > > Signed-off-by: Muchun Song <songmuchun@bytedance.com>
-> > > > > > ---
-> > > > > >  drivers/base/node.c | 3 +--
-> > > > > >  fs/proc/meminfo.c   | 2 +-
-> > > > > >  mm/filemap.c        | 2 +-
-> > > > > >  mm/huge_memory.c    | 3 ++-
-> > > > > >  mm/khugepaged.c     | 2 +-
-> > > > > >  mm/memcontrol.c     | 5 ++---
-> > > > > >  6 files changed, 8 insertions(+), 9 deletions(-)
-> > > > > >
-> > > > > > diff --git a/drivers/base/node.c b/drivers/base/node.c
-> > > > > > index 05c369e93e16..f6a9521bbcf8 100644
-> > > > > > --- a/drivers/base/node.c
-> > > > > > +++ b/drivers/base/node.c
-> > > > > > @@ -466,8 +466,7 @@ static ssize_t node_read_meminfo(struct device *dev,
-> > > > > >                                   HPAGE_PMD_NR),
-> > > > > >                            nid, K(node_page_state(pgdat, NR_SHMEM_PMDMAPPED) *
-> > > > > >                                   HPAGE_PMD_NR),
-> > > > > > -                          nid, K(node_page_state(pgdat, NR_FILE_THPS) *
-> > > > > > -                                 HPAGE_PMD_NR),
-> > > > > > +                          nid, K(node_page_state(pgdat, NR_FILE_THPS)),
-> > > > >
-> > > > > Again, is this changing a user-visable value?
-> > > > >
-> > > >
-> > > > Of course not.
-> > > >
-> > > > In the previous, the NR_FILE_THPS account is like below:
-> > > >
-> > > >     __mod_lruvec_page_state(page, NR_FILE_THPS, 1);
-> > > >
-> > > > With this patch, it is:
-> > > >
-> > > >     __mod_lruvec_page_state(page, NR_FILE_THPS, HPAGE_PMD_NR);
-> > > >
-> > > > So the result is not changed from the view of user space.
-> > >
-> > > So you "broke" it on the previous patch and "fixed" it on this one?  Why
-> > > not just do it all in one patch?
-> >
-> > Sorry for the confusion. I mean that the "previous" is without all of this patch
-> > series. So this series is aimed to convert the unit of all different THP vmstat
-> > counters from HPAGE_PMD_NR to pages. Thanks.
->
-> I'm sorry, I still do not understand.  It looks to me that you are
-> changing the number printed to userspace here.  Where is the
-> corrisponding change that changed the units for this function?  Is it in
-> this patch?  If so, sorry, I did not see that at all...
+Convert NR_FILE_PMDMAPPED account to pages
 
-Sorry, actually, this patch does not change the number printed to
-userspace. It only changes the unit of the vmstat counter.
+Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+---
+ drivers/base/node.c | 3 +--
+ fs/proc/meminfo.c   | 2 +-
+ mm/rmap.c           | 6 ++++--
+ 3 files changed, 6 insertions(+), 5 deletions(-)
 
-Without this patch, every counter of NR_FILE_THPS represents
-NR_FILE_THPS pages. However, with this patch, every counter
-represents only one page. And why do I want to do this? Can
-reference to the cover letter. Thanks very much.
-
->
-> thanks,
->
-> greg k-h
-
-
-
+diff --git a/drivers/base/node.c b/drivers/base/node.c
+index fe90888f90a8..679215cdeb87 100644
+--- a/drivers/base/node.c
++++ b/drivers/base/node.c
+@@ -465,8 +465,7 @@ static ssize_t node_read_meminfo(struct device *dev,
+ 			     nid, K(node_page_state(pgdat, NR_SHMEM_THPS)),
+ 			     nid, K(node_page_state(pgdat, NR_SHMEM_PMDMAPPED)),
+ 			     nid, K(node_page_state(pgdat, NR_FILE_THPS)),
+-			     nid, K(node_page_state(pgdat, NR_FILE_PMDMAPPED) *
+-				    HPAGE_PMD_NR)
++			     nid, K(node_page_state(pgdat, NR_FILE_PMDMAPPED))
+ #endif
+ 			    );
+ 	len += hugetlb_report_node_meminfo(buf, len, nid);
+diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
+index b2bff8359497..a0828df01721 100644
+--- a/fs/proc/meminfo.c
++++ b/fs/proc/meminfo.c
+@@ -137,7 +137,7 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
+ 	show_val_kb(m, "FileHugePages:  ",
+ 		    global_node_page_state(NR_FILE_THPS));
+ 	show_val_kb(m, "FilePmdMapped:  ",
+-		    global_node_page_state(NR_FILE_PMDMAPPED) * HPAGE_PMD_NR);
++		    global_node_page_state(NR_FILE_PMDMAPPED));
+ #endif
+ 
+ #ifdef CONFIG_CMA
+diff --git a/mm/rmap.c b/mm/rmap.c
+index 3089ad6bf468..e383c5619501 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -1222,7 +1222,8 @@ void page_add_file_rmap(struct page *page, bool compound)
+ 			__mod_lruvec_page_state(page, NR_SHMEM_PMDMAPPED,
+ 						HPAGE_PMD_NR);
+ 		else
+-			__inc_node_page_state(page, NR_FILE_PMDMAPPED);
++			__mod_lruvec_page_state(page, NR_FILE_PMDMAPPED,
++						HPAGE_PMD_NR);
+ 	} else {
+ 		if (PageTransCompound(page) && page_mapping(page)) {
+ 			VM_WARN_ON_ONCE(!PageLocked(page));
+@@ -1264,7 +1265,8 @@ static void page_remove_file_rmap(struct page *page, bool compound)
+ 			__mod_lruvec_page_state(page, NR_SHMEM_PMDMAPPED,
+ 						-HPAGE_PMD_NR);
+ 		else
+-			__dec_node_page_state(page, NR_FILE_PMDMAPPED);
++			__mod_lruvec_page_state(page, NR_FILE_PMDMAPPED,
++						-HPAGE_PMD_NR);
+ 	} else {
+ 		if (!atomic_add_negative(-1, &page->_mapcount))
+ 			return;
 -- 
-Yours,
-Muchun
+2.11.0
+
