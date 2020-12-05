@@ -1,186 +1,149 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH 4/9] mm: memcontrol: convert NR_ANON_THPS account to pages
-Date: Sat,  5 Dec 2020 21:02:19 +0800
-Message-ID: <20201205130224.81607-5-songmuchun@bytedance.com>
+From: Muchun Song <songmuchun@bytedance.com>
+Subject: [PATCH 3/9] mm: memcontrol: convert kernel stack account to byte-sized
+Date: Sat,  5 Dec 2020 21:02:18 +0800
+Message-ID: <20201205130224.81607-4-songmuchun@bytedance.com>
 References: <20201205130224.81607-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=e/ByzOD9hz0YZpM+oDBw2TLHq41qvMWpZTD0cqZGx4I=;
-        b=EPbjwaB9bJDW0LzCf2yQYjATnBpm0Th60ZbMY9bsk2dPEMEfNS9bPgB7ty5q5wOzBB
-         UiHdsfr9ogMWYH7TvvzqvrO6EoPVUMNK1x+1ydqTdreqCEu+/KpnzwSr0w73mgKDJGvk
-         aSR5MzsuSDls159UCz7r42D8qQO+2u/g1NP4uciuI15nyxVO1pkuIM9G3tOWAtjcTqzk
-         uOnFwiQfpKH13sRYjk/L7DMll/r1662AJqcNsxRL22WLA3xqWdJgYAeMUUZl0HR2bTDd
-         ZEnm6lHxNfhzUNl6pyRHHeB29a8nUbf0+Zz2VjLBtAfGCI9mVhTBW6JycPut5UccvzLv
-         8ILg==
-In-Reply-To: <20201205130224.81607-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+        bh=ibu+HPexsNJ6GCHgTCs1EnvihRdwIFloguIfEoBcFm0=;
+        b=RIWJqFEUtUvKu8Fg1Zcim0D0ygw/emSaDfHLDuSMZVi1l6jU98f0+j1WCvxvvrXmbM
+         Zz7Sr/edGmZx8HWClxGoOS136rCnQ1gGAPZhN7ffez6dlZGHiW+lhfJkjQnXlF/DmcGV
+         j3hVd1mClJVrhdcn5tFzL/2qmSGBKn5QetJBoFw03uBntP75pIbJLNCJCW5g8A95YVar
+         h1pf9RM+JYZAqyk9myiNWcGDxI851yBOCBx8Uf5/huiuzSMioyS+Ke4ayojmQfH/XBos
+         gO+Ml53OUJiZ8lF7EYb8uvp4uvrtkfNLiPCa5d/7BXjnzxxV8VQ0Gw4FOZU7yaEC3a0S
+         4IZQ==
+In-Reply-To: <20201205130224.81607-1-songmuchun@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, krisman-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, avagin-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To: gregkh@linuxfoundation.org, rafael@kernel.org, adobriyan@gmail.com, akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, hughd@google.com, will@kernel.org, guro@fb.com, rppt@kernel.org, tglx@linutronix.de, esyr@redhat.com, peterx@redhat.com, krisman@collabora.com, surenb@google.com, avagin@openvz.org, elver@google.com, rdunlap@infradead.org, iamjoonsoo.kim@lge.com
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>
 
-Convert the NR_ANON_THPS account to pages.
+The kernel stack account is the only one that counts in KiB.
+This patch convert it from KiB to byte.
 
-Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Signed-off-by: Muchun Song <songmuchun@bytedance.com>
 ---
- drivers/base/node.c |  3 +--
- fs/proc/meminfo.c   |  2 +-
- mm/huge_memory.c    |  3 ++-
- mm/memcontrol.c     | 20 ++++++--------------
- mm/page_alloc.c     |  2 +-
- mm/rmap.c           |  7 ++++---
- 6 files changed, 15 insertions(+), 22 deletions(-)
+ drivers/base/node.c    | 2 +-
+ fs/proc/meminfo.c      | 2 +-
+ include/linux/mmzone.h | 2 +-
+ kernel/fork.c          | 8 ++++----
+ mm/memcontrol.c        | 2 +-
+ mm/page_alloc.c        | 2 +-
+ mm/vmstat.c            | 4 ++--
+ 7 files changed, 11 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/base/node.c b/drivers/base/node.c
-index 855886a6ba0e..05c369e93e16 100644
+index 6ffa470e2984..855886a6ba0e 100644
 --- a/drivers/base/node.c
 +++ b/drivers/base/node.c
-@@ -461,8 +461,7 @@ static ssize_t node_read_meminfo(struct device *dev,
- 			     nid, K(sunreclaimable)
- #ifdef CONFIG_TRANSPARENT_HUGEPAGE
- 			     ,
--			     nid, K(node_page_state(pgdat, NR_ANON_THPS) *
--				    HPAGE_PMD_NR),
-+			     nid, K(node_page_state(pgdat, NR_ANON_THPS)),
- 			     nid, K(node_page_state(pgdat, NR_SHMEM_THPS) *
- 				    HPAGE_PMD_NR),
- 			     nid, K(node_page_state(pgdat, NR_SHMEM_PMDMAPPED) *
+@@ -446,7 +446,7 @@ static ssize_t node_read_meminfo(struct device *dev,
+ 			     nid, K(node_page_state(pgdat, NR_FILE_MAPPED)),
+ 			     nid, K(node_page_state(pgdat, NR_ANON_MAPPED)),
+ 			     nid, K(i.sharedram),
+-			     nid, node_page_state(pgdat, NR_KERNEL_STACK_KB),
++			     nid, node_page_state(pgdat, NR_KERNEL_STACK_B) / 1024,
+ #ifdef CONFIG_SHADOW_CALL_STACK
+ 			     nid, node_page_state(pgdat, NR_KERNEL_SCS_KB),
+ #endif
 diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
-index c396b6cfba82..f447ac191d24 100644
+index 887a5532e449..c396b6cfba82 100644
 --- a/fs/proc/meminfo.c
 +++ b/fs/proc/meminfo.c
-@@ -129,7 +129,7 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
+@@ -101,7 +101,7 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
+ 	show_val_kb(m, "SReclaimable:   ", sreclaimable);
+ 	show_val_kb(m, "SUnreclaim:     ", sunreclaim);
+ 	seq_printf(m, "KernelStack:    %8lu kB\n",
+-		   global_node_page_state(NR_KERNEL_STACK_KB));
++		   global_node_page_state(NR_KERNEL_STACK_B) / 1024);
+ #ifdef CONFIG_SHADOW_CALL_STACK
+ 	seq_printf(m, "ShadowCallStack:%8lu kB\n",
+ 		   global_node_page_state(NR_KERNEL_SCS_KB));
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index 15132adaa233..bd34416293ec 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -202,7 +202,7 @@ enum node_stat_item {
+ 	NR_KERNEL_MISC_RECLAIMABLE,	/* reclaimable non-slab kernel pages */
+ 	NR_FOLL_PIN_ACQUIRED,	/* via: pin_user_page(), gup flag: FOLL_PIN */
+ 	NR_FOLL_PIN_RELEASED,	/* pages returned via unpin_user_page() */
+-	NR_KERNEL_STACK_KB,	/* measured in KiB */
++	NR_KERNEL_STACK_B,	/* measured in byte */
+ #if IS_ENABLED(CONFIG_SHADOW_CALL_STACK)
+ 	NR_KERNEL_SCS_KB,	/* measured in KiB */
+ #endif
+diff --git a/kernel/fork.c b/kernel/fork.c
+index 345f378e104d..2913d7c43dcb 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -382,11 +382,11 @@ static void account_kernel_stack(struct task_struct *tsk, int account)
  
- #ifdef CONFIG_TRANSPARENT_HUGEPAGE
- 	show_val_kb(m, "AnonHugePages:  ",
--		    global_node_page_state(NR_ANON_THPS) * HPAGE_PMD_NR);
-+		    global_node_page_state(NR_ANON_THPS));
- 	show_val_kb(m, "ShmemHugePages: ",
- 		    global_node_page_state(NR_SHMEM_THPS) * HPAGE_PMD_NR);
- 	show_val_kb(m, "ShmemPmdMapped: ",
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index c94dfc0cc1a3..1a13e1dab3ec 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -2178,7 +2178,8 @@ static void __split_huge_pmd_locked(struct vm_area_struct *vma, pmd_t *pmd,
- 		lock_page_memcg(page);
- 		if (atomic_add_negative(-1, compound_mapcount_ptr(page))) {
- 			/* Last compound_mapcount is gone. */
--			__dec_lruvec_page_state(page, NR_ANON_THPS);
-+			__mod_lruvec_page_state(page, NR_ANON_THPS,
-+						-HPAGE_PMD_NR);
- 			if (TestClearPageDoubleMap(page)) {
- 				/* No need in mapcount reference anymore */
- 				for (i = 0; i < HPAGE_PMD_NR; i++)
+ 	/* All stack pages are in the same node. */
+ 	if (vm)
+-		mod_lruvec_page_state(vm->pages[0], NR_KERNEL_STACK_KB,
+-				      account * (THREAD_SIZE / 1024));
++		mod_lruvec_page_state(vm->pages[0], NR_KERNEL_STACK_B,
++				      account * THREAD_SIZE);
+ 	else
+-		mod_lruvec_kmem_state(stack, NR_KERNEL_STACK_KB,
+-				      account * (THREAD_SIZE / 1024));
++		mod_lruvec_kmem_state(stack, NR_KERNEL_STACK_B,
++				      account * THREAD_SIZE);
+ }
+ 
+ static int memcg_charge_kernel_stack(struct task_struct *tsk)
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a7ec79dcb7dc..39cb7f1b00d3 100644
+index 695dedf8687a..a7ec79dcb7dc 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -1513,7 +1513,7 @@ static struct memory_stat memory_stats[] = {
- 	 * on some architectures, the macro of HPAGE_PMD_SIZE is not
- 	 * constant(e.g. powerpc).
- 	 */
--	{ "anon_thp", 0, NR_ANON_THPS },
-+	{ "anon_thp", PAGE_SIZE, NR_ANON_THPS },
- 	{ "file_thp", 0, NR_FILE_THPS },
- 	{ "shmem_thp", 0, NR_SHMEM_THPS },
- #endif
-@@ -1546,8 +1546,7 @@ static int __init memory_stats_init(void)
- 
- 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
- #ifdef CONFIG_TRANSPARENT_HUGEPAGE
--		if (memory_stats[i].idx == NR_ANON_THPS ||
--		    memory_stats[i].idx == NR_FILE_THPS ||
-+		if (memory_stats[i].idx == NR_FILE_THPS ||
- 		    memory_stats[i].idx == NR_SHMEM_THPS)
- 			memory_stats[i].ratio = HPAGE_PMD_SIZE;
- #endif
-@@ -4069,10 +4068,6 @@ static int memcg_stat_show(struct seq_file *m, void *v)
- 		if (memcg1_stats[i] == MEMCG_SWAP && !do_memsw_account())
- 			continue;
- 		nr = memcg_page_state_local(memcg, memcg1_stats[i]);
--#ifdef CONFIG_TRANSPARENT_HUGEPAGE
--		if (memcg1_stats[i] == NR_ANON_THPS)
--			nr *= HPAGE_PMD_NR;
--#endif
- 		seq_printf(m, "%s %lu\n", memcg1_stat_names[i], nr * PAGE_SIZE);
- 	}
- 
-@@ -4103,10 +4098,6 @@ static int memcg_stat_show(struct seq_file *m, void *v)
- 		if (memcg1_stats[i] == MEMCG_SWAP && !do_memsw_account())
- 			continue;
- 		nr = memcg_page_state(memcg, memcg1_stats[i]);
--#ifdef CONFIG_TRANSPARENT_HUGEPAGE
--		if (memcg1_stats[i] == NR_ANON_THPS)
--			nr *= HPAGE_PMD_NR;
--#endif
- 		seq_printf(m, "total_%s %llu\n", memcg1_stat_names[i],
- 						(u64)nr * PAGE_SIZE);
- 	}
-@@ -5634,10 +5625,11 @@ static int mem_cgroup_move_account(struct page *page,
- 			__mod_lruvec_state(from_vec, NR_ANON_MAPPED, -nr_pages);
- 			__mod_lruvec_state(to_vec, NR_ANON_MAPPED, nr_pages);
- 			if (PageTransHuge(page)) {
--				__dec_lruvec_state(from_vec, NR_ANON_THPS);
--				__inc_lruvec_state(to_vec, NR_ANON_THPS);
-+				__mod_lruvec_state(from_vec, NR_ANON_THPS,
-+						   -nr_pages);
-+				__mod_lruvec_state(to_vec, NR_ANON_THPS,
-+						   nr_pages);
- 			}
--
- 		}
- 	} else {
- 		__mod_lruvec_state(from_vec, NR_FILE_PAGES, -nr_pages);
+@@ -1500,7 +1500,7 @@ struct memory_stat {
+ static struct memory_stat memory_stats[] = {
+ 	{ "anon", PAGE_SIZE, NR_ANON_MAPPED },
+ 	{ "file", PAGE_SIZE, NR_FILE_PAGES },
+-	{ "kernel_stack", 1024, NR_KERNEL_STACK_KB },
++	{ "kernel_stack", 1, NR_KERNEL_STACK_B },
+ 	{ "percpu", 1, MEMCG_PERCPU_B },
+ 	{ "sock", PAGE_SIZE, MEMCG_SOCK },
+ 	{ "shmem", PAGE_SIZE, NR_SHMEM },
 diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index c28f8e1f1ef6..fabdbb340806 100644
+index 56e603eea1dd..c28f8e1f1ef6 100644
 --- a/mm/page_alloc.c
 +++ b/mm/page_alloc.c
-@@ -5570,7 +5570,7 @@ void show_free_areas(unsigned int filter, nodemask_t *nodemask)
- 			K(node_page_state(pgdat, NR_SHMEM_THPS) * HPAGE_PMD_NR),
- 			K(node_page_state(pgdat, NR_SHMEM_PMDMAPPED)
- 					* HPAGE_PMD_NR),
--			K(node_page_state(pgdat, NR_ANON_THPS) * HPAGE_PMD_NR),
-+			K(node_page_state(pgdat, NR_ANON_THPS)),
+@@ -5573,7 +5573,7 @@ void show_free_areas(unsigned int filter, nodemask_t *nodemask)
+ 			K(node_page_state(pgdat, NR_ANON_THPS) * HPAGE_PMD_NR),
  #endif
  			K(node_page_state(pgdat, NR_WRITEBACK_TEMP)),
- 			node_page_state(pgdat, NR_KERNEL_STACK_B) / 1024,
-diff --git a/mm/rmap.c b/mm/rmap.c
-index 08c56aaf72eb..f59e92e26b61 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -1144,7 +1144,8 @@ void do_page_add_anon_rmap(struct page *page,
- 		 * disabled.
+-			node_page_state(pgdat, NR_KERNEL_STACK_KB),
++			node_page_state(pgdat, NR_KERNEL_STACK_B) / 1024,
+ #ifdef CONFIG_SHADOW_CALL_STACK
+ 			node_page_state(pgdat, NR_KERNEL_SCS_KB),
+ #endif
+diff --git a/mm/vmstat.c b/mm/vmstat.c
+index f7857a7052e4..3e3bcaf7ba7e 100644
+--- a/mm/vmstat.c
++++ b/mm/vmstat.c
+@@ -353,7 +353,7 @@ void __mod_node_page_state(struct pglist_data *pgdat, enum node_stat_item item,
+ 	x = delta + __this_cpu_read(*p);
+ 
+ 	t = __this_cpu_read(pcp->stat_threshold);
+-	if (unlikely(item == NR_KERNEL_STACK_KB))
++	if (unlikely(item == NR_KERNEL_STACK_B))
+ 		t <<= PAGE_SHIFT;
+ 
+ 	if (unlikely(abs(x) > t)) {
+@@ -575,7 +575,7 @@ static inline void mod_node_state(struct pglist_data *pgdat,
+ 		 * for all cpus in a node.
  		 */
- 		if (compound)
--			__inc_lruvec_page_state(page, NR_ANON_THPS);
-+			__mod_lruvec_page_state(page, NR_ANON_THPS,
-+						HPAGE_PMD_NR);
- 		__mod_lruvec_page_state(page, NR_ANON_MAPPED, nr);
- 	}
+ 		t = this_cpu_read(pcp->stat_threshold);
+-		if (unlikely(item == NR_KERNEL_STACK_KB))
++		if (unlikely(item == NR_KERNEL_STACK_B))
+ 			t <<= PAGE_SHIFT;
  
-@@ -1186,7 +1187,7 @@ void page_add_new_anon_rmap(struct page *page,
- 		if (hpage_pincount_available(page))
- 			atomic_set(compound_pincount_ptr(page), 0);
- 
--		__inc_lruvec_page_state(page, NR_ANON_THPS);
-+		__mod_lruvec_page_state(page, NR_ANON_THPS, HPAGE_PMD_NR);
- 	} else {
- 		/* Anon THP always mapped first with PMD */
- 		VM_BUG_ON_PAGE(PageTransCompound(page), page);
-@@ -1292,7 +1293,7 @@ static void page_remove_anon_compound_rmap(struct page *page)
- 	if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
- 		return;
- 
--	__dec_lruvec_page_state(page, NR_ANON_THPS);
-+	__mod_lruvec_page_state(page, NR_ANON_THPS, -HPAGE_PMD_NR);
- 
- 	if (TestClearPageDoubleMap(page)) {
- 		/*
+ 		o = this_cpu_read(*p);
 -- 
 2.11.0
 
