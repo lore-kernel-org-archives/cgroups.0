@@ -1,130 +1,54 @@
 From: Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH v2 03/12] mm: memcontrol: convert NR_FILE_THPS account to pages
-Date: Sun,  6 Dec 2020 16:23:02 +0800
-Message-ID: <20201206082318.11532-6-songmuchun@bytedance.com>
+Subject: [PATCH 2/9] mm: memcontrol: fix NR_ANON_THPS account
+Date: Sun,  6 Dec 2020 16:23:01 +0800
+Message-ID: <20201206082318.11532-5-songmuchun@bytedance.com>
 References: <20201206082318.11532-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=i2WmQI9Q0soqzGFU1vD0NNfzSFXtCmp1bcFtyNd4sgI=;
-        b=MIUVcU2jzF+u+tn8VjceqHLW/r8Q4V/Uw5MRRrgGhy4zO3rH4zfu5rXqpbeIGNcXyd
-         MyLJIxAVO0zsgIM9V6d/BP+VxSirmugbZYCtLOX6DD9DrEjK+h6fSwT6b3Vn3TaUJmgS
-         4vKmLF8xZ+4nMXzpYvM+9OBr70/q88gmC9L01ZX7obDIIV+XWpwuRLRQ2npCldmPDgqC
-         13un0uhyx7ZB3aO1L9HJ5AybwozX+DDwRjBm/AMqUHsRHvBlsFrytsUkI/qCRNV1CM5r
-         cTF60JNXZDZnMMjOmpRvWTv0TH27P1P4l+nxVmmtf2CNEeMbm9kRbAicZIcwub1ehauR
-         HRig==
+        bh=JLGZC7sv5nAUpuhCShqzZAhxLbvYoPKLszNPrb+RhvY=;
+        b=kiHdmCDIlr4NkTd1dvaUQ6aOss/IHgJnkituhfu1gcpJQgbf7Gnh47zFIIuLjAn5WF
+         HrQvfe9hmrfB147HA91725LflAnp+r6nObX1wa3n+L8aI+Z4QW5BjHzWcYmakrYhzATf
+         1GcX6bmCmkh/BfjUn2POt7kPfjIVxmGUXCRD8/ixacwPB8i4XjAoNPg9ONLbEbwO+LfU
+         AtDDTKPHv02yb4GBFy5fRF2n+UwO/ynMPO84tCnj5ndtad7Hf6q/B66EMzaUp8LKShkI
+         Y6Z4v+8AAdczX96Fg5AiiwHncBAKMiKWMN5gfa7lyufOZKCylkoSol6Uj314+ZpYWLOf
+         R31Q==
 In-Reply-To: <20201206082318.11532-1-songmuchun@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: gregkh@linuxfoundation.org, rafael@kernel.org, adobriyan@gmail.com, akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, hughd@google.com, will@kernel.org, guro@fb.com, rppt@kernel.org, tglx@linutronix.de, esyr@redhat.com, peterx@redhat.com, krisman@collabora.com, surenb@google.com, avagin@openvz.org, elver@google.com, rdunlap@infradead.org, iamjoonsoo.kim@lge.com
 Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>
 
-Converrt NR_FILE_THPS account to pages.
+The unit of NR_ANON_THPS is HPAGE_PMD_NR already. So it should inc/dec
+by one rather than nr_pages.
 
+Fixes: 468c398233da ("mm: memcontrol: switch to native NR_ANON_THPS counter")
 Signed-off-by: Muchun Song <songmuchun@bytedance.com>
 ---
- drivers/base/node.c | 3 +--
- fs/proc/meminfo.c   | 2 +-
- mm/filemap.c        | 2 +-
- mm/huge_memory.c    | 3 ++-
- mm/khugepaged.c     | 2 +-
- mm/memcontrol.c     | 5 ++---
- 6 files changed, 8 insertions(+), 9 deletions(-)
+ mm/memcontrol.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/base/node.c b/drivers/base/node.c
-index 7ebe4c2f64d1..2db28acdaa4f 100644
---- a/drivers/base/node.c
-+++ b/drivers/base/node.c
-@@ -466,8 +466,7 @@ static ssize_t node_read_meminfo(struct device *dev,
- 				    HPAGE_PMD_NR),
- 			     nid, K(node_page_state(pgdat, NR_SHMEM_PMDMAPPED) *
- 				    HPAGE_PMD_NR),
--			     nid, K(node_page_state(pgdat, NR_FILE_THPS) *
--				    HPAGE_PMD_NR),
-+			     nid, K(node_page_state(pgdat, NR_FILE_THPS)),
- 			     nid, K(node_page_state(pgdat, NR_FILE_PMDMAPPED) *
- 				    HPAGE_PMD_NR)
- #endif
-diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
-index 1f7e1945c313..f4157f26cbf5 100644
---- a/fs/proc/meminfo.c
-+++ b/fs/proc/meminfo.c
-@@ -135,7 +135,7 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
- 	show_val_kb(m, "ShmemPmdMapped: ",
- 		    global_node_page_state(NR_SHMEM_PMDMAPPED) * HPAGE_PMD_NR);
- 	show_val_kb(m, "FileHugePages:  ",
--		    global_node_page_state(NR_FILE_THPS) * HPAGE_PMD_NR);
-+		    global_node_page_state(NR_FILE_THPS));
- 	show_val_kb(m, "FilePmdMapped:  ",
- 		    global_node_page_state(NR_FILE_PMDMAPPED) * HPAGE_PMD_NR);
- #endif
-diff --git a/mm/filemap.c b/mm/filemap.c
-index 28e7309c29c8..c4dcb1144883 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -206,7 +206,7 @@ static void unaccount_page_cache_page(struct address_space *mapping,
- 		if (PageTransHuge(page))
- 			__dec_lruvec_page_state(page, NR_SHMEM_THPS);
- 	} else if (PageTransHuge(page)) {
--		__dec_lruvec_page_state(page, NR_FILE_THPS);
-+		__mod_lruvec_page_state(page, NR_FILE_THPS, -HPAGE_PMD_NR);
- 		filemap_nr_thps_dec(mapping);
- 	}
- 
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 1a13e1dab3ec..37840bdeaad0 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -2748,7 +2748,8 @@ int split_huge_page_to_list(struct page *page, struct list_head *list)
- 			if (PageSwapBacked(head))
- 				__dec_lruvec_page_state(head, NR_SHMEM_THPS);
- 			else
--				__dec_lruvec_page_state(head, NR_FILE_THPS);
-+				__mod_lruvec_page_state(head, NR_FILE_THPS,
-+							-HPAGE_PMD_NR);
- 		}
- 
- 		__split_huge_page(page, list, end);
-diff --git a/mm/khugepaged.c b/mm/khugepaged.c
-index ad316d2e1fee..1e1ced2208d0 100644
---- a/mm/khugepaged.c
-+++ b/mm/khugepaged.c
-@@ -1859,7 +1859,7 @@ static void collapse_file(struct mm_struct *mm,
- 	if (is_shmem)
- 		__inc_lruvec_page_state(new_page, NR_SHMEM_THPS);
- 	else {
--		__inc_lruvec_page_state(new_page, NR_FILE_THPS);
-+		__mod_lruvec_page_state(new_page, NR_FILE_THPS, HPAGE_PMD_NR);
- 		filemap_nr_thps_inc(mapping);
- 	}
- 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 2700c1db5a1a..c4557de2b211 100644
+index 22d9bd688d6d..695dedf8687a 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -1514,7 +1514,7 @@ static struct memory_stat memory_stats[] = {
- 	 * constant(e.g. powerpc).
- 	 */
- 	{ "anon_thp", PAGE_SIZE, NR_ANON_THPS },
--	{ "file_thp", 0, NR_FILE_THPS },
-+	{ "file_thp", PAGE_SIZE, NR_FILE_THPS },
- 	{ "shmem_thp", 0, NR_SHMEM_THPS },
- #endif
- 	{ "inactive_anon", PAGE_SIZE, NR_INACTIVE_ANON },
-@@ -1546,8 +1546,7 @@ static int __init memory_stats_init(void)
+@@ -5634,10 +5634,8 @@ static int mem_cgroup_move_account(struct page *page,
+ 			__mod_lruvec_state(from_vec, NR_ANON_MAPPED, -nr_pages);
+ 			__mod_lruvec_state(to_vec, NR_ANON_MAPPED, nr_pages);
+ 			if (PageTransHuge(page)) {
+-				__mod_lruvec_state(from_vec, NR_ANON_THPS,
+-						   -nr_pages);
+-				__mod_lruvec_state(to_vec, NR_ANON_THPS,
+-						   nr_pages);
++				__dec_lruvec_state(from_vec, NR_ANON_THPS);
++				__inc_lruvec_state(to_vec, NR_ANON_THPS);
+ 			}
  
- 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
- #ifdef CONFIG_TRANSPARENT_HUGEPAGE
--		if (memory_stats[i].idx == NR_FILE_THPS ||
--		    memory_stats[i].idx == NR_SHMEM_THPS)
-+		if (memory_stats[i].idx == NR_SHMEM_THPS)
- 			memory_stats[i].ratio = HPAGE_PMD_SIZE;
- #endif
- 		VM_BUG_ON(!memory_stats[i].ratio);
+ 		}
 -- 
 2.11.0
 
