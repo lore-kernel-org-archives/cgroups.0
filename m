@@ -1,75 +1,87 @@
-From: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Subject: Re: [External] Re: [PATCH 5/9] mm: memcontrol: convert NR_FILE_THPS
- account to pages
-Date: Sat, 5 Dec 2020 16:32:49 +0100
-Message-ID: <X8uoITGcfvZ/EA74@kroah.com>
-References: <20201205130224.81607-1-songmuchun@bytedance.com>
- <20201205130224.81607-6-songmuchun@bytedance.com>
- <X8uU6ODzteuBY9pf@kroah.com>
- <CAMZfGtWjumNV4hu-Qv8Z+WoS-EmyhvQd1qsaoS1quvQCyczT=g@mail.gmail.com>
+From: Muchun Song <songmuchun@bytedance.com>
+Subject: [PATCH v2 00/12] Convert all vmstat counters to pages or bytes
+Date: Sun,  6 Dec 2020 16:22:57 +0800
+Message-ID: <20201206082318.11532-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1607182373;
-        bh=YvwWbwUJz4IsDZPSgrDxX9tu/27SyYUwe/JZizJeblA=;
-        h=From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mrTHi9vVfhyA42YnDVcB34yiTLBSymgeakxRNtgMdkIcHq3gM4SpZeohUcBjJiiOC
-         KYpF6+h2Vsl0LLBEgyxzmUbbwQbICwRpvxibvUcVhMLAhJubFkIl+6gGZd9aI6V0/d
-         UO6pX0KDAvixCm+HGsq2/Ixiff3DUqAKIhXVvLlo=
-Content-Disposition: inline
-In-Reply-To: <CAMZfGtWjumNV4hu-Qv8Z+WoS-EmyhvQd1qsaoS1quvQCyczT=g@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=94t92p220d3blDFDgpx+1JH+mQKvnsugZ3wYNVpL5Pc=;
+        b=aPEbZU4OyEStT3F68E8ntmWaoqDSzRPfxpNag1nustiini6Rf/h8SsWgNHnv4nMhTc
+         R5+L+leR3yh0p1Z46A9wM4d+nzaY/GgZwJyBPEZPXBgMmUXiV5wBRVBZSxvRYxmjxtLd
+         v6lQLZXZNUK0DIQFDR2uuU3dQVm3JJDOD6FYURZgGlVg+xMUJhlcxhvFjvsg8lWGFxJA
+         kfXZFS/lzxEWbrwnrtvgXNPh/EKiZqJEIv6TnJu1UodsK0tRvuYxzOJQqSBbIBLxFmXR
+         3fhfx5Shes7y2EfZXI2Wc1yj+ikUveMtDJd2DyrJNw9155Ig/QQ4g8lwQh8IyrOAfG8a
+         nFDg==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Mike Rapoport <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, krisman-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, avagin-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29Tb/PtFMR13I2A@public.gmane.org>
+To: gregkh@linuxfoundation.org, rafael@kernel.org, adobriyan@gmail.com, akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, hughd@google.com, will@kernel.org, guro@fb.com, rppt@kernel.org, tglx@linutronix.de, esyr@redhat.com, peterx@redhat.com, krisman@collabora.com, surenb@google.com, avagin@openvz.org, elver@google.com, rdunlap@infradead.org, iamjoonsoo.kim@lge.com
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>
 
-On Sat, Dec 05, 2020 at 11:29:26PM +0800, Muchun Song wrote:
-> On Sat, Dec 5, 2020 at 10:09 PM Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org> wrote:
-> >
-> > On Sat, Dec 05, 2020 at 09:02:20PM +0800, Muchun Song wrote:
-> > > Converrt NR_FILE_THPS account to pages.
-> > >
-> > > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> > > ---
-> > >  drivers/base/node.c | 3 +--
-> > >  fs/proc/meminfo.c   | 2 +-
-> > >  mm/filemap.c        | 2 +-
-> > >  mm/huge_memory.c    | 3 ++-
-> > >  mm/khugepaged.c     | 2 +-
-> > >  mm/memcontrol.c     | 5 ++---
-> > >  6 files changed, 8 insertions(+), 9 deletions(-)
-> > >
-> > > diff --git a/drivers/base/node.c b/drivers/base/node.c
-> > > index 05c369e93e16..f6a9521bbcf8 100644
-> > > --- a/drivers/base/node.c
-> > > +++ b/drivers/base/node.c
-> > > @@ -466,8 +466,7 @@ static ssize_t node_read_meminfo(struct device *dev,
-> > >                                   HPAGE_PMD_NR),
-> > >                            nid, K(node_page_state(pgdat, NR_SHMEM_PMDMAPPED) *
-> > >                                   HPAGE_PMD_NR),
-> > > -                          nid, K(node_page_state(pgdat, NR_FILE_THPS) *
-> > > -                                 HPAGE_PMD_NR),
-> > > +                          nid, K(node_page_state(pgdat, NR_FILE_THPS)),
-> >
-> > Again, is this changing a user-visable value?
-> >
-> 
-> Of course not.
-> 
-> In the previous, the NR_FILE_THPS account is like below:
-> 
->     __mod_lruvec_page_state(page, NR_FILE_THPS, 1);
-> 
-> With this patch, it is:
-> 
->     __mod_lruvec_page_state(page, NR_FILE_THPS, HPAGE_PMD_NR);
-> 
-> So the result is not changed from the view of user space.
+Hi,
 
-So you "broke" it on the previous patch and "fixed" it on this one?  Why
-not just do it all in one patch?
+This patch series is aimed to convert all THP vmstat counters to pages
+and some KiB vmstat counters to bytes.
 
-Confused,
+The unit of some vmstat counters are pages, some are bytes, some are
+HPAGE_PMD_NR, and some are KiB. When we want to expose these vmstat
+counters to the userspace, we have to know the unit of the vmstat counters
+is which one. It makes the code complex. Because there are too many choices,
+the probability of making a mistake will be greater.
 
-greg k-h
+For example, the below is some bug fix:
+  - 7de2e9f195b9 ("mm: memcontrol: correct the NR_ANON_THPS counter of hierarchical memcg")
+  - not committed(it is the first commit in this series) ("mm: memcontrol: fix NR_ANON_THPS account")
+
+This patch series can make the code simple (161 insertions(+), 187 deletions(-)).
+And make the unit of the vmstat counters are either pages or bytes. Fewer choices
+means lower probability of making mistakes :).
+
+This was inspired by Johannes and Roman. Thanks to them.
+
+Changes in v1 -> v2:
+  - Change the series subject from "Convert all THP vmstat counters to pages"
+    to "Convert all vmstat counters to pages or bytes".
+  - Convert NR_KERNEL_SCS_KB account to bytes.
+  - Convert vmstat slab counters to bytes.
+  - Remove {global_}node_page_state_pages.
+
+Muchun Song (12):
+  mm: memcontrol: fix NR_ANON_THPS account
+  mm: memcontrol: convert NR_ANON_THPS account to pages
+  mm: memcontrol: convert NR_FILE_THPS account to pages
+  mm: memcontrol: convert NR_SHMEM_THPS account to pages
+  mm: memcontrol: convert NR_SHMEM_PMDMAPPED account to pages
+  mm: memcontrol: convert NR_FILE_PMDMAPPED account to pages
+  mm: memcontrol: convert kernel stack account to bytes
+  mm: memcontrol: convert NR_KERNEL_SCS_KB account to bytes
+  mm: memcontrol: convert vmstat slab counters to bytes
+  mm: memcontrol: scale stat_threshold for byted-sized vmstat
+  mm: memcontrol: make the slab calculation consistent
+  mm: memcontrol: remove {global_}node_page_state_pages
+
+ drivers/base/node.c     |  25 ++++-----
+ fs/proc/meminfo.c       |  22 ++++----
+ include/linux/mmzone.h  |  21 +++-----
+ include/linux/vmstat.h  |  21 ++------
+ kernel/fork.c           |   8 +--
+ kernel/power/snapshot.c |   2 +-
+ kernel/scs.c            |   4 +-
+ mm/filemap.c            |   4 +-
+ mm/huge_memory.c        |   9 ++--
+ mm/khugepaged.c         |   4 +-
+ mm/memcontrol.c         | 131 ++++++++++++++++++++++++------------------------
+ mm/oom_kill.c           |   2 +-
+ mm/page_alloc.c         |  17 +++----
+ mm/rmap.c               |  19 ++++---
+ mm/shmem.c              |   3 +-
+ mm/vmscan.c             |   2 +-
+ mm/vmstat.c             |  54 ++++++++------------
+ 17 files changed, 161 insertions(+), 187 deletions(-)
+
+-- 
+2.11.0
+
