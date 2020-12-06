@@ -1,88 +1,141 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [RESEND PATCH v2 06/12] mm: memcontrol: convert NR_FILE_PMDMAPPED account to pages
-Date: Sun,  6 Dec 2020 18:14:45 +0800
-Message-ID: <20201206101451.14706-7-songmuchun@bytedance.com>
+From: Muchun Song <songmuchun@bytedance.com>
+Subject: [RESEND PATCH v2 09/12] mm: memcontrol: convert vmstat slab counters to bytes
+Date: Sun,  6 Dec 2020 18:14:48 +0800
+Message-ID: <20201206101451.14706-10-songmuchun@bytedance.com>
 References: <20201206101451.14706-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=47URTm8Dh9aVQTOnIPzCjSnQ3r0uw/hpFPQHZdAjXJk=;
-        b=ZFrm0RAsDKjEspMJB3v1V7ooekc7E7o5kl6qta47nxPfgFfA0L3kv9YJmSyWr+/B31
-         JHbHQopIMAu9OZDsv9OzAyQyEvdtpOUYOU4uChMVGIF7Rha4Kuyjtf6rvPmWRFq5r0Hb
-         YpLTSeIofdez0J4pdps2gKdUCVEdB8v5HEpGQlyPdg9S6BnGVAvnNjCt9SvzcI6vyvP0
-         AnBBUWKm3mxAbbRDBv+EBHvtTprB++jbhIeX1HnMXf4B51kCpzqpciDO6VLGjCSqEfqj
-         l7aae0EI4r2sW1m8S0lkLyNyXIeCmU8aRNz4NeRgVcg0KuTQ+ZB92ejjuYcxaPQNk/6O
-         FZjQ==
-In-Reply-To: <20201206101451.14706-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+        bh=jxjzCofAcULr7bnQMbpOvZCW6tNXMo722rzO5X3X+g0=;
+        b=l0t429mzGcnZFwxy/27EHeyds85DHU2/SvU/cTTFIMKpTZQ13vGzScVjnNJc1Qfgdl
+         tq3J8LH2Po4yAdE4Qo1uNZ9GfP2dCXBM7HpnjMHacvON/LTEfdfapf3sJCtF6f1t+m//
+         Rdasl44TWp0U1bs3j6e3qWDr9Qn4cvq1JzncWvKY7tQL+4hmLSOUSIIajJobIPEmCai1
+         ok61QC0poafIrVv2iaxO+AbBLSIJ7BNrJjU/r+EtWVpKKiZe8qX3AGUSS983k1LeN9AL
+         G+VQSyqTH4X1j0tI7iZy9yvMHaPD1FXpVWoKPjzR3GdmseCxF/0+PH5flDA0QOufjbFW
+         Swlw==
+In-Reply-To: <20201206101451.14706-1-songmuchun@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, krisman-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, avagin-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+To: gregkh@linuxfoundation.org, rafael@kernel.org, adobriyan@gmail.com, akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, hughd@google.com, will@kernel.org, guro@fb.com, rppt@kernel.org, tglx@linutronix.de, esyr@redhat.com, peterx@redhat.com, krisman@collabora.com, surenb@google.com, avagin@openvz.org, elver@google.com, rdunlap@infradead.org, iamjoonsoo.kim@lge.com
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>
 
-Convert NR_FILE_PMDMAPPED account to pages
+the global and per-node counters are stored in pages, however memcg
+and lruvec counters are stored in bytes. This scheme looks weird.
+So convert all vmstat slab counters to bytes.
 
-Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Signed-off-by: Muchun Song <songmuchun@bytedance.com>
 ---
- drivers/base/node.c | 3 +--
- fs/proc/meminfo.c   | 2 +-
- mm/rmap.c           | 6 ++++--
- 3 files changed, 6 insertions(+), 5 deletions(-)
+ include/linux/vmstat.h | 17 ++++++++++-------
+ mm/vmstat.c            | 21 ++++++++++-----------
+ 2 files changed, 20 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/base/node.c b/drivers/base/node.c
-index e5abc6144dab..f77652e6339f 100644
---- a/drivers/base/node.c
-+++ b/drivers/base/node.c
-@@ -465,8 +465,7 @@ static ssize_t node_read_meminfo(struct device *dev,
- 			     nid, K(node_page_state(pgdat, NR_SHMEM_THPS)),
- 			     nid, K(node_page_state(pgdat, NR_SHMEM_PMDMAPPED)),
- 			     nid, K(node_page_state(pgdat, NR_FILE_THPS)),
--			     nid, K(node_page_state(pgdat, NR_FILE_PMDMAPPED) *
--				    HPAGE_PMD_NR)
-+			     nid, K(node_page_state(pgdat, NR_FILE_PMDMAPPED))
+diff --git a/include/linux/vmstat.h b/include/linux/vmstat.h
+index 322dcbfcc933..fd1a3d5d4926 100644
+--- a/include/linux/vmstat.h
++++ b/include/linux/vmstat.h
+@@ -197,18 +197,26 @@ static inline
+ unsigned long global_node_page_state_pages(enum node_stat_item item)
+ {
+ 	long x = atomic_long_read(&vm_node_stat[item]);
++
+ #ifdef CONFIG_SMP
+ 	if (x < 0)
+ 		x = 0;
  #endif
- 			    );
- 	len += hugetlb_report_node_meminfo(buf, len, nid);
-diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
-index 84886b2cc2f7..5a83012d8b72 100644
---- a/fs/proc/meminfo.c
-+++ b/fs/proc/meminfo.c
-@@ -137,7 +137,7 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
- 	show_val_kb(m, "FileHugePages:  ",
- 		    global_node_page_state(NR_FILE_THPS));
- 	show_val_kb(m, "FilePmdMapped:  ",
--		    global_node_page_state(NR_FILE_PMDMAPPED) * HPAGE_PMD_NR);
-+		    global_node_page_state(NR_FILE_PMDMAPPED));
++	if (vmstat_item_in_bytes(item))
++		x >>= PAGE_SHIFT;
+ 	return x;
+ }
+ 
+ static inline unsigned long global_node_page_state(enum node_stat_item item)
+ {
+-	VM_WARN_ON_ONCE(vmstat_item_in_bytes(item));
++	long x = atomic_long_read(&vm_node_stat[item]);
+ 
+-	return global_node_page_state_pages(item);
++	VM_WARN_ON_ONCE(vmstat_item_in_bytes(item));
++#ifdef CONFIG_SMP
++	if (x < 0)
++		x = 0;
++#endif
++	return x;
+ }
+ 
+ static inline unsigned long zone_page_state(struct zone *zone,
+@@ -312,11 +320,6 @@ static inline void __mod_zone_page_state(struct zone *zone,
+ static inline void __mod_node_page_state(struct pglist_data *pgdat,
+ 			enum node_stat_item item, int delta)
+ {
+-	if (vmstat_item_in_bytes(item)) {
+-		VM_WARN_ON_ONCE(delta & (PAGE_SIZE - 1));
+-		delta >>= PAGE_SHIFT;
+-	}
+-
+ 	node_page_state_add(delta, pgdat, item);
+ }
+ 
+diff --git a/mm/vmstat.c b/mm/vmstat.c
+index 8d77ee426e22..7fb0c7cb9516 100644
+--- a/mm/vmstat.c
++++ b/mm/vmstat.c
+@@ -345,11 +345,6 @@ void __mod_node_page_state(struct pglist_data *pgdat, enum node_stat_item item,
+ 	long x;
+ 	long t;
+ 
+-	if (vmstat_item_in_bytes(item)) {
+-		VM_WARN_ON_ONCE(delta & (PAGE_SIZE - 1));
+-		delta >>= PAGE_SHIFT;
+-	}
+-
+ 	x = delta + __this_cpu_read(*p);
+ 
+ 	t = __this_cpu_read(pcp->stat_threshold);
+@@ -554,11 +549,6 @@ static inline void mod_node_state(struct pglist_data *pgdat,
+ 	s8 __percpu *p = pcp->vm_node_stat_diff + item;
+ 	long o, n, t, z;
+ 
+-	if (vmstat_item_in_bytes(item)) {
+-		VM_WARN_ON_ONCE(delta & (PAGE_SIZE - 1));
+-		delta >>= PAGE_SHIFT;
+-	}
+-
+ 	do {
+ 		z = 0;  /* overflow to node counters */
+ 
+@@ -1012,19 +1002,28 @@ unsigned long node_page_state_pages(struct pglist_data *pgdat,
+ 				    enum node_stat_item item)
+ {
+ 	long x = atomic_long_read(&pgdat->vm_stat[item]);
++
+ #ifdef CONFIG_SMP
+ 	if (x < 0)
+ 		x = 0;
+ #endif
++	if (vmstat_item_in_bytes(item))
++		x >>= PAGE_SHIFT;
+ 	return x;
+ }
+ 
+ unsigned long node_page_state(struct pglist_data *pgdat,
+ 			      enum node_stat_item item)
+ {
++	long x = atomic_long_read(&pgdat->vm_stat[item]);
++
+ 	VM_WARN_ON_ONCE(vmstat_item_in_bytes(item));
+ 
+-	return node_page_state_pages(pgdat, item);
++#ifdef CONFIG_SMP
++	if (x < 0)
++		x = 0;
++#endif
++	return x;
+ }
  #endif
  
- #ifdef CONFIG_CMA
-diff --git a/mm/rmap.c b/mm/rmap.c
-index 3089ad6bf468..e383c5619501 100644
---- a/mm/rmap.c
-+++ b/mm/rmap.c
-@@ -1222,7 +1222,8 @@ void page_add_file_rmap(struct page *page, bool compound)
- 			__mod_lruvec_page_state(page, NR_SHMEM_PMDMAPPED,
- 						HPAGE_PMD_NR);
- 		else
--			__inc_node_page_state(page, NR_FILE_PMDMAPPED);
-+			__mod_lruvec_page_state(page, NR_FILE_PMDMAPPED,
-+						HPAGE_PMD_NR);
- 	} else {
- 		if (PageTransCompound(page) && page_mapping(page)) {
- 			VM_WARN_ON_ONCE(!PageLocked(page));
-@@ -1264,7 +1265,8 @@ static void page_remove_file_rmap(struct page *page, bool compound)
- 			__mod_lruvec_page_state(page, NR_SHMEM_PMDMAPPED,
- 						-HPAGE_PMD_NR);
- 		else
--			__dec_node_page_state(page, NR_FILE_PMDMAPPED);
-+			__mod_lruvec_page_state(page, NR_FILE_PMDMAPPED,
-+						-HPAGE_PMD_NR);
- 	} else {
- 		if (!atomic_add_negative(-1, &page->_mapcount))
- 			return;
 -- 
 2.11.0
 
