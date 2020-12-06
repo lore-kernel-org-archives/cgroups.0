@@ -1,196 +1,191 @@
-From: Muchun Song <songmuchun@bytedance.com>
-Subject: [RESEND PATCH v2 11/12] mm: memcontrol: make the slab calculation consistent
-Date: Sun,  6 Dec 2020 18:14:50 +0800
-Message-ID: <20201206101451.14706-12-songmuchun@bytedance.com>
-References: <20201206101451.14706-1-songmuchun@bytedance.com>
+From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons-ud5FBsm0p/xEiooADzr8i9i2O/JbrIOy@public.gmane.org>
+Subject: Re: Regression from 5.7.17 to 5.9.9 with memory.low cgroup
+ constraints
+Date: Sun, 6 Dec 2020 12:30:21 +0100
+Message-ID: <20201206123021.6683e2a5@hemera.lan.sysophe.eu>
+References: <20201125123956.61d9e16a@hemera>
+        <20201125182103.GA840171@carbon.dhcp.thefacebook.com>
+        <20201203120936.4cadef43@hemera.lan.sysophe.eu>
+        <20201203205559.GD1571588@carbon.DHCP.thefacebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=KwRaMRI+Sr6xQo3P1J4+HoZOIYaqIcm7QaRM3zeaHfM=;
-        b=f/VNxHgtOj2/ijqqrMgBgEUMKgTq1TDJOBO6yN20rM9HpH8TxNGjJYzwKTkp3RG5sD
-         USGASwcjMY+URzaWD2oF4Pv1KZGFh4zftUJ6WMVXbHKNpARcJxdsDopTTjMW+4Bx1CMk
-         f2c5UACjKkSxlREuzyENkckmbtZVOQTFTlnlEPmMSdM0RyQlwfpdOGuZmJ9MMihGnp35
-         vxeZEdaUuGsIF96EnguTyhCMMADUD3KzIYz3IyE0jVXLFmkeoxxKPbhM1wOXunzhe9Jw
-         9p3eJ/ZZXPy00wlkw4joCyNiL5Fs2TV2Gpkjx954WMxsVeup4myYhUKVdDRCrwp027Q2
-         Ndsw==
-In-Reply-To: <20201206101451.14706-1-songmuchun@bytedance.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20201203205559.GD1571588-lLJQVQxiE4uLfgCeKHXN1g2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: gregkh@linuxfoundation.org, rafael@kernel.org, adobriyan@gmail.com, akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, hughd@google.com, will@kernel.org, guro@fb.com, rppt@kernel.org, tglx@linutronix.de, esyr@redhat.com, peterx@redhat.com, krisman@collabora.com, surenb@google.com, avagin@openvz.org, elver@google.com, rdunlap@infradead.org, iamjoonsoo.kim@lge.com
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Although the ratio of the slab is one, we also should read the ratio
-from the related memory_stats instead of hard-coding. And the local
-variable of size is already the value of slab_unreclaimable. So we
-do not need to read again.
+On Thu, 3 Dec 2020 12:55:59 -0800 Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
+> In the meantime Yang Shi discovered a problem related slab shrinkers,
+> which is to some extent similar to what you describe: under certain conditions
+> large amounts of slab memory can be completely excluded from the reclaim process.
+> 
+> Can you, please, check if his fix will solve your problem?
+> Here is the final version: https://www.spinics.net/lists/stable/msg430601.html .
 
-The unit of the vmstat counters are either pages or bytes now. So we
-can drop the ratio in struct memory_stat. This can make the code clean
-and simple. And get rid of the awkward mix of static and runtime
-initialization of the memory_stats table.
+I've added that patch on top of yours but it seems not to completely
+help either.
+With this patch is seems that such dentries might get reclaimed as a
+last resort instead of not at all.
 
-Signed-off-by: Muchun Song <songmuchun@bytedance.com>
----
- mm/memcontrol.c | 108 ++++++++++++++++++++++++++++++++++++--------------------
- 1 file changed, 70 insertions(+), 38 deletions(-)
+I've added logs since current boot:
+ https://faramir-fj.hosting-restena.lu/cgmon-20201204.txt
+ https://faramir-fj.hosting-restena.lu/cgmon-20201205.txt
+ https://faramir-fj.hosting-restena.lu/cgmon-20201206.txt
+with the memory evolution. Evolution started to degrade over past night
+where memory usage started to increase from 40G tending to full use but
+with only slabs growing (not file cache) and memory assigned to cgroups
+staying more or less constant - even root cgroup's memory stats seem not
+to list a great deal of used memory.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 48d70c1ad301..49fbcf003bf5 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1493,48 +1493,71 @@ static bool mem_cgroup_wait_acct_move(struct mem_cgroup *memcg)
- 
- struct memory_stat {
- 	const char *name;
--	unsigned int ratio;
- 	unsigned int idx;
- };
- 
- static const struct memory_stat memory_stats[] = {
--	{ "anon", PAGE_SIZE, NR_ANON_MAPPED },
--	{ "file", PAGE_SIZE, NR_FILE_PAGES },
--	{ "kernel_stack", 1, NR_KERNEL_STACK_B },
--	{ "percpu", 1, MEMCG_PERCPU_B },
--	{ "sock", PAGE_SIZE, MEMCG_SOCK },
--	{ "shmem", PAGE_SIZE, NR_SHMEM },
--	{ "file_mapped", PAGE_SIZE, NR_FILE_MAPPED },
--	{ "file_dirty", PAGE_SIZE, NR_FILE_DIRTY },
--	{ "file_writeback", PAGE_SIZE, NR_WRITEBACK },
-+	{ "anon",			NR_ANON_MAPPED			},
-+	{ "file",			NR_FILE_PAGES			},
-+	{ "kernel_stack",		NR_KERNEL_STACK_B		},
-+	{ "percpu",			MEMCG_PERCPU_B			},
-+	{ "sock",			MEMCG_SOCK			},
-+	{ "shmem",			NR_SHMEM			},
-+	{ "file_mapped",		NR_FILE_MAPPED			},
-+	{ "file_dirty",			NR_FILE_DIRTY			},
-+	{ "file_writeback",		NR_WRITEBACK			},
- #ifdef CONFIG_TRANSPARENT_HUGEPAGE
--	{ "anon_thp", PAGE_SIZE, NR_ANON_THPS },
--	{ "file_thp", PAGE_SIZE, NR_FILE_THPS },
--	{ "shmem_thp", PAGE_SIZE, NR_SHMEM_THPS },
-+	{ "anon_thp",			NR_ANON_THPS			},
-+	{ "file_thp",			NR_FILE_THPS			},
-+	{ "shmem_thp",			NR_SHMEM_THPS			},
- #endif
--	{ "inactive_anon", PAGE_SIZE, NR_INACTIVE_ANON },
--	{ "active_anon", PAGE_SIZE, NR_ACTIVE_ANON },
--	{ "inactive_file", PAGE_SIZE, NR_INACTIVE_FILE },
--	{ "active_file", PAGE_SIZE, NR_ACTIVE_FILE },
--	{ "unevictable", PAGE_SIZE, NR_UNEVICTABLE },
--
--	/*
--	 * Note: The slab_reclaimable and slab_unreclaimable must be
--	 * together and slab_reclaimable must be in front.
--	 */
--	{ "slab_reclaimable", 1, NR_SLAB_RECLAIMABLE_B },
--	{ "slab_unreclaimable", 1, NR_SLAB_UNRECLAIMABLE_B },
-+	{ "inactive_anon",		NR_INACTIVE_ANON		},
-+	{ "active_anon",		NR_ACTIVE_ANON			},
-+	{ "inactive_file",		NR_INACTIVE_FILE		},
-+	{ "active_file",		NR_ACTIVE_FILE			},
-+	{ "unevictable",		NR_UNEVICTABLE			},
-+	{ "slab_reclaimable",		NR_SLAB_RECLAIMABLE_B		},
-+	{ "slab_unreclaimable",		NR_SLAB_UNRECLAIMABLE_B		},
- 
- 	/* The memory events */
--	{ "workingset_refault_anon", 1, WORKINGSET_REFAULT_ANON },
--	{ "workingset_refault_file", 1, WORKINGSET_REFAULT_FILE },
--	{ "workingset_activate_anon", 1, WORKINGSET_ACTIVATE_ANON },
--	{ "workingset_activate_file", 1, WORKINGSET_ACTIVATE_FILE },
--	{ "workingset_restore_anon", 1, WORKINGSET_RESTORE_ANON },
--	{ "workingset_restore_file", 1, WORKINGSET_RESTORE_FILE },
--	{ "workingset_nodereclaim", 1, WORKINGSET_NODERECLAIM },
-+	{ "workingset_refault_anon",	WORKINGSET_REFAULT_ANON		},
-+	{ "workingset_refault_file",	WORKINGSET_REFAULT_FILE		},
-+	{ "workingset_activate_anon",	WORKINGSET_ACTIVATE_ANON	},
-+	{ "workingset_activate_file",	WORKINGSET_ACTIVATE_FILE	},
-+	{ "workingset_restore_anon",	WORKINGSET_RESTORE_ANON		},
-+	{ "workingset_restore_file",	WORKINGSET_RESTORE_FILE		},
-+	{ "workingset_nodereclaim",	WORKINGSET_NODERECLAIM		},
- };
- 
-+/* Translate stat items to the correct unit for memory.stat output */
-+static int memcg_page_state_unit(int item)
-+{
-+	int unit;
-+
-+	switch (item) {
-+	case WORKINGSET_REFAULT_ANON:
-+	case WORKINGSET_REFAULT_FILE:
-+	case WORKINGSET_ACTIVATE_ANON:
-+	case WORKINGSET_ACTIVATE_FILE:
-+	case WORKINGSET_RESTORE_ANON:
-+	case WORKINGSET_RESTORE_FILE:
-+	case WORKINGSET_NODERECLAIM:
-+		unit = 1;
-+		break;
-+	default:
-+		unit = memcg_stat_item_in_bytes(item) ? 1 : PAGE_SIZE;
-+		break;
-+	}
-+
-+	return unit;
-+}
-+
-+static inline unsigned long memcg_page_state_output(struct mem_cgroup *memcg,
-+						    int item)
-+{
-+	return memcg_page_state(memcg, item) * memcg_page_state_unit(item);
-+}
-+
- static char *memory_stat_format(struct mem_cgroup *memcg)
- {
- 	struct seq_buf s;
-@@ -1558,13 +1581,16 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
- 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
- 		u64 size;
- 
--		size = memcg_page_state(memcg, memory_stats[i].idx);
--		size *= memory_stats[i].ratio;
-+		size = memcg_page_state_output(memcg, memory_stats[i].idx);
- 		seq_buf_printf(&s, "%s %llu\n", memory_stats[i].name, size);
- 
-+		/*
-+		 * We are printing reclaimable, unreclaimable of the slab
-+		 * and the sum of both.
-+		 */
- 		if (unlikely(memory_stats[i].idx == NR_SLAB_UNRECLAIMABLE_B)) {
--			size = memcg_page_state(memcg, NR_SLAB_RECLAIMABLE_B) +
--			       memcg_page_state(memcg, NR_SLAB_UNRECLAIMABLE_B);
-+			size += memcg_page_state_output(memcg,
-+							NR_SLAB_RECLAIMABLE_B);
- 			seq_buf_printf(&s, "slab %llu\n", size);
- 		}
- 	}
-@@ -6358,6 +6384,12 @@ static int memory_stat_show(struct seq_file *m, void *v)
- }
- 
- #ifdef CONFIG_NUMA
-+static inline unsigned long lruvec_page_state_output(struct lruvec *lruvec,
-+						     int item)
-+{
-+	return lruvec_page_state(lruvec, item) * memcg_page_state_unit(item);
-+}
-+
- static int memory_numa_stat_show(struct seq_file *m, void *v)
- {
- 	int i;
-@@ -6375,8 +6407,8 @@ static int memory_numa_stat_show(struct seq_file *m, void *v)
- 			struct lruvec *lruvec;
- 
- 			lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
--			size = lruvec_page_state(lruvec, memory_stats[i].idx);
--			size *= memory_stats[i].ratio;
-+			size = lruvec_page_state_output(lruvec,
-+							memory_stats[i].idx);
- 			seq_printf(m, " N%d=%llu", nid, size);
- 		}
- 		seq_putc(m, '\n');
--- 
-2.11.0
+The only cgroup not "sufficiently" protected by memory.low (websrv) has
+seen its memory use somehow clamped to about 16G while it should be
+allowed to go up to 32G according to memory.high and of those 16G in
+use at time of writing it only had 100M of file cache left, all the
+rest being slabs.
+
+
+As system now is using most of its memory I've bumped websrv CG's
+memory.low to 20G so it should stay protected some more (which after a
+few minutes showed its filecache growing again) with the aim of moving
+pressure out of leaf-cgroups to non-cg-assigned-memory.
+
+Somehow this move seems to prove getting me some success.
+
+
+I will report back later today or tomorrow with more details on the
+evolution with "no unused" memory. At least production service tends not
+to suffer (more than from storage response time).
+
+
+
+I have the impression that memory reclaim now only looks at cgroup and
+if it can make some progress it will not bother looking anywhere else.
+
+I also have the vague impression that distribution of my tasks on the
+two NUMA nodes somehow impacts when or how memory reclaim happens.
+
+NUMA node0 CPU(s):     0-5,12-17
+NUMA node1 CPU(s):     6-11,18-23
+
+            CPUs    MEMs
+  system:    0-3     0
+  websrv:   8-11     0        (allowed mems=0-1 as of 2020-12-06 12:18
+                               after increasing memory.low from 4G
+                               to 20G which did release quite some
+                               pression and allow)
+  website: 12-23     1
+  remote:    4-7     0
+    (assignment done using cpuset cgroup)
+
+(seems NUMA distribution changed or I missed the non-linear node
+distribution of CPUs - cores versus hyperthreading as my Intent was to
+have website on 1 socket and the rest on the other socket. Memory is
+mapped as I planned it, but tasks not really)
+
+
+So calculating:
+  system: 128M..8G     mems=0    \
+  remote: 1G..14G      mems=0     }-->   5G..54G
+  websrv: 4G..32G      mems=0    /
+  website: 16G..       mems=1
+
+But with everything except websrv lying below its low limit I wonder why
+reclaim only hits the cgroups's file cache but still mostly ignores its
+slabs.
+
+
+Bruno
+
+> > Compared to initial occurrence I do now have some more details (all but
+> > /proc/slabinfo since boot) and according to /proc/slabinfo a good deal
+> > of reclaimable slabs seem to be dentries (and probably
+> > xfs_inode/xfs_ifork related to them) - not sure if those are assigned
+> > to cgroups or not-accounted and not seen as candidate for reclaim...
+> > 
+> > xfs_buf           444908 445068    448   36    4 : tunables    0    0    0 : slabdata  12363  12363      0
+> > xfs_bui_item           0      0    232   35    2 : tunables    0    0    0 : slabdata      0      0      0
+> > xfs_bud_item           0      0    200   40    2 : tunables    0    0    0 : slabdata      0      0      0
+> > xfs_cui_item           0      0    456   35    4 : tunables    0    0    0 : slabdata      0      0      0
+> > xfs_cud_item           0      0    200   40    2 : tunables    0    0    0 : slabdata      0      0      0
+> > xfs_rui_item           0      0    712   46    8 : tunables    0    0    0 : slabdata      0      0      0
+> > xfs_rud_item           0      0    200   40    2 : tunables    0    0    0 : slabdata      0      0      0
+> > xfs_icr                0    156    208   39    2 : tunables    0    0    0 : slabdata      4      4      0
+> > xfs_ili           1223169 1535904    224   36    2 : tunables    0    0    0 : slabdata  42664  42664      0
+> > xfs_inode         12851565 22081140   1088   30    8 : tunables    0    0    0 : slabdata 736038 736038      0
+> > xfs_efi_item           0    280    456   35    4 : tunables    0    0    0 : slabdata      8      8      0
+> > xfs_efd_item           0    280    464   35    4 : tunables    0    0    0 : slabdata      8      8      0
+> > xfs_buf_item           7    216    296   27    2 : tunables    0    0    0 : slabdata      8      8      0
+> > xf_trans               0    224    288   28    2 : tunables    0    0    0 : slabdata      8      8      0
+> > xfs_ifork         12834992 46309928     72   56    1 : tunables    0    0    0 : slabdata 826963 826963      0
+> > xfs_da_state           0    224    512   32    4 : tunables    0    0    0 : slabdata      7      7      0
+> > xfs_btree_cur          0    224    256   32    2 : tunables    0    0    0 : slabdata      7      7      0
+> > xfs_bmap_free_item      0    230     88   46    1 : tunables    0    0    0 : slabdata      5      5      0
+> > xfs_log_ticket         4    296    216   37    2 : tunables    0    0    0 : slabdata      8      8      0
+> > fat_inode_cache        0      0    744   44    8 : tunables    0    0    0 : slabdata      0      0      0
+> > fat_cache              0      0     64   64    1 : tunables    0    0    0 : slabdata      0      0      0
+> > mnt_cache            114    180    448   36    4 : tunables    0    0    0 : slabdata      5      5      0
+> > filp                6228  15582    384   42    4 : tunables    0    0    0 : slabdata    371    371      0
+> > inode_cache         6669  16016    608   26    4 : tunables    0    0    0 : slabdata    616    616      0
+> > dentry            8092159 15642504    224   36    2 : tunables    0    0    0 : slabdata 434514 434514      0
+> > 
+> > 
+> > 
+> > The full collected details are available at
+> >   https://faramir-fj.hosting-restena.lu/cgmon-20201203.txt 
+> > (please take a copy as that file will not stay there forever)
+> > 
+> > A visual graph of memory evolution is available at
+> >   https://faramir-fj.hosting-restena.lu/system-memory-20201203.png 
+> > with reboot on Tuesday morning and steady increase of slabs starting
+> > Webnesday evening correlating with start of backup until trashing
+> > started at about 3:30 and the large drop in memory being me doing
+> >   echo 2 > /proc/sys/vm/drop_caches
+> > which stopped the trashing as well.
+> > 
+> > 
+> > Against what does memcg attempt reclaim when it tries to satisfy a CG's
+> > low limit? Only against siblings or also against root or not-accounted?
+> > How does it take into account slabs where evictable entries will cause
+> > unevictable entries to be freed as well?
+> 
+> Low limits are working by excluding some portions of memory from the reclaim,
+> not by adding a memory pressure to something else.
+> 
+> > 
+> > > > My setup, server has 64G of RAM:
+> > > >   root
+> > > >    + system        { min=0, low=128M, high=8G, max=8G }
+> > > >      + base        { no specific constraints }
+> > > >      + backup      { min=0, low=32M, high=2G, max=2G }
+> > > >      + shell       { no specific constraints }
+> > > >   + websrv         { min=0, low=4G, high=32G, max=32G }
+> > > >   + website        { min=0, low=16G, high=40T, max=40T }
+> > > >     + website1     { min=0, low=64M, high=2G, max=2G }
+> > > >     + website2     { min=0, low=64M, high=2G, max=2G }
+> > > >       ...
+> > > >   + remote         { min=0, low=1G, high=14G, max=14G }
+> > > >     + webuser1     { min=0, low=64M, high=2G, max=2G }
+> > > >     + webuser2     { min=0, low=64M, high=2G, max=2G }
+> > > >       ...
+> > 
+> > Also interesting is that backup which is forced into 2G
+> > (system/backup CG) causes amount of slabs assigned to websrv CG to
+> > increase until that CG has almost only slab entries assigned to it to
+> > fill 16G, like file cache being reclaimed but not slab entries even if
+> > there is almost no file cache left and tons of slabs.
+> > What I'm also surprised is the so much memory remains completely unused
+> > (instead of being used for file caches).
+> > 
+> > According to the documentation if I didn't get it wrong any limits of
+> > child CGs (e.g. webuser1...) are applied up to what their parent's
+> > limits allow. Thus, if looking at e.g. remote -> webuser1... even if I
+> > have 1000 webuserN they wont "reserve" 65G for themselves via
+> > memory.low limit when their parent sets memory.low to 1G?
+> > Or does this depend on on CG mount options (memory_recursiveprot)?
+> 
+> It does. What you're describing is the old (!memory_recursiveprot) behavior.
+> 
+> Thanks!
 
