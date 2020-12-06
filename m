@@ -1,141 +1,196 @@
-From: Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH v2 09/12] mm: memcontrol: convert vmstat slab counters to bytes
-Date: Sun,  6 Dec 2020 16:29:45 +0800
-Message-ID: <20201206082948.11812-3-songmuchun@bytedance.com>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: [PATCH v2 11/12] mm: memcontrol: make the slab calculation consistent
+Date: Sun,  6 Dec 2020 16:29:47 +0800
+Message-ID: <20201206082948.11812-5-songmuchun@bytedance.com>
 References: <20201206082948.11812-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=jxjzCofAcULr7bnQMbpOvZCW6tNXMo722rzO5X3X+g0=;
-        b=wNv4qDSehcayO/ihogNTwYkGmNfh5RiiwJJPy5Ul8/X5rRuoAcaO9IWiT/zhh7c3zE
-         DkQdTnRVChsF0HNvUG0ZpVzWqoGDxZHC6UdxNFd1esXfxLRYG5JPaZt/ehJmxRKGxRcy
-         j2K7ImVTdAGGUwQzHwmDDriZDLsK3oJ2kzyams7iLzW6JmsFMSnV6U0Q5tVhmTk88NLQ
-         P1mxFKPCxWivQAZSOj3l5kb7OdCK33TsD2BMo7RzFcUXbMtYUb38SlvmlQtvx8PkvIV3
-         EV0/A75iolf7+KiwyhLHgs4vUFCGQa7dSkHBYsNwoQvuzRX5BJsEWtgU5PNGExnjgrB6
-         0zag==
-In-Reply-To: <20201206082948.11812-1-songmuchun@bytedance.com>
+        bh=KwRaMRI+Sr6xQo3P1J4+HoZOIYaqIcm7QaRM3zeaHfM=;
+        b=PRd0vzD/2Sfkm55VZCIWYO1SYAuzM56m2d7biop5RolLR2ogMnVEGiPJhLhDPDObMW
+         NgaZSB9qXSMiN+B7CM1wNTUxoGLnKFhBTm1vJI+vyEnU8CnO4gDi1iY7f36ef/ReRVDo
+         tYJfaEHnhV61ky7Ql+2u3VfR7XAaCOxb0ltJsDBQhaoZr8r98oJbn3uqUcoiyquGen98
+         Y/U+6ZzOwPmy0jIW2h0lzdvQQn9+63sqBSV650Sq1ENh3kBNyvHct57dyqPXdGB50ruD
+         OVVW9URrc5fGzg3xl32gVd1mPix6CgFbHzuJstcUCxP7fSs6IiomiZ+BKJ1qr0Acgvg9
+         iTYA==
+In-Reply-To: <20201206082948.11812-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: gregkh@linuxfoundation.org, rafael@kernel.org, adobriyan@gmail.com, akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, hughd@google.com, will@kernel.org, guro@fb.com, rppt@kernel.org, tglx@linutronix.de, esyr@redhat.com, peterx@redhat.com, krisman@collabora.com, surenb@google.com, avagin@openvz.org, elver@google.com, rdunlap@infradead.org, iamjoonsoo.kim@lge.com
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>
+To: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, krisman-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, avagin-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-the global and per-node counters are stored in pages, however memcg
-and lruvec counters are stored in bytes. This scheme looks weird.
-So convert all vmstat slab counters to bytes.
+Although the ratio of the slab is one, we also should read the ratio
+from the related memory_stats instead of hard-coding. And the local
+variable of size is already the value of slab_unreclaimable. So we
+do not need to read again.
 
-Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+The unit of the vmstat counters are either pages or bytes now. So we
+can drop the ratio in struct memory_stat. This can make the code clean
+and simple. And get rid of the awkward mix of static and runtime
+initialization of the memory_stats table.
+
+Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 ---
- include/linux/vmstat.h | 17 ++++++++++-------
- mm/vmstat.c            | 21 ++++++++++-----------
- 2 files changed, 20 insertions(+), 18 deletions(-)
+ mm/memcontrol.c | 108 ++++++++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 70 insertions(+), 38 deletions(-)
 
-diff --git a/include/linux/vmstat.h b/include/linux/vmstat.h
-index 322dcbfcc933..fd1a3d5d4926 100644
---- a/include/linux/vmstat.h
-+++ b/include/linux/vmstat.h
-@@ -197,18 +197,26 @@ static inline
- unsigned long global_node_page_state_pages(enum node_stat_item item)
- {
- 	long x = atomic_long_read(&vm_node_stat[item]);
-+
- #ifdef CONFIG_SMP
- 	if (x < 0)
- 		x = 0;
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 48d70c1ad301..49fbcf003bf5 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1493,48 +1493,71 @@ static bool mem_cgroup_wait_acct_move(struct mem_cgroup *memcg)
+ 
+ struct memory_stat {
+ 	const char *name;
+-	unsigned int ratio;
+ 	unsigned int idx;
+ };
+ 
+ static const struct memory_stat memory_stats[] = {
+-	{ "anon", PAGE_SIZE, NR_ANON_MAPPED },
+-	{ "file", PAGE_SIZE, NR_FILE_PAGES },
+-	{ "kernel_stack", 1, NR_KERNEL_STACK_B },
+-	{ "percpu", 1, MEMCG_PERCPU_B },
+-	{ "sock", PAGE_SIZE, MEMCG_SOCK },
+-	{ "shmem", PAGE_SIZE, NR_SHMEM },
+-	{ "file_mapped", PAGE_SIZE, NR_FILE_MAPPED },
+-	{ "file_dirty", PAGE_SIZE, NR_FILE_DIRTY },
+-	{ "file_writeback", PAGE_SIZE, NR_WRITEBACK },
++	{ "anon",			NR_ANON_MAPPED			},
++	{ "file",			NR_FILE_PAGES			},
++	{ "kernel_stack",		NR_KERNEL_STACK_B		},
++	{ "percpu",			MEMCG_PERCPU_B			},
++	{ "sock",			MEMCG_SOCK			},
++	{ "shmem",			NR_SHMEM			},
++	{ "file_mapped",		NR_FILE_MAPPED			},
++	{ "file_dirty",			NR_FILE_DIRTY			},
++	{ "file_writeback",		NR_WRITEBACK			},
+ #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+-	{ "anon_thp", PAGE_SIZE, NR_ANON_THPS },
+-	{ "file_thp", PAGE_SIZE, NR_FILE_THPS },
+-	{ "shmem_thp", PAGE_SIZE, NR_SHMEM_THPS },
++	{ "anon_thp",			NR_ANON_THPS			},
++	{ "file_thp",			NR_FILE_THPS			},
++	{ "shmem_thp",			NR_SHMEM_THPS			},
  #endif
-+	if (vmstat_item_in_bytes(item))
-+		x >>= PAGE_SHIFT;
- 	return x;
- }
- 
- static inline unsigned long global_node_page_state(enum node_stat_item item)
- {
--	VM_WARN_ON_ONCE(vmstat_item_in_bytes(item));
-+	long x = atomic_long_read(&vm_node_stat[item]);
- 
--	return global_node_page_state_pages(item);
-+	VM_WARN_ON_ONCE(vmstat_item_in_bytes(item));
-+#ifdef CONFIG_SMP
-+	if (x < 0)
-+		x = 0;
-+#endif
-+	return x;
- }
- 
- static inline unsigned long zone_page_state(struct zone *zone,
-@@ -312,11 +320,6 @@ static inline void __mod_zone_page_state(struct zone *zone,
- static inline void __mod_node_page_state(struct pglist_data *pgdat,
- 			enum node_stat_item item, int delta)
- {
--	if (vmstat_item_in_bytes(item)) {
--		VM_WARN_ON_ONCE(delta & (PAGE_SIZE - 1));
--		delta >>= PAGE_SHIFT;
--	}
+-	{ "inactive_anon", PAGE_SIZE, NR_INACTIVE_ANON },
+-	{ "active_anon", PAGE_SIZE, NR_ACTIVE_ANON },
+-	{ "inactive_file", PAGE_SIZE, NR_INACTIVE_FILE },
+-	{ "active_file", PAGE_SIZE, NR_ACTIVE_FILE },
+-	{ "unevictable", PAGE_SIZE, NR_UNEVICTABLE },
 -
- 	node_page_state_add(delta, pgdat, item);
- }
+-	/*
+-	 * Note: The slab_reclaimable and slab_unreclaimable must be
+-	 * together and slab_reclaimable must be in front.
+-	 */
+-	{ "slab_reclaimable", 1, NR_SLAB_RECLAIMABLE_B },
+-	{ "slab_unreclaimable", 1, NR_SLAB_UNRECLAIMABLE_B },
++	{ "inactive_anon",		NR_INACTIVE_ANON		},
++	{ "active_anon",		NR_ACTIVE_ANON			},
++	{ "inactive_file",		NR_INACTIVE_FILE		},
++	{ "active_file",		NR_ACTIVE_FILE			},
++	{ "unevictable",		NR_UNEVICTABLE			},
++	{ "slab_reclaimable",		NR_SLAB_RECLAIMABLE_B		},
++	{ "slab_unreclaimable",		NR_SLAB_UNRECLAIMABLE_B		},
  
-diff --git a/mm/vmstat.c b/mm/vmstat.c
-index 8d77ee426e22..7fb0c7cb9516 100644
---- a/mm/vmstat.c
-+++ b/mm/vmstat.c
-@@ -345,11 +345,6 @@ void __mod_node_page_state(struct pglist_data *pgdat, enum node_stat_item item,
- 	long x;
- 	long t;
+ 	/* The memory events */
+-	{ "workingset_refault_anon", 1, WORKINGSET_REFAULT_ANON },
+-	{ "workingset_refault_file", 1, WORKINGSET_REFAULT_FILE },
+-	{ "workingset_activate_anon", 1, WORKINGSET_ACTIVATE_ANON },
+-	{ "workingset_activate_file", 1, WORKINGSET_ACTIVATE_FILE },
+-	{ "workingset_restore_anon", 1, WORKINGSET_RESTORE_ANON },
+-	{ "workingset_restore_file", 1, WORKINGSET_RESTORE_FILE },
+-	{ "workingset_nodereclaim", 1, WORKINGSET_NODERECLAIM },
++	{ "workingset_refault_anon",	WORKINGSET_REFAULT_ANON		},
++	{ "workingset_refault_file",	WORKINGSET_REFAULT_FILE		},
++	{ "workingset_activate_anon",	WORKINGSET_ACTIVATE_ANON	},
++	{ "workingset_activate_file",	WORKINGSET_ACTIVATE_FILE	},
++	{ "workingset_restore_anon",	WORKINGSET_RESTORE_ANON		},
++	{ "workingset_restore_file",	WORKINGSET_RESTORE_FILE		},
++	{ "workingset_nodereclaim",	WORKINGSET_NODERECLAIM		},
+ };
  
--	if (vmstat_item_in_bytes(item)) {
--		VM_WARN_ON_ONCE(delta & (PAGE_SIZE - 1));
--		delta >>= PAGE_SHIFT;
--	}
--
- 	x = delta + __this_cpu_read(*p);
- 
- 	t = __this_cpu_read(pcp->stat_threshold);
-@@ -554,11 +549,6 @@ static inline void mod_node_state(struct pglist_data *pgdat,
- 	s8 __percpu *p = pcp->vm_node_stat_diff + item;
- 	long o, n, t, z;
- 
--	if (vmstat_item_in_bytes(item)) {
--		VM_WARN_ON_ONCE(delta & (PAGE_SIZE - 1));
--		delta >>= PAGE_SHIFT;
--	}
--
- 	do {
- 		z = 0;  /* overflow to node counters */
- 
-@@ -1012,19 +1002,28 @@ unsigned long node_page_state_pages(struct pglist_data *pgdat,
- 				    enum node_stat_item item)
- {
- 	long x = atomic_long_read(&pgdat->vm_stat[item]);
++/* Translate stat items to the correct unit for memory.stat output */
++static int memcg_page_state_unit(int item)
++{
++	int unit;
 +
- #ifdef CONFIG_SMP
- 	if (x < 0)
- 		x = 0;
- #endif
-+	if (vmstat_item_in_bytes(item))
-+		x >>= PAGE_SHIFT;
- 	return x;
- }
- 
- unsigned long node_page_state(struct pglist_data *pgdat,
- 			      enum node_stat_item item)
- {
-+	long x = atomic_long_read(&pgdat->vm_stat[item]);
++	switch (item) {
++	case WORKINGSET_REFAULT_ANON:
++	case WORKINGSET_REFAULT_FILE:
++	case WORKINGSET_ACTIVATE_ANON:
++	case WORKINGSET_ACTIVATE_FILE:
++	case WORKINGSET_RESTORE_ANON:
++	case WORKINGSET_RESTORE_FILE:
++	case WORKINGSET_NODERECLAIM:
++		unit = 1;
++		break;
++	default:
++		unit = memcg_stat_item_in_bytes(item) ? 1 : PAGE_SIZE;
++		break;
++	}
 +
- 	VM_WARN_ON_ONCE(vmstat_item_in_bytes(item));
++	return unit;
++}
++
++static inline unsigned long memcg_page_state_output(struct mem_cgroup *memcg,
++						    int item)
++{
++	return memcg_page_state(memcg, item) * memcg_page_state_unit(item);
++}
++
+ static char *memory_stat_format(struct mem_cgroup *memcg)
+ {
+ 	struct seq_buf s;
+@@ -1558,13 +1581,16 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
+ 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
+ 		u64 size;
  
--	return node_page_state_pages(pgdat, item);
-+#ifdef CONFIG_SMP
-+	if (x < 0)
-+		x = 0;
-+#endif
-+	return x;
+-		size = memcg_page_state(memcg, memory_stats[i].idx);
+-		size *= memory_stats[i].ratio;
++		size = memcg_page_state_output(memcg, memory_stats[i].idx);
+ 		seq_buf_printf(&s, "%s %llu\n", memory_stats[i].name, size);
+ 
++		/*
++		 * We are printing reclaimable, unreclaimable of the slab
++		 * and the sum of both.
++		 */
+ 		if (unlikely(memory_stats[i].idx == NR_SLAB_UNRECLAIMABLE_B)) {
+-			size = memcg_page_state(memcg, NR_SLAB_RECLAIMABLE_B) +
+-			       memcg_page_state(memcg, NR_SLAB_UNRECLAIMABLE_B);
++			size += memcg_page_state_output(memcg,
++							NR_SLAB_RECLAIMABLE_B);
+ 			seq_buf_printf(&s, "slab %llu\n", size);
+ 		}
+ 	}
+@@ -6358,6 +6384,12 @@ static int memory_stat_show(struct seq_file *m, void *v)
  }
- #endif
  
+ #ifdef CONFIG_NUMA
++static inline unsigned long lruvec_page_state_output(struct lruvec *lruvec,
++						     int item)
++{
++	return lruvec_page_state(lruvec, item) * memcg_page_state_unit(item);
++}
++
+ static int memory_numa_stat_show(struct seq_file *m, void *v)
+ {
+ 	int i;
+@@ -6375,8 +6407,8 @@ static int memory_numa_stat_show(struct seq_file *m, void *v)
+ 			struct lruvec *lruvec;
+ 
+ 			lruvec = mem_cgroup_lruvec(memcg, NODE_DATA(nid));
+-			size = lruvec_page_state(lruvec, memory_stats[i].idx);
+-			size *= memory_stats[i].ratio;
++			size = lruvec_page_state_output(lruvec,
++							memory_stats[i].idx);
+ 			seq_printf(m, " N%d=%llu", nid, size);
+ 		}
+ 		seq_putc(m, '\n');
 -- 
 2.11.0
 
