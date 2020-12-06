@@ -1,287 +1,73 @@
-From: Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH v2 12/12] mm: memcontrol: remove {global_}node_page_state_pages
-Date: Sun,  6 Dec 2020 16:29:48 +0800
-Message-ID: <20201206082948.11812-6-songmuchun@bytedance.com>
-References: <20201206082948.11812-1-songmuchun@bytedance.com>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: [PATCH] mm: memcontrol: optimize per-lruvec stats counter memory usage
+Date: Sun,  6 Dec 2020 16:56:39 +0800
+Message-ID: <20201206085639.12627-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=lP6NOXY9P1Y1tdnLUE8WJ9oCZQOprYuVn3yHjkNbfog=;
-        b=EXcZ7sDghEHanmw7oN1QvmiFqdNgVMPn4nxp5QrGV7ENEoDYwofyu11Px+/NibCKAf
-         fmyDb/uqNjxbGizqa2LrxwD13xo7YmNycDZvWPARPTKLARWA/9ZWeJQJtRccj0B5wy+S
-         h6zBOQpoOfi6JblccslS0e8TdwLvzMpIv8ZO+uQ7RJxaRXZmyQoUD5vmhOeGU/VuGl1N
-         XttH3IKOla/ZAbSTwpsejWyqi86ar9zjgUH56qfCAp6qtLvH4E5rqoVgYJJW6lq1i6Mh
-         Ftzp9nx4AFEkD2MKP2r0mJMHYeu2nmvkFpu64metQYT24FytfEiSGhDt/V2LgBObhBlQ
-         jb+g==
-In-Reply-To: <20201206082948.11812-1-songmuchun@bytedance.com>
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=S6K7q1C4aJV74LX9XzVIffEohV+cRacrmIp1D6GqZ88=;
+        b=wbbdNcohGtl2TDgFPwVXnP/R+H6oQayEahb3/U42bl0C7LgjfwxjWQhZocOA7q6nF1
+         FmtvtIEcyBL9V+t39mbO4lzaK3D9oTeBvtaHdFlFz5TlDEYOB9DOU0g0r52AFuZaHxwI
+         rNZH7gI3CebsuonBrBQOiF4iPffZnK0CGnQx6yEn+aOC1vD6rAOzROGitnJm3cR9VnOl
+         gqkZAkaKqh8+KCdEtr403lAWfvLGFsCx7aTVag6VoJpSRcIBDj5fiHqADmh6SBeDTCPy
+         342drhgb5CF35xSJJ4tpvkbgw+y4UbM3sqdXlFOrxBuNhZZjGjtPYWqJpBpiUtqLJ9P7
+         vLYA==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: gregkh@linuxfoundation.org, rafael@kernel.org, adobriyan@gmail.com, akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, hughd@google.com, will@kernel.org, guro@fb.com, rppt@kernel.org, tglx@linutronix.de, esyr@redhat.com, peterx@redhat.com, krisman@collabora.com, surenb@google.com, avagin@openvz.org, elver@google.com, rdunlap@infradead.org, iamjoonsoo.kim@lge.com
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org, alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-Now the unit of the vmstat counters are either pages or bytes. So we can
-adjust the node_page_state to always returns values in pages and remove
-the node_page_state_pages.
+The vmstat threshold is 32 (MEMCG_CHARGE_BATCH), so the type of s32
+of lruvec_stat_cpu is enough. And introduce struct per_cpu_lruvec_stat
+to optimize memory usage.
 
-Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 ---
- drivers/base/node.c     | 10 +++++-----
- fs/proc/meminfo.c       | 12 ++++++------
- include/linux/vmstat.h  | 17 +----------------
- kernel/power/snapshot.c |  2 +-
- mm/oom_kill.c           |  2 +-
- mm/page_alloc.c         | 10 +++++-----
- mm/vmscan.c             |  2 +-
- mm/vmstat.c             | 23 ++++++-----------------
- 8 files changed, 26 insertions(+), 52 deletions(-)
+ include/linux/memcontrol.h | 6 +++++-
+ mm/memcontrol.c            | 2 +-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/base/node.c b/drivers/base/node.c
-index bc01ce0b2fcd..42298e3552e5 100644
---- a/drivers/base/node.c
-+++ b/drivers/base/node.c
-@@ -374,8 +374,8 @@ static ssize_t node_read_meminfo(struct device *dev,
- 	unsigned long sreclaimable, sunreclaimable;
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index f9a496c4eac7..34cf119976b1 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -92,6 +92,10 @@ struct lruvec_stat {
+ 	long count[NR_VM_NODE_STAT_ITEMS];
+ };
  
- 	si_meminfo_node(&i, nid);
--	sreclaimable = node_page_state_pages(pgdat, NR_SLAB_RECLAIMABLE_B);
--	sunreclaimable = node_page_state_pages(pgdat, NR_SLAB_UNRECLAIMABLE_B);
-+	sreclaimable = node_page_state(pgdat, NR_SLAB_RECLAIMABLE_B);
-+	sunreclaimable = node_page_state(pgdat, NR_SLAB_UNRECLAIMABLE_B);
- 	len = sysfs_emit_at(buf, len,
- 			    "Node %d MemTotal:       %8lu kB\n"
- 			    "Node %d MemFree:        %8lu kB\n"
-@@ -446,9 +446,9 @@ static ssize_t node_read_meminfo(struct device *dev,
- 			     nid, K(node_page_state(pgdat, NR_FILE_MAPPED)),
- 			     nid, K(node_page_state(pgdat, NR_ANON_MAPPED)),
- 			     nid, K(i.sharedram),
--			     nid, node_page_state(pgdat, NR_KERNEL_STACK_B) / SZ_1K,
-+			     nid, K(node_page_state(pgdat, NR_KERNEL_STACK_B)),
- #ifdef CONFIG_SHADOW_CALL_STACK
--			     nid, node_page_state(pgdat, NR_KERNEL_SCS_B) / SZ_1K,
-+			     nid, K(node_page_state(pgdat, NR_KERNEL_SCS_B)),
- #endif
- 			     nid, K(sum_zone_node_page_state(nid, NR_PAGETABLE)),
- 			     nid, 0UL,
-@@ -517,7 +517,7 @@ static ssize_t node_read_vmstat(struct device *dev,
- 	for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
- 		len += sysfs_emit_at(buf, len, "%s %lu\n",
- 				     node_stat_name(i),
--				     node_page_state_pages(pgdat, i));
-+				     node_page_state(pgdat, i));
- 
- 	return len;
- }
-diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
-index 69895e83d4fc..95ea5f062161 100644
---- a/fs/proc/meminfo.c
-+++ b/fs/proc/meminfo.c
-@@ -52,8 +52,8 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
- 		pages[lru] = global_node_page_state(NR_LRU_BASE + lru);
- 
- 	available = si_mem_available();
--	sreclaimable = global_node_page_state_pages(NR_SLAB_RECLAIMABLE_B);
--	sunreclaim = global_node_page_state_pages(NR_SLAB_UNRECLAIMABLE_B);
-+	sreclaimable = global_node_page_state(NR_SLAB_RECLAIMABLE_B);
-+	sunreclaim = global_node_page_state(NR_SLAB_UNRECLAIMABLE_B);
- 
- 	show_val_kb(m, "MemTotal:       ", i.totalram);
- 	show_val_kb(m, "MemFree:        ", i.freeram);
-@@ -100,11 +100,11 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
- 	show_val_kb(m, "Slab:           ", sreclaimable + sunreclaim);
- 	show_val_kb(m, "SReclaimable:   ", sreclaimable);
- 	show_val_kb(m, "SUnreclaim:     ", sunreclaim);
--	seq_printf(m, "KernelStack:    %8lu kB\n",
--		   global_node_page_state(NR_KERNEL_STACK_B) / SZ_1K);
-+	show_val_kb(m, "KernelStack:    ",
-+		    global_node_page_state(NR_KERNEL_STACK_B));
- #ifdef CONFIG_SHADOW_CALL_STACK
--	seq_printf(m, "ShadowCallStack:%8lu kB\n",
--		   global_node_page_state(NR_KERNEL_SCS_B) / SZ_1K);
-+	show_val_kb(m, "ShadowCallStack:",
-+		    global_node_page_state(NR_KERNEL_SCS_B));
- #endif
- 	show_val_kb(m, "PageTables:     ",
- 		    global_zone_page_state(NR_PAGETABLE));
-diff --git a/include/linux/vmstat.h b/include/linux/vmstat.h
-index afd84dc2398c..ae821e016fdd 100644
---- a/include/linux/vmstat.h
-+++ b/include/linux/vmstat.h
-@@ -193,8 +193,7 @@ static inline unsigned long global_zone_page_state(enum zone_stat_item item)
- 	return x;
- }
- 
--static inline
--unsigned long global_node_page_state_pages(enum node_stat_item item)
-+static inline unsigned long global_node_page_state(enum node_stat_item item)
- {
- 	long x = atomic_long_read(&vm_node_stat[item]);
- 
-@@ -207,17 +206,6 @@ unsigned long global_node_page_state_pages(enum node_stat_item item)
- 	return x;
- }
- 
--static inline unsigned long global_node_page_state(enum node_stat_item item)
--{
--	long x = atomic_long_read(&vm_node_stat[item]);
--
--#ifdef CONFIG_SMP
--	if (x < 0)
--		x = 0;
--#endif
--	return x;
--}
--
- static inline unsigned long zone_page_state(struct zone *zone,
- 					enum zone_stat_item item)
- {
-@@ -258,12 +246,9 @@ extern unsigned long sum_zone_node_page_state(int node,
- extern unsigned long sum_zone_numa_state(int node, enum numa_stat_item item);
- extern unsigned long node_page_state(struct pglist_data *pgdat,
- 						enum node_stat_item item);
--extern unsigned long node_page_state_pages(struct pglist_data *pgdat,
--					   enum node_stat_item item);
- #else
- #define sum_zone_node_page_state(node, item) global_zone_page_state(item)
- #define node_page_state(node, item) global_node_page_state(item)
--#define node_page_state_pages(node, item) global_node_page_state_pages(item)
- #endif /* CONFIG_NUMA */
- 
- #ifdef CONFIG_SMP
-diff --git a/kernel/power/snapshot.c b/kernel/power/snapshot.c
-index d63560e1cf87..664520bdaa20 100644
---- a/kernel/power/snapshot.c
-+++ b/kernel/power/snapshot.c
-@@ -1705,7 +1705,7 @@ static unsigned long minimum_image_size(unsigned long saveable)
- {
- 	unsigned long size;
- 
--	size = global_node_page_state_pages(NR_SLAB_RECLAIMABLE_B)
-+	size = global_node_page_state(NR_SLAB_RECLAIMABLE_B)
- 		+ global_node_page_state(NR_ACTIVE_ANON)
- 		+ global_node_page_state(NR_INACTIVE_ANON)
- 		+ global_node_page_state(NR_ACTIVE_FILE)
-diff --git a/mm/oom_kill.c b/mm/oom_kill.c
-index 04b19b7b5435..73861473c7d4 100644
---- a/mm/oom_kill.c
-+++ b/mm/oom_kill.c
-@@ -188,7 +188,7 @@ static bool should_dump_unreclaim_slab(void)
- 		 global_node_page_state(NR_ISOLATED_FILE) +
- 		 global_node_page_state(NR_UNEVICTABLE);
- 
--	return (global_node_page_state_pages(NR_SLAB_UNRECLAIMABLE_B) > nr_lru);
-+	return (global_node_page_state(NR_SLAB_UNRECLAIMABLE_B) > nr_lru);
- }
- 
- /**
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 58916b3afdab..d16c9388c0b8 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -5372,7 +5372,7 @@ long si_mem_available(void)
- 	 * items that are in use, and cannot be freed. Cap this estimate at the
- 	 * low watermark.
- 	 */
--	reclaimable = global_node_page_state_pages(NR_SLAB_RECLAIMABLE_B) +
-+	reclaimable = global_node_page_state(NR_SLAB_RECLAIMABLE_B) +
- 		global_node_page_state(NR_KERNEL_MISC_RECLAIMABLE);
- 	available += reclaimable - min(reclaimable / 2, wmark_low);
- 
-@@ -5516,8 +5516,8 @@ void show_free_areas(unsigned int filter, nodemask_t *nodemask)
- 		global_node_page_state(NR_UNEVICTABLE),
- 		global_node_page_state(NR_FILE_DIRTY),
- 		global_node_page_state(NR_WRITEBACK),
--		global_node_page_state_pages(NR_SLAB_RECLAIMABLE_B),
--		global_node_page_state_pages(NR_SLAB_UNRECLAIMABLE_B),
-+		global_node_page_state(NR_SLAB_RECLAIMABLE_B),
-+		global_node_page_state(NR_SLAB_UNRECLAIMABLE_B),
- 		global_node_page_state(NR_FILE_MAPPED),
- 		global_node_page_state(NR_SHMEM),
- 		global_zone_page_state(NR_PAGETABLE),
-@@ -5572,9 +5572,9 @@ void show_free_areas(unsigned int filter, nodemask_t *nodemask)
- 			K(node_page_state(pgdat, NR_ANON_THPS)),
- #endif
- 			K(node_page_state(pgdat, NR_WRITEBACK_TEMP)),
--			node_page_state(pgdat, NR_KERNEL_STACK_B) / SZ_1K,
-+			K(node_page_state(pgdat, NR_KERNEL_STACK_B)),
- #ifdef CONFIG_SHADOW_CALL_STACK
--			node_page_state(pgdat, NR_KERNEL_SCS_B) / SZ_1K,
-+			K(node_page_state(pgdat, NR_KERNEL_SCS_B)),
- #endif
- 			pgdat->kswapd_failures >= MAX_RECLAIM_RETRIES ?
- 				"yes" : "no");
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 469016222cdb..5d3c8fa68979 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -4220,7 +4220,7 @@ int node_reclaim(struct pglist_data *pgdat, gfp_t gfp_mask, unsigned int order)
- 	 * unmapped file backed pages.
- 	 */
- 	if (node_pagecache_reclaimable(pgdat) <= pgdat->min_unmapped_pages &&
--	    node_page_state_pages(pgdat, NR_SLAB_RECLAIMABLE_B) <=
-+	    node_page_state(pgdat, NR_SLAB_RECLAIMABLE_B) <=
- 	    pgdat->min_slab_pages)
- 		return NODE_RECLAIM_FULL;
- 
-diff --git a/mm/vmstat.c b/mm/vmstat.c
-index 25751b1d8e2e..b7cdef585efd 100644
---- a/mm/vmstat.c
-+++ b/mm/vmstat.c
-@@ -1000,22 +1000,9 @@ unsigned long sum_zone_numa_state(int node,
- }
- 
++struct per_cpu_lruvec_stat {
++	s32 count[NR_VM_NODE_STAT_ITEMS];
++};
++
  /*
-- * Determine the per node value of a stat item.
-+ * Determine the per node value of a stat item. This always returns
-+ * values in pages.
-  */
--unsigned long node_page_state_pages(struct pglist_data *pgdat,
--				    enum node_stat_item item)
--{
--	long x = atomic_long_read(&pgdat->vm_stat[item]);
--
--#ifdef CONFIG_SMP
--	if (x < 0)
--		x = 0;
--#endif
--	if (vmstat_item_in_bytes(item))
--		x >>= PAGE_SHIFT;
--	return x;
--}
--
- unsigned long node_page_state(struct pglist_data *pgdat,
- 			      enum node_stat_item item)
- {
-@@ -1025,6 +1012,8 @@ unsigned long node_page_state(struct pglist_data *pgdat,
- 	if (x < 0)
- 		x = 0;
- #endif
-+	if (vmstat_item_in_bytes(item))
-+		x >>= PAGE_SHIFT;
- 	return x;
- }
- #endif
-@@ -1626,7 +1615,7 @@ static void zoneinfo_show_print(struct seq_file *m, pg_data_t *pgdat,
- 		seq_printf(m, "\n  per-node stats");
- 		for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++) {
- 			seq_printf(m, "\n      %-12s %lu", node_stat_name(i),
--				   node_page_state_pages(pgdat, i));
-+				   node_page_state(pgdat, i));
- 		}
+  * Bitmap of shrinker::id corresponding to memcg-aware shrinkers,
+  * which have elements charged to this memcg.
+@@ -111,7 +115,7 @@ struct mem_cgroup_per_node {
+ 	struct lruvec_stat __percpu *lruvec_stat_local;
+ 
+ 	/* Subtree VM stats (batched updates) */
+-	struct lruvec_stat __percpu *lruvec_stat_cpu;
++	struct per_cpu_lruvec_stat __percpu *lruvec_stat_cpu;
+ 	atomic_long_t		lruvec_stat[NR_VM_NODE_STAT_ITEMS];
+ 
+ 	unsigned long		lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 49fbcf003bf5..c874ea37b05d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5184,7 +5184,7 @@ static int alloc_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
+ 		return 1;
  	}
- 	seq_printf(m,
-@@ -1747,7 +1736,7 @@ static void *vmstat_start(struct seq_file *m, loff_t *pos)
- #endif
  
- 	for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
--		v[i] = global_node_page_state_pages(i);
-+		v[i] = global_node_page_state(i);
- 	v += NR_VM_NODE_STAT_ITEMS;
- 
- 	global_dirty_limits(v + NR_DIRTY_BG_THRESHOLD,
+-	pn->lruvec_stat_cpu = alloc_percpu_gfp(struct lruvec_stat,
++	pn->lruvec_stat_cpu = alloc_percpu_gfp(struct per_cpu_lruvec_stat,
+ 					       GFP_KERNEL_ACCOUNT);
+ 	if (!pn->lruvec_stat_cpu) {
+ 		free_percpu(pn->lruvec_stat_local);
 -- 
 2.11.0
 
