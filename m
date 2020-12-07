@@ -1,95 +1,46 @@
 From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [External] Re: [RESEND PATCH v2 00/12] Convert all vmstat
- counters to pages or bytes
-Date: Mon, 7 Dec 2020 11:51:41 -0800
-Message-ID: <20201207195141.GB2238414@carbon.dhcp.thefacebook.com>
+Subject: Re: [RESEND PATCH v2 09/12] mm: memcontrol: convert vmstat slab
+ counters to bytes
+Date: Mon, 7 Dec 2020 12:01:55 -0800
+Message-ID: <20201207200155.GC2238414@carbon.dhcp.thefacebook.com>
 References: <20201206101451.14706-1-songmuchun@bytedance.com>
- <20201207130018.GJ25569@dhcp22.suse.cz>
- <CAMZfGtWSEKWqR4f+23xt+jVF-NLSTVQ0L0V3xfZsQzV7aeebhw@mail.gmail.com>
- <20201207150254.GL25569@dhcp22.suse.cz>
+ <20201206101451.14706-10-songmuchun@bytedance.com>
+ <20201207194622.GA2238414@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=ApH9spN0E9R4hdJB2VpBfFP9PfbnPsafyCHQUiddqR0=;
- b=FkJlnRn13qM2/kEazcX7qrWzMV5MN0aTky0zy8EqasQNqWmP3SgTwa8a3VpcyjdmLmtH
- qX6usjb75l+aUi0R5ROwHPqJKtIfqZdDv4OJ/4SLdlN0mO91UJReLJBB/5Bwl19KMs/D
- lzI3KOV51xkiNmnhejlHPwgYIj0tkF2H/GY= 
+ mime-version; s=facebook; bh=m+GbydYCsM+9Eqs+kHgUyqtbdjf9kuBWw0UOILhR8fc=;
+ b=TEBJ3xKrcYDEr0oA3UehSzwxZwE7hNLl39NK47qcZTXBSjx2RtVKXAdONUccFnRinN1Y
+ Ae+LqnRKwtRT5tSdCeYoBSeA30+rTONFofjKW9F8/cjQ/ymqhhcqbcaVL44+LJa1zqpK
+ p00qN4XZR0jc5y+4xSKV8wMtbBFK3SDyqCc= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector2-fb-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ApH9spN0E9R4hdJB2VpBfFP9PfbnPsafyCHQUiddqR0=;
- b=JHcY7Zo5fH17knmY5ekt7Ua+hSWWgabripmN9XUsnuc77auYnR316pOXrtYRA5xySYg2fv6/CpguaJE9RNenQ5tI8A6Ug4LvI7T2vjybWF362wzi4s2AY4wEAs5LbTahGQtkxJA0gt6T2LtYKAdm+StcDPLj/wY4zG6dDNG79QY=
+ bh=m+GbydYCsM+9Eqs+kHgUyqtbdjf9kuBWw0UOILhR8fc=;
+ b=KUkOVynAWJVo3RLc+0/MA3Q3fXoTMtT+BrhpJNlS/F75eo3MIytp1CZxJ2A9Ru0oJmyCunYgKVQ3vOo6wZjEDRqdZLYJBg33v0Y6ohiPIbO3CdlDrdthPzjVgw1UM7FPI4ZlFLkUD5svN6RS3UkN8fgESx0QiFlTJVdw0Ox7yQg=
 Content-Disposition: inline
-In-Reply-To: <20201207150254.GL25569-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <20201207194622.GA2238414-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Will Deacon <will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mike Rapoport <rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, krisman-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, avagin-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, Marco Elver <elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, will-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rppt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, esyr-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, peterx-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, krisman-ZGY8ohtN/8qB+jHODAdFcQ@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, avagin-GEFAQzZX7r8dnm+yROfE0A@public.gmane.org, elver-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, Dec 07, 2020 at 04:02:54PM +0100, Michal Hocko wrote:
-> On Mon 07-12-20 22:52:30, Muchun Song wrote:
-> > On Mon, Dec 7, 2020 at 9:00 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> > >
-> > > On Sun 06-12-20 18:14:39, Muchun Song wrote:
-> > > > Hi,
-> > > >
-> > > > This patch series is aimed to convert all THP vmstat counters to pages
-> > > > and some KiB vmstat counters to bytes.
-> > > >
-> > > > The unit of some vmstat counters are pages, some are bytes, some are
-> > > > HPAGE_PMD_NR, and some are KiB. When we want to expose these vmstat
-> > > > counters to the userspace, we have to know the unit of the vmstat counters
-> > > > is which one. It makes the code complex. Because there are too many choices,
-> > > > the probability of making a mistake will be greater.
-> > > >
-> > > > For example, the below is some bug fix:
-> > > >   - 7de2e9f195b9 ("mm: memcontrol: correct the NR_ANON_THPS counter of hierarchical memcg")
-> > > >   - not committed(it is the first commit in this series) ("mm: memcontrol: fix NR_ANON_THPS account")
-> > > >
-> > > > This patch series can make the code simple (161 insertions(+), 187 deletions(-)).
-> > > > And make the unit of the vmstat counters are either pages or bytes. Fewer choices
-> > > > means lower probability of making mistakes :).
-> > > >
-> > > > This was inspired by Johannes and Roman. Thanks to them.
-> > >
-> > > It would be really great if you could summarize the current and after
-> > > the patch state so that exceptions are clear and easier to review. The
-> > 
-> > Agree. Will do in the next version. Thanks.
-> > 
-> > 
-> > > existing situation is rather convoluted but we have at least units part
-> > > of the name so it is not too hard to notice that. Reducing exeptions
-> > > sounds nice but I am not really sure it is such an improvement it is
-> > > worth a lot of code churn. Especially when it comes to KB vs B. Counting
-> > 
-> > There are two vmstat counters (NR_KERNEL_STACK_KB and
-> > NR_KERNEL_SCS_KB) whose units are KB. If we do this, all
-> > vmstat counter units are either pages or bytes in the end. When
-> > we expose those counters to userspace, it can be easy. You can
-> > reference to:
-> > 
-> >     [RESEND PATCH v2 11/12] mm: memcontrol: make the slab calculation consistent
-> > 
-> > From this point of view, I think that it is worth doing this. Right?
+On Mon, Dec 07, 2020 at 11:46:22AM -0800, Roman Gushchin wrote:
+> On Sun, Dec 06, 2020 at 06:14:48PM +0800, Muchun Song wrote:
+> > the global and per-node counters are stored in pages, however memcg
+> > and lruvec counters are stored in bytes. This scheme looks weird.
+> > So convert all vmstat slab counters to bytes.
 > 
-> Well, unless I am missing something, we have two counters in bytes, two
-> in kB, both clearly distinguishable by the B/KB suffix. Changing KB to B
-> will certainly reduce the different classes of units, no question about
-> that, but I am not really sure this is worth all the code churn. Maybe
-> others will think otherwise.
+> There is a reason for this weird scheme:
+> percpu caches (see struct per_cpu_nodestat) are s8, so counting in bytes
+> will lead to overfills. Switching to s32 can lead to an increase in
+> the cache thrashing, especially on small machines.
 
-Even if it was me who suggested it, I do agree. It's nice to have a smaller number
-of units, but if it creates a lot of hassle, then it makes not much sense.
-I think we need to look at the final version of patches and decide if it
-worth it or not.
+JFYI:
+I've tried to convert all slab counters to bytes and change those s8 percpu batches to s32
+about a year ago. Here is a link to that thread:
+https://patchwork.kernel.org/project/linux-mm/patch/20191018002820.307763-3-guro-b10kYP2dOMg@public.gmane.org/
 
-> 
-> As I've said the THP accounting change makes more sense to me because it
-> allows future changes which are already undergoing so there is more
-> merit in those.
-
-+1
-And this part is absolutely trivial.
+Thanks!
