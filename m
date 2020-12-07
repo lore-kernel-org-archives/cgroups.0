@@ -1,191 +1,77 @@
-From: Bruno =?UTF-8?B?UHLDqW1vbnQ=?= <bonbons-ud5FBsm0p/xEiooADzr8i9i2O/JbrIOy@public.gmane.org>
-Subject: Re: Regression from 5.7.17 to 5.9.9 with memory.low cgroup
- constraints
-Date: Sun, 6 Dec 2020 12:30:21 +0100
-Message-ID: <20201206123021.6683e2a5@hemera.lan.sysophe.eu>
-References: <20201125123956.61d9e16a@hemera>
-        <20201125182103.GA840171@carbon.dhcp.thefacebook.com>
-        <20201203120936.4cadef43@hemera.lan.sysophe.eu>
-        <20201203205559.GD1571588@carbon.DHCP.thefacebook.com>
+From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Subject: Re: [RFC][PATCH] cpu/hotplug: wait for cpuset_hotplug_work to finish
+ on cpu online
+Date: Mon, 7 Dec 2020 09:38:27 +0100
+Message-ID: <20201207083827.GD3040@hirez.programming.kicks-ass.net>
+References: <20201203171431.256675-1-aklimov@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20201203205559.GD1571588-lLJQVQxiE4uLfgCeKHXN1g2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Tt7kYwGZL/f9gqTlt1OKvzsn0qmf++skmQ2P5/DR7To=; b=bV9WbCuibWCCvRZSVNtx4ueWon
+        AdM3PcTwc0oGZWl0yGHetGgyPsqdAmMrbvmAM7MjW2ex605SPcrhgyylVOIGxkIj6wJLtEfeHCif9
+        /lz3kFjewNZ4yXWBcu58WWaFZPY2biePzkI+VkQAQIASe45vv+V63PEM3MRCtqwfQrqLCcZ36PMwd
+        4c4F8IsRynK1Fvs6HXVDP+tavmb4/Aifv4Gw0dcKZYG0ATgNtVNL95UjpX6R/jsMLa8ZnTezY9So9
+        jgpcOFTfiZkFsyr7PZibeYGWqbmzz6Id4J7PDaAE7bBtUbcJgMworSUKPTN0CkwSGxVJANF7QA0Do
+        g639Bnkg==;
+Content-Disposition: inline
+In-Reply-To: <20201203171431.256675-1-aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, qais.yousef-5wv7dgnIgG8@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Thu, 3 Dec 2020 12:55:59 -0800 Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
-> In the meantime Yang Shi discovered a problem related slab shrinkers,
-> which is to some extent similar to what you describe: under certain conditions
-> large amounts of slab memory can be completely excluded from the reclaim process.
+On Thu, Dec 03, 2020 at 05:14:31PM +0000, Alexey Klimov wrote:
+> When a CPU offlined and onlined via device_offline() and device_online()
+> the userspace gets uevent notification. If, after receiving uevent,
+> userspace executes sched_setaffinity() on some task trying to move it
+> to a recently onlined CPU, then it will fail with -EINVAL. Userspace needs
+> to wait around 5..30 ms before sched_setaffinity() will succeed for
+> recently onlined CPU after receiving uevent.
+
+Right.
+
+>  Unfortunately, the execution time of
+> echo 1 > /sys/devices/system/cpu/cpuX/online roughly doubled with this
+> change (on my test machine).
+
+Nobody cares, it's hotplug, it's supposed to be slow :-) That is,
+we fundamentally shift the work _to_ the hotplug path, so as to keep
+everybody else fast.
+
+> The nature of this bug is also described here (with different consequences):
+> https://lore.kernel.org/lkml/20200211141554.24181-1-qais.yousef-5wv7dgnIgG8@public.gmane.org/
+
+Yeah, pesky deadlocks.. someone was going to try again.
+
+
+>  kernel/cpu.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> Can you, please, check if his fix will solve your problem?
-> Here is the final version: https://www.spinics.net/lists/stable/msg430601.html .
+> diff --git a/kernel/cpu.c b/kernel/cpu.c
+> index 6ff2578ecf17..f39a27a7f24b 100644
+> --- a/kernel/cpu.c
+> +++ b/kernel/cpu.c
+> @@ -15,6 +15,7 @@
+>  #include <linux/sched/smt.h>
+>  #include <linux/unistd.h>
+>  #include <linux/cpu.h>
+> +#include <linux/cpuset.h>
+>  #include <linux/oom.h>
+>  #include <linux/rcupdate.h>
+>  #include <linux/export.h>
+> @@ -1275,6 +1276,8 @@ static int cpu_up(unsigned int cpu, enum cpuhp_state target)
+>  	}
+>  
+>  	err = _cpu_up(cpu, 0, target);
+> +	if (!err)
+> +		cpuset_wait_for_hotplug();
+>  out:
+>  	cpu_maps_update_done();
+>  	return err;
 
-I've added that patch on top of yours but it seems not to completely
-help either.
-With this patch is seems that such dentries might get reclaimed as a
-last resort instead of not at all.
-
-I've added logs since current boot:
- https://faramir-fj.hosting-restena.lu/cgmon-20201204.txt
- https://faramir-fj.hosting-restena.lu/cgmon-20201205.txt
- https://faramir-fj.hosting-restena.lu/cgmon-20201206.txt
-with the memory evolution. Evolution started to degrade over past night
-where memory usage started to increase from 40G tending to full use but
-with only slabs growing (not file cache) and memory assigned to cgroups
-staying more or less constant - even root cgroup's memory stats seem not
-to list a great deal of used memory.
-
-The only cgroup not "sufficiently" protected by memory.low (websrv) has
-seen its memory use somehow clamped to about 16G while it should be
-allowed to go up to 32G according to memory.high and of those 16G in
-use at time of writing it only had 100M of file cache left, all the
-rest being slabs.
-
-
-As system now is using most of its memory I've bumped websrv CG's
-memory.low to 20G so it should stay protected some more (which after a
-few minutes showed its filecache growing again) with the aim of moving
-pressure out of leaf-cgroups to non-cg-assigned-memory.
-
-Somehow this move seems to prove getting me some success.
-
-
-I will report back later today or tomorrow with more details on the
-evolution with "no unused" memory. At least production service tends not
-to suffer (more than from storage response time).
-
-
-
-I have the impression that memory reclaim now only looks at cgroup and
-if it can make some progress it will not bother looking anywhere else.
-
-I also have the vague impression that distribution of my tasks on the
-two NUMA nodes somehow impacts when or how memory reclaim happens.
-
-NUMA node0 CPU(s):     0-5,12-17
-NUMA node1 CPU(s):     6-11,18-23
-
-            CPUs    MEMs
-  system:    0-3     0
-  websrv:   8-11     0        (allowed mems=0-1 as of 2020-12-06 12:18
-                               after increasing memory.low from 4G
-                               to 20G which did release quite some
-                               pression and allow)
-  website: 12-23     1
-  remote:    4-7     0
-    (assignment done using cpuset cgroup)
-
-(seems NUMA distribution changed or I missed the non-linear node
-distribution of CPUs - cores versus hyperthreading as my Intent was to
-have website on 1 socket and the rest on the other socket. Memory is
-mapped as I planned it, but tasks not really)
-
-
-So calculating:
-  system: 128M..8G     mems=0    \
-  remote: 1G..14G      mems=0     }-->   5G..54G
-  websrv: 4G..32G      mems=0    /
-  website: 16G..       mems=1
-
-But with everything except websrv lying below its low limit I wonder why
-reclaim only hits the cgroups's file cache but still mostly ignores its
-slabs.
-
-
-Bruno
-
-> > Compared to initial occurrence I do now have some more details (all but
-> > /proc/slabinfo since boot) and according to /proc/slabinfo a good deal
-> > of reclaimable slabs seem to be dentries (and probably
-> > xfs_inode/xfs_ifork related to them) - not sure if those are assigned
-> > to cgroups or not-accounted and not seen as candidate for reclaim...
-> > 
-> > xfs_buf           444908 445068    448   36    4 : tunables    0    0    0 : slabdata  12363  12363      0
-> > xfs_bui_item           0      0    232   35    2 : tunables    0    0    0 : slabdata      0      0      0
-> > xfs_bud_item           0      0    200   40    2 : tunables    0    0    0 : slabdata      0      0      0
-> > xfs_cui_item           0      0    456   35    4 : tunables    0    0    0 : slabdata      0      0      0
-> > xfs_cud_item           0      0    200   40    2 : tunables    0    0    0 : slabdata      0      0      0
-> > xfs_rui_item           0      0    712   46    8 : tunables    0    0    0 : slabdata      0      0      0
-> > xfs_rud_item           0      0    200   40    2 : tunables    0    0    0 : slabdata      0      0      0
-> > xfs_icr                0    156    208   39    2 : tunables    0    0    0 : slabdata      4      4      0
-> > xfs_ili           1223169 1535904    224   36    2 : tunables    0    0    0 : slabdata  42664  42664      0
-> > xfs_inode         12851565 22081140   1088   30    8 : tunables    0    0    0 : slabdata 736038 736038      0
-> > xfs_efi_item           0    280    456   35    4 : tunables    0    0    0 : slabdata      8      8      0
-> > xfs_efd_item           0    280    464   35    4 : tunables    0    0    0 : slabdata      8      8      0
-> > xfs_buf_item           7    216    296   27    2 : tunables    0    0    0 : slabdata      8      8      0
-> > xf_trans               0    224    288   28    2 : tunables    0    0    0 : slabdata      8      8      0
-> > xfs_ifork         12834992 46309928     72   56    1 : tunables    0    0    0 : slabdata 826963 826963      0
-> > xfs_da_state           0    224    512   32    4 : tunables    0    0    0 : slabdata      7      7      0
-> > xfs_btree_cur          0    224    256   32    2 : tunables    0    0    0 : slabdata      7      7      0
-> > xfs_bmap_free_item      0    230     88   46    1 : tunables    0    0    0 : slabdata      5      5      0
-> > xfs_log_ticket         4    296    216   37    2 : tunables    0    0    0 : slabdata      8      8      0
-> > fat_inode_cache        0      0    744   44    8 : tunables    0    0    0 : slabdata      0      0      0
-> > fat_cache              0      0     64   64    1 : tunables    0    0    0 : slabdata      0      0      0
-> > mnt_cache            114    180    448   36    4 : tunables    0    0    0 : slabdata      5      5      0
-> > filp                6228  15582    384   42    4 : tunables    0    0    0 : slabdata    371    371      0
-> > inode_cache         6669  16016    608   26    4 : tunables    0    0    0 : slabdata    616    616      0
-> > dentry            8092159 15642504    224   36    2 : tunables    0    0    0 : slabdata 434514 434514      0
-> > 
-> > 
-> > 
-> > The full collected details are available at
-> >   https://faramir-fj.hosting-restena.lu/cgmon-20201203.txt 
-> > (please take a copy as that file will not stay there forever)
-> > 
-> > A visual graph of memory evolution is available at
-> >   https://faramir-fj.hosting-restena.lu/system-memory-20201203.png 
-> > with reboot on Tuesday morning and steady increase of slabs starting
-> > Webnesday evening correlating with start of backup until trashing
-> > started at about 3:30 and the large drop in memory being me doing
-> >   echo 2 > /proc/sys/vm/drop_caches
-> > which stopped the trashing as well.
-> > 
-> > 
-> > Against what does memcg attempt reclaim when it tries to satisfy a CG's
-> > low limit? Only against siblings or also against root or not-accounted?
-> > How does it take into account slabs where evictable entries will cause
-> > unevictable entries to be freed as well?
-> 
-> Low limits are working by excluding some portions of memory from the reclaim,
-> not by adding a memory pressure to something else.
-> 
-> > 
-> > > > My setup, server has 64G of RAM:
-> > > >   root
-> > > >    + system        { min=0, low=128M, high=8G, max=8G }
-> > > >      + base        { no specific constraints }
-> > > >      + backup      { min=0, low=32M, high=2G, max=2G }
-> > > >      + shell       { no specific constraints }
-> > > >   + websrv         { min=0, low=4G, high=32G, max=32G }
-> > > >   + website        { min=0, low=16G, high=40T, max=40T }
-> > > >     + website1     { min=0, low=64M, high=2G, max=2G }
-> > > >     + website2     { min=0, low=64M, high=2G, max=2G }
-> > > >       ...
-> > > >   + remote         { min=0, low=1G, high=14G, max=14G }
-> > > >     + webuser1     { min=0, low=64M, high=2G, max=2G }
-> > > >     + webuser2     { min=0, low=64M, high=2G, max=2G }
-> > > >       ...
-> > 
-> > Also interesting is that backup which is forced into 2G
-> > (system/backup CG) causes amount of slabs assigned to websrv CG to
-> > increase until that CG has almost only slab entries assigned to it to
-> > fill 16G, like file cache being reclaimed but not slab entries even if
-> > there is almost no file cache left and tons of slabs.
-> > What I'm also surprised is the so much memory remains completely unused
-> > (instead of being used for file caches).
-> > 
-> > According to the documentation if I didn't get it wrong any limits of
-> > child CGs (e.g. webuser1...) are applied up to what their parent's
-> > limits allow. Thus, if looking at e.g. remote -> webuser1... even if I
-> > have 1000 webuserN they wont "reserve" 65G for themselves via
-> > memory.low limit when their parent sets memory.low to 1G?
-> > Or does this depend on on CG mount options (memory_recursiveprot)?
-> 
-> It does. What you're describing is the old (!memory_recursiveprot) behavior.
-> 
-> Thanks!
-
+My only consideration is if doing that flush under cpu_add_remove_lock()
+is wise.
