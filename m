@@ -1,64 +1,97 @@
-From: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
-Subject: [PATCH] psi: fix monitor for root cgroup
-Date: Tue,  8 Dec 2020 09:35:10 +0100
-Message-ID: <20201208083510.14344-1-odin@uged.al>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: [PATCH v2] mm: memcontrol: optimize per-lruvec stats counter memory usage
+Date: Tue,  8 Dec 2020 17:51:32 +0800
+Message-ID: <20201208095132.79383-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=uged.al; s=google;
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=DVjmHtFolxRAfV2C2U9GLiRolrXJrnLIEB5X5ihubDs=;
-        b=qAmjandBuTe8qafIuAhL+TRlTjWYdwJtv4pxvO3A91BFSWYQ2m5Dhc5xXfQ86i45P4
-         E3fIfNW8Zyzttr/rUcthF0L0R46DB055NYg4IpBbRNoHX8L+c6pT9AlSyhHwt6L5MEGK
-         IrcIIo7NM2/irS7jnXbifBZN+fNdTFHhYIKvh7/ychq6B8PNveguCXhAVaXvWRqSAFJm
-         f4nOYltGvJKemURDUDlTLofhy8UHwaVdDv1ttvzDvudAGIwAy1Wzpz+oBT0P52Gqw7tz
-         0b3B0QChyVPVQ0uyTybj0ii9Zisy884SfXaCGt7AK8RnwZHNPfF3P+L+T4pkausUhqXG
-         JkKw==
+        bh=6CIOYlRgtphmf+WmK1R+aOhJzgaX/le8P/Q7sWamhAQ=;
+        b=F38cAAV8Hsq7gNN4wz6Mlgpz78c9+U/9pMam2t514mSZvpMBMINEdbTKhTTGebaqxz
+         tbZmtyC62U+wSA7GToz5yGiCDhXoeFbnGTc9w8nEDjfsHAwmMTaA7h7WcgL6lUEGajpr
+         8vcZ40JKiLE+/RbRitqJSgAKVPmT6b9UHSOOE0gUoLfarLPo90g2jElNiJ+XvZtL2UAh
+         u/RHXEcOqJZ2nxpxsJ155rLUV8wlysExb2Fc3FOc+1h32VXw8fpDS1TXmDRvJ8wmmXRS
+         oy8LggNdBHaJAHu9rYDImijFL6FstkicZjOiijpa7dcSO4KIhPTlF2PHnmnzsKXN52DN
+         mWpA==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dschatzberg-b10kYP2dOMg@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-Cc: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org, chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org, laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-Fix NULL pointer dereference when adding new psi monitor to the root
-cgroup. PSI files for root cgroup was introduced in df5ba5be742 by using
-system wide psi struct when reading, but file write/monitor was not
-properly fixed. Since the PSI config for the root cgroup isn't
-initialized, the current implementation tries to lock a NULL ptr,
-resulting in a crash.
+The vmstat threshold is 32 (MEMCG_CHARGE_BATCH), so the type of s32
+of lruvec_stat_cpu is enough. And introduce struct per_cpu_lruvec_stat
+to optimize memory usage.
 
-Can be triggered by running this as root:
-$ tee /sys/fs/cgroup/cpu.pressure <<< "some 10000 1000000"
+The size of struct lruvec_stat is 304 bytes on 64 bits system. As it
+is a per-cpu structure. So with this patch, we can save 304 / 2 * ncpu
+bytes per-memcg per-node where ncpu is the number of the possible CPU.
+If there are c memory cgroup (include dying cgroup) and n NUMA node in
+the system. Finally, we can save (152 * ncpu * c * n) bytes.
 
-
-Signed-off-by: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
+Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 ---
- kernel/cgroup/cgroup.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Changes in v1 -> v2:
+ - Update the commit log to point out how many bytes that we can save.
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index e41c21819ba0..5d1fdf7c3ec6 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -3567,6 +3567,7 @@ static ssize_t cgroup_pressure_write(struct kernfs_open_file *of, char *buf,
+ include/linux/memcontrol.h |  6 +++++-
+ mm/memcontrol.c            | 10 +++++++++-
+ 2 files changed, 14 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 3febf64d1b80..290d6ec8535a 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -92,6 +92,10 @@ struct lruvec_stat {
+ 	long count[NR_VM_NODE_STAT_ITEMS];
+ };
+ 
++struct per_cpu_lruvec_stat {
++	s32 count[NR_VM_NODE_STAT_ITEMS];
++};
++
+ /*
+  * Bitmap of shrinker::id corresponding to memcg-aware shrinkers,
+  * which have elements charged to this memcg.
+@@ -111,7 +115,7 @@ struct mem_cgroup_per_node {
+ 	struct lruvec_stat __percpu *lruvec_stat_local;
+ 
+ 	/* Subtree VM stats (batched updates) */
+-	struct lruvec_stat __percpu *lruvec_stat_cpu;
++	struct per_cpu_lruvec_stat __percpu *lruvec_stat_cpu;
+ 	atomic_long_t		lruvec_stat[NR_VM_NODE_STAT_ITEMS];
+ 
+ 	unsigned long		lru_zone_size[MAX_NR_ZONES][NR_LRU_LISTS];
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index eec44918d373..da6dc6ca388d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -5198,7 +5198,7 @@ static int alloc_mem_cgroup_per_node_info(struct mem_cgroup *memcg, int node)
+ 		return 1;
+ 	}
+ 
+-	pn->lruvec_stat_cpu = alloc_percpu_gfp(struct lruvec_stat,
++	pn->lruvec_stat_cpu = alloc_percpu_gfp(struct per_cpu_lruvec_stat,
+ 					       GFP_KERNEL_ACCOUNT);
+ 	if (!pn->lruvec_stat_cpu) {
+ 		free_percpu(pn->lruvec_stat_local);
+@@ -7089,6 +7089,14 @@ static int __init mem_cgroup_init(void)
  {
- 	struct psi_trigger *new;
- 	struct cgroup *cgrp;
-+	struct psi_group *psi;
+ 	int cpu, node;
  
- 	cgrp = cgroup_kn_lock_live(of->kn, false);
- 	if (!cgrp)
-@@ -3575,7 +3576,8 @@ static ssize_t cgroup_pressure_write(struct kernfs_open_file *of, char *buf,
- 	cgroup_get(cgrp);
- 	cgroup_kn_unlock(of->kn);
++	/*
++	 * Currently s32 type (can refer to struct per_cpu_lruvec_stat) is
++	 * used for per-memcg-per-cpu caching of per-node statistics. In order
++	 * to work fine, we should make sure that the overfill threshold can't
++	 * exceed S32_MAX / PAGE_SIZE.
++	 */
++	BUILD_BUG_ON(MEMCG_CHARGE_BATCH > S32_MAX / PAGE_SIZE);
++
+ 	cpuhp_setup_state_nocalls(CPUHP_MM_MEMCQ_DEAD, "mm/memctrl:dead", NULL,
+ 				  memcg_hotplug_cpu_dead);
  
--	new = psi_trigger_create(&cgrp->psi, buf, nbytes, res);
-+	psi = cgroup_ino(cgrp) == 1 ? &psi_system : &cgrp->psi;
-+	new = psi_trigger_create(psi, buf, nbytes, res);
- 	if (IS_ERR(new)) {
- 		cgroup_put(cgrp);
- 		return PTR_ERR(new);
 -- 
-2.29.2
+2.11.0
 
