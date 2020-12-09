@@ -1,64 +1,31 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH v3 1/7] mm: memcontrol: fix NR_ANON_THPS account
-Date: Tue, 8 Dec 2020 17:58:30 -0800
-Message-ID: <20201209015830.GA2385286@carbon.DHCP.thefacebook.com>
-References: <20201208041847.72122-1-songmuchun@bytedance.com>
- <20201208041847.72122-2-songmuchun@bytedance.com>
+From: Daniel Jordan <daniel.m.jordan@oracle.com>
+Subject: Re: [RFC][PATCH] cpu/hotplug: wait for cpuset_hotplug_work to
+ finish on cpu online
+Date: Tue, 08 Dec 2020 21:09:35 -0500
+Message-ID: <87k0trvig0.fsf@oracle.com>
+References: <20201203171431.256675-1-aklimov@redhat.com>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=aydL4QXg8XURDf2KOlBrMWX/E75tPJ8ATtsmVoERNmQ=;
- b=W6kG7UAoQUNYWIJy2WWuZpDxaDsScbR3xDsevQzVfGWYpwKm6VKNruGodRnc2PMNUtj9
- 0KEjKZlaWRClv0iwm74V+782zshPt5KKP3IJfdqFwtwjZQLGMWpUtuGQerBNjKrRyGTi
- C/EPky8BHdRLd4bLIbJ56X1ccTcFGlfCYdM= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=aydL4QXg8XURDf2KOlBrMWX/E75tPJ8ATtsmVoERNmQ=;
- b=UVJV2aSjngkSqBYVhHWAI9HoX73M8/ZzcKGWxENECd/M3B8O9q/s2R/SuBFSVtkCtIxt0+3HOOMo0vPf71Q++31ZjiHNfCdYYPeMQv/QsfBpfgtRAIfdwU+/l/EXCUrHU7DkzGK6ckUzLlXHjRX+cKQGLTNwqjDels6oho5hGrU=
-Content-Disposition: inline
-In-Reply-To: <20201208041847.72122-2-songmuchun@bytedance.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : in-reply-to : references : date : message-id : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=TQkdG2HxofP7Gjx/2MbWPihewec5Qk/l1s4p7G1cXC8=;
+ b=U9gwOjq7SmCbCgRImhl1TwXzuxOUUqCB0rMIJdegBcv9/Gzu+laCbtU2jTGUxx4tmpH4
+ mNyfpxy3z+yi78IBboMbbYliZCv4lw8u1B5OZX4xN83a6LobhTnYThTFG/S8qL7rVcgx
+ MAL5OtXa0n2n4fD2nkobJowekxaCoWc2abDld8DvitfkDcfrKCu0tCuSF17ebefEYn9k
+ +43E16O5KWiZ7JrgzfXlBfgw1bDTwmrtz/I6mk66Stx/Z9oe3N3jvGsywGPBTqMEwKFx
+ 21a5WpWQwP3sEppwkJgVBptCcyDKtLxBX4s6ZoUmQs3Dnp6XDYjbfElMId5YhlVLHGoz Hw== 
+In-Reply-To: <20201203171431.256675-1-aklimov@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Muchun Song <songmuchun@bytedance.com>
-Cc: gregkh@linuxfoundation.org, rafael@kernel.org, adobriyan@gmail.com, akpm@linux-foundation.org, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, hughd@google.com, shakeelb@google.com, samitolvanen@google.com, feng.tang@intel.com, neilb@suse.de, iamjoonsoo.kim@lge.com, rdunlap@infradead.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org, Michal Hocko <mhocko@suse.com>
+To: Alexey Klimov <aklimov@redhat.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
+Cc: peterz@infradead.org, yury.norov@gmail.com, tglx@linutronix.de, jobaker@redhat.com, audralmitchel@gmail.com, arnd@arndb.de, gregkh@linuxfoundation.org, rafael@kernel.org, tj@kernel.org, lizefan@huawei.com, qais.yousef@arm.com, hannes@cmpxchg.org, klimov.linux@gmail.com
 
-On Tue, Dec 08, 2020 at 12:18:41PM +0800, Muchun Song wrote:
-> The unit of NR_ANON_THPS is HPAGE_PMD_NR already. So it should inc/dec
-> by one rather than nr_pages.
-> 
-> Fixes: 468c398233da ("mm: memcontrol: switch to native NR_ANON_THPS counter")
-> Signed-off-by: Muchun Song <songmuchun@bytedance.com>
-> Acked-by: Michal Hocko <mhocko@suse.com>
+Alexey Klimov <aklimov@redhat.com> writes:
+> I also in doubts if we need cpuset_wait_for_hotplug() in cpuhp_online_cpu_device()
+> since an online uevent is sent there too.
 
-Reviewed-by: Roman Gushchin <guro@fb.com>
-
-Thanks!
-
-
-> ---
->  mm/memcontrol.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index b80328f52fb4..8818bf64d6fe 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -5653,10 +5653,8 @@ static int mem_cgroup_move_account(struct page *page,
->  			__mod_lruvec_state(from_vec, NR_ANON_MAPPED, -nr_pages);
->  			__mod_lruvec_state(to_vec, NR_ANON_MAPPED, nr_pages);
->  			if (PageTransHuge(page)) {
-> -				__mod_lruvec_state(from_vec, NR_ANON_THPS,
-> -						   -nr_pages);
-> -				__mod_lruvec_state(to_vec, NR_ANON_THPS,
-> -						   nr_pages);
-> +				__dec_lruvec_state(from_vec, NR_ANON_THPS);
-> +				__inc_lruvec_state(to_vec, NR_ANON_THPS);
->  			}
->  
->  		}
-> -- 
-> 2.11.0
-> 
+We do need it there if we go with this fix.  Your reproducer hits the
+same issue when it's changed to exercise smt/control instead of
+cpuN/online.
