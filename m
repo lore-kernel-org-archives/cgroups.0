@@ -1,80 +1,54 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: [PATCH v2] mm: memcontrol: optimize per-lruvec
- stats counter memory usage
-Date: Wed, 9 Dec 2020 15:05:49 +0800
-Message-ID: <CAMZfGtVJnZESZQZmPzk=mBqK0KH4L=-s_+ebTr-6Z76zdXXn7g@mail.gmail.com>
-References: <20201208095132.79383-1-songmuchun@bytedance.com>
- <20201209022118.GB2385286@carbon.DHCP.thefacebook.com> <CAMZfGtUMP6mz3DE7DHS55fyto=LZuQpcitt59WuwhZw8m2LqBg@mail.gmail.com>
- <20201209031115.GA2390587@carbon.lan>
+From: Qinglang Miao <miaoqinglang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cgroup: Fix memory leak when parsing multiple source parameters
+Date: Wed, 9 Dec 2020 20:13:22 +0800
+Message-ID: <20201209121322.77665-1-miaoqinglang@huawei.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7BIT
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=kkn786HNMnRJCcN2vJ93qEyfsAgh7pkxJtiGF06J3yU=;
-        b=JXrRB0nWVA5bEbEvNjxEzu/NNeNa7aKnAuns8JTBIx/sW/F+SxwH6QRAtQ0iiTX8h0
-         Pac4yR3jIe7TZKkrxsjkSHBXB2sYr2OJpHc4wBiXDQyKPB3oQF+wkfxiqHFAC5c0jW7g
-         yo4V3RXknI3qJ4Zrh7cHk1tdTj2f/wUWuSdQ0Liblz9+qjFB+QluSTdO+wyA/78lMxRC
-         4SI1SKgLSphvUkVovLeGAhK4IvUiJWFmOARy7q+vYzadZQLrsrDAK5jLog+gVokidCMh
-         31bF/AgWkPzKCdrxRNqlXaWLaA7X84nL2vH4nv0L3kZXAoY4FkkzIMz2vDn4MF3KTUap
-         yVnw==
-In-Reply-To: <20201209031115.GA2390587-esYZh5BkUNV+urZeOPWqwQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Qinglang Miao <miaoqinglang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-On Wed, Dec 9, 2020 at 11:52 AM Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
->
-> On Wed, Dec 09, 2020 at 10:31:55AM +0800, Muchun Song wrote:
-> > On Wed, Dec 9, 2020 at 10:21 AM Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
-> > >
-> > > On Tue, Dec 08, 2020 at 05:51:32PM +0800, Muchun Song wrote:
-> > > > The vmstat threshold is 32 (MEMCG_CHARGE_BATCH), so the type of s32
-> > > > of lruvec_stat_cpu is enough.
->
-> Actually the threshold can be as big as MEMCG_CHARGE_BATCH * PAGE_SIZE.
-> It still fits into s32, but without explicitly saying it it's hard to
-> understand why not choosing s8, as in vmstat.c.
+A memory leak is found in cgroup1_parse_param() when multiple source
+parameters overwrite fc->source in the fs_context struct without free.
 
-Yeah, here I need to update the commit log.
+unreferenced object 0xffff888100d930e0 (size 16):
+  comm "mount", pid 520, jiffies 4303326831 (age 152.783s)
+  hex dump (first 16 bytes):
+    74 65 73 74 6c 65 61 6b 00 00 00 00 00 00 00 00  testleak........
+  backtrace:
+    [<000000003e5023ec>] kmemdup_nul+0x2d/0xa0
+    [<00000000377dbdaa>] vfs_parse_fs_string+0xc0/0x150
+    [<00000000cb2b4882>] generic_parse_monolithic+0x15a/0x1d0
+    [<000000000f750198>] path_mount+0xee1/0x1820
+    [<0000000004756de2>] do_mount+0xea/0x100
+    [<0000000094cafb0a>] __x64_sys_mount+0x14b/0x1f0
 
->
-> > > >
-> > > > The size of struct lruvec_stat is 304 bytes on 64 bits system. As it
-> > > > is a per-cpu structure. So with this patch, we can save 304 / 2 * ncpu
-> > > > bytes per-memcg per-node where ncpu is the number of the possible CPU.
-> > > > If there are c memory cgroup (include dying cgroup) and n NUMA node in
-> > > > the system. Finally, we can save (152 * ncpu * c * n) bytes.
-> > >
-> > > Honestly, I'm not convinced.
-> > > Say, ncpu = 32, n = 2, c = 500. We're saving <5Mb of memory.
-> > > If the machine has 128Gb of RAM, it's .000000003%.
-> >
-> > Hi Roman,
-> >
-> > When the cpu hotplug is enabled, the ncpu can be 256 on
-> > some configurations. Also, the c can be more large when
-> > there are many dying cgroup in the system.
-> >
-> > So the savings depends on the environment and
-> > configurations. Right?
->
-> Of course, but machines with more CPUs tend to have more RAM as well.
+Fix this bug by permitting a single source parameter and rejecting with
+an error all subsequent ones.
 
-Here I mean possible CPU not online CPU. The number of possible
-CPUs may be greater than online CPUs. The per-cpu allocator is based
-on the number of possible CPUs. Right?
+Fixes: 8d2451f4994f ("cgroup1: switch to option-by-option parsing")
+Reported-by: Hulk Robot <hulkci-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Qinglang Miao <miaoqinglang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/cgroup-v1.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Thanks.
-
->
-> Thanks!
-
-
-
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 191c329e4..1fd7d3d18 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -908,6 +908,9 @@ int cgroup1_parse_param(struct fs_context *fc, struct fs_parameter *param)
+ 	opt = fs_parse(fc, cgroup1_fs_parameters, param, &result);
+ 	if (opt == -ENOPARAM) {
+ 		if (strcmp(param->key, "source") == 0) {
++			if (fc->source)
++				return invalf(fc, "Multiple sources not
++						  supported");
+ 			fc->source = param->string;
+ 			param->string = NULL;
+ 			return 0;
 -- 
-Yours,
-Muchun
+2.23.0
+
