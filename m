@@ -1,60 +1,41 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: [PATCH v2] mm: memcontrol: optimize per-lruvec
- stats counter memory usage
-Date: Wed, 9 Dec 2020 10:31:55 +0800
-Message-ID: <CAMZfGtUMP6mz3DE7DHS55fyto=LZuQpcitt59WuwhZw8m2LqBg@mail.gmail.com>
-References: <20201208095132.79383-1-songmuchun@bytedance.com> <20201209022118.GB2385286@carbon.DHCP.thefacebook.com>
+From: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC][PATCH] cpu/hotplug: wait for cpuset_hotplug_work to
+ finish on cpu online
+Date: Tue, 08 Dec 2020 21:40:57 -0500
+Message-ID: <87k0tritvq.fsf@oracle.com>
+References: <20201203171431.256675-1-aklimov@redhat.com>
+ <20201207083827.GD3040@hirez.programming.kicks-ass.net>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=lpLy5o85Uv8KFkEXX1qh8QHfnClzTv7IW4GkyuNRa/I=;
-        b=iol7HVumr2vVfjJpGSYJsjp2//+4swLMulHc2gpp0zagvSLlssLPP9K3PRtq2X6zMy
-         Po5hMnqSAA28ZIbmek9aOm0SSGmzdrpc5dZLVJ4bMUVEj0uC3X3jZ9G6A+z8LrQIi033
-         +PK6fgSurp1M2od/4Td4FLHZZo1TXLt3GWL1FhWnJIJNmZWuAwNC/TPlLHYR96nthc9V
-         Qj4+z5EjXrBaKWai2A4XYuBgu0phbWuur699cOnNUw7tYen7UJX3dm0rXvKlgUGn6asC
-         wN0X9e+wv9i6vOlueoBI/4+SXBLMYWtrQrWQMYleF0cx+FYfqbfCsfmdDd4SkWvNPLIN
-         I3jg==
-In-Reply-To: <20201209022118.GB2385286-lLJQVQxiE4uLfgCeKHXN1g2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : in-reply-to : references : date : message-id : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=vhPAwGbX5UKJfIemCq3LE77ldW/MS6Z/BCzHi9otysg=;
+ b=T4qPBYnl6CDw7MhxbLNUcQjfUzICtHe7Qj9GkVpSQmPaYMc0vvfQl536HZLiYJTvoNJ9
+ jVA851tnFUxV62TxuNng9POPjnJibMO3kJeLdLP1o1Fk6m2M/EpmZYaxGU+9aRc27Co5
+ bVG0eIucX9pBiqAYyJBL3xcODZJgNK3QhdPLWXGwucydXvAMr25NL+Zvl/dCOW0NmPkn
+ nQ3IS9QIgBUoraAEHf7P56v8UAdAsGwRTD+nHgSQetz1MF7CyaV55tU9Wu1hv+2lRvOA
+ EdWQ9Gpd5doM08dD2BbYWdVB8UJuefPMG/FwZoN+G+ZNF3Vbbqd00W667q8W20J4gMsj Nw== 
+In-Reply-To: <20201207083827.GD3040-Nxj+rRp3nVydTX5a5knrm8zTDFooKrT+cvkQGrU6aU0@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, qais.yousef-5wv7dgnIgG8@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Wed, Dec 9, 2020 at 10:21 AM Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
+Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> writes:
+>> The nature of this bug is also described here (with different consequences):
+>> https://lore.kernel.org/lkml/20200211141554.24181-1-qais.yousef-5wv7dgnIgG8@public.gmane.org/
 >
-> On Tue, Dec 08, 2020 at 05:51:32PM +0800, Muchun Song wrote:
-> > The vmstat threshold is 32 (MEMCG_CHARGE_BATCH), so the type of s32
-> > of lruvec_stat_cpu is enough. And introduce struct per_cpu_lruvec_stat
-> > to optimize memory usage.
-> >
-> > The size of struct lruvec_stat is 304 bytes on 64 bits system. As it
-> > is a per-cpu structure. So with this patch, we can save 304 / 2 * ncpu
-> > bytes per-memcg per-node where ncpu is the number of the possible CPU.
-> > If there are c memory cgroup (include dying cgroup) and n NUMA node in
-> > the system. Finally, we can save (152 * ncpu * c * n) bytes.
->
-> Honestly, I'm not convinced.
-> Say, ncpu = 32, n = 2, c = 500. We're saving <5Mb of memory.
-> If the machine has 128Gb of RAM, it's .000000003%.
+> Yeah, pesky deadlocks.. someone was going to try again.
 
-Hi Roman,
+I dug up the synchronous patch
 
-When the cpu hotplug is enabled, the ncpu can be 256 on
-some configurations. Also, the c can be more large when
-there are many dying cgroup in the system.
+    https://lore.kernel.org/lkml/1579878449-10164-1-git-send-email-prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org/
 
-So the savings depends on the environment and
-configurations. Right?
+but surprisingly wasn't able to reproduce the lockdep splat from
 
+    https://lore.kernel.org/lkml/F0388D99-84D7-453B-9B6B-EEFF0E7BE4CC-J5quhbR+WMc@public.gmane.org/
 
->
-> Using longs (s64) allows not to think too much about overflows
-> and can also be slightly faster on 64-bit machines.
->
-> Thanks!
-
-
+even though I could hit it a few weeks ago.  I'm going to try to mess
+with it later, but don't let me hold this up.
