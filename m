@@ -1,70 +1,63 @@
-From: Suren Baghdasaryan <surenb@google.com>
-Subject: Re: [PATCH] psi: fix monitor for root cgroup
-Date: Tue, 8 Dec 2020 19:22:06 -0800
-Message-ID: <CAJuCfpFjdE3k+eWoJLZMp9miffmueZ0hgLLF1b_V6Kb4=i+D3g@mail.gmail.com>
-References: <20201208083510.14344-1-odin@uged.al>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [External] Re: [PATCH v2] mm: memcontrol: optimize per-lruvec
+ stats counter memory usage
+Date: Tue, 8 Dec 2020 19:52:35 -0800
+Message-ID: <20201209031115.GA2390587@carbon.lan>
+References: <20201208095132.79383-1-songmuchun@bytedance.com>
+ <20201209022118.GB2385286@carbon.DHCP.thefacebook.com>
+ <CAMZfGtUMP6mz3DE7DHS55fyto=LZuQpcitt59WuwhZw8m2LqBg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=tEWLaiABhfSkvT1cOB+vXvjqCQDKr8VP2HOqqGxlXaU=;
-        b=pcvicRPw5fYEgoz+vgcA1n+jR1qIiuAy8vpfCm59ZqryG+PILmlYM1YTrFKF/wyXpZ
-         v1pywrJXjxoRPB8GkzlTagFXSd7kNkJGHzhriOnPCNwCDMK9i28G3mSf5EmV5tFFWE4Z
-         6VGGhT0BHDl63+AbvGzdMKqnakYnPxEZqOnlVrW8DEu4/xzih1VVvbKwacsHZeI7IW/b
-         XrzN4RVG4uKI220wjgDbdVZmGVqg1S/v9pzn8EPUQiis1Dv7fNabFblXHL9iULtncz1V
-         DdUZ7ySgDlhUQI5aYOh+BUKMieD+QCltb5ahUFhEoxsmGo1HCWbkmLUnwyv8b5KtDrFM
-         YCkw==
-In-Reply-To: <20201208083510.14344-1-odin@uged.al>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=j84ueRbd5U3HePmJX5oQjdX2Bf/TWLQOa+LPbgAb1Ko=;
+ b=Krnsx0yvhpkI4pPM9qxyOcv/0F765WRZTDCUG5lDowoCDin6aagiFAQ7eVDgE0pr7EFE
+ JhpkP1GJwItPFVyhZvuhtowa0Mtx/Z34FNRTM+VYpPysea1LbNO9TV/JI08fMmDc5yZb
+ kmTdGlIVVcav0/tN6qv7AnJrHUx0lYirf5U= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=j84ueRbd5U3HePmJX5oQjdX2Bf/TWLQOa+LPbgAb1Ko=;
+ b=E3QxU9N/E805zJ30GyhAnQUjnTiv1FAgwSAnsJN4GyUp5BDOL2FQx9THo5jTfmsKAdZbXWaKcIMLCBQ4F5AVjEBDvqc4hBk0EPJqBPtfYbE1tEt6+FkG1Jqd7DmPHS05JM40WSJwXitydqK0buZFLvgyeVj5Moh0Fj+6OXDCSkE=
+Content-Disposition: inline
+In-Reply-To: <CAMZfGtUMP6mz3DE7DHS55fyto=LZuQpcitt59WuwhZw8m2LqBg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Odin Ugedal <odin@uged.al>
-Cc: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups mailinglist <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, dschatzberg@fb.com
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-On Tue, Dec 8, 2020 at 12:35 AM Odin Ugedal <odin@uged.al> wrote:
->
-> Fix NULL pointer dereference when adding new psi monitor to the root
-> cgroup. PSI files for root cgroup was introduced in df5ba5be742 by using
-> system wide psi struct when reading, but file write/monitor was not
-> properly fixed. Since the PSI config for the root cgroup isn't
-> initialized, the current implementation tries to lock a NULL ptr,
-> resulting in a crash.
->
-> Can be triggered by running this as root:
-> $ tee /sys/fs/cgroup/cpu.pressure <<< "some 10000 1000000"
->
->
-> Signed-off-by: Odin Ugedal <odin@uged.al>
-> ---
->  kernel/cgroup/cgroup.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index e41c21819ba0..5d1fdf7c3ec6 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -3567,6 +3567,7 @@ static ssize_t cgroup_pressure_write(struct kernfs_open_file *of, char *buf,
->  {
->         struct psi_trigger *new;
->         struct cgroup *cgrp;
-> +       struct psi_group *psi;
->
->         cgrp = cgroup_kn_lock_live(of->kn, false);
->         if (!cgrp)
-> @@ -3575,7 +3576,8 @@ static ssize_t cgroup_pressure_write(struct kernfs_open_file *of, char *buf,
->         cgroup_get(cgrp);
->         cgroup_kn_unlock(of->kn);
->
-> -       new = psi_trigger_create(&cgrp->psi, buf, nbytes, res);
-> +       psi = cgroup_ino(cgrp) == 1 ? &psi_system : &cgrp->psi;
-> +       new = psi_trigger_create(psi, buf, nbytes, res);
->         if (IS_ERR(new)) {
->                 cgroup_put(cgrp);
->                 return PTR_ERR(new);
-> --
-> 2.29.2
->
+On Wed, Dec 09, 2020 at 10:31:55AM +0800, Muchun Song wrote:
+> On Wed, Dec 9, 2020 at 10:21 AM Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
+> >
+> > On Tue, Dec 08, 2020 at 05:51:32PM +0800, Muchun Song wrote:
+> > > The vmstat threshold is 32 (MEMCG_CHARGE_BATCH), so the type of s32
+> > > of lruvec_stat_cpu is enough.
 
-Reviewed-by: Suren Baghdasaryan <surenb@google.com>
+Actually the threshold can be as big as MEMCG_CHARGE_BATCH * PAGE_SIZE.
+It still fits into s32, but without explicitly saying it it's hard to
+understand why not choosing s8, as in vmstat.c.
+
+> > >
+> > > The size of struct lruvec_stat is 304 bytes on 64 bits system. As it
+> > > is a per-cpu structure. So with this patch, we can save 304 / 2 * ncpu
+> > > bytes per-memcg per-node where ncpu is the number of the possible CPU.
+> > > If there are c memory cgroup (include dying cgroup) and n NUMA node in
+> > > the system. Finally, we can save (152 * ncpu * c * n) bytes.
+> >
+> > Honestly, I'm not convinced.
+> > Say, ncpu = 32, n = 2, c = 500. We're saving <5Mb of memory.
+> > If the machine has 128Gb of RAM, it's .000000003%.
+> 
+> Hi Roman,
+> 
+> When the cpu hotplug is enabled, the ncpu can be 256 on
+> some configurations. Also, the c can be more large when
+> there are many dying cgroup in the system.
+> 
+> So the savings depends on the environment and
+> configurations. Right?
+
+Of course, but machines with more CPUs tend to have more RAM as well.
+
+Thanks!
