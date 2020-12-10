@@ -1,77 +1,44 @@
-From: Christian Borntraeger <borntraeger@de.ibm.com>
-Subject: Re: [Patch v3 0/2] cgroup: KVM: New Encryption IDs cgroup controller
-Date: Thu, 10 Dec 2020 15:54:01 +0100
-Message-ID: <4f7b9c3f-200e-6127-1d94-91dd9c917921@de.ibm.com>
-References: <20201209205413.3391139-1-vipinsh@google.com>
- <X9E6eZaIFDhzrqWO@mtj.duckdns.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [RESEND PATCH v2 01/12] mm: memcontrol: fix NR_ANON_THPS account
+Date: Thu, 10 Dec 2020 17:00:45 +0100
+Message-ID: <20201210160045.GF264602@cmpxchg.org>
+References: <20201206101451.14706-1-songmuchun@bytedance.com>
+ <20201206101451.14706-2-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=VsCisPySZHG4Vff0eAvJw4F76GzoTiGXaBqWHoCkKF0=;
- b=H/i0vBJaVrEsIxTNzzpSFA/FCskUwAue6ja+2YX99G5xdQAchy5YHz28mh0jiokEVJh3
- cVZVOQaOOGLQHSbKM9vb4OlkQS0lpZNLgdmAh8uifjptyOloMlsBkGmjAkOL/h1hmyzo
- 5ANkm8pODhkiJfDX7wP2kvW+FVbcpDzP7v9QbxASmDfzsNGCUl8QrHMs+c0AZVs4IHoc
- r9bYF0tv/FR5mng22P6Rrs6Qc283dFG5Jc4L9VdSpX8y9OHnYyDSwE27LhruKR4v7YxK
- zypN7M+fXF08EenWsawvPzSRb+wz9CHSdTqjHIRc4bmgMRRK7ZcttZS5CtfejBDyWve/ 3Q== 
-In-Reply-To: <X9E6eZaIFDhzrqWO@mtj.duckdns.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=6cqy3h6zeyXBfeazWGfRXkH+RsOnGkrK4uYLa4meA10=;
+        b=F55eqp5BdR+2SiD7cUjPc/dE5pm//HKBnJEcNN5JIQ3kahgaFcm0unTLLFNeCYA/Hd
+         mo7zbwH1GSpHvmwgMtLlswl7zttk633FKLWuA8j2R6zKbbTOwJPzK9qAjGbt32uLuL9E
+         3qT0+KI8QM1ZnsV+MPMeOJmcQZ+hGQTxRAC3++ooyZlY35akuYScnqpB0mLR0PT38nzY
+         3/i0V4j1Rd3vnz8E/9ditif0EzUdhdzgBSvDcW91585TV28VDRDMer1gez6ryZTsRRya
+         xFaWZ7TA5GBO/ZOctXMy2slNo0Ju3Vf9KOqund3aOhniPqFeoR78cVC+bfD2xzG5pIjZ
+         +F+g==
+Content-Disposition: inline
+In-Reply-To: <20201206101451.14706-2-songmuchun@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Tejun Heo <tj@kernel.org>, Vipin Sharma <vipinsh@google.com>
-Cc: thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, seanjc@google.com, lizefan@huawei.com, hannes@cmpxchg.org, frankja@linux.ibm.com, corbet@lwn.net, joro@8bytes.org, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Muchun Song <songmuchun@bytedance.com>
+Cc: gregkh@linuxfoundation.org, rafael@kernel.org, adobriyan@gmail.com, akpm@linux-foundation.org, mhocko@kernel.org, vdavydov.dev@gmail.com, hughd@google.com, will@kernel.org, guro@fb.com, rppt@kernel.org, tglx@linutronix.de, esyr@redhat.com, peterx@redhat.com, krisman@collabora.com, surenb@google.com, avagin@openvz.org, elver@google.com, rdunlap@infradead.org, iamjoonsoo.kim@lge.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-On 09.12.20 21:58, Tejun Heo wrote:
-> Hello,
->=20
-> Rough take after skimming:
->=20
-> * I don't have an overall objection. In terms of behavior, the only thing
->   which stood out was input rejection depending on the current usage. The
->   preferred way of handling that is rejecting future allocations rather t=
-han
->   failing configuration as that makes it impossible e.g. to lower limit a=
-nd
->   drain existing usages from outside the container.
->=20
-> * However, the boilerplate to usefulness ratio doesn't look too good and I
->   wonder whether what we should do is adding a generic "misc" controller
->   which can host this sort of static hierarchical counting. I'll think mo=
-re
->   on it.
+On Sun, Dec 06, 2020 at 06:14:40PM +0800, Muchun Song wrote:
+> The unit of NR_ANON_THPS is HPAGE_PMD_NR already. So it should inc/dec
+> by one rather than nr_pages.
 
-We first dicussed to have
-encryption_ids.stat
-encryption_ids.max
-encryption_ids.current
+This is a real bug, thanks for catching it.
 
-and we added the sev in later, so that we can also have tdx, seid, sgx or w=
-hatever.
-Maybe also 2 or more things at the same time.
+However, your patch changes the user-visible output of /proc/vmstat!
 
-Right now this code has
+NR_ANON_THPS isn't just used by memcg, it's a generic accounting item
+of the memory subsystem. See this from the Fixes:-patch:
 
-encryption_ids.sev.stat
-encryption_ids.sev.max
-encryption_ids.sev.current
+-                       __inc_node_page_state(page, NR_ANON_THPS);
++                       __inc_lruvec_page_state(page, NR_ANON_THPS);
 
-And it would be trivial to extend it to have
-encryption_ids.seid.stat
-encryption_ids.seid.max
-encryption_ids.seid.current
-on s390 instead (for our secure guests).
-
-So in the end this is almost already a misc controller, the only thing that=
- we
-need to change is the capability to also define things other than encryptio=
-n.*.*
-And of course we would need to avoid adding lots of random garbage to such =
-a thing.
-
-But if you feel ok with the burden to keep things kind of organized a misc
-controller would certainly work for the encryption ID usecase as well.=20
-So I would be fine with the thing as is or a misc control=C4=BAer.
-
-Christian
+While we've considered /proc/vmstat less official than other files
+like meminfo, and have in the past freely added and removed items,
+changing the unit of an existing one is not going to work.
