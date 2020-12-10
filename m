@@ -1,46 +1,56 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [Patch v3 0/2] cgroup: KVM: New Encryption IDs cgroup controller
-Date: Wed, 9 Dec 2020 15:58:33 -0500
-Message-ID: <X9E6eZaIFDhzrqWO@mtj.duckdns.org>
-References: <20201209205413.3391139-1-vipinsh@google.com>
+From: Qinglang Miao <miaoqinglang@huawei.com>
+Subject: [PATCH v2] cgroup: Fix memory leak when parsing multiple source parameters
+Date: Thu, 10 Dec 2020 09:29:43 +0800
+Message-ID: <20201210012943.92845-1-miaoqinglang@huawei.com>
+References: <20201209121322.77665-1-miaoqinglang@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=hLr4IoNk4mXvkDggJZgGkE0Lh0R6y+fsYHaJEGIfuuc=;
-        b=gphtz3zP8o+6zS3N+NSHv4/V28d6PSJir32f2MrZa2gKRKJDXP6TvwxbeBOq3deiDV
-         LlTp1Xc1fAAHw05jQqUsRiHBgY+ruguxqVbvb5cIlP3sy2WcS9YLU0Q5r6+dgB/iJTKB
-         vXdpg4K3iNVlSaW+QLGwC6orshyfnLvJ2mg0jYpB8AYnV66ox0Dd0Tv1asOBtczplSjD
-         YDAeLZ7WJooce78KC5lMONcwo6GD3XoXqxfLF58l8ufOJZp/UuMkKulOibk9ILEZpfhj
-         AkwSNALY3spqQNHSCUdoyrkmftK/32r7rM91m9khiDAb+5KieKcWlZ8xJIKJ13BZCNCP
-         oSGg==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20201209205413.3391139-1-vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20201209121322.77665-1-miaoqinglang@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: thomas.lendacky-5C7GfCeVMHo@public.gmane.org, brijesh.singh-5C7GfCeVMHo@public.gmane.org, jon.grimm-5C7GfCeVMHo@public.gmane.org, eric.vantassell-5C7GfCeVMHo@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, frankja-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org, vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, gingell-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dionnaglaze-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>
+Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Qinglang Miao <miaoqinglang@huawei.com>
 
-Hello,
+A memory leak is found in cgroup1_parse_param() when multiple source
+parameters overwrite fc->source in the fs_context struct without free.
 
-Rough take after skimming:
+unreferenced object 0xffff888100d930e0 (size 16):
+  comm "mount", pid 520, jiffies 4303326831 (age 152.783s)
+  hex dump (first 16 bytes):
+    74 65 73 74 6c 65 61 6b 00 00 00 00 00 00 00 00  testleak........
+  backtrace:
+    [<000000003e5023ec>] kmemdup_nul+0x2d/0xa0
+    [<00000000377dbdaa>] vfs_parse_fs_string+0xc0/0x150
+    [<00000000cb2b4882>] generic_parse_monolithic+0x15a/0x1d0
+    [<000000000f750198>] path_mount+0xee1/0x1820
+    [<0000000004756de2>] do_mount+0xea/0x100
+    [<0000000094cafb0a>] __x64_sys_mount+0x14b/0x1f0
 
-* I don't have an overall objection. In terms of behavior, the only thing
-  which stood out was input rejection depending on the current usage. The
-  preferred way of handling that is rejecting future allocations rather than
-  failing configuration as that makes it impossible e.g. to lower limit and
-  drain existing usages from outside the container.
+Fix this bug by permitting a single source parameter and rejecting with
+an error all subsequent ones.
 
-* However, the boilerplate to usefulness ratio doesn't look too good and I
-  wonder whether what we should do is adding a generic "misc" controller
-  which can host this sort of static hierarchical counting. I'll think more
-  on it.
+Fixes: 8d2451f4994f ("cgroup1: switch to option-by-option parsing")
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Qinglang Miao <miaoqinglang@huawei.com>
+---
+ v1->v2: fix compile problems caused by superfluous LF in err message.
+ kernel/cgroup/cgroup-v1.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Thanks.
-
+diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
+index 191c329e4..32596fdbc 100644
+--- a/kernel/cgroup/cgroup-v1.c
++++ b/kernel/cgroup/cgroup-v1.c
+@@ -908,6 +908,8 @@ int cgroup1_parse_param(struct fs_context *fc, struct fs_parameter *param)
+ 	opt = fs_parse(fc, cgroup1_fs_parameters, param, &result);
+ 	if (opt == -ENOPARAM) {
+ 		if (strcmp(param->key, "source") == 0) {
++			if (fc->source)
++				return invalf(fc, "Multiple sources not supported");
+ 			fc->source = param->string;
+ 			param->string = NULL;
+ 			return 0;
 -- 
-tejun
+2.23.0
+
