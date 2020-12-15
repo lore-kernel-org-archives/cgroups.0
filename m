@@ -1,19 +1,22 @@
-From: Zefan Li <lizefan@huawei.com>
-Subject: Re: [PATCH] cgroup: Fix memory leak when parsing multiple source
+From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2] cgroup: Fix memory leak when parsing multiple source
  parameters
-Date: Tue, 15 Dec 2020 16:39:00 +0800
-Message-ID: <a2a23bfb-65a9-96ad-ff54-0248432d166b@huawei.com>
+Date: Tue, 15 Dec 2020 16:50:07 +0800
+Message-ID: <eb369eb1-5e2a-9f19-019f-c101adb8f4f5@huawei.com>
 References: <20201209121322.77665-1-miaoqinglang@huawei.com>
+ <20201210012943.92845-1-miaoqinglang@huawei.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20201209121322.77665-1-miaoqinglang@huawei.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20201210012943.92845-1-miaoqinglang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Qinglang Miao <miaoqinglang@huawei.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>
-Cc: cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Qinglang Miao <miaoqinglang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 2020/12/9 20:13, Qinglang Miao wrote:
+(didn't notice you've sent v2 with the printk msg fixed)
+
+On 2020/12/10 9:29, Qinglang Miao wrote:
 > A memory leak is found in cgroup1_parse_param() when multiple source
 > parameters overwrite fc->source in the fs_context struct without free.
 > 
@@ -33,27 +36,22 @@ On 2020/12/9 20:13, Qinglang Miao wrote:
 > an error all subsequent ones.
 > 
 > Fixes: 8d2451f4994f ("cgroup1: switch to option-by-option parsing")
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: Qinglang Miao <miaoqinglang@huawei.com>
+> Reported-by: Hulk Robot <hulkci-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Qinglang Miao <miaoqinglang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 > ---
->  kernel/cgroup/cgroup-v1.c | 3 +++
->  1 file changed, 3 insertions(+)
+>  v1->v2: fix compile problems caused by superfluous LF in err message.
+>  kernel/cgroup/cgroup-v1.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
 > diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-> index 191c329e4..1fd7d3d18 100644
+> index 191c329e4..32596fdbc 100644
 > --- a/kernel/cgroup/cgroup-v1.c
 > +++ b/kernel/cgroup/cgroup-v1.c
-> @@ -908,6 +908,9 @@ int cgroup1_parse_param(struct fs_context *fc, struct fs_parameter *param)
+> @@ -908,6 +908,8 @@ int cgroup1_parse_param(struct fs_context *fc, struct fs_parameter *param)
 >  	opt = fs_parse(fc, cgroup1_fs_parameters, param, &result);
 >  	if (opt == -ENOPARAM) {
 >  		if (strcmp(param->key, "source") == 0) {
 > +			if (fc->source)
-> +				return invalf(fc, "Multiple sources not
-> +						  supported");
+> +				return invalf(fc, "Multiple sources not supported");
 
-"never break user-visible strings such as printk messages because
-that breaks the ability to grep for them.", quoted from CodingStyle.
-
-Please fix this and you can add
-
-	Reviewed-by: Zefan Li <lizefan@huawei.com>
+Reviewed-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
