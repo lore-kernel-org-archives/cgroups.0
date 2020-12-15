@@ -1,57 +1,196 @@
-From: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] cgroup: Fix memory leak when parsing multiple source
- parameters
-Date: Tue, 15 Dec 2020 16:50:07 +0800
-Message-ID: <eb369eb1-5e2a-9f19-019f-c101adb8f4f5@huawei.com>
-References: <20201209121322.77665-1-miaoqinglang@huawei.com>
- <20201210012943.92845-1-miaoqinglang@huawei.com>
+From: Michal Hocko <mhocko@suse.com>
+Subject: Re: [PATCH v3 2/7] mm: memcontrol: convert NR_ANON_THPS account to
+ pages
+Date: Tue, 15 Dec 2020 14:30:38 +0100
+Message-ID: <20201215133038.GO32193@dhcp22.suse.cz>
+References: <20201208041847.72122-1-songmuchun@bytedance.com>
+ <20201208041847.72122-3-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20201210012943.92845-1-miaoqinglang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1608039039; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=3XPa6B5Agc5X6gtCtpcj1Z+hTlPDBybjc3CU9O9vvm8=;
+        b=lwTzTrU4ZpC9WAg1Lcxkfq6ExedXTJyBvr3P+BNvrZTJMYbNYj15XQHLVfMroQosvrZ4mr
+        fvFXk7otxv0Q/1eEnx3sQmIHMMBgLHwpNq0mUHe5mQfYL7zi6AqG9keKKuL5R9rcMaOTam
+        T+c6FIrXI3rjbfewiF6OnCYKHHoY8vo=
+Content-Disposition: inline
+In-Reply-To: <20201208041847.72122-3-songmuchun@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Qinglang Miao <miaoqinglang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Muchun Song <songmuchun@bytedance.com>
+Cc: gregkh@linuxfoundation.org, rafael@kernel.org, adobriyan@gmail.com, akpm@linux-foundation.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com, hughd@google.com, shakeelb@google.com, guro@fb.com, samitolvanen@google.com, feng.tang@intel.com, neilb@suse.de, iamjoonsoo.kim@lge.com, rdunlap@infradead.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, cgroups@vger.kernel.org
 
-(didn't notice you've sent v2 with the printk msg fixed)
+On Tue 08-12-20 12:18:42, Muchun Song wrote:
+> The unit of NR_ANON_THPS is HPAGE_PMD_NR. Convert the NR_ANON_THPS
+> account to pages.
 
-On 2020/12/10 9:29, Qinglang Miao wrote:
-> A memory leak is found in cgroup1_parse_param() when multiple source
-> parameters overwrite fc->source in the fs_context struct without free.
-> 
-> unreferenced object 0xffff888100d930e0 (size 16):
->   comm "mount", pid 520, jiffies 4303326831 (age 152.783s)
->   hex dump (first 16 bytes):
->     74 65 73 74 6c 65 61 6b 00 00 00 00 00 00 00 00  testleak........
->   backtrace:
->     [<000000003e5023ec>] kmemdup_nul+0x2d/0xa0
->     [<00000000377dbdaa>] vfs_parse_fs_string+0xc0/0x150
->     [<00000000cb2b4882>] generic_parse_monolithic+0x15a/0x1d0
->     [<000000000f750198>] path_mount+0xee1/0x1820
->     [<0000000004756de2>] do_mount+0xea/0x100
->     [<0000000094cafb0a>] __x64_sys_mount+0x14b/0x1f0
-> 
-> Fix this bug by permitting a single source parameter and rejecting with
-> an error all subsequent ones.
-> 
-> Fixes: 8d2451f4994f ("cgroup1: switch to option-by-option parsing")
-> Reported-by: Hulk Robot <hulkci-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Qinglang Miao <miaoqinglang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+This changelog could benefit from some improvements. First of all you
+should be clear about the motivation. I believe the previous feedback
+was also to explicitly mention what effect this has on the pcp
+accounting flushing.
+
+> Signed-off-by: Muchun Song <songmuchun@bytedance.com>
 > ---
->  v1->v2: fix compile problems caused by superfluous LF in err message.
->  kernel/cgroup/cgroup-v1.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/base/node.c |  3 +--
+>  fs/proc/meminfo.c   |  2 +-
+>  mm/huge_memory.c    |  3 ++-
+>  mm/memcontrol.c     | 20 ++++++--------------
+>  mm/page_alloc.c     |  2 +-
+>  mm/rmap.c           |  7 ++++---
+>  6 files changed, 15 insertions(+), 22 deletions(-)
 > 
-> diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-> index 191c329e4..32596fdbc 100644
-> --- a/kernel/cgroup/cgroup-v1.c
-> +++ b/kernel/cgroup/cgroup-v1.c
-> @@ -908,6 +908,8 @@ int cgroup1_parse_param(struct fs_context *fc, struct fs_parameter *param)
->  	opt = fs_parse(fc, cgroup1_fs_parameters, param, &result);
->  	if (opt == -ENOPARAM) {
->  		if (strcmp(param->key, "source") == 0) {
-> +			if (fc->source)
-> +				return invalf(fc, "Multiple sources not supported");
+> diff --git a/drivers/base/node.c b/drivers/base/node.c
+> index 04f71c7bc3f8..ec35cb567940 100644
+> --- a/drivers/base/node.c
+> +++ b/drivers/base/node.c
+> @@ -461,8 +461,7 @@ static ssize_t node_read_meminfo(struct device *dev,
+>  			     nid, K(sunreclaimable)
+>  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+>  			     ,
+> -			     nid, K(node_page_state(pgdat, NR_ANON_THPS) *
+> -				    HPAGE_PMD_NR),
+> +			     nid, K(node_page_state(pgdat, NR_ANON_THPS)),
+>  			     nid, K(node_page_state(pgdat, NR_SHMEM_THPS) *
+>  				    HPAGE_PMD_NR),
+>  			     nid, K(node_page_state(pgdat, NR_SHMEM_PMDMAPPED) *
+> diff --git a/fs/proc/meminfo.c b/fs/proc/meminfo.c
+> index d6fc74619625..a635c8a84ddf 100644
+> --- a/fs/proc/meminfo.c
+> +++ b/fs/proc/meminfo.c
+> @@ -129,7 +129,7 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
+>  
+>  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+>  	show_val_kb(m, "AnonHugePages:  ",
+> -		    global_node_page_state(NR_ANON_THPS) * HPAGE_PMD_NR);
+> +		    global_node_page_state(NR_ANON_THPS));
+>  	show_val_kb(m, "ShmemHugePages: ",
+>  		    global_node_page_state(NR_SHMEM_THPS) * HPAGE_PMD_NR);
+>  	show_val_kb(m, "ShmemPmdMapped: ",
+> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+> index 10dd3cae5f53..66ec454120de 100644
+> --- a/mm/huge_memory.c
+> +++ b/mm/huge_memory.c
+> @@ -2178,7 +2178,8 @@ static void __split_huge_pmd_locked(struct vm_area_struct *vma, pmd_t *pmd,
+>  		lock_page_memcg(page);
+>  		if (atomic_add_negative(-1, compound_mapcount_ptr(page))) {
+>  			/* Last compound_mapcount is gone. */
+> -			__dec_lruvec_page_state(page, NR_ANON_THPS);
+> +			__mod_lruvec_page_state(page, NR_ANON_THPS,
+> +						-HPAGE_PMD_NR);
+>  			if (TestClearPageDoubleMap(page)) {
+>  				/* No need in mapcount reference anymore */
+>  				for (i = 0; i < HPAGE_PMD_NR; i++)
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 8818bf64d6fe..b18e25a5cdf3 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1532,7 +1532,7 @@ static struct memory_stat memory_stats[] = {
+>  	 * on some architectures, the macro of HPAGE_PMD_SIZE is not
+>  	 * constant(e.g. powerpc).
+>  	 */
+> -	{ "anon_thp", 0, NR_ANON_THPS },
+> +	{ "anon_thp", PAGE_SIZE, NR_ANON_THPS },
+>  	{ "file_thp", 0, NR_FILE_THPS },
+>  	{ "shmem_thp", 0, NR_SHMEM_THPS },
+>  #endif
+> @@ -1565,8 +1565,7 @@ static int __init memory_stats_init(void)
+>  
+>  	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
+>  #ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> -		if (memory_stats[i].idx == NR_ANON_THPS ||
+> -		    memory_stats[i].idx == NR_FILE_THPS ||
+> +		if (memory_stats[i].idx == NR_FILE_THPS ||
+>  		    memory_stats[i].idx == NR_SHMEM_THPS)
+>  			memory_stats[i].ratio = HPAGE_PMD_SIZE;
+>  #endif
+> @@ -4088,10 +4087,6 @@ static int memcg_stat_show(struct seq_file *m, void *v)
+>  		if (memcg1_stats[i] == MEMCG_SWAP && !do_memsw_account())
+>  			continue;
+>  		nr = memcg_page_state_local(memcg, memcg1_stats[i]);
+> -#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> -		if (memcg1_stats[i] == NR_ANON_THPS)
+> -			nr *= HPAGE_PMD_NR;
+> -#endif
+>  		seq_printf(m, "%s %lu\n", memcg1_stat_names[i], nr * PAGE_SIZE);
+>  	}
+>  
+> @@ -4122,10 +4117,6 @@ static int memcg_stat_show(struct seq_file *m, void *v)
+>  		if (memcg1_stats[i] == MEMCG_SWAP && !do_memsw_account())
+>  			continue;
+>  		nr = memcg_page_state(memcg, memcg1_stats[i]);
+> -#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+> -		if (memcg1_stats[i] == NR_ANON_THPS)
+> -			nr *= HPAGE_PMD_NR;
+> -#endif
+>  		seq_printf(m, "total_%s %llu\n", memcg1_stat_names[i],
+>  						(u64)nr * PAGE_SIZE);
+>  	}
+> @@ -5653,10 +5644,11 @@ static int mem_cgroup_move_account(struct page *page,
+>  			__mod_lruvec_state(from_vec, NR_ANON_MAPPED, -nr_pages);
+>  			__mod_lruvec_state(to_vec, NR_ANON_MAPPED, nr_pages);
+>  			if (PageTransHuge(page)) {
+> -				__dec_lruvec_state(from_vec, NR_ANON_THPS);
+> -				__inc_lruvec_state(to_vec, NR_ANON_THPS);
+> +				__mod_lruvec_state(from_vec, NR_ANON_THPS,
+> +						   -nr_pages);
+> +				__mod_lruvec_state(to_vec, NR_ANON_THPS,
+> +						   nr_pages);
+>  			}
+> -
+>  		}
+>  	} else {
+>  		__mod_lruvec_state(from_vec, NR_FILE_PAGES, -nr_pages);
+> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+> index 469e28f95ce7..1700f52b7869 100644
+> --- a/mm/page_alloc.c
+> +++ b/mm/page_alloc.c
+> @@ -5580,7 +5580,7 @@ void show_free_areas(unsigned int filter, nodemask_t *nodemask)
+>  			K(node_page_state(pgdat, NR_SHMEM_THPS) * HPAGE_PMD_NR),
+>  			K(node_page_state(pgdat, NR_SHMEM_PMDMAPPED)
+>  					* HPAGE_PMD_NR),
+> -			K(node_page_state(pgdat, NR_ANON_THPS) * HPAGE_PMD_NR),
+> +			K(node_page_state(pgdat, NR_ANON_THPS)),
+>  #endif
+>  			K(node_page_state(pgdat, NR_WRITEBACK_TEMP)),
+>  			node_page_state(pgdat, NR_KERNEL_STACK_KB),
+> diff --git a/mm/rmap.c b/mm/rmap.c
+> index 08c56aaf72eb..f59e92e26b61 100644
+> --- a/mm/rmap.c
+> +++ b/mm/rmap.c
+> @@ -1144,7 +1144,8 @@ void do_page_add_anon_rmap(struct page *page,
+>  		 * disabled.
+>  		 */
+>  		if (compound)
+> -			__inc_lruvec_page_state(page, NR_ANON_THPS);
+> +			__mod_lruvec_page_state(page, NR_ANON_THPS,
+> +						HPAGE_PMD_NR);
+>  		__mod_lruvec_page_state(page, NR_ANON_MAPPED, nr);
+>  	}
+>  
+> @@ -1186,7 +1187,7 @@ void page_add_new_anon_rmap(struct page *page,
+>  		if (hpage_pincount_available(page))
+>  			atomic_set(compound_pincount_ptr(page), 0);
+>  
+> -		__inc_lruvec_page_state(page, NR_ANON_THPS);
+> +		__mod_lruvec_page_state(page, NR_ANON_THPS, HPAGE_PMD_NR);
+>  	} else {
+>  		/* Anon THP always mapped first with PMD */
+>  		VM_BUG_ON_PAGE(PageTransCompound(page), page);
+> @@ -1292,7 +1293,7 @@ static void page_remove_anon_compound_rmap(struct page *page)
+>  	if (!IS_ENABLED(CONFIG_TRANSPARENT_HUGEPAGE))
+>  		return;
+>  
+> -	__dec_lruvec_page_state(page, NR_ANON_THPS);
+> +	__mod_lruvec_page_state(page, NR_ANON_THPS, -HPAGE_PMD_NR);
+>  
+>  	if (TestClearPageDoubleMap(page)) {
+>  		/*
+> -- 
+> 2.11.0
 
-Reviewed-by: Zefan Li <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+-- 
+Michal Hocko
+SUSE Labs
