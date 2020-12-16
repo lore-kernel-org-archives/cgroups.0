@@ -1,69 +1,58 @@
-From: Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org>
-Subject: [PATCH] mm/memcontrol: remove the unnecessary rcu_read_[un]lock
-Date: Wed, 16 Dec 2020 13:52:13 +0800
-Message-ID: <20201216055213.GA63520@rlk>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] cgroup: Fix memory leak when parsing multiple source
+ parameters
+Date: Wed, 16 Dec 2020 10:11:36 -0500
+Message-ID: <X9ojqIbV/SxSrNy7@mtj.duckdns.org>
+References: <20201209121322.77665-1-miaoqinglang@huawei.com>
+ <20201210012943.92845-1-miaoqinglang@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=Date:From:Subject:Message-ID:MIME-Version; bh=BBKRI
-        TNFFT+q7yGvwOTx4/tWHfQzcYeyta5d1Cb3V68=; b=fB/bHrF7W+wEz0U0iVXbW
-        ATCoPSFOK67Iehdh5ukdjw4pGkuhbuE8YfAlOWVvLKt+5hznZ0U6IHJGPO1vabp0
-        WbnGtiCpykUl6cS9IIOgcP7ZD6Qo9+8RUjfi9347z63Wx8y5d/vcgT0OeTN6CIWH
-        xKzmE/1w/+8oGAFZC+kNDM=
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=e8UBHhFg+dlyjUuWALZhGhLIm76hEru3ETvVso2v0Xo=;
+        b=pUc3eRmZd45iQpeNK/64AmkrzUhbIBAM7pKzZyYLjQeKyB92dntNljnfvCDG7UOutC
+         m/WplD/grRAc7RqIf6063SJhpGRrhLVYsa9EmZMmHYKsibbOpNo+pejGfsc60bR5sK3u
+         JIiiMJnAt/e0LnjeULzz4tUefO9MJl5Uu91PouXkDceaxnRZvddl2dX1yMBiPDJWMG5B
+         PDW6Zg21tN16gCA2MkTzQgcFZKUV4Tx+84qwNpxl1l8c52lXa52B3/snRWQwGIpQaZPy
+         2uyKK9OID73/SM8cyaK+p6T52VS1GXnZf8lAoAUK+vqxq9+awrc6NDtSziLwoUTrHPwg
+         Swlg==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
+In-Reply-To: <20201210012943.92845-1-miaoqinglang@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: sh_def-9Onoh4P/yGk@public.gmane.org
+To: Qinglang Miao <miaoqinglang@huawei.com>
+Cc: Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-the rcu_read_lock and rcu_read_unlock is unnecessary in:
-	lock_page_lruvec()
-	lock_page_lruvec_irq()
-	lock_page_lruvec_irqsave()
+On Thu, Dec 10, 2020 at 09:29:43AM +0800, Qinglang Miao wrote:
+> A memory leak is found in cgroup1_parse_param() when multiple source
+> parameters overwrite fc->source in the fs_context struct without free.
+> 
+> unreferenced object 0xffff888100d930e0 (size 16):
+>   comm "mount", pid 520, jiffies 4303326831 (age 152.783s)
+>   hex dump (first 16 bytes):
+>     74 65 73 74 6c 65 61 6b 00 00 00 00 00 00 00 00  testleak........
+>   backtrace:
+>     [<000000003e5023ec>] kmemdup_nul+0x2d/0xa0
+>     [<00000000377dbdaa>] vfs_parse_fs_string+0xc0/0x150
+>     [<00000000cb2b4882>] generic_parse_monolithic+0x15a/0x1d0
+>     [<000000000f750198>] path_mount+0xee1/0x1820
+>     [<0000000004756de2>] do_mount+0xea/0x100
+>     [<0000000094cafb0a>] __x64_sys_mount+0x14b/0x1f0
+> 
+> Fix this bug by permitting a single source parameter and rejecting with
+> an error all subsequent ones.
+> 
+> Fixes: 8d2451f4994f ("cgroup1: switch to option-by-option parsing")
+> Reported-by: Hulk Robot <hulkci@huawei.com>
+> Signed-off-by: Qinglang Miao <miaoqinglang@huawei.com>
 
-Signed-off-by: Hui Su <sh_def-9Onoh4P/yGk@public.gmane.org>
----
- mm/memcontrol.c | 6 ------
- 1 file changed, 6 deletions(-)
+Applied to cgroup/for-5.11.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e3c7ca7dc174..a19f820e8a3f 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1396,10 +1396,8 @@ struct lruvec *lock_page_lruvec(struct page *page)
- 	struct lruvec *lruvec;
- 	struct pglist_data *pgdat = page_pgdat(page);
- 
--	rcu_read_lock();
- 	lruvec = mem_cgroup_page_lruvec(page, pgdat);
- 	spin_lock(&lruvec->lru_lock);
--	rcu_read_unlock();
- 
- 	lruvec_memcg_debug(lruvec, page);
- 
-@@ -1411,10 +1409,8 @@ struct lruvec *lock_page_lruvec_irq(struct page *page)
- 	struct lruvec *lruvec;
- 	struct pglist_data *pgdat = page_pgdat(page);
- 
--	rcu_read_lock();
- 	lruvec = mem_cgroup_page_lruvec(page, pgdat);
- 	spin_lock_irq(&lruvec->lru_lock);
--	rcu_read_unlock();
- 
- 	lruvec_memcg_debug(lruvec, page);
- 
-@@ -1426,10 +1422,8 @@ struct lruvec *lock_page_lruvec_irqsave(struct page *page, unsigned long *flags)
- 	struct lruvec *lruvec;
- 	struct pglist_data *pgdat = page_pgdat(page);
- 
--	rcu_read_lock();
- 	lruvec = mem_cgroup_page_lruvec(page, pgdat);
- 	spin_lock_irqsave(&lruvec->lru_lock, *flags);
--	rcu_read_unlock();
- 
- 	lruvec_memcg_debug(lruvec, page);
- 
+Thanks.
+
 -- 
-2.29.2
-
+tejun
