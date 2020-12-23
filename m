@@ -1,81 +1,39 @@
-From: Alex Shi <alex.shi@linux.alibaba.com>
-Subject: Re: [PATCH v2 2/3] mm/memcg: remove rcu locking for lock_page_lruvec
- function series
-Date: Tue, 22 Dec 2020 16:00:20 +0800
-Message-ID: <398f089d-250b-39f7-691a-9ce495b30700@linux.alibaba.com>
-References: <1608614453-10739-1-git-send-email-alex.shi@linux.alibaba.com>
- <1608614453-10739-2-git-send-email-alex.shi@linux.alibaba.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v5 1/7] mm: memcontrol: fix NR_ANON_THPS accounting in
+ charge moving
+Date: Wed, 23 Dec 2020 13:01:07 -0800
+Message-ID: <CALvZod7WqYEVOD0o7y+JVcTjdF8N=cbZHEeXa3VvkMsJDQjeKg@mail.gmail.com>
+References: <20201217034356.4708-1-songmuchun@bytedance.com> <20201217034356.4708-2-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1608614453-10739-2-git-send-email-alex.shi@linux.alibaba.com>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=g36tAmTEjSaA0vpBKIUlCpStJerd4pisa8lbF6yxKNQ=;
+        b=kn3BVILCed5+28QuNVyEq3hRiqw3fts33Is0SKnBnm17qBAVZ6oxU+DgC7uMmunsTH
+         2a8wsM30fyoKI6v9GWohnvTMO5TYWEKkVvE4s/DF3tT8r5sdLksMQxtNkyWi0AcTFDW4
+         hzsZELBW0HTOt7N1u6bEzGc/JOnkLsHiAVA5rj/vh/uyWPVcX86QX6MXrj/vEh+tO/wr
+         0sSNB2ZbmhP1LDMvMU6ZvEQDpTyGMYClmNF1sruJq5YfeMV7C8cqn0Px8HjHsQIdLbk8
+         5GRLH2bKy5K4w+EZF35tH6U5vIO0TqDfdYVDaxNJu/ntR7m/JgE56e2Kf41SGSmLlpc3
+         h6Aw==
+In-Reply-To: <20201217034356.4708-2-songmuchun@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: hughd@google.com
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Hui Su <sh_def@163.com>, Alexander Duyck <alexander.duyck@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Muchun Song <songmuchun@bytedance.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, rafael@kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Hugh Dickins <hughd@google.com>, Roman Gushchin <guro@fb.com>, Sami Tolvanen <samitolvanen@google.com>, Feng Tang <feng.tang@intel.com>, Neil Brown <neilb@suse.de>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Randy Dunlap <rdunlap@infradead.org>, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, Michal Hocko <mhocko@suse.com>, Pankaj Gupta <pankaj.gupta@cloud.ionos.com>
 
-Cc: Hui Su and Alexander Duyck as Hugh suggested.
+On Wed, Dec 16, 2020 at 7:45 PM Muchun Song <songmuchun@bytedance.com> wrote:
+>
+> The unit of NR_ANON_THPS is HPAGE_PMD_NR already. So it should inc/dec
+> by one rather than nr_pages.
+>
+> Fixes: 468c398233da ("mm: memcontrol: switch to native NR_ANON_THPS counter")
+> Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+> Acked-by: Michal Hocko <mhocko@suse.com>
+> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> Acked-by: Pankaj Gupta <pankaj.gupta@cloud.ionos.com>
+> Reviewed-by: Roman Gushchin <guro@fb.com>
 
-=D4=DA 2020/12/22 =CF=C2=CE=E71:20, Alex Shi =D0=B4=B5=C0:
-> lock_page_lruvec() and its variants used rcu_read_lock() with the
-> intention of safeguarding against the mem_cgroup being destroyed
-> concurrently; but so long as they are called under the specified
-> conditions (as they are), there is no way for the page's mem_cgroup
-> to be destroyed.  Delete the unnecessary rcu_read_lock() and _unlock().
->=20
-> Hugh Dickin's polished the commit log, Thanks a lot!
->=20
-> Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
-> Acked-by: Hugh Dickins <hughd@google.com>
-> Cc: Hugh Dickins <hughd@google.com>
-> Cc: Johannes Weiner <hannes@cmpxchg.org>
-> Cc: Michal Hocko <mhocko@kernel.org>
-> Cc: Vladimir Davydov <vdavydov.dev@gmail.com>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: cgroups@vger.kernel.org
-> Cc: linux-mm@kvack.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  mm/memcontrol.c | 6 ------
->  1 file changed, 6 deletions(-)
->=20
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 8d400efc81b9..0af13c4fe4b3 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -1356,10 +1356,8 @@ struct lruvec *lock_page_lruvec(struct page *page)
->  	struct lruvec *lruvec;
->  	struct pglist_data *pgdat =3D page_pgdat(page);
-> =20
-> -	rcu_read_lock();
->  	lruvec =3D mem_cgroup_page_lruvec(page, pgdat);
->  	spin_lock(&lruvec->lru_lock);
-> -	rcu_read_unlock();
-> =20
->  	lruvec_memcg_debug(lruvec, page);
-> =20
-> @@ -1371,10 +1369,8 @@ struct lruvec *lock_page_lruvec_irq(struct page *p=
-age)
->  	struct lruvec *lruvec;
->  	struct pglist_data *pgdat =3D page_pgdat(page);
-> =20
-> -	rcu_read_lock();
->  	lruvec =3D mem_cgroup_page_lruvec(page, pgdat);
->  	spin_lock_irq(&lruvec->lru_lock);
-> -	rcu_read_unlock();
-> =20
->  	lruvec_memcg_debug(lruvec, page);
-> =20
-> @@ -1386,10 +1382,8 @@ struct lruvec *lock_page_lruvec_irqsave(struct pag=
-e *page, unsigned long *flags)
->  	struct lruvec *lruvec;
->  	struct pglist_data *pgdat =3D page_pgdat(page);
-> =20
-> -	rcu_read_lock();
->  	lruvec =3D mem_cgroup_page_lruvec(page, pgdat);
->  	spin_lock_irqsave(&lruvec->lru_lock, *flags);
-> -	rcu_read_unlock();
-> =20
->  	lruvec_memcg_debug(lruvec, page);
-> =20
->=20
+Reviewed-by: Shakeel Butt <shakeelb@google.com>
