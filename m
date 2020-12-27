@@ -1,77 +1,55 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: [PATCH v5 2/7] mm: memcontrol: convert
- NR_ANON_THPS account to pages
-Date: Thu, 24 Dec 2020 10:45:58 +0800
-Message-ID: <CAMZfGtVQvD4o-nVdCqNBjWtjDzxcfqme9xMH9ar=C=_sMyDm+g@mail.gmail.com>
-References: <20201217034356.4708-1-songmuchun@bytedance.com>
- <20201217034356.4708-3-songmuchun@bytedance.com> <CALvZod7kMhb7k6rDZj18JTE=RMji-SinJmfdcPbN9PUL9Off_w@mail.gmail.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 1/2] mm: memcg: fix memcg file_dirty numa stat
+Date: Sun, 27 Dec 2020 10:13:09 -0800
+Message-ID: <20201227181310.3235210-1-shakeelb@google.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=fDRfu0M1YLV1uhT7YoKaiH9p9Ye/ITZc1yvaQ4SUQRQ=;
-        b=ZJPDaWbo/DIXrpPoj3kbzFZq3ifzLIDVBRcOUeeDau6bNYnMbfXwq+Q3xjq+SqbDy4
-         Dim1zSamlWYGDHO7vC5p5k5feoa3IXuVpZaqrm86asSB+klu5vOjmug219Kw/52k8nAo
-         eHOfWtYH2gjhQhErEg4GMr3D5/GaUBAn4XQCkV/btHnMMR6M1AEaIiPQpHv9/jr0V9p5
-         dPyMkWT6VkJRbkcY3AvB9Eta4zTVQCQmf9DRFylxLwf8Zm98OVmndOXtNERC8HmdkP0F
-         kuhZWGA2K7XU/Gz+RkI2T6VYvzo+paOxH/7ud2cUmqITTJde3TZ5DowlQoAvpRH7yspk
-         1t5Q==
-In-Reply-To: <CALvZod7kMhb7k6rDZj18JTE=RMji-SinJmfdcPbN9PUL9Off_w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        d=google.com; s=20161025;
+        h=sender:date:message-id:mime-version:subject:from:to:cc;
+        bh=xnWBSJPhozInRwppdn26D5arQOhyJfW1ESk6fdr40LY=;
+        b=Dq/IHpw1gtGkzq5FLK/NHtIAnUq2oqWzMLwgYRvTVAfZpIRHDmLWc65E2hDSOJ2FXh
+         wPPxoEBceQFulXVt8Vkej4uoC8IFNalCxyyZG2Z7Qhz4gMg9MjB2j2vvyDmnCWSUv/KJ
+         bvhWE+tL7sJQ5JFIxJARhcjnAvEhFXS2Xk64bHkw/yW1OYQ2B8QGUu12/bNGdjiUrSmr
+         IcqmBZn6jf8NNp0HcFxJZ7bvCPQMK8Ib3OsxbmRmKujlxbO22gilrOILbjnF3HUgUkkk
+         UR/SmyQjJIcLSdUqFIkHJ6pYPkCUBDjqJlYTB6h27QJEuz/rhV/E9KLlWMpI9cUSi+JC
+         +Jtw==
+Sender: "shakeelb via sendgmr" <shakeelb-rSQFlI6iZjOvss2yl3NHrPyj43VRqXoZVpNB7YpNyf8@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "Rafael J. Wysocki" <rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Sami Tolvanen <samitolvanen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Feng Tang <feng.tang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Neil Brown <neilb-l3A5Bk7waGM@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Naoya Horiguchi <n-horiguchi-PaJj6Psr51x8UrSeD/g0lQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: "Kirill A . Shutemov" <kirill.shutemov-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Dec 24, 2020 at 6:08 AM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-> On Wed, Dec 16, 2020 at 7:45 PM Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
-> >
-> > Currently we use struct per_cpu_nodestat to cache the vmstat
-> > counters, which leads to inaccurate statistics expecially THP
->
-> *especially
+The kernel updates the per-node NR_FILE_DIRTY stats on page migration
+but not the memcg numa stats. That was not an issue until recently the
+commit 5f9a4f4a7096 ("mm: memcontrol: add the missing numa_stat interface
+for cgroup v2") exposed numa stats for the memcg. So fixing the
+file_dirty per-memcg numa stat.
 
-Thanks.
+Fixes: 5f9a4f4a7096 ("mm: memcontrol: add the missing numa_stat interface for cgroup v2")
+Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+---
+ mm/migrate.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
->
-> > vmstat counters. In the systems with hundreads of processors
->
-> *hundreds
-
-Thanks.
-
->
-> > it can be GBs of memory. For example, for a 96 CPUs system,
-> > the threshold is the maximum number of 125. And the per cpu
-> > counters can cache 23.4375 GB in total.
-> >
-> > The THP page is already a form of batched addition (it will
-> > add 512 worth of memory in one go) so skipping the batching
-> > seems like sensible. Although every THP stats update overflows
-> > the per-cpu counter, resorting to atomic global updates. But
-> > it can make the statistics more accuracy for the THP vmstat
-> > counters.
-> >
-> > So we convert the NR_ANON_THPS account to pages. This patch
-> > is consistent with 8f182270dfec ("mm/swap.c: flush lru pvecs
-> > on compound page arrival"). Doing this also can make the unit
-> > of vmstat counters more unified. Finally, the unit of the vmstat
-> > counters are pages, kB and bytes. The B/KB suffix can tell us
-> > that the unit is bytes or kB. The rest which is without suffix
-> > are pages.
-> >
-> > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
->
-> I agree with the motivation behind this patch but I would like to see
-> some performance numbers in the commit message. We might agree to pay
-> the price but at least we will know what exactly that cost is.
-
-Do you have any recommendations about benchmarks?
-I can do a test. Thanks very much.
-
+diff --git a/mm/migrate.c b/mm/migrate.c
+index ee5e612b4cd8..613794f6a433 100644
+--- a/mm/migrate.c
++++ b/mm/migrate.c
+@@ -500,9 +500,9 @@ int migrate_page_move_mapping(struct address_space *mapping,
+ 			__inc_lruvec_state(new_lruvec, NR_SHMEM);
+ 		}
+ 		if (dirty && mapping_can_writeback(mapping)) {
+-			__dec_node_state(oldzone->zone_pgdat, NR_FILE_DIRTY);
++			__dec_lruvec_state(old_lruvec, NR_FILE_DIRTY);
+ 			__dec_zone_state(oldzone, NR_ZONE_WRITE_PENDING);
+-			__inc_node_state(newzone->zone_pgdat, NR_FILE_DIRTY);
++			__inc_lruvec_state(new_lruvec, NR_FILE_DIRTY);
+ 			__inc_zone_state(newzone, NR_ZONE_WRITE_PENDING);
+ 		}
+ 	}
 -- 
-Yours,
-Muchun
+2.29.2.729.g45daf8777d-goog
+
