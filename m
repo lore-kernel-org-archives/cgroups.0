@@ -1,143 +1,99 @@
-From: Imran Khan <imran.f.khan@oracle.com>
-Subject: [RFC PATCH] mm/memcontrol: Increase threshold for draining per-cpu stocked bytes.
-Date: Tue,  5 Jan 2021 16:07:42 +0000
-Message-ID: <1609862862-3573-1-git-send-email-imran.f.khan@oracle.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id; s=corp-2020-01-29;
- bh=yNni/tK57EDeoptLP5V7FbpXjviboZZ0FQ2qjDTGI0k=;
- b=BZdT1mw9MX1u0oGQ6e+ZpQc4eAG3Vtt1aCAuGVfcz2ES7ceOfYdWhsPkQCpBdIihKl3o
- vt66aqLlVEv1D/mehQfNancEmNq/jyBEEs13OyY7FziAV8kFMYxxOIH/EP4xAc2LtCOL
- LjVRi0TkSZx8K4nxFlMqtzMNYR7iNtVLZ4ldGF/vljYyPRjy6KDVExFleoRU2mpOYhK2
- UkBgX2g0zPpXVbD+jjSkbx60zTJNZVQLdccrgeDmZ3ByR/2za0pBFwNrW61w4jk+ZnDn
- phduzwwMovodnMR3rXUC0aS6SG+iRNKCTfgtzZUml3MsRExCkdBj0KlN/AN91f5J46fc YQ== 
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: blk-iocost: fix NULL iocg deref from racing against initialization
+Date: Tue, 5 Jan 2021 12:37:23 -0500
+Message-ID: <X/Sj014x+U8ubiFT@mtj.duckdns.org>
+Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=bOiN/zd9h/CaIEMnPVzsFlx2JDr/hQqa7NqLbxPttmg=;
+        b=A6Yuo3om6XcBhTEO/4ecawxwdtaAZUgoobIbMueTX0iyKN5I3/eZSh8b2H/H9cDex2
+         DNgxYkpPOWU6ZWJyxvtFUYQYV25ZSDCFg4ocuHiarOztqojoRL1GML2sjQp4H95hu3Pe
+         JKCFNqc0/UEQHIAEIeopDEVKMj93Viv8k5GQV24uR80o2JheusvN5HxBJkIH5gyu7Un6
+         4vGn1EADmSXg+xHSlCuFCWDK9RiNFdrbVkB8oGgwyGKWMBQCaJ6EQRs2cpUK3NEmAv4i
+         GnVoLS83odSpWLkHzklUVWxOTzE2p8AJFt4IkDWuatBTYKVfIwIkuRwTeBD/gNG2UXo6
+         LuIA==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: hannes@cmpxchg.org, mhocko@kernel.org
-Cc: akpm@linux-foundation.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Imran Khan <imran.f.khan@oracle.com>
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bsd-b10kYP2dOMg@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-While allocating objects whose size is multiple of PAGE_SIZE,
-say kmalloc-4K, we charge one page for extra bytes corresponding
-to the obj_cgroup membership pointer and remainder of the charged
-page gets added to per-cpu stocked bytes. If this allocation is
-followed by another allocation of the same size, the stocked bytes
-will not suffice and thus we endup charging an extra page
-again for membership pointer and remainder of this page gets added
-to per-cpu stocked bytes. This second addition will cause amount of
-stocked bytes to go beyond PAGE_SIZE and hence will result in
-invocation of drain_obj_stock.
+When initializing iocost for a queue, its rqos should be registered before
+the blkcg policy is activated to allow policy data initiailization to lookup
+the associated ioc. This unfortunately means that the rqos methods can be
+called on bios before iocgs are attached to all existing blkgs.
 
-So if we are in a scenario where we are consecutively allocating,
-several PAGE_SIZE multiple sized objects, the stocked bytes will
-never be enough to suffice a request and every second request will
-trigger draining of stocked bytes.
+While the race is theoretically possible on ioc_rqos_throttle(), it mostly
+happened in ioc_rqos_merge() due to the difference in how they lookup ioc.
+The former determines it from the passed in @rqos and then bails before
+dereferencing iocg if the looked up ioc is disabled, which most likely is
+the case if initialization is still in progress. The latter looked up ioc by
+dereferencing the possibly NULL iocg making it a lot more prone to actually
+triggering the bug.
 
-For example invoking __alloc_skb multiple times with
-2K < packet size < 4K will give a call graph like:
+* Make ioc_rqos_merge() use the same method as ioc_rqos_throttle() to look
+  up ioc for consistency.
 
-__alloc_skb
-    |
-    |__kmalloc_reserve.isra.61
-    |    |
-    |    |__kmalloc_node_track_caller
-    |    |    |
-    |    |    |slab_pre_alloc_hook.constprop.88
-    |    |     obj_cgroup_charge
-    |    |    |    |
-    |    |    |    |__memcg_kmem_charge
-    |    |    |    |    |
-    |    |    |    |    |page_counter_try_charge
-    |    |    |    |
-    |    |    |    |refill_obj_stock
-    |    |    |    |    |
-    |    |    |    |    |drain_obj_stock.isra.68
-    |    |    |    |    |    |
-    |    |    |    |    |    |__memcg_kmem_uncharge
-    |    |    |    |    |    |    |
-    |    |    |    |    |    |    |page_counter_uncharge
-    |    |    |    |    |    |    |    |
-    |    |    |    |    |    |    |    |page_counter_cancel
-    |    |    |
-    |    |    |
-    |    |    |__slab_alloc
-    |    |    |    |
-    |    |    |    |___slab_alloc
-    |    |    |    |
-    |    |    |slab_post_alloc_hook
+* Make ioc_rqos_throttle() and ioc_rqos_merge() test for NULL iocg before
+  dereferencing it.
 
-This frequent draining of stock bytes and resultant charging of pages
-increases the CPU load and hence deteriorates the scheduler latency.
+* Explain the danger of NULL iocgs in blk_iocost_init().
 
-The above mentioned scenario and it's impact can be seen by running
-hackbench with large packet size on v5.8 and subsequent kernels. The
-deterioration in hackbench number starts appearing from v5.9 kernel,
-'commit f2fe7b09a52b ("mm: memcg/slab: charge individual slab objects
-instead of pages")'.
-
-Increasing the draining limit to twice of KMALLOC_MAX_CACHE_SIZE
-(a safe upper limit for size of slab cache objects), will avoid draining
-of stock, every second allocation request, for the above mentioned
-scenario and hence will reduce the CPU load for such cases. For
-allocation of smaller objects or other allocation patterns the behaviour
-will be same as before.
-
-This change increases the draining threshold for per-cpu stocked bytes
-from PAGE_SIZE to KMALLOC_MAX_CACHE_SIZE * 2.
-
-Below are the hackbench numbers with and without this change on
-v5.10.0-rc7.
-
-Without this change:
-    # hackbench process 10 1000 -s 100000
-    Running in process mode with 10 groups using 40 file descriptors
-    each (== 400 tasks)
-    Each sender will pass 100 messages of 100000 bytes
-    Time: 4.401
-
-    # hackbench process 10 1000 -s 100000
-    Running in process mode with 10 groups using 40 file descriptors
-    each (== 400 tasks)
-    Each sender will pass 100 messages of 100000 bytes
-    Time: 4.470
-
-With this change:
-    # hackbench process 10 1000 -s 100000
-    Running in process mode with 10 groups using 40 file descriptors
-    each (== 400 tasks)
-    Each sender will pass 100 messages of 100000 bytes
-    Time: 3.782
-
-    # hackbench process 10 1000 -s 100000
-    Running in process mode with 10 groups using 40 file descriptors
-    each (== 400 tasks)
-    Each sender will pass 100 messages of 100000 bytes
-    Time: 3.827
-
-As can be seen the change gives an improvement of about 15% in hackbench
-numbers.
-Also numbers obtained with the change are inline with those obtained
-from v5.8 kernel.
-
-Signed-off-by: Imran Khan <imran.f.khan@oracle.com>
+Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Reported-by: Jonathan Lemon <bsd-b10kYP2dOMg@public.gmane.org>
+Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # v5.4+
 ---
- mm/memcontrol.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ block/blk-iocost.c |   16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 0d74b80..c04633c 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3256,7 +3256,7 @@ static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
- 	}
- 	stock->nr_bytes += nr_bytes;
+diff --git a/block/blk-iocost.c b/block/blk-iocost.c
+index ac6078a349394..98d656bdb42b7 100644
+--- a/block/blk-iocost.c
++++ b/block/blk-iocost.c
+@@ -2551,8 +2551,8 @@ static void ioc_rqos_throttle(struct rq_qos *rqos, struct bio *bio)
+ 	bool use_debt, ioc_locked;
+ 	unsigned long flags;
  
--	if (stock->nr_bytes > PAGE_SIZE)
-+	if (stock->nr_bytes > KMALLOC_MAX_CACHE_SIZE * 2)
- 		drain_obj_stock(stock);
+-	/* bypass IOs if disabled or for root cgroup */
+-	if (!ioc->enabled || !iocg->level)
++	/* bypass IOs if disabled, still initializing, or for root cgroup */
++	if (!ioc->enabled || !iocg || !iocg->level)
+ 		return;
  
- 	local_irq_restore(flags);
--- 
-1.8.3.1
-
+ 	/* calculate the absolute vtime cost */
+@@ -2679,14 +2679,14 @@ static void ioc_rqos_merge(struct rq_qos *rqos, struct request *rq,
+ 			   struct bio *bio)
+ {
+ 	struct ioc_gq *iocg = blkg_to_iocg(bio->bi_blkg);
+-	struct ioc *ioc = iocg->ioc;
++	struct ioc *ioc = rqos_to_ioc(rqos);
+ 	sector_t bio_end = bio_end_sector(bio);
+ 	struct ioc_now now;
+ 	u64 vtime, abs_cost, cost;
+ 	unsigned long flags;
+ 
+-	/* bypass if disabled or for root cgroup */
+-	if (!ioc->enabled || !iocg->level)
++	/* bypass if disabled, still initializing, or for root cgroup */
++	if (!ioc->enabled || !iocg || !iocg->level)
+ 		return;
+ 
+ 	abs_cost = calc_vtime_cost(bio, iocg, true);
+@@ -2863,6 +2863,12 @@ static int blk_iocost_init(struct request_queue *q)
+ 	ioc_refresh_params(ioc, true);
+ 	spin_unlock_irq(&ioc->lock);
+ 
++	/*
++	 * rqos must be added before activation to allow iocg_pd_init() to
++	 * lookup the ioc from q. This means that the rqos methods may get
++	 * called before policy activation completion, can't assume that the
++	 * target bio has an iocg associated and need to test for NULL iocg.
++	 */
+ 	rq_qos_add(q, rqos);
+ 	ret = blkcg_activate_policy(q, &blkcg_policy_iocost);
+ 	if (ret) {
