@@ -1,61 +1,54 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm: memcg: add swapcache stat for memcg v2
-Date: Wed, 6 Jan 2021 08:42:39 -0800
-Message-ID: <CALvZod6Lv3gWmWRPP7jAaw4YCQPyPXcxqXTO3Vp6YVZ6AcEH4w@mail.gmail.com>
-References: <20210101023955.250965-1-shakeelb@google.com> <20210106145349.GN13207@dhcp22.suse.cz>
+From: Vipin Sharma <vipinsh@google.com>
+Subject: Re: [Patch v3 0/2] cgroup: KVM: New Encryption IDs cgroup controller
+Date: Wed, 6 Jan 2021 10:45:14 -0800
+Message-ID: <X/YFOvLp/mEk5z9W@google.com>
+References: <20201209205413.3391139-1-vipinsh@google.com>
+ <X9E6eZaIFDhzrqWO@mtj.duckdns.org>
+ <4f7b9c3f-200e-6127-1d94-91dd9c917921@de.ibm.com>
+ <5f8d4cba-d3f-61c2-f97-fdb338fec9b8@google.com>
+ <X9onUwvKovJeHpKR@mtj.duckdns.org>
+ <CAHVum0dS+QxWFSK+evxQtZDHkZZx9pr0m_jEDHc9ovd5jQcfaA@mail.gmail.com>
+ <X/SHiFHRsQM43VgC@mtj.duckdns.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=utozISaxL63drmUZAC6aSc+ai12dhlJYUKebxiFAYAo=;
-        b=NJgC/VUIvpf5fbTrQst8wZDFHYVt/5v9vItzWgOp62erRY5JkQGsNMvKLDONIPp/BD
-         zfZi6fl4PjIAf6Zmb7/vqYHlqhAebazjLTxpe49ORp+LFKCsUl04l9F1aU1l3EZZwSL7
-         3C2r0OzvfFvuvUAJEVE08+OI3ztkKPl0RHcNxLSH43zDth8rS2q9Ka97JE1HGgk34A9Y
-         urfd7r+YFlHUazX1lwYuWsVOio3w20BEArpVhHgsEz5f91diI5p1QamKhRnX9eKPmEId
-         K04++Bd9AxG5mDliD9J8T6GMEBG1NZe2MXWAd43BvvvkRi9lRGkmf108ZUt8111O7wJJ
-         DPXg==
-In-Reply-To: <20210106145349.GN13207-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=ho+xRsAlnZPA9XwreJh6lam3mNeyMrjUZb8gp0Pijj4=;
+        b=pp1lm1jkJ+G032pTcswwk6Ab4cZJqTQ98WbtBympCzpKmXncEcv6qCTKzdSbVOifHF
+         uO+nl+4aB9LlmW27p+QnG2+/nu8cKCtE16/9E02D0atV5oYdFrwqTeb1hcvmgQQjdytE
+         BP1rIL3zXJL23b5bAWRaM36ihs/hLE+PLKsZFbf/TciuW23P2ye6vkAHfsnLnFQiw8op
+         SaTOOnQnWIsFOuYSjlppUh85Nmnt1nhpBQbFhMgLCW6419x2Pc3B2b/hRpknb8qcl2/J
+         v0XFc/9O3QoVmWuvbjNFMHTi5AJ8M6U2jnYB8YoB90TeBavfL516zS3wbFWGmGUCg3im
+         GPtg==
+Content-Disposition: inline
+In-Reply-To: <X/SHiFHRsQM43VgC@mtj.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: David Rientjes <rientjes@google.com>, Christian Borntraeger <borntraeger@de.ibm.com>, Tom Lendacky <thomas.lendacky@amd.com>, Brijesh <brijesh.singh@amd.com>, Jon <jon.grimm@amd.com>, Eric <eric.vantassell@amd.com>, pbonzini@redhat.com, Sean Christopherson <seanjc@google.com>, lizefan@huawei.com, hannes@cmpxchg.org, Janosch Frank <frankja@linux.ibm.com>, corbet@lwn.net, joro@8bytes.org, vkuznets@redhat.com, wanpengli@tencent.com, Jim Mattson <jmattson@google.com>, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, Matt Gingell <gingell@google.com>, Dionna Glaze <dionnaglaze@google.com>, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Jan 6, 2021 at 6:53 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
->
-> On Thu 31-12-20 18:39:55, Shakeel Butt wrote:
-> > This patch adds swapcache stat for the cgroup v2. The swapcache
-> > represents the memory that is accounted against both the memory and the
-> > swap limit of the cgroup. The main motivation behind exposing the
-> > swapcache stat is for enabling users to gracefully migrate from cgroup
-> > v1's memsw counter to cgroup v2's memory and swap counters.
-> >
-> > Cgroup v1's memsw limit allows users to limit the memory+swap usage of a
-> > workload but without control on the exact proportion of memory and swap.
-> > Cgroup v2 provides separate limits for memory and swap which enables
-> > more control on the exact usage of memory and swap individually for the
-> > workload.
-> >
-> > With some little subtleties, the v1's memsw limit can be switched with
-> > the sum of the v2's memory and swap limits. However the alternative for
-> > memsw usage is not yet available in cgroup v2. Exposing per-cgroup
-> > swapcache stat enables that alternative. Adding the memory usage and
-> > swap usage and subtracting the swapcache will approximate the memsw
-> > usage. This will help in the transparent migration of the workloads
-> > depending on memsw usage and limit to v2' memory and swap counters.
->
-> Could you expand a bit more on why memsw usage is important even in
-> cgroup v2 land? How are you going to use the approximated value?
->
+On Tue, Jan 05, 2021 at 10:36:40AM -0500, Tejun Heo wrote:
+> Happy new year!
+> 
+> On Wed, Dec 16, 2020 at 12:02:37PM -0800, Vipin Sharma wrote:
+> > I like the idea of having a separate controller to keep the code simple and
+> > easier for maintenance.
+> 
+> Yeah, the more I think about it, keeping it separate seems like the right
+> thing to do. What bothers me primarily is that the internal logic is
+> identical between the RDMA controller and this one. If you wanna try
+> factoring them out into library, great. If not, I don't think it should
+> block merging this controller. We can get to refactoring later.
+> 
 
-Two main benefits. First, it hides the underlying system's swap setup
-from the applications. Applications with multiple instances running in
-a datacenter with heterogeneous systems (some have swap and some
-don't) will keep seeing a consistent view of their usage.
+Happy new year!
+Sounds great, I will send out a new patch which will not reject the new
+max limit based on the current usage. It will not include refactoring
+out common code between RDMA and Encryption ID controller. We can pursue
+that later.
 
-Second, most of the applications (at least in our prod) are not really
-interested in two separate memory and swap usage metrics. A single
-usage metric is more simple to use and reason about for these
-applications.
+Thanks
+Vipin
