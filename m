@@ -1,72 +1,61 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm: memcg: add swapcache stat for memcg v2
-Date: Fri, 8 Jan 2021 14:24:14 +0100
-Message-ID: <20210108132414.GD13207@dhcp22.suse.cz>
-References: <20210101023955.250965-1-shakeelb@google.com>
- <20210106145349.GN13207@dhcp22.suse.cz>
- <CALvZod6Lv3gWmWRPP7jAaw4YCQPyPXcxqXTO3Vp6YVZ6AcEH4w@mail.gmail.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: [PATCH v2 1/3] mm: memcg: fix memcg file_dirty numa stat
+Date: Fri,  8 Jan 2021 07:58:11 -0800
+Message-ID: <20210108155813.2914586-1-shakeelb@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1610112255; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=kWajWUazhZoEFj2YC1/JZm5JagKSGgfHEeGYCRfJurE=;
-        b=gs/586IHJv6CfKBEQW6uznolaSjSS7pyS5nCShXJcGLVgCkBmUTYiKM35HqVN6LdBhjcdl
-        GSiu4KPjhiEhosFZ+Q5uNSk690PF1Oee5aOvtgSFQcJW6Ls9/9qCRSvcUHoRLguIVpVh2C
-        Na5hi5eVTTxjyqSzml7eMuDkWWNgBtc=
-Content-Disposition: inline
-In-Reply-To: <CALvZod6Lv3gWmWRPP7jAaw4YCQPyPXcxqXTO3Vp6YVZ6AcEH4w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Return-path: <stable-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=sender:date:message-id:mime-version:subject:from:to:cc;
+        bh=TmS2aUSU9Nc+jbusxkpkx6bWx9vKLPLSx0ah1Mh9yyI=;
+        b=MqO7QoO5t1t19B+AEl6h5z4tw+zU7KM6GwbNk/Mp1PFVGy9rfrtGYSbX/d9+eAzZhn
+         85nVIeuPCcrIsHLF6pmDeiMskOl5gL8hrRpWLw2fiRK1XfHVrtlIhB3jtVuaOAuYAkX9
+         y6PXWQyxwiovuUX4CqBWFUXWa2W+xhkln/xfwF05D6fSP6Ciqky7dTJuFFfn+UdmRkds
+         KWeq7o1ESWlHIt80X8LW5vaHOnrLQeNZ4AhBLpgI54SeMWH/RtWLb2vuIH8DG7ux9OWT
+         VZV7UjrCJGnJuc7mg18IjSCC1lMGzxZnMGNHFI+bg4cgIzRnzex0r+3is36+V51S9R/d
+         SeWQ==
+Sender: "shakeelb via sendgmr" <shakeelb@shakeelb.svl.corp.google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Yang Shi <shy828301@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, stable@vger.kernel.org
 
-On Wed 06-01-21 08:42:39, Shakeel Butt wrote:
-> On Wed, Jan 6, 2021 at 6:53 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> >
-> > On Thu 31-12-20 18:39:55, Shakeel Butt wrote:
-> > > This patch adds swapcache stat for the cgroup v2. The swapcache
-> > > represents the memory that is accounted against both the memory and the
-> > > swap limit of the cgroup. The main motivation behind exposing the
-> > > swapcache stat is for enabling users to gracefully migrate from cgroup
-> > > v1's memsw counter to cgroup v2's memory and swap counters.
-> > >
-> > > Cgroup v1's memsw limit allows users to limit the memory+swap usage of a
-> > > workload but without control on the exact proportion of memory and swap.
-> > > Cgroup v2 provides separate limits for memory and swap which enables
-> > > more control on the exact usage of memory and swap individually for the
-> > > workload.
-> > >
-> > > With some little subtleties, the v1's memsw limit can be switched with
-> > > the sum of the v2's memory and swap limits. However the alternative for
-> > > memsw usage is not yet available in cgroup v2. Exposing per-cgroup
-> > > swapcache stat enables that alternative. Adding the memory usage and
-> > > swap usage and subtracting the swapcache will approximate the memsw
-> > > usage. This will help in the transparent migration of the workloads
-> > > depending on memsw usage and limit to v2' memory and swap counters.
-> >
-> > Could you expand a bit more on why memsw usage is important even in
-> > cgroup v2 land? How are you going to use the approximated value?
-> >
-> 
-> Two main benefits. First, it hides the underlying system's swap setup
-> from the applications. Applications with multiple instances running in
-> a datacenter with heterogeneous systems (some have swap and some
-> don't) will keep seeing a consistent view of their usage.
-> 
-> Second, most of the applications (at least in our prod) are not really
-> interested in two separate memory and swap usage metrics. A single
-> usage metric is more simple to use and reason about for these
-> applications.
+The kernel updates the per-node NR_FILE_DIRTY stats on page migration
+but not the memcg numa stats. That was not an issue until recently the
+commit 5f9a4f4a7096 ("mm: memcontrol: add the missing numa_stat interface
+for cgroup v2") exposed numa stats for the memcg. So fixing the
+file_dirty per-memcg numa stat.
 
-OK fair enough. Thanks for the clarification.
+Fixes: 5f9a4f4a7096 ("mm: memcontrol: add the missing numa_stat interface for cgroup v2")
+Signed-off-by: Shakeel Butt <shakeelb@google.com>
+Reviewed-by: Muchun Song <songmuchun@bytedance.com>
+Acked-by: Yang Shi <shy828301@gmail.com>
+Reviewed-by: Roman Gushchin <guro@fb.com>
+Cc: <stable@vger.kernel.org>
+---
+Changes since v1:
+- none
 
-As I've said I do not see any problem with exporting the counter.
+ mm/migrate.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-
+diff --git a/mm/migrate.c b/mm/migrate.c
+index ee5e612b4cd8..613794f6a433 100644
+--- a/mm/migrate.c
++++ b/mm/migrate.c
+@@ -500,9 +500,9 @@ int migrate_page_move_mapping(struct address_space *mapping,
+ 			__inc_lruvec_state(new_lruvec, NR_SHMEM);
+ 		}
+ 		if (dirty && mapping_can_writeback(mapping)) {
+-			__dec_node_state(oldzone->zone_pgdat, NR_FILE_DIRTY);
++			__dec_lruvec_state(old_lruvec, NR_FILE_DIRTY);
+ 			__dec_zone_state(oldzone, NR_ZONE_WRITE_PENDING);
+-			__inc_node_state(newzone->zone_pgdat, NR_FILE_DIRTY);
++			__inc_lruvec_state(new_lruvec, NR_FILE_DIRTY);
+ 			__inc_zone_state(newzone, NR_ZONE_WRITE_PENDING);
+ 		}
+ 	}
 -- 
-Michal Hocko
-SUSE Labs
+2.29.2.729.g45daf8777d-goog
+
