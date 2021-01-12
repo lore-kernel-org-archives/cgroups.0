@@ -1,185 +1,139 @@
-From: Daniel Bristot de Oliveira <bristot@redhat.com>
-Subject: [PATCH 6/6] sched/deadline: Fixes cpu/rd/dl_bw references for suspended tasks
-Date: Tue, 12 Jan 2021 16:53:45 +0100
-Message-ID: <8c1cb0c850e2f3ab1d7a533aa4b33a30f9dbeda5.1610463999.git.bristot@redhat.com>
+From: Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 5/6] sched/deadline: Add helpers to get the correct root domain/span/dl_bw
+Date: Tue, 12 Jan 2021 16:53:44 +0100
+Message-ID: <645f20a3fc9287aff2c5e8ca1a08ec1cb32996d5.1610463999.git.bristot@redhat.com>
 References: <cover.1610463999.git.bristot@redhat.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1610466893;
+        s=mimecast20190719; t=1610466886;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=wOhI5g5i5LSzzWOHJu+RbadpKHs6IKldH+QIJhJVpUE=;
-        b=Kpx6k+uUq92j9xOI8PtQxiHuMau2juVdCzyPFgDXDnl/uD9PVNwbsgR0FyXINqOWCmCTSs
-        At3jMjuO4FVsrCu+RMA4rnkXmCgGH+dstwpkf/8EsGhqGhGQDOSAXB9ph+RtZ6llqVluu9
-        xqDzOZ/16b++unKdNocTudoBmnLO98U=
-In-Reply-To: <cover.1610463999.git.bristot@redhat.com>
+        bh=AfgtcL4F5AYD3v5kDSOmx2qMlgaNuM9QROpZ54Xxzng=;
+        b=eAmV7qyEPrnqcZZl59IZb+TbtDYPR59Zyu5h4YBYXIAdSdHMUrhOL+v3Aqw9YwJnsufFRo
+        R5RKUq2UF0p2k2QtyjwatWrVQ+D7GSxJYCA7+piIIGkLb0GMjV1u+yZV1H8L5ePJL2gFsd
+        S1Ls0ClGK5Tnl4M3C6zqbD6dV53EL6M=
+In-Reply-To: <cover.1610463999.git.bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org
-Cc: Marco Perronet <perronet@mpi-sws.org>, Daniel Bristot de Oliveira <bristot@redhat.com>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Valentin Schneider <valentin.schneider@arm.com>, cgroups@vger.kernel.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Marco Perronet <perronet-41PbBDiSz5tAfugRpC6u6w@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Valentin Schneider <valentin.schneider-5wv7dgnIgG8@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-__set_cpus_allowed_ptr() migrates running or runnable, setting the
-task's cpu accordingly. The CPU is not set when the task is not
-runnable because of complications on the hotplug code. The
-task cpu will be updated in the next wakeup anyway.
+task_cpu() is often used on SCHED_DEADLINE to access the root_domain
+and associated information. However, the task_cpu() does not always
+reflect the correct CPU. The reason being is shown in the code:
 
-However, this creates a problem for the usage of task_cpu(p), which
-might point the task to a CPU in which it cannot run, or worse,
-a runqueue/root_domain it does not belong to, causing some
-odd errors. For example, the script below shows that a sleeping
-task cannot become SCHED_DEADLINE if they moved to another (exclusive)
-cpuset:
-
+From kernel/sched/core:
 ----- %< -----
-  #!/bin/bash
-  # Enter on the cgroup directory
-  cd /sys/fs/cgroup/
-
-  # Check it if is cgroup v2 and enable cpuset
-  if [ -e cgroup.subtree_control ]; then
-  	# Enable cpuset controller on cgroup v2
-  	echo +cpuset > cgroup.subtree_control
-  fi
-
-  echo LOG: create an exclusive cpuset and assigned the CPU 0 to it
-  # Create cpuset groups
-  rmdir dl-group &> /dev/null
-  mkdir dl-group
-
-  # Restrict the task to the CPU 0
-  echo 0 > dl-group/cpuset.mems
-  echo 0 > dl-group/cpuset.cpus
-  echo root >  dl-group/cpuset.cpus.partition
-
-  echo LOG: dispatching a regular task
-  sleep 100 &
-  CPUSET_PID="$!"
-
-  # let it settle down
-  sleep 1
-
-  # Assign the second task to the cgroup
-  echo LOG: moving the second DL task to the cpuset
-  echo "$CPUSET_PID" > dl-group/cgroup.procs 2> /dev/null
-
-  CPUSET_ALLOWED=`cat /proc/$CPUSET_PID/status | grep Cpus_allowed_list | awk '{print $2}'`
-
-  chrt -p -d --sched-period 1000000000 --sched-runtime 100000000 0 $CPUSET_PID
-  ACCEPTED=$?
-
-  if [ $ACCEPTED == 0 ]; then
-  	echo PASS: the task became DL
-  else
-  	echo FAIL: the task was rejected as DL
-  fi
-
-  # Just ignore the clean up
-  exec > /dev/null 2>&1
-  kill -9 $CPUSET_PID
-  kill -9 $ROOT_PID
-  rmdir dl-group
+ * p->on_rq <- { 0, 1 = TASK_ON_RQ_QUEUED, 2 = TASK_ON_RQ_MIGRATING }:
+ *
+ *   is set by activate_task() and cleared by deactivate_task(), under
+ *   rq->lock. Non-zero indicates the task is runnable, the special
+ *   ON_RQ_MIGRATING state is used for migration without holding both
+ *   rq->locks. It indicates task_cpu() is not stable, see task_rq_lock().
+[...]
+ * task_cpu(p): is changed by set_task_cpu(), the rules are:
+ *
+ *  - Don't call set_task_cpu() on a blocked task:
+ *
+ *    We don't care what CPU we're not running on, this simplifies hotplug,
+ *    the CPU assignment of blocked tasks isn't required to be valid.
 ----- >% -----
 
-Long story short: the sleep task is (not runnable) on a cpu != 0. After
-moving to a cpuset with only the CPU 0, task_cpu() returns a cpu that
-does not belong to the cpuset the task is in, and the task is rejected
-in this if:
+So, a sleeping task will not have its task_cpu() stable, and this is
+causing problems on SCHED_DEADLINE.
 
------ %< -----
-__sched_setscheduler():
-[...]
-        rq = task_rq_lock(p, &rf); <-- uses task_cpu(), that points to
-				   <-- the old cpu.
-[...]
-                if (dl_bandwidth_enabled() && dl_policy(policy) &&
-                                !(attr->sched_flags & SCHED_FLAG_SUGOV)) {
-                        cpumask_t *span = rq->rd->span;        <--- wrong rd!
+In preparation for fixing this problems, we need to add helper functions
+that return the dl_task_cpu, root_domain, and "root" dl_bw that
+reflects the current placement/affinity of the task.
 
-                        /*
-                         * Don't allow tasks with an affinity mask smaller than
-                         * the entire root_domain to become SCHED_DEADLINE. We
-                         * will also fail if there's no bandwidth available.
-                         */
-                        if (!cpumask_subset(span, p->cpus_ptr) ||
-                            rq->rd->dl_bw.bw == 0) {
-                                retval = -EPERM;   <--- returns here.
-                                goto unlock;
-                        }
-                }
------ >% -----
+Note that these functions are only required on the code path that
+can happen when the task is not queued.
 
-Because the rq, and so the root domain, corresponding to the ones of
-the CPU in which the sleep command went to... sleep, not the ones
-it will run in the next wakeup because of its affinity.
-
-To avoid this problem, use the dl_task* helpers that return the task
-cpu, root domain, and the "root" dl_bw, aware of the status of
-task->cpu.
-
-Reported-by: Marco Perronet <perronet@mpi-sws.org>
-Signed-off-by: Daniel Bristot de Oliveira <bristot@redhat.com>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Juri Lelli <juri.lelli@redhat.com>
-Cc: Vincent Guittot <vincent.guittot@linaro.org>
-Cc: Dietmar Eggemann <dietmar.eggemann@arm.com>
-Cc: Steven Rostedt <rostedt@goodmis.org>
-Cc: Ben Segall <bsegall@google.com>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Daniel Bristot de Oliveira <bristot@redhat.com>
-Cc: Li Zefan <lizefan@huawei.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Valentin Schneider <valentin.schneider@arm.com>
-Cc: linux-kernel@vger.kernel.org
-Cc: cgroups@vger.kernel.org
+Signed-off-by: Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Cc: Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>
+Cc: Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>
+Cc: Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>
+Cc: Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Valentin Schneider <valentin.schneider-5wv7dgnIgG8@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 ---
- kernel/sched/core.c     | 6 +++---
- kernel/sched/deadline.c | 4 ++--
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ kernel/sched/sched.h | 43 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
 
-diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-index 5961a97541c2..3c2775e6869f 100644
---- a/kernel/sched/core.c
-+++ b/kernel/sched/core.c
-@@ -5905,15 +5905,15 @@ static int __sched_setscheduler(struct task_struct *p,
- #ifdef CONFIG_SMP
- 		if (dl_bandwidth_enabled() && dl_policy(policy) &&
- 				!(attr->sched_flags & SCHED_FLAG_SUGOV)) {
--			cpumask_t *span = rq->rd->span;
-+			struct root_domain *rd = dl_task_rd(p);
+diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
+index 54881d99cebd..5f3f3cb5a6ff 100644
+--- a/kernel/sched/sched.h
++++ b/kernel/sched/sched.h
+@@ -2393,6 +2393,37 @@ void __dl_update(struct dl_bw *dl_b, s64 bw)
+ 		rq->dl.extra_bw += bw;
+ 	}
+ }
++
++static inline
++int dl_task_cpu(struct task_struct *p)
++{
++	/*
++	 * We can only rely on task_cpu() of runnable tasks.
++	 */
++	if (p->on_rq)
++		return task_cpu(p);
++
++	/*
++	 * The task_cpu() of non-runnable task migth be pointing a CPU
++	 * it cannot run anymore (see set_task_cpu()). Hence, let's
++	 * get a possible cpu from the current cpu_mask.
++	 */
++	return cpumask_any(p->cpus_ptr);
++
++}
++
++static inline
++struct root_domain *dl_task_rd(struct task_struct *p)
++{
++	int cpu = dl_task_cpu(p);
++	return cpu_rq(cpu)->rd;
++}
++
++static inline
++struct dl_bw *dl_task_root_bw(struct task_struct *p)
++{
++	return &dl_task_rd(p)->dl_bw;
++}
+ #else
+ static inline
+ void __dl_update(struct dl_bw *dl_b, s64 bw)
+@@ -2401,6 +2432,18 @@ void __dl_update(struct dl_bw *dl_b, s64 bw)
  
- 			/*
- 			 * Don't allow tasks with an affinity mask smaller than
- 			 * the entire root_domain to become SCHED_DEADLINE. We
- 			 * will also fail if there's no bandwidth available.
- 			 */
--			if (!cpumask_subset(span, p->cpus_ptr) ||
--			    rq->rd->dl_bw.bw == 0) {
-+			if (!cpumask_subset(rd->span, p->cpus_ptr) ||
-+			    rd->dl_bw.bw == 0) {
- 				retval = -EPERM;
- 				goto unlock;
- 			}
-diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-index c221e14d5b86..1f6264cb8867 100644
---- a/kernel/sched/deadline.c
-+++ b/kernel/sched/deadline.c
-@@ -2678,8 +2678,8 @@ int sched_dl_overflow(struct task_struct *p, int policy,
- 	u64 period = attr->sched_period ?: attr->sched_deadline;
- 	u64 runtime = attr->sched_runtime;
- 	u64 new_bw = dl_policy(policy) ? to_ratio(period, runtime) : 0;
--	int cpus, err = -1, cpu = task_cpu(p);
--	struct dl_bw *dl_b = dl_bw_of(cpu);
-+	int cpus, err = -1, cpu = dl_task_cpu(p);
-+	struct dl_bw *dl_b = dl_task_root_bw(p);
- 	unsigned long cap;
+ 	dl->extra_bw += bw;
+ }
++
++static inline
++int dl_task_cpu(struct task_struct *p)
++{
++	return 0;
++}
++
++static inline
++struct dl_bw *dl_task_root_bw(struct task_struct *p)
++{
++	return &task_rq(p)->dl.dl_bw;
++}
+ #endif
  
- 	if (attr->sched_flags & SCHED_FLAG_SUGOV)
+ 
 -- 
 2.29.2
 
