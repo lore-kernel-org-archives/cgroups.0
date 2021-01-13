@@ -1,36 +1,36 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: Arjun Roy <arjunroy@google.com>
 Subject: Re: [PATCH] mm: net: memcg accounting for TCP rx zerocopy
-Date: Tue, 12 Jan 2021 16:12:47 -0800
-Message-ID: <CALvZod7Te77n1EprntM_+8EBai3o+X0-f=5QZ9Q=SkJU9x1cSQ@mail.gmail.com>
+Date: Tue, 12 Jan 2021 16:12:08 -0800
+Message-ID: <CAOFY-A2YbE3_GGq-QpVOHTmd=35Lt-rxi8gpXBcNVKvUzrzSNg@mail.gmail.com>
 References: <20210112214105.1440932-1-shakeelb@google.com> <20210112233108.GD99586@carbon.dhcp.thefacebook.com>
  <CAOFY-A3=mCvfvMYBJvDL1LfjgYgc3kzebRNgeg0F+e=E1hMPXA@mail.gmail.com> <20210112234822.GA134064@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=tab6Enz612n0UEaGXXTasn8EcadOeEalCik4C7Y4JR4=;
-        b=Wnd0A1DqYau6lQS2BNRZf68TjeUJv51eJTXSZtLeP9/9inpCfiAd0yH/AFgMos0FWQ
-         ViWgFf6WegefdV0Zfgk70hO40ZT8D2uobc3AVSQYCKVfC0DT3NbdR+28qelgDOixdQqP
-         rNVsMCoY7n2oo+qzo157lRx0hwQodLiAQiliwP/5VMdBalQSy2JaW34heNpCGBDSWTmc
-         8AzuPJQFsMaf7k51HBKWKl6GU803Xp2Oo7Q+t6lfRaJTkdblF14XqGGn17UzVUQFFxV7
-         nlQSYrr5C+e+KN0Dy+AFgG0/Qm0W7e0puT3WBsbUG0xBQ5R3IVAE1ll3GMNkKYb3Ya6n
-         Njpw==
-In-Reply-To: <20210112234822.GA134064-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+        bh=3IGkoTRZrnyvZ6jLkwzARD6R+4JtvTtBZjTYPsPzMhg=;
+        b=ic+NBTt7tbBKct5myOxtKhtbhrnYnEpG4HK+1cN8B3IFfYR13kl4Az6h6AkQqZ9J5L
+         Gl37jtYAlUnqAgWz8zrXnTT0Up5j43XdZ5ypScrENwDEylodmYKrHIB3P1dhXpW/g+WY
+         AH3l3F/N0hUA08rS3rymdSnCEa3OiZK9w2FYNR6G5odZ2cfK0qFUurH5zcTfY2gD1Eik
+         kooO5wtapMsszNWJBMRVGIVgMXj4iny5njdtGnEv9rJeBn0zVoqhDiTZQebaNN/q9+d1
+         na6OnCeIVB7lZdWlPzffQL3oncs5HJYhGwqwZWx2s83V9JGmiTBNiSDHTe+CMTljk1nV
+         4JWg==
+In-Reply-To: <20210112234822.GA134064@carbon.dhcp.thefacebook.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Roman Gushchin <guro@fb.com>
+Cc: Shakeel Butt <shakeelb@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Eric Dumazet <edumazet@google.com>, Andrew Morton <akpm@linux-foundation.org>, "David S . Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, netdev <netdev@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Tue, Jan 12, 2021 at 3:48 PM Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
+On Tue, Jan 12, 2021 at 3:48 PM Roman Gushchin <guro@fb.com> wrote:
 >
 > On Tue, Jan 12, 2021 at 03:36:18PM -0800, Arjun Roy wrote:
-> > On Tue, Jan 12, 2021 at 3:31 PM Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
+> > On Tue, Jan 12, 2021 at 3:31 PM Roman Gushchin <guro@fb.com> wrote:
 > > >
 > > > On Tue, Jan 12, 2021 at 01:41:05PM -0800, Shakeel Butt wrote:
-> > > > From: Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > > > From: Arjun Roy <arjunroy@google.com>
 > > > >
 > > > > TCP zerocopy receive is used by high performance network applications to
 > > > > further scale. For RX zerocopy, the memory containing the network data
@@ -56,9 +56,9 @@ On Tue, Jan 12, 2021 at 3:48 PM Roman Gushchin <guro-b10kYP2dOMg@public.gmane.or
 > > > > address space also holds a reference to the page i.e. the reference
 > > > > count can not drop to zero before the map count.
 > > > >
-> > > > Signed-off-by: Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > > > Co-developed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > > > Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > > > Signed-off-by: Arjun Roy <arjunroy@google.com>
+> > > > Co-developed-by: Shakeel Butt <shakeelb@google.com>
+> > > > Signed-off-by: Shakeel Butt <shakeelb@google.com>
 > > > > ---
 > > > >  include/linux/memcontrol.h | 34 +++++++++++++++++++--
 > > > >  mm/memcontrol.c            | 60 ++++++++++++++++++++++++++++++++++++++
@@ -222,30 +222,54 @@ On Tue, Jan 12, 2021 at 3:48 PM Roman Gushchin <guro-b10kYP2dOMg@public.gmane.or
 > Does it mean that a page can be accounted twice (even temporarily)?
 >
 
-Actually yes depending on the environment. For applications running in
-cgroup v2 where the skmem is charged against the memcg's memory
-counter and if sk->sk_memcg is equal to current's memcg there is a
-small window where the memory is double charged. However that is not
-the case for cgroup v1 or if sk->sk_memcg is different from current's
-memcg. IMO this small window of double charging is fine as it is
-somewhat similar to recv*() syscalls where the application has to
-pre-allocate memory where the kernel copies the network data which is
-charged to sk->sk_memcg.
+This was an actual consideration for this patchset that we went back
+and forth on a little bit.
+Short answer, for this patch in its current form: yes. We're calling
+mem_cgroup_charge_sock_pages() immediately prior to vm_insert_pages();
+and the skb isn't cleaned up until afterwards. Thus we have a period
+of double charging.
+
+The pseudocode for the approach in this patch is:
+
+while skb = next skb in queue is not null:
+    charge_skb_pages(skb.pages) // sets page.memcg for each page
+    // at this point pages are double counted
+    vm_insert_pages(skb.pages)
+    free(skb) // unrefs the pages, no longer double counted
+
+An alternative version of this patch went the other way: have a short
+period of undercharging.
+
+while skb = next skb in queue is not null:
+    for page in skb.pages set page.memcg
+    vm_insert_pages(skb.pages)
+    free(skb) // unrefs the pages. pages are now undercounted
+charge_skb_pages(nr_pages_mapped, FORCE_CHARGE) // count is now correct again
+ret
+
+The latter would have the benefit of having less charge operations
+(less pricey atomics etc.) but would require the charge to be forced
+to succeed since we already made it available to the user. But if one
+assumes that in the common case, that sock->memcg == current->memcg,
+then perhaps a forced charge is ok in that case.
+
 
 > Historically we have a corresponding vmstat counter to each charged page.
 > It helps with finding accounting/stastistics issues: we can check that
 > memory.current ~= anon + file + sock + slab + percpu + stack.
 > It would be nice to preserve such ability.
-
-I think it can be either sock memcg stat or a new one. I will think of
-something.
-
 >
+
+Perhaps one option would be to have it count as a file page, or have a
+new category.
+
 > >
 > > To double check, what do you mean by shrinker?
 >
 > I mean do we plan to implement a mechanism to reclaim memory from these drivers
 > on-demand, if a cgroup is experiencing high memory pressure.
 
-These pages are not really reclaimable as these are not really LRU or
-page cache pages. These will get freed when application unmaps them.
+Not that I'm aware of.
+
+Thanks,
+-Arjun
