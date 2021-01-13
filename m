@@ -1,86 +1,50 @@
 From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: prevent starvation when writing
- memory.high
-Date: Wed, 13 Jan 2021 10:06:44 -0800
-Message-ID: <20210113180620.GA353910@carbon.lan>
-References: <20210112163011.127833-1-hannes@cmpxchg.org>
+Subject: Re: [PATCH] mm: net: memcg accounting for TCP rx zerocopy
+Date: Wed, 13 Jan 2021 10:43:02 -0800
+Message-ID: <20210113184302.GA355124@carbon.dhcp.thefacebook.com>
+References: <20210112214105.1440932-1-shakeelb@google.com>
+ <20210112233108.GD99586@carbon.dhcp.thefacebook.com>
+ <CAOFY-A3=mCvfvMYBJvDL1LfjgYgc3kzebRNgeg0F+e=E1hMPXA@mail.gmail.com>
+ <20210112234822.GA134064@carbon.dhcp.thefacebook.com>
+ <CAOFY-A2YbE3_GGq-QpVOHTmd=35Lt-rxi8gpXBcNVKvUzrzSNg@mail.gmail.com>
+ <CALvZod4am_dNcj2+YZmraCj0+BYHB9PnQqKcrhiOnV8gzd+S3w@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=Tqk3s2gbpL7IEpMXx5QPwfd2m6Xl9/uAFYgdXH/d59k=;
- b=gNZVLsqO5R99DCECsq9hNLTTDhM4yZS6qMGfIcDhcDT8qV06EDTSouPaP1IoAsC9P5NA
- UPnV/ryBOR9qfrLkAOG+Goow25pWZptMLDhpGCZxW8j7YRxVITR4yBp/zuPPIDKzYJyU
- LLFNAwKp2dhEhhHmr6aHWZgmtZL67Bt78NU= 
+ mime-version; s=facebook; bh=LmOPinyKx8+8x52Th4DE4vt+lyMbSY2O2z3Pq7Ov4WQ=;
+ b=MBrRSo97MoA0IaALi2Q5mdd8loBkX+gUGZBShyW4v4jTR4D3GTP4eZc3kZgJURK1y9Qh
+ K1h5AVrQGEBHnNW321haB7o29qru8DLyMbzwLV/UD30SHzq72kaSxzy5k7n8nm6AB796
+ o102NdaBhYNSI6fOsa6QRP43vj7zxj5yR5Q= 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
  s=selector2-fb-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Tqk3s2gbpL7IEpMXx5QPwfd2m6Xl9/uAFYgdXH/d59k=;
- b=QCuZxlsWe2k6VrTbephjDi795JM88LcVOGCyz+zzzKYmF13ftylB8isTI5Ga2tivSXsfSM+quSJdt6o4WgwJozjzDdIVHBPKspn/ct8s4Fp+SHYTFWQ25hTI6qEIJVUqKID3D2IAg4J+8I9Pd43pPVfL9f/+i8J4wb8StieAzqk=
+ bh=LmOPinyKx8+8x52Th4DE4vt+lyMbSY2O2z3Pq7Ov4WQ=;
+ b=i90H2L5DAEFMPBA5oVLwjZO0sOQYjczT3D9LpraG7EChgEUlTkLGz7A7SDhga6JpW5ekpdwijAPkEYoWCHDYwcAw5yvNKJHPttY5FuqP6+hpqd0rflJY2hZXYZn8mfniHYOFGzzglkTtl5a0kSGNjGQ+8HiuDneduEXTZrizO4c=
 Content-Disposition: inline
-In-Reply-To: <20210112163011.127833-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <CALvZod4am_dNcj2+YZmraCj0+BYHB9PnQqKcrhiOnV8gzd+S3w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "David S . Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Tue, Jan 12, 2021 at 11:30:11AM -0500, Johannes Weiner wrote:
-> When a value is written to a cgroup's memory.high control file, the
-> write() context first tries to reclaim the cgroup to size before
-> putting the limit in place for the workload. Concurrent charges from
-> the workload can keep such a write() looping in reclaim indefinitely.
+On Tue, Jan 12, 2021 at 04:18:44PM -0800, Shakeel Butt wrote:
+> On Tue, Jan 12, 2021 at 4:12 PM Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> >
+> > On Tue, Jan 12, 2021 at 3:48 PM Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
+> > >
+> [snip]
+> > > Historically we have a corresponding vmstat counter to each charged page.
+> > > It helps with finding accounting/stastistics issues: we can check that
+> > > memory.current ~= anon + file + sock + slab + percpu + stack.
+> > > It would be nice to preserve such ability.
+> > >
+> >
+> > Perhaps one option would be to have it count as a file page, or have a
+> > new category.
+> >
 > 
-> In the past, a write to memory.high would first put the limit in place
-> for the workload, then do targeted reclaim until the new limit has
-> been met - similar to how we do it for memory.max. This wasn't prone
-> to the described starvation issue. However, this sequence could cause
-> excessive latencies in the workload, when allocating threads could be
-> put into long penalty sleeps on the sudden memory.high overage created
-> by the write(), before that had a chance to work it off.
-> 
-> Now that memory_high_write() performs reclaim before enforcing the new
-> limit, reflect that the cgroup may well fail to converge due to
-> concurrent workload activity. Bail out of the loop after a few tries.
-> 
-> Fixes: 536d3bf261a2 ("mm: memcontrol: avoid workload stalls when lowering memory.high")
-> Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # 5.8+
-> Reported-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> ---
->  mm/memcontrol.c | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 605f671203ef..63a8d47c1cd3 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -6275,7 +6275,6 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
->  
->  	for (;;) {
->  		unsigned long nr_pages = page_counter_read(&memcg->memory);
-> -		unsigned long reclaimed;
->  
->  		if (nr_pages <= high)
->  			break;
-> @@ -6289,10 +6288,10 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
->  			continue;
->  		}
->  
-> -		reclaimed = try_to_free_mem_cgroup_pages(memcg, nr_pages - high,
-> -							 GFP_KERNEL, true);
-> +		try_to_free_mem_cgroup_pages(memcg, nr_pages - high,
-> +					     GFP_KERNEL, true);
->  
-> -		if (!reclaimed && !nr_retries--)
-> +		if (!nr_retries--)
->  			break;
->  	}
->  
-> -- 
-> 2.30.0
-> 
+> Oh these are actually already accounted for in NR_FILE_MAPPED.
 
-Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-
-Thanks!
+Well, it's confusing. Can't we fix this by looking at the new page memcg flag?
