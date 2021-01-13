@@ -1,7 +1,7 @@
 From: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH 2/2] MAINTAINERS: Update my email address
-Date: Wed, 13 Jan 2021 16:50:52 +0800
-Message-ID: <d09fd675-00fa-21e4-00b6-1cc4c2533a94@bytedance.com>
+Subject: [PATCH v2 2/2] MAINTAINERS: Update my email address
+Date: Wed, 13 Jan 2021 16:59:42 +0800
+Message-ID: <f8fe9c3b-db08-50da-d207-0952be5d2b85@bytedance.com>
 References: <75494a75-a74b-3dba-9846-7f51d805023a@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -10,30 +10,29 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
         h=subject:from:to:cc:references:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding;
-        bh=7bLM0SCOKHe/fCiUaodu2A32W/TBhIHCOkDztDbBVPw=;
-        b=OVDbUIK/40/4Bmxe//hY97Zk9F8gvprX3CooRRdOK52T50X2qY2nkMmNxudovLCQTp
-         dJyO3hcd45gfuloJGvUi4pgVbARR6OQLuhFjR0FM47Ie4+M84e0zXnZYDUgzZdh7YDt6
-         FwWSeh7UPC6Z6w4BGTyiqQ+cv1b83DKZm6vAojXOk7pD1np4wsbSRgOqCVOyZpCnyTaq
-         cAPH6T6i5nhKYXJM5XeUFP8Fqs5bDrSszPonUJQb4uhUXrr26xHqs1DIAy3OT9OlhNpg
-         k+M6M1JU952L+lvwwb+OIDh3+POJ2nEnHX2s6MkB2sBOgS9BHGIGtS7RCKBtKyWAXr10
-         XMfg==
+        bh=khY3b9nNLG3pn8j5ObMad/IKodRFErErRiM9bDM1Hc4=;
+        b=m6cG2SZeoQC7z+233pF69aduzYVErPg7kpJnAwKckGrYeox/3cz6OJTflqkC44PiAA
+         Ua3Dnyw7IzJqquKUSYJT8KQNhPwx/nBUt+TMamSiADca5useKtiXMpzEHpsr0yAW9muC
+         jeANNgo8BBvZTjbXVu0nauEXPnwXC+FSgBVFUQYVJwMwOYOo9saJkLZD6BIkz7JDKVR2
+         pLzx/RtBzX8qVvXQ5W1+1ttaxU+EtbysSUCzkXMVGYWcUD+i61vC9rRSD4ttddp5Jesx
+         uxlQgYEDUlk/5/yBIopyVL7CSZ2GQ+AMakMnm7G6Dx2eldCI/JXBv3SwktDO5jhdL+ej
+         QURA==
 In-Reply-To: <75494a75-a74b-3dba-9846-7f51d805023a-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 Cc: Steve Wahl <steve.wahl-ZPxbGqLxI0U@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-
 Signed-off-by: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 ---
- MAINTAINERS | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ MAINTAINERS | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 89140540aa8d..bc38f36f257c 100644
+index 2a01cd3e0a2b..4987d1ce9ac6 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -4467,7 +4467,7 @@ F:	include/linux/console*
+@@ -4448,7 +4448,7 @@ F:	include/linux/console*
  
  CONTROL GROUP (CGROUP)
  M:	Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
@@ -42,7 +41,7 @@ index 89140540aa8d..bc38f36f257c 100644
  M:	Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
  L:	cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
  S:	Maintained
-@@ -4491,11 +4491,11 @@ F:	block/blk-throttle.c
+@@ -4472,7 +4472,7 @@ F:	block/blk-throttle.c
  F:	include/linux/blk-cgroup.h
  
  CONTROL GROUP - CPUSET
@@ -51,10 +50,6 @@ index 89140540aa8d..bc38f36f257c 100644
  L:	cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
  S:	Maintained
  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git
--F:	Documentation/admin-guide/cgroup-v1/cpusets.rst
-+F:	Documentation/admin-guide/cgroup-v0/cpusets.rst
- F:	include/linux/cpuset.h
- F:	kernel/cgroup/cpuset.c
- 
 -- 
-2.25.1
+2.11.0
+
