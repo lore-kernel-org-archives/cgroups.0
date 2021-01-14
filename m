@@ -1,117 +1,68 @@
-From: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>
-Subject: Re: [PATCH 4/6] sched/deadline: Block DL tasks on non-exclusive
- cpuset if bandwitdh control is enable
-Date: Thu, 14 Jan 2021 16:51:43 +0100
-Message-ID: <4b37b32b-0e16-ffbc-ca6a-fbee935c0813@arm.com>
-References: <cover.1610463999.git.bristot@redhat.com>
- <7b336c37cc3c38def6de181df8ba8c3148c5cc0c.1610463999.git.bristot@redhat.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v2] cgroup-v1: add disabled controller check in
+ cgroup1_parse_param()
+Date: Thu, 14 Jan 2021 17:54:50 +0100
+Message-ID: <YAB3Wuu+hFpN698N@blackbook>
+References: <20201218061755.121205-1-chenzhou10@huawei.com>
+ <YABDWvI2PWQpnv59@blackbook>
+ <d4ba14b0-ee06-b793-a840-2c2ff369d890@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="G5CWgaLxblIFSK1F"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <7b336c37cc3c38def6de181df8ba8c3148c5cc0c.1610463999.git.bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1610643293; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=DRTWHPlrQiiVrNwf4oflLPIJjJTF+5vr64DIMf+QTzg=;
+        b=KHpcDRFA4ImJgm0jszlZ5QuF1YjRRcDklHFKYmKcTHOppIbR9JtOCoQZRCer8cQKBcuzIq
+        EM6SveYBqUYvVaun91OGPhpL0Ko4u+/DF0/O9mkaHXT/wC/M0ICIXU71iYnKojIT7f0dfx
+        VwFQ5pJzaVHr2iO7YWrMt7Y2IQ/M3EE=
+Content-Disposition: inline
+In-Reply-To: <d4ba14b0-ee06-b793-a840-2c2ff369d890-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Marco Perronet <perronet-41PbBDiSz5tAfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Valentin Schneider <valentin.schneider-5wv7dgnIgG8@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: chenzhou <chenzhou10-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On 12/01/2021 16:53, Daniel Bristot de Oliveira wrote:
-> The current SCHED_DEADLINE design supports only global scheduler,
-> or variants of it, i.e., clustered and partitioned, via cpuset config.
-> To enable the partitioning of a system with clusters of CPUs, the
-> documentation advises the usage of exclusive cpusets, creating an
-> exclusive root_domain for the cpuset.
-> 
-> Attempts to change the cpu affinity of a thread to a cpu mask different
-> from the root domain results in an error. For instance:
 
-[...]
+--G5CWgaLxblIFSK1F
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-> diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-> index 788a391657a5..c221e14d5b86 100644
-> --- a/kernel/sched/deadline.c
-> +++ b/kernel/sched/deadline.c
-> @@ -2878,6 +2878,13 @@ int dl_task_can_attach(struct task_struct *p,
->  	if (cpumask_empty(cs_cpus_allowed))
->  		return 0;
->  
-> +	/*
-> +	 * Do not allow moving tasks to non-exclusive cpusets
-> +	 * if bandwidth control is enabled.
-> +	 */
-> +	if (dl_bandwidth_enabled() && !exclusive)
-> +		return -EBUSY;
-> +
->  	/*
->  	 * The task is not moving to another root domain, so it is
->  	 * already accounted.
-> 
+On Thu, Jan 14, 2021 at 10:08:19PM +0800, chenzhou <chenzhou10-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> wrote:
+> In this case, at the beginning of function check_cgroupfs_options(), the mask
+> ctx->subsys_mask will be 0. And if we mount without 'none' and 'name=' options,
+> then in check_cgroupfs_options(), the flag ctx->all_ss will be set, that is, select all the subsystems.
+But even then, the line
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/cgroup/cgroup-v1.c?h=v5.11-rc3#n1012
+would select only 'enabled' controllers, wouldn't it?
 
-But doesn't this mean you only have to set this cgroup exclusive/root to
-run into the same issue:
+It's possible I missed something but if this means that cgroup_no_v1=
+doesn't hold to its expectations, I'd suggest adding proper Fixes: tag
+to the patch.
 
-with this patch:
+Thanks,
+Michal
 
-cgroupv1:
+--G5CWgaLxblIFSK1F
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-root@juno:/sys/fs/cgroup/cpuset# chrt -d --sched-period 1000000000
---sched-runtime 100000000 0 sleep 500 &
-[1] 1668
-root@juno:/sys/fs/cgroup/cpuset# PID1=$!
+-----BEGIN PGP SIGNATURE-----
 
-root@juno:/sys/fs/cgroup/cpuset# chrt -d --sched-period 1000000000
---sched-runtime 100000000 0 sleep 500 &
-[2] 1669
-root@juno:/sys/fs/cgroup/cpuset# PID2=$!
+iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmAAd1QACgkQia1+riC5
+qSgWoQ/+IhQQDXjrTBF5Pw5vod0YE5rO2MUWtzh4d1tLQTjzBng8E1jnWV3jAsD8
+wFqLWz3JxqFUQa9A0DEKWjwmHfu0ud0A6t/eCV24Xm6JoX8vcR1dVimMzCUd2Hjk
+QINq+w81pOhqZX0vjGPRW8J1cf8jMjQgQ0nZmHxm11TaGuO5G3dvhVJuFAjXyvEy
+568of571ti78CKzoa7zt5KK1ID2m3u3rk5WDuGGj4zlTg2QoqFOxrBprRaF/1eCu
+0Fk+LKva7qmiGP87uXFt124432CQ8AAGG+fsAzcBqKuIFFxcpzyrnkP8jNRZS0xV
+Sb7nZ7ivB50YyMJxorpXiRT2lhh+BtFbvydWuAs1PGh7z8B6AexE4XtF52XBeybB
+MSpQJ/0E9LuesHjcEFXLzGwFe7Dw5N0u4pNrKo5QMh63PveCx7KxIcdBWXihuBJm
+pDE9d707NJ2g4M4/88Hvs9QIiBmzOU9h/x2zKVNKMM4io7o51hUEHkUEG/4nb0/d
+tUvH1jxlFPeQh4UoazlKnTMq3ljI1gi1mBq6ytoptxVxdu4rvhBNcrd+nuKcWKtu
+vWwdZ8lh9crRwEWbLtIVY0flm2GX4Nu5xq/VF1y67QA1e+34NjwMX8a2GrrS1dBK
+q/NvMQTk62NfRzjrh+uabF5pEcA/K7EvnKQLGasG1RYmvas3YoI=
+=9rm1
+-----END PGP SIGNATURE-----
 
-root@juno:/sys/fs/cgroup/cpuset# mkdir A
-
-root@juno:/sys/fs/cgroup/cpuset# echo 0 > ./A/cpuset.mems
-root@juno:/sys/fs/cgroup/cpuset# echo 0 > ./A/cpuset.cpus
-
-root@juno:/sys/fs/cgroup/cpuset# echo $PID2 > ./A/cgroup.procs
--bash: echo: write error: Device or resource busy
-
-root@juno:/sys/fs/cgroup/cpuset# echo 1 > ./A/cpuset.cpu_exclusive
-
-root@juno:/sys/fs/cgroup/cpuset# echo $PID2 > ./A/cgroup.procs
-
-root@juno:/sys/fs/cgroup/cpuset# cat /proc/$PID1/status | grep
-Cpus_allowed_list | awk '{print $2}'
-0-5
-root@juno:/sys/fs/cgroup/cpuset# cat /proc/$PID2/status | grep
-Cpus_allowed_list | awk '{print $2}'
-0
-
-cgroupv2:
-
-root@juno:/sys/fs/cgroup# echo +cpuset > cgroup.subtree_control
-
-root@juno:/sys/fs/cgroup# chrt -d --sched-period 1000000000
---sched-runtime 100000000 0 sleep 500 &
-[1] 1687
-root@juno:/sys/fs/cgroup# PID1=$!
-
-root@juno:/sys/fs/cgroup# chrt -d --sched-period 1000000000
---sched-runtime 100000000 0 sleep 500 &
-[2] 1688
-root@juno:/sys/fs/cgroup# PID2=$!
-
-root@juno:/sys/fs/cgroup# mkdir A
-
-root@juno:/sys/fs/cgroup# echo 0 > ./A/cpuset.mems
-root@juno:/sys/fs/cgroup# echo 0 > ./A/cpuset.cpus
-
-root@juno:/sys/fs/cgroup# echo $PID2 > ./A/cgroup.procs
--bash: echo: write error: Device or resource busy
-
-root@juno:/sys/fs/cgroup# echo root > ./A/cpuset.cpus.partition
-
-root@juno:/sys/fs/cgroup# echo $PID2 > ./A/cgroup.procs
-
-root@juno:/sys/fs/cgroup# cat /proc/$PID1/status | grep
-Cpus_allowed_list | awk '{print $2}'
-0-5
-root@juno:/sys/fs/cgroup# cat /proc/$PID2/status | grep
-Cpus_allowed_list | awk '{print $2}'
-0
+--G5CWgaLxblIFSK1F--
