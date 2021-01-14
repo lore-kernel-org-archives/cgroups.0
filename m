@@ -1,148 +1,158 @@
-From: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] bfq: don't check active group if bfq.weight is not changed
-Date: Thu, 14 Jan 2021 20:24:26 +0800
-Message-ID: <20210114122426.603813-1-yukuai3@huawei.com>
-References: <b4163392-0462-ff6f-b958-1f96f33d69e6@huawei.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH] cgroup: Remove unnecessary call to strstrip()
+Date: Thu, 14 Jan 2021 13:44:27 +0100
+Message-ID: <YAA8qyBUAurgCeEz@blackbook>
+References: <20210103024846.GA15337@haolee.github.io>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <b4163392-0462-ff6f-b958-1f96f33d69e6-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1610628275; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=DQyI62Ts2y3vpFgTZP2ClEtzkdY49hYrxY8Mhozx6ZM=;
+        b=XAL1/7+PnbWKJjPsHK2l1e7zdnCyCA6cNoVLhsOcIv/DDJm4AK7WHj9S2Arzd5PCFYJSn+
+        xxO+/a0tZw/Lteq0FAH8cR6bcfPpiajZOAief4od7tLB3lar/3SgZRX/3zADC460uN+jAy
+        lA4NzgX15rJriC50h7F2Ix71Z1UCkGs=
+Content-Disposition: inline
+In-Reply-To: <20210103024846.GA15337-aLGwGs2JoHKXlosIQRE7iA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: Hao Lee <haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Now the group scheduling in BFQ depends on the check of active group,
-but in most cases group scheduling is not used and the checking
-of active group will cause bfq_asymmetric_scenario() and its caller
-bfq_better_to_idle() to always return true, so the throughput
-will be impacted if the workload doesn't need idle (e.g. random rw)
+Hello.
 
-To fix that, adding check in bfq_io_set_weight_legacy() and
-bfq_pd_init() to check whether or not group scheduling is used
-(a non-default weight is used). If not, there is no need
-to check active group.
+On Sun, Jan 03, 2021 at 02:50:01AM +0000, Hao Lee <haolee.swjtu-Re5JQEeQqe8=
+AvxtiuMwx3w@public.gmane.org> wrote:
+> The string buf will be stripped in cgroup_procs_write_start() before it
+> is converted to int, so remove this unnecessary call to strstrip().
+Good catch, Hao.
 
-Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Perhaps the code be then simplified a bit
+
+-- >8 --
+From: =3D?UTF-8?q?Michal=3D20Koutn=3DC3=3DBD?=3D <mkoutny-IBi9RG/b67k@publi=
+c.gmane.org>
+Date: Thu, 14 Jan 2021 13:23:39 +0100
+Subject: [PATCH] cgroup: cgroup.{procs,threads} factor out common parts
+MIME-Version: 1.0
+Content-Type: text/plain; charset=3DUTF-8
+Content-Transfer-Encoding: 8bit
+
+The functions cgroup_threads_start and cgroup_procs_start are almost
+identical. In order to reduce duplication, factor out the common code in
+similar fashion we already do for other threadgroup/task functions. No
+functional changes are intended.
+
+Suggested-by: Hao Lee <haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
 ---
- block/bfq-cgroup.c  | 14 ++++++++++++--
- block/bfq-iosched.c |  8 +++-----
- block/bfq-iosched.h | 19 +++++++++++++++++++
- 3 files changed, 34 insertions(+), 7 deletions(-)
+ kernel/cgroup/cgroup.c | 55 +++++++++++-------------------------------
+ 1 file changed, 14 insertions(+), 41 deletions(-)
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index b791e2041e49..b4ac42c4bd9f 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -505,12 +505,18 @@ static struct blkcg_policy_data *bfq_cpd_alloc(gfp_t gfp)
- 	return &bgd->pd;
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 613845769103c..f6279df507f4b 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -4726,8 +4726,8 @@ static int cgroup_attach_permissions(struct cgroup *s=
+rc_cgrp,
+ 	return ret;
  }
- 
-+static inline int bfq_dft_weight(void)
-+{
-+	return cgroup_subsys_on_dfl(io_cgrp_subsys) ?
-+	       CGROUP_WEIGHT_DFL : BFQ_WEIGHT_LEGACY_DFL;
-+
-+}
-+
- static void bfq_cpd_init(struct blkcg_policy_data *cpd)
+=20
+-static ssize_t cgroup_procs_write(struct kernfs_open_file *of,
+-				  char *buf, size_t nbytes, loff_t off)
++static ssize_t __cgroup_procs_write(struct kernfs_open_file *of, char *buf,
++				    bool threadgroup)
  {
- 	struct bfq_group_data *d = cpd_to_bfqgd(cpd);
- 
--	d->weight = cgroup_subsys_on_dfl(io_cgrp_subsys) ?
--		CGROUP_WEIGHT_DFL : BFQ_WEIGHT_LEGACY_DFL;
-+	d->weight = bfq_dft_weight();
- }
- 
- static void bfq_cpd_free(struct blkcg_policy_data *cpd)
-@@ -554,6 +560,9 @@ static void bfq_pd_init(struct blkg_policy_data *pd)
- 	bfqg->bfqd = bfqd;
- 	bfqg->active_entities = 0;
- 	bfqg->rq_pos_tree = RB_ROOT;
-+
-+	if (entity->new_weight != bfq_dft_weight())
-+		bfqd_enable_active_group_check(bfqd);
- }
- 
- static void bfq_pd_free(struct blkg_policy_data *pd)
-@@ -1013,6 +1022,7 @@ static void bfq_group_set_weight(struct bfq_group *bfqg, u64 weight, u64 dev_wei
- 		 */
- 		smp_wmb();
- 		bfqg->entity.prio_changed = 1;
-+		bfqd_enable_active_group_check(bfqg->bfqd);
- 	}
- }
- 
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 9e4eb0fc1c16..1b695de1df95 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -699,11 +699,8 @@ static bool bfq_asymmetric_scenario(struct bfq_data *bfqd,
- 		(bfqd->busy_queues[0] && bfqd->busy_queues[2]) ||
- 		(bfqd->busy_queues[1] && bfqd->busy_queues[2]);
- 
--	return varied_queue_weights || multiple_classes_busy
--#ifdef CONFIG_BFQ_GROUP_IOSCHED
--	       || bfqd->num_groups_with_pending_reqs > 0
--#endif
--		;
-+	return varied_queue_weights || multiple_classes_busy ||
-+	       bfqd_has_active_group(bfqd);
- }
- 
- /*
-@@ -6472,6 +6469,7 @@ static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
- 
- 	bfqd->queue_weights_tree = RB_ROOT_CACHED;
- 	bfqd->num_groups_with_pending_reqs = 0;
-+	bfqd->check_active_group = false;
- 
- 	INIT_LIST_HEAD(&bfqd->active_list);
- 	INIT_LIST_HEAD(&bfqd->idle_list);
-diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 703895224562..216509013012 100644
---- a/block/bfq-iosched.h
-+++ b/block/bfq-iosched.h
-@@ -524,6 +524,8 @@ struct bfq_data {
- 
- 	/* true if the device is non rotational and performs queueing */
- 	bool nonrot_with_queueing;
-+	/* true if need to check num_groups_with_pending_reqs */
-+	bool check_active_group;
- 
- 	/*
- 	 * Maximum number of requests in driver in the last
-@@ -1066,6 +1068,17 @@ static inline void bfq_pid_to_str(int pid, char *str, int len)
- }
- 
- #ifdef CONFIG_BFQ_GROUP_IOSCHED
-+static inline void bfqd_enable_active_group_check(struct bfq_data *bfqd)
-+{
-+	cmpxchg_relaxed(&bfqd->check_active_group, false, true);
+ 	struct cgroup *src_cgrp, *dst_cgrp;
+ 	struct task_struct *task;
+@@ -4738,7 +4738,7 @@ static ssize_t cgroup_procs_write(struct kernfs_open_=
+file *of,
+ 	if (!dst_cgrp)
+ 		return -ENODEV;
+=20
+-	task =3D cgroup_procs_write_start(buf, true, &locked);
++	task =3D cgroup_procs_write_start(buf, threadgroup, &locked);
+ 	ret =3D PTR_ERR_OR_ZERO(task);
+ 	if (ret)
+ 		goto out_unlock;
+@@ -4748,19 +4748,26 @@ static ssize_t cgroup_procs_write(struct kernfs_ope=
+n_file *of,
+ 	src_cgrp =3D task_cgroup_from_root(task, &cgrp_dfl_root);
+ 	spin_unlock_irq(&css_set_lock);
+=20
++	/* process and thread migrations follow same delegation rule */
+ 	ret =3D cgroup_attach_permissions(src_cgrp, dst_cgrp,
+-					of->file->f_path.dentry->d_sb, true);
++					of->file->f_path.dentry->d_sb, threadgroup);
+ 	if (ret)
+ 		goto out_finish;
+=20
+-	ret =3D cgroup_attach_task(dst_cgrp, task, true);
++	ret =3D cgroup_attach_task(dst_cgrp, task, threadgroup);
+=20
+ out_finish:
+ 	cgroup_procs_write_finish(task, locked);
+ out_unlock:
+ 	cgroup_kn_unlock(of->kn);
+=20
+-	return ret ?: nbytes;
++	return ret;
 +}
 +
-+static inline bool bfqd_has_active_group(struct bfq_data *bfqd)
++static ssize_t cgroup_procs_write(struct kernfs_open_file *of,
++				  char *buf, size_t nbytes, loff_t off)
 +{
-+	return bfqd->check_active_group &&
-+	       bfqd->num_groups_with_pending_reqs > 0;
-+}
-+
- struct bfq_group *bfqq_group(struct bfq_queue *bfqq);
- 
- #define bfq_log_bfqq(bfqd, bfqq, fmt, args...)	do {			\
-@@ -1085,6 +1098,12 @@ struct bfq_group *bfqq_group(struct bfq_queue *bfqq);
- } while (0)
- 
- #else /* CONFIG_BFQ_GROUP_IOSCHED */
-+static inline void bfqd_enable_active_group_check(struct bfq_data *bfqd) {}
-+
-+static inline bool bfqd_has_active_group(struct bfq_data *bfqd)
-+{
-+	return false;
-+}
- 
- #define bfq_log_bfqq(bfqd, bfqq, fmt, args...) do {	\
- 	char pid_str[MAX_PID_STR_LENGTH];	\
--- 
-2.25.4
++	return __cgroup_procs_write(of, buf, true) ?: nbytes;
+ }
+=20
+ static void *cgroup_threads_start(struct seq_file *s, loff_t *pos)
+@@ -4771,41 +4778,7 @@ static void *cgroup_threads_start(struct seq_file *s=
+, loff_t *pos)
+ static ssize_t cgroup_threads_write(struct kernfs_open_file *of,
+ 				    char *buf, size_t nbytes, loff_t off)
+ {
+-	struct cgroup *src_cgrp, *dst_cgrp;
+-	struct task_struct *task;
+-	ssize_t ret;
+-	bool locked;
+-
+-	buf =3D strstrip(buf);
+-
+-	dst_cgrp =3D cgroup_kn_lock_live(of->kn, false);
+-	if (!dst_cgrp)
+-		return -ENODEV;
+-
+-	task =3D cgroup_procs_write_start(buf, false, &locked);
+-	ret =3D PTR_ERR_OR_ZERO(task);
+-	if (ret)
+-		goto out_unlock;
+-
+-	/* find the source cgroup */
+-	spin_lock_irq(&css_set_lock);
+-	src_cgrp =3D task_cgroup_from_root(task, &cgrp_dfl_root);
+-	spin_unlock_irq(&css_set_lock);
+-
+-	/* thread migrations follow the cgroup.procs delegation rule */
+-	ret =3D cgroup_attach_permissions(src_cgrp, dst_cgrp,
+-					of->file->f_path.dentry->d_sb, false);
+-	if (ret)
+-		goto out_finish;
+-
+-	ret =3D cgroup_attach_task(dst_cgrp, task, false);
+-
+-out_finish:
+-	cgroup_procs_write_finish(task, locked);
+-out_unlock:
+-	cgroup_kn_unlock(of->kn);
+-
+-	return ret ?: nbytes;
++	return __cgroup_procs_write(of, buf, false) ?: nbytes;
+ }
+=20
+ /* cgroup core interface files for the default hierarchy */
+--=20
+2.29.2
 
