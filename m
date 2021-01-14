@@ -1,65 +1,44 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+From: chenzhou <chenzhou10-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH v2] cgroup-v1: add disabled controller check in
  cgroup1_parse_param()
-Date: Thu, 14 Jan 2021 14:12:58 +0100
-Message-ID: <YABDWvI2PWQpnv59@blackbook>
+Date: Thu, 14 Jan 2021 22:08:19 +0800
+Message-ID: <d4ba14b0-ee06-b793-a840-2c2ff369d890@huawei.com>
 References: <20201218061755.121205-1-chenzhou10@huawei.com>
+ <YABDWvI2PWQpnv59@blackbook>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="QyWpP+FhytSknTGW"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1610629980; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=GF0WE0Qb6cVvTF2NflEBTiiInZOom4YMvYdVAC+0ETs=;
-        b=ppy0OqvZZFsx46UyvH/Y+mY7fTQiwWlcKuhkEbbFcZdQZtFZ5RhA3BKOnX788tNIk9oJgv
-        AXW70nFIyE03LmllPcvvqAkEoA+3QfjdaTKUed7321bX5vEMuaqx/GRyvuBHLsXMSm4bwu
-        jcSogLSuNsqDLDDJoCVz4AdTFsc9MmI=
-Content-Disposition: inline
-In-Reply-To: <20201218061755.121205-1-chenzhou10@huawei.com>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <YABDWvI2PWQpnv59@blackbook>
 List-ID: <cgroups.vger.kernel.org>
-To: Chen Zhou <chenzhou10@huawei.com>
-Cc: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+To: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
+Hi Michal,
 
---QyWpP+FhytSknTGW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On 2021/1/14 21:12, Michal Koutn=FD wrote:
+> Hello Chen.
+>
+> On Fri, Dec 18, 2020 at 02:17:55PM +0800, Chen Zhou <chenzhou10-hv44wF8Li=
+93QT0dZR+AlfA@public.gmane.org> wrote:
+>> When mounting a cgroup hierarchy with disabled controller in cgroup v1,
+>> all available controllers will be attached.
+> Not sure if I understand the situation -- have you observed a v1
+> controller attached to a hierarchy while specifying cgroup_no_v1=3D kernel
+> cmdline arg?
+Yeah, this is the situation.
+In this case, at the beginning of function check_cgroupfs_options(), the ma=
+sk
+ctx->subsys_mask will be 0. And if we mount without 'none' and 'name=3D' op=
+tions,
+then in check_cgroupfs_options(), the flag ctx->all_ss will be set, that is=
+, select all the subsystems.
 
-Hello Chen.
+Thanks,
+Chen Zhou
+>
+> AFAICS, the disabled controllers are honored thanks to
+> check_cgroupfs_options().
+>
+> Michal
 
-On Fri, Dec 18, 2020 at 02:17:55PM +0800, Chen Zhou <chenzhou10@huawei.com> wrote:
-> When mounting a cgroup hierarchy with disabled controller in cgroup v1,
-> all available controllers will be attached.
-Not sure if I understand the situation -- have you observed a v1
-controller attached to a hierarchy while specifying cgroup_no_v1= kernel
-cmdline arg?
-
-AFAICS, the disabled controllers are honored thanks to
-check_cgroupfs_options().
-
-Michal
-
---QyWpP+FhytSknTGW
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmAAQ1UACgkQia1+riC5
-qSjfmhAAjoBfZd9q9AjcZUbdDE79xfD2+0B+c03VStMia9Y4uEBWHMUAVLZMK9Vt
-BoOCVFB6V2SdjkB1gV3gxPfShWHIt9iIz9GVqSuGgXBXtt0Lut8nuw/t/Z2mP4pw
-rMHXKR9aOWNQU3dWKIttXMp7TZ2EMLJ/HW73Jth867zXZd8Wc+lYEDrfsbQT1WCI
-fZHr/dJSUb9uEFo7Wr1IpNsR3owLNcZ+0POnPmeUjUleClrwe0C8CAp1ipTcVx+2
-0tA5Yqy0uSHpbrRiuhI2lseHvwOdc7SG1oxRIBe/M4smN/P12GeN6YD6k0V3tRgc
-1PZVpAjsBoHvJl+lVIKWN+X/Qpjh/GlSwHsufZeoKGtR6NAKNEcU39/yACRJBGBx
-M3osYIRcuTT+D822Yq1Rn8wQ9juolImzwWaRAJzlIXNh4PZfJD3ywI0AoO6I69md
-3aokm5YEycI76Y75TNxKbfkr51EmprqNNOgz71qslj2Y7robC7h0Mf4BvRCu/1ns
-M2V0U4bZQy872sfoPu/k+13ki3Bc9cukowl31w7jrhvVAvuxo5FqgDZzNzRwGYRE
-hzKNW0Ed6hX6RL1ZHvxsClHgyh49wgMEIbAJHblkmoIgFGQrBCHe03uoN+DN18ke
-x0LQCS6h5y/WR7STRS1CHM1NPJPQvqpDu92GREfZCXNsVIgK3vc=
-=l74T
------END PGP SIGNATURE-----
-
---QyWpP+FhytSknTGW--
