@@ -1,64 +1,42 @@
-From: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC][PATCH] cpu/hotplug: wait for cpuset_hotplug_work to
- finish on cpu online
-Date: Thu, 14 Jan 2021 22:21:25 -0500
-Message-ID: <87im7yc2bu.fsf@oracle.com>
-References: <20201203171431.256675-1-aklimov@redhat.com>
- <20201207083827.GD3040@hirez.programming.kicks-ass.net>
- <87k0tritvq.fsf@oracle.com>
+From: chenzhou <chenzhou10-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2] cgroup-v1: add disabled controller check in
+ cgroup1_parse_param()
+Date: Fri, 15 Jan 2021 13:58:20 +0800
+Message-ID: <c4e62492-4b12-c516-3c17-77d18f3ddfe2@huawei.com>
+References: <20201218061755.121205-1-chenzhou10@huawei.com>
+ <YABDWvI2PWQpnv59@blackbook>
+ <d4ba14b0-ee06-b793-a840-2c2ff369d890@huawei.com>
+ <YAB3Wuu+hFpN698N@blackbook>
+ <7804658e-7644-8edb-5ca8-0c97389c8c62@huawei.com>
+ <YAEJPs4DJIgAXWul@mtj.duckdns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : in-reply-to : references : date : message-id : mime-version :
- content-type; s=corp-2020-01-29;
- bh=IOXbYHXHreW/DM/cC1BlOLyDYYZQRT6FD474gUtPV4A=;
- b=bEPJJSBKEY26381CteMXcM4TUtEgoNn7H/6Rj2Fypaq1KcWpgvxWwf+JT51UyPqMBfLU
- z4XGtzk1ndfrc/YAierZRu8Y86WIPMsivOrf/Y0gSoD3VutNeQ14tbaclOeHXO6zDT2U
- JDqZC1A1fdnzmxHZJY87mMZdb55T7Z+HczXUWTjsiU6OYzicqpmmTE6AtcFnknnwMjLg
- aXWGjJkmveVKL93gWjnihgvAyIxdmP8K2uKCqQWMSRElLbNy3MpZZTbY6Hq3znlVDiy2
- th6Uds65hwxEYViQeguOCfM9EEcXPWxXXjPogQle01Bu/mBImohggC0CRTiZiBXkdjVI /A== 
-In-Reply-To: <87k0tritvq.fsf-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <YAEJPs4DJIgAXWul-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, qais.yousef-5wv7dgnIgG8@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> writes:
-> Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> writes:
->>> The nature of this bug is also described here (with different consequences):
->>> https://lore.kernel.org/lkml/20200211141554.24181-1-qais.yousef-5wv7dgnIgG8@public.gmane.org/
+
+
+On 2021/1/15 11:17, Tejun Heo wrote:
+> Hello,
+>
+> On Fri, Jan 15, 2021 at 09:55:43AM +0800, chenzhou wrote:
+>> Yeah, this will select all enabled controllers, but which doesn't the behavior we want.
+>> I think the case should return error with information "Disabled controller xx" rather than
+>> attaching all the other enabled controllers.
 >>
->> Yeah, pesky deadlocks.. someone was going to try again.
+>> For example, boot with cgroup_no_v1=cpu, and then mount with
+>> "mount -t cgroup -o cpu cpu /sys/fs/cgroup/cpu", then all enabled controllers will
+>> be attached expect cpu.
+> Okay, that explanation actually makes sense. Can you please update the
+> description to include what's broken and how it's being fixed? It really
+> isn't clear what the patch is trying to achieve from the current
+> description.
+Ok, will update the description.
 >
-> I dug up the synchronous patch
+> Thanks.
 >
->     https://lore.kernel.org/lkml/1579878449-10164-1-git-send-email-prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org/
->
-> but surprisingly wasn't able to reproduce the lockdep splat from
->
->     https://lore.kernel.org/lkml/F0388D99-84D7-453B-9B6B-EEFF0E7BE4CC-J5quhbR+WMc@public.gmane.org/
->
-> even though I could hit it a few weeks ago.
 
-oh okay, you need to mount a legacy cpuset hierarchy.
-
-So as the above splat shows, making cpuset_hotplug_workfn() synchronous
-means cpu_hotplug_lock (and "cpuhp_state-down") can be acquired before
-cgroup_mutex.
-
-But there are at least four cgroup paths that take the locks in the
-opposite order.  They're all the same, they take cgroup_mutex and then
-cpu_hotplug_lock later on to modify one or more static keys.
-
-cpu_hotplug_lock should probably be ahead of cgroup_mutex because the
-latter is taken in a hotplug callback, and we should keep the static
-branches in cgroup, so the only way out I can think of is moving
-cpu_hotplug_lock to just before cgroup_mutex is taken and switching to
-_cpuslocked flavors of the static key calls.
-
-lockdep quiets down with that change everywhere, but it puts another big
-lock around a lot of cgroup paths.  Seems less heavyhanded to go with
-this RFC.  What do you all think?
-
-Absent further discussion, Alexey, do you plan to post another version?
