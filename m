@@ -1,42 +1,100 @@
-From: chenzhou <chenzhou10-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] cgroup-v1: add disabled controller check in
- cgroup1_parse_param()
-Date: Fri, 15 Jan 2021 13:58:20 +0800
-Message-ID: <c4e62492-4b12-c516-3c17-77d18f3ddfe2@huawei.com>
-References: <20201218061755.121205-1-chenzhou10@huawei.com>
- <YABDWvI2PWQpnv59@blackbook>
- <d4ba14b0-ee06-b793-a840-2c2ff369d890@huawei.com>
- <YAB3Wuu+hFpN698N@blackbook>
- <7804658e-7644-8edb-5ca8-0c97389c8c62@huawei.com>
- <YAEJPs4DJIgAXWul@mtj.duckdns.org>
+From: wu860403-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Subject: [PATCH] tg: add cpu's wait_count of a task group
+Date: Fri, 15 Jan 2021 22:30:05 +0800
+Message-ID: <20210115143005.7071-1-wu860403@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <YAEJPs4DJIgAXWul-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=YbRVLfFTFl245PvcYNPKPfmfRYJ/Oj1+0NVhnOPy8iU=;
+        b=Ghj6FPYnkt4QNhyG8f5qpS/3xRNhmYk713fFOsUclYgV8W6X3ODPPvTONsfAE6Ns99
+         PWmhEPT+kRkE847fTjGxhm9VGvvIAl/1vKEYQNXtfwI31sGqkhuuAu5egc01RkRYISi8
+         ZLCYv1WoFL8s2wB/JYT5lIGi9/VxJRobm/S6qy3vWc0/Bpc44+XpB1Pf0Lkoe1xQonHv
+         /VCTtKiOtfuFkxwEjLZDaRg46tG5hqU26y3hTiP/jK5rDQF9IXA65YV/BAgrfWuj7Zi1
+         TVdobsmszfGP3oojf0UHV7Dez0UcIw0gqqJUtpfQ175lqtTiIWAUmNaFgS8fME/9YoFK
+         0Izg==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, 398776277-9uewiaClKEY@public.gmane.org
+Cc: Liming Wu <wu860403-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
+From: Liming Wu <wu860403-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
+Now we can rely on PSI to reflect whether there is contention in
+the task group, but it cannot reflect the details of the contention.
+Through this metric, we can get details of task group contention
+ from the dimension of scheduling.
+   delta(wait_sum)/delta(wait_count)
 
-On 2021/1/15 11:17, Tejun Heo wrote:
-> Hello,
->
-> On Fri, Jan 15, 2021 at 09:55:43AM +0800, chenzhou wrote:
->> Yeah, this will select all enabled controllers, but which doesn't the behavior we want.
->> I think the case should return error with information "Disabled controller xx" rather than
->> attaching all the other enabled controllers.
->>
->> For example, boot with cgroup_no_v1=cpu, and then mount with
->> "mount -t cgroup -o cpu cpu /sys/fs/cgroup/cpu", then all enabled controllers will
->> be attached expect cpu.
-> Okay, that explanation actually makes sense. Can you please update the
-> description to include what's broken and how it's being fixed? It really
-> isn't clear what the patch is trying to achieve from the current
-> description.
-Ok, will update the description.
->
-> Thanks.
->
+Also unified the cpu.stat output of cgroup v1 and v2
+
+Signed-off-by Liming Wu <19092205-t/fWbKJQg0/QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/sched/core.c | 33 ++++++++++++++++++++++++++++-----
+ 1 file changed, 28 insertions(+), 5 deletions(-)
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index e7e453492..e7ff47436 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -8139,19 +8139,29 @@ static int cpu_cfs_stat_show(struct seq_file *sf, void *v)
+ {
+ 	struct task_group *tg = css_tg(seq_css(sf));
+ 	struct cfs_bandwidth *cfs_b = &tg->cfs_bandwidth;
++	u64 throttled_usec;
+ 
+-	seq_printf(sf, "nr_periods %d\n", cfs_b->nr_periods);
+-	seq_printf(sf, "nr_throttled %d\n", cfs_b->nr_throttled);
+-	seq_printf(sf, "throttled_time %llu\n", cfs_b->throttled_time);
++	throttled_usec = cfs_b->throttled_time;
++	do_div(throttled_usec, NSEC_PER_USEC);
++
++	seq_printf(sf, "nr_periods %d\n"
++		   "nr_throttled %d\n"
++		   "throttled_usec %llu\n",
++		   cfs_b->nr_periods, cfs_b->nr_throttled,
++		   throttled_usec);
+ 
+ 	if (schedstat_enabled() && tg != &root_task_group) {
+ 		u64 ws = 0;
++		u64 wc = 0;
+ 		int i;
+ 
+-		for_each_possible_cpu(i)
++		for_each_possible_cpu(i) {
+ 			ws += schedstat_val(tg->se[i]->statistics.wait_sum);
++			wc += schedstat_val(tg->se[i]->statistics.wait_count);
++		}
+ 
+-		seq_printf(sf, "wait_sum %llu\n", ws);
++		seq_printf(sf, "wait_sum %llu\n"
++			"wait_count %llu\n", ws, wc);
+ 	}
+ 
+ 	return 0;
+@@ -8255,6 +8265,19 @@ static int cpu_extra_stat_show(struct seq_file *sf,
+ 			   "throttled_usec %llu\n",
+ 			   cfs_b->nr_periods, cfs_b->nr_throttled,
+ 			   throttled_usec);
++		if (schedstat_enabled() && tg != &root_task_group) {
++			u64 ws = 0;
++			u64 wc = 0;
++			int i;
++
++			for_each_possible_cpu(i) {
++				ws += schedstat_val(tg->se[i]->statistics.wait_sum);
++				wc += schedstat_val(tg->se[i]->statistics.wait_count);
++			}
++
++			seq_printf(sf, "wait_sum %llu\n"
++				"wait_count %llu\n", ws, wc);
++		}
+ 	}
+ #endif
+ 	return 0;
+-- 
+2.20.1
 
