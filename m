@@ -1,44 +1,52 @@
-From: Hao Lee <haolee.swjtu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Remove unnecessary call to strstrip()
-Date: Fri, 15 Jan 2021 10:19:25 +0800
-Message-ID: <CA+PpKPnmzzdH4Wbb5LWT0+cjbS9=cwcxuPRMHf7GuukWdTfVuA@mail.gmail.com>
-References: <20210103024846.GA15337@haolee.github.io> <YAA8qyBUAurgCeEz@blackbook>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] cgroup-v1: add disabled controller check in
+ cgroup1_parse_param()
+Date: Thu, 14 Jan 2021 22:17:18 -0500
+Message-ID: <YAEJPs4DJIgAXWul@mtj.duckdns.org>
+References: <20201218061755.121205-1-chenzhou10@huawei.com>
+ <YABDWvI2PWQpnv59@blackbook>
+ <d4ba14b0-ee06-b793-a840-2c2ff369d890@huawei.com>
+ <YAB3Wuu+hFpN698N@blackbook>
+ <7804658e-7644-8edb-5ca8-0c97389c8c62@huawei.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=fI/1lXfnira7lqXCcxJnPYuJ/g5t5oZZRm+ZWpb4+FI=;
-        b=VGOuUg1lWUtN6AREorPyWbQWKGBcytb/F+GaLsKenHyIPlKz+HUKMT4Kl4Sge2dUhU
-         XDNiOD0jPt6rr8C4CQXlUqloEimlDqMXEXjAeGQcC4Mi9pvz2iAcvpwxXsf3RoarjE9g
-         +nMD/72CnC2OUF7s+FLt6PGhxn+wwoM3/vQdujxJtk8wq0a7ZSfkuch8wQrI+asDCEw6
-         mUVOzy/QttEfGvP0E9sY5arphfqahtgBM15jB9KRzqTMJLlCC2Qcnt0Wq3MI/7NflSOI
-         055r+5Rb0saSZyD2c/kNmdFKtGwkEVQCyH3zEsKJed0QYiGMO0fERnbthvJYK9O07bIO
-         bNdA==
-In-Reply-To: <YAA8qyBUAurgCeEz@blackbook>
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=5ZQN0t+SyirEWcCnAtJWFZVAj9QfKHKmBdxx1H8XwTE=;
+        b=odr0pw6Tc4JOSEerz1bsmasAi60PTA3HexpYK4sUs3CMn4UPSHFwTCje4xad/XxtEo
+         CL84jc8pHGUYe8mImzQQI3TrdZy6n/CgU1UHZSBLdxA5xctlwgyV+D4xOimaT3M6uWyT
+         yiC+nw82au74Mn/hxt1Q73E4iXvgTMSWKcum2qqT00gXo5gMUSwrJNfOUBzDgWGhaVZr
+         A+HnmBgxn9RcuYCDgGweJehTinfBAxFcUQLNNsL5QESd//9e+7jh3Jq2A0LopjvMf4re
+         P6TlcVR0r52q1udIrdYpghFbEKwq+iNPduY4Xrr4tZCXtYcK1zOszrey0pwB48dKpeTq
+         MTmg==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <7804658e-7644-8edb-5ca8-0c97389c8c62@huawei.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: chenzhou <chenzhou10@huawei.com>
+Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>, lizefan.x@bytedance.com, hannes@cmpxchg.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> Perhaps the code be then simplified a bit
->
-> -- >8 --
-> From: =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-> Date: Thu, 14 Jan 2021 13:23:39 +0100
-> Subject: [PATCH] cgroup: cgroup.{procs,threads} factor out common parts
-> MIME-Version: 1.0
-> Content-Type: text/plain; charset=UTF-8
-> Content-Transfer-Encoding: 8bit
->
-> The functions cgroup_threads_start and cgroup_procs_start are almost
-> identical. In order to reduce duplication, factor out the common code in
-> similar fashion we already do for other threadgroup/task functions. No
-> functional changes are intended.
+Hello,
 
-Nice work. I didn't realize this simplification :)
+On Fri, Jan 15, 2021 at 09:55:43AM +0800, chenzhou wrote:
+> Yeah, this will select all enabled controllers, but which doesn't the behavior we want.
+> I think the case should return error with information "Disabled controller xx" rather than
+> attaching all the other enabled controllers.
+> 
+> For example, boot with cgroup_no_v1=cpu, and then mount with
+> "mount -t cgroup -o cpu cpu /sys/fs/cgroup/cpu", then all enabled controllers will
+> be attached expect cpu.
 
-Regards,
-Hao Lee
+Okay, that explanation actually makes sense. Can you please update the
+description to include what's broken and how it's being fixed? It really
+isn't clear what the patch is trying to achieve from the current
+description.
+
+Thanks.
+
+-- 
+tejun
