@@ -1,145 +1,78 @@
-From: Vipin Sharma <vipinsh@google.com>
-Subject: [Patch v5 2/2] cgroup: svm: Encryption IDs cgroup documentation.
-Date: Fri, 15 Jan 2021 18:32:04 -0800
-Message-ID: <20210116023204.670834-3-vipinsh@google.com>
-References: <20210116023204.670834-1-vipinsh@google.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [Patch v4 1/2] cgroup: svm: Add Encryption ID controller
+Date: Fri, 15 Jan 2021 22:43:32 -0500
+Message-ID: <YAJg5MB/Qn5dRqmu@mtj.duckdns.org>
+References: <20210108012846.4134815-1-vipinsh@google.com>
+ <20210108012846.4134815-2-vipinsh@google.com>
+ <YAICLR8PBXxAcOMz@mtj.duckdns.org>
+ <YAIUwGUPDmYfUm/a@google.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=sender:date:in-reply-to:message-id:mime-version:references:subject
-         :from:to:cc;
-        bh=nNIw9PreN3FBfGgYbh7zpha0dJbvtaxE6HZ4WAMEo70=;
-        b=O2uE/OuqpEgZiCwyZa5o+HdAhsN+xhoaafd3x8Ye33wpF65KEC4fEPn100XRq87CH/
-         Q2TJeQS138EUddLPqEtboMXaAo8XB5S558db63b4I7kxn9pR+9yJfam6xtNXxm5+CIFT
-         YSIHfBEmlnhmHOOtJozrakoHbWmwUu0OjBYiQTOlTde/CEsfKsHf0Cwl1oE1waBDCHzb
-         z9MXupmatS1uObwaN8PBkcTeWtxQpRramyrqJr3x4qElSlo3VfWl8c8tE3DBCqQ70OJJ
-         5q4IoBV6ZvGpg1is4EuVWByB2HJplNZ0tSs4Nqq6iBx8vxkHtGw9dCiBRiR+TefON/JC
-         Wuhw==
-Sender: "vipinsh via sendgmr" <vipinsh@vipinsh.kir.corp.google.com>
-In-Reply-To: <20210116023204.670834-1-vipinsh@google.com>
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=/rrxaLl/1RYv52Tg0tmQaRL1KMmod/XpsPxJFkVknMw=;
+        b=pNabNEooGioMTBokqWDJs4vPKzX6S2/DjTzFl3fopsSC+CcHCbpL9lL559Asbyt60E
+         gWSrSZmHP5WIGcbDaHDs2xuEHm235/Dr8eiqMjj3SM2zjw8TCOats7USFDvUUHEbZwrC
+         sUrCLnkSxnGEQC45/05qUT30+tf9LFuLN8utC/5DQ7KEAezjyk1R27XavvgXohBbftmg
+         nwadR36gQdasHOIGPufBPtwJ3lFyKzGF8Xc36K0UMb+yd2SvYQh3XyEtkXNv9y7b2HXB
+         giDPpmqTrqal1FaxZXlKkePNsvel6tULDXWt2XEo64T5+wOUvHPX+uoz4uC3htXu5ZCJ
+         7egQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <YAIUwGUPDmYfUm/a@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, seanjc@google.com, tj@kernel.org, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net
-Cc: joro@8bytes.org, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Vipin Sharma <vipinsh@google.com>
+To: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: thomas.lendacky-5C7GfCeVMHo@public.gmane.org, brijesh.singh-5C7GfCeVMHo@public.gmane.org, jon.grimm-5C7GfCeVMHo@public.gmane.org, eric.vantassell-5C7GfCeVMHo@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, frankja-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org, vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, gingell-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dionnaglaze-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Documentation of Encryption IDs controller. This new controller is used
-to track and limit usage of hardware memory encryption capabilities on
-the CPUs.
+On Fri, Jan 15, 2021 at 02:18:40PM -0800, Vipin Sharma wrote:
+> > * Why is .sev a separate namespace? Isn't the controller supposed to cover
+> >   encryption ids across different implementations? It's not like multiple
+> >   types of IDs can be in use on the same machine, right?
+> > 
+> 
+> On AMD platform we have two types SEV and SEV-ES which can exists
+> simultaneously and they have their own quota.
 
-Signed-off-by: Vipin Sharma <vipinsh@google.com>
-Reviewed-by: David Rientjes <rientjes@google.com>
-Reviewed-by: Dionna Glaze <dionnaglaze@google.com>
----
- .../admin-guide/cgroup-v1/encryption_ids.rst  |  1 +
- Documentation/admin-guide/cgroup-v2.rst       | 78 ++++++++++++++++++-
- 2 files changed, 77 insertions(+), 2 deletions(-)
- create mode 100644 Documentation/admin-guide/cgroup-v1/encryption_ids.rst
+Can you please give a brief explanation of the two and lay out a scenario
+where the two are being used / allocated disjointly?
 
-diff --git a/Documentation/admin-guide/cgroup-v1/encryption_ids.rst b/Documentation/admin-guide/cgroup-v1/encryption_ids.rst
-new file mode 100644
-index 000000000000..8e9e9311daeb
---- /dev/null
-+++ b/Documentation/admin-guide/cgroup-v1/encryption_ids.rst
-@@ -0,0 +1 @@
-+/Documentation/admin-guide/cgroup-v2.rst
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 63521cd36ce5..72993571de2e 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -63,8 +63,11 @@ v1 is available under :ref:`Documentation/admin-guide/cgroup-v1/index.rst <cgrou
-        5-7-1. RDMA Interface Files
-      5-8. HugeTLB
-        5.8-1. HugeTLB Interface Files
--     5-8. Misc
--       5-8-1. perf_event
-+     5-9. Encryption IDs
-+       5.9-1 Encryption IDs Interface Files
-+       5.9-2 Migration and Ownership
-+     5-10. Misc
-+       5-10-1. perf_event
-      5-N. Non-normative information
-        5-N-1. CPU controller root cgroup process behaviour
-        5-N-2. IO controller root cgroup process behaviour
-@@ -2160,6 +2163,77 @@ HugeTLB Interface Files
- 	are local to the cgroup i.e. not hierarchical. The file modified event
- 	generated on this file reflects only the local events.
- 
-+Encryption IDs
-+--------------
-+
-+There are multiple hardware memory encryption capabilities provided by the
-+hardware vendors, like Secure Encrypted Virtualization (SEV) and SEV Encrypted
-+State (SEV-ES) from AMD.
-+
-+These features are being used in encrypting virtual machines (VMs) and user
-+space programs. However, only a small number of keys/IDs can be used
-+simultaneously.
-+
-+This limited availability of these IDs requires system admin to optimize
-+allocation, control, and track the usage of the resources in the cloud
-+infrastructure. This resource also needs to be protected from getting exhausted
-+by some malicious program and causing starvation for other programs.
-+
-+Encryption IDs controller provides capability to register the resource for
-+controlling and tracking through the cgroups.
-+
-+Encryption IDs Interface Files
-+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-+
-+Each encryption ID type have their own interface files,
-+encids.[ID TYPE].{max, current, stat}, where "ID TYPE" can be sev and
-+sev-es.
-+
-+  encids.[ID TYPE].stat
-+        A read-only flat-keyed single value file. This file exists only in the
-+        root cgroup.
-+
-+        It shows the total number of encryption IDs available and currently in
-+        use on the platform::
-+          # cat encids.sev.stat
-+          total 509
-+          used 0
-+
-+  encids.[ID TYPE].max
-+        A read-write file which exists on the non-root cgroups. File is used to
-+        set maximum count of "[ID TYPE]" which can be used in the cgroup.
-+
-+        Limit can be set to max by::
-+          # echo max > encids.sev.max
-+
-+        Limit can be set by::
-+          # echo 100 > encids.sev.max
-+
-+        This file shows the max limit of the encryption ID in the cgroup::
-+          # cat encids.sev.max
-+          max
-+
-+        OR::
-+          # cat encids.sev.max
-+          100
-+
-+        Limits can be set more than the "total" capacity value in the
-+        encids.[ID TYPE].stat file, however, the controller ensures
-+        that the usage never exceeds the "total" and the max limit.
-+
-+  encids.[ID TYPE].current
-+        A read-only single value file which exists on non-root cgroups.
-+
-+        Shows the total number of encrypted IDs being used in the cgroup.
-+
-+Migration and Ownership
-+~~~~~~~~~~~~~~~~~~~~~~~
-+
-+An encryption ID is charged to the cgroup in which it is used first, and
-+stays charged to that cgroup until that ID is freed. Migrating a process
-+to a different cgroup do not move the charge to the destination cgroup
-+where the process has moved.
-+
- Misc
- ----
- 
+> > > Other ID types can be easily added in the controller in the same way.
+> > 
+> > I'm not sure this is necessarily a good thing.
+> 
+> This is to just say that when Intel and PowerPC changes are ready it
+> won't be difficult for them to add their controller.
+
+I'm not really enthused about having per-hardware-type control knobs. None
+of other controllers behave that way. Unless it can be abstracted into
+something common, I'm likely to object.
+
+> > > +static int enc_id_cg_stat_show(struct seq_file *sf, void *v)
+> > > +{
+> > > +	unsigned long flags;
+> > > +	enum encryption_id_type type = seq_cft(sf)->private;
+> > > +
+> > > +	spin_lock_irqsave(&enc_id_cg_lock, flags);
+> > > +
+> > > +	seq_printf(sf, "total %u\n", enc_id_capacity[type]);
+> > > +	seq_printf(sf, "used %u\n", root_cg.res[type].usage);
+> > 
+> > Dup with .current and no need to show total on every cgroup, right?
+> 
+> This is for the stat file which will only be seen in the root cgroup
+> directory.  It is to know overall picture for the resource, what is the
+> total capacity and what is the current usage. ".current" file is not
+> shown on the root cgroup.
+
+Ah, missed the flags. It's odd for the usage to be presented in two
+different ways tho. I think it'd make more sense w/ cgroup.current at root
+level. Is the total number available somewhere else in the system?
+
+Thanks.
+
 -- 
-2.30.0.284.gd98b1dd5eaa7-goog
-
+tejun
