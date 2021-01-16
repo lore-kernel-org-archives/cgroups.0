@@ -1,116 +1,173 @@
-From: Vipin Sharma <vipinsh@google.com>
-Subject: Re: [Patch v4 1/2] cgroup: svm: Add Encryption ID controller
-Date: Fri, 15 Jan 2021 20:32:19 -0800
-Message-ID: <YAJsUyH2zspZxF2S@google.com>
-References: <20210108012846.4134815-1-vipinsh@google.com>
- <20210108012846.4134815-2-vipinsh@google.com>
- <YAICLR8PBXxAcOMz@mtj.duckdns.org>
- <YAIUwGUPDmYfUm/a@google.com>
- <YAJg5MB/Qn5dRqmu@mtj.duckdns.org>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:for-5.11-fixes] BUILD SUCCESS
+ b5e56576e16236de3c035ca86cd3ef16591722fb
+Date: Sat, 16 Jan 2021 17:35:53 +0800
+Message-ID: <6002b379.uzGPYyUCOOl7yg/Q%lkp@intel.com>
 Mime-Version: 1.0
-Return-path: <kvm-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=78eb91iV6onC6q/hVFxGo4K1XPsW1qS27cVVQW2qr6s=;
-        b=AhCJrurJWr5qakhtTFitP0L+ZLAyEUUdfmPca3QpxNzNGFZrZqXzwK7rGFldzEKG/g
-         rJg/IJDxekMuO8bfkHTyYr74RzsMadcBKp3YR9g06tgDFSHtXj+chssKalfaIawkjxih
-         BRVvlJPQYIvd4KdUAxAhR4o75d35icXrZB/EFP+iGbzySEycNsF4pX+FdJ9wg3SoTuE5
-         rFtP8JHAXY+SgOM6dFnjOivvQw+GG6iyCeM1dcpiO6/ytRmGQmhhFtnGXUsk/g7/6di8
-         Vd538ChRdWi0U4cRJs4gB1uu7Phm5CVMgdVGwZ8UBewEAtTIVAqqGMDPKErXtfOpnTpg
-         SEvw==
-Content-Disposition: inline
-In-Reply-To: <YAJg5MB/Qn5dRqmu@mtj.duckdns.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, seanjc@google.com, lizefan@huawei.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net, joro@8bytes.org, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Jan 15, 2021 at 10:43:32PM -0500, Tejun Heo wrote:
-> On Fri, Jan 15, 2021 at 02:18:40PM -0800, Vipin Sharma wrote:
-> > > * Why is .sev a separate namespace? Isn't the controller supposed to cover
-> > >   encryption ids across different implementations? It's not like multiple
-> > >   types of IDs can be in use on the same machine, right?
-> > > 
-> > 
-> > On AMD platform we have two types SEV and SEV-ES which can exists
-> > simultaneously and they have their own quota.
-> 
-> Can you please give a brief explanation of the two and lay out a scenario
-> where the two are being used / allocated disjointly?
-> 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.11-fixes
+branch HEAD: b5e56576e16236de3c035ca86cd3ef16591722fb  MAINTAINERS: Update my email address
 
-SEV-ES has stronger memory encryption gurantees compared to SEV, apart
-from encrypting the application memory it also encrypts register state
-among other things. In a single host ASIDs can be distributed between
-these two types by BIOS settings.
+elapsed time: 725m
 
-Currently, Google Cloud has Confidential VM machines offering using SEV.
-ASIDs are not compatible between SEV and SEV-ES, so a VM running on SEV
-cannot run on SEV-ES and vice versa
+configs tested: 142
+configs skipped: 3
 
-There are use cases for both types of VMs getting used in future.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-> > > > Other ID types can be easily added in the controller in the same way.
-> > > 
-> > > I'm not sure this is necessarily a good thing.
-> > 
-> > This is to just say that when Intel and PowerPC changes are ready it
-> > won't be difficult for them to add their controller.
-> 
-> I'm not really enthused about having per-hardware-type control knobs. None
-> of other controllers behave that way. Unless it can be abstracted into
-> something common, I'm likely to object.
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+mips                  cavium_octeon_defconfig
+powerpc                      ppc6xx_defconfig
+c6x                              alldefconfig
+arm                           viper_defconfig
+arc                        nsimosci_defconfig
+mips                         rt305x_defconfig
+sh                      rts7751r2d1_defconfig
+powerpc                 mpc8272_ads_defconfig
+arm                           h3600_defconfig
+sh                  sh7785lcr_32bit_defconfig
+arm                  colibri_pxa300_defconfig
+xtensa                    xip_kc705_defconfig
+arm                             rpc_defconfig
+sparc64                             defconfig
+powerpc                      ppc44x_defconfig
+arm                          gemini_defconfig
+mips                     decstation_defconfig
+csky                             alldefconfig
+arm                           h5000_defconfig
+powerpc                 mpc837x_mds_defconfig
+mips                         cobalt_defconfig
+sh                          r7785rp_defconfig
+arm                          pcm027_defconfig
+sparc64                          alldefconfig
+arm                            mps2_defconfig
+openrisc                    or1ksim_defconfig
+mips                     cu1830-neo_defconfig
+sh                   sh7724_generic_defconfig
+mips                         mpc30x_defconfig
+arm                          exynos_defconfig
+mips                            gpr_defconfig
+arm                         bcm2835_defconfig
+sh                             sh03_defconfig
+powerpc                     tqm8555_defconfig
+mips                           ip32_defconfig
+sh                          kfr2r09_defconfig
+powerpc                  storcenter_defconfig
+arm                          pxa910_defconfig
+powerpc                       maple_defconfig
+sh                ecovec24-romimage_defconfig
+sparc                       sparc64_defconfig
+sh                        dreamcast_defconfig
+mips                         db1xxx_defconfig
+powerpc                       holly_defconfig
+csky                                defconfig
+mips                       rbtx49xx_defconfig
+powerpc                 mpc834x_itx_defconfig
+arc                              allyesconfig
+powerpc                      katmai_defconfig
+m68k                        m5272c3_defconfig
+sh                           se7206_defconfig
+powerpc                 mpc8560_ads_defconfig
+mips                     loongson1c_defconfig
+c6x                         dsk6455_defconfig
+m68k                             allmodconfig
+mips                           jazz_defconfig
+sh                            titan_defconfig
+arm                      tct_hammer_defconfig
+sh                         apsh4a3a_defconfig
+arc                        nsim_700_defconfig
+arm                        mini2440_defconfig
+sh                           se7780_defconfig
+powerpc                          g5_defconfig
+mips                        nlm_xlr_defconfig
+ia64                            zx1_defconfig
+sh                           se7619_defconfig
+mips                           ip28_defconfig
+mips                           ip27_defconfig
+powerpc                     kmeter1_defconfig
+m68k                                defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allyesconfig
+nios2                               defconfig
+nds32                             allnoconfig
+c6x                              allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+alpha                               defconfig
+alpha                            allyesconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+parisc                           allyesconfig
+s390                                defconfig
+i386                             allyesconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                               tinyconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+x86_64               randconfig-a004-20210115
+x86_64               randconfig-a006-20210115
+x86_64               randconfig-a001-20210115
+x86_64               randconfig-a003-20210115
+x86_64               randconfig-a005-20210115
+x86_64               randconfig-a002-20210115
+i386                 randconfig-a002-20210115
+i386                 randconfig-a005-20210115
+i386                 randconfig-a006-20210115
+i386                 randconfig-a001-20210115
+i386                 randconfig-a003-20210115
+i386                 randconfig-a004-20210115
+i386                 randconfig-a012-20210115
+i386                 randconfig-a011-20210115
+i386                 randconfig-a016-20210115
+i386                 randconfig-a015-20210115
+i386                 randconfig-a013-20210115
+i386                 randconfig-a014-20210115
+riscv                    nommu_k210_defconfig
+riscv                            allyesconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+riscv                            allmodconfig
+x86_64                                   rhel
+x86_64                           allyesconfig
+x86_64                    rhel-7.6-kselftests
+x86_64                              defconfig
+x86_64                               rhel-8.3
+x86_64                      rhel-8.3-kbuiltin
+x86_64                                  kexec
 
-There was a discussion in Patch v1 and consensus was to have individual
-files because it makes kernel implementation extremely simple.
+clang tested configs:
+x86_64               randconfig-a015-20210115
+x86_64               randconfig-a012-20210115
+x86_64               randconfig-a013-20210115
+x86_64               randconfig-a016-20210115
+x86_64               randconfig-a014-20210115
+x86_64               randconfig-a011-20210115
 
-https://lore.kernel.org/lkml/alpine.DEB.2.23.453.2011131615510.333518@chino.kir.corp.google.com/#t
-
-> 
-> > > > +static int enc_id_cg_stat_show(struct seq_file *sf, void *v)
-> > > > +{
-> > > > +	unsigned long flags;
-> > > > +	enum encryption_id_type type = seq_cft(sf)->private;
-> > > > +
-> > > > +	spin_lock_irqsave(&enc_id_cg_lock, flags);
-> > > > +
-> > > > +	seq_printf(sf, "total %u\n", enc_id_capacity[type]);
-> > > > +	seq_printf(sf, "used %u\n", root_cg.res[type].usage);
-> > > 
-> > > Dup with .current and no need to show total on every cgroup, right?
-> > 
-> > This is for the stat file which will only be seen in the root cgroup
-> > directory.  It is to know overall picture for the resource, what is the
-> > total capacity and what is the current usage. ".current" file is not
-> > shown on the root cgroup.
-> 
-> Ah, missed the flags. It's odd for the usage to be presented in two
-> different ways tho. I think it'd make more sense w/ cgroup.current at root
-> level. Is the total number available somewhere else in the system?
-
-This information is not available anywhere else in the system. Only
-other way to get this value is to use CPUID instruction (0x8000001F) of
-the processor. Which also has disdvantage if sev module in kernel
-doesn't use all of the available ASIDs for its work (right now it uses
-all) then there will be a mismatch between what user get through their
-code and what is actually getting used in the kernel by sev.
-
-In cgroup v2, I didn't see current files for other cgroups in root
-folder that is why I didn't show that file in root folder.
-
-Will you be fine if I show two files in the root, something like:
-
-encids.sev.capacity
-encids.sev.current
-
-In non root folder, it will be:
-encids.sev.max
-encids.sev.current
-
-I still prefer encids.sev.stat, as it won't repeat same information in
-each cgroup but let me know what you think.
-
-Thanks
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
