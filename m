@@ -1,8 +1,8 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-5.11-fixes] BUILD SUCCESS
- b5e56576e16236de3c035ca86cd3ef16591722fb
-Date: Sat, 16 Jan 2021 17:35:53 +0800
-Message-ID: <6002b379.uzGPYyUCOOl7yg/Q%lkp@intel.com>
+Subject: [cgroup:for-5.12] BUILD SUCCESS
+ 415de5fdeb5ac28c2960df85b749700560dcd63c
+Date: Sat, 16 Jan 2021 17:35:36 +0800
+Message-ID: <6002b368.T6v6eXc/GwgKR2DC%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,12 +11,12 @@ Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.11-fixes
-branch HEAD: b5e56576e16236de3c035ca86cd3ef16591722fb  MAINTAINERS: Update my email address
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.12
+branch HEAD: 415de5fdeb5ac28c2960df85b749700560dcd63c  cpuset: fix typos in comments
 
 elapsed time: 725m
 
-configs tested: 142
+configs tested: 145
 configs skipped: 3
 
 The following configs have been built successfully.
@@ -38,6 +38,12 @@ sh                      rts7751r2d1_defconfig
 powerpc                 mpc8272_ads_defconfig
 arm                           h3600_defconfig
 sh                  sh7785lcr_32bit_defconfig
+arm                       mainstone_defconfig
+sh                        apsh4ad0a_defconfig
+arm                        magician_defconfig
+arm                         assabet_defconfig
+powerpc                mpc7448_hpc2_defconfig
+powerpc                     tqm8548_defconfig
 arm                  colibri_pxa300_defconfig
 xtensa                    xip_kc705_defconfig
 arm                             rpc_defconfig
@@ -72,12 +78,8 @@ sparc                       sparc64_defconfig
 sh                        dreamcast_defconfig
 mips                         db1xxx_defconfig
 powerpc                       holly_defconfig
-csky                                defconfig
 mips                       rbtx49xx_defconfig
-powerpc                 mpc834x_itx_defconfig
-arc                              allyesconfig
-powerpc                      katmai_defconfig
-m68k                        m5272c3_defconfig
+csky                                defconfig
 sh                           se7206_defconfig
 powerpc                 mpc8560_ads_defconfig
 mips                     loongson1c_defconfig
@@ -95,6 +97,7 @@ mips                        nlm_xlr_defconfig
 ia64                            zx1_defconfig
 sh                           se7619_defconfig
 mips                           ip28_defconfig
+arc                              allyesconfig
 mips                           ip27_defconfig
 powerpc                     kmeter1_defconfig
 m68k                                defconfig
@@ -113,10 +116,10 @@ xtensa                           allyesconfig
 h8300                            allyesconfig
 arc                                 defconfig
 sh                               allmodconfig
+s390                                defconfig
 parisc                              defconfig
 s390                             allyesconfig
 parisc                           allyesconfig
-s390                                defconfig
 i386                             allyesconfig
 sparc                            allyesconfig
 sparc                               defconfig
