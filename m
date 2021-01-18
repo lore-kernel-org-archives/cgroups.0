@@ -1,145 +1,164 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: prevent starvation when writing
- memory.high
-Date: Mon, 18 Jan 2021 14:12:19 +0100
-Message-ID: <20210118131219.GD14336@dhcp22.suse.cz>
-References: <20210112163011.127833-1-hannes@cmpxchg.org>
- <20210113144654.GD22493@dhcp22.suse.cz>
- <YAHA4uBSLlnxxAbu@cmpxchg.org>
+From: Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 6/6] sched/deadline: Fixes cpu/rd/dl_bw references for
+ suspended tasks
+Date: Mon, 18 Jan 2021 14:17:43 +0100
+Message-ID: <40b1f087-2411-8fb3-4aad-20791e63d940@redhat.com>
+References: <cover.1610463999.git.bristot@redhat.com>
+ <8c1cb0c850e2f3ab1d7a533aa4b33a30f9dbeda5.1610463999.git.bristot@redhat.com>
+ <97875017-a6bb-98ea-83f9-82e95db58aca@arm.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1610975540; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1610975868;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=2HWlEcvjoTMsI47i3B2eDVwrEWOw9JoCLpGemiNPf30=;
-        b=WRI2Tg5vF8LWLchV6CyUa6ivZgv/GZ8dICb27aHO7w65YYVBVTsSCslltgUdJL+5iSUSY3
-        q3FLiSeOueIALl6QC9t2JrZVeaylnKbjNcKK2h5TXpo0xEyqGu3vB46UNAw6PAJ1uQU2tS
-        rvY30do+2Sn34TtauQe67VRF6eknetE=
-Content-Disposition: inline
-In-Reply-To: <YAHA4uBSLlnxxAbu-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        bh=qskwrs9PcUI54IS2EGGfpMU4PDXQfqH5PObQuPS3H0M=;
+        b=VjVw97lQqbybL65fIAWJPJc0X1JgSgA2kyo8p0Itbe+XfK2zPnlQnDzWfY0iH4mU0mIn8k
+        VXfGdDHig7FENUQQ5ZwMTEPB3avAwE4kPVix6yVJf+NuND6gdtEiRU0mf8zk/iBDrxiasS
+        hqjB6RX1ZdykjwQkYDBpUYAPCdO1yI8=
+In-Reply-To: <97875017-a6bb-98ea-83f9-82e95db58aca-5wv7dgnIgG8@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Marco Perronet <perronet-41PbBDiSz5tAfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Valentin Schneider <valentin.schneider-5wv7dgnIgG8@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 15-01-21 11:20:50, Johannes Weiner wrote:
-> On Wed, Jan 13, 2021 at 03:46:54PM +0100, Michal Hocko wrote:
-> > On Tue 12-01-21 11:30:11, Johannes Weiner wrote:
-> > > When a value is written to a cgroup's memory.high control file, the
-> > > write() context first tries to reclaim the cgroup to size before
-> > > putting the limit in place for the workload. Concurrent charges from
-> > > the workload can keep such a write() looping in reclaim indefinitely.
-> > > 
-> > > In the past, a write to memory.high would first put the limit in place
-> > > for the workload, then do targeted reclaim until the new limit has
-> > > been met - similar to how we do it for memory.max. This wasn't prone
-> > > to the described starvation issue. However, this sequence could cause
-> > > excessive latencies in the workload, when allocating threads could be
-> > > put into long penalty sleeps on the sudden memory.high overage created
-> > > by the write(), before that had a chance to work it off.
-> > > 
-> > > Now that memory_high_write() performs reclaim before enforcing the new
-> > > limit, reflect that the cgroup may well fail to converge due to
-> > > concurrent workload activity. Bail out of the loop after a few tries.
-> > 
-> > I can see that you have provided some more details in follow up replies
-> > but I do not see any explicit argument why an excessive time for writer
-> > is an actual problem. Could you be more specific?
+On 1/15/21 3:36 PM, Dietmar Eggemann wrote:
+> On 12/01/2021 16:53, Daniel Bristot de Oliveira wrote:
 > 
-> Our writer isn't necessarily time sensitive, but there is a difference
-> between a) the write taking a few seconds to reclaim down the
-> requested delta and b) the writer essentially turning into kswapd for
-> the workload and busy-spinning inside the kernel indefinitely.
+> [...]
 > 
-> We've seen the writer stuck in this function for minutes, long after
-> the requested delta has been reclaimed, consuming alarming amounts of
-> CPU cycles - CPU time that should really be accounted to the workload,
-> not the system software performing the write.
+>> ----- %< -----
+>>   #!/bin/bash
+>>   # Enter on the cgroup directory
+>>   cd /sys/fs/cgroup/
+>>
+>>   # Check it if is cgroup v2 and enable cpuset
+>>   if [ -e cgroup.subtree_control ]; then
+>>   	# Enable cpuset controller on cgroup v2
+>>   	echo +cpuset > cgroup.subtree_control
+>>   fi
+>>
+>>   echo LOG: create an exclusive cpuset and assigned the CPU 0 to it
+>>   # Create cpuset groups
+>>   rmdir dl-group &> /dev/null
+>>   mkdir dl-group
+>>
+>>   # Restrict the task to the CPU 0
+>>   echo 0 > dl-group/cpuset.mems
+>>   echo 0 > dl-group/cpuset.cpus
+>>   echo root >  dl-group/cpuset.cpus.partition
+>>
+>>   echo LOG: dispatching a regular task
+>>   sleep 100 &
+>>   CPUSET_PID="$!"
+>>
+>>   # let it settle down
+>>   sleep 1
+>>
+>>   # Assign the second task to the cgroup
+> 
+> There is only one task 'CPUSET_PID' involved here?
 
-OK, this is an important detail. So the context which is doing the work
-doesn't belong to the target memcg? If that is the case then I do
-understand why you consider it a problem. In general I would recommend
-running operations like this one in scope of the affected cgroup. But
-maybe that is not really an option in your setup.
+Ooops, yep, I will remove the "second" part.
 
-Anyway this is an important information to have in the changelog.
+>>   echo LOG: moving the second DL task to the cpuset
+>>   echo "$CPUSET_PID" > dl-group/cgroup.procs 2> /dev/null
+>>
+>>   CPUSET_ALLOWED=`cat /proc/$CPUSET_PID/status | grep Cpus_allowed_list | awk '{print $2}'`
+>>
+>>   chrt -p -d --sched-period 1000000000 --sched-runtime 100000000 0 $CPUSET_PID
+>>   ACCEPTED=$?
+>>
+>>   if [ $ACCEPTED == 0 ]; then
+>>   	echo PASS: the task became DL
+>>   else
+>>   	echo FAIL: the task was rejected as DL
+>>   fi
+> 
+> [...]
+> 
+>> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+>> index 5961a97541c2..3c2775e6869f 100644
+>> --- a/kernel/sched/core.c
+>> +++ b/kernel/sched/core.c
+>> @@ -5905,15 +5905,15 @@ static int __sched_setscheduler(struct task_struct *p,
+>>  #ifdef CONFIG_SMP
+>>  		if (dl_bandwidth_enabled() && dl_policy(policy) &&
+>>  				!(attr->sched_flags & SCHED_FLAG_SUGOV)) {
+>> -			cpumask_t *span = rq->rd->span;
+>> +			struct root_domain *rd = dl_task_rd(p);
+>>  
+>>  			/*
+>>  			 * Don't allow tasks with an affinity mask smaller than
+>>  			 * the entire root_domain to become SCHED_DEADLINE. We
+>>  			 * will also fail if there's no bandwidth available.
+>>  			 */
+>> -			if (!cpumask_subset(span, p->cpus_ptr) ||
+>> -			    rq->rd->dl_bw.bw == 0) {
+>> +			if (!cpumask_subset(rd->span, p->cpus_ptr) ||
+>> +			    rd->dl_bw.bw == 0) {
+>>  				retval = -EPERM;
+>>  				goto unlock;
+>>  			}
+>> diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
+>> index c221e14d5b86..1f6264cb8867 100644
+>> --- a/kernel/sched/deadline.c
+>> +++ b/kernel/sched/deadline.c
+>> @@ -2678,8 +2678,8 @@ int sched_dl_overflow(struct task_struct *p, int policy,
+>>  	u64 period = attr->sched_period ?: attr->sched_deadline;
+>>  	u64 runtime = attr->sched_runtime;
+>>  	u64 new_bw = dl_policy(policy) ? to_ratio(period, runtime) : 0;
+>> -	int cpus, err = -1, cpu = task_cpu(p);
+>> -	struct dl_bw *dl_b = dl_bw_of(cpu);
+>> +	int cpus, err = -1, cpu = dl_task_cpu(p);
+>> +	struct dl_bw *dl_b = dl_task_root_bw(p);
+>>  	unsigned long cap;
+>>  
+>>  	if (attr->sched_flags & SCHED_FLAG_SUGOV)
+>>
+> 
+> Wouldn't it be sufficient to just introduce dl_task_cpu() and use the
+> correct cpu to get rd->span or struct dl_bw in __sched_setscheduler()
+> -> sched_dl_overflow()?
 
-> Obviously, we could work around it using timeouts and signals. In
-> fact, we may have to until the new kernel is deployed everywhere. But
-> this is the definition of an interface change breaking userspace, so
-> I'm a bit surprised by your laid-back response.
+While I think that having the dl_task_rd() makes the code more intuitive, I have
+no problem on not adding it...
 
-Well, I was basing my feedback on the available information in the
-changelog. It is quite clear that somebody has to pay for the work.
-Moving as much of the work to the writer makes sense as long as the
-context is runing in the same cgroup so the work gets accounted
-properly. If this assumption doesn't match the reality then we have to
-re-evaluate our priorities here.
+> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+> index 5961a97541c2..0573f676696a 100644
+> --- a/kernel/sched/core.c
+> +++ b/kernel/sched/core.c
+> @@ -5905,7 +5905,8 @@ static int __sched_setscheduler(struct task_struct *p,
+>  #ifdef CONFIG_SMP
+>                 if (dl_bandwidth_enabled() && dl_policy(policy) &&
+>                                 !(attr->sched_flags & SCHED_FLAG_SUGOV)) {
+> -                       cpumask_t *span = rq->rd->span;
+> +                       int cpu = dl_task_cpu(p);
+> +                       cpumask_t *span = cpu_rq(cpu)->rd->span;
+>  
+>                         /*
+>                          * Don't allow tasks with an affinity mask smaller than
+> diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
+> index c221e14d5b86..308ecaaf3d28 100644
+> --- a/kernel/sched/deadline.c
+> +++ b/kernel/sched/deadline.c
+> @@ -2678,7 +2678,7 @@ int sched_dl_overflow(struct task_struct *p, int policy,
+>         u64 period = attr->sched_period ?: attr->sched_deadline;
+>         u64 runtime = attr->sched_runtime;
+>         u64 new_bw = dl_policy(policy) ? to_ratio(period, runtime) : 0;
+> -       int cpus, err = -1, cpu = task_cpu(p);
+> +       int cpus, err = -1, cpu = dl_task_cpu(p);
+>         struct dl_bw *dl_b = dl_bw_of(cpu);
+>         unsigned long cap;
+> 
 
-> > > Fixes: 536d3bf261a2 ("mm: memcontrol: avoid workload stalls when lowering memory.high")
-> > > Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # 5.8+
-> > 
-> > Why is this worth backporting to stable? The behavior is different but I
-> > do not think any of them is harmful.
-> 
-> The referenced patch changed user-visible behavior in a way that is
-> causing real production problems for us. From stable-kernel-rules:
-> 
->  - It must fix a real bug that bothers people (not a, "This could be a
->    problem..." type thing).
-> 
-> > > Reported-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> > > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> > 
-> > I am not against the patch. The existing interface doesn't provide any
-> > meaningful feedback to the userspace anyway. User would have to re check
-> > to see the result of the operation. So how hard we try is really an
-> > implementation detail.
-> 
-> Yeah, I wish it was a bit more consistent from an interface POV.
-> 
-> Btw, if you have noticed, Roman's patch to enforce memcg->high *after*
-> trying to reclaim went into the tree at the same exact time as Chris's
-> series "mm, memcg: reclaim harder before high throttling" (commit
-> b3ff92916af3b458712110bb83976a23471c12fa). It's likely they overlap.
-> 
-> Chris's patch changes memory.high reclaim on the allocation side from
-> 
-> 	reclaim once, sleep if there is still overage
-> 
-> to
-> 
-> 	reclaim the overage as long as you make forward progress;
-> 	sleep after 16 no-progress loops if there is still overage
-> 
-> Roman's patch describes a problem where allocating threads go to sleep
-> when memory.high is lowered by a wider step. This is exceedingly
-> unlikely after Chris's change.
-> 
-> Because after Chris's change, memory.high is reclaimed on the
-> allocation side as aggressively as memory.max. The only difference is
-> that upon failure, one sleeps and the other OOMs.
-> 
-> If Roman's issue were present after Chris's change, then we'd also see
-> premature OOM kills when memory.max is lowered by a large step. And I
-> have never seen that happening.
+This way works for me too.
 
-This should be something quite easy to double check right?
+Thanks!
 
-> So I suggest instead of my fix here, we revert Roman's patch instead,
-> as it should no longer be needed. Thoughts?
+-- Daniel
 
-Reverting 536d3bf261a2 ("mm: memcontrol: avoid workload stalls when
-lowering memory.high") would certainly help to throttle producers but it
-still doesn't solve the underlying problem that a lot of work could be
-done in a context which lives outside of the memcg, right? The effect
-would be much smaller and it shouldn't be effectivelly unbounded but
-still something we should think about.
-
-That being said going with the revert sounds like a slightly better
-approach to me.
--- 
-Michal Hocko
-SUSE Labs
