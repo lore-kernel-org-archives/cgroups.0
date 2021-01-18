@@ -1,164 +1,174 @@
-From: Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 6/6] sched/deadline: Fixes cpu/rd/dl_bw references for
- suspended tasks
-Date: Mon, 18 Jan 2021 14:17:43 +0100
-Message-ID: <40b1f087-2411-8fb3-4aad-20791e63d940@redhat.com>
-References: <cover.1610463999.git.bristot@redhat.com>
- <8c1cb0c850e2f3ab1d7a533aa4b33a30f9dbeda5.1610463999.git.bristot@redhat.com>
- <97875017-a6bb-98ea-83f9-82e95db58aca@arm.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [Patch v5 2/2] cgroup: svm: Encryption IDs cgroup documentation.
+Date: Mon, 18 Jan 2021 09:55:12 -0800
+Message-ID: <2a009bd9-fde5-4911-3525-e28379fe3be2@infradead.org>
+References: <20210116023204.670834-1-vipinsh@google.com>
+ <20210116023204.670834-3-vipinsh@google.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1610975868;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=qskwrs9PcUI54IS2EGGfpMU4PDXQfqH5PObQuPS3H0M=;
-        b=VjVw97lQqbybL65fIAWJPJc0X1JgSgA2kyo8p0Itbe+XfK2zPnlQnDzWfY0iH4mU0mIn8k
-        VXfGdDHig7FENUQQ5ZwMTEPB3avAwE4kPVix6yVJf+NuND6gdtEiRU0mf8zk/iBDrxiasS
-        hqjB6RX1ZdykjwQkYDBpUYAPCdO1yI8=
-In-Reply-To: <97875017-a6bb-98ea-83f9-82e95db58aca-5wv7dgnIgG8@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description;
+        bh=VSy7n9nGa+8yIgiz5/4Q9YZDqz+WHE9uZBEMuw4LP60=; b=ElCtRKXWs00XlQ5Ju8PBSEsSCb
+        3CKHkgdNQu7e41t3Gwu6khGQbo7R7XI6ZZ6nOHwmCrH5tafVsX0+G1e+2II5ILaV4zQDNl6LvNSAf
+        k1xhJvevWgHmbH5bii13SgJRDA2Gv/2FfexFvnnyb1mgpy9MJDYKQZFoh0RUivM9eMxCsraYa2p9R
+        Jg4Mb4zn0txphL73yMA/ZsAguhFstS8Lu17S7jB6DxUL9EfvLUYpzyudmN0fpZ6wPIZ77YM7lJlEY
+        saWcR1bPA7nTD90KFEz5YAShJB9kepxCRmYpBXT91+34kLPPifqcqDTGm265vQ+0HuVZfjmuPe6u9
+        W2ZEIc9A==;
+In-Reply-To: <20210116023204.670834-3-vipinsh@google.com>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Marco Perronet <perronet-41PbBDiSz5tAfugRpC6u6w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Valentin Schneider <valentin.schneider-5wv7dgnIgG8@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Vipin Sharma <vipinsh@google.com>, thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, seanjc@google.com, tj@kernel.org, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net
+Cc: joro@8bytes.org, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 1/15/21 3:36 PM, Dietmar Eggemann wrote:
-> On 12/01/2021 16:53, Daniel Bristot de Oliveira wrote:
+On 1/15/21 6:32 PM, Vipin Sharma wrote:
+> Documentation of Encryption IDs controller. This new controller is used
+> to track and limit usage of hardware memory encryption capabilities on
+> the CPUs.
 > 
-> [...]
+> Signed-off-by: Vipin Sharma <vipinsh@google.com>
+> Reviewed-by: David Rientjes <rientjes@google.com>
+> Reviewed-by: Dionna Glaze <dionnaglaze@google.com>
+> ---
+>  .../admin-guide/cgroup-v1/encryption_ids.rst  |  1 +
+>  Documentation/admin-guide/cgroup-v2.rst       | 78 ++++++++++++++++++-
+>  2 files changed, 77 insertions(+), 2 deletions(-)
+>  create mode 100644 Documentation/admin-guide/cgroup-v1/encryption_ids.rst
 > 
->> ----- %< -----
->>   #!/bin/bash
->>   # Enter on the cgroup directory
->>   cd /sys/fs/cgroup/
->>
->>   # Check it if is cgroup v2 and enable cpuset
->>   if [ -e cgroup.subtree_control ]; then
->>   	# Enable cpuset controller on cgroup v2
->>   	echo +cpuset > cgroup.subtree_control
->>   fi
->>
->>   echo LOG: create an exclusive cpuset and assigned the CPU 0 to it
->>   # Create cpuset groups
->>   rmdir dl-group &> /dev/null
->>   mkdir dl-group
->>
->>   # Restrict the task to the CPU 0
->>   echo 0 > dl-group/cpuset.mems
->>   echo 0 > dl-group/cpuset.cpus
->>   echo root >  dl-group/cpuset.cpus.partition
->>
->>   echo LOG: dispatching a regular task
->>   sleep 100 &
->>   CPUSET_PID="$!"
->>
->>   # let it settle down
->>   sleep 1
->>
->>   # Assign the second task to the cgroup
-> 
-> There is only one task 'CPUSET_PID' involved here?
-
-Ooops, yep, I will remove the "second" part.
-
->>   echo LOG: moving the second DL task to the cpuset
->>   echo "$CPUSET_PID" > dl-group/cgroup.procs 2> /dev/null
->>
->>   CPUSET_ALLOWED=`cat /proc/$CPUSET_PID/status | grep Cpus_allowed_list | awk '{print $2}'`
->>
->>   chrt -p -d --sched-period 1000000000 --sched-runtime 100000000 0 $CPUSET_PID
->>   ACCEPTED=$?
->>
->>   if [ $ACCEPTED == 0 ]; then
->>   	echo PASS: the task became DL
->>   else
->>   	echo FAIL: the task was rejected as DL
->>   fi
-> 
-> [...]
-> 
->> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
->> index 5961a97541c2..3c2775e6869f 100644
->> --- a/kernel/sched/core.c
->> +++ b/kernel/sched/core.c
->> @@ -5905,15 +5905,15 @@ static int __sched_setscheduler(struct task_struct *p,
->>  #ifdef CONFIG_SMP
->>  		if (dl_bandwidth_enabled() && dl_policy(policy) &&
->>  				!(attr->sched_flags & SCHED_FLAG_SUGOV)) {
->> -			cpumask_t *span = rq->rd->span;
->> +			struct root_domain *rd = dl_task_rd(p);
->>  
->>  			/*
->>  			 * Don't allow tasks with an affinity mask smaller than
->>  			 * the entire root_domain to become SCHED_DEADLINE. We
->>  			 * will also fail if there's no bandwidth available.
->>  			 */
->> -			if (!cpumask_subset(span, p->cpus_ptr) ||
->> -			    rq->rd->dl_bw.bw == 0) {
->> +			if (!cpumask_subset(rd->span, p->cpus_ptr) ||
->> +			    rd->dl_bw.bw == 0) {
->>  				retval = -EPERM;
->>  				goto unlock;
->>  			}
->> diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
->> index c221e14d5b86..1f6264cb8867 100644
->> --- a/kernel/sched/deadline.c
->> +++ b/kernel/sched/deadline.c
->> @@ -2678,8 +2678,8 @@ int sched_dl_overflow(struct task_struct *p, int policy,
->>  	u64 period = attr->sched_period ?: attr->sched_deadline;
->>  	u64 runtime = attr->sched_runtime;
->>  	u64 new_bw = dl_policy(policy) ? to_ratio(period, runtime) : 0;
->> -	int cpus, err = -1, cpu = task_cpu(p);
->> -	struct dl_bw *dl_b = dl_bw_of(cpu);
->> +	int cpus, err = -1, cpu = dl_task_cpu(p);
->> +	struct dl_bw *dl_b = dl_task_root_bw(p);
->>  	unsigned long cap;
->>  
->>  	if (attr->sched_flags & SCHED_FLAG_SUGOV)
->>
-> 
-> Wouldn't it be sufficient to just introduce dl_task_cpu() and use the
-> correct cpu to get rd->span or struct dl_bw in __sched_setscheduler()
-> -> sched_dl_overflow()?
-
-While I think that having the dl_task_rd() makes the code more intuitive, I have
-no problem on not adding it...
-
-> diff --git a/kernel/sched/core.c b/kernel/sched/core.c
-> index 5961a97541c2..0573f676696a 100644
-> --- a/kernel/sched/core.c
-> +++ b/kernel/sched/core.c
-> @@ -5905,7 +5905,8 @@ static int __sched_setscheduler(struct task_struct *p,
->  #ifdef CONFIG_SMP
->                 if (dl_bandwidth_enabled() && dl_policy(policy) &&
->                                 !(attr->sched_flags & SCHED_FLAG_SUGOV)) {
-> -                       cpumask_t *span = rq->rd->span;
-> +                       int cpu = dl_task_cpu(p);
-> +                       cpumask_t *span = cpu_rq(cpu)->rd->span;
+> diff --git a/Documentation/admin-guide/cgroup-v1/encryption_ids.rst b/Documentation/admin-guide/cgroup-v1/encryption_ids.rst
+> new file mode 100644
+> index 000000000000..8e9e9311daeb
+> --- /dev/null
+> +++ b/Documentation/admin-guide/cgroup-v1/encryption_ids.rst
+> @@ -0,0 +1 @@
+> +/Documentation/admin-guide/cgroup-v2.rst
+> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+> index 63521cd36ce5..72993571de2e 100644
+> --- a/Documentation/admin-guide/cgroup-v2.rst
+> +++ b/Documentation/admin-guide/cgroup-v2.rst
+> @@ -63,8 +63,11 @@ v1 is available under :ref:`Documentation/admin-guide/cgroup-v1/index.rst <cgrou
+>         5-7-1. RDMA Interface Files
+>       5-8. HugeTLB
+>         5.8-1. HugeTLB Interface Files
+> -     5-8. Misc
+> -       5-8-1. perf_event
+> +     5-9. Encryption IDs
+> +       5.9-1 Encryption IDs Interface Files
+> +       5.9-2 Migration and Ownership
+> +     5-10. Misc
+> +       5-10-1. perf_event
+>       5-N. Non-normative information
+>         5-N-1. CPU controller root cgroup process behaviour
+>         5-N-2. IO controller root cgroup process behaviour
+> @@ -2160,6 +2163,77 @@ HugeTLB Interface Files
+>  	are local to the cgroup i.e. not hierarchical. The file modified event
+>  	generated on this file reflects only the local events.
 >  
->                         /*
->                          * Don't allow tasks with an affinity mask smaller than
-> diff --git a/kernel/sched/deadline.c b/kernel/sched/deadline.c
-> index c221e14d5b86..308ecaaf3d28 100644
-> --- a/kernel/sched/deadline.c
-> +++ b/kernel/sched/deadline.c
-> @@ -2678,7 +2678,7 @@ int sched_dl_overflow(struct task_struct *p, int policy,
->         u64 period = attr->sched_period ?: attr->sched_deadline;
->         u64 runtime = attr->sched_runtime;
->         u64 new_bw = dl_policy(policy) ? to_ratio(period, runtime) : 0;
-> -       int cpus, err = -1, cpu = task_cpu(p);
-> +       int cpus, err = -1, cpu = dl_task_cpu(p);
->         struct dl_bw *dl_b = dl_bw_of(cpu);
->         unsigned long cap;
+> +Encryption IDs
+> +--------------
+> +
+> +There are multiple hardware memory encryption capabilities provided by the
+> +hardware vendors, like Secure Encrypted Virtualization (SEV) and SEV Encrypted
+> +State (SEV-ES) from AMD.
+> +
+> +These features are being used in encrypting virtual machines (VMs) and user
+> +space programs. However, only a small number of keys/IDs can be used
+> +simultaneously.
+> +
+> +This limited availability of these IDs requires system admin to optimize
+
+                                                          admins
+
+> +allocation, control, and track the usage of the resources in the cloud
+> +infrastructure. This resource also needs to be protected from getting exhausted
+> +by some malicious program and causing starvation for other programs.
+> +
+> +Encryption IDs controller provides capability to register the resource for
+
+   The Encryption IDs controller provides the capability to register the resource for
+
+> +controlling and tracking through the cgroups.
+
+                            through cgroups.
+
+> +
+> +Encryption IDs Interface Files
+> +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> +
+> +Each encryption ID type have their own interface files,
+
+                           has its own
+
+> +encids.[ID TYPE].{max, current, stat}, where "ID TYPE" can be sev and
+
+                                                                     or
+
+> +sev-es.
+> +
+> +  encids.[ID TYPE].stat
+> +        A read-only flat-keyed single value file. This file exists only in the
+> +        root cgroup.
+> +
+> +        It shows the total number of encryption IDs available and currently in
+> +        use on the platform::
+> +          # cat encids.sev.stat
+> +          total 509
+> +          used 0
+
+This is described above as a single-value file...
+
+Is the max value a hardware limit or a software (flexible) limit?
+
+
+> +
+> +  encids.[ID TYPE].max
+> +        A read-write file which exists on the non-root cgroups. File is used to
+> +        set maximum count of "[ID TYPE]" which can be used in the cgroup.
+> +
+> +        Limit can be set to max by::
+> +          # echo max > encids.sev.max
+> +
+> +        Limit can be set by::
+> +          # echo 100 > encids.sev.max
+> +
+> +        This file shows the max limit of the encryption ID in the cgroup::
+> +          # cat encids.sev.max
+> +          max
+> +
+> +        OR::
+> +          # cat encids.sev.max
+> +          100
+> +
+> +        Limits can be set more than the "total" capacity value in the
+> +        encids.[ID TYPE].stat file, however, the controller ensures
+> +        that the usage never exceeds the "total" and the max limit.
+> +
+> +  encids.[ID TYPE].current
+> +        A read-only single value file which exists on non-root cgroups.
+> +
+> +        Shows the total number of encrypted IDs being used in the cgroup.
+> +
+> +Migration and Ownership
+> +~~~~~~~~~~~~~~~~~~~~~~~
+> +
+> +An encryption ID is charged to the cgroup in which it is used first, and
+> +stays charged to that cgroup until that ID is freed. Migrating a process
+> +to a different cgroup do not move the charge to the destination cgroup
+
+                         does
+
+> +where the process has moved.
+> +
+>  Misc
+>  ----
+>  
 > 
 
-This way works for me too.
 
-Thanks!
-
--- Daniel
-
+-- 
+~Randy
+You can't do anything without having to do something else first.
+-- Belefant's Law
