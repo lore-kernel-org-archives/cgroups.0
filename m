@@ -1,67 +1,70 @@
-From: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
-Subject: [PATCH v2 2/2] cgroup: update PSI file description in docs
-Date: Sat, 16 Jan 2021 18:36:34 +0100
-Message-ID: <20210116173634.1615875-3-odin@uged.al>
-References: <20210116173634.1615875-1-odin@uged.al>
+From: liming wu <wu860403-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] tg: add cpu's wait_count of a task group
+Date: Mon, 18 Jan 2021 11:07:47 +0800
+Message-ID: <CAPnMXWWmfzWh9J_G4OPT=eCFySaD2NAFE0_OiWFQKL-1R0uOkA@mail.gmail.com>
+References: <20210115143005.7071-1-wu860403@gmail.com> <YAH4w5T3/oCTGJny@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=uged.al; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=RXhQCLR7kJ8wXIoAGktxHEJsN7Fs/rfacZeAYDKFmIs=;
-        b=sdBAnkXLZiSEhGYam1qUuWzP56Niue66DVFgEdt1Rz43y1S6IdNFkfCnwls9cXBoRu
-         H7Mnh4NEeCcFDxV/x+NRCPo572ISiOPh2+Ui0cn3wJesaGBeK2/nAQPu7QM/UfEsE1ps
-         9fcwB7f1eBXAxTylN12jvL0Ey7MioXV1IipxMvuY78uF7QVVq68JWJ/eBgv2qjDpGueo
-         k2Gej1o/CGHMjBTgKXsb/V0+efCE+YjLhpZvBazc6WFgZGVl/X8yPhswVTWPdp7BS3Ts
-         358Nhh/NuyKi85UnNoyDdLoB08blefdiCKCKwkCzcWQAElNQcFcIej5wktZ0dgdw+cT5
-         JPaw==
-In-Reply-To: <20210116173634.1615875-1-odin-RObV4cXtwVA@public.gmane.org>
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=PlQe4ElMPvugk6/KnMDsBpLgn9qSpVd0RRGjY15TtBQ=;
+        b=jEOTuxeeQdSsqnGagWGslg43TXvsjT1GjS43nG6bpxn/Q7TiDnkuEnWBWopiiNc2Si
+         o6RVR1YEam7YDczQFb6qnMaGUL3WvdVZBWy3Yak+6iDUPxkF8iyYGfncJxipvOv4+QYB
+         bsEd7l/iJIF0C43x8UeAjysvewqGoQWGedgYEO5PDxAFuO6Ssmb+PtUd13Ar2FbCmnAK
+         /Hp58BiE1RKUXDzd1UFZatihz1VFurXjXVFZIJihoPXLXU5VTvGitPZd0+6u8QYmjCZ4
+         G39JY3u1pOzCoiuluklb/G8chXju9jw2T2mb8a6ba2rJ59IC8DsFhxy9HiRaXKwKjreB
+         oUxw==
+In-Reply-To: <YAH4w5T3/oCTGJny-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: 
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dschatzberg-b10kYP2dOMg@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, 398776277 <398776277-9uewiaClKEY@public.gmane.org>
 
-Update PSI file description in cgroup-v2 docs to reflect the current
-implementation.
+Hello tejun:
+On Sat, Jan 16, 2021 at 4:20 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+>
+> Hello,
+>
+> On Fri, Jan 15, 2021 at 10:30:05PM +0800, wu860403-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org wrote:
+> > -     seq_printf(sf, "throttled_time %llu\n", cfs_b->throttled_time);
+> ...
+> > +     seq_printf(sf, "nr_periods %d\n"
+> > +                "nr_throttled %d\n"
+> > +                "throttled_usec %llu\n",
+> > +                cfs_b->nr_periods, cfs_b->nr_throttled,
+> > +                throttled_usec);
+>
+> This is interface breaking change. I don't think we can do this at this
+> point.
+Thanks for your reply, agree with it.
+> > @@ -8255,6 +8265,19 @@ static int cpu_extra_stat_show(struct seq_file *sf,
+> >                          "throttled_usec %llu\n",
+> >                          cfs_b->nr_periods, cfs_b->nr_throttled,
+> >                          throttled_usec);
+> > +             if (schedstat_enabled() && tg != &root_task_group) {
+> > +                     u64 ws = 0;
+> > +                     u64 wc = 0;
+> > +                     int i;
+> > +
+> > +                     for_each_possible_cpu(i) {
+> > +                             ws += schedstat_val(tg->se[i]->statistics.wait_sum);
+> > +                             wc += schedstat_val(tg->se[i]->statistics.wait_count);
+> > +                     }
+> > +
+> > +                     seq_printf(sf, "wait_sum %llu\n"
+> > +                             "wait_count %llu\n", ws, wc);
+> > +             }
+>
+> What does sum/count tell?
+It can tell the task group average latency of every context switch
+wait_sum is equivalent to sched_info->run_delay (the second parameter
+of /proc/$pid/schedstat)
+wait_count is equivalent to sched_info->pcount(the third parameter of
+/proc/$pid/schedstat)
 
-Signed-off-by: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
----
- Documentation/admin-guide/cgroup-v2.rst | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Thanks
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 63521cd36ce5..f638c9d3d9f2 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -1029,7 +1029,7 @@ All time durations are in microseconds.
- 	one number is written, $MAX is updated.
- 
-   cpu.pressure
--	A read-only nested-key file which exists on non-root cgroups.
-+	A read-only nested-keyed file.
- 
- 	Shows pressure stall information for CPU. See
- 	:ref:`Documentation/accounting/psi.rst <psi>` for details.
-@@ -1475,7 +1475,7 @@ PAGE_SIZE multiple when read back.
- 	reduces the impact on the workload and memory management.
- 
-   memory.pressure
--	A read-only nested-key file which exists on non-root cgroups.
-+	A read-only nested-keyed file.
- 
- 	Shows pressure stall information for memory. See
- 	:ref:`Documentation/accounting/psi.rst <psi>` for details.
-@@ -1714,7 +1714,7 @@ IO Interface Files
- 	  8:16 rbps=2097152 wbps=max riops=max wiops=max
- 
-   io.pressure
--	A read-only nested-key file which exists on non-root cgroups.
-+	A read-only nested-keyed file.
- 
- 	Shows pressure stall information for IO. See
- 	:ref:`Documentation/accounting/psi.rst <psi>` for details.
--- 
-2.30.0
-
+Liming
