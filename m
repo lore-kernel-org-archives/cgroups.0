@@ -1,61 +1,178 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 2/2] cgroup: update PSI file description in docs
-Date: Tue, 19 Jan 2021 12:03:55 -0500
-Message-ID: <YAcQ+/z0WkW61gL3@mtj.duckdns.org>
-References: <20210116173634.1615875-1-odin@uged.al>
- <20210116173634.1615875-3-odin@uged.al>
- <YAcPMlxXVSuKgbvn@cmpxchg.org>
+From: Vipin Sharma <vipinsh@google.com>
+Subject: Re: [Patch v5 2/2] cgroup: svm: Encryption IDs cgroup documentation.
+Date: Tue, 19 Jan 2021 09:45:12 -0800
+Message-ID: <CAHVum0e8qY7Nt23wSXU7KON8qZ5c6gnNWf=i5BeYji2+735COw@mail.gmail.com>
+References: <20210116023204.670834-1-vipinsh@google.com> <20210116023204.670834-3-vipinsh@google.com>
+ <2a009bd9-fde5-4911-3525-e28379fe3be2@infradead.org>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <kvm-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=hC/zpZbVc37tYw12xQlWmizImGmh0tgMQSzuFSnLUZU=;
-        b=dNZ5VRxuAFPEt1xf96G3Ir7Dr2NVc6IpAUFuXbxqAJlgEzpm7dLaw4tl4xVf5ikq6o
-         odlMxzqpBZ12BrXpEnIeub3bjQDSNuJGP5PACusqEryq+7xJzbH/nmLde+UGBIbaswaV
-         xz6PYJfhtnsCHGCpWD6Pu4BFSJbVgpDYf742FotXAPTu/TQDyIyNo/2tX26sWhrs/R8s
-         tsUayWWg2VW9XF0QOqrpqERWt2zK/YPCDJLhSpfmMK+pZq1HmXKfM3K/FOIld/68t06O
-         I54pLIIoarsZZoeqOQnoY4BG9Ma+IdzUIRm9/h2f0iaAoYgsNmDzvGYI70EOxKRercif
-         fgAw==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <YAcPMlxXVSuKgbvn@cmpxchg.org>
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Rd3A8g1IdM0Da3ayDEEkpfl0IAd1dLONzNOBcV3ebWU=;
+        b=HgxRSY1UqbS9/rhXLTNfxHXeBBzedejKfHX0k4UFydcfqonYyGAaZOkwTPWns4jkPQ
+         esF/GfzCdXeprMZcR0ldlHasvbgdLzQUQKuoonWfyg/1PJiYiAQCs6nEFq4JCNR8UoZ6
+         L6PyL622kWecWT47tVu+mk1cmbD2RTPlWjumHdsO+G0rhUhQvmeVflWNxLMaEi1TcrFh
+         VEoIk82Z1RZibJHkxhJoWvXlijEayutV5Qeas5v5D4ueg87Fq9K4GiUyA/cnWqroNvz9
+         QaepTABYH2v3/iunQHx1HEYEiJL77LViNqhc0EsnX8b1A80s0ELoGjKZWBLJngIbcwTJ
+         w/cA==
+In-Reply-To: <2a009bd9-fde5-4911-3525-e28379fe3be2@infradead.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Odin Ugedal <odin@uged.al>, lizefan@huawei.com, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, dschatzberg@fb.com, surenb@google.com
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: Tom Lendacky <thomas.lendacky@amd.com>, Brijesh <brijesh.singh@amd.com>, Jon <jon.grimm@amd.com>, Eric <eric.vantassell@amd.com>, pbonzini@redhat.com, Sean Christopherson <seanjc@google.com>, Tejun Heo <tj@kernel.org>, hannes@cmpxchg.org, Janosch Frank <frankja@linux.ibm.com>, Christian Borntraeger <borntraeger@de.ibm.com>, corbet@lwn.net, joro@8bytes.org, vkuznets@redhat.com, wanpengli@tencent.com, Jim Mattson <jmattson@google.com>, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, Matt Gingell <gingell@google.com>, David Rientjes <rientjes@google.com>, Dionna Glaze <dionnaglaze@google.com>, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jan 19, 2021 at 11:56:18AM -0500, Johannes Weiner wrote:
-> On Sat, Jan 16, 2021 at 06:36:34PM +0100, Odin Ugedal wrote:
-> > Update PSI file description in cgroup-v2 docs to reflect the current
-> > implementation.
-> > 
-> > Signed-off-by: Odin Ugedal <odin@uged.al>
+On Mon, Jan 18, 2021 at 9:55 AM Randy Dunlap <rdunlap@infradead.org> wrote:
+>
+> On 1/15/21 6:32 PM, Vipin Sharma wrote:
+> > Documentation of Encryption IDs controller. This new controller is used
+> > to track and limit usage of hardware memory encryption capabilities on
+> > the CPUs.
+> >
+> > Signed-off-by: Vipin Sharma <vipinsh@google.com>
+> > Reviewed-by: David Rientjes <rientjes@google.com>
+> > Reviewed-by: Dionna Glaze <dionnaglaze@google.com>
 > > ---
-> >  Documentation/admin-guide/cgroup-v2.rst | 6 +++---
-> >  1 file changed, 3 insertions(+), 3 deletions(-)
-> > 
+> >  .../admin-guide/cgroup-v1/encryption_ids.rst  |  1 +
+> >  Documentation/admin-guide/cgroup-v2.rst       | 78 ++++++++++++++++++-
+> >  2 files changed, 77 insertions(+), 2 deletions(-)
+> >  create mode 100644 Documentation/admin-guide/cgroup-v1/encryption_ids.rst
+> >
+> > diff --git a/Documentation/admin-guide/cgroup-v1/encryption_ids.rst b/Documentation/admin-guide/cgroup-v1/encryption_ids.rst
+> > new file mode 100644
+> > index 000000000000..8e9e9311daeb
+> > --- /dev/null
+> > +++ b/Documentation/admin-guide/cgroup-v1/encryption_ids.rst
+> > @@ -0,0 +1 @@
+> > +/Documentation/admin-guide/cgroup-v2.rst
 > > diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> > index 63521cd36ce5..f638c9d3d9f2 100644
+> > index 63521cd36ce5..72993571de2e 100644
 > > --- a/Documentation/admin-guide/cgroup-v2.rst
 > > +++ b/Documentation/admin-guide/cgroup-v2.rst
-> > @@ -1029,7 +1029,7 @@ All time durations are in microseconds.
-> >  	one number is written, $MAX is updated.
-> >  
-> >    cpu.pressure
-> > -	A read-only nested-key file which exists on non-root cgroups.
-> > +	A read-only nested-keyed file.
-> 
-> Could you please also change the 'read-only' to 'read-write'?
-> 
-> With that, please feel free to add:
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
+> > @@ -63,8 +63,11 @@ v1 is available under :ref:`Documentation/admin-guide/cgroup-v1/index.rst <cgrou
+> >         5-7-1. RDMA Interface Files
+> >       5-8. HugeTLB
+> >         5.8-1. HugeTLB Interface Files
+> > -     5-8. Misc
+> > -       5-8-1. perf_event
+> > +     5-9. Encryption IDs
+> > +       5.9-1 Encryption IDs Interface Files
+> > +       5.9-2 Migration and Ownership
+> > +     5-10. Misc
+> > +       5-10-1. perf_event
+> >       5-N. Non-normative information
+> >         5-N-1. CPU controller root cgroup process behaviour
+> >         5-N-2. IO controller root cgroup process behaviour
+> > @@ -2160,6 +2163,77 @@ HugeTLB Interface Files
+> >       are local to the cgroup i.e. not hierarchical. The file modified event
+> >       generated on this file reflects only the local events.
+> >
+> > +Encryption IDs
+> > +--------------
+> > +
+> > +There are multiple hardware memory encryption capabilities provided by the
+> > +hardware vendors, like Secure Encrypted Virtualization (SEV) and SEV Encrypted
+> > +State (SEV-ES) from AMD.
+> > +
+> > +These features are being used in encrypting virtual machines (VMs) and user
+> > +space programs. However, only a small number of keys/IDs can be used
+> > +simultaneously.
+> > +
+> > +This limited availability of these IDs requires system admin to optimize
+>
+>                                                           admins
+>
+> > +allocation, control, and track the usage of the resources in the cloud
+> > +infrastructure. This resource also needs to be protected from getting exhausted
+> > +by some malicious program and causing starvation for other programs.
+> > +
+> > +Encryption IDs controller provides capability to register the resource for
+>
+>    The Encryption IDs controller provides the capability to register the resource for
+>
+> > +controlling and tracking through the cgroups.
+>
+>                             through cgroups.
+>
+> > +
+> > +Encryption IDs Interface Files
+> > +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> > +
+> > +Each encryption ID type have their own interface files,
+>
+>                            has its own
+>
+> > +encids.[ID TYPE].{max, current, stat}, where "ID TYPE" can be sev and
+>
+>                                                                      or
+>
+> > +sev-es.
+> > +
+> > +  encids.[ID TYPE].stat
+> > +        A read-only flat-keyed single value file. This file exists only in the
+> > +        root cgroup.
+> > +
+> > +        It shows the total number of encryption IDs available and currently in
+> > +        use on the platform::
+> > +          # cat encids.sev.stat
+> > +          total 509
+> > +          used 0
+>
+> This is described above as a single-value file...
+>
+> Is the max value a hardware limit or a software (flexible) limit?
+>
+>
+> > +
+> > +  encids.[ID TYPE].max
+> > +        A read-write file which exists on the non-root cgroups. File is used to
+> > +        set maximum count of "[ID TYPE]" which can be used in the cgroup.
+> > +
+> > +        Limit can be set to max by::
+> > +          # echo max > encids.sev.max
+> > +
+> > +        Limit can be set by::
+> > +          # echo 100 > encids.sev.max
+> > +
+> > +        This file shows the max limit of the encryption ID in the cgroup::
+> > +          # cat encids.sev.max
+> > +          max
+> > +
+> > +        OR::
+> > +          # cat encids.sev.max
+> > +          100
+> > +
+> > +        Limits can be set more than the "total" capacity value in the
+> > +        encids.[ID TYPE].stat file, however, the controller ensures
+> > +        that the usage never exceeds the "total" and the max limit.
+> > +
+> > +  encids.[ID TYPE].current
+> > +        A read-only single value file which exists on non-root cgroups.
+> > +
+> > +        Shows the total number of encrypted IDs being used in the cgroup.
+> > +
+> > +Migration and Ownership
+> > +~~~~~~~~~~~~~~~~~~~~~~~
+> > +
+> > +An encryption ID is charged to the cgroup in which it is used first, and
+> > +stays charged to that cgroup until that ID is freed. Migrating a process
+> > +to a different cgroup do not move the charge to the destination cgroup
+>
+>                          does
+>
+> > +where the process has moved.
+> > +
+> >  Misc
+> >  ----
+> >
+> >
+>
+>
+> --
+> ~Randy
+> You can't do anything without having to do something else first.
+> -- Belefant's Law
 
-Applied w/ the suggested change.
-
-Thanks.
-
--- 
-tejun
+Thank you, I will fix them in the next patch.
