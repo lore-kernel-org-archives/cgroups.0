@@ -1,194 +1,50 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH] mm: memcontrol: prevent starvation when writing
- memory.high
-Date: Tue, 19 Jan 2021 11:47:29 -0500
-Message-ID: <YAcNISYNGDA/26pw@cmpxchg.org>
-References: <20210112163011.127833-1-hannes@cmpxchg.org>
- <20210113144654.GD22493@dhcp22.suse.cz>
- <YAHA4uBSLlnxxAbu@cmpxchg.org>
- <20210115170341.GA631549@carbon.dhcp.thefacebook.com>
- <YAIBSJg3btQ+2CNZ@cmpxchg.org>
- <20210115212723.GB631549@carbon.dhcp.thefacebook.com>
+From: Dan Schatzberg <dschatzberg-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH v2 0/2] cgroup: fix psi monitor for root cgroup
+Date: Tue, 19 Jan 2021 16:46:44 +0000
+Message-ID: <MN2PR15MB32937C185D521E6AEEFB4095D0A30@MN2PR15MB3293.namprd15.prod.outlook.com>
+References: <20210116173634.1615875-1-odin@uged.al>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=HQhIiqouZYO54MDphZpxd2e5yZbQev4tgCFWsf4zZmo=;
-        b=SKZViz0B81l15glJySEmk2KHv0dZ42QnZw63XyroVp+LT997+JqLHviX++WY4bwsHw
-         Snuf9828SnnBvpcPDuzcVgzwoaAzwIoEXSRgWikHQNIebuJ5zjAQF1W8NGfMoeBU5cg2
-         fqussE3+f/VCdDM6WdROtEOn1ozeSND0xsgBSYkIgy2JccFTUI3fLGvM3TzKVRZ0opee
-         uNc0diVqCRL1wP7dEI9CQo8n6I10dbbFY/dQ2Llw1snQ6926q0DUTby6ljheVvzykUvH
-         soPCZPyR+SAqb2rH2Z3V778u+xC5PPQdRPgJdtl5+gWx5bypel3J4131SY82hw/Vhjri
-         HdLg==
-Content-Disposition: inline
-In-Reply-To: <20210115212723.GB631549@carbon.dhcp.thefacebook.com>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
+ : date : message-id : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=facebook;
+ bh=My85n9gAnslKDRKKwaErn0o9lUBJOk3+wcNS9dC0CKA=;
+ b=EZ2HVGcz7tRC9Aq51cishSr5in8FOaYh14rq05LW/xVQrqGzY/KdW2DB3WzO50Iilc/H
+ 6K454dHU69lI/bngMFXAsBMvIgFQhriMkDD2Z1kkHJi8OPQldq5nGMdfr3snGATLgT+x
+ txgU8k4u7KvabmGXqfd1DnzihVPaRoYdx+4= 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
+ s=selector2-fb-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=My85n9gAnslKDRKKwaErn0o9lUBJOk3+wcNS9dC0CKA=;
+ b=BaLHQMf0zTvqEIZCW2r1nsFLRY5cJ+TlhYGBOOLwYv8WaY8zxChdE1qzbP8AVdRcciiBvQ9bR1osavPxW0wWYTvtjiafrNDwDqx5Mdfg8TyBpgMEUOvo3qE/Mut22c5qO7QwJFVHw7x2x/iLnPvJ2RYEZr8G3hGiNr/CGGAs7jo=
+In-Reply-To: <20210116173634.1615875-1-odin-RObV4cXtwVA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro@fb.com>
-Cc: Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
+Cc: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Fri, Jan 15, 2021 at 01:27:23PM -0800, Roman Gushchin wrote:
-> On Fri, Jan 15, 2021 at 03:55:36PM -0500, Johannes Weiner wrote:
-> > On Fri, Jan 15, 2021 at 09:03:41AM -0800, Roman Gushchin wrote:
-> > > On Fri, Jan 15, 2021 at 11:20:50AM -0500, Johannes Weiner wrote:
-> > > > On Wed, Jan 13, 2021 at 03:46:54PM +0100, Michal Hocko wrote:
-> > > > > On Tue 12-01-21 11:30:11, Johannes Weiner wrote:
-> > > > > > When a value is written to a cgroup's memory.high control file, the
-> > > > > > write() context first tries to reclaim the cgroup to size before
-> > > > > > putting the limit in place for the workload. Concurrent charges from
-> > > > > > the workload can keep such a write() looping in reclaim indefinitely.
-> > > > > > 
-> > > > > > In the past, a write to memory.high would first put the limit in place
-> > > > > > for the workload, then do targeted reclaim until the new limit has
-> > > > > > been met - similar to how we do it for memory.max. This wasn't prone
-> > > > > > to the described starvation issue. However, this sequence could cause
-> > > > > > excessive latencies in the workload, when allocating threads could be
-> > > > > > put into long penalty sleeps on the sudden memory.high overage created
-> > > > > > by the write(), before that had a chance to work it off.
-> > > > > > 
-> > > > > > Now that memory_high_write() performs reclaim before enforcing the new
-> > > > > > limit, reflect that the cgroup may well fail to converge due to
-> > > > > > concurrent workload activity. Bail out of the loop after a few tries.
-> > > > > 
-> > > > > I can see that you have provided some more details in follow up replies
-> > > > > but I do not see any explicit argument why an excessive time for writer
-> > > > > is an actual problem. Could you be more specific?
-> > > > 
-> > > > Our writer isn't necessarily time sensitive, but there is a difference
-> > > > between a) the write taking a few seconds to reclaim down the
-> > > > requested delta and b) the writer essentially turning into kswapd for
-> > > > the workload and busy-spinning inside the kernel indefinitely.
-> > > > 
-> > > > We've seen the writer stuck in this function for minutes, long after
-> > > > the requested delta has been reclaimed, consuming alarming amounts of
-> > > > CPU cycles - CPU time that should really be accounted to the workload,
-> > > > not the system software performing the write.
-> > > > 
-> > > > Obviously, we could work around it using timeouts and signals. In
-> > > > fact, we may have to until the new kernel is deployed everywhere. But
-> > > > this is the definition of an interface change breaking userspace, so
-> > > > I'm a bit surprised by your laid-back response.
-> > > > 
-> > > > > > Fixes: 536d3bf261a2 ("mm: memcontrol: avoid workload stalls when lowering memory.high")
-> > > > > > Cc: <stable@vger.kernel.org> # 5.8+
-> > > > > 
-> > > > > Why is this worth backporting to stable? The behavior is different but I
-> > > > > do not think any of them is harmful.
-> > > > 
-> > > > The referenced patch changed user-visible behavior in a way that is
-> > > > causing real production problems for us. From stable-kernel-rules:
-> > > > 
-> > > >  - It must fix a real bug that bothers people (not a, "This could be a
-> > > >    problem..." type thing).
-> > > > 
-> > > > > > Reported-by: Tejun Heo <tj@kernel.org>
-> > > > > > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-> > > > > 
-> > > > > I am not against the patch. The existing interface doesn't provide any
-> > > > > meaningful feedback to the userspace anyway. User would have to re check
-> > > > > to see the result of the operation. So how hard we try is really an
-> > > > > implementation detail.
-> > > > 
-> > > > Yeah, I wish it was a bit more consistent from an interface POV.
-> > > > 
-> > > > Btw, if you have noticed, Roman's patch to enforce memcg->high *after*
-> > > > trying to reclaim went into the tree at the same exact time as Chris's
-> > > > series "mm, memcg: reclaim harder before high throttling" (commit
-> > > > b3ff92916af3b458712110bb83976a23471c12fa). It's likely they overlap.
-> > > > 
-> > > > Chris's patch changes memory.high reclaim on the allocation side from
-> > > > 
-> > > > 	reclaim once, sleep if there is still overage
-> > > > 
-> > > > to
-> > > > 
-> > > > 	reclaim the overage as long as you make forward progress;
-> > > > 	sleep after 16 no-progress loops if there is still overage
-> > > > 
-> > > > Roman's patch describes a problem where allocating threads go to sleep
-> > > > when memory.high is lowered by a wider step. This is exceedingly
-> > > > unlikely after Chris's change.
-> > > > 
-> > > > Because after Chris's change, memory.high is reclaimed on the
-> > > > allocation side as aggressively as memory.max. The only difference is
-> > > > that upon failure, one sleeps and the other OOMs.
-> > > > 
-> > > > If Roman's issue were present after Chris's change, then we'd also see
-> > > > premature OOM kills when memory.max is lowered by a large step. And I
-> > > > have never seen that happening.
-> > > > 
-> > > > So I suggest instead of my fix here, we revert Roman's patch instead,
-> > > > as it should no longer be needed. Thoughts?
-> > > 
-> > > Chris's patch was merged way earlier than mine into the kernel tree which
-> > > was used when I observed the problem in the production. So likely it was there.
-> > 
-> > Chris's patch was in the tree earlier, but the first release
-> > containing it was tagged a day before you put in your change, so I
-> > doubt it was on the production system where you observed the issue.
-> > 
-> > As per above, it'd be very surprising to see premature sleeps when
-> > lowering memory.high, when allocation-side reclaim keeps going until
-> > the cgroup meets the definition of OOM.
-> > 
-> > > I think it makes sense to try to reclaim memory first before putting
-> > > all processes in the cgroup into reclaim mode. Even without artificial delays
-> > > it creates some latency and btw doesn't make the reclaim process more efficient.
-> > 
-> > It's not obvious that this is a practical problem. It certainly isn't
-> > for memory.max,
-> 
-> Because memory.max is usually not adjusted dynamically?
-> 
-> > and there should be a good reason why the two should
-> > be different aside from the documented OOM vs sleep behavior.
-> 
-> Maybe we have different examples in our heads, but mine is a cgroup
-> with a significant amount of relatively cold pagecache and a multi-threaded
-> workload. Now somebody wants to tighten memory.high. Why would we put all
-> threads into a direct reclaim? I don't see a good reason.
-
-But how is that different than a multi-threaded workload simply
-running up against a static limit?
-
-As soon as one event puts the cgroup over the limit, all concurrent
-allocations will form a thundering herd of reclaimers. I don't see
-much of a difference between a burst of allocations exceeding the
-limit from below and the limit being lowered from above.
-
-Sure, the requested limit delta is usually bigger than a single
-allocation. However, memory.high enforcement is batched, and quite a
-few threads could contribute to the overage and be marked to enter
-direct reclaim before the first page is actually scanned. Also, while
-we do adjust memory.high dynamically, we do so no more than once every
-5-10 seconds, whereas a multi-threaded workload may breach its limit
-and provoke thundering herds many times a second.
-
-So I just cannot imagine the sequence of events here would make a
-practical difference for the aspect of the thundering herd (whereas it
-was VERY obvious with the premature sleep issue on the allocation
-side). But the thundering herd may start as soon as you lower the
-limit, whether you reclaim before or after. It may already be
-occurring against the higher limit before you even enter write().
-
-Allocation latency is a real concern, I agree with you there. But
-that's IMO more to do with how cgroup limits are enforced in
-general. That's why there have been multiple discussions and patch
-submissions around async reclaim.
-
-But the fact is, the change of sequence is causing real problems in
-production, and with the premature-throttling-on-large-delta-bug out
-of the way, the justification for keeping it are somewhat nebulous.
-
-So unless we can clearly show from production that the sequence still
-matters after Chris's patch, I'd say we go with the revert and take
-the small risk of getting data to the contrary.
-
-As opposed to accruing additional complexity and special-cased code on
-a hunch, that we then may carry unnecessarily for a very long time -
-until somebody later on, under the pressure of keeping all this stuff
-maintainable, takes the risk of chopping it again with much less of
-the original context and stake holders available.
+> This patchset fixes PSI monitors on the root cgroup, as they currently=0A=
+> only works on the non-root cgroups. Reading works for all, since that=0A=
+> was fixed when adding support for the root PSI files. It also contains=0A=
+> a doc update to reflect the current implementation.=0A=
+> =0A=
+> Changes since v1:=0A=
+>=A0- Added Reviewed-by tag on the original patch (Suren)=0A=
+>=A0- Updated patch title=0A=
+>=A0- Added a separate patch to update doc=0A=
+>=0A=
+>=0A=
+> Odin Ugedal (2):=0A=
+>=A0 cgroup: fix psi monitor for root cgroup=0A=
+>=A0 cgroup: update PSI file description in docs=0A=
+>=0A=
+>=A0Documentation/admin-guide/cgroup-v2.rst | 6 +++---=0A=
+>=A0kernel/cgroup/cgroup.c=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0 | 4 +++-=0A=
+>=A02 files changed, 6 insertions(+), 4 deletions(-)=0A=
+=0A=
+Both patches look good.=0A=
+=0A=
+Acked-by: Dan Schatzberg <dschatzberg-b10kYP2dOMg@public.gmane.org>=
