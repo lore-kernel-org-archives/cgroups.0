@@ -1,108 +1,194 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [Patch v4 1/2] cgroup: svm: Add Encryption ID controller
-Date: Tue, 19 Jan 2021 10:51:24 -0500
-Message-ID: <YAb//EYCkZ7wnl6D@mtj.duckdns.org>
-References: <20210108012846.4134815-1-vipinsh@google.com>
- <20210108012846.4134815-2-vipinsh@google.com>
- <YAICLR8PBXxAcOMz@mtj.duckdns.org>
- <YAIUwGUPDmYfUm/a@google.com>
- <YAJg5MB/Qn5dRqmu@mtj.duckdns.org>
- <YAJsUyH2zspZxF2S@google.com>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH] mm: memcontrol: prevent starvation when writing
+ memory.high
+Date: Tue, 19 Jan 2021 11:47:29 -0500
+Message-ID: <YAcNISYNGDA/26pw@cmpxchg.org>
+References: <20210112163011.127833-1-hannes@cmpxchg.org>
+ <20210113144654.GD22493@dhcp22.suse.cz>
+ <YAHA4uBSLlnxxAbu@cmpxchg.org>
+ <20210115170341.GA631549@carbon.dhcp.thefacebook.com>
+ <YAIBSJg3btQ+2CNZ@cmpxchg.org>
+ <20210115212723.GB631549@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <kvm-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=QcyMDDVr7CULOAn4Y79GHadhfUa6Q0T6oHNJlZ8GjWw=;
-        b=Yer91Bx8c4Zuf1jc7YE1BhjV1iCXJqwpcbRE/LVgACcNIm3xYd/qExI++Vi5WEHKWn
-         h4Q3B9iNjHGBstOD7f7waSofR3i2l0oNGDU9laQHLyX+/zYYktlFoV0ZTe7fjLqqo7fd
-         sIiq82ij96CVIZIpR+mIPzExMbuBALZCMme1Nrmb0DboFYLMIBQLK05OPJO+ZyqTc05a
-         daKfvHLmry82KJR9/iqFcLQOQFZLGjLOmSspQyJ7tY0LKKjX5aiZ107DAR/NlIGF3PiX
-         XfTgFPaVwKS6MVwb49o+BNhXvKTxY4pd+TrVD35ssENsLzTINILsfmIxnI6Y8se5xAeu
-         vmQg==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=HQhIiqouZYO54MDphZpxd2e5yZbQev4tgCFWsf4zZmo=;
+        b=SKZViz0B81l15glJySEmk2KHv0dZ42QnZw63XyroVp+LT997+JqLHviX++WY4bwsHw
+         Snuf9828SnnBvpcPDuzcVgzwoaAzwIoEXSRgWikHQNIebuJ5zjAQF1W8NGfMoeBU5cg2
+         fqussE3+f/VCdDM6WdROtEOn1ozeSND0xsgBSYkIgy2JccFTUI3fLGvM3TzKVRZ0opee
+         uNc0diVqCRL1wP7dEI9CQo8n6I10dbbFY/dQ2Llw1snQ6926q0DUTby6ljheVvzykUvH
+         soPCZPyR+SAqb2rH2Z3V778u+xC5PPQdRPgJdtl5+gWx5bypel3J4131SY82hw/Vhjri
+         HdLg==
 Content-Disposition: inline
-In-Reply-To: <YAJsUyH2zspZxF2S@google.com>
+In-Reply-To: <20210115212723.GB631549@carbon.dhcp.thefacebook.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vipin Sharma <vipinsh@google.com>
-Cc: thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, seanjc@google.com, lizefan@huawei.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net, joro@8bytes.org, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Roman Gushchin <guro@fb.com>
+Cc: Michal Hocko <mhocko@suse.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Hello,
-
-On Fri, Jan 15, 2021 at 08:32:19PM -0800, Vipin Sharma wrote:
-> SEV-ES has stronger memory encryption gurantees compared to SEV, apart
-> from encrypting the application memory it also encrypts register state
-> among other things. In a single host ASIDs can be distributed between
-> these two types by BIOS settings.
-> 
-> Currently, Google Cloud has Confidential VM machines offering using SEV.
-> ASIDs are not compatible between SEV and SEV-ES, so a VM running on SEV
-> cannot run on SEV-ES and vice versa
-> 
-> There are use cases for both types of VMs getting used in future.
-
-Can you please elaborate? I skimmed through the amd manual and it seemed to
-say that SEV-ES ASIDs are superset of SEV but !SEV-ES ASIDs. What's the use
-case for mixing those two?
-
-> > > > > Other ID types can be easily added in the controller in the same way.
+On Fri, Jan 15, 2021 at 01:27:23PM -0800, Roman Gushchin wrote:
+> On Fri, Jan 15, 2021 at 03:55:36PM -0500, Johannes Weiner wrote:
+> > On Fri, Jan 15, 2021 at 09:03:41AM -0800, Roman Gushchin wrote:
+> > > On Fri, Jan 15, 2021 at 11:20:50AM -0500, Johannes Weiner wrote:
+> > > > On Wed, Jan 13, 2021 at 03:46:54PM +0100, Michal Hocko wrote:
+> > > > > On Tue 12-01-21 11:30:11, Johannes Weiner wrote:
+> > > > > > When a value is written to a cgroup's memory.high control file, the
+> > > > > > write() context first tries to reclaim the cgroup to size before
+> > > > > > putting the limit in place for the workload. Concurrent charges from
+> > > > > > the workload can keep such a write() looping in reclaim indefinitely.
+> > > > > > 
+> > > > > > In the past, a write to memory.high would first put the limit in place
+> > > > > > for the workload, then do targeted reclaim until the new limit has
+> > > > > > been met - similar to how we do it for memory.max. This wasn't prone
+> > > > > > to the described starvation issue. However, this sequence could cause
+> > > > > > excessive latencies in the workload, when allocating threads could be
+> > > > > > put into long penalty sleeps on the sudden memory.high overage created
+> > > > > > by the write(), before that had a chance to work it off.
+> > > > > > 
+> > > > > > Now that memory_high_write() performs reclaim before enforcing the new
+> > > > > > limit, reflect that the cgroup may well fail to converge due to
+> > > > > > concurrent workload activity. Bail out of the loop after a few tries.
+> > > > > 
+> > > > > I can see that you have provided some more details in follow up replies
+> > > > > but I do not see any explicit argument why an excessive time for writer
+> > > > > is an actual problem. Could you be more specific?
 > > > > 
-> > > > I'm not sure this is necessarily a good thing.
+> > > > Our writer isn't necessarily time sensitive, but there is a difference
+> > > > between a) the write taking a few seconds to reclaim down the
+> > > > requested delta and b) the writer essentially turning into kswapd for
+> > > > the workload and busy-spinning inside the kernel indefinitely.
+> > > > 
+> > > > We've seen the writer stuck in this function for minutes, long after
+> > > > the requested delta has been reclaimed, consuming alarming amounts of
+> > > > CPU cycles - CPU time that should really be accounted to the workload,
+> > > > not the system software performing the write.
+> > > > 
+> > > > Obviously, we could work around it using timeouts and signals. In
+> > > > fact, we may have to until the new kernel is deployed everywhere. But
+> > > > this is the definition of an interface change breaking userspace, so
+> > > > I'm a bit surprised by your laid-back response.
+> > > > 
+> > > > > > Fixes: 536d3bf261a2 ("mm: memcontrol: avoid workload stalls when lowering memory.high")
+> > > > > > Cc: <stable@vger.kernel.org> # 5.8+
+> > > > > 
+> > > > > Why is this worth backporting to stable? The behavior is different but I
+> > > > > do not think any of them is harmful.
+> > > > 
+> > > > The referenced patch changed user-visible behavior in a way that is
+> > > > causing real production problems for us. From stable-kernel-rules:
+> > > > 
+> > > >  - It must fix a real bug that bothers people (not a, "This could be a
+> > > >    problem..." type thing).
+> > > > 
+> > > > > > Reported-by: Tejun Heo <tj@kernel.org>
+> > > > > > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+> > > > > 
+> > > > > I am not against the patch. The existing interface doesn't provide any
+> > > > > meaningful feedback to the userspace anyway. User would have to re check
+> > > > > to see the result of the operation. So how hard we try is really an
+> > > > > implementation detail.
+> > > > 
+> > > > Yeah, I wish it was a bit more consistent from an interface POV.
+> > > > 
+> > > > Btw, if you have noticed, Roman's patch to enforce memcg->high *after*
+> > > > trying to reclaim went into the tree at the same exact time as Chris's
+> > > > series "mm, memcg: reclaim harder before high throttling" (commit
+> > > > b3ff92916af3b458712110bb83976a23471c12fa). It's likely they overlap.
+> > > > 
+> > > > Chris's patch changes memory.high reclaim on the allocation side from
+> > > > 
+> > > > 	reclaim once, sleep if there is still overage
+> > > > 
+> > > > to
+> > > > 
+> > > > 	reclaim the overage as long as you make forward progress;
+> > > > 	sleep after 16 no-progress loops if there is still overage
+> > > > 
+> > > > Roman's patch describes a problem where allocating threads go to sleep
+> > > > when memory.high is lowered by a wider step. This is exceedingly
+> > > > unlikely after Chris's change.
+> > > > 
+> > > > Because after Chris's change, memory.high is reclaimed on the
+> > > > allocation side as aggressively as memory.max. The only difference is
+> > > > that upon failure, one sleeps and the other OOMs.
+> > > > 
+> > > > If Roman's issue were present after Chris's change, then we'd also see
+> > > > premature OOM kills when memory.max is lowered by a large step. And I
+> > > > have never seen that happening.
+> > > > 
+> > > > So I suggest instead of my fix here, we revert Roman's patch instead,
+> > > > as it should no longer be needed. Thoughts?
 > > > 
-> > > This is to just say that when Intel and PowerPC changes are ready it
-> > > won't be difficult for them to add their controller.
+> > > Chris's patch was merged way earlier than mine into the kernel tree which
+> > > was used when I observed the problem in the production. So likely it was there.
 > > 
-> > I'm not really enthused about having per-hardware-type control knobs. None
-> > of other controllers behave that way. Unless it can be abstracted into
-> > something common, I'm likely to object.
+> > Chris's patch was in the tree earlier, but the first release
+> > containing it was tagged a day before you put in your change, so I
+> > doubt it was on the production system where you observed the issue.
+> > 
+> > As per above, it'd be very surprising to see premature sleeps when
+> > lowering memory.high, when allocation-side reclaim keeps going until
+> > the cgroup meets the definition of OOM.
+> > 
+> > > I think it makes sense to try to reclaim memory first before putting
+> > > all processes in the cgroup into reclaim mode. Even without artificial delays
+> > > it creates some latency and btw doesn't make the reclaim process more efficient.
+> > 
+> > It's not obvious that this is a practical problem. It certainly isn't
+> > for memory.max,
 > 
-> There was a discussion in Patch v1 and consensus was to have individual
-> files because it makes kernel implementation extremely simple.
+> Because memory.max is usually not adjusted dynamically?
 > 
-> https://lore.kernel.org/lkml/alpine.DEB.2.23.453.2011131615510.333518@chino.kir.corp.google.com/#t
-
-I'm very reluctant to ack vendor specific interfaces for a few reasons but
-most importantly because they usually indicate abstraction and/or the
-underlying feature not being sufficiently developed and they tend to become
-baggages after a while. So, here are my suggestions:
-
-* If there can be a shared abstraction which hopefully makes intuitive
-  sense, that'd be ideal. It doesn't have to be one knob but it shouldn't be
-  something arbitrary to specific vendors.
-
-* If we aren't there yet and vendor-specific interface is a must, attach
-  that part to an interface which is already vendor-aware.
-
-> This information is not available anywhere else in the system. Only
-> other way to get this value is to use CPUID instruction (0x8000001F) of
-> the processor. Which also has disdvantage if sev module in kernel
-> doesn't use all of the available ASIDs for its work (right now it uses
-> all) then there will be a mismatch between what user get through their
-> code and what is actually getting used in the kernel by sev.
+> > and there should be a good reason why the two should
+> > be different aside from the documented OOM vs sleep behavior.
 > 
-> In cgroup v2, I didn't see current files for other cgroups in root
-> folder that is why I didn't show that file in root folder.
-> 
-> Will you be fine if I show two files in the root, something like:
-> 
-> encids.sev.capacity
-> encids.sev.current
-> 
-> In non root folder, it will be:
-> encids.sev.max
-> encids.sev.current
-> 
-> I still prefer encids.sev.stat, as it won't repeat same information in
-> each cgroup but let me know what you think.
+> Maybe we have different examples in our heads, but mine is a cgroup
+> with a significant amount of relatively cold pagecache and a multi-threaded
+> workload. Now somebody wants to tighten memory.high. Why would we put all
+> threads into a direct reclaim? I don't see a good reason.
 
-Yeah, this will be a first and I was mostly wondering about the same number
-appearing under different files / names on root and !root cgroups. I'm
-leaning more towards capacity/current but let me think about it a bit more.
+But how is that different than a multi-threaded workload simply
+running up against a static limit?
 
-Thank you.
+As soon as one event puts the cgroup over the limit, all concurrent
+allocations will form a thundering herd of reclaimers. I don't see
+much of a difference between a burst of allocations exceeding the
+limit from below and the limit being lowered from above.
 
--- 
-tejun
+Sure, the requested limit delta is usually bigger than a single
+allocation. However, memory.high enforcement is batched, and quite a
+few threads could contribute to the overage and be marked to enter
+direct reclaim before the first page is actually scanned. Also, while
+we do adjust memory.high dynamically, we do so no more than once every
+5-10 seconds, whereas a multi-threaded workload may breach its limit
+and provoke thundering herds many times a second.
+
+So I just cannot imagine the sequence of events here would make a
+practical difference for the aspect of the thundering herd (whereas it
+was VERY obvious with the premature sleep issue on the allocation
+side). But the thundering herd may start as soon as you lower the
+limit, whether you reclaim before or after. It may already be
+occurring against the higher limit before you even enter write().
+
+Allocation latency is a real concern, I agree with you there. But
+that's IMO more to do with how cgroup limits are enforced in
+general. That's why there have been multiple discussions and patch
+submissions around async reclaim.
+
+But the fact is, the change of sequence is causing real problems in
+production, and with the premature-throttling-on-large-delta-bug out
+of the way, the justification for keeping it are somewhat nebulous.
+
+So unless we can clearly show from production that the sequence still
+matters after Chris's patch, I'd say we go with the revert and take
+the small risk of getting data to the contrary.
+
+As opposed to accruing additional complexity and special-cased code on
+a hunch, that we then may carry unnecessarily for a very long time -
+until somebody later on, under the pressure of keeping all this stuff
+maintainable, takes the risk of chopping it again with much less of
+the original context and stake holders available.
