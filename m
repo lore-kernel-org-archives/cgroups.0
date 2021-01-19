@@ -1,50 +1,48 @@
-From: Dan Schatzberg <dschatzberg-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH v2 0/2] cgroup: fix psi monitor for root cgroup
-Date: Tue, 19 Jan 2021 16:46:44 +0000
-Message-ID: <MN2PR15MB32937C185D521E6AEEFB4095D0A30@MN2PR15MB3293.namprd15.prod.outlook.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v2 1/2] cgroup: fix psi monitor for root cgroup
+Date: Tue, 19 Jan 2021 11:52:37 -0500
+Message-ID: <YAcOVZ9hceK3gwWT@cmpxchg.org>
 References: <20210116173634.1615875-1-odin@uged.al>
+ <20210116173634.1615875-2-odin@uged.al>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : references : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=facebook;
- bh=My85n9gAnslKDRKKwaErn0o9lUBJOk3+wcNS9dC0CKA=;
- b=EZ2HVGcz7tRC9Aq51cishSr5in8FOaYh14rq05LW/xVQrqGzY/KdW2DB3WzO50Iilc/H
- 6K454dHU69lI/bngMFXAsBMvIgFQhriMkDD2Z1kkHJi8OPQldq5nGMdfr3snGATLgT+x
- txgU8k4u7KvabmGXqfd1DnzihVPaRoYdx+4= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=My85n9gAnslKDRKKwaErn0o9lUBJOk3+wcNS9dC0CKA=;
- b=BaLHQMf0zTvqEIZCW2r1nsFLRY5cJ+TlhYGBOOLwYv8WaY8zxChdE1qzbP8AVdRcciiBvQ9bR1osavPxW0wWYTvtjiafrNDwDqx5Mdfg8TyBpgMEUOvo3qE/Mut22c5qO7QwJFVHw7x2x/iLnPvJ2RYEZr8G3hGiNr/CGGAs7jo=
-In-Reply-To: <20210116173634.1615875-1-odin-RObV4cXtwVA@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=uGojdeA20zzASlYpdW76UKnqe50ntC8qShndn6zJIz4=;
+        b=xtAjKAEtfJQvTQE5lGL0o/pBMwEY1osKiNGCA40ER/PyoQC6arxZqOi3F65vp97cKN
+         h+lMfbHribwS5JhD+aM32o5RCl7lTiUuS4dsKUM0nJ8J/V4y8xND8eWXhbfYz935LOuH
+         Oygf+8ZTdrQUK4JsMzhoMVERDJnqu7csEnK5zT75ytSHbN7YI8FOvCBn/LZSz7DOvAwY
+         6GvraSTztJHRercM9PV46hF8l53VyDol1fxk7eJUlraR/FfdKKf2/tpxctc9l/tfB7JP
+         qwQhf7xoRiBqJLidHBzAtWUem0/wr1XEQeC0oFNFhYaFgbHqiOmNo1Baurzc1aS0pcu8
+         9iXg==
+Content-Disposition: inline
+In-Reply-To: <20210116173634.1615875-2-odin-RObV4cXtwVA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
-Cc: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org" <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org" <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dschatzberg-b10kYP2dOMg@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-> This patchset fixes PSI monitors on the root cgroup, as they currently=0A=
-> only works on the non-root cgroups. Reading works for all, since that=0A=
-> was fixed when adding support for the root PSI files. It also contains=0A=
-> a doc update to reflect the current implementation.=0A=
-> =0A=
-> Changes since v1:=0A=
->=A0- Added Reviewed-by tag on the original patch (Suren)=0A=
->=A0- Updated patch title=0A=
->=A0- Added a separate patch to update doc=0A=
->=0A=
->=0A=
-> Odin Ugedal (2):=0A=
->=A0 cgroup: fix psi monitor for root cgroup=0A=
->=A0 cgroup: update PSI file description in docs=0A=
->=0A=
->=A0Documentation/admin-guide/cgroup-v2.rst | 6 +++---=0A=
->=A0kernel/cgroup/cgroup.c=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0 | 4 +++-=0A=
->=A02 files changed, 6 insertions(+), 4 deletions(-)=0A=
-=0A=
-Both patches look good.=0A=
-=0A=
-Acked-by: Dan Schatzberg <dschatzberg-b10kYP2dOMg@public.gmane.org>=
+On Sat, Jan 16, 2021 at 06:36:33PM +0100, Odin Ugedal wrote:
+> Fix NULL pointer dereference when adding new psi monitor to the root
+> cgroup. PSI files for root cgroup was introduced in df5ba5be742 by using
+> system wide psi struct when reading, but file write/monitor was not
+> properly fixed. Since the PSI config for the root cgroup isn't
+> initialized, the current implementation tries to lock a NULL ptr,
+> resulting in a crash.
+> 
+> Can be triggered by running this as root:
+> $ tee /sys/fs/cgroup/cpu.pressure <<< "some 10000 1000000"
+> 
+> Signed-off-by: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
+> Reviewed-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+
+Fixes: df5ba5be7425 ("kernel/sched/psi.c: expose pressure metrics on root cgroup")
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+
+Since this is a userspace-triggerable NULL ptr crash, we should
+probably also
+
+Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 5.2+
