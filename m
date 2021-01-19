@@ -1,90 +1,66 @@
-From: Dietmar Eggemann <dietmar.eggemann@arm.com>
-Subject: Re: [PATCH 4/6] sched/deadline: Block DL tasks on non-exclusive
- cpuset if bandwitdh control is enable
-Date: Tue, 19 Jan 2021 16:37:46 +0100
-Message-ID: <f7cad09a-09e3-e150-d505-ac75aece0248@arm.com>
-References: <cover.1610463999.git.bristot@redhat.com>
- <7b336c37cc3c38def6de181df8ba8c3148c5cc0c.1610463999.git.bristot@redhat.com>
- <4b37b32b-0e16-ffbc-ca6a-fbee935c0813@arm.com>
- <08dd4e61-5c4a-b010-2149-8f84ced3fb38@redhat.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] tg: add cpu's wait_count of a task group
+Date: Tue, 19 Jan 2021 10:32:25 -0500
+Message-ID: <YAb7icZqetp5c827@mtj.duckdns.org>
+References: <20210115143005.7071-1-wu860403@gmail.com>
+ <YAH4w5T3/oCTGJny@mtj.duckdns.org>
+ <CAPnMXWWmfzWh9J_G4OPT=eCFySaD2NAFE0_OiWFQKL-1R0uOkA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <08dd4e61-5c4a-b010-2149-8f84ced3fb38@redhat.com>
-Content-Language: en-US
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=kSkC2qIvnSbPN0EBpd70Gg0QmXoZHEfwntVfKkWRT5Y=;
+        b=heLkTAXMu7tor2Dhd0hqS7RlJXkXrZS8bRbn9D98yRqAUqeSwcmb03MFAJjeYTndSu
+         7Umtbpq1+cipanv6fsWnAeAopTJMUp0CtQDWtpeSRbh93VmEahoHq+gFACF/mZNJqKwc
+         RPpBA5u2q0hNlML5Uj6SCAqtSNx3zvrchDcVXzX89TKPbZlhe2xkRe+0ZtdedAKZnEey
+         TPdF9etfTVmMu9O+IfXatJSYl09Bj+rPqrGR4mgd7xAYPWJEAPKd8Sy502AXeuSPWpWk
+         pPlfRr4A65ATWgcPPXh+pgSNusrdfkxsSVjN1jvO10e7sSStKKcwKgS16Cdd27ZnGBXU
+         NGjQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <CAPnMXWWmfzWh9J_G4OPT=eCFySaD2NAFE0_OiWFQKL-1R0uOkA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Daniel Bristot de Oliveira <bristot@redhat.com>, linux-kernel@vger.kernel.org
-Cc: Marco Perronet <perronet@mpi-sws.org>, Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Li Zefan <lizefan@huawei.com>, Tejun Heo <tj@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Valentin Schneider <valentin.schneider@arm.com>, cgroups@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+To: liming wu <wu860403-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, 398776277 <398776277-9uewiaClKEY@public.gmane.org>
 
-On 19/01/2021 10:41, Daniel Bristot de Oliveira wrote:
-> On 1/14/21 4:51 PM, Dietmar Eggemann wrote:
->> On 12/01/2021 16:53, Daniel Bristot de Oliveira wrote:
+Hello,
 
-[...]
+On Mon, Jan 18, 2021 at 11:07:47AM +0800, liming wu wrote:
+> > > +             if (schedstat_enabled() && tg != &root_task_group) {
+> > > +                     u64 ws = 0;
+> > > +                     u64 wc = 0;
+> > > +                     int i;
+> > > +
+> > > +                     for_each_possible_cpu(i) {
+> > > +                             ws += schedstat_val(tg->se[i]->statistics.wait_sum);
+> > > +                             wc += schedstat_val(tg->se[i]->statistics.wait_count);
+> > > +                     }
+> > > +
+> > > +                     seq_printf(sf, "wait_sum %llu\n"
+> > > +                             "wait_count %llu\n", ws, wc);
+> > > +             }
+> >
+> > What does sum/count tell?
+> It can tell the task group average latency of every context switch
+> wait_sum is equivalent to sched_info->run_delay (the second parameter
+> of /proc/$pid/schedstat)
+> wait_count is equivalent to sched_info->pcount(the third parameter of
+> /proc/$pid/schedstat)
 
->> with this patch:
->>
->> cgroupv1:
->>
->> root@juno:/sys/fs/cgroup/cpuset# chrt -d --sched-period 1000000000
->> --sched-runtime 100000000 0 sleep 500 &
->> [1] 1668
->> root@juno:/sys/fs/cgroup/cpuset# PID1=$!
->>
->> root@juno:/sys/fs/cgroup/cpuset# chrt -d --sched-period 1000000000
->> --sched-runtime 100000000 0 sleep 500 &
->> [2] 1669
->> root@juno:/sys/fs/cgroup/cpuset# PID2=$!
->>
->> root@juno:/sys/fs/cgroup/cpuset# mkdir A
->>
->> root@juno:/sys/fs/cgroup/cpuset# echo 0 > ./A/cpuset.mems
->> root@juno:/sys/fs/cgroup/cpuset# echo 0 > ./A/cpuset.cpus
->>
->> root@juno:/sys/fs/cgroup/cpuset# echo $PID2 > ./A/cgroup.procs
->> -bash: echo: write error: Device or resource busy
->>
->> root@juno:/sys/fs/cgroup/cpuset# echo 1 > ./A/cpuset.cpu_exclusive
->>
->> root@juno:/sys/fs/cgroup/cpuset# echo $PID2 > ./A/cgroup.procs
->>
->> root@juno:/sys/fs/cgroup/cpuset# cat /proc/$PID1/status | grep
->> Cpus_allowed_list | awk '{print $2}'
->> 0-5
->> root@juno:/sys/fs/cgroup/cpuset# cat /proc/$PID2/status | grep
->> Cpus_allowed_list | awk '{print $2}'
->> 0
-> 
-> On CPU v1 we also need to disable the load balance to create a root domain, right?
+Sounds good to me but can you please:
 
-IMHO, that's not necessary for this example. But yes, if we create 2
-exclusive cpusets A and B we want to turn off load-balancing on root
-level. It also doesn't hurt doing this in this example. But we end up
-with no sched domain since load-balance is disabled at root and A only
-contains CPU0.
+* Rename wait_sum to wait_usec and make sure the duration is in usecs.
 
-root@juno:/sys/fs/cgroup/cpuset# echo 0 > cpuset.sched_load_balance
+* Rename wait_count to nr_waits.
 
-ls /proc/sys/kernel/sched_domain/cpu*/ doesn't show any (sched) domains.
+* This should go through the scheduler tree. When you post the updated
+  version, please cc the scheduler folks from MAINAINERS.
 
->> cgroupv2:
-> 
-> Yeah, I see your point. I was seeing a different output because of Fedora
-> default's behavior of adding the tasks to the system.slice/user.slice...
-> 
-> doing:
-> 
->> root@juno:/sys/fs/cgroup# echo +cpuset > cgroup.subtree_control
-> 
-> # echo $$ > cgroup.procs
+Thanks.
 
-The current shell should be already in the root cgroup?
-
-root@juno:/sys/fs/cgroup# echo $$
-1644
-root@juno:/sys/fs/cgroup# cat cgroup.procs | grep $$
-1644
-
-[...]
-
+-- 
+tejun
