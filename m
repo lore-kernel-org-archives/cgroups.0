@@ -1,48 +1,76 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v2 1/2] cgroup: fix psi monitor for root cgroup
-Date: Tue, 19 Jan 2021 11:52:37 -0500
-Message-ID: <YAcOVZ9hceK3gwWT@cmpxchg.org>
-References: <20210116173634.1615875-1-odin@uged.al>
- <20210116173634.1615875-2-odin@uged.al>
+From: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC][PATCH] cpu/hotplug: wait for cpuset_hotplug_work to finish
+ on cpu online
+Date: Tue, 19 Jan 2021 16:52:55 +0000
+Message-ID: <CAFBcO+_PoXhbq+p-2z=acCpboJtOewXkp-9-3=csafoAYuNFQw@mail.gmail.com>
+References: <20201203171431.256675-1-aklimov@redhat.com> <20201207083827.GD3040@hirez.programming.kicks-ass.net>
+ <87k0tritvq.fsf@oracle.com> <87im7yc2bu.fsf@oracle.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=uGojdeA20zzASlYpdW76UKnqe50ntC8qShndn6zJIz4=;
-        b=xtAjKAEtfJQvTQE5lGL0o/pBMwEY1osKiNGCA40ER/PyoQC6arxZqOi3F65vp97cKN
-         h+lMfbHribwS5JhD+aM32o5RCl7lTiUuS4dsKUM0nJ8J/V4y8xND8eWXhbfYz935LOuH
-         Oygf+8ZTdrQUK4JsMzhoMVERDJnqu7csEnK5zT75ytSHbN7YI8FOvCBn/LZSz7DOvAwY
-         6GvraSTztJHRercM9PV46hF8l53VyDol1fxk7eJUlraR/FfdKKf2/tpxctc9l/tfB7JP
-         qwQhf7xoRiBqJLidHBzAtWUem0/wr1XEQeC0oFNFhYaFgbHqiOmNo1Baurzc1aS0pcu8
-         9iXg==
-Content-Disposition: inline
-In-Reply-To: <20210116173634.1615875-2-odin-RObV4cXtwVA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1611075190;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=HK4nAJ3T6oXK1ONWdl9zHivMWs2pVZ45ipCqU6He5eg=;
+        b=RtPi40MGQUp86aKT2ckSg14hsx22rAUhg2DaaduI/jj6Canc+zO8i9MbPoJDbQiEuIC/ux
+        QVEw+98Ax5N5oPETveJvuqv/UwhPm+Uv70qUT7FXDUH/7f8iCF2531ypb7R2jqIjC67G1E
+        dmmULZUNZnlsqMc7K/CPhuB2uvhP4tE=
+In-Reply-To: <87im7yc2bu.fsf-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dschatzberg-b10kYP2dOMg@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+To: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, qais.yousef-5wv7dgnIgG8@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Alexey Klimov <klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Sat, Jan 16, 2021 at 06:36:33PM +0100, Odin Ugedal wrote:
-> Fix NULL pointer dereference when adding new psi monitor to the root
-> cgroup. PSI files for root cgroup was introduced in df5ba5be742 by using
-> system wide psi struct when reading, but file write/monitor was not
-> properly fixed. Since the PSI config for the root cgroup isn't
-> initialized, the current implementation tries to lock a NULL ptr,
-> resulting in a crash.
-> 
-> Can be triggered by running this as root:
-> $ tee /sys/fs/cgroup/cpu.pressure <<< "some 10000 1000000"
-> 
-> Signed-off-by: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
-> Reviewed-by: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+On Fri, Jan 15, 2021 at 6:54 AM Daniel Jordan
+<daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> writes:
+> > Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org> writes:
+> >>> The nature of this bug is also described here (with different consequences):
+> >>> https://lore.kernel.org/lkml/20200211141554.24181-1-qais.yousef-5wv7dgnIgG8@public.gmane.org/
+> >>
+> >> Yeah, pesky deadlocks.. someone was going to try again.
+> >
+> > I dug up the synchronous patch
+> >
+> >     https://lore.kernel.org/lkml/1579878449-10164-1-git-send-email-prsood-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org/
+> >
+> > but surprisingly wasn't able to reproduce the lockdep splat from
+> >
+> >     https://lore.kernel.org/lkml/F0388D99-84D7-453B-9B6B-EEFF0E7BE4CC-J5quhbR+WMc@public.gmane.org/
+> >
+> > even though I could hit it a few weeks ago.
+>
+> oh okay, you need to mount a legacy cpuset hierarchy.
+>
+> So as the above splat shows, making cpuset_hotplug_workfn() synchronous
+> means cpu_hotplug_lock (and "cpuhp_state-down") can be acquired before
+> cgroup_mutex.
+>
+> But there are at least four cgroup paths that take the locks in the
+> opposite order.  They're all the same, they take cgroup_mutex and then
+> cpu_hotplug_lock later on to modify one or more static keys.
+>
+> cpu_hotplug_lock should probably be ahead of cgroup_mutex because the
+> latter is taken in a hotplug callback, and we should keep the static
+> branches in cgroup, so the only way out I can think of is moving
+> cpu_hotplug_lock to just before cgroup_mutex is taken and switching to
+> _cpuslocked flavors of the static key calls.
+>
+> lockdep quiets down with that change everywhere, but it puts another big
+> lock around a lot of cgroup paths.  Seems less heavyhanded to go with
+> this RFC.  What do you all think?
 
-Fixes: df5ba5be7425 ("kernel/sched/psi.c: expose pressure metrics on root cgroup")
-Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Daniel, thank you for taking a look. I don't mind reviewing+testing
+another approach that you described.
 
-Since this is a userspace-triggerable NULL ptr crash, we should
-probably also
+> Absent further discussion, Alexey, do you plan to post another version?
 
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 5.2+
+I plan to update this patch and re-send in the next couple of days. It
+looks like it might be a series of two patches. Sorry for delays.
+
+Best regards,
+Alexey
+
