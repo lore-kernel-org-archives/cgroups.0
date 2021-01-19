@@ -1,174 +1,66 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [Patch v5 2/2] cgroup: svm: Encryption IDs cgroup documentation.
-Date: Mon, 18 Jan 2021 09:55:12 -0800
-Message-ID: <2a009bd9-fde5-4911-3525-e28379fe3be2@infradead.org>
-References: <20210116023204.670834-1-vipinsh@google.com>
- <20210116023204.670834-3-vipinsh@google.com>
+From: Muchun Song <songmuchun@bytedance.com>
+Subject: [PATCH] mm: memcontrol: skip propagate percpu vmstat values to current memcg
+Date: Tue, 19 Jan 2021 13:27:44 +0800
+Message-ID: <20210119052744.96765-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
-        :Reply-To:Content-ID:Content-Description;
-        bh=VSy7n9nGa+8yIgiz5/4Q9YZDqz+WHE9uZBEMuw4LP60=; b=ElCtRKXWs00XlQ5Ju8PBSEsSCb
-        3CKHkgdNQu7e41t3Gwu6khGQbo7R7XI6ZZ6nOHwmCrH5tafVsX0+G1e+2II5ILaV4zQDNl6LvNSAf
-        k1xhJvevWgHmbH5bii13SgJRDA2Gv/2FfexFvnnyb1mgpy9MJDYKQZFoh0RUivM9eMxCsraYa2p9R
-        Jg4Mb4zn0txphL73yMA/ZsAguhFstS8Lu17S7jB6DxUL9EfvLUYpzyudmN0fpZ6wPIZ77YM7lJlEY
-        saWcR1bPA7nTD90KFEz5YAShJB9kepxCRmYpBXT91+34kLPPifqcqDTGm265vQ+0HuVZfjmuPe6u9
-        W2ZEIc9A==;
-In-Reply-To: <20210116023204.670834-3-vipinsh@google.com>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=aEEMV7863xltVpOu5dQdeBuAa/L7iHBBzSh9lFg+Kn0=;
+        b=mwxZeLnxMtuvQXXMcMBQsTFESo6aiXFL43N5Ft8TdGjcyIu/StwJ3A3lW8hC+9BQfm
+         qvqCffOW80GeEY4cGwo2tkrrFTWeUL3471eOzgweQvi1pLYkHqYIw1ICBBoJ77i3jVBZ
+         Y9imH6F6215IdJ6eJgOvOjf0v4joL8ol/PWEPUpDHU1EMw5m3P1mXe+gKRjv8jg31GJo
+         gW2wp/txsbZbS9BHBsT4bTflX5ir+ZFxBI72wyDTaGq8ZJsyjM55zz2pmiDzcvOaYth2
+         0mEjuA23VeUwUlK5j333DwpSRHDhln8Hqjo7pln6+GZxOsvZO+eMuBOG61a0N6FOygNj
+         BqcQ==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Vipin Sharma <vipinsh@google.com>, thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, seanjc@google.com, tj@kernel.org, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net
-Cc: joro@8bytes.org, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org
+Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>
 
-On 1/15/21 6:32 PM, Vipin Sharma wrote:
-> Documentation of Encryption IDs controller. This new controller is used
-> to track and limit usage of hardware memory encryption capabilities on
-> the CPUs.
-> 
-> Signed-off-by: Vipin Sharma <vipinsh@google.com>
-> Reviewed-by: David Rientjes <rientjes@google.com>
-> Reviewed-by: Dionna Glaze <dionnaglaze@google.com>
-> ---
->  .../admin-guide/cgroup-v1/encryption_ids.rst  |  1 +
->  Documentation/admin-guide/cgroup-v2.rst       | 78 ++++++++++++++++++-
->  2 files changed, 77 insertions(+), 2 deletions(-)
->  create mode 100644 Documentation/admin-guide/cgroup-v1/encryption_ids.rst
-> 
-> diff --git a/Documentation/admin-guide/cgroup-v1/encryption_ids.rst b/Documentation/admin-guide/cgroup-v1/encryption_ids.rst
-> new file mode 100644
-> index 000000000000..8e9e9311daeb
-> --- /dev/null
-> +++ b/Documentation/admin-guide/cgroup-v1/encryption_ids.rst
-> @@ -0,0 +1 @@
-> +/Documentation/admin-guide/cgroup-v2.rst
-> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-> index 63521cd36ce5..72993571de2e 100644
-> --- a/Documentation/admin-guide/cgroup-v2.rst
-> +++ b/Documentation/admin-guide/cgroup-v2.rst
-> @@ -63,8 +63,11 @@ v1 is available under :ref:`Documentation/admin-guide/cgroup-v1/index.rst <cgrou
->         5-7-1. RDMA Interface Files
->       5-8. HugeTLB
->         5.8-1. HugeTLB Interface Files
-> -     5-8. Misc
-> -       5-8-1. perf_event
-> +     5-9. Encryption IDs
-> +       5.9-1 Encryption IDs Interface Files
-> +       5.9-2 Migration and Ownership
-> +     5-10. Misc
-> +       5-10-1. perf_event
->       5-N. Non-normative information
->         5-N-1. CPU controller root cgroup process behaviour
->         5-N-2. IO controller root cgroup process behaviour
-> @@ -2160,6 +2163,77 @@ HugeTLB Interface Files
->  	are local to the cgroup i.e. not hierarchical. The file modified event
->  	generated on this file reflects only the local events.
->  
-> +Encryption IDs
-> +--------------
-> +
-> +There are multiple hardware memory encryption capabilities provided by the
-> +hardware vendors, like Secure Encrypted Virtualization (SEV) and SEV Encrypted
-> +State (SEV-ES) from AMD.
-> +
-> +These features are being used in encrypting virtual machines (VMs) and user
-> +space programs. However, only a small number of keys/IDs can be used
-> +simultaneously.
-> +
-> +This limited availability of these IDs requires system admin to optimize
+The current memcg will be freed soon, so updating it's vmstat and
+vmevent values is pointless. Just skip updating it.
 
-                                                          admins
+Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+---
+ mm/memcontrol.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-> +allocation, control, and track the usage of the resources in the cloud
-> +infrastructure. This resource also needs to be protected from getting exhausted
-> +by some malicious program and causing starvation for other programs.
-> +
-> +Encryption IDs controller provides capability to register the resource for
-
-   The Encryption IDs controller provides the capability to register the resource for
-
-> +controlling and tracking through the cgroups.
-
-                            through cgroups.
-
-> +
-> +Encryption IDs Interface Files
-> +~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> +
-> +Each encryption ID type have their own interface files,
-
-                           has its own
-
-> +encids.[ID TYPE].{max, current, stat}, where "ID TYPE" can be sev and
-
-                                                                     or
-
-> +sev-es.
-> +
-> +  encids.[ID TYPE].stat
-> +        A read-only flat-keyed single value file. This file exists only in the
-> +        root cgroup.
-> +
-> +        It shows the total number of encryption IDs available and currently in
-> +        use on the platform::
-> +          # cat encids.sev.stat
-> +          total 509
-> +          used 0
-
-This is described above as a single-value file...
-
-Is the max value a hardware limit or a software (flexible) limit?
-
-
-> +
-> +  encids.[ID TYPE].max
-> +        A read-write file which exists on the non-root cgroups. File is used to
-> +        set maximum count of "[ID TYPE]" which can be used in the cgroup.
-> +
-> +        Limit can be set to max by::
-> +          # echo max > encids.sev.max
-> +
-> +        Limit can be set by::
-> +          # echo 100 > encids.sev.max
-> +
-> +        This file shows the max limit of the encryption ID in the cgroup::
-> +          # cat encids.sev.max
-> +          max
-> +
-> +        OR::
-> +          # cat encids.sev.max
-> +          100
-> +
-> +        Limits can be set more than the "total" capacity value in the
-> +        encids.[ID TYPE].stat file, however, the controller ensures
-> +        that the usage never exceeds the "total" and the max limit.
-> +
-> +  encids.[ID TYPE].current
-> +        A read-only single value file which exists on non-root cgroups.
-> +
-> +        Shows the total number of encrypted IDs being used in the cgroup.
-> +
-> +Migration and Ownership
-> +~~~~~~~~~~~~~~~~~~~~~~~
-> +
-> +An encryption ID is charged to the cgroup in which it is used first, and
-> +stays charged to that cgroup until that ID is freed. Migrating a process
-> +to a different cgroup do not move the charge to the destination cgroup
-
-                         does
-
-> +where the process has moved.
-> +
->  Misc
->  ----
->  
-> 
-
-
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index c0a90767e264..597fbe9acf93 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3700,7 +3700,7 @@ static void memcg_flush_percpu_vmstats(struct mem_cgroup *memcg)
+ 		for (i = 0; i < MEMCG_NR_STAT; i++)
+ 			stat[i] += per_cpu(memcg->vmstats_percpu->stat[i], cpu);
+ 
+-	for (mi = memcg; mi; mi = parent_mem_cgroup(mi))
++	for (mi = parent_mem_cgroup(memcg); mi; mi = parent_mem_cgroup(mi))
+ 		for (i = 0; i < MEMCG_NR_STAT; i++)
+ 			atomic_long_add(stat[i], &mi->vmstats[i]);
+ 
+@@ -3716,7 +3716,8 @@ static void memcg_flush_percpu_vmstats(struct mem_cgroup *memcg)
+ 				stat[i] += per_cpu(
+ 					pn->lruvec_stat_cpu->count[i], cpu);
+ 
+-		for (pi = pn; pi; pi = parent_nodeinfo(pi, node))
++		for (pi = parent_nodeinfo(pn, node); pi;
++		     pi = parent_nodeinfo(pi, node))
+ 			for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
+ 				atomic_long_add(stat[i], &pi->lruvec_stat[i]);
+ 	}
+@@ -3736,7 +3737,7 @@ static void memcg_flush_percpu_vmevents(struct mem_cgroup *memcg)
+ 			events[i] += per_cpu(memcg->vmstats_percpu->events[i],
+ 					     cpu);
+ 
+-	for (mi = memcg; mi; mi = parent_mem_cgroup(mi))
++	for (mi = parent_mem_cgroup(memcg); mi; mi = parent_mem_cgroup(mi))
+ 		for (i = 0; i < NR_VM_EVENT_ITEMS; i++)
+ 			atomic_long_add(events[i], &mi->vmevents[i]);
+ }
 -- 
-~Randy
-You can't do anything without having to do something else first.
--- Belefant's Law
+2.11.0
+
