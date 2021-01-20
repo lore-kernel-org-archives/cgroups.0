@@ -1,7 +1,7 @@
 From: Kir Kolyshkin <kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 01/10] docs/scheduler/sched-bwc: formatting fix
-Date: Tue, 19 Jan 2021 16:18:15 -0800
-Message-ID: <20210120001824.385168-2-kolyshkin@gmail.com>
+Subject: [PATCH 06/10] docs/admin-guide: cgroup-v2: typos and spaces
+Date: Tue, 19 Jan 2021 16:18:20 -0800
+Message-ID: <20210120001824.385168-7-kolyshkin@gmail.com>
 References: <20210120001824.385168-1-kolyshkin@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,46 +10,119 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=XkdryAomM5az2Ze2NYd09JWowO5YjJiadHr5mNXL5/M=;
-        b=VP75uQaycjsESHMeLXbRrDjAb4Cqt4odG4boanj7vRVeuesb49E/ZOheLGtFdgZ6Pu
-         UutaIeCpF3tfV5s4Unrs4qhoGgGw5i53G2fwKFquvwnELcK35WEbs9fgdW8Z+sBJs/9u
-         5BjHCtcOu34bzeflTDxfKz6MItwT0b0RZIfSu4Vrs7r27ZS3NMTJkQczKfJEtXCui6o9
-         wiZKGBq45p/Wg2Xr3EytZu4fCxpmcZC7n7e6QTCO8qkYY191T+j1XsyaMv1syZYJveOo
-         lpORo4531azB5pI6wvGY5Q1+TN91vTf/dOCL+GnRy67TRZauS4tEBgcdj4+tH6rB9N06
-         56vw==
+        bh=MClthhiRASKx89OyXDAWaQGxQLzHlwXXba8sXj7wtYg=;
+        b=mSOIbc4Lg/dAwgp5ccUf0gm8Q8YOE4xeHySRx9KMvE3UueOXiwM1ZOnFQYjECzUZQz
+         gXjmlwo9Y+lLkWSuwEaVps+e5wp30twhKpbzcX9sWh4DO1+jFGzQxhQT2Z5l1pIehvFc
+         YWDGEO7MSVE0+vyHixnVh56JRzRXcf8v31WV5O+K6i1hV4vpSaO4orX/WPPk1U+2yY77
+         6VBrDkN7KyK1+YhNbwQLrNl1WL2LTOv3mDCi9RZh/BoSp1dWQ8Jbc6aKDsuo/zjzmpub
+         DXEgFCuFNBlsVUaSJRGGomIPtIuzgbNtCSOlC5Zfl1VxG8nBb6iHgGQYxO3QrkNFyDNQ
+         fEEQ==
 In-Reply-To: <20210120001824.385168-1-kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: corbet-T1hC0tSOHrs@public.gmane.org
 Cc: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kir Kolyshkin <kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Since commit d6a3b247627a3 these three lines are merged into one by the
-RST processor, making it hard to read. Use bullet points to separate
-the entries, like it's done in other similar places.
+- fix a typo (mempry -> memory) in a file name;
+- add space before "(" where appropriate.
 
+Fixes: 5f9a4f4a70960
 Signed-off-by: Kir Kolyshkin <kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- Documentation/scheduler/sched-bwc.rst | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst | 34 ++++++++++++-------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/Documentation/scheduler/sched-bwc.rst b/Documentation/scheduler/sched-bwc.rst
-index 9801d6b284b1..4af4ee1f3600 100644
---- a/Documentation/scheduler/sched-bwc.rst
-+++ b/Documentation/scheduler/sched-bwc.rst
-@@ -25,9 +25,10 @@ Management
- ----------
- Quota and period are managed within the cpu subsystem via cgroupfs.
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index b55362454886..073f976d44ea 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1263,9 +1263,9 @@ PAGE_SIZE multiple when read back.
+ 	can show up in the middle. Don't rely on items remaining in a
+ 	fixed position; use the keys to look up specific values!
  
--cpu.cfs_quota_us: the total available run-time within a period (in microseconds)
--cpu.cfs_period_us: the length of a period (in microseconds)
--cpu.stat: exports throttling statistics [explained further below]
-+- cpu.cfs_quota_us: the total available run-time within a period (in
-+  microseconds)
-+- cpu.cfs_period_us: the length of a period (in microseconds)
-+- cpu.stat: exports throttling statistics [explained further below]
+-	If the entry has no per-node counter(or not show in the
+-	mempry.numa_stat). We use 'npn'(non-per-node) as the tag
+-	to indicate that it will not show in the mempry.numa_stat.
++	If the entry has no per-node counter (or not show in the
++	memory.numa_stat). We use 'npn' (non-per-node) as the tag
++	to indicate that it will not show in the memory.numa_stat.
  
- The default values are::
+ 	  anon
+ 		Amount of memory used in anonymous mappings such as
+@@ -1281,11 +1281,11 @@ PAGE_SIZE multiple when read back.
+ 	  pagetables
+                 Amount of memory allocated for page tables.
  
+-	  percpu(npn)
++	  percpu (npn)
+ 		Amount of memory used for storing per-cpu kernel
+ 		data structures.
+ 
+-	  sock(npn)
++	  sock (npn)
+ 		Amount of memory used in network transmission buffers
+ 
+ 	  shmem
+@@ -1333,7 +1333,7 @@ PAGE_SIZE multiple when read back.
+ 		Part of "slab" that cannot be reclaimed on memory
+ 		pressure.
+ 
+-	  slab(npn)
++	  slab (npn)
+ 		Amount of memory used for storing in-kernel data
+ 		structures.
+ 
+@@ -1361,39 +1361,39 @@ PAGE_SIZE multiple when read back.
+ 	  workingset_nodereclaim
+ 		Number of times a shadow node has been reclaimed
+ 
+-	  pgfault(npn)
++	  pgfault (npn)
+ 		Total number of page faults incurred
+ 
+-	  pgmajfault(npn)
++	  pgmajfault (npn)
+ 		Number of major page faults incurred
+ 
+-	  pgrefill(npn)
++	  pgrefill (npn)
+ 		Amount of scanned pages (in an active LRU list)
+ 
+-	  pgscan(npn)
++	  pgscan (npn)
+ 		Amount of scanned pages (in an inactive LRU list)
+ 
+-	  pgsteal(npn)
++	  pgsteal (npn)
+ 		Amount of reclaimed pages
+ 
+-	  pgactivate(npn)
++	  pgactivate (npn)
+ 		Amount of pages moved to the active LRU list
+ 
+-	  pgdeactivate(npn)
++	  pgdeactivate (npn)
+ 		Amount of pages moved to the inactive LRU list
+ 
+-	  pglazyfree(npn)
++	  pglazyfree (npn)
+ 		Amount of pages postponed to be freed under memory pressure
+ 
+-	  pglazyfreed(npn)
++	  pglazyfreed (npn)
+ 		Amount of reclaimed lazyfree pages
+ 
+-	  thp_fault_alloc(npn)
++	  thp_fault_alloc (npn)
+ 		Number of transparent hugepages which were allocated to satisfy
+ 		a page fault. This counter is not present when CONFIG_TRANSPARENT_HUGEPAGE
+                 is not set.
+ 
+-	  thp_collapse_alloc(npn)
++	  thp_collapse_alloc (npn)
+ 		Number of transparent hugepages which were allocated to allow
+ 		collapsing an existing range of pages. This counter is not
+ 		present when CONFIG_TRANSPARENT_HUGEPAGE is not set.
 -- 
 2.29.2
 
