@@ -1,66 +1,49 @@
-From: Kir Kolyshkin <kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH 10/10] docs/admin-guide/cgroup-v2: fix mount opt rendering
-Date: Tue, 19 Jan 2021 16:18:24 -0800
-Message-ID: <20210120001824.385168-11-kolyshkin@gmail.com>
+From: Kir Kolyshkin <kolyshkin@gmail.com>
+Subject: [PATCH 07/10] docs/admin-guide: cgroup-v2: fix cgroup.type rendering
+Date: Tue, 19 Jan 2021 16:18:21 -0800
+Message-ID: <20210120001824.385168-8-kolyshkin@gmail.com>
 References: <20210120001824.385168-1-kolyshkin@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=AdWaVN+/y4nB7k2Y/h5vFo2XQMYLD7PwO6KnTXo1gOs=;
-        b=tc1iJDBzwbPdk+USFLGiRAiPsr6L571rZa3SCif6sTOwoQRJRXez/OTOLccvPK3pkU
-         5ab1xxV1QurDk1JxI7Yv4IxskuIOSIzpdB8otapSda/VCvcU454FGalL9pPXpv0izXPD
-         +HDMlU0j0o0hZNSHAih7DYTeaxiNhRtinyid5QBhYcHuflDF2gECapHYNPkdzmlW/aUq
-         +LnQINaUPaw/Li6mThzwPrSUBSV6lZLcsAbu831MVkoRkutl/D6prMiTRVYlY0ySDwDb
-         CVTVD+kFdzfOjkdu3DCRgshK+p2MXJCRU428sXP2CXbbVy5CVrRJUAv2feqRw2qdDKJ5
-         uQJg==
-In-Reply-To: <20210120001824.385168-1-kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=sl4zutZNTqwn4UHJVbcHFIYb+Z0yDoOK+cSVT1ECB74=;
+        b=FAHyInT2erztCE+Frd0/kZorfgt3mSLYhqmxotJ/K3i2LDdZRBYoJgcn7tUSgWTfzw
+         BM26+JwBeo60N8US3bSpEdk0HWvme3LbqCwswE8pgfQVNmFp0K/f+0uPeGFMA1YtbhRr
+         gPtTX0LU8yrS0yBRpSmlqo6gkoqnWv0tZUZSxJAVz1cDeRJLTnAzjMFKQk7ach94mZTv
+         IhwMzPZaTfj6atx/BgF2GVQxKZ0ffcHSdL3n2qTskwNnfmnwRR6vjNP5nlcBQ7rgOYAc
+         nlk8SUUZW7YU3fxXVhMeCpRj8vUniTNjl6SvKeuslH/OMGYmnKi0irIsPyh6Kfu0ZnOD
+         2OaA==
+In-Reply-To: <20210120001824.385168-1-kolyshkin@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: corbet-T1hC0tSOHrs@public.gmane.org
-Cc: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kir Kolyshkin <kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: corbet@lwn.net
+Cc: linux-doc@vger.kernel.org, cgroups@vger.kernel.org, Kir Kolyshkin <kolyshkin@gmail.com>
 
-Due to an extra empty line between the option and its description
-it is rendered not like in other places.
+Due to an extra vertical whitespace, this was not recognised
+as a definition list entry, and thus was not rendered like
+the rest of cgroupfs files.
 
-Remove the empty lines to fix.
-
-Signed-off-by: Kir Kolyshkin <kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Kir Kolyshkin <kolyshkin@gmail.com>
 ---
- Documentation/admin-guide/cgroup-v2.rst | 3 ---
- 1 file changed, 3 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst | 1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 136902cd0e98..14a7523c46a4 100644
+index 073f976d44ea..c1b6ffc286cf 100644
 --- a/Documentation/admin-guide/cgroup-v2.rst
 +++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -174,7 +174,6 @@ disabling controllers in v1 and make them always available in v2.
- cgroup v2 currently supports the following mount options.
+@@ -788,7 +788,6 @@ Core Interface Files
+ All cgroup core files are prefixed with "cgroup."
  
-   nsdelegate
+   cgroup.type
 -
- 	Consider cgroup namespaces as delegation boundaries.  This
- 	option is system wide and can only be set on mount or modified
- 	through remount from the init namespace.  The mount option is
-@@ -182,7 +181,6 @@ cgroup v2 currently supports the following mount options.
- 	Delegation section for details.
+ 	A read-write single value file which exists on non-root
+ 	cgroups.
  
-   memory_localevents
--
-         Only populate memory.events with data for the current cgroup,
-         and not any subtrees. This is legacy behaviour, the default
-         behaviour without this option is to include subtree counts.
-@@ -191,7 +189,6 @@ cgroup v2 currently supports the following mount options.
-         option is ignored on non-init namespace mounts.
- 
-   memory_recursiveprot
--
-         Recursively apply memory.min and memory.low protection to
-         entire subtrees, without requiring explicit downward
-         propagation into leaf cgroups.  This allows protecting entire
 -- 
 2.29.2
 
