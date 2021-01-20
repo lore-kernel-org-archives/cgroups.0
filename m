@@ -1,78 +1,60 @@
-From: Kir Kolyshkin <kolyshkin@gmail.com>
-Subject: [PATCH 08/10] doc/admin-guide/cgroup-v2: use tables
-Date: Tue, 19 Jan 2021 16:18:22 -0800
-Message-ID: <20210120001824.385168-9-kolyshkin@gmail.com>
+From: Kir Kolyshkin <kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 04/10] docs/scheduler/sched-bwc: add proper ref
+Date: Tue, 19 Jan 2021 16:18:18 -0800
+Message-ID: <20210120001824.385168-5-kolyshkin@gmail.com>
 References: <20210120001824.385168-1-kolyshkin@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=045PvP5AZFJnLagMgpduNxgCsOQAzU/2eOj/YLdBA4A=;
-        b=gqrB0eAJfwpSU25eN7Jtg6+8cofftYbci8tlN7GIxkNIgv7rj4AvBL0j7a/XCcl3GO
-         Uq0DU/ugxh+YaceXN20O9rqGPcixxwyGpTevGEnXTs6o1OQBc12A5KAvnEXVHDKZnYqC
-         2wM80/HKZ5B6OcOp+7HpodTJNAJ3g9G7G6Z9SbomHRzWg++X4GWmO8sps++rkUH7bbQU
-         6rRja8dqCgTWcsLie68NOcxgthqGPELhFwCMvA3sgu5auhckN36wl19yB3ijtOR0ToYY
-         ha1QWQhbnPP+XObvf81YeXH7K/dw87nFMcC/0DRE6xDVIv5Yl7mNZxKCiM6TcjTYm+pF
-         hhVA==
-In-Reply-To: <20210120001824.385168-1-kolyshkin@gmail.com>
+        bh=tXzJgZeFW0MqXzTyG1CaFrbwaPZ1tQM/2q7+gv5S6M4=;
+        b=mIXcBx3kExnFoF3rAgXg8Y0Wu3FiLWLpnEXS/UczJOdkeL0yC1hqypRtVpXgGacxkM
+         jFXPPaebOVuteHEChay9KDmNeziCRTFDwPBe0G8qEWVc6Ajx6crLYnLLxo68GO6yg+op
+         +ZQPcjIEheoIfceVbvtgM2rHoRQTgIAWWEOsSR4+VNmhA+MvKh3SVqkSe3CpsQVPs1MB
+         ElUdO99Zv2hUhqifNRyDclRz0V/79CWbfIGu7qVORtMqlRfMz0R4QyjGf2E2hmDv425R
+         SxAu+WEkc0bc8kdw4dGzwxmge1QMdYiKJ8GWP6IqhpGMnQzybv5bwGMCncMKSbwx/KpZ
+         4snw==
+In-Reply-To: <20210120001824.385168-1-kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: corbet@lwn.net
-Cc: linux-doc@vger.kernel.org, cgroups@vger.kernel.org, Kir Kolyshkin <kolyshkin@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+To: corbet-T1hC0tSOHrs@public.gmane.org
+Cc: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kir Kolyshkin <kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-These two places are rendered like a table in the source (rst) code,
-but they are seen as plain text by formatters, and thus are joined
-together into a single line, e.g.:
+Add a proper reference instead of just using the file name.
 
-> “root” - a partition root “member” - a non-root member of a partition
-
-This is definitely not what was intended.
-
-To fix, use table formatting, like in other places.
-
-Signed-off-by: Kir Kolyshkin <kolyshkin@gmail.com>
+Signed-off-by: Kir Kolyshkin <kolyshkin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- Documentation/admin-guide/cgroup-v2.rst | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+ Documentation/scheduler/sched-bwc.rst      | 3 ++-
+ Documentation/scheduler/sched-rt-group.rst | 2 ++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index c1b6ffc286cf..6f59f13f28d0 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -2003,10 +2003,12 @@ Cpuset Interface Files
- 	cpuset-enabled cgroups.  This flag is owned by the parent cgroup
- 	and is not delegatable.
+diff --git a/Documentation/scheduler/sched-bwc.rst b/Documentation/scheduler/sched-bwc.rst
+index a44860d33ffc..dcec7440c222 100644
+--- a/Documentation/scheduler/sched-bwc.rst
++++ b/Documentation/scheduler/sched-bwc.rst
+@@ -4,7 +4,8 @@ CFS Bandwidth Control
  
--        It accepts only the following input values when written to.
-+	It accepts only the following input values when written to.
+ .. note::
+    This document only discusses CPU bandwidth control for SCHED_NORMAL.
+-   The SCHED_RT case is covered in Documentation/scheduler/sched-rt-group.rst
++   The SCHED_RT case is covered in
++   :ref:`Documentation/scheduler/sched-rt-group.rst <sched-rt-group>`.
  
--        "root"   - a partition root
--        "member" - a non-root member of a partition
-+	  ========	================================
-+	  "root"	a partition root
-+	  "member"	a non-root member of a partition
-+	  ========	================================
- 
- 	When set to be a partition root, the current cgroup is the
- 	root of a new partition or scheduling domain that comprises
-@@ -2047,9 +2049,11 @@ Cpuset Interface Files
- 	root to change.  On read, the "cpuset.sched.partition" file
- 	can show the following values.
- 
--	"member"       Non-root member of a partition
--	"root"         Partition root
--	"root invalid" Invalid partition root
-+	  ==============	==============================
-+	  "member"		Non-root member of a partition
-+	  "root"		Partition root
-+	  "root invalid"	Invalid partition root
-+	  ==============	==============================
- 
- 	It is a partition root if the first 2 partition root conditions
- 	above are true and at least one CPU from "cpuset.cpus" is
+ CFS bandwidth control is a CONFIG_FAIR_GROUP_SCHED extension which allows the
+ specification of the maximum CPU bandwidth available to a group or hierarchy.
+diff --git a/Documentation/scheduler/sched-rt-group.rst b/Documentation/scheduler/sched-rt-group.rst
+index 655a096ec8fb..a3b4aa51c271 100644
+--- a/Documentation/scheduler/sched-rt-group.rst
++++ b/Documentation/scheduler/sched-rt-group.rst
+@@ -1,3 +1,5 @@
++.. _sched-rt-group:
++
+ ==========================
+ Real-Time group scheduling
+ ==========================
 -- 
 2.29.2
 
