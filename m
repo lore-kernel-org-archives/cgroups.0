@@ -1,8 +1,8 @@
 From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-next] BUILD SUCCESS
- 00bfa16052cd66855de9bee66d7a5468f4fdc850
-Date: Wed, 20 Jan 2021 13:40:02 +0800
-Message-ID: <6007c232.emMgx3EuuUczs34v%lkp@intel.com>
+Subject: [cgroup:for-5.11-fixes] BUILD SUCCESS
+ 74bdd45c85d02f695a1cd1c3dccf8b3960a86d8f
+Date: Wed, 20 Jan 2021 13:40:05 +0800
+Message-ID: <6007c235.LS2ZV4U7mRvJ0SHA%lkp@intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,12 +11,12 @@ Content-Type: text/plain; charset="us-ascii"
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-next
-branch HEAD: 00bfa16052cd66855de9bee66d7a5468f4fdc850  Merge branch 'for-5.11-fixes' into for-next
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.11-fixes
+branch HEAD: 74bdd45c85d02f695a1cd1c3dccf8b3960a86d8f  cgroup: update PSI file description in docs
 
 elapsed time: 720m
 
-configs tested: 111
+configs tested: 118
 configs skipped: 2
 
 The following configs have been built successfully.
@@ -38,6 +38,9 @@ mips                           ci20_defconfig
 arm                           sunxi_defconfig
 mips                        bcm63xx_defconfig
 powerpc                  iss476-smp_defconfig
+powerpc                       maple_defconfig
+xtensa                generic_kc705_defconfig
+arm                            qcom_defconfig
 powerpc                    adder875_defconfig
 arm                            hisi_defconfig
 arm                         palmz72_defconfig
@@ -49,9 +52,13 @@ arm                           corgi_defconfig
 m68k                        m5407c3_defconfig
 m68k                          amiga_defconfig
 powerpc                      cm5200_defconfig
+arm                       omap2plus_defconfig
+sh                          polaris_defconfig
+powerpc                     pq2fads_defconfig
+powerpc                       eiger_defconfig
+arc                              alldefconfig
 mips                         tb0287_defconfig
 arm                       aspeed_g4_defconfig
-powerpc                       maple_defconfig
 parisc                generic-64bit_defconfig
 arm                           stm32_defconfig
 sh                           se7780_defconfig
