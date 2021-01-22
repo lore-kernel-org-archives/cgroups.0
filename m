@@ -1,126 +1,90 @@
-From: Vipin Sharma <vipinsh@google.com>
+From: Sean Christopherson <seanjc@google.com>
 Subject: Re: [Patch v4 1/2] cgroup: svm: Add Encryption ID controller
-Date: Thu, 21 Jan 2021 16:09:22 -0800
-Message-ID: <YAoXsluM+J9ICy99@google.com>
-References: <20210108012846.4134815-2-vipinsh@google.com>
- <YAICLR8PBXxAcOMz@mtj.duckdns.org>
+Date: Thu, 21 Jan 2021 17:25:36 -0800
+Message-ID: <YAopkDN85GtWAj3a@google.com>
+References: <YAICLR8PBXxAcOMz@mtj.duckdns.org>
  <YAIUwGUPDmYfUm/a@google.com>
  <YAJg5MB/Qn5dRqmu@mtj.duckdns.org>
  <YAJsUyH2zspZxF2S@google.com>
  <YAb//EYCkZ7wnl6D@mtj.duckdns.org>
  <YAfYL7V6E4/P83Mg@google.com>
  <YAhc8khTUc2AFDcd@mtj.duckdns.org>
- <YAi6RcbxTSMmNssw@google.com>
- <YAi9qNqiBjGvXMoI@mtj.duckdns.org>
+ <be699d89-1bd8-25ae-fc6f-1e356b768c75@amd.com>
+ <YAmj4Q2J9htW2Fe8@mtj.duckdns.org>
+ <d11e58ec-4a8f-5b31-063a-b6b45d4ccdc5@amd.com>
 Mime-Version: 1.0
 Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=5B43/qTnJag/KIuHZ95pu4xZZ/OP+ZGwvSqErVBVefQ=;
-        b=QPjyDabZlAqIUgik+G/LpiVQmoi31M4CpAZoE2IA6GPPirbHjXtU7aKqvxbLBidRmA
-         X8uNXVrpHa3HmQZyYcFrK/DCD4va75v9VXF8Z+iakiKkBkW8utaus/QNohUtlnoB7CqM
-         X9y9wErEa6Krei2ahz3jgJ2I4KZtueLITUWcE62XKDK6rQ72GLHzIXgfAsXbrBJx6jdC
-         4RBtQtvMVXM07Ax+1Cq0xOT7+ijzCi1PiQF9Z/FeLuACVRh1MjEfm513NELriKgFLIzh
-         i0sz16Pn/3b18CZk+oBe+VBpdTGKsS5dUzWtJUldptfuB1fPjchyCfRwm2o2r+s7fOHo
-         KZxg==
+        bh=gzcpU9W1/SZCeREWQKtCyU+h3ZnueYB6wsd7p8fQjUk=;
+        b=Ivg8s/ngCczJmDVLobjxa7s3o/QJ81lhVeiVs+r5I/EbmSTuoLcuzVzUEEim+zxauz
+         jW26PvAyV7m5WxC3OBo2G+OpV8nlBVlzuj+n495o9Fb7N0nH2Q/Axwg562mccRnVtwag
+         Zggzp+J/2P9RvXz8oXaQQS9aB/U1BQG1Kb3Wm/jWj4G5TKZZCi8K74Mfjeq6Qf1z7ee0
+         6k2e9QzVsAMLZLDg/w8kHSPKmClR83FXKMGZuUyiY+1X465rrUKAPpXQzRSuJcNbJn/w
+         FYXkJv2yLZYGKcnaZxekgSWbeT0Wp81bb/snOGx8tnAnv5sREa+vwu89V6iHG6igejfK
+         j7kw==
 Content-Disposition: inline
-In-Reply-To: <YAi9qNqiBjGvXMoI@mtj.duckdns.org>
+In-Reply-To: <d11e58ec-4a8f-5b31-063a-b6b45d4ccdc5@amd.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, seanjc@google.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net, joro@8bytes.org, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tom Lendacky <thomas.lendacky@amd.com>
+Cc: Tejun Heo <tj@kernel.org>, Vipin Sharma <vipinsh@google.com>, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, lizefan@huawei.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net, joro@8bytes.org, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Jan 20, 2021 at 06:32:56PM -0500, Tejun Heo wrote:
-> I don't know how many times I have to repeat the same point to get it
-> across. For any question about actual abstraction, you haven't provided any
-> kind of actual research or analysis and just keep pushing the same thing
-> over and over again. Maybe the situation is such that it makes sense to
-> change the rule but that needs substantial justifications. I've been asking
-> to see whether there are such justifications but all I've been getting are
-> empty answers. Until such discussions take place, please consider the series
-> nacked and please excuse if I don't respond promptly in this thread.
+On Thu, Jan 21, 2021, Tom Lendacky wrote:
+> On 1/21/21 9:55 AM, Tejun Heo wrote:
+> > Hello,
+> > 
+> > On Thu, Jan 21, 2021 at 08:55:07AM -0600, Tom Lendacky wrote:
+> > > The hardware will allow any SEV capable ASID to be run as SEV-ES, however,
+> > > the SEV firmware will not allow the activation of an SEV-ES VM to be
+> > > assigned to an ASID greater than or equal to the SEV minimum ASID value. The
+> > > reason for the latter is to prevent an !SEV-ES ASID starting out as an
+> > > SEV-ES guest and then disabling the SEV-ES VMCB bit that is used by VMRUN.
+> > > This would result in the downgrading of the security of the VM without the
+> > > VM realizing it.
+> > > 
+> > > As a result, you have a range of ASIDs that can only run SEV-ES VMs and a
+> > > range of ASIDs that can only run SEV VMs.
+> > 
+> > I see. That makes sense. What's the downside of SEV-ES compared to SEV w/o
+> > ES? Are there noticeable performance / feature penalties or is the split
+> > mostly for backward compatibility?
+> 
+> SEV-ES is an incremental enhancement of SEV where the register state of the
+> guest is protected/encrypted. As with a lot of performance questions, the
+> answer is ...it depends. 
 
-I am sorry Tejun that you felt your feedback and questions are being ignored
-or not answered properly by me. It was not my intent. Let me try again.
+True, but the expected dual-usage is more about backwards compatibility than
+anything else.  Running an SEV-ES VM requires a heavily enlightened guest vBIOS
+and kernel, which means that a VM that was created as an SEV guest cannot easily
+be converted to an SEV-ES guest, and it would require cooperation from the guest
+(if it's even feasible?).
 
-I am not able to come up with an abstraction for underlying the hardware
-like we have for memory, cpu, and io with their respective cgroup
-controllers, because each vendor is solving VM security issue in
-different ways. For example:
+SEV-SNP, another incremental enhancement (on SEV-ES), further strengthens the
+argument for SEV and SEV-* coexistenence.  SEV-SNP and SEV-ES will share the
+same ASID range, so the question is really, "do we expect to run SEV guests and
+any flavor of SEV-* guests on the same platform".  And due to SEV-* not being
+directly backward compatible with SEV, the answer will eventually be "yes", as
+we'll want to keep running existing SEV guest while also spinning up new SEV-*
+guests.
 
-s390 is using Ultravisor (UV) to disable access to the VMs memory from
-the host.  All KVM interaction with their Protected Virtual Machines
-(PVM) are handled through UV APIs. Here an encrypted guest image is
-loaded first which is decrypted by UV and then UV disallows access to
-PVMs memory and register state from KVM or other PVMs. PVMs are assigned
-IDs known as secure execution IDs (SEID).  These IDs are not scarce
-resource on the host.
+That being said, it's certainly possible to abstract the different key types
+between AMD and Intel (assuming s390 won't use the cgroup due to it's plethora
+of keys).  TDX private keys are equivalent to SEV-ES ASIDs, and MKTME keys (if
+the kernel ever gains a user) could be thrown into the same bucket as SEV IDs,
+albeit with some minor mental gymnastics.
 
-AMD is encrypting runtime memory of a VM using an hardware AES engine in
-the memory controller and keys are managed by an Arm based coprocessor
-inside the CPU, for encryption and decryption of the data flow between
-CPU and memory.  Their offering is known as Secure Encrypted
-Virtualization (SEV). There are also two more enhanced offerings SEV-ES,
-(memory + guest register state encryption), SEV-SNP (SEV-ES + memory
-integrity protection + TCB rollback) in later generation of CPUs. At any
-time only a limited number of IDs can be used simultaneously in the
-processor. Initially only SEV IDs we available on the CPUs but in the
-later generations of CPUs with the addition of SEV-ES, IDs were divided
-in two groups SEV ASIDs for SEV guests, and SEV-ES ASIDs for SEV-ES and
-SEV-SNP VMs. SEV firmware doesn't allow SEV ASIDs to launch SEV-ES and
-SEV-SNP VMs. Ideally, I think its better to use SEV-SNP as it provides
-highest protection but support in vmm and guest kernels are not there
-yet. Also, old HW will not be able to run SEV-ES or SEV-SNP as they can
-only run SEV ASIDs. I dont have data in terms of drawbacks running VM on
-SEV-SNP in terms of speed and cost but I think it will be dependent on
-workloads.
+E.g. this mapping isn't horrendous:
 
-Intel has come up with Trusted Domain Extension (TDX) for their secure
-VMs offering. They allow a VM to use multiple keys for private pages and
-for pages shared with other VMs. Overall, this is called as Multi-Key
-Total Memory Encryption (MKTME). A fixed number of encryption keys are
-supported in MKTME engine. During execution these keys are identified
-using KeyIDs which are present in upper bits of platform physical
-addresses.
+  encrpytion_ids.basic.*       == SEV   == MKTME
+  encrpytion_ids.enhanced.*    == SEV-* == TDX
 
-Only limited form of abstraction present here is that all are providing
-a way to have secure VMs and processes, either through single key
-encryption, multiple key encryptions or access denial.
-
-A common abstraction of different underlying security behavior/approach
-can mislead users in giving impression that all secure VMs/processes are
-same. In my opinion, this kind of thing can work when we talk about
-memory, cpu, etc, but for security related stuff will do more harm to
-the end user than the benefit of simplicity of abstraction. The name of
-the underlying feature also tells what kind of security guarantees a
-user can expect on the platform for a VM and what kind is used.
-
-Taking a step back, in the current scenario, we have some global shared
-resources which are limited for SEV, SEV-ES, and TDX. There is also a
-need for tracking and controlling on all 4 features for now. This is a
-case for some kind of cgroup behavior to limit and control an aggregate
-of processes using these system resources. After all, "cgroup is a
-mechanism to organize processes hierarchically and distribute system
-resources along the hierarchy in a controlled and configurable manner."
-
-We are using SEV in KVM and outside KVM also for other products on
-horizon. As cgroups are commonly used in many infrastructures for
-resource control, scheduling, and tracking, this patch is helping us in
-allocating jobs in the infrastructure along with memory, cpu and other
-constraints in a coherent way.
-
-If you feel encryption id cgroup is not good for long term or a
-too specific use case then may be there should be a common cgroup which
-can be a home for this kind and other kind of future resources where
-there is need to limit a global resource allocation but are not abstract
-or cannot be abstracted as the other existing cgroups. My current patch
-is very generic and with few modifications, it can provide subsystems,
-having valid requirements, a capability to use their own simple cgroup
-interfaces with minimal code duplication and get robustness of generic
-cgroup for free. Here, SEV will be the first user of this generic
-cgroup. Need for this is clearly there.
-
-Thanks Vipin
+The names will likely be a bit vague, but I don't think they'll be so far off
+that it'd be impossible for someone with SEV/TDX knowledge to glean their intent.
+And realistically, if anyone gets to the point where they care about controlling
+SEV or TDX IDs, they've already plowed through hundreds of pages of dense
+documentation; having to read a few lines of cgroup docs to understand basic vs.
+enhanced probably won't faze them at all.
