@@ -1,195 +1,109 @@
-From: Paolo Valente <paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] bfq: don't check active group if bfq.weight is not
- changed
-Date: Fri, 22 Jan 2021 10:46:21 +0100
-Message-ID: <44BDF727-92DA-4678-A026-A1CF53A655BF@linaro.org>
-References: <b4163392-0462-ff6f-b958-1f96f33d69e6@huawei.com>
- <20210114122426.603813-1-yukuai3@huawei.com>
-Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
-Content-Transfer-Encoding: quoted-printable
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [PATCH] Revert "mm: memcontrol: avoid workload stalls when lowering memory.high"
+Date: Fri, 22 Jan 2021 13:43:41 -0500
+Message-ID: <20210122184341.292461-1-hannes@cmpxchg.org>
+Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=HjgV2PK/NA+pQ8cTfpiwH9HQAhJSvB08Q16GX5X3zfA=;
-        b=by/sVS1It0deAY0BLbNdRSfPNB6zDWFTbe0d/GdsR736L2aLnyAHGJLh2YDDme2PwY
-         IWjGWmZfSUUJLx6x33cWmVGFnaFF8NdjEAfl3KulaX2BZ6y3QGSQcriBcwdMDhfNavwo
-         YVTiU3HsaaYUWTPrisnsQVlILY7rOMNv1FfKeLhjI21QRn1vMPkF/cRjIeagRCAuOIR5
-         C/JtUyOq5gyX3gWEnOupLVZXJKYP/gpyr+w68gBGVbnm7m2zVamsEGQAPJWlwPqVVUFT
-         iaGgCxf3xXGQwjd3c9Msmm9RPa3aa2nRk6IwK1oDfhJnTaXBBhlqSAwf0kmmh5AvxPH7
-         kghA==
-In-Reply-To: <20210114122426.603813-1-yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=C9fNjhrnoyOFnHJ9WQ+/Ta+coPGgxGkP5OqAw7eb4FE=;
+        b=jZfX+8gSvsMknjij2NXiIkewNvE/gS0U3cVGRcyPmCqSxmENCBZB94bg9qNEDpz1/6
+         EraLaqdwbEc4JCtd9r5PpiJZrDTX7sq3ubzrQkZDk37siT5lhYY+2d86mkxF/54wMn6I
+         FFW2rpjqkRxx58b4cmvX5LghbDFYl6D9T1qiLQIrf9H0/Bm4zCQjT3lPd29XyUUTsyWW
+         JErij86cT0276L6OHd2ics2wWE8glvLdLu7uHZiKNM6MBGiI+DCKpcAUKMGjRuiCo+tE
+         5IOV2/n++vOYBzOW3Dja7cVPBGgJKROdI78/O8suUL/c0aHEqbgDjxPMVcUaAYd1rEuH
+         YIHw==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yi.zhang-hv44wF8Li93QT0dZR+AlfA@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
+This reverts commit 536d3bf261a2fc3b05b3e91e7eef7383443015cf, as it
+can cause writers to memory.high to get stuck in the kernel forever,
+performing page reclaim and consuming excessive amounts of CPU cycles.
 
+Before the patch, a write to memory.high would first put the new limit
+in place for the workload, and then reclaim the requested delta. After
+the patch, the kernel tries to reclaim the delta before putting the
+new limit into place, in order to not overwhelm the workload with a
+sudden, large excess over the limit. However, if reclaim is actively
+racing with new allocations from the uncurbed workload, it can keep
+the write() working inside the kernel indefinitely.
 
-> Il giorno 14 gen 2021, alle ore 13:24, Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org> ha =
-scritto:
->=20
-> Now the group scheduling in BFQ depends on the check of active group,
-> but in most cases group scheduling is not used and the checking
-> of active group will cause bfq_asymmetric_scenario() and its caller
-> bfq_better_to_idle() to always return true, so the throughput
-> will be impacted if the workload doesn't need idle (e.g. random rw)
->=20
-> To fix that, adding check in bfq_io_set_weight_legacy() and
-> bfq_pd_init() to check whether or not group scheduling is used
-> (a non-default weight is used). If not, there is no need
-> to check active group.
->=20
+This is causing problems in Facebook production. A privileged
+system-level daemon that adjusts memory.high for various workloads
+running on a host can get unexpectedly stuck in the kernel and
+essentially turn into a sort of involuntary kswapd for one of the
+workloads. We've observed that daemon busy-spin in a write() for
+minutes at a time, neglecting its other duties on the system, and
+expending privileged system resources on behalf of a workload.
 
-Hi,
-I do like the goal you want to attain.  Still, I see a problem with
-your proposal.  Consider two groups, say A and B.  Suppose that both
-have the same, default weight.  Yet, group A generates large I/O
-requests, while group B generates small requests.  With your change,
-idling would not be performed.  This would cause group A to steal
-bandwidth to group B, in proportion to how large its requests are
-compared with those of group B.
+To remedy this, we have first considered changing the reclaim logic to
+break out after a couple of loops - whether the workload has converged
+to the new limit or not - and bound the write() call this way.
+However, the root cause that inspired the sequence change in the first
+place has been fixed through other means, and so a revert back to the
+proven limit-setting sequence, also used by memory.max, is preferable.
 
-As a possible solution, maybe we would need also a varied_rq_size
-flag, similar to the varied_weights flag?
+The sequence was changed to avoid extreme latencies in the workload
+when the limit was lowered: the sudden, large excess created by the
+limit lowering would erroneously trigger the penalty sleeping code
+that is meant to throttle excessive growth from below. Allocating
+threads could end up sleeping long after the write() had already
+reclaimed the delta for which they were being punished.
 
-Thoughts?
+However, erroneous throttling also caused problems in other scenarios
+at around the same time. This resulted in commit b3ff92916af3 ("mm,
+memcg: reclaim more aggressively before high allocator throttling"),
+included in the same release as the offending commit. When allocating
+threads now encounter large excess caused by a racing write() to
+memory.high, instead of entering punitive sleeps, they will simply be
+tasked with helping reclaim down the excess, and will be held no
+longer than it takes to accomplish that. This is in line with regular
+limit enforcement - i.e. if the workload allocates up against or over
+an otherwise unchanged limit from below.
 
-Thanks for your contribution,
-Paolo
+With the patch breaking userspace, and the root cause addressed by
+other means already, revert it again.
 
-> Signed-off-by: Yu Kuai <yukuai3-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> ---
-> block/bfq-cgroup.c  | 14 ++++++++++++--
-> block/bfq-iosched.c |  8 +++-----
-> block/bfq-iosched.h | 19 +++++++++++++++++++
-> 3 files changed, 34 insertions(+), 7 deletions(-)
->=20
-> diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-> index b791e2041e49..b4ac42c4bd9f 100644
-> --- a/block/bfq-cgroup.c
-> +++ b/block/bfq-cgroup.c
-> @@ -505,12 +505,18 @@ static struct blkcg_policy_data =
-*bfq_cpd_alloc(gfp_t gfp)
-> 	return &bgd->pd;
-> }
->=20
-> +static inline int bfq_dft_weight(void)
-> +{
-> +	return cgroup_subsys_on_dfl(io_cgrp_subsys) ?
-> +	       CGROUP_WEIGHT_DFL : BFQ_WEIGHT_LEGACY_DFL;
-> +
-> +}
-> +
-> static void bfq_cpd_init(struct blkcg_policy_data *cpd)
-> {
-> 	struct bfq_group_data *d =3D cpd_to_bfqgd(cpd);
->=20
-> -	d->weight =3D cgroup_subsys_on_dfl(io_cgrp_subsys) ?
-> -		CGROUP_WEIGHT_DFL : BFQ_WEIGHT_LEGACY_DFL;
-> +	d->weight =3D bfq_dft_weight();
-> }
->=20
-> static void bfq_cpd_free(struct blkcg_policy_data *cpd)
-> @@ -554,6 +560,9 @@ static void bfq_pd_init(struct blkg_policy_data =
-*pd)
-> 	bfqg->bfqd =3D bfqd;
-> 	bfqg->active_entities =3D 0;
-> 	bfqg->rq_pos_tree =3D RB_ROOT;
-> +
-> +	if (entity->new_weight !=3D bfq_dft_weight())
-> +		bfqd_enable_active_group_check(bfqd);
-> }
->=20
-> static void bfq_pd_free(struct blkg_policy_data *pd)
-> @@ -1013,6 +1022,7 @@ static void bfq_group_set_weight(struct =
-bfq_group *bfqg, u64 weight, u64 dev_wei
-> 		 */
-> 		smp_wmb();
-> 		bfqg->entity.prio_changed =3D 1;
-> +		bfqd_enable_active_group_check(bfqg->bfqd);
-> 	}
-> }
->=20
-> diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-> index 9e4eb0fc1c16..1b695de1df95 100644
-> --- a/block/bfq-iosched.c
-> +++ b/block/bfq-iosched.c
-> @@ -699,11 +699,8 @@ static bool bfq_asymmetric_scenario(struct =
-bfq_data *bfqd,
-> 		(bfqd->busy_queues[0] && bfqd->busy_queues[2]) ||
-> 		(bfqd->busy_queues[1] && bfqd->busy_queues[2]);
->=20
-> -	return varied_queue_weights || multiple_classes_busy
-> -#ifdef CONFIG_BFQ_GROUP_IOSCHED
-> -	       || bfqd->num_groups_with_pending_reqs > 0
-> -#endif
-> -		;
-> +	return varied_queue_weights || multiple_classes_busy ||
-> +	       bfqd_has_active_group(bfqd);
-> }
->=20
-> /*
-> @@ -6472,6 +6469,7 @@ static int bfq_init_queue(struct request_queue =
-*q, struct elevator_type *e)
->=20
-> 	bfqd->queue_weights_tree =3D RB_ROOT_CACHED;
-> 	bfqd->num_groups_with_pending_reqs =3D 0;
-> +	bfqd->check_active_group =3D false;
->=20
-> 	INIT_LIST_HEAD(&bfqd->active_list);
-> 	INIT_LIST_HEAD(&bfqd->idle_list);
-> diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-> index 703895224562..216509013012 100644
-> --- a/block/bfq-iosched.h
-> +++ b/block/bfq-iosched.h
-> @@ -524,6 +524,8 @@ struct bfq_data {
->=20
-> 	/* true if the device is non rotational and performs queueing */
-> 	bool nonrot_with_queueing;
-> +	/* true if need to check num_groups_with_pending_reqs */
-> +	bool check_active_group;
->=20
-> 	/*
-> 	 * Maximum number of requests in driver in the last
-> @@ -1066,6 +1068,17 @@ static inline void bfq_pid_to_str(int pid, char =
-*str, int len)
-> }
->=20
-> #ifdef CONFIG_BFQ_GROUP_IOSCHED
-> +static inline void bfqd_enable_active_group_check(struct bfq_data =
-*bfqd)
-> +{
-> +	cmpxchg_relaxed(&bfqd->check_active_group, false, true);
-> +}
-> +
-> +static inline bool bfqd_has_active_group(struct bfq_data *bfqd)
-> +{
-> +	return bfqd->check_active_group &&
-> +	       bfqd->num_groups_with_pending_reqs > 0;
-> +}
-> +
-> struct bfq_group *bfqq_group(struct bfq_queue *bfqq);
->=20
-> #define bfq_log_bfqq(bfqd, bfqq, fmt, args...)	do {			=
-\
-> @@ -1085,6 +1098,12 @@ struct bfq_group *bfqq_group(struct bfq_queue =
-*bfqq);
-> } while (0)
->=20
-> #else /* CONFIG_BFQ_GROUP_IOSCHED */
-> +static inline void bfqd_enable_active_group_check(struct bfq_data =
-*bfqd) {}
-> +
-> +static inline bool bfqd_has_active_group(struct bfq_data *bfqd)
-> +{
-> +	return false;
-> +}
->=20
-> #define bfq_log_bfqq(bfqd, bfqq, fmt, args...) do {	\
-> 	char pid_str[MAX_PID_STR_LENGTH];	\
-> --=20
-> 2.25.4
->=20
+Fixes: 536d3bf261a2 ("mm: memcontrol: avoid workload stalls when lowering memory.high")
+Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # 5.8+
+Reported-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+ mm/memcontrol.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+Andrew, this is a replacement for
+mm-memcontrol-prevent-starvation-when-writing-memoryhigh.patch
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 605f671203ef..a8611a62bafd 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6273,6 +6273,8 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
+ 	if (err)
+ 		return err;
+ 
++	page_counter_set_high(&memcg->memory, high);
++
+ 	for (;;) {
+ 		unsigned long nr_pages = page_counter_read(&memcg->memory);
+ 		unsigned long reclaimed;
+@@ -6296,10 +6298,7 @@ static ssize_t memory_high_write(struct kernfs_open_file *of,
+ 			break;
+ 	}
+ 
+-	page_counter_set_high(&memcg->memory, high);
+-
+ 	memcg_wb_domain_size_changed(memcg);
+-
+ 	return nbytes;
+ }
+ 
+-- 
+2.30.0
 
