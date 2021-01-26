@@ -1,8 +1,7 @@
 From: Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [RFC PATCH 9/9] drm/i915: Use memory cgroup for enforcing device
- memory limit
-Date: Tue, 26 Jan 2021 13:46:26 -0800
-Message-ID: <20210126214626.16260-10-brian.welty@intel.com>
+Subject: [RFC PATCH 7/9] drmcg: Add initial support for tracking gpu time usage
+Date: Tue, 26 Jan 2021 13:46:24 -0800
+Message-ID: <20210126214626.16260-8-brian.welty@intel.com>
 References: <20210126214626.16260-1-brian.welty@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,171 +20,134 @@ Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
 Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 To: Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Joonas Lahtinen <joonas.lahtinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Eero Tamminen <eero.t.tamminen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-To charge device memory allocations, we need to (1) identify appropriate
-cgroup to charge (currently decided at object creation time), and (2)
-make the charging call at the time that memory pages are being allocated.
+Single control below is added to DRM cgroup controller in order to track
+user execution time for GPU devices.  It is up to device drivers to
+charge execution time to the cgroup via drm_cgroup_try_charge().
 
-For (1), see prior DRM patch which associates current task's cgroup with
-GEM objects as they are created.  That cgroup will be charged/uncharged
-for all paging activity against the GEM object.
-
-For (2), we call drm_get_object_charge_mem() in .get_pages callback
-for the GEM object type.  Uncharging is done in .put_pages when the
-memory is marked such that it can be evicted.  The try_charge() call will
-fail with -ENOMEM if the current memory allocation will exceed the cgroup
-device memory maximum, and allow for driver to perform memory reclaim.
-
-We also set the total device memory reported by DRM cgroup by storing
-in drm_device.drmcg_props after initializing LMEM memory regions.
-
-FIXME: to release drm cgroup reference requires this additional patch:
-  https://patchwork.freedesktop.org/patch/349029
+  sched.runtime
+      Read-only value, displays current user execution time for each DRM
+      device. The expectation is that this is incremented by DRM device
+      driver's scheduler upon user context completion or context switch.
+      Units of time are in microseconds for consistency with cpu.stats.
 
 Signed-off-by: Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 ---
- drivers/gpu/drm/i915/gem/i915_gem_mman.c   |  1 +
- drivers/gpu/drm/i915/gem/i915_gem_region.c | 23 ++++++++++++++++++----
- drivers/gpu/drm/i915/intel_memory_region.c | 13 ++++++++++--
- drivers/gpu/drm/i915/intel_memory_region.h |  2 +-
- 4 files changed, 32 insertions(+), 7 deletions(-)
+ Documentation/admin-guide/cgroup-v2.rst |  9 +++++++++
+ include/drm/drm_cgroup.h                |  2 ++
+ include/linux/cgroup_drm.h              |  2 ++
+ kernel/cgroup/drm.c                     | 20 ++++++++++++++++++++
+ 4 files changed, 33 insertions(+)
 
-diff --git a/drivers/gpu/drm/i915/gem/i915_gem_mman.c b/drivers/gpu/drm/i915/gem/i915_gem_mman.c
-index ec28a6cde49b..9fbe91d4d2f1 100644
---- a/drivers/gpu/drm/i915/gem/i915_gem_mman.c
-+++ b/drivers/gpu/drm/i915/gem/i915_gem_mman.c
-@@ -16,6 +16,7 @@
- #include "i915_gem_gtt.h"
- #include "i915_gem_ioctls.h"
- #include "i915_gem_object.h"
-+#include "i915_gem_lmem.h"
- #include "i915_gem_mman.h"
- #include "i915_trace.h"
- #include "i915_user_extensions.h"
-diff --git a/drivers/gpu/drm/i915/gem/i915_gem_region.c b/drivers/gpu/drm/i915/gem/i915_gem_region.c
-index 3e3dad22a683..690b36b25984 100644
---- a/drivers/gpu/drm/i915/gem/i915_gem_region.c
-+++ b/drivers/gpu/drm/i915/gem/i915_gem_region.c
-@@ -12,11 +12,14 @@ void
- i915_gem_object_put_pages_buddy(struct drm_i915_gem_object *obj,
- 				struct sg_table *pages)
- {
--	__intel_memory_region_put_pages_buddy(obj->mm.region, &obj->mm.blocks);
-+	u64 freed;
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index ccc25f03a898..f1d0f333a49e 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2205,6 +2205,15 @@ thresholds are hit, this would then allow the DRM device driver to invoke
+ some equivalent to OOM-killer or forced memory eviction for the device
+ backed memory in order to attempt to free additional space.
  
-+	freed = __intel_memory_region_put_pages_buddy(obj->mm.region,
-+						      &obj->mm.blocks);
- 	obj->mm.dirty = false;
- 	sg_free_table(pages);
- 	kfree(pages);
-+	drm_gem_object_uncharge_mem(&obj->base, freed);
- }
- 
- int
-@@ -25,7 +28,7 @@ i915_gem_object_get_pages_buddy(struct drm_i915_gem_object *obj)
- 	const u64 max_segment = i915_sg_segment_size();
- 	struct intel_memory_region *mem = obj->mm.region;
- 	struct list_head *blocks = &obj->mm.blocks;
--	resource_size_t size = obj->base.size;
-+	resource_size_t charged, size = obj->base.size;
- 	resource_size_t prev_end;
- 	struct i915_buddy_block *block;
- 	unsigned int flags;
-@@ -44,12 +47,22 @@ i915_gem_object_get_pages_buddy(struct drm_i915_gem_object *obj)
- 	}
- 
- 	flags = I915_ALLOC_MIN_PAGE_SIZE;
--	if (obj->flags & I915_BO_ALLOC_CONTIGUOUS)
-+	if (obj->flags & I915_BO_ALLOC_CONTIGUOUS) {
- 		flags |= I915_ALLOC_CONTIGUOUS;
-+		charged = roundup_pow_of_two(size);
-+	} else {
-+		charged = size;
-+	}
++The below set of control files are for time accounting of DRM devices. Units
++of time are in microseconds.
 +
-+	ret = drm_gem_object_charge_mem(&obj->base, charged);
-+	if (ret) {
-+		DRM_DEBUG("DRMCG: charge_mem failed for %lld\n", charged);
-+		goto err_free_sg;
-+	}
++  sched.runtime
++        Read-only value, displays current user execution time for each DRM
++        device. The expectation is that this is incremented by DRM device
++        driver's scheduler upon user context completion or context switch.
++
++
+ Misc
+ ----
  
- 	ret = __intel_memory_region_get_pages_buddy(mem, size, flags, blocks);
- 	if (ret)
--		goto err_free_sg;
-+		goto err_uncharge;
+diff --git a/include/drm/drm_cgroup.h b/include/drm/drm_cgroup.h
+index 9ba0e372eeee..315dab8a93b8 100644
+--- a/include/drm/drm_cgroup.h
++++ b/include/drm/drm_cgroup.h
+@@ -22,6 +22,7 @@ enum drmcg_res_type {
+ 	DRMCG_TYPE_MEM_CURRENT,
+ 	DRMCG_TYPE_MEM_MAX,
+ 	DRMCG_TYPE_MEM_TOTAL,
++	DRMCG_TYPE_SCHED_RUNTIME,
+ 	__DRMCG_TYPE_LAST,
+ };
  
- 	GEM_BUG_ON(list_empty(blocks));
+@@ -79,5 +80,6 @@ void drm_cgroup_uncharge(struct drmcg *drmcg,struct drm_device *dev,
+ 			 enum drmcg_res_type type, u64 usage)
+ {
+ }
++
+ #endif /* CONFIG_CGROUP_DRM */
+ #endif /* __DRM_CGROUP_H__ */
+diff --git a/include/linux/cgroup_drm.h b/include/linux/cgroup_drm.h
+index 3570636473cf..0fafa663321e 100644
+--- a/include/linux/cgroup_drm.h
++++ b/include/linux/cgroup_drm.h
+@@ -19,6 +19,8 @@
+  */
+ struct drmcg_device_resource {
+ 	struct page_counter memory;
++	seqlock_t sched_lock;
++	u64 exec_runtime;
+ };
  
-@@ -99,6 +112,8 @@ i915_gem_object_get_pages_buddy(struct drm_i915_gem_object *obj)
+ /**
+diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
+index 08e75eb67593..64e9d0dbe8c8 100644
+--- a/kernel/cgroup/drm.c
++++ b/kernel/cgroup/drm.c
+@@ -81,6 +81,7 @@ static inline int init_drmcg_single(struct drmcg *drmcg, struct drm_device *dev)
+ 	/* set defaults here */
+ 	page_counter_init(&ddr->memory,
+ 			  parent_ddr ? &parent_ddr->memory : NULL);
++	seqlock_init(&ddr->sched_lock);
+ 	drmcg->dev_resources[minor] = ddr;
  
  	return 0;
+@@ -287,6 +288,10 @@ static int drmcg_seq_show_fn(int id, void *ptr, void *data)
+ 		seq_printf(sf, "%d:%d %llu\n", DRM_MAJOR, minor->index,
+ 			   minor->dev->drmcg_props.memory_total);
+ 		break;
++	case DRMCG_TYPE_SCHED_RUNTIME:
++		seq_printf(sf, "%d:%d %llu\n", DRM_MAJOR, minor->index,
++			   ktime_to_us(ddr->exec_runtime));
++		break;
+ 	default:
+ 		seq_printf(sf, "%d:%d\n", DRM_MAJOR, minor->index);
+ 		break;
+@@ -384,6 +389,12 @@ struct cftype files[] = {
+ 		.private = DRMCG_TYPE_MEM_TOTAL,
+ 		.flags = CFTYPE_ONLY_ON_ROOT,
+ 	},
++	{
++		.name = "sched.runtime",
++		.seq_show = drmcg_seq_show,
++		.private = DRMCG_TYPE_SCHED_RUNTIME,
++		.flags = CFTYPE_NOT_ON_ROOT,
++	},
+ 	{ }	/* terminate */
+ };
  
-+err_uncharge:
-+	drm_gem_object_uncharge_mem(&obj->base, charged);
- err_free_sg:
- 	sg_free_table(st);
- 	kfree(st);
-diff --git a/drivers/gpu/drm/i915/intel_memory_region.c b/drivers/gpu/drm/i915/intel_memory_region.c
-index 1bfcdd89b241..9b1edbf4361c 100644
---- a/drivers/gpu/drm/i915/intel_memory_region.c
-+++ b/drivers/gpu/drm/i915/intel_memory_region.c
-@@ -46,13 +46,18 @@ intel_memory_region_free_pages(struct intel_memory_region *mem,
- 	return size;
- }
- 
--void
-+u64
- __intel_memory_region_put_pages_buddy(struct intel_memory_region *mem,
- 				      struct list_head *blocks)
- {
-+	u64 freed;
-+
- 	mutex_lock(&mem->mm_lock);
--	mem->avail += intel_memory_region_free_pages(mem, blocks);
-+	freed = intel_memory_region_free_pages(mem, blocks);
-+	mem->avail += freed;
- 	mutex_unlock(&mem->mm_lock);
-+
-+	return freed;
- }
- 
- void
-@@ -241,6 +246,7 @@ void intel_memory_region_put(struct intel_memory_region *mem)
- 
- int intel_memory_regions_hw_probe(struct drm_i915_private *i915)
- {
-+	u64 lmem_total = 0;
- 	int err, i;
- 
- 	for (i = 0; i < ARRAY_SIZE(i915->mm.regions); i++) {
-@@ -260,6 +266,7 @@ int intel_memory_regions_hw_probe(struct drm_i915_private *i915)
- 			break;
- 		case INTEL_MEMORY_LOCAL:
- 			mem = intel_setup_fake_lmem(i915);
-+			lmem_total += mem->total;
- 			break;
+@@ -440,6 +451,10 @@ EXPORT_SYMBOL(drmcg_device_early_init);
+  * choose to enact some form of memory reclaim, but the exact behavior is left
+  * to the DRM device driver to define.
+  *
++ * For @res type of DRMCG_TYPE_SCHED_RUNTIME:
++ * For GPU time accounting, add @usage amount of GPU time to @drmcg for
++ * the given device.
++ *
+  * Returns 0 on success.  Otherwise, an error code is returned.
+  */
+ int drm_cgroup_try_charge(struct drmcg *drmcg, struct drm_device *dev,
+@@ -466,6 +481,11 @@ int drm_cgroup_try_charge(struct drmcg *drmcg, struct drm_device *dev,
+ 			err = 0;
  		}
- 
-@@ -278,6 +285,8 @@ int intel_memory_regions_hw_probe(struct drm_i915_private *i915)
- 		i915->mm.regions[i] = mem;
- 	}
- 
-+	i915->drm.drmcg_props.memory_total = lmem_total;
-+
- 	return 0;
- 
- out_cleanup:
-diff --git a/drivers/gpu/drm/i915/intel_memory_region.h b/drivers/gpu/drm/i915/intel_memory_region.h
-index 6ffc0673f005..c9fca951a372 100644
---- a/drivers/gpu/drm/i915/intel_memory_region.h
-+++ b/drivers/gpu/drm/i915/intel_memory_region.h
-@@ -109,7 +109,7 @@ struct i915_buddy_block *
- __intel_memory_region_get_block_buddy(struct intel_memory_region *mem,
- 				      resource_size_t size,
- 				      unsigned int flags);
--void __intel_memory_region_put_pages_buddy(struct intel_memory_region *mem,
-+u64 __intel_memory_region_put_pages_buddy(struct intel_memory_region *mem,
- 					   struct list_head *blocks);
- void __intel_memory_region_put_block_buddy(struct i915_buddy_block *block);
- 
+ 		break;
++	case DRMCG_TYPE_SCHED_RUNTIME:
++		write_seqlock(&res->sched_lock);
++		res->exec_runtime = ktime_add(res->exec_runtime, usage);
++		write_sequnlock(&res->sched_lock);
++		break;
+ 	default:
+ 		err = -EINVAL;
+ 		break;
 -- 
 2.20.1
