@@ -1,12 +1,11 @@
 From: Brian Welty <brian.welty@intel.com>
-Subject: [RFC PATCH 2/9] drm,
- cgroup: Bind drm and cgroup subsystem
-Date: Tue, 26 Jan 2021 13:46:19 -0800
-Message-ID: <20210126214626.16260-3-brian.welty@intel.com>
+Subject: [RFC PATCH 4/9] drmcg: Add skeleton seq_show and write
+ for drmcg files
+Date: Tue, 26 Jan 2021 13:46:21 -0800
+Message-ID: <20210126214626.16260-5-brian.welty@intel.com>
 References: <20210126214626.16260-1-brian.welty@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 In-Reply-To: <20210126214626.16260-1-brian.welty@intel.com>
 List-Id: <cgroups.vger.kernel.org>
@@ -19,284 +18,82 @@ List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
  <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
 Errors-To: intel-gfx-bounces@lists.freedesktop.org
 Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset="iso-8859-1"
 To: Brian Welty <brian.welty@intel.com>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, dri-devel@lists.freedesktop.org, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>, Kenny Ho <Kenny.Ho@amd.com>, amd-gfx@lists.freedesktop.org, Chris Wilson <chris@chris-wilson.co.uk>, Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>, intel-gfx@lists.freedesktop.org, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Eero Tamminen <eero.t.tamminen@intel.com>
 
-From: Kenny Ho <Kenny.Ho@amd.com>
-
-Since the drm subsystem can be compiled as a module and drm devices can
-be added and removed during run time, add several functions to bind the
-drm subsystem as well as drm devices with drmcg.
-
-Two pairs of functions:
-drmcg_bind/drmcg_unbind - used to bind/unbind the drm subsystem to the
-cgroup subsystem as the drm core initialize/exit.
-
-drmcg_register_dev/drmcg_unregister_dev - used to register/unregister
-drm devices to the cgroup subsystem as the devices are presented/removed
-from userspace.
-
-Signed-off-by: Kenny Ho <Kenny.Ho@amd.com>
----
- drivers/gpu/drm/drm_drv.c  |   8 +++
- include/drm/drm_cgroup.h   |  39 +++++++++++
- include/linux/cgroup_drm.h |   4 ++
- kernel/cgroup/drm.c        | 131 +++++++++++++++++++++++++++++++++++++
- 4 files changed, 182 insertions(+)
- create mode 100644 include/drm/drm_cgroup.h
-
-diff --git a/drivers/gpu/drm/drm_drv.c b/drivers/gpu/drm/drm_drv.c
-index 20d22e41d7ce..3b940926d672 100644
---- a/drivers/gpu/drm/drm_drv.c
-+++ b/drivers/gpu/drm/drm_drv.c
-@@ -42,6 +42,7 @@
- #include <drm/drm_managed.h>
- #include <drm/drm_mode_object.h>
- #include <drm/drm_print.h>
-+#include <drm/drm_cgroup.h>
- 
- #include "drm_crtc_internal.h"
- #include "drm_internal.h"
-@@ -893,6 +894,8 @@ int drm_dev_register(struct drm_device *dev, unsigned long flags)
- 	if (drm_core_check_feature(dev, DRIVER_MODESET))
- 		drm_modeset_register_all(dev);
- 
-+	drmcg_register_dev(dev);
-+
- 	DRM_INFO("Initialized %s %d.%d.%d %s for %s on minor %d\n",
- 		 driver->name, driver->major, driver->minor,
- 		 driver->patchlevel, driver->date,
-@@ -928,6 +931,8 @@ EXPORT_SYMBOL(drm_dev_register);
-  */
- void drm_dev_unregister(struct drm_device *dev)
- {
-+	drmcg_unregister_dev(dev);
-+
- 	if (drm_core_check_feature(dev, DRIVER_LEGACY))
- 		drm_lastclose(dev);
- 
-@@ -1030,6 +1035,7 @@ static const struct file_operations drm_stub_fops = {
- 
- static void drm_core_exit(void)
- {
-+	drmcg_unbind();
- 	unregister_chrdev(DRM_MAJOR, "drm");
- 	debugfs_remove(drm_debugfs_root);
- 	drm_sysfs_destroy();
-@@ -1056,6 +1062,8 @@ static int __init drm_core_init(void)
- 	if (ret < 0)
- 		goto error;
- 
-+	drmcg_bind(&drm_minor_acquire, &drm_dev_put);
-+
- 	drm_core_init_complete = true;
- 
- 	DRM_DEBUG("Initialized\n");
-diff --git a/include/drm/drm_cgroup.h b/include/drm/drm_cgroup.h
-new file mode 100644
-index 000000000000..530c9a0b3238
---- /dev/null
-+++ b/include/drm/drm_cgroup.h
-@@ -0,0 +1,39 @@
-+/* SPDX-License-Identifier: MIT
-+ * Copyright 2019 Advanced Micro Devices, Inc.
-+ */
-+#ifndef __DRM_CGROUP_H__
-+#define __DRM_CGROUP_H__
-+
-+#ifdef CONFIG_CGROUP_DRM
-+
-+void drmcg_bind(struct drm_minor (*(*acq_dm)(unsigned int minor_id)),
-+		void (*put_ddev)(struct drm_device *dev));
-+
-+void drmcg_unbind(void);
-+
-+void drmcg_register_dev(struct drm_device *dev);
-+
-+void drmcg_unregister_dev(struct drm_device *dev);
-+
-+#else
-+
-+static inline void drmcg_bind(
-+		struct drm_minor (*(*acq_dm)(unsigned int minor_id)),
-+		void (*put_ddev)(struct drm_device *dev))
-+{
-+}
-+
-+static inline void drmcg_unbind(void)
-+{
-+}
-+
-+static inline void drmcg_register_dev(struct drm_device *dev)
-+{
-+}
-+
-+static inline void drmcg_unregister_dev(struct drm_device *dev)
-+{
-+}
-+
-+#endif /* CONFIG_CGROUP_DRM */
-+#endif /* __DRM_CGROUP_H__ */
-diff --git a/include/linux/cgroup_drm.h b/include/linux/cgroup_drm.h
-index 345af54a5d41..307bb75db248 100644
---- a/include/linux/cgroup_drm.h
-+++ b/include/linux/cgroup_drm.h
-@@ -5,6 +5,10 @@
- #define _CGROUP_DRM_H
- 
- #include <linux/cgroup.h>
-+#include <drm/drm_file.h>
-+
-+/* limit defined per the way drm_minor_alloc operates */
-+#define MAX_DRM_DEV (64 * DRM_MINOR_RENDER)
- 
- #ifdef CONFIG_CGROUP_DRM
- 
-diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
-index 5e38a8230922..061bb9c458e4 100644
---- a/kernel/cgroup/drm.c
-+++ b/kernel/cgroup/drm.c
-@@ -1,11 +1,142 @@
- // SPDX-License-Identifier: MIT
- // Copyright 2019 Advanced Micro Devices, Inc.
-+#include <linux/bitmap.h>
-+#include <linux/mutex.h>
- #include <linux/slab.h>
- #include <linux/cgroup.h>
- #include <linux/cgroup_drm.h>
-+#include <drm/drm_file.h>
-+#include <drm/drm_device.h>
-+#include <drm/drm_cgroup.h>
- 
- static struct drmcg *root_drmcg __read_mostly;
- 
-+/* global mutex for drmcg across all devices */
-+static DEFINE_MUTEX(drmcg_mutex);
-+
-+static DECLARE_BITMAP(known_devs, MAX_DRM_DEV);
-+
-+static struct drm_minor (*(*acquire_drm_minor)(unsigned int minor_id));
-+
-+static void (*put_drm_dev)(struct drm_device *dev);
-+
-+/**
-+ * drmcg_bind - Bind DRM subsystem to cgroup subsystem
-+ * @acq_dm: function pointer to the drm_minor_acquire function
-+ * @put_ddev: function pointer to the drm_dev_put function
-+ *
-+ * This function binds some functions from the DRM subsystem and make
-+ * them available to the drmcg subsystem.
-+ *
-+ * drmcg_unbind does the opposite of this function
-+ */
-+void drmcg_bind(struct drm_minor (*(*acq_dm)(unsigned int minor_id)),
-+		void (*put_ddev)(struct drm_device *dev))
-+{
-+	mutex_lock(&drmcg_mutex);
-+	acquire_drm_minor = acq_dm;
-+	put_drm_dev = put_ddev;
-+	mutex_unlock(&drmcg_mutex);
-+}
-+EXPORT_SYMBOL(drmcg_bind);
-+
-+/**
-+ * drmcg_unbind - Unbind DRM subsystem from cgroup subsystem
-+ *
-+ * drmcg_bind does the opposite of this function
-+ */
-+void drmcg_unbind(void)
-+{
-+	mutex_lock(&drmcg_mutex);
-+	acquire_drm_minor = NULL;
-+	put_drm_dev = NULL;
-+	mutex_unlock(&drmcg_mutex);
-+}
-+EXPORT_SYMBOL(drmcg_unbind);
-+
-+/**
-+ * drmcg_register_dev - register a DRM device for usage in drm cgroup
-+ * @dev: DRM device
-+ *
-+ * This function make a DRM device visible to the cgroup subsystem.
-+ * Once the drmcg is aware of the device, drmcg can start tracking and
-+ * control resource usage for said device.
-+ *
-+ * drmcg_unregister_dev reverse the operation of this function
-+ */
-+void drmcg_register_dev(struct drm_device *dev)
-+{
-+	if (WARN_ON(dev->primary->index >= MAX_DRM_DEV))
-+		return;
-+
-+	mutex_lock(&drmcg_mutex);
-+	set_bit(dev->primary->index, known_devs);
-+	mutex_unlock(&drmcg_mutex);
-+}
-+EXPORT_SYMBOL(drmcg_register_dev);
-+
-+/**
-+ * drmcg_unregister_dev - Iterate through all stored DRM minors
-+ * @dev: DRM device
-+ *
-+ * Unregister @dev so that drmcg no longer control resource usage
-+ * of @dev.  The @dev was registered to drmcg using
-+ * drmcg_register_dev function
-+ */
-+void drmcg_unregister_dev(struct drm_device *dev)
-+{
-+	if (WARN_ON(dev->primary->index >= MAX_DRM_DEV))
-+		return;
-+
-+	mutex_lock(&drmcg_mutex);
-+	clear_bit(dev->primary->index, known_devs);
-+	mutex_unlock(&drmcg_mutex);
-+}
-+EXPORT_SYMBOL(drmcg_unregister_dev);
-+
-+/**
-+ * drm_minor_for_each - Iterate through all stored DRM minors
-+ * @fn: Function to be called for each pointer.
-+ * @data: Data passed to callback function.
-+ *
-+ * The callback function will be called for each registered device, passing
-+ * the minor, the @drm_minor entry and @data.
-+ *
-+ * If @fn returns anything other than %0, the iteration stops and that
-+ * value is returned from this function.
-+ */
-+static int drm_minor_for_each(int (*fn)(int id, void *p, void *data),
-+		void *data)
-+{
-+	int rc = 0;
-+
-+	mutex_lock(&drmcg_mutex);
-+	if (acquire_drm_minor) {
-+		unsigned int minor;
-+		struct drm_minor *dm;
-+
-+		minor = find_next_bit(known_devs, MAX_DRM_DEV, 0);
-+		while (minor < MAX_DRM_DEV) {
-+			dm = acquire_drm_minor(minor);
-+
-+			if (IS_ERR(dm))
-+				continue;
-+
-+			rc = fn(minor, (void *)dm, data);
-+
-+			put_drm_dev(dm->dev); /* release from acquire_drm_minor */
-+
-+			if (rc)
-+				break;
-+
-+			minor = find_next_bit(known_devs, MAX_DRM_DEV, minor+1);
-+		}
-+	}
-+	mutex_unlock(&drmcg_mutex);
-+
-+	return rc;
-+}
-+
- static void drmcg_css_free(struct cgroup_subsys_state *css)
- {
- 	struct drmcg *drmcg = css_to_drmcg(css);
--- 
-2.20.1
+QWRkIGJhc2ljIC5zZXFfc2hvdyBhbmQgLndyaXRlIGZ1bmN0aW9ucyBmb3IgdXNlIHdpdGggRFJN
+IGNncm91cCBjb250cm9sCmZpbGVzLiAgVGhpcyBpcyBiYXNlZCBvbiBvcmlnaW5hbCB3b3JrIGZy
+b20gS2VubnkgSG8gYW5kIGV4dHJhY3RlZCBmcm9tCnBhdGNoZXMgWzFdIGFuZCBbMl0uICBIYXMg
+YmVlbiBzaW1wbGlmaWVkIHRvIHJlbW92ZSBoYXZpbmcgZGlmZmVyZW50IGZpbGUKdHlwZXMgYW5k
+IGZ1bmN0aW9ucyBmb3IgZWFjaC4KClsxXSBodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9h
+cmNoaXZlcy9kcmktZGV2ZWwvMjAyMC1GZWJydWFyeS8yNTQ5ODYuaHRtbApbMl0gaHR0cHM6Ly9s
+aXN0cy5mcmVlZGVza3RvcC5vcmcvYXJjaGl2ZXMvZHJpLWRldmVsLzIwMjAtRmVicnVhcnkvMjU0
+OTkwLmh0bWwKCkNvLWRldmVsb3BlZC1ieTogS2VubnkgSG8gPEtlbm55LkhvQGFtZC5jb20+ClNp
+Z25lZC1vZmYtYnk6IEJyaWFuIFdlbHR5IDxicmlhbi53ZWx0eUBpbnRlbC5jb20+Ci0tLQogaW5j
+bHVkZS9kcm0vZHJtX2Nncm91cC5oIHwgICA1ICsrCiBrZXJuZWwvY2dyb3VwL2RybS5jICAgICAg
+fCAxMDIgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrCiAyIGZpbGVzIGNo
+YW5nZWQsIDEwNyBpbnNlcnRpb25zKCspCgpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9kcm0vZHJtX2Nn
+cm91cC5oIGIvaW5jbHVkZS9kcm0vZHJtX2Nncm91cC5oCmluZGV4IDQzY2FmMWI2YTBkZS4uMTI1
+MjZkZWY5ZmJmIDEwMDY0NAotLS0gYS9pbmNsdWRlL2RybS9kcm1fY2dyb3VwLmgKKysrIGIvaW5j
+bHVkZS9kcm0vZHJtX2Nncm91cC5oCkBAIC0xLDUgKzEsNiBAQAogLyogU1BEWC1MaWNlbnNlLUlk
+ZW50aWZpZXI6IE1JVAogICogQ29weXJpZ2h0IDIwMTkgQWR2YW5jZWQgTWljcm8gRGV2aWNlcywg
+SW5jLgorICogQ29weXJpZ2h0IMKpIDIwMjEgSW50ZWwgQ29ycG9yYXRpb24KICAqLwogI2lmbmRl
+ZiBfX0RSTV9DR1JPVVBfSF9fCiAjZGVmaW5lIF9fRFJNX0NHUk9VUF9IX18KQEAgLTE1LDYgKzE2
+LDEwIEBAIHN0cnVjdCBkcm1fZGV2aWNlOwogc3RydWN0IGRybWNnX3Byb3BzIHsKIH07CiAKK2Vu
+dW0gZHJtY2dfcmVzX3R5cGUgeworCV9fRFJNQ0dfVFlQRV9MQVNULAorfTsKKwogI2lmZGVmIENP
+TkZJR19DR1JPVVBfRFJNCiAKIHZvaWQgZHJtY2dfYmluZChzdHJ1Y3QgZHJtX21pbm9yICgqKCph
+Y3FfZG0pKHVuc2lnbmVkIGludCBtaW5vcl9pZCkpLApkaWZmIC0tZ2l0IGEva2VybmVsL2Nncm91
+cC9kcm0uYyBiL2tlcm5lbC9jZ3JvdXAvZHJtLmMKaW5kZXggODM2OTI5YzI3ZGU4Li5hZWNlMTFm
+YWEwYmMgMTAwNjQ0Ci0tLSBhL2tlcm5lbC9jZ3JvdXAvZHJtLmMKKysrIGIva2VybmVsL2Nncm91
+cC9kcm0uYwpAQCAtNSw2ICs1LDcgQEAKICAqLwogI2luY2x1ZGUgPGxpbnV4L2JpdG1hcC5oPgog
+I2luY2x1ZGUgPGxpbnV4L211dGV4Lmg+CisjaW5jbHVkZSA8bGludXgvc2VxX2ZpbGUuaD4KICNp
+bmNsdWRlIDxsaW51eC9zbGFiLmg+CiAjaW5jbHVkZSA8bGludXgvY2dyb3VwLmg+CiAjaW5jbHVk
+ZSA8bGludXgvY2dyb3VwX2RybS5oPgpAQCAtMTIsNiArMTMsNyBAQAogI2luY2x1ZGUgPGRybS9k
+cm1fZHJ2Lmg+CiAjaW5jbHVkZSA8ZHJtL2RybV9kZXZpY2UuaD4KICNpbmNsdWRlIDxkcm0vZHJt
+X2Nncm91cC5oPgorI2luY2x1ZGUgPGRybS9kcm1faW9jdGwuaD4KIAogc3RhdGljIHN0cnVjdCBk
+cm1jZyAqcm9vdF9kcm1jZyBfX3JlYWRfbW9zdGx5OwogCkBAIC0yMjIsNiArMjI0LDEwNiBAQCBk
+cm1jZ19jc3NfYWxsb2Moc3RydWN0IGNncm91cF9zdWJzeXNfc3RhdGUgKnBhcmVudF9jc3MpCiAJ
+cmV0dXJuICZkcm1jZy0+Y3NzOwogfQogCitzdGF0aWMgaW50IGRybWNnX2FwcGx5X3ZhbHVlKHN0
+cnVjdCBkcm1jZ19kZXZpY2VfcmVzb3VyY2UgKmRkciwKKwkJCSAgICAgZW51bSBkcm1jZ19yZXNf
+dHlwZSB0eXBlLCBjaGFyICpidWYpCit7CisJaW50IHJldCA9IDA7CisJdW5zaWduZWQgbG9uZyB2
+YWw7CisKKwlzd2l0Y2ggKHR5cGUpIHsKKwlkZWZhdWx0OgorCQlicmVhazsKKwl9CisKKwlyZXR1
+cm4gcmV0OworfQorCitzdGF0aWMgaW50IGRybWNnX3NlcV9zaG93X2ZuKGludCBpZCwgdm9pZCAq
+cHRyLCB2b2lkICpkYXRhKQoreworCXN0cnVjdCBkcm1fbWlub3IgKm1pbm9yID0gcHRyOworCXN0
+cnVjdCBzZXFfZmlsZSAqc2YgPSBkYXRhOworCXN0cnVjdCBkcm1jZyAqZHJtY2cgPSBjc3NfdG9f
+ZHJtY2coc2VxX2NzcyhzZikpOworCWVudW0gZHJtY2dfcmVzX3R5cGUgdHlwZSA9IHNlcV9jZnQo
+c2YpLT5wcml2YXRlOworCXN0cnVjdCBkcm1jZ19kZXZpY2VfcmVzb3VyY2UgKmRkcjsKKworCWlm
+IChtaW5vci0+dHlwZSAhPSBEUk1fTUlOT1JfUFJJTUFSWSkKKwkJcmV0dXJuIDA7CisKKwlkZHIg
+PSBkcm1jZy0+ZGV2X3Jlc291cmNlc1ttaW5vci0+aW5kZXhdOworCWlmIChkZHIgPT0gTlVMTCkK
+KwkJcmV0dXJuIDA7CisKKwlzZXFfcHJpbnRmKHNmLCAiJWQ6JWQgIiwgRFJNX01BSk9SLCBtaW5v
+ci0+aW5kZXgpOworCXN3aXRjaCAodHlwZSkgeworCWRlZmF1bHQ6CisJCXNlcV9wdXRzKHNmLCAi
+XG4iKTsKKwkJYnJlYWs7CisJfQorCisJcmV0dXJuIDA7Cit9CisKK3N0YXRpYyBpbnQgZHJtY2df
+c2VxX3Nob3coc3RydWN0IHNlcV9maWxlICpzZiwgdm9pZCAqdikKK3sKKwlyZXR1cm4gZHJtX21p
+bm9yX2Zvcl9lYWNoKCZkcm1jZ19zZXFfc2hvd19mbiwgc2YpOworfQorCitzdGF0aWMgc3NpemVf
+dCBkcm1jZ193cml0ZShzdHJ1Y3Qga2VybmZzX29wZW5fZmlsZSAqb2YsIGNoYXIgKmJ1ZiwKKwkJ
+CSAgIHNpemVfdCBuYnl0ZXMsIGxvZmZfdCBvZmYpCit7CisJc3RydWN0IGRybWNnICpkcm1jZyA9
+IGNzc190b19kcm1jZyhvZl9jc3Mob2YpKTsKKwllbnVtIGRybWNnX3Jlc190eXBlIHR5cGUgPSBv
+Zl9jZnQob2YpLT5wcml2YXRlOworCWNoYXIgKmNmdF9uYW1lID0gb2ZfY2Z0KG9mKS0+bmFtZTsK
+KwljaGFyICpsaW1pdHMgPSBzdHJzdHJpcChidWYpOworCXN0cnVjdCBkcm1jZ19kZXZpY2VfcmVz
+b3VyY2UgKmRkcjsKKwlzdHJ1Y3QgZHJtX21pbm9yICpkbTsKKwljaGFyICpsaW5lOworCWNoYXIg
+c2F0dHJbMjU2XTsKKwlpbnQgbWlub3IsIHJldCA9IDA7CisKKwl3aGlsZSAoIXJldCAmJiBsaW1p
+dHMgIT0gTlVMTCkgeworCQlsaW5lID0gIHN0cnNlcCgmbGltaXRzLCAiXG4iKTsKKworCQlpZiAo
+c3NjYW5mKGxpbmUsCisJCQlfX3N0cmluZ2lmeShEUk1fTUFKT1IpIjoldSAlMjU1W15cdFxuXSIs
+CisJCQkJCQkJJm1pbm9yLCBzYXR0cikgIT0gMikgeworCQkJcHJfZXJyKCJkcm1jZzogZXJyb3Ig
+cGFyc2luZyAlcyAiLCBjZnRfbmFtZSk7CisJCQlwcl9jb250X2Nncm91cF9uYW1lKGRybWNnLT5j
+c3MuY2dyb3VwKTsKKwkJCXByX2NvbnQoIlxuIik7CisKKwkJCWNvbnRpbnVlOworCQl9CisKKwkJ
+bXV0ZXhfbG9jaygmZHJtY2dfbXV0ZXgpOworCQlpZiAoYWNxdWlyZV9kcm1fbWlub3IpCisJCQlk
+bSA9IGFjcXVpcmVfZHJtX21pbm9yKG1pbm9yKTsKKwkJZWxzZQorCQkJZG0gPSBOVUxMOworCQlt
+dXRleF91bmxvY2soJmRybWNnX211dGV4KTsKKworCQlpZiAoSVNfRVJSX09SX05VTEwoZG0pKSB7
+CisJCQlwcl9lcnIoImRybWNnOiBpbnZhbGlkIG1pbm9yICVkIGZvciAlcyAiLAorCQkJCQltaW5v
+ciwgY2Z0X25hbWUpOworCQkJcHJfY29udF9jZ3JvdXBfbmFtZShkcm1jZy0+Y3NzLmNncm91cCk7
+CisJCQlwcl9jb250KCJcbiIpOworCisJCQljb250aW51ZTsKKwkJfQorCisJCW11dGV4X2xvY2so
+JmRtLT5kZXYtPmRybWNnX211dGV4KTsKKwkJZGRyID0gZHJtY2ctPmRldl9yZXNvdXJjZXNbbWlu
+b3JdOworCQlyZXQgPSBkcm1jZ19hcHBseV92YWx1ZShkZHIsIHR5cGUsIHNhdHRyKTsKKwkJbXV0
+ZXhfdW5sb2NrKCZkbS0+ZGV2LT5kcm1jZ19tdXRleCk7CisKKwkJbXV0ZXhfbG9jaygmZHJtY2df
+bXV0ZXgpOworCQlpZiAocHV0X2RybV9kZXYpCisJCQlwdXRfZHJtX2RldihkbS0+ZGV2KTsgLyog
+cmVsZWFzZSBmcm9tIGFjcXVpcmVfZHJtX21pbm9yICovCisJCW11dGV4X3VubG9jaygmZHJtY2df
+bXV0ZXgpOworCX0KKworCXJldHVybiByZXQgPzogbmJ5dGVzOworfQorCiBzdHJ1Y3QgY2Z0eXBl
+IGZpbGVzW10gPSB7CiAJeyB9CS8qIHRlcm1pbmF0ZSAqLwogfTsKLS0gCjIuMjAuMQoKX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KSW50ZWwtZ2Z4IG1haWxp
+bmcgbGlzdApJbnRlbC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJl
+ZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vaW50ZWwtZ2Z4Cg==
