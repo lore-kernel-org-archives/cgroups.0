@@ -1,102 +1,302 @@
-From: Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [RFC PATCH 6/9] drmcg: Add memory.total file
-Date: Tue, 26 Jan 2021 13:46:23 -0800
-Message-ID: <20210126214626.16260-7-brian.welty@intel.com>
+From: Brian Welty <brian.welty@intel.com>
+Subject: [RFC PATCH 2/9] drm,
+ cgroup: Bind drm and cgroup subsystem
+Date: Tue, 26 Jan 2021 13:46:19 -0800
+Message-ID: <20210126214626.16260-3-brian.welty@intel.com>
 References: <20210126214626.16260-1-brian.welty@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <20210126214626.16260-1-brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+In-Reply-To: <20210126214626.16260-1-brian.welty@intel.com>
 List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Joonas Lahtinen <joonas.lahtinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Eero Tamminen <eero.t.tamminen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+To: Brian Welty <brian.welty@intel.com>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, dri-devel@lists.freedesktop.org, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>, Kenny Ho <Kenny.Ho@amd.com>, amd-gfx@lists.freedesktop.org, Chris Wilson <chris@chris-wilson.co.uk>, Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>, intel-gfx@lists.freedesktop.org, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Eero Tamminen <eero.t.tamminen@intel.com>
 
-Following control is introduced in order to display total memory that
-exists for the DRM device. DRM drivers can advertise this value by
-writing to drm_device.drmcg_props. This is needed in order to effectively
-use the other memory controls.
-Normally for system memory this is available to the user using procfs.
+From: Kenny Ho <Kenny.Ho@amd.com>
 
-   memory.total
-      Read-only value, displays total memory for a device, shown
-      only in root cgroup.
+Since the drm subsystem can be compiled as a module and drm devices can
+be added and removed during run time, add several functions to bind the
+drm subsystem as well as drm devices with drmcg.
 
-Signed-off-by: Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Two pairs of functions:
+drmcg_bind/drmcg_unbind - used to bind/unbind the drm subsystem to the
+cgroup subsystem as the drm core initialize/exit.
+
+drmcg_register_dev/drmcg_unregister_dev - used to register/unregister
+drm devices to the cgroup subsystem as the devices are presented/removed
+from userspace.
+
+Signed-off-by: Kenny Ho <Kenny.Ho@amd.com>
 ---
- Documentation/admin-guide/cgroup-v2.rst |  4 ++++
- include/drm/drm_cgroup.h                |  2 ++
- kernel/cgroup/drm.c                     | 10 ++++++++++
- 3 files changed, 16 insertions(+)
+ drivers/gpu/drm/drm_drv.c  |   8 +++
+ include/drm/drm_cgroup.h   |  39 +++++++++++
+ include/linux/cgroup_drm.h |   4 ++
+ kernel/cgroup/drm.c        | 131 +++++++++++++++++++++++++++++++++++++
+ 4 files changed, 182 insertions(+)
+ create mode 100644 include/drm/drm_cgroup.h
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 405912710b3a..ccc25f03a898 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -2189,6 +2189,10 @@ MEM controller.  All memory amounts are in bytes.
-         DRM device memory.  If memory usage reaches this limit,
-         subsequent device memory allocations will fail.
+diff --git a/drivers/gpu/drm/drm_drv.c b/drivers/gpu/drm/drm_drv.c
+index 20d22e41d7ce..3b940926d672 100644
+--- a/drivers/gpu/drm/drm_drv.c
++++ b/drivers/gpu/drm/drm_drv.c
+@@ -42,6 +42,7 @@
+ #include <drm/drm_managed.h>
+ #include <drm/drm_mode_object.h>
+ #include <drm/drm_print.h>
++#include <drm/drm_cgroup.h>
  
-+  memory.total
-+        Read-only value, displays total memory for a device, shown only in
-+        root cgroup.
+ #include "drm_crtc_internal.h"
+ #include "drm_internal.h"
+@@ -893,6 +894,8 @@ int drm_dev_register(struct drm_device *dev, unsigned long flags)
+ 	if (drm_core_check_feature(dev, DRIVER_MODESET))
+ 		drm_modeset_register_all(dev);
+ 
++	drmcg_register_dev(dev);
 +
- While some DRM devices may be capable to present multiple memory segments
- to the user, the intent with above controls is to aggregate all user
- allocatable backing store.  Any support for multiple memory segments is
-diff --git a/include/drm/drm_cgroup.h b/include/drm/drm_cgroup.h
-index 8b4c4e798b11..9ba0e372eeee 100644
---- a/include/drm/drm_cgroup.h
-+++ b/include/drm/drm_cgroup.h
-@@ -15,11 +15,13 @@ struct drmcg;
-  * of storing per device defaults
+ 	DRM_INFO("Initialized %s %d.%d.%d %s for %s on minor %d\n",
+ 		 driver->name, driver->major, driver->minor,
+ 		 driver->patchlevel, driver->date,
+@@ -928,6 +931,8 @@ EXPORT_SYMBOL(drm_dev_register);
   */
- struct drmcg_props {
-+	u64 memory_total;
- };
+ void drm_dev_unregister(struct drm_device *dev)
+ {
++	drmcg_unregister_dev(dev);
++
+ 	if (drm_core_check_feature(dev, DRIVER_LEGACY))
+ 		drm_lastclose(dev);
  
- enum drmcg_res_type {
- 	DRMCG_TYPE_MEM_CURRENT,
- 	DRMCG_TYPE_MEM_MAX,
-+	DRMCG_TYPE_MEM_TOTAL,
- 	__DRMCG_TYPE_LAST,
- };
+@@ -1030,6 +1035,7 @@ static const struct file_operations drm_stub_fops = {
+ 
+ static void drm_core_exit(void)
+ {
++	drmcg_unbind();
+ 	unregister_chrdev(DRM_MAJOR, "drm");
+ 	debugfs_remove(drm_debugfs_root);
+ 	drm_sysfs_destroy();
+@@ -1056,6 +1062,8 @@ static int __init drm_core_init(void)
+ 	if (ret < 0)
+ 		goto error;
+ 
++	drmcg_bind(&drm_minor_acquire, &drm_dev_put);
++
+ 	drm_core_init_complete = true;
+ 
+ 	DRM_DEBUG("Initialized\n");
+diff --git a/include/drm/drm_cgroup.h b/include/drm/drm_cgroup.h
+new file mode 100644
+index 000000000000..530c9a0b3238
+--- /dev/null
++++ b/include/drm/drm_cgroup.h
+@@ -0,0 +1,39 @@
++/* SPDX-License-Identifier: MIT
++ * Copyright 2019 Advanced Micro Devices, Inc.
++ */
++#ifndef __DRM_CGROUP_H__
++#define __DRM_CGROUP_H__
++
++#ifdef CONFIG_CGROUP_DRM
++
++void drmcg_bind(struct drm_minor (*(*acq_dm)(unsigned int minor_id)),
++		void (*put_ddev)(struct drm_device *dev));
++
++void drmcg_unbind(void);
++
++void drmcg_register_dev(struct drm_device *dev);
++
++void drmcg_unregister_dev(struct drm_device *dev);
++
++#else
++
++static inline void drmcg_bind(
++		struct drm_minor (*(*acq_dm)(unsigned int minor_id)),
++		void (*put_ddev)(struct drm_device *dev))
++{
++}
++
++static inline void drmcg_unbind(void)
++{
++}
++
++static inline void drmcg_register_dev(struct drm_device *dev)
++{
++}
++
++static inline void drmcg_unregister_dev(struct drm_device *dev)
++{
++}
++
++#endif /* CONFIG_CGROUP_DRM */
++#endif /* __DRM_CGROUP_H__ */
+diff --git a/include/linux/cgroup_drm.h b/include/linux/cgroup_drm.h
+index 345af54a5d41..307bb75db248 100644
+--- a/include/linux/cgroup_drm.h
++++ b/include/linux/cgroup_drm.h
+@@ -5,6 +5,10 @@
+ #define _CGROUP_DRM_H
+ 
+ #include <linux/cgroup.h>
++#include <drm/drm_file.h>
++
++/* limit defined per the way drm_minor_alloc operates */
++#define MAX_DRM_DEV (64 * DRM_MINOR_RENDER)
+ 
+ #ifdef CONFIG_CGROUP_DRM
  
 diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
-index bec41f343208..08e75eb67593 100644
+index 5e38a8230922..061bb9c458e4 100644
 --- a/kernel/cgroup/drm.c
 +++ b/kernel/cgroup/drm.c
-@@ -283,6 +283,10 @@ static int drmcg_seq_show_fn(int id, void *ptr, void *data)
- 		else
- 			seq_printf(sf, "%ld\n", ddr->memory.max * PAGE_SIZE);
- 		break;
-+	case DRMCG_TYPE_MEM_TOTAL:
-+		seq_printf(sf, "%d:%d %llu\n", DRM_MAJOR, minor->index,
-+			   minor->dev->drmcg_props.memory_total);
-+		break;
- 	default:
- 		seq_printf(sf, "%d:%d\n", DRM_MAJOR, minor->index);
- 		break;
-@@ -374,6 +378,12 @@ struct cftype files[] = {
- 		.private = DRMCG_TYPE_MEM_MAX,
- 		.flags = CFTYPE_NOT_ON_ROOT
- 	},
-+	{
-+		.name = "memory.total",
-+		.seq_show = drmcg_seq_show,
-+		.private = DRMCG_TYPE_MEM_TOTAL,
-+		.flags = CFTYPE_ONLY_ON_ROOT,
-+	},
- 	{ }	/* terminate */
- };
+@@ -1,11 +1,142 @@
+ // SPDX-License-Identifier: MIT
+ // Copyright 2019 Advanced Micro Devices, Inc.
++#include <linux/bitmap.h>
++#include <linux/mutex.h>
+ #include <linux/slab.h>
+ #include <linux/cgroup.h>
+ #include <linux/cgroup_drm.h>
++#include <drm/drm_file.h>
++#include <drm/drm_device.h>
++#include <drm/drm_cgroup.h>
  
+ static struct drmcg *root_drmcg __read_mostly;
+ 
++/* global mutex for drmcg across all devices */
++static DEFINE_MUTEX(drmcg_mutex);
++
++static DECLARE_BITMAP(known_devs, MAX_DRM_DEV);
++
++static struct drm_minor (*(*acquire_drm_minor)(unsigned int minor_id));
++
++static void (*put_drm_dev)(struct drm_device *dev);
++
++/**
++ * drmcg_bind - Bind DRM subsystem to cgroup subsystem
++ * @acq_dm: function pointer to the drm_minor_acquire function
++ * @put_ddev: function pointer to the drm_dev_put function
++ *
++ * This function binds some functions from the DRM subsystem and make
++ * them available to the drmcg subsystem.
++ *
++ * drmcg_unbind does the opposite of this function
++ */
++void drmcg_bind(struct drm_minor (*(*acq_dm)(unsigned int minor_id)),
++		void (*put_ddev)(struct drm_device *dev))
++{
++	mutex_lock(&drmcg_mutex);
++	acquire_drm_minor = acq_dm;
++	put_drm_dev = put_ddev;
++	mutex_unlock(&drmcg_mutex);
++}
++EXPORT_SYMBOL(drmcg_bind);
++
++/**
++ * drmcg_unbind - Unbind DRM subsystem from cgroup subsystem
++ *
++ * drmcg_bind does the opposite of this function
++ */
++void drmcg_unbind(void)
++{
++	mutex_lock(&drmcg_mutex);
++	acquire_drm_minor = NULL;
++	put_drm_dev = NULL;
++	mutex_unlock(&drmcg_mutex);
++}
++EXPORT_SYMBOL(drmcg_unbind);
++
++/**
++ * drmcg_register_dev - register a DRM device for usage in drm cgroup
++ * @dev: DRM device
++ *
++ * This function make a DRM device visible to the cgroup subsystem.
++ * Once the drmcg is aware of the device, drmcg can start tracking and
++ * control resource usage for said device.
++ *
++ * drmcg_unregister_dev reverse the operation of this function
++ */
++void drmcg_register_dev(struct drm_device *dev)
++{
++	if (WARN_ON(dev->primary->index >= MAX_DRM_DEV))
++		return;
++
++	mutex_lock(&drmcg_mutex);
++	set_bit(dev->primary->index, known_devs);
++	mutex_unlock(&drmcg_mutex);
++}
++EXPORT_SYMBOL(drmcg_register_dev);
++
++/**
++ * drmcg_unregister_dev - Iterate through all stored DRM minors
++ * @dev: DRM device
++ *
++ * Unregister @dev so that drmcg no longer control resource usage
++ * of @dev.  The @dev was registered to drmcg using
++ * drmcg_register_dev function
++ */
++void drmcg_unregister_dev(struct drm_device *dev)
++{
++	if (WARN_ON(dev->primary->index >= MAX_DRM_DEV))
++		return;
++
++	mutex_lock(&drmcg_mutex);
++	clear_bit(dev->primary->index, known_devs);
++	mutex_unlock(&drmcg_mutex);
++}
++EXPORT_SYMBOL(drmcg_unregister_dev);
++
++/**
++ * drm_minor_for_each - Iterate through all stored DRM minors
++ * @fn: Function to be called for each pointer.
++ * @data: Data passed to callback function.
++ *
++ * The callback function will be called for each registered device, passing
++ * the minor, the @drm_minor entry and @data.
++ *
++ * If @fn returns anything other than %0, the iteration stops and that
++ * value is returned from this function.
++ */
++static int drm_minor_for_each(int (*fn)(int id, void *p, void *data),
++		void *data)
++{
++	int rc = 0;
++
++	mutex_lock(&drmcg_mutex);
++	if (acquire_drm_minor) {
++		unsigned int minor;
++		struct drm_minor *dm;
++
++		minor = find_next_bit(known_devs, MAX_DRM_DEV, 0);
++		while (minor < MAX_DRM_DEV) {
++			dm = acquire_drm_minor(minor);
++
++			if (IS_ERR(dm))
++				continue;
++
++			rc = fn(minor, (void *)dm, data);
++
++			put_drm_dev(dm->dev); /* release from acquire_drm_minor */
++
++			if (rc)
++				break;
++
++			minor = find_next_bit(known_devs, MAX_DRM_DEV, minor+1);
++		}
++	}
++	mutex_unlock(&drmcg_mutex);
++
++	return rc;
++}
++
+ static void drmcg_css_free(struct cgroup_subsys_state *css)
+ {
+ 	struct drmcg *drmcg = css_to_drmcg(css);
 -- 
 2.20.1
