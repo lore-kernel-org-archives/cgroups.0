@@ -1,171 +1,96 @@
-From: Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [RFC PATCH 3/9] drm, cgroup: Initialize drmcg properties
-Date: Tue, 26 Jan 2021 13:46:20 -0800
-Message-ID: <20210126214626.16260-4-brian.welty@intel.com>
-References: <20210126214626.16260-1-brian.welty@intel.com>
+From: Brian Welty <brian.welty@intel.com>
+Subject: [RFC PATCH 0/9] cgroup support for GPU devices
+Date: Tue, 26 Jan 2021 13:46:17 -0800
+Message-ID: <20210126214626.16260-1-brian.welty@intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <20210126214626.16260-1-brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Joonas Lahtinen <joonas.lahtinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Eero Tamminen <eero.t.tamminen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+To: Brian Welty <brian.welty@intel.com>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, dri-devel@lists.freedesktop.org, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>, Kenny Ho <Kenny.Ho@amd.com>, amd-gfx@lists.freedesktop.org, Chris Wilson <chris@chris-wilson.co.uk>, Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>, intel-gfx@lists.freedesktop.org, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Eero Tamminen <eero.t.tamminen@intel.com>
 
-RnJvbTogS2VubnkgSG8gPEtlbm55LkhvQGFtZC5jb20+Cgpkcm1jZyBpbml0aWFsaXphdGlvbiBp
-bnZvbHZlcyBhbGxvY2F0aW5nIGEgcGVyIGNncm91cCwgcGVyIGRldmljZSBkYXRhCnN0cnVjdHVy
-ZSBhbmQgc2V0dGluZyB0aGUgZGVmYXVsdHMuICBUaGVyZSBhcmUgdHdvIGVudHJ5IHBvaW50cyBm
-b3IKZHJtY2cgaW5pdDoKCjEpIFdoZW4gc3RydWN0IGRybWNnIGlzIGNyZWF0ZWQgdmlhIGNzc19h
-bGxvYywgaW5pdGlhbGl6YXRpb24gaXMgZG9uZQogIGZvciBlYWNoIGRldmljZQoKMikgV2hlbiBE
-Uk0gZGV2aWNlcyBhcmUgY3JlYXRlZCBhZnRlciBkcm1jZ3MgYXJlIGNyZWF0ZWQsIHBlcgogIGRl
-dmljZSBkcm1jZyBkYXRhIHN0cnVjdHVyZSBpcyBhbGxvY2F0ZWQgYXQgdGhlIGJlZ2lubmluZyBv
-ZgogIERSTSBkZXZpY2UgY3JlYXRpb24gc3VjaCB0aGF0IGRybWNnIGNhbiBiZWdpbiB0cmFja2lu
-ZyB1c2FnZQogIHN0YXRpc3RpY3MKCkVudHJ5IHBvaW50ICMyIHVzdWFsbHkgYXBwbGllcyB0byB0
-aGUgcm9vdCBjZ3JvdXAgc2luY2UgaXQgY2FuIGJlCmNyZWF0ZWQgYmVmb3JlIERSTSBkZXZpY2Vz
-IGFyZSBhdmFpbGFibGUuICBUaGUgZHJtY2cgY29udHJvbGxlciB3aWxsIGdvCnRocm91Z2ggYWxs
-IGV4aXN0aW5nIGRybSBjZ3JvdXBzIGFuZCBpbml0aWFsaXplIHRoZW0gd2l0aCB0aGUgbmV3IGRl
-dmljZQphY2NvcmRpbmdseS4KCkV4dGVuZGluZyBLZW5ueSdzIG9yaWdpbmFsIHdvcmssIHRoaXMg
-aGFzIGJlZW4gc2ltcGxpZmllZCBzb21lIGFuZAp0aGUgY3VzdG9tX2luaXQgY2FsbGJhY2sgaGFz
-IGJlZW4gcmVtb3ZlZC4gKEJyaWFuKQoKU2lnbmVkLW9mZi1ieSBLZW5ueSBIbyA8S2VubnkuSG9A
-YW1kLmNvbT4KU2lnbmVkLW9mZi1ieTogQnJpYW4gV2VsdHkgPGJyaWFuLndlbHR5QGludGVsLmNv
-bT4KLS0tCiBkcml2ZXJzL2dwdS9kcm0vZHJtX2Rydi5jICB8ICAzICsrCiBpbmNsdWRlL2RybS9k
-cm1fY2dyb3VwLmggICB8IDE3ICsrKysrKysKIGluY2x1ZGUvZHJtL2RybV9kZXZpY2UuaCAgIHwg
-IDcgKysrCiBpbmNsdWRlL2xpbnV4L2Nncm91cF9kcm0uaCB8IDEzICsrKysrKwoga2VybmVsL2Nn
-cm91cC9kcm0uYyAgICAgICAgfCA5NSArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrLQogNSBmaWxlcyBjaGFuZ2VkLCAxMzQgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQoK
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvZ3B1L2RybS9kcm1fZHJ2LmMgYi9kcml2ZXJzL2dwdS9kcm0v
-ZHJtX2Rydi5jCmluZGV4IDNiOTQwOTI2ZDY3Mi4uZGFjNzQyNDQ1YjM4IDEwMDY0NAotLS0gYS9k
-cml2ZXJzL2dwdS9kcm0vZHJtX2Rydi5jCisrKyBiL2RyaXZlcnMvZ3B1L2RybS9kcm1fZHJ2LmMK
-QEAgLTU3MCw2ICs1NzAsNyBAQCBzdGF0aWMgdm9pZCBkcm1fZGV2X2luaXRfcmVsZWFzZShzdHJ1
-Y3QgZHJtX2RldmljZSAqZGV2LCB2b2lkICpyZXMpCiAJLyogUHJldmVudCB1c2UtYWZ0ZXItZnJl
-ZSBpbiBkcm1fbWFuYWdlZF9yZWxlYXNlIHdoZW4gZGVidWdnaW5nIGlzCiAJICogZW5hYmxlZC4g
-U2xpZ2h0bHkgYXdrd2FyZCwgYnV0IGNhbid0IHJlYWxseSBiZSBoZWxwZWQuICovCiAJZGV2LT5k
-ZXYgPSBOVUxMOworCW11dGV4X2Rlc3Ryb3koJmRldi0+ZHJtY2dfbXV0ZXgpOwogCW11dGV4X2Rl
-c3Ryb3koJmRldi0+bWFzdGVyX211dGV4KTsKIAltdXRleF9kZXN0cm95KCZkZXYtPmNsaWVudGxp
-c3RfbXV0ZXgpOwogCW11dGV4X2Rlc3Ryb3koJmRldi0+ZmlsZWxpc3RfbXV0ZXgpOwpAQCAtNjEy
-LDYgKzYxMyw3IEBAIHN0YXRpYyBpbnQgZHJtX2Rldl9pbml0KHN0cnVjdCBkcm1fZGV2aWNlICpk
-ZXYsCiAJbXV0ZXhfaW5pdCgmZGV2LT5maWxlbGlzdF9tdXRleCk7CiAJbXV0ZXhfaW5pdCgmZGV2
-LT5jbGllbnRsaXN0X211dGV4KTsKIAltdXRleF9pbml0KCZkZXYtPm1hc3Rlcl9tdXRleCk7CisJ
-bXV0ZXhfaW5pdCgmZGV2LT5kcm1jZ19tdXRleCk7CiAKIAlyZXQgPSBkcm1tX2FkZF9hY3Rpb24o
-ZGV2LCBkcm1fZGV2X2luaXRfcmVsZWFzZSwgTlVMTCk7CiAJaWYgKHJldCkKQEAgLTY1Miw2ICs2
-NTQsNyBAQCBzdGF0aWMgaW50IGRybV9kZXZfaW5pdChzdHJ1Y3QgZHJtX2RldmljZSAqZGV2LAog
-CWlmIChyZXQpCiAJCWdvdG8gZXJyOwogCisJZHJtY2dfZGV2aWNlX2Vhcmx5X2luaXQoZGV2KTsK
-IAlyZXR1cm4gMDsKIAogZXJyOgpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9kcm0vZHJtX2Nncm91cC5o
-IGIvaW5jbHVkZS9kcm0vZHJtX2Nncm91cC5oCmluZGV4IDUzMGM5YTBiMzIzOC4uNDNjYWYxYjZh
-MGRlIDEwMDY0NAotLS0gYS9pbmNsdWRlL2RybS9kcm1fY2dyb3VwLmgKKysrIGIvaW5jbHVkZS9k
-cm0vZHJtX2Nncm91cC5oCkBAIC00LDYgKzQsMTcgQEAKICNpZm5kZWYgX19EUk1fQ0dST1VQX0hf
-XwogI2RlZmluZSBfX0RSTV9DR1JPVVBfSF9fCiAKKyNpbmNsdWRlIDxkcm0vZHJtX2ZpbGUuaD4K
-Kworc3RydWN0IGRybV9kZXZpY2U7CisKKy8qKgorICogUGVyIERSTSBkZXZpY2UgcHJvcGVydGll
-cyBmb3IgRFJNIGNncm91cCBjb250cm9sbGVyIGZvciB0aGUgcHVycG9zZQorICogb2Ygc3Rvcmlu
-ZyBwZXIgZGV2aWNlIGRlZmF1bHRzCisgKi8KK3N0cnVjdCBkcm1jZ19wcm9wcyB7Cit9OworCiAj
-aWZkZWYgQ09ORklHX0NHUk9VUF9EUk0KIAogdm9pZCBkcm1jZ19iaW5kKHN0cnVjdCBkcm1fbWlu
-b3IgKCooKmFjcV9kbSkodW5zaWduZWQgaW50IG1pbm9yX2lkKSksCkBAIC0xNSw2ICsyNiw4IEBA
-IHZvaWQgZHJtY2dfcmVnaXN0ZXJfZGV2KHN0cnVjdCBkcm1fZGV2aWNlICpkZXYpOwogCiB2b2lk
-IGRybWNnX3VucmVnaXN0ZXJfZGV2KHN0cnVjdCBkcm1fZGV2aWNlICpkZXYpOwogCit2b2lkIGRy
-bWNnX2RldmljZV9lYXJseV9pbml0KHN0cnVjdCBkcm1fZGV2aWNlICpkZXZpY2UpOworCiAjZWxz
-ZQogCiBzdGF0aWMgaW5saW5lIHZvaWQgZHJtY2dfYmluZCgKQEAgLTM1LDUgKzQ4LDkgQEAgc3Rh
-dGljIGlubGluZSB2b2lkIGRybWNnX3VucmVnaXN0ZXJfZGV2KHN0cnVjdCBkcm1fZGV2aWNlICpk
-ZXYpCiB7CiB9CiAKK3N0YXRpYyBpbmxpbmUgdm9pZCBkcm1jZ19kZXZpY2VfZWFybHlfaW5pdChz
-dHJ1Y3QgZHJtX2RldmljZSAqZGV2aWNlKQoreworfQorCiAjZW5kaWYgLyogQ09ORklHX0NHUk9V
-UF9EUk0gKi8KICNlbmRpZiAvKiBfX0RSTV9DR1JPVVBfSF9fICovCmRpZmYgLS1naXQgYS9pbmNs
-dWRlL2RybS9kcm1fZGV2aWNlLmggYi9pbmNsdWRlL2RybS9kcm1fZGV2aWNlLmgKaW5kZXggZDY0
-NzIyM2U4MzkwLi4xY2RjY2M5YTY1M2MgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvZHJtL2RybV9kZXZp
-Y2UuaAorKysgYi9pbmNsdWRlL2RybS9kcm1fZGV2aWNlLmgKQEAgLTgsNiArOCw3IEBACiAKICNp
-bmNsdWRlIDxkcm0vZHJtX2hhc2h0YWIuaD4KICNpbmNsdWRlIDxkcm0vZHJtX21vZGVfY29uZmln
-Lmg+CisjaW5jbHVkZSA8ZHJtL2RybV9jZ3JvdXAuaD4KIAogc3RydWN0IGRybV9kcml2ZXI7CiBz
-dHJ1Y3QgZHJtX21pbm9yOwpAQCAtMzE4LDYgKzMxOSwxMiBAQCBzdHJ1Y3QgZHJtX2RldmljZSB7
-CiAJICovCiAJc3RydWN0IGRybV9mYl9oZWxwZXIgKmZiX2hlbHBlcjsKIAorICAgICAgICAvKiog
-XG5hbWUgRFJNIENncm91cCAqLworCS8qQHsgKi8KKwlzdHJ1Y3QgbXV0ZXggZHJtY2dfbXV0ZXg7
-CisJc3RydWN0IGRybWNnX3Byb3BzIGRybWNnX3Byb3BzOworCS8qQH0gKi8KKwogCS8qIEV2ZXJ5
-dGhpbmcgYmVsb3cgaGVyZSBpcyBmb3IgbGVnYWN5IGRyaXZlciwgbmV2ZXIgdXNlISAqLwogCS8q
-IHByaXZhdGU6ICovCiAjaWYgSVNfRU5BQkxFRChDT05GSUdfRFJNX0xFR0FDWSkKZGlmZiAtLWdp
-dCBhL2luY2x1ZGUvbGludXgvY2dyb3VwX2RybS5oIGIvaW5jbHVkZS9saW51eC9jZ3JvdXBfZHJt
-LmgKaW5kZXggMzA3YmI3NWRiMjQ4Li41MGYwNTU4MDQ0MDAgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUv
-bGludXgvY2dyb3VwX2RybS5oCisrKyBiL2luY2x1ZGUvbGludXgvY2dyb3VwX2RybS5oCkBAIC0x
-MiwxMSArMTIsMTkgQEAKIAogI2lmZGVmIENPTkZJR19DR1JPVVBfRFJNCiAKKy8qKgorICogUGVy
-IERSTSBjZ3JvdXAsIHBlciBkZXZpY2UgcmVzb3VyY2VzIChzdWNoIGFzIHN0YXRpc3RpY3MgYW5k
-IGxpbWl0cykKKyAqLworc3RydWN0IGRybWNnX2RldmljZV9yZXNvdXJjZSB7CisJLyogZm9yIHBl
-ciBkZXZpY2Ugc3RhdHMgKi8KK307CisKIC8qKgogICogVGhlIERSTSBjZ3JvdXAgY29udHJvbGxl
-ciBkYXRhIHN0cnVjdHVyZS4KICAqLwogc3RydWN0IGRybWNnIHsKIAlzdHJ1Y3QgY2dyb3VwX3N1
-YnN5c19zdGF0ZQljc3M7CisJc3RydWN0IGRybWNnX2RldmljZV9yZXNvdXJjZQkqZGV2X3Jlc291
-cmNlc1tNQVhfRFJNX0RFVl07CiB9OwogCiAvKioKQEAgLTQwLDYgKzQ4LDggQEAgc3RhdGljIGlu
-bGluZSBzdHJ1Y3QgZHJtY2cgKmNzc190b19kcm1jZyhzdHJ1Y3QgY2dyb3VwX3N1YnN5c19zdGF0
-ZSAqY3NzKQogICovCiBzdGF0aWMgaW5saW5lIHN0cnVjdCBkcm1jZyAqZHJtY2dfZ2V0KHN0cnVj
-dCB0YXNrX3N0cnVjdCAqdGFzaykKIHsKKwlpZiAoIWNncm91cF9zdWJzeXNfZW5hYmxlZChncHVf
-Y2dycF9zdWJzeXMpKQorCQlyZXR1cm4gTlVMTDsKIAlyZXR1cm4gY3NzX3RvX2RybWNnKHRhc2tf
-Z2V0X2Nzcyh0YXNrLCBncHVfY2dycF9pZCkpOwogfQogCkBAIC03MCw2ICs4MCw5IEBAIHN0YXRp
-YyBpbmxpbmUgc3RydWN0IGRybWNnICpkcm1jZ19wYXJlbnQoc3RydWN0IGRybWNnICpjZykKIAog
-I2Vsc2UgLyogQ09ORklHX0NHUk9VUF9EUk0gKi8KIAorc3RydWN0IGRybWNnX2RldmljZV9yZXNv
-dXJjZSB7Cit9OworCiBzdHJ1Y3QgZHJtY2cgewogfTsKIApkaWZmIC0tZ2l0IGEva2VybmVsL2Nn
-cm91cC9kcm0uYyBiL2tlcm5lbC9jZ3JvdXAvZHJtLmMKaW5kZXggMDYxYmI5YzQ1OGU0Li44MzY5
-MjljMjdkZTggMTAwNjQ0Ci0tLSBhL2tlcm5lbC9jZ3JvdXAvZHJtLmMKKysrIGIva2VybmVsL2Nn
-cm91cC9kcm0uYwpAQCAtMSwxMSArMSwxNSBAQAogLy8gU1BEWC1MaWNlbnNlLUlkZW50aWZpZXI6
-IE1JVAotLy8gQ29weXJpZ2h0IDIwMTkgQWR2YW5jZWQgTWljcm8gRGV2aWNlcywgSW5jLgorLyoK
-KyAqIENvcHlyaWdodCAyMDE5IEFkdmFuY2VkIE1pY3JvIERldmljZXMsIEluYy4KKyAqIENvcHly
-aWdodCDCqSAyMDIxIEludGVsIENvcnBvcmF0aW9uCisgKi8KICNpbmNsdWRlIDxsaW51eC9iaXRt
-YXAuaD4KICNpbmNsdWRlIDxsaW51eC9tdXRleC5oPgogI2luY2x1ZGUgPGxpbnV4L3NsYWIuaD4K
-ICNpbmNsdWRlIDxsaW51eC9jZ3JvdXAuaD4KICNpbmNsdWRlIDxsaW51eC9jZ3JvdXBfZHJtLmg+
-CiAjaW5jbHVkZSA8ZHJtL2RybV9maWxlLmg+CisjaW5jbHVkZSA8ZHJtL2RybV9kcnYuaD4KICNp
-bmNsdWRlIDxkcm0vZHJtX2RldmljZS5oPgogI2luY2x1ZGUgPGRybS9kcm1fY2dyb3VwLmg+CiAK
-QEAgLTU0LDYgKzU4LDI2IEBAIHZvaWQgZHJtY2dfdW5iaW5kKHZvaWQpCiB9CiBFWFBPUlRfU1lN
-Qk9MKGRybWNnX3VuYmluZCk7CiAKKy8qIGNhbGxlciBtdXN0IGhvbGQgZGV2LT5kcm1jZ19tdXRl
-eCAqLworc3RhdGljIGlubGluZSBpbnQgaW5pdF9kcm1jZ19zaW5nbGUoc3RydWN0IGRybWNnICpk
-cm1jZywgc3RydWN0IGRybV9kZXZpY2UgKmRldikKK3sKKwlpbnQgbWlub3IgPSBkZXYtPnByaW1h
-cnktPmluZGV4OworCXN0cnVjdCBkcm1jZ19kZXZpY2VfcmVzb3VyY2UgKmRkciA9IGRybWNnLT5k
-ZXZfcmVzb3VyY2VzW21pbm9yXTsKKworCWlmIChkZHIgPT0gTlVMTCkgeworCQlkZHIgPSBremFs
-bG9jKHNpemVvZihzdHJ1Y3QgZHJtY2dfZGV2aWNlX3Jlc291cmNlKSwKKwkJCUdGUF9LRVJORUwp
-OworCisJCWlmICghZGRyKQorCQkJcmV0dXJuIC1FTk9NRU07CisJfQorCisJLyogc2V0IGRlZmF1
-bHRzIGhlcmUgKi8KKwlkcm1jZy0+ZGV2X3Jlc291cmNlc1ttaW5vcl0gPSBkZHI7CisKKwlyZXR1
-cm4gMDsKK30KKwogLyoqCiAgKiBkcm1jZ19yZWdpc3Rlcl9kZXYgLSByZWdpc3RlciBhIERSTSBk
-ZXZpY2UgZm9yIHVzYWdlIGluIGRybSBjZ3JvdXAKICAqIEBkZXY6IERSTSBkZXZpY2UKQEAgLTEz
-NywyMyArMTYxLDYxIEBAIHN0YXRpYyBpbnQgZHJtX21pbm9yX2Zvcl9lYWNoKGludCAoKmZuKShp
-bnQgaWQsIHZvaWQgKnAsIHZvaWQgKmRhdGEpLAogCXJldHVybiByYzsKIH0KIAorc3RhdGljIGlu
-dCBkcm1jZ19jc3NfZnJlZV9mbihpbnQgaWQsIHZvaWQgKnB0ciwgdm9pZCAqZGF0YSkKK3sKKwlz
-dHJ1Y3QgZHJtX21pbm9yICptaW5vciA9IHB0cjsKKwlzdHJ1Y3QgZHJtY2cgKmRybWNnID0gZGF0
-YTsKKworCWlmIChtaW5vci0+dHlwZSAhPSBEUk1fTUlOT1JfUFJJTUFSWSkKKwkJcmV0dXJuIDA7
-CisKKwlrZnJlZShkcm1jZy0+ZGV2X3Jlc291cmNlc1ttaW5vci0+aW5kZXhdKTsKKworCXJldHVy
-biAwOworfQorCiBzdGF0aWMgdm9pZCBkcm1jZ19jc3NfZnJlZShzdHJ1Y3QgY2dyb3VwX3N1YnN5
-c19zdGF0ZSAqY3NzKQogewogCXN0cnVjdCBkcm1jZyAqZHJtY2cgPSBjc3NfdG9fZHJtY2coY3Nz
-KTsKIAorCWRybV9taW5vcl9mb3JfZWFjaCgmZHJtY2dfY3NzX2ZyZWVfZm4sIGRybWNnKTsKKwog
-CWtmcmVlKGRybWNnKTsKIH0KIAorc3RhdGljIGludCBpbml0X2RybWNnX2ZuKGludCBpZCwgdm9p
-ZCAqcHRyLCB2b2lkICpkYXRhKQoreworCXN0cnVjdCBkcm1fbWlub3IgKm1pbm9yID0gcHRyOwor
-CXN0cnVjdCBkcm1jZyAqZHJtY2cgPSBkYXRhOworCWludCByYzsKKworCWlmIChtaW5vci0+dHlw
-ZSAhPSBEUk1fTUlOT1JfUFJJTUFSWSkKKwkJcmV0dXJuIDA7CisKKwltdXRleF9sb2NrKCZtaW5v
-ci0+ZGV2LT5kcm1jZ19tdXRleCk7CisJcmMgPSBpbml0X2RybWNnX3NpbmdsZShkcm1jZywgbWlu
-b3ItPmRldik7CisJbXV0ZXhfdW5sb2NrKCZtaW5vci0+ZGV2LT5kcm1jZ19tdXRleCk7CisKKwly
-ZXR1cm4gcmM7Cit9CisKIHN0YXRpYyBzdHJ1Y3QgY2dyb3VwX3N1YnN5c19zdGF0ZSAqCiBkcm1j
-Z19jc3NfYWxsb2Moc3RydWN0IGNncm91cF9zdWJzeXNfc3RhdGUgKnBhcmVudF9jc3MpCiB7CiAJ
-c3RydWN0IGRybWNnICpwYXJlbnQgPSBjc3NfdG9fZHJtY2cocGFyZW50X2Nzcyk7CiAJc3RydWN0
-IGRybWNnICpkcm1jZzsKKwlpbnQgcmM7CiAKIAlkcm1jZyA9IGt6YWxsb2Moc2l6ZW9mKHN0cnVj
-dCBkcm1jZyksIEdGUF9LRVJORUwpOwogCWlmICghZHJtY2cpCiAJCXJldHVybiBFUlJfUFRSKC1F
-Tk9NRU0pOwogCisJcmMgPSBkcm1fbWlub3JfZm9yX2VhY2goJmluaXRfZHJtY2dfZm4sIGRybWNn
-KTsKKwlpZiAocmMpIHsKKwkJZHJtY2dfY3NzX2ZyZWUoJmRybWNnLT5jc3MpOworCQlyZXR1cm4g
-RVJSX1BUUihyYyk7CisJfQorCiAJaWYgKCFwYXJlbnQpCiAJCXJvb3RfZHJtY2cgPSBkcm1jZzsK
-IApAQCAtMTcxLDMgKzIzMywzNCBAQCBzdHJ1Y3QgY2dyb3VwX3N1YnN5cyBncHVfY2dycF9zdWJz
-eXMgPSB7CiAJLmxlZ2FjeV9jZnR5cGVzCT0gZmlsZXMsCiAJLmRmbF9jZnR5cGVzCT0gZmlsZXMs
-CiB9OworCisvKioKKyAqIGRybWNnX2RldmljZV9lYXJseV9pbml0IC0gaW5pdGlhbGl6ZSBkZXZp
-Y2Ugc3BlY2lmaWMgcmVzb3VyY2VzIGZvciBEUk0gY2dyb3VwcworICogQGRldjogdGhlIHRhcmdl
-dCBEUk0gZGV2aWNlCisgKgorICogQWxsb2NhdGUgYW5kIGluaXRpYWxpemUgZGV2aWNlIHNwZWNp
-ZmljIHJlc291cmNlcyBmb3IgZXhpc3RpbmcgRFJNIGNncm91cHMuCisgKiBUeXBpY2FsbHkgb25s
-eSB0aGUgcm9vdCBjZ3JvdXAgZXhpc3RzIGJlZm9yZSB0aGUgaW5pdGlhbGl6YXRpb24gb2YgQGRl
-di4KKyAqLwordm9pZCBkcm1jZ19kZXZpY2VfZWFybHlfaW5pdChzdHJ1Y3QgZHJtX2RldmljZSAq
-ZGV2KQoreworCXN0cnVjdCBjZ3JvdXBfc3Vic3lzX3N0YXRlICpwb3M7CisKKwlpZiAocm9vdF9k
-cm1jZyA9PSBOVUxMKQorCQlyZXR1cm47CisKKwkvKiBpbml0IGNncm91cHMgY3JlYXRlZCBiZWZv
-cmUgcmVnaXN0cmF0aW9uIChpLmUuIHJvb3QgY2dyb3VwKSAqLworCXJjdV9yZWFkX2xvY2soKTsK
-Kwljc3NfZm9yX2VhY2hfZGVzY2VuZGFudF9wcmUocG9zLCAmcm9vdF9kcm1jZy0+Y3NzKSB7CisJ
-CWNzc19nZXQocG9zKTsKKwkJcmN1X3JlYWRfdW5sb2NrKCk7CisKKwkJbXV0ZXhfbG9jaygmZGV2
-LT5kcm1jZ19tdXRleCk7CisJCWluaXRfZHJtY2dfc2luZ2xlKGNzc190b19kcm1jZyhwb3MpLCBk
-ZXYpOworCQltdXRleF91bmxvY2soJmRldi0+ZHJtY2dfbXV0ZXgpOworCisJCXJjdV9yZWFkX2xv
-Y2soKTsKKwkJY3NzX3B1dChwb3MpOworCX0KKwlyY3VfcmVhZF91bmxvY2soKTsKK30KK0VYUE9S
-VF9TWU1CT0woZHJtY2dfZGV2aWNlX2Vhcmx5X2luaXQpOwotLSAKMi4yMC4xCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwphbWQtZ2Z4IG1haWxpbmcgbGlz
-dAphbWQtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9w
-Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL2FtZC1nZngK
+We'd like to revisit the proposal of a GPU cgroup controller for managing
+GPU devices but with just a basic set of controls.  This series is based on 
+the prior patch series from Kenny Ho [1].  We take Kenny's base patches
+which implement the basic framework for the controller, but we propose an
+alternate set of control files.  Here we've taken a subset of the controls
+proposed in earlier discussion on ML here [2]. 
+
+This series proposes a set of device memory controls (gpu.memory.current,
+gpu.memory.max, and gpu.memory.total) and accounting of GPU time usage
+(gpu.sched.runtime).  GPU time sharing controls are left as future work.
+These are implemented within the GPU controller along with integration/usage
+of the device memory controls by the i915 device driver.
+
+As an accelerator or GPU device is similar in many respects to a CPU with
+(or without) attached system memory, the basic principle here is try to
+copy the semantics of existing controls from other controllers when possible
+and where these controls serve the same underlying purpose.
+For example, the memory.max and memory.current controls are based on
+same controls from MEMCG controller.
+
+Following with the implementation used by the existing RDMA controller,
+here we introduce a general purpose drm_cgroup_try_charge and uncharge
+pair of exported functions. These functions are to be used for
+charging and uncharging all current and future DRM resource controls.
+
+Patches 1 - 4 are part original work and part refactoring of the prior
+work from Kenny Ho from his series for GPU / DRM controller v2 [1].
+
+Patches 5 - 7 introduce new controls to the GPU / DRM controller for device
+memory accounting and GPU time tracking.
+
+Patch 8 introduces DRM support for associating GEM objects with a cgroup.
+
+Patch 9 implements i915 changes to use cgroups for device memory charging
+and enforcing device memory allocation limit.
+
+[1] https://lists.freedesktop.org/archives/dri-devel/2020-February/257052.html
+[2] https://lists.freedesktop.org/archives/dri-devel/2019-November/242599.html
+
+Brian Welty (6):
+  drmcg: Add skeleton seq_show and write for drmcg files
+  drmcg: Add support for device memory accounting via page counter
+  drmcg: Add memory.total file
+  drmcg: Add initial support for tracking gpu time usage
+  drm/gem: Associate GEM objects with drm cgroup
+  drm/i915: Use memory cgroup for enforcing device memory limit
+
+Kenny Ho (3):
+  cgroup: Introduce cgroup for drm subsystem
+  drm, cgroup: Bind drm and cgroup subsystem
+  drm, cgroup: Initialize drmcg properties
+
+ Documentation/admin-guide/cgroup-v2.rst    |  58 ++-
+ Documentation/cgroup-v1/drm.rst            |   1 +
+ drivers/gpu/drm/drm_drv.c                  |  11 +
+ drivers/gpu/drm/drm_gem.c                  |  89 ++++
+ drivers/gpu/drm/i915/gem/i915_gem_mman.c   |   1 +
+ drivers/gpu/drm/i915/gem/i915_gem_region.c |  23 +-
+ drivers/gpu/drm/i915/intel_memory_region.c |  13 +-
+ drivers/gpu/drm/i915/intel_memory_region.h |   2 +-
+ include/drm/drm_cgroup.h                   |  85 ++++
+ include/drm/drm_device.h                   |   7 +
+ include/drm/drm_gem.h                      |  17 +
+ include/linux/cgroup_drm.h                 | 113 +++++
+ include/linux/cgroup_subsys.h              |   4 +
+ init/Kconfig                               |   5 +
+ kernel/cgroup/Makefile                     |   1 +
+ kernel/cgroup/drm.c                        | 533 +++++++++++++++++++++
+ 16 files changed, 954 insertions(+), 9 deletions(-)
+ create mode 100644 Documentation/cgroup-v1/drm.rst
+ create mode 100644 include/drm/drm_cgroup.h
+ create mode 100644 include/linux/cgroup_drm.h
+ create mode 100644 kernel/cgroup/drm.c
+
+-- 
+2.20.1
