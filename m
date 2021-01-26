@@ -1,282 +1,102 @@
-From: Brian Welty <brian.welty@intel.com>
-Subject: [RFC PATCH 1/9] cgroup: Introduce cgroup for drm
- subsystem
-Date: Tue, 26 Jan 2021 13:46:18 -0800
-Message-ID: <20210126214626.16260-2-brian.welty@intel.com>
+From: Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [RFC PATCH 6/9] drmcg: Add memory.total file
+Date: Tue, 26 Jan 2021 13:46:23 -0800
+Message-ID: <20210126214626.16260-7-brian.welty@intel.com>
 References: <20210126214626.16260-1-brian.welty@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-In-Reply-To: <20210126214626.16260-1-brian.welty@intel.com>
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+In-Reply-To: <20210126214626.16260-1-brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Brian Welty <brian.welty@intel.com>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, dri-devel@lists.freedesktop.org, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>, Kenny Ho <Kenny.Ho@amd.com>, amd-gfx@lists.freedesktop.org, Chris Wilson <chris@chris-wilson.co.uk>, Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>, intel-gfx@lists.freedesktop.org, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Eero Tamminen <eero.t.tamminen@intel.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+To: Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Joonas Lahtinen <joonas.lahtinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Eero Tamminen <eero.t.tamminen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-From: Kenny Ho <Kenny.Ho@amd.com>
+Following control is introduced in order to display total memory that
+exists for the DRM device. DRM drivers can advertise this value by
+writing to drm_device.drmcg_props. This is needed in order to effectively
+use the other memory controls.
+Normally for system memory this is available to the user using procfs.
 
-With the increased importance of machine learning, data science and
-other cloud-based applications, GPUs are already in production use in
-data centers today.  Existing GPU resource management is very coarse
-grain, however, as sysadmins are only able to distribute workload on a
-per-GPU basis.  An alternative is to use GPU virtualization (with or
-without SRIOV) but it generally acts on the entire GPU instead of the
-specific resources in a GPU.  With a drm cgroup controller, we can
-enable alternate, fine-grain, sub-GPU resource management (in addition
-to what may be available via GPU virtualization.)
+   memory.total
+      Read-only value, displays total memory for a device, shown
+      only in root cgroup.
 
-Signed-off-by: Kenny Ho <Kenny.Ho@amd.com>
+Signed-off-by: Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 ---
- Documentation/admin-guide/cgroup-v2.rst | 18 ++++-
- Documentation/cgroup-v1/drm.rst         |  1 +
- include/linux/cgroup_drm.h              | 92 +++++++++++++++++++++++++
- include/linux/cgroup_subsys.h           |  4 ++
- init/Kconfig                            |  5 ++
- kernel/cgroup/Makefile                  |  1 +
- kernel/cgroup/drm.c                     | 42 +++++++++++
- 7 files changed, 161 insertions(+), 2 deletions(-)
- create mode 100644 Documentation/cgroup-v1/drm.rst
- create mode 100644 include/linux/cgroup_drm.h
- create mode 100644 kernel/cgroup/drm.c
+ Documentation/admin-guide/cgroup-v2.rst |  4 ++++
+ include/drm/drm_cgroup.h                |  2 ++
+ kernel/cgroup/drm.c                     | 10 ++++++++++
+ 3 files changed, 16 insertions(+)
 
 diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 63521cd36ce5..b099e1d71098 100644
+index 405912710b3a..ccc25f03a898 100644
 --- a/Documentation/admin-guide/cgroup-v2.rst
 +++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -63,8 +63,10 @@ v1 is available under :ref:`Documentation/admin-guide/cgroup-v1/index.rst <cgrou
-        5-7-1. RDMA Interface Files
-      5-8. HugeTLB
-        5.8-1. HugeTLB Interface Files
--     5-8. Misc
--       5-8-1. perf_event
-+     5-9. GPU
-+       5-9-1. GPU Interface Files
-+     5-10. Misc
-+       5-10-1. perf_event
-      5-N. Non-normative information
-        5-N-1. CPU controller root cgroup process behaviour
-        5-N-2. IO controller root cgroup process behaviour
-@@ -2160,6 +2162,18 @@ HugeTLB Interface Files
- 	are local to the cgroup i.e. not hierarchical. The file modified event
- 	generated on this file reflects only the local events.
+@@ -2189,6 +2189,10 @@ MEM controller.  All memory amounts are in bytes.
+         DRM device memory.  If memory usage reaches this limit,
+         subsequent device memory allocations will fail.
  
-+GPU
-+---
++  memory.total
++        Read-only value, displays total memory for a device, shown only in
++        root cgroup.
 +
-+The "gpu" controller regulates the distribution and accounting of
-+of GPU-related resources.
-+
-+GPU Interface Files
-+~~~~~~~~~~~~~~~~~~~~
-+
-+TODO
-+
-+
- Misc
- ----
- 
-diff --git a/Documentation/cgroup-v1/drm.rst b/Documentation/cgroup-v1/drm.rst
-new file mode 100644
-index 000000000000..5f5658e1f5ed
---- /dev/null
-+++ b/Documentation/cgroup-v1/drm.rst
-@@ -0,0 +1 @@
-+Please see ../cgroup-v2.rst for details
-diff --git a/include/linux/cgroup_drm.h b/include/linux/cgroup_drm.h
-new file mode 100644
-index 000000000000..345af54a5d41
---- /dev/null
-+++ b/include/linux/cgroup_drm.h
-@@ -0,0 +1,92 @@
-+/* SPDX-License-Identifier: MIT
-+ * Copyright 2019 Advanced Micro Devices, Inc.
-+ */
-+#ifndef _CGROUP_DRM_H
-+#define _CGROUP_DRM_H
-+
-+#include <linux/cgroup.h>
-+
-+#ifdef CONFIG_CGROUP_DRM
-+
-+/**
-+ * The DRM cgroup controller data structure.
-+ */
-+struct drmcg {
-+	struct cgroup_subsys_state	css;
-+};
-+
-+/**
-+ * css_to_drmcg - get the corresponding drmcg ref from a cgroup_subsys_state
-+ * @css: the target cgroup_subsys_state
-+ *
-+ * Return: DRM cgroup that contains the @css
-+ */
-+static inline struct drmcg *css_to_drmcg(struct cgroup_subsys_state *css)
-+{
-+	return css ? container_of(css, struct drmcg, css) : NULL;
-+}
-+
-+/**
-+ * drmcg_get - get the drmcg reference that a task belongs to
-+ * @task: the target task
-+ *
-+ * This increase the reference count of the css that the @task belongs to
-+ *
-+ * Return: reference to the DRM cgroup the task belongs to
-+ */
-+static inline struct drmcg *drmcg_get(struct task_struct *task)
-+{
-+	return css_to_drmcg(task_get_css(task, gpu_cgrp_id));
-+}
-+
-+/**
-+ * drmcg_put - put a drmcg reference
-+ * @drmcg: the target drmcg
-+ *
-+ * Put a reference obtained via drmcg_get
-+ */
-+static inline void drmcg_put(struct drmcg *drmcg)
-+{
-+	if (drmcg)
-+		css_put(&drmcg->css);
-+}
-+
-+/**
-+ * drmcg_parent - find the parent of a drm cgroup
-+ * @cg: the target drmcg
-+ *
-+ * This does not increase the reference count of the parent cgroup
-+ *
-+ * Return: parent DRM cgroup of @cg
-+ */
-+static inline struct drmcg *drmcg_parent(struct drmcg *cg)
-+{
-+	return css_to_drmcg(cg->css.parent);
-+}
-+
-+#else /* CONFIG_CGROUP_DRM */
-+
-+struct drmcg {
-+};
-+
-+static inline struct drmcg *css_to_drmcg(struct cgroup_subsys_state *css)
-+{
-+	return NULL;
-+}
-+
-+static inline struct drmcg *drmcg_get(struct task_struct *task)
-+{
-+	return NULL;
-+}
-+
-+static inline void drmcg_put(struct drmcg *drmcg)
-+{
-+}
-+
-+static inline struct drmcg *drmcg_parent(struct drmcg *cg)
-+{
-+	return NULL;
-+}
-+
-+#endif	/* CONFIG_CGROUP_DRM */
-+#endif	/* _CGROUP_DRM_H */
-diff --git a/include/linux/cgroup_subsys.h b/include/linux/cgroup_subsys.h
-index acb77dcff3b4..f4e627942115 100644
---- a/include/linux/cgroup_subsys.h
-+++ b/include/linux/cgroup_subsys.h
-@@ -61,6 +61,10 @@ SUBSYS(pids)
- SUBSYS(rdma)
- #endif
- 
-+#if IS_ENABLED(CONFIG_CGROUP_DRM)
-+SUBSYS(gpu)
-+#endif
-+
- /*
-  * The following subsystems are not supported on the default hierarchy.
+ While some DRM devices may be capable to present multiple memory segments
+ to the user, the intent with above controls is to aggregate all user
+ allocatable backing store.  Any support for multiple memory segments is
+diff --git a/include/drm/drm_cgroup.h b/include/drm/drm_cgroup.h
+index 8b4c4e798b11..9ba0e372eeee 100644
+--- a/include/drm/drm_cgroup.h
++++ b/include/drm/drm_cgroup.h
+@@ -15,11 +15,13 @@ struct drmcg;
+  * of storing per device defaults
   */
-diff --git a/init/Kconfig b/init/Kconfig
-index b77c60f8b963..bee29f51e380 100644
---- a/init/Kconfig
-+++ b/init/Kconfig
-@@ -1027,6 +1027,11 @@ config CGROUP_RDMA
- 	  Attaching processes with active RDMA resources to the cgroup
- 	  hierarchy is allowed even if can cross the hierarchy's limit.
+ struct drmcg_props {
++	u64 memory_total;
+ };
  
-+config CGROUP_DRM
-+	bool "DRM controller (EXPERIMENTAL)"
-+	help
-+	  Provides accounting and enforcement of resources in the DRM subsystem.
-+
- config CGROUP_FREEZER
- 	bool "Freezer controller"
- 	help
-diff --git a/kernel/cgroup/Makefile b/kernel/cgroup/Makefile
-index 5d7a76bfbbb7..31f186f58121 100644
---- a/kernel/cgroup/Makefile
-+++ b/kernel/cgroup/Makefile
-@@ -4,5 +4,6 @@ obj-y := cgroup.o rstat.o namespace.o cgroup-v1.o freezer.o
- obj-$(CONFIG_CGROUP_FREEZER) += legacy_freezer.o
- obj-$(CONFIG_CGROUP_PIDS) += pids.o
- obj-$(CONFIG_CGROUP_RDMA) += rdma.o
-+obj-$(CONFIG_CGROUP_DRM) += drm.o
- obj-$(CONFIG_CPUSETS) += cpuset.o
- obj-$(CONFIG_CGROUP_DEBUG) += debug.o
+ enum drmcg_res_type {
+ 	DRMCG_TYPE_MEM_CURRENT,
+ 	DRMCG_TYPE_MEM_MAX,
++	DRMCG_TYPE_MEM_TOTAL,
+ 	__DRMCG_TYPE_LAST,
+ };
+ 
 diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
-new file mode 100644
-index 000000000000..5e38a8230922
---- /dev/null
+index bec41f343208..08e75eb67593 100644
+--- a/kernel/cgroup/drm.c
 +++ b/kernel/cgroup/drm.c
-@@ -0,0 +1,42 @@
-+// SPDX-License-Identifier: MIT
-+// Copyright 2019 Advanced Micro Devices, Inc.
-+#include <linux/slab.h>
-+#include <linux/cgroup.h>
-+#include <linux/cgroup_drm.h>
-+
-+static struct drmcg *root_drmcg __read_mostly;
-+
-+static void drmcg_css_free(struct cgroup_subsys_state *css)
-+{
-+	struct drmcg *drmcg = css_to_drmcg(css);
-+
-+	kfree(drmcg);
-+}
-+
-+static struct cgroup_subsys_state *
-+drmcg_css_alloc(struct cgroup_subsys_state *parent_css)
-+{
-+	struct drmcg *parent = css_to_drmcg(parent_css);
-+	struct drmcg *drmcg;
-+
-+	drmcg = kzalloc(sizeof(struct drmcg), GFP_KERNEL);
-+	if (!drmcg)
-+		return ERR_PTR(-ENOMEM);
-+
-+	if (!parent)
-+		root_drmcg = drmcg;
-+
-+	return &drmcg->css;
-+}
-+
-+struct cftype files[] = {
-+	{ }	/* terminate */
-+};
-+
-+struct cgroup_subsys gpu_cgrp_subsys = {
-+	.css_alloc	= drmcg_css_alloc,
-+	.css_free	= drmcg_css_free,
-+	.early_init	= false,
-+	.legacy_cftypes	= files,
-+	.dfl_cftypes	= files,
-+};
+@@ -283,6 +283,10 @@ static int drmcg_seq_show_fn(int id, void *ptr, void *data)
+ 		else
+ 			seq_printf(sf, "%ld\n", ddr->memory.max * PAGE_SIZE);
+ 		break;
++	case DRMCG_TYPE_MEM_TOTAL:
++		seq_printf(sf, "%d:%d %llu\n", DRM_MAJOR, minor->index,
++			   minor->dev->drmcg_props.memory_total);
++		break;
+ 	default:
+ 		seq_printf(sf, "%d:%d\n", DRM_MAJOR, minor->index);
+ 		break;
+@@ -374,6 +378,12 @@ struct cftype files[] = {
+ 		.private = DRMCG_TYPE_MEM_MAX,
+ 		.flags = CFTYPE_NOT_ON_ROOT
+ 	},
++	{
++		.name = "memory.total",
++		.seq_show = drmcg_seq_show,
++		.private = DRMCG_TYPE_MEM_TOTAL,
++		.flags = CFTYPE_ONLY_ON_ROOT,
++	},
+ 	{ }	/* terminate */
+ };
+ 
 -- 
 2.20.1
