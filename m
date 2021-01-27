@@ -1,87 +1,71 @@
-From: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [Patch v4 1/2] cgroup: svm: Add Encryption ID controller
-Date: Tue, 26 Jan 2021 12:49:14 -0800 (PST)
-Message-ID: <1744f6c-551b-8de8-263e-5dac291b7ef@google.com>
-References: <YAICLR8PBXxAcOMz@mtj.duckdns.org> <YAIUwGUPDmYfUm/a@google.com> <YAJg5MB/Qn5dRqmu@mtj.duckdns.org> <YAJsUyH2zspZxF2S@google.com> <YAb//EYCkZ7wnl6D@mtj.duckdns.org> <YAfYL7V6E4/P83Mg@google.com> <YAhc8khTUc2AFDcd@mtj.duckdns.org>
- <be699d89-1bd8-25ae-fc6f-1e356b768c75@amd.com> <YAmj4Q2J9htW2Fe8@mtj.duckdns.org> <d11e58ec-4a8f-5b31-063a-b6b45d4ccdc5@amd.com> <YAopkDN85GtWAj3a@google.com>
+Date: Tue, 26 Jan 2021 17:11:59 -0800
+Message-ID: <YBC937MFGEEiI63o@google.com>
+References: <YAJsUyH2zspZxF2S@google.com>
+ <YAb//EYCkZ7wnl6D@mtj.duckdns.org>
+ <YAfYL7V6E4/P83Mg@google.com>
+ <YAhc8khTUc2AFDcd@mtj.duckdns.org>
+ <be699d89-1bd8-25ae-fc6f-1e356b768c75@amd.com>
+ <YAmj4Q2J9htW2Fe8@mtj.duckdns.org>
+ <d11e58ec-4a8f-5b31-063a-b6b45d4ccdc5@amd.com>
+ <YAopkDN85GtWAj3a@google.com>
+ <1744f6c-551b-8de8-263e-5dac291b7ef@google.com>
+ <YBCRIPcJyB2J85XS@slm.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :mime-version;
-        bh=JT5edQcn2lC/ohAJBe7VJY+gZeoJrzYd010rHqJGKDE=;
-        b=Sl3WiOu4tIDOkkgv6i4aMIADj6Mw5A+pPOV31fbYQXGVQgOWouYMM9sniqU/pYH0k7
-         2bREpiqbqKcRGqldVB4KKeo0Crk7SCoIXJWfguKvvlG8NCnvIuoyx5dlIZKLjioqq8dd
-         UOkv/2z8yKxiOcEI6Qx+6Jjygo437bYF0l+IWzWFxzmvNrQi2oKLFiTj9uHv18Vo+8LS
-         SXfRYG5Bu3tI76sinpnZrXtxRnYYxLP7ukt94RAtwQabXFW7v37K9A3D3MX8L4iu30Gc
-         BV5CZUT7tAIm/dQbcvnszeOQCpOd+2emTElIqjZRG/A8fPqerkeY6wXr7UKHybt0vmC8
-         +gmg==
-In-Reply-To: <YAopkDN85GtWAj3a-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=h4YmZOf34leeTQFI3eVZ6RKnokT375TaRDpu5h/uKr0=;
+        b=C22G2NnLTkRdn/mttyEGOMoXxuTI2raLaGT4eCAOpNLzguJMhhMmlz0hxMQ5gA2Rj9
+         qTOfsm8D9kYABK9iahC0LW6TJZGFYlNTBRFUajK7C0nvPhjSPfRyPxrSld7uQxz5yEPk
+         8gOyD6zIHU7KjQD4jKwUI3I0eCeE4pQBotxDMRCpTJ3onB6SaWW6YcvXP1A3os4mkSh+
+         ZWrMmw2P91GRl1Zfse3yYl0EuS7KKt7X4SpR8JphUOejt6zAT3zvjROsAJ8vux6lw3Tb
+         YXzV6lDO0Zfg+oWDaGv5DDtrpWLiCpE/+MzqEQ1j9jOyYE+FHvZUTvAXPton0sk+fASu
+         ZqXw==
+Content-Disposition: inline
+In-Reply-To: <YBCRIPcJyB2J85XS-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Tom Lendacky <thomas.lendacky-5C7GfCeVMHo@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "Singh, Brijesh" <brijesh.singh-5C7GfCeVMHo@public.gmane.org>, "Grimm, Jon" <jon.grimm-5C7GfCeVMHo@public.gmane.org>, "Van Tassell, Eric" <eric.vantassell-5C7GfCeVMHo@public.gmane.org>, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, frankja-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org, vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, gingell-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dionnaglaze-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tom Lendacky <thomas.lendacky-5C7GfCeVMHo@public.gmane.org>, "Singh, Brijesh" <brijesh.singh-5C7GfCeVMHo@public.gmane.org>, "Grimm, Jon" <jon.grimm-5C7GfCeVMHo@public.gmane.org>, "Van Tassell, Eric" <eric.vantassell-5C7GfCeVMHo@public.gmane.org>, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, frankja-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org, vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, gingell-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dionnaglaze-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, 21 Jan 2021, Sean Christopherson wrote:
-
-> True, but the expected dual-usage is more about backwards compatibility than
-> anything else.  Running an SEV-ES VM requires a heavily enlightened guest vBIOS
-> and kernel, which means that a VM that was created as an SEV guest cannot easily
-> be converted to an SEV-ES guest, and it would require cooperation from the guest
-> (if it's even feasible?).
+On Tue, Jan 26, 2021 at 05:01:04PM -0500, Tejun Heo wrote:
+> The whole thing seems pretty immature to me and I agree with you that coming
+> up with an abstraction at this stage feels risky.
 > 
-> SEV-SNP, another incremental enhancement (on SEV-ES), further strengthens the
-> argument for SEV and SEV-* coexistenence.  SEV-SNP and SEV-ES will share the
-> same ASID range, so the question is really, "do we expect to run SEV guests and
-> any flavor of SEV-* guests on the same platform".  And due to SEV-* not being
-> directly backward compatible with SEV, the answer will eventually be "yes", as
-> we'll want to keep running existing SEV guest while also spinning up new SEV-*
-> guests.
+> I'm leaning towards creating a misc controller to shove these things into:
 > 
-
-Agreed, cloud providers will most certainly want to run both SEV and SEV-* 
-guests on the same platform.
-
-> That being said, it's certainly possible to abstract the different key types
-> between AMD and Intel (assuming s390 won't use the cgroup due to it's plethora
-> of keys).  TDX private keys are equivalent to SEV-ES ASIDs, and MKTME keys (if
-> the kernel ever gains a user) could be thrown into the same bucket as SEV IDs,
-> albeit with some minor mental gymnastics.
+> * misc.max and misc.current: nested keyed files listing max and current
+>   usage for the cgroup.
 > 
-> E.g. this mapping isn't horrendous:
+> * Have an API to activate or update a given resource with total resource
+>   count. I'd much prefer the resource list to be in the controller itself
+>   rather than being through some dynamic API just so that there is some
+>   review in what keys get added.
 > 
->   encrpytion_ids.basic.*       == SEV   == MKTME
->   encrpytion_ids.enhanced.*    == SEV-* == TDX
-> 
-> The names will likely be a bit vague, but I don't think they'll be so far off
-> that it'd be impossible for someone with SEV/TDX knowledge to glean their intent.
-> And realistically, if anyone gets to the point where they care about controlling
-> SEV or TDX IDs, they've already plowed through hundreds of pages of dense
-> documentation; having to read a few lines of cgroup docs to understand basic vs.
-> enhanced probably won't faze them at all.
-> 
+> * Top level cgroup lists which resource is active and how many are
+>   available.
 
-The abstraction makes sense for both AMD and Intel offerings today.  It 
-makes me wonder if we want a read-only 
-encryption_ids.{basic,enhanced}.type file to describe the underlying 
-technology ("SEV-ES/SEV-SNP", "TDX", etc).  Since the technology is 
-discoverable by other means and we are assuming one encryption type per 
-pool of encryption ids, we likely don't need this.
+Sounds good, we can have a single top level stat file
 
-I'm slightly concerned about extensibility if there is to be an 
-incremental enhancement atop SEV-* or TDX with yet another pool of 
-encryption ids.  (For example, when we only had hugepages, this name was 
-perfect; then we got 1GB pages which became "gigantic pages", so are 512GB 
-pages "enormous"? :)  I could argue (encryption_ids.basic.*,
-encryption_ids.enhanced.*) should map to 
-(encryption_ids.legacy.*, encryption_ids.*) but that's likely 
-bikeshedding.
+misc.stat
+  Shows how many are supported on the host:
+  $ cat misc.stat
+  sev 500
+  sev_es 10
 
-Thomas: does encryption_ids.{basic,enhanced}.* make sense for ASID 
-partitioning?
+If total value of some resource is 0 then it will be considered inactive and
+won't show in misc.{stat, current, max}
 
-Tejun: if this makes sense for legacy SEV and SEV-* per Thomas, and this 
-is now abstracted to be technology (vendor) neutral, does this make sense 
-to you?
+We discussed earlier, instead of having "stat" file we should show
+"current" and "capacity" files in the root but I think we can just have stat
+at top showing total resources to keep it consistent with other cgroup
+files.
+
+Thanks
+Vipin
+
