@@ -1,27 +1,27 @@
-From: Xingyou Chen <rockrush@rockwork.org>
+From: Xingyou Chen <rockrush-hTEXxzOs8fRg9hUCZPvPmw@public.gmane.org>
 Subject: Re: [RFC PATCH 0/9] cgroup support for GPU devices
-Date: Fri, 29 Jan 2021 10:45:49 +0800
-Message-ID: <293ecfcc-50f7-1c43-bc1b-f96dc04d976a@rockwork.org>
+Date: Fri, 29 Jan 2021 11:00:56 +0800
+Message-ID: <84b79978-84c9-52aa-b761-3f4be929064e@rockwork.org>
 References: <20210126214626.16260-1-brian.welty@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-In-Reply-To: <20210126214626.16260-1-brian.welty@intel.com>
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+In-Reply-To: <20210126214626.16260-1-brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Content-Language: en-US
 List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Brian Welty <brian.welty@intel.com>, cgroups@vger.kernel.org, Tejun Heo <tj@kernel.org>, dri-devel@lists.freedesktop.org, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>, Kenny Ho <Kenny.Ho@amd.com>, amd-gfx@lists.freedesktop.org, Chris Wilson <chris@chris-wilson.co.uk>, Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>, intel-gfx@lists.freedesktop.org, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Eero Tamminen <eero.t.tamminen@intel.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+To: Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Joonas Lahtinen <joonas.lahtinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Eero Tamminen <eero.t.tamminen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Ck9uIDIwMjEvMS8yNyDkuIrljYg1OjQ2LCBCcmlhbiBXZWx0eSB3cm90ZToKPiBXZSdkIGxpa2Ug
+T24gMjAyMS8xLzI3IOS4iuWNiDU6NDYsIEJyaWFuIFdlbHR5IHdyb3RlOgoKPiBXZSdkIGxpa2Ug
 dG8gcmV2aXNpdCB0aGUgcHJvcG9zYWwgb2YgYSBHUFUgY2dyb3VwIGNvbnRyb2xsZXIgZm9yIG1h
 bmFnaW5nCj4gR1BVIGRldmljZXMgYnV0IHdpdGgganVzdCBhIGJhc2ljIHNldCBvZiBjb250cm9s
 cy4gIFRoaXMgc2VyaWVzIGlzIGJhc2VkIG9uIAo+IHRoZSBwcmlvciBwYXRjaCBzZXJpZXMgZnJv
@@ -44,12 +44,12 @@ IHRoZXNlIGNvbnRyb2xzIHNlcnZlIHRoZSBzYW1lIHVuZGVybHlpbmcgcHVycG9zZS4KPiBGb3Ig
 ZXhhbXBsZSwgdGhlIG1lbW9yeS5tYXggYW5kIG1lbW9yeS5jdXJyZW50IGNvbnRyb2xzIGFyZSBi
 YXNlZCBvbgo+IHNhbWUgY29udHJvbHMgZnJvbSBNRU1DRyBjb250cm9sbGVyLgoKSXQgc2VlbXMg
 bm90IHRvIGJlIERSTSBzcGVjaWZpYywgb3IgZXZlbiBHUFUgc3BlY2lmaWMuIFdvdWxkIHdlIGhh
-dmUgYW4gdW5pdmVyc2FsIGNvbnRyb2wgZ3JvdXAgZm9yCgphbnkgYWNjZWxlcmF0b3IsIEdQR1BV
-IGRldmljZSBldGMsIHRoYXQgaG9sZCBzaGFyYWJsZSByZXNvdXJjZXMgbGlrZSBkZXZpY2UgbWVt
-b3J5LCBjb21wdXRlIHV0aWxpdHksCgpiYW5kd2lkdGgsIHdpdGggZXh0cmEgY29udHJvbCBmaWxl
-IHRvIHNlbGVjdCBiZXR3ZWVuIGRldmljZXMob3IgdmVuZG9ycyk/CgplLmcuIC9jZ25hbWUuZGV2
-aWNlIHRoYXQgc3RvcmVzIFBDSSBCREbvvIwgb3IgZW51bShpbnRlbCwgYW1kZ3B1LCBudmlkaWEs
-IC4uLiksIGRlZmF1bHRzIHRvIG5vbmUsCgptZWFucyBub3QgZW5hYmxlZC4KCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkludGVsLWdmeCBtYWlsaW5nIGxp
-c3QKSW50ZWwtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNr
-dG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2ludGVsLWdmeAo=
+dmUgYW4gdW5pdmVyc2FsCmNvbnRyb2wgZ3JvdXAgZm9yIGFueSBhY2NlbGVyYXRvciwgR1BHUFUg
+ZGV2aWNlIGV0YywgdGhhdCBob2xkIHNoYXJhYmxlIHJlc291cmNlcwpsaWtlIGRldmljZSBtZW1v
+cnksIGNvbXB1dGUgdXRpbGl0eSwgYmFuZHdpZHRoLCB3aXRoIGV4dHJhIGNvbnRyb2wgZmlsZSB0
+byBzZWxlY3QKYmV0d2VlbiBkZXZpY2VzKG9yIHZlbmRvcnMpPwoKZS5nLiAvY2duYW1lLmRldmlj
+ZSB0aGF0IHN0b3JlcyBQQ0kgQkRG77yMIG9yIGVudW0oaW50ZWwsIGFtZGdwdSwgbnZpZGlhLCAu
+Li4pLApkZWZhdWx0cyB0byBub25lLCBtZWFucyBub3QgZW5hYmxlZC4KCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmFtZC1nZnggbWFpbGluZyBsaXN0CmFt
+ZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3Jn
+L21haWxtYW4vbGlzdGluZm8vYW1kLWdmeAo=
