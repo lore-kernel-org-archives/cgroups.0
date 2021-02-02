@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH 3/7] mm: memcontrol: privatize memcg_page_state query functions
-Date: Tue,  2 Feb 2021 13:47:42 -0500
-Message-ID: <20210202184746.119084-4-hannes@cmpxchg.org>
+Subject: [PATCH 4/7] cgroup: rstat: support cgroup1
+Date: Tue,  2 Feb 2021 13:47:43 -0500
+Message-ID: <20210202184746.119084-5-hannes@cmpxchg.org>
 References: <20210202184746.119084-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,133 +10,164 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Mpanv+/+JrDOLKkhynshAPXe4Ve6rW0I2YibAc13/NE=;
-        b=O6ja58PYqYoZvn6p3Ba4+2qoDJfPZb1STqRFQNHtToIEjSyj1BXxH6ycynJzuxomPV
-         9fl+x9JgJmfXvhv62NMyzN1ZD+/Buddm65nbmPOqK3iXg+jJ9NqA/wCMtFsY9aGRAVJi
-         KTZk3QQsuUAQgka169LtM2V9I023EzNu1Kt4m8OB0Cw52000aJ3vTLT60nM1lA1DioZb
-         ILdfgkvKbzGlqMLCcQWafrt71/KPfYqXBK0uxS0VzOmRtaPEq5CUAujti4DcSP8AABo1
-         p/I6pOucyVi/HFirs7ugdp8cwARsiQm+CcFgrfIHN5K2WXtPHEzwkxqpZMIPDGP+ZRxj
-         Yjdw==
+        bh=XT+JmgvaZOl0uziPjZmcv+RThYrP5A/U4TIbmhwqks0=;
+        b=CD4IDH/zzGOlaHncy8YNUVjQm/YufoLAqbtib1Ch7ybgevCSkokoyoEE3mDGi649k6
+         uISfIK4Zhrz0TY/k0WF131nO/i1D4UkZTNHH3vKWaWWQYQkfe8Tjh8Ji0Y+MWF2Ja2lE
+         QpRKdxGp+Fj6/Gu0pDy/5mXW9duKwRtwAPmou0o58ON0XVbPiGU+boZdjFyCQPLwgmbB
+         7zSc0z3e4r+RdUOyryCsgPdTLPenmZk7qkob+pro+yEqTurvBfZiGHboma9diumUprF9
+         //fG61ZYz3az/cPkAxqodIrLcS9f9y1F2LIRUO0WaGMPm7KsZqk7ZA/TisuxoO3FaYfY
+         8g7g==
 In-Reply-To: <20210202184746.119084-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-There are no users outside of the memory controller itself. The rest
-of the kernel cares either about node or lruvec stats.
+Rstat currently only supports the default hierarchy in cgroup2. In
+order to replace memcg's private stats infrastructure - used in both
+cgroup1 and cgroup2 - with rstat, the latter needs to support cgroup1.
+
+The initialization and destruction callbacks for regular cgroups are
+already in place. Remove the cgroup_on_dfl() guards to handle cgroup1.
+
+The initialization of the root cgroup is currently hardcoded to only
+handle cgrp_dfl_root.cgrp. Move those callbacks to cgroup_setup_root()
+and cgroup_destroy_root() to handle the default root as well as the
+various cgroup1 roots we may set up during mounting.
+
+The linking of css to cgroups happens in code shared between cgroup1
+and cgroup2 as well. Simply remove the cgroup_on_dfl() guard.
+
+Linkage of the root css to the root cgroup is a bit trickier: per
+default, the root css of a subsystem controller belongs to the default
+hierarchy (i.e. the cgroup2 root). When a controller is mounted in its
+cgroup1 version, the root css is stolen and moved to the cgroup1 root;
+on unmount, the css moves back to the default hierarchy. Annotate
+rebind_subsystems() to move the root css linkage along between roots.
 
 Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
- include/linux/memcontrol.h | 44 --------------------------------------
- mm/memcontrol.c            | 32 +++++++++++++++++++++++++++
- 2 files changed, 32 insertions(+), 44 deletions(-)
+ kernel/cgroup/cgroup.c | 34 +++++++++++++++++++++-------------
+ kernel/cgroup/rstat.c  |  2 --
+ 2 files changed, 21 insertions(+), 15 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index c7f387a6233e..20ecdfae3289 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -867,39 +867,6 @@ struct mem_cgroup *lock_page_memcg(struct page *page);
- void __unlock_page_memcg(struct mem_cgroup *memcg);
- void unlock_page_memcg(struct page *page);
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 9153b20e5cc6..e049edd66776 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -1339,6 +1339,7 @@ static void cgroup_destroy_root(struct cgroup_root *root)
  
--/*
-- * idx can be of type enum memcg_stat_item or node_stat_item.
-- * Keep in sync with memcg_exact_page_state().
-- */
--static inline unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
--{
--	long x = atomic_long_read(&memcg->vmstats[idx]);
--#ifdef CONFIG_SMP
--	if (x < 0)
--		x = 0;
--#endif
--	return x;
--}
--
--/*
-- * idx can be of type enum memcg_stat_item or node_stat_item.
-- * Keep in sync with memcg_exact_page_state().
-- */
--static inline unsigned long memcg_page_state_local(struct mem_cgroup *memcg,
--						   int idx)
--{
--	long x = 0;
--	int cpu;
--
--	for_each_possible_cpu(cpu)
--		x += per_cpu(memcg->vmstats_local->stat[idx], cpu);
--#ifdef CONFIG_SMP
--	if (x < 0)
--		x = 0;
--#endif
--	return x;
--}
--
- void __mod_memcg_state(struct mem_cgroup *memcg, int idx, int val);
+ 	mutex_unlock(&cgroup_mutex);
  
- /* idx can be of type enum memcg_stat_item or node_stat_item */
-@@ -1337,17 +1304,6 @@ static inline void mem_cgroup_print_oom_group(struct mem_cgroup *memcg)
- {
++	cgroup_rstat_exit(cgrp);
+ 	kernfs_destroy_root(root->kf_root);
+ 	cgroup_free_root(root);
+ }
+@@ -1751,6 +1752,12 @@ int rebind_subsystems(struct cgroup_root *dst_root, u16 ss_mask)
+ 				       &dcgrp->e_csets[ss->id]);
+ 		spin_unlock_irq(&css_set_lock);
+ 
++		if (ss->css_rstat_flush) {
++			list_del_rcu(&css->rstat_css_node);
++			list_add_rcu(&css->rstat_css_node,
++				     &dcgrp->rstat_css_list);
++		}
++
+ 		/* default hierarchy doesn't enable controllers by default */
+ 		dst_root->subsys_mask |= 1 << ssid;
+ 		if (dst_root == &cgrp_dfl_root) {
+@@ -1971,10 +1978,14 @@ int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask)
+ 	if (ret)
+ 		goto destroy_root;
+ 
+-	ret = rebind_subsystems(root, ss_mask);
++	ret = cgroup_rstat_init(root_cgrp);
+ 	if (ret)
+ 		goto destroy_root;
+ 
++	ret = rebind_subsystems(root, ss_mask);
++	if (ret)
++		goto exit_stats;
++
+ 	ret = cgroup_bpf_inherit(root_cgrp);
+ 	WARN_ON_ONCE(ret);
+ 
+@@ -2006,6 +2017,8 @@ int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask)
+ 	ret = 0;
+ 	goto out;
+ 
++exit_stats:
++	cgroup_rstat_exit(root_cgrp);
+ destroy_root:
+ 	kernfs_destroy_root(root->kf_root);
+ 	root->kf_root = NULL;
+@@ -4934,8 +4947,7 @@ static void css_free_rwork_fn(struct work_struct *work)
+ 			cgroup_put(cgroup_parent(cgrp));
+ 			kernfs_put(cgrp->kn);
+ 			psi_cgroup_free(cgrp);
+-			if (cgroup_on_dfl(cgrp))
+-				cgroup_rstat_exit(cgrp);
++			cgroup_rstat_exit(cgrp);
+ 			kfree(cgrp);
+ 		} else {
+ 			/*
+@@ -4976,8 +4988,7 @@ static void css_release_work_fn(struct work_struct *work)
+ 		/* cgroup release path */
+ 		TRACE_CGROUP_PATH(release, cgrp);
+ 
+-		if (cgroup_on_dfl(cgrp))
+-			cgroup_rstat_flush(cgrp);
++		cgroup_rstat_flush(cgrp);
+ 
+ 		spin_lock_irq(&css_set_lock);
+ 		for (tcgrp = cgroup_parent(cgrp); tcgrp;
+@@ -5034,7 +5045,7 @@ static void init_and_link_css(struct cgroup_subsys_state *css,
+ 		css_get(css->parent);
+ 	}
+ 
+-	if (cgroup_on_dfl(cgrp) && ss->css_rstat_flush)
++	if (ss->css_rstat_flush)
+ 		list_add_rcu(&css->rstat_css_node, &cgrp->rstat_css_list);
+ 
+ 	BUG_ON(cgroup_css(cgrp, ss));
+@@ -5159,11 +5170,9 @@ static struct cgroup *cgroup_create(struct cgroup *parent, const char *name,
+ 	if (ret)
+ 		goto out_free_cgrp;
+ 
+-	if (cgroup_on_dfl(parent)) {
+-		ret = cgroup_rstat_init(cgrp);
+-		if (ret)
+-			goto out_cancel_ref;
+-	}
++	ret = cgroup_rstat_init(cgrp);
++	if (ret)
++		goto out_cancel_ref;
+ 
+ 	/* create the directory */
+ 	kn = kernfs_create_dir(parent->kn, name, mode, cgrp);
+@@ -5250,8 +5259,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent, const char *name,
+ out_kernfs_remove:
+ 	kernfs_remove(cgrp->kn);
+ out_stat_exit:
+-	if (cgroup_on_dfl(parent))
+-		cgroup_rstat_exit(cgrp);
++	cgroup_rstat_exit(cgrp);
+ out_cancel_ref:
+ 	percpu_ref_exit(&cgrp->self.refcnt);
+ out_free_cgrp:
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index d51175cedfca..faa767a870ba 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -285,8 +285,6 @@ void __init cgroup_rstat_boot(void)
+ 
+ 	for_each_possible_cpu(cpu)
+ 		raw_spin_lock_init(per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu));
+-
+-	BUG_ON(cgroup_rstat_init(&cgrp_dfl_root.cgrp));
  }
  
--static inline unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
--{
--	return 0;
--}
--
--static inline unsigned long memcg_page_state_local(struct mem_cgroup *memcg,
--						   int idx)
--{
--	return 0;
--}
--
- static inline void __mod_memcg_state(struct mem_cgroup *memcg,
- 				     int idx,
- 				     int nr)
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 7e05a4ebf80f..2f97cb4cef6d 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -789,6 +789,38 @@ void __mod_memcg_state(struct mem_cgroup *memcg, int idx, int val)
- 	__this_cpu_write(memcg->vmstats_percpu->stat[idx], x);
- }
- 
-+/*
-+ * idx can be of type enum memcg_stat_item or node_stat_item.
-+ * Keep in sync with memcg_exact_page_state().
-+ */
-+static unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
-+{
-+	long x = atomic_long_read(&memcg->vmstats[idx]);
-+#ifdef CONFIG_SMP
-+	if (x < 0)
-+		x = 0;
-+#endif
-+	return x;
-+}
-+
-+/*
-+ * idx can be of type enum memcg_stat_item or node_stat_item.
-+ * Keep in sync with memcg_exact_page_state().
-+ */
-+static unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx)
-+{
-+	long x = 0;
-+	int cpu;
-+
-+	for_each_possible_cpu(cpu)
-+		x += per_cpu(memcg->vmstats_local->stat[idx], cpu);
-+#ifdef CONFIG_SMP
-+	if (x < 0)
-+		x = 0;
-+#endif
-+	return x;
-+}
-+
- static struct mem_cgroup_per_node *
- parent_nodeinfo(struct mem_cgroup_per_node *pn, int nid)
- {
+ /*
 -- 
 2.30.0
 
