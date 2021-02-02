@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH 4/7] cgroup: rstat: support cgroup1
-Date: Tue,  2 Feb 2021 13:47:43 -0500
-Message-ID: <20210202184746.119084-5-hannes@cmpxchg.org>
+Subject: [PATCH 2/7] mm: memcontrol: kill mem_cgroup_nodeinfo()
+Date: Tue,  2 Feb 2021 13:47:41 -0500
+Message-ID: <20210202184746.119084-3-hannes@cmpxchg.org>
 References: <20210202184746.119084-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,164 +10,146 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=XT+JmgvaZOl0uziPjZmcv+RThYrP5A/U4TIbmhwqks0=;
-        b=CD4IDH/zzGOlaHncy8YNUVjQm/YufoLAqbtib1Ch7ybgevCSkokoyoEE3mDGi649k6
-         uISfIK4Zhrz0TY/k0WF131nO/i1D4UkZTNHH3vKWaWWQYQkfe8Tjh8Ji0Y+MWF2Ja2lE
-         QpRKdxGp+Fj6/Gu0pDy/5mXW9duKwRtwAPmou0o58ON0XVbPiGU+boZdjFyCQPLwgmbB
-         7zSc0z3e4r+RdUOyryCsgPdTLPenmZk7qkob+pro+yEqTurvBfZiGHboma9diumUprF9
-         //fG61ZYz3az/cPkAxqodIrLcS9f9y1F2LIRUO0WaGMPm7KsZqk7ZA/TisuxoO3FaYfY
-         8g7g==
+        bh=zZpcdqBIUeHuRA3ry6psqLVWAEi8jyTeTt09lQraF+c=;
+        b=pFBlBbi+hJBi102ivz3tEHlSObS5vUVEGXyRbRzgummggVh/7m310IjtgC0c5SkxI4
+         ZwBqqTyEwUsGjXo9z72N4yfm1lTy6QxlimLDLaKHCHpgbcd/5vWVSu0MD0EgclWQcusU
+         sC8MZzqg/WGCEvGiILpsgFFvSVDcgpPyAfgoGtr6We7mC9PelfRoA4dkX3xwXXJURd+W
+         C6dNlV3YKjirNjhViGWJiOmCS2m8poDXp150V4FPKtwVdXa8SLrGT/8oztQoZeZAhC0h
+         spTzo+OGHgdYMWpheVyoIWntjh94cxkF2wMcEHJbfreYpDlVRxLvVDCtR3hlfhu19aer
+         Munw==
 In-Reply-To: <20210202184746.119084-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Rstat currently only supports the default hierarchy in cgroup2. In
-order to replace memcg's private stats infrastructure - used in both
-cgroup1 and cgroup2 - with rstat, the latter needs to support cgroup1.
-
-The initialization and destruction callbacks for regular cgroups are
-already in place. Remove the cgroup_on_dfl() guards to handle cgroup1.
-
-The initialization of the root cgroup is currently hardcoded to only
-handle cgrp_dfl_root.cgrp. Move those callbacks to cgroup_setup_root()
-and cgroup_destroy_root() to handle the default root as well as the
-various cgroup1 roots we may set up during mounting.
-
-The linking of css to cgroups happens in code shared between cgroup1
-and cgroup2 as well. Simply remove the cgroup_on_dfl() guard.
-
-Linkage of the root css to the root cgroup is a bit trickier: per
-default, the root css of a subsystem controller belongs to the default
-hierarchy (i.e. the cgroup2 root). When a controller is mounted in its
-cgroup1 version, the root css is stolen and moved to the cgroup1 root;
-on unmount, the css moves back to the default hierarchy. Annotate
-rebind_subsystems() to move the root css linkage along between roots.
+No need to encapsulate a simple struct member access.
 
 Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
- kernel/cgroup/cgroup.c | 34 +++++++++++++++++++++-------------
- kernel/cgroup/rstat.c  |  2 --
- 2 files changed, 21 insertions(+), 15 deletions(-)
+ include/linux/memcontrol.h |  8 +-------
+ mm/memcontrol.c            | 21 +++++++++++----------
+ 2 files changed, 12 insertions(+), 17 deletions(-)
 
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 9153b20e5cc6..e049edd66776 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -1339,6 +1339,7 @@ static void cgroup_destroy_root(struct cgroup_root *root)
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 7a38a1517a05..c7f387a6233e 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -602,12 +602,6 @@ void mem_cgroup_uncharge_list(struct list_head *page_list);
  
- 	mutex_unlock(&cgroup_mutex);
+ void mem_cgroup_migrate(struct page *oldpage, struct page *newpage);
  
-+	cgroup_rstat_exit(cgrp);
- 	kernfs_destroy_root(root->kf_root);
- 	cgroup_free_root(root);
- }
-@@ -1751,6 +1752,12 @@ int rebind_subsystems(struct cgroup_root *dst_root, u16 ss_mask)
- 				       &dcgrp->e_csets[ss->id]);
- 		spin_unlock_irq(&css_set_lock);
+-static struct mem_cgroup_per_node *
+-mem_cgroup_nodeinfo(struct mem_cgroup *memcg, int nid)
+-{
+-	return memcg->nodeinfo[nid];
+-}
+-
+ /**
+  * mem_cgroup_lruvec - get the lru list vector for a memcg & node
+  * @memcg: memcg of the wanted lruvec
+@@ -631,7 +625,7 @@ static inline struct lruvec *mem_cgroup_lruvec(struct mem_cgroup *memcg,
+ 	if (!memcg)
+ 		memcg = root_mem_cgroup;
  
-+		if (ss->css_rstat_flush) {
-+			list_del_rcu(&css->rstat_css_node);
-+			list_add_rcu(&css->rstat_css_node,
-+				     &dcgrp->rstat_css_list);
-+		}
-+
- 		/* default hierarchy doesn't enable controllers by default */
- 		dst_root->subsys_mask |= 1 << ssid;
- 		if (dst_root == &cgrp_dfl_root) {
-@@ -1971,10 +1978,14 @@ int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask)
- 	if (ret)
- 		goto destroy_root;
+-	mz = mem_cgroup_nodeinfo(memcg, pgdat->node_id);
++	mz = memcg->nodeinfo[pgdat->node_id];
+ 	lruvec = &mz->lruvec;
+ out:
+ 	/*
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 8120d565dd79..7e05a4ebf80f 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -414,13 +414,14 @@ static int memcg_expand_one_shrinker_map(struct mem_cgroup *memcg,
+ 					 int size, int old_size)
+ {
+ 	struct memcg_shrinker_map *new, *old;
++	struct mem_cgroup_per_node *pn;
+ 	int nid;
  
--	ret = rebind_subsystems(root, ss_mask);
-+	ret = cgroup_rstat_init(root_cgrp);
- 	if (ret)
- 		goto destroy_root;
+ 	lockdep_assert_held(&memcg_shrinker_map_mutex);
  
-+	ret = rebind_subsystems(root, ss_mask);
-+	if (ret)
-+		goto exit_stats;
-+
- 	ret = cgroup_bpf_inherit(root_cgrp);
- 	WARN_ON_ONCE(ret);
+ 	for_each_node(nid) {
+-		old = rcu_dereference_protected(
+-			mem_cgroup_nodeinfo(memcg, nid)->shrinker_map, true);
++		pn = memcg->nodeinfo[nid];
++		old = rcu_dereference_protected(pn->shrinker_map, true);
+ 		/* Not yet online memcg */
+ 		if (!old)
+ 			return 0;
+@@ -433,7 +434,7 @@ static int memcg_expand_one_shrinker_map(struct mem_cgroup *memcg,
+ 		memset(new->map, (int)0xff, old_size);
+ 		memset((void *)new->map + old_size, 0, size - old_size);
  
-@@ -2006,6 +2017,8 @@ int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask)
- 	ret = 0;
- 	goto out;
- 
-+exit_stats:
-+	cgroup_rstat_exit(root_cgrp);
- destroy_root:
- 	kernfs_destroy_root(root->kf_root);
- 	root->kf_root = NULL;
-@@ -4934,8 +4947,7 @@ static void css_free_rwork_fn(struct work_struct *work)
- 			cgroup_put(cgroup_parent(cgrp));
- 			kernfs_put(cgrp->kn);
- 			psi_cgroup_free(cgrp);
--			if (cgroup_on_dfl(cgrp))
--				cgroup_rstat_exit(cgrp);
-+			cgroup_rstat_exit(cgrp);
- 			kfree(cgrp);
- 		} else {
- 			/*
-@@ -4976,8 +4988,7 @@ static void css_release_work_fn(struct work_struct *work)
- 		/* cgroup release path */
- 		TRACE_CGROUP_PATH(release, cgrp);
- 
--		if (cgroup_on_dfl(cgrp))
--			cgroup_rstat_flush(cgrp);
-+		cgroup_rstat_flush(cgrp);
- 
- 		spin_lock_irq(&css_set_lock);
- 		for (tcgrp = cgroup_parent(cgrp); tcgrp;
-@@ -5034,7 +5045,7 @@ static void init_and_link_css(struct cgroup_subsys_state *css,
- 		css_get(css->parent);
+-		rcu_assign_pointer(memcg->nodeinfo[nid]->shrinker_map, new);
++		rcu_assign_pointer(pn->shrinker_map, new);
+ 		call_rcu(&old->rcu, memcg_free_shrinker_map_rcu);
  	}
  
--	if (cgroup_on_dfl(cgrp) && ss->css_rstat_flush)
-+	if (ss->css_rstat_flush)
- 		list_add_rcu(&css->rstat_css_node, &cgrp->rstat_css_list);
+@@ -450,7 +451,7 @@ static void memcg_free_shrinker_maps(struct mem_cgroup *memcg)
+ 		return;
  
- 	BUG_ON(cgroup_css(cgrp, ss));
-@@ -5159,11 +5170,9 @@ static struct cgroup *cgroup_create(struct cgroup *parent, const char *name,
- 	if (ret)
- 		goto out_free_cgrp;
+ 	for_each_node(nid) {
+-		pn = mem_cgroup_nodeinfo(memcg, nid);
++		pn = memcg->nodeinfo[nid];
+ 		map = rcu_dereference_protected(pn->shrinker_map, true);
+ 		kvfree(map);
+ 		rcu_assign_pointer(pn->shrinker_map, NULL);
+@@ -713,7 +714,7 @@ static void mem_cgroup_remove_from_trees(struct mem_cgroup *memcg)
+ 	int nid;
  
--	if (cgroup_on_dfl(parent)) {
--		ret = cgroup_rstat_init(cgrp);
--		if (ret)
--			goto out_cancel_ref;
--	}
-+	ret = cgroup_rstat_init(cgrp);
-+	if (ret)
-+		goto out_cancel_ref;
- 
- 	/* create the directory */
- 	kn = kernfs_create_dir(parent->kn, name, mode, cgrp);
-@@ -5250,8 +5259,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent, const char *name,
- out_kernfs_remove:
- 	kernfs_remove(cgrp->kn);
- out_stat_exit:
--	if (cgroup_on_dfl(parent))
--		cgroup_rstat_exit(cgrp);
-+	cgroup_rstat_exit(cgrp);
- out_cancel_ref:
- 	percpu_ref_exit(&cgrp->self.refcnt);
- out_free_cgrp:
-diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
-index d51175cedfca..faa767a870ba 100644
---- a/kernel/cgroup/rstat.c
-+++ b/kernel/cgroup/rstat.c
-@@ -285,8 +285,6 @@ void __init cgroup_rstat_boot(void)
- 
- 	for_each_possible_cpu(cpu)
- 		raw_spin_lock_init(per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu));
--
--	BUG_ON(cgroup_rstat_init(&cgrp_dfl_root.cgrp));
+ 	for_each_node(nid) {
+-		mz = mem_cgroup_nodeinfo(memcg, nid);
++		mz = memcg->nodeinfo[nid];
+ 		mctz = soft_limit_tree_node(nid);
+ 		if (mctz)
+ 			mem_cgroup_remove_exceeded(mz, mctz);
+@@ -796,7 +797,7 @@ parent_nodeinfo(struct mem_cgroup_per_node *pn, int nid)
+ 	parent = parent_mem_cgroup(pn->memcg);
+ 	if (!parent)
+ 		return NULL;
+-	return mem_cgroup_nodeinfo(parent, nid);
++	return parent->nodeinfo[nid];
  }
  
- /*
+ void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+@@ -1163,7 +1164,7 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
+ 	if (reclaim) {
+ 		struct mem_cgroup_per_node *mz;
+ 
+-		mz = mem_cgroup_nodeinfo(root, reclaim->pgdat->node_id);
++		mz = root->nodeinfo[reclaim->pgdat->node_id];
+ 		iter = &mz->iter;
+ 
+ 		if (prev && reclaim->generation != iter->generation)
+@@ -1265,7 +1266,7 @@ static void __invalidate_reclaim_iterators(struct mem_cgroup *from,
+ 	int nid;
+ 
+ 	for_each_node(nid) {
+-		mz = mem_cgroup_nodeinfo(from, nid);
++		mz = from->nodeinfo[nid];
+ 		iter = &mz->iter;
+ 		cmpxchg(&iter->position, dead_memcg, NULL);
+ 	}
+@@ -2438,7 +2439,7 @@ static int memcg_hotplug_cpu_dead(unsigned int cpu)
+ 				struct mem_cgroup_per_node *pn;
+ 				long x;
+ 
+-				pn = mem_cgroup_nodeinfo(memcg, nid);
++				pn = memcg->nodeinfo[nid];
+ 				lstatc = per_cpu_ptr(pn->lruvec_stat_cpu, cpu);
+ 
+ 				x = lstatc->count[i];
+@@ -4145,7 +4146,7 @@ static int memcg_stat_show(struct seq_file *m, void *v)
+ 		unsigned long file_cost = 0;
+ 
+ 		for_each_online_pgdat(pgdat) {
+-			mz = mem_cgroup_nodeinfo(memcg, pgdat->node_id);
++			mz = memcg->nodeinfo[pgdat->node_id];
+ 
+ 			anon_cost += mz->lruvec.anon_cost;
+ 			file_cost += mz->lruvec.file_cost;
 -- 
 2.30.0
 
