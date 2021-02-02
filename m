@@ -1,22 +1,22 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.4 17/17] blk-cgroup: Use cond_resched() when destroy blkgs
-Date: Tue,  2 Feb 2021 10:06:51 -0500
-Message-ID: <20210202150651.1864426-17-sashal@kernel.org>
-References: <20210202150651.1864426-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 24/25] blk-cgroup: Use cond_resched() when destroy blkgs
+Date: Tue,  2 Feb 2021 10:06:14 -0500
+Message-ID: <20210202150615.1864175-24-sashal@kernel.org>
+References: <20210202150615.1864175-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612278433;
-        bh=mBU5b8VRc4MSpIsnNB2jc88+ZShmw8rX+D3GQtW1cFE=;
+        s=k20201202; t=1612278407;
+        bh=QEaEtUdgOwqKhjqXpL8Ve8WrJNYFJPvtx5Ol4GMzAww=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=k8qBrVkS6+u3vpOjcpbGqyZAZCgWa99mbwU8or/q1RJ31RqT3eb/aD4mzilU/PuB2
-         mwVrUKajcYte/bTN37RrqFvHVdNPotn6LyvZOyv0CqpRTZBs4hHy/+wSqSnqmSN2rO
-         y6BPrryf93HGuWQoD4Iur3tCsWcqks7XCaKm3GtNKcyby4MiXou2KW1JLTTgL33cY2
-         TQ14YbFJPucq30Iddn2r9FrFTBIKTre7CFJFAl0AvLkZ8246ChA0om3geBiuvtIJtd
-         OhrVD5EZ3JQ/Jk5lO3ste3t9rYGe652trOYMTksFzrMB3plqe82JqY0OWUtaAdGmlY
-         iHaG8uk/U8HtA==
-In-Reply-To: <20210202150651.1864426-1-sashal@kernel.org>
+        b=qdGb6c1ZlHQtvYng7x2dxV7szjJuFWD/KcwQA1IYWwDWatxZpIYFDH/d9a5i/aYs2
+         8r1tioxFvikMP6ebK1BLUXBLjkMQUXI3dQXVHWHMfUoFMYgw0OAApsxs0yV4NuUYXI
+         uIxzg8VB+c9jVr4logmaUK71FUyS028vS1cXP9Z8AxYcC2d6gz/uidxI1sIesncGF8
+         XfPvhigP4NaUb8tz6lrxkOIgOqeB/g0UNmnD8s1CzmoIM/+ZBXCsc+l1N9OG1vA8Kl
+         lA1XBGOP4vLqE9zZQl8rlJhHUVtNzFcWiNo/EpuGHWKFzR7uTY1Kj3EyeTYaNMk06+
+         rWxKsfPPzLXAw==
+In-Reply-To: <20210202150615.1864175-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
@@ -52,10 +52,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 13 insertions(+), 5 deletions(-)
 
 diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 3d34ac02d76ef..cb3d44d200055 100644
+index 54fbe1e80cc41..f13688c4b9317 100644
 --- a/block/blk-cgroup.c
 +++ b/block/blk-cgroup.c
-@@ -1089,6 +1089,8 @@ static void blkcg_css_offline(struct cgroup_subsys_state *css)
+@@ -1017,6 +1017,8 @@ static void blkcg_css_offline(struct cgroup_subsys_state *css)
   */
  void blkcg_destroy_blkgs(struct blkcg *blkcg)
  {
@@ -64,7 +64,7 @@ index 3d34ac02d76ef..cb3d44d200055 100644
  	spin_lock_irq(&blkcg->lock);
  
  	while (!hlist_empty(&blkcg->blkg_list)) {
-@@ -1096,14 +1098,20 @@ void blkcg_destroy_blkgs(struct blkcg *blkcg)
+@@ -1024,14 +1026,20 @@ void blkcg_destroy_blkgs(struct blkcg *blkcg)
  						struct blkcg_gq, blkcg_node);
  		struct request_queue *q = blkg->q;
  
