@@ -1,95 +1,113 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.10 24/25] blk-cgroup: Use cond_resched() when destroy blkgs
-Date: Tue,  2 Feb 2021 10:06:14 -0500
-Message-ID: <20210202150615.1864175-24-sashal@kernel.org>
-References: <20210202150615.1864175-1-sashal@kernel.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [PATCH 1/7] mm: memcontrol: fix cpuhotplug statistics flushing
+Date: Tue,  2 Feb 2021 13:47:40 -0500
+Message-ID: <20210202184746.119084-2-hannes@cmpxchg.org>
+References: <20210202184746.119084-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1612278407;
-        bh=QEaEtUdgOwqKhjqXpL8Ve8WrJNYFJPvtx5Ol4GMzAww=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qdGb6c1ZlHQtvYng7x2dxV7szjJuFWD/KcwQA1IYWwDWatxZpIYFDH/d9a5i/aYs2
-         8r1tioxFvikMP6ebK1BLUXBLjkMQUXI3dQXVHWHMfUoFMYgw0OAApsxs0yV4NuUYXI
-         uIxzg8VB+c9jVr4logmaUK71FUyS028vS1cXP9Z8AxYcC2d6gz/uidxI1sIesncGF8
-         XfPvhigP4NaUb8tz6lrxkOIgOqeB/g0UNmnD8s1CzmoIM/+ZBXCsc+l1N9OG1vA8Kl
-         lA1XBGOP4vLqE9zZQl8rlJhHUVtNzFcWiNo/EpuGHWKFzR7uTY1Kj3EyeTYaNMk06+
-         rWxKsfPPzLXAw==
-In-Reply-To: <20210202150615.1864175-1-sashal@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=MBCKydbpWga5DpiOrlHudvnTFh13spVvcDscPggPa+8=;
+        b=iixvdo9II3CKbmX3rdwEdikCy6FYq2Xh7l6cr1JZDyZLV3tA7TuJMIZuIukFI2YdMG
+         BTy4s/CiTvdw7jKAbWtlNoWIJe4vyWfjyD9CrO57tcOSLynLgtpULv2m6u3oUrxMqe6n
+         cdDCwBSYaO1AFHPmCA2adqCaOiR2FF28vjLiw9S4VV2dR2P+1YK3kcyjPDRjRzQJfmHU
+         iUdM0DlrSVzOwnsqjfhCFN1CXQKjBxXFaOvaFjkd0I314jpXy9KqXtn6Gpji3x8apJ7O
+         WNsgg5PiF2eDrCHcn+OWgi/CW/dWhUMfSQcTW2vMCUHR5pB5jPDCL8FW9+KOOoyrSOBR
+         s06A==
+In-Reply-To: <20210202184746.119084-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-From: Baolin Wang <baolin.wang@linux.alibaba.com>
+The memcg hotunplug callback erroneously flushes counts on the local
+CPU, not the counts of the CPU going away; those counts will be lost.
 
-[ Upstream commit 6c635caef410aa757befbd8857c1eadde5cc22ed ]
+Flush the CPU that is actually going away.
 
-On !PREEMPT kernel, we can get below softlockup when doing stress
-testing with creating and destroying block cgroup repeatly. The
-reason is it may take a long time to acquire the queue's lock in
-the loop of blkcg_destroy_blkgs(), or the system can accumulate a
-huge number of blkgs in pathological cases. We can add a need_resched()
-check on each loop and release locks and do cond_resched() if true
-to avoid this issue, since the blkcg_destroy_blkgs() is not called
-from atomic contexts.
+Also simplify the code a bit by using mod_memcg_state() and
+count_memcg_events() instead of open-coding the upward flush - this is
+comparable to how vmstat.c handles hotunplug flushing.
 
-[ 4757.010308] watchdog: BUG: soft lockup - CPU#11 stuck for 94s!
-[ 4757.010698] Call trace:
-[ 4757.010700]  blkcg_destroy_blkgs+0x68/0x150
-[ 4757.010701]  cgwb_release_workfn+0x104/0x158
-[ 4757.010702]  process_one_work+0x1bc/0x3f0
-[ 4757.010704]  worker_thread+0x164/0x468
-[ 4757.010705]  kthread+0x108/0x138
-
-Suggested-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Baolin Wang <baolin.wang@linux.alibaba.com>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
- block/blk-cgroup.c | 18 +++++++++++++-----
- 1 file changed, 13 insertions(+), 5 deletions(-)
+ mm/memcontrol.c | 35 +++++++++++++++++++++--------------
+ 1 file changed, 21 insertions(+), 14 deletions(-)
 
-diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-index 54fbe1e80cc41..f13688c4b9317 100644
---- a/block/blk-cgroup.c
-+++ b/block/blk-cgroup.c
-@@ -1017,6 +1017,8 @@ static void blkcg_css_offline(struct cgroup_subsys_state *css)
-  */
- void blkcg_destroy_blkgs(struct blkcg *blkcg)
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index ed5cc78a8dbf..8120d565dd79 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2411,45 +2411,52 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
+ static int memcg_hotplug_cpu_dead(unsigned int cpu)
  {
-+	might_sleep();
+ 	struct memcg_stock_pcp *stock;
+-	struct mem_cgroup *memcg, *mi;
++	struct mem_cgroup *memcg;
+ 
+ 	stock = &per_cpu(memcg_stock, cpu);
+ 	drain_stock(stock);
+ 
+ 	for_each_mem_cgroup(memcg) {
++		struct memcg_vmstats_percpu *statc;
+ 		int i;
+ 
++		statc = per_cpu_ptr(memcg->vmstats_percpu, cpu);
 +
- 	spin_lock_irq(&blkcg->lock);
+ 		for (i = 0; i < MEMCG_NR_STAT; i++) {
+ 			int nid;
+-			long x;
  
- 	while (!hlist_empty(&blkcg->blkg_list)) {
-@@ -1024,14 +1026,20 @@ void blkcg_destroy_blkgs(struct blkcg *blkcg)
- 						struct blkcg_gq, blkcg_node);
- 		struct request_queue *q = blkg->q;
+-			x = this_cpu_xchg(memcg->vmstats_percpu->stat[i], 0);
+-			if (x)
+-				for (mi = memcg; mi; mi = parent_mem_cgroup(mi))
+-					atomic_long_add(x, &memcg->vmstats[i]);
++			if (statc->stat[i]) {
++				mod_memcg_state(memcg, i, statc->stat[i]);
++				statc->stat[i] = 0;
++			}
  
--		if (spin_trylock(&q->queue_lock)) {
--			blkg_destroy(blkg);
--			spin_unlock(&q->queue_lock);
--		} else {
-+		if (need_resched() || !spin_trylock(&q->queue_lock)) {
-+			/*
-+			 * Given that the system can accumulate a huge number
-+			 * of blkgs in pathological cases, check to see if we
-+			 * need to rescheduling to avoid softlockup.
-+			 */
- 			spin_unlock_irq(&blkcg->lock);
--			cpu_relax();
-+			cond_resched();
- 			spin_lock_irq(&blkcg->lock);
-+			continue;
+ 			if (i >= NR_VM_NODE_STAT_ITEMS)
+ 				continue;
+ 
+ 			for_each_node(nid) {
++				struct batched_lruvec_stat *lstatc;
+ 				struct mem_cgroup_per_node *pn;
++				long x;
+ 
+ 				pn = mem_cgroup_nodeinfo(memcg, nid);
+-				x = this_cpu_xchg(pn->lruvec_stat_cpu->count[i], 0);
+-				if (x)
++				lstatc = per_cpu_ptr(pn->lruvec_stat_cpu, cpu);
++
++				x = lstatc->count[i];
++				lstatc->count[i] = 0;
++
++				if (x) {
+ 					do {
+ 						atomic_long_add(x, &pn->lruvec_stat[i]);
+ 					} while ((pn = parent_nodeinfo(pn, nid)));
++				}
+ 			}
  		}
-+
-+		blkg_destroy(blkg);
-+		spin_unlock(&q->queue_lock);
+ 
+ 		for (i = 0; i < NR_VM_EVENT_ITEMS; i++) {
+-			long x;
+-
+-			x = this_cpu_xchg(memcg->vmstats_percpu->events[i], 0);
+-			if (x)
+-				for (mi = memcg; mi; mi = parent_mem_cgroup(mi))
+-					atomic_long_add(x, &memcg->vmevents[i]);
++			if (statc->events[i]) {
++				count_memcg_events(memcg, i, statc->events[i]);
++				statc->events[i] = 0;
++			}
+ 		}
  	}
  
- 	spin_unlock_irq(&blkcg->lock);
 -- 
-2.27.0
+2.30.0
 
