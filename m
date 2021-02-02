@@ -1,68 +1,59 @@
-From: Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC PATCH 0/9] cgroup support for GPU devices
-Date: Mon, 1 Feb 2021 15:21:35 -0800
-Message-ID: <5307d21b-7494-858c-30f0-cb5fe1d86004@intel.com>
-References: <20210126214626.16260-1-brian.welty@intel.com>
- <84b79978-84c9-52aa-b761-3f4be929064e@rockwork.org>
+From: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm/memcontrol: remove redundant NULL check
+Date: Tue, 2 Feb 2021 11:12:05 +0100
+Message-ID: <187faa43-dc1c-d0a9-769c-b8d99b954c32@redhat.com>
+References: <1611216029-34397-1-git-send-email-abaci-bugfix@linux.alibaba.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <84b79978-84c9-52aa-b761-3f4be929064e-hTEXxzOs8fRg9hUCZPvPmw@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1612260733;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=OsWwN1vmOUR/or+/6FTZ3nC/QP7/0ejkOvTfj5/Q2X8=;
+        b=bWg6uFp2BsSH3lgy/WA7A0Ys4rIQlNf9p4yD4cCHqzMMG6Btg48J3VwhWvVfBvrc4RKrBP
+        geLx3tXiUkBYbYxAzLc5c9DfvHVqMVTrC6xw3joYsfUAcTpV2z4vSr4mD906+tkcP1HC/d
+        9L70KLtHz1MQHpRYjSTiCBaYxstsYE4=
+In-Reply-To: <1611216029-34397-1-git-send-email-abaci-bugfix-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
 Content-Language: en-US
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: Xingyou Chen <rockrush-hTEXxzOs8fRg9hUCZPvPmw@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>, Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Joonas Lahtinen <joonas.lahtinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Eero Tamminen <eero.t.tamminen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Yang Li <abaci-bugfix-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
+Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Ck9uIDEvMjgvMjAyMSA3OjAwIFBNLCBYaW5neW91IENoZW4gd3JvdGU6Cj4gT24gMjAyMS8xLzI3
-IOS4iuWNiDU6NDYsIEJyaWFuIFdlbHR5IHdyb3RlOgo+IAo+PiBXZSdkIGxpa2UgdG8gcmV2aXNp
-dCB0aGUgcHJvcG9zYWwgb2YgYSBHUFUgY2dyb3VwIGNvbnRyb2xsZXIgZm9yIG1hbmFnaW5nCj4+
-IEdQVSBkZXZpY2VzIGJ1dCB3aXRoIGp1c3QgYSBiYXNpYyBzZXQgb2YgY29udHJvbHMuICBUaGlz
-IHNlcmllcyBpcyBiYXNlZCBvbiAKPj4gdGhlIHByaW9yIHBhdGNoIHNlcmllcyBmcm9tIEtlbm55
-IEhvIFsxXS4gIFdlIHRha2UgS2VubnkncyBiYXNlIHBhdGNoZXMKPj4gd2hpY2ggaW1wbGVtZW50
-IHRoZSBiYXNpYyBmcmFtZXdvcmsgZm9yIHRoZSBjb250cm9sbGVyLCBidXQgd2UgcHJvcG9zZSBh
-bgo+PiBhbHRlcm5hdGUgc2V0IG9mIGNvbnRyb2wgZmlsZXMuICBIZXJlIHdlJ3ZlIHRha2VuIGEg
-c3Vic2V0IG9mIHRoZSBjb250cm9scwo+PiBwcm9wb3NlZCBpbiBlYXJsaWVyIGRpc2N1c3Npb24g
-b24gTUwgaGVyZSBbMl0uIAo+Pgo+PiBUaGlzIHNlcmllcyBwcm9wb3NlcyBhIHNldCBvZiBkZXZp
-Y2UgbWVtb3J5IGNvbnRyb2xzIChncHUubWVtb3J5LmN1cnJlbnQsCj4+IGdwdS5tZW1vcnkubWF4
-LCBhbmQgZ3B1Lm1lbW9yeS50b3RhbCkgYW5kIGFjY291bnRpbmcgb2YgR1BVIHRpbWUgdXNhZ2UK
-Pj4gKGdwdS5zY2hlZC5ydW50aW1lKS4gIEdQVSB0aW1lIHNoYXJpbmcgY29udHJvbHMgYXJlIGxl
-ZnQgYXMgZnV0dXJlIHdvcmsuCj4+IFRoZXNlIGFyZSBpbXBsZW1lbnRlZCB3aXRoaW4gdGhlIEdQ
-VSBjb250cm9sbGVyIGFsb25nIHdpdGggaW50ZWdyYXRpb24vdXNhZ2UKPj4gb2YgdGhlIGRldmlj
-ZSBtZW1vcnkgY29udHJvbHMgYnkgdGhlIGk5MTUgZGV2aWNlIGRyaXZlci4KPj4KPj4gQXMgYW4g
-YWNjZWxlcmF0b3Igb3IgR1BVIGRldmljZSBpcyBzaW1pbGFyIGluIG1hbnkgcmVzcGVjdHMgdG8g
-YSBDUFUgd2l0aAo+PiAob3Igd2l0aG91dCkgYXR0YWNoZWQgc3lzdGVtIG1lbW9yeSwgdGhlIGJh
-c2ljIHByaW5jaXBsZSBoZXJlIGlzIHRyeSB0bwo+PiBjb3B5IHRoZSBzZW1hbnRpY3Mgb2YgZXhp
-c3RpbmcgY29udHJvbHMgZnJvbSBvdGhlciBjb250cm9sbGVycyB3aGVuIHBvc3NpYmxlCj4+IGFu
-ZCB3aGVyZSB0aGVzZSBjb250cm9scyBzZXJ2ZSB0aGUgc2FtZSB1bmRlcmx5aW5nIHB1cnBvc2Uu
-Cj4+IEZvciBleGFtcGxlLCB0aGUgbWVtb3J5Lm1heCBhbmQgbWVtb3J5LmN1cnJlbnQgY29udHJv
-bHMgYXJlIGJhc2VkIG9uCj4+IHNhbWUgY29udHJvbHMgZnJvbSBNRU1DRyBjb250cm9sbGVyLgo+
-IAo+IEl0IHNlZW1zIG5vdCB0byBiZSBEUk0gc3BlY2lmaWMsIG9yIGV2ZW4gR1BVIHNwZWNpZmlj
-LiBXb3VsZCB3ZSBoYXZlIGFuIHVuaXZlcnNhbAo+IGNvbnRyb2wgZ3JvdXAgZm9yIGFueSBhY2Nl
-bGVyYXRvciwgR1BHUFUgZGV2aWNlIGV0YywgdGhhdCBob2xkIHNoYXJhYmxlIHJlc291cmNlcwo+
-IGxpa2UgZGV2aWNlIG1lbW9yeSwgY29tcHV0ZSB1dGlsaXR5LCBiYW5kd2lkdGgsIHdpdGggZXh0
-cmEgY29udHJvbCBmaWxlIHRvIHNlbGVjdAo+IGJldHdlZW4gZGV2aWNlcyhvciB2ZW5kb3JzKT8K
-PiAKPiBlLmcuIC9jZ25hbWUuZGV2aWNlIHRoYXQgc3RvcmVzIFBDSSBCREbvvIwgb3IgZW51bShp
-bnRlbCwgYW1kZ3B1LCBudmlkaWEsIC4uLiksCj4gZGVmYXVsdHMgdG8gbm9uZSwgbWVhbnMgbm90
-IGVuYWJsZWQuCj4gCgpIaSwgdGhhbmtzIGZvciB0aGUgZmVlZGJhY2suICBZZXMsIEkgdGVuZCB0
-byBhZ3JlZS4gIEkndmUgYXNrZWQgYWJvdXQgdGhpcyBpbgplYXJsaWVyIHdvcms7IG15IHN1Z2dl
-c3Rpb24gaXMgdG8gbmFtZSB0aGUgY29udHJvbGxlciBzb21ldGhpbmcgbGlrZSAnWFBVJyB0bwpi
-ZSBjbGVhciB0aGF0IHRoZXNlIGNvbnRyb2xzIGNvdWxkIGFwcGx5IHRvIG1vcmUgdGhhbiBHUFUu
-CgpCdXQgYXQgbGVhc3QgZm9yIG5vdywgYmFzZWQgb24gVGVqdW4ncyByZXBseSBbMV0sIHRoZSBm
-ZWVkYmFjayBpcyB0byB0cnkgYW5kIGtlZXAKdGhpcyBjb250cm9sbGVyIGFzIHNtYWxsIGFuZCBm
-b2N1c2VkIGFzIHBvc3NpYmxlIG9uIGp1c3QgR1BVLiAgQXQgbGVhc3QgdW50aWwKd2UgZ2V0IHNv
-bWUgY29uc2Vuc3VzIG9uIHNldCBvZiBjb250cm9scyBmb3IgR1BVLi4uLi4gIGJ1dCBmb3IgdGhp
-cyB3ZSBuZWVkIG1vcmUKYWN0aXZlIGlucHV0IGZyb20gY29tbXVuaXR5Li4uLi4uCgotQnJpYW4K
-ClsxXSBodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9hcmNoaXZlcy9kcmktZGV2ZWwvMjAx
-OS1Ob3ZlbWJlci8yNDMxNjcuaHRtbApfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwphbWQtZ2Z4IG1haWxpbmcgbGlzdAphbWQtZ2Z4QGxpc3RzLmZyZWVkZXNr
-dG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2Ft
-ZC1nZngK
+On 21.01.21 09:00, Yang Li wrote:
+> Fix below warnings reported by coccicheck:
+> ./mm/memcontrol.c:451:3-9: WARNING: NULL check before some freeing
+> functions is not needed.
+> 
+> Reported-by: Abaci Robot <abaci-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+> Signed-off-by: Yang Li <abaci-bugfix-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
+> ---
+>   mm/memcontrol.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 605f671..f6a561b 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -447,8 +447,7 @@ static void memcg_free_shrinker_maps(struct mem_cgroup *memcg)
+>   	for_each_node(nid) {
+>   		pn = mem_cgroup_nodeinfo(memcg, nid);
+>   		map = rcu_dereference_protected(pn->shrinker_map, true);
+> -		if (map)
+> -			kvfree(map);
+> +		kvfree(map);
+>   		rcu_assign_pointer(pn->shrinker_map, NULL);
+>   	}
+>   }
+> 
+
+Reviewed-by: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+
+-- 
+Thanks,
+
+David / dhildenb
+
