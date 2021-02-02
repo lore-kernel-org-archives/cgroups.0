@@ -1,59 +1,95 @@
-From: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm/memcontrol: remove redundant NULL check
-Date: Tue, 2 Feb 2021 11:12:05 +0100
-Message-ID: <187faa43-dc1c-d0a9-769c-b8d99b954c32@redhat.com>
-References: <1611216029-34397-1-git-send-email-abaci-bugfix@linux.alibaba.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 17/17] blk-cgroup: Use cond_resched() when destroy blkgs
+Date: Tue,  2 Feb 2021 10:06:51 -0500
+Message-ID: <20210202150651.1864426-17-sashal@kernel.org>
+References: <20210202150651.1864426-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1612260733;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=OsWwN1vmOUR/or+/6FTZ3nC/QP7/0ejkOvTfj5/Q2X8=;
-        b=bWg6uFp2BsSH3lgy/WA7A0Ys4rIQlNf9p4yD4cCHqzMMG6Btg48J3VwhWvVfBvrc4RKrBP
-        geLx3tXiUkBYbYxAzLc5c9DfvHVqMVTrC6xw3joYsfUAcTpV2z4vSr4mD906+tkcP1HC/d
-        9L70KLtHz1MQHpRYjSTiCBaYxstsYE4=
-In-Reply-To: <1611216029-34397-1-git-send-email-abaci-bugfix-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1612278433;
+        bh=mBU5b8VRc4MSpIsnNB2jc88+ZShmw8rX+D3GQtW1cFE=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=k8qBrVkS6+u3vpOjcpbGqyZAZCgWa99mbwU8or/q1RJ31RqT3eb/aD4mzilU/PuB2
+         mwVrUKajcYte/bTN37RrqFvHVdNPotn6LyvZOyv0CqpRTZBs4hHy/+wSqSnqmSN2rO
+         y6BPrryf93HGuWQoD4Iur3tCsWcqks7XCaKm3GtNKcyby4MiXou2KW1JLTTgL33cY2
+         TQ14YbFJPucq30Iddn2r9FrFTBIKTre7CFJFAl0AvLkZ8246ChA0om3geBiuvtIJtd
+         OhrVD5EZ3JQ/Jk5lO3ste3t9rYGe652trOYMTksFzrMB3plqe82JqY0OWUtaAdGmlY
+         iHaG8uk/U8HtA==
+In-Reply-To: <20210202150651.1864426-1-sashal@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Yang Li <abaci-bugfix-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Baolin Wang <baolin.wang@linux.alibaba.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, cgroups@vger.kernel.org, linux-block@vger.kernel.org
 
-On 21.01.21 09:00, Yang Li wrote:
-> Fix below warnings reported by coccicheck:
-> ./mm/memcontrol.c:451:3-9: WARNING: NULL check before some freeing
-> functions is not needed.
-> 
-> Reported-by: Abaci Robot <abaci-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-> Signed-off-by: Yang Li <abaci-bugfix-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>
-> ---
->   mm/memcontrol.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 605f671..f6a561b 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -447,8 +447,7 @@ static void memcg_free_shrinker_maps(struct mem_cgroup *memcg)
->   	for_each_node(nid) {
->   		pn = mem_cgroup_nodeinfo(memcg, nid);
->   		map = rcu_dereference_protected(pn->shrinker_map, true);
-> -		if (map)
-> -			kvfree(map);
-> +		kvfree(map);
->   		rcu_assign_pointer(pn->shrinker_map, NULL);
->   	}
->   }
-> 
+From: Baolin Wang <baolin.wang@linux.alibaba.com>
 
-Reviewed-by: David Hildenbrand <david-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+[ Upstream commit 6c635caef410aa757befbd8857c1eadde5cc22ed ]
 
+On !PREEMPT kernel, we can get below softlockup when doing stress
+testing with creating and destroying block cgroup repeatly. The
+reason is it may take a long time to acquire the queue's lock in
+the loop of blkcg_destroy_blkgs(), or the system can accumulate a
+huge number of blkgs in pathological cases. We can add a need_resched()
+check on each loop and release locks and do cond_resched() if true
+to avoid this issue, since the blkcg_destroy_blkgs() is not called
+from atomic contexts.
+
+[ 4757.010308] watchdog: BUG: soft lockup - CPU#11 stuck for 94s!
+[ 4757.010698] Call trace:
+[ 4757.010700]  blkcg_destroy_blkgs+0x68/0x150
+[ 4757.010701]  cgwb_release_workfn+0x104/0x158
+[ 4757.010702]  process_one_work+0x1bc/0x3f0
+[ 4757.010704]  worker_thread+0x164/0x468
+[ 4757.010705]  kthread+0x108/0x138
+
+Suggested-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Baolin Wang <baolin.wang@linux.alibaba.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ block/blk-cgroup.c | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
+index 3d34ac02d76ef..cb3d44d200055 100644
+--- a/block/blk-cgroup.c
++++ b/block/blk-cgroup.c
+@@ -1089,6 +1089,8 @@ static void blkcg_css_offline(struct cgroup_subsys_state *css)
+  */
+ void blkcg_destroy_blkgs(struct blkcg *blkcg)
+ {
++	might_sleep();
++
+ 	spin_lock_irq(&blkcg->lock);
+ 
+ 	while (!hlist_empty(&blkcg->blkg_list)) {
+@@ -1096,14 +1098,20 @@ void blkcg_destroy_blkgs(struct blkcg *blkcg)
+ 						struct blkcg_gq, blkcg_node);
+ 		struct request_queue *q = blkg->q;
+ 
+-		if (spin_trylock(&q->queue_lock)) {
+-			blkg_destroy(blkg);
+-			spin_unlock(&q->queue_lock);
+-		} else {
++		if (need_resched() || !spin_trylock(&q->queue_lock)) {
++			/*
++			 * Given that the system can accumulate a huge number
++			 * of blkgs in pathological cases, check to see if we
++			 * need to rescheduling to avoid softlockup.
++			 */
+ 			spin_unlock_irq(&blkcg->lock);
+-			cpu_relax();
++			cond_resched();
+ 			spin_lock_irq(&blkcg->lock);
++			continue;
+ 		}
++
++		blkg_destroy(blkg);
++		spin_unlock(&q->queue_lock);
+ 	}
+ 
+ 	spin_unlock_irq(&blkcg->lock);
 -- 
-Thanks,
-
-David / dhildenb
+2.27.0
 
