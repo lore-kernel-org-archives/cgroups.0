@@ -1,52 +1,86 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH 1/7] mm: memcontrol: fix cpuhotplug statistics flushing
-Date: Tue, 2 Feb 2021 18:28:53 -0800
-Message-ID: <20210203022853.GG1812008@carbon.dhcp.thefacebook.com>
-References: <20210202184746.119084-1-hannes@cmpxchg.org>
- <20210202184746.119084-2-hannes@cmpxchg.org>
- <20210202230747.GA1812008@carbon.dhcp.thefacebook.com>
+From: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
+Subject: Re: [RFC PATCH 0/9] cgroup support for GPU devices
+Date: Wed, 3 Feb 2021 11:18:18 +0100
+Message-ID: <YBp4ap+1l2KWbqEJ@phenom.ffwll.local>
+References: <20210126214626.16260-1-brian.welty@intel.com>
+ <84b79978-84c9-52aa-b761-3f4be929064e@rockwork.org>
+ <5307d21b-7494-858c-30f0-cb5fe1d86004@intel.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=UyikSY9c2CyK14yztGolAG6yxN2SE3+M5dkc3tRuvBU=;
- b=Jc/aoqFWSrNhfb6Yokv7YqwlCNhSSrrG2308Qymtq471i1pelHXYerJeO8FgYqQITeVE
- Mf0Of4JEoxmC3ZiXkEBmGmgMetawU1Jmf2lnGsKiAbXw0cFqRwdt/xYIUq4VEerWbVdy
- d7CnYd1Vvh8O8uv5h+3m/4hGp+w0FBVBMVY= 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=UyikSY9c2CyK14yztGolAG6yxN2SE3+M5dkc3tRuvBU=;
- b=T4uPRSduQDXHw6fTaE4dg2MoWb5rKzdWQeUZo16QXGq9rukhA6cnfGP3exZNz2jq2IGWzSnxmwuU8/QBTpSy1nkhr2IpImz7aYXSwC8OdfcTCYw/fNX5LKDOym9vt23GrBe1fIDLLBwzPApkSeYvnfMHe8M+Q7JpZQP4toOJctA=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ffwll.ch; s=google;
+ h=date:from:to:cc:subject:message-id:references:mime-version
+ :content-disposition:content-transfer-encoding:in-reply-to;
+ bh=U7wzFPqPJjRnSnevKVluik0v7yG0WQ43COq8Iej7GJk=;
+ b=Et1vQSKj1b5A5vPhuXS6Jv72x4mhNh+mqm6wWyMVijzpn7Sgr3TS7RXh1ftWuA9HpM
+ z0H/E4Omf9Y0mwUJsiiBbyDyK9lpKh7r+NlhP17/ZSp/aDTcTh7/zAvo4HspBNCSy/+8
+ lOmCzPDG/9A7iZeHl8T0M79MmVUUhEAzZOJL0=
 Content-Disposition: inline
-In-Reply-To: <20210202230747.GA1812008-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+In-Reply-To: <5307d21b-7494-858c-30f0-cb5fe1d86004-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
+List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
+ <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+To: Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Tvrtko Ursulin <tvrtko.ursulin-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Eero Tamminen <eero.t.tamminen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Xingyou Chen <rockrush-hTEXxzOs8fRg9hUCZPvPmw@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Joonas Lahtinen <joonas.lahtinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Chris Wilson <chris-Y6uKTt2uX1cEflXRtASbqLVCufUGDwFn@public.gmane.org>, amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig-5C7GfCeVMHo@public.gmane.org>
 
-On Tue, Feb 02, 2021 at 03:07:47PM -0800, Roman Gushchin wrote:
-> On Tue, Feb 02, 2021 at 01:47:40PM -0500, Johannes Weiner wrote:
-> > The memcg hotunplug callback erroneously flushes counts on the local
-> > CPU, not the counts of the CPU going away; those counts will be lost.
-> > 
-> > Flush the CPU that is actually going away.
-> > 
-> > Also simplify the code a bit by using mod_memcg_state() and
-> > count_memcg_events() instead of open-coding the upward flush - this is
-> > comparable to how vmstat.c handles hotunplug flushing.
-> 
-> To the whole series: it's really nice to have an accurate stats at
-> non-leaf levels. Just as an illustration: if there are 32 CPUs and
-> 1000 sub-cgroups (which is an absolutely realistic number, because
-> often there are many dying generations of each cgroup), the error
-> margin is 3.9GB. It makes all numbers pretty much random and all
-> possible tests extremely flaky.
-
-Btw, I was just looking into kmem kselftests failures/flakiness,
-which is caused by exactly this problem: without waiting for the
-finish of dying cgroups reclaim, we can't make any reliable assumptions
-about what to expect from memcg stats.
-
-So looking forward to have this patchset merged!
+T24gTW9uLCBGZWIgMDEsIDIwMjEgYXQgMDM6MjE6MzVQTSAtMDgwMCwgQnJpYW4gV2VsdHkgd3Jv
+dGU6Cj4gCj4gT24gMS8yOC8yMDIxIDc6MDAgUE0sIFhpbmd5b3UgQ2hlbiB3cm90ZToKPiA+IE9u
+IDIwMjEvMS8yNyDkuIrljYg1OjQ2LCBCcmlhbiBXZWx0eSB3cm90ZToKPiA+IAo+ID4+IFdlJ2Qg
+bGlrZSB0byByZXZpc2l0IHRoZSBwcm9wb3NhbCBvZiBhIEdQVSBjZ3JvdXAgY29udHJvbGxlciBm
+b3IgbWFuYWdpbmcKPiA+PiBHUFUgZGV2aWNlcyBidXQgd2l0aCBqdXN0IGEgYmFzaWMgc2V0IG9m
+IGNvbnRyb2xzLiAgVGhpcyBzZXJpZXMgaXMgYmFzZWQgb24gCj4gPj4gdGhlIHByaW9yIHBhdGNo
+IHNlcmllcyBmcm9tIEtlbm55IEhvIFsxXS4gIFdlIHRha2UgS2VubnkncyBiYXNlIHBhdGNoZXMK
+PiA+PiB3aGljaCBpbXBsZW1lbnQgdGhlIGJhc2ljIGZyYW1ld29yayBmb3IgdGhlIGNvbnRyb2xs
+ZXIsIGJ1dCB3ZSBwcm9wb3NlIGFuCj4gPj4gYWx0ZXJuYXRlIHNldCBvZiBjb250cm9sIGZpbGVz
+LiAgSGVyZSB3ZSd2ZSB0YWtlbiBhIHN1YnNldCBvZiB0aGUgY29udHJvbHMKPiA+PiBwcm9wb3Nl
+ZCBpbiBlYXJsaWVyIGRpc2N1c3Npb24gb24gTUwgaGVyZSBbMl0uIAo+ID4+Cj4gPj4gVGhpcyBz
+ZXJpZXMgcHJvcG9zZXMgYSBzZXQgb2YgZGV2aWNlIG1lbW9yeSBjb250cm9scyAoZ3B1Lm1lbW9y
+eS5jdXJyZW50LAo+ID4+IGdwdS5tZW1vcnkubWF4LCBhbmQgZ3B1Lm1lbW9yeS50b3RhbCkgYW5k
+IGFjY291bnRpbmcgb2YgR1BVIHRpbWUgdXNhZ2UKPiA+PiAoZ3B1LnNjaGVkLnJ1bnRpbWUpLiAg
+R1BVIHRpbWUgc2hhcmluZyBjb250cm9scyBhcmUgbGVmdCBhcyBmdXR1cmUgd29yay4KPiA+PiBU
+aGVzZSBhcmUgaW1wbGVtZW50ZWQgd2l0aGluIHRoZSBHUFUgY29udHJvbGxlciBhbG9uZyB3aXRo
+IGludGVncmF0aW9uL3VzYWdlCj4gPj4gb2YgdGhlIGRldmljZSBtZW1vcnkgY29udHJvbHMgYnkg
+dGhlIGk5MTUgZGV2aWNlIGRyaXZlci4KPiA+Pgo+ID4+IEFzIGFuIGFjY2VsZXJhdG9yIG9yIEdQ
+VSBkZXZpY2UgaXMgc2ltaWxhciBpbiBtYW55IHJlc3BlY3RzIHRvIGEgQ1BVIHdpdGgKPiA+PiAo
+b3Igd2l0aG91dCkgYXR0YWNoZWQgc3lzdGVtIG1lbW9yeSwgdGhlIGJhc2ljIHByaW5jaXBsZSBo
+ZXJlIGlzIHRyeSB0bwo+ID4+IGNvcHkgdGhlIHNlbWFudGljcyBvZiBleGlzdGluZyBjb250cm9s
+cyBmcm9tIG90aGVyIGNvbnRyb2xsZXJzIHdoZW4gcG9zc2libGUKPiA+PiBhbmQgd2hlcmUgdGhl
+c2UgY29udHJvbHMgc2VydmUgdGhlIHNhbWUgdW5kZXJseWluZyBwdXJwb3NlLgo+ID4+IEZvciBl
+eGFtcGxlLCB0aGUgbWVtb3J5Lm1heCBhbmQgbWVtb3J5LmN1cnJlbnQgY29udHJvbHMgYXJlIGJh
+c2VkIG9uCj4gPj4gc2FtZSBjb250cm9scyBmcm9tIE1FTUNHIGNvbnRyb2xsZXIuCj4gPiAKPiA+
+IEl0IHNlZW1zIG5vdCB0byBiZSBEUk0gc3BlY2lmaWMsIG9yIGV2ZW4gR1BVIHNwZWNpZmljLiBX
+b3VsZCB3ZSBoYXZlIGFuIHVuaXZlcnNhbAo+ID4gY29udHJvbCBncm91cCBmb3IgYW55IGFjY2Vs
+ZXJhdG9yLCBHUEdQVSBkZXZpY2UgZXRjLCB0aGF0IGhvbGQgc2hhcmFibGUgcmVzb3VyY2VzCj4g
+PiBsaWtlIGRldmljZSBtZW1vcnksIGNvbXB1dGUgdXRpbGl0eSwgYmFuZHdpZHRoLCB3aXRoIGV4
+dHJhIGNvbnRyb2wgZmlsZSB0byBzZWxlY3QKPiA+IGJldHdlZW4gZGV2aWNlcyhvciB2ZW5kb3Jz
+KT8KPiA+IAo+ID4gZS5nLiAvY2duYW1lLmRldmljZSB0aGF0IHN0b3JlcyBQQ0kgQkRG77yMIG9y
+IGVudW0oaW50ZWwsIGFtZGdwdSwgbnZpZGlhLCAuLi4pLAo+ID4gZGVmYXVsdHMgdG8gbm9uZSwg
+bWVhbnMgbm90IGVuYWJsZWQuCj4gPiAKPiAKPiBIaSwgdGhhbmtzIGZvciB0aGUgZmVlZGJhY2su
+ICBZZXMsIEkgdGVuZCB0byBhZ3JlZS4gIEkndmUgYXNrZWQgYWJvdXQgdGhpcyBpbgo+IGVhcmxp
+ZXIgd29yazsgbXkgc3VnZ2VzdGlvbiBpcyB0byBuYW1lIHRoZSBjb250cm9sbGVyIHNvbWV0aGlu
+ZyBsaWtlICdYUFUnIHRvCj4gYmUgY2xlYXIgdGhhdCB0aGVzZSBjb250cm9scyBjb3VsZCBhcHBs
+eSB0byBtb3JlIHRoYW4gR1BVLgo+IAo+IEJ1dCBhdCBsZWFzdCBmb3Igbm93LCBiYXNlZCBvbiBU
+ZWp1bidzIHJlcGx5IFsxXSwgdGhlIGZlZWRiYWNrIGlzIHRvIHRyeSBhbmQga2VlcAo+IHRoaXMg
+Y29udHJvbGxlciBhcyBzbWFsbCBhbmQgZm9jdXNlZCBhcyBwb3NzaWJsZSBvbiBqdXN0IEdQVS4g
+IEF0IGxlYXN0IHVudGlsCj4gd2UgZ2V0IHNvbWUgY29uc2Vuc3VzIG9uIHNldCBvZiBjb250cm9s
+cyBmb3IgR1BVLi4uLi4gIGJ1dCBmb3IgdGhpcyB3ZSBuZWVkIG1vcmUKPiBhY3RpdmUgaW5wdXQg
+ZnJvbSBjb21tdW5pdHkuLi4uLi4KClRoZXJlJ3MgYWxzbyBub3RoaW5nIHN0b3BwaW5nIGFueW9u
+ZSBmcm9tIGV4cG9zaW5nIGFueSBraW5kIG9mIFhQVSBhcwpkcml2ZXJzL2dwdSBkZXZpY2UuIEFz
+aWRlIGZyb20gdGhlICJmdWxsIHN0YWNrIG11c3QgYmUgb3BlbiByZXF1aXJlbWVudCB3ZQpoYXZl
+IiBpbiBkcm0uIEFuZCBmcmFua2x5IHdpdGggZHJtIGJlaW5nIHZlcnkgY29uZnVzaW5nIGFjcm9u
+eW0gd2UgY291bGQKYWxzbyByZW5hbWUgR1BVIHRvIGJlIHRoZSAiZ2VuZXJhbCBwcm9jZXNzaW5n
+IHVuaXQiIHN1YnN5dGVtIDotKQotRGFuaWVsCgo+IAo+IC1Ccmlhbgo+IAo+IFsxXSBodHRwczov
+L2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9hcmNoaXZlcy9kcmktZGV2ZWwvMjAxOS1Ob3ZlbWJlci8y
+NDMxNjcuaHRtbAoKLS0gCkRhbmllbCBWZXR0ZXIKU29mdHdhcmUgRW5naW5lZXIsIEludGVsIENv
+cnBvcmF0aW9uCmh0dHA6Ly9ibG9nLmZmd2xsLmNoCl9fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fCmFtZC1nZnggbWFpbGluZyBsaXN0CmFtZC1nZnhAbGlzdHMu
+ZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlz
+dGluZm8vYW1kLWdmeAo=
