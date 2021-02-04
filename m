@@ -1,98 +1,43 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 6/7] mm: memcontrol: switch to rstat
-Date: Thu, 4 Feb 2021 17:44:06 +0100
-Message-ID: <YBwkVoNa77Nn5TE9@dhcp22.suse.cz>
-References: <20210202184746.119084-1-hannes@cmpxchg.org>
- <20210202184746.119084-7-hannes@cmpxchg.org>
- <YBwCZYWsQOFAGUar@dhcp22.suse.cz>
- <YBwdiu2Fj4JHgqhQ@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH v2] mm: memcontrol: replace the loop with a
+ list_for_each_entry()
+Date: Thu, 4 Feb 2021 12:43:56 -0500
+Message-ID: <YBwyXPFoXrLcxsZR@cmpxchg.org>
+References: <20210204163055.56080-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1612457047; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=uPMfnHJez5C0MYU9Bi3DY+Zzs1npEebnPNg9a6l1V9g=;
-        b=OyUf2t2CyZUBOw3fyaefDcbgpMBcVsea+tJUuphQlBvBy9pQkyrcEsJBBG4GEajmW7vM6g
-        H949fzmNE/GPXVwllufcLuwPy+hWIU2G05xDp8Yxm0U1lJsyNeCmeqSFogw1mxxO0JB1jW
-        4YsoerN08FU9CzXsrURvSYD6tYTNAaM=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=GCBGFufjjtkKM79QaCqD4gnNbGr/Jp0wwB8/7DPDEJI=;
+        b=kNmXSlAAZOA5BA1Nd/FHNTmnZuUl+kBcrKvgz0V3T9PaqZLDkAdiv+vpuvjGJWzgIQ
+         1JbP6ozldUU5i9up9n52QDgGGYGoDr2vLQPsW3ypPSvSxzf47qEyMaHhjlht+j+pN+Am
+         0SC3HBoEE2tK35rFDjrbYwH6woQAqVY+EP9KnLUo6SV1bNagCuG4CyFcPPx5AvuoKcPK
+         hlMTyTVcLovypO7oBoPsJ00SQg0EViX0k+ScJ67WU8/8sMm7MpxTfTpmb9HHxGuwY84a
+         31WQ5Pt3MX0MummZwo7oyY4RA7sqHnFFYctmMseNA4rmTHJTHv75zulDM5FQKOCrxpog
+         rfpg==
 Content-Disposition: inline
-In-Reply-To: <YBwdiu2Fj4JHgqhQ-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <20210204163055.56080-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu 04-02-21 11:15:06, Johannes Weiner wrote:
-> Hello Michal,
+On Fri, Feb 05, 2021 at 12:30:55AM +0800, Muchun Song wrote:
+> The rule of list walk has gone since:
 > 
-> On Thu, Feb 04, 2021 at 03:19:17PM +0100, Michal Hocko wrote:
-> > On Tue 02-02-21 13:47:45, Johannes Weiner wrote:
-> > > Replace the memory controller's custom hierarchical stats code with
-> > > the generic rstat infrastructure provided by the cgroup core.
-> > > 
-> > > The current implementation does batched upward propagation from the
-> > > write side (i.e. as stats change). The per-cpu batches introduce an
-> > > error, which is multiplied by the number of subgroups in a tree. In
-> > > systems with many CPUs and sizable cgroup trees, the error can be
-> > > large enough to confuse users (e.g. 32 batch pages * 32 CPUs * 32
-> > > subgroups results in an error of up to 128M per stat item). This can
-> > > entirely swallow allocation bursts inside a workload that the user is
-> > > expecting to see reflected in the statistics.
-> > > 
-> > > In the past, we've done read-side aggregation, where a memory.stat
-> > > read would have to walk the entire subtree and add up per-cpu
-> > > counts. This became problematic with lazily-freed cgroups: we could
-> > > have large subtrees where most cgroups were entirely idle. Hence the
-> > > switch to change-driven upward propagation. Unfortunately, it needed
-> > > to trade accuracy for speed due to the write side being so hot.
-> > > 
-> > > Rstat combines the best of both worlds: from the write side, it
-> > > cheaply maintains a queue of cgroups that have pending changes, so
-> > > that the read side can do selective tree aggregation. This way the
-> > > reported stats will always be precise and recent as can be, while the
-> > > aggregation can skip over potentially large numbers of idle cgroups.
-> > > 
-> > > This adds a second vmstats to struct mem_cgroup (MEMCG_NR_STAT +
-> > > NR_VM_EVENT_ITEMS) to track pending subtree deltas during upward
-> > > aggregation. It removes 3 words from the per-cpu data. It eliminates
-> > > memcg_exact_page_state(), since memcg_page_state() is now exact.
-> > 
-> > I am still digesting details and need to look deeper into how rstat
-> > works but removing our own stats is definitely a good plan. Especially
-> > when there are existing limitations and problems that would need fixing.
-> > 
-> > Just to check that my high level understanding is correct. The
-> > transition is effectivelly removing a need to manually sync counters up
-> > the hierarchy and partially outsources that decision to rstat core. The
-> > controller is responsible just to tell the core how that syncing is done
-> > (e.g. which specific counters etc).
+>  commit a9d5adeeb4b2 ("mm/memcontrol: allow to uncharge page without using page->lru field")
 > 
-> Yes, exactly.
+> So remove the strange comment and replace the loop with a
+> list_for_each_entry().
 > 
-> rstat implements a tree of cgroups that have local changes pending,
-> and a flush walk on that tree. But it's all driven by the controller.
+> There is only one caller of the uncharge_list(). So just fold it into
+> mem_cgroup_uncharge_list() and remove it.
 > 
-> memcg needs to tell rstat 1) when stats in a local cgroup change
-> e.g. when we do mod_memcg_state() (cgroup_rstat_updated), 2) when to
-> flush, e.g. before a memory.stat read (cgroup_rstat_flush), and 3) how
-> to flush one cgroup's per-cpu state and propagate it upward to the
-> parent during rstat's flush walk (.css_rstat_flush).
+> Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-Can we have this short summary in a changelog please?
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-> > Excplicit flushes are needed when you want an exact value (e.g. when
-> > values are presented to the userspace). I do not see any flushes to
-> > be done by the core pro-actively except for clean up on a release.
-> > 
-> > Is the above correct understanding?
-> 
-> Yes, that's correct.
-
-OK, thanks for the confirmation. I will have a closer look tomorrow but
-I do not see any problems now.
-
--- 
-Michal Hocko
-SUSE Labs
+Thank you, Muchun!
