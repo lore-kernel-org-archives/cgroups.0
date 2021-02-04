@@ -1,42 +1,100 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 6/7] mm: memcontrol: switch to rstat
-Date: Thu, 4 Feb 2021 11:26:32 -0500
-Message-ID: <YBwgOHL8dTjJpnKU@cmpxchg.org>
-References: <20210202184746.119084-1-hannes@cmpxchg.org>
- <20210202184746.119084-7-hannes@cmpxchg.org>
- <20210203014726.GE1812008@carbon.dhcp.thefacebook.com>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: [PATCH v2] mm: memcontrol: replace the loop with a list_for_each_entry()
+Date: Fri,  5 Feb 2021 00:30:55 +0800
+Message-ID: <20210204163055.56080-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=ACIgalIASwLRIdWMuW6Oj7uCmIS5PMrqjcUMfzNwZKE=;
-        b=MhxcF478bHTzeOjaqn3t+dgrOQ2TemimDwkXVDLohFRJNl95pHbGa9lLMm7eUh47yK
-         hqGCwPMieGsvldBevk/GTzZFLDZryCRd8tlWXVG8uYNf9AohQdvgTb+LxFJwSEjutywo
-         3E18OctPqEd11DhJx4NgXE4Yj0fHAQ0WIyhu+wgSKgvMnTRsuVjDtnLBrLvkb4TXY9Om
-         LcJVZVFkYyCc7nEmtuJiow7He54ZkAWBEXGmmJe/6WxLOur+I/zZe0/QnliUXFYnnBc3
-         +cNlrBxAgNgbdTKF95BPokovA+P0SqJ0wm/w/bqBYg83pfhDJKy0DV+MBi+sqDRpT+Bx
-         ZldA==
-Content-Disposition: inline
-In-Reply-To: <20210203014726.GE1812008-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Ci1gXzshUKxf8ZHIFWrDVwutYRYOBcIY5pJ9Y3PAGTs=;
+        b=YZLEXsBAH1Q6e3Y+HQtqMaUhliU9SQ3zmhdOHQH+2rBPWuZlC8ivhzt6Rp6OoEW/zI
+         +t4hg5wwXDDgx7ZNPxXGePwQ4/FKQIYYw5+JknWED8xyAERQ6TzplGInxk5/dNmSJLKc
+         1Flm0SpW/RqCoLemrCbH1+qDjpIFDsQu7DlVvxFXWkY1q7U/mJH3XJIuHHXtTtU/9sEP
+         2n9WfMvAUFGCWLbLDaLrhc3U0cscXjgE4aE9lItHCXtTvFU1lvmuLzMpd5yJ75vEPyQD
+         /0Z3nI5rplhLrYHOkjAz2j0jNo1PTBXBbnVVzziipPHWjAGbQijoHvNCAOyip/wI6HXi
+         atwQ==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-On Tue, Feb 02, 2021 at 05:47:26PM -0800, Roman Gushchin wrote:
-> On Tue, Feb 02, 2021 at 01:47:45PM -0500, Johannes Weiner wrote:
-> >  	for_each_node(node) {
-> >  		struct mem_cgroup_per_node *pn = memcg->nodeinfo[node];
-> > +		unsigned long stat[NR_VM_NODE_STAT_ITEMS] = {0, };
->                                                               ^^
-> I'd drop the comma here. It seems that "{0}" version is way more popular
-> over the mm code and in the kernel in general.
+The rule of list walk has gone since:
 
-Is there a downside to the comma? I'm finding more { 0, } than { 0 }
-in mm code, and at least kernel-wide it seems both are acceptable
-(although { 0 } is more popular overall).
+ commit a9d5adeeb4b2 ("mm/memcontrol: allow to uncharge page without using page->lru field")
 
-I don't care much either way. I can change it in v2 if there is one.
+So remove the strange comment and replace the loop with a
+list_for_each_entry().
+
+There is only one caller of the uncharge_list(). So just fold it into
+mem_cgroup_uncharge_list() and remove it.
+
+Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+---
+v2:
+ - Fold uncharge_list() to mem_cgroup_uncharge_list().
+
+ mm/memcontrol.c | 35 ++++++++---------------------------
+ 1 file changed, 8 insertions(+), 27 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index ed5cc78a8dbf..8c035846c7a4 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6862,31 +6862,6 @@ static void uncharge_page(struct page *page, struct uncharge_gather *ug)
+ 	css_put(&ug->memcg->css);
+ }
+ 
+-static void uncharge_list(struct list_head *page_list)
+-{
+-	struct uncharge_gather ug;
+-	struct list_head *next;
+-
+-	uncharge_gather_clear(&ug);
+-
+-	/*
+-	 * Note that the list can be a single page->lru; hence the
+-	 * do-while loop instead of a simple list_for_each_entry().
+-	 */
+-	next = page_list->next;
+-	do {
+-		struct page *page;
+-
+-		page = list_entry(next, struct page, lru);
+-		next = page->lru.next;
+-
+-		uncharge_page(page, &ug);
+-	} while (next != page_list);
+-
+-	if (ug.memcg)
+-		uncharge_batch(&ug);
+-}
+-
+ /**
+  * mem_cgroup_uncharge - uncharge a page
+  * @page: page to uncharge
+@@ -6918,11 +6893,17 @@ void mem_cgroup_uncharge(struct page *page)
+  */
+ void mem_cgroup_uncharge_list(struct list_head *page_list)
+ {
++	struct uncharge_gather ug;
++	struct page *page;
++
+ 	if (mem_cgroup_disabled())
+ 		return;
+ 
+-	if (!list_empty(page_list))
+-		uncharge_list(page_list);
++	uncharge_gather_clear(&ug);
++	list_for_each_entry(page, page_list, lru)
++		uncharge_page(page, &ug);
++	if (ug.memcg)
++		uncharge_batch(&ug);
+ }
+ 
+ /**
+-- 
+2.11.0
+
