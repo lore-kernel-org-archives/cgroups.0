@@ -1,69 +1,90 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 4/7] cgroup: rstat: support cgroup1
-Date: Thu, 4 Feb 2021 11:01:30 -0500
-Message-ID: <YBwaWkJgqPNF3I3w@cmpxchg.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH 6/7] mm: memcontrol: switch to rstat
+Date: Thu, 4 Feb 2021 11:15:06 -0500
+Message-ID: <YBwdiu2Fj4JHgqhQ@cmpxchg.org>
 References: <20210202184746.119084-1-hannes@cmpxchg.org>
- <20210202184746.119084-5-hannes@cmpxchg.org>
- <YBv5Dc1I9QpPH69n@dhcp22.suse.cz>
+ <20210202184746.119084-7-hannes@cmpxchg.org>
+ <YBwCZYWsQOFAGUar@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=csnC8vI9T1wPkKdVnk2T3EegCaTzDUoDkg3RtcvUQt0=;
-        b=om9bw1733wlt1/kLEgKPgVnHc/NgppIyLl3gcn5uZTxcNLNlLmm/dcW3kKnRBqJ1kP
-         VJckPkk8IWcl+e6iyWLb/rPmCsRwzIQS4d+o6d9mYr4g8FxKPqxG4vvn7XeKENY3r0IC
-         1LaB5GlWS3YVKSJItCGIthyB1GthkrGXEpGx/4rzUptWXX5Y2aU8Lgrex7t0/LI3pGP6
-         1gP1wf3yZ/nhn2phPWvvBuYwk2vpZC78juptyfdu00sQDAHwUSXeS0vsYhIx/E2wT+CI
-         eXV1MkmzGpbjcRrPxWdQVedLBV1Rbp1D32tSh0qqx6W0CERrvFXvU9ryGCfamlzKIAa1
-         2sAw==
+        bh=0rhTk5izLatoFfIDNxmz1fyaLshSZ+6LLZBve6XjOzQ=;
+        b=O4ZVUwRrPSmt03J6wBFbrAwKR8DigcweNeGpjQBAT542zJXom/F8N0kM5lXk+AOpAz
+         lkEqie3XYPUxu/MymMBqjyYRKYWigI816jCPhNr1e907EDJ6OXubQrfNVJizoLGIlbv1
+         sXK3IjOgSrrdcit8dHEAFEjRAmzd28hArjzv69QYDfjsiT0VwXNP/mr2Dn3OKxdd3o6U
+         8rykm84xwcu5321Sid2AN+avO0Ad5tnKkoMCTX2BEAg0UiQ1L0RRQmz3uHhW8MULkxy2
+         gGGYZPxIOmxMRqo45RSrHCREyaqZuMRHgMDKQhWwUIS/Imgu4yXVukgdiiRVb2odb0q3
+         iJ+A==
 Content-Disposition: inline
-In-Reply-To: <YBv5Dc1I9QpPH69n-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <YBwCZYWsQOFAGUar@dhcp22.suse.cz>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Michal Hocko <mhocko@suse.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Thu, Feb 04, 2021 at 02:39:25PM +0100, Michal Hocko wrote:
-> On Tue 02-02-21 13:47:43, Johannes Weiner wrote:
-> > Rstat currently only supports the default hierarchy in cgroup2. In
-> > order to replace memcg's private stats infrastructure - used in both
-> > cgroup1 and cgroup2 - with rstat, the latter needs to support cgroup1.
+Hello Michal,
+
+On Thu, Feb 04, 2021 at 03:19:17PM +0100, Michal Hocko wrote:
+> On Tue 02-02-21 13:47:45, Johannes Weiner wrote:
+> > Replace the memory controller's custom hierarchical stats code with
+> > the generic rstat infrastructure provided by the cgroup core.
 > > 
-> > The initialization and destruction callbacks for regular cgroups are
-> > already in place. Remove the cgroup_on_dfl() guards to handle cgroup1.
+> > The current implementation does batched upward propagation from the
+> > write side (i.e. as stats change). The per-cpu batches introduce an
+> > error, which is multiplied by the number of subgroups in a tree. In
+> > systems with many CPUs and sizable cgroup trees, the error can be
+> > large enough to confuse users (e.g. 32 batch pages * 32 CPUs * 32
+> > subgroups results in an error of up to 128M per stat item). This can
+> > entirely swallow allocation bursts inside a workload that the user is
+> > expecting to see reflected in the statistics.
 > > 
-> > The initialization of the root cgroup is currently hardcoded to only
-> > handle cgrp_dfl_root.cgrp. Move those callbacks to cgroup_setup_root()
-> > and cgroup_destroy_root() to handle the default root as well as the
-> > various cgroup1 roots we may set up during mounting.
+> > In the past, we've done read-side aggregation, where a memory.stat
+> > read would have to walk the entire subtree and add up per-cpu
+> > counts. This became problematic with lazily-freed cgroups: we could
+> > have large subtrees where most cgroups were entirely idle. Hence the
+> > switch to change-driven upward propagation. Unfortunately, it needed
+> > to trade accuracy for speed due to the write side being so hot.
 > > 
-> > The linking of css to cgroups happens in code shared between cgroup1
-> > and cgroup2 as well. Simply remove the cgroup_on_dfl() guard.
+> > Rstat combines the best of both worlds: from the write side, it
+> > cheaply maintains a queue of cgroups that have pending changes, so
+> > that the read side can do selective tree aggregation. This way the
+> > reported stats will always be precise and recent as can be, while the
+> > aggregation can skip over potentially large numbers of idle cgroups.
 > > 
-> > Linkage of the root css to the root cgroup is a bit trickier: per
-> > default, the root css of a subsystem controller belongs to the default
-> > hierarchy (i.e. the cgroup2 root). When a controller is mounted in its
-> > cgroup1 version, the root css is stolen and moved to the cgroup1 root;
-> > on unmount, the css moves back to the default hierarchy. Annotate
-> > rebind_subsystems() to move the root css linkage along between roots.
+> > This adds a second vmstats to struct mem_cgroup (MEMCG_NR_STAT +
+> > NR_VM_EVENT_ITEMS) to track pending subtree deltas during upward
+> > aggregation. It removes 3 words from the per-cpu data. It eliminates
+> > memcg_exact_page_state(), since memcg_page_state() is now exact.
 > 
-> I am not familiar with rstat API and from this patch it is not really
-> clear to me how does it deal with memcg v1 use_hierarchy oddness.
+> I am still digesting details and need to look deeper into how rstat
+> works but removing our own stats is definitely a good plan. Especially
+> when there are existing limitations and problems that would need fixing.
+> 
+> Just to check that my high level understanding is correct. The
+> transition is effectivelly removing a need to manually sync counters up
+> the hierarchy and partially outsources that decision to rstat core. The
+> controller is responsible just to tell the core how that syncing is done
+> (e.g. which specific counters etc).
 
-That's gone, right?
+Yes, exactly.
 
-static int mem_cgroup_hierarchy_write(struct cgroup_subsys_state *css,
-                                      struct cftype *cft, u64 val)
-{
-        if (val == 1)
-                return 0;
+rstat implements a tree of cgroups that have local changes pending,
+and a flush walk on that tree. But it's all driven by the controller.
 
-        pr_warn_once("Non-hierarchical mode is deprecated. "
-                     "Please report your usecase to linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org if you "
-                     "depend on this functionality.\n");
+memcg needs to tell rstat 1) when stats in a local cgroup change
+e.g. when we do mod_memcg_state() (cgroup_rstat_updated), 2) when to
+flush, e.g. before a memory.stat read (cgroup_rstat_flush), and 3) how
+to flush one cgroup's per-cpu state and propagate it upward to the
+parent during rstat's flush walk (.css_rstat_flush).
 
-        return -EINVAL;
-}
+> Excplicit flushes are needed when you want an exact value (e.g. when
+> values are presented to the userspace). I do not see any flushes to
+> be done by the core pro-actively except for clean up on a release.
+> 
+> Is the above correct understanding?
+
+Yes, that's correct.
