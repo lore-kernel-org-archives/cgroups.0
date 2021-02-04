@@ -1,130 +1,184 @@
-From: Kenny Ho <y2kenny-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC] Add BPF_PROG_TYPE_CGROUP_IOCTL
-Date: Wed, 3 Feb 2021 14:01:19 -0500
-Message-ID: <CAOWid-c4Nk717xUah19B=z=2DtztbtU=_4=fQdfhqpfNJYN2gw@mail.gmail.com>
-References: <CAOWid-d=a1Q3R92s7GrzxWhXx7_dc8NQvQg7i7RYTVv3+jHxkQ@mail.gmail.com>
- <20201103053244.khibmr66p7lhv7ge@ast-mbp.dhcp.thefacebook.com>
- <CAOWid-eQSPru0nm8+Xo3r6C0pJGq+5r8mzM8BL2dgNn2c9mt2Q@mail.gmail.com>
- <CAADnVQKuoZDB-Xga5STHdGSxvSP=B6jQ40kLdpL1u+J98bv65A@mail.gmail.com>
- <CAOWid-czZphRz6Y-H3OcObKCH=bLLC3=bOZaSB-6YBE56+Qzrg@mail.gmail.com>
- <20201103210418.q7hddyl7rvdplike@ast-mbp.dhcp.thefacebook.com>
- <CAOWid-djQ_NRfCbOTnZQ-A8Pr7jMP7KuZEJDSsvzWkdw7qc=yA@mail.gmail.com>
- <20201103232805.6uq4zg3gdvw2iiki@ast-mbp.dhcp.thefacebook.com>
- <YBgU9Vu0BGV8kCxD@phenom.ffwll.local>
- <CAOWid-eXMqcNpjFxbcuUDU7Y-CCYJRNT_9mzqFYm1jeCPdADGQ@mail.gmail.com>
- <YBqEbHyIjUjgk+es@phenom.ffwll.local>
+From: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] cpu/hotplug: wait for cpuset_hotplug_work to finish on cpu onlining
+Date: Thu,  4 Feb 2021 01:01:57 +0000
+Message-ID: <20210204010157.1823669-1-aklimov@redhat.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1612400525;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=ZAkXTLCQatITvM0DWGh6kbF0oAf7mL4HuXS0UNtLhwE=;
+        b=NiU+0emwcXPYLWUe/PZUq4Bm2SxEeL+YJH1O2iyOVfTMoqvZyB6YKHqWPXAXt1w4K2k4Cs
+        Pzu05ss3E7Yc7ClhfhttllrdfOmOjyW0zbxaf3ibReR8LMIH3Ln1/OQ8bqig6tYHX7AAsH
+        fZ5nm8NmxPL0KeSG1TKxzngtewBIdyk=
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20161025;
- h=mime-version:references:in-reply-to:from:date:message-id:subject:to
- :cc; bh=wIOqY6tEDX11BFk0SrIjiKiEqqNnZwVaHMuzsSoEibs=;
- b=j1WPtWwj8ipHJ5w71WVEp7IMoeVOix4P22EtplqXkjwA3n9TYe5ruFx1w3WCtU7TzM
- xFLyuYLyBBgt4rQ9pTEI63RwpaU6CH7fkZ88Wi0xGVwbsuqsBGR5WliCCTl4EOMu/qKd
- qY6Cts+PckDtVmNCpdBPZd9QtKkhizU5dNhml5JlB/UQWoDiAnl6U1aMICEdKwcL+amr
- E+pOA2+y3TkeSviLQtMzDMoojyeBShIzT+i53bi0lY2dHnXhhD5GMHQwMySDyksSlTy4
- NyeS0I5MuMzrAZAdl95lq3Yc5PvaJNIbJQxk29A3UhOaQR6k/IbdWakgsaWBB1jwKs+i
- QtIg==
-In-Reply-To: <YBqEbHyIjUjgk+es-dv86pmgwkMBes7Z6vYuT8azUEOm+Xw19@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/amd-gfx>
-List-Post: <mailto:amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/amd-gfx>,
- <mailto:amd-gfx-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "amd-gfx" <amd-gfx-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>
-Cc: Song Liu <songliubraving-b10kYP2dOMg@public.gmane.org>, Andrii Nakryiko <andriin-b10kYP2dOMg@public.gmane.org>, DRI Development <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Daniel Borkmann <daniel-FeC+5ew28dpmcu3hnIyYJQ@public.gmane.org>, Kenny Ho <Kenny.Ho-5C7GfCeVMHo@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Brian Welty <brian.welty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, John Fastabend <john.fastabend-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexei Starovoitov <ast-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, amd-gfx list <amd-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Martin KaFai Lau <kafai-b10kYP2dOMg@public.gmane.org>, Linux-Fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, KP Singh <kpsingh-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, Yonghong Song <yhs-b10kYP2dOMg@public.gmane.org>, bpf <bpf-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Airlie <airlied-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexei Starovoitov <alexei.starovoitov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alex Deucher <alexander.deucher-5C7GfCeVMHo@public.gmane.org>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, qais.yousef-5wv7dgnIgG8@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-Daniel,
+When a CPU offlined and onlined via device_offline() and device_online()
+the userspace gets uevent notification. If, after receiving "online" uevent,
+userspace executes sched_setaffinity() on some task trying to move it
+to a recently onlined CPU, then it often fails with -EINVAL. Userspace needs
+to wait around 5..30 ms before sched_setaffinity() will succeed for the recently
+onlined CPU after receiving uevent.
 
-I will have to get back to you later on the details of this because my
-head is currently context switched to some infrastructure and
-Kubernetes/golang work, so I am having a hard time digesting what you
-are saying.  I am new to the bpf stuff so this is about my own
-learning as well as a conversation starter.  The high level goal here
-is to have a path for flexibility via a bpf program.  Not just GPU or
-DRM or CU mask, but devices making decisions via an operator-written
-bpf-prog attached to a cgroup.  More inline.
+If in_mask argument for sched_setaffinity() has only recently onlined CPU,
+it often fails with such flow:
 
-On Wed, Feb 3, 2021 at 6:09 AM Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org> wrote:
->
-> On Mon, Feb 01, 2021 at 11:51:07AM -0500, Kenny Ho wrote:
-> > On Mon, Feb 1, 2021 at 9:49 AM Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org> wrote:
-> > > - there's been a pile of cgroups proposal to manage gpus at the drm
-> > >   subsystem level, some by Kenny, and frankly this at least looks a bit
-> > >   like a quick hack to sidestep the consensus process for that.
-> > No Daniel, this is quick *draft* to get a conversation going.  Bpf was
-> > actually a path suggested by Tejun back in 2018 so I think you are
-> > mischaracterizing this quite a bit.
-> >
-> > "2018-11-20 Kenny Ho:
-> > To put the questions in more concrete terms, let say a user wants to
-> >  expose certain part of a gpu to a particular cgroup similar to the
-> >  way selective cpu cores are exposed to a cgroup via cpuset, how
-> >  should we go about enabling such functionality?
-> >
-> > 2018-11-20 Tejun Heo:
-> > Do what the intel driver or bpf is doing?  It's not difficult to hook
-> > into cgroup for identification purposes."
->
-> Yeah, but if you go full amd specific for this, you might as well have a
-> specific BPF hook which is called in amdgpu/kfd and returns you the CU
-> mask for a given cgroups (and figures that out however it pleases).
->
-> Not a generic framework which lets you build pretty much any possible
-> cgroups controller for anything else using BPF. Trying to filter anything
-> at the generic ioctl just doesn't feel like a great idea that's long term
-> maintainable. E.g. what happens if there's new uapi for command
-> submission/context creation and now your bpf filter isn't catching all
-> access anymore? If it's an explicit hook that explicitly computes the CU
-> mask, then we can add more checks as needed. With ioctl that's impossible.
->
-> Plus I'm also not sure whether that's really a good idea still, since if
-> cloud companies have to built their own bespoke container stuff for every
-> gpu vendor, that's quite a bad platform we're building. And "I'd like to
-> make sure my gpu is used fairly among multiple tenents" really isn't a
-> use-case that's specific to amd.
+  sched_setaffinity()
+    cpuset_cpus_allowed()
+      guarantee_online_cpus()   <-- cs->effective_cpus mask does not
+                                        contain recently onlined cpu
+    cpumask_and()               <-- final new_mask is empty
+    __set_cpus_allowed_ptr()
+      cpumask_any_and_distribute() <-- returns dest_cpu equal to nr_cpu_ids
+      returns -EINVAL
 
-I don't understand what you are saying about containers here since
-bpf-progs are not the same as container nor are they deployed from
-inside a container (as far as I know, I am actually not sure how
-bpf-cgroup works with higher level cloud orchestration since folks
-like Docker just migrated to cgroup v2 very recently... I don't think
-you can specify a bpf-prog to load as part of a k8s pod definition.)
-That said, the bit I understand ("not sure whether that's really a
-good idea....cloud companies have to built their own bespoke container
-stuff for every gpu vendor...") is in fact the current status quo.  If
-you look into some of the popular ML/AI-oriented containers/apps, you
-will likely see things are mostly hardcoded to CUDA.  Since I work for
-AMD, I wouldn't say that's a good thing but this is just the reality.
-For Kubernetes at least (where my head is currently), the official
-mechanisms are Device Plugins (I am the author for the one for AMD but
-there are a few ones from Intel too, you can confirm with your
-colleagues)  and Node Feature/Labels.  Kubernetes schedules
-pod/container launched by users to the node/servers by the affinity of
-the node resources/labels, and the resources/labels in the pod
-specification created by the users.
+Cpusets used in guarantee_online_cpus() are updated using workqueue from
+cpuset_update_active_cpus() which in its turn is called from cpu hotplug callback
+sched_cpu_activate() hence it may not be observable by sched_setaffinity() if
+it is called immediately after uevent.
+Out of line uevent can be avoided if we will ensure that cpuset_hotplug_work
+has run to completion using cpuset_wait_for_hotplug() after onlining the
+cpu in cpu_up() and in cpuhp_smt_enable().
 
-> If this would be something very hw specific like cache assignment and
-> quality of service stuff or things like that, then vendor specific imo
-> makes sense. But for CU masks essentially we're cutting the compute
-> resources up in some way, and I kinda expect everyone with a gpu who cares
-> about isolating workloads with cgroups wants to do that.
+Co-analyzed-by: Joshua Baker <jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
 
-Right, but isolating workloads is quality of service stuff and *how*
-compute resources are cut up are vendor specific.
+Previous RFC patch and discussion is here:
+https://lore.kernel.org/lkml/20201203171431.256675-1-aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
 
-Anyway, as I said at the beginning of this reply, this is about
-flexibility in support of the diversity of devices and architectures.
-CU mask is simply a concrete example of hw diversity that a
-bpf-program can encapsulate.  I can see this framework (a custom
-program making decisions in a specific cgroup and device context) use
-for other things as well.  It may even be useful within a vendor to
-handle the diversity between SKUs.
+The commit a49e4629b5ed "cpuset: Make cpuset hotplug synchronous"
+would also get rid of the early uevent but it was reverted (deadlocks).
 
-Kenny
+The nature of this bug is also described here (with different consequences):
+https://lore.kernel.org/lkml/20200211141554.24181-1-qais.yousef-5wv7dgnIgG8@public.gmane.org/
+
+Reproducer: https://gitlab.com/0xeafffffe/xlam
+
+Currently with such changes the reproducer code continues to work without issues.
+The idea is to avoid the situation when userspace receives the event about
+onlined CPU which is not ready to take tasks for a while after uevent.
+
+
+ kernel/cpu.c | 47 +++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 41 insertions(+), 6 deletions(-)
+
+diff --git a/kernel/cpu.c b/kernel/cpu.c
+index 4e11e91010e1..ea728e75a74d 100644
+--- a/kernel/cpu.c
++++ b/kernel/cpu.c
+@@ -15,6 +15,7 @@
+ #include <linux/sched/smt.h>
+ #include <linux/unistd.h>
+ #include <linux/cpu.h>
++#include <linux/cpuset.h>
+ #include <linux/oom.h>
+ #include <linux/rcupdate.h>
+ #include <linux/export.h>
+@@ -1281,6 +1282,11 @@ static int cpu_up(unsigned int cpu, enum cpuhp_state target)
+ 	err = _cpu_up(cpu, 0, target);
+ out:
+ 	cpu_maps_update_done();
++
++	/* To avoid out of line uevent */
++	if (!err)
++		cpuset_wait_for_hotplug();
++
+ 	return err;
+ }
+ 
+@@ -2062,8 +2068,6 @@ static void cpuhp_offline_cpu_device(unsigned int cpu)
+ 	struct device *dev = get_cpu_device(cpu);
+ 
+ 	dev->offline = true;
+-	/* Tell user space about the state change */
+-	kobject_uevent(&dev->kobj, KOBJ_OFFLINE);
+ }
+ 
+ static void cpuhp_online_cpu_device(unsigned int cpu)
+@@ -2071,14 +2075,18 @@ static void cpuhp_online_cpu_device(unsigned int cpu)
+ 	struct device *dev = get_cpu_device(cpu);
+ 
+ 	dev->offline = false;
+-	/* Tell user space about the state change */
+-	kobject_uevent(&dev->kobj, KOBJ_ONLINE);
+ }
+ 
+ int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
+ {
+-	int cpu, ret = 0;
++	struct device *dev;
++	cpumask_var_t mask;
++	int cpu, ret;
++
++	if (!zalloc_cpumask_var(&mask, GFP_KERNEL))
++                return -ENOMEM;
+ 
++	ret = 0;
+ 	cpu_maps_update_begin();
+ 	for_each_online_cpu(cpu) {
+ 		if (topology_is_primary_thread(cpu))
+@@ -2100,17 +2108,32 @@ int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
+ 		 * serialized against the regular offline usage.
+ 		 */
+ 		cpuhp_offline_cpu_device(cpu);
++		cpumask_set_cpu(cpu, mask);
+ 	}
+ 	if (!ret)
+ 		cpu_smt_control = ctrlval;
+ 	cpu_maps_update_done();
++
++	/* Tell user space about the state changes */
++	for_each_cpu(cpu, mask) {
++		dev = get_cpu_device(cpu);
++		kobject_uevent(&dev->kobj, KOBJ_OFFLINE);
++	}
++
++	free_cpumask_var(mask);
+ 	return ret;
+ }
+ 
+ int cpuhp_smt_enable(void)
+ {
+-	int cpu, ret = 0;
++	struct device *dev;
++	cpumask_var_t mask;
++	int cpu, ret;
+ 
++	if (!zalloc_cpumask_var(&mask, GFP_KERNEL))
++                return -ENOMEM;
++
++	ret = 0;
+ 	cpu_maps_update_begin();
+ 	cpu_smt_control = CPU_SMT_ENABLED;
+ 	for_each_present_cpu(cpu) {
+@@ -2122,8 +2145,20 @@ int cpuhp_smt_enable(void)
+ 			break;
+ 		/* See comment in cpuhp_smt_disable() */
+ 		cpuhp_online_cpu_device(cpu);
++		cpumask_set_cpu(cpu, mask);
+ 	}
+ 	cpu_maps_update_done();
++
++	/* To avoid out of line uevents */
++	cpuset_wait_for_hotplug();
++
++	/* Tell user space about the state changes */
++	for_each_cpu(cpu, mask) {
++		dev = get_cpu_device(cpu);
++		kobject_uevent(&dev->kobj, KOBJ_ONLINE);
++	}
++
++	free_cpumask_var(mask);
+ 	return ret;
+ }
+ #endif
+-- 
+2.30.0
+
