@@ -1,90 +1,42 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [PATCH 6/7] mm: memcontrol: switch to rstat
-Date: Thu, 4 Feb 2021 11:15:06 -0500
-Message-ID: <YBwdiu2Fj4JHgqhQ@cmpxchg.org>
+Date: Thu, 4 Feb 2021 11:26:32 -0500
+Message-ID: <YBwgOHL8dTjJpnKU@cmpxchg.org>
 References: <20210202184746.119084-1-hannes@cmpxchg.org>
  <20210202184746.119084-7-hannes@cmpxchg.org>
- <YBwCZYWsQOFAGUar@dhcp22.suse.cz>
+ <20210203014726.GE1812008@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=0rhTk5izLatoFfIDNxmz1fyaLshSZ+6LLZBve6XjOzQ=;
-        b=O4ZVUwRrPSmt03J6wBFbrAwKR8DigcweNeGpjQBAT542zJXom/F8N0kM5lXk+AOpAz
-         lkEqie3XYPUxu/MymMBqjyYRKYWigI816jCPhNr1e907EDJ6OXubQrfNVJizoLGIlbv1
-         sXK3IjOgSrrdcit8dHEAFEjRAmzd28hArjzv69QYDfjsiT0VwXNP/mr2Dn3OKxdd3o6U
-         8rykm84xwcu5321Sid2AN+avO0Ad5tnKkoMCTX2BEAg0UiQ1L0RRQmz3uHhW8MULkxy2
-         gGGYZPxIOmxMRqo45RSrHCREyaqZuMRHgMDKQhWwUIS/Imgu4yXVukgdiiRVb2odb0q3
-         iJ+A==
+        bh=ACIgalIASwLRIdWMuW6Oj7uCmIS5PMrqjcUMfzNwZKE=;
+        b=MhxcF478bHTzeOjaqn3t+dgrOQ2TemimDwkXVDLohFRJNl95pHbGa9lLMm7eUh47yK
+         hqGCwPMieGsvldBevk/GTzZFLDZryCRd8tlWXVG8uYNf9AohQdvgTb+LxFJwSEjutywo
+         3E18OctPqEd11DhJx4NgXE4Yj0fHAQ0WIyhu+wgSKgvMnTRsuVjDtnLBrLvkb4TXY9Om
+         LcJVZVFkYyCc7nEmtuJiow7He54ZkAWBEXGmmJe/6WxLOur+I/zZe0/QnliUXFYnnBc3
+         +cNlrBxAgNgbdTKF95BPokovA+P0SqJ0wm/w/bqBYg83pfhDJKy0DV+MBi+sqDRpT+Bx
+         ZldA==
 Content-Disposition: inline
-In-Reply-To: <YBwCZYWsQOFAGUar@dhcp22.suse.cz>
+In-Reply-To: <20210203014726.GE1812008-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-Hello Michal,
+On Tue, Feb 02, 2021 at 05:47:26PM -0800, Roman Gushchin wrote:
+> On Tue, Feb 02, 2021 at 01:47:45PM -0500, Johannes Weiner wrote:
+> >  	for_each_node(node) {
+> >  		struct mem_cgroup_per_node *pn = memcg->nodeinfo[node];
+> > +		unsigned long stat[NR_VM_NODE_STAT_ITEMS] = {0, };
+>                                                               ^^
+> I'd drop the comma here. It seems that "{0}" version is way more popular
+> over the mm code and in the kernel in general.
 
-On Thu, Feb 04, 2021 at 03:19:17PM +0100, Michal Hocko wrote:
-> On Tue 02-02-21 13:47:45, Johannes Weiner wrote:
-> > Replace the memory controller's custom hierarchical stats code with
-> > the generic rstat infrastructure provided by the cgroup core.
-> > 
-> > The current implementation does batched upward propagation from the
-> > write side (i.e. as stats change). The per-cpu batches introduce an
-> > error, which is multiplied by the number of subgroups in a tree. In
-> > systems with many CPUs and sizable cgroup trees, the error can be
-> > large enough to confuse users (e.g. 32 batch pages * 32 CPUs * 32
-> > subgroups results in an error of up to 128M per stat item). This can
-> > entirely swallow allocation bursts inside a workload that the user is
-> > expecting to see reflected in the statistics.
-> > 
-> > In the past, we've done read-side aggregation, where a memory.stat
-> > read would have to walk the entire subtree and add up per-cpu
-> > counts. This became problematic with lazily-freed cgroups: we could
-> > have large subtrees where most cgroups were entirely idle. Hence the
-> > switch to change-driven upward propagation. Unfortunately, it needed
-> > to trade accuracy for speed due to the write side being so hot.
-> > 
-> > Rstat combines the best of both worlds: from the write side, it
-> > cheaply maintains a queue of cgroups that have pending changes, so
-> > that the read side can do selective tree aggregation. This way the
-> > reported stats will always be precise and recent as can be, while the
-> > aggregation can skip over potentially large numbers of idle cgroups.
-> > 
-> > This adds a second vmstats to struct mem_cgroup (MEMCG_NR_STAT +
-> > NR_VM_EVENT_ITEMS) to track pending subtree deltas during upward
-> > aggregation. It removes 3 words from the per-cpu data. It eliminates
-> > memcg_exact_page_state(), since memcg_page_state() is now exact.
-> 
-> I am still digesting details and need to look deeper into how rstat
-> works but removing our own stats is definitely a good plan. Especially
-> when there are existing limitations and problems that would need fixing.
-> 
-> Just to check that my high level understanding is correct. The
-> transition is effectivelly removing a need to manually sync counters up
-> the hierarchy and partially outsources that decision to rstat core. The
-> controller is responsible just to tell the core how that syncing is done
-> (e.g. which specific counters etc).
+Is there a downside to the comma? I'm finding more { 0, } than { 0 }
+in mm code, and at least kernel-wide it seems both are acceptable
+(although { 0 } is more popular overall).
 
-Yes, exactly.
-
-rstat implements a tree of cgroups that have local changes pending,
-and a flush walk on that tree. But it's all driven by the controller.
-
-memcg needs to tell rstat 1) when stats in a local cgroup change
-e.g. when we do mod_memcg_state() (cgroup_rstat_updated), 2) when to
-flush, e.g. before a memory.stat read (cgroup_rstat_flush), and 3) how
-to flush one cgroup's per-cpu state and propagate it upward to the
-parent during rstat's flush walk (.css_rstat_flush).
-
-> Excplicit flushes are needed when you want an exact value (e.g. when
-> values are presented to the userspace). I do not see any flushes to
-> be done by the core pro-actively except for clean up on a release.
-> 
-> Is the above correct understanding?
-
-Yes, that's correct.
+I don't care much either way. I can change it in v2 if there is one.
