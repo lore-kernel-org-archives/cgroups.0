@@ -1,88 +1,69 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: [PATCH] mm: memcontrol: replace the loop with a list_for_each_entry()
-Date: Thu, 4 Feb 2021 23:55:45 +0800
-Message-ID: <CAMZfGtX6VKKyBNhUJk+a2NTub8nfHbET=N_1ERHAqjUDEVJnZg@mail.gmail.com>
-References: <20210204105320.46072-1-songmuchun@bytedance.com> <YBwPQUwLQ6hAbdSV@cmpxchg.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 4/7] cgroup: rstat: support cgroup1
+Date: Thu, 4 Feb 2021 11:01:30 -0500
+Message-ID: <YBwaWkJgqPNF3I3w@cmpxchg.org>
+References: <20210202184746.119084-1-hannes@cmpxchg.org>
+ <20210202184746.119084-5-hannes@cmpxchg.org>
+ <YBv5Dc1I9QpPH69n@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=bCCaUVi9BPMivSd/JjnmDZicqO5VGVuxEY7PUQjIT88=;
-        b=rlZgV+XQhv7Yhfg2tHnSnXCKKbzm84eznk312M6PxgAwzfTh4Ik7suX8rLMrd8rXzW
-         ELbY53/nujaDFMiP14r3bJRXJe2SLOoDDm7sffhsqmt4GKW+wmpKq6Gdtfj2QdFO17T+
-         WrG64+XjOEDDvget+WoHZdNRbg5IRNW8ARaNBPxIRGcCFwjnSRzV0hu2+Sg9n5s1otFy
-         dIe6RG99T8b1bYWd9JqmT4Sgzp+tBEy+/04B4IeuCr5ItLShwKeV6hjbqyEvOKR40jJe
-         PdJGOuMShSOj8Gf4D32HY3XPIV4w8c5fUSBIfYPjxjpKYoZdYKnWF1oTvlasKNpW/y0T
-         fP8w==
-In-Reply-To: <YBwPQUwLQ6hAbdSV-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=csnC8vI9T1wPkKdVnk2T3EegCaTzDUoDkg3RtcvUQt0=;
+        b=om9bw1733wlt1/kLEgKPgVnHc/NgppIyLl3gcn5uZTxcNLNlLmm/dcW3kKnRBqJ1kP
+         VJckPkk8IWcl+e6iyWLb/rPmCsRwzIQS4d+o6d9mYr4g8FxKPqxG4vvn7XeKENY3r0IC
+         1LaB5GlWS3YVKSJItCGIthyB1GthkrGXEpGx/4rzUptWXX5Y2aU8Lgrex7t0/LI3pGP6
+         1gP1wf3yZ/nhn2phPWvvBuYwk2vpZC78juptyfdu00sQDAHwUSXeS0vsYhIx/E2wT+CI
+         eXV1MkmzGpbjcRrPxWdQVedLBV1Rbp1D32tSh0qqx6W0CERrvFXvU9ryGCfamlzKIAa1
+         2sAw==
+Content-Disposition: inline
+In-Reply-To: <YBv5Dc1I9QpPH69n-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Thu, Feb 4, 2021 at 11:14 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-> On Thu, Feb 04, 2021 at 06:53:20PM +0800, Muchun Song wrote:
-> > The rule of list walk has gone since:
-> >
-> >  commit a9d5adeeb4b2 ("mm/memcontrol: allow to uncharge page without using page->lru field")
-> >
-> > So remove the strange comment and replace the loop with a
-> > list_for_each_entry().
-> >
-> > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> > ---
-> >  mm/memcontrol.c | 17 ++---------------
-> >  1 file changed, 2 insertions(+), 15 deletions(-)
-> >
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 6c7f1ea3955e..43341bd7ea1c 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -6891,24 +6891,11 @@ static void uncharge_page(struct page *page, struct uncharge_gather *ug)
-> >  static void uncharge_list(struct list_head *page_list)
-> >  {
-> >       struct uncharge_gather ug;
-> > -     struct list_head *next;
-> > +     struct page *page;
-> >
-> >       uncharge_gather_clear(&ug);
-> > -
-> > -     /*
-> > -      * Note that the list can be a single page->lru; hence the
-> > -      * do-while loop instead of a simple list_for_each_entry().
-> > -      */
-> > -     next = page_list->next;
-> > -     do {
-> > -             struct page *page;
-> > -
-> > -             page = list_entry(next, struct page, lru);
-> > -             next = page->lru.next;
-> > -
-> > +     list_for_each_entry(page, page_list, lru)
-> >               uncharge_page(page, &ug);
-> > -     } while (next != page_list);
-> > -
-> >       uncharge_batch(&ug);
->
-> Good catch, this makes things much simpler.
->
-> Looking at the surrounding code, there also seems to be no reason
-> anymore to have uncharge_list() as a separate function: there is only
-> one caller after the mentioned commit, and it's trivial after your
-> change. Would you mind folding it into mem_cgroup_uncharge_list()?
+On Thu, Feb 04, 2021 at 02:39:25PM +0100, Michal Hocko wrote:
+> On Tue 02-02-21 13:47:43, Johannes Weiner wrote:
+> > Rstat currently only supports the default hierarchy in cgroup2. In
+> > order to replace memcg's private stats infrastructure - used in both
+> > cgroup1 and cgroup2 - with rstat, the latter needs to support cgroup1.
+> > 
+> > The initialization and destruction callbacks for regular cgroups are
+> > already in place. Remove the cgroup_on_dfl() guards to handle cgroup1.
+> > 
+> > The initialization of the root cgroup is currently hardcoded to only
+> > handle cgrp_dfl_root.cgrp. Move those callbacks to cgroup_setup_root()
+> > and cgroup_destroy_root() to handle the default root as well as the
+> > various cgroup1 roots we may set up during mounting.
+> > 
+> > The linking of css to cgroups happens in code shared between cgroup1
+> > and cgroup2 as well. Simply remove the cgroup_on_dfl() guard.
+> > 
+> > Linkage of the root css to the root cgroup is a bit trickier: per
+> > default, the root css of a subsystem controller belongs to the default
+> > hierarchy (i.e. the cgroup2 root). When a controller is mounted in its
+> > cgroup1 version, the root css is stolen and moved to the cgroup1 root;
+> > on unmount, the css moves back to the default hierarchy. Annotate
+> > rebind_subsystems() to move the root css linkage along between roots.
+> 
+> I am not familiar with rstat API and from this patch it is not really
+> clear to me how does it deal with memcg v1 use_hierarchy oddness.
 
-Will do. Thanks.
+That's gone, right?
 
->
-> The list_empty() check in that one is also unnecessary now: the
-> do-while loop required at least one page to be on the list or it would
-> crash, but list_for_each() will be just fine on an empty list.
+static int mem_cgroup_hierarchy_write(struct cgroup_subsys_state *css,
+                                      struct cftype *cft, u64 val)
+{
+        if (val == 1)
+                return 0;
 
-Right. It makes things more simple.
+        pr_warn_once("Non-hierarchical mode is deprecated. "
+                     "Please report your usecase to linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org if you "
+                     "depend on this functionality.\n");
 
->
-> Thanks
+        return -EINVAL;
+}
