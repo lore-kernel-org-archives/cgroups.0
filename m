@@ -1,184 +1,187 @@
-From: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] cpu/hotplug: wait for cpuset_hotplug_work to finish on cpu onlining
-Date: Thu,  4 Feb 2021 01:01:57 +0000
-Message-ID: <20210204010157.1823669-1-aklimov@redhat.com>
+From: Brian Welty <brian.welty@intel.com>
+Subject: Re: [RFC PATCH 7/9] drmcg: Add initial support for
+ tracking gpu time usage
+Date: Wed, 3 Feb 2021 18:23:17 -0800
+Message-ID: <90e4b657-d5d6-e985-4cda-628c74dbac30@intel.com>
+References: <20210126214626.16260-1-brian.welty@intel.com>
+ <20210126214626.16260-8-brian.welty@intel.com>
+ <161235875541.15744.14541970842808007912@jlahtine-mobl.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1612400525;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=ZAkXTLCQatITvM0DWGh6kbF0oAf7mL4HuXS0UNtLhwE=;
-        b=NiU+0emwcXPYLWUe/PZUq4Bm2SxEeL+YJH1O2iyOVfTMoqvZyB6YKHqWPXAXt1w4K2k4Cs
-        Pzu05ss3E7Yc7ClhfhttllrdfOmOjyW0zbxaf3ibReR8LMIH3Ln1/OQ8bqig6tYHX7AAsH
-        fZ5nm8NmxPL0KeSG1TKxzngtewBIdyk=
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, qais.yousef-5wv7dgnIgG8@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-
-When a CPU offlined and onlined via device_offline() and device_online()
-the userspace gets uevent notification. If, after receiving "online" uevent,
-userspace executes sched_setaffinity() on some task trying to move it
-to a recently onlined CPU, then it often fails with -EINVAL. Userspace needs
-to wait around 5..30 ms before sched_setaffinity() will succeed for the recently
-onlined CPU after receiving uevent.
-
-If in_mask argument for sched_setaffinity() has only recently onlined CPU,
-it often fails with such flow:
-
-  sched_setaffinity()
-    cpuset_cpus_allowed()
-      guarantee_online_cpus()   <-- cs->effective_cpus mask does not
-                                        contain recently onlined cpu
-    cpumask_and()               <-- final new_mask is empty
-    __set_cpus_allowed_ptr()
-      cpumask_any_and_distribute() <-- returns dest_cpu equal to nr_cpu_ids
-      returns -EINVAL
-
-Cpusets used in guarantee_online_cpus() are updated using workqueue from
-cpuset_update_active_cpus() which in its turn is called from cpu hotplug callback
-sched_cpu_activate() hence it may not be observable by sched_setaffinity() if
-it is called immediately after uevent.
-Out of line uevent can be avoided if we will ensure that cpuset_hotplug_work
-has run to completion using cpuset_wait_for_hotplug() after onlining the
-cpu in cpu_up() and in cpuhp_smt_enable().
-
-Co-analyzed-by: Joshua Baker <jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
-
-Previous RFC patch and discussion is here:
-https://lore.kernel.org/lkml/20201203171431.256675-1-aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
-
-The commit a49e4629b5ed "cpuset: Make cpuset hotplug synchronous"
-would also get rid of the early uevent but it was reverted (deadlocks).
-
-The nature of this bug is also described here (with different consequences):
-https://lore.kernel.org/lkml/20200211141554.24181-1-qais.yousef-5wv7dgnIgG8@public.gmane.org/
-
-Reproducer: https://gitlab.com/0xeafffffe/xlam
-
-Currently with such changes the reproducer code continues to work without issues.
-The idea is to avoid the situation when userspace receives the event about
-onlined CPU which is not ready to take tasks for a while after uevent.
+Content-Transfer-Encoding: 7bit
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+In-Reply-To: <161235875541.15744.14541970842808007912@jlahtine-mobl.ger.corp.intel.com>
+Content-Language: en-US
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+To: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>, Chris Wilson <chris@chris-wilson.co.uk>, Daniel Vetter <daniel@ffwll.ch>, David Airlie <airlied@linux.ie>, Eero Tamminen <eero.t.tamminen@intel.com>, Kenny Ho <Kenny.Ho@amd.com>, Tejun Heo <tj@kernel.org>, Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>, amd-gfx@lists.freedesktop.org, cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org
 
 
- kernel/cpu.c | 47 +++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 41 insertions(+), 6 deletions(-)
+On 2/3/2021 5:25 AM, Joonas Lahtinen wrote:
+> Quoting Brian Welty (2021-01-26 23:46:24)
+>> Single control below is added to DRM cgroup controller in order to track
+>> user execution time for GPU devices.  It is up to device drivers to
+>> charge execution time to the cgroup via drm_cgroup_try_charge().
+>>
+>>   sched.runtime
+>>       Read-only value, displays current user execution time for each DRM
+>>       device. The expectation is that this is incremented by DRM device
+>>       driver's scheduler upon user context completion or context switch.
+>>       Units of time are in microseconds for consistency with cpu.stats.
+> 
+> Were not we also planning for a percentage style budgeting?
 
-diff --git a/kernel/cpu.c b/kernel/cpu.c
-index 4e11e91010e1..ea728e75a74d 100644
---- a/kernel/cpu.c
-+++ b/kernel/cpu.c
-@@ -15,6 +15,7 @@
- #include <linux/sched/smt.h>
- #include <linux/unistd.h>
- #include <linux/cpu.h>
-+#include <linux/cpuset.h>
- #include <linux/oom.h>
- #include <linux/rcupdate.h>
- #include <linux/export.h>
-@@ -1281,6 +1282,11 @@ static int cpu_up(unsigned int cpu, enum cpuhp_state target)
- 	err = _cpu_up(cpu, 0, target);
- out:
- 	cpu_maps_update_done();
-+
-+	/* To avoid out of line uevent */
-+	if (!err)
-+		cpuset_wait_for_hotplug();
-+
- 	return err;
- }
- 
-@@ -2062,8 +2068,6 @@ static void cpuhp_offline_cpu_device(unsigned int cpu)
- 	struct device *dev = get_cpu_device(cpu);
- 
- 	dev->offline = true;
--	/* Tell user space about the state change */
--	kobject_uevent(&dev->kobj, KOBJ_OFFLINE);
- }
- 
- static void cpuhp_online_cpu_device(unsigned int cpu)
-@@ -2071,14 +2075,18 @@ static void cpuhp_online_cpu_device(unsigned int cpu)
- 	struct device *dev = get_cpu_device(cpu);
- 
- 	dev->offline = false;
--	/* Tell user space about the state change */
--	kobject_uevent(&dev->kobj, KOBJ_ONLINE);
- }
- 
- int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
- {
--	int cpu, ret = 0;
-+	struct device *dev;
-+	cpumask_var_t mask;
-+	int cpu, ret;
-+
-+	if (!zalloc_cpumask_var(&mask, GFP_KERNEL))
-+                return -ENOMEM;
- 
-+	ret = 0;
- 	cpu_maps_update_begin();
- 	for_each_online_cpu(cpu) {
- 		if (topology_is_primary_thread(cpu))
-@@ -2100,17 +2108,32 @@ int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
- 		 * serialized against the regular offline usage.
- 		 */
- 		cpuhp_offline_cpu_device(cpu);
-+		cpumask_set_cpu(cpu, mask);
- 	}
- 	if (!ret)
- 		cpu_smt_control = ctrlval;
- 	cpu_maps_update_done();
-+
-+	/* Tell user space about the state changes */
-+	for_each_cpu(cpu, mask) {
-+		dev = get_cpu_device(cpu);
-+		kobject_uevent(&dev->kobj, KOBJ_OFFLINE);
-+	}
-+
-+	free_cpumask_var(mask);
- 	return ret;
- }
- 
- int cpuhp_smt_enable(void)
- {
--	int cpu, ret = 0;
-+	struct device *dev;
-+	cpumask_var_t mask;
-+	int cpu, ret;
- 
-+	if (!zalloc_cpumask_var(&mask, GFP_KERNEL))
-+                return -ENOMEM;
-+
-+	ret = 0;
- 	cpu_maps_update_begin();
- 	cpu_smt_control = CPU_SMT_ENABLED;
- 	for_each_present_cpu(cpu) {
-@@ -2122,8 +2145,20 @@ int cpuhp_smt_enable(void)
- 			break;
- 		/* See comment in cpuhp_smt_disable() */
- 		cpuhp_online_cpu_device(cpu);
-+		cpumask_set_cpu(cpu, mask);
- 	}
- 	cpu_maps_update_done();
-+
-+	/* To avoid out of line uevents */
-+	cpuset_wait_for_hotplug();
-+
-+	/* Tell user space about the state changes */
-+	for_each_cpu(cpu, mask) {
-+		dev = get_cpu_device(cpu);
-+		kobject_uevent(&dev->kobj, KOBJ_ONLINE);
-+	}
-+
-+	free_cpumask_var(mask);
- 	return ret;
- }
- #endif
--- 
-2.30.0
+Yes, that's right.  Above is to report accumlated time usage.
+I can include controls for time sharing in next submission.
+But not using percentage.
+Relative time share can be implemented with weights as described in cgroups
+documentation for resource distribution models.
+This was also the prior feedback from Tejun [1], and so will look very much
+like the existing cpu.weight or io.weight.
 
+> 
+> Capping the maximum runtime is definitely useful, but in order to
+> configure a system for peaceful co-existence of two or more workloads we
+> must also impose a limit on how big portion of the instantaneous
+> capacity can be used.
+
+Agreed.  This is also included with CPU and IO controls (cpu.max and io.max),
+so we should also plan to have the same.
+
+-Brian
+
+[1]  https://lists.freedesktop.org/archives/dri-devel/2020-April/262141.html
+
+> 
+> Regards, Joonas
+> 
+>> Signed-off-by: Brian Welty <brian.welty@intel.com>
+>> ---
+>>  Documentation/admin-guide/cgroup-v2.rst |  9 +++++++++
+>>  include/drm/drm_cgroup.h                |  2 ++
+>>  include/linux/cgroup_drm.h              |  2 ++
+>>  kernel/cgroup/drm.c                     | 20 ++++++++++++++++++++
+>>  4 files changed, 33 insertions(+)
+>>
+>> diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+>> index ccc25f03a898..f1d0f333a49e 100644
+>> --- a/Documentation/admin-guide/cgroup-v2.rst
+>> +++ b/Documentation/admin-guide/cgroup-v2.rst
+>> @@ -2205,6 +2205,15 @@ thresholds are hit, this would then allow the DRM device driver to invoke
+>>  some equivalent to OOM-killer or forced memory eviction for the device
+>>  backed memory in order to attempt to free additional space.
+>>  
+>> +The below set of control files are for time accounting of DRM devices. Units
+>> +of time are in microseconds.
+>> +
+>> +  sched.runtime
+>> +        Read-only value, displays current user execution time for each DRM
+>> +        device. The expectation is that this is incremented by DRM device
+>> +        driver's scheduler upon user context completion or context switch.
+>> +
+>> +
+>>  Misc
+>>  ----
+>>  
+>> diff --git a/include/drm/drm_cgroup.h b/include/drm/drm_cgroup.h
+>> index 9ba0e372eeee..315dab8a93b8 100644
+>> --- a/include/drm/drm_cgroup.h
+>> +++ b/include/drm/drm_cgroup.h
+>> @@ -22,6 +22,7 @@ enum drmcg_res_type {
+>>         DRMCG_TYPE_MEM_CURRENT,
+>>         DRMCG_TYPE_MEM_MAX,
+>>         DRMCG_TYPE_MEM_TOTAL,
+>> +       DRMCG_TYPE_SCHED_RUNTIME,
+>>         __DRMCG_TYPE_LAST,
+>>  };
+>>  
+>> @@ -79,5 +80,6 @@ void drm_cgroup_uncharge(struct drmcg *drmcg,struct drm_device *dev,
+>>                          enum drmcg_res_type type, u64 usage)
+>>  {
+>>  }
+>> +
+>>  #endif /* CONFIG_CGROUP_DRM */
+>>  #endif /* __DRM_CGROUP_H__ */
+>> diff --git a/include/linux/cgroup_drm.h b/include/linux/cgroup_drm.h
+>> index 3570636473cf..0fafa663321e 100644
+>> --- a/include/linux/cgroup_drm.h
+>> +++ b/include/linux/cgroup_drm.h
+>> @@ -19,6 +19,8 @@
+>>   */
+>>  struct drmcg_device_resource {
+>>         struct page_counter memory;
+>> +       seqlock_t sched_lock;
+>> +       u64 exec_runtime;
+>>  };
+>>  
+>>  /**
+>> diff --git a/kernel/cgroup/drm.c b/kernel/cgroup/drm.c
+>> index 08e75eb67593..64e9d0dbe8c8 100644
+>> --- a/kernel/cgroup/drm.c
+>> +++ b/kernel/cgroup/drm.c
+>> @@ -81,6 +81,7 @@ static inline int init_drmcg_single(struct drmcg *drmcg, struct drm_device *dev)
+>>         /* set defaults here */
+>>         page_counter_init(&ddr->memory,
+>>                           parent_ddr ? &parent_ddr->memory : NULL);
+>> +       seqlock_init(&ddr->sched_lock);
+>>         drmcg->dev_resources[minor] = ddr;
+>>  
+>>         return 0;
+>> @@ -287,6 +288,10 @@ static int drmcg_seq_show_fn(int id, void *ptr, void *data)
+>>                 seq_printf(sf, "%d:%d %llu\n", DRM_MAJOR, minor->index,
+>>                            minor->dev->drmcg_props.memory_total);
+>>                 break;
+>> +       case DRMCG_TYPE_SCHED_RUNTIME:
+>> +               seq_printf(sf, "%d:%d %llu\n", DRM_MAJOR, minor->index,
+>> +                          ktime_to_us(ddr->exec_runtime));
+>> +               break;
+>>         default:
+>>                 seq_printf(sf, "%d:%d\n", DRM_MAJOR, minor->index);
+>>                 break;
+>> @@ -384,6 +389,12 @@ struct cftype files[] = {
+>>                 .private = DRMCG_TYPE_MEM_TOTAL,
+>>                 .flags = CFTYPE_ONLY_ON_ROOT,
+>>         },
+>> +       {
+>> +               .name = "sched.runtime",
+>> +               .seq_show = drmcg_seq_show,
+>> +               .private = DRMCG_TYPE_SCHED_RUNTIME,
+>> +               .flags = CFTYPE_NOT_ON_ROOT,
+>> +       },
+>>         { }     /* terminate */
+>>  };
+>>  
+>> @@ -440,6 +451,10 @@ EXPORT_SYMBOL(drmcg_device_early_init);
+>>   * choose to enact some form of memory reclaim, but the exact behavior is left
+>>   * to the DRM device driver to define.
+>>   *
+>> + * For @res type of DRMCG_TYPE_SCHED_RUNTIME:
+>> + * For GPU time accounting, add @usage amount of GPU time to @drmcg for
+>> + * the given device.
+>> + *
+>>   * Returns 0 on success.  Otherwise, an error code is returned.
+>>   */
+>>  int drm_cgroup_try_charge(struct drmcg *drmcg, struct drm_device *dev,
+>> @@ -466,6 +481,11 @@ int drm_cgroup_try_charge(struct drmcg *drmcg, struct drm_device *dev,
+>>                         err = 0;
+>>                 }
+>>                 break;
+>> +       case DRMCG_TYPE_SCHED_RUNTIME:
+>> +               write_seqlock(&res->sched_lock);
+>> +               res->exec_runtime = ktime_add(res->exec_runtime, usage);
+>> +               write_sequnlock(&res->sched_lock);
+>> +               break;
+>>         default:
+>>                 err = -EINVAL;
+>>                 break;
+>> -- 
+>> 2.20.1
+>>
