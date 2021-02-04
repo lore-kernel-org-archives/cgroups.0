@@ -1,51 +1,69 @@
-From: Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH] cpu/hotplug: wait for cpuset_hotplug_work to finish on
- cpu onlining
-Date: Thu, 4 Feb 2021 10:46:10 +0100
-Message-ID: <YBvCYhdPai+pb8u2@hirez.programming.kicks-ass.net>
-References: <20210204010157.1823669-1-aklimov@redhat.com>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: [PATCH] mm: memcontrol: replace the loop with a list_for_each_entry()
+Date: Thu,  4 Feb 2021 18:53:20 +0800
+Message-ID: <20210204105320.46072-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=QF37dPCi57HEpfqUEK+5VUOa3KKAQXFiBdpPks8yG20=; b=NlCodaOYD+cypLcm3DpzdiK5SG
-        enboRJqS7Gco2hpMe/1qaYVqdyNlxcLRp4nvUZJEg2FjEMadpp2grRgO50XSeWSi+2pvzxTpJt2xU
-        L80uLyOvmhiADkKp93jPjS1slDGSoMJCY36LVm3Px1jF/9iCRd5EIyUa/PS1ohZEmlctc7vnci27C
-        Og2Cd3illgZyC3Ie6gF4QqEFVonx/tmvnXfvKBVXVzFFUGvoBVGvTRvwzMod/u2JSP25tj1q44UkO
-        qApjLYLA7hTMClH89C37qIuoIugDL2WAOM+hK8EE/upbpZTd1D4mj5i/ekzPehAFe5E6GgA9EoRon
-        usv3VBgQ==;
-Content-Disposition: inline
-In-Reply-To: <20210204010157.1823669-1-aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=bomnKjBCXlMUt7cumGwFSxIt2tLEfiNfG1uDxtiHzHo=;
+        b=meRFeoFABKNahcTD5pEZi9cJb0xVYtEo0jR+vAzCdEludgjz8sf1Qlv2/xeRPDfibp
+         /MMKS0gDIAcIwS+spfwSSxSYmiHHlYLXKz78sdAEln7aHWvn0QsCJNlPvKVOmygR7EfF
+         nSWXTdN5o2V9xWtAhYeJgMlGZE86yc7er/RVSRnjuvKWa6RjgUQXsVKFyMLzh72oLILh
+         ZefaeRzKTsudfYwco8W1CE1Vr2eIFb+VxUGIitkSeo2UM5YS+/bx7Xwr9TH4t1EkX+rc
+         uS0RLOQkFJ07jRmOC12Y7X8c6oWiSWepD2xx1ceyRtqiYop3Hqiqt9lcpsOK7wc4pLM+
+         sZlw==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, qais.yousef-5wv7dgnIgG8@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-On Thu, Feb 04, 2021 at 01:01:57AM +0000, Alexey Klimov wrote:
-> @@ -1281,6 +1282,11 @@ static int cpu_up(unsigned int cpu, enum cpuhp_state target)
->  	err = _cpu_up(cpu, 0, target);
->  out:
->  	cpu_maps_update_done();
-> +
-> +	/* To avoid out of line uevent */
-> +	if (!err)
-> +		cpuset_wait_for_hotplug();
-> +
->  	return err;
->  }
->  
+The rule of list walk has gone since:
 
-> @@ -2071,14 +2075,18 @@ static void cpuhp_online_cpu_device(unsigned int cpu)
->  	struct device *dev = get_cpu_device(cpu);
->  
->  	dev->offline = false;
-> -	/* Tell user space about the state change */
-> -	kobject_uevent(&dev->kobj, KOBJ_ONLINE);
->  }
->  
+ commit a9d5adeeb4b2 ("mm/memcontrol: allow to uncharge page without using page->lru field")
 
-One concequence of this is that you'll now get a bunch of notifications
-across things like suspend/hybernate.
+So remove the strange comment and replace the loop with a
+list_for_each_entry().
+
+Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+---
+ mm/memcontrol.c | 17 ++---------------
+ 1 file changed, 2 insertions(+), 15 deletions(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 6c7f1ea3955e..43341bd7ea1c 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6891,24 +6891,11 @@ static void uncharge_page(struct page *page, struct uncharge_gather *ug)
+ static void uncharge_list(struct list_head *page_list)
+ {
+ 	struct uncharge_gather ug;
+-	struct list_head *next;
++	struct page *page;
+ 
+ 	uncharge_gather_clear(&ug);
+-
+-	/*
+-	 * Note that the list can be a single page->lru; hence the
+-	 * do-while loop instead of a simple list_for_each_entry().
+-	 */
+-	next = page_list->next;
+-	do {
+-		struct page *page;
+-
+-		page = list_entry(next, struct page, lru);
+-		next = page->lru.next;
+-
++	list_for_each_entry(page, page_list, lru)
+ 		uncharge_page(page, &ug);
+-	} while (next != page_list);
+-
+ 	uncharge_batch(&ug);
+ }
+ 
+-- 
+2.11.0
+
