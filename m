@@ -1,7 +1,7 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH 7/8] mm: memcontrol: consolidate lruvec stat flushing
-Date: Fri,  5 Feb 2021 13:28:05 -0500
-Message-ID: <20210205182806.17220-8-hannes@cmpxchg.org>
+Subject: [PATCH 8/8] kselftests: cgroup: update kmem test for new vmstat implementation
+Date: Fri,  5 Feb 2021 13:28:06 -0500
+Message-ID: <20210205182806.17220-9-hannes@cmpxchg.org>
 References: <20210205182806.17220-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,143 +10,90 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=NkGochaaRcmTlyZxkCgRxNgKhbX45qwASpGU1xNehx0=;
-        b=0F6KH20bviGrQNM9hbNvSXi7Vk/KA9cDm/VECQSQnHEPGSsqEZRI0RBWRVQ6p7HnxD
-         kC8C0UB7VSTJzFNjkBOtg4VH27hzXIAf2zYhcPeZ+v+UP273dW65hwzx7s1q0zHV9zuE
-         6vfEBaxgqx27Nni6gCcAWoGeoPzLDvXiXlOZTA9n3Z6qpCthBOX9QIdwNhwPDX36/zpY
-         bL4fcNoSLRdYjOitEDTdeTKEkerao0KI7iYwRLfbfjEzu0FaMeyPFq93DsS1foVkMa5C
-         iVzRPcKT76qsfJIiN0d/uMOZ0uR77juU+76rJpaWEPDpmJM4ewdbqq1FxIf6bknXkOCX
-         bD1g==
+        bh=QOIw4B/+XCkxqjVq4ULIq5aMnPErv/ZIiEkm9Qo0mIY=;
+        b=idJT7y3SE1/7kfbEc9LO0zxd5v0/lc3uRviS/yKpvk1qGeWsTpJc+f5tyW0Ojr2CaC
+         DOb2xjm355MkcBLUlQKt1LNt2Id4DsxDmXUgxkqZ9JGJJMyh456qCekFMvTRZyGz/2l+
+         OzT3PIYYyHKW0lBosOj2ryMkSu7+e7+qyS43BfMCOSnIwGtLcziwXyfikExd7JNpyH1/
+         l+/KVjav/lOTYOb/Dr+TKFz8wjZcRUl5SuY5AWvq+oABg4czWSmzQlnNMNMfbEUn9S2m
+         bYErICkXlUGO+LrrVUP24yY9ckXylg3VyLAeAmX4ChtGlqTGJ9aGdxAHHD5zhRzfw7nW
+         ZybQ==
 In-Reply-To: <20210205182806.17220-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-There are two functions to flush the per-cpu data of an lruvec into
-the rest of the cgroup tree: when the cgroup is being freed, and when
-a CPU disappears during hotplug. The difference is whether all CPUs or
-just one is being collected, but the rest of the flushing code is the
-same. Merge them into one function and share the common code.
+With memcg having switched to rstat, memory.stat output is precise.
+Update the cgroup selftest to reflect the expectations and error
+tolerances of the new implementation.
+
+Also add newly tracked types of memory to the memory.stat side of the
+equation, since they're included in memory.current and could throw
+false positives.
 
 Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
- mm/memcontrol.c | 74 +++++++++++++++++++------------------------------
- 1 file changed, 28 insertions(+), 46 deletions(-)
+ tools/testing/selftests/cgroup/test_kmem.c | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 5dc0bd53b64a..490357945f2c 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -2410,39 +2410,39 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
- 	mutex_unlock(&percpu_charge_mutex);
- }
+diff --git a/tools/testing/selftests/cgroup/test_kmem.c b/tools/testing/selftests/cgroup/test_kmem.c
+index 0941aa16157e..22b31ebb3513 100644
+--- a/tools/testing/selftests/cgroup/test_kmem.c
++++ b/tools/testing/selftests/cgroup/test_kmem.c
+@@ -19,12 +19,12 @@
  
--static int memcg_hotplug_cpu_dead(unsigned int cpu)
-+static void memcg_flush_lruvec_page_state(struct mem_cgroup *memcg, int cpu)
+ 
+ /*
+- * Memory cgroup charging and vmstat data aggregation is performed using
+- * percpu batches 32 pages big (look at MEMCG_CHARGE_BATCH). So the maximum
+- * discrepancy between charge and vmstat entries is number of cpus multiplied
+- * by 32 pages multiplied by 2.
++ * Memory cgroup charging is performed using percpu batches 32 pages
++ * big (look at MEMCG_CHARGE_BATCH), whereas memory.stat is exact. So
++ * the maximum discrepancy between charge and vmstat entries is number
++ * of cpus multiplied by 32 pages.
+  */
+-#define MAX_VMSTAT_ERROR (4096 * 32 * 2 * get_nprocs())
++#define MAX_VMSTAT_ERROR (4096 * 32 * get_nprocs())
+ 
+ 
+ static int alloc_dcache(const char *cgroup, void *arg)
+@@ -162,7 +162,7 @@ static int cg_run_in_subcgroups(const char *parent,
+  */
+ static int test_kmem_memcg_deletion(const char *root)
  {
--	struct memcg_stock_pcp *stock;
--	struct mem_cgroup *memcg;
--
--	stock = &per_cpu(memcg_stock, cpu);
--	drain_stock(stock);
-+	int nid;
+-	long current, slab, anon, file, kernel_stack, sum;
++	long current, slab, anon, file, kernel_stack, pagetables, percpu, sock, sum;
+ 	int ret = KSFT_FAIL;
+ 	char *parent;
  
--	for_each_mem_cgroup(memcg) {
-+	for_each_node(nid) {
-+		struct mem_cgroup_per_node *pn = memcg->nodeinfo[nid];
-+		unsigned long stat[NR_VM_NODE_STAT_ITEMS];
-+		struct batched_lruvec_stat *lstatc;
- 		int i;
+@@ -184,11 +184,14 @@ static int test_kmem_memcg_deletion(const char *root)
+ 	anon = cg_read_key_long(parent, "memory.stat", "anon ");
+ 	file = cg_read_key_long(parent, "memory.stat", "file ");
+ 	kernel_stack = cg_read_key_long(parent, "memory.stat", "kernel_stack ");
++	pagetables = cg_read_key_long(parent, "memory.stat", "pagetables ");
++	percpu = cg_read_key_long(parent, "memory.stat", "percpu ");
++	sock = cg_read_key_long(parent, "memory.stat", "sock ");
+ 	if (current < 0 || slab < 0 || anon < 0 || file < 0 ||
+-	    kernel_stack < 0)
++	    kernel_stack < 0 || pagetables < 0 || percpu < 0 || sock < 0)
+ 		goto cleanup;
  
-+		lstatc = per_cpu_ptr(pn->lruvec_stat_cpu, cpu);
- 		for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++) {
--			int nid;
-+			stat[i] = lstatc->count[i];
-+			lstatc->count[i] = 0;
-+		}
- 
--			for_each_node(nid) {
--				struct batched_lruvec_stat *lstatc;
--				struct mem_cgroup_per_node *pn;
--				long x;
-+		do {
-+			for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
-+				atomic_long_add(stat[i], &pn->lruvec_stat[i]);
-+		} while ((pn = parent_nodeinfo(pn, nid)));
-+	}
-+}
- 
--				pn = memcg->nodeinfo[nid];
--				lstatc = per_cpu_ptr(pn->lruvec_stat_cpu, cpu);
-+static int memcg_hotplug_cpu_dead(unsigned int cpu)
-+{
-+	struct memcg_stock_pcp *stock;
-+	struct mem_cgroup *memcg;
- 
--				x = lstatc->count[i];
--				lstatc->count[i] = 0;
-+	stock = &per_cpu(memcg_stock, cpu);
-+	drain_stock(stock);
- 
--				if (x) {
--					do {
--						atomic_long_add(x, &pn->lruvec_stat[i]);
--					} while ((pn = parent_nodeinfo(pn, nid)));
--				}
--			}
--		}
--	}
-+	for_each_mem_cgroup(memcg)
-+		memcg_flush_lruvec_page_state(memcg, cpu);
- 
- 	return 0;
- }
-@@ -3636,27 +3636,6 @@ static u64 mem_cgroup_read_u64(struct cgroup_subsys_state *css,
+-	sum = slab + anon + file + kernel_stack;
++	sum = slab + anon + file + kernel_stack + pagetables + percpu + sock;
+ 	if (abs(sum - current) < MAX_VMSTAT_ERROR) {
+ 		ret = KSFT_PASS;
+ 	} else {
+@@ -198,6 +201,9 @@ static int test_kmem_memcg_deletion(const char *root)
+ 		printf("anon = %ld\n", anon);
+ 		printf("file = %ld\n", file);
+ 		printf("kernel_stack = %ld\n", kernel_stack);
++		printf("pagetables = %ld\n", pagetables);
++		printf("percpu = %ld\n", percpu);
++		printf("sock = %ld\n", sock);
  	}
- }
  
--static void memcg_flush_lruvec_page_state(struct mem_cgroup *memcg)
--{
--	int node;
--
--	for_each_node(node) {
--		struct mem_cgroup_per_node *pn = memcg->nodeinfo[node];
--		unsigned long stat[NR_VM_NODE_STAT_ITEMS] = { 0 };
--		struct mem_cgroup_per_node *pi;
--		int cpu, i;
--
--		for_each_online_cpu(cpu)
--			for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
--				stat[i] += per_cpu(
--					pn->lruvec_stat_cpu->count[i], cpu);
--
--		for (pi = pn; pi; pi = parent_nodeinfo(pi, node))
--			for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
--				atomic_long_add(stat[i], &pi->lruvec_stat[i]);
--	}
--}
--
- #ifdef CONFIG_MEMCG_KMEM
- static int memcg_online_kmem(struct mem_cgroup *memcg)
- {
-@@ -5192,12 +5171,15 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
- 
- static void mem_cgroup_free(struct mem_cgroup *memcg)
- {
-+	int cpu;
-+
- 	memcg_wb_domain_exit(memcg);
- 	/*
- 	 * Flush percpu lruvec stats to guarantee the value
- 	 * correctness on parent's and all ancestor levels.
- 	 */
--	memcg_flush_lruvec_page_state(memcg);
-+	for_each_online_cpu(cpu)
-+		memcg_flush_lruvec_page_state(memcg, cpu);
- 	__mem_cgroup_free(memcg);
- }
- 
+ cleanup:
 -- 
 2.30.0
 
