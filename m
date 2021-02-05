@@ -1,60 +1,175 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [External] Re: [PATCH] mm: memcontrol: remove rcu_read_lock from get_mem_cgroup_from_page
-Date: Fri, 5 Feb 2021 07:59:06 -0800
-Message-ID: <CALvZod65SY3yVXSwxO02VCZeEg9KsBqq9_Ph3pq2gfQ0eH=kFw@mail.gmail.com>
-References: <20210205062719.74431-1-songmuchun@bytedance.com>
- <YB0DnAlCaQza4Uf9@dhcp22.suse.cz> <CAMZfGtVhBrwgkJVwiah6eDsppSf8fYp+uZ=tZmHBLDFeTmQX3w@mail.gmail.com>
- <YB0euLiMU+T/9bMK@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 7/7] mm: memcontrol: consolidate lruvec stat flushing
+Date: Fri, 5 Feb 2021 16:17:27 +0100
+Message-ID: <YB1hhwVybr0x5M2j@dhcp22.suse.cz>
+References: <20210202184746.119084-1-hannes@cmpxchg.org>
+ <20210202184746.119084-8-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=jHFnyH790m7nlnJSVskIB0W5pLoFkbMx9bIb16KHmNs=;
-        b=Y1n3cckxp8Sv26Yg2Kxgb2craA8eH4oamlcKNyGu6Cq1ETKGeIjpz1wSLG34yCwBx9
-         8jCz4hYbdEzrAX0HgzdJIOZAxBXC75We1qql4WXxrna9TC7NdTBJ4AQonUGKLBiKsjI4
-         K7eE3O2fHwXc9MFhnrN0WYaNbqDRD0jwhifUYAb0N4UDEKiIlSTtsc4gAJogahjk9yU4
-         H2yVdG7mMrcZ+vdTepWBHEqEjQs47HZ21dfvcgETV8ovaJ59vY1rQbi4dzKp+swccwCE
-         yoKNg1vQ7f8haUoV7EPCiMm4JXjqOzywrdWE8hRgawdHbFgXUy6MoznmNBJSqTLnnPlU
-         qETg==
-In-Reply-To: <YB0euLiMU+T/9bMK-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1612538248; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=r8wialKdheVOWKUm2V9AI1x41rtNkGlqL+YFxoW4NCY=;
+        b=e9eORgSyJ69kSnIywPMO4ancKa6to5n2wceHlPgMzOSqkondXIZUfqhke6GyONiEL/h3Nz
+        NMbd5LMcG9rxDAPy5FzdlY3YjW78TIe7aKolEGddszgWxwLEJI97ivP3Of9W5YMIbI8mYU
+        zi0itQD0XQ3Ofa69Asm8BX4PN3W5ugE=
+Content-Disposition: inline
+In-Reply-To: <20210202184746.119084-8-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-+Cc Roman
+On Tue 02-02-21 13:47:46, Johannes Weiner wrote:
+> There are two functions to flush the per-cpu data of an lruvec into
+> the rest of the cgroup tree: when the cgroup is being freed, and when
+> a CPU disappears during hotplug. The difference is whether all CPUs or
+> just one is being collected, but the rest of the flushing code is the
+> same. Merge them into one function and share the common code.
 
-On Fri, Feb 5, 2021 at 2:49 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
->
-[snip]
-> > > > Also, css_get is enough because page
-> > > > has a reference to the memcg.
-> > >
-> > > tryget used to be there to guard against offlined memcg but we have
-> > > concluded this is impossible in this path. tryget stayed there to catch
-> > > some unexpected cases IIRC.
-> >
-> > Yeah, it can catch some unexpected cases. But why is this path
-> > special so that we need a tryget?
->
-> I do not remember details and the changelog of that change is not
-> explicit but I suspect it was just because this one could trigger as
-> there are external callers to memcg. Is this protection needed? I am not
-> sure, this is for you to justify if you want to remove it.
->
+IIUC the only reason for the cpu == -1 special case is to avoid
+zeroying, right? Is this optimization worth the special case? The code
+would be slightly easier to follow without this.
 
-It used to be css_tryget_online() which was changed to css_tryget()
-and from the discussion at [1], it seemed css_get() would be enough
-but we took a safer route.
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Anyways, I think we can either take the page_memcg_rcu() route or put
-explicit restrictions with page lock or lock_page_memcg() to guarantee
-page and memcg binding. I don't have a strong opinion either way but I
-think removing restrictions in future for new use-cases will be much
-harder, so, page_memcg_rcu() approach seems more appropriate at least
-for now.
+Anyway the above is not really a fundamental objection. It is more important
+to unify the flushing.
 
-[1] https://lore.kernel.org/linux-mm/CALvZod5pAv=u8L2Tgk0hDY7XAiiF2dvjC1omQ5BSfzFu_2zSXA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org/
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+
+> ---
+>  mm/memcontrol.c | 88 +++++++++++++++++++++++--------------------------
+>  1 file changed, 42 insertions(+), 46 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index b205b2413186..88e8afc49a46 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2410,39 +2410,56 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
+>  	mutex_unlock(&percpu_charge_mutex);
+>  }
+>  
+> -static int memcg_hotplug_cpu_dead(unsigned int cpu)
+> +static void memcg_flush_lruvec_page_state(struct mem_cgroup *memcg, int cpu)
+>  {
+> -	struct memcg_stock_pcp *stock;
+> -	struct mem_cgroup *memcg;
+> -
+> -	stock = &per_cpu(memcg_stock, cpu);
+> -	drain_stock(stock);
+> +	int nid;
+>  
+> -	for_each_mem_cgroup(memcg) {
+> +	for_each_node(nid) {
+> +		struct mem_cgroup_per_node *pn = memcg->nodeinfo[nid];
+> +		unsigned long stat[NR_VM_NODE_STAT_ITEMS] = { 0, };
+> +		struct batched_lruvec_stat *lstatc;
+>  		int i;
+>  
+> -		for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++) {
+> -			int nid;
+> -
+> -			for_each_node(nid) {
+> -				struct batched_lruvec_stat *lstatc;
+> -				struct mem_cgroup_per_node *pn;
+> -				long x;
+> -
+> -				pn = memcg->nodeinfo[nid];
+> +		if (cpu == -1) {
+> +			int cpui;
+> +			/*
+> +			 * The memcg is about to be freed, collect all
+> +			 * CPUs, no need to zero anything out.
+> +			 */
+> +			for_each_online_cpu(cpui) {
+> +				lstatc = per_cpu_ptr(pn->lruvec_stat_cpu, cpui);
+> +				for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
+> +					stat[i] += lstatc->count[i];
+> +			}
+> +		} else {
+> +			/*
+> +			 * The CPU has gone away, collect and zero out
+> +			 * its stats, it may come back later.
+> +			 */
+> +			for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++) {
+>  				lstatc = per_cpu_ptr(pn->lruvec_stat_cpu, cpu);
+> -
+> -				x = lstatc->count[i];
+> +				stat[i] = lstatc->count[i];
+>  				lstatc->count[i] = 0;
+> -
+> -				if (x) {
+> -					do {
+> -						atomic_long_add(x, &pn->lruvec_stat[i]);
+> -					} while ((pn = parent_nodeinfo(pn, nid)));
+> -				}
+>  			}
+>  		}
+> +
+> +		do {
+> +			for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
+> +				atomic_long_add(stat[i], &pn->lruvec_stat[i]);
+> +		} while ((pn = parent_nodeinfo(pn, nid)));
+>  	}
+> +}
+> +
+> +static int memcg_hotplug_cpu_dead(unsigned int cpu)
+> +{
+> +	struct memcg_stock_pcp *stock;
+> +	struct mem_cgroup *memcg;
+> +
+> +	stock = &per_cpu(memcg_stock, cpu);
+> +	drain_stock(stock);
+> +
+> +	for_each_mem_cgroup(memcg)
+> +		memcg_flush_lruvec_page_state(memcg, cpu);
+>  
+>  	return 0;
+>  }
+> @@ -3636,27 +3653,6 @@ static u64 mem_cgroup_read_u64(struct cgroup_subsys_state *css,
+>  	}
+>  }
+>  
+> -static void memcg_flush_lruvec_page_state(struct mem_cgroup *memcg)
+> -{
+> -	int node;
+> -
+> -	for_each_node(node) {
+> -		struct mem_cgroup_per_node *pn = memcg->nodeinfo[node];
+> -		unsigned long stat[NR_VM_NODE_STAT_ITEMS] = {0, };
+> -		struct mem_cgroup_per_node *pi;
+> -		int cpu, i;
+> -
+> -		for_each_online_cpu(cpu)
+> -			for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
+> -				stat[i] += per_cpu(
+> -					pn->lruvec_stat_cpu->count[i], cpu);
+> -
+> -		for (pi = pn; pi; pi = parent_nodeinfo(pi, node))
+> -			for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
+> -				atomic_long_add(stat[i], &pi->lruvec_stat[i]);
+> -	}
+> -}
+> -
+>  #ifdef CONFIG_MEMCG_KMEM
+>  static int memcg_online_kmem(struct mem_cgroup *memcg)
+>  {
+> @@ -5197,7 +5193,7 @@ static void mem_cgroup_free(struct mem_cgroup *memcg)
+>  	 * Flush percpu lruvec stats to guarantee the value
+>  	 * correctness on parent's and all ancestor levels.
+>  	 */
+> -	memcg_flush_lruvec_page_state(memcg);
+> +	memcg_flush_lruvec_page_state(memcg, -1);
+>  	__mem_cgroup_free(memcg);
+>  }
+>  
+> -- 
+> 2.30.0
+> 
+
+-- 
+Michal Hocko
+SUSE Labs
