@@ -1,98 +1,73 @@
-From: Muchun Song <songmuchun@bytedance.com>
-Subject: Re: [External] Re: [PATCH] mm: memcontrol: remove rcu_read_lock from get_mem_cgroup_from_page
-Date: Fri, 5 Feb 2021 17:14:30 +0800
-Message-ID: <CAMZfGtVhBrwgkJVwiah6eDsppSf8fYp+uZ=tZmHBLDFeTmQX3w@mail.gmail.com>
-References: <20210205062719.74431-1-songmuchun@bytedance.com> <YB0DnAlCaQza4Uf9@dhcp22.suse.cz>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [External] Re: [PATCH] mm: memcontrol: fix missing wakeup oom
+ task
+Date: Fri, 5 Feb 2021 11:21:47 +0100
+Message-ID: <YB0cO7R1WtJgAxI2@dhcp22.suse.cz>
+References: <20210205062310.74268-1-songmuchun@bytedance.com>
+ <YB0Ay+epP/hnFmDS@dhcp22.suse.cz>
+ <CAMZfGtWKNNhc1Jy1jzp2uZU_PM6GNWup7d=yUVk9AehKFo_CRw@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=53pDsjk4dsfRxbD/kmYDiUVFcJx5hI2GOqEILwRUysY=;
-        b=lI6xNbyP7s/yr16Sg6aC5FlliprvUbrxjSsyUrxMaPEP1KqYYQyRHtd9K0UqINg26g
-         QmTgj8Spi3UKo86zeJGV83yXawxMbYM9CVFSrujTaGLXq/82Y0Ayv6njyfjK2fGS486s
-         aK97+eddmJcU79YSI2w/3NYY8Cz5dFwUkAM0cps0WLK3XdhrzxC9i+UYWwr1A8prvV8X
-         RP1T+YqbYhVSnYMEpWju7n9oT1AD5a3+cjb6SGUlmT1rX1pqmxW2MlNQEMuS1c1aXhPC
-         acMS102YFmfhPAkrdrIGjnj//Ku6/enRZpVxSIW/x5r9lGBvP3E6a4a3x/IPrwui2Jbe
-         D88w==
-In-Reply-To: <YB0DnAlCaQza4Uf9@dhcp22.suse.cz>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1612520509; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=441WHve7NP2TxAMx0OJ30INfKQWqrKfmb5j39ihe/DY=;
+        b=vD+GXDhlMi+q+LG9eTNBL8QlKKkp0Yk2YsIRnv1U0jtK12zgNa84A5lVmwU25sEhOXR1g3
+        r/tOBtkZeacMgrU3FSrlbpsoUpc6zQv2UU0Pk7EeQE2dfk4jtBkU3TZXUhKrL67tRGs+5K
+        iR6YLPQo02cieBvDO2ytc1YLsSVnVWI=
+Content-Disposition: inline
+In-Reply-To: <CAMZfGtWKNNhc1Jy1jzp2uZU_PM6GNWup7d=yUVk9AehKFo_CRw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko@suse.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, Linux Memory Management List <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, Feb 5, 2021 at 4:36 PM Michal Hocko <mhocko@suse.com> wrote:
->
-> On Fri 05-02-21 14:27:19, Muchun Song wrote:
-> > The get_mem_cgroup_from_page() is called under page lock, so the page
-> > memcg cannot be changed under us.
->
-> Where is the page lock enforced?
-
-Because it is called from alloc_page_buffers(). This path is under
-page lock.
-
->
-> > Also, css_get is enough because page
-> > has a reference to the memcg.
->
-> tryget used to be there to guard against offlined memcg but we have
-> concluded this is impossible in this path. tryget stayed there to catch
-> some unexpected cases IIRC.
-
-Yeah, it can catch some unexpected cases. But why is this path
-special so that we need a tryget?
-
->
-> > If we really want to make the get_mem_cgroup_from_page() suitable for
-> > arbitrary page, we should use page_memcg_rcu() instead of page_memcg()
-> > and call it after rcu_read_lock().
->
-> What is the primary motivation to change this code? is the overhead of
-> tryget/RCU something that needs optimizing?
-
-Actually, the rcu_read_lock() is not necessary here. So it is better to
-remove it (indeed reduce some code).
-
-Thanks.
-
-
->
-> > Signed-off-by: Muchun Song <songmuchun@bytedance.com>
-> > ---
-> >  mm/memcontrol.c | 9 ++++-----
-> >  1 file changed, 4 insertions(+), 5 deletions(-)
+On Fri 05-02-21 17:55:10, Muchun Song wrote:
+> On Fri, Feb 5, 2021 at 4:24 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
 > >
-> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> > index 87f01bc05d1f..6c7f1ea3955e 100644
-> > --- a/mm/memcontrol.c
-> > +++ b/mm/memcontrol.c
-> > @@ -1063,16 +1063,15 @@ EXPORT_SYMBOL(get_mem_cgroup_from_mm);
-> >   */
-> >  struct mem_cgroup *get_mem_cgroup_from_page(struct page *page)
-> >  {
-> > -     struct mem_cgroup *memcg = page_memcg(page);
-> > +     struct mem_cgroup *memcg;
+> > On Fri 05-02-21 14:23:10, Muchun Song wrote:
+> > > We call memcg_oom_recover() in the uncharge_batch() to wakeup OOM task
+> > > when page uncharged, but for the slab pages, we do not do this when page
+> > > uncharged.
 > >
-> >       if (mem_cgroup_disabled())
-> >               return NULL;
+> > How does the patch deal with this?
+> 
+> When we uncharge a slab page via __memcg_kmem_uncharge,
+> actually, this path forgets to do this for us compared to
+> uncharge_batch(). Right?
+
+Yes this was more more or less clear (still would have been nicer to be
+explicit). But you still haven't replied to my question I believe. I
+assume you rely on refill_stock doing draining but how does this address
+the problem? Is it sufficient to do wakeups in the batched way?
+
+> > > When we drain per cpu stock, we also should do this.
 > >
-> > -     rcu_read_lock();
-> >       /* Page should not get uncharged and freed memcg under us. */
-> > -     if (!memcg || WARN_ON_ONCE(!css_tryget(&memcg->css)))
-> > -             memcg = root_mem_cgroup;
-> > -     rcu_read_unlock();
-> > +     memcg = page_memcg(page) ? : root_mem_cgroup;
-> > +     css_get(&memcg->css);
-> > +
-> >       return memcg;
-> >  }
-> >  EXPORT_SYMBOL(get_mem_cgroup_from_page);
-> > --
-> > 2.11.0
->
-> --
-> Michal Hocko
-> SUSE Labs
+> > Can we have anything the per-cpu stock while entering the OOM path. IIRC
+> > we do drain all cpus before entering oom path.
+> 
+> You are right. I did not notice this. Thank you.
+> 
+> >
+> > > The memcg_oom_recover() is small, so make it inline.
+> >
+> > Does this lead to any code generation improvements? I would expect
+> > compiler to be clever enough to inline static functions if that pays
+> > off. If yes make this a patch on its own.
+> 
+> I have disassembled the code, I see memcg_oom_recover is not
+> inline. Maybe because memcg_oom_recover has a lot of callers.
+> Just guess.
+> 
+> (gdb) disassemble uncharge_batch
+>  [...]
+>  0xffffffff81341c73 <+227>: callq  0xffffffff8133c420 <page_counter_uncharge>
+>  0xffffffff81341c78 <+232>: jmpq   0xffffffff81341bc0 <uncharge_batch+48>
+>  0xffffffff81341c7d <+237>: callq  0xffffffff8133e2c0 <memcg_oom_recover>
+
+So does it really help to do the inlining?
+-- 
+Michal Hocko
+SUSE Labs
