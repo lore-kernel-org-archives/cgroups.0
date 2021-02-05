@@ -1,167 +1,148 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH 0/8] mm: memcontrol: switch to rstat v2
-Date: Fri,  5 Feb 2021 13:27:58 -0500
-Message-ID: <20210205182806.17220-1-hannes@cmpxchg.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [External] Re: [PATCH] mm: memcontrol: remove rcu_read_lock from get_mem_cgroup_from_page
+Date: Fri, 5 Feb 2021 10:59:06 -0800
+Message-ID: <CALvZod6Z-C_2Dg0iAc2XA6AQTj9jHovjVuoM6QqPRUmjP3Fu=Q@mail.gmail.com>
+References: <20210205062719.74431-1-songmuchun@bytedance.com>
+ <YB0DnAlCaQza4Uf9@dhcp22.suse.cz> <CAMZfGtVhBrwgkJVwiah6eDsppSf8fYp+uZ=tZmHBLDFeTmQX3w@mail.gmail.com>
+ <YB0euLiMU+T/9bMK@dhcp22.suse.cz> <YB2LTIeTPN72Xrxj@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=2KeaXbGexKPSD8rISWFG5PeHSxIPuC3Rzo5og1/7Ir0=;
-        b=pV0wejWptXCQndSQPQbqSqo3RcnUZw+d6QFJ9TEEnzCMzSHQWc79RNjsbrbcojhnLj
-         HByaFRnyfY9pW7EnZ0hgajmYebe0E+XFuM3ERSwpzAY+2J2JBgDRe28TP+oqky6K591o
-         cwfu9EA1Dkok8d321pZ3mUjM/ZwN4/PxCPBcSJ5GBJuKy7FlQsIsmmSJKPsJAOmItoaM
-         RTgoarqvt6tfiZolIE3A6+tbJ5J4Uias+SRxR9lYvUDoIGPvWiUGoRTDcJ7k3bnkBzyy
-         G+QUkCJ9RuYX3eeQFVfJxTWSFgL1zSV5QNqpx/NaHOv3QFiTLiEa07fmlX6L8tky3Iby
-         Hctg==
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=umcUJjWlYyqhcB34L7jgiVYkOGucvAbPTMYmElui7W8=;
+        b=sxvdKwLVtJjOYJactSKqj9AfcdPfdvYp/V6Mg0fIQpYbLA8SHxX0K6BJDTpBjkL4Qv
+         lmem8SOCb37UshDi2wl22+MCq4w+kmqrM8+C7BxN9ng+4g5Jv+E0D470uPlk9606zyDH
+         H6607b6EDARbFm/hZH4nW6Dllif4XUfsJJkaxtFsAX3TRZPkDxlF+Y7KwKp/p5QD8t+q
+         2l2eaEjfR86d42X3W8MESoXsYXk7D9Fsx+TGcBIGbhFOvK3Hequ+8MYg4B7JcH4CzBAu
+         xbReADtXCiPXx9Zr4+nMdp9YumSadxv6wRiu7O7zAAMyGK/+w72fe4Ti+3OysAhLZSKn
+         NTzg==
+In-Reply-To: <YB2LTIeTPN72Xrxj-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-This is version 2 of the memcg rstat patches. Updates since v1:
+On Fri, Feb 5, 2021 at 10:31 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+>
+> On Fri, Feb 05, 2021 at 11:32:24AM +0100, Michal Hocko wrote:
+> > On Fri 05-02-21 17:14:30, Muchun Song wrote:
+> > > On Fri, Feb 5, 2021 at 4:36 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> > > >
+> > > > On Fri 05-02-21 14:27:19, Muchun Song wrote:
+> > > > > The get_mem_cgroup_from_page() is called under page lock, so the page
+> > > > > memcg cannot be changed under us.
+> > > >
+> > > > Where is the page lock enforced?
+> > >
+> > > Because it is called from alloc_page_buffers(). This path is under
+> > > page lock.
+> >
+> > I do not see any page lock enforecement there. There is not even a
+> > comment requiring that. Can we grow more users where this is not the
+> > case? There is no actual relation between alloc_page_buffers and
+> > get_mem_cgroup_from_page except that the former is the only _current_
+> > existing user. I would be careful to dictate locking based solely on
+> > that.
+>
+> Since alloc_page_buffers() holds the page lock throughout the entire
+> time it uses the memcg, there is no actual reason for it to use RCU or
+> even acquire an additional reference on the css. We know it's pinned,
+> the charge pins it, and the page lock pins the charge. It can neither
+> move to a different cgroup nor be uncharged.
+>
+> So what do you say we switch alloc_page_buffers() to page_memcg()?
+>
+> And because that removes the last user of get_mem_cgroup_from_page(),
+> we can kill it off and worry about a good interface once a consumer
+> materializes for it.
 
-- added cgroup selftest output (see test section below) (thanks Roman)
-- updated cgroup selftest to match new kernel implementation
-- added Fixes: tag to 'mm: memcontrol: fix cpuhotplug statistics flushing' (Shakeel)
-- collected review & ack tags
-- added rstat overview to 'mm: memcontrol: switch to rstat' changelog (Michal)
-- simplified memcg_flush_lruvec_page_state() and removed cpu==-1 case (Michal)
+This seems like even better approach.
 
----
+>
+> diff --git a/fs/buffer.c b/fs/buffer.c
+> index 96c7604f69b3..12a10f461b81 100644
+> --- a/fs/buffer.c
+> +++ b/fs/buffer.c
+> @@ -847,7 +847,7 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
+>         if (retry)
+>                 gfp |= __GFP_NOFAIL;
+>
+> -       memcg = get_mem_cgroup_from_page(page);
+> +       memcg = page_memcg(page);
 
-This series converts memcg stats tracking to the streamlined rstat
-infrastructure provided by the cgroup core code. rstat is already used
-by the CPU controller and the IO controller. This change is motivated
-by recent accuracy problems in memcg's custom stats code, as well as
-the benefits of sharing common infra with other controllers.
+A comment explaining why page_memcg(page) is safe here and then the
+patch looks good to me.
 
-The current memcg implementation does batched tree aggregation on the
-write side: local stat changes are cached in per-cpu counters, which
-are then propagated upward in batches when a threshold (32 pages) is
-exceeded. This is cheap, but the error introduced by the lazy upward
-propagation adds up: 32 pages times CPUs times cgroups in the subtree.
-We've had complaints from service owners that the stats do not
-reliably track and react to allocation behavior as expected, sometimes
-swallowing the results of entire test applications.
-
-The original memcg stat implementation used to do tree aggregation
-exclusively on the read side: local stats would only ever be tracked
-in per-cpu counters, and a memory.stat read would iterate the entire
-subtree and sum those counters up. This didn't keep up with the times:
-
-- Cgroup trees are much bigger now. We switched to lazily-freed
-  cgroups, where deleted groups would hang around until their
-  remaining page cache has been reclaimed. This can result in large
-  subtrees that are expensive to walk, while most of the groups are
-  idle and their statistics don't change much anymore.
-
-- Automated monitoring increased. With the proliferation of userspace
-  oom killing, proactive reclaim, and higher-resolution logging of
-  workload trends in general, top-level stat files are polled at least
-  once a second in many deployments.
-
-- The lifetime of cgroups got shorter. Where most cgroup setups in the
-  past would have a few large policy-oriented cgroups for everything
-  running on the system, newer cgroup deployments tend to create one
-  group per application - which gets deleted again as the processes
-  exit. An aggregation scheme that doesn't retain child data inside
-  the parents loses event history of the subtree.
-
-Rstat addresses all three of those concerns through intelligent,
-persistent read-side aggregation. As statistics change at the local
-level, rstat tracks - on a per-cpu basis - only those parts of a
-subtree that have changes pending and require aggregation. The actual
-aggregation occurs on the colder read side - which can now skip over
-(potentially large) numbers of recently idle cgroups.
-
----
-
-The test_kmem cgroup selftest is currently failing due to excessive
-cumulative vmstat drift from 100 subgroups:
-
-    ok 1 test_kmem_basic
-    memory.current = 8810496
-    slab + anon + file + kernel_stack = 17074568
-    slab = 6101384
-    anon = 946176
-    file = 0
-    kernel_stack = 10027008
-    not ok 2 test_kmem_memcg_deletion
-    ok 3 test_kmem_proc_kpagecgroup
-    ok 4 test_kmem_kernel_stacks
-    ok 5 test_kmem_dead_cgroups
-    ok 6 test_percpu_basic
-
-As you can see, memory.stat items far exceed memory.current. The
-kernel stack alone is bigger than all of charged memory. That's
-because the memory of the test has been uncharged from memory.current,
-but the negative vmstat deltas are still sitting in the percpu caches.
-
-The test at this time isn't even counting percpu, pagetables etc. yet,
-which would further contribute to the error. The last patch in the
-series updates the test to include them - as well as match error
-expectations on the new implementation to catch future regressions.
-
-With all patches applied, the (updated, more rigorous) test succeeds:
-
-    ok 1 test_kmem_basic
-    ok 2 test_kmem_memcg_deletion
-    ok 3 test_kmem_proc_kpagecgroup
-    ok 4 test_kmem_kernel_stacks
-    ok 5 test_kmem_dead_cgroups
-    ok 6 test_percpu_basic
-
----
-
-A kernel build test confirms that overhead is comparable. Two kernels
-are built simultaneously in a nested tree with several idle siblings:
-
-root - kernelbuild - one - two - three - four - build-a (defconfig, make -j16)
-                                             `- build-b (defconfig, make -j16)
-                                             `- idle-1
-                                             `- ...
-                                             `- idle-9
-
-During the builds, kernelbuild/memory.stat is read once a second.
-
-A perf diff shows that the changes in cycle distribution is
-minimal. Top 10 kernel symbols:
-
-     0.09%     +0.08%  [kernel.kallsyms]                       [k] __mod_memcg_lruvec_state
-     0.00%     +0.06%  [kernel.kallsyms]                       [k] cgroup_rstat_updated
-     0.08%     -0.05%  [kernel.kallsyms]                       [k] __mod_memcg_state.part.0
-     0.16%     -0.04%  [kernel.kallsyms]                       [k] release_pages
-     0.00%     +0.03%  [kernel.kallsyms]                       [k] __count_memcg_events
-     0.01%     +0.03%  [kernel.kallsyms]                       [k] mem_cgroup_charge_statistics.constprop.0
-     0.10%     -0.02%  [kernel.kallsyms]                       [k] get_mem_cgroup_from_mm
-     0.05%     -0.02%  [kernel.kallsyms]                       [k] mem_cgroup_update_lru_size
-     0.57%     +0.01%  [kernel.kallsyms]                       [k] asm_exc_page_fault
-
-
----
-
-The on-demand aggregated stats are now fully accurate:
-
-$ grep -e nr_inactive_file /proc/vmstat | awk '{print($1,$2*4096)}'; \
-  grep -e inactive_file /sys/fs/cgroup/memory.stat
-
-vanilla:                              patched:
-nr_inactive_file 1574105088           nr_inactive_file 1027801088
-   inactive_file 1577410560              inactive_file 1027801088
-
----
-
- block/blk-cgroup.c                         |  14 +-
- include/linux/memcontrol.h                 | 119 ++++-------
- kernel/cgroup/cgroup.c                     |  34 +--
- kernel/cgroup/rstat.c                      |  62 +++---
- mm/memcontrol.c                            | 306 +++++++++++++--------------
- tools/testing/selftests/cgroup/test_kmem.c |  22 +-
- 6 files changed, 266 insertions(+), 291 deletions(-)
-
-Based on v5.11-rc5-mm1.
-
-
+>         old_memcg = set_active_memcg(memcg);
+>
+>         head = NULL;
+> @@ -868,7 +868,6 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
+>         }
+>  out:
+>         set_active_memcg(old_memcg);
+> -       mem_cgroup_put(memcg);
+>         return head;
+>  /*
+>   * In case anything failed, we just free everything we got.
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index a8c7a0ccc759..a44b2d51aecc 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -687,8 +687,6 @@ struct mem_cgroup *mem_cgroup_from_task(struct task_struct *p);
+>
+>  struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm);
+>
+> -struct mem_cgroup *get_mem_cgroup_from_page(struct page *page);
+> -
+>  struct lruvec *lock_page_lruvec(struct page *page);
+>  struct lruvec *lock_page_lruvec_irq(struct page *page);
+>  struct lruvec *lock_page_lruvec_irqsave(struct page *page,
+> @@ -1169,11 +1167,6 @@ static inline struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm)
+>         return NULL;
+>  }
+>
+> -static inline struct mem_cgroup *get_mem_cgroup_from_page(struct page *page)
+> -{
+> -       return NULL;
+> -}
+> -
+>  static inline void mem_cgroup_put(struct mem_cgroup *memcg)
+>  {
+>  }
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 490357945f2c..ff52550d2f65 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1048,29 +1048,6 @@ struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm)
+>  }
+>  EXPORT_SYMBOL(get_mem_cgroup_from_mm);
+>
+> -/**
+> - * get_mem_cgroup_from_page: Obtain a reference on given page's memcg.
+> - * @page: page from which memcg should be extracted.
+> - *
+> - * Obtain a reference on page->memcg and returns it if successful. Otherwise
+> - * root_mem_cgroup is returned.
+> - */
+> -struct mem_cgroup *get_mem_cgroup_from_page(struct page *page)
+> -{
+> -       struct mem_cgroup *memcg = page_memcg(page);
+> -
+> -       if (mem_cgroup_disabled())
+> -               return NULL;
+> -
+> -       rcu_read_lock();
+> -       /* Page should not get uncharged and freed memcg under us. */
+> -       if (!memcg || WARN_ON_ONCE(!css_tryget(&memcg->css)))
+> -               memcg = root_mem_cgroup;
+> -       rcu_read_unlock();
+> -       return memcg;
+> -}
+> -EXPORT_SYMBOL(get_mem_cgroup_from_page);
+> -
+>  static __always_inline struct mem_cgroup *active_memcg(void)
+>  {
+>         if (in_interrupt())
