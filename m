@@ -1,142 +1,174 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [External] Re: [PATCH] mm: memcontrol: remove rcu_read_lock from
- get_mem_cgroup_from_page
-Date: Fri, 5 Feb 2021 13:15:40 -0500
-Message-ID: <YB2LTIeTPN72Xrxj@cmpxchg.org>
-References: <20210205062719.74431-1-songmuchun@bytedance.com>
- <YB0DnAlCaQza4Uf9@dhcp22.suse.cz>
- <CAMZfGtVhBrwgkJVwiah6eDsppSf8fYp+uZ=tZmHBLDFeTmQX3w@mail.gmail.com>
- <YB0euLiMU+T/9bMK@dhcp22.suse.cz>
+Subject: [PATCH 4/8] cgroup: rstat: support cgroup1
+Date: Fri,  5 Feb 2021 13:28:02 -0500
+Message-ID: <20210205182806.17220-5-hannes@cmpxchg.org>
+References: <20210205182806.17220-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=XIgSkeXWHW1iLdxhmfSy4vGDVypEJJKaTvz/+TUywfw=;
-        b=h3S3h+C3rXQ+iT7q44q8ThSjMNuxNz+xsM6CGSL6Hj4noskqYapqnJM+rdc1eRECvH
-         YkiJQTBjKNdep/452yExfB/n2Ii3ypd4q5ygcUoCf6F9MqWu+QhyTOLVwBaD0wn9Tgmr
-         RAl69uYMB36ucKfSVfiJ9xaRs8GnZ08lcc/Dt+lxnxmsHDKs2qNvtekBQiFaNA1arh/+
-         d8Vi0Y9FC0tl7fLu7RewHBz+sKCM4lmOo79AayMW2O46Bv+Jp9OsX+yHzqITi+ATTrTG
-         IxVYgTLTp6yp60AJUZ3IQwBltqRHOtugETh+kS/2HwuFjfXHCPsxmasmaoTlXfIZXn6c
-         P0Xw==
-Content-Disposition: inline
-In-Reply-To: <YB0euLiMU+T/9bMK-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=BaUO0pgli+w3WAaSzoSou9pv5Ds3nAQBJUbmAgL0bVs=;
+        b=AM3ZrZz8cvpBGn6MlO823+OEBTcXj/+p9LQp8MY8YAsGWuGslA5P7ox7fpa8rJoWfz
+         md7ddBktXxCCmBlfPQRL549Cd+kHwYzfDMlBuA1Kis8uOitRMBu+JIr0TBY1JkhLaqEf
+         U6c2a+wxWq9lQCLJwx5tuF3oJ+o5JNlwpkQa+paSMBwZ1veYAxAWfl0/TuCpDj4fsHzU
+         mgGcUaIJfJbIt2Gl73PUll0IqbMyV3Cv4UHN3wInAJwUu3LsbL5p2rCnT+RMn6fSGVVV
+         m4YfPHNDXLPlX5akurOGBWHjkX/aOxnlghimaHbpxRs9Q/5ddg7sX2By63vXOjhvn27H
+         M5qg==
+In-Reply-To: <20210205182806.17220-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Fri, Feb 05, 2021 at 11:32:24AM +0100, Michal Hocko wrote:
-> On Fri 05-02-21 17:14:30, Muchun Song wrote:
-> > On Fri, Feb 5, 2021 at 4:36 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> > >
-> > > On Fri 05-02-21 14:27:19, Muchun Song wrote:
-> > > > The get_mem_cgroup_from_page() is called under page lock, so the page
-> > > > memcg cannot be changed under us.
-> > >
-> > > Where is the page lock enforced?
-> > 
-> > Because it is called from alloc_page_buffers(). This path is under
-> > page lock.
-> 
-> I do not see any page lock enforecement there. There is not even a
-> comment requiring that. Can we grow more users where this is not the
-> case? There is no actual relation between alloc_page_buffers and
-> get_mem_cgroup_from_page except that the former is the only _current_
-> existing user. I would be careful to dictate locking based solely on
-> that.
+Rstat currently only supports the default hierarchy in cgroup2. In
+order to replace memcg's private stats infrastructure - used in both
+cgroup1 and cgroup2 - with rstat, the latter needs to support cgroup1.
 
-Since alloc_page_buffers() holds the page lock throughout the entire
-time it uses the memcg, there is no actual reason for it to use RCU or
-even acquire an additional reference on the css. We know it's pinned,
-the charge pins it, and the page lock pins the charge. It can neither
-move to a different cgroup nor be uncharged.
+The initialization and destruction callbacks for regular cgroups are
+already in place. Remove the cgroup_on_dfl() guards to handle cgroup1.
 
-So what do you say we switch alloc_page_buffers() to page_memcg()?
+The initialization of the root cgroup is currently hardcoded to only
+handle cgrp_dfl_root.cgrp. Move those callbacks to cgroup_setup_root()
+and cgroup_destroy_root() to handle the default root as well as the
+various cgroup1 roots we may set up during mounting.
 
-And because that removes the last user of get_mem_cgroup_from_page(),
-we can kill it off and worry about a good interface once a consumer
-materializes for it.
+The linking of css to cgroups happens in code shared between cgroup1
+and cgroup2 as well. Simply remove the cgroup_on_dfl() guard.
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 96c7604f69b3..12a10f461b81 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -847,7 +847,7 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
- 	if (retry)
- 		gfp |= __GFP_NOFAIL;
+Linkage of the root css to the root cgroup is a bit trickier: per
+default, the root css of a subsystem controller belongs to the default
+hierarchy (i.e. the cgroup2 root). When a controller is mounted in its
+cgroup1 version, the root css is stolen and moved to the cgroup1 root;
+on unmount, the css moves back to the default hierarchy. Annotate
+rebind_subsystems() to move the root css linkage along between roots.
+
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+---
+ kernel/cgroup/cgroup.c | 34 +++++++++++++++++++++-------------
+ kernel/cgroup/rstat.c  |  2 --
+ 2 files changed, 21 insertions(+), 15 deletions(-)
+
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 9153b20e5cc6..e049edd66776 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -1339,6 +1339,7 @@ static void cgroup_destroy_root(struct cgroup_root *root)
  
--	memcg = get_mem_cgroup_from_page(page);
-+	memcg = page_memcg(page);
- 	old_memcg = set_active_memcg(memcg);
+ 	mutex_unlock(&cgroup_mutex);
  
- 	head = NULL;
-@@ -868,7 +868,6 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
++	cgroup_rstat_exit(cgrp);
+ 	kernfs_destroy_root(root->kf_root);
+ 	cgroup_free_root(root);
+ }
+@@ -1751,6 +1752,12 @@ int rebind_subsystems(struct cgroup_root *dst_root, u16 ss_mask)
+ 				       &dcgrp->e_csets[ss->id]);
+ 		spin_unlock_irq(&css_set_lock);
+ 
++		if (ss->css_rstat_flush) {
++			list_del_rcu(&css->rstat_css_node);
++			list_add_rcu(&css->rstat_css_node,
++				     &dcgrp->rstat_css_list);
++		}
++
+ 		/* default hierarchy doesn't enable controllers by default */
+ 		dst_root->subsys_mask |= 1 << ssid;
+ 		if (dst_root == &cgrp_dfl_root) {
+@@ -1971,10 +1978,14 @@ int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask)
+ 	if (ret)
+ 		goto destroy_root;
+ 
+-	ret = rebind_subsystems(root, ss_mask);
++	ret = cgroup_rstat_init(root_cgrp);
+ 	if (ret)
+ 		goto destroy_root;
+ 
++	ret = rebind_subsystems(root, ss_mask);
++	if (ret)
++		goto exit_stats;
++
+ 	ret = cgroup_bpf_inherit(root_cgrp);
+ 	WARN_ON_ONCE(ret);
+ 
+@@ -2006,6 +2017,8 @@ int cgroup_setup_root(struct cgroup_root *root, u16 ss_mask)
+ 	ret = 0;
+ 	goto out;
+ 
++exit_stats:
++	cgroup_rstat_exit(root_cgrp);
+ destroy_root:
+ 	kernfs_destroy_root(root->kf_root);
+ 	root->kf_root = NULL;
+@@ -4934,8 +4947,7 @@ static void css_free_rwork_fn(struct work_struct *work)
+ 			cgroup_put(cgroup_parent(cgrp));
+ 			kernfs_put(cgrp->kn);
+ 			psi_cgroup_free(cgrp);
+-			if (cgroup_on_dfl(cgrp))
+-				cgroup_rstat_exit(cgrp);
++			cgroup_rstat_exit(cgrp);
+ 			kfree(cgrp);
+ 		} else {
+ 			/*
+@@ -4976,8 +4988,7 @@ static void css_release_work_fn(struct work_struct *work)
+ 		/* cgroup release path */
+ 		TRACE_CGROUP_PATH(release, cgrp);
+ 
+-		if (cgroup_on_dfl(cgrp))
+-			cgroup_rstat_flush(cgrp);
++		cgroup_rstat_flush(cgrp);
+ 
+ 		spin_lock_irq(&css_set_lock);
+ 		for (tcgrp = cgroup_parent(cgrp); tcgrp;
+@@ -5034,7 +5045,7 @@ static void init_and_link_css(struct cgroup_subsys_state *css,
+ 		css_get(css->parent);
  	}
- out:
- 	set_active_memcg(old_memcg);
--	mem_cgroup_put(memcg);
- 	return head;
+ 
+-	if (cgroup_on_dfl(cgrp) && ss->css_rstat_flush)
++	if (ss->css_rstat_flush)
+ 		list_add_rcu(&css->rstat_css_node, &cgrp->rstat_css_list);
+ 
+ 	BUG_ON(cgroup_css(cgrp, ss));
+@@ -5159,11 +5170,9 @@ static struct cgroup *cgroup_create(struct cgroup *parent, const char *name,
+ 	if (ret)
+ 		goto out_free_cgrp;
+ 
+-	if (cgroup_on_dfl(parent)) {
+-		ret = cgroup_rstat_init(cgrp);
+-		if (ret)
+-			goto out_cancel_ref;
+-	}
++	ret = cgroup_rstat_init(cgrp);
++	if (ret)
++		goto out_cancel_ref;
+ 
+ 	/* create the directory */
+ 	kn = kernfs_create_dir(parent->kn, name, mode, cgrp);
+@@ -5250,8 +5259,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent, const char *name,
+ out_kernfs_remove:
+ 	kernfs_remove(cgrp->kn);
+ out_stat_exit:
+-	if (cgroup_on_dfl(parent))
+-		cgroup_rstat_exit(cgrp);
++	cgroup_rstat_exit(cgrp);
+ out_cancel_ref:
+ 	percpu_ref_exit(&cgrp->self.refcnt);
+ out_free_cgrp:
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index d51175cedfca..faa767a870ba 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -285,8 +285,6 @@ void __init cgroup_rstat_boot(void)
+ 
+ 	for_each_possible_cpu(cpu)
+ 		raw_spin_lock_init(per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu));
+-
+-	BUG_ON(cgroup_rstat_init(&cgrp_dfl_root.cgrp));
+ }
+ 
  /*
-  * In case anything failed, we just free everything we got.
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index a8c7a0ccc759..a44b2d51aecc 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -687,8 +687,6 @@ struct mem_cgroup *mem_cgroup_from_task(struct task_struct *p);
- 
- struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm);
- 
--struct mem_cgroup *get_mem_cgroup_from_page(struct page *page);
--
- struct lruvec *lock_page_lruvec(struct page *page);
- struct lruvec *lock_page_lruvec_irq(struct page *page);
- struct lruvec *lock_page_lruvec_irqsave(struct page *page,
-@@ -1169,11 +1167,6 @@ static inline struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm)
- 	return NULL;
- }
- 
--static inline struct mem_cgroup *get_mem_cgroup_from_page(struct page *page)
--{
--	return NULL;
--}
--
- static inline void mem_cgroup_put(struct mem_cgroup *memcg)
- {
- }
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 490357945f2c..ff52550d2f65 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -1048,29 +1048,6 @@ struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm)
- }
- EXPORT_SYMBOL(get_mem_cgroup_from_mm);
- 
--/**
-- * get_mem_cgroup_from_page: Obtain a reference on given page's memcg.
-- * @page: page from which memcg should be extracted.
-- *
-- * Obtain a reference on page->memcg and returns it if successful. Otherwise
-- * root_mem_cgroup is returned.
-- */
--struct mem_cgroup *get_mem_cgroup_from_page(struct page *page)
--{
--	struct mem_cgroup *memcg = page_memcg(page);
--
--	if (mem_cgroup_disabled())
--		return NULL;
--
--	rcu_read_lock();
--	/* Page should not get uncharged and freed memcg under us. */
--	if (!memcg || WARN_ON_ONCE(!css_tryget(&memcg->css)))
--		memcg = root_mem_cgroup;
--	rcu_read_unlock();
--	return memcg;
--}
--EXPORT_SYMBOL(get_mem_cgroup_from_page);
--
- static __always_inline struct mem_cgroup *active_memcg(void)
- {
- 	if (in_interrupt())
+-- 
+2.30.0
+
