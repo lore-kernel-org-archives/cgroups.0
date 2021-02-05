@@ -1,99 +1,145 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH 8/8] kselftests: cgroup: update kmem test for new vmstat implementation
-Date: Fri,  5 Feb 2021 13:28:06 -0500
-Message-ID: <20210205182806.17220-9-hannes@cmpxchg.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH 3/8] mm: memcontrol: privatize memcg_page_state query functions
+Date: Fri,  5 Feb 2021 13:28:01 -0500
+Message-ID: <20210205182806.17220-4-hannes@cmpxchg.org>
 References: <20210205182806.17220-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=QOIw4B/+XCkxqjVq4ULIq5aMnPErv/ZIiEkm9Qo0mIY=;
-        b=idJT7y3SE1/7kfbEc9LO0zxd5v0/lc3uRviS/yKpvk1qGeWsTpJc+f5tyW0Ojr2CaC
-         DOb2xjm355MkcBLUlQKt1LNt2Id4DsxDmXUgxkqZ9JGJJMyh456qCekFMvTRZyGz/2l+
-         OzT3PIYYyHKW0lBosOj2ryMkSu7+e7+qyS43BfMCOSnIwGtLcziwXyfikExd7JNpyH1/
-         l+/KVjav/lOTYOb/Dr+TKFz8wjZcRUl5SuY5AWvq+oABg4czWSmzQlnNMNMfbEUn9S2m
-         bYErICkXlUGO+LrrVUP24yY9ckXylg3VyLAeAmX4ChtGlqTGJ9aGdxAHHD5zhRzfw7nW
-         ZybQ==
-In-Reply-To: <20210205182806.17220-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        bh=cyRE6cACCpenz5S22wUDNGiEebDEXlsVuxUU66sedEg=;
+        b=icEoG5fvED4gxDkodWySfEiJNdvHYTrXwyvRJR/NMlNgXGomJfFsLQ0X1Z7EzQefwS
+         rfW+aNcKIIETp0qQ7BgaL+bHxz9JDwG8D0DQ7OfBTQMxsMX1PKR5GEDlskiULC37oHzk
+         snxN/HmpVBXYD1Azekn8O3eQqv9R8NTKfz3zGLkjSAnFLNp0F5ChuS6QLvZs+NwzrOXa
+         MTt6ZuHZmnFc/5tqEtOoAJV4yDeMqaNNC3TDVMuNTyayv8+BojubGAjU9FECgFSvq0Rv
+         itLqqfmn0+w1v9I4LLhobur8A2NlT6lqld3Lz3oem56U7oDrlQVEEyGhxQWCkJGnDPAB
+         gMwQ==
+In-Reply-To: <20210205182806.17220-1-hannes@cmpxchg.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>
+Cc: Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-With memcg having switched to rstat, memory.stat output is precise.
-Update the cgroup selftest to reflect the expectations and error
-tolerances of the new implementation.
+There are no users outside of the memory controller itself. The rest
+of the kernel cares either about node or lruvec stats.
 
-Also add newly tracked types of memory to the memory.stat side of the
-equation, since they're included in memory.current and could throw
-false positives.
-
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Reviewed-by: Shakeel Butt <shakeelb@google.com>
+Reviewed-by: Roman Gushchin <guro@fb.com>
+Acked-by: Michal Hocko <mhocko@suse.com>
 ---
- tools/testing/selftests/cgroup/test_kmem.c | 22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
+ include/linux/memcontrol.h | 44 --------------------------------------
+ mm/memcontrol.c            | 32 +++++++++++++++++++++++++++
+ 2 files changed, 32 insertions(+), 44 deletions(-)
 
-diff --git a/tools/testing/selftests/cgroup/test_kmem.c b/tools/testing/selftests/cgroup/test_kmem.c
-index 0941aa16157e..22b31ebb3513 100644
---- a/tools/testing/selftests/cgroup/test_kmem.c
-+++ b/tools/testing/selftests/cgroup/test_kmem.c
-@@ -19,12 +19,12 @@
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index c7f387a6233e..20ecdfae3289 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -867,39 +867,6 @@ struct mem_cgroup *lock_page_memcg(struct page *page);
+ void __unlock_page_memcg(struct mem_cgroup *memcg);
+ void unlock_page_memcg(struct page *page);
  
+-/*
+- * idx can be of type enum memcg_stat_item or node_stat_item.
+- * Keep in sync with memcg_exact_page_state().
+- */
+-static inline unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
+-{
+-	long x = atomic_long_read(&memcg->vmstats[idx]);
+-#ifdef CONFIG_SMP
+-	if (x < 0)
+-		x = 0;
+-#endif
+-	return x;
+-}
+-
+-/*
+- * idx can be of type enum memcg_stat_item or node_stat_item.
+- * Keep in sync with memcg_exact_page_state().
+- */
+-static inline unsigned long memcg_page_state_local(struct mem_cgroup *memcg,
+-						   int idx)
+-{
+-	long x = 0;
+-	int cpu;
+-
+-	for_each_possible_cpu(cpu)
+-		x += per_cpu(memcg->vmstats_local->stat[idx], cpu);
+-#ifdef CONFIG_SMP
+-	if (x < 0)
+-		x = 0;
+-#endif
+-	return x;
+-}
+-
+ void __mod_memcg_state(struct mem_cgroup *memcg, int idx, int val);
  
- /*
-- * Memory cgroup charging and vmstat data aggregation is performed using
-- * percpu batches 32 pages big (look at MEMCG_CHARGE_BATCH). So the maximum
-- * discrepancy between charge and vmstat entries is number of cpus multiplied
-- * by 32 pages multiplied by 2.
-+ * Memory cgroup charging is performed using percpu batches 32 pages
-+ * big (look at MEMCG_CHARGE_BATCH), whereas memory.stat is exact. So
-+ * the maximum discrepancy between charge and vmstat entries is number
-+ * of cpus multiplied by 32 pages.
-  */
--#define MAX_VMSTAT_ERROR (4096 * 32 * 2 * get_nprocs())
-+#define MAX_VMSTAT_ERROR (4096 * 32 * get_nprocs())
- 
- 
- static int alloc_dcache(const char *cgroup, void *arg)
-@@ -162,7 +162,7 @@ static int cg_run_in_subcgroups(const char *parent,
-  */
- static int test_kmem_memcg_deletion(const char *root)
+ /* idx can be of type enum memcg_stat_item or node_stat_item */
+@@ -1337,17 +1304,6 @@ static inline void mem_cgroup_print_oom_group(struct mem_cgroup *memcg)
  {
--	long current, slab, anon, file, kernel_stack, sum;
-+	long current, slab, anon, file, kernel_stack, pagetables, percpu, sock, sum;
- 	int ret = KSFT_FAIL;
- 	char *parent;
+ }
  
-@@ -184,11 +184,14 @@ static int test_kmem_memcg_deletion(const char *root)
- 	anon = cg_read_key_long(parent, "memory.stat", "anon ");
- 	file = cg_read_key_long(parent, "memory.stat", "file ");
- 	kernel_stack = cg_read_key_long(parent, "memory.stat", "kernel_stack ");
-+	pagetables = cg_read_key_long(parent, "memory.stat", "pagetables ");
-+	percpu = cg_read_key_long(parent, "memory.stat", "percpu ");
-+	sock = cg_read_key_long(parent, "memory.stat", "sock ");
- 	if (current < 0 || slab < 0 || anon < 0 || file < 0 ||
--	    kernel_stack < 0)
-+	    kernel_stack < 0 || pagetables < 0 || percpu < 0 || sock < 0)
- 		goto cleanup;
+-static inline unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
+-{
+-	return 0;
+-}
+-
+-static inline unsigned long memcg_page_state_local(struct mem_cgroup *memcg,
+-						   int idx)
+-{
+-	return 0;
+-}
+-
+ static inline void __mod_memcg_state(struct mem_cgroup *memcg,
+ 				     int idx,
+ 				     int nr)
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 7e05a4ebf80f..2f97cb4cef6d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -789,6 +789,38 @@ void __mod_memcg_state(struct mem_cgroup *memcg, int idx, int val)
+ 	__this_cpu_write(memcg->vmstats_percpu->stat[idx], x);
+ }
  
--	sum = slab + anon + file + kernel_stack;
-+	sum = slab + anon + file + kernel_stack + pagetables + percpu + sock;
- 	if (abs(sum - current) < MAX_VMSTAT_ERROR) {
- 		ret = KSFT_PASS;
- 	} else {
-@@ -198,6 +201,9 @@ static int test_kmem_memcg_deletion(const char *root)
- 		printf("anon = %ld\n", anon);
- 		printf("file = %ld\n", file);
- 		printf("kernel_stack = %ld\n", kernel_stack);
-+		printf("pagetables = %ld\n", pagetables);
-+		printf("percpu = %ld\n", percpu);
-+		printf("sock = %ld\n", sock);
- 	}
- 
- cleanup:
++/*
++ * idx can be of type enum memcg_stat_item or node_stat_item.
++ * Keep in sync with memcg_exact_page_state().
++ */
++static unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
++{
++	long x = atomic_long_read(&memcg->vmstats[idx]);
++#ifdef CONFIG_SMP
++	if (x < 0)
++		x = 0;
++#endif
++	return x;
++}
++
++/*
++ * idx can be of type enum memcg_stat_item or node_stat_item.
++ * Keep in sync with memcg_exact_page_state().
++ */
++static unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx)
++{
++	long x = 0;
++	int cpu;
++
++	for_each_possible_cpu(cpu)
++		x += per_cpu(memcg->vmstats_local->stat[idx], cpu);
++#ifdef CONFIG_SMP
++	if (x < 0)
++		x = 0;
++#endif
++	return x;
++}
++
+ static struct mem_cgroup_per_node *
+ parent_nodeinfo(struct mem_cgroup_per_node *pn, int nid)
+ {
 -- 
 2.30.0
 
