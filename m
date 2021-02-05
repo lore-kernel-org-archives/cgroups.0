@@ -1,158 +1,117 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH 2/8] mm: memcontrol: kill mem_cgroup_nodeinfo()
-Date: Fri,  5 Feb 2021 13:28:00 -0500
-Message-ID: <20210205182806.17220-3-hannes@cmpxchg.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH 1/8] mm: memcontrol: fix cpuhotplug statistics flushing
+Date: Fri,  5 Feb 2021 13:27:59 -0500
+Message-ID: <20210205182806.17220-2-hannes@cmpxchg.org>
 References: <20210205182806.17220-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=t4R65KE0u5JIY01fjm4wgVu+gu5q/lvBl+LPH4oeHXQ=;
-        b=2GoTFtEowqrMcE/2JXvhPu/VJNSggY8k2YXKw+oBnF8qVqSj6nFZJeXkZSmQvh8Chb
-         iKccOdyZsvW9v8jznhdC39v/OqbplLGxQ115ICBCsWhCh6GUT5AItWlGkMnzetbPVRL4
-         VlU94D2Rl6GaGRw4lAd6FsE25kmQ7ni7w3piepIbRGd4Jts5HY0bjVyLY1Mer5oD7HHr
-         tN3uEwpoJoGGutOMcv2OHRj9Yw2D8DxYUTpqeFsShqs6/jsKScTJxsrn6XlRoYE9R85e
-         35x/epOpQ3YVQmPBd9A3QMw5J03QfaPF6YSrE2LfOJkkOZzB+3UoHW/aBkLkQEMw6b20
-         9KSw==
-In-Reply-To: <20210205182806.17220-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        bh=anbL9Wexkq0QH+x4JfZ6vBo+adkAAWXAkexWmp3sHZ4=;
+        b=U4EQA/daTMWDj2KpnKM6JeOv9uy/kBDEm/uO2MZ/dYoFEl9BtZMe0u8Up1GJlOAVat
+         FyUdHSnYcoLRyCDpy8I5JguO9gryQYk06pvXlFuWvP1nanx9BoVt708OpOVjX7hGp0NM
+         u3CpSRjrbpoptPnLF+vCKAD0uEl8CgLgfTmhRpQRx/D7hadhMAKsjwWqjtUsOTrJBngg
+         UoyMrvGzLTbhsQjBLb0Zn4ex3iUdg2hNEv85wEs/BAJ3rcBGu3oLsoIUeTYsYAC4yl/2
+         Yon8QeGPR9FRKoCpxU7jZA/EY4KF58sECERo6V/grHRiHwQukuZWKSjdWkEetayENa9D
+         8EAQ==
+In-Reply-To: <20210205182806.17220-1-hannes@cmpxchg.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>
+Cc: Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-No need to encapsulate a simple struct member access.
+The memcg hotunplug callback erroneously flushes counts on the local
+CPU, not the counts of the CPU going away; those counts will be lost.
 
-Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Flush the CPU that is actually going away.
+
+Also simplify the code a bit by using mod_memcg_state() and
+count_memcg_events() instead of open-coding the upward flush - this is
+comparable to how vmstat.c handles hotunplug flushing.
+
+Fixes: a983b5ebee572 ("mm: memcontrol: fix excessive complexity in memory.stat reporting")
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+Reviewed-by: Shakeel Butt <shakeelb@google.com>
+Reviewed-by: Roman Gushchin <guro@fb.com>
+Acked-by: Michal Hocko <mhocko@suse.com>
 ---
- include/linux/memcontrol.h |  8 +-------
- mm/memcontrol.c            | 21 +++++++++++----------
- 2 files changed, 12 insertions(+), 17 deletions(-)
+ mm/memcontrol.c | 35 +++++++++++++++++++++--------------
+ 1 file changed, 21 insertions(+), 14 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 7a38a1517a05..c7f387a6233e 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -602,12 +602,6 @@ void mem_cgroup_uncharge_list(struct list_head *page_list);
- 
- void mem_cgroup_migrate(struct page *oldpage, struct page *newpage);
- 
--static struct mem_cgroup_per_node *
--mem_cgroup_nodeinfo(struct mem_cgroup *memcg, int nid)
--{
--	return memcg->nodeinfo[nid];
--}
--
- /**
-  * mem_cgroup_lruvec - get the lru list vector for a memcg & node
-  * @memcg: memcg of the wanted lruvec
-@@ -631,7 +625,7 @@ static inline struct lruvec *mem_cgroup_lruvec(struct mem_cgroup *memcg,
- 	if (!memcg)
- 		memcg = root_mem_cgroup;
- 
--	mz = mem_cgroup_nodeinfo(memcg, pgdat->node_id);
-+	mz = memcg->nodeinfo[pgdat->node_id];
- 	lruvec = &mz->lruvec;
- out:
- 	/*
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 8120d565dd79..7e05a4ebf80f 100644
+index ed5cc78a8dbf..8120d565dd79 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -414,13 +414,14 @@ static int memcg_expand_one_shrinker_map(struct mem_cgroup *memcg,
- 					 int size, int old_size)
+@@ -2411,45 +2411,52 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
+ static int memcg_hotplug_cpu_dead(unsigned int cpu)
  {
- 	struct memcg_shrinker_map *new, *old;
-+	struct mem_cgroup_per_node *pn;
- 	int nid;
+ 	struct memcg_stock_pcp *stock;
+-	struct mem_cgroup *memcg, *mi;
++	struct mem_cgroup *memcg;
  
- 	lockdep_assert_held(&memcg_shrinker_map_mutex);
+ 	stock = &per_cpu(memcg_stock, cpu);
+ 	drain_stock(stock);
  
- 	for_each_node(nid) {
--		old = rcu_dereference_protected(
--			mem_cgroup_nodeinfo(memcg, nid)->shrinker_map, true);
-+		pn = memcg->nodeinfo[nid];
-+		old = rcu_dereference_protected(pn->shrinker_map, true);
- 		/* Not yet online memcg */
- 		if (!old)
- 			return 0;
-@@ -433,7 +434,7 @@ static int memcg_expand_one_shrinker_map(struct mem_cgroup *memcg,
- 		memset(new->map, (int)0xff, old_size);
- 		memset((void *)new->map + old_size, 0, size - old_size);
+ 	for_each_mem_cgroup(memcg) {
++		struct memcg_vmstats_percpu *statc;
+ 		int i;
  
--		rcu_assign_pointer(memcg->nodeinfo[nid]->shrinker_map, new);
-+		rcu_assign_pointer(pn->shrinker_map, new);
- 		call_rcu(&old->rcu, memcg_free_shrinker_map_rcu);
- 	}
++		statc = per_cpu_ptr(memcg->vmstats_percpu, cpu);
++
+ 		for (i = 0; i < MEMCG_NR_STAT; i++) {
+ 			int nid;
+-			long x;
  
-@@ -450,7 +451,7 @@ static void memcg_free_shrinker_maps(struct mem_cgroup *memcg)
- 		return;
+-			x = this_cpu_xchg(memcg->vmstats_percpu->stat[i], 0);
+-			if (x)
+-				for (mi = memcg; mi; mi = parent_mem_cgroup(mi))
+-					atomic_long_add(x, &memcg->vmstats[i]);
++			if (statc->stat[i]) {
++				mod_memcg_state(memcg, i, statc->stat[i]);
++				statc->stat[i] = 0;
++			}
  
- 	for_each_node(nid) {
--		pn = mem_cgroup_nodeinfo(memcg, nid);
-+		pn = memcg->nodeinfo[nid];
- 		map = rcu_dereference_protected(pn->shrinker_map, true);
- 		kvfree(map);
- 		rcu_assign_pointer(pn->shrinker_map, NULL);
-@@ -713,7 +714,7 @@ static void mem_cgroup_remove_from_trees(struct mem_cgroup *memcg)
- 	int nid;
+ 			if (i >= NR_VM_NODE_STAT_ITEMS)
+ 				continue;
  
- 	for_each_node(nid) {
--		mz = mem_cgroup_nodeinfo(memcg, nid);
-+		mz = memcg->nodeinfo[nid];
- 		mctz = soft_limit_tree_node(nid);
- 		if (mctz)
- 			mem_cgroup_remove_exceeded(mz, mctz);
-@@ -796,7 +797,7 @@ parent_nodeinfo(struct mem_cgroup_per_node *pn, int nid)
- 	parent = parent_mem_cgroup(pn->memcg);
- 	if (!parent)
- 		return NULL;
--	return mem_cgroup_nodeinfo(parent, nid);
-+	return parent->nodeinfo[nid];
- }
- 
- void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
-@@ -1163,7 +1164,7 @@ struct mem_cgroup *mem_cgroup_iter(struct mem_cgroup *root,
- 	if (reclaim) {
- 		struct mem_cgroup_per_node *mz;
- 
--		mz = mem_cgroup_nodeinfo(root, reclaim->pgdat->node_id);
-+		mz = root->nodeinfo[reclaim->pgdat->node_id];
- 		iter = &mz->iter;
- 
- 		if (prev && reclaim->generation != iter->generation)
-@@ -1265,7 +1266,7 @@ static void __invalidate_reclaim_iterators(struct mem_cgroup *from,
- 	int nid;
- 
- 	for_each_node(nid) {
--		mz = mem_cgroup_nodeinfo(from, nid);
-+		mz = from->nodeinfo[nid];
- 		iter = &mz->iter;
- 		cmpxchg(&iter->position, dead_memcg, NULL);
- 	}
-@@ -2438,7 +2439,7 @@ static int memcg_hotplug_cpu_dead(unsigned int cpu)
+ 			for_each_node(nid) {
++				struct batched_lruvec_stat *lstatc;
  				struct mem_cgroup_per_node *pn;
- 				long x;
++				long x;
  
--				pn = mem_cgroup_nodeinfo(memcg, nid);
-+				pn = memcg->nodeinfo[nid];
- 				lstatc = per_cpu_ptr(pn->lruvec_stat_cpu, cpu);
+ 				pn = mem_cgroup_nodeinfo(memcg, nid);
+-				x = this_cpu_xchg(pn->lruvec_stat_cpu->count[i], 0);
+-				if (x)
++				lstatc = per_cpu_ptr(pn->lruvec_stat_cpu, cpu);
++
++				x = lstatc->count[i];
++				lstatc->count[i] = 0;
++
++				if (x) {
+ 					do {
+ 						atomic_long_add(x, &pn->lruvec_stat[i]);
+ 					} while ((pn = parent_nodeinfo(pn, nid)));
++				}
+ 			}
+ 		}
  
- 				x = lstatc->count[i];
-@@ -4145,7 +4146,7 @@ static int memcg_stat_show(struct seq_file *m, void *v)
- 		unsigned long file_cost = 0;
+ 		for (i = 0; i < NR_VM_EVENT_ITEMS; i++) {
+-			long x;
+-
+-			x = this_cpu_xchg(memcg->vmstats_percpu->events[i], 0);
+-			if (x)
+-				for (mi = memcg; mi; mi = parent_mem_cgroup(mi))
+-					atomic_long_add(x, &memcg->vmevents[i]);
++			if (statc->events[i]) {
++				count_memcg_events(memcg, i, statc->events[i]);
++				statc->events[i] = 0;
++			}
+ 		}
+ 	}
  
- 		for_each_online_pgdat(pgdat) {
--			mz = mem_cgroup_nodeinfo(memcg, pgdat->node_id);
-+			mz = memcg->nodeinfo[pgdat->node_id];
- 
- 			anon_cost += mz->lruvec.anon_cost;
- 			file_cost += mz->lruvec.file_cost;
 -- 
 2.30.0
 
