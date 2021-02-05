@@ -1,88 +1,98 @@
-From: Daniel Jordan <daniel.m.jordan@oracle.com>
-Subject: Re: [PATCH] cpu/hotplug: wait for cpuset_hotplug_work to finish on
- cpu onlining
-Date: Thu, 04 Feb 2021 20:35:34 -0500
-Message-ID: <87blczz47t.fsf@oracle.com>
-References: <20210204010157.1823669-1-aklimov@redhat.com>
+From: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2] mm: memcontrol: replace the loop with a
+ list_for_each_entry()
+Date: Fri, 5 Feb 2021 10:53:42 +0800
+Message-ID: <6f8d9e82-5903-e983-8c93-9dfe3e9b14ca@huawei.com>
+References: <20210204163055.56080-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : in-reply-to : references : date : message-id : content-type :
- mime-version; s=corp-2020-01-29;
- bh=9mUzFjaVs74qLb6Q14lutmjVoiosGF/lazrQY9m+wPc=;
- b=mAicFptooX7xaprci6Ni+42tLGgnB2YY14g0ePdwRTQpQZNqBFbiQ0j4V3OqtoCn5evr
- gy4kW7sZrtGWVkO9zGW3MPfIuUbNw9ankbH3CXQMG3LFWgThVHrEFPsWsGfZzY+fUVOw
- LSZbk3z4j1czSwLIiREKi9sfkTza4jJQ3arliQ0/4xBg2vcFdtm9iNM2VmY1Cp2gw+h2
- vFE1qLOpME/Vpn+YU5KfacOT3FBHcXz0XqiOBi6Izv68HhJDaajf0lwtfmOqnX2RDyjh
- whF0/22uQIlYIefDIRxqzns+ojZdGqoxjeK9dmzPVz3dgVvrlzzP7djdVRH8H1/IIzUK Sw== 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9mUzFjaVs74qLb6Q14lutmjVoiosGF/lazrQY9m+wPc=;
- b=tOnD3hvCR8JpbPq1XO5OQ+8tsoUHc9lJKiK6qzaMJT7xdTZrO/5TsDnMYioAboVjk1Lna+8e6ssr/nKKVn+pnfrPIkLSAU4s95PKm0qirDKlGO49Yc0uyG+Ad8yGhAZk2ZY8stYy1yz44w+SFNuU2tv68x425/Z7HMbor7Dbu2Q=
-In-Reply-To: <20210204010157.1823669-1-aklimov@redhat.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20210204163055.56080-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alexey Klimov <aklimov@redhat.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org
-Cc: peterz@infradead.org, yury.norov@gmail.com, tglx@linutronix.de, jobaker@redhat.com, audralmitchel@gmail.com, arnd@arndb.de, gregkh@linuxfoundation.org, rafael@kernel.org, tj@kernel.org, lizefan@huawei.com, qais.yousef@arm.com, hannes@cmpxchg.org, klimov.linux@gmail.com
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 
-Alexey Klimov <aklimov@redhat.com> writes:
+Hi:
+On 2021/2/5 0:30, Muchun Song wrote:
+> The rule of list walk has gone since:
+> 
+>  commit a9d5adeeb4b2 ("mm/memcontrol: allow to uncharge page without using page->lru field")
+> 
+> So remove the strange comment and replace the loop with a
+> list_for_each_entry().
+> 
+> There is only one caller of the uncharge_list(). So just fold it into
+> mem_cgroup_uncharge_list() and remove it.
+> 
+> Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-> When a CPU offlined and onlined via device_offline() and device_online()
-> the userspace gets uevent notification. If, after receiving "online" uevent,
-> userspace executes sched_setaffinity() on some task trying to move it
-> to a recently onlined CPU, then it often fails with -EINVAL. Userspace needs
-> to wait around 5..30 ms before sched_setaffinity() will succeed for the recently
-> onlined CPU after receiving uevent.
->
-> If in_mask argument for sched_setaffinity() has only recently onlined CPU,
-> it often fails with such flow:
->
->   sched_setaffinity()
->     cpuset_cpus_allowed()
->       guarantee_online_cpus()   <-- cs->effective_cpus mask does not
->                                         contain recently onlined cpu
->     cpumask_and()               <-- final new_mask is empty
->     __set_cpus_allowed_ptr()
->       cpumask_any_and_distribute() <-- returns dest_cpu equal to nr_cpu_ids
->       returns -EINVAL
->
-> Cpusets used in guarantee_online_cpus() are updated using workqueue from
-> cpuset_update_active_cpus() which in its turn is called from cpu hotplug callback
-> sched_cpu_activate() hence it may not be observable by sched_setaffinity() if
-> it is called immediately after uevent.
-> Out of line uevent can be avoided if we will ensure that cpuset_hotplug_work
-> has run to completion using cpuset_wait_for_hotplug() after onlining the
-> cpu in cpu_up() and in cpuhp_smt_enable().
+LGTM. Thanks.
+Reviewed-by: Miaohe Lin <linmiaohe-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 
-Nice writeup.  I just have some nits, patch looks ok otherwise.
-
-> @@ -1281,6 +1282,11 @@ static int cpu_up(unsigned int cpu, enum cpuhp_state target)
->  	err = _cpu_up(cpu, 0, target);
->  out:
->  	cpu_maps_update_done();
+> ---
+> v2:
+>  - Fold uncharge_list() to mem_cgroup_uncharge_list().
+> 
+>  mm/memcontrol.c | 35 ++++++++---------------------------
+>  1 file changed, 8 insertions(+), 27 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index ed5cc78a8dbf..8c035846c7a4 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -6862,31 +6862,6 @@ static void uncharge_page(struct page *page, struct uncharge_gather *ug)
+>  	css_put(&ug->memcg->css);
+>  }
+>  
+> -static void uncharge_list(struct list_head *page_list)
+> -{
+> -	struct uncharge_gather ug;
+> -	struct list_head *next;
+> -
+> -	uncharge_gather_clear(&ug);
+> -
+> -	/*
+> -	 * Note that the list can be a single page->lru; hence the
+> -	 * do-while loop instead of a simple list_for_each_entry().
+> -	 */
+> -	next = page_list->next;
+> -	do {
+> -		struct page *page;
+> -
+> -		page = list_entry(next, struct page, lru);
+> -		next = page->lru.next;
+> -
+> -		uncharge_page(page, &ug);
+> -	} while (next != page_list);
+> -
+> -	if (ug.memcg)
+> -		uncharge_batch(&ug);
+> -}
+> -
+>  /**
+>   * mem_cgroup_uncharge - uncharge a page
+>   * @page: page to uncharge
+> @@ -6918,11 +6893,17 @@ void mem_cgroup_uncharge(struct page *page)
+>   */
+>  void mem_cgroup_uncharge_list(struct list_head *page_list)
+>  {
+> +	struct uncharge_gather ug;
+> +	struct page *page;
 > +
-> +	/* To avoid out of line uevent */
-
-Not sure this will make sense out of context.  Maybe,
-
-        /*
-         * Wait for cpuset updates to cpumasks to finish.  Later on this path
-         * may generate uevents whose consumers rely on the updates.
-         */
-
-> @@ -2062,8 +2068,6 @@ static void cpuhp_offline_cpu_device(unsigned int cpu)
->  	struct device *dev = get_cpu_device(cpu);
+>  	if (mem_cgroup_disabled())
+>  		return;
 >  
->  	dev->offline = true;
+> -	if (!list_empty(page_list))
+> -		uncharge_list(page_list);
+> +	uncharge_gather_clear(&ug);
+> +	list_for_each_entry(page, page_list, lru)
+> +		uncharge_page(page, &ug);
+> +	if (ug.memcg)
+> +		uncharge_batch(&ug);
 >  }
 >  
-> @@ -2071,14 +2075,18 @@ static void cpuhp_online_cpu_device(unsigned int cpu)
->  	struct device *dev = get_cpu_device(cpu);
->  
->  	dev->offline = false;
->  }
+>  /**
+> 
 
-You could get rid of these functions and just put the few remaining bits
-in the callers.  They each have only one.
