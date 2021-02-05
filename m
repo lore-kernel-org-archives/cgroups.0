@@ -1,53 +1,94 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 7/7] mm: memcontrol: consolidate lruvec stat flushing
-Date: Fri, 5 Feb 2021 12:10:28 -0500
-Message-ID: <YB18BF8b41RPra5b@cmpxchg.org>
+Subject: Re: [PATCH 6/7] mm: memcontrol: switch to rstat
+Date: Fri, 5 Feb 2021 11:34:19 -0500
+Message-ID: <YB1zi/bZdeL2j59I@cmpxchg.org>
 References: <20210202184746.119084-1-hannes@cmpxchg.org>
- <20210202184746.119084-8-hannes@cmpxchg.org>
- <YB1hhwVybr0x5M2j@dhcp22.suse.cz>
+ <20210202184746.119084-7-hannes@cmpxchg.org>
+ <YB1esMKg3QhBDFG2@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=JSYiUbx9lBanOq4tbekqTAf5PAtDklDUpjXB1f72Qrc=;
-        b=tM/dZEUeDe1AgSL5LylGwYfRT5+levhjDv8vOBR8fUAbDaWMIznPnPLamaZYjY3wzT
-         g+cjA6pD7ZjdrM2mng9Mhako+BFslrJzcTyReIW3h3o2QgGnwwDoKQzvWVUktPepuyYF
-         AQpeiGmjpMs3K7CIzmD/iIjPrJfmglw9FOMLa8DMpRqKtFq4n+aJwjjtM6lqRBeHo15z
-         kMc5x+Y/a9DnW6WdEzSjR2PJZoQSYrOzjK7pChRoltFN0rOJYBKH6WVkXPnWme2gn3k3
-         YwP8eOjnLw8SSf+taDiSenMwKUeZDxhJoWi9lzmTgxWYD8kMQD8Zdwho7ZOxqfsluBcS
-         VKTQ==
+        bh=RW0ONyxKXYjlsRuX7eO/UdLt7OqwnBfWk+dSDdSDYyw=;
+        b=fDCx8PML3wpb7Gv9Qhxf/Lmgt8t9paY9PlqQPeev9GAzZIOy9HRlwnhk8Gj2bTe2yf
+         0uSHjMJJYfZDMDMboGVMVL98lxLZYKECaPT1YM59+/uoVp+j2yeayauMqi3OZM4d1tEn
+         YN/ecY3LDoZFlB6rqTT5ynUD98p8d4ARLnea2R77u3ZWZqfLt+1HcCkt9MhNrCijWhUz
+         f4DiXHO0gL1TK9dgWhCoDy3l5Q2bJk2OkxHSBoWy+wJ4rScOFcDJlLvSG/M9tYuP2TdN
+         mWVZjPe8sqxDRGKXq+ydF2Mdvz57XMe1jNoelLFF+OdOSt6KcspYQ/F2PQw35OvoRNYe
+         +pCA==
 Content-Disposition: inline
-In-Reply-To: <YB1hhwVybr0x5M2j-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+In-Reply-To: <YB1esMKg3QhBDFG2-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Fri, Feb 05, 2021 at 04:17:27PM +0100, Michal Hocko wrote:
-> On Tue 02-02-21 13:47:46, Johannes Weiner wrote:
-> > There are two functions to flush the per-cpu data of an lruvec into
-> > the rest of the cgroup tree: when the cgroup is being freed, and when
-> > a CPU disappears during hotplug. The difference is whether all CPUs or
-> > just one is being collected, but the rest of the flushing code is the
-> > same. Merge them into one function and share the common code.
+On Fri, Feb 05, 2021 at 04:05:20PM +0100, Michal Hocko wrote:
+> On Tue 02-02-21 13:47:45, Johannes Weiner wrote:
+> > Replace the memory controller's custom hierarchical stats code with
+> > the generic rstat infrastructure provided by the cgroup core.
+> > 
+> > The current implementation does batched upward propagation from the
+> > write side (i.e. as stats change). The per-cpu batches introduce an
+> > error, which is multiplied by the number of subgroups in a tree. In
+> > systems with many CPUs and sizable cgroup trees, the error can be
+> > large enough to confuse users (e.g. 32 batch pages * 32 CPUs * 32
+> > subgroups results in an error of up to 128M per stat item). This can
+> > entirely swallow allocation bursts inside a workload that the user is
+> > expecting to see reflected in the statistics.
+> > 
+> > In the past, we've done read-side aggregation, where a memory.stat
+> > read would have to walk the entire subtree and add up per-cpu
+> > counts. This became problematic with lazily-freed cgroups: we could
+> > have large subtrees where most cgroups were entirely idle. Hence the
+> > switch to change-driven upward propagation. Unfortunately, it needed
+> > to trade accuracy for speed due to the write side being so hot.
+> > 
+> > Rstat combines the best of both worlds: from the write side, it
+> > cheaply maintains a queue of cgroups that have pending changes, so
+> > that the read side can do selective tree aggregation. This way the
+> > reported stats will always be precise and recent as can be, while the
+> > aggregation can skip over potentially large numbers of idle cgroups.
+> > 
+> > This adds a second vmstats to struct mem_cgroup (MEMCG_NR_STAT +
+> > NR_VM_EVENT_ITEMS) to track pending subtree deltas during upward
+> > aggregation. It removes 3 words from the per-cpu data. It eliminates
+> > memcg_exact_page_state(), since memcg_page_state() is now exact.
 > 
-> IIUC the only reason for the cpu == -1 special case is to avoid
-> zeroying, right? Is this optimization worth the special case? The code
-> would be slightly easier to follow without this.
+> The above confused me a bit. I can see the pcp data size increased by
+> adding _prev.  The resulting memory footprint should be increased by
+> sizeof(long) * (MEMCG_NR_STAT + NR_VM_EVENT_ITEMS) * (CPUS + 1)
+> which is roughly 1kB per CPU per memcg unless I have made any
+> mistake. This is a quite a lot and it should be mentioned in the
+> changelog.
 
-Hm, it was less about the optimization and more about which CPU(s)
-need(s) to be handled. But it's pretty silly the way it's written,
-indeed. I'll move the for_each_online_cpu() to the caller and drop the
-cpu==-1 special casing, it makes things much simpler and more obvious.
+Not quite, you missed a hunk further below in the patch.
+
+Yes, the _prev arrays are added to the percpu struct. HOWEVER, we used
+to have TWO percpu structs in a memcg: one for local data, one for
+hierarchical data. In the rstat format, one is enough to capture both:
+
+-       /* Legacy local VM stats and events */
+-       struct memcg_vmstats_percpu __percpu *vmstats_local;
+-
+-       /* Subtree VM stats and events (batched updates) */
+        struct memcg_vmstats_percpu __percpu *vmstats_percpu;
+
+This eliminates dead duplicates of the nr_page_events and
+targets[MEM_CGROUP_NTARGETS(2)] we used to carry, which means we have
+a net reduction of 3 longs in the percpu data with this series.
 
 > > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 > 
-> Anyway the above is not really a fundamental objection. It is more important
-> to unify the flushing.
+> Although the memory overhead is quite large and it scales both with
+> memcg count and CPUs so it can grow quite a bit I do not think this is
+> prohibitive. Although it would be really nice if this could be optimized
+> in the future.
 > 
+> All that being said, the code looks more manageable now.
 > Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-Thanks. v2 is different, so I'll wait with taking the ack.
+Thanks
