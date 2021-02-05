@@ -1,175 +1,90 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 7/7] mm: memcontrol: consolidate lruvec stat flushing
-Date: Fri, 5 Feb 2021 16:17:27 +0100
-Message-ID: <YB1hhwVybr0x5M2j@dhcp22.suse.cz>
-References: <20210202184746.119084-1-hannes@cmpxchg.org>
- <20210202184746.119084-8-hannes@cmpxchg.org>
+From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Subject: Re: [External] Re: [PATCH] mm: memcontrol: remove rcu_read_lock from get_mem_cgroup_from_page
+Date: Fri, 5 Feb 2021 20:56:07 +0800
+Message-ID: <CAMZfGtW3fjnPt140OqaQqSyaPAiB9AKSVgop4pXdZb15qVmSPw@mail.gmail.com>
+References: <20210205062719.74431-1-songmuchun@bytedance.com>
+ <YB0DnAlCaQza4Uf9@dhcp22.suse.cz> <CAMZfGtVhBrwgkJVwiah6eDsppSf8fYp+uZ=tZmHBLDFeTmQX3w@mail.gmail.com>
+ <YB0euLiMU+T/9bMK@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1612538248; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=r8wialKdheVOWKUm2V9AI1x41rtNkGlqL+YFxoW4NCY=;
-        b=e9eORgSyJ69kSnIywPMO4ancKa6to5n2wceHlPgMzOSqkondXIZUfqhke6GyONiEL/h3Nz
-        NMbd5LMcG9rxDAPy5FzdlY3YjW78TIe7aKolEGddszgWxwLEJI97ivP3Of9W5YMIbI8mYU
-        zi0itQD0XQ3Ofa69Asm8BX4PN3W5ugE=
-Content-Disposition: inline
-In-Reply-To: <20210202184746.119084-8-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=at3tlE+CnMfJFYgoRalXte0nrDzDhLkLsR1wIcNPMOM=;
+        b=rh+E2c1RBqi2Afh5NbYKEM3yLFpRTWi9kUBJWQ4+8iWFvtpIMOf9ASTnRxKKD+dKrA
+         MJshQOYgCKe27lDY4QZkClKdDAUu9qWUjxOpvFSQTCDOBfkPF82Hynzf0IG1wPGdIzb3
+         IU5bD6qlsNnrrjF+g3m382MXpUkDMR3Oar4JbCr0JG9Fjh6x+19tfj4EeRFbc/8rQOqk
+         a2gbS5rTBo0mgUTFtn4PFjuvqG5Dg2lg8Qu8xk0/+bqRB77gJgMpLq7CVYlWkf4XImVG
+         3ZBxBIpcfVcdKow7puYuDSj2Xw70IytFjMpGZ9aV5vKroCNt2CXgHJRdwIoPtBISS2fx
+         ZFsg==
+In-Reply-To: <YB0euLiMU+T/9bMK-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Tue 02-02-21 13:47:46, Johannes Weiner wrote:
-> There are two functions to flush the per-cpu data of an lruvec into
-> the rest of the cgroup tree: when the cgroup is being freed, and when
-> a CPU disappears during hotplug. The difference is whether all CPUs or
-> just one is being collected, but the rest of the flushing code is the
-> same. Merge them into one function and share the common code.
+On Fri, Feb 5, 2021 at 6:32 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+>
+> On Fri 05-02-21 17:14:30, Muchun Song wrote:
+> > On Fri, Feb 5, 2021 at 4:36 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+> > >
+> > > On Fri 05-02-21 14:27:19, Muchun Song wrote:
+> > > > The get_mem_cgroup_from_page() is called under page lock, so the page
+> > > > memcg cannot be changed under us.
+> > >
+> > > Where is the page lock enforced?
+> >
+> > Because it is called from alloc_page_buffers(). This path is under
+> > page lock.
+>
+> I do not see any page lock enforecement there. There is not even a
+> comment requiring that. Can we grow more users where this is not the
+> case? There is no actual relation between alloc_page_buffers and
+> get_mem_cgroup_from_page except that the former is the only _current_
+> existing user. I would be careful to dictate locking based solely on
+> that.
 
-IIUC the only reason for the cpu == -1 special case is to avoid
-zeroying, right? Is this optimization worth the special case? The code
-would be slightly easier to follow without this.
+Yeah, there is no comment requiring that. I have seen all the callers
+of the alloc_page_buffers. I found that it is under page lock.
+But it seems it is not the key point here. I should delete those
+comments from the commit log.
 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+>
+> > > > Also, css_get is enough because page
+> > > > has a reference to the memcg.
+> > >
+> > > tryget used to be there to guard against offlined memcg but we have
+> > > concluded this is impossible in this path. tryget stayed there to catch
+> > > some unexpected cases IIRC.
+> >
+> > Yeah, it can catch some unexpected cases. But why is this path
+> > special so that we need a tryget?
+>
+> I do not remember details and the changelog of that change is not
+> explicit but I suspect it was just because this one could trigger as
+> there are external callers to memcg. Is this protection needed? I am not
+> sure, this is for you to justify if you want to remove it.
 
-Anyway the above is not really a fundamental objection. It is more important
-to unify the flushing.
+I am sure it is not needed.
 
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+>
+> > > > If we really want to make the get_mem_cgroup_from_page() suitable for
+> > > > arbitrary page, we should use page_memcg_rcu() instead of page_memcg()
+> > > > and call it after rcu_read_lock().
+> > >
+> > > What is the primary motivation to change this code? is the overhead of
+> > > tryget/RCU something that needs optimizing?
+> >
+> > Actually, the rcu_read_lock() is not necessary here. So it is better to
+> > remove it (indeed reduce some code).
+>
+> Please state your reasoning in the changelog including benefits we get
+> from it.
 
-> ---
->  mm/memcontrol.c | 88 +++++++++++++++++++++++--------------------------
->  1 file changed, 42 insertions(+), 46 deletions(-)
-> 
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index b205b2413186..88e8afc49a46 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -2410,39 +2410,56 @@ static void drain_all_stock(struct mem_cgroup *root_memcg)
->  	mutex_unlock(&percpu_charge_mutex);
->  }
->  
-> -static int memcg_hotplug_cpu_dead(unsigned int cpu)
-> +static void memcg_flush_lruvec_page_state(struct mem_cgroup *memcg, int cpu)
->  {
-> -	struct memcg_stock_pcp *stock;
-> -	struct mem_cgroup *memcg;
-> -
-> -	stock = &per_cpu(memcg_stock, cpu);
-> -	drain_stock(stock);
-> +	int nid;
->  
-> -	for_each_mem_cgroup(memcg) {
-> +	for_each_node(nid) {
-> +		struct mem_cgroup_per_node *pn = memcg->nodeinfo[nid];
-> +		unsigned long stat[NR_VM_NODE_STAT_ITEMS] = { 0, };
-> +		struct batched_lruvec_stat *lstatc;
->  		int i;
->  
-> -		for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++) {
-> -			int nid;
-> -
-> -			for_each_node(nid) {
-> -				struct batched_lruvec_stat *lstatc;
-> -				struct mem_cgroup_per_node *pn;
-> -				long x;
-> -
-> -				pn = memcg->nodeinfo[nid];
-> +		if (cpu == -1) {
-> +			int cpui;
-> +			/*
-> +			 * The memcg is about to be freed, collect all
-> +			 * CPUs, no need to zero anything out.
-> +			 */
-> +			for_each_online_cpu(cpui) {
-> +				lstatc = per_cpu_ptr(pn->lruvec_stat_cpu, cpui);
-> +				for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
-> +					stat[i] += lstatc->count[i];
-> +			}
-> +		} else {
-> +			/*
-> +			 * The CPU has gone away, collect and zero out
-> +			 * its stats, it may come back later.
-> +			 */
-> +			for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++) {
->  				lstatc = per_cpu_ptr(pn->lruvec_stat_cpu, cpu);
-> -
-> -				x = lstatc->count[i];
-> +				stat[i] = lstatc->count[i];
->  				lstatc->count[i] = 0;
-> -
-> -				if (x) {
-> -					do {
-> -						atomic_long_add(x, &pn->lruvec_stat[i]);
-> -					} while ((pn = parent_nodeinfo(pn, nid)));
-> -				}
->  			}
->  		}
-> +
-> +		do {
-> +			for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
-> +				atomic_long_add(stat[i], &pn->lruvec_stat[i]);
-> +		} while ((pn = parent_nodeinfo(pn, nid)));
->  	}
-> +}
-> +
-> +static int memcg_hotplug_cpu_dead(unsigned int cpu)
-> +{
-> +	struct memcg_stock_pcp *stock;
-> +	struct mem_cgroup *memcg;
-> +
-> +	stock = &per_cpu(memcg_stock, cpu);
-> +	drain_stock(stock);
-> +
-> +	for_each_mem_cgroup(memcg)
-> +		memcg_flush_lruvec_page_state(memcg, cpu);
->  
->  	return 0;
->  }
-> @@ -3636,27 +3653,6 @@ static u64 mem_cgroup_read_u64(struct cgroup_subsys_state *css,
->  	}
->  }
->  
-> -static void memcg_flush_lruvec_page_state(struct mem_cgroup *memcg)
-> -{
-> -	int node;
-> -
-> -	for_each_node(node) {
-> -		struct mem_cgroup_per_node *pn = memcg->nodeinfo[node];
-> -		unsigned long stat[NR_VM_NODE_STAT_ITEMS] = {0, };
-> -		struct mem_cgroup_per_node *pi;
-> -		int cpu, i;
-> -
-> -		for_each_online_cpu(cpu)
-> -			for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
-> -				stat[i] += per_cpu(
-> -					pn->lruvec_stat_cpu->count[i], cpu);
-> -
-> -		for (pi = pn; pi; pi = parent_nodeinfo(pi, node))
-> -			for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
-> -				atomic_long_add(stat[i], &pi->lruvec_stat[i]);
-> -	}
-> -}
-> -
->  #ifdef CONFIG_MEMCG_KMEM
->  static int memcg_online_kmem(struct mem_cgroup *memcg)
->  {
-> @@ -5197,7 +5193,7 @@ static void mem_cgroup_free(struct mem_cgroup *memcg)
->  	 * Flush percpu lruvec stats to guarantee the value
->  	 * correctness on parent's and all ancestor levels.
->  	 */
-> -	memcg_flush_lruvec_page_state(memcg);
-> +	memcg_flush_lruvec_page_state(memcg, -1);
->  	__mem_cgroup_free(memcg);
->  }
->  
-> -- 
-> 2.30.0
-> 
+OK.
 
--- 
-Michal Hocko
-SUSE Labs
+> --
+> Michal Hocko
+> SUSE Labs
