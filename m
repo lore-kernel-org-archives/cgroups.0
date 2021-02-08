@@ -1,57 +1,80 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 7/8] mm: memcontrol: consolidate lruvec stat flushing
-Date: Mon, 8 Feb 2021 15:54:14 -0500
-Message-ID: <YCGk9ksAU8+tBv5y@cmpxchg.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 5/8] cgroup: rstat: punt root-level optimization to
+ individual controllers
+Date: Mon, 8 Feb 2021 10:58:11 -0500
+Message-ID: <YCFfkxytFaYooidE@slm.duckdns.org>
 References: <20210205182806.17220-1-hannes@cmpxchg.org>
- <20210205182806.17220-8-hannes@cmpxchg.org>
- <CALvZod4ex5V2Xs_6YHmmLJw91rjKTSZ9XobXiRx4ftj=L=A6MA@mail.gmail.com>
+ <20210205182806.17220-6-hannes@cmpxchg.org>
+ <YB4OT61owRaze5/M@mtj.duckdns.org>
+ <YCGfIYTLzcTO+ng8@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=WcpftL0I3Yn/sC6LOBOo9QXXxpF9jls61Dh3UGgrMhQ=;
-        b=XGEs+1RNC81c2udolSMD/41WbwHBvqroEIblFLM6gl9MVclTdONeCq1jP0jJVv3DW7
-         dqvBGlfkyGoSaJOFPO4C+/KygXrMmF6GgeZV38oFelwD8bYgQ4Y9FaDxTNylaeEkxhxN
-         9/wMWF5GLFfZLkCkBzWMoFr2YsBTvzztvlTODSSdkywa0ZqSPz7MMES7R4ORrBwmRXAa
-         inRSRsCQhcz07fMpBpDsQUbvvWjmpmN/ObDNeouvOi73LV0BXKKTABmritwmYEUUmzuj
-         N6MX+1gkgsjC7cBc8+SIZf6tPoSoD/WIgebrPDZfgKnsLOKOtM1fzFUShy4hNgpDqfjO
-         8aOQ==
+        bh=tqRaxICy5YHBMmHcX2M4Wd1YNoE/TgL6qyHQaFgZCcY=;
+        b=Kbipus5vPp2mNkhFtKdD511qL2yTMBCGkJZfr16sI2xPQnoo74CcVb7BKoEvNsK0Ka
+         uhkpzga2kyNnhAT8doX26kRfoHUMEh4usIoPhV1QXcI2l7N6BuHrhC5pj7g0nRcThPfM
+         Im3oy3HkeuZHZPj26peXKX7xI4Q9Gw27KDbhyW4CvpnP7D+0Qm76ctrraFJM+mjD5jSG
+         7huMyxqW0/n0d3Rm74L0WMPLdSydyk2YfXTZXTtJzY4NGFMUamuDbbqU5exQeM4Lk9US
+         mHcN3S9Rqqm7mORgR40fI2W97hMnvhan02fsuGrxKZW1wV1MMqdvgxNdhbrDp6nPQRrs
+         sI5w==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CALvZod4ex5V2Xs_6YHmmLJw91rjKTSZ9XobXiRx4ftj=L=A6MA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+In-Reply-To: <YCGfIYTLzcTO+ng8-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Sun, Feb 07, 2021 at 06:28:37PM -0800, Shakeel Butt wrote:
-> On Fri, Feb 5, 2021 at 10:28 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> >
-> > There are two functions to flush the per-cpu data of an lruvec into
-> > the rest of the cgroup tree: when the cgroup is being freed, and when
-> > a CPU disappears during hotplug. The difference is whether all CPUs or
-> > just one is being collected, but the rest of the flushing code is the
-> > same. Merge them into one function and share the common code.
-> >
-> > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Hello,
+
+On Mon, Feb 08, 2021 at 03:29:21PM -0500, Johannes Weiner wrote:
+> > > @@ -789,6 +793,7 @@ static void blkcg_rstat_flush(struct cgroup_subsys_state *css, int cpu)
+> > >  		u64_stats_update_end(&blkg->iostat.sync);
+> > >  
+> > >  		/* propagate global delta to parent */
+> > > +		/* XXX: could skip this if parent is root */
+> > >  		if (parent) {
+> > >  			u64_stats_update_begin(&parent->iostat.sync);
+> > >  			blkg_iostat_set(&delta, &blkg->iostat.cur);
+> > 
+> > Might as well update this similar to cgroup_base_stat_flush()?
 > 
-> Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> I meant to revisit that, but I'm never 100% confident when it comes to
+> the interaction and lifetime of css, blkcg and blkg_gq.
 
-Thanks!
+Yeah, it does get hairy.
 
-> BTW what about the lruvec stats? Why not convert them to rstat as well?
+> IIUC, the blkg_gq->parent linkage always matches the css parent
+> linkage; it just exists as an optimization for ancestor walks, which
+> would otherwise have to do radix lookups when going through the css.
 
-Great question.
+But yes, at least this part is straight-forward.
 
-I actually started this series with the lruvec stats included, but I'm
-worried about the readers being too hot to use rstat (in its current
-shape, at least). For example, the refault code accesses the lruvec
-stats for every page that is refaulting - at the root level, in case
-of global reclaim. With an active workload, that would result in a
-very high rate of whole-tree flushes.
+> So with the cgroup_parent() check at the beginning of the function
+> making sure we're looking at a non-root group, blkg_gq->parent should
+> also never be NULL and I can do if (paren->parent) directly, right?
 
-We probably do need a better solution for the lruvecs as well, but in
-this case it just started holding up fixing the memory.stat issue for
-no reason and so I tabled it for another patch series.
+I think so.
+
+> > >  static void cgroup_base_stat_flush(struct cgroup *cgrp, int cpu)
+> > >  {
+> > > -	struct cgroup *parent = cgroup_parent(cgrp);
+> > >  	struct cgroup_rstat_cpu *rstatc = cgroup_rstat_cpu(cgrp, cpu);
+> > > +	struct cgroup *parent = cgroup_parent(cgrp);
+> > 
+> > Is this chunk intentional?
+> 
+> Yeah, it puts the local variable declarations into reverse christmas
+> tree ordering to make them a bit easier to read. It's a while-at-it
+> cleanup, mostly a force of habit. I can drop it if it bothers you.
+
+I don't mind either way. Was just wondering whether it was accidental.
+
+Thanks.
+
+-- 
+tejun
