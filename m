@@ -1,147 +1,625 @@
-From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: Re: [External] Re: [PATCH] mm: memcontrol: remove rcu_read_lock from get_mem_cgroup_from_page
-Date: Sat, 6 Feb 2021 12:34:15 +0800
-Message-ID: <CAMZfGtVyn75kyMe+6DJ2rZaycfgomWyDYH+5Pk-Fesqs+bb3+g@mail.gmail.com>
-References: <20210205062719.74431-1-songmuchun@bytedance.com>
- <YB0DnAlCaQza4Uf9@dhcp22.suse.cz> <CAMZfGtVhBrwgkJVwiah6eDsppSf8fYp+uZ=tZmHBLDFeTmQX3w@mail.gmail.com>
- <YB0euLiMU+T/9bMK@dhcp22.suse.cz> <YB2LTIeTPN72Xrxj@cmpxchg.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 6/8] mm: memcontrol: switch to rstat
+Date: Sun, 7 Feb 2021 18:19:04 -0800
+Message-ID: <CALvZod4LUfbgmTuHg_YOhp9n43QJsOdKD8F9-qnYBZ22svb8OQ@mail.gmail.com>
+References: <20210205182806.17220-1-hannes@cmpxchg.org> <20210205182806.17220-7-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=AfU8CxWnfJGtSfIWBoz8gcUKxsmxSB28QltCEf7Seho=;
-        b=FY0YcpkTvfMDL0uzj13pWIJ446sR279zz/b0pKxyDlsQhUfw4es4Vhs5+hc++o2z56
-         pWd/RcPOHFkrY+CZXxwt2hbW+IiNgQsOsM852AYmZDx7oEU+KUW2wsudTvsH1iqWsaQS
-         xqmkuNNbeuD5F2hbeIshyo5ASOOk2USdodJnuN6XisfqRqblFRBG3pmC/k1idVu6iGNG
-         5C7TszOfXt5updsf02pFqo+WQfBE0i+fhXO32Q7yMgpSihcLgavAc2oBhSAp7iDMjWJw
-         jpiGyXOJFBAaiRhmfihsVWud6HHW7H0LzE0jbWqh62ZHKVMzl0HNN1kGN5A+bJmo3X3s
-         PjEA==
-In-Reply-To: <YB2LTIeTPN72Xrxj-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        bh=IeLLvT/JhNu8FTAewAFi4j/BzX8PXX38Aywd7jFPdXE=;
+        b=SPIvZrWD49BJZ8JRzANcqGK1PmLUNZlIAvGJkVEHpHNx2TJSFXIoPfB2TRKvtgzlfG
+         R9rKslguLvgoS5+Df6H3Ka5xvLvxqCYdrsd9Wxy3g1HQHW85VHZjnJ8doEIELVUm0uUo
+         RdF36wRL4L6/+L03HhMoFmVth0u/aTcUhBQN5bzUf2rqMcJ/g0Q5NWKLsphi9hCM5uDa
+         G3T6g8I/RR4laI9Bxz/+6Po4p+TsLULqe0ppXUgV0RcyROlsHqROLg1S4EEsvEK2ecAs
+         kCaueJNLb+pq6vlp7RnXU39mwIWKudIFrnGj8B7Xf21Zv9filnD9GDNf2gEl3Ennbk9R
+         kR7Q==
+In-Reply-To: <20210205182806.17220-7-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>
 
-On Sat, Feb 6, 2021 at 2:15 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+On Fri, Feb 5, 2021 at 10:28 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
 >
-> On Fri, Feb 05, 2021 at 11:32:24AM +0100, Michal Hocko wrote:
-> > On Fri 05-02-21 17:14:30, Muchun Song wrote:
-> > > On Fri, Feb 5, 2021 at 4:36 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> > > >
-> > > > On Fri 05-02-21 14:27:19, Muchun Song wrote:
-> > > > > The get_mem_cgroup_from_page() is called under page lock, so the page
-> > > > > memcg cannot be changed under us.
-> > > >
-> > > > Where is the page lock enforced?
-> > >
-> > > Because it is called from alloc_page_buffers(). This path is under
-> > > page lock.
-> >
-> > I do not see any page lock enforecement there. There is not even a
-> > comment requiring that. Can we grow more users where this is not the
-> > case? There is no actual relation between alloc_page_buffers and
-> > get_mem_cgroup_from_page except that the former is the only _current_
-> > existing user. I would be careful to dictate locking based solely on
-> > that.
+> Replace the memory controller's custom hierarchical stats code with
+> the generic rstat infrastructure provided by the cgroup core.
 >
-> Since alloc_page_buffers() holds the page lock throughout the entire
-> time it uses the memcg, there is no actual reason for it to use RCU or
-> even acquire an additional reference on the css. We know it's pinned,
-> the charge pins it, and the page lock pins the charge. It can neither
-> move to a different cgroup nor be uncharged.
+> The current implementation does batched upward propagation from the
+> write side (i.e. as stats change). The per-cpu batches introduce an
+> error, which is multiplied by the number of subgroups in a tree. In
+> systems with many CPUs and sizable cgroup trees, the error can be
+> large enough to confuse users (e.g. 32 batch pages * 32 CPUs * 32
+> subgroups results in an error of up to 128M per stat item). This can
+> entirely swallow allocation bursts inside a workload that the user is
+> expecting to see reflected in the statistics.
+>
+> In the past, we've done read-side aggregation, where a memory.stat
+> read would have to walk the entire subtree and add up per-cpu
+> counts. This became problematic with lazily-freed cgroups: we could
+> have large subtrees where most cgroups were entirely idle. Hence the
+> switch to change-driven upward propagation. Unfortunately, it needed
+> to trade accuracy for speed due to the write side being so hot.
+>
+> Rstat combines the best of both worlds: from the write side, it
+> cheaply maintains a queue of cgroups that have pending changes, so
+> that the read side can do selective tree aggregation. This way the
+> reported stats will always be precise and recent as can be, while the
+> aggregation can skip over potentially large numbers of idle cgroups.
+>
+> The way rstat works is that it implements a tree for tracking cgroups
+> with pending local changes, as well as a flush function that walks the
+> tree upwards. The controller then drives this by 1) telling rstat when
+> a local cgroup stat changes (e.g. mod_memcg_state) and 2) when a flush
+> is required to get uptodate hierarchy stats for a given subtree
+> (e.g. when memory.stat is read). The controller also provides a flush
+> callback that is called during the rstat flush walk for each cgroup
+> and aggregates its local per-cpu counters and propagates them upwards.
+>
+> This adds a second vmstats to struct mem_cgroup (MEMCG_NR_STAT +
+> NR_VM_EVENT_ITEMS) to track pending subtree deltas during upward
+> aggregation. It removes 3 words from the per-cpu data. It eliminates
+> memcg_exact_page_state(), since memcg_page_state() is now exact.
 
-Thanks for your patient explanation.
+Only if cgroup_rstat_flush() has been called before memcg_page_state(), right?
 
 >
-> So what do you say we switch alloc_page_buffers() to page_memcg()?
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-It's better than mine.
+Overall the patch looks good to me with a couple of nits/queries below.
 
+Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+
+> ---
+>  include/linux/memcontrol.h |  67 ++++++-----
+>  mm/memcontrol.c            | 224 +++++++++++++++----------------------
+>  2 files changed, 133 insertions(+), 158 deletions(-)
 >
-> And because that removes the last user of get_mem_cgroup_from_page(),
-> we can kill it off and worry about a good interface once a consumer
-> materializes for it.
->
-> diff --git a/fs/buffer.c b/fs/buffer.c
-> index 96c7604f69b3..12a10f461b81 100644
-> --- a/fs/buffer.c
-> +++ b/fs/buffer.c
-> @@ -847,7 +847,7 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
->         if (retry)
->                 gfp |= __GFP_NOFAIL;
->
-> -       memcg = get_mem_cgroup_from_page(page);
-> +       memcg = page_memcg(page);
->         old_memcg = set_active_memcg(memcg);
->
->         head = NULL;
-> @@ -868,7 +868,6 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
->         }
->  out:
->         set_active_memcg(old_memcg);
-> -       mem_cgroup_put(memcg);
->         return head;
->  /*
->   * In case anything failed, we just free everything we got.
 > diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index a8c7a0ccc759..a44b2d51aecc 100644
+> index 20ecdfae3289..a8c7a0ccc759 100644
 > --- a/include/linux/memcontrol.h
 > +++ b/include/linux/memcontrol.h
-> @@ -687,8 +687,6 @@ struct mem_cgroup *mem_cgroup_from_task(struct task_struct *p);
+> @@ -76,10 +76,27 @@ enum mem_cgroup_events_target {
+>  };
 >
->  struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm);
+>  struct memcg_vmstats_percpu {
+> -       long stat[MEMCG_NR_STAT];
+> -       unsigned long events[NR_VM_EVENT_ITEMS];
+> -       unsigned long nr_page_events;
+> -       unsigned long targets[MEM_CGROUP_NTARGETS];
+> +       /* Local (CPU and cgroup) page state & events */
+> +       long                    state[MEMCG_NR_STAT];
+> +       unsigned long           events[NR_VM_EVENT_ITEMS];
+> +
+> +       /* Delta calculation for lockless upward propagation */
+> +       long                    state_prev[MEMCG_NR_STAT];
+> +       unsigned long           events_prev[NR_VM_EVENT_ITEMS];
+> +
+> +       /* Cgroup1: threshold notifications & softlimit tree updates */
+> +       unsigned long           nr_page_events;
+> +       unsigned long           targets[MEM_CGROUP_NTARGETS];
+> +};
+> +
+> +struct memcg_vmstats {
+> +       /* Aggregated (CPU and subtree) page state & events */
+> +       long                    state[MEMCG_NR_STAT];
+> +       unsigned long           events[NR_VM_EVENT_ITEMS];
+> +
+> +       /* Pending child counts during tree propagation */
+> +       long                    state_pending[MEMCG_NR_STAT];
+> +       unsigned long           events_pending[NR_VM_EVENT_ITEMS];
+>  };
 >
-> -struct mem_cgroup *get_mem_cgroup_from_page(struct page *page);
+>  struct mem_cgroup_reclaim_iter {
+> @@ -287,8 +304,8 @@ struct mem_cgroup {
+>
+>         MEMCG_PADDING(_pad1_);
+>
+> -       atomic_long_t           vmstats[MEMCG_NR_STAT];
+> -       atomic_long_t           vmevents[NR_VM_EVENT_ITEMS];
+> +       /* memory.stat */
+> +       struct memcg_vmstats    vmstats;
+>
+>         /* memory.events */
+>         atomic_long_t           memory_events[MEMCG_NR_MEMORY_EVENTS];
+> @@ -315,10 +332,6 @@ struct mem_cgroup {
+>         atomic_t                moving_account;
+>         struct task_struct      *move_lock_task;
+>
+> -       /* Legacy local VM stats and events */
+> -       struct memcg_vmstats_percpu __percpu *vmstats_local;
 > -
->  struct lruvec *lock_page_lruvec(struct page *page);
->  struct lruvec *lock_page_lruvec_irq(struct page *page);
->  struct lruvec *lock_page_lruvec_irqsave(struct page *page,
-> @@ -1169,11 +1167,6 @@ static inline struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm)
->         return NULL;
+> -       /* Subtree VM stats and events (batched updates) */
+>         struct memcg_vmstats_percpu __percpu *vmstats_percpu;
+>
+>  #ifdef CONFIG_CGROUP_WRITEBACK
+> @@ -942,10 +955,6 @@ static inline void mod_memcg_lruvec_state(struct lruvec *lruvec,
+>         local_irq_restore(flags);
 >  }
 >
-> -static inline struct mem_cgroup *get_mem_cgroup_from_page(struct page *page)
+> -unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+> -                                               gfp_t gfp_mask,
+> -                                               unsigned long *total_scanned);
+> -
+>  void __count_memcg_events(struct mem_cgroup *memcg, enum vm_event_item idx,
+>                           unsigned long count);
+>
+> @@ -1028,6 +1037,10 @@ static inline void memcg_memory_event_mm(struct mm_struct *mm,
+>  void mem_cgroup_split_huge_fixup(struct page *head);
+>  #endif
+>
+> +unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+> +                                               gfp_t gfp_mask,
+> +                                               unsigned long *total_scanned);
+> +
+>  #else /* CONFIG_MEMCG */
+>
+>  #define MEM_CGROUP_ID_SHIFT    0
+> @@ -1136,6 +1149,10 @@ static inline bool lruvec_holds_page_lru_lock(struct page *page,
+>         return lruvec == &pgdat->__lruvec;
+>  }
+>
+> +static inline void lruvec_memcg_debug(struct lruvec *lruvec, struct page *page)
+> +{
+> +}
+> +
+>  static inline struct mem_cgroup *parent_mem_cgroup(struct mem_cgroup *memcg)
+>  {
+>         return NULL;
+> @@ -1349,18 +1366,6 @@ static inline void mod_lruvec_kmem_state(void *p, enum node_stat_item idx,
+>         mod_node_page_state(page_pgdat(page), idx, val);
+>  }
+>
+> -static inline
+> -unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+> -                                           gfp_t gfp_mask,
+> -                                           unsigned long *total_scanned)
 > -{
-> -       return NULL;
+> -       return 0;
 > -}
 > -
->  static inline void mem_cgroup_put(struct mem_cgroup *memcg)
+> -static inline void mem_cgroup_split_huge_fixup(struct page *head)
+> -{
+> -}
+> -
+>  static inline void count_memcg_events(struct mem_cgroup *memcg,
+>                                       enum vm_event_item idx,
+>                                       unsigned long count)
+> @@ -1383,8 +1388,16 @@ void count_memcg_event_mm(struct mm_struct *mm, enum vm_event_item idx)
 >  {
 >  }
+>
+> -static inline void lruvec_memcg_debug(struct lruvec *lruvec, struct page *page)
+> +static inline void mem_cgroup_split_huge_fixup(struct page *head)
+> +{
+> +}
+> +
+> +static inline
+> +unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+> +                                           gfp_t gfp_mask,
+> +                                           unsigned long *total_scanned)
+>  {
+> +       return 0;
+
+Any technical reason to move around mem_cgroup_soft_limit_reclaim(),
+mem_cgroup_split_huge_fixup() and lruvec_memcg_debug() or just
+aesthetics?
+
+>  }
+>  #endif /* CONFIG_MEMCG */
+>
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 490357945f2c..ff52550d2f65 100644
+> index 2f97cb4cef6d..5dc0bd53b64a 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -1048,29 +1048,6 @@ struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm)
+> @@ -757,6 +757,11 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_node *mctz)
+>         return mz;
 >  }
->  EXPORT_SYMBOL(get_mem_cgroup_from_mm);
 >
-> -/**
-> - * get_mem_cgroup_from_page: Obtain a reference on given page's memcg.
-> - * @page: page from which memcg should be extracted.
-> - *
-> - * Obtain a reference on page->memcg and returns it if successful. Otherwise
-> - * root_mem_cgroup is returned.
-> - */
-> -struct mem_cgroup *get_mem_cgroup_from_page(struct page *page)
-> -{
-> -       struct mem_cgroup *memcg = page_memcg(page);
-> -
-> -       if (mem_cgroup_disabled())
-> -               return NULL;
-> -
-> -       rcu_read_lock();
-> -       /* Page should not get uncharged and freed memcg under us. */
-> -       if (!memcg || WARN_ON_ONCE(!css_tryget(&memcg->css)))
-> -               memcg = root_mem_cgroup;
-> -       rcu_read_unlock();
-> -       return memcg;
-> -}
-> -EXPORT_SYMBOL(get_mem_cgroup_from_page);
-> -
->  static __always_inline struct mem_cgroup *active_memcg(void)
+> +static void memcg_flush_vmstats(struct mem_cgroup *memcg)
+> +{
+> +       cgroup_rstat_flush(memcg->css.cgroup);
+> +}
+
+cgroup_rstat_flush() has one line wrapper but cgroup_rstat_updated()
+does not, any reason?
+
+> +
+>  /**
+>   * __mod_memcg_state - update cgroup memory statistics
+>   * @memcg: the memory cgroup
+> @@ -765,37 +770,17 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_node *mctz)
+>   */
+>  void __mod_memcg_state(struct mem_cgroup *memcg, int idx, int val)
 >  {
->         if (in_interrupt())
+> -       long x, threshold = MEMCG_CHARGE_BATCH;
+> -
+>         if (mem_cgroup_disabled())
+>                 return;
+>
+> -       if (memcg_stat_item_in_bytes(idx))
+> -               threshold <<= PAGE_SHIFT;
+> -
+> -       x = val + __this_cpu_read(memcg->vmstats_percpu->stat[idx]);
+> -       if (unlikely(abs(x) > threshold)) {
+> -               struct mem_cgroup *mi;
+> -
+> -               /*
+> -                * Batch local counters to keep them in sync with
+> -                * the hierarchical ones.
+> -                */
+> -               __this_cpu_add(memcg->vmstats_local->stat[idx], x);
+> -               for (mi = memcg; mi; mi = parent_mem_cgroup(mi))
+> -                       atomic_long_add(x, &mi->vmstats[idx]);
+> -               x = 0;
+> -       }
+> -       __this_cpu_write(memcg->vmstats_percpu->stat[idx], x);
+> +       __this_cpu_add(memcg->vmstats_percpu->state[idx], val);
+> +       cgroup_rstat_updated(memcg->css.cgroup, smp_processor_id());
+>  }
+>
+> -/*
+> - * idx can be of type enum memcg_stat_item or node_stat_item.
+> - * Keep in sync with memcg_exact_page_state().
+> - */
+> +/* idx can be of type enum memcg_stat_item or node_stat_item. */
+>  static unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
+>  {
+> -       long x = atomic_long_read(&memcg->vmstats[idx]);
+> +       long x = READ_ONCE(memcg->vmstats.state[idx]);
+>  #ifdef CONFIG_SMP
+>         if (x < 0)
+>                 x = 0;
+> @@ -803,17 +788,14 @@ static unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
+>         return x;
+>  }
+>
+> -/*
+> - * idx can be of type enum memcg_stat_item or node_stat_item.
+> - * Keep in sync with memcg_exact_page_state().
+> - */
+> +/* idx can be of type enum memcg_stat_item or node_stat_item. */
+>  static unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx)
+>  {
+>         long x = 0;
+>         int cpu;
+>
+>         for_each_possible_cpu(cpu)
+> -               x += per_cpu(memcg->vmstats_local->stat[idx], cpu);
+> +               x += per_cpu(memcg->vmstats_percpu->state[idx], cpu);
+>  #ifdef CONFIG_SMP
+>         if (x < 0)
+>                 x = 0;
+> @@ -936,30 +918,16 @@ void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val)
+>  void __count_memcg_events(struct mem_cgroup *memcg, enum vm_event_item idx,
+>                           unsigned long count)
+>  {
+> -       unsigned long x;
+> -
+>         if (mem_cgroup_disabled())
+>                 return;
+>
+> -       x = count + __this_cpu_read(memcg->vmstats_percpu->events[idx]);
+> -       if (unlikely(x > MEMCG_CHARGE_BATCH)) {
+> -               struct mem_cgroup *mi;
+> -
+> -               /*
+> -                * Batch local counters to keep them in sync with
+> -                * the hierarchical ones.
+> -                */
+> -               __this_cpu_add(memcg->vmstats_local->events[idx], x);
+> -               for (mi = memcg; mi; mi = parent_mem_cgroup(mi))
+> -                       atomic_long_add(x, &mi->vmevents[idx]);
+> -               x = 0;
+> -       }
+> -       __this_cpu_write(memcg->vmstats_percpu->events[idx], x);
+> +       __this_cpu_add(memcg->vmstats_percpu->events[idx], count);
+> +       cgroup_rstat_updated(memcg->css.cgroup, smp_processor_id());
+>  }
+>
+>  static unsigned long memcg_events(struct mem_cgroup *memcg, int event)
+>  {
+> -       return atomic_long_read(&memcg->vmevents[event]);
+> +       return READ_ONCE(memcg->vmstats.events[event]);
+>  }
+>
+>  static unsigned long memcg_events_local(struct mem_cgroup *memcg, int event)
+> @@ -968,7 +936,7 @@ static unsigned long memcg_events_local(struct mem_cgroup *memcg, int event)
+>         int cpu;
+>
+>         for_each_possible_cpu(cpu)
+> -               x += per_cpu(memcg->vmstats_local->events[event], cpu);
+> +               x += per_cpu(memcg->vmstats_percpu->events[event], cpu);
+>         return x;
+>  }
+>
+> @@ -1631,6 +1599,7 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
+>          *
+>          * Current memory state:
+>          */
+> +       memcg_flush_vmstats(memcg);
+>
+>         for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
+>                 u64 size;
+> @@ -2450,22 +2419,11 @@ static int memcg_hotplug_cpu_dead(unsigned int cpu)
+>         drain_stock(stock);
+>
+>         for_each_mem_cgroup(memcg) {
+> -               struct memcg_vmstats_percpu *statc;
+>                 int i;
+>
+> -               statc = per_cpu_ptr(memcg->vmstats_percpu, cpu);
+> -
+> -               for (i = 0; i < MEMCG_NR_STAT; i++) {
+> +               for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++) {
+>                         int nid;
+>
+> -                       if (statc->stat[i]) {
+> -                               mod_memcg_state(memcg, i, statc->stat[i]);
+> -                               statc->stat[i] = 0;
+> -                       }
+> -
+> -                       if (i >= NR_VM_NODE_STAT_ITEMS)
+> -                               continue;
+> -
+>                         for_each_node(nid) {
+>                                 struct batched_lruvec_stat *lstatc;
+>                                 struct mem_cgroup_per_node *pn;
+> @@ -2484,13 +2442,6 @@ static int memcg_hotplug_cpu_dead(unsigned int cpu)
+>                                 }
+>                         }
+>                 }
+> -
+> -               for (i = 0; i < NR_VM_EVENT_ITEMS; i++) {
+> -                       if (statc->events[i]) {
+> -                               count_memcg_events(memcg, i, statc->events[i]);
+> -                               statc->events[i] = 0;
+> -                       }
+> -               }
+>         }
+>
+>         return 0;
+> @@ -3618,6 +3569,8 @@ static unsigned long mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
+>  {
+>         unsigned long val;
+>
+> +       memcg_flush_vmstats(memcg);
+> +
+>         if (mem_cgroup_is_root(memcg)) {
+
+I think memcg_flush_vmstats(memcg) should be here.
+
+>                 val = memcg_page_state(memcg, NR_FILE_PAGES) +
+>                         memcg_page_state(memcg, NR_ANON_MAPPED);
+> @@ -3683,26 +3636,15 @@ static u64 mem_cgroup_read_u64(struct cgroup_subsys_state *css,
+>         }
+>  }
+>
+> -static void memcg_flush_percpu_vmstats(struct mem_cgroup *memcg)
+> +static void memcg_flush_lruvec_page_state(struct mem_cgroup *memcg)
+>  {
+> -       unsigned long stat[MEMCG_NR_STAT] = {0};
+> -       struct mem_cgroup *mi;
+> -       int node, cpu, i;
+> -
+> -       for_each_online_cpu(cpu)
+> -               for (i = 0; i < MEMCG_NR_STAT; i++)
+> -                       stat[i] += per_cpu(memcg->vmstats_percpu->stat[i], cpu);
+> -
+> -       for (mi = memcg; mi; mi = parent_mem_cgroup(mi))
+> -               for (i = 0; i < MEMCG_NR_STAT; i++)
+> -                       atomic_long_add(stat[i], &mi->vmstats[i]);
+> +       int node;
+>
+>         for_each_node(node) {
+>                 struct mem_cgroup_per_node *pn = memcg->nodeinfo[node];
+> +               unsigned long stat[NR_VM_NODE_STAT_ITEMS] = { 0 };
+>                 struct mem_cgroup_per_node *pi;
+> -
+> -               for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
+> -                       stat[i] = 0;
+> +               int cpu, i;
+>
+>                 for_each_online_cpu(cpu)
+>                         for (i = 0; i < NR_VM_NODE_STAT_ITEMS; i++)
+> @@ -3715,25 +3657,6 @@ static void memcg_flush_percpu_vmstats(struct mem_cgroup *memcg)
+>         }
+>  }
+>
+> -static void memcg_flush_percpu_vmevents(struct mem_cgroup *memcg)
+> -{
+> -       unsigned long events[NR_VM_EVENT_ITEMS];
+> -       struct mem_cgroup *mi;
+> -       int cpu, i;
+> -
+> -       for (i = 0; i < NR_VM_EVENT_ITEMS; i++)
+> -               events[i] = 0;
+> -
+> -       for_each_online_cpu(cpu)
+> -               for (i = 0; i < NR_VM_EVENT_ITEMS; i++)
+> -                       events[i] += per_cpu(memcg->vmstats_percpu->events[i],
+> -                                            cpu);
+> -
+> -       for (mi = memcg; mi; mi = parent_mem_cgroup(mi))
+> -               for (i = 0; i < NR_VM_EVENT_ITEMS; i++)
+> -                       atomic_long_add(events[i], &mi->vmevents[i]);
+> -}
+> -
+>  #ifdef CONFIG_MEMCG_KMEM
+>  static int memcg_online_kmem(struct mem_cgroup *memcg)
+>  {
+> @@ -4050,6 +3973,8 @@ static int memcg_numa_stat_show(struct seq_file *m, void *v)
+>         int nid;
+>         struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
+>
+> +       memcg_flush_vmstats(memcg);
+> +
+>         for (stat = stats; stat < stats + ARRAY_SIZE(stats); stat++) {
+>                 seq_printf(m, "%s=%lu", stat->name,
+>                            mem_cgroup_nr_lru_pages(memcg, stat->lru_mask,
+> @@ -4120,6 +4045,8 @@ static int memcg_stat_show(struct seq_file *m, void *v)
+>
+>         BUILD_BUG_ON(ARRAY_SIZE(memcg1_stat_names) != ARRAY_SIZE(memcg1_stats));
+>
+> +       memcg_flush_vmstats(memcg);
+> +
+>         for (i = 0; i < ARRAY_SIZE(memcg1_stats); i++) {
+>                 unsigned long nr;
+>
+> @@ -4596,22 +4523,6 @@ struct wb_domain *mem_cgroup_wb_domain(struct bdi_writeback *wb)
+>         return &memcg->cgwb_domain;
+>  }
+>
+> -/*
+> - * idx can be of type enum memcg_stat_item or node_stat_item.
+> - * Keep in sync with memcg_exact_page().
+> - */
+> -static unsigned long memcg_exact_page_state(struct mem_cgroup *memcg, int idx)
+> -{
+> -       long x = atomic_long_read(&memcg->vmstats[idx]);
+> -       int cpu;
+> -
+> -       for_each_online_cpu(cpu)
+> -               x += per_cpu_ptr(memcg->vmstats_percpu, cpu)->stat[idx];
+> -       if (x < 0)
+> -               x = 0;
+> -       return x;
+> -}
+> -
+>  /**
+>   * mem_cgroup_wb_stats - retrieve writeback related stats from its memcg
+>   * @wb: bdi_writeback in question
+> @@ -4637,13 +4548,14 @@ void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pfilepages,
+>         struct mem_cgroup *memcg = mem_cgroup_from_css(wb->memcg_css);
+>         struct mem_cgroup *parent;
+>
+> -       *pdirty = memcg_exact_page_state(memcg, NR_FILE_DIRTY);
+> +       memcg_flush_vmstats(memcg);
+>
+> -       *pwriteback = memcg_exact_page_state(memcg, NR_WRITEBACK);
+> -       *pfilepages = memcg_exact_page_state(memcg, NR_INACTIVE_FILE) +
+> -                       memcg_exact_page_state(memcg, NR_ACTIVE_FILE);
+> -       *pheadroom = PAGE_COUNTER_MAX;
+> +       *pdirty = memcg_page_state(memcg, NR_FILE_DIRTY);
+> +       *pwriteback = memcg_page_state(memcg, NR_WRITEBACK);
+> +       *pfilepages = memcg_page_state(memcg, NR_INACTIVE_FILE) +
+> +                       memcg_page_state(memcg, NR_ACTIVE_FILE);
+>
+> +       *pheadroom = PAGE_COUNTER_MAX;
+>         while ((parent = parent_mem_cgroup(memcg))) {
+>                 unsigned long ceiling = min(READ_ONCE(memcg->memory.max),
+>                                             READ_ONCE(memcg->memory.high));
+> @@ -5275,7 +5187,6 @@ static void __mem_cgroup_free(struct mem_cgroup *memcg)
+>         for_each_node(node)
+>                 free_mem_cgroup_per_node_info(memcg, node);
+>         free_percpu(memcg->vmstats_percpu);
+> -       free_percpu(memcg->vmstats_local);
+>         kfree(memcg);
+>  }
+>
+> @@ -5283,11 +5194,10 @@ static void mem_cgroup_free(struct mem_cgroup *memcg)
+>  {
+>         memcg_wb_domain_exit(memcg);
+>         /*
+> -        * Flush percpu vmstats and vmevents to guarantee the value correctness
+> -        * on parent's and all ancestor levels.
+> +        * Flush percpu lruvec stats to guarantee the value
+> +        * correctness on parent's and all ancestor levels.
+>          */
+> -       memcg_flush_percpu_vmstats(memcg);
+> -       memcg_flush_percpu_vmevents(memcg);
+> +       memcg_flush_lruvec_page_state(memcg);
+>         __mem_cgroup_free(memcg);
+>  }
+>
+> @@ -5314,11 +5224,6 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
+>                 goto fail;
+>         }
+>
+> -       memcg->vmstats_local = alloc_percpu_gfp(struct memcg_vmstats_percpu,
+> -                                               GFP_KERNEL_ACCOUNT);
+> -       if (!memcg->vmstats_local)
+> -               goto fail;
+> -
+>         memcg->vmstats_percpu = alloc_percpu_gfp(struct memcg_vmstats_percpu,
+>                                                  GFP_KERNEL_ACCOUNT);
+>         if (!memcg->vmstats_percpu)
+> @@ -5518,6 +5423,62 @@ static void mem_cgroup_css_reset(struct cgroup_subsys_state *css)
+>         memcg_wb_domain_size_changed(memcg);
+>  }
+>
+> +static void mem_cgroup_css_rstat_flush(struct cgroup_subsys_state *css, int cpu)
+> +{
+> +       struct mem_cgroup *memcg = mem_cgroup_from_css(css);
+> +       struct mem_cgroup *parent = parent_mem_cgroup(memcg);
+> +       struct memcg_vmstats_percpu *statc;
+> +       long delta, v;
+> +       int i;
+> +
+> +       statc = per_cpu_ptr(memcg->vmstats_percpu, cpu);
+> +
+> +       for (i = 0; i < MEMCG_NR_STAT; i++) {
+> +               /*
+> +                * Collect the aggregated propagation counts of groups
+> +                * below us. We're in a per-cpu loop here and this is
+> +                * a global counter, so the first cycle will get them.
+> +                */
+> +               delta = memcg->vmstats.state_pending[i];
+> +               if (delta)
+> +                       memcg->vmstats.state_pending[i] = 0;
+> +
+> +               /* Add CPU changes on this level since the last flush */
+> +               v = READ_ONCE(statc->state[i]);
+> +               if (v != statc->state_prev[i]) {
+> +                       delta += v - statc->state_prev[i];
+> +                       statc->state_prev[i] = v;
+> +               }
+> +
+> +               if (!delta)
+> +                       continue;
+> +
+> +               /* Aggregate counts on this level and propagate upwards */
+> +               memcg->vmstats.state[i] += delta;
+> +               if (parent)
+> +                       parent->vmstats.state_pending[i] += delta;
+> +       }
+> +
+> +       for (i = 0; i < NR_VM_EVENT_ITEMS; i++) {
+> +               delta = memcg->vmstats.events_pending[i];
+> +               if (delta)
+> +                       memcg->vmstats.events_pending[i] = 0;
+> +
+> +               v = READ_ONCE(statc->events[i]);
+> +               if (v != statc->events_prev[i]) {
+> +                       delta += v - statc->events_prev[i];
+> +                       statc->events_prev[i] = v;
+> +               }
+> +
+> +               if (!delta)
+> +                       continue;
+> +
+> +               memcg->vmstats.events[i] += delta;
+> +               if (parent)
+> +                       parent->vmstats.events_pending[i] += delta;
+> +       }
+> +}
+> +
+>  #ifdef CONFIG_MMU
+>  /* Handlers for move charge at task migration. */
+>  static int mem_cgroup_do_precharge(unsigned long count)
+> @@ -6571,6 +6532,7 @@ struct cgroup_subsys memory_cgrp_subsys = {
+>         .css_released = mem_cgroup_css_released,
+>         .css_free = mem_cgroup_css_free,
+>         .css_reset = mem_cgroup_css_reset,
+> +       .css_rstat_flush = mem_cgroup_css_rstat_flush,
+>         .can_attach = mem_cgroup_can_attach,
+>         .cancel_attach = mem_cgroup_cancel_attach,
+>         .post_attach = mem_cgroup_move_task,
+> --
+> 2.30.0
+>
