@@ -1,162 +1,143 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 5/8] cgroup: rstat: punt root-level optimization to
- individual controllers
-Date: Mon, 8 Feb 2021 15:29:21 -0500
-Message-ID: <YCGfIYTLzcTO+ng8@cmpxchg.org>
+Subject: Re: [PATCH 6/8] mm: memcontrol: switch to rstat
+Date: Mon, 8 Feb 2021 15:40:44 -0500
+Message-ID: <YCGhzBiI/vaRFmOM@cmpxchg.org>
 References: <20210205182806.17220-1-hannes@cmpxchg.org>
- <20210205182806.17220-6-hannes@cmpxchg.org>
- <YB4OT61owRaze5/M@mtj.duckdns.org>
+ <20210205182806.17220-7-hannes@cmpxchg.org>
+ <CALvZod4LUfbgmTuHg_YOhp9n43QJsOdKD8F9-qnYBZ22svb8OQ@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=+W+MLaT/TXNsbaKxVAInWpHHDZc9eH9AzV5HpOZtk1o=;
-        b=apHJgSOvhe5ZskHK3zxdt0o5vOX1K/DnUVvo1YFy+TT6/qeKrazZ/tuagXJHv9sjnj
-         Au1UjaBP+G0hqohnHtm7s5g5Tu/725HxS4SN09uwAPWTk+XYmR09wakqnLKcrm6sUIBB
-         tk5yftslC7tLC2PSiqiBqfkyQHbVNYykfNGNhOHdhHKa6kDEeSujOAJl28U3n7MW6fNF
-         UzJoS8NWwIqCrVAeUjp2h66GuqBDpL49bOTzGsZq2IIZlE0OTGFl+v7UN82sm9ycAmUd
-         PGwdZLEER7S9hg6uE1d45GB00ML82m+mbaWWj4gXv2ArgSx+739lbaYxR2CVGiOAhCrT
-         J4Mw==
+        bh=trurRt8gUU2aadbEi0vZGrvIaapkw6K9paKqRwTKcaY=;
+        b=IL858Nl22Xe2hZD/k7dFdDA3y+XeQMUvCmXDBjIFTXBken1a9/tGC8cuqXn/3roGxK
+         7jtigYEaOOLoafpuKYhSmZEhQvp5Ocgsr1V7H+sKcbBBM3kyznclWFpSeqQ9iRaa8RK2
+         valQydK60iZosDHNE6P+Gh8p0hvoJgaeznnlGjsKJ7ViMr3IIrDDQMozxhaG736LO4DV
+         e0/hPjQZqz6YtgVg/HjadSA3vP6U+nx/XGm7VrQJwvqyTA4j6j2M/17ReimA5yhY3F7u
+         lRNLTmFdnGave+CFQ3023/gG5YM7ARcRFQQkgsMbpJ5JcFIA8xm5HVIvIP7j6TblfL36
+         kJXA==
 Content-Disposition: inline
-In-Reply-To: <YB4OT61owRaze5/M@mtj.duckdns.org>
+In-Reply-To: <CALvZod4LUfbgmTuHg_YOhp9n43QJsOdKD8F9-qnYBZ22svb8OQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>
 
-On Fri, Feb 05, 2021 at 10:34:39PM -0500, Tejun Heo wrote:
-> Hello,
+On Sun, Feb 07, 2021 at 06:19:04PM -0800, Shakeel Butt wrote:
+> On Fri, Feb 5, 2021 at 10:28 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+> >
+> > Replace the memory controller's custom hierarchical stats code with
+> > the generic rstat infrastructure provided by the cgroup core.
+> >
+> > The current implementation does batched upward propagation from the
+> > write side (i.e. as stats change). The per-cpu batches introduce an
+> > error, which is multiplied by the number of subgroups in a tree. In
+> > systems with many CPUs and sizable cgroup trees, the error can be
+> > large enough to confuse users (e.g. 32 batch pages * 32 CPUs * 32
+> > subgroups results in an error of up to 128M per stat item). This can
+> > entirely swallow allocation bursts inside a workload that the user is
+> > expecting to see reflected in the statistics.
+> >
+> > In the past, we've done read-side aggregation, where a memory.stat
+> > read would have to walk the entire subtree and add up per-cpu
+> > counts. This became problematic with lazily-freed cgroups: we could
+> > have large subtrees where most cgroups were entirely idle. Hence the
+> > switch to change-driven upward propagation. Unfortunately, it needed
+> > to trade accuracy for speed due to the write side being so hot.
+> >
+> > Rstat combines the best of both worlds: from the write side, it
+> > cheaply maintains a queue of cgroups that have pending changes, so
+> > that the read side can do selective tree aggregation. This way the
+> > reported stats will always be precise and recent as can be, while the
+> > aggregation can skip over potentially large numbers of idle cgroups.
+> >
+> > The way rstat works is that it implements a tree for tracking cgroups
+> > with pending local changes, as well as a flush function that walks the
+> > tree upwards. The controller then drives this by 1) telling rstat when
+> > a local cgroup stat changes (e.g. mod_memcg_state) and 2) when a flush
+> > is required to get uptodate hierarchy stats for a given subtree
+> > (e.g. when memory.stat is read). The controller also provides a flush
+> > callback that is called during the rstat flush walk for each cgroup
+> > and aggregates its local per-cpu counters and propagates them upwards.
+> >
+> > This adds a second vmstats to struct mem_cgroup (MEMCG_NR_STAT +
+> > NR_VM_EVENT_ITEMS) to track pending subtree deltas during upward
+> > aggregation. It removes 3 words from the per-cpu data. It eliminates
+> > memcg_exact_page_state(), since memcg_page_state() is now exact.
 > 
-> On Fri, Feb 05, 2021 at 01:28:03PM -0500, Johannes Weiner wrote:
-> > Current users of the rstat code can source root-level statistics from
-> > the native counters of their respective subsystem, allowing them to
-> > forego aggregation at the root level. This optimization is currently
-> > implemented inside the generic rstat code, which doesn't track the
-> > root cgroup and doesn't invoke the subsystem flush callbacks on it.
-> > 
-> > However, the memory controller cannot do this optimization, because
-> > cgroup1 breaks out memory specifically for the local level, including
-> > at the root level. In preparation for the memory controller switching
-> > to rstat, move the optimization from rstat core to the controllers.
-> > 
-> > Afterwards, rstat will always track the root cgroup for changes and
-> > invoke the subsystem callbacks on it; and it's up to the subsystem to
-> > special-case and skip aggregation of the root cgroup if it can source
-> > this information through other, cheaper means.
-> > 
-> > The extra cost of tracking the root cgroup is negligible: on stat
-> > changes, we actually remove a branch that checks for the root. The
-> > queueing for a flush touches only per-cpu data, and only the first
-> > stat change since a flush requires a (per-cpu) lock.
-> > 
+> Only if cgroup_rstat_flush() has been called before memcg_page_state(), right?
+
+Yes, correct.
+
 > > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> > Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+> > Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 > 
-> Generally looks good to me.
+> Overall the patch looks good to me with a couple of nits/queries below.
 > 
-> Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
 Thanks!
 
-> A couple nits below.
-> 
-> > diff --git a/block/blk-cgroup.c b/block/blk-cgroup.c
-> > index 02ce2058c14b..76725e1cad7f 100644
-> > --- a/block/blk-cgroup.c
-> > +++ b/block/blk-cgroup.c
-> > @@ -766,6 +766,10 @@ static void blkcg_rstat_flush(struct cgroup_subsys_state *css, int cpu)
-> >  	struct blkcg *blkcg = css_to_blkcg(css);
-> >  	struct blkcg_gq *blkg;
-> >  
-> > +	/* Root-level stats are sourced from system-wide IO stats */
-> > +	if (!cgroup_parent(css->cgroup))
-> > +		return;
-> > +
-> >  	rcu_read_lock();
-> >  
-> >  	hlist_for_each_entry_rcu(blkg, &blkcg->blkg_list, blkcg_node) {
-> > @@ -789,6 +793,7 @@ static void blkcg_rstat_flush(struct cgroup_subsys_state *css, int cpu)
-> >  		u64_stats_update_end(&blkg->iostat.sync);
-> >  
-> >  		/* propagate global delta to parent */
-> > +		/* XXX: could skip this if parent is root */
-> >  		if (parent) {
-> >  			u64_stats_update_begin(&parent->iostat.sync);
-> >  			blkg_iostat_set(&delta, &blkg->iostat.cur);
-> 
-> Might as well update this similar to cgroup_base_stat_flush()?
-
-I meant to revisit that, but I'm never 100% confident when it comes to
-the interaction and lifetime of css, blkcg and blkg_gq.
-
-IIUC, the blkg_gq->parent linkage always matches the css parent
-linkage; it just exists as an optimization for ancestor walks, which
-would otherwise have to do radix lookups when going through the css.
-
-So with the cgroup_parent() check at the beginning of the function
-making sure we're looking at a non-root group, blkg_gq->parent should
-also never be NULL and I can do if (paren->parent) directly, right?
-
-> > @@ -58,8 +53,16 @@ void cgroup_rstat_updated(struct cgroup *cgrp, int cpu)
-> >  		if (rstatc->updated_next)
-> >  			break;
-> >  
-> > +		if (!parent) {
-> 
-> Maybe useful to note that the node is being marked busy but not added to the
-> non-existent parent.
-
-Makes sense, I'll add a comment.
-
-> > +			rstatc->updated_next = cgrp;
-> > +			break;
-> > +		}
-> > +
-> > +		prstatc = cgroup_rstat_cpu(parent, cpu);
-> >  		rstatc->updated_next = prstatc->updated_children;
-> >  		prstatc->updated_children = cgrp;
-> > +
-> > +		cgrp = parent;
-> >  	}
-> >  
-> >  	raw_spin_unlock_irqrestore(cpu_lock, flags);
-> ...
-> >  static void cgroup_base_stat_flush(struct cgroup *cgrp, int cpu)
+> > @@ -1383,8 +1388,16 @@ void count_memcg_event_mm(struct mm_struct *mm, enum vm_event_item idx)
 > >  {
-> > -	struct cgroup *parent = cgroup_parent(cgrp);
-> >  	struct cgroup_rstat_cpu *rstatc = cgroup_rstat_cpu(cgrp, cpu);
-> > +	struct cgroup *parent = cgroup_parent(cgrp);
-> 
-> Is this chunk intentional?
-
-Yeah, it puts the local variable declarations into reverse christmas
-tree ordering to make them a bit easier to read. It's a while-at-it
-cleanup, mostly a force of habit. I can drop it if it bothers you.
-
-> >  	struct cgroup_base_stat cur, delta;
-> >  	unsigned seq;
-> >  
-> > +	/* Root-level stats are sourced from system-wide CPU stats */
-> > +	if (!parent)
-> > +		return;
+> >  }
+> >
+> > -static inline void lruvec_memcg_debug(struct lruvec *lruvec, struct page *page)
+> > +static inline void mem_cgroup_split_huge_fixup(struct page *head)
+> > +{
+> > +}
 > > +
-> >  	/* fetch the current per-cpu values */
-> >  	do {
-> >  		seq = __u64_stats_fetch_begin(&rstatc->bsync);
-> > @@ -326,8 +336,8 @@ static void cgroup_base_stat_flush(struct cgroup *cgrp, int cpu)
-> >  	cgroup_base_stat_add(&cgrp->bstat, &delta);
-> >  	cgroup_base_stat_add(&rstatc->last_bstat, &delta);
-> >  
-> > -	/* propagate global delta to parent */
-> > -	if (parent) {
-> > +	/* propagate global delta to parent (unless that's root) */
-> > +	if (cgroup_parent(parent)) {
+> > +static inline
+> > +unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+> > +                                           gfp_t gfp_mask,
+> > +                                           unsigned long *total_scanned)
+> >  {
+> > +       return 0;
 > 
-> Yeah, this makes sense. Can you add a short while-at-it note in the patch
-> description?
+> Any technical reason to move around mem_cgroup_soft_limit_reclaim(),
+> mem_cgroup_split_huge_fixup() and lruvec_memcg_debug() or just
+> aesthetics?
 
-Will do.
+Yeah, just a while-at-it cleanup. It seemed too minor to justify a
+separate patch.
 
-Thanks for the review!
+> >  #endif /* CONFIG_MEMCG */
+> >
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index 2f97cb4cef6d..5dc0bd53b64a 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -757,6 +757,11 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_node *mctz)
+> >         return mz;
+> >  }
+> >
+> > +static void memcg_flush_vmstats(struct mem_cgroup *memcg)
+> > +{
+> > +       cgroup_rstat_flush(memcg->css.cgroup);
+> > +}
+> 
+> cgroup_rstat_flush() has one line wrapper but cgroup_rstat_updated()
+> does not, any reason?
+
+cgroup_rstat_flush() seemed a bit low-level to sprinkle around the
+code base. Especially with cgroup_rstat_updated() encapsulated by the
+mod_memcg_state() layer, a reader of such a callsite might not easily
+understand what rstat even is and when and why it needs to be called.
+
+> > @@ -3618,6 +3569,8 @@ static unsigned long mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
+> >  {
+> >         unsigned long val;
+> >
+> > +       memcg_flush_vmstats(memcg);
+> > +
+> >         if (mem_cgroup_is_root(memcg)) {
+> 
+> I think memcg_flush_vmstats(memcg) should be here.
+
+Good catch! I'll fix that in the next revision.
+
+Thanks Shakeel
