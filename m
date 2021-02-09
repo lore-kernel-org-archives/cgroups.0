@@ -1,174 +1,145 @@
 From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: [PATCH v3 0/8] mm: memcontrol: switch to rstat
-Date: Tue,  9 Feb 2021 11:32:56 -0500
-Message-ID: <20210209163304.77088-1-hannes@cmpxchg.org>
+Subject: [PATCH v3 3/8] mm: memcontrol: privatize memcg_page_state query functions
+Date: Tue,  9 Feb 2021 11:32:59 -0500
+Message-ID: <20210209163304.77088-4-hannes@cmpxchg.org>
+References: <20210209163304.77088-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=XqwbjVKT92bgGmTwHneB7S6uqWbAlrDany7fE7oGT1Y=;
-        b=wl5iSzgZjMYgWkqOkI6F1OA6EQOr0VBwWz+1jGJaqi9r0iUCCJMwGfNy2ZgOyJmrST
-         vI9XWIPnkXj3pyoS9MC9dwZeK338IHOw9TivjHI1cpLlskJGdf5qqx53svtAV2vJ1MP+
-         4gjuaJl6/GvvI9OK4j1vD+s8KCK/lEJ3wnl16G3olAhs+NxlVEHkzb/mrooKe86FFG86
-         K8jc53i5n0xi4ZZKuID1hBG8PLcyVmjfJ00zIKKsi8iZzFGEwYc8oDqm+IViUkuIzBHA
-         TPd5DYSVcdaXjzcwLruGKXCJgCuxRWnF/I3rqeoMLw37Dnmv1MGK8blqtFqMuuXyLG9m
-         I1IA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=cyRE6cACCpenz5S22wUDNGiEebDEXlsVuxUU66sedEg=;
+        b=u/HDSEYp99RhO8kqQIIVwaAns/CtmccQ9gChZtsKMsP0WJwv841qFHb0cD60Q1fWDw
+         4GCwEjU06NTqK4M7OtBfHWm7a7XidL/c7E5qvQynNhyS2gI/r0t0ePrvf2mHSGJAsuz7
+         mLn4QMKjqClvDuKnSV7hLFm7zyh3SrC8zrxhLdphwbQdNDKUD8WVPzgHw5JEGhGBsuIo
+         Bf1KKn8yNDd01l4N1+6FLn0twzj4sbVI3Cc/py4066Q0MMnghnKnqlv9xjpoxstEuYBA
+         8/rM8j9Jb+ofG8V/fm0+LiysJI5wyCtSfbnO3ey11h6wn832ocT1rayRg9twROQXCoTK
+         CrTw==
+In-Reply-To: <20210209163304.77088-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
 Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-This is version 3 of the memcg rstat patches.
+There are no users outside of the memory controller itself. The rest
+of the kernel cares either about node or lruvec stats.
 
-Updates since v2:
-- optimize root level in io controller's rstat flush callback (Tejun)
-- add comments and changelog notes on root level optimization (Tejun)
-- eliminate mem_cgroup_usage() rstat flush for leaf cgroups (Shakeel)
-- collected review & ack tags
-
-Updates since v1:
-- added cgroup selftest output (see test section below) (thanks Roman)
-- patched cgroup selftest so error expectations match kernel implementation
-- added Fixes: tag to 'mm: memcontrol: fix cpuhotplug statistics flushing' (Shakeel)
-- collected review & ack tags
-- added rstat overview to 'mm: memcontrol: switch to rstat' changelog (Michal)
-- simplified memcg_flush_lruvec_page_state() and removed cpu==-1 case (Michal)
-
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Reviewed-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 ---
+ include/linux/memcontrol.h | 44 --------------------------------------
+ mm/memcontrol.c            | 32 +++++++++++++++++++++++++++
+ 2 files changed, 32 insertions(+), 44 deletions(-)
 
-This series converts memcg stats tracking to the streamlined rstat
-infrastructure provided by the cgroup core code. rstat is already used
-by the CPU controller and the IO controller. This change is motivated
-by recent accuracy problems in memcg's custom stats code, as well as
-the benefits of sharing common infra with other controllers.
-
-The current memcg implementation does batched tree aggregation on the
-write side: local stat changes are cached in per-cpu counters, which
-are then propagated upward in batches when a threshold (32 pages) is
-exceeded. This is cheap, but the error introduced by the lazy upward
-propagation adds up: 32 pages times CPUs times cgroups in the subtree.
-We've had complaints from service owners that the stats do not
-reliably track and react to allocation behavior as expected, sometimes
-swallowing the results of entire test applications.
-
-The original memcg stat implementation used to do tree aggregation
-exclusively on the read side: local stats would only ever be tracked
-in per-cpu counters, and a memory.stat read would iterate the entire
-subtree and sum those counters up. This didn't keep up with the times:
-
-- Cgroup trees are much bigger now. We switched to lazily-freed
-  cgroups, where deleted groups would hang around until their
-  remaining page cache has been reclaimed. This can result in large
-  subtrees that are expensive to walk, while most of the groups are
-  idle and their statistics don't change much anymore.
-
-- Automated monitoring increased. With the proliferation of userspace
-  oom killing, proactive reclaim, and higher-resolution logging of
-  workload trends in general, top-level stat files are polled at least
-  once a second in many deployments.
-
-- The lifetime of cgroups got shorter. Where most cgroup setups in the
-  past would have a few large policy-oriented cgroups for everything
-  running on the system, newer cgroup deployments tend to create one
-  group per application - which gets deleted again as the processes
-  exit. An aggregation scheme that doesn't retain child data inside
-  the parents loses event history of the subtree.
-
-Rstat addresses all three of those concerns through intelligent,
-persistent read-side aggregation. As statistics change at the local
-level, rstat tracks - on a per-cpu basis - only those parts of a
-subtree that have changes pending and require aggregation. The actual
-aggregation occurs on the colder read side - which can now skip over
-(potentially large) numbers of recently idle cgroups.
-
----
-
-The test_kmem cgroup selftest is currently failing due to excessive
-cumulative vmstat drift from 100 subgroups:
-
-    ok 1 test_kmem_basic
-    memory.current = 8810496
-    slab + anon + file + kernel_stack = 17074568
-    slab = 6101384
-    anon = 946176
-    file = 0
-    kernel_stack = 10027008
-    not ok 2 test_kmem_memcg_deletion
-    ok 3 test_kmem_proc_kpagecgroup
-    ok 4 test_kmem_kernel_stacks
-    ok 5 test_kmem_dead_cgroups
-    ok 6 test_percpu_basic
-
-As you can see, memory.stat items far exceed memory.current. The
-kernel stack alone is bigger than all of charged memory. That's
-because the memory of the test has been uncharged from memory.current,
-but the negative vmstat deltas are still sitting in the percpu caches.
-
-The test at this time isn't even counting percpu, pagetables etc. yet,
-which would further contribute to the error. The last patch in the
-series updates the test to include them - as well as reduces the
-vmstat tolerances in general to only expect page_counter batching.
-
-With all patches applied, the (now more stringent) test succeeds:
-
-    ok 1 test_kmem_basic
-    ok 2 test_kmem_memcg_deletion
-    ok 3 test_kmem_proc_kpagecgroup
-    ok 4 test_kmem_kernel_stacks
-    ok 5 test_kmem_dead_cgroups
-    ok 6 test_percpu_basic
-
----
-
-A kernel build test confirms that overhead is comparable. Two kernels
-are built simultaneously in a nested tree with several idle siblings:
-
-root - kernelbuild - one - two - three - four - build-a (defconfig, make -j16)
-                                             `- build-b (defconfig, make -j16)
-                                             `- idle-1
-                                             `- ...
-                                             `- idle-9
-
-During the builds, kernelbuild/memory.stat is read once a second.
-
-A perf diff shows that the changes in cycle distribution is
-minimal. Top 10 kernel symbols:
-
-     0.09%     +0.08%  [kernel.kallsyms]                       [k] __mod_memcg_lruvec_state
-     0.00%     +0.06%  [kernel.kallsyms]                       [k] cgroup_rstat_updated
-     0.08%     -0.05%  [kernel.kallsyms]                       [k] __mod_memcg_state.part.0
-     0.16%     -0.04%  [kernel.kallsyms]                       [k] release_pages
-     0.00%     +0.03%  [kernel.kallsyms]                       [k] __count_memcg_events
-     0.01%     +0.03%  [kernel.kallsyms]                       [k] mem_cgroup_charge_statistics.constprop.0
-     0.10%     -0.02%  [kernel.kallsyms]                       [k] get_mem_cgroup_from_mm
-     0.05%     -0.02%  [kernel.kallsyms]                       [k] mem_cgroup_update_lru_size
-     0.57%     +0.01%  [kernel.kallsyms]                       [k] asm_exc_page_fault
-
-
----
-
-The on-demand aggregated stats are now fully accurate:
-
-$ grep -e nr_inactive_file /proc/vmstat | awk '{print($1,$2*4096)}'; \
-  grep -e inactive_file /sys/fs/cgroup/memory.stat
-
-vanilla:                              patched:
-nr_inactive_file 1574105088           nr_inactive_file 1027801088
-   inactive_file 1577410560              inactive_file 1027801088
-
----
-
- block/blk-cgroup.c                         |  17 +-
- include/linux/memcontrol.h                 | 119 ++++-------
- kernel/cgroup/cgroup.c                     |  34 +--
- kernel/cgroup/rstat.c                      |  63 +++---
- mm/memcontrol.c                            | 305 +++++++++++++--------------
- tools/testing/selftests/cgroup/test_kmem.c |  22 +-
- 6 files changed, 267 insertions(+), 293 deletions(-)
-
-Based on v5.11-rc6-mmotm-2021-02-02-20-19.
-
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index c7f387a6233e..20ecdfae3289 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -867,39 +867,6 @@ struct mem_cgroup *lock_page_memcg(struct page *page);
+ void __unlock_page_memcg(struct mem_cgroup *memcg);
+ void unlock_page_memcg(struct page *page);
+ 
+-/*
+- * idx can be of type enum memcg_stat_item or node_stat_item.
+- * Keep in sync with memcg_exact_page_state().
+- */
+-static inline unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
+-{
+-	long x = atomic_long_read(&memcg->vmstats[idx]);
+-#ifdef CONFIG_SMP
+-	if (x < 0)
+-		x = 0;
+-#endif
+-	return x;
+-}
+-
+-/*
+- * idx can be of type enum memcg_stat_item or node_stat_item.
+- * Keep in sync with memcg_exact_page_state().
+- */
+-static inline unsigned long memcg_page_state_local(struct mem_cgroup *memcg,
+-						   int idx)
+-{
+-	long x = 0;
+-	int cpu;
+-
+-	for_each_possible_cpu(cpu)
+-		x += per_cpu(memcg->vmstats_local->stat[idx], cpu);
+-#ifdef CONFIG_SMP
+-	if (x < 0)
+-		x = 0;
+-#endif
+-	return x;
+-}
+-
+ void __mod_memcg_state(struct mem_cgroup *memcg, int idx, int val);
+ 
+ /* idx can be of type enum memcg_stat_item or node_stat_item */
+@@ -1337,17 +1304,6 @@ static inline void mem_cgroup_print_oom_group(struct mem_cgroup *memcg)
+ {
+ }
+ 
+-static inline unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
+-{
+-	return 0;
+-}
+-
+-static inline unsigned long memcg_page_state_local(struct mem_cgroup *memcg,
+-						   int idx)
+-{
+-	return 0;
+-}
+-
+ static inline void __mod_memcg_state(struct mem_cgroup *memcg,
+ 				     int idx,
+ 				     int nr)
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 7e05a4ebf80f..2f97cb4cef6d 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -789,6 +789,38 @@ void __mod_memcg_state(struct mem_cgroup *memcg, int idx, int val)
+ 	__this_cpu_write(memcg->vmstats_percpu->stat[idx], x);
+ }
+ 
++/*
++ * idx can be of type enum memcg_stat_item or node_stat_item.
++ * Keep in sync with memcg_exact_page_state().
++ */
++static unsigned long memcg_page_state(struct mem_cgroup *memcg, int idx)
++{
++	long x = atomic_long_read(&memcg->vmstats[idx]);
++#ifdef CONFIG_SMP
++	if (x < 0)
++		x = 0;
++#endif
++	return x;
++}
++
++/*
++ * idx can be of type enum memcg_stat_item or node_stat_item.
++ * Keep in sync with memcg_exact_page_state().
++ */
++static unsigned long memcg_page_state_local(struct mem_cgroup *memcg, int idx)
++{
++	long x = 0;
++	int cpu;
++
++	for_each_possible_cpu(cpu)
++		x += per_cpu(memcg->vmstats_local->stat[idx], cpu);
++#ifdef CONFIG_SMP
++	if (x < 0)
++		x = 0;
++#endif
++	return x;
++}
++
+ static struct mem_cgroup_per_node *
+ parent_nodeinfo(struct mem_cgroup_per_node *pn, int nid)
+ {
+-- 
+2.30.0
 
