@@ -1,40 +1,68 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] fs: buffer: use raw page_memcg() on locked page
-Date: Tue, 9 Feb 2021 11:12:18 -0800
-Message-ID: <CALvZod6jd5+H0jr8wyB_ivPcJzSYH-rCCQL64Hgg+D_wuAZZFg@mail.gmail.com>
-References: <20210209190126.97842-1-hannes@cmpxchg.org>
+From: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: [PATCH 3/3] mm: Fix missing mem cgroup soft limit tree updates
+Date: Tue,  9 Feb 2021 12:29:47 -0800
+Message-ID: <3b6e4e9aa8b3ee1466269baf23ed82d90a8f791c.1612902157.git.tim.c.chen@linux.intel.com>
+References: <cover.1612902157.git.tim.c.chen@linux.intel.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=4FXGsIN5T7fPPrN05ehbZdpVJVDuk872+BL495X4FDE=;
-        b=YvBxOcvDEJCqlebLaBfz/mFH6WfvwNvw+jQhAqduaI6hWBxU9A7ZskYOCf8zcRNuUL
-         LNbWWsUWHTLKYRhFQE7ZkmHbXyvJranSr8hnyxgHcM87KHuoJ9eUsuztqw3ewH1h8/DU
-         9YcegKtpf6/jTxL35RfgKtx9Rd1OBpJeO/ouB0m3udBtiglWVl7Lp6l3JA8RS47w9/J0
-         2dhI4ZOMi9bgsIRYK+d8DIvW4DTc2kMjCcTmIbo41C8RoVDL5ru3Dpa/g6a8Gvbc9xNu
-         PW6i+H6yvplDmsMMShk7HQ2tWFn96BXZ/4i4IcP8Nqc4o2ryZiRU0xfEw8EQ6+VEYUY0
-         L6kw==
-In-Reply-To: <20210209190126.97842-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+In-Reply-To: <cover.1612902157.git.tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue, Feb 9, 2021 at 11:01 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-> alloc_page_buffers() currently uses get_mem_cgroup_from_page() for
-> charging the buffers to the page owner, which does an rcu-protected
-> page->memcg lookup and acquires a reference. But buffer allocation has
-> the page lock held throughout, which pins the page to the memcg and
-> thereby the memcg - neither rcu nor holding an extra reference during
-> the allocation are necessary. Use a raw page_memcg() instead.
->
-> This was the last user of get_mem_cgroup_from_page(), delete it.
->
-> Reported-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+On a per node basis, the mem cgroup soft limit tree on each node tracks
+how much a cgroup has exceeded its soft limit memory limit and sorts
+the cgroup by its excess usage.  On page release, the trees are not
+updated right away, until we have gathered a batch of pages belonging to
+the same cgroup. This reduces the frequency of updating the soft limit tree
+and locking of the tree and associated cgroup.
 
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+However, the batch of pages could contain pages from multiple nodes but
+only the soft limit tree from one node would get updated.  Change the
+logic so that we update the tree in batch of pages, with each batch of
+pages all in the same mem cgroup and memory node.  An update is issued for
+the batch of pages of a node collected till now whenever we encounter
+a page belonging to a different node.
+
+Reviewed-by: Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+---
+ mm/memcontrol.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d72449eeb85a..f5a4a0e4e2ec 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -6804,6 +6804,7 @@ struct uncharge_gather {
+ 	unsigned long pgpgout;
+ 	unsigned long nr_kmem;
+ 	struct page *dummy_page;
++	int nid;
+ };
+ 
+ static inline void uncharge_gather_clear(struct uncharge_gather *ug)
+@@ -6849,7 +6850,9 @@ static void uncharge_page(struct page *page, struct uncharge_gather *ug)
+ 	 * exclusive access to the page.
+ 	 */
+ 
+-	if (ug->memcg != page_memcg(page)) {
++	if (ug->memcg != page_memcg(page) ||
++	    /* uncharge batch update soft limit tree on a node basis */
++	    (ug->dummy_page && ug->nid != page_to_nid(page))) {
+ 		if (ug->memcg) {
+ 			uncharge_batch(ug);
+ 			uncharge_gather_clear(ug);
+@@ -6869,6 +6872,7 @@ static void uncharge_page(struct page *page, struct uncharge_gather *ug)
+ 		ug->pgpgout++;
+ 
+ 	ug->dummy_page = page;
++	ug->nid = page_to_nid(page);
+ 	page->memcg_data = 0;
+ 	css_put(&ug->memcg->css);
+ }
+-- 
+2.20.1
+
