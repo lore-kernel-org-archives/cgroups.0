@@ -1,54 +1,75 @@
-From: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH 1/3] mm: Fix dropped memcg from mem cgroup soft limit tree
-Date: Tue,  9 Feb 2021 12:29:45 -0800
-Message-ID: <d50e3bb513845d1f7816b94733576ce6f798682a.1612902157.git.tim.c.chen@linux.intel.com>
-References: <cover.1612902157.git.tim.c.chen@linux.intel.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [PATCH] mm: page-writeback: simplify memcg handling in test_clear_page_writeback()
+Date: Tue,  9 Feb 2021 16:45:43 -0500
+Message-ID: <20210209214543.112655-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <cover.1612902157.git.tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=EwcA9/MPS0+DC3O3HQWukmve7xuaXcZk9slnXQmx7cE=;
+        b=wIT3T2WvKrwC5BKbIvNn7kdMwcTAScbRrfy18Jb8Zhtzgv/tJ/NMmI6yFeXmx+k+zt
+         IAMVDHXZ9uks34GmNs68sEqzbBojhsn2RgNG8RCvtrE6RHopwENBg3jbgh3LGG65XQSy
+         NPt/yTL38hj2tqZqevSZK70ul/wLkw9hmJljmQgwnVN0Q99ewpN7hr7kmujDldtFzpWZ
+         J3W4K3szU4FwoHmBaYJDgsjBKctQ9T/3G7pFtNBuctYp5HkpCtTX4W7eVEV7lzKHiRIs
+         I9/OKo/fFDMkIqhPr5e6FzDVIWPZhLcxuAgqgIIuNa2vpkc0rGZEX0eq0P7wzNG8aWVC
+         x8iA==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-During soft limit memory reclaim, we will temporarily remove the target
-mem cgroup from the cgroup soft limit tree.  We then perform memory
-reclaim, update the memory usage excess count and re-insert the mem
-cgroup back into the mem cgroup soft limit tree according to the new
-memory usage excess count.
+Page writeback doesn't hold a page reference, which allows truncate to
+free a page the second PageWriteback is cleared. This used to require
+special attention in test_clear_page_writeback(), where we had to be
+careful not to rely on the unstable page->memcg binding and look up
+all the necessary information before clearing the writeback flag.
 
-However, when memory reclaim failed for a maximum number of attempts
-and we bail out of the reclaim loop, we forgot to put the target mem
-cgroup chosen for next reclaim back to the soft limit tree. This prevented
-pages in the mem cgroup from being reclaimed in the future even though
-the mem cgroup exceeded its soft limit.  Fix the logic and put the mem
-cgroup back on the tree when page reclaim failed for the mem cgroup.
+Since commit 073861ed77b6 ("mm: fix VM_BUG_ON(PageTail) and
+BUG_ON(PageWriteback)") test_clear_page_writeback() is called with an
+explicit reference on the page, and this dance is no longer needed.
 
-Reviewed-by: Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Use unlock_page_memcg() and dec_lruvec_page_stat() directly.
+
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 ---
- mm/memcontrol.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ mm/page-writeback.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ed5cc78a8dbf..a51bf90732cb 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3505,8 +3505,12 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
- 			loop > MEM_CGROUP_MAX_SOFT_LIMIT_RECLAIM_LOOPS))
- 			break;
- 	} while (!nr_reclaimed);
--	if (next_mz)
-+	if (next_mz) {
-+		spin_lock_irq(&mctz->lock);
-+		__mem_cgroup_insert_exceeded(next_mz, mctz, excess);
-+		spin_unlock_irq(&mctz->lock);
- 		css_put(&next_mz->memcg->css);
-+	}
- 	return nr_reclaimed;
+diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+index eb34d204d4ee..f6c2c3165d4d 100644
+--- a/mm/page-writeback.c
++++ b/mm/page-writeback.c
+@@ -2722,12 +2722,9 @@ EXPORT_SYMBOL(clear_page_dirty_for_io);
+ int test_clear_page_writeback(struct page *page)
+ {
+ 	struct address_space *mapping = page_mapping(page);
+-	struct mem_cgroup *memcg;
+-	struct lruvec *lruvec;
+ 	int ret;
+ 
+-	memcg = lock_page_memcg(page);
+-	lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
++	lock_page_memcg(page);
+ 	if (mapping && mapping_use_writeback_tags(mapping)) {
+ 		struct inode *inode = mapping->host;
+ 		struct backing_dev_info *bdi = inode_to_bdi(inode);
+@@ -2755,11 +2752,11 @@ int test_clear_page_writeback(struct page *page)
+ 		ret = TestClearPageWriteback(page);
+ 	}
+ 	if (ret) {
+-		dec_lruvec_state(lruvec, NR_WRITEBACK);
++		dec_lruvec_page_state(page, NR_WRITEBACK);
+ 		dec_zone_page_state(page, NR_ZONE_WRITE_PENDING);
+ 		inc_node_page_state(page, NR_WRITTEN);
+ 	}
+-	__unlock_page_memcg(memcg);
++	unlock_page_memcg(page);
+ 	return ret;
  }
  
 -- 
-2.20.1
+2.30.0
 
