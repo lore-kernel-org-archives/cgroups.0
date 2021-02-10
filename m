@@ -1,44 +1,95 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH stable 4.9] mm: memcontrol: fix NULL pointer crash in
+From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] mm: page-writeback: simplify memcg handling in
  test_clear_page_writeback()
-Date: Tue, 9 Feb 2021 16:19:46 -0500
-Message-ID: <YCL8cnXFtpdnAAUj@cmpxchg.org>
-References: <20210209202616.2257512-1-f.fainelli@gmail.com>
+Date: Tue, 9 Feb 2021 21:16:37 -0800 (PST)
+Message-ID: <alpine.LSU.2.11.2102092058290.7553@eggly.anvils>
+References: <20210209214543.112655-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=E+GwgIRGKbJyN6BMx9osGrabexMLPqEhC8h9yJvwcPI=;
-        b=qVg6eWt/p+mtaLHMJ3UMS3pa7cP8tRdSZltmlPVvywtYM1Xz2GgR7lvaILGqsvNc5q
-         vYrdlEDpJ6LAExkiYJ+B2vgDJ4ic2ZFx3wDChTDEaZfGBOTtJtLCbFQKoE4/Vk9+CRMe
-         /MncFu/kd8cMm7K8t7NNOuyjR2eP2G5CTovSmA03FmKDfH7k80wPNw51QigLDkuqVVoO
-         9Jsosv3nlBPAAyWAq3Pt67mVcQfjR5jY5YDPEDWGyqd4Kp1yax1q4OadysJ422FdpCbt
-         WX/JTNoTftwxDefcRi52Porkf9IdP/D/O6sbzPHti4g2tYZ9YwaiO2XPK1xOKsZWKK6h
-         TUWw==
-Content-Disposition: inline
-In-Reply-To: <20210209202616.2257512-1-f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=Q8+AD77bMtoNW/HBzmZ8xMNYIgN4sAwD1/ADY3ZtEEk=;
+        b=Fdroa3m70eD8+7KTxXuHTcUNnT7RKmI2+/ujf5yGEJfyh0W9IHuWdQ5VrHoRK6KiKO
+         orVrw72k5YjskoOG5UvgLdG/VhwDwAzL+AT5d8n9kKs8NOrUjf1eD9km4BYGH86kloyE
+         na4Au9OoCTeFEnN4rZy0olzery/o76zJWHL/F4q0Er3uC2Wu2BN/BydsGVBJ9vFNEjv3
+         DGOM99xnrf4CLCxsyb52Jb4BBg+fytIkav8i4ZzrLv+joPRR4Zjr5LcjOKlhUVM9M64i
+         yf1ht/CMGODtIeTCmM5Y/XlMCZ7q21rDcMYbIM7kF3RiQZGI0RCBgeQvIwBdMrMHhydS
+         lARA==
+In-Reply-To: <20210209214543.112655-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jaegeuk Kim <jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Bradley Bolen <bradleybolen-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Vladimir Davydov <vdavydov-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Prakash Gupta <guptap-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP - MEMORY RESOURCE CONTROLLER (MEMCG)" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Tue, Feb 09, 2021 at 12:26:15PM -0800, Florian Fainelli wrote:
-> From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> 
-> commit 739f79fc9db1b38f96b5a5109b247a650fbebf6d upstream
+On Tue, 9 Feb 2021, Johannes Weiner wrote:
 
-...
+> Page writeback doesn't hold a page reference, which allows truncate to
+> free a page the second PageWriteback is cleared. This used to require
+> special attention in test_clear_page_writeback(), where we had to be
+> careful not to rely on the unstable page->memcg binding and look up
+> all the necessary information before clearing the writeback flag.
+> 
+> Since commit 073861ed77b6 ("mm: fix VM_BUG_ON(PageTail) and
+> BUG_ON(PageWriteback)") test_clear_page_writeback() is called with an
+> explicit reference on the page, and this dance is no longer needed.
+> 
+> Use unlock_page_memcg() and dec_lruvec_page_stat() directly.
 
-> This patch is present in a downstream Android tree:
-> 
-> https://source.mcwhirter.io/craige/bluecross/commit/d4a742865c6b69ef931694745ef54965d7c9966c
-> 
-> and I happened to have stumbled across the same problem too.
-> 
-> Johannes can you review it for correctness with respect to the 4.9
-> kernel? Thanks!
+s/stat()/state()/
 
-Looks good to me.
+This is a nice cleanup: I hadn't seen that connection at all.
+
+But I think you should take it further:
+__unlock_page_memcg() can then be static in mm/memcontrol.c,
+and its declarations deleted from include/linux/memcontrol.h?
+
+And further: delete __dec_lruvec_state() and dec_lruvec_state()
+from include/linux/vmstat.h - unless you feel that every "inc"
+ought to be matched by a "dec", even when unused.
+
+> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+
+Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+
+> ---
+>  mm/page-writeback.c | 9 +++------
+>  1 file changed, 3 insertions(+), 6 deletions(-)
+> 
+> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+> index eb34d204d4ee..f6c2c3165d4d 100644
+> --- a/mm/page-writeback.c
+> +++ b/mm/page-writeback.c
+> @@ -2722,12 +2722,9 @@ EXPORT_SYMBOL(clear_page_dirty_for_io);
+>  int test_clear_page_writeback(struct page *page)
+>  {
+>  	struct address_space *mapping = page_mapping(page);
+> -	struct mem_cgroup *memcg;
+> -	struct lruvec *lruvec;
+>  	int ret;
+>  
+> -	memcg = lock_page_memcg(page);
+> -	lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+> +	lock_page_memcg(page);
+>  	if (mapping && mapping_use_writeback_tags(mapping)) {
+>  		struct inode *inode = mapping->host;
+>  		struct backing_dev_info *bdi = inode_to_bdi(inode);
+> @@ -2755,11 +2752,11 @@ int test_clear_page_writeback(struct page *page)
+>  		ret = TestClearPageWriteback(page);
+>  	}
+>  	if (ret) {
+> -		dec_lruvec_state(lruvec, NR_WRITEBACK);
+> +		dec_lruvec_page_state(page, NR_WRITEBACK);
+>  		dec_zone_page_state(page, NR_ZONE_WRITE_PENDING);
+>  		inc_node_page_state(page, NR_WRITTEN);
+>  	}
+> -	__unlock_page_memcg(memcg);
+> +	unlock_page_memcg(page);
+>  	return ret;
+>  }
+>  
+> -- 
+> 2.30.0
