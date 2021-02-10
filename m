@@ -1,85 +1,91 @@
 From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 2/3] mm: Force update of mem cgroup soft limit tree on
- usage excess
-Date: Wed, 10 Feb 2021 10:51:04 +0100
-Message-ID: <YCOsiM5towVQwmjy@dhcp22.suse.cz>
+Subject: Re: [PATCH 3/3] mm: Fix missing mem cgroup soft limit tree updates
+Date: Wed, 10 Feb 2021 11:08:15 +0100
+Message-ID: <YCOwjz/F15wci5qG@dhcp22.suse.cz>
 References: <cover.1612902157.git.tim.c.chen@linux.intel.com>
- <90ef1dbc8ba6112794a3d09ecfed73f385f08eb7.1612902157.git.tim.c.chen@linux.intel.com>
+ <3b6e4e9aa8b3ee1466269baf23ed82d90a8f791c.1612902157.git.tim.c.chen@linux.intel.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1612950667; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1612951696; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=CAFzAyZy/KFZTsu+ARXaCj+Xnf0VYpa/fyIfFuwi9+E=;
-        b=YUq56y6mtYH/Zv/QM5JMteooatovb8ZVwTA95QkzipN8TrrweOCA2kd/E4vxFBA8rRv/TC
-        KacdaHK0HaJxMz0S1v9EbDcIGgfr77mN3pQpz3D4aIvttYIWmFZX86ZrhHqQzGuaRftQz/
-        +rE8Is9r5TMyPepqPzAgq8PzSP3lPw0=
+        bh=Ig9aYUdY0A4bRb/viKrqlRI25TdZpdS3B9s1FAQ8d5M=;
+        b=RmTN3T8/hICAOC6l1XMuobPQa8aGQBEt6sUVbhhqfPzbXPp+lhGVtVyXxTbsWfvsph963Y
+        Y1kkh53nLblH/DL0vjjcxYLKFTWG2ENavtqu0YDAbpmAWSF91HpdIw5A9ksXepM6G9BQTb
+        2HvhpCJwB3kbezOlEomfoSNoAl56rhQ=
 Content-Disposition: inline
-In-Reply-To: <90ef1dbc8ba6112794a3d09ecfed73f385f08eb7.1612902157.git.tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+In-Reply-To: <3b6e4e9aa8b3ee1466269baf23ed82d90a8f791c.1612902157.git.tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 09-02-21 12:29:46, Tim Chen wrote:
-> To rate limit updates to the mem cgroup soft limit tree, we only perform
-> updates every SOFTLIMIT_EVENTS_TARGET (defined as 1024) memory events.
+On Tue 09-02-21 12:29:47, Tim Chen wrote:
+> On a per node basis, the mem cgroup soft limit tree on each node tracks
+> how much a cgroup has exceeded its soft limit memory limit and sorts
+> the cgroup by its excess usage.  On page release, the trees are not
+> updated right away, until we have gathered a batch of pages belonging to
+> the same cgroup. This reduces the frequency of updating the soft limit tree
+> and locking of the tree and associated cgroup.
 > 
-> However, this sampling based updates may miss a critical update: i.e. when
-> the mem cgroup first exceeded its limit but it was not on the soft limit tree.
-> It should be on the tree at that point so it could be subjected to soft
-> limit page reclaim. If the mem cgroup had few memory events compared with
-> other mem cgroups, we may not update it and place in on the mem cgroup
-> soft limit tree for many memory events.  And this mem cgroup excess
-> usage could creep up and the mem cgroup could be hidden from the soft
-> limit page reclaim for a long time.
+> However, the batch of pages could contain pages from multiple nodes but
+> only the soft limit tree from one node would get updated.  Change the
+> logic so that we update the tree in batch of pages, with each batch of
+> pages all in the same mem cgroup and memory node.  An update is issued for
+> the batch of pages of a node collected till now whenever we encounter
+> a page belonging to a different node.
 
-Have you observed this happening in the real life? I do agree that the
-threshold based updates of the tree is not ideal but the whole soft
-reclaim code is far from optimal. So why do we care only now? The
-feature is essentially dead and fine tuning it sounds like a step back
-to me.
+I do agree with Johannes here. This shouldn't be done unconditionally
+for all memcgs. Wouldn't it be much better to do the fix up in the
+mem_cgroup_soft_reclaim path instead. Simply check the excess before
+doing any reclaim?
 
-> Fix this issue by forcing an update to the mem cgroup soft limit tree if a
-> mem cgroup has exceeded its memory soft limit but it is not on the mem
-> cgroup soft limit tree.
-> 
+Btw. have you seen this triggering a noticeable misbehaving? I would
+expect this to have a rather small effect considering how many sources
+of memcg_check_events we have.
+
+Unless I have missed something this has been introduced by 747db954cab6
+("mm: memcontrol: use page lists for uncharge batching"). Please add
+Fixes tag as well if this is really worth fixing.
+
 > Reviewed-by: Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 > Signed-off-by: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 > ---
->  mm/memcontrol.c | 11 +++++++++--
->  1 file changed, 9 insertions(+), 2 deletions(-)
+>  mm/memcontrol.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
 > 
 > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index a51bf90732cb..d72449eeb85a 100644
+> index d72449eeb85a..f5a4a0e4e2ec 100644
 > --- a/mm/memcontrol.c
 > +++ b/mm/memcontrol.c
-> @@ -985,15 +985,22 @@ static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
->   */
->  static void memcg_check_events(struct mem_cgroup *memcg, struct page *page)
->  {
-> +	struct mem_cgroup_per_node *mz;
-> +	bool force_update = false;
-> +
-> +	mz = mem_cgroup_nodeinfo(memcg, page_to_nid(page));
-> +	if (mz && !mz->on_tree && soft_limit_excess(mz->memcg) > 0)
-> +		force_update = true;
-> +
->  	/* threshold event is triggered in finer grain than soft limit */
-> -	if (unlikely(mem_cgroup_event_ratelimit(memcg,
-> +	if (unlikely((force_update) || mem_cgroup_event_ratelimit(memcg,
->  						MEM_CGROUP_TARGET_THRESH))) {
->  		bool do_softlimit;
+> @@ -6804,6 +6804,7 @@ struct uncharge_gather {
+>  	unsigned long pgpgout;
+>  	unsigned long nr_kmem;
+>  	struct page *dummy_page;
+> +	int nid;
+>  };
 >  
->  		do_softlimit = mem_cgroup_event_ratelimit(memcg,
->  						MEM_CGROUP_TARGET_SOFTLIMIT);
->  		mem_cgroup_threshold(memcg);
-> -		if (unlikely(do_softlimit))
-> +		if (unlikely((force_update) || do_softlimit))
->  			mem_cgroup_update_tree(memcg, page);
->  	}
+>  static inline void uncharge_gather_clear(struct uncharge_gather *ug)
+> @@ -6849,7 +6850,9 @@ static void uncharge_page(struct page *page, struct uncharge_gather *ug)
+>  	 * exclusive access to the page.
+>  	 */
+>  
+> -	if (ug->memcg != page_memcg(page)) {
+> +	if (ug->memcg != page_memcg(page) ||
+> +	    /* uncharge batch update soft limit tree on a node basis */
+> +	    (ug->dummy_page && ug->nid != page_to_nid(page))) {
+>  		if (ug->memcg) {
+>  			uncharge_batch(ug);
+>  			uncharge_gather_clear(ug);
+> @@ -6869,6 +6872,7 @@ static void uncharge_page(struct page *page, struct uncharge_gather *ug)
+>  		ug->pgpgout++;
+>  
+>  	ug->dummy_page = page;
+> +	ug->nid = page_to_nid(page);
+>  	page->memcg_data = 0;
+>  	css_put(&ug->memcg->css);
 >  }
 > -- 
 > 2.20.1
