@@ -1,7 +1,7 @@
 From: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH 3/4] mm: memcontrol: bail out early when id is zero
-Date: Sat, 13 Feb 2021 01:01:58 +0800
-Message-ID: <20210212170159.32153-3-songmuchun@bytedance.com>
+Subject: [PATCH 4/4] mm: memcontrol: fix swap uncharge on cgroup v2
+Date: Sat, 13 Feb 2021 01:01:59 +0800
+Message-ID: <20210212170159.32153-4-songmuchun@bytedance.com>
 References: <20210212170159.32153-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,41 +10,43 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=uMiCMlqqsGt4v3DIDBbc5Tzpa+oMrTR3N8I/PD9p2nk=;
-        b=NmStyGwgQEnVNrqN5Ubtgd25sYfpL8IXtOClOXbtc4s/sjMIQFqvb31t0DYjJZidM1
-         gCU3y8v0DWb3bByea+46x2tO/zxaZI0DLjF8Y1CVsBZu6wD68sRHZXdAlzW5+0pqOwTT
-         TM3Jb8qnl9xOL4mWSIZj8Q1QL2ERlMxEY4F9uzUa1wjlotEQZKxZVjviz3OXd8WsF/Rg
-         jFVabi1XtYlsOwbqnSNgovnWpCfmsOpZKBCmrxZU1f8vkqYrTp2sVvrX738HsEIw8MFn
-         blBu6Yfthn9vxzvgemOvsKgO0ZWZHZw99ZIC5oXvfM3NPLKZaY4jXeVvJfxkeLuu24Wy
-         6/NQ==
+        bh=7mHQ3glb31sFuwvoGcKO+DumCO9HSr0Bb7Nri9jWV50=;
+        b=mAnF3VGeuW6pSRvu2LN2xqj+dzYyLwh/OPEDqMeHluwaz2poT5if4WhFnoBubDskRD
+         WhemKL3Sc0cI5yOpXFf9KOI9IxspEKlb0Yx00kM0w2z3lZWpHDh9nEqUqtIJIKQPqLA5
+         xcpTmN54VOVH83PLYEfe7rFxnQwCu3TC8LcM+lp8sY5f2JdsTwXNHNUz/KY0RPxxBpqK
+         ZJB6hm8JCvRjPWPpLFw2sWnkKZDw26g3HarWaEIjaNl5953EBj7UaCDr50tnWTqaScTC
+         rvhmQZW1Vgq9yaElWbZpHKpFG09EA5M7Ga5tjZxGq+ijpVfQQ8fzo1Axg+qd6FtjiW1J
+         52Uw==
 In-Reply-To: <20210212170159.32153-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org
 Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 
-The memcg ID cannot be zero, but we can pass zero to mem_cgroup_from_id,
-so idr_find() is pointless and wastes CPU cycles.
+The swap charges the actual number of swap entries on cgroup v2.
+If a swap cache page is charged successful, and then we uncharge
+the swap counter. It is wrong on cgroup v2. Because the swap
+entry is not freed.
 
+Fixes: 2d1c498072de ("mm: memcontrol: make swap tracking an integral part of memory control")
 Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 ---
- mm/memcontrol.c | 3 +++
- 1 file changed, 3 insertions(+)
+ mm/memcontrol.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a3f26522765a..68ed4b297c13 100644
+index c737c8f05992..be6bc5044150 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -5173,6 +5173,9 @@ static inline void mem_cgroup_id_put(struct mem_cgroup *memcg)
- struct mem_cgroup *mem_cgroup_from_id(unsigned short id)
- {
- 	WARN_ON_ONCE(!rcu_read_lock_held());
-+	/* The memcg ID cannot be zero. */
-+	if (id == 0)
-+		return NULL;
- 	return idr_find(&mem_cgroup_idr, id);
- }
+@@ -6753,7 +6753,7 @@ int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask)
+ 	memcg_check_events(memcg, page);
+ 	local_irq_enable();
  
+-	if (PageSwapCache(page)) {
++	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && PageSwapCache(page)) {
+ 		swp_entry_t entry = { .val = page_private(page) };
+ 		/*
+ 		 * The swap entry might not get freed for a long time,
 -- 
 2.11.0
 
