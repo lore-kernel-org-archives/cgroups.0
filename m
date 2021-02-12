@@ -1,207 +1,260 @@
-From: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2] cpu/hotplug: wait for cpuset_hotplug_work to finish on cpu onlining
-Date: Fri, 12 Feb 2021 00:30:32 +0000
-Message-ID: <20210212003032.2037750-1-aklimov@redhat.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v2] mm: page-writeback: simplify memcg handling in
+ test_clear_page_writeback()
+Date: Fri, 12 Feb 2021 11:05:31 +0100
+Message-ID: <YCZS6yKKsGCWZQj1@dhcp22.suse.cz>
+References: <20210209214543.112655-1-hannes@cmpxchg.org>
+ <alpine.LSU.2.11.2102092058290.7553@eggly.anvils>
+ <alpine.LSU.2.11.2102100813050.8131@eggly.anvils>
+ <YCQbYAWg4nvBFL6h@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1613089840;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=NLMPxtrDedh1aXRblNSj1Q9oYWpm+CQpAnETAilPvG4=;
-        b=YA32vMG35laHrDX9OT0RKVaPAgw6nI0ZobjLUDQrIz08U4JcnM/qqzgapNBrZCQQoTRQfJ
-        vIqU2X6PRso7NT/IkOvWoFNMbtroYX383iOnkFxBj6gVMFxcl2uf5bSFV6dIGh5UEC2uGV
-        AgzoeEpajNClBKKSnRLGd2Kmull5hHM=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1613124332; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=DCMU+SNVi9LrmGxlBwBdqGWjuIz/B/V9ZdK3fwnkJ4o=;
+        b=E7NcXPfWBUJmcZoA0RwgIJRCJZBZ7N/EncAEAq6h0yU4Yav0ZaIvYQh0TQ/bFt6kvTRMRw
+        pC51eOvinqYijIAjvrztJK5Obe4izKvquhhn+zffFuyip5lKGhhAzIusP7NOqOkBkBDNCE
+        josfV6qx7+IuEosXWGrDazb+gfYwq4U=
+Content-Disposition: inline
+In-Reply-To: <YCQbYAWg4nvBFL6h-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, qais.yousef-5wv7dgnIgG8@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-When a CPU offlined and onlined via device_offline() and device_online()
-the userspace gets uevent notification. If, after receiving "online" uevent,
-userspace executes sched_setaffinity() on some task trying to move it
-to a recently onlined CPU, then it often fails with -EINVAL. Userspace needs
-to wait around 5..30 ms before sched_setaffinity() will succeed for recently
-onlined CPU after receiving uevent.
+On Wed 10-02-21 12:44:00, Johannes Weiner wrote:
+[...]
+> >From 5bcc0f468460aa2670c40318bb657e8b08ef96d5 Mon Sep 17 00:00:00 2001
+> From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Date: Tue, 9 Feb 2021 16:22:42 -0500
+> Subject: [PATCH] mm: page-writeback: simplify memcg handling in
+>  test_clear_page_writeback()
+> 
+> Page writeback doesn't hold a page reference, which allows truncate to
+> free a page the second PageWriteback is cleared. This used to require
+> special attention in test_clear_page_writeback(), where we had to be
+> careful not to rely on the unstable page->memcg binding and look up
+> all the necessary information before clearing the writeback flag.
+> 
+> Since commit 073861ed77b6 ("mm: fix VM_BUG_ON(PageTail) and
+> BUG_ON(PageWriteback)") test_clear_page_writeback() is called with an
+> explicit reference on the page, and this dance is no longer needed.
+> 
+> Use unlock_page_memcg() and dec_lruvec_page_state() directly.
+> 
+> This removes the last user of the lock_page_memcg() return value,
+> change it to void. Touch up the comments in there as well. This also
+> removes the last extern user of __unlock_page_memcg(), make it
+> static. Further, it removes the last user of dec_lruvec_state(),
+> delete it, along with a few other unused helpers.
+> 
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-If in_mask argument for sched_setaffinity() has only recently onlined CPU,
-it often fails with such flow:
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
 
-  sched_setaffinity()
-    cpuset_cpus_allowed()
-      guarantee_online_cpus()   <-- cs->effective_cpus mask does not
-                                        contain recently onlined cpu
-    cpumask_and()               <-- final new_mask is empty
-    __set_cpus_allowed_ptr()
-      cpumask_any_and_distribute() <-- returns dest_cpu equal to nr_cpu_ids
-      returns -EINVAL
+Thanks!
 
-Cpusets used in guarantee_online_cpus() are updated using workqueue from
-cpuset_update_active_cpus() which in its turn is called from cpu hotplug callback
-sched_cpu_activate() hence it may not be observable by sched_setaffinity() if
-it is called immediately after uevent.
-Out of line uevent can be avoided if we will ensure that cpuset_hotplug_work
-has run to completion using cpuset_wait_for_hotplug() after onlining the
-cpu in cpu_device_up() and in cpuhp_smt_enable().
+> ---
+>  include/linux/memcontrol.h | 10 ++--------
+>  include/linux/vmstat.h     | 24 +++---------------------
+>  mm/memcontrol.c            | 36 +++++++++++-------------------------
+>  mm/page-writeback.c        |  9 +++------
+>  4 files changed, 19 insertions(+), 60 deletions(-)
+> 
+> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+> index a44b2d51aecc..b17053af3287 100644
+> --- a/include/linux/memcontrol.h
+> +++ b/include/linux/memcontrol.h
+> @@ -874,8 +874,7 @@ void mem_cgroup_print_oom_group(struct mem_cgroup *memcg);
+>  extern bool cgroup_memory_noswap;
+>  #endif
+>  
+> -struct mem_cgroup *lock_page_memcg(struct page *page);
+> -void __unlock_page_memcg(struct mem_cgroup *memcg);
+> +void lock_page_memcg(struct page *page);
+>  void unlock_page_memcg(struct page *page);
+>  
+>  void __mod_memcg_state(struct mem_cgroup *memcg, int idx, int val);
+> @@ -1269,12 +1268,7 @@ mem_cgroup_print_oom_meminfo(struct mem_cgroup *memcg)
+>  {
+>  }
+>  
+> -static inline struct mem_cgroup *lock_page_memcg(struct page *page)
+> -{
+> -	return NULL;
+> -}
+> -
+> -static inline void __unlock_page_memcg(struct mem_cgroup *memcg)
+> +static inline void lock_page_memcg(struct page *page)
+>  {
+>  }
+>  
+> diff --git a/include/linux/vmstat.h b/include/linux/vmstat.h
+> index 506d625163a1..3299cd69e4ca 100644
+> --- a/include/linux/vmstat.h
+> +++ b/include/linux/vmstat.h
+> @@ -512,16 +512,10 @@ static inline void mod_lruvec_page_state(struct page *page,
+>  
+>  #endif /* CONFIG_MEMCG */
+>  
+> -static inline void __inc_lruvec_state(struct lruvec *lruvec,
+> -				      enum node_stat_item idx)
+> -{
+> -	__mod_lruvec_state(lruvec, idx, 1);
+> -}
+> -
+> -static inline void __dec_lruvec_state(struct lruvec *lruvec,
+> -				      enum node_stat_item idx)
+> +static inline void inc_lruvec_state(struct lruvec *lruvec,
+> +				    enum node_stat_item idx)
+>  {
+> -	__mod_lruvec_state(lruvec, idx, -1);
+> +	mod_lruvec_state(lruvec, idx, 1);
+>  }
+>  
+>  static inline void __inc_lruvec_page_state(struct page *page,
+> @@ -536,18 +530,6 @@ static inline void __dec_lruvec_page_state(struct page *page,
+>  	__mod_lruvec_page_state(page, idx, -1);
+>  }
+>  
+> -static inline void inc_lruvec_state(struct lruvec *lruvec,
+> -				    enum node_stat_item idx)
+> -{
+> -	mod_lruvec_state(lruvec, idx, 1);
+> -}
+> -
+> -static inline void dec_lruvec_state(struct lruvec *lruvec,
+> -				    enum node_stat_item idx)
+> -{
+> -	mod_lruvec_state(lruvec, idx, -1);
+> -}
+> -
+>  static inline void inc_lruvec_page_state(struct page *page,
+>  					 enum node_stat_item idx)
+>  {
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 9e455815fb7a..e29d3d64c27e 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -2124,11 +2124,10 @@ void mem_cgroup_print_oom_group(struct mem_cgroup *memcg)
+>   * This function protects unlocked LRU pages from being moved to
+>   * another cgroup.
+>   *
+> - * It ensures lifetime of the returned memcg. Caller is responsible
+> - * for the lifetime of the page; __unlock_page_memcg() is available
+> - * when @page might get freed inside the locked section.
+> + * It ensures lifetime of the locked memcg. Caller is responsible
+> + * for the lifetime of the page.
+>   */
+> -struct mem_cgroup *lock_page_memcg(struct page *page)
+> +void lock_page_memcg(struct page *page)
+>  {
+>  	struct page *head = compound_head(page); /* rmap on tail pages */
+>  	struct mem_cgroup *memcg;
+> @@ -2138,21 +2137,15 @@ struct mem_cgroup *lock_page_memcg(struct page *page)
+>  	 * The RCU lock is held throughout the transaction.  The fast
+>  	 * path can get away without acquiring the memcg->move_lock
+>  	 * because page moving starts with an RCU grace period.
+> -	 *
+> -	 * The RCU lock also protects the memcg from being freed when
+> -	 * the page state that is going to change is the only thing
+> -	 * preventing the page itself from being freed. E.g. writeback
+> -	 * doesn't hold a page reference and relies on PG_writeback to
+> -	 * keep off truncation, migration and so forth.
+>           */
+>  	rcu_read_lock();
+>  
+>  	if (mem_cgroup_disabled())
+> -		return NULL;
+> +		return;
+>  again:
+>  	memcg = page_memcg(head);
+>  	if (unlikely(!memcg))
+> -		return NULL;
+> +		return;
+>  
+>  #ifdef CONFIG_PROVE_LOCKING
+>  	local_irq_save(flags);
+> @@ -2161,7 +2154,7 @@ struct mem_cgroup *lock_page_memcg(struct page *page)
+>  #endif
+>  
+>  	if (atomic_read(&memcg->moving_account) <= 0)
+> -		return memcg;
+> +		return;
+>  
+>  	spin_lock_irqsave(&memcg->move_lock, flags);
+>  	if (memcg != page_memcg(head)) {
+> @@ -2170,24 +2163,17 @@ struct mem_cgroup *lock_page_memcg(struct page *page)
+>  	}
+>  
+>  	/*
+> -	 * When charge migration first begins, we can have locked and
+> -	 * unlocked page stat updates happening concurrently.  Track
+> -	 * the task who has the lock for unlock_page_memcg().
+> +	 * When charge migration first begins, we can have multiple
+> +	 * critical sections holding the fast-path RCU lock and one
+> +	 * holding the slowpath move_lock. Track the task who has the
+> +	 * move_lock for unlock_page_memcg().
+>  	 */
+>  	memcg->move_lock_task = current;
+>  	memcg->move_lock_flags = flags;
+> -
+> -	return memcg;
+>  }
+>  EXPORT_SYMBOL(lock_page_memcg);
+>  
+> -/**
+> - * __unlock_page_memcg - unlock and unpin a memcg
+> - * @memcg: the memcg
+> - *
+> - * Unlock and unpin a memcg returned by lock_page_memcg().
+> - */
+> -void __unlock_page_memcg(struct mem_cgroup *memcg)
+> +static void __unlock_page_memcg(struct mem_cgroup *memcg)
+>  {
+>  	if (memcg && memcg->move_lock_task == current) {
+>  		unsigned long flags = memcg->move_lock_flags;
+> diff --git a/mm/page-writeback.c b/mm/page-writeback.c
+> index eb34d204d4ee..f6c2c3165d4d 100644
+> --- a/mm/page-writeback.c
+> +++ b/mm/page-writeback.c
+> @@ -2722,12 +2722,9 @@ EXPORT_SYMBOL(clear_page_dirty_for_io);
+>  int test_clear_page_writeback(struct page *page)
+>  {
+>  	struct address_space *mapping = page_mapping(page);
+> -	struct mem_cgroup *memcg;
+> -	struct lruvec *lruvec;
+>  	int ret;
+>  
+> -	memcg = lock_page_memcg(page);
+> -	lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
+> +	lock_page_memcg(page);
+>  	if (mapping && mapping_use_writeback_tags(mapping)) {
+>  		struct inode *inode = mapping->host;
+>  		struct backing_dev_info *bdi = inode_to_bdi(inode);
+> @@ -2755,11 +2752,11 @@ int test_clear_page_writeback(struct page *page)
+>  		ret = TestClearPageWriteback(page);
+>  	}
+>  	if (ret) {
+> -		dec_lruvec_state(lruvec, NR_WRITEBACK);
+> +		dec_lruvec_page_state(page, NR_WRITEBACK);
+>  		dec_zone_page_state(page, NR_ZONE_WRITE_PENDING);
+>  		inc_node_page_state(page, NR_WRITTEN);
+>  	}
+> -	__unlock_page_memcg(memcg);
+> +	unlock_page_memcg(page);
+>  	return ret;
+>  }
+>  
+> -- 
+> 2.30.0
+> 
 
-Co-analyzed-by: Joshua Baker <jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
-
-Previous patches and discussion are:
-RFC patch: https://lore.kernel.org/lkml/20201203171431.256675-1-aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
-v1 patch:  https://lore.kernel.org/lkml/20210204010157.1823669-1-aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
-
-The commit a49e4629b5ed "cpuset: Make cpuset hotplug synchronous"
-would also get rid of the early uevent but it was reverted (deadlocks).
-
-The nature of this bug is also described here (with different consequences):
-https://lore.kernel.org/lkml/20200211141554.24181-1-qais.yousef-5wv7dgnIgG8@public.gmane.org/
-
-Reproducer: https://gitlab.com/0xeafffffe/xlam
-
-Currently with such changes the reproducer code continues to work without issues.
-The idea is to avoid the situation when userspace receives the event about
-onlined CPU which is not ready to take tasks for a while after uevent.
-
- kernel/cpu.c | 79 +++++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 56 insertions(+), 23 deletions(-)
-
-diff --git a/kernel/cpu.c b/kernel/cpu.c
-index 4e11e91010e1..8817ccdc8e11 100644
---- a/kernel/cpu.c
-+++ b/kernel/cpu.c
-@@ -15,6 +15,7 @@
- #include <linux/sched/smt.h>
- #include <linux/unistd.h>
- #include <linux/cpu.h>
-+#include <linux/cpuset.h>
- #include <linux/oom.h>
- #include <linux/rcupdate.h>
- #include <linux/export.h>
-@@ -1294,7 +1295,17 @@ static int cpu_up(unsigned int cpu, enum cpuhp_state target)
-  */
- int cpu_device_up(struct device *dev)
- {
--	return cpu_up(dev->id, CPUHP_ONLINE);
-+	int err;
-+
-+	err = cpu_up(dev->id, CPUHP_ONLINE);
-+	/*
-+	 * Wait for cpuset updates to cpumasks to finish.  Later on this path
-+	 * may generate uevents whose consumers rely on the updates.
-+	 */
-+	if (!err)
-+		cpuset_wait_for_hotplug();
-+
-+	return err;
- }
- 
- int add_cpu(unsigned int cpu)
-@@ -2057,28 +2068,16 @@ void __cpuhp_remove_state(enum cpuhp_state state, bool invoke)
- EXPORT_SYMBOL(__cpuhp_remove_state);
- 
- #ifdef CONFIG_HOTPLUG_SMT
--static void cpuhp_offline_cpu_device(unsigned int cpu)
--{
--	struct device *dev = get_cpu_device(cpu);
--
--	dev->offline = true;
--	/* Tell user space about the state change */
--	kobject_uevent(&dev->kobj, KOBJ_OFFLINE);
--}
--
--static void cpuhp_online_cpu_device(unsigned int cpu)
--{
--	struct device *dev = get_cpu_device(cpu);
--
--	dev->offline = false;
--	/* Tell user space about the state change */
--	kobject_uevent(&dev->kobj, KOBJ_ONLINE);
--}
--
- int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
- {
--	int cpu, ret = 0;
-+	struct device *dev;
-+	cpumask_var_t mask;
-+	int cpu, ret;
-+
-+	if (!zalloc_cpumask_var(&mask, GFP_KERNEL))
-+		return -ENOMEM;
- 
-+	ret = 0;
- 	cpu_maps_update_begin();
- 	for_each_online_cpu(cpu) {
- 		if (topology_is_primary_thread(cpu))
-@@ -2099,18 +2098,35 @@ int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
- 		 * called under the sysfs hotplug lock, so it is properly
- 		 * serialized against the regular offline usage.
- 		 */
--		cpuhp_offline_cpu_device(cpu);
-+		dev = get_cpu_device(cpu);
-+		dev->offline = true;
-+
-+		cpumask_set_cpu(cpu, mask);
- 	}
- 	if (!ret)
- 		cpu_smt_control = ctrlval;
- 	cpu_maps_update_done();
-+
-+	/* Tell user space about the state changes */
-+	for_each_cpu(cpu, mask) {
-+		dev = get_cpu_device(cpu);
-+		kobject_uevent(&dev->kobj, KOBJ_OFFLINE);
-+	}
-+
-+	free_cpumask_var(mask);
- 	return ret;
- }
- 
- int cpuhp_smt_enable(void)
- {
--	int cpu, ret = 0;
-+	struct device *dev;
-+	cpumask_var_t mask;
-+	int cpu, ret;
-+
-+	if (!zalloc_cpumask_var(&mask, GFP_KERNEL))
-+		return -ENOMEM;
- 
-+	ret = 0;
- 	cpu_maps_update_begin();
- 	cpu_smt_control = CPU_SMT_ENABLED;
- 	for_each_present_cpu(cpu) {
-@@ -2121,9 +2137,26 @@ int cpuhp_smt_enable(void)
- 		if (ret)
- 			break;
- 		/* See comment in cpuhp_smt_disable() */
--		cpuhp_online_cpu_device(cpu);
-+		dev = get_cpu_device(cpu);
-+		dev->offline = false;
-+
-+		cpumask_set_cpu(cpu, mask);
- 	}
- 	cpu_maps_update_done();
-+
-+	/*
-+	 * Wait for cpuset updates to cpumasks to finish.  Later on this path
-+	 * may generate uevents whose consumers rely on the updates.
-+	 */
-+	cpuset_wait_for_hotplug();
-+
-+	/* Tell user space about the state changes */
-+	for_each_cpu(cpu, mask) {
-+		dev = get_cpu_device(cpu);
-+		kobject_uevent(&dev->kobj, KOBJ_ONLINE);
-+	}
-+
-+	free_cpumask_var(mask);
- 	return ret;
- }
- #endif
 -- 
-2.30.0
-
+Michal Hocko
+SUSE Labs
