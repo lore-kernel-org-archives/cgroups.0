@@ -1,139 +1,103 @@
-From: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2] cpu/hotplug: wait for cpuset_hotplug_work to finish
- on cpu onlining
-Date: Fri, 12 Feb 2021 14:41:58 -0500
-Message-ID: <87tuqhrs3d.fsf@oracle.com>
-References: <20210212003032.2037750-1-aklimov@redhat.com>
+From: Muchun Song <songmuchun@bytedance.com>
+Subject: Re: [External] Re: [PATCH 4/4] mm: memcontrol: fix swap uncharge on
+ cgroup v2
+Date: Sat, 13 Feb 2021 14:48:16 +0800
+Message-ID: <CAMZfGtUpsbiVW7AtBtfYjFvppv+7MmAcff_x872gbeMuv8zs3Q@mail.gmail.com>
+References: <20210212170159.32153-1-songmuchun@bytedance.com>
+ <20210212170159.32153-4-songmuchun@bytedance.com> <CALvZod6tXn9qrRmzyspp+7usB-Xx4ayu6KrzmKvoU7zWajx85g@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : in-reply-to : references : date : message-id : content-type :
- mime-version; s=corp-2020-01-29;
- bh=7l/HTcouzdCQubM+36EHWqvqjAfkWdgxqsZ9O6WgAtI=;
- b=GynNSQPPWRc4d7mYTUTMrlJCQR3amxCmINf4TcP5PoGWlchcIssENjWBGqNsviuICyRT
- yLkpItamXznEmHguU/7Dgn76uoQKE3HpNT48wUSyXv/ipTI+IpgK787KPut4lIGlXGv+
- qtdB+5VOf7Ah+bFodSvzpbcalLVtGdddVVX286XVoDGJrCRqGXpjljP7P5xGHhH3qhKm
- P754438qwbsL4iLfohqV33Xgu8QPL3fusqJnb9aBkN5pmBDCPa8JdXENNmFwGnsI8Xhn
- hOSM6GDyE5/T4BTdN+c7yw7byaricE8o0+uFzrgVJm0LtxkoYJOa3aRILKPCrwzzJ0Xs TQ== 
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7l/HTcouzdCQubM+36EHWqvqjAfkWdgxqsZ9O6WgAtI=;
- b=SlZjlqjskJ4z8Crkg8O39BU+A7q+Mbf6UbnSJ5Q00EuWaj2Rif4AHVO5r9hFrT0bW7JKBefVRqZE457DdYVQsYIopCBGk/poISX3KzXqjuQQ07HHbigzHVd1nA6H72qrDjehO6rFau47x2hhMple5Yb2iG14PlCQmTxuNLvS6+M=
-In-Reply-To: <20210212003032.2037750-1-aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=SvQPbY0JLL8of3BGGDOMIdtAbjg+M4/SFz/IP/02qIQ=;
+        b=Qmi3QON0oQEQ54YUbGatNEp0xc3/YNtLOTVVx5KzgbwD6xLzcXH/g0Co9uJ4dpyYop
+         wCV9HN1/bZZtAG7NippRen0hStG1KmbBWuUhyoPCUPn0aVe76tYiOAJRG2YYt6hRQtKv
+         Bx6NTRQBgq79QZVKQHdOufm5Xia6818VExEwaGiI+EqLuZfqqdfab+u/NcZ0IK2NeM7V
+         SXIbsxeWwFN8VB7pcGuHkvYGNVhb9kVO695jHYGzPvZrQEaTmOiyCfe28kfQGRN5NYPm
+         KFtsQOlyUxqbSqeq9FONIci5vl5CNHjpXEZpy6cOU+C1ILj9zOOagrDctqSrFJdxYJ4W
+         hyaQ==
+In-Reply-To: <CALvZod6tXn9qrRmzyspp+7usB-Xx4ayu6KrzmKvoU7zWajx85g@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, qais.yousef-5wv7dgnIgG8@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Huang Ying <ying.huang@intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>
 
-Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
-> int cpu_device_up(struct device *dev)
+On Sat, Feb 13, 2021 at 2:57 AM Shakeel Butt <shakeelb@google.com> wrote:
+>
+> CCing more folks.
+>
+> On Fri, Feb 12, 2021 at 9:14 AM Muchun Song <songmuchun@bytedance.com> wrote:
+> >
+> > The swap charges the actual number of swap entries on cgroup v2.
+> > If a swap cache page is charged successful, and then we uncharge
+> > the swap counter. It is wrong on cgroup v2. Because the swap
+> > entry is not freed.
+> >
+> > Fixes: 2d1c498072de ("mm: memcontrol: make swap tracking an integral part of memory control")
+> > Signed-off-by: Muchun Song <songmuchun@bytedance.com>
+>
+> What's the user visible impact of this change?
 
-Yeah, definitely better to do the wait here.
+IIUC, I think that we cannot limit the swap to memory.swap.max
+on cgroup v2.
 
->  int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
->  {
-> -	int cpu, ret = 0;
-> +	struct device *dev;
-> +	cpumask_var_t mask;
-> +	int cpu, ret;
-> +
-> +	if (!zalloc_cpumask_var(&mask, GFP_KERNEL))
-> +		return -ENOMEM;
->  
-> +	ret = 0;
->  	cpu_maps_update_begin();
->  	for_each_online_cpu(cpu) {
->  		if (topology_is_primary_thread(cpu))
-> @@ -2099,18 +2098,35 @@ int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
->  		 * called under the sysfs hotplug lock, so it is properly
->  		 * serialized against the regular offline usage.
->  		 */
-> -		cpuhp_offline_cpu_device(cpu);
-> +		dev = get_cpu_device(cpu);
-> +		dev->offline = true;
-> +
-> +		cpumask_set_cpu(cpu, mask);
->  	}
->  	if (!ret)
->  		cpu_smt_control = ctrlval;
->  	cpu_maps_update_done();
-> +
-> +	/* Tell user space about the state changes */
-> +	for_each_cpu(cpu, mask) {
-> +		dev = get_cpu_device(cpu);
-> +		kobject_uevent(&dev->kobj, KOBJ_OFFLINE);
-> +	}
-> +
-> +	free_cpumask_var(mask);
->  	return ret;
->  }
+  cd /sys/fs/cgroup/
+  mkdir test
+  cd test
+  echo 8192 > memory.max
+  echo 4096 > memory.swap.max
 
-Hrm, should the dev manipulation be kept in one place, something like
-this?
+OK. Now we limit swap to 1 page and memory to 2 pages.
+Firstly, we allocate 1 page from this memory cgroup and
+swap this page to swap disk. We can see:
 
-diff --git a/kernel/cpu.c b/kernel/cpu.c
-index 8817ccdc8e112..aa21219a7b7c4 100644
---- a/kernel/cpu.c
-+++ b/kernel/cpu.c
-@@ -2085,11 +2085,20 @@ int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
- 		ret = cpu_down_maps_locked(cpu, CPUHP_OFFLINE);
- 		if (ret)
- 			break;
-+
-+		cpumask_set_cpu(cpu, mask);
-+	}
-+	if (!ret)
-+		cpu_smt_control = ctrlval;
-+	cpu_maps_update_done();
-+
-+	/* Tell user space about the state changes */
-+	for_each_cpu(cpu, mask) {
- 		/*
--		 * As this needs to hold the cpu maps lock it's impossible
-+		 * When the cpu maps lock was taken above it was impossible
- 		 * to call device_offline() because that ends up calling
- 		 * cpu_down() which takes cpu maps lock. cpu maps lock
--		 * needs to be held as this might race against in kernel
-+		 * needed to be held as this might race against in kernel
- 		 * abusers of the hotplug machinery (thermal management).
- 		 *
- 		 * So nothing would update device:offline state. That would
-@@ -2100,16 +2109,6 @@ int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
- 		 */
- 		dev = get_cpu_device(cpu);
- 		dev->offline = true;
--
--		cpumask_set_cpu(cpu, mask);
--	}
--	if (!ret)
--		cpu_smt_control = ctrlval;
--	cpu_maps_update_done();
--
--	/* Tell user space about the state changes */
--	for_each_cpu(cpu, mask) {
--		dev = get_cpu_device(cpu);
- 		kobject_uevent(&dev->kobj, KOBJ_OFFLINE);
- 	}
- 
-@@ -2136,9 +2135,6 @@ int cpuhp_smt_enable(void)
- 		ret = _cpu_up(cpu, 0, CPUHP_ONLINE);
- 		if (ret)
- 			break;
--		/* See comment in cpuhp_smt_disable() */
--		dev = get_cpu_device(cpu);
--		dev->offline = false;
- 
- 		cpumask_set_cpu(cpu, mask);
- 	}
-@@ -2152,7 +2148,9 @@ int cpuhp_smt_enable(void)
- 
- 	/* Tell user space about the state changes */
- 	for_each_cpu(cpu, mask) {
-+		/* See comment in cpuhp_smt_disable() */
- 		dev = get_cpu_device(cpu);
-+		dev->offline = false;
- 		kobject_uevent(&dev->kobj, KOBJ_ONLINE);
- 	}
- 
+  memory.current: 0
+  memory.swap.current: 1
+
+Then we touch this page, we will swap in and charge
+the swap cache page to the memory counter and uncharge
+the swap counter.
+
+  memory.current: 1
+  memory.swap.current: 0 (but actually we use a swap entry)
+
+Then we allocate another 1 page from this memory cgroup.
+
+  memory.current: 2
+  memory.swap.current: 0 (but actually we use a swap entry)
+
+If we swap those 2 pages to swap disk. We can charge and swap
+those 2 pages successfully. Right? Maybe I am wrong.
+
+>
+> One impact I can see is that without this patch meminfo's (SwapTotal -
+> SwapFree) is larger than the sum of top level memory.swap.current.
+> This change will reduce that gap.
+>
+> BTW what about per-cpu slots_ret cache? Should we call
+> mem_cgroup_uncharge_swap() before putting in the cache after this
+> change?
+>
+> > ---
+> >  mm/memcontrol.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index c737c8f05992..be6bc5044150 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -6753,7 +6753,7 @@ int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask)
+> >         memcg_check_events(memcg, page);
+> >         local_irq_enable();
+> >
+> > -       if (PageSwapCache(page)) {
+> > +       if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && PageSwapCache(page)) {
+> >                 swp_entry_t entry = { .val = page_private(page) };
+> >                 /*
+> >                  * The swap entry might not get freed for a long time,
+> > --
+> > 2.11.0
+> >
