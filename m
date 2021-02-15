@@ -1,36 +1,72 @@
-From: pr-tracker-bot-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Subject: Re: [GIT PULL] cgroup fixes for v5.11-rc7
-Date: Sat, 13 Feb 2021 20:33:42 +0000
-Message-ID: <161324842240.29494.3043101433487963584.pr-tracker-bot@kernel.org>
-References: <YCgwkyRWS5fM0Xtj@mtj.duckdns.org>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 1/4] mm: memcontrol: remove memcg check from
+ memcg_oom_recover
+Date: Mon, 15 Feb 2021 10:24:45 +0100
+Message-ID: <YCo93axI0xUMbM4I@dhcp22.suse.cz>
+References: <20210212170159.32153-1-songmuchun@bytedance.com>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1613248422;
-        bh=UdqFlA5f1dhkoDkbOpBQvT6LUv/DrayKpSZ4UV27eFI=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=JztK/goCusB+LPYTHWl6Vjk2fxuv9YCx//5JubGtreceShuq0cDW1POxWLaBX8rQJ
-         70nV/FxO9lChG9yRm+kBjlcjEqN022JK22dVe8uGjfiucP10lWOISf4HujAjSHnUMx
-         ABrmZ5UeQgGy4nJvQEDVmqNQY47OjZCh6Gy+17GTEvlYO17vo8HHxV6JFoMtc4iGpe
-         Radw6typmRbMNKCJIAOz0EntMG+JvIHoFOFfrv5g+ftPdIkaklDPN4ftKu3TefDYHi
-         zjny1btmjYO4cztEegHmd9zSrVKU+HaYfZgMImNI9hiOFVNAYKhfDAt3x/wmvb4OyL
-         KtZ+0Vi0cVjHQ==
-In-Reply-To: <YCgwkyRWS5fM0Xtj-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1613381086; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=xB5MBNbB1QLYYTbvCj1weox/L1QyvBLNycXdZJ/J33s=;
+        b=msIiFaMGkdJ4pDCv0zyVzZbaNCFRTvzOfXRSNRzqy3NRtv9ZBePOOmmS5Aicny13IwoBJR
+        cOnnBmTXrlauKa0ifYK8IfQd8C24XTIjw4Y7qX0E0tuRGrIu60sL/0UThYl+CsPbdYZWsm
+        sfYS0TqbdIhAmdfPROvuM5Tk0ePE4OU=
+Content-Disposition: inline
+In-Reply-To: <20210212170159.32153-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-The pull request you sent on Sat, 13 Feb 2021 15:03:31 -0500:
+On Sat 13-02-21 01:01:56, Muchun Song wrote:
+> The memcg_oom_recover() almost never do anything but the test (because
+> oom_disabled is a rarely used) is just waste of cycles in some hot
+> paths (e.g. kmem uncharge). And it is very small, so it is better to
+> make it inline. Also, the parameter of memcg cannot be NULL, so removing
+> the check can reduce useless check.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.11-fixes
+You probably wanted to make this patch follow the second one in the
+series. As there is no oom recover form the kmem uncharge path now. Also
+I believe that I've asked you to split the memcg check to its separate
+patch.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/ac30d8ce28d61c05ac3a8b1452e889371136f3af
+Regarding the inlining, I would add it along with a static key check in
+memcg_oom_recover.
 
-Thank you!
+> Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+> ---
+>  mm/memcontrol.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 8c035846c7a4..7afca9677693 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1925,7 +1925,7 @@ static int memcg_oom_wake_function(wait_queue_entry_t *wait,
+>  	return autoremove_wake_function(wait, mode, sync, arg);
+>  }
+>  
+> -static void memcg_oom_recover(struct mem_cgroup *memcg)
+> +static inline void memcg_oom_recover(struct mem_cgroup *memcg)
+>  {
+>  	/*
+>  	 * For the following lockless ->under_oom test, the only required
+> @@ -1935,7 +1935,7 @@ static void memcg_oom_recover(struct mem_cgroup *memcg)
+>  	 * achieved by invoking mem_cgroup_mark_under_oom() before
+>  	 * triggering notification.
+>  	 */
+> -	if (memcg && memcg->under_oom)
+> +	if (memcg->under_oom)
+>  		__wake_up(&memcg_oom_waitq, TASK_NORMAL, 0, memcg);
+>  }
+>  
+> -- 
+> 2.11.0
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Michal Hocko
+SUSE Labs
