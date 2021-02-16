@@ -1,82 +1,114 @@
 From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [External] Re: [PATCH 4/4] mm: memcontrol: fix swap uncharge on
- cgroup v2
-Date: Tue, 16 Feb 2021 09:16:24 -0800
-Message-ID: <CALvZod4mjDPfRvs0EZw3nZW8TuZqvye61ExD98Qfpm9JtsbGtg@mail.gmail.com>
+Subject: Re: [PATCH 4/4] mm: memcontrol: fix swap uncharge on cgroup v2
+Date: Tue, 16 Feb 2021 09:17:45 -0800
+Message-ID: <CALvZod6RPUFnA4zZR20e7M=GriYwWob3DMQqUfhqUMd9aJUq2w@mail.gmail.com>
 References: <20210212170159.32153-1-songmuchun@bytedance.com>
- <20210212170159.32153-4-songmuchun@bytedance.com> <CALvZod6tXn9qrRmzyspp+7usB-Xx4ayu6KrzmKvoU7zWajx85g@mail.gmail.com>
- <CAMZfGtUpsbiVW7AtBtfYjFvppv+7MmAcff_x872gbeMuv8zs3Q@mail.gmail.com>
+ <20210212170159.32153-4-songmuchun@bytedance.com> <YCv51LgGIWxVjLHT@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=E45USrfwyuPTU85r3q5N9FFFgs4PphB6lqH5aUk4Cag=;
-        b=uKAmePCYTggNcKv8e6HwrE/wfBPlHBLs09fukIDn1Ad8eGiyXdq6UVoUHACc5UoJCE
-         3zvOhCdBL7paJpiTVqgjW/9Ln+PbRjS+i/9EK2u5XKpZQ8iRUEu1fvlDnBpoENJ61vJV
-         xamLT1E0WOt/77sNcTXjJxBpkwIl5RrePfmtw0KFg2DKLqob1a4wdYxNfEB6iY+zZQLh
-         T73T2gxzFEIfdIthKZ+fVjxhiCYxIDTziJVgXH7GQiAJOCvGXQZK0xyN017joVbw4A0I
-         vLlIr+HnHG9caI+/8IiRynC1jQ7pDqyTTR8CIPFBsuFA8z4k9Hp5BTpdMneZU8Fsi1uF
-         2WVg==
-In-Reply-To: <CAMZfGtUpsbiVW7AtBtfYjFvppv+7MmAcff_x872gbeMuv8zs3Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+        bh=TAIlfyj1+vl6wEY03t8gQIxJzlIrwjx8g7cV2iEl46I=;
+        b=ajc+Ly1Kl3BQHBgTjkn+/wNh48GTRtZTdxzUnLJIhxY4ZFdqnb9AYLaI2XXT/ZVLrv
+         jyngOR5w7dsP5aWWRcFYUODEcZN65i1edh1DfsByO6EIB6AZ32Cuj5vOz3wZdy9r1zNg
+         Y1RHti10VjznC2eoihl0UL/cr+IAYRk25Oczds3MyxDy/ygc6AF2oSQvlGSgLRUMpRT6
+         uFlUP8t+nHMnChWyq4NleRHpwctatl95VSvcqZDV/sKZrHxa/2AT/Si5DDZkL/fAhjxt
+         c/Fyll05dd/xV/YbRAi7tz/eBZ8bA2MyA50QOh9upkC1Ic6UaOz9uHizMUsD+L4RszQ6
+         Mfpw==
+In-Reply-To: <YCv51LgGIWxVjLHT-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: Huang Ying <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, Feb 12, 2021 at 10:48 PM Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
+On Tue, Feb 16, 2021 at 9:05 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
 >
-> On Sat, Feb 13, 2021 at 2:57 AM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >
-> > CCing more folks.
-> >
-> > On Fri, Feb 12, 2021 at 9:14 AM Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
-> > >
-> > > The swap charges the actual number of swap entries on cgroup v2.
-> > > If a swap cache page is charged successful, and then we uncharge
-> > > the swap counter. It is wrong on cgroup v2. Because the swap
-> > > entry is not freed.
-> > >
-> > > Fixes: 2d1c498072de ("mm: memcontrol: make swap tracking an integral part of memory control")
-> > > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-> >
-> > What's the user visible impact of this change?
+> Hello Muchun,
 >
-> IIUC, I think that we cannot limit the swap to memory.swap.max
-> on cgroup v2.
+> On Sat, Feb 13, 2021 at 01:01:59AM +0800, Muchun Song wrote:
+> > The swap charges the actual number of swap entries on cgroup v2.
+> > If a swap cache page is charged successful, and then we uncharge
+> > the swap counter. It is wrong on cgroup v2. Because the swap
+> > entry is not freed.
 >
->   cd /sys/fs/cgroup/
->   mkdir test
->   cd test
->   echo 8192 > memory.max
->   echo 4096 > memory.swap.max
+> The patch makes sense to me. But this code is a bit tricky, we should
+> add more documentation to how it works and what the problem is.
 >
-> OK. Now we limit swap to 1 page and memory to 2 pages.
-> Firstly, we allocate 1 page from this memory cgroup and
-> swap this page to swap disk. We can see:
+> How about this for the changelog?
 >
->   memory.current: 0
->   memory.swap.current: 1
+> ---
+> mm: memcontrol: fix swap undercounting for shared pages in cgroup2
 >
-> Then we touch this page, we will swap in and charge
-> the swap cache page to the memory counter and uncharge
-> the swap counter.
+> When shared pages are swapped in partially, we can have some page
+> tables referencing the in-memory page and some referencing the swap
+> slot. Cgroup1 and cgroup2 handle these overlapping lifetimes slightly
+> differently due to the nature of how they account memory and swap:
 >
->   memory.current: 1
->   memory.swap.current: 0 (but actually we use a swap entry)
+> Cgroup1 has a unified memory+swap counter that tracks a data page
+> regardless whether it's in-core or swapped out. On swapin, we transfer
+> the charge from the swap entry to the newly allocated swapcache page,
+> even though the swap entry might stick around for a while. That's why
+> we have a mem_cgroup_uncharge_swap() call inside mem_cgroup_charge().
 >
-> Then we allocate another 1 page from this memory cgroup.
+> Cgroup2 tracks memory and swap as separate, independent resources and
+> thus has split memory and swap counters. On swapin, we charge the
+> newly allocated swapcache page as memory, while the swap slot in turn
+> must remain charged to the swap counter as long as its allocated too.
 >
->   memory.current: 2
->   memory.swap.current: 0 (but actually we use a swap entry)
+> The cgroup2 logic was broken by commit 2d1c498072de ("mm: memcontrol:
+> make swap tracking an integral part of memory control"), because it
+> accidentally removed the do_memsw_account() check in the branch inside
+> mem_cgroup_uncharge() that was supposed to tell the difference between
+> the charge transfer in cgroup1 and the separate counters in cgroup2.
 >
-> If we swap those 2 pages to swap disk. We can charge and swap
-> those 2 pages successfully. Right? Maybe I am wrong.
+> As a result, cgroup2 currently undercounts consumed swap when shared
+> pages are partially swapped back in. This in turn allows a cgroup to
+> consume more swap than its configured limit intends.
 >
+> Add the do_memsw_account() check back to fix this problem.
+> ---
+>
+> > Fixes: 2d1c498072de ("mm: memcontrol: make swap tracking an integral part of memory control")
+> > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+>
+> Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-I was trying to repro this but couldn't and later remembered that swap
-on zram skips the swapcache and thus is not impacted by this issue.
-This is reproducible on swap on disk and I see Johannes has already
-described in good detail.
+With Johannes's suggestions:
+
+Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+
+>
+> > ---
+> >  mm/memcontrol.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index c737c8f05992..be6bc5044150 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -6753,7 +6753,7 @@ int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask)
+> >       memcg_check_events(memcg, page);
+> >       local_irq_enable();
+> >
+> > -     if (PageSwapCache(page)) {
+> > +     if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && PageSwapCache(page)) {
+>
+> It's more descriptive to use do_memsw_account() here, IMO.
+>
+> We should also add a comment. How about this above the branch?
+>
+>         /*
+>          * Cgroup1's unified memory+swap counter has been charged with the
+>          * new swapcache page, finish the transfer by uncharging the swap
+>          * slot. The swap slot would also get uncharged when it dies, but
+>          * for shared pages it can stick around indefinitely and we'd count
+>          * the page twice the entire time.
+>          *
+>          * Cgroup2 has separate resource counters for memory and swap,
+>          * so this is a non-issue here. Memory and swap charge lifetimes
+>          * correspond 1:1 to page and swap slot lifetimes: we charge the
+>          * page to memory here, and uncharge swap when the slot is freed.
+>          */
