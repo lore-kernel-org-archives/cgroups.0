@@ -1,29 +1,32 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [PATCH 4/4] mm: memcontrol: fix swap uncharge on cgroup v2
-Date: Tue, 16 Feb 2021 18:19:39 +0100
-Message-ID: <YCv+q749iP4J/pWC@dhcp22.suse.cz>
+Date: Tue, 16 Feb 2021 12:28:05 -0500
+Message-ID: <YCwApSWpgOTOZEMx@cmpxchg.org>
 References: <20210212170159.32153-1-songmuchun@bytedance.com>
  <20210212170159.32153-4-songmuchun@bytedance.com>
  <YCv51LgGIWxVjLHT@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1613495980; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=rOgv2eEZRaweG7NJSebRdSvYOOr4gqJRXTJSspBSCOc=;
-        b=h74MeufS56pS+vSQUpiTiDJslgiawZx4tJtn7aauwv7pBJhcNTfCnkvkZcET1ccH9wgS0S
-        uSIXIOcmQcAWyo9lIedoNUMHCxP1lJvUJ71ea01Qe4mg3wVOss7YoIzXmifMbWipNTDnwz
-        bmUSS78TXUvirG7wUzA62/J22oR4h+8=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=aj39bprl00uaR4PQZ10YyZf7Ojk1u6xUF8hobhBWb4s=;
+        b=ELksuc2ItlzB7BWl2trs4DYSQVkq1eOfCU21Om21ZFjRufw+7yXeDuY8QZ03y9s+Vg
+         t9KMsDJX+i72U890Vl/ZqfpZpBEm3DRIeL/uoeXnUYQStpX5tBoiRY1n745UTXa7FPfW
+         B8UzHg3sqazyeQ+5wWXsfzuAljhT7mzyrwostbTT7OZgs41ChW7pxJu+zBkwIsUCSqmO
+         OvImI9+qd05rLWMHWQX3UVI8RSC4+m2FpQyLF4MyJ9Fb+iMOzZP3ZM4qORmatwMbPZZS
+         oD1WpJ1yJFa893vm8TLeyjVH13Im8FT7QBYnwgC3Md50A8QTapaHmQC+4Yc8oJu89AF7
+         XrDQ==
 Content-Disposition: inline
 In-Reply-To: <YCv51LgGIWxVjLHT-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Tue 16-02-21 11:59:00, Johannes Weiner wrote:
+On Tue, Feb 16, 2021 at 11:59:01AM -0500, Johannes Weiner wrote:
 > Hello Muchun,
 > 
 > On Sat, Feb 13, 2021 at 01:01:59AM +0800, Muchun Song wrote:
@@ -39,12 +42,25 @@ On Tue 16-02-21 11:59:00, Johannes Weiner wrote:
 > 
 > ---
 > mm: memcontrol: fix swap undercounting for shared pages in cgroup2
-> 
+
+Coming to think of it, this isn't just for shared pages. We also hold
+on to the swap slot as long as the page is read-only, not mlocked, and
+swap isn't full. So scratch "for shared pages" here.
+
 > When shared pages are swapped in partially, we can have some page
 > tables referencing the in-memory page and some referencing the swap
 > slot. Cgroup1 and cgroup2 handle these overlapping lifetimes slightly
 > differently due to the nature of how they account memory and swap:
-> 
+
+Correction:
+
+When pages are swapped in, the VM may retain the swap copy to avoid
+repeated writes in the future. It's also retained if shared pages are
+faulted back in some processes, but not in others. During that time we
+have an in-memory copy of the page, as well as an on-swap
+copy. Cgroup1 and cgroup2 handle these overlapping lifetimes slightly
+differently due to the nature of how they account memory and swap:
+
 > Cgroup1 has a unified memory+swap counter that tracks a data page
 > regardless whether it's in-core or swapped out. On swapin, we transfer
 > the charge from the swap entry to the newly allocated swapcache page,
@@ -65,21 +81,29 @@ On Tue 16-02-21 11:59:00, Johannes Weiner wrote:
 > As a result, cgroup2 currently undercounts consumed swap when shared
 > pages are partially swapped back in. This in turn allows a cgroup to
 > consume more swap than its configured limit intends.
-> 
+
+Correction:
+
+As a result, cgroup2 currently undercounts retained swap to varying
+degrees: swap slots are cached up to 50% of the configured limit or
+total available swap space; partially faulted back shared pages are
+only limited by physical capacity. This in turn allows cgroups to
+significantly overconsume their alloted swap space.
+
 > Add the do_memsw_account() check back to fix this problem.
-
-Yes this clarfies both the issue and the subtlety of the accounting.
-Thanks a lot Johannes! This is a great example of how changelogs should
-really look.
-
 > ---
 > 
 > > Fixes: 2d1c498072de ("mm: memcontrol: make swap tracking an integral part of memory control")
 > > Signed-off-by: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 > 
 > Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> 
-> > ---
+
+I also think we should tag stable on this one. The potential
+accounting error is quite large and, even without concrete examples,
+is likely to cause problems for swap management in the real world.
+
+Cc: stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org # 5.8+
+
 > >  mm/memcontrol.c | 2 +-
 > >  1 file changed, 1 insertion(+), 1 deletion(-)
 > > 
@@ -104,20 +128,11 @@ really look.
 > 	 * slot. The swap slot would also get uncharged when it dies, but
 > 	 * for shared pages it can stick around indefinitely and we'd count
 > 	 * the page twice the entire time.
-> 	 *
+
+-for shared pages
+
 > 	 * Cgroup2 has separate resource counters for memory and swap,
 > 	 * so this is a non-issue here. Memory and swap charge lifetimes
 > 	 * correspond 1:1 to page and swap slot lifetimes: we charge the
 > 	 * page to memory here, and uncharge swap when the slot is freed.
 > 	 */
-
-Yes very helpful.
-
-With the changelog update and the comment
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-
-Thanks!
-
--- 
-Michal Hocko
-SUSE Labs
