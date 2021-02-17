@@ -1,213 +1,49 @@
-From: Andrey Ryabinin <arbn@yandex-team.com>
-Subject: [PATCH 3/4] sched/cpuacct: fix user/system in shown cpuacct.usage*
-Date: Wed, 17 Feb 2021 15:00:03 +0300
-Message-ID: <20210217120004.7984-3-arbn@yandex-team.com>
+From: Andrey Ryabinin <arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>
+Subject: [PATCH 2/4] cgroup: Fix 'usage_usec' time in root's cpu.stat
+Date: Wed, 17 Feb 2021 15:00:02 +0300
+Message-ID: <20210217120004.7984-2-arbn@yandex-team.com>
 References: <20210217120004.7984-1-arbn@yandex-team.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.com; s=default;
-        t=1613563137; bh=6C15C64hP1XMKAgjinsCItu/GC9ExXSOFBzauCsTbfU=;
+        t=1613563136; bh=LuoQeMQQrtl1XmsM4uDiGZRevLihMSflRpO6W5fFyf0=;
         h=In-Reply-To:Message-Id:References:Date:Subject:To:From:Cc;
-        b=2aiP//157Nbc1Tr9M4D8ZOrLUkjHEY7B/qpKBnWnMgokd1IcBIP2syEqrViQTa3vh
-         2Ol7yq48YVkhWhF4gXQk6MK2Qn8qkZ24DKRL27KCxic1ryb7jqf3TXqy8ZC5BQr2Hd
-         4kpthI2dBNJJAthCm978OppJWikRr4ALrCO9sDww=
-In-Reply-To: <20210217120004.7984-1-arbn@yandex-team.com>
+        b=iybY8AoBRftH99ramFuGRb5GUmT6U/wQcK1Gi1xbBbUU7TBa1/tc/Ot7KuEvV1pO7
+         U1ZgzNTf7n/OF1Tz1XJKJxD3U16PrTGUMlORyWBJcO2nEEnj+PX6ELkP/rOjz7qyA6
+         7ICJfly+A12/+0hR2VwnVkUsWxW9eq3lehDr9Q8A=
+In-Reply-To: <20210217120004.7984-1-arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Ingo Molnar <mingo@redhat.com>, Peter Zijlstra <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Dietmar Eggemann <dietmar.eggemann@arm.com>, Steven Rostedt <rostedt@goodmis.org>, Ben Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, Daniel Bristot de Oliveira <bristot@redhat.com>
-Cc: Boris Burkov <boris@bur.io>, Bharata B Rao <bharata@linux.vnet.ibm.com>, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, Andrey Ryabinin <arbn@yandex-team.com>, stable@vger.kernel.org
+To: Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Boris Burkov <boris-UrQYPotlwNs@public.gmane.org>, Bharata B Rao <bharata-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrey Ryabinin <arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>, stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-cpuacct has 2 different ways of accounting and showing user
-and system times.
+Global CPUTIME_USER counter already includes CPUTIME_GUEST
+Also CPUTIME_NICE already includes CPUTIME_GUEST_NICE.
 
-The first one uses cpuacct_account_field() to account times
-and cpuacct.stat file to expose them. And this one seems to work ok.
+Remove additions of CPUTIME_GUEST[_NICE] to total ->sum_exec_runtime
+to not account them twice.
 
-The second one is uses cpuacct_charge() function for accounting and
-set of cpuacct.usage* files to show times. Despite some attempts to
-fix it in the past it still doesn't work. E.g. while running KVM
-guest the cpuacct_charge() accounts most of the guest time as
-system time. This doesn't match with user&system times shown in
-cpuacct.stat or proc/<pid>/stat.
-
-Use cpustats accounted in cpuacct_account_field() as the source
-of user/sys times for cpuacct.usage* files. Make cpuacct_charge()
-to account only summary execution time.
-
-Fixes: d740037fac70 ("sched/cpuacct: Split usage accounting into user_usage and sys_usage")
-Signed-off-by: Andrey Ryabinin <arbn@yandex-team.com>
-Cc: <stable@vger.kernel.org>
+Fixes: 936f2a70f207 ("cgroup: add cpu.stat file to root cgroup")
+Signed-off-by: Andrey Ryabinin <arbn-XoJtRXgx1JtgGdypvdXH1w@public.gmane.org>
+Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 ---
- kernel/sched/cpuacct.c | 77 +++++++++++++++++++-----------------------
- 1 file changed, 34 insertions(+), 43 deletions(-)
+ kernel/cgroup/rstat.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/kernel/sched/cpuacct.c b/kernel/sched/cpuacct.c
-index 941c28cf9738..7eff79faab0d 100644
---- a/kernel/sched/cpuacct.c
-+++ b/kernel/sched/cpuacct.c
-@@ -29,7 +29,7 @@ struct cpuacct_usage {
- struct cpuacct {
- 	struct cgroup_subsys_state	css;
- 	/* cpuusage holds pointer to a u64-type object on every CPU */
--	struct cpuacct_usage __percpu	*cpuusage;
-+	u64 __percpu	*cpuusage;
- 	struct kernel_cpustat __percpu	*cpustat;
- };
- 
-@@ -49,7 +49,7 @@ static inline struct cpuacct *parent_ca(struct cpuacct *ca)
- 	return css_ca(ca->css.parent);
- }
- 
--static DEFINE_PER_CPU(struct cpuacct_usage, root_cpuacct_cpuusage);
-+static DEFINE_PER_CPU(u64, root_cpuacct_cpuusage);
- static struct cpuacct root_cpuacct = {
- 	.cpustat	= &kernel_cpustat,
- 	.cpuusage	= &root_cpuacct_cpuusage,
-@@ -68,7 +68,7 @@ cpuacct_css_alloc(struct cgroup_subsys_state *parent_css)
- 	if (!ca)
- 		goto out;
- 
--	ca->cpuusage = alloc_percpu(struct cpuacct_usage);
-+	ca->cpuusage = alloc_percpu(u64);
- 	if (!ca->cpuusage)
- 		goto out_free_ca;
- 
-@@ -99,7 +99,8 @@ static void cpuacct_css_free(struct cgroup_subsys_state *css)
- static u64 cpuacct_cpuusage_read(struct cpuacct *ca, int cpu,
- 				 enum cpuacct_stat_index index)
- {
--	struct cpuacct_usage *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
-+	u64 *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
-+	u64 *cpustat = per_cpu_ptr(ca->cpustat, cpu)->cpustat;
- 	u64 data;
- 
- 	/*
-@@ -115,14 +116,17 @@ static u64 cpuacct_cpuusage_read(struct cpuacct *ca, int cpu,
- 	raw_spin_lock_irq(&cpu_rq(cpu)->lock);
- #endif
- 
--	if (index == CPUACCT_STAT_NSTATS) {
--		int i = 0;
--
--		data = 0;
--		for (i = 0; i < CPUACCT_STAT_NSTATS; i++)
--			data += cpuusage->usages[i];
--	} else {
--		data = cpuusage->usages[index];
-+	switch (index) {
-+	case CPUACCT_STAT_USER:
-+		data = cpustat[CPUTIME_USER] + cpustat[CPUTIME_NICE];
-+		break;
-+	case CPUACCT_STAT_SYSTEM:
-+		data = cpustat[CPUTIME_SYSTEM] + cpustat[CPUTIME_IRQ] +
-+			cpustat[CPUTIME_SOFTIRQ];
-+		break;
-+	case CPUACCT_STAT_NSTATS:
-+		data = *cpuusage;
-+		break;
+diff --git a/kernel/cgroup/rstat.c b/kernel/cgroup/rstat.c
+index d51175cedfca..89ca9b61aa0d 100644
+--- a/kernel/cgroup/rstat.c
++++ b/kernel/cgroup/rstat.c
+@@ -421,8 +421,6 @@ static void root_cgroup_cputime(struct task_cputime *cputime)
+ 		cputime->sum_exec_runtime += user;
+ 		cputime->sum_exec_runtime += sys;
+ 		cputime->sum_exec_runtime += cpustat[CPUTIME_STEAL];
+-		cputime->sum_exec_runtime += cpustat[CPUTIME_GUEST];
+-		cputime->sum_exec_runtime += cpustat[CPUTIME_GUEST_NICE];
  	}
- 
- #ifndef CONFIG_64BIT
-@@ -132,10 +136,14 @@ static u64 cpuacct_cpuusage_read(struct cpuacct *ca, int cpu,
- 	return data;
  }
  
--static void cpuacct_cpuusage_write(struct cpuacct *ca, int cpu, u64 val)
-+static void cpuacct_cpuusage_write(struct cpuacct *ca, int cpu)
- {
--	struct cpuacct_usage *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
--	int i;
-+	u64 *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
-+	u64 *cpustat = per_cpu_ptr(ca->cpustat, cpu)->cpustat;
-+
-+	/* Don't allow to reset global kernel_cpustat */
-+	if (ca == &root_cpuacct)
-+		return;
- 
- #ifndef CONFIG_64BIT
- 	/*
-@@ -143,9 +151,10 @@ static void cpuacct_cpuusage_write(struct cpuacct *ca, int cpu, u64 val)
- 	 */
- 	raw_spin_lock_irq(&cpu_rq(cpu)->lock);
- #endif
--
--	for (i = 0; i < CPUACCT_STAT_NSTATS; i++)
--		cpuusage->usages[i] = val;
-+	*cpuusage = 0;
-+	cpustat[CPUTIME_USER] = cpustat[CPUTIME_NICE] = 0;
-+	cpustat[CPUTIME_SYSTEM] = cpustat[CPUTIME_IRQ] = 0;
-+	cpustat[CPUTIME_SOFTIRQ] = 0;
- 
- #ifndef CONFIG_64BIT
- 	raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
-@@ -196,7 +205,7 @@ static int cpuusage_write(struct cgroup_subsys_state *css, struct cftype *cft,
- 		return -EINVAL;
- 
- 	for_each_possible_cpu(cpu)
--		cpuacct_cpuusage_write(ca, cpu, 0);
-+		cpuacct_cpuusage_write(ca, cpu);
- 
- 	return 0;
- }
-@@ -243,25 +252,12 @@ static int cpuacct_all_seq_show(struct seq_file *m, void *V)
- 	seq_puts(m, "\n");
- 
- 	for_each_possible_cpu(cpu) {
--		struct cpuacct_usage *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
--
- 		seq_printf(m, "%d", cpu);
- 
--		for (index = 0; index < CPUACCT_STAT_NSTATS; index++) {
--#ifndef CONFIG_64BIT
--			/*
--			 * Take rq->lock to make 64-bit read safe on 32-bit
--			 * platforms.
--			 */
--			raw_spin_lock_irq(&cpu_rq(cpu)->lock);
--#endif
--
--			seq_printf(m, " %llu", cpuusage->usages[index]);
-+		for (index = 0; index < CPUACCT_STAT_NSTATS; index++)
-+			seq_printf(m, " %llu",
-+				cpuacct_cpuusage_read(ca, cpu, index));
- 
--#ifndef CONFIG_64BIT
--			raw_spin_unlock_irq(&cpu_rq(cpu)->lock);
--#endif
--		}
- 		seq_puts(m, "\n");
- 	}
- 	return 0;
-@@ -278,8 +274,8 @@ static int cpuacct_stats_show(struct seq_file *sf, void *v)
- 	for_each_possible_cpu(cpu) {
- 		u64 *cpustat = per_cpu_ptr(ca->cpustat, cpu)->cpustat;
- 
--		val[CPUACCT_STAT_USER]   += cpustat[CPUTIME_USER];
--		val[CPUACCT_STAT_USER]   += cpustat[CPUTIME_NICE];
-+		val[CPUACCT_STAT_USER] += cpustat[CPUTIME_USER];
-+		val[CPUACCT_STAT_USER] += cpustat[CPUTIME_NICE];
- 		val[CPUACCT_STAT_SYSTEM] += cpustat[CPUTIME_SYSTEM];
- 		val[CPUACCT_STAT_SYSTEM] += cpustat[CPUTIME_IRQ];
- 		val[CPUACCT_STAT_SYSTEM] += cpustat[CPUTIME_SOFTIRQ];
-@@ -339,16 +335,11 @@ static struct cftype files[] = {
- void cpuacct_charge(struct task_struct *tsk, u64 cputime)
- {
- 	struct cpuacct *ca;
--	int index = CPUACCT_STAT_SYSTEM;
--	struct pt_regs *regs = get_irq_regs() ? : task_pt_regs(tsk);
--
--	if (regs && user_mode(regs))
--		index = CPUACCT_STAT_USER;
- 
- 	rcu_read_lock();
- 
- 	for (ca = task_ca(tsk); ca; ca = parent_ca(ca))
--		__this_cpu_add(ca->cpuusage->usages[index], cputime);
-+		__this_cpu_add(*ca->cpuusage, cputime);
- 
- 	rcu_read_unlock();
- }
 -- 
 2.26.2
 
