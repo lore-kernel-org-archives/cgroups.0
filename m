@@ -1,7 +1,7 @@
 From: Tim Chen <tim.c.chen@linux.intel.com>
-Subject: [PATCH v2 2/3] mm: Force update of mem cgroup soft limit tree on usage excess
-Date: Wed, 17 Feb 2021 12:41:35 -0800
-Message-ID: <06f1f92f1f7d4e57c4e20c97f435252c16c60a27.1613584277.git.tim.c.chen@linux.intel.com>
+Subject: [PATCH v2 1/3] mm: Fix dropped memcg from mem cgroup soft limit tree
+Date: Wed, 17 Feb 2021 12:41:34 -0800
+Message-ID: <8d35206601ccf0e1fe021d24405b2a0c2f4e052f.1613584277.git.tim.c.chen@linux.intel.com>
 References: <cover.1613584277.git.tim.c.chen@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,57 +12,43 @@ Content-Type: text/plain; charset="us-ascii"
 To: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@suse.cz>, Vladimir Davydov <vdavydov.dev@gmail.com>
 Cc: Tim Chen <tim.c.chen@linux.intel.com>, Dave Hansen <dave.hansen@intel.com>, Ying Huang <ying.huang@intel.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-To rate limit updates to the mem cgroup soft limit tree, we only perform
-updates every SOFTLIMIT_EVENTS_TARGET (defined as 1024) memory events.
+During soft limit memory reclaim, we will temporarily remove the target
+mem cgroup from the cgroup soft limit tree.  We then perform memory
+reclaim, update the memory usage excess count and re-insert the mem
+cgroup back into the mem cgroup soft limit tree according to the new
+memory usage excess count.
 
-However, this sampling based updates may miss a critical update: i.e. when
-the mem cgroup first exceeded its limit but it was not on the soft limit tree.
-It should be on the tree at that point so it could be subjected to soft
-limit page reclaim. If the mem cgroup had few memory events compared with
-other mem cgroups, we may not update it and place in on the mem cgroup
-soft limit tree for many memory events.  And this mem cgroup excess
-usage could creep up and the mem cgroup could be hidden from the soft
-limit page reclaim for a long time.
-
-Fix this issue by forcing an update to the mem cgroup soft limit tree if a
-mem cgroup has exceeded its memory soft limit but it is not on the mem
-cgroup soft limit tree.
+However, when memory reclaim failed for a maximum number of attempts
+and we bail out of the reclaim loop, we forgot to put the target mem
+cgroup chosen for next reclaim back to the soft limit tree. This prevented
+pages in the mem cgroup from being reclaimed in the future even though
+the mem cgroup exceeded its soft limit.  Fix the logic and put the mem
+cgroup back on the tree when page reclaim failed for the mem cgroup.
 
 Reviewed-by: Ying Huang <ying.huang@intel.com>
 Signed-off-by: Tim Chen <tim.c.chen@linux.intel.com>
 ---
- mm/memcontrol.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ mm/memcontrol.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index a51bf90732cb..d72449eeb85a 100644
+index ed5cc78a8dbf..a51bf90732cb 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -985,15 +985,22 @@ static bool mem_cgroup_event_ratelimit(struct mem_cgroup *memcg,
-  */
- static void memcg_check_events(struct mem_cgroup *memcg, struct page *page)
- {
-+	struct mem_cgroup_per_node *mz;
-+	bool force_update = false;
-+
-+	mz = mem_cgroup_nodeinfo(memcg, page_to_nid(page));
-+	if (mz && !mz->on_tree && soft_limit_excess(mz->memcg) > 0)
-+		force_update = true;
-+
- 	/* threshold event is triggered in finer grain than soft limit */
--	if (unlikely(mem_cgroup_event_ratelimit(memcg,
-+	if (unlikely((force_update) || mem_cgroup_event_ratelimit(memcg,
- 						MEM_CGROUP_TARGET_THRESH))) {
- 		bool do_softlimit;
- 
- 		do_softlimit = mem_cgroup_event_ratelimit(memcg,
- 						MEM_CGROUP_TARGET_SOFTLIMIT);
- 		mem_cgroup_threshold(memcg);
--		if (unlikely(do_softlimit))
-+		if (unlikely((force_update) || do_softlimit))
- 			mem_cgroup_update_tree(memcg, page);
- 	}
+@@ -3505,8 +3505,12 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+ 			loop > MEM_CGROUP_MAX_SOFT_LIMIT_RECLAIM_LOOPS))
+ 			break;
+ 	} while (!nr_reclaimed);
+-	if (next_mz)
++	if (next_mz) {
++		spin_lock_irq(&mctz->lock);
++		__mem_cgroup_insert_exceeded(next_mz, mctz, excess);
++		spin_unlock_irq(&mctz->lock);
+ 		css_put(&next_mz->memcg->css);
++	}
+ 	return nr_reclaimed;
  }
+ 
 -- 
 2.20.1
 
