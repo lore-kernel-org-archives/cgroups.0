@@ -1,100 +1,100 @@
-From: Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH v3] mm: memcontrol: fix swap undercounting in cgroup2
-Date: Wed, 17 Feb 2021 23:32:37 +0800
-Message-ID: <20210217153237.92484-1-songmuchun@bytedance.com>
+From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH v3 4/8] cgroup: rstat: support cgroup1
+Date: Wed, 17 Feb 2021 18:42:32 +0100
+Message-ID: <20210217174232.GA19239@blackbody.suse.cz>
+References: <20210209163304.77088-1-hannes@cmpxchg.org>
+ <20210209163304.77088-5-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=kE7mLzgqqc+6vOhYxJiqUhHI6vUz0T4aeCDVC6PmU30=;
-        b=b2qP0aVfIrVcgB8xO4ckm7QHZL+79RAzka2JYVw36Lk0gYh3+CcaMpoTvULGB3KnjV
-         z2evxWo7r63ifxXyOahnUPH2qhAbGDdInmxbxD+zLuZtGlQOoYImpA8HWgrC8xHidjrC
-         yN+p+as2K3h4pxEX8HqyqlDoQ9pQzNNkuoWVx1Q5Qp8aCsi7aMnh8wnYlJXlAMxAt3/z
-         sK+f5GeOPDdRBimcprVKJ8zp3FtwYB+hyvR7GUnq9uRWsO393v2C1HY1eRC+dEBvHTWB
-         JFmYRXffi90t/TfvyOjQUQszkdXRXFWfLO2LAynThYyENVz5bSup1abPgMk2gSu4lzUV
-         RoKg==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="YiEDa0DAkWCtVeE4"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1613583759; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=a6Rl/czINqek0rZKZZkZim1YkdyieBAQrw40eO7tWpo=;
+        b=soFy8+R1BOZzWqypKMO/GP4dVw3MB+lo7eiyCGXhnG4ImOxT6IaKHEB11G9vIuv9sdAyA8
+        nw7VQtqcz8RaeT5LDfr2BPqVWi9/ddvB+QBzpoJOQmDYEVNzMUOjsvd/8KSUJszCzOWT0J
+        wUDlYi6Sh9TDjry0L3TDFJVGZhBTqjI=
+Content-Disposition: inline
+In-Reply-To: <20210209163304.77088-5-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, Muchun Song <songmuchun@bytedance.com>, Shakeel Butt <shakeelb@google.com>, Michal Hocko <mhocko@suse.com>, stable@vger.kernel.org
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-When pages are swapped in, the VM may retain the swap copy to avoid
-repeated writes in the future. It's also retained if shared pages are
-faulted back in some processes, but not in others. During that time we
-have an in-memory copy of the page, as well as an on-swap copy. Cgroup1
-and cgroup2 handle these overlapping lifetimes slightly differently
-due to the nature of how they account memory and swap:
 
-Cgroup1 has a unified memory+swap counter that tracks a data page
-regardless whether it's in-core or swapped out. On swapin, we transfer
-the charge from the swap entry to the newly allocated swapcache page,
-even though the swap entry might stick around for a while. That's why
-we have a mem_cgroup_uncharge_swap() call inside mem_cgroup_charge().
+--YiEDa0DAkWCtVeE4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Cgroup2 tracks memory and swap as separate, independent resources and
-thus has split memory and swap counters. On swapin, we charge the
-newly allocated swapcache page as memory, while the swap slot in turn
-must remain charged to the swap counter as long as its allocated too.
+Hello.
 
-The cgroup2 logic was broken by commit 2d1c498072de ("mm: memcontrol:
-make swap tracking an integral part of memory control"), because it
-accidentally removed the do_memsw_account() check in the branch inside
-mem_cgroup_uncharge() that was supposed to tell the difference between
-the charge transfer in cgroup1 and the separate counters in cgroup2.
+On Tue, Feb 09, 2021 at 11:33:00AM -0500, Johannes Weiner <hannes@cmpxchg.o=
+rg> wrote:
+> @@ -1971,10 +1978,14 @@ int cgroup_setup_root(struct cgroup_root *root, u=
+16 ss_mask)
+>  	if (ret)
+>  		goto destroy_root;
+> =20
+> -	ret =3D rebind_subsystems(root, ss_mask);
+> +	ret =3D cgroup_rstat_init(root_cgrp);
+Would it make sense to do cgroup_rstat_init() only if there's a subsys
+in ss_mask that makes use of rstat?
+(On legacy systems there could be individual hierarchy for each
+controller so the rstat space can be saved.)
 
-As a result, cgroup2 currently undercounts retained swap to varying
-degrees: swap slots are cached up to 50% of the configured limit or
-total available swap space; partially faulted back shared pages are
-only limited by physical capacity. This in turn allows cgroups to
-significantly overconsume their alloted swap space.
+> @@ -5159,11 +5170,9 @@ static struct cgroup *cgroup_create(struct cgroup =
+*parent, const char *name,
+>  	if (ret)
+>  		goto out_free_cgrp;
+> =20
+> -	if (cgroup_on_dfl(parent)) {
+> -		ret =3D cgroup_rstat_init(cgrp);
+> -		if (ret)
+> -			goto out_cancel_ref;
+> -	}
+> +	ret =3D cgroup_rstat_init(cgrp);
+And here do cgroup_rstat_init() only when parent has it.
 
-Add the do_memsw_account() check back to fix this problem.
+> @@ -285,8 +285,6 @@ void __init cgroup_rstat_boot(void)
+> =20
+>  	for_each_possible_cpu(cpu)
+>  		raw_spin_lock_init(per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu));
+> -
+> -	BUG_ON(cgroup_rstat_init(&cgrp_dfl_root.cgrp));
+>  }
+Regardless of the suggestion above, this removal obsoletes the comment
+cgroup_rstat_init:
 
-Fixes: 2d1c498072de ("mm: memcontrol: make swap tracking an integral part of memory control")
-Signed-off-by: Muchun Song <songmuchun@bytedance.com>
-Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-Reviewed-by: Shakeel Butt <shakeelb@google.com>
-Acked-by: Michal Hocko <mhocko@suse.com>
-Cc: stable@vger.kernel.org # 5.8+
----
- v3:
- - Replace !cgroup_subsys_on_dfl(memory_cgrp_subsys) with do_memsw_account().
-   Thanks to Shakeel.
+         int cpu;
+=20
+-        /* the root cgrp has rstat_cpu preallocated */
+         if (!cgrp->rstat_cpu) {
+                 cgrp->rstat_cpu =3D alloc_percpu(struct cgroup_rstat_cpu);
 
- v2:
- - update commit log and add a comment to the code. Very thanks to Johannes.
+Regards,
+Michal
 
- mm/memcontrol.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+--YiEDa0DAkWCtVeE4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index ed5cc78a8dbf..b5a66b98af74 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -6771,7 +6771,19 @@ int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask)
- 	memcg_check_events(memcg, page);
- 	local_irq_enable();
- 
--	if (PageSwapCache(page)) {
-+	/*
-+	 * Cgroup1's unified memory+swap counter has been charged with the
-+	 * new swapcache page, finish the transfer by uncharging the swap
-+	 * slot. The swap slot would also get uncharged when it dies, but
-+	 * it can stick around indefinitely and we'd count the page twice
-+	 * the entire time.
-+	 *
-+	 * Cgroup2 has separate resource counters for memory and swap,
-+	 * so this is a non-issue here. Memory and swap charge lifetimes
-+	 * correspond 1:1 to page and swap slot lifetimes: we charge the
-+	 * page to memory here, and uncharge swap when the slot is freed.
-+	 */
-+	if (do_memsw_account() && PageSwapCache(page)) {
- 		swp_entry_t entry = { .val = page_private(page) };
- 		/*
- 		 * The swap entry might not get freed for a long time,
--- 
-2.11.0
+-----BEGIN PGP SIGNATURE-----
 
+iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmAtVYQACgkQia1+riC5
+qSgrug/8CSTeb3l4LFsYInnLNt+TFGvt5ZjsT2mDXjfBjDSY8Nxa0h9Epw58x19L
+CbDnD6Q0kLLnK4ZUw4CAM1UWpHqsLaNsRTWg7LhLkpt8YB4r7Mu2TWJFNbq+hvl8
+ylFSNrEws0GLv+T7ymT5voKGZacN3TkS7krrEh/4eJfBKIfKVwyfbF984rLCmVk2
+ZX7a/e6hc26KKLEEKgRl6bXHeMeQTHe0elonZh7o/U1ganJqzidcs/a4f/kDXy94
+NxILYXpoO6A2P3AlzQsMpLxUItsW/8BWEGzwYx3XwXz2Yr5i7fr/5qK24egs4izQ
+o9BsDCE4mO+V7WEUxDQjG5LhQLFh4AmsGuk/NQeLZEPebTdkbBeA3FaWDzSd4SWw
+GWELqOFMduOse8dAofnWv0dAjSxUspJ2dyVSD9d2mAO4Zf1DohjdAtCR5BmFTS8E
+Jq0/DQk4bAY9dou2JzpA5CF8WSp/oKnPoZymFTW5om9bwm8yAsrhshzQ40d5DOD0
+lwpswxSbv7cHE+qxyTU2/jEgjKfis9Fir+gS47OjHMQvBuZ4OLU4r7flg5IUo5X1
+Vk8zvbDD9Y22pFVAzg5UXgRZZoHepbgJaGUW+E/A4+hy7iWpgX9M44f9Devyjyrt
+tL9oj/nw/RKkkdsCn3s4z2ZykQzhU0boLi2qzeHENef45VDHqyY=
+=LqMk
+-----END PGP SIGNATURE-----
+
+--YiEDa0DAkWCtVeE4--
