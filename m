@@ -1,60 +1,93 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v3 3/8] mm: memcontrol: privatize memcg_page_state query
- functions
-Date: Wed, 17 Feb 2021 18:44:20 +0100
-Message-ID: <20210217174420.GD19239@blackbody.suse.cz>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v3 4/8] cgroup: rstat: support cgroup1
+Date: Wed, 17 Feb 2021 15:52:59 -0500
+Message-ID: <YC2CKyaeF2bqvpMk@cmpxchg.org>
 References: <20210209163304.77088-1-hannes@cmpxchg.org>
- <20210209163304.77088-4-hannes@cmpxchg.org>
+ <20210209163304.77088-5-hannes@cmpxchg.org>
+ <20210217174232.GA19239@blackbody.suse.cz>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="FFoLq8A0u+X9iRU8"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1613583861; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=EzOKje4WL0kVoheIE3+A7Z4mHaEdboezPhHAQ+ElTW8=;
-        b=StyzdM+6sBl1ztWv65eULrf4hjCKFEf843Tr0IwKdnr86PqzzDohDsAOkrFN0u6pZmPXyl
-        BxoFHjHrdAHJQb58+iWNedkWTYC2HI0bzfLQtfVoz6HA7EgnerKK4CuDNxKbFuuzDw7e9n
-        IfWkVNFZ2KJYiJ28Z6kHSElmRXWm2Zo=
-Content-Disposition: inline
-In-Reply-To: <20210209163304.77088-4-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
-
-
---FFoLq8A0u+X9iRU8
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=/nI5rj9bvE6w+kmHwM58CvDkIfatHnQ+1wEcvE6t0qM=;
+        b=LRegk7bSkLpAy9xvp3N/hncxZhzP8Xrlr1UaRRu2N5qWlQWPo52bjTvGA8VIv4kbEF
+         lShAhk2O99mAa5clhSXPVAdxFkq1AKCbtlnxLGkUORLjGHudJIhkQeT0LGFRVqc5czce
+         olwaIu6YmleDNMi6Guf87kfg0jryOdIC22S8AdK8aVVunaMZgAICA1OTr0M2XS8qZzcJ
+         HJ/Ene0AyDh2JrCED8TVxmid8NiihzpDXbpRyzZXTsibJGK4tUGn/lpepfII6xFrarI0
+         OrxhWiNJ0YIv4ARellkRePr3xqNExRIieZ/h2vVX/HYHYfLPkwImW+FqC2dlsRHhIy7W
+         UcUQ==
+Content-Disposition: inline
+In-Reply-To: <20210217174232.GA19239@blackbody.suse.cz>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Tue, Feb 09, 2021 at 11:32:59AM -0500, Johannes Weiner <hannes@cmpxchg.o=
-rg> wrote:
->  include/linux/memcontrol.h | 44 --------------------------------------
->  mm/memcontrol.c            | 32 +++++++++++++++++++++++++++
->  2 files changed, 32 insertions(+), 44 deletions(-)
-Reviewed-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
+On Wed, Feb 17, 2021 at 06:42:32PM +0100, Michal Koutn=FD wrote:
+> Hello.
+>=20
+> On Tue, Feb 09, 2021 at 11:33:00AM -0500, Johannes Weiner <hannes@cmpxchg=
+.org> wrote:
+> > @@ -1971,10 +1978,14 @@ int cgroup_setup_root(struct cgroup_root *root,=
+ u16 ss_mask)
+> >  	if (ret)
+> >  		goto destroy_root;
+> > =20
+> > -	ret =3D rebind_subsystems(root, ss_mask);
+> > +	ret =3D cgroup_rstat_init(root_cgrp);
+> Would it make sense to do cgroup_rstat_init() only if there's a subsys
+> in ss_mask that makes use of rstat?
+> (On legacy systems there could be individual hierarchy for each
+> controller so the rstat space can be saved.)
 
---FFoLq8A0u+X9iRU8
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+It's possible, but I don't think worth the trouble.
 
------BEGIN PGP SIGNATURE-----
+It would have to be done from rebind_subsystems(), as remount can add
+more subsystems to an existing cgroup1 root. That in turn means we'd
+have to have separate init paths for cgroup1 and cgroup2.
 
-iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmAtVfQACgkQia1+riC5
-qShclBAAlogxv5YghyRoLey9Ry1bJ5alDXX5JzcvBTHKgzWcUwtzv77ckze9p54r
-nkerpq7ndgxFuJ5ogb5JzkwX+r1kDuidWQj/Qcpfv6T4ZkTGYJ/2nF0mjtW48o6L
-Fcl+2Q9oVh0nsN0zr3MKEPj6dPxpwg1nKGuT+FzyvCEOQMOYKZsUT6bUCKMz7xzU
-qAoNFNk1dusb9V/nGz+XYT1eLyRITUp+WULuhk0+ubNhOj9HcuRI5THyjcw/cXfb
-+L8FHkwdoorulHgVLISahipKmUPc85OOI5GezcehnMPD+mmW6oFs71P7K8P6pGiP
-3EVFbX5Dj8BjS9kp0GPYZ50QuSofw8j5YN/cW8cjW15FWes3hlnpfnH0yu5oPWys
-jo79//YgNBhGka0RnWALhbr+L/nxHlLoo6FXteH0PU1nXau7QQ14exB7rqI3qalQ
-fN1WrWijFDYkGv2eknVdkduSpIi+cu8NzmCIkdmaW0k6VyLBm698zkH+5wpghN6W
-ypucVEuRniclM4ckftGGO5JKu1+dlyWYEiyCru+FLwAMxby4EDuYT3B8Xh+UiyCy
-bsen0xV+0EPsit1OCRF41HCu8ouAqhV4BKz9aQT3SyDc2snhnpMbc2ZpVx5T2FLY
-PxBk2D4Rv81JWXHO/Jcyy3YWSkuXrc7sfJ9bQj7rCwmfNt8fZ7s=
-=07gk
------END PGP SIGNATURE-----
+While we split cgroup1 and cgroup2 paths where necessary in the code,
+it's a significant maintenance burden and a not unlikely source of
+subtle errors (see the recent 'fix swap undercounting in cgroup2').
 
---FFoLq8A0u+X9iRU8--
+In this case, we're talking about a relatively small data structure
+and the overhead is per mountpoint. Comparatively, we're allocating
+the full vmstats structures for cgroup1 groups which barely use them,
+and cgroup1 softlimit tree structures for each cgroup2 group.
+
+So I don't think it's a good tradeoff. Subtle bugs that require kernel
+patches are more disruptive to the user experience than the amount of
+memory in question here.
+
+> > @@ -285,8 +285,6 @@ void __init cgroup_rstat_boot(void)
+> > =20
+> >  	for_each_possible_cpu(cpu)
+> >  		raw_spin_lock_init(per_cpu_ptr(&cgroup_rstat_cpu_lock, cpu));
+> > -
+> > -	BUG_ON(cgroup_rstat_init(&cgrp_dfl_root.cgrp));
+> >  }
+> Regardless of the suggestion above, this removal obsoletes the comment
+> cgroup_rstat_init:
+>=20
+>          int cpu;
+> =20
+> -        /* the root cgrp has rstat_cpu preallocated */
+>          if (!cgrp->rstat_cpu) {
+>                  cgrp->rstat_cpu =3D alloc_percpu(struct cgroup_rstat_cpu=
+);
+
+Oh, I'm not removing the init call, I'm merely moving it from
+cgroup_rstat_boot() to cgroup_setup_root().
+
+The default root group has statically preallocated percpu data before
+and after this patch. See cgroup.c:
+
+  static DEFINE_PER_CPU(struct cgroup_rstat_cpu, cgrp_dfl_root_rstat_cpu);
+
+  /* the default hierarchy */
+  struct cgroup_root cgrp_dfl_root =3D { .cgrp.rstat_cpu =3D &cgrp_dfl_root=
+_rstat_cpu };
+  EXPORT_SYMBOL_GPL(cgrp_dfl_root);
