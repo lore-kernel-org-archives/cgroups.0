@@ -1,48 +1,63 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v3 4/8] cgroup: rstat: support cgroup1
-Date: Thu, 18 Feb 2021 12:06:42 -0500
-Message-ID: <YC6eojaku6oaOqA2@cmpxchg.org>
-References: <20210209163304.77088-1-hannes@cmpxchg.org>
- <20210209163304.77088-5-hannes@cmpxchg.org>
- <20210217174232.GA19239@blackbody.suse.cz>
- <YC2CKyaeF2bqvpMk@cmpxchg.org>
- <YC6Lh8BRfMA2Ppdk@blackbook>
+From: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH v2 1/3] mm: Fix dropped memcg from mem cgroup soft limit
+ tree
+Date: Thu, 18 Feb 2021 10:30:20 -0800
+Message-ID: <c3ffa2cb-cb2c-20b7-d722-c875934992e9@linux.intel.com>
+References: <cover.1613584277.git.tim.c.chen@linux.intel.com>
+ <8d35206601ccf0e1fe021d24405b2a0c2f4e052f.1613584277.git.tim.c.chen@linux.intel.com>
+ <YC4kV7dkJpxjW+df@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=zVENMey1EdFzZhk4Yon7dEXfrybku0MTAsUKJNMONig=;
-        b=Y1SWeFTKNyObDh6T0tVdAgoEZMOAylAVj0RaiIh4kAxsIwLKcsBRG7tkJfxs3cHEKu
-         NOWc39l8M1vBqjKsIMnc+AtNj0YWSFBUUDAUFpgpXHuzPzLnk3MRbun/IK0sJH9iZqCi
-         RdKo6WX4ySkyoeKwlC94IFZsf1Ggdowq/47IJqc+GCWUnkGbAfJudf0kZ1qCFSoUNHHv
-         dY/nu1cl5r8HS/JXRG7goGXAtXL1RrdpPQrPCdy4hfiG1WW/Jl8mkMBXUYgonM//jEni
-         tEXmFMLO5cKxRzFHrI9OfkDp/+N6LspjAeUDpjjPIkd3xT5lsvZV4/93GtGUolxXXHfH
-         c9TQ==
-Content-Disposition: inline
-In-Reply-To: <YC6Lh8BRfMA2Ppdk@blackbook>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <YC4kV7dkJpxjW+df-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+Content-Type: text/plain; charset="us-ascii"
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Thu, Feb 18, 2021 at 04:45:11PM +0100, Michal Koutn=FD wrote:
-> On Wed, Feb 17, 2021 at 03:52:59PM -0500, Johannes Weiner <hannes@cmpxchg=
-.org> wrote:
-> > In this case, we're talking about a relatively small data structure
-> > and the overhead is per mountpoint.
-> IIUC, it is per each mountpoint's number of cgroups. But I still accept
-> the argument above. Furthermore, this can be changed later.
 
-Oops, you're right of course.
 
-> > The default root group has statically preallocated percpu data before
-> > and after this patch. See cgroup.c:
-> I stand corrected, the comment is still valid.
->=20
-> Therefore,
-> Reviewed-by: Michal Koutn=FD <mkoutny@suse.com>
+On 2/18/21 12:24 AM, Michal Hocko wrote:
 
-Thanks for your reviews, Michal!
+> 
+> I have already acked this patch in the previous version along with Fixes
+> tag. It seems that my review feedback has been completely ignored also
+> for other patches in this series.
+
+Michal,
+
+My apology.  Our mail system screwed up and there are some mail missing
+from our mail system that I completely missed your mail.  
+Only saw them now after I looked into the lore.kernel.org.
+
+Responding to your comment:
+
+>Have you observed this happening in the real life? I do agree that the
+>threshold based updates of the tree is not ideal but the whole soft
+>reclaim code is far from optimal. So why do we care only now? The
+>feature is essentially dead and fine tuning it sounds like a step back
+>to me.
+
+Yes, I did see the issue mentioned in patch 2 breaking soft limit
+reclaim for cgroup v1.  There are still some of our customers using
+cgroup v1 so we will like to fix this if possible.
+
+For patch 3 regarding the uncharge_batch, it
+is more of an observation that we should uncharge in batch of same node
+and not prompted by actual workload.
+Thinking more about this, the worst that could happen
+is we could have some entries in the soft limit tree that overestimate
+the memory used.  The worst that could happen is a soft page reclaim
+on that cgroup.  The overhead from extra memcg event update could
+be more than a soft page reclaim pass.  So let's drop patch 3
+for now.
+
+Let me know if you will like me to resend patch 1 with the fixes tag
+for commit 4e41695356fb ("memory controller: soft limit reclaim on contention")
+and if there are any changes I should make for patch 2.
+
+Thanks.
+
+Tim
+
