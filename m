@@ -1,70 +1,104 @@
-From: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH v2 3/3] mm: Fix missing mem cgroup soft limit tree updates
-Date: Mon, 22 Feb 2021 10:38:27 -0800
-Message-ID: <d141f9ec-5502-b011-167f-e24d891b0dfe@linux.intel.com>
-References: <cover.1613584277.git.tim.c.chen@linux.intel.com>
- <e269f5df3af1157232b01a9b0dae3edf4880d786.1613584277.git.tim.c.chen@linux.intel.com>
- <YC4BcsNFEmW7XeqB@cmpxchg.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH] memcg: charge before adding to swapcache on swapin
+Date: Mon, 22 Feb 2021 10:45:54 -0800
+Message-ID: <CALvZod6Uf4w1xTrM6wSuGyefqWSfauXiJbCex_OnhY2g-Kadhw@mail.gmail.com>
+References: <20210219224405.1544597-1-shakeelb@google.com> <YDBZFY8WnLewRqLg@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <YC4BcsNFEmW7XeqB-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=EF4DZ8/YPHLgiqcKgmmLocSOb1RhL6xlS59EKbvTOMk=;
+        b=l7F/ZAQ0Ut25vN6NuV1Mgnps+4oWPHrywIpIgaIMkipU6kKTEaaav9qFISBOq1DdyE
+         NxV5B0YqGvSpNTeBTU4M8gA9rVt3DhfzqEvukbwx9tXDmt6zQ2n3ccGgf5qIKe49GnOK
+         +MG8d7OArOJULgO1WVyGHqga7pkUYoKEF0jYlWUT7KupD2fnJOKOBEvX+wG9rctXY6A0
+         huZx9EPyD30ZfcsfqJCpapDIv4dTgJ9lGV8+dWQVJX0mNpKcf+5Bv88WBKvJOqVaTD7s
+         YZ1Umhgva/38fQ8BD83N9bpYvAW5BKOdVqDYTmQ9f7UVVfHRMuI58kMKCF4Rq1tWhOEZ
+         1ufg==
+In-Reply-To: <YDBZFY8WnLewRqLg-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
+On Fri, Feb 19, 2021 at 4:34 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+>
+> On Fri, Feb 19, 2021 at 02:44:05PM -0800, Shakeel Butt wrote:
+> > Currently the kernel adds the page, allocated for swapin, to the
+> > swapcache before charging the page. This is fine but now we want a
+> > per-memcg swapcache stat which is essential for folks who wants to
+> > transparently migrate from cgroup v1's memsw to cgroup v2's memory and
+> > swap counters.
+> >
+> > To correctly maintain the per-memcg swapcache stat, one option which
+> > this patch has adopted is to charge the page before adding it to
+> > swapcache. One challenge in this option is the failure case of
+> > add_to_swap_cache() on which we need to undo the mem_cgroup_charge().
+> > Specifically undoing mem_cgroup_uncharge_swap() is not simple.
+> >
+> > This patch circumvent this specific issue by removing the failure path
+> > of  add_to_swap_cache() by providing __GFP_NOFAIL. Please note that in
+> > this specific situation ENOMEM was the only possible failure of
+> > add_to_swap_cache() which is removed by using __GFP_NOFAIL.
+> >
+> > Another option was to use __mod_memcg_lruvec_state(NR_SWAPCACHE) in
+> > mem_cgroup_charge() but then we need to take of the do_swap_page() case
+> > where synchronous swap devices bypass the swapcache. The do_swap_page()
+> > already does hackery to set and reset PageSwapCache bit to make
+> > mem_cgroup_charge() execute the swap accounting code and then we would
+> > need to add additional parameter to tell to not touch NR_SWAPCACHE stat
+> > as that code patch bypass swapcache.
+> >
+> > This patch added memcg charging API explicitly foe swapin pages and
+> > cleaned up do_swap_page() to not set and reset PageSwapCache bit.
+> >
+> > Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>
+> The patch makes sense to me. While it extends the charge interface, I
+> actually quite like that it charges the page earlier - before putting
+> it into wider circulation. It's a step in the right direction.
+>
+> But IMO the semantics of mem_cgroup_charge_swapin_page() are a bit too
+> fickle: the __GFP_NOFAIL in add_to_swap_cache() works around it, but
+> having a must-not-fail-after-this line makes the code tricky to work
+> on and error prone.
+>
+> It would be nicer to do a proper transaction sequence.
+>
+> > @@ -497,16 +497,15 @@ struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
+> >       __SetPageLocked(page);
+> >       __SetPageSwapBacked(page);
+> >
+> > -     /* May fail (-ENOMEM) if XArray node allocation failed. */
+> > -     if (add_to_swap_cache(page, entry, gfp_mask & GFP_RECLAIM_MASK, &shadow)) {
+> > -             put_swap_page(page, entry);
+> > +     if (mem_cgroup_charge_swapin_page(page, NULL, gfp_mask, entry))
+> >               goto fail_unlock;
+> > -     }
+> >
+> > -     if (mem_cgroup_charge(page, NULL, gfp_mask)) {
+> > -             delete_from_swap_cache(page);
+> > -             goto fail_unlock;
+> > -     }
+> > +     /*
+> > +      * Use __GFP_NOFAIL to not worry about undoing the changes done by
+> > +      * mem_cgroup_charge_swapin_page() on failure of add_to_swap_cache().
+> > +      */
+> > +     add_to_swap_cache(page, entry,
+> > +                       (gfp_mask|__GFP_NOFAIL) & GFP_RECLAIM_MASK, &shadow);
+>
+> How about:
+>
+>         mem_cgroup_charge_swapin_page()
+>         add_to_swap_cache()
+>         mem_cgroup_finish_swapin_page()
+>
+> where finish_swapin_page() only uncharges the swap entry (on cgroup1)
+> once the swap->memory transition is complete?
+>
+> Otherwise the patch looks good to me.
 
-
-On 2/17/21 9:56 PM, Johannes Weiner wrote:
-
->>  static inline void uncharge_gather_clear(struct uncharge_gather *ug)
->> @@ -6849,7 +6850,13 @@ static void uncharge_page(struct page *page, struct uncharge_gather *ug)
->>  	 * exclusive access to the page.
->>  	 */
->>  
->> -	if (ug->memcg != page_memcg(page)) {
->> +	if (ug->memcg != page_memcg(page) ||
->> +	    /*
->> +	     * Update soft limit tree used in v1 cgroup in page batch for
->> +	     * the same node. Relevant only to v1 cgroup with a soft limit.
->> +	     */
->> +	    (ug->dummy_page && ug->nid != page_to_nid(page) &&
->> +	     ug->memcg->soft_limit != PAGE_COUNTER_MAX)) {
-> 
-> Sorry, I used weird phrasing in my last email.
-> 
-> Can you please preface the checks you're adding with a
-> !cgroup_subsys_on_dfl(memory_cgrp_subsys) to static branch for
-> cgroup1? The uncharge path is pretty hot, and this would avoid the
-> runtime overhead on cgroup2 at least, which doesn't have the SL.
-> 
-> Also, do we need the ug->dummy_page check? It's only NULL on the first
-> loop - where ug->memcg is NULL as well and the branch is taken anyway.
-> 
-> The soft limit check is also slightly cheaper than the nid check, as
-> page_to_nid() might be out-of-line, so we should do it first. This?
-> 
-> 	/*
-> 	 * Batch-uncharge all pages of the same memcg.
-> 	 *
-> 	 * Unless we're looking at a cgroup1 with a softlimit
-> 	 * set: the soft limit trees are maintained per-node
-> 	 * and updated on uncharge (via dummy_page), so keep
-> 	 * batches confined to a single node as well.
-> 	 */
-> 	if (ug->memcg != page_memcg(page) ||
-> 	    (!cgroup_subsys_on_dfl(memory_cgrp_subsys) &&
-> 	     ug->memcg->soft_limit != PAGE_COUNTER_MAX &&
-> 	     ug->nid != page_to_nid(page)))
-> 
-
-Johannes,
-
-Thanks for your feedback.  Since Michal has concerns about the overhead
-this patch could incur, I think we'll hold the patch for now.  If later
-on Michal think that this patch is a good idea, I'll incorporate these
-changes you suggested.
-
-Tim
+Thanks for the review and yes this makes the code much more clear and
+maintainable.
