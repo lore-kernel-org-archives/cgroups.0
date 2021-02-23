@@ -1,58 +1,63 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: fix slub memory accounting
-Date: Tue, 23 Feb 2021 19:42:27 +0100
-Message-ID: <YDVMk+GQ943JXGz6@blackbook>
-References: <20210223092423.42420-1-songmuchun@bytedance.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] memcg: enable memcg oom-kill for __GFP_NOFAIL
+Date: Tue, 23 Feb 2021 12:43:37 -0800
+Message-ID: <20210223204337.2785120-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="IG0eXaihVNtABiw1"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1614105756; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=QZ33EKFydKYQll/wNBrYJt9SLMpJFdNX6PK6738sxL4=;
-        b=mRqz5RlxY0MleyIZCOCdydEysSrolgNwxZXrgyikDtYy1z8XMTWGF98OFHNS48BU9VNXn+
-        hyu7Y2zGqWmCaeLcc37RctNV3xOx9vTeKixinggl492o/U0QDr7KtYdw/h6EKKOjAClx2o
-        85Yyb5VCteuKVyX9O1ML24HqsJ1TiBo=
-Content-Disposition: inline
-In-Reply-To: <20210223092423.42420-1-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=sender:date:message-id:mime-version:subject:from:to:cc;
+        bh=tAEo4In/0gx3aeLrRSAmN7UQ8VKqv74lEJhxcNM3pDE=;
+        b=pNq6leRfIEyTpbzdvnSYqIa5/6uoeglwemLjqUX0IiWI8TeuF2G5lJMdEEeNcMegkl
+         O8gXSmRbFBDs2+LfUtiO8uqvdm+8+6zCwGPlI1kuN6m/K6h4DYXcZQtK5IOqx9zVk4+n
+         TUHEIgVRaat0jXeawkQ6LznVLYTsonjsmiFtth44j9oUWYUJyNwp9iM0lUduBUWN4odo
+         YvTirH9MQ2knks30Akq6f3ezOTsPcfx/lQ2Z7GKBNvRzoihVWJrOFBn87IWdovViuj4s
+         AYm2f0MuddRZ6VYqA/eHzlzS2FhYT/6lCwleqtKPCJpCUgCCiOF2r2v9A7ijcwQ0mMaw
+         m46g==
+Sender: "shakeelb via sendgmr" <shakeelb-rSQFlI6iZjOvss2yl3NHrPyj43VRqXoZVpNB7YpNyf8@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
+In the era of async memcg oom-killer, the commit a0d8b00a3381 ("mm:
+memcg: do not declare OOM from __GFP_NOFAIL allocations") added the code
+to skip memcg oom-killer for __GFP_NOFAIL allocations. The reason was
+that the __GFP_NOFAIL callers will not enter aync oom synchronization
+path and will keep the task marked as in memcg oom. At that time the
+tasks marked in memcg oom can bypass the memcg limits and the oom
+synchronization would have happened later in the later userspace
+triggered page fault. Thus letting the task marked as under memcg oom
+bypass the memcg limit for arbitrary time.
 
---IG0eXaihVNtABiw1
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+With the synchronous memcg oom-killer (commit 29ef680ae7c21 ("memcg,
+oom: move out_of_memory back to the charge path")) and not letting the
+task marked under memcg oom to bypass the memcg limits (commit
+1f14c1ac19aa4 ("mm: memcg: do not allow task about to OOM kill to bypass
+the limit")), we can again allow __GFP_NOFAIL allocations to trigger
+memcg oom-kill. This will make memcg oom behavior closer to page
+allocator oom behavior.
 
-On Tue, Feb 23, 2021 at 05:24:23PM +0800, Muchun Song <songmuchun@bytedance=
-=2Ecom> wrote:
->  mm/slab_common.c | 4 ++--
->  mm/slub.c        | 8 ++++----
->  2 files changed, 6 insertions(+), 6 deletions(-)
-Reviewed-by: Michal Koutn=FD <mkoutny-IBi9RG/b67k@public.gmane.org>
+Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+---
+ mm/memcontrol.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
---IG0eXaihVNtABiw1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 2db2aeac8a9e..dcb5665aeb69 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -2797,9 +2797,6 @@ static int try_charge(struct mem_cgroup *memcg, gfp_t gfp_mask,
+ 	if (gfp_mask & __GFP_RETRY_MAYFAIL)
+ 		goto nomem;
+ 
+-	if (gfp_mask & __GFP_NOFAIL)
+-		goto force;
+-
+ 	if (fatal_signal_pending(current))
+ 		goto force;
+ 
+-- 
+2.30.0.617.g56c4b15f3c-goog
 
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmA1TI8ACgkQia1+riC5
-qSiWAQ/9HoHZzRkfByT6xtaSn15MABMfGyy9kpE9KTK6y30Id4ErEgc+l0uy9jSz
-W3omUt+e01+K0G7jDAwTN8dK/SevY/IpENprCxKMVkZ3thk4OO72uAy4ip7Ahpc5
-j4YUVofSMiHeM8BRg0jyNURYnAjD5zI1tS3D9xVVe5EFnbhSBw5ur3gTNTjs9ZUd
-N9Iu5BVUmohXes7P0Z1vyFOSuvyf4bWDPb1sHnHPU9n73p6lPQ+0Z9o7ph1nR5zZ
-0SG48AnWW5sEiCDxvGU27NpnNueLfTz9tBiAd5f/k1VJSZyPez1aJXcRYnQDAuxo
-H9AgsQnO7BmHR2+doyHjlfaPkRtXT5QLSq/0z87hf/T78eTYMlG7hLTo2DHMEdKA
-L+Jx7JQo0IasKOmID/nmL14PMDs5XYRWxw1y+DW1G0kW7u/0Th8sgMLkh0qQQYZx
-m5gTJIXJ0mZjnZoK0hQqtxkuVnTvPMTy5fTvFlduzoIp1pILkdjNmFxWg8ZAenIA
-lYoCkkPd17lOF7vC4jXo/L9gFSOyODZamS/jbjnwo9GqadMYiAJNHo4ShIoF3YAz
-dyG5TSSVFDzn9XdwMfwPg7tBUtD6GiLG7GLjKT+IJM6LO5wFoDeQPCag41KgxTDn
-SSwi1GdzHGyrGDH6JcTmAqWDudbmvTdK065ntc7Zj2XmRXMTeDc=
-=7qx0
------END PGP SIGNATURE-----
-
---IG0eXaihVNtABiw1--
