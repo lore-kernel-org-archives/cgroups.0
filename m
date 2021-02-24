@@ -1,69 +1,53 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH v2 2/3] mm: Force update of mem cgroup soft limit tree on
- usage excess
-Date: Wed, 24 Feb 2021 12:53:35 +0100
-Message-ID: <YDY+PydRUGQpHNaJ@dhcp22.suse.cz>
-References: <cover.1613584277.git.tim.c.chen@linux.intel.com>
- <06f1f92f1f7d4e57c4e20c97f435252c16c60a27.1613584277.git.tim.c.chen@linux.intel.com>
- <YC+ApsntwnlVfCuK@dhcp22.suse.cz>
- <884d7559-e118-3773-351d-84c02642ca96@linux.intel.com>
- <YDNuAIztiGJpLEtw@dhcp22.suse.cz>
- <e132f836-b5d5-3776-22d6-669e713983e4@linux.intel.com>
- <YDQBh5th9txxEFUm@dhcp22.suse.cz>
- <cf5ca7a1-7965-f307-22e1-e216316904cf@linux.intel.com>
+From: Antonio Terceiro <antonio.terceiro@linaro.org>
+Subject: [PATCH] Documentation: cgroup-v2: fix path to example BPF program
+Date: Wed, 24 Feb 2021 10:16:31 -0300
+Message-ID: <20210224131631.349287-1-antonio.terceiro@linaro.org>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1614167617; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=XzLsHGcL8bQEwd8q77IJXXPxrQFmDs82g85prap2dQ4=;
-        b=nXir09DKObx9wu/my6Ugn5gdRgCXHFR7PCmDobwcx3KpR14Hr90pvWZwBEJmLtYJWI0B6R
-        /7z86SKpQROZRhKPQ27B778WIRwrt3MZQrt6wYpdGaX1fLA4BtZg0qAxf16zW7CAYZFcpg
-        onHSk/VsZtl2Lnilzk6yEZSaiE8fcvk=
-Content-Disposition: inline
-In-Reply-To: <cf5ca7a1-7965-f307-22e1-e216316904cf-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=2QMkH64M8As4l+KSDTQdK+u4M5qrIN7PaZOHlR51wic=;
+        b=QmN0FsJYiPxmCNa2Tha1APhsUK8o/7UaZLHeTlgpjASwj19luMRyZbWjrLxbXnOWSq
+         QX3Widqm0McOoSM3HTXHxcQmOE55BROws/lIjp65Idz5F6TUFsQCip3AEZUVrDi4802W
+         a1DgYxiomsD1lW1EmR4QuPaF4FxC5XnzYOdkw7NhBJMriRHA9/xsyO/aNXKB4gX+Akwl
+         XZDq3lTBz1baGF2HPr2Zj2AtovQtHjgyajNkzw0upFslmhr/BtBhrG2tOL3fl4ZgMHp+
+         eyKWP2uXQHTgp4Q/AvKzKs1YWSL4aGdSzROSCh8GqzzcYz7IiSTyQg3cPlVOLhACAypy
+         MH3g==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Jonathan Corbet <corbet@lwn.net>, Jiong Wang <jiong.wang@netronome.com>
 
-On Mon 22-02-21 11:48:37, Tim Chen wrote:
-> 
-> 
-> On 2/22/21 11:09 AM, Michal Hocko wrote:
-> 
-> >>
-> >> I actually have tried adjusting the threshold but found that it doesn't work well for
-> >> the case with unenven memory access frequency between cgroups.  The soft
-> >> limit for the low memory event cgroup could creep up quite a lot, exceeding
-> >> the soft limit by hundreds of MB, even
-> >> if I drop the SOFTLIMIT_EVENTS_TARGET from 1024 to something like 8.
-> > 
-> > What was the underlying reason? Higher order allocations?
-> > 
-> 
-> Not high order allocation.
-> 
-> The reason was because the run away memcg asks for memory much less often, compared
-> to the other memcgs in the system.  So it escapes the sampling update and
-> was not put onto the tree and exceeds the soft limit
-> pretty badly.  Even if it was put onto the tree and gets page reclaimed below the
-> limit, it could escape the sampling the next time it exceeds the soft limit.
+This file has been moved into the "progs" subdirectory in
+bd4aed0ee73ca873bef3cb3ec746dd796f03df28, together with all test BPF
+programs.
 
-I am sorry but I really do not follow. Maybe I am missing something
-obvious but the the rate of events (charge/uncharge) shouldn't be really
-important. There is no way to exceed the limit without charging memory
-(either a new or via task migration in v1 and immigrate_on_move). If you
-have SOFTLIMIT_EVENTS_TARGET 8 then you should be 128 * 8 events to
-re-evaluate. Huge pages can make the runaway much bigger but how it
-would be possible to runaway outside of that bound.
+Signed-off-by: Antonio Terceiro <antonio.terceiro@linaro.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Zefan Li <lizefan.x@bytedance.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Jiong Wang <jiong.wang@netronome.com>
+---
+ Documentation/admin-guide/cgroup-v2.rst | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Btw. do we really need SOFTLIMIT_EVENTS_TARGET at all? Why cannot we
-just stick with a single threshold? mem_cgroup_update_tree can be made
-a effectivelly a noop when there is no soft limit in place so overhead
-shouldn't matter for the vast majority of workloads.
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index c513eafaddea..befe9425d028 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2094,7 +2094,7 @@ If the program returns 0, the attempt fails with -EPERM, otherwise
+ it succeeds.
+ 
+ An example of BPF_CGROUP_DEVICE program may be found in the kernel
+-source tree in the tools/testing/selftests/bpf/dev_cgroup.c file.
++source tree in the tools/testing/selftests/bpf/progs/dev_cgroup.c file.
+ 
+ 
+ RDMA
 -- 
-Michal Hocko
-SUSE Labs
+2.30.1
+
