@@ -1,11 +1,11 @@
 From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [RFC PATCH 17/18] docs: cgroup-v1: Add IOASIDs controller
-Date: Sat, 27 Feb 2021 14:01:25 -0800
-Message-ID: <1614463286-97618-18-git-send-email-jacob.jun.pan@linux.intel.com>
+Subject: [PATCH V4 13/18] iommu/ioasid: Add a workqueue for cleanup work
+Date: Sat, 27 Feb 2021 14:01:21 -0800
+Message-ID: <1614463286-97618-14-git-send-email-jacob.jun.pan@linux.intel.com>
 References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 In-Reply-To: <1614463286-97618-1-git-send-email-jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
@@ -21,90 +21,84 @@ Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@publi
 To: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>
 Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-U2lnbmVkLW9mZi1ieTogSmFjb2IgUGFuIDxqYWNvYi5qdW4ucGFuQGxpbnV4LmludGVsLmNvbT4K
-LS0tCiBEb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nncm91cC12MS9pbmRleC5yc3QgfCAgIDEg
-KwogLi4uL2FkbWluLWd1aWRlL2Nncm91cC12MS9pb2FzaWRzLnJzdCAgICAgICAgIHwgMTEwICsr
-KysrKysrKysrKysrKysrKwogMiBmaWxlcyBjaGFuZ2VkLCAxMTEgaW5zZXJ0aW9ucygrKQogY3Jl
-YXRlIG1vZGUgMTAwNjQ0IERvY3VtZW50YXRpb24vYWRtaW4tZ3VpZGUvY2dyb3VwLXYxL2lvYXNp
-ZHMucnN0CgpkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9hZG1pbi1ndWlkZS9jZ3JvdXAtdjEv
-aW5kZXgucnN0IGIvRG9jdW1lbnRhdGlvbi9hZG1pbi1ndWlkZS9jZ3JvdXAtdjEvaW5kZXgucnN0
-CmluZGV4IDIyNmY2NDQ3M2U4ZS4uZjVlMzA3ZGM0ZGJiIDEwMDY0NAotLS0gYS9Eb2N1bWVudGF0
-aW9uL2FkbWluLWd1aWRlL2Nncm91cC12MS9pbmRleC5yc3QKKysrIGIvRG9jdW1lbnRhdGlvbi9h
-ZG1pbi1ndWlkZS9jZ3JvdXAtdjEvaW5kZXgucnN0CkBAIC0xNSw2ICsxNSw3IEBAIENvbnRyb2wg
-R3JvdXBzIHZlcnNpb24gMQogICAgIGRldmljZXMKICAgICBmcmVlemVyLXN1YnN5c3RlbQogICAg
-IGh1Z2V0bGIKKyAgICBpb2FzaWRzCiAgICAgbWVtY2dfdGVzdAogICAgIG1lbW9yeQogICAgIG5l
-dF9jbHMKZGlmZiAtLWdpdCBhL0RvY3VtZW50YXRpb24vYWRtaW4tZ3VpZGUvY2dyb3VwLXYxL2lv
-YXNpZHMucnN0IGIvRG9jdW1lbnRhdGlvbi9hZG1pbi1ndWlkZS9jZ3JvdXAtdjEvaW9hc2lkcy5y
-c3QKbmV3IGZpbGUgbW9kZSAxMDA2NDQKaW5kZXggMDAwMDAwMDAwMDAwLi5iMzBlYjQxYmYxYmUK
-LS0tIC9kZXYvbnVsbAorKysgYi9Eb2N1bWVudGF0aW9uL2FkbWluLWd1aWRlL2Nncm91cC12MS9p
-b2FzaWRzLnJzdApAQCAtMCwwICsxLDExMCBAQAorPT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PQorSS9PIEFkZHJlc3MgU3BhY2UgSUQgKElPQVNJRCkgQ29udHJvbGxlcgor
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQorCitBY3JvbnltcworLS0t
-LS0tLS0KK1BBU0lEOgorCVByb2Nlc3MgQWRkcmVzcyBTcGFjZSBJRCwgZGVmaW5lZCBieSBQQ0ll
-CitTVkE6CisJU2hhcmVkIFZpcnR1YWwgQWRkcmVzcworCitJbnRyb2R1Y3Rpb24KKy0tLS0tLS0t
-LS0tLQorCitJT0FTSURzIGFyZSB1c2VkIHRvIGFzc29jaWF0ZSBETUEgcmVxdWVzdHMgd2l0aCB2
-aXJ0dWFsIGFkZHJlc3Mgc3BhY2VzLiBBcworYSBzeXN0ZW0td2lkZSBsaW1pdGVkwrkgcmVzb3Vy
-Y2UsIGl0cyBjb25zdHJhaW50cyBhcmUgbWFuYWdlZCBieSB0aGUgSU9BU0lEcworY2dyb3VwIHN1
-YnN5c3RlbS4gVGhlIHNwZWNpZmljIHVzZSBjYXNlcyBhcmU6CisKKzEuIFNvbWUgdXNlciBhcHBs
-aWNhdGlvbnMgZXhoYXVzdCBhbGwgdGhlIGF2YWlsYWJsZSBJT0FTSURzIHRodXMgZGVwcml2aW5n
-CisgICBvdGhlcnMgb2YgdGhlIHNhbWUgaG9zdC4KKworMi4gU3lzdGVtIGFkbWlucyBuZWVkIHRv
-IHByb3Zpc2lvbiBWTXMgYmFzZWQgb24gdGhlaXIgbmVlZHMgZm9yIElPQVNJRHMsCisgICBlLmcu
-IHRoZSBudW1iZXIgb2YgVk1zIHdpdGggYXNzaWduZWQgZGV2aWNlcyB0aGF0IHBlcmZvcm0gRE1B
-IHJlcXVlc3RzCisgICB3aXRoIFBBU0lELgorCitUaGUgSU9BU0lEIHN1YnN5c3RlbSBjb25zaXN0
-cyBvZiB0aHJlZSBjb21wb25lbnRzOgorCistIElPQVNJRCBjb3JlOiBwcm92aWRlcyBBUElzIGZv
-ciBhbGxvY2F0aW9uLCBwb29sIG1hbmFnZW1lbnQsCisgIG5vdGlmaWNhdGlvbnMgYW5kIHJlZmNv
-dW50aW5nLiBTZWUgRG9jdW1lbnRhdGlvbi9kcml2ZXItYXBpL2lvYXNpZC5yc3QKKyAgZm9yIGRl
-dGFpbHMKKy0gSU9BU0lEIHVzZXI6ICBwcm92aWRlcyB1c2VyIGFsbG9jYXRpb24gaW50ZXJmYWNl
-IHZpYSAvZGV2L2lvYXNpZAorLSBJT0FTSUQgY2dyb3VwIGNvbnRyb2xsZXI6IG1hbmFnZSByZXNv
-dXJjZSBkaXN0cmlidXRpb24KKworUmVzb3VyY2UgRGlzdHJpYnV0aW9uIE1vZGVsCistLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0KK0lPQVNJRCBhbGxvY2F0aW9uIGlzIHByb2Nlc3MtYmFzZWQg
-aW4gdGhhdCBJT0FTSURzIGFyZSB0aWVkIHRvIHBhZ2UgdGFibGVzwrIsCit0aGUgdGhyZWFkZWQg
-bW9kZWwgaXMgbm90IHN1cHBvcnRlZC4gVGhlIGFsbG9jYXRpb24gaXMgcmVqZWN0ZWQgYnkgdGhl
-CitjZ3JvdXAgaGllcmFyY2h5IG9uY2UgYSBsaW1pdCBpcyByZWFjaGVkLiBIb3dldmVyLCBvcmdh
-bml6YXRpb25hbCBjaGFuZ2VzCitzdWNoIGFzIG1vdmluZyBwcm9jZXNzZXMgYWNyb3NzIGNncm91
-cHMgYXJlIGV4ZW1wdGVkLiBUaGVyZWZvcmUsIGl0IGlzCitwb3NzaWJsZSB0byBoYXZlIGlvYXNp
-ZHMuY3VycmVudCA+IGlvYXNpZHMubWF4LiBJdCBpcyBub3QgcG9zc2libGUgdG8gZG8KK2Z1cnRo
-ZXIgYWxsb2NhdGlvbiBhZnRlciB0aGUgb3JnYW5pemF0aW9uYWwgY2hhbmdlIHRoYXQgZXhjZWVk
-cyB0aGUgbWF4LgorCitUaGUgc3lzdGVtIGNhcGFjaXR5IG9mIHRoZSBJT0FTSURzIGlzIGRlZmF1
-bHQgdG8gUENJZSBQQVNJRCBzaXplIG9mIDIwIGJpdHMuCitJT0FTSUQgY29yZSBwcm92aWRlcyBB
-UEkgdG8gYWRqdXN0IHRoZSBzeXN0ZW0gY2FwYWNpdHkgYmFzZWQgb24gcGxhdGZvcm1zLgorSU9B
-U0lEcyBhcmUgdXNlZCBieSBib3RoIHVzZXIgYXBwbGljYXRpb25zIChlLmcuIFZNcyBhbmQgdXNl
-cnNwYWNlIGRyaXZlcnMpCithbmQga2VybmVsIChlLmcuIHN1cGVydmlzb3IgU1ZBKS4gSG93ZXZl
-ciwgb25seSB1c2VyIGFsbG9jYXRpb24gaXMgc3ViamVjdAordG8gY2dyb3VwIGNvbnN0cmFpbnRz
-LiBIb3N0IGtlcm5lbCBhbGxvY2F0ZXMgYSBwb29sIG9mIElPQVNJRHMgd2hlcmUgaXRzCitxdW90
-YSBpcyBzdWJ0cmFjdGVkIGZyb20gdGhlIHN5c3RlbSBjYXBhY2l0eS4gSU9BU0lEcyBjZ3JvdXAg
-Y29uc3VsdHMgd2l0aAordGhlIElPQVNJRCBjb3JlIGZvciBhdmFpbGFibGUgY2FwYWNpdHkgd2hl
-biBhIG5ldyBjZ3JvdXAgbGltaXQgaXMgZ3JhbnRlZC4KK1Vwb24gY3JlYXRpb24sIG5vIElPQVNJ
-RCBhbGxvY2F0aW9uIGlzIGFsbG93ZWQgYnkgdGhlIHVzZXIgcHJvY2Vzc2VzIHdpdGhpbgordGhl
-IG5ldyBjZ3JvdXAuCisKK1VzYWdlCistLS0tLQorQ0dyb3VwIGZpbGVzeXN0ZW0gaGFzIHRoZSBm
-b2xsb3dpbmcgSU9BU0lEcyBjb250cm9sbGVyIHNwZWNpZmljIGVudHJpZXM6Cis6OgorCisgaW9h
-c2lkcy5jdXJyZW50CisgaW9hc2lkcy5ldmVudHMKKyBpb2FzaWRzLm1heAorCitUbyB1c2UgdGhl
-IElPQVNJRHMgY29udHJvbGxlciwgc2V0IGlvYXNpZHMubWF4IHRvIHRoZSBsaW1pdCBvZiB0aGUg
-bnVtYmVyCitvZiBJT0FTSURzIHRoYXQgY2FuIGJlIGFsbG9jYXRlZC4gVGhlIGZpbGUgaW9hc2lk
-cy5jdXJyZW50IHNob3dzIHRoZSBjdXJyZW50CitudW1iZXIgb2YgSU9BU0lEcyBhbGxvY2F0ZWQg
-d2l0aGluIHRoZSBjZ3JvdXAuCisKK0V4YW1wbGUKKy0tLS0tLS0tCisxLiBNb3VudCB0aGUgY2dy
-b3VwMiBGUyA6OgorCisJJCBtb3VudCAtdCBjZ3JvdXAyIG5vbmUgL21udC9jZzIvCisKKzIuIEFk
-ZCBpb2FzaWRzIGNvbnRyb2xsZXIgOjoKKworCSQgZWNobyAnK2lvYXNpZHMnID4gL21udC9jZzIv
-Y2dyb3VwLnN1YnRyZWVfY29udHJvbAorCiszLiBDcmVhdGUgYSBoaWVyYXJjaHksIHNldCBub24t
-emVybyBsaW1pdCAoZGVmYXVsdCAwKSA6OgorCisJJCBta2RpciAvbW50L2NnMi90ZXN0MQorCSQg
-ZWNobyA1ID4gL21udC9jZzIvdGVzdDEvaW9hc2lkcy5tYXgKKworNC4gQWxsb2NhdGUgSU9BU0lE
-cyB3aXRoaW4gbGltaXQgc2hvdWxkIHN1Y2NlZWQgOjoKKworCSRlY2hvICQkID4gL21udC9jZzIv
-dGVzdDEvY2dyb3VwLnByb2NzCisJRG8gSU9BU0lEIGFsbG9jYXRpb24gdmlhIC9kZXYvaW9hc2lk
-CisJaW9hc2lkcy5jdXJyZW50OjEKKwlpb2FzaWRzLm1heDo1CisKKzUuIEF0dGVtcHQgdG8gYWxs
-b2NhdGUgSU9BU0lEcyBiZXlvbmQgbGltaXQgc2hvdWxkIGZhaWwgOjoKKworCWlvYXNpZHMuY3Vy
-cmVudDo1CisJaW9hc2lkcy5tYXg6NQorCis2LiBBdHRhY2ggYSBuZXcgcHJvY2VzcyB3aXRoIElP
-QVNJRCBhbHJlYWR5IGFsbG9jYXRlZCB0byBhIGNncm91cCBjb3VsZAorcmVzdWx0IGluIGlvYXNp
-ZHMuY3VycmVudCA+IGlvYXNpZHMubWF4LCBlLmcuIHByb2Nlc3Mgd2l0aCBQSUQgMTIzNCB1bmRl
-cgorYSBjZ3JvdXAgd2l0aCBJT0FTSURzIGNvbnRyb2xsZXIgaGFzIG9uZSBJT0FTSUQgYWxsb2Nh
-dGVkLCBtb3ZpbmcgaXQgdG8KK3Rlc3QxIGNncm91cCA6OgorCisJJGVjaG8gMTIzNCA+IC9tbnQv
-Y2cyL3Rlc3QxL2Nncm91cC5wcm9jcworCWlvYXNpZHMuY3VycmVudDo2CisJaW9hc2lkcy5tYXg6
-NQorCitOb3RlcworLS0tLS0KK8K5IFdoZW4gSU9BU0lEIGlzIHVzZWQgZm9yIFBDSSBFeHByZXNz
-IFBBU0lELCB0aGUgcmFuZ2UgaXMgbGltaXRlZCB0byB0aGUKK1BBU0lEIHNpemUgb2YgMjAgYml0
-cy4gRm9yIGEgZGV2aWNlIHRoYXQgaXRzIHJlc291cmNlcyBjYW4gYmUgc2hhcmVkIGFjcm9zcwor
-dGhlIHBsYXRmb3JtLCB0aGUgSU9BU0lEIG5hbWVzcGFjZSBtdXN0IGJlIHN5c3RlbS13aWRlIGlu
-IG9yZGVyIHRvIHVuaXF1ZWx5CitpZGVudGlmeSBETUEgcmVxdWVzdCB3aXRoIFBBU0lEIGluc2lk
-ZSB0aGUgZGV2aWNlLgorCivCsiBUaGUgcHJpbWFyeSB1c2UgY2FzZSBpcyBTVkEsIHdoZXJlIENQ
-VSBwYWdlIHRhYmxlcyBhcmUgc2hhcmVkIHdpdGggRE1BIHZpYQorSU9NTVUuCi0tIAoyLjI1LjEK
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmlvbW11IG1h
-aWxpbmcgbGlzdAppb21tdUBsaXN0cy5saW51eC1mb3VuZGF0aW9uLm9yZwpodHRwczovL2xpc3Rz
-LmxpbnV4Zm91bmRhdGlvbi5vcmcvbWFpbG1hbi9saXN0aW5mby9pb21tdQ==
+An IOASID can have multiple users, such as IOMMU driver, KVM, and device
+drivers.   The atomic IOASID notifier is used to inform users of IOASID
+state change. For example, the IOASID_NOTIFY_UNBIND event is issued when
+the IOASID is no longer bound to an address space. This requires ordered
+actions among users to tear down their contexts.
+
+Not all work can be handled in the atomic notifier handler. This patch
+introduces a shared, ordered workqueue for all IOASID users who wish to
+perform work asynchronously upon notification.
+
+Signed-off-by: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+---
+ drivers/iommu/ioasid.c | 25 +++++++++++++++++++++++++
+ include/linux/ioasid.h |  1 +
+ 2 files changed, 26 insertions(+)
+
+diff --git a/drivers/iommu/ioasid.c b/drivers/iommu/ioasid.c
+index 28a2e9b6594d..d42b39ca2c8b 100644
+--- a/drivers/iommu/ioasid.c
++++ b/drivers/iommu/ioasid.c
+@@ -32,6 +32,9 @@ static ioasid_t ioasid_capacity = PCI_PASID_MAX;
+ static ioasid_t ioasid_capacity_avail = PCI_PASID_MAX;
+ static DEFINE_XARRAY_ALLOC(ioasid_sets);
+ 
++/* Workqueue for IOASID users to do cleanup upon notification */
++static struct workqueue_struct *ioasid_wq;
++
+ struct ioasid_set_nb {
+ 	struct list_head	list;
+ 	struct notifier_block	*nb;
+@@ -1281,6 +1284,12 @@ int ioasid_register_notifier_mm(struct mm_struct *mm, struct notifier_block *nb)
+ }
+ EXPORT_SYMBOL_GPL(ioasid_register_notifier_mm);
+ 
++bool ioasid_queue_work(struct work_struct *work)
++{
++	return queue_work(ioasid_wq, work);
++}
++EXPORT_SYMBOL_GPL(ioasid_queue_work);
++
+ void ioasid_unregister_notifier_mm(struct mm_struct *mm, struct notifier_block *nb)
+ {
+ 	struct ioasid_set_nb *curr;
+@@ -1303,7 +1312,23 @@ void ioasid_unregister_notifier_mm(struct mm_struct *mm, struct notifier_block *
+ }
+ EXPORT_SYMBOL_GPL(ioasid_unregister_notifier_mm);
+ 
++static int __init ioasid_init(void)
++{
++	ioasid_wq = alloc_ordered_workqueue("ioasid_wq", 0);
++	if (!ioasid_wq)
++		return -ENOMEM;
++
++	return 0;
++}
++
++static void __exit ioasid_cleanup(void)
++{
++	destroy_workqueue(ioasid_wq);
++}
++
+ MODULE_AUTHOR("Jean-Philippe Brucker <jean-philippe.brucker-5wv7dgnIgG8@public.gmane.org>");
+ MODULE_AUTHOR("Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>");
+ MODULE_DESCRIPTION("IO Address Space ID (IOASID) allocator");
+ MODULE_LICENSE("GPL");
++module_init(ioasid_init);
++module_exit(ioasid_cleanup);
+diff --git a/include/linux/ioasid.h b/include/linux/ioasid.h
+index 9624b665f810..4547086797df 100644
+--- a/include/linux/ioasid.h
++++ b/include/linux/ioasid.h
+@@ -135,6 +135,7 @@ void ioasid_set_for_each_ioasid(struct ioasid_set *sdata,
+ 				void *data);
+ int ioasid_register_notifier_mm(struct mm_struct *mm, struct notifier_block *nb);
+ void ioasid_unregister_notifier_mm(struct mm_struct *mm, struct notifier_block *nb);
++bool ioasid_queue_work(struct work_struct *work);
+ #else /* !CONFIG_IOASID */
+ static inline void ioasid_install_capacity(ioasid_t total)
+ {
+-- 
+2.25.1
