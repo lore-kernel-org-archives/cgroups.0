@@ -1,7 +1,7 @@
 From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH V4 04/18] iommu/ioasid: Support setting system-wide capacity
-Date: Sat, 27 Feb 2021 14:01:12 -0800
-Message-ID: <1614463286-97618-5-git-send-email-jacob.jun.pan@linux.intel.com>
+Subject: [PATCH V4 08/18] iommu/ioasid: Introduce ioasid_set private ID
+Date: Sat, 27 Feb 2021 14:01:16 -0800
+Message-ID: <1614463286-97618-9-git-send-email-jacob.jun.pan@linux.intel.com>
 References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,166 +21,195 @@ Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@publi
 To: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>
 Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-IOASID is a system-wide resource that could vary on different systems.
-The default capacity is 20 bits as defined in the PCI-E specifications.
-This patch adds a function to allow adjusting system IOASID capacity.
-For VT-d this is set during boot as part of the Intel IOMMU
-initialization. APIs also added to support runtime capacity reservation,
-potentially by cgroups.
+When an IOASID set is used for guest SVA, each VM will acquire its
+ioasid_set for IOASID allocations. IOASIDs within the VM must have a
+host/physical IOASID backing, mapping between guest and host IOASIDs can
+be non-identical. IOASID set private ID (SPID) is introduced in this
+patch to be used as guest IOASID. However, the concept of ioasid_set
+specific namespace is generic, thus named SPID.
+
+As SPID namespace is within the IOASID set, the IOASID core can provide
+lookup services at both directions. SPIDs may not be available when its
+IOASID is allocated, the mapping between SPID and IOASID is usually
+established when a guest page table is bound to a host PASID.
 
 Signed-off-by: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- drivers/iommu/intel/iommu.c |  5 +++
- drivers/iommu/ioasid.c      | 70 +++++++++++++++++++++++++++++++++++++
- include/linux/ioasid.h      | 18 ++++++++++
- 3 files changed, 93 insertions(+)
+ drivers/iommu/ioasid.c | 104 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/ioasid.h |  18 +++++++
+ 2 files changed, 122 insertions(+)
 
-diff --git a/drivers/iommu/intel/iommu.c b/drivers/iommu/intel/iommu.c
-index f665322a0991..6f42ff7d171d 100644
---- a/drivers/iommu/intel/iommu.c
-+++ b/drivers/iommu/intel/iommu.c
-@@ -41,6 +41,7 @@
- #include <linux/dma-direct.h>
- #include <linux/crash_dump.h>
- #include <linux/numa.h>
-+#include <linux/ioasid.h>
- #include <asm/irq_remapping.h>
- #include <asm/cacheflush.h>
- #include <asm/iommu.h>
-@@ -3298,6 +3299,10 @@ static int __init init_dmars(void)
- 	if (ret)
- 		goto free_iommu;
- 
-+	/* PASID is needed for scalable mode irrespective to SVM */
-+	if (intel_iommu_sm)
-+		ioasid_install_capacity(intel_pasid_max_id);
-+
- 	/*
- 	 * for each drhd
- 	 *   enable fault log
 diff --git a/drivers/iommu/ioasid.c b/drivers/iommu/ioasid.c
-index 4eb9b3dd1b85..28681b99340b 100644
+index 9a3ba157dec3..7707bb608bdd 100644
 --- a/drivers/iommu/ioasid.c
 +++ b/drivers/iommu/ioasid.c
-@@ -10,6 +10,10 @@
- #include <linux/spinlock.h>
- #include <linux/xarray.h>
- 
-+/* Default to PCIe standard 20 bit PASID */
-+#define PCI_PASID_MAX 0x100000
-+static ioasid_t ioasid_capacity = PCI_PASID_MAX;
-+static ioasid_t ioasid_capacity_avail = PCI_PASID_MAX;
+@@ -26,6 +26,7 @@ enum ioasid_state {
+  * struct ioasid_data - Meta data about ioasid
+  *
+  * @id:		Unique ID
++ * @spid:	Private ID unique within a set
+  * @refs:	Number of active users
+  * @state:	Track state of the IOASID
+  * @set:	ioasid_set of the IOASID belongs to
+@@ -34,6 +35,7 @@ enum ioasid_state {
+  */
  struct ioasid_data {
  	ioasid_t id;
++	ioasid_t spid;
+ 	enum ioasid_state state;
  	struct ioasid_set *set;
-@@ -258,6 +262,72 @@ void ioasid_unregister_allocator(struct ioasid_allocator_ops *ops)
+ 	void *private;
+@@ -413,6 +415,107 @@ void ioasid_detach_data(ioasid_t ioasid)
  }
- EXPORT_SYMBOL_GPL(ioasid_unregister_allocator);
+ EXPORT_SYMBOL_GPL(ioasid_detach_data);
  
-+void ioasid_install_capacity(ioasid_t total)
++static ioasid_t ioasid_find_by_spid_locked(struct ioasid_set *set, ioasid_t spid, bool get)
 +{
-+	spin_lock(&ioasid_allocator_lock);
-+	if (ioasid_capacity && ioasid_capacity != PCI_PASID_MAX) {
-+		pr_warn("IOASID capacity is already set.\n");
-+		goto done_unlock;
++	ioasid_t ioasid = INVALID_IOASID;
++	struct ioasid_data *entry;
++	unsigned long index;
++
++	if (!xa_load(&ioasid_sets, set->id)) {
++		pr_warn("Invalid set\n");
++		goto done;
 +	}
-+	ioasid_capacity = ioasid_capacity_avail = total;
-+done_unlock:
-+	spin_unlock(&ioasid_allocator_lock);
++
++	xa_for_each(&set->xa, index, entry) {
++		if (spid == entry->spid) {
++			if (get)
++				refcount_inc(&entry->refs);
++			ioasid = index;
++		}
++	}
++done:
++	return ioasid;
 +}
-+EXPORT_SYMBOL_GPL(ioasid_install_capacity);
 +
 +/**
-+ * @brief Reserve capacity from the system pool
++ * ioasid_attach_spid - Attach ioasid_set private ID to an IOASID
 + *
-+ * @param nr_ioasid Number of IOASIDs requested to be reserved, 0 means
-+ *	reserve all remaining IDs.
++ * @ioasid: the system-wide IOASID to attach
++ * @spid:   the ioasid_set private ID of @ioasid
 + *
-+ * @return the remaining capacity on success, or errno
++ * After attching SPID, future lookup can be done via ioasid_find_by_spid().
 + */
-+int ioasid_reserve_capacity(ioasid_t nr_ioasid)
++int ioasid_attach_spid(ioasid_t ioasid, ioasid_t spid)
 +{
++	struct ioasid_data *data;
 +	int ret = 0;
 +
++	if (spid == INVALID_IOASID)
++		return -EINVAL;
++
 +	spin_lock(&ioasid_allocator_lock);
-+	if (nr_ioasid > ioasid_capacity_avail) {
-+		ret = -ENOSPC;
++	data = xa_load(&active_allocator->xa, ioasid);
++
++	if (!data) {
++		pr_err("No IOASID entry %d to attach SPID %d\n",
++			ioasid, spid);
++		ret = -ENOENT;
 +		goto done_unlock;
 +	}
-+	if (!nr_ioasid)
-+		nr_ioasid = ioasid_capacity_avail;
-+	ioasid_capacity_avail -= nr_ioasid;
-+	ret = nr_ioasid;
-+done_unlock:
-+	spin_unlock(&ioasid_allocator_lock);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(ioasid_reserve_capacity);
-+
-+/**
-+ * @brief Return capacity to the system pool
-+ * 	We trust the caller not to return more than it has reserved, we could
-+ * 	also track reservation if needed.
-+ *
-+ * @param nr_ioasid Number of IOASIDs requested to be returned
-+ *
-+ * @return the remaining capacity on success, or errno
-+ */
-+int ioasid_cancel_capacity(ioasid_t nr_ioasid)
-+{
-+	int ret = 0;
-+
-+	spin_lock(&ioasid_allocator_lock);
-+	if (nr_ioasid + ioasid_capacity_avail > ioasid_capacity) {
++	/* Check if SPID is unique within the set */
++	if (ioasid_find_by_spid_locked(data->set, spid, false) != INVALID_IOASID) {
 +		ret = -EINVAL;
 +		goto done_unlock;
 +	}
-+	ioasid_capacity_avail += nr_ioasid;
-+	ret = ioasid_capacity_avail;
++	data->spid = spid;
++
 +done_unlock:
 +	spin_unlock(&ioasid_allocator_lock);
 +	return ret;
 +}
-+EXPORT_SYMBOL_GPL(ioasid_cancel_capacity);
++EXPORT_SYMBOL_GPL(ioasid_attach_spid);
 +
- /**
-  * ioasid_attach_data - Set private data for an allocated ioasid
-  * @ioasid: the ID to set data
++void ioasid_detach_spid(ioasid_t ioasid)
++{
++	struct ioasid_data *data;
++
++	spin_lock(&ioasid_allocator_lock);
++	data = xa_load(&active_allocator->xa, ioasid);
++
++	if (!data || data->spid == INVALID_IOASID) {
++		pr_err("Invalid IOASID entry %d to detach\n", ioasid);
++		goto done_unlock;
++	}
++	data->spid = INVALID_IOASID;
++
++done_unlock:
++	spin_unlock(&ioasid_allocator_lock);
++}
++EXPORT_SYMBOL_GPL(ioasid_detach_spid);
++
++/**
++ * ioasid_find_by_spid - Find the system-wide IOASID by a set private ID and
++ * its set.
++ *
++ * @set:	the ioasid_set to search within
++ * @spid:	the set private ID
++ * @get:	flag indicates whether to take a reference once found
++ *
++ * Given a set private ID and its IOASID set, find the system-wide IOASID. Take
++ * a reference upon finding the matching IOASID if @get is true. Return
++ * INVALID_IOASID if the IOASID is not found in the set or the set is not valid.
++ */
++ioasid_t ioasid_find_by_spid(struct ioasid_set *set, ioasid_t spid, bool get)
++{
++	ioasid_t ioasid;
++
++	spin_lock(&ioasid_allocator_lock);
++	ioasid = ioasid_find_by_spid_locked(set, spid, get);
++	spin_unlock(&ioasid_allocator_lock);
++	return ioasid;
++}
++EXPORT_SYMBOL_GPL(ioasid_find_by_spid);
++
+ static inline bool ioasid_set_is_valid(struct ioasid_set *set)
+ {
+ 	return xa_load(&ioasid_sets, set->id) == set;
+@@ -616,6 +719,7 @@ ioasid_t ioasid_alloc(struct ioasid_set *set, ioasid_t min, ioasid_t max,
+ 	}
+ 	data->id = id;
+ 	data->state = IOASID_STATE_IDLE;
++	data->spid = INVALID_IOASID;
+ 
+ 	/* Store IOASID in the per set data */
+ 	if (xa_err(xa_store(&set->xa, id, data, GFP_ATOMIC))) {
 diff --git a/include/linux/ioasid.h b/include/linux/ioasid.h
-index f6e705f832f0..2780bdc84b94 100644
+index e7f3e6108724..dcab02886cb5 100644
 --- a/include/linux/ioasid.h
 +++ b/include/linux/ioasid.h
-@@ -32,6 +32,10 @@ struct ioasid_allocator_ops {
- #define DECLARE_IOASID_SET(name) struct ioasid_set name = { 0 }
- 
- #if IS_ENABLED(CONFIG_IOASID)
-+void ioasid_install_capacity(ioasid_t total);
-+int ioasid_reserve_capacity(ioasid_t nr_ioasid);
-+int ioasid_cancel_capacity(ioasid_t nr_ioasid);
-+
- ioasid_t ioasid_alloc(struct ioasid_set *set, ioasid_t min, ioasid_t max,
- 		      void *private);
- void ioasid_get(ioasid_t ioasid);
-@@ -43,6 +47,20 @@ void ioasid_unregister_allocator(struct ioasid_allocator_ops *allocator);
+@@ -81,6 +81,9 @@ int ioasid_register_allocator(struct ioasid_allocator_ops *allocator);
+ void ioasid_unregister_allocator(struct ioasid_allocator_ops *allocator);
  int ioasid_attach_data(ioasid_t ioasid, void *data);
  void ioasid_detach_data(ioasid_t ioasid);
- #else /* !CONFIG_IOASID */
-+static inline void ioasid_install_capacity(ioasid_t total)
++int ioasid_attach_spid(ioasid_t ioasid, ioasid_t spid);
++void ioasid_detach_spid(ioasid_t ioasid);
++ioasid_t ioasid_find_by_spid(struct ioasid_set *set, ioasid_t spid, bool get);
+ void ioasid_set_for_each_ioasid(struct ioasid_set *sdata,
+ 				void (*fn)(ioasid_t id, void *data),
+ 				void *data);
+@@ -173,6 +176,21 @@ static inline struct ioasid_set *ioasid_find_set(ioasid_t ioasid)
+ 	return ERR_PTR(-ENOTSUPP);
+ }
+ 
++static inline int ioasid_attach_spid(ioasid_t ioasid, ioasid_t spid)
++{
++	return -ENOTSUPP;
++}
++
++static inline void ioasid_detach_spid(ioasid_t ioasid)
 +{
 +}
 +
-+static inline int ioasid_reserve_capacity(ioasid_t nr_ioasid)
++static inline ioasid_t ioasid_find_by_spid(struct ioasid_set *set,
++					   ioasid_t spid, bool get)
 +{
-+	return -ENOSPC;
++	return INVALID_IOASID;
 +}
 +
-+static inline int ioasid_cancel_capacity(ioasid_t nr_ioasid)
-+{
-+	return -EINVAL;
-+}
-+
- static inline ioasid_t ioasid_alloc(struct ioasid_set *set, ioasid_t min,
- 				    ioasid_t max, void *private)
- {
+ static inline void ioasid_set_for_each_ioasid(struct ioasid_set *sdata,
+ 					      void (*fn)(ioasid_t id, void *data),
+ 					      void *data)
 -- 
 2.25.1
