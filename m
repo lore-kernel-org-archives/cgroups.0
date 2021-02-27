@@ -1,7 +1,7 @@
 From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [RFC PATCH 18/18] ioasid: Add /dev/ioasid for userspace
-Date: Sat, 27 Feb 2021 14:01:26 -0800
-Message-ID: <1614463286-97618-19-git-send-email-jacob.jun.pan@linux.intel.com>
+Subject: [PATCH V4 09/18] iommu/ioasid: Introduce notification APIs
+Date: Sat, 27 Feb 2021 14:01:17 -0800
+Message-ID: <1614463286-97618-10-git-send-email-jacob.jun.pan@linux.intel.com>
 References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,637 +21,307 @@ Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@publi
 To: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>
 Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-From: Liu Yi L <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Relations among IOASID users largely follow a publisher-subscriber
+pattern. E.g. to support guest SVA on Intel Scalable I/O Virtualization
+(SIOV) enabled platforms, VFIO, IOMMU, device drivers, KVM are all users
+of IOASIDs. When a state change occurs, VFIO publishes the change event
+that needs to be processed by other users/subscribers.
 
-I/O Address Space IDs (IOASIDs) is used to tag DMA requests to target
-multiple DMA address spaces for physical devices. Its PCI terminology
-is called PASID (Process Address Space ID). Platforms with PASID support
-can provide PASID granularity DMA isolation, which is very useful for
-efficient and secure device sharing (SVA, subdevice passthrough, etc.).
-
-Today only kernel drivers are allowed to allocate IOASIDs [1]. This patch
-aims to extend this capability to userspace as required in device pass-
-through scenarios. For example, a userspace driver may want to create its
-own DMA address spaces besides the default IOVA address space established
-by the kernel on the assigned device (e.g. vDPA control vq [2] and guest
-SVA [3]), thus need to get IOASIDs from the kernel IOASID allocator for
-tagging. In concept, each device can have its own IOASID space, thus it's
-also possible for userspace driver to manage a private IOASID space itself,
-say, when PF/VF is assigned. However it doesn't work for subdevice pass-
-through, as multiple subdevices under the same parent device share a single
-IOASID space thus IOASIDs must be centrally managed by the kernel in such
-case.
-
-This patch introduces a /dev/ioasid interface for this purpose (per discussion
-in [4]). An IOASID is just a number before it is tagged to a specific DMA
-address space. The actual IOASID tagging (to DMA requests) and association
-(with DMA address spaces) operations from userspace are scrutinized by specific
-device passthrough frameworks, which must ensure that a malicious driver
-cannot program arbitrary IOASIDs to its assigned device to access DMA address
-spaces that don't belong to it, this is out of the scope of this patch (a
-reference VFIO implementation will be posted soon).
-
-Open:
-
-PCIe PASID is 20bit implying a space with 1M IOASIDs. although it's plenty
-there was an open [4] on whether this user interface is open to all processes
-or only selective processes (e.g. with device assigned). In this patchseries,
-a cgroup controller is introduced to manage IOASID quota that a process is
-allowed to use. A cgroup-enabled system may by default set quota=0 to disallow
-IOASID allocation for most processes, and then having the virt management
-stack to adjust the quota for a process which gets device assigned. But yeah,
-we are also willing to hear more suggestions.
-
-[1] https://lore.kernel.org/linux-iommu/1565900005-62508-8-git-send-email-jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org/
-[2] https://lore.kernel.org/kvm/20201216064818.48239-1-jasowang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
-[3] https://lore.kernel.org/linux-iommu/1599734733-6431-1-git-send-email-yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
-[4] https://lore.kernel.org/kvm/20201014171055.328a52f4-DGNDKt5SQtizQB+pC5nmwQ@public.gmane.org/
+This patch introduced two types of notifications: global and per
+ioasid_set. The latter is intended for users who only needs to handle
+events related to the IOASID of a given set.
+For more information, refer to the kernel documentation at
+Documentation/ioasid.rst.
 
 Signed-off-by: Liu Yi L <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- Documentation/userspace-api/index.rst  |   1 +
- Documentation/userspace-api/ioasid.rst |  49 ++++
- drivers/iommu/Kconfig                  |   5 +
- drivers/iommu/Makefile                 |   1 +
- drivers/iommu/intel/Kconfig            |   1 +
- drivers/iommu/ioasid_user.c            | 297 +++++++++++++++++++++++++
- include/linux/ioasid.h                 |  26 +++
- include/linux/miscdevice.h             |   1 +
- include/uapi/linux/ioasid.h            |  98 ++++++++
- 9 files changed, 479 insertions(+)
- create mode 100644 Documentation/userspace-api/ioasid.rst
- create mode 100644 drivers/iommu/ioasid_user.c
- create mode 100644 include/uapi/linux/ioasid.h
+ drivers/iommu/ioasid.c | 111 +++++++++++++++++++++++++++++++++++++++--
+ include/linux/ioasid.h |  54 ++++++++++++++++++++
+ 2 files changed, 161 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/userspace-api/index.rst b/Documentation/userspace-api/index.rst
-index acd2cc2a538d..69e1be7c67ee 100644
---- a/Documentation/userspace-api/index.rst
-+++ b/Documentation/userspace-api/index.rst
-@@ -24,6 +24,7 @@ place where this information is gathered.
-    ioctl/index
-    iommu
-    media/index
-+   ioasid
+diff --git a/drivers/iommu/ioasid.c b/drivers/iommu/ioasid.c
+index 7707bb608bdd..56577e745c4b 100644
+--- a/drivers/iommu/ioasid.c
++++ b/drivers/iommu/ioasid.c
+@@ -10,12 +10,33 @@
+ #include <linux/spinlock.h>
+ #include <linux/xarray.h>
  
- .. only::  subproject and html
- 
-diff --git a/Documentation/userspace-api/ioasid.rst b/Documentation/userspace-api/ioasid.rst
-new file mode 100644
-index 000000000000..879d6cbae858
---- /dev/null
-+++ b/Documentation/userspace-api/ioasid.rst
-@@ -0,0 +1,49 @@
-+.. SPDX-License-Identifier: GPL-2.0
-+.. ioasid:
-+
-+=====================================
-+IOASID Userspace API
-+=====================================
-+
-+The IOASID UAPI is used for userspace IOASID allocation/free requests,
-+thus IOASID management is centralized in the IOASID core[1] in the kernel. The
-+primary use case is guest Shared Virtual Address (SVA) today.
-+
-+Requests such as allocation/free can be issued by the users and managed
-+on a per-process basis through the ioasid core. Upon opening ("/dev/ioasid"),
-+a process obtains a unique handle associated with the process's mm_struct.
-+This handle is mapped to an FD in the userspace. Only a single open is
-+allowed per process.
-+
-+File descriptors can be transferred across processes by employing fork() or
-+UNIX domain socket. FDs obtained by transfer cannot be used to perform
-+IOASID requests. The following behaviors are recommended for the
-+applications:
-+
-+ - forked children close the parent's IOASID FDs immediately, open new
-+   /dev/ioasid FDs if IOASID allocation is desired
-+
-+ - do not share FDs via UNIX domain socket, e.g. via sendmsg
-+
-+================
-+Userspace APIs
-+================
-+
-+/dev/ioasid provides below ioctls:
-+
-+*) IOASID_GET_API_VERSION: returns the API version, userspace should check
-+   the API version first with the one it has embedded.
-+*) IOASID_GET_INFO: returns the information on the /dev/ioasid.
-+   - ioasid_bits: the ioasid bit width supported by this uAPI, userspace
-+     should check the ioasid_bits returned by this ioctl with the ioasid
-+     bits it wants and should fail if it's smaller than the one that
-+     userspace wants, otherwise, allocation will be failed.
-+*) IOASID_REQUEST_ALLOC: returns an IOASID which is allocated in kernel within
-+   the specified ioasid range.
-+*) IOASID_REQUEST_FREE: free an IOASID per userspace's request.
-+
-+For detailed definition, please see include/uapi/linux/ioasid.h.
-+
-+.. contents:: :local:
-+
-+[1] Documentation/driver-api/ioasid.rst
-diff --git a/drivers/iommu/Kconfig b/drivers/iommu/Kconfig
-index 192ef8f61310..830f4ec28a16 100644
---- a/drivers/iommu/Kconfig
-+++ b/drivers/iommu/Kconfig
-@@ -7,6 +7,11 @@ config IOMMU_IOVA
- config IOASID
- 	tristate
- 
-+config IOASID_USER
-+	tristate
-+	depends on IOASID
-+	default n
-+
- # IOMMU_API always gets selected by whoever wants it.
- config IOMMU_API
- 	bool
-diff --git a/drivers/iommu/Makefile b/drivers/iommu/Makefile
-index 61bd30cd8369..305dd019ff49 100644
---- a/drivers/iommu/Makefile
-+++ b/drivers/iommu/Makefile
-@@ -9,6 +9,7 @@ obj-$(CONFIG_IOMMU_IO_PGTABLE) += io-pgtable.o
- obj-$(CONFIG_IOMMU_IO_PGTABLE_ARMV7S) += io-pgtable-arm-v7s.o
- obj-$(CONFIG_IOMMU_IO_PGTABLE_LPAE) += io-pgtable-arm.o
- obj-$(CONFIG_IOASID) += ioasid.o
-+obj-$(CONFIG_IOASID_USER) += ioasid_user.o
- obj-$(CONFIG_IOMMU_IOVA) += iova.o
- obj-$(CONFIG_OF_IOMMU)	+= of_iommu.o
- obj-$(CONFIG_MSM_IOMMU) += msm_iommu.o
-diff --git a/drivers/iommu/intel/Kconfig b/drivers/iommu/intel/Kconfig
-index 28a3d1596c76..a6d9dea61d58 100644
---- a/drivers/iommu/intel/Kconfig
-+++ b/drivers/iommu/intel/Kconfig
-@@ -13,6 +13,7 @@ config INTEL_IOMMU
- 	select DMAR_TABLE
- 	select SWIOTLB
- 	select IOASID
-+	select IOASID_USER
- 	select IOMMU_DMA
- 	help
- 	  DMA remapping (DMAR) devices support enables independent address
-diff --git a/drivers/iommu/ioasid_user.c b/drivers/iommu/ioasid_user.c
-new file mode 100644
-index 000000000000..2f8957cd055a
---- /dev/null
-+++ b/drivers/iommu/ioasid_user.c
-@@ -0,0 +1,297 @@
-+// SPDX-License-Identifier: GPL-2.0-only
 +/*
-+ * Support IOASID allocation/free from user space.
-+ *
-+ * Copyright (C) 2021 Intel Corporation.
-+ *     Author: Liu Yi L <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-+ *
++ * An IOASID can have multiple consumers where each consumer may have
++ * hardware contexts associated with the IOASID.
++ * When a status change occurs, like on IOASID deallocation, notifier chains
++ * are used to keep the consumers in sync.
++ * This is a publisher-subscriber pattern where publisher can change the
++ * state of each IOASID, e.g. alloc/free, bind IOASID to a device and mm.
++ * On the other hand, subscribers get notified for the state change and
++ * keep local states in sync.
 + */
++static ATOMIC_NOTIFIER_HEAD(ioasid_notifier);
++static DEFINE_SPINLOCK(ioasid_nb_lock);
 +
-+#include <linux/ioasid.h>
-+#include <linux/file.h>
-+#include <linux/fs.h>
-+#include <linux/module.h>
-+#include <linux/slab.h>
-+#include <linux/sched/mm.h>
-+#include <linux/miscdevice.h>
-+
-+#define DRIVER_VERSION  "0.1"
-+#define DRIVER_AUTHOR   "Liu Yi L <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>"
-+#define DRIVER_DESC     "IOASID management for user space"
-+
-+/* Current user ioasid uapi supports 31 bits */
-+#define IOASID_BITS	31
-+
-+struct ioasid_user_token {
-+	unsigned long long val;
+ /* Default to PCIe standard 20 bit PASID */
+ #define PCI_PASID_MAX 0x100000
+ static ioasid_t ioasid_capacity = PCI_PASID_MAX;
+ static ioasid_t ioasid_capacity_avail = PCI_PASID_MAX;
+ static DEFINE_XARRAY_ALLOC(ioasid_sets);
+ 
++struct ioasid_set_nb {
++	struct list_head	list;
++	struct notifier_block	*nb;
++	void			*token;
++	struct ioasid_set	*set;
++	bool			active;
 +};
 +
-+struct ioasid_user {
-+	struct kref		kref;
-+	struct ioasid_set	*ioasid_set;
-+	struct mutex		lock;
-+	struct list_head	next;
-+	struct ioasid_user_token	token;
-+};
-+
-+static struct mutex		ioasid_user_lock;
-+static struct list_head		ioasid_user_list;
-+
-+/* called with ioasid_user_lock held */
-+static void ioasid_user_release(struct kref *kref)
+ enum ioasid_state {
+ 	IOASID_STATE_IDLE,
+ 	IOASID_STATE_ACTIVE,
+@@ -415,6 +436,38 @@ void ioasid_detach_data(ioasid_t ioasid)
+ }
+ EXPORT_SYMBOL_GPL(ioasid_detach_data);
+ 
++/**
++ * ioasid_notify - Send notification on a given IOASID for status change.
++ *
++ * @data:	The IOASID data to which the notification will send
++ * @cmd:	Notification event sent by IOASID external users, can be
++ *		IOASID_BIND or IOASID_UNBIND.
++ *
++ * @flags:	Special instructions, e.g. notify within a set or global by
++ *		IOASID_NOTIFY_FLAG_SET or IOASID_NOTIFY_FLAG_ALL flags
++ * Caller must hold ioasid_allocator_lock and reference to the IOASID
++ */
++static int ioasid_notify(struct ioasid_data *data,
++			 enum ioasid_notify_val cmd, unsigned int flags)
 +{
-+	struct ioasid_user *iuser = container_of(kref, struct ioasid_user, kref);
-+
-+	ioasid_free_all_in_set(iuser->ioasid_set);
-+	list_del(&iuser->next);
-+	mutex_unlock(&ioasid_user_lock);
-+	ioasid_set_free(iuser->ioasid_set);
-+	kfree(iuser);
-+}
-+
-+void ioasid_user_put(struct ioasid_user *iuser)
-+{
-+	kref_put_mutex(&iuser->kref, ioasid_user_release, &ioasid_user_lock);
-+}
-+EXPORT_SYMBOL_GPL(ioasid_user_put);
-+
-+static void ioasid_user_get(struct ioasid_user *iuser)
-+{
-+	kref_get(&iuser->kref);
-+}
-+
-+struct ioasid_user *ioasid_user_get_from_task(struct task_struct *task)
-+{
-+	struct mm_struct *mm = get_task_mm(task);
-+	unsigned long long val = (unsigned long long)mm;
-+	struct ioasid_user *iuser;
-+	bool found = false;
-+
-+	if (!mm)
-+		return NULL;
-+
-+	mutex_lock(&ioasid_user_lock);
-+	/* Search existing ioasid_user with current mm pointer */
-+	list_for_each_entry(iuser, &ioasid_user_list, next) {
-+		if (iuser->token.val == val) {
-+			ioasid_user_get(iuser);
-+			found = true;
-+			break;
-+		}
-+	}
-+
-+	mmput(mm);
-+
-+	mutex_unlock(&ioasid_user_lock);
-+	return found ? iuser : NULL;
-+}
-+EXPORT_SYMBOL_GPL(ioasid_user_get_from_task);
-+
-+void ioasid_user_for_each_id(struct ioasid_user *iuser, void *data,
-+			    void (*fn)(ioasid_t id, void *data))
-+{
-+	mutex_lock(&iuser->lock);
-+	ioasid_set_for_each_ioasid(iuser->ioasid_set, fn, data);
-+	mutex_unlock(&iuser->lock);
-+}
-+EXPORT_SYMBOL_GPL(ioasid_user_for_each_id);
-+
-+static int ioasid_fops_open(struct inode *inode, struct file *filep)
-+{
-+	struct mm_struct *mm = get_task_mm(current);
-+	unsigned long long val = (unsigned long long)mm;
-+	struct ioasid_set *iset;
-+	struct ioasid_user *iuser;
++	struct ioasid_nb_args args = { 0 };
 +	int ret = 0;
 +
-+	mutex_lock(&ioasid_user_lock);
-+	/* Only allow one single open per process */
-+	list_for_each_entry(iuser, &ioasid_user_list, next) {
-+		if (iuser->token.val == val) {
-+			ret = -EBUSY;
-+			goto out;
-+		}
-+	}
++	if (flags & ~(IOASID_NOTIFY_FLAG_ALL | IOASID_NOTIFY_FLAG_SET))
++		return -EINVAL;
 +
-+	iuser = kzalloc(sizeof(*iuser), GFP_KERNEL);
-+	if (!iuser) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
++	args.id = data->id;
++	args.set = data->set;
++	args.pdata = data->private;
++	args.spid = data->spid;
++	if (flags & IOASID_NOTIFY_FLAG_ALL)
++		ret = atomic_notifier_call_chain(&ioasid_notifier, cmd, &args);
++	if (flags & IOASID_NOTIFY_FLAG_SET)
++		ret = atomic_notifier_call_chain(&data->set->nh, cmd, &args);
 +
-+	/*
-+	 * IOASID core provides a 'IOASID set' concept to track all
-+	 * IOASIDs associated with a token. Here we use mm_struct as
-+	 * the token and create a IOASID set per mm_struct. All the
-+	 * containers of the process share the same IOASID set.
-+	 */
-+	iset = ioasid_set_alloc(mm, 0, IOASID_SET_TYPE_MM);
-+	if (IS_ERR(iset)) {
-+		kfree(iuser);
-+		ret = PTR_ERR(iset);
-+		goto out;
-+	}
-+
-+	iuser->ioasid_set = iset;
-+	kref_init(&iuser->kref);
-+	iuser->token.val = val;
-+	mutex_init(&iuser->lock);
-+	filep->private_data = iuser;
-+
-+	list_add(&iuser->next, &ioasid_user_list);
-+out:
-+	mutex_unlock(&ioasid_user_lock);
-+	mmput(mm);
 +	return ret;
 +}
 +
-+static int ioasid_fops_release(struct inode *inode, struct file *filep)
-+{
-+	struct ioasid_user *iuser = filep->private_data;
+ static ioasid_t ioasid_find_by_spid_locked(struct ioasid_set *set, ioasid_t spid, bool get)
+ {
+ 	ioasid_t ioasid = INVALID_IOASID;
+@@ -468,7 +521,7 @@ int ioasid_attach_spid(ioasid_t ioasid, ioasid_t spid)
+ 		goto done_unlock;
+ 	}
+ 	data->spid = spid;
+-
++	ioasid_notify(data, IOASID_NOTIFY_BIND, IOASID_NOTIFY_FLAG_SET);
+ done_unlock:
+ 	spin_unlock(&ioasid_allocator_lock);
+ 	return ret;
+@@ -486,8 +539,8 @@ void ioasid_detach_spid(ioasid_t ioasid)
+ 		pr_err("Invalid IOASID entry %d to detach\n", ioasid);
+ 		goto done_unlock;
+ 	}
++	ioasid_notify(data, IOASID_NOTIFY_UNBIND, IOASID_NOTIFY_FLAG_SET);
+ 	data->spid = INVALID_IOASID;
+-
+ done_unlock:
+ 	spin_unlock(&ioasid_allocator_lock);
+ }
+@@ -603,6 +656,8 @@ struct ioasid_set *ioasid_set_alloc(void *token, ioasid_t quota, int type)
+ 	set->quota = quota;
+ 	set->id = id;
+ 	atomic_set(&set->nr_ioasids, 0);
++	ATOMIC_INIT_NOTIFIER_HEAD(&set->nh);
 +
-+	filep->private_data = NULL;
-+
-+	ioasid_user_put(iuser);
-+
-+	return 0;
-+}
-+
-+static int ioasid_get_info(struct ioasid_user *iuser, unsigned long arg)
-+{
-+	struct ioasid_info info;
-+	unsigned long minsz;
-+
-+	minsz = offsetofend(struct ioasid_info, ioasid_bits);
-+
-+	if (copy_from_user(&info, (void __user *)arg, minsz))
-+		return -EFAULT;
-+
-+	if (info.argsz < minsz || info.flags)
-+		return -EINVAL;
-+
-+	info.ioasid_bits = IOASID_BITS;
-+
-+	return copy_to_user((void __user *)arg, &info, minsz) ? -EFAULT : 0;
-+}
-+
-+static int ioasid_alloc_request(struct ioasid_user *iuser, unsigned long arg)
-+{
-+	struct ioasid_alloc_request req;
-+	unsigned long minsz;
-+	ioasid_t ioasid;
-+
-+	minsz = offsetofend(struct ioasid_alloc_request, range);
-+
-+	if (copy_from_user(&req, (void __user *)arg, minsz))
-+		return -EFAULT;
-+
-+	if (req.argsz < minsz || req.flags)
-+		return -EINVAL;
-+
-+	if (req.range.min > req.range.max ||
-+	    req.range.min >= (1 << IOASID_BITS) ||
-+	    req.range.max >= (1 << IOASID_BITS))
-+		return -EINVAL;
-+
-+	ioasid = ioasid_alloc(iuser->ioasid_set, req.range.min,
-+			    req.range.max, NULL);
-+
-+	if (ioasid == INVALID_IOASID)
-+		return -EINVAL;
-+
-+	return ioasid;
-+
-+}
-+
-+static int ioasid_free_request(struct ioasid_user *iuser, unsigned long arg)
-+{
-+	int ioasid;
-+
-+	if (copy_from_user(&ioasid, (void __user *)arg, sizeof(ioasid)))
-+		return -EFAULT;
-+
-+	if (ioasid < 0)
-+		return -EINVAL;
-+
-+	ioasid_free(iuser->ioasid_set, ioasid);
-+
-+	return 0;
-+}
-+
-+static long ioasid_fops_unl_ioctl(struct file *filep,
-+				  unsigned int cmd, unsigned long arg)
-+{
-+	struct ioasid_user *iuser = filep->private_data;
-+	long ret = -EINVAL;
-+
-+	if (!iuser)
-+		return ret;
-+
-+	mutex_lock(&iuser->lock);
-+
-+	switch (cmd) {
-+	case IOASID_GET_API_VERSION:
-+		ret = IOASID_API_VERSION;
-+		break;
-+	case IOASID_GET_INFO:
-+		ret = ioasid_get_info(iuser, arg);
-+		break;
-+	case IOASID_REQUEST_ALLOC:
-+		ret = ioasid_alloc_request(iuser, arg);
-+		break;
-+	case IOASID_REQUEST_FREE:
-+		ret = ioasid_free_request(iuser, arg);
-+		break;
-+	default:
-+		pr_err("Unsupported cmd %u\n", cmd);
-+		break;
+ 	/*
+ 	 * Per set XA is used to store private IDs within the set, get ready
+ 	 * for ioasid_set private ID and system-wide IOASID allocation
+@@ -655,7 +710,9 @@ int ioasid_set_free(struct ioasid_set *set)
+ 	int ret = 0;
+ 
+ 	spin_lock(&ioasid_allocator_lock);
++	spin_lock(&ioasid_nb_lock);
+ 	ret = ioasid_set_free_locked(set);
++	spin_unlock(&ioasid_nb_lock);
+ 	spin_unlock(&ioasid_allocator_lock);
+ 	return ret;
+ }
+@@ -728,6 +785,7 @@ ioasid_t ioasid_alloc(struct ioasid_set *set, ioasid_t min, ioasid_t max,
+ 		goto exit_free;
+ 	}
+ 	atomic_inc(&set->nr_ioasids);
++	ioasid_notify(data, IOASID_NOTIFY_ALLOC, IOASID_NOTIFY_FLAG_SET);
+ 	goto done_unlock;
+ exit_free:
+ 	kfree(data);
+@@ -780,9 +838,11 @@ static void ioasid_free_locked(struct ioasid_set *set, ioasid_t ioasid)
+ 	 * If the refcount is 1, it means there is no other users of the IOASID
+ 	 * other than IOASID core itself. There is no need to notify anyone.
+ 	 */
+-	if (!refcount_dec_and_test(&data->refs))
++	if (!refcount_dec_and_test(&data->refs)) {
++		ioasid_notify(data, IOASID_NOTIFY_FREE,
++			IOASID_NOTIFY_FLAG_SET | IOASID_NOTIFY_FLAG_ALL);
+ 		return;
+-
 +	}
-+
-+	mutex_unlock(&iuser->lock);
-+	return ret;
-+}
-+
-+static const struct file_operations ioasid_user_fops = {
-+	.owner		= THIS_MODULE,
-+	.open		= ioasid_fops_open,
-+	.release	= ioasid_fops_release,
-+	.unlocked_ioctl	= ioasid_fops_unl_ioctl,
-+};
-+
-+static struct miscdevice ioasid_user = {
-+	.minor = IOASID_MINOR,
-+	.name = "ioasid_user",
-+	.fops = &ioasid_user_fops,
-+	.nodename = "ioasid",
-+	.mode = S_IRUGO | S_IWUGO,
-+};
-+
-+
-+static int __init ioasid_user_init(void)
+ 	ioasid_do_free_locked(data);
+ }
+ 
+@@ -833,15 +893,39 @@ void ioasid_free_all_in_set(struct ioasid_set *set)
+ 	if (!atomic_read(&set->nr_ioasids))
+ 		return;
+ 	spin_lock(&ioasid_allocator_lock);
++	spin_lock(&ioasid_nb_lock);
+ 	xa_for_each(&set->xa, index, entry) {
+ 		ioasid_free_locked(set, index);
+ 		/* Free from per set private pool */
+ 		xa_erase(&set->xa, index);
+ 	}
++	spin_unlock(&ioasid_nb_lock);
+ 	spin_unlock(&ioasid_allocator_lock);
+ }
+ EXPORT_SYMBOL_GPL(ioasid_free_all_in_set);
+ 
++/*
++ * ioasid_find_mm_set - Retrieve IOASID set with mm token
++ * Take a reference of the set if found.
++ */
++struct ioasid_set *ioasid_find_mm_set(struct mm_struct *token)
 +{
-+	int ret;
++	struct ioasid_set *set;
++	unsigned long index;
 +
-+	ret = misc_register(&ioasid_user);
-+	if (ret) {
-+		pr_err("ioasid_user: misc device register failed\n");
-+		return ret;
++	spin_lock(&ioasid_allocator_lock);
++
++	xa_for_each(&ioasid_sets, index, set) {
++		if (set->type == IOASID_SET_TYPE_MM && set->token == token)
++			goto exit_unlock;
 +	}
-+
-+	mutex_init(&ioasid_user_lock);
-+	INIT_LIST_HEAD(&ioasid_user_list);
-+	return 0;
++	set = NULL;
++exit_unlock:
++	spin_unlock(&ioasid_allocator_lock);
++	return set;
 +}
++EXPORT_SYMBOL_GPL(ioasid_find_mm_set);
 +
-+static void __exit ioasid_user_exit(void)
+ /**
+  * ioasid_set_for_each_ioasid
+  * @brief
+@@ -1021,6 +1105,25 @@ void *ioasid_find(struct ioasid_set *set, ioasid_t ioasid,
+ }
+ EXPORT_SYMBOL_GPL(ioasid_find);
+ 
++int ioasid_register_notifier(struct ioasid_set *set, struct notifier_block *nb)
 +{
-+	WARN_ON(!list_empty(&ioasid_user_list));
-+	misc_deregister(&ioasid_user);
++	if (set)
++		return atomic_notifier_chain_register(&set->nh, nb);
++	else
++		return atomic_notifier_chain_register(&ioasid_notifier, nb);
 +}
++EXPORT_SYMBOL_GPL(ioasid_register_notifier);
 +
-+module_init(ioasid_user_init);
-+module_exit(ioasid_user_exit);
++void ioasid_unregister_notifier(struct ioasid_set *set,
++				struct notifier_block *nb)
++{
++	if (set)
++		atomic_notifier_chain_unregister(&set->nh, nb);
++	else
++		atomic_notifier_chain_unregister(&ioasid_notifier, nb);
++}
++EXPORT_SYMBOL_GPL(ioasid_unregister_notifier);
 +
-+MODULE_VERSION(DRIVER_VERSION);
-+MODULE_LICENSE("GPL v2");
-+MODULE_AUTHOR(DRIVER_AUTHOR);
-+MODULE_DESCRIPTION(DRIVER_DESC);
+ MODULE_AUTHOR("Jean-Philippe Brucker <jean-philippe.brucker-5wv7dgnIgG8@public.gmane.org>");
+ MODULE_AUTHOR("Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>");
+ MODULE_DESCRIPTION("IO Address Space ID (IOASID) allocator");
 diff --git a/include/linux/ioasid.h b/include/linux/ioasid.h
-index 5ea4710efb02..b82abe6325f7 100644
+index dcab02886cb5..d8b85a04214f 100644
 --- a/include/linux/ioasid.h
 +++ b/include/linux/ioasid.h
-@@ -6,6 +6,7 @@
- #include <linux/errno.h>
- #include <linux/xarray.h>
- #include <linux/refcount.h>
-+#include <uapi/linux/ioasid.h>
+@@ -58,6 +58,47 @@ struct ioasid_allocator_ops {
+ 	void *pdata;
+ };
  
- #define INVALID_IOASID ((ioasid_t)-1)
- typedef unsigned int ioasid_t;
-@@ -152,6 +153,31 @@ static inline int ioasid_cg_uncharge(struct ioasid_set *set)
- #endif /* CGROUP_IOASIDS */
- bool ioasid_queue_work(struct work_struct *work);
- 
-+/* IOASID userspace support */
-+struct ioasid_user;
-+#if IS_ENABLED(CONFIG_IOASID_USER)
-+extern struct ioasid_user *ioasid_user_get_from_task(struct task_struct *task);
-+extern void ioasid_user_put(struct ioasid_user *iuser);
-+extern void ioasid_user_for_each_id(struct ioasid_user *iuser, void *data,
-+				   void (*fn)(ioasid_t id, void *data));
-+
-+#else /* CONFIG_IOASID_USER */
-+static inline struct ioasid_user *
-+ioasid_user_get_from_task(struct task_struct *task)
-+{
-+	return ERR_PTR(-ENOTTY);
-+}
-+
-+static inline void ioasid_user_put(struct ioasid_user *iuser)
-+{
-+}
-+
-+static inline void ioasid_user_for_each_id(struct ioasid_user *iuser, void *data,
-+					  void (*fn)(ioasid_t id, void *data))
-+{
-+}
-+#endif /* CONFIG_IOASID_USER */
-+
- #else /* !CONFIG_IOASID */
- 
- static inline void ioasid_install_capacity(ioasid_t total)
-diff --git a/include/linux/miscdevice.h b/include/linux/miscdevice.h
-index 0676f18093f9..9823901f11a4 100644
---- a/include/linux/miscdevice.h
-+++ b/include/linux/miscdevice.h
-@@ -21,6 +21,7 @@
- #define APOLLO_MOUSE_MINOR	7	/* unused */
- #define PC110PAD_MINOR		9	/* unused */
- /*#define ADB_MOUSE_MINOR	10	FIXME OBSOLETE */
-+#define IOASID_MINOR		129     /* /dev/ioasid     */
- #define WATCHDOG_MINOR		130	/* Watchdog timer     */
- #define TEMP_MINOR		131	/* Temperature Sensor */
- #define APM_MINOR_DEV		134
-diff --git a/include/uapi/linux/ioasid.h b/include/uapi/linux/ioasid.h
-new file mode 100644
-index 000000000000..1529070c0317
---- /dev/null
-+++ b/include/uapi/linux/ioasid.h
-@@ -0,0 +1,98 @@
-+/* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
-+/*
-+ * PASID (Processor Address Space ID) is a PCIe concept for tagging
-+ * address spaces in DMA requests. When system-wide PASID allocation
-+ * is required by the underlying iommu driver (e.g. Intel VT-d), this
-+ * provides an interface for userspace to request ioasid alloc/free
-+ * for its assigned devices.
-+ *
-+ * Copyright (C) 2021 Intel Corporation.  All rights reserved.
-+ *     Author: Liu Yi L <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+#ifndef _UAPI_IOASID_H
-+#define _UAPI_IOASID_H
-+
-+#include <linux/types.h>
-+#include <linux/ioctl.h>
-+#include <linux/ioasid.h>
-+
-+#define IOASID_API_VERSION	0
-+
-+
-+/* Kernel & User level defines for IOASID IOCTLs. */
-+
-+#define IOASID_TYPE	('i')
-+#define IOASID_BASE	100
-+
-+/* -------- IOCTLs for IOASID file descriptor (/dev/ioasid) -------- */
-+
-+/**
-+ * IOASID_GET_API_VERSION - _IO(IOASID_TYPE, IOASID_BASE + 0)
-+ *
-+ * Report the version of the IOASID API.  This allows us to bump the entire
-+ * API version should we later need to add or change features in incompatible
-+ * ways.
-+ * Return: IOASID_API_VERSION
-+ * Availability: Always
-+ */
-+#define IOASID_GET_API_VERSION		_IO(IOASID_TYPE, IOASID_BASE + 0)
-+
-+/**
-+ * IOASID_GET_INFO - _IOR(IOASID_TYPE, IOASID_BASE + 1, struct ioasid_info)
-+ *
-+ * Retrieve information about the IOASID object. Fills in provided
-+ * struct ioasid_info. Caller sets argsz.
-+ *
-+ * @argsz:	 user filled size of this data.
-+ * @flags:	 currently reserved for future extension. must set to 0.
-+ * @ioasid_bits: maximum supported PASID bits, 0 represents no PASID
-+ *		 support.
-+
-+ * Availability: Always
-+ */
-+struct ioasid_info {
-+	__u32	argsz;
-+	__u32	flags;
-+	__u32	ioasid_bits;
++/* Notification data when IOASID status changed */
++enum ioasid_notify_val {
++	IOASID_NOTIFY_ALLOC = 1,
++	IOASID_NOTIFY_FREE,
++	IOASID_NOTIFY_BIND,
++	IOASID_NOTIFY_UNBIND,
 +};
-+#define IOASID_GET_INFO _IO(IOASID_TYPE, IOASID_BASE + 1)
 +
++#define IOASID_NOTIFY_FLAG_ALL BIT(0)
++#define IOASID_NOTIFY_FLAG_SET BIT(1)
 +/**
-+ * IOASID_REQUEST_ALLOC - _IOWR(IOASID_TYPE, IOASID_BASE + 2,
-+ *					struct ioasid_request)
++ * enum ioasid_notifier_prios - IOASID event notification order
 + *
-+ * Alloc a PASID within @range. @range is [min, max], which means both
-+ * @min and @max are inclusive.
-+ * User space should provide min, max no more than the ioasid bits reports
-+ * in ioasid_info via IOASID_GET_INFO.
-+ *
-+ * @argsz: user filled size of this data.
-+ * @flags: currently reserved for future extension. must set to 0.
-+ * @range: allocated ioasid is expected in the range.
-+ *
-+ * returns: allocated ID on success, -errno on failure
++ * When status of an IOASID changes, users might need to take actions to
++ * reflect the new state. For example, when an IOASID is freed due to
++ * exception, the hardware context in virtual CPU, DMA device, and IOMMU
++ * shall be cleared and drained. Order is required to prevent life cycle
++ * problems.
 + */
-+struct ioasid_alloc_request {
-+	__u32	argsz;
-+	__u32	flags;
-+	struct {
-+		__u32	min;
-+		__u32	max;
-+	} range;
++enum ioasid_notifier_prios {
++	IOASID_PRIO_LAST,
++	IOASID_PRIO_DEVICE,
++	IOASID_PRIO_IOMMU,
++	IOASID_PRIO_CPU,
 +};
-+#define IOASID_REQUEST_ALLOC	_IO(IOASID_TYPE, IOASID_BASE + 2)
 +
 +/**
-+ * IOASID_REQUEST_FREE - _IOWR(IOASID_TYPE, IOASID_BASE + 3, int)
-+ *
-+ * Free a PASID.
-+ *
-+ * returns: 0 on success, -errno on failure
++ * struct ioasid_nb_args - Argument provided by IOASID core when notifier
++ * is called.
++ * @id:		The IOASID being notified
++ * @spid:	The set private ID associated with the IOASID
++ * @set:	The IOASID set of @id
++ * @pdata:	The private data attached to the IOASID
 + */
-+#define IOASID_REQUEST_FREE	_IO(IOASID_TYPE, IOASID_BASE + 3)
++struct ioasid_nb_args {
++	ioasid_t id;
++	ioasid_t spid;
++	struct ioasid_set *set;
++	void *pdata;
++};
 +
-+#endif /* _UAPI_IOASID_H */
+ #if IS_ENABLED(CONFIG_IOASID)
+ void ioasid_install_capacity(ioasid_t total);
+ int ioasid_reserve_capacity(ioasid_t nr_ioasid);
+@@ -84,6 +125,10 @@ void ioasid_detach_data(ioasid_t ioasid);
+ int ioasid_attach_spid(ioasid_t ioasid, ioasid_t spid);
+ void ioasid_detach_spid(ioasid_t ioasid);
+ ioasid_t ioasid_find_by_spid(struct ioasid_set *set, ioasid_t spid, bool get);
++int ioasid_register_notifier(struct ioasid_set *set,
++			struct notifier_block *nb);
++void ioasid_unregister_notifier(struct ioasid_set *set,
++				struct notifier_block *nb);
+ void ioasid_set_for_each_ioasid(struct ioasid_set *sdata,
+ 				void (*fn)(ioasid_t id, void *data),
+ 				void *data);
+@@ -149,6 +194,15 @@ static inline void *ioasid_find(struct ioasid_set *set, ioasid_t ioasid,
+ 	return NULL;
+ }
+ 
++static inline int ioasid_register_notifier(struct notifier_block *nb)
++{
++	return -ENOTSUPP;
++}
++
++static inline void ioasid_unregister_notifier(struct notifier_block *nb)
++{
++}
++
+ static inline int ioasid_register_allocator(struct ioasid_allocator_ops *allocator)
+ {
+ 	return -ENOTSUPP;
 -- 
 2.25.1
