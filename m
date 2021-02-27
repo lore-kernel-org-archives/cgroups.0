@@ -1,11 +1,11 @@
 From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [PATCH V4 10/18] iommu/ioasid: Support mm token type ioasid_set
- notifications
-Date: Sat, 27 Feb 2021 14:01:18 -0800
-Message-ID: <1614463286-97618-11-git-send-email-jacob.jun.pan@linux.intel.com>
+Subject: [PATCH V4 03/18] iommu/ioasid: Add a separate function for detach data
+Date: Sat, 27 Feb 2021 14:01:11 -0800
+Message-ID: <1614463286-97618-4-git-send-email-jacob.jun.pan@linux.intel.com>
 References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 In-Reply-To: <1614463286-97618-1-git-send-email-jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
@@ -18,160 +18,143 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
  <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Type: text/plain; charset="windows-1252"
 To: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>
 Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-QXMgYSBzeXN0ZW0td2lkZSByZXNvdXJjZSwgSU9BU0lEIGlzIG9mdGVuIHNoYXJlZCBieSBtdWx0
-aXBsZSBrZXJuZWwKc3Vic3lzdGVtcyB0aGF0IGFyZSBpbmRlcGVuZGVudCBvZiBlYWNoIG90aGVy
-LiBIb3dldmVyLCBhdCB0aGUKaW9hc2lkX3NldCBsZXZlbCwgdGhlc2Uga2VybmVsIHN1YnN5c3Rl
-bXMgbXVzdCBjb21tdW5pY2F0ZSB3aXRoIGVhY2gKb3RoZXIgZm9yIG93bmVyc2hpcCBjaGVja2lu
-ZywgZXZlbnQgbm90aWZpY2F0aW9ucywgZXRjLiBGb3IgZXhhbXBsZSwgb24KSW50ZWwgU2NhbGFi
-bGUgSU8gVmlydHVhbGl6YXRpb24gKFNJT1YpIGVuYWJsZWQgcGxhdGZvcm1zLCBLVk0gYW5kIFZG
-SU8KaW5zdGFuY2VzIHVuZGVyIHRoZSBzYW1lIHByb2Nlc3MvZ3Vlc3QgbXVzdCBiZSBhd2FyZSBv
-ZiBhIHNoYXJlZCBJT0FTSUQKc2V0LgpJT0FTSURfU0VUX1RZUEVfTU0gdG9rZW4gdHlwZSB3YXMg
-aW50cm9kdWNlZCB0byBleHBsaWNpdGx5IG1hcmsgYW4KSU9BU0lEIHNldCB0aGF0IGJlbG9uZ3Mg
-dG8gYSBwcm9jZXNzLCB0aHVzIHVzZSB0aGUgc2FtZSBtbV9zdHJ1Y3QKcG9pbnRlciBhcyBhIHRv
-a2VuLiBVc2VycyBvZiB0aGUgc2FtZSBwcm9jZXNzIGNhbiB0aGVuIGlkZW50aWZ5IHdpdGgKZWFj
-aCBvdGhlciBiYXNlZCBvbiB0aGlzIHRva2VuLgoKVGhpcyBwYXRjaCBpbnRyb2R1Y2VzIE1NIHRv
-a2VuIHNwZWNpZmljIGV2ZW50IHJlZ2lzdHJhdGlvbiBBUElzLiBFdmVudApzdWJzY3JpYmVycyBz
-dWNoIGFzIEtWTSBpbnN0YW5jZXMgY2FuIHJlZ2lzdGVyIElPQVNJRCBldmVudCBoYW5kbGVyCndp
-dGhvdXQgdGhlIGtub3dsZWRnZSBvZiBpdHMgaW9hc2lkX3NldC4gRXZlbnQgaGFuZGxlcnMgYXJl
-IHJlZ2lzdGVyZWQKYmFzZWQgb24gaXRzIG1tX3N0cnVjdCBwb2ludGVyIGFzIGEgdG9rZW4uIElu
-IGNhc2Ugd2hlbiBzdWJzY3JpYmVycwpyZWdpc3RlciBoYW5kbGVyICpwcmlvciogdG8gdGhlIGNy
-ZWF0aW9uIG9mIHRoZSBpb2FzaWRfc2V0LCB0aGUKaGFuZGxlcuKAmXMgbm90aWZpY2F0aW9uIGJs
-b2NrIGlzIHN0b3JlZCBpbiBhIHBlbmRpbmcgbGlzdCB3aXRoaW4gSU9BU0lECmNvcmUuIE9uY2Ug
-dGhlIGlvYXNpZF9zZXQgb2YgdGhlIE1NIHRva2VuIGlzIGNyZWF0ZWQsIHRoZSBub3RpZmljYXRp
-b24KYmxvY2sgd2lsbCBiZSByZWdpc3RlcmVkIGJ5IHRoZSBJT0FTSUQgY29yZS4KClNpZ25lZC1v
-ZmYtYnk6IExpdSBZaSBMIDx5aS5sLmxpdUBpbnRlbC5jb20+ClNpZ25lZC1vZmYtYnk6IFd1IEhh
-byA8aGFvLnd1QGludGVsLmNvbT4KU2lnbmVkLW9mZi1ieTogSmFjb2IgUGFuIDxqYWNvYi5qdW4u
-cGFuQGxpbnV4LmludGVsLmNvbT4KLS0tCiBkcml2ZXJzL2lvbW11L2lvYXNpZC5jIHwgMTQyICsr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrCiBpbmNsdWRlL2xpbnV4L2lv
-YXNpZC5oIHwgIDE4ICsrKysrKwogMiBmaWxlcyBjaGFuZ2VkLCAxNjAgaW5zZXJ0aW9ucygrKQoK
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvaW9tbXUvaW9hc2lkLmMgYi9kcml2ZXJzL2lvbW11L2lvYXNp
-ZC5jCmluZGV4IDU2NTc3ZTc0NWM0Yi4uOTZlOTQxZGZhZGE3IDEwMDY0NAotLS0gYS9kcml2ZXJz
-L2lvbW11L2lvYXNpZC5jCisrKyBiL2RyaXZlcnMvaW9tbXUvaW9hc2lkLmMKQEAgLTIxLDYgKzIx
-LDggQEAKICAqIGtlZXAgbG9jYWwgc3RhdGVzIGluIHN5bmMuCiAgKi8KIHN0YXRpYyBBVE9NSUNf
-Tk9USUZJRVJfSEVBRChpb2FzaWRfbm90aWZpZXIpOworLyogTGlzdCB0byBob2xkIHBlbmRpbmcg
-bm90aWZpY2F0aW9uIGJsb2NrIHJlZ2lzdHJhdGlvbnMgKi8KK3N0YXRpYyBMSVNUX0hFQUQoaW9h
-c2lkX25iX3BlbmRpbmdfbGlzdCk7CiBzdGF0aWMgREVGSU5FX1NQSU5MT0NLKGlvYXNpZF9uYl9s
-b2NrKTsKIAogLyogRGVmYXVsdCB0byBQQ0llIHN0YW5kYXJkIDIwIGJpdCBQQVNJRCAqLwpAQCAt
-NTc0LDYgKzU3NiwyNyBAQCBzdGF0aWMgaW5saW5lIGJvb2wgaW9hc2lkX3NldF9pc192YWxpZChz
-dHJ1Y3QgaW9hc2lkX3NldCAqc2V0KQogCXJldHVybiB4YV9sb2FkKCZpb2FzaWRfc2V0cywgc2V0
-LT5pZCkgPT0gc2V0OwogfQogCitzdGF0aWMgdm9pZCBpb2FzaWRfYWRkX3BlbmRpbmdfbmIoc3Ry
-dWN0IGlvYXNpZF9zZXQgKnNldCkKK3sKKwlzdHJ1Y3QgaW9hc2lkX3NldF9uYiAqY3VycjsKKwor
-CWlmIChzZXQtPnR5cGUgIT0gSU9BU0lEX1NFVF9UWVBFX01NKQorCQlyZXR1cm47CisJLyoKKwkg
-KiBDaGVjayBpZiB0aGVyZSBhcmUgYW55IHBlbmRpbmcgbmIgcmVxdWVzdHMgZm9yIHRoZSBnaXZl
-biB0b2tlbiwgaWYgc28KKwkgKiBhZGQgdGhlbSB0byB0aGUgbm90aWZpZXIgY2hhaW4uCisJICov
-CisJc3Bpbl9sb2NrKCZpb2FzaWRfbmJfbG9jayk7CisJbGlzdF9mb3JfZWFjaF9lbnRyeShjdXJy
-LCAmaW9hc2lkX25iX3BlbmRpbmdfbGlzdCwgbGlzdCkgeworCQlpZiAoY3Vyci0+dG9rZW4gPT0g
-c2V0LT50b2tlbiAmJiAhY3Vyci0+YWN0aXZlKSB7CisJCQlhdG9taWNfbm90aWZpZXJfY2hhaW5f
-cmVnaXN0ZXIoJnNldC0+bmgsIGN1cnItPm5iKTsKKwkJCWN1cnItPnNldCA9IHNldDsKKwkJCWN1
-cnItPmFjdGl2ZSA9IHRydWU7CisJCX0KKwl9CisJc3Bpbl91bmxvY2soJmlvYXNpZF9uYl9sb2Nr
-KTsKK30KKwogLyoqCiAgKiBpb2FzaWRfc2V0X2FsbG9jIC0gQWxsb2NhdGUgYSBuZXcgSU9BU0lE
-IHNldCBmb3IgYSBnaXZlbiB0b2tlbgogICoKQEAgLTY1OCw2ICs2ODEsMTEgQEAgc3RydWN0IGlv
-YXNpZF9zZXQgKmlvYXNpZF9zZXRfYWxsb2Modm9pZCAqdG9rZW4sIGlvYXNpZF90IHF1b3RhLCBp
-bnQgdHlwZSkKIAlhdG9taWNfc2V0KCZzZXQtPm5yX2lvYXNpZHMsIDApOwogCUFUT01JQ19JTklU
-X05PVElGSUVSX0hFQUQoJnNldC0+bmgpOwogCisJLyoKKwkgKiBDaGVjayBpZiB0aGVyZSBhcmUg
-YW55IHBlbmRpbmcgbmIgcmVxdWVzdHMgZm9yIHRoZSBnaXZlbiB0b2tlbiwgaWYgc28KKwkgKiBh
-ZGQgdGhlbSB0byB0aGUgbm90aWZpZXIgY2hhaW4uCisJICovCisJaW9hc2lkX2FkZF9wZW5kaW5n
-X25iKHNldCk7CiAJLyoKIAkgKiBQZXIgc2V0IFhBIGlzIHVzZWQgdG8gc3RvcmUgcHJpdmF0ZSBJ
-RHMgd2l0aGluIHRoZSBzZXQsIGdldCByZWFkeQogCSAqIGZvciBpb2FzaWRfc2V0IHByaXZhdGUg
-SUQgYW5kIHN5c3RlbS13aWRlIElPQVNJRCBhbGxvY2F0aW9uCkBAIC02NzUsNiArNzAzLDcgQEAg
-RVhQT1JUX1NZTUJPTF9HUEwoaW9hc2lkX3NldF9hbGxvYyk7CiAKIHN0YXRpYyBpbnQgaW9hc2lk
-X3NldF9mcmVlX2xvY2tlZChzdHJ1Y3QgaW9hc2lkX3NldCAqc2V0KQogeworCXN0cnVjdCBpb2Fz
-aWRfc2V0X25iICpjdXJyOwogCWludCByZXQgPSAwOwogCiAJaWYgKCFpb2FzaWRfc2V0X2lzX3Zh
-bGlkKHNldCkpIHsKQEAgLTY4OCw2ICs3MTcsMTYgQEAgc3RhdGljIGludCBpb2FzaWRfc2V0X2Zy
-ZWVfbG9ja2VkKHN0cnVjdCBpb2FzaWRfc2V0ICpzZXQpCiAJfQogCiAJV0FSTl9PTigheGFfZW1w
-dHkoJnNldC0+eGEpKTsKKwkvKiBSZXN0b3JlIHBlbmRpbmcgc3RhdHVzIG9mIHRoZSBzZXQgTkJz
-ICovCisJbGlzdF9mb3JfZWFjaF9lbnRyeShjdXJyLCAmaW9hc2lkX25iX3BlbmRpbmdfbGlzdCwg
-bGlzdCkgeworCQlpZiAoY3Vyci0+dG9rZW4gPT0gc2V0LT50b2tlbikgeworCQkJaWYgKGN1cnIt
-PmFjdGl2ZSkKKwkJCQljdXJyLT5hY3RpdmUgPSBmYWxzZTsKKwkJCWVsc2UKKwkJCQlwcl93YXJu
-KCJTZXQgdG9rZW4gZXhpc3RzIGJ1dCBub3QgYWN0aXZlIVxuIik7CisJCX0KKwl9CisKIAkvKgog
-CSAqIFRva2VuIGdvdCByZWxlYXNlZCByaWdodCBhd2F5IGFmdGVyIHRoZSBpb2FzaWRfc2V0IGlz
-IGZyZWVkLgogCSAqIElmIGEgbmV3IHNldCBpcyBjcmVhdGVkIGltbWVkaWF0ZWx5IHdpdGggdGhl
-IG5ld2x5IHJlbGVhc2VkIHRva2VuLApAQCAtMTExNyw2ICsxMTU2LDIyIEBAIEVYUE9SVF9TWU1C
-T0xfR1BMKGlvYXNpZF9yZWdpc3Rlcl9ub3RpZmllcik7CiB2b2lkIGlvYXNpZF91bnJlZ2lzdGVy
-X25vdGlmaWVyKHN0cnVjdCBpb2FzaWRfc2V0ICpzZXQsCiAJCQkJc3RydWN0IG5vdGlmaWVyX2Js
-b2NrICpuYikKIHsKKwlzdHJ1Y3QgaW9hc2lkX3NldF9uYiAqY3VycjsKKworCXNwaW5fbG9jaygm
-aW9hc2lkX25iX2xvY2spOworCS8qCisJICogUGVuZGluZyBsaXN0IGlzIHJlZ2lzdGVyZWQgd2l0
-aCBhIHRva2VuIHdpdGhvdXQgYW4gaW9hc2lkX3NldCwKKwkgKiB0aGVyZWZvcmUgc2hvdWxkIG5v
-dCBiZSB1bnJlZ2lzdGVyZWQgZGlyZWN0bHkuCisJICovCisJbGlzdF9mb3JfZWFjaF9lbnRyeShj
-dXJyLCAmaW9hc2lkX25iX3BlbmRpbmdfbGlzdCwgbGlzdCkgeworCQlpZiAoY3Vyci0+bmIgPT0g
-bmIpIHsKKwkJCXByX3dhcm4oIkNhbm5vdCB1bnJlZ2lzdGVyIE5CIGZyb20gcGVuZGluZyBsaXN0
-XG4iKTsKKwkJCXNwaW5fdW5sb2NrKCZpb2FzaWRfbmJfbG9jayk7CisJCQlyZXR1cm47CisJCX0K
-Kwl9CisJc3Bpbl91bmxvY2soJmlvYXNpZF9uYl9sb2NrKTsKKwogCWlmIChzZXQpCiAJCWF0b21p
-Y19ub3RpZmllcl9jaGFpbl91bnJlZ2lzdGVyKCZzZXQtPm5oLCBuYik7CiAJZWxzZQpAQCAtMTEy
-NCw2ICsxMTc5LDkzIEBAIHZvaWQgaW9hc2lkX3VucmVnaXN0ZXJfbm90aWZpZXIoc3RydWN0IGlv
-YXNpZF9zZXQgKnNldCwKIH0KIEVYUE9SVF9TWU1CT0xfR1BMKGlvYXNpZF91bnJlZ2lzdGVyX25v
-dGlmaWVyKTsKIAorLyoqCisgKiBpb2FzaWRfcmVnaXN0ZXJfbm90aWZpZXJfbW0gLSBSZWdpc3Rl
-ciBhIG5vdGlmaWVyIGJsb2NrIG9uIHRoZSBJT0FTSUQgc2V0CisgKiAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICBjcmVhdGVkIGJ5IHRoZSBtbV9zdHJ1Y3QgcG9pbnRlciBhcyB0aGUgdG9r
-ZW4KKyAqCisgKiBAbW06IHRoZSBtbV9zdHJ1Y3QgdG9rZW4gb2YgdGhlIGlvYXNpZF9zZXQKKyAq
-IEBuYjogbm90ZmllciBibG9jayB0byBiZSByZWdpc3RlcmVkIG9uIHRoZSBpb2FzaWRfc2V0Cisg
-KgorICogVGhpcyBhIHZhcmlhbnQgb2YgaW9hc2lkX3JlZ2lzdGVyX25vdGlmaWVyKCkgd2hlcmUg
-dGhlIGNhbGxlciBpbnRlbmRzIHRvCisgKiBsaXN0ZW4gdG8gSU9BU0lEIGV2ZW50cyBiZWxvbmcg
-dGhlIGlvYXNpZF9zZXQgY3JlYXRlZCB1bmRlciB0aGUgc2FtZQorICogcHJvY2Vzcy4gQ2FsbGVy
-IGlzIG5vdCBhd2FyZSBvZiB0aGUgaW9hc2lkX3NldCwgbm8gbmVlZCB0byBob2xkIHJlZmVyZW5j
-ZQorICogb2YgdGhlIGlvYXNpZF9zZXQuCisgKi8KK2ludCBpb2FzaWRfcmVnaXN0ZXJfbm90aWZp
-ZXJfbW0oc3RydWN0IG1tX3N0cnVjdCAqbW0sIHN0cnVjdCBub3RpZmllcl9ibG9jayAqbmIpCit7
-CisJc3RydWN0IGlvYXNpZF9zZXRfbmIgKmN1cnI7CisJc3RydWN0IGlvYXNpZF9zZXQgKnNldDsK
-KwlpbnQgcmV0ID0gMDsKKworCXNwaW5fbG9jaygmaW9hc2lkX25iX2xvY2spOworCS8qIENoZWNr
-IGZvciBkdXBsaWNhdGVzLCBuYiBpcyB1bmlxdWUgcGVyIHNldCAqLworCWxpc3RfZm9yX2VhY2hf
-ZW50cnkoY3VyciwgJmlvYXNpZF9uYl9wZW5kaW5nX2xpc3QsIGxpc3QpIHsKKwkJaWYgKGN1cnIt
-PnRva2VuID09IG1tICYmIGN1cnItPm5iID09IG5iKSB7CisJCQlyZXQgPSAtRUJVU1k7CisJCQln
-b3RvIGV4aXRfdW5sb2NrOworCQl9CisJfQorCWN1cnIgPSBremFsbG9jKHNpemVvZigqY3Vyciks
-IEdGUF9BVE9NSUMpOworCWlmICghY3VycikgeworCQlyZXQgPSAtRU5PTUVNOworCQlnb3RvIGV4
-aXRfdW5sb2NrOworCX0KKwkvKiBDaGVjayBpZiB0aGUgdG9rZW4gaGFzIGFuIGV4aXN0aW5nIHNl
-dCAqLworCXNldCA9IGlvYXNpZF9maW5kX21tX3NldChtbSk7CisJaWYgKCFzZXQpIHsKKwkJLyog
-QWRkIHRvIHRoZSByc3ZkIGxpc3QgYXMgaW5hY3RpdmUgKi8KKwkJY3Vyci0+YWN0aXZlID0gZmFs
-c2U7CisJfSBlbHNlIHsKKwkJLyogUkVWSVNJVDogT25seSByZWdpc3RlciBlbXB0eSBzZXQgZm9y
-IG5vdy4gQ2FuIGFkZCBhbiBvcHRpb24KKwkJICogaW4gdGhlIGZ1dHVyZSB0byBwbGF5YmFjayBl
-eGlzdGluZyBQQVNJRHMuCisJCSAqLworCQlpZiAoYXRvbWljX3JlYWQoJnNldC0+bnJfaW9hc2lk
-cykpIHsKKwkJCXByX3dhcm4oIklPQVNJRCBzZXQgJWQgbm90IGVtcHR5ICVkXG4iLCBzZXQtPmlk
-LAorCQkJCWF0b21pY19yZWFkKCZzZXQtPm5yX2lvYXNpZHMpKTsKKwkJCXJldCA9IC1FQlVTWTsK
-KwkJCWdvdG8gZXhpdF9mcmVlOworCQl9CisJCWN1cnItPnRva2VuID0gbW07CisJCWN1cnItPm5i
-ID0gbmI7CisJCWN1cnItPmFjdGl2ZSA9IHRydWU7CisJCWN1cnItPnNldCA9IHNldDsKKworCQkv
-KiBTZXQgYWxyZWFkeSBjcmVhdGVkLCBhZGQgdG8gdGhlIG5vdGlmaWVyIGNoYWluICovCisJCWF0
-b21pY19ub3RpZmllcl9jaGFpbl9yZWdpc3Rlcigmc2V0LT5uaCwgbmIpOworCX0KKworCWxpc3Rf
-YWRkKCZjdXJyLT5saXN0LCAmaW9hc2lkX25iX3BlbmRpbmdfbGlzdCk7CisJZ290byBleGl0X3Vu
-bG9jazsKK2V4aXRfZnJlZToKKwlrZnJlZShjdXJyKTsKK2V4aXRfdW5sb2NrOgorCXNwaW5fdW5s
-b2NrKCZpb2FzaWRfbmJfbG9jayk7CisJcmV0dXJuIHJldDsKK30KK0VYUE9SVF9TWU1CT0xfR1BM
-KGlvYXNpZF9yZWdpc3Rlcl9ub3RpZmllcl9tbSk7CisKK3ZvaWQgaW9hc2lkX3VucmVnaXN0ZXJf
-bm90aWZpZXJfbW0oc3RydWN0IG1tX3N0cnVjdCAqbW0sIHN0cnVjdCBub3RpZmllcl9ibG9jayAq
-bmIpCit7CisJc3RydWN0IGlvYXNpZF9zZXRfbmIgKmN1cnI7CisKKwlzcGluX2xvY2soJmlvYXNp
-ZF9uYl9sb2NrKTsKKwlsaXN0X2Zvcl9lYWNoX2VudHJ5KGN1cnIsICZpb2FzaWRfbmJfcGVuZGlu
-Z19saXN0LCBsaXN0KSB7CisJCWlmIChjdXJyLT50b2tlbiA9PSBtbSAmJiBjdXJyLT5uYiA9PSBu
-YikgeworCQkJbGlzdF9kZWwoJmN1cnItPmxpc3QpOworCQkJc3Bpbl91bmxvY2soJmlvYXNpZF9u
-Yl9sb2NrKTsKKwkJCWlmIChjdXJyLT5hY3RpdmUpIHsKKwkJCQlhdG9taWNfbm90aWZpZXJfY2hh
-aW5fdW5yZWdpc3RlcigmY3Vyci0+c2V0LT5uaCwKKwkJCQkJCQkJIG5iKTsKKwkJCX0KKwkJCWtm
-cmVlKGN1cnIpOworCQkJcmV0dXJuOworCQl9CisJfQorCXByX3dhcm4oIk5vIGlvYXNpZCBzZXQg
-Zm91bmQgZm9yIG1tIHRva2VuICVsbHhcbiIsICAodTY0KW1tKTsKKwlzcGluX3VubG9jaygmaW9h
-c2lkX25iX2xvY2spOworfQorRVhQT1JUX1NZTUJPTF9HUEwoaW9hc2lkX3VucmVnaXN0ZXJfbm90
-aWZpZXJfbW0pOworCiBNT0RVTEVfQVVUSE9SKCJKZWFuLVBoaWxpcHBlIEJydWNrZXIgPGplYW4t
-cGhpbGlwcGUuYnJ1Y2tlckBhcm0uY29tPiIpOwogTU9EVUxFX0FVVEhPUigiSmFjb2IgUGFuIDxq
-YWNvYi5qdW4ucGFuQGxpbnV4LmludGVsLmNvbT4iKTsKIE1PRFVMRV9ERVNDUklQVElPTigiSU8g
-QWRkcmVzcyBTcGFjZSBJRCAoSU9BU0lEKSBhbGxvY2F0b3IiKTsKZGlmZiAtLWdpdCBhL2luY2x1
-ZGUvbGludXgvaW9hc2lkLmggYi9pbmNsdWRlL2xpbnV4L2lvYXNpZC5oCmluZGV4IGQ4Yjg1YTA0
-MjE0Zi4uYzk3ZTgwZmY2NWNjIDEwMDY0NAotLS0gYS9pbmNsdWRlL2xpbnV4L2lvYXNpZC5oCisr
-KyBiL2luY2x1ZGUvbGludXgvaW9hc2lkLmgKQEAgLTEzMiw2ICsxMzIsOCBAQCB2b2lkIGlvYXNp
-ZF91bnJlZ2lzdGVyX25vdGlmaWVyKHN0cnVjdCBpb2FzaWRfc2V0ICpzZXQsCiB2b2lkIGlvYXNp
-ZF9zZXRfZm9yX2VhY2hfaW9hc2lkKHN0cnVjdCBpb2FzaWRfc2V0ICpzZGF0YSwKIAkJCQl2b2lk
-ICgqZm4pKGlvYXNpZF90IGlkLCB2b2lkICpkYXRhKSwKIAkJCQl2b2lkICpkYXRhKTsKK2ludCBp
-b2FzaWRfcmVnaXN0ZXJfbm90aWZpZXJfbW0oc3RydWN0IG1tX3N0cnVjdCAqbW0sIHN0cnVjdCBu
-b3RpZmllcl9ibG9jayAqbmIpOwordm9pZCBpb2FzaWRfdW5yZWdpc3Rlcl9ub3RpZmllcl9tbShz
-dHJ1Y3QgbW1fc3RydWN0ICptbSwgc3RydWN0IG5vdGlmaWVyX2Jsb2NrICpuYik7CiAjZWxzZSAv
-KiAhQ09ORklHX0lPQVNJRCAqLwogc3RhdGljIGlubGluZSB2b2lkIGlvYXNpZF9pbnN0YWxsX2Nh
-cGFjaXR5KGlvYXNpZF90IHRvdGFsKQogewpAQCAtMjUwLDUgKzI1MiwyMSBAQCBzdGF0aWMgaW5s
-aW5lIHZvaWQgaW9hc2lkX3NldF9mb3JfZWFjaF9pb2FzaWQoc3RydWN0IGlvYXNpZF9zZXQgKnNk
-YXRhLAogCQkJCQkgICAgICB2b2lkICpkYXRhKQogewogfQorCitzdGF0aWMgaW5saW5lIGludCBp
-b2FzaWRfcmVnaXN0ZXJfbm90aWZpZXJfbW0oc3RydWN0IG1tX3N0cnVjdCAqbW0sCisJCQkJCSAg
-ICAgIHN0cnVjdCBub3RpZmllcl9ibG9jayAqbmIpCit7CisJcmV0dXJuIC1FTk9UU1VQUDsKK30K
-Kworc3RhdGljIGlubGluZSB2b2lkIGlvYXNpZF91bnJlZ2lzdGVyX25vdGlmaWVyX21tKHN0cnVj
-dCBtbV9zdHJ1Y3QgKm1tLAorCQkJCQkJIHN0cnVjdCBub3RpZmllcl9ibG9jayAqbmIpCit7Cit9
-CisKK3N0YXRpYyBpbmxpbmUgYm9vbCBpb2FzaWRfcXVldWVfd29yayhzdHJ1Y3Qgd29ya19zdHJ1
-Y3QgKndvcmspCit7CisJcmV0dXJuIGZhbHNlOworfQogI2VuZGlmIC8qIENPTkZJR19JT0FTSUQg
-Ki8KICNlbmRpZiAvKiBfX0xJTlVYX0lPQVNJRF9IICovCi0tIAoyLjI1LjEKCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmlvbW11IG1haWxpbmcgbGlzdApp
-b21tdUBsaXN0cy5saW51eC1mb3VuZGF0aW9uLm9yZwpodHRwczovL2xpc3RzLmxpbnV4Zm91bmRh
-dGlvbi5vcmcvbWFpbG1hbi9saXN0aW5mby9pb21tdQ==
+IOASID private data can be cleared by ioasid_attach_data() with a NULL
+data pointer. A common use case is for a caller to free the data
+afterward. ioasid_attach_data() calls synchronize_rcu() before return
+such that free data can be sure without outstanding readers.
+However, since synchronize_rcu() may sleep, ioasid_attach_data() cannot
+be used under spinlocks.
+
+This patch adds ioasid_detach_data() as a separate API where
+synchronize_rcu() is called only in this case. ioasid_attach_data() can
+then be used under spinlocks. In addition, this change makes the API
+symmetrical.
+
+Signed-off-by: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+---
+ drivers/iommu/intel/svm.c |  4 +--
+ drivers/iommu/ioasid.c    | 54 +++++++++++++++++++++++++++++++--------
+ include/linux/ioasid.h    |  5 +++-
+ 3 files changed, 50 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/iommu/intel/svm.c b/drivers/iommu/intel/svm.c
+index 0053df9edffc..68372a7eb8b5 100644
+--- a/drivers/iommu/intel/svm.c
++++ b/drivers/iommu/intel/svm.c
+@@ -425,7 +425,7 @@ int intel_svm_bind_gpasid(struct iommu_domain *domain, struct device *dev,
+ 	list_add_rcu(&sdev->list, &svm->devs);
+  out:
+ 	if (!IS_ERR_OR_NULL(svm) && list_empty(&svm->devs)) {
+-		ioasid_attach_data(data->hpasid, NULL);
++		ioasid_detach_data(data->hpasid);
+ 		kfree(svm);
+ 	}
+ 
+@@ -468,7 +468,7 @@ int intel_svm_unbind_gpasid(struct device *dev, u32 pasid)
+ 				 * the unbind, IOMMU driver will get notified
+ 				 * and perform cleanup.
+ 				 */
+-				ioasid_attach_data(pasid, NULL);
++				ioasid_detach_data(pasid);
+ 				kfree(svm);
+ 			}
+ 		}
+diff --git a/drivers/iommu/ioasid.c b/drivers/iommu/ioasid.c
+index eeadf4586e0a..4eb9b3dd1b85 100644
+--- a/drivers/iommu/ioasid.c
++++ b/drivers/iommu/ioasid.c
+@@ -273,23 +273,57 @@ int ioasid_attach_data(ioasid_t ioasid, void *data)
+ 
+ 	spin_lock(&ioasid_allocator_lock);
+ 	ioasid_data = xa_load(&active_allocator->xa, ioasid);
+-	if (ioasid_data)
+-		rcu_assign_pointer(ioasid_data->private, data);
+-	else
++
++	if (!ioasid_data) {
+ 		ret = -ENOENT;
+-	spin_unlock(&ioasid_allocator_lock);
++		goto done_unlock;
++	}
+ 
+-	/*
+-	 * Wait for readers to stop accessing the old private data, so the
+-	 * caller can free it.
+-	 */
+-	if (!ret)
+-		synchronize_rcu();
++	if (ioasid_data->private) {
++		ret = -EBUSY;
++		goto done_unlock;
++	}
++	rcu_assign_pointer(ioasid_data->private, data);
++
++done_unlock:
++	spin_unlock(&ioasid_allocator_lock);
+ 
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(ioasid_attach_data);
+ 
++/**
++ * ioasid_detach_data - Clear the private data of an ioasid
++ *
++ * @ioasid: the IOASIDD to clear private data
++ */
++void ioasid_detach_data(ioasid_t ioasid)
++{
++	struct ioasid_data *ioasid_data;
++
++	spin_lock(&ioasid_allocator_lock);
++	ioasid_data = xa_load(&active_allocator->xa, ioasid);
++
++	if (!ioasid_data) {
++		pr_warn("IOASID %u not found to detach data from\n", ioasid);
++		goto done_unlock;
++	}
++
++	if (ioasid_data->private) {
++		rcu_assign_pointer(ioasid_data->private, NULL);
++		goto done_unlock;
++	}
++
++done_unlock:
++	spin_unlock(&ioasid_allocator_lock);
++	/*
++	 * Wait for readers to stop accessing the old private data,
++	 * so the caller can free it.
++	 */
++	synchronize_rcu();
++}
++EXPORT_SYMBOL_GPL(ioasid_detach_data);
++
+ /**
+  * ioasid_alloc - Allocate an IOASID
+  * @set: the IOASID set
+diff --git a/include/linux/ioasid.h b/include/linux/ioasid.h
+index 60ea279802b8..f6e705f832f0 100644
+--- a/include/linux/ioasid.h
++++ b/include/linux/ioasid.h
+@@ -41,7 +41,7 @@ void *ioasid_find(struct ioasid_set *set, ioasid_t ioasid,
+ int ioasid_register_allocator(struct ioasid_allocator_ops *allocator);
+ void ioasid_unregister_allocator(struct ioasid_allocator_ops *allocator);
+ int ioasid_attach_data(ioasid_t ioasid, void *data);
+-
++void ioasid_detach_data(ioasid_t ioasid);
+ #else /* !CONFIG_IOASID */
+ static inline ioasid_t ioasid_alloc(struct ioasid_set *set, ioasid_t min,
+ 				    ioasid_t max, void *private)
+@@ -78,5 +78,8 @@ static inline int ioasid_attach_data(ioasid_t ioasid, void *data)
+ 	return -ENOTSUPP;
+ }
+ 
++static inline void ioasid_detach_data(ioasid_t ioasid)
++{
++}
+ #endif /* CONFIG_IOASID */
+ #endif /* __LINUX_IOASID_H */
+-- 
+2.25.1
