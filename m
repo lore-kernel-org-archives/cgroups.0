@@ -1,7 +1,7 @@
 From: Muchun Song <songmuchun@bytedance.com>
-Subject: [PATCH 3/5] mm: memcontrol: reparent the kmem pages on cgroup removal
-Date: Mon,  1 Mar 2021 14:22:25 +0800
-Message-ID: <20210301062227.59292-4-songmuchun@bytedance.com>
+Subject: [PATCH 5/5] mm: memcontrol: use object cgroup for remote memory cgroup charging
+Date: Mon,  1 Mar 2021 14:22:27 +0800
+Message-ID: <20210301062227.59292-6-songmuchun@bytedance.com>
 References: <20210301062227.59292-1-songmuchun@bytedance.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -10,404 +10,550 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=bytedance-com.20150623.gappssmtp.com; s=20150623;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=wh9K8k/cLdEa+pvuxX0zgE5b842GEaAUv1TfPTB1I1E=;
-        b=a1njz4rSfNhYNlrVmnxZvIibOJ3N5IqT3x9MOJOzivPWjvWO7cRRE4PQQdR1+f2mBM
-         E0Jkya+zdkPfmtLMf9tMZGa6ujnyrWnvRcaGnsVip8Nm3c8C5Zn3odFwF1uuAHlzMiYP
-         P9Eps74BbRMqv2xdOugMvWCjfQCjogdmgHuo4KAKShWvT7QHAgL8K9X41llRif3QFHN1
-         NNG+ohZ4yQsg8hp8jHSmKkinxDvnoEDptm5WTFkiXI1/fCzDo4YnjXgHAHQRxUny4u9B
-         WJDupUt8w2sSdcLCT5kr/LZ3bTPVbyJ27SY8iotwHvJWdXL9DasADNr/tiPfSHK30r8v
-         8spA==
+        bh=nxql2aJwrwhG2WdeUI/4PFWqz52uoM1i3aXYU+EM6Pg=;
+        b=TK3zr8pb3882L+sK1u2LI53XOaW5aXAHXpIDx4WHeHfHhvmh1Dln3Az1N0swv/bhHk
+         hOIiBs97nIXnNCQYBwArdvdkPoT3Z+i3Uy1l0QXDN+/XqsS7PpELpAAokqShO9m6P/Ap
+         sUJnm0E1y9hhGtESNdMYLlAJkE6MBa78pH9PPXxycOchrnvZ1lh4fRMNTYsYkhZJuTTP
+         46mdbQgqOzFXVyd0rfp837y40sA0/9HfuQHSjz3uP/KqB6VaSvuKHuVwysk3sFqCjKSH
+         TQzDSOP6B03g6CnqRXZ44wpDyguyp39LyUSpPW9zan7/JFjkNQm7HMgFS7T/raBZIFKm
+         pmdg==
 In-Reply-To: <20210301062227.59292-1-songmuchun@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: viro@zeniv.linux.org.uk, jack@suse.cz, amir73il@gmail.com, ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, shakeelb@google.com, guro@fb.com, songmuchun@bytedance.com, alex.shi@linux.alibaba.com, alexander.h.duyck@linux.intel.com, chris@chrisdown.name, richard.weiyang@gmail.com, vbabka@suse.cz, mathieu.desnoyers@efficios.com, posk@google.com, jannh@google.com, iamjoonsoo.kim@lge.com, daniel.vetter@ffw
 Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, bpf@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, duanxiongchun@bytedance.com
 
-Currently the slab objects already reparent to it's parent memcg on
-cgroup removal. But there are still some corner objects which are
-not reparent (e.g. allocations larger than order-1 page on SLUB).
-Actually those objects are allocated directly from the buddy allocator.
-And they are chared as kmem to memcg via __memcg_kmem_charge_page().
-Such objects are not reparent on cgroup removal.
+We spent a lot of energy to make slab accounting do not hold a refcount
+to memory cgroup, so the dying cgroup can be freed as soon as possible
+on cgroup offlined.
 
-So this patch aims to reparent kmem pages on cgroup removal. Doing
-this is simple with help of the infrastructures of obj_cgroup.
-Finally, the page->memcg_data points to an object cgroup for the
-kmem page.
+But some users of remote memory cgroup charging (e.g. bpf and fsnotify)
+hold a refcount to memory cgroup for charging to it later. Actually,
+the slab core use obj_cgroup APIs for memory cgroup charing, so we can
+hold a refcount to obj_cgroup instead of memory cgroup. In this case,
+the infrastructure of remote meory charging also do not hold a refcount
+to memory cgroup.
 
 Signed-off-by: Muchun Song <songmuchun@bytedance.com>
 ---
- include/linux/memcontrol.h |  66 +++++++++++--------
- mm/memcontrol.c            | 155 ++++++++++++++++++++++++---------------------
- 2 files changed, 124 insertions(+), 97 deletions(-)
+ fs/buffer.c                          | 10 ++++--
+ fs/notify/fanotify/fanotify.c        |  6 ++--
+ fs/notify/fanotify/fanotify_user.c   |  2 +-
+ fs/notify/group.c                    |  3 +-
+ fs/notify/inotify/inotify_fsnotify.c |  8 ++---
+ fs/notify/inotify/inotify_user.c     |  2 +-
+ include/linux/bpf.h                  |  2 +-
+ include/linux/fsnotify_backend.h     |  2 +-
+ include/linux/memcontrol.h           | 15 ++++++++
+ include/linux/sched.h                |  4 +--
+ include/linux/sched/mm.h             | 28 +++++++--------
+ kernel/bpf/syscall.c                 | 35 +++++++++----------
+ kernel/fork.c                        |  2 +-
+ mm/memcontrol.c                      | 66 ++++++++++++++++++++++++++++--------
+ 14 files changed, 121 insertions(+), 64 deletions(-)
 
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 591547779dbd..cc99fcf66368 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -842,14 +842,16 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
+ 	struct buffer_head *bh, *head;
+ 	gfp_t gfp = GFP_NOFS | __GFP_ACCOUNT;
+ 	long offset;
+-	struct mem_cgroup *memcg, *old_memcg;
++	struct mem_cgroup *memcg;
++	struct obj_cgroup *objcg, *old_objcg;
+ 
+ 	if (retry)
+ 		gfp |= __GFP_NOFAIL;
+ 
+ 	/* The page lock pins the memcg */
+ 	memcg = page_memcg(page);
+-	old_memcg = set_active_memcg(memcg);
++	objcg = get_obj_cgroup_from_mem_cgroup(memcg);
++	old_objcg = set_active_obj_cgroup(objcg);
+ 
+ 	head = NULL;
+ 	offset = PAGE_SIZE;
+@@ -868,7 +870,9 @@ struct buffer_head *alloc_page_buffers(struct page *page, unsigned long size,
+ 		set_bh_page(bh, page, offset);
+ 	}
+ out:
+-	set_active_memcg(old_memcg);
++	set_active_obj_cgroup(old_objcg);
++	if (objcg)
++		obj_cgroup_put(objcg);
+ 	return head;
+ /*
+  * In case anything failed, we just free everything we got.
+diff --git a/fs/notify/fanotify/fanotify.c b/fs/notify/fanotify/fanotify.c
+index 1192c9953620..04d24acfffc7 100644
+--- a/fs/notify/fanotify/fanotify.c
++++ b/fs/notify/fanotify/fanotify.c
+@@ -530,7 +530,7 @@ static struct fanotify_event *fanotify_alloc_event(struct fsnotify_group *group,
+ 	struct inode *dirid = fanotify_dfid_inode(mask, data, data_type, dir);
+ 	const struct path *path = fsnotify_data_path(data, data_type);
+ 	unsigned int fid_mode = FAN_GROUP_FLAG(group, FANOTIFY_FID_BITS);
+-	struct mem_cgroup *old_memcg;
++	struct obj_cgroup *old_objcg;
+ 	struct inode *child = NULL;
+ 	bool name_event = false;
+ 
+@@ -580,7 +580,7 @@ static struct fanotify_event *fanotify_alloc_event(struct fsnotify_group *group,
+ 		gfp |= __GFP_RETRY_MAYFAIL;
+ 
+ 	/* Whoever is interested in the event, pays for the allocation. */
+-	old_memcg = set_active_memcg(group->memcg);
++	old_objcg = set_active_obj_cgroup(group->objcg);
+ 
+ 	if (fanotify_is_perm_event(mask)) {
+ 		event = fanotify_alloc_perm_event(path, gfp);
+@@ -608,7 +608,7 @@ static struct fanotify_event *fanotify_alloc_event(struct fsnotify_group *group,
+ 		event->pid = get_pid(task_tgid(current));
+ 
+ out:
+-	set_active_memcg(old_memcg);
++	set_active_obj_cgroup(old_objcg);
+ 	return event;
+ }
+ 
+diff --git a/fs/notify/fanotify/fanotify_user.c b/fs/notify/fanotify/fanotify_user.c
+index 9e0c1afac8bd..055ca36d4e0e 100644
+--- a/fs/notify/fanotify/fanotify_user.c
++++ b/fs/notify/fanotify/fanotify_user.c
+@@ -985,7 +985,7 @@ SYSCALL_DEFINE2(fanotify_init, unsigned int, flags, unsigned int, event_f_flags)
+ 	group->fanotify_data.user = user;
+ 	group->fanotify_data.flags = flags;
+ 	atomic_inc(&user->fanotify_listeners);
+-	group->memcg = get_mem_cgroup_from_mm(current->mm);
++	group->objcg = get_obj_cgroup_from_current();
+ 
+ 	group->overflow_event = fanotify_alloc_overflow_event();
+ 	if (unlikely(!group->overflow_event)) {
+diff --git a/fs/notify/group.c b/fs/notify/group.c
+index ffd723ffe46d..fac46b92c16f 100644
+--- a/fs/notify/group.c
++++ b/fs/notify/group.c
+@@ -24,7 +24,8 @@ static void fsnotify_final_destroy_group(struct fsnotify_group *group)
+ 	if (group->ops->free_group_priv)
+ 		group->ops->free_group_priv(group);
+ 
+-	mem_cgroup_put(group->memcg);
++	if (group->objcg)
++		obj_cgroup_put(group->objcg);
+ 	mutex_destroy(&group->mark_mutex);
+ 
+ 	kfree(group);
+diff --git a/fs/notify/inotify/inotify_fsnotify.c b/fs/notify/inotify/inotify_fsnotify.c
+index 1901d799909b..20835554819a 100644
+--- a/fs/notify/inotify/inotify_fsnotify.c
++++ b/fs/notify/inotify/inotify_fsnotify.c
+@@ -66,7 +66,7 @@ int inotify_handle_inode_event(struct fsnotify_mark *inode_mark, u32 mask,
+ 	int ret;
+ 	int len = 0;
+ 	int alloc_len = sizeof(struct inotify_event_info);
+-	struct mem_cgroup *old_memcg;
++	struct obj_cgroup *old_objcg;
+ 
+ 	if (name) {
+ 		len = name->len;
+@@ -81,12 +81,12 @@ int inotify_handle_inode_event(struct fsnotify_mark *inode_mark, u32 mask,
+ 
+ 	/*
+ 	 * Whoever is interested in the event, pays for the allocation. Do not
+-	 * trigger OOM killer in the target monitoring memcg as it may have
++	 * trigger OOM killer in the target monitoring objcg as it may have
+ 	 * security repercussion.
+ 	 */
+-	old_memcg = set_active_memcg(group->memcg);
++	old_objcg = set_active_obj_cgroup(group->objcg);
+ 	event = kmalloc(alloc_len, GFP_KERNEL_ACCOUNT | __GFP_RETRY_MAYFAIL);
+-	set_active_memcg(old_memcg);
++	set_active_obj_cgroup(old_objcg);
+ 
+ 	if (unlikely(!event)) {
+ 		/*
+diff --git a/fs/notify/inotify/inotify_user.c b/fs/notify/inotify/inotify_user.c
+index c71be4fb7dc5..5b4de477fcac 100644
+--- a/fs/notify/inotify/inotify_user.c
++++ b/fs/notify/inotify/inotify_user.c
+@@ -649,7 +649,7 @@ static struct fsnotify_group *inotify_new_group(unsigned int max_events)
+ 	oevent->name_len = 0;
+ 
+ 	group->max_events = max_events;
+-	group->memcg = get_mem_cgroup_from_mm(current->mm);
++	group->objcg = get_obj_cgroup_from_current();
+ 
+ 	spin_lock_init(&group->inotify_data.idr_lock);
+ 	idr_init(&group->inotify_data.idr);
+diff --git a/include/linux/bpf.h b/include/linux/bpf.h
+index cccaef1088ea..b6894e3cd095 100644
+--- a/include/linux/bpf.h
++++ b/include/linux/bpf.h
+@@ -158,7 +158,7 @@ struct bpf_map {
+ 	u32 btf_value_type_id;
+ 	struct btf *btf;
+ #ifdef CONFIG_MEMCG_KMEM
+-	struct mem_cgroup *memcg;
++	struct obj_cgroup *objcg;
+ #endif
+ 	char name[BPF_OBJ_NAME_LEN];
+ 	u32 btf_vmlinux_value_type_id;
+diff --git a/include/linux/fsnotify_backend.h b/include/linux/fsnotify_backend.h
+index e5409b83e731..d0303f634da6 100644
+--- a/include/linux/fsnotify_backend.h
++++ b/include/linux/fsnotify_backend.h
+@@ -220,7 +220,7 @@ struct fsnotify_group {
+ 						 * notification list is too
+ 						 * full */
+ 
+-	struct mem_cgroup *memcg;	/* memcg to charge allocations */
++	struct obj_cgroup *objcg;	/* objcg to charge allocations */
+ 
+ 	/* groups can define private fields here or use the void *private */
+ 	union {
 diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 1d2c82464c8c..27043478220f 100644
+index 27043478220f..96e63ec7274a 100644
 --- a/include/linux/memcontrol.h
 +++ b/include/linux/memcontrol.h
-@@ -370,23 +370,15 @@ static inline bool page_memcg_charged(struct page *page)
- }
+@@ -1642,6 +1642,7 @@ static inline void memcg_set_shrinker_bit(struct mem_cgroup *memcg,
+ int __memcg_kmem_charge_page(struct page *page, gfp_t gfp, int order);
+ void __memcg_kmem_uncharge_page(struct page *page, int order);
  
- /*
-- * page_memcg_kmem - get the memory cgroup associated with a kmem page.
-- * @page: a pointer to the page struct
-+ * After the initialization objcg->memcg is always pointing at
-+ * a valid memcg, but can be atomically swapped to the parent memcg.
-  *
-- * Returns a pointer to the memory cgroup associated with the kmem page,
-- * or NULL. This function assumes that the page is known to have a proper
-- * memory cgroup pointer. It is only suitable for kmem pages which means
-- * PageMemcgKmem() returns true for this page.
-+ * The caller must ensure that the returned memcg won't be released:
-+ * e.g. acquire the rcu_read_lock or css_set_lock.
-  */
--static inline struct mem_cgroup *page_memcg_kmem(struct page *page)
-+static inline struct mem_cgroup *obj_cgroup_memcg(struct obj_cgroup *objcg)
- {
--	unsigned long memcg_data = page->memcg_data;
--
--	VM_BUG_ON_PAGE(PageSlab(page), page);
--	VM_BUG_ON_PAGE(memcg_data & MEMCG_DATA_OBJCGS, page);
--	VM_BUG_ON_PAGE(!(memcg_data & MEMCG_DATA_KMEM), page);
--
--	return (struct mem_cgroup *)(memcg_data & ~MEMCG_DATA_FLAGS_MASK);
-+	return READ_ONCE(objcg->memcg);
- }
++struct obj_cgroup *get_obj_cgroup_from_mem_cgroup(struct mem_cgroup *memcg);
+ struct obj_cgroup *get_obj_cgroup_from_current(void);
  
- /*
-@@ -462,6 +454,17 @@ static inline struct mem_cgroup *page_memcg_check(struct page *page)
- 	if (memcg_data & MEMCG_DATA_OBJCGS)
- 		return NULL;
+ int obj_cgroup_charge(struct obj_cgroup *objcg, gfp_t gfp, size_t size);
+@@ -1692,6 +1693,20 @@ static inline int memcg_cache_id(struct mem_cgroup *memcg)
+ struct mem_cgroup *mem_cgroup_from_obj(void *p);
  
-+	if (memcg_data & MEMCG_DATA_KMEM) {
-+		struct obj_cgroup *objcg;
-+
-+		/*
-+		 * The caller must ensure that the returned memcg won't be
-+		 * released: e.g. acquire the rcu_read_lock or css_set_lock.
-+		 */
-+		objcg = (void *)(memcg_data & ~MEMCG_DATA_FLAGS_MASK);
-+		return obj_cgroup_memcg(objcg);
-+	}
-+
- 	return (struct mem_cgroup *)(memcg_data & ~MEMCG_DATA_FLAGS_MASK);
- }
- 
-@@ -520,6 +523,24 @@ static inline struct obj_cgroup **page_objcgs_check(struct page *page)
- 	return (struct obj_cgroup **)(memcg_data & ~MEMCG_DATA_FLAGS_MASK);
- }
- 
-+/*
-+ * page_objcg - get the object cgroup associated with a kmem page
-+ * @page: a pointer to the page struct
-+ *
-+ * Returns a pointer to the object cgroup associated with the kmem page,
-+ * or NULL. This function assumes that the page is known to have an
-+ * associated object cgroup. It's only safe to call this function
-+ * against kmem pages (PageMemcgKmem() returns true).
-+ */
-+static inline struct obj_cgroup *page_objcg(struct page *page)
-+{
-+	unsigned long memcg_data = page->memcg_data;
-+
-+	VM_BUG_ON_PAGE(memcg_data & MEMCG_DATA_OBJCGS, page);
-+	VM_BUG_ON_PAGE(!(memcg_data & MEMCG_DATA_KMEM), page);
-+
-+	return (struct obj_cgroup *)(memcg_data & ~MEMCG_DATA_FLAGS_MASK);
-+}
  #else
- static inline struct obj_cgroup **page_objcgs(struct page *page)
- {
-@@ -530,6 +551,11 @@ static inline struct obj_cgroup **page_objcgs_check(struct page *page)
- {
- 	return NULL;
- }
-+
-+static inline struct obj_cgroup *page_objcg(struct page *page)
++static inline
++struct obj_cgroup *get_obj_cgroup_from_mem_cgroup(struct mem_cgroup *memcg)
 +{
 +	return NULL;
 +}
++
++static inline struct obj_cgroup *get_obj_cgroup_from_current(void)
++{
++	return NULL;
++}
++
++static inline void obj_cgroup_put(struct obj_cgroup *objcg)
++{
++}
+ 
+ static inline int memcg_kmem_charge_page(struct page *page, gfp_t gfp,
+ 					 int order)
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index c2d488eddf85..75d5b571edcb 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1317,8 +1317,8 @@ struct task_struct {
  #endif
  
- static __always_inline bool memcg_stat_item_in_bytes(int idx)
-@@ -748,18 +774,6 @@ static inline void obj_cgroup_put(struct obj_cgroup *objcg)
- 	percpu_ref_put(&objcg->refcnt);
+ #ifdef CONFIG_MEMCG_KMEM
+-	/* Used by memcontrol for targeted memcg charge: */
+-	struct mem_cgroup		*active_memcg;
++	/* Used by memcontrol for targeted object cgroup charge: */
++	struct obj_cgroup		*active_objcg;
+ #endif
+ 
+ #ifdef CONFIG_BLK_CGROUP
+diff --git a/include/linux/sched/mm.h b/include/linux/sched/mm.h
+index 64a72975270e..e713f4290914 100644
+--- a/include/linux/sched/mm.h
++++ b/include/linux/sched/mm.h
+@@ -295,36 +295,34 @@ static inline void memalloc_nocma_restore(unsigned int flags)
+ #endif
+ 
+ #ifdef CONFIG_MEMCG_KMEM
+-DECLARE_PER_CPU(struct mem_cgroup *, int_active_memcg);
++DECLARE_PER_CPU(struct obj_cgroup *, int_active_objcg);
+ /**
+- * set_active_memcg - Starts the remote memcg charging scope.
+- * @memcg: memcg to charge.
++ * set_active_obj_cgroup - Starts the remote object cgroup charging scope.
++ * @objcg: object cgroup to charge.
+  *
+- * This function marks the beginning of the remote memcg charging scope. All the
+- * __GFP_ACCOUNT allocations till the end of the scope will be charged to the
+- * given memcg.
++ * This function marks the beginning of the remote object cgroup charging scope.
++ * All the __GFP_ACCOUNT allocations till the end of the scope will be charged
++ * to the given object cgroup.
+  *
+  * NOTE: This function can nest. Users must save the return value and
+  * reset the previous value after their own charging scope is over.
+  */
+-static inline struct mem_cgroup *
+-set_active_memcg(struct mem_cgroup *memcg)
++static inline struct obj_cgroup *set_active_obj_cgroup(struct obj_cgroup *objcg)
+ {
+-	struct mem_cgroup *old;
++	struct obj_cgroup *old;
+ 
+ 	if (in_interrupt()) {
+-		old = this_cpu_read(int_active_memcg);
+-		this_cpu_write(int_active_memcg, memcg);
++		old = this_cpu_read(int_active_objcg);
++		this_cpu_write(int_active_objcg, objcg);
+ 	} else {
+-		old = current->active_memcg;
+-		current->active_memcg = memcg;
++		old = current->active_objcg;
++		current->active_objcg = objcg;
+ 	}
+ 
+ 	return old;
+ }
+ #else
+-static inline struct mem_cgroup *
+-set_active_memcg(struct mem_cgroup *memcg)
++static inline struct obj_cgroup *set_active_obj_cgroup(struct obj_cgroup *objcg)
+ {
+ 	return NULL;
+ }
+diff --git a/kernel/bpf/syscall.c b/kernel/bpf/syscall.c
+index c859bc46d06c..1b078eddf083 100644
+--- a/kernel/bpf/syscall.c
++++ b/kernel/bpf/syscall.c
+@@ -390,37 +390,38 @@ void bpf_map_free_id(struct bpf_map *map, bool do_idr_lock)
  }
  
--/*
-- * After the initialization objcg->memcg is always pointing at
-- * a valid memcg, but can be atomically swapped to the parent memcg.
-- *
-- * The caller must ensure that the returned memcg won't be released:
-- * e.g. acquire the rcu_read_lock or css_set_lock.
-- */
--static inline struct mem_cgroup *obj_cgroup_memcg(struct obj_cgroup *objcg)
--{
--	return READ_ONCE(objcg->memcg);
--}
--
- static inline void mem_cgroup_put(struct mem_cgroup *memcg)
+ #ifdef CONFIG_MEMCG_KMEM
+-static void bpf_map_save_memcg(struct bpf_map *map)
++static void bpf_map_save_objcg(struct bpf_map *map)
  {
- 	if (memcg)
+-	map->memcg = get_mem_cgroup_from_mm(current->mm);
++	map->objcg = get_obj_cgroup_from_current();
+ }
+ 
+-static void bpf_map_release_memcg(struct bpf_map *map)
++static void bpf_map_release_objcg(struct bpf_map *map)
+ {
+-	mem_cgroup_put(map->memcg);
++	if (map->objcg)
++		obj_cgroup_put(map->objcg);
+ }
+ 
+ void *bpf_map_kmalloc_node(const struct bpf_map *map, size_t size, gfp_t flags,
+ 			   int node)
+ {
+-	struct mem_cgroup *old_memcg;
++	struct obj_cgroup *old_objcg;
+ 	void *ptr;
+ 
+-	old_memcg = set_active_memcg(map->memcg);
++	old_objcg = set_active_obj_cgroup(map->objcg);
+ 	ptr = kmalloc_node(size, flags | __GFP_ACCOUNT, node);
+-	set_active_memcg(old_memcg);
++	set_active_obj_cgroup(old_objcg);
+ 
+ 	return ptr;
+ }
+ 
+ void *bpf_map_kzalloc(const struct bpf_map *map, size_t size, gfp_t flags)
+ {
+-	struct mem_cgroup *old_memcg;
++	struct obj_cgroup *old_objcg;
+ 	void *ptr;
+ 
+-	old_memcg = set_active_memcg(map->memcg);
++	old_objcg = set_active_obj_cgroup(map->objcg);
+ 	ptr = kzalloc(size, flags | __GFP_ACCOUNT);
+-	set_active_memcg(old_memcg);
++	set_active_obj_cgroup(old_objcg);
+ 
+ 	return ptr;
+ }
+@@ -428,22 +429,22 @@ void *bpf_map_kzalloc(const struct bpf_map *map, size_t size, gfp_t flags)
+ void __percpu *bpf_map_alloc_percpu(const struct bpf_map *map, size_t size,
+ 				    size_t align, gfp_t flags)
+ {
+-	struct mem_cgroup *old_memcg;
++	struct obj_cgroup *old_objcg;
+ 	void __percpu *ptr;
+ 
+-	old_memcg = set_active_memcg(map->memcg);
++	old_objcg = set_active_obj_cgroup(map->objcg);
+ 	ptr = __alloc_percpu_gfp(size, align, flags | __GFP_ACCOUNT);
+-	set_active_memcg(old_memcg);
++	set_active_obj_cgroup(old_objcg);
+ 
+ 	return ptr;
+ }
+ 
+ #else
+-static void bpf_map_save_memcg(struct bpf_map *map)
++static void bpf_map_save_objcg(struct bpf_map *map)
+ {
+ }
+ 
+-static void bpf_map_release_memcg(struct bpf_map *map)
++static void bpf_map_release_objcg(struct bpf_map *map)
+ {
+ }
+ #endif
+@@ -454,7 +455,7 @@ static void bpf_map_free_deferred(struct work_struct *work)
+ 	struct bpf_map *map = container_of(work, struct bpf_map, work);
+ 
+ 	security_bpf_map_free(map);
+-	bpf_map_release_memcg(map);
++	bpf_map_release_objcg(map);
+ 	/* implementation dependent freeing */
+ 	map->ops->map_free(map);
+ }
+@@ -877,7 +878,7 @@ static int map_create(union bpf_attr *attr)
+ 	if (err)
+ 		goto free_map_sec;
+ 
+-	bpf_map_save_memcg(map);
++	bpf_map_save_objcg(map);
+ 
+ 	err = bpf_map_new_fd(map, f_flags);
+ 	if (err < 0) {
+diff --git a/kernel/fork.c b/kernel/fork.c
+index d66718bc82d5..5a800916ad8d 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -943,7 +943,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig, int node)
+ #endif
+ 
+ #ifdef CONFIG_MEMCG_KMEM
+-	tsk->active_memcg = NULL;
++	tsk->active_objcg = NULL;
+ #endif
+ 	return tsk;
+ 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index bfd6efe1e196..39cb8c5bf8b2 100644
+index 092dc4588b43..024a0f377eb7 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -856,10 +856,16 @@ void __mod_lruvec_page_state(struct page *page, enum node_stat_item idx,
- {
- 	struct page *head = compound_head(page); /* rmap on tail pages */
- 	struct mem_cgroup *memcg;
--	pg_data_t *pgdat = page_pgdat(page);
-+	pg_data_t *pgdat;
- 	struct lruvec *lruvec;
+@@ -77,8 +77,8 @@ EXPORT_SYMBOL(memory_cgrp_subsys);
+ struct mem_cgroup *root_mem_cgroup __read_mostly;
  
--	memcg = PageMemcgKmem(head) ? page_memcg_kmem(head) : page_memcg(head);
-+	if (PageMemcgKmem(head)) {
-+		__mod_lruvec_kmem_state(page_to_virt(head), idx, val);
-+		return;
-+	}
-+
-+	pgdat = page_pgdat(head);
-+	memcg = page_memcg(head);
- 	/* Untracked pages have no memcg, no lruvec. Update only the node */
- 	if (!memcg) {
- 		__mod_node_page_state(pgdat, idx, val);
-@@ -1056,24 +1062,6 @@ static __always_inline struct mem_cgroup *active_memcg(void)
- 		return current->active_memcg;
+ #ifdef CONFIG_MEMCG_KMEM
+-/* Active memory cgroup to use from an interrupt context */
+-DEFINE_PER_CPU(struct mem_cgroup *, int_active_memcg);
++/* Active object cgroup to use from an interrupt context */
++DEFINE_PER_CPU(struct obj_cgroup *, int_active_objcg);
+ #endif
+ 
+ /* Socket memory accounting disabled? */
+@@ -1057,18 +1057,18 @@ struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm)
+ EXPORT_SYMBOL(get_mem_cgroup_from_mm);
+ 
+ #ifdef CONFIG_MEMCG_KMEM
+-static __always_inline struct mem_cgroup *active_memcg(void)
++static __always_inline struct obj_cgroup *active_obj_cgroup(void)
+ {
+ 	if (in_interrupt())
+-		return this_cpu_read(int_active_memcg);
++		return this_cpu_read(int_active_objcg);
+ 	else
+-		return current->active_memcg;
++		return current->active_objcg;
  }
  
--static __always_inline struct mem_cgroup *get_active_memcg(void)
--{
--	struct mem_cgroup *memcg;
--
--	rcu_read_lock();
--	memcg = active_memcg();
--	if (memcg) {
--		/* current->active_memcg must hold a ref. */
--		if (WARN_ON_ONCE(!css_tryget(&memcg->css)))
--			memcg = root_mem_cgroup;
--		else
--			memcg = current->active_memcg;
--	}
--	rcu_read_unlock();
--
--	return memcg;
--}
--
  static __always_inline bool memcg_kmem_bypass(void)
  {
  	/* Allow remote memcg charging from any context. */
-@@ -1088,20 +1076,6 @@ static __always_inline bool memcg_kmem_bypass(void)
- }
- 
- /**
-- * If active memcg is set, do not fallback to current->mm->memcg.
-- */
--static __always_inline struct mem_cgroup *get_mem_cgroup_from_current(void)
--{
--	if (memcg_kmem_bypass())
--		return NULL;
--
 -	if (unlikely(active_memcg()))
--		return get_active_memcg();
--
--	return get_mem_cgroup_from_mm(current->mm);
--}
--
--/**
-  * mem_cgroup_iter - iterate over memory cgroup hierarchy
-  * @root: hierarchy root
-  * @prev: previously returned memcg, NULL on first invocation
-@@ -3148,18 +3122,18 @@ static void __memcg_kmem_uncharge(struct mem_cgroup *memcg, unsigned int nr_page
-  */
- int __memcg_kmem_charge_page(struct page *page, gfp_t gfp, int order)
- {
--	struct mem_cgroup *memcg;
-+	struct obj_cgroup *objcg;
- 	int ret = 0;
++	if (unlikely(active_obj_cgroup()))
+ 		return false;
  
--	memcg = get_mem_cgroup_from_current();
--	if (memcg && !mem_cgroup_is_root(memcg)) {
--		ret = __memcg_kmem_charge(memcg, gfp, 1 << order);
-+	objcg = get_obj_cgroup_from_current();
-+	if (objcg) {
-+		ret = obj_cgroup_charge_page(objcg, gfp, 1 << order);
- 		if (!ret) {
--			page->memcg_data = (unsigned long)memcg |
-+			page->memcg_data = (unsigned long)objcg |
- 				MEMCG_DATA_KMEM;
- 			return 0;
- 		}
--		css_put(&memcg->css);
-+		obj_cgroup_put(objcg);
- 	}
- 	return ret;
+ 	/* Memcg to charge can't be determined. */
+@@ -2971,26 +2971,47 @@ struct mem_cgroup *mem_cgroup_from_obj(void *p)
+ 	return page_memcg_check(page);
  }
-@@ -3171,17 +3145,18 @@ int __memcg_kmem_charge_page(struct page *page, gfp_t gfp, int order)
-  */
- void __memcg_kmem_uncharge_page(struct page *page, int order)
+ 
+-__always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
++__always_inline
++struct obj_cgroup *get_obj_cgroup_from_mem_cgroup(struct mem_cgroup *memcg)
  {
--	struct mem_cgroup *memcg;
-+	struct obj_cgroup *objcg;
- 	unsigned int nr_pages = 1 << order;
- 
- 	if (!page_memcg_charged(page))
- 		return;
- 
--	memcg = page_memcg_kmem(page);
--	VM_BUG_ON_PAGE(mem_cgroup_is_root(memcg), page);
--	__memcg_kmem_uncharge(memcg, nr_pages);
-+	VM_BUG_ON_PAGE(!PageMemcgKmem(page), page);
+ 	struct obj_cgroup *objcg = NULL;
 +
-+	objcg = page_objcg(page);
-+	obj_cgroup_uncharge_page(objcg, nr_pages);
- 	page->memcg_data = 0;
--	css_put(&memcg->css);
-+	obj_cgroup_put(objcg);
- }
- 
- static bool consume_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
-@@ -6798,8 +6773,12 @@ struct uncharge_gather {
++	rcu_read_lock();
++	for (; !mem_cgroup_is_root(memcg); memcg = parent_mem_cgroup(memcg)) {
++		objcg = rcu_dereference(memcg->objcg);
++		if (objcg && obj_cgroup_tryget(objcg))
++			break;
++		objcg = NULL;
++	}
++	rcu_read_unlock();
++
++	return objcg;
++}
++
++__always_inline struct obj_cgroup *get_obj_cgroup_from_current(void)
++{
++	struct obj_cgroup *objcg;
  	struct mem_cgroup *memcg;
- 	unsigned long nr_pages;
- 	unsigned long pgpgout;
--	unsigned long nr_kmem;
- 	struct page *dummy_page;
-+
-+#ifdef CONFIG_MEMCG_KMEM
-+	struct obj_cgroup *objcg;
-+	unsigned long nr_kmem;
-+#endif
- };
  
- static inline void uncharge_gather_clear(struct uncharge_gather *ug)
-@@ -6811,12 +6790,21 @@ static void uncharge_batch(const struct uncharge_gather *ug)
- {
- 	unsigned long flags;
+ 	if (memcg_kmem_bypass())
+ 		return NULL;
  
-+#ifdef CONFIG_MEMCG_KMEM
-+	if (ug->objcg) {
-+		obj_cgroup_uncharge_page(ug->objcg, ug->nr_kmem);
-+		/* drop reference from uncharge_kmem_page */
-+		obj_cgroup_put(ug->objcg);
+ 	rcu_read_lock();
+-	if (unlikely(active_memcg()))
+-		memcg = active_memcg();
+-	else
+-		memcg = mem_cgroup_from_task(current);
++	objcg = active_obj_cgroup();
++	if (unlikely(objcg)) {
++		/* remote object cgroup must hold a reference. */
++		obj_cgroup_get(objcg);
++		goto out;
 +	}
-+#endif
-+
-+	if (!ug->memcg)
-+		return;
-+
- 	if (!mem_cgroup_is_root(ug->memcg)) {
- 		page_counter_uncharge(&ug->memcg->memory, ug->nr_pages);
- 		if (do_memsw_account())
- 			page_counter_uncharge(&ug->memcg->memsw, ug->nr_pages);
--		if (!cgroup_subsys_on_dfl(memory_cgrp_subsys) && ug->nr_kmem)
--			page_counter_uncharge(&ug->memcg->kmem, ug->nr_kmem);
- 		memcg_oom_recover(ug->memcg);
+ 
++	memcg = mem_cgroup_from_task(current);
+ 	for (; memcg != root_mem_cgroup; memcg = parent_mem_cgroup(memcg)) {
+ 		objcg = rcu_dereference(memcg->objcg);
+ 		if (objcg && obj_cgroup_tryget(objcg))
+ 			break;
+ 		objcg = NULL;
  	}
++out:
+ 	rcu_read_unlock();
  
-@@ -6826,26 +6814,40 @@ static void uncharge_batch(const struct uncharge_gather *ug)
- 	memcg_check_events(ug->memcg, ug->dummy_page);
- 	local_irq_restore(flags);
- 
--	/* drop reference from uncharge_page */
-+	/* drop reference from uncharge_user_page */
- 	css_put(&ug->memcg->css);
+ 	return objcg;
+@@ -5296,16 +5317,33 @@ static struct mem_cgroup *mem_cgroup_alloc(void)
+ 	return ERR_PTR(error);
  }
  
--static void uncharge_page(struct page *page, struct uncharge_gather *ug)
 +#ifdef CONFIG_MEMCG_KMEM
-+static void uncharge_kmem_page(struct page *page, struct uncharge_gather *ug)
- {
--	unsigned long nr_pages;
--	struct mem_cgroup *memcg;
-+	struct obj_cgroup *objcg = page_objcg(page);
- 
--	VM_BUG_ON_PAGE(PageLRU(page), page);
-+	if (ug->objcg != objcg) {
-+		if (ug->objcg) {
-+			uncharge_batch(ug);
-+			uncharge_gather_clear(ug);
-+		}
-+		ug->objcg = objcg;
- 
--	if (!page_memcg_charged(page))
--		return;
-+		/* pairs with obj_cgroup_put in uncharge_batch */
-+		obj_cgroup_get(ug->objcg);
-+	}
-+
-+	ug->nr_kmem += compound_nr(page);
-+	page->memcg_data = 0;
-+	obj_cgroup_put(ug->objcg);
++static inline struct obj_cgroup *memcg_obj_cgroup(struct mem_cgroup *memcg)
++{
++	return memcg ? memcg->objcg : NULL;
 +}
 +#else
-+static void uncharge_kmem_page(struct page *page, struct uncharge_gather *ug)
++static inline struct obj_cgroup *memcg_obj_cgroup(struct mem_cgroup *memcg)
 +{
++	return NULL;
 +}
 +#endif
 +
-+static void uncharge_user_page(struct page *page, struct uncharge_gather *ug)
-+{
-+	struct mem_cgroup *memcg = page_memcg(page);
+ static struct cgroup_subsys_state * __ref
+ mem_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
+ {
+ 	struct mem_cgroup *parent = mem_cgroup_from_css(parent_css);
+-	struct mem_cgroup *memcg, *old_memcg;
++	struct mem_cgroup *memcg;
++	struct obj_cgroup *old_objcg;
+ 	long error = -ENOMEM;
  
--	/*
--	 * Nobody should be changing or seriously looking at
--	 * page memcg at this point, we have fully exclusive
--	 * access to the page.
--	 */
--	memcg = PageMemcgKmem(page) ? page_memcg_kmem(page) : page_memcg(page);
- 	if (ug->memcg != memcg) {
- 		if (ug->memcg) {
- 			uncharge_batch(ug);
-@@ -6856,18 +6858,30 @@ static void uncharge_page(struct page *page, struct uncharge_gather *ug)
- 		/* pairs with css_put in uncharge_batch */
- 		css_get(&ug->memcg->css);
- 	}
-+	ug->pgpgout++;
-+	ug->dummy_page = page;
-+
-+	ug->nr_pages += compound_nr(page);
-+	page->memcg_data = 0;
-+	css_put(&ug->memcg->css);
-+}
- 
--	nr_pages = compound_nr(page);
--	ug->nr_pages += nr_pages;
-+static void uncharge_page(struct page *page, struct uncharge_gather *ug)
-+{
-+	VM_BUG_ON_PAGE(PageLRU(page), page);
- 
-+	if (!page_memcg_charged(page))
-+		return;
-+
+-	old_memcg = set_active_memcg(parent);
 +	/*
-+	 * Nobody should be changing or seriously looking at
-+	 * page memcg at this point, we have fully exclusive
-+	 * access to the page.
++	 * The @parent cannot be offlined, so @parent->objcg cannot be freed
++	 * under us.
 +	 */
- 	if (PageMemcgKmem(page))
--		ug->nr_kmem += nr_pages;
-+		uncharge_kmem_page(page, ug);
- 	else
--		ug->pgpgout++;
--
--	ug->dummy_page = page;
--	page->memcg_data = 0;
--	css_put(&ug->memcg->css);
-+		uncharge_user_page(page, ug);
- }
++	old_objcg = set_active_obj_cgroup(memcg_obj_cgroup(parent));
+ 	memcg = mem_cgroup_alloc();
+-	set_active_memcg(old_memcg);
++	set_active_obj_cgroup(old_objcg);
+ 	if (IS_ERR(memcg))
+ 		return ERR_CAST(memcg);
  
- /**
-@@ -6910,8 +6924,7 @@ void mem_cgroup_uncharge_list(struct list_head *page_list)
- 	uncharge_gather_clear(&ug);
- 	list_for_each_entry(page, page_list, lru)
- 		uncharge_page(page, &ug);
--	if (ug.memcg)
--		uncharge_batch(&ug);
-+	uncharge_batch(&ug);
- }
- 
- /**
 -- 
 2.11.0
 
