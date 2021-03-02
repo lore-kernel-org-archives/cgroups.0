@@ -1,79 +1,116 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH 2/5] mm: memcontrol: make page_memcg{_rcu} only
- applicable for non-kmem page
-Date: Mon, 1 Mar 2021 14:09:55 -0500
-Message-ID: <YD08A+fEp/4pw10I@cmpxchg.org>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH 0/5] Use obj_cgroup APIs to change kmem pages
+Date: Mon, 1 Mar 2021 17:12:06 -0800
+Message-ID: <YD2Q5q2HfKXPnDte@carbon.dhcp.thefacebook.com>
 References: <20210301062227.59292-1-songmuchun@bytedance.com>
- <20210301062227.59292-3-songmuchun@bytedance.com>
- <CALvZod7sysj0+wrzLTXnwn7s_Gf-V2eFPJ6cLcoRmR0LdAFk0Q@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <bpf-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=i+xARtY+5W8Bn1AE04i/Ad5rFPbMh8nDWeTLAZo2lK0=;
-        b=Dmi55bD0YEnhSqHee72cnYtTysJPc/UwD5dR9ydldk6GNoQl1/DniyGpHgFg80docR
-         e1KdvcdDDqDdYhzqdjbwQC3WwGcI+gVUYGwEy/2ZHD9FDnWf38mhuSNKbYuja0dkYMwc
-         Dt1ZWtdL/AKMrYyS1KxGZHqiczC3VM3kJ6R+dzCrcHrTE05NQ5F/8yLtHGymvg1aq6BM
-         EXf4Kdm1R/J3x2USifUap32jpSxasFV9xs+YN9M/8OjxeDZd0alUdKogErFvkkhpAax4
-         4O0hiOHJwEitkpq+e0RPMg7fyDENlKa7NIV1yli4o3coe+gnJvv16u0eFWOoTS7x0HeU
-         rH1g==
-Content-Disposition: inline
-In-Reply-To: <CALvZod7sysj0+wrzLTXnwn7s_Gf-V2eFPJ6cLcoRmR0LdAFk0Q@mail.gmail.com>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=ThN+ehv/zMIPsztTY0/Oc35AMeSc5RecSzsa87omAco=;
+ b=M9alM8+oJnTILnBZEDHmMVLdcDVxYxKxIsH66hkzDvuGNWqJdDq/d3iV02dIOO+jzMDg
+ 1qO40mIyK7ExrEtjNrFinafblX9J8NCiBeR3dwHsqMOZdXGSod/LFJQi0mdU4S2vfgrU
+ jGw62O8DOJL68s3WumjI2qLRW1wh6VA9sAc= 
+Content-Disposition: inline
+In-Reply-To: <20210301062227.59292-1-songmuchun@bytedance.com>
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Muchun Song <songmuchun@bytedance.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, john.fastabend@gmail.com, kpsingh@kernel.org, Ingo Molnar <mingo@redhat.com>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, dietmar.eggemann@arm.com, Steven Rostedt <rostedt@goodmis.org>, Benjamin Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, bristot@redhat.com, Michal Hocko <mhocko@kernel.org>, Vladimir
+To: Muchun Song <songmuchun@bytedance.com>
+Cc: viro@zeniv.linux.org.uk, jack@suse.cz, amir73il@gmail.com, ast@kernel.org, daniel@iogearbox.net, andrii@kernel.org, kafai@fb.com, songliubraving@fb.com, yhs@fb.com, john.fastabend@gmail.com, kpsingh@kernel.org, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, hannes@cmpxchg.org, mhocko@kernel.org, vdavydov.dev@gmail.com, akpm@linux-foundation.org, shakeelb@google.com, alex.shi@linux.alibaba.com, alexander.h.duyck@linux.intel.com, chris@chrisdown.name, richard.weiyang@gmail.com, vbabka@suse.cz, mathieu.desnoyers@efficios.com, posk@google.com, jannh@google.com, iamjo
 
-Muchun, can you please reduce the CC list to mm/memcg folks only for
-the next submission? I think probably 80% of the current recipients
-don't care ;-)
+Hi Muchun!
 
-On Mon, Mar 01, 2021 at 10:11:45AM -0800, Shakeel Butt wrote:
-> On Sun, Feb 28, 2021 at 10:25 PM Muchun Song <songmuchun@bytedance.com> wrote:
-> >
-> > We want to reuse the obj_cgroup APIs to reparent the kmem pages when
-> > the memcg offlined. If we do this, we should store an object cgroup
-> > pointer to page->memcg_data for the kmem pages.
-> >
-> > Finally, page->memcg_data can have 3 different meanings.
-> >
-> >   1) For the slab pages, page->memcg_data points to an object cgroups
-> >      vector.
-> >
-> >   2) For the kmem pages (exclude the slab pages), page->memcg_data
-> >      points to an object cgroup.
-> >
-> >   3) For the user pages (e.g. the LRU pages), page->memcg_data points
-> >      to a memory cgroup.
-> >
-> > Currently we always get the memcg associated with a page via page_memcg
-> > or page_memcg_rcu. page_memcg_check is special, it has to be used in
-> > cases when it's not known if a page has an associated memory cgroup
-> > pointer or an object cgroups vector. Because the page->memcg_data of
-> > the kmem page is not pointing to a memory cgroup in the later patch,
-> > the page_memcg and page_memcg_rcu cannot be applicable for the kmem
-> > pages. In this patch, we introduce page_memcg_kmem to get the memcg
-> > associated with the kmem pages. And make page_memcg and page_memcg_rcu
-> > no longer apply to the kmem pages.
-> >
-> > In the end, there are 4 helpers to get the memcg associated with a
-> > page. The usage is as follows.
-> >
-> >   1) Get the memory cgroup associated with a non-kmem page (e.g. the LRU
-> >      pages).
-> >
-> >      - page_memcg()
-> >      - page_memcg_rcu()
+On Mon, Mar 01, 2021 at 02:22:22PM +0800, Muchun Song wrote:
+> Since Roman series "The new cgroup slab memory controller" applied. All
+> slab objects are changed via the new APIs of obj_cgroup. This new APIs
+> introduce a struct obj_cgroup instead of using struct mem_cgroup directly
+> to charge slab objects. It prevents long-living objects from pinning the
+> original memory cgroup in the memory. But there are still some corner
+> objects (e.g. allocations larger than order-1 page on SLUB) which are
+> not charged via the API of obj_cgroup. Those objects (include the pages
+> which are allocated from buddy allocator directly) are charged as kmem
+> pages which still hold a reference to the memory cgroup.
+
+Yes, this is a good idea, large kmallocs should be treated the same
+way as small ones.
+
 > 
-> Can you rename these to page_memcg_lru[_rcu] to make them explicitly
-> for LRU pages?
+> E.g. We know that the kernel stack is charged as kmem pages because the
+> size of the kernel stack can be greater than 2 pages (e.g. 16KB on x86_64
+> or arm64). If we create a thread (suppose the thread stack is charged to
+> memory cgroup A) and then move it from memory cgroup A to memory cgroup
+> B. Because the kernel stack of the thread hold a reference to the memory
+> cgroup A. The thread can pin the memory cgroup A in the memory even if
+> we remove the cgroup A. If we want to see this scenario by using the
+> following script. We can see that the system has added 500 dying cgroups.
+> 
+> 	#!/bin/bash
+> 
+> 	cat /proc/cgroups | grep memory
+> 
+> 	cd /sys/fs/cgroup/memory
+> 	echo 1 > memory.move_charge_at_immigrate
+> 
+> 	for i in range{1..500}
+> 	do
+> 		mkdir kmem_test
+> 		echo $$ > kmem_test/cgroup.procs
+> 		sleep 3600 &
+> 		echo $$ > cgroup.procs
+> 		echo `cat kmem_test/cgroup.procs` > cgroup.procs
+> 		rmdir kmem_test
+> 	done
+> 
+> 	cat /proc/cgroups | grep memory
 
-The next patch removes page_memcg_kmem() again to replace it with
-page_objcg(). That should (luckily) remove the need for this
-distinction and keep page_memcg() simple and obvious.
+Well, moving processes between cgroups always created a lot of issues
+and corner cases and this one is definitely not the worst. So this problem
+looks a bit artificial, unless I'm missing something. But if it doesn't
+introduce any new performance costs and doesn't make the code more complex,
+I have nothing against.
 
-It would be better to not introduce page_memcg_kmem() in the first
-place in this patch, IMO.
+Btw, can you, please, run the spell-checker on commit logs? There are many
+typos (starting from the title of the series, I guess), which make the patchset
+look less appealing.
+
+Thank you!
+
+> 
+> This patchset aims to make those kmem pages drop the reference to memory
+> cgroup by using the APIs of obj_cgroup. Finally, we can see that the number
+> of the dying cgroups will not increase if we run the above test script.
+> 
+> Patch 1-3 are using obj_cgroup APIs to charge kmem pages. The remote
+> memory cgroup charing APIs is a mechanism to charge kernel memory to a
+> given memory cgroup. So I also make it use the APIs of obj_cgroup.
+> Patch 4-5 are doing this.
+> 
+> Muchun Song (5):
+>   mm: memcontrol: introduce obj_cgroup_{un}charge_page
+>   mm: memcontrol: make page_memcg{_rcu} only applicable for non-kmem
+>     page
+>   mm: memcontrol: reparent the kmem pages on cgroup removal
+>   mm: memcontrol: move remote memcg charging APIs to CONFIG_MEMCG_KMEM
+>   mm: memcontrol: use object cgroup for remote memory cgroup charging
+> 
+>  fs/buffer.c                          |  10 +-
+>  fs/notify/fanotify/fanotify.c        |   6 +-
+>  fs/notify/fanotify/fanotify_user.c   |   2 +-
+>  fs/notify/group.c                    |   3 +-
+>  fs/notify/inotify/inotify_fsnotify.c |   8 +-
+>  fs/notify/inotify/inotify_user.c     |   2 +-
+>  include/linux/bpf.h                  |   2 +-
+>  include/linux/fsnotify_backend.h     |   2 +-
+>  include/linux/memcontrol.h           | 109 +++++++++++---
+>  include/linux/sched.h                |   6 +-
+>  include/linux/sched/mm.h             |  30 ++--
+>  kernel/bpf/syscall.c                 |  35 ++---
+>  kernel/fork.c                        |   4 +-
+>  mm/memcontrol.c                      | 276 ++++++++++++++++++++++-------------
+>  mm/page_alloc.c                      |   4 +-
+>  15 files changed, 324 insertions(+), 175 deletions(-)
+> 
+> -- 
+> 2.11.0
+> 
