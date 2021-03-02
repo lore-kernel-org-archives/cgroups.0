@@ -1,87 +1,47 @@
-From: Muchun Song <songmuchun@bytedance.com>
-Subject: Re: [External] Re: [PATCH 2/5] mm: memcontrol: make page_memcg{_rcu}
- only applicable for non-kmem page
-Date: Tue, 2 Mar 2021 11:49:21 +0800
-Message-ID: <CAMZfGtWJRS=Cjx5HKt02-pzw7UOn-qhwR21fmDS6fcpntprbCQ@mail.gmail.com>
+From: Roman Gushchin <guro@fb.com>
+Subject: Re: [PATCH 4/5] mm: memcontrol: move remote memcg charging APIs to
+ CONFIG_MEMCG_KMEM
+Date: Mon, 1 Mar 2021 19:58:06 -0800
+Message-ID: <YD23zlVg+1sKJYvy@carbon.DHCP.thefacebook.com>
 References: <20210301062227.59292-1-songmuchun@bytedance.com>
- <20210301062227.59292-3-songmuchun@bytedance.com> <CALvZod7sysj0+wrzLTXnwn7s_Gf-V2eFPJ6cLcoRmR0LdAFk0Q@mail.gmail.com>
- <YD08A+fEp/4pw10I@cmpxchg.org>
+ <20210301062227.59292-5-songmuchun@bytedance.com>
+ <YD2RuPzikjPnI82h@carbon.dhcp.thefacebook.com>
+ <CALvZod4rWvMJdnbfMm4SGtj0WyqDzvH8RY9G32y=NLNCZqJ2Gg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=zR9rZ5Vo7n4Jx4LSiCHtKNBAWL0tmz/mJnFtTbDqbIU=;
-        b=v9fAqyuNhDoUw3dtU1vnpYtIU5IhN9QKuc3uYH/Oncb9JTBA0DAi9YtlWkm2stJ90r
-         +PRYhf+SGzC8j9uqnJHPm3vCzMPuzAlnRV+vZMvYST7E5TMq44Rfk3kwAWcFcB46Sq41
-         vFesKUHLPs83TWyyQCS5dXK5ciQhNVQKs4VGeOCSJchW2M9Dd07uGTBp4LJtvxYatGgm
-         sha9dr2oAKShevSBQhU6iX58QJjZVzwmCF0nNJCAcZeNG/9JX/jUobwm9Bc9XIzTh7wD
-         oMMjslfibt+eQ+1H+3/V5FkViK5z1Qxnvh3OuG/KKQ6i1oEnosdWfybQ1+34pqH7hfV2
-         +ufg==
-In-Reply-To: <YD08A+fEp/4pw10I@cmpxchg.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=1anEYPlXeCA8QVDJWhWrL7Jesrjov7VMWN5N28YTCOg=;
+ b=XAPWDmlLUoJX5jDl2d7KacxV6G/fAF8Fy3uQdSpPBsP295FNUAgCzup5l45sLRSQ7OY2
+ aO4j6vrIH7NZfPB76jVWLEFcb4dvmbNcRYfGmq8oAqHqnEGA3rlhSq5FMJDDFyNRMi3G
+ VpDeJPZeHYArFXt1zEIHelTX7DdcxG8ys3s= 
+Content-Disposition: inline
+In-Reply-To: <CALvZod4rWvMJdnbfMm4SGtj0WyqDzvH8RY9G32y=NLNCZqJ2Gg@mail.gmail.com>
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Shakeel Butt <shakeelb@google.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Alexei Starovoitov <ast@kernel.org>, Daniel Borkmann <daniel@iogearbox.net>, Andrii Nakryiko <andrii@kernel.org>, Martin KaFai Lau <kafai@fb.com>, Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>, John Fastabend <john.fastabend@gmail.com>, kpsingh@kernel.org, Ingo Molnar <mingo@redhat.com>, "Peter Zijlstra (Intel)" <peterz@infradead.org>, Juri Lelli <juri.lelli@redhat.com>, Vincent Guittot <vincent.guittot@linaro.org>, dietmar.eggemann@arm.com, Steven Rostedt <rostedt@goodmis.org>, Benjamin Segall <bsegall@google.com>, Mel Gorman <mgorman@suse.de>, bristot@redhat.com, Michal Hocko <mhocko@kernel.org>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Dan Schatzberg <schatzberg.dan@gmail.com>, Muchun Song <songmuchun@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, esyr@redhat.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, netdev <netdev@vger.kernel.org>, bpf <bpf@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
 
-On Tue, Mar 2, 2021 at 3:09 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
->
-> Muchun, can you please reduce the CC list to mm/memcg folks only for
-> the next submission? I think probably 80% of the current recipients
-> don't care ;-)
-
-At first, I just used scripts/get_maintainer.pl to get the
-CC list. I will reduce the CC list in the next version.
-Thanks.
-
->
-> On Mon, Mar 01, 2021 at 10:11:45AM -0800, Shakeel Butt wrote:
-> > On Sun, Feb 28, 2021 at 10:25 PM Muchun Song <songmuchun@bytedance.com> wrote:
-> > >
-> > > We want to reuse the obj_cgroup APIs to reparent the kmem pages when
-> > > the memcg offlined. If we do this, we should store an object cgroup
-> > > pointer to page->memcg_data for the kmem pages.
-> > >
-> > > Finally, page->memcg_data can have 3 different meanings.
-> > >
-> > >   1) For the slab pages, page->memcg_data points to an object cgroups
-> > >      vector.
-> > >
-> > >   2) For the kmem pages (exclude the slab pages), page->memcg_data
-> > >      points to an object cgroup.
-> > >
-> > >   3) For the user pages (e.g. the LRU pages), page->memcg_data points
-> > >      to a memory cgroup.
-> > >
-> > > Currently we always get the memcg associated with a page via page_memcg
-> > > or page_memcg_rcu. page_memcg_check is special, it has to be used in
-> > > cases when it's not known if a page has an associated memory cgroup
-> > > pointer or an object cgroups vector. Because the page->memcg_data of
-> > > the kmem page is not pointing to a memory cgroup in the later patch,
-> > > the page_memcg and page_memcg_rcu cannot be applicable for the kmem
-> > > pages. In this patch, we introduce page_memcg_kmem to get the memcg
-> > > associated with the kmem pages. And make page_memcg and page_memcg_rcu
-> > > no longer apply to the kmem pages.
-> > >
-> > > In the end, there are 4 helpers to get the memcg associated with a
-> > > page. The usage is as follows.
-> > >
-> > >   1) Get the memory cgroup associated with a non-kmem page (e.g. the LRU
-> > >      pages).
-> > >
-> > >      - page_memcg()
-> > >      - page_memcg_rcu()
+On Mon, Mar 01, 2021 at 07:43:27PM -0800, Shakeel Butt wrote:
+> On Mon, Mar 1, 2021 at 5:16 PM Roman Gushchin <guro@fb.com> wrote:
 > >
-> > Can you rename these to page_memcg_lru[_rcu] to make them explicitly
-> > for LRU pages?
->
-> The next patch removes page_memcg_kmem() again to replace it with
-> page_objcg(). That should (luckily) remove the need for this
-> distinction and keep page_memcg() simple and obvious.
->
-> It would be better to not introduce page_memcg_kmem() in the first
-> place in this patch, IMO.
+> > On Mon, Mar 01, 2021 at 02:22:26PM +0800, Muchun Song wrote:
+> > > The remote memcg charing APIs is a mechanism to charge kernel memory
+> > > to a given memcg. So we can move the infrastructure to the scope of
+> > > the CONFIG_MEMCG_KMEM.
+> >
+> > This is not a good idea, because there is nothing kmem-specific
+> > in the idea of remote charging, and we definitely will see cases
+> > when user memory is charged to the process different from the current.
+> >
+> 
+> Indeed and which remind me: what happened to the "Charge loop device
+> i/o to issuing cgroup" series? That series was doing remote charging
+> for user pages.
 
-OK. I will follow your suggestion. Thanks.
+Yeah, this is exactly what I minded. We're using it internally, and as I
+remember there were no obstacles to upstream it too.
+I'll ping Dan when after the merge window.
+
+Thanks!
