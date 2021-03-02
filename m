@@ -1,62 +1,93 @@
-From: Vipin Sharma <vipinsh@google.com>
-Subject: [RFC v2 0/2] cgroup: New misc cgroup controller
-Date: Tue,  2 Mar 2021 00:17:03 -0800
-Message-ID: <20210302081705.1990283-1-vipinsh@google.com>
+From: "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: RE: [PATCH V4 00/18] IOASID extensions for guest SVA
+Date: Tue, 2 Mar 2021 12:58:05 +0000
+Message-ID: <BN6PR11MB406867D75E42A34F8C2555E5C3999@BN6PR11MB4068.namprd11.prod.outlook.com>
+References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=sender:date:message-id:mime-version:subject:from:to:cc;
-        bh=J5nM/aBIL0ud17qxWddLzc4+65+ykqSEziPOIHoR18E=;
-        b=CLaHSQRRQuhzlrNUHt+Ee6dvdh/pvhmKVL23Vm4bjLSGpL9t3yxCRmBAVgHL6lsIyn
-         05iAFmfLfOZZR9GHkYRXKHrHC0SJlD8qUu+AAvO9gfMPcV4vhR646pp/hEvI68QeA2Mb
-         DBYpEVQWeUFHdRFXaub06Vwhv8jjJysBUfgnKx9+1KwWwrDjmMYv+jozyxcKVieG9COH
-         DE7ZHKblBdBpTi6HTjHtr7iiM5+8AIUrueg5HzDkJVCaHvkxaOHcB1vGO3bNgFMavgSK
-         JIqmGJgz7qn0J+SwCsXUdzaYEdBIOPxEJJe80J4+INK+OSDVp9jhM5+vKb5bRxmRrTWt
-         lYag==
-Sender: "vipinsh via sendgmr" <vipinsh@vipinsh.kir.corp.google.com>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj@kernel.org, mkoutny@suse.com, rdunlap@infradead.org, thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com
-Cc: corbet@lwn.net, seanjc@google.com, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, joro@8bytes.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Vipin Sharma <vipinsh@google.com>
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com; 
+ s=selector2-intel-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=EABkFu3+j2V5WDiRXC0f/ppojwIHN02YS+GxyGKV6cA=;
+ b=g4PqHbpWP7IXc99b0R9W0Z1WhQHIi2+YAUkgcVUkGtCFzKClYU3fxEUCHYpSw24P1EGD338fqVmBQZW9gUpMoYZCPc+PwQ87ERBUUUsAy5dZjug0917o9Fi2xl/fpEL/OZ7Z72jLjTgDR2h1aQpoWuJdmfVKZdYnOnbTuwoJomQ=
+In-Reply-To: <1614463286-97618-1-git-send-email-jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Content-Language: en-US
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>
+Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Hello
+> From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+> Sent: Sunday, February 28, 2021 6:01 AM
+>
+> I/O Address Space ID (IOASID) core code was introduced in v5.5 as a generic
+> kernel allocator service for both PCIe Process Address Space ID (PASID) and
+> ARM SMMU's Substream ID. IOASIDs are used to associate DMA requests
+> with
+> virtual address spaces, including both host and guest.
+> 
+> In addition to providing basic ID allocation, ioasid_set was defined as a
+> token that is shared by a group of IOASIDs. This set token can be used
+> for permission checking, but lack some features to address the following
+> needs by guest Shared Virtual Address (SVA).
+> - Manage IOASIDs by group, group ownership, quota, etc.
+> - State synchronization among IOASID users (e.g. IOMMU driver, KVM,
+> device
+> drivers)
+> - Non-identity guest-host IOASID mapping
+> - Lifecycle management
+> 
+> This patchset introduces the following extensions as solutions to the
+> problems above.
+> - Redefine and extend IOASID set such that IOASIDs can be managed by
+> groups/pools.
+> - Add notifications for IOASID state synchronization
+> - Extend reference counting for life cycle alignment among multiple users
+> - Support ioasid_set private IDs, which can be used as guest IOASIDs
+> - Add a new cgroup controller for resource distribution
+> 
+> Please refer to Documentation/admin-guide/cgroup-v1/ioasids.rst and
+> Documentation/driver-api/ioasid.rst in the enclosed patches for more
+> details.
+> 
+> Based on discussions on LKML[1], a direction change was made in v4 such
+> that
+> the user interfaces for IOASID allocation are extracted from VFIO
+> subsystem. The proposed IOASID subsystem now consists of three
+> components:
+> 1. IOASID core[01-14]: provides APIs for allocation, pool management,
+>   notifications, and refcounting.
+> 2. IOASID cgroup controller[RFC 15-17]: manage resource distribution[2].
+> 3. IOASID user[RFC 18]:  provides user allocation interface via /dev/ioasid
+> 
+> This patchset only included VT-d driver as users of some of the new APIs.
+> VFIO and KVM patches are coming up to fully utilize the APIs introduced
+> here.
+>
+> [1] https://lore.kernel.org/linux-iommu/1599734733-6431-1-git-send-email-
+> yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+> [2] Note that ioasid quota management code can be removed once the
+> IOASIDs
+> cgroup is ratified.
+> 
+> You can find this series, VFIO, KVM, and IOASID user at:
+> https://github.com/jacobpan/linux.git ioasid_v4
+> (VFIO and KVM patches will be available at this branch when published.)
 
-This patch series is creating a new misc cgroup controller for limiting
-and tracking of resources which are not abstract like other cgroup
-controllers.
+VFIO and QEMU series are listed below:
 
-This controller was initially proposed as encryption_id but after
-the feedbacks, it is now changed to misc cgroup.
-https://lore.kernel.org/lkml/20210108012846.4134815-2-vipinsh@google.com/
+VFIO: https://lore.kernel.org/linux-iommu/20210302203545.436623-1-yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/
+QEMU: https://lore.kernel.org/qemu-devel/20210302203827.437645-1-yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org/T/#t
 
-Changes in RFC v2:
-1. Documentation fixes.
-2. Added kernel log messages.
-3. Changed charge API to treat misc_cg as input parameter.
-4. Added helper APIs to get and release references on the cgroup.
-
-[1] https://lore.kernel.org/lkml/20210218195549.1696769-1-vipinsh@google.com
-Vipin Sharma (2):
-  cgroup: sev: Add misc cgroup controller
-  cgroup: sev: Miscellaneous cgroup documentation.
-
- Documentation/admin-guide/cgroup-v1/index.rst |   1 +
- Documentation/admin-guide/cgroup-v1/misc.rst  |   4 +
- Documentation/admin-guide/cgroup-v2.rst       |  69 ++-
- arch/x86/kvm/svm/sev.c                        |  65 ++-
- arch/x86/kvm/svm/svm.h                        |   1 +
- include/linux/cgroup_subsys.h                 |   4 +
- include/linux/misc_cgroup.h                   | 122 +++++
- init/Kconfig                                  |  14 +
- kernel/cgroup/Makefile                        |   1 +
- kernel/cgroup/misc.c                          | 423 ++++++++++++++++++
- 10 files changed, 692 insertions(+), 12 deletions(-)
- create mode 100644 Documentation/admin-guide/cgroup-v1/misc.rst
- create mode 100644 include/linux/misc_cgroup.h
- create mode 100644 kernel/cgroup/misc.c
-
--- 
-2.30.1.766.gb4fecdf3b7-goog
-
+Regards,
+Yi Liu
