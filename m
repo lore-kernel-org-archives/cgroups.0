@@ -1,85 +1,69 @@
-From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [RFC PATCH 15/18] cgroup: Introduce ioasids controller
-Date: Thu, 4 Mar 2021 13:28:09 -0800
-Message-ID: <20210304132809.75b3fa55@jacob-builder>
-References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
- <1614463286-97618-16-git-send-email-jacob.jun.pan@linux.intel.com>
- <YD+u3CXhwOi2LC+4@slm.duckdns.org>
- <20210303131726.7a8cb169@jacob-builder>
- <20210303160205.151d114e@jacob-builder> <YECtMZNqSgh7jkGP@myrica>
- <20210304094603.4ab6c1c4@jacob-builder>
- <20210304175402.GG4247@nvidia.com>
- <20210304110144.39ef0941@jacob-builder>
- <20210304190253.GL4247@nvidia.com>
+From: Vipin Sharma <vipinsh@google.com>
+Subject: [Patch v3 0/2] cgroup: New misc cgroup controller
+Date: Thu,  4 Mar 2021 15:19:44 -0800
+Message-ID: <20210304231946.2766648-1-vipinsh@google.com>
 Mime-Version: 1.0
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=sender:date:message-id:mime-version:subject:from:to:cc;
+        bh=/tCag2eM5nibLNaUG4o5xV/pF/skcGVt2I4xreL6gfI=;
+        b=LQXYw+cnQ5skNeBCxADkh40ZLQqdcnVS3py7rRwFSc5jFkf7xMzj9/kzaAN030I1cc
+         ALcihEajKRdWwIjzVkdnEEJ5clsDxKQCKHquzcrv8S9dEvFia/6LDSqmEcIN11QY9L6s
+         saub2b4HcnLstNNeZJqAxnWxq24Uy7PY/kp2g+fFrOD3byGvmkozYDdoNEj/CKOcCnzr
+         mAe6R+sOd5omrR9C1LNlE2Xm/myYz5zAmPVWmxnMkeZ0NlyjRM2duTuxU/21B5qSsWFQ
+         jaWvUqgeCXHh+Gdf8ecYjuYDFAHn+R3NKCwzyTigP2dz/HK4C6F8nONvHgpXHdCe/Efg
+         uRcw==
+Sender: "vipinsh via sendgmr" <vipinsh@vipinsh.kir.corp.google.com>
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20210304190253.GL4247-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian,
- Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+To: tj@kernel.org, mkoutny@suse.com, rdunlap@infradead.org, thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com
+Cc: corbet@lwn.net, seanjc@google.com, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, joro@8bytes.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Vipin Sharma <vipinsh@google.com>
 
-Hi Jason,
+Hello
 
-On Thu, 4 Mar 2021 15:02:53 -0400, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
+This patch series is creating a new misc cgroup controller for limiting
+and tracking of resources which are not abstract like other cgroup
+controllers.
 
-> On Thu, Mar 04, 2021 at 11:01:44AM -0800, Jacob Pan wrote:
-> 
-> > > For something like qemu I'd expect to put the qemu process in a cgroup
-> > > with 1 PASID. Who cares what qemu uses the PASID for, or how it was
-> > > allocated?  
-> > 
-> > For vSVA, we will need one PASID per guest process. But that is up to
-> > the admin based on whether or how many SVA capable devices are directly
-> > assigned.  
-> 
-> I hope the virtual IOMMU driver can communicate the PASID limit and
-> the cgroup machinery in the guest can know what the actual limit is.
-> 
-For VT-d, emulated vIOMMU can communicate with the guest IOMMU driver on how
-many PASID bits are supported (extended cap reg PASID size fields). But it
-cannot communicate how many PASIDs are in the pool(host cgroup capacity).
+This controller was initially proposed as encryption_id but after
+the feedbacks, it is now changed to misc cgroup.
+https://lore.kernel.org/lkml/20210108012846.4134815-2-vipinsh@google.com/
 
-The QEMU process may not be the only one in a cgroup so it cannot give hard
-guarantees. I don't see a good way to communicate accurately at runtime as
-the process migrates or limit changes.
+Changes in RFC v3:
+1. Changed implementation to support 64 bit counters.
+2. Print kernel logs only once per resource per cgroup.
+3. Capacity can be set less than the current usage.
 
-We were thinking to adopt the "Limits" model as defined in the cgroup-v2
-doc.
-"
-Limits
-------
+Changes in RFC v2:
+1. Documentation fixes.
+2. Added kernel log messages.
+3. Changed charge API to treat misc_cg as input parameter.
+4. Added helper APIs to get and release references on the cgroup.
 
-A child can only consume upto the configured amount of the resource.
-Limits can be over-committed - the sum of the limits of children can
-exceed the amount of resource available to the parent.
-"
+[1] https://lore.kernel.org/lkml/20210218195549.1696769-1-vipinsh@google.com
+[2] https://lore.kernel.org/lkml/20210302081705.1990283-1-vipinsh@google.com/
 
-So the guest cgroup would still think it has full 20 bits of PASID at its
-disposal. But PASID allocation may fail before reaching the full 20 bits
-(2M).
-Similar on the host side, we only enforce the limit set by the cgroup but
-not guarantee it.
+Vipin Sharma (2):
+  cgroup: sev: Add misc cgroup controller
+  cgroup: sev: Miscellaneous cgroup documentation.
 
-> I was thinking of a case where qemu is using a single PASID to setup
-> the guest kVA or similar
-> 
-got it.
+ Documentation/admin-guide/cgroup-v1/index.rst |   1 +
+ Documentation/admin-guide/cgroup-v1/misc.rst  |   4 +
+ Documentation/admin-guide/cgroup-v2.rst       |  69 ++-
+ arch/x86/kvm/svm/sev.c                        |  65 ++-
+ arch/x86/kvm/svm/svm.h                        |   1 +
+ include/linux/cgroup_subsys.h                 |   4 +
+ include/linux/misc_cgroup.h                   | 130 ++++++
+ init/Kconfig                                  |  14 +
+ kernel/cgroup/Makefile                        |   1 +
+ kernel/cgroup/misc.c                          | 402 ++++++++++++++++++
+ 10 files changed, 679 insertions(+), 12 deletions(-)
+ create mode 100644 Documentation/admin-guide/cgroup-v1/misc.rst
+ create mode 100644 include/linux/misc_cgroup.h
+ create mode 100644 kernel/cgroup/misc.c
 
-> Jason
+-- 
+2.30.1.766.gb4fecdf3b7-goog
 
-
-Thanks,
-
-Jacob
