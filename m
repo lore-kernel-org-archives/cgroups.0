@@ -1,59 +1,45 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC v2 2/2] cgroup: sev: Miscellaneous cgroup documentation.
-Date: Thu, 4 Mar 2021 03:51:16 -0500
-Message-ID: <YECfhCJtHUL9cB2L@slm.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC v2 1/2] cgroup: sev: Add misc cgroup controller
+Date: Thu, 4 Mar 2021 03:53:11 -0500
+Message-ID: <YECf9yxMMAztYEH4@slm.duckdns.org>
 References: <20210302081705.1990283-1-vipinsh@google.com>
- <20210302081705.1990283-3-vipinsh@google.com>
- <20210303185513.27e18fce@jacob-builder>
- <YEB8i6Chq4K/GGF6@google.com>
+ <20210302081705.1990283-2-vipinsh@google.com>
+ <YD+ubbB4Tz0ZlVvp@slm.duckdns.org>
+ <YEB6ULUgbf+s8ydd@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=I4gktfqxylGB3DlwpHUJlo46LXTYxo6+TuJCmtDgwqg=;
-        b=WYjdeOOvSLFpvDoGjRRqZlAOwzlmZdzsKW62eY2+C+MatfU5IHlRHugMRRHognkKJa
-         7I/NGS3uGqF63bl8cu+Sd8jPUj2wa8lNZWhg6s7FdnFPLRsxr7AK4HzzeD65KBmPz6wN
-         VQcjeJJbBgX5qiMV1/Cq6/FQCVXVPWIa+tMGhn9gGdfcb2+PL56qDI1QfMLy9cayAD8R
-         QXnYX4JEzS6BN9ANqF2JSjPoHHX1U+rqiF5qO+KIN6ax+4qAeRnkp97wMpAOHuQIRs5o
-         Kj46nYkNjqGS+ndlohRvyB8MUQ4HYU2dQPbGtA8rAwwGGcZ43FjhtD3OMnmovFe3Uaft
-         0aqA==
-Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        bh=7yRX9wnbaqglQOqo35jp40oCDrn05rlNxnwnL03DlpE=;
+        b=KZp4VpCLyjq4r7v+f3wf3DEJwmNX69ZdxRoq/N35GcQfqmjHiarec+NRj7KIldoeDn
+         pZbEMbqOFxiQNvPhJdL/up4J+DHXdVPtN8l6ev1aGrjKVWrHdVUiyQ3Ne3+oN+ssrls6
+         LxnEGJ3S+kkZGcOyVXuepIbNqb1RPDtwc1GiQwhln41uDV1zNmeLCoGVCz1Zou/rv8Km
+         3zoPGw9sfJxB/GP+6HeJLHc7ZL8k/473wsXPli2Df4HTj+afRv1U+MNTSquDZmTG4vZZ
+         1GO0fzGBFPwvgzS1jPRN+1sMTk1UKbe7A2bA5z1ZcNiHFJUYu/I4XRGD4g+xai+Z2UfJ
+         P1BA==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <YEB8i6Chq4K/GGF6-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <YEB6ULUgbf+s8ydd@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Jacob Pan <jacob.jun.pan-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, mkoutny-IBi9RG/b67k@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, thomas.lendacky-5C7GfCeVMHo@public.gmane.org, brijesh.singh-5C7GfCeVMHo@public.gmane.org, jon.grimm-5C7GfCeVMHo@public.gmane.org, eric.vantassell-5C7GfCeVMHo@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, frankja-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, gingell-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dionnaglaze-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jaso
+To: Vipin Sharma <vipinsh@google.com>
+Cc: mkoutny@suse.com, rdunlap@infradead.org, thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net, seanjc@google.com, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, joro@8bytes.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Hello,
 
-On Wed, Mar 03, 2021 at 10:22:03PM -0800, Vipin Sharma wrote:
-> > I am trying to see if IOASIDs cgroup can also fit in this misc controller
-> > as yet another resource type.
-> > https://lore.kernel.org/linux-iommu/20210303131726.7a8cb169@jacob-builder/T/#u
-> > However, unlike sev IOASIDs need to be migrated if the process is moved to
-> > another cgroup. i.e. charge the destination and uncharge the source.
-> > 
-> > Do you think this behavior can be achieved by differentiating resource
-> > types? i.e. add attach callbacks for certain types. Having a single misc
-> > interface seems cleaner than creating another controller.
+On Wed, Mar 03, 2021 at 10:12:32PM -0800, Vipin Sharma wrote:
+> Right now there is no API for the caller to know total usage, unless they
+> keep their own tally, I was thinking it will be useful to add one more API
 > 
-> I think it makes sense to add support for migration for the resources
-> which need it. Resources like SEV, SEV-ES will not participate in
-> migration and won't stop can_attach() to succeed, other resources which
-> need migration will allow or stop based on their limits and capacity in
-> the destination.
+> unsigned long misc_cg_res_total_usage(enum misc_res_type type)
+> 
+> It will return root_cg usage for "type" resource.
+> Will it be fine?
 
-Please note that cgroup2 by and large don't really like or support charge
-migration or even migrations themselves. We tried that w/ memcg on cgroup1
-and it turned out horrible. The expected usage model as decribed in the doc
-is using migration to seed a cgroup (or even better, use the new clone call
-to start in the target cgroup) and then stay there until exit. All existing
-controllers assume this usage model and I'm likely to nack deviation unless
-there are some super strong justifications.
+Yeah, that sounds fine.
 
 Thanks.
 
