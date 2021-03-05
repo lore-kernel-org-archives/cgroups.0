@@ -1,331 +1,61 @@
-From: Roman Gushchin <guro@fb.com>
+From: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH v4] memcg: charge before adding to swapcache on swapin
-Date: Fri, 5 Mar 2021 15:20:18 -0800
-Message-ID: <YEK8stUpyrOEuIp/@carbon.DHCP.thefacebook.com>
-References: <20210305212639.775498-1-shakeelb@google.com>
+Date: Fri, 5 Mar 2021 15:20:48 -0800 (PST)
+Message-ID: <alpine.LSU.2.11.2103051519460.1856@eggly.anvils>
+References: <20210305212639.775498-1-shakeelb@google.com> <CALvZod5oPTj8r6vKXVGgtKoXVaRWbRX9S2mLVtSnyysqtzr_ng@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=f32fyFzwjaU0mA2f3MrVKPDbjM5W6NBbQk7qWSHPiAo=;
- b=Bg83jKphk4KObye9bvQS6A5b1qf3eUwlhxCXxr/dc2gYYELm+QTFiD4xAQCDxIxDCS2/
- w4ErftuouY3uJlWcNGEdrhEQ9giOBh5OUj3pwt+OWf84BO8OpHIhJsjA5S7kPhE3yp98
- H3/pPFQBfYeoA0DG6XMExNAAadNiZecx2iw= 
-Content-Disposition: inline
-In-Reply-To: <20210305212639.775498-1-shakeelb@google.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=r0cTPvXdPd9aXoIuTSiB+0BptUG2HNyX6VD0hnKItjg=;
+        b=IbW9BqWseyXJunfwk6vypcVhPM+2f00lqu+yPIf3i41yBB3U5kG6VJwHyyyzipvUcp
+         Jdclyo7xbJuBiOMrpb+Xx8T4Y8lg73KtuHhrAZcbWI8SKiUkS61MweoA31Psyv9zholn
+         qSagH5RJmp3v8GEPtNkbIfOC2ukMr68AEhnOeuR+z9ftl9I/2ghIBnJxLPNhlEAh7+vk
+         JSKIdRV1Pmp+08NC0NUfZ/EnxiirZfHnuEsdaiUqDTT6qqJPzWnBtUuDCT/s4UZn/TeD
+         47KfBlUwFBGH+ZLQ47DM7ivUbE88YHaKoQXHKYxF5Kodqils0+P4mK4R1D5nnRjkLRRJ
+         uqBQ==
+In-Reply-To: <CALvZod5oPTj8r6vKXVGgtKoXVaRWbRX9S2mLVtSnyysqtzr_ng-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Hugh Dickins <hughd@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On Fri, Mar 05, 2021 at 01:26:39PM -0800, Shakeel Butt wrote:
-> Currently the kernel adds the page, allocated for swapin, to the
-> swapcache before charging the page. This is fine but now we want a
-> per-memcg swapcache stat which is essential for folks who wants to
-> transparently migrate from cgroup v1's memsw to cgroup v2's memory and
-> swap counters. In addition charging a page before exposing it to other
-> parts of the kernel is a step in the right direction.
+On Fri, 5 Mar 2021, Shakeel Butt wrote:
+> On Fri, Mar 5, 2021 at 1:26 PM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> >
+> > Currently the kernel adds the page, allocated for swapin, to the
+> > swapcache before charging the page. This is fine but now we want a
+> > per-memcg swapcache stat which is essential for folks who wants to
+> > transparently migrate from cgroup v1's memsw to cgroup v2's memory and
+> > swap counters. In addition charging a page before exposing it to other
+> > parts of the kernel is a step in the right direction.
+> >
+> > To correctly maintain the per-memcg swapcache stat, this patch has
+> > adopted to charge the page before adding it to swapcache. One
+> > challenge in this option is the failure case of add_to_swap_cache() on
+> > which we need to undo the mem_cgroup_charge(). Specifically undoing
+> > mem_cgroup_uncharge_swap() is not simple.
+> >
+> > To resolve the issue, this patch introduces transaction like interface
+> > to charge a page for swapin. The function mem_cgroup_charge_swapin_page()
+> > initiates the charging of the page and mem_cgroup_finish_swapin_page()
+> > completes the charging process. So, the kernel starts the charging
+> > process of the page for swapin with mem_cgroup_charge_swapin_page(),
+> > adds the page to the swapcache and on success completes the charging
+> > process with mem_cgroup_finish_swapin_page().
 > 
-> To correctly maintain the per-memcg swapcache stat, this patch has
-> adopted to charge the page before adding it to swapcache. One
-> challenge in this option is the failure case of add_to_swap_cache() on
-> which we need to undo the mem_cgroup_charge(). Specifically undoing
-> mem_cgroup_uncharge_swap() is not simple.
+> And of course I forgot to update the commit message.
 > 
-> To resolve the issue, this patch introduces transaction like interface
-> to charge a page for swapin. The function mem_cgroup_charge_swapin_page()
-> initiates the charging of the page and mem_cgroup_finish_swapin_page()
-> completes the charging process. So, the kernel starts the charging
-> process of the page for swapin with mem_cgroup_charge_swapin_page(),
-> adds the page to the swapcache and on success completes the charging
-> process with mem_cgroup_finish_swapin_page().
+> Andrew, please replace the third paragraph with the following para:
 > 
-> Signed-off-by: Shakeel Butt <shakeelb@google.com>
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-> Acked-by: Hugh Dickins <hughd@google.com>
+> To resolve the issue, this patch decouples the charging for swapin pages from
+> mem_cgroup_charge(). Two new functions are introduced,
+> mem_cgroup_swapin_charge_page() for just charging the swapin page and
+> mem_cgroup_swapin_uncharge_swap() for uncharging the swap slot once the
+> page has been successfully added to the swapcache.
 
-Acked-by: Roman Gushchin <guro@fb.com>
-
-Thanks!
-
-> ---
-> Changes since v3:
-> - Updated the comments on introduced functions (Johannes)
-> - Rename the funcations to be more clear (Hugh & Johannes)
-> 
-> Changes since v2:
-> - fixed build for !CONFIG_MEMCG
-> - simplified failure path from add_to_swap_cache()
-> 
-> Changes since v1:
-> - Removes __GFP_NOFAIL and introduced transaction interface for charging
->   (suggested by Johannes)
-> - Updated the commit message
-> 
->  include/linux/memcontrol.h |  13 +++++
->  mm/memcontrol.c            | 117 +++++++++++++++++++++++--------------
->  mm/memory.c                |  14 ++---
->  mm/swap_state.c            |  13 ++---
->  4 files changed, 97 insertions(+), 60 deletions(-)
-> 
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index e6dc793d587d..f522b09f2df7 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -596,6 +596,9 @@ static inline bool mem_cgroup_below_min(struct mem_cgroup *memcg)
->  }
->  
->  int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask);
-> +int mem_cgroup_swapin_charge_page(struct page *page, struct mm_struct *mm,
-> +				  gfp_t gfp, swp_entry_t entry);
-> +void mem_cgroup_swapin_uncharge_swap(swp_entry_t entry);
->  
->  void mem_cgroup_uncharge(struct page *page);
->  void mem_cgroup_uncharge_list(struct list_head *page_list);
-> @@ -1141,6 +1144,16 @@ static inline int mem_cgroup_charge(struct page *page, struct mm_struct *mm,
->  	return 0;
->  }
->  
-> +static inline int mem_cgroup_swapin_charge_page(struct page *page,
-> +			struct mm_struct *mm, gfp_t gfp, swp_entry_t entry)
-> +{
-> +	return 0;
-> +}
-> +
-> +static inline void mem_cgroup_swapin_uncharge_swap(swp_entry_t entry)
-> +{
-> +}
-> +
->  static inline void mem_cgroup_uncharge(struct page *page)
->  {
->  }
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 2db2aeac8a9e..21c38c0b6e5a 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -6690,6 +6690,27 @@ void mem_cgroup_calculate_protection(struct mem_cgroup *root,
->  			atomic_long_read(&parent->memory.children_low_usage)));
->  }
->  
-> +static int __mem_cgroup_charge(struct page *page, struct mem_cgroup *memcg,
-> +			       gfp_t gfp)
-> +{
-> +	unsigned int nr_pages = thp_nr_pages(page);
-> +	int ret;
-> +
-> +	ret = try_charge(memcg, gfp, nr_pages);
-> +	if (ret)
-> +		goto out;
-> +
-> +	css_get(&memcg->css);
-> +	commit_charge(page, memcg);
-> +
-> +	local_irq_disable();
-> +	mem_cgroup_charge_statistics(memcg, page, nr_pages);
-> +	memcg_check_events(memcg, page);
-> +	local_irq_enable();
-> +out:
-> +	return ret;
-> +}
-> +
->  /**
->   * mem_cgroup_charge - charge a newly allocated page to a cgroup
->   * @page: page to charge
-> @@ -6699,55 +6720,71 @@ void mem_cgroup_calculate_protection(struct mem_cgroup *root,
->   * Try to charge @page to the memcg that @mm belongs to, reclaiming
->   * pages according to @gfp_mask if necessary.
->   *
-> + * Do not use this for pages allocated for swapin.
-> + *
->   * Returns 0 on success. Otherwise, an error code is returned.
->   */
->  int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask)
->  {
-> -	unsigned int nr_pages = thp_nr_pages(page);
-> -	struct mem_cgroup *memcg = NULL;
-> -	int ret = 0;
-> +	struct mem_cgroup *memcg;
-> +	int ret;
->  
->  	if (mem_cgroup_disabled())
-> -		goto out;
-> +		return 0;
->  
-> -	if (PageSwapCache(page)) {
-> -		swp_entry_t ent = { .val = page_private(page), };
-> -		unsigned short id;
-> +	memcg = get_mem_cgroup_from_mm(mm);
-> +	ret = __mem_cgroup_charge(page, memcg, gfp_mask);
-> +	css_put(&memcg->css);
->  
-> -		/*
-> -		 * Every swap fault against a single page tries to charge the
-> -		 * page, bail as early as possible.  shmem_unuse() encounters
-> -		 * already charged pages, too.  page and memcg binding is
-> -		 * protected by the page lock, which serializes swap cache
-> -		 * removal, which in turn serializes uncharging.
-> -		 */
-> -		VM_BUG_ON_PAGE(!PageLocked(page), page);
-> -		if (page_memcg(compound_head(page)))
-> -			goto out;
-> +	return ret;
-> +}
->  
-> -		id = lookup_swap_cgroup_id(ent);
-> -		rcu_read_lock();
-> -		memcg = mem_cgroup_from_id(id);
-> -		if (memcg && !css_tryget_online(&memcg->css))
-> -			memcg = NULL;
-> -		rcu_read_unlock();
-> -	}
-> +/**
-> + * mem_cgroup_swapin_charge_page - charge a newly allocated page for swapin
-> + * @page: page to charge
-> + * @mm: mm context of the victim
-> + * @gfp: reclaim mode
-> + * @entry: swap entry for which the page is allocated
-> + *
-> + * This function charges a page allocated for swapin. Please call this before
-> + * adding the page to the swapcache.
-> + *
-> + * Returns 0 on success. Otherwise, an error code is returned.
-> + */
-> +int mem_cgroup_swapin_charge_page(struct page *page, struct mm_struct *mm,
-> +				  gfp_t gfp, swp_entry_t entry)
-> +{
-> +	struct mem_cgroup *memcg;
-> +	unsigned short id;
-> +	int ret;
->  
-> -	if (!memcg)
-> +	if (mem_cgroup_disabled())
-> +		return 0;
-> +
-> +	id = lookup_swap_cgroup_id(entry);
-> +	rcu_read_lock();
-> +	memcg = mem_cgroup_from_id(id);
-> +	if (!memcg || !css_tryget_online(&memcg->css))
->  		memcg = get_mem_cgroup_from_mm(mm);
-> +	rcu_read_unlock();
->  
-> -	ret = try_charge(memcg, gfp_mask, nr_pages);
-> -	if (ret)
-> -		goto out_put;
-> +	ret = __mem_cgroup_charge(page, memcg, gfp);
->  
-> -	css_get(&memcg->css);
-> -	commit_charge(page, memcg);
-> -
-> -	local_irq_disable();
-> -	mem_cgroup_charge_statistics(memcg, page, nr_pages);
-> -	memcg_check_events(memcg, page);
-> -	local_irq_enable();
-> +	css_put(&memcg->css);
-> +	return ret;
-> +}
->  
-> +/*
-> + * mem_cgroup_swapin_uncharge_swap - uncharge swap slot
-> + * @entry: swap entry for which the page is charged
-> + *
-> + * Call this function after successfully adding the charged page to swapcache.
-> + *
-> + * Note: This function assumes the page for which swap slot is being uncharged
-> + * is order 0 page.
-> + */
-> +void mem_cgroup_swapin_uncharge_swap(swp_entry_t entry)
-> +{
->  	/*
->  	 * Cgroup1's unified memory+swap counter has been charged with the
->  	 * new swapcache page, finish the transfer by uncharging the swap
-> @@ -6760,20 +6797,14 @@ int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask)
->  	 * correspond 1:1 to page and swap slot lifetimes: we charge the
->  	 * page to memory here, and uncharge swap when the slot is freed.
->  	 */
-> -	if (do_memsw_account() && PageSwapCache(page)) {
-> -		swp_entry_t entry = { .val = page_private(page) };
-> +	if (!mem_cgroup_disabled() && do_memsw_account()) {
->  		/*
->  		 * The swap entry might not get freed for a long time,
->  		 * let's not wait for it.  The page already received a
->  		 * memory+swap charge, drop the swap entry duplicate.
->  		 */
-> -		mem_cgroup_uncharge_swap(entry, nr_pages);
-> +		mem_cgroup_uncharge_swap(entry, 1);
->  	}
-> -
-> -out_put:
-> -	css_put(&memcg->css);
-> -out:
-> -	return ret;
->  }
->  
->  struct uncharge_gather {
-> diff --git a/mm/memory.c b/mm/memory.c
-> index c8e357627318..5ddc133d0038 100644
-> --- a/mm/memory.c
-> +++ b/mm/memory.c
-> @@ -3307,21 +3307,15 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
->  			page = alloc_page_vma(GFP_HIGHUSER_MOVABLE, vma,
->  							vmf->address);
->  			if (page) {
-> -				int err;
-> -
->  				__SetPageLocked(page);
->  				__SetPageSwapBacked(page);
-> -				set_page_private(page, entry.val);
-> -
-> -				/* Tell memcg to use swap ownership records */
-> -				SetPageSwapCache(page);
-> -				err = mem_cgroup_charge(page, vma->vm_mm,
-> -							GFP_KERNEL);
-> -				ClearPageSwapCache(page);
-> -				if (err) {
-> +
-> +				if (mem_cgroup_swapin_charge_page(page,
-> +					vma->vm_mm, GFP_KERNEL, entry)) {
->  					ret = VM_FAULT_OOM;
->  					goto out_page;
->  				}
-> +				mem_cgroup_swapin_uncharge_swap(entry);
->  
->  				shadow = get_shadow_from_swap_cache(entry);
->  				if (shadow)
-> diff --git a/mm/swap_state.c b/mm/swap_state.c
-> index 3cdee7b11da9..fb7efa08fe57 100644
-> --- a/mm/swap_state.c
-> +++ b/mm/swap_state.c
-> @@ -497,16 +497,14 @@ struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
->  	__SetPageLocked(page);
->  	__SetPageSwapBacked(page);
->  
-> -	/* May fail (-ENOMEM) if XArray node allocation failed. */
-> -	if (add_to_swap_cache(page, entry, gfp_mask & GFP_RECLAIM_MASK, &shadow)) {
-> -		put_swap_page(page, entry);
-> +	if (mem_cgroup_swapin_charge_page(page, NULL, gfp_mask, entry))
->  		goto fail_unlock;
-> -	}
->  
-> -	if (mem_cgroup_charge(page, NULL, gfp_mask)) {
-> -		delete_from_swap_cache(page);
-> +	/* May fail (-ENOMEM) if XArray node allocation failed. */
-> +	if (add_to_swap_cache(page, entry, gfp_mask & GFP_RECLAIM_MASK, &shadow))
->  		goto fail_unlock;
-> -	}
-> +
-> +	mem_cgroup_swapin_uncharge_swap(entry);
->  
->  	if (shadow)
->  		workingset_refault(page, shadow);
-> @@ -517,6 +515,7 @@ struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
->  	return page;
->  
->  fail_unlock:
-> +	put_swap_page(page, entry);
->  	unlock_page(page);
->  	put_page(page);
->  	return NULL;
-> -- 
-> 2.30.1.766.gb4fecdf3b7-goog
-> 
+Lgtm
+Hugh
