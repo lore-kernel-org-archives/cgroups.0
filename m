@@ -1,81 +1,45 @@
-From: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH v2 1/3] mm: Fix dropped memcg from mem cgroup soft limit
- tree
-Date: Fri, 5 Mar 2021 11:07:59 -0800
-Message-ID: <087bed0e-5b5f-0e25-c247-7fcb34de1513@linux.intel.com>
-References: <cover.1613584277.git.tim.c.chen@linux.intel.com>
- <8d35206601ccf0e1fe021d24405b2a0c2f4e052f.1613584277.git.tim.c.chen@linux.intel.com>
- <YC68Xo9+R2msn/ul@dhcp22.suse.cz>
- <72cb8618-73af-ce08-d5d5-30cab30755a3@linux.intel.com>
- <YEH1xF8xm9MCsQ+q@dhcp22.suse.cz>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v3] memcg: charge before adding to swapcache on swapin
+Date: Fri, 5 Mar 2021 16:00:19 -0500
+Message-ID: <YEKb4/MAVv8zDPNw@cmpxchg.org>
+References: <20210304014229.521351-1-shakeelb@google.com>
+ <alpine.LSU.2.11.2103042248590.18572@eggly.anvils>
+ <YEJbZi+tpSATjsT/@cmpxchg.org>
+ <CALvZod4iVF1tg8H-zcUVp6Kf+L9jeJBF62hNHuLNKrdcxyJXYQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <YEH1xF8xm9MCsQ+q-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-Content-Language: en-US
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=La3mwDa8nISUh2U9bi9oHzPu358czH3TeQ0ByYgJZqY=;
+        b=VfhA/pXDD661QUgX1Mxa4DhK6hKrLISfubA84eRcP5m7HrACNGN9aEnYTpgLPqDTKl
+         g4TbBNYRDsU/94H2jOc7T/WxPyFqm19l9G7+Q1geXVCnQcSU5+0ssJYshieCtlZBKv8G
+         ZhfXtpPkowYLxrCPZDBq+iHGWe+2Ke52zeeoRbeMAElVHx7F1isMeyzGcS7h/D6oaDkV
+         Ro/dMjTsOIUEVp7J0fkdOfo9OM7pFGQuyPmXZK2etHIsJqi+AAuIWwkhelx/s2kSoHn5
+         0GHaF5UMUWdWwHNA8bAi9C2HW1FxI9M8Ef6GARBBntVKOnNojeQRWUUzzV0DCeMyIcnc
+         o4Jg==
+Content-Disposition: inline
+In-Reply-To: <CALvZod4iVF1tg8H-zcUVp6Kf+L9jeJBF62hNHuLNKrdcxyJXYQ@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Hugh Dickins <hughd@google.com>, Roman Gushchin <guro@fb.com>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>
 
-
-
-On 3/5/21 1:11 AM, Michal Hocko wrote:
-> On Thu 04-03-21 09:35:08, Tim Chen wrote:
->>
->>
->> On 2/18/21 11:13 AM, Michal Hocko wrote:
->>
->>>
->>> Fixes: 4e41695356fb ("memory controller: soft limit reclaim on contention")
->>> Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
->>>
->>> Thanks!
->>>> ---
->>>>  mm/memcontrol.c | 6 +++++-
->>>>  1 file changed, 5 insertions(+), 1 deletion(-)
->>>>
->>>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->>>> index ed5cc78a8dbf..a51bf90732cb 100644
->>>> --- a/mm/memcontrol.c
->>>> +++ b/mm/memcontrol.c
->>>> @@ -3505,8 +3505,12 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
->>>>  			loop > MEM_CGROUP_MAX_SOFT_LIMIT_RECLAIM_LOOPS))
->>>>  			break;
->>>>  	} while (!nr_reclaimed);
->>>> -	if (next_mz)
->>>> +	if (next_mz) {
->>>> +		spin_lock_irq(&mctz->lock);
->>>> +		__mem_cgroup_insert_exceeded(next_mz, mctz, excess);
->>>> +		spin_unlock_irq(&mctz->lock);
->>>>  		css_put(&next_mz->memcg->css);
->>>> +	}
->>>>  	return nr_reclaimed;
->>>>  }
->>>>  
->>>> -- 
->>>> 2.20.1
->>>
->>
->> Mel,
->>
->> Reviewing this patch a bit more, I realize that there is a chance that the removed
->> next_mz could be inserted back to the tree from a memcg_check_events
->> that happen in between.  So we need to make sure that the next_mz
->> is indeed off the tree and update the excess value before adding it
->> back.  Update the patch to the patch below.
+On Fri, Mar 05, 2021 at 08:42:00AM -0800, Shakeel Butt wrote:
+> On Fri, Mar 5, 2021 at 8:25 AM Johannes Weiner <hannes@cmpxchg.org> wrote:
+> >
+> [...]
+> > I'd also rename cgroup_memory_noswap to cgroup_swapaccount - to match
+> > the commandline and (hopefully) make a bit clearer what it effects.
 > 
-> This scenario is certainly possible but it shouldn't really matter much
-> as __mem_cgroup_insert_exceeded bails out when the node is on the tree
-> already.
-> 
+> Do we really need to keep supporting "swapaccount=0"? Is swap
+> page_counter really a performance issue for systems with memcg and
+> swap? To me, deprecating "swapaccount=0" simplifies already
+> complicated code.
 
-Makes sense. We should still update the excess value with
+Now that you mention it, it's probably really not worth it.
 
-+		excess = soft_limit_excess(next_mz->memcg);
-+		__mem_cgroup_insert_exceeded(next_mz, mctz, excess);
-
-before doing insertion.  The excess value was recorded from previous
-mz in the loop and needs to be updated to that of next_mz.
-
-Tim
+I'll replace my cleanup patch with a removal patch that eliminates
+everything behind swapaccount= except for a deprecation warning...
