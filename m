@@ -1,98 +1,81 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3] memcg: charge before adding to swapcache on swapin
-Date: Fri, 5 Mar 2021 11:00:40 -0800
-Message-ID: <CALvZod5Q+jo_FezxZz0XRfMDZ73SSMdHkt_TkB-ab-TY2+XYVA@mail.gmail.com>
-References: <20210304014229.521351-1-shakeelb@google.com> <alpine.LSU.2.11.2103042248590.18572@eggly.anvils>
- <YEJbZi+tpSATjsT/@cmpxchg.org>
+From: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH v2 1/3] mm: Fix dropped memcg from mem cgroup soft limit
+ tree
+Date: Fri, 5 Mar 2021 11:07:59 -0800
+Message-ID: <087bed0e-5b5f-0e25-c247-7fcb34de1513@linux.intel.com>
+References: <cover.1613584277.git.tim.c.chen@linux.intel.com>
+ <8d35206601ccf0e1fe021d24405b2a0c2f4e052f.1613584277.git.tim.c.chen@linux.intel.com>
+ <YC68Xo9+R2msn/ul@dhcp22.suse.cz>
+ <72cb8618-73af-ce08-d5d5-30cab30755a3@linux.intel.com>
+ <YEH1xF8xm9MCsQ+q@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=rBJywJ/55SdNNzhqEcBb4hZL99EvDvjWTnWLT8JPIUw=;
-        b=RoBRx/Ju+scxCBTVd/KvQrJIbS48I+xnjFvh4bTmMOSNIxQ5JM+JiCXo3NaDckbE9M
-         DCZOWmAjHLYlX+7BObWmlV2P6zUj25fU/3weEb+3W5YxaOZgDWeus+AMMuY/jCLgLbH/
-         Vpi+6D4B/nRB2tiuuyiNPmfxiMVKU5PB6VhT09Ls9yc41FsKwAwBlS1xHhpAjVwHtXkZ
-         NH7VYMRF+Qpbw7xrXRbxVz1JGegIJ1ZstGik6Q8xIWI91LWicEzNIhUkJhwBRiL/9BXU
-         lTjrxy8IvulF0o22LYBTRU4oz2GuDEKwqyQgwfFPXW20DoV+1kPFGXVXJT24zB1F4txg
-         3J7g==
-In-Reply-To: <YEJbZi+tpSATjsT/@cmpxchg.org>
+In-Reply-To: <YEH1xF8xm9MCsQ+q-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Mar 5, 2021 at 8:25 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-> On Fri, Mar 05, 2021 at 12:06:31AM -0800, Hugh Dickins wrote:
-> > On Wed, 3 Mar 2021, Shakeel Butt wrote:
-> >
-> > > Currently the kernel adds the page, allocated for swapin, to the
-> > > swapcache before charging the page. This is fine but now we want a
-> > > per-memcg swapcache stat which is essential for folks who wants to
-> > > transparently migrate from cgroup v1's memsw to cgroup v2's memory and
-> > > swap counters. In addition charging a page before exposing it to other
-> > > parts of the kernel is a step in the right direction.
-> > >
-> > > To correctly maintain the per-memcg swapcache stat, this patch has
-> > > adopted to charge the page before adding it to swapcache. One
-> > > challenge in this option is the failure case of add_to_swap_cache() on
-> > > which we need to undo the mem_cgroup_charge(). Specifically undoing
-> > > mem_cgroup_uncharge_swap() is not simple.
-> > >
-> > > To resolve the issue, this patch introduces transaction like interface
-> > > to charge a page for swapin. The function mem_cgroup_charge_swapin_page()
-> > > initiates the charging of the page and mem_cgroup_finish_swapin_page()
-> > > completes the charging process. So, the kernel starts the charging
-> > > process of the page for swapin with mem_cgroup_charge_swapin_page(),
-> > > adds the page to the swapcache and on success completes the charging
-> > > process with mem_cgroup_finish_swapin_page().
-> > >
-> > > Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> >
-> > Quite apart from helping with the stat you want, what you've ended
-> > up with here is a nice cleanup in several different ways (and I'm
-> > glad Johannes talked you out of __GFP_NOFAIL: much better like this).
-> > I'll say
-> >
-> > Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> >
-> > but I am quite unhappy with the name mem_cgroup_finish_swapin_page():
-> > it doesn't finish the swapin, it doesn't finish the page, and I'm
-> > not persuaded by your paragraph above that there's any "transaction"
-> > here (if there were, I'd suggest "commit" instead of "finish"'; and
-> > I'd get worried by the css_put before it's called - but no, that's
-> > fine, it's independent).
-> >
-> > How about complementing mem_cgroup_charge_swapin_page() with
-> > mem_cgroup_uncharge_swapin_swap()?  I think that describes well
-> > what it does, at least in the do_memsw_account() case, and I hope
-> > we can overlook that it does nothing at all in the other case.
->
-> Yes, that's better. The sequence is still somewhat mysterious for
-> people not overly familiar with memcg swap internals, but it's much
-> clearer for people who are.
->
-> I mildly prefer swapping the swapin bit:
->
-> mem_cgroup_swapin_charge_page()
-> mem_cgroup_swapin_uncharge_swap()
->
-> But either way works for me.
->
 
-I will do a coin toss to select one.
 
-> > And it really doesn't need a page argument: both places it's called
-> > have just allocated an order-0 page, there's no chance of a THP here;
-> > but you might have some idea of future expansion, or matching
-> > put_swap_page() - I won't object if you prefer to pass in the page.
->
-> Agreed.
+On 3/5/21 1:11 AM, Michal Hocko wrote:
+> On Thu 04-03-21 09:35:08, Tim Chen wrote:
+>>
+>>
+>> On 2/18/21 11:13 AM, Michal Hocko wrote:
+>>
+>>>
+>>> Fixes: 4e41695356fb ("memory controller: soft limit reclaim on contention")
+>>> Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+>>>
+>>> Thanks!
+>>>> ---
+>>>>  mm/memcontrol.c | 6 +++++-
+>>>>  1 file changed, 5 insertions(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>>>> index ed5cc78a8dbf..a51bf90732cb 100644
+>>>> --- a/mm/memcontrol.c
+>>>> +++ b/mm/memcontrol.c
+>>>> @@ -3505,8 +3505,12 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
+>>>>  			loop > MEM_CGROUP_MAX_SOFT_LIMIT_RECLAIM_LOOPS))
+>>>>  			break;
+>>>>  	} while (!nr_reclaimed);
+>>>> -	if (next_mz)
+>>>> +	if (next_mz) {
+>>>> +		spin_lock_irq(&mctz->lock);
+>>>> +		__mem_cgroup_insert_exceeded(next_mz, mctz, excess);
+>>>> +		spin_unlock_irq(&mctz->lock);
+>>>>  		css_put(&next_mz->memcg->css);
+>>>> +	}
+>>>>  	return nr_reclaimed;
+>>>>  }
+>>>>  
+>>>> -- 
+>>>> 2.20.1
+>>>
+>>
+>> Mel,
+>>
+>> Reviewing this patch a bit more, I realize that there is a chance that the removed
+>> next_mz could be inserted back to the tree from a memcg_check_events
+>> that happen in between.  So we need to make sure that the next_mz
+>> is indeed off the tree and update the excess value before adding it
+>> back.  Update the patch to the patch below.
+> 
+> This scenario is certainly possible but it shouldn't really matter much
+> as __mem_cgroup_insert_exceeded bails out when the node is on the tree
+> already.
+> 
 
-Will remove the page parameter.
+Makes sense. We should still update the excess value with
 
-BTW I will keep mem_cgroup_disabled() check in the uncharge swap
-function as I am thinking of removing "swapaccount=0" functionality.
++		excess = soft_limit_excess(next_mz->memcg);
++		__mem_cgroup_insert_exceeded(next_mz, mctz, excess);
+
+before doing insertion.  The excess value was recorded from previous
+mz in the loop and needs to be updated to that of next_mz.
+
+Tim
