@@ -1,129 +1,98 @@
-From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [RFC PATCH 15/18] cgroup: Introduce ioasids controller
-Date: Fri, 5 Mar 2021 10:20:48 -0800
-Message-ID: <20210305102048.7c274968@jacob-builder>
-References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
- <1614463286-97618-16-git-send-email-jacob.jun.pan@linux.intel.com>
- <YD+u3CXhwOi2LC+4@slm.duckdns.org>
- <20210303131726.7a8cb169@jacob-builder>
- <20210303160205.151d114e@jacob-builder> <YECtMZNqSgh7jkGP@myrica>
- <20210304094603.4ab6c1c4@jacob-builder> <YEHsOR/XjDxQapE6@myrica>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3] memcg: charge before adding to swapcache on swapin
+Date: Fri, 5 Mar 2021 11:00:40 -0800
+Message-ID: <CALvZod5Q+jo_FezxZz0XRfMDZ73SSMdHkt_TkB-ab-TY2+XYVA@mail.gmail.com>
+References: <20210304014229.521351-1-shakeelb@google.com> <alpine.LSU.2.11.2103042248590.18572@eggly.anvils>
+ <YEJbZi+tpSATjsT/@cmpxchg.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=rBJywJ/55SdNNzhqEcBb4hZL99EvDvjWTnWLT8JPIUw=;
+        b=RoBRx/Ju+scxCBTVd/KvQrJIbS48I+xnjFvh4bTmMOSNIxQ5JM+JiCXo3NaDckbE9M
+         DCZOWmAjHLYlX+7BObWmlV2P6zUj25fU/3weEb+3W5YxaOZgDWeus+AMMuY/jCLgLbH/
+         Vpi+6D4B/nRB2tiuuyiNPmfxiMVKU5PB6VhT09Ls9yc41FsKwAwBlS1xHhpAjVwHtXkZ
+         NH7VYMRF+Qpbw7xrXRbxVz1JGegIJ1ZstGik6Q8xIWI91LWicEzNIhUkJhwBRiL/9BXU
+         lTjrxy8IvulF0o22LYBTRU4oz2GuDEKwqyQgwfFPXW20DoV+1kPFGXVXJT24zB1F4txg
+         3J7g==
+In-Reply-To: <YEJbZi+tpSATjsT/@cmpxchg.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <YEHsOR/XjDxQapE6@myrica>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-To: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-Hi Jean-Philippe,
+On Fri, Mar 5, 2021 at 8:25 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+>
+> On Fri, Mar 05, 2021 at 12:06:31AM -0800, Hugh Dickins wrote:
+> > On Wed, 3 Mar 2021, Shakeel Butt wrote:
+> >
+> > > Currently the kernel adds the page, allocated for swapin, to the
+> > > swapcache before charging the page. This is fine but now we want a
+> > > per-memcg swapcache stat which is essential for folks who wants to
+> > > transparently migrate from cgroup v1's memsw to cgroup v2's memory and
+> > > swap counters. In addition charging a page before exposing it to other
+> > > parts of the kernel is a step in the right direction.
+> > >
+> > > To correctly maintain the per-memcg swapcache stat, this patch has
+> > > adopted to charge the page before adding it to swapcache. One
+> > > challenge in this option is the failure case of add_to_swap_cache() on
+> > > which we need to undo the mem_cgroup_charge(). Specifically undoing
+> > > mem_cgroup_uncharge_swap() is not simple.
+> > >
+> > > To resolve the issue, this patch introduces transaction like interface
+> > > to charge a page for swapin. The function mem_cgroup_charge_swapin_page()
+> > > initiates the charging of the page and mem_cgroup_finish_swapin_page()
+> > > completes the charging process. So, the kernel starts the charging
+> > > process of the page for swapin with mem_cgroup_charge_swapin_page(),
+> > > adds the page to the swapcache and on success completes the charging
+> > > process with mem_cgroup_finish_swapin_page().
+> > >
+> > > Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> >
+> > Quite apart from helping with the stat you want, what you've ended
+> > up with here is a nice cleanup in several different ways (and I'm
+> > glad Johannes talked you out of __GFP_NOFAIL: much better like this).
+> > I'll say
+> >
+> > Acked-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> >
+> > but I am quite unhappy with the name mem_cgroup_finish_swapin_page():
+> > it doesn't finish the swapin, it doesn't finish the page, and I'm
+> > not persuaded by your paragraph above that there's any "transaction"
+> > here (if there were, I'd suggest "commit" instead of "finish"'; and
+> > I'd get worried by the css_put before it's called - but no, that's
+> > fine, it's independent).
+> >
+> > How about complementing mem_cgroup_charge_swapin_page() with
+> > mem_cgroup_uncharge_swapin_swap()?  I think that describes well
+> > what it does, at least in the do_memsw_account() case, and I hope
+> > we can overlook that it does nothing at all in the other case.
+>
+> Yes, that's better. The sequence is still somewhat mysterious for
+> people not overly familiar with memcg swap internals, but it's much
+> clearer for people who are.
+>
+> I mildly prefer swapping the swapin bit:
+>
+> mem_cgroup_swapin_charge_page()
+> mem_cgroup_swapin_uncharge_swap()
+>
+> But either way works for me.
+>
 
-On Fri, 5 Mar 2021 09:30:49 +0100, Jean-Philippe Brucker
-<jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org> wrote:
+I will do a coin toss to select one.
 
-> On Thu, Mar 04, 2021 at 09:46:03AM -0800, Jacob Pan wrote:
-> > Hi Jean-Philippe,
-> > 
-> > On Thu, 4 Mar 2021 10:49:37 +0100, Jean-Philippe Brucker
-> > <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org> wrote:
-> >   
-> > > On Wed, Mar 03, 2021 at 04:02:05PM -0800, Jacob Pan wrote:  
-> > > > Hi Jacob,
-> > > > 
-> > > > On Wed, 3 Mar 2021 13:17:26 -0800, Jacob Pan
-> > > > <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org> wrote:
-> > > >     
-> > > > > Hi Tejun,
-> > > > > 
-> > > > > On Wed, 3 Mar 2021 10:44:28 -0500, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> > > > > wrote: 
-> > > > > > On Sat, Feb 27, 2021 at 02:01:23PM -0800, Jacob Pan wrote:      
-> > > > > > > IOASIDs are used to associate DMA requests with virtual
-> > > > > > > address spaces. They are a system-wide limited resource made
-> > > > > > > available to the userspace applications. Let it be VMs or
-> > > > > > > user-space device drivers.
-> > > > > > > 
-> > > > > > > This RFC patch introduces a cgroup controller to address the
-> > > > > > > following problems:
-> > > > > > > 1. Some user applications exhaust all the available IOASIDs
-> > > > > > > thus depriving others of the same host.
-> > > > > > > 2. System admins need to provision VMs based on their needs
-> > > > > > > for IOASIDs, e.g. the number of VMs with assigned devices
-> > > > > > > that perform DMA requests with PASID.        
-> > > > > > 
-> > > > > > Please take a look at the proposed misc controller:
-> > > > > > 
-> > > > > >  http://lkml.kernel.org/r/20210302081705.1990283-2-vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-> > > > > > 
-> > > > > > Would that fit your bill?      
-> > > > > The interface definitely can be reused. But IOASID has a different
-> > > > > behavior in terms of migration and ownership checking. I guess
-> > > > > SEV key IDs are not tied to a process whereas IOASIDs are.
-> > > > > Perhaps this can be solved by adding
-> > > > > +	.can_attach	= ioasids_can_attach,
-> > > > > +	.cancel_attach	= ioasids_cancel_attach,
-> > > > > Let me give it a try and come back.
-> > > > >     
-> > > > While I am trying to fit the IOASIDs cgroup in to the misc cgroup
-> > > > proposal. I'd like to have a direction check on whether this idea of
-> > > > using cgroup for IOASID/PASID resource management is viable.    
-> > > 
-> > > Yes, even for host SVA it would be good to have a cgroup. Currently
-> > > the number of shared address spaces is naturally limited by number of
-> > > processes, which can be controlled with rlimit and cgroup. But on Arm
-> > > the hardware limit on shared address spaces is 64k (number of ASIDs),
-> > > easily exhausted with the default PASID and PID limits. So a cgroup
-> > > for managing this resource is more than welcome.
-> > > 
-> > > It looks like your current implementation is very dependent on
-> > > IOASID_SET_TYPE_MM?  I'll need to do more reading about cgroup to see
-> > > how easily it can be adapted to host SVA which uses
-> > > IOASID_SET_TYPE_NULL. 
-> > Right, I was assuming have three use cases of IOASIDs:
-> > 1. host supervisor SVA (not a concern, just one init_mm to bind)
-> > 2. host user SVA, either one IOASID per process or perhaps some private
-> > IOASID for private address space
-> > 3. VM use for guest SVA, each IOASID is bound to a guest process
-> > 
-> > My current cgroup proposal applies to #3 with IOASID_SET_TYPE_MM, which
-> > is allocated by the new /dev/ioasid interface.
-> > 
-> > For #2, I was thinking you can limit the host process via PIDs cgroup?
-> > i.e. limit fork.  
-> 
-> That works but isn't perfect, because the hardware resource of shared
-> address spaces can be much lower that PID limit - 16k ASIDs on Arm. To
-> allow an admin to fairly distribute that resource we could introduce
-> another cgroup just to limit the number of shared address spaces, but
-> limiting the number of IOASIDs does the trick.
-> 
-make sense. it would be cleaner to have a single approach to limit IOASIDs
-(as Jason asked).
+> > And it really doesn't need a page argument: both places it's called
+> > have just allocated an order-0 page, there's no chance of a THP here;
+> > but you might have some idea of future expansion, or matching
+> > put_swap_page() - I won't object if you prefer to pass in the page.
+>
+> Agreed.
 
-> > So the host IOASIDs are currently allocated from the system pool
-> > with quota of chosen by iommu_sva_init() in my patch, 0 means unlimited
-> > use whatever is available. https://lkml.org/lkml/2021/2/28/18  
-> 
-> Yes that's sensible, but it would be good to plan the cgroup user
-> interface to work for #2 as well, even if we don't implement it right
-> away.
-> 
-will do it in the next version.
+Will remove the page parameter.
 
-> Thanks,
-> Jean
-
-
-Thanks,
-
-Jacob
+BTW I will keep mem_cgroup_disabled() check in the uncharge swap
+function as I am thinking of removing "swapaccount=0" functionality.
