@@ -1,7 +1,7 @@
-From: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Subject: Re: [RFC PATCH 15/18] cgroup: Introduce ioasids controller
-Date: Fri, 5 Mar 2021 18:16:45 +0100
-Message-ID: <YEJnfe+E0ZifuFR+@myrica>
+Date: Fri, 5 Mar 2021 10:20:48 -0800
+Message-ID: <20210305102048.7c274968@jacob-builder>
 References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
  <1614463286-97618-16-git-send-email-jacob.jun.pan@linux.intel.com>
  <YD+u3CXhwOi2LC+4@slm.duckdns.org>
@@ -12,17 +12,6 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linaro.org; s=google;
- h=date:from:to:cc:subject:message-id:references:mime-version
- :content-disposition:in-reply-to;
- bh=Omevd0FBx005iXL14bFQltfa8ss9fF32vxOQu4J/uVM=;
- b=tzl5fhX/krPPRB6sEiaTWhW3YSjAMn88PlLbuYq0oNviAauvjp07tfa/KV98lTpk8/
- NLtaeVriS8ldYE4HDi94XRMPJg/1jy8NVsE89wO9zNH5POQyMAGWdMezN8SXiSGCA+SW
- kTdZqwqIDjGngUrv3hzgxlYhC+UDloP7Y7T0o+4Iw9QzRzG2RT802XrB52IFqNQMSJTj
- 98HpANBxIWiGVNQHsqfmaNpvFN2VFuPOYEeZzoSAYzrboUEKuii9VegR/lZKLsUtYiId
- OItjdFaJCWib4s1ZjBYyiFg/qes7r9HJfyzcGqhdcmnL0LKAYU+sK7HFcG7Iii62F6mW
- 2C9w==
-Content-Disposition: inline
 In-Reply-To: <YEHsOR/XjDxQapE6@myrica>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
@@ -34,14 +23,107 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
  <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-To: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+To: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Fri, Mar 05, 2021 at 09:30:49AM +0100, Jean-Philippe Brucker wrote:
+Hi Jean-Philippe,
+
+On Fri, 5 Mar 2021 09:30:49 +0100, Jean-Philippe Brucker
+<jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org> wrote:
+
+> On Thu, Mar 04, 2021 at 09:46:03AM -0800, Jacob Pan wrote:
+> > Hi Jean-Philippe,
+> > 
+> > On Thu, 4 Mar 2021 10:49:37 +0100, Jean-Philippe Brucker
+> > <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org> wrote:
+> >   
+> > > On Wed, Mar 03, 2021 at 04:02:05PM -0800, Jacob Pan wrote:  
+> > > > Hi Jacob,
+> > > > 
+> > > > On Wed, 3 Mar 2021 13:17:26 -0800, Jacob Pan
+> > > > <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org> wrote:
+> > > >     
+> > > > > Hi Tejun,
+> > > > > 
+> > > > > On Wed, 3 Mar 2021 10:44:28 -0500, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> > > > > wrote: 
+> > > > > > On Sat, Feb 27, 2021 at 02:01:23PM -0800, Jacob Pan wrote:      
+> > > > > > > IOASIDs are used to associate DMA requests with virtual
+> > > > > > > address spaces. They are a system-wide limited resource made
+> > > > > > > available to the userspace applications. Let it be VMs or
+> > > > > > > user-space device drivers.
+> > > > > > > 
+> > > > > > > This RFC patch introduces a cgroup controller to address the
+> > > > > > > following problems:
+> > > > > > > 1. Some user applications exhaust all the available IOASIDs
+> > > > > > > thus depriving others of the same host.
+> > > > > > > 2. System admins need to provision VMs based on their needs
+> > > > > > > for IOASIDs, e.g. the number of VMs with assigned devices
+> > > > > > > that perform DMA requests with PASID.        
+> > > > > > 
+> > > > > > Please take a look at the proposed misc controller:
+> > > > > > 
+> > > > > >  http://lkml.kernel.org/r/20210302081705.1990283-2-vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+> > > > > > 
+> > > > > > Would that fit your bill?      
+> > > > > The interface definitely can be reused. But IOASID has a different
+> > > > > behavior in terms of migration and ownership checking. I guess
+> > > > > SEV key IDs are not tied to a process whereas IOASIDs are.
+> > > > > Perhaps this can be solved by adding
+> > > > > +	.can_attach	= ioasids_can_attach,
+> > > > > +	.cancel_attach	= ioasids_cancel_attach,
+> > > > > Let me give it a try and come back.
+> > > > >     
+> > > > While I am trying to fit the IOASIDs cgroup in to the misc cgroup
+> > > > proposal. I'd like to have a direction check on whether this idea of
+> > > > using cgroup for IOASID/PASID resource management is viable.    
+> > > 
+> > > Yes, even for host SVA it would be good to have a cgroup. Currently
+> > > the number of shared address spaces is naturally limited by number of
+> > > processes, which can be controlled with rlimit and cgroup. But on Arm
+> > > the hardware limit on shared address spaces is 64k (number of ASIDs),
+> > > easily exhausted with the default PASID and PID limits. So a cgroup
+> > > for managing this resource is more than welcome.
+> > > 
+> > > It looks like your current implementation is very dependent on
+> > > IOASID_SET_TYPE_MM?  I'll need to do more reading about cgroup to see
+> > > how easily it can be adapted to host SVA which uses
+> > > IOASID_SET_TYPE_NULL. 
+> > Right, I was assuming have three use cases of IOASIDs:
+> > 1. host supervisor SVA (not a concern, just one init_mm to bind)
+> > 2. host user SVA, either one IOASID per process or perhaps some private
+> > IOASID for private address space
+> > 3. VM use for guest SVA, each IOASID is bound to a guest process
+> > 
+> > My current cgroup proposal applies to #3 with IOASID_SET_TYPE_MM, which
+> > is allocated by the new /dev/ioasid interface.
+> > 
+> > For #2, I was thinking you can limit the host process via PIDs cgroup?
+> > i.e. limit fork.  
+> 
 > That works but isn't perfect, because the hardware resource of shared
 > address spaces can be much lower that PID limit - 16k ASIDs on Arm. To
+> allow an admin to fairly distribute that resource we could introduce
+> another cgroup just to limit the number of shared address spaces, but
+> limiting the number of IOASIDs does the trick.
+> 
+make sense. it would be cleaner to have a single approach to limit IOASIDs
+(as Jason asked).
 
-Sorry I meant 16-bit here - 64k
+> > So the host IOASIDs are currently allocated from the system pool
+> > with quota of chosen by iommu_sva_init() in my patch, 0 means unlimited
+> > use whatever is available. https://lkml.org/lkml/2021/2/28/18  
+> 
+> Yes that's sensible, but it would be good to plan the cgroup user
+> interface to work for #2 as well, even if we don't implement it right
+> away.
+> 
+will do it in the next version.
+
+> Thanks,
+> Jean
+
 
 Thanks,
-Jean
+
+Jacob
