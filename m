@@ -1,18 +1,23 @@
 From: brookxu <brookxu.cn@gmail.com>
-Subject: [RFC PATCH 0/8] bfq: introduce bfq.ioprio for cgroup
-Date: Mon,  8 Mar 2021 20:00:13 +0800
-Message-ID: <cover.1615203034.git.brookxu@tencent.com>
+Subject: [RFC PATCH 2/8] bfq: limit the IO depth of idle_class to 1
+Date: Mon,  8 Mar 2021 20:00:15 +0800
+Message-ID: <c23ff2bafdf20b3f18debfa1021e59a87aba1a11.1615203034.git.brookxu@tencent.com>
+References: <cover.1615203034.git.brookxu@tencent.com>
 Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=R/mts98GlDutHhgzA1LEz4Tkn30xrY5SkbMfoTtOKwI=;
-        b=ozGqeSDtM+WQItumTUxas1Vds2nU8frKxEEIEHXOZmKh2lsgNKNvcdDze/Rfa0Lvqg
-         lcEnFEpSimHAr/Uab85hbMNFHxN4E1tVh3dxrKtETgesboEsGooNUJtxjoA4aFwLGzSN
-         LBo4ehifa1YPEjj/Gl+VqND0LaAd8ck52aiD398nNHCdWuXpIJ5k7ecyBEUiODz2wE41
-         wIAo3JtEI63O+1eebruaN2UGgYaVKDkenND/FWVEeksFQwVGAeQEcnpHDj07poMrzF4H
-         EooZQ+45nn17MLGGI3NeLKLfS+PRppswwud1ePUQKH5BMaH+tiIi71tC/NMyCIZ+eYsG
-         4Iyg==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :in-reply-to:references;
+        bh=dJz1mJNUFCu8/5ZpciRC6YOn6iNHDwCBUMOb6meMbWM=;
+        b=VCBfFCHPdKB3UhuPOgg2Yl0CKxU24aFecGuDgxFYy0jOzvUcnjdNfbcmGVRaXyDYsa
+         bAiaaKxzyJlYvUy/tR1Ko00yth8vjfUTKC5UJRAuxpY3MDubB9tSrc1aJQH0RzlGSkoS
+         qbKgJC8o2DnY2wUjKr8IYnXKMvmho0+bDYbqmTbvMwjIgrKrsGc8RiqDSlS54oFkNHmo
+         K66njTNaHiGJn5X6kOMvbwlEJjN+GaR5wMqXS2IuW2bmHcy1RPfWh8ZDXGCkIJ6aqRCO
+         k/xN3/wy5TdmCEnQTD48QngEyGv+7eeUTE80tgBcGb1HqUS7mqlEntr3zL4n1JLzo7OG
+         xYjw==
+In-Reply-To: <cover.1615203034.git.brookxu@tencent.com>
+In-Reply-To: <cover.1615203034.git.brookxu@tencent.com>
+References: <cover.1615203034.git.brookxu@tencent.com>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,70 +27,42 @@ Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kern
 
 From: Chunguang Xu <brookxu@tencent.com>
 
-Tasks in the production environment can be roughly divided into
-three categories: emergency tasks, ordinary tasks and offline
-tasks. Emergency tasks need to be scheduled in real time, and the
-amount of data for such tasks is usually not very large, such as
-system agents. Offline tasks do not need to guarantee QoS, but
-can improve system resource utilization during system idle
-periods, such as various background tasks. The above requirements
-need to achieve IO preemption. At present, we can use weights to
-simulate IO preemption, but since weights are more of a shared
-concept, they cannot be simulated well. For example, the weights
-of emergency tasks and ordinary tasks cannot be determined well,
-offline tasks (with the same weight) actually occupy different
-resources on disks with different performance, and the tail delay
-caused by offline tasks cannot be well controlled. Using ioprio's
-concept of preemption, we can solve the above problems very well.
-Second, we can still use weights to control resource isolation of
-the same priority, thereby achieving better IO Qos control.
+From: Chunguang Xu <brookxu@tencent.com>
 
-However, currently implemented by bfq, the class of bfq_group is
-always be class, and the ioprio class of the task can only be
-reflected in a single cgroup. We cannot guarantee that real-time
-tasks in a cgroup are scheduled in time. To this end, we
-introduced cgroup ioprio. In this way, we can ensure that the
-real-time tasks of a cgroup can be scheduled in time. Similarly,
-the processing of offline task groups can also be simpler.
+The IO depth of idle_class is limited to 1, so that it can
+avoid introducing a larger tail latency under a device with
+a larger IO depth. Although limiting the IO depth may reduce
+the performance of idle_class, it is generally not a big
+problem, because idle_class usually does not have strict
+performance requirements.
 
-To this end, we have introduced the bfq.ioprio interface for
-cgroup v1 and cgroup v2. Users can configure the priority
-through this interface, as shown below:
+Signed-off-by: Chunguang Xu <brookxu@tencent.com>
+---
+ block/bfq-iosched.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-echo "1 2"> blkio.bfq.weight
-
-The above two values respectively represent the values of ioprio
-class and ioprio for cgroup. The ioprio of tasks within the cgroup
-is uniformly equal to the ioprio of the cgroup. If the ioprio of
-the cgroup is disabled, the ioprio of the task remains the same,
-usually from io_context.
-
-When testing, using fio and fio_generate_plots we can clearly see
-that the IO delay of the task satisfies RT> BE> IDLE. When RT is
-running, BE and IDLE are guaranteed minimum bandwidth. When used
-with bfq.weight, we can also isolate the weight within the same
-class.
-
-The last three patches are irrelevant to the cgroup ioprio,
-they are brought together here for the convenience of patch
-management.
-
-Chunguang Xu (8):
-  bfq: introduce bfq_entity_to_bfqg helper method
-  bfq: limit the IO depth of idle_class to 1
-  bfq: keep the minimun bandwidth for be_class
-  bfq: expire bfqq if a higher priority class is waiting
-  bfq: introduce bfq.ioprio for cgroup
-  bfq: convert the type of bfq_group.bfqd to bfq_data*
-  bfq: remove unnecessary initialization logic
-  bfq: optimize the calculation of bfq_weight_to_ioprio()
-
- block/bfq-cgroup.c  |  99 +++++++++++++++++++++++++++++++++++++-----
- block/bfq-iosched.c |  32 +++++++++++++-
- block/bfq-iosched.h |  20 ++++++---
- block/bfq-wf2q.c    | 103 +++++++++++++++++++++++++++++++-------------
- 4 files changed, 207 insertions(+), 47 deletions(-)
-
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index ec482e6641ff..ea9d7f6f4e3d 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -4808,6 +4808,17 @@ static struct request *__bfq_dispatch_request(struct blk_mq_hw_ctx *hctx)
+ 	if (!bfqq)
+ 		goto exit;
+ 
++	/*
++	 * Here, the IO depth of idle_class is limited to 1, so that it
++	 * can avoid introducing a larger tail latency under a device
++	 * with a larger IO depth. Although limiting the IO depth may
++	 * reduce the performance of idle_class, it is generally not a
++	 * big problem, because idle_class usually does not have strict
++	 * performance requirements.
++	 */
++	if (bfq_class_idle(bfqq) && bfqq->dispatched)
++		goto exit;
++
+ 	rq = bfq_dispatch_rq_from_bfqq(bfqd, bfqq);
+ 
+ 	if (rq) {
 -- 
 2.30.0
 
