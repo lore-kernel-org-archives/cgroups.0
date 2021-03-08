@@ -1,94 +1,128 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH v2 1/3] mm: Fix dropped memcg from mem cgroup soft limit
- tree
-Date: Mon, 8 Mar 2021 09:34:17 +0100
-Message-ID: <YEXhfJhmXrLuxGWB@dhcp22.suse.cz>
-References: <cover.1613584277.git.tim.c.chen@linux.intel.com>
- <8d35206601ccf0e1fe021d24405b2a0c2f4e052f.1613584277.git.tim.c.chen@linux.intel.com>
- <YC68Xo9+R2msn/ul@dhcp22.suse.cz>
- <72cb8618-73af-ce08-d5d5-30cab30755a3@linux.intel.com>
- <YEH1xF8xm9MCsQ+q@dhcp22.suse.cz>
- <087bed0e-5b5f-0e25-c247-7fcb34de1513@linux.intel.com>
-Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1615192466; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=TxNbQKNdS8Bk5nTMx7iGX1d+YD0DAigE/GiZ5gzAA50=;
-        b=ZZ1a1HjC/nl8Om4mducww6VRiweUKlyk0AOG02UpuuhFQ9flgmUuu2fbSXN5LH08nRxxKO
-        tTHr2mRvYFWxQJldGJ07bAPb+pWXp2p1YhZHxCaZL+bFbOl4c9jdprGg3zF6hzEoILQDqN
-        Hcn1CbQo/4NBBgG4C9KubCoKFiBQVo0=
-Content-Disposition: inline
-In-Reply-To: <087bed0e-5b5f-0e25-c247-7fcb34de1513@linux.intel.com>
+From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [RFC PATCH 1/8] bfq: introduce bfq_entity_to_bfqg helper method
+Date: Mon,  8 Mar 2021 20:00:14 +0800
+Message-ID: <59c86d37fef3075827b0884ec3dbdc56d527366a.1615203034.git.brookxu@tencent.com>
+References: <cover.1615203034.git.brookxu@tencent.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :in-reply-to:references;
+        bh=7aU87TbOL7pa/4cYXaJm7aQaYa0MM5avjjv9F0ZkTmY=;
+        b=dYtvszeRqI7T2FE/C3qFppUXDuCb7TMCBlM9TqdHbR38e19zwlqSpW62ROXQd/TwXc
+         QVEDLWSR2c16Doax47Fnkv+l61iFzX8SOIHjlI5eQldKFsaj1WqDQ+B1IEuRDEz50J84
+         DVhxn4yo1gdG+8CMuVQz/SIA6lC1fzGwr9OnvR9P/rcjeWurz400cypgySNgc2+kL1bJ
+         n2SOD9WVNfVRHYtQBSqAdp43+Ai+Tv2fGtemXFTgQF1liLg7s/WmABJU389gBbMrNsy4
+         gAYe+/PfHVZ3QO+i0DG1QEDR4lTEz+RhwRAQHCA5TdpHJocPi7hbEULVwLUWZ1WNM03K
+         axqg==
+In-Reply-To: <cover.1615203034.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+In-Reply-To: <cover.1615203034.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+References: <cover.1615203034.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tim Chen <tim.c.chen@linux.intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Dave Hansen <dave.hansen@intel.com>, Ying Huang <ying.huang@intel.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri 05-03-21 11:07:59, Tim Chen wrote:
-> 
-> 
-> On 3/5/21 1:11 AM, Michal Hocko wrote:
-> > On Thu 04-03-21 09:35:08, Tim Chen wrote:
-> >>
-> >>
-> >> On 2/18/21 11:13 AM, Michal Hocko wrote:
-> >>
-> >>>
-> >>> Fixes: 4e41695356fb ("memory controller: soft limit reclaim on contention")
-> >>> Acked-by: Michal Hocko <mhocko@suse.com>
-> >>>
-> >>> Thanks!
-> >>>> ---
-> >>>>  mm/memcontrol.c | 6 +++++-
-> >>>>  1 file changed, 5 insertions(+), 1 deletion(-)
-> >>>>
-> >>>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> >>>> index ed5cc78a8dbf..a51bf90732cb 100644
-> >>>> --- a/mm/memcontrol.c
-> >>>> +++ b/mm/memcontrol.c
-> >>>> @@ -3505,8 +3505,12 @@ unsigned long mem_cgroup_soft_limit_reclaim(pg_data_t *pgdat, int order,
-> >>>>  			loop > MEM_CGROUP_MAX_SOFT_LIMIT_RECLAIM_LOOPS))
-> >>>>  			break;
-> >>>>  	} while (!nr_reclaimed);
-> >>>> -	if (next_mz)
-> >>>> +	if (next_mz) {
-> >>>> +		spin_lock_irq(&mctz->lock);
-> >>>> +		__mem_cgroup_insert_exceeded(next_mz, mctz, excess);
-> >>>> +		spin_unlock_irq(&mctz->lock);
-> >>>>  		css_put(&next_mz->memcg->css);
-> >>>> +	}
-> >>>>  	return nr_reclaimed;
-> >>>>  }
-> >>>>  
-> >>>> -- 
-> >>>> 2.20.1
-> >>>
-> >>
-> >> Mel,
-> >>
-> >> Reviewing this patch a bit more, I realize that there is a chance that the removed
-> >> next_mz could be inserted back to the tree from a memcg_check_events
-> >> that happen in between.  So we need to make sure that the next_mz
-> >> is indeed off the tree and update the excess value before adding it
-> >> back.  Update the patch to the patch below.
-> > 
-> > This scenario is certainly possible but it shouldn't really matter much
-> > as __mem_cgroup_insert_exceeded bails out when the node is on the tree
-> > already.
-> > 
-> 
-> Makes sense. We should still update the excess value with
-> 
-> +		excess = soft_limit_excess(next_mz->memcg);
-> +		__mem_cgroup_insert_exceeded(next_mz, mctz, excess);
-> 
-> before doing insertion.  The excess value was recorded from previous
-> mz in the loop and needs to be updated to that of next_mz.
+From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Yes. Sorry, I have missed that part previously.
+From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+
+Introduce bfq_entity_to_bfqg() to make it easier to obtain the
+bfq_group corresponding to the entity.
+
+Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+---
+ block/bfq-cgroup.c  |  6 ++----
+ block/bfq-iosched.h |  1 +
+ block/bfq-wf2q.c    | 16 ++++++++++++----
+ 3 files changed, 15 insertions(+), 8 deletions(-)
+
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index b791e2041e49..a5f544acaa61 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -309,8 +309,7 @@ struct bfq_group *bfqq_group(struct bfq_queue *bfqq)
+ {
+ 	struct bfq_entity *group_entity = bfqq->entity.parent;
+ 
+-	return group_entity ? container_of(group_entity, struct bfq_group,
+-					   entity) :
++	return group_entity ? bfq_entity_to_bfqg(group_entity) :
+ 			      bfqq->bfqd->root_group;
+ }
+ 
+@@ -610,8 +609,7 @@ struct bfq_group *bfq_find_set_group(struct bfq_data *bfqd,
+ 	 */
+ 	entity = &bfqg->entity;
+ 	for_each_entity(entity) {
+-		struct bfq_group *curr_bfqg = container_of(entity,
+-						struct bfq_group, entity);
++		struct bfq_group *curr_bfqg = bfq_entity_to_bfqg(entity);
+ 		if (curr_bfqg != bfqd->root_group) {
+ 			parent = bfqg_parent(curr_bfqg);
+ 			if (!parent)
+diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+index b8e793c34ff1..a6f98e9e14b5 100644
+--- a/block/bfq-iosched.h
++++ b/block/bfq-iosched.h
+@@ -941,6 +941,7 @@ struct bfq_group {
+ #endif
+ 
+ struct bfq_queue *bfq_entity_to_bfqq(struct bfq_entity *entity);
++struct bfq_group *bfq_entity_to_bfqg(struct bfq_entity *entity);
+ 
+ /* --------------- main algorithm interface ----------------- */
+ 
+diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
+index 070e34a7feb1..5ff0028920a2 100644
+--- a/block/bfq-wf2q.c
++++ b/block/bfq-wf2q.c
+@@ -149,7 +149,7 @@ struct bfq_group *bfq_bfqq_to_bfqg(struct bfq_queue *bfqq)
+ 	if (!group_entity)
+ 		group_entity = &bfqq->bfqd->root_group->entity;
+ 
+-	return container_of(group_entity, struct bfq_group, entity);
++	return bfq_entity_to_bfqg(group_entity);
+ }
+ 
+ /*
+@@ -208,7 +208,7 @@ static bool bfq_no_longer_next_in_service(struct bfq_entity *entity)
+ 	if (bfq_entity_to_bfqq(entity))
+ 		return true;
+ 
+-	bfqg = container_of(entity, struct bfq_group, entity);
++	bfqg = bfq_entity_to_bfqg(entity);
+ 
+ 	/*
+ 	 * The field active_entities does not always contain the
+@@ -266,6 +266,15 @@ struct bfq_queue *bfq_entity_to_bfqq(struct bfq_entity *entity)
+ 	return bfqq;
+ }
+ 
++struct bfq_group *bfq_entity_to_bfqg(struct bfq_entity *entity)
++{
++	struct bfq_group *bfqg = NULL;
++
++	if (entity->my_sched_data)
++		bfqg = container_of(entity, struct bfq_group, entity);
++
++	return bfqg;
++}
+ 
+ /**
+  * bfq_delta - map service into the virtual time domain.
+@@ -1001,8 +1010,7 @@ static void __bfq_activate_entity(struct bfq_entity *entity,
+ 
+ #ifdef CONFIG_BFQ_GROUP_IOSCHED
+ 	if (!bfq_entity_to_bfqq(entity)) { /* bfq_group */
+-		struct bfq_group *bfqg =
+-			container_of(entity, struct bfq_group, entity);
++		struct bfq_group *bfqg = bfq_entity_to_bfqg(entity);
+ 		struct bfq_data *bfqd = bfqg->bfqd;
+ 
+ 		if (!entity->in_groups_with_pending_reqs) {
 -- 
-Michal Hocko
-SUSE Labs
+2.30.0
+
