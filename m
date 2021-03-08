@@ -1,59 +1,152 @@
-From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [RFC PATCH 8/8] bfq: optimize the calculation of bfq_weight_to_ioprio()
-Date: Mon,  8 Mar 2021 20:00:21 +0800
-Message-ID: <cbd1e689ca0010c3d437f22c904f10b123e6b1f4.1615203034.git.brookxu@tencent.com>
+From: brookxu <brookxu.cn@gmail.com>
+Subject: [RFC PATCH 3/8] bfq: keep the minimun bandwidth for be_class
+Date: Mon,  8 Mar 2021 20:00:16 +0800
+Message-ID: <60007c99598dc26b0e0c495120d829f96ea38dd2.1615203034.git.brookxu@tencent.com>
 References: <cover.1615203034.git.brookxu@tencent.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :in-reply-to:references;
-        bh=MsMrEc4lTH47pfPngVwGfQNjeTIkU6svvwLN8Qg8P28=;
-        b=mUhvT0FPrBG4HiXW7y9J5WZyUFm+kOkubtMISyASrxvxjTNSoam06f4EeFpOTS9Wuu
-         thpfbVouSfVT7cXTmuRE0ohBa+/AQ9VhaFZOlbfshF66qKj3i/jrFp+7PmvcXJTYmWMH
-         Oq0ZYBzYVY1mLPzsORhJjSK+oXkkGmW1g9lLklufsnikuAli+fxEkJopncvjQS5IQswZ
-         nviudM05sIkbc5fpXP1pyW6CIgEfa8C2NDWAtX9Wh9JBwl+9SpRfaWAPVhT1gIfrWqqn
-         EPlA51MNz2CDinh4BlhkmljgFeXQQan01LmYCGkmcL8xscJQxoRNLfPAzXVfKUv7KcaA
-         3Rvw==
-In-Reply-To: <cover.1615203034.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-In-Reply-To: <cover.1615203034.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-References: <cover.1615203034.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+        bh=HYuShFUBkBZ/uay9hk4TebKYyzXODNV6658Oa603tVk=;
+        b=m8HMdOdavHVDaiPc4cVKb2oSWRo5jyYxaGWzgE7lwQGf32xtFlT4MDVIG4KJzAXyxx
+         SB6hQMvOZdvz/q1KqEpQeUDuDTxXZsOreoWBruOJA85v5rRiuaHdwa3vWVuf4FcBrfxM
+         RRMKw/skzXDc4TPr18AQ8RnX1zaWM2mqXBd1XQYyMQHi+c1hbUvayaUGAAIhThjU1r4b
+         6quKMSFEWxGWLl2tpX6IpRu42bdEDEiWxPvK32bGKMkkLltq3RiGAenPqPCdK7IOrMKV
+         MMft//v3EtBcYezXZpEyCwrCn7Ai+uK1hUjfvNhGz7vypdWIj5pb+3AJ5KNcrUffhFcU
+         0LMQ==
+In-Reply-To: <cover.1615203034.git.brookxu@tencent.com>
+In-Reply-To: <cover.1615203034.git.brookxu@tencent.com>
+References: <cover.1615203034.git.brookxu@tencent.com>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+From: Chunguang Xu <brookxu@tencent.com>
 
-From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+From: Chunguang Xu <brookxu@tencent.com>
 
-The value range of ioprio is [0, 7], but the result of
-bfq_weight_to_ioprio() may exceed this range, so simple
-optimization is required.
+rt_class will preempt other classes, which may cause other
+classes to starve to death. At present, idle_class has
+alleviated the starvation problem through the minimum
+bandwidth mechanism. Similarly, we should do the same for
+be_class.
 
-Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+Signed-off-by: Chunguang Xu <brookxu@tencent.com>
 ---
- block/bfq-wf2q.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ block/bfq-iosched.c |  2 +-
+ block/bfq-iosched.h |  9 +++++----
+ block/bfq-wf2q.c    | 46 ++++++++++++++++++++++++++++-----------------
+ 3 files changed, 35 insertions(+), 22 deletions(-)
 
-diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index 850a8e2f0bda..1d565daf516f 100644
---- a/block/bfq-wf2q.c
-+++ b/block/bfq-wf2q.c
-@@ -536,8 +536,9 @@ unsigned short bfq_ioprio_to_weight(int ioprio)
-  */
- static unsigned short bfq_weight_to_ioprio(int weight)
- {
--	return max_t(int, 0,
--		     IOPRIO_BE_NR * BFQ_WEIGHT_CONVERSION_COEFF - weight);
-+	int ioprio = IOPRIO_BE_NR  - weight / BFQ_WEIGHT_CONVERSION_COEFF;
-+
-+	return ioprio < 0 ? 0 : min_t(int, ioprio, IOPRIO_BE_NR - 1);
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index ea9d7f6f4e3d..b639cdbb4192 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -6539,7 +6539,7 @@ static void bfq_init_root_group(struct bfq_group *root_group,
+ 	root_group->rq_pos_tree = RB_ROOT;
+ 	for (i = 0; i < BFQ_IOPRIO_CLASSES; i++)
+ 		root_group->sched_data.service_tree[i] = BFQ_SERVICE_TREE_INIT;
+-	root_group->sched_data.bfq_class_idle_last_service = jiffies;
++	root_group->sched_data.class_timeout_last_check = jiffies;
  }
  
- static void bfq_get_entity(struct bfq_entity *entity)
+ static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
+diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+index a6f98e9e14b5..2fe7456aa7bc 100644
+--- a/block/bfq-iosched.h
++++ b/block/bfq-iosched.h
+@@ -13,7 +13,7 @@
+ #include "blk-cgroup-rwstat.h"
+ 
+ #define BFQ_IOPRIO_CLASSES	3
+-#define BFQ_CL_IDLE_TIMEOUT	(HZ/5)
++#define BFQ_CLASS_TIMEOUT	(HZ/5)
+ 
+ #define BFQ_MIN_WEIGHT			1
+ #define BFQ_MAX_WEIGHT			1000
+@@ -97,9 +97,10 @@ struct bfq_sched_data {
+ 	struct bfq_entity *next_in_service;
+ 	/* array of service trees, one per ioprio_class */
+ 	struct bfq_service_tree service_tree[BFQ_IOPRIO_CLASSES];
+-	/* last time CLASS_IDLE was served */
+-	unsigned long bfq_class_idle_last_service;
+-
++	/* last time the class timeout was checked */
++	unsigned long class_timeout_last_check;
++	/* the position to start class timeout check next time */
++	unsigned int next_class_index;
+ };
+ 
+ /**
+diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
+index 5ff0028920a2..0d10eb3ed555 100644
+--- a/block/bfq-wf2q.c
++++ b/block/bfq-wf2q.c
+@@ -1435,6 +1435,34 @@ __bfq_lookup_next_entity(struct bfq_service_tree *st, bool in_service)
+ 	return entity;
+ }
+ 
++static int bfq_select_next_class(struct bfq_sched_data *sd)
++{
++	struct bfq_service_tree *st = sd->service_tree;
++	int i, class_idx, next_class = 0;
++	unsigned long last_check;
++
++	/*
++	 * we needed to guarantee a minimum bandwidth for each class (if
++	 * there is some active entity in this class). This should also
++	 * mitigate priority-inversion problems in case a low priority
++	 * task is holding file system resources.
++	 */
++	for (i = 0; i < BFQ_IOPRIO_CLASSES; i++) {
++		class_idx = (sd->next_class_index + i) % BFQ_IOPRIO_CLASSES;
++		last_check = sd->class_timeout_last_check;
++		if (time_is_before_jiffies(last_check + BFQ_CLASS_TIMEOUT)) {
++			sd->class_timeout_last_check = jiffies;
++			if (!RB_EMPTY_ROOT(&(st + class_idx)->active)) {
++				next_class = class_idx++;
++				class_idx %= BFQ_IOPRIO_CLASSES;
++				sd->next_class_index = class_idx;
++				break;
++			}
++		}
++	}
++	return next_class;
++}
++
+ /**
+  * bfq_lookup_next_entity - return the first eligible entity in @sd.
+  * @sd: the sched_data.
+@@ -1448,24 +1476,8 @@ static struct bfq_entity *bfq_lookup_next_entity(struct bfq_sched_data *sd,
+ 						 bool expiration)
+ {
+ 	struct bfq_service_tree *st = sd->service_tree;
+-	struct bfq_service_tree *idle_class_st = st + (BFQ_IOPRIO_CLASSES - 1);
+ 	struct bfq_entity *entity = NULL;
+-	int class_idx = 0;
+-
+-	/*
+-	 * Choose from idle class, if needed to guarantee a minimum
+-	 * bandwidth to this class (and if there is some active entity
+-	 * in idle class). This should also mitigate
+-	 * priority-inversion problems in case a low priority task is
+-	 * holding file system resources.
+-	 */
+-	if (time_is_before_jiffies(sd->bfq_class_idle_last_service +
+-				   BFQ_CL_IDLE_TIMEOUT)) {
+-		if (!RB_EMPTY_ROOT(&idle_class_st->active))
+-			class_idx = BFQ_IOPRIO_CLASSES - 1;
+-		/* About to be served if backlogged, or not yet backlogged */
+-		sd->bfq_class_idle_last_service = jiffies;
+-	}
++	int class_idx = bfq_select_next_class(sd);
+ 
+ 	/*
+ 	 * Find the next entity to serve for the highest-priority
 -- 
 2.30.0
 
