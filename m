@@ -1,55 +1,57 @@
-From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: [PATCH 9/9] memcg: accounting for ldt_struct objects
-Date: Tue, 9 Mar 2021 11:04:56 +0300
-Message-ID: <05c448c7-d992-8d80-b423-b80bf5446d7c@virtuozzo.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 1/9] memcg: accounting for allocations called with
+ disabled BH
+Date: Tue, 9 Mar 2021 15:57:52 +0100
+Message-ID: <YEeM8AZczZt/irhR@dhcp22.suse.cz>
+References: <18a0ae77-89ff-2679-ab19-378e38ce2be2@virtuozzo.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=DETAgUIoY/Yh+88xtrJ0p4ub3J39q3mROrB0pV7+7iY=;
- b=s1VeK+kL/60lgVPBobVfRF82ESE/ZrQt6G7tL6f0LBe3D+HFVMTQU6ILix5Gf/uZWUi+lQDaluVNyWxT2qFCLctf8EqjgL47nG/6eBAOi58InqTwljsuG4JiZBg4eLf5OvcLW7HzQ6NtliUXsI1QlCTcq/Yf50HgWzw+AdY/cNY=
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1615301872; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=5ub+z7UW6G+p7byFeLSBCS3Oq9eOmRCBt+nX5wp22Mg=;
+        b=AivRumHZpuQ4WOtIffTFP2IZCPHT1w3Z1VSEUQCS85Si/yS/0LEY0F3M9HsP7VdBx5rf5R
+        kprrR1HPRo1G9mKSWEgrfenZA9x6IXOBttbWnCdzMIQIXXIRKI8k9tMN9NhfGEY86DlWWi
+        B0xXDtrH4r5dIHEslCslFYtKv69a8us=
+Content-Disposition: inline
+In-Reply-To: <18a0ae77-89ff-2679-ab19-378e38ce2be2-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Objects can be created from memcg-limited tasks
-but its misuse may lead to host OOM.
+On Tue 09-03-21 11:03:48, Vasily Averin wrote:
+> in_interrupt() check in memcg_kmem_bypass() is incorrect because
+> it does not allow to account memory allocation called from task context
+> with disabled BH, i.e. inside spin_lock_bh()/spin_unlock_bh() sections
 
-Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
----
- arch/x86/kernel/ldt.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Is there any existing user in the tree? Or is this more of a preparatory
+patch for a later one which will need it? In other words, is this a bug
+fix or a preparatory work.
 
-diff --git a/arch/x86/kernel/ldt.c b/arch/x86/kernel/ldt.c
-index aa15132..a1889a0 100644
---- a/arch/x86/kernel/ldt.c
-+++ b/arch/x86/kernel/ldt.c
-@@ -154,7 +154,7 @@ static struct ldt_struct *alloc_ldt_struct(unsigned int num_entries)
- 	if (num_entries > LDT_ENTRIES)
- 		return NULL;
- 
--	new_ldt = kmalloc(sizeof(struct ldt_struct), GFP_KERNEL);
-+	new_ldt = kmalloc(sizeof(struct ldt_struct), GFP_KERNEL_ACCOUNT);
- 	if (!new_ldt)
- 		return NULL;
- 
-@@ -168,9 +168,10 @@ static struct ldt_struct *alloc_ldt_struct(unsigned int num_entries)
- 	 * than PAGE_SIZE.
- 	 */
- 	if (alloc_size > PAGE_SIZE)
--		new_ldt->entries = vzalloc(alloc_size);
-+		new_ldt->entries = __vmalloc(alloc_size,
-+					     GFP_KERNEL_ACCOUNT | __GFP_ZERO);
- 	else
--		new_ldt->entries = (void *)get_zeroed_page(GFP_KERNEL);
-+		new_ldt->entries = (void *)get_zeroed_page(GFP_KERNEL_ACCOUNT);
- 
- 	if (!new_ldt->entries) {
- 		kfree(new_ldt);
+> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+> ---
+>  mm/memcontrol.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 845eec0..568f2cb 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -1076,7 +1076,7 @@ static __always_inline bool memcg_kmem_bypass(void)
+>  		return false;
+>  
+>  	/* Memcg to charge can't be determined. */
+> -	if (in_interrupt() || !current->mm || (current->flags & PF_KTHREAD))
+> +	if (!in_task() || !current->mm || (current->flags & PF_KTHREAD))
+>  		return true;
+>  
+>  	return false;
+> -- 
+> 1.8.3.1
+
 -- 
-1.8.3.1
-
+Michal Hocko
+SUSE Labs
