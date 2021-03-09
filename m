@@ -1,15 +1,15 @@
 From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: [PATCH 6/9] memcg: accounting for fasync_cache
-Date: Tue, 9 Mar 2021 11:04:30 +0300
-Message-ID: <b9d9c222-558d-a3c8-eed3-ad174bc0c32f@virtuozzo.com>
+Subject: [PATCH 5/9] memcg: accounting for ip_fib caches
+Date: Tue, 9 Mar 2021 11:04:22 +0300
+Message-ID: <6f182357-0a06-7f27-8684-22198725ac5d@virtuozzo.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VAPlJ23nmyUC/3g97olMrSpPlXIx1ZJBbDYNe6ym1cE=;
- b=j8VAwy80Uqb5L95Fd9+7SCOODVdHayijarY5FJ8bJaKZTc7LyWwpn2kJAI/ZCjdCsNGK96zTzTqqb29v2NvOrOOijhnPqL2sugNzAvHjVNt6RZAuaklMnRx46/38BxiZ1BT+L7Ies70fNSuGagZlJLmtQETW3HC7/IQfLeNIV6A=
+ bh=jOmah3Ttr9Ux8KuZu/qKnk0qr3VbDotJHjS20FoIgVc=;
+ b=RQSuWtKu7YNKRzV4JUL3gFPUTNYuL+FCxfgShJ08jNC3cze6gXt9sznoQnve4759qYUFlj8UQ+ce5Q2Eksio7FGqzP0fK2SYc6u6BnJkiFzETOxTb1zNq4w0dsaARVD1KayMbFK/SIj275w+QxOObiQiysFbxzWTaG12JXcrNM8=
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -21,23 +21,27 @@ but its misuse may lead to host OOM.
 
 Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 ---
- fs/fcntl.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/ipv4/fib_trie.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/fcntl.c b/fs/fcntl.c
-index dfc72f1..7941559 100644
---- a/fs/fcntl.c
-+++ b/fs/fcntl.c
-@@ -1049,7 +1049,8 @@ static int __init fcntl_init(void)
- 			__FMODE_EXEC | __FMODE_NONOTIFY));
+diff --git a/net/ipv4/fib_trie.c b/net/ipv4/fib_trie.c
+index 25cf387..8060524 100644
+--- a/net/ipv4/fib_trie.c
++++ b/net/ipv4/fib_trie.c
+@@ -2380,11 +2380,11 @@ void __init fib_trie_init(void)
+ {
+ 	fn_alias_kmem = kmem_cache_create("ip_fib_alias",
+ 					  sizeof(struct fib_alias),
+-					  0, SLAB_PANIC, NULL);
++					  0, SLAB_PANIC | SLAB_ACCOUNT, NULL);
  
- 	fasync_cache = kmem_cache_create("fasync_cache",
--		sizeof(struct fasync_struct), 0, SLAB_PANIC, NULL);
-+					 sizeof(struct fasync_struct), 0,
-+					 SLAB_PANIC | SLAB_ACCOUNT, NULL);
- 	return 0;
+ 	trie_leaf_kmem = kmem_cache_create("ip_fib_trie",
+ 					   LEAF_SIZE,
+-					   0, SLAB_PANIC, NULL);
++					   0, SLAB_PANIC | SLAB_ACCOUNT, NULL);
  }
  
+ struct fib_table *fib_trie_table(u32 id, struct fib_table *alias)
 -- 
 1.8.3.1
 
