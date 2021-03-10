@@ -1,59 +1,46 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 0/9] memcg accounting from OpenVZ
-Date: Wed, 10 Mar 2021 11:41:07 +0100
-Message-ID: <YEiiQ2TGnJcEtL3d@dhcp22.suse.cz>
-References: <5affff71-e503-9fb9-50cb-f6d48286dd52@virtuozzo.com>
- <CALvZod5YOtqXcSqn2Zj2Nb_SKgDRKOMW4o5i-u_yj7CanQVtGQ@mail.gmail.com>
- <ad68d004-fa84-3d21-60b7-d4a342ad4007@virtuozzo.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH 1/9] memcg: accounting for allocations called with
+ disabled BH
+Date: Wed, 10 Mar 2021 11:09:04 -0800
+Message-ID: <YEkZUGc/Kw56MwwA@carbon.dhcp.thefacebook.com>
+References: <18a0ae77-89ff-2679-ab19-378e38ce2be2@virtuozzo.com>
+ <CALvZod4QiAhjgQOGO4KYCs4-GjUmqb6th+4tr8nQ+bPumGFzNg@mail.gmail.com>
+ <YEfYFIlRH0+0XWwT@carbon.dhcp.thefacebook.com>
+ <YEiUhWjsC6HbYFpT@dhcp22.suse.cz>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1615372875; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=nZTPkVjV+mQdbkg1znHnpckUqBiD+p2S+HbVcCoP3kY=;
-        b=bwZeSFYTFUaI6k5iEVR5XFMy1jPlekVWZKMv+nY/aKA6C+txpjGOWyhpx/j5aXqEg0ZQji
-        57JZ+A9hVmISWq5KpmmR+Li43cWJMh4Y5jD9UtZz132HBk1cpZfQ1XYn5BEOOUvyy+mzPG
-        /hk5kqKbchb70cq4l+HcBR/14KoqXwk=
-Content-Disposition: inline
-In-Reply-To: <ad68d004-fa84-3d21-60b7-d4a342ad4007-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=SqrnM5rUjX4Rc9LZhCE/7SAx5fRzevVuNPcpF1zfDD4=;
+ b=fGeXerzzx5wAmKbDRy14oL0y8MUXL4x/NKc6/WSqZx/+1JtNIHb4ZLeYtylsbgYiS2xp
+ hGI+zWWeOeGBMx97GlYHlxKAhp5Oyo4JnZLO3nwyh9WRjAc7WUdOAe+wa089KnZPWoMr
+ QgAacUAmtDZ2F9pZacz14fXar6QNhrE3b1c= 
+Content-Disposition: inline
+In-Reply-To: <YEiUhWjsC6HbYFpT-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Wed 10-03-21 13:17:19, Vasily Averin wrote:
-> On 3/10/21 12:12 AM, Shakeel Butt wrote:
-> > On Tue, Mar 9, 2021 at 12:04 AM Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> wrote:
-> >>
-> >> OpenVZ many years accounted memory of few kernel objects,
-> >> this helps us to prevent host memory abuse from inside memcg-limited container.
-> >>
+On Wed, Mar 10, 2021 at 10:42:29AM +0100, Michal Hocko wrote:
+> On Tue 09-03-21 12:18:28, Roman Gushchin wrote:
+> > On Tue, Mar 09, 2021 at 11:39:41AM -0800, Shakeel Butt wrote:
+> > > On Tue, Mar 9, 2021 at 12:04 AM Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> wrote:
+> > > >
+> > > > in_interrupt() check in memcg_kmem_bypass() is incorrect because
+> > > > it does not allow to account memory allocation called from task context
+> > > > with disabled BH, i.e. inside spin_lock_bh()/spin_unlock_bh() sections
+> > > >
+> > > > Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+> > > 
+> > > In that file in_interrupt() is used at other places too. Should we
+> > > change those too?
 > > 
-> > The text is cryptic but I am assuming you wanted to say that OpenVZ
-> > has remained on a kernel which was still on opt-out kmem accounting
-> > i.e. <4.5. Now OpenVZ wants to move to a newer kernel and thus these
-> > patches are needed, right?
+> > Yes, it seems so. Let me prepare a fix (it seems like most of them were
+> > introduced by me).
 > 
-> Something like this.
-> Frankly speaking I badly understand which arguments should I provide to upstream
-> to enable accounting for some new king of objects.
-> 
-> OpenVZ used own accounting subsystem since 2001 (i.e. since v2.2.x linux kernels) 
-> and we have accounted all required kernel objects by using our own patches.
-> When memcg was added to upstream Vladimir Davydov added accounting of some objects
-> to upstream but did not skipped another ones.
-> Now OpenVZ uses RHEL7-based kernels with cgroup v1 in production, and we still account
-> "skipped" objects by our own patches just because we accounted such objects before.
-> We're working on rebase to new kernels and we prefer to push our old patches to upstream. 
+> Does this affect any existing in-tree users?
 
-That is certainly an interesting information. But for a changelog it
-would be more appropriate to provide information about how much memory
-user can induce and whether there is any way to limit that memory by
-other means. How practical those other means are and which usecases will
-benefit from the containment.
-
--- 
-Michal Hocko
-SUSE Labs
+I'll double check this, but I doubt. We should fix it anyway, but I don't think
+we need any stable backports.
