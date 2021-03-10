@@ -1,46 +1,51 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH 1/9] memcg: accounting for allocations called with
- disabled BH
-Date: Wed, 10 Mar 2021 11:09:04 -0800
-Message-ID: <YEkZUGc/Kw56MwwA@carbon.dhcp.thefacebook.com>
-References: <18a0ae77-89ff-2679-ab19-378e38ce2be2@virtuozzo.com>
- <CALvZod4QiAhjgQOGO4KYCs4-GjUmqb6th+4tr8nQ+bPumGFzNg@mail.gmail.com>
- <YEfYFIlRH0+0XWwT@carbon.dhcp.thefacebook.com>
- <YEiUhWjsC6HbYFpT@dhcp22.suse.cz>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH 18/18] ioasid: Add /dev/ioasid for userspace
+Date: Wed, 10 Mar 2021 15:23:01 -0400
+Message-ID: <20210310192301.GC2356281@nvidia.com>
+References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
+ <1614463286-97618-19-git-send-email-jacob.jun.pan@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=SqrnM5rUjX4Rc9LZhCE/7SAx5fRzevVuNPcpF1zfDD4=;
- b=fGeXerzzx5wAmKbDRy14oL0y8MUXL4x/NKc6/WSqZx/+1JtNIHb4ZLeYtylsbgYiS2xp
- hGI+zWWeOeGBMx97GlYHlxKAhp5Oyo4JnZLO3nwyh9WRjAc7WUdOAe+wa089KnZPWoMr
- QgAacUAmtDZ2F9pZacz14fXar6QNhrE3b1c= 
-Content-Disposition: inline
-In-Reply-To: <YEiUhWjsC6HbYFpT-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=F9vW5Tkli/mGOXhgNDkiWxksYvTGh56Erxhualjjxwc=;
+ b=LaXeEE8/z8xKwzOnzuOHFOraxwyZ4k4XccBmPjvoy2x9oSfZ1vT0VnPlV1BL+9aH+F3tqxaytcPbjqKMqIg79Xdo12+0pV4y/l8pIYcV51XnWlw8a8pqMqNkcY/yFNu3Zb3Hev6uZx5yq+HV1BjFVkmNoou1bsK8LRXAHd3fqQTswur7Q7VHNaC/mW1lq52x5pPCKN3t1Q7/Do+PfLRix9V6deI9tZTgmjcgYnxo08TRqhz4aaUJJFhSzEXwb/BjJA933SVHpS7inLZo1JnIsUELtMyUvSqQ8z6hSpNYXnF7xhmXe6snJxJ43jz0qLKpeIE1/Oned/IRWVvZdeR2ng==
+Content-Disposition: inline
+In-Reply-To: <1614463286-97618-19-git-send-email-jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Wed, Mar 10, 2021 at 10:42:29AM +0100, Michal Hocko wrote:
-> On Tue 09-03-21 12:18:28, Roman Gushchin wrote:
-> > On Tue, Mar 09, 2021 at 11:39:41AM -0800, Shakeel Butt wrote:
-> > > On Tue, Mar 9, 2021 at 12:04 AM Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> wrote:
-> > > >
-> > > > in_interrupt() check in memcg_kmem_bypass() is incorrect because
-> > > > it does not allow to account memory allocation called from task context
-> > > > with disabled BH, i.e. inside spin_lock_bh()/spin_unlock_bh() sections
-> > > >
-> > > > Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-> > > 
-> > > In that file in_interrupt() is used at other places too. Should we
-> > > change those too?
-> > 
-> > Yes, it seems so. Let me prepare a fix (it seems like most of them were
-> > introduced by me).
-> 
-> Does this affect any existing in-tree users?
+On Sat, Feb 27, 2021 at 02:01:26PM -0800, Jacob Pan wrote:
 
-I'll double check this, but I doubt. We should fix it anyway, but I don't think
-we need any stable backports.
+> +/* -------- IOCTLs for IOASID file descriptor (/dev/ioasid) -------- */
+> +
+> +/**
+> + * IOASID_GET_API_VERSION - _IO(IOASID_TYPE, IOASID_BASE + 0)
+> + *
+> + * Report the version of the IOASID API.  This allows us to bump the entire
+> + * API version should we later need to add or change features in incompatible
+> + * ways.
+> + * Return: IOASID_API_VERSION
+> + * Availability: Always
+> + */
+> +#define IOASID_GET_API_VERSION		_IO(IOASID_TYPE, IOASID_BASE + 0)
+
+I think this is generally a bad idea, if you change the API later then
+also change the ioctl numbers and everything should work out
+
+eg use the 4th argument to IOC to specify something about the ABI
+
+Jason
