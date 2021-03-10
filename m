@@ -1,43 +1,66 @@
 From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Subject: Re: [PATCH 1/9] memcg: accounting for allocations called with
  disabled BH
-Date: Wed, 10 Mar 2021 12:11:26 +0300
-Message-ID: <60275aa1-082e-af13-b048-76c5a5cf18fb@virtuozzo.com>
+Date: Wed, 10 Mar 2021 12:17:41 +0300
+Message-ID: <818da0d3-80bb-cf68-2807-6604de36998a@virtuozzo.com>
 References: <18a0ae77-89ff-2679-ab19-378e38ce2be2@virtuozzo.com>
- <YEeM8AZczZt/irhR@dhcp22.suse.cz>
+ <CALvZod4QiAhjgQOGO4KYCs4-GjUmqb6th+4tr8nQ+bPumGFzNg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Li5frmD9SCXBj5Pm1ZvYCMOqZm8Q7Kkqx/voF2Vx6iQ=;
- b=I17qZ20ISZOauP9RVDm+uEgnL9vfpJjwdb4fr6cYPHdFB61sR44d9jM4M3t6XsMk55+LZ+1bOx0u2SU0M5b6SkT2bGfrhku6FnpmGAkJAKhnkvL/caIMMSdhP0/Irn0FFrPfkYl3TCbUGREWlULT/4FIr0wndmVQ6G//iFAd6/Q=
-In-Reply-To: <YEeM8AZczZt/irhR-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+ bh=yWpyRahM3scPgduj2VZeje83N5LT4t9feie9QxWPmu0=;
+ b=lmJMQ/APfy8c5LbaSrrZTmmqLmyAJvEFJnnDn2z3M5SlsY5q09jf5oJeJkGUVcWc01b1wfGat9JSA7i1Uz67fywe8tGfIoLSf4mP5Pndyv+fR8lq1XIh9ZY/Al3arU3cshz7emjj1THOtAN76Qb3ouQEzj4ECGjsnUZAMS4FUYU=
+In-Reply-To: <CALvZod4QiAhjgQOGO4KYCs4-GjUmqb6th+4tr8nQ+bPumGFzNg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On 3/9/21 5:57 PM, Michal Hocko wrote:
-> On Tue 09-03-21 11:03:48, Vasily Averin wrote:
+On 3/9/21 10:39 PM, Shakeel Butt wrote:
+> On Tue, Mar 9, 2021 at 12:04 AM Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> wrote:
+>>
 >> in_interrupt() check in memcg_kmem_bypass() is incorrect because
 >> it does not allow to account memory allocation called from task context
 >> with disabled BH, i.e. inside spin_lock_bh()/spin_unlock_bh() sections
+>>
+>> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 > 
-> Is there any existing user in the tree? Or is this more of a preparatory
-> patch for a later one which will need it? In other words, is this a bug
-> fix or a preparatory work.
+> In that file in_interrupt() is used at other places too. Should we
+> change those too?
 
-struct fib6_node objects are allocated by this way
-net/ipv6/route.c::__ip6_ins_rt()
-...        write_lock_bh(&table->tb6_lock);
-        err = fib6_add(&table->tb6_root, rt, info, mxc);
-        write_unlock_bh(&table->tb6_lock);
+Yes, you're right, in_interrupt() is used incorrectly in other places too,
+but 
+1) these cases are not so critical as this one,
+2) and are not related to current patch set
 
-I spend some time to understand why properly entries from properly configured cache
-was not accounted to container's memcg.
+They can be replaced later without urgency
+(unless I missed something imporant).
 
-Thank you,
+thank you,
 	Vasily Averin
+
+>> ---
+>>  mm/memcontrol.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index 845eec0..568f2cb 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -1076,7 +1076,7 @@ static __always_inline bool memcg_kmem_bypass(void)
+>>                 return false;
+>>
+>>         /* Memcg to charge can't be determined. */
+>> -       if (in_interrupt() || !current->mm || (current->flags & PF_KTHREAD))
+>> +       if (!in_task() || !current->mm || (current->flags & PF_KTHREAD))
+>>                 return true;
+>>
+>>         return false;
+>> --
+>> 1.8.3.1
+>>
+
