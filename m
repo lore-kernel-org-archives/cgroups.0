@@ -1,176 +1,65 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [Patch v3 1/2] cgroup: sev: Add misc cgroup controller
-Date: Thu, 11 Mar 2021 19:59:03 +0100
-Message-ID: <YEpod5X29YqMhW/g@blackbook>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [Patch v3 0/2] cgroup: New misc cgroup controller
+Date: Thu, 11 Mar 2021 14:39:36 -0500
+Message-ID: <YEpx+HTd/S2EfJCe@slm.duckdns.org>
 References: <20210304231946.2766648-1-vipinsh@google.com>
- <20210304231946.2766648-2-vipinsh@google.com>
+ <YETLqGIw1GekWdYK@slm.duckdns.org>
+ <YEpoS90X19Z2QOro@blackbook>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="P59/QYeOOUiz8W8D"
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1615489150; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=yjwoEp08KuFW/WZWpnttqf7bhHxPhXa/rNuXqsSS6BU=;
-        b=A92RigJEpRKeT/CXGVq/eQfkOixlOk12+hPSHu4f2emWGx1R264aD1eZuLPcPPuWu3XcfW
-        TO43QIfsJMECh8TmL6spuhxOug3k578v296drheY+6mSg1EhQHrBpIjiLk6cuzvgGNNF2m
-        F14tpwUkpBCu5ziXump6bni8kzHGnf4=
-Content-Disposition: inline
-In-Reply-To: <20210304231946.2766648-2-vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-To: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, thomas.lendacky-5C7GfCeVMHo@public.gmane.org, brijesh.singh-5C7GfCeVMHo@public.gmane.org, jon.grimm-5C7GfCeVMHo@public.gmane.org, eric.vantassell-5C7GfCeVMHo@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, frankja-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, gingell-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dionnaglaze-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-
-
---P59/QYeOOUiz8W8D
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=J6ZVBfVZRTkSOXZ58J3mQQUyv5RexzLY8G/YXzNw3gg=;
+        b=aeyBPHOo96EVYsMl4EKRqRg7PAOMWcAChCuvfw246ZdPtGEFxCU5KTrsB0CrwxwPV5
+         VeofU1Vy+8OGBU14nm3l8e8shZpL2cXu4wVt+1zqc+2zagrT6Ixgo+SXwXqPvIQTyej+
+         /5+KcpdjG38fHSNPGd3AXgvkbiZvQtXbTfU9Hr1/1+uK3hWWNzRRuCIcZUFP6+AmfyiG
+         fLwqY7StbRxtPyibTYlXFxg4YgN9Wc2tDY6cbjPSafLEp+JD0hFEUpMLMJtXO4lsjqWJ
+         EMHXMSN8XdbVX6cALJvJdTxsgIwSBhivrT2abm88VpVpalQuevvoExn7gVv8djmqGWTr
+         t3hw==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <YEpoS90X19Z2QOro@blackbook>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, thomas.lendacky-5C7GfCeVMHo@public.gmane.org, brijesh.singh-5C7GfCeVMHo@public.gmane.org, jon.grimm-5C7GfCeVMHo@public.gmane.org, eric.vantassell-5C7GfCeVMHo@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, frankja-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, gingell-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dionnaglaze-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi Vipin.
+Hello,
 
-On Thu, Mar 04, 2021 at 03:19:45PM -0800, Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>=
- wrote:
->  arch/x86/kvm/svm/sev.c        |  65 +++++-
->  arch/x86/kvm/svm/svm.h        |   1 +
->  include/linux/cgroup_subsys.h |   4 +
->  include/linux/misc_cgroup.h   | 130 +++++++++++
->  init/Kconfig                  |  14 ++
->  kernel/cgroup/Makefile        |   1 +
->  kernel/cgroup/misc.c          | 402 ++++++++++++++++++++++++++++++++++
-Given different two-fold nature (SEV caller vs misc controller) of some
-remarks below, I think it makes sense to split this into two patches:
-a) generic controller implementation,
-b) hooking the controller into SEV ASIDs management.
+On Thu, Mar 11, 2021 at 07:58:19PM +0100, Michal Koutn=FD wrote:
+> > Michal, as you've been reviewing the series, can you please take
+> > another look and ack them if you don't find anything objectionable?
+> Honestly, I'm still sitting on the fence whether this needs a new
+> controller and whether the miscontroller (:-p) is a good approach in the
+> long term [1].
 
-> +#ifndef CONFIG_KVM_AMD_SEV
-> +/*
-> + * When this config is not defined, SEV feature is not supported and API=
-s in
-> + * this file are not used but this file still gets compiled into the KVM=
- AMD
-> + * module.
-> + *
-> + * We will not have MISC_CG_RES_SEV and MISC_CG_RES_SEV_ES entries in th=
-e enum
-> + * misc_res_type {} defined in linux/misc_cgroup.h.
-BTW, was there any progress on conditioning sev.c build on
-CONFIG_KVM_AMD_SEV? (So that the defines workaround isn't needeed.)
+Yeah, it's a bit of cop-out. My take is that the underlying hardware feature
+isn't mature enough to have reasonable abstraction built on top of them.
+Given time, maybe future iterations will get there or maybe it's a passing
+fad and people will mostly forget about these.
 
->  static int sev_asid_new(struct kvm_sev_info *sev)
->  {
-> -	int pos, min_asid, max_asid;
-> +	int pos, min_asid, max_asid, ret;
->  	bool retry =3D true;
-> +	enum misc_res_type type;
-> +
-> +	type =3D sev->es_active ? MISC_CG_RES_SEV_ES : MISC_CG_RES_SEV;
-> +	sev->misc_cg =3D get_current_misc_cg();
-> +	ret =3D misc_cg_try_charge(type, sev->misc_cg, 1);
-It may be safer to WARN_ON(sev->misc_cg) at this point (see below).
+In the meantime, keeping them out of cgroup is one direction, a relatively
+high friction one but still viable. Or we can provide something of a halfway
+house so that people who have immediate needs can still leverage the
+existing infrastructure while controlling the amount of time, energy and
+future lock-ins they take. So, that's misc controller.
 
+I'm somewhat ambivalent but we've had multiple of these things popping up in
+the past several years and containment seems to be a reasonable approach at
+this point.
 
-> [...]
-> +e_uncharge:
-> +	misc_cg_uncharge(type, sev->misc_cg, 1);
-> +	put_misc_cg(sev->misc_cg);
-> +	return ret;
-vvv
+> [1] Currently, only one thing comes to my mind -- the delegation via
+> cgroup.subtree_control. The miscontroller may add possibly further
+> resources whose delegation granularity is bunched up under one entry.
 
-> @@ -140,6 +171,10 @@ static void sev_asid_free(int asid)
->  	}
-> =20
->  	mutex_unlock(&sev_bitmap_lock);
-> +
-> +	type =3D sev->es_active ? MISC_CG_RES_SEV_ES : MISC_CG_RES_SEV;
-> +	misc_cg_uncharge(type, sev->misc_cg, 1);
-> +	put_misc_cg(sev->misc_cg);
-It may be safer to set sev->misc_cg to NULL here.
+Controller enabling and delegation in themselves aren't supposed to have
+resource or security implications, so I don't think it's a practical
+problem.
 
-(IIUC, with current asid_{new,free} calls it shouldn't matter but why to
-rely on it in the future.)
+Thanks.
 
-> +++ b/kernel/cgroup/misc.c
-> [...]
-> +static void misc_cg_reduce_charge(enum misc_res_type type, struct misc_c=
-g *cg,
-> +				  unsigned long amount)
-misc_cg_cancel_charge seems to be a name more consistent with what we
-already have in pids and memory controller.
-
-
-> +static ssize_t misc_cg_max_write(struct kernfs_open_file *of, char *buf,
-> +				 size_t nbytes, loff_t off)
-> +{
-> [...]
-> +
-> +	if (!strcmp(MAX_STR, buf)) {
-> +		max =3D ULONG_MAX;
-MAX_NUM for consistency with other places.
-
-> +	} else {
-> +		ret =3D kstrtoul(buf, 0, &max);
-> +		if (ret)
-> +			return ret;
-> +	}
-> +
-> +	cg =3D css_misc(of_css(of));
-> +
-> +	if (misc_res_capacity[type])
-> +		cg->res[type].max =3D max;
-In theory, parallel writers can clash here, so having the limit atomic
-type to prevent this would resolve it. See also commit a713af394cf3
-("cgroup: pids: use atomic64_t for pids->limit").
-
-> +static int misc_cg_current_show(struct seq_file *sf, void *v)
-> +{
-> +	int i;
-> +	struct misc_cg *cg =3D css_misc(seq_css(sf));
-> +
-> +	for (i =3D 0; i < MISC_CG_RES_TYPES; i++) {
-> +		if (misc_res_capacity[i])
-Since there can be some residual charges after removing capacity (before
-draining), maybe the condition along the line
-
-if (misc_res_capacity[i] || atomic_long_read(&cg->res[i].usage))
-
-would be more informative for debugging.
-
-> +static int misc_cg_capacity_show(struct seq_file *sf, void *v)
-> +{
-> +	int i;
-> +	unsigned long cap;
-> +
-> +	for (i =3D 0; i < MISC_CG_RES_TYPES; i++) {
-> +		cap =3D READ_ONCE(misc_res_capacity[i]);
-Why is READ_ONCE only here and not in other places that (actually) check
-against the set capacity value? Also, there should be a paired
-WRITE_ONCCE in misc_cg_set_capacity().
-
-
-Thanks,
-Michal
-
---P59/QYeOOUiz8W8D
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmBKaHcACgkQia1+riC5
-qSiidhAAoCX45GiD4qZe4u2WKoNPdtGoFzWSAJItAODcB/g3yxvxspelkpE9ZQ3t
-Bi9w3IS0akVnhAPOkGqYbOhfogbnD2yBaHs4GuhDCnarlk+aUuqbhqhCjqhBn6KQ
-vn4mVevmZAnsP3t3VcahmTG3J37iLplbx6ytEwpswlx6XmxWr2Cymlogwa33f0DE
-OYF/xezDi1NzS8VaOdSsn9ueY989hYcg3eav+pw62EY9kC+oa4taIbvywjaN+aNr
-HRjN6CcqTZ33VL0GfZeo3ig58oHz6D7uXlBrzYT2/ZoE//C5U6wPZ31EOY9noCqn
-MGCeAxVi9Xv1/aA0GS6dw2a1hivDwRiXgLGz5Q3Sg9zVtCLbwZjTn+x5IrWtjNOe
-CBRMNGf42NWi5Rgo9xYUI2A/VHxWje3bjLIHa90yKXYI4b3DTYp43SrEOu1J5BlM
-xxpuvQy/VOlC7XPN6TTEegSxCzftpT3uc79Iq2ymWk5GDRgg4cxRNV9VxqluUFSw
-GZLRzLYt34/jQpMzj9GJRLBN/AY/XfFiuFhyKKhEPK99WIjJIIbakZp34ajfso8J
-Yrf6YSxVbTAB1lIWPGT0ku8SzgPDkMTtYYpSdWBPSqiTaczuhGiC/14t3VQfj0GH
-vX4poFE3fRouhoUnmyfsLnKPJFJlp5tK9Z6m0Nmc7wL/iDsH6ik=
-=pXNU
------END PGP SIGNATURE-----
-
---P59/QYeOOUiz8W8D--
+--=20
+tejun
