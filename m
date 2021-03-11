@@ -1,133 +1,76 @@
-From: Chengming Zhou <zhouchengming@bytedance.com>
-Subject: [PATCH] cgroup-v2: Add taskstats counters in cgroup.stat
-Date: Thu, 11 Mar 2021 14:17:52 +0800
-Message-ID: <20210311061752.310831-1-zhouchengming@bytedance.com>
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH 0/9] memcg accounting from OpenVZ
+Date: Thu, 11 Mar 2021 10:00:17 +0300
+Message-ID: <24a416f7-9def-65c9-599e-d56f7c328d33@virtuozzo.com>
+References: <5affff71-e503-9fb9-50cb-f6d48286dd52@virtuozzo.com>
+ <CALvZod5YOtqXcSqn2Zj2Nb_SKgDRKOMW4o5i-u_yj7CanQVtGQ@mail.gmail.com>
+ <ad68d004-fa84-3d21-60b7-d4a342ad4007@virtuozzo.com>
+ <YEiiQ2TGnJcEtL3d@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=GtG19LOebEp2WxfXZAPDVqDaGg46AUd7BpnKVeJq4kc=;
-        b=rhbKo8dcc8lTdzeUYcMZoyURBR3BB+R/PES6oMiL7hFf6Hfd2KdUNdjN3OUvIs24TK
-         Kld96DWzTaLfOLMLQ4UQ+NNx04wNaN7EPmGc0Rrs/meIZhbVWMZRyFRs0xgvufGs53+1
-         WZbD536dxbOG4ZX3uDXg6AXioZz0EA90qLurDWnmAee19bYnY5otEd1TRemCbakfWAKL
-         mfI+Cvmzdumpdq3HmPzqS/JiVMKhF+gCqZT2yLK1tmyCFPc4VVUpdmR6swDdUIApIgfY
-         qBS2ud3yIfWJyKT4/qh412WYUWrg/xwTXvwTyZLpEnvAJxOJvTLTF3sbjzl3uecblNhE
-         Sfrg==
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=virtuozzo.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=6XPR4e7Qekz+ZPzIgfhEI9MBflHrYmy/+tDff+zpX30=;
+ b=A+6eWPlIyvvZRRYeZxrKxIlyg3t95fJoF6pdp1ZWgVwLwwgSL6OpY7ciQupLfgVr+oNYMzuIq+bDpb1FfyHZ9jRtn/GviVI634k+KKnc9hGsDJh2OhAQ34MrD8ryvQozONgLZAgOk9EZFjd7n0b4KX2M2bciDnkwDWiTOq4SRcA=
+In-Reply-To: <YEiiQ2TGnJcEtL3d-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj@kernel.org, lizefan.x@bytedance.com, hannes@cmpxchg.org, corbet@lwn.net, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org
-Cc: dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, zhouchengming@bytedance.com, songmuchun@bytedance.com
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-We have the netlink CGROUPSTATS_CMD_GET interface to get taskstats
-of the cgroup on v1, but haven't the equivalent interface on v2,
-making it difficult to calculate the per-cgroup cpu load in cadvisor
-or implement the cgroup proc interface in lxcfs, like /proc/loadavg.
+On 3/10/21 1:41 PM, Michal Hocko wrote:
+> On Wed 10-03-21 13:17:19, Vasily Averin wrote:
+>> On 3/10/21 12:12 AM, Shakeel Butt wrote:
+>>> On Tue, Mar 9, 2021 at 12:04 AM Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> wrote:
+>>>>
+>>>> OpenVZ many years accounted memory of few kernel objects,
+>>>> this helps us to prevent host memory abuse from inside memcg-limited container.
+>>>
+>>> The text is cryptic but I am assuming you wanted to say that OpenVZ
+>>> has remained on a kernel which was still on opt-out kmem accounting
+>>> i.e. <4.5. Now OpenVZ wants to move to a newer kernel and thus these
+>>> patches are needed, right?
+>>
+>> Something like this.
+>> Frankly speaking I badly understand which arguments should I provide to upstream
+>> to enable accounting for some new king of objects.
+>>
+>> OpenVZ used own accounting subsystem since 2001 (i.e. since v2.2.x linux kernels) 
+>> and we have accounted all required kernel objects by using our own patches.
+>> When memcg was added to upstream Vladimir Davydov added accounting of some objects
+>> to upstream but did not skipped another ones.
+>> Now OpenVZ uses RHEL7-based kernels with cgroup v1 in production, and we still account
+>> "skipped" objects by our own patches just because we accounted such objects before.
+>> We're working on rebase to new kernels and we prefer to push our old patches to upstream. 
+> 
+> That is certainly an interesting information. But for a changelog it
+> would be more appropriate to provide information about how much memory
+> user can induce and whether there is any way to limit that memory by
+> other means. How practical those other means are and which usecases will
+> benefit from the containment.
 
-Since we already have these counters maintained in psi subsystem,
-so this patch sum them up and export in the cgroup.stat interface.
+Right now I would like to understand how should I argument my requests about
+accounting of new kind of objects.
 
-Signed-off-by: Chengming Zhou <zhouchengming@bytedance.com>
----
- Documentation/admin-guide/cgroup-v2.rst |  9 +++++++
- include/linux/psi.h                     |  1 +
- kernel/cgroup/cgroup.c                  |  3 +++
- kernel/sched/psi.c                      | 34 +++++++++++++++++++++++++
- 4 files changed, 47 insertions(+)
+Which description it enough to enable object accounting?
+Could you please specify some edge rules?
+Should I push such patches trough this list? 
+Is it probably better to send them to mailing lists of according subsystems?
+Should I notify them somehow at least?
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index 64c62b979f2f..4184e749f687 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -923,6 +923,15 @@ All cgroup core files are prefixed with "cgroup."
- 		A dying cgroup can consume system resources not exceeding
- 		limits, which were active at the moment of cgroup deletion.
- 
-+	  nr_iowait_tasks
-+	    Total number of tasks in iowait.
-+
-+	  nr_memstall_tasks
-+	    Total number of tasks in memstall.
-+
-+	  nr_running_tasks
-+	    Total number of runnable tasks.
-+
-   cgroup.freeze
- 	A read-write single value file which exists on non-root cgroups.
- 	Allowed values are "0" and "1". The default is "0".
-diff --git a/include/linux/psi.h b/include/linux/psi.h
-index 7361023f3fdd..ea98239424ca 100644
---- a/include/linux/psi.h
-+++ b/include/linux/psi.h
-@@ -30,6 +30,7 @@ int psi_show(struct seq_file *s, struct psi_group *group, enum psi_res res);
- int psi_cgroup_alloc(struct cgroup *cgrp);
- void psi_cgroup_free(struct cgroup *cgrp);
- void cgroup_move_task(struct task_struct *p, struct css_set *to);
-+void psi_taskstat_show(struct seq_file *m, struct cgroup *cgrp);
- 
- struct psi_trigger *psi_trigger_create(struct psi_group *group,
- 			char *buf, size_t nbytes, enum psi_res res);
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 9153b20e5cc6..2724ae318a3b 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -3502,6 +3502,9 @@ static int cgroup_stat_show(struct seq_file *seq, void *v)
- 	seq_printf(seq, "nr_dying_descendants %d\n",
- 		   cgroup->nr_dying_descendants);
- 
-+#ifdef CONFIG_PSI
-+	psi_taskstat_show(seq, cgroup);
-+#endif
- 	return 0;
- }
- 
-diff --git a/kernel/sched/psi.c b/kernel/sched/psi.c
-index 967732c0766c..0ae8bd278ca4 100644
---- a/kernel/sched/psi.c
-+++ b/kernel/sched/psi.c
-@@ -1000,6 +1000,40 @@ void cgroup_move_task(struct task_struct *task, struct css_set *to)
- 
- 	task_rq_unlock(rq, task, &rf);
- }
-+
-+void psi_taskstat_show(struct seq_file *m, struct cgroup *cgrp)
-+{
-+	struct psi_group *group;
-+	int cpu;
-+	int s;
-+	unsigned int taskstat[NR_PSI_TASK_COUNTS - 1] = { 0, };
-+
-+	if (static_branch_likely(&psi_disabled))
-+		return;
-+
-+	group = cgroup_ino(cgrp) == 1 ? &psi_system : &cgrp->psi;
-+
-+	for_each_possible_cpu(cpu) {
-+		struct psi_group_cpu *groupc = per_cpu_ptr(group->pcpu, cpu);
-+		unsigned int tasks[NR_PSI_TASK_COUNTS];
-+		unsigned int seq;
-+
-+		do {
-+			seq = read_seqcount_begin(&groupc->seq);
-+			memcpy(tasks, groupc->tasks, sizeof(groupc->tasks));
-+		} while (read_seqcount_retry(&groupc->seq, seq));
-+
-+		for (s = 0; s < NR_ONCPU; s++)
-+			taskstat[s] += tasks[s];
-+	}
-+
-+	seq_printf(m, "nr_iowait_tasks %u\n"
-+		   "nr_memstall_tasks %u\n"
-+		   "nr_running_tasks %u\n",
-+		   taskstat[NR_IOWAIT],
-+		   taskstat[NR_MEMSTALL],
-+		   taskstat[NR_RUNNING]);
-+}
- #endif /* CONFIG_CGROUPS */
- 
- int psi_show(struct seq_file *m, struct psi_group *group, enum psi_res res)
--- 
-2.25.1
+"untrusted netadmin inside memcg-limited container can create unlimited number of routing entries, trigger OOM on host that will be unable to find the reason of memory  shortage and  kill huge"
 
+"each mount inside memcg-limited container creates non-accounted mount object,
+ but new mount namespace creation consumes huge piece of non-accounted memory for cloned mounts"
+
+"unprivileged user inside memcg-limited container can create non-accounted multi-page per-thread kernel objects for LDT"
+
+"non-accounted multi-page tty objects can be created from inside memcg-limited container"
+
+"unprivileged user inside memcg-limited container can trigger creation of huge number of non-accounted fasync_struct objects"
+
+Thank you,
+	Vasily Averin
