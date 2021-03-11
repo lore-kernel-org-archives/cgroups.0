@@ -1,76 +1,41 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 0/9] memcg accounting from OpenVZ
-Date: Thu, 11 Mar 2021 09:35:30 +0100
-Message-ID: <YEnWUrYOArju66ym@dhcp22.suse.cz>
-References: <5affff71-e503-9fb9-50cb-f6d48286dd52@virtuozzo.com>
- <CALvZod5YOtqXcSqn2Zj2Nb_SKgDRKOMW4o5i-u_yj7CanQVtGQ@mail.gmail.com>
- <ad68d004-fa84-3d21-60b7-d4a342ad4007@virtuozzo.com>
- <YEiiQ2TGnJcEtL3d@dhcp22.suse.cz>
- <24a416f7-9def-65c9-599e-d56f7c328d33@virtuozzo.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] cgroup-v2: Add taskstats counters in cgroup.stat
+Date: Thu, 11 Mar 2021 06:10:25 -0500
+Message-ID: <YEn6od+CCVjNZIS9@slm.duckdns.org>
+References: <20210311061752.310831-1-zhouchengming@bytedance.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1615451731; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=SPSvV0WAkJhngu3aMbeieIGtboHQE6ozlBVf1GQ8Sww=;
-        b=hMByrvkbSYioy7yXZtEnsXK7gQssCDpTUh7KNFoXt5p4SQbgBT8MSPdoyKSf/inCqJUI3u
-        SPR5qwEBCYsPA7VxCzZiscKONdpqLeHcJwUVfRfC0MDaZIzS5FX392ldn/NZBvp0ZuhVZB
-        pKmxwq+CmSCGhgO0QwbafOqq4vIxjAc=
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=4FDhkUkdj8fWqlipDBp6WuM7/UyISTb34fe+zJutuhk=;
+        b=P849DNFgS5nte6HYXGD6ebAhhBZ3CyFnv9N3Sr2OhrHYwPjZon8k1Uf09nEsePPWI0
+         H9dmyx+EEhFA/GBdul8L0iS9ImrDHwqzKxTUxo7LNAZ4EBKimkA8s4dQS0umgEhbgttx
+         jRTxH4Wng6J+VJxQ4lnEAxHZe3iMCaQMx9n22CblexjSVPeCf+1Nl4XSIsdSbNdMbWdx
+         i5ZhN1Ux4/9F8jxSWEX+T5YsVD+Y/92mIsKAy2YM0NsJSyw4CDCt1snVu0JcpbWQsBOc
+         wvKxY6zBFQwDQAV1K40PCqBou18XW6/Fmbt1sZ4xYK0NirvYCvAJ0nxsL+CcWem4M5TY
+         F93g==
+Sender: Tejun Heo <htejun@gmail.com>
 Content-Disposition: inline
-In-Reply-To: <24a416f7-9def-65c9-599e-d56f7c328d33-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+In-Reply-To: <20210311061752.310831-1-zhouchengming@bytedance.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Chengming Zhou <zhouchengming@bytedance.com>
+Cc: lizefan.x@bytedance.com, hannes@cmpxchg.org, corbet@lwn.net, mingo@redhat.com, peterz@infradead.org, juri.lelli@redhat.com, vincent.guittot@linaro.org, dietmar.eggemann@arm.com, rostedt@goodmis.org, bsegall@google.com, mgorman@suse.de, bristot@redhat.com, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, songmuchun@bytedance.com
 
-On Thu 11-03-21 10:00:17, Vasily Averin wrote:
-> On 3/10/21 1:41 PM, Michal Hocko wrote:
-[...]
-> > That is certainly an interesting information. But for a changelog it
-> > would be more appropriate to provide information about how much memory
-> > user can induce and whether there is any way to limit that memory by
-> > other means. How practical those other means are and which usecases will
-> > benefit from the containment.
-> 
-> Right now I would like to understand how should I argument my requests about
-> accounting of new kind of objects.
-> 
-> Which description it enough to enable object accounting?
+On Thu, Mar 11, 2021 at 02:17:52PM +0800, Chengming Zhou wrote:
+> We have the netlink CGROUPSTATS_CMD_GET interface to get taskstats
+> of the cgroup on v1, but haven't the equivalent interface on v2,
+> making it difficult to calculate the per-cgroup cpu load in cadvisor
+> or implement the cgroup proc interface in lxcfs, like /proc/loadavg.
 
-Doesn't the above paragraph give you a hint?
+So, this is what the PSI metrics are for and we've been using it for that
+for quite a while now. I'd much prefer not adding something duplicate (and
+incomplete).
 
-> Could you please specify some edge rules?
+Thanks.
 
-There are no strong rules AFAIK. I would say that it is important is
-that the user can trigger a lot of or unbound amount of objects.
-
-> Should I push such patches trough this list? 
-
-yes linux-mm and ccing memcg maintainers is the proper way. It would be
-great to CC maintainers of the affected subsystem as well.
-
-> Is it probably better to send them to mailing lists of according subsystems?
-
-> Should I notify them somehow at least?
-> 
-> "untrusted netadmin inside memcg-limited container can create unlimited number of routing entries, trigger OOM on host that will be unable to find the reason of memory  shortage and  kill huge"
-> 
-> "each mount inside memcg-limited container creates non-accounted mount object,
->  but new mount namespace creation consumes huge piece of non-accounted memory for cloned mounts"
-> 
-> "unprivileged user inside memcg-limited container can create non-accounted multi-page per-thread kernel objects for LDT"
-> 
-> "non-accounted multi-page tty objects can be created from inside memcg-limited container"
-> 
-> "unprivileged user inside memcg-limited container can trigger creation of huge number of non-accounted fasync_struct objects"
-
-OK, that sounds better to me. It would be also great if you can mention
-whether there are any other means to limit those objects if there are
-any.
-
-Thanks!
 -- 
-Michal Hocko
-SUSE Labs
+tejun
