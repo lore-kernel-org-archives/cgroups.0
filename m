@@ -1,66 +1,126 @@
-From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [RFC PATCH v2 04/11] bfq: limit the IO depth of idle_class to 1
-Date: Fri, 12 Mar 2021 19:08:38 +0800
-Message-ID: <e5928d0b76ef665701df034eb2bd7f85681f4656.1615527324.git.brookxu@tencent.com>
+From: brookxu <brookxu.cn@gmail.com>
+Subject: [RFC PATCH v2 01/11] bfq: introduce bfq_entity_to_bfqg helper method
+Date: Fri, 12 Mar 2021 19:08:35 +0800
+Message-ID: <1e04546dd04dc35f0f658b0699cc3470f8de5bbd.1615527324.git.brookxu@tencent.com>
 References: <cover.1615517202.git.brookxu@tencent.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :in-reply-to:references;
-        bh=hunTPZCviArd0MXDnzzzFZQhSy4vbv7jKWoalPSpEQw=;
-        b=SrCFlWpyYEENRUBIySkHbIQhj3YL/u8Dq4FFAhdS3eeNRP8iej9jnd0fxfZgReZzq6
-         vQbg8sifDsDYphc1Xv+ncKLBisptBg6GlH0013HzPCzSPkA/12LCWS61x6KtPhDcdTMw
-         yuzt+ATDX2NbXACFByh9moNeIOuO+VN7i12hTiaB7qqDwr9dUPqpZF/MhoA64Cx99DUm
-         +jx9n3kGXj1eDGOOksXjz5TVRpAsEpqWh1mkpDoXV/z3xXuvRCWfEW5CC6boKc8P89RL
-         RLKcSlaMj5yqtGWc7okGN3PB7hSjtsPBFfple7Eee8i7AvJyiin26R2tP86CmrROgyF7
-         8jog==
-In-Reply-To: <cover.1615517202.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-In-Reply-To: <cover.1615527324.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-References: <cover.1615527324.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+        bh=kelUwn0Whs7JivQ1KuhMZo0HpcgwSby3dPMp6TcStyI=;
+        b=CIIlIw+pCqMT8TkvG6gOiFr2Fzp9zN9Z7AAIc8gn5XlcMYTNbW+7LaaO1j0vUyxNio
+         Wb2UFhlR+D1TJnz9zlXK8JiMkeDj5w0YLvUzELVEMjjQ1vUiWbmhvv8qCF2IEe3xCEDF
+         NxiO2aBUfmmc2qpeIHBYH0fscahca6LqO0P2pgdmvHBicJQzKBOgEIY/LVYK//p/uBnL
+         TifpSFejxf3HzkUE6qCVLWQ/NgGITahZYxGC6NXBUXhChe25kDecPJv3h7lsLTbyebHB
+         SliDYHIT+aiVtG8Gr8O1ZN4DgdwIPSL8S7GOpj/wtdxjeFqKYNLuB1Rj6Zhs5pC8/dnB
+         3Nwg==
+In-Reply-To: <cover.1615517202.git.brookxu@tencent.com>
+In-Reply-To: <cover.1615527324.git.brookxu@tencent.com>
+References: <cover.1615527324.git.brookxu@tencent.com>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+From: Chunguang Xu <brookxu@tencent.com>
 
-The IO depth of queues belong to CLASS_IDLE  is limited to 1,
-so that it can avoid introducing a larger tail latency under
-a device with a larger IO depth. Although limiting the IO
-depth may reduce the performance of idle_class, it is
-generally not a big problem, because idle_class usually does
-not have strict performance requirements.
+Introduce bfq_entity_to_bfqg() to make it easier to obtain the
+bfq_group corresponding to the entity.
 
-Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+Signed-off-by: Chunguang Xu <brookxu@tencent.com>
 ---
- block/bfq-iosched.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ block/bfq-cgroup.c  |  6 ++----
+ block/bfq-iosched.h |  1 +
+ block/bfq-wf2q.c    | 16 ++++++++++++----
+ 3 files changed, 15 insertions(+), 8 deletions(-)
 
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index f0f53d6f1f6e..91e903f1e550 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -4808,6 +4808,17 @@ static struct request *__bfq_dispatch_request(struct blk_mq_hw_ctx *hctx)
- 	if (!bfqq)
- 		goto exit;
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index b791e2041e49..a5f544acaa61 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -309,8 +309,7 @@ struct bfq_group *bfqq_group(struct bfq_queue *bfqq)
+ {
+ 	struct bfq_entity *group_entity = bfqq->entity.parent;
  
-+	/*
-+	 * Here, the IO depth of queues belong to CLASS_IDLE is limited
-+	 * to 1, so that it can avoid introducing a larger tail latency
-+	 * under a device with a larger IO depth. Although limiting the
-+	 * IO depth may reduce the performance of idle_class, it is
-+	 * generally not a big problem, because idle_class usually
-+	 * does not have strict performance requirements.
-+	 */
-+	if (bfq_class_idle(bfqq) && bfqq->dispatched)
-+		goto exit;
+-	return group_entity ? container_of(group_entity, struct bfq_group,
+-					   entity) :
++	return group_entity ? bfq_entity_to_bfqg(group_entity) :
+ 			      bfqq->bfqd->root_group;
+ }
+ 
+@@ -610,8 +609,7 @@ struct bfq_group *bfq_find_set_group(struct bfq_data *bfqd,
+ 	 */
+ 	entity = &bfqg->entity;
+ 	for_each_entity(entity) {
+-		struct bfq_group *curr_bfqg = container_of(entity,
+-						struct bfq_group, entity);
++		struct bfq_group *curr_bfqg = bfq_entity_to_bfqg(entity);
+ 		if (curr_bfqg != bfqd->root_group) {
+ 			parent = bfqg_parent(curr_bfqg);
+ 			if (!parent)
+diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+index b8e793c34ff1..a6f98e9e14b5 100644
+--- a/block/bfq-iosched.h
++++ b/block/bfq-iosched.h
+@@ -941,6 +941,7 @@ struct bfq_group {
+ #endif
+ 
+ struct bfq_queue *bfq_entity_to_bfqq(struct bfq_entity *entity);
++struct bfq_group *bfq_entity_to_bfqg(struct bfq_entity *entity);
+ 
+ /* --------------- main algorithm interface ----------------- */
+ 
+diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
+index 070e34a7feb1..5ff0028920a2 100644
+--- a/block/bfq-wf2q.c
++++ b/block/bfq-wf2q.c
+@@ -149,7 +149,7 @@ struct bfq_group *bfq_bfqq_to_bfqg(struct bfq_queue *bfqq)
+ 	if (!group_entity)
+ 		group_entity = &bfqq->bfqd->root_group->entity;
+ 
+-	return container_of(group_entity, struct bfq_group, entity);
++	return bfq_entity_to_bfqg(group_entity);
+ }
+ 
+ /*
+@@ -208,7 +208,7 @@ static bool bfq_no_longer_next_in_service(struct bfq_entity *entity)
+ 	if (bfq_entity_to_bfqq(entity))
+ 		return true;
+ 
+-	bfqg = container_of(entity, struct bfq_group, entity);
++	bfqg = bfq_entity_to_bfqg(entity);
+ 
+ 	/*
+ 	 * The field active_entities does not always contain the
+@@ -266,6 +266,15 @@ struct bfq_queue *bfq_entity_to_bfqq(struct bfq_entity *entity)
+ 	return bfqq;
+ }
+ 
++struct bfq_group *bfq_entity_to_bfqg(struct bfq_entity *entity)
++{
++	struct bfq_group *bfqg = NULL;
 +
- 	rq = bfq_dispatch_rq_from_bfqq(bfqd, bfqq);
++	if (entity->my_sched_data)
++		bfqg = container_of(entity, struct bfq_group, entity);
++
++	return bfqg;
++}
  
- 	if (rq) {
+ /**
+  * bfq_delta - map service into the virtual time domain.
+@@ -1001,8 +1010,7 @@ static void __bfq_activate_entity(struct bfq_entity *entity,
+ 
+ #ifdef CONFIG_BFQ_GROUP_IOSCHED
+ 	if (!bfq_entity_to_bfqq(entity)) { /* bfq_group */
+-		struct bfq_group *bfqg =
+-			container_of(entity, struct bfq_group, entity);
++		struct bfq_group *bfqg = bfq_entity_to_bfqg(entity);
+ 		struct bfq_data *bfqd = bfqg->bfqd;
+ 
+ 		if (!entity->in_groups_with_pending_reqs) {
 -- 
 2.30.0
 
