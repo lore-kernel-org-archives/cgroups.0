@@ -1,59 +1,184 @@
-From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [RFC PATCH v2 08/11] bfq: disallow idle if CLASS_RT waiting for service
-Date: Fri, 12 Mar 2021 19:08:42 +0800
-Message-ID: <157b97d7bda348b657b09e9c5a294305cfe29329.1615527324.git.brookxu@tencent.com>
+From: brookxu <brookxu.cn@gmail.com>
+Subject: [RFC PATCH v2 05/11] bfq: keep the minimun bandwidth for be_class
+Date: Fri, 12 Mar 2021 19:08:39 +0800
+Message-ID: <189426afb7e3d2fa4e0c0df3c9037b2ed51f0fe5.1615527324.git.brookxu@tencent.com>
 References: <cover.1615517202.git.brookxu@tencent.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :in-reply-to:references:mime-version:content-transfer-encoding;
-        bh=FSKEpSWVHV20pfrPvKA6p9/HfL/MH8Y0LwmULwrkplM=;
-        b=Q69wXyuREdBCG9JuoDz6E0QKQmNabsXXZeI4+0yjvDeqW2TyfrRepIb7+5SyGkOyag
-         oCPUq6Ru1g6ZcxAfAr37vgU4MT1BVD5TUp6r3X+ztdKAPNiA9DMVDqcAMASIXwM/2OCp
-         ICVOraK3udBH4Sa4UCaRDyujHXwQ643iSCSJwAeQeaWnpzQruEh/cYto65VfGdn7MIX+
-         56tn4/STBGaSBEEpxoZfxbzSjfEyzlTT/ZHd0dy6J6up/pHrAPy4Ax9PvL8gVCnHw6uj
-         DVT//4Apv0RyFN8M4orNaskY4xlmDo6WHq0GJSutyfxtdnk09owdMM/DMTVEUfVb3p5z
-         hrug==
-In-Reply-To: <cover.1615517202.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-In-Reply-To: <cover.1615527324.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-References: <cover.1615527324.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+         :in-reply-to:references;
+        bh=j0cc3FhyIkik1ZqjcQtP+JY263bu0AJPOx8K4+YzkWU=;
+        b=PESSmFeV+dR08oaB+9e064Or+JEAcMV+WuNyyP/qM/X9qGtme4jCGFu7TJs4o2BSR2
+         hKo5/U3IqDyD8di7CTWm/jxlKBsrlFAw6aTed3PLBO3fwsWDYWeJajNruMRQYe5YGvIu
+         cuDkXz2Mb6X2Wn1cU4PQqT02SEpi5L3LpSbA/FmHAvEuSU0FcJ/GLURD1/14VzhZ13H8
+         0CeVSNYx8g+B7dcz1rlcKzova4YJNiGLIFdgNfb8K2WzY3m4hblvlVqfM24F7n4yP8gz
+         Bkn2m9JU4Kkhiw8DxBfuhWR8iGPf9G5b5TfPrWmbDFPWiI0B9cnhh1s1rcNYnPC3hqEv
+         YyFA==
+In-Reply-To: <cover.1615517202.git.brookxu@tencent.com>
+In-Reply-To: <cover.1615527324.git.brookxu@tencent.com>
+References: <cover.1615527324.git.brookxu@tencent.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+From: Chunguang Xu <brookxu@tencent.com>
 
-if CLASS_RT is waiting for service=EF=BC=8Cqueues belong
-to other class disallow idle, so that a schedule
-can be invoked in time.
+rt_class will preempt other classes, which may cause other
+classes to starve to death. At present, idle_class has
+alleviated the starvation problem through the minimum
+bandwidth mechanism. Similarly, we should do the same for
+be_class.
 
-Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.or=
-g>
+Signed-off-by: Chunguang Xu <brookxu@tencent.com>
 ---
- block/bfq-iosched.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ block/bfq-iosched.c |  6 +++--
+ block/bfq-iosched.h | 11 ++++++---
+ block/bfq-wf2q.c    | 59 ++++++++++++++++++++++++++++++++-------------
+ 3 files changed, 53 insertions(+), 23 deletions(-)
 
 diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index a5f13589df79..9330043cdd53 100644
+index 91e903f1e550..ab00b664348c 100644
 --- a/block/bfq-iosched.c
 +++ b/block/bfq-iosched.c
-@@ -4263,6 +4263,11 @@ static bool bfq_better_to_idle(struct bfq_queue *bfq=
-q)
- 	if (unlikely(bfqd->strict_guarantees))
- 		return true;
-=20
-+#ifdef CONFIG_BFQ_GROUP_IOSCHED
-+	if (!bfq_class_rt(bfqq) && bfqd->busy_groups[0])
-+		return false;
-+#endif
+@@ -6542,9 +6542,11 @@ static void bfq_init_root_group(struct bfq_group *root_group,
+ 	root_group->bfqd = bfqd;
+ #endif
+ 	root_group->rq_pos_tree = RB_ROOT;
+-	for (i = 0; i < BFQ_IOPRIO_CLASSES; i++)
++	for (i = 0; i < BFQ_IOPRIO_CLASSES; i++) {
+ 		root_group->sched_data.service_tree[i] = BFQ_SERVICE_TREE_INIT;
+-	root_group->sched_data.bfq_class_idle_last_service = jiffies;
++		root_group->sched_data.bfq_class_last_service[i] = jiffies;
++	}
++	root_group->sched_data.class_timeout_last_check = jiffies;
+ }
+ 
+ static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
+diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
+index 3416a75f47da..de7301664ad3 100644
+--- a/block/bfq-iosched.h
++++ b/block/bfq-iosched.h
+@@ -13,7 +13,7 @@
+ #include "blk-cgroup-rwstat.h"
+ 
+ #define BFQ_IOPRIO_CLASSES	3
+-#define BFQ_CL_IDLE_TIMEOUT	(HZ/5)
++#define BFQ_CLASS_TIMEOUT	(HZ/5)
+ 
+ #define BFQ_MIN_WEIGHT			1
+ #define BFQ_MAX_WEIGHT			1000
+@@ -97,9 +97,12 @@ struct bfq_sched_data {
+ 	struct bfq_entity *next_in_service;
+ 	/* array of service trees, one per ioprio_class */
+ 	struct bfq_service_tree service_tree[BFQ_IOPRIO_CLASSES];
+-	/* last time CLASS_IDLE was served */
+-	unsigned long bfq_class_idle_last_service;
+-
++	/* last time the class was served */
++	unsigned long bfq_class_last_service[BFQ_IOPRIO_CLASSES];
++	/* last time class timeout was checked */
++	unsigned long class_timeout_last_check;
++	/* next index to check class timeout */
++	unsigned int next_class_index;
+ };
+ 
+ /**
+diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
+index 7405be960a92..0ac35fd4f2ab 100644
+--- a/block/bfq-wf2q.c
++++ b/block/bfq-wf2q.c
+@@ -1188,6 +1188,7 @@ bool __bfq_deactivate_entity(struct bfq_entity *entity, bool ins_into_idle_tree)
+ {
+ 	struct bfq_sched_data *sd = entity->sched_data;
+ 	struct bfq_service_tree *st;
++	int idx = bfq_class_idx(entity);
+ 	bool is_in_service;
+ 
+ 	if (!entity->on_st_or_in_serv) /*
+@@ -1227,6 +1228,7 @@ bool __bfq_deactivate_entity(struct bfq_entity *entity, bool ins_into_idle_tree)
+ 	else
+ 		bfq_idle_insert(st, entity);
+ 
++	sd->bfq_class_last_service[idx] = jiffies;
+ 	return true;
+ }
+ 
+@@ -1455,6 +1457,45 @@ __bfq_lookup_next_entity(struct bfq_service_tree *st, bool in_service)
+ 	return entity;
+ }
+ 
++static int bfq_select_next_class(struct bfq_sched_data *sd)
++{
++	struct bfq_service_tree *st = sd->service_tree;
++	unsigned long last_check, last_serve;
++	int i, class_idx, next_class = 0;
++	bool found = false;
 +
++	/*
++	 * we needed to guarantee a minimum bandwidth for each class (if
++	 * there is some active entity in this class). This should also
++	 * mitigate priority-inversion problems in case a low priority
++	 * task is holding file system resources.
++	 */
++	last_check = sd->class_timeout_last_check;
++	if (time_is_after_jiffies(last_check + BFQ_CLASS_TIMEOUT))
++		return next_class;
++
++	sd->class_timeout_last_check = jiffies;
++	for (i = 0; i < BFQ_IOPRIO_CLASSES; i++) {
++		class_idx = (sd->next_class_index + i) % BFQ_IOPRIO_CLASSES;
++		last_serve = sd->bfq_class_last_service[class_idx];
++
++		if (time_is_after_jiffies(last_serve + BFQ_CLASS_TIMEOUT))
++			continue;
++
++		if (!RB_EMPTY_ROOT(&(st + class_idx)->active)) {
++			if (found)
++				continue;
++
++			next_class = class_idx++;
++			class_idx %= BFQ_IOPRIO_CLASSES;
++			sd->next_class_index = class_idx;
++			found = true;
++		}
++		sd->bfq_class_last_service[class_idx] = jiffies;
++	}
++	return next_class;
++}
++
+ /**
+  * bfq_lookup_next_entity - return the first eligible entity in @sd.
+  * @sd: the sched_data.
+@@ -1468,24 +1509,8 @@ static struct bfq_entity *bfq_lookup_next_entity(struct bfq_sched_data *sd,
+ 						 bool expiration)
+ {
+ 	struct bfq_service_tree *st = sd->service_tree;
+-	struct bfq_service_tree *idle_class_st = st + (BFQ_IOPRIO_CLASSES - 1);
+ 	struct bfq_entity *entity = NULL;
+-	int class_idx = 0;
+-
+-	/*
+-	 * Choose from idle class, if needed to guarantee a minimum
+-	 * bandwidth to this class (and if there is some active entity
+-	 * in idle class). This should also mitigate
+-	 * priority-inversion problems in case a low priority task is
+-	 * holding file system resources.
+-	 */
+-	if (time_is_before_jiffies(sd->bfq_class_idle_last_service +
+-				   BFQ_CL_IDLE_TIMEOUT)) {
+-		if (!RB_EMPTY_ROOT(&idle_class_st->active))
+-			class_idx = BFQ_IOPRIO_CLASSES - 1;
+-		/* About to be served if backlogged, or not yet backlogged */
+-		sd->bfq_class_idle_last_service = jiffies;
+-	}
++	int class_idx = bfq_select_next_class(sd);
+ 
  	/*
- 	 * Idling is performed only if slice_idle > 0. In addition, we
- 	 * do not idle if
---=20
+ 	 * Find the next entity to serve for the highest-priority
+-- 
 2.30.0
 
