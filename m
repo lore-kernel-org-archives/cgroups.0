@@ -1,57 +1,62 @@
-From: brookxu <brookxu.cn@gmail.com>
-Subject: [RFC PATCH v2 11/11] bfq: optimize the calculation of bfq_weight_to_ioprio()
-Date: Fri, 12 Mar 2021 19:08:45 +0800
-Message-ID: <29efad299fd111b38ad215dcbc6eb506290e7937.1615527324.git.brookxu@tencent.com>
+From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [RFC PATCH v2 10/11] bfq: remove unnecessary initialization logic
+Date: Fri, 12 Mar 2021 19:08:44 +0800
+Message-ID: <dae42cd3c1c9f798a3c390e0a14ef77d02e94ce0.1615527324.git.brookxu@tencent.com>
 References: <cover.1615517202.git.brookxu@tencent.com>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :in-reply-to:references;
-        bh=ZEYL/pbFIoRQQHylJZyb6mvpBG/vJ0CzVs8U+fDkQms=;
-        b=fDVgcd6CradPpZOVQhUMVl1zY6XDbhFqMkk4LY+ex6E56v/JqmtuN+XcpqYkN0QxU8
-         eOv3acgR/VQTPgS+YCZlSYLiwXSLKMSCBcguGL40LJ6EOBXrvWHegtWndkARFq8ZVQ1Q
-         rcJ99csDt8f0DX2tAYsw0iJ4T2CAGL66fx6rvQx6PEz0Nkzo/KfWE0Gam//0TeEtYzZQ
-         xvyYfViiR6iAuln08vPKuT+id9NBl+Zwu2JJxZEkOEZ8/RXIKj9UtpWHvAv0zuLkfupT
-         Elq1xJxBCFfVQidEQUGLC1gcHQbQXy/EIcmK0WTWhplSm0Ak+/hgpJf3MjptOgn7T/fg
-         O07Q==
-In-Reply-To: <cover.1615517202.git.brookxu@tencent.com>
-In-Reply-To: <cover.1615527324.git.brookxu@tencent.com>
-References: <cover.1615527324.git.brookxu@tencent.com>
+        bh=T9l6k5OqXtfEirisuPLMZitzFU3x0IHKvGRBmuRDlLQ=;
+        b=Gt865lGSosE/T4BW16U1yPG0jYVc3NdxxtP9Pd66qyhtwSv8Q5grSCA5RTm/buM6aL
+         9QbLbKH1f8qHAak2n67AjGhs1iL4kBnc1SZmJBzrA8mgMSDEnKJ3FwMC9l0lTFbe90a0
+         iY6n13l7NyU5i6HJ5zH75q20VJCRQtXXuM2lD9cx3cZM0k4FBde1K0JS6uJ5IjbAM07J
+         mAE/X6bOQkORjeAZ3xiXZBrAGZ4C6ueGaPjCAfhKj+Pc3SjUkf2Fxq0QUJgpEqByJerw
+         LCb7b6eTB2PcZ1NG+OlTXFgSXjcQ29I0ulqlfsjC2A/ZaJ2a3UrMIAf8Ty5L+Kembe8r
+         g5/Q==
+In-Reply-To: <cover.1615517202.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+In-Reply-To: <cover.1615527324.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+References: <cover.1615527324.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Chunguang Xu <brookxu@tencent.com>
+From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-The value range of ioprio is [0, 7], but the result of
-bfq_weight_to_ioprio() may exceed this range, so simple
-optimization is required.
+Since we will initialize sched_data.service_tree[] in
+bfq_init_root_group(), bfq_create_group_hierarchy() can
+ignore this part of the initialization, which can avoid
+repeated initialization.
 
-Signed-off-by: Chunguang Xu <brookxu@tencent.com>
+Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 ---
- block/bfq-wf2q.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ block/bfq-cgroup.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index f6c67a80e454..86558a8fede1 100644
---- a/block/bfq-wf2q.c
-+++ b/block/bfq-wf2q.c
-@@ -536,8 +536,9 @@ unsigned short bfq_ioprio_to_weight(int ioprio)
-  */
- static unsigned short bfq_weight_to_ioprio(int weight)
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index ab4bc410e635..05054e1b5d97 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -1514,15 +1514,11 @@ void bfqg_and_blkg_put(struct bfq_group *bfqg) {}
+ struct bfq_group *bfq_create_group_hierarchy(struct bfq_data *bfqd, int node)
  {
--	return max_t(int, 0,
--		     IOPRIO_BE_NR * BFQ_WEIGHT_CONVERSION_COEFF - weight);
-+	int ioprio = IOPRIO_BE_NR  - weight / BFQ_WEIGHT_CONVERSION_COEFF;
-+
-+	return ioprio < 0 ? 0 : min_t(int, ioprio, IOPRIO_BE_NR - 1);
- }
+ 	struct bfq_group *bfqg;
+-	int i;
  
- static void bfq_get_entity(struct bfq_entity *entity)
+ 	bfqg = kmalloc_node(sizeof(*bfqg), GFP_KERNEL | __GFP_ZERO, node);
+ 	if (!bfqg)
+ 		return NULL;
+ 
+-	for (i = 0; i < BFQ_IOPRIO_CLASSES; i++)
+-		bfqg->sched_data.service_tree[i] = BFQ_SERVICE_TREE_INIT;
+-
+ 	return bfqg;
+ }
+ #endif	/* CONFIG_BFQ_GROUP_IOSCHED */
 -- 
 2.30.0
 
