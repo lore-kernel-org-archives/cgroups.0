@@ -1,99 +1,54 @@
-From: brookxu <brookxu.cn@gmail.com>
-Subject: [RFC PATCH v2 02/11] bfq: convert the type of bfq_group.bfqd to bfq_data*
-Date: Fri, 12 Mar 2021 19:08:36 +0800
-Message-ID: <856a594d70b9a43b911285ff192d892d664001b0.1615527324.git.brookxu@tencent.com>
+From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [RFC PATCH v2 09/11] bfq: disallow merge CLASS_RT with other class
+Date: Fri, 12 Mar 2021 19:08:43 +0800
+Message-ID: <9b3b89cf193896f459b5c59f58b65783df0f490c.1615527324.git.brookxu@tencent.com>
 References: <cover.1615517202.git.brookxu@tencent.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :in-reply-to:references;
-        bh=T14uQktm+Sg7+gpVLlmca1QlgsLzohgO//zswTvqmzc=;
-        b=qQDIP426SYd0JFMuLOjcjCvM4b7lir3T36QLUC/aPgXpKn0w4+ZiPKbzzaDVqbdx7S
-         N2ig54PNAeA0G8Jal9Yrlp0BoyTf1wIDq6n51EfRR8jxA1nf6sCkh8/0ThlPy2gFMRt5
-         EpwK+5oted7MknJGGmQI6Qx/xhmpdUVaPJIcdvtjMzaqLTdoX0+Y8LvH6VPnz764xmIr
-         FCWG3oLX0ehAyAi0Vbl6tvCLEQHGgI9KF997kPOyyyluYVldm6i4l8UMT2s25LNfHEXe
-         812ijlTGrWs3LvuPq6dOa24ceKqExR4JAK0WzFHETP8xN2NUjjtc5xjb6pHJTDXy1VWf
-         pUsw==
-In-Reply-To: <cover.1615517202.git.brookxu@tencent.com>
-In-Reply-To: <cover.1615527324.git.brookxu@tencent.com>
-References: <cover.1615527324.git.brookxu@tencent.com>
+        bh=SiVV6EtJZFIFkG/CEJdYUnLYJ8IcYQwEYTMUZJ4BL9Q=;
+        b=YC4HWpCJruAgTzfDhVZNQ6U66EvejBlEQQyydGG0jwfqwp9h3Dr3L7Y3WwGt+Hex6X
+         1Xcts7hqe3FXHQ5RbBV8FvZRFmKl+KXUbSGbNxR8oXPH/I4mU8cymvoEujoTS12WgP88
+         uCNoDsD3/sCxjRs62AaH/We1Ys/QfFTEWsYgxmzEW3w6M8mS9HRiy4lCLZMH3Jch0/27
+         1XLqZyIDbyok6EfcrmOhMjs8IkA9a51KFbeksGzEi+8TtCNyVeWMkJ4a0fVBzsZ6EIrC
+         gs7q7HeVTxkD/6x3/YUNQg1mIkOxjx8rqVDk6IY5ry+ruSeK5RW/HS/SSlQ4YZTawn/Z
+         3OYA==
+In-Reply-To: <cover.1615517202.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+In-Reply-To: <cover.1615527324.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+References: <cover.1615527324.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Chunguang Xu <brookxu@tencent.com>
+From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Setting bfq_group.bfqd to void* type does not seem to make much sense.
-This will cause unnecessary type conversion. Perhaps it would be better
-to change it to bfq_data* type.
+In EMQ, perhaps we should not merge the CLASS_RT queue
+with other class queues. Otherwise, the delay of
+CLASS_RT IO will increase.
 
-Signed-off-by: Chunguang Xu <brookxu@tencent.com>
+Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 ---
- block/bfq-cgroup.c  | 2 +-
- block/bfq-iosched.h | 2 +-
- block/bfq-wf2q.c    | 6 +++---
- 3 files changed, 5 insertions(+), 5 deletions(-)
+ block/bfq-iosched.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index a5f544acaa61..50d06c760194 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -224,7 +224,7 @@ void bfqg_stats_update_io_add(struct bfq_group *bfqg, struct bfq_queue *bfqq,
- {
- 	blkg_rwstat_add(&bfqg->stats.queued, op, 1);
- 	bfqg_stats_end_empty_time(&bfqg->stats);
--	if (!(bfqq == ((struct bfq_data *)bfqg->bfqd)->in_service_queue))
-+	if (!(bfqq == bfqg->bfqd->in_service_queue))
- 		bfqg_stats_set_start_group_wait_time(bfqg, bfqq_group(bfqq));
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index 9330043cdd53..bb6cc8c9ddf5 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -2623,6 +2623,9 @@ static bool bfq_may_be_close_cooperator(struct bfq_queue *bfqq,
+ 	if (!bfq_bfqq_sync(bfqq) || !bfq_bfqq_sync(new_bfqq))
+ 		return false;
+ 
++	if (bfq_class_rt(bfqq) && !bfq_class_rt(new_bfqq))
++		return false;
++
+ 	return true;
  }
- 
-diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index a6f98e9e14b5..28d85903cf66 100644
---- a/block/bfq-iosched.h
-+++ b/block/bfq-iosched.h
-@@ -914,7 +914,7 @@ struct bfq_group {
- 	struct bfq_entity entity;
- 	struct bfq_sched_data sched_data;
- 
--	void *bfqd;
-+	struct bfq_data *bfqd;
- 
- 	struct bfq_queue *async_bfqq[2][IOPRIO_BE_NR];
- 	struct bfq_queue *async_idle_bfqq;
-diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index 5ff0028920a2..276f225f9c6e 100644
---- a/block/bfq-wf2q.c
-+++ b/block/bfq-wf2q.c
-@@ -498,7 +498,7 @@ static void bfq_active_insert(struct bfq_service_tree *st,
- #ifdef CONFIG_BFQ_GROUP_IOSCHED
- 	sd = entity->sched_data;
- 	bfqg = container_of(sd, struct bfq_group, sched_data);
--	bfqd = (struct bfq_data *)bfqg->bfqd;
-+	bfqd = bfqg->bfqd;
- #endif
- 	if (bfqq)
- 		list_add(&bfqq->bfqq_list, &bfqq->bfqd->active_list);
-@@ -597,7 +597,7 @@ static void bfq_active_extract(struct bfq_service_tree *st,
- #ifdef CONFIG_BFQ_GROUP_IOSCHED
- 	sd = entity->sched_data;
- 	bfqg = container_of(sd, struct bfq_group, sched_data);
--	bfqd = (struct bfq_data *)bfqg->bfqd;
-+	bfqd = bfqg->bfqd;
- #endif
- 	if (bfqq)
- 		list_del(&bfqq->bfqq_list);
-@@ -743,7 +743,7 @@ __bfq_entity_update_weight_prio(struct bfq_service_tree *old_st,
- 		else {
- 			sd = entity->my_sched_data;
- 			bfqg = container_of(sd, struct bfq_group, sched_data);
--			bfqd = (struct bfq_data *)bfqg->bfqd;
-+			bfqd = bfqg->bfqd;
- 		}
- #endif
  
 -- 
 2.30.0
