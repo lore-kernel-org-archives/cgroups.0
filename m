@@ -1,74 +1,54 @@
-From: Vipin Sharma <vipinsh@google.com>
-Subject: Re: [RFC v2 2/2] cgroup: sev: Miscellaneous cgroup documentation.
-Date: Fri, 12 Mar 2021 13:15:14 -0800
-Message-ID: <YEvZ4muXqiSScQ8i@google.com>
-References: <20210302081705.1990283-1-vipinsh@google.com>
- <20210302081705.1990283-3-vipinsh@google.com>
- <20210303185513.27e18fce@jacob-builder>
- <YEB8i6Chq4K/GGF6@google.com>
- <YECfhCJtHUL9cB2L@slm.duckdns.org>
- <20210312125821.22d9bfca@jacob-builder>
+From: Tom Lendacky <thomas.lendacky-5C7GfCeVMHo@public.gmane.org>
+Subject: Re: [Patch v3 1/2] cgroup: sev: Add misc cgroup controller
+Date: Fri, 12 Mar 2021 15:18:28 -0600
+Message-ID: <04f58780-5392-63ed-589b-259de695e4c3@amd.com>
+References: <20210304231946.2766648-1-vipinsh@google.com>
+ <20210304231946.2766648-2-vipinsh@google.com> <YEpod5X29YqMhW/g@blackbook>
+ <YEvFldKZ8YQM+t2q@google.com> <YEvUTatAjIoP7dPD@google.com>
 Mime-Version: 1.0
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=oK13NYYObq7fILet15UhnXXbfKNqEk2c8gMn7wJFCws=;
-        b=L/HGcpkaoKR032Ed2ki/P9yv8JigIq1I+XKxVu7Ofi15Aw2uLnI9zseSnLb0HbWpkJ
-         XkKtQeqG9NJjlGQ3Otgauzs6NMkxAh5sXneh2ZGDisPS4wAjGaeShvuHapM+QQabnPka
-         vu0eFLci/ShYfmigzoVRXjHbKBTqk5P9e8yqvJscm/GaYakLFEBiyZflNAVYu/bwWREf
-         LnmFkwJssPewJhlPRqeAwa6abZP9J/hSgZfwMws0IFJ4aeNXd3ppUL+NEJbI9rue7qsR
-         vzGEQ1dTDt71MLv5xsaf5NAQ95F0lgx0IcGUFb7eS+E2XTlXxk7gOi7ypjpkVfjbiA6I
-         mNpw==
-Content-Disposition: inline
-In-Reply-To: <20210312125821.22d9bfca@jacob-builder>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=18cHAm1AC7Yf5jApTKiftia0rxqWJiiNh+UM0xqalZE=;
+ b=aNX7sxStiIzkOyJyVxAzeIpHlv/0LRPkEebFLflQUkYca7YmEx3P3MXFcrutTSH2z7NIEVNyj4nA7kic+uRVwzcIQgUaTCgY6mJGt5rz2+YbOWi9XCs/kH6hWym16U9VH3v5CkR35+jginGCr4mmoLbgF38w5dIZYzf6tc9Sacw=
+In-Reply-To: <YEvUTatAjIoP7dPD-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jacob Pan <jacob.jun.pan@intel.com>
-Cc: Tejun Heo <tj@kernel.org>, mkoutny@suse.com, rdunlap@infradead.org, thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net, seanjc@google.com, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, joro@8bytes.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, "Tian, Kevin" <kevin.tian@intel.com>, "Liu, Yi L" <yi.l.liu@intel.com>, "Raj, Ashok" <ashok.raj@intel.com>, Alex Williamson <alex.williamson@redhat.com>, Jason Gunthorpe <jgg@n>
+Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
+To: Sean Christopherson <seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, brijesh.singh-5C7GfCeVMHo@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, jon.grimm-5C7GfCeVMHo@public.gmane.org, eric.vantassell-5C7GfCeVMHo@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, frankja-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, gingell-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dionnaglaze-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Fri, Mar 12, 2021 at 12:58:21PM -0800, Jacob Pan wrote:
-> Hi Vipin & Tejun,
-> 
-> Sorry for the late reply, I sent from a different email address than I
-> intended. Please see my comments inline.
-> 
-> 
-> On Thu, 4 Mar 2021 03:51:16 -0500, Tejun Heo <tj@kernel.org> wrote:
-> 
-> > Hello,
-> > 
-> > On Wed, Mar 03, 2021 at 10:22:03PM -0800, Vipin Sharma wrote:
-> > > > I am trying to see if IOASIDs cgroup can also fit in this misc
-> > > > controller as yet another resource type.
-> > > > https://lore.kernel.org/linux-iommu/20210303131726.7a8cb169@jacob-builder/T/#u
-> > > > However, unlike sev IOASIDs need to be migrated if the process is
-> > > > moved to another cgroup. i.e. charge the destination and uncharge the
-> > > > source.
-> > > > 
-> > > > Do you think this behavior can be achieved by differentiating resource
-> > > > types? i.e. add attach callbacks for certain types. Having a single
-> > > > misc interface seems cleaner than creating another controller.  
-> > > 
-> > > I think it makes sense to add support for migration for the resources
-> > > which need it. Resources like SEV, SEV-ES will not participate in
-> > > migration and won't stop can_attach() to succeed, other resources which
-> > > need migration will allow or stop based on their limits and capacity in
-> > > the destination.  
-> > 
-> Sounds good. Perhaps some capability/feature flags for each resource such
-> that different behavior can be accommodated?
-> Could you please include me in your future posting? I will rebase on yours.
+On 3/12/21 2:51 PM, Sean Christopherson wrote:
+> On Fri, Mar 12, 2021, Vipin Sharma wrote:
+>> On Thu, Mar 11, 2021 at 07:59:03PM +0100, Michal Koutn=C3=BD wrote:
+>>>> +#ifndef CONFIG_KVM_AMD_SEV
+>>>> +/*
+>>>> + * When this config is not defined, SEV feature is not supported and =
+APIs in
+>>>> + * this file are not used but this file still gets compiled into the =
+KVM AMD
+>>>> + * module.
+>>>> + *
+>>>> + * We will not have MISC_CG_RES_SEV and MISC_CG_RES_SEV_ES entries in=
+ the enum
+>>>> + * misc_res_type {} defined in linux/misc_cgroup.h.
+>>> BTW, was there any progress on conditioning sev.c build on
+>>> CONFIG_KVM_AMD_SEV? (So that the defines workaround isn't needeed.)
+>>
+>> Tom, Brijesh,
+>> Is this something you guys thought about or have some plans to do in the
+>> future? Basically to not include sev.c in compilation if
+>> CONFIG_KVM_AMD_SEV is disabled.
+>=20
+> It's crossed my mind, but the number of stubs needed made me back off.  I=
+'m
+> certainly not opposed to the idea, it's just not a trivial change.
 
-Hi Jacob
+Right, I looked at it when I was doing the SEV-ES work and came to the=20
+same conclusion.
 
-Based on Tejun's response, I will not add charge migration support in
-misc controller.
+Thanks,
+Tom
 
-I can definitly add you in my future posting, if you still wanna use it
-without charge migration support.
-
-Thanks
-Vipin
+>=20
