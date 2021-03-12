@@ -1,126 +1,137 @@
-From: brookxu <brookxu.cn@gmail.com>
-Subject: [RFC PATCH v2 01/11] bfq: introduce bfq_entity_to_bfqg helper method
-Date: Fri, 12 Mar 2021 19:08:35 +0800
-Message-ID: <1e04546dd04dc35f0f658b0699cc3470f8de5bbd.1615527324.git.brookxu@tencent.com>
+From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [RFC PATCH v2 06/11] bfq: expire other class if CLASS_RT is waiting
+Date: Fri, 12 Mar 2021 19:08:40 +0800
+Message-ID: <7c5d7791d538aa3f705c7e1da8debe463a6ce174.1615527324.git.brookxu@tencent.com>
 References: <cover.1615517202.git.brookxu@tencent.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :in-reply-to:references;
-        bh=kelUwn0Whs7JivQ1KuhMZo0HpcgwSby3dPMp6TcStyI=;
-        b=CIIlIw+pCqMT8TkvG6gOiFr2Fzp9zN9Z7AAIc8gn5XlcMYTNbW+7LaaO1j0vUyxNio
-         Wb2UFhlR+D1TJnz9zlXK8JiMkeDj5w0YLvUzELVEMjjQ1vUiWbmhvv8qCF2IEe3xCEDF
-         NxiO2aBUfmmc2qpeIHBYH0fscahca6LqO0P2pgdmvHBicJQzKBOgEIY/LVYK//p/uBnL
-         TifpSFejxf3HzkUE6qCVLWQ/NgGITahZYxGC6NXBUXhChe25kDecPJv3h7lsLTbyebHB
-         SliDYHIT+aiVtG8Gr8O1ZN4DgdwIPSL8S7GOpj/wtdxjeFqKYNLuB1Rj6Zhs5pC8/dnB
-         3Nwg==
-In-Reply-To: <cover.1615517202.git.brookxu@tencent.com>
-In-Reply-To: <cover.1615527324.git.brookxu@tencent.com>
-References: <cover.1615527324.git.brookxu@tencent.com>
+        bh=Ud/HIpdKfmY9i4QsmVRo1Nb5Ke6E9oHUsnblYDWdhJA=;
+        b=e1vbgjvwidHePgd6EoNDd4Kl3SpU2Ae5fZbmZdf58I/SUQga9/4NxJsg8nhEDi0Xq/
+         d0QlLsGmYasbGPSeXTH82FF9XRxKEr8O609+waQaXAWnEn406rZXd13RiIfd+zMBnbGX
+         gTK4STN1RllcfTW8fJ87Ihwy0ziWn4t1AK8lelxVyYUPpu6LprxDmVrSVnBWi+XmET2o
+         iHgT+1xWgVb/i+AMAlycS8OYhczx5IzZQfrnAPS6/1dr9MCH4QdAtQLYAjcXbdmx8uvZ
+         6ybzcpsWnypeog9LOEINXDuFIJTsntRawy7krddQoQ7g7mSfzGAL+GLvmQOFPbxhW/Q6
+         Fv4Q==
+In-Reply-To: <cover.1615517202.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+In-Reply-To: <cover.1615527324.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+References: <cover.1615527324.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Chunguang Xu <brookxu@tencent.com>
+From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Introduce bfq_entity_to_bfqg() to make it easier to obtain the
-bfq_group corresponding to the entity.
+Expire bfqq not belong to CLASS_RT and CLASS_RT is waiting for
+service, we can further guarantee the latency for CLASS_RT.
 
-Signed-off-by: Chunguang Xu <brookxu@tencent.com>
+Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 ---
- block/bfq-cgroup.c  |  6 ++----
- block/bfq-iosched.h |  1 +
- block/bfq-wf2q.c    | 16 ++++++++++++----
- 3 files changed, 15 insertions(+), 8 deletions(-)
+ block/bfq-iosched.c | 15 ++++++++++-----
+ block/bfq-iosched.h |  8 ++++++++
+ block/bfq-wf2q.c    | 12 ++++++++++++
+ 3 files changed, 30 insertions(+), 5 deletions(-)
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index b791e2041e49..a5f544acaa61 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -309,8 +309,7 @@ struct bfq_group *bfqq_group(struct bfq_queue *bfqq)
- {
- 	struct bfq_entity *group_entity = bfqq->entity.parent;
- 
--	return group_entity ? container_of(group_entity, struct bfq_group,
--					   entity) :
-+	return group_entity ? bfq_entity_to_bfqg(group_entity) :
- 			      bfqq->bfqd->root_group;
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index ab00b664348c..8af73473c45c 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -428,6 +428,7 @@ void bfq_schedule_dispatch(struct bfq_data *bfqd)
+ 	}
  }
  
-@@ -610,8 +609,7 @@ struct bfq_group *bfq_find_set_group(struct bfq_data *bfqd,
++#define bfq_class_rt(bfqq)	((bfqq)->ioprio_class == IOPRIO_CLASS_RT)
+ #define bfq_class_idle(bfqq)	((bfqq)->ioprio_class == IOPRIO_CLASS_IDLE)
+ 
+ #define bfq_sample_valid(samples)	((samples) > 80)
+@@ -4709,12 +4710,16 @@ static struct request *bfq_dispatch_rq_from_bfqq(struct bfq_data *bfqd,
+ 	/*
+ 	 * Expire bfqq, pretending that its budget expired, if bfqq
+ 	 * belongs to CLASS_IDLE and other queues are waiting for
+-	 * service.
++	 * service, or if bfqq not belongs to CLASS_RT and CLASS_RT
++	 * is waiting for service.
  	 */
- 	entity = &bfqg->entity;
- 	for_each_entity(entity) {
--		struct bfq_group *curr_bfqg = container_of(entity,
--						struct bfq_group, entity);
-+		struct bfq_group *curr_bfqg = bfq_entity_to_bfqg(entity);
- 		if (curr_bfqg != bfqd->root_group) {
- 			parent = bfqg_parent(curr_bfqg);
- 			if (!parent)
+-	if (!(bfq_tot_busy_queues(bfqd) > 1 && bfq_class_idle(bfqq)))
+-		goto return_rq;
+-
+-	bfq_bfqq_expire(bfqd, bfqq, false, BFQQE_BUDGET_EXHAUSTED);
++#ifdef CONFIG_BFQ_GROUP_IOSCHED
++	if ((bfq_tot_busy_queues(bfqd) > 1 && bfq_class_idle(bfqq)) ||
++	    (!bfq_class_rt(bfqq) && bfqd->busy_groups[0]))
++#else
++	if (bfq_tot_busy_queues(bfqd) > 1 && bfq_class_idle(bfqq))
++#endif
++		bfq_bfqq_expire(bfqd, bfqq, false, BFQQE_BUDGET_EXHAUSTED);
+ 
+ return_rq:
+ 	return rq;
 diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index b8e793c34ff1..a6f98e9e14b5 100644
+index de7301664ad3..6b87ba53db94 100644
 --- a/block/bfq-iosched.h
 +++ b/block/bfq-iosched.h
-@@ -941,6 +941,7 @@ struct bfq_group {
- #endif
+@@ -531,6 +531,14 @@ struct bfq_data {
+ 	 */
+ 	unsigned int num_groups_with_pending_reqs;
  
- struct bfq_queue *bfq_entity_to_bfqq(struct bfq_entity *entity);
-+struct bfq_group *bfq_entity_to_bfqg(struct bfq_entity *entity);
- 
- /* --------------- main algorithm interface ----------------- */
- 
++#ifdef CONFIG_BFQ_GROUP_IOSCHED
++	/*
++	 * Per-class (RT, BE, IDLE) number of bfq_groups waiting for
++	 * service.
++	 */
++	unsigned int busy_groups[3];
++#endif
++
+ 	/*
+ 	 * Per-class (RT, BE, IDLE) number of bfq_queues containing
+ 	 * requests (including the queue in service, even if it is
 diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index 070e34a7feb1..5ff0028920a2 100644
+index 0ac35fd4f2ab..f6c67a80e454 100644
 --- a/block/bfq-wf2q.c
 +++ b/block/bfq-wf2q.c
-@@ -149,7 +149,7 @@ struct bfq_group *bfq_bfqq_to_bfqg(struct bfq_queue *bfqq)
- 	if (!group_entity)
- 		group_entity = &bfqq->bfqd->root_group->entity;
- 
--	return container_of(group_entity, struct bfq_group, entity);
-+	return bfq_entity_to_bfqg(group_entity);
- }
- 
- /*
-@@ -208,7 +208,7 @@ static bool bfq_no_longer_next_in_service(struct bfq_entity *entity)
- 	if (bfq_entity_to_bfqq(entity))
- 		return true;
- 
--	bfqg = container_of(entity, struct bfq_group, entity);
-+	bfqg = bfq_entity_to_bfqg(entity);
- 
- 	/*
- 	 * The field active_entities does not always contain the
-@@ -266,6 +266,15 @@ struct bfq_queue *bfq_entity_to_bfqq(struct bfq_entity *entity)
- 	return bfqq;
- }
- 
-+struct bfq_group *bfq_entity_to_bfqg(struct bfq_entity *entity)
-+{
-+	struct bfq_group *bfqg = NULL;
-+
-+	if (entity->my_sched_data)
-+		bfqg = container_of(entity, struct bfq_group, entity);
-+
-+	return bfqg;
-+}
- 
- /**
-  * bfq_delta - map service into the virtual time domain.
-@@ -1001,8 +1010,7 @@ static void __bfq_activate_entity(struct bfq_entity *entity,
- 
- #ifdef CONFIG_BFQ_GROUP_IOSCHED
+@@ -1032,11 +1032,14 @@ static void __bfq_activate_entity(struct bfq_entity *entity,
  	if (!bfq_entity_to_bfqq(entity)) { /* bfq_group */
--		struct bfq_group *bfqg =
--			container_of(entity, struct bfq_group, entity);
-+		struct bfq_group *bfqg = bfq_entity_to_bfqg(entity);
+ 		struct bfq_group *bfqg = bfq_entity_to_bfqg(entity);
  		struct bfq_data *bfqd = bfqg->bfqd;
++		int idx = bfq_class_idx(entity);
  
  		if (!entity->in_groups_with_pending_reqs) {
+ 			entity->in_groups_with_pending_reqs = true;
+ 			bfqd->num_groups_with_pending_reqs++;
+ 		}
++
++		bfqd->busy_groups[idx]++;
+ 	}
+ #endif
+ 
+@@ -1188,6 +1191,9 @@ bool __bfq_deactivate_entity(struct bfq_entity *entity, bool ins_into_idle_tree)
+ {
+ 	struct bfq_sched_data *sd = entity->sched_data;
+ 	struct bfq_service_tree *st;
++#ifdef CONFIG_BFQ_GROUP_IOSCHED
++	struct bfq_group *bfqg;
++#endif
+ 	int idx = bfq_class_idx(entity);
+ 	bool is_in_service;
+ 
+@@ -1229,6 +1235,12 @@ bool __bfq_deactivate_entity(struct bfq_entity *entity, bool ins_into_idle_tree)
+ 		bfq_idle_insert(st, entity);
+ 
+ 	sd->bfq_class_last_service[idx] = jiffies;
++#ifdef CONFIG_BFQ_GROUP_IOSCHED
++	bfqg = bfq_entity_to_bfqg(entity);
++	if (bfqg)
++		bfqg->bfqd->busy_groups[idx]--;
++#endif
++
+ 	return true;
+ }
+ 
 -- 
 2.30.0
 
