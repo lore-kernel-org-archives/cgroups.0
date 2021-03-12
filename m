@@ -1,78 +1,57 @@
-From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [RFC PATCH v2 07/11] bfq: optimse IO injection for CLASS_RT
-Date: Fri, 12 Mar 2021 19:08:41 +0800
-Message-ID: <ab86856f91a4734adf9cbf4212adfe2252ddbc57.1615527324.git.brookxu@tencent.com>
+From: brookxu <brookxu.cn@gmail.com>
+Subject: [RFC PATCH v2 11/11] bfq: optimize the calculation of bfq_weight_to_ioprio()
+Date: Fri, 12 Mar 2021 19:08:45 +0800
+Message-ID: <29efad299fd111b38ad215dcbc6eb506290e7937.1615527324.git.brookxu@tencent.com>
 References: <cover.1615517202.git.brookxu@tencent.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :in-reply-to:references;
-        bh=3QEWlUrFLMLaUGl8wHuUk98pwVzXJV4Z6adAvQh0quw=;
-        b=AGOaWhDWZN5OxUpAk5V5Je2FjeTyxmmJlwyPNZzcQmCQ+g/rNzmGRA5ryZ1FcaImaO
-         jqKkyKDssGkwA3qgyEp4KuNPs4zMC4GInA4VFAlsduFYqPgdxhU9J+tQemyGyTnmT6wN
-         XAHdNUtd8/4ReAlRmlcv8q5kQEwJgkJZakU3RNBvTyIu6DVkU13lj6L1Mq0vJyx+MLhk
-         qKSmRn52WJ0F12fAviPFMVW7yiDDq0ovLTmUcGvswcGNbaR4daC7yoGG98tgwLtrylEl
-         IQ2TNM1RUug/vlh4k9Qoc5dZcyMo8M7VQBVByQcN0SX3C0vpECt3udTKKTHx473mSmdq
-         Qkvw==
-In-Reply-To: <cover.1615517202.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-In-Reply-To: <cover.1615527324.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-References: <cover.1615527324.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+        bh=ZEYL/pbFIoRQQHylJZyb6mvpBG/vJ0CzVs8U+fDkQms=;
+        b=fDVgcd6CradPpZOVQhUMVl1zY6XDbhFqMkk4LY+ex6E56v/JqmtuN+XcpqYkN0QxU8
+         eOv3acgR/VQTPgS+YCZlSYLiwXSLKMSCBcguGL40LJ6EOBXrvWHegtWndkARFq8ZVQ1Q
+         rcJ99csDt8f0DX2tAYsw0iJ4T2CAGL66fx6rvQx6PEz0Nkzo/KfWE0Gam//0TeEtYzZQ
+         xvyYfViiR6iAuln08vPKuT+id9NBl+Zwu2JJxZEkOEZ8/RXIKj9UtpWHvAv0zuLkfupT
+         Elq1xJxBCFfVQidEQUGLC1gcHQbQXy/EIcmK0WTWhplSm0Ak+/hgpJf3MjptOgn7T/fg
+         O07Q==
+In-Reply-To: <cover.1615517202.git.brookxu@tencent.com>
+In-Reply-To: <cover.1615527324.git.brookxu@tencent.com>
+References: <cover.1615527324.git.brookxu@tencent.com>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+From: Chunguang Xu <brookxu@tencent.com>
 
-CLASS_RT is more sensitive to latency, and IO injection
-will increase the CLASS_RT latency. For this reason,
-consider prohibiting the injection of async queue for
-CLASS_RT, and only the waker queue and other active
-queues belonging to CLASS_RT are allowed to inject. In
-this way, for CLASS_RT, both the advantages of inject
-and IO latency can be maintained.
+The value range of ioprio is [0, 7], but the result of
+bfq_weight_to_ioprio() may exceed this range, so simple
+optimization is required.
 
-Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+Signed-off-by: Chunguang Xu <brookxu@tencent.com>
 ---
- block/bfq-iosched.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ block/bfq-wf2q.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 8af73473c45c..a5f13589df79 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -1965,6 +1965,9 @@ static void bfq_check_waker(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 	    bfqd->last_completed_rq_bfqq == bfqq->waker_bfqq)
- 		return;
- 
-+	if (bfq_class_rt(bfqq) && !bfq_class_rt(bfqd->last_completed_rq_bfqq))
-+		return;
+diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
+index f6c67a80e454..86558a8fede1 100644
+--- a/block/bfq-wf2q.c
++++ b/block/bfq-wf2q.c
+@@ -536,8 +536,9 @@ unsigned short bfq_ioprio_to_weight(int ioprio)
+  */
+ static unsigned short bfq_weight_to_ioprio(int weight)
+ {
+-	return max_t(int, 0,
+-		     IOPRIO_BE_NR * BFQ_WEIGHT_CONVERSION_COEFF - weight);
++	int ioprio = IOPRIO_BE_NR  - weight / BFQ_WEIGHT_CONVERSION_COEFF;
 +
- 	if (bfqd->last_completed_rq_bfqq !=
- 	    bfqq->tentative_waker_bfqq) {
- 		/*
-@@ -4391,6 +4394,9 @@ bfq_choose_bfqq_for_injection(struct bfq_data *bfqd)
- 			else
- 				limit = in_serv_bfqq->inject_limit;
++	return ioprio < 0 ? 0 : min_t(int, ioprio, IOPRIO_BE_NR - 1);
+ }
  
-+			if (bfq_class_rt(in_serv_bfqq) && !bfq_class_rt(bfqq))
-+				continue;
-+
- 			if (bfqd->rq_in_driver < limit) {
- 				bfqd->rqs_injected = true;
- 				return bfqq;
-@@ -4565,7 +4571,7 @@ static struct bfq_queue *bfq_select_queue(struct bfq_data *bfqd)
- 		 * may not be minimized, because the waker queue may
- 		 * happen to be served only after other queues.
- 		 */
--		if (async_bfqq &&
-+		if (async_bfqq && !bfq_class_rt(bfqq) &&
- 		    icq_to_bic(async_bfqq->next_rq->elv.icq) == bfqq->bic &&
- 		    bfq_serv_to_charge(async_bfqq->next_rq, async_bfqq) <=
- 		    bfq_bfqq_budget_left(async_bfqq))
+ static void bfq_get_entity(struct bfq_entity *entity)
 -- 
 2.30.0
 
