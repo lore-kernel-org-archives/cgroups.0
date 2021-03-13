@@ -1,83 +1,47 @@
-From: Jacob Pan <jacob.jun.pan@intel.com>
-Subject: Re: [RFC v2 2/2] cgroup: sev: Miscellaneous cgroup documentation.
-Date: Fri, 12 Mar 2021 14:59:04 -0800
-Message-ID: <20210312145904.4071a9d6@jacob-builder>
-References: <20210302081705.1990283-1-vipinsh@google.com>
-        <20210302081705.1990283-3-vipinsh@google.com>
-        <20210303185513.27e18fce@jacob-builder>
-        <YEB8i6Chq4K/GGF6@google.com>
-        <YECfhCJtHUL9cB2L@slm.duckdns.org>
-        <20210312125821.22d9bfca@jacob-builder>
-        <YEvZ4muXqiSScQ8i@google.com>
+From: Bhaskar Chowdhury <unixbhaskar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] docs: admin-guide: cgroup-v1: Fix typos in the file memory.rst
+Date: Sat, 13 Mar 2021 11:40:29 +0530
+Message-ID: <20210313061029.28024-1-unixbhaskar@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <kvm-owner@vger.kernel.org>
-In-Reply-To: <YEvZ4muXqiSScQ8i@google.com>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=NhJjvom66vWXKl1dRRY7urBL+2AkflR90bJnAsiNVs0=;
+        b=F1PhW6/1e0GK1MFV1fErIjvorj1XvA8fYbgQ+EBS2xpTPDvLQE3OfN8UuruqsI26/R
+         ZyDKY85MRnrK8iSjHxVFbhnMmLbO1dk2/2Ddu+y8lgkkEIPMK9rOpLq/TyNxCJavBGm+
+         XMQ7N1Gw5xxGsTAaJ5VLJVwKRrmywjrZen1GHlnxUvXBt8CLz+GsRNnUygUOxM8m6hEW
+         agapUrIR9+qmpif5lwqWNI4UmZSeczjjbvND3FYs7PBfQFDx+mAFTtuFpP29FHIEUcqe
+         d/KVUyrLxQTJfozyesGmOoAkwdelT/lcQE4PtvqenL6/ileoCUL66HRiOB2BaozcAFpC
+         BFdw==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Vipin Sharma <vipinsh@google.com>
-Cc: Tejun Heo <tj@kernel.org>, mkoutny@suse.com, rdunlap@infradead.org, thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net, seanjc@google.com, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, joro@8bytes.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, "Tian, Kevin" <kevin.tian@intel.com>, "Liu, Yi L" <yi.l.liu@intel.com>, "Raj, Ashok" <ashok.raj@intel.com>, Alex Williamson <alex.williamson@redhat.com>, Jason Gunthorpe <jgg@n>
-
-Hi Vipin,
-
-On Fri, 12 Mar 2021 13:15:14 -0800, Vipin Sharma <vipinsh@google.com> wrote:
-
-> On Fri, Mar 12, 2021 at 12:58:21PM -0800, Jacob Pan wrote:
-> > Hi Vipin & Tejun,
-> > 
-> > Sorry for the late reply, I sent from a different email address than I
-> > intended. Please see my comments inline.
-> > 
-> > 
-> > On Thu, 4 Mar 2021 03:51:16 -0500, Tejun Heo <tj@kernel.org> wrote:
-> >   
-> > > Hello,
-> > > 
-> > > On Wed, Mar 03, 2021 at 10:22:03PM -0800, Vipin Sharma wrote:  
-> > > > > I am trying to see if IOASIDs cgroup can also fit in this misc
-> > > > > controller as yet another resource type.
-> > > > > https://lore.kernel.org/linux-iommu/20210303131726.7a8cb169@jacob-builder/T/#u
-> > > > > However, unlike sev IOASIDs need to be migrated if the process is
-> > > > > moved to another cgroup. i.e. charge the destination and uncharge
-> > > > > the source.
-> > > > > 
-> > > > > Do you think this behavior can be achieved by differentiating
-> > > > > resource types? i.e. add attach callbacks for certain types.
-> > > > > Having a single misc interface seems cleaner than creating
-> > > > > another controller.    
-> > > > 
-> > > > I think it makes sense to add support for migration for the
-> > > > resources which need it. Resources like SEV, SEV-ES will not
-> > > > participate in migration and won't stop can_attach() to succeed,
-> > > > other resources which need migration will allow or stop based on
-> > > > their limits and capacity in the destination.    
-> > >   
-> > Sounds good. Perhaps some capability/feature flags for each resource
-> > such that different behavior can be accommodated?
-> > Could you please include me in your future posting? I will rebase on
-> > yours.  
-> 
-> Hi Jacob
-> 
-> Based on Tejun's response, I will not add charge migration support in
-> misc controller.
-> 
-Sounds good. I need some confirmation on whether migration is a must have
-for VMs allocated IOASIDs.
-Our primary goal is to limit the amount of IOASIDs that VMs can allocate.
-If a VM is migrated to a different cgroup, I think we need to
-charge/uncharge the destination/source cgroup in order enforce the limit. I
-am not an expert here, any feedback would be appreciated.
-
-> I can definitly add you in my future posting, if you still wanna use it
-> without charge migration support.
-> 
-Yes, please. I got your v3 already, so just future patches.
-
-> Thanks
-> Vipin
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, Bhaskar Chowdhury <unixbhaskar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
 
-Thanks,
+s/overcommited/overcommitted/
+s/Overcommiting/Overcommitting/
 
-Jacob
+Signed-off-by: Bhaskar Chowdhury <unixbhaskar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ Documentation/admin-guide/cgroup-v1/memory.rst | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
+index 52688ae34461..0d574fd3f8e3 100644
+--- a/Documentation/admin-guide/cgroup-v1/memory.rst
++++ b/Documentation/admin-guide/cgroup-v1/memory.rst
+@@ -360,8 +360,8 @@ U != 0, K = unlimited:
+
+ U != 0, K < U:
+     Kernel memory is a subset of the user memory. This setup is useful in
+-    deployments where the total amount of memory per-cgroup is overcommited.
+-    Overcommiting kernel memory limits is definitely not recommended, since the
++    deployments where the total amount of memory per-cgroup is overcommitted.
++    Overcommitting kernel memory limits is definitely not recommended, since the
+     box can still run out of non-reclaimable memory.
+     In this case, the admin could set up K so that the sum of all groups is
+     never greater than the total memory, and freely set U at the cost of his
