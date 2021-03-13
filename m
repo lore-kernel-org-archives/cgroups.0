@@ -1,60 +1,47 @@
-From: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Subject: Re: [PATCH] docs: admin-guide: cgroup-v1: Fix typos in the file
- memory.rst
-Date: Fri, 12 Mar 2021 22:51:18 -0800
-Message-ID: <f3a59b47-5706-4da9-f6f6-b325b2edd289@infradead.org>
-References: <20210313061029.28024-1-unixbhaskar@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC v2 2/2] cgroup: sev: Miscellaneous cgroup documentation.
+Date: Sat, 13 Mar 2021 05:20:39 -0500
+Message-ID: <YEyR9181Qgzt+Ps9@mtj.duckdns.org>
+References: <20210302081705.1990283-1-vipinsh@google.com>
+ <20210302081705.1990283-3-vipinsh@google.com>
+ <20210303185513.27e18fce@jacob-builder>
+ <YEB8i6Chq4K/GGF6@google.com>
+ <YECfhCJtHUL9cB2L@slm.duckdns.org>
+ <20210312125821.22d9bfca@jacob-builder>
+ <YEvZ4muXqiSScQ8i@google.com>
+ <20210312145904.4071a9d6@jacob-builder>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=merlin.20170209; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:To:Subject:Sender:
-        Reply-To:Cc:Content-ID:Content-Description;
-        bh=TwM+34ovqWzke2UroJ5Fb4rXHMkhYWeBFaPdq+c3MEY=; b=vAla+2hs9fXA6ziQtEpcwEIPBP
-        pAudnvS3kBR/tnbbsZlXTGQtJPjNZ58YTLej24+Rl4N3lxEGjreB0FeKLGRb/bReWrO/syCYj+UTm
-        6SN2qU5tl9rt4Z+aHj8s218mP4GwkxQ1c6xfXGKJdIFNW/rDw7OhV68sELuQP9/ozjVkR3BAwlhOs
-        K4yak9IhNu6sX10SXvZJ+sN5TQcaOWMsBE+fTecMdSFGvGo9eG1PtsBIjaFQD2u1VFVK5gZ5XNwe4
-        Y8Gz126N4sylodBm4SCwSFGfKjlv8BVzTBUtj335Y8W4iEYQ3wU3YEPEQvZe4lh+WX9E7e6+TRtUe
-        nhnIOr+g==;
-In-Reply-To: <20210313061029.28024-1-unixbhaskar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Content-Language: en-US
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=UpX1Lg+mq54WtiAhrwBDWXYDPmqQUSFtcUwtNY+v8RQ=;
+        b=FS0YqOTWPrsR8T8rB+TOtNMqfIpKjZbMujx1QpqRgZjz+StMzp0ESXTxK/LGZVIOsP
+         9J/ID9iq3J8fZXg6Zvd+AZeFr0D4YkkTPs8aOslYrPBSny6+99XB8x6oEohV8QVCe77t
+         cUb0BW4BeNSoNY+qqwndaQGB63Hxq/SUFNI/zOzGmYw9u8iUbebYf6K0V012N05CS6MU
+         HkIJs4hs3gGUSxMlZ1Fh6L2Gc3+begGLpY1xDxOeF1bLTazwfYrTo9ed3PR2AFrzSZHL
+         aUwrIpg9owREHwMHERhVCTJp9HrkZ26YA1xMQIDqfyU3uRlaMJYeB8puRxRmsdcEjhCI
+         OInA==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20210312145904.4071a9d6@jacob-builder>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Bhaskar Chowdhury <unixbhaskar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Jacob Pan <jacob.jun.pan@intel.com>
+Cc: Vipin Sharma <vipinsh@google.com>, mkoutny@suse.com, rdunlap@infradead.org, thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net, seanjc@google.com, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, joro@8bytes.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, "Tian, Kevin" <kevin.tian@intel.com>, "Liu, Yi L" <yi.l.liu@intel.com>, "Raj, Ashok" <ashok.raj@intel.com>, Alex Williamson <alex.williamson@redhat.com>, Jason
 
-On 3/12/21 10:10 PM, Bhaskar Chowdhury wrote:
-> 
-> s/overcommited/overcommitted/
-> s/Overcommiting/Overcommitting/
-> 
-> Signed-off-by: Bhaskar Chowdhury <unixbhaskar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+On Fri, Mar 12, 2021 at 02:59:04PM -0800, Jacob Pan wrote:
+> Our primary goal is to limit the amount of IOASIDs that VMs can allocate.
+> If a VM is migrated to a different cgroup, I think we need to
+> charge/uncharge the destination/source cgroup in order enforce the limit. I
+> am not an expert here, any feedback would be appreciated.
 
-Acked-by: Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+That simply isn't a supported usage model. None of other resources will get
+tracked if you do that.
 
-
-> ---
->  Documentation/admin-guide/cgroup-v1/memory.rst | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/admin-guide/cgroup-v1/memory.rst b/Documentation/admin-guide/cgroup-v1/memory.rst
-> index 52688ae34461..0d574fd3f8e3 100644
-> --- a/Documentation/admin-guide/cgroup-v1/memory.rst
-> +++ b/Documentation/admin-guide/cgroup-v1/memory.rst
-> @@ -360,8 +360,8 @@ U != 0, K = unlimited:
-> 
->  U != 0, K < U:
->      Kernel memory is a subset of the user memory. This setup is useful in
-> -    deployments where the total amount of memory per-cgroup is overcommited.
-> -    Overcommiting kernel memory limits is definitely not recommended, since the
-> +    deployments where the total amount of memory per-cgroup is overcommitted.
-> +    Overcommitting kernel memory limits is definitely not recommended, since the
->      box can still run out of non-reclaimable memory.
->      In this case, the admin could set up K so that the sum of all groups is
->      never greater than the total memory, and freely set U at the cost of his
-> --
-
+Thanks.
 
 -- 
-~Randy
-
+tejun
