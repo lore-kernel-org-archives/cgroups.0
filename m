@@ -1,98 +1,100 @@
-From: Jacob Pan <jacob.jun.pan@intel.com>
-Subject: Re: [RFC v2 2/2] cgroup: sev: Miscellaneous cgroup documentation.
-Date: Mon, 15 Mar 2021 16:40:12 -0700
-Message-ID: <20210315164012.4adeabe8@jacob-builder>
-References: <20210303185513.27e18fce@jacob-builder>
-        <YEB8i6Chq4K/GGF6@google.com>
-        <YECfhCJtHUL9cB2L@slm.duckdns.org>
-        <20210312125821.22d9bfca@jacob-builder>
-        <YEvZ4muXqiSScQ8i@google.com>
-        <20210312145904.4071a9d6@jacob-builder>
-        <YEyR9181Qgzt+Ps9@mtj.duckdns.org>
-        <20210313085701.1fd16a39@jacob-builder>
-        <YEz+8HbfkbGgG5Tm@mtj.duckdns.org>
-        <20210315151155.383a7e6e@jacob-builder>
-        <YE/ddx5+ToNsgUF0@slm.duckdns.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: [PATCH] mm: memcontrol: switch to rstat fix
+Date: Mon, 15 Mar 2021 19:41:00 -0400
+Message-ID: <20210315234100.64307-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <kvm-owner@vger.kernel.org>
-In-Reply-To: <YE/ddx5+ToNsgUF0@slm.duckdns.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=sHh364PFI7gr7Rg7wpaysNQPtI9BiNpDxSsKea0W7pA=;
+        b=KbheRMtg2robQTyXPOEUrlWiONJ6e2isDPkgv9TYBs4HWXHrRdzR9F4j8VM+dTeX2M
+         eabV8ybFsCDihGBWhwgMPDDTOX737BCr06IpzJThWzsqHtEJiT5yZZq3Z89KjreYoS2W
+         9GMEiDZw38HOxAu7Z1TuHEAcU6cUTzw/i3xPEKKtM4aJJtASYaaboQmNpTbWdtH+uOIs
+         tAPWz2umjmR8R0K+EHsBDPmG35CNquRmgrNIM+onWovfmkuPW6eYCeH4T0Bg0KGQ1Jbo
+         2m7pNiKU76I12k+7IUBC77cbwWHyrwEwwo1g1QPp8LoL/FS4EHStaALOmG1cd3x7bIUn
+         ms7Q==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj@kernel.org>
-Cc: Vipin Sharma <vipinsh@google.com>, mkoutny@suse.com, rdunlap@infradead.org, thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net, seanjc@google.com, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, joro@8bytes.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, "Tian, Kevin" <kevin.tian@intel.com>, "Liu, Yi L" <yi.l.liu@intel.com>, "Raj, Ashok" <ashok.raj@intel.com>, Alex Williamson <alex.williamson@redhat.com>, Jason
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Tejun Heo <tj@kernel.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-Hi Tejun,
+Fix a sleep in atomic section problem: wb_writeback() takes a spinlock
+and calls wb_over_bg_thresh() -> mem_cgroup_wb_stats, but the regular
+rstat flushing function called from in there does lockbreaking and may
+sleep. Switch to the atomic variant, cgroup_rstat_irqsafe().
 
-On Mon, 15 Mar 2021 18:19:35 -0400, Tejun Heo <tj@kernel.org> wrote:
+To be consistent with other memcg flush calls, but without adding
+another memcg wrapper, inline and drop memcg_flush_vmstats() instead.
 
-> Hello,
-> 
-> On Mon, Mar 15, 2021 at 03:11:55PM -0700, Jacob Pan wrote:
-> > > Migration itself doesn't have restrictions but all resources are
-> > > distributed on the same hierarchy, so the controllers are supposed to
-> > > follow the same conventions that can be implemented by all
-> > > controllers. 
-> > Got it, I guess that is the behavior required by the unified hierarchy.
-> > Cgroup v1 would be ok? But I am guessing we are not extending on v1?  
-> 
-> A new cgroup1 only controller is unlikely to be accpeted.
-> 
-> > The IOASIDs are programmed into devices to generate DMA requests tagged
-> > with them. The IOMMU has a per device IOASID table with each entry has
-> > two pointers:
-> >  - the PGD of the guest process.
-> >  - the PGD of the host process
-> > 
-> > The result of this 2 stage/nested translation is that we can share
-> > virtual address (SVA) between guest process and DMA. The host process
-> > needs to allocate multiple IOASIDs since one IOASID is needed for each
-> > guest process who wants SVA.
-> > 
-> > The DMA binding among device-IOMMU-process is setup via a series of user
-> > APIs (e.g. via VFIO).
-> > 
-> > If a process calls fork(), the children does not inherit the IOASIDs and
-> > their bindings. Children who wish to use SVA has to call those APIs to
-> > establish the binding for themselves.
-> > 
-> > Therefore, if a host process allocates 10 IOASIDs then does a
-> > fork()/clone(), it cannot charge 10 IOASIDs in the new cgroup. i.e. the
-> > 10 IOASIDs stays with the process wherever it goes.
-> > 
-> > I feel this fit in the domain model, true?  
-> 
-> I still don't get where migration is coming into the picture. Who's
-> migrating where?
-> 
-Sorry, perhaps I can explain by an example.
+Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
+---
+ mm/memcontrol.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
 
-There are two cgroups: cg_A and cg_B with limit set to 20 for both. Process1
-is in cg_A. The initial state is:
-cg_A/ioasid.current=0, cg_A/ioasid.max=20
-cg_B/ioasid.current=0, cg_B/ioasid.max=20
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index f7fb12d3c2fc..9091913ec877 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -757,11 +757,6 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_node *mctz)
+ 	return mz;
+ }
+ 
+-static void memcg_flush_vmstats(struct mem_cgroup *memcg)
+-{
+-	cgroup_rstat_flush(memcg->css.cgroup);
+-}
+-
+ /**
+  * __mod_memcg_state - update cgroup memory statistics
+  * @memcg: the memory cgroup
+@@ -1572,7 +1567,7 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
+ 	 *
+ 	 * Current memory state:
+ 	 */
+-	memcg_flush_vmstats(memcg);
++	cgroup_rstat_flush(memcg->css.cgroup);
+ 
+ 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
+ 		u64 size;
+@@ -3523,7 +3518,7 @@ static unsigned long mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
+ 	unsigned long val;
+ 
+ 	if (mem_cgroup_is_root(memcg)) {
+-		memcg_flush_vmstats(memcg);
++		cgroup_rstat_flush(memcg->css.cgroup);
+ 		val = memcg_page_state(memcg, NR_FILE_PAGES) +
+ 			memcg_page_state(memcg, NR_ANON_MAPPED);
+ 		if (swap)
+@@ -3925,7 +3920,7 @@ static int memcg_numa_stat_show(struct seq_file *m, void *v)
+ 	int nid;
+ 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
+ 
+-	memcg_flush_vmstats(memcg);
++	cgroup_rstat_flush(memcg->css.cgroup);
+ 
+ 	for (stat = stats; stat < stats + ARRAY_SIZE(stats); stat++) {
+ 		seq_printf(m, "%s=%lu", stat->name,
+@@ -3997,7 +3992,7 @@ static int memcg_stat_show(struct seq_file *m, void *v)
+ 
+ 	BUILD_BUG_ON(ARRAY_SIZE(memcg1_stat_names) != ARRAY_SIZE(memcg1_stats));
+ 
+-	memcg_flush_vmstats(memcg);
++	cgroup_rstat_flush(memcg->css.cgroup);
+ 
+ 	for (i = 0; i < ARRAY_SIZE(memcg1_stats); i++) {
+ 		unsigned long nr;
+@@ -4500,7 +4495,7 @@ void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pfilepages,
+ 	struct mem_cgroup *memcg = mem_cgroup_from_css(wb->memcg_css);
+ 	struct mem_cgroup *parent;
+ 
+-	memcg_flush_vmstats(memcg);
++	cgroup_rstat_flush_irqsafe(memcg->css.cgroup);
+ 
+ 	*pdirty = memcg_page_state(memcg, NR_FILE_DIRTY);
+ 	*pwriteback = memcg_page_state(memcg, NR_WRITEBACK);
+-- 
+2.30.1
 
-Now, consider the following steps:
-
-1. Process1 allocated 10 IOASIDs,
-cg_A/ioasid.current=10,
-cg_B/ioasid.current=0
-
-2. then we want to move/migrate Process1 to cg_B. so we need uncharge 10 of
-cg_A, charge 10 of cg_B
-
-3. After the migration, I expect
-cg_A/ioasid.current=0,
-cg_B/ioasid.current=10
-
-We don't enforce the limit during this organizational change since we can't
-force free IOASIDs. But any new allocations will be subject to the limit
-set in ioasid.max.
-
-> Thanks.
-> 
-
-
-Thanks,
-
-Jacob
