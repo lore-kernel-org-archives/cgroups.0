@@ -1,9 +1,9 @@
 From: David Ahern <dsahern-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 3/8] memcg: accounting for fib_rules
-Date: Mon, 15 Mar 2021 09:14:52 -0600
-Message-ID: <4800bd7d-92b9-ee82-6b9d-71bc13769964@gmail.com>
+Subject: Re: [PATCH v2 4/8] memcg: accounting for ip_fib caches
+Date: Mon, 15 Mar 2021 09:15:43 -0600
+Message-ID: <afe47a9a-ec1e-36cb-7184-96a4c457f1f4@gmail.com>
 References: <YEnWUrYOArju66ym@dhcp22.suse.cz>
- <cb893761-cf6e-fa92-3219-712e485259b4@virtuozzo.com>
+ <d569bf43-b30a-02af-f7ad-ccc794a50589@virtuozzo.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
@@ -11,14 +11,14 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=xpuZaiVrlNlwHASDhPqhddOX6dJW8QhrY9uWLI1rY04=;
-        b=edTWOLsBDmAlUGB7ucxeGLpXdgsmMVpfpuLUfSKoSpL6qBsDWSBR5ns5bV+aTTtYHL
-         zA+g2MigGIdR8EeLa4iPweB3MWhPZiRm1POzYbneUQ2Ot87YFb7LzTaY4XIgShIwfcMS
-         J250iOuJVnLOfLxIYEp6lbTIv8wCbspmuHnzFSTYFHNsGYmTigGvaFjGG1EL71CN5ShM
-         6ZBnOcmUlMrmEoaczCt/267Gc8zTKXsjYUOxQRIB4MXRQrN0+PqUWWA8Sht9A6H2ours
-         F6Jon+u3cwNGtzJlUeKGA0Se49N1rTP/H5iq/V6VPo0R6HaiQPjVbisl9xcncZBMBEt0
-         xxkw==
-In-Reply-To: <cb893761-cf6e-fa92-3219-712e485259b4-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+        bh=np/p9Ih58kbyvM0hIUqkXcnFFKPhSSCXOoOrFZ44REo=;
+        b=MUPk/pbvsn449ONYJk455H6Kc7gE2u7S1noOh1h4Ceekj651HdpXnqPF/fmlu5WPOY
+         DEMZjWTp3NjUYHaEVjXHq9/IpuVXsQNeu0rECQ2cRPbOYtmxEGxnt3Zw182ID7NEz35P
+         CIUegNIVDabVbfTwMJT6CQUvgQNwZva/YpRFrAvOxpnGrB6pQBpNIQ40cU8N8bMx9eGl
+         oUS6TFxnnRHPRrwCEy8p3u5SCf9hme2AESiU5ArpFKAn+UuCf70dKHW61rRBGmqU2iDF
+         7ELKnpHho+NQSVdMrwNtVaNb4HFspvuEEKZ5jxvoxVayIb3tfeDsUE7ThTfq0g1JayYf
+         dkUw==
+In-Reply-To: <d569bf43-b30a-02af-f7ad-ccc794a50589-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
@@ -31,11 +31,12 @@ On 3/15/21 6:23 AM, Vasily Averin wrote:
 > are not accounted to proper memcg, so this can lead to global memory
 > shortage on the host and cause lot of OOM kiils.
 > 
-> This patch enables accounting for 'struct fib_rules'
+> This patch enables accounting for ip_fib_alias and ip_fib_trie caches
 > ---
->  net/core/fib_rules.c | 4 ++--
+>  net/ipv4/fib_trie.c | 4 ++--
 >  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
 
 Acked-by: David Ahern <dsahern-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+
 
