@@ -1,100 +1,50 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH] mm: memcontrol: switch to rstat fix
-Date: Mon, 15 Mar 2021 19:41:00 -0400
-Message-ID: <20210315234100.64307-1-hannes@cmpxchg.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC v2 2/2] cgroup: sev: Miscellaneous cgroup documentation.
+Date: Mon, 15 Mar 2021 19:54:36 -0400
+Message-ID: <YE/zvLkL1vM8/Cdm@slm.duckdns.org>
+References: <YECfhCJtHUL9cB2L@slm.duckdns.org>
+ <20210312125821.22d9bfca@jacob-builder>
+ <YEvZ4muXqiSScQ8i@google.com>
+ <20210312145904.4071a9d6@jacob-builder>
+ <YEyR9181Qgzt+Ps9@mtj.duckdns.org>
+ <20210313085701.1fd16a39@jacob-builder>
+ <YEz+8HbfkbGgG5Tm@mtj.duckdns.org>
+ <20210315151155.383a7e6e@jacob-builder>
+ <YE/ddx5+ToNsgUF0@slm.duckdns.org>
+ <20210315164012.4adeabe8@jacob-builder>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <kvm-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=sHh364PFI7gr7Rg7wpaysNQPtI9BiNpDxSsKea0W7pA=;
-        b=KbheRMtg2robQTyXPOEUrlWiONJ6e2isDPkgv9TYBs4HWXHrRdzR9F4j8VM+dTeX2M
-         eabV8ybFsCDihGBWhwgMPDDTOX737BCr06IpzJThWzsqHtEJiT5yZZq3Z89KjreYoS2W
-         9GMEiDZw38HOxAu7Z1TuHEAcU6cUTzw/i3xPEKKtM4aJJtASYaaboQmNpTbWdtH+uOIs
-         tAPWz2umjmR8R0K+EHsBDPmG35CNquRmgrNIM+onWovfmkuPW6eYCeH4T0Bg0KGQ1Jbo
-         2m7pNiKU76I12k+7IUBC77cbwWHyrwEwwo1g1QPp8LoL/FS4EHStaALOmG1cd3x7bIUn
-         ms7Q==
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=US0hVPQ8vE/ff4q4EMV/WahbUbFBxAIlNGyDC8TZKKo=;
+        b=anlpAKgv1icjbUA4PcLTmi9IUjIbI/zzazbcKLMIKSnLma+f+zvtMa/z+TNJ1Fb4/U
+         w4LKNq8Sxa+Jd4ADL3B6JaCsM2rY4qXj3HeZD4506hVAgMner9pcoO2Vd9OZCjXqeQ2Q
+         C/KJ3q0LAJ2t2P4R0lPsrUK1AC8Cgrxvl02ibVFSP88VrAhtb7nDKS5uiJI/tNu+Uv/M
+         HvEa87XZIybFq27EArSte01J4H7GrL53gn48U5jGfSOP/O0z/vgpwwPp2ftthhXWAsVY
+         //QJ71p/BWJs/LrqaW7yb0VkIlGKZxprXpB0uMM1gym5oJ/Pjk4XP/jxxyLzDqwn2AFp
+         k4vg==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20210315164012.4adeabe8@jacob-builder>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>, Shakeel Butt <shakeelb@google.com>, Tejun Heo <tj@kernel.org>, =?UTF-8?q?Michal=20Koutn=C3=BD?= <mkoutny@suse.com>, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+Content-Transfer-Encoding: 7bit
+To: Jacob Pan <jacob.jun.pan@intel.com>
+Cc: Vipin Sharma <vipinsh@google.com>, mkoutny@suse.com, rdunlap@infradead.org, thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net, seanjc@google.com, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, joro@8bytes.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, "Tian, Kevin" <kevin.tian@intel.com>, "Liu, Yi L" <yi.l.liu@intel.com>, "Raj, Ashok" <ashok.raj@intel.com>, Alex Williamson <alex.williamson@redhat.com>, Jason
 
-Fix a sleep in atomic section problem: wb_writeback() takes a spinlock
-and calls wb_over_bg_thresh() -> mem_cgroup_wb_stats, but the regular
-rstat flushing function called from in there does lockbreaking and may
-sleep. Switch to the atomic variant, cgroup_rstat_irqsafe().
+Hello,
 
-To be consistent with other memcg flush calls, but without adding
-another memcg wrapper, inline and drop memcg_flush_vmstats() instead.
+On Mon, Mar 15, 2021 at 04:40:12PM -0700, Jacob Pan wrote:
+> 2. then we want to move/migrate Process1 to cg_B. so we need uncharge 10 of
+> cg_A, charge 10 of cg_B
 
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- mm/memcontrol.c | 15 +++++----------
- 1 file changed, 5 insertions(+), 10 deletions(-)
+So, what I don't get is why this migration is necessary. This isn't
+supported as a usage pattern and no one, at least in terms of wide-spread
+usage, does this. Why is this a requirement for your use case?
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index f7fb12d3c2fc..9091913ec877 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -757,11 +757,6 @@ mem_cgroup_largest_soft_limit_node(struct mem_cgroup_tree_per_node *mctz)
- 	return mz;
- }
- 
--static void memcg_flush_vmstats(struct mem_cgroup *memcg)
--{
--	cgroup_rstat_flush(memcg->css.cgroup);
--}
--
- /**
-  * __mod_memcg_state - update cgroup memory statistics
-  * @memcg: the memory cgroup
-@@ -1572,7 +1567,7 @@ static char *memory_stat_format(struct mem_cgroup *memcg)
- 	 *
- 	 * Current memory state:
- 	 */
--	memcg_flush_vmstats(memcg);
-+	cgroup_rstat_flush(memcg->css.cgroup);
- 
- 	for (i = 0; i < ARRAY_SIZE(memory_stats); i++) {
- 		u64 size;
-@@ -3523,7 +3518,7 @@ static unsigned long mem_cgroup_usage(struct mem_cgroup *memcg, bool swap)
- 	unsigned long val;
- 
- 	if (mem_cgroup_is_root(memcg)) {
--		memcg_flush_vmstats(memcg);
-+		cgroup_rstat_flush(memcg->css.cgroup);
- 		val = memcg_page_state(memcg, NR_FILE_PAGES) +
- 			memcg_page_state(memcg, NR_ANON_MAPPED);
- 		if (swap)
-@@ -3925,7 +3920,7 @@ static int memcg_numa_stat_show(struct seq_file *m, void *v)
- 	int nid;
- 	struct mem_cgroup *memcg = mem_cgroup_from_seq(m);
- 
--	memcg_flush_vmstats(memcg);
-+	cgroup_rstat_flush(memcg->css.cgroup);
- 
- 	for (stat = stats; stat < stats + ARRAY_SIZE(stats); stat++) {
- 		seq_printf(m, "%s=%lu", stat->name,
-@@ -3997,7 +3992,7 @@ static int memcg_stat_show(struct seq_file *m, void *v)
- 
- 	BUILD_BUG_ON(ARRAY_SIZE(memcg1_stat_names) != ARRAY_SIZE(memcg1_stats));
- 
--	memcg_flush_vmstats(memcg);
-+	cgroup_rstat_flush(memcg->css.cgroup);
- 
- 	for (i = 0; i < ARRAY_SIZE(memcg1_stats); i++) {
- 		unsigned long nr;
-@@ -4500,7 +4495,7 @@ void mem_cgroup_wb_stats(struct bdi_writeback *wb, unsigned long *pfilepages,
- 	struct mem_cgroup *memcg = mem_cgroup_from_css(wb->memcg_css);
- 	struct mem_cgroup *parent;
- 
--	memcg_flush_vmstats(memcg);
-+	cgroup_rstat_flush_irqsafe(memcg->css.cgroup);
- 
- 	*pdirty = memcg_page_state(memcg, NR_FILE_DIRTY);
- 	*pwriteback = memcg_page_state(memcg, NR_WRITEBACK);
+Thanks.
+
 -- 
-2.30.1
-
+tejun
