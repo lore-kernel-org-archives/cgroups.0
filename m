@@ -1,50 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC v2 2/2] cgroup: sev: Miscellaneous cgroup documentation.
-Date: Mon, 15 Mar 2021 19:54:36 -0400
-Message-ID: <YE/zvLkL1vM8/Cdm@slm.duckdns.org>
-References: <YECfhCJtHUL9cB2L@slm.duckdns.org>
- <20210312125821.22d9bfca@jacob-builder>
- <YEvZ4muXqiSScQ8i@google.com>
- <20210312145904.4071a9d6@jacob-builder>
- <YEyR9181Qgzt+Ps9@mtj.duckdns.org>
- <20210313085701.1fd16a39@jacob-builder>
- <YEz+8HbfkbGgG5Tm@mtj.duckdns.org>
- <20210315151155.383a7e6e@jacob-builder>
- <YE/ddx5+ToNsgUF0@slm.duckdns.org>
- <20210315164012.4adeabe8@jacob-builder>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH] mm: memcontrol: switch to rstat fix
+Date: Mon, 15 Mar 2021 16:58:49 -0700
+Message-ID: <CALvZod7VzxYc4Kz0WPHWt74YMopi9XrCu4CKtEGTRKxXPSP=8w@mail.gmail.com>
+References: <20210315234100.64307-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <kvm-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=US0hVPQ8vE/ff4q4EMV/WahbUbFBxAIlNGyDC8TZKKo=;
-        b=anlpAKgv1icjbUA4PcLTmi9IUjIbI/zzazbcKLMIKSnLma+f+zvtMa/z+TNJ1Fb4/U
-         w4LKNq8Sxa+Jd4ADL3B6JaCsM2rY4qXj3HeZD4506hVAgMner9pcoO2Vd9OZCjXqeQ2Q
-         C/KJ3q0LAJ2t2P4R0lPsrUK1AC8Cgrxvl02ibVFSP88VrAhtb7nDKS5uiJI/tNu+Uv/M
-         HvEa87XZIybFq27EArSte01J4H7GrL53gn48U5jGfSOP/O0z/vgpwwPp2ftthhXWAsVY
-         //QJ71p/BWJs/LrqaW7yb0VkIlGKZxprXpB0uMM1gym5oJ/Pjk4XP/jxxyLzDqwn2AFp
-         k4vg==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <20210315164012.4adeabe8@jacob-builder>
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=GiWLaJ6JfRY7D2fjAEheSS/CI6En0Tfjr7NfpaLRaUg=;
+        b=el1U4yM7KpXL5g8A1suug3kzC4jqMxihYzAe6idzQvWFnWS91NbuSI/u+c6mo6cRnV
+         SPei+MME4J69H5g9v4345POnj6DndSypgXQdfUHFQYb7eJNzCDNSvw/2JxkV/MfzWtOC
+         kf4IBHDbVcqItf9trvNPu1tywIQIXWuoKwXmyEvHMidR1r5dkG0r+DYt+noifqymr/al
+         NOpBuSOhXUfkxXzujUrmtj6SfPf704YxzLSaRzU5iJInw3d/wh8k5iOLjeOO/M+5KmEi
+         LJh2OEaMvZRv9JdvA6or3g3XBQ1bnr8Uu6YnH5VpChJ/5QuJgx7O/g/j1G2ONUuw4djx
+         N5OQ==
+In-Reply-To: <20210315234100.64307-1-hannes@cmpxchg.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jacob Pan <jacob.jun.pan@intel.com>
-Cc: Vipin Sharma <vipinsh@google.com>, mkoutny@suse.com, rdunlap@infradead.org, thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net, seanjc@google.com, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, joro@8bytes.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, "Tian, Kevin" <kevin.tian@intel.com>, "Liu, Yi L" <yi.l.liu@intel.com>, "Raj, Ashok" <ashok.raj@intel.com>, Alex Williamson <alex.williamson@redhat.com>, Jason
+To: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@suse.com>, Roman Gushchin <guro@fb.com>, Tejun Heo <tj@kernel.org>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <kernel-team@fb.com>
 
-Hello,
+On Mon, Mar 15, 2021 at 4:41 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
+>
+> Fix a sleep in atomic section problem: wb_writeback() takes a spinlock
+> and calls wb_over_bg_thresh() -> mem_cgroup_wb_stats, but the regular
+> rstat flushing function called from in there does lockbreaking and may
+> sleep. Switch to the atomic variant, cgroup_rstat_irqsafe().
+>
+> To be consistent with other memcg flush calls, but without adding
+> another memcg wrapper, inline and drop memcg_flush_vmstats() instead.
+>
+> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 
-On Mon, Mar 15, 2021 at 04:40:12PM -0700, Jacob Pan wrote:
-> 2. then we want to move/migrate Process1 to cg_B. so we need uncharge 10 of
-> cg_A, charge 10 of cg_B
-
-So, what I don't get is why this migration is necessary. This isn't
-supported as a usage pattern and no one, at least in terms of wide-spread
-usage, does this. Why is this a requirement for your use case?
-
-Thanks.
-
--- 
-tejun
+Reviewed-by: Shakeel Butt <shakeelb@google.com>
