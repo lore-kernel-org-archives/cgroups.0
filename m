@@ -1,75 +1,56 @@
 From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v2 8/8] memcg: accounting for ldt_struct objects
-Date: Mon, 15 Mar 2021 08:48:26 -0700
-Message-ID: <CALvZod7aT7t_Yp67CaECbCSzk8CuqBRMUBccthLCpz4osqDLKw@mail.gmail.com>
-References: <YEnWUrYOArju66ym@dhcp22.suse.cz> <360b4c94-8713-f621-1049-6bc0865c1867@virtuozzo.com>
- <20210315132740.GB20497@zn.tnic>
+Subject: Re: [PATCH v2 5/8] memcg: accounting for fasync_cache
+Date: Mon, 15 Mar 2021 08:56:50 -0700
+Message-ID: <CALvZod5GXkxUQyxzD-eL4QUhnoayVGTrBQPUC1iv+0LGnYJFzg@mail.gmail.com>
+References: <YEnWUrYOArju66ym@dhcp22.suse.cz> <4eb97c88-b87c-6f6e-3960-b1a61b46d380@virtuozzo.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=uMQX9cSTk4pNl9nGi7mtI/mLokkbjIxGL748SGLyk7Q=;
-        b=cyJf+6PyxCCi1Oz5oXDGFThBCrClPxSRsk4OIhR45gZ2yQRY5505jv96pHlPM/tocl
-         KPKqQJb+vUy978TiwjWk3UPiulBwwPx58fsQNlVOJKblEvN6u9pCGreAPcktDGh2C2sU
-         wKzfAotaFmv1XxCu51PCvql11jzjj2Y0SJbTz4hPCZ1lalDud8yTldxQLM1kbOMh/Uu9
-         OPSJwhyq4omWbP7uT8st4DL9pnnbZvr2MwMEuww9YQ9xUKiNW/TZiPls4Ry2k2BsVM7m
-         dkK3DT0CwEdJred10Dzs6Bvjx0UWVLhcsglbl/5f/1omrcFR/v8hb89/8egTNRWofpJo
-         k3Dg==
-In-Reply-To: <20210315132740.GB20497-Jj63ApZU6fQ@public.gmane.org>
+        bh=QW3CaHPgPmHox0WmReW9hgPm5r4PklZYtPsrifaA0GA=;
+        b=GjZCh6DFUHNU5yqp7BNiRmI5nNX7N06Cc8wlYDtW8nKcoLEQzliJpSJ0DNTWm7s5UQ
+         OzI2H8rAP9fv6MJpkYit3y/f0XFYxBLyIXnpKCebIFhfyktgK8dZPqGym6ea4aVDL6Kt
+         DxtRQD1wI/o0Oomu+p7cLF4egVxRsePMBgwr9wBG84sD8Lhxumbb0mx0zn9qSiH/qsmX
+         V2Zb7Jn3ycpIGJLBNPdmAJDPohqgDpY1STomDkQzSSaVarcjO9KKT/Ol98VlrRn3U5fE
+         Y1eNX+Q6GCCFYj3qC4KWyfVnypYssQIpMgwsMMSyLLsTEdtpPQxZxp7QLTHARscwqB+x
+         4lUg==
+In-Reply-To: <4eb97c88-b87c-6f6e-3960-b1a61b46d380-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>
-Cc: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Jeff Layton <jlayton-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "J. Bruce Fields" <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
 
-On Mon, Mar 15, 2021 at 6:27 AM Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org> wrote:
+On Mon, Mar 15, 2021 at 5:23 AM Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org> wrote:
 >
-> On Mon, Mar 15, 2021 at 03:24:01PM +0300, Vasily Averin wrote:
-> > Unprivileged user inside memcg-limited container can create
-> > non-accounted multi-page per-thread kernel objects for LDT
->
-> I have hard time parsing this commit message.
->
-> And I'm CCed only on patch 8 of what looks like a patchset.
->
-> And that patchset is not on lkml so I can't find the rest to read about
-> it, perhaps linux-mm.
->
-> /me goes and finds it on lore
->
-> I can see some bits and pieces, this, for example:
->
-> https://lore.kernel.org/linux-mm/05c448c7-d992-8d80-b423-b80bf5446d7c-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org/
->
->  ( Btw, that version has your SOB and this patch doesn't even have a
->    Signed-off-by. Next time, run your whole set through checkpatch please
->    before sending. )
->
-> Now, this URL above talks about OOM, ok, that gets me close to the "why"
-> this patch.
->
-> From a quick look at the ldt.c code, we allow a single LDT struct per
-> mm. Manpage says so too:
->
-> DESCRIPTION
->        modify_ldt()  reads  or  writes  the local descriptor table (LDT) for a process.
->        The LDT is an array of segment descriptors that can be referenced by user  code.
->        Linux  allows  processes  to configure a per-process (actually per-mm) LDT.
->
-> We allow
->
-> /* Maximum number of LDT entries supported. */
-> #define LDT_ENTRIES     8192
->
-> so there's an upper limit per mm.
->
-> Now, please explain what is this accounting for?
->
+> unprivileged user inside memcg-limited container can trigger
+> creation of huge number of non-accounted fasync_struct objects
 
-Let me try to provide the reasoning at least from my perspective.
-There are legitimate workloads with hundreds of processes and there
-can be hundreds of workloads running on large machines. The
-unaccounted memory can cause isolation issues between the workloads
-particularly on highly utilized machines.
+You need to make each patch of this series self-contained by including
+the motivation behind the series (just one or two sentences). For
+example, for this patch include what's the potential impact of these
+huge numbers of unaccounted fasync_struct objects?
+
+> ---
+>  fs/fcntl.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/fs/fcntl.c b/fs/fcntl.c
+> index dfc72f1..7941559 100644
+> --- a/fs/fcntl.c
+> +++ b/fs/fcntl.c
+> @@ -1049,7 +1049,8 @@ static int __init fcntl_init(void)
+>                         __FMODE_EXEC | __FMODE_NONOTIFY));
+>
+>         fasync_cache = kmem_cache_create("fasync_cache",
+> -               sizeof(struct fasync_struct), 0, SLAB_PANIC, NULL);
+> +                                        sizeof(struct fasync_struct), 0,
+> +                                        SLAB_PANIC | SLAB_ACCOUNT, NULL);
+>         return 0;
+>  }
+>
+> --
+> 1.8.3.1
+>
