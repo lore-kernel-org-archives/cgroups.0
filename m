@@ -1,44 +1,44 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 3/3] loop: Charge i/o to mem and blk cg
-Date: Tue, 16 Mar 2021 09:25:18 -0700
-Message-ID: <CALvZod7tDf3vvspJmS551GkiNbSdCH9VWNgWMesmUi2Q3NkgKA@mail.gmail.com>
-References: <20210316153655.500806-1-schatzberg.dan@gmail.com> <20210316153655.500806-4-schatzberg.dan@gmail.com>
+From: Jacob Pan <jacob.jun.pan-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC v2 2/2] cgroup: sev: Miscellaneous cgroup documentation.
+Date: Tue, 16 Mar 2021 11:19:04 -0700
+Message-ID: <20210316111904.5d92472e@jacob-builder>
+References: <YEvZ4muXqiSScQ8i@google.com>
+        <20210312145904.4071a9d6@jacob-builder>
+        <YEyR9181Qgzt+Ps9@mtj.duckdns.org>
+        <20210313085701.1fd16a39@jacob-builder>
+        <YEz+8HbfkbGgG5Tm@mtj.duckdns.org>
+        <20210315151155.383a7e6e@jacob-builder>
+        <YE/ddx5+ToNsgUF0@slm.duckdns.org>
+        <20210315164012.4adeabe8@jacob-builder>
+        <YE/zvLkL1vM8/Cdm@slm.duckdns.org>
+        <20210315183030.5b15aea3@jacob-builder>
+        <YFAWVJrM86FB17Lk@slm.duckdns.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=TPPV6ZX3Tdhvd5ax8oWrAMyN2NntSRwXfaI6WubILUM=;
-        b=GqzIDfmCJYvYrFRGXeic57AzgBH3b1U4AAYEYp2J5pjfw4f/EnP9cLB/T6t1r6TAVg
-         tMrVgaaocuUTM4D5JtLmSuQIu2yoT7UwXVom1It5Gr99hKftdLRf8bFHTTW90fpDcSxG
-         LAklID4UlfQ5039uo09+40JkCw6EmElu4y5DRj8kxbylRlUp4Q2u5Vdg5DPlB9Pd0Bi2
-         T4/d+1t2uvMESJRFgocJF9lvTDwHRjPJUtXR2rDn4rU3r5/Gp0EtxNgynOSacujSpjVU
-         vmQw90Z074wG2SsY7t61SI+FYrKEojLMY+5Ts4h8dkCyGw/ZjTFaDaYPYDf/Dcb5Mjhn
-         wp0w==
-In-Reply-To: <20210316153655.500806-4-schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+In-Reply-To: <YFAWVJrM86FB17Lk-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:BLOCK LAYER" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:MEMORY MANAGEMENT" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, mkoutny-IBi9RG/b67k@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, thomas.lendacky-5C7GfCeVMHo@public.gmane.org, brijesh.singh-5C7GfCeVMHo@public.gmane.org, jon.grimm-5C7GfCeVMHo@public.gmane.org, eric.vantassell-5C7GfCeVMHo@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, frankja-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, gingell-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dionnaglaze-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jason
 
-On Tue, Mar 16, 2021 at 8:37 AM Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
-[...]
->
->  /* Support for loadable transfer modules */
-> diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-> index 0c04d39a7967..fd5dd961d01f 100644
-> --- a/include/linux/memcontrol.h
-> +++ b/include/linux/memcontrol.h
-> @@ -1187,6 +1187,17 @@ static inline struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm)
->         return NULL;
->  }
->
-> +static inline struct mem_cgroup *get_mem_cgroup_from_page(struct page *page)
-> +{
-> +       return NULL;
-> +}
+Hi Tejun,
 
-The above function has been removed.
+On Mon, 15 Mar 2021 22:22:12 -0400, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+
+> On Mon, Mar 15, 2021 at 06:30:30PM -0700, Jacob Pan wrote:
+> > I don't know if this is required. I thought utilities such as cgclassify
+> > need to be supported.
+> > " cgclassify - move running task(s) to given cgroups "
+> > If no such use case, I am fine with dropping the migration support. Just
+> > enforce limit on allocations.  
+> 
+> Yeah, that's what all other controllers do. Please read the in-tree
+> cgroup2 doc.
+> 
+Thanks for your patience and guidance, will try to merge with misc
+controller and go from there.
+
+Thanks,
+
+Jacob
