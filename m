@@ -1,44 +1,59 @@
-From: Jacob Pan <jacob.jun.pan-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC v2 2/2] cgroup: sev: Miscellaneous cgroup documentation.
-Date: Tue, 16 Mar 2021 11:19:04 -0700
-Message-ID: <20210316111904.5d92472e@jacob-builder>
-References: <YEvZ4muXqiSScQ8i@google.com>
-        <20210312145904.4071a9d6@jacob-builder>
-        <YEyR9181Qgzt+Ps9@mtj.duckdns.org>
-        <20210313085701.1fd16a39@jacob-builder>
-        <YEz+8HbfkbGgG5Tm@mtj.duckdns.org>
-        <20210315151155.383a7e6e@jacob-builder>
-        <YE/ddx5+ToNsgUF0@slm.duckdns.org>
-        <20210315164012.4adeabe8@jacob-builder>
-        <YE/zvLkL1vM8/Cdm@slm.duckdns.org>
-        <20210315183030.5b15aea3@jacob-builder>
-        <YFAWVJrM86FB17Lk@slm.duckdns.org>
+From: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [mm, net-next v2] mm: net: memcg accounting for TCP rx zerocopy
+Date: Tue, 16 Mar 2021 14:02:03 -0700
+Message-ID: <20210316140203.0d5ddf33@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+References: <20210316041645.144249-1-arjunroy.kdev@gmail.com>
+        <CAOFY-A1L8c626HZYSWm6ZKFO9mqBdBszv6obX4-1_LmDBQ6Z4A@mail.gmail.com>
+        <CALvZod7hgtdrN_KXD_5JdB2vzJzTc8tVz_5YFN53-xZjpHLLRw@mail.gmail.com>
+        <CAOFY-A0v2BEwRinhPXspjL_3dvyw2kDSyzQgUiJxc+P-3OLP8g@mail.gmail.com>
+        <CAOFY-A2q4otqu=pD60tUiD0GTDZnpcm+zajFp6SRDh4VixbV2Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <YFAWVJrM86FB17Lk-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1615928524;
+        bh=JabW6V+JpL9pQaNpNRb0IG759fPR+7+Gv+pQSojDt34=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=jOk9a5TPgHzTAN5ehOWPg8HuwPQrH0q3mHqJ37unDnf1PG40sZpnvwxU0T71BAchP
+         hFOCtYBamTnnDN8DKucrMp3+1m+zX0yKiENOlLQ5rhTpz0ZAs5WQUmnNnDoWeV8dYO
+         vaz0OjRFROztRXqg5zRMktFltLTYjih7InXGuqaloONOH1JqpaZHzO3J+Y0fEXWxVb
+         dHDbX9DC8B96C+NvnXBkeKm9VMCExKXNHI3G4dFi1HIPBAGNwoncDrLuF/RkBzZtfS
+         uPoSY6JW+5yhuSk3iT7ZaWnHEBiVPWKbzOgDyBPYKu5pKU/bIrVHdz++B0lMxRqB0G
+         /BhHwJErBjG5A==
+In-Reply-To: <CAOFY-A2q4otqu=pD60tUiD0GTDZnpcm+zajFp6SRDh4VixbV2Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, mkoutny-IBi9RG/b67k@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, thomas.lendacky-5C7GfCeVMHo@public.gmane.org, brijesh.singh-5C7GfCeVMHo@public.gmane.org, jon.grimm-5C7GfCeVMHo@public.gmane.org, eric.vantassell-5C7GfCeVMHo@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, frankja-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, gingell-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dionnaglaze-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jason
+To: Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Arjun Roy <arjunroy.kdev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-Hi Tejun,
-
-On Mon, 15 Mar 2021 22:22:12 -0400, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-
-> On Mon, Mar 15, 2021 at 06:30:30PM -0700, Jacob Pan wrote:
-> > I don't know if this is required. I thought utilities such as cgclassify
-> > need to be supported.
-> > " cgclassify - move running task(s) to given cgroups "
-> > If no such use case, I am fine with dropping the migration support. Just
-> > enforce limit on allocations.  
+On Mon, 15 Mar 2021 23:28:08 -0700 Arjun Roy wrote:
+> On Mon, Mar 15, 2021 at 11:22 PM Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+> >
+> > On Mon, Mar 15, 2021 at 9:29 PM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:  
+> > >
+> > > On Mon, Mar 15, 2021 at 9:20 PM Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:  
+>  [...]  
+> > > [...]  
+>  [...]  
+>  [...]  
+> > >
+> > > It is due to "mm: page-writeback: simplify memcg handling in
+> > > test_clear_page_writeback()" patch in the mm tree. You would need to
+> > > reintroduce the lock_page_memcg() which returns the memcg and make
+> > > __unlock_page_memcg() non-static.  
+> >
+> > To clarify, Shakeel - the tag "tag: v5.12-rc2-mmots-2021-03-11-21-49"
+> > fails to build on a clean checkout, without this patch, due to a
+> > compilation failure in mm/shmem.c, for reference:
+> > https://pastebin.com/raw/12eSGdGD
+> > (and that's why I'm basing this patch off of net-next in this email).
+> >
+> > -Arjun  
 > 
-> Yeah, that's what all other controllers do. Please read the in-tree
-> cgroup2 doc.
+> Another seeming anomaly - the patch sent out passes
+> scripts/checkpatch.pl but netdev/checkpatch finds plenty of actionable
+> fixes here: https://patchwork.kernel.org/project/netdevbpf/patch/20210316041645.144249-1-arjunroy.kdev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org/
 > 
-Thanks for your patience and guidance, will try to merge with misc
-controller and go from there.
+> Is netdev using some other automated checker instead of scripts/checkpatch.pl?
 
-Thanks,
-
-Jacob
+--strict --max-line-length=80
