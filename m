@@ -1,111 +1,35 @@
-From: Shakeel Butt <shakeelb@google.com>
+From: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH 2/3] mm: Charge active memcg when no mm is set
-Date: Tue, 16 Mar 2021 08:50:16 -0700
-Message-ID: <CALvZod7sk52OYwxP=VRhS0q4xZ57UuSdL6Mi4Y956xDq3pTatQ@mail.gmail.com>
-References: <20210316153655.500806-1-schatzberg.dan@gmail.com> <20210316153655.500806-3-schatzberg.dan@gmail.com>
+Date: Tue, 16 Mar 2021 12:02:46 -0400
+Message-ID: <YFDWps+whDDhoan5@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
+References: <20210316153655.500806-1-schatzberg.dan@gmail.com>
+ <20210316153655.500806-3-schatzberg.dan@gmail.com>
+ <CALvZod7sk52OYwxP=VRhS0q4xZ57UuSdL6Mi4Y956xDq3pTatQ@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=WwakdtxuHaTN5z0HCiQ4MNVrrN9llL1dGHrwS+1rEFI=;
-        b=Y8vlN3SI/ykxQTjQbv4kH+9CK9WxCxroUfhO5YAG/Q06fEfhC7gmihPG0b2gkbg7p2
-         BJcipNhPpwfAYZQawmSVw4SuDq9HgHqrnJ72QN6YzAPc/iS45ymhVnlsheWAmhIcRFFC
-         5n043KRfcygMCCaESFPz/xle+ga7BJvXFjAgDJ2KE3+DwTFKrqQGRARQHbIWQizdgYAx
-         yjC00EWkXA7CGN93CjqVoC9HMMj3XE/OgUEkwHEjGGzbImbrc7x5KngmL6YhRLcDwLnF
-         rOlY48nIfjjcwEFdjlIDwqnZrPTEBtobD5wnEMK+86kKf6TRdXu36PZTzykBdCGIV382
-         K6bQ==
-In-Reply-To: <20210316153655.500806-3-schatzberg.dan@gmail.com>
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=OWxtuf+bX9R9Cu8TrjqwnDkf028NcAMlaQLndtH+i54=;
+        b=LYzEzss7CpK+82hRa1OyJ5aKdBxvMSCKamF0GMBN3uRD3MjSqMnlr4wAbcnVkeWmqO
+         xMTtoGkM+2XtUWunjz/GozmOPWH81mpg0mMYthGk6NU3chxb1OT/zTWHxoOJjW+y7ntB
+         FJVIMyD12Ki7bro2nKguFU5F2O98AsnxXJEy9BU/MUIDCgEKPjCkvKYOv7OcnEWKLr+Z
+         tHmR/A8LIQypTA4XLaqM6qXCgMmhMrfhcMy7oejDQr/gpqQeDou3C+fazTlvvUvsY7VN
+         C1wvmeXLITdnLCvnOkmS5rBkMbCOPGQtHiEJAyAk3aDaGwIt008WGNfYLgi//LIDoM8n
+         dKkQ==
+Content-Disposition: inline
+In-Reply-To: <CALvZod7sk52OYwxP=VRhS0q4xZ57UuSdL6Mi4Y956xDq3pTatQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Dan Schatzberg <schatzberg.dan@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Hugh Dickins <hughd@google.com>, Roman Gushchin <guro@fb.com>, Muchun Song <songmuchun@bytedance.com>, Alex Shi <alex.shi@linux.alibaba.com>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Wei Yang <richard.weiyang@gmail.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:MEMORY MANAGEMENT" <linux-mm@kvack.org>
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:BLOCK LAYER" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:MEMORY MANAGEMENT" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-On Tue, Mar 16, 2021 at 8:37 AM Dan Schatzberg <schatzberg.dan@gmail.com> wrote:
->
-> memalloc_use_memcg() worked for kernel allocations but was silently
-> ignored for user pages.
+On Tue, Mar 16, 2021 at 08:50:16AM -0700, Shakeel Butt wrote:
+> You will need to rebase to the latest mm tree. This code has changed.
 
-set_active_memcg()
-
->
-> This patch establishes a precedence order for who gets charged:
->
-> 1. If there is a memcg associated with the page already, that memcg is
->    charged. This happens during swapin.
->
-> 2. If an explicit mm is passed, mm->memcg is charged. This happens
->    during page faults, which can be triggered in remote VMs (eg gup).
->
-> 3. Otherwise consult the current process context. If it has configured
->    a current->active_memcg, use that. Otherwise, current->mm->memcg.
-
-It's a bit more sophisticated than current->active_memcg. It has been
-extended to work in interrupt context as well.
-
->
-> Previously, if a NULL mm was passed to mem_cgroup_try_charge (case 3) it
-
-mem_cgroup_charge()
-
-> would always charge the root cgroup. Now it looks up the current
-> active_memcg first (falling back to charging the root cgroup if not
-> set).
->
-> Signed-off-by: Dan Schatzberg <schatzberg.dan@gmail.com>
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-> Acked-by: Tejun Heo <tj@kernel.org>
-> Acked-by: Chris Down <chris@chrisdown.name>
-> Reviewed-by: Shakeel Butt <shakeelb@google.com>
-> ---
->  mm/filemap.c    |  2 +-
->  mm/memcontrol.c | 14 +++++++++++---
->  mm/shmem.c      |  4 ++--
->  3 files changed, 14 insertions(+), 6 deletions(-)
->
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 43700480d897..5135f330f05c 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -843,7 +843,7 @@ noinline int __add_to_page_cache_locked(struct page *page,
->         page->index = offset;
->
->         if (!huge) {
-> -               error = mem_cgroup_charge(page, current->mm, gfp);
-> +               error = mem_cgroup_charge(page, NULL, gfp);
->                 if (error)
->                         goto error;
->                 charged = true;
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index e064ac0d850a..9a1b23ed3412 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -6690,7 +6690,8 @@ void mem_cgroup_calculate_protection(struct mem_cgroup *root,
->   * @gfp_mask: reclaim mode
->   *
->   * Try to charge @page to the memcg that @mm belongs to, reclaiming
-> - * pages according to @gfp_mask if necessary.
-> + * pages according to @gfp_mask if necessary. if @mm is NULL, try to
-> + * charge to the active memcg.
->   *
->   * Returns 0 on success. Otherwise, an error code is returned.
->   */
-> @@ -6726,8 +6727,15 @@ int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask)
->                 rcu_read_unlock();
->         }
->
-> -       if (!memcg)
-> -               memcg = get_mem_cgroup_from_mm(mm);
-> +       if (!memcg) {
-> +               if (!mm) {
-> +                       memcg = get_mem_cgroup_from_current();
-> +                       if (!memcg)
-> +                               memcg = get_mem_cgroup_from_mm(current->mm);
-> +               } else {
-> +                       memcg = get_mem_cgroup_from_mm(mm);
-> +               }
-> +       }
-
-You will need to rebase to the latest mm tree. This code has changed.
+Thanks for the feedback, I will address these comments in another
+rebase. I'll wait and see if there's any comments concerning the
+loop-related patches but it sounds like this will need to go through
+the mm-tree
