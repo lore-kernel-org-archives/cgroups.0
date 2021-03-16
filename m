@@ -1,123 +1,269 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [mm, net-next v2] mm: net: memcg accounting for TCP rx zerocopy
-Date: Tue, 16 Mar 2021 06:26:58 -0400
-Message-ID: <YFCH8vzFGmfFRCvV@cmpxchg.org>
-References: <20210316041645.144249-1-arjunroy.kdev@gmail.com>
+From: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 3/3] loop: Charge i/o to mem and blk cg
+Date: Tue, 16 Mar 2021 08:36:52 -0700
+Message-ID: <20210316153655.500806-4-schatzberg.dan@gmail.com>
+References: <20210316153655.500806-1-schatzberg.dan@gmail.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=V0BTN/Z2jXatx08nLmn2iGZ7O1WuylzrrulrDON6R9k=;
-        b=xCib9ZN+FiOtHqn2f2GIRYRiTffT7uatWQxo/AtFklW7YHFihG2zQ/vTE6gNPQNf+9
-         vRO50HskMB8FxFuo2e/yIPiiEjRMNR2akfE/kxzq3hVHcZW6gbBwrXGM/nkazzsBxspT
-         IDDzm1pyKpT157y7ETbYQl89HFKamnR3YLguRbBuNUGLzFKgCZyAKpgnaNfuYaC+pVa6
-         LpmHEpA95pzB9VWM6M9mop0H7Z1xD8Vy9M7yIxp15Me9nGIHP1oJuFRaG4tLl0wyVweM
-         Pvxba1+vGHWQ9Sr05/mHjYuGYAaztxJfRkzf+J9pX0/vBFCFzOae7JoD3GMPcoWagsvR
-         gusg==
-Content-Disposition: inline
-In-Reply-To: <20210316041645.144249-1-arjunroy.kdev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=SADjSKEOkix4t8p9x6JY890dWdHLGsY9Rc7Lg6faQoU=;
+        b=rM8fq07zA9C4bo9WSbloq+ek277Q5kGSB7HNIy5MooE0Bf/vReCLqO4IviXlNiZ2aw
+         gFCQU9fv/bm/p05hS5ZbsOFJ+grHxZU2+2COb0cuhEMZurcChMHtmgh/wQBzpehMLhBI
+         7u5utpXXm68vTqK72bGlfjCek7+nFC7VbUauxGyzLmY+68pwX4dfEOm3HM+kkzlwOZZu
+         aoK9mYEyMOmLn4nf4iF05Zkme8X9tDhtgVeDxLr1SpsYTE+PyelRbgcrL7W9/EtqeXLw
+         mXP1Rs1RBVP+kUdU5RkduPWn1/dpECrMQGZzo+5ioaoNCumIxQ9jdLWS/KWgOAgCUwcf
+         4gPA==
+In-Reply-To: <20210316153655.500806-1-schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Arjun Roy <arjunroy.kdev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org
+To: 
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:BLOCK LAYER" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP CGROUP" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-
 
-Hello,
+The current code only associates with the existing blkcg when aio is
+used to access the backing file. This patch covers all types of i/o to
+the backing file and also associates the memcg so if the backing file is
+on tmpfs, memory is charged appropriately.
 
-On Mon, Mar 15, 2021 at 09:16:45PM -0700, Arjun Roy wrote:
-> From: Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> 
-> TCP zerocopy receive is used by high performance network applications
-> to further scale. For RX zerocopy, the memory containing the network
-> data filled by the network driver is directly mapped into the address
-> space of high performance applications. To keep the TLB cost low,
-> these applications unmap the network memory in big batches. So, this
-> memory can remain mapped for long time. This can cause a memory
-> isolation issue as this memory becomes unaccounted after getting
-> mapped into the application address space. This patch adds the memcg
-> accounting for such memory.
-> 
-> Accounting the network memory comes with its own unique challenges.
-> The high performance NIC drivers use page pooling to reuse the pages
-> to eliminate/reduce expensive setup steps like IOMMU. These drivers
-> keep an extra reference on the pages and thus we can not depend on the
-> page reference for the uncharging. The page in the pool may keep a
-> memcg pinned for arbitrary long time or may get used by other memcg.
+This patch also exports cgroup_get_e_css and int_active_memcg so it
+can be used by the loop module.
 
-The page pool knows when a page is unmapped again and becomes
-available for recycling, right? Essentially the 'free' phase of that
-private allocator. That's where the uncharge should be done.
+Signed-off-by: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Acked-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+ drivers/block/loop.c       | 61 +++++++++++++++++++++++++-------------
+ drivers/block/loop.h       |  3 +-
+ include/linux/memcontrol.h | 11 +++++++
+ kernel/cgroup/cgroup.c     |  1 +
+ mm/memcontrol.c            |  1 +
+ 5 files changed, 56 insertions(+), 21 deletions(-)
 
-For one, it's more aligned with the usual memcg charge lifetime rules.
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index 5c080af73caa..6cf3086a2e75 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -77,6 +77,7 @@
+ #include <linux/uio.h>
+ #include <linux/ioprio.h>
+ #include <linux/blk-cgroup.h>
++#include <linux/sched/mm.h>
+ 
+ #include "loop.h"
+ 
+@@ -515,8 +516,6 @@ static void lo_rw_aio_complete(struct kiocb *iocb, long ret, long ret2)
+ {
+ 	struct loop_cmd *cmd = container_of(iocb, struct loop_cmd, iocb);
+ 
+-	if (cmd->css)
+-		css_put(cmd->css);
+ 	cmd->ret = ret;
+ 	lo_rw_aio_do_completion(cmd);
+ }
+@@ -577,8 +576,6 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 	cmd->iocb.ki_complete = lo_rw_aio_complete;
+ 	cmd->iocb.ki_flags = IOCB_DIRECT;
+ 	cmd->iocb.ki_ioprio = IOPRIO_PRIO_VALUE(IOPRIO_CLASS_NONE, 0);
+-	if (cmd->css)
+-		kthread_associate_blkcg(cmd->css);
+ 
+ 	if (rw == WRITE)
+ 		ret = call_write_iter(file, &cmd->iocb, &iter);
+@@ -586,7 +583,6 @@ static int lo_rw_aio(struct loop_device *lo, struct loop_cmd *cmd,
+ 		ret = call_read_iter(file, &cmd->iocb, &iter);
+ 
+ 	lo_rw_aio_do_completion(cmd);
+-	kthread_associate_blkcg(NULL);
+ 
+ 	if (ret != -EIOCBQUEUED)
+ 		cmd->iocb.ki_complete(&cmd->iocb, ret, 0);
+@@ -927,7 +923,7 @@ struct loop_worker {
+ 	struct list_head cmd_list;
+ 	struct list_head idle_list;
+ 	struct loop_device *lo;
+-	struct cgroup_subsys_state *css;
++	struct cgroup_subsys_state *blkcg_css;
+ 	unsigned long last_ran_at;
+ };
+ 
+@@ -944,7 +940,7 @@ static void loop_queue_work(struct loop_device *lo, struct loop_cmd *cmd)
+ 
+ 	spin_lock_irq(&lo->lo_work_lock);
+ 
+-	if (!cmd->css)
++	if (!cmd->blkcg_css)
+ 		goto queue_work;
+ 
+ 	node = &lo->worker_tree.rb_node;
+@@ -952,10 +948,10 @@ static void loop_queue_work(struct loop_device *lo, struct loop_cmd *cmd)
+ 	while (*node) {
+ 		parent = *node;
+ 		cur_worker = container_of(*node, struct loop_worker, rb_node);
+-		if (cur_worker->css == cmd->css) {
++		if (cur_worker->blkcg_css == cmd->blkcg_css) {
+ 			worker = cur_worker;
+ 			break;
+-		} else if ((long)cur_worker->css < (long)cmd->css) {
++		} else if ((long)cur_worker->blkcg_css < (long)cmd->blkcg_css) {
+ 			node = &(*node)->rb_left;
+ 		} else {
+ 			node = &(*node)->rb_right;
+@@ -967,13 +963,18 @@ static void loop_queue_work(struct loop_device *lo, struct loop_cmd *cmd)
+ 	worker = kzalloc(sizeof(struct loop_worker), GFP_NOWAIT | __GFP_NOWARN);
+ 	/*
+ 	 * In the event we cannot allocate a worker, just queue on the
+-	 * rootcg worker
++	 * rootcg worker and issue the I/O as the rootcg
+ 	 */
+-	if (!worker)
++	if (!worker) {
++		cmd->blkcg_css = NULL;
++		if (cmd->memcg_css)
++			css_put(cmd->memcg_css);
++		cmd->memcg_css = NULL;
+ 		goto queue_work;
++	}
+ 
+-	worker->css = cmd->css;
+-	css_get(worker->css);
++	worker->blkcg_css = cmd->blkcg_css;
++	css_get(worker->blkcg_css);
+ 	INIT_WORK(&worker->work, loop_workfn);
+ 	INIT_LIST_HEAD(&worker->cmd_list);
+ 	INIT_LIST_HEAD(&worker->idle_list);
+@@ -1297,7 +1298,7 @@ static int __loop_clr_fd(struct loop_device *lo, bool release)
+ 				idle_list) {
+ 		list_del(&worker->idle_list);
+ 		rb_erase(&worker->rb_node, &lo->worker_tree);
+-		css_put(worker->css);
++		css_put(worker->blkcg_css);
+ 		kfree(worker);
+ 	}
+ 	spin_unlock_irq(&lo->lo_work_lock);
+@@ -2102,13 +2103,18 @@ static blk_status_t loop_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	}
+ 
+ 	/* always use the first bio's css */
++	cmd->blkcg_css = NULL;
++	cmd->memcg_css = NULL;
+ #ifdef CONFIG_BLK_CGROUP
+-	if (cmd->use_aio && rq->bio && rq->bio->bi_blkg) {
+-		cmd->css = &bio_blkcg(rq->bio)->css;
+-		css_get(cmd->css);
+-	} else
++	if (rq->bio && rq->bio->bi_blkg) {
++		cmd->blkcg_css = &bio_blkcg(rq->bio)->css;
++#ifdef CONFIG_MEMCG
++		cmd->memcg_css =
++			cgroup_get_e_css(cmd->blkcg_css->cgroup,
++					&memory_cgrp_subsys);
++#endif
++	}
+ #endif
+-		cmd->css = NULL;
+ 	loop_queue_work(lo, cmd);
+ 
+ 	return BLK_STS_OK;
+@@ -2120,13 +2126,28 @@ static void loop_handle_cmd(struct loop_cmd *cmd)
+ 	const bool write = op_is_write(req_op(rq));
+ 	struct loop_device *lo = rq->q->queuedata;
+ 	int ret = 0;
++	struct mem_cgroup *old_memcg = NULL;
+ 
+ 	if (write && (lo->lo_flags & LO_FLAGS_READ_ONLY)) {
+ 		ret = -EIO;
+ 		goto failed;
+ 	}
+ 
++	if (cmd->blkcg_css)
++		kthread_associate_blkcg(cmd->blkcg_css);
++	if (cmd->memcg_css)
++		old_memcg = set_active_memcg(
++			mem_cgroup_from_css(cmd->memcg_css));
++
+ 	ret = do_req_filebacked(lo, rq);
++
++	if (cmd->blkcg_css)
++		kthread_associate_blkcg(NULL);
++
++	if (cmd->memcg_css) {
++		set_active_memcg(old_memcg);
++		css_put(cmd->memcg_css);
++	}
+  failed:
+ 	/* complete non-aio request */
+ 	if (!cmd->use_aio || ret) {
+@@ -2205,7 +2226,7 @@ static void loop_free_idle_workers(struct timer_list *timer)
+ 			break;
+ 		list_del(&worker->idle_list);
+ 		rb_erase(&worker->rb_node, &lo->worker_tree);
+-		css_put(worker->css);
++		css_put(worker->blkcg_css);
+ 		kfree(worker);
+ 	}
+ 	if (!list_empty(&lo->idle_worker_list))
+diff --git a/drivers/block/loop.h b/drivers/block/loop.h
+index 9289c1cd6374..cd24a81e00e6 100644
+--- a/drivers/block/loop.h
++++ b/drivers/block/loop.h
+@@ -76,7 +76,8 @@ struct loop_cmd {
+ 	long ret;
+ 	struct kiocb iocb;
+ 	struct bio_vec *bvec;
+-	struct cgroup_subsys_state *css;
++	struct cgroup_subsys_state *blkcg_css;
++	struct cgroup_subsys_state *memcg_css;
+ };
+ 
+ /* Support for loadable transfer modules */
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 0c04d39a7967..fd5dd961d01f 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1187,6 +1187,17 @@ static inline struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm)
+ 	return NULL;
+ }
+ 
++static inline struct mem_cgroup *get_mem_cgroup_from_page(struct page *page)
++{
++	return NULL;
++}
++
++static inline
++struct mem_cgroup *mem_cgroup_from_css(struct cgroup_subsys_state *css)
++{
++	return NULL;
++}
++
+ static inline void mem_cgroup_put(struct mem_cgroup *memcg)
+ {
+ }
+diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
+index 9153b20e5cc6..94c88f7221c5 100644
+--- a/kernel/cgroup/cgroup.c
++++ b/kernel/cgroup/cgroup.c
+@@ -577,6 +577,7 @@ struct cgroup_subsys_state *cgroup_get_e_css(struct cgroup *cgrp,
+ 	rcu_read_unlock();
+ 	return css;
+ }
++EXPORT_SYMBOL_GPL(cgroup_get_e_css);
+ 
+ static void cgroup_get_live(struct cgroup *cgrp)
+ {
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 9a1b23ed3412..f05501669e29 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -78,6 +78,7 @@ struct mem_cgroup *root_mem_cgroup __read_mostly;
+ 
+ /* Active memory cgroup to use from an interrupt context */
+ DEFINE_PER_CPU(struct mem_cgroup *, int_active_memcg);
++EXPORT_PER_CPU_SYMBOL_GPL(int_active_memcg);
+ 
+ /* Socket memory accounting disabled? */
+ static bool cgroup_memory_nosocket;
+-- 
+2.30.2
 
-But also it doesn't add what is essentially a private driver callback
-to the generic file unmapping path.
-
-Finally, this will eliminate the need for making up a new charge type
-(MEMCG_DATA_SOCK) and allow using the standard kmem charging API.
-
-> This patch decouples the uncharging of the page from the refcnt and
-> associates it with the map count i.e. the page gets uncharged when the
-> last address space unmaps it. Now the question is, what if the driver
-> drops its reference while the page is still mapped? That is fine as
-> the address space also holds a reference to the page i.e. the
-> reference count can not drop to zero before the map count.
-> 
-> Signed-off-by: Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Co-developed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> ---
-> 
-> Changelog since v1:
-> - Pages accounted for in this manner are now tracked via MEMCG_SOCK.
-> - v1 allowed for a brief period of double-charging, now we have a
->   brief period of under-charging to avoid undue memory pressure.
-
-I'm afraid we'll have to go back to v1.
-
-Let's address the issues raised with it:
-
-1. The NR_FILE_MAPPED accounting. It is longstanding Linux behavior
-   that driver pages mapped into userspace are accounted as file
-   pages, because userspace is actually doing mmap() against a driver
-   file/fd (as opposed to an anon mmap). That is how they show up in
-   vmstat, in meminfo, and in the per process stats. There is no
-   reason to make memcg deviate from this. If we don't like it, it
-   should be taken on by changing vm_insert_page() - not trick rmap
-   into thinking these arent memcg pages and then fixing it up with
-   additional special-cased accounting callbacks.
-
-   v1 did this right, it charged the pages the way we handle all other
-   userspace pages: before rmap, and then let the generic VM code do
-   the accounting for us with the cgroup-aware vmstat infrastructure.
-
-2. The double charging. Could you elaborate how much we're talking
-   about in any given batch? Is this a problem worth worrying about?
-
-   The way I see it, any conflict here is caused by the pages being
-   counted in the SOCK counter already, but not actually *tracked* on
-   a per page basis. If it's worth addressing, we should look into
-   fixing the root cause over there first if possible, before trying
-   to work around it here.
-
-   The newly-added GFP_NOFAIL is especially worrisome. The pages
-   should be charged before we make promises to userspace, not be
-   force-charged when it's too late.
-
-   We have sk context when charging the inserted pages. Can we
-   uncharge MEMCG_SOCK after each batch of inserts? That's only 32
-   pages worth of overcharging, so not more than the regular charge
-   batch memcg is using.
-
-   An even better way would be to do charge stealing where we reuse
-   the existing MEMCG_SOCK charges and don't have to get any new ones
-   at all - just set up page->memcg and remove the charge from the sk.
-
-   But yeah, it depends a bit if this is a practical concern.
-
-Thanks,
-Johannes
