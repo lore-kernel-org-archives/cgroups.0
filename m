@@ -1,50 +1,127 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC v2 2/2] cgroup: sev: Miscellaneous cgroup documentation.
-Date: Mon, 15 Mar 2021 22:22:12 -0400
-Message-ID: <YFAWVJrM86FB17Lk@slm.duckdns.org>
-References: <YEvZ4muXqiSScQ8i@google.com>
- <20210312145904.4071a9d6@jacob-builder>
- <YEyR9181Qgzt+Ps9@mtj.duckdns.org>
- <20210313085701.1fd16a39@jacob-builder>
- <YEz+8HbfkbGgG5Tm@mtj.duckdns.org>
- <20210315151155.383a7e6e@jacob-builder>
- <YE/ddx5+ToNsgUF0@slm.duckdns.org>
- <20210315164012.4adeabe8@jacob-builder>
- <YE/zvLkL1vM8/Cdm@slm.duckdns.org>
- <20210315183030.5b15aea3@jacob-builder>
+From: Alexey Klimov <aklimov@redhat.com>
+Subject: Re: [PATCH v2] cpu/hotplug: wait for cpuset_hotplug_work to finish on
+ cpu onlining
+Date: Tue, 16 Mar 2021 03:15:13 +0000
+Message-ID: <CAFBcO+99Ax5MuOtzNx=NrmnUN=+913Sc-DV83ObOi01A=kkN3w@mail.gmail.com>
+References: <20210212003032.2037750-1-aklimov@redhat.com> <87tuqhrs3d.fsf@oracle.com>
 Mime-Version: 1.0
-Return-path: <kvm-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=x9e1xfobrgux5JmgRy+7168jAO2JUpIpvIQcF6MG83w=;
-        b=fjEXsStwnXKCurOKkJhtQkcTA24r1rdYzLOmvw1xvyNUJvtm0b9kg5enio6VXPGHUE
-         NeMqy3J9wiHHmkHoTqZlg8I7iJ8StIPtyYL8JawjzLLmbqjI+hrWHfILqO0RxLbwrXLC
-         jDWFObZ/zoE4IRnM9FQRyorroXQVsjphNLWMaDMpPHCRxgovQgs4vjPMMOm2o45NtdX/
-         nDbk2QOo3c4OaemxRdSTaFDuqla+i33mWKdJznmikwFBiysdhSnwmgzniAXpM9JXIQla
-         5KZ3WFUnLvoxEVwfPbWYKAVhnwTfUrDOtfhCPtfNSeuue6NnIU8ZUyDPx7cSZeSy2Yys
-         QoHw==
-Sender: Tejun Heo <htejun@gmail.com>
-Content-Disposition: inline
-In-Reply-To: <20210315183030.5b15aea3@jacob-builder>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1615864527;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=PgTYgUrUjzuxenxAnT33mXHPaYITveEH9VmNhTwLT9M=;
+        b=NqVT9RHENRggJAIjd3vRujEcQMIuz/MAv/1h4mRyWQEf93Axih9NS0m8UjIH4mJ78dx27U
+        v2ShXygmlQxBerjozZI8rcoyUasoLTL13DV12OSTVQWxIBadNYepcDbqvYJvpG9NJ++Hff
+        0OW4GKG7vsnIWBRKEOKbWEIk1N8poq4=
+In-Reply-To: <87tuqhrs3d.fsf@oracle.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Jacob Pan <jacob.jun.pan@intel.com>
-Cc: Vipin Sharma <vipinsh@google.com>, mkoutny@suse.com, rdunlap@infradead.org, thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net, seanjc@google.com, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, joro@8bytes.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, "Tian, Kevin" <kevin.tian@intel.com>, "Liu, Yi L" <yi.l.liu@intel.com>, "Raj, Ashok" <ashok.raj@intel.com>, Alex Williamson <alex.williamson@redhat.com>, Jason
+To: Daniel Jordan <daniel.m.jordan@oracle.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>, yury.norov@gmail.com, tglx@linutronix.de, Joshua Baker <jobaker@redhat.com>, audralmitchel@gmail.com, arnd@arndb.de, gregkh@linuxfoundation.org, rafael@kernel.org, tj@kernel.org, Qais Yousef <qais.yousef@arm.com>, hannes@cmpxchg.org, Alexey Klimov <klimov.linux@gmail.com>
 
-On Mon, Mar 15, 2021 at 06:30:30PM -0700, Jacob Pan wrote:
-> I don't know if this is required. I thought utilities such as cgclassify
-> need to be supported.
-> " cgclassify - move running task(s) to given cgroups "
-> If no such use case, I am fine with dropping the migration support. Just
-> enforce limit on allocations.
+On Fri, Feb 12, 2021 at 7:42 PM Daniel Jordan
+<daniel.m.jordan@oracle.com> wrote:
+>
+> Alexey Klimov <aklimov@redhat.com> writes:
+> > int cpu_device_up(struct device *dev)
+>
+> Yeah, definitely better to do the wait here.
+>
+> >  int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
+> >  {
+> > -     int cpu, ret = 0;
+> > +     struct device *dev;
+> > +     cpumask_var_t mask;
+> > +     int cpu, ret;
+> > +
+> > +     if (!zalloc_cpumask_var(&mask, GFP_KERNEL))
+> > +             return -ENOMEM;
+> >
+> > +     ret = 0;
+> >       cpu_maps_update_begin();
+> >       for_each_online_cpu(cpu) {
+> >               if (topology_is_primary_thread(cpu))
+> > @@ -2099,18 +2098,35 @@ int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
+> >                * called under the sysfs hotplug lock, so it is properly
+> >                * serialized against the regular offline usage.
+> >                */
+> > -             cpuhp_offline_cpu_device(cpu);
+> > +             dev = get_cpu_device(cpu);
+> > +             dev->offline = true;
+> > +
+> > +             cpumask_set_cpu(cpu, mask);
+> >       }
+> >       if (!ret)
+> >               cpu_smt_control = ctrlval;
+> >       cpu_maps_update_done();
+> > +
+> > +     /* Tell user space about the state changes */
+> > +     for_each_cpu(cpu, mask) {
+> > +             dev = get_cpu_device(cpu);
+> > +             kobject_uevent(&dev->kobj, KOBJ_OFFLINE);
+> > +     }
+> > +
+> > +     free_cpumask_var(mask);
+> >       return ret;
+> >  }
+>
+> Hrm, should the dev manipulation be kept in one place, something like
+> this?
 
-Yeah, that's what all other controllers do. Please read the in-tree cgroup2
-doc.
+The first section of comment seems problematic to me with regards to such move:
 
-Thanks.
+                 * As this needs to hold the cpu maps lock it's impossible
+                 * to call device_offline() because that ends up calling
+                 * cpu_down() which takes cpu maps lock. cpu maps lock
+                 * needs to be held as this might race against in kernel
+                 * abusers of the hotplug machinery (thermal management).
 
--- 
-tejun
+Cpu maps lock is released in cpu_maps_update_done() hence we will move
+dev->offline out of cpu maps lock. Maybe I misunderstood the comment
+and it relates to calling cpu_down_maps_locked() under lock to avoid
+race?
+I failed to find the abusers of hotplug machinery in drivers/thermal/*
+to track down the logic of potential race but I might have overlooked.
+Anyway, if we move the update of dev->offline out, then it makes sense
+to restore cpuhp_{offline,online}_cpu_device back and just use it.
+
+I guess I'll update and re-send the patch and see how it goes.
+
+> diff --git a/kernel/cpu.c b/kernel/cpu.c
+> index 8817ccdc8e112..aa21219a7b7c4 100644
+> --- a/kernel/cpu.c
+> +++ b/kernel/cpu.c
+> @@ -2085,11 +2085,20 @@ int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
+>                 ret = cpu_down_maps_locked(cpu, CPUHP_OFFLINE);
+>                 if (ret)
+>                         break;
+> +
+> +               cpumask_set_cpu(cpu, mask);
+> +       }
+> +       if (!ret)
+> +               cpu_smt_control = ctrlval;
+> +       cpu_maps_update_done();
+> +
+> +       /* Tell user space about the state changes */
+> +       for_each_cpu(cpu, mask) {
+>                 /*
+> -                * As this needs to hold the cpu maps lock it's impossible
+> +                * When the cpu maps lock was taken above it was impossible
+>                  * to call device_offline() because that ends up calling
+>                  * cpu_down() which takes cpu maps lock. cpu maps lock
+> -                * needs to be held as this might race against in kernel
+> +                * needed to be held as this might race against in kernel
+>                  * abusers of the hotplug machinery (thermal management).
+>                  *
+>                  * So nothing would update device:offline state. That would
+
+Yeah, reading how you re-phrased it, this seems to be about
+cpu_down_maps_locked()/device_offline() locks and race rather than
+updating stale dev->offline.
+
+Thank you,
+Alexey
+
