@@ -1,44 +1,51 @@
-From: "Singh, Balbir" <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] mm: memcontrol: switch to rstat fix
-Date: Tue, 16 Mar 2021 11:52:22 +1100
-Message-ID: <494a5169-7e18-804b-3975-3a6442aff601@gmail.com>
-References: <20210315234100.64307-1-hannes@cmpxchg.org>
+From: Jacob Pan <jacob.jun.pan-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC v2 2/2] cgroup: sev: Miscellaneous cgroup documentation.
+Date: Mon, 15 Mar 2021 18:30:30 -0700
+Message-ID: <20210315183030.5b15aea3@jacob-builder>
+References: <YECfhCJtHUL9cB2L@slm.duckdns.org>
+        <20210312125821.22d9bfca@jacob-builder>
+        <YEvZ4muXqiSScQ8i@google.com>
+        <20210312145904.4071a9d6@jacob-builder>
+        <YEyR9181Qgzt+Ps9@mtj.duckdns.org>
+        <20210313085701.1fd16a39@jacob-builder>
+        <YEz+8HbfkbGgG5Tm@mtj.duckdns.org>
+        <20210315151155.383a7e6e@jacob-builder>
+        <YE/ddx5+ToNsgUF0@slm.duckdns.org>
+        <20210315164012.4adeabe8@jacob-builder>
+        <YE/zvLkL1vM8/Cdm@slm.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=xZoZuWb2tBzrGLpbmU0QlJ3nLJM79Q95ZotWRYdo/dU=;
-        b=udPVwzShPfqLnJku3Fi+dpSMekaBCR/1LK2aWf1PcUDLZZrudJibDmi0qfrv/bqFQi
-         2H93ctwVoCfgOr2SN8hWgsDeHQvcBvP8XiGlBtPsy1YjVOKrLNSDioU8RZp8zwqXc3A6
-         oJI2UWvwmwVvKThzHVEDxhD1X5nOp/VOJj4PbXs+hR49oilZocWDgVy25YKK8EOHXYdm
-         qYcsl+P22j8n75mkw0RH4x+LoJ8q9WWI19/8ttIpLAb5Tp5h50c6BXldIRsMApX7ghT4
-         eTArYFObAgWoCrP6O+yFbQ/MxkIiKeK6kzPC9Og6q+TOirm7W6j9lHvVgDGzbYPmZY3q
-         8c5Q==
-In-Reply-To: <20210315234100.64307-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Content-Language: en-GB
+In-Reply-To: <YE/zvLkL1vM8/Cdm-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, mkoutny-IBi9RG/b67k@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, thomas.lendacky-5C7GfCeVMHo@public.gmane.org, brijesh.singh-5C7GfCeVMHo@public.gmane.org, jon.grimm-5C7GfCeVMHo@public.gmane.org, eric.vantassell-5C7GfCeVMHo@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, frankja-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, gingell-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dionnaglaze-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jason
 
-On 16/3/21 10:41 am, Johannes Weiner wrote:
-> Fix a sleep in atomic section problem: wb_writeback() takes a spinlock
-> and calls wb_over_bg_thresh() -> mem_cgroup_wb_stats, but the regular
-> rstat flushing function called from in there does lockbreaking and may
-> sleep. Switch to the atomic variant, cgroup_rstat_irqsafe().
+Hi Tejun,
+
+On Mon, 15 Mar 2021 19:54:36 -0400, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+
+> Hello,
 > 
-> To be consistent with other memcg flush calls, but without adding
-> another memcg wrapper, inline and drop memcg_flush_vmstats() instead.
+> On Mon, Mar 15, 2021 at 04:40:12PM -0700, Jacob Pan wrote:
+> > 2. then we want to move/migrate Process1 to cg_B. so we need uncharge
+> > 10 of cg_A, charge 10 of cg_B  
 > 
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> ---
+> So, what I don't get is why this migration is necessary. This isn't
+> supported as a usage pattern and no one, at least in terms of wide-spread
+> usage, does this. Why is this a requirement for your use case?
+> 
+I don't know if this is required. I thought utilities such as cgclassify
+need to be supported.
+" cgclassify - move running task(s) to given cgroups "
+If no such use case, I am fine with dropping the migration support. Just
+enforce limit on allocations.
 
-The patch make sense, but it does break any notion of abstraction we had
-about controllers have some independence in their strategy to maintain
-their own counters and stats. It now couples writeback with rstat instead
-of just memcg.
+> Thanks.
+> 
 
-Acked-by: Balbir Singh <bsingharora-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+Thanks,
+
+Jacob
