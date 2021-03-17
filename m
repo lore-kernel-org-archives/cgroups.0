@@ -1,59 +1,218 @@
-From: Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [mm, net-next v2] mm: net: memcg accounting for TCP rx zerocopy
-Date: Tue, 16 Mar 2021 14:02:03 -0700
-Message-ID: <20210316140203.0d5ddf33@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-References: <20210316041645.144249-1-arjunroy.kdev@gmail.com>
-        <CAOFY-A1L8c626HZYSWm6ZKFO9mqBdBszv6obX4-1_LmDBQ6Z4A@mail.gmail.com>
-        <CALvZod7hgtdrN_KXD_5JdB2vzJzTc8tVz_5YFN53-xZjpHLLRw@mail.gmail.com>
-        <CAOFY-A0v2BEwRinhPXspjL_3dvyw2kDSyzQgUiJxc+P-3OLP8g@mail.gmail.com>
-        <CAOFY-A2q4otqu=pD60tUiD0GTDZnpcm+zajFp6SRDh4VixbV2Q@mail.gmail.com>
+From: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v3] cpu/hotplug: wait for cpuset_hotplug_work to finish on cpu onlining
+Date: Wed, 17 Mar 2021 00:36:16 +0000
+Message-ID: <20210317003616.2817418-1-aklimov@redhat.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1615928524;
-        bh=JabW6V+JpL9pQaNpNRb0IG759fPR+7+Gv+pQSojDt34=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=jOk9a5TPgHzTAN5ehOWPg8HuwPQrH0q3mHqJ37unDnf1PG40sZpnvwxU0T71BAchP
-         hFOCtYBamTnnDN8DKucrMp3+1m+zX0yKiENOlLQ5rhTpz0ZAs5WQUmnNnDoWeV8dYO
-         vaz0OjRFROztRXqg5zRMktFltLTYjih7InXGuqaloONOH1JqpaZHzO3J+Y0fEXWxVb
-         dHDbX9DC8B96C+NvnXBkeKm9VMCExKXNHI3G4dFi1HIPBAGNwoncDrLuF/RkBzZtfS
-         uPoSY6JW+5yhuSk3iT7ZaWnHEBiVPWKbzOgDyBPYKu5pKU/bIrVHdz++B0lMxRqB0G
-         /BhHwJErBjG5A==
-In-Reply-To: <CAOFY-A2q4otqu=pD60tUiD0GTDZnpcm+zajFp6SRDh4VixbV2Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1615941387;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=q+WBXT2Z0GX5Wb5Zd+rdqHW22JpjwdirbYKXvw2UcrI=;
+        b=jJYLiV9lg09U1snUyWiFs9AFQFaWMnGh2yNKjSqD8BmLjywzi4hr/D5K7wOVavHtdWoboH
+        c/lhV1XBb1XHOVI0pRS+zr+7jpQ3LZ8VeiHgExXvAeSj3PYeM11JwKW2+n3PNH1T1SE1XA
+        25qVOt7BRqw9nhN8EgTk2HLYXaCUWnM=
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Arjun Roy <arjunroy.kdev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, qais.yousef-5wv7dgnIgG8@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Mon, 15 Mar 2021 23:28:08 -0700 Arjun Roy wrote:
-> On Mon, Mar 15, 2021 at 11:22 PM Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-> >
-> > On Mon, Mar 15, 2021 at 9:29 PM Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:  
-> > >
-> > > On Mon, Mar 15, 2021 at 9:20 PM Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:  
->  [...]  
-> > > [...]  
->  [...]  
->  [...]  
-> > >
-> > > It is due to "mm: page-writeback: simplify memcg handling in
-> > > test_clear_page_writeback()" patch in the mm tree. You would need to
-> > > reintroduce the lock_page_memcg() which returns the memcg and make
-> > > __unlock_page_memcg() non-static.  
-> >
-> > To clarify, Shakeel - the tag "tag: v5.12-rc2-mmots-2021-03-11-21-49"
-> > fails to build on a clean checkout, without this patch, due to a
-> > compilation failure in mm/shmem.c, for reference:
-> > https://pastebin.com/raw/12eSGdGD
-> > (and that's why I'm basing this patch off of net-next in this email).
-> >
-> > -Arjun  
-> 
-> Another seeming anomaly - the patch sent out passes
-> scripts/checkpatch.pl but netdev/checkpatch finds plenty of actionable
-> fixes here: https://patchwork.kernel.org/project/netdevbpf/patch/20210316041645.144249-1-arjunroy.kdev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org/
-> 
-> Is netdev using some other automated checker instead of scripts/checkpatch.pl?
+When a CPU offlined and onlined via device_offline() and device_online()
+the userspace gets uevent notification. If, after receiving "online" uevent,
+userspace executes sched_setaffinity() on some task trying to move it
+to a recently onlined CPU, then it sometimes fails with -EINVAL. Userspace
+needs to wait around 5..30 ms before sched_setaffinity() will succeed for
+recently onlined CPU after receiving uevent.
 
---strict --max-line-length=80
+If in_mask argument for sched_setaffinity() has only recently onlined CPU,
+it could fail with such flow:
+
+  sched_setaffinity()
+    cpuset_cpus_allowed()
+      guarantee_online_cpus()   <-- cs->effective_cpus mask does not
+                                        contain recently onlined cpu
+    cpumask_and()               <-- final new_mask is empty
+    __set_cpus_allowed_ptr()
+      cpumask_any_and_distribute() <-- returns dest_cpu equal to nr_cpu_ids
+      returns -EINVAL
+
+Cpusets used in guarantee_online_cpus() are updated using workqueue from
+cpuset_update_active_cpus() which in its turn is called from cpu hotplug callback
+sched_cpu_activate() hence it may not be observable by sched_setaffinity() if
+it is called immediately after uevent.
+
+Out of line uevent can be avoided if we will ensure that cpuset_hotplug_work
+has run to completion using cpuset_wait_for_hotplug() after onlining the
+cpu in cpu_device_up() and in cpuhp_smt_enable().
+
+Cc: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Reviewed-by: Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org>
+Co-analyzed-by: Joshua Baker <jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+
+Changes since v2:
+	- restore cpuhp_{online,offline}_cpu_device back and move it out
+		of cpu maps lock;
+	- use Reviewed-by from Qais;
+	- minor corrections in commit message and in comment in code.
+
+Changes since v1:
+	- cpuset_wait_for_hotplug() moved to cpu_device_up();
+	- corrections in comments;
+	- removed cpuhp_{online,offline}_cpu_device.
+
+Changes since RFC:
+	- cpuset_wait_for_hotplug() used in cpuhp_smt_enable().
+
+Previous patches and discussion are:
+RFC patch: https://lore.kernel.org/lkml/20201203171431.256675-1-aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
+v1 patch:  https://lore.kernel.org/lkml/20210204010157.1823669-1-aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
+v2 patch: https://lore.kernel.org/lkml/20210212003032.2037750-1-aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
+
+The commit a49e4629b5ed "cpuset: Make cpuset hotplug synchronous"
+would also get rid of the early uevent but it was reverted (deadlocks).
+
+The nature of this bug is also described here (with different consequences):
+https://lore.kernel.org/lkml/20200211141554.24181-1-qais.yousef-5wv7dgnIgG8@public.gmane.org/
+
+Reproducer: https://gitlab.com/0xeafffffe/xlam
+
+Currently with such changes the reproducer code continues to work without issues.
+The idea is to avoid the situation when userspace receives the event about
+onlined CPU which is not ready to take tasks for a while after uevent.
+
+ kernel/cpu.c | 74 +++++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 56 insertions(+), 18 deletions(-)
+
+diff --git a/kernel/cpu.c b/kernel/cpu.c
+index 1b6302ecbabe..9b091d8a8811 100644
+--- a/kernel/cpu.c
++++ b/kernel/cpu.c
+@@ -15,6 +15,7 @@
+ #include <linux/sched/smt.h>
+ #include <linux/unistd.h>
+ #include <linux/cpu.h>
++#include <linux/cpuset.h>
+ #include <linux/oom.h>
+ #include <linux/rcupdate.h>
+ #include <linux/export.h>
+@@ -1301,7 +1302,17 @@ static int cpu_up(unsigned int cpu, enum cpuhp_state target)
+  */
+ int cpu_device_up(struct device *dev)
+ {
+-	return cpu_up(dev->id, CPUHP_ONLINE);
++	int err;
++
++	err = cpu_up(dev->id, CPUHP_ONLINE);
++	/*
++	 * Wait for cpuset updates to cpumasks to finish.  Later on this path
++	 * may generate uevents whose consumers rely on the updates.
++	 */
++	if (!err)
++		cpuset_wait_for_hotplug();
++
++	return err;
+ }
+ 
+ int add_cpu(unsigned int cpu)
+@@ -2084,8 +2095,13 @@ static void cpuhp_online_cpu_device(unsigned int cpu)
+ 
+ int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
+ {
+-	int cpu, ret = 0;
++	cpumask_var_t mask;
++	int cpu, ret;
+ 
++	if (!zalloc_cpumask_var(&mask, GFP_KERNEL))
++		return -ENOMEM;
++
++	ret = 0;
+ 	cpu_maps_update_begin();
+ 	for_each_online_cpu(cpu) {
+ 		if (topology_is_primary_thread(cpu))
+@@ -2093,31 +2109,42 @@ int cpuhp_smt_disable(enum cpuhp_smt_control ctrlval)
+ 		ret = cpu_down_maps_locked(cpu, CPUHP_OFFLINE);
+ 		if (ret)
+ 			break;
+-		/*
+-		 * As this needs to hold the cpu maps lock it's impossible
+-		 * to call device_offline() because that ends up calling
+-		 * cpu_down() which takes cpu maps lock. cpu maps lock
+-		 * needs to be held as this might race against in kernel
+-		 * abusers of the hotplug machinery (thermal management).
+-		 *
+-		 * So nothing would update device:offline state. That would
+-		 * leave the sysfs entry stale and prevent onlining after
+-		 * smt control has been changed to 'off' again. This is
+-		 * called under the sysfs hotplug lock, so it is properly
+-		 * serialized against the regular offline usage.
+-		 */
+-		cpuhp_offline_cpu_device(cpu);
++
++		cpumask_set_cpu(cpu, mask);
+ 	}
+ 	if (!ret)
+ 		cpu_smt_control = ctrlval;
+ 	cpu_maps_update_done();
++
++	/*
++	 * When the cpu maps lock was taken above it was impossible
++	 * to call device_offline() because that ends up calling
++	 * cpu_down() which takes cpu maps lock. cpu maps lock
++	 * needed to be held as this might race against in-kernel
++	 * abusers of the hotplug machinery (thermal management).
++	 *
++	 * So nothing would update device:offline state. That would
++	 * leave the sysfs entry stale and prevent onlining after
++	 * smt control has been changed to 'off' again. This is
++	 * called under the sysfs hotplug lock, so it is properly
++	 * serialized against the regular offline usage.
++	 */
++	for_each_cpu(cpu, mask)
++		cpuhp_offline_cpu_device(cpu);
++
++	free_cpumask_var(mask);
+ 	return ret;
+ }
+ 
+ int cpuhp_smt_enable(void)
+ {
+-	int cpu, ret = 0;
++	cpumask_var_t mask;
++	int cpu, ret;
++
++	if (!zalloc_cpumask_var(&mask, GFP_KERNEL))
++		return -ENOMEM;
+ 
++	ret = 0;
+ 	cpu_maps_update_begin();
+ 	cpu_smt_control = CPU_SMT_ENABLED;
+ 	for_each_present_cpu(cpu) {
+@@ -2128,9 +2155,20 @@ int cpuhp_smt_enable(void)
+ 		if (ret)
+ 			break;
+ 		/* See comment in cpuhp_smt_disable() */
+-		cpuhp_online_cpu_device(cpu);
++		cpumask_set_cpu(cpu, mask);
+ 	}
+ 	cpu_maps_update_done();
++
++	/*
++	 * Wait for cpuset updates to cpumasks to finish.  Later on this path
++	 * may generate uevents whose consumers rely on the updates.
++	 */
++	cpuset_wait_for_hotplug();
++
++	for_each_cpu(cpu, mask)
++		cpuhp_online_cpu_device(cpu);
++
++	free_cpumask_var(mask);
+ 	return ret;
+ }
+ #endif
+-- 
+2.31.0
+
