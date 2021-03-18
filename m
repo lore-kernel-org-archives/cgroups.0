@@ -1,56 +1,61 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH] memcg: set page->private before calling swap_readpage
-Date: Wed, 17 Mar 2021 18:59:59 -0700
-Message-ID: <20210318015959.2986837-1-shakeelb@google.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [mm, net-next v2] mm: net: memcg accounting for TCP rx zerocopy
+Date: Wed, 17 Mar 2021 20:21:23 -0700
+Message-ID: <20210317202123.7d2eaa0e54c36c20571a335c@linux-foundation.org>
+References: <20210316013003.25271-1-arjunroy.kdev@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=v1M50zVO+qfyX8hHQPyP5qHNesgD9s9P1xyKpHxr+O4=;
-        b=cbLMc8ExTKSMcFjJxmr7HW9m23mlVR3fNMnWGPh4+DjYZqiKhZUFQ4qcdVtPpzE/aA
-         8mzuAfy1Q0Y7qSpp/xGenI6FdRQWsuCmLqLHAF1mcTH7SZsy6c4b5+2jf6nJ4d07Cbfq
-         4v4LbsEel7zJtXZb2uQdbeUh1djn/FduBWLT8vHUZCzCeLdMhqzuFMfuR2MJROscijad
-         cQ4Qt4Yu9kV7InlNKAAj+USa8pz9YiawXTdgmUDfXxvo13msqrp/Tk04Bqk0ldaoqsYw
-         v7/o8ImE6egm/TTuhWC01bt5tIoIsowp7eUL6ELQhTEBEGO3lNsPjtUir0f1vCIdlEHf
-         AvDQ==
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1616037684;
+        bh=QOtXK6Ec9/3i2FBcUrutU4vPFPJXNzko8Hou0zo6b0g=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=RUXwEgkZOfdEA9KgB1z8gfEFWzOZZilJmfuz4cG+74p7eXjqFu2d/kYgp8eEmI2jp
+         Lh9SoXDyVjcLcKn+PGnwvxJxOLxJ6CFiljMM1uTs9Wfc3ppS1ano9o3d5Y8+A1f9I9
+         mrsICt7zVT+9c4NHN9bxa2zgvPS9KMDJNdmLRfjI=
+In-Reply-To: <20210316013003.25271-1-arjunroy.kdev@gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+To: Arjun Roy <arjunroy.kdev@gmail.com>
+Cc: davem@davemloft.net, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, arjunroy@google.com, shakeelb@google.com, edumazet@google.com, soheil@google.com, kuba@kernel.org, mhocko@kernel.org, hannes@cmpxchg.org, shy828301@gmail.com, guro@fb.com
 
-The function swap_readpage() (and other functions it call) extracts swap
-entry from page->private. However for SWP_SYNCHRONOUS_IO, the kernel
-skips the swapcache and thus we need to manually set the page->private
-with the swap entry before calling swap_readpage().
+On Mon, 15 Mar 2021 18:30:03 -0700 Arjun Roy <arjunroy.kdev@gmail.com> wrote:
 
-Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Reported-by: Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
----
+> From: Arjun Roy <arjunroy@google.com>
+> 
+> TCP zerocopy receive is used by high performance network applications
+> to further scale. For RX zerocopy, the memory containing the network
+> data filled by the network driver is directly mapped into the address
+> space of high performance applications. To keep the TLB cost low,
+> these applications unmap the network memory in big batches. So, this
+> memory can remain mapped for long time. This can cause a memory
+> isolation issue as this memory becomes unaccounted after getting
+> mapped into the application address space. This patch adds the memcg
+> accounting for such memory.
+> 
+> Accounting the network memory comes with its own unique challenges.
+> The high performance NIC drivers use page pooling to reuse the pages
+> to eliminate/reduce expensive setup steps like IOMMU. These drivers
+> keep an extra reference on the pages and thus we can not depend on the
+> page reference for the uncharging. The page in the pool may keep a
+> memcg pinned for arbitrary long time or may get used by other memcg.
+> 
+> This patch decouples the uncharging of the page from the refcnt and
+> associates it with the map count i.e. the page gets uncharged when the
+> last address space unmaps it. Now the question is, what if the driver
+> drops its reference while the page is still mapped? That is fine as
+> the address space also holds a reference to the page i.e. the
+> reference count can not drop to zero before the map count.
 
-Andrew, please squash this into "memcg: charge before adding to
-swapcache on swapin" patch.
+What tree were you hoping to get this merged through?  I'd suggest net
+- it's more likely to get tested over there.
 
- mm/memory.c | 4 ++++
- 1 file changed, 4 insertions(+)
+>
+> ...
+>
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
 
-diff --git a/mm/memory.c b/mm/memory.c
-index aefd158ae1ea..b6f3410b5902 100644
---- a/mm/memory.c
-+++ b/mm/memory.c
-@@ -3324,7 +3324,11 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
- 					workingset_refault(page, shadow);
- 
- 				lru_cache_add(page);
-+
-+				/* To provide entry to swap_readpage() */
-+				set_page_private(page, entry.val);
- 				swap_readpage(page, true);
-+				set_page_private(page, 0);
- 			}
- 		} else {
- 			page = swapin_readahead(entry, GFP_HIGHUSER_MOVABLE,
--- 
-2.31.0.rc2.261.g7f71774620-goog
+These changes could be inside #ifdef CONFIG_NET.  Although I expect
+MEMCG=y&&NET=n is pretty damn rare.
 
