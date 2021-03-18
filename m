@@ -1,47 +1,47 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v10 0/3] Charge loop device i/o to issuing cgroup
-Date: Thu, 18 Mar 2021 10:00:17 -0600
-Message-ID: <8c32421c-4bd8-ec46-f1d0-25996956f4da@kernel.dk>
-References: <20210316153655.500806-1-schatzberg.dan@gmail.com>
- <7ca79335-026f-2511-2b58-0e9f32caa063@kernel.dk>
- <CALvZod6tvrZ_sj=BnM4baQepexwvOPREx3qe5ZJrmqftrqwBEA@mail.gmail.com>
+From: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v2] cpu/hotplug: wait for cpuset_hotplug_work to finish
+ on cpu onlining
+Date: Thu, 18 Mar 2021 15:12:25 -0400
+Message-ID: <87a6r0uvhi.fsf@oracle.com>
+References: <20210212003032.2037750-1-aklimov@redhat.com>
+ <87tuqhrs3d.fsf@oracle.com>
+ <CAFBcO+99Ax5MuOtzNx=NrmnUN=+913Sc-DV83ObOi01A=kkN3w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : in-reply-to : references : date : message-id : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=k381lxwLG2fnstlsplMWqZjJew5AP+0V8oe6V2+EYwE=;
+ b=HsVTTUU1EXtHxNSXeSMxPD1EXmioXLiHx665MD8wz3gWrcGrk0XvcOo9k1CJvzxQPZxA
+ MtdDiks6vcbWQsVRXWlWmzDs4jHiJbKjhAnLxnMkAdQh8b3Nf1ZN5knLLCh+ix3Ad7On
+ jRfeWmuwRQFjsQtg/sd8Hodn00RsHHrkKgsfMaImIVeRQcimKxL7Z/P4HgHbI2Bwt3V4
+ nDcn1VrHz6pnTBRKoIynKS0oegoz7go2qly8kee5ib+QYODufTOsPCjlVZVei2c7kRDs
+ AGrnwppi+emr6icre1JstUBE9LQ2Jv1VGzXuKKLFZhLlq722fBgNcmOfbWUQ5lgVhMfq /w== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=wUijfwg+uIfKfZvAaaXdkGTXi/eEZcihpR4YJOsQcao=;
-        b=x4gGUgw/3leBjfQHr9OOg+OpXui02/U/2GUZyNPrOGO0bY2mPIcrTwKHXxWy9qZ4EM
-         7tvKJoaDcaSG9p354Dma+Y4AEo8dHqedWnCovZGA9AcGBEzqN1WJImRhBoawGR0IWW7w
-         uHHXneMsob/NSsiZjL1y4DtteY0j8oseFc2oEsyAuvIEdazYmMNQyS+DEX6e5v6xED9l
-         qW63lH5JdKzrpPTBfitQt28mJ+iazG3qO+Qrqn4n86reF2TRsB5gSf3r8QoJEZYF5etR
-         TjWV3pyO9o+TCsXcMIGXdrMgtnxKLFg17mpOFDiOwR2qzDnqT235xki7H3U4Mj9MZnB7
-         DR7Q==
-In-Reply-To: <CALvZod6tvrZ_sj=BnM4baQepexwvOPREx3qe5ZJrmqftrqwBEA@mail.gmail.com>
-Content-Language: en-US
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=k381lxwLG2fnstlsplMWqZjJew5AP+0V8oe6V2+EYwE=;
+ b=C6aRsDgtrww45gnbuJ+sxvYEGrKacpdTz0RJXRGUjVE5Kb2GnDlz7wF7C+xnnVBDtJwb5q0kM4any6BYiyozF+6NeL8dVwsiTuGjYZGYQ8XygZyVyAEPmQrMPRXGEvc7fZEnuMRNzCXdjqgTEqO6Acj1lxxr3a8V/TiA6i0hzmU=
+In-Reply-To: <CAFBcO+99Ax5MuOtzNx=NrmnUN=+913Sc-DV83ObOi01A=kkN3w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Shakeel Butt <shakeelb@google.com>
-Cc: Dan Schatzberg <schatzberg.dan@gmail.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Hugh Dickins <hughd@google.com>, Roman Gushchin <guro@fb.com>, Muchun Song <songmuchun@bytedance.com>, Alex Shi <alex.shi@linux.alibaba.com>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Wei Yang <richard.weiyang@gmail.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:MEMORY MANAGEMENT" <linux-mm@k>
+Content-Transfer-Encoding: 7bit
+To: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, Joshua Baker <jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Alexey Klimov <klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On 3/18/21 9:53 AM, Shakeel Butt wrote:
-> On Wed, Mar 17, 2021 at 3:30 PM Jens Axboe <axboe@kernel.dk> wrote:
->>
->> On 3/16/21 9:36 AM, Dan Schatzberg wrote:
->>> No major changes, just rebasing and resubmitting
->>
->> Applied for 5.13, thanks.
->>
-> 
-> I have requested a couple of changes in the patch series. Can this
-> applied series still be changed or new patches are required?
+Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
+> The first section of comment seems problematic to me with regards to such move:
+>
+>                  * As this needs to hold the cpu maps lock it's impossible
+>                  * to call device_offline() because that ends up calling
+>                  * cpu_down() which takes cpu maps lock. cpu maps lock
+>                  * needs to be held as this might race against in kernel
+>                  * abusers of the hotplug machinery (thermal management).
+>
+> Cpu maps lock is released in cpu_maps_update_done() hence we will move
+> dev->offline out of cpu maps lock. Maybe I misunderstood the comment
+> and it relates to calling cpu_down_maps_locked() under lock to avoid
+> race?
 
-I have nothing sitting on top of it for now, so as far as I'm concerned
-we can apply a new series instead. Then we can also fold in that fix
-from Colin that he posted this morning...
-
--- 
-Jens Axboe
-
+Yes, that's what I take from the comment, the cpu maps lock protects
+against racing hotplug operations.
