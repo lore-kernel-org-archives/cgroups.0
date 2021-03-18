@@ -1,34 +1,56 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v10 0/3] Charge loop device i/o to issuing cgroup
-Date: Wed, 17 Mar 2021 16:30:48 -0600
-Message-ID: <7ca79335-026f-2511-2b58-0e9f32caa063@kernel.dk>
-References: <20210316153655.500806-1-schatzberg.dan@gmail.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] memcg: set page->private before calling swap_readpage
+Date: Wed, 17 Mar 2021 18:59:59 -0700
+Message-ID: <20210318015959.2986837-1-shakeelb@google.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=B1Pn4DbFEch76dQ9ia9lLBjd1nNH8Pqwys+so0gPrt0=;
-        b=lNbRHp6l0oM2+Xq1AOXCruM08fOp6OY0+sGgqz70SCTkv4se0odGZQPG+2axOFqFHe
-         gBMmrJfpnSZ6ewa5+etGicUlX6aWCCHLXvxkhAfui38IGfPcdWIVG/2vuIThlZe1/5j7
-         pxqp0mj3hZDp5XwfNY+dK2+YK1nlugwQMLaDmYvF0ZlXPcqkq9/8UKBHyjRs4OUxnMUI
-         Her8syokr+HbPWZDRXobrQg0l9k0AOkKvi+yPIpnFzY8HPLuQKqeeoHWzZV9WGuL/PAE
-         cCqR255GknGuZO8aVj4J8LBWYTifQKdU526zmqrvtB1GyY5NPrRMNB45NBZi3r1tu57l
-         8nZw==
-In-Reply-To: <20210316153655.500806-1-schatzberg.dan@gmail.com>
-Content-Language: en-US
+        d=google.com; s=20161025;
+        h=date:message-id:mime-version:subject:from:to:cc;
+        bh=v1M50zVO+qfyX8hHQPyP5qHNesgD9s9P1xyKpHxr+O4=;
+        b=cbLMc8ExTKSMcFjJxmr7HW9m23mlVR3fNMnWGPh4+DjYZqiKhZUFQ4qcdVtPpzE/aA
+         8mzuAfy1Q0Y7qSpp/xGenI6FdRQWsuCmLqLHAF1mcTH7SZsy6c4b5+2jf6nJ4d07Cbfq
+         4v4LbsEel7zJtXZb2uQdbeUh1djn/FduBWLT8vHUZCzCeLdMhqzuFMfuR2MJROscijad
+         cQ4Qt4Yu9kV7InlNKAAj+USa8pz9YiawXTdgmUDfXxvo13msqrp/Tk04Bqk0ldaoqsYw
+         v7/o8ImE6egm/TTuhWC01bt5tIoIsowp7eUL6ELQhTEBEGO3lNsPjtUir0f1vCIdlEHf
+         AvDQ==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Dan Schatzberg <schatzberg.dan@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Hugh Dickins <hughd@google.com>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, Muchun Song <songmuchun@bytedance.com>, Alex Shi <alex.shi@linux.alibaba.com>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Wei Yang <richard.weiyang@gmail.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:MEMORY MANAGEMENT" <>
+Content-Transfer-Encoding: 7bit
+To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
 
-On 3/16/21 9:36 AM, Dan Schatzberg wrote:
-> No major changes, just rebasing and resubmitting
+The function swap_readpage() (and other functions it call) extracts swap
+entry from page->private. However for SWP_SYNCHRONOUS_IO, the kernel
+skips the swapcache and thus we need to manually set the page->private
+with the swap entry before calling swap_readpage().
 
-Applied for 5.13, thanks.
+Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Reported-by: Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+---
 
+Andrew, please squash this into "memcg: charge before adding to
+swapcache on swapin" patch.
+
+ mm/memory.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/mm/memory.c b/mm/memory.c
+index aefd158ae1ea..b6f3410b5902 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -3324,7 +3324,11 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
+ 					workingset_refault(page, shadow);
+ 
+ 				lru_cache_add(page);
++
++				/* To provide entry to swap_readpage() */
++				set_page_private(page, entry.val);
+ 				swap_readpage(page, true);
++				set_page_private(page, 0);
+ 			}
+ 		} else {
+ 			page = swapin_readahead(entry, GFP_HIGHUSER_MOVABLE,
 -- 
-Jens Axboe
+2.31.0.rc2.261.g7f71774620-goog
 
