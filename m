@@ -1,66 +1,97 @@
-From: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3] cpu/hotplug: wait for cpuset_hotplug_work to finish
- on cpu onlining
-Date: Thu, 18 Mar 2021 15:28:09 -0400
-Message-ID: <877dm4uura.fsf@oracle.com>
-References: <20210317003616.2817418-1-aklimov@redhat.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v10 0/3] Charge loop device i/o to issuing cgroup
+Date: Thu, 18 Mar 2021 16:46:25 -0700
+Message-ID: <20210318164625.1018062b042e540bd83bb08e@linux-foundation.org>
+References: <20210316153655.500806-1-schatzberg.dan@gmail.com>
+        <7ca79335-026f-2511-2b58-0e9f32caa063@kernel.dk>
+        <CALvZod6tvrZ_sj=BnM4baQepexwvOPREx3qe5ZJrmqftrqwBEA@mail.gmail.com>
+        <8c32421c-4bd8-ec46-f1d0-25996956f4da@kernel.dk>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : in-reply-to : references : date : message-id : content-type :
- mime-version; s=corp-2020-01-29;
- bh=uOQfgSt7DnQHzU9CkYe3OcxfQ5H3Z/rsIPYYFJiCANs=;
- b=QJH9dy+su5JGPKj1DYwDoSiq3eVLBtHQ/Q1NqpXZTK/YXViWnsNsSnZ+4l1k2CvUFrzX
- GOhecQRvRfk3rZZWPZvKRu3Tby3c4Sf8stkcR6ueU3zPqsuznNaHX7IgwcWvK0R8I3oS
- rWY9mF8C4Uwi6DIeH/V1d/WWCWb8vWxM7yq0LidQINkzdnAfZb8chj11vBhcw6D5CEhB
- ALwJ/tvdhdEY3ILNNviss+a39QtEp+jhLRz4GiFDGnQ8JhBxwLRtzkNN4tXu+SpzsUuq
- uXkKnCwWuG31WQbCMhbmdScfUkGXVQnJMCLGMVaRxcUEE0L9tG3YfCc0RYD77ElkXPf3 /A== 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uOQfgSt7DnQHzU9CkYe3OcxfQ5H3Z/rsIPYYFJiCANs=;
- b=JstB/y8hptP2LlfLQBpvfgrlbZ483A2DKvjGkP/egrrAV7A0keULTYrNCsM9jda338ytDlplXK+LNpPJVHzGgPScAb9635N7PWzz2JCjqLJd5FzSGi2K7e2dpahMBziShrvWa24fBofOB4IvHDHKhOgs5I0iz6U6JUmXQAyzAnE=
-In-Reply-To: <20210317003616.2817418-1-aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
+        s=korg; t=1616111187;
+        bh=Q6IwZMnHQrWqg5zWmgJf0Ebi8/XOyNEUBJCBBfeMwho=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=pkyU/9SsaUegsBiyD056d2/968LCZGIbrcp4noID/iGWNue/gnKHUnWbmuzrgA3Sc
+         IG3OtZdi84KVr6ugmWi4ktkMLMz9PqX7sUR+xzB6moH5TdMx09O1HExrMGhhkUmSzZ
+         JEDDvYTUz6Su6h3nJl/Du6zeBIbKIgEjWAXP9Ot8=
+In-Reply-To: <8c32421c-4bd8-ec46-f1d0-25996956f4da@kernel.dk>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, qais.yousef-5wv7dgnIgG8@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Shakeel Butt <shakeelb@google.com>, Dan Schatzberg <schatzberg.dan@gmail.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Hugh Dickins <hughd@google.com>, Roman Gushchin <guro@fb.com>, Muchun Song <songmuchun@bytedance.com>, Alex Shi <alex.shi@linux.alibaba.com>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Wei Yang <richard.weiyang@gmail.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:MEMORY MANAGEMENT" <linux-mm@kvack.or>
 
-Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
-> When a CPU offlined and onlined via device_offline() and device_online()
-> the userspace gets uevent notification. If, after receiving "online" uevent,
-> userspace executes sched_setaffinity() on some task trying to move it
-> to a recently onlined CPU, then it sometimes fails with -EINVAL. Userspace
-> needs to wait around 5..30 ms before sched_setaffinity() will succeed for
-> recently onlined CPU after receiving uevent.
->
-> If in_mask argument for sched_setaffinity() has only recently onlined CPU,
-> it could fail with such flow:
->
->   sched_setaffinity()
->     cpuset_cpus_allowed()
->       guarantee_online_cpus()   <-- cs->effective_cpus mask does not
->                                         contain recently onlined cpu
->     cpumask_and()               <-- final new_mask is empty
->     __set_cpus_allowed_ptr()
->       cpumask_any_and_distribute() <-- returns dest_cpu equal to nr_cpu_ids
->       returns -EINVAL
->
-> Cpusets used in guarantee_online_cpus() are updated using workqueue from
-> cpuset_update_active_cpus() which in its turn is called from cpu hotplug callback
-> sched_cpu_activate() hence it may not be observable by sched_setaffinity() if
-> it is called immediately after uevent.
->
-> Out of line uevent can be avoided if we will ensure that cpuset_hotplug_work
-> has run to completion using cpuset_wait_for_hotplug() after onlining the
-> cpu in cpu_device_up() and in cpuhp_smt_enable().
->
-> Cc: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-> Reviewed-by: Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org>
-> Co-analyzed-by: Joshua Baker <jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+On Thu, 18 Mar 2021 10:00:17 -0600 Jens Axboe <axboe@kernel.dk> wrote:
 
-Looks good to me.
+> On 3/18/21 9:53 AM, Shakeel Butt wrote:
+> > On Wed, Mar 17, 2021 at 3:30 PM Jens Axboe <axboe@kernel.dk> wrote:
+> >>
+> >> On 3/16/21 9:36 AM, Dan Schatzberg wrote:
+> >>> No major changes, just rebasing and resubmitting
+> >>
+> >> Applied for 5.13, thanks.
+> >>
+> > 
+> > I have requested a couple of changes in the patch series. Can this
+> > applied series still be changed or new patches are required?
+> 
+> I have nothing sitting on top of it for now, so as far as I'm concerned
+> we can apply a new series instead. Then we can also fold in that fix
+> from Colin that he posted this morning...
 
-Reviewed-by: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+The collision in memcontrol.c is a pain, but I guess as this is mainly
+a loop patch, the block tree is an appropriate route.
+
+Here's the collision between "mm: Charge active memcg when no mm is
+set" and Shakeels's
+https://lkml.kernel.org/r/20210305212639.775498-1-shakeelb@google.com
+
+
+--- mm/memcontrol.c
++++ mm/memcontrol.c
+@@ -6728,8 +6730,15 @@ int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask)
+ 		rcu_read_unlock();
+ 	}
+ 
+-	if (!memcg)
+-		memcg = get_mem_cgroup_from_mm(mm);
++	if (!memcg) {
++		if (!mm) {
++			memcg = get_mem_cgroup_from_current();
++			if (!memcg)
++				memcg = get_mem_cgroup_from_mm(current->mm);
++		} else {
++			memcg = get_mem_cgroup_from_mm(mm);
++		}
++	}
+ 
+ 	ret = try_charge(memcg, gfp_mask, nr_pages);
+ 	if (ret)
+
+
+Which I resolved thusly:
+
+int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask)
+{
+	struct mem_cgroup *memcg;
+	int ret;
+
+	if (mem_cgroup_disabled())
+		return 0;
+
+	if (!mm) {
+		memcg = get_mem_cgroup_from_current();
+		(!memcg)
+			memcg = get_mem_cgroup_from_mm(current->mm);
+	} else {
+		memcg = get_mem_cgroup_from_mm(mm);
+	}
+				
+	ret = __mem_cgroup_charge(page, memcg, gfp_mask);
+	css_put(&memcg->css);
+
+	return ret;
+}
+
+
