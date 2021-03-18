@@ -1,66 +1,39 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 Subject: Re: [PATCH] memcg: set page->private before calling swap_readpage
-Date: Thu, 18 Mar 2021 15:01:25 +0100
-Message-ID: <YFNdNeczjnmF55bm@dhcp22.suse.cz>
+Date: Thu, 18 Mar 2021 11:02:17 -0400
+Message-ID: <YFNreYne/27T9XA8@cmpxchg.org>
 References: <20210318015959.2986837-1-shakeelb@google.com>
+ <YFNdNeczjnmF55bm@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1616076086; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=CJKjKFzH2Oz9V1KExzh/D5bnwo5wq9sGnNFQSvBiHoE=;
-        b=Wom5vnku1jvAJyVaLvzB9o9HTjhTb0xA6SLbfWE2afD0RUi+h+TnBjUTC5EnU4pVJRzIO6
-        RV9e+V0KTVuVkex7bcTAqI5M4I6MA2kENPgPkcOVuPxUUbArdzpB598lQc/wGqF6T6q9ht
-        IeQVdK3N+hVid6CnPSTubid4TFs34yw=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=ODku1sNI+qzXn1A0+oyYPRNoNufpW48D4xQgC/ecSb8=;
+        b=hywKb9JeRd9aGyWq9FNaxWtEEW+yd82HTdswTVDd+YNG4CK4ZnSRTzRkxPwIlz3Wvy
+         vUYCvr9m0vMQnHTsXASTFTDUD3quCYQd9i5tW7wERWnJdNCkzr67eUw5wTX6qg17tofO
+         9RIb8wyrDa16vhsBdb2rZ68Ayv/cCciBiG1872zqL2E2adC+QLbEOFMixg2/K3jZEHJr
+         JhI2uGgNAw1Z8EZKhaw9kxkZp1+2fdIJhxiq9F9xa/NdGrlZyijiKRnp1DmGv4d0ldn6
+         MmiSWRlu3ortORbGmJAt5W7Uvf/CRMcPBb+0uOhER92DsjeQfjpL7iqD81yoelklufuB
+         KhXA==
 Content-Disposition: inline
-In-Reply-To: <20210318015959.2986837-1-shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <YFNdNeczjnmF55bm-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Minchan Kim <minchan-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
 
-On Wed 17-03-21 18:59:59, Shakeel Butt wrote:
-> The function swap_readpage() (and other functions it call) extracts swap
-> entry from page->private. However for SWP_SYNCHRONOUS_IO, the kernel
-> skips the swapcache and thus we need to manually set the page->private
-> with the swap entry before calling swap_readpage().
+On Thu, Mar 18, 2021 at 03:01:25PM +0100, Michal Hocko wrote:
+> On Wed 17-03-21 18:59:59, Shakeel Butt wrote:
+> > The function swap_readpage() (and other functions it call) extracts swap
+> > entry from page->private. However for SWP_SYNCHRONOUS_IO, the kernel
+> > skips the swapcache and thus we need to manually set the page->private
+> > with the swap entry before calling swap_readpage().
+> 
+> One thing that is not really clear to me is whether/why this is only
+> needed with your patch. Can you expand a bit on that please? Maybe I am
+> just missing something obvious but I just do not see any connection.
 
-One thing that is not really clear to me is whether/why this is only
-needed with your patch. Can you expand a bit on that please? Maybe I am
-just missing something obvious but I just do not see any connection.
-
-> Signed-off-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Reported-by: Heiko Carstens <hca-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>
-> ---
-> 
-> Andrew, please squash this into "memcg: charge before adding to
-> swapcache on swapin" patch.
-> 
->  mm/memory.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/mm/memory.c b/mm/memory.c
-> index aefd158ae1ea..b6f3410b5902 100644
-> --- a/mm/memory.c
-> +++ b/mm/memory.c
-> @@ -3324,7 +3324,11 @@ vm_fault_t do_swap_page(struct vm_fault *vmf)
->  					workingset_refault(page, shadow);
->  
->  				lru_cache_add(page);
-> +
-> +				/* To provide entry to swap_readpage() */
-> +				set_page_private(page, entry.val);
->  				swap_readpage(page, true);
-> +				set_page_private(page, 0);
->  			}
->  		} else {
->  			page = swapin_readahead(entry, GFP_HIGHUSER_MOVABLE,
-> -- 
-> 2.31.0.rc2.261.g7f71774620-goog
-> 
-
--- 
-Michal Hocko
-SUSE Labs
+It was always needed, his original patch erroneously removed it.
