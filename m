@@ -1,53 +1,48 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Fri, 19 Mar 2021 10:54:32 -0300
-Message-ID: <20210319135432.GT2356281@nvidia.com>
-References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
- <1614463286-97618-6-git-send-email-jacob.jun.pan@linux.intel.com>
- <20210318172234.3e8c34f7@jacob-builder> <YFR10eeDVf5ZHV5l@myrica>
- <20210319124645.GP2356281@nvidia.com> <YFSqDNJ5yagk4eO+@myrica>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/2] mm: memcontrol: don't allocate cgroup swap arrays
+ when memcg is disabled
+Date: Fri, 19 Mar 2021 07:00:24 -0700
+Message-ID: <CALvZod4RD6ALiQHrFBMWMytYW0Lg+RFZapKKSWJbK+-ue9BG2A@mail.gmail.com>
+References: <20210319054944.50048-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=CCZAHZFhptxcyqdqzzX/b+llWDB9Z2cdnFChdhi5Vwg=;
+        b=hbuafUMuXP312PXrZHnMp/92FBrmirq42lyx06C8Agvn87xHEoPo7OQu6gl2wSVWMO
+         I6doAnkI5UZ0G0OdBgSgw7TdfurM6EjLVZBa0M+Y5aZUPhfzckmx9H30C15CVZeAxFZe
+         4uxJHzgd5zNB2Shl7VKLfHcAFXrQwXeJ22Nl9RzXfrTV9PaT8nCUomECivrsQ5FaaqiI
+         T/ltkh0E+Md2wAJzG94MHdJ1IKPJKBvqP5Tsd9Cnyp/TB1utqQwprQzjEXCNltXpJ/xP
+         zC8uwR6rKEg5aBhOXxJ5CgMIva1CslYrhntNPzlA5wX9c0C5QrxEKEd066vPiNwcTJER
+         pPfg==
+In-Reply-To: <20210319054944.50048-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=M7ic/wgCgBjj+2SlGjLvj6N7uWWIpxlyndm1A+f5tMY=;
- b=emfT0d1/R6izUpprunoWVFojbrjhKKwsFt3ynJeD5bxS7DWtdpWxlSRFcT4CXW7uDBxtdGCPg3MTz0ZRhhzx2kBPbaM+otRcX0wi2t4L9UcMj+jzIabTlUmmfOlRCz+Aw+ZbChZl7dZ5goGoUULJaVDtvZywMnC9TwoVSB6aGxh8ueBdpBw64a3za0K/8+QrXTacEXfRhpl06+6hT+NBhnfCdUXSCecQkqDV6qQ/45hJ/9P+CbovepwE80+eXbvrBn48NIAOBAPd+ex1cCl3qAKAntOxJxfejxm7zWUPRqQhYTKek20Qt0PsWnx7+iXYpEyOxOV2aa7QOtrQPFAHFw==
-Content-Disposition: inline
-In-Reply-To: <YFSqDNJ5yagk4eO+@myrica>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-To: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>
 
-On Fri, Mar 19, 2021 at 02:41:32PM +0100, Jean-Philippe Brucker wrote:
-> On Fri, Mar 19, 2021 at 09:46:45AM -0300, Jason Gunthorpe wrote:
-> > On Fri, Mar 19, 2021 at 10:58:41AM +0100, Jean-Philippe Brucker wrote:
-> > 
-> > > Although there is no use for it at the moment (only two upstream users and
-> > > it looks like amdkfd always uses current too), I quite like the
-> > > client-server model where the privileged process does bind() and programs
-> > > the hardware queue on behalf of the client process.
-> > 
-> > This creates a lot complexity, how do does process A get a secure
-> > reference to B? How does it access the memory in B to setup the HW?
-> 
-> mm_access() for example, and passing addresses via IPC
+On Thu, Mar 18, 2021 at 10:49 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+>
+> Since commit 2d1c498072de ("mm: memcontrol: make swap tracking an
+> integral part of memory control"), the cgroup swap arrays are used to
+> track memory ownership at the time of swap readahead and swapoff, even
+> if swap space *accounting* has been turned off by the user via
+> swapaccount=0 (which sets cgroup_memory_noswap).
+>
+> However, the patch was overzealous: by simply dropping the
+> cgroup_memory_noswap conditionals in the swapon, swapoff and uncharge
+> path, it caused the cgroup arrays being allocated even when the memory
+> controller as a whole is disabled. This is a waste of that memory.
+>
+> Restore mem_cgroup_disabled() checks, implied previously by
+> cgroup_memory_noswap, in the swapon, swapoff, and swap_entry_free
+> callbacks.
+>
+> Fixes: 2d1c498072de ("mm: memcontrol: make swap tracking an integral part of memory control")
+> Reported-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-I'd rather the source process establish its own PASID and then pass
-the rights to use it to some other process via FD passing than try to
-go the other way. There are lots of security questions with something
-like mm_access.
-
-Jason
+Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
