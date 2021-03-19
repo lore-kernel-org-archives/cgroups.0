@@ -1,106 +1,66 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: [PATCH] mm: page_alloc: fix memcg accounting leak in speculative cache lookup
-Date: Fri, 19 Mar 2021 03:15:47 -0400
-Message-ID: <20210319071547.60973-1-hannes@cmpxchg.org>
+From: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Fri, 19 Mar 2021 10:58:41 +0100
+Message-ID: <YFR10eeDVf5ZHV5l@myrica>
+References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
+ <1614463286-97618-6-git-send-email-jacob.jun.pan@linux.intel.com>
+ <20210318172234.3e8c34f7@jacob-builder>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=ach62O71zJmjQaxBWOhbiCSRi6YbNUmXSSxM/3dIo+Q=;
-        b=LLPxssSQQyhHC/5j0K/BnAF9lDHMavl2/PTd2rwGE98XJVC95NdTDe026Yif3esELH
-         GRdvUKk+Uqgc+UFDBAhIRgK3rp7PfpFY0yWrP+rU/OYCI17KckVin8MPGJXa+i2G3oof
-         YwH2dQ35WvcMKe8DiY1Zc5BH2axHtoXZ+EZw3eQFIblWMwZcWtiCFcVdg/AYV4CjuZsq
-         yIbejLme3dOKD467pB9SBVkMhuNjXgbqSoT+wrkgn2q9gyuPSRQxQwl46Of0QzC/XtmL
-         vAGYPoBoXtjdjuaF0391+wDtY3K0ddqc8GeWy1U7mEF7FG5JdAocigUxr81Qkiu9zlPJ
-         54IA==
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Matthew Wilcox <willy@infradead.org>, Michal Hocko <mhocko@suse.com>, Hugh Dickins <hughd@google.com>, Zhou Guanghui <zhouguanghui1@huawei.com>, Zi Yan <ziy@nvidia.com>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linaro.org; s=google;
+ h=date:from:to:cc:subject:message-id:references:mime-version
+ :content-disposition:in-reply-to;
+ bh=+ew0oK+98acMtQgKLGerzyoNXnWF03GfXmL2rWxicfk=;
+ b=UdvS3qSDTfqH6Y/9ofxlqvCMdGhYTHBMlEKvkuSNFIAbXj3Iw7mjRPnscCsrtOHM5G
+ MlOFed3B9j8sNv6cKE1CjkDG7IVfJZaejlQLQHjinhmn4md6lO9XFnLYwz+70nP+jRDQ
+ Z5fs4LXC67m6l5OhlLif7iHkDnjNtHEEH8Un5AjM4d/DNim7CCkfGj9IPPbiGnACMtVL
+ 9Zuh84uDGYWvyZbcQ+M9KjO0nCzsdA+CCKhBixRmtofebvqO9UQMbXS2Ktix/fxZ3r4N
+ ktpSWYrVOqT0PqvQqWuidhdHYwmu0PFpnGYb/SHBosxdSqn1KgYSTXs5RpmVr3XP5Hqg
+ ixMA==
+Content-Disposition: inline
+In-Reply-To: <20210318172234.3e8c34f7@jacob-builder>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-When the freeing of a higher-order page block (non-compound) races
-with a speculative page cache lookup, __free_pages() needs to leave
-the first order-0 page in the chunk to the lookup but free the buddy
-pages that the lookup doesn't know about separately.
+Hi Jacob,
 
-However, if such a higher-order page is charged to a memcg (e.g. !vmap
-kernel stack)), only the first page of the block has page->memcg
-set. That means we'll uncharge only one order-0 page from the entire
-block, and leak the remainder.
+On Thu, Mar 18, 2021 at 05:22:34PM -0700, Jacob Pan wrote:
+> Hi Jean,
+> 
+> Slightly off the title. As we are moving to use cgroup to limit PASID
+> allocations, it would be much simpler if we enforce on the current task.
 
-Add a split_page_memcg() to __free_pages() right before it starts
-taking the higher-order page apart and freeing its individual
-constituent pages. This ensures all of them will have the memcg
-linkage set up for correct uncharging. Also update the comments a bit
-to clarify what exactly is happening to the page during that race.
+Yes I think we should do that. Is there a problem with charging the
+process that does the PASID allocation even if the PASID indexes some
+other mm?
 
-This bug is old and has its roots in the speculative page cache patch
-and adding cgroup accounting of kernel pages. There are no known user
-reports. A backport to stable is therefor not warranted.
+> However, iommu_sva_alloc_pasid() takes an mm_struct pointer as argument
+> which implies it can be something other the the current task mm. So far all
+> kernel callers use current task mm. Is there a use case for doing PASID
+> allocation on behalf of another mm? If not, can we remove the mm argument?
 
-Reported-by: Matthew Wilcox <willy@infradead.org>
-Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
----
- mm/page_alloc.c | 33 +++++++++++++++++++++++++++------
- 1 file changed, 27 insertions(+), 6 deletions(-)
+This would effectively remove the mm parameter from
+iommu_sva_bind_device(). I'm not opposed to that, but reintroducing it
+later will be difficult if IOMMU drivers start assuming that the bound mm
+is from current.
 
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index c53fe4fa10bf..f4bd56656402 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -5112,10 +5112,9 @@ static inline void free_the_page(struct page *page, unsigned int order)
-  * the allocation, so it is easy to leak memory.  Freeing more memory
-  * than was allocated will probably emit a warning.
-  *
-- * If the last reference to this page is speculative, it will be released
-- * by put_page() which only frees the first page of a non-compound
-- * allocation.  To prevent the remaining pages from being leaked, we free
-- * the subsequent pages here.  If you want to use the page's reference
-+ * This function isn't a put_page(). Don't let the put_page_testzero()
-+ * fool you, it's only to deal with speculative cache references. It
-+ * WILL free pages directly. If you want to use the page's reference
-  * count to decide when to free the allocation, you should allocate a
-  * compound page, and use put_page() instead of __free_pages().
-  *
-@@ -5124,11 +5123,33 @@ static inline void free_the_page(struct page *page, unsigned int order)
-  */
- void __free_pages(struct page *page, unsigned int order)
- {
--	if (put_page_testzero(page))
-+	/*
-+	 * Drop the base reference from __alloc_pages and free. In
-+	 * case there is an outstanding speculative reference, from
-+	 * e.g. the page cache, it will put and free the page later.
-+	 */
-+	if (likely(put_page_testzero(page))) {
- 		free_the_page(page, order);
--	else if (!PageHead(page))
-+		return;
-+	}
-+
-+	/*
-+	 * The speculative reference will put and free the page.
-+	 *
-+	 * However, if the speculation was into a higher-order page
-+	 * chunk that isn't marked compound, the other side will know
-+	 * nothing about our buddy pages and only free the order-0
-+	 * page at the start of our chunk! We must split off and free
-+	 * the buddy pages here.
-+	 *
-+	 * The buddy pages aren't individually refcounted, so they
-+	 * can't have any pending speculative references themselves.
-+	 */
-+	if (!PageHead(page) && order > 0) {
-+		split_page_memcg(page, 1 << order);
- 		while (order-- > 0)
- 			free_the_page(page + (1 << order), order);
-+	}
- }
- EXPORT_SYMBOL(__free_pages);
- 
--- 
-2.30.1
+Although there is no use for it at the moment (only two upstream users and
+it looks like amdkfd always uses current too), I quite like the
+client-server model where the privileged process does bind() and programs
+the hardware queue on behalf of the client process.
 
+Thanks,
+Jean
