@@ -1,107 +1,87 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH v10 0/3] Charge loop device i/o to issuing cgroup
-Date: Thu, 18 Mar 2021 17:56:28 -0700
-Message-ID: <CALvZod6FMQQC17Zsu9xoKs=dFWaJdMC2Qk3YiDPUUQHx8teLYg@mail.gmail.com>
-References: <20210316153655.500806-1-schatzberg.dan@gmail.com>
- <7ca79335-026f-2511-2b58-0e9f32caa063@kernel.dk> <CALvZod6tvrZ_sj=BnM4baQepexwvOPREx3qe5ZJrmqftrqwBEA@mail.gmail.com>
- <8c32421c-4bd8-ec46-f1d0-25996956f4da@kernel.dk> <20210318164625.1018062b042e540bd83bb08e@linux-foundation.org>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [PATCH 1/2] mm: memcontrol: don't allocate cgroup swap arrays when memcg is disabled
+Date: Fri, 19 Mar 2021 01:49:43 -0400
+Message-ID: <20210319054944.50048-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=6gTh132+rc2eC7+iuJdnPJjGut8rCOk0bv/jkoJwjos=;
-        b=dKTes1FKvp/DzPE43p1AwRBeRVKFON9qL1XwrpMNHUbvBm7Q85xfRixMCaNBCkPDxx
-         0f3qo6HyoxcRQkWCXA7TtPgH5vMcUYGmA00b6LpeYS9SUx5dWhNQ5hHuH8Ii4ULjkflM
-         DigmBVyvCZL7eApstVvrAD96tXpWWwyXd6EVlj/yWRcT/pSoyuIBa19KQlI93IT5oxFQ
-         jQPgTzIe2XuV+LhQ5xRI/GFv83yN7Oy3IDPCR1nXVyyWo3aDBIdHKjeVV0VuKMe79nnm
-         gVIggj7RDj13QlGC0t80BCt3pm87t/v49IonN9jOSlziU2Jz2l93SA0lqzWnN8OIDREF
-         2IfA==
-In-Reply-To: <20210318164625.1018062b042e540bd83bb08e@linux-foundation.org>
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=4EjKKyy6zJi89FUhVJH9257gvcZYHljfd48zTgz5zIU=;
+        b=x3QpbZL8xF3lB+fhzJjWSXfOdOYw7IT0xr7pVuPujmaG7k9pCD7DqET3m+8xVwZ5fs
+         9k297z+F24N6dyH21lb1L1Xd/k1LuGHRov8Ow80+4RDOpZh75ea7sqWiYm12gaCu5Q0J
+         sVUBYLc1+1h4Kx1tvB+uDpg0n/HxaUQ8X4aeJo9h/4EaSEOm3BpoNbfNPF+U9GdYaYI3
+         73ndGlNaJSVE+R5glrk8jWDvFVtpL1IKfaJbAWKVNZ0v8wEScvUqQPE7fcnMOvALYcJR
+         T7RUNMqMWmr2NpNZNqMiKeRDcre+/EKQRJ7tR6mEQYtwnxKl3A40jfWoKVM7UDzDdbvI
+         VClQ==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Dan Schatzberg <schatzberg.dan@gmail.com>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Hugh Dickins <hughd@google.com>, Roman Gushchin <guro@fb.com>, Muchun Song <songmuchun@bytedance.com>, Alex Shi <alex.shi@linux.alibaba.com>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Wei Yang <richard.weiyang@gmail.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:MEMORY MANAGEMENT" <linux-mm@kvack.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Thu, Mar 18, 2021 at 4:46 PM Andrew Morton <akpm@linux-foundation.org> wrote:
->
-> On Thu, 18 Mar 2021 10:00:17 -0600 Jens Axboe <axboe@kernel.dk> wrote:
->
-> > On 3/18/21 9:53 AM, Shakeel Butt wrote:
-> > > On Wed, Mar 17, 2021 at 3:30 PM Jens Axboe <axboe@kernel.dk> wrote:
-> > >>
-> > >> On 3/16/21 9:36 AM, Dan Schatzberg wrote:
-> > >>> No major changes, just rebasing and resubmitting
-> > >>
-> > >> Applied for 5.13, thanks.
-> > >>
-> > >
-> > > I have requested a couple of changes in the patch series. Can this
-> > > applied series still be changed or new patches are required?
-> >
-> > I have nothing sitting on top of it for now, so as far as I'm concerned
-> > we can apply a new series instead. Then we can also fold in that fix
-> > from Colin that he posted this morning...
->
-> The collision in memcontrol.c is a pain, but I guess as this is mainly
-> a loop patch, the block tree is an appropriate route.
->
-> Here's the collision between "mm: Charge active memcg when no mm is
-> set" and Shakeels's
-> https://lkml.kernel.org/r/20210305212639.775498-1-shakeelb@google.com
->
->
-> --- mm/memcontrol.c
-> +++ mm/memcontrol.c
-> @@ -6728,8 +6730,15 @@ int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask)
->                 rcu_read_unlock();
->         }
->
-> -       if (!memcg)
-> -               memcg = get_mem_cgroup_from_mm(mm);
-> +       if (!memcg) {
-> +               if (!mm) {
-> +                       memcg = get_mem_cgroup_from_current();
-> +                       if (!memcg)
-> +                               memcg = get_mem_cgroup_from_mm(current->mm);
-> +               } else {
-> +                       memcg = get_mem_cgroup_from_mm(mm);
-> +               }
-> +       }
->
->         ret = try_charge(memcg, gfp_mask, nr_pages);
->         if (ret)
->
->
-> Which I resolved thusly:
->
-> int mem_cgroup_charge(struct page *page, struct mm_struct *mm, gfp_t gfp_mask)
-> {
->         struct mem_cgroup *memcg;
->         int ret;
->
->         if (mem_cgroup_disabled())
->                 return 0;
->
->         if (!mm) {
->                 memcg = get_mem_cgroup_from_current();
->                 (!memcg)
->                         memcg = get_mem_cgroup_from_mm(current->mm);
->         } else {
->                 memcg = get_mem_cgroup_from_mm(mm);
->         }
->
->         ret = __mem_cgroup_charge(page, memcg, gfp_mask);
->         css_put(&memcg->css);
->
->         return ret;
-> }
->
+Since commit 2d1c498072de ("mm: memcontrol: make swap tracking an
+integral part of memory control"), the cgroup swap arrays are used to
+track memory ownership at the time of swap readahead and swapoff, even
+if swap space *accounting* has been turned off by the user via
+swapaccount=0 (which sets cgroup_memory_noswap).
 
-We need something similar for mem_cgroup_swapin_charge_page() as well.
+However, the patch was overzealous: by simply dropping the
+cgroup_memory_noswap conditionals in the swapon, swapoff and uncharge
+path, it caused the cgroup arrays being allocated even when the memory
+controller as a whole is disabled. This is a waste of that memory.
 
-It is better to take this series in mm tree and Jens is ok with that [1].
+Restore mem_cgroup_disabled() checks, implied previously by
+cgroup_memory_noswap, in the swapon, swapoff, and swap_entry_free
+callbacks.
 
-[1] https://lore.kernel.org/linux-next/4fea89a5-0e18-0791-18a8-4c5907b0d2c4@kernel.dk/
+Fixes: 2d1c498072de ("mm: memcontrol: make swap tracking an integral part of memory control")
+Reported-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+ mm/memcontrol.c  | 3 +++
+ mm/swap_cgroup.c | 6 ++++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index 668d1d7c2645..49bdcf603af1 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -7101,6 +7101,9 @@ void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_pages)
+ 	struct mem_cgroup *memcg;
+ 	unsigned short id;
+ 
++	if (mem_cgroup_disabled())
++		return;
++
+ 	id = swap_cgroup_record(entry, 0, nr_pages);
+ 	rcu_read_lock();
+ 	memcg = mem_cgroup_from_id(id);
+diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
+index 7f34343c075a..08c3246f9269 100644
+--- a/mm/swap_cgroup.c
++++ b/mm/swap_cgroup.c
+@@ -171,6 +171,9 @@ int swap_cgroup_swapon(int type, unsigned long max_pages)
+ 	unsigned long length;
+ 	struct swap_cgroup_ctrl *ctrl;
+ 
++	if (mem_cgroup_disabled())
++		return 0;
++
+ 	length = DIV_ROUND_UP(max_pages, SC_PER_PAGE);
+ 	array_size = length * sizeof(void *);
+ 
+@@ -206,6 +209,9 @@ void swap_cgroup_swapoff(int type)
+ 	unsigned long i, length;
+ 	struct swap_cgroup_ctrl *ctrl;
+ 
++	if (mem_cgroup_disabled())
++		return;
++
+ 	mutex_lock(&swap_cgroup_mutex);
+ 	ctrl = &swap_cgroup_ctrl[type];
+ 	map = ctrl->map;
+-- 
+2.30.1
+
