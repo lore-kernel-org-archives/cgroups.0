@@ -1,106 +1,53 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH 2/2] mm: memcontrol: deprecate swapaccounting=0 mode
-Date: Fri, 19 Mar 2021 06:49:55 -0700
-Message-ID: <CALvZod6HYfoSnBoq7JGW1ifLmLMmwSAyCqjh+bJ6L9evAPVGLQ@mail.gmail.com>
-References: <20210319054944.50048-1-hannes@cmpxchg.org> <20210319054944.50048-2-hannes@cmpxchg.org>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Fri, 19 Mar 2021 10:54:32 -0300
+Message-ID: <20210319135432.GT2356281@nvidia.com>
+References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
+ <1614463286-97618-6-git-send-email-jacob.jun.pan@linux.intel.com>
+ <20210318172234.3e8c34f7@jacob-builder> <YFR10eeDVf5ZHV5l@myrica>
+ <20210319124645.GP2356281@nvidia.com> <YFSqDNJ5yagk4eO+@myrica>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=UsGaLcv8p/W1uMdTq13khVuGSy6Z0QJqkLpFYQ1bIJk=;
-        b=i77Av+sBL8n+9UII8kK0PPrV0npH/0edODNbc1YUASq98qZ1gcvqBFDVwq1QLt1zyX
-         7s4RpGH1yxfP87oZyrB+44qDBZUm8EUWzYn2cMXYhz8eq1T6/ozPZSt3dMDmsjB1YKZg
-         6P2buZ8iGuy07bMMD+S2xdHzzYCWej0gyZK8KtUyVjNtJAzk6v/Lzp0MRhuESwTipzmm
-         pZdGUo7CLI9ROlYI7rxw21LEGWx4f9FN7yZda+kKZtQ6rpPxkuV+78/gHaHWZ6a0R8i7
-         nGs9ZB98n7tT8UtgieFAhSqszHDkwHh7qHtzNJ0T4Nia0yB3JEVoR2Mv6s81hF0QcQ8l
-         lFOw==
-In-Reply-To: <20210319054944.50048-2-hannes@cmpxchg.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Michal Hocko <mhocko@suse.com>, Linux MM <linux-mm@kvack.org>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Kernel Team <kernel-team@fb.com>
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=M7ic/wgCgBjj+2SlGjLvj6N7uWWIpxlyndm1A+f5tMY=;
+ b=emfT0d1/R6izUpprunoWVFojbrjhKKwsFt3ynJeD5bxS7DWtdpWxlSRFcT4CXW7uDBxtdGCPg3MTz0ZRhhzx2kBPbaM+otRcX0wi2t4L9UcMj+jzIabTlUmmfOlRCz+Aw+ZbChZl7dZ5goGoUULJaVDtvZywMnC9TwoVSB6aGxh8ueBdpBw64a3za0K/8+QrXTacEXfRhpl06+6hT+NBhnfCdUXSCecQkqDV6qQ/45hJ/9P+CbovepwE80+eXbvrBn48NIAOBAPd+ex1cCl3qAKAntOxJxfejxm7zWUPRqQhYTKek20Qt0PsWnx7+iXYpEyOxOV2aa7QOtrQPFAHFw==
+Content-Disposition: inline
+In-Reply-To: <YFSqDNJ5yagk4eO+@myrica>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Thu, Mar 18, 2021 at 10:49 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
->
-> The swapaccounting= commandline option already does very little
-> today. To close a trivial containment failure case, the swap ownership
-> tracking part of the swap controller has recently become mandatory
-> (see commit 2d1c498072de ("mm: memcontrol: make swap tracking an
-> integral part of memory control") for details), which makes up the
-> majority of the work during swapout, swapin, and the swap slot map.
->
-> The only thing left under this flag is the page_counter operations and
-> the visibility of the swap control files in the first place, which are
-> rather meager savings. There also aren't many scenarios, if any, where
-> controlling the memory of a cgroup while allowing it unlimited access
-> to a global swap space is a workable resource isolation stragegy.
+On Fri, Mar 19, 2021 at 02:41:32PM +0100, Jean-Philippe Brucker wrote:
+> On Fri, Mar 19, 2021 at 09:46:45AM -0300, Jason Gunthorpe wrote:
+> > On Fri, Mar 19, 2021 at 10:58:41AM +0100, Jean-Philippe Brucker wrote:
+> > 
+> > > Although there is no use for it at the moment (only two upstream users and
+> > > it looks like amdkfd always uses current too), I quite like the
+> > > client-server model where the privileged process does bind() and programs
+> > > the hardware queue on behalf of the client process.
+> > 
+> > This creates a lot complexity, how do does process A get a secure
+> > reference to B? How does it access the memory in B to setup the HW?
+> 
+> mm_access() for example, and passing addresses via IPC
 
-*strategy
+I'd rather the source process establish its own PASID and then pass
+the rights to use it to some other process via FD passing than try to
+go the other way. There are lots of security questions with something
+like mm_access.
 
->
-> On the other hand, there have been several bugs and confusion around
-> the many possible swap controller states (cgroup1 vs cgroup2 behavior,
-> memory accounting without swap accounting, memcg runtime disabled).
->
-> This puts the maintenance overhead of retaining the toggle above its
-> practical benefits. Deprecate it.
->
-> Suggested-by: Shakeel Butt <shakeelb@google.com>
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-[...]
->
->  static int __init setup_swap_account(char *s)
->  {
-> -       if (!strcmp(s, "1"))
-> -               cgroup_memory_noswap = false;
-> -       else if (!strcmp(s, "0"))
-> -               cgroup_memory_noswap = true;
-> -       return 1;
-> +       pr_warn_once("The swapaccount= commandline option is deprecated. "
-> +                    "Please report your usecase to linux-mm@kvack.org if you "
-> +                    "depend on this functionality.\n");
-> +       return 0;
-
-What's the difference between returning 0 or 1 here?
-
->  }
->  __setup("swapaccount=", setup_swap_account);
->
-> @@ -7291,27 +7287,13 @@ static struct cftype memsw_files[] = {
->         { },    /* terminate */
->  };
->
-> -/*
-> - * If mem_cgroup_swap_init() is implemented as a subsys_initcall()
-> - * instead of a core_initcall(), this could mean cgroup_memory_noswap still
-> - * remains set to false even when memcg is disabled via "cgroup_disable=memory"
-> - * boot parameter. This may result in premature OOPS inside
-> - * mem_cgroup_get_nr_swap_pages() function in corner cases.
-> - */
->  static int __init mem_cgroup_swap_init(void)
->  {
-> -       /* No memory control -> no swap control */
-> -       if (mem_cgroup_disabled())
-> -               cgroup_memory_noswap = true;
-> -
-> -       if (cgroup_memory_noswap)
-> -               return 0;
-> -
-
-Do we need a mem_cgroup_disabled() check here?
-
->         WARN_ON(cgroup_add_dfl_cftypes(&memory_cgrp_subsys, swap_files));
->         WARN_ON(cgroup_add_legacy_cftypes(&memory_cgrp_subsys, memsw_files));
->
->         return 0;
->  }
-> -core_initcall(mem_cgroup_swap_init);
-> +subsys_initcall(mem_cgroup_swap_init);
->
->  #endif /* CONFIG_MEMCG_SWAP */
-> --
-> 2.30.1
->
+Jason
