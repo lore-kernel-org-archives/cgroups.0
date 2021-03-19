@@ -1,48 +1,41 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/2] mm: memcontrol: don't allocate cgroup swap arrays
- when memcg is disabled
-Date: Fri, 19 Mar 2021 07:00:24 -0700
-Message-ID: <CALvZod4RD6ALiQHrFBMWMytYW0Lg+RFZapKKSWJbK+-ue9BG2A@mail.gmail.com>
-References: <20210319054944.50048-1-hannes@cmpxchg.org>
+From: Dan Schatzberg <schatzberg.dan@gmail.com>
+Subject: Re: [PATCH v10 0/3] Charge loop device i/o to issuing cgroup
+Date: Fri, 19 Mar 2021 11:51:22 -0400
+Message-ID: <YFTIepcb+qm/+/9d@dschatzberg-fedora-PC0Y6AEN.dhcp.thefacebook.com>
+References: <20210316153655.500806-1-schatzberg.dan@gmail.com>
+ <7ca79335-026f-2511-2b58-0e9f32caa063@kernel.dk>
+ <CALvZod6tvrZ_sj=BnM4baQepexwvOPREx3qe5ZJrmqftrqwBEA@mail.gmail.com>
+ <8c32421c-4bd8-ec46-f1d0-25996956f4da@kernel.dk>
+ <20210318164625.1018062b042e540bd83bb08e@linux-foundation.org>
+ <CALvZod6FMQQC17Zsu9xoKs=dFWaJdMC2Qk3YiDPUUQHx8teLYg@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=CCZAHZFhptxcyqdqzzX/b+llWDB9Z2cdnFChdhi5Vwg=;
-        b=hbuafUMuXP312PXrZHnMp/92FBrmirq42lyx06C8Agvn87xHEoPo7OQu6gl2wSVWMO
-         I6doAnkI5UZ0G0OdBgSgw7TdfurM6EjLVZBa0M+Y5aZUPhfzckmx9H30C15CVZeAxFZe
-         4uxJHzgd5zNB2Shl7VKLfHcAFXrQwXeJ22Nl9RzXfrTV9PaT8nCUomECivrsQ5FaaqiI
-         T/ltkh0E+Md2wAJzG94MHdJ1IKPJKBvqP5Tsd9Cnyp/TB1utqQwprQzjEXCNltXpJ/xP
-         zC8uwR6rKEg5aBhOXxJ5CgMIva1CslYrhntNPzlA5wX9c0C5QrxEKEd066vPiNwcTJER
-         pPfg==
-In-Reply-To: <20210319054944.50048-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=yQLsk2Tp9wfXFgh3gpmNEHc/1LVc0qNRoZDzdBhuURQ=;
+        b=bCWupG2mTUy75B9SdmzjE60Wm4fflLRjowQwVn0gS6PS4fBpwtA4DG4NH5Ooo3tjeb
+         Crja/7T/8mXD/ardmLAx9Cgj9xa8d+7v4SAYzzWKKlTF9zMvmgsqI7cDS2DVMNvfaNqm
+         LOnBD/IscqHTTRHxI0+clnR7I7MtJsFKSnRmftmwUX9WDsHYGy3JCbi8ZzuASOeNKxvN
+         3zwlzI1Lsg8ODU9JsRK0o+Mrj105/EzdsFRDCKYRigFK6nXnRLSH6W+8swv8w6IIZ21t
+         yIoQbHXSuiQUxqfhpVfSgAxe4zd87/cXTnjfUxvlzRsMa6bcG9GblChEkIpSopFEyxX3
+         n5BA==
+Content-Disposition: inline
+In-Reply-To: <CALvZod6FMQQC17Zsu9xoKs=dFWaJdMC2Qk3YiDPUUQHx8teLYg@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Hugh Dickins <hughd@google.com>, Roman Gushchin <guro@fb.com>, Muchun Song <songmuchun@bytedance.com>, Alex Shi <alex.shi@linux.alibaba.com>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Wei Yang <richard.weiyang@gmail.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:MEMORY MANAGEMENT" <linux-mm@kvack.org>
 
-On Thu, Mar 18, 2021 at 10:49 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-> Since commit 2d1c498072de ("mm: memcontrol: make swap tracking an
-> integral part of memory control"), the cgroup swap arrays are used to
-> track memory ownership at the time of swap readahead and swapoff, even
-> if swap space *accounting* has been turned off by the user via
-> swapaccount=0 (which sets cgroup_memory_noswap).
->
-> However, the patch was overzealous: by simply dropping the
-> cgroup_memory_noswap conditionals in the swapon, swapoff and uncharge
-> path, it caused the cgroup arrays being allocated even when the memory
-> controller as a whole is disabled. This is a waste of that memory.
->
-> Restore mem_cgroup_disabled() checks, implied previously by
-> cgroup_memory_noswap, in the swapon, swapoff, and swap_entry_free
-> callbacks.
->
-> Fixes: 2d1c498072de ("mm: memcontrol: make swap tracking an integral part of memory control")
-> Reported-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+On Thu, Mar 18, 2021 at 05:56:28PM -0700, Shakeel Butt wrote:
+> 
+> We need something similar for mem_cgroup_swapin_charge_page() as well.
+> 
+> It is better to take this series in mm tree and Jens is ok with that [1].
+> 
+> [1] https://lore.kernel.org/linux-next/4fea89a5-0e18-0791-18a8-4c5907b0d2c4@kernel.dk/
 
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+It sounds like there are no concerns about the loop-related work in
+the patch series. I'll rebase on the mm tree and resubmit.
