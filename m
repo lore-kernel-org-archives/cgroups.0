@@ -1,94 +1,174 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Mon, 22 Mar 2021 09:03:00 -0300
-Message-ID: <20210322120300.GU2356281@nvidia.com>
-References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
- <1614463286-97618-6-git-send-email-jacob.jun.pan@linux.intel.com>
- <20210318172234.3e8c34f7@jacob-builder> <YFR10eeDVf5ZHV5l@myrica>
- <20210319124645.GP2356281@nvidia.com> <YFSqDNJ5yagk4eO+@myrica>
- <20210319135432.GT2356281@nvidia.com>
- <20210319112221.5123b984@jacob-builder>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: Re: [PATCH 2/2] mm: memcontrol: deprecate swapaccounting=0 mode
+Date: Mon, 22 Mar 2021 11:53:41 -0400
+Message-ID: <YFi9hVQM9maWyhWv@cmpxchg.org>
+References: <20210319054944.50048-1-hannes@cmpxchg.org>
+ <20210319054944.50048-2-hannes@cmpxchg.org>
+ <alpine.LSU.2.11.2103191633350.1043@eggly.anvils>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=9nzn01HrZRrwKwV0UIRm7mXB+Hx5h/+0Svn2iOOF3wM=;
- b=Awv7I16VB9PBbqCllrddC1HBoNjg/I7JnRN5KKKk6C12wdfMr0NBkl1ylMJhyMHZnAvKMVJ9QooxDmQ0GF7jhFauFPB2Ao5Uft+VpXHxkKFf5TRbYWBtaFGa0K9PmhhjzeyFtc+ODR3AG9Fw3TTtmXJDk6eRNnTHToupP/divexZknR9ATV5WN4HoZDxlKAXTCAzwVXe9BX07M8GLDXX2SRqsFI1HULxIWOXlnkMKUj5+qbETvkZdu7JTn6O55zd9DCTBv38ZX8YDoQkQw6tqHEBGgkPVYdtO6P6qwVZ+aeBfyLFcIci16R6DCra7+ARXB5fFQzL6ruf5I/SLiSwnw==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=E5pR4bhxZETSxTpVA3uMOpN6g18ZTkn19HmQ/Nnh+4o=;
+        b=EHV7q9LwYDxGRVPpLfLVmAGUPg55im2cpNJ3+h7ZlJ1Ip9KZXSuVb095YaAk3LoOe/
+         TgStUPZvFQicUOGPKSakFK2kCfiXea14bbW2LFqTMzJHAQ699cVZK8BAkp+LNTaytRUn
+         Xp4dYojRqHJtOPYC1Y+13U+2/rglDmFPvm8uzwDef0JIWnPky/yXvAcfWJVfTw1hGDwY
+         QkFU8zUYaLJLXnZzSQddyAL1Lp/z6sVM4sS/u2Utm0nw571hVtcoCo3bbORJzj5JccAO
+         05Tbf0Ttjbba+BA460+lrwKiAcZ1gqEgq2hUl1t2MsaiTHwbFZ74Gz6I60bixo9cDDrQ
+         GvwQ==
 Content-Disposition: inline
-In-Reply-To: <20210319112221.5123b984@jacob-builder>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-To: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian,
- Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+In-Reply-To: <alpine.LSU.2.11.2103191633350.1043-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-T24gRnJpLCBNYXIgMTksIDIwMjEgYXQgMTE6MjI6MjFBTSAtMDcwMCwgSmFjb2IgUGFuIHdyb3Rl
-Ogo+IEhpIEphc29uLAo+IAo+IE9uIEZyaSwgMTkgTWFyIDIwMjEgMTA6NTQ6MzIgLTAzMDAsIEph
-c29uIEd1bnRob3JwZSA8amdnQG52aWRpYS5jb20+IHdyb3RlOgo+IAo+ID4gT24gRnJpLCBNYXIg
-MTksIDIwMjEgYXQgMDI6NDE6MzJQTSArMDEwMCwgSmVhbi1QaGlsaXBwZSBCcnVja2VyIHdyb3Rl
-Ogo+ID4gPiBPbiBGcmksIE1hciAxOSwgMjAyMSBhdCAwOTo0Njo0NUFNIC0wMzAwLCBKYXNvbiBH
-dW50aG9ycGUgd3JvdGU6ICAKPiA+ID4gPiBPbiBGcmksIE1hciAxOSwgMjAyMSBhdCAxMDo1ODo0
-MUFNICswMTAwLCBKZWFuLVBoaWxpcHBlIEJydWNrZXIgd3JvdGU6Cj4gPiA+ID4gICAKPiA+ID4g
-PiA+IEFsdGhvdWdoIHRoZXJlIGlzIG5vIHVzZSBmb3IgaXQgYXQgdGhlIG1vbWVudCAob25seSB0
-d28gdXBzdHJlYW0KPiA+ID4gPiA+IHVzZXJzIGFuZCBpdCBsb29rcyBsaWtlIGFtZGtmZCBhbHdh
-eXMgdXNlcyBjdXJyZW50IHRvbyksIEkgcXVpdGUKPiA+ID4gPiA+IGxpa2UgdGhlIGNsaWVudC1z
-ZXJ2ZXIgbW9kZWwgd2hlcmUgdGhlIHByaXZpbGVnZWQgcHJvY2VzcyBkb2VzCj4gPiA+ID4gPiBi
-aW5kKCkgYW5kIHByb2dyYW1zIHRoZSBoYXJkd2FyZSBxdWV1ZSBvbiBiZWhhbGYgb2YgdGhlIGNs
-aWVudAo+ID4gPiA+ID4gcHJvY2Vzcy4gIAo+ID4gPiA+IAo+ID4gPiA+IFRoaXMgY3JlYXRlcyBh
-IGxvdCBjb21wbGV4aXR5LCBob3cgZG8gZG9lcyBwcm9jZXNzIEEgZ2V0IGEgc2VjdXJlCj4gPiA+
-ID4gcmVmZXJlbmNlIHRvIEI/IEhvdyBkb2VzIGl0IGFjY2VzcyB0aGUgbWVtb3J5IGluIEIgdG8g
-c2V0dXAgdGhlIEhXPyAgCj4gPiA+IAo+ID4gPiBtbV9hY2Nlc3MoKSBmb3IgZXhhbXBsZSwgYW5k
-IHBhc3NpbmcgYWRkcmVzc2VzIHZpYSBJUEMgIAo+ID4gCj4gPiBJJ2QgcmF0aGVyIHRoZSBzb3Vy
-Y2UgcHJvY2VzcyBlc3RhYmxpc2ggaXRzIG93biBQQVNJRCBhbmQgdGhlbiBwYXNzCj4gPiB0aGUg
-cmlnaHRzIHRvIHVzZSBpdCB0byBzb21lIG90aGVyIHByb2Nlc3MgdmlhIEZEIHBhc3NpbmcgdGhh
-biB0cnkgdG8KPiA+IGdvIHRoZSBvdGhlciB3YXkuIFRoZXJlIGFyZSBsb3RzIG9mIHNlY3VyaXR5
-IHF1ZXN0aW9ucyB3aXRoIHNvbWV0aGluZwo+ID4gbGlrZSBtbV9hY2Nlc3MuCj4gPiAKPiAKPiBU
-aGFuayB5b3UgYWxsIGZvciB0aGUgaW5wdXQsIGl0IHNvdW5kcyBsaWtlIHdlIGFyZSBPSyB0byBy
-ZW1vdmUgbW0gYXJndW1lbnQKPiBmcm9tIGlvbW11X3N2YV9iaW5kX2RldmljZSgpIGFuZCBpb21t
-dV9zdmFfYWxsb2NfcGFzaWQoKSBmb3Igbm93Pwo+IAo+IExldCBtZSB0cnkgdG8gc3VtbWFyaXpl
-IFBBU0lEIGFsbG9jYXRpb24gYXMgYmVsb3c6Cj4gCj4gSW50ZXJmYWNlcwl8IFVzYWdlCXwgIExp
-bWl0CXwgYmluZMK5IHxVc2VyIHZpc2libGUKPiAvZGV2L2lvYXNpZMKyCXwgRy1TVkEvSU9WQQl8
-ICBjZ3JvdXAJfCBObwl8WWVzCj4gY2hhciBkZXbCswl8IFNWQQkJfCAgY2dyb3VwCXwgWWVzCXxO
-bwo+IGlvbW11IGRyaXZlcgl8IGRlZmF1bHQgUEFTSUR8ICBubwkJfCBObwl8Tm8KPiBrZXJuZWwJ
-CXwgc3VwZXIgU1ZBCXwgbm8JCXwgeWVzICAgfE5vCj4gCj4gwrkgQWxsb2NhdGVkIGR1cmluZyBT
-VkEgYmluZAo+IMKyIFBBU0lEcyBhbGxvY2F0ZWQgdmlhIC9kZXYvaW9hc2lkIGFyZSBub3QgYm91
-bmQgdG8gYW55IG1tLiBCdXQgaXRzCj4gICBvd25lcnNoaXAgaXMgYXNzaWduZWQgdG8gdGhlIHBy
-b2Nlc3MgdGhhdCBkb2VzIHRoZSBhbGxvY2F0aW9uLgoKV2hhdCBkb2VzICJub3QgYm91bmQgdG8g
-YSBtbSIgbWVhbj8KCklNSE8gYSB1c2UgY3JlYXRlZCBQQVNJRCBpcyBlaXRoZXIgYm91bmQgdG8g
-YSBtbSAoY3VycmVudCkgYXQgY3JlYXRpb24KdGltZSwgb3IgaXQgd2lsbCBuZXZlciBiZSBib3Vu
-ZCB0byBhIG1tIGFuZCBpdHMgcGFnZSB0YWJsZSBpcyB1bmRlcgp1c2VyIGNvbnRyb2wgdmlhIC9k
-ZXYvaW9hc2lkLgoKSSB0aG91Z2h0IHRoZSB3aG9sZSBwb2ludCBvZiBzb21ldGhpbmcgbGlrZSBh
-IC9kZXYvaW9hc2lkIHdhcyB0byBnZXQKYXdheSBmcm9tIGVhY2ggYW5kIGV2ZXJ5IGRldmljZSBj
-cmVhdGluZyBpdHMgb3duIFBBU0lEIGludGVyZmFjZT8KCkl0IG1heWJlIHNvbWV3aGF0IHJlYXNv
-bmFibGUgdGhhdCBzb21lIGRldmljZXMgY291bGQgaGF2ZSBzb21lIGVhc3kKJ21ha2UgYSBTVkEg
-UEFTSUQgb24gY3VycmVudCcgaW50ZXJmYWNlIGJ1aWx0IGluLCBidXQgYW55dGhpbmcgbW9yZQpj
-b21wbGljYXRlZCBzaG91bGQgdXNlIC9kZXYvaW9hc2lkLCBhbmQgYW55dGhpbmcgY29uc3VtaW5n
-IFBBU0lECnNob3VsZCBhbHNvIGhhdmUgYW4gQVBJIHRvIGltcG9ydCBhbmQgYXR0YWNoIGEgUEFT
-SUQgZnJvbSAvZGV2L2lvYXNpZC4KCj4gQ3VycmVudGx5LCB0aGUgcHJvcG9zZWQgL2Rldi9pb2Fz
-aWQgaW50ZXJmYWNlIGRvZXMgbm90IG1hcCBpbmRpdmlkdWFsIFBBU0lECj4gd2l0aCBhbiBGRC4g
-VGhlIEZEIGlzIGF0IHRoZSBpb2FzaWRfc2V0IGdyYW51bGFyaXR5IGFuZCBib25kIHRvIHRoZSBj
-dXJyZW50Cj4gbW0uIFdlIGNvdWxkIGV4dGVuZCB0aGUgSU9DVExzIHRvIGNvdmVyIGluZGl2aWR1
-YWwgUEFTSUQtRkQgcGFzc2luZyBjYXNlCj4gd2hlbiB1c2UgY2FzZXMgYXJpc2UuIFdvdWxkIHRo
-aXMgd29yaz8KCklzIGl0IGEgZ29vZCBpZGVhIHRoYXQgdGhlIEZEIGlzIHBlciBpb2FzaWRfc2V0
-ID8gV2hhdCBpcyB0aGUgc2V0IHVzZWQKZm9yPwoKVXN1YWxseSBrZXJuZWwgaW50ZXJmYWNlcyB3
-b3JrIG5pY2VyIHdpdGggYSBvbmUgZmQvb25lIG9iamVjdCBtb2RlbC4KCkJ1dCBldmVuIGlmIGl0
-IGlzIGEgc2V0LCB5b3UgY291bGQgcGFzcyB0aGUgc2V0IGJldHdlZW4gY28tb3BlcmF0aW5nCnBy
-b2Nlc3NlcyBhbmQgdGhlIFBBU0lEIGNhbiBiZSBjcmVhdGVkIGluIHRoZSBjb3JyZWN0ICdjdXJy
-ZW50Jy4gQnV0CnRoZXJlIGlzIGFsbCBraW5kcyBvZiBzZWN1cml0eSBxdWVzdHNpb25zIGFzIHNv
-b24gYXMgeW91IHN0YXJ0IGRvaW5nCmFueXRoaW5nIGxpa2UgdGhpcyAtIGlzIHRoZXJlIHJlYWxs
-eSBhIHVzZSBjYXNlPwoKSmFzb24KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX18KaW9tbXUgbWFpbGluZyBsaXN0CmlvbW11QGxpc3RzLmxpbnV4LWZvdW5kYXRp
-b24ub3JnCmh0dHBzOi8vbGlzdHMubGludXhmb3VuZGF0aW9uLm9yZy9tYWlsbWFuL2xpc3RpbmZv
-L2lvbW11
+On Fri, Mar 19, 2021 at 05:37:05PM -0700, Hugh Dickins wrote:
+> On Fri, 19 Mar 2021, Johannes Weiner wrote:
+> 
+> > The swapaccounting= commandline option already does very little
+> > today. To close a trivial containment failure case, the swap ownership
+> > tracking part of the swap controller has recently become mandatory
+> > (see commit 2d1c498072de ("mm: memcontrol: make swap tracking an
+> > integral part of memory control") for details), which makes up the
+> > majority of the work during swapout, swapin, and the swap slot map.
+> > 
+> > The only thing left under this flag is the page_counter operations and
+> > the visibility of the swap control files in the first place, which are
+> > rather meager savings. There also aren't many scenarios, if any, where
+> > controlling the memory of a cgroup while allowing it unlimited access
+> > to a global swap space is a workable resource isolation stragegy.
+> > 
+> > On the other hand, there have been several bugs and confusion around
+> > the many possible swap controller states (cgroup1 vs cgroup2 behavior,
+> > memory accounting without swap accounting, memcg runtime disabled).
+> > 
+> > This puts the maintenance overhead of retaining the toggle above its
+> > practical benefits. Deprecate it.
+> > 
+> > Suggested-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> 
+> This crashes, and needs a fix: see below (plus some nits).
+> 
+> But it's a very welcome cleanup: just getting rid of all those
+> !cgroup_memory_noswap double negatives is a relief in itself.
+> 
+> It does suggest eliminating CONFIG_MEMCG_SWAP altogether (just
+> using #ifdef CONFIG_SWAP instead, in those parts of CONFIG_MEMCG code);
+> but you're right that's a separate cleanup, and not nearly so worthwhile
+> as this one (I notice CONFIG_MEMCG_SWAP in some of the arch defconfigs,
+> and don't know whether whoever removes CONFIG_MEMCG_SWAP would be
+> obligated to remove those too).
+
+2d1c498072de ("mm: memcontrol: make swap tracking an integral part of
+memory control") made it invisible to the user already, I only kept
+the symbol for convenience in the Makefile:
+
+obj-$(CONFIG_MEMCG_SWAP) += swap_cgroup.o
+
+But I guess we could replace it with
+
+ifdef CONFIG_SWAP
+obj-$(CONFIG_MEMCG) += swap_cgroup.c
+endif
+
+and I agree, everywhere else it's currently used would be nicer
+without it. I'll send a separate patch.
+
+> > @@ -99,7 +92,11 @@ static DECLARE_WAIT_QUEUE_HEAD(memcg_cgwb_frn_waitq);
+> >  /* Whether legacy memory+swap accounting is active */
+> >  static bool do_memsw_account(void)
+> >  {
+> > -	return !cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_noswap;
+> > +	/* cgroup2 doesn't do mem+swap accounting */
+> > +	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
+> > +		return false;
+> > +
+> > +	return true;
+> 
+> Nit: I'm not fond of the "if (boolean()) return true; else return false;"
+> codestyle, and would prefer the straightforward
+> 
+> 	return !cgroup_subsys_on_dfl(memory_cgrp_subsys);
+> 
+> but you've chosen otherwise, so, okay.
+
+I prefer a series of branches if a single expression becomes unwieldy,
+and individual conditions deserve their own comments.
+
+But it's indeed pretty silly in this case, I'll make it a single line.
+
+> > @@ -7124,7 +7121,7 @@ long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
+> >  {
+> >  	long nr_swap_pages = get_nr_swap_pages();
+> >  
+> > -	if (cgroup_memory_noswap || !cgroup_subsys_on_dfl(memory_cgrp_subsys))
+> > +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
+> 
+> That needs to check mem_cgroup_disabled() where it used to check
+> cgroup_memory_noswap.  The convolutions are confusing (which is
+> precisely why this is such a welcome cleanup), but without a
+> mem_cgroup_disabled() (or NULL memcg) check there, the
+> cgroup_disable=memory case oopses on NULLish pointer dereference
+> when mem_cgroup_get_nr_swap_pages() is called from get_scan_count().
+> 
+> (This little function has been repeatedly troublesome that way.)
+
+Sigh, yes, this will hopefully be the last instance of this bug...
+
+Thanks for catching that, I'll fix it up.
+
+> > @@ -7141,7 +7138,7 @@ bool mem_cgroup_swap_full(struct page *page)
+> >  
+> >  	if (vm_swap_full())
+> >  		return true;
+> > -	if (cgroup_memory_noswap || !cgroup_subsys_on_dfl(memory_cgrp_subsys))
+> > +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
+> 
+> Would it now be better to say "if (do_memsw_account())" there?
+
+Yes, I'll change that.
+
+> Or would it be better to eliminate do_memsw_account() altogether,
+> and just use !cgroup_subsys_on_dfl(memory_cgrp_subsys) throughout?
+
+I have found do_memsw_account() useful in the past to find those
+related pieces. The details elude me know but I remember searching for
+this string often during the recent work in this area.
+
+> (Though I don't find "cgroup_subsys_on_dfl" very informative.)
+
+This routinely bothers me as well, but I have not been able to come up
+with a good replacement.
+
+memcg_v1()? memcg_legacy_mode()? memory_cgroup_in_bytes()?
+
+> > @@ -7291,27 +7287,13 @@ static struct cftype memsw_files[] = {
+> >  	{ },	/* terminate */
+> >  };
+> >  
+> > -/*
+> > - * If mem_cgroup_swap_init() is implemented as a subsys_initcall()
+> > - * instead of a core_initcall(), this could mean cgroup_memory_noswap still
+> > - * remains set to false even when memcg is disabled via "cgroup_disable=memory"
+> > - * boot parameter. This may result in premature OOPS inside
+> > - * mem_cgroup_get_nr_swap_pages() function in corner cases.
+> > - */
+> >  static int __init mem_cgroup_swap_init(void)
+> >  {
+> > -	/* No memory control -> no swap control */
+> > -	if (mem_cgroup_disabled())
+> > -		cgroup_memory_noswap = true;
+> > -
+> > -	if (cgroup_memory_noswap)
+> > -		return 0;
+> > -
+> 
+> Shakeel suggested "if (mem_cgroup_disabled()) return 0;" here,
+> and that was the first thing I tried when I got the crash.
+
+It really isn't obviously safe. I'll put it back in.
