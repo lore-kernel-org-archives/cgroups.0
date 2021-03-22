@@ -1,117 +1,94 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [PATCH] mm: page_alloc: fix memcg accounting leak in speculative
- cache lookup
-Date: Mon, 22 Mar 2021 10:55:30 +0100
-Message-ID: <YFhpkrK7MZ1mDQhi@dhcp22.suse.cz>
-References: <20210319071547.60973-1-hannes@cmpxchg.org>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Mon, 22 Mar 2021 09:03:00 -0300
+Message-ID: <20210322120300.GU2356281@nvidia.com>
+References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
+ <1614463286-97618-6-git-send-email-jacob.jun.pan@linux.intel.com>
+ <20210318172234.3e8c34f7@jacob-builder> <YFR10eeDVf5ZHV5l@myrica>
+ <20210319124645.GP2356281@nvidia.com> <YFSqDNJ5yagk4eO+@myrica>
+ <20210319135432.GT2356281@nvidia.com>
+ <20210319112221.5123b984@jacob-builder>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1616406947; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=B/2ozR1dCacTTh1U7cY+Z5HNl+3fI6dqE+W2ZDjDPYM=;
-        b=Z6gyafmxwULS2CLLmU6+9rxjA+6VdYu/ZVVzqZlu7ZW2khYcqWt3VZyW5URwptKGH6FfHt
-        sOevZnUMpkVLYHYkXIePZhVkyMlsMuiNktVNXkSE6PL2a/NmVOtnGSkGFZjvGIPtrfHSNB
-        S8V4aYfbUQ73RzmerBVBOySZw2B6MjI=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=9nzn01HrZRrwKwV0UIRm7mXB+Hx5h/+0Svn2iOOF3wM=;
+ b=Awv7I16VB9PBbqCllrddC1HBoNjg/I7JnRN5KKKk6C12wdfMr0NBkl1ylMJhyMHZnAvKMVJ9QooxDmQ0GF7jhFauFPB2Ao5Uft+VpXHxkKFf5TRbYWBtaFGa0K9PmhhjzeyFtc+ODR3AG9Fw3TTtmXJDk6eRNnTHToupP/divexZknR9ATV5WN4HoZDxlKAXTCAzwVXe9BX07M8GLDXX2SRqsFI1HULxIWOXlnkMKUj5+qbETvkZdu7JTn6O55zd9DCTBv38ZX8YDoQkQw6tqHEBGgkPVYdtO6P6qwVZ+aeBfyLFcIci16R6DCra7+ARXB5fFQzL6ruf5I/SLiSwnw==
 Content-Disposition: inline
-In-Reply-To: <20210319071547.60973-1-hannes@cmpxchg.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <willy@infradead.org>, Hugh Dickins <hughd@google.com>, Zhou Guanghui <zhouguanghui1@huawei.com>, Zi Yan <ziy@nvidia.com>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+In-Reply-To: <20210319112221.5123b984@jacob-builder>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian,
+ Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Fri 19-03-21 03:15:47, Johannes Weiner wrote:
-> When the freeing of a higher-order page block (non-compound) races
-> with a speculative page cache lookup, __free_pages() needs to leave
-> the first order-0 page in the chunk to the lookup but free the buddy
-> pages that the lookup doesn't know about separately.
-> 
-> However, if such a higher-order page is charged to a memcg (e.g. !vmap
-> kernel stack)), only the first page of the block has page->memcg
-> set. That means we'll uncharge only one order-0 page from the entire
-> block, and leak the remainder.
-> 
-> Add a split_page_memcg() to __free_pages() right before it starts
-> taking the higher-order page apart and freeing its individual
-> constituent pages. This ensures all of them will have the memcg
-> linkage set up for correct uncharging. Also update the comments a bit
-> to clarify what exactly is happening to the page during that race.
-> 
-> This bug is old and has its roots in the speculative page cache patch
-> and adding cgroup accounting of kernel pages. There are no known user
-> reports. A backport to stable is therefor not warranted.
-> 
-> Reported-by: Matthew Wilcox <willy@infradead.org>
-> Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
-
-Acked-by: Michal Hocko <mhocko@suse.com>
-
-Thanks!
-
-> ---
->  mm/page_alloc.c | 33 +++++++++++++++++++++++++++------
->  1 file changed, 27 insertions(+), 6 deletions(-)
-> 
-> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-> index c53fe4fa10bf..f4bd56656402 100644
-> --- a/mm/page_alloc.c
-> +++ b/mm/page_alloc.c
-> @@ -5112,10 +5112,9 @@ static inline void free_the_page(struct page *page, unsigned int order)
->   * the allocation, so it is easy to leak memory.  Freeing more memory
->   * than was allocated will probably emit a warning.
->   *
-> - * If the last reference to this page is speculative, it will be released
-> - * by put_page() which only frees the first page of a non-compound
-> - * allocation.  To prevent the remaining pages from being leaked, we free
-> - * the subsequent pages here.  If you want to use the page's reference
-> + * This function isn't a put_page(). Don't let the put_page_testzero()
-> + * fool you, it's only to deal with speculative cache references. It
-> + * WILL free pages directly. If you want to use the page's reference
->   * count to decide when to free the allocation, you should allocate a
->   * compound page, and use put_page() instead of __free_pages().
->   *
-> @@ -5124,11 +5123,33 @@ static inline void free_the_page(struct page *page, unsigned int order)
->   */
->  void __free_pages(struct page *page, unsigned int order)
->  {
-> -	if (put_page_testzero(page))
-> +	/*
-> +	 * Drop the base reference from __alloc_pages and free. In
-> +	 * case there is an outstanding speculative reference, from
-> +	 * e.g. the page cache, it will put and free the page later.
-> +	 */
-> +	if (likely(put_page_testzero(page))) {
->  		free_the_page(page, order);
-> -	else if (!PageHead(page))
-> +		return;
-> +	}
-> +
-> +	/*
-> +	 * The speculative reference will put and free the page.
-> +	 *
-> +	 * However, if the speculation was into a higher-order page
-> +	 * chunk that isn't marked compound, the other side will know
-> +	 * nothing about our buddy pages and only free the order-0
-> +	 * page at the start of our chunk! We must split off and free
-> +	 * the buddy pages here.
-> +	 *
-> +	 * The buddy pages aren't individually refcounted, so they
-> +	 * can't have any pending speculative references themselves.
-> +	 */
-> +	if (!PageHead(page) && order > 0) {
-> +		split_page_memcg(page, 1 << order);
->  		while (order-- > 0)
->  			free_the_page(page + (1 << order), order);
-> +	}
->  }
->  EXPORT_SYMBOL(__free_pages);
->  
-> -- 
-> 2.30.1
-> 
-
--- 
-Michal Hocko
-SUSE Labs
+T24gRnJpLCBNYXIgMTksIDIwMjEgYXQgMTE6MjI6MjFBTSAtMDcwMCwgSmFjb2IgUGFuIHdyb3Rl
+Ogo+IEhpIEphc29uLAo+IAo+IE9uIEZyaSwgMTkgTWFyIDIwMjEgMTA6NTQ6MzIgLTAzMDAsIEph
+c29uIEd1bnRob3JwZSA8amdnQG52aWRpYS5jb20+IHdyb3RlOgo+IAo+ID4gT24gRnJpLCBNYXIg
+MTksIDIwMjEgYXQgMDI6NDE6MzJQTSArMDEwMCwgSmVhbi1QaGlsaXBwZSBCcnVja2VyIHdyb3Rl
+Ogo+ID4gPiBPbiBGcmksIE1hciAxOSwgMjAyMSBhdCAwOTo0Njo0NUFNIC0wMzAwLCBKYXNvbiBH
+dW50aG9ycGUgd3JvdGU6ICAKPiA+ID4gPiBPbiBGcmksIE1hciAxOSwgMjAyMSBhdCAxMDo1ODo0
+MUFNICswMTAwLCBKZWFuLVBoaWxpcHBlIEJydWNrZXIgd3JvdGU6Cj4gPiA+ID4gICAKPiA+ID4g
+PiA+IEFsdGhvdWdoIHRoZXJlIGlzIG5vIHVzZSBmb3IgaXQgYXQgdGhlIG1vbWVudCAob25seSB0
+d28gdXBzdHJlYW0KPiA+ID4gPiA+IHVzZXJzIGFuZCBpdCBsb29rcyBsaWtlIGFtZGtmZCBhbHdh
+eXMgdXNlcyBjdXJyZW50IHRvbyksIEkgcXVpdGUKPiA+ID4gPiA+IGxpa2UgdGhlIGNsaWVudC1z
+ZXJ2ZXIgbW9kZWwgd2hlcmUgdGhlIHByaXZpbGVnZWQgcHJvY2VzcyBkb2VzCj4gPiA+ID4gPiBi
+aW5kKCkgYW5kIHByb2dyYW1zIHRoZSBoYXJkd2FyZSBxdWV1ZSBvbiBiZWhhbGYgb2YgdGhlIGNs
+aWVudAo+ID4gPiA+ID4gcHJvY2Vzcy4gIAo+ID4gPiA+IAo+ID4gPiA+IFRoaXMgY3JlYXRlcyBh
+IGxvdCBjb21wbGV4aXR5LCBob3cgZG8gZG9lcyBwcm9jZXNzIEEgZ2V0IGEgc2VjdXJlCj4gPiA+
+ID4gcmVmZXJlbmNlIHRvIEI/IEhvdyBkb2VzIGl0IGFjY2VzcyB0aGUgbWVtb3J5IGluIEIgdG8g
+c2V0dXAgdGhlIEhXPyAgCj4gPiA+IAo+ID4gPiBtbV9hY2Nlc3MoKSBmb3IgZXhhbXBsZSwgYW5k
+IHBhc3NpbmcgYWRkcmVzc2VzIHZpYSBJUEMgIAo+ID4gCj4gPiBJJ2QgcmF0aGVyIHRoZSBzb3Vy
+Y2UgcHJvY2VzcyBlc3RhYmxpc2ggaXRzIG93biBQQVNJRCBhbmQgdGhlbiBwYXNzCj4gPiB0aGUg
+cmlnaHRzIHRvIHVzZSBpdCB0byBzb21lIG90aGVyIHByb2Nlc3MgdmlhIEZEIHBhc3NpbmcgdGhh
+biB0cnkgdG8KPiA+IGdvIHRoZSBvdGhlciB3YXkuIFRoZXJlIGFyZSBsb3RzIG9mIHNlY3VyaXR5
+IHF1ZXN0aW9ucyB3aXRoIHNvbWV0aGluZwo+ID4gbGlrZSBtbV9hY2Nlc3MuCj4gPiAKPiAKPiBU
+aGFuayB5b3UgYWxsIGZvciB0aGUgaW5wdXQsIGl0IHNvdW5kcyBsaWtlIHdlIGFyZSBPSyB0byBy
+ZW1vdmUgbW0gYXJndW1lbnQKPiBmcm9tIGlvbW11X3N2YV9iaW5kX2RldmljZSgpIGFuZCBpb21t
+dV9zdmFfYWxsb2NfcGFzaWQoKSBmb3Igbm93Pwo+IAo+IExldCBtZSB0cnkgdG8gc3VtbWFyaXpl
+IFBBU0lEIGFsbG9jYXRpb24gYXMgYmVsb3c6Cj4gCj4gSW50ZXJmYWNlcwl8IFVzYWdlCXwgIExp
+bWl0CXwgYmluZMK5IHxVc2VyIHZpc2libGUKPiAvZGV2L2lvYXNpZMKyCXwgRy1TVkEvSU9WQQl8
+ICBjZ3JvdXAJfCBObwl8WWVzCj4gY2hhciBkZXbCswl8IFNWQQkJfCAgY2dyb3VwCXwgWWVzCXxO
+bwo+IGlvbW11IGRyaXZlcgl8IGRlZmF1bHQgUEFTSUR8ICBubwkJfCBObwl8Tm8KPiBrZXJuZWwJ
+CXwgc3VwZXIgU1ZBCXwgbm8JCXwgeWVzICAgfE5vCj4gCj4gwrkgQWxsb2NhdGVkIGR1cmluZyBT
+VkEgYmluZAo+IMKyIFBBU0lEcyBhbGxvY2F0ZWQgdmlhIC9kZXYvaW9hc2lkIGFyZSBub3QgYm91
+bmQgdG8gYW55IG1tLiBCdXQgaXRzCj4gICBvd25lcnNoaXAgaXMgYXNzaWduZWQgdG8gdGhlIHBy
+b2Nlc3MgdGhhdCBkb2VzIHRoZSBhbGxvY2F0aW9uLgoKV2hhdCBkb2VzICJub3QgYm91bmQgdG8g
+YSBtbSIgbWVhbj8KCklNSE8gYSB1c2UgY3JlYXRlZCBQQVNJRCBpcyBlaXRoZXIgYm91bmQgdG8g
+YSBtbSAoY3VycmVudCkgYXQgY3JlYXRpb24KdGltZSwgb3IgaXQgd2lsbCBuZXZlciBiZSBib3Vu
+ZCB0byBhIG1tIGFuZCBpdHMgcGFnZSB0YWJsZSBpcyB1bmRlcgp1c2VyIGNvbnRyb2wgdmlhIC9k
+ZXYvaW9hc2lkLgoKSSB0aG91Z2h0IHRoZSB3aG9sZSBwb2ludCBvZiBzb21ldGhpbmcgbGlrZSBh
+IC9kZXYvaW9hc2lkIHdhcyB0byBnZXQKYXdheSBmcm9tIGVhY2ggYW5kIGV2ZXJ5IGRldmljZSBj
+cmVhdGluZyBpdHMgb3duIFBBU0lEIGludGVyZmFjZT8KCkl0IG1heWJlIHNvbWV3aGF0IHJlYXNv
+bmFibGUgdGhhdCBzb21lIGRldmljZXMgY291bGQgaGF2ZSBzb21lIGVhc3kKJ21ha2UgYSBTVkEg
+UEFTSUQgb24gY3VycmVudCcgaW50ZXJmYWNlIGJ1aWx0IGluLCBidXQgYW55dGhpbmcgbW9yZQpj
+b21wbGljYXRlZCBzaG91bGQgdXNlIC9kZXYvaW9hc2lkLCBhbmQgYW55dGhpbmcgY29uc3VtaW5n
+IFBBU0lECnNob3VsZCBhbHNvIGhhdmUgYW4gQVBJIHRvIGltcG9ydCBhbmQgYXR0YWNoIGEgUEFT
+SUQgZnJvbSAvZGV2L2lvYXNpZC4KCj4gQ3VycmVudGx5LCB0aGUgcHJvcG9zZWQgL2Rldi9pb2Fz
+aWQgaW50ZXJmYWNlIGRvZXMgbm90IG1hcCBpbmRpdmlkdWFsIFBBU0lECj4gd2l0aCBhbiBGRC4g
+VGhlIEZEIGlzIGF0IHRoZSBpb2FzaWRfc2V0IGdyYW51bGFyaXR5IGFuZCBib25kIHRvIHRoZSBj
+dXJyZW50Cj4gbW0uIFdlIGNvdWxkIGV4dGVuZCB0aGUgSU9DVExzIHRvIGNvdmVyIGluZGl2aWR1
+YWwgUEFTSUQtRkQgcGFzc2luZyBjYXNlCj4gd2hlbiB1c2UgY2FzZXMgYXJpc2UuIFdvdWxkIHRo
+aXMgd29yaz8KCklzIGl0IGEgZ29vZCBpZGVhIHRoYXQgdGhlIEZEIGlzIHBlciBpb2FzaWRfc2V0
+ID8gV2hhdCBpcyB0aGUgc2V0IHVzZWQKZm9yPwoKVXN1YWxseSBrZXJuZWwgaW50ZXJmYWNlcyB3
+b3JrIG5pY2VyIHdpdGggYSBvbmUgZmQvb25lIG9iamVjdCBtb2RlbC4KCkJ1dCBldmVuIGlmIGl0
+IGlzIGEgc2V0LCB5b3UgY291bGQgcGFzcyB0aGUgc2V0IGJldHdlZW4gY28tb3BlcmF0aW5nCnBy
+b2Nlc3NlcyBhbmQgdGhlIFBBU0lEIGNhbiBiZSBjcmVhdGVkIGluIHRoZSBjb3JyZWN0ICdjdXJy
+ZW50Jy4gQnV0CnRoZXJlIGlzIGFsbCBraW5kcyBvZiBzZWN1cml0eSBxdWVzdHNpb25zIGFzIHNv
+b24gYXMgeW91IHN0YXJ0IGRvaW5nCmFueXRoaW5nIGxpa2UgdGhpcyAtIGlzIHRoZXJlIHJlYWxs
+eSBhIHVzZSBjYXNlPwoKSmFzb24KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KaW9tbXUgbWFpbGluZyBsaXN0CmlvbW11QGxpc3RzLmxpbnV4LWZvdW5kYXRp
+b24ub3JnCmh0dHBzOi8vbGlzdHMubGludXhmb3VuZGF0aW9uLm9yZy9tYWlsbWFuL2xpc3RpbmZv
+L2lvbW11
