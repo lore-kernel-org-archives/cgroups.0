@@ -1,100 +1,96 @@
-From: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Mon, 22 Mar 2021 10:24:00 +0100
-Message-ID: <YFhiMLR35WWMW/Hu@myrica>
-References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
- <1614463286-97618-6-git-send-email-jacob.jun.pan@linux.intel.com>
- <20210318172234.3e8c34f7@jacob-builder> <YFR10eeDVf5ZHV5l@myrica>
- <20210319124645.GP2356281@nvidia.com> <YFSqDNJ5yagk4eO+@myrica>
- <20210319135432.GT2356281@nvidia.com>
- <20210319112221.5123b984@jacob-builder>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCH 1/2] mm: memcontrol: don't allocate cgroup swap arrays
+ when memcg is disabled
+Date: Mon, 22 Mar 2021 10:41:47 +0100
+Message-ID: <YFhmW63Py+UbmFTS@dhcp22.suse.cz>
+References: <20210319054944.50048-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linaro.org; s=google;
- h=date:from:to:cc:subject:message-id:references:mime-version
- :content-disposition:content-transfer-encoding:in-reply-to;
- bh=VWtR8KlOcQ/dRYdCQQ3jM8KP7ad2PsBUuVXGD0LTdjA=;
- b=fRHQUYdDILcpfmFZPajioQDe1shm3v7+PmX5riSU+Vb7du56hShPmszeNHz0p/JF9y
- WTn6C5cEfg3ce/85Q7Kgah0vZQs2SFfUDSNZVFAQtr0wsI4SgRLyLibvoq7Da6+08ssd
- 10TtaDTn5PcmmrJytU8mqDpFISfcb7jO/8AnkGDlwZjlCeIV7lUHeN2p8Z5W70DgtTSR
- yOICtMTkYMH0fw2uiuAreQp7KiLv2YZIglHPoO/CYtvH4r7U72jol+yJMW79TFddAWef
- 53y1ZeP8GZWBt0HrJX17YbHxxhHzYno2MU+OuPWrsQ7wL8BCnLivBFxpPRGvZ7K9kz2y
- Mr+w==
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1616406107; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=2MrLrWusuMoiI8O7+3wbzgaIdF+kB6mkdoYQZJejkd4=;
+        b=E8D+jDAB+COFZKQcu1xIYYrlMjFnpzSSEQuIxnyvEKfQx0biUZEIj+nLhEn2vmvJUbQNmH
+        K3bE7QPucLJ9hKYrmqtXLCNBJRqkWS8KyFJRMX4AAB0BBVw0pYsDBd/0peRXIdpft3Zkrh
+        mSDjAXUSYypyfpU/g4bLolctjgMumgk=
 Content-Disposition: inline
-In-Reply-To: <20210319112221.5123b984@jacob-builder>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-To: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+In-Reply-To: <20210319054944.50048-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-T24gRnJpLCBNYXIgMTksIDIwMjEgYXQgMTE6MjI6MjFBTSAtMDcwMCwgSmFjb2IgUGFuIHdyb3Rl
-Ogo+IEhpIEphc29uLAo+IAo+IE9uIEZyaSwgMTkgTWFyIDIwMjEgMTA6NTQ6MzIgLTAzMDAsIEph
-c29uIEd1bnRob3JwZSA8amdnQG52aWRpYS5jb20+IHdyb3RlOgo+IAo+ID4gT24gRnJpLCBNYXIg
-MTksIDIwMjEgYXQgMDI6NDE6MzJQTSArMDEwMCwgSmVhbi1QaGlsaXBwZSBCcnVja2VyIHdyb3Rl
-Ogo+ID4gPiBPbiBGcmksIE1hciAxOSwgMjAyMSBhdCAwOTo0Njo0NUFNIC0wMzAwLCBKYXNvbiBH
-dW50aG9ycGUgd3JvdGU6ICAKPiA+ID4gPiBPbiBGcmksIE1hciAxOSwgMjAyMSBhdCAxMDo1ODo0
-MUFNICswMTAwLCBKZWFuLVBoaWxpcHBlIEJydWNrZXIgd3JvdGU6Cj4gPiA+ID4gICAKPiA+ID4g
-PiA+IEFsdGhvdWdoIHRoZXJlIGlzIG5vIHVzZSBmb3IgaXQgYXQgdGhlIG1vbWVudCAob25seSB0
-d28gdXBzdHJlYW0KPiA+ID4gPiA+IHVzZXJzIGFuZCBpdCBsb29rcyBsaWtlIGFtZGtmZCBhbHdh
-eXMgdXNlcyBjdXJyZW50IHRvbyksIEkgcXVpdGUKPiA+ID4gPiA+IGxpa2UgdGhlIGNsaWVudC1z
-ZXJ2ZXIgbW9kZWwgd2hlcmUgdGhlIHByaXZpbGVnZWQgcHJvY2VzcyBkb2VzCj4gPiA+ID4gPiBi
-aW5kKCkgYW5kIHByb2dyYW1zIHRoZSBoYXJkd2FyZSBxdWV1ZSBvbiBiZWhhbGYgb2YgdGhlIGNs
-aWVudAo+ID4gPiA+ID4gcHJvY2Vzcy4gIAo+ID4gPiA+IAo+ID4gPiA+IFRoaXMgY3JlYXRlcyBh
-IGxvdCBjb21wbGV4aXR5LCBob3cgZG8gZG9lcyBwcm9jZXNzIEEgZ2V0IGEgc2VjdXJlCj4gPiA+
-ID4gcmVmZXJlbmNlIHRvIEI/IEhvdyBkb2VzIGl0IGFjY2VzcyB0aGUgbWVtb3J5IGluIEIgdG8g
-c2V0dXAgdGhlIEhXPyAgCj4gPiA+IAo+ID4gPiBtbV9hY2Nlc3MoKSBmb3IgZXhhbXBsZSwgYW5k
-IHBhc3NpbmcgYWRkcmVzc2VzIHZpYSBJUEMgIAo+ID4gCj4gPiBJJ2QgcmF0aGVyIHRoZSBzb3Vy
-Y2UgcHJvY2VzcyBlc3RhYmxpc2ggaXRzIG93biBQQVNJRCBhbmQgdGhlbiBwYXNzCj4gPiB0aGUg
-cmlnaHRzIHRvIHVzZSBpdCB0byBzb21lIG90aGVyIHByb2Nlc3MgdmlhIEZEIHBhc3NpbmcgdGhh
-biB0cnkgdG8KPiA+IGdvIHRoZSBvdGhlciB3YXkuIFRoZXJlIGFyZSBsb3RzIG9mIHNlY3VyaXR5
-IHF1ZXN0aW9ucyB3aXRoIHNvbWV0aGluZwo+ID4gbGlrZSBtbV9hY2Nlc3MuCj4gPiAKPiAKPiBU
-aGFuayB5b3UgYWxsIGZvciB0aGUgaW5wdXQsIGl0IHNvdW5kcyBsaWtlIHdlIGFyZSBPSyB0byBy
-ZW1vdmUgbW0gYXJndW1lbnQKPiBmcm9tIGlvbW11X3N2YV9iaW5kX2RldmljZSgpIGFuZCBpb21t
-dV9zdmFfYWxsb2NfcGFzaWQoKSBmb3Igbm93PwoKRmluZSBieSBtZS4gQnkgdGhlIHdheSB0aGUg
-SURYRCBjdXJyZW50bHkgbWlzc3VlcyB0aGUgYmluZCBBUEkgZm9yCnN1cGVydmlzb3IgUEFTSUQs
-IGFuZCB0aGUgZHJ2ZGF0YSBwYXJhbWV0ZXIgaXNuJ3Qgb3RoZXJ3aXNlIHVzZWQuIFRoaXMKd291
-bGQgYmUgYSBnb29kIG9jY2FzaW9uIHRvIGNsZWFuIGJvdGguIFRoZSBuZXcgYmluZCBwcm90b3R5
-cGUgY291bGQgYmU6CgpzdHJ1Y3QgaW9tbXVfc3ZhICppb21tdV9zdmFfYmluZF9kZXZpY2Uoc3Ry
-dWN0IGRldmljZSAqZGV2LCBpbnQgZmxhZ3MpCgpBbmQgYSBmbGFnIElPTU1VX1NWQV9CSU5EX1NV
-UEVSVklTT1IgKG5vdCB0aGF0IEkgcGxhbiB0byBpbXBsZW1lbnQgaXQgaW4KdGhlIFNNTVUsIGJ1
-dCBJIHRoaW5rIHdlIG5lZWQgdG8gY2xlYW4gdGhlIGN1cnJlbnQgdXNhZ2UpCgo+IAo+IExldCBt
-ZSB0cnkgdG8gc3VtbWFyaXplIFBBU0lEIGFsbG9jYXRpb24gYXMgYmVsb3c6Cj4gCj4gSW50ZXJm
-YWNlcwl8IFVzYWdlCXwgIExpbWl0CXwgYmluZMK5IHxVc2VyIHZpc2libGUKPiAtLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LQo+IC9kZXYvaW9hc2lkwrIJfCBHLVNWQS9JT1ZBCXwgIGNncm91cAl8IE5vCXxZZXMKPiAtLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLQo+IGNoYXIgZGV2wrMJfCBTVkEJCXwgIGNncm91cAl8IFllcwl8Tm8KPiAtLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLQo+IGlvbW11IGRyaXZlcgl8IGRlZmF1bHQgUEFTSUR8ICBubwkJfCBObwl8Tm8KCklzIHRo
-aXMgUEFTSUQgIzA/Cgo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCj4ga2VybmVsCQl8IHN1cGVyIFNWQQl8IG5vCQl8
-IHllcyAgIHxObwo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgpBbHNvIHdvbmRlcmluZyBhYm91dCBkZXZpY2UgZHJp
-dmVyIGFsbG9jYXRpbmcgYXV4aWxpYXJ5IGRvbWFpbnMgZm9yIHRoZWlyCnByaXZhdGUgdXNlLCB0
-byBkbyBpb21tdV9tYXAvdW5tYXAgb24gcHJpdmF0ZSBQQVNJRHMgKGEgY2xlYW4gcmVwbGFjZW1l
-bnQKdG8gc3VwZXIgU1ZBLCBmb3IgZXhhbXBsZSkuIFdvdWxkIHRoYXQgZ28gdGhyb3VnaCB0aGUg
-c2FtZSBwYXRoIGFzCi9kZXYvaW9hc2lkIGFuZCB1c2UgdGhlIGNncm91cCBvZiBjdXJyZW50IHRh
-c2s/CgpUaGFua3MsCkplYW4KCj4gCj4gwrkgQWxsb2NhdGVkIGR1cmluZyBTVkEgYmluZAo+IMKy
-IFBBU0lEcyBhbGxvY2F0ZWQgdmlhIC9kZXYvaW9hc2lkIGFyZSBub3QgYm91bmQgdG8gYW55IG1t
-LiBCdXQgaXRzCj4gICBvd25lcnNoaXAgaXMgYXNzaWduZWQgdG8gdGhlIHByb2Nlc3MgdGhhdCBk
-b2VzIHRoZSBhbGxvY2F0aW9uLgo+IMKzIEluY2x1ZGUgdWFjY2UsIG90aGVyIHByaXZhdGUgZGV2
-aWNlIGRyaXZlciBjaGFyIGRldiBzdWNoIGFzIGlkeGQKPiAKPiBDdXJyZW50bHksIHRoZSBwcm9w
-b3NlZCAvZGV2L2lvYXNpZCBpbnRlcmZhY2UgZG9lcyBub3QgbWFwIGluZGl2aWR1YWwgUEFTSUQK
-PiB3aXRoIGFuIEZELiBUaGUgRkQgaXMgYXQgdGhlIGlvYXNpZF9zZXQgZ3JhbnVsYXJpdHkgYW5k
-IGJvbmQgdG8gdGhlIGN1cnJlbnQKPiBtbS4gV2UgY291bGQgZXh0ZW5kIHRoZSBJT0NUTHMgdG8g
-Y292ZXIgaW5kaXZpZHVhbCBQQVNJRC1GRCBwYXNzaW5nIGNhc2UKPiB3aGVuIHVzZSBjYXNlcyBh
-cmlzZS4gV291bGQgdGhpcyB3b3JrPwo+IAo+IFRoYW5rcywKPiAKPiBKYWNvYgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwppb21tdSBtYWlsaW5nIGxpc3QK
-aW9tbXVAbGlzdHMubGludXgtZm91bmRhdGlvbi5vcmcKaHR0cHM6Ly9saXN0cy5saW51eGZvdW5k
-YXRpb24ub3JnL21haWxtYW4vbGlzdGluZm8vaW9tbXU=
+On Fri 19-03-21 01:49:43, Johannes Weiner wrote:
+> Since commit 2d1c498072de ("mm: memcontrol: make swap tracking an
+> integral part of memory control"), the cgroup swap arrays are used to
+> track memory ownership at the time of swap readahead and swapoff, even
+> if swap space *accounting* has been turned off by the user via
+> swapaccount=0 (which sets cgroup_memory_noswap).
+> 
+> However, the patch was overzealous: by simply dropping the
+> cgroup_memory_noswap conditionals in the swapon, swapoff and uncharge
+> path, it caused the cgroup arrays being allocated even when the memory
+> controller as a whole is disabled. This is a waste of that memory.
+> 
+> Restore mem_cgroup_disabled() checks, implied previously by
+> cgroup_memory_noswap, in the swapon, swapoff, and swap_entry_free
+> callbacks.
+> 
+> Fixes: 2d1c498072de ("mm: memcontrol: make swap tracking an integral part of memory control")
+> Reported-by: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+
+Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+
+> ---
+>  mm/memcontrol.c  | 3 +++
+>  mm/swap_cgroup.c | 6 ++++++
+>  2 files changed, 9 insertions(+)
+> 
+> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> index 668d1d7c2645..49bdcf603af1 100644
+> --- a/mm/memcontrol.c
+> +++ b/mm/memcontrol.c
+> @@ -7101,6 +7101,9 @@ void mem_cgroup_uncharge_swap(swp_entry_t entry, unsigned int nr_pages)
+>  	struct mem_cgroup *memcg;
+>  	unsigned short id;
+>  
+> +	if (mem_cgroup_disabled())
+> +		return;
+> +
+>  	id = swap_cgroup_record(entry, 0, nr_pages);
+>  	rcu_read_lock();
+>  	memcg = mem_cgroup_from_id(id);
+> diff --git a/mm/swap_cgroup.c b/mm/swap_cgroup.c
+> index 7f34343c075a..08c3246f9269 100644
+> --- a/mm/swap_cgroup.c
+> +++ b/mm/swap_cgroup.c
+> @@ -171,6 +171,9 @@ int swap_cgroup_swapon(int type, unsigned long max_pages)
+>  	unsigned long length;
+>  	struct swap_cgroup_ctrl *ctrl;
+>  
+> +	if (mem_cgroup_disabled())
+> +		return 0;
+> +
+>  	length = DIV_ROUND_UP(max_pages, SC_PER_PAGE);
+>  	array_size = length * sizeof(void *);
+>  
+> @@ -206,6 +209,9 @@ void swap_cgroup_swapoff(int type)
+>  	unsigned long i, length;
+>  	struct swap_cgroup_ctrl *ctrl;
+>  
+> +	if (mem_cgroup_disabled())
+> +		return;
+> +
+>  	mutex_lock(&swap_cgroup_mutex);
+>  	ctrl = &swap_cgroup_ctrl[type];
+>  	map = ctrl->map;
+> -- 
+> 2.30.1
+> 
+
+-- 
+Michal Hocko
+SUSE Labs
