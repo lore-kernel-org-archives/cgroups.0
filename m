@@ -1,96 +1,115 @@
 From: Arnd Bergmann <arnd@kernel.org>
-Subject: [PATCH 00/11] treewide: address gcc-11 -Wstringop-overread warnings
-Date: Mon, 22 Mar 2021 17:02:38 +0100
-Message-ID: <20210322160253.4032422-1-arnd@kernel.org>
-Mime-Version: 1.
+Subject: [PATCH 02/11] x86: tboot: avoid Wstringop-overread-warning
+Date: Mon, 22 Mar 2021 17:02:40 +0100
+Message-ID: <20210322160253.4032422-3-arnd@kernel.org>
+References: <20210322160253.4032422-1-arnd@kernel.org>
+Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616428980;
-        bh=443r2a53XZrLPy3VFDNzKFCONnuuJaVZhGXWFTRxMGo=;
-        h=From:To:Cc:Subject:Date:From;
-        b=Wm1CETPpBfKZZ3lkNCemLWeIZGtbFVmw4nKK+xzlHh6SjshNPJfKJvKmWNXvf1K/F
-         5o2Ww58tt6oERHDBipAS4BwOz2CJOvMh/uBNklODZ0dsfVzZt5cj7OrnLB7U+iYnI+
-         V9LYQbKfb8Z/fsl+P+r2cUIk2R08rZtGx280ke6EJyn8vt+7YkwV0naEM1o/sQwiUN
-         Si9atqBgkFPNOL0NiRMLIEOjWWQ3UF2GIm92tB+iawDYiaDCLVZNub5gpWn3V4pP25
-         Ov3hZNHbzywOnT474a9kxX7y+Z8vSF7APRLbZu9IopXbelGoOeiLfQvjhYZz099ogD
-         8vEYHTLGBXuSg==
+        s=k20201202; t=1616429019;
+        bh=by6x6Rsrr+/5kT7BQ0fn/CIy488q3HO6uAtxXzMMlIk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=O6Jy+HmUTikJ1x1bJ304Vrp1sBfWbLm1PtId9ZJsKafzCLMEYQU//L/uQ5NyHGzrh
+         RhBcv0KcZohevaQjWtq/m2PyDxHXZ6oO/xPHdEAeZN27qebnzt5Wg4fhtjqGJK48VY
+         UL94XPmfJWp5a2JWF1yBFnnQqkdteTxWc08FTIpJX/wa6/CiiShyqAZe7XpjIeOmzt
+         cO/lp91PJ7K5iDRKpXJ1LzXMgwxLeTNc1hWrW+Oj2cHQ8M1FuYfEUnJHvIMPGvZ3nY
+         pOppyp2fEDOWTHfMFCcVXI+sMo5gidr9nyHaAyqJ/Nlnh1nTbp/etdZKIJcUsxQAJ9
+         FpT/4xvv9xvFg==
+In-Reply-To: <20210322160253.4032422-1-arnd@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, x86@kernel.org, Ning Sun <ning.sun@intel.com>, Jani Nikula <jani.nikula@linux.intel.com>, Kalle Valo <kvalo@codeaurora.org>, Simon Kelley <simon@thekelleys.org.uk>, James Smart <james.smart@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>, Serge Hallyn <serge@hallyn.com>, Imre Deak <imre.deak@intel.com>, linux-arm-kernel@lists.infradead.org, tboot-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, ath11k@lists.infradead.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, cgroups@vger.kernel.org, linux-security-module@vger.kernel.org
+To: linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>, Ning Sun <ning.sun@intel.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, x86@kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Jani Nikula <jani.nikula@linux.intel.com>, Kalle Valo <kvalo@codeaurora.org>, Simon Kelley <simon@thekelleys.org.uk>, James Smart <james.smart@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>, Serge Hallyn <serge@hallyn.com>, Imre Deak <imre.deak@intel.com>, linux-arm-kernel@lists.infradead.org, tboot-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, ath11k@lists.infradead.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, cgroups@vger.kernel.org, linux-security-module@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>, Andrew Morton <akpm@linux-foundation.org>, Lu
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-The coming gcc release introduces a new warning for string operations
-reading beyond the end of a fixed-length object. After testing
-randconfig kernels for a while, think I have patches for any such
-warnings that came up on x86, arm and arm64.
+gcc-11 warns about using string operations on pointers that are
+defined at compile time as offsets from a NULL pointer. Unfortunately
+that also happens on the result of fix_to_virt(), which is a
+compile-time constant for a constantn input:
 
-Most of these warnings are false-positive ones, either gcc warning
-about something that is entirely correct, or about something that
-looks suspicious but turns out to be correct after all.
+arch/x86/kernel/tboot.c: In function 'tboot_probe':
+arch/x86/kernel/tboot.c:70:13: error: '__builtin_memcmp_eq' specified bound 16 exceeds source size 0 [-Werror=stringop-overread]
+   70 |         if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The two patches for the i915 driver look like something that might
-be actual bugs, but I am not sure about those either.
+I hope this can get addressed in gcc-11 before the release.
 
-We probably want some combination of workaround like the ones I
-post here and changes to gcc to have fewer false positives in the
-release. I'm posting the entire set of workaround that give me
-a cleanly building kernel for reference here.
+As a workaround, split up the tboot_probe() function in two halves
+to separate the pointer generation from the usage. This is a bit
+ugly, and hopefully gcc understands that the code is actually correct
+before it learns to peek into the noinline function.
 
-        Arnd
+Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99578
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ arch/x86/kernel/tboot.c | 44 ++++++++++++++++++++++++-----------------
+ 1 file changed, 26 insertions(+), 18 deletions(-)
 
-Arnd Bergmann (11):
-  x86: compressed: avoid gcc-11 -Wstringop-overread warning
-  x86: tboot: avoid Wstringop-overread-warning
-  security: commoncap: fix -Wstringop-overread warning
-  ath11: Wstringop-overread warning
-  qnx: avoid -Wstringop-overread warning
-  cgroup: fix -Wzero-length-bounds warnings
-  ARM: sharpsl_param: work around -Wstringop-overread warning
-  atmel: avoid gcc -Wstringop-overflow warning
-  scsi: lpfc: fix gcc -Wstringop-overread warning
-  drm/i915: avoid stringop-overread warning on pri_latency
-  [RFC] drm/i915/dp: fix array overflow warning
-
- arch/arm/common/sharpsl_param.c         |  4 ++-
- arch/x86/boot/compressed/misc.c         |  2 --
- arch/x86/kernel/tboot.c                 | 44 +++++++++++++++----------
- drivers/gpu/drm/i915/display/intel_dp.c |  2 +-
- drivers/gpu/drm/i915/i915_drv.h         |  6 ++--
- drivers/net/wireless/ath/ath11k/mac.c   |  2 +-
- drivers/net/wireless/atmel/atmel.c      | 25 ++++++++------
- drivers/scsi/lpfc/lpfc_attr.c           |  6 ++--
- fs/qnx4/dir.c                           | 11 +++----
- kernel/cgroup/cgroup.c                  | 15 +++++++--
- security/commoncap.c                    |  2 +-
- 11 files changed, 69 insertions(+), 50 deletions(-)
-
-Cc: x86@kernel.org
-Cc: Ning Sun <ning.sun@intel.com>
-Cc: Jani Nikula <jani.nikula@linux.intel.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Simon Kelley <simon@thekelleys.org.uk>
-Cc: James Smart <james.smart@broadcom.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: Anders Larsen <al@alarsen.net>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Serge Hallyn <serge@hallyn.com>
-Cc: Imre Deak <imre.deak@intel.com>
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Cc: tboot-devel@lists.sourceforge.net
-Cc: intel-gfx@lists.freedesktop.org
-Cc: dri-devel@lists.freedesktop.org
-Cc: ath11k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-Cc: cgroups@vger.kernel.org
-Cc: linux-security-module@vger.kernel.org
-
-
+diff --git a/arch/x86/kernel/tboot.c b/arch/x86/kernel/tboot.c
+index 4c09ba110204..f9af561c3cd4 100644
+--- a/arch/x86/kernel/tboot.c
++++ b/arch/x86/kernel/tboot.c
+@@ -49,6 +49,30 @@ bool tboot_enabled(void)
+ 	return tboot != NULL;
+ }
+ 
++/* noinline to prevent gcc from warning about dereferencing constant fixaddr */
++static noinline __init bool check_tboot_version(void)
++{
++	if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
++		pr_warn("tboot at 0x%llx is invalid\n", boot_params.tboot_addr);
++		return false;
++	}
++
++	if (tboot->version < 5) {
++		pr_warn("tboot version is invalid: %u\n", tboot->version);
++		return false;
++	}
++
++	pr_info("found shared page at phys addr 0x%llx:\n",
++		boot_params.tboot_addr);
++	pr_debug("version: %d\n", tboot->version);
++	pr_debug("log_addr: 0x%08x\n", tboot->log_addr);
++	pr_debug("shutdown_entry: 0x%x\n", tboot->shutdown_entry);
++	pr_debug("tboot_base: 0x%08x\n", tboot->tboot_base);
++	pr_debug("tboot_size: 0x%x\n", tboot->tboot_size);
++
++	return true;
++}
++
+ void __init tboot_probe(void)
+ {
+ 	/* Look for valid page-aligned address for shared page. */
+@@ -66,25 +90,9 @@ void __init tboot_probe(void)
+ 
+ 	/* Map and check for tboot UUID. */
+ 	set_fixmap(FIX_TBOOT_BASE, boot_params.tboot_addr);
+-	tboot = (struct tboot *)fix_to_virt(FIX_TBOOT_BASE);
+-	if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
+-		pr_warn("tboot at 0x%llx is invalid\n", boot_params.tboot_addr);
++	tboot = (void *)fix_to_virt(FIX_TBOOT_BASE);
++	if (!check_tboot_version())
+ 		tboot = NULL;
+-		return;
+-	}
+-	if (tboot->version < 5) {
+-		pr_warn("tboot version is invalid: %u\n", tboot->version);
+-		tboot = NULL;
+-		return;
+-	}
+-
+-	pr_info("found shared page at phys addr 0x%llx:\n",
+-		boot_params.tboot_addr);
+-	pr_debug("version: %d\n", tboot->version);
+-	pr_debug("log_addr: 0x%08x\n", tboot->log_addr);
+-	pr_debug("shutdown_entry: 0x%x\n", tboot->shutdown_entry);
+-	pr_debug("tboot_base: 0x%08x\n", tboot->tboot_base);
+-	pr_debug("tboot_size: 0x%x\n", tboot->tboot_size);
+ }
+ 
+ static pgd_t *tboot_pg_dir;
 -- 
 2.29.2
 
