@@ -1,63 +1,97 @@
-From: Arnd Bergmann <arnd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH 07/11] ARM: sharpsl_param: work around -Wstringop-overread warning
-Date: Mon, 22 Mar 2021 17:02:45 +0100
-Message-ID: <20210322160253.4032422-8-arnd@kernel.org>
+From: Arnd Bergmann <arnd@kernel.org>
+Subject: [PATCH 08/11] atmel: avoid gcc -Wstringop-overflow warning
+Date: Mon, 22 Mar 2021 17:02:46 +0100
+Message-ID: <20210322160253.4032422-9-arnd@kernel.org>
 References: <20210322160253.4032422-1-arnd@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616429094;
-        bh=xAtyylaIqASvvaS85ZKuu0hXHauLkQxCojv0RLX/Mb4=;
+        s=k20201202; t=1616429107;
+        bh=hZ+CAtng3yIYZIb+ah3e8qtw8iX8HVHsX0ExOcLMkVU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qF3TQ/qAB99dHQJQ17LkEWSGHzxXaa6ah0V394Zl3kvv8RzfyZLGR5LrTvWyC7H1A
-         Y/FGboTYdhxs+1JdIoA84vXMKDdcAhTrEkBBb0UQUQKweCwvIzhlEQaLj3V5+EtINN
-         TkIcf5XVjUiGPrExh51GxNaO8HstdwbBZt6yPypCRTLZ7dgkDLCsQKmQNcTUMokkXV
-         S8QQatAQDJMuuHsGK0sG76w09rCi8u76J/NCDygW1XdPiFPESnsqpJ4LRffqASyFiK
-         CjWew/HiP9HZ5pWACV/kafDp0YkSlO5krvl5NtQtLs6m/hkRHKNSKqc2U8LuhcidQu
-         4FzJ0OAQMgZGg==
-In-Reply-To: <20210322160253.4032422-1-arnd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+        b=dwkY1GeSKE6uqnx1AxEi3VFdRhYPg81cUVXGmS7VFECNmiWnHG9H8Xs03DE5r5UkI
+         2VYRrKWZEbiYE/8Go+UBgggdeU5IHX8PCQyERsMz4uhXvD8S/WDGEhcAqel5lYAhxx
+         GH5OrCzsuWJ7MemQavOxq36ZBrGw8QsN0rHVPucenBu12gisEUNifGSz6+0j2xJ9ZZ
+         bEVaUqft+/YBHP8/oDZqfcdvztMrcHT8BJQ3udH192n6G7X4gUnHIGCuLP1ptF/QU4
+         TnlXa1Qe8PUzWprVm8njgDc/yGpNfz20AWAFmYDGGOfZtOuyJUs4ZC7Fgr12Ezshk/
+         OxLRDx1pnNY1A==
+In-Reply-To: <20210322160253.4032422-1-arnd@kernel.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Martin Sebor <msebor-/MQLu3FmUzdAfugRpC6u6w@public.gmane.org>
-Cc: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Ning Sun <ning.sun-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jani Nikula <jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Kalle Valo <kvalo-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Simon Kelley <simon-xn1N/tgparsycpQjotevgVpr/1R2p/CL@public.gmane.org>, James Smart <james.smart-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Anders Larsen <al-V9/YLgxv/GvR7s880joybQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Imre Deak <imre.deak-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, tboot-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, ath11k-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Russell King <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>
+To: linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>, Simon Kelley <simon@thekelleys.org.uk>, Kalle Valo <kvalo@codeaurora.org>, "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, x86@kernel.org, Ning Sun <ning.sun@intel.com>, Jani Nikula <jani.nikula@linux.intel.com>, James Smart <james.smart@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>, Serge Hallyn <serge@hallyn.com>, Imre Deak <imre.deak@intel.com>, linux-arm-kernel@lists.infradead.org, tboot-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, ath11k@lists.infradead.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, cgroups@vger.kernel.org, linux-security-module@vger.kernel.org, Lee Jones <lee.jones@linaro.org>, Pascal Terjan <pterjan@google.com>, "Gustavo A. R. Silva" <gustavoars@kernel.org>
 
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+From: Arnd Bergmann <arnd@arndb.de>
 
-gcc warns that accessing a pointer based on a numeric constant may
-be an offset into a NULL pointer, and would therefore has zero
-accessible bytes:
+gcc-11 notices that the fields as defined in the ass_req_format
+structure do not match the actual use of that structure:
 
-arch/arm/common/sharpsl_param.c: In function ‘sharpsl_save_param’:
-arch/arm/common/sharpsl_param.c:43:9: error: ‘memcpy’ reading 64 bytes from a region of size 0 [-Werror=stringop-overread]
-   43 |         memcpy(&sharpsl_param, param_start(PARAM_BASE), sizeof(struct sharpsl_param_info));
-      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cc1: error: writing 4 bytes into a region of size between 18446744073709551613 and 2 [-Werror=stringop-overflow=]
+drivers/net/wireless/atmel/atmel.c:2884:20: note: at offset [4, 6] into destination object ‘ap’ of size 6
+ 2884 |                 u8 ap[ETH_ALEN]; /* nothing after here directly accessible */
+      |                    ^~
+drivers/net/wireless/atmel/atmel.c:2885:20: note: at offset [4, 6] into destination object ‘ssid_el_id’ of size 1
+ 2885 |                 u8 ssid_el_id;
+      |                    ^~~~~~~~~~
 
-In this particular case, the warning is bogus since this is the actual
-pointer, not an offset on a NULL pointer. Add a local variable to shut
-up the warning and hope it doesn't come back.
+This is expected here because the actual structure layout is variable.
+As the code does not actually access the individual fields, replace
+them with a comment and fixed-length array so prevent gcc from
+complaining about it.
 
-Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99578
-Signed-off-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- arch/arm/common/sharpsl_param.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/atmel/atmel.c | 25 +++++++++++++++----------
+ 1 file changed, 15 insertions(+), 10 deletions(-)
 
-diff --git a/arch/arm/common/sharpsl_param.c b/arch/arm/common/sharpsl_param.c
-index efeb5724d9e9..6237ede2f0c7 100644
---- a/arch/arm/common/sharpsl_param.c
-+++ b/arch/arm/common/sharpsl_param.c
-@@ -40,7 +40,9 @@ EXPORT_SYMBOL(sharpsl_param);
+diff --git a/drivers/net/wireless/atmel/atmel.c b/drivers/net/wireless/atmel/atmel.c
+index 707fe66727f8..ff9152d600e1 100644
+--- a/drivers/net/wireless/atmel/atmel.c
++++ b/drivers/net/wireless/atmel/atmel.c
+@@ -2881,13 +2881,18 @@ static void send_association_request(struct atmel_private *priv, int is_reassoc)
+ 	struct ass_req_format {
+ 		__le16 capability;
+ 		__le16 listen_interval;
+-		u8 ap[ETH_ALEN]; /* nothing after here directly accessible */
+-		u8 ssid_el_id;
+-		u8 ssid_len;
+-		u8 ssid[MAX_SSID_LENGTH];
+-		u8 sup_rates_el_id;
+-		u8 sup_rates_len;
+-		u8 rates[4];
++		u8 ssid_el[ETH_ALEN + 2 + MAX_SSID_LENGTH + 2 + 4];
++		/*
++		 * nothing after here directly accessible:
++		 *
++		 * u8 ap[ETH_ALEN];
++		 * u8 ssid_el_id;
++		 * u8 ssid_len;
++		 * u8 ssid[MAX_SSID_LENGTH];
++		 * u8 sup_rates_el_id;
++		 * u8 sup_rates_len;
++		 * u8 rates[4];
++		 */
+ 	} body;
  
- void sharpsl_save_param(void)
- {
--	memcpy(&sharpsl_param, param_start(PARAM_BASE), sizeof(struct sharpsl_param_info));
-+	struct sharpsl_param_info *params = param_start(PARAM_BASE);
-+
-+	memcpy(&sharpsl_param, params, sizeof(*params));
+ 	header.frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+@@ -2907,13 +2912,13 @@ static void send_association_request(struct atmel_private *priv, int is_reassoc)
  
- 	if (sharpsl_param.comadj_keyword != COMADJ_MAGIC)
- 		sharpsl_param.comadj=-1;
+ 	body.listen_interval = cpu_to_le16(priv->listen_interval * priv->beacon_period);
+ 
++	ssid_el_p = body.ssid_el;
+ 	/* current AP address - only in reassoc frame */
+ 	if (is_reassoc) {
+-		memcpy(body.ap, priv->CurrentBSSID, ETH_ALEN);
+-		ssid_el_p = &body.ssid_el_id;
++		memcpy(ssid_el_p, priv->CurrentBSSID, ETH_ALEN);
++		ssid_el_p += ETH_ALEN;
+ 		bodysize = 18 + priv->SSID_size;
+ 	} else {
+-		ssid_el_p = &body.ap[0];
+ 		bodysize = 12 + priv->SSID_size;
+ 	}
+ 
 -- 
 2.29.2
 
