@@ -1,137 +1,78 @@
-From: Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH 02/11] x86: tboot: avoid
- Wstringop-overread-warning
-Date: Mon, 22 Mar 2021 21:29:58 +0100
-Message-ID: <20210322202958.GA1955909@gmail.com>
-References: <20210322160253.4032422-1-arnd@kernel.org>
- <20210322160253.4032422-3-arnd@kernel.org>
+From: Arjun Roy <arjunroy@google.com>
+Subject: Re: [mm, net-next v2] mm: net: memcg accounting for TCP rx zerocopy
+Date: Mon, 22 Mar 2021 14:19:08 -0700
+Message-ID: <CAOFY-A232pad5Xm0Cxx3P4oGLrSa+7=5ys8WB+LOPduz7YYfVA@mail.gmail.com>
+References: <20210316013003.25271-1-arjunroy.kdev@gmail.com> <20210317202123.7d2eaa0e54c36c20571a335c@linux-foundation.org>
 Mime-Version: 1.0
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=gyGz6jIAyesHb03GrLq2sQ8gNXK0GEF8U0hfkl4YQos=;
+        b=WFU7Cd+KSjhmC3zYLefyH/pznYkILEn4gUYD7fgJdX15GrVZXGIjvctmLzMcUMehix
+         DBe1X1g3cy/+Fh385KsKSImJA5ngvSqHLfHMA2T/6M2Vzm0ArF8tP3xMXk2oKzX9jfCl
+         /eFW9cpATHI9XDuToVZyvmbnwaxiZJE2ZKS6JAw1kodd+wtBYwgc1/INQS7ISYzJ2lrA
+         Dtyq6CFbKILtk389p0xzfizKYo9bBAoYISMoZZmM22cKcI3MpJgHYdEhXvpscEVor9kl
+         cdao8Wx9Ba+End5w8sZotV3yefDZwsz6ZyKzGmtgPONmz3bCJRLPfX9axapxptljnzDF
+         ogTQ==
+In-Reply-To: <20210317202123.7d2eaa0e54c36c20571a335c@linux-foundation.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20161025;
- h=sender:date:from:to:cc:subject:message-id:references:mime-version
- :content-disposition:in-reply-to;
- bh=7QH2qH8OXw7astC9J+hBZNIvd5jFa6HOZzbSlRf+8Ek=;
- b=T8MfESZQxe3NObZ/7MqvvJi28NxxdFf3ab07gERPhzLT804c2DkkhJkBMdizuiX7N5
- CHF46uFWWZ0cEHLJOYnXTiyTVv5tLvjO1lmS5Ohg2XPP88nZmWW9F5ARG6cD601rZ5/K
- zoiBTqPm5H0nLHbAPcra7yZ3RbLdPm8oZKbWma9nQPHRlRk5CMs6B2AjWWGtpKPrvkGd
- rL5fFWVmWmq+K/IWUKd2YrrT8XNdUQvFpqJ+tfEUQNjkhvUoBFoAG9jEiozLdABWs7F1
- P6ZC1gmMny9VZsWnwgXXF/Dsydybb92YeAKNqz04oOvYAWJ3XKyrs6O1pidMSVkxvnmE
- iM1A==
-Content-Disposition: inline
-In-Reply-To: <20210322160253.4032422-3-arnd@kernel.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Arnd Bergmann <arnd@kernel.org>
-Cc: dri-devel@lists.freedesktop.org, "H. Peter Anvin" <hpa@zytor.com>, Will Deacon <will@kernel.org>, linux-scsi@vger.kernel.org, x86@kernel.org, James Smart <james.smart@broadcom.com>, tboot-devel@lists.sourceforge.net, Ingo Molnar <mingo@redhat.com>, Kalle Valo <kvalo@codeaurora.org>, ath11k@lists.infradead.org, Serge Hallyn <serge@hallyn.com>, Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Ning Sun <ning.sun@intel.com>, Anders Larsen <al@alarsen.net>, Borislav Petkov <bp@alien8.de>, cgroups@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org, Martin Sebor <msebor@gcc.gnu.org>, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, linux-security-module@vger.kernel.org, Tejun Heo <tj@kernel.org>, Simon Kelley <simon@thekelleys.org.uk>, Andrew Morton <akpm@linux-foundation.or>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Arjun Roy <arjunroy.kdev@gmail.com>, David Miller <davem@davemloft.net>, netdev <netdev@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Shakeel Butt <shakeelb@google.com>, Eric Dumazet <edumazet@google.com>, Soheil Hassas Yeganeh <soheil@google.com>, Jakub Kicinski <kuba@kernel.org>, Michal Hocko <mhocko@kernel.org>, Johannes Weiner <hannes@cmpxchg.org>, Yang Shi <shy828301@gmail.com>, Roman Gushchin <guro@fb.com>
 
+On Wed, Mar 17, 2021 at 8:21 PM Andrew Morton <akpm@linux-foundation.org> wrote:
+>
+> On Mon, 15 Mar 2021 18:30:03 -0700 Arjun Roy <arjunroy.kdev@gmail.com> wrote:
+>
+> > From: Arjun Roy <arjunroy@google.com>
+> >
+> > TCP zerocopy receive is used by high performance network applications
+> > to further scale. For RX zerocopy, the memory containing the network
+> > data filled by the network driver is directly mapped into the address
+> > space of high performance applications. To keep the TLB cost low,
+> > these applications unmap the network memory in big batches. So, this
+> > memory can remain mapped for long time. This can cause a memory
+> > isolation issue as this memory becomes unaccounted after getting
+> > mapped into the application address space. This patch adds the memcg
+> > accounting for such memory.
+> >
+> > Accounting the network memory comes with its own unique challenges.
+> > The high performance NIC drivers use page pooling to reuse the pages
+> > to eliminate/reduce expensive setup steps like IOMMU. These drivers
+> > keep an extra reference on the pages and thus we can not depend on the
+> > page reference for the uncharging. The page in the pool may keep a
+> > memcg pinned for arbitrary long time or may get used by other memcg.
+> >
+> > This patch decouples the uncharging of the page from the refcnt and
+> > associates it with the map count i.e. the page gets uncharged when the
+> > last address space unmaps it. Now the question is, what if the driver
+> > drops its reference while the page is still mapped? That is fine as
+> > the address space also holds a reference to the page i.e. the
+> > reference count can not drop to zero before the map count.
+>
+> What tree were you hoping to get this merged through?  I'd suggest net
+> - it's more likely to get tested over there.
+>
 
-* Arnd Bergmann <arnd@kernel.org> wrote:
+That was one part I wasn't quite sure about - the v3 patchset makes
+things less clear even, since while v1/v2 are mostly mm heavy v3 would
+have some significant changes in both subsystems.
 
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> gcc-11 warns about using string operations on pointers that are
-> defined at compile time as offsets from a NULL pointer. Unfortunately
-> that also happens on the result of fix_to_virt(), which is a
-> compile-time constant for a constantn input:
-> 
-> arch/x86/kernel/tboot.c: In function 'tboot_probe':
-> arch/x86/kernel/tboot.c:70:13: error: '__builtin_memcmp_eq' specified bound 16 exceeds source size 0 [-Werror=stringop-overread]
->    70 |         if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
->       |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> 
-> I hope this can get addressed in gcc-11 before the release.
-> 
-> As a workaround, split up the tboot_probe() function in two halves
-> to separate the pointer generation from the usage. This is a bit
-> ugly, and hopefully gcc understands that the code is actually correct
-> before it learns to peek into the noinline function.
-> 
-> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99578
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  arch/x86/kernel/tboot.c | 44 ++++++++++++++++++++++++-----------------
->  1 file changed, 26 insertions(+), 18 deletions(-)
-> 
-> diff --git a/arch/x86/kernel/tboot.c b/arch/x86/kernel/tboot.c
-> index 4c09ba110204..f9af561c3cd4 100644
-> --- a/arch/x86/kernel/tboot.c
-> +++ b/arch/x86/kernel/tboot.c
-> @@ -49,6 +49,30 @@ bool tboot_enabled(void)
->  	return tboot != NULL;
->  }
->  
-> +/* noinline to prevent gcc from warning about dereferencing constant fixaddr */
-> +static noinline __init bool check_tboot_version(void)
-> +{
-> +	if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
-> +		pr_warn("tboot at 0x%llx is invalid\n", boot_params.tboot_addr);
-> +		return false;
-> +	}
-> +
-> +	if (tboot->version < 5) {
-> +		pr_warn("tboot version is invalid: %u\n", tboot->version);
-> +		return false;
-> +	}
-> +
-> +	pr_info("found shared page at phys addr 0x%llx:\n",
-> +		boot_params.tboot_addr);
-> +	pr_debug("version: %d\n", tboot->version);
-> +	pr_debug("log_addr: 0x%08x\n", tboot->log_addr);
-> +	pr_debug("shutdown_entry: 0x%x\n", tboot->shutdown_entry);
-> +	pr_debug("tboot_base: 0x%08x\n", tboot->tboot_base);
-> +	pr_debug("tboot_size: 0x%x\n", tboot->tboot_size);
-> +
-> +	return true;
-> +}
-> +
->  void __init tboot_probe(void)
->  {
->  	/* Look for valid page-aligned address for shared page. */
-> @@ -66,25 +90,9 @@ void __init tboot_probe(void)
->  
->  	/* Map and check for tboot UUID. */
->  	set_fixmap(FIX_TBOOT_BASE, boot_params.tboot_addr);
-> -	tboot = (struct tboot *)fix_to_virt(FIX_TBOOT_BASE);
-> -	if (memcmp(&tboot_uuid, &tboot->uuid, sizeof(tboot->uuid))) {
-> -		pr_warn("tboot at 0x%llx is invalid\n", boot_params.tboot_addr);
-> +	tboot = (void *)fix_to_virt(FIX_TBOOT_BASE);
-> +	if (!check_tboot_version())
->  		tboot = NULL;
-> -		return;
-> -	}
-> -	if (tboot->version < 5) {
-> -		pr_warn("tboot version is invalid: %u\n", tboot->version);
-> -		tboot = NULL;
-> -		return;
-> -	}
-> -
-> -	pr_info("found shared page at phys addr 0x%llx:\n",
-> -		boot_params.tboot_addr);
-> -	pr_debug("version: %d\n", tboot->version);
-> -	pr_debug("log_addr: 0x%08x\n", tboot->log_addr);
-> -	pr_debug("shutdown_entry: 0x%x\n", tboot->shutdown_entry);
-> -	pr_debug("tboot_base: 0x%08x\n", tboot->tboot_base);
-> -	pr_debug("tboot_size: 0x%x\n", tboot->tboot_size);
-
-This is indeed rather ugly - and the other patch that removes a debug 
-check seems counterproductive as well.
-
-Do we know how many genuine bugs -Wstringop-overread-warning has 
-caught or is about to catch?
-
-I.e. the real workaround might be to turn off the -Wstringop-overread-warning,
-until GCC-11 gets fixed?
+I'm open to whichever is the "right" way to go, but am not currently
+certain which would be.
 
 Thanks,
+-Arjun
 
-	Ingo
+> >
+> > ...
+> >
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+>
+> These changes could be inside #ifdef CONFIG_NET.  Although I expect
+> MEMCG=y&&NET=n is pretty damn rare.
+>
