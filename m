@@ -1,174 +1,68 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH 2/2] mm: memcontrol: deprecate swapaccounting=0 mode
-Date: Mon, 22 Mar 2021 11:53:41 -0400
-Message-ID: <YFi9hVQM9maWyhWv@cmpxchg.org>
-References: <20210319054944.50048-1-hannes@cmpxchg.org>
- <20210319054944.50048-2-hannes@cmpxchg.org>
- <alpine.LSU.2.11.2103191633350.1043@eggly.anvils>
+From: Arnd Bergmann <arnd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH 01/11] x86: compressed: avoid gcc-11 -Wstringop-overread warning
+Date: Mon, 22 Mar 2021 17:02:39 +0100
+Message-ID: <20210322160253.4032422-2-arnd@kernel.org>
+References: <20210322160253.4032422-1-arnd@kernel.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=E5pR4bhxZETSxTpVA3uMOpN6g18ZTkn19HmQ/Nnh+4o=;
-        b=EHV7q9LwYDxGRVPpLfLVmAGUPg55im2cpNJ3+h7ZlJ1Ip9KZXSuVb095YaAk3LoOe/
-         TgStUPZvFQicUOGPKSakFK2kCfiXea14bbW2LFqTMzJHAQ699cVZK8BAkp+LNTaytRUn
-         Xp4dYojRqHJtOPYC1Y+13U+2/rglDmFPvm8uzwDef0JIWnPky/yXvAcfWJVfTw1hGDwY
-         QkFU8zUYaLJLXnZzSQddyAL1Lp/z6sVM4sS/u2Utm0nw571hVtcoCo3bbORJzj5JccAO
-         05Tbf0Ttjbba+BA460+lrwKiAcZ1gqEgq2hUl1t2MsaiTHwbFZ74Gz6I60bixo9cDDrQ
-         GvwQ==
-Content-Disposition: inline
-In-Reply-To: <alpine.LSU.2.11.2103191633350.1043-fupSdm12i1nKWymIFiNcPA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616429000;
+        bh=3vH1tW/3dz/29rKeu66QIybhctPu7u2aaTt+yHw+ixQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=VRbsfgY+z8kWvWs+txugnu/XzSTF1os4UBObTbMaVvuShG2tPdw5ChRNTsdoitI1c
+         Os5gXEmTV19Hh0dH4sglqm/fSEpSE1o+cdD5mtmVZ292EJ017mpHo8q2zl1C63RDvy
+         9IP52tHZwWSskub+gnvqqJxnuA90avLg12n2yst/hTpywQNyH7pGS5SlpLOCg1l1zv
+         SC2S1tGwIlfSqI7YXPTsk7il0mAFtLumFo7AO2H+payHYwT3xe1jEFpNJbjQ5KEMrV
+         fL6MEJv6J7008Lwon/8167XZUtB/IGdDaiFW7a3KldjWew3Xisi5j0MtsrpiR6liOq
+         jy3MXhpKCZK+w==
+In-Reply-To: <20210322160253.4032422-1-arnd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Martin Sebor <msebor-/MQLu3FmUzdAfugRpC6u6w@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Ning Sun <ning.sun-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jani Nikula <jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Kalle Valo <kvalo-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Simon Kelley <simon-xn1N/tgparsycpQjotevgVpr/1R2p/CL@public.gmane.org>, James Smart <james.smart-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Anders Larsen <al-V9/YLgxv/GvR7s880joybQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Imre Deak <imre.deak-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, tboot-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, ath11k-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-security-module-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
 
-On Fri, Mar 19, 2021 at 05:37:05PM -0700, Hugh Dickins wrote:
-> On Fri, 19 Mar 2021, Johannes Weiner wrote:
-> 
-> > The swapaccounting= commandline option already does very little
-> > today. To close a trivial containment failure case, the swap ownership
-> > tracking part of the swap controller has recently become mandatory
-> > (see commit 2d1c498072de ("mm: memcontrol: make swap tracking an
-> > integral part of memory control") for details), which makes up the
-> > majority of the work during swapout, swapin, and the swap slot map.
-> > 
-> > The only thing left under this flag is the page_counter operations and
-> > the visibility of the swap control files in the first place, which are
-> > rather meager savings. There also aren't many scenarios, if any, where
-> > controlling the memory of a cgroup while allowing it unlimited access
-> > to a global swap space is a workable resource isolation stragegy.
-> > 
-> > On the other hand, there have been several bugs and confusion around
-> > the many possible swap controller states (cgroup1 vs cgroup2 behavior,
-> > memory accounting without swap accounting, memcg runtime disabled).
-> > 
-> > This puts the maintenance overhead of retaining the toggle above its
-> > practical benefits. Deprecate it.
-> > 
-> > Suggested-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-> 
-> This crashes, and needs a fix: see below (plus some nits).
-> 
-> But it's a very welcome cleanup: just getting rid of all those
-> !cgroup_memory_noswap double negatives is a relief in itself.
-> 
-> It does suggest eliminating CONFIG_MEMCG_SWAP altogether (just
-> using #ifdef CONFIG_SWAP instead, in those parts of CONFIG_MEMCG code);
-> but you're right that's a separate cleanup, and not nearly so worthwhile
-> as this one (I notice CONFIG_MEMCG_SWAP in some of the arch defconfigs,
-> and don't know whether whoever removes CONFIG_MEMCG_SWAP would be
-> obligated to remove those too).
+From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
 
-2d1c498072de ("mm: memcontrol: make swap tracking an integral part of
-memory control") made it invisible to the user already, I only kept
-the symbol for convenience in the Makefile:
+gcc gets confused by the comparison of a pointer to an integer listeral,
+with the assumption that this is an offset from a NULL pointer and that
+dereferencing it is invalid:
 
-obj-$(CONFIG_MEMCG_SWAP) += swap_cgroup.o
+In file included from arch/x86/boot/compressed/misc.c:18:
+In function ‘parse_elf’,
+    inlined from ‘extract_kernel’ at arch/x86/boot/compressed/misc.c:442:2:
+arch/x86/boot/compressed/../string.h:15:23: error: ‘__builtin_memcpy’ reading 64 bytes from a region of size 0 [-Werror=stringop-overread]
+   15 | #define memcpy(d,s,l) __builtin_memcpy(d,s,l)
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~
+arch/x86/boot/compressed/misc.c:283:9: note: in expansion of macro ‘memcpy’
+  283 |         memcpy(&ehdr, output, sizeof(ehdr));
+      |         ^~~~~~
 
-But I guess we could replace it with
+I could not find any good workaround for this, but as this is only
+a warning for a failure during early boot, removing the line entirely
+works around the warning.
 
-ifdef CONFIG_SWAP
-obj-$(CONFIG_MEMCG) += swap_cgroup.c
-endif
+This should probably get addressed in gcc instead, before 11.1 gets
+released.
 
-and I agree, everywhere else it's currently used would be nicer
-without it. I'll send a separate patch.
+Signed-off-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+---
+ arch/x86/boot/compressed/misc.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-> > @@ -99,7 +92,11 @@ static DECLARE_WAIT_QUEUE_HEAD(memcg_cgwb_frn_waitq);
-> >  /* Whether legacy memory+swap accounting is active */
-> >  static bool do_memsw_account(void)
-> >  {
-> > -	return !cgroup_subsys_on_dfl(memory_cgrp_subsys) && !cgroup_memory_noswap;
-> > +	/* cgroup2 doesn't do mem+swap accounting */
-> > +	if (cgroup_subsys_on_dfl(memory_cgrp_subsys))
-> > +		return false;
-> > +
-> > +	return true;
-> 
-> Nit: I'm not fond of the "if (boolean()) return true; else return false;"
-> codestyle, and would prefer the straightforward
-> 
-> 	return !cgroup_subsys_on_dfl(memory_cgrp_subsys);
-> 
-> but you've chosen otherwise, so, okay.
+diff --git a/arch/x86/boot/compressed/misc.c b/arch/x86/boot/compressed/misc.c
+index 3a214cc3239f..9ada64e66cb7 100644
+--- a/arch/x86/boot/compressed/misc.c
++++ b/arch/x86/boot/compressed/misc.c
+@@ -430,8 +430,6 @@ asmlinkage __visible void *extract_kernel(void *rmode, memptr heap,
+ 		error("Destination address too large");
+ #endif
+ #ifndef CONFIG_RELOCATABLE
+-	if ((unsigned long)output != LOAD_PHYSICAL_ADDR)
+-		error("Destination address does not match LOAD_PHYSICAL_ADDR");
+ 	if (virt_addr != LOAD_PHYSICAL_ADDR)
+ 		error("Destination virtual address changed when not relocatable");
+ #endif
+-- 
+2.29.2
 
-I prefer a series of branches if a single expression becomes unwieldy,
-and individual conditions deserve their own comments.
-
-But it's indeed pretty silly in this case, I'll make it a single line.
-
-> > @@ -7124,7 +7121,7 @@ long mem_cgroup_get_nr_swap_pages(struct mem_cgroup *memcg)
-> >  {
-> >  	long nr_swap_pages = get_nr_swap_pages();
-> >  
-> > -	if (cgroup_memory_noswap || !cgroup_subsys_on_dfl(memory_cgrp_subsys))
-> > +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
-> 
-> That needs to check mem_cgroup_disabled() where it used to check
-> cgroup_memory_noswap.  The convolutions are confusing (which is
-> precisely why this is such a welcome cleanup), but without a
-> mem_cgroup_disabled() (or NULL memcg) check there, the
-> cgroup_disable=memory case oopses on NULLish pointer dereference
-> when mem_cgroup_get_nr_swap_pages() is called from get_scan_count().
-> 
-> (This little function has been repeatedly troublesome that way.)
-
-Sigh, yes, this will hopefully be the last instance of this bug...
-
-Thanks for catching that, I'll fix it up.
-
-> > @@ -7141,7 +7138,7 @@ bool mem_cgroup_swap_full(struct page *page)
-> >  
-> >  	if (vm_swap_full())
-> >  		return true;
-> > -	if (cgroup_memory_noswap || !cgroup_subsys_on_dfl(memory_cgrp_subsys))
-> > +	if (!cgroup_subsys_on_dfl(memory_cgrp_subsys))
-> 
-> Would it now be better to say "if (do_memsw_account())" there?
-
-Yes, I'll change that.
-
-> Or would it be better to eliminate do_memsw_account() altogether,
-> and just use !cgroup_subsys_on_dfl(memory_cgrp_subsys) throughout?
-
-I have found do_memsw_account() useful in the past to find those
-related pieces. The details elude me know but I remember searching for
-this string often during the recent work in this area.
-
-> (Though I don't find "cgroup_subsys_on_dfl" very informative.)
-
-This routinely bothers me as well, but I have not been able to come up
-with a good replacement.
-
-memcg_v1()? memcg_legacy_mode()? memory_cgroup_in_bytes()?
-
-> > @@ -7291,27 +7287,13 @@ static struct cftype memsw_files[] = {
-> >  	{ },	/* terminate */
-> >  };
-> >  
-> > -/*
-> > - * If mem_cgroup_swap_init() is implemented as a subsys_initcall()
-> > - * instead of a core_initcall(), this could mean cgroup_memory_noswap still
-> > - * remains set to false even when memcg is disabled via "cgroup_disable=memory"
-> > - * boot parameter. This may result in premature OOPS inside
-> > - * mem_cgroup_get_nr_swap_pages() function in corner cases.
-> > - */
-> >  static int __init mem_cgroup_swap_init(void)
-> >  {
-> > -	/* No memory control -> no swap control */
-> > -	if (mem_cgroup_disabled())
-> > -		cgroup_memory_noswap = true;
-> > -
-> > -	if (cgroup_memory_noswap)
-> > -		return 0;
-> > -
-> 
-> Shakeel suggested "if (mem_cgroup_disabled()) return 0;" here,
-> and that was the first thing I tried when I got the crash.
-
-It really isn't obviously safe. I'll put it back in.
