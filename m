@@ -1,39 +1,85 @@
-From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 03/11] security: commoncap: fix -Wstringop-overread
- warning
-Date: Mon, 22 Mar 2021 17:31:31 +0100
-Message-ID: <20210322163131.yaovowes2raydgyg@wittgenstein>
-References: <20210322160253.4032422-1-arnd@kernel.org>
- <20210322160253.4032422-4-arnd@kernel.org>
+From: Vipin Sharma <vipinsh@google.com>
+Subject: Re: [Patch v3 0/2] cgroup: New misc cgroup controller
+Date: Mon, 22 Mar 2021 11:24:55 -0700
+Message-ID: <YFjg9+qGLMUoKj4h@google.com>
+References: <20210304231946.2766648-1-vipinsh@google.com>
+ <YETLqGIw1GekWdYK@slm.duckdns.org>
+ <YEpoS90X19Z2QOro@blackbook>
+ <YEupplaAWU1i0G6B@google.com>
+ <YE+xEbwUoRj+snTY@blackbook>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=OALm4xfK1wwGwvHx7Gk4sNjSyWXfRLiJPZ9rAyaA/XM=;
+        b=Qa63hcwdFdariUeX+riXwEreFLPTb8WrlMOljzBBFX7+lp14M5ndxajfImrIDPJgdI
+         5tnI1Ok8NP2//d9SfWGA6kfZD4QxFSKXBpq4yIP2JdwI27pnQtHPN6unZSbl3cEyHlAt
+         /Bqt6YvXxD5CJZo7tQbFS2DyO8VFSNopZzgykyEPzup90yrfD7qKbOb9U8hre5ZgDXnS
+         w8ntMBJwlffDAVEsVx6MH8+bwCYwhsRnUOgmDPuKnSb+9ohMIobtcQ2gZMTr1mpHYpK8
+         zDt4vXs1yZFQz2qoSg721rNpbpkBLZCOodzZyDXjvP8fcqmgWIOUNkE2sP8VonbGPHwg
+         Svpw==
 Content-Disposition: inline
-In-Reply-To: <20210322160253.4032422-4-arnd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+In-Reply-To: <YE+xEbwUoRj+snTY@blackbook>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Arnd Bergmann <arnd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Martin Sebor <msebor-/MQLu3FmUzdAfugRpC6u6w@public.gmane.org>, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Ning Sun <ning.sun-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jani Nikula <jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Kalle Valo <kvalo-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Simon Kelley <simon-xn1N/tgparsycpQjotevgVpr/1R2p/CL@public.gmane.org>, James Smart <james.smart-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Anders Larsen <al-V9/YLgxv/GvR7s880joybQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Imre Deak <imre.deak-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, tboot-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, ath11k-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups@vger
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny@suse.com>
+Cc: Tejun Heo <tj@kernel.org>, rdunlap@infradead.org, thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com, corbet@lwn.net, seanjc@google.com, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, joro@8bytes.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, dionnaglaze@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Mar 22, 2021 at 05:02:41PM +0100, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-> 
-> gcc-11 introdces a harmless warning for cap_inode_getsecurity:
-> 
-> security/commoncap.c: In function ‘cap_inode_getsecurity’:
-> security/commoncap.c:440:33: error: ‘memcpy’ reading 16 bytes from a region of size 0 [-Werror=stringop-overread]
->   440 |                                 memcpy(&nscap->data, &cap->data, sizeof(__le32) * 2 * VFS_CAP_U32);
->       |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> 
-> The problem here is that tmpbuf is initialized to NULL, so gcc assumes
-> it is not accessible unless it gets set by vfs_getxattr_alloc().  This is
-> a legitimate warning as far as I can tell, but the code is correct since
-> it correctly handles the error when that function fails.
-> 
-> Add a separate NULL check to tell gcc about it as well.
-> 
-> Signed-off-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-> ---
+On Mon, Mar 15, 2021 at 08:10:09PM +0100, Michal Koutn=FD wrote:
+> On Fri, Mar 12, 2021 at 09:49:26AM -0800, Vipin Sharma <vipinsh@google.co=
+m> wrote:
+> > I will add some more information in the cover letter of the next versio=
+n.
+> Thanks.
+>=20
+> > Each one coming up with their own interaction is a duplicate effort
+> > when they all need similar thing.
+> Could this be expressed as a new BPF hook (when allocating/freeing such
+> a resource unit)?
+>=20
+> The decision could be made based on the configured limit or even some
+> other predicate.
+>=20
+> (I saw this proposed already but I haven't seen some more reasoning
+> whether it's worse/better. IMO, BPF hooks are "cheaper" than full-blown
+> controllers, though it's still new user API.)
 
-Seems reasonable,
-Acked-by: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+I am not much knowledgeable with BPF, so, I might be wrong here.
+
+There are couple of things which might not be addressed with BPF:
+1. Which controller to use in v1 case? These are not abstract resources
+   so in v1 where each controller have their own hierarchy it might not
+   be easy to identify the best controller.
+
+2. It seems to me that we won't be able to abstract out a single BPF
+   program which can help with all of the resources types we are
+   planning to use, again, because it is not an abstract type like
+   network packets, and there will be different places in the source
+   code to use these resources.
+
+To me a cgroup tends to give much easier and well integrated solution when =
+it
+comes to scheduling and limiting a resource with existing tools in a
+cloud infrastructure.
+
+>=20
+>=20
+> > As per my understanding this is the only for way for loadable modules
+> > (kvm-amd in this case) to access Kernel APIs. Let me know if there is a
+> > better way to do it.
+> I understood the symbols are exported for such modularized builds.
+> However, making them non-GPL exposes them to any out-of-tree modules,
+> although, the resource types are supposed to stay hardcoded in the misc
+> controller. So my point was to make them EXPORT_SYMBOL_GPL to mark
+> they're just a means of implementing the modularized builds and not an
+> API. (But they'd remain API for out-of-tree GPL modules anyway, so take
+> this reasoning of mine with a grain of salt.)
+>=20
+I see, I will change it to GPL.
+
+Thanks
+Vipin
+
