@@ -1,72 +1,39 @@
-From: Arnd Bergmann <arnd@kernel.org>
-Subject: [PATCH 10/11] drm/i915: avoid stringop-overread warning on pri_latency
-Date: Mon, 22 Mar 2021 17:02:48 +0100
-Message-ID: <20210322160253.4032422-11-arnd@kernel.org>
+From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 03/11] security: commoncap: fix -Wstringop-overread
+ warning
+Date: Mon, 22 Mar 2021 17:31:31 +0100
+Message-ID: <20210322163131.yaovowes2raydgyg@wittgenstein>
 References: <20210322160253.4032422-1-arnd@kernel.org>
+ <20210322160253.4032422-4-arnd@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-security-module-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1616429130;
-        bh=Cz6Ib/Jy2MCBRG3RkrW7YxIgzj/6kEv+v4DuuyruVdM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YmX1KQkIWDTM9oL9SIaizhQuXBgId2TgjaOHRvpRa8ujB1Hj1aOwCgrCrMNJVi2gq
-         P8VgokfOwAmfnYZLX1rsRk4pLvkeDX2bspNuX1VYi25/JXoxXtnn7F2MgFWC0FsAFu
-         N+uQuJ3Me21QeU0KrCs4aFbaBIGeJwlctHwPj1pA51MBMY2ra+UvbFh+zl+P+BsSj9
-         1ElKemq6Wxa1TUdo/FGf/LywTMYZxZt3573Q+qI3GKdCXVd48krzSZHquQETNI++01
-         tCB8r6B7NO2iohCFFlGopnfYJGFYOD5rOpt+nJhCejnPW+cx72ztkTHm7tbHkrEoPf
-         S1/KeKBMSo8Ag==
-In-Reply-To: <20210322160253.4032422-1-arnd@kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20210322160253.4032422-4-arnd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="utf-8"
-To: linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>, Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>
-Cc: Arnd Bergmann <arnd@arndb.de>, x86@kernel.org, Ning Sun <ning.sun@intel.com>, Kalle Valo <kvalo@codeaurora.org>, Simon Kelley <simon@thekelleys.org.uk>, James Smart <james.smart@broadcom.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>, Serge Hallyn <serge@hallyn.com>, Imre Deak <imre.deak@intel.com>, linux-arm-kernel@lists.infradead.org, tboot-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, ath11k@lists.infradead.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, cgroups@vger.kernel.org, linux-security-module@vger.kernel.org, Chris Wilson <chris@chris-wilson.co.uk>, =?UTF-8?q?Jos=C3=A9=20Roberto=20de=20Souza?= <jos>
+To: Arnd Bergmann <arnd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Martin Sebor <msebor-/MQLu3FmUzdAfugRpC6u6w@public.gmane.org>, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Ning Sun <ning.sun-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jani Nikula <jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Kalle Valo <kvalo-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Simon Kelley <simon-xn1N/tgparsycpQjotevgVpr/1R2p/CL@public.gmane.org>, James Smart <james.smart-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Anders Larsen <al-V9/YLgxv/GvR7s880joybQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Imre Deak <imre.deak-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, tboot-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, ath11k-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups@vger
 
-From: Arnd Bergmann <arnd@arndb.de>
+On Mon, Mar 22, 2021 at 05:02:41PM +0100, Arnd Bergmann wrote:
+> From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+> 
+> gcc-11 introdces a harmless warning for cap_inode_getsecurity:
+> 
+> security/commoncap.c: In function ‘cap_inode_getsecurity’:
+> security/commoncap.c:440:33: error: ‘memcpy’ reading 16 bytes from a region of size 0 [-Werror=stringop-overread]
+>   440 |                                 memcpy(&nscap->data, &cap->data, sizeof(__le32) * 2 * VFS_CAP_U32);
+>       |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> 
+> The problem here is that tmpbuf is initialized to NULL, so gcc assumes
+> it is not accessible unless it gets set by vfs_getxattr_alloc().  This is
+> a legitimate warning as far as I can tell, but the code is correct since
+> it correctly handles the error when that function fails.
+> 
+> Add a separate NULL check to tell gcc about it as well.
+> 
+> Signed-off-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+> ---
 
-gcc-11 warns about what appears to be an out-of-range array access:
-
-In function ‘snb_wm_latency_quirk’,
-    inlined from ‘ilk_setup_wm_latency’ at drivers/gpu/drm/i915/intel_pm.c:3108:3:
-drivers/gpu/drm/i915/intel_pm.c:3057:9: error: ‘intel_print_wm_latency’ reading 16 bytes from a region of size 10 [-Werror=stringop-overread]
- 3057 |         intel_print_wm_latency(dev_priv, "Primary", dev_priv->wm.pri_latency);
-      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-drivers/gpu/drm/i915/intel_pm.c: In function ‘ilk_setup_wm_latency’:
-drivers/gpu/drm/i915/intel_pm.c:3057:9: note: referencing argument 3 of type ‘const u16 *’ {aka ‘const short unsigned int *’}
-drivers/gpu/drm/i915/intel_pm.c:2994:13: note: in a call to function ‘intel_print_wm_latency’
- 2994 | static void intel_print_wm_latency(struct drm_i915_private *dev_priv,
-      |             ^~~~~~~~~~~~~~~~~~~~~~
-
-My guess is that this code is actually safe because the size of the
-array depends on the hardware generation, and the function checks for
-that, but at the same time I would not expect the compiler to work it
-out correctly, and the code seems a little fragile with regards to
-future changes. Simply increasing the size of the array should help.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/gpu/drm/i915/i915_drv.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
-index 26d69d06aa6d..3567602e0a35 100644
---- a/drivers/gpu/drm/i915/i915_drv.h
-+++ b/drivers/gpu/drm/i915/i915_drv.h
-@@ -1095,11 +1095,11 @@ struct drm_i915_private {
- 		 * in 0.5us units for WM1+.
- 		 */
- 		/* primary */
--		u16 pri_latency[5];
-+		u16 pri_latency[8];
- 		/* sprite */
--		u16 spr_latency[5];
-+		u16 spr_latency[8];
- 		/* cursor */
--		u16 cur_latency[5];
-+		u16 cur_latency[8];
- 		/*
- 		 * Raw watermark memory latency values
- 		 * for SKL for all 8 levels
--- 
-2.29.2
-
+Seems reasonable,
+Acked-by: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
