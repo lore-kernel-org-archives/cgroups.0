@@ -1,332 +1,47 @@
-From: Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [mm, net-next v2] mm: net: memcg accounting for TCP rx zerocopy
-Date: Mon, 22 Mar 2021 14:35:11 -0700
-Message-ID: <CAOFY-A17g-Aq_TsSX8=mD7ZaSAqx3gzUuCJT8K0xwrSuYdP4Kw@mail.gmail.com>
-References: <20210316041645.144249-1-arjunroy.kdev@gmail.com>
- <YFCH8vzFGmfFRCvV@cmpxchg.org> <CAOFY-A23NBpJQ=mVQuvFib+cREAZ_wC5=FOMzv3YCO69E4qRxw@mail.gmail.com>
- <YFJ+5+NBOBiUbGWS@cmpxchg.org>
+From: Arnd Bergmann <arnd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 02/11] x86: tboot: avoid Wstringop-overread-warning
+Date: Mon, 22 Mar 2021 22:39:47 +0100
+Message-ID: <CAK8P3a10d8hgBiO5W=34oLqw8m22=Xi4C=MxVSY_fGnXZUJ3iA@mail.gmail.com>
+References: <20210322160253.4032422-1-arnd@kernel.org> <20210322160253.4032422-3-arnd@kernel.org>
+ <20210322202958.GA1955909@gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=bvWxgszd7bHSN3N05Mi+My4+fLUUN/q4y4GSdnnqfGg=;
-        b=mRzbnQLF26AWforqhEC+mDfTuD2X3cK4cOJBlHoZhMEtBui2PxCGJUttFUCFBKptep
-         0pkH6ZRjliu+qXCXul703r89Xv0Cl0jt8IeU3nJLieaX1mbUFiXXmCD3I9ks/zRBmJpT
-         woVOp5xrBQNKut3INrmTibjKWmlUmoxir8Wcf5s+E4bgvxYX8LGXFCwrUUBmhWP6Qpbo
-         ySsDLmcxJMFptBvyaNFwT7BsUtTkYaAGG5iM7jJ+OcRURCCu0lzkpdN6nqwthBakyD9T
-         MO3u7zQBkGzl2VsOx2rE9yk3OBICbepuIP1b0HczySkgkZE8BYVGRQXgCfTgWuXW7qbu
-         ulMA==
-In-Reply-To: <YFJ+5+NBOBiUbGWS-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616449204;
+        bh=ZjEe7Re0RKu002ndI22T8BlfDJ+aY+HHY+t9XvQS7Q8=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=bJZCpZ5EEGZerp3UrSyvokIM6nH3GPNLIsyJMJB5nyc4Sgnjtzn+OMtjUL2ZBSie+
+         Fi83eey5HsMSKc/9qaD2RuZEeUeUwoE2M6qwk7wrSCjkj4ws8OGv18z8EyYcukmWHT
+         jM35+ir6/srZfSH78DCRwpRXtTCanNR0ouNRk+r0zZqC9uicwbh5Vl6qVN2J0nC7fg
+         yAR8A/u0nDcj41ohiNdL688eDQ2opEHdctaDOmgytVvpFgfvzBz92vFYBp5Nn21+zL
+         vtNIUbcaOAFjelvCYqZ6uXvufN0DecSq4tETddYi+zxgAsQXGrS7YO4xRruhTqWyYj
+         CraMDT8xmXxbw==
+In-Reply-To: <20210322202958.GA1955909-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Arjun Roy <arjunroy.kdev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+To: Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Martin Sebor <msebor-/MQLu3FmUzdAfugRpC6u6w@public.gmane.org>, Ning Sun <ning.sun-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, the arch/x86 maintainers <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jani Nikula <jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Kalle Valo <kvalo-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Simon Kelley <simon-xn1N/tgparsycpQjotevgVpr/1R2p/CL@public.gmane.org>, James Smart <james.smart-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Anders Larsen <al-V9/YLgxv/GvR7s880joybQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Imre Deak <imre.deak-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Linux ARM <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, tboot-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Intel Graphics <intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, dri-devel <dri-devel@lists>
 
-On Wed, Mar 17, 2021 at 3:12 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-> On Tue, Mar 16, 2021 at 11:05:11PM -0700, Arjun Roy wrote:
-> > On Tue, Mar 16, 2021 at 3:27 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
-> > >
-> > > Hello,
-> > >
-> > > On Mon, Mar 15, 2021 at 09:16:45PM -0700, Arjun Roy wrote:
-> > > > From: Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > > >
-> > > > TCP zerocopy receive is used by high performance network applications
-> > > > to further scale. For RX zerocopy, the memory containing the network
-> > > > data filled by the network driver is directly mapped into the address
-> > > > space of high performance applications. To keep the TLB cost low,
-> > > > these applications unmap the network memory in big batches. So, this
-> > > > memory can remain mapped for long time. This can cause a memory
-> > > > isolation issue as this memory becomes unaccounted after getting
-> > > > mapped into the application address space. This patch adds the memcg
-> > > > accounting for such memory.
-> > > >
-> > > > Accounting the network memory comes with its own unique challenges.
-> > > > The high performance NIC drivers use page pooling to reuse the pages
-> > > > to eliminate/reduce expensive setup steps like IOMMU. These drivers
-> > > > keep an extra reference on the pages and thus we can not depend on the
-> > > > page reference for the uncharging. The page in the pool may keep a
-> > > > memcg pinned for arbitrary long time or may get used by other memcg.
-> > >
-> > > The page pool knows when a page is unmapped again and becomes
-> > > available for recycling, right? Essentially the 'free' phase of that
-> > > private allocator. That's where the uncharge should be done.
-> > >
-> >
-> > In general, no it does not.  The page pool, how it operates and whether it
-> > exists in the first place, is an optimization that a given NIC driver can choose
-> > to make - and so there's no generic plumbing that ties page unmap events to
-> > something that a page pool could subscribe to that I am aware of. All it can do
-> > is check, at a given point, whether it can reuse a page or not, typically by
-> > checking the current page refcount.
-> >
-> > A couple of examples for drivers with such a mechanism - mlx5:
-> > (https://github.com/torvalds/linux/blob/master/drivers/net/ethernet/mellanox/mlx5/core/en_rx.c#L248)
->
->         if (page_ref_count(cache->page_cache[cache->head].page) != 1)
->
-> So IIUC it co-opts the page count used by the page allocator, offset
-> by the base ref of the pool. That means it doesn't control the put
-> path and won't be aware of when pages are used and unused.
->
-> How does it free those pages back to the system eventually? Does it
-> just do a series of put_page() on pages in the pool when something
-> determines it is too big?
->
-> However it does it, it found some way to live without a
-> destructor. But now we need one.
->
-> > Or intel fm10k:
-> > (https://github.com/torvalds/linux/blob/master/drivers/net/ethernet/intel/fm10k/fm10k_main.c#L207)
-> >
-> > Note that typically map count is not checked (maybe because page-flipping
-> > receive zerocopy did not exist as a consideration when the driver was written).
-> >
-> > So given that the page pool is essentially checking on demand for whether a page
-> > is usable or not - since there is no specific plumbing invoked when a page is
-> > usable again (i.e. unmapped, in this case) - we opted to hook into when the
-> > mapcount is decremented inside unmap() path.
->
-> The problem is that the page isn't reusable just because it's
-> unmapped. The user may have vmspliced those pages into a pipe and be
-> pinning them long after the unmap.
->
-> I don't know whether that happens in real life, but it's a legitimate
-> thing to do. At the very least it would be an avenue for abuse.
->
-> > > For one, it's more aligned with the usual memcg charge lifetime rules.
-> > >
-> > > But also it doesn't add what is essentially a private driver callback
-> > > to the generic file unmapping path.
-> > >
-> >
-> > I understand the concern, and share it - the specific thing we'd like to avoid
-> > is to have driver specific code in the unmap path, and not in the least because
-> > any given driver could do its own thing.
-> >
-> > Rather, we consider this mechanism that we added as generic to zerocopy network
-> > data reception - that it does the right thing, no matter what the driver is
-> > doing. This would be transparent to the driver, in other words - all the driver
-> > has to do is to continue doing what it was before, using page->refcnt == 1 to
-> > decide whether it can use a page or if it is not already in use.
-> >
-> >
-> > Consider this instead as a broadly applicable networking feature adding a
-> > callback to the unmap path, instead of a particular driver. And while it is just
-> > TCP at present, it fundamentally isn't limited to TCP.
-> >
-> > I do have a request for clarification, if you could specify the usual memcg
-> > charge lifetime rules that you are referring to here? Just to make sure we're on
-> > the same page.
->
-> Usually, the charge lifetime is tied to the allocation lifetime. It
-> ends when the object is fed back to whatever pool it came out of, its
-> data is considered invalid, and its memory is available to new allocs.
->
-> This isn't the case here, and as per above you may uncharge the page
-> long before the user actually relinquishes it.
->
-> > > 1. The NR_FILE_MAPPED accounting. It is longstanding Linux behavior
-> > >    that driver pages mapped into userspace are accounted as file
-> > >    pages, because userspace is actually doing mmap() against a driver
-> > >    file/fd (as opposed to an anon mmap). That is how they show up in
-> > >    vmstat, in meminfo, and in the per process stats. There is no
-> > >    reason to make memcg deviate from this. If we don't like it, it
-> > >    should be taken on by changing vm_insert_page() - not trick rmap
-> > >    into thinking these arent memcg pages and then fixing it up with
-> > >    additional special-cased accounting callbacks.
-> > >
-> > >    v1 did this right, it charged the pages the way we handle all other
-> > >    userspace pages: before rmap, and then let the generic VM code do
-> > >    the accounting for us with the cgroup-aware vmstat infrastructure.
-> >
-> > To clarify, are you referring to the v1 approach for this patch from a
-> > few weeks ago?
->
-> Yes.
->
-> > (i.e. charging for the page before vm_insert_page()). This patch changes when
-> > the charging happens, and, as you note, makes it a forced charge since we've
-> > already inserted the mappings into the user's address space - but it isn't
-> > otherwise fundamentally different from v1 in what it does. And unmap is the
-> > same.
->
-> Right. The places where it IS different are the problem ;)
->
-> Working around native VM accounting; adding custom accounting that is
-> inconsistent with the rest of the system; force-charging a quantity of
-> memory that the container may not be entitled to.
->
-> Please revert back to precharging like in v1.
->
+On Mon, Mar 22, 2021 at 9:29 PM Ingo Molnar <mingo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> * Arnd Bergmann <arnd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> > From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
 
-v3 will do so.
+> This is indeed rather ugly - and the other patch that removes a debug
+> check seems counterproductive as well.
+>
+> Do we know how many genuine bugs -Wstringop-overread-warning has
+> caught or is about to catch?
+>
+> I.e. the real workaround might be to turn off the -Wstringop-overread-warning,
+> until GCC-11 gets fixed?
 
-> > The period of double counting in v1 of this patch was from around the time we do
-> > vm_insert_page() (note that the pages were accounted just prior to being
-> > inserted) till the struct sk_buff's were disposed of - for an skb
-> > that's up to 45 pages.
->
-> That's seems fine.
->
-> Can there be instances where the buffers are pinned by something else
-> for indefinite lengths of time?
->
-> > But note that is for one socket, and there can be quite a lot of open
-> > sockets and
-> > depending on what happens in terms of scheduling the period of time we're
-> > double counting can be a bit high.
->
-> You mean thread/CPU scheduling?
->
-> If it comes down to that, I'm not convinced this is a practical
-> concern at this point.
->
-> I think we can assume that the number of sockets and the number of
-> concurrent threads going through the receive path at any given time
-> will scale with the size of the cgroup. And even a thousand threads
-> reading from a thousand sockets at exactly the same time would double
-> charge a maximum of 175M for a brief period of time. Since few people
-> have 1,000 CPUs the possible overlap is further reduced.
->
-> This isn't going to be a problem in the real world.
->
-> > >    The way I see it, any conflict here is caused by the pages being
-> > >    counted in the SOCK counter already, but not actually *tracked* on
-> > >    a per page basis. If it's worth addressing, we should look into
-> > >    fixing the root cause over there first if possible, before trying
-> > >    to work around it here.
-> > >
-> >
-> > When you say tracked on a per-page basis, I assume you mean using the usual
-> > mechanism where a page has a non-null memcg set, with unaccounting occuring when
-> > the refcount goes to 0.
->
-> Right.
->
-> > Networking currently will account/unaccount bytes just based on a
-> > page count (and the memcg set in struct sock) rather than setting it in the page
-> > itself - because the recycling of pages means the next time around it could be
-> > charged to another memcg. And the refcount never goes to 1 due to the pooling
-> > (in the absence of eviction for busy pages during packet reception). When
-> > sitting in the driver page pool, non-null memcg does not work since we do not
-> > know which socket (thus which memcg) the page would be destined for since we do
-> > not know whose packet arrives next.
-> >
-> > The page pooling does make this all this a bit awkward, and the approach
-> > in this patch seems to me the cleanest solution.
->
-> I don't think it's clean, but as per above it also isn't complete.
->
-> What's necessary is to give the network page pool a hookup to the
-> page's put path so it knows when pages go unused.
->
-> This would actually be great not just for this patch, but also for
-> accounting the amount of memory consumed by the network stack in
-> general, at the system level. This can be a sizable chunk these days,
-> especially with some of the higher end nics. Users currently have no
-> idea where their memory is going. And it seems it couldn't even answer
-> this question right now without scanning the entire pool. It'd be
-> great if it could track used and cached pages and report to vmstat.
->
-> It would also be good if it could integrate with the page reclaim path
-> and return any unused pages when the system is struggling with memory
-> pressure. I don't see how it could easily/predictably do that without
-> a good handle on what is and isn't used.
->
-> These are all upsides even before your patch. Let's stop working
-> around this quirk in the page pool, we've clearly run into the limit
-> of this implementation.
->
->
-> Here is an idea of how it could work:
->
-> struct page already has
->
->                 struct {        /* page_pool used by netstack */
->                         /**
->                          * @dma_addr: might require a 64-bit value even on
->                          * 32-bit architectures.
->                          */
->                         dma_addr_t dma_addr;
->                 };
->
-> and as you can see from its union neighbors, there is quite a bit more
-> room to store private data necessary for the page pool.
->
-> When a page's refcount hits zero and it's a networking page, we can
-> feed it back to the page pool instead of the page allocator.
->
-> From a first look, we should be able to use the PG_owner_priv_1 page
-> flag for network pages (see how this flag is overloaded, we can add a
-> PG_network alias). With this, we can identify the page in __put_page()
-> and __release_page(). These functions are already aware of different
-> types of pages and do their respective cleanup handling. We can
-> similarly make network a first-class citizen and hand pages back to
-> the network allocator from in there.
->
-> Now the network KNOWS which of its pages are in use and which
-> aren't. You can use that to uncharge pages without the DoS vector, and
-> it'd go a great length toward introspecting and managing this memory -
-> and not sit in a black hole as far as users and the MM are concerned.
->
+See the [PATCH 0/11] message. The last two patches in the series are for
+code that I suspect may be broken, the others are basically all false positives.
 
-To make sure we're on the same page, then, here's a tentative
-mechanism - I'd rather get buy in before spending too much time on
-something that wouldn't pass muster afterwards.
+As gcc-11 is not released yet, I don't think we have to apply any of the
+patches or disable the warning at the moment, but I posted all the patches
+to get a better understanding on which of them should be addressed in
+the kernel vs gcc.
 
-A) An opt-in mechanism, that a driver needs to explicitly support, in
-order to get properly accounted receive zerocopy.
-B) Failure to opt-in (e.g. unchanged old driver) can either lead to
-unaccounted zerocopy (ie. existing behaviour) or, optionally,
-effectively disabled zerocopy (ie. any call to zerocopy will return
-something like EINVAL) (perhaps controlled via some sysctl, which
-either lets zerocopy through or not with/without accounting).
-
-The proposed mechanism would involve:
-1) Some way of marking a page as being allocated by a driver that has
-decided to opt into this mechanism. Say, a page flag, or a memcg flag.
-2) A callback provided by the driver, that takes a struct page*, and
-returns a boolean. The value of the boolean being true indicates that
-any and all refs on the page are held by the driver. False means there
-exists at least one reference that is not held by the driver.
-3) A branch in put_page() that, for pages marked thus, will consult
-the driver callback and if it returns true, will uncharge the memcg
-for the page.
-
-The anonymous struct you defined above is part of a union that I think
-normally is one qword in length (well, could be more depending on the
-typedefs I saw there) and I think that can be co-opted to provide the
-driver callback - though, it might require growing the struct by one
-more qword since there may be drivers like mlx5 that are already using
-the field already in there  for dma_addr.
-
-Anyways, the callback could then be used by the driver to handle the
-other accounting quirks you mentioned, without needing to scan the
-full pool.
-
-Of course there are corner cases and such to properly account for, but
-I just wanted to provide a really rough sketch to see if this
-(assuming it were properly implemented) was what you had in mind. If
-so I can put together a v3 patch.
-
-Per my response to Andrew earlier, this would make it even more
-confusing whether this is to be applied against net-next or mm trees.
-But that's a bridge to cross when we get to it.
-
-What are your thoughts?
-
-Thanks,
--Arjun
-
-
-
-
-
-
-> Thanks,
-> Johannes
+       Arnd
