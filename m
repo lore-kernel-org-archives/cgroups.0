@@ -1,91 +1,74 @@
-From: Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH 02/11] x86: tboot: avoid
- Wstringop-overread-warning
-Date: Tue, 23 Mar 2021 00:13:32 +0100
-Message-ID: <20210322231332.GA1984184@gmail.com>
-References: <20210322160253.4032422-1-arnd@kernel.org>
- <20210322160253.4032422-3-arnd@kernel.org>
- <20210322202958.GA1955909@gmail.com>
- <b944a853-0e4b-b767-0175-cc2c1edba759@gmail.com>
+From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [mm, net-next v2] mm: net: memcg accounting for TCP rx zerocopy
+Date: Tue, 23 Mar 2021 15:34:20 +0100
+Message-ID: <YFn8bLBMt7txj3AZ@dhcp22.suse.cz>
+References: <20210316041645.144249-1-arjunroy.kdev@gmail.com>
+ <YFCH8vzFGmfFRCvV@cmpxchg.org>
+ <CAOFY-A23NBpJQ=mVQuvFib+cREAZ_wC5=FOMzv3YCO69E4qRxw@mail.gmail.com>
+ <YFJ+5+NBOBiUbGWS@cmpxchg.org>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1616510061; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=U6AYmAE3axZU7Y0KUT99DSxo5RPJIf5s+7Dy88I1Wdg=;
+        b=vUoROcuhUJ8TVeKb7PORfNjQR1dmz/iSaXTllYT7iJQTfH0qjQLXrU+7jK2uLB7GR2hoFG
+        m+8V9mml9J2vpquf2lzURMMvfwwKcmQCcNKfWXvUV0odfTIdwUgQSOhBILiplh1EFx4ucw
+        ppXcwU9GX3xYTiamctYDF0mhMZc1NBQ=
+Content-Disposition: inline
+In-Reply-To: <YFJ+5+NBOBiUbGWS-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=gmail.com; s=20161025;
- h=sender:date:from:to:cc:subject:message-id:references:mime-version
- :content-disposition:in-reply-to;
- bh=tYvb3I5DkX3N6jN+5U7mg9SkFokyTC7DYO1POXsmyXA=;
- b=JAukgRqBFlBqYxoTg07QIe3L0u4Zd4pnU8/KawSiQ9CobCuM3gzIOiljfx6LuzgDWA
- UowTprAJ6pvQSXvs4KSQRoxyhk97bRV/HvA6p2Z7/U2jyU55VRoMchp/WW94qOWwfctx
- xjztqDCBK6KyOMwxPOwi4e26tFik5N8gD8ME46WI4P9N9+IGYjmYXftjUoCOmT9YRUhI
- oxS7NQe6LKxh0Fe3YkrHljuKHXVZGAd59GORjepGb1sCy/oTzRkzKEYxW8PIJ/sFr1d6
- zI5HyhOjX7JC0HU1eEG4mNxiJ04gBc9w35eUnfsZO8LW67/ihxMVwREYJPst2Xb0XGu3
- JGJw==
-Content-Disposition: inline
-In-Reply-To: <b944a853-0e4b-b767-0175-cc2c1edba759@gmail.com>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Martin Sebor <msebor@gmail.com>
-Cc: dri-devel@lists.freedesktop.org, "H. Peter Anvin" <hpa@zytor.com>, Will Deacon <will@kernel.org>, linux-scsi@vger.kernel.org, x86@kernel.org, James Smart <james.smart@broadcom.com>, tboot-devel@lists.sourceforge.net, Ingo Molnar <mingo@redhat.com>, Kalle Valo <kvalo@codeaurora.org>, intel-gfx@lists.freedesktop.org, Serge Hallyn <serge@hallyn.com>, Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Ning Sun <ning.sun@intel.com>, Anders Larsen <al@alarsen.net>, Borislav Petkov <bp@alien8.de>, cgroups@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@kernel.org>, Martin Sebor <msebor@gcc.gnu.org>, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, ath11k@lists.infradead.org, linux-security-module@vger.kernel.org, Tejun Heo <tj@kernel.org>, Simon
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Arjun Roy <arjunroy.kdev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 
-
-* Martin Sebor <msebor@gmail.com> wrote:
-
-> > I.e. the real workaround might be to turn off the -Wstringop-overread-warning,
-> > until GCC-11 gets fixed?
+On Wed 17-03-21 18:12:55, Johannes Weiner wrote:
+[...]
+> Here is an idea of how it could work:
 > 
-> In GCC 10 -Wstringop-overread is a subset of -Wstringop-overflow.
-> GCC 11 breaks it out as a separate warning to make it easier to
-> control.  Both warnings have caught some real bugs but they both
-> have a nonzero rate of false positives.  Other than bug reports
-> we don't have enough data to say what their S/N ratio might be
-> but my sense is that it's fairly high in general.
+> struct page already has
 > 
->   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=wstringop-overread
->   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=wstringop-overflow
+>                 struct {        /* page_pool used by netstack */
+>                         /**
+>                          * @dma_addr: might require a 64-bit value even on
+>                          * 32-bit architectures.
+>                          */
+>                         dma_addr_t dma_addr;
+>                 };
 > 
-> In GCC 11, all access warnings expect objects to be either declared
-> or allocated.  Pointers with constant values are taken to point to
-> nothing valid (as Arnd mentioned above, this is to detect invalid
-> accesses to members of structs at address zero).
+> and as you can see from its union neighbors, there is quite a bit more
+> room to store private data necessary for the page pool.
 > 
-> One possible solution to the known address problem is to extend GCC
-> attributes address and io that pin an object to a hardwired address
-> to all targets (at the moment they're supported on just one or two
-> targets).  I'm not sure this can still happen before GCC 11 releases
-> sometime in April or May.
+> When a page's refcount hits zero and it's a networking page, we can
+> feed it back to the page pool instead of the page allocator.
 > 
-> Until then, another workaround is to convert the fixed address to
-> a volatile pointer before using it for the access, along the lines
-> below.  It should have only a negligible effect on efficiency.
+> From a first look, we should be able to use the PG_owner_priv_1 page
+> flag for network pages (see how this flag is overloaded, we can add a
+> PG_network alias). With this, we can identify the page in __put_page()
+> and __release_page(). These functions are already aware of different
+> types of pages and do their respective cleanup handling. We can
+> similarly make network a first-class citizen and hand pages back to
+> the network allocator from in there.
 
-Thank you for the detailed answer!
+For compound pages we have a concept of destructors. Maybe we can extend
+that for order-0 pages as well. The struct page is heavily packed and
+compound_dtor shares the storage without other metadata
+                                        int    pages;    /*    16     4 */
+                        unsigned char compound_dtor;     /*    16     1 */
+                        atomic_t   hpage_pinned_refcount; /*    16     4 */
+                        pgtable_t  pmd_huge_pte;         /*    16     8 */
+                        void *     zone_device_data;     /*    16     8 */
 
-I think I'll go with Arnd's original patch - which makes the code a 
-slightly bit cleaner by separating out the check_tboot_version() check 
-into a standalone function.
+But none of those should really require to be valid when a page is freed
+unless I am missing something. It would really require to check their
+users whether they can leave the state behind. But if we can establish a
+contract that compound_dtor can be always valid when a page is freed
+this would be really a nice and useful abstraction because you wouldn't
+have to care about the specific type of page.
 
-The only ugly aspect is the global nature of the 'tboot' pointer - but 
-that's a self-inflicted wound.
-
-I'd also guess that the S/N ratio somewhat unfairly penalizes this 
-warning right now, because the kernel had a decade of growing real 
-fixes via other efforts such as static and dynamic instrumentation as 
-well.
-
-So the probability of false positive remaining is in fact higher, and 
-going forward we should see a better S/N ratio of this warning. Most 
-of which will never be seen by upstream maintainers, as the mishaps 
-will stay at the individual developer level. :-)
-
-Thanks,
-
-	Ingo
+But maybe I am just overlooking the real complexity there.
+-- 
+Michal Hocko
+SUSE Labs
