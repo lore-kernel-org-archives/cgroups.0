@@ -1,66 +1,137 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [mm, net-next v2] mm: net: memcg accounting for TCP rx zerocopy
-Date: Wed, 24 Mar 2021 11:25:47 -0700
-Message-ID: <CALvZod527EgYmkqWdoLCARj2BD2=YWVCC9Dk87gfQRG8NViX_A@mail.gmail.com>
-References: <20210316041645.144249-1-arjunroy.kdev@gmail.com>
- <YFCH8vzFGmfFRCvV@cmpxchg.org> <CAOFY-A23NBpJQ=mVQuvFib+cREAZ_wC5=FOMzv3YCO69E4qRxw@mail.gmail.com>
- <YFJ+5+NBOBiUbGWS@cmpxchg.org> <CAOFY-A17g-Aq_TsSX8=mD7ZaSAqx3gzUuCJT8K0xwrSuYdP4Kw@mail.gmail.com>
- <YFoe8BO0JsbXTHHF@cmpxchg.org> <CAOFY-A2dfWS91b10R9Pu-5T-uT2qF9h9Lm8GaJfV9shfjP4Wbg@mail.gmail.com>
+From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Wed, 24 Mar 2021 12:05:28 -0700
+Message-ID: <20210324120528.24d82dbd@jacob-builder>
+References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
+ <1614463286-97618-6-git-send-email-jacob.jun.pan@linux.intel.com>
+ <20210318172234.3e8c34f7@jacob-builder> <YFR10eeDVf5ZHV5l@myrica>
+ <20210319124645.GP2356281@nvidia.com> <YFSqDNJ5yagk4eO+@myrica>
+ <20210319135432.GT2356281@nvidia.com>
+ <20210319112221.5123b984@jacob-builder>
+ <20210322120300.GU2356281@nvidia.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=T4N8DBRr0y3pnQ+GYU6PHDcjxPfiucyRsdqMiT4zgqA=;
-        b=G6Mpzu8Fe8xOBs6JczHBtn8H0S8SCoL1f8ofwhnllztiurQZdtRKZfp9fQh5HV+Zha
-         u8r+/u2f70a05QIFYREh/+taoxH++OKNA425bEESIlpfmAPzzV5mU2NydGChVd/0LHxY
-         XEUViqaaHmjCHFqeIrZDAqfMHH8MMp0dHbZE7EKo00GjFbl8Bdqgyja6/NxSJdNGVYBp
-         p4NJfhzdfQ9irpzalC4O5NRVp6DG1A3wZIOSxd0RZ0EMqHYYjg2haX0i1RyhustM4tnU
-         C6LDzJlJpcs47PgnI0rbDzEzYUarNvEY9LvK/4MffNmBCPBazyFFVsd3/7ZhxAiY1+Nh
-         a6OA==
-In-Reply-To: <CAOFY-A2dfWS91b10R9Pu-5T-uT2qF9h9Lm8GaJfV9shfjP4Wbg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Arjun Roy <arjunroy.kdev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20210322120300.GU2356281-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian,
+ Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Tue, Mar 23, 2021 at 11:42 AM Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
->
-[...]
->
-> To summarize then, it seems to me that we're on the same page now.
-> I'll put together a tentative v3 such that:
-> 1. It uses pre-charging, as previously discussed.
-> 2. It uses a page flag to delineate pages of a certain networking sort
-> (ie. this mechanism).
-> 3. It avails itself of up to 4 words of data inside struct page,
-> inside the networking specific struct.
-> 4. And it sets up this opt-in lifecycle notification for drivers that
-> choose to use it, falling back to existing behaviour without.
->
-
-Arjun, if you don't mind, can you explain how the lifetime of such a
-page will look like?
-
-For example:
-
-Driver:
-page = dev_alloc_page()
-/* page has 1 ref */
-dev_map_page(page)
-/* I don't think dev_map_page() takes a ref on page, so the ref remains 1. */
-
-On incoming traffic the page goes to skb and which then gets assigned
-to a struct sock. Does the kernel increase refcnt of the page on these
-operations?
-
-The page gets mapped into user space which increments its refcnt.
-
-After processing the data, the application unmaps the page and its
-refcnt will be decremented.
-
-__put_page() will be called when refcnt reaches 0, so, the initial
-refcnt which the driver has acquired, has to be transferred to the
-next layer. So, I am trying to understand how that will work?
+SGkgSmFzb24sCgpPbiBNb24sIDIyIE1hciAyMDIxIDA5OjAzOjAwIC0wMzAwLCBKYXNvbiBHdW50
+aG9ycGUgPGpnZ0BudmlkaWEuY29tPiB3cm90ZToKCj4gT24gRnJpLCBNYXIgMTksIDIwMjEgYXQg
+MTE6MjI6MjFBTSAtMDcwMCwgSmFjb2IgUGFuIHdyb3RlOgo+ID4gSGkgSmFzb24sCj4gPiAKPiA+
+IE9uIEZyaSwgMTkgTWFyIDIwMjEgMTA6NTQ6MzIgLTAzMDAsIEphc29uIEd1bnRob3JwZSA8amdn
+QG52aWRpYS5jb20+Cj4gPiB3cm90ZTogCj4gPiA+IE9uIEZyaSwgTWFyIDE5LCAyMDIxIGF0IDAy
+OjQxOjMyUE0gKzAxMDAsIEplYW4tUGhpbGlwcGUgQnJ1Y2tlcgo+ID4gPiB3cm90ZTogIAo+ID4g
+PiA+IE9uIEZyaSwgTWFyIDE5LCAyMDIxIGF0IDA5OjQ2OjQ1QU0gLTAzMDAsIEphc29uIEd1bnRo
+b3JwZSB3cm90ZTogICAgCj4gPiA+ID4gPiBPbiBGcmksIE1hciAxOSwgMjAyMSBhdCAxMDo1ODo0
+MUFNICswMTAwLCBKZWFuLVBoaWxpcHBlIEJydWNrZXIKPiA+ID4gPiA+IHdyb3RlOiAKPiA+ID4g
+PiA+ID4gQWx0aG91Z2ggdGhlcmUgaXMgbm8gdXNlIGZvciBpdCBhdCB0aGUgbW9tZW50IChvbmx5
+IHR3byB1cHN0cmVhbQo+ID4gPiA+ID4gPiB1c2VycyBhbmQgaXQgbG9va3MgbGlrZSBhbWRrZmQg
+YWx3YXlzIHVzZXMgY3VycmVudCB0b28pLCBJIHF1aXRlCj4gPiA+ID4gPiA+IGxpa2UgdGhlIGNs
+aWVudC1zZXJ2ZXIgbW9kZWwgd2hlcmUgdGhlIHByaXZpbGVnZWQgcHJvY2VzcyBkb2VzCj4gPiA+
+ID4gPiA+IGJpbmQoKSBhbmQgcHJvZ3JhbXMgdGhlIGhhcmR3YXJlIHF1ZXVlIG9uIGJlaGFsZiBv
+ZiB0aGUgY2xpZW50Cj4gPiA+ID4gPiA+IHByb2Nlc3MuICAgIAo+ID4gPiA+ID4gCj4gPiA+ID4g
+PiBUaGlzIGNyZWF0ZXMgYSBsb3QgY29tcGxleGl0eSwgaG93IGRvIGRvZXMgcHJvY2VzcyBBIGdl
+dCBhIHNlY3VyZQo+ID4gPiA+ID4gcmVmZXJlbmNlIHRvIEI/IEhvdyBkb2VzIGl0IGFjY2VzcyB0
+aGUgbWVtb3J5IGluIEIgdG8gc2V0dXAgdGhlCj4gPiA+ID4gPiBIVz8gICAgCj4gPiA+ID4gCj4g
+PiA+ID4gbW1fYWNjZXNzKCkgZm9yIGV4YW1wbGUsIGFuZCBwYXNzaW5nIGFkZHJlc3NlcyB2aWEg
+SVBDICAgIAo+ID4gPiAKPiA+ID4gSSdkIHJhdGhlciB0aGUgc291cmNlIHByb2Nlc3MgZXN0YWJs
+aXNoIGl0cyBvd24gUEFTSUQgYW5kIHRoZW4gcGFzcwo+ID4gPiB0aGUgcmlnaHRzIHRvIHVzZSBp
+dCB0byBzb21lIG90aGVyIHByb2Nlc3MgdmlhIEZEIHBhc3NpbmcgdGhhbiB0cnkgdG8KPiA+ID4g
+Z28gdGhlIG90aGVyIHdheS4gVGhlcmUgYXJlIGxvdHMgb2Ygc2VjdXJpdHkgcXVlc3Rpb25zIHdp
+dGggc29tZXRoaW5nCj4gPiA+IGxpa2UgbW1fYWNjZXNzLgo+ID4gPiAgIAo+ID4gCj4gPiBUaGFu
+ayB5b3UgYWxsIGZvciB0aGUgaW5wdXQsIGl0IHNvdW5kcyBsaWtlIHdlIGFyZSBPSyB0byByZW1v
+dmUgbW0KPiA+IGFyZ3VtZW50IGZyb20gaW9tbXVfc3ZhX2JpbmRfZGV2aWNlKCkgYW5kIGlvbW11
+X3N2YV9hbGxvY19wYXNpZCgpIGZvcgo+ID4gbm93Pwo+ID4gCj4gPiBMZXQgbWUgdHJ5IHRvIHN1
+bW1hcml6ZSBQQVNJRCBhbGxvY2F0aW9uIGFzIGJlbG93Ogo+ID4gCj4gPiBJbnRlcmZhY2VzCXwg
+VXNhZ2UJfCAgTGltaXQJfCBiaW5kwrkgfFVzZXIgdmlzaWJsZQo+ID4gL2Rldi9pb2FzaWTCsgl8
+IEctU1ZBL0lPVkEJfCAgY2dyb3VwCXwgTm8KPiA+IHxZZXMgY2hhciBkZXbCswl8IFNWQQkJfCAg
+Y2dyb3VwCXwKPiA+IFllcwl8Tm8gaW9tbXUgZHJpdmVyCXwgZGVmYXVsdCBQQVNJRHwgIG5vCj4g
+PiB8IE5vCXxObyBrZXJuZWwJCXwgc3VwZXIgU1ZBCXwgbm8KPiA+IAl8IHllcyAgIHxObwo+ID4g
+Cj4gPiDCuSBBbGxvY2F0ZWQgZHVyaW5nIFNWQSBiaW5kCj4gPiDCsiBQQVNJRHMgYWxsb2NhdGVk
+IHZpYSAvZGV2L2lvYXNpZCBhcmUgbm90IGJvdW5kIHRvIGFueSBtbS4gQnV0IGl0cwo+ID4gICBv
+d25lcnNoaXAgaXMgYXNzaWduZWQgdG8gdGhlIHByb2Nlc3MgdGhhdCBkb2VzIHRoZSBhbGxvY2F0
+aW9uLiAgCj4gCj4gV2hhdCBkb2VzICJub3QgYm91bmQgdG8gYSBtbSIgbWVhbj8KPiAKSSBtZWFu
+dCwgdGhlIElPQVNJRCBhbGxvY2F0ZWQgdmlhIC9kZXYvaW9hc2lkIGlzIGluIGEgY2xlYW4gc3Rh
+dGUgKGp1c3QgYQpudW1iZXIpLiBJdCdzIGluaXRpYWwgc3RhdGUgaXMgbm90IGJvdW5kIHRvIGFu
+IG1tLiBVbmxpa2UsIHN2YV9iaW5kX2RldmljZSgpCndoZXJlIHRoZSBJT0FTSUQgaXMgYWxsb2Nh
+dGVkIGR1cmluZyBiaW5kIHRpbWUuCgpUaGUgdXNlIGNhc2UgaXMgdG8gc3VwcG9ydCBndWVzdCBT
+VkEgYmluZCwgd2hlcmUgYWxsb2NhdGlvbiBhbmQgYmluZCBhcmUgaW4KdHdvIHNlcGFyYXRlIHN0
+ZXBzLgoKPiBJTUhPIGEgdXNlIGNyZWF0ZWQgUEFTSUQgaXMgZWl0aGVyIGJvdW5kIHRvIGEgbW0g
+KGN1cnJlbnQpIGF0IGNyZWF0aW9uCj4gdGltZSwgb3IgaXQgd2lsbCBuZXZlciBiZSBib3VuZCB0
+byBhIG1tIGFuZCBpdHMgcGFnZSB0YWJsZSBpcyB1bmRlcgo+IHVzZXIgY29udHJvbCB2aWEgL2Rl
+di9pb2FzaWQuCj4gClRydWUgZm9yIFBBU0lEIHVzZWQgaW4gbmF0aXZlIFNWQSBiaW5kLiBCdXQg
+Zm9yIGJpbmRpbmcgd2l0aCBhIGd1ZXN0IG1tLApQQVNJRCBpcyBhbGxvY2F0ZWQgZmlyc3QgKFZU
+LWQgdmlydHVhbCBjbWQgaW50ZXJmYWNlIFNwZWMgMTAuNC40NCksIHRoZQpiaW5kIHdpdGggdGhl
+IGhvc3QgSU9NTVUgd2hlbiB2SU9NTVUgUEFTSUQgY2FjaGUgaXMgaW52YWxpZGF0ZWQuCgpPdXIg
+aW50ZW50aW9uIGlzIHRvIGhhdmUgdHdvIHNlcGFyYXRlIGludGVyZmFjZXM6CjEuIC9kZXYvaW9h
+c2lkIChhbGxvY2F0aW9uL2ZyZWUgb25seSkKMi4gL2Rldi9zdmEgKGhhbmRsZXMgYWxsIFNWQSBy
+ZWxhdGVkIGFjdGl2aXRpZXMgaW5jbHVkaW5nIHBhZ2UgdGFibGVzKQoKPiBJIHRob3VnaHQgdGhl
+IHdob2xlIHBvaW50IG9mIHNvbWV0aGluZyBsaWtlIGEgL2Rldi9pb2FzaWQgd2FzIHRvIGdldAo+
+IGF3YXkgZnJvbSBlYWNoIGFuZCBldmVyeSBkZXZpY2UgY3JlYXRpbmcgaXRzIG93biBQQVNJRCBp
+bnRlcmZhY2U/Cj4gCnllcywgYnV0IG9ubHkgZm9yIHRoZSB1c2UgY2FzZXMgdGhhdCBuZWVkIHRv
+IGV4cG9zZSBQQVNJRCB0byB0aGUgdXNlcnNwYWNlLgpBRkFJQ1QsIHRoZSBjYXNlcyBhcmU6CjEu
+IGd1ZXN0IFNWQSAoYmluZCBndWVzdCBtbSkKMi4gZnVsbCBQRi9WRiBhc3NpZ25tZW50KG5vdCBt
+ZWRpYXRlZCkgd2hlcmUgZ3Vlc3QgZHJpdmVyIHdhbnQgdG8gcHJvZ3JhbQp0aGUgYWN0dWFsIFBB
+U0lEIG9udG8gdGhlIGRldmljZS4KCj4gSXQgbWF5YmUgc29tZXdoYXQgcmVhc29uYWJsZSB0aGF0
+IHNvbWUgZGV2aWNlcyBjb3VsZCBoYXZlIHNvbWUgZWFzeQo+ICdtYWtlIGEgU1ZBIFBBU0lEIG9u
+IGN1cnJlbnQnIGludGVyZmFjZSBidWlsdCBpbiwKSSBhZ3JlZSwgdGhpcyBpcyB0aGUgY2FzZSBQ
+QVNJRCBpcyBoaWRkZW4gZnJvbSB0aGUgdXNlcnNwYWNlLCByaWdodD8gZS5nLgp1YWNjZS4KCj4g
+YnV0IGFueXRoaW5nIG1vcmUKPiBjb21wbGljYXRlZCBzaG91bGQgdXNlIC9kZXYvaW9hc2lkLCBh
+bmQgYW55dGhpbmcgY29uc3VtaW5nIFBBU0lECj4gc2hvdWxkIGFsc28gaGF2ZSBhbiBBUEkgdG8g
+aW1wb3J0IGFuZCBhdHRhY2ggYSBQQVNJRCBmcm9tIC9kZXYvaW9hc2lkLgo+IApXb3VsZCB0aGUg
+YWJvdmUgdHdvIHVzZSBjYXNlcyBjb25zdGl0dXRlIHRoZSAiY29tcGxpY2F0ZWQiIGNyaXRlcmlh
+PyBPciB3ZQpzaG91bGQgc2F5IGFueXRoaW5nIHRoYXQgbmVlZCB0aGUgZXhwbGljaXQgUEFTSUQg
+dmFsdWUgaGFzIHRvIHRocm91Z2gKL2Rldi9pb2FzaWQ/CgpDb3VsZCB5b3UgZ2l2ZSBzb21lIGhp
+Z2hsZXZlbCBoaW50IG9uIHRoZSBBUElzIHRoYXQgaG9vayB1cCBJT0FTSUQKYWxsb2NhdGVkIGZy
+b20gL2Rldi9pb2FzaWQgYW5kIHVzZSBjYXNlcyB0aGF0IGNvbWJpbmUgZGV2aWNlIGFuZCBkb21h
+aW4KaW5mb3JtYXRpb24/IFlpIGlzIHdvcmtpbmcgb24gL2Rldi9zdmEgUkZDLCBpdCB3b3VsZCBi
+ZSBnb29kIHRvIGhhdmUgYQpkaXJlY3Rpb24gY2hlY2suCgo+ID4gQ3VycmVudGx5LCB0aGUgcHJv
+cG9zZWQgL2Rldi9pb2FzaWQgaW50ZXJmYWNlIGRvZXMgbm90IG1hcCBpbmRpdmlkdWFsCj4gPiBQ
+QVNJRCB3aXRoIGFuIEZELiBUaGUgRkQgaXMgYXQgdGhlIGlvYXNpZF9zZXQgZ3JhbnVsYXJpdHkg
+YW5kIGJvbmQgdG8KPiA+IHRoZSBjdXJyZW50IG1tLiBXZSBjb3VsZCBleHRlbmQgdGhlIElPQ1RM
+cyB0byBjb3ZlciBpbmRpdmlkdWFsIFBBU0lELUZECj4gPiBwYXNzaW5nIGNhc2Ugd2hlbiB1c2Ug
+Y2FzZXMgYXJpc2UuIFdvdWxkIHRoaXMgd29yaz8gIAo+IAo+IElzIGl0IGEgZ29vZCBpZGVhIHRo
+YXQgdGhlIEZEIGlzIHBlciBpb2FzaWRfc2V0ID8KV2Ugd2VyZSB0aGlua2luZyB0aGUgYWxsb2Nh
+dGlvbiBJT0NUTCBpcyBvbiBhIHBlciBzZXQgYmFzaXMsIHRoZW4gd2Uga25vdwp0aGUgb3duZXJz
+aGlwIG9mIGJldHdlZW4gUEFTSURzIGFuZCBpdHMgc2V0LiBJZiBwZXIgUEFTSUQgRkQgaXMgbmVl
+ZGVkLCB3ZQpjYW4gZXh0ZW5kLgoKPiBXaGF0IGlzIHRoZSBzZXQgdXNlZAo+IGZvcj8KPiAKSSB0
+cmllZCB0byBkb2N1bWVudCB0aGUgY29uY2VwdCBpbgpodHRwczovL2xvcmUua2VybmVsLm9yZy9s
+a21sLzE2MTQ0NjMyODYtOTc2MTgtMi1naXQtc2VuZC1lbWFpbC1qYWNvYi5qdW4ucGFuQGxpbnV4
+LmludGVsLmNvbS8KCkluIHRlcm1zIG9mIHVzYWdlIGZvciBndWVzdCBTVkEsIGFuIGlvYXNpZF9z
+ZXQgaXMgbW9zdGx5IHRpZWQgdG8gYSBob3N0IG1tLAp0aGUgdXNlIGNhc2UgaXMgYXMgdGhlIGZv
+bGxvd2luZzoKMS4gSWRlbnRpZnkgYSBwb29sIG9mIFBBU0lEcyBmb3IgcGVybWlzc2lvbiBjaGVj
+a2luZyAoYmVsb3cgdG8gdGhlIHNhbWUgVk0pLAplLmcuIG9ubHkgYWxsb3cgU1ZBIGJpbmRpbmcg
+Zm9yIFBBU0lEcyBhbGxvY2F0ZWQgZnJvbSB0aGUgc2FtZSBzZXQuCgoyLiBBbGxvdyBkaWZmZXJl
+bnQgUEFTSUQtYXdhcmUga2VybmVsIHN1YnN5c3RlbXMgdG8gYXNzb2NpYXRlLCBlLmcuIEtWTSwK
+ZGV2aWNlIGRyaXZlcnMsIGFuZCBJT01NVSBkcml2ZXIuIGkuZS4gZWFjaCBLVk0gaW5zdGFuY2Ug
+b25seSBjYXJlcyBhYm91dAp0aGUgaW9hc2lkX3NldCBhc3NvY2lhdGVkIHdpdGggdGhlIFZNLiBF
+dmVudHMgbm90aWZpY2F0aW9ucyBhcmUgYWxzbyB3aXRoaW4KdGhlIGlvYXNpZF9zZXQgdG8gc3lu
+Y2hyb25pemUgUEFTSUQgc3RhdGVzLgoKMy4gR3Vlc3QtSG9zdCBQQVNJRCBsb29rIHVwIChlYWNo
+IHNldCBoYXMgaXRzIG93biBYQXJyYXkgdG8gc3RvcmUgdGhlCm1hcHBpbmcpCgo0LiBRdW90YSBj
+b250cm9sIChnb2luZyBhd2F5IG9uY2Ugd2UgaGF2ZSBjZ3JvdXApCgo+IFVzdWFsbHkga2VybmVs
+IGludGVyZmFjZXMgd29yayBuaWNlciB3aXRoIGEgb25lIGZkL29uZSBvYmplY3QgbW9kZWwuCj4g
+Cj4gQnV0IGV2ZW4gaWYgaXQgaXMgYSBzZXQsIHlvdSBjb3VsZCBwYXNzIHRoZSBzZXQgYmV0d2Vl
+biBjby1vcGVyYXRpbmcKPiBwcm9jZXNzZXMgYW5kIHRoZSBQQVNJRCBjYW4gYmUgY3JlYXRlZCBp
+biB0aGUgY29ycmVjdCAnY3VycmVudCcuIEJ1dAo+IHRoZXJlIGlzIGFsbCBraW5kcyBvZiBzZWN1
+cml0eSBxdWVzdHNpb25zIGFzIHNvb24gYXMgeW91IHN0YXJ0IGRvaW5nCj4gYW55dGhpbmcgbGlr
+ZSB0aGlzIC0gaXMgdGhlcmUgcmVhbGx5IGEgdXNlIGNhc2U/Cj4gCldlIGRvbid0IHNlZSBhIHVz
+ZSBjYXNlIGZvciBwYXNzaW5nIGlvYXNpZF9zZXQgdG8gYW5vdGhlciBwcm9jZXNzLiBBbGwgdGhl
+CmZvdXIgdXNlIGNhc2VzIGFib3ZlIGFyZSBmb3IgdGhlIGN1cnJlbnQgcHJvY2Vzcy4KCj4gSmFz
+b24KCgpUaGFua3MsCgpKYWNvYgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwppb21tdSBtYWlsaW5nIGxpc3QKaW9tbXVAbGlzdHMubGludXgtZm91bmRhdGlv
+bi5vcmcKaHR0cHM6Ly9saXN0cy5saW51eGZvdW5kYXRpb24ub3JnL21haWxtYW4vbGlzdGluZm8v
+aW9tbXU=
