@@ -1,137 +1,122 @@
-From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Wed, 24 Mar 2021 12:05:28 -0700
-Message-ID: <20210324120528.24d82dbd@jacob-builder>
-References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
- <1614463286-97618-6-git-send-email-jacob.jun.pan@linux.intel.com>
- <20210318172234.3e8c34f7@jacob-builder> <YFR10eeDVf5ZHV5l@myrica>
- <20210319124645.GP2356281@nvidia.com> <YFSqDNJ5yagk4eO+@myrica>
- <20210319135432.GT2356281@nvidia.com>
- <20210319112221.5123b984@jacob-builder>
- <20210322120300.GU2356281@nvidia.com>
+From: Arjun Roy <arjunroy@google.com>
+Subject: Re: [mm, net-next v2] mm: net: memcg accounting for TCP rx zerocopy
+Date: Wed, 24 Mar 2021 13:39:06 -0700
+Message-ID: <CAOFY-A1+TT5EgT0oVEkGgHAaJavbLzbKp5fQx_uOrMtw-7VEiA@mail.gmail.com>
+References: <20210316041645.144249-1-arjunroy.kdev@gmail.com>
+ <YFCH8vzFGmfFRCvV@cmpxchg.org> <CAOFY-A23NBpJQ=mVQuvFib+cREAZ_wC5=FOMzv3YCO69E4qRxw@mail.gmail.com>
+ <YFJ+5+NBOBiUbGWS@cmpxchg.org> <YFn8bLBMt7txj3AZ@dhcp22.suse.cz>
+ <CAOFY-A22Pp3Z0apYBWtOJCD8TxfrbZ_HE9Xd6eUds8aEvRL+uw@mail.gmail.com> <YFsA78FfzICrnFf7@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20210322120300.GU2356281-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian,
- Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=qcDyxyk5bvCS0WEAV1+mJY8jO/8xTEDVqNFuTGwD3vw=;
+        b=LQv/zun+j1/d9r4zt9gm0IaWVEHFp8r2eRBRjyUN6GFZODOU1mbnZt2VglPEMqNrMk
+         5XO3EJkRspqLHmcUlkVAoJFRaMzGO65rMOxOVb89V6LEr3WYzYSl+7LKLIW3XD5V/y+J
+         CjJh7fXJoQ5eSHjuGEm0atA60APspXDZ2TJJlFC34cmQda/5bX9QW968cxxC00GNf9yj
+         73+uXyYSMPdhj/hgFSsp4QabE3/KzaQ+YoUte/HNOtLyEX5iyrUeQb786gluhJc4wQ2/
+         U2hJkhVbGvJWYbEF8SsnOsjUTOxexa8kSlA64w/vw5ylM6SNWnXSPaYLHextD3GJ82Ir
+         WeCw==
+In-Reply-To: <YFsA78FfzICrnFf7@dhcp22.suse.cz>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Michal Hocko <mhocko@suse.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Arjun Roy <arjunroy.kdev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, netdev <netdev@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Shakeel Butt <shakeelb@google.com>, Eric Dumazet <edumazet@google.com>, Soheil Hassas Yeganeh <soheil@google.com>, Jakub Kicinski <kuba@kernel.org>, Yang Shi <shy828301@gmail.com>, Roman Gushchin <guro@fb.com>
 
-SGkgSmFzb24sCgpPbiBNb24sIDIyIE1hciAyMDIxIDA5OjAzOjAwIC0wMzAwLCBKYXNvbiBHdW50
-aG9ycGUgPGpnZ0BudmlkaWEuY29tPiB3cm90ZToKCj4gT24gRnJpLCBNYXIgMTksIDIwMjEgYXQg
-MTE6MjI6MjFBTSAtMDcwMCwgSmFjb2IgUGFuIHdyb3RlOgo+ID4gSGkgSmFzb24sCj4gPiAKPiA+
-IE9uIEZyaSwgMTkgTWFyIDIwMjEgMTA6NTQ6MzIgLTAzMDAsIEphc29uIEd1bnRob3JwZSA8amdn
-QG52aWRpYS5jb20+Cj4gPiB3cm90ZTogCj4gPiA+IE9uIEZyaSwgTWFyIDE5LCAyMDIxIGF0IDAy
-OjQxOjMyUE0gKzAxMDAsIEplYW4tUGhpbGlwcGUgQnJ1Y2tlcgo+ID4gPiB3cm90ZTogIAo+ID4g
-PiA+IE9uIEZyaSwgTWFyIDE5LCAyMDIxIGF0IDA5OjQ2OjQ1QU0gLTAzMDAsIEphc29uIEd1bnRo
-b3JwZSB3cm90ZTogICAgCj4gPiA+ID4gPiBPbiBGcmksIE1hciAxOSwgMjAyMSBhdCAxMDo1ODo0
-MUFNICswMTAwLCBKZWFuLVBoaWxpcHBlIEJydWNrZXIKPiA+ID4gPiA+IHdyb3RlOiAKPiA+ID4g
-PiA+ID4gQWx0aG91Z2ggdGhlcmUgaXMgbm8gdXNlIGZvciBpdCBhdCB0aGUgbW9tZW50IChvbmx5
-IHR3byB1cHN0cmVhbQo+ID4gPiA+ID4gPiB1c2VycyBhbmQgaXQgbG9va3MgbGlrZSBhbWRrZmQg
-YWx3YXlzIHVzZXMgY3VycmVudCB0b28pLCBJIHF1aXRlCj4gPiA+ID4gPiA+IGxpa2UgdGhlIGNs
-aWVudC1zZXJ2ZXIgbW9kZWwgd2hlcmUgdGhlIHByaXZpbGVnZWQgcHJvY2VzcyBkb2VzCj4gPiA+
-ID4gPiA+IGJpbmQoKSBhbmQgcHJvZ3JhbXMgdGhlIGhhcmR3YXJlIHF1ZXVlIG9uIGJlaGFsZiBv
-ZiB0aGUgY2xpZW50Cj4gPiA+ID4gPiA+IHByb2Nlc3MuICAgIAo+ID4gPiA+ID4gCj4gPiA+ID4g
-PiBUaGlzIGNyZWF0ZXMgYSBsb3QgY29tcGxleGl0eSwgaG93IGRvIGRvZXMgcHJvY2VzcyBBIGdl
-dCBhIHNlY3VyZQo+ID4gPiA+ID4gcmVmZXJlbmNlIHRvIEI/IEhvdyBkb2VzIGl0IGFjY2VzcyB0
-aGUgbWVtb3J5IGluIEIgdG8gc2V0dXAgdGhlCj4gPiA+ID4gPiBIVz8gICAgCj4gPiA+ID4gCj4g
-PiA+ID4gbW1fYWNjZXNzKCkgZm9yIGV4YW1wbGUsIGFuZCBwYXNzaW5nIGFkZHJlc3NlcyB2aWEg
-SVBDICAgIAo+ID4gPiAKPiA+ID4gSSdkIHJhdGhlciB0aGUgc291cmNlIHByb2Nlc3MgZXN0YWJs
-aXNoIGl0cyBvd24gUEFTSUQgYW5kIHRoZW4gcGFzcwo+ID4gPiB0aGUgcmlnaHRzIHRvIHVzZSBp
-dCB0byBzb21lIG90aGVyIHByb2Nlc3MgdmlhIEZEIHBhc3NpbmcgdGhhbiB0cnkgdG8KPiA+ID4g
-Z28gdGhlIG90aGVyIHdheS4gVGhlcmUgYXJlIGxvdHMgb2Ygc2VjdXJpdHkgcXVlc3Rpb25zIHdp
-dGggc29tZXRoaW5nCj4gPiA+IGxpa2UgbW1fYWNjZXNzLgo+ID4gPiAgIAo+ID4gCj4gPiBUaGFu
-ayB5b3UgYWxsIGZvciB0aGUgaW5wdXQsIGl0IHNvdW5kcyBsaWtlIHdlIGFyZSBPSyB0byByZW1v
-dmUgbW0KPiA+IGFyZ3VtZW50IGZyb20gaW9tbXVfc3ZhX2JpbmRfZGV2aWNlKCkgYW5kIGlvbW11
-X3N2YV9hbGxvY19wYXNpZCgpIGZvcgo+ID4gbm93Pwo+ID4gCj4gPiBMZXQgbWUgdHJ5IHRvIHN1
-bW1hcml6ZSBQQVNJRCBhbGxvY2F0aW9uIGFzIGJlbG93Ogo+ID4gCj4gPiBJbnRlcmZhY2VzCXwg
-VXNhZ2UJfCAgTGltaXQJfCBiaW5kwrkgfFVzZXIgdmlzaWJsZQo+ID4gL2Rldi9pb2FzaWTCsgl8
-IEctU1ZBL0lPVkEJfCAgY2dyb3VwCXwgTm8KPiA+IHxZZXMgY2hhciBkZXbCswl8IFNWQQkJfCAg
-Y2dyb3VwCXwKPiA+IFllcwl8Tm8gaW9tbXUgZHJpdmVyCXwgZGVmYXVsdCBQQVNJRHwgIG5vCj4g
-PiB8IE5vCXxObyBrZXJuZWwJCXwgc3VwZXIgU1ZBCXwgbm8KPiA+IAl8IHllcyAgIHxObwo+ID4g
-Cj4gPiDCuSBBbGxvY2F0ZWQgZHVyaW5nIFNWQSBiaW5kCj4gPiDCsiBQQVNJRHMgYWxsb2NhdGVk
-IHZpYSAvZGV2L2lvYXNpZCBhcmUgbm90IGJvdW5kIHRvIGFueSBtbS4gQnV0IGl0cwo+ID4gICBv
-d25lcnNoaXAgaXMgYXNzaWduZWQgdG8gdGhlIHByb2Nlc3MgdGhhdCBkb2VzIHRoZSBhbGxvY2F0
-aW9uLiAgCj4gCj4gV2hhdCBkb2VzICJub3QgYm91bmQgdG8gYSBtbSIgbWVhbj8KPiAKSSBtZWFu
-dCwgdGhlIElPQVNJRCBhbGxvY2F0ZWQgdmlhIC9kZXYvaW9hc2lkIGlzIGluIGEgY2xlYW4gc3Rh
-dGUgKGp1c3QgYQpudW1iZXIpLiBJdCdzIGluaXRpYWwgc3RhdGUgaXMgbm90IGJvdW5kIHRvIGFu
-IG1tLiBVbmxpa2UsIHN2YV9iaW5kX2RldmljZSgpCndoZXJlIHRoZSBJT0FTSUQgaXMgYWxsb2Nh
-dGVkIGR1cmluZyBiaW5kIHRpbWUuCgpUaGUgdXNlIGNhc2UgaXMgdG8gc3VwcG9ydCBndWVzdCBT
-VkEgYmluZCwgd2hlcmUgYWxsb2NhdGlvbiBhbmQgYmluZCBhcmUgaW4KdHdvIHNlcGFyYXRlIHN0
-ZXBzLgoKPiBJTUhPIGEgdXNlIGNyZWF0ZWQgUEFTSUQgaXMgZWl0aGVyIGJvdW5kIHRvIGEgbW0g
-KGN1cnJlbnQpIGF0IGNyZWF0aW9uCj4gdGltZSwgb3IgaXQgd2lsbCBuZXZlciBiZSBib3VuZCB0
-byBhIG1tIGFuZCBpdHMgcGFnZSB0YWJsZSBpcyB1bmRlcgo+IHVzZXIgY29udHJvbCB2aWEgL2Rl
-di9pb2FzaWQuCj4gClRydWUgZm9yIFBBU0lEIHVzZWQgaW4gbmF0aXZlIFNWQSBiaW5kLiBCdXQg
-Zm9yIGJpbmRpbmcgd2l0aCBhIGd1ZXN0IG1tLApQQVNJRCBpcyBhbGxvY2F0ZWQgZmlyc3QgKFZU
-LWQgdmlydHVhbCBjbWQgaW50ZXJmYWNlIFNwZWMgMTAuNC40NCksIHRoZQpiaW5kIHdpdGggdGhl
-IGhvc3QgSU9NTVUgd2hlbiB2SU9NTVUgUEFTSUQgY2FjaGUgaXMgaW52YWxpZGF0ZWQuCgpPdXIg
-aW50ZW50aW9uIGlzIHRvIGhhdmUgdHdvIHNlcGFyYXRlIGludGVyZmFjZXM6CjEuIC9kZXYvaW9h
-c2lkIChhbGxvY2F0aW9uL2ZyZWUgb25seSkKMi4gL2Rldi9zdmEgKGhhbmRsZXMgYWxsIFNWQSBy
-ZWxhdGVkIGFjdGl2aXRpZXMgaW5jbHVkaW5nIHBhZ2UgdGFibGVzKQoKPiBJIHRob3VnaHQgdGhl
-IHdob2xlIHBvaW50IG9mIHNvbWV0aGluZyBsaWtlIGEgL2Rldi9pb2FzaWQgd2FzIHRvIGdldAo+
-IGF3YXkgZnJvbSBlYWNoIGFuZCBldmVyeSBkZXZpY2UgY3JlYXRpbmcgaXRzIG93biBQQVNJRCBp
-bnRlcmZhY2U/Cj4gCnllcywgYnV0IG9ubHkgZm9yIHRoZSB1c2UgY2FzZXMgdGhhdCBuZWVkIHRv
-IGV4cG9zZSBQQVNJRCB0byB0aGUgdXNlcnNwYWNlLgpBRkFJQ1QsIHRoZSBjYXNlcyBhcmU6CjEu
-IGd1ZXN0IFNWQSAoYmluZCBndWVzdCBtbSkKMi4gZnVsbCBQRi9WRiBhc3NpZ25tZW50KG5vdCBt
-ZWRpYXRlZCkgd2hlcmUgZ3Vlc3QgZHJpdmVyIHdhbnQgdG8gcHJvZ3JhbQp0aGUgYWN0dWFsIFBB
-U0lEIG9udG8gdGhlIGRldmljZS4KCj4gSXQgbWF5YmUgc29tZXdoYXQgcmVhc29uYWJsZSB0aGF0
-IHNvbWUgZGV2aWNlcyBjb3VsZCBoYXZlIHNvbWUgZWFzeQo+ICdtYWtlIGEgU1ZBIFBBU0lEIG9u
-IGN1cnJlbnQnIGludGVyZmFjZSBidWlsdCBpbiwKSSBhZ3JlZSwgdGhpcyBpcyB0aGUgY2FzZSBQ
-QVNJRCBpcyBoaWRkZW4gZnJvbSB0aGUgdXNlcnNwYWNlLCByaWdodD8gZS5nLgp1YWNjZS4KCj4g
-YnV0IGFueXRoaW5nIG1vcmUKPiBjb21wbGljYXRlZCBzaG91bGQgdXNlIC9kZXYvaW9hc2lkLCBh
-bmQgYW55dGhpbmcgY29uc3VtaW5nIFBBU0lECj4gc2hvdWxkIGFsc28gaGF2ZSBhbiBBUEkgdG8g
-aW1wb3J0IGFuZCBhdHRhY2ggYSBQQVNJRCBmcm9tIC9kZXYvaW9hc2lkLgo+IApXb3VsZCB0aGUg
-YWJvdmUgdHdvIHVzZSBjYXNlcyBjb25zdGl0dXRlIHRoZSAiY29tcGxpY2F0ZWQiIGNyaXRlcmlh
-PyBPciB3ZQpzaG91bGQgc2F5IGFueXRoaW5nIHRoYXQgbmVlZCB0aGUgZXhwbGljaXQgUEFTSUQg
-dmFsdWUgaGFzIHRvIHRocm91Z2gKL2Rldi9pb2FzaWQ/CgpDb3VsZCB5b3UgZ2l2ZSBzb21lIGhp
-Z2hsZXZlbCBoaW50IG9uIHRoZSBBUElzIHRoYXQgaG9vayB1cCBJT0FTSUQKYWxsb2NhdGVkIGZy
-b20gL2Rldi9pb2FzaWQgYW5kIHVzZSBjYXNlcyB0aGF0IGNvbWJpbmUgZGV2aWNlIGFuZCBkb21h
-aW4KaW5mb3JtYXRpb24/IFlpIGlzIHdvcmtpbmcgb24gL2Rldi9zdmEgUkZDLCBpdCB3b3VsZCBi
-ZSBnb29kIHRvIGhhdmUgYQpkaXJlY3Rpb24gY2hlY2suCgo+ID4gQ3VycmVudGx5LCB0aGUgcHJv
-cG9zZWQgL2Rldi9pb2FzaWQgaW50ZXJmYWNlIGRvZXMgbm90IG1hcCBpbmRpdmlkdWFsCj4gPiBQ
-QVNJRCB3aXRoIGFuIEZELiBUaGUgRkQgaXMgYXQgdGhlIGlvYXNpZF9zZXQgZ3JhbnVsYXJpdHkg
-YW5kIGJvbmQgdG8KPiA+IHRoZSBjdXJyZW50IG1tLiBXZSBjb3VsZCBleHRlbmQgdGhlIElPQ1RM
-cyB0byBjb3ZlciBpbmRpdmlkdWFsIFBBU0lELUZECj4gPiBwYXNzaW5nIGNhc2Ugd2hlbiB1c2Ug
-Y2FzZXMgYXJpc2UuIFdvdWxkIHRoaXMgd29yaz8gIAo+IAo+IElzIGl0IGEgZ29vZCBpZGVhIHRo
-YXQgdGhlIEZEIGlzIHBlciBpb2FzaWRfc2V0ID8KV2Ugd2VyZSB0aGlua2luZyB0aGUgYWxsb2Nh
-dGlvbiBJT0NUTCBpcyBvbiBhIHBlciBzZXQgYmFzaXMsIHRoZW4gd2Uga25vdwp0aGUgb3duZXJz
-aGlwIG9mIGJldHdlZW4gUEFTSURzIGFuZCBpdHMgc2V0LiBJZiBwZXIgUEFTSUQgRkQgaXMgbmVl
-ZGVkLCB3ZQpjYW4gZXh0ZW5kLgoKPiBXaGF0IGlzIHRoZSBzZXQgdXNlZAo+IGZvcj8KPiAKSSB0
-cmllZCB0byBkb2N1bWVudCB0aGUgY29uY2VwdCBpbgpodHRwczovL2xvcmUua2VybmVsLm9yZy9s
-a21sLzE2MTQ0NjMyODYtOTc2MTgtMi1naXQtc2VuZC1lbWFpbC1qYWNvYi5qdW4ucGFuQGxpbnV4
-LmludGVsLmNvbS8KCkluIHRlcm1zIG9mIHVzYWdlIGZvciBndWVzdCBTVkEsIGFuIGlvYXNpZF9z
-ZXQgaXMgbW9zdGx5IHRpZWQgdG8gYSBob3N0IG1tLAp0aGUgdXNlIGNhc2UgaXMgYXMgdGhlIGZv
-bGxvd2luZzoKMS4gSWRlbnRpZnkgYSBwb29sIG9mIFBBU0lEcyBmb3IgcGVybWlzc2lvbiBjaGVj
-a2luZyAoYmVsb3cgdG8gdGhlIHNhbWUgVk0pLAplLmcuIG9ubHkgYWxsb3cgU1ZBIGJpbmRpbmcg
-Zm9yIFBBU0lEcyBhbGxvY2F0ZWQgZnJvbSB0aGUgc2FtZSBzZXQuCgoyLiBBbGxvdyBkaWZmZXJl
-bnQgUEFTSUQtYXdhcmUga2VybmVsIHN1YnN5c3RlbXMgdG8gYXNzb2NpYXRlLCBlLmcuIEtWTSwK
-ZGV2aWNlIGRyaXZlcnMsIGFuZCBJT01NVSBkcml2ZXIuIGkuZS4gZWFjaCBLVk0gaW5zdGFuY2Ug
-b25seSBjYXJlcyBhYm91dAp0aGUgaW9hc2lkX3NldCBhc3NvY2lhdGVkIHdpdGggdGhlIFZNLiBF
-dmVudHMgbm90aWZpY2F0aW9ucyBhcmUgYWxzbyB3aXRoaW4KdGhlIGlvYXNpZF9zZXQgdG8gc3lu
-Y2hyb25pemUgUEFTSUQgc3RhdGVzLgoKMy4gR3Vlc3QtSG9zdCBQQVNJRCBsb29rIHVwIChlYWNo
-IHNldCBoYXMgaXRzIG93biBYQXJyYXkgdG8gc3RvcmUgdGhlCm1hcHBpbmcpCgo0LiBRdW90YSBj
-b250cm9sIChnb2luZyBhd2F5IG9uY2Ugd2UgaGF2ZSBjZ3JvdXApCgo+IFVzdWFsbHkga2VybmVs
-IGludGVyZmFjZXMgd29yayBuaWNlciB3aXRoIGEgb25lIGZkL29uZSBvYmplY3QgbW9kZWwuCj4g
-Cj4gQnV0IGV2ZW4gaWYgaXQgaXMgYSBzZXQsIHlvdSBjb3VsZCBwYXNzIHRoZSBzZXQgYmV0d2Vl
-biBjby1vcGVyYXRpbmcKPiBwcm9jZXNzZXMgYW5kIHRoZSBQQVNJRCBjYW4gYmUgY3JlYXRlZCBp
-biB0aGUgY29ycmVjdCAnY3VycmVudCcuIEJ1dAo+IHRoZXJlIGlzIGFsbCBraW5kcyBvZiBzZWN1
-cml0eSBxdWVzdHNpb25zIGFzIHNvb24gYXMgeW91IHN0YXJ0IGRvaW5nCj4gYW55dGhpbmcgbGlr
-ZSB0aGlzIC0gaXMgdGhlcmUgcmVhbGx5IGEgdXNlIGNhc2U/Cj4gCldlIGRvbid0IHNlZSBhIHVz
-ZSBjYXNlIGZvciBwYXNzaW5nIGlvYXNpZF9zZXQgdG8gYW5vdGhlciBwcm9jZXNzLiBBbGwgdGhl
-CmZvdXIgdXNlIGNhc2VzIGFib3ZlIGFyZSBmb3IgdGhlIGN1cnJlbnQgcHJvY2Vzcy4KCj4gSmFz
-b24KCgpUaGFua3MsCgpKYWNvYgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fXwppb21tdSBtYWlsaW5nIGxpc3QKaW9tbXVAbGlzdHMubGludXgtZm91bmRhdGlv
-bi5vcmcKaHR0cHM6Ly9saXN0cy5saW51eGZvdW5kYXRpb24ub3JnL21haWxtYW4vbGlzdGluZm8v
-aW9tbXU=
+On Wed, Mar 24, 2021 at 2:12 AM Michal Hocko <mhocko@suse.com> wrote:
+>
+> On Tue 23-03-21 11:47:54, Arjun Roy wrote:
+> > On Tue, Mar 23, 2021 at 7:34 AM Michal Hocko <mhocko@suse.com> wrote:
+> > >
+> > > On Wed 17-03-21 18:12:55, Johannes Weiner wrote:
+> > > [...]
+> > > > Here is an idea of how it could work:
+> > > >
+> > > > struct page already has
+> > > >
+> > > >                 struct {        /* page_pool used by netstack */
+> > > >                         /**
+> > > >                          * @dma_addr: might require a 64-bit value even on
+> > > >                          * 32-bit architectures.
+> > > >                          */
+> > > >                         dma_addr_t dma_addr;
+> > > >                 };
+> > > >
+> > > > and as you can see from its union neighbors, there is quite a bit more
+> > > > room to store private data necessary for the page pool.
+> > > >
+> > > > When a page's refcount hits zero and it's a networking page, we can
+> > > > feed it back to the page pool instead of the page allocator.
+> > > >
+> > > > From a first look, we should be able to use the PG_owner_priv_1 page
+> > > > flag for network pages (see how this flag is overloaded, we can add a
+> > > > PG_network alias). With this, we can identify the page in __put_page()
+> > > > and __release_page(). These functions are already aware of different
+> > > > types of pages and do their respective cleanup handling. We can
+> > > > similarly make network a first-class citizen and hand pages back to
+> > > > the network allocator from in there.
+> > >
+> > > For compound pages we have a concept of destructors. Maybe we can extend
+> > > that for order-0 pages as well. The struct page is heavily packed and
+> > > compound_dtor shares the storage without other metadata
+> > >                                         int    pages;    /*    16     4 */
+> > >                         unsigned char compound_dtor;     /*    16     1 */
+> > >                         atomic_t   hpage_pinned_refcount; /*    16     4 */
+> > >                         pgtable_t  pmd_huge_pte;         /*    16     8 */
+> > >                         void *     zone_device_data;     /*    16     8 */
+> > >
+> > > But none of those should really require to be valid when a page is freed
+> > > unless I am missing something. It would really require to check their
+> > > users whether they can leave the state behind. But if we can establish a
+> > > contract that compound_dtor can be always valid when a page is freed
+> > > this would be really a nice and useful abstraction because you wouldn't
+> > > have to care about the specific type of page.
+> > >
+> > > But maybe I am just overlooking the real complexity there.
+> > > --
+> >
+> > For now probably the easiest way is to have network pages be first
+> > class with a specific flag as previously discussed and have concrete
+> > handling for it, rather than trying to establish the contract across
+> > page types.
+>
+> If you are going to claim a page flag then it would be much better to
+> have it more generic. Flags are really scarce and if all you care about
+> is PageHasDestructor() and provide one via page->dtor then the similar
+> mechanism can be reused by somebody else. Or does anything prevent that?
+
+The way I see it - the fundamental want here is, for some arbitrary
+page that we are dropping a reference on, to be able to tell that the
+provenance of the page is some network driver's page pool. If we added
+an enum target to compound_dtor, if we examine that offset in the page
+and look at that value, what guarantee do we have that the page isn't
+instead some other kind of page, and the byte value there was just
+coincidentally the one we were looking for (but it wasn't a network
+driver pool page)?
+
+Existing users of compound_dtor seem to check first that a
+PageCompound() or PageHead() return true - the specific scenario here,
+of receiving network packets, those pages will tend to not be compound
+(and more specifically, compound pages are explicitly disallowed for
+TCP receive zerocopy).
+
+Given that's the case, the options seem to be:
+1) Use a page flag - with the downside that they are a severely
+limited resource,
+2) Use some bits inside page->memcg_data - this I believe Johannes had
+reasons against, and it isn't always the case that MEMCG support is
+enabled.
+3) Use compound_dtor - but I think this would have problems for the
+prior reasons.
+
+Thanks,
+-Arjun
+
+
+
+> --
+> Michal Hocko
+> SUSE Labs
