@@ -1,59 +1,109 @@
-From: Jacob Pan <jacob.jun.pan-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [Patch v3 1/2] cgroup: sev: Add misc cgroup controller
-Date: Wed, 24 Mar 2021 09:17:01 -0700
-Message-ID: <20210324091701.63c9ce8e@jacob-builder>
-References: <20210304231946.2766648-1-vipinsh@google.com>
-        <20210304231946.2766648-2-vipinsh@google.com>
-        <20210319142801.7dcce403@jacob-builder>
-        <YFjn7wv/iMO4Isgz@google.com>
+From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Wed, 24 Mar 2021 10:02:46 -0700
+Message-ID: <20210324100246.4e6b8aa1@jacob-builder>
+References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
+ <1614463286-97618-6-git-send-email-jacob.jun.pan@linux.intel.com>
+ <20210318172234.3e8c34f7@jacob-builder> <YFR10eeDVf5ZHV5l@myrica>
+ <20210319124645.GP2356281@nvidia.com> <YFSqDNJ5yagk4eO+@myrica>
+ <20210319135432.GT2356281@nvidia.com>
+ <20210319112221.5123b984@jacob-builder> <YFhiMLR35WWMW/Hu@myrica>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <YFjn7wv/iMO4Isgz-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, thomas.lendacky-5C7GfCeVMHo@public.gmane.org, brijesh.singh-5C7GfCeVMHo@public.gmane.org, jon.grimm-5C7GfCeVMHo@public.gmane.org, eric.vantassell-5C7GfCeVMHo@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, frankja-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, gingell-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dionnaglaze-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, jacob.jun.pan-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <YFhiMLR35WWMW/Hu@myrica>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-Hi Vipin,
-
-On Mon, 22 Mar 2021 11:54:39 -0700, Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
-
-> On Fri, Mar 19, 2021 at 02:28:01PM -0700, Jacob Pan wrote:
-> > On Thu,  4 Mar 2021 15:19:45 -0800, Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-> > wrote:  
-> > > +#ifndef _MISC_CGROUP_H_
-> > > +#define _MISC_CGROUP_H_
-> > > +  
-> > nit: should you do #include <linux/cgroup.h>?
-> > Otherwise, css may be undefined.  
-> 
-> User of this controller will use get_curernt_misc_cg() API which returns
-> a pointer. Ideally the user should use this pointer and they shouldn't
-> have any need to access "css" in their code. They also don't need to
-> create a object of 'struct misc_cg{}', because that won't be correct misc
-> cgroup object. They should just declare a pointer like we are doing here
-> in 'struct kvm_sev_info {}'.
-> 
-> If they do need to use "css" then they can include cgroup header in their
-> code.
-> 
-I didn't mean the users of misc_cgroup will use css directly. I meant if I
-want to use misc cgruop in ioasid.c, I have to do the following to avoid
-undefined css:
-#include <linux/cgroup.h>
-#include <linux/misc_cgroup.h>
-
-So it might be simpler if you do #include <linux/cgroup.h> inside
-misc_cgroup.h. Then in ioasid.c, I only need to do
-#include <linux/misc_cgroup.h>.
-
-> Let me know if I am overlooking something here.
-> 
-> Thanks
-> Vipin Sharma
-
-
-Thanks,
-
-Jacob
+SGkgSmVhbi1QaGlsaXBwZSwKCk9uIE1vbiwgMjIgTWFyIDIwMjEgMTA6MjQ6MDAgKzAxMDAsIEpl
+YW4tUGhpbGlwcGUgQnJ1Y2tlcgo8amVhbi1waGlsaXBwZUBsaW5hcm8ub3JnPiB3cm90ZToKCj4g
+T24gRnJpLCBNYXIgMTksIDIwMjEgYXQgMTE6MjI6MjFBTSAtMDcwMCwgSmFjb2IgUGFuIHdyb3Rl
+Ogo+ID4gSGkgSmFzb24sCj4gPiAKPiA+IE9uIEZyaSwgMTkgTWFyIDIwMjEgMTA6NTQ6MzIgLTAz
+MDAsIEphc29uIEd1bnRob3JwZSA8amdnQG52aWRpYS5jb20+Cj4gPiB3cm90ZTogCj4gPiA+IE9u
+IEZyaSwgTWFyIDE5LCAyMDIxIGF0IDAyOjQxOjMyUE0gKzAxMDAsIEplYW4tUGhpbGlwcGUgQnJ1
+Y2tlcgo+ID4gPiB3cm90ZTogIAo+ID4gPiA+IE9uIEZyaSwgTWFyIDE5LCAyMDIxIGF0IDA5OjQ2
+OjQ1QU0gLTAzMDAsIEphc29uIEd1bnRob3JwZSB3cm90ZTogICAgCj4gPiA+ID4gPiBPbiBGcmks
+IE1hciAxOSwgMjAyMSBhdCAxMDo1ODo0MUFNICswMTAwLCBKZWFuLVBoaWxpcHBlIEJydWNrZXIK
+PiA+ID4gPiA+IHdyb3RlOiAKPiA+ID4gPiA+ID4gQWx0aG91Z2ggdGhlcmUgaXMgbm8gdXNlIGZv
+ciBpdCBhdCB0aGUgbW9tZW50IChvbmx5IHR3byB1cHN0cmVhbQo+ID4gPiA+ID4gPiB1c2VycyBh
+bmQgaXQgbG9va3MgbGlrZSBhbWRrZmQgYWx3YXlzIHVzZXMgY3VycmVudCB0b28pLCBJIHF1aXRl
+Cj4gPiA+ID4gPiA+IGxpa2UgdGhlIGNsaWVudC1zZXJ2ZXIgbW9kZWwgd2hlcmUgdGhlIHByaXZp
+bGVnZWQgcHJvY2VzcyBkb2VzCj4gPiA+ID4gPiA+IGJpbmQoKSBhbmQgcHJvZ3JhbXMgdGhlIGhh
+cmR3YXJlIHF1ZXVlIG9uIGJlaGFsZiBvZiB0aGUgY2xpZW50Cj4gPiA+ID4gPiA+IHByb2Nlc3Mu
+ICAgIAo+ID4gPiA+ID4gCj4gPiA+ID4gPiBUaGlzIGNyZWF0ZXMgYSBsb3QgY29tcGxleGl0eSwg
+aG93IGRvIGRvZXMgcHJvY2VzcyBBIGdldCBhIHNlY3VyZQo+ID4gPiA+ID4gcmVmZXJlbmNlIHRv
+IEI/IEhvdyBkb2VzIGl0IGFjY2VzcyB0aGUgbWVtb3J5IGluIEIgdG8gc2V0dXAgdGhlCj4gPiA+
+ID4gPiBIVz8gICAgCj4gPiA+ID4gCj4gPiA+ID4gbW1fYWNjZXNzKCkgZm9yIGV4YW1wbGUsIGFu
+ZCBwYXNzaW5nIGFkZHJlc3NlcyB2aWEgSVBDICAgIAo+ID4gPiAKPiA+ID4gSSdkIHJhdGhlciB0
+aGUgc291cmNlIHByb2Nlc3MgZXN0YWJsaXNoIGl0cyBvd24gUEFTSUQgYW5kIHRoZW4gcGFzcwo+
+ID4gPiB0aGUgcmlnaHRzIHRvIHVzZSBpdCB0byBzb21lIG90aGVyIHByb2Nlc3MgdmlhIEZEIHBh
+c3NpbmcgdGhhbiB0cnkgdG8KPiA+ID4gZ28gdGhlIG90aGVyIHdheS4gVGhlcmUgYXJlIGxvdHMg
+b2Ygc2VjdXJpdHkgcXVlc3Rpb25zIHdpdGggc29tZXRoaW5nCj4gPiA+IGxpa2UgbW1fYWNjZXNz
+Lgo+ID4gPiAgIAo+ID4gCj4gPiBUaGFuayB5b3UgYWxsIGZvciB0aGUgaW5wdXQsIGl0IHNvdW5k
+cyBsaWtlIHdlIGFyZSBPSyB0byByZW1vdmUgbW0KPiA+IGFyZ3VtZW50IGZyb20gaW9tbXVfc3Zh
+X2JpbmRfZGV2aWNlKCkgYW5kIGlvbW11X3N2YV9hbGxvY19wYXNpZCgpIGZvcgo+ID4gbm93PyAg
+Cj4gCj4gRmluZSBieSBtZS4gQnkgdGhlIHdheSB0aGUgSURYRCBjdXJyZW50bHkgbWlzc3VlcyB0
+aGUgYmluZCBBUEkgZm9yCj4gc3VwZXJ2aXNvciBQQVNJRCwgYW5kIHRoZSBkcnZkYXRhIHBhcmFt
+ZXRlciBpc24ndCBvdGhlcndpc2UgdXNlZC4gVGhpcwo+IHdvdWxkIGJlIGEgZ29vZCBvY2Nhc2lv
+biB0byBjbGVhbiBib3RoLiBUaGUgbmV3IGJpbmQgcHJvdG90eXBlIGNvdWxkIGJlOgo+IAo+IHN0
+cnVjdCBpb21tdV9zdmEgKmlvbW11X3N2YV9iaW5kX2RldmljZShzdHJ1Y3QgZGV2aWNlICpkZXYs
+IGludCBmbGFncykKPiAKeWVzLCB3ZSByZWFsbHkganVzdCBoaWphY2tlZCBkcnZkYXRhIGFzIGZs
+YWdzLCBpdCB3b3VsZCBiZSBjbGVhbmVyIHRvIHVzZQpmbGFncyBleHBsaWNpdGx5LgoKPiBBbmQg
+YSBmbGFnIElPTU1VX1NWQV9CSU5EX1NVUEVSVklTT1IgKG5vdCB0aGF0IEkgcGxhbiB0byBpbXBs
+ZW1lbnQgaXQgaW4KPiB0aGUgU01NVSwgYnV0IEkgdGhpbmsgd2UgbmVlZCB0byBjbGVhbiB0aGUg
+Y3VycmVudCB1c2FnZSkKPiAKWW91IG1lYW4gbW92ZSAjZGVmaW5lIFNWTV9GTEFHX1NVUEVSVklT
+T1JfTU9ERSBvdXQgb2YgSW50ZWwgY29kZSB0byBiZSBhCmdlbmVyaWMgZmxhZyBpbiBpb21tdS1z
+dmEtbGliLmggY2FsbGVkIElPTU1VX1NWQV9CSU5EX1NVUEVSVklTT1I/CgpJIGFncmVlIGlmIHRo
+YXQgaXMgdGhlIHByb3Bvc2FsLgoKPiA+IAo+ID4gTGV0IG1lIHRyeSB0byBzdW1tYXJpemUgUEFT
+SUQgYWxsb2NhdGlvbiBhcyBiZWxvdzoKPiA+IAo+ID4gSW50ZXJmYWNlcwl8IFVzYWdlCXwgIExp
+bWl0CXwgYmluZMK5IHxVc2VyIHZpc2libGUKPiA+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCj4gPiAvZGV2L2lvYXNp
+ZMKyCXwgRy1TVkEvSU9WQQl8ICBjZ3JvdXAJfCBObwo+ID4gfFllcwo+ID4gLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0K
+PiA+IGNoYXIgZGV2wrMJfCBTVkEJCXwgIGNncm91cAl8IFllcwl8Tm8KPiA+IC0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+Cj4gPiBpb21tdSBkcml2ZXIJfCBkZWZhdWx0IFBBU0lEfCAgbm8JCXwgTm8JfE5vCj4gPiAgCj4g
+Cj4gSXMgdGhpcyBQQVNJRCAjMD8KPiAKVHJ1ZSBmb3IgbmF0aXZlIGNhc2UgYnV0IG5vdCBsaW1p
+dGVkIHRvIFBBU0lEIzAgZm9yIGd1ZXN0IGNhc2UuIEUuZy4gZm9yCm1kZXYgYXNzaWdubWVudCB3
+aXRoIGd1ZXN0IElPVkEsIHRoZSBndWVzdCBQQVNJRCB3b3VsZCAjMCwgYnV0IHRoZSBob3N0IGF1
+eApkb21haW4gZGVmYXVsdCBQQVNJRCBjYW4gYmUgbm9uLXplcm8uIEhlcmUgSSBtZWFudCB0byBp
+bmNsdWRlIGJvdGggY2FzZXMuCgo+ID4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiA+IGtlcm5lbAkJfCBzdXBlciBT
+VkEJfCBubwkJfCB5ZXMgICB8Tm8KPiA+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tICAKPiAKPiBBbHNvIHdvbmRlcmlu
+ZyBhYm91dCBkZXZpY2UgZHJpdmVyIGFsbG9jYXRpbmcgYXV4aWxpYXJ5IGRvbWFpbnMgZm9yIHRo
+ZWlyCj4gcHJpdmF0ZSB1c2UsIHRvIGRvIGlvbW11X21hcC91bm1hcCBvbiBwcml2YXRlIFBBU0lE
+cyAoYSBjbGVhbiByZXBsYWNlbWVudAo+IHRvIHN1cGVyIFNWQSwgZm9yIGV4YW1wbGUpLiBXb3Vs
+ZCB0aGF0IGdvIHRocm91Z2ggdGhlIHNhbWUgcGF0aCBhcwo+IC9kZXYvaW9hc2lkIGFuZCB1c2Ug
+dGhlIGNncm91cCBvZiBjdXJyZW50IHRhc2s/Cj4KRm9yIHRoZSBpbi1rZXJuZWwgcHJpdmF0ZSB1
+c2UsIEkgZG9uJ3QgdGhpbmsgd2Ugc2hvdWxkIHJlc3RyaWN0IGJhc2VkIG9uCmNncm91cCwgc2lu
+Y2UgdGhlcmUgaXMgbm8gYWZmaW5pdHkgdG8gdXNlciBwcm9jZXNzZXMuIEkgYWxzbyB0aGluayB0
+aGUKUEFTSUQgYWxsb2NhdGlvbiBzaG91bGQganVzdCB1c2Uga2VybmVsIEFQSSBpbnN0ZWFkIG9m
+IC9kZXYvaW9hc2lkLiBXaHkKd291bGQgdXNlciBzcGFjZSBuZWVkIHRvIGtub3cgdGhlIGFjdHVh
+bCBQQVNJRCAjIGZvciBkZXZpY2UgcHJpdmF0ZSBkb21haW5zPwpNYXliZSBJIG1pc3NlZCB5b3Vy
+IGlkZWE/Cgo+IFRoYW5rcywKPiBKZWFuCj4gCj4gPiAKPiA+IMK5IEFsbG9jYXRlZCBkdXJpbmcg
+U1ZBIGJpbmQKPiA+IMKyIFBBU0lEcyBhbGxvY2F0ZWQgdmlhIC9kZXYvaW9hc2lkIGFyZSBub3Qg
+Ym91bmQgdG8gYW55IG1tLiBCdXQgaXRzCj4gPiAgIG93bmVyc2hpcCBpcyBhc3NpZ25lZCB0byB0
+aGUgcHJvY2VzcyB0aGF0IGRvZXMgdGhlIGFsbG9jYXRpb24uCj4gPiDCsyBJbmNsdWRlIHVhY2Nl
+LCBvdGhlciBwcml2YXRlIGRldmljZSBkcml2ZXIgY2hhciBkZXYgc3VjaCBhcyBpZHhkCj4gPiAK
+PiA+IEN1cnJlbnRseSwgdGhlIHByb3Bvc2VkIC9kZXYvaW9hc2lkIGludGVyZmFjZSBkb2VzIG5v
+dCBtYXAgaW5kaXZpZHVhbAo+ID4gUEFTSUQgd2l0aCBhbiBGRC4gVGhlIEZEIGlzIGF0IHRoZSBp
+b2FzaWRfc2V0IGdyYW51bGFyaXR5IGFuZCBib25kIHRvCj4gPiB0aGUgY3VycmVudCBtbS4gV2Ug
+Y291bGQgZXh0ZW5kIHRoZSBJT0NUTHMgdG8gY292ZXIgaW5kaXZpZHVhbCBQQVNJRC1GRAo+ID4g
+cGFzc2luZyBjYXNlIHdoZW4gdXNlIGNhc2VzIGFyaXNlLiBXb3VsZCB0aGlzIHdvcms/Cj4gPiAK
+PiA+IFRoYW5rcywKPiA+IAo+ID4gSmFjb2IgIAoKClRoYW5rcywKCkphY29iCl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmlvbW11IG1haWxpbmcgbGlzdApp
+b21tdUBsaXN0cy5saW51eC1mb3VuZGF0aW9uLm9yZwpodHRwczovL2xpc3RzLmxpbnV4Zm91bmRh
+dGlvbi5vcmcvbWFpbG1hbi9saXN0aW5mby9pb21tdQ==
