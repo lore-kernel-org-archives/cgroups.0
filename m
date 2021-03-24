@@ -1,19 +1,15 @@
-From: David Laight <David.Laight@ACULAB.COM>
-Subject: Re: [PATCH 02/11] x86: tboot: avoid
- Wstringop-overread-warning
-Date: Wed, 24 Mar 2021 10:39:57 +0000
-Message-ID: <7e05de6cbb554b09ac532c073fab7386@AcuMS.aculab.com>
+From: Jani Nikula <jani.nikula@linux.intel.com>
+Subject: Re: [PATCH 10/11] drm/i915: avoid stringop-overread
+ warning on pri_latency
+Date: Wed, 24 Mar 2021 17:30:24 +0200
+Message-ID: <874kh04lin.fsf@intel.com>
 References: <20210322160253.4032422-1-arnd@kernel.org>
- <20210322160253.4032422-3-arnd@kernel.org>
- <20210322202958.GA1955909@gmail.com>
- <b944a853-0e4b-b767-0175-cc2c1edba759@gmail.com>
- <0aa198a1dd904231bcc29454bf19a812@AcuMS.aculab.com>
+ <20210322160253.4032422-11-arnd@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-In-Reply-To: <0aa198a1dd904231bcc29454bf19a812@AcuMS.aculab.com>
-Content-Language: en-US
+In-Reply-To: <20210322160253.4032422-11-arnd@kernel.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
  <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
@@ -24,39 +20,55 @@ List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
  <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
 Errors-To: intel-gfx-bounces@lists.freedesktop.org
 Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: David Laight <David.Laight@ACULAB.COM>, 'Martin Sebor' <msebor@gmail.com>, Ingo Molnar <mingo@kernel.org>, Arnd Bergmann <arnd@kernel.org>
-Cc: "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, "H. Peter Anvin" <hpa@zytor.com>, Will Deacon <will@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, James Smart <james.smart@broadcom.com>, "tboot-devel@lists.sourceforge.net" <tboot-devel@lists.sourceforge.net>, Ingo Molnar <mingo@redhat.com>, Kalle Valo <kvalo@codeaurora.org>, "ath11k@lists.infradead.org" <ath11k@lists.infradead.org>, Serge Hallyn <serge@hallyn.com>, Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Ning Sun <ning.sun@intel.com>, Anders Larsen <al@alarsen.net>, Borislav Petkov <bp@alien8.de>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Martin Sebor <msebor@gcc.gnu.org>, netde
+To: Arnd Bergmann <arnd@kernel.org>, linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>
+Cc: dri-devel@lists.freedesktop.org, Chris Wilson <chris@chris-wilson.co.uk>, linux-scsi@vger.kernel.org, x86@kernel.org, James Smart <james.smart@broadcom.com>, tboot-devel@lists.sourceforge.net, Kalle Valo <kvalo@codeaurora.org>, ath11k@lists.infradead.org, Serge Hallyn <serge@hallyn.com>, Arnd Bergmann <arnd@arndb.de>, "James
+ E.J. Bottomley" <jejb@linux.ibm.com>, Ning Sun <ning.sun@intel.com>, Anders Larsen <al@alarsen.net>, cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-security-module@vger.kernel.org, Tejun Heo <tj@kernel.org>, Simon Kelley <simon@thekelleys.org.uk>, intel-gfx@lists.freedesktop.org
 
-From: David Laight
-> Sent: 24 March 2021 09:12
-> 
-> From: Martin Sebor
-> > Sent: 22 March 2021 22:08
-> ...
-> > In GCC 11, all access warnings expect objects to be either declared
-> > or allocated.  Pointers with constant values are taken to point to
-> > nothing valid (as Arnd mentioned above, this is to detect invalid
-> > accesses to members of structs at address zero).
-> >
-> > One possible solution to the known address problem is to extend GCC
-> > attributes address and io that pin an object to a hardwired address
-> > to all targets (at the moment they're supported on just one or two
-> > targets).  I'm not sure this can still happen before GCC 11 releases
-> > sometime in April or May.
-> 
-> A different solution is to define a normal C external data item
-> and then assign a fixed address with an asm statement or in
-> the linker script.
-
-Or stop gcc tracking the value by using:
-	struct foo *foo = (void *)xxxxx;
-	asm ("", "+r" (foo));
-
-If the address is used more than once forcing it into
-a register is also likely to generate better code.
-
-	David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
+T24gTW9uLCAyMiBNYXIgMjAyMSwgQXJuZCBCZXJnbWFubiA8YXJuZEBrZXJuZWwub3JnPiB3cm90
+ZToKPiBGcm9tOiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPgo+Cj4gZ2NjLTExIHdhcm5z
+IGFib3V0IHdoYXQgYXBwZWFycyB0byBiZSBhbiBvdXQtb2YtcmFuZ2UgYXJyYXkgYWNjZXNzOgo+
+Cj4gSW4gZnVuY3Rpb24g4oCYc25iX3dtX2xhdGVuY3lfcXVpcmvigJksCj4gICAgIGlubGluZWQg
+ZnJvbSDigJhpbGtfc2V0dXBfd21fbGF0ZW5jeeKAmSBhdCBkcml2ZXJzL2dwdS9kcm0vaTkxNS9p
+bnRlbF9wbS5jOjMxMDg6MzoKPiBkcml2ZXJzL2dwdS9kcm0vaTkxNS9pbnRlbF9wbS5jOjMwNTc6
+OTogZXJyb3I6IOKAmGludGVsX3ByaW50X3dtX2xhdGVuY3nigJkgcmVhZGluZyAxNiBieXRlcyBm
+cm9tIGEgcmVnaW9uIG9mIHNpemUgMTAgWy1XZXJyb3I9c3RyaW5nb3Atb3ZlcnJlYWRdCj4gIDMw
+NTcgfCAgICAgICAgIGludGVsX3ByaW50X3dtX2xhdGVuY3koZGV2X3ByaXYsICJQcmltYXJ5Iiwg
+ZGV2X3ByaXYtPndtLnByaV9sYXRlbmN5KTsKPiAgICAgICB8ICAgICAgICAgXn5+fn5+fn5+fn5+
+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+
+Cj4gZHJpdmVycy9ncHUvZHJtL2k5MTUvaW50ZWxfcG0uYzogSW4gZnVuY3Rpb24g4oCYaWxrX3Nl
+dHVwX3dtX2xhdGVuY3nigJk6Cj4gZHJpdmVycy9ncHUvZHJtL2k5MTUvaW50ZWxfcG0uYzozMDU3
+Ojk6IG5vdGU6IHJlZmVyZW5jaW5nIGFyZ3VtZW50IDMgb2YgdHlwZSDigJhjb25zdCB1MTYgKuKA
+mSB7YWthIOKAmGNvbnN0IHNob3J0IHVuc2lnbmVkIGludCAq4oCZfQo+IGRyaXZlcnMvZ3B1L2Ry
+bS9pOTE1L2ludGVsX3BtLmM6Mjk5NDoxMzogbm90ZTogaW4gYSBjYWxsIHRvIGZ1bmN0aW9uIOKA
+mGludGVsX3ByaW50X3dtX2xhdGVuY3nigJkKPiAgMjk5NCB8IHN0YXRpYyB2b2lkIGludGVsX3By
+aW50X3dtX2xhdGVuY3koc3RydWN0IGRybV9pOTE1X3ByaXZhdGUgKmRldl9wcml2LAo+ICAgICAg
+IHwgICAgICAgICAgICAgXn5+fn5+fn5+fn5+fn5+fn5+fn5+fgo+Cj4gTXkgZ3Vlc3MgaXMgdGhh
+dCB0aGlzIGNvZGUgaXMgYWN0dWFsbHkgc2FmZSBiZWNhdXNlIHRoZSBzaXplIG9mIHRoZQo+IGFy
+cmF5IGRlcGVuZHMgb24gdGhlIGhhcmR3YXJlIGdlbmVyYXRpb24sIGFuZCB0aGUgZnVuY3Rpb24g
+Y2hlY2tzIGZvcgo+IHRoYXQsIGJ1dCBhdCB0aGUgc2FtZSB0aW1lIEkgd291bGQgbm90IGV4cGVj
+dCB0aGUgY29tcGlsZXIgdG8gd29yayBpdAo+IG91dCBjb3JyZWN0bHksIGFuZCB0aGUgY29kZSBz
+ZWVtcyBhIGxpdHRsZSBmcmFnaWxlIHdpdGggcmVnYXJkcyB0bwo+IGZ1dHVyZSBjaGFuZ2VzLiBT
+aW1wbHkgaW5jcmVhc2luZyB0aGUgc2l6ZSBvZiB0aGUgYXJyYXkgc2hvdWxkIGhlbHAuCgpBZ3Jl
+ZWQsIEkgZG9uJ3QgdGhpbmsgdGhlcmUncyBhbiBpc3N1ZSwgYnV0IHRoZSBjb2RlIGNvdWxkIHVz
+ZSBhIGJ1bmNoCm9mIGltcHJvdmVtZW50cy4KCkxpa2UsIHdlIGhhdmUgaW50ZWxfcHJpbnRfd21f
+bGF0ZW5jeSgpIGZvciBkZWJ1ZyBsb2dnaW5nIGFuZAp3bV9sYXRlbmN5X3Nob3coKSBmb3IgZGVi
+dWdmcywgYW5kIHRoZXJlJ3MgYSBidW5jaCBvZiBkdXBsaWNhdGlvbiBhbmQKdWdoLgoKQnV0IHRo
+aXMgc2VlbXMgbGlrZSB0aGUgZWFzaWVzdCBmaXggZm9yIHRoZSB3YXJuaW5nLgoKUmV2aWV3ZWQt
+Ynk6IEphbmkgTmlrdWxhIDxqYW5pLm5pa3VsYUBpbnRlbC5jb20+CgoKPiBTaWduZWQtb2ZmLWJ5
+OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPgo+IC0tLQo+ICBkcml2ZXJzL2dwdS9kcm0v
+aTkxNS9pOTE1X2Rydi5oIHwgNiArKystLS0KPiAgMSBmaWxlIGNoYW5nZWQsIDMgaW5zZXJ0aW9u
+cygrKSwgMyBkZWxldGlvbnMoLSkKPgo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9kcm0vaTkx
+NS9pOTE1X2Rydi5oIGIvZHJpdmVycy9ncHUvZHJtL2k5MTUvaTkxNV9kcnYuaAo+IGluZGV4IDI2
+ZDY5ZDA2YWE2ZC4uMzU2NzYwMmUwYTM1IDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMvZ3B1L2RybS9p
+OTE1L2k5MTVfZHJ2LmgKPiArKysgYi9kcml2ZXJzL2dwdS9kcm0vaTkxNS9pOTE1X2Rydi5oCj4g
+QEAgLTEwOTUsMTEgKzEwOTUsMTEgQEAgc3RydWN0IGRybV9pOTE1X3ByaXZhdGUgewo+ICAJCSAq
+IGluIDAuNXVzIHVuaXRzIGZvciBXTTErLgo+ICAJCSAqLwo+ICAJCS8qIHByaW1hcnkgKi8KPiAt
+CQl1MTYgcHJpX2xhdGVuY3lbNV07Cj4gKwkJdTE2IHByaV9sYXRlbmN5WzhdOwo+ICAJCS8qIHNw
+cml0ZSAqLwo+IC0JCXUxNiBzcHJfbGF0ZW5jeVs1XTsKPiArCQl1MTYgc3ByX2xhdGVuY3lbOF07
+Cj4gIAkJLyogY3Vyc29yICovCj4gLQkJdTE2IGN1cl9sYXRlbmN5WzVdOwo+ICsJCXUxNiBjdXJf
+bGF0ZW5jeVs4XTsKPiAgCQkvKgo+ICAJCSAqIFJhdyB3YXRlcm1hcmsgbWVtb3J5IGxhdGVuY3kg
+dmFsdWVzCj4gIAkJICogZm9yIFNLTCBmb3IgYWxsIDggbGV2ZWxzCgotLSAKSmFuaSBOaWt1bGEs
+IEludGVsIE9wZW4gU291cmNlIEdyYXBoaWNzIENlbnRlcgpfX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fXwpJbnRlbC1nZnggbWFpbGluZyBsaXN0CkludGVsLWdm
+eEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFp
+bG1hbi9saXN0aW5mby9pbnRlbC1nZngK
