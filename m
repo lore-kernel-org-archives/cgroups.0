@@ -1,19 +1,26 @@
-From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
  allocation APIs
-Date: Wed, 24 Mar 2021 10:02:46 -0700
-Message-ID: <20210324100246.4e6b8aa1@jacob-builder>
+Date: Wed, 24 Mar 2021 14:03:38 -0300
+Message-ID: <20210324170338.GM2356281@nvidia.com>
 References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
  <1614463286-97618-6-git-send-email-jacob.jun.pan@linux.intel.com>
  <20210318172234.3e8c34f7@jacob-builder> <YFR10eeDVf5ZHV5l@myrica>
  <20210319124645.GP2356281@nvidia.com> <YFSqDNJ5yagk4eO+@myrica>
  <20210319135432.GT2356281@nvidia.com>
  <20210319112221.5123b984@jacob-builder> <YFhiMLR35WWMW/Hu@myrica>
+ <20210324100246.4e6b8aa1@jacob-builder>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <YFhiMLR35WWMW/Hu@myrica>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Uzr+K3BRDxSN1riRVVfJ2WL/Ho0CU52QiKj0ERMcv9w=;
+ b=sDdOckxwkgSHEz6mRMpkT1XRJw4UZByb2yMGmmn4/mUdLEWzt6FfXd/XnRtMqUtkaTLKPdUxTlqu6yB2a/aYctAamkuBn6JUwz9E9YTzmKN2go+YJ/0aZ+qNjPn1rI79l+w3U4BMQlnyK4SmTj8991e0N/PdYMNS0eofgfhUlyGlqOc+2D6fvTZDl2rm2HhjPkLFrLteNnUAakll6PnhqQxKbVNViHJW8rybDLjmcFSSrcoSOt83o74J5iHWrYM2kwYprSKLW73S3bkkatns53VHK3X2JkoiYknLpFQ7oT0SNYkDCFq6XzfuFBge9O0FxhxN7TaZWHVMEf3xaHtT0g==
+Content-Disposition: inline
+In-Reply-To: <20210324100246.4e6b8aa1@jacob-builder>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
  <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -24,86 +31,29 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
  <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-To: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+To: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian,
+ Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-SGkgSmVhbi1QaGlsaXBwZSwKCk9uIE1vbiwgMjIgTWFyIDIwMjEgMTA6MjQ6MDAgKzAxMDAsIEpl
-YW4tUGhpbGlwcGUgQnJ1Y2tlcgo8amVhbi1waGlsaXBwZUBsaW5hcm8ub3JnPiB3cm90ZToKCj4g
-T24gRnJpLCBNYXIgMTksIDIwMjEgYXQgMTE6MjI6MjFBTSAtMDcwMCwgSmFjb2IgUGFuIHdyb3Rl
-Ogo+ID4gSGkgSmFzb24sCj4gPiAKPiA+IE9uIEZyaSwgMTkgTWFyIDIwMjEgMTA6NTQ6MzIgLTAz
-MDAsIEphc29uIEd1bnRob3JwZSA8amdnQG52aWRpYS5jb20+Cj4gPiB3cm90ZTogCj4gPiA+IE9u
-IEZyaSwgTWFyIDE5LCAyMDIxIGF0IDAyOjQxOjMyUE0gKzAxMDAsIEplYW4tUGhpbGlwcGUgQnJ1
-Y2tlcgo+ID4gPiB3cm90ZTogIAo+ID4gPiA+IE9uIEZyaSwgTWFyIDE5LCAyMDIxIGF0IDA5OjQ2
-OjQ1QU0gLTAzMDAsIEphc29uIEd1bnRob3JwZSB3cm90ZTogICAgCj4gPiA+ID4gPiBPbiBGcmks
-IE1hciAxOSwgMjAyMSBhdCAxMDo1ODo0MUFNICswMTAwLCBKZWFuLVBoaWxpcHBlIEJydWNrZXIK
-PiA+ID4gPiA+IHdyb3RlOiAKPiA+ID4gPiA+ID4gQWx0aG91Z2ggdGhlcmUgaXMgbm8gdXNlIGZv
-ciBpdCBhdCB0aGUgbW9tZW50IChvbmx5IHR3byB1cHN0cmVhbQo+ID4gPiA+ID4gPiB1c2VycyBh
-bmQgaXQgbG9va3MgbGlrZSBhbWRrZmQgYWx3YXlzIHVzZXMgY3VycmVudCB0b28pLCBJIHF1aXRl
-Cj4gPiA+ID4gPiA+IGxpa2UgdGhlIGNsaWVudC1zZXJ2ZXIgbW9kZWwgd2hlcmUgdGhlIHByaXZp
-bGVnZWQgcHJvY2VzcyBkb2VzCj4gPiA+ID4gPiA+IGJpbmQoKSBhbmQgcHJvZ3JhbXMgdGhlIGhh
-cmR3YXJlIHF1ZXVlIG9uIGJlaGFsZiBvZiB0aGUgY2xpZW50Cj4gPiA+ID4gPiA+IHByb2Nlc3Mu
-ICAgIAo+ID4gPiA+ID4gCj4gPiA+ID4gPiBUaGlzIGNyZWF0ZXMgYSBsb3QgY29tcGxleGl0eSwg
-aG93IGRvIGRvZXMgcHJvY2VzcyBBIGdldCBhIHNlY3VyZQo+ID4gPiA+ID4gcmVmZXJlbmNlIHRv
-IEI/IEhvdyBkb2VzIGl0IGFjY2VzcyB0aGUgbWVtb3J5IGluIEIgdG8gc2V0dXAgdGhlCj4gPiA+
-ID4gPiBIVz8gICAgCj4gPiA+ID4gCj4gPiA+ID4gbW1fYWNjZXNzKCkgZm9yIGV4YW1wbGUsIGFu
-ZCBwYXNzaW5nIGFkZHJlc3NlcyB2aWEgSVBDICAgIAo+ID4gPiAKPiA+ID4gSSdkIHJhdGhlciB0
-aGUgc291cmNlIHByb2Nlc3MgZXN0YWJsaXNoIGl0cyBvd24gUEFTSUQgYW5kIHRoZW4gcGFzcwo+
-ID4gPiB0aGUgcmlnaHRzIHRvIHVzZSBpdCB0byBzb21lIG90aGVyIHByb2Nlc3MgdmlhIEZEIHBh
-c3NpbmcgdGhhbiB0cnkgdG8KPiA+ID4gZ28gdGhlIG90aGVyIHdheS4gVGhlcmUgYXJlIGxvdHMg
-b2Ygc2VjdXJpdHkgcXVlc3Rpb25zIHdpdGggc29tZXRoaW5nCj4gPiA+IGxpa2UgbW1fYWNjZXNz
-Lgo+ID4gPiAgIAo+ID4gCj4gPiBUaGFuayB5b3UgYWxsIGZvciB0aGUgaW5wdXQsIGl0IHNvdW5k
-cyBsaWtlIHdlIGFyZSBPSyB0byByZW1vdmUgbW0KPiA+IGFyZ3VtZW50IGZyb20gaW9tbXVfc3Zh
-X2JpbmRfZGV2aWNlKCkgYW5kIGlvbW11X3N2YV9hbGxvY19wYXNpZCgpIGZvcgo+ID4gbm93PyAg
-Cj4gCj4gRmluZSBieSBtZS4gQnkgdGhlIHdheSB0aGUgSURYRCBjdXJyZW50bHkgbWlzc3VlcyB0
-aGUgYmluZCBBUEkgZm9yCj4gc3VwZXJ2aXNvciBQQVNJRCwgYW5kIHRoZSBkcnZkYXRhIHBhcmFt
-ZXRlciBpc24ndCBvdGhlcndpc2UgdXNlZC4gVGhpcwo+IHdvdWxkIGJlIGEgZ29vZCBvY2Nhc2lv
-biB0byBjbGVhbiBib3RoLiBUaGUgbmV3IGJpbmQgcHJvdG90eXBlIGNvdWxkIGJlOgo+IAo+IHN0
-cnVjdCBpb21tdV9zdmEgKmlvbW11X3N2YV9iaW5kX2RldmljZShzdHJ1Y3QgZGV2aWNlICpkZXYs
-IGludCBmbGFncykKPiAKeWVzLCB3ZSByZWFsbHkganVzdCBoaWphY2tlZCBkcnZkYXRhIGFzIGZs
-YWdzLCBpdCB3b3VsZCBiZSBjbGVhbmVyIHRvIHVzZQpmbGFncyBleHBsaWNpdGx5LgoKPiBBbmQg
-YSBmbGFnIElPTU1VX1NWQV9CSU5EX1NVUEVSVklTT1IgKG5vdCB0aGF0IEkgcGxhbiB0byBpbXBs
-ZW1lbnQgaXQgaW4KPiB0aGUgU01NVSwgYnV0IEkgdGhpbmsgd2UgbmVlZCB0byBjbGVhbiB0aGUg
-Y3VycmVudCB1c2FnZSkKPiAKWW91IG1lYW4gbW92ZSAjZGVmaW5lIFNWTV9GTEFHX1NVUEVSVklT
-T1JfTU9ERSBvdXQgb2YgSW50ZWwgY29kZSB0byBiZSBhCmdlbmVyaWMgZmxhZyBpbiBpb21tdS1z
-dmEtbGliLmggY2FsbGVkIElPTU1VX1NWQV9CSU5EX1NVUEVSVklTT1I/CgpJIGFncmVlIGlmIHRo
-YXQgaXMgdGhlIHByb3Bvc2FsLgoKPiA+IAo+ID4gTGV0IG1lIHRyeSB0byBzdW1tYXJpemUgUEFT
-SUQgYWxsb2NhdGlvbiBhcyBiZWxvdzoKPiA+IAo+ID4gSW50ZXJmYWNlcwl8IFVzYWdlCXwgIExp
-bWl0CXwgYmluZMK5IHxVc2VyIHZpc2libGUKPiA+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCj4gPiAvZGV2L2lvYXNp
-ZMKyCXwgRy1TVkEvSU9WQQl8ICBjZ3JvdXAJfCBObwo+ID4gfFllcwo+ID4gLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0K
-PiA+IGNoYXIgZGV2wrMJfCBTVkEJCXwgIGNncm91cAl8IFllcwl8Tm8KPiA+IC0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-Cj4gPiBpb21tdSBkcml2ZXIJfCBkZWZhdWx0IFBBU0lEfCAgbm8JCXwgTm8JfE5vCj4gPiAgCj4g
-Cj4gSXMgdGhpcyBQQVNJRCAjMD8KPiAKVHJ1ZSBmb3IgbmF0aXZlIGNhc2UgYnV0IG5vdCBsaW1p
-dGVkIHRvIFBBU0lEIzAgZm9yIGd1ZXN0IGNhc2UuIEUuZy4gZm9yCm1kZXYgYXNzaWdubWVudCB3
-aXRoIGd1ZXN0IElPVkEsIHRoZSBndWVzdCBQQVNJRCB3b3VsZCAjMCwgYnV0IHRoZSBob3N0IGF1
-eApkb21haW4gZGVmYXVsdCBQQVNJRCBjYW4gYmUgbm9uLXplcm8uIEhlcmUgSSBtZWFudCB0byBp
-bmNsdWRlIGJvdGggY2FzZXMuCgo+ID4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KPiA+IGtlcm5lbAkJfCBzdXBlciBT
-VkEJfCBubwkJfCB5ZXMgICB8Tm8KPiA+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tICAKPiAKPiBBbHNvIHdvbmRlcmlu
-ZyBhYm91dCBkZXZpY2UgZHJpdmVyIGFsbG9jYXRpbmcgYXV4aWxpYXJ5IGRvbWFpbnMgZm9yIHRo
-ZWlyCj4gcHJpdmF0ZSB1c2UsIHRvIGRvIGlvbW11X21hcC91bm1hcCBvbiBwcml2YXRlIFBBU0lE
-cyAoYSBjbGVhbiByZXBsYWNlbWVudAo+IHRvIHN1cGVyIFNWQSwgZm9yIGV4YW1wbGUpLiBXb3Vs
-ZCB0aGF0IGdvIHRocm91Z2ggdGhlIHNhbWUgcGF0aCBhcwo+IC9kZXYvaW9hc2lkIGFuZCB1c2Ug
-dGhlIGNncm91cCBvZiBjdXJyZW50IHRhc2s/Cj4KRm9yIHRoZSBpbi1rZXJuZWwgcHJpdmF0ZSB1
-c2UsIEkgZG9uJ3QgdGhpbmsgd2Ugc2hvdWxkIHJlc3RyaWN0IGJhc2VkIG9uCmNncm91cCwgc2lu
-Y2UgdGhlcmUgaXMgbm8gYWZmaW5pdHkgdG8gdXNlciBwcm9jZXNzZXMuIEkgYWxzbyB0aGluayB0
-aGUKUEFTSUQgYWxsb2NhdGlvbiBzaG91bGQganVzdCB1c2Uga2VybmVsIEFQSSBpbnN0ZWFkIG9m
-IC9kZXYvaW9hc2lkLiBXaHkKd291bGQgdXNlciBzcGFjZSBuZWVkIHRvIGtub3cgdGhlIGFjdHVh
-bCBQQVNJRCAjIGZvciBkZXZpY2UgcHJpdmF0ZSBkb21haW5zPwpNYXliZSBJIG1pc3NlZCB5b3Vy
-IGlkZWE/Cgo+IFRoYW5rcywKPiBKZWFuCj4gCj4gPiAKPiA+IMK5IEFsbG9jYXRlZCBkdXJpbmcg
-U1ZBIGJpbmQKPiA+IMKyIFBBU0lEcyBhbGxvY2F0ZWQgdmlhIC9kZXYvaW9hc2lkIGFyZSBub3Qg
-Ym91bmQgdG8gYW55IG1tLiBCdXQgaXRzCj4gPiAgIG93bmVyc2hpcCBpcyBhc3NpZ25lZCB0byB0
-aGUgcHJvY2VzcyB0aGF0IGRvZXMgdGhlIGFsbG9jYXRpb24uCj4gPiDCsyBJbmNsdWRlIHVhY2Nl
-LCBvdGhlciBwcml2YXRlIGRldmljZSBkcml2ZXIgY2hhciBkZXYgc3VjaCBhcyBpZHhkCj4gPiAK
-PiA+IEN1cnJlbnRseSwgdGhlIHByb3Bvc2VkIC9kZXYvaW9hc2lkIGludGVyZmFjZSBkb2VzIG5v
-dCBtYXAgaW5kaXZpZHVhbAo+ID4gUEFTSUQgd2l0aCBhbiBGRC4gVGhlIEZEIGlzIGF0IHRoZSBp
-b2FzaWRfc2V0IGdyYW51bGFyaXR5IGFuZCBib25kIHRvCj4gPiB0aGUgY3VycmVudCBtbS4gV2Ug
-Y291bGQgZXh0ZW5kIHRoZSBJT0NUTHMgdG8gY292ZXIgaW5kaXZpZHVhbCBQQVNJRC1GRAo+ID4g
-cGFzc2luZyBjYXNlIHdoZW4gdXNlIGNhc2VzIGFyaXNlLiBXb3VsZCB0aGlzIHdvcms/Cj4gPiAK
-PiA+IFRoYW5rcywKPiA+IAo+ID4gSmFjb2IgIAoKClRoYW5rcywKCkphY29iCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmlvbW11IG1haWxpbmcgbGlzdApp
-b21tdUBsaXN0cy5saW51eC1mb3VuZGF0aW9uLm9yZwpodHRwczovL2xpc3RzLmxpbnV4Zm91bmRh
-dGlvbi5vcmcvbWFpbG1hbi9saXN0aW5mby9pb21tdQ==
+On Wed, Mar 24, 2021 at 10:02:46AM -0700, Jacob Pan wrote:
+> > Also wondering about device driver allocating auxiliary domains for their
+> > private use, to do iommu_map/unmap on private PASIDs (a clean replacement
+> > to super SVA, for example). Would that go through the same path as
+> > /dev/ioasid and use the cgroup of current task?
+>
+> For the in-kernel private use, I don't think we should restrict based on
+> cgroup, since there is no affinity to user processes. I also think the
+> PASID allocation should just use kernel API instead of /dev/ioasid. Why
+> would user space need to know the actual PASID # for device private domains?
+> Maybe I missed your idea?
+
+There is not much in the kernel that isn't triggered by a process, I
+would be careful about the idea that there is a class of users that
+can consume a cgroup controlled resource without being inside the
+cgroup.
+
+We've got into trouble before overlooking this and with something
+greenfield like PASID it would be best built in to the API to prevent
+a mistake. eg accepting a cgroup or process input to the allocator.
+
+Jason
