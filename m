@@ -1,74 +1,59 @@
-From: Jani Nikula <jani.nikula@linux.intel.com>
-Subject: Re: [PATCH 10/11] drm/i915: avoid stringop-overread
- warning on pri_latency
-Date: Wed, 24 Mar 2021 17:30:24 +0200
-Message-ID: <874kh04lin.fsf@intel.com>
-References: <20210322160253.4032422-1-arnd@kernel.org>
- <20210322160253.4032422-11-arnd@kernel.org>
+From: Jacob Pan <jacob.jun.pan-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [Patch v3 1/2] cgroup: sev: Add misc cgroup controller
+Date: Wed, 24 Mar 2021 09:17:01 -0700
+Message-ID: <20210324091701.63c9ce8e@jacob-builder>
+References: <20210304231946.2766648-1-vipinsh@google.com>
+        <20210304231946.2766648-2-vipinsh@google.com>
+        <20210319142801.7dcce403@jacob-builder>
+        <YFjn7wv/iMO4Isgz@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-In-Reply-To: <20210322160253.4032422-11-arnd@kernel.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Arnd Bergmann <arnd@kernel.org>, linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>
-Cc: dri-devel@lists.freedesktop.org, Chris Wilson <chris@chris-wilson.co.uk>, linux-scsi@vger.kernel.org, x86@kernel.org, James Smart <james.smart@broadcom.com>, tboot-devel@lists.sourceforge.net, Kalle Valo <kvalo@codeaurora.org>, ath11k@lists.infradead.org, Serge Hallyn <serge@hallyn.com>, Arnd Bergmann <arnd@arndb.de>, "James
- E.J. Bottomley" <jejb@linux.ibm.com>, Ning Sun <ning.sun@intel.com>, Anders Larsen <al@alarsen.net>, cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-security-module@vger.kernel.org, Tejun Heo <tj@kernel.org>, Simon Kelley <simon@thekelleys.org.uk>, intel-gfx@lists.freedesktop.org
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <YFjn7wv/iMO4Isgz-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+To: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, thomas.lendacky-5C7GfCeVMHo@public.gmane.org, brijesh.singh-5C7GfCeVMHo@public.gmane.org, jon.grimm-5C7GfCeVMHo@public.gmane.org, eric.vantassell-5C7GfCeVMHo@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, frankja-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, gingell-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dionnaglaze-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, jacob.jun.pan-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
 
-T24gTW9uLCAyMiBNYXIgMjAyMSwgQXJuZCBCZXJnbWFubiA8YXJuZEBrZXJuZWwub3JnPiB3cm90
-ZToKPiBGcm9tOiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPgo+Cj4gZ2NjLTExIHdhcm5z
-IGFib3V0IHdoYXQgYXBwZWFycyB0byBiZSBhbiBvdXQtb2YtcmFuZ2UgYXJyYXkgYWNjZXNzOgo+
-Cj4gSW4gZnVuY3Rpb24g4oCYc25iX3dtX2xhdGVuY3lfcXVpcmvigJksCj4gICAgIGlubGluZWQg
-ZnJvbSDigJhpbGtfc2V0dXBfd21fbGF0ZW5jeeKAmSBhdCBkcml2ZXJzL2dwdS9kcm0vaTkxNS9p
-bnRlbF9wbS5jOjMxMDg6MzoKPiBkcml2ZXJzL2dwdS9kcm0vaTkxNS9pbnRlbF9wbS5jOjMwNTc6
-OTogZXJyb3I6IOKAmGludGVsX3ByaW50X3dtX2xhdGVuY3nigJkgcmVhZGluZyAxNiBieXRlcyBm
-cm9tIGEgcmVnaW9uIG9mIHNpemUgMTAgWy1XZXJyb3I9c3RyaW5nb3Atb3ZlcnJlYWRdCj4gIDMw
-NTcgfCAgICAgICAgIGludGVsX3ByaW50X3dtX2xhdGVuY3koZGV2X3ByaXYsICJQcmltYXJ5Iiwg
-ZGV2X3ByaXYtPndtLnByaV9sYXRlbmN5KTsKPiAgICAgICB8ICAgICAgICAgXn5+fn5+fn5+fn5+
-fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+
-Cj4gZHJpdmVycy9ncHUvZHJtL2k5MTUvaW50ZWxfcG0uYzogSW4gZnVuY3Rpb24g4oCYaWxrX3Nl
-dHVwX3dtX2xhdGVuY3nigJk6Cj4gZHJpdmVycy9ncHUvZHJtL2k5MTUvaW50ZWxfcG0uYzozMDU3
-Ojk6IG5vdGU6IHJlZmVyZW5jaW5nIGFyZ3VtZW50IDMgb2YgdHlwZSDigJhjb25zdCB1MTYgKuKA
-mSB7YWthIOKAmGNvbnN0IHNob3J0IHVuc2lnbmVkIGludCAq4oCZfQo+IGRyaXZlcnMvZ3B1L2Ry
-bS9pOTE1L2ludGVsX3BtLmM6Mjk5NDoxMzogbm90ZTogaW4gYSBjYWxsIHRvIGZ1bmN0aW9uIOKA
-mGludGVsX3ByaW50X3dtX2xhdGVuY3nigJkKPiAgMjk5NCB8IHN0YXRpYyB2b2lkIGludGVsX3By
-aW50X3dtX2xhdGVuY3koc3RydWN0IGRybV9pOTE1X3ByaXZhdGUgKmRldl9wcml2LAo+ICAgICAg
-IHwgICAgICAgICAgICAgXn5+fn5+fn5+fn5+fn5+fn5+fn5+fgo+Cj4gTXkgZ3Vlc3MgaXMgdGhh
-dCB0aGlzIGNvZGUgaXMgYWN0dWFsbHkgc2FmZSBiZWNhdXNlIHRoZSBzaXplIG9mIHRoZQo+IGFy
-cmF5IGRlcGVuZHMgb24gdGhlIGhhcmR3YXJlIGdlbmVyYXRpb24sIGFuZCB0aGUgZnVuY3Rpb24g
-Y2hlY2tzIGZvcgo+IHRoYXQsIGJ1dCBhdCB0aGUgc2FtZSB0aW1lIEkgd291bGQgbm90IGV4cGVj
-dCB0aGUgY29tcGlsZXIgdG8gd29yayBpdAo+IG91dCBjb3JyZWN0bHksIGFuZCB0aGUgY29kZSBz
-ZWVtcyBhIGxpdHRsZSBmcmFnaWxlIHdpdGggcmVnYXJkcyB0bwo+IGZ1dHVyZSBjaGFuZ2VzLiBT
-aW1wbHkgaW5jcmVhc2luZyB0aGUgc2l6ZSBvZiB0aGUgYXJyYXkgc2hvdWxkIGhlbHAuCgpBZ3Jl
-ZWQsIEkgZG9uJ3QgdGhpbmsgdGhlcmUncyBhbiBpc3N1ZSwgYnV0IHRoZSBjb2RlIGNvdWxkIHVz
-ZSBhIGJ1bmNoCm9mIGltcHJvdmVtZW50cy4KCkxpa2UsIHdlIGhhdmUgaW50ZWxfcHJpbnRfd21f
-bGF0ZW5jeSgpIGZvciBkZWJ1ZyBsb2dnaW5nIGFuZAp3bV9sYXRlbmN5X3Nob3coKSBmb3IgZGVi
-dWdmcywgYW5kIHRoZXJlJ3MgYSBidW5jaCBvZiBkdXBsaWNhdGlvbiBhbmQKdWdoLgoKQnV0IHRo
-aXMgc2VlbXMgbGlrZSB0aGUgZWFzaWVzdCBmaXggZm9yIHRoZSB3YXJuaW5nLgoKUmV2aWV3ZWQt
-Ynk6IEphbmkgTmlrdWxhIDxqYW5pLm5pa3VsYUBpbnRlbC5jb20+CgoKPiBTaWduZWQtb2ZmLWJ5
-OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPgo+IC0tLQo+ICBkcml2ZXJzL2dwdS9kcm0v
-aTkxNS9pOTE1X2Rydi5oIHwgNiArKystLS0KPiAgMSBmaWxlIGNoYW5nZWQsIDMgaW5zZXJ0aW9u
-cygrKSwgMyBkZWxldGlvbnMoLSkKPgo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9kcm0vaTkx
-NS9pOTE1X2Rydi5oIGIvZHJpdmVycy9ncHUvZHJtL2k5MTUvaTkxNV9kcnYuaAo+IGluZGV4IDI2
-ZDY5ZDA2YWE2ZC4uMzU2NzYwMmUwYTM1IDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMvZ3B1L2RybS9p
-OTE1L2k5MTVfZHJ2LmgKPiArKysgYi9kcml2ZXJzL2dwdS9kcm0vaTkxNS9pOTE1X2Rydi5oCj4g
-QEAgLTEwOTUsMTEgKzEwOTUsMTEgQEAgc3RydWN0IGRybV9pOTE1X3ByaXZhdGUgewo+ICAJCSAq
-IGluIDAuNXVzIHVuaXRzIGZvciBXTTErLgo+ICAJCSAqLwo+ICAJCS8qIHByaW1hcnkgKi8KPiAt
-CQl1MTYgcHJpX2xhdGVuY3lbNV07Cj4gKwkJdTE2IHByaV9sYXRlbmN5WzhdOwo+ICAJCS8qIHNw
-cml0ZSAqLwo+IC0JCXUxNiBzcHJfbGF0ZW5jeVs1XTsKPiArCQl1MTYgc3ByX2xhdGVuY3lbOF07
-Cj4gIAkJLyogY3Vyc29yICovCj4gLQkJdTE2IGN1cl9sYXRlbmN5WzVdOwo+ICsJCXUxNiBjdXJf
-bGF0ZW5jeVs4XTsKPiAgCQkvKgo+ICAJCSAqIFJhdyB3YXRlcm1hcmsgbWVtb3J5IGxhdGVuY3kg
-dmFsdWVzCj4gIAkJICogZm9yIFNLTCBmb3IgYWxsIDggbGV2ZWxzCgotLSAKSmFuaSBOaWt1bGEs
-IEludGVsIE9wZW4gU291cmNlIEdyYXBoaWNzIENlbnRlcgpfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwpJbnRlbC1nZnggbWFpbGluZyBsaXN0CkludGVsLWdm
-eEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFp
-bG1hbi9saXN0aW5mby9pbnRlbC1nZngK
+Hi Vipin,
+
+On Mon, 22 Mar 2021 11:54:39 -0700, Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org> wrote:
+
+> On Fri, Mar 19, 2021 at 02:28:01PM -0700, Jacob Pan wrote:
+> > On Thu,  4 Mar 2021 15:19:45 -0800, Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+> > wrote:  
+> > > +#ifndef _MISC_CGROUP_H_
+> > > +#define _MISC_CGROUP_H_
+> > > +  
+> > nit: should you do #include <linux/cgroup.h>?
+> > Otherwise, css may be undefined.  
+> 
+> User of this controller will use get_curernt_misc_cg() API which returns
+> a pointer. Ideally the user should use this pointer and they shouldn't
+> have any need to access "css" in their code. They also don't need to
+> create a object of 'struct misc_cg{}', because that won't be correct misc
+> cgroup object. They should just declare a pointer like we are doing here
+> in 'struct kvm_sev_info {}'.
+> 
+> If they do need to use "css" then they can include cgroup header in their
+> code.
+> 
+I didn't mean the users of misc_cgroup will use css directly. I meant if I
+want to use misc cgruop in ioasid.c, I have to do the following to avoid
+undefined css:
+#include <linux/cgroup.h>
+#include <linux/misc_cgroup.h>
+
+So it might be simpler if you do #include <linux/cgroup.h> inside
+misc_cgroup.h. Then in ioasid.c, I only need to do
+#include <linux/misc_cgroup.h>.
+
+> Let me know if I am overlooking something here.
+> 
+> Thanks
+> Vipin Sharma
+
+
+Thanks,
+
+Jacob
