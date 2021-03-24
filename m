@@ -1,31 +1,32 @@
-From: Hugh Dickins <hughd@google.com>
+From: Michal Hocko <mhocko@suse.com>
 Subject: Re: [PATCH] mm: page_alloc: fix memcg accounting leak in speculative
  cache lookup
-Date: Tue, 23 Mar 2021 13:10:13 -0700 (PDT)
-Message-ID: <alpine.LSU.2.11.2103231310020.5513@eggly.anvils>
-References: <20210319071547.60973-1-hannes@cmpxchg.org> <alpine.LSU.2.11.2103191814040.1043@eggly.anvils> <YFo7SOni0s0TbXUm@cmpxchg.org>
+Date: Wed, 24 Mar 2021 09:58:09 +0100
+Message-ID: <YFr/IdkW42GtVXk3@dhcp22.suse.cz>
+References: <20210319071547.60973-1-hannes@cmpxchg.org>
+ <alpine.LSU.2.11.2103191814040.1043@eggly.anvils>
+ <YFo7SOni0s0TbXUm@cmpxchg.org>
 Mime-Version: 1.0
 Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:in-reply-to:message-id:references
-         :user-agent:mime-version;
-        bh=LyHHHSMLFWUeygbV2lU1XgcbhGu+fq/FJm7L8suyFsw=;
-        b=pvagIcQfYI9eLKjZ4QGl1Q2Bs9IeTWQSzIY6slDMNYWnvJgF2c8mi2N4adhgHTzfqI
-         /SNzU3qxYr1u9PIVkoQXXT7forjchfGfPxahqRaF3+ZItU2zsI6f3QdO1n4dctmeCKTG
-         j7UGWys7lo5BpZ6hIiCWZZVycs7TH/l7dQDjs7C2SpHo7lVOrTjJYNGs/umOCg8DgsiQ
-         h2RY+s+2k3XdtBv7oi+A3xGCnDCSeyVZ/jRJUxwEGLA8P+7toCLU8fYVOG+mn5vcAb9g
-         DhJcA5BFdHDotGdShY6zhZyAGHIJdEwNsR+jln4otYC6raSVzSXjkuAyCPKcfVOOTV/2
-         DpqA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1616576296; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=VVzLgWjtMsEMunfCiqO/qhbiIn6Lcs5ezaAhMGPZ5v0=;
+        b=jdR+KJoW214iwOHGKwl3IMT3Tz2nzV3xPjRwYZJPW6Kfw4XyJ+08DLqMLUSe/bcOrxuHHf
+        zRnpGguit6cAg7MMNs0CR6V2N9XtBRPVTdpKn9lQZk7Prx9aBAKKVGRD1VIIHoSh+i0QcK
+        Yiu9zs0obzcn0PUNwNZoPedEQgUobN8=
+Content-Disposition: inline
 In-Reply-To: <YFo7SOni0s0TbXUm@cmpxchg.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: TEXT/PLAIN; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <willy@infradead.org>, Michal Hocko <mhocko@suse.com>, Zhou Guanghui <zhouguanghui1@huawei.com>, Zi Yan <ziy@nvidia.com>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+Cc: Hugh Dickins <hughd@google.com>, Andrew Morton <akpm@linux-foundation.org>, Matthew Wilcox <willy@infradead.org>, Zhou Guanghui <zhouguanghui1@huawei.com>, Zi Yan <ziy@nvidia.com>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
-On Tue, 23 Mar 2021, Johannes Weiner wrote:
-> From f6f062a3ec46f4fb083dcf6792fde9723f18cfc5 Mon Sep 17 00:00:00 2001
+On Tue 23-03-21 15:02:32, Johannes Weiner wrote:
+[...]
+> >From f6f062a3ec46f4fb083dcf6792fde9723f18cfc5 Mon Sep 17 00:00:00 2001
 > From: Johannes Weiner <hannes@cmpxchg.org>
 > Date: Fri, 19 Mar 2021 02:17:00 -0400
 > Subject: [PATCH] mm: page_alloc: fix allocation imbalances from speculative
@@ -63,11 +64,15 @@ On Tue, 23 Mar 2021, Johannes Weiner wrote:
 > Signed-off-by: Johannes Weiner <hannes@cmpxchg.org>
 > Cc: <stable@vger.kernel.org> # 5.10+
 
-This is great, thanks Hannes.
-Acked-by: Hugh Dickins <hughd@google.com>
+Normally I would argue for one fix per patch but considering we need
+both anyway then squashing is fine. Especially with the above
+explanation. Thanks for updated comments it made it much clear what the
+speculative path is doing. I was quite confused about the whole thing
+earlier.
 
-I know that 5.10-stable rejected the two split_page_memcg() patches:
-we shall need those in, I'll send GregKH the fixups, but not today.
+Acked-by: Michal Hocko <mhocko@suse.com>
+
+Thanks!
 
 > ---
 >  mm/page_alloc.c | 41 +++++++++++++++++++++++++++++++++++------
@@ -137,3 +142,7 @@ we shall need those in, I'll send GregKH the fixups, but not today.
 >  
 > -- 
 > 2.31.0
+
+-- 
+Michal Hocko
+SUSE Labs
