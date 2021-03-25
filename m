@@ -1,135 +1,113 @@
-From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v3 04/14] bfq: introduce bfq_ioprio_class to get ioprio class
-Date: Thu, 25 Mar 2021 14:57:48 +0800
-Message-ID: <fd37b831bf65c2048047441ffeacd3494ab73224.1616649216.git.brookxu@tencent.com>
+From: brookxu <brookxu.cn@gmail.com>
+Subject: [PATCH v3 07/14] bfq: introduce better_fairness for container scene
+Date: Thu, 25 Mar 2021 14:57:51 +0800
+Message-ID: <9d9566d30702268e1f270f0cf7e8b08444c127a6.1616649216.git.brookxu@tencent.com>
 References: <cover.1616649216.git.brookxu@tencent.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :in-reply-to:references;
-        bh=hPH8DsECt5xnwFiwZHAUQb2WmzQbShnA545eG6/RNz0=;
-        b=pMLWKUf1N40MVt0ryRnco5Yj9BGvy7Ncfvog0V1iIoT0pvsd7aHSkYh9c23lQRGTPt
-         /Mu3GQo43nXXR+5WbJL3d9+ocRfBun29XfCLAHOzWzhkg/2eD/uVqiaJ5yFbS1ExerNO
-         rbQ4AcH18A1zNagwBlVS6/fFFs5DcX3uRZee8xyVOHgVpngsi0Y4nwwdpEbeHCcXwnl0
-         Js8hfcpxKnZgfgDPj3GDuYTT05Q7o4r5bg7iOCoqUw4ammVL6UTzdsTtImFgfwgwOxgc
-         w8QNYfIWT5WzrmcHmVJLIyXjrCPhNJA1HkjFGIyWJzRuRskIedLtmtTTOZcwxUCaNxxT
-         GNAA==
-In-Reply-To: <cover.1616649216.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-In-Reply-To: <cover.1616649216.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-References: <cover.1616649216.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+        bh=U2Ib5ddOEuKBopBvgjIJBWoMeTG4fDxN3eIx8DhyDG0=;
+        b=te9NBf+emxKWBuf7IJoeMpDO6KZYXEcL9VBzWGRMDUAbr/9GThJYF8oDn0LtaQjFlh
+         X/4Hu5GtC2OgZVNMaOCOIIiRdILv+sAybk9aqi/C/cyU10oULWf4FBtNcla+hnbhDhAF
+         DahdKd4VTsFjIoNo1TLAGFPsF493k6SseDengj3eeJam+Ibi6ZDht6aSmDkmcNoV8bvm
+         6zveANN7YmTEirYyRgSV4zKcOyo9yWwcXJbLuKKf3p2SUwV2Ja3wX7h0Uv8qGfZDbytB
+         fZTbj4tBwhRrlG+WokxAEtMbLHjJLbbJA6k841sKw2TtNQ2l9357WOJkKx0VgmsN85rI
+         mKVg==
+In-Reply-To: <cover.1616649216.git.brookxu@tencent.com>
+In-Reply-To: <cover.1616649216.git.brookxu@tencent.com>
+References: <cover.1616649216.git.brookxu@tencent.com>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+From: Chunguang Xu <brookxu@tencent.com>
 
-Since the tasks inside the container itself have different
-ioprio, in order to be compatible with the actual production
-environment, when scheduling within a group, we use the task
-ioprio class, but outside the group, we use the group ioprio
-class. For example, when counting busy_queues, tasks from
-the CLASS_IDLE group, regardless of their ioprio, are always
-treated as CLASS_IDLE tasks.
+In the container scenario, in addition to throughput, we
+also pay attention to Qos. In order to better support this
+scenario, we introduce the better_fairness mode here. In
+this mode, we expect to control the Qos of each group
+according to its priority better. Only add configuration
+interface here
 
-Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+Signed-off-by: Chunguang Xu <brookxu@tencent.com>
 ---
- block/bfq-iosched.c | 29 ++++++++++++++++++++++++++---
- block/bfq-iosched.h |  1 +
- block/bfq-wf2q.c    |  4 ++--
- 3 files changed, 29 insertions(+), 5 deletions(-)
+ block/bfq-iosched.c | 22 ++++++++++++++++++++++
+ block/bfq-iosched.h | 10 ++++++++++
+ 2 files changed, 32 insertions(+)
 
 diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index ec482e6..5f7a0cc 100644
+index ee8c457..e7bc5e2 100644
 --- a/block/bfq-iosched.c
 +++ b/block/bfq-iosched.c
-@@ -428,7 +428,30 @@ void bfq_schedule_dispatch(struct bfq_data *bfqd)
- 	}
+@@ -6745,6 +6745,7 @@ static ssize_t __FUNC(struct elevator_queue *e, char *page)		\
+ SHOW_FUNCTION(bfq_max_budget_show, bfqd->bfq_user_max_budget, 0);
+ SHOW_FUNCTION(bfq_timeout_sync_show, bfqd->bfq_timeout, 1);
+ SHOW_FUNCTION(bfq_strict_guarantees_show, bfqd->strict_guarantees, 0);
++SHOW_FUNCTION(bfq_better_fairness_show, bfqd->better_fairness, 0);
+ SHOW_FUNCTION(bfq_low_latency_show, bfqd->low_latency, 0);
+ #undef SHOW_FUNCTION
+ 
+@@ -6886,6 +6887,26 @@ static ssize_t bfq_strict_guarantees_store(struct elevator_queue *e,
+ 	return count;
  }
  
--#define bfq_class_idle(bfqq)	((bfqq)->ioprio_class == IOPRIO_CLASS_IDLE)
-+unsigned short bfq_ioprio_class(struct bfq_entity *entity)
++static ssize_t bfq_better_fairness_store(struct elevator_queue *e,
++				     const char *page, size_t count)
 +{
-+	struct bfq_queue *bfqq = bfq_entity_to_bfqq(entity);
-+	unsigned short class = BFQ_DEFAULT_GRP_CLASS;
-+#ifdef CONFIG_BFQ_GROUP_IOSCHED
-+	struct bfq_group *bfqg;
++	struct bfq_data *bfqd = e->elevator_data;
++	unsigned long __data;
++	int ret;
 +
-+	if (bfqq) {
-+		bfqg = bfqq_group(bfqq);
-+		class = bfqg->ioprio_class?:bfqq->ioprio_class;
-+	} else {
-+		bfqg = bfq_entity_to_bfqg(entity);
-+		class = bfqg->ioprio_class?:BFQ_DEFAULT_GRP_CLASS;
-+	}
-+#else
-+	if (bfqq)
-+		class = bfqq->ioprio_class;
-+#endif
-+	return class;
++	ret = bfq_var_store(&__data, (page));
++	if (ret)
++		return ret;
++
++	if (__data > 1)
++		__data = 1;
++	if (__data == 0 && bfqd->better_fairness != 0)
++		bfq_end_wr(bfqd);
++	bfqd->better_fairness = __data;
++
++	return count;
 +}
 +
-+#define bfq_class(bfq)		(bfq_ioprio_class(&bfq->entity))
-+#define bfq_class_rt(bfq)	(bfq_ioprio_class(&bfq->entity) == IOPRIO_CLASS_RT)
-+#define bfq_class_idle(bfq)	(bfq_ioprio_class(&bfq->entity) == IOPRIO_CLASS_IDLE)
- 
- #define bfq_sample_valid(samples)	((samples) > 80)
- 
-@@ -1635,7 +1658,7 @@ static bool bfq_bfqq_higher_class_or_weight(struct bfq_queue *bfqq,
+ static ssize_t bfq_low_latency_store(struct elevator_queue *e,
+ 				     const char *page, size_t count)
  {
- 	int bfqq_weight, in_serv_weight;
- 
--	if (bfqq->ioprio_class < in_serv_bfqq->ioprio_class)
-+	if (bfq_class(bfqq) < bfq_class(in_serv_bfqq))
- 		return true;
- 
- 	if (in_serv_bfqq->entity.parent == bfqq->entity.parent) {
-@@ -2600,7 +2623,7 @@ static bool bfq_may_be_close_cooperator(struct bfq_queue *bfqq,
- 		return false;
- 
- 	if (bfq_class_idle(bfqq) || bfq_class_idle(new_bfqq) ||
--	    (bfqq->ioprio_class != new_bfqq->ioprio_class))
-+	    (bfq_class(bfqq) != bfq_class(new_bfqq)))
- 		return false;
- 
- 	/*
+@@ -6919,6 +6940,7 @@ static ssize_t bfq_low_latency_store(struct elevator_queue *e,
+ 	BFQ_ATTR(max_budget),
+ 	BFQ_ATTR(timeout_sync),
+ 	BFQ_ATTR(strict_guarantees),
++	BFQ_ATTR(better_fairness),
+ 	BFQ_ATTR(low_latency),
+ 	__ATTR_NULL
+ };
 diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 3416a75..29a56b8 100644
+index f9ed1da..674de8b 100644
 --- a/block/bfq-iosched.h
 +++ b/block/bfq-iosched.h
-@@ -1071,6 +1071,7 @@ void bfq_requeue_bfqq(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- void bfq_del_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 		       bool expiration);
- void bfq_add_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq);
-+unsigned short bfq_ioprio_class(struct bfq_entity *entity);
+@@ -672,6 +672,16 @@ struct bfq_data {
+ 	bool strict_guarantees;
  
- /* --------------- end of interface of B-WF2Q+ ---------------- */
- 
-diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index 7405be9..c91109e 100644
---- a/block/bfq-wf2q.c
-+++ b/block/bfq-wf2q.c
-@@ -1702,7 +1702,7 @@ void bfq_del_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq,
- 
- 	bfq_clear_bfqq_busy(bfqq);
- 
--	bfqd->busy_queues[bfqq->ioprio_class - 1]--;
-+	bfqd->busy_queues[bfq_ioprio_class(&bfqq->entity) - 1]--;
- 
- 	if (bfqq->wr_coeff > 1)
- 		bfqd->wr_busy_queues--;
-@@ -1725,7 +1725,7 @@ void bfq_add_bfqq_busy(struct bfq_data *bfqd, struct bfq_queue *bfqq)
- 	bfq_activate_bfqq(bfqd, bfqq);
- 
- 	bfq_mark_bfqq_busy(bfqq);
--	bfqd->busy_queues[bfqq->ioprio_class - 1]++;
-+	bfqd->busy_queues[bfq_ioprio_class(&bfqq->entity) - 1]++;
- 
- 	if (!bfqq->dispatched)
- 		if (bfqq->wr_coeff == 1)
+ 	/*
++	 * If there is no prio preemption, we force the device to
++	 * idle to ensure Qos. IO inject also has some additional
++	 * restrictions. The inject/merge queue should come from the
++	 * same class in the same group. Doing so will reduce the
++	 * throughput of the system, but it can better guarantee
++	 * the Qos of each group and real-time tasks.
++	 */
++	bool better_fairness;
++
++	/*
+ 	 * Last time at which a queue entered the current burst of
+ 	 * queues being activated shortly after each other; for more
+ 	 * details about this and the following parameters related to
 -- 
 1.8.3.1
 
