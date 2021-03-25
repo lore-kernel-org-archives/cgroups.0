@@ -1,20 +1,20 @@
 From: brookxu <brookxu.cn@gmail.com>
-Subject: [PATCH v3 06/14] bfq: keep the minimun bandwidth for CLASS_BE
-Date: Thu, 25 Mar 2021 14:57:50 +0800
-Message-ID: <bc39271c5f3835e4782c7ecd53fb205aa9cc97a0.1616649216.git.brookxu@tencent.com>
+Subject: [PATCH v3 03/14] bfq: introduce bfq.ioprio for cgroup
+Date: Thu, 25 Mar 2021 14:57:47 +0800
+Message-ID: <b14c6ac8feeb919815a99c48a9ef8b8fb2ed8569.1616649216.git.brookxu@tencent.com>
 References: <cover.1616649216.git.brookxu@tencent.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :in-reply-to:references;
-        bh=bSZL7kirn3ytucnGGJSGBi1K6j7tN0mB+xwGax7QE0Y=;
-        b=cmCca1wwq8zjRNpdjae2qHgjfPHbVBjdywuM1tOtPlKfMmzaZnxQ6e3GVwbKNJKaVT
-         Up55cWUaqfRohYZpnnlbJbT3JLf4zHGk56fPXxhCmyS3TJARXxFLeyInbRH0oQWftz2+
-         2q8tZg/mGjCTy7PlPRPJxGWMIm7468fkAZzq3yRDy2vBZJVcvbiLkYJncyF4WC4DXBv/
-         MwNXuSlodHn9mqrCmRmzFnJyblv6HMM6TSXx5a2WlXn1eYZQERxNEg2YLpsTSzxJzsJA
-         TqWVPe7cYuJG81gU4BGDXafywDXxaxFKHaTm/jwkKa8Pa+vCtnl2yLlw+KneN1vaz86L
-         EARg==
+        bh=qGY1Kg03OXm+zTrKJxIt7fh+GQW7rx9ophC48RACBkY=;
+        b=PoYH9mvvnNVP6JWfNmsb2+qrlA/hCF7KHUSTenHZAmBvsPTqOvBuDDCsnw1wPmJ1Hr
+         OulmyZxgzFhqw4Sx4zsfbaxf9AyYeztixpIxuLBArjwbo44KzlIn8KzyI62F2xG2ko0v
+         ePyKldQ7FrMl6L0d+0pezfUWXUFKG8FobZFowyQbUPIYUwQA1RT8YbnGZrlZYEi5aLMv
+         ZfT88AN6rB+HwgcZYr2pT+8wubQqAyf6wNmte1JZYwQjjp+bn0fungHuko/G564LEUT2
+         l+8qruqdcHSg+PvAWtlxO6NYaqx8mBJxitS0KLV6IZpehlba4uzp8pOWntMzviwVvQKH
+         zclg==
 In-Reply-To: <cover.1616649216.git.brookxu@tencent.com>
 In-Reply-To: <cover.1616649216.git.brookxu@tencent.com>
 References: <cover.1616649216.git.brookxu@tencent.com>
@@ -27,157 +27,260 @@ Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kern
 
 From: Chunguang Xu <brookxu@tencent.com>
 
-CLASS_RT will preempt other classes, which may starve. At
-present, CLASS_IDLE has alleviated the starvation problem
-through the minimum bandwidth mechanism. Similarly, we
-should do the same for CLASS_BE.
+Now the ioprio class of all groups is CLASS_BE, which is not very
+friendly to the container scene. Therefore, we introduce the bfq.ioprio
+interface to allow users to configure the ioprio class and ioprio of
+the group, which can meet more priority requirements.
+
+The bfq.ioprio interface now is available for cgroup v1 and cgroup
+v2. Users can configure the ioprio for cgroup through this interface,
+as shown below:
+
+echo "1 2"> blkio.bfq.ioprio
+
+The above two values respectively represent the values of ioprio
+class and ioprio for cgroup. When necessary, we can disable this
+feature by:
+
+echo "0 0" > bfq.ioprio.
 
 Signed-off-by: Chunguang Xu <brookxu@tencent.com>
 ---
- block/bfq-iosched.c |  6 ++++--
- block/bfq-iosched.h | 11 ++++++----
- block/bfq-wf2q.c    | 59 ++++++++++++++++++++++++++++++++++++++---------------
- 3 files changed, 53 insertions(+), 23 deletions(-)
+ block/bfq-cgroup.c  | 87 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ block/bfq-iosched.h |  8 +++++
+ block/bfq-wf2q.c    | 30 +++++++++++++++---
+ 3 files changed, 119 insertions(+), 6 deletions(-)
 
-diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index 8eaf0eb..ee8c457 100644
---- a/block/bfq-iosched.c
-+++ b/block/bfq-iosched.c
-@@ -6560,9 +6560,11 @@ static void bfq_init_root_group(struct bfq_group *root_group,
- 	root_group->bfqd = bfqd;
- #endif
- 	root_group->rq_pos_tree = RB_ROOT;
--	for (i = 0; i < BFQ_IOPRIO_CLASSES; i++)
-+	for (i = 0; i < BFQ_IOPRIO_CLASSES; i++) {
- 		root_group->sched_data.service_tree[i] = BFQ_SERVICE_TREE_INIT;
--	root_group->sched_data.bfq_class_idle_last_service = jiffies;
-+		root_group->sched_data.bfq_class_last_service[i] = jiffies;
-+	}
-+	root_group->sched_data.class_timeout_last_check = jiffies;
+diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
+index 50d06c7..ab4bc41 100644
+--- a/block/bfq-cgroup.c
++++ b/block/bfq-cgroup.c
+@@ -489,7 +489,7 @@ static struct bfq_group_data *cpd_to_bfqgd(struct blkcg_policy_data *cpd)
+ 	return cpd ? container_of(cpd, struct bfq_group_data, pd) : NULL;
  }
  
- static int bfq_init_queue(struct request_queue *q, struct elevator_type *e)
+-static struct bfq_group_data *blkcg_to_bfqgd(struct blkcg *blkcg)
++struct bfq_group_data *blkcg_to_bfqgd(struct blkcg *blkcg)
+ {
+ 	return cpd_to_bfqgd(blkcg_to_cpd(blkcg, &blkcg_policy_bfq));
+ }
+@@ -553,6 +553,16 @@ static void bfq_pd_init(struct blkg_policy_data *pd)
+ 	bfqg->bfqd = bfqd;
+ 	bfqg->active_entities = 0;
+ 	bfqg->rq_pos_tree = RB_ROOT;
++
++	bfqg->new_ioprio_class = IOPRIO_PRIO_CLASS(d->ioprio);
++	bfqg->new_ioprio = IOPRIO_PRIO_DATA(d->ioprio);
++	bfqg->ioprio_class = bfqg->new_ioprio_class;
++	bfqg->ioprio = bfqg->new_ioprio;
++
++	if (d->ioprio) {
++		entity->new_weight = bfq_ioprio_to_weight(bfqg->ioprio);
++		entity->weight = entity->new_weight;
++	}
+ }
+ 
+ static void bfq_pd_free(struct blkg_policy_data *pd)
+@@ -981,6 +991,20 @@ static int bfq_io_show_weight(struct seq_file *sf, void *v)
+ 	return 0;
+ }
+ 
++static int bfq_io_show_ioprio(struct seq_file *sf, void *v)
++{
++	struct blkcg *blkcg = css_to_blkcg(seq_css(sf));
++	struct bfq_group_data *bfqgd = blkcg_to_bfqgd(blkcg);
++	unsigned int val = 0;
++
++	if (bfqgd)
++		val = bfqgd->ioprio;
++
++	seq_printf(sf, "%u %lu\n", IOPRIO_PRIO_CLASS(val), IOPRIO_PRIO_DATA(val));
++
++	return 0;
++}
++
+ static void bfq_group_set_weight(struct bfq_group *bfqg, u64 weight, u64 dev_weight)
+ {
+ 	weight = dev_weight ?: weight;
+@@ -1098,6 +1122,55 @@ static ssize_t bfq_io_set_weight(struct kernfs_open_file *of,
+ 	return bfq_io_set_device_weight(of, buf, nbytes, off);
+ }
+ 
++static ssize_t bfq_io_set_ioprio(struct kernfs_open_file *of, char *buf,
++				 size_t nbytes, loff_t off)
++{
++	struct cgroup_subsys_state *css = of_css(of);
++	struct blkcg *blkcg = css_to_blkcg(css);
++	struct bfq_group_data *bfqgd = blkcg_to_bfqgd(blkcg);
++	struct blkcg_gq *blkg;
++	unsigned int class, data;
++	char *endp;
++
++	buf = strstrip(buf);
++
++	class = simple_strtoul(buf, &endp, 10);
++	if (*endp != ' ')
++		return -EINVAL;
++	buf = endp + 1;
++
++	data = simple_strtoul(buf, &endp, 10);
++	if ((*endp != ' ') && (*endp != '\0'))
++		return -EINVAL;
++
++	if (class > IOPRIO_CLASS_IDLE || data >= IOPRIO_BE_NR)
++		return -EINVAL;
++
++	spin_lock_irq(&blkcg->lock);
++	bfqgd->ioprio = IOPRIO_PRIO_VALUE(class, data);
++	hlist_for_each_entry(blkg, &blkcg->blkg_list, blkcg_node) {
++		struct bfq_group *bfqg = blkg_to_bfqg(blkg);
++
++		if (bfqg) {
++			if ((bfqg->ioprio_class != class) ||
++			    (bfqg->ioprio != data)) {
++				unsigned short weight;
++
++				weight = class ? bfq_ioprio_to_weight(data) :
++					BFQ_WEIGHT_LEGACY_DFL;
++
++				bfqg->new_ioprio_class = class;
++				bfqg->new_ioprio = data;
++				bfqg->entity.new_weight = weight;
++				bfqg->entity.prio_changed = 1;
++			}
++		}
++	}
++	spin_unlock_irq(&blkcg->lock);
++
++	return nbytes;
++}
++
+ static int bfqg_print_rwstat(struct seq_file *sf, void *v)
+ {
+ 	blkcg_print_blkgs(sf, css_to_blkcg(seq_css(sf)), blkg_prfill_rwstat,
+@@ -1264,6 +1337,12 @@ struct cftype bfq_blkcg_legacy_files[] = {
+ 		.seq_show = bfq_io_show_weight,
+ 		.write = bfq_io_set_weight,
+ 	},
++	{
++		.name = "bfq.ioprio",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.seq_show = bfq_io_show_ioprio,
++		.write = bfq_io_set_ioprio,
++	},
+ 
+ 	/* statistics, covers only the tasks in the bfqg */
+ 	{
+@@ -1384,6 +1463,12 @@ struct cftype bfq_blkg_files[] = {
+ 		.seq_show = bfq_io_show_weight,
+ 		.write = bfq_io_set_weight,
+ 	},
++	{
++		.name = "bfq.ioprio",
++		.flags = CFTYPE_NOT_ON_ROOT,
++		.seq_show = bfq_io_show_ioprio,
++		.write = bfq_io_set_ioprio,
++	},
+ 	{} /* terminate */
+ };
+ 
 diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index 29a56b8..f9ed1da 100644
+index 28d8590..3416a75 100644
 --- a/block/bfq-iosched.h
 +++ b/block/bfq-iosched.h
-@@ -13,7 +13,7 @@
- #include "blk-cgroup-rwstat.h"
+@@ -867,6 +867,7 @@ struct bfq_group_data {
+ 	struct blkcg_policy_data pd;
  
- #define BFQ_IOPRIO_CLASSES	3
--#define BFQ_CL_IDLE_TIMEOUT	(HZ/5)
-+#define BFQ_CLASS_TIMEOUT	(HZ/5)
- 
- #define BFQ_MIN_WEIGHT			1
- #define BFQ_MAX_WEIGHT			1000
-@@ -97,9 +97,12 @@ struct bfq_sched_data {
- 	struct bfq_entity *next_in_service;
- 	/* array of service trees, one per ioprio_class */
- 	struct bfq_service_tree service_tree[BFQ_IOPRIO_CLASSES];
--	/* last time CLASS_IDLE was served */
--	unsigned long bfq_class_idle_last_service;
--
-+	/* last time the class was served */
-+	unsigned long bfq_class_last_service[BFQ_IOPRIO_CLASSES];
-+	/* last time class timeout was checked */
-+	unsigned long class_timeout_last_check;
-+	/* next index to check class timeout */
-+	unsigned int next_class_index;
+ 	unsigned int weight;
++	unsigned short ioprio;
  };
  
  /**
+@@ -923,6 +924,11 @@ struct bfq_group {
+ 
+ 	int active_entities;
+ 
++	/* current ioprio and ioprio class */
++	unsigned short ioprio, ioprio_class;
++	/* next ioprio and ioprio class if a change is in progress */
++	unsigned short new_ioprio, new_ioprio_class;
++
+ 	struct rb_root rq_pos_tree;
+ 
+ 	struct bfqg_stats stats;
+@@ -991,6 +997,7 @@ void bfq_bfqq_move(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+ void bfq_init_entity(struct bfq_entity *entity, struct bfq_group *bfqg);
+ void bfq_bic_update_cgroup(struct bfq_io_cq *bic, struct bio *bio);
+ void bfq_end_wr_async(struct bfq_data *bfqd);
++struct bfq_group_data *blkcg_to_bfqgd(struct blkcg *blkcg);
+ struct bfq_group *bfq_find_set_group(struct bfq_data *bfqd,
+ 				     struct blkcg *blkcg);
+ struct blkcg_gq *bfqg_to_blkg(struct bfq_group *bfqg);
+@@ -1037,6 +1044,7 @@ struct bfq_group *bfq_find_set_group(struct bfq_data *bfqd,
+ 
+ struct bfq_group *bfq_bfqq_to_bfqg(struct bfq_queue *bfqq);
+ struct bfq_queue *bfq_entity_to_bfqq(struct bfq_entity *entity);
++unsigned int bfq_class_idx(struct bfq_entity *entity);
+ unsigned int bfq_tot_busy_queues(struct bfq_data *bfqd);
+ struct bfq_service_tree *bfq_entity_service_tree(struct bfq_entity *entity);
+ struct bfq_entity *bfq_entity_of(struct rb_node *node);
 diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index c91109e..1f8f3c5 100644
+index 276f225..7405be9 100644
 --- a/block/bfq-wf2q.c
 +++ b/block/bfq-wf2q.c
-@@ -1188,6 +1188,7 @@ bool __bfq_deactivate_entity(struct bfq_entity *entity, bool ins_into_idle_tree)
+@@ -27,12 +27,21 @@ static struct bfq_entity *bfq_root_active_entity(struct rb_root *tree)
+ 	return rb_entry(node, struct bfq_entity, rb_node);
+ }
+ 
+-static unsigned int bfq_class_idx(struct bfq_entity *entity)
++unsigned int bfq_class_idx(struct bfq_entity *entity)
  {
- 	struct bfq_sched_data *sd = entity->sched_data;
- 	struct bfq_service_tree *st;
-+	int idx = bfq_class_idx(entity);
- 	bool is_in_service;
+ 	struct bfq_queue *bfqq = bfq_entity_to_bfqq(entity);
++	unsigned short class = BFQ_DEFAULT_GRP_CLASS;
  
- 	if (!entity->on_st_or_in_serv) /*
-@@ -1227,6 +1228,7 @@ bool __bfq_deactivate_entity(struct bfq_entity *entity, bool ins_into_idle_tree)
- 	else
- 		bfq_idle_insert(st, entity);
- 
-+	sd->bfq_class_last_service[idx] = jiffies;
- 	return true;
- }
- 
-@@ -1455,6 +1457,45 @@ static struct bfq_entity *bfq_first_active_entity(struct bfq_service_tree *st,
- 	return entity;
- }
- 
-+static int bfq_select_next_class(struct bfq_sched_data *sd)
-+{
-+	struct bfq_service_tree *st = sd->service_tree;
-+	unsigned long last_check, last_serve;
-+	int i, class_idx, next_class = 0;
-+	bool found = false;
+-	return bfqq ? bfqq->ioprio_class - 1 :
+-		BFQ_DEFAULT_GRP_CLASS - 1;
++	if (bfqq)
++		class = bfqq->ioprio_class;
++#ifdef CONFIG_BFQ_GROUP_IOSCHED
++	else {
++		struct bfq_group *bfqg = bfq_entity_to_bfqg(entity);
 +
-+	/*
-+	 * we needed to guarantee a minimum bandwidth for each class (if
-+	 * there is some active entity in this class). This should also
-+	 * mitigate priority-inversion problems in case a low priority
-+	 * task is holding file system resources.
-+	 */
-+	last_check = sd->class_timeout_last_check;
-+	if (time_is_after_jiffies(last_check + BFQ_CLASS_TIMEOUT))
-+		return next_class;
-+
-+	sd->class_timeout_last_check = jiffies;
-+	for (i = 0; i < BFQ_IOPRIO_CLASSES; i++) {
-+		class_idx = (sd->next_class_index + i) % BFQ_IOPRIO_CLASSES;
-+		last_serve = sd->bfq_class_last_service[class_idx];
-+
-+		if (time_is_after_jiffies(last_serve + BFQ_CLASS_TIMEOUT))
-+			continue;
-+
-+		if (!RB_EMPTY_ROOT(&(st + class_idx)->active)) {
-+			if (found)
-+				continue;
-+
-+			next_class = class_idx++;
-+			class_idx %= BFQ_IOPRIO_CLASSES;
-+			sd->next_class_index = class_idx;
-+			found = true;
-+		}
-+		sd->bfq_class_last_service[class_idx] = jiffies;
++		class = bfqg->ioprio_class ?: BFQ_DEFAULT_GRP_CLASS;
 +	}
-+	return next_class;
-+}
-+
- /**
-  * bfq_lookup_next_entity - return the first eligible entity in @sd.
-  * @sd: the sched_data.
-@@ -1468,24 +1509,8 @@ static struct bfq_entity *bfq_lookup_next_entity(struct bfq_sched_data *sd,
- 						 bool expiration)
- {
- 	struct bfq_service_tree *st = sd->service_tree;
--	struct bfq_service_tree *idle_class_st = st + (BFQ_IOPRIO_CLASSES - 1);
- 	struct bfq_entity *entity = NULL;
--	int class_idx = 0;
--
--	/*
--	 * Choose from idle class, if needed to guarantee a minimum
--	 * bandwidth to this class (and if there is some active entity
--	 * in idle class). This should also mitigate
--	 * priority-inversion problems in case a low priority task is
--	 * holding file system resources.
--	 */
--	if (time_is_before_jiffies(sd->bfq_class_idle_last_service +
--				   BFQ_CL_IDLE_TIMEOUT)) {
--		if (!RB_EMPTY_ROOT(&idle_class_st->active))
--			class_idx = BFQ_IOPRIO_CLASSES - 1;
--		/* About to be served if backlogged, or not yet backlogged */
--		sd->bfq_class_idle_last_service = jiffies;
--	}
-+	int class_idx = bfq_select_next_class(sd);
++#endif
++	return class - 1;
+ }
  
- 	/*
- 	 * Find the next entity to serve for the highest-priority
+ unsigned int bfq_tot_busy_queues(struct bfq_data *bfqd)
+@@ -767,14 +776,25 @@ struct bfq_service_tree *
+ 				  bfq_weight_to_ioprio(entity->orig_weight);
+ 		}
+ 
+-		if (bfqq && update_class_too)
+-			bfqq->ioprio_class = bfqq->new_ioprio_class;
++		if (update_class_too) {
++			if (bfqq)
++				bfqq->ioprio_class = bfqq->new_ioprio_class;
++#ifdef CONFIG_BFQ_GROUP_IOSCHED
++			else
++				bfqg->ioprio_class = bfqg->new_ioprio_class;
++#endif
++		}
+ 
+ 		/*
+ 		 * Reset prio_changed only if the ioprio_class change
+ 		 * is not pending any longer.
+ 		 */
++#ifdef CONFIG_BFQ_GROUP_IOSCHED
++		if ((bfqq && bfqq->ioprio_class == bfqq->new_ioprio_class) ||
++		    (!bfqq && bfqg->ioprio_class == bfqg->new_ioprio_class))
++#else
+ 		if (!bfqq || bfqq->ioprio_class == bfqq->new_ioprio_class)
++#endif
+ 			entity->prio_changed = 0;
+ 
+ 		/*
 -- 
 1.8.3.1
 
