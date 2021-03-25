@@ -1,57 +1,80 @@
-From: brookxu <brookxu.cn@gmail.com>
-Subject: [PATCH v3 14/14] bfq: optimize the calculation of bfq_weight_to_ioprio()
-Date: Thu, 25 Mar 2021 14:57:58 +0800
-Message-ID: <0d36b7d249e0890298e222424f524d3f9bfedbc8.1616649216.git.brookxu@tencent.com>
-References: <cover.1616649216.git.brookxu@tencent.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :in-reply-to:references;
-        bh=o1CvHWMNIVE9JRrHuZNAemnGtuIBJ5AIryKfD1r6v+8=;
-        b=WhK2TyCXaTs5nWrXgXWnQsFcAVspW+OYbTmTY1PFOrUpXe7RBtPozCnn0xEc5Qy4eE
-         8yfrTdCLndDjDf18f4IOpLauyPoXRE/W0828gduqXyl2vBp06UZ77uoCknocQdBk5inR
-         dfNe8bQuUdeiTFpTuvsJfP2XKBgDX0Egzn4Rq0agjFHydy27vVfUhGMbaOginJwoFTPo
-         Ke4/UfL/shnb3yXKJjIRHHnJNqWiPIK0Ji1Qx+yKkYUngmycm82Xrm4ew4b9SoWVJwF6
-         70BDWtIclqhyQxdyAlby3e7B347wzJf2UMdFXxokiZ/6XhkiWAwcn1uf8mV5sNsb90Zg
-         vE5Q==
-In-Reply-To: <cover.1616649216.git.brookxu@tencent.com>
-In-Reply-To: <cover.1616649216.git.brookxu@tencent.com>
-References: <cover.1616649216.git.brookxu@tencent.com>
-List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Jani Nikula <jani.nikula@linux.intel.com>
+Subject: Re: [PATCH 11/11] [RFC] drm/i915/dp: fix array overflow
+ warning
+Date: Thu, 25 Mar 2021 10:05:06 +0200
+Message-ID: <87wntv3bgt.fsf@intel.com>
+References: <20210322160253.4032422-1-arnd@kernel.org>
+ <20210322160253.4032422-12-arnd@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+In-Reply-To: <20210322160253.4032422-12-arnd@kernel.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+To: Arnd Bergmann <arnd@kernel.org>, linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>
+Cc: dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, x86@kernel.org, James Smart <james.smart@broadcom.com>, tboot-devel@lists.sourceforge.net, Kalle Valo <kvalo@codeaurora.org>, ath11k@lists.infradead.org, Serge Hallyn <serge@hallyn.com>, Arnd Bergmann <arnd@arndb.de>, "James
+ E.J. Bottomley" <jejb@linux.ibm.com>, Ning Sun <ning.sun@intel.com>, Anders Larsen <al@alarsen.net>, Sean Paul <seanpaul@chromium.org>, cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-security-module@vger.kernel.org, Tejun Heo <tj@kernel.org>, Simon Kelley <simon@thekelleys.org.uk>, intel-gfx@lists.freedesktop.org
 
-From: Chunguang Xu <brookxu@tencent.com>
-
-The value range of ioprio is [0, 7], but the result of
-bfq_weight_to_ioprio() may exceed this range, so simple
-optimization is required.
-
-Signed-off-by: Chunguang Xu <brookxu@tencent.com>
----
- block/bfq-wf2q.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
-index b477a9b..1b91c8b 100644
---- a/block/bfq-wf2q.c
-+++ b/block/bfq-wf2q.c
-@@ -586,8 +586,9 @@ unsigned short bfq_ioprio_to_weight(int ioprio)
-  */
- static unsigned short bfq_weight_to_ioprio(int weight)
- {
--	return max_t(int, 0,
--		     IOPRIO_BE_NR * BFQ_WEIGHT_CONVERSION_COEFF - weight);
-+	int ioprio = IOPRIO_BE_NR  - weight / BFQ_WEIGHT_CONVERSION_COEFF;
-+
-+	return ioprio < 0 ? 0 : min_t(int, ioprio, IOPRIO_BE_NR - 1);
- }
- 
- static void bfq_get_entity(struct bfq_entity *entity)
--- 
-1.8.3.1
-
+T24gTW9uLCAyMiBNYXIgMjAyMSwgQXJuZCBCZXJnbWFubiA8YXJuZEBrZXJuZWwub3JnPiB3cm90
+ZToKPiBGcm9tOiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPgo+Cj4gZ2NjLTExIHdhcm5z
+IHRoYXQgaW50ZWxfZHBfY2hlY2tfbXN0X3N0YXR1cygpIGhhcyBhIGxvY2FsIGFycmF5IG9mCj4g
+Zm91cnRlZW4gYnl0ZXMgYW5kIHBhc3NlcyB0aGUgbGFzdCBmb3VyIGJ5dGVzIGludG8gYSBmdW5j
+dGlvbiB0aGF0Cj4gZXhwZWN0cyBhIHNpeC1ieXRlIGFycmF5Ogo+Cj4gZHJpdmVycy9ncHUvZHJt
+L2k5MTUvZGlzcGxheS9pbnRlbF9kcC5jOiBJbiBmdW5jdGlvbiDigJhpbnRlbF9kcF9jaGVja19t
+c3Rfc3RhdHVz4oCZOgo+IGRyaXZlcnMvZ3B1L2RybS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAuYzo0
+NTU2OjIyOiBlcnJvcjog4oCYZHJtX2RwX2NoYW5uZWxfZXFfb2vigJkgcmVhZGluZyA2IGJ5dGVz
+IGZyb20gYSByZWdpb24gb2Ygc2l6ZSA0IFstV2Vycm9yPXN0cmluZ29wLW92ZXJyZWFkXQo+ICA0
+NTU2IHwgICAgICAgICAgICAgICAgICAgICAhZHJtX2RwX2NoYW5uZWxfZXFfb2soJmVzaVsxMF0s
+IGludGVsX2RwLT5sYW5lX2NvdW50KSkgewo+ICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAg
+Xn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fgo+IGRy
+aXZlcnMvZ3B1L2RybS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAuYzo0NTU2OjIyOiBub3RlOiByZWZl
+cmVuY2luZyBhcmd1bWVudCAxIG9mIHR5cGUg4oCYY29uc3QgdTggKuKAmSB7YWthIOKAmGNvbnN0
+IHVuc2lnbmVkIGNoYXIgKuKAmX0KPiBJbiBmaWxlIGluY2x1ZGVkIGZyb20gZHJpdmVycy9ncHUv
+ZHJtL2k5MTUvZGlzcGxheS9pbnRlbF9kcC5jOjM4Ogo+IGluY2x1ZGUvZHJtL2RybV9kcF9oZWxw
+ZXIuaDoxNDU5OjY6IG5vdGU6IGluIGEgY2FsbCB0byBmdW5jdGlvbiDigJhkcm1fZHBfY2hhbm5l
+bF9lcV9va+KAmQo+ICAxNDU5IHwgYm9vbCBkcm1fZHBfY2hhbm5lbF9lcV9vayhjb25zdCB1OCBs
+aW5rX3N0YXR1c1tEUF9MSU5LX1NUQVRVU19TSVpFXSwKPiAgICAgICB8ICAgICAgXn5+fn5+fn5+
+fn5+fn5+fn5+fn4KPgo+IENsZWFybHkgc29tZXRoaW5nIGlzIHdyb25nIGhlcmUsIGJ1dCBJIGNh
+bid0IHF1aXRlIGZpZ3VyZSBvdXQgd2hhdC4KPiBDaGFuZ2luZyB0aGUgYXJyYXkgc2l6ZSB0byAx
+NiBieXRlcyBhdm9pZHMgdGhlIHdhcm5pbmcsIGJ1dCBpcwo+IHByb2JhYmx5IHRoZSB3cm9uZyBz
+b2x1dGlvbiBoZXJlLgoKVWdoLiBkcm1fZHBfY2hhbm5lbF9lcV9vaygpIGRvZXMgbm90IGFjdHVh
+bGx5IHJlcXVpcmUgbW9yZSB0aGFuCkRQX0xJTktfU1RBVFVTX1NJWkUgLSAyIGVsZW1lbnRzIGlu
+IHRoZSBsaW5rX3N0YXR1cy4gSXQncyBzb21lIG90aGVyCnJlbGF0ZWQgZnVuY3Rpb25zIHRoYXQg
+ZG8sIGFuZCBpbiBtb3N0IGNhc2VzIGl0J3MgY29udmVuaWVudCB0byByZWFkIGFsbAp0aG9zZSBE
+UF9MSU5LX1NUQVRVU19TSVpFIGJ5dGVzLgoKSG93ZXZlciwgaGVyZSB0aGUgY2FzZSBpcyBzbGln
+aHRseSBkaWZmZXJlbnQgZm9yIERQIE1TVCwgYW5kIHRoZSBjaGFuZ2UKY2F1c2VzIHJlc2VydmVk
+IERQQ0QgYWRkcmVzc2VzIHRvIGJlIHJlYWQuIE5vdCBzdXJlIGl0IG1hdHRlcnMsIGJ1dApyZWFs
+bHkgSSB0aGluayB0aGUgcHJvYmxlbSBpcyB3aGF0IGRybV9kcF9jaGFubmVsX2VxX29rKCkgYWR2
+ZXJ0aXplcy4KCkkgYWxzbyBkb24ndCBsaWtlIHRoZSBhcnJheSBub3RhdGlvbiB3aXRoIHNpemVz
+IGluIGZ1bmN0aW9uIHBhcmFtZXRlcnMKaW4gZ2VuZXJhbCwgYmVjYXVzZSBJIHRoaW5rIGl0J3Mg
+bWlzbGVhZGluZy4gV291bGQgZ2NjLTExIHdhcm4gaWYgYQpmdW5jdGlvbiBhY3R1YWxseSBhY2Nl
+c3NlcyB0aGUgbWVtb3J5IG91dCBvZiBib3VuZHMgb2YgdGhlIHNpemU/CgpBbnl3YXkuIEkgZG9u
+J3QgdGhpbmsgd2UncmUgZ29pbmcgdG8gZ2V0IHJpZCBvZiB0aGUgYXJyYXkgbm90YXRpb24KYW55
+dGltZSBzb29uLCBpZiBldmVyLCBubyBtYXR0ZXIgaG93IG11Y2ggSSBkaXNsaWtlIGl0LCBzbyBJ
+IHRoaW5rIHRoZQpyaWdodCBmaXggd291bGQgYmUgdG8gYXQgbGVhc3Qgc3RhdGUgdGhlIGNvcnJl
+Y3QgcmVxdWlyZWQgc2l6ZSBpbgpkcm1fZHBfY2hhbm5lbF9lcV9vaygpLgoKCkJSLApKYW5pLgoK
+Cj4KPiBTaWduZWQtb2ZmLWJ5OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPgo+IC0tLQo+
+ICBkcml2ZXJzL2dwdS9kcm0vaTkxNS9kaXNwbGF5L2ludGVsX2RwLmMgfCAyICstCj4gIDEgZmls
+ZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQo+Cj4gZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvZ3B1L2RybS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAuYyBiL2RyaXZlcnMvZ3B1L2Ry
+bS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAuYwo+IGluZGV4IDhjMTJkNTM3NTYwNy4uODMwZTI1MTVm
+MTE5IDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMvZ3B1L2RybS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAu
+Ywo+ICsrKyBiL2RyaXZlcnMvZ3B1L2RybS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAuYwo+IEBAIC02
+NSw3ICs2NSw3IEBACj4gICNpbmNsdWRlICJpbnRlbF92ZHNjLmgiCj4gICNpbmNsdWRlICJpbnRl
+bF92cnIuaCIKPiAgCj4gLSNkZWZpbmUgRFBfRFBSWF9FU0lfTEVOIDE0Cj4gKyNkZWZpbmUgRFBf
+RFBSWF9FU0lfTEVOIDE2Cj4gIAo+ICAvKiBEUCBEU0MgdGhyb3VnaHB1dCB2YWx1ZXMgdXNlZCBm
+b3Igc2xpY2UgY291bnQgY2FsY3VsYXRpb25zIEtQaXhlbHMvcyAqLwo+ICAjZGVmaW5lIERQX0RT
+Q19QRUFLX1BJWEVMX1JBVEUJCQkyNzIwMDAwCgotLSAKSmFuaSBOaWt1bGEsIEludGVsIE9wZW4g
+U291cmNlIEdyYXBoaWNzIENlbnRlcgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXwpJbnRlbC1nZnggbWFpbGluZyBsaXN0CkludGVsLWdmeEBsaXN0cy5mcmVl
+ZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5m
+by9pbnRlbC1nZngK
