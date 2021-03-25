@@ -1,141 +1,216 @@
-From: Arjun Roy <arjunroy-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [mm, net-next v2] mm: net: memcg accounting for TCP rx zerocopy
-Date: Wed, 24 Mar 2021 15:49:15 -0700
-Message-ID: <CAOFY-A0Y0ye74bnpcWsKOPZMJSrFW8mJxVJrpwiy2dcGgUJ5Tw@mail.gmail.com>
-References: <20210316041645.144249-1-arjunroy.kdev@gmail.com>
- <YFCH8vzFGmfFRCvV@cmpxchg.org> <CAOFY-A23NBpJQ=mVQuvFib+cREAZ_wC5=FOMzv3YCO69E4qRxw@mail.gmail.com>
- <YFJ+5+NBOBiUbGWS@cmpxchg.org> <YFn8bLBMt7txj3AZ@dhcp22.suse.cz>
- <CAOFY-A22Pp3Z0apYBWtOJCD8TxfrbZ_HE9Xd6eUds8aEvRL+uw@mail.gmail.com>
- <YFsA78FfzICrnFf7@dhcp22.suse.cz> <YFut+cZhsJec7Pud@cmpxchg.org>
+From: brookxu <brookxu.cn@gmail.com>
+Subject: [PATCH v3 00/14] bfq: introduce bfq.ioprio for cgroup
+Date: Thu, 25 Mar 2021 14:57:44 +0800
+Message-ID: <cover.1616649216.git.brookxu@tencent.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=CnG9+rCYeZJOIO9wMA1OXXczz9AhODbjeHBnYJ2S+dQ=;
-        b=eTp2wE3KCcGL21ofZv6+GyxjukrFrzM4orBTTCdTZi62hw3w9tW9Q7zv2c01Al6gsO
-         97oQPxXzoeZKpLW8VSCq8NNFKYBlBiUZmZNJp3pJdLjTKwSJ8zzLXffVO6p/zEuJ+lp9
-         Wqw+/wIvYMInmyLsmfJ2b4PEDWD58m2Ihzg4GKOgh6D3ydDkAE1KZEBCxIUEnIxM3pHH
-         PfHP/whaBXAVlYcwax2Ci/U2I1x3kFfXHFXSdNYCZxR5WQZ0jns6WPKbBk4oZWTel0k7
-         ro/niqhhCx94gnqMkOkn1iAWzkkLRUs7mXITMVx5WaYhy391bq59krI9cSMJSzYUaFMr
-         ocAQ==
-In-Reply-To: <YFut+cZhsJec7Pud-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Y0HAQH9S7BYME7xDrrfAGZHnKbsUU3U5GDi3mcyHwUY=;
+        b=ghPXClxqYWb2AdpDYWC1Z/AJsylFh3gBBPzyIZFVKCVWHDNg+l3ozpCD3UwuX7CC+n
+         TnhnNfVtwOvvBUGr6Deg+KI2oCjO+kBuL5oJFvPVNHDhncTGln/i6mtVGdWDsDc8jr2w
+         nzyfacn4VJM+NOOt+ZHiWK5WENii+qwmkCvIBYtQkqM3yacAFMYC5tHMurqF147ys2bQ
+         ANIegMB5gk1zE/3b0DdgYbISokZB0BhlKKhTUyFZbi2bFNBoIIHXLUTJ75Sux4NiL9zT
+         bO5ixe7zO8VOiHwbMR/fkY7xs5ra2A4IPIuxJlXHq6khuak2NyAsNsV6GU6tH5RtIib4
+         4S5A==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Arjun Roy <arjunroy.kdev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Eric Dumazet <edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Soheil Hassas Yeganeh <soheil-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+To: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org
+Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Mar 24, 2021 at 2:24 PM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
->
-> On Wed, Mar 24, 2021 at 10:12:46AM +0100, Michal Hocko wrote:
-> > On Tue 23-03-21 11:47:54, Arjun Roy wrote:
-> > > On Tue, Mar 23, 2021 at 7:34 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
-> > > >
-> > > > On Wed 17-03-21 18:12:55, Johannes Weiner wrote:
-> > > > [...]
-> > > > > Here is an idea of how it could work:
-> > > > >
-> > > > > struct page already has
-> > > > >
-> > > > >                 struct {        /* page_pool used by netstack */
-> > > > >                         /**
-> > > > >                          * @dma_addr: might require a 64-bit value even on
-> > > > >                          * 32-bit architectures.
-> > > > >                          */
-> > > > >                         dma_addr_t dma_addr;
-> > > > >                 };
-> > > > >
-> > > > > and as you can see from its union neighbors, there is quite a bit more
-> > > > > room to store private data necessary for the page pool.
-> > > > >
-> > > > > When a page's refcount hits zero and it's a networking page, we can
-> > > > > feed it back to the page pool instead of the page allocator.
-> > > > >
-> > > > > From a first look, we should be able to use the PG_owner_priv_1 page
-> > > > > flag for network pages (see how this flag is overloaded, we can add a
-> > > > > PG_network alias). With this, we can identify the page in __put_page()
-> > > > > and __release_page(). These functions are already aware of different
-> > > > > types of pages and do their respective cleanup handling. We can
-> > > > > similarly make network a first-class citizen and hand pages back to
-> > > > > the network allocator from in there.
-> > > >
-> > > > For compound pages we have a concept of destructors. Maybe we can extend
-> > > > that for order-0 pages as well. The struct page is heavily packed and
-> > > > compound_dtor shares the storage without other metadata
-> > > >                                         int    pages;    /*    16     4 */
-> > > >                         unsigned char compound_dtor;     /*    16     1 */
-> > > >                         atomic_t   hpage_pinned_refcount; /*    16     4 */
-> > > >                         pgtable_t  pmd_huge_pte;         /*    16     8 */
-> > > >                         void *     zone_device_data;     /*    16     8 */
-> > > >
-> > > > But none of those should really require to be valid when a page is freed
-> > > > unless I am missing something. It would really require to check their
-> > > > users whether they can leave the state behind. But if we can establish a
-> > > > contract that compound_dtor can be always valid when a page is freed
-> > > > this would be really a nice and useful abstraction because you wouldn't
-> > > > have to care about the specific type of page.
->
-> Yeah technically nobody should leave these fields behind, but it
-> sounds pretty awkward to manage an overloaded destructor with a
-> refcounted object:
->
-> Either every put would have to check ref==1 before to see if it will
-> be the one to free the page, and then set up the destructor before
-> putting the final ref. But that means we can't support lockless
-> tryget() schemes like we have in the page cache with a destructor.
->
+From: Chunguang Xu <brookxu@tencent.com>
 
-Ah, I think I see what you were getting at with your prior email - at
-first I thought your suggestion was that, since the driver may have
-its own refcount, every put would need to check ref == 1 and call into
-the driver if need be.
+Any suggestions or discussions are welcome, thank you every much.
 
-Instead, and correct me if I'm wrong, it seems like what you're advocating is:
-1) The (opted in) driver no longer hangs onto the ref,
-2) Now refcount can go all the way to 0,
-3) And when it does, due to the special destructor this page has, it
-goes back to the driver, rather than the system?
+BACKGROUND:
+In the container scenario, in addition to throughput, we also pay
+attention to Qos of each group. Based on hierarchical scheduling,
+EMQ, IO Injection, bfq.weight and other mechanisms, we can achieve
+better IO isolation, better throughput, better avoiding priority
+inversion. However, we still have something to be optimized.
 
+OPTIMIZATION:
 
-> Or you'd have to set up the destructor every time an overloaded field
-> reverts to its null state, e.g. hpage_pinned_refcount goes back to 0.
->
-> Neither of those sound practical to me.
->
+We try to do something to make bfq work better in the container scene.
 
+1. Introduce bfq.ioprio
+Tasks in the production environment can be roughly divided into
+three categories: emergency, ordinary and offline. Emergency tasks
+need to be scheduled in real time, such as system agents. Offline
+tasks do not need to guarantee QoS, but can improve system resource
+utilization during system idle periods, such as background tasks.
 
+At present, we can use weights to simulate IO preemption, but since
+weights are more of a share concept, they cannot be simulated well.
+Using ioprio class for group, we can solve the above problems more
+easier. In this way, in hierarchical scheduling, we can ensure that
+RT and IDLE group can be scheduled correctly. In addition, we also
+introduce ioprio for group, so we realize a weight value through
+ioprio class and ioprio. In scenarios where only simple weights are
+needed, we can achieve IO preemption and weight isolation only
+through bfq.ioprio. 
 
+After the introduction of bfq.ioprio, in order to better adapt to
+the actual container environment. When scheduling within a group,
+we use task ioprio class. But outside of group, we use group ioprio
+class. For example, when counting bfqd->busy_queues[], tasks from the
+CLASS_IDLE group are always regarded as CLASS_IDLE, and the ioprio
+class of the task is ignored.
 
-> > > > But maybe I am just overlooking the real complexity there.
-> > > > --
-> > >
-> > > For now probably the easiest way is to have network pages be first
-> > > class with a specific flag as previously discussed and have concrete
-> > > handling for it, rather than trying to establish the contract across
-> > > page types.
-> >
-> > If you are going to claim a page flag then it would be much better to
-> > have it more generic. Flags are really scarce and if all you care about
-> > is PageHasDestructor() and provide one via page->dtor then the similar
-> > mechanism can be reused by somebody else. Or does anything prevent that?
->
-> I was suggesting to alias PG_owner_priv_1, which currently isn't used
-> on network pages. We don't need to allocate a brandnew page flag.
->
+2. Introduce better_faireness mode
+Better Qos control needs to sacrifice throughput, and this is not
+suitable for all scenarios. For this, we added a switch called
+better_fairness. After better_fairness is enabled, we will make
+the following restrictions:
 
-Just to be certain, is there any danger of having a page, that would
-not be a network driver page originally, being inside __put_page(),
-such that PG_owner_priv_1 is set (but with one of its other overloaded
-meanings)?
+Guarantee group Qos:
+1. Cooperator queue can only come from the same group and the same class.
+2. Waker queue can only come from the same group and the same class.
+3. Inject queue can only come from the same group of the same class.
 
-Thanks,
--Arjun
+Guarantee RT tasks Qos:
+1. Async_queue cannot inject RT queue.
+2. Traverse the upper schedule domain to determine whether
+   in_service_queue needs to be preempted.
+3. If in_service_queue marked prio_expire, disable idle.
 
-> I agree that a generic destructor for order-0 pages would be nice, but
-> due to the decentralized nature of refcounting the only way I think it
-> would work in practice is by adding a new field to struct page that is
-> not in conflict with any existing ones.
->
-> Comparably, creating a network type page consumes no additional space.
+Better Buffer IO control:
+1. Except for the CLASS_IDLE queue, other queues allow idle by default.
+
+INTERFACE:
+
+The bfq.ioprio interface now is available for cgroup v1 and cgroup
+v2. Users can configure the ioprio for cgroup through this
+interface, as shown below:
+
+echo "1 2"> blkio.bfq.ioprio
+
+The above two values respectively represent the values of ioprio
+class and ioprio for cgroup.
+
+EXPERIMENT:
+
+The test process is as follows:
+# prepare data disk
+mount /dev/sdb /data1
+
+# prepare IO scheduler
+echo bfq > /sys/block/sdb/queue/scheduler
+echo 0 > /sys/block/sdb/queue/iosched/low_latency
+echo 1 > /sys/block/sdb/queue/iosched/better_fairness
+
+It is worth noting here that nr_requests limits the number of
+requests, and it does not perceive priority. If nr_requests is
+too small, it may cause a serious priority inversion problem.
+Therefore, we can increase the size of nr_requests based on
+the actual situation.
+
+# create cgroup v1 hierarchy
+cd /sys/fs/cgroup/blkio
+mkdir rt be0 be1 be2 idle
+
+# prepare cgroup
+echo "1 0" > rt/blkio.bfq.ioprio
+echo "2 0" > be0/blkio.bfq.ioprio
+echo "2 4" > be1/blkio.bfq.ioprio
+echo "2 7" > be2/blkio.bfq.ioprio
+echo "3 0" > idle/blkio.bfq.ioprio
+
+# run fio test
+fio fio.ini
+
+# generate svg graph
+fio_generate_plots res
+
+The contents of fio.ini are as follows:
+[global]
+ioengine=libaio
+group_reporting=1
+log_avg_msec=3000
+direct=1
+time_based=1
+iodepth=16
+size=100M
+rw=write
+bs=1M
+[rt]
+name=rt
+write_bw_log=rt
+write_lat_log=rt
+write_iops_log=rt
+filename=/data1/rt.bin
+cgroup=rt
+runtime=30s
+nice=-10
+[be0]
+name=be0
+write_bw_log=be0
+write_lat_log=be0
+write_iops_log=be0
+filename=/data1/be0.bin
+cgroup=be0
+runtime=60s
+[be1]
+name=be1
+write_bw_log=be1
+write_lat_log=be1
+write_iops_log=be1
+filename=/data1/be1.bin
+cgroup=be1
+runtime=60s
+[be2]
+name=be2
+write_bw_log=be2
+write_lat_log=be2
+write_iops_log=be2
+filename=/data1/be2.bin
+cgroup=be2
+runtime=60s
+[idle]
+name=idle
+write_bw_log=idle
+write_lat_log=idle
+write_iops_log=idle
+filename=/data1/idle.bin
+cgroup=idle
+runtime=90s
+
+V3:
+1. introdule prio_expire for bfqq.
+2. introduce better_fairness mode.
+3. optimize the processing of task ioprio and group ioprio. 
+4. optimize some small points
+
+V2:
+1. Optmise bfq_select_next_class().
+2. Introduce bfq_group [] to track the number of groups for each CLASS.
+3. Optimse IO injection, EMQ and Idle mechanism for CLASS_RT.
+
+Chunguang Xu (14):
+  bfq: introduce bfq_entity_to_bfqg helper method
+  bfq: convert the type of bfq_group.bfqd to bfq_data*
+  bfq: introduce bfq.ioprio for cgroup
+  bfq: introduce bfq_ioprio_class to get ioprio class
+  bfq: limit the IO depth of CLASS_IDLE to 1
+  bfq: keep the minimun bandwidth for CLASS_BE
+  bfq: introduce better_fairness for container scene
+  bfq: introduce prio_expire flag for bfq_queue
+  bfq: expire in_serv_queue for prio_expire under better_fairness
+  bfq: optimize IO injection under better_fairness
+  bfq: disable idle for prio_expire under better_fairness
+  bfq: disable merging between different groups under better_fairness
+  bfq: remove unnecessary initialization logic
+  bfq: optimize the calculation of bfq_weight_to_ioprio()
+
+ block/bfq-cgroup.c  |  99 ++++++++++++++++++++++++++---
+ block/bfq-iosched.c | 119 +++++++++++++++++++++++++++++++---
+ block/bfq-iosched.h |  36 +++++++++--
+ block/bfq-wf2q.c    | 180 ++++++++++++++++++++++++++++++++++++++++++----------
+ 4 files changed, 376 insertions(+), 58 deletions(-)
+
+-- 
+1.8.3.1
+
