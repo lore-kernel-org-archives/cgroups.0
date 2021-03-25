@@ -1,80 +1,139 @@
-From: Jani Nikula <jani.nikula@linux.intel.com>
-Subject: Re: [PATCH 11/11] [RFC] drm/i915/dp: fix array overflow
- warning
-Date: Thu, 25 Mar 2021 10:05:06 +0200
-Message-ID: <87wntv3bgt.fsf@intel.com>
-References: <20210322160253.4032422-1-arnd@kernel.org>
- <20210322160253.4032422-12-arnd@kernel.org>
+From: Michal Hocko <mhocko@suse.com>
+Subject: Re: [mm, net-next v2] mm: net: memcg accounting for TCP rx zerocopy
+Date: Thu, 25 Mar 2021 10:02:28 +0100
+Message-ID: <YFxRpKfwQwobt7IK@dhcp22.suse.cz>
+References: <20210316041645.144249-1-arjunroy.kdev@gmail.com>
+ <YFCH8vzFGmfFRCvV@cmpxchg.org>
+ <CAOFY-A23NBpJQ=mVQuvFib+cREAZ_wC5=FOMzv3YCO69E4qRxw@mail.gmail.com>
+ <YFJ+5+NBOBiUbGWS@cmpxchg.org>
+ <YFn8bLBMt7txj3AZ@dhcp22.suse.cz>
+ <CAOFY-A22Pp3Z0apYBWtOJCD8TxfrbZ_HE9Xd6eUds8aEvRL+uw@mail.gmail.com>
+ <YFsA78FfzICrnFf7@dhcp22.suse.cz>
+ <YFut+cZhsJec7Pud@cmpxchg.org>
+ <CAOFY-A0Y0ye74bnpcWsKOPZMJSrFW8mJxVJrpwiy2dcGgUJ5Tw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-In-Reply-To: <20210322160253.4032422-12-arnd@kernel.org>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Arnd Bergmann <arnd@kernel.org>, linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>
-Cc: dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, x86@kernel.org, James Smart <james.smart@broadcom.com>, tboot-devel@lists.sourceforge.net, Kalle Valo <kvalo@codeaurora.org>, ath11k@lists.infradead.org, Serge Hallyn <serge@hallyn.com>, Arnd Bergmann <arnd@arndb.de>, "James
- E.J. Bottomley" <jejb@linux.ibm.com>, Ning Sun <ning.sun@intel.com>, Anders Larsen <al@alarsen.net>, Sean Paul <seanpaul@chromium.org>, cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-security-module@vger.kernel.org, Tejun Heo <tj@kernel.org>, Simon Kelley <simon@thekelleys.org.uk>, intel-gfx@lists.freedesktop.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1616662949; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=4KPBFe0XybqKsFmMmUb7cVLIpaMGEswxqCxAFWNw8sM=;
+        b=Nb7XPpOuVRDN3w6eNmTUhnynRp9xVASYQCH5sOuzsTCxTi8EBOJus9BNROk8Y+uw8/71Jm
+        vvy3H7614dTf4N43U50ZNRjc026/j3m7CVjESgZCffKsRHPWNDxPNR1DjWYMRNOEc16W4E
+        jrPliVKNSqfRLthmUwuSmCKoJAaENcs=
+Content-Disposition: inline
+In-Reply-To: <CAOFY-A0Y0ye74bnpcWsKOPZMJSrFW8mJxVJrpwiy2dcGgUJ5Tw@mail.gmail.com>
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Arjun Roy <arjunroy@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Arjun Roy <arjunroy.kdev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, netdev <netdev@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Shakeel Butt <shakeelb@google.com>, Eric Dumazet <edumazet@google.com>, Soheil Hassas Yeganeh <soheil@google.com>, Jakub Kicinski <kuba@kernel.org>, Yang Shi <shy828301@gmail.com>, Roman Gushchin <guro@fb.com>
 
-T24gTW9uLCAyMiBNYXIgMjAyMSwgQXJuZCBCZXJnbWFubiA8YXJuZEBrZXJuZWwub3JnPiB3cm90
-ZToKPiBGcm9tOiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPgo+Cj4gZ2NjLTExIHdhcm5z
-IHRoYXQgaW50ZWxfZHBfY2hlY2tfbXN0X3N0YXR1cygpIGhhcyBhIGxvY2FsIGFycmF5IG9mCj4g
-Zm91cnRlZW4gYnl0ZXMgYW5kIHBhc3NlcyB0aGUgbGFzdCBmb3VyIGJ5dGVzIGludG8gYSBmdW5j
-dGlvbiB0aGF0Cj4gZXhwZWN0cyBhIHNpeC1ieXRlIGFycmF5Ogo+Cj4gZHJpdmVycy9ncHUvZHJt
-L2k5MTUvZGlzcGxheS9pbnRlbF9kcC5jOiBJbiBmdW5jdGlvbiDigJhpbnRlbF9kcF9jaGVja19t
-c3Rfc3RhdHVz4oCZOgo+IGRyaXZlcnMvZ3B1L2RybS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAuYzo0
-NTU2OjIyOiBlcnJvcjog4oCYZHJtX2RwX2NoYW5uZWxfZXFfb2vigJkgcmVhZGluZyA2IGJ5dGVz
-IGZyb20gYSByZWdpb24gb2Ygc2l6ZSA0IFstV2Vycm9yPXN0cmluZ29wLW92ZXJyZWFkXQo+ICA0
-NTU2IHwgICAgICAgICAgICAgICAgICAgICAhZHJtX2RwX2NoYW5uZWxfZXFfb2soJmVzaVsxMF0s
-IGludGVsX2RwLT5sYW5lX2NvdW50KSkgewo+ICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAg
-Xn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fgo+IGRy
-aXZlcnMvZ3B1L2RybS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAuYzo0NTU2OjIyOiBub3RlOiByZWZl
-cmVuY2luZyBhcmd1bWVudCAxIG9mIHR5cGUg4oCYY29uc3QgdTggKuKAmSB7YWthIOKAmGNvbnN0
-IHVuc2lnbmVkIGNoYXIgKuKAmX0KPiBJbiBmaWxlIGluY2x1ZGVkIGZyb20gZHJpdmVycy9ncHUv
-ZHJtL2k5MTUvZGlzcGxheS9pbnRlbF9kcC5jOjM4Ogo+IGluY2x1ZGUvZHJtL2RybV9kcF9oZWxw
-ZXIuaDoxNDU5OjY6IG5vdGU6IGluIGEgY2FsbCB0byBmdW5jdGlvbiDigJhkcm1fZHBfY2hhbm5l
-bF9lcV9va+KAmQo+ICAxNDU5IHwgYm9vbCBkcm1fZHBfY2hhbm5lbF9lcV9vayhjb25zdCB1OCBs
-aW5rX3N0YXR1c1tEUF9MSU5LX1NUQVRVU19TSVpFXSwKPiAgICAgICB8ICAgICAgXn5+fn5+fn5+
-fn5+fn5+fn5+fn4KPgo+IENsZWFybHkgc29tZXRoaW5nIGlzIHdyb25nIGhlcmUsIGJ1dCBJIGNh
-bid0IHF1aXRlIGZpZ3VyZSBvdXQgd2hhdC4KPiBDaGFuZ2luZyB0aGUgYXJyYXkgc2l6ZSB0byAx
-NiBieXRlcyBhdm9pZHMgdGhlIHdhcm5pbmcsIGJ1dCBpcwo+IHByb2JhYmx5IHRoZSB3cm9uZyBz
-b2x1dGlvbiBoZXJlLgoKVWdoLiBkcm1fZHBfY2hhbm5lbF9lcV9vaygpIGRvZXMgbm90IGFjdHVh
-bGx5IHJlcXVpcmUgbW9yZSB0aGFuCkRQX0xJTktfU1RBVFVTX1NJWkUgLSAyIGVsZW1lbnRzIGlu
-IHRoZSBsaW5rX3N0YXR1cy4gSXQncyBzb21lIG90aGVyCnJlbGF0ZWQgZnVuY3Rpb25zIHRoYXQg
-ZG8sIGFuZCBpbiBtb3N0IGNhc2VzIGl0J3MgY29udmVuaWVudCB0byByZWFkIGFsbAp0aG9zZSBE
-UF9MSU5LX1NUQVRVU19TSVpFIGJ5dGVzLgoKSG93ZXZlciwgaGVyZSB0aGUgY2FzZSBpcyBzbGln
-aHRseSBkaWZmZXJlbnQgZm9yIERQIE1TVCwgYW5kIHRoZSBjaGFuZ2UKY2F1c2VzIHJlc2VydmVk
-IERQQ0QgYWRkcmVzc2VzIHRvIGJlIHJlYWQuIE5vdCBzdXJlIGl0IG1hdHRlcnMsIGJ1dApyZWFs
-bHkgSSB0aGluayB0aGUgcHJvYmxlbSBpcyB3aGF0IGRybV9kcF9jaGFubmVsX2VxX29rKCkgYWR2
-ZXJ0aXplcy4KCkkgYWxzbyBkb24ndCBsaWtlIHRoZSBhcnJheSBub3RhdGlvbiB3aXRoIHNpemVz
-IGluIGZ1bmN0aW9uIHBhcmFtZXRlcnMKaW4gZ2VuZXJhbCwgYmVjYXVzZSBJIHRoaW5rIGl0J3Mg
-bWlzbGVhZGluZy4gV291bGQgZ2NjLTExIHdhcm4gaWYgYQpmdW5jdGlvbiBhY3R1YWxseSBhY2Nl
-c3NlcyB0aGUgbWVtb3J5IG91dCBvZiBib3VuZHMgb2YgdGhlIHNpemU/CgpBbnl3YXkuIEkgZG9u
-J3QgdGhpbmsgd2UncmUgZ29pbmcgdG8gZ2V0IHJpZCBvZiB0aGUgYXJyYXkgbm90YXRpb24KYW55
-dGltZSBzb29uLCBpZiBldmVyLCBubyBtYXR0ZXIgaG93IG11Y2ggSSBkaXNsaWtlIGl0LCBzbyBJ
-IHRoaW5rIHRoZQpyaWdodCBmaXggd291bGQgYmUgdG8gYXQgbGVhc3Qgc3RhdGUgdGhlIGNvcnJl
-Y3QgcmVxdWlyZWQgc2l6ZSBpbgpkcm1fZHBfY2hhbm5lbF9lcV9vaygpLgoKCkJSLApKYW5pLgoK
-Cj4KPiBTaWduZWQtb2ZmLWJ5OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPgo+IC0tLQo+
-ICBkcml2ZXJzL2dwdS9kcm0vaTkxNS9kaXNwbGF5L2ludGVsX2RwLmMgfCAyICstCj4gIDEgZmls
-ZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQo+Cj4gZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvZ3B1L2RybS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAuYyBiL2RyaXZlcnMvZ3B1L2Ry
-bS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAuYwo+IGluZGV4IDhjMTJkNTM3NTYwNy4uODMwZTI1MTVm
-MTE5IDEwMDY0NAo+IC0tLSBhL2RyaXZlcnMvZ3B1L2RybS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAu
-Ywo+ICsrKyBiL2RyaXZlcnMvZ3B1L2RybS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAuYwo+IEBAIC02
-NSw3ICs2NSw3IEBACj4gICNpbmNsdWRlICJpbnRlbF92ZHNjLmgiCj4gICNpbmNsdWRlICJpbnRl
-bF92cnIuaCIKPiAgCj4gLSNkZWZpbmUgRFBfRFBSWF9FU0lfTEVOIDE0Cj4gKyNkZWZpbmUgRFBf
-RFBSWF9FU0lfTEVOIDE2Cj4gIAo+ICAvKiBEUCBEU0MgdGhyb3VnaHB1dCB2YWx1ZXMgdXNlZCBm
-b3Igc2xpY2UgY291bnQgY2FsY3VsYXRpb25zIEtQaXhlbHMvcyAqLwo+ICAjZGVmaW5lIERQX0RT
-Q19QRUFLX1BJWEVMX1JBVEUJCQkyNzIwMDAwCgotLSAKSmFuaSBOaWt1bGEsIEludGVsIE9wZW4g
-U291cmNlIEdyYXBoaWNzIENlbnRlcgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fXwpJbnRlbC1nZnggbWFpbGluZyBsaXN0CkludGVsLWdmeEBsaXN0cy5mcmVl
-ZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5m
-by9pbnRlbC1nZngK
+On Wed 24-03-21 15:49:15, Arjun Roy wrote:
+> On Wed, Mar 24, 2021 at 2:24 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
+> >
+> > On Wed, Mar 24, 2021 at 10:12:46AM +0100, Michal Hocko wrote:
+> > > On Tue 23-03-21 11:47:54, Arjun Roy wrote:
+> > > > On Tue, Mar 23, 2021 at 7:34 AM Michal Hocko <mhocko@suse.com> wrote:
+> > > > >
+> > > > > On Wed 17-03-21 18:12:55, Johannes Weiner wrote:
+> > > > > [...]
+> > > > > > Here is an idea of how it could work:
+> > > > > >
+> > > > > > struct page already has
+> > > > > >
+> > > > > >                 struct {        /* page_pool used by netstack */
+> > > > > >                         /**
+> > > > > >                          * @dma_addr: might require a 64-bit value even on
+> > > > > >                          * 32-bit architectures.
+> > > > > >                          */
+> > > > > >                         dma_addr_t dma_addr;
+> > > > > >                 };
+> > > > > >
+> > > > > > and as you can see from its union neighbors, there is quite a bit more
+> > > > > > room to store private data necessary for the page pool.
+> > > > > >
+> > > > > > When a page's refcount hits zero and it's a networking page, we can
+> > > > > > feed it back to the page pool instead of the page allocator.
+> > > > > >
+> > > > > > From a first look, we should be able to use the PG_owner_priv_1 page
+> > > > > > flag for network pages (see how this flag is overloaded, we can add a
+> > > > > > PG_network alias). With this, we can identify the page in __put_page()
+> > > > > > and __release_page(). These functions are already aware of different
+> > > > > > types of pages and do their respective cleanup handling. We can
+> > > > > > similarly make network a first-class citizen and hand pages back to
+> > > > > > the network allocator from in there.
+> > > > >
+> > > > > For compound pages we have a concept of destructors. Maybe we can extend
+> > > > > that for order-0 pages as well. The struct page is heavily packed and
+> > > > > compound_dtor shares the storage without other metadata
+> > > > >                                         int    pages;    /*    16     4 */
+> > > > >                         unsigned char compound_dtor;     /*    16     1 */
+> > > > >                         atomic_t   hpage_pinned_refcount; /*    16     4 */
+> > > > >                         pgtable_t  pmd_huge_pte;         /*    16     8 */
+> > > > >                         void *     zone_device_data;     /*    16     8 */
+> > > > >
+> > > > > But none of those should really require to be valid when a page is freed
+> > > > > unless I am missing something. It would really require to check their
+> > > > > users whether they can leave the state behind. But if we can establish a
+> > > > > contract that compound_dtor can be always valid when a page is freed
+> > > > > this would be really a nice and useful abstraction because you wouldn't
+> > > > > have to care about the specific type of page.
+> >
+> > Yeah technically nobody should leave these fields behind, but it
+> > sounds pretty awkward to manage an overloaded destructor with a
+> > refcounted object:
+> >
+> > Either every put would have to check ref==1 before to see if it will
+> > be the one to free the page, and then set up the destructor before
+> > putting the final ref. But that means we can't support lockless
+> > tryget() schemes like we have in the page cache with a destructor.
+
+I do not follow the ref==1 part. I mean to use the hugetlb model where
+the destructore is configured for the whole lifetime until the page is
+freed back to the allocator (see below).
+
+> Ah, I think I see what you were getting at with your prior email - at
+> first I thought your suggestion was that, since the driver may have
+> its own refcount, every put would need to check ref == 1 and call into
+> the driver if need be.
+> 
+> Instead, and correct me if I'm wrong, it seems like what you're advocating is:
+> 1) The (opted in) driver no longer hangs onto the ref,
+> 2) Now refcount can go all the way to 0,
+> 3) And when it does, due to the special destructor this page has, it
+> goes back to the driver, rather than the system?
+
+Yes, this is the model we use for hugetlb pages for example. Have a look
+at free_huge_page path (HUGETLB_PAGE_DTOR destructor). It can either
+enqueue a freed page to its pool or to the page allocator depending on
+the pool state.
+ 
+[...]
+> > > If you are going to claim a page flag then it would be much better to
+> > > have it more generic. Flags are really scarce and if all you care about
+> > > is PageHasDestructor() and provide one via page->dtor then the similar
+> > > mechanism can be reused by somebody else. Or does anything prevent that?
+> >
+> > I was suggesting to alias PG_owner_priv_1, which currently isn't used
+> > on network pages. We don't need to allocate a brandnew page flag.
+> >
+> 
+> Just to be certain, is there any danger of having a page, that would
+> not be a network driver page originally, being inside __put_page(),
+> such that PG_owner_priv_1 is set (but with one of its other overloaded
+> meanings)?
+
+Yeah this is a real question. And from what Johannes is saying this
+might pose some problem for this specific flags. I still need to check
+all the users to be certain. One thing is clear though.  PG_owner_priv_1
+is not a part of PAGE_FLAGS_CHECK_AT_FREE so it is not checked when a
+page is freed so it is possible that the flag is left behind when
+somebody does final put_page which makes things harder.
+
+But that would be the case even when the flag is used for network
+specific handling because you cannot tell it from other potential users
+who are outside of networking...
+-- 
+Michal Hocko
+SUSE Labs
