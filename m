@@ -1,73 +1,102 @@
 From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v3 11/14] bfq: disable idle for prio_expire under better_fairness
-Date: Thu, 25 Mar 2021 14:57:55 +0800
-Message-ID: <39653b15a904b5658b6fa23ad1021427ab18c15a.1616649216.git.brookxu@tencent.com>
+Subject: [PATCH v3 10/14] bfq: optimize IO injection under better_fairness
+Date: Thu, 25 Mar 2021 14:57:54 +0800
+Message-ID: <d572933d913b4c38808446abe263b24bdac38098.1616649216.git.brookxu@tencent.com>
 References: <cover.1616649216.git.brookxu@tencent.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :in-reply-to:references:mime-version:content-transfer-encoding;
-        bh=IC6S0GoA+Bjxyq4aIxKh/SpT8Ze+znH1bLzroU/O1D0=;
-        b=SPxdsKnog7hbJTjFckkX1eoumaCRAFblwQSCB9HJ7ZRF6kknKczdyVvqZix1IzZs79
-         kvOuqXawdOV4IeoHb5+OD5Nv1gW9Vxs++KWuJSwwl8RNndWoBP5kImZyEWiLz5ioDJYP
-         WxoJt99R1WFWMfrLD0+hbkUWp1OP1AzbV5GuD0+Gf9Fg477xEn/sdqFpwquvwoIQ1qKy
-         Xdgh1aKMEwhRt0ceYGDhPbsTNSZ5PSBxrRzfB3oFtWp6veXSdL/PCX5BxXBM0hPJV+u8
-         UDoyQk2T80gCWtfEVhMgRkst2E29x+RSisP7Zj7dYWNHTnKRWn6qTXflxR0MR2NswveL
-         QpRw==
+         :in-reply-to:references;
+        bh=DeBrNab0KU7KzKaG5m2cKOd/Gyr3Wt1IGcfHEMz36Qo=;
+        b=Gp+SaexnPkH/P50XCFy/6XBBnQQBLSdHcmjcap9YMg+BTzmyVFYSrHpOXCz5QJyXWo
+         2qa2TcycVdUxzmf/yiC84yw/4NTKRbSwNmv3ef9V9Cuvv5xtlnxi4NDUdDO6pTsEVI+P
+         u3f6OVZRBLLYrGQczOMyCwXQOWjurtcr12+85iVo4J3XTlfCayowMKHno4y7iY7rH1xj
+         SKBxVVQ3GZ9tkGRIL3FQAJQXo0W3u42eDVZKLpHyNbnDC6lrFxN/JXeuSjPthkJlK+Bo
+         UHjgHAodVbbY7BEGztcTi5CYemjF1q+6uURfEFfgkvImU7Sb3m+lPNxq+ZxZKKa0q/S0
+         0A9g==
 In-Reply-To: <cover.1616649216.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 In-Reply-To: <cover.1616649216.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 References: <cover.1616649216.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Under better_fairness, if higher priority queue is waiting
-for service=EF=BC=8Cdisable queue idle, so that a schedule can be
-invoked in time. In addition to CLASS_IDLE, other queues
-allow idle, so that we can better control buffer IO too.
+In order to ensure better Qos of tasks of different groups
+and different classes under better_fairness, we only allow
+the queues of the same class in the same group can be
+injected.
 
-Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.or=
-g>
+Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 ---
- block/bfq-iosched.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ block/bfq-iosched.c | 28 +++++++++++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
 
 diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index be5b1e3..5aa9c2c 100644
+index 51192bd..be5b1e3 100644
 --- a/block/bfq-iosched.c
 +++ b/block/bfq-iosched.c
-@@ -4307,6 +4307,14 @@ static bool bfq_better_to_idle(struct bfq_queue *bfq=
-q)
- 		return true;
-=20
- 	/*
-+	 * In better_fairness mode, we also put emphasis on Qos. The main
-+	 * purpose of allowing idle here is to ensure better isolation
-+	 * of Buffer IO.
-+	 */
-+	if (unlikely(bfqd->better_fairness))
-+		return !(bfqd->bfq_slice_idle =3D=3D 0 || bfq_class_idle(bfqq));
+@@ -1900,6 +1900,27 @@ static void bfq_reset_inject_limit(struct bfq_data *bfqd,
+ 	bfqq->decrease_time_jif = jiffies;
+ }
+ 
++static bool bfq_bfqq_may_inject(struct bfq_queue *bfqq, struct bfq_queue *new_bfqq)
++{
++	struct bfq_data *bfqd = bfqq->bfqd;
++	bool ret = true;
 +
-+	/*
- 	 * Idling is performed only if slice_idle > 0. In addition, we
- 	 * do not idle if
- 	 * (a) bfqq is async
-@@ -4318,6 +4326,9 @@ static bool bfq_better_to_idle(struct bfq_queue *bfqq)
- 	   bfq_class_idle(bfqq))
- 		return false;
-=20
-+	if (bfq_may_expire_in_serv_for_prio(&bfqq->entity))
-+		return false;
++	if (unlikely(bfqd->better_fairness)) {
++		/*
++		 * In addition to throughput, better_fairness also pays
++		 * attention to Qos. In the container scenario, in order
++		 * to ensure the Qos of each group we only allow tasks
++		 * of the same class in the same group to be injected.
++		 */
++		if (bfq_class(bfqq) != bfq_class(new_bfqq))
++			ret = false;
 +
- 	idling_boosts_thr_with_no_issue =3D
- 		idling_boosts_thr_without_issues(bfqd, bfqq);
-=20
---=20
++		if (bfqq_group(bfqq) != bfqq_group(new_bfqq))
++			ret = false;
++	}
++	return ret;
++}
++
+ static void bfq_update_io_intensity(struct bfq_queue *bfqq, u64 now_ns)
+ {
+ 	u64 tot_io_time = now_ns - bfqq->io_start_time;
+@@ -1985,7 +2006,8 @@ static void bfq_check_waker(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+ 	    bfqd->last_completed_rq_bfqq == bfqq ||
+ 	    bfq_bfqq_has_short_ttime(bfqq) ||
+ 	    now_ns - bfqd->last_completion >= 4 * NSEC_PER_MSEC ||
+-	    bfqd->last_completed_rq_bfqq == bfqq->waker_bfqq)
++	    bfqd->last_completed_rq_bfqq == bfqq->waker_bfqq ||
++	    !bfq_bfqq_may_inject(bfqq, bfqd->last_completed_rq_bfqq))
+ 		return;
+ 
+ 	if (bfqd->last_completed_rq_bfqq !=
+@@ -4415,6 +4437,9 @@ static bool bfq_bfqq_must_idle(struct bfq_queue *bfqq)
+ 			else
+ 				limit = in_serv_bfqq->inject_limit;
+ 
++			if (!bfq_bfqq_may_inject(in_serv_bfqq, bfqq))
++				continue;
++
+ 			if (bfqd->rq_in_driver < limit) {
+ 				bfqd->rqs_injected = true;
+ 				return bfqq;
+@@ -4590,6 +4615,7 @@ static struct bfq_queue *bfq_select_queue(struct bfq_data *bfqd)
+ 		 * happen to be served only after other queues.
+ 		 */
+ 		if (async_bfqq &&
++		    !(bfqd->better_fairness && !bfq_class_idx(&bfqq->entity)) &&
+ 		    icq_to_bic(async_bfqq->next_rq->elv.icq) == bfqq->bic &&
+ 		    bfq_serv_to_charge(async_bfqq->next_rq, async_bfqq) <=
+ 		    bfq_bfqq_budget_left(async_bfqq))
+-- 
 1.8.3.1
 
