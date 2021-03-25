@@ -1,139 +1,109 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [mm, net-next v2] mm: net: memcg accounting for TCP rx zerocopy
-Date: Thu, 25 Mar 2021 10:02:28 +0100
-Message-ID: <YFxRpKfwQwobt7IK@dhcp22.suse.cz>
-References: <20210316041645.144249-1-arjunroy.kdev@gmail.com>
- <YFCH8vzFGmfFRCvV@cmpxchg.org>
- <CAOFY-A23NBpJQ=mVQuvFib+cREAZ_wC5=FOMzv3YCO69E4qRxw@mail.gmail.com>
- <YFJ+5+NBOBiUbGWS@cmpxchg.org>
- <YFn8bLBMt7txj3AZ@dhcp22.suse.cz>
- <CAOFY-A22Pp3Z0apYBWtOJCD8TxfrbZ_HE9Xd6eUds8aEvRL+uw@mail.gmail.com>
- <YFsA78FfzICrnFf7@dhcp22.suse.cz>
- <YFut+cZhsJec7Pud@cmpxchg.org>
- <CAOFY-A0Y0ye74bnpcWsKOPZMJSrFW8mJxVJrpwiy2dcGgUJ5Tw@mail.gmail.com>
+From: Arnd Bergmann <arnd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 11/11] [RFC] drm/i915/dp: fix array overflow warning
+Date: Thu, 25 Mar 2021 10:53:14 +0100
+Message-ID: <CAK8P3a0HGiPQ-k6t6roTgeUvVAMMY=fMnGV0+t48yJjz55XFAA@mail.gmail.com>
+References: <20210322160253.4032422-1-arnd@kernel.org> <20210322160253.4032422-12-arnd@kernel.org>
+ <87wntv3bgt.fsf@intel.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1616662949; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=4KPBFe0XybqKsFmMmUb7cVLIpaMGEswxqCxAFWNw8sM=;
-        b=Nb7XPpOuVRDN3w6eNmTUhnynRp9xVASYQCH5sOuzsTCxTi8EBOJus9BNROk8Y+uw8/71Jm
-        vvy3H7614dTf4N43U50ZNRjc026/j3m7CVjESgZCffKsRHPWNDxPNR1DjWYMRNOEc16W4E
-        jrPliVKNSqfRLthmUwuSmCKoJAaENcs=
-Content-Disposition: inline
-In-Reply-To: <CAOFY-A0Y0ye74bnpcWsKOPZMJSrFW8mJxVJrpwiy2dcGgUJ5Tw@mail.gmail.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1616666011;
+        bh=zDIkwCmITSxBLdjnUtP8aWuLpPIn7yP+onOPa2fWtIM=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=aw+dq7xqFwszvQn+7YjwXW7/fxugShYPXJjaDJagcTuDAOuB8E9nNiKezq66fA/8m
+         hFuPlB/FQy5OaxdMAZxMHga0tzWzb7PQ6p+xNpG4X8bAN7OAf2G+Qkm0llEzqPMeL1
+         Kid4PdS5VCb6nVOuYhBFHH0Yau0kHvVybsDn9ffxag5/mdTWHzlRYsdW/dxayQNar3
+         KY8Ym1MijDJv/mTgzfTa/iwhfzr2YqelyjbMy1v1O0PJUB5A8eiQqK6LL68YF5Ta8p
+         SByPQKDJncOjrUNNBuwi03nuXQ11JZYKUdMwcj0KubiMCvSEyc/5dYjwzZVUc5ZcXd
+         6uORErooXgDMw==
+In-Reply-To: <87wntv3bgt.fsf-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Arjun Roy <arjunroy@google.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Arjun Roy <arjunroy.kdev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, netdev <netdev@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Cgroups <cgroups@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, Shakeel Butt <shakeelb@google.com>, Eric Dumazet <edumazet@google.com>, Soheil Hassas Yeganeh <soheil@google.com>, Jakub Kicinski <kuba@kernel.org>, Yang Shi <shy828301@gmail.com>, Roman Gushchin <guro@fb.com>
+To: Jani Nikula <jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Martin Sebor <msebor-/MQLu3FmUzdAfugRpC6u6w@public.gmane.org>, Joonas Lahtinen <joonas.lahtinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rodrigo Vivi <rodrigo.vivi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, the arch/x86 maintainers <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ning Sun <ning.sun-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kalle Valo <kvalo-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Simon Kelley <simon-xn1N/tgparsycpQjotevgVpr/1R2p/CL@public.gmane.org>, James Smart <james.smart-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Anders Larsen <al-V9/YLgxv/GvR7s880joybQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Imre Deak <imre.deak-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Linux ARM <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, tboot-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Intel Graphics <intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, dri-dev
 
-On Wed 24-03-21 15:49:15, Arjun Roy wrote:
-> On Wed, Mar 24, 2021 at 2:24 PM Johannes Weiner <hannes@cmpxchg.org> wrote:
-> >
-> > On Wed, Mar 24, 2021 at 10:12:46AM +0100, Michal Hocko wrote:
-> > > On Tue 23-03-21 11:47:54, Arjun Roy wrote:
-> > > > On Tue, Mar 23, 2021 at 7:34 AM Michal Hocko <mhocko@suse.com> wrote:
-> > > > >
-> > > > > On Wed 17-03-21 18:12:55, Johannes Weiner wrote:
-> > > > > [...]
-> > > > > > Here is an idea of how it could work:
-> > > > > >
-> > > > > > struct page already has
-> > > > > >
-> > > > > >                 struct {        /* page_pool used by netstack */
-> > > > > >                         /**
-> > > > > >                          * @dma_addr: might require a 64-bit value even on
-> > > > > >                          * 32-bit architectures.
-> > > > > >                          */
-> > > > > >                         dma_addr_t dma_addr;
-> > > > > >                 };
-> > > > > >
-> > > > > > and as you can see from its union neighbors, there is quite a bit more
-> > > > > > room to store private data necessary for the page pool.
-> > > > > >
-> > > > > > When a page's refcount hits zero and it's a networking page, we can
-> > > > > > feed it back to the page pool instead of the page allocator.
-> > > > > >
-> > > > > > From a first look, we should be able to use the PG_owner_priv_1 page
-> > > > > > flag for network pages (see how this flag is overloaded, we can add a
-> > > > > > PG_network alias). With this, we can identify the page in __put_page()
-> > > > > > and __release_page(). These functions are already aware of different
-> > > > > > types of pages and do their respective cleanup handling. We can
-> > > > > > similarly make network a first-class citizen and hand pages back to
-> > > > > > the network allocator from in there.
-> > > > >
-> > > > > For compound pages we have a concept of destructors. Maybe we can extend
-> > > > > that for order-0 pages as well. The struct page is heavily packed and
-> > > > > compound_dtor shares the storage without other metadata
-> > > > >                                         int    pages;    /*    16     4 */
-> > > > >                         unsigned char compound_dtor;     /*    16     1 */
-> > > > >                         atomic_t   hpage_pinned_refcount; /*    16     4 */
-> > > > >                         pgtable_t  pmd_huge_pte;         /*    16     8 */
-> > > > >                         void *     zone_device_data;     /*    16     8 */
-> > > > >
-> > > > > But none of those should really require to be valid when a page is freed
-> > > > > unless I am missing something. It would really require to check their
-> > > > > users whether they can leave the state behind. But if we can establish a
-> > > > > contract that compound_dtor can be always valid when a page is freed
-> > > > > this would be really a nice and useful abstraction because you wouldn't
-> > > > > have to care about the specific type of page.
-> >
-> > Yeah technically nobody should leave these fields behind, but it
-> > sounds pretty awkward to manage an overloaded destructor with a
-> > refcounted object:
-> >
-> > Either every put would have to check ref==1 before to see if it will
-> > be the one to free the page, and then set up the destructor before
-> > putting the final ref. But that means we can't support lockless
-> > tryget() schemes like we have in the page cache with a destructor.
+On Thu, Mar 25, 2021 at 9:05 AM Jani Nikula <jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org> wrote:
+> > Clearly something is wrong here, but I can't quite figure out what.
+> > Changing the array size to 16 bytes avoids the warning, but is
+> > probably the wrong solution here.
+>
+> Ugh. drm_dp_channel_eq_ok() does not actually require more than
+> DP_LINK_STATUS_SIZE - 2 elements in the link_status. It's some other
+> related functions that do, and in most cases it's convenient to read all
+> those DP_LINK_STATUS_SIZE bytes.
+>
+> However, here the case is slightly different for DP MST, and the change
+> causes reserved DPCD addresses to be read. Not sure it matters, but
+> really I think the problem is what drm_dp_channel_eq_ok() advertizes.
+>
+> I also don't like the array notation with sizes in function parameters
+> in general, because I think it's misleading. Would gcc-11 warn if a
+> function actually accesses the memory out of bounds of the size?
 
-I do not follow the ref==1 part. I mean to use the hugetlb model where
-the destructore is configured for the whole lifetime until the page is
-freed back to the allocator (see below).
+Yes, that is the point of the warning. Using an explicit length in an
+array argument type tells gcc that the function will never access
+beyond the end of that bound, and that passing a short array
+is a bug.
 
-> Ah, I think I see what you were getting at with your prior email - at
-> first I thought your suggestion was that, since the driver may have
-> its own refcount, every put would need to check ref == 1 and call into
-> the driver if need be.
-> 
-> Instead, and correct me if I'm wrong, it seems like what you're advocating is:
-> 1) The (opted in) driver no longer hangs onto the ref,
-> 2) Now refcount can go all the way to 0,
-> 3) And when it does, due to the special destructor this page has, it
-> goes back to the driver, rather than the system?
+I don't know if this /only/ means triggering a warning, or if gcc
+is also able to make optimizations after classifying this as undefined
+behavior that it would not make for an unspecified length.
 
-Yes, this is the model we use for hugetlb pages for example. Have a look
-at free_huge_page path (HUGETLB_PAGE_DTOR destructor). It can either
-enqueue a freed page to its pool or to the page allocator depending on
-the pool state.
- 
-[...]
-> > > If you are going to claim a page flag then it would be much better to
-> > > have it more generic. Flags are really scarce and if all you care about
-> > > is PageHasDestructor() and provide one via page->dtor then the similar
-> > > mechanism can be reused by somebody else. Or does anything prevent that?
-> >
-> > I was suggesting to alias PG_owner_priv_1, which currently isn't used
-> > on network pages. We don't need to allocate a brandnew page flag.
-> >
-> 
-> Just to be certain, is there any danger of having a page, that would
-> not be a network driver page originally, being inside __put_page(),
-> such that PG_owner_priv_1 is set (but with one of its other overloaded
-> meanings)?
+> Anyway. I don't think we're going to get rid of the array notation
+> anytime soon, if ever, no matter how much I dislike it, so I think the
+> right fix would be to at least state the correct required size in
+> drm_dp_channel_eq_ok().
 
-Yeah this is a real question. And from what Johannes is saying this
-might pose some problem for this specific flags. I still need to check
-all the users to be certain. One thing is clear though.  PG_owner_priv_1
-is not a part of PAGE_FLAGS_CHECK_AT_FREE so it is not checked when a
-page is freed so it is possible that the flag is left behind when
-somebody does final put_page which makes things harder.
+Ok. Just to confirm: Changing the declaration to an unspecified length
+avoids the warnings, as does the patch below:
 
-But that would be the case even when the flag is used for network
-specific handling because you cannot tell it from other potential users
-who are outside of networking...
--- 
-Michal Hocko
-SUSE Labs
+diff --git a/drivers/gpu/drm/drm_dp_helper.c b/drivers/gpu/drm/drm_dp_helper.c
+index eedbb48815b7..6ebeec3d88a7 100644
+--- a/drivers/gpu/drm/drm_dp_helper.c
++++ b/drivers/gpu/drm/drm_dp_helper.c
+@@ -46,12 +46,12 @@
+  */
+
+ /* Helpers for DP link training */
+-static u8 dp_link_status(const u8 link_status[DP_LINK_STATUS_SIZE], int r)
++static u8 dp_link_status(const u8 link_status[DP_LINK_STATUS_SIZE - 2], int r)
+ {
+        return link_status[r - DP_LANE0_1_STATUS];
+ }
+
+-static u8 dp_get_lane_status(const u8 link_status[DP_LINK_STATUS_SIZE],
++static u8 dp_get_lane_status(const u8 link_status[DP_LINK_STATUS_SIZE - 2],
+                             int lane)
+ {
+        int i = DP_LANE0_1_STATUS + (lane >> 1);
+@@ -61,7 +61,7 @@ static u8 dp_get_lane_status(const u8
+link_status[DP_LINK_STATUS_SIZE],
+        return (l >> s) & 0xf;
+ }
+
+-bool drm_dp_channel_eq_ok(const u8 link_status[DP_LINK_STATUS_SIZE],
++bool drm_dp_channel_eq_ok(const u8 link_status[DP_LINK_STATUS_SIZE - 2],
+                          int lane_count)
+ {
+        u8 lane_align;
+diff --git a/include/drm/drm_dp_helper.h b/include/drm/drm_dp_helper.h
+index edffd1dcca3e..160f7fd127b1 100644
+--- a/include/drm/drm_dp_helper.h
++++ b/include/drm/drm_dp_helper.h
+@@ -1456,7 +1456,7 @@ enum drm_dp_phy {
+
+ #define DP_LINK_CONSTANT_N_VALUE 0x8000
+ #define DP_LINK_STATUS_SIZE       6
+-bool drm_dp_channel_eq_ok(const u8 link_status[DP_LINK_STATUS_SIZE],
++bool drm_dp_channel_eq_ok(const u8 link_status[DP_LINK_STATUS_SIZE - 2],
+                          int lane_count);
+ bool drm_dp_clock_recovery_ok(const u8 link_status[DP_LINK_STATUS_SIZE],
+                              int lane_count);
+
+
+This obviously needs a good explanation in the code and the changelog text,
+which I don't have, but if the above is what you had in mind, please take that
+and add Reported-by/Tested-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>.
+
+       Arnd
