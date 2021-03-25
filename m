@@ -1,113 +1,166 @@
-From: brookxu <brookxu.cn@gmail.com>
-Subject: [PATCH v3 07/14] bfq: introduce better_fairness for container scene
-Date: Thu, 25 Mar 2021 14:57:51 +0800
-Message-ID: <9d9566d30702268e1f270f0cf7e8b08444c127a6.1616649216.git.brookxu@tencent.com>
+From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH v3 09/14] bfq: expire in_serv_queue for prio_expire under better_fairness
+Date: Thu, 25 Mar 2021 14:57:53 +0800
+Message-ID: <f2cb0781623e336d2ac6a6b010d22a8353ed0f83.1616649216.git.brookxu@tencent.com>
 References: <cover.1616649216.git.brookxu@tencent.com>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :in-reply-to:references;
-        bh=U2Ib5ddOEuKBopBvgjIJBWoMeTG4fDxN3eIx8DhyDG0=;
-        b=te9NBf+emxKWBuf7IJoeMpDO6KZYXEcL9VBzWGRMDUAbr/9GThJYF8oDn0LtaQjFlh
-         X/4Hu5GtC2OgZVNMaOCOIIiRdILv+sAybk9aqi/C/cyU10oULWf4FBtNcla+hnbhDhAF
-         DahdKd4VTsFjIoNo1TLAGFPsF493k6SseDengj3eeJam+Ibi6ZDht6aSmDkmcNoV8bvm
-         6zveANN7YmTEirYyRgSV4zKcOyo9yWwcXJbLuKKf3p2SUwV2Ja3wX7h0Uv8qGfZDbytB
-         fZTbj4tBwhRrlG+WokxAEtMbLHjJLbbJA6k841sKw2TtNQ2l9357WOJkKx0VgmsN85rI
-         mKVg==
-In-Reply-To: <cover.1616649216.git.brookxu@tencent.com>
-In-Reply-To: <cover.1616649216.git.brookxu@tencent.com>
-References: <cover.1616649216.git.brookxu@tencent.com>
+        bh=gKQxiL9Ics9FEiHObsHY8UcO0dmLMvnwEV9tZC7Iho0=;
+        b=L/1YxwipDPbGlV3OvtnrF5Zs6ewcstH0eyvCsYmC6jf4Y49EMnKnnS5uVgcAkfF5YT
+         TP0FfChTGF1e/uTdTwDj3DR5rVmo9xiHLMmGtF9ZEErMToKFaOLzTVY7CCqSH6ziQZp0
+         YEwcsC7WkML+ogRIGSh9FUDsVfpDecNXHD1azfiSZEdkgubRsEPNVXnrHfJLQRVgtl0l
+         72YSqMVl8Rz7whfxJ/hSaR5X8PUGA29XnPBOVdGgHWs80xt0NVzNeBBAhMwl9vApvluB
+         tiGWmiRF1T/7YjoY1kJlc7yS9ZEB3oaUmJmT74NCgzcYn0Vlghwfgfs26JnnQJLfX2p7
+         drMQ==
+In-Reply-To: <cover.1616649216.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+In-Reply-To: <cover.1616649216.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+References: <cover.1616649216.git.brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: paolo.valente@linaro.org, axboe@kernel.dk, tj@kernel.org
-Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-From: Chunguang Xu <brookxu@tencent.com>
+From: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-In the container scenario, in addition to throughput, we
-also pay attention to Qos. In order to better support this
-scenario, we introduce the better_fairness mode here. In
-this mode, we expect to control the Qos of each group
-according to its priority better. Only add configuration
-interface here
+Traverse all schedule domains upward, if there are higher
+priority tasks waiting for service, mark in_service_queue
+prio_expire and then expire it, so the So RT tasks can be
+scheduled in time.
 
-Signed-off-by: Chunguang Xu <brookxu@tencent.com>
+Signed-off-by: Chunguang Xu <brookxu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 ---
- block/bfq-iosched.c | 22 ++++++++++++++++++++++
- block/bfq-iosched.h | 10 ++++++++++
- 2 files changed, 32 insertions(+)
+ block/bfq-iosched.c |  7 +++----
+ block/bfq-iosched.h |  1 +
+ block/bfq-wf2q.c    | 60 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 64 insertions(+), 4 deletions(-)
 
 diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
-index ee8c457..e7bc5e2 100644
+index 6e19b5a..51192bd 100644
 --- a/block/bfq-iosched.c
 +++ b/block/bfq-iosched.c
-@@ -6745,6 +6745,7 @@ static ssize_t __FUNC(struct elevator_queue *e, char *page)		\
- SHOW_FUNCTION(bfq_max_budget_show, bfqd->bfq_user_max_budget, 0);
- SHOW_FUNCTION(bfq_timeout_sync_show, bfqd->bfq_timeout, 1);
- SHOW_FUNCTION(bfq_strict_guarantees_show, bfqd->strict_guarantees, 0);
-+SHOW_FUNCTION(bfq_better_fairness_show, bfqd->better_fairness, 0);
- SHOW_FUNCTION(bfq_low_latency_show, bfqd->low_latency, 0);
- #undef SHOW_FUNCTION
+@@ -4736,10 +4736,9 @@ static struct request *bfq_dispatch_rq_from_bfqq(struct bfq_data *bfqd,
+ 	 * belongs to CLASS_IDLE and other queues are waiting for
+ 	 * service.
+ 	 */
+-	if (!(bfq_tot_busy_queues(bfqd) > 1 && bfq_class_idle(bfqq)))
+-		goto return_rq;
+-
+-	bfq_bfqq_expire(bfqd, bfqq, false, BFQQE_BUDGET_EXHAUSTED);
++	if ((bfq_tot_busy_queues(bfqd) > 1 && bfq_class_idle(bfqq)) ||
++	    bfq_bfqq_prio_expire(bfqq))
++		bfq_bfqq_expire(bfqd, bfqq, false, BFQQE_BUDGET_EXHAUSTED);
  
-@@ -6886,6 +6887,26 @@ static ssize_t bfq_strict_guarantees_store(struct elevator_queue *e,
- 	return count;
- }
- 
-+static ssize_t bfq_better_fairness_store(struct elevator_queue *e,
-+				     const char *page, size_t count)
-+{
-+	struct bfq_data *bfqd = e->elevator_data;
-+	unsigned long __data;
-+	int ret;
-+
-+	ret = bfq_var_store(&__data, (page));
-+	if (ret)
-+		return ret;
-+
-+	if (__data > 1)
-+		__data = 1;
-+	if (__data == 0 && bfqd->better_fairness != 0)
-+		bfq_end_wr(bfqd);
-+	bfqd->better_fairness = __data;
-+
-+	return count;
-+}
-+
- static ssize_t bfq_low_latency_store(struct elevator_queue *e,
- 				     const char *page, size_t count)
- {
-@@ -6919,6 +6940,7 @@ static ssize_t bfq_low_latency_store(struct elevator_queue *e,
- 	BFQ_ATTR(max_budget),
- 	BFQ_ATTR(timeout_sync),
- 	BFQ_ATTR(strict_guarantees),
-+	BFQ_ATTR(better_fairness),
- 	BFQ_ATTR(low_latency),
- 	__ATTR_NULL
- };
+ return_rq:
+ 	return rq;
 diff --git a/block/bfq-iosched.h b/block/bfq-iosched.h
-index f9ed1da..674de8b 100644
+index 8af5ac0..1406398 100644
 --- a/block/bfq-iosched.h
 +++ b/block/bfq-iosched.h
-@@ -672,6 +672,16 @@ struct bfq_data {
- 	bool strict_guarantees;
+@@ -989,6 +989,7 @@ void bfq_bfqq_expire(struct bfq_data *bfqd, struct bfq_queue *bfqq,
+ void bfq_release_process_ref(struct bfq_data *bfqd, struct bfq_queue *bfqq);
+ void bfq_schedule_dispatch(struct bfq_data *bfqd);
+ void bfq_put_async_queues(struct bfq_data *bfqd, struct bfq_group *bfqg);
++bool bfq_may_expire_in_serv_for_prio(struct bfq_entity *entity);
  
- 	/*
-+	 * If there is no prio preemption, we force the device to
-+	 * idle to ensure Qos. IO inject also has some additional
-+	 * restrictions. The inject/merge queue should come from the
-+	 * same class in the same group. Doing so will reduce the
-+	 * throughput of the system, but it can better guarantee
-+	 * the Qos of each group and real-time tasks.
-+	 */
-+	bool better_fairness;
+ /* ------------ end of main algorithm interface -------------- */
+ 
+diff --git a/block/bfq-wf2q.c b/block/bfq-wf2q.c
+index 1f8f3c5..b477a9b 100644
+--- a/block/bfq-wf2q.c
++++ b/block/bfq-wf2q.c
+@@ -161,6 +161,51 @@ struct bfq_group *bfq_bfqq_to_bfqg(struct bfq_queue *bfqq)
+ 	return bfq_entity_to_bfqg(group_entity);
+ }
+ 
++bool bfq_may_expire_in_serv_for_prio(struct bfq_entity *entity)
++{
++	struct bfq_sched_data *sd;
++	struct bfq_queue *bfqq;
++	struct bfq_group *bfqg;
++	bool ret = false;
++
++	sd = entity->sched_data;
++	bfqg = container_of(sd, struct bfq_group, sched_data);
++
++	if (likely(!bfqg->bfqd->better_fairness))
++		return false;
++
++	bfqq = bfqg->bfqd->in_service_queue;
++	if (bfqq) {
++		struct bfq_entity *next_in_serv;
++
++		/*
++		 * Traverse the upper-level scheduling domain for
++		 * prio preemption, and expire in_service_queue
++		 * if necessary.
++		 */
++		entity = &bfqq->entity;
++		for_each_entity(entity) {
++			sd = entity->sched_data;
++			next_in_serv = sd->next_in_service;
++
++			if (!next_in_serv)
++				continue;
++
++			/*
++			 * Expire bfqq, if next_in_serv belongs to
++			 * a higher class.
++			 */
++			if (bfq_class_idx(next_in_serv) <
++			    bfq_class_idx(entity)) {
++				bfq_mark_bfqq_prio_expire(bfqq);
++				ret = true;
++				break;
++			}
++		}
++	}
++	return ret;
++}
++
+ /*
+  * Returns true if this budget changes may let next_in_service->parent
+  * become the next_in_service entity for its parent entity.
+@@ -244,6 +289,11 @@ struct bfq_group *bfq_bfqq_to_bfqg(struct bfq_queue *bfqq)
+ 	return bfqq->bfqd->root_group;
+ }
+ 
++bool bfq_may_expire_in_serv_for_prio(struct bfq_entity *entity)
++{
++	return false;
++}
++
+ static bool bfq_update_parent_budget(struct bfq_entity *next_in_service)
+ {
+ 	return false;
+@@ -1162,6 +1212,7 @@ static void bfq_activate_requeue_entity(struct bfq_entity *entity,
+ 					bool non_blocking_wait_rq,
+ 					bool requeue, bool expiration)
+ {
++	struct bfq_entity *old_entity = entity;
+ 	struct bfq_sched_data *sd;
+ 
+ 	for_each_entity(entity) {
+@@ -1172,6 +1223,15 @@ static void bfq_activate_requeue_entity(struct bfq_entity *entity,
+ 		    !requeue)
+ 			break;
+ 	}
 +
 +	/*
- 	 * Last time at which a queue entered the current burst of
- 	 * queues being activated shortly after each other; for more
- 	 * details about this and the following parameters related to
++	 * Expire in_service_queue, if a task belongs to higher class
++	 * is added to the upper-level scheduling domain, we should
++	 * initiate a new schedule. But here is just to mark bfqq
++	 * prio_expire, the real schedule occurs in
++	 * bfq_dispatch_rq_from_bfqq().
++	 */
++	bfq_may_expire_in_serv_for_prio(old_entity);
+ }
+ 
+ /**
 -- 
 1.8.3.1
 
