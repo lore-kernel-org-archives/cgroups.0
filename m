@@ -1,20 +1,20 @@
 From: brookxu <brookxu.cn@gmail.com>
-Subject: [PATCH v3 13/14] bfq: remove unnecessary initialization logic
-Date: Thu, 25 Mar 2021 14:57:57 +0800
-Message-ID: <e26a3b14976a833e1350799f84f49c10a50e3705.1616649216.git.brookxu@tencent.com>
+Subject: [PATCH v3 12/14] bfq: disable merging between different groups under better_fairness
+Date: Thu, 25 Mar 2021 14:57:56 +0800
+Message-ID: <d31d9a4bc5705adc0b6669b48470fcaabf55074a.1616649216.git.brookxu@tencent.com>
 References: <cover.1616649216.git.brookxu@tencent.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :in-reply-to:references;
-        bh=Qko9xgJWdOHvuiNbVOg4Moyiw5zlG2MS/A0wr9gMovI=;
-        b=gPAx01xm/r3iBawJ1NuBPdBcHS3OM1cuHtXiXwjkO9IJTncPqMSyYWAyOPZovOy7+M
-         HKXJZuHXPuOl/J9elmeo6iMwBmeyFrz00y071+NCTvU1nq1hj/j/84H6Oa4uwPQ9/+Ae
-         IqfRId9AUwEcQaNy0eow2CeBabWIFg6tAS2jOAs3kAnJshCm9bwwS/uWGs15p/bgKvhG
-         5bCKxZEFicPLPckJHicYsivZIHUpFKQeDmMOPVnwV42vWhPnBQ5dWejb4wD2klnEdx7i
-         YHerNeGnF96sZM7WaDwpZ5MgykN+gp4OWExqZxgwT7LLZB30esjasWGaanZ3mwDbmoMP
-         S3Vg==
+        bh=ZZvw7/YnAvbuz3MYm/09eOTBXS+Szbh8Xu21JXaDC18=;
+        b=A5MwuGnBLXyxo1pNxzLhQUC1BCejhCEC8eQEep08Z+a+m2RfBsIU+6isYbN7js2fpI
+         jjkbVmee3EPb+2fDE30FjVmQc7QtHnOLSzFfaObbLfd9T8zni8h2cDnaBBP38ue13hHk
+         HR4cNYODcN4OIrVlkNLHh2J5QZjZ+C/qhcS8v5PdccuELOCUhqJ7jnFnKm5JmwL2FmPE
+         J+bwS8yOkJv+vk8NCWANCP3/fDkf+GCEHbhYSxD9bsoc8Yk7QgaNZA5zVEsudsJVoxPJ
+         4VjLXwuA7INBQdt0tA+RxEroUa9tPBGhx5rUhreTd5MHorZLxDHpWAAyX0W+aN473Zt3
+         PM3g==
 In-Reply-To: <cover.1616649216.git.brookxu@tencent.com>
 In-Reply-To: <cover.1616649216.git.brookxu@tencent.com>
 References: <cover.1616649216.git.brookxu@tencent.com>
@@ -27,36 +27,28 @@ Cc: linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kern
 
 From: Chunguang Xu <brookxu@tencent.com>
 
-Since we will initialize sched_data.service_tree[] in
-bfq_init_root_group(), bfq_create_group_hierarchy() can
-ignore this part of the initialization, which can avoid
-repeated initialization.
+In order to better guarantee the Qos for each group, we do not
+allow queues of different groups to be merged.
 
 Signed-off-by: Chunguang Xu <brookxu@tencent.com>
 ---
- block/bfq-cgroup.c | 4 ----
- 1 file changed, 4 deletions(-)
+ block/bfq-iosched.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/block/bfq-cgroup.c b/block/bfq-cgroup.c
-index ab4bc41..05054e1 100644
---- a/block/bfq-cgroup.c
-+++ b/block/bfq-cgroup.c
-@@ -1514,15 +1514,11 @@ void bfqg_and_blkg_put(struct bfq_group *bfqg) {}
- struct bfq_group *bfq_create_group_hierarchy(struct bfq_data *bfqd, int node)
- {
- 	struct bfq_group *bfqg;
--	int i;
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index 5aa9c2c..f4a99f9 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -2665,6 +2665,9 @@ static bool bfq_may_be_close_cooperator(struct bfq_queue *bfqq,
+ 	if (!bfq_bfqq_sync(bfqq) || !bfq_bfqq_sync(new_bfqq))
+ 		return false;
  
- 	bfqg = kmalloc_node(sizeof(*bfqg), GFP_KERNEL | __GFP_ZERO, node);
- 	if (!bfqg)
- 		return NULL;
- 
--	for (i = 0; i < BFQ_IOPRIO_CLASSES; i++)
--		bfqg->sched_data.service_tree[i] = BFQ_SERVICE_TREE_INIT;
--
- 	return bfqg;
++	if (!bfq_bfqq_may_inject(bfqq, new_bfqq))
++		return false;
++
+ 	return true;
  }
- #endif	/* CONFIG_BFQ_GROUP_IOSCHED */
+ 
 -- 
 1.8.3.1
 
