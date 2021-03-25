@@ -1,67 +1,132 @@
-From: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Thu, 25 Mar 2021 11:26:48 +0100
-Message-ID: <YFxlaGyJkTM1m9IX@myrica>
-References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
- <1614463286-97618-6-git-send-email-jacob.jun.pan@linux.intel.com>
- <20210318172234.3e8c34f7@jacob-builder> <YFR10eeDVf5ZHV5l@myrica>
- <20210319124645.GP2356281@nvidia.com> <YFSqDNJ5yagk4eO+@myrica>
- <20210319135432.GT2356281@nvidia.com>
- <20210319112221.5123b984@jacob-builder> <YFhiMLR35WWMW/Hu@myrica>
- <20210324100246.4e6b8aa1@jacob-builder>
+From: Martin Sebor <msebor-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 11/11] [RFC] drm/i915/dp: fix array overflow warning
+Date: Thu, 25 Mar 2021 08:49:56 -0600
+Message-ID: <44ad545d-cc07-2e5f-9ec8-ad848f39268a@gmail.com>
+References: <20210322160253.4032422-1-arnd@kernel.org>
+ <20210322160253.4032422-12-arnd@kernel.org> <87wntv3bgt.fsf@intel.com>
+ <CAK8P3a0HGiPQ-k6t6roTgeUvVAMMY=fMnGV0+t48yJjz55XFAA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linaro.org; s=google;
- h=date:from:to:cc:subject:message-id:references:mime-version
- :content-disposition:in-reply-to;
- bh=u9AkdAVb0gsY6G2Oei9QB4lZ6Usat1kUEujoUhrt1js=;
- b=QSAmfgEVULSIhCaPdxWKJcVrRBjVBDsS0MmFMIPOq9bRxTAPOK04UvAqkTDtsAX5zl
- R3UjLwuRfcbW9sL8Lnxv/AScRo2vVP3gxjtftPodfxo+2+YeaHgnQ3z4djluByoM0eec
- qc73JgmFYVWwwYhqPgPTmV9EyuypESanyM8URvd1xSs2qwrJSJz1FFUOod8S5BH6ox+n
- eRa4xcqneXr4ob4p7geLCd86atWQTyDU7x6Nc0CVtPADzPOiUwMFjeJ+KtMUKwhiImbi
- u1O/kLwY+2mpo4dgm4IN7Whnq6O8CmsBxKKazHidEBCbWK2UVMzSUm0wPTRy0H9KXhlJ
- j8gw==
-Content-Disposition: inline
-In-Reply-To: <20210324100246.4e6b8aa1@jacob-builder>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-To: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=A01xU9scL5QHqCTcEARA+UZXhX3w6QfTLVjGvG0qhWs=;
+        b=fjIpx38pKKpF7tuHHnx+6bHTa8GIAr+gRLGjKt2x69P7v8gjKVe3W9dYqxgP9vSwI9
+         QihvfqnQepbko6JQmAIRW+EQAppxHtxDBVpKo/ulTx0XeTA+TsLT2XPd5R47EHfs/vL+
+         RcfmGpqKXdbxR340ysSTk2TR5aaFQcoTZCnFjyd/rFWDxI9wey0GlS/SNuFSvLhs+psi
+         0EVXYddJbSDWFSlhrUt5I6M67vOMO/RGQOVQ0jvf2R4mqWnxzVz/163P9EVlylTqlOyg
+         RuvSoLqCSa3d1HolOz0J7uXNfTUCd96jvr8FQ9pq7Hu06fFtmIslpU2LxY/2YEkWewFc
+         MUFw==
+In-Reply-To: <CAK8P3a0HGiPQ-k6t6roTgeUvVAMMY=fMnGV0+t48yJjz55XFAA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
+List-ID: <cgroups.vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Arnd Bergmann <arnd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jani Nikula <jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Martin Sebor <msebor-/MQLu3FmUzdAfugRpC6u6w@public.gmane.org>, Joonas Lahtinen <joonas.lahtinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Rodrigo Vivi <rodrigo.vivi-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, Daniel Vetter <daniel-/w4YWyX8dFk@public.gmane.org>, the arch/x86 maintainers <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ning Sun <ning.sun-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Kalle Valo <kvalo-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Simon Kelley <simon-xn1N/tgparsycpQjotevgVpr/1R2p/CL@public.gmane.org>, James Smart <james.smart-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Anders Larsen <al-V9/YLgxv/GvR7s880joybQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Imre Deak <imre.deak-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Linux ARM <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, tboot-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Intel Graphics <intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, dri-devel
 
-On Wed, Mar 24, 2021 at 10:02:46AM -0700, Jacob Pan wrote:
-> > And a flag IOMMU_SVA_BIND_SUPERVISOR (not that I plan to implement it in
-> > the SMMU, but I think we need to clean the current usage)
-> > 
-> You mean move #define SVM_FLAG_SUPERVISOR_MODE out of Intel code to be a
-> generic flag in iommu-sva-lib.h called IOMMU_SVA_BIND_SUPERVISOR?
+On 3/25/21 3:53 AM, Arnd Bergmann wrote:
+> On Thu, Mar 25, 2021 at 9:05 AM Jani Nikula <jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org> wrote:
+>>> Clearly something is wrong here, but I can't quite figure out what.
+>>> Changing the array size to 16 bytes avoids the warning, but is
+>>> probably the wrong solution here.
+>>
+>> Ugh. drm_dp_channel_eq_ok() does not actually require more than
+>> DP_LINK_STATUS_SIZE - 2 elements in the link_status. It's some other
+>> related functions that do, and in most cases it's convenient to read all
+>> those DP_LINK_STATUS_SIZE bytes.
+>>
+>> However, here the case is slightly different for DP MST, and the change
+>> causes reserved DPCD addresses to be read. Not sure it matters, but
+>> really I think the problem is what drm_dp_channel_eq_ok() advertizes.
+>>
+>> I also don't like the array notation with sizes in function parameters
+>> in general, because I think it's misleading. Would gcc-11 warn if a
+>> function actually accesses the memory out of bounds of the size?
+> 
+> Yes, that is the point of the warning. Using an explicit length in an
+> array argument type tells gcc that the function will never access
+> beyond the end of that bound, and that passing a short array
+> is a bug.
+> 
+> I don't know if this /only/ means triggering a warning, or if gcc
+> is also able to make optimizations after classifying this as undefined
+> behavior that it would not make for an unspecified length.
 
-Yes, though it would need to be in iommu.h since it's used by device
-drivers
+GCC uses the array parameter notation as a hint for warnings but
+it doesn't optimize on this basis and never will be able to because
+code that accesses more elements from the array isn't invalid.
+Adding static to the bound, as in void f (int[static N]) does
+imply that the function won't access more than N elements and
+C intends for optimizers to rely on it, although GCC doesn't yet.
 
-> > Also wondering about device driver allocating auxiliary domains for their
-> > private use, to do iommu_map/unmap on private PASIDs (a clean replacement
-> > to super SVA, for example). Would that go through the same path as
-> > /dev/ioasid and use the cgroup of current task?
-> >
-> For the in-kernel private use, I don't think we should restrict based on
-> cgroup, since there is no affinity to user processes. I also think the
-> PASID allocation should just use kernel API instead of /dev/ioasid. Why
-> would user space need to know the actual PASID # for device private domains?
-> Maybe I missed your idea?
+The warning for the array notation is a more portable alternative
+to explicitly annotating functions with attribute access, and to
+-Wvla-parameter for VLA parameters.  The latter seem to be used
+relatively rarely, sometimes deliberately because of the bad rap
+of VLA objects, even though VLA parameters don't suffer from
+the same problems.
 
-No that's my bad, I didn't get the role of /dev/ioasid. Let me give the
-series a proper read.
+Martin
 
-Thanks,
-Jean
+> 
+>> Anyway. I don't think we're going to get rid of the array notation
+>> anytime soon, if ever, no matter how much I dislike it, so I think the
+>> right fix would be to at least state the correct required size in
+>> drm_dp_channel_eq_ok().
+> 
+> Ok. Just to confirm: Changing the declaration to an unspecified length
+> avoids the warnings, as does the patch below:
+> 
+> diff --git a/drivers/gpu/drm/drm_dp_helper.c b/drivers/gpu/drm/drm_dp_helper.c
+> index eedbb48815b7..6ebeec3d88a7 100644
+> --- a/drivers/gpu/drm/drm_dp_helper.c
+> +++ b/drivers/gpu/drm/drm_dp_helper.c
+> @@ -46,12 +46,12 @@
+>    */
+> 
+>   /* Helpers for DP link training */
+> -static u8 dp_link_status(const u8 link_status[DP_LINK_STATUS_SIZE], int r)
+> +static u8 dp_link_status(const u8 link_status[DP_LINK_STATUS_SIZE - 2], int r)
+>   {
+>          return link_status[r - DP_LANE0_1_STATUS];
+>   }
+> 
+> -static u8 dp_get_lane_status(const u8 link_status[DP_LINK_STATUS_SIZE],
+> +static u8 dp_get_lane_status(const u8 link_status[DP_LINK_STATUS_SIZE - 2],
+>                               int lane)
+>   {
+>          int i = DP_LANE0_1_STATUS + (lane >> 1);
+> @@ -61,7 +61,7 @@ static u8 dp_get_lane_status(const u8
+> link_status[DP_LINK_STATUS_SIZE],
+>          return (l >> s) & 0xf;
+>   }
+> 
+> -bool drm_dp_channel_eq_ok(const u8 link_status[DP_LINK_STATUS_SIZE],
+> +bool drm_dp_channel_eq_ok(const u8 link_status[DP_LINK_STATUS_SIZE - 2],
+>                            int lane_count)
+>   {
+>          u8 lane_align;
+> diff --git a/include/drm/drm_dp_helper.h b/include/drm/drm_dp_helper.h
+> index edffd1dcca3e..160f7fd127b1 100644
+> --- a/include/drm/drm_dp_helper.h
+> +++ b/include/drm/drm_dp_helper.h
+> @@ -1456,7 +1456,7 @@ enum drm_dp_phy {
+> 
+>   #define DP_LINK_CONSTANT_N_VALUE 0x8000
+>   #define DP_LINK_STATUS_SIZE       6
+> -bool drm_dp_channel_eq_ok(const u8 link_status[DP_LINK_STATUS_SIZE],
+> +bool drm_dp_channel_eq_ok(const u8 link_status[DP_LINK_STATUS_SIZE - 2],
+>                            int lane_count);
+>   bool drm_dp_clock_recovery_ok(const u8 link_status[DP_LINK_STATUS_SIZE],
+>                                int lane_count);
+> 
+> 
+> This obviously needs a good explanation in the code and the changelog text,
+> which I don't have, but if the above is what you had in mind, please take that
+> and add Reported-by/Tested-by: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>.
+> 
+>         Arnd
+> 
+
