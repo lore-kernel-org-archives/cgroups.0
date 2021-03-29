@@ -1,243 +1,150 @@
-From: Muchun Song <songmuchun@bytedance.com>
-Subject: Re: [External] [PATCH 2/3] mm: Charge active memcg when no mm is set
-Date: Tue, 30 Mar 2021 00:13:01 +0800
-Message-ID: <CAMZfGtVT85+1_Bu9LBaG6DUsr1kYsepQ-1-K7BDD0Wn3L+BQgg@mail.gmail.com>
-References: <20210329144829.1834347-1-schatzberg.dan@gmail.com> <20210329144829.1834347-3-schatzberg.dan@gmail.com>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Mon, 29 Mar 2021 13:31:47 -0300
+Message-ID: <20210329163147.GG2356281@nvidia.com>
+References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
+ <1614463286-97618-6-git-send-email-jacob.jun.pan@linux.intel.com>
+ <20210318172234.3e8c34f7@jacob-builder> <YFR10eeDVf5ZHV5l@myrica>
+ <20210319124645.GP2356281@nvidia.com> <YFSqDNJ5yagk4eO+@myrica>
+ <20210319135432.GT2356281@nvidia.com>
+ <20210319112221.5123b984@jacob-builder>
+ <20210322120300.GU2356281@nvidia.com>
+ <20210324120528.24d82dbd@jacob-builder>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=iwgqrSQ7OtcTD6Kmq+G2j4+SoTiaaT1H8kRq2h2aVwg=;
-        b=B9aWLAKZAcMxqzTDYkFoN6eV0fA9YoPBu44LBrfz1T4nCQajwJ1+96uuUowCoffKP7
-         MBg0CU2oSAFSCKP0UMxIFoaCf8MgRmHFgZ7w4sCHhaHykw5JmWgJZSohSe4SVtfP8lx3
-         2BK6kH92QLkrAsORbl2SG85f70wbzRu95WMoIyW9+Ci/QgcNuz5se6sTzgaWUnAr2v5V
-         S913EZLQMV3S20eRdWWJ40lcdNl+T0T96Wl44fH9J7mbgaPeVwj0PmfTEoSyD5a+f6fL
-         sVSU06qRWs+2PQvOE/d6zfVul1SWs3lkSBX4GkdKDi1XGP84/Ms+8vrYWqdpPd0NI3zz
-         JcRA==
-In-Reply-To: <20210329144829.1834347-3-schatzberg.dan@gmail.com>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Dan Schatzberg <schatzberg.dan@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Hugh Dickins <hughd@google.com>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, Yang Shi <shy828301@gmail.com>, Alex Shi <alex.shi@linux.alibaba.com>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Yafang Shao <laoar.shao@gmail.com>, Wei Yang <richard.weiyang@gmail.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:MEMORY MANAGEMENT" <linux-mm@kvack.org>, C
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=a9aEK6B+3YyO5OqaUbIleKWQnFZ2YkAV6AxJ0q5vvnY=;
+ b=ig2oCuU0YoeT8AMc4uQ3O8ZJsVtUGMboBU7t+iCo8mleLVT/mMEVGKU7UWwJg4UqUEOo5td/f7o+vQRgbQEzibO39txsYeYwDAWUwJSfJLtFESYZqtNONznjsTDuvt1pVCoP/8bcy1IMMkuYw2dbKtD9ZDlVVLtktSEDMT5rsXXQYSA4GslGqjXtE/DcgzkYQrVoXRFr8UGbUOP9Mur0qxRCrw9EJSyhA2DQuG15tql1sMwsagY3YGNKxyl2bH2sTA2/WkFYJ93IfazQExIKAvLi7YaH6kqXW98R4aaDKHE/8XBh3ZOZS7VPd6q5GAeetlwn2gWy0JMUj3eMjGUhdQ==
+Content-Disposition: inline
+In-Reply-To: <20210324120528.24d82dbd@jacob-builder>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian,
+ Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Mon, Mar 29, 2021 at 10:49 PM Dan Schatzberg
-<schatzberg.dan@gmail.com> wrote:
->
-> set_active_memcg() worked for kernel allocations but was silently
-> ignored for user pages.
->
-> This patch establishes a precedence order for who gets charged:
->
-> 1. If there is a memcg associated with the page already, that memcg is
->    charged. This happens during swapin.
->
-> 2. If an explicit mm is passed, mm->memcg is charged. This happens
->    during page faults, which can be triggered in remote VMs (eg gup).
->
-> 3. Otherwise consult the current process context. If there is an
->    active_memcg, use that. Otherwise, current->mm->memcg.
->
-> Previously, if a NULL mm was passed to mem_cgroup_charge (case 3) it
-> would always charge the root cgroup. Now it looks up the active_memcg
-> first (falling back to charging the root cgroup if not set).
->
-> Signed-off-by: Dan Schatzberg <schatzberg.dan@gmail.com>
-> Acked-by: Johannes Weiner <hannes@cmpxchg.org>
-> Acked-by: Tejun Heo <tj@kernel.org>
-> Acked-by: Chris Down <chris@chrisdown.name>
-> Reviewed-by: Shakeel Butt <shakeelb@google.com>
-> ---
->  mm/filemap.c    |  2 +-
->  mm/memcontrol.c | 72 ++++++++++++++++++++++++++++---------------------
->  mm/shmem.c      |  4 +--
->  3 files changed, 44 insertions(+), 34 deletions(-)
->
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index eeeb8e2cc36a..63fd980e863a 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -872,7 +872,7 @@ noinline int __add_to_page_cache_locked(struct page *=
-page,
->         page->index =3D offset;
->
->         if (!huge) {
-> -               error =3D mem_cgroup_charge(page, current->mm, gfp);
-> +               error =3D mem_cgroup_charge(page, NULL, gfp);
->                 if (error)
->                         goto error;
->                 charged =3D true;
-> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-> index 668d1d7c2645..adc618814fd2 100644
-> --- a/mm/memcontrol.c
-> +++ b/mm/memcontrol.c
-> @@ -884,13 +884,38 @@ struct mem_cgroup *mem_cgroup_from_task(struct task=
-_struct *p)
->  }
->  EXPORT_SYMBOL(mem_cgroup_from_task);
->
-> +static __always_inline struct mem_cgroup *active_memcg(void)
-> +{
-> +       if (in_interrupt())
-> +               return this_cpu_read(int_active_memcg);
-> +       else
-> +               return current->active_memcg;
-> +}
-> +
-> +static __always_inline struct mem_cgroup *get_active_memcg(void)
-> +{
-> +       struct mem_cgroup *memcg;
-> +
-> +       rcu_read_lock();
-> +       memcg =3D active_memcg();
-> +       /* remote memcg must hold a ref. */
-> +       if (memcg && WARN_ON_ONCE(!css_tryget(&memcg->css)))
-> +               memcg =3D root_mem_cgroup;
-> +       rcu_read_unlock();
-> +
-> +       return memcg;
-> +}
+On Wed, Mar 24, 2021 at 12:05:28PM -0700, Jacob Pan wrote:
 
-This function is already removed since the patchset below.
+> > IMHO a use created PASID is either bound to a mm (current) at creation
+> > time, or it will never be bound to a mm and its page table is under
+> > user control via /dev/ioasid.
+> > 
+> True for PASID used in native SVA bind. But for binding with a guest mm,
+> PASID is allocated first (VT-d virtual cmd interface Spec 10.4.44), the
+> bind with the host IOMMU when vIOMMU PASID cache is invalidated.
+> 
+> Our intention is to have two separate interfaces:
+> 1. /dev/ioasid (allocation/free only)
+> 2. /dev/sva (handles all SVA related activities including page tables)
 
-  Use obj_cgroup APIs to charge kmem pages
-  https://lore.kernel.org/patchwork/cover/1399132/
+I'm not sure I understand why you'd want to have two things. Doesn't
+that just complicate everything?
 
-I also suggest not reintroducing get_active_memcg.
-There is only one user of it, just inline it into
-get_mem_cgroup_from_mm(). Actually we don=E2=80=99t
-need get_active_memcg() either.
+Manipulating the ioasid, including filling it with page tables, seems
+an integral inseperable part of the whole interface. Why have two ?
 
-> +
->  /**
->   * get_mem_cgroup_from_mm: Obtain a reference on given mm_struct's memcg=
-.
->   * @mm: mm from which memcg should be extracted. It can be NULL.
->   *
-> - * Obtain a reference on mm->memcg and returns it if successful. Otherwi=
-se
-> - * root_mem_cgroup is returned. However if mem_cgroup is disabled, NULL =
-is
-> - * returned.
-> + * Obtain a reference on mm->memcg and returns it if successful. If mm
-> + * is NULL, then the memcg is chosen as follows:
-> + * 1) The active memcg, if set.
-> + * 2) current->mm->memcg, if available
-> + * 3) root memcg
-> + * If mem_cgroup is disabled, NULL is returned.
->   */
->  struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_struct *mm)
->  {
-> @@ -899,13 +924,19 @@ struct mem_cgroup *get_mem_cgroup_from_mm(struct mm=
-_struct *mm)
->         if (mem_cgroup_disabled())
->                 return NULL;
->
-> +       /*
-> +        * Page cache insertions can happen without an
-> +        * actual mm context, e.g. during disk probing
-> +        * on boot, loopback IO, acct() writes etc.
-> +        */
-> +       if (unlikely(!mm)) {
-> +               if (unlikely(active_memcg()))
-> +                       return get_active_memcg();
+> > I thought the whole point of something like a /dev/ioasid was to get
+> > away from each and every device creating its own PASID interface?
+> > 
+> yes, but only for the use cases that need to expose PASID to the
+> userspace.
 
-Since remote memcg must hold a reference, we do not
-need to do something like get_active_memcg() does.
-Just use css_get to obtain a ref, it is simpler. Just
-Like below.
+Why "but only"? This thing should reach for a higher generality, not
+just be contained to solve some problem within qemu.
 
-+       if (unlikely(!mm)) {
-+               memcg =3D active_memcg();
-+               if (unlikely(memcg)) {
-+                       /* remote memcg must hold a ref. */
-+                       css_get(memcg);
-+                       return memcg;
-+               }
+> > It maybe somewhat reasonable that some devices could have some easy
+> > 'make a SVA PASID on current' interface built in,
+> I agree, this is the case PASID is hidden from the userspace, right? e.g.
+> uacce.
 
-Thanks.
+"hidden", I guess, but does it matter so much?
 
-> +               mm =3D current->mm;
-> +       }
-> +
->         rcu_read_lock();
->         do {
-> -               /*
-> -                * Page cache insertions can happen withou an
-> -                * actual mm context, e.g. during disk probing
-> -                * on boot, loopback IO, acct() writes etc.
-> -                */
->                 if (unlikely(!mm))
->                         memcg =3D root_mem_cgroup;
->                 else {
-> @@ -919,28 +950,6 @@ struct mem_cgroup *get_mem_cgroup_from_mm(struct mm_=
-struct *mm)
->  }
->  EXPORT_SYMBOL(get_mem_cgroup_from_mm);
->
-> -static __always_inline struct mem_cgroup *active_memcg(void)
-> -{
-> -       if (in_interrupt())
-> -               return this_cpu_read(int_active_memcg);
-> -       else
-> -               return current->active_memcg;
-> -}
-> -
-> -static __always_inline struct mem_cgroup *get_active_memcg(void)
-> -{
-> -       struct mem_cgroup *memcg;
-> -
-> -       rcu_read_lock();
-> -       memcg =3D active_memcg();
-> -       /* remote memcg must hold a ref. */
-> -       if (memcg && WARN_ON_ONCE(!css_tryget(&memcg->css)))
-> -               memcg =3D root_mem_cgroup;
-> -       rcu_read_unlock();
-> -
-> -       return memcg;
-> -}
-> -
->  static __always_inline bool memcg_kmem_bypass(void)
->  {
->         /* Allow remote memcg charging from any context. */
-> @@ -6549,7 +6558,8 @@ static int __mem_cgroup_charge(struct page *page, s=
-truct mem_cgroup *memcg,
->   * @gfp_mask: reclaim mode
->   *
->   * Try to charge @page to the memcg that @mm belongs to, reclaiming
-> - * pages according to @gfp_mask if necessary.
-> + * pages according to @gfp_mask if necessary. if @mm is NULL, try to
-> + * charge to the active memcg.
->   *
->   * Do not use this for pages allocated for swapin.
->   *
-> diff --git a/mm/shmem.c b/mm/shmem.c
-> index 78ab81a62b29..7c09276125d5 100644
-> --- a/mm/shmem.c
-> +++ b/mm/shmem.c
-> @@ -1694,7 +1694,7 @@ static int shmem_swapin_page(struct inode *inode, p=
-goff_t index,
->  {
->         struct address_space *mapping =3D inode->i_mapping;
->         struct shmem_inode_info *info =3D SHMEM_I(inode);
-> -       struct mm_struct *charge_mm =3D vma ? vma->vm_mm : current->mm;
-> +       struct mm_struct *charge_mm =3D vma ? vma->vm_mm : NULL;
->         struct page *page;
->         swp_entry_t swap;
->         int error;
-> @@ -1815,7 +1815,7 @@ static int shmem_getpage_gfp(struct inode *inode, p=
-goff_t index,
->         }
->
->         sbinfo =3D SHMEM_SB(inode->i_sb);
-> -       charge_mm =3D vma ? vma->vm_mm : current->mm;
-> +       charge_mm =3D vma ? vma->vm_mm : NULL;
->
->         page =3D pagecache_get_page(mapping, index,
->                                         FGP_ENTRY | FGP_HEAD | FGP_LOCK, =
-0);
-> --
-> 2.30.2
->
+The PASID would still consume a cgroup credit
+
+> > but anything more
+> > complicated should use /dev/ioasid, and anything consuming PASID
+> > should also have an API to import and attach a PASID from /dev/ioasid.
+> > 
+> Would the above two use cases constitute the "complicated" criteria? Or we
+> should say anything that need the explicit PASID value has to through
+> /dev/ioasid?
+
+Anything that needs more that creating a hidden PASID link'd to
+current should use the full interface.
+
+> In terms of usage for guest SVA, an ioasid_set is mostly tied to a host mm,
+> the use case is as the following:
+
+From that doc:
+
+  It is imperative to enforce
+  VM-IOASID ownership such that a malicious guest cannot target DMA
+  traffic outside its own IOASIDs, or free an active IOASID that belongs
+  to another VM.
+
+Huh?
+
+Security in a PASID world comes from the IOMMU blocking access to the
+PASID except from approved PCI-ID's. If a VF/PF is assigned to a guest
+then that guest can cause the device to issue any PASID by having
+complete control and the vIOMMU is supposed to tell the real IOMMU
+what PASID's the device is alowed to access.
+
+If a device is sharing a single PCI function with different security
+contexts (eg vfio mdev) then the device itself is responsible to
+ensure that only the secure interface can program a PASID and a less
+secure context can never self-enroll. 
+
+Here the mdev driver would have to consule with the vIOMMU to ensure
+the mdev device is allowed to access the PASID - is that what this
+set stuff is about? 
+
+If yes, it is backwards. The MDEV is the thing doing the security, the
+MDEV should have the list of allowed PASID's and a single PASID
+created under /dev/ioasid should be loaded into MDEV with some 'Ok you
+can use PASID xyz from FD abc' command.
+
+Because you absolutely don't want to have a generic 'set' that all the
+mdevs are sharing as that violates the basic security principle at the
+start - each and every device must have a unique list of what PASID's
+it can talk to.
+
+> 1. Identify a pool of PASIDs for permission checking (below to the same VM),
+> e.g. only allow SVA binding for PASIDs allocated from the same set.
+> 
+> 2. Allow different PASID-aware kernel subsystems to associate, e.g. KVM,
+> device drivers, and IOMMU driver. i.e. each KVM instance only cares about
+> the ioasid_set associated with the VM. Events notifications are also within
+> the ioasid_set to synchronize PASID states.
+> 
+> 3. Guest-Host PASID look up (each set has its own XArray to store the
+> mapping)
+> 
+> 4. Quota control (going away once we have cgroup)
+
+It sounds worrysome things have gone this way.
+
+I'd say you shoul have a single /dev/ioasid per VM and KVM should
+attach to that - it should get all the global events/etc that are not
+device specific.
+
+permission checking *must* be done on a per-device level, either inside the
+mdev driver, or inside the IOMMU at a per-PCI device level.
+
+Not sure what guest-host PASID means, these have to be 1:1 for device
+assignment to work - why would use something else for mdev?
+
+Jason
