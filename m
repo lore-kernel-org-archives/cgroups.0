@@ -1,8 +1,8 @@
 From: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Subject: RE: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
  APIs
-Date: Tue, 30 Mar 2021 01:37:05 +0000
-Message-ID: <MWHPR11MB188639EE54B48B0E1321C8198C7D9@MWHPR11MB1886.namprd11.prod.outlook.com>
+Date: Tue, 30 Mar 2021 02:24:09 +0000
+Message-ID: <MWHPR11MB1886F14B4C7C58C99F54FAFF8C7D9@MWHPR11MB1886.namprd11.prod.outlook.com>
 References: <1614463286-97618-1-git-send-email-jacob.jun.pan@linux.intel.com>
  <1614463286-97618-6-git-send-email-jacob.jun.pan@linux.intel.com>
  <20210318172234.3e8c34f7@jacob-builder> <YFR10eeDVf5ZHV5l@myrica>
@@ -17,8 +17,8 @@ Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.g
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com; 
  s=selector2-intel-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CdkHWlLZVWbmowEFXz5ft+/3LXDayE8Wc7U1U+7L7cI=;
- b=bdK+9ya/HGBnsE+oNNS/y5E/1/NCnEUAwU7ul2Sa6iU2BHR27pOzlibm+aXZqSoGwYWmii3Z1X7ftYZkfOKAE3z8rr/r+zUvj+raSJu3/jjAuCl3GNoC/kKXPDk7xTTQzpA2OeBXqBpXyE3F2dVm5pn8g1Co22G/rZHC6bHaOvU=
+ bh=yifpqWXgVu+yqFKJ1gV498K9qIJTDYZf7ExZs6hCv+0=;
+ b=PHPa1wvqAJ+XpXWt6jWOU+7No5y8Cj/H37s+ITAFXpES49f9lUML/v4aQvQ+UBIjXmDpCeto6CFmtKzAq6YPeWAef5QllEk4o6nKG74+G7aS9IZBcRVNUQMDMVL+FrscTqAMN5+wjmbV6OuQDAbKQaHuXeQTE6dSpHkiRrM2gSs=
 In-Reply-To: <20210329163147.GG2356281-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Content-Language: en-US
 List-Id: <cgroups.vger.kernel.org>
@@ -36,69 +36,46 @@ Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org
 
 > From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 > Sent: Tuesday, March 30, 2021 12:32 AM
+> > In terms of usage for guest SVA, an ioasid_set is mostly tied to a host mm,
+> > the use case is as the following:
 > 
-> On Wed, Mar 24, 2021 at 12:05:28PM -0700, Jacob Pan wrote:
+> From that doc:
 > 
-> > > IMHO a use created PASID is either bound to a mm (current) at creation
-> > > time, or it will never be bound to a mm and its page table is under
-> > > user control via /dev/ioasid.
-> > >
-> > True for PASID used in native SVA bind. But for binding with a guest mm,
-> > PASID is allocated first (VT-d virtual cmd interface Spec 10.4.44), the
-> > bind with the host IOMMU when vIOMMU PASID cache is invalidated.
-> >
-> > Our intention is to have two separate interfaces:
-> > 1. /dev/ioasid (allocation/free only)
-> > 2. /dev/sva (handles all SVA related activities including page tables)
+>   It is imperative to enforce
+>   VM-IOASID ownership such that a malicious guest cannot target DMA
+>   traffic outside its own IOASIDs, or free an active IOASID that belongs
+>   to another VM.
 > 
-> I'm not sure I understand why you'd want to have two things. Doesn't
-> that just complicate everything?
+> Huh?
 > 
-> Manipulating the ioasid, including filling it with page tables, seems
-> an integral inseperable part of the whole interface. Why have two ?
+> Security in a PASID world comes from the IOMMU blocking access to the
+> PASID except from approved PCI-ID's. If a VF/PF is assigned to a guest
+> then that guest can cause the device to issue any PASID by having
+> complete control and the vIOMMU is supposed to tell the real IOMMU
+> what PASID's the device is alowed to access.
+> 
+> If a device is sharing a single PCI function with different security
+> contexts (eg vfio mdev) then the device itself is responsible to
+> ensure that only the secure interface can program a PASID and a less
+> secure context can never self-enroll.
+> 
+> Here the mdev driver would have to consule with the vIOMMU to ensure
+> the mdev device is allowed to access the PASID - is that what this
+> set stuff is about?
+> 
+> If yes, it is backwards. The MDEV is the thing doing the security, the
+> MDEV should have the list of allowed PASID's and a single PASID
+> created under /dev/ioasid should be loaded into MDEV with some 'Ok you
+> can use PASID xyz from FD abc' command.
+> 
 
-Hi, Jason,
-
-Actually above is a major open while we are refactoring vSVA uAPI toward
-this direction. We have two concerns about merging /dev/ioasid with
-/dev/sva, and would like to hear your thought whether they are valid.
-
-First, userspace may use ioasid in a non-SVA scenario where ioasid is 
-bound to specific security context (e.g. a control vq in vDPA) instead of 
-tying to mm. In this case there is no pgtable binding initiated from user
-space. Instead, ioasid is allocated from /dev/ioasid and then programmed
-to the intended security context through specific passthrough framework
-which manages that context.
-
-Second, ioasid is managed per process/VM while pgtable binding is a
-device-wise operation.  The userspace flow looks like below for an integral
-/dev/ioasid interface:
-
------------initialization----------
-- ioctl(container->fd, VFIO_SET_IOMMU, VFIO_TYPE1_NESTING_IOMMU)
-- ioasid_fd = open(/dev/ioasid)
-- ioctl(ioasid_fd, IOASID_GET_USVA_FD, &sva_fd) //an empty context
-- ioctl(device->fd, VFIO_DEVICE_SET_SVA, &sva_fd); //sva_fd ties to device
-- ioctl(sva_fd, USVA_GET_INFO, &sva_info);
------------runtime----------------
-- ioctl(ioasid_fd, IOMMU_ALLOC_IOASID, &ioasid);
-- ioctl(sva_fd, USVA_BIND_PGTBL, &bind_data);
-- ioctl(sva_fd, USVA_FLUSH_CACHE, &inv_info);
-- ioctl(sva_fd, USVA_UNBIND_PGTBL, &unbind_data);
------------destroy----------------
-- ioctl(device->fd, VFIO_DEVICE_UNSET_SVA, &sva_fd);
-- close(sva_fd)
-- close(ioasid_fd)
-
-Our hesitation here is based on one of your earlier comments that
-you are not a fan of constructing fd's through ioctl. Are you OK with
-above flow or have a better idea of handling it?
-
-With separate interfaces then userspace just opens /dev/sva instead 
-of getting it through ioasid_fd:
-
-- ioasid_fd = open(/dev/ioasid)
-- sva_fd = open(/dev/sva)
+The 'set' is per-VM. Once the mdev is assigned to a VM, all valid PASID's
+in the set of that VM are considered legitimate on this mdev. The mdev
+driver will mediate guest operations which program PASID to the backend
+context and load the PASID only if it is within the 'set' (i.e. already 
+allocated through /dev/ioasid). This prevents a malicious VM from attacking
+others. Though it's not mdev which directly maintaining the list of allowed 
+PASID's, the effect is the same in concept.
 
 Thanks
 Kevin
