@@ -1,92 +1,50 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH 11/11] [RFC] drm/i915/dp: fix array overflow
- warning
-Date: Tue, 30 Mar 2021 12:56:51 +0200
-Message-ID: <949db606-ac48-69ae-b0f7-b1cba6fc2d7f@redhat.com>
-References: <20210322160253.4032422-1-arnd@kernel.org>
- <20210322160253.4032422-12-arnd@kernel.org>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Tue, 30 Mar 2021 10:07:55 -0300
+Message-ID: <20210330130755.GN2356281@nvidia.com>
+References: <20210319135432.GT2356281@nvidia.com>
+ <20210319112221.5123b984@jacob-builder> <YFhiMLR35WWMW/Hu@myrica>
+ <20210324100246.4e6b8aa1@jacob-builder>
+ <20210324170338.GM2356281@nvidia.com>
+ <20210324151230.466fd47a@jacob-builder> <YFxkNEz3THJKzW0b@myrica>
+ <20210325100236.17241a1c@jacob-builder>
+ <20210325171645.GF2356281@nvidia.com> <YF2WEmfXsXKCkCDb@myrica>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
- s=mimecast20190719; t=1617101815;
- h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
- to:to:cc:cc:mime-version:mime-version:content-type:content-type:
- content-transfer-encoding:content-transfer-encoding:
- in-reply-to:in-reply-to:references:references;
- bh=rYqzNHiuAl/aoLjb89NUxhkCMXfILPBrl172tqHnnHE=;
- b=CNfyjNv8F23LnMAJNDnUNFKhwn/+7qb3AMe4+LBSVke3MjdtxoflURxkmkRK1pxz29h/wa
- vnfIkHKNay0CZroZ6iXTvyo6Xn63R2rHoOCxuLAkmRYilhPRBTOBrNjn4OI/wGtZljeK1R
- LcBsMTqOVdAh6cAaCzlQRs3q0Qh8TMU=
-In-Reply-To: <20210322160253.4032422-12-arnd@kernel.org>
-Content-Language: en-US
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=9s5RX/kaTQLG4ZYwIXZPhAg6lwL5YhEUVyeYSZvZ0hM=;
+ b=HEFVEbCBsqhoaugV0hOZDcCMEYzYsRClOEuU/Rpagb62BUzX+Z1C5W2D9stEcqeiaZuunva6VuWN0WvxJlMlgyUsfJMucHjrM4k/In2/yl8gbwy5KdAqQB32wYRJ9Bz/MdYHgc7BhJx/RHWIEqk29/83sZs4MTz0Yf/1MaF3YeBiypM4UvsrXPHvIUzdIrNgvdkkPLleBfLKdR4GCpqTZFJWw4nT/bysHv+3f8O3MfnBJ99Ut48FemWA5xdrPpKAs3Hle8kFhL9Hh7QxBg07pT8drwZkIPVBdPDY492qx+GkjlbNr3Hm8nrQSVY+2eZJA8g5a1CwIveiXVBne78F4g==
+Content-Disposition: inline
+In-Reply-To: <YF2WEmfXsXKCkCDb@myrica>
 List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Arnd Bergmann <arnd@kernel.org>, linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>, Jani Nikula <jani.nikula@linux.intel.com>, Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, imre.deak@intel.com
-Cc: dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, x86@kernel.org, James Smart <james.smart@broadcom.com>, tboot-devel@lists.sourceforge.net, Kalle Valo <kvalo@codeaurora.org>, ath11k@lists.infradead.org, Serge Hallyn <serge@hallyn.com>, Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.ibm.com>, Ning Sun <ning.sun@intel.com>, Anders Larsen <al@alarsen.net>, Sean Paul <seanpaul@chromium.org>, cgroups@vger.kernel.org, linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-security-module@vger.kernel.org, Tejun Heo <tj@kernel.org>, Simon Kelley <simon@thekelleys.org.uk>, intel-gfx@lists.freedesktop.org
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-SGksCgpPbiAzLzIyLzIxIDU6MDIgUE0sIEFybmQgQmVyZ21hbm4gd3JvdGU6Cj4gRnJvbTogQXJu
-ZCBCZXJnbWFubiA8YXJuZEBhcm5kYi5kZT4KPiAKPiBnY2MtMTEgd2FybnMgdGhhdCBpbnRlbF9k
-cF9jaGVja19tc3Rfc3RhdHVzKCkgaGFzIGEgbG9jYWwgYXJyYXkgb2YKPiBmb3VydGVlbiBieXRl
-cyBhbmQgcGFzc2VzIHRoZSBsYXN0IGZvdXIgYnl0ZXMgaW50byBhIGZ1bmN0aW9uIHRoYXQKPiBl
-eHBlY3RzIGEgc2l4LWJ5dGUgYXJyYXk6Cj4gCj4gZHJpdmVycy9ncHUvZHJtL2k5MTUvZGlzcGxh
-eS9pbnRlbF9kcC5jOiBJbiBmdW5jdGlvbiDigJhpbnRlbF9kcF9jaGVja19tc3Rfc3RhdHVz4oCZ
-Ogo+IGRyaXZlcnMvZ3B1L2RybS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAuYzo0NTU2OjIyOiBlcnJv
-cjog4oCYZHJtX2RwX2NoYW5uZWxfZXFfb2vigJkgcmVhZGluZyA2IGJ5dGVzIGZyb20gYSByZWdp
-b24gb2Ygc2l6ZSA0IFstV2Vycm9yPXN0cmluZ29wLW92ZXJyZWFkXQo+ICA0NTU2IHwgICAgICAg
-ICAgICAgICAgICAgICAhZHJtX2RwX2NoYW5uZWxfZXFfb2soJmVzaVsxMF0sIGludGVsX2RwLT5s
-YW5lX2NvdW50KSkgewo+ICAgICAgIHwgICAgICAgICAgICAgICAgICAgICAgXn5+fn5+fn5+fn5+
-fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fgo+IGRyaXZlcnMvZ3B1L2Ry
-bS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAuYzo0NTU2OjIyOiBub3RlOiByZWZlcmVuY2luZyBhcmd1
-bWVudCAxIG9mIHR5cGUg4oCYY29uc3QgdTggKuKAmSB7YWthIOKAmGNvbnN0IHVuc2lnbmVkIGNo
-YXIgKuKAmX0KPiBJbiBmaWxlIGluY2x1ZGVkIGZyb20gZHJpdmVycy9ncHUvZHJtL2k5MTUvZGlz
-cGxheS9pbnRlbF9kcC5jOjM4Ogo+IGluY2x1ZGUvZHJtL2RybV9kcF9oZWxwZXIuaDoxNDU5OjY6
-IG5vdGU6IGluIGEgY2FsbCB0byBmdW5jdGlvbiDigJhkcm1fZHBfY2hhbm5lbF9lcV9va+KAmQo+
-ICAxNDU5IHwgYm9vbCBkcm1fZHBfY2hhbm5lbF9lcV9vayhjb25zdCB1OCBsaW5rX3N0YXR1c1tE
-UF9MSU5LX1NUQVRVU19TSVpFXSwKPiAgICAgICB8ICAgICAgXn5+fn5+fn5+fn5+fn5+fn5+fn4K
-PiAKPiBDbGVhcmx5IHNvbWV0aGluZyBpcyB3cm9uZyBoZXJlLCBidXQgSSBjYW4ndCBxdWl0ZSBm
-aWd1cmUgb3V0IHdoYXQuCj4gQ2hhbmdpbmcgdGhlIGFycmF5IHNpemUgdG8gMTYgYnl0ZXMgYXZv
-aWRzIHRoZSB3YXJuaW5nLCBidXQgaXMKPiBwcm9iYWJseSB0aGUgd3Jvbmcgc29sdXRpb24gaGVy
-ZS4KClRoZSBkcm0gZGlzcGxheXBvcnQtaGVscGVycyBpbmRlZWQgZXhwZWN0IGEgNiBieXRlcyBi
-dWZmZXIsIGJ1dCB0aGV5CnVzdWFsbHkgb25seSBjb25zdW1lIDQgYnl0ZXMuCgpJIGRvbid0IHRo
-aW5rIHRoYXQgY2hhbmdpbmcgdGhlIERQX0RQUlhfRVNJX0xFTiBpcyBhIGdvb2QgZml4IGhlcmUs
-CnNpbmNlIGl0IGlzIHVzZWQgaW4gbXVsdGlwbGUgcGxhY2VzLCBidXQgdGhlIGVzaSBhcnJheSBh
-bHJlYWR5IGdldHMKemVyby1lZCBvdXQgYnkgaXRzIGluaXRpYWxpemVyLCBzbyB3ZSBjYW4ganVz
-dCBwYXNzIDIgZXh0cmEgMCBieXRlcwp0byBnaXZlIGRybV9kcF9jaGFubmVsX2VxX29rKCkgY2Fs
-bCB0aGUgNiBieXRlIGJ1ZmZlciBpdHMgcHJvdG90eXBlCnNwZWNpZmllcyBieSBkb2luZyB0aGlz
-OgoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvZ3B1L2RybS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAuYyBi
-L2RyaXZlcnMvZ3B1L2RybS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAuYwppbmRleCA4OTc3MTFkOWQ3
-ZDMuLjE0Nzk2MmQ0YWQwNiAxMDA2NDQKLS0tIGEvZHJpdmVycy9ncHUvZHJtL2k5MTUvZGlzcGxh
-eS9pbnRlbF9kcC5jCisrKyBiL2RyaXZlcnMvZ3B1L2RybS9pOTE1L2Rpc3BsYXkvaW50ZWxfZHAu
-YwpAQCAtNDUzOCw3ICs0NTM4LDExIEBAIGludGVsX2RwX2NoZWNrX21zdF9zdGF0dXMoc3RydWN0
-IGludGVsX2RwICppbnRlbF9kcCkKIAlkcm1fV0FSTl9PTl9PTkNFKCZpOTE1LT5kcm0sIGludGVs
-X2RwLT5hY3RpdmVfbXN0X2xpbmtzIDwgMCk7CiAKIAlmb3IgKDs7KSB7Ci0JCXU4IGVzaVtEUF9E
-UFJYX0VTSV9MRU5dID0ge307CisJCS8qCisJCSAqIGRybV9kcF9jaGFubmVsX2VxX29rKCkgZXhw
-ZWN0cyBhIDYgYnl0ZSBsYXJnZSBidWZmZXIsIGJ1dAorCQkgKiB0aGUgRVNJIGluZm8gb25seSBj
-b250YWlucyA0IGJ5dGVzLCBwYXNzIDIgZXh0cmEgMCBieXRlcy4KKwkJICovCisJCXU4IGVzaVtE
-UF9EUFJYX0VTSV9MRU4gKyAyXSA9IHt9OwogCQlib29sIGhhbmRsZWQ7CiAJCWludCByZXRyeTsK
-IAoKU28gaTkxNSBkZXZzLCB3b3VsZCBzdWNoIGEgZml4IGJlIGFjY2VwdGFibGUgPwoKUmVnYXJk
-cywKCkhhbnMKCgoKCgoKPiAKPiBTaWduZWQtb2ZmLWJ5OiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFy
-bmRiLmRlPgo+IC0tLQo+ICBkcml2ZXJzL2dwdS9kcm0vaTkxNS9kaXNwbGF5L2ludGVsX2RwLmMg
-fCAyICstCj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQo+
-IAo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9kcm0vaTkxNS9kaXNwbGF5L2ludGVsX2RwLmMg
-Yi9kcml2ZXJzL2dwdS9kcm0vaTkxNS9kaXNwbGF5L2ludGVsX2RwLmMKPiBpbmRleCA4YzEyZDUz
-NzU2MDcuLjgzMGUyNTE1ZjExOSAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL2dwdS9kcm0vaTkxNS9k
-aXNwbGF5L2ludGVsX2RwLmMKPiArKysgYi9kcml2ZXJzL2dwdS9kcm0vaTkxNS9kaXNwbGF5L2lu
-dGVsX2RwLmMKPiBAQCAtNjUsNyArNjUsNyBAQAo+ICAjaW5jbHVkZSAiaW50ZWxfdmRzYy5oIgo+
-ICAjaW5jbHVkZSAiaW50ZWxfdnJyLmgiCj4gIAo+IC0jZGVmaW5lIERQX0RQUlhfRVNJX0xFTiAx
-NAo+ICsjZGVmaW5lIERQX0RQUlhfRVNJX0xFTiAxNgo+ICAKPiAgLyogRFAgRFNDIHRocm91Z2hw
-dXQgdmFsdWVzIHVzZWQgZm9yIHNsaWNlIGNvdW50IGNhbGN1bGF0aW9ucyBLUGl4ZWxzL3MgKi8K
-PiAgI2RlZmluZSBEUF9EU0NfUEVBS19QSVhFTF9SQVRFCQkJMjcyMDAwMAo+IAoKX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KSW50ZWwtZ2Z4IG1haWxpbmcg
-bGlzdApJbnRlbC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRl
-c2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vaW50ZWwtZ2Z4Cg==
+On Fri, Mar 26, 2021 at 09:06:42AM +0100, Jean-Philippe Brucker wrote:
+
+> It's not inconceivable to have a control queue doing DMA tagged with
+> PASID. The devices I know either use untagged DMA, or have a choice to use
+> a PASID.
+
+I don't think we should encourage that. A PASID and all the related is
+so expensive compared to just doing normal untagged kernel DMA.
+
+I assume HW has these features because virtualization use cases might
+use them, eg by using mdev to assign a command queue - then it would
+need be be contained by a PASID.
+
+Jason
