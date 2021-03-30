@@ -1,126 +1,271 @@
-From: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 0/3] cgroup: New misc cgroup controller
-Date: Mon, 29 Mar 2021 21:42:03 -0700
-Message-ID: <20210330044206.2864329-1-vipinsh@google.com>
+From: Vipin Sharma <vipinsh@google.com>
+Subject: [PATCH v4 3/3] svm/sev: Register SEV and SEV-ES ASIDs to the misc controller
+Date: Mon, 29 Mar 2021 21:42:06 -0700
+Message-ID: <20210330044206.2864329-4-vipinsh@google.com>
+References: <20210330044206.2864329-1-vipinsh@google.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=sfHXJbbxb6p3TEWQ8tzYZSEzCbGd5MPRFw754wGnO9M=;
-        b=TTKZd5jbX64Rbx+dgGmFRdeRnmF8AD7bOmTLS2z53CveoKd38s4zHorjlWhT7JWttc
-         W/4AYxcvnetv6zEBZYnCLLwDw/n0+NMSmznlECeNN386pQMDpBp4tAkUmypuy690YhbX
-         MUJZ5LuwMKBNRdfciczq43ArGC3OCKUJ3QO4oD3Y2cx4JDMR46cTE+wD46kDhx1s1eQi
-         BCVe4G/w1rxiIqWKYuh9XRd2X4XFgxFOga84xCkanZwHE8wax3F1kzF+jGb1H1j6pCKN
-         N/nXSaOUfTOeOvgZgsdJwf4qCgPRhbqT7Cz7dmTglQ23YrQf8/aRU/gRgyKet03i1zWN
-         AnpQ==
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=CIy5ACCF0ofpwh9zYe0S73BRRk0v0OISzt23gHBSsNA=;
+        b=tx1gG07Ck0mnE68/XTiNe7DMvwTmOjF63Ee6rvYBpVtmUo1jx0zb+lJOqCOsnt1hXe
+         bELVj5fbj0lz7PS2TONyKBpXYIg+feIwlb2VQCl1bb726ea+kHs6yTAp4a/TBF1k5cNh
+         WQ7JT51oLru86QmE3Bug1CsPCNupA0AQxQOQpqcQ70fD/3FS6gFl8U/KXywKfbykWixr
+         FLW0fgOQNvjlRhnIMpfTgmDUmGu+0C64hBYrbb0iuGPxZ/r0bhCzaVMdH0iuouV3fY5z
+         CRrv0gWHJDdl+0FnWRe3z8iJedXnrjVHTw6g8/yhbA4D/qPiBYGRKtuMsiyj56DxIK4s
+         rCWQ==
+In-Reply-To: <20210330044206.2864329-1-vipinsh@google.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mkoutny-IBi9RG/b67k@public.gmane.org, jacob.jun.pan-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, thomas.lendacky-5C7GfCeVMHo@public.gmane.org, brijesh.singh-5C7GfCeVMHo@public.gmane.org, jon.grimm-5C7GfCeVMHo@public.gmane.org, eric.vantassell-5C7GfCeVMHo@public.gmane.org, pbonzini-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, frankja-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org, borntraeger-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org
-Cc: corbet-T1hC0tSOHrs@public.gmane.org, seanjc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, vkuznets-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, wanpengli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, jmattson-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org, hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org, gingell-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, kvm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: tj@kernel.org, mkoutny@suse.com, jacob.jun.pan@intel.com, rdunlap@infradead.org, thomas.lendacky@amd.com, brijesh.singh@amd.com, jon.grimm@amd.com, eric.vantassell@amd.com, pbonzini@redhat.com, hannes@cmpxchg.org, frankja@linux.ibm.com, borntraeger@de.ibm.com
+Cc: corbet@lwn.net, seanjc@google.com, vkuznets@redhat.com, wanpengli@tencent.com, jmattson@google.com, joro@8bytes.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, gingell@google.com, rientjes@google.com, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Vipin Sharma <vipinsh@google.com>
 
-Hello,
+Secure Encrypted Virtualization (SEV) and Secure Encrypted
+Virtualization - Encrypted State (SEV-ES) ASIDs are used to encrypt KVMs
+on AMD platform. These ASIDs are available in the limited quantities on
+a host.
 
-This patch series is creating a new misc cgroup controller for limiting
-and tracking of resources which are not abstract like other cgroup
-controllers.
+Register their capacity and usage to the misc controller for tracking
+via cgroups.
 
-This controller was initially proposed as encryption_id but after the
-feedbacks and use cases for other resources, it is now changed to misc
-cgroup.
-https://lore.kernel.org/lkml/20210108012846.4134815-2-vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
+Signed-off-by: Vipin Sharma <vipinsh@google.com>
+Reviewed-by: David Rientjes <rientjes@google.com>
+---
+ arch/x86/kvm/svm/sev.c      | 70 +++++++++++++++++++++++++++++++------
+ arch/x86/kvm/svm/svm.h      |  1 +
+ include/linux/misc_cgroup.h |  6 ++++
+ kernel/cgroup/misc.c        |  6 ++++
+ 4 files changed, 73 insertions(+), 10 deletions(-)
 
-Most of the cloud infrastructure use cgroups for knowing the host state,
-track the resources usage, enforce limits on them, etc. They use this
-info to optimize work allocation in the fleet and make sure no rogue job
-consumes more than it needs and starves others.
-
-There are resources on a system which are not abstract enough like other
-cgroup controllers and are available in a limited quantity on a host.
-
-One of them is Secure Encrypted Virtualization (SEV) ASID on AMD CPU.
-SEV ASIDs are used for creating encrypted VMs. SEV is mostly be used by
-the cloud providers for providing confidential VMs. Since SEV ASIDs are
-limited, there is a need to schedule encrypted VMs in a cloud
-infrastructure based on SEV ASIDs availability and also to limit its
-usage.
-
-There are similar requirements for other resource types like TDX keys,
-IOASIDs and SEID.
-
-Adding these resources to a cgroup controller is a natural choice with
-least amount of friction. Cgroup itself says it is a mechanism to
-distribute system resources along the hierarchy in a controlled
-mechanism and configurable manner. Most of the resources in cgroups are
-abstracted enough but there are still some resources which are not
-abstract but have limited availability or have specific use cases.
-
-Misc controller is a generic controller which can be used by these
-kinds of resources.
-
-One suggestion was to use BPF for this purpose, however, there are
-couple of things which might not be addressed with BPF:
-1. Which controller to use in v1 case? These are not abstract resources
-   so in v1 where each controller have their own hierarchy it might not
-   be easy to identify the best controller to use for BPF.
-
-2. Abstracting out a single BPF program which can help with all of the
-   resources types might not be possible, because resources we are
-   working with are not similar and abstract enough, for example network
-   packets, and there will be different places in the source code to use
-   these resources.
-
-A new cgroup controller tends to give much easier and well integrated
-solution when it comes to scheduling and limiting a resource with
-existing tools in a cloud infrastructure.
-
-Changes in RFC v4:
-1. Misc controller patch is split into two patches. One for generic misc
-   controller and second for adding SEV and SEV-ES resource.
-2. Using READ_ONCE and WRITE_ONCE for variable accesses.
-3. Updated documentation.
-4. Changed EXPORT_SYMBOL to EXPORT_SYMBOL_GPL.
-5. Included cgroup header in misc_cgroup.h.
-6. misc_cg_reduce_charge changed to misc_cg_cancel_charge.
-7. misc_cg set to NULL after uncharge.
-8. Added WARN_ON if misc_cg not NULL before charging in SEV/SEV-ES.
-
-Changes in RFC v3:
-1. Changed implementation to support 64 bit counters.
-2. Print kernel logs only once per resource per cgroup.
-3. Capacity can be set less than the current usage.
-
-Changes in RFC v2:
-1. Documentation fixes.
-2. Added kernel log messages.
-3. Changed charge API to treat misc_cg as input parameter.
-4. Added helper APIs to get and release references on the cgroup.
-
-[1] https://lore.kernel.org/lkml/20210218195549.1696769-1-vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-[2] https://lore.kernel.org/lkml/20210302081705.1990283-1-vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
-[3] https://lore.kernel.org/lkml/20210304231946.2766648-1-vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org/
-
-Vipin Sharma (3):
-  cgroup: Add misc cgroup controller
-  cgroup: Miscellaneous cgroup documentation.
-  svm/sev: Register SEV and SEV-ES ASIDs to the misc controller
-
- Documentation/admin-guide/cgroup-v1/index.rst |   1 +
- Documentation/admin-guide/cgroup-v1/misc.rst  |   4 +
- Documentation/admin-guide/cgroup-v2.rst       |  73 +++-
- arch/x86/kvm/svm/sev.c                        |  70 ++-
- arch/x86/kvm/svm/svm.h                        |   1 +
- include/linux/cgroup_subsys.h                 |   4 +
- include/linux/misc_cgroup.h                   | 132 ++++++
- init/Kconfig                                  |  14 +
- kernel/cgroup/Makefile                        |   1 +
- kernel/cgroup/misc.c                          | 407 ++++++++++++++++++
- 10 files changed, 695 insertions(+), 12 deletions(-)
- create mode 100644 Documentation/admin-guide/cgroup-v1/misc.rst
- create mode 100644 include/linux/misc_cgroup.h
- create mode 100644 kernel/cgroup/misc.c
-
+diff --git a/arch/x86/kvm/svm/sev.c b/arch/x86/kvm/svm/sev.c
+index 874ea309279f..214eefb20414 100644
+--- a/arch/x86/kvm/svm/sev.c
++++ b/arch/x86/kvm/svm/sev.c
+@@ -14,6 +14,7 @@
+ #include <linux/psp-sev.h>
+ #include <linux/pagemap.h>
+ #include <linux/swap.h>
++#include <linux/misc_cgroup.h>
+ #include <linux/processor.h>
+ #include <linux/trace_events.h>
+ #include <asm/fpu/internal.h>
+@@ -28,6 +29,21 @@
+ 
+ #define __ex(x) __kvm_handle_fault_on_reboot(x)
+ 
++#ifndef CONFIG_KVM_AMD_SEV
++/*
++ * When this config is not defined, SEV feature is not supported and APIs in
++ * this file are not used but this file still gets compiled into the KVM AMD
++ * module.
++ *
++ * We will not have MISC_CG_RES_SEV and MISC_CG_RES_SEV_ES entries in the enum
++ * misc_res_type {} defined in linux/misc_cgroup.h.
++ *
++ * Below macros allow compilation to succeed.
++ */
++#define MISC_CG_RES_SEV MISC_CG_RES_TYPES
++#define MISC_CG_RES_SEV_ES MISC_CG_RES_TYPES
++#endif
++
+ static u8 sev_enc_bit;
+ static int sev_flush_asids(void);
+ static DECLARE_RWSEM(sev_deactivate_lock);
+@@ -89,8 +105,19 @@ static bool __sev_recycle_asids(int min_asid, int max_asid)
+ 
+ static int sev_asid_new(struct kvm_sev_info *sev)
+ {
+-	int pos, min_asid, max_asid;
++	int pos, min_asid, max_asid, ret;
+ 	bool retry = true;
++	enum misc_res_type type;
++
++	type = sev->es_active ? MISC_CG_RES_SEV_ES : MISC_CG_RES_SEV;
++	WARN_ON(sev->misc_cg);
++	sev->misc_cg = get_current_misc_cg();
++	ret = misc_cg_try_charge(type, sev->misc_cg, 1);
++	if (ret) {
++		put_misc_cg(sev->misc_cg);
++		sev->misc_cg = NULL;
++		return ret;
++	}
+ 
+ 	mutex_lock(&sev_bitmap_lock);
+ 
+@@ -108,7 +135,8 @@ static int sev_asid_new(struct kvm_sev_info *sev)
+ 			goto again;
+ 		}
+ 		mutex_unlock(&sev_bitmap_lock);
+-		return -EBUSY;
++		ret = -EBUSY;
++		goto e_uncharge;
+ 	}
+ 
+ 	__set_bit(pos, sev_asid_bitmap);
+@@ -116,6 +144,11 @@ static int sev_asid_new(struct kvm_sev_info *sev)
+ 	mutex_unlock(&sev_bitmap_lock);
+ 
+ 	return pos + 1;
++e_uncharge:
++	misc_cg_uncharge(type, sev->misc_cg, 1);
++	put_misc_cg(sev->misc_cg);
++	sev->misc_cg = NULL;
++	return ret;
+ }
+ 
+ static int sev_get_asid(struct kvm *kvm)
+@@ -125,14 +158,15 @@ static int sev_get_asid(struct kvm *kvm)
+ 	return sev->asid;
+ }
+ 
+-static void sev_asid_free(int asid)
++static void sev_asid_free(struct kvm_sev_info *sev)
+ {
+ 	struct svm_cpu_data *sd;
+ 	int cpu, pos;
++	enum misc_res_type type;
+ 
+ 	mutex_lock(&sev_bitmap_lock);
+ 
+-	pos = asid - 1;
++	pos = sev->asid - 1;
+ 	__set_bit(pos, sev_reclaim_asid_bitmap);
+ 
+ 	for_each_possible_cpu(cpu) {
+@@ -141,6 +175,11 @@ static void sev_asid_free(int asid)
+ 	}
+ 
+ 	mutex_unlock(&sev_bitmap_lock);
++
++	type = sev->es_active ? MISC_CG_RES_SEV_ES : MISC_CG_RES_SEV;
++	misc_cg_uncharge(type, sev->misc_cg, 1);
++	put_misc_cg(sev->misc_cg);
++	sev->misc_cg = NULL;
+ }
+ 
+ static void sev_unbind_asid(struct kvm *kvm, unsigned int handle)
+@@ -188,19 +227,20 @@ static int sev_guest_init(struct kvm *kvm, struct kvm_sev_cmd *argp)
+ 	asid = sev_asid_new(sev);
+ 	if (asid < 0)
+ 		return ret;
++	sev->asid = asid;
+ 
+ 	ret = sev_platform_init(&argp->error);
+ 	if (ret)
+ 		goto e_free;
+ 
+ 	sev->active = true;
+-	sev->asid = asid;
+ 	INIT_LIST_HEAD(&sev->regions_list);
+ 
+ 	return 0;
+ 
+ e_free:
+-	sev_asid_free(asid);
++	sev_asid_free(sev);
++	sev->asid = 0;
+ 	return ret;
+ }
+ 
+@@ -1315,12 +1355,12 @@ void sev_vm_destroy(struct kvm *kvm)
+ 	mutex_unlock(&kvm->lock);
+ 
+ 	sev_unbind_asid(kvm, sev->handle);
+-	sev_asid_free(sev->asid);
++	sev_asid_free(sev);
+ }
+ 
+ void __init sev_hardware_setup(void)
+ {
+-	unsigned int eax, ebx, ecx, edx;
++	unsigned int eax, ebx, ecx, edx, sev_asid_count, sev_es_asid_count;
+ 	bool sev_es_supported = false;
+ 	bool sev_supported = false;
+ 
+@@ -1352,7 +1392,11 @@ void __init sev_hardware_setup(void)
+ 	if (!sev_reclaim_asid_bitmap)
+ 		goto out;
+ 
+-	pr_info("SEV supported: %u ASIDs\n", max_sev_asid - min_sev_asid + 1);
++	sev_asid_count = max_sev_asid - min_sev_asid + 1;
++	if (misc_cg_set_capacity(MISC_CG_RES_SEV, sev_asid_count))
++		goto out;
++
++	pr_info("SEV supported: %u ASIDs\n", sev_asid_count);
+ 	sev_supported = true;
+ 
+ 	/* SEV-ES support requested? */
+@@ -1367,7 +1411,11 @@ void __init sev_hardware_setup(void)
+ 	if (min_sev_asid == 1)
+ 		goto out;
+ 
+-	pr_info("SEV-ES supported: %u ASIDs\n", min_sev_asid - 1);
++	sev_es_asid_count = min_sev_asid - 1;
++	if (misc_cg_set_capacity(MISC_CG_RES_SEV_ES, sev_es_asid_count))
++		goto out;
++
++	pr_info("SEV-ES supported: %u ASIDs\n", sev_es_asid_count);
+ 	sev_es_supported = true;
+ 
+ out:
+@@ -1382,6 +1430,8 @@ void sev_hardware_teardown(void)
+ 
+ 	bitmap_free(sev_asid_bitmap);
+ 	bitmap_free(sev_reclaim_asid_bitmap);
++	misc_cg_set_capacity(MISC_CG_RES_SEV, 0);
++	misc_cg_set_capacity(MISC_CG_RES_SEV_ES, 0);
+ 
+ 	sev_flush_asids();
+ }
+diff --git a/arch/x86/kvm/svm/svm.h b/arch/x86/kvm/svm/svm.h
+index 39e071fdab0c..9806aaebc37f 100644
+--- a/arch/x86/kvm/svm/svm.h
++++ b/arch/x86/kvm/svm/svm.h
+@@ -65,6 +65,7 @@ struct kvm_sev_info {
+ 	unsigned long pages_locked; /* Number of pages locked */
+ 	struct list_head regions_list;  /* List of registered regions */
+ 	u64 ap_jump_table;	/* SEV-ES AP Jump Table address */
++	struct misc_cg *misc_cg; /* For misc cgroup accounting */
+ };
+ 
+ struct kvm_svm {
+diff --git a/include/linux/misc_cgroup.h b/include/linux/misc_cgroup.h
+index 1195d36558b4..c5af592481c0 100644
+--- a/include/linux/misc_cgroup.h
++++ b/include/linux/misc_cgroup.h
+@@ -12,6 +12,12 @@
+  * Types of misc cgroup entries supported by the host.
+  */
+ enum misc_res_type {
++#ifdef CONFIG_KVM_AMD_SEV
++	/* AMD SEV ASIDs resource */
++	MISC_CG_RES_SEV,
++	/* AMD SEV-ES ASIDs resource */
++	MISC_CG_RES_SEV_ES,
++#endif
+ 	MISC_CG_RES_TYPES
+ };
+ 
+diff --git a/kernel/cgroup/misc.c b/kernel/cgroup/misc.c
+index 4352bc4a3bd5..ec02d963cad1 100644
+--- a/kernel/cgroup/misc.c
++++ b/kernel/cgroup/misc.c
+@@ -18,6 +18,12 @@
+ 
+ /* Miscellaneous res name, keep it in sync with enum misc_res_type */
+ static const char *const misc_res_name[] = {
++#ifdef CONFIG_KVM_AMD_SEV
++	/* AMD SEV ASIDs resource */
++	"sev",
++	/* AMD SEV-ES ASIDs resource */
++	"sev_es",
++#endif
+ };
+ 
+ /* Root misc cgroup */
 -- 
 2.31.0.291.g576ba9dcdaf-goog
 
