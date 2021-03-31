@@ -1,17 +1,17 @@
 From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
  allocation APIs
-Date: Wed, 31 Mar 2021 09:28:05 -0300
-Message-ID: <20210331122805.GC1463678@nvidia.com>
+Date: Wed, 31 Mar 2021 09:38:01 -0300
+Message-ID: <20210331123801.GD1463678@nvidia.com>
 References: <20210319124645.GP2356281@nvidia.com> <YFSqDNJ5yagk4eO+@myrica>
  <20210319135432.GT2356281@nvidia.com>
  <20210319112221.5123b984@jacob-builder>
  <20210322120300.GU2356281@nvidia.com>
  <20210324120528.24d82dbd@jacob-builder>
  <20210329163147.GG2356281@nvidia.com>
- <20210329155526.2ad791a9@jacob-builder>
- <20210330134313.GP2356281@nvidia.com>
- <20210330171041.70f2d7d0@jacob-builder>
+ <MWHPR11MB18867EC048E3E3FA37F9C38F8C7D9@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210330132740.GB1403691@nvidia.com>
+ <BN6PR11MB40688BB2693A657D411E33C8C37C9@BN6PR11MB4068.namprd11.prod.outlook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -19,10 +19,10 @@ Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.g
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=BxbQytUr9+fpQTmbz09WMWQ5YuxnEIGMLAZU/zYwuzY=;
- b=jtbNqQBqs4lspf4bAsJofdQyYdMMpAAoID+L8q3Btti2yolcmrP9OlM8RJG1cL6xEc3Cu6Sgl9pljQCgeA3tjL05QFtWgd8T46myaAzoLiQRmnZzDFyXOPO827cq2knIo8LE++9IowAXzgYOORpnK+x43Fn84vnWghiKTrE8/KyIwuDtXiwxob4xf1Z/qIOvVuTIFEuOQ2NzUoWE/D3DC/KQAvhfqY2ajxsl5e52PoWs4DXajdcD4yaDXIfJBZTQqGmATwRybkDN2Hy4xNT0gRwyLh25rVcNEoqFfZT6LUhBW2YdnWOVZIJ2FRjQeNurbAy8WkP8udSZepoPXKmpkA==
+ bh=P1qBHeqbqDUWGAnx/XsR6oQqvBRfPdQZlzErc5vGx/g=;
+ b=EEixU/TW1BAfC4fPy8y/dFDD7KOs2wyTr1dSF2b1Q8mD0321Jx4F7LjCh56WCHSEGbdBpCKyWPUOAF6kfv4FiBBqkfftwrBEMb1U1HmLkT0uchXq2tNgQfqSJggscwASeCzHD/+FdhwX9ZPNMTRlrytrLbo5BNLYPzToRYo54DNphiWv2AYWSRH6fv2B4uS1CAJTzZClc182y+HMOvbLCwXF90Fb340OfKHsoRJciUa7uGXeQdgQ5U3Uo8mankXRUV1LRsZB3nDKidefINo0GZlCV2qKjoztyVuBmjTFLku7rAvBSldoDHdn663dy2T/mAWa+DjBQ2a517XwqSmXoA==
 Content-Disposition: inline
-In-Reply-To: <20210330171041.70f2d7d0@jacob-builder>
+In-Reply-To: <BN6PR11MB40688BB2693A657D411E33C8C37C9-1gF2/dm/6VuPGwkGT4HjsJPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
  <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -33,91 +33,105 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
  <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-To: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+To: "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian,
- Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+ Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Tue, Mar 30, 2021 at 05:10:41PM -0700, Jacob Pan wrote:
-> Hi Jason,
+On Wed, Mar 31, 2021 at 07:41:40AM +0000, Liu, Yi L wrote:
+> > From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+> > Sent: Tuesday, March 30, 2021 9:28 PM
+> > 
+> > On Tue, Mar 30, 2021 at 04:14:58AM +0000, Tian, Kevin wrote:
+> > 
+> > > One correction. The mdev should still construct the list of allowed PASID's
+> > as
+> > > you said (by listening to IOASID_BIND/UNBIND event), in addition to the
+> > ioasid
+> > > set maintained per VM (updated when a PASID is allocated/freed). The
+> > per-VM
+> > > set is required for inter-VM isolation (verified when a pgtable is bound to
+> > the
+> > > mdev/PASID), while the mdev's own list is necessary for intra-VM isolation
+> > when
+> > > multiple mdevs are assigned to the same VM (verified before loading a
+> > PASID
+> > > to the mdev). This series just handles the general part i.e. per-VM ioasid
+> > set and
+> > > leaves the mdev's own list to be managed by specific mdev driver which
+> > listens
+> > > to various IOASID events).
+> > 
+> > This is better, but I don't understand why we need such a convoluted
+> > design.
+> > 
+> > Get rid of the ioasid set.
+> >
+> > Each driver has its own list of allowed ioasids.
 > 
-> On Tue, 30 Mar 2021 10:43:13 -0300, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
+> First, I agree with you it's necessary to have a per-device allowed ioasid
+> list. But besides it, I think we still need to ensure the ioasid used by a
+> VM is really allocated to this VM. A VM should not use an ioasid allocated
+> to another VM. right? Actually, this is the major intention for introducing
+> ioasid_set.
+
+The /dev/ioasid FD replaces this security check. By becoming FD
+centric you don't need additional kernel security objects.
+
+Any process with access to the /dev/ioasid FD is allowed to control
+those PASID. The seperation between VMs falls naturally from the
+seperation of FDs without creating additional, complicated, security
+infrastrucure in the kernel.
+
+This is why all APIs must be FD focused, and you need to have a
+logical layering of responsibility.
+
+ Allocate a /dev/ioasid FD
+ Allocate PASIDs inside the FD
+ Assign memory to the PASIDS
+
+ Open a device FD, eg from VFIO or VDP
+ Instruct the device FD to authorize the device to access PASID A in
+ an ioasid FD
+   * Prior to being authorized the device will have NO access to any
+     PASID
+   * Presenting BOTH the device FD and the ioasid FD to the kernel
+     is the security check. Any process with both FDs is allowed to
+     make the connection. This is normal Unix FD centric thinking.
+
+> > Register a ioasid in the driver's list by passing the fd and ioasid #
 > 
-> > > If two mdevs from the same PF dev are assigned to two VMs, the PASID
-> > > table will be shared. IOASID set ensures one VM cannot program another
-> > > VM's PASIDs. I assume 'secure context' is per VM when it comes to host
-> > > PASID.  
-> > 
-> > No, the mdev device driver must enforce this directly. It is the one
-> > that programms the physical shared HW, it is the one that needs a list
-> > of PASID's it is allowed to program *for each mdev*
-> > 
-> This requires the mdev driver to obtain a list of allowed PASIDs(possibly
-> during PASID bind time) prior to do enforcement. IMHO, the PASID enforcement
-> points are:
-> 1. During WQ configuration (e.g.program MSI)
-> 2. During work submission
+> The fd here is a device fd. Am I right? 
+
+It would be the vfio_device FD, for instance, and a VFIO IOCTL.
+
+> If yes, your idea is ioasid is allocated via /dev/ioasid and
+> associated with device fd via either VFIO or vDPA ioctl. right?
+> sorry I may be asking silly questions but really need to ensure we
+> are talking in the same page.
+
+Yes, this is right
+
+> > No listening to events. A simple understandable security model.
 > 
-> For VT-d shared workqueue, there is no way to enforce #2 in mdev driver in
-> that the PASID is obtained from PASID MSR from the CPU and submitted w/o
-> driver involvement.
+> For this suggestion, I have a little bit concern if we may have A-B/B-A
+> lock sequence issue since it requires the /dev/ioasid (if it supports)
+> to call back into VFIO/VDPA to check if the ioasid has been registered to
+> device FD and record it in the per-device list. right? Let's have more
+> discussion based on the skeleton sent by Kevin.
 
-I assume that the PASID MSR is privileged and only qemu can program
-it? Otherwise this seems like a security problem.
+Callbacks would be backwards.
 
-If qemu controls it then the idxd userspace driver in qemu must ensure
-it is only ever programmed to an authorized PASID.
+User calls vfio with vfio_device fd and dev/ioasid fd
 
-> The enforcement for #2 is in the KVM PASID translation table, which
-> is per VM.
+VFIO extracts some kernel representation of the ioasid from the ioasid
+fd using an API
 
-I don't understand why KVM gets involved in PASID??
+VFIO does some kernel call to IOMMU/IOASID layer that says 'tell the
+IOMMU that this PCI device is allowed to use this PASID'
 
-Doesn't work submission go either to the mdev driver or through the
-secure PASID of #1?
+VFIO mdev drivers then record that the PASID is allowed in its own
+device specific struct for later checking during other system calls.
 
-> For our current VFIO mdev model, bind guest page table does not involve
-> mdev driver. So this is a gap we must fill, i.e. include a callback from
-> mdev driver?
-
-No not a callback, tell the mdev driver with a VFIO IOCTL that it is
-authorized to use a specific PASID because the vIOMMU was told to
-allow it by the guest kernel. Simple and straightforward.
-
-> > ioasid_set doesn't seem to help at all, certainly not as a concept
-> > tied to /dev/ioasid.
-> > 
-> Yes, we can take the security role off ioasid_set once we have per mdev
-> list. However, ioasid_set being a per VM/mm entity also bridge
-> communications among kernel subsystems that don't have direct call path.
-> e.g. KVM, VDCM and IOMMU.
-
-Everything should revolve around the /dev/ioasid FD. qemu should pass
-it to all places that need to know about PASID's in the VM.
-
-We should try to avoid hidden behind the scenes kernel
-interconnections between subsystems.
-
-
-> > So when you 'allow' a mdev to access a PASID you want to say:
-> >  Allow Guest PASID A, map it to host PASID B on this /dev/ioasid FD
-> > 
-
-> Host and guest PASID value, as well as device info are available through
-> iommu_uapi_sva_bind_gpasid(), we just need to feed that info to mdev driver.
-
-You need that IOCTL to exist on the *mdev driver*. It is a VFIO ioctl,
-not a iommu or ioasid or sva IOCTL.
- 
-> > That seems like a good helper library to provide for drivers to use,
-> > but it should be a construct entirely contained in the driver.
-> why? would it be cleaner if it is in the common code?
-
-No, it is the "mid layer" problematic design.
-
-Having the iommu layer store driver-specific data on behalf of a
-driver will just make a mess. Use the natural layering we have and
-store driver specific data in the driver structs.
-
-Add a library to help build the datastructure if it necessary.
+No lock inversions. No callbacks. Why do we need callbacks?? Simplify.
 
 Jason
