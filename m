@@ -1,71 +1,116 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH 06/11] cgroup: fix -Wzero-length-bounds warnings
-Date: Tue, 30 Mar 2021 16:44:52 +0200
-Message-ID: <YGM5ZJlK1V7ex9xR@blackbook>
-References: <20210322160253.4032422-1-arnd@kernel.org>
- <20210322160253.4032422-7-arnd@kernel.org>
- <YGLkPjSBdgpriC0E@blackbook>
- <CAK8P3a3nUCGwPpE+E820DniY8Haz1Xx72pA38P6s5MWsbi0iAQ@mail.gmail.com>
+From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Tue, 30 Mar 2021 17:10:41 -0700
+Message-ID: <20210330171041.70f2d7d0@jacob-builder>
+References: <20210318172234.3e8c34f7@jacob-builder> <YFR10eeDVf5ZHV5l@myrica>
+ <20210319124645.GP2356281@nvidia.com> <YFSqDNJ5yagk4eO+@myrica>
+ <20210319135432.GT2356281@nvidia.com>
+ <20210319112221.5123b984@jacob-builder>
+ <20210322120300.GU2356281@nvidia.com>
+ <20210324120528.24d82dbd@jacob-builder>
+ <20210329163147.GG2356281@nvidia.com>
+ <20210329155526.2ad791a9@jacob-builder>
+ <20210330134313.GP2356281@nvidia.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="9pRQkLwCQMovNrXD"
-Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1617115495; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=llTp9KMmNhLgpFrt/A/4gk0SgpNaUf1ZpYpNvho6oEk=;
-        b=iKbol1UC2cYC03I2rvUtoSu92j1pz2tv1L6/9iiw7cxLhRzh90EQvV5vkd5t59I4w79b5z
-        //6Ea77uYBp+fXZGWtXmCr26hrFxJVsTlICwAL4byi52zB9FKuPbHVzN1zqRgW2z3Slp3o
-        4tg7hayC693qItZd+Jni902Xu3F2GZQ=
-Content-Disposition: inline
-In-Reply-To: <CAK8P3a3nUCGwPpE+E820DniY8Haz1Xx72pA38P6s5MWsbi0iAQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-To: Arnd Bergmann <arnd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Martin Sebor <msebor-/MQLu3FmUzdAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, the arch/x86 maintainers <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ning Sun <ning.sun-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jani Nikula <jani.nikula-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Kalle Valo <kvalo-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Simon Kelley <simon-xn1N/tgparsycpQjotevgVpr/1R2p/CL@public.gmane.org>, James Smart <james.smart-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, "James E.J. Bottomley" <jejb-tEXmvtCZX7AybS5Ee8rs3A@public.gmane.org>, Anders Larsen <al-V9/YLgxv/GvR7s880joybQ@public.gmane.org>, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>, Imre Deak <imre.deak-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Linux ARM <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, tboot-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Intel Graphics <intel-gfx-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, dri-devel <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, ath
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20210330134313.GP2356281-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian,
+ Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Raj Ashok <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dave Jiang <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wu Hao <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
+Hi Jason,
 
---9pRQkLwCQMovNrXD
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On Tue, 30 Mar 2021 10:43:13 -0300, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
 
-On Tue, Mar 30, 2021 at 11:00:36AM +0200, Arnd Bergmann <arnd-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Would it be possible to enclose most or all of kernel/cgroup/cgroup.c
-> in an #ifdef CGROUP_SUBSYS_COUNT block?
-Even without any controllers, there can still be named hierarchies (v1)
-or the default hierarchy (v2) (for instance) for process tracking
-purposes. So only parts of kernel/cgroup/cgroup.c could be ifdef'd.
+> > If two mdevs from the same PF dev are assigned to two VMs, the PASID
+> > table will be shared. IOASID set ensures one VM cannot program another
+> > VM's PASIDs. I assume 'secure context' is per VM when it comes to host
+> > PASID.  
+> 
+> No, the mdev device driver must enforce this directly. It is the one
+> that programms the physical shared HW, it is the one that needs a list
+> of PASID's it is allowed to program *for each mdev*
+> 
+This requires the mdev driver to obtain a list of allowed PASIDs(possibly
+during PASID bind time) prior to do enforcement. IMHO, the PASID enforcement
+points are:
+1. During WQ configuration (e.g.program MSI)
+2. During work submission
 
-Beware that CGROUP_SUBSYS_COUNT is not known at preprocessing stage (you
-could have a macro alternative though).
+For VT-d shared workqueue, there is no way to enforce #2 in mdev driver in
+that the PASID is obtained from PASID MSR from the CPU and submitted w/o
+driver involvement. The enforcement for #2 is in the KVM PASID translation
+table, which is per VM.
 
-> I didn't try that myself, but this might be a way to guarantee that
-> there cannot be any callers (it would cause a link error).
-Such a guarantee would be nicer, I agree. I tried a bit but anandoned it
-when I saw macros proliferate (which I found less readable than your
-current variant). But YMMV.
+For our current VFIO mdev model, bind guest page table does not involve
+mdev driver. So this is a gap we must fill, i.e. include a callback from
+mdev driver?
 
-Michal
+> ioasid_set doesn't seem to help at all, certainly not as a concept
+> tied to /dev/ioasid.
+> 
+Yes, we can take the security role off ioasid_set once we have per mdev
+list. However, ioasid_set being a per VM/mm entity also bridge
+communications among kernel subsystems that don't have direct call path.
+e.g. KVM, VDCM and IOMMU.
 
---9pRQkLwCQMovNrXD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+> > No. the mdev driver consults with IOASID core When the guest programs a
+> > guest PASID on to he mdev. VDCM driver does a lookup:
+> > host_pasid = ioasid_find_by_spid(ioasid_set, guest_pasid);  
+> 
+> This is the wrong layering. Tell the mdev device directly what it is
+> allowed to do. Do not pollute the ioasid core with security stuff.
+> 
+> > > I'd say you shoul have a single /dev/ioasid per VM and KVM should
+> > > attach to that - it should get all the global events/etc that are not
+> > > device specific.
+> > >   
+> > You mean a single /dev/ioasid FD per VM and KVM? I think that is what we
+> > are doing in this set. A VM process can only open /dev/ioasid once, then
+> > use the FD for allocation and pass the PASID for bind page table etc.  
+> 
+> Yes, I think that is reasonable.
+> 
+> Tag all the IOCTL's with the IOASID number.
+>  
+> > > Not sure what guest-host PASID means, these have to be 1:1 for device
+> > > assignment to work - why would use something else for mdev?
+> > >   
+> > We have G-H PASID translation. They don't have to be 1:1.
+> > IOASID Set Private ID (SPID) is intended as a generic solution for
+> > guest PASID. Could you review the secion Section: IOASID Set Private ID
+> > (SPID) in the doc patch?  
+> 
+> Again this only works for MDEV? How would you do translation for a
+> real PF/VF?
+> 
+Right, we will need some mediation for PF/VF.
 
------BEGIN PGP SIGNATURE-----
+> So when you 'allow' a mdev to access a PASID you want to say:
+>  Allow Guest PASID A, map it to host PASID B on this /dev/ioasid FD
+> 
+> ?
+> 
+Host and guest PASID value, as well as device info are available through
+iommu_uapi_sva_bind_gpasid(), we just need to feed that info to mdev driver.
 
-iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmBjOV4ACgkQia1+riC5
-qSgZNQ/9FFBZs5QQqEUHmbWyF9O2R2bGF8WCBz56zh+F2OZf+/GK7z4OGhkKUlEa
-1lPOUoibt4aZZhWD30RcfB3i3qJ8VqY3wqwnS6W9uN9+sU22sgsx/elCqiua3EnM
-4tGDRcLBfSuktgPo1T0oNvGGbFnFJ0kUenLZ6mVkWlSTzx8kp/B8h4S5LkYmRIov
-fVmHURht22FPiA8wwlUb9LAp8ONF+68t6BtMWNmZbqmJ17qHSnLyQQUiHIHytASt
-xgaQCJU8/nrtv2xPfp66aCQLO12b6OxpjPoRxo1hj9IP5HZPukzNDat/VaWyh0iE
-t9GO85K0PVqcuvJpymes0yRT6RvEwlqEna0T+qbh+qih4S3+xRm/Js5IV5m8KfIc
-wWUve4llNT1jq6zzgn28FkXe9coH7ybpwBaWeAdwEM3Wl9GvXimKwIQqg+3ZDnm4
-CbDVh6scYVu3kFYHVy6ld5+fG2GWEKvNL+9AVH+wsXUb6OXtyOtxD3FWyiVVYBkl
-Q4N0KWETd67BNb2NklxTkeC4hYusuHeFvxa9Ki6K6zbdxDxVwdcTWpWFVkTDs45S
-sEVkmsPU9pLu5vm5o9kBCmr6q1lW6yzudcxBvcvcHXGQnkfcmDCo+C3OEwKzKUeh
-8+BhDV9zMpKBpJfuPiI8UNIt8sI7YeTpjdk14YjWYQTgZCHc7WU=
-=iFNx
------END PGP SIGNATURE-----
+> That seems like a good helper library to provide for drivers to use,
+> but it should be a construct entirely contained in the driver.
+why? would it be cleaner if it is in the common code?
 
---9pRQkLwCQMovNrXD--
+Thanks,
+
+Jacob
