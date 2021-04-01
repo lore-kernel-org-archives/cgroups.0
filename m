@@ -1,29 +1,24 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+From: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
  allocation APIs
-Date: Thu, 1 Apr 2021 13:03:37 -0300
-Message-ID: <20210401160337.GJ1463678@nvidia.com>
-References: <MWHPR11MB188639EE54B48B0E1321C8198C7D9@MWHPR11MB1886.namprd11.prod.outlook.com>
- <20210330132830.GO2356281@nvidia.com>
- <BN6PR11MB40688F5AA2323AB8CC8E65E7C37C9@BN6PR11MB4068.namprd11.prod.outlook.com>
- <20210331124038.GE1463678@nvidia.com>
- <BN6PR11MB406854CAE9D7CE86BEAB3E23C37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
- <BN6PR11MB40687428F0D0F3B5F13EA3E0C37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
- <YGW27KFt9eQB9X2z@myrica>
- <BN6PR11MB4068171CD1D4B823515F7EFBC37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
- <20210401134236.GF1463678@nvidia.com>
- <BN6PR11MB4068C4DE7AF43D44DE70F4C1C37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
+Date: Thu, 1 Apr 2021 10:23:55 -0700
+Message-ID: <20210401102355.38b0b7d7@jacob-builder>
+References: <20210319135432.GT2356281@nvidia.com>
+ <20210319112221.5123b984@jacob-builder>
+ <20210322120300.GU2356281@nvidia.com>
+ <20210324120528.24d82dbd@jacob-builder>
+ <20210329163147.GG2356281@nvidia.com>
+ <MWHPR11MB18867EC048E3E3FA37F9C38F8C7D9@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210330132740.GB1403691@nvidia.com>
+ <BN6PR11MB40688BB2693A657D411E33C8C37C9@BN6PR11MB4068.namprd11.prod.outlook.com>
+ <20210331123801.GD1463678@nvidia.com>
+ <20210331164621.5f0b0d63@jacob-builder>
+ <20210401003705.GS1463678@nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FzW2BYP3ezifTSicTa4DSrM25NdyzyyIuxKnyri/X1I=;
- b=cfICuL1ll+qfpY/WKb7rUzig5uRYwC+DwFsMrEWm4UJaN75y6zvmmDzAlLtz55gDlHWu4dYpyv1bezVSERorqn/JhLQs9rnnHd7QXY0bjLOD8r/HDBuLSsY4TpxvtrzgNKg5eG2QBcPcwIZgjzLv7mLH3zzazBxs9B8GOacSsrBDHxJQ2YiQTY6JYBAuN+9BHN1GwccQLJyolxFvTzojDCHzD43Dx/YFaJHRP29PkDZKv5ovmoYAC7LYVpyI+s4KBefZzUoGjIn6bO2Ru7P0S9QmZYRkq6+1Jx6FoJsR0EvGwrdblUqDMseaeNl6bIV6FmiQ4PzwYjqoLZQ3N/F6Fg==
-Content-Disposition: inline
-In-Reply-To: <BN6PR11MB4068C4DE7AF43D44DE70F4C1C37B9-1gF2/dm/6VuPGwkGT4HjsJPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
+In-Reply-To: <20210401003705.GS1463678-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-Id: <cgroups.vger.kernel.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
  <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
@@ -34,51 +29,125 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
  <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-To: "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian,
  Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Thu, Apr 01, 2021 at 02:08:17PM +0000, Liu, Yi L wrote:
+Hi Jason,
 
-> DMA page faults are delivered to root-complex via page request message and
-> it is per-device according to PCIe spec. Page request handling flow is:
+On Wed, 31 Mar 2021 21:37:05 -0300, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
+
+> On Wed, Mar 31, 2021 at 04:46:21PM -0700, Jacob Pan wrote:
+> > Hi Jason,
+> > 
+> > On Wed, 31 Mar 2021 09:38:01 -0300, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+> > wrote: 
+> > > > > Get rid of the ioasid set.
+> > > > >
+> > > > > Each driver has its own list of allowed ioasids.    
+> > >  [...]  
+> > > 
+> > > The /dev/ioasid FD replaces this security check. By becoming FD
+> > > centric you don't need additional kernel security objects.
+> > > 
+> > > Any process with access to the /dev/ioasid FD is allowed to control
+> > > those PASID. The seperation between VMs falls naturally from the
+> > > seperation of FDs without creating additional, complicated, security
+> > > infrastrucure in the kernel.
+> > > 
+> > > This is why all APIs must be FD focused, and you need to have a
+> > > logical layering of responsibility.
+> > > 
+> > >  Allocate a /dev/ioasid FD
+> > >  Allocate PASIDs inside the FD
+Just to be super clear. Do we allocate a FD for each PASID and return the
+FD to the user? Or return the plain PASID number back to the user space?
+
+> > >  Assign memory to the PASIDS
+> > > 
+> > >  Open a device FD, eg from VFIO or VDP
+> > >  Instruct the device FD to authorize the device to access PASID A in
+> > >  an ioasid FD  
+> > How do we know user provided PASID A was allocated by the ioasid FD?  
 > 
-> 1) iommu driver receives a page request from device
-> 2) iommu driver parses the page request message. Get the RID,PASID, faulted
->    page and requested permissions etc.
-> 3) iommu driver triggers fault handler registered by device driver with
->    iommu_report_device_fault()
+> You pass in the ioasid FD and use a 'get pasid from fdno' API to
+> extract the required kernel structure.
+> 
+Seems you are talking about two FDs:
+- /dev/ioasid FD
+- per IOASID FD
+This API ioasid = get_pasid_from_fd(dev_ioasid_fd, ioasid_fd);
+dev_ioasid_fd will find the xarray for all the PASIDs allocated under it,
+ioasid_fd wil be the index into the xarray to retrieve the actual ioasid.
+Correct?
 
-This seems confused.
+> > Shouldn't we validate user input by tracking which PASIDs are
+> > allocated by which ioasid FD?  
+> 
+> Yes, but it is integral to the ioasid FD, not something separated.
+> 
+OK, if we have per IOASID FD in addition to the /dev/ioasid FD we can
+validate user input.
 
-The PASID should define how to handle the page fault, not the driver.
+> > > VFIO extracts some kernel representation of the ioasid from the ioasid
+> > > fd using an API
+> > >   
+> > This lookup API seems to be asking for per ioasid FD storage array.
+> > Today, the ioasid_set is per mm and contains a Xarray.   
+> 
+> Right, put the xarray per FD. A set per mm is fairly nonsensical, we
+> don't use the mm as that kind of security key.
+> 
+Sounds good, one xarray per /dev/ioasid FD.
 
-I don't remember any device specific actions in ATS, so what is the
-driver supposed to do?
+> > Since each VM, KVM can only open one ioasid FD, this per FD array
+> > would be equivalent to the per mm ioasid_set, right?  
+> 
+> Why only one?  Each interaction with the other FDs should include the
+> PASID/FD pair. There is no restriction to just one.
+> 
+OK, one per subsystem-VM. For example, if a VM has a VFIO and a VDPA
+device, it should only two /dev/ioasid FDs respectively. Correct?
 
-> 4) device driver's fault handler signals an event FD to notify userspace to
->    fetch the information about the page fault. If it's VM case, inject the
->    page fault to VM and let guest to solve it.
+> > > VFIO does some kernel call to IOMMU/IOASID layer that says 'tell the
+> > > IOMMU that this PCI device is allowed to use this PASID'  
+> >
+> > Would it be redundant to what iommu_uapi_sva_bind_gpasid() does? I
+> > thought the idea is to use ioasid FD IOCTL to issue IOMMU uAPI calls.
+> > Or we can skip this step for now and wait for the user to do SVA bind.  
+> 
+> I'm not sure what you are asking.
+> 
+> Possibly some of the IOMMU API will need a bit adjusting to make
+> things split.
+> 
+> The act of programming the page tables and the act of authorizing a
+> PCI BDF to use a PASID are distinct things with two different IOCTLs.
+> 
+Why separate? I don't see a use case to just authorize a PASID but don't
+bind it with a page table. The very act of bind page table *is* the
+authorization.
 
-If the PASID is set to 'report page fault to userspace' then some
-event should come out of /dev/ioasid, or be reported to a linked
-eventfd, or whatever.
+> iommu_uapi_sva_bind_gpasid() is never called by anything, and it's
+> uAPI is never implemented.
+> 
+Just a little background here. We have been working on the vSVA stack
+since 2017. At the time, VFIO was the de facto interface for IOMMU-aware
+driver framework. These uAPIs were always developed alone side with the
+accompanying VFIO patches served as consumers. By the time these IOMMU uAPIs
+were merged after reviews from most vendors, the VFIO patchset was
+approaching maturity in around v7. This is when we suddenly saw a new
+request to support VDPA, which attempted VFIO earlier but ultimately moved
+away.
 
-If the PASID is set to 'SVM' then the fault should be passed to
-handle_mm_fault
+For a complex stack like vSVA, I feel we have to reduce moving parts and do
+some divide and conquer.
 
-And so on.
+> Joerg? Why did you merge dead uapi and dead code?
+> 
+> Jason
 
-Userspace chooses what happens based on how they configure the PASID
-through /dev/ioasid.
 
-Why would a device driver get involved here?
+Thanks,
 
-> Eric has sent below series for the page fault reporting for VM with passthru
-> device.
-> https://lore.kernel.org/kvm/20210223210625.604517-5-eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org/
-
-It certainly should not be in vfio pci. Everything using a PASID needs
-this infrastructure, VDPA, mdev, PCI, CXL, etc.
-
-Jason
+Jacob
