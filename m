@@ -1,129 +1,132 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Thu, 1 Apr 2021 14:26:04 -0300
-Message-ID: <20210401172604.GK1463678@nvidia.com>
-References: <20210322120300.GU2356281@nvidia.com>
- <20210324120528.24d82dbd@jacob-builder>
- <20210329163147.GG2356281@nvidia.com>
- <MWHPR11MB18867EC048E3E3FA37F9C38F8C7D9@MWHPR11MB1886.namprd11.prod.outlook.com>
- <20210330132740.GB1403691@nvidia.com>
- <BN6PR11MB40688BB2693A657D411E33C8C37C9@BN6PR11MB4068.namprd11.prod.outlook.com>
- <20210331123801.GD1463678@nvidia.com>
- <20210331164621.5f0b0d63@jacob-builder>
- <20210401003705.GS1463678@nvidia.com>
- <20210401102355.38b0b7d7@jacob-builder>
+From: Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org>
+Subject: Re: [PATCH v3] cpu/hotplug: wait for cpuset_hotplug_work to finish
+ on cpu onlining
+Date: Thu, 1 Apr 2021 15:06:03 +0100
+Message-ID: <20210401140603.hvtbxjxw2izuhwus@e107158-lin>
+References: <20210317003616.2817418-1-aklimov@redhat.com>
+ <87tuowcnv3.ffs@nanos.tec.linutronix.de>
 Mime-Version: 1.0
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <87tuowcnv3.ffs-ecDvlHI5BZPZikZi3RtOZ1XZhhPuCNm+@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Ziwf1w5DA8l+3uM9hK6DzOugzV5jzyrNOz7y/RdgICY=;
- b=ODGfMh1+QBZDYa/FGBFHjgz5L8qh0H3bOxSDR5QUAA3YbCV9H+bfGlCK4+wr6CiNpEHzvF3y0LqDy0FgACGthypU2LGcNB/wFqHKT4VSE60R8Lr63OYmrlh435wMpJwCi+47ShEqutwZGISH297ecxN59g1yL3JrJ39XAJAbfVnQqe3WsJBjk0RzDP1pelWLr/nkPhZUnDrmJ0hYM6Si1K0XutEYjvhuWDhLbAHNXFR9itvetNrPpQoyg214XK3P5O7xL8pN+hV7z8mRj/IEFb/OMaj2sF2Nia0oq4sClV8BZ7wwEcjUNqNqg6R7VOkhKgcinqBPJ7mv0o76e+499A==
-Content-Disposition: inline
-In-Reply-To: <20210401102355.38b0b7d7@jacob-builder>
-List-Id: <cgroups.vger.kernel.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
- <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-To: Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian,
- Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+To: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Cc: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org, yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 
-On Thu, Apr 01, 2021 at 10:23:55AM -0700, Jacob Pan wrote:
-> Hi Jason,
+On 03/27/21 22:01, Thomas Gleixner wrote:
+> And while you carefully reworded the comment, did you actually read what
+> it said and what is says now?
 > 
-> On Wed, 31 Mar 2021 21:37:05 -0300, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
+> > -		 * cpu_down() which takes cpu maps lock. cpu maps lock
+> > -		 * needs to be held as this might race against in kernel
+> > -		 * abusers of the hotplug machinery (thermal management).
 > 
-> > On Wed, Mar 31, 2021 at 04:46:21PM -0700, Jacob Pan wrote:
-> > > Hi Jason,
-> > > 
-> > > On Wed, 31 Mar 2021 09:38:01 -0300, Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> > > wrote: 
-> > > > > > Get rid of the ioasid set.
-> > > > > >
-> > > > > > Each driver has its own list of allowed ioasids.    
-> > > >  [...]  
-> > > > 
-> > > > The /dev/ioasid FD replaces this security check. By becoming FD
-> > > > centric you don't need additional kernel security objects.
-> > > > 
-> > > > Any process with access to the /dev/ioasid FD is allowed to control
-> > > > those PASID. The seperation between VMs falls naturally from the
-> > > > seperation of FDs without creating additional, complicated, security
-> > > > infrastrucure in the kernel.
-> > > > 
-> > > > This is why all APIs must be FD focused, and you need to have a
-> > > > logical layering of responsibility.
-> > > > 
-> > > >  Allocate a /dev/ioasid FD
-> > > >  Allocate PASIDs inside the FD
-> Just to be super clear. Do we allocate a FD for each PASID and return the
-> FD to the user? Or return the plain PASID number back to the user space?
+> vs.
+> 
+> > +	 * cpu_down() which takes cpu maps lock. cpu maps lock
+> > +	 * needed to be held as this might race against in-kernel
+> > +	 * abusers of the hotplug machinery (thermal management).
+> 
+> The big fat hint is: "cpu maps lock needs to be held as this ...." and
+> it still needs to be held for the above loop to work correctly at
+> all. See also below.
+> 
+> So just moving comments blindly around and making them past tense is not
+> cutting it. Quite the contrary the comments make no sense anymore. They
+> became uncomprehensible word salad.
+> 
+> Now for the second part of that comment:
+> 
+> > +      *                                          ....  This is
+> > +	 * called under the sysfs hotplug lock, so it is properly
+> > +	 * serialized against the regular offline usage.
+> 
+> So there are two layers of protection:
+> 
+>    cpu_maps_lock and sysfs hotplug lock
+> 
+> One protects surprisingly against concurrent sysfs writes and the other
+> is required to serialize in kernel usage.
+> 
+> Now lets look at the original protection:
+> 
+>    lock(sysfs)
+>      lock(cpu_maps)
+>        hotplug
+>         dev->offline = new_state
+>         uevent()
+>      unlock(cpu_maps)
+>    unlock(sysfs)
+> 
+> and the one you created:
+> 
+>    lock(sysfs)
+>      lock(cpu_maps)
+>        hotplug
+>      unlock(cpu_maps)
+>      dev->offline = new_state
+>      uevent()
+>    unlock(sysfs)
+> 
+> Where is that protection scope change mentioned in the change log and
+> where is the analysis that it is correct?
 
-I would do multiple PASID's per /dev/ioasid FD because we expect alot
-of PASIDs to be in use and we'd run into FDno limits.
+The comment do still need updating though. Its reference to thermal management
+is cryptic. I couldn't see who performs hotplug operations in thermal code.
 
-> > > >  Assign memory to the PASIDS
-> > > > 
-> > > >  Open a device FD, eg from VFIO or VDP
-> > > >  Instruct the device FD to authorize the device to access PASID A in
-> > > >  an ioasid FD  
-> > > How do we know user provided PASID A was allocated by the ioasid FD?  
-> > 
-> > You pass in the ioasid FD and use a 'get pasid from fdno' API to
-> > extract the required kernel structure.
-> > 
-> Seems you are talking about two FDs:
-> - /dev/ioasid FD
+I also think generally that comment is no longer valid after the refactor I did
+to 'prevent' in-kernel users from calling cpu_up/down() directly and force them
+all to go via device_offline/online() which is wrapped via the add/remove_cpu()
 
-No, just this one.
+	33c3736ec888 cpu/hotplug: Hide cpu_up/down()
 
-> - per IOASID FD
-> This API ioasid = get_pasid_from_fd(dev_ioasid_fd, ioasid_fd);
-> dev_ioasid_fd will find the xarray for all the PASIDs allocated under it,
-> ioasid_fd wil be the index into the xarray to retrieve the actual ioasid.
-> Correct?
+So I think except for suspend/resume/hibernate/kexec, all in-kernel users
+should be serialized by lock(hotplug) now. Since uevents() don't matter for
+suspend/resume/hiberante/kexec I think moving it outside of lock(cpu_maps) is
+fine.
 
-'ioasid_fd' is just the ioasid number in whatever numberspace the
-/dev/ioasid FD's use.
+So IIUC in the past we had the race
 
-> > Why only one?  Each interaction with the other FDs should include the
-> > PASID/FD pair. There is no restriction to just one.
+	userspace			in-kernel users
 
-> OK, one per subsystem-VM. For example, if a VM has a VFIO and a VDPA
-> device, it should only two /dev/ioasid FDs respectively. Correct?
+	lock(hotplug)
+	cpuhp_smt_disable()
+	   lock(cpu_maps)		cpu_down()
+					  lock(cpu_maps)
 
-No, only one.
+So they were serialized by cpu_maps lock. But that should not happen now since
+in-kernel (except for the aforementioned) users should use remove_cpu().
 
-For something like qemu's use case I mostly expect the vIOMMU driver
-will open /dev/ioasid for each vIOMMU instance it creates (basically
-only one)
+	userspace			in-kernel users
 
-> > The act of programming the page tables and the act of authorizing a
-> > PCI BDF to use a PASID are distinct things with two different IOCTLs.
-> > 
-> Why separate? 
+	lock(hotplug)
+	cpuhp_smt_disable()
+	   lock(cpu_maps)		remove_cpu()
+					  lock(hotplug)
+					  device_offline()
+					    cpu_down()
+					      lock(cpu_maps)
 
-Because they have different owners and different layers in the
-software.
+Which forces the serialization at lock(hotplug), which is what
+lock_device_hotplug_sysfs() is actually tries to hold.
 
-It is not about use case, it is about putting the control points where
-they naturally belong.
+So I think that race condition should not happen now. Or did I miss something?
 
-> For a complex stack like vSVA, I feel we have to reduce moving parts and do
-> some divide and conquer.
+The only loophole is that cpu_device_up() could be abused if not caught by
+reviewers. I didn't find a way to warn/error if someone other than
+cpu_subsys_online() uses it. We rely on a comment explaining it..
 
-uAPI should have all come together with a user and user application.
+I think cpuhp_smt_disable/enable can safely call device_offline/online now.
+Although it might still be more efficient to hold lock(cpu_maps) once than
+repeatedly in a loop.
 
-uAPI is hardest and most important part.
+If we do that, then cpu_up_down_serialize_trainwrech() can be called from
+cpu_device_up/down() which implies !task_frozen.
 
-Jason
+Can't remember now if Alexey moved the uevent() handling out of the loop for
+efficiency reasons or was seeing something else. I doubt it was the latter.
+
+
+Thanks
