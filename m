@@ -1,168 +1,386 @@
-From: Dan Schatzberg <schatzberg.dan@gmail.com>
-Subject: [PATCH V12 0/3] Charge loop device i/o to issuing cgroup
-Date: Fri,  2 Apr 2021 12:16:31 -0700
-Message-ID: <20210402191638.3249835-1-schatzberg.dan@gmail.com>
+From: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 1/3] loop: Use worker per cgroup instead of kworker
+Date: Fri,  2 Apr 2021 12:16:32 -0700
+Message-ID: <20210402191638.3249835-2-schatzberg.dan@gmail.com>
+References: <20210402191638.3249835-1-schatzberg.dan@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=LnxM2dCsgefp2lTqtmiMsTgHl3EHT3phtkcM0CuctsU=;
-        b=sexUDEANAJW6Wcofc3gTufIIY3OVzBHVz66e60XJSMOYq0momOVoT1/oSTROjNQAyO
-         D8/s6Joupk3LV08oTkklRtksM5DRiYMbzCopEdPBUGrn8O3zoOAipt71aFRGv2ZanlBl
-         vO2GozZTnPskqZfhgTlFk95cwMNQU+m339bV7RkCZSySqCTRmQHot0CU2gqFG66di69J
-         NLYQSNDERUfyzQHXHoVwSYJHd/ZLxBf5wdfiYR1w8ySfWzTwxxMx3ryHMA+WgOWaXbWQ
-         HhzFx3Yldxiyuf0WWLuAGodViVzYnMi84D2KpIbOaqfNTgwTJ/LjUaGqp4slRUQ2cuam
-         kDig==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=8QbNdUJxb0RDEcXsdObc113EBLTuyth4RuMIsDiAdoc=;
+        b=nMW5PZgoPiIA3Yp/bJSnW5xhEIS/p2jcrkF440/QOJQruvUnXQyEmDHN5bNTcbtMU0
+         v7YZzd/G65P3k7JMKPbCVoXm0nK7Ao2r2Ped68Hm05yIt8AKI+L5TVMtj3uH8MVPkAEn
+         B6rI3Lte9DtzT6g3v/dvvVRiQ56ixoy9or7e8E/D7ndJhSziWM+jedyGYrNOtuBgadhS
+         yN10uhiSv76N6Y5T59xhnJyRawfdHyuvPCuMrCH+nNOvlmlcSKjJ5u7KmYTexjlwHevT
+         NF6iOusqdYweO+r4sU5Pa6ZDFcNsGdQ7eHeJ4DYkRTe4YVXK8uSSbEGYi9Zcdlgnh+4Z
+         7SPQ==
+In-Reply-To: <20210402191638.3249835-1-schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: 
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Hugh Dickins <hughd@google.com>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, Muchun Song <songmuchun@bytedance.com>, Yang Shi <shy828301@gmail.com>, Alex Shi <alex.shi@linux.alibaba.com>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Wei Yang <richard.weiyang@gmail.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP CGROUP" <cgroups@vger.kernel.org>, "open list:MEMORY MANAGEMENT" <linux-mm@kvack.org>
+Cc: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:BLOCK LAYER" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:CONTROL GROUP CGROUP" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:MEMORY MANAGEMENT" <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>
 
-No major changes, rebased on top of latest mm tree
+Existing uses of loop device may have multiple cgroups reading/writing
+to the same device. Simply charging resources for I/O to the backing
+file could result in priority inversion where one cgroup gets
+synchronously blocked, holding up all other I/O to the loop device.
 
-Changes since V12:
+In order to avoid this priority inversion, we use a single workqueue
+where each work item is a "struct loop_worker" which contains a queue of
+struct loop_cmds to issue. The loop device maintains a tree mapping blk
+css_id -> loop_worker. This allows each cgroup to independently make
+forward progress issuing I/O to the backing file.
 
-* Small change to get_mem_cgroup_from_mm to avoid needing
-  get_active_memcg
+There is also a single queue for I/O associated with the rootcg which
+can be used in cases of extreme memory shortage where we cannot allocate
+a loop_worker.
 
-Changes since V11:
+The locking for the tree and queues is fairly heavy handed - we acquire
+a per-loop-device spinlock any time either is accessed. The existing
+implementation serializes all I/O through a single thread anyways, so I
+don't believe this is any worse.
 
-* Removed WQ_MEM_RECLAIM flag from loop workqueue. Technically, this
-  can be driven by writeback, but this was causing a warning in xfs
-  and likely other filesystems aren't equipped to be driven by reclaim
-  at the VFS layer.
-* Included a small fix from Colin Ian King.
-* reworked get_mem_cgroup_from_mm to institute the necessary charge
-  priority.
+Fixes-from: Colin Ian King <colin.king-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>
+Signed-off-by: Dan Schatzberg <schatzberg.dan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
+ drivers/block/loop.c | 203 ++++++++++++++++++++++++++++++++++++-------
+ drivers/block/loop.h |  12 ++-
+ 2 files changed, 178 insertions(+), 37 deletions(-)
 
-Changes since V10:
-
-* Added page-cache charging to mm: Charge active memcg when no mm is set
-
-Changes since V9:
-
-* Rebased against linus's branch which now includes Roman Gushchin's
-  patch this series is based off of
-
-Changes since V8:
-
-* Rebased on top of Roman Gushchin's patch
-  (https://lkml.org/lkml/2020/8/21/1464) which provides the nesting
-  support for setting active memcg. Dropped the patch from this series
-  that did the same thing.
-
-Changes since V7:
-
-* Rebased against linus's branch
-
-Changes since V6:
-
-* Added separate spinlock for worker synchronization
-* Minor style changes
-
-Changes since V5:
-
-* Fixed a missing css_put when failing to allocate a worker
-* Minor style changes
-
-Changes since V4:
-
-Only patches 1 and 2 have changed.
-
-* Fixed irq lock ordering bug
-* Simplified loop detach
-* Added support for nesting memalloc_use_memcg
-
-Changes since V3:
-
-* Fix race on loop device destruction and deferred worker cleanup
-* Ensure charge on shmem_swapin_page works just like getpage
-* Minor style changes
-
-Changes since V2:
-
-* Deferred destruction of workqueue items so in the common case there
-  is no allocation needed
-
-Changes since V1:
-
-* Split out and reordered patches so cgroup charging changes are
-  separate from kworker -> workqueue change
-
-* Add mem_css to struct loop_cmd to simplify logic
-
-The loop device runs all i/o to the backing file on a separate kworker
-thread which results in all i/o being charged to the root cgroup. This
-allows a loop device to be used to trivially bypass resource limits
-and other policy. This patch series fixes this gap in accounting.
-
-A simple script to demonstrate this behavior on cgroupv2 machine:
-
-'''
-#!/bin/bash
-set -e
-
-CGROUP=/sys/fs/cgroup/test.slice
-LOOP_DEV=/dev/loop0
-
-if [[ ! -d $CGROUP ]]
-then
-    sudo mkdir $CGROUP
-fi
-
-grep oom_kill $CGROUP/memory.events
-
-# Set a memory limit, write more than that limit to tmpfs -> OOM kill
-sudo unshare -m bash -c "
-echo \$\$ > $CGROUP/cgroup.procs;
-echo 0 > $CGROUP/memory.swap.max;
-echo 64M > $CGROUP/memory.max;
-mount -t tmpfs -o size=512m tmpfs /tmp;
-dd if=/dev/zero of=/tmp/file bs=1M count=256" || true
-
-grep oom_kill $CGROUP/memory.events
-
-# Set a memory limit, write more than that limit through loopback
-# device -> no OOM kill
-sudo unshare -m bash -c "
-echo \$\$ > $CGROUP/cgroup.procs;
-echo 0 > $CGROUP/memory.swap.max;
-echo 64M > $CGROUP/memory.max;
-mount -t tmpfs -o size=512m tmpfs /tmp;
-truncate -s 512m /tmp/backing_file
-losetup $LOOP_DEV /tmp/backing_file
-dd if=/dev/zero of=$LOOP_DEV bs=1M count=256;
-losetup -D $LOOP_DEV" || true
-
-grep oom_kill $CGROUP/memory.events
-'''
-
-Naively charging cgroups could result in priority inversions through
-the single kworker thread in the case where multiple cgroups are
-reading/writing to the same loop device. This patch series does some
-minor modification to the loop driver so that each cgroup can make
-forward progress independently to avoid this inversion.
-
-With this patch series applied, the above script triggers OOM kills
-when writing through the loop device as expected.
-
-Dan Schatzberg (3):
-  loop: Use worker per cgroup instead of kworker
-  mm: Charge active memcg when no mm is set
-  loop: Charge i/o to mem and blk cg
-
- drivers/block/loop.c       | 244 ++++++++++++++++++++++++++++++-------
- drivers/block/loop.h       |  15 ++-
- include/linux/memcontrol.h |   6 +
- kernel/cgroup/cgroup.c     |   1 +
- mm/filemap.c               |   2 +-
- mm/memcontrol.c            |  49 +++++---
- mm/shmem.c                 |   4 +-
- 7 files changed, 253 insertions(+), 68 deletions(-)
-
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index d58d68f3c7cd..4750b373d4bb 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -71,7 +71,6 @@
+ #include <linux/writeback.h>
+ #include <linux/completion.h>
+ #include <linux/highmem.h>
+-#include <linux/kthread.h>
+ #include <linux/splice.h>
+ #include <linux/sysfs.h>
+ #include <linux/miscdevice.h>
+@@ -84,6 +83,8 @@
+ 
+ #include <linux/uaccess.h>
+ 
++#define LOOP_IDLE_WORKER_TIMEOUT (60 * HZ)
++
+ static DEFINE_IDR(loop_index_idr);
+ static DEFINE_MUTEX(loop_ctl_mutex);
+ 
+@@ -921,27 +922,83 @@ static void loop_config_discard(struct loop_device *lo)
+ 	q->limits.discard_alignment = 0;
+ }
+ 
+-static void loop_unprepare_queue(struct loop_device *lo)
+-{
+-	kthread_flush_worker(&lo->worker);
+-	kthread_stop(lo->worker_task);
+-}
++struct loop_worker {
++	struct rb_node rb_node;
++	struct work_struct work;
++	struct list_head cmd_list;
++	struct list_head idle_list;
++	struct loop_device *lo;
++	struct cgroup_subsys_state *css;
++	unsigned long last_ran_at;
++};
+ 
+-static int loop_kthread_worker_fn(void *worker_ptr)
+-{
+-	current->flags |= PF_LOCAL_THROTTLE | PF_MEMALLOC_NOIO;
+-	return kthread_worker_fn(worker_ptr);
+-}
++static void loop_workfn(struct work_struct *work);
++static void loop_rootcg_workfn(struct work_struct *work);
++static void loop_free_idle_workers(struct timer_list *timer);
+ 
+-static int loop_prepare_queue(struct loop_device *lo)
++static void loop_queue_work(struct loop_device *lo, struct loop_cmd *cmd)
+ {
+-	kthread_init_worker(&lo->worker);
+-	lo->worker_task = kthread_run(loop_kthread_worker_fn,
+-			&lo->worker, "loop%d", lo->lo_number);
+-	if (IS_ERR(lo->worker_task))
+-		return -ENOMEM;
+-	set_user_nice(lo->worker_task, MIN_NICE);
+-	return 0;
++	struct rb_node **node = &(lo->worker_tree.rb_node), *parent = NULL;
++	struct loop_worker *cur_worker, *worker = NULL;
++	struct work_struct *work;
++	struct list_head *cmd_list;
++
++	spin_lock_irq(&lo->lo_work_lock);
++
++	if (!cmd->css)
++		goto queue_work;
++
++	node = &lo->worker_tree.rb_node;
++
++	while (*node) {
++		parent = *node;
++		cur_worker = container_of(*node, struct loop_worker, rb_node);
++		if (cur_worker->css == cmd->css) {
++			worker = cur_worker;
++			break;
++		} else if ((long)cur_worker->css < (long)cmd->css) {
++			node = &(*node)->rb_left;
++		} else {
++			node = &(*node)->rb_right;
++		}
++	}
++	if (worker)
++		goto queue_work;
++
++	worker = kzalloc(sizeof(struct loop_worker), GFP_NOWAIT | __GFP_NOWARN);
++	/*
++	 * In the event we cannot allocate a worker, just queue on the
++	 * rootcg worker
++	 */
++	if (!worker)
++		goto queue_work;
++
++	worker->css = cmd->css;
++	css_get(worker->css);
++	INIT_WORK(&worker->work, loop_workfn);
++	INIT_LIST_HEAD(&worker->cmd_list);
++	INIT_LIST_HEAD(&worker->idle_list);
++	worker->lo = lo;
++	rb_link_node(&worker->rb_node, parent, node);
++	rb_insert_color(&worker->rb_node, &lo->worker_tree);
++queue_work:
++	if (worker) {
++		/*
++		 * We need to remove from the idle list here while
++		 * holding the lock so that the idle timer doesn't
++		 * free the worker
++		 */
++		if (!list_empty(&worker->idle_list))
++			list_del_init(&worker->idle_list);
++		work = &worker->work;
++		cmd_list = &worker->cmd_list;
++	} else {
++		work = &lo->rootcg_work;
++		cmd_list = &lo->rootcg_cmd_list;
++	}
++	list_add_tail(&cmd->list_entry, cmd_list);
++	queue_work(lo->workqueue, work);
++	spin_unlock_irq(&lo->lo_work_lock);
+ }
+ 
+ static void loop_update_rotational(struct loop_device *lo)
+@@ -1127,12 +1184,23 @@ static int loop_configure(struct loop_device *lo, fmode_t mode,
+ 	    !file->f_op->write_iter)
+ 		lo->lo_flags |= LO_FLAGS_READ_ONLY;
+ 
+-	error = loop_prepare_queue(lo);
+-	if (error)
++	lo->workqueue = alloc_workqueue("loop%d",
++					WQ_UNBOUND | WQ_FREEZABLE,
++					0,
++					lo->lo_number);
++	if (!lo->workqueue) {
++		error = -ENOMEM;
+ 		goto out_unlock;
++	}
+ 
+ 	set_disk_ro(lo->lo_disk, (lo->lo_flags & LO_FLAGS_READ_ONLY) != 0);
+ 
++	INIT_WORK(&lo->rootcg_work, loop_rootcg_workfn);
++	INIT_LIST_HEAD(&lo->rootcg_cmd_list);
++	INIT_LIST_HEAD(&lo->idle_worker_list);
++	lo->worker_tree = RB_ROOT;
++	timer_setup(&lo->timer, loop_free_idle_workers,
++		TIMER_DEFERRABLE);
+ 	lo->use_dio = lo->lo_flags & LO_FLAGS_DIRECT_IO;
+ 	lo->lo_device = bdev;
+ 	lo->lo_backing_file = file;
+@@ -1200,6 +1268,7 @@ static int __loop_clr_fd(struct loop_device *lo, bool release)
+ 	int err = 0;
+ 	bool partscan = false;
+ 	int lo_number;
++	struct loop_worker *pos, *worker;
+ 
+ 	mutex_lock(&lo->lo_mutex);
+ 	if (WARN_ON_ONCE(lo->lo_state != Lo_rundown)) {
+@@ -1219,6 +1288,18 @@ static int __loop_clr_fd(struct loop_device *lo, bool release)
+ 	/* freeze request queue during the transition */
+ 	blk_mq_freeze_queue(lo->lo_queue);
+ 
++	destroy_workqueue(lo->workqueue);
++	spin_lock_irq(&lo->lo_work_lock);
++	list_for_each_entry_safe(worker, pos, &lo->idle_worker_list,
++				idle_list) {
++		list_del(&worker->idle_list);
++		rb_erase(&worker->rb_node, &lo->worker_tree);
++		css_put(worker->css);
++		kfree(worker);
++	}
++	spin_unlock_irq(&lo->lo_work_lock);
++	del_timer_sync(&lo->timer);
++
+ 	spin_lock_irq(&lo->lo_lock);
+ 	lo->lo_backing_file = NULL;
+ 	spin_unlock_irq(&lo->lo_lock);
+@@ -1255,7 +1336,6 @@ static int __loop_clr_fd(struct loop_device *lo, bool release)
+ 
+ 	partscan = lo->lo_flags & LO_FLAGS_PARTSCAN && bdev;
+ 	lo_number = lo->lo_number;
+-	loop_unprepare_queue(lo);
+ out_unlock:
+ 	mutex_unlock(&lo->lo_mutex);
+ 	if (partscan) {
+@@ -2026,7 +2106,7 @@ static blk_status_t loop_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	} else
+ #endif
+ 		cmd->css = NULL;
+-	kthread_queue_work(&lo->worker, &cmd->work);
++	loop_queue_work(lo, cmd);
+ 
+ 	return BLK_STS_OK;
+ }
+@@ -2056,26 +2136,82 @@ static void loop_handle_cmd(struct loop_cmd *cmd)
+ 	}
+ }
+ 
+-static void loop_queue_work(struct kthread_work *work)
++static void loop_set_timer(struct loop_device *lo)
++{
++	timer_reduce(&lo->timer, jiffies + LOOP_IDLE_WORKER_TIMEOUT);
++}
++
++static void loop_process_work(struct loop_worker *worker,
++			struct list_head *cmd_list, struct loop_device *lo)
++{
++	int orig_flags = current->flags;
++	struct loop_cmd *cmd;
++
++	current->flags |= PF_LOCAL_THROTTLE | PF_MEMALLOC_NOIO;
++	spin_lock_irq(&lo->lo_work_lock);
++	while (!list_empty(cmd_list)) {
++		cmd = container_of(
++			cmd_list->next, struct loop_cmd, list_entry);
++		list_del(cmd_list->next);
++		spin_unlock_irq(&lo->lo_work_lock);
++
++		loop_handle_cmd(cmd);
++		cond_resched();
++
++		spin_lock_irq(&lo->lo_work_lock);
++	}
++
++	/*
++	 * We only add to the idle list if there are no pending cmds
++	 * *and* the worker will not run again which ensures that it
++	 * is safe to free any worker on the idle list
++	 */
++	if (worker && !work_pending(&worker->work)) {
++		worker->last_ran_at = jiffies;
++		list_add_tail(&worker->idle_list, &lo->idle_worker_list);
++		loop_set_timer(lo);
++	}
++	spin_unlock_irq(&lo->lo_work_lock);
++	current->flags = orig_flags;
++}
++
++static void loop_workfn(struct work_struct *work)
+ {
+-	struct loop_cmd *cmd =
+-		container_of(work, struct loop_cmd, work);
++	struct loop_worker *worker =
++		container_of(work, struct loop_worker, work);
++	loop_process_work(worker, &worker->cmd_list, worker->lo);
++}
+ 
+-	loop_handle_cmd(cmd);
++static void loop_rootcg_workfn(struct work_struct *work)
++{
++	struct loop_device *lo =
++		container_of(work, struct loop_device, rootcg_work);
++	loop_process_work(NULL, &lo->rootcg_cmd_list, lo);
+ }
+ 
+-static int loop_init_request(struct blk_mq_tag_set *set, struct request *rq,
+-		unsigned int hctx_idx, unsigned int numa_node)
++static void loop_free_idle_workers(struct timer_list *timer)
+ {
+-	struct loop_cmd *cmd = blk_mq_rq_to_pdu(rq);
++	struct loop_device *lo = container_of(timer, struct loop_device, timer);
++	struct loop_worker *pos, *worker;
+ 
+-	kthread_init_work(&cmd->work, loop_queue_work);
+-	return 0;
++	spin_lock_irq(&lo->lo_work_lock);
++	list_for_each_entry_safe(worker, pos, &lo->idle_worker_list,
++				idle_list) {
++		if (time_is_after_jiffies(worker->last_ran_at +
++						LOOP_IDLE_WORKER_TIMEOUT))
++			break;
++		list_del(&worker->idle_list);
++		rb_erase(&worker->rb_node, &lo->worker_tree);
++		css_put(worker->css);
++		kfree(worker);
++	}
++	if (!list_empty(&lo->idle_worker_list))
++		loop_set_timer(lo);
++	spin_unlock_irq(&lo->lo_work_lock);
+ }
+ 
+ static const struct blk_mq_ops loop_mq_ops = {
+ 	.queue_rq       = loop_queue_rq,
+-	.init_request	= loop_init_request,
+ 	.complete	= lo_complete_rq,
+ };
+ 
+@@ -2164,6 +2300,7 @@ static int loop_add(struct loop_device **l, int i)
+ 	mutex_init(&lo->lo_mutex);
+ 	lo->lo_number		= i;
+ 	spin_lock_init(&lo->lo_lock);
++	spin_lock_init(&lo->lo_work_lock);
+ 	disk->major		= LOOP_MAJOR;
+ 	disk->first_minor	= i << part_shift;
+ 	disk->fops		= &lo_fops;
+diff --git a/drivers/block/loop.h b/drivers/block/loop.h
+index a3c04f310672..9289c1cd6374 100644
+--- a/drivers/block/loop.h
++++ b/drivers/block/loop.h
+@@ -14,7 +14,6 @@
+ #include <linux/blk-mq.h>
+ #include <linux/spinlock.h>
+ #include <linux/mutex.h>
+-#include <linux/kthread.h>
+ #include <uapi/linux/loop.h>
+ 
+ /* Possible states of device */
+@@ -54,8 +53,13 @@ struct loop_device {
+ 
+ 	spinlock_t		lo_lock;
+ 	int			lo_state;
+-	struct kthread_worker	worker;
+-	struct task_struct	*worker_task;
++	spinlock_t              lo_work_lock;
++	struct workqueue_struct *workqueue;
++	struct work_struct      rootcg_work;
++	struct list_head        rootcg_cmd_list;
++	struct list_head        idle_worker_list;
++	struct rb_root          worker_tree;
++	struct timer_list       timer;
+ 	bool			use_dio;
+ 	bool			sysfs_inited;
+ 
+@@ -66,7 +70,7 @@ struct loop_device {
+ };
+ 
+ struct loop_cmd {
+-	struct kthread_work work;
++	struct list_head list_entry;
+ 	bool use_aio; /* use AIO interface to handle I/O */
+ 	atomic_t ref; /* only for aio */
+ 	long ret;
 -- 
 2.30.2
 
