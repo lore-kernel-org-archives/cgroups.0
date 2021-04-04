@@ -1,208 +1,97 @@
-From: yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Subject: [RFC 1/1] cgroup: add support for cgroup priority
-Date: Sun,  4 Apr 2021 22:52:12 +0800
-Message-ID: <84ef7a7f3f9cd64c0426829565a0e7e7a1d61ef7.1617355387.git.yuleixzhang@tencent.com>
-References: <cover.1617355387.git.yuleixzhang@tencent.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 00/14] bfq: introduce bfq.ioprio for cgroup
+Date: Sun, 4 Apr 2021 12:09:29 -0400
+Message-ID: <YGnkuWYKeK7C8/Za@mtj.duckdns.org>
+References: <cover.1616649216.git.brookxu@tencent.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=ROIbdx9NEaHy04j2uTdjxQYFMD03Fs+kDBrN45oSLkE=;
-        b=pber5eyHPYVGXZoMnj9kwxnIv0bUKffhYZQKY6Dj/uKitLpkJayms8VsrU/tx+sr6d
-         Llzuj70uwIh6T2wQEPS42hXvN5UMb3nKcQWhqSknzVMraYRnLDDVzPnrU/dKnsEwOxlU
-         n+ZtqnRSE7ju+j7XHml8Yn+4nkvXgjpP+hSBQhVYxhmHuu5oUCtAps6yxgGGEoqtBmRO
-         jGniecanskartv32GXSrAnHNLyaCBhXPEr3k6I/RJOqAFEmaHpTFbGQaIJLMNNOuVFFE
-         6MeRrffNDM1Cy9akCpQf0E0q5bq0EBX0UNRiNESUUJuBr2widck+yLQClhXTStlkIQUQ
-         rFvQ==
-In-Reply-To: <cover.1617355387.git.yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=+IdKWx2ZVFrKT8K7Fl0vAas4WcyOSUW1ErabAnFzPiY=;
+        b=jX96hJMhziC36OYDoWoeDNXvIA7cggPk7CorJz2BxjjrMbtNIlwlpylAvnWF+ZOTyX
+         R7O0Tb1FjmEEOmOFKybqkuX8uLYt2kbD46H7Y9fQHbW5Kw+U3x2WI3624GWsb+cyX1Qm
+         cJvWe7RpsV9BTo+zcEeHuunv76O9aeTVuLBEnsy91UoYI9wl35bYLsG/WBzjtikXWIVS
+         s3A+KOz6W63YHWWmCPXPcHspclrqJ5KPq1reYAn/NMAUpaawH35cptaHti0MVdvLFkFj
+         TCHTZmHAnWMdCuEb7ak9yytBgKRMd0BPNOVa3yfL8Ywmf86oBtWf6FmATEivJzIPJXX6
+         O0uw==
+Sender: Tejun Heo <htejun@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <cover.1616649216.git.brookxu@tencent.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, benbjiang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, kernellwp-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, lihaiwei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linussli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, herberthbli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, lennychen-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, allanyuliu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, Peng Zhiguang <zgpeng-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: brookxu <brookxu.cn@gmail.com>
+Cc: paolo.valente@linaro.org, axboe@kernel.dk, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Lei Chen <lennychen-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+Hello,
 
-Introduce new attribute "priority" to control group, which
-could be used as scale by subssytem to manipulate the behaviors
-of processes.
-The default value of "priority" is set to 0 which means the
-highest priority, and the totally levels of priority is defined
-by CGROUP_PRIORITY_MAX.
+On Thu, Mar 25, 2021 at 02:57:44PM +0800, brookxu wrote:
+> INTERFACE:
+> 
+> The bfq.ioprio interface now is available for cgroup v1 and cgroup
+> v2. Users can configure the ioprio for cgroup through this
+> interface, as shown below:
+> 
+> echo "1 2"> blkio.bfq.ioprio
+> 
+> The above two values respectively represent the values of ioprio
+> class and ioprio for cgroup.
+> 
+> EXPERIMENT:
+> 
+> The test process is as follows:
+> # prepare data disk
+> mount /dev/sdb /data1
+> 
+> # prepare IO scheduler
+> echo bfq > /sys/block/sdb/queue/scheduler
+> echo 0 > /sys/block/sdb/queue/iosched/low_latency
+> echo 1 > /sys/block/sdb/queue/iosched/better_fairness
+> 
+> It is worth noting here that nr_requests limits the number of
+> requests, and it does not perceive priority. If nr_requests is
+> too small, it may cause a serious priority inversion problem.
+> Therefore, we can increase the size of nr_requests based on
+> the actual situation.
+> 
+> # create cgroup v1 hierarchy
+> cd /sys/fs/cgroup/blkio
+> mkdir rt be0 be1 be2 idle
+> 
+> # prepare cgroup
+> echo "1 0" > rt/blkio.bfq.ioprio
+> echo "2 0" > be0/blkio.bfq.ioprio
+> echo "2 4" > be1/blkio.bfq.ioprio
+> echo "2 7" > be2/blkio.bfq.ioprio
+> echo "3 0" > idle/blkio.bfq.ioprio
 
-Signed-off-by: Lei Chen <lennychen-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-Signed-off-by: Liu Yu <allanyuliu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-Signed-off-by: Peng Zhiguang <zgpeng-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-Signed-off-by: Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
----
- include/linux/cgroup-defs.h |  2 +
- include/linux/cgroup.h      |  2 +
- kernel/cgroup/cgroup.c      | 90 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 94 insertions(+)
+Here are some concerns:
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 559ee05f8..3fa2f28a9 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -417,6 +417,7 @@ struct cgroup {
- 	u16 subtree_ss_mask;
- 	u16 old_subtree_control;
- 	u16 old_subtree_ss_mask;
-+	u16 priority;
- 
- 	/* Private pointers for each registered subsystem */
- 	struct cgroup_subsys_state __rcu *subsys[CGROUP_SUBSYS_COUNT];
-@@ -640,6 +641,7 @@ struct cgroup_subsys {
- 	void (*exit)(struct task_struct *task);
- 	void (*release)(struct task_struct *task);
- 	void (*bind)(struct cgroup_subsys_state *root_css);
-+	int (*css_priority_change)(struct cgroup_subsys_state *css, u16 old, u16 new);
- 
- 	bool early_init:1;
- 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 4f2f79de0..734d51aba 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -47,6 +47,7 @@ struct kernel_clone_args;
- 
- /* internal flags */
- #define CSS_TASK_ITER_SKIPPED		(1U << 16)
-+#define CGROUP_PRIORITY_MAX		8
- 
- /* a css_task_iter should be treated as an opaque object */
- struct css_task_iter {
-@@ -957,5 +958,6 @@ static inline void cgroup_bpf_get(struct cgroup *cgrp) {}
- static inline void cgroup_bpf_put(struct cgroup *cgrp) {}
- 
- #endif /* CONFIG_CGROUP_BPF */
-+ssize_t cgroup_priority(struct cgroup_subsys_state *css);
- 
- #endif /* _LINUX_CGROUP_H */
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 9153b20e5..dcb057e42 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -1892,6 +1892,7 @@ static void init_cgroup_housekeeping(struct cgroup *cgrp)
- 	cgrp->dom_cgrp = cgrp;
- 	cgrp->max_descendants = INT_MAX;
- 	cgrp->max_depth = INT_MAX;
-+	cgrp->priority = 0;
- 	INIT_LIST_HEAD(&cgrp->rstat_css_list);
- 	prev_cputime_init(&cgrp->prev_cputime);
- 
-@@ -4783,6 +4784,88 @@ static ssize_t cgroup_threads_write(struct kernfs_open_file *of,
- 	return __cgroup_procs_write(of, buf, false) ?: nbytes;
- }
- 
-+static int cgroup_priority_show(struct seq_file *seq, void *v)
-+{
-+	struct cgroup *cgrp = seq_css(seq)->cgroup;
-+	u16 prio = cgrp->priority;
-+
-+	seq_printf(seq, "%d\n", prio);
-+
-+	return 0;
-+}
-+
-+static void cgroup_set_priority(struct cgroup *cgrp, unsigned int priority)
-+{
-+	u16 old = cgrp->priority;
-+	struct cgroup_subsys_state *css;
-+	int ssid;
-+
-+	cgrp->priority = priority;
-+	for_each_css(css, ssid, cgrp) {
-+		if (css->ss->css_priority_change)
-+			css->ss->css_priority_change(css, old, priority);
-+	}
-+}
-+
-+static void cgroup_priority_propagate(struct cgroup *cgrp)
-+{
-+	struct cgroup *dsct;
-+	struct cgroup_subsys_state *d_css;
-+	u16 priority = cgrp->priority;
-+
-+	lockdep_assert_held(&cgroup_mutex);
-+	cgroup_for_each_live_descendant_pre(dsct, d_css, cgrp) {
-+		if (dsct->priority < priority)
-+			cgroup_set_priority(dsct, priority);
-+	}
-+}
-+
-+static ssize_t cgroup_priority_write(struct kernfs_open_file *of,
-+				      char *buf, size_t nbytes, loff_t off)
-+{
-+	struct cgroup *cgrp, *parent;
-+	ssize_t ret;
-+	u16 prio, orig;
-+
-+	buf = strstrip(buf);
-+	ret = kstrtoint(buf, 0, &prio);
-+	if (ret)
-+		return ret;
-+
-+	if (prio < 0 || prio >= CGROUP_PRIORITY_MAX)
-+		return -ERANGE;
-+
-+	cgrp = cgroup_kn_lock_live(of->kn, false);
-+	if (!cgrp)
-+		return -ENOENT;
-+	parent = cgroup_parent(cgrp);
-+	if (parent && prio < parent->priority) {
-+		ret = -EINVAL;
-+		goto unlock_out;
-+	}
-+	orig = cgrp->priority;
-+	if (prio == orig)
-+		goto unlock_out;
-+
-+	cgroup_set_priority(cgrp, prio);
-+	cgroup_priority_propagate(cgrp);
-+unlock_out:
-+	cgroup_kn_unlock(of->kn);
-+
-+	return ret ?: nbytes;
-+}
-+
-+ssize_t cgroup_priority(struct cgroup_subsys_state *css)
-+{
-+	struct cgroup *cgrp = css->cgroup;
-+	unsigned int prio = 0;
-+
-+	if (cgrp)
-+		prio = cgrp->priority;
-+	return prio;
-+}
-+EXPORT_SYMBOL(cgroup_priority);
-+
- /* cgroup core interface files for the default hierarchy */
- static struct cftype cgroup_base_files[] = {
- 	{
-@@ -4836,6 +4919,12 @@ static struct cftype cgroup_base_files[] = {
- 		.seq_show = cgroup_max_depth_show,
- 		.write = cgroup_max_depth_write,
- 	},
-+	{
-+		.name = "cgroup.priority",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.seq_show = cgroup_priority_show,
-+		.write = cgroup_priority_write,
-+	},
- 	{
- 		.name = "cgroup.stat",
- 		.seq_show = cgroup_stat_show,
-@@ -5178,6 +5267,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent, const char *name,
- 	cgrp->self.parent = &parent->self;
- 	cgrp->root = root;
- 	cgrp->level = level;
-+	cgrp->priority = parent->priority;
- 
- 	ret = psi_cgroup_alloc(cgrp);
- 	if (ret)
+* The main benefit of bfq compared to cfq at least was that the behavior
+  model was defined in a clearer way. It was possible to describe what the
+  control model was in a way which makes semantic sense. The main problem I
+  see with this proposal is that it's an interface which grew out of the
+  current implementation specifics and I'm having a hard time understanding
+  what the end results should be with different configuration combinations.
+
+* While this might work around some scheduling latency issues but I have a
+  hard time imagining it being able to address actual QoS issues. e.g. on a
+  lot of SSDs, without absolute throttling, device side latencies can spike
+  by multiple orders of magnitude and no prioritization on the scheduler
+  side is gonna help once such state is reached. Here, there's no robust
+  mechanisms or measurement/control units defined to address that. In fact,
+  the above direction to increase nr_requests limit will make priority
+  inversions on the device and post-elevator side way more likely and
+  severe.
+
+So, maybe it helps with specific scenarios on some hardware, but given the
+ad-hoc nature, I don't think it justifies all the extra interface additions.
+My suggestion would be slimming it down to bare essentials and making the
+user interface part as minimal as possible.
+
+Thanks.
+
 -- 
-2.28.0
-
+tejun
