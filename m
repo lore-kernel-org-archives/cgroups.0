@@ -1,95 +1,58 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 00/14] bfq: introduce bfq.ioprio for cgroup
-Date: Sun, 4 Apr 2021 12:09:29 -0400
-Message-ID: <YGnkuWYKeK7C8/Za@mtj.duckdns.org>
-References: <cover.1616649216.git.brookxu@tencent.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC 0/1] Introduce new attribute "priority" to control group
+Date: Sun, 4 Apr 2021 13:29:44 -0400
+Message-ID: <YGn3iHBp5UweFv2/@mtj.duckdns.org>
+References: <cover.1617355387.git.yuleixzhang@tencent.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=+IdKWx2ZVFrKT8K7Fl0vAas4WcyOSUW1ErabAnFzPiY=;
-        b=jX96hJMhziC36OYDoWoeDNXvIA7cggPk7CorJz2BxjjrMbtNIlwlpylAvnWF+ZOTyX
-         R7O0Tb1FjmEEOmOFKybqkuX8uLYt2kbD46H7Y9fQHbW5Kw+U3x2WI3624GWsb+cyX1Qm
-         cJvWe7RpsV9BTo+zcEeHuunv76O9aeTVuLBEnsy91UoYI9wl35bYLsG/WBzjtikXWIVS
-         s3A+KOz6W63YHWWmCPXPcHspclrqJ5KPq1reYAn/NMAUpaawH35cptaHti0MVdvLFkFj
-         TCHTZmHAnWMdCuEb7ak9yytBgKRMd0BPNOVa3yfL8Ywmf86oBtWf6FmATEivJzIPJXX6
-         O0uw==
-Sender: Tejun Heo <htejun@gmail.com>
+        bh=OZEUSqboDcw+HtCtMOSkDciT/SlQ5QAFuYRmXSX9rkA=;
+        b=EnoTD+SOKtJxZf859K9o2lC02HkQGzWR/1z2Br3tVAqf2xxTDw+Ja+hz2EACyfqYT8
+         UcM7QFDuLfNoiNDop7thhYp0jFMeRvEhmTdxP0w3qftVK253XoEpo+RG2T4nrytSYv5v
+         EV0Ju1WP6YWLnCqaaz94hdImt/LN+of0HmC64US3iFacnvVLFsht8UaNXHQULktYGlCR
+         l3fG6Um8cRrW0a0ca75HRtzObP0BtW+kZLFp3PKEM2aaNmhRdL1p3t5Su7wflHzlWm3L
+         dexByUr8whbR7okUwSUcKxbEG8jJjcj2D4bSK28z9jIPSiK3IIelG9lzjQzgAPQvXhgb
+         7VvQ==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <cover.1616649216.git.brookxu@tencent.com>
+In-Reply-To: <cover.1617355387.git.yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: brookxu <brookxu.cn@gmail.com>
-Cc: paolo.valente@linaro.org, axboe@kernel.dk, linux-block@vger.kernel.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, benbjiang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, kernellwp-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, lihaiwei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linussli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, herberthbli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, lennychen-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, allanyuliu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Hello,
+On Sun, Apr 04, 2021 at 10:51:53PM +0800, yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org wrote:
+> From: Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+> 
+> This patch is the init patch of a series which we want to present the idea
+> of prioritized tasks management. As the cloud computing introduces intricate
+> configurations to provide customized infrasturctures and friendly user
+> experiences, in order to maximum utilization of sources and improve the
+> efficiency of arrangement, we add the new attribute "priority" to control
+> group, which could be used as graded factor by subssystems to manipulate
+> the behaviors of processes.
+> 
+> Base on the order of priority, we could apply different resource configuration
+> strategies, sometimes it will be more accuracy instead of fine tuning in each
+> subsystem. And of course to set fundamental rules, for example, high priority
+> cgroups could seize the resource from cgroups with lower priority all the time.
+> 
+> The default value of "priority" is set to 0 which means the highest
+> priority, and the totally levels of priority is defined by
+> CGROUP_PRIORITY_MAX. Each subsystem could register callback to receive the
+> priority change notification for their own purposes. 
+> 
+> We would like to send out the corresponding features in the coming weeks,
+> which are relaying on the priority settings. For example, the prioritized
+> oom, memory reclaiming and cpu schedule strategy.
 
-On Thu, Mar 25, 2021 at 02:57:44PM +0800, brookxu wrote:
-> INTERFACE:
-> 
-> The bfq.ioprio interface now is available for cgroup v1 and cgroup
-> v2. Users can configure the ioprio for cgroup through this
-> interface, as shown below:
-> 
-> echo "1 2"> blkio.bfq.ioprio
-> 
-> The above two values respectively represent the values of ioprio
-> class and ioprio for cgroup.
-> 
-> EXPERIMENT:
-> 
-> The test process is as follows:
-> # prepare data disk
-> mount /dev/sdb /data1
-> 
-> # prepare IO scheduler
-> echo bfq > /sys/block/sdb/queue/scheduler
-> echo 0 > /sys/block/sdb/queue/iosched/low_latency
-> echo 1 > /sys/block/sdb/queue/iosched/better_fairness
-> 
-> It is worth noting here that nr_requests limits the number of
-> requests, and it does not perceive priority. If nr_requests is
-> too small, it may cause a serious priority inversion problem.
-> Therefore, we can increase the size of nr_requests based on
-> the actual situation.
-> 
-> # create cgroup v1 hierarchy
-> cd /sys/fs/cgroup/blkio
-> mkdir rt be0 be1 be2 idle
-> 
-> # prepare cgroup
-> echo "1 0" > rt/blkio.bfq.ioprio
-> echo "2 0" > be0/blkio.bfq.ioprio
-> echo "2 4" > be1/blkio.bfq.ioprio
-> echo "2 7" > be2/blkio.bfq.ioprio
-> echo "3 0" > idle/blkio.bfq.ioprio
-
-Here are some concerns:
-
-* The main benefit of bfq compared to cfq at least was that the behavior
-  model was defined in a clearer way. It was possible to describe what the
-  control model was in a way which makes semantic sense. The main problem I
-  see with this proposal is that it's an interface which grew out of the
-  current implementation specifics and I'm having a hard time understanding
-  what the end results should be with different configuration combinations.
-
-* While this might work around some scheduling latency issues but I have a
-  hard time imagining it being able to address actual QoS issues. e.g. on a
-  lot of SSDs, without absolute throttling, device side latencies can spike
-  by multiple orders of magnitude and no prioritization on the scheduler
-  side is gonna help once such state is reached. Here, there's no robust
-  mechanisms or measurement/control units defined to address that. In fact,
-  the above direction to increase nr_requests limit will make priority
-  inversions on the device and post-elevator side way more likely and
-  severe.
-
-So, maybe it helps with specific scenarios on some hardware, but given the
-ad-hoc nature, I don't think it justifies all the extra interface additions.
-My suggestion would be slimming it down to bare essentials and making the
-user interface part as minimal as possible.
+We've been trying really hard to give each interface semantics which is
+logical and describable independent of the implementation details. This runs
+precisely against that.
 
 Thanks.
 
