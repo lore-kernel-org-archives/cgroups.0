@@ -1,7 +1,7 @@
 From: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: [RFC PATCH v1 09/11] mm: Use kswapd to demote pages when toptier memory is tight
-Date: Mon,  5 Apr 2021 10:08:33 -0700
-Message-ID: <83c06bf70e38360358c84daab399f18f57e7eba4.1617642417.git.tim.c.chen@linux.intel.com>
+Subject: [RFC PATCH v1 07/11] mm: Account the total top tier memory in use
+Date: Mon,  5 Apr 2021 10:08:31 -0700
+Message-ID: <9170c90b0f58dee05a2b2c1d3789d674df42ed65.1617642417.git.tim.c.chen@linux.intel.com>
 References: <cover.1617642417.git.tim.c.chen@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -12,205 +12,161 @@ Content-Type: text/plain; charset="us-ascii"
 To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
 Cc: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Demote pages from memory cgroup that has excess
-toptier memory usage when top tier memory is tight.
-
-When free top tier memory falls below this fraction
-"toptier_scale_factor/10000" of overall toptier memory in a node, kswapd
-reclaims top tier memory from those mem cgroups that exceeded their
-toptier memory soft limit by deomoting the top tier pages to
-lower memory tier.
+Track the global top tier memory usage stats. They are used as the basis of
+deciding when to start demoting pages from memory cgroups that have exceeded
+their soft limit.  We start reclaiming top tier memory when the total
+top tier memory is low.
 
 Signed-off-by: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- Documentation/admin-guide/sysctl/vm.rst | 12 +++++
- include/linux/mmzone.h                  |  2 +
- mm/page_alloc.c                         | 14 +++++
- mm/vmscan.c                             | 69 ++++++++++++++++++++++++-
- 4 files changed, 96 insertions(+), 1 deletion(-)
+ include/linux/vmstat.h | 18 ++++++++++++++++++
+ mm/vmstat.c            | 20 +++++++++++++++++---
+ 2 files changed, 35 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/admin-guide/sysctl/vm.rst b/Documentation/admin-guide/sysctl/vm.rst
-index 9de3847c3469..6b49e2e90953 100644
---- a/Documentation/admin-guide/sysctl/vm.rst
-+++ b/Documentation/admin-guide/sysctl/vm.rst
-@@ -74,6 +74,7 @@ Currently, these files are in /proc/sys/vm:
- - vfs_cache_pressure
- - watermark_boost_factor
- - watermark_scale_factor
-+- toptier_scale_factor
- - zone_reclaim_mode
+diff --git a/include/linux/vmstat.h b/include/linux/vmstat.h
+index e1a4fa9abb3a..a3ad5a937fd8 100644
+--- a/include/linux/vmstat.h
++++ b/include/linux/vmstat.h
+@@ -139,6 +139,7 @@ static inline void vm_events_fold_cpu(int cpu)
+  * Zone and node-based page accounting with per cpu differentials.
+  */
+ extern atomic_long_t vm_zone_stat[NR_VM_ZONE_STAT_ITEMS];
++extern atomic_long_t vm_toptier_zone_stat[NR_VM_ZONE_STAT_ITEMS];
+ extern atomic_long_t vm_numa_stat[NR_VM_NUMA_STAT_ITEMS];
+ extern atomic_long_t vm_node_stat[NR_VM_NODE_STAT_ITEMS];
  
+@@ -175,6 +176,8 @@ static inline void zone_page_state_add(long x, struct zone *zone,
+ {
+ 	atomic_long_add(x, &zone->vm_stat[item]);
+ 	atomic_long_add(x, &vm_zone_stat[item]);
++	if (node_state(zone->zone_pgdat->node_id, N_TOPTIER))
++		atomic_long_add(x, &vm_toptier_zone_stat[item]);
+ }
  
-@@ -962,6 +963,17 @@ too small for the allocation bursts occurring in the system. This knob
- can then be used to tune kswapd aggressiveness accordingly.
+ static inline void node_page_state_add(long x, struct pglist_data *pgdat,
+@@ -212,6 +215,17 @@ static inline unsigned long global_node_page_state(enum node_stat_item item)
+ 	return global_node_page_state_pages(item);
+ }
  
- 
-+toptier_scale_factor
-+====================
++static inline unsigned long global_toptier_zone_page_state(enum zone_stat_item item)
++{
++	long x = atomic_long_read(&vm_toptier_zone_stat[item]);
 +
-+This factor controls when kswapd wakes up to demote pages of those
-+cgroups that have exceeded their memory soft limit.
++#ifdef CONFIG_SMP
++	if (x < 0)
++		x = 0;
++#endif
++	return x;
++}
 +
-+The unit is in fractions of 10,000. The default value of 2000 means the
-+if there are less than 20% of free top tier memory in the
-+node/system, we will start to demote pages of those memory cgroups
-+that have exceeded their soft memory limit.
+ static inline unsigned long zone_page_state(struct zone *zone,
+ 					enum zone_stat_item item)
+ {
+@@ -325,6 +339,8 @@ static inline void __inc_zone_state(struct zone *zone, enum zone_stat_item item)
+ {
+ 	atomic_long_inc(&zone->vm_stat[item]);
+ 	atomic_long_inc(&vm_zone_stat[item]);
++	if (node_state(zone->zone_pgdat->node_id, N_TOPTIER))
++		atomic_long_inc(&vm_toptier_zone_stat[item]);
+ }
+ 
+ static inline void __inc_node_state(struct pglist_data *pgdat, enum node_stat_item item)
+@@ -337,6 +353,8 @@ static inline void __dec_zone_state(struct zone *zone, enum zone_stat_item item)
+ {
+ 	atomic_long_dec(&zone->vm_stat[item]);
+ 	atomic_long_dec(&vm_zone_stat[item]);
++	if (node_state(zone->zone_pgdat->node_id, N_TOPTIER))
++		atomic_long_dec(&vm_toptier_zone_stat[item]);
+ }
+ 
+ static inline void __dec_node_state(struct pglist_data *pgdat, enum node_stat_item item)
+diff --git a/mm/vmstat.c b/mm/vmstat.c
+index f299d2e89acb..b59efbcaef4e 100644
+--- a/mm/vmstat.c
++++ b/mm/vmstat.c
+@@ -161,9 +161,11 @@ void vm_events_fold_cpu(int cpu)
+  * vm_stat contains the global counters
+  */
+ atomic_long_t vm_zone_stat[NR_VM_ZONE_STAT_ITEMS] __cacheline_aligned_in_smp;
++atomic_long_t vm_toptier_zone_stat[NR_VM_ZONE_STAT_ITEMS] __cacheline_aligned_in_smp;
+ atomic_long_t vm_numa_stat[NR_VM_NUMA_STAT_ITEMS] __cacheline_aligned_in_smp;
+ atomic_long_t vm_node_stat[NR_VM_NODE_STAT_ITEMS] __cacheline_aligned_in_smp;
+ EXPORT_SYMBOL(vm_zone_stat);
++EXPORT_SYMBOL(vm_toptier_zone_stat);
+ EXPORT_SYMBOL(vm_numa_stat);
+ EXPORT_SYMBOL(vm_node_stat);
+ 
+@@ -695,7 +697,7 @@ EXPORT_SYMBOL(dec_node_page_state);
+  * Returns the number of counters updated.
+  */
+ #ifdef CONFIG_NUMA
+-static int fold_diff(int *zone_diff, int *numa_diff, int *node_diff)
++static int fold_diff(int *zone_diff, int *numa_diff, int *node_diff, int *toptier_diff)
+ {
+ 	int i;
+ 	int changes = 0;
+@@ -717,6 +719,11 @@ static int fold_diff(int *zone_diff, int *numa_diff, int *node_diff)
+ 			atomic_long_add(node_diff[i], &vm_node_stat[i]);
+ 			changes++;
+ 	}
 +
- zone_reclaim_mode
- =================
++	for (i = 0; i < NR_VM_ZONE_STAT_ITEMS; i++)
++		if (toptier_diff[i]) {
++			atomic_long_add(toptier_diff[i], &vm_toptier_zone_stat[i]);
++	}
+ 	return changes;
+ }
+ #else
+@@ -762,6 +769,7 @@ static int refresh_cpu_vm_stats(bool do_pagesets)
+ 	struct zone *zone;
+ 	int i;
+ 	int global_zone_diff[NR_VM_ZONE_STAT_ITEMS] = { 0, };
++	int global_toptier_diff[NR_VM_ZONE_STAT_ITEMS] = { 0, };
+ #ifdef CONFIG_NUMA
+ 	int global_numa_diff[NR_VM_NUMA_STAT_ITEMS] = { 0, };
+ #endif
+@@ -779,6 +787,9 @@ static int refresh_cpu_vm_stats(bool do_pagesets)
  
-diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
-index bbe649c4fdee..4ee0073d255f 100644
---- a/include/linux/mmzone.h
-+++ b/include/linux/mmzone.h
-@@ -332,12 +332,14 @@ enum zone_watermarks {
- 	WMARK_MIN,
- 	WMARK_LOW,
- 	WMARK_HIGH,
-+	WMARK_TOPTIER,
- 	NR_WMARK
- };
+ 				atomic_long_add(v, &zone->vm_stat[i]);
+ 				global_zone_diff[i] += v;
++				if (node_state(zone->zone_pgdat->node_id, N_TOPTIER)) {
++					global_toptier_diff[i] +=v;
++				}
+ #ifdef CONFIG_NUMA
+ 				/* 3 seconds idle till flush */
+ 				__this_cpu_write(p->expire, 3);
+@@ -846,7 +857,7 @@ static int refresh_cpu_vm_stats(bool do_pagesets)
  
- #define min_wmark_pages(z) (z->_watermark[WMARK_MIN] + z->watermark_boost)
- #define low_wmark_pages(z) (z->_watermark[WMARK_LOW] + z->watermark_boost)
- #define high_wmark_pages(z) (z->_watermark[WMARK_HIGH] + z->watermark_boost)
-+#define toptier_wmark_pages(z) (z->_watermark[WMARK_TOPTIER] + z->watermark_boost)
- #define wmark_pages(z, i) (z->_watermark[i] + z->watermark_boost)
+ #ifdef CONFIG_NUMA
+ 	changes += fold_diff(global_zone_diff, global_numa_diff,
+-			     global_node_diff);
++			     global_node_diff, global_toptier_diff);
+ #else
+ 	changes += fold_diff(global_zone_diff, global_node_diff);
+ #endif
+@@ -868,6 +879,7 @@ void cpu_vm_stats_fold(int cpu)
+ 	int global_numa_diff[NR_VM_NUMA_STAT_ITEMS] = { 0, };
+ #endif
+ 	int global_node_diff[NR_VM_NODE_STAT_ITEMS] = { 0, };
++	int global_toptier_diff[NR_VM_NODE_STAT_ITEMS] = { 0, };
  
- struct per_cpu_pages {
-diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-index 471a2c342c4f..20f3caee60f3 100644
---- a/mm/page_alloc.c
-+++ b/mm/page_alloc.c
-@@ -7964,6 +7964,20 @@ static void __setup_per_zone_wmarks(void)
- 		zone->_watermark[WMARK_LOW]  = min_wmark_pages(zone) + tmp;
- 		zone->_watermark[WMARK_HIGH] = min_wmark_pages(zone) + tmp * 2;
- 
-+		tmp = mult_frac(zone_managed_pages(zone),
-+				toptier_scale_factor, 10000);
-+		/*
-+		 * Clamp toptier watermark between twice high watermark
-+		 * and max managed pages.
-+		 */
-+		if (tmp < 2 * zone->_watermark[WMARK_HIGH])
-+			tmp = 2 * zone->_watermark[WMARK_HIGH];
-+		if (tmp > zone_managed_pages(zone))
-+			tmp = zone_managed_pages(zone);
-+		zone->_watermark[WMARK_TOPTIER] = tmp;
-+
-+		zone->watermark_boost = 0;
-+
- 		spin_unlock_irqrestore(&zone->lock, flags);
+ 	for_each_populated_zone(zone) {
+ 		struct per_cpu_pageset *p;
+@@ -910,11 +922,13 @@ void cpu_vm_stats_fold(int cpu)
+ 				p->vm_node_stat_diff[i] = 0;
+ 				atomic_long_add(v, &pgdat->vm_stat[i]);
+ 				global_node_diff[i] += v;
++				if (node_state(pgdat->node_id, N_TOPTIER))
++					global_toptier_diff[i] +=v;
+ 			}
  	}
  
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 11bb0c6fa524..270880c8baef 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -185,6 +185,7 @@ static void set_task_reclaim_state(struct task_struct *task,
- 
- static LIST_HEAD(shrinker_list);
- static DECLARE_RWSEM(shrinker_rwsem);
-+int toptier_scale_factor = 2000;
- 
- #ifdef CONFIG_MEMCG
- /*
-@@ -3624,6 +3625,34 @@ static bool pgdat_balanced(pg_data_t *pgdat, int order, int highest_zoneidx)
- 	return false;
- }
- 
-+static bool pgdat_toptier_balanced(pg_data_t *pgdat, int order, int classzone_idx)
-+{
-+	int i;
-+	unsigned long mark;
-+	struct zone *zone;
-+
-+	zone = pgdat->node_zones + ZONE_NORMAL;
-+
-+	if (!node_state(pgdat->node_id, N_TOPTIER) ||
-+	    next_demotion_node(pgdat->node_id) == -1 ||
-+	    order > 0 || classzone_idx < ZONE_NORMAL) {
-+		return true;
-+	}
-+
-+	zone = pgdat->node_zones + ZONE_NORMAL;
-+
-+	if (!managed_zone(zone))
-+		return true;
-+
-+	mark = min(toptier_wmark_pages(zone),
-+		   zone_managed_pages(zone));
-+
-+	if (zone_page_state(zone, NR_FREE_PAGES) < mark)
-+		return false;
-+
-+	return true;
-+}
-+
- /* Clear pgdat state for congested, dirty or under writeback. */
- static void clear_pgdat_congested(pg_data_t *pgdat)
- {
-@@ -4049,6 +4078,39 @@ static void kswapd_try_to_sleep(pg_data_t *pgdat, int alloc_order, int reclaim_o
- 	finish_wait(&pgdat->kswapd_wait, &wait);
- }
- 
-+static bool toptier_soft_reclaim(pg_data_t *pgdat,
-+			      unsigned int reclaim_order,
-+			      unsigned int classzone_idx)
-+{
-+	unsigned long nr_soft_scanned, nr_soft_reclaimed;
-+	int ret;
-+	struct scan_control sc = {
-+		.gfp_mask = GFP_KERNEL,
-+		.order = reclaim_order,
-+		.may_unmap = 1,
-+	};
-+
-+	if (!node_state(pgdat->node_id, N_TOPTIER) || kthread_should_stop())
-+		return false;
-+
-+	set_task_reclaim_state(current, &sc.reclaim_state);
-+
-+	if (!pgdat_toptier_balanced(pgdat, 0, classzone_idx)) {
-+		nr_soft_scanned = 0;
-+		nr_soft_reclaimed = mem_cgroup_soft_limit_reclaim(pgdat,
-+					0, GFP_KERNEL,
-+					&nr_soft_scanned, N_TOPTIER);
-+	}
-+
-+	set_task_reclaim_state(current, NULL);
-+
-+	if (prepare_kswapd_sleep(pgdat, reclaim_order, classzone_idx) &&
-+	   !kthread_should_stop())
-+		return true;
-+	else
-+		return false;
-+}
-+
- /*
-  * The background pageout daemon, started as a kernel thread
-  * from the init process.
-@@ -4108,6 +4170,10 @@ static int kswapd(void *p)
- 		WRITE_ONCE(pgdat->kswapd_order, 0);
- 		WRITE_ONCE(pgdat->kswapd_highest_zoneidx, MAX_NR_ZONES);
- 
-+		if (toptier_soft_reclaim(pgdat, 0,
-+					highest_zoneidx))
-+			goto kswapd_try_sleep;
-+
- 		ret = try_to_freeze();
- 		if (kthread_should_stop())
- 			break;
-@@ -4173,7 +4239,8 @@ void wakeup_kswapd(struct zone *zone, gfp_t gfp_flags, int order,
- 
- 	/* Hopeless node, leave it to direct reclaim if possible */
- 	if (pgdat->kswapd_failures >= MAX_RECLAIM_RETRIES ||
--	    (pgdat_balanced(pgdat, order, highest_zoneidx) &&
-+	    (pgdat_toptier_balanced(pgdat, 0, highest_zoneidx) &&
-+	     pgdat_balanced(pgdat, order, highest_zoneidx) &&
- 	     !pgdat_watermark_boosted(pgdat, highest_zoneidx))) {
- 		/*
- 		 * There may be plenty of free memory available, but it's too
+ #ifdef CONFIG_NUMA
+-	fold_diff(global_zone_diff, global_numa_diff, global_node_diff);
++	fold_diff(global_zone_diff, global_numa_diff, global_node_diff, global_toptier_diff);
+ #else
+ 	fold_diff(global_zone_diff, global_node_diff);
+ #endif
 -- 
 2.20.1
 
