@@ -1,102 +1,128 @@
-From: Tim Chen <tim.c.chen@linux.intel.com>
-Subject: [RFC PATCH v1 00/11] Manage the top tier memory in a tiered memory
-Date: Mon,  5 Apr 2021 10:08:24 -0700
-Message-ID: <cover.1617642417.git.tim.c.chen@linux.intel.com>
+From: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: [RFC PATCH v1 01/11] mm: Define top tier memory node mask
+Date: Mon,  5 Apr 2021 10:08:25 -0700
+Message-ID: <57544494cb67299fabfa01dd17885f7b6a4266bb.1617642417.git.tim.c.chen@linux.intel.com>
+References: <cover.1617642417.git.tim.c.chen@linux.intel.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <cover.1617642417.git.tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko@suse.cz>
-Cc: Tim Chen <tim.c.chen@linux.intel.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Dave Hansen <dave.hansen@intel.com>, Ying Huang <ying.huang@intel.com>, Dan Williams <dan.j.williams@intel.com>, David Rientjes <rientjes@google.com>, Shakeel Butt <shakeelb@google.com>, linux-mm@kvack.org, cgroups@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>
+Cc: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Traditionally, all memory is DRAM.  Some DRAM might be closer/faster than
-others NUMA wise, but a byte of media has about the same cost whether it
-is close or far.  But, with new memory tiers such as Persistent Memory
-(PMEM).  there is a choice between fast/expensive DRAM and slow/cheap
-PMEM.
+Traditionally, all RAM is DRAM.  Some DRAM might be closer/faster
+than others, but a byte of media has about the same cost whether it
+is close or far.  But, with new memory tiers such as High-Bandwidth
+Memory or Persistent Memory, there is a choice between fast/expensive
+and slow/cheap.
 
-The fast/expensive memory lives in the top tier of the memory hierachy.
+The fast/expensive memory lives in the top tier of the memory
+hierachy and it is a precious resource that needs to be accounted and
+managed on a memory cgroup basis.
 
-Previously, the patchset
-[PATCH 00/10] [v7] Migrate Pages in lieu of discard
-https://lore.kernel.org/linux-mm/20210401183216.443C4443@viggo.jf.intel.com/
-provides a mechanism to demote cold pages from DRAM node into PMEM.
+Define the top tier memory as the memory nodes that don't have demotion
+paths into it from higher tier memory.
 
-And the patchset
-[PATCH 0/6] [RFC v6] NUMA balancing: optimize memory placement for memory tiering system
-https://lore.kernel.org/linux-mm/20210311081821.138467-1-ying.huang@intel.com/
-provides a mechanism to promote hot pages in PMEM to the DRAM node
-leveraging autonuma.
+Signed-off-by: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+---
+ drivers/base/node.c      | 2 ++
+ include/linux/nodemask.h | 1 +
+ mm/memory_hotplug.c      | 3 +++
+ mm/migrate.c             | 1 +
+ mm/page_alloc.c          | 5 ++++-
+ 5 files changed, 11 insertions(+), 1 deletion(-)
 
-The two patchsets together keep the hot pages in DRAM and colder pages
-in PMEM.
-
-To make fine grain cgroup based management of the precious top tier
-DRAM memory possible, this patchset adds a few new features:
-1. Provides memory monitors on the amount of top tier memory used per cgroup 
-   and by the system as a whole.
-2. Applies soft limits on the top tier memory each cgroup uses 
-3. Enables kswapd to demote top tier pages from cgroup with excess top
-   tier memory usages.
-
-This allows us to provision different amount of top tier memory to each
-cgroup according to the cgroup's latency need.
-
-The patchset is based on cgroup v1 interface. One shortcoming of the v1
-interface is the limit on the cgroup is a soft limit, so a cgroup can
-exceed the limit quite a bit before reclaim before page demotion reins
-it in. 
-
-We are also working on a cgroup v2 interface control interface that will will
-have a max limit on the top tier memory per cgroup but requires much
-additional logic to fall back and allocate from non top tier memory when a
-cgroup reaches the maximum limit.  This simpler cgroup v1 implementation
-with all its warts is used to illustrate the concept of cgroup based
-top tier memory management and serves as a starting point of discussions.
-
-The soft limit and soft reclaim logic in this patchset will be similar for what
-we would do for a cgroup v2 interface when we reach the high watermark
-for top tier usage in a cgroup v2 interface. 
-
-This patchset is applied on top of 
-[PATCH 00/10] [v7] Migrate Pages in lieu of discard
-and
-[PATCH 0/6] [RFC v6] NUMA balancing: optimize memory placement for memory tiering system
-
-It is part of a larger patchset.  You can play with the complete set of patches
-using the tree:
-https://git.kernel.org/pub/scm/linux/kernel/git/vishal/tiering.git/log/?h=tiering-0.71
-
-Tim Chen (11):
-  mm: Define top tier memory node mask
-  mm: Add soft memory limit for mem cgroup
-  mm: Account the top tier memory usage per cgroup
-  mm: Report top tier memory usage in sysfs
-  mm: Add soft_limit_top_tier tree for mem cgroup
-  mm: Handle top tier memory in cgroup soft limit memory tree utilities
-  mm: Account the total top tier memory in use
-  mm: Add toptier option for mem_cgroup_soft_limit_reclaim()
-  mm: Use kswapd to demote pages when toptier memory is tight
-  mm: Set toptier_scale_factor via sysctl
-  mm: Wakeup kswapd if toptier memory need soft reclaim
-
- Documentation/admin-guide/sysctl/vm.rst |  12 +
- drivers/base/node.c                     |   2 +
- include/linux/memcontrol.h              |  20 +-
- include/linux/mm.h                      |   4 +
- include/linux/mmzone.h                  |   7 +
- include/linux/nodemask.h                |   1 +
- include/linux/vmstat.h                  |  18 ++
- kernel/sysctl.c                         |  10 +
- mm/memcontrol.c                         | 303 +++++++++++++++++++-----
- mm/memory_hotplug.c                     |   3 +
- mm/migrate.c                            |   1 +
- mm/page_alloc.c                         |  36 ++-
- mm/vmscan.c                             |  73 +++++-
- mm/vmstat.c                             |  22 +-
- 14 files changed, 444 insertions(+), 68 deletions(-)
-
+diff --git a/drivers/base/node.c b/drivers/base/node.c
+index 04f71c7bc3f8..9eb214ac331f 100644
+--- a/drivers/base/node.c
++++ b/drivers/base/node.c
+@@ -1016,6 +1016,7 @@ static struct node_attr node_state_attr[] = {
+ #endif
+ 	[N_MEMORY] = _NODE_ATTR(has_memory, N_MEMORY),
+ 	[N_CPU] = _NODE_ATTR(has_cpu, N_CPU),
++	[N_TOPTIER] = _NODE_ATTR(is_toptier, N_TOPTIER),
+ 	[N_GENERIC_INITIATOR] = _NODE_ATTR(has_generic_initiator,
+ 					   N_GENERIC_INITIATOR),
+ };
+@@ -1029,6 +1030,7 @@ static struct attribute *node_state_attrs[] = {
+ #endif
+ 	&node_state_attr[N_MEMORY].attr.attr,
+ 	&node_state_attr[N_CPU].attr.attr,
++	&node_state_attr[N_TOPTIER].attr.attr,
+ 	&node_state_attr[N_GENERIC_INITIATOR].attr.attr,
+ 	NULL
+ };
+diff --git a/include/linux/nodemask.h b/include/linux/nodemask.h
+index ac398e143c9a..3003401ed7f0 100644
+--- a/include/linux/nodemask.h
++++ b/include/linux/nodemask.h
+@@ -399,6 +399,7 @@ enum node_states {
+ #endif
+ 	N_MEMORY,		/* The node has memory(regular, high, movable) */
+ 	N_CPU,		/* The node has one or more cpus */
++	N_TOPTIER,		/* Top tier node, no demotion path into node */
+ 	N_GENERIC_INITIATOR,	/* The node has one or more Generic Initiators */
+ 	NR_NODE_STATES
+ };
+diff --git a/mm/memory_hotplug.c b/mm/memory_hotplug.c
+index 7550b88e2432..7b21560d4c4d 100644
+--- a/mm/memory_hotplug.c
++++ b/mm/memory_hotplug.c
+@@ -36,6 +36,7 @@
+ #include <linux/memblock.h>
+ #include <linux/compaction.h>
+ #include <linux/rmap.h>
++#include <linux/node.h>
+ 
+ #include <asm/tlbflush.h>
+ 
+@@ -654,6 +655,8 @@ static void node_states_set_node(int node, struct memory_notify *arg)
+ 
+ 	if (arg->status_change_nid >= 0)
+ 		node_set_state(node, N_MEMORY);
++
++	node_set_state(node, N_TOPTIER);
+ }
+ 
+ static void __meminit resize_zone_range(struct zone *zone, unsigned long start_pfn,
+diff --git a/mm/migrate.c b/mm/migrate.c
+index 72223fd7e623..e84aedf611da 100644
+--- a/mm/migrate.c
++++ b/mm/migrate.c
+@@ -3439,6 +3439,7 @@ static int establish_migrate_target(int node, nodemask_t *used)
+ 		return NUMA_NO_NODE;
+ 
+ 	node_demotion[node] = migration_target;
++	node_clear_state(migration_target, N_TOPTIER);
+ 
+ 	return migration_target;
+ }
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index ff058941ccfa..471a2c342c4f 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -157,6 +157,7 @@ nodemask_t node_states[NR_NODE_STATES] __read_mostly = {
+ 	[N_MEMORY] = { { [0] = 1UL } },
+ 	[N_CPU] = { { [0] = 1UL } },
+ #endif	/* NUMA */
++	[N_TOPTIER] = NODE_MASK_ALL,
+ };
+ EXPORT_SYMBOL(node_states);
+ 
+@@ -7590,8 +7591,10 @@ void __init free_area_init(unsigned long *max_zone_pfn)
+ 		free_area_init_node(nid);
+ 
+ 		/* Any memory on that node */
+-		if (pgdat->node_present_pages)
++		if (pgdat->node_present_pages) {
+ 			node_set_state(nid, N_MEMORY);
++			node_set_state(nid, N_TOPTIER);
++		}
+ 		check_for_memory(pgdat, nid);
+ 	}
+ }
 -- 
 2.20.1
 
