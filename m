@@ -1,37 +1,158 @@
-From: Vipin Sharma <vipinsh@google.com>
-Subject: Re: [PATCH v4 0/3] cgroup: New misc cgroup controller
-Date: Sun, 4 Apr 2021 17:29:59 -0700
-Message-ID: <CAHVum0fhWSOFRS-t7cF=zCRf_SUoMN5UOYBChWSpmhJVcuMbsg@mail.gmail.com>
-References: <20210330044206.2864329-1-vipinsh@google.com> <YGn42SKCPg2HWtQc@mtj.duckdns.org>
+From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [cgroup:for-5.13] BUILD SUCCESS
+ dd3f4e4972f146a685930ccfed95e4e1d13d952a
+Date: Mon, 05 Apr 2021 18:49:17 +0800
+Message-ID: <606aeb2d.J7jCUZ1mr8Sb/h/Z%lkp@intel.com>
 Mime-Version: 1.0
-Return-path: <kvm-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=4djxblumYsM0MYjaTI3gAeclQoo4tMzFZGJUydviNoY=;
-        b=k9XPOH16pkp6wIhN6fUXTfgtf00C1nX1vfWzkAoJCwZhTPryGhPETEbWtKNuql8dcT
-         J66HvvN+nGIGX/hWkB2rtYjC7ogWFD4Rd4IZkQ0bS/rYf5HmIGTyE/ZylI39cDqXlZLQ
-         DrwfgJgtrdAYa4RnReHlFBjkf09I61p5QCpFtdcJBiTqN5do0FBlf/GNBAM4Sa4K9fTt
-         O0Sc6EJP96oqfCYeJaor+ktU4xDDekqEt6oEKns8rGYAeQWl4AQoPK1E7sIISi8w1r2q
-         CU1BS4YW9udqw0T/oEayc0e8nZsTv0pujP4QcRjuay7oCDxyx5293bIck4CW+rAYTTaJ
-         a32w==
-In-Reply-To: <YGn42SKCPg2HWtQc@mtj.duckdns.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj@kernel.org>
-Cc: =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Jacob Pan <jacob.jun.pan@intel.com>, Randy Dunlap <rdunlap@infradead.org>, Tom Lendacky <thomas.lendacky@amd.com>, Brijesh <brijesh.singh@amd.com>, Jon <jon.grimm@amd.com>, Eric <eric.vantassell@amd.com>, pbonzini@redhat.com, hannes@cmpxchg.org, Janosch Frank <frankja@linux.ibm.com>, Christian Borntraeger <borntraeger@de.ibm.com>, corbet@lwn.net, Sean Christopherson <seanjc@google.com>, vkuznets@redhat.com, wanpengli@tencent.com, Jim Mattson <jmattson@google.com>, joro@8bytes.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, hpa@zytor.com, Matt Gingell <gingell@google.com>, David Rientjes <rientjes@google.com>, kvm@vger.kernel.org, x86@kernel.org, cgroups@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Sun, Apr 4, 2021 at 10:35 AM Tejun Heo <tj@kernel.org> wrote:
->
-> Applied to cgroup/for-5.13. If there are further issues, let's address them
-> incrementally.
->
-> Thanks.
->
-> --
-> tejun
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.13
+branch HEAD: dd3f4e4972f146a685930ccfed95e4e1d13d952a  cgroup: misc: mark dummy misc_cg_res_total_usage() static inline
 
-Thanks Tejun for accepting and guiding through each version of this
-patch series.
+elapsed time: 723m
+
+configs tested: 127
+configs skipped: 2
+
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+gcc tested configs:
+arm                                 defconfig
+arm64                            allyesconfig
+arm64                               defconfig
+arm                              allyesconfig
+arm                              allmodconfig
+x86_64                           allyesconfig
+riscv                            allmodconfig
+i386                             allyesconfig
+riscv                            allyesconfig
+arm                         cm_x300_defconfig
+powerpc                      chrp32_defconfig
+arm                           sama5_defconfig
+powerpc                          g5_defconfig
+m68k                         amcore_defconfig
+powerpc                      pasemi_defconfig
+sh                        edosk7760_defconfig
+arm                          badge4_defconfig
+arc                        nsimosci_defconfig
+mips                     cu1000-neo_defconfig
+ia64                        generic_defconfig
+mips                          rb532_defconfig
+m68k                           sun3_defconfig
+arm                           viper_defconfig
+mips                        bcm63xx_defconfig
+mips                           gcw0_defconfig
+sh                 kfr2r09-romimage_defconfig
+powerpc                      obs600_defconfig
+powerpc               mpc834x_itxgp_defconfig
+powerpc                      cm5200_defconfig
+arm                        realview_defconfig
+arm                        spear6xx_defconfig
+sh                         apsh4a3a_defconfig
+openrisc                            defconfig
+arm                            mmp2_defconfig
+sh                             shx3_defconfig
+arm                       imx_v4_v5_defconfig
+mips                           ip28_defconfig
+m68k                       m5249evb_defconfig
+h8300                               defconfig
+arm                      jornada720_defconfig
+arm                         axm55xx_defconfig
+powerpc                     tqm8555_defconfig
+arm                        mini2440_defconfig
+powerpc                      acadia_defconfig
+arm                            dove_defconfig
+arm                         lpc18xx_defconfig
+powerpc                      mgcoge_defconfig
+sh                         microdev_defconfig
+mips                      bmips_stb_defconfig
+powerpc                      makalu_defconfig
+m68k                             alldefconfig
+sh                           se7712_defconfig
+powerpc                        fsp2_defconfig
+powerpc                       ppc64_defconfig
+arm                       versatile_defconfig
+s390                       zfcpdump_defconfig
+mips                           ip27_defconfig
+powerpc                     mpc83xx_defconfig
+ia64                             allmodconfig
+ia64                                defconfig
+ia64                             allyesconfig
+m68k                             allmodconfig
+m68k                                defconfig
+m68k                             allyesconfig
+nds32                               defconfig
+nios2                            allyesconfig
+csky                                defconfig
+alpha                               defconfig
+alpha                            allyesconfig
+nios2                               defconfig
+arc                              allyesconfig
+nds32                             allnoconfig
+xtensa                           allyesconfig
+h8300                            allyesconfig
+arc                                 defconfig
+sh                               allmodconfig
+parisc                              defconfig
+s390                             allyesconfig
+s390                             allmodconfig
+parisc                           allyesconfig
+s390                                defconfig
+sparc                            allyesconfig
+sparc                               defconfig
+i386                                defconfig
+mips                             allyesconfig
+mips                             allmodconfig
+powerpc                          allyesconfig
+powerpc                          allmodconfig
+powerpc                           allnoconfig
+i386                 randconfig-a006-20210405
+i386                 randconfig-a003-20210405
+i386                 randconfig-a001-20210405
+i386                 randconfig-a004-20210405
+i386                 randconfig-a002-20210405
+i386                 randconfig-a005-20210405
+x86_64               randconfig-a014-20210405
+x86_64               randconfig-a015-20210405
+x86_64               randconfig-a013-20210405
+x86_64               randconfig-a011-20210405
+x86_64               randconfig-a012-20210405
+x86_64               randconfig-a016-20210405
+i386                 randconfig-a016-20210405
+i386                 randconfig-a015-20210405
+i386                 randconfig-a014-20210405
+i386                 randconfig-a011-20210405
+i386                 randconfig-a012-20210405
+i386                 randconfig-a013-20210405
+riscv                    nommu_k210_defconfig
+riscv                    nommu_virt_defconfig
+riscv                             allnoconfig
+riscv                               defconfig
+riscv                          rv32_defconfig
+um                               allmodconfig
+um                                allnoconfig
+um                               allyesconfig
+um                                  defconfig
+x86_64                              defconfig
+x86_64                                  kexec
+x86_64                    rhel-8.3-kselftests
+x86_64                               rhel-8.3
+x86_64                      rhel-8.3-kbuiltin
+
+clang tested configs:
+x86_64               randconfig-a004-20210405
+x86_64               randconfig-a003-20210405
+x86_64               randconfig-a005-20210405
+x86_64               randconfig-a001-20210405
+x86_64               randconfig-a002-20210405
+x86_64               randconfig-a006-20210405
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
