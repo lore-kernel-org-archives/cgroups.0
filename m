@@ -1,393 +1,133 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH 1/3] loop: Use worker per cgroup instead of kworker
-Date: Tue, 6 Apr 2021 09:44:51 +0800
-Message-ID: <CACVXFVPgVf2fkf_00pLTiYbUhX-YpGxAJMfnPY0hPeYUhpB+=g@mail.gmail.com>
-References: <20210402191638.3249835-1-schatzberg.dan@gmail.com> <20210402191638.3249835-2-schatzberg.dan@gmail.com>
+From: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: RE: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
+ APIs
+Date: Tue, 6 Apr 2021 02:08:22 +0000
+Message-ID: <MWHPR11MB18866B20CEDEE868D428AE228C769@MWHPR11MB1886.namprd11.prod.outlook.com>
+References: <20210330132830.GO2356281@nvidia.com>
+ <BN6PR11MB40688F5AA2323AB8CC8E65E7C37C9@BN6PR11MB4068.namprd11.prod.outlook.com>
+ <20210331124038.GE1463678@nvidia.com>
+ <BN6PR11MB406854CAE9D7CE86BEAB3E23C37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
+ <20210401114648.GX1463678@nvidia.com>
+ <BN6PR11MB406858FAC3821B84CCC4D30DC37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
+ <20210401131533.GD1463678@nvidia.com>
+ <BN6PR11MB4068C1A040FF61B4A9ABBD9BC37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
+ <20210401134641.GG1463678@nvidia.com>
+ <MWHPR11MB1886C0804A0240998C110EE58C7A9@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210405233946.GE7405@nvidia.com>
+ <MWHPR11MB188628BDB37A4EE36F3D99338C769@MWHPR11MB1886.namprd11.prod.outlook.com>
 Mime-Version: 1.0
-Return-path: <linux-block-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=GhFuSU0adajGubBX4Ule4ocsHQm4xPIfHN+0ZP2284Q=;
-        b=Wn7ZoBDph7CMtJHFrM/2HqLQhhknorL39ExoxjRlEWg0ChI34+pe7PBgVLf9IVyQHP
-         x1jd40BR14iSbCYze82mZLAL3xuUfeNkUR+PfMAuL1+O+1+mekmbAyflotP2lCKFNbK/
-         qjXLsrpoIpXnRANynkRppL5bQ+3iOXLGRP6tSA8LpOxwI7F80q2e7Lm6/HZv3rleQ2C6
-         5t7WM30+YhlCpcYcM5xk4Daow6smkIoTt1XRch/0FAv9s+6Kbq5W1ueLwabvaKzbNnj2
-         vHmP233UcxBsOlISyE7eI65P8WHtacA589Az3egFcgLAYv0yUiTS6XA+l9YNrEwUAOSl
-         I7mw==
-In-Reply-To: <20210402191638.3249835-2-schatzberg.dan@gmail.com>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Dan Schatzberg <schatzberg.dan@gmail.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Hugh Dickins <hughd@google.com>, Shakeel Butt <shakeelb@google.com>, Roman Gushchin <guro@fb.com>, Muchun Song <songmuchun@bytedance.com>, Yang Shi <shy828301@gmail.com>, Alex Shi <alex.shi@linux.alibaba.com>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Wei Yang <richard.weiyang@gmail.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups@vger.kernel.org>, "open list:MEMORY MANAGEMENT" <linux-mm@kvack.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
+ s=selector2-intel-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=HJ+qzGDPaPVoZR1d7nDWgjZHHPys2puDxb2bS7JmC+k=;
+ b=XSuKjDnkD4m+EGBuDnfX3Qfo48yh0c6E+4a1/qMeGk7YTKbt6rqSITdyZ6toh5EIPB4hu9n8mtvk3x8VPdjYXwnMPbn78zYri/bl5zU9+iYml/BnU4lXfyeV7NL3yTY0FGPQPlr59QcyjKTBhrzj3+adcw48i2hospD68xLj7pA=
+In-Reply-To: <MWHPR11MB188628BDB37A4EE36F3D99338C769-4Pk8um7sDhPjKiA5vsxACZPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
+Content-Language: en-US
+List-ID: <cgroups.vger.kernel.org>
+To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Eric Auger <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Sat, Apr 3, 2021 at 3:17 AM Dan Schatzberg <schatzberg.dan@gmail.com> wrote:
->
-> Existing uses of loop device may have multiple cgroups reading/writing
-> to the same device. Simply charging resources for I/O to the backing
-> file could result in priority inversion where one cgroup gets
-> synchronously blocked, holding up all other I/O to the loop device.
->
-> In order to avoid this priority inversion, we use a single workqueue
-> where each work item is a "struct loop_worker" which contains a queue of
-> struct loop_cmds to issue. The loop device maintains a tree mapping blk
-> css_id -> loop_worker. This allows each cgroup to independently make
-> forward progress issuing I/O to the backing file.
->
-> There is also a single queue for I/O associated with the rootcg which
-> can be used in cases of extreme memory shortage where we cannot allocate
-> a loop_worker.
->
-> The locking for the tree and queues is fairly heavy handed - we acquire
-> a per-loop-device spinlock any time either is accessed. The existing
-> implementation serializes all I/O through a single thread anyways, so I
-> don't believe this is any worse.
->
-> Fixes-from: Colin Ian King <colin.king@canonical.com>
-> Signed-off-by: Dan Schatzberg <schatzberg.dan@gmail.com>
-> ---
->  drivers/block/loop.c | 203 ++++++++++++++++++++++++++++++++++++-------
->  drivers/block/loop.h |  12 ++-
->  2 files changed, 178 insertions(+), 37 deletions(-)
->
-> diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-> index d58d68f3c7cd..4750b373d4bb 100644
-> --- a/drivers/block/loop.c
-> +++ b/drivers/block/loop.c
-> @@ -71,7 +71,6 @@
->  #include <linux/writeback.h>
->  #include <linux/completion.h>
->  #include <linux/highmem.h>
-> -#include <linux/kthread.h>
->  #include <linux/splice.h>
->  #include <linux/sysfs.h>
->  #include <linux/miscdevice.h>
-> @@ -84,6 +83,8 @@
->
->  #include <linux/uaccess.h>
->
-> +#define LOOP_IDLE_WORKER_TIMEOUT (60 * HZ)
-> +
->  static DEFINE_IDR(loop_index_idr);
->  static DEFINE_MUTEX(loop_ctl_mutex);
->
-> @@ -921,27 +922,83 @@ static void loop_config_discard(struct loop_device *lo)
->         q->limits.discard_alignment = 0;
->  }
->
-> -static void loop_unprepare_queue(struct loop_device *lo)
-> -{
-> -       kthread_flush_worker(&lo->worker);
-> -       kthread_stop(lo->worker_task);
-> -}
-> +struct loop_worker {
-> +       struct rb_node rb_node;
-> +       struct work_struct work;
-> +       struct list_head cmd_list;
-> +       struct list_head idle_list;
-> +       struct loop_device *lo;
-> +       struct cgroup_subsys_state *css;
-> +       unsigned long last_ran_at;
-> +};
->
-> -static int loop_kthread_worker_fn(void *worker_ptr)
-> -{
-> -       current->flags |= PF_LOCAL_THROTTLE | PF_MEMALLOC_NOIO;
-> -       return kthread_worker_fn(worker_ptr);
-> -}
-> +static void loop_workfn(struct work_struct *work);
-> +static void loop_rootcg_workfn(struct work_struct *work);
-> +static void loop_free_idle_workers(struct timer_list *timer);
->
-> -static int loop_prepare_queue(struct loop_device *lo)
-> +static void loop_queue_work(struct loop_device *lo, struct loop_cmd *cmd)
->  {
-> -       kthread_init_worker(&lo->worker);
-> -       lo->worker_task = kthread_run(loop_kthread_worker_fn,
-> -                       &lo->worker, "loop%d", lo->lo_number);
-> -       if (IS_ERR(lo->worker_task))
-> -               return -ENOMEM;
-> -       set_user_nice(lo->worker_task, MIN_NICE);
-> -       return 0;
-> +       struct rb_node **node = &(lo->worker_tree.rb_node), *parent = NULL;
-> +       struct loop_worker *cur_worker, *worker = NULL;
-> +       struct work_struct *work;
-> +       struct list_head *cmd_list;
-> +
-> +       spin_lock_irq(&lo->lo_work_lock);
-> +
-> +       if (!cmd->css)
-> +               goto queue_work;
-> +
-> +       node = &lo->worker_tree.rb_node;
-> +
-> +       while (*node) {
-> +               parent = *node;
-> +               cur_worker = container_of(*node, struct loop_worker, rb_node);
-> +               if (cur_worker->css == cmd->css) {
-> +                       worker = cur_worker;
-> +                       break;
-> +               } else if ((long)cur_worker->css < (long)cmd->css) {
-> +                       node = &(*node)->rb_left;
-> +               } else {
-> +                       node = &(*node)->rb_right;
-> +               }
-> +       }
-> +       if (worker)
-> +               goto queue_work;
-> +
-> +       worker = kzalloc(sizeof(struct loop_worker), GFP_NOWAIT | __GFP_NOWARN);
-> +       /*
-> +        * In the event we cannot allocate a worker, just queue on the
-> +        * rootcg worker
-> +        */
-> +       if (!worker)
-> +               goto queue_work;
-> +
-> +       worker->css = cmd->css;
-> +       css_get(worker->css);
-> +       INIT_WORK(&worker->work, loop_workfn);
-> +       INIT_LIST_HEAD(&worker->cmd_list);
-> +       INIT_LIST_HEAD(&worker->idle_list);
-> +       worker->lo = lo;
-> +       rb_link_node(&worker->rb_node, parent, node);
-> +       rb_insert_color(&worker->rb_node, &lo->worker_tree);
-> +queue_work:
-> +       if (worker) {
-> +               /*
-> +                * We need to remove from the idle list here while
-> +                * holding the lock so that the idle timer doesn't
-> +                * free the worker
-> +                */
-> +               if (!list_empty(&worker->idle_list))
-> +                       list_del_init(&worker->idle_list);
-> +               work = &worker->work;
-> +               cmd_list = &worker->cmd_list;
-> +       } else {
-> +               work = &lo->rootcg_work;
-> +               cmd_list = &lo->rootcg_cmd_list;
-> +       }
-> +       list_add_tail(&cmd->list_entry, cmd_list);
-> +       queue_work(lo->workqueue, work);
-> +       spin_unlock_irq(&lo->lo_work_lock);
->  }
->
->  static void loop_update_rotational(struct loop_device *lo)
-> @@ -1127,12 +1184,23 @@ static int loop_configure(struct loop_device *lo, fmode_t mode,
->             !file->f_op->write_iter)
->                 lo->lo_flags |= LO_FLAGS_READ_ONLY;
->
-> -       error = loop_prepare_queue(lo);
-> -       if (error)
-> +       lo->workqueue = alloc_workqueue("loop%d",
-> +                                       WQ_UNBOUND | WQ_FREEZABLE,
-> +                                       0,
-> +                                       lo->lo_number);
-> +       if (!lo->workqueue) {
-> +               error = -ENOMEM;
->                 goto out_unlock;
-> +       }
->
->         set_disk_ro(lo->lo_disk, (lo->lo_flags & LO_FLAGS_READ_ONLY) != 0);
->
-> +       INIT_WORK(&lo->rootcg_work, loop_rootcg_workfn);
-> +       INIT_LIST_HEAD(&lo->rootcg_cmd_list);
-> +       INIT_LIST_HEAD(&lo->idle_worker_list);
-> +       lo->worker_tree = RB_ROOT;
-> +       timer_setup(&lo->timer, loop_free_idle_workers,
-> +               TIMER_DEFERRABLE);
->         lo->use_dio = lo->lo_flags & LO_FLAGS_DIRECT_IO;
->         lo->lo_device = bdev;
->         lo->lo_backing_file = file;
-> @@ -1200,6 +1268,7 @@ static int __loop_clr_fd(struct loop_device *lo, bool release)
->         int err = 0;
->         bool partscan = false;
->         int lo_number;
-> +       struct loop_worker *pos, *worker;
->
->         mutex_lock(&lo->lo_mutex);
->         if (WARN_ON_ONCE(lo->lo_state != Lo_rundown)) {
-> @@ -1219,6 +1288,18 @@ static int __loop_clr_fd(struct loop_device *lo, bool release)
->         /* freeze request queue during the transition */
->         blk_mq_freeze_queue(lo->lo_queue);
->
-> +       destroy_workqueue(lo->workqueue);
-> +       spin_lock_irq(&lo->lo_work_lock);
-> +       list_for_each_entry_safe(worker, pos, &lo->idle_worker_list,
-> +                               idle_list) {
-> +               list_del(&worker->idle_list);
-> +               rb_erase(&worker->rb_node, &lo->worker_tree);
-> +               css_put(worker->css);
-> +               kfree(worker);
-> +       }
-> +       spin_unlock_irq(&lo->lo_work_lock);
-> +       del_timer_sync(&lo->timer);
-> +
->         spin_lock_irq(&lo->lo_lock);
->         lo->lo_backing_file = NULL;
->         spin_unlock_irq(&lo->lo_lock);
-> @@ -1255,7 +1336,6 @@ static int __loop_clr_fd(struct loop_device *lo, bool release)
->
->         partscan = lo->lo_flags & LO_FLAGS_PARTSCAN && bdev;
->         lo_number = lo->lo_number;
-> -       loop_unprepare_queue(lo);
->  out_unlock:
->         mutex_unlock(&lo->lo_mutex);
->         if (partscan) {
-> @@ -2026,7 +2106,7 @@ static blk_status_t loop_queue_rq(struct blk_mq_hw_ctx *hctx,
->         } else
->  #endif
->                 cmd->css = NULL;
-> -       kthread_queue_work(&lo->worker, &cmd->work);
-> +       loop_queue_work(lo, cmd);
->
->         return BLK_STS_OK;
->  }
-> @@ -2056,26 +2136,82 @@ static void loop_handle_cmd(struct loop_cmd *cmd)
->         }
->  }
->
-> -static void loop_queue_work(struct kthread_work *work)
-> +static void loop_set_timer(struct loop_device *lo)
-> +{
-> +       timer_reduce(&lo->timer, jiffies + LOOP_IDLE_WORKER_TIMEOUT);
-> +}
-> +
-> +static void loop_process_work(struct loop_worker *worker,
-> +                       struct list_head *cmd_list, struct loop_device *lo)
-> +{
-> +       int orig_flags = current->flags;
-> +       struct loop_cmd *cmd;
-> +
-> +       current->flags |= PF_LOCAL_THROTTLE | PF_MEMALLOC_NOIO;
-> +       spin_lock_irq(&lo->lo_work_lock);
-> +       while (!list_empty(cmd_list)) {
-> +               cmd = container_of(
-> +                       cmd_list->next, struct loop_cmd, list_entry);
-> +               list_del(cmd_list->next);
-> +               spin_unlock_irq(&lo->lo_work_lock);
-> +
-> +               loop_handle_cmd(cmd);
-> +               cond_resched();
-> +
-> +               spin_lock_irq(&lo->lo_work_lock);
-> +       }
-> +
-> +       /*
-> +        * We only add to the idle list if there are no pending cmds
-> +        * *and* the worker will not run again which ensures that it
-> +        * is safe to free any worker on the idle list
-> +        */
-> +       if (worker && !work_pending(&worker->work)) {
-> +               worker->last_ran_at = jiffies;
-> +               list_add_tail(&worker->idle_list, &lo->idle_worker_list);
-> +               loop_set_timer(lo);
-> +       }
-> +       spin_unlock_irq(&lo->lo_work_lock);
-> +       current->flags = orig_flags;
-> +}
-> +
-> +static void loop_workfn(struct work_struct *work)
->  {
-> -       struct loop_cmd *cmd =
-> -               container_of(work, struct loop_cmd, work);
-> +       struct loop_worker *worker =
-> +               container_of(work, struct loop_worker, work);
-> +       loop_process_work(worker, &worker->cmd_list, worker->lo);
-> +}
->
-> -       loop_handle_cmd(cmd);
-> +static void loop_rootcg_workfn(struct work_struct *work)
-> +{
-> +       struct loop_device *lo =
-> +               container_of(work, struct loop_device, rootcg_work);
-> +       loop_process_work(NULL, &lo->rootcg_cmd_list, lo);
->  }
->
-> -static int loop_init_request(struct blk_mq_tag_set *set, struct request *rq,
-> -               unsigned int hctx_idx, unsigned int numa_node)
-> +static void loop_free_idle_workers(struct timer_list *timer)
->  {
-> -       struct loop_cmd *cmd = blk_mq_rq_to_pdu(rq);
-> +       struct loop_device *lo = container_of(timer, struct loop_device, timer);
-> +       struct loop_worker *pos, *worker;
->
-> -       kthread_init_work(&cmd->work, loop_queue_work);
-> -       return 0;
-> +       spin_lock_irq(&lo->lo_work_lock);
-> +       list_for_each_entry_safe(worker, pos, &lo->idle_worker_list,
-> +                               idle_list) {
-> +               if (time_is_after_jiffies(worker->last_ran_at +
-> +                                               LOOP_IDLE_WORKER_TIMEOUT))
-> +                       break;
-> +               list_del(&worker->idle_list);
-> +               rb_erase(&worker->rb_node, &lo->worker_tree);
-> +               css_put(worker->css);
-> +               kfree(worker);
-> +       }
-> +       if (!list_empty(&lo->idle_worker_list))
-> +               loop_set_timer(lo);
-> +       spin_unlock_irq(&lo->lo_work_lock);
->  }
->
->  static const struct blk_mq_ops loop_mq_ops = {
->         .queue_rq       = loop_queue_rq,
-> -       .init_request   = loop_init_request,
->         .complete       = lo_complete_rq,
->  };
->
-> @@ -2164,6 +2300,7 @@ static int loop_add(struct loop_device **l, int i)
->         mutex_init(&lo->lo_mutex);
->         lo->lo_number           = i;
->         spin_lock_init(&lo->lo_lock);
-> +       spin_lock_init(&lo->lo_work_lock);
->         disk->major             = LOOP_MAJOR;
->         disk->first_minor       = i << part_shift;
->         disk->fops              = &lo_fops;
-> diff --git a/drivers/block/loop.h b/drivers/block/loop.h
-> index a3c04f310672..9289c1cd6374 100644
-> --- a/drivers/block/loop.h
-> +++ b/drivers/block/loop.h
-> @@ -14,7 +14,6 @@
->  #include <linux/blk-mq.h>
->  #include <linux/spinlock.h>
->  #include <linux/mutex.h>
-> -#include <linux/kthread.h>
->  #include <uapi/linux/loop.h>
->
->  /* Possible states of device */
-> @@ -54,8 +53,13 @@ struct loop_device {
->
->         spinlock_t              lo_lock;
->         int                     lo_state;
-> -       struct kthread_worker   worker;
-> -       struct task_struct      *worker_task;
-> +       spinlock_t              lo_work_lock;
-> +       struct workqueue_struct *workqueue;
-> +       struct work_struct      rootcg_work;
-> +       struct list_head        rootcg_cmd_list;
-> +       struct list_head        idle_worker_list;
-> +       struct rb_root          worker_tree;
-> +       struct timer_list       timer;
->         bool                    use_dio;
->         bool                    sysfs_inited;
->
-> @@ -66,7 +70,7 @@ struct loop_device {
->  };
->
->  struct loop_cmd {
-> -       struct kthread_work work;
-> +       struct list_head list_entry;
->         bool use_aio; /* use AIO interface to handle I/O */
->         atomic_t ref; /* only for aio */
->         long ret;
-> --
-> 2.30.2
->
+> From: Tian, Kevin
+> Sent: Tuesday, April 6, 2021 9:02 AM
+>=20
+> > From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+> > Sent: Tuesday, April 6, 2021 7:40 AM
+> >
+> > On Fri, Apr 02, 2021 at 07:58:02AM +0000, Tian, Kevin wrote:
+> > > > From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+> > > > Sent: Thursday, April 1, 2021 9:47 PM
+> > > >
+> > > > On Thu, Apr 01, 2021 at 01:43:36PM +0000, Liu, Yi L wrote:
+> > > > > > From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+> > > > > > Sent: Thursday, April 1, 2021 9:16 PM
+> > > > > >
+> > > > > > On Thu, Apr 01, 2021 at 01:10:48PM +0000, Liu, Yi L wrote:
+> > > > > > > > From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+> > > > > > > > Sent: Thursday, April 1, 2021 7:47 PM
+> > > > > > > [...]
+> > > > > > > > I'm worried Intel views the only use of PASID in a guest is=
+ with
+> > > > > > > > ENQCMD, but that is not consistent with the industry. We ne=
+ed
+> to
+> > see
+> > > > > > > > normal nested PASID support with assigned PCI VFs.
+> > > > > > >
+> > > > > > > I'm not quire flow here. Intel also allows PASID usage in gue=
+st
+> > without
+> > > > > > > ENQCMD. e.g. Passthru a PF to guest, and use PASID on it with=
+out
+> > > > > > ENQCMD.
+> > > > > >
+> > > > > > Then you need all the parts, the hypervisor calls from the vIOM=
+MU,
+> > and
+> > > > > > you can't really use a vPASID.
+> > > > >
+> > > > > This is a diagram shows the vSVA setup.
+> > > >
+> > > > I'm not talking only about vSVA. Generic PASID support with arbitar=
+y
+> > > > mappings.
+> > > >
+> > > > And how do you deal with the vPASID vs pPASID issue if the system h=
+as
+> > > > a mix of physical devices and mdevs?
+> > > >
+> > >
+> > > We plan to support two schemes. One is vPASID identity-mapped to
+> > > pPASID then the mixed scenario just works, with the limitation of
+> > > lacking of live migration support. The other is non-identity-mapped
+> > > scheme, where live migration is supported but physical devices and
+> > > mdevs should not be mixed in one VM if both expose SVA capability
+> > > (requires some filtering check in Qemu).
+> >
+> > That just becomes "block vPASID support if any device that
+> > doesn't use ENQCMD is plugged into the guest"
+>=20
+> The limitation is only for physical device. and in reality it is not that
+> bad. To support live migration with physical device we anyway need
+> additional work to migrate the device state (e.g. based on Max's work),
+> then it's not unreasonable to also mediate guest programming of
+> device specific PASID register to enable vPASID (need to translate in
+> the whole VM lifespan but likely is not a hot path).
+>=20
+> >
+> > Which needs a special VFIO capability of some kind so qemu knows to
+> > block it. This really needs to all be layed out together so someone
+> > can understand it :(
+>=20
+> Or could simply based on whether the VFIO device supports live migration.
 
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Actually you are right on this point. VFIO should provide a per-device
+capability to indicate whether vPASID is allowed on this device. likely=20
+yes for mdev, by default no for pdev (unless explicitly opt in). Qemu
+should enable vPASID only if all assigned devices support it, and then=20
+provide vPASID information when using VFIO API to allow pPASIDs.
 
--- 
-Ming Lei
+>=20
+> >
+> > Why doesn't the siov cookbook explaining this stuff??
+> >
+> > > We hope the /dev/ioasid can support both schemes, with the minimal
+> > > requirement of allowing userspace to tag a vPASID to a pPASID and
+> > > allowing mdev to translate vPASID into pPASID, i.e. not assuming that
+> > > the guest will always use pPASID.
+> >
+> > What I'm a unclear of is if /dev/ioasid even needs to care about
+> > vPASID or if vPASID is just a hidden artifact of the KVM connection to
+> > setup the translation table and the vIOMMU driver in qemu.
+>=20
+> Not just for KVM. Also required by mdev, which needs to translate
+> vPASID into pPASID when ENQCMD is not used. As I replied in another
+> mail, possibly we don't need /dev/ioasid to know this fact, which
+> should only care about the operations related to pPASID. VFIO could
+> carry vPASID information to mdev. KVM should have its own interface
+> to know this information, as you suggested earlier.
+>=20
+> Thanks
+> Kevin
