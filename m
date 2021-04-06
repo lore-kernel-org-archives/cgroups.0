@@ -1,8 +1,8 @@
-From: Jason Gunthorpe <jgg@nvidia.com>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
  allocation APIs
-Date: Tue, 6 Apr 2021 09:34:51 -0300
-Message-ID: <20210406123451.GN7405@nvidia.com>
+Date: Tue, 6 Apr 2021 09:42:51 -0300
+Message-ID: <20210406124251.GO7405@nvidia.com>
 References: <20210319135432.GT2356281@nvidia.com>
  <20210319112221.5123b984@jacob-builder>
  <20210322120300.GU2356281@nvidia.com>
@@ -12,73 +12,98 @@ References: <20210319135432.GT2356281@nvidia.com>
  <20210330132830.GO2356281@nvidia.com>
  <MWHPR11MB1886CAD48AFC156BFC7C1D398C7A9@MWHPR11MB1886.namprd11.prod.outlook.com>
  <20210405234230.GF7405@nvidia.com>
- <MWHPR11MB1886CF7C11ECE0396A0215078C769@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <fa57bde5-472f-6e66-3521-bfac7d6e4f8d@redhat.com>
 Mime-Version: 1.0
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=487PkQf+U8PXv/fDH1TQwHED0SCO9RSfHacBURVdHls=;
- b=P6DL8N7G73UXtTIo1xlCjX0yg0o4XiKraNCwtOrC8t2oGt7bOuafqCR4T9PP1S+ZLSZjjh+KmonGGCEVjUDgSj3LPGsUcTBsXlOBNbegxzu6XT6ELX5rLht9UaUq9hwlwXon7RF9YSiJ7SGaJ7AlushzKV1XAKi4MsDsT7om3DmrGjbqpM0XO3TFg92beQ4llfTgvh5xCOZBAqVjR54yxCvGlNGGmhQtmpbi20J4LQpUMSrFHjY4xBb3vCErinSgJev871zsuCfHbfI0sGcXUvXwb753gjaG56jK4YUH6F2l73JU7u9o/mObS21i+8Li1WoGk2ckxaUY0Yb7eOOgSQ==
+ bh=VVcvhKEC4qVlKMK+ZPuj7FsiS/N0B9kV0o9VQC6v6JQ=;
+ b=J8e6UMs1zenWhtP/PzleJ1l6xG9UN8/aN2326f4syh43eIr3OZoKrhGTWds98aY+s/qH7Uo8UHLZmyGSTH+jXz8xEVQSOmr5M03JDrXe4cmz7LoW/Ck4gIQYA/iGrNSUjHtdPd6K935TPOv2FhqJA+RkvTjMoFilRaTzoKZy8oRxPuh+HsB6vHvqBHIZxBtKKgYxjjMETXQZj88+2+lBU9DmjGN5C6oWXZ+84kbg4T85RLG2blvGzIrP+BKw8l/Lhebyl4nRSLlvKKAwGiDF+4vf/igzGWY1aiLDDUjj6VkSZ1lc5JrpZlsQ8jtnqbwiCVQxF5lo26EyMLLlZw6YSg==
 Content-Disposition: inline
-In-Reply-To: <MWHPR11MB1886CF7C11ECE0396A0215078C769@MWHPR11MB1886.namprd11.prod.outlook.com>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: "Tian, Kevin" <kevin.tian@intel.com>
-Cc: Jean-Philippe Brucker <jean-philippe@linaro.org>, Alex Williamson <alex.williamson@redhat.com>, "Raj, Ashok" <ashok.raj@intel.com>, Jonathan Corbet <corbet@lwn.net>, Jean-Philippe Brucker <jean-philippe@linaro.com>, LKML <linux-kernel@vger.kernel.org>, "Jiang, Dave" <dave.jiang@intel.com>, "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Tejun Heo <tj@kernel.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "Wu, Hao" <hao.wu@intel.com>, David Woodhouse <dwmw2@infradead.org>, Jason Wang <jasowang@redhat.com>
+In-Reply-To: <fa57bde5-472f-6e66-3521-bfac7d6e4f8d-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+To: Jason Wang <jasowang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian,
+ Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Tue, Apr 06, 2021 at 01:27:15AM +0000, Tian, Kevin wrote:
-> 
-> and here is one example why using existing VFIO/VDPA interface makes
-> sense. say dev1 (w/ sva) and dev2 (w/o sva) are placed in a single VFIO 
-> container. 
+On Tue, Apr 06, 2021 at 09:35:17AM +0800, Jason Wang wrote:
 
-Forget about SVA, it is an irrelevant detail of how a PASID is
-configured.
+> > VFIO and VDPA has no buisness having map/unmap interfaces once we have
+> > /dev/ioasid. That all belongs in the iosaid side.
+> > 
+> > I know they have those interfaces today, but that doesn't mean we have
+> > to keep using them for PASID use cases, they should be replaced with a
+> > 'do dma from this pasid on /dev/ioasid' interface certainly not a
+> > 'here is a pasid from /dev/ioasid, go ahead and configure it youself'
+> > interface
+>  
+> So it looks like the PASID was bound to SVA in this design. I think it's not
+> necessairly the case:
 
-> The container is associated to an iommu domain which contains a
-> single 2nd-level page table, shared by both devices (when attached
-> to the domain).
+No, I wish people would stop talking about SVA.
 
-This level should be described by an ioasid.
+SVA and vSVA are a very special narrow configuration of a PASID. There
+are lots of other PASID configurations! That is the whole point, a
+PASID is complicated, there are many configuration scenarios, they
+need to be in one place with a very clearly defined uAPI
 
-> The VFIO MAP operation is applied to the 2nd-level
-> page table thus naturally applied to both devices. Then userspace
-> could use /dev/ioasid to further allocate IOASIDs and bind multiple
-> 1st-level page tables for dev1, nested on the shared 2nd-level page
-> table.
+> 1) PASID can be implemented without SVA, in this case a map/unmap interface
+> is still required
 
-Because if you don't then we enter insane world where a PASID is being
-created under /dev/ioasid but its translation path flows through setup
-done by VFIO and the whole user API becomes an incomprehensible mess.
+Any interface to manipulate a PASID should be under /dev/ioasid. We do
+not want to duplicate this into every subsystem.
 
-How will you even associate the PASID with the other translation??
+> 2) For the case that hypervisor want to do some mediation in the middle for
+> a virtqueue. e.g in the case of control vq that is implemented in the
+> VF/ADI/SF itself, the hardware virtqueue needs to be controlled by Qemu,
+> Though binding qemu's page table to cvq can work but it looks like a
+> overkill, a small dedicated buffers that is mapped for this PASID seems more
+> suitalbe.
 
-The entire translation path for any ioasid or PASID should be defined
-only by /dev/ioasid. Everything else is a legacy API.
+/dev/ioasid should allow userspace to setup any PASID configuration it
+wants. There are many choices. That is the whole point, instead of
+copying&pasting all the PASID configuration option into every
+subsystem we have on place to configure it.
 
-> If following your suggestion then VFIO must deny VFIO MAP operations
-> on sva1 (assume userspace should not mix sva1 and sva2 in the same
-> container and instead use /dev/ioasid to map for sva1)? 
+If you want a PASID (or generic ioasid) that has the guest physical
+map, which is probably all that VDPA would ever want, then /dev/ioasid
+should be able to prepare that.
 
-No, userspace creates an iosaid for the guest physical mapping and
-passes this ioasid to VFIO PCI which will assign it as the first layer
-mapping on the RID
+If you just want to map a few buffers into a PASID then it should be
+able to do that too.
 
-When PASIDs are allocated the uAPI will be told to logically nested
-under the first ioasid. When VFIO authorizes a PASID for a RID it
-checks that all the HW rules are being followed.
+> So do you mean the device should not expose the PASID confiugration API to
+> guest? I think it could happen if we assign the whole device and let guest
+> to configure it for nested VMs.
 
-If there are rules like groups of VFIO devices must always use the
-same IOASID then VFIO will check these too (and realistically qemu
-will have only one guest physical map ioasid anyhow)
+This always needs co-operating with the vIOMMU driver. We can't have
+nested PASID use without both parts working together.
 
-There is no real difference between setting up an IOMMU table for a
-(RID,PASID) tuple or just a RID. We can do it universally with
-one interface for all consumers.
+The vIOMMU driver configures the PASID and assigns the mappings
+(however complicated that turns out to be)
 
-I wanted this when we were doing VDPA for the first time, now that we
-are doing pasid and more difficult stuff I view it as essential.
+The VDPA/mdev driver authorizes the HW to use the ioasid mapping, eg
+by authorizing a queue to issue PCIe TLPs with a specific PASID.
+
+The authorization is triggered by the guest telling the vIOMMU to
+allow a vRID to talk to a PASID, which qemu would have to translate to
+telling something like the VDPA driver under the vRID that it can use
+a PASID from /dev/ioasid
+
+For security a VDPA/mdev device MUST NOT issue PASIDs that the vIOMMU
+has not authorized its vRID to use. Otherwise the security model of
+something like VFIO in the guest becomes completely broken.
 
 Jason
