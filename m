@@ -1,125 +1,77 @@
-From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v3 00/14] bfq: introduce bfq.ioprio for cgroup
-Date: Tue, 6 Apr 2021 15:31:50 +0800
-Message-ID: <72bf47d0-3294-5f9d-7ce2-775e12fd721e@gmail.com>
-References: <cover.1616649216.git.brookxu@tencent.com>
- <YGnkuWYKeK7C8/Za@mtj.duckdns.org>
+From: Oleksandr Natalenko <oleksandr@natalenko.name>
+Subject: Page fault in cgroup_get_e_css
+Date: Tue, 6 Apr 2021 10:25:00 +0200
+Message-ID: <20210406082500.ufjxjv2pbi532nwc@spock.localdomain>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=UwN9w+51+jOvx1hrWNQ1GlpP9ul/HF8UegwwJjkG1m0=;
-        b=WS6mCzGZLxylWCXpePONbSRO9ety8hUfT2R0doOOJEF9FU677AIP+XTP2uxbNSVnKd
-         vJHQ4n97MW6skxC9xu9OljhFgtrUfG+qV1Bam6cNLV5M23xxx94f2seb3L3EUCDzkuIs
-         LHPDJx/t1a6K1meBSSjmGk9VbSiDUBJgN27ncjYKsQO//TkfNA8RVWPyjDjdtc9z9wKP
-         p7v5ElVmQiomYGhzeu+wwgYocMAMc3OlwS9EoJNvCRKjsPbrGosaf2Z6OIpfLyONVQ7B
-         s6gSJfhNAxwAJshWWFjmOBG4bU6w5a+Q9np3awDjnP7dRAO3FzxdFUkqUm93iIOdUZgs
-         P7QA==
-In-Reply-To: <YGnkuWYKeK7C8/Za-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Content-Language: en-US
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=natalenko.name;
+        s=dkim-20170712; t=1617697500;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=FFIoGOaJU2yArcx/E1SPfz59RP31n3PkOCSfX9LZ5mw=;
+        b=wtv4AXwdmy9SrC39BGy86T5bCpx4qithD9DEpb5x8lXsFJsiyWpOg2AfpeBG8KSes5uzc5
+        61gPq4ZYzUaOUdQKWKN+MXhmvXn2mnRmksQpxhriG5rS1OS0ufKjMpryVDIGoiCwsR9LbF
+        rKxrehcvQvIXzjW+WImHjdGahU079qw=
+Content-Disposition: inline
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="utf-8"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: linux-kernel@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Zefan Li <lizefan.x@bytedance.com>, Johannes Weiner <hannes@cmpxchg.org>, Andrew Morton <akpm@linux-foundation.org>, cgroups@vger.kernel.org, linux-mm@kvack.org
 
+Hello.
 
+From time to time I'm experiencing the following:
 
-Tejun Heo wrote on 2021/4/5 0:09:
-> Hello,
+```
+[64924.105071] BUG: unable to handle page fault for address: 0000040000000190
+[64924.105080] #PF: supervisor read access in kernel mode
+[64924.105083] #PF: error_code(0x0000) - not-present page
+[64924.105085] PGD 0 P4D 0
+[64924.105088] Oops: 0000 [#1] PREEMPT SMP NOPTI
+[64924.105091] CPU: 3 PID: 1103 Comm: bluetoothd Tainted: G        W         5.11.0-pf7 #1
+[64924.105094] Hardware name: ASUS System Product Name/Pro WS X570-ACE, BIOS 3302 03/05/2021
+[64924.105097] RIP: 0010:cgroup_get_e_css+0x27/0xe0
+[64924.105102] Code: b9 eb da 0f 1f 44 00 00 41 54 55 48 89 f5 53 48 89 fb e8 2c 8a fb ff 49 89 dc 48 85 ed 74 10 48 63 85 94 00 00 00 48 83 c0 2e <4c> 8b 64 c3 08 4d 85 e4 74 4d 41 f6 44 24 54 01 74 0d e8 32 db fb
+[64924.105105] RSP: 0018:ffffc07f02bafad8 EFLAGS: 00010012
+[64924.105108] RAX: 0000000000000031 RBX: 0000040000000000 RCX: 0000000000000000
+[64924.105111] RDX: 000000000000000a RSI: ffffffffb93398a0 RDI: 0000040000000000
+[64924.105113] RBP: ffffffffb93398a0 R08: 0000000000000040 R09: ffffc07f02bafcd8
+[64924.105115] R10: 0000000000000476 R11: 000000000000000c R12: 0000040000000000
+[64924.105117] R13: ffff9f88c538e700 R14: ffff9f88c538e400 R15: ffffedfb96b629c0
+[64924.105119] FS:  00007f234fe867c0(0000) GS:ffff9f8fceac0000(0000) knlGS:0000000000000000
+[64924.105122] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[64924.105124] CR2: 0000040000000190 CR3: 000000010c89c000 CR4: 0000000000350ee0
+[64924.105127] Call Trace:
+[64924.105130]  wb_get_create+0x8d/0x640
+[64924.105136]  ? xfs_bmap_add_extent_hole_real+0x60a/0x950 [xfs]
+[64924.105188]  __inode_attach_wb+0x8c/0x250
+[64924.105192]  account_page_dirtied+0x16d/0x1b0
+[64924.105196]  __set_page_dirty+0x50/0xc0
+[64924.105199]  iomap_set_page_dirty+0x50/0x90
+[64924.105203]  iomap_write_end+0x73/0x280
+[64924.105206]  ? iov_iter_copy_from_user_atomic+0xc7/0x340
+[64924.105210]  iomap_write_actor+0xed/0x190
+[64924.105213]  iomap_apply+0x106/0x300
+[64924.105216]  ? iomap_write_begin+0x5b0/0x5b0
+[64924.105271]  iomap_file_buffered_write+0x5c/0x80
+[64924.105274]  ? iomap_write_begin+0x5b0/0x5b0
+[64924.105277]  xfs_file_buffered_aio_write+0xe7/0x350 [xfs]
+[64924.105333]  new_sync_write+0x16a/0x200
+[64924.105337]  vfs_write+0x21c/0x2e0
+[64924.105341]  __x64_sys_write+0x6d/0xf0
+[64924.105344]  do_syscall_64+0x33/0x40
+[64924.105347]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[64924.105352] RIP: 0033:0x7f23504a40f7
+[64924.105355] Code: 0d 00 f7 d8 64 89 02 48 c7 c0 ff ff ff ff eb b7 0f 1f 00 f3 0f 1e fa 64 8b 04 25 18 00 00 00 85 c0 75 10 b8 01 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 51 c3 48 83 ec 28 48 89 54 24 18 48 89 74 24
+[64924.105357] RSP: 002b:00007ffcc0fdc988 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+```
 
-Hi, tj, thanks for your reply：）
+I'm not quite positive about having an exact reproducer, unfortunately.
 
-> On Thu, Mar 25, 2021 at 02:57:44PM +0800, brookxu wrote:
->> INTERFACE:
->>
->> The bfq.ioprio interface now is available for cgroup v1 and cgroup
->> v2. Users can configure the ioprio for cgroup through this
->> interface, as shown below:
->>
->> echo "1 2"> blkio.bfq.ioprio
->>
->> The above two values respectively represent the values of ioprio
->> class and ioprio for cgroup.
->>
->> EXPERIMENT:
->>
->> The test process is as follows:
->> # prepare data disk
->> mount /dev/sdb /data1
->>
->> # prepare IO scheduler
->> echo bfq > /sys/block/sdb/queue/scheduler
->> echo 0 > /sys/block/sdb/queue/iosched/low_latency
->> echo 1 > /sys/block/sdb/queue/iosched/better_fairness
->>
->> It is worth noting here that nr_requests limits the number of
->> requests, and it does not perceive priority. If nr_requests is
->> too small, it may cause a serious priority inversion problem.
->> Therefore, we can increase the size of nr_requests based on
->> the actual situation.
->>
->> # create cgroup v1 hierarchy
->> cd /sys/fs/cgroup/blkio
->> mkdir rt be0 be1 be2 idle
->>
->> # prepare cgroup
->> echo "1 0" > rt/blkio.bfq.ioprio
->> echo "2 0" > be0/blkio.bfq.ioprio
->> echo "2 4" > be1/blkio.bfq.ioprio
->> echo "2 7" > be2/blkio.bfq.ioprio
->> echo "3 0" > idle/blkio.bfq.ioprio
-> 
-> Here are some concerns:
-> 
-> * The main benefit of bfq compared to cfq at least was that the behavior
->   model was defined in a clearer way. It was possible to describe what the
->   control model was in a way which makes semantic sense. The main problem I
->   see with this proposal is that it's an interface which grew out of the
->   current implementation specifics and I'm having a hard time understanding
->   what the end results should be with different configuration combinations.
+Have you got an idea on what could go wrong here?
 
-In the current scheduling strategy, we consider both the entity's ioprio class
-and budget size. But in fact, there are some differences between bfqq and bfqg.
-Since the ioprio class of bfqg is fixed to BE, the scheduling of bfqg actually
-only considers the budget size. The introduction of ioprio for cgroup should not
-destroy or complicate the existing design of bfq. It followed the original design
-of bfq and try to make us thinking about the scheduling of entities more simply,
-without distinguishing between bfqq and bfqg.
+Thanks.
 
-> * While this might work around some scheduling latency issues but I have a
->   hard time imagining it being able to address actual QoS issues. e.g. on a
->   lot of SSDs, without absolute throttling, device side latencies can spike
->   by multiple orders of magnitude and no prioritization on the scheduler
->   side is gonna help once such state is reached. Here, there's no robust
->   mechanisms or measurement/control units defined to address that. In fact,
-
-The latency caused by ssd fireware operation is unpredictable. Here we try to
-control Qos under normal conditions, which usually meets most scenarios. In the
-container scenario, in addition to the overall IO Qos control of the container,
-we also hope to achieve more fine-grained Qos control of the tasks inside the
-container, such as ioprio support, suppression of async IO, and so on.
-
->   the above direction to increase nr_requests limit will make priority
->   inversions on the device and post-elevator side way more likely and
->   severe.
-
-Increasing nr_request is really not a good way. I tried to reserve 10% of tags
-for in service group by limit depth, which can better alleviate this problem,
-but more tests are needed.
- 
-> So, maybe it helps with specific scenarios on some hardware, but given the
-> ad-hoc nature, I don't think it justifies all the extra interface additions.
-> My suggestion would be slimming it down to bare essentials and making the
-> user interface part as minimal as possible.
-
-Now the weight of bfqq is jointly determined by ioprio and weight, and both
-ioprio and weight will update entity.weight. After the introduction of bfq.ioprio
-for cgroup, the processing of bfqg is the same as that of bfqq, and the complexity
-is not increased from the perspective of entity. There is no new concept added to
-the user side, because the per task ioprio has existed for a long time.
-
-> Thanks.
-> 
+-- 
+  Oleksandr Natalenko (post-factum)
