@@ -1,141 +1,58 @@
-From: Quentin Perret <qperret-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] cgroup: Relax restrictions on kernel threads moving out
- of root cpu cgroup
-Date: Tue, 6 Apr 2021 12:10:41 +0000
-Message-ID: <YGxPwTVvpqYkkIMI@google.com>
-References: <1617706753-25349-1-git-send-email-pkondeti@codeaurora.org>
+From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Tue, 6 Apr 2021 09:15:46 -0300
+Message-ID: <20210406121546.GL7405@nvidia.com>
+References: <BN6PR11MB406854CAE9D7CE86BEAB3E23C37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
+ <BN6PR11MB40687428F0D0F3B5F13EA3E0C37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
+ <YGW27KFt9eQB9X2z@myrica>
+ <BN6PR11MB4068171CD1D4B823515F7EFBC37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
+ <20210401134236.GF1463678@nvidia.com>
+ <BN6PR11MB4068C4DE7AF43D44DE70F4C1C37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
+ <20210401160337.GJ1463678@nvidia.com>
+ <MWHPR11MB18866AB35A13A139262347FD8C7A9@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210405233526.GD7405@nvidia.com>
+ <MWHPR11MB18862BF4EA4DC0CFDE6CD2238C769@MWHPR11MB1886.namprd11.prod.outlook.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=3UA2QLgE5D0ijsyIx8P+uuJ+qKQ15FjapR/N/wkS3FM=;
-        b=HF72u0MOJvcyb2iO031+3c68hjNTeovFQNLtmtnt5xqUF1rnl9HuJPHYt5suzoXNS0
-         XGZaD4/jxQsphiOqCQ7iwY+xVYPkdS/lkbMeDHiHVVsO2ZhBbaxKz/R9tJcLJVw5qyKg
-         wH8RjFs6SbFvit+GIlaly8tMXLlJxWDnkFGCOo1q9cvbp0r9VqQzi3KqtUC3Bzf4Hp+9
-         7rCvU/b58AauosJJ+qvqsWEZBDrc1Rk7er7tyPgLkisjbxAqgRi6V4Xn54K4K5lpuQtr
-         dkJWd0eWbKIhUf7hs+Ch4z2XyTMWUK86+nbI/TqALTF24exGJ9lnQmaju2WAqmH0rAof
-         qZ8g==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=TAyWTpAGiBmIhJeujMEDNxR36LohagizGI7BWUhzgCo=;
+ b=qIlL15XsQ02PtaeaYyl+7oAuoH8i6ae1nr+6e25M6efcJHloboiqE7XKI5lVX+zAVFYtkrlCcD/NJXseo84obNTzS3sgR7EVEKXO5y7O3tCVnV2F7KCRTR61/QgIGoxExqKu91OasfecrniCDqhXzZ6lAuOLNr89jxpZ0OEIcDg1gOjjVlCb35zp7ic+u2mvaj5z0Hy/fqtFqw4VF4apSCQG2AL02JxsTcYnfMRzCmiC3I1sgvoaBbaP0EFa9ngG3fMQuwHQhAcp6OKCqdDXQT8U5O+z7wuWFFr2O7xLpp2/C2bP64HwDBDD19JbqYOSaYOQjI7WyWQlQHK4SBFS6A==
 Content-Disposition: inline
-In-Reply-To: <1617706753-25349-1-git-send-email-pkondeti-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+In-Reply-To: <MWHPR11MB18862BF4EA4DC0CFDE6CD2238C769-4Pk8um7sDhPjKiA5vsxACZPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Pavankumar Kondeti <pkondeti-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Wei Wang <wvw-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Eric Auger <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-Hi Pavan,
+On Tue, Apr 06, 2021 at 12:37:35AM +0000, Tian, Kevin wrote:
 
-On Tuesday 06 Apr 2021 at 16:29:13 (+0530), Pavankumar Kondeti wrote:
-> In Android GKI, CONFIG_FAIR_GROUP_SCHED is enabled [1] to help prioritize
-> important work. Given that CPU shares of root cgroup can't be changed,
-> leaving the tasks inside root cgroup will give them higher share
-> compared to the other tasks inside important cgroups. This is mitigated
-> by moving all tasks inside root cgroup to a different cgroup after
-> Android is booted. However, there are many kernel tasks stuck in the
-> root cgroup after the boot.
+> With nested translation it is GVA->GPA->HPA. The kernel needs to
+> fix fault related to GPA->HPA (managed by VFIO/VDPA) while 
+> handle_mm_fault only handles HVA->HPA. In this case, the 2nd-level
+> page fault is expected to be delivered to VFIO/VDPA first which then
+> find HVA related to GPA, call handle_mm_fault to fix HVA->HPA,
+> and then call iommu_map to fix GPA->HPA in the IOMMU page table.
+> This is exactly like how CPU EPT violation is handled.
+
+No, it should all be in the /dev/ioasid layer not duplicated into
+every user.
+
+> > If the fault needs to be fixed in the guest, then it needs to be
+> > delivered over /dev/ioasid in some way and injected into the
+> > vIOMMU. VFIO and VDPA have nothing to do with vIOMMU driver in quemu.
+> > 
+> > You need to have an interface under /dev/ioasid to create both page
+> > table levels and part of that will be to tell the kernel what VA is
+> > mapped and how to handle faults.
 > 
-> We see all kworker threads are in the root cpu cgroup. This is because,
-> tasks with PF_NO_SETAFFINITY flag set are forbidden from cgroup migration.
-> This restriction is in place to avoid kworkers getting moved to a cpuset
-> which conflicts with kworker affinity. Relax this restriction by explicitly
-> checking if the task is moving out of a cpuset cgroup. This allows kworkers
-> to be moved out root cpu cgroup.
-> 
-> We also see kthreadd_task and any kernel thread created after the Android boot
-> also stuck in the root cgroup. The current code prevents kthreadd_task moving
-> out root cgroup to avoid the possibility of creating new RT kernel threads
-> inside a cgroup with no RT runtime allocated. Apply this restriction when tasks
-> are moving out of cpu cgroup under CONFIG_RT_GROUP_SCHED. This allows all
-> kernel threads to be moved out of root cpu cgroup if the kernel does not
-> enable RT group scheduling.
+> VFIO/VDPA already have their own interface to manage GPA->HPA
+> mappings. Why do we want to duplicate it in /dev/ioasid? 
 
-OK, so IIUC this only works with cgroup v1 -- the unified hierarchy in
-v2 forces you to keep cpu and cpuset in 'sync'. But that should be fine,
-so this looks like a nice improvement to me.
+They have their own interface to manage other types of HW, we should
+not duplicate PASID programming into there too.
 
-> [1] https://android.googlesource.com/kernel/common/+/f08f049de11c15a4251cb1db08cf0bee20bd9b59
-> 
-> Signed-off-by: Pavankumar Kondeti <pkondeti-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-> ---
->  kernel/cgroup/cgroup-internal.h |  3 ++-
->  kernel/cgroup/cgroup-v1.c       |  2 +-
->  kernel/cgroup/cgroup.c          | 24 +++++++++++++++++++-----
->  3 files changed, 22 insertions(+), 7 deletions(-)
-> 
-> diff --git a/kernel/cgroup/cgroup-internal.h b/kernel/cgroup/cgroup-internal.h
-> index bfbeabc..a96ed9a 100644
-> --- a/kernel/cgroup/cgroup-internal.h
-> +++ b/kernel/cgroup/cgroup-internal.h
-> @@ -232,7 +232,8 @@ int cgroup_migrate(struct task_struct *leader, bool threadgroup,
->  int cgroup_attach_task(struct cgroup *dst_cgrp, struct task_struct *leader,
->  		       bool threadgroup);
->  struct task_struct *cgroup_procs_write_start(char *buf, bool threadgroup,
-> -					     bool *locked)
-> +					     bool *locked,
-> +					     struct cgroup *dst_cgrp)
->  	__acquires(&cgroup_threadgroup_rwsem);
->  void cgroup_procs_write_finish(struct task_struct *task, bool locked)
->  	__releases(&cgroup_threadgroup_rwsem);
-> diff --git a/kernel/cgroup/cgroup-v1.c b/kernel/cgroup/cgroup-v1.c
-> index a575178..d674a6c 100644
-> --- a/kernel/cgroup/cgroup-v1.c
-> +++ b/kernel/cgroup/cgroup-v1.c
-> @@ -497,7 +497,7 @@ static ssize_t __cgroup1_procs_write(struct kernfs_open_file *of,
->  	if (!cgrp)
->  		return -ENODEV;
->  
-> -	task = cgroup_procs_write_start(buf, threadgroup, &locked);
-> +	task = cgroup_procs_write_start(buf, threadgroup, &locked, cgrp);
->  	ret = PTR_ERR_OR_ZERO(task);
->  	if (ret)
->  		goto out_unlock;
-> diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-> index 9153b20..41864a8 100644
-> --- a/kernel/cgroup/cgroup.c
-> +++ b/kernel/cgroup/cgroup.c
-> @@ -2744,7 +2744,8 @@ int cgroup_attach_task(struct cgroup *dst_cgrp, struct task_struct *leader,
->  }
->  
->  struct task_struct *cgroup_procs_write_start(char *buf, bool threadgroup,
-> -					     bool *locked)
-> +					     bool *locked,
-> +					     struct cgroup *dst_cgrp)
->  	__acquires(&cgroup_threadgroup_rwsem)
->  {
->  	struct task_struct *tsk;
-> @@ -2784,15 +2785,28 @@ struct task_struct *cgroup_procs_write_start(char *buf, bool threadgroup,
->  		tsk = tsk->group_leader;
->  
->  	/*
-> +	 * RT kthreads may be born in a cgroup with no rt_runtime allocated.
-> +	 * Just say no.
-> +	 */
-> +#ifdef CONFIG_RT_GROUP_SCHED
-> +	if (tsk->no_cgroup_migration && (dst_cgrp->root->subsys_mask & (1U << cpu_cgrp_id))) {
-> +		tsk = ERR_PTR(-EINVAL);
-> +		goto out_unlock_threadgroup;
-> +	}
-> +#endif
-> +
-> +	/*
->  	 * kthreads may acquire PF_NO_SETAFFINITY during initialization.
->  	 * If userland migrates such a kthread to a non-root cgroup, it can
-> -	 * become trapped in a cpuset, or RT kthread may be born in a
-> -	 * cgroup with no rt_runtime allocated.  Just say no.
-> +	 * become trapped in a cpuset. Just say no.
->  	 */
-> -	if (tsk->no_cgroup_migration || (tsk->flags & PF_NO_SETAFFINITY)) {
-> +#ifdef CONFIG_CPUSETS
-> +	if ((tsk->no_cgroup_migration || (tsk->flags & PF_NO_SETAFFINITY)) &&
-> +			(dst_cgrp->root->subsys_mask & (1U << cpuset_cgrp_id))) {
->  		tsk = ERR_PTR(-EINVAL);
->  		goto out_unlock_threadgroup;
->  	}
-> +#endif
-
-Nit: maybe move this #ifdefery out to a header?
-
-Thanks,
-Quentin
+Jason
