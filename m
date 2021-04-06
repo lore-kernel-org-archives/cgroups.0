@@ -1,48 +1,125 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 00/11] treewide: address gcc-11 -Wstringop-overread warnings
-Date: Tue,  6 Apr 2021 00:53:17 -0400
-Message-ID: <161768454091.32082.3141021591391350544.b4-ty@oracle.com>
-References: <20210322160253.4032422-1-arnd@kernel.org>
+From: brookxu <brookxu.cn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v3 00/14] bfq: introduce bfq.ioprio for cgroup
+Date: Tue, 6 Apr 2021 15:31:50 +0800
+Message-ID: <72bf47d0-3294-5f9d-7ce2-775e12fd721e@gmail.com>
+References: <cover.1616649216.git.brookxu@tencent.com>
+ <YGnkuWYKeK7C8/Za@mtj.duckdns.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : content-type :
- content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=z6WUpdpP7QuueY+6HVjqRyjPlcWvW85PeHWksryxc1s=;
- b=SZgD5nxpzoPP5BC/kCwEtImG++GGuRJ0VsqbamZHDVSVjgaRvtQ/6rVKOY+yEZKEyaDO
- CLcSPT2WMzlgk+oCe9lnQfwmIRFUHkunczw22nyPnuFT6fXAHjB83QuQW3E2d7pZPU27
- qySJdDM8rjLgOxzYD1La6zZp+F/nwteSl4OYbk7olbPnzAjewLgFZSYSJsh9HT4yO9fg
- gYkYZzp1l4shtyjVdZHLIUk754lEP7qacfu8Z0Ruf2YDZNAUt8e3yOlNDRuTk1xliiih
- TH0fIDyeCY2obmPG7Ajwy80lBmEYoL5EpSc0onIHDnrXjlstWlEZ00Hee+afFMCDS6bP 9Q== 
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=z6WUpdpP7QuueY+6HVjqRyjPlcWvW85PeHWksryxc1s=;
- b=d8dNvvSXzSsDMO6sC7yDvuKOp/gJV3ecOQzOQPp5O2/jZPQE7A53hdLOFYygRW8DLoGoYFVHzeqRK9yCO8B14byUHVGUWJJ2W+OasQyi0zfXgDxuNIw/p3mYFpaj2yRzZp0HArxHhc3nAKGKrN9oI/hgzaxCNK8dUiv+C525g/E=
-In-Reply-To: <20210322160253.4032422-1-arnd@kernel.org>
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=UwN9w+51+jOvx1hrWNQ1GlpP9ul/HF8UegwwJjkG1m0=;
+        b=WS6mCzGZLxylWCXpePONbSRO9ety8hUfT2R0doOOJEF9FU677AIP+XTP2uxbNSVnKd
+         vJHQ4n97MW6skxC9xu9OljhFgtrUfG+qV1Bam6cNLV5M23xxx94f2seb3L3EUCDzkuIs
+         LHPDJx/t1a6K1meBSSjmGk9VbSiDUBJgN27ncjYKsQO//TkfNA8RVWPyjDjdtc9z9wKP
+         p7v5ElVmQiomYGhzeu+wwgYocMAMc3OlwS9EoJNvCRKjsPbrGosaf2Z6OIpfLyONVQ7B
+         s6gSJfhNAxwAJshWWFjmOBG4bU6w5a+Q9np3awDjnP7dRAO3FzxdFUkqUm93iIOdUZgs
+         P7QA==
+In-Reply-To: <YGnkuWYKeK7C8/Za-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>, Arnd Bergmann <arnd@kernel.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, x86@kernel.org, linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-wireless@vger.kernel.org, tboot-devel@lists.sourceforge.net, ath11k@lists.infradead.org, linux-arm-kernel@lists.infradead.org, Anders Larsen <al@alarsen.net>, netdev@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.ibm.com>, cgroups@vger.kernel.org, linux-security-module@vger.kernel.org, Serge Hallyn <serge@hallyn.com>, Imre Deak <imre.deak@intel.com>, Simon Kelley <simon@thekelleys.org.uk>, Ning Sun <ning.sun@intel.com>, Tejun Heo <tj@kernel.org>, intel-gfx@lists.freedesktop.org, Jani Nikula <jani.nikula@linux.intel.com>, James Smart <james.smart@broadcom.com>, Kalle Valo <kvalo@codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: paolo.valente-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Mon, 22 Mar 2021 17:02:38 +0100, Arnd Bergmann wrote:
 
-> The coming gcc release introduces a new warning for string operations
-> reading beyond the end of a fixed-length object. After testing
-> randconfig kernels for a while, think I have patches for any such
-> warnings that came up on x86, arm and arm64.
+
+Tejun Heo wrote on 2021/4/5 0:09:
+> Hello,
+
+Hi, tj, thanks for your reply：）
+
+> On Thu, Mar 25, 2021 at 02:57:44PM +0800, brookxu wrote:
+>> INTERFACE:
+>>
+>> The bfq.ioprio interface now is available for cgroup v1 and cgroup
+>> v2. Users can configure the ioprio for cgroup through this
+>> interface, as shown below:
+>>
+>> echo "1 2"> blkio.bfq.ioprio
+>>
+>> The above two values respectively represent the values of ioprio
+>> class and ioprio for cgroup.
+>>
+>> EXPERIMENT:
+>>
+>> The test process is as follows:
+>> # prepare data disk
+>> mount /dev/sdb /data1
+>>
+>> # prepare IO scheduler
+>> echo bfq > /sys/block/sdb/queue/scheduler
+>> echo 0 > /sys/block/sdb/queue/iosched/low_latency
+>> echo 1 > /sys/block/sdb/queue/iosched/better_fairness
+>>
+>> It is worth noting here that nr_requests limits the number of
+>> requests, and it does not perceive priority. If nr_requests is
+>> too small, it may cause a serious priority inversion problem.
+>> Therefore, we can increase the size of nr_requests based on
+>> the actual situation.
+>>
+>> # create cgroup v1 hierarchy
+>> cd /sys/fs/cgroup/blkio
+>> mkdir rt be0 be1 be2 idle
+>>
+>> # prepare cgroup
+>> echo "1 0" > rt/blkio.bfq.ioprio
+>> echo "2 0" > be0/blkio.bfq.ioprio
+>> echo "2 4" > be1/blkio.bfq.ioprio
+>> echo "2 7" > be2/blkio.bfq.ioprio
+>> echo "3 0" > idle/blkio.bfq.ioprio
 > 
-> Most of these warnings are false-positive ones, either gcc warning
-> about something that is entirely correct, or about something that
-> looks suspicious but turns out to be correct after all.
+> Here are some concerns:
 > 
-> [...]
+> * The main benefit of bfq compared to cfq at least was that the behavior
+>   model was defined in a clearer way. It was possible to describe what the
+>   control model was in a way which makes semantic sense. The main problem I
+>   see with this proposal is that it's an interface which grew out of the
+>   current implementation specifics and I'm having a hard time understanding
+>   what the end results should be with different configuration combinations.
 
-Applied to 5.13/scsi-queue, thanks!
+In the current scheduling strategy, we consider both the entity's ioprio class
+and budget size. But in fact, there are some differences between bfqq and bfqg.
+Since the ioprio class of bfqg is fixed to BE, the scheduling of bfqg actually
+only considers the budget size. The introduction of ioprio for cgroup should not
+destroy or complicate the existing design of bfq. It followed the original design
+of bfq and try to make us thinking about the scheduling of entities more simply,
+without distinguishing between bfqq and bfqg.
 
-[09/11] scsi: lpfc: fix gcc -Wstringop-overread warning
-        https://git.kernel.org/mkp/scsi/c/ada48ba70f6b
+> * While this might work around some scheduling latency issues but I have a
+>   hard time imagining it being able to address actual QoS issues. e.g. on a
+>   lot of SSDs, without absolute throttling, device side latencies can spike
+>   by multiple orders of magnitude and no prioritization on the scheduler
+>   side is gonna help once such state is reached. Here, there's no robust
+>   mechanisms or measurement/control units defined to address that. In fact,
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+The latency caused by ssd fireware operation is unpredictable. Here we try to
+control Qos under normal conditions, which usually meets most scenarios. In the
+container scenario, in addition to the overall IO Qos control of the container,
+we also hope to achieve more fine-grained Qos control of the tasks inside the
+container, such as ioprio support, suppression of async IO, and so on.
+
+>   the above direction to increase nr_requests limit will make priority
+>   inversions on the device and post-elevator side way more likely and
+>   severe.
+
+Increasing nr_request is really not a good way. I tried to reserve 10% of tags
+for in service group by limit depth, which can better alleviate this problem,
+but more tests are needed.
+ 
+> So, maybe it helps with specific scenarios on some hardware, but given the
+> ad-hoc nature, I don't think it justifies all the extra interface additions.
+> My suggestion would be slimming it down to bare essentials and making the
+> user interface part as minimal as possible.
+
+Now the weight of bfqq is jointly determined by ioprio and weight, and both
+ioprio and weight will update entity.weight. After the introduction of bfq.ioprio
+for cgroup, the processing of bfqg is the same as that of bfqq, and the complexity
+is not increased from the perspective of entity. There is no new concept added to
+the user side, because the per task ioprio has existed for a long time.
+
+> Thanks.
+> 
