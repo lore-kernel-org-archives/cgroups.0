@@ -1,8 +1,8 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+From: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
  allocation APIs
-Date: Wed, 7 Apr 2021 09:20:42 -0300
-Message-ID: <20210407122042.GF7405@nvidia.com>
+Date: Wed, 7 Apr 2021 20:43:50 +0200
+Message-ID: <YG39ZtnTuyn5uBOa@myrica>
 References: <20210322120300.GU2356281@nvidia.com>
  <20210324120528.24d82dbd@jacob-builder>
  <20210329163147.GG2356281@nvidia.com>
@@ -10,105 +10,102 @@ References: <20210322120300.GU2356281@nvidia.com>
  <20210330132830.GO2356281@nvidia.com>
  <MWHPR11MB1886CAD48AFC156BFC7C1D398C7A9@MWHPR11MB1886.namprd11.prod.outlook.com>
  <20210405234230.GF7405@nvidia.com>
- <MWHPR11MB1886CF7C11ECE0396A0215078C769@MWHPR11MB1886.namprd11.prod.outlook.com>
- <20210406123451.GN7405@nvidia.com>
- <MWHPR11MB1886CB8F558C6C17F921F77F8C759@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <fa57bde5-472f-6e66-3521-bfac7d6e4f8d@redhat.com>
+ <20210406124251.GO7405@nvidia.com>
+ <MWHPR11MB1886A7E4C6F3E3A81240517B8C759@MWHPR11MB1886.namprd11.prod.outlook.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=b+EaUTINRKnm9T9DTyulX+UCeIXY3iZPhGqqGXHeVcQ=;
- b=MJyAg4fy00qxK3oKqZR3mJ3vyzAmC+0IqekYn2jZbwe8lrXTgEc6onXQ1nU8iO+HPsnI6wk92uKH5g2r/lkzE+ez1IamweaLgfo4J2MAnTgurejobZq6WX9Ufs9KNJAA94jdOrIjmDvQlZlldyrDWX8xkdRAOfdHEMo4EfS8J6OLLNg7gs50vO5PbSNIPdlNVe2ftm8r8CGD66SOaVn7uf+QimEUVHXYoQ25HROT1YW6Bc18Aj9CkFRe8knlOqkGLyGhaogyRFU6JrQakcm1bGhwaUdsUEif4faQLQWEp2kObRcKN3XGfk1aOzGbqev+auRKGe8fyCIXTpaHyGSDlw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=U09jkuhbNd4GqgIa8gbKdPQlfgb0wMDSk0hVwDV1gRw=;
+        b=ngd4o4PyyH4y4MwaG4cnoC6BYaNJKVmTUn1FLk6iHOAPaNG8DeUfZzhymKYlRt0WBF
+         HGIOklvd6ZH0GhYEpHVm1LuvZ4z2wBSgD26kvfyaBhMfmn663lBk1uddv969zUJdaAYt
+         3YBKSHQAb6fT2Vyy/1JMWOttU9895pAjrlIlWnXHy+8Vp2NPYpaGV+sB+0StjU9OeP98
+         tRy0QHfn3hsF8zE1Aq/BMXcz9eW6XrmshNU6mzVrbRp5IwhAeUJu2P0HNXcKc1pCQV2C
+         WnUNExQdMC8rBcwLKpfweD2zJQ7hiRYL85Z0298BXC5qxaHuANgjHZkaqk2CWglrqSDR
+         vunA==
 Content-Disposition: inline
-In-Reply-To: <MWHPR11MB1886CB8F558C6C17F921F77F8C759-4Pk8um7sDhPjKiA5vsxACZPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
+In-Reply-To: <MWHPR11MB1886A7E4C6F3E3A81240517B8C759-4Pk8um7sDhPjKiA5vsxACZPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 To: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jason Wang <jasowang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Jason Wang <jasowang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Wed, Apr 07, 2021 at 02:08:33AM +0000, Tian, Kevin wrote:
+On Wed, Apr 07, 2021 at 08:17:50AM +0000, Tian, Kevin wrote:
+> btw this discussion was raised when discussing the I/O page fault handling
+> process. Currently the IOMMU layer implements a per-device fault reporting
+> mechanism, which requires VFIO to register a handler to receive all faults 
+> on its device and then forwards to ioasid if it's due to 1st-level. Possibly it 
+> makes more sense to convert it into a per-pgtable reporting scheme, and 
+> then the owner of each pgtable should register its own handler.
 
-> > Because if you don't then we enter insane world where a PASID is being
-> > created under /dev/ioasid but its translation path flows through setup
-> > done by VFIO and the whole user API becomes an incomprehensible mess.
-> > 
-> > How will you even associate the PASID with the other translation??
-> 
-> PASID is attached to a specific iommu domain (created by VFIO/VDPA), which
-> has GPA->HPA mappings already configured. If we view that mapping as an
-> attribute of the iommu domain, it's reasonable to have the userspace-bound
-> pgtable through /dev/ioasid to nest on it.
+Maybe, but you do need device information in there, since that's how the
+fault is reported to the guest and how the response is routed back to the
+faulting device (only PASID+PRGI would cause aliasing). And we need to
+report non-recoverable faults, as well as recoverable ones without PASID,
+once we hand control of level-1 page tables to guests.
 
-A user controlled page table should absolutely not be an attribute of
-a hidden kernel object, nor should two parts of the kernel silently
-connect to each other via a hidden internal objects like this.
+> It means
+> for 1) VFIO will register a 2nd-level pgtable handler while /dev/ioasid
+> will register a 1st-level pgtable handler, while for 3) /dev/ioasid will register 
+> handlers for both 1st-level and 2nd-level pgtable. Jean? also want to know 
+> your thoughts...  
 
-Security is important - the kind of connection must use some explicit
-FD authorization to access shared objects, not be made implicit!
+Moving all IOMMU controls to /dev/ioasid rather that splitting them is
+probably better. Hopefully the implementation can reuse most of
+vfio_iommu_type1.
 
-IMHO this direction is a dead end for this reason.
+I'm trying to sketch what may work for Arm, if we have to reuse
+/dev/ioasid to avoid duplication of fault and inval queues:
 
-> > The entire translation path for any ioasid or PASID should be defined
-> > only by /dev/ioasid. Everything else is a legacy API.
-> > 
-> > > If following your suggestion then VFIO must deny VFIO MAP operations
-> > > on sva1 (assume userspace should not mix sva1 and sva2 in the same
-> > > container and instead use /dev/ioasid to map for sva1)?
-> > 
-> > No, userspace creates an iosaid for the guest physical mapping and
-> > passes this ioasid to VFIO PCI which will assign it as the first layer
-> > mapping on the RID
-> 
-> Is it an dummy ioasid just for providing GPA mappings for nesting purpose
-> of other IOASIDs? Then we waste one per VM?
+* Get a container handle out of /dev/ioasid (or /dev/iommu, really.)
+  No operation available since we don't know what the device and IOMMU
+  capabilities are.
 
-Generic ioasid's are "free" they are just software constructs in the
-kernel.
+* Attach the handle to a VF. With VFIO that would be
+  VFIO_GROUP_SET_CONTAINER. That causes the kernel to associate an IOMMU
+  with the handle, and decide which operations are available.
 
-> > When PASIDs are allocated the uAPI will be told to logically nested
-> > under the first ioasid. When VFIO authorizes a PASID for a RID it
-> > checks that all the HW rules are being followed.
-> 
-> As I explained above, why cannot we just use iommu domain to connect 
-> the dots? 
+* With a map/unmap vIOMMU (or shadow mappings), a single translation level
+  is supported. With a nesting vIOMMU, we're populating the level-2
+  translation (some day maybe by binding the KVM page tables, but
+  currently with map/unmap ioctl).
 
-Security.
+  Single-level translation needs single VF per container. Two level would
+  allow sharing stage-2 between multiple VFs, though it's a pain to define
+  and implement.
 
-> Every passthrough framework needs to create an iommu domain
-> first. and It needs to support both devices w/ PASID and devices w/o
-> PASID.  For devices w/o PASID it needs to invent its own MAP
-> interface anyway.  
+* Without a vIOMMU or if the vIOMMU starts in bypass, populate the
+  container page tables.
 
-No, it should consume a ioasid from /dev/ioasid, use a common ioasid
-map interface and assign that ioasid to a RID.
+Start the guest.
 
-Don't get so fixated on PASID as a special case
+* With a map/unmap vIOMMU, guest creates mappings, userspace populates the
+  page tables with map/unmap ioctl.
 
-> Then why do we bother creating another MAP interface through
-> /dev/ioasid which not only duplicates but also creating transition
-> burden between two set of MAP interfaces when the guest turns on/off
-> the pasid capability on the device?
+  It would be possible to add a PASID mode there: guest requests an
+  address space with a specific PASID, userspace derives an IOASID handle
+  from the container handle and populate that address space with map/unmap
+  ioctl. That would enable PASID on sub-VF assignment, which requires the
+  host to control which PASID is programmed into the VF (with
+  DEVICE_ALLOW_IOASID, I guess). And either the host allocates the PASID
+  in this case (which isn't supported by a vSMMU) or we have to do a
+  vPASID -> pPASID. I don't know if it's worth the effort.
 
-Don't transition. Always use the new interface. qemu detects the
-kernel supports /dev/ioasid and *all iommu page table configuration*
-goes through there. VFIO and VDPA APIs become unused for iommu
-configuration.
+Or
+* With a nesting vIOMMU, the guest attaches a PASID table to a VF,
+  userspace issues a SET_PASID_TABLE ioctl on the container handle. If
+  we support multiple VFs per container, we first need to derive a child
+  container from the main one and the device, then attach the PASID table.
 
-> 'universally' upon from which angle you look at this problem. From IOASID
-> p.o.v possibly yes, but from device passthrough p.o.v. it's the opposite
-> since the passthrough framework needs to handle devices w/o PASID anyway
-> (or even for device w/ PASID it could send traffic w/o PASID) thus 'universally'
-> makes more sense if the passthrough framework can use one interface of its
-> own to manage GPA mappings for all consumers (apply to the case when a
-> PASID is allowed/authorized).
+  Guest programs the PASID table, sends invalidations when removing
+  mappings which are relayed to the host on the child container. Page
+  faults and response queue would be per container, so if multiple VF per
+  container, we could have one queue for the parent (level-2 faults) and
+  one for each child (level-1 faults).
 
-You correctly named it /dev/ioasid, it is a generic way to allocate,
-manage and assign IOMMU page tables, which when generalized, only some
-of which may consume a limited PASID.
-
-RID and RID,PASID are the same thing, just a small difference in how
-they match TLPs.
-
-Jason
+Thanks,
+Jean
