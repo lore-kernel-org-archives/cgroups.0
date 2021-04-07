@@ -1,19 +1,17 @@
 From: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 Subject: RE: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
  APIs
-Date: Wed, 7 Apr 2021 02:23:06 +0000
-Message-ID: <MWHPR11MB188665040BFD2D7606E8983D8C759@MWHPR11MB1886.namprd11.prod.outlook.com>
-References: <20210331124038.GE1463678@nvidia.com>
- <BN6PR11MB406854CAE9D7CE86BEAB3E23C37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
- <20210401114648.GX1463678@nvidia.com>
- <BN6PR11MB406858FAC3821B84CCC4D30DC37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
- <20210401131533.GD1463678@nvidia.com>
- <BN6PR11MB4068C1A040FF61B4A9ABBD9BC37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
- <20210401134641.GG1463678@nvidia.com>
- <MWHPR11MB1886C0804A0240998C110EE58C7A9@MWHPR11MB1886.namprd11.prod.outlook.com>
- <20210405233946.GE7405@nvidia.com>
- <MWHPR11MB18863645C2C63A89BBA200B08C769@MWHPR11MB1886.namprd11.prod.outlook.com>
- <20210406122117.GM7405@nvidia.com>
+Date: Wed, 7 Apr 2021 08:17:50 +0000
+Message-ID: <MWHPR11MB1886A7E4C6F3E3A81240517B8C759@MWHPR11MB1886.namprd11.prod.outlook.com>
+References: <20210319135432.GT2356281@nvidia.com>
+ <20210319112221.5123b984@jacob-builder> <20210322120300.GU2356281@nvidia.com>
+ <20210324120528.24d82dbd@jacob-builder> <20210329163147.GG2356281@nvidia.com>
+ <MWHPR11MB188639EE54B48B0E1321C8198C7D9@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210330132830.GO2356281@nvidia.com>
+ <MWHPR11MB1886CAD48AFC156BFC7C1D398C7A9@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210405234230.GF7405@nvidia.com>
+ <fa57bde5-472f-6e66-3521-bfac7d6e4f8d@redhat.com>
+ <20210406124251.GO7405@nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
@@ -21,134 +19,110 @@ Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
  s=selector2-intel-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=v99zA+dNTwHdIILhWG0hCwNHQNvFCtkE/1VDw4vyNAc=;
- b=mXaojgGPV5hL+6UV+dZWxDlI1uwdg9XnWbuH3OfIcDsHWjjng7+yE6gNpQQUo1oHPSD2Iz8abEKPBlnxtZuwLwINZlGj0zr/41xCrbjy3Choh82b6PIS6WFiAdnn2k1vqgXmLoRNxxj3zzZZrLO5qFQ+BrFcMv+UGhmUMuJGxjE=
-In-Reply-To: <20210406122117.GM7405-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+ bh=bQFXd0Ztxf4n+0ZhWQnNR6RE0AxFwFoKz0KzltMML8A=;
+ b=OSyg3TLz9GFm2HnC9GGvMcGQ/JHQIuQxedaMdsOIovSC/LF3Ag09YdM5ehWnaApQ6j3s6RXgIY8LX53qv3VN4JrXvNDLKNWtvipO6xACKL8NCyu/qTqesU+6oDPhkpFqFe5sncRC2c9WVWiaGvlchr1PY3okc9j+EyBREP6kd1U=
+In-Reply-To: <20210406124251.GO7405-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Eric Auger <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Jason Wang <jasowang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-> From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> Sent: Tuesday, April 6, 2021 8:21 PM
+> From: Jason Gunthorpe
+> Sent: Tuesday, April 6, 2021 8:43 PM
 >=20
-> On Tue, Apr 06, 2021 at 01:02:05AM +0000, Tian, Kevin wrote:
-> > > From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> > > Sent: Tuesday, April 6, 2021 7:40 AM
+> On Tue, Apr 06, 2021 at 09:35:17AM +0800, Jason Wang wrote:
+>=20
+> > > VFIO and VDPA has no buisness having map/unmap interfaces once we
+> have
+> > > /dev/ioasid. That all belongs in the iosaid side.
 > > >
-> > > On Fri, Apr 02, 2021 at 07:58:02AM +0000, Tian, Kevin wrote:
-> > > > > From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> > > > > Sent: Thursday, April 1, 2021 9:47 PM
-> > > > >
-> > > > > On Thu, Apr 01, 2021 at 01:43:36PM +0000, Liu, Yi L wrote:
-> > > > > > > From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> > > > > > > Sent: Thursday, April 1, 2021 9:16 PM
-> > > > > > >
-> > > > > > > On Thu, Apr 01, 2021 at 01:10:48PM +0000, Liu, Yi L wrote:
-> > > > > > > > > From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> > > > > > > > > Sent: Thursday, April 1, 2021 7:47 PM
-> > > > > > > > [...]
-> > > > > > > > > I'm worried Intel views the only use of PASID in a guest =
-is with
-> > > > > > > > > ENQCMD, but that is not consistent with the industry. We =
-need
-> to
-> > > see
-> > > > > > > > > normal nested PASID support with assigned PCI VFs.
-> > > > > > > >
-> > > > > > > > I'm not quire flow here. Intel also allows PASID usage in g=
-uest
-> > > without
-> > > > > > > > ENQCMD. e.g. Passthru a PF to guest, and use PASID on it
-> without
-> > > > > > > ENQCMD.
-> > > > > > >
-> > > > > > > Then you need all the parts, the hypervisor calls from the vI=
-OMMU,
-> > > and
-> > > > > > > you can't really use a vPASID.
-> > > > > >
-> > > > > > This is a diagram shows the vSVA setup.
-> > > > >
-> > > > > I'm not talking only about vSVA. Generic PASID support with arbit=
-ary
-> > > > > mappings.
-> > > > >
-> > > > > And how do you deal with the vPASID vs pPASID issue if the system
-> has
-> > > > > a mix of physical devices and mdevs?
-> > > > >
-> > > >
-> > > > We plan to support two schemes. One is vPASID identity-mapped to
-> > > > pPASID then the mixed scenario just works, with the limitation of
-> > > > lacking of live migration support. The other is non-identity-mapped
-> > > > scheme, where live migration is supported but physical devices and
-> > > > mdevs should not be mixed in one VM if both expose SVA capability
-> > > > (requires some filtering check in Qemu).
-> > >
-> > > That just becomes "block vPASID support if any device that
-> > > doesn't use ENQCMD is plugged into the guest"
+> > > I know they have those interfaces today, but that doesn't mean we hav=
+e
+> > > to keep using them for PASID use cases, they should be replaced with =
+a
+> > > 'do dma from this pasid on /dev/ioasid' interface certainly not a
+> > > 'here is a pasid from /dev/ioasid, go ahead and configure it youself'
+> > > interface
 > >
-> > The limitation is only for physical device. and in reality it is not th=
-at
-> > bad. To support live migration with physical device we anyway need
-> > additional work to migrate the device state (e.g. based on Max's work),
-> > then it's not unreasonable to also mediate guest programming of
-> > device specific PASID register to enable vPASID (need to translate in
-> > the whole VM lifespan but likely is not a hot path).
+> > So it looks like the PASID was bound to SVA in this design. I think it'=
+s not
+> > necessairly the case:
 >=20
-> IMHO that is pretty unreasonable.. More likely we end up with vPASID
-> tables in each migratable device like KVM has.
-
-just like mdev needs to maintain allowed PASID list, this extends it to
-all migratable devices.
-
+> No, I wish people would stop talking about SVA.
 >=20
-> > > Which needs a special VFIO capability of some kind so qemu knows to
-> > > block it. This really needs to all be layed out together so someone
-> > > can understand it :(
-> >
-> > Or could simply based on whether the VFIO device supports live migratio=
-n.
->=20
-> You need to define affirmative caps that indicate that vPASID will be
-> supported by the VFIO device.
-
-Yes, this is required as I acked in another mail.
-
->=20
-> > > Why doesn't the siov cookbook explaining this stuff??
-> > >
-> > > > We hope the /dev/ioasid can support both schemes, with the minimal
-> > > > requirement of allowing userspace to tag a vPASID to a pPASID and
-> > > > allowing mdev to translate vPASID into pPASID, i.e. not assuming th=
-at
-> > > > the guest will always use pPASID.
-> > >
-> > > What I'm a unclear of is if /dev/ioasid even needs to care about
-> > > vPASID or if vPASID is just a hidden artifact of the KVM connection t=
-o
-> > > setup the translation table and the vIOMMU driver in qemu.
-> >
-> > Not just for KVM. Also required by mdev, which needs to translate
-> > vPASID into pPASID when ENQCMD is not used.
->=20
-> Do we have any mdev's that will do this?
-
-definitely. Actually any mdev which doesn't do ENQCMD needs to do this.
-In normal case, the PASID is programmed to a MMIO register (or in-memory
-context) associate with the backend resource of the mdev. The value=20
-programmed from the guest is vPASID, thus must be translated into pPASID
-before updating the physical register.
-
->=20
-> > should only care about the operations related to pPASID. VFIO could
-> > carry vPASID information to mdev.
->=20
-> It depends how common this is, I suppose
+> SVA and vSVA are a very special narrow configuration of a PASID. There
+> are lots of other PASID configurations! That is the whole point, a
+> PASID is complicated, there are many configuration scenarios, they
+> need to be in one place with a very clearly defined uAPI
 >=20
 
-based on above I think it's a common case.
+I feel it also makes sense to allow a subsystem to specify which configurat=
+ions
+are permitted when allowing a PASID on its device, e.g. excluding things li=
+ke
+GPA mappings that existing subsystems (VFIO/VDPA) already handle well:
+
+- Share GPA mappings between multiple devices (w/ or w/o PASID) for=20
+better IOTLB efficiency;
+
+- Share GPA mappings between transactions w/ PASID and transactions w/o
+PASID from the same device (e.g. GPU) for better IOTLB efficiency;
+
+- Use the same page table for GPA mappings before and after the guest=20
+turns on/off the PASID capability;
+
+All above are given as long as we continue to let VFIO/VDPA manage the
+iommu domain and associated GPA mappings for PASID. The IOMMU driver=20
+already ensures a nested PASID entry linking to the established GPA paging=
+=20
+structure of the domain when the 1st-level pgtable is bound through=20
+/dev/ioasid.=20
+
+In contrast, above merits are lost if forcing a model where GPA mappings
+for PASID must be constructed through /dev/ioasid, as this will lead to
+multiple paging structures for the same GPA mappings implying worse=20
+IOTLB usage and unnecessary cost of invalidations.
+
+Therefore, I envision a scheme where the subsystem could specify=20
+permitted PASID configurations when doing ALLOW_PASID, and then=20
+userspace queries per-PASID capability to learn which operations
+are allowed, e.g.:
+
+1) To enable vSVA, VFIO/VDPA allows pgtable binding and related invalidatio=
+n/
+fault ops through /dev/ioasid;
+
+2) for vDPA control vq usage, no configuration is allowed through /dev/ioas=
+id;
+
+3) for new subsystem which doesn't carry any legacy or similar usage as=20
+VFIO/VDPA, it could permit all configurations through /dev/ioasid including=
+=20
+1st-level binding and 2nd-level mapping ops;
+
+This approach also allows us to grow the uAPI in a staging approach. Now=20
+focus on 1) and 2) as VFIO/VDPA are the only two users for now with good
+legacy to cover the GPA mappings. More ops can be introduced for 3) when=20
+there is a real example to show what exact ops are required for such a new=
+=20
+subsystem.
+
+Is this a good strategy to move forward?
+
+btw this discussion was raised when discussing the I/O page fault handling
+process. Currently the IOMMU layer implements a per-device fault reporting
+mechanism, which requires VFIO to register a handler to receive all faults=
+=20
+on its device and then forwards to ioasid if it's due to 1st-level. Possibl=
+y it=20
+makes more sense to convert it into a per-pgtable reporting scheme, and=20
+then the owner of each pgtable should register its own handler. It means
+for 1) VFIO will register a 2nd-level pgtable handler while /dev/ioasid
+will register a 1st-level pgtable handler, while for 3) /dev/ioasid will re=
+gister=20
+handlers for both 1st-level and 2nd-level pgtable. Jean? also want to know=
+=20
+your thoughts... =20
 
 Thanks
 Kevin
