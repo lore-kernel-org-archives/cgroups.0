@@ -1,66 +1,117 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Wed, 7 Apr 2021 16:36:54 -0300
-Message-ID: <20210407193654.GG282464@nvidia.com>
-References: <20210324120528.24d82dbd@jacob-builder>
- <20210329163147.GG2356281@nvidia.com>
- <MWHPR11MB188639EE54B48B0E1321C8198C7D9@MWHPR11MB1886.namprd11.prod.outlook.com>
- <20210330132830.GO2356281@nvidia.com>
- <MWHPR11MB1886CAD48AFC156BFC7C1D398C7A9@MWHPR11MB1886.namprd11.prod.outlook.com>
- <20210405234230.GF7405@nvidia.com>
- <fa57bde5-472f-6e66-3521-bfac7d6e4f8d@redhat.com>
- <20210406124251.GO7405@nvidia.com>
- <MWHPR11MB1886A7E4C6F3E3A81240517B8C759@MWHPR11MB1886.namprd11.prod.outlook.com>
- <YG39ZtnTuyn5uBOa@myrica>
+From: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Subject: Re: [RFC PATCH v1 00/11] Manage the top tier memory in a tiered
+ memory
+Date: Wed, 7 Apr 2021 15:33:26 -0700
+Message-ID: <c615a610-eb4b-7e1e-16d1-4bc12938b08a@linux.intel.com>
+References: <cover.1617642417.git.tim.c.chen@linux.intel.com>
+ <YGwlGrHtDJPQF7UG@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=euujbp5ifWbE/nYFGO+RbLm5+vvP3TSgbVZNDwFKczM=;
- b=THDHycEP+i9Xg0ob2ax4wnW29tB8MYSz8ME+Iz03t8lRsJi5fk1gIVnw11IiL0vii8NBFZa0agCwg2a0PVWQXxmHneNftOAPqyez3zATYiFaFiCdnrhcWLMmU8/s4Ric+v/dTd8NI6CxUQVWUz42QNkMwkA7S/xdlOcMywTOMy5+NMM4ymUNFx5xj3lvqrApRO0lIhAjHdBxk0IFRSWswrHIojxhogFThhT1uOWoYYJ29CaaebB87wKP4V3/sm9naEk8ZE14+oIbtCU2+zTzNuHaL0Xv60iFYuX7ASsrIrHuUaPlE1x9cphpiS29pMQgFe1cmsueOv10XDo1+oTymA==
-Content-Disposition: inline
-In-Reply-To: <YG39ZtnTuyn5uBOa@myrica>
+In-Reply-To: <YGwlGrHtDJPQF7UG-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jason Wang <jasowang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-On Wed, Apr 07, 2021 at 08:43:50PM +0200, Jean-Philippe Brucker wrote:
 
-> * Get a container handle out of /dev/ioasid (or /dev/iommu, really.)
->   No operation available since we don't know what the device and IOMMU
->   capabilities are.
->
-> * Attach the handle to a VF. With VFIO that would be
->   VFIO_GROUP_SET_CONTAINER. That causes the kernel to associate an IOMMU
->   with the handle, and decide which operations are available.
 
-Right, this is basically the point, - the VFIO container (/dev/vfio)
-and the /dev/ioasid we are talking about have a core of
-similarity. ioasid is the generalized, modernized, and cross-subsystem
-version of the same idea. Instead of calling it "vfio container" we
-call it something that evokes the idea of controlling the iommu.
-
-The issue is to seperate /dev/vfio generic functionality from vfio and
-share it with every subsystem.
-
-It may be that /dev/vfio and /dev/ioasid end up sharing a lot of code,
-with a different IOCTL interface around it. The vfio_iommu_driver_ops
-is not particularly VFIOy.
-
-Creating /dev/ioasid may primarily start as a code reorganization
-exercise.
-
-> * With a map/unmap vIOMMU (or shadow mappings), a single translation level
->   is supported. With a nesting vIOMMU, we're populating the level-2
->   translation (some day maybe by binding the KVM page tables, but
->   currently with map/unmap ioctl).
+On 4/6/21 2:08 AM, Michal Hocko wrote:
+> On Mon 05-04-21 10:08:24, Tim Chen wrote:
+> [...]
+>> To make fine grain cgroup based management of the precious top tier
+>> DRAM memory possible, this patchset adds a few new features:
+>> 1. Provides memory monitors on the amount of top tier memory used per cgroup 
+>>    and by the system as a whole.
+>> 2. Applies soft limits on the top tier memory each cgroup uses 
+>> 3. Enables kswapd to demote top tier pages from cgroup with excess top
+>>    tier memory usages.
 > 
->   Single-level translation needs single VF per container. 
 
-Really? Why?
+Michal,
 
-Jason
+Thanks for giving your feedback.  Much appreciated.
+
+> Could you be more specific on how this interface is supposed to be used?
+
+We created a README section on the cgroup control part of this patchset:
+https://git.kernel.org/pub/scm/linux/kernel/git/vishal/tiering.git/commit/?h=tiering-0.71&id=20f20be02671384470c7cd8f66b56a9061a4071f
+to illustrate how this interface should be used.
+
+The top tier memory used is reported in
+
+memory.toptier_usage_in_bytes
+
+The amount of top tier memory usable by each cgroup without
+triggering page reclaim is controlled by the
+
+memory.toptier_soft_limit_in_bytes 
+
+knob for each cgroup.  
+
+We anticipate that for cgroup v2, we will have
+
+memory_toptier.max  (max allowed top tier memory)
+memory_toptier.high (aggressive page demotion from top tier memory)
+memory_toptier.min  (not to page demote from top tier memory at this threshold) 
+
+this is analogous to existing controllers
+memory.max, memory.high and memory.min
+
+> 
+>> This allows us to provision different amount of top tier memory to each
+>> cgroup according to the cgroup's latency need.
+>>
+>> The patchset is based on cgroup v1 interface. One shortcoming of the v1
+>> interface is the limit on the cgroup is a soft limit, so a cgroup can
+>> exceed the limit quite a bit before reclaim before page demotion reins
+>> it in. 
+> 
+> I have to say that I dislike abusing soft limit reclaim for this. In the
+> past we have learned that the existing implementation is unfixable and
+> changing the existing semantic impossible due to backward compatibility.
+> So I would really prefer the soft limit just find its rest rather than
+> see new potential usecases.
+
+Do you think we can reuse some of the existing soft reclaim machinery
+for the v2 interface?
+
+More particularly, can we treat memory_toptier.high in cgroup v2 as a soft limit?
+We sort how much each mem cgroup exceeds memory_toptier.high and
+go after the cgroup that have largest excess first for page demotion.
+Will appreciate if you can shed some insights on what could go wrong
+with such an approach. 
+
+> 
+> I haven't really looked into details of this patchset but from a cursory
+> look it seems like you are actually introducing a NUMA aware limits into
+> memcg that would control consumption from some nodes differently than
+> other nodes. This would be rather alien concept to the existing memcg
+> infrastructure IMO. It looks like it is fusing borders between memcg and
+> cputset controllers.
+
+Want to make sure I understand what you mean by NUMA aware limits.
+Yes, in the patch set, it does treat the NUMA nodes differently.
+We are putting constraint on the "top tier" RAM nodes vs the lower
+tier PMEM nodes.  Is this what you mean?  I can see it does has
+some flavor of cpuset controller.  In this case, it doesn't explicitly
+set a node as allowed or forbidden as in cpuset, but put some constraints
+on the usage of a group of nodes.  
+
+Do you have suggestions on alternative controller for allocating tiered memory resource?
+
+
+> 
+> You also seem to be basing the interface on the very specific usecase.
+> Can we expect that there will be many different tiers requiring their
+> own balancing?
+> 
+
+You mean more than two tiers of memory? We did think a bit about system
+that has stuff like high bandwidth memory that's faster than DRAM.
+Our thought is usage and freeing of those memory will require 
+explicit assignment (not used by default), so will be outside the
+realm of auto balancing.  So at this point, we think two tiers will be good.
+
+Tim
