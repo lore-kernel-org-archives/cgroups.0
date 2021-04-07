@@ -1,117 +1,64 @@
-From: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [RFC PATCH v1 00/11] Manage the top tier memory in a tiered
- memory
-Date: Wed, 7 Apr 2021 15:33:26 -0700
-Message-ID: <c615a610-eb4b-7e1e-16d1-4bc12938b08a@linux.intel.com>
-References: <cover.1617642417.git.tim.c.chen@linux.intel.com>
- <YGwlGrHtDJPQF7UG@dhcp22.suse.cz>
+From: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: RE: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
+ APIs
+Date: Wed, 7 Apr 2021 23:50:02 +0000
+Message-ID: <MWHPR11MB1886AEAE97A9E6972C63CACF8C759@MWHPR11MB1886.namprd11.prod.outlook.com>
+References: <20210322120300.GU2356281@nvidia.com>
+ <20210324120528.24d82dbd@jacob-builder> <20210329163147.GG2356281@nvidia.com>
+ <MWHPR11MB188639EE54B48B0E1321C8198C7D9@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210330132830.GO2356281@nvidia.com>
+ <MWHPR11MB1886CAD48AFC156BFC7C1D398C7A9@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210405234230.GF7405@nvidia.com>
+ <MWHPR11MB1886CF7C11ECE0396A0215078C769@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210406123451.GN7405@nvidia.com>
+ <MWHPR11MB1886CB8F558C6C17F921F77F8C759@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210407122042.GF7405@nvidia.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <YGwlGrHtDJPQF7UG-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
+ s=selector2-intel-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=72aMzgHYkJPFhSqIJLHWPhwCiZNQvAP+LnWwCgGGmCA=;
+ b=QZW/6RFpPfezEl8zmRceshOUrJuyQxYoWZg/2LN7fYkqYCW/rmsWiUKla0C5IaYIUFnSjZ4SHzajhZMjCCRvLbmIKUcrKIcqY7j6jYbjSqHryDquTeHbVqMW8NBeAYS6SYQcEsdqKfkUBboqlH56GivGlVYYh7jLB9KUHshG2lM=
+In-Reply-To: <20210407122042.GF7405-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jason Wang <jasowang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-
-
-On 4/6/21 2:08 AM, Michal Hocko wrote:
-> On Mon 05-04-21 10:08:24, Tim Chen wrote:
-> [...]
->> To make fine grain cgroup based management of the precious top tier
->> DRAM memory possible, this patchset adds a few new features:
->> 1. Provides memory monitors on the amount of top tier memory used per cgroup 
->>    and by the system as a whole.
->> 2. Applies soft limits on the top tier memory each cgroup uses 
->> 3. Enables kswapd to demote top tier pages from cgroup with excess top
->>    tier memory usages.
-> 
-
-Michal,
-
-Thanks for giving your feedback.  Much appreciated.
-
-> Could you be more specific on how this interface is supposed to be used?
-
-We created a README section on the cgroup control part of this patchset:
-https://git.kernel.org/pub/scm/linux/kernel/git/vishal/tiering.git/commit/?h=tiering-0.71&id=20f20be02671384470c7cd8f66b56a9061a4071f
-to illustrate how this interface should be used.
-
-The top tier memory used is reported in
-
-memory.toptier_usage_in_bytes
-
-The amount of top tier memory usable by each cgroup without
-triggering page reclaim is controlled by the
-
-memory.toptier_soft_limit_in_bytes 
-
-knob for each cgroup.  
-
-We anticipate that for cgroup v2, we will have
-
-memory_toptier.max  (max allowed top tier memory)
-memory_toptier.high (aggressive page demotion from top tier memory)
-memory_toptier.min  (not to page demote from top tier memory at this threshold) 
-
-this is analogous to existing controllers
-memory.max, memory.high and memory.min
-
-> 
->> This allows us to provision different amount of top tier memory to each
->> cgroup according to the cgroup's latency need.
->>
->> The patchset is based on cgroup v1 interface. One shortcoming of the v1
->> interface is the limit on the cgroup is a soft limit, so a cgroup can
->> exceed the limit quite a bit before reclaim before page demotion reins
->> it in. 
-> 
-> I have to say that I dislike abusing soft limit reclaim for this. In the
-> past we have learned that the existing implementation is unfixable and
-> changing the existing semantic impossible due to backward compatibility.
-> So I would really prefer the soft limit just find its rest rather than
-> see new potential usecases.
-
-Do you think we can reuse some of the existing soft reclaim machinery
-for the v2 interface?
-
-More particularly, can we treat memory_toptier.high in cgroup v2 as a soft limit?
-We sort how much each mem cgroup exceeds memory_toptier.high and
-go after the cgroup that have largest excess first for page demotion.
-Will appreciate if you can shed some insights on what could go wrong
-with such an approach. 
-
-> 
-> I haven't really looked into details of this patchset but from a cursory
-> look it seems like you are actually introducing a NUMA aware limits into
-> memcg that would control consumption from some nodes differently than
-> other nodes. This would be rather alien concept to the existing memcg
-> infrastructure IMO. It looks like it is fusing borders between memcg and
-> cputset controllers.
-
-Want to make sure I understand what you mean by NUMA aware limits.
-Yes, in the patch set, it does treat the NUMA nodes differently.
-We are putting constraint on the "top tier" RAM nodes vs the lower
-tier PMEM nodes.  Is this what you mean?  I can see it does has
-some flavor of cpuset controller.  In this case, it doesn't explicitly
-set a node as allowed or forbidden as in cpuset, but put some constraints
-on the usage of a group of nodes.  
-
-Do you have suggestions on alternative controller for allocating tiered memory resource?
-
-
-> 
-> You also seem to be basing the interface on the very specific usecase.
-> Can we expect that there will be many different tiers requiring their
-> own balancing?
-> 
-
-You mean more than two tiers of memory? We did think a bit about system
-that has stuff like high bandwidth memory that's faster than DRAM.
-Our thought is usage and freeing of those memory will require 
-explicit assignment (not used by default), so will be outside the
-realm of auto balancing.  So at this point, we think two tiers will be good.
-
-Tim
+PiBGcm9tOiBKYXNvbiBHdW50aG9ycGUgPGpnZ0BudmlkaWEuY29tPg0KPiBTZW50OiBXZWRuZXNk
+YXksIEFwcmlsIDcsIDIwMjEgODoyMSBQTQ0KPiANCj4gT24gV2VkLCBBcHIgMDcsIDIwMjEgYXQg
+MDI6MDg6MzNBTSArMDAwMCwgVGlhbiwgS2V2aW4gd3JvdGU6DQo+IA0KPiA+ID4gQmVjYXVzZSBp
+ZiB5b3UgZG9uJ3QgdGhlbiB3ZSBlbnRlciBpbnNhbmUgd29ybGQgd2hlcmUgYSBQQVNJRCBpcyBi
+ZWluZw0KPiA+ID4gY3JlYXRlZCB1bmRlciAvZGV2L2lvYXNpZCBidXQgaXRzIHRyYW5zbGF0aW9u
+IHBhdGggZmxvd3MgdGhyb3VnaCBzZXR1cA0KPiA+ID4gZG9uZSBieSBWRklPIGFuZCB0aGUgd2hv
+bGUgdXNlciBBUEkgYmVjb21lcyBhbiBpbmNvbXByZWhlbnNpYmxlDQo+IG1lc3MuDQo+ID4gPg0K
+PiA+ID4gSG93IHdpbGwgeW91IGV2ZW4gYXNzb2NpYXRlIHRoZSBQQVNJRCB3aXRoIHRoZSBvdGhl
+ciB0cmFuc2xhdGlvbj8/DQo+ID4NCj4gPiBQQVNJRCBpcyBhdHRhY2hlZCB0byBhIHNwZWNpZmlj
+IGlvbW11IGRvbWFpbiAoY3JlYXRlZCBieSBWRklPL1ZEUEEpLA0KPiB3aGljaA0KPiA+IGhhcyBH
+UEEtPkhQQSBtYXBwaW5ncyBhbHJlYWR5IGNvbmZpZ3VyZWQuIElmIHdlIHZpZXcgdGhhdCBtYXBw
+aW5nIGFzIGFuDQo+ID4gYXR0cmlidXRlIG9mIHRoZSBpb21tdSBkb21haW4sIGl0J3MgcmVhc29u
+YWJsZSB0byBoYXZlIHRoZSB1c2Vyc3BhY2UtDQo+IGJvdW5kDQo+ID4gcGd0YWJsZSB0aHJvdWdo
+IC9kZXYvaW9hc2lkIHRvIG5lc3Qgb24gaXQuDQo+IA0KPiBBIHVzZXIgY29udHJvbGxlZCBwYWdl
+IHRhYmxlIHNob3VsZCBhYnNvbHV0ZWx5IG5vdCBiZSBhbiBhdHRyaWJ1dGUgb2YNCj4gYSBoaWRk
+ZW4ga2VybmVsIG9iamVjdCwgbm9yIHNob3VsZCB0d28gcGFydHMgb2YgdGhlIGtlcm5lbCBzaWxl
+bnRseQ0KPiBjb25uZWN0IHRvIGVhY2ggb3RoZXIgdmlhIGEgaGlkZGVuIGludGVybmFsIG9iamVj
+dHMgbGlrZSB0aGlzLg0KPiANCj4gU2VjdXJpdHkgaXMgaW1wb3J0YW50IC0gdGhlIGtpbmQgb2Yg
+Y29ubmVjdGlvbiBtdXN0IHVzZSBzb21lIGV4cGxpY2l0DQo+IEZEIGF1dGhvcml6YXRpb24gdG8g
+YWNjZXNzIHNoYXJlZCBvYmplY3RzLCBub3QgYmUgbWFkZSBpbXBsaWNpdCENCj4gDQo+IElNSE8g
+dGhpcyBkaXJlY3Rpb24gaXMgYSBkZWFkIGVuZCBmb3IgdGhpcyByZWFzb24uDQo+IA0KDQpDb3Vs
+ZCB5b3UgZWxhYm9yYXRlIHdoYXQgZXhhY3Qgc2VjdXJpdHkgcHJvYmxlbSBpcyBicm91Z2h0IHdp
+dGggdGhpcyANCmFwcHJvYWNoPyBJc24ndCBBTExPV19QQVNJRCB0aGUgYXV0aG9yaXphdGlvbiBp
+bnRlcmZhY2UgZm9yIHRoZSANCmNvbm5lY3Rpb24/DQoNCkJhc2VkIG9uIGFsbCB5b3VyIHJlcGxp
+ZXMgbm93IEkgc2VlIHdoYXQgeW91IGFjdHVhbGx5IHdhbnQgaXMgZ2VuZXJhbGl6aW5nDQphbGwg
+SU9NTVUgcmVsYXRlZCBzdHVmZiB0aHJvdWdoIC9kZXYvaW9hc2lkIChzb3J0IG9mIC9kZXYvaW9t
+bXUpLCB3aGljaA0KcmVxdWlyZXMgZmFjdG9yaW5nIG91dCB0aGUgdmZpb19pb21tdV90eXBlMSBp
+bnRvIHRoZSBnZW5lcmFsIHBhcnQuIFRoaXMgaXMNCmEgaHVnZSB3b3JrLg0KDQpJcyBpdCByZWFs
+bHkgdGhlIG9ubHkgcHJhY3RpY2UgaW4gTGludXggdGhhdCBhbnkgbmV3IGZlYXR1cmUgaGFzIHRv
+IGJlDQpibG9ja2VkIGFzIGxvbmcgYXMgYSByZWZhY3RvcmluZyB3b3JrIGlzIGlkZW50aWZpZWQ/
+IERvbid0IHBlb3BsZSBhY2NlcHQNCmFueSBiYWxhbmNlIGJldHdlZW4gZW5hYmxpbmcgbmV3IGZl
+YXR1cmVzIGFuZCBjb21wbGV0aW5nIHJlZmFjdG9yaW5nDQp3b3JrIHRocm91Z2ggYSBzdGFnaW5n
+IGFwcHJvYWNoLCBhcyBsb25nIGFzIHdlIGRvbid0IGludHJvZHVjZSBhbiB1QVBJDQpzcGVjaWZp
+Y2FsbHkgZm9yIHRoZSBzdGFnaW5nIHB1cnBvc2U/IOKYuQ0KDQpUaGFua3MNCktldmluDQo=
