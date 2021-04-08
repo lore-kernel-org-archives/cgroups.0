@@ -1,165 +1,67 @@
-From: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [RFC PATCH v1 00/11] Manage the top tier memory in a tiered
- memory
-Date: Thu, 8 Apr 2021 13:52:33 +0200
-Message-ID: <YG7ugXZZ9BcXyGGk@dhcp22.suse.cz>
-References: <cover.1617642417.git.tim.c.chen@linux.intel.com>
- <YGwlGrHtDJPQF7UG@dhcp22.suse.cz>
- <c615a610-eb4b-7e1e-16d1-4bc12938b08a@linux.intel.com>
+From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Subject: [PATCH] mm: page_counter: mitigate consequences of a page_counter underflow
+Date: Thu,  8 Apr 2021 10:31:55 -0400
+Message-ID: <20210408143155.2679744-1-hannes@cmpxchg.org>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1617882754; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=2Vxf/Rtqoq9cSHpyTLbA+D/Tz1bK6eTu2aX5QUqZu3s=;
-        b=byyTyOdY+AS9gT2WSkbCuGKS135Due4isvhpfxgM4HuYBanvO/ML3RrZ/mPrT+DV0wAtu9
-        aaqsWKNPcs/YgwjJLv8d5LxDyIGAhS7dryABfKL86abWEO49l1n2HadFwVXL+Cvn4ovBYI
-        7kc5ho0cbjGcBg6cxziVvRTCA8pJDtw=
-Content-Disposition: inline
-In-Reply-To: <c615a610-eb4b-7e1e-16d1-4bc12938b08a-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=btC50RWZIR531OhYeaaK7FrT2NEPi0tjXTwyDrbtV5o=;
+        b=i6e9rr/E1F5vh2gsAqs1AjButTuV2db5PXnLnGsrylcSpVrAPBMDWw7TlkxlPuEcfR
+         69vzlUrbGFl3mdMfMTrED2E20o/836zklqnPuO8grp+mwVmWtAl9sMJVQGN2R4Dfib4q
+         Osvj9Hy/tqt2ZffewcVDUwMkxVb1ZeXE1xfdOe+xF3NssK0biDNoBBJm2sBSeWzjxNij
+         nr9QqJj/dqmY/PhUHIQC7nJV/X2Y7+GSQPCA2WhHya1WL9wC13mjR7Cy40Od+40yG4kd
+         Csi505C9RBKkqCoYQSty2edESBk7g/mzSEKx6/oZPMUVrtNTtAaw7umqVm4t7n/HereL
+         hQBg==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, kernel-team-b10kYP2dOMg@public.gmane.org
 
-On Wed 07-04-21 15:33:26, Tim Chen wrote:
-> 
-> 
-> On 4/6/21 2:08 AM, Michal Hocko wrote:
-> > On Mon 05-04-21 10:08:24, Tim Chen wrote:
-> > [...]
-> >> To make fine grain cgroup based management of the precious top tier
-> >> DRAM memory possible, this patchset adds a few new features:
-> >> 1. Provides memory monitors on the amount of top tier memory used per cgroup 
-> >>    and by the system as a whole.
-> >> 2. Applies soft limits on the top tier memory each cgroup uses 
-> >> 3. Enables kswapd to demote top tier pages from cgroup with excess top
-> >>    tier memory usages.
-> > 
-> 
-> Michal,
-> 
-> Thanks for giving your feedback.  Much appreciated.
-> 
-> > Could you be more specific on how this interface is supposed to be used?
-> 
-> We created a README section on the cgroup control part of this patchset:
-> https://git.kernel.org/pub/scm/linux/kernel/git/vishal/tiering.git/commit/?h=tiering-0.71&id=20f20be02671384470c7cd8f66b56a9061a4071f
-> to illustrate how this interface should be used.
+When the unsigned page_counter underflows, even just by a few pages, a
+cgroup will not be able to run anything afterwards and trigger the OOM
+killer in a loop.
 
-I have to confess I didn't get to look at demotion patches yet.
+Underflows shouldn't happen, but when they do in practice, we may just
+be off by a small amount that doesn't interfere with the normal
+operation - consequences don't need to be that dire.
 
-> The top tier memory used is reported in
-> 
-> memory.toptier_usage_in_bytes
-> 
-> The amount of top tier memory usable by each cgroup without
-> triggering page reclaim is controlled by the
-> 
-> memory.toptier_soft_limit_in_bytes 
+Reset the page_counter to 0 upon underflow. We'll issue a warning that
+the accounting will be off and then try to keep limping along.
 
-Are you trying to say that soft limit acts as some sort of guarantee?
-Does that mean that if the memcg is under memory pressure top tiear
-memory is opted out from any reclaim if the usage is not in excess?
+[ We used to do this with the original res_counter, where it was a
+  more straight-forward correction inside the spinlock section. I
+  didn't carry it forward into the lockless page counters for
+  simplicity, but it turns out this is quite useful in practice. ]
 
-From you previous email it sounds more like the limit is evaluated on
-the global memory pressure to balance specific memcgs which are in
-excess when trying to reclaim/demote a toptier numa node.
+Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+---
+ mm/page_counter.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-Soft limit reclaim has several problems. Those are historical and
-therefore the behavior cannot be changed. E.g. go after the biggest
-excessed memcg (with priority 0 - aka potential full LRU scan) and then
-continue with a normal reclaim. This can be really disruptive to the top
-user.
-
-So you can likely define a more sane semantic. E.g. push back memcgs
-proporitional to their excess but then we have two different soft limits
-behavior which is bad as well. I am not really sure there is a sensible
-way out by (ab)using soft limit here.
-
-Also I am not really sure how this is going to be used in practice.
-There is no soft limit by default. So opting in would effectivelly
-discriminate those memcgs. There has been a similar problem with the
-soft limit we have in general. Is this really what you are looing for?
-What would be a typical usecase?
-
-[...]
-> >> The patchset is based on cgroup v1 interface. One shortcoming of the v1
-> >> interface is the limit on the cgroup is a soft limit, so a cgroup can
-> >> exceed the limit quite a bit before reclaim before page demotion reins
-> >> it in. 
-> > 
-> > I have to say that I dislike abusing soft limit reclaim for this. In the
-> > past we have learned that the existing implementation is unfixable and
-> > changing the existing semantic impossible due to backward compatibility.
-> > So I would really prefer the soft limit just find its rest rather than
-> > see new potential usecases.
-> 
-> Do you think we can reuse some of the existing soft reclaim machinery
-> for the v2 interface?
-> 
-> More particularly, can we treat memory_toptier.high in cgroup v2 as a soft limit?
-
-No, you should follow existing limits semantics. High limit acts as a
-allocation throttling interface.
-
-> We sort how much each mem cgroup exceeds memory_toptier.high and
-> go after the cgroup that have largest excess first for page demotion.
-> Will appreciate if you can shed some insights on what could go wrong
-> with such an approach. 
-
-This cannot work as a thorttling interface.
+diff --git a/mm/page_counter.c b/mm/page_counter.c
+index c6860f51b6c6..7d83641eb86b 100644
+--- a/mm/page_counter.c
++++ b/mm/page_counter.c
+@@ -52,9 +52,13 @@ void page_counter_cancel(struct page_counter *counter, unsigned long nr_pages)
+ 	long new;
  
-> > I haven't really looked into details of this patchset but from a cursory
-> > look it seems like you are actually introducing a NUMA aware limits into
-> > memcg that would control consumption from some nodes differently than
-> > other nodes. This would be rather alien concept to the existing memcg
-> > infrastructure IMO. It looks like it is fusing borders between memcg and
-> > cputset controllers.
-> 
-> Want to make sure I understand what you mean by NUMA aware limits.
-> Yes, in the patch set, it does treat the NUMA nodes differently.
-> We are putting constraint on the "top tier" RAM nodes vs the lower
-> tier PMEM nodes.  Is this what you mean?
-
-What I am trying to say (and I have brought that up when demotion has been
-discussed at LSFMM) is that the implementation shouldn't be PMEM aware.
-The specific technology shouldn't be imprinted into the interface.
-Fundamentally you are trying to balance memory among NUMA nodes as we do
-not have other abstraction to use. So rather than talking about top,
-secondary, nth tier we have different NUMA nodes with different
-characteristics and you want to express your "priorities" for them.
-
-> I can see it does has
-> some flavor of cpuset controller.  In this case, it doesn't explicitly
-> set a node as allowed or forbidden as in cpuset, but put some constraints
-> on the usage of a group of nodes.  
-> 
-> Do you have suggestions on alternative controller for allocating tiered memory resource?
+ 	new = atomic_long_sub_return(nr_pages, &counter->usage);
+-	propagate_protected_usage(counter, new);
+ 	/* More uncharges than charges? */
+-	WARN_ON_ONCE(new < 0);
++	if (WARN_ONCE(new < 0, "page_counter underflow: %ld nr_pages=%lu\n",
++		      new, nr_pages)) {
++		new = 0;
++		atomic_long_set(&counter->usage, new);
++	}
++	propagate_protected_usage(counter, new);
+ }
  
-I am not really sure what would be the best interface to be honest.
-Maybe we want to carve this into memcg in some form of node priorities
-for the reclaim. Any of the existing limits is numa aware so far. Maybe
-we want to say hammer this node more than others if there is a memory
-pressure. Not sure that would help you particular usecase though.
-
-> > You also seem to be basing the interface on the very specific usecase.
-> > Can we expect that there will be many different tiers requiring their
-> > own balancing?
-> > 
-> 
-> You mean more than two tiers of memory? We did think a bit about system
-> that has stuff like high bandwidth memory that's faster than DRAM.
-> Our thought is usage and freeing of those memory will require 
-> explicit assignment (not used by default), so will be outside the
-> realm of auto balancing.  So at this point, we think two tiers will be good.
-
-Please keep in mind that once there is an interface it will be
-impossible to change in the future. So do not bind yourself to the 2
-tier setups that you have in hands right now.
-
+ /**
 -- 
-Michal Hocko
-SUSE Labs
+2.31.1
+
