@@ -1,64 +1,54 @@
-From: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: RE: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
- APIs
-Date: Wed, 7 Apr 2021 23:50:02 +0000
-Message-ID: <MWHPR11MB1886AEAE97A9E6972C63CACF8C759@MWHPR11MB1886.namprd11.prod.outlook.com>
-References: <20210322120300.GU2356281@nvidia.com>
- <20210324120528.24d82dbd@jacob-builder> <20210329163147.GG2356281@nvidia.com>
- <MWHPR11MB188639EE54B48B0E1321C8198C7D9@MWHPR11MB1886.namprd11.prod.outlook.com>
- <20210330132830.GO2356281@nvidia.com>
- <MWHPR11MB1886CAD48AFC156BFC7C1D398C7A9@MWHPR11MB1886.namprd11.prod.outlook.com>
- <20210405234230.GF7405@nvidia.com>
- <MWHPR11MB1886CF7C11ECE0396A0215078C769@MWHPR11MB1886.namprd11.prod.outlook.com>
- <20210406123451.GN7405@nvidia.com>
- <MWHPR11MB1886CB8F558C6C17F921F77F8C759@MWHPR11MB1886.namprd11.prod.outlook.com>
- <20210407122042.GF7405@nvidia.com>
+From: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH -next] cgroup/cpuset: fix typos in comments
+Date: Thu, 8 Apr 2021 16:03:46 +0800
+Message-ID: <20210408080346.166046-1-lujialin4@huawei.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
- s=selector2-intel-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=72aMzgHYkJPFhSqIJLHWPhwCiZNQvAP+LnWwCgGGmCA=;
- b=QZW/6RFpPfezEl8zmRceshOUrJuyQxYoWZg/2LN7fYkqYCW/rmsWiUKla0C5IaYIUFnSjZ4SHzajhZMjCCRvLbmIKUcrKIcqY7j6jYbjSqHryDquTeHbVqMW8NBeAYS6SYQcEsdqKfkUBboqlH56GivGlVYYh7jLB9KUHshG2lM=
-In-Reply-To: <20210407122042.GF7405-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Jason Wang <jasowang-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+Cc: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Wang Weiyang <wangweiyang2-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-PiBGcm9tOiBKYXNvbiBHdW50aG9ycGUgPGpnZ0BudmlkaWEuY29tPg0KPiBTZW50OiBXZWRuZXNk
-YXksIEFwcmlsIDcsIDIwMjEgODoyMSBQTQ0KPiANCj4gT24gV2VkLCBBcHIgMDcsIDIwMjEgYXQg
-MDI6MDg6MzNBTSArMDAwMCwgVGlhbiwgS2V2aW4gd3JvdGU6DQo+IA0KPiA+ID4gQmVjYXVzZSBp
-ZiB5b3UgZG9uJ3QgdGhlbiB3ZSBlbnRlciBpbnNhbmUgd29ybGQgd2hlcmUgYSBQQVNJRCBpcyBi
-ZWluZw0KPiA+ID4gY3JlYXRlZCB1bmRlciAvZGV2L2lvYXNpZCBidXQgaXRzIHRyYW5zbGF0aW9u
-IHBhdGggZmxvd3MgdGhyb3VnaCBzZXR1cA0KPiA+ID4gZG9uZSBieSBWRklPIGFuZCB0aGUgd2hv
-bGUgdXNlciBBUEkgYmVjb21lcyBhbiBpbmNvbXByZWhlbnNpYmxlDQo+IG1lc3MuDQo+ID4gPg0K
-PiA+ID4gSG93IHdpbGwgeW91IGV2ZW4gYXNzb2NpYXRlIHRoZSBQQVNJRCB3aXRoIHRoZSBvdGhl
-ciB0cmFuc2xhdGlvbj8/DQo+ID4NCj4gPiBQQVNJRCBpcyBhdHRhY2hlZCB0byBhIHNwZWNpZmlj
-IGlvbW11IGRvbWFpbiAoY3JlYXRlZCBieSBWRklPL1ZEUEEpLA0KPiB3aGljaA0KPiA+IGhhcyBH
-UEEtPkhQQSBtYXBwaW5ncyBhbHJlYWR5IGNvbmZpZ3VyZWQuIElmIHdlIHZpZXcgdGhhdCBtYXBw
-aW5nIGFzIGFuDQo+ID4gYXR0cmlidXRlIG9mIHRoZSBpb21tdSBkb21haW4sIGl0J3MgcmVhc29u
-YWJsZSB0byBoYXZlIHRoZSB1c2Vyc3BhY2UtDQo+IGJvdW5kDQo+ID4gcGd0YWJsZSB0aHJvdWdo
-IC9kZXYvaW9hc2lkIHRvIG5lc3Qgb24gaXQuDQo+IA0KPiBBIHVzZXIgY29udHJvbGxlZCBwYWdl
-IHRhYmxlIHNob3VsZCBhYnNvbHV0ZWx5IG5vdCBiZSBhbiBhdHRyaWJ1dGUgb2YNCj4gYSBoaWRk
-ZW4ga2VybmVsIG9iamVjdCwgbm9yIHNob3VsZCB0d28gcGFydHMgb2YgdGhlIGtlcm5lbCBzaWxl
-bnRseQ0KPiBjb25uZWN0IHRvIGVhY2ggb3RoZXIgdmlhIGEgaGlkZGVuIGludGVybmFsIG9iamVj
-dHMgbGlrZSB0aGlzLg0KPiANCj4gU2VjdXJpdHkgaXMgaW1wb3J0YW50IC0gdGhlIGtpbmQgb2Yg
-Y29ubmVjdGlvbiBtdXN0IHVzZSBzb21lIGV4cGxpY2l0DQo+IEZEIGF1dGhvcml6YXRpb24gdG8g
-YWNjZXNzIHNoYXJlZCBvYmplY3RzLCBub3QgYmUgbWFkZSBpbXBsaWNpdCENCj4gDQo+IElNSE8g
-dGhpcyBkaXJlY3Rpb24gaXMgYSBkZWFkIGVuZCBmb3IgdGhpcyByZWFzb24uDQo+IA0KDQpDb3Vs
-ZCB5b3UgZWxhYm9yYXRlIHdoYXQgZXhhY3Qgc2VjdXJpdHkgcHJvYmxlbSBpcyBicm91Z2h0IHdp
-dGggdGhpcyANCmFwcHJvYWNoPyBJc24ndCBBTExPV19QQVNJRCB0aGUgYXV0aG9yaXphdGlvbiBp
-bnRlcmZhY2UgZm9yIHRoZSANCmNvbm5lY3Rpb24/DQoNCkJhc2VkIG9uIGFsbCB5b3VyIHJlcGxp
-ZXMgbm93IEkgc2VlIHdoYXQgeW91IGFjdHVhbGx5IHdhbnQgaXMgZ2VuZXJhbGl6aW5nDQphbGwg
-SU9NTVUgcmVsYXRlZCBzdHVmZiB0aHJvdWdoIC9kZXYvaW9hc2lkIChzb3J0IG9mIC9kZXYvaW9t
-bXUpLCB3aGljaA0KcmVxdWlyZXMgZmFjdG9yaW5nIG91dCB0aGUgdmZpb19pb21tdV90eXBlMSBp
-bnRvIHRoZSBnZW5lcmFsIHBhcnQuIFRoaXMgaXMNCmEgaHVnZSB3b3JrLg0KDQpJcyBpdCByZWFs
-bHkgdGhlIG9ubHkgcHJhY3RpY2UgaW4gTGludXggdGhhdCBhbnkgbmV3IGZlYXR1cmUgaGFzIHRv
-IGJlDQpibG9ja2VkIGFzIGxvbmcgYXMgYSByZWZhY3RvcmluZyB3b3JrIGlzIGlkZW50aWZpZWQ/
-IERvbid0IHBlb3BsZSBhY2NlcHQNCmFueSBiYWxhbmNlIGJldHdlZW4gZW5hYmxpbmcgbmV3IGZl
-YXR1cmVzIGFuZCBjb21wbGV0aW5nIHJlZmFjdG9yaW5nDQp3b3JrIHRocm91Z2ggYSBzdGFnaW5n
-IGFwcHJvYWNoLCBhcyBsb25nIGFzIHdlIGRvbid0IGludHJvZHVjZSBhbiB1QVBJDQpzcGVjaWZp
-Y2FsbHkgZm9yIHRoZSBzdGFnaW5nIHB1cnBvc2U/IOKYuQ0KDQpUaGFua3MNCktldmluDQo=
+Change hierachy to hierarchy and unrechable to unreachable,
+no functionality changed.
+
+Signed-off-by: Lu Jialin <lujialin4-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+---
+ kernel/cgroup/cpuset.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/kernel/cgroup/cpuset.c b/kernel/cgroup/cpuset.c
+index 5258b68153e0..a945504c0ae7 100644
+--- a/kernel/cgroup/cpuset.c
++++ b/kernel/cgroup/cpuset.c
+@@ -585,7 +585,7 @@ static int validate_change(struct cpuset *cur, struct cpuset *trial)
+ 
+ 	par = parent_cs(cur);
+ 
+-	/* On legacy hiearchy, we must be a subset of our parent cpuset. */
++	/* On legacy hierarchy, we must be a subset of our parent cpuset. */
+ 	ret = -EACCES;
+ 	if (!is_in_v2_mode() && !is_cpuset_subset(trial, par))
+ 		goto out;
+@@ -1726,7 +1726,7 @@ static void update_tasks_nodemask(struct cpuset *cs)
+  * When configured nodemask is changed, the effective nodemasks of this cpuset
+  * and all its descendants need to be updated.
+  *
+- * On legacy hiearchy, effective_mems will be the same with mems_allowed.
++ * On legacy hierarchy, effective_mems will be the same with mems_allowed.
+  *
+  * Called with cpuset_mutex held
+  */
+@@ -2500,7 +2500,7 @@ static s64 cpuset_read_s64(struct cgroup_subsys_state *css, struct cftype *cft)
+ 		BUG();
+ 	}
+ 
+-	/* Unrechable but makes gcc happy */
++	/* Unreachable but makes gcc happy */
+ 	return 0;
+ }
+ 
+-- 
+2.17.1
+
