@@ -1,46 +1,72 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] mm: page_counter: mitigate consequences of a page_counter underflow
-Date: Thu, 8 Apr 2021 09:24:45 -0700
-Message-ID: <CALvZod4W+7_EZUmUQLoz-9-C2LeMtqbdvFxK31m4qV6qHOrejQ@mail.gmail.com>
-References: <20210408143155.2679744-1-hannes@cmpxchg.org>
+From: yulei zhang <yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC 0/1] Introduce new attribute "priority" to control group
+Date: Fri, 9 Apr 2021 00:49:30 +0800
+Message-ID: <CACZOiM0xA+6kAeM2sk3SfVV9Vu+5dOzC7APoNmB0Zw3jQKbg+w@mail.gmail.com>
+References: <cover.1617355387.git.yuleixzhang@tencent.com> <YGn3iHBp5UweFv2/@mtj.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
+        d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=OhP7GymXFSKtZlfnt0/yi6SF4MHiLfNobLLfZttkPNg=;
-        b=pNP3+nw0beqqrktG7Qie1dyDV4VmIMTq0UwmxM/5Sy5GbRLRfwgh+YWj0pIv0+jMw9
-         9WCqIIzsivso6CM/3M1eM/MyxDQaZtoRm3iZj8GpXZGLq6USw578MYrsIwfXNlFIulIW
-         +n/4hMXYlP5tphCL1r7xo3d4yFIedzoQ0a+4oFS8tmLcnsC0sIEBa1ZY7vW5CXPGFLzJ
-         XiT4U5W3LAeXk/7KXilNkSqdc/gXcnKNG6GNEyGR/lbZJB1QcGjyTjAad7FcLS7ZJMWB
-         4RMNOqfrgOqnCQ/w7oNhEe3XoBeJqmHp2rYfhs3bNxY8mlIWL6O4nxCOB7PN7PhBZgbM
-         XaBg==
-In-Reply-To: <20210408143155.2679744-1-hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+        bh=BvgEZr+K7yzxkeeyCsAz2iteiOgpmUKfpWfzbHaQazM=;
+        b=GM0Wm4vFW/wf2eICOC4yCXvbYGJwlw9Qzt8P3f39zrRJ6Gza4ov6DMssm5SoYpypYQ
+         ejN+t5t7XH1HFSXNTlX+8YT+tcY6j+DnuxieEZsXpF7TqjI7aoLMPCvN5XTXl5z89ddw
+         aOxex4Y4omGcHPFpe+7B/rEQJx+Wz4Fe8JPKPwTR1HbRrWwJTBxXyvZkFYoxmeEdmf70
+         DCPwDo1keA2LHj6ufy6XOIXsSlLF0zbDqcQ5d/vfgkY//tbOIZqru1jm0YvwwUWatsxe
+         HipsoNE2hu8vclcBy+TtkXtrPgYu7K7VTICtJ9+DMrFSBRSleeBivrlHYJ4/faSPFVGD
+         HgzA==
+In-Reply-To: <YGn3iHBp5UweFv2/@mtj.duckdns.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Cc: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Hugh Dickins <hughd-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Kernel Team <kernel-team-b10kYP2dOMg@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, benbjiang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, Wanpeng Li <kernellwp-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Haiwei Li <lihaiwei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linussli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, herberthbli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, lennychen-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, allanyuliu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-On Thu, Apr 8, 2021 at 7:31 AM Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org> wrote:
+On Mon, Apr 5, 2021 at 1:29 AM Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
 >
-> When the unsigned page_counter underflows, even just by a few pages, a
-> cgroup will not be able to run anything afterwards and trigger the OOM
-> killer in a loop.
+> On Sun, Apr 04, 2021 at 10:51:53PM +0800, yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org wrote:
+> > From: Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+> >
+> > This patch is the init patch of a series which we want to present the idea
+> > of prioritized tasks management. As the cloud computing introduces intricate
+> > configurations to provide customized infrasturctures and friendly user
+> > experiences, in order to maximum utilization of sources and improve the
+> > efficiency of arrangement, we add the new attribute "priority" to control
+> > group, which could be used as graded factor by subssystems to manipulate
+> > the behaviors of processes.
+> >
+> > Base on the order of priority, we could apply different resource configuration
+> > strategies, sometimes it will be more accuracy instead of fine tuning in each
+> > subsystem. And of course to set fundamental rules, for example, high priority
+> > cgroups could seize the resource from cgroups with lower priority all the time.
+> >
+> > The default value of "priority" is set to 0 which means the highest
+> > priority, and the totally levels of priority is defined by
+> > CGROUP_PRIORITY_MAX. Each subsystem could register callback to receive the
+> > priority change notification for their own purposes.
+> >
+> > We would like to send out the corresponding features in the coming weeks,
+> > which are relaying on the priority settings. For example, the prioritized
+> > oom, memory reclaiming and cpu schedule strategy.
 >
-> Underflows shouldn't happen, but when they do in practice, we may just
-> be off by a small amount that doesn't interfere with the normal
-> operation - consequences don't need to be that dire.
+> We've been trying really hard to give each interface semantics which is
+> logical and describable independent of the implementation details. This runs
+> precisely against that.
 >
-> Reset the page_counter to 0 upon underflow. We'll issue a warning that
-> the accounting will be off and then try to keep limping along.
+> Thanks.
 >
-> [ We used to do this with the original res_counter, where it was a
->   more straight-forward correction inside the spinlock section. I
->   didn't carry it forward into the lockless page counters for
->   simplicity, but it turns out this is quite useful in practice. ]
->
-> Signed-off-by: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
+> --
+> tejun
 
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Thanks for the feedback. I am afraid that I didn't express myself clearly
+about the idea of the priority attribute. We don't want to overwrite
+the semantics
+for each interface in cgroup, just hope to introduce another factor that could
+help us apply the management strategy. For example, In our production
+environment
+K8s has its own priority class to implement the Qos, and it will be
+very helpful
+if control group could provide corresponding priority to assist the
+implementation.
+-Yulei
