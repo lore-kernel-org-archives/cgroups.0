@@ -1,148 +1,204 @@
-From: Waiman Long <longman@redhat.com>
-Subject: [PATCH 2/5] mm/memcg: Introduce obj_cgroup_uncharge_mod_state()
-Date: Fri,  9 Apr 2021 19:18:39 -0400
-Message-ID: <20210409231842.8840-3-longman@redhat.com>
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH 5/5] mm/memcg: Optimize user context object stock access
+Date: Fri,  9 Apr 2021 19:18:42 -0400
+Message-ID: <20210409231842.8840-6-longman@redhat.com>
 References: <20210409231842.8840-1-longman@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618010377;
+        s=mimecast20190719; t=1618010383;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=ptUYwKpXpvlSb7C/Hll6413ogimsLnOMUVrWZt43Ltc=;
-        b=W/HDZWQKhlmH+NpEwU3IXtZabPxWuZh/K8ysbil6L0njazV42eAuXB2WLPzn/c5NBVJcuw
-        YDw5ObAVqUpbVjitGQe9QxGxpxq598UX4M0eg7C3dLEqyRc4e+qtHDS/2s9mWA1LNrc5W9
-        pxkZCkAPbF5C6yoV1yQ/Lb9BFY75ncI=
-In-Reply-To: <20210409231842.8840-1-longman@redhat.com>
+        bh=VV6+ghNH1/AQ98hZ8A1K9EsRVAqRThkZsOYM3AOhXtQ=;
+        b=ZKFbrfcmVVTZHicbPfReb1uP9O7gruBZgmlfsfPvmSB3OyGXjp8Hhg4TTyu7FHAQdmgiPN
+        JMMGzU/jLWkbgQpjSLwrbMtiA6ZJFGLTPMLXYm2KUWwUvwmwCelpT7yc5RiTIbQRFl7Ls/
+        1LWFjIrupB4eaf3eWY/C1kI46d2TJAs=
+In-Reply-To: <20210409231842.8840-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Vlastimil Babka <vbabka@suse.cz>, Roman Gushchin <guro@fb.com>
-Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Alex Shi <alex.shi@linux.alibaba.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Wei Yang <richard.weiyang@gmail.com>, Masayoshi Mizuma <msys.mizuma@gmail.com>, Waiman Long <longman@redhat.com>
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-In memcg_slab_free_hook()/pcpu_memcg_free_hook(), obj_cgroup_uncharge()
-is followed by mod_objcg_state()/mod_memcg_state(). Each of these
-function call goes through a separate irq_save/irq_restore cycle. That
-is inefficient.  Introduce a new function obj_cgroup_uncharge_mod_state()
-that combines them with a single irq_save/irq_restore cycle.
+Most kmem_cache_alloc() calls are from user context. With instrumentation
+enabled, the measured amount of kmem_cache_alloc() calls from non-task
+context was about 0.01% of the total.
 
-Signed-off-by: Waiman Long <longman@redhat.com>
+The irq disable/enable sequence used in this case to access content
+from object stock is slow.  To optimize for user context access, there
+are now two object stocks for task context and interrupt context access
+respectively.
+
+The task context object stock can be accessed after disabling preemption
+which is cheap in non-preempt kernel. The interrupt context object stock
+can only be accessed after disabling interrupt. User context code can
+access interrupt object stock, but not vice versa.
+
+The mod_objcg_state() function is also modified to make sure that memcg
+and lruvec stat updates are done with interrupted disabled.
+
+The downside of this change is that there are more data stored in local
+object stocks and not reflected in the charge counter and the vmstat
+arrays.  However, this is a small price to pay for better performance.
+
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/memcontrol.h |  2 ++
- mm/memcontrol.c            | 31 +++++++++++++++++++++++++++----
- mm/percpu.c                |  9 ++-------
- mm/slab.h                  |  6 +++---
- 4 files changed, 34 insertions(+), 14 deletions(-)
+ mm/memcontrol.c | 71 +++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 57 insertions(+), 14 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 95f12996e66c..6890f999c1a3 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -1592,6 +1592,8 @@ struct obj_cgroup *get_obj_cgroup_from_current(void);
- 
- int obj_cgroup_charge(struct obj_cgroup *objcg, gfp_t gfp, size_t size);
- void obj_cgroup_uncharge(struct obj_cgroup *objcg, size_t size);
-+void obj_cgroup_uncharge_mod_state(struct obj_cgroup *objcg, size_t size,
-+				   struct pglist_data *pgdat, int idx);
- 
- extern struct static_key_false memcg_kmem_enabled_key;
- 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index d66e1e38f8ac..b19100c68aa0 100644
+index 69f728383efe..00c9074e42e5 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -3225,12 +3225,9 @@ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
- 	return false;
+@@ -2229,7 +2229,8 @@ struct obj_stock {
+ struct memcg_stock_pcp {
+ 	struct mem_cgroup *cached; /* this never be root cgroup */
+ 	unsigned int nr_pages;
+-	struct obj_stock obj;
++	struct obj_stock task_obj;
++	struct obj_stock irq_obj;
+ 
+ 	struct work_struct work;
+ 	unsigned long flags;
+@@ -2254,11 +2255,46 @@ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+ }
+ #endif
+ 
++/*
++ * Most kmem_cache_alloc() calls are from user context. The irq disable/enable
++ * sequence used in this case to access content from object stock is slow.
++ * To optimize for user context access, there are now two object stocks for
++ * task context and interrupt context access respectively.
++ *
++ * The task context object stock can be accessed by disabling preemption only
++ * which is cheap in non-preempt kernel. The interrupt context object stock
++ * can only be accessed after disabling interrupt. User context code can
++ * access interrupt object stock, but not vice versa.
++ */
+ static inline struct obj_stock *current_obj_stock(void)
+ {
+ 	struct memcg_stock_pcp *stock = this_cpu_ptr(&memcg_stock);
+ 
+-	return &stock->obj;
++	return in_task() ? &stock->task_obj : &stock->irq_obj;
++}
++
++#define get_obj_stock(flags)			\
++({						\
++	struct memcg_stock_pcp *stock;		\
++	struct obj_stock *obj_stock;		\
++						\
++	if (in_task()) {			\
++		preempt_disable();		\
++		(flags) = -1L;			\
++		obj_stock = &stock->task_obj;	\
++	} else {				\
++		local_irq_save(flags);		\
++		obj_stock = &stock->irq_obj;	\
++	}					\
++	obj_stock;				\
++})
++
++static inline void put_obj_stock(unsigned long flags)
++{
++	if (flags == -1L)
++		preempt_enable();
++	else
++		local_irq_restore(flags);
  }
  
--static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
-+static void __refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
- {
- 	struct memcg_stock_pcp *stock;
--	unsigned long flags;
--
--	local_irq_save(flags);
+ /**
+@@ -2327,7 +2363,9 @@ static void drain_local_stock(struct work_struct *dummy)
+ 	local_irq_save(flags);
  
  	stock = this_cpu_ptr(&memcg_stock);
- 	if (stock->cached_objcg != objcg) { /* reset if necessary */
-@@ -3243,7 +3240,14 @@ static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
+-	drain_obj_stock(&stock->obj);
++	drain_obj_stock(&stock->irq_obj);
++	if (in_task())
++		drain_obj_stock(&stock->task_obj);
+ 	drain_stock(stock);
+ 	clear_bit(FLUSHING_CACHED_CHARGE, &stock->flags);
  
- 	if (stock->nr_bytes > PAGE_SIZE)
- 		drain_obj_stock(stock);
-+}
-+
-+static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
-+{
-+	unsigned long flags;
- 
-+	local_irq_save(flags);
-+	__refill_obj_stock(objcg, nr_bytes);
- 	local_irq_restore(flags);
+@@ -3183,7 +3221,7 @@ static inline void mod_objcg_state(struct obj_cgroup *objcg,
+ 	memcg = obj_cgroup_memcg(objcg);
+ 	if (pgdat)
+ 		lruvec = mem_cgroup_lruvec(memcg, pgdat);
+-	__mod_memcg_lruvec_state(memcg, lruvec, idx, nr);
++	mod_memcg_lruvec_state(memcg, lruvec, idx, nr);
+ 	rcu_read_unlock();
  }
  
-@@ -3292,6 +3296,25 @@ void obj_cgroup_uncharge(struct obj_cgroup *objcg, size_t size)
- 	refill_obj_stock(objcg, size);
- }
+@@ -3193,7 +3231,7 @@ static bool consume_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
+ 	unsigned long flags;
+ 	bool ret = false;
  
-+void obj_cgroup_uncharge_mod_state(struct obj_cgroup *objcg, size_t size,
-+				   struct pglist_data *pgdat, int idx)
-+{
-+	unsigned long flags;
-+	struct mem_cgroup *memcg;
-+	struct lruvec *lruvec = NULL;
-+
-+	local_irq_save(flags);
-+	__refill_obj_stock(objcg, size);
-+
-+	rcu_read_lock();
-+	memcg = obj_cgroup_memcg(objcg);
-+	if (pgdat)
-+		lruvec = mem_cgroup_lruvec(memcg, pgdat);
-+	__mod_memcg_lruvec_state(memcg, lruvec, idx, -(int)size);
-+	rcu_read_unlock();
-+	local_irq_restore(flags);
-+}
-+
- #endif /* CONFIG_MEMCG_KMEM */
+-	local_irq_save(flags);
++	stock = get_obj_stock(flags);
  
- /*
-diff --git a/mm/percpu.c b/mm/percpu.c
-index 6596a0a4286e..24ecd51c688c 100644
---- a/mm/percpu.c
-+++ b/mm/percpu.c
-@@ -1631,13 +1631,8 @@ static void pcpu_memcg_free_hook(struct pcpu_chunk *chunk, int off, size_t size)
- 	objcg = chunk->obj_cgroups[off >> PCPU_MIN_ALLOC_SHIFT];
- 	chunk->obj_cgroups[off >> PCPU_MIN_ALLOC_SHIFT] = NULL;
- 
--	obj_cgroup_uncharge(objcg, size * num_possible_cpus());
--
--	rcu_read_lock();
--	mod_memcg_state(obj_cgroup_memcg(objcg), MEMCG_PERCPU_B,
--			-(size * num_possible_cpus()));
--	rcu_read_unlock();
--
-+	obj_cgroup_uncharge_mod_state(objcg, size * num_possible_cpus(),
-+				      NULL, MEMCG_PERCPU_B);
- 	obj_cgroup_put(objcg);
- }
- 
-diff --git a/mm/slab.h b/mm/slab.h
-index bc6c7545e487..677cdc52e641 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -366,9 +366,9 @@ static inline void memcg_slab_free_hook(struct kmem_cache *s_orig,
- 			continue;
- 
- 		objcgs[off] = NULL;
--		obj_cgroup_uncharge(objcg, obj_full_size(s));
--		mod_objcg_state(objcg, page_pgdat(page), cache_vmstat_idx(s),
--				-obj_full_size(s));
-+		obj_cgroup_uncharge_mod_state(objcg, obj_full_size(s),
-+					      page_pgdat(page),
-+					      cache_vmstat_idx(s));
- 		obj_cgroup_put(objcg);
+ 	stock = current_obj_stock();
+ 	if (objcg == stock->cached_objcg && stock->nr_bytes >= nr_bytes) {
+@@ -3201,7 +3239,7 @@ static bool consume_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
+ 		ret = true;
  	}
+ 
+-	local_irq_restore(flags);
++	put_obj_stock(flags);
+ 
+ 	return ret;
  }
+@@ -3254,8 +3292,13 @@ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+ {
+ 	struct mem_cgroup *memcg;
+ 
+-	if (stock->obj.cached_objcg) {
+-		memcg = obj_cgroup_memcg(stock->obj.cached_objcg);
++	if (in_task() && stock->task_obj.cached_objcg) {
++		memcg = obj_cgroup_memcg(stock->task_obj.cached_objcg);
++		if (memcg && mem_cgroup_is_descendant(memcg, root_memcg))
++			return true;
++	}
++	if (stock->irq_obj.cached_objcg) {
++		memcg = obj_cgroup_memcg(stock->irq_obj.cached_objcg);
+ 		if (memcg && mem_cgroup_is_descendant(memcg, root_memcg))
+ 			return true;
+ 	}
+@@ -3283,9 +3326,9 @@ static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
+ {
+ 	unsigned long flags;
+ 
+-	local_irq_save(flags);
++	get_obj_stock(flags);
+ 	__refill_obj_stock(objcg, nr_bytes);
+-	local_irq_restore(flags);
++	put_obj_stock(flags);
+ }
+ 
+ static void __mod_obj_stock_state(struct obj_cgroup *objcg,
+@@ -3325,9 +3368,9 @@ void mod_obj_stock_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
+ {
+ 	unsigned long flags;
+ 
+-	local_irq_save(flags);
++	get_obj_stock(flags);
+ 	__mod_obj_stock_state(objcg, pgdat, idx, nr);
+-	local_irq_restore(flags);
++	put_obj_stock(flags);
+ }
+ 
+ int obj_cgroup_charge(struct obj_cgroup *objcg, gfp_t gfp, size_t size)
+@@ -3380,10 +3423,10 @@ void obj_cgroup_uncharge_mod_state(struct obj_cgroup *objcg, size_t size,
+ {
+ 	unsigned long flags;
+ 
+-	local_irq_save(flags);
++	get_obj_stock(flags);
+ 	__refill_obj_stock(objcg, size);
+ 	__mod_obj_stock_state(objcg, pgdat, idx, -(int)size);
+-	local_irq_restore(flags);
++	put_obj_stock(flags);
+ }
+ 
+ #endif /* CONFIG_MEMCG_KMEM */
 -- 
 2.18.1
 
