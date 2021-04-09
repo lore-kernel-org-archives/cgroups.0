@@ -1,230 +1,148 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 3/5] mm/memcg: Cache vmstat data in percpu memcg_stock_pcp
-Date: Fri,  9 Apr 2021 19:18:40 -0400
-Message-ID: <20210409231842.8840-4-longman@redhat.com>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH 2/5] mm/memcg: Introduce obj_cgroup_uncharge_mod_state()
+Date: Fri,  9 Apr 2021 19:18:39 -0400
+Message-ID: <20210409231842.8840-3-longman@redhat.com>
 References: <20210409231842.8840-1-longman@redhat.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618010378;
+        s=mimecast20190719; t=1618010377;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=NSPhrn8yNtaplSMa5znJDxoNcNPpKM5qvIFqs/P3czs=;
-        b=KvfkCHsLIyd0csQYta0AdjRic3Egd/dOsp1fgQ3rEr1uhLiSumFbzpwlXJt/MsDr40WTyc
-        7Am8/ZuAsZLK7yS1ynp3wNOybr/MyxthgpnEJ5icexQ4GRGncy7qXY694HQBdAIwebnrto
-        jd70Vi/VJ05V5/IhZwPzK4gykA1snqk=
-In-Reply-To: <20210409231842.8840-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+        bh=ptUYwKpXpvlSb7C/Hll6413ogimsLnOMUVrWZt43Ltc=;
+        b=W/HDZWQKhlmH+NpEwU3IXtZabPxWuZh/K8ysbil6L0njazV42eAuXB2WLPzn/c5NBVJcuw
+        YDw5ObAVqUpbVjitGQe9QxGxpxq598UX4M0eg7C3dLEqyRc4e+qtHDS/2s9mWA1LNrc5W9
+        pxkZCkAPbF5C6yoV1yQ/Lb9BFY75ncI=
+In-Reply-To: <20210409231842.8840-1-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Vlastimil Babka <vbabka@suse.cz>, Roman Gushchin <guro@fb.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Alex Shi <alex.shi@linux.alibaba.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Wei Yang <richard.weiyang@gmail.com>, Masayoshi Mizuma <msys.mizuma@gmail.com>, Waiman Long <longman@redhat.com>
 
-Before the new slab memory controller with per object byte charging,
-charging and vmstat data update happen only when new slab pages are
-allocated or freed. Now they are done with every kmem_cache_alloc()
-and kmem_cache_free(). This causes additional overhead for workloads
-that generate a lot of alloc and free calls.
+In memcg_slab_free_hook()/pcpu_memcg_free_hook(), obj_cgroup_uncharge()
+is followed by mod_objcg_state()/mod_memcg_state(). Each of these
+function call goes through a separate irq_save/irq_restore cycle. That
+is inefficient.  Introduce a new function obj_cgroup_uncharge_mod_state()
+that combines them with a single irq_save/irq_restore cycle.
 
-The memcg_stock_pcp is used to cache byte charge for a specific
-obj_cgroup to reduce that overhead. To further reducing it, this patch
-makes the vmstat data cached in the memcg_stock_pcp structure as well
-until it accumulates a page size worth of update or when other cached
-data change.
-
-On a 2-socket Cascade Lake server with instrumentation enabled and this
-patch applied, it was found that about 17% (946796 out of 5515184) of the
-time when __mod_obj_stock_state() is called leads to an actual call to
-mod_objcg_state() after initial boot. When doing parallel kernel build,
-the figure was about 16% (21894614 out of 139780628). So caching the
-vmstat data reduces the number of calls to mod_objcg_state() by more
-than 80%.
-
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Waiman Long <longman@redhat.com>
 ---
- mm/memcontrol.c | 78 +++++++++++++++++++++++++++++++++++++++++++------
- mm/slab.h       | 26 +++++++----------
- 2 files changed, 79 insertions(+), 25 deletions(-)
+ include/linux/memcontrol.h |  2 ++
+ mm/memcontrol.c            | 31 +++++++++++++++++++++++++++----
+ mm/percpu.c                |  9 ++-------
+ mm/slab.h                  |  6 +++---
+ 4 files changed, 34 insertions(+), 14 deletions(-)
 
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 95f12996e66c..6890f999c1a3 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1592,6 +1592,8 @@ struct obj_cgroup *get_obj_cgroup_from_current(void);
+ 
+ int obj_cgroup_charge(struct obj_cgroup *objcg, gfp_t gfp, size_t size);
+ void obj_cgroup_uncharge(struct obj_cgroup *objcg, size_t size);
++void obj_cgroup_uncharge_mod_state(struct obj_cgroup *objcg, size_t size,
++				   struct pglist_data *pgdat, int idx);
+ 
+ extern struct static_key_false memcg_kmem_enabled_key;
+ 
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index b19100c68aa0..539c3b632e47 100644
+index d66e1e38f8ac..b19100c68aa0 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -2220,7 +2220,10 @@ struct memcg_stock_pcp {
- 
- #ifdef CONFIG_MEMCG_KMEM
- 	struct obj_cgroup *cached_objcg;
-+	struct pglist_data *cached_pgdat;
- 	unsigned int nr_bytes;
-+	int vmstat_idx;
-+	int vmstat_bytes;
- #endif
- 
- 	struct work_struct work;
-@@ -3157,6 +3160,21 @@ void __memcg_kmem_uncharge_page(struct page *page, int order)
- 	css_put(&memcg->css);
+@@ -3225,12 +3225,9 @@ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+ 	return false;
  }
  
-+static inline void mod_objcg_state(struct obj_cgroup *objcg,
-+				   struct pglist_data *pgdat,
-+				   enum node_stat_item idx, int nr)
+-static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
++static void __refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
+ {
+ 	struct memcg_stock_pcp *stock;
+-	unsigned long flags;
+-
+-	local_irq_save(flags);
+ 
+ 	stock = this_cpu_ptr(&memcg_stock);
+ 	if (stock->cached_objcg != objcg) { /* reset if necessary */
+@@ -3243,7 +3240,14 @@ static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
+ 
+ 	if (stock->nr_bytes > PAGE_SIZE)
+ 		drain_obj_stock(stock);
++}
++
++static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
 +{
++	unsigned long flags;
+ 
++	local_irq_save(flags);
++	__refill_obj_stock(objcg, nr_bytes);
+ 	local_irq_restore(flags);
+ }
+ 
+@@ -3292,6 +3296,25 @@ void obj_cgroup_uncharge(struct obj_cgroup *objcg, size_t size)
+ 	refill_obj_stock(objcg, size);
+ }
+ 
++void obj_cgroup_uncharge_mod_state(struct obj_cgroup *objcg, size_t size,
++				   struct pglist_data *pgdat, int idx)
++{
++	unsigned long flags;
 +	struct mem_cgroup *memcg;
 +	struct lruvec *lruvec = NULL;
++
++	local_irq_save(flags);
++	__refill_obj_stock(objcg, size);
 +
 +	rcu_read_lock();
 +	memcg = obj_cgroup_memcg(objcg);
 +	if (pgdat)
 +		lruvec = mem_cgroup_lruvec(memcg, pgdat);
-+	__mod_memcg_lruvec_state(memcg, lruvec, idx, nr);
++	__mod_memcg_lruvec_state(memcg, lruvec, idx, -(int)size);
 +	rcu_read_unlock();
-+}
-+
- static bool consume_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
- {
- 	struct memcg_stock_pcp *stock;
-@@ -3207,6 +3225,14 @@ static void drain_obj_stock(struct memcg_stock_pcp *stock)
- 		stock->nr_bytes = 0;
- 	}
- 
-+	if (stock->vmstat_bytes) {
-+		mod_objcg_state(old, stock->cached_pgdat, stock->vmstat_idx,
-+				stock->vmstat_bytes);
-+		stock->vmstat_bytes = 0;
-+		stock->vmstat_idx = 0;
-+		stock->cached_pgdat = NULL;
-+	}
-+
- 	obj_cgroup_put(old);
- 	stock->cached_objcg = NULL;
- }
-@@ -3251,6 +3277,48 @@ static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
- 	local_irq_restore(flags);
- }
- 
-+static void __mod_obj_stock_state(struct obj_cgroup *objcg,
-+				  struct pglist_data *pgdat, int idx, int nr)
-+{
-+	struct memcg_stock_pcp *stock = this_cpu_ptr(&memcg_stock);
-+
-+	if (stock->cached_objcg != objcg) {
-+		/* Output the current data as is */
-+	} else if (!stock->vmstat_bytes) {
-+		/* Save the current data */
-+		stock->vmstat_bytes = nr;
-+		stock->vmstat_idx = idx;
-+		stock->cached_pgdat = pgdat;
-+		nr = 0;
-+	} else if ((stock->cached_pgdat != pgdat) ||
-+		   (stock->vmstat_idx != idx)) {
-+		/* Output the cached data & save the current data */
-+		swap(nr, stock->vmstat_bytes);
-+		swap(idx, stock->vmstat_idx);
-+		swap(pgdat, stock->cached_pgdat);
-+	} else {
-+		stock->vmstat_bytes += nr;
-+		if (abs(nr) > PAGE_SIZE) {
-+			nr = stock->vmstat_bytes;
-+			stock->vmstat_bytes = 0;
-+		} else {
-+			nr = 0;
-+		}
-+	}
-+	if (nr)
-+		mod_objcg_state(objcg, pgdat, idx, nr);
-+}
-+
-+void mod_obj_stock_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
-+			 int idx, int nr)
-+{
-+	unsigned long flags;
-+
-+	local_irq_save(flags);
-+	__mod_obj_stock_state(objcg, pgdat, idx, nr);
 +	local_irq_restore(flags);
 +}
 +
- int obj_cgroup_charge(struct obj_cgroup *objcg, gfp_t gfp, size_t size)
- {
- 	struct mem_cgroup *memcg;
-@@ -3300,18 +3368,10 @@ void obj_cgroup_uncharge_mod_state(struct obj_cgroup *objcg, size_t size,
- 				   struct pglist_data *pgdat, int idx)
- {
- 	unsigned long flags;
--	struct mem_cgroup *memcg;
--	struct lruvec *lruvec = NULL;
+ #endif /* CONFIG_MEMCG_KMEM */
  
- 	local_irq_save(flags);
- 	__refill_obj_stock(objcg, size);
+ /*
+diff --git a/mm/percpu.c b/mm/percpu.c
+index 6596a0a4286e..24ecd51c688c 100644
+--- a/mm/percpu.c
++++ b/mm/percpu.c
+@@ -1631,13 +1631,8 @@ static void pcpu_memcg_free_hook(struct pcpu_chunk *chunk, int off, size_t size)
+ 	objcg = chunk->obj_cgroups[off >> PCPU_MIN_ALLOC_SHIFT];
+ 	chunk->obj_cgroups[off >> PCPU_MIN_ALLOC_SHIFT] = NULL;
+ 
+-	obj_cgroup_uncharge(objcg, size * num_possible_cpus());
 -
 -	rcu_read_lock();
--	memcg = obj_cgroup_memcg(objcg);
--	if (pgdat)
--		lruvec = mem_cgroup_lruvec(memcg, pgdat);
--	__mod_memcg_lruvec_state(memcg, lruvec, idx, -(int)size);
+-	mod_memcg_state(obj_cgroup_memcg(objcg), MEMCG_PERCPU_B,
+-			-(size * num_possible_cpus()));
 -	rcu_read_unlock();
-+	__mod_obj_stock_state(objcg, pgdat, idx, -(int)size);
- 	local_irq_restore(flags);
+-
++	obj_cgroup_uncharge_mod_state(objcg, size * num_possible_cpus(),
++				      NULL, MEMCG_PERCPU_B);
+ 	obj_cgroup_put(objcg);
  }
  
 diff --git a/mm/slab.h b/mm/slab.h
-index 677cdc52e641..ae971975d9fc 100644
+index bc6c7545e487..677cdc52e641 100644
 --- a/mm/slab.h
 +++ b/mm/slab.h
-@@ -239,6 +239,8 @@ static inline bool kmem_cache_debug_flags(struct kmem_cache *s, slab_flags_t fla
- #ifdef CONFIG_MEMCG_KMEM
- int memcg_alloc_page_obj_cgroups(struct page *page, struct kmem_cache *s,
- 				 gfp_t gfp, bool new_page);
-+void mod_obj_stock_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
-+			 int idx, int nr);
+@@ -366,9 +366,9 @@ static inline void memcg_slab_free_hook(struct kmem_cache *s_orig,
+ 			continue;
  
- static inline void memcg_free_page_obj_cgroups(struct page *page)
- {
-@@ -283,20 +285,6 @@ static inline bool memcg_slab_pre_alloc_hook(struct kmem_cache *s,
- 	return true;
+ 		objcgs[off] = NULL;
+-		obj_cgroup_uncharge(objcg, obj_full_size(s));
+-		mod_objcg_state(objcg, page_pgdat(page), cache_vmstat_idx(s),
+-				-obj_full_size(s));
++		obj_cgroup_uncharge_mod_state(objcg, obj_full_size(s),
++					      page_pgdat(page),
++					      cache_vmstat_idx(s));
+ 		obj_cgroup_put(objcg);
+ 	}
  }
- 
--static inline void mod_objcg_state(struct obj_cgroup *objcg,
--				   struct pglist_data *pgdat,
--				   enum node_stat_item idx, int nr)
--{
--	struct mem_cgroup *memcg;
--	struct lruvec *lruvec;
--
--	rcu_read_lock();
--	memcg = obj_cgroup_memcg(objcg);
--	lruvec = mem_cgroup_lruvec(memcg, pgdat);
--	mod_memcg_lruvec_state(memcg, lruvec, idx, nr);
--	rcu_read_unlock();
--}
--
- static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
- 					      struct obj_cgroup *objcg,
- 					      gfp_t flags, size_t size,
-@@ -324,8 +312,9 @@ static inline void memcg_slab_post_alloc_hook(struct kmem_cache *s,
- 			off = obj_to_index(s, page, p[i]);
- 			obj_cgroup_get(objcg);
- 			page_objcgs(page)[off] = objcg;
--			mod_objcg_state(objcg, page_pgdat(page),
--					cache_vmstat_idx(s), obj_full_size(s));
-+			mod_obj_stock_state(objcg, page_pgdat(page),
-+					    cache_vmstat_idx(s),
-+					    obj_full_size(s));
- 		} else {
- 			obj_cgroup_uncharge(objcg, obj_full_size(s));
- 		}
-@@ -408,6 +397,11 @@ static inline void memcg_slab_free_hook(struct kmem_cache *s,
- 					void **p, int objects)
- {
- }
-+
-+static void mod_obj_stock_state(struct obj_cgroup *objcg,
-+				struct pglist_data *pgdat, int idx, int nr)
-+{
-+}
- #endif /* CONFIG_MEMCG_KMEM */
- 
- static inline struct kmem_cache *virt_to_cache(const void *obj)
 -- 
 2.18.1
 
