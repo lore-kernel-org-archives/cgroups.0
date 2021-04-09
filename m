@@ -1,17 +1,17 @@
 From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 1/5] mm/memcg: Pass both memcg and lruvec to mod_memcg_lruvec_state()
-Date: Fri,  9 Apr 2021 19:18:38 -0400
-Message-ID: <20210409231842.8840-2-longman@redhat.com>
+Subject: [PATCH 4/5] mm/memcg: Separate out object stock data into its own struct
+Date: Fri,  9 Apr 2021 19:18:41 -0400
+Message-ID: <20210409231842.8840-5-longman@redhat.com>
 References: <20210409231842.8840-1-longman@redhat.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618010374;
+        s=mimecast20190719; t=1618010378;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=uZv/d8ZgMLy4t6LltwZ6A+YmlSKW3HmeIredudZwsTQ=;
-        b=Sq5qd5TgS1VIs2diKhF2922629XjH1vCA8CaFlg4P3NZETqwGiZBZeyoYTUStLbU9Y0CQj
-        bqRriu4BSYm4QIaXMorD+55Ku4hoKpqmxE5uFQDH9BtM1wfzpUJvV/2hTTV5bsLG7wr8CF
-        mOLY27zJk8F3u0gwWqlqI7KgvGIYG6A=
+        bh=oXVjTSR+aFPIAEydZVFSTtWuZOXw9aSIOWMRbXqKvKY=;
+        b=B961Q05k2zLLLOccrku+pV3klv7cil6EA/CidNJDIKccabgwe663fa/1qQLhJiDe+7PkaJ
+        ACxrNi3/Zf1kNDuIngS9GMrgJy7SF4YU/2Mgr443pr5v33beu7fG8W0ezamjJKZYINWyHL
+        7WxzSet8eGhpDzIlaESWA+xIw/fk+sM=
 In-Reply-To: <20210409231842.8840-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
@@ -20,121 +20,140 @@ Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-The caller of mod_memcg_lruvec_state() has both memcg and lruvec readily
-available. So both of them are now passed to mod_memcg_lruvec_state()
-and __mod_memcg_lruvec_state(). The __mod_memcg_lruvec_state() is
-updated to allow either of the two parameters to be set to null. This
-makes mod_memcg_lruvec_state() equivalent to mod_memcg_state() if lruvec
-is null.
+The object stock data stored in struct memcg_stock_pcp are independent
+of the other page based data stored there. Separating them out into
+their own struct to highlight the independency.
 
 Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- include/linux/memcontrol.h | 12 +++++++-----
- mm/memcontrol.c            | 19 +++++++++++++------
- mm/slab.h                  |  2 +-
- 3 files changed, 21 insertions(+), 12 deletions(-)
+ mm/memcontrol.c | 41 ++++++++++++++++++++++++++---------------
+ 1 file changed, 26 insertions(+), 15 deletions(-)
 
-diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
-index 0c04d39a7967..95f12996e66c 100644
---- a/include/linux/memcontrol.h
-+++ b/include/linux/memcontrol.h
-@@ -955,8 +955,8 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- 	return x;
- }
- 
--void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
--			      int val);
-+void __mod_memcg_lruvec_state(struct mem_cgroup *memcg, struct lruvec *lruvec,
-+			      enum node_stat_item idx, int val);
- void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val);
- 
- static inline void mod_lruvec_kmem_state(void *p, enum node_stat_item idx,
-@@ -969,13 +969,14 @@ static inline void mod_lruvec_kmem_state(void *p, enum node_stat_item idx,
- 	local_irq_restore(flags);
- }
- 
--static inline void mod_memcg_lruvec_state(struct lruvec *lruvec,
-+static inline void mod_memcg_lruvec_state(struct mem_cgroup *memcg,
-+					  struct lruvec *lruvec,
- 					  enum node_stat_item idx, int val)
- {
- 	unsigned long flags;
- 
- 	local_irq_save(flags);
--	__mod_memcg_lruvec_state(lruvec, idx, val);
-+	__mod_memcg_lruvec_state(memcg, lruvec, idx, val);
- 	local_irq_restore(flags);
- }
- 
-@@ -1369,7 +1370,8 @@ static inline unsigned long lruvec_page_state_local(struct lruvec *lruvec,
- 	return node_page_state(lruvec_pgdat(lruvec), idx);
- }
- 
--static inline void __mod_memcg_lruvec_state(struct lruvec *lruvec,
-+static inline void __mod_memcg_lruvec_state(struct mem_cgroup *memcg,
-+					    struct lruvec *lruvec,
- 					    enum node_stat_item idx, int val)
- {
- }
 diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index e064ac0d850a..d66e1e38f8ac 100644
+index 539c3b632e47..69f728383efe 100644
 --- a/mm/memcontrol.c
 +++ b/mm/memcontrol.c
-@@ -799,20 +799,27 @@ parent_nodeinfo(struct mem_cgroup_per_node *pn, int nid)
- 	return mem_cgroup_nodeinfo(parent, nid);
+@@ -2214,17 +2214,22 @@ void unlock_page_memcg(struct page *page)
  }
+ EXPORT_SYMBOL(unlock_page_memcg);
  
--void __mod_memcg_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
--			      int val)
-+/*
-+ * Either one of memcg or lruvec can be NULL, but not both.
-+ */
-+void __mod_memcg_lruvec_state(struct mem_cgroup *memcg, struct lruvec *lruvec,
-+			      enum node_stat_item idx, int val)
+-struct memcg_stock_pcp {
+-	struct mem_cgroup *cached; /* this never be root cgroup */
+-	unsigned int nr_pages;
+-
++struct obj_stock {
+ #ifdef CONFIG_MEMCG_KMEM
+ 	struct obj_cgroup *cached_objcg;
+ 	struct pglist_data *cached_pgdat;
+ 	unsigned int nr_bytes;
+ 	int vmstat_idx;
+ 	int vmstat_bytes;
++#else
++	int dummy[0];
+ #endif
++};
++
++struct memcg_stock_pcp {
++	struct mem_cgroup *cached; /* this never be root cgroup */
++	unsigned int nr_pages;
++	struct obj_stock obj;
+ 
+ 	struct work_struct work;
+ 	unsigned long flags;
+@@ -2234,12 +2239,12 @@ static DEFINE_PER_CPU(struct memcg_stock_pcp, memcg_stock);
+ static DEFINE_MUTEX(percpu_charge_mutex);
+ 
+ #ifdef CONFIG_MEMCG_KMEM
+-static void drain_obj_stock(struct memcg_stock_pcp *stock);
++static void drain_obj_stock(struct obj_stock *stock);
+ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+ 				     struct mem_cgroup *root_memcg);
+ 
+ #else
+-static inline void drain_obj_stock(struct memcg_stock_pcp *stock)
++static inline void drain_obj_stock(struct obj_stock *stock)
  {
- 	struct mem_cgroup_per_node *pn;
--	struct mem_cgroup *memcg;
- 	long x, threshold = MEMCG_CHARGE_BATCH;
+ }
+ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+@@ -2249,6 +2254,13 @@ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+ }
+ #endif
  
-+	/* Update lruvec */
- 	pn = container_of(lruvec, struct mem_cgroup_per_node, lruvec);
--	memcg = pn->memcg;
++static inline struct obj_stock *current_obj_stock(void)
++{
++	struct memcg_stock_pcp *stock = this_cpu_ptr(&memcg_stock);
 +
-+	if (!memcg)
-+		memcg = pn->memcg;
- 
- 	/* Update memcg */
- 	__mod_memcg_state(memcg, idx, val);
- 
--	/* Update lruvec */
-+	if (!lruvec)
-+		return;
++	return &stock->obj;
++}
 +
- 	__this_cpu_add(pn->lruvec_stat_local->count[idx], val);
+ /**
+  * consume_stock: Try to consume stocked charge on this cpu.
+  * @memcg: memcg to consume from.
+@@ -2315,7 +2327,7 @@ static void drain_local_stock(struct work_struct *dummy)
+ 	local_irq_save(flags);
  
- 	if (vmstat_item_in_bytes(idx))
-@@ -848,7 +855,7 @@ void __mod_lruvec_state(struct lruvec *lruvec, enum node_stat_item idx,
+ 	stock = this_cpu_ptr(&memcg_stock);
+-	drain_obj_stock(stock);
++	drain_obj_stock(&stock->obj);
+ 	drain_stock(stock);
+ 	clear_bit(FLUSHING_CACHED_CHARGE, &stock->flags);
  
- 	/* Update memcg and lruvec */
- 	if (!mem_cgroup_disabled())
--		__mod_memcg_lruvec_state(lruvec, idx, val);
-+		__mod_memcg_lruvec_state(NULL, lruvec, idx, val);
+@@ -3177,13 +3189,13 @@ static inline void mod_objcg_state(struct obj_cgroup *objcg,
+ 
+ static bool consume_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
+ {
+-	struct memcg_stock_pcp *stock;
++	struct obj_stock *stock;
+ 	unsigned long flags;
+ 	bool ret = false;
+ 
+ 	local_irq_save(flags);
+ 
+-	stock = this_cpu_ptr(&memcg_stock);
++	stock = current_obj_stock();
+ 	if (objcg == stock->cached_objcg && stock->nr_bytes >= nr_bytes) {
+ 		stock->nr_bytes -= nr_bytes;
+ 		ret = true;
+@@ -3194,7 +3206,7 @@ static bool consume_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
+ 	return ret;
  }
  
- void __mod_lruvec_page_state(struct page *page, enum node_stat_item idx,
-diff --git a/mm/slab.h b/mm/slab.h
-index 076582f58f68..bc6c7545e487 100644
---- a/mm/slab.h
-+++ b/mm/slab.h
-@@ -293,7 +293,7 @@ static inline void mod_objcg_state(struct obj_cgroup *objcg,
- 	rcu_read_lock();
- 	memcg = obj_cgroup_memcg(objcg);
- 	lruvec = mem_cgroup_lruvec(memcg, pgdat);
--	mod_memcg_lruvec_state(lruvec, idx, nr);
-+	mod_memcg_lruvec_state(memcg, lruvec, idx, nr);
- 	rcu_read_unlock();
- }
+-static void drain_obj_stock(struct memcg_stock_pcp *stock)
++static void drain_obj_stock(struct obj_stock *stock)
+ {
+ 	struct obj_cgroup *old = stock->cached_objcg;
  
+@@ -3242,8 +3254,8 @@ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+ {
+ 	struct mem_cgroup *memcg;
+ 
+-	if (stock->cached_objcg) {
+-		memcg = obj_cgroup_memcg(stock->cached_objcg);
++	if (stock->obj.cached_objcg) {
++		memcg = obj_cgroup_memcg(stock->obj.cached_objcg);
+ 		if (memcg && mem_cgroup_is_descendant(memcg, root_memcg))
+ 			return true;
+ 	}
+@@ -3253,9 +3265,8 @@ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+ 
+ static void __refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
+ {
+-	struct memcg_stock_pcp *stock;
++	struct obj_stock *stock = current_obj_stock();
+ 
+-	stock = this_cpu_ptr(&memcg_stock);
+ 	if (stock->cached_objcg != objcg) { /* reset if necessary */
+ 		drain_obj_stock(stock);
+ 		obj_cgroup_get(objcg);
+@@ -3280,7 +3291,7 @@ static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
+ static void __mod_obj_stock_state(struct obj_cgroup *objcg,
+ 				  struct pglist_data *pgdat, int idx, int nr)
+ {
+-	struct memcg_stock_pcp *stock = this_cpu_ptr(&memcg_stock);
++	struct obj_stock *stock = current_obj_stock();
+ 
+ 	if (stock->cached_objcg != objcg) {
+ 		/* Output the current data as is */
 -- 
 2.18.1
 
