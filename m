@@ -1,76 +1,62 @@
-From: Waiman Long <llong@redhat.com>
-Subject: Re: [PATCH 0/5] mm/memcg: Reduce kmemcache memory accounting overhead
-Date: Mon, 12 Apr 2021 10:03:13 -0400
-Message-ID: <51ea6b09-b7ee-36e9-a500-b7141bd3a42b@redhat.com>
-References: <20210409231842.8840-1-longman@redhat.com>
- <YHEEmGSVy3nl0obM@carbon.dhcp.thefacebook.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH v1 00/11] Manage the top tier memory in a tiered memory
+Date: Mon, 12 Apr 2021 07:03:27 -0700
+Message-ID: <CALvZod4vYiT-OnQ8gmhs+NurMV+kSFptMig4FJS7RAAcJJeDNA@mail.gmail.com>
+References: <cover.1617642417.git.tim.c.chen@linux.intel.com>
+ <CALvZod7StYJCPnWRNLnYQV8S5CBLtE0w4r2rH-wZzNs9jGJSRg@mail.gmail.com>
+ <CAHbLzkrPD6s9vRy89cgQ36e+1cs6JbLqV84se7nnvP9MByizXA@mail.gmail.com>
+ <CALvZod69-GcS2W57hAUvjbWBCD6B2dTeVsFbtpQuZOM2DphwCQ@mail.gmail.com> <CAHbLzkoce41b-pJ5x=6nRhex_xBdC-+cYACBw9HKtA87H71A-Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618236200;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=SUFKvDRszZ9E49AwoslD+yXNYOfmw6oJnUv4+bKBZOM=;
-        b=W45c4zAXXx1GatkmynpAcbZadOeg6cHV6Hlkm54yZzNJYupu2J/pCb+hF/B0JOK13f9FlN
-        3bBpQwJ2JOP/TXWHLCAwRldft+tERJqT9kLi91BRkXOaBddi+gws/OuF7VFwq5gCN5bL9t
-        4b+oqWspzUd+RNf0oJJ42+GVCMMOIaQ=
-In-Reply-To: <YHEEmGSVy3nl0obM@carbon.dhcp.thefacebook.com>
-Content-Language: en-US
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Txa0jtEnzVHszI7+7RurZSdLkTftdeKdRRITuMLu8Aw=;
+        b=PKU//OewynQNd7SeSC4KENGCXLIca0cApDWlmgkcNZDG1kpsbr0rPgil0AfgvOY6dl
+         xyI6oUsEgz7I5NjvX0nmU5gKYvslpr/DlU2IIRtDHNsKTNj5mYTMWpVOpf0jlmmt/S1y
+         CUUPJrpfVC9XLPr2/2KydVFWwL1JDLBVppMWOyO+Az5d4syy4eLTXKVvpJh2no8LrH7e
+         ex2ev3hbHYWC5eF6K2hYH3cFW/+lq19/RnT0xtAF8Di+nXWZY6q/eFfZ0rQhHO906gw/
+         8g5iI2BKxf1UF0j4bm0jF5b9TGq687Vz2mq2c0Pjjaq4ByhtTs/YAEQgxKfs2aA9Fml4
+         jqyg==
+In-Reply-To: <CAHbLzkoce41b-pJ5x=6nRhex_xBdC-+cYACBw9HKtA87H71A-Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Roman Gushchin <guro@fb.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Vlastimil Babka <vbabka@suse.cz>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Alex Shi <alex.shi@linux.alibaba.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Wei Yang <richard.weiyang@gmail.com>, Masayoshi Mizuma <msys.mizuma@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Michal Hocko <mhocko-AlSwsSmVLrQ@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 
-On 4/9/21 9:51 PM, Roman Gushchin wrote:
-> On Fri, Apr 09, 2021 at 07:18:37PM -0400, Waiman Long wrote:
->> With the recent introduction of the new slab memory controller, we
->> eliminate the need for having separate kmemcaches for each memory
->> cgroup and reduce overall kernel memory usage. However, we also add
->> additional memory accounting overhead to each call of kmem_cache_alloc()
->> and kmem_cache_free().
->>
->> For workloads that require a lot of kmemcache allocations and
->> de-allocations, they may experience performance regression as illustrated
->> in [1].
->>
->> With a simple kernel module that performs repeated loop of 100,000,000
->> kmem_cache_alloc() and kmem_cache_free() of 64-byte object at module
->> init. The execution time to load the kernel module with and without
->> memory accounting were:
->>
->>    with accounting = 6.798s
->>    w/o  accounting = 1.758s
->>
->> That is an increase of 5.04s (287%). With this patchset applied, the
->> execution time became 4.254s. So the memory accounting overhead is now
->> 2.496s which is a 50% reduction.
-> Hi Waiman!
+On Thu, Apr 8, 2021 at 1:50 PM Yang Shi <shy828301-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
 >
-> Thank you for working on it, it's indeed very useful!
-> A couple of questions:
-> 1) did your config included lockdep or not?
-The test kernel is based on a production kernel config and so lockdep 
-isn't enabled.
-> 2) do you have a (rough) estimation how much each change contributes
->     to the overall reduction?
+[...]
 
-I should have a better breakdown of the effect of individual patches. I 
-rerun the benchmarking module with turbo-boosting disabled to reduce 
-run-to-run variation. The execution times were:
+> >
+> > The low and min limits have semantics similar to the v1's soft limit
+> > for this situation i.e. letting the low priority job occupy top tier
+> > memory and depending on reclaim to take back the excess top tier
+> > memory use of such jobs.
+>
+> I don't get why low priority jobs can *not* use top tier memory?
 
-Before patch: time = 10.800s (with memory accounting), 2.848s (w/o 
-accounting), overhead = 7.952s
-After patch 2: time = 9.140s, overhead = 6.292s
-After patch 3: time = 7.641s, overhead = 4.793s
-After patch 5: time = 6.801s, overhead = 3.953s
+I am saying low priority jobs can use top tier memory. The only
+difference is to limit them upfront (using limits) or reclaim from
+them later (using min/low/soft-limit).
 
-Patches 1 & 4 are preparatory patches that should affect performance.
+> I can
+> think of it may incur latency overhead for high priority jobs. If it
+> is not allowed, it could be restricted by cpuset without introducing
+> in any new interfaces.
+>
+> I'm supposed the memory utilization could be maximized by allowing all
+> jobs allocate memory from all applicable nodes, then let reclaimer (or
+> something new if needed)
 
-So the memory accounting overhead was reduced by about half.
+Most probably something new as we do want to consider unevictable
+memory as well.
 
-Cheers,
-Longman
+> do the job to migrate the memory to proper
+> nodes by time. We could achieve some kind of balance between memory
+> utilization and resource isolation.
+>
 
+Tradeoff between utilization and isolation should be decided by the user/admin.
