@@ -1,67 +1,54 @@
-From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 5/5] mm/memcg: Optimize user context object stock access
-Date: Mon, 12 Apr 2021 15:58:46 -0400
-Message-ID: <49c03fb0-be46-5288-2c4c-6ad5ad194b4c@redhat.com>
-References: <20210409231842.8840-1-longman@redhat.com>
- <20210409231842.8840-6-longman@redhat.com>
- <YHSXvQVvzHu26u7H@carbon.dhcp.thefacebook.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC v2 0/2] introduce new attribute "priority" to control group
+Date: Mon, 12 Apr 2021 17:13:01 -0400
+Message-ID: <YHS33Rsj5xZ+nE3u@slm.duckdns.org>
+References: <cover.1618219939.git.yuleixzhang@tencent.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618257532;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ehM6Hadf4JLUdNm4RfG2SBXxOzb5EYXQTf0escn85tQ=;
-        b=FQLmHp9NRV08fCW5MDOhsZ/mClHXI7qOe2HQupmfkfstS8vXCsie9Q8rBuklClUoD4Vjvn
-        PB9fOoJCE8ZuPJk0kPVBV/wU8NmAyhBrH1RSLuOl6GWH+RIYfzuwLXTglHSl7ACTRfwEtz
-        nZC3GjGbCCyv0MwABJIBkH+8Oe8sadk=
-In-Reply-To: <YHSXvQVvzHu26u7H-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=VhpeC0PCBKcKFiAl7ppRsOOB3Otxo0lk7Zd3T6AZwNM=;
+        b=WnYKb70Cx5OQVPFK9OAHJNNPUzeGnDdH/lqQWvldpQLwRF0TeKp7OOcCsqrGn3A2fP
+         X7JSCUXEAxdUwX1KHddEf8mdYypYI1Ci6RWcdUntTl6Cw/6sJk8aelTufvyKnaQ7dxCt
+         gz+qtss9qhGqnhFc9LIGH1/YjGDU+0FCDIYLc0s88lmJDCRdb8dZ1X8X5jwIkS6s8951
+         l9UhZ7hwM04XdHi9oH656UT6gi68AWG1vT4xj9tHMWzi5H1bOEKS7ovUc1ein199JqN8
+         fnvCnDLiH4d9OLrWJQQeiWKHVhOW49C0ceMO6WOg1eX7qpsG1s7YVA6ziYsqCv1ijwfB
+         gg7w==
+Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <cover.1618219939.git.yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"; format="flowed"
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Alexander Duyck <alexander.h.duyck-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, benbjiang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, kernellwp-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, lihaiwei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linussli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, herberthbli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-On 4/12/21 2:55 PM, Roman Gushchin wrote:
-> On Fri, Apr 09, 2021 at 07:18:42PM -0400, Waiman Long wrote:
->> Most kmem_cache_alloc() calls are from user context. With instrumentation
->> enabled, the measured amount of kmem_cache_alloc() calls from non-task
->> context was about 0.01% of the total.
->>
->> The irq disable/enable sequence used in this case to access content
->> from object stock is slow.  To optimize for user context access, there
->> are now two object stocks for task context and interrupt context access
->> respectively.
->>
->> The task context object stock can be accessed after disabling preemption
->> which is cheap in non-preempt kernel. The interrupt context object stock
->> can only be accessed after disabling interrupt. User context code can
->> access interrupt object stock, but not vice versa.
->>
->> The mod_objcg_state() function is also modified to make sure that memcg
->> and lruvec stat updates are done with interrupted disabled.
->>
->> The downside of this change is that there are more data stored in local
->> object stocks and not reflected in the charge counter and the vmstat
->> arrays.  However, this is a small price to pay for better performance.
-> I agree, the extra memory space is not a significant concern.
-> I'd be more worried about the code complexity, but the result looks
-> nice to me!
->
-> Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
->
-> Btw, it seems that the mm tree ran a bit off, so I had to apply this series
-> on top of Linus's tree to review. Please, rebase.
+On Tue, Apr 13, 2021 at 12:40:09AM +0800, yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org wrote:
+> From: Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+> 
+> Last time we introduce the idea of adding prioritized tasks management
+> to control group. Sometimes we may assign the same amount of resources
+> to multiple cgroups due to the environment restriction, but we still 
+> hope there are preference order to handle the tasks in those cgroups,
+> the 'prio' attribute may help to do the ranking jobs. 
+> 
+> The default value of "priority" is set to 0 which means the highest
+> priority, and the totally levels of priority is defined by
+> CGROUP_PRIORITY_MAX. Each subsystem could register callback to receive the
+> priority change notification for their own purposes. 
+> 
+> In this v2 patch we apply a simple rule to the oom hanlder base on the
+> order of priority to demonstrate the intention about adding this attribute.
+> When enable the prioritized oom, it will perfer to pick up the victim from the
+> memory cgroup with lower priority, and try the best to keep the tasks
+> alive in high ranked memcg.
 
-This patchset is based on the code in Linus' tree. I had applied the 
-patchset to linux-next to see if there was any conflicts. Two of the 
-patches had minor fuzzes around the edge but no actual merge conflict 
-for now.
+I don't think the discussion in the previous thread led anywhere. Please
+consider this series nacked for now.
 
-Cheers,
-Longman
+Thanks.
 
-
+-- 
+tejun
