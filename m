@@ -1,82 +1,235 @@
-From: Roman Gushchin <guro@fb.com>
-Subject: Re: [PATCH 0/5] mm/memcg: Reduce kmemcache memory accounting overhead
-Date: Fri, 9 Apr 2021 18:51:20 -0700
-Message-ID: <YHEEmGSVy3nl0obM@carbon.dhcp.thefacebook.com>
-References: <20210409231842.8840-1-longman@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=VohXgyTubbH1Px/q87HiemKrrAlwObQnOXkba6IiUtU=;
- b=CLxfce8vVIZ2kXgOQl+pOXWVfntDxU7r7Yw74ommWKk+CArXVlisK7TLyROWsWuKZa0k
- v1yt8Lt7XnMbAk4NqHNZmsSjx+LWmimUiZrsmaswDzPbaY8RlFuHPCxwO9pCnhd+2oa7
- Z/raLGLDoYB27bwQrHUnZ5HDxHtjNvhFvdc= 
-Content-Disposition: inline
-In-Reply-To: <20210409231842.8840-1-longman@redhat.com>
+From: ultrachin-9Onoh4P/yGk@public.gmane.org
+Subject: [PATCH] mm: optimize memory allocation
+Date: Mon, 12 Apr 2021 15:49:53 +0800
+Message-ID: <1618213793-17741-1-git-send-email-ultrachin@163.com>
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id; bh=G/6Z4nNqZYq7RUqhry
+        lTggPskhrSTLLuKMTwylozwN8=; b=Pd9HUn5gUA4b5cO5VygQjnTLjN3HdtVAbt
+        1/AwKWWC6sMw7oP/zTJbjb2a9QO4VpEAL4Gk3S1wSvuDSn4TIVpN+XwMonoOCM+l
+        CCrzwyiobo2NF3oiFanGrOkv2ih8+sF9VPG48vU6oyJE39hskcdsjXAhlUn37+x0
+        7J1aneeSg=
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman@redhat.com>
-Cc: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Vlastimil Babka <vbabka@suse.cz>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Alex Shi <alex.shi@linux.alibaba.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Alexander Duyck <alexander.h.duyck@linux.intel.com>, Wei Yang <richard.weiyang@gmail.com>, Masayoshi Mizuma <msys.mizuma@gmail.co>
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Chen Xiaoguang <xiaoggchen-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Chen He <heddchen-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-On Fri, Apr 09, 2021 at 07:18:37PM -0400, Waiman Long wrote:
-> With the recent introduction of the new slab memory controller, we
-> eliminate the need for having separate kmemcaches for each memory
-> cgroup and reduce overall kernel memory usage. However, we also add
-> additional memory accounting overhead to each call of kmem_cache_alloc()
-> and kmem_cache_free().
-> 
-> For workloads that require a lot of kmemcache allocations and
-> de-allocations, they may experience performance regression as illustrated
-> in [1].
-> 
-> With a simple kernel module that performs repeated loop of 100,000,000
-> kmem_cache_alloc() and kmem_cache_free() of 64-byte object at module
-> init. The execution time to load the kernel module with and without
-> memory accounting were:
-> 
->   with accounting = 6.798s
->   w/o  accounting = 1.758s
-> 
-> That is an increase of 5.04s (287%). With this patchset applied, the
-> execution time became 4.254s. So the memory accounting overhead is now
-> 2.496s which is a 50% reduction.
+From: Chen Xiaoguang <xiaoggchen-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Hi Waiman!
+Check memory cgroup limit before allocating real memory. This may
+improve performance especially in slow path when memory allocation
+exceeds cgroup limitation.
 
-Thank you for working on it, it's indeed very useful!
-A couple of questions:
-1) did your config included lockdep or not?
-2) do you have a (rough) estimation how much each change contributes
-   to the overall reduction?
+Signed-off-by: Chen Xiaoguang <xiaoggchen-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+Signed-off-by: Chen He <heddchen-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+---
+ include/linux/memcontrol.h | 30 ++++++++++++++++++++++--------
+ mm/memcontrol.c            | 34 ++++++++++++++++------------------
+ mm/page_alloc.c            | 24 +++++++++++++++++-------
+ 3 files changed, 55 insertions(+), 33 deletions(-)
 
-Thanks!
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 0c04d39..59bb3ba 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1583,8 +1583,9 @@ static inline void memcg_set_shrinker_bit(struct mem_cgroup *memcg,
+ #endif
+ 
+ #ifdef CONFIG_MEMCG_KMEM
+-int __memcg_kmem_charge_page(struct page *page, gfp_t gfp, int order);
+-void __memcg_kmem_uncharge_page(struct page *page, int order);
++int __memcg_kmem_charge_page(struct mem_cgroup *memcg, gfp_t gfp, int order);
++void __memcg_kmem_uncharge_page(struct page *page, int order,
++				struct mem_cgroup *memcg);
+ 
+ struct obj_cgroup *get_obj_cgroup_from_current(void);
+ 
+@@ -1610,18 +1611,30 @@ static inline bool memcg_kmem_enabled(void)
+ 	return static_branch_likely(&memcg_kmem_enabled_key);
+ }
+ 
++extern struct mem_cgroup *get_mem_cgroup_from_current(void);
++
+ static inline int memcg_kmem_charge_page(struct page *page, gfp_t gfp,
+ 					 int order)
+ {
+-	if (memcg_kmem_enabled())
+-		return __memcg_kmem_charge_page(page, gfp, order);
+-	return 0;
++	struct mem_cgroup *memcg;
++	int ret = 0;
++
++	memcg = get_mem_cgroup_from_current();
++	if (memcg && memcg_kmem_enabled() && !mem_cgroup_is_root(memcg)) {
++		ret = __memcg_kmem_charge_page(memcg, gfp, order);
++		if (!ret) {
++			page->memcg_data = (unsigned long)memcg | MEMCG_DATA_KMEM;
++			return 0;
++		}
++		css_put(&memcg->css);
++	}
++	return ret;
+ }
+ 
+ static inline void memcg_kmem_uncharge_page(struct page *page, int order)
+ {
+ 	if (memcg_kmem_enabled())
+-		__memcg_kmem_uncharge_page(page, order);
++		__memcg_kmem_uncharge_page(page, order, NULL);
+ }
+ 
+ /*
+@@ -1647,13 +1660,14 @@ static inline void memcg_kmem_uncharge_page(struct page *page, int order)
+ {
+ }
+ 
+-static inline int __memcg_kmem_charge_page(struct page *page, gfp_t gfp,
++static inline int __memcg_kmem_charge_page(struct mem_cgroup *memcg, gfp_t gfp,
+ 					   int order)
+ {
+ 	return 0;
+ }
+ 
+-static inline void __memcg_kmem_uncharge_page(struct page *page, int order)
++static inline void __memcg_kmem_uncharge_page(struct page *page, int order,
++					    struct mem_cgroup *memcg)
+ {
+ }
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index e064ac0d..8df57b7 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -1085,7 +1085,7 @@ static __always_inline bool memcg_kmem_bypass(void)
+ /**
+  * If active memcg is set, do not fallback to current->mm->memcg.
+  */
+-static __always_inline struct mem_cgroup *get_mem_cgroup_from_current(void)
++struct mem_cgroup *get_mem_cgroup_from_current(void)
+ {
+ 	if (memcg_kmem_bypass())
+ 		return NULL;
+@@ -3113,21 +3113,11 @@ static void __memcg_kmem_uncharge(struct mem_cgroup *memcg, unsigned int nr_page
+  *
+  * Returns 0 on success, an error code on failure.
+  */
+-int __memcg_kmem_charge_page(struct page *page, gfp_t gfp, int order)
++int __memcg_kmem_charge_page(struct mem_cgroup *memcg, gfp_t gfp, int order)
+ {
+-	struct mem_cgroup *memcg;
+-	int ret = 0;
++	int ret;
+ 
+-	memcg = get_mem_cgroup_from_current();
+-	if (memcg && !mem_cgroup_is_root(memcg)) {
+-		ret = __memcg_kmem_charge(memcg, gfp, 1 << order);
+-		if (!ret) {
+-			page->memcg_data = (unsigned long)memcg |
+-				MEMCG_DATA_KMEM;
+-			return 0;
+-		}
+-		css_put(&memcg->css);
+-	}
++	ret = __memcg_kmem_charge(memcg, gfp, 1 << order);
+ 	return ret;
+ }
+ 
+@@ -3136,17 +3126,25 @@ int __memcg_kmem_charge_page(struct page *page, gfp_t gfp, int order)
+  * @page: page to uncharge
+  * @order: allocation order
+  */
+-void __memcg_kmem_uncharge_page(struct page *page, int order)
++void __memcg_kmem_uncharge_page(struct page *page, int order,
++		struct mem_cgroup *memcg_in)
+ {
+-	struct mem_cgroup *memcg = page_memcg(page);
++	struct mem_cgroup *memcg;
+ 	unsigned int nr_pages = 1 << order;
+ 
++	if (page)
++		memcg = page_memcg(page);
++	else
++		memcg = memcg_in;
++
+ 	if (!memcg)
+ 		return;
+ 
+-	VM_BUG_ON_PAGE(mem_cgroup_is_root(memcg), page);
++	if (page)
++		VM_BUG_ON_PAGE(mem_cgroup_is_root(memcg), page);
+ 	__memcg_kmem_uncharge(memcg, nr_pages);
+-	page->memcg_data = 0;
++	if (page)
++		page->memcg_data = 0;
+ 	css_put(&memcg->css);
+ }
+ 
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index cfc7287..c3d1d0c 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -1230,7 +1230,7 @@ static __always_inline bool free_pages_prepare(struct page *page,
+ 		 * Untie memcg state and reset page's owner
+ 		 */
+ 		if (memcg_kmem_enabled() && PageMemcgKmem(page))
+-			__memcg_kmem_uncharge_page(page, order);
++			__memcg_kmem_uncharge_page(page, order, NULL);
+ 		reset_page_owner(page, order);
+ 		return false;
+ 	}
+@@ -1260,7 +1260,7 @@ static __always_inline bool free_pages_prepare(struct page *page,
+ 	if (PageMappingFlags(page))
+ 		page->mapping = NULL;
+ 	if (memcg_kmem_enabled() && PageMemcgKmem(page))
+-		__memcg_kmem_uncharge_page(page, order);
++		__memcg_kmem_uncharge_page(page, order, NULL);
+ 	if (check_free)
+ 		bad += check_free_page(page);
+ 	if (bad)
+@@ -4976,6 +4976,8 @@ struct page *
+ 	unsigned int alloc_flags = ALLOC_WMARK_LOW;
+ 	gfp_t alloc_mask; /* The gfp_t that was actually used for allocation */
+ 	struct alloc_context ac = { };
++	struct mem_cgroup *memcg;
++	bool charged = false;
+ 
+ 	/*
+ 	 * There are several places where we assume that the order value is sane
+@@ -4987,6 +4989,15 @@ struct page *
+ 	}
+ 
+ 	gfp_mask &= gfp_allowed_mask;
++	memcg = get_mem_cgroup_from_current();
++	if (memcg && memcg_kmem_enabled() && (gfp_mask & __GFP_ACCOUNT) &&
++	    !mem_cgroup_is_root(memcg)) {
++		if (unlikely(__memcg_kmem_charge_page(memcg, gfp_mask, order) != 0)) {
++			css_put(&memcg->css);
++			return NULL;
++		}
++		charged = true;
++	}
+ 	alloc_mask = gfp_mask;
+ 	if (!prepare_alloc_pages(gfp_mask, order, preferred_nid, nodemask, &ac, &alloc_mask, &alloc_flags))
+ 		return NULL;
+@@ -5020,11 +5031,10 @@ struct page *
+ 	page = __alloc_pages_slowpath(alloc_mask, order, &ac);
+ 
+ out:
+-	if (memcg_kmem_enabled() && (gfp_mask & __GFP_ACCOUNT) && page &&
+-	    unlikely(__memcg_kmem_charge_page(page, gfp_mask, order) != 0)) {
+-		__free_pages(page, order);
+-		page = NULL;
+-	}
++	if (page && charged)
++		page->memcg_data = (unsigned long)memcg | MEMCG_DATA_KMEM;
++	else if (charged)
++		__memcg_kmem_uncharge_page(NULL, order, memcg);
+ 
+ 	trace_mm_page_alloc(page, order, alloc_mask, ac.migratetype);
+ 
+-- 
+1.8.3.1
 
-> 
-> It was found that a major part of the memory accounting overhead
-> is caused by the local_irq_save()/local_irq_restore() sequences in
-> updating local stock charge bytes and vmstat array, at least in x86
-> systems. There are two such sequences in kmem_cache_alloc() and two
-> in kmem_cache_free(). This patchset tries to reduce the use of such
-> sequences as much as possible. In fact, it eliminates them in the common
-> case. Another part of this patchset to cache the vmstat data update in
-> the local stock as well which also helps.
-> 
-> [1] https://lore.kernel.org/linux-mm/20210408193948.vfktg3azh2wrt56t@gabell/T/#u
-> 
-> Waiman Long (5):
->   mm/memcg: Pass both memcg and lruvec to mod_memcg_lruvec_state()
->   mm/memcg: Introduce obj_cgroup_uncharge_mod_state()
->   mm/memcg: Cache vmstat data in percpu memcg_stock_pcp
->   mm/memcg: Separate out object stock data into its own struct
->   mm/memcg: Optimize user context object stock access
-> 
->  include/linux/memcontrol.h |  14 ++-
->  mm/memcontrol.c            | 198 ++++++++++++++++++++++++++++++++-----
->  mm/percpu.c                |   9 +-
->  mm/slab.h                  |  32 +++---
->  4 files changed, 195 insertions(+), 58 deletions(-)
-> 
-> -- 
-> 2.18.1
-> 
+
