@@ -1,208 +1,63 @@
 From: yulei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Subject: [RFC v2 1/2] cgroup: add support for cgroup priority
-Date: Tue, 13 Apr 2021 00:45:48 +0800
-Message-ID: <2304fff128001ea8962704f1716286d03044ac51.1618219939.git.yuleixzhang@tencent.com>
-References: <cover.1618219939.git.yuleixzhang@tencent.com>
+Subject: [RFC v2 0/2] introduce new attribute "priority" to control group
+Date: Tue, 13 Apr 2021 00:40:09 +0800
+Message-ID: <cover.1618219939.git.yuleixzhang@tencent.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=a6x/SVY566QC4XRne/VcnphgwitSAF9FZ0ekSLyRb6U=;
-        b=NrA3V8OYI4PeAa68KkhMvhrCGkESZskjhs8ykqnIV1hnUCHB/9kp/UfHBIz43yBPwk
-         CwVEefr8Hd6/2tbtqq40azEAufA4JpCK9hV5c2vltMEH5X7mizo9OpmaHitn1UUrCkwH
-         vVS4Tt7Ntj+gJ5GM9qSL+5Ww2kysiTZFRxlqt9rzKtcjy1PVRGJv+p1Hovqf0X2d32eZ
-         uEZwIVb/oNyQ4D3Y2U15m3F1ZAAOqun0gk0n6QgpAcYCCoF1cJcJpOeN7i9ROI44vXLq
-         yo7dUOFiiH1P3PrPcAgAyP++vpU3ZQPfLbPFk5AS79s/IP0X8wABMRGkotdHS448aJXX
-         k2Tg==
-In-Reply-To: <cover.1618219939.git.yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=rWd8qaffFtx7x0KdjfNiWGmezRnoMswRgKduJuFiO4A=;
+        b=WEvsRmRxGAgXGh1Q+11q9oWawxwjMoAvDbSSeSLffAn+syXlTlKtqPce9hXAFsv1EQ
+         Qb4wTXhTPMBsqKmhqz0/FGvuIwxwgtJg/ztFW9/GLhJ0DMS/jmc+AEkeZTG6K24Bu3oO
+         XOh/0L2v5CfHP3Osp9aiNhDOgLXTApyKFSkZDjb6zsqHDa87D1g77S0vJJ8Oao9Tb0hV
+         WO6V/slUu9coDshH8er9wOtVgm4guloaK/+HnxPUu/OvUSfysY50fvvNRDp16cfDlufZ
+         knvN/TZXW1z20kQLfNVlBKXRGBADo7+gJzufp5eLhx0LmORqOs+NOCEmFRppfBV2DSrm
+         sJyg==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, christian-STijNZzMWpgWenYVfaLwtA@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, benbjiang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, kernellwp-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, lihaiwei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linussli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, herberthbli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, Lei Chen <lennychen-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Liu Yu <allanyuliu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Peng Zhiguang <zgpeng-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>, Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, benbjiang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, kernellwp-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, lihaiwei.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linussli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, herberthbli-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org, Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-From: Lei Chen <lennychen-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
+From: Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
 
-Introduce new attribute "priority" to control group, which
-could be used as scale by subssytem to manipulate the behaviors
-of processes.
-The default value of "priority" is set to 0 which means the
-highest priority, and the totally levels of priority is defined
-by CGROUP_PRIORITY_MAX.
+Last time we introduce the idea of adding prioritized tasks management
+to control group. Sometimes we may assign the same amount of resources
+to multiple cgroups due to the environment restriction, but we still 
+hope there are preference order to handle the tasks in those cgroups,
+the 'prio' attribute may help to do the ranking jobs. 
 
-Signed-off-by: Lei Chen <lennychen-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-Signed-off-by: Liu Yu <allanyuliu-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-Signed-off-by: Peng Zhiguang <zgpeng-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
-Signed-off-by: Yulei Zhang <yuleixzhang-1Nz4purKYjRBDgjK7y7TUQ@public.gmane.org>
----
+The default value of "priority" is set to 0 which means the highest
+priority, and the totally levels of priority is defined by
+CGROUP_PRIORITY_MAX. Each subsystem could register callback to receive the
+priority change notification for their own purposes. 
+
+In this v2 patch we apply a simple rule to the oom hanlder base on the
+order of priority to demonstrate the intention about adding this attribute.
+When enable the prioritized oom, it will perfer to pick up the victim from the
+memory cgroup with lower priority, and try the best to keep the tasks
+alive in high ranked memcg.
+
+V2->V1:
+1. Introduce prioritized oom in memcg.
+
+Lei Chen (1):
+  cgroup: add support for cgroup priority
+
+Yulei Zhang (1):
+  memcg: introduce prioritized oom in memcg
+
  include/linux/cgroup-defs.h |  2 +
  include/linux/cgroup.h      |  2 +
- kernel/cgroup/cgroup.c      | 90 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 94 insertions(+)
+ include/linux/memcontrol.h  | 38 ++++++++++++++
+ include/linux/oom.h         |  1 +
+ kernel/cgroup/cgroup.c      | 90 +++++++++++++++++++++++++++++++++
+ mm/memcontrol.c             | 99 ++++++++++++++++++++++++++++++++++++-
+ mm/oom_kill.c               |  6 +--
+ 7 files changed, 233 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/cgroup-defs.h b/include/linux/cgroup-defs.h
-index 559ee05f8..3fa2f28a9 100644
---- a/include/linux/cgroup-defs.h
-+++ b/include/linux/cgroup-defs.h
-@@ -417,6 +417,7 @@ struct cgroup {
- 	u16 subtree_ss_mask;
- 	u16 old_subtree_control;
- 	u16 old_subtree_ss_mask;
-+	u16 priority;
- 
- 	/* Private pointers for each registered subsystem */
- 	struct cgroup_subsys_state __rcu *subsys[CGROUP_SUBSYS_COUNT];
-@@ -640,6 +641,7 @@ struct cgroup_subsys {
- 	void (*exit)(struct task_struct *task);
- 	void (*release)(struct task_struct *task);
- 	void (*bind)(struct cgroup_subsys_state *root_css);
-+	int (*css_priority_change)(struct cgroup_subsys_state *css, u16 old, u16 new);
- 
- 	bool early_init:1;
- 
-diff --git a/include/linux/cgroup.h b/include/linux/cgroup.h
-index 4f2f79de0..734d51aba 100644
---- a/include/linux/cgroup.h
-+++ b/include/linux/cgroup.h
-@@ -47,6 +47,7 @@ struct kernel_clone_args;
- 
- /* internal flags */
- #define CSS_TASK_ITER_SKIPPED		(1U << 16)
-+#define CGROUP_PRIORITY_MAX		8
- 
- /* a css_task_iter should be treated as an opaque object */
- struct css_task_iter {
-@@ -957,5 +958,6 @@ static inline void cgroup_bpf_get(struct cgroup *cgrp) {}
- static inline void cgroup_bpf_put(struct cgroup *cgrp) {}
- 
- #endif /* CONFIG_CGROUP_BPF */
-+ssize_t cgroup_priority(struct cgroup_subsys_state *css);
- 
- #endif /* _LINUX_CGROUP_H */
-diff --git a/kernel/cgroup/cgroup.c b/kernel/cgroup/cgroup.c
-index 9153b20e5..aa019ad24 100644
---- a/kernel/cgroup/cgroup.c
-+++ b/kernel/cgroup/cgroup.c
-@@ -1892,6 +1892,7 @@ static void init_cgroup_housekeeping(struct cgroup *cgrp)
- 	cgrp->dom_cgrp = cgrp;
- 	cgrp->max_descendants = INT_MAX;
- 	cgrp->max_depth = INT_MAX;
-+	cgrp->priority = 0;
- 	INIT_LIST_HEAD(&cgrp->rstat_css_list);
- 	prev_cputime_init(&cgrp->prev_cputime);
- 
-@@ -4783,6 +4784,88 @@ static ssize_t cgroup_threads_write(struct kernfs_open_file *of,
- 	return __cgroup_procs_write(of, buf, false) ?: nbytes;
- }
- 
-+static int cgroup_priority_show(struct seq_file *seq, void *v)
-+{
-+	struct cgroup *cgrp = seq_css(seq)->cgroup;
-+	u16 prio = cgrp->priority;
-+
-+	seq_printf(seq, "%d\n", prio);
-+
-+	return 0;
-+}
-+
-+static void cgroup_set_priority(struct cgroup *cgrp, unsigned int priority)
-+{
-+	u16 old = cgrp->priority;
-+	struct cgroup_subsys_state *css;
-+	int ssid;
-+
-+	cgrp->priority = priority;
-+	for_each_css(css, ssid, cgrp) {
-+		if (css->ss->css_priority_change)
-+			css->ss->css_priority_change(css, old, priority);
-+	}
-+}
-+
-+static void cgroup_priority_propagate(struct cgroup *cgrp)
-+{
-+	struct cgroup *dsct;
-+	struct cgroup_subsys_state *d_css;
-+	u16 priority = cgrp->priority;
-+
-+	lockdep_assert_held(&cgroup_mutex);
-+	cgroup_for_each_live_descendant_pre(dsct, d_css, cgrp) {
-+		if (dsct->priority < priority)
-+			cgroup_set_priority(dsct, priority);
-+	}
-+}
-+
-+static ssize_t cgroup_priority_write(struct kernfs_open_file *of,
-+				      char *buf, size_t nbytes, loff_t off)
-+{
-+	struct cgroup *cgrp, *parent;
-+	ssize_t ret;
-+	u16 prio, orig;
-+
-+	buf = strstrip(buf);
-+	ret = kstrtou16(buf, 0, &prio);
-+	if (ret)
-+		return ret;
-+
-+	if (prio < 0 || prio >= CGROUP_PRIORITY_MAX)
-+		return -ERANGE;
-+
-+	cgrp = cgroup_kn_lock_live(of->kn, false);
-+	if (!cgrp)
-+		return -ENOENT;
-+	parent = cgroup_parent(cgrp);
-+	if (parent && prio < parent->priority) {
-+		ret = -EINVAL;
-+		goto unlock_out;
-+	}
-+	orig = cgrp->priority;
-+	if (prio == orig)
-+		goto unlock_out;
-+
-+	cgroup_set_priority(cgrp, prio);
-+	cgroup_priority_propagate(cgrp);
-+unlock_out:
-+	cgroup_kn_unlock(of->kn);
-+
-+	return ret ?: nbytes;
-+}
-+
-+ssize_t cgroup_priority(struct cgroup_subsys_state *css)
-+{
-+	struct cgroup *cgrp = css->cgroup;
-+	unsigned int prio = 0;
-+
-+	if (cgrp)
-+		prio = cgrp->priority;
-+	return prio;
-+}
-+EXPORT_SYMBOL(cgroup_priority);
-+
- /* cgroup core interface files for the default hierarchy */
- static struct cftype cgroup_base_files[] = {
- 	{
-@@ -4836,6 +4919,12 @@ static struct cftype cgroup_base_files[] = {
- 		.seq_show = cgroup_max_depth_show,
- 		.write = cgroup_max_depth_write,
- 	},
-+	{
-+		.name = "cgroup.priority",
-+		.flags = CFTYPE_NOT_ON_ROOT,
-+		.seq_show = cgroup_priority_show,
-+		.write = cgroup_priority_write,
-+	},
- 	{
- 		.name = "cgroup.stat",
- 		.seq_show = cgroup_stat_show,
-@@ -5178,6 +5267,7 @@ static struct cgroup *cgroup_create(struct cgroup *parent, const char *name,
- 	cgrp->self.parent = &parent->self;
- 	cgrp->root = root;
- 	cgrp->level = level;
-+	cgrp->priority = parent->priority;
- 
- 	ret = psi_cgroup_alloc(cgrp);
- 	if (ret)
 -- 
 2.28.0
 
