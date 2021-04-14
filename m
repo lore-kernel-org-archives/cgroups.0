@@ -1,15 +1,18 @@
 From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v3 0/5] mm/memcg: Reduce kmemcache memory accounting overhead
-Date: Tue, 13 Apr 2021 21:20:22 -0400
-Message-ID: <20210414012027.5352-1-longman@redhat.com>
+Subject: [PATCH v3 2/5] mm/memcg: Introduce obj_cgroup_uncharge_mod_state()
+Date: Tue, 13 Apr 2021 21:20:24 -0400
+Message-ID: <20210414012027.5352-3-longman@redhat.com>
+References: <20210414012027.5352-1-longman@redhat.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618363250;
+        s=mimecast20190719; t=1618363258;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=LSB88EC5/cfTeZcbFM6S4I7akVAT0dRwokU/dRHo8FE=;
-        b=Kb7bEjJRcnEFtPIsAAQDwIa+4C0snTf6vlX6voGGIB3BqtxHIh+eP469Ephea+9wGsYsEO
-        1YAkGqHWPxcnnFzIm7vlMFVJ5k4gdSZCOPjb5qhPaZcTsjqXUiKf6QCNtWoUY4lAqOf+ya
-        UMz5x3rwPAA+4xWtkbx4zb3EkMFsqu4=
+         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
+        bh=6q8PwfMd38t+lXEGfKmsTXF5u9dPLNsn54ZL71OOV5A=;
+        b=S3CslSBFfje58tz2zYhSTgs3EQu7lO6iXHDtuJmxgBvfZi1gIPe55ri8XzOxiTV33jPO6L
+        PvG1zbGTYWr5g2UDuOn0EFn8nwVnG4gZel+Aiz1A5LlHDXdBrgwlw0psHDWyuiXHe2lixP
+        6BK4+GPE0I12JkvS+KNKbs7voMdu1jQ=
+In-Reply-To: <20210414012027.5352-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -17,71 +20,131 @@ Content-Transfer-Encoding: 7bit
 To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Xing Zhengjun <zhengjun.xing-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
- v3:
-  - Add missing "inline" qualifier to the alternate mod_obj_stock_state()
-    in patch 3.
-  - Remove redundant current_obj_stock() call in patch 5.
+In memcg_slab_free_hook()/pcpu_memcg_free_hook(), obj_cgroup_uncharge()
+is followed by mod_objcg_state()/mod_memcg_state(). Each of these
+function call goes through a separate irq_save/irq_restore cycle. That
+is inefficient.  Introduce a new function obj_cgroup_uncharge_mod_state()
+that combines them with a single irq_save/irq_restore cycle.
 
- v2:
-  - Fix bug found by test robot in patch 5.
-  - Update cover letter and commit logs.
+Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+---
+ include/linux/memcontrol.h |  2 ++
+ mm/memcontrol.c            | 31 +++++++++++++++++++++++++++----
+ mm/percpu.c                |  9 ++-------
+ mm/slab.h                  |  6 +++---
+ 4 files changed, 34 insertions(+), 14 deletions(-)
 
-With the recent introduction of the new slab memory controller, we
-eliminate the need for having separate kmemcaches for each memory
-cgroup and reduce overall kernel memory usage. However, we also add
-additional memory accounting overhead to each call of kmem_cache_alloc()
-and kmem_cache_free().
-
-For workloads that require a lot of kmemcache allocations and
-de-allocations, they may experience performance regression as illustrated
-in [1] and [2].
-
-A simple kernel module that performs repeated loop of 100,000,000
-kmem_cache_alloc() and kmem_cache_free() of a 64-byte object at module
-init time is used for benchmarking. The test was run on a CascadeLake
-server with turbo-boosting disable to reduce run-to-run variation.
-
-With memory accounting disable, the run time was 2.848s. With memory
-accounting enabled, the run times with the application of various
-patches in the patchset were:
-
-  Applied patches   Run time   Accounting overhead   Overhead %age
-  ---------------   --------   -------------------   -------------
-       None          10.800s         7.952s              100.0%
-        1-2           9.140s         6.292s               79.1%
-        1-3           7.641s         4.793s               60.3%
-        1-5           6.801s         3.953s               49.7%
-
-Note that this is the best case scenario where most updates happen only
-to the percpu stocks. Real workloads will likely have a certain amount
-of updates to the memcg charges and vmstats. So the performance benefit
-will be less.
-
-It was found that a big part of the memory accounting overhead
-was caused by the local_irq_save()/local_irq_restore() sequences in
-updating local stock charge bytes and vmstat array, at least in x86
-systems. There are two such sequences in kmem_cache_alloc() and two
-in kmem_cache_free(). This patchset tries to reduce the use of such
-sequences as much as possible. In fact, it eliminates them in the common
-case. Another part of this patchset to cache the vmstat data update in
-the local stock as well which also helps.
-
-[1] https://lore.kernel.org/linux-mm/20210408193948.vfktg3azh2wrt56t@gabell/T/#u
-[2] https://lore.kernel.org/lkml/20210114025151.GA22932@xsang-OptiPlex-9020/
-
-Waiman Long (5):
-  mm/memcg: Pass both memcg and lruvec to mod_memcg_lruvec_state()
-  mm/memcg: Introduce obj_cgroup_uncharge_mod_state()
-  mm/memcg: Cache vmstat data in percpu memcg_stock_pcp
-  mm/memcg: Separate out object stock data into its own struct
-  mm/memcg: Optimize user context object stock access
-
- include/linux/memcontrol.h |  14 ++-
- mm/memcontrol.c            | 199 ++++++++++++++++++++++++++++++++-----
- mm/percpu.c                |   9 +-
- mm/slab.h                  |  32 +++---
- 4 files changed, 196 insertions(+), 58 deletions(-)
-
+diff --git a/include/linux/memcontrol.h b/include/linux/memcontrol.h
+index 95f12996e66c..6890f999c1a3 100644
+--- a/include/linux/memcontrol.h
++++ b/include/linux/memcontrol.h
+@@ -1592,6 +1592,8 @@ struct obj_cgroup *get_obj_cgroup_from_current(void);
+ 
+ int obj_cgroup_charge(struct obj_cgroup *objcg, gfp_t gfp, size_t size);
+ void obj_cgroup_uncharge(struct obj_cgroup *objcg, size_t size);
++void obj_cgroup_uncharge_mod_state(struct obj_cgroup *objcg, size_t size,
++				   struct pglist_data *pgdat, int idx);
+ 
+ extern struct static_key_false memcg_kmem_enabled_key;
+ 
+diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+index d66e1e38f8ac..b19100c68aa0 100644
+--- a/mm/memcontrol.c
++++ b/mm/memcontrol.c
+@@ -3225,12 +3225,9 @@ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+ 	return false;
+ }
+ 
+-static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
++static void __refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
+ {
+ 	struct memcg_stock_pcp *stock;
+-	unsigned long flags;
+-
+-	local_irq_save(flags);
+ 
+ 	stock = this_cpu_ptr(&memcg_stock);
+ 	if (stock->cached_objcg != objcg) { /* reset if necessary */
+@@ -3243,7 +3240,14 @@ static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
+ 
+ 	if (stock->nr_bytes > PAGE_SIZE)
+ 		drain_obj_stock(stock);
++}
++
++static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
++{
++	unsigned long flags;
+ 
++	local_irq_save(flags);
++	__refill_obj_stock(objcg, nr_bytes);
+ 	local_irq_restore(flags);
+ }
+ 
+@@ -3292,6 +3296,25 @@ void obj_cgroup_uncharge(struct obj_cgroup *objcg, size_t size)
+ 	refill_obj_stock(objcg, size);
+ }
+ 
++void obj_cgroup_uncharge_mod_state(struct obj_cgroup *objcg, size_t size,
++				   struct pglist_data *pgdat, int idx)
++{
++	unsigned long flags;
++	struct mem_cgroup *memcg;
++	struct lruvec *lruvec = NULL;
++
++	local_irq_save(flags);
++	__refill_obj_stock(objcg, size);
++
++	rcu_read_lock();
++	memcg = obj_cgroup_memcg(objcg);
++	if (pgdat)
++		lruvec = mem_cgroup_lruvec(memcg, pgdat);
++	__mod_memcg_lruvec_state(memcg, lruvec, idx, -(int)size);
++	rcu_read_unlock();
++	local_irq_restore(flags);
++}
++
+ #endif /* CONFIG_MEMCG_KMEM */
+ 
+ /*
+diff --git a/mm/percpu.c b/mm/percpu.c
+index 23308113a5ff..fd7aad6d7f90 100644
+--- a/mm/percpu.c
++++ b/mm/percpu.c
+@@ -1631,13 +1631,8 @@ static void pcpu_memcg_free_hook(struct pcpu_chunk *chunk, int off, size_t size)
+ 	objcg = chunk->obj_cgroups[off >> PCPU_MIN_ALLOC_SHIFT];
+ 	chunk->obj_cgroups[off >> PCPU_MIN_ALLOC_SHIFT] = NULL;
+ 
+-	obj_cgroup_uncharge(objcg, size * num_possible_cpus());
+-
+-	rcu_read_lock();
+-	mod_memcg_state(obj_cgroup_memcg(objcg), MEMCG_PERCPU_B,
+-			-(size * num_possible_cpus()));
+-	rcu_read_unlock();
+-
++	obj_cgroup_uncharge_mod_state(objcg, size * num_possible_cpus(),
++				      NULL, MEMCG_PERCPU_B);
+ 	obj_cgroup_put(objcg);
+ }
+ 
+diff --git a/mm/slab.h b/mm/slab.h
+index bc6c7545e487..677cdc52e641 100644
+--- a/mm/slab.h
++++ b/mm/slab.h
+@@ -366,9 +366,9 @@ static inline void memcg_slab_free_hook(struct kmem_cache *s_orig,
+ 			continue;
+ 
+ 		objcgs[off] = NULL;
+-		obj_cgroup_uncharge(objcg, obj_full_size(s));
+-		mod_objcg_state(objcg, page_pgdat(page), cache_vmstat_idx(s),
+-				-obj_full_size(s));
++		obj_cgroup_uncharge_mod_state(objcg, obj_full_size(s),
++					      page_pgdat(page),
++					      cache_vmstat_idx(s));
+ 		obj_cgroup_put(objcg);
+ 	}
+ }
 -- 
 2.18.1
 
