@@ -1,112 +1,138 @@
-From: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v3] cpu/hotplug: wait for cpuset_hotplug_work to finish on
- cpu onlining
-Date: Thu, 15 Apr 2021 02:30:03 +0100
-Message-ID: <CAFBcO+8NBZxNdXtVuTXt9_m9gWTq7kxrcDcdFntvVjR_0rM13A@mail.gmail.com>
-References: <20210317003616.2817418-1-aklimov@redhat.com> <87tuowcnv3.ffs@nanos.tec.linutronix.de>
- <CALW4P+L9_tYgfOPv0riWWnv54HPhKPDJ4EK4yYaWsz0MdDGqfw@mail.gmail.com>
+From: Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v3 0/5] mm/memcg: Reduce kmemcache memory accounting
+ overhead
+Date: Wed, 14 Apr 2021 23:26:42 -0400
+Message-ID: <20210415032642.gfaevezaxoj4od3d@gabell>
+References: <20210414012027.5352-1-longman@redhat.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618450217;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=NuT37Vpiz4KczvJjbLuhVhLsnc1sKQ6bWyp9Fysxc0M=;
-        b=SKhq/xnRzymw3OROtwY8Am/xi4wnDKFx6mlhKxf3ulA5LZ0UsKhsYL0ilIA/HsK7JbMUFM
-        FfWHcbHQL1OtIZV1bfto5mYPQr+DUpRAxiBQXwK+lhCTMrVGyP275AyoSnogh9+QFPs1uK
-        C5yPAWVNvZHCOLh9hrAryxbpT7ASXVM=
-In-Reply-To: <CALW4P+L9_tYgfOPv0riWWnv54HPhKPDJ4EK4yYaWsz0MdDGqfw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=7ELJgZAB0/MDsT4s31FFYWkqnQ9XSl76WVBBR9IJO1c=;
+        b=t528pCYvS51nm/69P94WlzjraUcBRoYhV1mwN/WUsURBWiaUdqIiJW0x7GvN+c679B
+         2FJpV0XfBUE7PthAYwdSXqkWAhsbL63OuuIrtaTeoO45oFfWY9FahsNxOsRY3lOEuSNU
+         F4TD+03q5Lr6hIVk/ZLD7lx4CDn4DQQEzUul5FgRzHyEiV3WUzWysaKVpVfZLxq8j2u6
+         pLxuQDhGeWAOSltbuPZ5uabQx9R0Qyor4AM/yD2MrU/KYb2Q7aAWP/PhI6KPt1zicqDP
+         UMnt9Gvr1J50tMHcewLTfsUzZjJ5BZYT6OGfvc9HF0Ah2Prk/wB6O72tGHROYyY7CvyZ
+         gE9w==
+Content-Disposition: inline
+In-Reply-To: <20210414012027.5352-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yury Norov <yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Joshua Baker <jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Alexey Klimov <klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Xing Zhengjun <zhengjun.xing-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-On Sun, Apr 4, 2021 at 3:32 AM Alexey Klimov <klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
->
-> On Sat, Mar 27, 2021 at 9:01 PM Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org> wrote:
+On Tue, Apr 13, 2021 at 09:20:22PM -0400, Waiman Long wrote:
+>  v3:
+>   - Add missing "inline" qualifier to the alternate mod_obj_stock_state()
+>     in patch 3.
+>   - Remove redundant current_obj_stock() call in patch 5.
+> 
+>  v2:
+>   - Fix bug found by test robot in patch 5.
+>   - Update cover letter and commit logs.
+> 
+> With the recent introduction of the new slab memory controller, we
+> eliminate the need for having separate kmemcaches for each memory
+> cgroup and reduce overall kernel memory usage. However, we also add
+> additional memory accounting overhead to each call of kmem_cache_alloc()
+> and kmem_cache_free().
+> 
+> For workloads that require a lot of kmemcache allocations and
+> de-allocations, they may experience performance regression as illustrated
+> in [1] and [2].
+> 
+> A simple kernel module that performs repeated loop of 100,000,000
+> kmem_cache_alloc() and kmem_cache_free() of a 64-byte object at module
+> init time is used for benchmarking. The test was run on a CascadeLake
+> server with turbo-boosting disable to reduce run-to-run variation.
+> 
+> With memory accounting disable, the run time was 2.848s. With memory
+> accounting enabled, the run times with the application of various
+> patches in the patchset were:
+> 
+>   Applied patches   Run time   Accounting overhead   Overhead %age
+>   ---------------   --------   -------------------   -------------
+>        None          10.800s         7.952s              100.0%
+>         1-2           9.140s         6.292s               79.1%
+>         1-3           7.641s         4.793s               60.3%
+>         1-5           6.801s         3.953s               49.7%
+> 
+> Note that this is the best case scenario where most updates happen only
+> to the percpu stocks. Real workloads will likely have a certain amount
+> of updates to the memcg charges and vmstats. So the performance benefit
+> will be less.
+> 
+> It was found that a big part of the memory accounting overhead
+> was caused by the local_irq_save()/local_irq_restore() sequences in
+> updating local stock charge bytes and vmstat array, at least in x86
+> systems. There are two such sequences in kmem_cache_alloc() and two
+> in kmem_cache_free(). This patchset tries to reduce the use of such
+> sequences as much as possible. In fact, it eliminates them in the common
+> case. Another part of this patchset to cache the vmstat data update in
+> the local stock as well which also helps.
+> 
+> [1] https://lore.kernel.org/linux-mm/20210408193948.vfktg3azh2wrt56t@gabell/T/#u
 
-[...]
+Hi Longman,
 
-Now, the patch:
+Thank you for your patches.
+I rerun the benchmark with your patches, it seems that the reduction
+is small... The total duration of sendto() and recvfrom() system call 
+during the benchmark are as follows.
 
->> Subject: cpu/hotplug: Cure the cpusets trainwreck
->> From: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
->> Date: Sat, 27 Mar 2021 15:57:29 +0100
->>
->> Alexey and Joshua tried to solve a cpusets related hotplug problem which is
->> user space visible and results in unexpected behaviour for some time after
->> a CPU has been plugged in and the corresponding uevent was delivered.
->>
->> cpusets delegate the hotplug work (rebuilding cpumasks etc.) to a
->> workqueue. This is done because the cpusets code has already a lock
->> nesting of cgroups_mutex -> cpu_hotplug_lock. A synchronous callback or
->> waiting for the work to finish with cpu_hotplug_lock held can and will
->> deadlock because that results in the reverse lock order.
->>
->> As a consequence the uevent can be delivered before cpusets have consistent
->> state which means that a user space invocation of sched_setaffinity() to
->> move a task to the plugged CPU fails up to the point where the scheduled
->> work has been processed.
->>
->> The same is true for CPU unplug, but that does not create user observable
->> failure (yet).
->>
->> It's still inconsistent to claim that an operation is finished before it
->> actually is and that's the real issue at hand. uevents just make it
->> reliably observable.
->>
->> Obviously the problem should be fixed in cpusets/cgroups, but untangling
->> that is pretty much impossible because according to the changelog of the
->> commit which introduced this 8 years ago:
->>
->>  3a5a6d0c2b03("cpuset: don't nest cgroup_mutex inside get_online_cpus()")
->>
->> the lock order cgroups_mutex -> cpu_hotplug_lock is a design decision and
->> the whole code is built around that.
->>
->> So bite the bullet and invoke the relevant cpuset function, which waits for
->> the work to finish, in _cpu_up/down() after dropping cpu_hotplug_lock and
->> only when tasks are not frozen by suspend/hibernate because that would
->> obviously wait forever.
->>
->> Waiting there with cpu_add_remove_lock, which is protecting the present
->> and possible CPU maps, held is not a problem at all because neither work
->> queues nor cpusets/cgroups have any lockchains related to that lock.
->>
->> Waiting in the hotplug machinery is not problematic either because there
->> are already state callbacks which wait for hardware queues to drain. It
->> makes the operations slightly slower, but hotplug is slow anyway.
->>
->> This ensures that state is consistent before returning from a hotplug
->> up/down operation. It's still inconsistent during the operation, but that's
->> a different story.
->>
->> Add a large comment which explains why this is done and why this is not a
->> dump ground for the hack of the day to work around half thought out locking
->> schemes. Document also the implications vs. hotplug operations and
->> serialization or the lack of it.
->>
->> Thanks to Alexy and Joshua for analyzing why this temporary
->> sched_setaffinity() failure happened.
->>
->> Reported-by: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> Reported-by: Joshua Baker <jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> Signed-off-by: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
->> Cc: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
->> Cc: Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org>
+- sendto
+  - v5.8 vanilla:                      2576.056 msec (100%)
+  - v5.12-rc7 vanilla:                 2988.911 msec (116%)
+  - v5.12-rc7 with your patches (1-5): 2984.307 msec (115%)
 
-Feel free to use:
-Tested-by: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+- recvfrom
+  - v5.8 vanilla:                      2113.156 msec (100%)
+  - v5.12-rc7 vanilla:                 2305.810 msec (109%)
+  - v5.12-rc7 with your patches (1-5): 2287.351 msec (108%)
 
-The bug doesn't reproduce with this change, I had the testcase running
-for ~25 hrs without failing under different workloads.
+kmem_cache_alloc()/kmem_cache_free() are called around 1,400,000 times during
+the benchmark. I ran a loop in a kernel module as following. The duration
+is reduced by your patches actually.
 
-Are you going to submit the patch? Or I can do it on your behalf if you like.
+  ---
+  dummy_cache = KMEM_CACHE(dummy, SLAB_ACCOUNT);
+  for (i = 0; i < 1400000; i++) {
+	p = kmem_cache_alloc(dummy_cache, GFP_KERNEL);
+	kmem_cache_free(dummy_cache, p);
+  }
+  ---
 
-[...]
+- v5.12-rc7 vanilla:                 110 msec (100%)
+- v5.12-rc7 with your patches (1-5):  85 msec (77%)
 
-Best regards,
-Alexey
+It seems that the reduction is small for the benchmark though...
+Anyway, I can see your patches reduce the overhead.
+Please feel free to add:
 
+	Tested-by: Masayoshi Mizuma <m.mizuma-+CUm20s59erQFUHtdCDX3A@public.gmane.org>
+
+Thanks!
+Masa
+
+> [2] https://lore.kernel.org/lkml/20210114025151.GA22932@xsang-OptiPlex-9020/
+> 
+> Waiman Long (5):
+>   mm/memcg: Pass both memcg and lruvec to mod_memcg_lruvec_state()
+>   mm/memcg: Introduce obj_cgroup_uncharge_mod_state()
+>   mm/memcg: Cache vmstat data in percpu memcg_stock_pcp
+>   mm/memcg: Separate out object stock data into its own struct
+>   mm/memcg: Optimize user context object stock access
+> 
+>  include/linux/memcontrol.h |  14 ++-
+>  mm/memcontrol.c            | 199 ++++++++++++++++++++++++++++++++-----
+>  mm/percpu.c                |   9 +-
+>  mm/slab.h                  |  32 +++---
+>  4 files changed, 196 insertions(+), 58 deletions(-)
+> 
+> -- 
+> 2.18.1
+> 
