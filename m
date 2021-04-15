@@ -1,48 +1,51 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [PATCH v3 1/5] mm/memcg: Pass both memcg and lruvec to
- mod_memcg_lruvec_state()
-Date: Thu, 15 Apr 2021 12:40:10 -0400
-Message-ID: <YHhsapGx3vTlyZvF@cmpxchg.org>
+From: Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v3 3/5] mm/memcg: Cache vmstat data in percpu
+ memcg_stock_pcp
+Date: Thu, 15 Apr 2021 12:50:28 -0400
+Message-ID: <YHhu1BOMj1Ip+sb3@cmpxchg.org>
 References: <20210414012027.5352-1-longman@redhat.com>
- <20210414012027.5352-2-longman@redhat.com>
+ <20210414012027.5352-4-longman@redhat.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=+MTg13jTruCvQFaQ2SQHWrJMRTHVexZhbO2LJXAAyHU=;
-        b=f2azcLNZKFWVZUi+8XlEbk6xsbqrFPaLUskuzNkt4yE1HRpTTrcLRwV2kQt0HrgDFE
-         rVwpA9q0JEuyse5ePGHghwY1t+A+GPkgJb2OnZjCHD/VJyH3ZKGS46D6pgCtC7Z95JtM
-         33KKM18EU0EJI9eOZQhPb2U8b3GuVPqpmGv8JwgbzjxbOB/v2c64Uq6WeExA1QmpQZt+
-         92/nDRBZIHZ1AUlVayRBlQ7+vA8kHBZynbnsZ/kVg2GY43428DBGz9LPK06fYEh6wZBX
-         /I7JO6qcEZx2/Ltz/urm+ZH7FxV3/MALWzsvBgzcEo9pgtbfhLRKOZVHur6XLWVGIzaQ
-         hAgw==
+        bh=72rB8XajCzG79dd5/kOjH7uMhYOH+DU3KMVLgxLTyr4=;
+        b=gQvCER62Mwi5oOStzJNE1BKisdCON4w0Nn2typ/ZyS1Ny50cGwhUj9pvaveb3tS9/E
+         X9MNmWLkyS9uXvaumY/gMJXf8m+jhaGuAOeFRcXV9DF8WLtqNDnuki4CHTcmCgRQMWgX
+         f3zALOJ57RB3qV+eTAbSEx+AutfxwtoDwjoqIzk3Ei4QXWsD8M6LRgg7wGL0LaXyLiho
+         344kPvBWK4+RhlgZtEs+mK5xUlqQSffYOatYybZyyx8/RhSHJFzmxMaNddavPBPrHsDA
+         /hVrZaxPiv8rCR4j8LjKGwsmpreZVSW5yhnbx6wRts3LHecG1e3eyeL0/fLAEoHvRqxV
+         hZrw==
 Content-Disposition: inline
-In-Reply-To: <20210414012027.5352-2-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20210414012027.5352-4-longman@redhat.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Xing Zhengjun <zhengjun.xing-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+To: Waiman Long <longman@redhat.com>
+Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Vlastimil Babka <vbabka@suse.cz>, Roman Gushchin <guro@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Alex Shi <alex.shi@linux.alibaba.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Wei Yang <richard.weiyang@gmail.com>, Masayoshi Mizuma <msys.mizuma@gmail.com>, Xing Zhengjun <zhengjun.xing@linux.intel.com>
 
-On Tue, Apr 13, 2021 at 09:20:23PM -0400, Waiman Long wrote:
-> The caller of mod_memcg_lruvec_state() has both memcg and lruvec readily
-> available. So both of them are now passed to mod_memcg_lruvec_state()
-> and __mod_memcg_lruvec_state(). The __mod_memcg_lruvec_state() is
-> updated to allow either of the two parameters to be set to null. This
-> makes mod_memcg_lruvec_state() equivalent to mod_memcg_state() if lruvec
-> is null.
+On Tue, Apr 13, 2021 at 09:20:25PM -0400, Waiman Long wrote:
+> Before the new slab memory controller with per object byte charging,
+> charging and vmstat data update happen only when new slab pages are
+> allocated or freed. Now they are done with every kmem_cache_alloc()
+> and kmem_cache_free(). This causes additional overhead for workloads
+> that generate a lot of alloc and free calls.
 > 
-> The new __mod_memcg_lruvec_state() function will be used in the next
-> patch as a replacement of mod_memcg_state() in mm/percpu.c for the
-> consolidation of the memory uncharge and vmstat update functions in
-> the kmem_cache_free() path.
+> The memcg_stock_pcp is used to cache byte charge for a specific
+> obj_cgroup to reduce that overhead. To further reducing it, this patch
+> makes the vmstat data cached in the memcg_stock_pcp structure as well
+> until it accumulates a page size worth of update or when other cached
+> data change.
+> 
+> On a 2-socket Cascade Lake server with instrumentation enabled and this
+> patch applied, it was found that about 17% (946796 out of 5515184) of the
+> time when __mod_obj_stock_state() is called leads to an actual call to
+> mod_objcg_state() after initial boot. When doing parallel kernel build,
+> the figure was about 16% (21894614 out of 139780628). So caching the
+> vmstat data reduces the number of calls to mod_objcg_state() by more
+> than 80%.
 
-This requires users who want both to pass a pgdat that can be derived
-from the lruvec. This is error prone, and we just acked a patch that
-removes this very thing from mem_cgroup_page_lruvec().
-
-With the suggestion for patch 2, this shouldn't be necessary anymore,
-though. And sort of underlines my point around that combined function
-creating akwward code above and below it.
+Right, but mod_objcg_state() is itself already percpu-cached. What's
+the benefit of avoiding calls to it with another percpu cache?
