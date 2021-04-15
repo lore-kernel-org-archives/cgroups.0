@@ -1,40 +1,106 @@
-From: Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v3 5/5] mm/memcg: Optimize user context object stock
- access
-Date: Thu, 15 Apr 2021 08:16:53 -0400
-Message-ID: <20210415121653.dotuf6253s5yuhae@gabell>
-References: <20210414012027.5352-1-longman@redhat.com>
- <20210414012027.5352-6-longman@redhat.com>
- <20210415032836.lohexqge3cvpsqoa@gabell>
- <alpine.DEB.2.22.394.2104151143080.632904@gentwo.de>
+From: Auger Eric <eric.auger@redhat.com>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
+ APIs
+Date: Thu, 15 Apr 2021 15:11:19 +0200
+Message-ID: <4bea6eb9-08ad-4b6b-1e0f-c97ece58a078@redhat.com>
+References: <MWHPR11MB188639EE54B48B0E1321C8198C7D9@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210330132830.GO2356281@nvidia.com>
+ <BN6PR11MB40688F5AA2323AB8CC8E65E7C37C9@BN6PR11MB4068.namprd11.prod.outlook.com>
+ <20210331124038.GE1463678@nvidia.com>
+ <BN6PR11MB406854CAE9D7CE86BEAB3E23C37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
+ <BN6PR11MB40687428F0D0F3B5F13EA3E0C37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
+ <YGW27KFt9eQB9X2z@myrica>
+ <BN6PR11MB4068171CD1D4B823515F7EFBC37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
+ <20210401134236.GF1463678@nvidia.com>
+ <BN6PR11MB4068C4DE7AF43D44DE70F4C1C37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
+ <20210401160337.GJ1463678@nvidia.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=vWuMPoAE8UBxHeNo7QhXBPsmih0P+8U7Q8QiWirp95g=;
-        b=QEPR7zW4F2buJfe2/0q/Do+HgnihvLvH75yFZXYoSIEAsd5pvO2VZsskORw9FaK3qT
-         bcZn9AeJubvP+XKoDHKYPm17f5EnqO6SnyFbevyQpdLFd/dgjC8NtoAynIjQtSipvppY
-         IKclDl5Wb55AG6gDcd55/LzTdzszDj/5h/oXHSpOMWj0JcWG67nS8W3Mi7BRYfpuNjAV
-         98bZ0lymWQAsgfYv6Dq5dXZAOz/V/hYV67v6JD2mIh7ICfEbFoBpDUtTVM4s2Wr0wkQj
-         yMRK89IE2tJKHj23aKC9y3TPmgaBFzMRLuEr+qKRaih2eEA02VSSOLndN4pCayGugPc6
-         HyYQ==
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.22.394.2104151143080.632904-LoxgEY9JZOazQB+pC5nmwQ@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1618492300;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=uJFJJborCVJEMqUuUmQ0ihhHIFtN58LgRcEx9fJY0yk=;
+        b=YfdYhD1KXOQofVDi6ddoyfUiLfmOSpXtVQo48PGgsItO1LiUx5Bi46thUvFlk12UnUU5rl
+        Cjjp7LYpRteqZB7Wtz1KvjifuKM/0sZQQ9SA5V1Q9mEUmsuW+csMfblwdqfiW8Fl7JO0I1
+        B2Zwi1X8/2q0XKteF2uCgdI0xB/S12A=
+In-Reply-To: <20210401160337.GJ1463678@nvidia.com>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christoph Lameter <cl-LoxgEY9JZOazQB+pC5nmwQ@public.gmane.org>
-Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Xing Zhengjun <zhengjun.xing-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+To: Jason Gunthorpe <jgg@nvidia.com>, "Liu, Yi L" <yi.l.liu@intel.com>
+Cc: Jean-Philippe Brucker <jean-philippe@linaro.org>, "Tian, Kevin" <kevin.tian@intel.com>, Jacob Pan <jacob.jun.pan@linux.intel.com>, LKML <linux-kernel@vger.kernel.org>, Joerg Roedel <joro@8bytes.org>, Lu Baolu <baolu.lu@linux.intel.com>, David Woodhouse <dwmw2@infradead.org>, "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Li Zefan <lizefan@huawei.com>, Johannes Weiner <hannes@cmpxchg.org>, Jean-Philippe Brucker <jean-philippe@linaro.com>, Alex Williamson <alex.williamson@redhat.com>, Jonathan Corbet <corbet@lwn.net>, "Raj, Ashok" <ashok.raj@intel.com>, "Wu, Hao" <hao.wu@intel.com>, "Jiang, Dave" <dave.jiang@intel.com>
 
-On Thu, Apr 15, 2021 at 11:44:55AM +0200, Christoph Lameter wrote:
-> Would you please stop quoting the whole patch when you have nothing to say
-> about the details? It is enough to just respond without quoting. I was
-> looking through this trying to find something you said about individual
-> sections of code but there was nothing.
+Hi Jason,
 
-Thank you for pointing it out and sorry about that.
-I'll do that next time.
+On 4/1/21 6:03 PM, Jason Gunthorpe wrote:
+> On Thu, Apr 01, 2021 at 02:08:17PM +0000, Liu, Yi L wrote:
+> 
+>> DMA page faults are delivered to root-complex via page request message and
+>> it is per-device according to PCIe spec. Page request handling flow is:
+>>
+>> 1) iommu driver receives a page request from device
+>> 2) iommu driver parses the page request message. Get the RID,PASID, faulted
+>>    page and requested permissions etc.
+>> 3) iommu driver triggers fault handler registered by device driver with
+>>    iommu_report_device_fault()
+> 
+> This seems confused.
+> 
+> The PASID should define how to handle the page fault, not the driver.
 
-- Masa
+In my series I don't use PASID at all. I am just enabling nested stage
+and the guest uses a single context. I don't allocate any user PASID at
+any point.
+
+When there is a fault at physical level (a stage 1 fault that concerns
+the guest), this latter needs to be reported and injected into the
+guest. The vfio pci driver registers a fault handler to the iommu layer
+and in that fault handler it fills a circ bugger and triggers an eventfd
+that is listened to by the VFIO-PCI QEMU device. this latter retrives
+the faault from the mmapped circ buffer, it knowns which vIOMMU it is
+attached to, and passes the fault to the vIOMMU.
+Then the vIOMMU triggers and IRQ in the guest.
+
+We are reusing the existing concepts from VFIO, region, IRQ to do that.
+
+For that use case, would you also use /dev/ioasid?
+
+Thanks
+
+Eric
+> 
+> I don't remember any device specific actions in ATS, so what is the
+> driver supposed to do?
+> 
+>> 4) device driver's fault handler signals an event FD to notify userspace to
+>>    fetch the information about the page fault. If it's VM case, inject the
+>>    page fault to VM and let guest to solve it.
+> 
+> If the PASID is set to 'report page fault to userspace' then some
+> event should come out of /dev/ioasid, or be reported to a linked
+> eventfd, or whatever.
+> 
+> If the PASID is set to 'SVM' then the fault should be passed to
+> handle_mm_fault
+> 
+> And so on.
+> 
+> Userspace chooses what happens based on how they configure the PASID
+> through /dev/ioasid.
+> 
+> Why would a device driver get involved here?
+> 
+>> Eric has sent below series for the page fault reporting for VM with passthru
+>> device.
+>> https://lore.kernel.org/kvm/20210223210625.604517-5-eric.auger@redhat.com/
+> 
+> It certainly should not be in vfio pci. Everything using a PASID needs
+> this infrastructure, VDPA, mdev, PCI, CXL, etc.
+> 
+> Jason
+> 
+
