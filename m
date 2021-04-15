@@ -1,120 +1,112 @@
-From: Tim Chen <tim.c.chen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [RFC PATCH v1 00/11] Manage the top tier memory in a tiered
- memory
-Date: Wed, 14 Apr 2021 17:42:39 -0700
-Message-ID: <ec5d5da8-bfc8-cd7a-7959-ee86d4e01bfa@linux.intel.com>
-References: <cover.1617642417.git.tim.c.chen@linux.intel.com>
- <YGwlGrHtDJPQF7UG@dhcp22.suse.cz>
- <c615a610-eb4b-7e1e-16d1-4bc12938b08a@linux.intel.com>
- <YG7ugXZZ9BcXyGGk@dhcp22.suse.cz>
- <58e5dcc9-c134-78de-6965-7980f8596b57@linux.intel.com>
- <CALvZod4zXB6-3Mshu_TnTsQaDErfYkPTw9REYNRptSvPSRmKVA@mail.gmail.com>
+From: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3] cpu/hotplug: wait for cpuset_hotplug_work to finish on
+ cpu onlining
+Date: Thu, 15 Apr 2021 02:30:03 +0100
+Message-ID: <CAFBcO+8NBZxNdXtVuTXt9_m9gWTq7kxrcDcdFntvVjR_0rM13A@mail.gmail.com>
+References: <20210317003616.2817418-1-aklimov@redhat.com> <87tuowcnv3.ffs@nanos.tec.linutronix.de>
+ <CALW4P+L9_tYgfOPv0riWWnv54HPhKPDJ4EK4yYaWsz0MdDGqfw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CALvZod4zXB6-3Mshu_TnTsQaDErfYkPTw9REYNRptSvPSRmKVA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1618450217;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=NuT37Vpiz4KczvJjbLuhVhLsnc1sKQ6bWyp9Fysxc0M=;
+        b=SKhq/xnRzymw3OROtwY8Am/xi4wnDKFx6mlhKxf3ulA5LZ0UsKhsYL0ilIA/HsK7JbMUFM
+        FfWHcbHQL1OtIZV1bfto5mYPQr+DUpRAxiBQXwK+lhCTMrVGyP275AyoSnogh9+QFPs1uK
+        C5yPAWVNvZHCOLh9hrAryxbpT7ASXVM=
+In-Reply-To: <CALW4P+L9_tYgfOPv0riWWnv54HPhKPDJ4EK4yYaWsz0MdDGqfw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dave Hansen <dave.hansen-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ying Huang <ying.huang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Wei Xu <weixugc-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Yury Norov <yury.norov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Joshua Baker <jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, audralmitchel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, rafael-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org>, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, Alexey Klimov <klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
+On Sun, Apr 4, 2021 at 3:32 AM Alexey Klimov <klimov.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+>
+> On Sat, Mar 27, 2021 at 9:01 PM Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org> wrote:
 
+[...]
 
-On 4/12/21 12:20 PM, Shakeel Butt wrote:
+Now, the patch:
 
+>> Subject: cpu/hotplug: Cure the cpusets trainwreck
+>> From: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+>> Date: Sat, 27 Mar 2021 15:57:29 +0100
 >>
->> memory_t0.current       Current usage of tier 0 memory by the cgroup.
+>> Alexey and Joshua tried to solve a cpusets related hotplug problem which is
+>> user space visible and results in unexpected behaviour for some time after
+>> a CPU has been plugged in and the corresponding uevent was delivered.
 >>
->> memory_t0.min           If tier 0 memory used by the cgroup falls below this low
->>                         boundary, the memory will not be subjected to demotion
->>                         to lower tiers to free up memory at tier 0.
+>> cpusets delegate the hotplug work (rebuilding cpumasks etc.) to a
+>> workqueue. This is done because the cpusets code has already a lock
+>> nesting of cgroups_mutex -> cpu_hotplug_lock. A synchronous callback or
+>> waiting for the work to finish with cpu_hotplug_lock held can and will
+>> deadlock because that results in the reverse lock order.
 >>
->> memory_t0.low           Above this boundary, the tier 0 memory will be subjected
->>                         to demotion.  The demotion pressure will be proportional
->>                         to the overage.
+>> As a consequence the uevent can be delivered before cpusets have consistent
+>> state which means that a user space invocation of sched_setaffinity() to
+>> move a task to the plugged CPU fails up to the point where the scheduled
+>> work has been processed.
 >>
->> memory_t0.high          If tier 0 memory used by the cgroup exceeds this high
->>                         boundary, allocation of tier 0 memory by the cgroup will
->>                         be throttled. The tier 0 memory used by this cgroup
->>                         will also be subjected to heavy demotion.
+>> The same is true for CPU unplug, but that does not create user observable
+>> failure (yet).
 >>
->> memory_t0.max           This will be a hard usage limit of tier 0 memory on the cgroup.
+>> It's still inconsistent to claim that an operation is finished before it
+>> actually is and that's the real issue at hand. uevents just make it
+>> reliably observable.
 >>
->> If needed, memory_t[12...].current/min/low/high for additional tiers can be added.
->> This follows closely with the design of the general memory controller interface.
+>> Obviously the problem should be fixed in cpusets/cgroups, but untangling
+>> that is pretty much impossible because according to the changelog of the
+>> commit which introduced this 8 years ago:
 >>
->> Will such an interface looks sane and acceptable with everyone?
+>>  3a5a6d0c2b03("cpuset: don't nest cgroup_mutex inside get_online_cpus()")
 >>
-> 
-> I have a couple of questions. Let's suppose we have a two socket
-> system. Node 0 (DRAM+CPUs), Node 1 (DRAM+CPUs), Node 2 (PMEM on socket
-> 0 along with Node 0) and Node 3 (PMEM on socket 1 along with Node 1).
-> Based on the tier definition of this patch series, tier_0: {node_0,
-> node_1} and tier_1: {node_2, node_3}.
-> 
-> My questions are:
-> 
-> 1) Can we assume that the cost of access within a tier will always be
-> less than the cost of access from the tier? (node_0 <-> node_1 vs
-> node_0 <-> node_2)
+>> the lock order cgroups_mutex -> cpu_hotplug_lock is a design decision and
+>> the whole code is built around that.
+>>
+>> So bite the bullet and invoke the relevant cpuset function, which waits for
+>> the work to finish, in _cpu_up/down() after dropping cpu_hotplug_lock and
+>> only when tasks are not frozen by suspend/hibernate because that would
+>> obviously wait forever.
+>>
+>> Waiting there with cpu_add_remove_lock, which is protecting the present
+>> and possible CPU maps, held is not a problem at all because neither work
+>> queues nor cpusets/cgroups have any lockchains related to that lock.
+>>
+>> Waiting in the hotplug machinery is not problematic either because there
+>> are already state callbacks which wait for hardware queues to drain. It
+>> makes the operations slightly slower, but hotplug is slow anyway.
+>>
+>> This ensures that state is consistent before returning from a hotplug
+>> up/down operation. It's still inconsistent during the operation, but that's
+>> a different story.
+>>
+>> Add a large comment which explains why this is done and why this is not a
+>> dump ground for the hack of the day to work around half thought out locking
+>> schemes. Document also the implications vs. hotplug operations and
+>> serialization or the lack of it.
+>>
+>> Thanks to Alexy and Joshua for analyzing why this temporary
+>> sched_setaffinity() failure happened.
+>>
+>> Reported-by: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>> Reported-by: Joshua Baker <jobaker-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>> Signed-off-by: Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+>> Cc: Daniel Jordan <daniel.m.jordan-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+>> Cc: Qais Yousef <qais.yousef-5wv7dgnIgG8@public.gmane.org>
 
-I do assume that higher tier memory offers better performance (or less
-access latency) than a lower tier memory.  Otherwise, this defeats the
-whole purpose of promoting hot memory from lower tier to a higher tier,
-and demoting cold memory to a lower tier.
+Feel free to use:
+Tested-by: Alexey Klimov <aklimov-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Tiers assumption is embedded once we define this promotion/demotion relationship
-between the numa nodes.
+The bug doesn't reproduce with this change, I had the testcase running
+for ~25 hrs without failing under different workloads.
 
-So if 
+Are you going to submit the patch? Or I can do it on your behalf if you like.
 
-  node_m ----demotes----> node_n
-         <---promotes---- 
+[...]
 
-then node_m is one tier higher tier than node_n. This promotion/demotion
-relationship between the nodes is the underpinning of Dave and Ying's
-demotion and promotion patch sets.  
+Best regards,
+Alexey
 
-> 2) If yes to (1), is that assumption future proof? Will the future
-> systems with DRAM over CXL support have the same characteristics?
-
-I think if you configure a promotion/demotion relationship between
-DRAM over CXL and local-socket connected DRAM, you could divide them
-up into separate tiers.  Or you don't care about the difference and
-you will configure them not to have a promotion/demotion relationship
-and they will be at the same tier.  Balance within the same tier
-will be effected by the autonuma mechanism.
-
-> 3) Will the cost of access from tier_0 to tier_1 be uniform? (node_0
-> <-> node_2 vs node_0 <-> node_3). For jobs running on node_0, node_3
-> might be third tier and similarly for jobs running on node_1, node_2
-> might be third tier.
-
-Tier definition is an admin's choice, of where the admin think the
-hot memory should reside after looking at the memory performance.
-It falls out of how the admin construct the promotion/demotion relationship
-between the nodes and OS does not assume the tier relationship from
-memory performance directly. 
-
-> 
-> The reason I am asking these questions is that the statically
-> partitioning memory nodes into tiers will inherently add platform
-> specific assumptions in the user API.
-> 
-> Assumptions like:
-> 1) Access within tier is always cheaper than across tier.
-> 2) Access from tier_i to tier_i+1 has uniform cost.
-> 
-> The reason I am more inclined towards having numa centric control is
-> that we don't have to make these assumptions. Though the usability
-> will be more difficult. Greg (CCed) has some ideas on making it better
-> and we will share our proposal after polishing it a bit more.
-> 
-
-I am still trying to understand how a numa centric control actually
-work. Putting limits on every numa node for each cgroup
-seems to make the system configuration quite complicated.  Looking
-forward to your proposal so I can better understand that perspective.
-
-Tim 
