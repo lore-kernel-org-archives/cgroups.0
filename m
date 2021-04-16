@@ -1,74 +1,89 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Fri, 16 Apr 2021 11:05:24 -0300
-Message-ID: <20210416140524.GI1370958@nvidia.com>
-References: <BN6PR11MB406854CAE9D7CE86BEAB3E23C37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
- <BN6PR11MB40687428F0D0F3B5F13EA3E0C37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
- <YGW27KFt9eQB9X2z@myrica>
- <BN6PR11MB4068171CD1D4B823515F7EFBC37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
- <20210401134236.GF1463678@nvidia.com>
- <BN6PR11MB4068C4DE7AF43D44DE70F4C1C37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
- <20210401160337.GJ1463678@nvidia.com>
- <4bea6eb9-08ad-4b6b-1e0f-c97ece58a078@redhat.com>
- <20210415230732.GG1370958@nvidia.com>
- <b1492fd3-8ce2-1632-3b14-73d8d4356fd7@redhat.com>
+From: Odin Ugedal <odin@uged.al>
+Subject: [RFC] docs/admin-guide/cgroup-v2: Add hugetlb rsvd files
+Date: Fri, 16 Apr 2021 16:11:46 +0200
+Message-ID: <20210416141146.542786-1-odin@uged.al>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=X0NgyUKoUtcHRz74mviqvi9/LcKudual4GKXJDqQC5c=;
- b=Cz3z0QxDUMf2fWt5ha2QRgfG/61V3tNtxPcXrBifbBL/VCfYY/Z3di26sFm+JgcODnivN1w7i6AsqpQ///WGv0Goe4icuw2VZaC7IB8Rajy91RL/NGNDpQ5p/BrFlWnbv2vwXJAdKO8vY6n4XVn/aT92ZF+Tq7I+BK99O8lWFC6+D3rHa9/FIzL4OMlkC00arktCJicR8/JeDXbWP42YZsoMNTekiobH5VzMtDo7bPP3vF6zU0oQq/QFmV9UNpF0pvFCGu/1RRLxhPl32oFqMUX2lvUhUVQ4GthBzuRA0rEHLPC+13otjTh64x6L2Et448Zl6I6JXjH6bnBKhCFeXw==
-Content-Disposition: inline
-In-Reply-To: <b1492fd3-8ce2-1632-3b14-73d8d4356fd7-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=uged.al; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Qvg0+ynFQWDqQCIO8KNqZL3+z/lrvuKdEEgfI7FsQlo=;
+        b=ELyLsiUaExhjw8YySJFA347NWUPn9j1onQtEB8PIFFgCd0rSH4RHWYCfpnKhEl3/w8
+         r2tqpsvCLvbZ5ufl2YzrkABtOqLiXfpc0s8WWpP3j3liXDtL+8fKYh5E9BtuYP9NUBBX
+         F2RVbdj+Qd8QICZ7cK0S2WsPyy+wtkXbj1aPNXuRK2WCHEYbL77Bn4+S2Y1AJKqvIjF2
+         zfQDxWkt6S7yWSrOahYG/p9o44w/TMzabmP+cykZtFiKvJ1q2vp/jai2lvCYV6KhH8Cc
+         KVKs/iOKDIlgT+3z6ih24LIhHDsL0lZHPBf+YFFqElurjSyFM4D6fHiUcnCmVZS5dKlR
+         e/VA==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+To: corbet@lwn.net
+Cc: cgroups@vger.kernel.org, linux-doc@vger.kernel.org, Odin Ugedal <odin@uged.al>
 
-On Fri, Apr 16, 2021 at 03:38:02PM +0200, Auger Eric wrote:
+Add missing docs about reservation accounting for hugetlb in cgroup v2.
 
-> The redesign requirement came pretty late in the development process.
-> The iommu user API is upstream for a while, the VFIO interfaces have
-> been submitted a long time ago and under review for a bunch of time.
-> Redesigning everything with a different API, undefined at this point, is
-> a major setback for our work and will have a large impact on the
-> introduction of features companies are looking forward, hence our
-> frustration.
+Signed-off-by: Odin Ugedal <odin@uged.al>
+---
+RFC: This is linking from cgroup-v1 docs, and that is probably not
+optimal. The information about the difference between reservation
+accounting and page fault accounting is pretty hard to make short.
 
-I will answer both you and Jacob at once.
+I think we have four ways to do it, but I don't know what is
+most optimal:
 
-This is uAPI, once it is set it can never be changed.
+- Link from cgroup-v2 to cgroup-v1 (this patch)
+- Have a separate description for both v1 and v2
+- Move description from cgroup-v1 to cgroup-v2, and link from v1 to
+  v2.
+- Move info from cgroup-v1 to admin-guide/mm/hugetlbpage or
+  vm/hugetlbfs_reserv, and link from cgroup to them.
 
-The kernel process and philosophy is to invest heavily in uAPI
-development and review to converge on the best uAPI possible.
+admin-guide/cgroup-v1/hugetlb need some formatting anyhow also, will fix
+that in the same patchset as this. Together with describing
+<hugepagesize> in cgroup-v2.
 
-Many past submissions have take a long time to get this right, there
-are several high profile uAPI examples.
+ Documentation/admin-guide/cgroup-v2.rst | 23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
 
-Do you think this case is so special, or the concerns so minor, that it
-should get to bypass all of the normal process?
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index 64c62b979f2f..0a29cd46b1ab 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -2143,12 +2143,31 @@ RDMA Interface Files
+ HugeTLB
+ -------
+ 
+-The HugeTLB controller allows to limit the HugeTLB usage per control group and
+-enforces the controller limit during page fault.
++The "HugeTLB" controller regulates usage of huge pages. The controller
++supports two forms of accounting: page fault accounting and reservation
++accounting. See
++:ref:`Documentation/admin-guide/cgroup-v1/hugetlb.rst <cgroup-v1-hugetlb>`
++for more details.
++
+ 
+ HugeTLB Interface Files
+ ~~~~~~~~~~~~~~~~~~~~~~~
+ 
++  hugetlb.<hugepagesize>.rsvd.current
++	Show current reservations and no-reserve faults for "hugepagesize"
++	hugetlb.  It exists for all the cgroup except root.
++
++  hugetlb.<hugepagesize>.rsvd.max
++	Set/show the hard limit of reservations and no-reserve faults for
++	"hugepagesize" hugetlb. The default value is "max".
++	It exists for all the cgroup except root.
++
++  hugetlb.<hugepagesize>.rsvd.events
++	A read-only flat-keyed file which exists on non-root cgroups.
++
++	  max
++		The number of allocation failure due to HugeTLB reservation limit
++
+   hugetlb.<hugepagesize>.current
+ 	Show current usage for "hugepagesize" hugetlb.  It exists for all
+ 	the cgroup except root.
+-- 
+2.31.1
 
-Ask yourself, is anyone advocating for the current direction on
-technical merits alone?
-
-Certainly the patches I last saw where completely disgusting from a
-uAPI design perspective.
-
-It was against the development process to organize this work the way
-it was done. Merging a wack of dead code to the kernel to support a
-uAPI vision that was never clearly articulated was a big mistake.
-
-Start from the beginning. Invest heavily in defining a high quality
-uAPI. Clearly describe the uAPI to all stake holders. Break up the
-implementation into patch series without dead code. Make the
-patches. Remove the dead code this group has already added.
-
-None of this should be a surprise. The VDPA discussion and related
-"what is a mdev" over a year ago made it pretty clear VFIO is not the
-exclusive user of "IOMMU in userspace" and that places limits on what
-kind of uAPIs expansion it should experience going forward.
-
-Jason
