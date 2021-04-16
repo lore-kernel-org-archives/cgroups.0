@@ -1,54 +1,56 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [cgroup:for-next 1/5] kernel/cgroup/misc.c:61 valid_type() warn:
- unsigned 'type' is never less than zero.
-Date: Fri, 16 Apr 2021 16:42:04 -0400
-Message-ID: <YHn2nDHqakJLG3di@slm.duckdns.org>
-References: <202104131244.3qFwbTtx-lkp@intel.com>
- <YHU4XrOW1dBIZfVl@google.com>
+Subject: Re: [RFC] docs/admin-guide/cgroup-v2: Add hugetlb rsvd files
+Date: Fri, 16 Apr 2021 16:45:38 -0400
+Message-ID: <YHn3cifQv1FUOqfU@slm.duckdns.org>
+References: <20210416141146.542786-1-odin@uged.al>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=XB7njt+oGvZctAMxlmgcAtP5yDpC3NFFKZ6SHAuxUDM=;
-        b=Jxemyxd9Q7CqrK7A61vstQkvzmVDdkSAa2JDVElwLoSy6GSWrakwVG6tqvpBp6X4aQ
-         rR1RR9yI1flIahOxrdJYfskfdFcg73imCsSBMwtuAP1Vrt276ElpzgGF9FkKrBlaSZfQ
-         JtmP5TZ9bTmUu1FW7GCme7m/rF8r5Rzi4r296Ds+iHb8m4+K2ZrULrig1Z4gbJ7+9ey1
-         QlWQQsBJVPToRapQTjnAXHH6ZFIvic8Y5SKjLCJ+8HnM522Nrzdbz9Ke2Okn3EAMtUlw
-         2q+BdrMNopvgne0A/gCueLfJzXkhNcgFqIcPoh8C/1f1UKS++SlzraTHZQOKRW7h4mv9
-         /F7g==
+        bh=AWk2YlZvUGRhuI33/yUiX9atOwnUzYG38aU0FDL42xY=;
+        b=FgYVOoIdZ4sQvOUT1JHrYKUFU+jlAZrX78C0g+MopM30ar0Syn+iLvzEO4VIqddWS1
+         UysK6NZeNoZrgjYV+94LqtBg6zzL4j3YA3ymub+zYiZ7HeXW3eMcsbQNgLEtZbgEAGEd
+         NwCAVBm68ZCQW0pd7nhRSmXyzRUx0qFOpF8n1ks4cGty5hzQZtu4xGt9G3IVGDqP9VrG
+         VTBRVjqLw/87EP9NdCFf6ROhq+1yNH/Xh6Ix7K4uGy2tqn4qFLaaZo1GG5OF2CTo7hEd
+         SIXouwLYFVsVloQAJHhTNhAQXYBEWaadxBljbSdFOBdn/wblVABFvDN+h05QUmQdmsf9
+         Oj/A==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <YHU4XrOW1dBIZfVl-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <20210416141146.542786-1-odin-RObV4cXtwVA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vipin Sharma <vipinsh-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org
+To: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
+Cc: corbet-T1hC0tSOHrs@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Mon, Apr 12, 2021 at 11:21:18PM -0700, Vipin Sharma wrote:
-> On Tue, Apr 13, 2021 at 12:30:50PM +0800, kernel test robot wrote:
-> > smatch warnings:
-> > kernel/cgroup/misc.c:61 valid_type() warn: unsigned 'type' is never less than zero.
-> > kernel/cgroup/misc.c:210 misc_cg_max_show() warn: we never enter this loop
-> > kernel/cgroup/misc.c:257 misc_cg_max_write() warn: we never enter this loop
-> > kernel/cgroup/misc.c:299 misc_cg_current_show() warn: we never enter this loop
-> > kernel/cgroup/misc.c:323 misc_cg_capacity_show() warn: we never enter this loop
-> > kernel/cgroup/misc.c:376 misc_cg_alloc() warn: we never enter this loop
-> > kernel/cgroup/misc.c:376 misc_cg_alloc() warn: unsigned 'i' is never less than zero.
-> > kernel/cgroup/misc.c:376 misc_cg_alloc() warn: unsigned 'i' is never less than zero.
-> > 
-> 
-> Tejun,
-> 
-> Should this be ignored because MISC_CG_RES_TYPES is 0 as no resource is
-> defined but the code has 'for' loops and condition checks which are valid?
-> 
-> If there is a way to fix these let me know, I will make the change.
+(cc'ing memcg maintainers)
 
-Can't think of a pretty way to slience this, so ignoring sounds good to me
-for now. Maybe smatch folks have better ideas?
+On Fri, Apr 16, 2021 at 04:11:46PM +0200, Odin Ugedal wrote:
+> Add missing docs about reservation accounting for hugetlb in cgroup v2.
+> 
+> Signed-off-by: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
+> ---
+> RFC: This is linking from cgroup-v1 docs, and that is probably not
+> optimal. The information about the difference between reservation
+> accounting and page fault accounting is pretty hard to make short.
+> 
+> I think we have four ways to do it, but I don't know what is
+> most optimal:
+> 
+> - Link from cgroup-v2 to cgroup-v1 (this patch)
+> - Have a separate description for both v1 and v2
+> - Move description from cgroup-v1 to cgroup-v2, and link from v1 to
+>   v2.
+
+This would be my preference but I don't really mind the other way around
+that much.
+
+> - Move info from cgroup-v1 to admin-guide/mm/hugetlbpage or
+>   vm/hugetlbfs_reserv, and link from cgroup to them.
+
+What do others think?
 
 Thanks.
 
