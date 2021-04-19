@@ -1,226 +1,110 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:for-5.13] BUILD SUCCESS
- ffeee417d97f9171bce9f43c22c9f477e4c84f54
-Date: Sat, 17 Apr 2021 16:58:33 +0800
-Message-ID: <607aa339.U5ANJssVtoA0rAPz%lkp@intel.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v4 0/5] mm/memcg: Reduce kmemcache memory accounting overhead
+Date: Sun, 18 Apr 2021 20:00:27 -0400
+Message-ID: <20210419000032.5432-1-longman@redhat.com>
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1618790456;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc; bh=yKxQATdGznhOXpI/AZM1Ukls2PIZ1+2c4XLkkNdNT6Q=;
+        b=DvQGilwMpHgKY0Hn2ij8KN82HO2JMQmIjCfweIHUZFQyzdIbCBvzZ6X4sQMEijHrZze6NT
+        V0+jxJ/pQX6In1WFJFmCc06G2C24l+t2a761xDWTti36zWHPk4vqgNuzLxOzsuny1Gku/M
+        43RIY89Gj5ZmpPFLpdFSHsWEUJyubkM=
 List-ID: <cgroups.vger.kernel.org>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Xing Zhengjun <zhengjun.xing-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.13
-branch HEAD: ffeee417d97f9171bce9f43c22c9f477e4c84f54  cgroup: use tsk->in_iowait instead of delayacct_is_task_waiting_on_io()
+ v4:
+  - Drop v3 patch 1 as well as modification to mm/percpu.c as the percpu
+    vmstat update isn't frequent enough to worth caching it.
+  - Add a new patch 1 to move Move mod_objcg_state() to memcontrol.c instead.
+  - Combine v3 patches 4 & 5 into a single patch (patch 3).
+  - Add a new patch 4 to cache both reclaimable & unreclaimable vmstat updates.
+  - Add a new patch 5 to improve refill_obj_stock() performance.
 
-elapsed time: 724m
+ v3:
+  - Add missing "inline" qualifier to the alternate mod_obj_stock_state()
+    in patch 3.
+  - Remove redundant current_obj_stock() call in patch 5.
 
-configs tested: 195
-configs skipped: 2
+ v2:
+  - Fix bug found by test robot in patch 5.
+  - Update cover letter and commit logs.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+With the recent introduction of the new slab memory controller, we
+eliminate the need for having separate kmemcaches for each memory
+cgroup and reduce overall kernel memory usage. However, we also add
+additional memory accounting overhead to each call of kmem_cache_alloc()
+and kmem_cache_free().
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-x86_64                           allyesconfig
-riscv                            allmodconfig
-i386                             allyesconfig
-riscv                            allyesconfig
-mips                         tb0219_defconfig
-arm                             mxs_defconfig
-parisc                generic-64bit_defconfig
-arm                        mvebu_v5_defconfig
-arm                         vf610m4_defconfig
-powerpc                 mpc837x_mds_defconfig
-powerpc                       ebony_defconfig
-powerpc                     ksi8560_defconfig
-arm                    vt8500_v6_v7_defconfig
-arm                        clps711x_defconfig
-arm                         at91_dt_defconfig
-arc                      axs103_smp_defconfig
-mips                      maltaaprp_defconfig
-arm                          imote2_defconfig
-powerpc                      pcm030_defconfig
-powerpc                      pasemi_defconfig
-m68k                          amiga_defconfig
-ia64                          tiger_defconfig
-mips                  decstation_64_defconfig
-powerpc                        icon_defconfig
-mips                       capcella_defconfig
-sh                        edosk7705_defconfig
-powerpc                 mpc837x_rdb_defconfig
-mips                           ip28_defconfig
-ia64                             allmodconfig
-powerpc                    adder875_defconfig
-mips                      pistachio_defconfig
-arm                         lpc18xx_defconfig
-mips                           ip27_defconfig
-powerpc                 mpc8272_ads_defconfig
-arm                        magician_defconfig
-xtensa                       common_defconfig
-sh                     magicpanelr2_defconfig
-powerpc                         ps3_defconfig
-arm                          pcm027_defconfig
-sparc64                             defconfig
-arm                            xcep_defconfig
-sh                   rts7751r2dplus_defconfig
-powerpc                      arches_defconfig
-arm                        vexpress_defconfig
-powerpc                       eiger_defconfig
-sh                            hp6xx_defconfig
-arm                        trizeps4_defconfig
-arm                     davinci_all_defconfig
-sh                           se7750_defconfig
-arm                       aspeed_g5_defconfig
-powerpc                 mpc834x_mds_defconfig
-sh                          sdk7780_defconfig
-m68k                        mvme147_defconfig
-sh                           se7751_defconfig
-arm                            pleb_defconfig
-arm                        mini2440_defconfig
-sparc                       sparc32_defconfig
-mips                           ip22_defconfig
-powerpc                   motionpro_defconfig
-powerpc                     powernv_defconfig
-sh                             espt_defconfig
-sh                           se7780_defconfig
-sh                          lboxre2_defconfig
-arm                           sama5_defconfig
-ia64                        generic_defconfig
-csky                                defconfig
-mips                           ip32_defconfig
-sh                             shx3_defconfig
-powerpc                     mpc512x_defconfig
-powerpc                       holly_defconfig
-um                               alldefconfig
-arm                            mps2_defconfig
-arc                     nsimosci_hs_defconfig
-arm                        multi_v7_defconfig
-arm                       imx_v4_v5_defconfig
-arm                         socfpga_defconfig
-sh                ecovec24-romimage_defconfig
-powerpc                          allmodconfig
-arm                            zeus_defconfig
-sh                           se7705_defconfig
-arm                       omap2plus_defconfig
-powerpc                     mpc83xx_defconfig
-mips                      loongson3_defconfig
-riscv                          rv32_defconfig
-m68k                            q40_defconfig
-arc                         haps_hs_defconfig
-mips                malta_qemu_32r6_defconfig
-powerpc                 mpc8315_rdb_defconfig
-sparc                       sparc64_defconfig
-sh                        sh7757lcr_defconfig
-arm                              alldefconfig
-h8300                            allyesconfig
-arm                        cerfcube_defconfig
-mips                        vocore2_defconfig
-powerpc                     kilauea_defconfig
-powerpc                 mpc8540_ads_defconfig
-mips                            ar7_defconfig
-mips                     cu1000-neo_defconfig
-powerpc                     sequoia_defconfig
-powerpc                    ge_imp3a_defconfig
-powerpc                     taishan_defconfig
-arm                          iop32x_defconfig
-powerpc                        cell_defconfig
-s390                          debug_defconfig
-openrisc                  or1klitex_defconfig
-arm64                            alldefconfig
-sh                          r7785rp_defconfig
-powerpc                          g5_defconfig
-mips                        maltaup_defconfig
-i386                             alldefconfig
-arm                        shmobile_defconfig
-mips                      pic32mzda_defconfig
-m68k                          atari_defconfig
-openrisc                            defconfig
-arm                         s3c2410_defconfig
-arm                         bcm2835_defconfig
-powerpc                    socrates_defconfig
-arm                             rpc_defconfig
-arm                      footbridge_defconfig
-arm                        neponset_defconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-arc                              allyesconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-arc                                 defconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-parisc                           allyesconfig
-s390                                defconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-mips                             allmodconfig
-powerpc                          allyesconfig
-powerpc                           allnoconfig
-i386                 randconfig-a003-20210416
-i386                 randconfig-a006-20210416
-i386                 randconfig-a001-20210416
-i386                 randconfig-a005-20210416
-i386                 randconfig-a004-20210416
-i386                 randconfig-a002-20210416
-x86_64               randconfig-a014-20210416
-x86_64               randconfig-a015-20210416
-x86_64               randconfig-a011-20210416
-x86_64               randconfig-a013-20210416
-x86_64               randconfig-a012-20210416
-x86_64               randconfig-a016-20210416
-i386                 randconfig-a015-20210416
-i386                 randconfig-a014-20210416
-i386                 randconfig-a013-20210416
-i386                 randconfig-a012-20210416
-i386                 randconfig-a016-20210416
-i386                 randconfig-a011-20210416
-x86_64               randconfig-a003-20210417
-x86_64               randconfig-a002-20210417
-x86_64               randconfig-a005-20210417
-x86_64               randconfig-a001-20210417
-x86_64               randconfig-a006-20210417
-x86_64               randconfig-a004-20210417
-riscv                    nommu_k210_defconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-um                               allmodconfig
-um                                allnoconfig
-um                               allyesconfig
-um                                  defconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                      rhel-8.3-kbuiltin
-x86_64                                  kexec
+For workloads that require a lot of kmemcache allocations and
+de-allocations, they may experience performance regression as illustrated
+in [1] and [2].
 
-clang tested configs:
-x86_64               randconfig-a003-20210416
-x86_64               randconfig-a002-20210416
-x86_64               randconfig-a005-20210416
-x86_64               randconfig-a001-20210416
-x86_64               randconfig-a006-20210416
-x86_64               randconfig-a004-20210416
+A simple kernel module that performs repeated loop of 100,000,000
+kmem_cache_alloc() and kmem_cache_free() of either a small 32-byte object
+or a big 4k object at module init time is used for benchmarking. The
+test was run on a CascadeLake server with turbo-boosting disable to
+reduce run-to-run variation.
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+With memory accounting disable, the run time was 2.848s with small object
+and 2.890s for the big object. With memory accounting enabled, the run
+times with the application of various patches in the patchset were:
+
+  Applied patches   Run time   Accounting overhead   %age 1   %age 2
+  ---------------   --------   -------------------   ------   ------
+
+  Small 32-byte object:
+       None          10.570s         7.722s          100.0%   271.1%
+        1-2           8.560s         5.712s           74.0%   200.6%
+        1-3           6.592s         3.744s           48.5%   131.5%
+        1-4           7.154s         4.306s           55.8%   151.2%
+	1-5           7.192s         4.344s           56.3%   152.5%
+
+  Large 4k object:
+       None          20.612s        17.722s          100.0%   613.2%
+        1-2          20.354s        17.464s           98.5%   604.3%
+        1-3          19.395s        16.505s           93.1%   571.1%
+        1-4          19.094s        16.204s           91.4%   560.7%
+	1-5          13.576s        10.686s           60.3%   369.8%
+
+  N.B. %age 1 = overhead/unpatched overhead
+       %age 2 = overhead/accounting disable time
+
+The small object test exercises mainly the object stock charging and
+vmstat update code paths. The large object test also exercises the
+refill_obj_stock() and  __memcg_kmem_charge()/__memcg_kmem_uncharge()
+code paths.
+
+The vmstat data stock caching helps in the small object test,
+but not so much on the large object test. Similarly, eliminating
+irq_disable/irq_enable helps in the small object test and less so in
+the large object test. Caching both reclaimable and non-reclaimable
+vmstat data actually regresses performance a bit in this particular
+small object test.
+
+The final patch to optimize refill_obj_stock() has negligible impact
+on the small object test as this code path isn't being exercised. The
+large object test, however, sees a pretty good performance improvement
+with this patch.
+
+[1] https://lore.kernel.org/linux-mm/20210408193948.vfktg3azh2wrt56t@gabell/T/#u
+[2] https://lore.kernel.org/lkml/20210114025151.GA22932@xsang-OptiPlex-9020/
+
+Waiman Long (5):
+  mm/memcg: Move mod_objcg_state() to memcontrol.c
+  mm/memcg: Cache vmstat data in percpu memcg_stock_pcp
+  mm/memcg: Optimize user context object stock access
+  mm/memcg: Save both reclaimable & unreclaimable bytes in object stock
+  mm/memcg: Improve refill_obj_stock() performance
+
+ mm/memcontrol.c | 199 +++++++++++++++++++++++++++++++++++++++++-------
+ mm/slab.h       |  16 +---
+ 2 files changed, 175 insertions(+), 40 deletions(-)
+
+-- 
+2.18.1
+
