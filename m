@@ -1,78 +1,105 @@
-From: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
-Subject: Re: [RFC] docs/admin-guide/cgroup-v2: Add hugetlb rsvd files
-Date: Mon, 19 Apr 2021 10:51:32 -0400
-Message-ID: <YH2Y9FucBW2GLLLQ@cmpxchg.org>
-References: <20210416141146.542786-1-odin@uged.al>
- <YHn3cifQv1FUOqfU@slm.duckdns.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [External] [PATCH v4 5/5] mm/memcg: Improve refill_obj_stock() performance
+Date: Mon, 19 Apr 2021 08:00:21 -0700
+Message-ID: <CALvZod70htGEyUm0vfOMpufrW4b2c18U3wR8TxsErKpkn=+CGw@mail.gmail.com>
+References: <20210419000032.5432-1-longman@redhat.com> <20210419000032.5432-6-longman@redhat.com>
+ <CAMZfGtWX-Gik3i9_wmipuQZf0c-O-Yo_ejJYoN6-sf25vMLfog@mail.gmail.com>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cmpxchg-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=YrZItNxcyVF3pVVkQf+v9BtikCFL0HmoCNCAuzegmSI=;
-        b=OeaV6gvLZnnSgBj2hQod5raZF9ZCVqc92fxLKd1/xMoNPJ8BuhLxwWUWh8+peK+69U
-         kI1zU+Mkv29pcKw8ycTns/9U9WSYJ5S0lLXBtik78Ge8J89sTvfInSRg7zaz2ionBo4n
-         4/ZbXtklCKgJQsGKLDrpcG0VEV2Pn/ruArOnhvry0sjLSYDw6YJ4daItO8OQKpLcHcVF
-         Gkx5U9d3BhiKjRxwCBT+XpjpBRWfajJm/aJMQ0cpLWChEy9HUks3monRWvAG7z8qog1B
-         K+tc+tUPSqi9pwkYjzaOVkx0g0o0HyoxeFbTLiTANdgI7pnRZ2wdsg0zn1wIUNs5I7Rm
-         PPeg==
-Content-Disposition: inline
-In-Reply-To: <YHn3cifQv1FUOqfU-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=wJcxPKcW0Veo1gCFL+CuNN37VW8R09vglUBE4v/xI9U=;
+        b=AT/Bs0Z5qEWwjLyYLiTX6W0h7JJDDXlbbH1gNiMaQcF+icW/iFjk2BO/NlULM5/k3R
+         FIQOadrNxR/LQZ/E6LpXhxDsllaWOUj3r7nH7N38qaGsdwqtn2qT6PVPZ+82bMRXeDVE
+         4qkn/DA4HLAd+C+uF7pMGzGwH+1eAqsf2gXlNaEA05Eing9VFkTd9LdNsVdfhWgvaEwS
+         USrRJT6rrfxCyqkI9J5XlVd41fifaNVinnCF7lVTQD93EsE4R6NqIpt16bxDZBqS+cB4
+         cbzzwsMtySElnFgVXYuTAZh/XOp9KBm+yIyWffMzHqtYTKkGMryd1+0PQvmmZabjeCHC
+         AGbg==
+In-Reply-To: <CAMZfGtWX-Gik3i9_wmipuQZf0c-O-Yo_ejJYoN6-sf25vMLfog-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>, corbet-T1hC0tSOHrs@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Memory Management List <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Xing
 
-On Fri, Apr 16, 2021 at 04:45:38PM -0400, Tejun Heo wrote:
-> (cc'ing memcg maintainers)
-> 
-> On Fri, Apr 16, 2021 at 04:11:46PM +0200, Odin Ugedal wrote:
-> > Add missing docs about reservation accounting for hugetlb in cgroup v2.
-> > 
-> > Signed-off-by: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>
+On Sun, Apr 18, 2021 at 11:07 PM Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org> wrote:
+>
+> On Mon, Apr 19, 2021 at 8:01 AM Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> >
+> > There are two issues with the current refill_obj_stock() code. First of
+> > all, when nr_bytes reaches over PAGE_SIZE, it calls drain_obj_stock() to
+> > atomically flush out remaining bytes to obj_cgroup, clear cached_objcg
+> > and do a obj_cgroup_put(). It is likely that the same obj_cgroup will
+> > be used again which leads to another call to drain_obj_stock() and
+> > obj_cgroup_get() as well as atomically retrieve the available byte from
+> > obj_cgroup. That is costly. Instead, we should just uncharge the excess
+> > pages, reduce the stock bytes and be done with it. The drain_obj_stock()
+> > function should only be called when obj_cgroup changes.
+> >
+> > Secondly, when charging an object of size not less than a page in
+> > obj_cgroup_charge(), it is possible that the remaining bytes to be
+> > refilled to the stock will overflow a page and cause refill_obj_stock()
+> > to uncharge 1 page. To avoid the additional uncharge in this case,
+> > a new overfill flag is added to refill_obj_stock() which will be set
+> > when called from obj_cgroup_charge().
+> >
+> > Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 > > ---
-> > RFC: This is linking from cgroup-v1 docs, and that is probably not
-> > optimal. The information about the difference between reservation
-> > accounting and page fault accounting is pretty hard to make short.
-> > 
-> > I think we have four ways to do it, but I don't know what is
-> > most optimal:
-> > 
-> > - Link from cgroup-v2 to cgroup-v1 (this patch)
-> > - Have a separate description for both v1 and v2
-> > - Move description from cgroup-v1 to cgroup-v2, and link from v1 to
-> >   v2.
-> 
-> This would be my preference but I don't really mind the other way around
-> that much.
+> >  mm/memcontrol.c | 23 +++++++++++++++++------
+> >  1 file changed, 17 insertions(+), 6 deletions(-)
+> >
+> > diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+> > index a6dd18f6d8a8..d13961352eef 100644
+> > --- a/mm/memcontrol.c
+> > +++ b/mm/memcontrol.c
+> > @@ -3357,23 +3357,34 @@ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
+> >         return false;
+> >  }
+> >
+> > -static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
+> > +static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes,
+> > +                            bool overfill)
+> >  {
+> >         unsigned long flags;
+> >         struct obj_stock *stock = get_obj_stock(&flags);
+> > +       unsigned int nr_pages = 0;
+> >
+> >         if (stock->cached_objcg != objcg) { /* reset if necessary */
+> > -               drain_obj_stock(stock);
+> > +               if (stock->cached_objcg)
+> > +                       drain_obj_stock(stock);
+> >                 obj_cgroup_get(objcg);
+> >                 stock->cached_objcg = objcg;
+> >                 stock->nr_bytes = atomic_xchg(&objcg->nr_charged_bytes, 0);
+> >         }
+> >         stock->nr_bytes += nr_bytes;
+> >
+> > -       if (stock->nr_bytes > PAGE_SIZE)
+> > -               drain_obj_stock(stock);
+> > +       if (!overfill && (stock->nr_bytes > PAGE_SIZE)) {
+> > +               nr_pages = stock->nr_bytes >> PAGE_SHIFT;
+> > +               stock->nr_bytes &= (PAGE_SIZE - 1);
+> > +       }
+> >
+> >         put_obj_stock(flags);
+> > +
+> > +       if (nr_pages) {
+> > +               rcu_read_lock();
+> > +               __memcg_kmem_uncharge(obj_cgroup_memcg(objcg), nr_pages);
+> > +               rcu_read_unlock();
+> > +       }
+>
+> It is not safe to call __memcg_kmem_uncharge() under rcu lock
+> and without holding a reference to memcg. More details can refer
+> to the following link.
+>
+> https://lore.kernel.org/linux-mm/20210319163821.20704-2-songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org/
+>
+> In the above patchset, we introduce obj_cgroup_uncharge_pages to
+> uncharge some pages from object cgroup. You can use this safe
+> API.
+>
 
-v1/hugetlb.rst is quite verbose, and some things are implementation
-details. I'm not sure we want all that in the cgroup2 documentation.
-
-My preference would be to first try to write a version of the doc in
-cgroup2's briefer style, and then, depending on how that works out,
-see whether we can delete (replace with link) the cgroup1 text, or
-keep it for archiving purposes.
-
-v1/hugetlb doc items that seem unnecesary to keep in v2:
-
-- how to mount the cgroupfs, create cgroups, and move tasks into it
-
-- the page fault accounting description could be compressed a
-  bit. maybe drop the part about it being the admin's job to avoid
-  sigbus by being careful with the allocations. that's obvious imo
-  when you simply describe the sigbus semantics.
-
-- likewise, reservation accounting can be briefer too. there is quite
-  a bit of opinion in there that could probably be cut short. maybe a
-  one-liner that says "mmap-time accounting gives userspace easier
-  error handling - if in doubt, use reservation accounting" or so.
-
-- caveats with shared memory: not sure this is needed at all, but if
-  so, it can be a one liner saying "hugetlb uses the same first-hit
-  semantics as the memory controller (see Memory Ownership)"
-
-- Caveats with HugeTLB cgroup offline: this is an implementation
-  detail that i don't think is actionable information for users
+I would recommend just rebase the patch series over the latest mm tree.
