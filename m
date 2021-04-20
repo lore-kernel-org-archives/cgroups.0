@@ -1,52 +1,94 @@
-From: "=?GBK?B?0e7E0NfT?=" <nzyang-i/EBJ3Cw40vfZEITPx7jRP8+0UxHXcjY@public.gmane.org>
+From: nanzi yang <952508578nanziyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Report Bug to Linux Control Group
-Date: Tue, 20 Apr 2021 17:11:51 +0800
-Message-ID: <210420171151fc1e2cfe68a34fa7e4e8ee3c8a07f7f4@stu.xidian.edu.cn>
+Date: Tue, 20 Apr 2021 17:48:28 +0800
+Message-ID: <CADRjgdb2NsYikK13GZw3xk+C95q8M3LEqnoCtS-=nPhoy3-mSQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=q4PsK1IB6S8NhB6JTxksI5uH1aB7Bg8w1NjrAu/sUPM=;
+        b=dKFnCjwDxYwTvpOtv5Kznjgvr2Pz+BblbsK/1VgtM/ezwULuTHIuWfAvlES7ZY02/q
+         1W6oy0s4vdBPooQYOJQlElGbJldAZMnpM5Lf2cYwAahHUgtBecoskmYOQBSrWeHeJu7h
+         BqXFlWUIkHFJErSSP+xBy3dsqup8kkVXbCTVwujcCUeqiou7S46aIN0Fa1Cl/oOUnz7o
+         MB1l6LgUBe/LtxrBHBge9LWuQlUtj9ZLtP1LZytydZ/uhYuMFlmRA3I8e7U04HgRK7rK
+         KaoEWdU9HAhvITz0ArIkBa2kVQUpFUajUr06dfRDJ1BvFQaRfi61J0DWi8NBQOn58ZlA
+         amNw==
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org
-Cc: cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shenwenbo-Y5EWUtBUdg4nDS1+zs4M5A@public.gmane.org
 
-SGksIG91ciB0ZWFtIGhhcyBmb3VuZCBhIHByb2JsZW0gaW4gZnMgc3lzdGVtIG9uIExp
-bnV4IGtlcm5lbCB2NS4xMCwgbGVhZGluZyB0byBEb1MgYXR0YWNrcy4KCiAKClRoZSBz
-dHJ1Y3QgZmlsZSBjYW4gYmUgZXhoYXVzdGVkIGJ5IG5vcm1hbCB1c2VycyBieSBjYWxs
-aW5nIG11bHRpcGxlIHN5c2NhbGxzIHN1Y2ggYXMgdGltZXJmZF9jcmVhdGUvcGlwZS9v
-cGVuIGV0Yy4gQWx0aG91Z2ggdGhlIHJsaW1pdCBsaW1pdHMgdGhlIG1heCBmZHMgY291
-bGQgb3BlbmVkIGJ5IGEgc2luZ2xlIHByb2Nlc3MuIEEgbm9ybWFsIHVzZXIgY2FuIGZv
-cmsgbXVsdGlwbGUgcHJvY2Vzc2VzLCByZXBlYXRlZGx5IG1ha2UgdGhlIHRpbWVyZmRf
-Y3JlYXRlL3BpcGUvb3BlbiBzeXNjYWxscyBhbmQgZXhoYXVzdCBhbGwgc3RydWN0IGZp
-bGVzLiBBcyBhIHJlc3VsdCwgYWxsIHN0cnVjdC1maWxlLWFsbG9jYXRpb24gcmVsYXRl
-ZCBvcGVyYXRpb25zIG9mIGFsbCBvdGhlciB1c2VzIHdpbGwgZmFpbC4KCiAKCkluIGZh
-Y3QsIHdlIHRyeSB0aGlzIGF0dGFjayBpbnNpZGUgYSBkZXByaXZpbGVnZWQgZG9ja2Vy
-IGNvbnRhaW5lciB3aXRob3V0IGFueSBjYXBhYmlsaXRpZXMuIFRoZSBwcm9jZXNzZXMg
-aW4gdGhlIGRvY2tlciBjYW4gZXhoYXVzdCBhbGwgc3RydWN0LWZpbGUgb24gdGhlIGhv
-c3Qga2VybmVsLiBXZSB1c2UgYSBtYWNoaW5lIHdpdGggMTZHIG1lbW9yeS4gV2Ugc3Rh
-cnQgMjAwMCBwcm9jZXNzZXMsIGVhY2ggcHJvY2Vzc2VzIHdpdGggYSAxMDI0IGxpbWl0
-LiBJbiB0b3RhbCwgYXJvdW5kIDE2MTM0MDAgbnVtYmVyIG9mIHN0cnVjdC1maWxlIGFy
-ZSBjb25zdW1lZCBhbmQgdGhlcmUgYXJlIG5vIGF2YWlsYWJsZSBzdHJ1Y3QtZmlsZSBp
-biB0aGUga2VybmVsLiBUaGUgdG90YWwgY29uc3VtZWQgbWVtb3J5IGlzIGxlc3MgdGhh
-biAyRyAsIHdoaWNoIGlzIHNtYWxsLCBzbyBtZW1vcnkgY29udHJvbCBncm91cCBjYW4g
-bm90IGhlbHAuCgogCgpUaGV5IGFyZSBjYXVzZWQgYnkgdGhlIGNvZGUgc25pcHBldHMg
-bGlzdGVkIGJlbG93OgoKLyotLS0tLS0tLS0tLS0tLS0tZnMvZmlsZV90YWJsZS5jLS0t
-LS0tLS0tLS0tLS0tLSovCgogICAuLi4uLi4KCjEzNCBzdHJ1Y3QgZmlsZSAqYWxsb2Nf
-ZW1wdHlfZmlsZShpbnQgZmxhZ3MsIGNvbnN0IHN0cnVjdCBjcmVkICpjcmVkKQoKMTM1
-IHsKCiAgICAgICAgLi4uLi4uCgoxNDIgICAgIGlmIChnZXRfbnJfZmlsZXMoKSA+PSBm
-aWxlc19zdGF0Lm1heF9maWxlcyAmJiAhY2FwYWJsZShDQVBfU1lTX0FETUlOKSkgewoK
-ICAgICAgICAgICAgICAgLi4uLi4uICAKCjE0NyAgICAgICAgICAgIGlmIChwZXJjcHVf
-Y291bnRlcl9zdW1fcG9zaXRpdmUoJm5yX2ZpbGVzKSA+PSBmaWxlc19zdGF0Lm1heF9m
-aWxlcykKCjE0OCAgICAgICAgICAgICAgICAgICBnb3RvIG92ZXI7CgoxNDkgICAgIH0K
-CiAgICAgICAuLi4uLi4KCjE1NyBvdmVyOgoKICAgICAgIC4uLi4uLgoKMTYzICAgICBy
-ZXR1cm4gRVJSX1BUUigtRU5GSUxFKTsKCjE2NCB9CgovKi0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tKi8KClRoZSBjb2RlIGF0IGxpbmUg
-MTQ3IGNvdWxkIGJlIHRyaWdnZXJlZCBieSBzeXNjYWxscyB0aW1lcmZkX2NyZWF0ZS9w
-aXBlL29wZW4gZXRjLiBCZXNpZGVzLCB0aGVyZSBhcmUgbm8gIExpbnV4IGNvbnRyb2wg
-Z3JvdXBzIG9yIExpbnV4IG5hbWVzcGFjZXMgY2FuIGxpbWl0IG9yIGlzb2xhdGUgdGhl
-IHN0cnVjdCBmaWxlIHJlc291cmNlcy4gSXMgdGhlcmUgbmVjZXNzYXJ5IHRvIGNyZWF0
-ZSBhIG5ldyBjb250cm9sIGdyb3VwIG9yIG5hbWVzcGFjZSB0byBkZWZlbmQgYWdhaW5z
-dCB0aGlzIGF0dGFjaz8KCiAKCkxvb2tpbmcgZm9yd2FyZCB0byB5b3VyIHJlcGx5IQoK
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgTmFuemkgWWFuZw==
+Hi, our team has found a problem in fs system on Linux kernel v5.10,
+leading to DoS attacks.
+
+
+
+The struct file can be exhausted by normal users by calling multiple
+syscalls such as timerfd_create/pipe/open etc. Although the rlimit
+limits the max fds could be opened by a single process. A normal user
+can fork multiple processes, repeatedly make the
+timerfd_create/pipe/open syscalls and exhaust all struct files. As a
+result, all struct-file-allocation related operations of all other
+users will fail.
+
+
+
+In fact, we try this attack inside a deprivileged docker container
+without any capabilities. The processes in the docker can exhaust all
+struct-file on the host kernel. We use a machine with 16G memory. We
+start 2000 processes, each process with a 1024 limit. In total, around
+1613400 number struct-file are consumed and there is no available
+struct-file in the kernel. The total consumed memory is less than 2G,
+which is small, so the memory control group can not help.
+
+
+
+They are caused by the code snippets listed below:
+
+/*----------------fs/file_table.c----------------*/
+
+   ......
+
+134 struct file *alloc_empty_file(int flags, const struct cred *cred)
+
+135 {
+
+        ......
+
+142     if (get_nr_files() >= files_stat.max_files && !capable(CAP_SYS_ADMIN)) {
+
+               ......
+
+147            if (percpu_counter_sum_positive(&nr_files) >=
+files_stat.max_files)
+
+148                   goto over;
+
+149     }
+
+       ......
+
+157 over:
+
+       ......
+
+163     return ERR_PTR(-ENFILE);
+
+164 }
+
+/*-----------------------------------------------*/
+
+The code at line 147 could be triggered by syscalls
+timerfd_create/pipe/open etc. Besides, there are no  Linux control
+groups or Linux namespaces that can limit or isolate the struct file
+resources. Is there necessary to create a new control group or
+namespace to defend against this attack?
+
+
+
+Looking forward to your reply!
+
+
+                                                       Nanzi Yang
