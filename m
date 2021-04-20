@@ -1,179 +1,148 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH-next v5 2/4] mm/memcg: Cache vmstat data in percpu memcg_stock_pcp
-Date: Tue, 20 Apr 2021 15:29:05 -0400
-Message-ID: <20210420192907.30880-3-longman@redhat.com>
-References: <20210420192907.30880-1-longman@redhat.com>
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+From: Waiman Long <longman@redhat.com>
+Subject: [PATCH-next v5 0/4] mm/memcg: Reduce kmemcache memory accounting overhead
+Date: Tue, 20 Apr 2021 15:29:03 -0400
+Message-ID: <20210420192907.30880-1-longman@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
         s=mimecast20190719; t=1618947020;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=leP7ynLW/Ya0OWUxwJ+81qaZKo2i+UvXWl8PamMADZY=;
-        b=PARmr/G8zSJA5gp6e6K8Vb146eBxiXC3OK0E5Gh6wPyYxwkGjfMc+VchhLp02atCGZNXlh
-        tMNFuEEEGMywO4l/tnMKzugr5UiF9BnFTSCleDLVfPGTTyKoWEL3sckmZ7iZvrkmNxEYU6
-        o3jYtqMMYy16Eigqc6dgRAN82b9VWNo=
-In-Reply-To: <20210420192907.30880-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+         to:to:cc:cc; bh=MbIxrX0aCC5TwYOgCR6sx7fFecrjfg4kmqWU4k6ggU4=;
+        b=UxmSddr29yx99KnAlajP1fMJei0MsNdQqeRaEOgY2s90C9+IIutyfJ6T86r+Q1xp+OqSvW
+        MNExivhzvq/dY9HuK0Ya4vqBHo4RlFbPrbjYVNtfKWJBMMrEkrY5geA9/S9FDJQ7TqvS7J
+        qYOjfKA5EPeE7u8GoE+kW2KO6D9zhMQ=
 List-ID: <cgroups.vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Xing Zhengjun <zhengjun.xing-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Johannes Weiner <hannes@cmpxchg.org>, Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Vlastimil Babka <vbabka@suse.cz>, Roman Gushchin <guro@fb.com>
+Cc: linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Alex Shi <alex.shi@linux.alibaba.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Wei Yang <richard.weiyang@gmail.com>, Masayoshi Mizuma <msys.mizuma@gmail.com>, Xing Zhengjun <zhengjun.xing@linux.intel.com>, Matthew Wilcox <willy@infradead.org>, Waiman Long <longman@redhat.com>
 
-Before the new slab memory controller with per object byte charging,
-charging and vmstat data update happen only when new slab pages are
-allocated or freed. Now they are done with every kmem_cache_alloc()
-and kmem_cache_free(). This causes additional overhead for workloads
-that generate a lot of alloc and free calls.
+ v5:
+  - Combine v4 patches 2 & 4 into a single patch with minor twisting.
+  - Move the user context stock access optimization patch to the end
+    of the series.
+  - Incorporate some changes suggested by Johannes.
 
-The memcg_stock_pcp is used to cache byte charge for a specific
-obj_cgroup to reduce that overhead. To further reducing it, this patch
-makes the vmstat data cached in the memcg_stock_pcp structure as well
-until it accumulates a page size worth of update or when other cached
-data change. Caching the vmstat data in the per-cpu stock eliminates two
-writes to non-hot cachelines for memcg specific as well as memcg-lruvecs
-specific vmstat data by a write to a hot local stock cacheline.
+ v4:
+  - Drop v3 patch 1 as well as modification to mm/percpu.c as the percpu
+    vmstat update isn't frequent enough to worth caching it.
+  - Add a new patch 1 to move Move mod_objcg_state() to memcontrol.c instead.
+  - Combine v3 patches 4 & 5 into a single patch (patch 3).
+  - Add a new patch 4 to cache both reclaimable & unreclaimable vmstat updates.
+  - Add a new patch 5 to improve refill_obj_stock() performance.
 
-On a 2-socket Cascade Lake server with instrumentation enabled and this
-patch applied, it was found that about 20% (634400 out of 3243830)
-of the time when mod_objcg_state() is called leads to an actual call
-to __mod_objcg_state() after initial boot. When doing parallel kernel
-build, the figure was about 17% (24329265 out of 142512465). So caching
-the vmstat data reduces the number of calls to __mod_objcg_state()
-by more than 80%.
+With the recent introduction of the new slab memory controller, we
+eliminate the need for having separate kmemcaches for each memory
+cgroup and reduce overall kernel memory usage. However, we also add
+additional memory accounting overhead to each call of kmem_cache_alloc()
+and kmem_cache_free().
 
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
----
- mm/memcontrol.c | 86 +++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 83 insertions(+), 3 deletions(-)
+For workloads that require a lot of kmemcache allocations and
+de-allocations, they may experience performance regression as illustrated
+in [1] and [2].
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 7cd7187a017c..292b4783b1a7 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -782,8 +782,9 @@ void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val)
- 	rcu_read_unlock();
- }
- 
--void mod_objcg_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
--		     enum node_stat_item idx, int nr)
-+static inline void mod_objcg_mlstate(struct obj_cgroup *objcg,
-+				     struct pglist_data *pgdat,
-+				     enum node_stat_item idx, int nr)
- {
- 	struct mem_cgroup *memcg;
- 	struct lruvec *lruvec;
-@@ -791,7 +792,7 @@ void mod_objcg_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
- 	rcu_read_lock();
- 	memcg = obj_cgroup_memcg(objcg);
- 	lruvec = mem_cgroup_lruvec(memcg, pgdat);
--	mod_memcg_lruvec_state(lruvec, idx, nr);
-+	__mod_memcg_lruvec_state(lruvec, idx, nr);
- 	rcu_read_unlock();
- }
- 
-@@ -2059,7 +2060,10 @@ struct memcg_stock_pcp {
- 
- #ifdef CONFIG_MEMCG_KMEM
- 	struct obj_cgroup *cached_objcg;
-+	struct pglist_data *cached_pgdat;
- 	unsigned int nr_bytes;
-+	int nr_slab_reclaimable_b;
-+	int nr_slab_unreclaimable_b;
- #endif
- 
- 	struct work_struct work;
-@@ -3008,6 +3012,63 @@ void __memcg_kmem_uncharge_page(struct page *page, int order)
- 	obj_cgroup_put(objcg);
- }
- 
-+void mod_objcg_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
-+		     enum node_stat_item idx, int nr)
-+{
-+	struct memcg_stock_pcp *stock;
-+	unsigned long flags;
-+	int *bytes;
-+
-+	local_irq_save(flags);
-+	stock = this_cpu_ptr(&memcg_stock);
-+
-+	/*
-+	 * Save vmstat data in stock and skip vmstat array update unless
-+	 * accumulating over a page of vmstat data or when pgdat or idx
-+	 * changes.
-+	 */
-+	if (stock->cached_objcg != objcg) {
-+		drain_obj_stock(stock);
-+		obj_cgroup_get(objcg);
-+		stock->nr_bytes = atomic_read(&objcg->nr_charged_bytes)
-+				? atomic_xchg(&objcg->nr_charged_bytes, 0) : 0;
-+		stock->cached_objcg = objcg;
-+		stock->cached_pgdat = pgdat;
-+	} else if (stock->cached_pgdat != pgdat) {
-+		/* Flush the existing cached vmstat data */
-+		if (stock->nr_slab_reclaimable_b) {
-+			mod_objcg_mlstate(objcg, pgdat, NR_SLAB_RECLAIMABLE_B,
-+					  stock->nr_slab_reclaimable_b);
-+			stock->nr_slab_reclaimable_b = 0;
-+		}
-+		if (stock->nr_slab_unreclaimable_b) {
-+			mod_objcg_mlstate(objcg, pgdat, NR_SLAB_UNRECLAIMABLE_B,
-+					  stock->nr_slab_unreclaimable_b);
-+			stock->nr_slab_unreclaimable_b = 0;
-+		}
-+		stock->cached_pgdat = pgdat;
-+	}
-+
-+	bytes = (idx == NR_SLAB_RECLAIMABLE_B) ? &stock->nr_slab_reclaimable_b
-+					       : &stock->nr_slab_unreclaimable_b;
-+	if (!*bytes) {
-+		*bytes = nr;
-+		nr = 0;
-+	} else {
-+		*bytes += nr;
-+		if (abs(*bytes) > PAGE_SIZE) {
-+			nr = *bytes;
-+			*bytes = 0;
-+		} else {
-+			nr = 0;
-+		}
-+	}
-+	if (nr)
-+		mod_objcg_mlstate(objcg, pgdat, idx, nr);
-+
-+	local_irq_restore(flags);
-+}
-+
- static bool consume_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
- {
- 	struct memcg_stock_pcp *stock;
-@@ -3055,6 +3116,25 @@ static void drain_obj_stock(struct memcg_stock_pcp *stock)
- 		stock->nr_bytes = 0;
- 	}
- 
-+	/*
-+	 * Flush the vmstat data in current stock
-+	 */
-+	if (stock->nr_slab_reclaimable_b || stock->nr_slab_unreclaimable_b) {
-+		if (stock->nr_slab_reclaimable_b) {
-+			mod_objcg_mlstate(old, stock->cached_pgdat,
-+					  NR_SLAB_RECLAIMABLE_B,
-+					  stock->nr_slab_reclaimable_b);
-+			stock->nr_slab_reclaimable_b = 0;
-+		}
-+		if (stock->nr_slab_unreclaimable_b) {
-+			mod_objcg_mlstate(old, stock->cached_pgdat,
-+					  NR_SLAB_UNRECLAIMABLE_B,
-+					  stock->nr_slab_unreclaimable_b);
-+			stock->nr_slab_unreclaimable_b = 0;
-+		}
-+		stock->cached_pgdat = NULL;
-+	}
-+
- 	obj_cgroup_put(old);
- 	stock->cached_objcg = NULL;
- }
+A simple kernel module that performs repeated loop of 100,000,000
+kmem_cache_alloc() and kmem_cache_free() of either a small 32-byte
+object or a big 4k object at module init time with a batch size of 4
+(4 kmalloc's followed by 4 kfree's) is used for benchmarking. The
+benchmarking tool was run on a kernel based on linux-next-20210419.
+The test was run on a CascadeLake server with turbo-boosting disable
+to reduce run-to-run variation.
+
+The small object test exercises mainly the object stock charging and
+vmstat update code paths. The large object test also exercises the
+refill_obj_stock() and  __memcg_kmem_charge()/__memcg_kmem_uncharge()
+code paths.
+
+With memory accounting disabled, the run time was 3.130s with both small
+object big object tests.
+
+With memory accounting enabled, both cgroup v1 and v2 showed similar
+results in the small object test.  The performance results of the large
+object test, however, differed between cgroup v1 and v2.
+
+The execution times with the application of various patches in the
+patchset were:
+
+  Applied patches   Run time   Accounting overhead   %age 1   %age 2
+  ---------------   --------   -------------------   ------   ------
+
+  Small 32-byte object:
+       None          11.634s         8.504s          100.0%   271.7%
+        1-2           9.425s         6.295s           74.0%   201.1%
+        1-3           9.708s         6.578s           77.4%   210.2%
+        1-4           8.062s         4.932s           58.0%   157.6%
+
+  Large 4k object (v2):
+       None          22.107s        18.977s          100.0%   606.3%
+        1-2          20.960s        17.830s           94.0%   569.6%
+        1-3          14.238s        11.108s           58.5%   354.9%
+        1-4          11.329s         8.199s           43.2%   261.9%
+
+  Large 4k object (v1):
+       None          36.807s        33.677s          100.0%  1075.9%
+        1-2          36.648s        33.518s           99.5%  1070.9%
+        1-3          22.345s        19.215s           57.1%   613.9%
+        1-4          18.662s        15.532s           46.1%   496.2%
+
+  N.B. %age 1 = overhead/unpatched overhead
+       %age 2 = overhead/accounting disabled time
+
+Patch 2 (vmstat data stock caching) helps in both the small object test
+and the large v2 object test. It doesn't help much in v1 big object test.
+
+Patch 3 (refill_obj_stock improvement) does help the small object test
+but offer significant performance improvement for the large object test
+(both v1 and v2).
+
+Patch 4 (eliminating irq disable/enable) helps in all test cases.
+
+To test for the extreme case, a multi-threaded kmalloc/kfree
+microbenchmark was run on the 2-socket 48-core 96-thread system with
+96 testing threads in the same memcg doing kmalloc+kfree of a 4k object
+with accounting enabled for 10s. The total number of kmalloc+kfree done
+in kilo operations per second (kops/s) were as follows:
+
+  Applied patches   v1 kops/s   v1 change   v2 kops/s   v2 change
+  ---------------   ---------   ---------   ---------   ---------
+       None           3,520        1.00X      6,242        1.00X
+        1-2           4,304        1.22X      8,478        1.36X
+        1-3           4,731        1.34X    418,142       66.99X
+        1-4           4,587        1.30X    438,838       70.30X
+
+With memory accounting disabled, the kmalloc/kfree rate was 1,481,291
+kop/s. This test shows how significant the memory accouting overhead
+can be in some extreme situations.
+
+For this multithreaded test, the improvement from patch 2 mainly
+comes from the conditional atomic xchg of objcg->nr_charged_bytes in
+mod_objcg_state(). By using an unconditional xchg, the operation rates
+were similar to the unpatched kernel.
+
+Patch 3 elminates the single highly contended cacheline of
+objcg->nr_charged_bytes for cgroup v2 leading to a huge performance
+improvement. Cgroup v1, however, still has another highly contended
+cacheline in the shared page counter &memcg->kmem. So the improvement
+is only modest.
+
+Patch 4 helps in cgroup v2, but performs worse in cgroup v1 as
+eliminating the irq_disable/irq_enable overhead seems to aggravate the
+cacheline contention.
+
+[1] https://lore.kernel.org/linux-mm/20210408193948.vfktg3azh2wrt56t@gabell/T/#u
+[2] https://lore.kernel.org/lkml/20210114025151.GA22932@xsang-OptiPlex-9020/
+
+
+Waiman Long (4):
+  mm/memcg: Move mod_objcg_state() to memcontrol.c
+  mm/memcg: Cache vmstat data in percpu memcg_stock_pcp
+  mm/memcg: Improve refill_obj_stock() performance
+  mm/memcg: Optimize user context object stock access
+
+ mm/memcontrol.c | 195 +++++++++++++++++++++++++++++++++++++++++-------
+ mm/slab.h       |  16 +---
+ 2 files changed, 171 insertions(+), 40 deletions(-)
+
 -- 
 2.18.1
 
