@@ -1,115 +1,156 @@
-From: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH-next v5 3/4] mm/memcg: Improve refill_obj_stock() performance
-Date: Tue, 20 Apr 2021 15:29:06 -0400
-Message-ID: <20210420192907.30880-4-longman@redhat.com>
-References: <20210420192907.30880-1-longman@redhat.com>
+From: Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC] memory reserve for userspace oom-killer
+Date: Tue, 20 Apr 2021 12:36:54 -0700
+Message-ID: <CAJuCfpGWdghXpSr9OaoWEdXwLq_qES=Pxg9BojqJ2N+Wx9NwFQ@mail.gmail.com>
+References: <CALvZod7vtDxJZtNhn81V=oE-EPOf=4KZB2Bv6Giz+u3bFFyOLg@mail.gmail.com>
+ <YH8o5iIau85FaeLw@carbon.DHCP.thefacebook.com>
+Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618947032;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=V8tpjiZVe9/HPR7EqqmVPxX4+H+yOIDgVesSOM9WmtY=;
-        b=ExXlP/QgRAFDof4pxNIZXaI6bL/bMGwkwhoxdmnolVTNEt9k/UGMQVrncxhLDKe2WMZrdu
-        eLQUjZch3/078FPjwvwXkBAJRTWiL0XIYaypI+qeoLa45GBlDiYGVqdV2omcfjwdg2UlOc
-        yvgjE0B4G+ggrLiEtRm+AopeECRl6HE=
-In-Reply-To: <20210420192907.30880-1-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=SzjYTJVYGK1cUYkBfmKqZ45DGnjAWx/7ND0PEQ2w/K8=;
+        b=GXKxY0AvNG2k78o1KudjUBrSM82uqefXrpum6p/8y5k2c+FLa1pwBlahcJ1dZdwcUx
+         L0lSRS5XlyQCPUEbQT26fLNqS9RaEw/tm37CwYA/5raBP1MnfEXAFz2nfs+GFS+gHGz9
+         vEMzxYKLAj311WmpK45+Mg9v7BgAiYRKthc8fMdkoxPCPU0QFUme6VVFLJgiRJjqyTJW
+         MbqaKG8k7BOM45gPxl10nrl7UGatbd0uvX8a4lT5yKksuz9CvSZQ3tlkPQwkHJjRFZVd
+         5wVaEpjxISkFFydI5ljxrOv9lKzhuC8x/bcPM71v57ysdANsstnes+f3a9SY9lecmLCf
+         nhMw==
+In-Reply-To: <YH8o5iIau85FaeLw-lLJQVQxiE4uLfgCeKHXN1g2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Xing Zhengjun <zhengjun.xing-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Matthew Wilcox <willy-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dragos Sbirlea <dragoss-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Priya Duraisamy <padmapriyad-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-There are two issues with the current refill_obj_stock() code. First of
-all, when nr_bytes reaches over PAGE_SIZE, it calls drain_obj_stock() to
-atomically flush out remaining bytes to obj_cgroup, clear cached_objcg
-and do a obj_cgroup_put(). It is likely that the same obj_cgroup will
-be used again which leads to another call to drain_obj_stock() and
-obj_cgroup_get() as well as atomically retrieve the available byte from
-obj_cgroup. That is costly. Instead, we should just uncharge the excess
-pages, reduce the stock bytes and be done with it. The drain_obj_stock()
-function should only be called when obj_cgroup changes.
+Hi Folks,
 
-Secondly, when charging an object of size not less than a page in
-obj_cgroup_charge(), it is possible that the remaining bytes to be
-refilled to the stock will overflow a page and cause refill_obj_stock()
-to uncharge 1 page. To avoid the additional uncharge in this case,
-a new overfill flag is added to refill_obj_stock() which will be set
-when called from obj_cgroup_charge().
+On Tue, Apr 20, 2021 at 12:18 PM Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
+>
+> On Mon, Apr 19, 2021 at 06:44:02PM -0700, Shakeel Butt wrote:
+> > Proposal: Provide memory guarantees to userspace oom-killer.
+> >
+> > Background:
+> >
+> > Issues with kernel oom-killer:
+> > 1. Very conservative and prefer to reclaim. Applications can suffer
+> > for a long time.
+> > 2. Borrows the context of the allocator which can be resource limited
+> > (low sched priority or limited CPU quota).
+> > 3. Serialized by global lock.
+> > 4. Very simplistic oom victim selection policy.
+> >
+> > These issues are resolved through userspace oom-killer by:
+> > 1. Ability to monitor arbitrary metrics (PSI, vmstat, memcg stats) to
+> > early detect suffering.
+> > 2. Independent process context which can be given dedicated CPU quota
+> > and high scheduling priority.
+> > 3. Can be more aggressive as required.
+> > 4. Can implement sophisticated business logic/policies.
+> >
+> > Android's LMKD and Facebook's oomd are the prime examples of userspace
+> > oom-killers. One of the biggest challenges for userspace oom-killers
+> > is to potentially function under intense memory pressure and are prone
+> > to getting stuck in memory reclaim themselves. Current userspace
+> > oom-killers aim to avoid this situation by preallocating user memory
+> > and protecting themselves from global reclaim by either mlocking or
+> > memory.min. However a new allocation from userspace oom-killer can
+> > still get stuck in the reclaim and policy rich oom-killer do trigger
+> > new allocations through syscalls or even heap.
+> >
+> > Our attempt of userspace oom-killer faces similar challenges.
+> > Particularly at the tail on the very highly utilized machines we have
+> > observed userspace oom-killer spectacularly failing in many possible
+> > ways in the direct reclaim. We have seen oom-killer stuck in direct
+> > reclaim throttling, stuck in reclaim and allocations from interrupts
+> > keep stealing reclaimed memory. We have even observed systems where
+> > all the processes were stuck in throttle_direct_reclaim() and only
+> > kswapd was running and the interrupts kept stealing the memory
+> > reclaimed by kswapd.
+> >
+> > To reliably solve this problem, we need to give guaranteed memory to
+> > the userspace oom-killer. At the moment we are contemplating between
+> > the following options and I would like to get some feedback.
+> >
+> > 1. prctl(PF_MEMALLOC)
+> >
+> > The idea is to give userspace oom-killer (just one thread which is
+> > finding the appropriate victims and will be sending SIGKILLs) access
+> > to MEMALLOC reserves. Most of the time the preallocation, mlock and
+> > memory.min will be good enough but for rare occasions, when the
+> > userspace oom-killer needs to allocate, the PF_MEMALLOC flag will
+> > protect it from reclaim and let the allocation dip into the memory
+> > reserves.
+> >
+> > The misuse of this feature would be risky but it can be limited to
+> > privileged applications. Userspace oom-killer is the only appropriate
+> > user of this feature. This option is simple to implement.
+>
+> Hello Shakeel!
+>
+> If ordinary PAGE_SIZE and smaller kernel allocations start to fail,
+> the system is already in a relatively bad shape. Arguably the userspace
+> OOM killer should kick in earlier, it's already a bit too late.
 
-A multithreaded kmalloc+kfree microbenchmark on a 2-socket 48-core
-96-thread x86-64 system with 96 testing threads were run.  Before this
-patch, the total number of kilo kmalloc+kfree operations done for a 4k
-large object by all the testing threads per second were 4,304 kops/s
-(cgroup v1) and 8,478 kops/s (cgroup v2). After applying this patch, the
-number were 4,731 (cgroup v1) and 418,142 (cgroup v2) respectively. This
-represents a performance improvement of 1.10X (cgroup v1) and 49.3X
-(cgroup v2).
+I tend to agree here. This is how we are trying to avoid issues with
+such severe memory shortages - by tuning the killer a bit more
+aggressively. But a more reliable mechanism would definitely be an
+improvement.
 
-Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- mm/memcontrol.c | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+> Allowing to use reserves just pushes this even further, so we're risking
+> the kernel stability for no good reason.
+>
+> But I agree that throttling the oom daemon in direct reclaim makes no sense.
+> I wonder if we can introduce a per-task flag which will exclude the task from
+> throttling, but instead all (large) allocations will just fail under a
+> significant memory pressure more easily. In this case if there is a significant
+> memory shortage the oom daemon will not be fully functional (will get -ENOMEM
+> for an attempt to read some stats, for example), but still will be able to kill
+> some processes and make the forward progress.
 
-diff --git a/mm/memcontrol.c b/mm/memcontrol.c
-index 292b4783b1a7..2f87d0b05092 100644
---- a/mm/memcontrol.c
-+++ b/mm/memcontrol.c
-@@ -3153,10 +3153,12 @@ static bool obj_stock_flush_required(struct memcg_stock_pcp *stock,
- 	return false;
- }
- 
--static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
-+static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes,
-+			     bool overfill)
- {
- 	struct memcg_stock_pcp *stock;
- 	unsigned long flags;
-+	unsigned int nr_pages = 0;
- 
- 	local_irq_save(flags);
- 
-@@ -3165,14 +3167,20 @@ static void refill_obj_stock(struct obj_cgroup *objcg, unsigned int nr_bytes)
- 		drain_obj_stock(stock);
- 		obj_cgroup_get(objcg);
- 		stock->cached_objcg = objcg;
--		stock->nr_bytes = atomic_xchg(&objcg->nr_charged_bytes, 0);
-+		stock->nr_bytes = atomic_read(&objcg->nr_charged_bytes)
-+				? atomic_xchg(&objcg->nr_charged_bytes, 0) : 0;
- 	}
- 	stock->nr_bytes += nr_bytes;
- 
--	if (stock->nr_bytes > PAGE_SIZE)
--		drain_obj_stock(stock);
-+	if (!overfill && (stock->nr_bytes > PAGE_SIZE)) {
-+		nr_pages = stock->nr_bytes >> PAGE_SHIFT;
-+		stock->nr_bytes &= (PAGE_SIZE - 1);
-+	}
- 
- 	local_irq_restore(flags);
-+
-+	if (nr_pages)
-+		obj_cgroup_uncharge_pages(objcg, nr_pages);
- }
- 
- int obj_cgroup_charge(struct obj_cgroup *objcg, gfp_t gfp, size_t size)
-@@ -3201,14 +3209,14 @@ int obj_cgroup_charge(struct obj_cgroup *objcg, gfp_t gfp, size_t size)
- 
- 	ret = obj_cgroup_charge_pages(objcg, gfp, nr_pages);
- 	if (!ret && nr_bytes)
--		refill_obj_stock(objcg, PAGE_SIZE - nr_bytes);
-+		refill_obj_stock(objcg, PAGE_SIZE - nr_bytes, true);
- 
- 	return ret;
- }
- 
- void obj_cgroup_uncharge(struct obj_cgroup *objcg, size_t size)
- {
--	refill_obj_stock(objcg, size);
-+	refill_obj_stock(objcg, size, false);
- }
- 
- #endif /* CONFIG_MEMCG_KMEM */
--- 
-2.18.1
+This sounds like a good idea to me.
 
+> But maybe it can be done in userspace too: by splitting the daemon into
+> a core- and extended part and avoid doing anything behind bare minimum
+> in the core part.
+>
+> >
+> > 2. Mempool
+> >
+> > The idea is to preallocate mempool with a given amount of memory for
+> > userspace oom-killer. Preferably this will be per-thread and
+> > oom-killer can preallocate mempool for its specific threads. The core
+> > page allocator can check before going to the reclaim path if the task
+> > has private access to the mempool and return page from it if yes.
+> >
+> > This option would be more complicated than the previous option as the
+> > lifecycle of the page from the mempool would be more sophisticated.
+> > Additionally the current mempool does not handle higher order pages
+> > and we might need to extend it to allow such allocations. Though this
+> > feature might have more use-cases and it would be less risky than the
+> > previous option.
+>
+> It looks like an over-kill for the oom daemon protection, but if there
+> are other good use cases, maybe it's a good feature to have.
+>
+> >
+> > Another idea I had was to use kthread based oom-killer and provide the
+> > policies through eBPF program. Though I am not sure how to make it
+> > monitor arbitrary metrics and if that can be done without any
+> > allocations.
+>
+> To start this effort it would be nice to understand what metrics various
+> oom daemons use and how easy is to gather them from the bpf side. I like
+> this idea long-term, but not sure if it has been settled down enough.
+> I imagine it will require a fair amount of work on the bpf side, so we
+> need a good understanding of features we need.
+
+For a reference, on Android, where we do not really use memcgs,
+low-memory-killer reads global data from meminfo, vmstat, zoneinfo
+procfs nodes.
+Thanks,
+Suren.
+
+>
+> Thanks!
