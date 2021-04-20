@@ -1,98 +1,142 @@
-From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: Killing cgroups
-Date: Tue, 20 Apr 2021 14:28:48 +0200
-Message-ID: <20210420122848.wwbioclewqeolucf@wittgenstein>
-References: <20210419155607.gmwu376cj4nyagyj@wittgenstein>
- <YH2slGErZ7s4t6DC@carbon.dhcp.thefacebook.com>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC] memory reserve for userspace oom-killer
+Date: Tue, 20 Apr 2021 09:04:21 -0700
+Message-ID: <CALvZod4kjdgMU=8T_bx6zFufA1cGtt2p1Jg8jOgi=+g=bs-Evw@mail.gmail.com>
+References: <CALvZod7vtDxJZtNhn81V=oE-EPOf=4KZB2Bv6Giz+u3bFFyOLg@mail.gmail.com>
+ <YH54pyRWSi1zLMw4@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <YH2slGErZ7s4t6DC-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=e5nl3Ndrhwo1fgJ0D9XlIWFVK7QF0q78XBT9yudtMFo=;
+        b=vKkrzDPvcz3fRrLdFAlmjvz7vtpkEl6ajq8gX+3KnuXhf54ZQGOVasz9hBppAxsdGG
+         zyZztOZeDrmM1spFY6MohNqmhFkis2LK6VOi3W+IH9bUeykvyICNxSmqkCbnhjzpXjHf
+         XKqYdFR9obobgtE2/O5DtNC/WwW/AqrYZbV6madxBsKv65SP+wJgk1bNlZDPbiVzTkN+
+         oXOXooCT2XNO3MHIRjEFKvTiEfjRt9nw92NVvhniIiBj65dVt1+Orf0nel6QyomWzsXL
+         ZmTInp0PiGiIWle6TL2gZ+KVl4aYadA8xDJUllgsDk/j3ms1uSI3fpCdytsAN4lUl24V
+         Aizw==
+In-Reply-To: <YH54pyRWSi1zLMw4-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dragos Sbirlea <dragoss-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Priya Duraisamy <padmapriyad-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Mon, Apr 19, 2021 at 09:15:16AM -0700, Roman Gushchin wrote:
-> On Mon, Apr 19, 2021 at 05:56:07PM +0200, Christian Brauner wrote:
-> > Hey,
-> > 
-> > It's not as dramatic as it sounds but I've been mulling a cgroup feature
-> > for some time now which I would like to get some input on. :)
-> > 
-> > So in container-land assuming a conservative layout where we treat a
-> > container as a separate machine we tend to give each container a
-> > delegated cgroup. That has already been the case with cgroup v1 and now
-> > even more so with cgroup v2.
-> > 
-> > So usually you will have a 1:1 mapping between container and cgroup. If
-> > the container in addition uses a separate pid namespace then killing a
-> > container becomes a simple kill -9 <container-init-pid> from an ancestor
-> > pid namespace.
-> > 
-> > However, there are quite a few scenarios where one or two of those
-> > assumptions aren't true, i.e. there are containers that share the cgroup
-> > with other processes on purpose that are supposed to be bound to the
-> > lifetime of the container but are not in the same pidns of the
-> > container. Containers that are in a delegated cgroup but share the pid
-> > namespace with the host or other containers.
-> > 
-> > This is just the container use-case. There are additional use-cases from
-> > systemd services for example.
-> > 
-> > For such scenarios it would be helpful to have a way to kill/signal all
-> > processes in a given cgroup.
-> > 
-> > It feels to me that conceptually this is somewhat similar to the freezer
-> > feature. Freezer is now nicely implemented in cgroup.freeze. I would
-> > think we could do something similar for the signal feature I'm thinking
-> > about. So we add a file cgroup.signal which can be opened with O_RDWR
-> > and can be used to send a signal to all processes in a given cgroup:
-> > 
-> > int fd = open("/sys/fs/cgroup/my/delegated/cgroup", O_RDWR);
-> > write(fd, "SIGKILL", sizeof("SIGKILL") - 1);
-> > 
-> > with SIGKILL being the only signal supported for a start and we can in
-> > the future extend this to more signals.
-> > 
-> > I'd like to hear your general thoughts about a feature like this or
-> > similar to this before prototyping it.
-> 
-> Hello Christian!
+On Mon, Apr 19, 2021 at 11:46 PM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
+>
+> On Mon 19-04-21 18:44:02, Shakeel Butt wrote:
+[...]
+> > memory.min. However a new allocation from userspace oom-killer can
+> > still get stuck in the reclaim and policy rich oom-killer do trigger
+> > new allocations through syscalls or even heap.
+>
+> Can you be more specific please?
+>
 
-Hey Roman,
+To decide when to kill, the oom-killer has to read a lot of metrics.
+It has to open a lot of files to read them and there will definitely
+be new allocations involved in those operations. For example reading
+memory.stat does a page size allocation. Similarly, to perform action
+the oom-killer may have to read cgroup.procs file which again has
+allocation inside it.
 
-Thanks for your quick reply!
+Regarding sophisticated oom policy, I can give one example of our
+cluster level policy. For robustness, many user facing jobs run a lot
+of instances in a cluster to handle failures. Such jobs are tolerant
+to some amount of failures but they still have requirements to not let
+the number of running instances below some threshold. Normally killing
+such jobs is fine but we do want to make sure that we do not violate
+their cluster level agreement. So, the userspace oom-killer may
+dynamically need to confirm if such a job can be killed.
 
-> 
-> Tejun and me discussed a feature like this during my work on the freezer
-> controller, and we both thought it might be useful. But because there is
-> a relatively simple userspace way to do it (which is implemented many times),
-> and systemd and other similar control daemons will need to keep it in a
-> working state for a quite some time anyway (to work on older kernels),
-> it was considered a low-prio feature, and it was somewhere on my to-do list
-> since then.
+[...]
+> > To reliably solve this problem, we need to give guaranteed memory to
+> > the userspace oom-killer.
+>
+> There is nothing like that. Even memory reserves are a finite resource
+> which can be consumed as it is sharing those reserves with other users
+> who are not necessarily coordinated. So before we start discussing
+> making this even more muddy by handing over memory reserves to the
+> userspace we should really examine whether pre-allocation is something
+> that will not work.
+>
 
-Totally understandable. I take it though we agree that this interface
-should exist as it seems really useful (especially for the recursive
-case) and we had a few others point out that they could make use of it.
+We actually explored if we can restrict the syscalls for the
+oom-killer which does not do memory allocations. We concluded that is
+not practical and not maintainable. Whatever the list we can come up
+with will be outdated soon. In addition, converting all the must-have
+syscalls to not do allocations is not possible/practical.
 
-> I'm not sure we need anything beyond SIGKILL and _maybe_ SIGTERM.
+> > At the moment we are contemplating between
+> > the following options and I would like to get some feedback.
+> >
+> > 1. prctl(PF_MEMALLOC)
+> >
+> > The idea is to give userspace oom-killer (just one thread which is
+> > finding the appropriate victims and will be sending SIGKILLs) access
+> > to MEMALLOC reserves. Most of the time the preallocation, mlock and
+> > memory.min will be good enough but for rare occasions, when the
+> > userspace oom-killer needs to allocate, the PF_MEMALLOC flag will
+> > protect it from reclaim and let the allocation dip into the memory
+> > reserves.
+>
+> I do not think that handing over an unlimited ticket to the memory
+> reserves to userspace is a good idea. Even the in kernel oom killer is
+> bound to a partial access to reserves. So if we really want this then
+> it should be in sync with and bound by the ALLOC_OOM.
+>
 
-Yeah, my feeling is SIGKILL and SIGTERM might be sufficient with SIGKILL
-being the first target. I would think that having more generic name for
-the file like cgroup.signal is better than cgroup.kill as I wouldn't be
-so sure that we don't end up with a few more signals due to unforseen
-use-cases in the future.
+Makes sense.
 
-> Indeed it can be implemented re-using a lot from the freezer code.
+> > The misuse of this feature would be risky but it can be limited to
+> > privileged applications. Userspace oom-killer is the only appropriate
+> > user of this feature. This option is simple to implement.
+> >
+> > 2. Mempool
+> >
+> > The idea is to preallocate mempool with a given amount of memory for
+> > userspace oom-killer. Preferably this will be per-thread and
+> > oom-killer can preallocate mempool for its specific threads. The core
+> > page allocator can check before going to the reclaim path if the task
+> > has private access to the mempool and return page from it if yes.
+>
+> Could you elaborate some more on how this would be controlled from the
+> userspace? A dedicated syscall? A driver?
+>
 
-Yeah, that was my feeling too.
+I was thinking of simply prctl(SET_MEMPOOL, bytes) to assign mempool
+to a thread (not shared between threads) and prctl(RESET_MEMPOOL) to
+free the mempool.
 
-> Please, let me know if I can help.
+> > This option would be more complicated than the previous option as the
+> > lifecycle of the page from the mempool would be more sophisticated.
+> > Additionally the current mempool does not handle higher order pages
+> > and we might need to extend it to allow such allocations. Though this
+> > feature might have more use-cases and it would be less risky than the
+> > previous option.
+>
+> I would tend to agree.
+>
+> > Another idea I had was to use kthread based oom-killer and provide the
+> > policies through eBPF program. Though I am not sure how to make it
+> > monitor arbitrary metrics and if that can be done without any
+> > allocations.
+>
+> A kernel module or eBPF to implement oom decisions has already been
+> discussed few years back. But I am afraid this would be hard to wire in
+> for anything except for the victim selection. I am not sure it is
+> maintainable to also control when the OOM handling should trigger.
+>
 
-Yes, will do. I'll take a look at the implementation soon and start
-working on a patch. I'm sure I'll have questions sooner or later. :)
+I think you are referring to [1]. That patch was only looking at PSI
+and I think we are on the same page that we need more information to
+decide when to kill. Also I agree with you that it is hard to
+implement "when to kill" with eBPF but I wanted the idea out to see if
+eBPF experts have some suggestions.
 
-Christian
+[1] https://lore.kernel.org/lkml/20190807205138.GA24222-druUgvl0LCNAfugRpC6u6w@public.gmane.org/
+
+thanks,
+Shakeel
