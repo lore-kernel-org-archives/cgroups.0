@@ -1,215 +1,131 @@
-From: Waiman Long <llong@redhat.com>
-Subject: Re: [PATCH v4 4/5] mm/memcg: Save both reclaimable & unreclaimable
- bytes in object stock
-Date: Tue, 20 Apr 2021 15:09:01 -0400
-Message-ID: <73992e36-376f-b7d3-dde5-d287c7696e72@redhat.com>
-References: <20210419000032.5432-1-longman@redhat.com>
- <20210419000032.5432-5-longman@redhat.com> <YH216/wnyEOcxATl@cmpxchg.org>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [RFC] memory reserve for userspace oom-killer
+Date: Tue, 20 Apr 2021 12:17:58 -0700
+Message-ID: <YH8o5iIau85FaeLw@carbon.DHCP.thefacebook.com>
+References: <CALvZod7vtDxJZtNhn81V=oE-EPOf=4KZB2Bv6Giz+u3bFFyOLg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1618945752;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ADqf//8Mzh80P94odXSMaff1QLcxK4pUkpeVBlMf/kw=;
-        b=WysXm/9f0aeGVTfFbauL5BgspuGT3dyb44SkU/Mv1wQeJGVXCCNun1YQlJTsAtN11ZUh8I
-        2vKkYGFbK/Wh1cF2h4L1HxP6+K4Hn5zn42WKmGAi7Yrw821EuEaySpCXVaLtXV2BNuUbxx
-        5xN+yYAic52kMA63utfuD1n37mK64+k=
-In-Reply-To: <YH216/wnyEOcxATl@cmpxchg.org>
-Content-Language: en-US
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=+Nr8aTrUc4EEeXeaW3ifa+be2lW0Pv6b5f+8AnmPVMg=;
+ b=nURjeuHbzPr9pUMcb/MbbeQvkpyHBpADsvmKXvyUHy3d+2yhqsc+GF+dBCMvtBIgqQGS
+ jKduCeahu2kOl7CbNzBNIA9v9rVk7WcQqgxedfFiD7FOjtK0gaaPW/HMh2A4GcPn78kY
+ U7tprq+qwIUafrqDdAK+UMiQUtXu25ThLho= 
+Content-Disposition: inline
+In-Reply-To: <CALvZod7vtDxJZtNhn81V=oE-EPOf=4KZB2Bv6Giz+u3bFFyOLg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"; format="flowed"
-To: Johannes Weiner <hannes@cmpxchg.org>
-Cc: Michal Hocko <mhocko@kernel.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Christoph Lameter <cl@linux.com>, Pekka Enberg <penberg@kernel.org>, David Rientjes <rientjes@google.com>, Joonsoo Kim <iamjoonsoo.kim@lge.com>, Vlastimil Babka <vbabka@suse.cz>, Roman Gushchin <guro@fb.com>, linux-kernel@vger.kernel.org, cgroups@vger.kernel.org, linux-mm@kvack.org, Shakeel Butt <shakeelb@google.com>, Muchun Song <songmuchun@bytedance.com>, Alex Shi <alex.shi@linux.alibaba.com>, Chris Down <chris@chrisdown.name>, Yafang Shao <laoar.shao@gmail.com>, Wei Yang <richard.weiyang@gmail.com>, Masayoshi Mizuma <msys.mizuma@gmail.com>, Xing Zhengjun <zhengjun.xing@linux.intel.com>, Matthew Wilcox <>
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dragos Sbirlea <dragoss-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Priya Duraisamy <padmapriyad-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On 4/19/21 12:55 PM, Johannes Weiner wrote:
-> On Sun, Apr 18, 2021 at 08:00:31PM -0400, Waiman Long wrote:
->> Currently, the object stock structure caches either reclaimable vmstat
->> bytes or unreclaimable vmstat bytes in its object stock structure. The
->> hit rate can be improved if both types of vmstat data can be cached
->> especially for single-node system.
->>
->> This patch supports the cacheing of both type of vmstat data, though
->> at the expense of a slightly increased complexity in the caching code.
->> For large object (>=3D PAGE_SIZE), vmstat array is done directly without
->> going through the stock caching step.
->>
->> On a 2-socket Cascade Lake server with instrumentation enabled, the
->> miss rates are shown in the table below.
->>
->>    Initial bootup:
->>
->>    Kernel       __mod_objcg_state    mod_objcg_state    %age
->>    ------       -----------------    ---------------    ----
->>    Before patch      634400              3243830        19.6%
->>    After patch       419810              3182424        13.2%
->>
->>    Parallel kernel build:
->>
->>    Kernel       __mod_objcg_state    mod_objcg_state    %age
->>    ------       -----------------    ---------------    ----
->>    Before patch      24329265           142512465       17.1%
->>    After patch       24051721           142445825       16.9%
->>
->> There was a decrease of miss rate after initial system bootup. However,
->> the miss rate for parallel kernel build remained about the same probably
->> because most of the touched kmemcache objects were reclaimable inodes
->> and dentries.
->>
->> Signed-off-by: Waiman Long <longman@redhat.com>
->> ---
->>   mm/memcontrol.c | 79 +++++++++++++++++++++++++++++++------------------
->>   1 file changed, 51 insertions(+), 28 deletions(-)
->>
->> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
->> index c13502eab282..a6dd18f6d8a8 100644
->> --- a/mm/memcontrol.c
->> +++ b/mm/memcontrol.c
->> @@ -2212,8 +2212,8 @@ struct obj_stock {
->>   	struct obj_cgroup *cached_objcg;
->>   	struct pglist_data *cached_pgdat;
->>   	unsigned int nr_bytes;
->> -	int vmstat_idx;
->> -	int vmstat_bytes;
->> +	int reclaimable_bytes;		/* NR_SLAB_RECLAIMABLE_B */
->> +	int unreclaimable_bytes;	/* NR_SLAB_UNRECLAIMABLE_B */
-> How about
->
-> 	int nr_slab_reclaimable_b;
-> 	int nr_slab_unreclaimable_b;
->
-> so you don't need the comments?
+On Mon, Apr 19, 2021 at 06:44:02PM -0700, Shakeel Butt wrote:
+> Proposal: Provide memory guarantees to userspace oom-killer.
+> 
+> Background:
+> 
+> Issues with kernel oom-killer:
+> 1. Very conservative and prefer to reclaim. Applications can suffer
+> for a long time.
+> 2. Borrows the context of the allocator which can be resource limited
+> (low sched priority or limited CPU quota).
+> 3. Serialized by global lock.
+> 4. Very simplistic oom victim selection policy.
+> 
+> These issues are resolved through userspace oom-killer by:
+> 1. Ability to monitor arbitrary metrics (PSI, vmstat, memcg stats) to
+> early detect suffering.
+> 2. Independent process context which can be given dedicated CPU quota
+> and high scheduling priority.
+> 3. Can be more aggressive as required.
+> 4. Can implement sophisticated business logic/policies.
+> 
+> Android's LMKD and Facebook's oomd are the prime examples of userspace
+> oom-killers. One of the biggest challenges for userspace oom-killers
+> is to potentially function under intense memory pressure and are prone
+> to getting stuck in memory reclaim themselves. Current userspace
+> oom-killers aim to avoid this situation by preallocating user memory
+> and protecting themselves from global reclaim by either mlocking or
+> memory.min. However a new allocation from userspace oom-killer can
+> still get stuck in the reclaim and policy rich oom-killer do trigger
+> new allocations through syscalls or even heap.
+> 
+> Our attempt of userspace oom-killer faces similar challenges.
+> Particularly at the tail on the very highly utilized machines we have
+> observed userspace oom-killer spectacularly failing in many possible
+> ways in the direct reclaim. We have seen oom-killer stuck in direct
+> reclaim throttling, stuck in reclaim and allocations from interrupts
+> keep stealing reclaimed memory. We have even observed systems where
+> all the processes were stuck in throttle_direct_reclaim() and only
+> kswapd was running and the interrupts kept stealing the memory
+> reclaimed by kswapd.
+> 
+> To reliably solve this problem, we need to give guaranteed memory to
+> the userspace oom-killer. At the moment we are contemplating between
+> the following options and I would like to get some feedback.
+> 
+> 1. prctl(PF_MEMALLOC)
+> 
+> The idea is to give userspace oom-killer (just one thread which is
+> finding the appropriate victims and will be sending SIGKILLs) access
+> to MEMALLOC reserves. Most of the time the preallocation, mlock and
+> memory.min will be good enough but for rare occasions, when the
+> userspace oom-killer needs to allocate, the PF_MEMALLOC flag will
+> protect it from reclaim and let the allocation dip into the memory
+> reserves.
+> 
+> The misuse of this feature would be risky but it can be limited to
+> privileged applications. Userspace oom-killer is the only appropriate
+> user of this feature. This option is simple to implement.
 
-Sure, will make the change.
+Hello Shakeel!
 
+If ordinary PAGE_SIZE and smaller kernel allocations start to fail,
+the system is already in a relatively bad shape. Arguably the userspace
+OOM killer should kick in earlier, it's already a bit too late.
+Allowing to use reserves just pushes this even further, so we're risking
+the kernel stability for no good reason.
 
->>   #else
->>   	int dummy[0];
->>   #endif
->> @@ -3217,40 +3217,56 @@ void mod_objcg_state(struct obj_cgroup *objcg, s=
-truct pglist_data *pgdat,
->>   		     enum node_stat_item idx, int nr)
->>   {
->>   	unsigned long flags;
->> -	struct obj_stock *stock =3D get_obj_stock(&flags);
->> +	struct obj_stock *stock;
->> +	int *bytes, *alt_bytes, alt_idx;
->> +
->> +	/*
->> +	 * Directly update vmstat array for big object.
->> +	 */
->> +	if (unlikely(abs(nr) >=3D PAGE_SIZE))
->> +		goto update_vmstat;
-> This looks like an optimization independent of the vmstat item split?
-It may not be that helpful. I am going to take it out in the next version.
->
->> +	stock =3D get_obj_stock(&flags);
->> +	if (idx =3D=3D NR_SLAB_RECLAIMABLE_B) {
->> +		bytes =3D &stock->reclaimable_bytes;
->> +		alt_bytes =3D &stock->unreclaimable_bytes;
->> +		alt_idx =3D NR_SLAB_UNRECLAIMABLE_B;
->> +	} else {
->> +		bytes =3D &stock->unreclaimable_bytes;
->> +		alt_bytes =3D &stock->reclaimable_bytes;
->> +		alt_idx =3D NR_SLAB_RECLAIMABLE_B;
->> +	}
->>  =20
->>   	/*
->> -	 * Save vmstat data in stock and skip vmstat array update unless
->> -	 * accumulating over a page of vmstat data or when pgdat or idx
->> +	 * Try to save vmstat data in stock and skip vmstat array update
->> +	 * unless accumulating over a page of vmstat data or when pgdat
->>   	 * changes.
->>   	 */
->>   	if (stock->cached_objcg !=3D objcg) {
->>   		/* Output the current data as is */
->> -	} else if (!stock->vmstat_bytes) {
->> -		/* Save the current data */
->> -		stock->vmstat_bytes =3D nr;
->> -		stock->vmstat_idx =3D idx;
->> -		stock->cached_pgdat =3D pgdat;
->> -		nr =3D 0;
->> -	} else if ((stock->cached_pgdat !=3D pgdat) ||
->> -		   (stock->vmstat_idx !=3D idx)) {
->> -		/* Output the cached data & save the current data */
->> -		swap(nr, stock->vmstat_bytes);
->> -		swap(idx, stock->vmstat_idx);
->> +	} else if (stock->cached_pgdat !=3D pgdat) {
->> +		/* Save the current data and output cached data, if any */
->> +		swap(nr, *bytes);
->>   		swap(pgdat, stock->cached_pgdat);
->> +		if (*alt_bytes) {
->> +			__mod_objcg_state(objcg, pgdat, alt_idx,
->> +					  *alt_bytes);
->> +			*alt_bytes =3D 0;
->> +		}
-> As per the other email, I really don't think optimizing the pgdat
-> switch (in a percpu cache) is worth this level of complexity.
+But I agree that throttling the oom daemon in direct reclaim makes no sense.
+I wonder if we can introduce a per-task flag which will exclude the task from
+throttling, but instead all (large) allocations will just fail under a
+significant memory pressure more easily. In this case if there is a significant
+memory shortage the oom daemon will not be fully functional (will get -ENOMEM
+for an attempt to read some stats, for example), but still will be able to kill
+some processes and make the forward progress.
+But maybe it can be done in userspace too: by splitting the daemon into
+a core- and extended part and avoid doing anything behind bare minimum
+in the core part.
 
-I am going to simplify it in the next version.
+> 
+> 2. Mempool
+> 
+> The idea is to preallocate mempool with a given amount of memory for
+> userspace oom-killer. Preferably this will be per-thread and
+> oom-killer can preallocate mempool for its specific threads. The core
+> page allocator can check before going to the reclaim path if the task
+> has private access to the mempool and return page from it if yes.
+> 
+> This option would be more complicated than the previous option as the
+> lifecycle of the page from the mempool would be more sophisticated.
+> Additionally the current mempool does not handle higher order pages
+> and we might need to extend it to allow such allocations. Though this
+> feature might have more use-cases and it would be less risky than the
+> previous option.
 
+It looks like an over-kill for the oom daemon protection, but if there
+are other good use cases, maybe it's a good feature to have.
 
->
->>   	} else {
->> -		stock->vmstat_bytes +=3D nr;
->> -		if (abs(stock->vmstat_bytes) > PAGE_SIZE) {
->> -			nr =3D stock->vmstat_bytes;
->> -			stock->vmstat_bytes =3D 0;
->> +		*bytes +=3D nr;
->> +		if (abs(*bytes) > PAGE_SIZE) {
->> +			nr =3D *bytes;
->> +			*bytes =3D 0;
->>   		} else {
->>   			nr =3D 0;
->>   		}
->>   	}
->> -	if (nr)
->> -		__mod_objcg_state(objcg, pgdat, idx, nr);
->> -
->>   	put_obj_stock(flags);
->> +	if (!nr)
->> +		return;
->> +update_vmstat:
->> +	__mod_objcg_state(objcg, pgdat, idx, nr);
->>   }
->>  =20
->>   static bool consume_obj_stock(struct obj_cgroup *objcg, unsigned int n=
-r_bytes)
->> @@ -3303,12 +3319,19 @@ static void drain_obj_stock(struct obj_stock *st=
-ock)
->>   	/*
->>   	 * Flush the vmstat data in current stock
->>   	 */
->> -	if (stock->vmstat_bytes) {
->> -		__mod_objcg_state(old, stock->cached_pgdat, stock->vmstat_idx,
->> -				  stock->vmstat_bytes);
->> +	if (stock->reclaimable_bytes || stock->unreclaimable_bytes) {
->> +		int bytes;
->> +
->> +		if ((bytes =3D stock->reclaimable_bytes))
->> +			__mod_objcg_state(old, stock->cached_pgdat,
->> +					  NR_SLAB_RECLAIMABLE_B, bytes);
->> +		if ((bytes =3D stock->unreclaimable_bytes))
->> +			__mod_objcg_state(old, stock->cached_pgdat,
->> +					  NR_SLAB_UNRECLAIMABLE_B, bytes);
-> The int bytes indirection isn't necessary. It's easier to read even
-> with the extra lines required to repeat the long stock member names,
-> because that is quite a common pattern (if (stuff) frob(stuff)).
-OK, I will eliminate the bytes variable.
->
-> __mod_objcg_state() also each time does rcu_read_lock() toggling and a
-> memcg lookup that could be batched, which I think is further proof
-> that it should just be inlined here.
->
-I am also thinking that eliminate unnecessary=20
-rcu_read_lock/rcu_read_unlock may help performance a bit. However, that=20
-will be done in another patch after I have done more performance=20
-testing. I am=C2=A0 not going to bother with that in this series.
+> 
+> Another idea I had was to use kthread based oom-killer and provide the
+> policies through eBPF program. Though I am not sure how to make it
+> monitor arbitrary metrics and if that can be done without any
+> allocations.
 
-Cheers,
-Longman
+To start this effort it would be nice to understand what metrics various
+oom daemons use and how easy is to gather them from the bpf side. I like
+this idea long-term, but not sure if it has been settled down enough.
+I imagine it will require a fair amount of work on the bpf side, so we
+need a good understanding of features we need.
 
-
+Thanks!
