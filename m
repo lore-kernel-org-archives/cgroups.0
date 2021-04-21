@@ -1,79 +1,53 @@
-From: <Peter.Enderborg-7U/KSKJipcs@public.gmane.org>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 Subject: Re: [RFC] memory reserve for userspace oom-killer
-Date: Wed, 21 Apr 2021 18:46:13 +0000
-Message-ID: <1f8d300b-9a8b-de09-6d5d-6a9c20c66d24@sony.com>
+Date: Wed, 21 Apr 2021 12:04:05 -0700
+Message-ID: <YIB3JYHvnuOi4CIt@carbon.dhcp.thefacebook.com>
 References: <CALvZod7vtDxJZtNhn81V=oE-EPOf=4KZB2Bv6Giz+u3bFFyOLg@mail.gmail.com>
- <699e51ba-825d-b243-8205-4d8cff478a66@sony.com>
- <CALvZod7AEjzWa6AR4Ym1jpfzT32hmepxvci6hXvNJTEQvcQqEw@mail.gmail.com>
+ <YH8o5iIau85FaeLw@carbon.DHCP.thefacebook.com>
+ <CALvZod7dXuFPeMv5NGu96uCosFpWY_Gy07iDsfSORCA0dT_zsA@mail.gmail.com>
+ <YH+U4X8PKWZpOpAA@carbon.dhcp.thefacebook.com>
+ <CALvZod7x=QR=p73BAxWPbFm+V8KFwYCcxNp-bOBvGaAttxjm7g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sony.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=S1;
- bh=v2af2Y67j2Zmkp/5RNqUHM5m9viZMjoevknqrwOcuSg=;
- b=e7AQFycMQAdX0DHdWUJn5p3dK8AYsIKdHU9Y0lbSOWbH3H5MslzOq6BcYA9GveoXheIP
- CqNd1/J3ajBXuB49Ud1qW+JOM6yxMqX8id5rhj1Xev9J6+uq6bemVMPZoaPp6ObpW9oP
- 0+32qUaxntsOuQohpxR21ZpcYOlBjkcOCtptlzWHhASwvFeWD0UNeeyJu4Rt8dV53HVx
- zKW0oBhJLEoZ3V56A53120WLIDCuIxHp0EUtWBnDTQ2hg9mvSUlA8GCnXa1b4PRYiPTf
- jnsPTCRe0wTI1GWLcCesQV2H591SPf3Yp/acCE7sZ3J+lpspzxE525Q50H8rNScjZli1 gQ== 
-In-Reply-To: <CALvZod7AEjzWa6AR4Ym1jpfzT32hmepxvci6hXvNJTEQvcQqEw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: en-US
-Content-ID: <6D5B716718F7FC41A8629E8261815C61-adN9VeZFLtn9SOyiPdwG7kEZadJ+ESx9@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dragoss-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, padmapriyad-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=pmCvH+b8TCN+8GDVAOpl+l0ohuWQx7qmmsTRAgatbgI=;
+ b=TB2FjrRSEly2Cw08PBeYWPjQS9JaaW/mgnByv2FONQNU7CyEWTDtDVA+l1PaPq8dq80+
+ ess1pQiBkvzOxSNsg+HZgXpeiq9CCIal5/47VCSKPSGV92sxTizkB75V+hC5Cg9/TcNv
+ GC+CKD60VD3GdufYf1CX0kKTLWDoQOuv1lQ= 
+Content-Disposition: inline
+In-Reply-To: <CALvZod7x=QR=p73BAxWPbFm+V8KFwYCcxNp-bOBvGaAttxjm7g-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-ID: <cgroups.vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+To: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dragos Sbirlea <dragoss-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Priya Duraisamy <padmapriyad-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-T24gNC8yMS8yMSA4OjI4IFBNLCBTaGFrZWVsIEJ1dHQgd3JvdGU6DQo+IE9uIFdlZCwgQXByIDIx
-LCAyMDIxIGF0IDEwOjA2IEFNIHBldGVyIGVuZGVyYm9yZw0KPiA8cGV0ZXIuZW5kZXJib3JnQHNv
-bnkuY29tPiB3cm90ZToNCj4+IE9uIDQvMjAvMjEgMzo0NCBBTSwgU2hha2VlbCBCdXR0IHdyb3Rl
-Og0KPiBbLi4uXQ0KPj4gSSB0aGluayB0aGlzIGlzIHRoZSB3cm9uZyB3YXkgdG8gZ28uDQo+IFdo
-aWNoIG9uZT8gQXJlIHlvdSB0YWxraW5nIGFib3V0IHRoZSBrZXJuZWwgb25lPyBXZSBhbHJlYWR5
-IHRhbGtlZCBvdXQNCj4gb2YgdGhhdC4gVG8gZGVjaWRlIHRvIE9PTSwgd2UgbmVlZCB0byBsb29r
-IGF0IGEgdmVyeSBkaXZlcnNlIHNldCBvZg0KPiBtZXRyaWNzIGFuZCBpdCBzZWVtcyBsaWtlIHRo
-YXQgd291bGQgYmUgdmVyeSBoYXJkIHRvIGRvIGZsZXhpYmx5DQo+IGluc2lkZSB0aGUga2VybmVs
-Lg0KWW91IGRvbnQgbmVlZCB0byBkZWNpZGUgdG8gb29tLCBidXQgd2hlbiBvb20gb2NjdXJzIHlv
-dQ0KY2FuIHRha2UgYSBwcm9wZXIgYWN0aW9uLg0KPg0KPj4gSSBzZW50IGEgcGF0Y2ggZm9yIGFu
-ZHJvaWQgbG93bWVtb3J5a2lsbGVyIHNvbWUgeWVhcnMgYWdvLg0KPj4NCj4+IGh0dHBzOi8vdXJs
-ZGVmZW5zZS5jb20vdjMvX19odHRwOi8vZHJpdmVyZGV2LmxpbnV4ZHJpdmVycHJvamVjdC5vcmcv
-cGlwZXJtYWlsL2RyaXZlcmRldi1kZXZlbC8yMDE3LUZlYnJ1YXJ5LzEwMDMxOS5odG1sX187ISFK
-bW9aaVpHQnYzUnZLUlN4IXB3bVk3UjFrR1BrWnE5NWJIU09iSHFJUjEtcjNJdFNCZ2RSQmRLeW05
-dUNjVXByR3EtQ1VyQUlhSDk0NnZXSnFyalUkIA0KPj4NCj4+IEl0IGhhcyBiZWVuIGltcHJvdmVk
-IHNpbmNlIHRoYW4sIHNvIGl0IGNhbiBhY3QgaGFuZGxlIG9vbSBjYWxsYmFja3MsIGl0IGNhbiBh
-Y3Qgb24gdm1wcmVzc3VyZSBhbmQgcHNpDQo+PiBhbmQgYXMgYSBzaHJpbmtlci4gVGhlIHBhdGNo
-ZXMgaGFzIG5vdCBiZWVuIHBvcnRlZCB0byByZXNlbnQga2VybmVscyB0aG91Z2guDQo+Pg0KPj4g
-SSBkb24ndCB0aGluayB2bXByZXNzdXJlIGFuZCBwc2kgaXMgdGhhdCByZWxldmFudCBub3cuIChU
-aGV5IGFyZSB3aGF0IHVzZXJzcGFjZSBhY3Qgb24pICBCdXQgdGhlIGJhc2ljIGlkZWEgaXMgdG8g
-aGF2ZSBhIHByaW9yaXR5IHF1ZXVlDQo+PiB3aXRoaW4gdGhlIGtlcm5lbC4gSXQgbmVlZCBwaWNr
-IHVwIG5ldyBwcm9jZXNzZXMgYW5kIGR5aW5nIHByb2Nlc3MuICBBbmQgdGhlbiBpdCBoYXMgYSBv
-cmRlciwgYW5kIHRoYXQNCj4+IGlzIHNldCB3aXRoIG9vbSBhZGogdmFsdWVzIGJ5IGFjdGl2aXR5
-IG1hbmFnZXIgaW4gYW5kcm9pZC4gIEkgc2VlIHRoaXMgbW9kZWwgY2FuIGJlIHJldXNlZCBmb3IN
-Cj4+IHNvbWV0aGluZyB0aGF0IGlzIGJldHdlZW4gYSBzdGFuZGFyZCBvb20gYW5kIHVzZXJzcGFj
-ZS4gIEluc3RlYWQgb2Ygdm1wcmVzc3VyZSBhbmQgcHNpDQo+PiBhIHdhdGNoZG9nIG1pZ2h0IGJl
-IGEgYmV0dGVyIHdheS4gIElmIHVzZXJzcGFjZSAoaW4gYW5kcm9pZCB0aGUgYWN0aXZpdHkgbWFu
-YWdlciBvciBsbWtkKSBkb2VzIG5vdCBraWNrIHRoZSB3YXRjaGRvZywNCj4+IHRoZSB3YXRjaGRv
-ZyBiaXRlIHRoZSB0YXNrIGFjY29yZGluZyB0byB0aGUgcHJpb3JpdHkgYW5kIGtpbGxzIGl0LiAg
-VGhpcyBwcmlvcml0eSBsaXN0IGRvZXMgbm90IGhhdmUgdG8gYmUgYSBsaXN0IGdlbmVyYXRlZA0K
-Pj4gd2l0aGluIGtlcm5lbC4gQnV0IGl0IGhhcyB0aGUgYWR2YW50YWdlIHRoYXQgeW91IGluaGVy
-ZW50IHBhcmVudHMgcHJvcGVydGllcy4gIFdlIHVzZSBhIHJiLXRyZWUgZm9yIHRoYXQuDQo+Pg0K
-Pj4gQWxsIHRoYXQgaXMgbWlzc2luZyBpcyB0aGUgd2F0Y2hkb2cuDQo+Pg0KPiBBY3R1YWxseSBu
-by4gSXQgaXMgbWlzc2luZyB0aGUgZmxleGliaWxpdHkgdG8gbW9uaXRvciBtZXRyaWNzIHdoaWNo
-IGENCj4gdXNlciBjYXJlIGFuZCBiYXNlZCBvbiB3aGljaCB0aGV5IGRlY2lkZSB0byB0cmlnZ2Vy
-IG9vbS1raWxsLiBOb3Qgc3VyZQ0KPiBob3cgd2lsbCB3YXRjaGRvZyByZXBsYWNlIHBzaS92bXBy
-ZXNzdXJlPyBVc2Vyc3BhY2Uga2VlcHMgcGV0dGluZyB0aGUNCj4gd2F0Y2hkb2cgZG9lcyBub3Qg
-bWVhbiB0aGF0IHN5c3RlbSBpcyBub3Qgc3VmZmVyaW5nLg0KDQpUaGUgdXNlcnNwYWNlIHNob3Vs
-ZCB2ZXJ5IG11Y2ggZG8gd2hhdCBpdCBkby4gQnV0IHdoZW4gaXQNCmRvZXMgbm90IGRvIHdoYXQg
-aXQgc2hvdWxkIGRvLCBpbmNsdWRpbmcga2ljayB0aGUgV0QuIFRoZW4NCnRoZSBrZXJuZWwga2lj
-a3MgaW4gYW5kIGtpbGwgYSBwcmUgZGVmaW5lZCBwcm9jZXNzIG9yIGFzIG1hbnkNCmFzIG5lZWRl
-ZCB1bnRpbCB0aGUgbW9uaXRvcmluZyBjYW4gc3RhcnQgdG8ga2ljayBhbmQgaGF2ZSB0aGUNCmNv
-bnRyb2wuDQoNCj4NCj4gSW4gYWRkaXRpb24gb29tIHByaW9yaXRpZXMgY2hhbmdlIGR5bmFtaWNh
-bGx5IGFuZCBjaGFuZ2luZyBpdCBpbiB5b3VyDQo+IHN5c3RlbSBzZWVtcyB2ZXJ5IGhhcmQuIENn
-cm91cCBhd2FyZW5lc3MgaXMgbWlzc2luZyB0b28uDQoNCldoeSBpcyB0aGF0IGhhcmQ/IE1vdmlu
-ZyBhIG9iamVjdCBpbiBhIHJiLXRyZWUgaXMgYXMgZ29vZCBpdCBnZXQuDQoNCg0KPg0KPiBBbnl3
-YXlzLCB0aGVyZSBhcmUgYWxyZWFkeSB3aWRlbHkgZGVwbG95ZWQgdXNlcnNwYWNlIG9vbS1raWxs
-ZXINCj4gc29sdXRpb25zIChsbWtkLCBvb21kKS4gSSBhbSBhaW1pbmcgdG8gZnVydGhlciBpbXBy
-b3ZlIHRoZQ0KPiByZWxpYWJpbGl0eS4NCg0KWWVzLCBhbmQgSSB0b3RhbGx5IGFncmVlIHRoYXQg
-aXQgaXMgbmVlZGVkLiBCdXQgSSBkb24ndCB0aGluaw0KaXQgd2lsbCBwb3NzaWJsZSB1bnRpbCBs
-aW51eCBpcyByZWFsdGltZSByZWFkeSwgaW5jbHVkaW5nIGENCm1lbW9yeSBzeXN0ZW0gdGhhdCBj
-YW4gZ3VhcmFudGVlIGFsbG9jYXRpb24gdGltZXMuDQo=
+On Wed, Apr 21, 2021 at 06:26:37AM -0700, Shakeel Butt wrote:
+> On Tue, Apr 20, 2021 at 7:58 PM Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
+> >
+> [...]
+> > >
+> > > Michal has suggested ALLOC_OOM which is less risky.
+> >
+> > The problem is that even if you'll serve the oom daemon task with pages
+> > from a reserve/custom pool, it doesn't guarantee anything, because the task
+> > still can wait for a long time on some mutex, taken by another process,
+> > throttled somewhere in the reclaim.
+> 
+> I am assuming here by mutex you are referring to locks which
+> oom-killer might have to take to read metrics or any possible lock
+> which oom-killer might have to take which some other process can take
+> too.
+> 
+> Have you observed this situation happening with oomd on production?
+
+I'm not aware of any oomd-specific issues. I'm not sure if they don't exist
+at all, but so far it's wasn't a problem for us. Maybe it because you tend to
+have less pagecache (as I understand), maybe it comes to specific oomd
+policies/settings.
+
+I know we had different pains with mmap_sem and atop and similar programs,
+where reading process data stalled on mmap_sem for a long time.
+
+Thanks!
