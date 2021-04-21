@@ -1,82 +1,105 @@
 From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [RFC] memory reserve for userspace oom-killer
-Date: Wed, 21 Apr 2021 06:26:37 -0700
-Message-ID: <CALvZod7x=QR=p73BAxWPbFm+V8KFwYCcxNp-bOBvGaAttxjm7g@mail.gmail.com>
+Date: Wed, 21 Apr 2021 06:57:43 -0700
+Message-ID: <CALvZod4kRWDQuZZQ5F+z6WMcUWLwgYd-Kb0mY8UAEK4MbSOZaA@mail.gmail.com>
 References: <CALvZod7vtDxJZtNhn81V=oE-EPOf=4KZB2Bv6Giz+u3bFFyOLg@mail.gmail.com>
- <YH8o5iIau85FaeLw@carbon.DHCP.thefacebook.com> <CALvZod7dXuFPeMv5NGu96uCosFpWY_Gy07iDsfSORCA0dT_zsA@mail.gmail.com>
- <YH+U4X8PKWZpOpAA@carbon.dhcp.thefacebook.com>
+ <YH54pyRWSi1zLMw4@dhcp22.suse.cz> <CALvZod4kjdgMU=8T_bx6zFufA1cGtt2p1Jg8jOgi=+g=bs-Evw@mail.gmail.com>
+ <YH/RPydqhwXdyG80@dhcp22.suse.cz>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=ZywKeowOaZ5VjiR6Xyl1lA10hFbmQYAWAA2LZ4rnjYw=;
-        b=CK1O++Mtfpi16+3yujCdkCfBGjU4sVfzcD13bBfsUdBy4QfY5X0LGDdVSJi7h59uGE
-         CAbgTBgagVouDpUaWZMzdF9CN6uKvmqX57EAYp9CPdLIm2iwV3lrOhiMPNnXnS1UAc3U
-         VOjJ9diIXc6gRimHPoCeH9Hiqca0KFQ/WE/zg2xuxmv7LyUlzY+T+aZvjN/dULKrWWGN
-         AtQZCyKcPiVpNk7gB9XIYbHiTdQe2wVPftF0ZEMKDc8lqANKKd2tbwSEwcHIzZdonz3B
-         mcNDmd8/vG/gsoS8jfvtZABzkpzTRy1JgaOM1Emh/D0bKwhc4dtv2LM7QlFYVIRXeY3A
-         Ulog==
-In-Reply-To: <YH+U4X8PKWZpOpAA-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
+        bh=SzUt8X/WzmqyiQTQOb09ZoIGFmeYojo8TKKWXg5zRNc=;
+        b=mjoh/M3C5zXaRixBaiMGh8FW3jbxldonTsAzJ77oVizAjeOQHKGQiC3i75Wu1umZhX
+         RchEyUx3ji5vKetnRRp26j8o1NQ2RDmlT0MDgmHTFqrnIHTNRA2hOPGLJSlBZ96jGVKf
+         571gU2R/TArQpNfCLUqywHzxY8P+cvMHYJLT1l3UwzGQBXFPMDEgJCSCblnavYn8A5bO
+         JXVBkSCY3RsQl8DJcCt2LB/rX6BfDfUMqitdJacy+e9UK6xr1L491vhp2P7k43GWQnVa
+         XgkwX1mnEErizRWbJD2VriTjvK5e1upblqP8QOGLtZ4cRNo9253JqHD+ovek+QYElz8G
+         tJ7w==
+In-Reply-To: <YH/RPydqhwXdyG80-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dragos Sbirlea <dragoss-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Priya Duraisamy <padmapriyad-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dragos Sbirlea <dragoss-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Priya Duraisamy <padmapriyad-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-On Tue, Apr 20, 2021 at 7:58 PM Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org> wrote:
+On Wed, Apr 21, 2021 at 12:16 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
 >
+[...]
+> > To decide when to kill, the oom-killer has to read a lot of metrics.
+> > It has to open a lot of files to read them and there will definitely
+> > be new allocations involved in those operations. For example reading
+> > memory.stat does a page size allocation. Similarly, to perform action
+> > the oom-killer may have to read cgroup.procs file which again has
+> > allocation inside it.
+>
+> True but many of those can be avoided by opening the file early. At
+> least seq_file based ones will not allocate later if the output size
+> doesn't increase. Which should be the case for many. I think it is a
+> general improvement to push those who allocate during read to an open
+> time allocation.
+>
+
+I agree that this would be a general improvement but it is not always
+possible (see below).
+
+> > Regarding sophisticated oom policy, I can give one example of our
+> > cluster level policy. For robustness, many user facing jobs run a lot
+> > of instances in a cluster to handle failures. Such jobs are tolerant
+> > to some amount of failures but they still have requirements to not let
+> > the number of running instances below some threshold. Normally killing
+> > such jobs is fine but we do want to make sure that we do not violate
+> > their cluster level agreement. So, the userspace oom-killer may
+> > dynamically need to confirm if such a job can be killed.
+>
+> What kind of data do you need to examine to make those decisions?
+>
+
+Most of the time the cluster level scheduler pushes the information to
+the node controller which transfers that information to the
+oom-killer. However based on the freshness of the information the
+oom-killer might request to pull the latest information (IPC and RPC).
+
 [...]
 > >
-> > Michal has suggested ALLOC_OOM which is less risky.
+> > I was thinking of simply prctl(SET_MEMPOOL, bytes) to assign mempool
+> > to a thread (not shared between threads) and prctl(RESET_MEMPOOL) to
+> > free the mempool.
 >
-> The problem is that even if you'll serve the oom daemon task with pages
-> from a reserve/custom pool, it doesn't guarantee anything, because the task
-> still can wait for a long time on some mutex, taken by another process,
-> throttled somewhere in the reclaim.
+> I am not a great fan of prctl. It has become a dumping ground for all
+> mix of unrelated functionality. But let's say this is a minor detail at
+> this stage.
 
-I am assuming here by mutex you are referring to locks which
-oom-killer might have to take to read metrics or any possible lock
-which oom-killer might have to take which some other process can take
-too.
+I agree this does not have to be prctl().
 
-Have you observed this situation happening with oomd on production?
+> So you are proposing to have a per mm mem pool that would be
 
-> You're basically trying to introduce a
-> "higher memory priority" and as always in such cases there will be priority
-> inversion problems.
->
-> So I doubt that you can simple create a common mechanism which will work
-> flawlessly for all kinds of allocations, I anticipate many special cases
-> requiring an individual approach.
->
-[...]
->
-> First, I need to admit that I didn't follow the bpf development too close
-> for last couple of years, so my knowledge can be a bit outdated.
->
-> But in general bpf is great when there is a fixed amount of data as input
-> (e.g. skb) and a fixed output (e.g. drop/pass the packet). There are different
-> maps which are handy to store some persistent data between calls.
->
-> However traversing complex data structures is way more complicated. It's
-> especially tricky if the data structure is not of a fixed size: bpf programs
-> have to be deterministic, so there are significant constraints on loops.
->
-> Just for example: it's easy to call a bpf program for each task in the system,
-> provide some stats/access to some fields of struct task and expect it to return
-> an oom score, which then the kernel will look at to select the victim.
-> Something like this can be done with cgroups too.
->
-> Writing a kthread, which can sleep, poll some data all over the system and
-> decide what to do (what oomd/... does),  will be really challenging.
-> And going back, it will not provide any guarantees unless we're not taking
-> any locks, which is already quite challenging.
->
+I was thinking of per-task_struct instead of per-mm_struct just for simplicity.
 
-Thanks for the info and I agree this direction needs much more thought
-and time to be materialized.
+> used as a fallback for an allocation which cannot make a forward
+> progress, right?
+
+Correct
+
+> Would that pool be preallocated and sitting idle?
+
+Correct
+
+> What kind of allocations would be allowed to use the pool?
+
+I was thinking of any type of allocation from the oom-killer (or
+specific threads). Please note that the mempool is the backup and only
+used in the slowpath.
+
+> What if the pool is depleted?
+
+This would mean that either the estimate of mempool size is bad or
+oom-killer is buggy and leaking memory.
+
+I am open to any design directions for mempool or some other way where
+we can provide a notion of memory guarantee to oom-killer.
 
 thanks,
 Shakeel
