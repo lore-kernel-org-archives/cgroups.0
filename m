@@ -1,75 +1,210 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC] memory reserve for userspace oom-killer
-Date: Wed, 21 Apr 2021 12:18:22 -0700
-Message-ID: <CALvZod5+5ycobmSt=NC3VJF4FRMFmBQEN7SQgipyTDbzHEbPUQ@mail.gmail.com>
-References: <CALvZod7vtDxJZtNhn81V=oE-EPOf=4KZB2Bv6Giz+u3bFFyOLg@mail.gmail.com>
- <699e51ba-825d-b243-8205-4d8cff478a66@sony.com> <CALvZod7AEjzWa6AR4Ym1jpfzT32hmepxvci6hXvNJTEQvcQqEw@mail.gmail.com>
- <1f8d300b-9a8b-de09-6d5d-6a9c20c66d24@sony.com>
+From: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
+ allocation APIs
+Date: Wed, 21 Apr 2021 13:33:12 -0600
+Message-ID: <20210421133312.15307c44@redhat.com>
+References: <20210401134236.GF1463678@nvidia.com>
+        <BN6PR11MB4068C4DE7AF43D44DE70F4C1C37B9@BN6PR11MB4068.namprd11.prod.outlook.com>
+        <20210401160337.GJ1463678@nvidia.com>
+        <4bea6eb9-08ad-4b6b-1e0f-c97ece58a078@redhat.com>
+        <20210415230732.GG1370958@nvidia.com>
+        <20210416061258.325e762e@jacob-builder>
+        <20210416094547.1774e1a3@redhat.com>
+        <BN6PR11MB406854F56D18E1187A2C98ACC3479@BN6PR11MB4068.namprd11.prod.outlook.com>
+        <20210421162307.GM1370958@nvidia.com>
+        <20210421105451.56d3670a@redhat.com>
+        <20210421175203.GN1370958@nvidia.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=50kzeCPGjm2JMXyK7PkTEiD0mm3C2OtO1PpsOLUYSss=;
-        b=T5uVrfbF8qU1G524RKlJRFgst7C0N8b4H2i02+jwmhpvtNGQJmtRwATMQyisjPGKwT
-         gsYjxwjD/BmmQlIvAf37RXRIKswGX+Hv5IHJWeJIGmVhisndacaJ5qoPcN/oMkAWKI2K
-         rXoWb3LP/jKJJcJoTQxXEwTnmALDSCLAr8aF4kENjxcOQsR1FiyM3YpiQEEA+/MirhaW
-         +P/0OecI6/mj//o2QV4f3/hm4ceifXZNLLqS/ltvN0Gkvy/DDlCZBBrWKzInmGXh+DJB
-         lq2C30XJHf5e6QSu2w8xVzy48r71MroUUoeyLBA+TWWQtRq16jzncXwVIx0S3LBgkBnU
-         pXTA==
-In-Reply-To: <1f8d300b-9a8b-de09-6d5d-6a9c20c66d24-7U/KSKJipcs@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1619033603;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=OSjUA9x97DB8V/G4wtzBrBvcZftae66qVvF3IBCBz10=;
+        b=a/BwnT8gxonr4Hr2+hTilVChlClMDb3XTSkKbAkd4Rq1LLhrqj7cWAlOErVXcqteatRtSn
+        zXLFua0wWu77Zt9USuDh5nj6RbT8olThUFCPCTG3Jzo9xiXo+COvoLQmy4zj8uch+34MwY
+        nVwc4ETlQhH13ZOFpC3KqKsPf+8baAw=
+In-Reply-To: <20210421175203.GN1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: peter enderborg <Peter.Enderborg-7U/KSKJipcs@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dragos Sbirlea <dragoss-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Priya Duraisamy <padmapriyad-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-On Wed, Apr 21, 2021 at 11:46 AM <Peter.Enderborg-7U/KSKJipcs@public.gmane.org> wrote:
->
-> On 4/21/21 8:28 PM, Shakeel Butt wrote:
-> > On Wed, Apr 21, 2021 at 10:06 AM peter enderborg
-> > <peter.enderborg-7U/KSKJipcs@public.gmane.org> wrote:
-> >> On 4/20/21 3:44 AM, Shakeel Butt wrote:
-> > [...]
-> >> I think this is the wrong way to go.
-> > Which one? Are you talking about the kernel one? We already talked out
-> > of that. To decide to OOM, we need to look at a very diverse set of
-> > metrics and it seems like that would be very hard to do flexibly
-> > inside the kernel.
-> You dont need to decide to oom, but when oom occurs you
-> can take a proper action.
+On Wed, 21 Apr 2021 14:52:03 -0300
+Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org> wrote:
 
-No, we want the flexibility to decide when to oom-kill. Kernel is very
-conservative in triggering the oom-kill.
+> On Wed, Apr 21, 2021 at 10:54:51AM -0600, Alex Williamson wrote:
+> 
+> > That's essentially replacing vfio-core, where I think we're more  
+> 
+> I am only talking about /dev/vfio here which is basically the IOMMU
+> interface part.
+> 
+> I still expect that VFIO_GROUP_SET_CONTAINER will be used to connect
+> /dev/{ioasid,vfio} to the VFIO group and all the group and device
+> logic stays inside VFIO.
 
-> >
-[...]
-> > Actually no. It is missing the flexibility to monitor metrics which a
-> > user care and based on which they decide to trigger oom-kill. Not sure
-> > how will watchdog replace psi/vmpressure? Userspace keeps petting the
-> > watchdog does not mean that system is not suffering.
->
-> The userspace should very much do what it do. But when it
-> does not do what it should do, including kick the WD. Then
-> the kernel kicks in and kill a pre defined process or as many
-> as needed until the monitoring can start to kick and have the
-> control.
->
+But that group and device logic is also tied to the container, where
+the IOMMU backend is the interchangeable thing that provides the IOMMU
+manipulation for that container.  If you're using
+VFIO_GROUP_SET_CONTAINER to associate a group to a /dev/ioasid, then
+you're really either taking that group outside of vfio or you're
+re-implementing group management in /dev/ioasid.  I'd expect the
+transition point at VFIO_SET_IOMMU.
 
-Roman already suggested something similar (i.e. oom-killer core and
-extended and core watching extended) but completely in userspace. I
-don't see why we would want to do that in the kernel instead.
+> The appeal of unifying /dev/{ioasid,vfio} to a single fops is that it
+> cleans up vfio a lot - we don't have to have two different code paths
+> where one handles a vfio_container and the other a ioasid_container
+> and the all the related different iommu ops and so on.
 
-> >
-> > In addition oom priorities change dynamically and changing it in your
-> > system seems very hard. Cgroup awareness is missing too.
->
-> Why is that hard? Moving a object in a rb-tree is as good it get.
->
+Currently vfio IOMMU backends don't know about containers either.
+Setting the vfio IOMMU for a container creates an object within the
+IOMMU backend representing that IOMMU context.  IOMMU groups are then
+attached to that context, where the IOMMU backend can add to or create a
+new IOMMU domain to include that group, or if no compatible IOMMU
+context can be created, reject it.
 
-It is a group of objects. Anyways that is implementation detail.
+> Everything can be switched to ioasid_container all down the line. If
+> it wasn't for PPC this looks fairly simple.
 
-The message I got from this exchange is that we can have a watchdog
-(userspace or kernel) to further improve the reliability of userspace
-oom-killers.
+At what point is it no longer vfio?  I'd venture to say that replacing
+the container rather than invoking a different IOMMU backend is that
+point.
+
+> Since getting rid of PPC looks a bit hard, we'd be stuck with
+> accepting a /dev/ioasid and then immediately wrappering it in a
+> vfio_container an shimming it through a vfio_iommu_ops. It is not
+> ideal at all, but in my look around I don't see a major problem if
+> type1 implementation is moved to live under /dev/ioasid.
+
+But type1 is \just\ an IOMMU backend, not "/dev/vfio".  Given that
+nobody flinched at removing NVLink support, maybe just deprecate SPAPR
+now and see if anyone objects ;)
+
+> For concreteness if we look at the set container flow with ioasid I'd
+> say something like:
+> 
+> vfio_group_fops_unl_ioctl()
+>  VFIO_GROUP_SET_CONTAINER
+>   vfio_group_set_container()
+>      if (f.file->f_op == &vfio_fops) {
+>           // Use a real vfio_container and vfio_iommu_driver
+>           driver->ops->attach_group()
+>              tce_iommu_attach_group()
+>      }
+> 
+>      if (ioasid_container = ioasid_get_from_fd(container_fd)) {
+>          // create a dummy vfio_container and use the ioasid driver
+> 	 container = kzalloc()
+>          container->iommu_driver = ioasid_shim
+>          driver->ops->attach_group()
+>              ioasid_shim_attach_group(ioasid_container, ...)
+>                  ioasid_attach_group()
+>                      // What used to be vfio_iommu_attach_group()
+
+How do you handle multiple groups with the same container?  Again, I'd
+expect some augmentation of VFIO_SET_IOMMU so that /dev/vfio continues
+to exist and manage group to container mapping and /dev/ioasid manages
+the IOMMU context of that container.
+> 
+> Broadly all the ops vfio need go through the ioasid_shim which relays
+> them to the generic ioasid API.
+
+/dev/vfio essentially already passes through all fops to the IOMMU
+backend once the VFIO_SET_IOMMU is established.
+ 
+> We end up with a ioasid.h that basically has the vfio_iommu_type1 code
+> lightly recast into some 'struct iommu_container' and a set of
+> ioasid_* function entry points that follow vfio_iommu_driver_ops_type1:
+>   ioasid_attach_group
+>   ioasid_detatch_group
+>   ioasid_<something about user pages>
+>   ioasid_read/ioasid_write
+
+Again, this looks like a vfio IOMMU backend.  What are we accomplishing
+by replacing /dev/vfio with /dev/ioasid versus some manipulation of
+VFIO_SET_IOMMU accepting a /dev/ioasid fd?
+
+> If we have this, and /dev/ioasid implements the legacy IOCTLs, then
+> /dev/vfio == /dev/ioasid and we can compile out vfio_fops and related
+> from vfio.c and tell ioasid.c to create /dev/vfio instead using the
+> ops it owns.
+
+Why would we want /dev/ioasid to implement legacy ioctls instead of
+simply implementing an interface to allow /dev/ioasid to be used as a
+vfio IOMMU backend?
+ 
+> This is a very long winded way of saying ideally we'd do
+> approximately:
+>   git mv drivers/vfio/vfio_iommu_type1.c drivers/ioasid/ioasid.c
+> 
+> As the first step. Essentially we declare that what is type1 is really
+> the user interface to the internal kernel IOMMU kAPI, which has been
+> steadily evolving since type1 was created 10 years ago.
+
+The pseudo code above really suggests you do want to remove
+/dev/vfio/vfio, but this is only one of the IOMMU backends for vfio, so
+I can't quite figure out if we're talking past each other.
+
+As I expressed in another thread, type1 has a lot of shortcomings.  The
+mapping interface leaves userspace trying desperately to use statically
+mapped buffers because the map/unmap latency is too high.  We have
+horrible issues with duplicate locked page accounting across
+containers.  It suffers pretty hard from feature creep in various
+areas.  A new IOMMU backend is an opportunity to redesign some of these
+things.
+
+> > The interface of making that selection might change to accept an
+> > external /dev/ioasid file descriptor, of course.  Maybe you can
+> > elaborate on how the vfio device and group uAPI live (or not) in
+> > this new scheme were /dev/ioasid is the primary interface.  Thanks,  
+> 
+> They say in vfio. You'd still open a group and you'd still pass in
+> either /dev/vfio or /dev/ioasid to define the container
+> 
+> Though, completely as an unrelated aside, I admit to not entirely
+> understanding why the group is the central element of the uAPI.
+> 
+> It is weird that the vfio "drivers" all work on the struct vfio_device
+> (at least after my series), and it has a file_operations presence via
+> vfio_device_fops, but instead of struct vfio_device directly having a
+> 'struct device' and cdev to access the FD we get it through a group FD
+> and agroup chardev via VFIO_GROUP_GET_DEVICE_FD
+> 
+> If we were to revise this, and I don't see a huge reason to do so, I
+> would put a struct device and cdev in struct vfio_device, attach the
+> vfio_device directly to the ioasid and then forget about the group, at
+> least as uapi, completely.
+> 
+> Or at least I don't see where that gets into trouble, but I'm not too
+> familiar with the multi-vfio in a process scenario..
+
+The vfio_group is the unit of userspace ownership as it reflects the
+IOMMU group as the unit of isolation.  Ideally there's a 1:1 mapping
+between device and group, but that is of course not always the case.
+
+The IOMMU group also abstracts isolation and visibility relative to
+DMA.  For example, in a PCIe topology a multi-function device may not
+have isolation between functions, but each requester ID is visible to
+the IOMMU.  This lacks isolation but not IOMMU granularity, or
+visibility.  A conventional PCI topology however lacks both isolation
+and visibility, all devices downstream use either the PCIe-to-PCI
+bridge RID or a RID derived from the secondary bus.  We can also have
+mixed topologies, for example PCIe-to-PCI<->PCI-to-PCIe, where the
+grouping code needs to search upstream for the highest level where we
+achieve both isolation and visibility.
+
+To simplify this, we use the group as the unit of IOMMU context, again
+favoring singleton group behavior.
+
+An individual vfio_device doesn't know about these isolation
+dependencies, thus while a vfio bus/device driver like vfio-pci can
+expose a device, it's vfio-core than manages whether the isolated set
+of devices which includes that device, ie. the group, meets the
+requirements for userspace access.  Thanks,
+
+Alex
+
