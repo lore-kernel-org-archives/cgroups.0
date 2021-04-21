@@ -1,81 +1,125 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+From: Michal Hocko <mhocko@suse.com>
 Subject: Re: [RFC] memory reserve for userspace oom-killer
-Date: Wed, 21 Apr 2021 07:13:45 -0700
-Message-ID: <CALvZod6oCBB6tDh5wABSwdHfcDzLX7S7cOTLp_4Qk4DCi50X_A@mail.gmail.com>
+Date: Wed, 21 Apr 2021 16:29:00 +0200
+Message-ID: <YIA2rB0wgqKzfUfi@dhcp22.suse.cz>
 References: <CALvZod7vtDxJZtNhn81V=oE-EPOf=4KZB2Bv6Giz+u3bFFyOLg@mail.gmail.com>
- <YH8o5iIau85FaeLw@carbon.DHCP.thefacebook.com> <CALvZod7dXuFPeMv5NGu96uCosFpWY_Gy07iDsfSORCA0dT_zsA@mail.gmail.com>
- <YH/S2dVxk2le8SMw@dhcp22.suse.cz>
+ <YH54pyRWSi1zLMw4@dhcp22.suse.cz>
+ <CALvZod4kjdgMU=8T_bx6zFufA1cGtt2p1Jg8jOgi=+g=bs-Evw@mail.gmail.com>
+ <YH/RPydqhwXdyG80@dhcp22.suse.cz>
+ <CALvZod4kRWDQuZZQ5F+z6WMcUWLwgYd-Kb0mY8UAEK4MbSOZaA@mail.gmail.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=KT5Z/sPJXf0qDYy55bMraiO4nEL20VpFAQ+FPYD2/dw=;
-        b=WFAWOqMmzOQnQNVjpAKoR6YqWuxUDxMFdKgszw7Kn8uz7r8hz4pWSNkrWd5wNrvPGp
-         q39wDsrIdJmGWqrYNH8EUO6pO+DVhIsP8AaaNicOjCkRz1CNsoCn+ETNeFl3Q8hL00Ct
-         CI1EzrSnzpp4EWE1LXyyb2yFXfBfV/RmqRZCM6pQdzS7WbVf46BwNckO0u6hNrXyZKcf
-         0nxRN8JIvGm8b0shRuwYStgnyt9mEE0rBE+HLxDOYWOElrfF7Tk4/ZSmZiS4411A4+bU
-         38t+fVT8D6CfEj3lIXI40eG7FQCx5Bzpg1adr0Ij4D6cG3oMI17mt+20w8Tl4tniDdvW
-         Xiag==
-In-Reply-To: <YH/S2dVxk2le8SMw-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1619015341; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=vb4w4rQjHd7BOri6tnIw9XpvN8SwPbJF3toyQYgzGRg=;
+        b=qYNAOXNH2YsGh7mAvqkzXGBRCliQc8swtDatbLoWNIYm4Q4oFYaMdsxs2xgIFTxRiGYjzy
+        e+teDibROzLugbdHxvDdxHVKbGaJEQ6PDxt85RVPy2LqF/PlbQe6QsddxC6D1vCcBoxuds
+        iBtliyQaR6FGnV5opOHT+yreCfUKFG8=
+Content-Disposition: inline
+In-Reply-To: <CALvZod4kRWDQuZZQ5F+z6WMcUWLwgYd-Kb0mY8UAEK4MbSOZaA@mail.gmail.com>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Suren Baghdasaryan <surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Greg Thelen <gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Dragos Sbirlea <dragoss-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Priya Duraisamy <padmapriyad-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+To: Shakeel Butt <shakeelb@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Linux MM <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, David Rientjes <rientjes@google.com>, LKML <linux-kernel@vger.kernel.org>, Suren Baghdasaryan <surenb@google.com>, Greg Thelen <gthelen@google.com>, Dragos Sbirlea <dragoss@google.com>, Priya Duraisamy <padmapriyad@google.com>
 
-On Wed, Apr 21, 2021 at 12:23 AM Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org> wrote:
->
-[...]
-> > In our observation the global reclaim is very non-deterministic at the
-> > tail and dramatically impacts the reliability of the system. We are
-> > looking for a solution which is independent of the global reclaim.
->
-> I believe it is worth purusing a solution that would make the memory
-> reclaim more predictable. I have seen direct reclaim memory throttling
-> in the past. For some reason which I haven't tried to examine this has
-> become less of a problem with newer kernels. Maybe the memory access
-> patterns have changed or those problems got replaced by other issues but
-> an excessive throttling is definitely something that we want to address
-> rather than work around by some user visible APIs.
->
-
-I agree we want to address the excessive throttling but for everyone
-on the machine and most importantly it is a moving target. The reclaim
-code continues to evolve and in addition it has callbacks to diverse
-sets of subsystems.
-
-The user visible APIs is for one specific use-case i.e. oom-killer
-which will indirectly help in reducing the excessive throttling.
-
-[...]
-> > So, the suggestion is to have a per-task flag to (1) indicate to not
-> > throttle and (2) fail allocations easily on significant memory
-> > pressure.
+On Wed 21-04-21 06:57:43, Shakeel Butt wrote:
+> On Wed, Apr 21, 2021 at 12:16 AM Michal Hocko <mhocko@suse.com> wrote:
 > >
-> > For (1), the challenge I see is that there are a lot of places in the
-> > reclaim code paths where a task can get throttled. There are
-> > filesystems that block/throttle in slab shrinking. Any process can get
-> > blocked on an unrelated page or inode writeback within reclaim.
+> [...]
+> > > To decide when to kill, the oom-killer has to read a lot of metrics.
+> > > It has to open a lot of files to read them and there will definitely
+> > > be new allocations involved in those operations. For example reading
+> > > memory.stat does a page size allocation. Similarly, to perform action
+> > > the oom-killer may have to read cgroup.procs file which again has
+> > > allocation inside it.
 > >
-> > For (2), I am not sure how to deterministically define "significant
-> > memory pressure". One idea is to follow the __GFP_NORETRY semantics
-> > and along with (1) the userspace oom-killer will see ENOMEM more
-> > reliably than stucking in the reclaim.
->
-> Some of the interfaces (e.g. seq_file uses GFP_KERNEL reclaim strength)
-> could be more relaxed and rather fail than OOM kill but wouldn't your
-> OOM handler be effectivelly dysfunctional when not able to collect data
-> to make a decision?
->
+> > True but many of those can be avoided by opening the file early. At
+> > least seq_file based ones will not allocate later if the output size
+> > doesn't increase. Which should be the case for many. I think it is a
+> > general improvement to push those who allocate during read to an open
+> > time allocation.
+> >
+> 
+> I agree that this would be a general improvement but it is not always
+> possible (see below).
 
-Yes it would be. Roman is suggesting to have a precomputed kill-list
-(pidfds ready to send SIGKILL) and whenever oom-killer gets ENOMEM, it
-would go with the kill-list. Though we are still contemplating the
-ways and side-effects of preferably returning ENOMEM in slowpath for
-oom-killer and in addition the complexity to maintain the kill-list
-and keeping it up to date.
+It would be still great to invest into those improvements. And I would
+be really grateful to learn about bottlenecks from the existing kernel
+interfaces you have found on the way.
 
-thanks,
-Shakeel
+> > > Regarding sophisticated oom policy, I can give one example of our
+> > > cluster level policy. For robustness, many user facing jobs run a lot
+> > > of instances in a cluster to handle failures. Such jobs are tolerant
+> > > to some amount of failures but they still have requirements to not let
+> > > the number of running instances below some threshold. Normally killing
+> > > such jobs is fine but we do want to make sure that we do not violate
+> > > their cluster level agreement. So, the userspace oom-killer may
+> > > dynamically need to confirm if such a job can be killed.
+> >
+> > What kind of data do you need to examine to make those decisions?
+> >
+> 
+> Most of the time the cluster level scheduler pushes the information to
+> the node controller which transfers that information to the
+> oom-killer. However based on the freshness of the information the
+> oom-killer might request to pull the latest information (IPC and RPC).
+
+I cannot imagine any OOM handler to be reliable if it has to depend on
+other userspace component with a lower resource priority. OOM handlers
+are fundamentally complex components which has to reduce their
+dependencies to the bare minimum.
+ 
+> [...]
+> > >
+> > > I was thinking of simply prctl(SET_MEMPOOL, bytes) to assign mempool
+> > > to a thread (not shared between threads) and prctl(RESET_MEMPOOL) to
+> > > free the mempool.
+> >
+> > I am not a great fan of prctl. It has become a dumping ground for all
+> > mix of unrelated functionality. But let's say this is a minor detail at
+> > this stage.
+> 
+> I agree this does not have to be prctl().
+> 
+> > So you are proposing to have a per mm mem pool that would be
+> 
+> I was thinking of per-task_struct instead of per-mm_struct just for simplicity.
+> 
+> > used as a fallback for an allocation which cannot make a forward
+> > progress, right?
+> 
+> Correct
+> 
+> > Would that pool be preallocated and sitting idle?
+> 
+> Correct
+> 
+> > What kind of allocations would be allowed to use the pool?
+> 
+> I was thinking of any type of allocation from the oom-killer (or
+> specific threads). Please note that the mempool is the backup and only
+> used in the slowpath.
+> 
+> > What if the pool is depleted?
+> 
+> This would mean that either the estimate of mempool size is bad or
+> oom-killer is buggy and leaking memory.
+> 
+> I am open to any design directions for mempool or some other way where
+> we can provide a notion of memory guarantee to oom-killer.
+
+OK, thanks for clarification. There will certainly be hard problems to
+sort out[1] but the overall idea makes sense to me and it sounds like a
+much better approach than a OOM specific solution.
+
+
+[1] - how the pool is going to be replenished without hitting all
+potential reclaim problems (thus dependencies on other all tasks
+directly/indirectly) yet to not rely on any background workers to do
+that on the task behalf without a proper accounting etc...
+-- 
+Michal Hocko
+SUSE Labs
