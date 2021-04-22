@@ -1,74 +1,184 @@
-From: <Peter.Enderborg-7U/KSKJipcs@public.gmane.org>
-Subject: Re: [RFC] memory reserve for userspace oom-killer
-Date: Thu, 22 Apr 2021 15:41:05 +0000
-Message-ID: <6217dcce-d178-3ab4-5174-1a98cdb14d98@sony.com>
-References: <CALvZod7vtDxJZtNhn81V=oE-EPOf=4KZB2Bv6Giz+u3bFFyOLg@mail.gmail.com>
- <699e51ba-825d-b243-8205-4d8cff478a66@sony.com>
- <CALvZod7AEjzWa6AR4Ym1jpfzT32hmepxvci6hXvNJTEQvcQqEw@mail.gmail.com>
- <1f8d300b-9a8b-de09-6d5d-6a9c20c66d24@sony.com>
- <CALvZod5+5ycobmSt=NC3VJF4FRMFmBQEN7SQgipyTDbzHEbPUQ@mail.gmail.com>
- <6eaa4c24-c565-bc5d-dbca-b73c72569a16@sony.com>
- <CALvZod5dr8Uy84wJ5-a=zyR52_k5AU64GtFAsJpBRE89DEt-yg@mail.gmail.com>
+From: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH-next v5 2/4] mm/memcg: Cache vmstat data in percpu
+ memcg_stock_pcp
+Date: Thu, 22 Apr 2021 12:58:52 -0400
+Message-ID: <ded96eba-8c0c-1822-61b5-de0577b7ebab@redhat.com>
+References: <20210420192907.30880-1-longman@redhat.com>
+ <20210420192907.30880-3-longman@redhat.com>
+ <YIC1HEKF8SQQdnxa@carbon.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sony.com; h=from : to : cc :
- subject : date : message-id : references : in-reply-to : content-type :
- content-id : content-transfer-encoding : mime-version; s=S1;
- bh=hLhyqvuSNau+9nQWxEwBZLvM2wcnTQlEU2YPuxWm1k0=;
- b=Msc9MtxYPz8lQqVqwxkCG1USRqzlnENq+EQVW1a6ZUJUxX091ePGLXRTyYO6Id4Y3Rz0
- 67Rjti5n519if474k4O7Bt6G48Vc5PCH0gZqIWuCwhq+9LHpbjzdaw+zdE2SxwaC13Lz
- Gu5pbl67xFK8f9Aaz8ntqf4/HQbKnw+qhN88V01IUrOPYWUaOYHx301Yx9f55ySiEgF1
- LrgRaJr7z7lFsVG2F3NSg1PSAbRLPcG/BsT8eyW+/MMWNXlXzilVrl23r3qxAsf7VNJx
- /sBvScx00LoejJu7JHLjdJ9w9buO4mQG1BVT3pq9Tt+3eo1SHNuxjWcv7FiN7e5pHlOO ww== 
-In-Reply-To: <CALvZod5dr8Uy84wJ5-a=zyR52_k5AU64GtFAsJpBRE89DEt-yg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1619110737;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=tnsoyaxSTba4CLrYhMvvI/m5yaJbsJVCTEUHiT030yM=;
+        b=YFwo06U9PeAeOFN8ZEDBvs8eSs2OkF78pVPHaGFAf3xLctZXWFqI2T15up1kTjfqXxbPaQ
+        Od2OCUsfwCSFdaDwJkewWX01EhmseUgMB+dJix53cIAeZ4ApMyvE42JELbUPbkKAjCcUFf
+        vxKGtSUF/+ae+N73ibFfRYLWHvLTmY0=
+In-Reply-To: <YIC1HEKF8SQQdnxa-cx5fftMpWqeCjSd+JxjunQ2O0Ztt9esIQQ4Iyu8u01E@public.gmane.org>
 Content-Language: en-US
-Content-ID: <BE679FEF622BEC4F904FF0E7A459843E-adN9VeZFLtn9SOyiPdwG7kEZadJ+ESx9@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-To: shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
-Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dragoss-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, padmapriyad-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"; format="flowed"
+To: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Xing Zhengjun <zhengjun.xing-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 
-T24gNC8yMi8yMSA0OjI3IFBNLCBTaGFrZWVsIEJ1dHQgd3JvdGU6DQo+IE9uIFdlZCwgQXByIDIx
-LCAyMDIxIGF0IDEwOjM5IFBNIDxQZXRlci5FbmRlcmJvcmdAc29ueS5jb20+IHdyb3RlOg0KPj4g
-T24gNC8yMS8yMSA5OjE4IFBNLCBTaGFrZWVsIEJ1dHQgd3JvdGU6DQo+Pj4gT24gV2VkLCBBcHIg
-MjEsIDIwMjEgYXQgMTE6NDYgQU0gPFBldGVyLkVuZGVyYm9yZ0Bzb255LmNvbT4gd3JvdGU6DQo+
-Pj4+IE9uIDQvMjEvMjEgODoyOCBQTSwgU2hha2VlbCBCdXR0IHdyb3RlOg0KPj4+Pj4gT24gV2Vk
-LCBBcHIgMjEsIDIwMjEgYXQgMTA6MDYgQU0gcGV0ZXIgZW5kZXJib3JnDQo+Pj4+PiA8cGV0ZXIu
-ZW5kZXJib3JnQHNvbnkuY29tPiB3cm90ZToNCj4+Pj4+PiBPbiA0LzIwLzIxIDM6NDQgQU0sIFNo
-YWtlZWwgQnV0dCB3cm90ZToNCj4+Pj4+IFsuLi5dDQo+Pj4+Pj4gSSB0aGluayB0aGlzIGlzIHRo
-ZSB3cm9uZyB3YXkgdG8gZ28uDQo+Pj4+PiBXaGljaCBvbmU/IEFyZSB5b3UgdGFsa2luZyBhYm91
-dCB0aGUga2VybmVsIG9uZT8gV2UgYWxyZWFkeSB0YWxrZWQgb3V0DQo+Pj4+PiBvZiB0aGF0LiBU
-byBkZWNpZGUgdG8gT09NLCB3ZSBuZWVkIHRvIGxvb2sgYXQgYSB2ZXJ5IGRpdmVyc2Ugc2V0IG9m
-DQo+Pj4+PiBtZXRyaWNzIGFuZCBpdCBzZWVtcyBsaWtlIHRoYXQgd291bGQgYmUgdmVyeSBoYXJk
-IHRvIGRvIGZsZXhpYmx5DQo+Pj4+PiBpbnNpZGUgdGhlIGtlcm5lbC4NCj4+Pj4gWW91IGRvbnQg
-bmVlZCB0byBkZWNpZGUgdG8gb29tLCBidXQgd2hlbiBvb20gb2NjdXJzIHlvdQ0KPj4+PiBjYW4g
-dGFrZSBhIHByb3BlciBhY3Rpb24uDQo+Pj4gTm8sIHdlIHdhbnQgdGhlIGZsZXhpYmlsaXR5IHRv
-IGRlY2lkZSB3aGVuIHRvIG9vbS1raWxsLiBLZXJuZWwgaXMgdmVyeQ0KPj4+IGNvbnNlcnZhdGl2
-ZSBpbiB0cmlnZ2VyaW5nIHRoZSBvb20ta2lsbC4NCj4+IEl0IHdvbnQgZG8gaXQgZm9yIHlvdS4g
-V2UgdXNlIHRoaXMgY29kZSB0byBzb2x2ZSB0aGF0Og0KPiBTb3JyeSB3aGF0IGRvIHlvdSBtZWFu
-IGJ5ICJJdCB3b250IGRvIGl0IGZvciB5b3UiPw0KVGhlIG9vbS1raWxsZXIsIGl0IGRvZXMgbm90
-IGRvIHdoYXQgeW91IHdhbnQgYW5kIG5lZWQuDQoNCllvdSBuZWVkIHRvIGFkZCBzb21ldGhpbmcg
-dGhhdCBraWxscyB0aGUgInJpZ2h0IiB0YXNrLg0KVGhlIGV4YW1wbGUgZG9lcyB0aGF0LCBpdCBw
-aWNrIHRoZSB0YXNrIHdpdGggaGlnaGVzdA0Kb29tX3Njb3JlX2FkaiBhbmQga2lsbHMgaXQuIEl0
-IGlzIHByb2JhYmx5IGVhc2VyDQp0byBzZWUgaW4gdGhlICJwcm9vZiBvZiBjb25jZXB0IiBwYXRj
-aC4NCg0KPg0KPiBbLi4uXQ0KPj4gaW50IF9faW5pdCBsb3dtZW1vcnlraWxsZXJfcmVnaXN0ZXJf
-b29tX25vdGlmaWVyKHZvaWQpDQo+PiB7DQo+PiAgICAgcmVnaXN0ZXJfb29tX25vdGlmaWVyKCZs
-b3dtZW1vcnlraWxsZXJfb29tX25iKTsNCj4gVGhpcyBjb2RlIGlzIHVzaW5nIG9vbV9ub3RpZnlf
-bGlzdC4gVGhhdCBpcyBvbmx5IGNhbGxlZCB3aGVuIHRoZQ0KPiBrZXJuZWwgaGFzIGFscmVhZHkg
-ZGVjaWRlZCB0byBnbyBmb3IgdGhlIG9vbS1raWxsLiBNeSBwb2ludCB3YXMgdGhlDQo+IGtlcm5l
-bCBpcyB2ZXJ5IGNvbnNlcnZhdGl2ZSBpbiBkZWNpZGluZyB0byB0cmlnZ2VyIHRoZSBvb20ta2ls
-bCBhbmQNCj4gdGhlIGFwcGxpY2F0aW9ucyBjYW4gc3VmZmVyIGZvciBsb25nLiBXZSBhbHJlYWR5
-IGhhdmUgc29sdXRpb25zIGZvcg0KPiB0aGlzIGlzc3VlIGluIHRoZSBmb3JtIG9mIHVzZXJzcGFj
-ZSBvb20ta2lsbGVycyAoQW5kcm9pZCdzIGxta2QgYW5kDQo+IEZhY2Vib29rJ3Mgb29tZCkgd2hp
-Y2ggbW9uaXRvcnMgYSBkaXZlcnNlIHNldCBvZiBtZXRyaWNzIHRvIGVhcmx5DQo+IGRldGVjdCB0
-aGUgYXBwbGljYXRpb24gc3VmZmVyaW5nIGFuZCB0cmlnZ2VyIFNJR0tJTExzIHRvIHJlbGVhc2Ug
-dGhlDQo+IG1lbW9yeSBwcmVzc3VyZSBvbiB0aGUgc3lzdGVtLg0KPg0KPiBCVFcgd2l0aCB0aGUg
-dXNlcnNwYWNlIG9vbS1raWxsZXJzLCB3ZSB3b3VsZCBsaWtlIHRvIGF2b2lkIHRoZSBrZXJuZWwN
-Cj4gb29tLWtpbGxlciBhbmQgbWVtb3J5LnN3YXAuaGlnaCBoYXMgYmVlbiBpbnRyb2R1Y2VkIGlu
-IHRoZSBrZXJuZWwgZm9yDQo+IHRoYXQgcHVycG9zZS4NCg0KVGhpcyBpdCBpcyBhIGxpZmVsaW5l
-LiBJdCB3aWxsIGtlZXAgdGhlIGxta2QvYWN0aXZpdHkgbWFuZ2VyIGdvaW5nLiBJdCBpcyBub3QN
-CmEgcmVwbGFjZW1lbnQgaXQgaXMgaGVscGVyLiBJdCBnaXZlcyB0aGUgZnJlZWRvbSB0byB0dW5l
-IG90aGVyDQpwYXJ0cyB3aXRoIG91dCB3b3JyeWluZyB0byBtdWNoIGFib3V0IG9vbS4gKEFzc3Vt
-aW5nIHRoYXQNCnVzZXJzcGFjZSBzdGlsbCBjYW4gaGFuZGxlIGtpbGxzIGxpa2UgdGhlIGtlcm5l
-bCBsbWsgZGlkKQ0K
+On 4/21/21 7:28 PM, Roman Gushchin wrote:
+> On Tue, Apr 20, 2021 at 03:29:05PM -0400, Waiman Long wrote:
+>> Before the new slab memory controller with per object byte charging,
+>> charging and vmstat data update happen only when new slab pages are
+>> allocated or freed. Now they are done with every kmem_cache_alloc()
+>> and kmem_cache_free(). This causes additional overhead for workloads
+>> that generate a lot of alloc and free calls.
+>>
+>> The memcg_stock_pcp is used to cache byte charge for a specific
+>> obj_cgroup to reduce that overhead. To further reducing it, this patch
+>> makes the vmstat data cached in the memcg_stock_pcp structure as well
+>> until it accumulates a page size worth of update or when other cached
+>> data change. Caching the vmstat data in the per-cpu stock eliminates two
+>> writes to non-hot cachelines for memcg specific as well as memcg-lruvecs
+>> specific vmstat data by a write to a hot local stock cacheline.
+>>
+>> On a 2-socket Cascade Lake server with instrumentation enabled and this
+>> patch applied, it was found that about 20% (634400 out of 3243830)
+>> of the time when mod_objcg_state() is called leads to an actual call
+>> to __mod_objcg_state() after initial boot. When doing parallel kernel
+>> build, the figure was about 17% (24329265 out of 142512465). So caching
+>> the vmstat data reduces the number of calls to __mod_objcg_state()
+>> by more than 80%.
+>>
+>> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>> Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+>> ---
+>>   mm/memcontrol.c | 86 +++++++++++++++++++++++++++++++++++++++++++++++--
+>>   1 file changed, 83 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/mm/memcontrol.c b/mm/memcontrol.c
+>> index 7cd7187a017c..292b4783b1a7 100644
+>> --- a/mm/memcontrol.c
+>> +++ b/mm/memcontrol.c
+>> @@ -782,8 +782,9 @@ void __mod_lruvec_kmem_state(void *p, enum node_stat_item idx, int val)
+>>   	rcu_read_unlock();
+>>   }
+>>   
+>> -void mod_objcg_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
+>> -		     enum node_stat_item idx, int nr)
+>> +static inline void mod_objcg_mlstate(struct obj_cgroup *objcg,
+>> +				     struct pglist_data *pgdat,
+>> +				     enum node_stat_item idx, int nr)
+>>   {
+>>   	struct mem_cgroup *memcg;
+>>   	struct lruvec *lruvec;
+>> @@ -791,7 +792,7 @@ void mod_objcg_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
+>>   	rcu_read_lock();
+>>   	memcg = obj_cgroup_memcg(objcg);
+>>   	lruvec = mem_cgroup_lruvec(memcg, pgdat);
+>> -	mod_memcg_lruvec_state(lruvec, idx, nr);
+>> +	__mod_memcg_lruvec_state(lruvec, idx, nr);
+>>   	rcu_read_unlock();
+>>   }
+>>   
+>> @@ -2059,7 +2060,10 @@ struct memcg_stock_pcp {
+>>   
+>>   #ifdef CONFIG_MEMCG_KMEM
+>>   	struct obj_cgroup *cached_objcg;
+>> +	struct pglist_data *cached_pgdat;
+> I wonder if we want to have per-node counters instead?
+> That would complicate the initialization of pcp stocks a bit,
+> but might shave off some additional cpu time.
+> But we can do it later too.
+>
+A per node counter will certainly complicate the code and reduce the 
+performance benefit too. I got a pretty good hit rate of 80%+ with the 
+current code on a 2-socket system. The hit rate will probably drop when 
+there are more nodes. I will do some more investigation, but it will not 
+be for this patchset.
+
+
+>>   	unsigned int nr_bytes;
+>> +	int nr_slab_reclaimable_b;
+>> +	int nr_slab_unreclaimable_b;
+>>   #endif
+>>   
+>>   	struct work_struct work;
+>> @@ -3008,6 +3012,63 @@ void __memcg_kmem_uncharge_page(struct page *page, int order)
+>>   	obj_cgroup_put(objcg);
+>>   }
+>>   
+>> +void mod_objcg_state(struct obj_cgroup *objcg, struct pglist_data *pgdat,
+>> +		     enum node_stat_item idx, int nr)
+>> +{
+>> +	struct memcg_stock_pcp *stock;
+>> +	unsigned long flags;
+>> +	int *bytes;
+>> +
+>> +	local_irq_save(flags);
+>> +	stock = this_cpu_ptr(&memcg_stock);
+>> +
+>> +	/*
+>> +	 * Save vmstat data in stock and skip vmstat array update unless
+>> +	 * accumulating over a page of vmstat data or when pgdat or idx
+>> +	 * changes.
+>> +	 */
+>> +	if (stock->cached_objcg != objcg) {
+>> +		drain_obj_stock(stock);
+>> +		obj_cgroup_get(objcg);
+>> +		stock->nr_bytes = atomic_read(&objcg->nr_charged_bytes)
+>> +				? atomic_xchg(&objcg->nr_charged_bytes, 0) : 0;
+>> +		stock->cached_objcg = objcg;
+>> +		stock->cached_pgdat = pgdat;
+>> +	} else if (stock->cached_pgdat != pgdat) {
+>> +		/* Flush the existing cached vmstat data */
+>> +		if (stock->nr_slab_reclaimable_b) {
+>> +			mod_objcg_mlstate(objcg, pgdat, NR_SLAB_RECLAIMABLE_B,
+>> +					  stock->nr_slab_reclaimable_b);
+>> +			stock->nr_slab_reclaimable_b = 0;
+>> +		}
+>> +		if (stock->nr_slab_unreclaimable_b) {
+>> +			mod_objcg_mlstate(objcg, pgdat, NR_SLAB_UNRECLAIMABLE_B,
+>> +					  stock->nr_slab_unreclaimable_b);
+>> +			stock->nr_slab_unreclaimable_b = 0;
+>> +		}
+>> +		stock->cached_pgdat = pgdat;
+>> +	}
+>> +
+>> +	bytes = (idx == NR_SLAB_RECLAIMABLE_B) ? &stock->nr_slab_reclaimable_b
+>> +					       : &stock->nr_slab_unreclaimable_b;
+>> +	if (!*bytes) {
+>> +		*bytes = nr;
+>> +		nr = 0;
+>> +	} else {
+>> +		*bytes += nr;
+>> +		if (abs(*bytes) > PAGE_SIZE) {
+>> +			nr = *bytes;
+>> +			*bytes = 0;
+>> +		} else {
+>> +			nr = 0;
+>> +		}
+>> +	}
+> This part is a little bit hard to follow, how about something like this
+> (completely untested):
+>
+> {
+> 	stocked = (idx == NR_SLAB_RECLAIMABLE_B) ? &stock->nr_slab_reclaimable_b
+> 		: &stock->nr_slab_unreclaimable_b;
+> 	if (abs(*stocked + nr) > PAGE_SIZE) {
+> 		nr += *stocked;
+> 		*stocked = 0;
+> 	} else {
+> 		*stocked += nr;
+> 		nr = 0;
+> 	}
+> }
+
+That was done purposely to make sure that large object (>= 4k) will also 
+be cached once before flushing it out. I should have been more clear 
+about that by adding a comment about it. vmstat data isn't as critical 
+as memory charge and so I am allowing it to cache more than 4k in this case.
+
+Cheers,
+Longman
+
