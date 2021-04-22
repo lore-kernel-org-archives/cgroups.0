@@ -1,83 +1,69 @@
-From: Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Subject: [PATCH 3/3] docs/admin-guide/cgroup-v2: add cpuset.mems.migration
-Date: Thu, 22 Apr 2021 17:06:08 +0800
-Message-ID: <20210422090608.7160-4-wuyun.abel@bytedance.com>
-References: <20210422090608.7160-1-wuyun.abel@bytedance.com>
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: [PATCH v3 01/16] memcg: enable accounting for net_device and Tx/Rx
+ queues
+Date: Thu, 22 Apr 2021 13:36:06 +0300
+Message-ID: <63329bfe-a000-a450-fdd2-be829aee8762@virtuozzo.com>
+References: <dddf6b29-debd-dcb5-62d0-74909d610edb@virtuozzo.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=SfF/Z0ScslK5LaLkBhpaNHR++tEupceqm51lspaZqiM=;
-        b=DDJ1gaaHVhTnJEYif/PYB82fh8uyWeB0mKRq575+v9VXDwnUsvR0QZrLWnxhvjzeKP
-         GBvaClcBVchRRh34BoRsfFf/JWIhLmVsBHRGBlfCpxnj3LFsc9mZ9E16wl3fhjnx0PwI
-         YML3XbmzkG6cmYHj4FydNXJewHjMOjfmq9jPXRqt05Ktm5GVHcWQQJxN7gRVaN01chh7
-         VlB5G0U1VIGpRexa5T40CJpjITNHl/c/2zMpH5u3Smlih3z8dkCcp0EnuCh3ymT06htv
-         dsBv1yoDXNEaPYqKFMIKnRDUmHgudqSxqy8zkT1AR5nLtXTOW/0Gf+G6hEN5rC3/u7t7
-         Kb5A==
-In-Reply-To: <20210422090608.7160-1-wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
+        :From; bh=uOkZzTEzLDYGvDz2EcEVr3MAZr7Fo0gfzmPbZqUA8K8=; b=IJW2qTrUgmj+QbyXTMS
+        sn1XsfjzFp8BDDhkt1pTpTw5KMJeeSLci/BuLsZXus52iIzs3YmodO0VSewya7W8Lwn0MGc8Kh+qD
+        rwdqGhv3wCgP4vsIkHDcYkuyejvIn5qT9OGwVGTBs8nk6wGXJvnizglEDtcDBongh8YbhorRn50=
+In-Reply-To: <dddf6b29-debd-dcb5-62d0-74909d610edb-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org
+To: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Jakub Kicinski <kuba-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Add docs for new interface cpuset.mems.migration, most of which
-are stolen from cpuset(7) manpages.
+Container netadmin can create a lot of fake net devices,
+then create a new net namespace and repeat it again and again.
+Net device can request the creation of up to 4096 tx and rx queues,
+and force kernel to allocate up to several tens of megabytes memory
+per net device.
 
-Signed-off-by: Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+It makes sense to account for them to restrict the host's memory
+consumption from inside the memcg-limited container.
+
+Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 ---
- Documentation/admin-guide/cgroup-v2.rst | 36 +++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+ net/core/dev.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index b1e81aa8598a..abf6589a390d 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -2079,6 +2079,42 @@ Cpuset Interface Files
- 	Changing the partition state of an invalid partition root to
- 	"member" is always allowed even if child cpusets are present.
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 1f79b9a..87b1e80 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -9994,7 +9994,7 @@ static int netif_alloc_rx_queues(struct net_device *dev)
  
-+  cpuset.mems.migration
-+	A read-write single value file which exists on non-root
-+	cpuset-enabled cgroups.
-+
-+	Only the following migration modes are defined.
-+
-+	  ========	==========================================
-+	  "none"	migration disabled [default]
-+	  "sync"	move pages to cpuset nodes synchronously
-+	  "lazy"	move pages to cpuset nodes on second touch
-+	  ========	==========================================
-+
-+	By default, "none" mode is enabled. In this mode, once a page
-+	is allocated (given a physical page of main memory) then that
-+	page stays on whatever node it was allocated, so long as it
-+	remains allocated, even if the cpusets memory placement policy
-+	'cpuset.mems' subsequently changes.
-+
-+	If "sync" mode is enabled in a cpuset, when the 'cpuset.mems'
-+	setting is changed, any memory page in use by any process in
-+	the cpuset that is on a memory node that is no longer allowed
-+	will be migrated to a memory node that is allowed synchronously.
-+	The relative placement of a migrated page within the cpuset is
-+	preserved during these migration operations if possible.
-+
-+	The "lazy" mode is almost the same as "sync" mode, except that
-+	it doesn't move the pages right away. Instead it sets these
-+	pages to protnone, and numa faults triggered by second touching
-+	these pages will handle the movement.
-+
-+	Furthermore, if a process is moved into a cpuset with migration
-+	enabled ("sync" or "lazy" enabled), any memory pages it uses
-+	that on memory nodes allowed in its previous cpuset, but which
-+	are not allowed in its new cpuset, will be migrated to a memory
-+	node allowed in the new cpuset.
-+
+ 	BUG_ON(count < 1);
  
- Device controller
- -----------------
+-	rx = kvzalloc(sz, GFP_KERNEL | __GFP_RETRY_MAYFAIL);
++	rx = kvzalloc(sz, GFP_KERNEL_ACCOUNT | __GFP_RETRY_MAYFAIL);
+ 	if (!rx)
+ 		return -ENOMEM;
+ 
+@@ -10061,7 +10061,7 @@ static int netif_alloc_netdev_queues(struct net_device *dev)
+ 	if (count < 1 || count > 0xffff)
+ 		return -EINVAL;
+ 
+-	tx = kvzalloc(sz, GFP_KERNEL | __GFP_RETRY_MAYFAIL);
++	tx = kvzalloc(sz, GFP_KERNEL_ACCOUNT | __GFP_RETRY_MAYFAIL);
+ 	if (!tx)
+ 		return -ENOMEM;
+ 
+@@ -10693,7 +10693,7 @@ struct net_device *alloc_netdev_mqs(int sizeof_priv, const char *name,
+ 	/* ensure 32-byte alignment of whole construct */
+ 	alloc_size += NETDEV_ALIGN - 1;
+ 
+-	p = kvzalloc(alloc_size, GFP_KERNEL | __GFP_RETRY_MAYFAIL);
++	p = kvzalloc(alloc_size, GFP_KERNEL_ACCOUNT | __GFP_RETRY_MAYFAIL);
+ 	if (!p)
+ 		return NULL;
+ 
 -- 
-2.31.1
+1.8.3.1
 
