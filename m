@@ -1,67 +1,131 @@
-From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH-next v5 3/4] mm/memcg: Improve refill_obj_stock()
- performance
-Date: Wed, 21 Apr 2021 16:55:34 -0700
-Message-ID: <YIC7dh0+nQDFmU+T@carbon.dhcp.thefacebook.com>
-References: <20210420192907.30880-1-longman@redhat.com>
- <20210420192907.30880-4-longman@redhat.com>
+From: <Peter.Enderborg-7U/KSKJipcs@public.gmane.org>
+Subject: Re: [RFC] memory reserve for userspace oom-killer
+Date: Thu, 22 Apr 2021 05:38:13 +0000
+Message-ID: <6eaa4c24-c565-bc5d-dbca-b73c72569a16@sony.com>
+References: <CALvZod7vtDxJZtNhn81V=oE-EPOf=4KZB2Bv6Giz+u3bFFyOLg@mail.gmail.com>
+ <699e51ba-825d-b243-8205-4d8cff478a66@sony.com>
+ <CALvZod7AEjzWa6AR4Ym1jpfzT32hmepxvci6hXvNJTEQvcQqEw@mail.gmail.com>
+ <1f8d300b-9a8b-de09-6d5d-6a9c20c66d24@sony.com>
+ <CALvZod5+5ycobmSt=NC3VJF4FRMFmBQEN7SQgipyTDbzHEbPUQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=KXymcwLV1RUhO127TJbcozKUy+8pPOtW5b5KBrtdntQ=;
- b=BRXxPZJgu3bmq6GKfll8Imb4Qsk7O6PD8vp09GdJs9tfG+UA5DhCtPN5IGjd+DWUTD0G
- nRdKTbtPJL9MJXg3LZa0rjJ1bRiFA73kEAmNyD1J2IKdFlcvXZugy6T3vEb8d/lPL90s
- fdqxhhfSU8pf8hyEdZ0C+Bjaj2ZhnDIsFpI= 
-Content-Disposition: inline
-In-Reply-To: <20210420192907.30880-4-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=sony.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=S1;
+ bh=ijRYYH3nAWlguqDVOMEgSJaHR1RCi7MR0jOwoRMAuMc=;
+ b=cKPXQjAbdRrg7e5kUNv1Y1ikWzEXSqbMMgYjdvFN8cyKAmr+tQD3W62WrFuTdPrcqHdL
+ 4r5DdX40+2X41TAXy7HHD6dDn/fubTlq0Nl0QD3cltfhPxuG0hMcuNd0gKgSfWtwknMT
+ tb+3frMSL4nHuZXcGUJ/8GMUjMbntOSpbi01dHQNBJXTsoYcVR86/v/fdnu8SPI4pQLn
+ s8ECvW+V59u6mzDZY+/PF7o7cE9otPPII5GR0vuqyj7l/n5P0ubCh8WigzA2+ymHFuNx
+ 2CQu6VZtESnyWz5rUxTVWYCLHYdChwtTVan9FHo6Y/7dZKjzxORBLCH2Ek1K5NTFsOB8 9w== 
+In-Reply-To: <CALvZod5+5ycobmSt=NC3VJF4FRMFmBQEN7SQgipyTDbzHEbPUQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
+Content-ID: <AE08DE8AA22B454A8F89E18D52193277-adN9VeZFLtn9SOyiPdwG7kEZadJ+ESx9@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Xing Zhengjun <zhengjun.xing-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+To: shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
+Cc: hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, guro-b10kYP2dOMg@public.gmane.org, mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, surenb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, gthelen-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, dragoss-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, padmapriyad-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org
 
-On Tue, Apr 20, 2021 at 03:29:06PM -0400, Waiman Long wrote:
-> There are two issues with the current refill_obj_stock() code. First of
-> all, when nr_bytes reaches over PAGE_SIZE, it calls drain_obj_stock() to
-> atomically flush out remaining bytes to obj_cgroup, clear cached_objcg
-> and do a obj_cgroup_put(). It is likely that the same obj_cgroup will
-> be used again which leads to another call to drain_obj_stock() and
-> obj_cgroup_get() as well as atomically retrieve the available byte from
-> obj_cgroup. That is costly. Instead, we should just uncharge the excess
-> pages, reduce the stock bytes and be done with it. The drain_obj_stock()
-> function should only be called when obj_cgroup changes.
-
-I really like this idea! Thanks!
-
-However, I wonder if it can implemented simpler by splitting drain_obj_stock()
-into two functions:
-     empty_obj_stock() will flush cached bytes, but not reset the objcg
-     drain_obj_stock() will call empty_obj_stock() and then reset objcg
-
-Then we simple can replace the second drain_obj_stock() in
-refill_obj_stock() with empty_obj_stock(). What do you think?
-
-> 
-> Secondly, when charging an object of size not less than a page in
-> obj_cgroup_charge(), it is possible that the remaining bytes to be
-> refilled to the stock will overflow a page and cause refill_obj_stock()
-> to uncharge 1 page. To avoid the additional uncharge in this case,
-> a new overfill flag is added to refill_obj_stock() which will be set
-> when called from obj_cgroup_charge().
-> 
-> A multithreaded kmalloc+kfree microbenchmark on a 2-socket 48-core
-> 96-thread x86-64 system with 96 testing threads were run.  Before this
-> patch, the total number of kilo kmalloc+kfree operations done for a 4k
-> large object by all the testing threads per second were 4,304 kops/s
-> (cgroup v1) and 8,478 kops/s (cgroup v2). After applying this patch, the
-> number were 4,731 (cgroup v1) and 418,142 (cgroup v2) respectively. This
-> represents a performance improvement of 1.10X (cgroup v1) and 49.3X
-> (cgroup v2).
-
-This part looks more controversial. Basically if there are N consequent
-allocations of size (PAGE_SIZE + x), the stock will end up with (N * x)
-cached bytes, right? It's not the end of the world, but do we really
-need it given that uncharging a page is also cached?
-
-Thanks!
+T24gNC8yMS8yMSA5OjE4IFBNLCBTaGFrZWVsIEJ1dHQgd3JvdGU6DQo+IE9uIFdlZCwgQXByIDIx
+LCAyMDIxIGF0IDExOjQ2IEFNIDxQZXRlci5FbmRlcmJvcmdAc29ueS5jb20+IHdyb3RlOg0KPj4g
+T24gNC8yMS8yMSA4OjI4IFBNLCBTaGFrZWVsIEJ1dHQgd3JvdGU6DQo+Pj4gT24gV2VkLCBBcHIg
+MjEsIDIwMjEgYXQgMTA6MDYgQU0gcGV0ZXIgZW5kZXJib3JnDQo+Pj4gPHBldGVyLmVuZGVyYm9y
+Z0Bzb255LmNvbT4gd3JvdGU6DQo+Pj4+IE9uIDQvMjAvMjEgMzo0NCBBTSwgU2hha2VlbCBCdXR0
+IHdyb3RlOg0KPj4+IFsuLi5dDQo+Pj4+IEkgdGhpbmsgdGhpcyBpcyB0aGUgd3Jvbmcgd2F5IHRv
+IGdvLg0KPj4+IFdoaWNoIG9uZT8gQXJlIHlvdSB0YWxraW5nIGFib3V0IHRoZSBrZXJuZWwgb25l
+PyBXZSBhbHJlYWR5IHRhbGtlZCBvdXQNCj4+PiBvZiB0aGF0LiBUbyBkZWNpZGUgdG8gT09NLCB3
+ZSBuZWVkIHRvIGxvb2sgYXQgYSB2ZXJ5IGRpdmVyc2Ugc2V0IG9mDQo+Pj4gbWV0cmljcyBhbmQg
+aXQgc2VlbXMgbGlrZSB0aGF0IHdvdWxkIGJlIHZlcnkgaGFyZCB0byBkbyBmbGV4aWJseQ0KPj4+
+IGluc2lkZSB0aGUga2VybmVsLg0KPj4gWW91IGRvbnQgbmVlZCB0byBkZWNpZGUgdG8gb29tLCBi
+dXQgd2hlbiBvb20gb2NjdXJzIHlvdQ0KPj4gY2FuIHRha2UgYSBwcm9wZXIgYWN0aW9uLg0KPiBO
+bywgd2Ugd2FudCB0aGUgZmxleGliaWxpdHkgdG8gZGVjaWRlIHdoZW4gdG8gb29tLWtpbGwuIEtl
+cm5lbCBpcyB2ZXJ5DQo+IGNvbnNlcnZhdGl2ZSBpbiB0cmlnZ2VyaW5nIHRoZSBvb20ta2lsbC4N
+Cg0KSXQgd29udCBkbyBpdCBmb3IgeW91LiBXZSB1c2UgdGhpcyBjb2RlIHRvIHNvbHZlIHRoYXQ6
+DQoNCi8qDQrCoCrCoCBsb3dtZW1vcnlraWxsZXJfb29tDQrCoCoNCsKgKsKgIEF1dGhvcjogUGV0
+ZXIgRW5kZXJib3JnIDxwZXRlci5lbmRlcmJvcmdAc29ueW1vYmlsZS5jb20+DQrCoCoNCsKgKsKg
+IFRoaXMgcHJvZ3JhbSBpcyBmcmVlIHNvZnR3YXJlOyB5b3UgY2FuIHJlZGlzdHJpYnV0ZSBpdCBh
+bmQvb3IgbW9kaWZ5DQrCoCrCoCBpdCB1bmRlciB0aGUgdGVybXMgb2YgdGhlIEdOVSBHZW5lcmFs
+IFB1YmxpYyBMaWNlbnNlIHZlcnNpb24gMiBhcw0KwqAqwqAgcHVibGlzaGVkIGJ5IHRoZSBGcmVl
+IFNvZnR3YXJlIEZvdW5kYXRpb24uDQrCoCovDQoNCi8qIGFkZCBmYWtlIHByaW50IGZvcm1hdCB3
+aXRoIG9yaWdpbmFsIG1vZHVsZSBuYW1lICovDQojZGVmaW5lIHByX2ZtdChmbXQpICJsb3dtZW1v
+cnlraWxsZXI6ICIgZm10DQoNCiNpbmNsdWRlIDxsaW51eC9tbS5oPg0KI2luY2x1ZGUgPGxpbnV4
+L3NsYWIuaD4NCiNpbmNsdWRlIDxsaW51eC9vb20uaD4NCg0KI2luY2x1ZGUgPHRyYWNlL2V2ZW50
+cy9sbWsuaD4NCg0KI2luY2x1ZGUgImxvd21lbW9yeWtpbGxlci5oIg0KI2luY2x1ZGUgImxvd21l
+bW9yeWtpbGxlcl90bmcuaCINCiNpbmNsdWRlICJsb3dtZW1vcnlraWxsZXJfc3RhdHMuaCINCiNp
+bmNsdWRlICJsb3dtZW1vcnlraWxsZXJfdGFza3MuaCINCg0KLyoqDQrCoCogbG93bWVtb3J5a2ls
+bGVyX29vbV9ub3RpZnkgLSBPT00gbm90aWZpZXINCsKgKiBAc2VsZjrCoMKgwqAgbm90aWZpZXIg
+YmxvY2sgc3RydWN0DQrCoCogQG5vdHVzZWQ6wqDCoMKgIG5vdCB1c2VkDQrCoCogQHBhcm06wqDC
+oMKgIHJldHVybmVkIC0gbnVtYmVyIG9mIHBhZ2VzIGZyZWVkDQrCoCoNCsKgKiBSZXR1cm4gdmFs
+dWU6DQrCoCrCoMKgwqAgTk9USUZZX09LDQrCoCoqLw0KDQpzdGF0aWMgaW50IGxvd21lbW9yeWtp
+bGxlcl9vb21fbm90aWZ5KHN0cnVjdCBub3RpZmllcl9ibG9jayAqc2VsZiwNCsKgwqDCoCDCoMKg
+wqAgwqDCoMKgIMKgwqDCoCDCoMKgwqDCoMKgIHVuc2lnbmVkIGxvbmcgbm90dXNlZCwgdm9pZCAq
+cGFyYW0pDQp7DQrCoMKgwqAgc3RydWN0IGxta19yYl93YXRjaCAqbHJ3Ow0KwqDCoMKgIHVuc2ln
+bmVkIGxvbmcgKm5mcmVlZCA9IHBhcmFtOw0KDQrCoMKgwqAgbG93bWVtX3ByaW50KDIsICJvb20g
+bm90aWZ5IGV2ZW50XG4iKTsNCsKgwqDCoCAqbmZyZWVkID0gMDsNCsKgwqDCoCBsbWtfaW5jX3N0
+YXRzKExNS19PT01fQ09VTlQpOw0KwqDCoMKgIHNwaW5fbG9ja19iaCgmbG1rX3Rhc2tfbG9jayk7
+DQrCoMKgwqAgbHJ3ID0gX19sbWtfdGFza19maXJzdCgpOw0KwqDCoMKgIGlmIChscncpIHsNCsKg
+wqDCoCDCoMKgwqAgc3RydWN0IHRhc2tfc3RydWN0ICpzZWxlY3RlZCA9IGxydy0+dHNrOw0KwqDC
+oMKgIMKgwqDCoCBzdHJ1Y3QgbG1rX2RlYXRoX3BlbmRpbmdfZW50cnkgKmxkcHQ7DQoNCsKgwqDC
+oCDCoMKgwqAgaWYgKCF0YXNrX3RyeWxvY2tfbG1rKHNlbGVjdGVkKSkgew0KwqDCoMKgIMKgwqDC
+oCDCoMKgwqAgbG1rX2luY19zdGF0cyhMTUtfRVJST1IpOw0KwqDCoMKgIMKgwqDCoCDCoMKgwqAg
+bG93bWVtX3ByaW50KDEsICJGYWlsZWQgdG8gbG9jayB0YXNrLlxuIik7DQrCoMKgwqAgwqDCoMKg
+IMKgwqDCoCBsbWtfaW5jX3N0YXRzKExNS19CVVNZKTsNCsKgwqDCoCDCoMKgwqAgwqDCoMKgIGdv
+dG8gdW5sb2NrX291dDsNCsKgwqDCoCDCoMKgwqAgfQ0KDQrCoMKgwqAgwqDCoMKgIGdldF90YXNr
+X3N0cnVjdChzZWxlY3RlZCk7DQrCoMKgwqAgwqDCoMKgIC8qIG1vdmUgdG8ga2lsbCBwZW5kaW5n
+IHNldCAqLw0KwqDCoMKgIMKgwqDCoCBsZHB0ID0ga21lbV9jYWNoZV9hbGxvYyhsbWtfZHBfY2Fj
+aGUsIEdGUF9BVE9NSUMpOw0KwqDCoMKgIMKgwqDCoCAvKiBpZiB3ZSBmYWlsIHRvIGFsbG9jIHdl
+IGlnbm9yZSB0aGUgZGVhdGggcGVuZGluZyBsaXN0ICovDQrCoMKgwqAgwqDCoMKgIGlmIChsZHB0
+KSB7DQrCoMKgwqAgwqDCoMKgIMKgwqDCoCBsZHB0LT50c2sgPSBzZWxlY3RlZDsNCsKgwqDCoCDC
+oMKgwqAgwqDCoMKgIF9fbG1rX2RlYXRoX3BlbmRpbmdfYWRkKGxkcHQpOw0KwqDCoMKgIMKgwqDC
+oCB9IGVsc2Ugew0KwqDCoMKgIMKgwqDCoCDCoMKgwqAgV0FSTl9PTigxKTsNCsKgwqDCoCDCoMKg
+wqAgwqDCoMKgIGxta19pbmNfc3RhdHMoTE1LX01FTV9FUlJPUik7DQrCoMKgwqAgwqDCoMKgIMKg
+wqDCoCB0cmFjZV9sbWtfc2lna2lsbChzZWxlY3RlZC0+cGlkLCBzZWxlY3RlZC0+Y29tbSwNCsKg
+wqDCoCDCoMKgwqAgwqDCoMKgIMKgwqDCoCDCoMKgwqAgwqAgTE1LX1RSQUNFX01FTUVSUk9SLCAq
+bmZyZWVkLCAwKTsNCsKgwqDCoCDCoMKgwqAgfQ0KwqDCoMKgIMKgwqDCoCBpZiAoIV9fbG1rX3Rh
+c2tfcmVtb3ZlKHNlbGVjdGVkLCBscnctPmtleSkpDQrCoMKgwqAgwqDCoMKgIMKgwqDCoCBXQVJO
+X09OKDEpOw0KDQrCoMKgwqAgwqDCoMKgIHNwaW5fdW5sb2NrX2JoKCZsbWtfdGFza19sb2NrKTsN
+CsKgwqDCoCDCoMKgwqAgKm5mcmVlZCA9IGdldF90YXNrX3JzcyhzZWxlY3RlZCk7DQrCoMKgwqAg
+wqDCoMKgIHNlbmRfc2lnKFNJR0tJTEwsIHNlbGVjdGVkLCAwKTsNCg0KwqDCoMKgIMKgwqDCoCBM
+TUtfVEFHX1RBU0tfRElFKHNlbGVjdGVkKTsNCsKgwqDCoCDCoMKgwqAgdHJhY2VfbG1rX3NpZ2tp
+bGwoc2VsZWN0ZWQtPnBpZCwgc2VsZWN0ZWQtPmNvbW0sDQrCoMKgwqAgwqDCoMKgIMKgwqDCoCDC
+oMKgwqAgwqAgTE1LX1RSQUNFX09PTUtJTEwsICpuZnJlZWQsDQrCoMKgwqAgwqDCoMKgIMKgwqDC
+oCDCoMKgwqAgwqAgMCk7DQoNCsKgwqDCoCDCoMKgwqAgdGFza191bmxvY2soc2VsZWN0ZWQpOw0K
+wqDCoMKgIMKgwqDCoCBwdXRfdGFza19zdHJ1Y3Qoc2VsZWN0ZWQpOw0KwqDCoMKgIMKgwqDCoCBs
+bWtfaW5jX3N0YXRzKExNS19PT01fS0lMTF9DT1VOVCk7DQrCoMKgwqAgwqDCoMKgIGdvdG8gb3V0
+Ow0KwqDCoMKgIH0NCnVubG9ja19vdXQ6DQrCoMKgwqAgc3Bpbl91bmxvY2tfYmgoJmxta190YXNr
+X2xvY2spOw0Kb3V0Og0KwqDCoMKgIHJldHVybiBOT1RJRllfT0s7DQp9DQoNCnN0YXRpYyBzdHJ1
+Y3Qgbm90aWZpZXJfYmxvY2sgbG93bWVtb3J5a2lsbGVyX29vbV9uYiA9IHsNCsKgwqDCoCAubm90
+aWZpZXJfY2FsbCA9IGxvd21lbW9yeWtpbGxlcl9vb21fbm90aWZ5DQp9Ow0KDQppbnQgX19pbml0
+IGxvd21lbW9yeWtpbGxlcl9yZWdpc3Rlcl9vb21fbm90aWZpZXIodm9pZCkNCnsNCsKgwqDCoCBy
+ZWdpc3Rlcl9vb21fbm90aWZpZXIoJmxvd21lbW9yeWtpbGxlcl9vb21fbmIpOw0KwqDCoMKgIHJl
+dHVybiAwOw0KfQ0KDQoNClNvIHdoYXQgbmVlZGVkIGlzIGEgZnVuY3Rpb24gdGhhdCBrbm93cyB0
+aGUNCnByaW9yaXR5LiBIZXJlIF9fbG1rX3Rhc2tfZmlyc3QoKSB0aGF0IGlzIGZyb20gYSByYi10
+cmVlLg0KDQpZb3UgY2FuIHBpY2sgd2hhdCBldmVyIHByaW9yaXR5IHlvdSBsaWtlLiBJbiBvdXIg
+Y2FzZSBpdCBpcyBhDQphbmRyb2lkIHNvIGl0IGlzIGEgc3RyaWN0bHkgb29tX2FkaiBvcmRlciBp
+biB0aGUgdHJlZS4NCg0KSSB0aGluayB5b3UgY2FuIGRvIHRoZSBzYW1lIHdpdGggYSBvbGQgbG93
+bWVtbW9yeWtpbGxlciBzdHlsZcKgIHdpdGgNCmEgZnVsbCB0YXNrIHNjYW4gdG9vLg0KDQo+IFsu
+Li5dDQo+Pj4gQWN0dWFsbHkgbm8uIEl0IGlzIG1pc3NpbmcgdGhlIGZsZXhpYmlsaXR5IHRvIG1v
+bml0b3IgbWV0cmljcyB3aGljaCBhDQo+Pj4gdXNlciBjYXJlIGFuZCBiYXNlZCBvbiB3aGljaCB0
+aGV5IGRlY2lkZSB0byB0cmlnZ2VyIG9vbS1raWxsLiBOb3Qgc3VyZQ0KPj4+IGhvdyB3aWxsIHdh
+dGNoZG9nIHJlcGxhY2UgcHNpL3ZtcHJlc3N1cmU/IFVzZXJzcGFjZSBrZWVwcyBwZXR0aW5nIHRo
+ZQ0KPj4+IHdhdGNoZG9nIGRvZXMgbm90IG1lYW4gdGhhdCBzeXN0ZW0gaXMgbm90IHN1ZmZlcmlu
+Zy4NCj4+IFRoZSB1c2Vyc3BhY2Ugc2hvdWxkIHZlcnkgbXVjaCBkbyB3aGF0IGl0IGRvLiBCdXQg
+d2hlbiBpdA0KPj4gZG9lcyBub3QgZG8gd2hhdCBpdCBzaG91bGQgZG8sIGluY2x1ZGluZyBraWNr
+IHRoZSBXRC4gVGhlbg0KPj4gdGhlIGtlcm5lbCBraWNrcyBpbiBhbmQga2lsbCBhIHByZSBkZWZp
+bmVkIHByb2Nlc3Mgb3IgYXMgbWFueQ0KPj4gYXMgbmVlZGVkIHVudGlsIHRoZSBtb25pdG9yaW5n
+IGNhbiBzdGFydCB0byBraWNrIGFuZCBoYXZlIHRoZQ0KPj4gY29udHJvbC4NCj4+DQo+IFJvbWFu
+IGFscmVhZHkgc3VnZ2VzdGVkIHNvbWV0aGluZyBzaW1pbGFyIChpLmUuIG9vbS1raWxsZXIgY29y
+ZSBhbmQNCj4gZXh0ZW5kZWQgYW5kIGNvcmUgd2F0Y2hpbmcgZXh0ZW5kZWQpIGJ1dCBjb21wbGV0
+ZWx5IGluIHVzZXJzcGFjZS4gSQ0KPiBkb24ndCBzZWUgd2h5IHdlIHdvdWxkIHdhbnQgdG8gZG8g
+dGhhdCBpbiB0aGUga2VybmVsIGluc3RlYWQuDQoNCkEgd2F0Y2hkb2cgaW4ga2VybmVsIHdpbGwg
+d29yayBpZiB1c2Vyc3BhY2UgaXMgY29tcGxldGVseSBicm9rZW4NCm9yIHN0YXZlZCB3aXRoIGxv
+dyBvbiBtZW1vcnkuDQoNCg0KPg0KPj4+IEluIGFkZGl0aW9uIG9vbSBwcmlvcml0aWVzIGNoYW5n
+ZSBkeW5hbWljYWxseSBhbmQgY2hhbmdpbmcgaXQgaW4geW91cg0KPj4+IHN5c3RlbSBzZWVtcyB2
+ZXJ5IGhhcmQuIENncm91cCBhd2FyZW5lc3MgaXMgbWlzc2luZyB0b28uDQo+PiBXaHkgaXMgdGhh
+dCBoYXJkPyBNb3ZpbmcgYSBvYmplY3QgaW4gYSByYi10cmVlIGlzIGFzIGdvb2QgaXQgZ2V0Lg0K
+Pj4NCj4gSXQgaXMgYSBncm91cCBvZiBvYmplY3RzLiBBbnl3YXlzIHRoYXQgaXMgaW1wbGVtZW50
+YXRpb24gZGV0YWlsLg0KPg0KPiBUaGUgbWVzc2FnZSBJIGdvdCBmcm9tIHRoaXMgZXhjaGFuZ2Ug
+aXMgdGhhdCB3ZSBjYW4gaGF2ZSBhIHdhdGNoZG9nDQo+ICh1c2Vyc3BhY2Ugb3Iga2VybmVsKSB0
+byBmdXJ0aGVyIGltcHJvdmUgdGhlIHJlbGlhYmlsaXR5IG9mIHVzZXJzcGFjZQ0KPiBvb20ta2ls
+bGVycy4NCg0K
