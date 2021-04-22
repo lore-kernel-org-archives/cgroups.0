@@ -1,66 +1,44 @@
-From: Michal Hocko <mhocko@suse.com>
-Subject: Re: [RFC] memory reserve for userspace oom-killer
-Date: Thu, 22 Apr 2021 15:08:31 +0200
-Message-ID: <YIF1T21wiPq9eeOW@dhcp22.suse.cz>
-References: <CALvZod7vtDxJZtNhn81V=oE-EPOf=4KZB2Bv6Giz+u3bFFyOLg@mail.gmail.com>
- <699e51ba-825d-b243-8205-4d8cff478a66@sony.com>
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH v3 15/16] memcg: enable accounting for tty-related objects
+Date: Thu, 22 Apr 2021 16:59:01 +0300
+Message-ID: <6e697a1f-936d-5ffe-d29f-e4dcbe099799@virtuozzo.com>
+References: <dddf6b29-debd-dcb5-62d0-74909d610edb@virtuozzo.com>
+ <da450388-2fbc-1bb8-0839-b6480cb0eead@virtuozzo.com>
+ <YIFcqcd4dCiNcILj@kroah.com> <YIFhuwlXKaAaY3IU@dhcp22.suse.cz>
+ <YIFjI3zHVQr4BjHc@kroah.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1619096911; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ziDd39JRIdWlI/ZncRHR4tPeHFque6IN9ySODF6A6RA=;
-        b=ASiXiYpuhQJ/g3mUwmNQ88KUW3PYI8bbiUz8frlVc4HfAQOrx6zcEuPvAWLydBPThzX1G2
-        mZw1c82Q3w+yMMZ8mF25AIjIRzZApPejrKxB7Dsc17Ce3QtjfOdmwhrc1q8d63JSizP5iT
-        EVok/PSjPGn9pOzVtaBHjrwaBxnCJgs=
-Content-Disposition: inline
-In-Reply-To: <699e51ba-825d-b243-8205-4d8cff478a66@sony.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:From:
+        Subject; bh=RJzqymK4KdLIflkHg7fNUFw31wIE7fLJRZ1fSy+vabc=; b=N8B30dAs7aOqNLVdf
+        Pa0srpVl2C/DUZIitS8DKW0kYyfVEDKhbVoZUwnyMgTE6eqTAucI0+gS+PYci9Bt8ed2mRP6H7RDN
+        mIzWS40A9nXNBXchcDS2WdywUiQLu4jFtZgs2aCnkUUhnDABY/ChQ338ZFkUxDGG4aWO56rQ9uzl8
+        =;
+In-Reply-To: <YIFjI3zHVQr4BjHc-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="iso-8859-1"
-To: peter enderborg <peter.enderborg@sony.com>
-Cc: Shakeel Butt <shakeelb@google.com>, Johannes Weiner <hannes@cmpxchg.org>, Roman Gushchin <guro@fb.com>, Linux MM <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, Cgroups <cgroups@vger.kernel.org>, David Rientjes <rientjes@google.com>, LKML <linux-kernel@vger.kernel.org>, Suren Baghdasaryan <surenb@google.com>, Greg Thelen <gthelen@google.com>, Dragos Sbirlea <dragoss@google.com>, Priya Duraisamy <padmapriyad@google.com>
+Content-Type: text/plain; charset="us-ascii"
+To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Jiri Slaby <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-On Wed 21-04-21 19:05:49, peter enderborg wrote:
-[...]
-> I think this is the wrong way to go.
->=20
-> I sent a patch for android lowmemorykiller some years ago.
->=20
-> http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/2017-Fe=
-bruary/100319.html
->=20
-> It has been improved since than, so it can act handle oom callbacks, it c=
-an act on vmpressure and psi
-> and as a shrinker. The patches has not been ported to resent kernels thou=
-gh.
->=20
-> I don't think vmpressure and psi is that relevant now. (They are what use=
-rspace act on)=A0 But the basic idea is to have a priority queue
-> within the kernel. It need pick up new processes and dying process.=A0 An=
-d then it has a order, and that
-> is set with oom adj values by activity manager in android.=A0 I see this =
-model can be reused for
-> something that is between a standard oom and userspace.=A0 Instead of vmp=
-ressure and psi
-> a watchdog might be a better way.=A0 If userspace (in android the activit=
-y manager or lmkd) does not kick the watchdog,
-> the watchdog bite the task according to the priority and kills it.=A0 Thi=
-s priority list does not have to be a list generated=A0
-> within kernel. But it has the advantage that you inherent parents propert=
-ies.=A0 We use a rb-tree for that.
->=20
-> All that is missing is the watchdog.
+On 4/22/21 2:50 PM, Greg Kroah-Hartman wrote:
+> On Thu, Apr 22, 2021 at 01:44:59PM +0200, Michal Hocko wrote:
+>> On Thu 22-04-21 13:23:21, Greg KH wrote:
+>>> On Thu, Apr 22, 2021 at 01:37:53PM +0300, Vasily Averin wrote:
+>>>> At each login the user forces the kernel to create a new terminal and
+>>>> allocate up to ~1Kb memory for the tty-related structures.
+>>>
+>>> Does this tiny amount of memory actually matter?
+>>
+>> The primary question is whether an untrusted user can trigger an
+>> unbounded amount of these allocations.
+> 
+> Can they?  They are not bounded by some other resource limit?
 
-And this is off topic to the discussion as well. We are not discussing
-how to handle OOM situation best. Shakeel has brought up challenges that
-some userspace based OOM killer implementations are facing. Like it or
-not but different workloads have different requirements and what you are
-using in Android might not be the best fit for everybody. I will not
-comment on the android approach but it doesn't address any of the
-concerns that have been brought up.
---=20
-Michal Hocko
-SUSE Labs
+I'm not ready to provide usecase right now,
+but on the other hand I do not see any related limits.
+Let me take time out to dig this question.
+
+Thank you,
+	Vasily Averin
