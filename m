@@ -1,156 +1,81 @@
-From: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: RE: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and allocation
- APIs
-Date: Fri, 23 Apr 2021 10:31:46 +0000
-Message-ID: <MWHPR11MB1886A98D9176B5571530EF1D8C459@MWHPR11MB1886.namprd11.prod.outlook.com>
-References: <20210421162307.GM1370958@nvidia.com>
- <20210421105451.56d3670a@redhat.com> <20210421175203.GN1370958@nvidia.com>
- <20210421133312.15307c44@redhat.com> <20210421230301.GP1370958@nvidia.com>
- <20210422111337.6ac3624d@redhat.com> <20210422175715.GA1370958@nvidia.com>
- <20210422133747.23322269@redhat.com> <20210422200024.GC1370958@nvidia.com>
- <20210422163808.2d173225@redhat.com> <20210422233950.GD1370958@nvidia.com>
+From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [PATCH v3 15/16] memcg: enable accounting for tty-related objects
+Date: Fri, 23 Apr 2021 12:57:30 +0200
+Message-ID: <YIKoGr/IFLyWiiRW@kroah.com>
+References: <dddf6b29-debd-dcb5-62d0-74909d610edb@virtuozzo.com>
+ <da450388-2fbc-1bb8-0839-b6480cb0eead@virtuozzo.com>
+ <YIFcqcd4dCiNcILj@kroah.com>
+ <YIFhuwlXKaAaY3IU@dhcp22.suse.cz>
+ <YIFjI3zHVQr4BjHc@kroah.com>
+ <6e697a1f-936d-5ffe-d29f-e4dcbe099799@virtuozzo.com>
+ <03cb1ce9-143a-1cd0-f34b-d608c3bbc66c@virtuozzo.com>
+ <YIKMMSf1uPrWmT2V@dhcp22.suse.cz>
+ <31c49c60-44db-0363-3d07-5febe0048e86@virtuozzo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=intel.onmicrosoft.com;
- s=selector2-intel-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Rtbw0XwQHPLtcOqCNsgcpL6rChQ3JJtsNWW01J5XlHs=;
- b=m2E31/1MgXERFszGjqpDTqKOTWkeNmU5+YZZ5GScBE3pIGc1cLBfNkuXHqXwZxQvNTpJIzVXiZJTUsX7VS0wRDlQWteU1xLe4vX+DPonM6XOZFUFmWrjfyJVxdmpW0gS6m06Thx7gfaQMj3fk1p1/I03NykMKp2Sim/dzwToiYs=
-In-Reply-To: <20210422233950.GD1370958-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1619175453;
+        bh=QwPNCCBwlne5k1vVEgLnUAp8OWXGGJbWMK3sscYCoOs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=zClMRVibFXTHHAlqv6HDb6lcSjkQuRAiykNCox1hCxkDmSCh37IvFpos0VnU3sTu4
+         WL5wMnEE6ne5PYDied/qpECZn+OsanB6O9ASqTASBWRlwdA6ZmQHO+RlfSwxamKZRu
+         ZyzB4AeCOOaUiQJYzvuvzAX7IGJEq1kEUU5wFhnE=
+Content-Disposition: inline
+In-Reply-To: <31c49c60-44db-0363-3d07-5febe0048e86-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Jiri Slaby <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
-> From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> Sent: Friday, April 23, 2021 7:40 AM
->=20
-> On Thu, Apr 22, 2021 at 04:38:08PM -0600, Alex Williamson wrote:
->=20
-> > Because it's fundamental to the isolation of the device?  What you're
-> > proposing doesn't get around the group issue, it just makes it implicit
-> > rather than explicit in the uapi.
->=20
-> I'm not even sure it makes it explicit or implicit, it just takes away
-> the FD.
->=20
-> There are four group IOCTLs, I see them mapping to /dev/ioasid follows:
->  VFIO_GROUP_GET_STATUS -
->    + VFIO_GROUP_FLAGS_CONTAINER_SET is fairly redundant
->    + VFIO_GROUP_FLAGS_VIABLE could be in a new sysfs under
->      kernel/iomm_groups, or could be an IOCTL on /dev/ioasid
->        IOASID_ALL_DEVICES_VIABLE
->=20
->  VFIO_GROUP_SET_CONTAINER -
->    + This happens implicitly when the device joins the IOASID
->      so it gets moved to the vfio_device FD:
->       ioctl(vifo_device_fd, JOIN_IOASID_FD, ioasifd)
->=20
->  VFIO_GROUP_UNSET_CONTAINER -
->    + Also moved to the vfio_device FD, opposite of JOIN_IOASID_FD
->=20
->  VFIO_GROUP_GET_DEVICE_FD -
->    + Replaced by opening /dev/vfio/deviceX
->      Learn the deviceX which will be the cdev sysfs shows as:
->       /sys/devices/pci0000:00/0000:00:01.0/0000:01:00.0/vfio/deviceX/dev
->     Open /dev/vfio/deviceX
->=20
-> > > How do we model the VFIO group security concept to something like
-> > > VDPA?
-> >
-> > Is it really a "VFIO group security concept"?  We're reflecting the
-> > reality of the hardware, not all devices are fully isolated.
->=20
-> Well, exactly.
->=20
-> /dev/ioasid should understand the group concept somehow, otherwise it
-> is incomplete and maybe even security broken.
->=20
-> So, how do I add groups to, say, VDPA in a way that makes sense? The
-> only answer I come to is broadly what I outlined here - make
-> /dev/ioasid do all the group operations, and do them when we enjoin
-> the VDPA device to the ioasid.
->=20
-> Once I have solved all the groups problems with the non-VFIO users,
-> then where does that leave VFIO? Why does VFIO need a group FD if
-> everyone else doesn't?
->=20
-> > IOMMU group.  This is the reality that any userspace driver needs to
-> > play in, it doesn't magically go away because we drop the group file
-> > descriptor.
->=20
-> I'm not saying it does, I'm saying it makes the uAPI more regular and
-> easier to fit into /dev/ioasid without the group FD.
->=20
-> > It only makes the uapi more difficult to use correctly because
-> > userspace drivers need to go outside of the uapi to have any idea
-> > that this restriction exists.
->=20
-> I don't think it makes any substantive difference one way or the
-> other.
->=20
-> With the group FD: the userspace has to read sysfs, find the list of
-> devices in the group, open the group fd, create device FDs for each
-> device using the name from sysfs.
->=20
-> Starting from a BDF the general pseudo code is
->  group_path =3D readlink("/sys/bus/pci/devices/BDF/iommu_group")
->  group_name =3D basename(group_path)
->  group_fd =3D open("/dev/vfio/"+group_name)
->  device_fd =3D ioctl(VFIO_GROUP_GET_DEVICE_FD, BDF);
->=20
-> Without the group FD: the userspace has to read sysfs, find the list
-> of devices in the group and then open the device-specific cdev (found
-> via sysfs) and link them to a /dev/ioasid FD.
->=20
-> Starting from a BDF the general pseudo code is:
->  device_name =3D first_directory_of("/sys/bus/pci/devices/BDF/vfio/")
->  device_fd =3D open("/dev/vfio/"+device_name)
->  ioasidfd =3D open("/dev/ioasid")
->  ioctl(device_fd, JOIN_IOASID_FD, ioasidfd)
->=20
-> These two routes can have identical outcomes and identical security
-> checks.
->=20
-> In both cases if userspace wants a list of BDFs in the same group as
-> the BDF it is interested in:
->    readdir("/sys/bus/pci/devices/BDF/iommu_group/devices")
->=20
-> It seems like a very small difference to me.
->=20
-> I still don't see how the group restriction gets surfaced to the
-> application through the group FD. The applications I looked through
-> just treat the group FD as a step on their way to get the device_fd.
->=20
+On Fri, Apr 23, 2021 at 01:29:53PM +0300, Vasily Averin wrote:
+> On 4/23/21 11:58 AM, Michal Hocko wrote:
+> > On Fri 23-04-21 10:53:55, Vasily Averin wrote:
+> >> On 4/22/21 4:59 PM, Vasily Averin wrote:
+> >>> On 4/22/21 2:50 PM, Greg Kroah-Hartman wrote:
+> >>>> On Thu, Apr 22, 2021 at 01:44:59PM +0200, Michal Hocko wrote:
+> >>>>> On Thu 22-04-21 13:23:21, Greg KH wrote:
+> >>>>>> On Thu, Apr 22, 2021 at 01:37:53PM +0300, Vasily Averin wrote:
+> >>>>>>> At each login the user forces the kernel to create a new terminal and
+> >>>>>>> allocate up to ~1Kb memory for the tty-related structures.
+> >>>>>>
+> >>>>>> Does this tiny amount of memory actually matter?
+> >>>>>
+> >>>>> The primary question is whether an untrusted user can trigger an
+> >>>>> unbounded amount of these allocations.
+> >>>>
+> >>>> Can they?  They are not bounded by some other resource limit?
+> >>>
+> >>> I'm not ready to provide usecase right now,
+> >>> but on the other hand I do not see any related limits.
+> >>> Let me take time out to dig this question.
+> >>
+> >> By default it's allowed to create up to 4096 ptys with 1024 reserve for initns only
+> >> and the settings are controlled by host admin. It's OK.
+> >> Though this default is not enough for hosters with thousands of containers per node.
+> >> Host admin can be forced to increase it up to NR_UNIX98_PTY_MAX = 1<<20.
+> >>
+> >> By default container is restricted by pty mount_opt.max = 1024, but admin inside container 
+> >> can change it via remount. In result one container can consume almost all allowed ptys 
+> >> and allocate up to 1Gb of unaccounted memory.
+> >>
+> >> It is not enough per-se to trigger OOM on host, however anyway, it allows to significantly
+> >> exceed the assigned memcg limit and leads to troubles on the over-committed node.
+> >> So I still think it makes sense to account this memory.
+> > 
+> > This is a very valuable information to have in the changelog. It is not
+> > my call but if all the above is correct then the accounting is worth
+> > IMO.
+> 
+> If Greg doesn't have any objections, I'll add this explanation to the next version of the patch.
+> 
 
-So your proposal sort of moves the entire container/group/domain=20
-managment into /dev/ioasid and then leaves vfio only provide device
-specific uAPI. An ioasid represents a page table (address space), thus=20
-is equivalent to the scope of VFIO container. Having the device join=20
-an ioasid is equivalent to attaching a device to VFIO container, and=20
-here the group integrity must be enforced. Then /dev/ioasid anyway=20
-needs to manage group objects and their association with ioasid and=20
-underlying iommu domain thus it's pointless to keep same logic within
-VFIO. Is this understanding correct?
+I object to the current text you submitted, so something has to change
+in order for me to be able to accept the patch :)
 
-btw one remaining open is whether you expect /dev/ioasid to be=20
-associated with a single iommu domain, or multiple. If only a single=20
-domain is allowed, the ioasid_fd is equivalent to the scope of VFIO=20
-container. It is supposed to have only one gpa_ioasid_id since one=20
-iommu domain can only have a single 2nd level pgtable. Then all other=20
-ioasids, once allocated, must be nested on this gpa_ioasid_id to fit=20
-in the same domain. if a legacy vIOMMU is exposed (which disallows=20
-nesting), the userspace has to open an ioasid_fd for every group.=20
-This is basically the VFIO way. On the other hand if multiple domains=20
-is allowed, there could be multiple ioasid_ids each holding a 2nd level=20
-pgtable and an iommu domain (or a list of pgtables and domains due to
-incompatibility issue as discussed in another thread), and can be
-nested by other ioasids respectively. The application only needs
-to open /dev/ioasid once regardless of whether vIOMMU allows=20
-nesting, and has a single interface for ioasid allocation. Which way
-do you prefer to?
+Seriously, yes, the above information is great, please include that and
+all should be fine.
 
-Thanks
-Kevin
+thanks,
+
+greg k-h
