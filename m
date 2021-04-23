@@ -1,95 +1,67 @@
 From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
-Subject: Re: [PATCH-next v5 3/4] mm/memcg: Improve refill_obj_stock()
- performance
-Date: Thu, 22 Apr 2021 19:28:00 -0700
-Message-ID: <YIIwsAk4RaJw5WCL@carbon>
-References: <20210420192907.30880-1-longman@redhat.com>
- <20210420192907.30880-4-longman@redhat.com>
- <YIC7dh0+nQDFmU+T@carbon.dhcp.thefacebook.com>
- <d17f1c19-fc1b-df92-8361-fa6b88170861@redhat.com>
+Subject: Re: [PATCH] memcg: enable accounting for pids in nested pid
+ namespaces
+Date: Thu, 22 Apr 2021 19:30:20 -0700
+Message-ID: <YIIxPAcdd4p4NTxV@carbon>
+References: <7b777e22-5b0d-7444-343d-92cbfae5f8b4@virtuozzo.com>
+ <YIIcKa/ANkQX07Nf@carbon>
+ <38945563-59ad-fb5e-9f7f-eb65ae4bf55e@virtuozzo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
  subject : message-id : references : content-type : in-reply-to :
- mime-version; s=facebook; bh=f+yG+OPHjdgN450GDRXrlRhhthAItsFQBePByq/lUsM=;
- b=kFGN5QsXVELfM06GwjBZWaKCzLgyqbtb9rV6cXJpodXZIh7GypiYWqH4AGqa5sGg57Vr
- Or/+Gpv11QXjPRyJvM7aPUAXYqRv0Ak1CxJgHXUR0A6XVuKpeOzv2JKznMtSoBX9L+oR
- bzcMkq1hvqnFR4tcqmHfzs0lZIsjXqLazM0= 
+ mime-version; s=facebook; bh=Dh8IVCSVnsBkGkxmdUYPMFZOeNBa7YoWkLVqqlwpCww=;
+ b=ALOvqaz47c0jMHNsPtoChr2WyCVsogfoz0IB++EKEKwTCzgIqS8r86TVZLQTzIi+TtJL
+ KqHLS726y8B560dvuZ7BIuyFLYvIFEGduVSpibMtGyTRAPoPKtkA+iedm5ZyrW9IstMu
+ YQkCjOkc91x2kMS45FUOQXPLZV3cT8MJgiQ= 
 Content-Disposition: inline
-In-Reply-To: <d17f1c19-fc1b-df92-8361-fa6b88170861-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <38945563-59ad-fb5e-9f7f-eb65ae4bf55e-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Transfer-Encoding: 7bit
-To: Waiman Long <llong-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Xing Zhengjun <zhengjun.xing-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
 
-On Thu, Apr 22, 2021 at 01:26:08PM -0400, Waiman Long wrote:
-> On 4/21/21 7:55 PM, Roman Gushchin wrote:
-> > On Tue, Apr 20, 2021 at 03:29:06PM -0400, Waiman Long wrote:
-> > > There are two issues with the current refill_obj_stock() code. First of
-> > > all, when nr_bytes reaches over PAGE_SIZE, it calls drain_obj_stock() to
-> > > atomically flush out remaining bytes to obj_cgroup, clear cached_objcg
-> > > and do a obj_cgroup_put(). It is likely that the same obj_cgroup will
-> > > be used again which leads to another call to drain_obj_stock() and
-> > > obj_cgroup_get() as well as atomically retrieve the available byte from
-> > > obj_cgroup. That is costly. Instead, we should just uncharge the excess
-> > > pages, reduce the stock bytes and be done with it. The drain_obj_stock()
-> > > function should only be called when obj_cgroup changes.
-> > I really like this idea! Thanks!
+On Fri, Apr 23, 2021 at 05:09:01AM +0300, Vasily Averin wrote:
+> On 4/23/21 4:00 AM, Roman Gushchin wrote:
+> > On Thu, Apr 22, 2021 at 08:44:15AM +0300, Vasily Averin wrote:
+> >> init_pid_ns.pid_cachep have enabled memcg accounting, though this
+> >> setting was disabled for nested pid namespaces.
+> >>
+> >> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+> >> ---
+> >>  kernel/pid_namespace.c | 3 ++-
+> >>  1 file changed, 2 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/kernel/pid_namespace.c b/kernel/pid_namespace.c
+> >> index 6cd6715..a46a372 100644
+> >> --- a/kernel/pid_namespace.c
+> >> +++ b/kernel/pid_namespace.c
+> >> @@ -51,7 +51,8 @@ static struct kmem_cache *create_pid_cachep(unsigned int level)
+> >>  	mutex_lock(&pid_caches_mutex);
+> >>  	/* Name collision forces to do allocation under mutex. */
+> >>  	if (!*pkc)
+> >> -		*pkc = kmem_cache_create(name, len, 0, SLAB_HWCACHE_ALIGN, 0);
+> >> +		*pkc = kmem_cache_create(name, len, 0,
+> >> +					 SLAB_HWCACHE_ALIGN | SLAB_ACCOUNT, 0);
+> >>  	mutex_unlock(&pid_caches_mutex);
+> >>  	/* current can fail, but someone else can succeed. */
+> >>  	return READ_ONCE(*pkc);
+> >> -- 
+> >> 1.8.3.1
+> >>
 > > 
-> > However, I wonder if it can implemented simpler by splitting drain_obj_stock()
-> > into two functions:
-> >       empty_obj_stock() will flush cached bytes, but not reset the objcg
-> >       drain_obj_stock() will call empty_obj_stock() and then reset objcg
+> > It looks good to me! It makes total sense to apply the same rules to the root
+> > and non-root levels.
 > > 
-> > Then we simple can replace the second drain_obj_stock() in
-> > refill_obj_stock() with empty_obj_stock(). What do you think?
-> 
-> Actually the problem is the flushing cached bytes to objcg->nr_charged_bytes
-> that can become a performance bottleneck in a multithreaded testing
-> scenario. See my description in the latter half of my cover-letter.
-> 
-> For cgroup v2, update the page charge will mostly update the per-cpu page
-> charge stock. Flushing the remaining byte charge, however, will cause the
-> obgcg to became the single contended cacheline for all the cpus that need to
-> flush the byte charge. That is why I only update the page charge and left
-> the remaining byte charge stayed put in the object stock.
-> 
+> > Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
 > > 
-> > > Secondly, when charging an object of size not less than a page in
-> > > obj_cgroup_charge(), it is possible that the remaining bytes to be
-> > > refilled to the stock will overflow a page and cause refill_obj_stock()
-> > > to uncharge 1 page. To avoid the additional uncharge in this case,
-> > > a new overfill flag is added to refill_obj_stock() which will be set
-> > > when called from obj_cgroup_charge().
-> > > 
-> > > A multithreaded kmalloc+kfree microbenchmark on a 2-socket 48-core
-> > > 96-thread x86-64 system with 96 testing threads were run.  Before this
-> > > patch, the total number of kilo kmalloc+kfree operations done for a 4k
-> > > large object by all the testing threads per second were 4,304 kops/s
-> > > (cgroup v1) and 8,478 kops/s (cgroup v2). After applying this patch, the
-> > > number were 4,731 (cgroup v1) and 418,142 (cgroup v2) respectively. This
-> > > represents a performance improvement of 1.10X (cgroup v1) and 49.3X
-> > > (cgroup v2).
-> > This part looks more controversial. Basically if there are N consequent
-> > allocations of size (PAGE_SIZE + x), the stock will end up with (N * x)
-> > cached bytes, right? It's not the end of the world, but do we really
-> > need it given that uncharging a page is also cached?
+> > Btw, is there any reason why this patch is not included into the series?
 > 
-> Actually the maximum charge that can be accumulated in (2*PAGE_SIZE + x - 1)
-> since a following consume_obj_stock() will use those bytes once the byte
-> charge is not less than (PAGE_SIZE + x).
+> It is a bugfix and I think it should be added to upstream ASAP.
 
-Got it, thank you for the explanation!
-
-Can you, please, add a comment explaining what the "overfill" parameter does
-and why it has different values on charge and uncharge paths?
-Personally, I'd revert it's meaning and rename it to something like "trim"
-or just plain "bool charge".
-I think the simple explanation is that during the charge we can't refill more
-than a PAGE_SIZE - 1 and the following allocation will likely use it or
-the following deallocation will trim it if necessarily.
-And on the uncharge path there are no bounds and the following deallocation
-can only increase the cached value.
+Then it would be really useful to add some details on why it's a bug,
+what kind of problems it causes, etc. If it has to be backported to
+stable, please, add cc stable/fixes tag.
 
 Thanks!
