@@ -1,49 +1,60 @@
 From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: [PATCH v2 0/1] memcg: enable accounting for pids in nested pid
+Subject: [PATCH v2 1/1] memcg: enable accounting for pids in nested pid
  namespaces
-Date: Sat, 24 Apr 2021 14:54:26 +0300
-Message-ID: <163b816f-0655-1b4d-9c59-7878981be44e@virtuozzo.com>
+Date: Sat, 24 Apr 2021 14:54:35 +0300
+Message-ID: <8b6de616-fd1a-02c6-cbdb-976ecdcfa604@virtuozzo.com>
 References: <7b777e22-5b0d-7444-343d-92cbfae5f8b4@virtuozzo.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
-        :From; bh=29HYTylwYhZ3dYsWBx6VPp71dTboK0VaoGXB6Hg/UoQ=; b=uijsUv9twbDkh0f/HsZ
-        s3sQlHADWWDS3ZGT4302e/GJiseFOrKGcqCclo1Eva/7ahcHfoRfv0GEuR3IhtmXv1sD8goSwNKXX
-        EmJ+AOqquy+3jDiiZB+n7dNUxk7Hd0PS+CsAZQWj/hBNOUKa+dKc6m4G6MgIKCu1CW/vtLzb7kc=
+        :From; bh=Ef6Icn37gpYOQIKG7/7Yf8A/Wb3Zt7XRkbRLccrvlZk=; b=IX8ZZaUQQJLWyf7r75v
+        oHsMoiIk6HgNgJrYsfIpUKhC+Fn4jQxnkbwJw/pYVlsml1jhMvQagmugzWRhPobxURM0fLYzOFxB+
+        tNt7HAw+GUCs4TXaoq3yX19xbi5viaLG48dd4QpVMAOaW9ZzdM+wWknja1vp8MEB/SkJ92uKFxc=
 In-Reply-To: <7b777e22-5b0d-7444-343d-92cbfae5f8b4-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="macroman"
 To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Michal_Koutn=c3=bd?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Serge Hallyn <serge-A9i7LUbDfNHQT0dZR+AlfA@public.gmane.org>
 
-Pid was one the first kernel objects enabled for memcg accounting, see
-5d097056c9a0 ("kmemcg: account certain kmem allocations to memcg")
-
-init_pid_ns.pid_cachep marked by SLAB_ACCOUNT and we can expect that any new pids 
-in the system are memcg-accounted.
-
-Though recently I've noticed that it is wrong. nested pid namespaces creates 
-own slab caches for pid objects, nested pids have increased size because contain 
-id both for all parent and for own pid namespaces. The problem is that these slab
-caches are _NOT_ marked by SLAB_ACCOUNT,as a result any pids allocated in 
-nested pid namespaces are not memcg-accounted.
-
-Pid struct in nested pid namespace consumes up to 500 bytes memory,
-100000 such objects gives us up to ~50Mb unaccounted memory.
-This allow container to exceed assigned memcg limits.
-
-For me this issue lookslike bug and I would like to ask to push this fix 
-both to upstream and to stable
-
-Vasily Averin (1):
-  memcg: enable accounting for pids in nested pid namespaces
-
- kernel/pid_namespace.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
--- 
-1.8.3.1
-
+Q29tbWl0IDVkMDk3MDU2YzlhMCAoImttZW1jZzogYWNjb3VudCBjZXJ0YWluIGttZW0gYWxsb2Nh
+dGlvbnMgdG8gbWVtY2ciKQplbmFibGVkIG1lbWNnIGFjY291bnRpbmcgZm9yIHBpZHMgYWxsb2Nh
+dGVkIGZyb20gaW5pdF9waWRfbnMucGlkX2NhY2hlcCwKYnV0IGZvcmdvdCB0byBhZGp1c3QgdGhl
+IHNldHRpbmcgZm9yIG5lc3RlZCBwaWQgbmFtZXNwYWNlcy4KQXMgYSByZXN1bHQsIHBpZCBtZW1v
+cnkgaXMgbm90IGFjY291bnRlZCBleGFjdGx5IHdoZXJlIGl0IGlzIHJlYWxseSBuZWVkZWQsCmlu
+c2lkZSBtZW1jZy1saW1pdGVkIGNvbnRhaW5lcnMgd2l0aCB0aGVpciBvd24gcGlkIG5hbWVzcGFj
+ZXMuCgpQaWQgd2FzIG9uZSB0aGUgZmlyc3Qga2VybmVsIG9iamVjdHMgZW5hYmxlZCBmb3IgbWVt
+Y2cgYWNjb3VudGluZy4KaW5pdF9waWRfbnMucGlkX2NhY2hlcCBtYXJrZWQgYnkgU0xBQl9BQ0NP
+VU5UIGFuZCB3ZSBjYW4gZXhwZWN0IHRoYXQKYW55IG5ldyBwaWRzIGluIHRoZSBzeXN0ZW0gYXJl
+IG1lbWNnLWFjY291bnRlZC4KClRob3VnaCByZWNlbnRseSBJJ3ZlIG5vdGljZWQgdGhhdCBpdCBp
+cyB3cm9uZy4gbmVzdGVkIHBpZCBuYW1lc3BhY2VzIGNyZWF0ZXMgCm93biBzbGFiIGNhY2hlcyBm
+b3IgcGlkIG9iamVjdHMsIG5lc3RlZCBwaWRzIGhhdmUgaW5jcmVhc2VkIHNpemUgYmVjYXVzZSBj
+b250YWluIAppZCBib3RoIGZvciBhbGwgcGFyZW50IGFuZCBmb3Igb3duIHBpZCBuYW1lc3BhY2Vz
+LiBUaGUgcHJvYmxlbSBpcyB0aGF0IHRoZXNlIHNsYWIKY2FjaGVzIGFyZSBfTk9UXyBtYXJrZWQg
+YnkgU0xBQl9BQ0NPVU5ULCBhcyBhIHJlc3VsdCBhbnkgcGlkcyBhbGxvY2F0ZWQgaW4gCm5lc3Rl
+ZCBwaWQgbmFtZXNwYWNlcyBhcmUgbm90IG1lbWNnLWFjY291bnRlZC4KClBpZCBzdHJ1Y3QgaW4g
+bmVzdGVkIHBpZCBuYW1lc3BhY2UgY29uc3VtZXMgdXAgdG8gNTAwIGJ5dGVzIG1lbW9yeSwgCjEw
+MDAwMCBzdWNoIG9iamVjdHMgZ2l2ZXMgdXMgdXAgdG8gfjUwTWIgdW5hY2NvdW50ZWQgbWVtb3J5
+LAp0aGlzIGFsbG93IGNvbnRhaW5lciB0byBleGNlZWQgYXNzaWduZWQgbWVtY2cgbGltaXRzLgoK
+Rml4ZXM6IDVkMDk3MDU2YzlhMCAoImttZW1jZzogYWNjb3VudCBjZXJ0YWluIGttZW0gYWxsb2Nh
+dGlvbnMgdG8gbWVtY2ciKQpDYzogc3RhYmxlLXU3OXV3WEwyOVRZNzZaMnJNNW1IWEFAcHVibGlj
+LmdtYW5lLm9yZwpTaWduZWQtb2ZmLWJ5OiBWYXNpbHkgQXZlcmluIDx2dnMtNUhkd0d1bjVsZitn
+U3B4c0pEMUM0d0BwdWJsaWMuZ21hbmUub3JnPgpSZXZpZXdlZC1ieTogTWljaGFsIEtvdXRuw70g
+PG1rb3V0bnktSUJpOVJHL2I2N2tAcHVibGljLmdtYW5lLm9yZz4KQWNrZWQtYnk6IENocmlzdGlh
+biBCcmF1bmVyIDxjaHJpc3RpYW4uYnJhdW5lci1HZVdJSC9uTVp6TFFUMGRaUitBbGZBQHB1Ymxp
+Yy5nbWFuZS5vcmc+CkFja2VkLWJ5OiBSb21hbiBHdXNoY2hpbiA8Z3Vyby1iMTBrWVAyZE9NZ0Bw
+dWJsaWMuZ21hbmUub3JnPgotLS0KIGtlcm5lbC9waWRfbmFtZXNwYWNlLmMgfCAzICsrLQogMSBm
+aWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQoKZGlmZiAtLWdpdCBh
+L2tlcm5lbC9waWRfbmFtZXNwYWNlLmMgYi9rZXJuZWwvcGlkX25hbWVzcGFjZS5jCmluZGV4IDZj
+ZDY3MTUuLmE0NmEzNzIgMTAwNjQ0Ci0tLSBhL2tlcm5lbC9waWRfbmFtZXNwYWNlLmMKKysrIGIv
+a2VybmVsL3BpZF9uYW1lc3BhY2UuYwpAQCAtNTEsNyArNTEsOCBAQCBzdGF0aWMgc3RydWN0IGtt
+ZW1fY2FjaGUgKmNyZWF0ZV9waWRfY2FjaGVwKHVuc2lnbmVkIGludCBsZXZlbCkKIAltdXRleF9s
+b2NrKCZwaWRfY2FjaGVzX211dGV4KTsKIAkvKiBOYW1lIGNvbGxpc2lvbiBmb3JjZXMgdG8gZG8g
+YWxsb2NhdGlvbiB1bmRlciBtdXRleC4gKi8KIAlpZiAoISpwa2MpCi0JCSpwa2MgPSBrbWVtX2Nh
+Y2hlX2NyZWF0ZShuYW1lLCBsZW4sIDAsIFNMQUJfSFdDQUNIRV9BTElHTiwgMCk7CisJCSpwa2Mg
+PSBrbWVtX2NhY2hlX2NyZWF0ZShuYW1lLCBsZW4sIDAsCisJCQkJCSBTTEFCX0hXQ0FDSEVfQUxJ
+R04gfCBTTEFCX0FDQ09VTlQsIDApOwogCW11dGV4X3VubG9jaygmcGlkX2NhY2hlc19tdXRleCk7
+CiAJLyogY3VycmVudCBjYW4gZmFpbCwgYnV0IHNvbWVvbmUgZWxzZSBjYW4gc3VjY2VlZC4gKi8K
+IAlyZXR1cm4gUkVBRF9PTkNFKCpwa2MpOwotLSAKMS44LjMuMQoK
