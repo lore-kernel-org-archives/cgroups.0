@@ -1,73 +1,85 @@
-From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
- allocation APIs
-Date: Fri, 23 Apr 2021 19:28:03 -0300
-Message-ID: <20210423222803.GK1370958@nvidia.com>
-References: <20210421175203.GN1370958@nvidia.com>
- <20210421133312.15307c44@redhat.com>
- <20210421230301.GP1370958@nvidia.com>
- <20210422111337.6ac3624d@redhat.com>
- <20210422175715.GA1370958@nvidia.com>
- <20210422133747.23322269@redhat.com>
- <20210422200024.GC1370958@nvidia.com>
- <20210422163808.2d173225@redhat.com>
- <20210422233950.GD1370958@nvidia.com>
- <20210423103851.41138791@redhat.com>
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH v3 08/16] memcg: enable accounting of ipc resources
+Date: Sat, 24 Apr 2021 14:17:50 +0300
+Message-ID: <e67f2a95-4b01-9db2-fe47-0b2210f0b138@virtuozzo.com>
+References: <dddf6b29-debd-dcb5-62d0-74909d610edb@virtuozzo.com>
+ <4ed65beb-bda3-1c93-fadf-296b760a32b2@virtuozzo.com>
+ <YIK6ttdnfjOo6XCN@localhost.localdomain>
+ <dd9b1767-55e0-6754-3ac5-7e01de12f16e@virtuozzo.com>
+ <YILOab0/h83egjUw@dhcp22.suse.cz> <YILQa1qas7veJaCq@dhcp22.suse.cz>
 Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YbXGDqFwkQOJaUjES4Zo6AxYK7W93MS9wh4R5dAJACU=;
- b=Qil48oWo2JuziDVtV5Xfsy5m/xmSJnuoUiUDMJ7VUXfvRPSgVVEaKNCGhbepcvoNsPg0m04YbgBInXvL/+j44xbjAR5KENIEqUkEroedCq0aFIz/LGkimqZ8g8rietsH2kkUon7ppKs2KrkPsRh9U4pJx+BZA4n73i6KY7ollvWVGZQPaHzAYS6Oz+nbwVhSUM3Cjs6Wn4zHO8z6n/MdNpCliX5V0+/VdLk5W5iWiN2hDoh6eKBFnNp6gmm9443TUclVDYq1cjdcguhI1GLgGNsMk7/Amul0vXGNGEX6ZMA98ezPFFInsVQ/RnN5ftRgjMX6jXWg//xydhVpNYR4mA==
-Content-Disposition: inline
-In-Reply-To: <20210423103851.41138791-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:From:
+        Subject; bh=UXNNUoARoOvWpr054pjURR+Eo7jDmpH/x3SEVXjHYTY=; b=Lgaj2Nk/GvJVU6saH
+        HCLOMYFtPDUPzRqUgGaeQNDlqnyl7+1ggqETMO2v1EszcBjPZ25oMERu1gM4e/LAYHKM4lgGVFAqc
+        Jn3JWjdmzDxkkNZ09FnSdSGxrmz8yx9Pgvc3LFaGTPtnbVfO8cgzRoLGfQn7GOhPonqWZOvKD7Eks
+        =;
+In-Reply-To: <YILQa1qas7veJaCq-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dmitry Safonov <0x7f454c46-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Fri, Apr 23, 2021 at 10:38:51AM -0600, Alex Williamson wrote:
-> On Thu, 22 Apr 2021 20:39:50 -0300
-
-> > /dev/ioasid should understand the group concept somehow, otherwise it
-> > is incomplete and maybe even security broken.
-> > 
-> > So, how do I add groups to, say, VDPA in a way that makes sense? The
-> > only answer I come to is broadly what I outlined here - make
-> > /dev/ioasid do all the group operations, and do them when we enjoin
-> > the VDPA device to the ioasid.
-> > 
-> > Once I have solved all the groups problems with the non-VFIO users,
-> > then where does that leave VFIO? Why does VFIO need a group FD if
-> > everyone else doesn't?
+On 4/23/21 4:49 PM, Michal Hocko wrote:
+> On Fri 23-04-21 15:40:58, Michal Hocko wrote:
+>> On Fri 23-04-21 15:32:01, Vasily Averin wrote:
+>>> On 4/23/21 3:16 PM, Alexey Dobriyan wrote:
+>>>> On Thu, Apr 22, 2021 at 01:37:02PM +0300, Vasily Averin wrote:
+>>>>> When user creates IPC objects it forces kernel to allocate memory for
+>>>>> these long-living objects.
+>>>>>
+>>>>> It makes sense to account them to restrict the host's memory consumption
+>>>>> from inside the memcg-limited container.
+>>>>>
+>>>>> This patch enables accounting for IPC shared memory segments, messages
+>>>>> semaphores and semaphore's undo lists.
+>>>>
+>>>>> --- a/ipc/msg.c
+>>>>> +++ b/ipc/msg.c
+>>>>> @@ -147,7 +147,7 @@ static int newque(struct ipc_namespace *ns, struct ipc_params *params)
+>>>>>  	key_t key = params->key;
+>>>>>  	int msgflg = params->flg;
+>>>>>  
+>>>>> -	msq = kvmalloc(sizeof(*msq), GFP_KERNEL);
+>>>>> +	msq = kvmalloc(sizeof(*msq), GFP_KERNEL_ACCOUNT);
+>>>>
+>>>> Why this requires vmalloc? struct msg_queue is not big at all.
+>>>>
+>>>>> --- a/ipc/shm.c
+>>>>> +++ b/ipc/shm.c
+>>>>> @@ -619,7 +619,7 @@ static int newseg(struct ipc_namespace *ns, struct ipc_params *params)
+>>>>>  			ns->shm_tot + numpages > ns->shm_ctlall)
+>>>>>  		return -ENOSPC;
+>>>>>  
+>>>>> -	shp = kvmalloc(sizeof(*shp), GFP_KERNEL);
+>>>>> +	shp = kvmalloc(sizeof(*shp), GFP_KERNEL_ACCOUNT);
+>>>>
+>>>> Same question.
+>>>> Kmem caches can be GFP_ACCOUNT by default.
+>>>
+>>> It is side effect: previously all these objects was allocated via ipc_alloc/ipc_alloc_rcu
+>>> function called kvmalloc inside.
+>>>
+>>> Should I replace it to kmalloc right in this patch?
+>>
+>> I would say those are two independent things. I would agree that
+>> kvmalloc is bogus here. The allocation would try SLAB allocator first
+>> but if it fails (as kvmalloc doesn't try really hard) then it would
+>> fragment memory without a good reason which looks like a bug to me.
 > 
-> This assumes there's a solution for vDPA that doesn't just ignore the
-> problem and hope for the best.  I can't speak to a vDPA solution.
+> I have dug into history and this all seems to be just code pattern
+> copy&paste thing. In the past it was ipc_alloc_rcu which was a common
+> code for all IPCs and that code was conditional on rcu_use_vmalloc
+> (HDRLEN_KMALLOC + size > PAGE_SIZE). Later changed to kvmalloc and then
+> helper removed and all users to use kvmalloc. It seems that only
+> semaphores can grow large enough to care about kvmalloc though.
 
-I don't think we can just ignore the question and succeed with
-/dev/ioasid.
+I have one more cleanup for ipc, 
+so if no one objects, I'll fix this case, add my patch and send them together
+as a separate patch set a bit later.
 
-Guess it should get answered as best it can for ioasid "in general"
-then we can decide if it makes sense for VFIO to use the group FD or
-not when working in ioasid mode.
-
-Maybe a better idea will come up
-
-> an implicit restriction.  You've listed a step in the description about
-> a "list of devices in the group", but nothing in the pseudo code
-> reflects that step.
-
-I gave it below with the readdir() - it isn't in the pseudo code
-because the applications I looked through didn't use it, and wouldn't
-benefit from it. I tried to show what things were doing today.
-
-> I expect it would be a subtly missed by any userspace driver
-> developer unless they happen to work on a system where the grouping
-> is not ideal.
-
-I'm still unclear - what are be the consequence if the application
-designer misses the group detail? 
-
-Jason
+Thank you,
+	Vasily Averin
