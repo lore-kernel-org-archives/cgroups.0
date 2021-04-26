@@ -1,88 +1,58 @@
-From: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [RFC PATCH] cgroup: add cgroup.signal
-Date: Mon, 26 Apr 2021 21:03:00 +0200
-Message-ID: <YIcOZEbvky7hGbR1@blackbook>
-References: <20210423171351.3614430-1-brauner@kernel.org>
+From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH-next v5 3/4] mm/memcg: Improve refill_obj_stock() performance
+Date: Mon, 26 Apr 2021 12:24:02 -0700
+Message-ID: <CALvZod7_NtptXi=1QdfgyobL-bw72xGeZ9Sm3pn1pxtZ9crTow@mail.gmail.com>
+References: <20210420192907.30880-1-longman@redhat.com> <20210420192907.30880-4-longman@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="5jsyb94QUhz03rfD"
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1619463782; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=pruVnX3wP3lTqUcxfMSZx+YIOxSZgwC20tCRJWOzLy0=;
-        b=MWBe01p9+08/bKgfYaQ6CSdsjjv0fRAHpnoLeyyijQiu/gzw7J6RdsLVHEkjHphKhDMRqj
-        eBUFbN4Cs/oVjDLhPhRnWU8I9IYSIke2EsjF/Mr7276CBdWUVGJvS9bRrwORPzOFsXy1eN
-        DGysD8NYUIWDuf8nZ2JEg9WiFSCfbLY=
-Content-Disposition: inline
-In-Reply-To: <20210423171351.3614430-1-brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=r1+fehePF1LQa+ETT3QS1bc9x/S6CdwPnRCT51uHUm4=;
+        b=Iap4Uo88x+wPaxUmMexmQyhYyjf2sL25rylbPddEu+U/hlOmwkIefEtnY9a0lTsa+d
+         DUbgh7t+lOXHdq4VYz0VlwX3lCFYFB9Lm27pp+hlnNM+4iymjU+rWrmDC8hvTSBH4Wv2
+         1CkyEz7xj5NMP4EM/vwkZawFtnVeCrcaL9+ByUY9j70Rdaig1pbM0LyMSpkkbYp1A5lL
+         /mXaVwXO48K5isxqZhn8/7TsMvkeR+0Z9j4PvHF3GxA75g9scTENPeaggakn1ZRNx/nR
+         0GyKQl7X5aA60jsuye9ISomU28l0tO06+F4UFDCPU2V4zz1wWjvJKdL91tRtAT+Rq/2l
+         vsRw==
+In-Reply-To: <20210420192907.30880-4-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-To: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Xing Zhengjun <zhengjun.xing@linu>
 
+On Tue, Apr 20, 2021 at 12:30 PM Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+>
+> There are two issues with the current refill_obj_stock() code. First of
+> all, when nr_bytes reaches over PAGE_SIZE, it calls drain_obj_stock() to
+> atomically flush out remaining bytes to obj_cgroup, clear cached_objcg
+> and do a obj_cgroup_put(). It is likely that the same obj_cgroup will
+> be used again which leads to another call to drain_obj_stock() and
+> obj_cgroup_get() as well as atomically retrieve the available byte from
+> obj_cgroup. That is costly. Instead, we should just uncharge the excess
+> pages, reduce the stock bytes and be done with it. The drain_obj_stock()
+> function should only be called when obj_cgroup changes.
+>
+> Secondly, when charging an object of size not less than a page in
+> obj_cgroup_charge(), it is possible that the remaining bytes to be
+> refilled to the stock will overflow a page and cause refill_obj_stock()
+> to uncharge 1 page. To avoid the additional uncharge in this case,
+> a new overfill flag is added to refill_obj_stock() which will be set
+> when called from obj_cgroup_charge().
+>
+> A multithreaded kmalloc+kfree microbenchmark on a 2-socket 48-core
+> 96-thread x86-64 system with 96 testing threads were run.  Before this
+> patch, the total number of kilo kmalloc+kfree operations done for a 4k
+> large object by all the testing threads per second were 4,304 kops/s
+> (cgroup v1) and 8,478 kops/s (cgroup v2). After applying this patch, the
+> number were 4,731 (cgroup v1) and 418,142 (cgroup v2) respectively. This
+> represents a performance improvement of 1.10X (cgroup v1) and 49.3X
+> (cgroup v2).
+>
+> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
---5jsyb94QUhz03rfD
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+After incorporating Roman's suggestion, you can add:
 
-On Fri, Apr 23, 2021 at 07:13:51PM +0200, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> +static void __cgroup_signal(struct cgroup *cgrp, int signr)
-> +{
-> +	struct css_task_iter it;
-> +	struct task_struct *task;
-> +
-> +	lockdep_assert_held(&cgroup_mutex);
-> +
-> +	css_task_iter_start(&cgrp->self, 0, &it);
-
-I think here you'd need CSS_TASK_ITER_PROCS here to avoid signalling
-multithreaded processes multiple times? (OTOH, with commiting just to
-SIGKILL this may be irrelevant.)
-
-> +static void cgroup_signal(struct cgroup *cgrp, int signr)
-> [...]
-> +	read_lock(&tasklist_lock);
-
-(Thinking loudly.)
-I wonder if it's possible to get rid of this? A similar check that
-freezer does in cgroup_post_fork() but perhaps in cgroup_can_fork(). The
-fork/clone would apparently fail for the soon-to-die parent but there's
-already similar error path returning ENODEV (heh, the macabrous name
-cgroup_is_dead() is already occupied).
-
-This way the cgroup-killer wouldn't unncessarily preempt tasklist_lock
-exclusive requestors system-wide.
-
-
-> @@ -4846,6 +4916,11 @@ static struct cftype cgroup_base_files[] = {
-> +	{
-> +		.name = "cgroup.signal",
-> +		.flags = CFTYPE_NOT_ON_ROOT,
-> +		.write = cgroup_signal_write,
-
-I think this shouldn't be visible in threaded cgroups (or return an
-error when attempting to kill those).
-
---5jsyb94QUhz03rfD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEEoQaUCWq8F2Id1tNia1+riC5qSgFAmCHDmQACgkQia1+riC5
-qSh+GQ/+PmzHNhWttonJMqWNiPPt+NmHzzLSkEChHAHdIbkJCDQioQD9VxMhjJ7I
-ZngkGOpRUu08Do8M74VNjJRf9OhqfcD20HeA9pfeem6HCryubtmPaU2MS8wNj2oa
-siqrCREHtVD8/N8Hop3U0mKL0xhJRX9gUAo7rd3TIHSpuRHgauhvxhE/HrJ3Ly6k
-MXcVZSe0OE3nyQY4nEGO9NOCQ3hbKl89WQYCEnT/mXRNiSPreZYYB5b59uK4dbUM
-nzdQ7wgVUoqX1z+DbGzBVzI6JIeoPXUn+4HoW10/3D2sDA0eFo2m1zLJBvxLj8lJ
-4Usy57JOzH9252RbRzV6ytvr5TnujzHAnamCTgP1ZpbQzur/E5AYO3PtJ+7Tv793
-F5h1AX48OdD53MoVCGLxtCwMzf8IPGPj09ZJnSYzt1IRo2V5u31/PDim9+knJsO5
-zgAVqGBndAl3VcTMkvpqmYxQpCUgwzSELo3K/japZrE6/W5Li33DSvDwsjBIeAQs
-XT9+/hRGENtf1rge3efo6nsdhmHZ6vwIxjnV/6KLTqjB5zLAyW62eIqpVuacbsFv
-BRlZH74JtyMpGDi3jhBjQwFbpvkw4S5FDYMaKebFE9Zcy40d00CRX5x8Taoo5JP0
-y4hL2R+lnAQ1aEKYTQK7HNgTGmK1rg4mw48KdMY3eBtVtHoQbxA=
-=qlsS
------END PGP SIGNATURE-----
-
---5jsyb94QUhz03rfD--
+Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
