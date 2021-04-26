@@ -1,58 +1,60 @@
-From: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH-next v5 3/4] mm/memcg: Improve refill_obj_stock() performance
-Date: Mon, 26 Apr 2021 12:24:02 -0700
-Message-ID: <CALvZod7_NtptXi=1QdfgyobL-bw72xGeZ9Sm3pn1pxtZ9crTow@mail.gmail.com>
-References: <20210420192907.30880-1-longman@redhat.com> <20210420192907.30880-4-longman@redhat.com>
+From: Shakeel Butt <shakeelb@google.com>
+Subject: Re: [PATCH v2 1/1] memcg: enable accounting for pids in nested pid namespaces
+Date: Mon, 26 Apr 2021 12:39:44 -0700
+Message-ID: <CALvZod5uw+f5dY=dUmHvdRq-4OfJBQ8zqjT5rZzpKtqQoy+28A@mail.gmail.com>
+References: <7b777e22-5b0d-7444-343d-92cbfae5f8b4@virtuozzo.com> <8b6de616-fd1a-02c6-cbdb-976ecdcfa604@virtuozzo.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=r1+fehePF1LQa+ETT3QS1bc9x/S6CdwPnRCT51uHUm4=;
-        b=Iap4Uo88x+wPaxUmMexmQyhYyjf2sL25rylbPddEu+U/hlOmwkIefEtnY9a0lTsa+d
-         DUbgh7t+lOXHdq4VYz0VlwX3lCFYFB9Lm27pp+hlnNM+4iymjU+rWrmDC8hvTSBH4Wv2
-         1CkyEz7xj5NMP4EM/vwkZawFtnVeCrcaL9+ByUY9j70Rdaig1pbM0LyMSpkkbYp1A5lL
-         /mXaVwXO48K5isxqZhn8/7TsMvkeR+0Z9j4PvHF3GxA75g9scTENPeaggakn1ZRNx/nR
-         0GyKQl7X5aA60jsuye9ISomU28l0tO06+F4UFDCPU2V4zz1wWjvJKdL91tRtAT+Rq/2l
-         vsRw==
-In-Reply-To: <20210420192907.30880-4-longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+         :cc:content-transfer-encoding;
+        bh=uKTFMl2K/jBtlUdprMSpQyuu4jIlYrjBFVJg7lJPhEk=;
+        b=QLHlSH2LL9uXh4sy9QtauiXaoF8OnWxtk9QCSh8791OUvFB4sYoW8jVjCMkGTrtcQL
+         FrGfNwUH0L3V08sKOzFRiJBbxgvswr4ji3xy0XAO/ufgHwMRGO6lR3COBApdiOIM/wk5
+         POZkZIlQVZuug1Bn5mrxSe11DlrX+WEBcb3+u5Ut7b/ygHXvPDZutuvyEZ7HLinkTewW
+         ISOX6S3OTcWbJyAX2Us30EFYhEOiff5QHkx6fv3pKd5//JiqcTwxKiS1xZfFqNrVY4K4
+         it/m5g7kX04xUv8RCDAMnDfVccezvq8wz9ORMKhwhg9p6SAxNBLtvy4KiSRqAZSu+wuD
+         JM3g==
+In-Reply-To: <8b6de616-fd1a-02c6-cbdb-976ecdcfa604@virtuozzo.com>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Lameter <cl-vYTEC60ixJUAvxtiuMwx3w@public.gmane.org>, Pekka Enberg <penberg-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, David Rientjes <rientjes-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Joonsoo Kim <iamjoonsoo.kim-Hm3cg6mZ9cc@public.gmane.org>, Vlastimil Babka <vbabka-AlSwsSmVLrQ@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Cgroups <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux MM <linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org>, Muchun Song <songmuchun-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Alex Shi <alex.shi-KPsoFbNs7GizrGE5bRqYAgC/G2K4zDHf@public.gmane.org>, Chris Down <chris-6Bi1550iOqEnzZ6mRAm98g@public.gmane.org>, Yafang Shao <laoar.shao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Wei Yang <richard.weiyang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Masayoshi Mizuma <msys.mizuma-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Xing Zhengjun <zhengjun.xing@linu>
+Content-Type: text/plain; charset="macroman"
+To: Vasily Averin <vvs@virtuozzo.com>
+Cc: Michal Hocko <mhocko@suse.com>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Roman Gushchin <guro@fb.com>, Christian Brauner <christian.brauner@ubuntu.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Serge Hallyn <serge@hallyn.com>
 
-On Tue, Apr 20, 2021 at 12:30 PM Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+On Sat, Apr 24, 2021 at 4:54 AM Vasily Averin <vvs@virtuozzo.com> wrote:
 >
-> There are two issues with the current refill_obj_stock() code. First of
-> all, when nr_bytes reaches over PAGE_SIZE, it calls drain_obj_stock() to
-> atomically flush out remaining bytes to obj_cgroup, clear cached_objcg
-> and do a obj_cgroup_put(). It is likely that the same obj_cgroup will
-> be used again which leads to another call to drain_obj_stock() and
-> obj_cgroup_get() as well as atomically retrieve the available byte from
-> obj_cgroup. That is costly. Instead, we should just uncharge the excess
-> pages, reduce the stock bytes and be done with it. The drain_obj_stock()
-> function should only be called when obj_cgroup changes.
+> Commit 5d097056c9a0 ("kmemcg: account certain kmem allocations to memcg")
+> enabled memcg accounting for pids allocated from init_pid_ns.pid_cachep,
+> but forgot to adjust the setting for nested pid namespaces.
+> As a result, pid memory is not accounted exactly where it is really neede=
+d,
+> inside memcg-limited containers with their own pid namespaces.
 >
-> Secondly, when charging an object of size not less than a page in
-> obj_cgroup_charge(), it is possible that the remaining bytes to be
-> refilled to the stock will overflow a page and cause refill_obj_stock()
-> to uncharge 1 page. To avoid the additional uncharge in this case,
-> a new overfill flag is added to refill_obj_stock() which will be set
-> when called from obj_cgroup_charge().
+> Pid was one the first kernel objects enabled for memcg accounting.
+> init_pid_ns.pid_cachep marked by SLAB_ACCOUNT and we can expect that
+> any new pids in the system are memcg-accounted.
 >
-> A multithreaded kmalloc+kfree microbenchmark on a 2-socket 48-core
-> 96-thread x86-64 system with 96 testing threads were run.  Before this
-> patch, the total number of kilo kmalloc+kfree operations done for a 4k
-> large object by all the testing threads per second were 4,304 kops/s
-> (cgroup v1) and 8,478 kops/s (cgroup v2). After applying this patch, the
-> number were 4,731 (cgroup v1) and 418,142 (cgroup v2) respectively. This
-> represents a performance improvement of 1.10X (cgroup v1) and 49.3X
-> (cgroup v2).
+> Though recently I've noticed that it is wrong. nested pid namespaces crea=
+tes
+> own slab caches for pid objects, nested pids have increased size because =
+contain
+> id both for all parent and for own pid namespaces. The problem is that th=
+ese slab
+> caches are _NOT_ marked by SLAB_ACCOUNT, as a result any pids allocated i=
+n
+> nested pid namespaces are not memcg-accounted.
 >
-> Signed-off-by: Waiman Long <longman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Pid struct in nested pid namespace consumes up to 500 bytes memory,
+> 100000 such objects gives us up to ~50Mb unaccounted memory,
+> this allow container to exceed assigned memcg limits.
+>
+> Fixes: 5d097056c9a0 ("kmemcg: account certain kmem allocations to memcg")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Vasily Averin <vvs@virtuozzo.com>
+> Reviewed-by: Michal Koutn=C3=BD <mkoutny@suse.com>
+> Acked-by: Christian Brauner <christian.brauner@ubuntu.com>
+> Acked-by: Roman Gushchin <guro@fb.com>
 
-After incorporating Roman's suggestion, you can add:
-
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Reviewed-by: Shakeel Butt <shakeelb@google.com>
