@@ -1,60 +1,31 @@
-From: Shakeel Butt <shakeelb@google.com>
-Subject: Re: [PATCH v2 1/1] memcg: enable accounting for pids in nested pid namespaces
-Date: Mon, 26 Apr 2021 12:39:44 -0700
-Message-ID: <CALvZod5uw+f5dY=dUmHvdRq-4OfJBQ8zqjT5rZzpKtqQoy+28A@mail.gmail.com>
-References: <7b777e22-5b0d-7444-343d-92cbfae5f8b4@virtuozzo.com> <8b6de616-fd1a-02c6-cbdb-976ecdcfa604@virtuozzo.com>
+From: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH 1/2] ipc sem: use kvmalloc for sem_undo allocation
+Date: Mon, 26 Apr 2021 13:29:20 -0700
+Message-ID: <YIcioHGrtjFHoDej@carbon.dhcp.thefacebook.com>
+References: <e67f2a95-4b01-9db2-fe47-0b2210f0b138@virtuozzo.com>
+ <722774d8-d46b-f8a6-a88e-3c56b4968622@virtuozzo.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=uKTFMl2K/jBtlUdprMSpQyuu4jIlYrjBFVJg7lJPhEk=;
-        b=QLHlSH2LL9uXh4sy9QtauiXaoF8OnWxtk9QCSh8791OUvFB4sYoW8jVjCMkGTrtcQL
-         FrGfNwUH0L3V08sKOzFRiJBbxgvswr4ji3xy0XAO/ufgHwMRGO6lR3COBApdiOIM/wk5
-         POZkZIlQVZuug1Bn5mrxSe11DlrX+WEBcb3+u5Ut7b/ygHXvPDZutuvyEZ7HLinkTewW
-         ISOX6S3OTcWbJyAX2Us30EFYhEOiff5QHkx6fv3pKd5//JiqcTwxKiS1xZfFqNrVY4K4
-         it/m5g7kX04xUv8RCDAMnDfVccezvq8wz9ORMKhwhg9p6SAxNBLtvy4KiSRqAZSu+wuD
-         JM3g==
-In-Reply-To: <8b6de616-fd1a-02c6-cbdb-976ecdcfa604@virtuozzo.com>
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to :
+ mime-version; s=facebook; bh=ry//vdskWCikoDYDP/MqQBfvu56aeeQCMaM0+qLdlI4=;
+ b=KXyePZeIkiSeeSNIKpP3Q3TmZ6l0s+DpKJ0TB/y9AuzZzm1k1NgQFJHdoDEF6Cl/NsK9
+ g8OXzSvkGU6SKJjtjwa2lEPVuTM2u9Syw9/I5JkgUypowxcuEIvOS+9/OJ5Nw3Xgb8Zn
+ JcPIG3xJR4cxs9VH7YpBGNewnjY03dfuDNo= 
+Content-Disposition: inline
+In-Reply-To: <722774d8-d46b-f8a6-a88e-3c56b4968622-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="macroman"
-To: Vasily Averin <vvs@virtuozzo.com>
-Cc: Michal Hocko <mhocko@suse.com>, Cgroups <cgroups@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Roman Gushchin <guro@fb.com>, Christian Brauner <christian.brauner@ubuntu.com>, =?UTF-8?Q?Michal_Koutn=C3=BD?= <mkoutny@suse.com>, Serge Hallyn <serge@hallyn.com>
+Content-Transfer-Encoding: 7bit
+To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dmitry Safonov <0x7f454c46-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-On Sat, Apr 24, 2021 at 4:54 AM Vasily Averin <vvs@virtuozzo.com> wrote:
->
-> Commit 5d097056c9a0 ("kmemcg: account certain kmem allocations to memcg")
-> enabled memcg accounting for pids allocated from init_pid_ns.pid_cachep,
-> but forgot to adjust the setting for nested pid namespaces.
-> As a result, pid memory is not accounted exactly where it is really neede=
-d,
-> inside memcg-limited containers with their own pid namespaces.
->
-> Pid was one the first kernel objects enabled for memcg accounting.
-> init_pid_ns.pid_cachep marked by SLAB_ACCOUNT and we can expect that
-> any new pids in the system are memcg-accounted.
->
-> Though recently I've noticed that it is wrong. nested pid namespaces crea=
-tes
-> own slab caches for pid objects, nested pids have increased size because =
-contain
-> id both for all parent and for own pid namespaces. The problem is that th=
-ese slab
-> caches are _NOT_ marked by SLAB_ACCOUNT, as a result any pids allocated i=
-n
-> nested pid namespaces are not memcg-accounted.
->
-> Pid struct in nested pid namespace consumes up to 500 bytes memory,
-> 100000 such objects gives us up to ~50Mb unaccounted memory,
-> this allow container to exceed assigned memcg limits.
->
-> Fixes: 5d097056c9a0 ("kmemcg: account certain kmem allocations to memcg")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Vasily Averin <vvs@virtuozzo.com>
-> Reviewed-by: Michal Koutn=C3=BD <mkoutny@suse.com>
-> Acked-by: Christian Brauner <christian.brauner@ubuntu.com>
-> Acked-by: Roman Gushchin <guro@fb.com>
+On Mon, Apr 26, 2021 at 01:18:09PM +0300, Vasily Averin wrote:
+> size of sem_undo can exceed one page and with the maximum possible
+> nsems = 32000 it can grow up to 64Kb. Let's switch its allocation
+> to kvmalloc to avoid user-triggered disruptive actions like OOM killer
+> in case of high-order memory shortage.
+> 
+> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-Reviewed-by: Shakeel Butt <shakeelb@google.com>
+Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
