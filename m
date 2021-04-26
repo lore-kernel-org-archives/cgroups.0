@@ -1,83 +1,38 @@
-From: Abel Wu <wuyun.abel@bytedance.com>
-Subject: [PATCH 3/3] docs/admin-guide/cgroup-v2: add cpuset.mems.migration
-Date: Mon, 26 Apr 2021 14:59:46 +0800
-Message-ID: <20210426065946.40491-4-wuyun.abel@bytedance.com>
-References: <20210426065946.40491-1-wuyun.abel@bytedance.com>
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: [PATCH 0/2] ipc: allocations cleanup
+Date: Mon, 26 Apr 2021 13:18:01 +0300
+Message-ID: <ebc3ac79-3190-520d-81ce-22ad194986ec@virtuozzo.com>
+References: <e67f2a95-4b01-9db2-fe47-0b2210f0b138@virtuozzo.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance-com.20150623.gappssmtp.com; s=20150623;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=SfF/Z0ScslK5LaLkBhpaNHR++tEupceqm51lspaZqiM=;
-        b=0i9nIWEJj9GpgmwDenmDPUoRWsFexvOFaT+BUwCnkkTJB+KggV7EM95SvP/FIHknUT
-         OJdeK9AduA5wcmvM8cbrNSN3YxfhLD0Ib9/gHGWwTDLfElVl2TVHo59+PlUjZXwWbKXn
-         g34ffK1upYiGkve9TcgSCFheOQoFet00lvgYTSy76AS3IfROqU5uXI8ICbiFPg9jDG4g
-         2p9kPKgAc/HLRmNmSrHHyvu8BznKlDrqvvh0eyyB15I2bdRy0CmVsufO9jHXl3LVnQam
-         RFh/sPCgsHU7lLUh91NE99fh0cdns99W4GJ+YvzguW4sWEQgMGtMyfqGqoIx0mE7zwqU
-         Uo0g==
-In-Reply-To: <20210426065946.40491-1-wuyun.abel@bytedance.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
+        :From; bh=bS7qJCt+apou1io9EP23fTA+ismXHEBNwUulXjfdPVc=; b=V2aHQIRfxkj2C8JYCW1
+        Xdjs8pF7wKtVSDoELvOh/RFwlqsae9Dqmm8vtmLAkEhzGI3q5f0mGU3RnF8qdWtEIb9Cep2vLJwtp
+        dOkPOTieBEBVyNLrF17DZtRKDEF1wvZuQFSQh6KJcVBZDYCdpSywmJJC1H8FbyvsJdkbrDksIQM=
+In-Reply-To: <e67f2a95-4b01-9db2-fe47-0b2210f0b138-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: akpm@linux-foundation.org, lizefan.x@bytedance.com, tj@kernel.org, hannes@cmpxchg.org, corbet@lwn.net
-Cc: cgroups@vger.kernel.org, linux-mm@kvack.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, Abel Wu <wuyun.abel@bytedance.com>
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dmitry Safonov <0x7f454c46-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Add docs for new interface cpuset.mems.migration, most of which
-are stolen from cpuset(7) manpages.
+Some ipc objects use the wrong allocation functions: small objects can use kmalloc(),
+and vice versa, potentially large objects can use kmalloc().
 
-Signed-off-by: Abel Wu <wuyun.abel@bytedance.com>
----
- Documentation/admin-guide/cgroup-v2.rst | 36 +++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+I think it's better to handle these patches via cgroups@ to avoid merge conflicts
+with my patches that include accounting for ipc objects.
 
-diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
-index b1e81aa8598a..abf6589a390d 100644
---- a/Documentation/admin-guide/cgroup-v2.rst
-+++ b/Documentation/admin-guide/cgroup-v2.rst
-@@ -2079,6 +2079,42 @@ Cpuset Interface Files
- 	Changing the partition state of an invalid partition root to
- 	"member" is always allowed even if child cpusets are present.
- 
-+  cpuset.mems.migration
-+	A read-write single value file which exists on non-root
-+	cpuset-enabled cgroups.
-+
-+	Only the following migration modes are defined.
-+
-+	  ========	==========================================
-+	  "none"	migration disabled [default]
-+	  "sync"	move pages to cpuset nodes synchronously
-+	  "lazy"	move pages to cpuset nodes on second touch
-+	  ========	==========================================
-+
-+	By default, "none" mode is enabled. In this mode, once a page
-+	is allocated (given a physical page of main memory) then that
-+	page stays on whatever node it was allocated, so long as it
-+	remains allocated, even if the cpusets memory placement policy
-+	'cpuset.mems' subsequently changes.
-+
-+	If "sync" mode is enabled in a cpuset, when the 'cpuset.mems'
-+	setting is changed, any memory page in use by any process in
-+	the cpuset that is on a memory node that is no longer allowed
-+	will be migrated to a memory node that is allowed synchronously.
-+	The relative placement of a migrated page within the cpuset is
-+	preserved during these migration operations if possible.
-+
-+	The "lazy" mode is almost the same as "sync" mode, except that
-+	it doesn't move the pages right away. Instead it sets these
-+	pages to protnone, and numa faults triggered by second touching
-+	these pages will handle the movement.
-+
-+	Furthermore, if a process is moved into a cpuset with migration
-+	enabled ("sync" or "lazy" enabled), any memory pages it uses
-+	that on memory nodes allowed in its previous cpuset, but which
-+	are not allowed in its new cpuset, will be migrated to a memory
-+	node allowed in the new cpuset.
-+
- 
- Device controller
- -----------------
+Vasily Averin (2):
+  ipc sem: use kvmalloc for sem_undo allocation
+  ipc: use kmalloc for msg_queue and shmid_kernel
+
+ ipc/msg.c |  6 +++---
+ ipc/sem.c | 10 +++++-----
+ ipc/shm.c |  6 +++---
+ 3 files changed, 11 insertions(+), 11 deletions(-)
+
 -- 
-2.31.1
+1.8.3.1
 
