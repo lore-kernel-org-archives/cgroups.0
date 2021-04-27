@@ -1,63 +1,83 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC PATCH] cgroup: add cgroup.signal
-Date: Tue, 27 Apr 2021 10:29:00 -0400
-Message-ID: <YIgfrP5J3aXHfM1i@slm.duckdns.org>
-References: <20210423171351.3614430-1-brauner@kernel.org>
- <YIcOZEbvky7hGbR1@blackbook>
- <20210427093606.kygcgb74otakofes@wittgenstein>
+Subject: Re: [PATCH 2/3] cgroup/cpuset: introduce cpuset.mems.migration
+Date: Tue, 27 Apr 2021 10:43:31 -0400
+Message-ID: <YIgjE6CgU4nDsJiR@slm.duckdns.org>
+References: <20210426065946.40491-1-wuyun.abel@bytedance.com>
+ <20210426065946.40491-3-wuyun.abel@bytedance.com>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=UMKXl6Gx8KBkOWI3gUemjqjUZmjyHB6+YGIl3pR8iV4=;
-        b=UjHG5sqhBTRbA7JGAGdLtiLjXzdXOPVB91HOJnd9Af9EJt2ivK+cpHpMc3DF1jMCYh
-         cscFht7exVuPnY5gdsxHMWXu9ox7qddVgaVG/Rwlb6lSMgX+iH0bZe/tY7rnHN6paJDg
-         v8fFOwLI0CKePjTVtutLeCXTUqPuJAkf+xxTozM+HCfL4a6beD8aDNgdnQjUyNwKQqKq
-         vtqDsHr1w6MShr+Ak4P9NT3ZzOCrG05utQj1creMV5Ltll51StvIU1J3PYRElodrEv+j
-         OaExalWKtGxF5yUOogdCsGVH1IFYYnQrEQBF/BD1uy+4fCeIhwOL0wVzYhVGCyx2JzvG
-         IpHA==
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=LjEjIzfJA5KpJv/2vrQIbqJyINd5uBvKHBOwXFK4cmg=;
+        b=UfjKZXQgIFJ/QoFLh4LdDInp1ZFrKTBWFrDnfd9PYx50iwg7P4068CGLxLxyqvB6HR
+         E5zPZ+36iFhlDwhZWQ5hljKXDXdRrzQq9kHdktL3oQ77hML0nySMN3kUELGojr2B/ZyR
+         Y2lLPGmylOXLTwPt79TlAhSGPBfCzeuGWj59Hfvs35GWmeyspiP1g04ozHoQVsh/oNqW
+         RPmwxkbA2Hfyckn9PULtvNVHNcvotFHbUisOfJAKV4k5tdoUtKUMKS+8Ai8VZu1yzrQX
+         DQAgxK1PgW37F/ZH9XO8H4K8ZygoSh8DnVwmIo0PHtd015RSc99y5kqLcvFdk0D3mcAH
+         YKWg==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20210427093606.kygcgb74otakofes@wittgenstein>
+In-Reply-To: <20210426065946.40491-3-wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
-Cc: Michal =?iso-8859-1?Q?Koutn=FD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"
+To: Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
+Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 Hello,
 
-On Tue, Apr 27, 2021 at 11:36:06AM +0200, Christian Brauner wrote:
-> I thought about this optimization but (see below) given that it should
-> work with threaded cgroups we can't only walk thread-group leaders,
-> afaiu.
+On Mon, Apr 26, 2021 at 02:59:45PM +0800, Abel Wu wrote:
+> When a NUMA node is assigned to numa-service, the workload
+> on that node needs to be moved away fast and complete. The
+> main aspects we cared about on the eviction are as follows:
+>=20
+> a) it should complete soon enough so that numa-services
+>    won=E2=80=99t wait too long to hurt user experience
+> b) the workloads to be evicted could have massive usage on
+>    memory, and migrating such amount of memory may lead to
+>    a sudden severe performance drop lasting tens of seconds
+>    that some certain workloads may not afford
+> c) the impact of the eviction should be limited within the
+>    source and destination nodes
+> d) cgroup interface is preferred
+>=20
+> So we come to a thought that:
+>=20
+> 1) fire up numa-services without waiting for memory migration
+> 2) memory migration can be done asynchronously by using spare
+>    memory bandwidth
+>=20
+> AutoNUMA seems to be a solution, but its scope is global which
+> violates c&d. And cpuset.memory_migrate performs in a synchronous
 
-CSS_TASK_ITER_PROCS|CSS_TASK_ITER_THREADED iterates all thread group leaders
-in the threaded domain and is used to implement cgroup.procs. This should
-work, right?
+I don't think d) in itself is a valid requirement. How does it violate c)?
 
-> > > @@ -4846,6 +4916,11 @@ static struct cftype cgroup_base_files[] = {
-> > > +	{
-> > > +		.name = "cgroup.signal",
-> > > +		.flags = CFTYPE_NOT_ON_ROOT,
-> > > +		.write = cgroup_signal_write,
-> > 
-> > I think this shouldn't be visible in threaded cgroups (or return an
-> > error when attempting to kill those).
-> 
-> I've been wondering about this too but then decided to follow freezer in
-> that regard. I think it should also be fine because a kill to a thread
-> will cause the whole thread-group to be taken down which arguably is the
-> semantics we want anyway.
+> fashion which breaks a&b. So a mixture of them, the new cgroup2
+> interface cpuset.mems.migration, is introduced.
+>=20
+> The new cpuset.mems.migration supports three modes:
+>=20
+>  - "none" mode, meaning migration disabled
+>  - "sync" mode, which is exactly the same as the cgroup v1
+>    interface cpuset.memory_migrate
+>  - "lazy" mode, when walking through all the pages, unlike
+>    cpuset.memory_migrate, it only sets pages to protnone,
+>    and numa faults triggered by later touch will handle the
+>    movement.
 
-I'd align it with cgroup.procs. Killing is a process-level operation (unlike
-arbitrary signal delivery which I think is another reason to confine this to
-killing) and threaded cgroups should be invisible to process-level
-operations.
+cpuset is already involved in NUMA allocation but it always felt like
+something bolted on - it's weird to have cpu to NUMA node settings at global
+level and then to have possibly conflicting direct NUMA configuration via
+cpuset. My preference would be putting as much configuration as possible on
+the mm / autonuma side and let cpuset's node confinements further restrict
+their operations rather than cpuset having its own set of policy
+configurations.
+
+Johannes, what are your thoughts?
 
 Thanks.
 
--- 
+--=20
 tejun
