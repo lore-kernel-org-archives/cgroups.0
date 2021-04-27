@@ -1,83 +1,83 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/3] cgroup/cpuset: introduce cpuset.mems.migration
-Date: Tue, 27 Apr 2021 10:43:31 -0400
-Message-ID: <YIgjE6CgU4nDsJiR@slm.duckdns.org>
-References: <20210426065946.40491-1-wuyun.abel@bytedance.com>
- <20210426065946.40491-3-wuyun.abel@bytedance.com>
+Subject: [GIT PULL] cgroup changes for v5.13-rc1
+Date: Tue, 27 Apr 2021 10:56:15 -0400
+Message-ID: <YIgmD4t2UM7lSXYz@slm.duckdns.org>
 Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=LjEjIzfJA5KpJv/2vrQIbqJyINd5uBvKHBOwXFK4cmg=;
-        b=UfjKZXQgIFJ/QoFLh4LdDInp1ZFrKTBWFrDnfd9PYx50iwg7P4068CGLxLxyqvB6HR
-         E5zPZ+36iFhlDwhZWQ5hljKXDXdRrzQq9kHdktL3oQ77hML0nySMN3kUELGojr2B/ZyR
-         Y2lLPGmylOXLTwPt79TlAhSGPBfCzeuGWj59Hfvs35GWmeyspiP1g04ozHoQVsh/oNqW
-         RPmwxkbA2Hfyckn9PULtvNVHNcvotFHbUisOfJAKV4k5tdoUtKUMKS+8Ai8VZu1yzrQX
-         DQAgxK1PgW37F/ZH9XO8H4K8ZygoSh8DnVwmIo0PHtd015RSc99y5kqLcvFdk0D3mcAH
-         YKWg==
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=NnSA+nWh0rBNTmeoPOnQ0TPq2BsER9tVNRP8Acu7TPc=;
+        b=Klrrv9sBhGLpydc+azHgNuqL7vDvN9teKG9RkVbuqgJP81giP/YgVK3DmRnWBNIADw
+         5GOMNf36NeA2qawEPgt8o45VsQWr6zSvGT/aaYp4OqykAkIigQvg+0ATahCfX16sVQ+e
+         Eqr+URa6kXlw95BD8T3qhZ0qk9+eSwH1VkGzDb5tyRWqMUzNQtdTGLmnCf/d/W3EP3y2
+         lwrE5hh1kaZ3UqDUSfG2pbXI8OZmRTnDjWpqAE9CYpWBfvIzfSwg2niE8dCgOVv2egVs
+         dzhnipYLxB0wIb5m0u16xgwvHXnG0oq6bszm9UOulXC20pu+0mp2u6uZgazMHgQSBZAu
+         zurQ==
 Sender: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20210426065946.40491-3-wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="windows-1252"
-To: Abel Wu <wuyun.abel-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>
-Cc: akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org, hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>
 
-Hello,
+Hello, Linus.
 
-On Mon, Apr 26, 2021 at 02:59:45PM +0800, Abel Wu wrote:
-> When a NUMA node is assigned to numa-service, the workload
-> on that node needs to be moved away fast and complete. The
-> main aspects we cared about on the eviction are as follows:
->=20
-> a) it should complete soon enough so that numa-services
->    won=E2=80=99t wait too long to hurt user experience
-> b) the workloads to be evicted could have massive usage on
->    memory, and migrating such amount of memory may lead to
->    a sudden severe performance drop lasting tens of seconds
->    that some certain workloads may not afford
-> c) the impact of the eviction should be limited within the
->    source and destination nodes
-> d) cgroup interface is preferred
->=20
-> So we come to a thought that:
->=20
-> 1) fire up numa-services without waiting for memory migration
-> 2) memory migration can be done asynchronously by using spare
->    memory bandwidth
->=20
-> AutoNUMA seems to be a solution, but its scope is global which
-> violates c&d. And cpuset.memory_migrate performs in a synchronous
-
-I don't think d) in itself is a valid requirement. How does it violate c)?
-
-> fashion which breaks a&b. So a mixture of them, the new cgroup2
-> interface cpuset.mems.migration, is introduced.
->=20
-> The new cpuset.mems.migration supports three modes:
->=20
->  - "none" mode, meaning migration disabled
->  - "sync" mode, which is exactly the same as the cgroup v1
->    interface cpuset.memory_migrate
->  - "lazy" mode, when walking through all the pages, unlike
->    cpuset.memory_migrate, it only sets pages to protnone,
->    and numa faults triggered by later touch will handle the
->    movement.
-
-cpuset is already involved in NUMA allocation but it always felt like
-something bolted on - it's weird to have cpu to NUMA node settings at global
-level and then to have possibly conflicting direct NUMA configuration via
-cpuset. My preference would be putting as much configuration as possible on
-the mm / autonuma side and let cpuset's node confinements further restrict
-their operations rather than cpuset having its own set of policy
-configurations.
-
-Johannes, what are your thoughts?
+The only notable change is Vipin's new misc cgroup controller. This
+implements generic support for resources which can be controlled by simply
+counting and limiting the number of resource instances - ie. there's X
+number of these on the system and this cgroup subtree can have upto Y of
+those. The first user is the address space IDs used for virtual machine
+memory encryption and expected future usages are similar - niche hardware
+features with concrete resource limits and simple usage models.
 
 Thanks.
 
---=20
+The following changes since commit 2023a53bdf41b7646b1d384b6816af06309f73a5:
+
+  Merge tag 'for-linus' of git://github.com/openrisc/linux (2021-04-03 15:42:45 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git for-5.13
+
+for you to fetch changes up to ffeee417d97f9171bce9f43c22c9f477e4c84f54:
+
+  cgroup: use tsk->in_iowait instead of delayacct_is_task_waiting_on_io() (2021-04-16 16:49:37 -0400)
+
+----------------------------------------------------------------
+Chunguang Xu (1):
+      cgroup: use tsk->in_iowait instead of delayacct_is_task_waiting_on_io()
+
+Lu Jialin (1):
+      cgroup/cpuset: fix typos in comments
+
+Tejun Heo (1):
+      cgroup: misc: mark dummy misc_cg_res_total_usage() static inline
+
+Vipin Sharma (3):
+      cgroup: Add misc cgroup controller
+      cgroup: Miscellaneous cgroup documentation.
+      svm/sev: Register SEV and SEV-ES ASIDs to the misc controller
+
+ Documentation/admin-guide/cgroup-v1/index.rst |   1 +
+ Documentation/admin-guide/cgroup-v1/misc.rst  |   4 +
+ Documentation/admin-guide/cgroup-v2.rst       |  73 ++++-
+ arch/x86/kvm/svm/sev.c                        |  70 ++++-
+ arch/x86/kvm/svm/svm.h                        |   1 +
+ include/linux/cgroup_subsys.h                 |   4 +
+ include/linux/misc_cgroup.h                   | 132 +++++++++
+ init/Kconfig                                  |  14 +
+ kernel/cgroup/Makefile                        |   1 +
+ kernel/cgroup/cgroup-v1.c                     |   2 +-
+ kernel/cgroup/cpuset.c                        |   6 +-
+ kernel/cgroup/misc.c                          | 407 ++++++++++++++++++++++++++
+ 12 files changed, 699 insertions(+), 16 deletions(-)
+ create mode 100644 Documentation/admin-guide/cgroup-v1/misc.rst
+ create mode 100644 include/linux/misc_cgroup.h
+ create mode 100644 kernel/cgroup/misc.c
+
+-- 
 tejun
