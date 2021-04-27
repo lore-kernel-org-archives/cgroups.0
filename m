@@ -1,109 +1,75 @@
-From: Odin Ugedal <odin-lVFEcm3hDZTQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 0/1] sched/fair: Fix unfairness caused by missing load decay
-Date: Tue, 27 Apr 2021 10:36:23 +0200
-Message-ID: <CAFpoUr2t0OXLJZi9wJzYg2uOhSLfwRa7sxCxxWzriJgXDsgEdA@mail.gmail.com>
-References: <20210425080902.11854-1-odin@uged.al> <CAKfTPtBHm+CjBTA614P9F2Vx3Bj7vv9Pt0CGFsiwqcrTFmKzjg@mail.gmail.com>
+From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH] cgroup: add cgroup.signal
+Date: Tue, 27 Apr 2021 11:36:06 +0200
+Message-ID: <20210427093606.kygcgb74otakofes@wittgenstein>
+References: <20210423171351.3614430-1-brauner@kernel.org>
+ <YIcOZEbvky7hGbR1@blackbook>
 Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ugedal.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=zh33Yh7lW0dlBQiRgpyt2psV9Y8igA+5UjDIZx32BfY=;
-        b=R80hr1wa0Mn4k9VnGUbjc2R4cixMJ5ZgNIsARabk5tPMu6Xepea/w5ho7Xc+BrYwxe
-         RzVMetIIjm8bZYHV94xbetqPI3rgYcmAT7Nrf8Dq39rGvxBcqXoeXnQ7GesBx3HvsUES
-         y8tiElerXVsLUim5FOz5JOxbTJoBMrtc63Y/8T+OOTjI7PYvJ0/xb4rO/cOynbxkZZUf
-         EyqUNqvy6ym8veTJ9KzmuW0L/PJlrPuQ9zJAejiUYWsuDsIUEffKgPUIlE7cYyTAucyZ
-         MW76yf/Qz4jtb3+hk6kV9THp4URfVjGSiTN+UZmk55DKeUifX6PsQ7ZTvUmp9qKKJ+Gl
-         J5yQ==
-In-Reply-To: <CAKfTPtBHm+CjBTA614P9F2Vx3Bj7vv9Pt0CGFsiwqcrTFmKzjg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <YIcOZEbvky7hGbR1@blackbook>
 List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-To: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+To: Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>
+Cc: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Also, instead of bpftrace, one can look at the /proc/sched_debug file,
-and infer from there.
+On Mon, Apr 26, 2021 at 09:03:00PM +0200, Michal Koutn=C3=BD wrote:
+> On Fri, Apr 23, 2021 at 07:13:51PM +0200, Christian Brauner <brauner-DgEj=
+T+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> > +static void __cgroup_signal(struct cgroup *cgrp, int signr)
+> > +{
+> > +	struct css_task_iter it;
+> > +	struct task_struct *task;
+> > +
+> > +	lockdep_assert_held(&cgroup_mutex);
+> > +
+> > +	css_task_iter_start(&cgrp->self, 0, &it);
+>=20
+> I think here you'd need CSS_TASK_ITER_PROCS here to avoid signalling
+> multithreaded processes multiple times? (OTOH, with commiting just to
+> SIGKILL this may be irrelevant.)
 
-Something like:
+I thought about this optimization but (see below) given that it should
+work with threaded cgroups we can't only walk thread-group leaders,
+afaiu.
+Instead I tried to rely on __fatal_signal_pending(). If any thread in a
+thread-group leader catches SIGKILL it'll set the signal as pending for
+each thread in the thread-group and __fatal_signal_pending() should
+therefore be enough to skip useless send_sig() calls.
 
-$ cat /proc/sched_debug | grep ":/slice" -A 28 | egrep "(:/slice)|load_avg"
+>=20
+> > +static void cgroup_signal(struct cgroup *cgrp, int signr)
+> > [...]
+> > +	read_lock(&tasklist_lock);
+>=20
+> (Thinking loudly.)
+> I wonder if it's possible to get rid of this? A similar check that
+> freezer does in cgroup_post_fork() but perhaps in cgroup_can_fork(). The
+> fork/clone would apparently fail for the soon-to-die parent but there's
+> already similar error path returning ENODEV (heh, the macabrous name
+> cgroup_is_dead() is already occupied).
+>=20
+> This way the cgroup-killer wouldn't unncessarily preempt tasklist_lock
+> exclusive requestors system-wide.
 
-gives me the output (when one stress proc gets 99%, and the other one 1%):
+Good point. I've been playing with revamping this whole thing. We should
+definitely do a post_fork() check too though but that's fairly cheap if
+we simply introduce a simple CGRP_KILL flag and set it prior to killing
+the cgroup.
 
-cfs_rq[0]:/slice/cg-2/sub
-  .load_avg                      : 1023
-  .removed.load_avg              : 0
-  .tg_load_avg_contrib           : 1035
-  .tg_load_avg                   : 1870
-  .se->avg.load_avg              : 56391
-cfs_rq[0]:/slice/cg-1/sub
-  .load_avg                      : 1023
-  .removed.load_avg              : 0
-  .tg_load_avg_contrib           : 1024
-  .tg_load_avg                   : 1847
-  .se->avg.load_avg              : 4
-cfs_rq[0]:/slice/cg-1
-  .load_avg                      : 4
-  .removed.load_avg              : 0
-  .tg_load_avg_contrib           : 4
-  .tg_load_avg                   : 794
-  .se->avg.load_avg              : 5
-cfs_rq[0]:/slice/cg-2
-  .load_avg                      : 56401
-  .removed.load_avg              : 0
-  .tg_load_avg_contrib           : 56700
-  .tg_load_avg                   : 57496
-  .se->avg.load_avg              : 1008
-cfs_rq[0]:/slice
-  .load_avg                      : 1015
-  .removed.load_avg              : 0
-  .tg_load_avg_contrib           : 1009
-  .tg_load_avg                   : 2314
-  .se->avg.load_avg              : 447
+>=20
+>=20
+> > @@ -4846,6 +4916,11 @@ static struct cftype cgroup_base_files[] =3D {
+> > +	{
+> > +		.name =3D "cgroup.signal",
+> > +		.flags =3D CFTYPE_NOT_ON_ROOT,
+> > +		.write =3D cgroup_signal_write,
+>=20
+> I think this shouldn't be visible in threaded cgroups (or return an
+> error when attempting to kill those).
 
-
-As can be seen here, no other cfs_rq for the relevant cgroups are
-"active" and listed, but they still contribute to eg. the "tg_load_avg". In this
-example, "cfs_rq[0]:/slice/cg-1" has a load_avg of 4, and contributes with 4 to
-tg_load_avg.  However, the total total tg_load_avg is 794. That means
-that the other 790 have to come from somewhere, and in this example,
-they come from the cfs_rq on another cpu.
-
-Hopefully that clarified a bit.
-
-For reference, here is the output when the issue is not occuring:
-cfs_rq[1]:/slice/cg-2/sub
-  .load_avg                      : 1024
-  .removed.load_avg              : 0
-  .tg_load_avg_contrib           : 1039
-  .tg_load_avg                   : 1039
-  .se->avg.load_avg              : 1
-cfs_rq[1]:/slice/cg-1/sub
-  .load_avg                      : 1023
-  .removed.load_avg              : 0
-  .tg_load_avg_contrib           : 1034
-  .tg_load_avg                   : 1034
-  .se->avg.load_avg              : 49994
-cfs_rq[1]:/slice/cg-1
-  .load_avg                      : 49998
-  .removed.load_avg              : 0
-  .tg_load_avg_contrib           : 49534
-  .tg_load_avg                   : 49534
-  .se->avg.load_avg              : 1023
-cfs_rq[1]:/slice/cg-2
-  .load_avg                      : 1
-  .removed.load_avg              : 0
-  .tg_load_avg_contrib           : 1
-  .tg_load_avg                   : 1
-  .se->avg.load_avg              : 1023
-cfs_rq[1]:/slice
-  .load_avg                      : 2048
-  .removed.load_avg              : 0
-  .tg_load_avg_contrib           : 2021
-  .tg_load_avg                   : 2021
-  .se->avg.load_avg              : 1023
-
-
-Odin
+I've been wondering about this too but then decided to follow freezer in
+that regard. I think it should also be fine because a kill to a thread
+will cause the whole thread-group to be taken down which arguably is the
+semantics we want anyway.
