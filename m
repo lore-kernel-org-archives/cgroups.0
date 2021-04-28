@@ -1,170 +1,55 @@
-From: kernel test robot <lkp-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: [cgroup:test-merge-for-5.13] BUILD SUCCESS
- 0def337b7d52bca20d0556fb8dc8797c540f5fc8
-Date: Wed, 28 Apr 2021 11:45:47 +0800
-Message-ID: <6088da6b.MtHdBq+KhtOFSJX4%lkp@intel.com>
+From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Subject: Re: [PATCH 2/2] ipc: use kmalloc for msg_queue and shmid_kernel
+Date: Wed, 28 Apr 2021 08:15:10 +0300
+Message-ID: <70805e05-5e56-2ab9-2654-3d48e9fe5a0a@virtuozzo.com>
+References: <e67f2a95-4b01-9db2-fe47-0b2210f0b138@virtuozzo.com>
+ <b0845b85-f4fe-601d-3328-d707d7db27f5@virtuozzo.com>
+ <YIaVKi+0VMrz5LGD@dhcp22.suse.cz>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:From:
+        Subject; bh=0gJMy7DqAS1eYRTK9B131Vy4K+YMVwWNOR4yrE6X82I=; b=lvTFouv53BEh8mHyG
+        NY7phcbGM0CieM5FyKUvFOhGkYhy9YpaXThdBSSwtS+55DAF1oe2Tf1w5GoChA6P4wWw8jBtBKm8H
+        dNK0NijqbVaj0q9VRVxslSW4Cnu0YuCBEUgfpXxqTJh70FnrJu64+7td8LHRzhWHt8DC5+9slwvdc
+        =;
+In-Reply-To: <YIaVKi+0VMrz5LGD-2MMpYkNvuYDjFM9bn6wA6Q@public.gmane.org>
+Content-Language: en-US
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dmitry Safonov <0x7f454c46-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/tj/cgroup.git test-merge-for-5.13
-branch HEAD: 0def337b7d52bca20d0556fb8dc8797c540f5fc8  Merge branch 'for-5.13' into tes-merge-for-5.13
+On 4/26/21 1:25 PM, Michal Hocko wrote:
+> Using kvmalloc for sub page size objects is suboptimal because kmalloc
+> can easily fallback into vmalloc under memory pressure and smaller
+> objects would fragment memory. Therefore replace kvmalloc by a simple
+> kmalloc.
 
-elapsed time: 723m
+I think you're wrong here:
+kvmalloc can failback to vmalloc for size > PAGE_SIZE only
 
-configs tested: 139
-configs skipped: 2
+Please take look at mm/util.c::kvmalloc_node()
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+        if (size > PAGE_SIZE) {
+                kmalloc_flags |= __GFP_NOWARN;
 
-gcc tested configs:
-arm                                 defconfig
-arm64                            allyesconfig
-arm64                               defconfig
-arm                              allyesconfig
-arm                              allmodconfig
-riscv                            allmodconfig
-x86_64                           allyesconfig
-i386                             allyesconfig
-riscv                            allyesconfig
-sh                             sh03_defconfig
-powerpc                 mpc837x_mds_defconfig
-microblaze                          defconfig
-parisc                           allyesconfig
-arm                      pxa255-idp_defconfig
-sh                         ecovec24_defconfig
-powerpc                 mpc836x_mds_defconfig
-m68k                        m5407c3_defconfig
-mips                           mtx1_defconfig
-powerpc                    mvme5100_defconfig
-powerpc                      ppc40x_defconfig
-mips                        nlm_xlr_defconfig
-mips                        bcm47xx_defconfig
-h8300                            alldefconfig
-sh                 kfr2r09-romimage_defconfig
-arm                        spear6xx_defconfig
-powerpc                          g5_defconfig
-m68k                          sun3x_defconfig
-m68k                        m5272c3_defconfig
-arm                         socfpga_defconfig
-openrisc                  or1klitex_defconfig
-parisc                generic-64bit_defconfig
-arm                         nhk8815_defconfig
-arm                  colibri_pxa300_defconfig
-xtensa                    xip_kc705_defconfig
-sh                         apsh4a3a_defconfig
-arm                           stm32_defconfig
-s390                             alldefconfig
-mips                      maltaaprp_defconfig
-arc                                 defconfig
-arc                              allyesconfig
-mips                            ar7_defconfig
-mips                       capcella_defconfig
-arm                          moxart_defconfig
-arm                          pcm027_defconfig
-arm                           tegra_defconfig
-xtensa                       common_defconfig
-sh                           se7721_defconfig
-powerpc                    amigaone_defconfig
-m68k                        m5307c3_defconfig
-powerpc                      arches_defconfig
-mips                             allmodconfig
-powerpc                   bluestone_defconfig
-arm                       mainstone_defconfig
-arm                   milbeaut_m10v_defconfig
-powerpc                     tqm8548_defconfig
-arm                         cm_x300_defconfig
-arm                        clps711x_defconfig
-sh                           se7712_defconfig
-mips                         mpc30x_defconfig
-mips                  decstation_64_defconfig
-sh                          urquell_defconfig
-riscv             nommu_k210_sdcard_defconfig
-m68k                           sun3_defconfig
-riscv                            alldefconfig
-m68k                         amcore_defconfig
-sh                  sh7785lcr_32bit_defconfig
-openrisc                 simple_smp_defconfig
-arc                          axs103_defconfig
-ia64                             allmodconfig
-ia64                                defconfig
-ia64                             allyesconfig
-m68k                             allmodconfig
-m68k                                defconfig
-m68k                             allyesconfig
-nios2                               defconfig
-nds32                             allnoconfig
-nds32                               defconfig
-nios2                            allyesconfig
-csky                                defconfig
-alpha                               defconfig
-alpha                            allyesconfig
-xtensa                           allyesconfig
-h8300                            allyesconfig
-sh                               allmodconfig
-parisc                              defconfig
-s390                             allyesconfig
-s390                             allmodconfig
-s390                                defconfig
-sparc                            allyesconfig
-sparc                               defconfig
-i386                                defconfig
-mips                             allyesconfig
-powerpc                          allyesconfig
-powerpc                          allmodconfig
-powerpc                           allnoconfig
-i386                 randconfig-a005-20210426
-i386                 randconfig-a002-20210426
-i386                 randconfig-a001-20210426
-i386                 randconfig-a006-20210426
-i386                 randconfig-a004-20210426
-i386                 randconfig-a003-20210426
-x86_64               randconfig-a015-20210426
-x86_64               randconfig-a016-20210426
-x86_64               randconfig-a011-20210426
-x86_64               randconfig-a014-20210426
-x86_64               randconfig-a012-20210426
-x86_64               randconfig-a013-20210426
-i386                 randconfig-a014-20210426
-i386                 randconfig-a012-20210426
-i386                 randconfig-a011-20210426
-i386                 randconfig-a013-20210426
-i386                 randconfig-a015-20210426
-i386                 randconfig-a016-20210426
-x86_64               randconfig-a002-20210427
-x86_64               randconfig-a004-20210427
-x86_64               randconfig-a001-20210427
-x86_64               randconfig-a006-20210427
-x86_64               randconfig-a005-20210427
-x86_64               randconfig-a003-20210427
-riscv                    nommu_k210_defconfig
-riscv                    nommu_virt_defconfig
-riscv                             allnoconfig
-riscv                               defconfig
-riscv                          rv32_defconfig
-um                               allmodconfig
-um                                allnoconfig
-um                               allyesconfig
-um                                  defconfig
-x86_64                    rhel-8.3-kselftests
-x86_64                              defconfig
-x86_64                               rhel-8.3
-x86_64                      rhel-8.3-kbuiltin
-x86_64                                  kexec
+                if (!(kmalloc_flags & __GFP_RETRY_MAYFAIL))
+                        kmalloc_flags |= __GFP_NORETRY;
+        }
 
-clang tested configs:
-x86_64               randconfig-a002-20210426
-x86_64               randconfig-a004-20210426
-x86_64               randconfig-a001-20210426
-x86_64               randconfig-a006-20210426
-x86_64               randconfig-a005-20210426
-x86_64               randconfig-a003-20210426
+        ret = kmalloc_node(size, kmalloc_flags, node);
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
+        /*
+         * It doesn't really make sense to fallback to vmalloc for sub page
+         * requests
+         */
+        if (ret || size <= PAGE_SIZE)
+                return ret;
+
+        return __vmalloc_node(size, 1, flags, node,
+                        __builtin_return_address(0));
+
+For small objects kvmalloc is not much different just from kmalloc,
+so the patch is mostly cosmetic.
