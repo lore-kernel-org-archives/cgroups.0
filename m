@@ -1,76 +1,103 @@
 From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH V4 05/18] iommu/ioasid: Redefine IOASID set and
  allocation APIs
-Date: Wed, 28 Apr 2021 15:41:23 -0300
-Message-ID: <20210428184123.GW1370958@nvidia.com>
-References: <20210421230301.GP1370958@nvidia.com>
- <20210422111337.6ac3624d@redhat.com>
- <20210422175715.GA1370958@nvidia.com>
- <20210422133747.23322269@redhat.com>
- <20210422200024.GC1370958@nvidia.com>
- <20210422163808.2d173225@redhat.com>
- <20210422233950.GD1370958@nvidia.com>
- <YIecXkaEGNgICePO@yekko.fritz.box>
- <20210427171212.GD1370958@nvidia.com>
- <MWHPR11MB1886C9199AA3F00FF72ACB508C409@MWHPR11MB1886.namprd11.prod.outlook.com>
+Date: Wed, 28 Apr 2021 17:46:06 -0300
+Message-ID: <20210428204606.GX1370958@nvidia.com>
+References: <20210421175203.GN1370958@nvidia.com>
+ <20210421133312.15307c44@redhat.com>
+ <20210421230301.GP1370958@nvidia.com>
+ <MWHPR11MB1886188698A6E20338196F788C469@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210422121020.GT1370958@nvidia.com>
+ <MWHPR11MB1886E688D2128C98A1F240B18C459@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210423114944.GF1370958@nvidia.com>
+ <MWHPR11MB18861FE6982D73AFBF173E048C439@MWHPR11MB1886.namprd11.prod.outlook.com>
+ <20210426123817.GQ1370958@nvidia.com>
+ <MWHPR11MB188625137D5B7423822396C88C409@MWHPR11MB1886.namprd11.prod.outlook.com>
 Mime-Version: 1.0
-Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: base64
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=gMfmm1azbuIlsXCXTeGTugB3LpP6zMt1PjDKaXST7PA=;
- b=fMLBMOkBCvSgDFRgfCWPqAajG2U53d/nIUY6+cMmNLyrlDufyCB/TY07W6ymzNif6+wi7IylHN3zujuMF2gpAqdI9eILAmQroCQY3mRz37R0oHhymyy4JKNN5DFkyAmkwMg+95G+SGe2bZNV6oTdidK3sbagmyNWAwSK0s91q303Evnl7SRyBbvyGvCxBQtXJlRCMgJ7Nn75npWsst5eirZhlIxzGXiNGu466W1s7s+BFueb7165gvf42/gNnrPBwN86lEHrp56Cf4IBhJWgNivxH7Jmvtys+VGhuIzz606WstV8I/IO9oSp7+wQbNjSX8IFiM6S8dQO0/WK8/vo8w==
+ bh=/fKpv9xAO7yDUmDQhi8eE8dYVFyldocMXHvUmN6E/Mc=;
+ b=dWUZedCa9MtKeKcKPCiXEQkNS/LHsw1r8ZBTtkRhU33wV7yZYwpbROnaCgmdP27dVqgl5iepVrK7QmRjaB5aNz7Z53OktyBK4rkztkyhMosn5VgNBRzOfWSVg/u+j0YxDC4/1yT+3caWKAPeH+THRSp35+2511/Z3r45gAjvZqbZgi5qfAu5ei2Yz4zzZ18ueJBSkZf7zOYAtHjCD0lGBxENRpGIvTMsOPNdwXnvjAvBlc51A+KC/TbZVWPwXjNY3X/xGBXBk+BTCLOF6OZ7+qQEDvXRqY5+KQkz18P4yE6UAMILhyQlPtxc2+XT5ns0K5n/VXWPlwB/S+fR9O6BDA==
 Content-Disposition: inline
-In-Reply-To: <MWHPR11MB1886C9199AA3F00FF72ACB508C409-4Pk8um7sDhPjKiA5vsxACZPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
-List-ID: <cgroups.vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <MWHPR11MB188625137D5B7423822396C88C409-4Pk8um7sDhPjKiA5vsxACZPPoyLQLiKMvxpqHgZTriW3zl9H0oFU5g@public.gmane.org>
+List-Id: <cgroups.vger.kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+ <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Sender: "iommu" <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
 To: "Tian, Kevin" <kevin.tian-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: David Gibson <david-xT8FGy+AXnRB3Ne2BGzF6laj5H9X9Tb+@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Liu, Yi L" <yi.l.liu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jacob Pan <jacob.jun.pan-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Auger Eric <eric.auger-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Lu Baolu <baolu.lu-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, "Raj, Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Wu, Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Jean-Philippe Brucker <jean-philippe-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Li Zefan <lizefan-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, "Jiang, Dave" <dave.jiang-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "Raj,
+ Ashok" <ashok.raj-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Jean-Philippe Brucker <jean-philippe-68IGFXMjmZ7QT0dZR+AlfA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Alex Williamson <alex.williamson-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Wu,
+ Hao" <hao.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, David Woodhouse <dwmw2-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
 
-On Wed, Apr 28, 2021 at 07:47:56AM +0000, Tian, Kevin wrote:
-> > From: Jason Gunthorpe <jgg-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> > Sent: Wednesday, April 28, 2021 1:12 AM
-> > 
-> [...]
-> > One option is VFIO can keep its group FD but nothing else will have
-> > anthing like it. However I don't much like the idea that VFIO will
-> > have a special and unique programming model to do that same things
-> > other subsystem will do. That will make it harder for userspace to
-> > implement.
-> 
-> Hi, Jason,
-> 
-> I have a question here. Based on discussions so far, it's clearly that the
-> new ioasid uAPI will differ from existing VFIO uAPI a lot, e.g. ioasid-
-> centric operations, no group fd, no incompatible domains, etc. Then 
-> I wonder how we plan to support legacy VFIO applications in this 
-> transition phase. 
-
-I suspect the VFIO group fd will have to be registered with
-/dev/ioasid in addition to each device if we are to retain the same
-model.
-
-> Earlier you ever mentioned the desire of directly replacing
-> /dev/vfio/vfio with /dev/ioasid and having ioasid to present both
-> VFIO and new uAPI. Doesn't it imply that we have to copy the VFIO
-> container/group semantics into /dev/ioasid although it's a special
-> programming model only for VFIO?
-
-I gave that as a something to think about, if it doesn't work out then
-it is just a bad idea to discard.
-
-> Alternatively we could keep all the container/group legacy within VFIO
-> and having /dev/ioasid support only the new uAPI semantics. In this case
-> VFIO will include a shim iommu backend to connect its legacy uAPI into 
-> drivers/ioasid backend functions for backward compatibility. Then VFIO
-> will also support a new model which only uses its device uAPI to bind
-> to new ioasid fd w/o using any legacy container/group/iommu uAPI.
-> Does this sound a plan? 
-
-It may be where we end up.. Though I fear it will make it overly
-complex inside VFIO to access the new stuff. It would be very nice if
-we could see a path where VFIO insides could only deal with the
-in-kernel ioasid handles, whatever they are.
-
-Jason
+T24gV2VkLCBBcHIgMjgsIDIwMjEgYXQgMDY6MzQ6MTFBTSArMDAwMCwgVGlhbiwgS2V2aW4gd3Jv
+dGU6Cgo+ID4gSWYgL2Rldi9pb2FzaWQgaXMgc2luZ2xlIEhXIHBhZ2UgdGFibGUgb25seSB0aGVu
+IEkgd291bGQgZm9jdXMgb24gdGhhdAo+ID4gaW1wbGVtZW50YXRpb24gYW5kIGxlYXZlIGl0IHRv
+IHVzZXJzcGFjZSB0byBzcGFuIGRpZmZlcmVudAo+ID4gL2Rldi9pb2FzaWRzIGlmIG5lZWRlZC4K
+PiA+IAo+ID4gPiBPSywgbm93IEkgc2VlIHdoZXJlIHRoZSBkaXNjb25uZWN0aW9uIGNvbWVzIGZy
+b20uIEluIG15IGNvbnRleHQgaW9hc2lkCj4gPiA+IGlzIHRoZSBpZGVudGlmaWVyIHRoYXQgaXMg
+YWN0dWFsbHkgdXNlZCBpbiB0aGUgd2lyZSwgYnV0IHNlZW1zIHlvdSB0cmVhdCBpdCBhcwo+ID4g
+PiBhIHN3LWRlZmluZWQgbmFtZXNwYWNlIHB1cmVseSBmb3IgcmVwcmVzZW50aW5nIHBhZ2UgdGFi
+bGVzLiBXZSBzaG91bGQKPiA+ID4gY2xlYXIgdGhpcyBjb25jZXB0IGZpcnN0IGJlZm9yZSBmdXJ0
+aGVyIGRpc2N1c3Npbmcgb3RoZXIgZGV0YWlscy4g8J+Yigo+ID4gCj4gPiBUaGVyZSBpcyBubyBn
+ZW5lcmFsIEhXIHJlcXVpcmVtZW50IHRoYXQgZXZlcnkgSU8gcGFnZSB0YWJsZSBiZQo+ID4gcmVm
+ZXJyZWQgdG8gYnkgdGhlIHNhbWUgUEFTSUQgYW5kIHRoaXMgQVBJIHdvdWxkIGhhdmUgdG8gc3Vw
+cG9ydAo+IAo+IFllcywgYnV0IHdoYXQgaXMgdGhlIHZhbHVlIG9mIGFsbG93aW5nIG11bHRpcGxl
+IFBBU0lEcyByZWZlcnJpbmcgdG8gdGhlCj4gdGhlIHNhbWUgSS9PIHBhZ2UgdGFibGUgKGV4Y2Vw
+dCB0aGUgbmVzdGluZyBwZ3RhYmxlIGNhc2UpPyBEb2Vzbid0IGl0IAo+IGxlYWQgdG8gcG9vciBp
+b3RsYiBlZmZpY2llbmN5IGlzc3VlIHNpbWlsYXIgdG8gbXVsdGlwbGUgaW9tbXUgZG9tYWlucyAK
+PiByZWZlcnJpbmcgdG8gdGhlIHNhbWUgcGFnZSB0YWJsZT8KCkkgdGhpbmsgaW90bGIgZWZmaWNp
+ZW5jeSBpcyB1cCB0byB0aGUgcGxhdGZvcm0uCgpUaGUgZ2VuZXJhbCB1c2UgY2FzZSBpcyB0byBt
+YWtlIGFuIElPQVNJRCBmb3Igc29tZXRoaW5nIGxpa2UgdGhlIEdQQQphbmQgdXNlIGl0IGNvbmN1
+cnJlbnRseSB3aXRoIHRocmVlIHNheSB0aHJlZSBkZXZpY2VzOgogLSBWRklPIChub3QgUEFTSUQp
+CiAtIFZEUEEgKFBBU0lEIGNhcGFibGUgSFcpCiAtICdGdXR1cmUgVkRQQSBzdG9yYWdlJyAoUEFT
+SUQgY2FwYWJsZSBIVykKClRoZSB1QVBJIGZvciB0aGlzIHNob3VsZCBiZSB2ZXJ5IGdlbmVyYWwg
+YW5kIHRoZSBrZXJuZWwgc2hvdWxkIGRlY2lkZQp0aGUgb3B0aW1hbCB3YXkgdG8gY29uZmlndXJl
+IHRoZSBIVy4gTWF5YmUgaXQgaXMgb25lIHBhZ2UgdGFibGUgYW5kCm9uZSBQQVNJRCwgb3IgbWF5
+YmUgaXQgaXMgc29tZXRoaW5nIGVsc2UuCgpBbGxvd2luZyB0aGUga2VybmVsIHRvIGNob29zZSB0
+aGUgUEFTSUQgb25jZSBpdCBrbm93cyB0aGUgUklEIGlzIHRoZQpoaWdoZXN0IGdlbmVyYWxpdHku
+Cgo+ID4gbm9uLVBBU0lEIElPIHBhZ2UgdGFibGVzIGFzIHdlbGwuIFNvIEknZCBrZWVwIHRoZSB0
+d28gdGhpbmdzCj4gPiBzZXBhcmF0ZWQgaW4gdGhlIHVBUEkgLSBldmVuIHRob3VnaCB0aGUga2Vy
+bmVsIHRvZGF5IGhhcyBhIGdsb2JhbAo+ID4gUEFTSUQgcG9vbC4KPiAKPiBmb3Igbm9uLVBBU0lE
+IHVzYWdlcyB0aGUgYWxsb2NhdGVkIFBBU0lEIHdpbGwgYmUgd2FzdGVkIGlmIHdlIGRvbid0Cj4g
+c2VwYXJhdGUgaW9hc2lkIGZyb20gcGFzaWQuIEJ1dCBpdCBtYXkgYmUgd29ydGh3aGlsZSBnaXZl
+biAxbSBhdmFpbGFibGUgCj4gcGFzaWRzIGFuZCB0aGUgc2ltcGxpZmljYXRpb24gaW4gdGhlIHVB
+UEkgd2hpY2ggb25seSBuZWVkcyB0byBjYXJlIGFib3V0IAo+IG9uZSBpZCBzcGFjZSB0aGVuLgoK
+SSdkIHByZWZlciB0aGlzIGJlIGEgcGxhdGZvcm0gY2hvaWNlIGFuZCBub3QgZm9yY2VkIGluIHRo
+ZSB1QVBJLApiZWNhdXNlIHdlIGNhbiBuZXZlciBnbyBiYWNrIG9uIGl0IGlmIHdlIHNlZSB0aGF0
+IHllcyB3ZSBuZWVkIHRvCm9wdGltaXplIGhlcmUuIEkgdW5kZXJzdGFuZCBtYW55IHBsYXRmb3Jt
+cyBoYXZlIGRpZmZlcmVudCBhdmFpbGFibGUKUEFTSUQgc3BhY2VzIGFscmVhZHkuCgo+ID4gU2lt
+cGxlIHRoaW5ncyBsaWtlIERQREsgY2FuIHVzZSAjMiBhbmQgcG90ZW50aWFsbHkgaGF2ZSBiZXR0
+ZXIgUEFTSUQKPiA+IGxpbWl0cy4gaHlwZXJ2aXNvcnMgd2lsbCBtb3N0IGxpa2VseSBoYXZlIHRv
+IHVzZSAjMSwgYnV0IGl0IGRlcGVuZHMgb24KPiA+IGhvdyB0aGVpciB2SU9NTVUgaW50ZXJmYWNl
+IHdvcmtzLgo+IAo+IENhbiB5b3UgZWxhYm9yYXRlIHdoeSBEUERLIHdhbnRzIHRvIHVzZSAjMiBp
+LmUuIG5vdCB1c2luZyBhIGdsb2JhbAo+IFBBU0lEPwoKSXQgZ2l2ZXMgdGhlIGtlcm5lbCBhbiBv
+cHRpb24gdG8gbWFrZSB0aGUgZGVjaXNpb24gYWJvdXQgdGhlIFBBU0lECndoZW4gaXQgaGFzIHRo
+ZSBmdWxsIGluZm9ybWF0aW9uLCBpbmNsdWRpbmcgdGhlIFJJRC4KCj4gPiBJIHRoaW5rIHRoZSBu
+YW1lIElPQVNJRCBpcyBmaW5lIGZvciB0aGUgdUFQSSwgdGhlIGtlcm5lbCB2ZXJzaW9uIGNhbgo+
+ID4gYmUgY2FsbGVkIGlvYXNpZF9pZCBvciBzb21ldGhpbmcuCj4gCj4gaW9hc2lkIGlzIGFscmVh
+ZHkgYW4gaWQgYW5kIHRoZW4gaW9hc2lkX2lkIGp1c3QgYWRkcyBjb25mdXNpb24uIEFub3RoZXIK
+PiBwb2ludCBpcyB0aGF0IGlvYXNpZCBpcyBjdXJyZW50bHkgdXNlZCB0byByZXByZXNlbnQgYm90
+aCBQQ0kgUEFTSUQgYW5kCj4gQVJNIHN1YnN0cmVhbSBJRCBpbiB0aGUga2VybmVsLiBJdCBpbXBs
+aWVzIHRoYXQgaWYgd2Ugd2FudCB0byBzZXBhcmF0ZQo+IGlvYXNpZCBhbmQgcGFzaWQgaW4gdGhl
+IHVBUEkgdGhlICdwYXNpZCcgYWxzbyBuZWVkcyB0byBiZSByZXBsYWNlZCB3aXRoCj4gYW5vdGhl
+ciBnZW5lcmFsIHRlcm0gdXNhYmxlIGZvciBzdWJzdHJlYW0gSUQuIEFyZSB3ZSBtYWtpbmcgdGhl
+Cj4gdGVybXMgdG9vIGNvbmZ1c2luZyBoZXJlPwoKVGhpcyBpcyB3aHkgSSBhbHNvIGFtIG5vdCBz
+byBzdXJlIGFib3V0IGV4cG9zaW5nIHRoZSBQQVNJRCBpbiB0aGUgQVBJCmJlY2F1c2UgaXQgaXMg
+dWx0aW1hdGVseSBhIEhXIHNwZWNpZmljIGl0ZW0uCgpBcyBJIHNhaWQgdG8gRGF2aWQsIG9uZSBh
+dmVudWUgaXMgdG8gaGF2ZSBzb21lIGdlbmVyaWMgdUFQSSB0aGF0IGlzCnZlcnkgZ2VuZXJhbCBh
+bmQga2VlcCBhbGwgdGhpcyBkZWVwbHkgZGV0YWlsZWQgc3R1ZmYsIHRoYXQgcmVhbGx5IG9ubHkK
+bWF0dGVycyBmb3IgcWVtdSwgYXMgcGFydCBvZiBhIG1vcmUgSFcgc3BlY2lmaWMgdklPTU1VIGRy
+aXZlcgppbnRlcmZhY2UuCgpKYXNvbgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXwppb21tdSBtYWlsaW5nIGxpc3QKaW9tbXVAbGlzdHMubGludXgtZm91bmRh
+dGlvbi5vcmcKaHR0cHM6Ly9saXN0cy5saW51eGZvdW5kYXRpb24ub3JnL21haWxtYW4vbGlzdGlu
+Zm8vaW9tbXU=
