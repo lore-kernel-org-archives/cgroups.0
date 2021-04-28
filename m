@@ -1,118 +1,105 @@
-From: Odin Ugedal <odin-lVFEcm3hDZTQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/1] sched/fair: Fix unfairness caused by missing load decay
-Date: Wed, 28 Apr 2021 15:10:22 +0200
-Message-ID: <CAFpoUr1KOvLSUoUac8MMTD+TREDWmDpeku950U=_p-oBDE4Avw@mail.gmail.com>
-References: <20210425080902.11854-1-odin@uged.al> <20210425080902.11854-2-odin@uged.al>
- <20210427142611.GA22056@vingu-book>
+From: Christian Brauner <christian.brauner-GeWIH/nMZzLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC PATCH] cgroup: add cgroup.signal
+Date: Wed, 28 Apr 2021 16:37:46 +0200
+Message-ID: <20210428143746.p6tjwv6ywgpixnjy@wittgenstein>
+References: <20210423171351.3614430-1-brauner@kernel.org>
+ <YIcOZEbvky7hGbR1@blackbook>
+ <20210427093606.kygcgb74otakofes@wittgenstein>
+ <YIgfrP5J3aXHfM1i@slm.duckdns.org>
 Mime-Version: 1.0
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ugedal.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=yCqiPinRq7KbHRxw2+1CXLudhDzt8HuMBSPIFpRiJPQ=;
-        b=op0etC5f3iUvcNGm81crqMGzOmX3gWMXzJ1+rzIG/28W0YXHGVhDZikIUWNtLjtHcV
-         N5bDI277rR4vU5GWFEoGG5TddC76vb5yoAhS5AjLe50YPBa0VSTIQCNkGP7lP70EA5Hv
-         pum91yU819opegmcarW/Xkhb4kPpl34BF/gLEQUBRP5IrfDqM9nVUFrqoTYhr1qo3fZA
-         Rtcw/hUDlSIljTYbcOcRo4awy0mbjxf1q+vVlTg0XEyAzEHgw7n8bmNv03Ll42cMok3m
-         3CfnuCqpwzKRuyhuSLqHXPqQ3rg4wTERINUrqlNHeaT3RTloj79T+iEBFkNO+IHU/OAq
-         vGtA==
-In-Reply-To: <20210427142611.GA22056@vingu-book>
+Content-Disposition: inline
+In-Reply-To: <YIgfrP5J3aXHfM1i-NiLfg/pYEd1N0TnZuCh8vA@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-To: Vincent Guittot <vincent.guittot-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Odin Ugedal <odin-RObV4cXtwVA@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <peterz-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Juri Lelli <juri.lelli-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dietmar Eggemann <dietmar.eggemann-5wv7dgnIgG8@public.gmane.org>, Steven Rostedt <rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org>, Ben Segall <bsegall-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Mel Gorman <mgorman-l3A5Bk7waGM@public.gmane.org>, Daniel Bristot de Oliveira <bristot-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "open list:CONTROL GROUP (CGROUP)" <cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Michal =?utf-8?Q?Koutn=C3=BD?= <mkoutny-IBi9RG/b67k@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
+Cc: Christian Brauner <brauner-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Zefan Li <lizefan.x-EC8Uxl6Npydl57MIdRCFDg@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Hi,
+On Tue, Apr 27, 2021 at 10:29:00AM -0400, Tejun Heo wrote:
+> Hello,
+> 
+> On Tue, Apr 27, 2021 at 11:36:06AM +0200, Christian Brauner wrote:
+> > I thought about this optimization but (see below) given that it should
+> > work with threaded cgroups we can't only walk thread-group leaders,
+> > afaiu.
+> 
+> CSS_TASK_ITER_PROCS|CSS_TASK_ITER_THREADED iterates all thread group leaders
+> in the threaded domain and is used to implement cgroup.procs. This should
+> work, right?
 
-> Would be good to mention that the problem happens only if the new cfs_rq has
-> been removed from the leaf_cfs_rq_list because its PELT metrics were already
-> null. In such case __update_blocked_fair() never updates the blocked load of
-> the new cfs_rq and never propagate the removed load in the hierarchy.
+Yes, I switched to that.
 
-Well, it does technically occur when PELT metrics were null and therefore
-removed from this leaf_cfs_rq_list, that is correct. We do however not add
-newly created cfs_rq's to leaf_cfs_rq_list, so that is also a reason for it
-to occur. Most users of cgroups are probably creating a new cgroup and then
-attaching a process to it, so I think that will be the _biggest_ issue.
+> 
+> > > > @@ -4846,6 +4916,11 @@ static struct cftype cgroup_base_files[] = {
+> > > > +	{
+> > > > +		.name = "cgroup.signal",
+> > > > +		.flags = CFTYPE_NOT_ON_ROOT,
+> > > > +		.write = cgroup_signal_write,
+> > > 
+> > > I think this shouldn't be visible in threaded cgroups (or return an
+> > > error when attempting to kill those).
+> > 
+> > I've been wondering about this too but then decided to follow freezer in
+> > that regard. I think it should also be fine because a kill to a thread
+> > will cause the whole thread-group to be taken down which arguably is the
+> > semantics we want anyway.
+> 
+> I'd align it with cgroup.procs. Killing is a process-level operation (unlike
+> arbitrary signal delivery which I think is another reason to confine this to
+> killing) and threaded cgroups should be invisible to process-level
+> operations.
 
-> The fix tag should be :
-> Fixes: 039ae8bcf7a5 ("sched/fair: Fix O(nr_cgroups) in the load balancing path")
->
-> This patch re-introduced the del of idle cfs_rq from leaf_cfs_rq_list in order to
-> skip useless update of blocked load.
+Ok, so we make write to cgroup.kill in threaded cgroups EOPNOTSUPP which
+is equivalent what a read on cgroup.procs would yield.
 
-Thanks for pointing me at that patch! A quick look makes me think that that
-commit caused the issue to occur _more often_, but was not the one that
-introduced it. I should probably investigate a bit more tho., since I didn't
-dig that deep in it. It is not a clean revert for that patch on v5.12,
-but I did apply the diff below to test. It is essentially what the patch
-039ae8bcf7a5 does, as far as I see. There might however been more commits
-beteen those, so I might take a look further behind to see.
+Tejun, Roman, Michal, I've been thinking a bit about the escaping
+children during fork() when killing a cgroup and I would like to propose
+we simply take the write-side of threadgroup_rwsem during cgroup.kill.
 
-Doing this does make the problem less severe, resulting in ~90/10 load on the
-example that without the diff results in ~99/1. So with this diff/reverting
-039ae8bcf7a5, there is still an issue.
+This would give us robust protection against escaping children during
+fork() since fork()ing takes the read-side already in cgroup_can_fork().
+And cgroup.kill should be sufficiently rare that this isn't an
+additional burden.
 
-Should I keep two "Fixes", or should I just take one of them?
+Other ways seems more fragile where the child can potentially escape
+being killed. The most obvious case is when CLONE_INTO_CGROUP is not
+used. If a cgroup.kill is initiated after cgroup_can_fork() and after
+the parent's fatal_signal_pending() check we will wait for the parent to
+release the siglock in cgroup_kill(). Once it does we deliver the fatal
+signal to the parent. But if we haven't passed cgroup_post_fork() fast
+enough the child can be placed into that cgroup right after the kill.
+That's not super bad per se since the child isn't technically visible in
+the target cgroup anyway but it feels a bit cleaner if it would die
+right away. We could minimize the window by raising a flag say CGRP_KILL
+say:
 
-diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-index 794c2cb945f8..5fac4fbf6f84 100644
---- a/kernel/sched/fair.c
-+++ b/kernel/sched/fair.c
-@@ -7941,8 +7941,8 @@ static bool __update_blocked_fair(struct rq *rq,
-bool *done)
-                 * There can be a lot of idle CPU cgroups.  Don't let fully
-                 * decayed cfs_rqs linger on the list.
-                 */
--               if (cfs_rq_is_decayed(cfs_rq))
--                       list_del_leaf_cfs_rq(cfs_rq);
-+               // if (cfs_rq_is_decayed(cfs_rq))
-+               //      list_del_leaf_cfs_rq(cfs_rq);
+static void __cgroup_kill(struct cgroup *cgrp)
+{
+       spin_lock_irq(&css_set_lock);
+       set_bit(CGRP_KILL, &cgrp->flags);
+       spin_unlock_irq(&css_set_lock);
 
-                /* Don't need periodic decay once load/util_avg are null */
-                if (cfs_rq_has_blocked(cfs_rq))
+       css_task_iter_start(&cgrp->self, CSS_TASK_ITER_PROCS | CSS_TASK_ITER_THREADED, &it);
+       while ((task = css_task_iter_next(&it)))
+               /* KILL IT */
 
-> propagate_entity_cfs_rq() already goes across the tg tree to
-> propagate the attach/detach.
->
-> would be better to call list_add_leaf_cfs_rq(cfs_rq)  inside this function
-> instead of looping twice the tg tree. Something like:
->
-> diff --git a/kernel/sched/fair.c b/kernel/sched/fair.c
-> index 33b1ee31ae0f..18441ce7316c 100644
-> --- a/kernel/sched/fair.c
-> +++ b/kernel/sched/fair.c
-> @@ -11026,10 +11026,10 @@ static void propagate_entity_cfs_rq(struct sched_entity *se)
->         for_each_sched_entity(se) {
->                 cfs_rq = cfs_rq_of(se);
->
-> -               if (cfs_rq_throttled(cfs_rq))
-> -                       break;
-> +               if (!cfs_rq_throttled(cfs_rq))
-> +                       update_load_avg(cfs_rq, se, UPDATE_TG);
->
-> -               update_load_avg(cfs_rq, se, UPDATE_TG);
-> +               list_add_leaf_cfs_rq(cfs_rq);
->         }
->  }
->  #else
+       spin_lock_irq(&css_set_lock);
+       clear_bit(CGRP_KILL, &cgrp->flags);
+       spin_unlock_irq(&css_set_lock);
 
+but that's also not clean enough for my taste. So I think the
+threadgroup_rwsem might be quite clean and acceptable?
 
-Thanks for that feedback!
+static void cgroup_kill(struct cgroup *cgrp)
+{
+       struct cgroup_subsys_state *css;
+       struct cgroup *dsct;
 
-I did think about that, but was not sure what would be the best one.
-If it is "safe" to always run list_add_leaf_cfs_rq there (since it is used in
-more places than just on cgroup change and move to fair class), I do agree
-that that is a better solution. Will test that, and post a new patch
-if it works as expected.
+       lockdep_assert_held(&cgroup_mutex);
 
-Also, the current code will exit from the loop in case a cfs_rq is throttled,
-while your suggestion will keep looping. For list_add_leaf_cfs_rq that is fine
-(and required), but should we keep running update_load_avg? I do think it is ok,
-and the likelihood of a cfs_rq being throttled is not that high after all, so
-I guess it doesn't really matter.
-
-Thanks
-Odin
+       percpu_down_write(&cgroup_threadgroup_rwsem);
+       cgroup_for_each_live_descendant_pre(dsct, css, cgrp)
+               __cgroup_kill(dsct);
+       percpu_up_write(&cgroup_threadgroup_rwsem);
+}
