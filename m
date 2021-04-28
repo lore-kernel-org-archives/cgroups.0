@@ -1,104 +1,49 @@
-From: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Subject: [PATCH v2 2/2] ipc: use kmalloc for msg_queue and shmid_kernel
-Date: Wed, 28 Apr 2021 10:35:22 +0300
-Message-ID: <0d0b6c9b-8af3-29d8-34e2-a565c53780f3@virtuozzo.com>
-References: <ebc3ac79-3190-520d-81ce-22ad194986ec@virtuozzo.com>
+From: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [PATCH v4 15/16] memcg: enable accounting for tty-related objects
+Date: Wed, 28 Apr 2021 09:38:03 +0200
+Message-ID: <YIkQ232vjPzFittf@kroah.com>
+References: <8664122a-99d3-7199-869a-781b21b7e712@virtuozzo.com>
+ <e1446e9c-3878-f545-b33e-389d55bf1396@virtuozzo.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Return-path: <cgroups-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=virtuozzo.com; s=relay; h=Content-Type:MIME-Version:Date:Message-ID:Subject
-        :From; bh=NyPojqAJXKDuboCn+PJDB2Z/IjVfmTg+CYfjOif2znQ=; b=A7vpzn4hERJpNyqPGJ2
-        nwASd6Gi9p0bKh7B0XkP8m5snuYBzC1YX3u+aKBsQ+djHxBhzQl2w8Ncp7B3PmNqxtWclUxgyywDk
-        CgKIl6fgyRjzLbOHFMogxlH466aAtLxp+dAdSQuFKXqMYlI96DO10QVaIEgUFcY0mjXF21dubS0=
-In-Reply-To: <ebc3ac79-3190-520d-81ce-22ad194986ec-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Content-Language: en-US
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1619595486;
+        bh=QBnMC6nBzJ7jyPXp0bvf8FizKe3kkFoosH+sK00xjf8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=IelduBmo8Z3egwJsjYkZqs/jOFjlgurmn6LjPrBRBFKU7Vy3L97eMta9CDfcaSOlo
+         NMPhseosskZD/a38E8FYsfJeUfx6Dm4LWJPHpKMaqR+EiLmz8XZiwMzdiPEp/rZ33T
+         Phenb4Jn/pCUyjFzMOyuFbhe3YdTbxqBjMXfsJ2s=
+Content-Disposition: inline
+In-Reply-To: <e1446e9c-3878-f545-b33e-389d55bf1396-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 List-ID: <cgroups.vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
-To: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>, cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Dmitry Safonov <0x7f454c46-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+To: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
+Cc: cgroups-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Michal Hocko <mhocko-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Vladimir Davydov <vdavydov.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>, Jiri Slaby <jirislaby-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-msg_queue and shmid_kernel are quite small objects, no need to use
-kvmalloc for them.
-mhocko@: "Both of them are 256B on most 64b systems."
+On Wed, Apr 28, 2021 at 09:54:16AM +0300, Vasily Averin wrote:
+> At each login the user forces the kernel to create a new terminal and
+> allocate up to ~1Kb memory for the tty-related structures.
+> 
+> By default it's allowed to create up to 4096 ptys with 1024 reserve for
+> initial mount namespace only and the settings are controlled by host admin.
+> 
+> Though this default is not enough for hosters with thousands
+> of containers per node. Host admin can be forced to increase it
+> up to NR_UNIX98_PTY_MAX = 1<<20.
+> 
+> By default container is restricted by pty mount_opt.max = 1024,
+> but admin inside container can change it via remount. As a result,
+> one container can consume almost all allowed ptys
+> and allocate up to 1Gb of unaccounted memory.
+> 
+> It is not enough per-se to trigger OOM on host, however anyway, it allows
+> to significantly exceed the assigned memcg limit and leads to troubles
+> on the over-committed node.
+> 
+> It makes sense to account for them to restrict the host's memory
+> consumption from inside the memcg-limited container.
+> 
+> Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
 
-Previously these objects was allocated via ipc_alloc/ipc_rcu_alloc(),
-common function for several ipc objects. It had kvmalloc call inside().
-Later, this function went away and was finally replaced by direct
-kvmalloc call, and now we can use more suitable kmalloc/kfree for them.
-
-Reported-by: Alexey Dobriyan <adobriyan-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Signed-off-by: Vasily Averin <vvs-5HdwGun5lf+gSpxsJD1C4w@public.gmane.org>
-Acked-by: Michal Hocko <mhocko-IBi9RG/b67k@public.gmane.org>
-Reviewed-by: Shakeel Butt <shakeelb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Acked-by: Roman Gushchin <guro-b10kYP2dOMg@public.gmane.org>
----
- ipc/msg.c | 6 +++---
- ipc/shm.c | 6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/ipc/msg.c b/ipc/msg.c
-index 87898cb..79c6625 100644
---- a/ipc/msg.c
-+++ b/ipc/msg.c
-@@ -130,7 +130,7 @@ static void msg_rcu_free(struct rcu_head *head)
- 	struct msg_queue *msq = container_of(p, struct msg_queue, q_perm);
- 
- 	security_msg_queue_free(&msq->q_perm);
--	kvfree(msq);
-+	kfree(msq);
- }
- 
- /**
-@@ -147,7 +147,7 @@ static int newque(struct ipc_namespace *ns, struct ipc_params *params)
- 	key_t key = params->key;
- 	int msgflg = params->flg;
- 
--	msq = kvmalloc(sizeof(*msq), GFP_KERNEL_ACCOUNT);
-+	msq = kmalloc(sizeof(*msq), GFP_KERNEL_ACCOUNT);
- 	if (unlikely(!msq))
- 		return -ENOMEM;
- 
-@@ -157,7 +157,7 @@ static int newque(struct ipc_namespace *ns, struct ipc_params *params)
- 	msq->q_perm.security = NULL;
- 	retval = security_msg_queue_alloc(&msq->q_perm);
- 	if (retval) {
--		kvfree(msq);
-+		kfree(msq);
- 		return retval;
- 	}
- 
-diff --git a/ipc/shm.c b/ipc/shm.c
-index 7632d72..85da060 100644
---- a/ipc/shm.c
-+++ b/ipc/shm.c
-@@ -222,7 +222,7 @@ static void shm_rcu_free(struct rcu_head *head)
- 	struct shmid_kernel *shp = container_of(ptr, struct shmid_kernel,
- 							shm_perm);
- 	security_shm_free(&shp->shm_perm);
--	kvfree(shp);
-+	kfree(shp);
- }
- 
- static inline void shm_rmid(struct ipc_namespace *ns, struct shmid_kernel *s)
-@@ -619,7 +619,7 @@ static int newseg(struct ipc_namespace *ns, struct ipc_params *params)
- 			ns->shm_tot + numpages > ns->shm_ctlall)
- 		return -ENOSPC;
- 
--	shp = kvmalloc(sizeof(*shp), GFP_KERNEL_ACCOUNT);
-+	shp = kmalloc(sizeof(*shp), GFP_KERNEL_ACCOUNT);
- 	if (unlikely(!shp))
- 		return -ENOMEM;
- 
-@@ -630,7 +630,7 @@ static int newseg(struct ipc_namespace *ns, struct ipc_params *params)
- 	shp->shm_perm.security = NULL;
- 	error = security_shm_alloc(&shp->shm_perm);
- 	if (error) {
--		kvfree(shp);
-+		kfree(shp);
- 		return error;
- 	}
- 
--- 
-1.8.3.1
-
+Acked-by: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
